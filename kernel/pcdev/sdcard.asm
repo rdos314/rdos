@@ -79,6 +79,36 @@ part_sectors        DD ?
 
 part_struc      ENDS
 
+gpt_part_struc  STRUC
+
+gpt_sign                DB 8 DUP(?)
+gpt_rev                 DB 4 DUP(?)
+gpt_header_size         DD ?
+gpt_crc32               DD ?
+gpt_resv                DD ?
+gpt_curr_lba            DD ?,?
+gpt_other_lba           DD ?,?
+gpt_first_lba           DD ?,?
+gpt_last_lba            DD ?,?
+gpt_guid                DB 16 DUP(?)
+gpt_entry_lba           DD ?,?
+gpt_entry_count         DD ?
+gpt_entry_size          DD ?
+gpt_entry_crc32         DD ?
+
+gpt_part_struc  ENDS
+
+gpt_entry_struc STRUC
+
+gpe_part_guid           DB 16 DUP(?)
+gpe_unique_guid         DB 16 DUP(?)
+gpe_first_lba           DD ?,?
+gpe_last_lba            DD ?,?
+gpe_attrib              DD ?,?
+gpe_name                DB 36 DUP(?)
+
+gpt_entry_struc ENDS
+
 sd_device_struc STRUC
 
 sd_reg_sel          DW ?
@@ -131,6 +161,10 @@ sd_dev_arr      DW MAX_SD_DEVICES DUP (?)
 
 unit_ptr        DW ?
 name_str        DB SERV_NAME_SIZE DUP(?)
+
+has_efi         DB ?
+
+fs_name         DB 10 DUP(?)
 
 data    ENDS
 
@@ -3202,6 +3236,593 @@ InstallPartition    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:       GetEfiName
+;
+;       DESCRIPTION:    Get EFI system part name
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES:EDI  GPT Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetEfiName   Proc near
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov es,ax
+    mov si,OFFSET fs_fat32
+    mov di,OFFSET fs_name
+    mov cx,8
+
+genCopyLoop:    
+    mov al,cs:[esi]
+    or al,al
+    jz genCopyDone
+;
+    cmp al,' '
+    jz genCopyDone
+;
+    stosb
+    inc si
+    loop genCopyLoop    
+
+genCopyDone:
+    xor al,al
+    stosb
+;
+    popad
+    pop es    
+    ret
+GetEfiName   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       GetFsName
+;
+;       DESCRIPTION:    Get MS FS name from boot record
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES:EDI  GPT Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFsName   Proc near
+    push es
+    push gs
+    pushad
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov esi,edx
+    mov ebp,edx
+    mov es:[edx],eax
+;
+    mov edx,es:[edi].gpe_first_lba
+    mov edi,esi
+    mov ecx,1
+    call ReadPioSector
+;
+    mov ax,SEG data
+    mov es,ax
+    mov ax,flat_sel
+    mov gs,ax
+    mov di,OFFSET fs_name
+;
+    mov al,gs:[esi+3]
+    cmp al,'M'
+    je gfnDos
+;
+    cmp al,'m'
+    je gfnLinux    
+;
+    cmp al,'R'
+    je gfnLinux    
+;
+    add esi,3
+    jmp gfnCopyName
+
+gfnLinux:
+    add esi,36h
+    jmp gfnCopyName
+
+gfnDos:
+    add esi,52h
+
+gfnCopyName:
+    mov cx,8
+
+gfnCopyLoop:    
+    mov al,gs:[esi]
+    or al,al
+    jz gfnCopyDone
+;
+    cmp al,' '
+    jz gfnCopyDone
+;
+    stosb
+    inc si
+    loop gfnCopyLoop    
+
+gfnCopyDone:
+    xor al,al
+    stosb
+;    
+    mov edx,ebp
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    pop gs
+    pop es    
+    ret
+GetFsName   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       InstallEfiPart
+;
+;       DESCRIPTION:    Install EFI part
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallEfiPart    Proc near
+    call GetEfiName
+;    
+    push es
+    pushad
+;
+    mov edx,es:[edi].gpe_first_lba
+    mov ecx,es:[edi].gpe_last_lba
+    sub ecx,edx
+    inc ecx
+;
+    mov di,SEG data
+    mov es,di
+    mov edi,OFFSET fs_name
+    IsFileSystemAvailable
+    jc iefipDone
+;
+    mov es:has_efi,1
+;    
+    AllocateStaticDrive
+    mov ah,ds:sd_disc_nr
+    OpenDrive
+;
+    InstallFileSystem
+    clc
+
+iefipDone:
+    popad
+    pop es    
+    ret
+InstallEfiPart  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       InstallBasicPart
+;
+;       DESCRIPTION:    Install basic part
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallBasicPart    Proc near
+    call GetFsName
+;    
+    push es
+    pushad
+;
+    mov edx,es:[edi].gpe_first_lba
+    mov ecx,es:[edi].gpe_last_lba
+    sub ecx,edx
+    inc ecx
+;
+    mov di,SEG data
+    mov es,di
+    mov edi,OFFSET fs_name
+    IsFileSystemAvailable
+    jc ibpDone
+;
+    AllocateStaticDrive
+    mov ah,ds:sd_disc_nr
+    OpenDrive
+;
+    InstallFileSystem
+
+ibpDone:
+    popad
+    pop es    
+    ret
+InstallBasicPart  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       InstallEfiGptEntry
+;
+;       DESCRIPTION:    Install EFI GPT entry
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallEfiGptEntry    Proc near
+    mov eax,dword ptr es:[edi].gpe_part_guid
+    cmp eax,0C12A7328h
+    jne iegpeDone
+;
+    mov eax,dword ptr es:[edi].gpe_part_guid+4
+    cmp eax,11D2F81Fh
+    jne iegpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+8
+    cmp eax,0A0004BBAh
+    jne iegpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+12
+    cmp eax,3BC93EC9h
+    jne iegpeDone
+;
+    call InstallEfiPart
+
+iegpeDone:    
+    ret
+InstallEfiGptEntry     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       InstallStdGptEntry
+;
+;       DESCRIPTION:    Install non-EFI GPT entry
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallStdGptEntry    Proc near
+    mov eax,dword ptr es:[edi].gpe_part_guid
+    cmp eax,0EBD0A0A2h
+    jne isgpeDone
+;
+    mov eax,dword ptr es:[edi].gpe_part_guid+4
+    cmp eax,4433B9E5h
+    jne isgpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+8
+    cmp eax,0B668C087h
+    jne isgpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+12
+    cmp eax,0C79926B7h
+    jne isgpeDone
+;
+    call InstallBasicPart
+
+isgpeDone:    
+    ret
+InstallStdGptEntry     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       InstallGpt1
+;
+;       DESCRIPTION:    Install GPT partition, first pass
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES      flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallGpt1    Proc near
+    push es
+    pushad
+;
+    xor ebp,ebp
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear    
+    mov edi,edx
+    mov es:[edi],eax
+;    
+    mov ecx,1
+    mov edx,1
+    call ReadPioSector
+;
+    mov eax,dword ptr es:[edi].gpt_sign
+    cmp eax,20494645h
+    jne igptDone1
+;
+    mov eax,dword ptr es:[edi].gpt_sign+4
+    cmp eax,54524150h
+    jne igptDone1
+;
+    xor edx,edx
+    xchg edx,es:[edi].gpt_crc32
+    mov ecx,es:[edi].gpt_header_size
+    cmp ecx,200h
+    jae igptDone1
+;    
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+    cmp eax,edx
+    jne igptDone1
+;    
+    mov eax,es:[edi].gpt_entry_size
+    cmp eax,128
+    jne igptDone1
+;
+    mov eax,es:[edi].gpt_entry_lba+4
+    or eax,eax
+    jnz igptDone1   
+;
+    mov ecx,es:[edi].gpt_entry_count
+    mov eax,ecx
+    shl eax,7
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    AllocateBigLinear    
+    mov ebp,edx
+;
+    push edx
+    push edi
+;
+    mov ecx,eax
+    shr ecx,9
+    mov edx,es:[edi].gpt_entry_lba
+    mov edi,ebp
+    xor eax,eax
+
+igptSectorLoop1:
+    mov es:[edi],eax
+    push ecx
+    mov ecx,1
+    call ReadPioSector
+    pop ecx
+;
+    inc edx
+    add edi,200h
+    loop igptSectorLoop1
+;
+    pop edi
+    pop edx
+;
+    push edi
+;    
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edi,ebp
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+;    
+    pop edi
+;
+    cmp eax,es:[edi].gpt_entry_crc32
+    jne igptDone1
+;
+    push edi
+    mov ecx,es:[edi].gpt_entry_count
+    mov edi,ebp
+    or ecx,ecx
+    jz igptEntryDone1
+
+igptEntryLoop1:
+    mov eax,es:[edi].gpe_last_lba+4
+    or eax,eax
+    jnz igptEntryNext1
+;
+    mov eax,es:[edi].gpe_first_lba+4
+    or eax,eax
+    jnz igptEntryNext1
+;
+    mov eax,es:[edi].gpe_first_lba
+    or eax,eax
+    jz igptEntryNext1
+;
+    mov edx,es:[edi].gpe_last_lba
+    sub edx,eax
+    jc igptEntryNext1
+;
+    call InstallEfiGptEntry
+
+igptEntryNext1:
+    add edi,128 
+    sub ecx,1
+    jnz igptEntryLoop1
+
+igptEntryDone1:     
+    pop edi
+    
+igptDone1:
+    or ebp,ebp
+    jz igptEnd1
+;
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edx,ebp
+    FreeLinear
+        
+igptEnd1:
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+;
+    popad
+    pop es
+    ret
+InstallGpt1    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       InstallGpt2
+;
+;       DESCRIPTION:    Install GPT partition, second pass
+;
+;       PARAMETERS:     DS      Device sel
+;                       ES      flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallGpt2    Proc near
+    push es
+    pushad
+;
+    xor ebp,ebp
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear    
+    mov edi,edx
+    mov es:[edi],eax
+;    
+    mov ecx,1
+    mov edx,1
+    call ReadPioSector
+;
+    mov eax,dword ptr es:[edi].gpt_sign
+    cmp eax,20494645h
+    jne igptDone2
+;
+    mov eax,dword ptr es:[edi].gpt_sign+4
+    cmp eax,54524150h
+    jne igptDone2
+;
+    xor edx,edx
+    xchg edx,es:[edi].gpt_crc32
+    mov ecx,es:[edi].gpt_header_size
+    cmp ecx,200h
+    jae igptDone2
+;    
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+    cmp eax,edx
+    jne igptDone2
+;    
+    mov eax,es:[edi].gpt_entry_size
+    cmp eax,128
+    jne igptDone2
+;
+    mov eax,es:[edi].gpt_entry_lba+4
+    or eax,eax
+    jnz igptDone2
+;
+    mov ecx,es:[edi].gpt_entry_count
+    mov eax,ecx
+    shl eax,7
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    AllocateBigLinear    
+    mov ebp,edx
+;
+    push edx
+    push edi
+;
+    mov ecx,eax
+    shr ecx,9
+    mov edx,es:[edi].gpt_entry_lba
+    mov edi,ebp
+    xor eax,eax
+
+igptSectorLoop2:
+    mov es:[edi],eax
+    push ecx
+    mov ecx,1
+    call ReadPioSector
+    pop ecx
+;
+    inc edx
+    add edi,200h
+    loop igptSectorLoop2
+;
+    pop edi
+    pop edx
+;
+    push edi
+;    
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edi,ebp
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+;    
+    pop edi
+;
+    cmp eax,es:[edi].gpt_entry_crc32
+    jne igptDone2
+;
+    push edi
+    mov ecx,es:[edi].gpt_entry_count
+    mov edi,ebp
+    or ecx,ecx
+    jz igptEntryDone2
+
+igptEntryLoop2:
+    mov eax,es:[edi].gpe_last_lba+4
+    or eax,eax
+    jnz igptEntryNext2
+;
+    mov eax,es:[edi].gpe_first_lba+4
+    or eax,eax
+    jnz igptEntryNext2
+;
+    mov eax,es:[edi].gpe_first_lba
+    or eax,eax
+    jz igptEntryNext2
+;
+    mov edx,es:[edi].gpe_last_lba
+    sub edx,eax
+    jc igptEntryNext2
+;
+    call InstallStdGptEntry
+
+igptEntryNext2:
+    add edi,128 
+    sub ecx,1
+    jnz igptEntryLoop2   
+
+igptEntryDone2:     
+    pop edi
+    
+igptDone2:
+    or ebp,ebp
+    jz igptEnd2
+;
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edx,ebp
+    FreeLinear
+        
+igptEnd2:
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+;
+    popad
+    pop es
+    ret
+InstallGpt2    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       DRIVE_ASSIGN1
 ;
 ;       DESCRIPTION:    Drive assign, pass 1
@@ -3211,6 +3832,10 @@ InstallPartition    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign1   Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:has_efi,1
+;
     mov ds,bx
     mov fs,ds:sd_reg_sel
 ;
@@ -3224,10 +3849,6 @@ drive_assign1   Proc far
     xor edx,edx
     call ReadPioSector
 ;
-    mov ecx,1
-    xor edx,edx
-    call ReadPioSector
-;
     mov esi,1BEh
 
 drive_assign_loop1:
@@ -3235,9 +3856,32 @@ drive_assign_loop1:
     or cl,cl
     jz drive_assign_free1
 ;
+    cmp cl,0EEh
+    je drive_assign_gpt1
+;
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:has_efi
+    pop ds
+    or al,al
+    jnz drive_assign_efi_ok1
+;
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:has_efi,1
+    pop ds
+    AllocateStaticDrive
+
+drive_assign_efi_ok1:
     mov eax,es:[esi+edi].part_sectors
     mov edx,es:[esi+edi].part_start_sector
     call InstallPartition
+    jmp drive_assign_next_part1
+
+drive_assign_gpt1:
+    call InstallGpt1
 
 drive_assign_next_part1:
     add si,10h
@@ -3248,6 +3892,18 @@ drive_assign_free1:
     mov ecx,1000h
     mov edx,edi
     FreeLinear
+;
+    push ds
+    mov ax,SEG data
+    mov ds,ax
+    mov al,ds:has_efi
+    pop ds
+    or al,al
+    jnz drive_assign_done1
+;
+    AllocateStaticDrive    
+
+drive_assign_done1:        
     retf32
 drive_assign1   Endp
 
@@ -3380,6 +4036,9 @@ drive_assign_loop2:
     or cl,cl
     jz drive_assign_next_part2
 ;
+    cmp cl,0EEh
+    je drive_assign_gpt2
+;
     cmp cl,5
     je drive_assign_install2
 ;
@@ -3397,6 +4056,10 @@ drive_assign_ext:
 ;
     pop edi
     pop esi
+    jmp drive_assign_next_part2
+
+drive_assign_gpt2:
+    call InstallGpt2
 
 drive_assign_next_part2:
     add si,10h
@@ -3519,6 +4182,7 @@ init    PROC far
     mov ax,SEG data
     mov ds,ax
     mov ds:sd_dev_count,0
+    mov ds:has_efi,0
     BeginDiscHandler
 ;    
     mov ax,cs
