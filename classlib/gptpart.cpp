@@ -168,6 +168,9 @@ TGptPartition::TGptPartition(TDisc *Disc, const char *Guid, long long StartSecto
         if (!strcmp(GuidStr, "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F"))
             strcpy(GuidStr, "Linux Swap");
 
+        if (!strcmp(GuidStr, "0FC63DAF-8483-4772-8E79-3D69D8477DE4"))
+            strcpy(GuidStr, "Linux Ext");
+
         if (mspart)
             GetMsFsName();
         else
