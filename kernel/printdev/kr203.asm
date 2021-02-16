@@ -442,6 +442,7 @@ SetWordParam   Proc near
     stosb
 ;
     mov ax,dx
+    xchg al,ah
     stosw
 ;
     mov cx,di
