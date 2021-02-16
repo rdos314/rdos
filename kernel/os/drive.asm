@@ -6126,6 +6126,24 @@ demand_load_drive       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SyncDiscPart
+;
+;           DESCRIPTION:    Sync disc partitions
+;
+;           PARAMETERS:     AL          Disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sync_disc_part_name  DB 'Sync Disc Part', 0
+
+sync_disc_part      Proc far
+    int 3
+    retf32
+sync_disc_part      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           INIT_DISC
 ;
 ;           DESCRIPTION:    Init discs
@@ -6411,6 +6429,12 @@ init    PROC far
     mov edi,OFFSET is_disc_idle_name
     xor dx,dx
     mov ax,is_disc_idle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET sync_disc_part
+    mov edi,OFFSET sync_disc_part_name
+    xor dx,dx
+    mov ax,sync_disc_part_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET allocate_fixed_drive
