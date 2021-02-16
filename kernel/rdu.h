@@ -937,6 +937,8 @@
 #define usergate_open_usb_packet_pipe 0x000002FC
 #define usergate_close_usb_pipe 0x000002FE
 
+#define usergate_sync_disc_part 0x000002FF
+
 
 
 #ifdef __FLAT__
@@ -1879,6 +1881,8 @@
 #define CallGate_open_usb_packet_pipe 0x55 0x67 0x9a 252 2 0 0 3 0 0x5d
 #define CallGate_close_usb_pipe 0x55 0x67 0x9a 254 2 0 0 3 0 0x5d
 
+#define CallGate_sync_disc_part 0x55 0x67 0x9a 255 2 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2818,5 +2822,7 @@
 
 #define CallGate_open_usb_packet_pipe 0x3e 0x67 0x9a 252 2 0 0 3 0
 #define CallGate_close_usb_pipe 0x3e 0x67 0x9a 254 2 0 0 3 0
+
+#define CallGate_sync_disc_part 0x3e 0x67 0x9a 255 2 0 0 3 0
 
 #endif

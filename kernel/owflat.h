@@ -2990,6 +2990,12 @@
     __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
     __value [__eax]
 
+#pragma aux RdosSyncDiscPart = \
+    CallGate_sync_disc_part  \
+    CarryToBool \
+    __parm [__eax]
+
+
 #pragma aux RdosGetDiscInfo = \
     "push edi" \
     "push esi" \

@@ -937,4 +937,6 @@ is_usb_dev_connected_nr           = 763
 open_usb_packet_pipe_nr           = 764
 close_usb_pipe_nr                 = 766
 
+sync_disc_part_nr                 = 767
+
 usergate_entries                  = 780

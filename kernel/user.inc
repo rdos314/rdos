@@ -2081,6 +2081,12 @@ AcceptIpv4Socket               MACRO
 
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
+
+; IN   AL                       Disc #
+SyncDiscPart     MACRO
+        UserGate sync_disc_part_nr
+                                                ENDM
+
 ; IN   BL           Unit #
 ; OUT  AL                       Disc #
 GetIdeDisc     MACRO

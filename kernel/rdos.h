@@ -797,6 +797,7 @@ void RDOSAPI RdosOpenDisc(int UnitNr);
 void RDOSAPI RdosCloseDisc(int UnitNr);
 
 int RDOSAPI RdosGetFileCacheSize();
+void RDOSAPI RdosSyncDiscPart(int DiscNr);
 int RDOSAPI RdosSetDiscInfo(int DiscNr, int SectorSize, long Sectors, int BiosSectorsPerCyl, int BiosHeads);
 int RDOSAPI RdosGetDiscInfo(int DiscNr, int *SectorSize, long long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
 void RDOSAPI RdosGetDiscVendorInfo(int DiscNr, char *Buf, int Size);
