@@ -89,6 +89,7 @@ disc_pend_high          DD ?
 disc_io_count           DD ?
 
 disc_change_proc        DD ?,?
+disc_read_proc          DD ?,?
 disc_vendor_str         DB 256 DUP(?)
 disc_unit_arr           DD ?
 
@@ -2778,15 +2779,16 @@ get_disc_request_array  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INSTALL_DISC
+;   NAME:           INSTALL_DISC
 ;
-;           DESCRIPTION:    Install disc unit
+;   DESCRIPTION:    Install disc unit
 ;
-;           PARAMETERS:         BX          Handle
-;                           ECX         Readahead
+;   PARAMETERS:     BX          Handle
+;                   ECX         Readahead
+;                   ES:EDI      Read procedure
 ;
-;           RETURNS:        AL          Disc #
-;                           BX          Disc sel
+;   RETURNS:        AL          Disc #
+;                   BX          Disc sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2799,11 +2801,14 @@ install_disc    Proc far
     push si
     push di
 ;
+    push es
+    push edi
     push cx
     mov ax,SEG data
     mov ds,ax
     mov si,OFFSET disc_def_arr
     mov cx,MAX_DRIVES
+
 install_disc_loop:
     mov ax,[si]
     or ax,ax
@@ -2844,8 +2849,13 @@ install_disc_loop:
     pop dword ptr ds:disc_param
     pop dword ptr ds:disc_param+4
     pop ds:disc_handle
+;
     pop cx
     mov ds:disc_readahead,ecx
+;
+    pop dword ptr ds:disc_read_proc
+    pop word ptr ds:disc_read_proc+4
+;
     InitSection ds:disc_section
     InitSpinlock ds:disc_spinlock
     mov ds:disc_curr_unit,-1

@@ -2371,6 +2371,24 @@ discbuf_thread_loop:
     WaitForDiscRequest    
     call perform_one
     jmp discbuf_thread_loop
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadSector
+;
+;           DESCRIPTION:    Read a sector
+;
+;           PARAMETERS:     FS          Disc selector
+;                           EDX         Sector
+;                           ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_sector      Proc far
+    int 3
+    retf32
+read_sector      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2451,6 +2469,9 @@ InstallUnit    Proc near
     add al,'0'
     mov gs:[bx],al
 ;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET read_sector
     mov bx,ds
     mov ecx,10000h
     InstallDisc    

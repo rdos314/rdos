@@ -3269,10 +3269,13 @@ HookInitDisc    MACRO
     OsGate hook_init_disc_nr
                     ENDM
 
-;       IN      BX          Handle
-;       IN      ECX         Read-ahead
-;       OUT     AL          Disc #
-;       OUT     BX          Disc sel
+; IN  BX          Handle
+; IN  ECX         Read-ahead
+; IN  ES:EDI      Read procedure
+;         FS      Disc handle
+;         EDX     Sector
+; OUT AL          Disc #
+; OUT BX          Disc sel
 InstallDisc     MACRO
     OsGate install_disc_nr
                     ENDM
