@@ -94,6 +94,7 @@ drive_wait_struc    ENDS
 
 DISC_FLAG_STOPPED       = 1
 DISC_FLAG_USE32         = 2
+DISC_FLAG_INSTALLED     = 4
 
 disc_def_struc      STRUC
 
@@ -104,15 +105,15 @@ disc_units              DD ?
 disc_bytes_per_sector   DW ?
 disc_sectors_per_unit   DW ?
 disc_sectors_per_cyl    DW ?
-disc_heads                  DW ?
+disc_heads              DW ?
 disc_cached_sectors     DD ?
-disc_cache_limit    DD ?
-disc_thread                 DW ?
+disc_cache_limit        DD ?
+disc_thread             DW ?
 disc_timer_id           DW ?
 disc_data_list          DD ?
 disc_handle_list        DD ?
 disc_readahead          DD ?
-disc_free                   DD ?
+disc_free               DD ?
 disc_section            section_typ <>
 disc_spinlock           spinlock_typ <>
 disc_awrite_list        DD ?
@@ -6275,6 +6276,169 @@ ReadDiscSector       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           AllocEfiDrive
+;
+;   DESCRIPTION:    Allocate EFI system drive
+;
+;   RETURNS:        AL          Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocEfiDrive   Proc near
+    push ds
+    push cx
+    push si
+;
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    mov si,OFFSET drive_def_arr
+    mov cx,MAX_DRIVES
+;
+    mov ax,[si+2]
+    or ax,ax
+    jz aedTakeB
+;
+    cmp ax,-1
+    jz aedTakeB
+
+aedLoop:
+    mov ax,[si]
+    or ax,ax
+    jnz aedNext
+;
+    mov word ptr [si],-1
+    mov cx,si
+    sub cx,OFFSET drive_def_arr
+    shr cx,1
+    pop ax
+    mov al,cl
+    clc
+    jmp aedDone
+
+aedTakeB:
+    mov word ptr [si+2],-1
+    mov al,1
+    clc
+    jmp aedDone
+    
+aedNext:
+    add si,2
+    loop aedLoop
+;
+    pop ax
+    stc
+
+aedDone:
+    pop si
+    pop cx
+    pop ds
+    ret
+AllocEfiDrive   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AllocStaticDrive
+;
+;   DESCRIPTION:    Allocate static drive
+;
+;   RETURNS:        AL          Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocStaticDrive   Proc near
+    push ds
+    push cx
+    push si
+;
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    mov si,OFFSET drive_def_arr + 4
+    mov cx,MAX_DRIVES - 2
+
+asdLoop:
+    mov ax,[si]
+    or ax,ax
+    jnz asdNext
+;
+    mov word ptr [si],-1
+    mov cx,si
+    sub cx,OFFSET drive_def_arr
+    shr cx,1
+    pop ax
+    mov al,cl
+    clc
+    jmp asdDone
+    
+asdNext:
+    add si,2
+    loop asdLoop
+;
+    pop ax
+    stc
+
+asdDone:
+    pop si
+    pop cx
+    pop ds
+    ret
+AllocStaticDrive   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AllocDynamicDrive
+;
+;   DESCRIPTION:    Allocate dynamic drive
+;
+;   RETURNS:        AL          Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocDynamicDrive  Proc near
+    push ds
+    push cx
+    push si
+;
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    mov si,OFFSET drive_def_arr + 2 * (MAX_DRIVES - 1)
+    mov cx,MAX_DRIVES
+
+addLoop:
+    mov ax,[si]
+    or ax,ax
+    jnz addNext
+;
+    mov word ptr [si],-1
+    mov cx,si
+    sub cx,OFFSET drive_def_arr
+    shr cx,1
+    pop ax
+    mov al,cl
+    clc
+    jmp addDone
+    
+addNext:
+    sub si,2
+    loop addLoop
+;
+    pop ax
+    stc
+    
+addDone:
+    pop si
+    pop cx
+    pop ds
+    ret
+AllocDynamicDrive  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateEfiDrive
 ;
 ;       DESCRIPTION:    Create EFI system drive
@@ -6292,7 +6456,18 @@ CreateEfiDrive  Proc near
     IsFileSystemAvailable
     jc cedDone
 ;    
-    AllocateStaticDrive
+    test gs:disc_flags,DISC_FLAG_INSTALLED
+    jz cedStatic
+;
+    call AllocDynamicDrive
+    jmp cedOpen
+
+cedStatic:
+    call AllocEfiDrive
+
+cedOpen:
+    jc cedDone
+;
     mov ah,gs:disc_nr
     OpenDrive
 ;
@@ -6325,7 +6500,18 @@ CreateDrive  Proc near
     IsFileSystemAvailable
     jc cndDone
 ;    
-    AllocateStaticDrive
+    test gs:disc_flags,DISC_FLAG_INSTALLED
+    jz cndStatic
+;
+    call AllocDynamicDrive
+    jmp cndOpen
+
+cndStatic:
+    call AllocStaticDrive
+
+cndOpen:
+    jc cndDone
+;
     mov ah,gs:disc_nr
     OpenDrive
 ;
@@ -6337,7 +6523,6 @@ cndDone:
     pop eax
     ret
 CreateDrive  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -7607,6 +7792,8 @@ sync_disc_part      Proc far
     mov gs,ax
     mov ax,flat_sel
     mov es,ax
+;
+    or gs:disc_flags,DISC_FLAG_INSTALLED
 ;
     call Assign1
     call Assign2
