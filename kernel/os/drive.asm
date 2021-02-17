@@ -42,6 +42,49 @@ DRIVE_WAIT_NUM = 32
 POLL_TIMEOUT = 1192 * 100
 MIN_TIMEOUT = 1192 * 250
 
+part_struc      STRUC
+
+part_status             DB ?
+part_start_head         DB ?
+part_start_cyl_sector   DW ?
+part_type               DB ?
+part_end_head           DB ?
+part_end_cyl_sector     DW ?
+part_start_sector       DD ?
+part_sectors            DD ?
+
+part_struc      ENDS
+
+gpt_part_struc  STRUC
+
+gpt_sign                DB 8 DUP(?)
+gpt_rev                 DB 4 DUP(?)
+gpt_header_size         DD ?
+gpt_crc32               DD ?
+gpt_resv                DD ?
+gpt_curr_lba            DD ?,?
+gpt_other_lba           DD ?,?
+gpt_first_lba           DD ?,?
+gpt_last_lba            DD ?,?
+gpt_guid                DB 16 DUP(?)
+gpt_entry_lba           DD ?,?
+gpt_entry_count         DD ?
+gpt_entry_size          DD ?
+gpt_entry_crc32         DD ?
+
+gpt_part_struc  ENDS
+
+gpt_entry_struc STRUC
+
+gpe_part_guid           DB 16 DUP(?)
+gpe_unique_guid         DB 16 DUP(?)
+gpe_first_lba           DD ?,?
+gpe_last_lba            DD ?,?
+gpe_attrib              DD ?,?
+gpe_name                DB 36 DUP(?)
+
+gpt_entry_struc ENDS
+
 drive_wait_struc    STRUC
 
 dws_link            DW ?
@@ -90,6 +133,7 @@ disc_io_count           DD ?
 
 disc_change_proc        DD ?,?
 disc_read_proc          DD ?,?
+disc_fs_name            DB 10 DUP(?)
 disc_vendor_str         DB 256 DUP(?)
 disc_unit_arr           DD ?
 
@@ -6133,6 +6177,1120 @@ demand_load_drive_done:
 demand_load_drive       Endp
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:       InstallPartition
+;
+;       DESCRIPTION:    Install partition
+;
+;       PARAMETERS:     GS      Disc sel
+;                       ES      flat sel
+;                       CL      Partition type
+;                       EDX     Start sector
+;                       EAX     Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fs_unknown      DB 'UNKNOWN '
+fs_fat12        DB 'FAT12   '
+fs_fat16        DB 'FAT16   '
+fs_fat32        DB 'FAT32   '
+fs_hpfs         DB 'HPFS    '
+fs_rdfs         DB 'RDFS    '
+fs_flashfs      DB 'FLASHFS '
+
+FsTab:
+fs00    DW OFFSET fs_unknown
+fs01    DW OFFSET fs_fat12
+fs02    DW OFFSET fs_unknown
+fs03    DW OFFSET fs_unknown
+fs04    DW OFFSET fs_fat16
+fs05    DW OFFSET fs_unknown
+fs06    DW OFFSET fs_fat16
+fs07    DW OFFSET fs_hpfs
+fs08    DW OFFSET fs_unknown
+fs09    DW OFFSET fs_unknown
+fs0A    DW OFFSET fs_unknown
+fs0B    DW OFFSET fs_fat32
+fs0C    DW OFFSET fs_fat32
+fs0D    DW OFFSET fs_unknown
+fs0E    DW OFFSET fs_unknown
+fs0F    DW OFFSET fs_unknown
+fs10    DW OFFSET fs_unknown
+fs11    DW OFFSET fs_unknown
+fs12    DW OFFSET fs_unknown
+fs13    DW OFFSET fs_unknown
+fs14    DW OFFSET fs_unknown
+fs15    DW OFFSET fs_unknown
+fs16    DW OFFSET fs_unknown
+fs17    DW OFFSET fs_unknown
+fs18    DW OFFSET fs_unknown
+fs19    DW OFFSET fs_unknown
+fs1A    DW OFFSET fs_unknown
+fs1B    DW OFFSET fs_unknown
+fs1C    DW OFFSET fs_unknown
+fs1D    DW OFFSET fs_unknown
+fs1E    DW OFFSET fs_unknown
+fs1F    DW OFFSET fs_unknown
+fs20    DW OFFSET fs_unknown
+fs21    DW OFFSET fs_unknown
+fs22    DW OFFSET fs_unknown
+fs23    DW OFFSET fs_unknown
+fs24    DW OFFSET fs_unknown
+fs25    DW OFFSET fs_unknown
+fs26    DW OFFSET fs_unknown
+fs27    DW OFFSET fs_unknown
+fs28    DW OFFSET fs_unknown
+fs29    DW OFFSET fs_unknown
+fs2A    DW OFFSET fs_unknown
+fs2B    DW OFFSET fs_unknown
+fs2C    DW OFFSET fs_unknown
+fs2D    DW OFFSET fs_unknown
+fs2E    DW OFFSET fs_unknown
+fs2F    DW OFFSET fs_unknown
+fs30    DW OFFSET fs_unknown
+fs31    DW OFFSET fs_unknown
+fs32    DW OFFSET fs_unknown
+fs33    DW OFFSET fs_unknown
+fs34    DW OFFSET fs_unknown
+fs35    DW OFFSET fs_unknown
+fs36    DW OFFSET fs_unknown
+fs37    DW OFFSET fs_unknown
+fs38    DW OFFSET fs_unknown
+fs39    DW OFFSET fs_unknown
+fs3A    DW OFFSET fs_unknown
+fs3B    DW OFFSET fs_unknown
+fs3C    DW OFFSET fs_unknown
+fs3D    DW OFFSET fs_unknown
+fs3E    DW OFFSET fs_unknown
+fs3F    DW OFFSET fs_unknown
+fs40    DW OFFSET fs_unknown
+fs41    DW OFFSET fs_unknown
+fs42    DW OFFSET fs_unknown
+fs43    DW OFFSET fs_unknown
+fs44    DW OFFSET fs_unknown
+fs45    DW OFFSET fs_unknown
+fs46    DW OFFSET fs_unknown
+fs47    DW OFFSET fs_unknown
+fs48    DW OFFSET fs_unknown
+fs49    DW OFFSET fs_unknown
+fs4A    DW OFFSET fs_unknown
+fs4B    DW OFFSET fs_unknown
+fs4C    DW OFFSET fs_unknown
+fs4D    DW OFFSET fs_unknown
+fs4E    DW OFFSET fs_unknown
+fs4F    DW OFFSET fs_unknown
+fs50    DW OFFSET fs_unknown
+fs51    DW OFFSET fs_unknown
+fs52    DW OFFSET fs_unknown
+fs53    DW OFFSET fs_unknown
+fs54    DW OFFSET fs_unknown
+fs55    DW OFFSET fs_unknown
+fs56    DW OFFSET fs_unknown
+fs57    DW OFFSET fs_unknown
+fs58    DW OFFSET fs_unknown
+fs59    DW OFFSET fs_unknown
+fs5A    DW OFFSET fs_unknown
+fs5B    DW OFFSET fs_unknown
+fs5C    DW OFFSET fs_unknown
+fs5D    DW OFFSET fs_unknown
+fs5E    DW OFFSET fs_unknown
+fs5F    DW OFFSET fs_unknown
+fs60    DW OFFSET fs_unknown
+fs61    DW OFFSET fs_unknown
+fs62    DW OFFSET fs_unknown
+fs63    DW OFFSET fs_unknown
+fs64    DW OFFSET fs_unknown
+fs65    DW OFFSET fs_unknown
+fs66    DW OFFSET fs_unknown
+fs67    DW OFFSET fs_unknown
+fs68    DW OFFSET fs_unknown
+fs69    DW OFFSET fs_unknown
+fs6A    DW OFFSET fs_unknown
+fs6B    DW OFFSET fs_unknown
+fs6C    DW OFFSET fs_unknown
+fs6D    DW OFFSET fs_unknown
+fs6E    DW OFFSET fs_unknown
+fs6F    DW OFFSET fs_unknown
+fs70    DW OFFSET fs_unknown
+fs71    DW OFFSET fs_unknown
+fs72    DW OFFSET fs_unknown
+fs73    DW OFFSET fs_unknown
+fs74    DW OFFSET fs_unknown
+fs75    DW OFFSET fs_unknown
+fs76    DW OFFSET fs_unknown
+fs77    DW OFFSET fs_unknown
+fs78    DW OFFSET fs_unknown
+fs79    DW OFFSET fs_unknown
+fs7A    DW OFFSET fs_unknown
+fs7B    DW OFFSET fs_unknown
+fs7C    DW OFFSET fs_unknown
+fs7D    DW OFFSET fs_unknown
+fs7E    DW OFFSET fs_unknown
+fs7F    DW OFFSET fs_unknown
+fs80    DW OFFSET fs_unknown
+fs81    DW OFFSET fs_unknown
+fs82    DW OFFSET fs_unknown
+fs83    DW OFFSET fs_unknown
+fs84    DW OFFSET fs_unknown
+fs85    DW OFFSET fs_unknown
+fs86    DW OFFSET fs_unknown
+fs87    DW OFFSET fs_unknown
+fs88    DW OFFSET fs_unknown
+fs89    DW OFFSET fs_unknown
+fs8A    DW OFFSET fs_unknown
+fs8B    DW OFFSET fs_unknown
+fs8C    DW OFFSET fs_unknown
+fs8D    DW OFFSET fs_unknown
+fs8E    DW OFFSET fs_unknown
+fs8F    DW OFFSET fs_unknown
+fs90    DW OFFSET fs_unknown
+fs91    DW OFFSET fs_unknown
+fs92    DW OFFSET fs_unknown
+fs93    DW OFFSET fs_unknown
+fs94    DW OFFSET fs_unknown
+fs95    DW OFFSET fs_unknown
+fs96    DW OFFSET fs_unknown
+fs97    DW OFFSET fs_unknown
+fs98    DW OFFSET fs_unknown
+fs99    DW OFFSET fs_unknown
+fs9A    DW OFFSET fs_unknown
+fs9B    DW OFFSET fs_unknown
+fs9C    DW OFFSET fs_unknown
+fs9D    DW OFFSET fs_unknown
+fs9E    DW OFFSET fs_unknown
+fs9F    DW OFFSET fs_unknown
+fsA0    DW OFFSET fs_unknown
+fsA1    DW OFFSET fs_unknown
+fsA2    DW OFFSET fs_unknown
+fsA3    DW OFFSET fs_unknown
+fsA4    DW OFFSET fs_unknown
+fsA5    DW OFFSET fs_unknown
+fsA6    DW OFFSET fs_unknown
+fsA7    DW OFFSET fs_unknown
+fsA8    DW OFFSET fs_unknown
+fsA9    DW OFFSET fs_unknown
+fsAA    DW OFFSET fs_unknown
+fsAB    DW OFFSET fs_unknown
+fsAC    DW OFFSET fs_unknown
+fsAD    DW OFFSET fs_unknown
+fsAE    DW OFFSET fs_rdfs
+fsAF    DW OFFSET fs_flashfs
+fsB0    DW OFFSET fs_unknown
+fsB1    DW OFFSET fs_unknown
+fsB2    DW OFFSET fs_unknown
+fsB3    DW OFFSET fs_unknown
+fsB4    DW OFFSET fs_unknown
+fsB5    DW OFFSET fs_unknown
+fsB6    DW OFFSET fs_unknown
+fsB7    DW OFFSET fs_unknown
+fsB8    DW OFFSET fs_unknown
+fsB9    DW OFFSET fs_unknown
+fsBA    DW OFFSET fs_unknown
+fsBB    DW OFFSET fs_unknown
+fsBC    DW OFFSET fs_unknown
+fsBD    DW OFFSET fs_unknown
+fsBE    DW OFFSET fs_unknown
+fsBF    DW OFFSET fs_unknown
+fsC0    DW OFFSET fs_unknown
+fsC1    DW OFFSET fs_unknown
+fsC2    DW OFFSET fs_unknown
+fsC3    DW OFFSET fs_unknown
+fsC4    DW OFFSET fs_unknown
+fsC5    DW OFFSET fs_unknown
+fsC6    DW OFFSET fs_unknown
+fsC7    DW OFFSET fs_unknown
+fsC8    DW OFFSET fs_unknown
+fsC9    DW OFFSET fs_unknown
+fsCA    DW OFFSET fs_unknown
+fsCB    DW OFFSET fs_unknown
+fsCC    DW OFFSET fs_unknown
+fsCD    DW OFFSET fs_unknown
+fsCE    DW OFFSET fs_unknown
+fsCF    DW OFFSET fs_unknown
+fsD0    DW OFFSET fs_unknown
+fsD1    DW OFFSET fs_unknown
+fsD2    DW OFFSET fs_unknown
+fsD3    DW OFFSET fs_unknown
+fsD4    DW OFFSET fs_unknown
+fsD5    DW OFFSET fs_unknown
+fsD6    DW OFFSET fs_unknown
+fsD7    DW OFFSET fs_unknown
+fsD8    DW OFFSET fs_unknown
+fsD9    DW OFFSET fs_unknown
+fsDA    DW OFFSET fs_unknown
+fsDB    DW OFFSET fs_unknown
+fsDC    DW OFFSET fs_unknown
+fsDD    DW OFFSET fs_unknown
+fsDE    DW OFFSET fs_unknown
+fsDF    DW OFFSET fs_unknown
+fsE0    DW OFFSET fs_unknown
+fsE1    DW OFFSET fs_unknown
+fsE2    DW OFFSET fs_unknown
+fsE3    DW OFFSET fs_unknown
+fsE4    DW OFFSET fs_unknown
+fsE5    DW OFFSET fs_unknown
+fsE6    DW OFFSET fs_unknown
+fsE7    DW OFFSET fs_unknown
+fsE8    DW OFFSET fs_unknown
+fsE9    DW OFFSET fs_unknown
+fsEA    DW OFFSET fs_unknown
+fsEB    DW OFFSET fs_unknown
+fsEC    DW OFFSET fs_unknown
+fsED    DW OFFSET fs_unknown
+fsEE    DW OFFSET fs_unknown
+fsEF    DW OFFSET fs_unknown
+fsF0    DW OFFSET fs_unknown
+fsF1    DW OFFSET fs_unknown
+fsF2    DW OFFSET fs_unknown
+fsF3    DW OFFSET fs_unknown
+fsF4    DW OFFSET fs_unknown
+fsF5    DW OFFSET fs_unknown
+fsF6    DW OFFSET fs_unknown
+fsF7    DW OFFSET fs_unknown
+fsF8    DW OFFSET fs_unknown
+fsF9    DW OFFSET fs_unknown
+fsFA    DW OFFSET fs_unknown
+fsFB    DW OFFSET fs_unknown
+fsFC    DW OFFSET fs_unknown
+fsFD    DW OFFSET fs_unknown
+fsFE    DW OFFSET fs_unknown
+fsFF    DW OFFSET fs_unknown
+
+InstallPartition    Proc near
+    push es
+    pushad
+;
+    mov di,cs
+    mov es,di
+    movzx di,cl
+    shl di,1
+
+install_part_test_avail:
+    mov ecx,eax
+    mov di,word ptr cs:[di].FsTab
+    movzx edi,di
+    IsFileSystemAvailable
+    jc install_part_done
+;
+    AllocateStaticDrive
+    mov ah,gs:disc_nr
+    OpenDrive
+;
+    InstallFileSystem
+    clc
+
+install_part_done:
+    popad
+    pop es
+    ret
+InstallPartition    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallExtended
+;
+;       DESCRIPTION:    Install extended partion on drive
+;
+;       PARAMETERS:     ES      Flat sel
+;                       GS      Disc sel
+;                       EDX     Current sector
+;                       EDI     Buffer with partition sector
+;                       ESI     Partition offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallExtended Proc near
+    mov ebp,edx
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    mov es:[edi],eax
+;
+    mov edx,ebp
+    mov al,gs:disc_nr
+    call fword ptr gs:disc_read_proc
+    jc install_ext_done
+;
+    mov esi,1BEh
+
+install_ext_loop1:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz install_ext_next_part1
+;
+    cmp cl,5
+    je install_ext_next_part1
+;
+    cmp cl,0Fh
+    je install_ext_next_part1
+;
+    push ebp
+    push edi
+;
+    mov eax,es:[esi+edi].part_sectors
+    mov edx,es:[esi+edi].part_start_sector
+    add edx,ebp
+
+install_ext_do:
+    call InstallPartition
+    pop edi
+    pop ebp
+
+install_ext_next_part1:
+    add si,10h
+    cmp si,1FEh
+    jne install_ext_loop1
+;
+    mov esi,1BEh
+
+install_ext_loop2:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz install_ext_next_part2
+;
+    cmp cl,5
+    je install_ext_install2
+;
+    cmp cl,0Fh
+    jne install_ext_next_part2
+
+install_ext_install2:
+    push esi
+    push edi
+    push ebp
+;
+    mov edx,es:[esi+edi].part_start_sector
+    add edx,ebp
+
+install_ext_link:
+    call InstallExtended
+;
+    pop ebp
+    pop edi
+    pop esi
+
+install_ext_next_part2:
+    add si,10h
+    cmp si,1FEh
+    jne install_ext_loop2
+
+install_ext_done:
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+    ret
+InstallExtended Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetFsName
+;
+;       DESCRIPTION:    Get MS FS name from boot record
+;
+;       PARAMETERS:     GS      Disc sel
+;                       ES:EDI  GPT Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFsName   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov esi,edx
+    mov ebp,edx
+    mov es:[edx],eax
+;
+    mov edx,es:[edi].gpe_first_lba
+    mov edi,esi
+    mov al,gs:disc_nr
+    call fword ptr gs:disc_read_proc
+;
+    mov ax,gs
+    mov es,ax
+    mov ax,flat_sel
+    mov ds,ax
+    mov di,OFFSET disc_fs_name
+;
+    mov al,ds:[esi+3]
+    cmp al,'M'
+    je gfnDos
+;
+    cmp al,'m'
+    je gfnLinux    
+;
+    cmp al,'R'
+    je gfnLinux    
+;
+    add esi,3
+    jmp gfnCopyName
+
+gfnLinux:
+    add esi,36h
+    jmp gfnCopyName
+
+gfnDos:
+    add esi,52h
+
+gfnCopyName:
+    mov cx,8
+
+gfnCopyLoop:    
+    mov al,ds:[esi]
+    or al,al
+    jz gfnCopyDone
+;
+    cmp al,' '
+    jz gfnCopyDone
+;
+    stosb
+    inc si
+    loop gfnCopyLoop    
+
+gfnCopyDone:
+    xor al,al
+    stosb
+;    
+    mov edx,ebp
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    pop es    
+    pop ds
+    ret
+GetFsName   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetEfiName
+;
+;       DESCRIPTION:    Get EFI system part name
+;
+;       PARAMETERS:     GS      Disc sel
+;                       ES:EDI  GPT Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetEfiName   Proc near
+    push es
+    pushad
+;
+    mov ax,gs
+    mov es,ax
+    mov si,OFFSET fs_fat32
+    mov di,OFFSET disc_fs_name
+    mov cx,8
+
+genCopyLoop:    
+    mov al,cs:[esi]
+    or al,al
+    jz genCopyDone
+;
+    cmp al,' '
+    jz genCopyDone
+;
+    stosb
+    inc si
+    loop genCopyLoop    
+
+genCopyDone:
+    xor al,al
+    stosb
+;
+    popad
+    pop es    
+    ret
+GetEfiName   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallEfiPart
+;
+;       DESCRIPTION:    Install EFI part
+;
+;       PARAMETERS:     GS      Disc sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallEfiPart    Proc near
+    call GetEfiName
+;    
+    push ds
+    push es
+    pushad
+;
+    mov edx,es:[edi].gpe_first_lba
+    mov ecx,es:[edi].gpe_last_lba
+    sub ecx,edx
+    inc ecx
+;
+    mov di,SEG data
+    mov es,di
+    mov edi,OFFSET disc_fs_name
+    IsFileSystemAvailable
+    jc iefipDone
+;    
+    AllocateStaticDrive
+    mov ah,gs:disc_nr
+    OpenDrive
+;
+    InstallFileSystem
+    clc
+
+iefipDone:
+    popad
+    pop es    
+    pop ds
+    ret
+InstallEfiPart  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallBasicPart
+;
+;       DESCRIPTION:    Install basic part
+;
+;       PARAMETERS:     GS      Disc sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallBasicPart    Proc near
+    call GetFsName
+;    
+    push ds
+    push es
+    pushad
+;
+    mov edx,es:[edi].gpe_first_lba
+    mov ecx,es:[edi].gpe_last_lba
+    sub ecx,edx
+    inc ecx
+;
+    mov di,SEG data
+    mov es,di
+    mov edi,OFFSET disc_fs_name
+    IsFileSystemAvailable
+    jc ibpDone
+;
+    AllocateStaticDrive
+    mov ah,gs:disc_nr
+    OpenDrive
+;
+    InstallFileSystem
+
+ibpDone:
+    popad
+    pop es    
+    pop ds
+    ret
+InstallBasicPart  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallEfiGptEntry
+;
+;       DESCRIPTION:    Install EFI GPT entry
+;
+;       PARAMETERS:     GS      Disc sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallEfiGptEntry    Proc near
+    mov eax,dword ptr es:[edi].gpe_part_guid
+    cmp eax,0C12A7328h
+    jne iegpeDone
+;
+    mov eax,dword ptr es:[edi].gpe_part_guid+4
+    cmp eax,11D2F81Fh
+    jne iegpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+8
+    cmp eax,0A0004BBAh
+    jne iegpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+12
+    cmp eax,3BC93EC9h
+    jne iegpeDone
+;
+    call InstallEfiPart
+
+iegpeDone:    
+    ret
+InstallEfiGptEntry     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallStdGptEntry
+;
+;       DESCRIPTION:    Install non-EFI GPT entry
+;
+;       PARAMETERS:     GS      Disc sel
+;                       ES:EDI  Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallStdGptEntry    Proc near
+    mov eax,dword ptr es:[edi].gpe_part_guid
+    cmp eax,0EBD0A0A2h
+    jne isgpeDone
+;
+    mov eax,dword ptr es:[edi].gpe_part_guid+4
+    cmp eax,4433B9E5h
+    jne isgpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+8
+    cmp eax,0B668C087h
+    jne isgpeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+12
+    cmp eax,0C79926B7h
+    jne isgpeDone
+;
+    call InstallBasicPart
+
+isgpeDone:    
+    ret
+InstallStdGptEntry     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallGpt1
+;
+;       DESCRIPTION:    Install GPT partition, first pass
+;
+;       PARAMETERS:     GS      Disc sel
+;                       ES      flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallGpt1    Proc near
+    push es
+    pushad
+;
+    xor ebp,ebp
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear    
+    mov edi,edx
+    mov es:[edi],eax
+;    
+    mov al,gs:disc_nr
+    mov edx,1
+    call fword ptr gs:disc_read_proc
+;
+    mov eax,dword ptr es:[edi].gpt_sign
+    cmp eax,20494645h
+    jne igptDone1
+;
+    mov eax,dword ptr es:[edi].gpt_sign+4
+    cmp eax,54524150h
+    jne igptDone1
+;
+    xor edx,edx
+    xchg edx,es:[edi].gpt_crc32
+    mov ecx,es:[edi].gpt_header_size
+    cmp ecx,200h
+    jae igptDone1
+;    
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+    cmp eax,edx
+    jne igptDone1
+;    
+    mov eax,es:[edi].gpt_entry_size
+    cmp eax,128
+    jne igptDone1
+;
+    mov eax,es:[edi].gpt_entry_lba+4
+    or eax,eax
+    jnz igptDone1   
+;
+    mov ecx,es:[edi].gpt_entry_count
+    mov eax,ecx
+    shl eax,7
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    AllocateBigLinear    
+    mov ebp,edx
+;
+    push edx
+    push edi
+;
+    mov ecx,eax
+    shr ecx,9
+    mov edx,es:[edi].gpt_entry_lba
+    mov edi,ebp
+    xor eax,eax
+
+igptSectorLoop1:
+    mov es:[edi],eax
+    mov al,gs:disc_nr
+    call fword ptr gs:disc_read_proc
+;
+    inc edx
+    add edi,200h
+    loop igptSectorLoop1
+;
+    pop edi
+    pop edx
+;
+    push edi
+;    
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edi,ebp
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+;    
+    pop edi
+;
+    cmp eax,es:[edi].gpt_entry_crc32
+    jne igptDone1
+;
+    push edi
+    mov ecx,es:[edi].gpt_entry_count
+    mov edi,ebp
+    or ecx,ecx
+    jz igptEntryDone1
+
+igptEntryLoop1:
+    mov eax,es:[edi].gpe_last_lba+4
+    or eax,eax
+    jnz igptEntryNext1
+;
+    mov eax,es:[edi].gpe_first_lba+4
+    or eax,eax
+    jnz igptEntryNext1
+;
+    mov eax,es:[edi].gpe_first_lba
+    or eax,eax
+    jz igptEntryNext1
+;
+    mov edx,es:[edi].gpe_last_lba
+    sub edx,eax
+    jc igptEntryNext1
+;
+    call InstallEfiGptEntry
+
+igptEntryNext1:
+    add edi,128 
+    sub ecx,1
+    jnz igptEntryLoop1
+
+igptEntryDone1:     
+    pop edi
+    
+igptDone1:
+    or ebp,ebp
+    jz igptEnd1
+;
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edx,ebp
+    FreeLinear
+        
+igptEnd1:
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+;
+    popad
+    pop es
+    ret
+InstallGpt1    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallGpt2
+;
+;       DESCRIPTION:    Install GPT partition, second pass
+;
+;       PARAMETERS:     GS      Disc sel
+;                       ES      flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallGpt2    Proc near
+    push es
+    pushad
+;
+    xor ebp,ebp
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigLinear    
+    mov edi,edx
+    mov es:[edi],eax
+;    
+    mov al,gs:disc_nr
+    mov edx,1
+    call fword ptr gs:disc_read_proc
+;
+    mov eax,dword ptr es:[edi].gpt_sign
+    cmp eax,20494645h
+    jne igptDone2
+;
+    mov eax,dword ptr es:[edi].gpt_sign+4
+    cmp eax,54524150h
+    jne igptDone2
+;
+    xor edx,edx
+    xchg edx,es:[edi].gpt_crc32
+    mov ecx,es:[edi].gpt_header_size
+    cmp ecx,200h
+    jae igptDone2
+;    
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+    cmp eax,edx
+    jne igptDone2
+;    
+    mov eax,es:[edi].gpt_entry_size
+    cmp eax,128
+    jne igptDone2
+;
+    mov eax,es:[edi].gpt_entry_lba+4
+    or eax,eax
+    jnz igptDone2
+;
+    mov ecx,es:[edi].gpt_entry_count
+    mov eax,ecx
+    shl eax,7
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    AllocateBigLinear    
+    mov ebp,edx
+;
+    push edx
+    push edi
+;
+    mov ecx,eax
+    shr ecx,9
+    mov edx,es:[edi].gpt_entry_lba
+    mov edi,ebp
+    xor eax,eax
+
+igptSectorLoop2:
+    mov es:[edi],eax
+    mov al,gs:disc_nr
+    mov edx,1
+    call fword ptr gs:disc_read_proc
+;
+    inc edx
+    add edi,200h
+    loop igptSectorLoop2
+;
+    pop edi
+    pop edx
+;
+    push edi
+;    
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edi,ebp
+    mov eax,-1
+    UserGateForce32 calc_crc32_nr
+;    
+    pop edi
+;
+    cmp eax,es:[edi].gpt_entry_crc32
+    jne igptDone2
+;
+    push edi
+    mov ecx,es:[edi].gpt_entry_count
+    mov edi,ebp
+    or ecx,ecx
+    jz igptEntryDone2
+
+igptEntryLoop2:
+    mov eax,es:[edi].gpe_last_lba+4
+    or eax,eax
+    jnz igptEntryNext2
+;
+    mov eax,es:[edi].gpe_first_lba+4
+    or eax,eax
+    jnz igptEntryNext2
+;
+    mov eax,es:[edi].gpe_first_lba
+    or eax,eax
+    jz igptEntryNext2
+;
+    mov edx,es:[edi].gpe_last_lba
+    sub edx,eax
+    jc igptEntryNext2
+;
+    call InstallStdGptEntry
+
+igptEntryNext2:
+    add edi,128 
+    sub ecx,1
+    jnz igptEntryLoop2   
+
+igptEntryDone2:     
+    pop edi
+    
+igptDone2:
+    or ebp,ebp
+    jz igptEnd2
+;
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edx,ebp
+    FreeLinear
+        
+igptEnd2:
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+;
+    popad
+    pop es
+    ret
+InstallGpt2    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Assign1
+;
+;       DESCRIPTION:    assign disc drives, step 1
+;
+;       PARAMETERS:     GS     Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Assign1   Proc near
+    mov eax,1000h
+    AllocateBigLinear
+    xor al,al
+    mov es:[edx],al
+    mov edi,edx
+;    
+    mov al,gs:disc_nr
+    xor edx,edx
+    call fword ptr gs:disc_read_proc
+;
+    mov esi,1BEh
+
+aLoop1:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz aFree1
+;
+    cmp cl,0EEh
+    je aGpt1
+;
+    mov eax,es:[esi+edi].part_sectors
+    mov edx,es:[esi+edi].part_start_sector
+    call InstallPartition
+    jmp aNextPart1
+
+aGpt1:
+    call InstallGpt1
+
+aNextPart1:
+    add si,10h
+    cmp si,1FEh
+    jne aLoop1
+
+aFree1:
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+;
+    ret
+Assign1   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Assign2
+;
+;       DESCRIPTION:    Assign disc drives, pass 2
+;
+;       PARAMETERS:     GS	Disc sel
+;                       ES      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Assign2   Proc near
+    mov eax,1000h
+    AllocateBigLinear
+    xor al,al
+    mov es:[edx],al
+    mov edi,edx
+;    
+    mov al,gs:disc_nr
+    xor edx,edx
+    call fword ptr gs:disc_read_proc
+;
+    mov esi,1BEh
+
+aLoop2:
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz aNextPart2
+;
+    cmp cl,0EEh
+    je aGpt2
+;
+    cmp cl,5
+    je aInstall2
+;
+    cmp cl,0Fh
+    jne aNextPart2
+
+aInstall2:
+    push esi
+    push edi
+;
+    mov edx,es:[esi+edi].part_start_sector
+
+aExt:
+    call InstallExtended
+;
+    pop edi
+    pop esi
+    jmp aNextPart2
+
+aGpt2:
+    call InstallGpt2
+
+aNextPart2:
+    add si,10h
+    cmp si,1FEh
+    jne aLoop2
+;
+    mov ecx,1000h
+    mov edx,edi
+    FreeLinear
+    ret
+Assign2   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -6147,7 +7305,37 @@ demand_load_drive       Endp
 sync_disc_part_name  DB 'Sync Disc Part', 0
 
 sync_disc_part      Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
     int 3
+    cmp al,MAX_DRIVES
+    jae sdpDone
+;
+    movzx si,al
+    shl si,1
+    mov ax,SEG data
+    mov ds,ax
+    mov ax,ds:[si].disc_def_arr
+    or ax,ax
+    jz sdpDone
+;
+    mov gs,ax
+    mov ax,flat_sel
+    mov es,ax
+;
+    call Assign1
+    call Assign2
+
+sdpDone:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
     retf32
 sync_disc_part      Endp
 
