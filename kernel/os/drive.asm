@@ -6623,6 +6623,73 @@ InstallPartition    Proc near
     push es
     pushad
 ;
+    cmp cl,7
+    je install_check_part
+;
+    cmp cl,0Ch
+    jne install_check_type
+
+install_check_part:
+    push eax
+;
+    push edx
+    mov eax,200h
+    AllocateSmallLinear
+    mov edi,edx
+    pop edx
+;
+    push edx
+    mov eax,edx
+    xor edx,edx
+    call ReadDiscSector
+    pop edx
+;
+    push ds
+    push edx
+;
+    mov al,es:[edi+26h]
+    cmp al,29h
+    je install_use_part_fat
+;
+    mov ax,cs
+    mov ds,ax
+    movzx esi,cl
+    shl si,1
+    mov si,cs:[si].FsTab
+    jmp install_use_part_cont
+
+install_use_part_fat:
+    mov ax,flat_sel
+    mov ds,ax
+    lea esi,[edi+36h]
+
+install_use_part_cont:
+    mov edx,edi
+    mov eax,10h
+    AllocateSmallGlobalMem
+    xor edi,edi
+    movs dword ptr es:[edi],ds:[esi]
+    movs dword ptr es:[edi],ds:[esi]
+    movs dword ptr es:[edi],ds:[esi]
+    movs dword ptr es:[edi],ds:[esi]
+;
+    xor ecx,ecx
+    FreeLinear
+;
+    pop edx
+    pop ds
+;
+    pop ecx
+    xor edi,edi
+    call CreateDrive
+
+install_part_free:
+    pushf
+    FreeMem
+    popf
+    jmp install_part_done
+
+install_check_type:
     mov di,cs
     mov es,di
     movzx di,cl
@@ -6633,7 +6700,8 @@ install_part_test_avail:
     mov di,word ptr cs:[di].FsTab
     movzx edi,di
     call CreateDrive
-;
+
+install_part_done:
     popad
     pop es
     ret
