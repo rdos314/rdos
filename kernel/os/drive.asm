@@ -6735,7 +6735,7 @@ InstallEfiPart    Proc near
     sub ecx,edx
     inc ecx
 ;
-    mov di,SEG data
+    mov di,gs
     mov es,di
     mov edi,OFFSET disc_fs_name
     IsFileSystemAvailable
@@ -6779,7 +6779,7 @@ InstallBasicPart    Proc near
     sub ecx,edx
     inc ecx
 ;
-    mov di,SEG data
+    mov di,gs
     mov es,di
     mov edi,OFFSET disc_fs_name
     IsFileSystemAvailable

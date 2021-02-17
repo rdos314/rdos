@@ -36,6 +36,8 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
 INCLUDE pci.inc
 
+MAX_DISCS           = 32
+
 MAX_AHCI_DEVICES    = 16
 MAX_AHCI_PORTS      = 32
 MAX_NAME_SIZE       = 16
@@ -367,6 +369,7 @@ ahci_device_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
+ahci_disc_arr       DW MAX_DISCS DUP(?)
 ahci_dev_count      DW ?
 ahci_dev_arr        DW MAX_AHCI_DEVICES DUP(?)
 ahci_port_count     DW ?
@@ -3560,14 +3563,31 @@ notify_cmd_next:
 ;
 ;           DESCRIPTION:    Read a sector
 ;
-;           PARAMETERS:     FS          Disc selector
+;           PARAMETERS:     AL          Disc #
 ;                           EDX         Sector
 ;                           ES:EDI      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_sector      Proc far
-    int 3
+    push gs
+    pushad
+;
+    movzx si,al
+    shl si,1
+    mov ax,SEG data
+    mov gs,ax
+    mov ax,gs:[si].ahci_disc_arr
+    or ax,ax
+    stc
+    jz rsDone
+;
+    mov gs,ax
+    call ReadSector
+
+rsDone:
+    popad
+    pop gs
     retf32
 read_sector      Endp
         
@@ -3608,6 +3628,14 @@ install_disc_unit Proc near
 ;
     mov ds:ap_disc_sel,bx
     mov ds:ap_disc_nr,al
+;
+    push es
+    movzx di,al
+    shl di,1
+    mov ax,SEG data
+    mov es,ax
+    mov es:[di].ahci_disc_arr,ds
+    pop es
 ;
     mov cx,512
     mov eax,ds:ap_sector_count
@@ -4069,6 +4097,13 @@ init_ahci    Proc far
     push es
     pusha
 ;    
+    mov ax,SEG data
+    mov es,ax
+    mov cx,MAX_DISCS
+    mov di,OFFSET ahci_disc_arr
+    xor ax,ax
+    rep stosw
+;
     call InitPciAhci
 ;
     mov ax,SEG data
