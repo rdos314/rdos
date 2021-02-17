@@ -6180,6 +6180,101 @@ demand_load_drive       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ReadDiscSector
+;
+;           DESCRIPTION:    Read disc sector
+;
+;           PARAMETERS:     GS          Disc sel
+;                           EDX:EAX     Sector #
+;                           ES:EDI      Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadDiscSector PROC near
+    push ds
+    pushad
+;
+    push es
+    push ecx
+    push edi
+;
+    mov bx,gs
+    mov ds,bx
+;
+    mov bx,flat_sel
+    mov es,bx
+;
+    movzx ebx,ds:disc_sectors_per_unit    
+    div ebx
+    mov ecx,eax
+    call wait_pending
+    EnterSection ds:disc_section
+
+rdsLoop:
+    call check_buf
+    jnc rdsFound
+;
+    ClearSignal
+    call allocate_handle
+    push edx
+    call allocate_data
+    mov es:[edi].dh_data,edx
+    pop edx
+    mov es:[edi].dh_buf_sel,ds
+    mov es:[edi].dh_sector,dx
+    movzx ecx,cx
+    mov es:[edi].dh_unit,ecx
+    mov es:[edi].dh_wait,0
+    mov es:[edi].dh_thread,0
+    mov es:[edi].dh_lock_count,0
+    mov es:[edi].dh_state,STATE_EMPTY
+    mov es:[edi].dh_usage,0
+    mov es:[edi].dh_flags,0
+    mov es:[edi].dh_time_lsb,0
+    mov es:[edi].dh_flags,0
+    call insert_buf
+    call insert_pending
+
+rdsSignal:
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    jne rdsFound
+
+rdsBlock:
+    call block
+    jmp rdsLoop
+
+rdsFound:
+    test es:[edi].dh_flags, FLAG_IO_BUSY
+    jnz rdsBlock
+;
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    je rdsSignal
+;       
+    mov esi,es:[edi].dh_data
+    mov ax,es
+    mov ds,ax
+    pop edi
+    pop ecx
+    pop es
+;
+    mov ecx,80h
+    rep movs dword ptr es:[edi],ds:[esi]
+;
+    mov bx,gs
+    mov ds,bx
+    LeaveSection ds:disc_section
+    clc
+;
+    popad
+    pop ds
+    ret
+ReadDiscSector       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateEfiDrive
 ;
 ;       DESCRIPTION:    Create EFI system drive
@@ -6566,9 +6661,9 @@ InstallExtended Proc near
     mov edi,edx
     mov es:[edi],eax
 ;
-    mov edx,ebp
-    mov al,gs:disc_nr
-    call fword ptr gs:disc_read_proc
+    mov eax,ebp
+    xor edx,edx
+    call ReadDiscSector
     jc install_ext_done
 ;
     mov esi,1BEh
@@ -6664,10 +6759,10 @@ GetFsName   Proc near
     mov ebp,edx
     mov es:[edx],eax
 ;
-    mov edx,es:[edi].gpe_first_lba
+    mov eax,es:[edi].gpe_first_lba
+    mov edx,es:[edi].gpe_first_lba+4
     mov edi,esi
-    mov al,gs:disc_nr
-    call fword ptr gs:disc_read_proc
+    call ReadDiscSector
 ;
     mov ax,gs
     mov es,ax
@@ -6932,9 +7027,10 @@ InstallGpt1    Proc near
     mov edi,edx
     mov es:[edi],eax
 ;    
-    mov al,gs:disc_nr
-    mov edx,1
-    call fword ptr gs:disc_read_proc
+    mov eax,1
+    xor edx,edx
+    call ReadDiscSector
+    jc igptDone1
 ;
     mov eax,dword ptr es:[edi].gpt_sign
     cmp eax,20494645h
@@ -6977,16 +7073,15 @@ InstallGpt1    Proc near
 ;
     mov ecx,eax
     shr ecx,9
-    mov edx,es:[edi].gpt_entry_lba
+    mov eax,es:[edi].gpt_entry_lba
+    mov edx,es:[edi].gpt_entry_lba+4
     mov edi,ebp
-    xor eax,eax
 
 igptSectorLoop1:
-    mov es:[edi],eax
-    mov al,gs:disc_nr
-    call fword ptr gs:disc_read_proc
+    mov es:[edi],edx
+    call ReadDiscSector
 ;
-    inc edx
+    inc eax
     add edi,200h
     loop igptSectorLoop1
 ;
@@ -7083,9 +7178,10 @@ InstallGpt2    Proc near
     mov edi,edx
     mov es:[edi],eax
 ;    
-    mov al,gs:disc_nr
-    mov edx,1
-    call fword ptr gs:disc_read_proc
+    mov eax,1
+    xor edx,edx
+    call ReadDiscSector
+    jc igptDone2
 ;
     mov eax,dword ptr es:[edi].gpt_sign
     cmp eax,20494645h
@@ -7128,16 +7224,15 @@ InstallGpt2    Proc near
 ;
     mov ecx,eax
     shr ecx,9
-    mov edx,es:[edi].gpt_entry_lba
+    mov eax,es:[edi].gpt_entry_lba
+    mov edx,es:[edi].gpt_entry_lba+4
     mov edi,ebp
-    xor eax,eax
 
 igptSectorLoop2:
-    mov es:[edi],eax
-    mov al,gs:disc_nr
-    call fword ptr gs:disc_read_proc
+    mov es:[edi],edx
+    call ReadDiscSector
 ;
-    inc edx
+    inc eax
     add edi,200h
     loop igptSectorLoop2
 ;
@@ -7228,9 +7323,10 @@ Assign1   Proc near
     mov es:[edx],al
     mov edi,edx
 ;    
-    mov al,gs:disc_nr
+    xor eax,eax
     xor edx,edx
-    call fword ptr gs:disc_read_proc
+    call ReadDiscSector
+    jc aFree1
 ;
     mov esi,1BEh
 
@@ -7282,9 +7378,10 @@ Assign2   Proc near
     mov es:[edx],al
     mov edi,edx
 ;    
-    mov al,gs:disc_nr
+    xor eax,eax
     xor edx,edx
-    call fword ptr gs:disc_read_proc
+    call ReadDiscSector
+    jc aFree2
 ;
     mov esi,1BEh
 
@@ -7322,7 +7419,8 @@ aNextPart2:
     add si,10h
     cmp si,1FEh
     jne aLoop2
-;
+
+aFree2:
     mov ecx,1000h
     mov edx,edi
     FreeLinear
@@ -7349,7 +7447,6 @@ sync_disc_part      Proc far
     push gs
     pushad
 ;
-    int 3
     cmp al,MAX_DRIVES
     jae sdpDone
 ;
