@@ -6338,6 +6338,60 @@ cndDone:
     ret
 CreateDrive  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ChsToLba
+;
+;       DESCRIPTION:    Convert CHS to LBA
+;
+;       PARAMETERS:     GS	 Disc sel
+;                       ES:EDI  CHS address
+;
+;       RETURNS:        EDX     LBA address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChsToLba    Proc near
+    push eax
+    push ecx
+;
+    mov ax,gs:disc_heads
+    cmp ax,-1
+    je chs_to_lba_fail
+;
+    mov cl,es:[edi+2]
+    movzx ax,byte ptr es:[edi+1]
+    and al,0C0h
+    shl ax,2
+    mov ch,ah
+    cmp cx,1023
+    je chs_to_lba_fail
+;
+    movzx eax,gs:disc_heads
+    movzx ecx,cx
+    mul ecx
+    movzx ecx,byte ptr es:[edi]
+    add ecx,eax
+    movzx eax,gs:disc_sectors_per_cyl
+    mul ecx
+    movzx ecx,byte ptr es:[edi+1]
+    and cl,3Fh
+    add eax,ecx
+    dec eax
+    mov edx,eax
+    jmp chs_to_lba_done
+
+chs_to_lba_fail:
+    xor edx,edx
+
+chs_to_lba_done:
+    pop ecx
+    pop eax
+    ret
+ChsToLba    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -6750,8 +6804,12 @@ install_ext_loop1:
     push ebp
     push edi
 ;
-    mov eax,es:[esi+edi].part_sectors
-    mov edx,es:[esi+edi].part_start_sector
+    lea edi,[esi+edi+1]
+    call ChsToLba
+    or edx,edx
+    jnz install_ext_do
+;
+    mov edx,es:[edi+7]
     add edx,ebp
 
 install_ext_do:
@@ -6782,7 +6840,12 @@ install_ext_install2:
     push edi
     push ebp
 ;
-    mov edx,es:[esi+edi].part_start_sector
+    lea edi,[esi+edi+1]
+    call ChsToLba
+    or edx,edx
+    jnz install_ext_link
+;
+    mov edx,es:[edi+7]
     add edx,ebp
 
 install_ext_link:
