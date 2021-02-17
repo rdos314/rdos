@@ -6347,9 +6347,9 @@ CreateDrive  Endp
 ;       DESCRIPTION:    Convert CHS to LBA
 ;
 ;       PARAMETERS:     GS	 Disc sel
-;                       ES:EDI  CHS address
+;                       ES:EDI   CHS address
 ;
-;       RETURNS:        EDX     LBA address
+;       RETURNS:        EDX      LBA address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6771,8 +6771,6 @@ InstallPartition    Endp
 ;       PARAMETERS:     ES      Flat sel
 ;                       GS      Disc sel
 ;                       EDX     Current sector
-;                       EDI     Buffer with partition sector
-;                       ESI     Partition offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6814,6 +6812,7 @@ install_ext_loop1:
 
 install_ext_do:
     call InstallPartition
+;
     pop edi
     pop ebp
 
@@ -7469,9 +7468,20 @@ aLoop1:
     cmp cl,0EEh
     je aGpt1
 ;
+    push edi
+;
     mov eax,es:[esi+edi].part_sectors
-    mov edx,es:[esi+edi].part_start_sector
+    lea edi,[esi+edi+1]
+    call ChsToLba
+    or edx,edx
+    jnz aInst1
+;
+    mov edx,es:[edi+7]
+
+aInst1:
     call InstallPartition
+;
+    pop edi
     jmp aNextPart1
 
 aGpt1:
@@ -7534,9 +7544,14 @@ aInstall2:
     push esi
     push edi
 ;
-    mov edx,es:[esi+edi].part_start_sector
+    lea edi,[esi+edi+1]
+    call ChsToLba
+    or edx,edx
+    jnz aExt2
+;
+    mov edx,es:[edi+7]
 
-aExt:
+aExt2:
     call InstallExtended
 ;
     pop edi
