@@ -1,1090 +1,1090 @@
 !define BLANK ""
-E:\rdos\kernel\acpi-pre\acpibase.obj : E:\rdos\kernel\acpi-pre\acpibase.asm &
+C:\rdos\kernel\acpi-pre\acpibase.obj : C:\rdos\kernel\acpi-pre\acpibase.asm &
 .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wasm acpibase.asm -mf -6r -fpi87 -d1 -w4 -e25 -zq
 
-E:\rdos\kernel\acpi-pre\acpi.obj : E:\rdos\kernel\acpi-pre\acpi.c .AUTODEPEN&
+C:\rdos\kernel\acpi-pre\acpi.obj : C:\rdos\kernel\acpi-pre\acpi.c .AUTODEPEN&
 D
- @E:
- cd E:\rdos\kernel\acpi-pre
- *wcc386 acpi.c -i="../../kernel;../../classlib;include;include/platform;e:\&
-watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -zff -zgf -&
+ @C:
+ cd C:\rdos\kernel\acpi-pre
+ *wcc386 acpi.c -i="../../kernel;../../classlib;include;include/platform;C:\&
+WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -zff -zgf -&
 zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\adfile.obj : E:\rdos\kernel\acpi-pre\common\adfile.c&
+C:\rdos\kernel\acpi-pre\adfile.obj : C:\rdos\kernel\acpi-pre\common\adfile.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 common\adfile.c -i="../../kernel;../../classlib;include;include/pla&
-tform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
+tform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
 ff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\getopt.obj : E:\rdos\kernel\acpi-pre\common\getopt.c&
+C:\rdos\kernel\acpi-pre\getopt.obj : C:\rdos\kernel\acpi-pre\common\getopt.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 common\getopt.c -i="../../kernel;../../classlib;include;include/pla&
-tform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
+tform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
 ff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dsfield.obj : E:\rdos\kernel\acpi-pre\dispatcher\dsf&
+C:\rdos\kernel\acpi-pre\dsfield.obj : C:\rdos\kernel\acpi-pre\dispatcher\dsf&
 ield.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dsfield.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dsinit.obj : E:\rdos\kernel\acpi-pre\dispatcher\dsin&
+C:\rdos\kernel\acpi-pre\dsinit.obj : C:\rdos\kernel\acpi-pre\dispatcher\dsin&
 it.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dsinit.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dsmethod.obj : E:\rdos\kernel\acpi-pre\dispatcher\ds&
+C:\rdos\kernel\acpi-pre\dsmethod.obj : C:\rdos\kernel\acpi-pre\dispatcher\ds&
 method.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dsmethod.c -i="../../kernel;../../classlib;include;inclu&
-de/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
+de/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
 zdp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dsmthdat.obj : E:\rdos\kernel\acpi-pre\dispatcher\ds&
+C:\rdos\kernel\acpi-pre\dsmthdat.obj : C:\rdos\kernel\acpi-pre\dispatcher\ds&
 mthdat.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dsmthdat.c -i="../../kernel;../../classlib;include;inclu&
-de/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
+de/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
 zdp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dsobject.obj : E:\rdos\kernel\acpi-pre\dispatcher\ds&
+C:\rdos\kernel\acpi-pre\dsobject.obj : C:\rdos\kernel\acpi-pre\dispatcher\ds&
 object.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dsobject.c -i="../../kernel;../../classlib;include;inclu&
-de/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
+de/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
 zdp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dsopcode.obj : E:\rdos\kernel\acpi-pre\dispatcher\ds&
+C:\rdos\kernel\acpi-pre\dsopcode.obj : C:\rdos\kernel\acpi-pre\dispatcher\ds&
 opcode.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dsopcode.c -i="../../kernel;../../classlib;include;inclu&
-de/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
+de/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
 zdp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dsutils.obj : E:\rdos\kernel\acpi-pre\dispatcher\dsu&
+C:\rdos\kernel\acpi-pre\dsutils.obj : C:\rdos\kernel\acpi-pre\dispatcher\dsu&
 tils.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dsutils.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dswexec.obj : E:\rdos\kernel\acpi-pre\dispatcher\dsw&
+C:\rdos\kernel\acpi-pre\dswexec.obj : C:\rdos\kernel\acpi-pre\dispatcher\dsw&
 exec.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dswexec.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dswload.obj : E:\rdos\kernel\acpi-pre\dispatcher\dsw&
+C:\rdos\kernel\acpi-pre\dswload.obj : C:\rdos\kernel\acpi-pre\dispatcher\dsw&
 load.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dswload.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dswscope.obj : E:\rdos\kernel\acpi-pre\dispatcher\ds&
+C:\rdos\kernel\acpi-pre\dswscope.obj : C:\rdos\kernel\acpi-pre\dispatcher\ds&
 wscope.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dswscope.c -i="../../kernel;../../classlib;include;inclu&
-de/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
+de/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
 zdp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\dswstate.obj : E:\rdos\kernel\acpi-pre\dispatcher\ds&
+C:\rdos\kernel\acpi-pre\dswstate.obj : C:\rdos\kernel\acpi-pre\dispatcher\ds&
 wstate.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 dispatcher\dswstate.c -i="../../kernel;../../classlib;include;inclu&
-de/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
+de/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
 zdp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evevent.obj : E:\rdos\kernel\acpi-pre\events\evevent&
+C:\rdos\kernel\acpi-pre\evevent.obj : C:\rdos\kernel\acpi-pre\events\evevent&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evevent.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evgpe.obj : E:\rdos\kernel\acpi-pre\events\evgpe.c .&
+C:\rdos\kernel\acpi-pre\evgpe.obj : C:\rdos\kernel\acpi-pre\events\evgpe.c .&
 AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evgpe.c -i="../../kernel;../../classlib;include;include/plat&
-form;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -zf&
+form;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -zf&
 f -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evgpeblk.obj : E:\rdos\kernel\acpi-pre\events\evgpeb&
+C:\rdos\kernel\acpi-pre\evgpeblk.obj : C:\rdos\kernel\acpi-pre\events\evgpeb&
 lk.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evgpeblk.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evgpeinit.obj : E:\rdos\kernel\acpi-pre\events\evgpe&
+C:\rdos\kernel\acpi-pre\evgpeinit.obj : C:\rdos\kernel\acpi-pre\events\evgpe&
 init.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evgpeinit.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evgpeutil.obj : E:\rdos\kernel\acpi-pre\events\evgpe&
+C:\rdos\kernel\acpi-pre\evgpeutil.obj : C:\rdos\kernel\acpi-pre\events\evgpe&
 util.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evgpeutil.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evmisc.obj : E:\rdos\kernel\acpi-pre\events\evmisc.c&
+C:\rdos\kernel\acpi-pre\evmisc.obj : C:\rdos\kernel\acpi-pre\events\evmisc.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evmisc.c -i="../../kernel;../../classlib;include;include/pla&
-tform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
+tform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
 ff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evregion.obj : E:\rdos\kernel\acpi-pre\events\evregi&
+C:\rdos\kernel\acpi-pre\evregion.obj : C:\rdos\kernel\acpi-pre\events\evregi&
 on.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evregion.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evrgnini.obj : E:\rdos\kernel\acpi-pre\events\evrgni&
+C:\rdos\kernel\acpi-pre\evrgnini.obj : C:\rdos\kernel\acpi-pre\events\evrgni&
 ni.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evrgnini.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evsci.obj : E:\rdos\kernel\acpi-pre\events\evsci.c .&
+C:\rdos\kernel\acpi-pre\evsci.obj : C:\rdos\kernel\acpi-pre\events\evsci.c .&
 AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evsci.c -i="../../kernel;../../classlib;include;include/plat&
-form;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -zf&
+form;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -zf&
 f -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evxface.obj : E:\rdos\kernel\acpi-pre\events\evxface&
+C:\rdos\kernel\acpi-pre\evxface.obj : C:\rdos\kernel\acpi-pre\events\evxface&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evxface.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evxfevnt.obj : E:\rdos\kernel\acpi-pre\events\evxfev&
+C:\rdos\kernel\acpi-pre\evxfevnt.obj : C:\rdos\kernel\acpi-pre\events\evxfev&
 nt.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evxfevnt.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evxfgpe.obj : E:\rdos\kernel\acpi-pre\events\evxfgpe&
+C:\rdos\kernel\acpi-pre\evxfgpe.obj : C:\rdos\kernel\acpi-pre\events\evxfgpe&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evxfgpe.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\evxfregn.obj : E:\rdos\kernel\acpi-pre\events\evxfre&
+C:\rdos\kernel\acpi-pre\evxfregn.obj : C:\rdos\kernel\acpi-pre\events\evxfre&
 gn.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 events\evxfregn.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exconfig.obj : E:\rdos\kernel\acpi-pre\executer\exco&
+C:\rdos\kernel\acpi-pre\exconfig.obj : C:\rdos\kernel\acpi-pre\executer\exco&
 nfig.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exconfig.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exconvrt.obj : E:\rdos\kernel\acpi-pre\executer\exco&
+C:\rdos\kernel\acpi-pre\exconvrt.obj : C:\rdos\kernel\acpi-pre\executer\exco&
 nvrt.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exconvrt.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\excreate.obj : E:\rdos\kernel\acpi-pre\executer\excr&
+C:\rdos\kernel\acpi-pre\excreate.obj : C:\rdos\kernel\acpi-pre\executer\excr&
 eate.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\excreate.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exdebug.obj : E:\rdos\kernel\acpi-pre\executer\exdeb&
+C:\rdos\kernel\acpi-pre\exdebug.obj : C:\rdos\kernel\acpi-pre\executer\exdeb&
 ug.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exdebug.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exdump.obj : E:\rdos\kernel\acpi-pre\executer\exdump&
+C:\rdos\kernel\acpi-pre\exdump.obj : C:\rdos\kernel\acpi-pre\executer\exdump&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exdump.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exfield.obj : E:\rdos\kernel\acpi-pre\executer\exfie&
+C:\rdos\kernel\acpi-pre\exfield.obj : C:\rdos\kernel\acpi-pre\executer\exfie&
 ld.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exfield.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exfldio.obj : E:\rdos\kernel\acpi-pre\executer\exfld&
+C:\rdos\kernel\acpi-pre\exfldio.obj : C:\rdos\kernel\acpi-pre\executer\exfld&
 io.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exfldio.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exmisc.obj : E:\rdos\kernel\acpi-pre\executer\exmisc&
+C:\rdos\kernel\acpi-pre\exmisc.obj : C:\rdos\kernel\acpi-pre\executer\exmisc&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exmisc.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exmutex.obj : E:\rdos\kernel\acpi-pre\executer\exmut&
+C:\rdos\kernel\acpi-pre\exmutex.obj : C:\rdos\kernel\acpi-pre\executer\exmut&
 ex.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exmutex.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exnames.obj : E:\rdos\kernel\acpi-pre\executer\exnam&
+C:\rdos\kernel\acpi-pre\exnames.obj : C:\rdos\kernel\acpi-pre\executer\exnam&
 es.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exnames.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exoparg1.obj : E:\rdos\kernel\acpi-pre\executer\exop&
+C:\rdos\kernel\acpi-pre\exoparg1.obj : C:\rdos\kernel\acpi-pre\executer\exop&
 arg1.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exoparg1.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exoparg2.obj : E:\rdos\kernel\acpi-pre\executer\exop&
+C:\rdos\kernel\acpi-pre\exoparg2.obj : C:\rdos\kernel\acpi-pre\executer\exop&
 arg2.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exoparg2.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exoparg3.obj : E:\rdos\kernel\acpi-pre\executer\exop&
+C:\rdos\kernel\acpi-pre\exoparg3.obj : C:\rdos\kernel\acpi-pre\executer\exop&
 arg3.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exoparg3.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exoparg6.obj : E:\rdos\kernel\acpi-pre\executer\exop&
+C:\rdos\kernel\acpi-pre\exoparg6.obj : C:\rdos\kernel\acpi-pre\executer\exop&
 arg6.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exoparg6.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exprep.obj : E:\rdos\kernel\acpi-pre\executer\exprep&
+C:\rdos\kernel\acpi-pre\exprep.obj : C:\rdos\kernel\acpi-pre\executer\exprep&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exprep.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exregion.obj : E:\rdos\kernel\acpi-pre\executer\exre&
+C:\rdos\kernel\acpi-pre\exregion.obj : C:\rdos\kernel\acpi-pre\executer\exre&
 gion.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exregion.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exresnte.obj : E:\rdos\kernel\acpi-pre\executer\exre&
+C:\rdos\kernel\acpi-pre\exresnte.obj : C:\rdos\kernel\acpi-pre\executer\exre&
 snte.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exresnte.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exresolv.obj : E:\rdos\kernel\acpi-pre\executer\exre&
+C:\rdos\kernel\acpi-pre\exresolv.obj : C:\rdos\kernel\acpi-pre\executer\exre&
 solv.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exresolv.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exresop.obj : E:\rdos\kernel\acpi-pre\executer\exres&
+C:\rdos\kernel\acpi-pre\exresop.obj : C:\rdos\kernel\acpi-pre\executer\exres&
 op.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exresop.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exstore.obj : E:\rdos\kernel\acpi-pre\executer\exsto&
+C:\rdos\kernel\acpi-pre\exstore.obj : C:\rdos\kernel\acpi-pre\executer\exsto&
 re.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exstore.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exstoren.obj : E:\rdos\kernel\acpi-pre\executer\exst&
+C:\rdos\kernel\acpi-pre\exstoren.obj : C:\rdos\kernel\acpi-pre\executer\exst&
 oren.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exstoren.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exstorob.obj : E:\rdos\kernel\acpi-pre\executer\exst&
+C:\rdos\kernel\acpi-pre\exstorob.obj : C:\rdos\kernel\acpi-pre\executer\exst&
 orob.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exstorob.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exsystem.obj : E:\rdos\kernel\acpi-pre\executer\exsy&
+C:\rdos\kernel\acpi-pre\exsystem.obj : C:\rdos\kernel\acpi-pre\executer\exsy&
 stem.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exsystem.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\exutils.obj : E:\rdos\kernel\acpi-pre\executer\exuti&
+C:\rdos\kernel\acpi-pre\exutils.obj : C:\rdos\kernel\acpi-pre\executer\exuti&
 ls.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 executer\exutils.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\hwacpi.obj : E:\rdos\kernel\acpi-pre\hardware\hwacpi&
+C:\rdos\kernel\acpi-pre\hwacpi.obj : C:\rdos\kernel\acpi-pre\hardware\hwacpi&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 hardware\hwacpi.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\hwgpe.obj : E:\rdos\kernel\acpi-pre\hardware\hwgpe.c&
+C:\rdos\kernel\acpi-pre\hwgpe.obj : C:\rdos\kernel\acpi-pre\hardware\hwgpe.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 hardware\hwgpe.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\hwpci.obj : E:\rdos\kernel\acpi-pre\hardware\hwpci.c&
+C:\rdos\kernel\acpi-pre\hwpci.obj : C:\rdos\kernel\acpi-pre\hardware\hwpci.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 hardware\hwpci.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\hwregs.obj : E:\rdos\kernel\acpi-pre\hardware\hwregs&
+C:\rdos\kernel\acpi-pre\hwregs.obj : C:\rdos\kernel\acpi-pre\hardware\hwregs&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 hardware\hwregs.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\hwsleep.obj : E:\rdos\kernel\acpi-pre\hardware\hwsle&
+C:\rdos\kernel\acpi-pre\hwsleep.obj : C:\rdos\kernel\acpi-pre\hardware\hwsle&
 ep.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 hardware\hwsleep.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\hwtimer.obj : E:\rdos\kernel\acpi-pre\hardware\hwtim&
+C:\rdos\kernel\acpi-pre\hwtimer.obj : C:\rdos\kernel\acpi-pre\hardware\hwtim&
 er.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 hardware\hwtimer.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\hwvalid.obj : E:\rdos\kernel\acpi-pre\hardware\hwval&
+C:\rdos\kernel\acpi-pre\hwvalid.obj : C:\rdos\kernel\acpi-pre\hardware\hwval&
 id.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 hardware\hwvalid.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\hwxface.obj : E:\rdos\kernel\acpi-pre\hardware\hwxfa&
+C:\rdos\kernel\acpi-pre\hwxface.obj : C:\rdos\kernel\acpi-pre\hardware\hwxfa&
 ce.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 hardware\hwxface.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsaccess.obj : E:\rdos\kernel\acpi-pre\namespace\nsa&
+C:\rdos\kernel\acpi-pre\nsaccess.obj : C:\rdos\kernel\acpi-pre\namespace\nsa&
 ccess.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsaccess.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsalloc.obj : E:\rdos\kernel\acpi-pre\namespace\nsal&
+C:\rdos\kernel\acpi-pre\nsalloc.obj : C:\rdos\kernel\acpi-pre\namespace\nsal&
 loc.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsalloc.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsdump.obj : E:\rdos\kernel\acpi-pre\namespace\nsdum&
+C:\rdos\kernel\acpi-pre\nsdump.obj : C:\rdos\kernel\acpi-pre\namespace\nsdum&
 p.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsdump.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsdumpdv.obj : E:\rdos\kernel\acpi-pre\namespace\nsd&
+C:\rdos\kernel\acpi-pre\nsdumpdv.obj : C:\rdos\kernel\acpi-pre\namespace\nsd&
 umpdv.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsdumpdv.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nseval.obj : E:\rdos\kernel\acpi-pre\namespace\nseva&
+C:\rdos\kernel\acpi-pre\nseval.obj : C:\rdos\kernel\acpi-pre\namespace\nseva&
 l.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nseval.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsinit.obj : E:\rdos\kernel\acpi-pre\namespace\nsini&
+C:\rdos\kernel\acpi-pre\nsinit.obj : C:\rdos\kernel\acpi-pre\namespace\nsini&
 t.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsinit.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsload.obj : E:\rdos\kernel\acpi-pre\namespace\nsloa&
+C:\rdos\kernel\acpi-pre\nsload.obj : C:\rdos\kernel\acpi-pre\namespace\nsloa&
 d.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsload.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsnames.obj : E:\rdos\kernel\acpi-pre\namespace\nsna&
+C:\rdos\kernel\acpi-pre\nsnames.obj : C:\rdos\kernel\acpi-pre\namespace\nsna&
 mes.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsnames.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsobject.obj : E:\rdos\kernel\acpi-pre\namespace\nso&
+C:\rdos\kernel\acpi-pre\nsobject.obj : C:\rdos\kernel\acpi-pre\namespace\nso&
 bject.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsobject.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsparse.obj : E:\rdos\kernel\acpi-pre\namespace\nspa&
+C:\rdos\kernel\acpi-pre\nsparse.obj : C:\rdos\kernel\acpi-pre\namespace\nspa&
 rse.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsparse.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nspredef.obj : E:\rdos\kernel\acpi-pre\namespace\nsp&
+C:\rdos\kernel\acpi-pre\nspredef.obj : C:\rdos\kernel\acpi-pre\namespace\nsp&
 redef.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nspredef.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsrepair.obj : E:\rdos\kernel\acpi-pre\namespace\nsr&
+C:\rdos\kernel\acpi-pre\nsrepair.obj : C:\rdos\kernel\acpi-pre\namespace\nsr&
 epair.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsrepair.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsrepair2.obj : E:\rdos\kernel\acpi-pre\namespace\ns&
+C:\rdos\kernel\acpi-pre\nsrepair2.obj : C:\rdos\kernel\acpi-pre\namespace\ns&
 repair2.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsrepair2.c -i="../../kernel;../../classlib;include;inclu&
-de/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
+de/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
 zdp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nssearch.obj : E:\rdos\kernel\acpi-pre\namespace\nss&
+C:\rdos\kernel\acpi-pre\nssearch.obj : C:\rdos\kernel\acpi-pre\namespace\nss&
 earch.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nssearch.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsutils.obj : E:\rdos\kernel\acpi-pre\namespace\nsut&
+C:\rdos\kernel\acpi-pre\nsutils.obj : C:\rdos\kernel\acpi-pre\namespace\nsut&
 ils.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsutils.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nswalk.obj : E:\rdos\kernel\acpi-pre\namespace\nswal&
+C:\rdos\kernel\acpi-pre\nswalk.obj : C:\rdos\kernel\acpi-pre\namespace\nswal&
 k.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nswalk.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsxfeval.obj : E:\rdos\kernel\acpi-pre\namespace\nsx&
+C:\rdos\kernel\acpi-pre\nsxfeval.obj : C:\rdos\kernel\acpi-pre\namespace\nsx&
 feval.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsxfeval.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsxfname.obj : E:\rdos\kernel\acpi-pre\namespace\nsx&
+C:\rdos\kernel\acpi-pre\nsxfname.obj : C:\rdos\kernel\acpi-pre\namespace\nsx&
 fname.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsxfname.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\nsxfobj.obj : E:\rdos\kernel\acpi-pre\namespace\nsxf&
+C:\rdos\kernel\acpi-pre\nsxfobj.obj : C:\rdos\kernel\acpi-pre\namespace\nsxf&
 obj.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 namespace\nsxfobj.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\osacpi.obj : E:\rdos\kernel\acpi-pre\osacpi.c .AUTOD&
+C:\rdos\kernel\acpi-pre\osacpi.obj : C:\rdos\kernel\acpi-pre\osacpi.c .AUTOD&
 EPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
- *wcc386 osacpi.c -i="../../kernel;../../classlib;include;include/platform;e&
-:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -zff -zgf&
+ @C:
+ cd C:\rdos\kernel\acpi-pre
+ *wcc386 osacpi.c -i="../../kernel;../../classlib;include;include/platform;C&
+:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -zff -zgf&
  -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\psargs.obj : E:\rdos\kernel\acpi-pre\parser\psargs.c&
+C:\rdos\kernel\acpi-pre\psargs.obj : C:\rdos\kernel\acpi-pre\parser\psargs.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 parser\psargs.c -i="../../kernel;../../classlib;include;include/pla&
-tform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
+tform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
 ff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\psloop.obj : E:\rdos\kernel\acpi-pre\parser\psloop.c&
+C:\rdos\kernel\acpi-pre\psloop.obj : C:\rdos\kernel\acpi-pre\parser\psloop.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 parser\psloop.c -i="../../kernel;../../classlib;include;include/pla&
-tform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
+tform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
 ff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\psopcode.obj : E:\rdos\kernel\acpi-pre\parser\psopco&
+C:\rdos\kernel\acpi-pre\psopcode.obj : C:\rdos\kernel\acpi-pre\parser\psopco&
 de.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 parser\psopcode.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\psparse.obj : E:\rdos\kernel\acpi-pre\parser\psparse&
+C:\rdos\kernel\acpi-pre\psparse.obj : C:\rdos\kernel\acpi-pre\parser\psparse&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 parser\psparse.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\psscope.obj : E:\rdos\kernel\acpi-pre\parser\psscope&
+C:\rdos\kernel\acpi-pre\psscope.obj : C:\rdos\kernel\acpi-pre\parser\psscope&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 parser\psscope.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\pstree.obj : E:\rdos\kernel\acpi-pre\parser\pstree.c&
+C:\rdos\kernel\acpi-pre\pstree.obj : C:\rdos\kernel\acpi-pre\parser\pstree.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 parser\pstree.c -i="../../kernel;../../classlib;include;include/pla&
-tform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
+tform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
 ff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\psutils.obj : E:\rdos\kernel\acpi-pre\parser\psutils&
+C:\rdos\kernel\acpi-pre\psutils.obj : C:\rdos\kernel\acpi-pre\parser\psutils&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 parser\psutils.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\pswalk.obj : E:\rdos\kernel\acpi-pre\parser\pswalk.c&
+C:\rdos\kernel\acpi-pre\pswalk.obj : C:\rdos\kernel\acpi-pre\parser\pswalk.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 parser\pswalk.c -i="../../kernel;../../classlib;include;include/pla&
-tform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
+tform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
 ff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\psxface.obj : E:\rdos\kernel\acpi-pre\parser\psxface&
+C:\rdos\kernel\acpi-pre\psxface.obj : C:\rdos\kernel\acpi-pre\parser\psxface&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 parser\psxface.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rsaddr.obj : E:\rdos\kernel\acpi-pre\resources\rsadd&
+C:\rdos\kernel\acpi-pre\rsaddr.obj : C:\rdos\kernel\acpi-pre\resources\rsadd&
 r.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rsaddr.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rscalc.obj : E:\rdos\kernel\acpi-pre\resources\rscal&
+C:\rdos\kernel\acpi-pre\rscalc.obj : C:\rdos\kernel\acpi-pre\resources\rscal&
 c.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rscalc.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rscreate.obj : E:\rdos\kernel\acpi-pre\resources\rsc&
+C:\rdos\kernel\acpi-pre\rscreate.obj : C:\rdos\kernel\acpi-pre\resources\rsc&
 reate.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rscreate.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rsdump.obj : E:\rdos\kernel\acpi-pre\resources\rsdum&
+C:\rdos\kernel\acpi-pre\rsdump.obj : C:\rdos\kernel\acpi-pre\resources\rsdum&
 p.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rsdump.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rsinfo.obj : E:\rdos\kernel\acpi-pre\resources\rsinf&
+C:\rdos\kernel\acpi-pre\rsinfo.obj : C:\rdos\kernel\acpi-pre\resources\rsinf&
 o.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rsinfo.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rsio.obj : E:\rdos\kernel\acpi-pre\resources\rsio.c &
+C:\rdos\kernel\acpi-pre\rsio.obj : C:\rdos\kernel\acpi-pre\resources\rsio.c &
 .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rsio.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rsirq.obj : E:\rdos\kernel\acpi-pre\resources\rsirq.&
+C:\rdos\kernel\acpi-pre\rsirq.obj : C:\rdos\kernel\acpi-pre\resources\rsirq.&
 c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rsirq.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rslist.obj : E:\rdos\kernel\acpi-pre\resources\rslis&
+C:\rdos\kernel\acpi-pre\rslist.obj : C:\rdos\kernel\acpi-pre\resources\rslis&
 t.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rslist.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rsmemory.obj : E:\rdos\kernel\acpi-pre\resources\rsm&
+C:\rdos\kernel\acpi-pre\rsmemory.obj : C:\rdos\kernel\acpi-pre\resources\rsm&
 emory.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rsmemory.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rsmisc.obj : E:\rdos\kernel\acpi-pre\resources\rsmis&
+C:\rdos\kernel\acpi-pre\rsmisc.obj : C:\rdos\kernel\acpi-pre\resources\rsmis&
 c.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rsmisc.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rsutils.obj : E:\rdos\kernel\acpi-pre\resources\rsut&
+C:\rdos\kernel\acpi-pre\rsutils.obj : C:\rdos\kernel\acpi-pre\resources\rsut&
 ils.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rsutils.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\rsxface.obj : E:\rdos\kernel\acpi-pre\resources\rsxf&
+C:\rdos\kernel\acpi-pre\rsxface.obj : C:\rdos\kernel\acpi-pre\resources\rsxf&
 ace.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 resources\rsxface.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\tbfadt.obj : E:\rdos\kernel\acpi-pre\tables\tbfadt.c&
+C:\rdos\kernel\acpi-pre\tbfadt.obj : C:\rdos\kernel\acpi-pre\tables\tbfadt.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 tables\tbfadt.c -i="../../kernel;../../classlib;include;include/pla&
-tform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
+tform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
 ff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\tbfind.obj : E:\rdos\kernel\acpi-pre\tables\tbfind.c&
+C:\rdos\kernel\acpi-pre\tbfind.obj : C:\rdos\kernel\acpi-pre\tables\tbfind.c&
  .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 tables\tbfind.c -i="../../kernel;../../classlib;include;include/pla&
-tform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
+tform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -z&
 ff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\tbinstal.obj : E:\rdos\kernel\acpi-pre\tables\tbinst&
+C:\rdos\kernel\acpi-pre\tbinstal.obj : C:\rdos\kernel\acpi-pre\tables\tbinst&
 al.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 tables\tbinstal.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\tbutils.obj : E:\rdos\kernel\acpi-pre\tables\tbutils&
+C:\rdos\kernel\acpi-pre\tbutils.obj : C:\rdos\kernel\acpi-pre\tables\tbutils&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 tables\tbutils.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\tbxface.obj : E:\rdos\kernel\acpi-pre\tables\tbxface&
+C:\rdos\kernel\acpi-pre\tbxface.obj : C:\rdos\kernel\acpi-pre\tables\tbxface&
 .c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 tables\tbxface.c -i="../../kernel;../../classlib;include;include/pl&
-atform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
+atform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp -&
 zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\tbxfroot.obj : E:\rdos\kernel\acpi-pre\tables\tbxfro&
+C:\rdos\kernel\acpi-pre\tbxfroot.obj : C:\rdos\kernel\acpi-pre\tables\tbxfro&
 ot.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 tables\tbxfroot.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utalloc.obj : E:\rdos\kernel\acpi-pre\utilities\utal&
+C:\rdos\kernel\acpi-pre\utalloc.obj : C:\rdos\kernel\acpi-pre\utilities\utal&
 loc.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utalloc.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utcache.obj : E:\rdos\kernel\acpi-pre\utilities\utca&
+C:\rdos\kernel\acpi-pre\utcache.obj : C:\rdos\kernel\acpi-pre\utilities\utca&
 che.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utcache.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utclib.obj : E:\rdos\kernel\acpi-pre\utilities\utcli&
+C:\rdos\kernel\acpi-pre\utclib.obj : C:\rdos\kernel\acpi-pre\utilities\utcli&
 b.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utclib.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utcopy.obj : E:\rdos\kernel\acpi-pre\utilities\utcop&
+C:\rdos\kernel\acpi-pre\utcopy.obj : C:\rdos\kernel\acpi-pre\utilities\utcop&
 y.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utcopy.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utdebug.obj : E:\rdos\kernel\acpi-pre\utilities\utde&
+C:\rdos\kernel\acpi-pre\utdebug.obj : C:\rdos\kernel\acpi-pre\utilities\utde&
 bug.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utdebug.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utdelete.obj : E:\rdos\kernel\acpi-pre\utilities\utd&
+C:\rdos\kernel\acpi-pre\utdelete.obj : C:\rdos\kernel\acpi-pre\utilities\utd&
 elete.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utdelete.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\uteval.obj : E:\rdos\kernel\acpi-pre\utilities\uteva&
+C:\rdos\kernel\acpi-pre\uteval.obj : C:\rdos\kernel\acpi-pre\utilities\uteva&
 l.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\uteval.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utglobal.obj : E:\rdos\kernel\acpi-pre\utilities\utg&
+C:\rdos\kernel\acpi-pre\utglobal.obj : C:\rdos\kernel\acpi-pre\utilities\utg&
 lobal.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utglobal.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utids.obj : E:\rdos\kernel\acpi-pre\utilities\utids.&
+C:\rdos\kernel\acpi-pre\utids.obj : C:\rdos\kernel\acpi-pre\utilities\utids.&
 c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utids.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utinit.obj : E:\rdos\kernel\acpi-pre\utilities\utini&
+C:\rdos\kernel\acpi-pre\utinit.obj : C:\rdos\kernel\acpi-pre\utilities\utini&
 t.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utinit.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utlock.obj : E:\rdos\kernel\acpi-pre\utilities\utloc&
+C:\rdos\kernel\acpi-pre\utlock.obj : C:\rdos\kernel\acpi-pre\utilities\utloc&
 k.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utlock.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utmath.obj : E:\rdos\kernel\acpi-pre\utilities\utmat&
+C:\rdos\kernel\acpi-pre\utmath.obj : C:\rdos\kernel\acpi-pre\utilities\utmat&
 h.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utmath.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utmisc.obj : E:\rdos\kernel\acpi-pre\utilities\utmis&
+C:\rdos\kernel\acpi-pre\utmisc.obj : C:\rdos\kernel\acpi-pre\utilities\utmis&
 c.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utmisc.c -i="../../kernel;../../classlib;include;include/&
-platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
+platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp&
  -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utmutex.obj : E:\rdos\kernel\acpi-pre\utilities\utmu&
+C:\rdos\kernel\acpi-pre\utmutex.obj : C:\rdos\kernel\acpi-pre\utilities\utmu&
 tex.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utmutex.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utobject.obj : E:\rdos\kernel\acpi-pre\utilities\uto&
+C:\rdos\kernel\acpi-pre\utobject.obj : C:\rdos\kernel\acpi-pre\utilities\uto&
 bject.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utobject.c -i="../../kernel;../../classlib;include;includ&
-e/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
+e/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -z&
 dp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utosi.obj : E:\rdos\kernel\acpi-pre\utilities\utosi.&
+C:\rdos\kernel\acpi-pre\utosi.obj : C:\rdos\kernel\acpi-pre\utilities\utosi.&
 c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utosi.c -i="../../kernel;../../classlib;include;include/p&
-latform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
+latform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zdp &
 -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utresrc.obj : E:\rdos\kernel\acpi-pre\utilities\utre&
+C:\rdos\kernel\acpi-pre\utresrc.obj : C:\rdos\kernel\acpi-pre\utilities\utre&
 src.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utresrc.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utstate.obj : E:\rdos\kernel\acpi-pre\utilities\utst&
+C:\rdos\kernel\acpi-pre\utstate.obj : C:\rdos\kernel\acpi-pre\utilities\utst&
 ate.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utstate.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\uttrack.obj : E:\rdos\kernel\acpi-pre\utilities\uttr&
+C:\rdos\kernel\acpi-pre\uttrack.obj : C:\rdos\kernel\acpi-pre\utilities\uttr&
 ack.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\uttrack.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utxface.obj : E:\rdos\kernel\acpi-pre\utilities\utxf&
+C:\rdos\kernel\acpi-pre\utxface.obj : C:\rdos\kernel\acpi-pre\utilities\utxf&
 ace.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utxface.c -i="../../kernel;../../classlib;include;include&
-/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
+/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -zd&
 p -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\utxferror.obj : E:\rdos\kernel\acpi-pre\utilities\ut&
+C:\rdos\kernel\acpi-pre\utxferror.obj : C:\rdos\kernel\acpi-pre\utilities\ut&
 xferror.c .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  *wcc386 utilities\utxferror.c -i="../../kernel;../../classlib;include;inclu&
-de/platform;e:\watcom/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
+de/platform;C:\WATCOM/rh" -w4 -e250 -zp1 -zq -otexan -of -s -d2 -bm -fpi87 -&
 zdp -zff -zgf -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\kernel\acpi-pre\acpi.rdv : E:\rdos\kernel\acpi-pre\acpibase.obj E:\r&
-dos\kernel\acpi-pre\acpi.obj E:\rdos\kernel\acpi-pre\adfile.obj E:\rdos\kern&
-el\acpi-pre\getopt.obj E:\rdos\kernel\acpi-pre\dsfield.obj E:\rdos\kernel\ac&
-pi-pre\dsinit.obj E:\rdos\kernel\acpi-pre\dsmethod.obj E:\rdos\kernel\acpi-p&
-re\dsmthdat.obj E:\rdos\kernel\acpi-pre\dsobject.obj E:\rdos\kernel\acpi-pre&
-\dsopcode.obj E:\rdos\kernel\acpi-pre\dsutils.obj E:\rdos\kernel\acpi-pre\ds&
-wexec.obj E:\rdos\kernel\acpi-pre\dswload.obj E:\rdos\kernel\acpi-pre\dswsco&
-pe.obj E:\rdos\kernel\acpi-pre\dswstate.obj E:\rdos\kernel\acpi-pre\evevent.&
-obj E:\rdos\kernel\acpi-pre\evgpe.obj E:\rdos\kernel\acpi-pre\evgpeblk.obj E&
-:\rdos\kernel\acpi-pre\evgpeinit.obj E:\rdos\kernel\acpi-pre\evgpeutil.obj E&
-:\rdos\kernel\acpi-pre\evmisc.obj E:\rdos\kernel\acpi-pre\evregion.obj E:\rd&
-os\kernel\acpi-pre\evrgnini.obj E:\rdos\kernel\acpi-pre\evsci.obj E:\rdos\ke&
-rnel\acpi-pre\evxface.obj E:\rdos\kernel\acpi-pre\evxfevnt.obj E:\rdos\kerne&
-l\acpi-pre\evxfgpe.obj E:\rdos\kernel\acpi-pre\evxfregn.obj E:\rdos\kernel\a&
-cpi-pre\exconfig.obj E:\rdos\kernel\acpi-pre\exconvrt.obj E:\rdos\kernel\acp&
-i-pre\excreate.obj E:\rdos\kernel\acpi-pre\exdebug.obj E:\rdos\kernel\acpi-p&
-re\exdump.obj E:\rdos\kernel\acpi-pre\exfield.obj E:\rdos\kernel\acpi-pre\ex&
-fldio.obj E:\rdos\kernel\acpi-pre\exmisc.obj E:\rdos\kernel\acpi-pre\exmutex&
-.obj E:\rdos\kernel\acpi-pre\exnames.obj E:\rdos\kernel\acpi-pre\exoparg1.ob&
-j E:\rdos\kernel\acpi-pre\exoparg2.obj E:\rdos\kernel\acpi-pre\exoparg3.obj &
-E:\rdos\kernel\acpi-pre\exoparg6.obj E:\rdos\kernel\acpi-pre\exprep.obj E:\r&
-dos\kernel\acpi-pre\exregion.obj E:\rdos\kernel\acpi-pre\exresnte.obj E:\rdo&
-s\kernel\acpi-pre\exresolv.obj E:\rdos\kernel\acpi-pre\exresop.obj E:\rdos\k&
-ernel\acpi-pre\exstore.obj E:\rdos\kernel\acpi-pre\exstoren.obj E:\rdos\kern&
-el\acpi-pre\exstorob.obj E:\rdos\kernel\acpi-pre\exsystem.obj E:\rdos\kernel&
-\acpi-pre\exutils.obj E:\rdos\kernel\acpi-pre\hwacpi.obj E:\rdos\kernel\acpi&
--pre\hwgpe.obj E:\rdos\kernel\acpi-pre\hwpci.obj E:\rdos\kernel\acpi-pre\hwr&
-egs.obj E:\rdos\kernel\acpi-pre\hwsleep.obj E:\rdos\kernel\acpi-pre\hwtimer.&
-obj E:\rdos\kernel\acpi-pre\hwvalid.obj E:\rdos\kernel\acpi-pre\hwxface.obj &
-E:\rdos\kernel\acpi-pre\nsaccess.obj E:\rdos\kernel\acpi-pre\nsalloc.obj E:\&
-rdos\kernel\acpi-pre\nsdump.obj E:\rdos\kernel\acpi-pre\nsdumpdv.obj E:\rdos&
-\kernel\acpi-pre\nseval.obj E:\rdos\kernel\acpi-pre\nsinit.obj E:\rdos\kerne&
-l\acpi-pre\nsload.obj E:\rdos\kernel\acpi-pre\nsnames.obj E:\rdos\kernel\acp&
-i-pre\nsobject.obj E:\rdos\kernel\acpi-pre\nsparse.obj E:\rdos\kernel\acpi-p&
-re\nspredef.obj E:\rdos\kernel\acpi-pre\nsrepair.obj E:\rdos\kernel\acpi-pre&
-\nsrepair2.obj E:\rdos\kernel\acpi-pre\nssearch.obj E:\rdos\kernel\acpi-pre\&
-nsutils.obj E:\rdos\kernel\acpi-pre\nswalk.obj E:\rdos\kernel\acpi-pre\nsxfe&
-val.obj E:\rdos\kernel\acpi-pre\nsxfname.obj E:\rdos\kernel\acpi-pre\nsxfobj&
-.obj E:\rdos\kernel\acpi-pre\osacpi.obj E:\rdos\kernel\acpi-pre\psargs.obj E&
-:\rdos\kernel\acpi-pre\psloop.obj E:\rdos\kernel\acpi-pre\psopcode.obj E:\rd&
-os\kernel\acpi-pre\psparse.obj E:\rdos\kernel\acpi-pre\psscope.obj E:\rdos\k&
-ernel\acpi-pre\pstree.obj E:\rdos\kernel\acpi-pre\psutils.obj E:\rdos\kernel&
-\acpi-pre\pswalk.obj E:\rdos\kernel\acpi-pre\psxface.obj E:\rdos\kernel\acpi&
--pre\rsaddr.obj E:\rdos\kernel\acpi-pre\rscalc.obj E:\rdos\kernel\acpi-pre\r&
-screate.obj E:\rdos\kernel\acpi-pre\rsdump.obj E:\rdos\kernel\acpi-pre\rsinf&
-o.obj E:\rdos\kernel\acpi-pre\rsio.obj E:\rdos\kernel\acpi-pre\rsirq.obj E:\&
-rdos\kernel\acpi-pre\rslist.obj E:\rdos\kernel\acpi-pre\rsmemory.obj E:\rdos&
-\kernel\acpi-pre\rsmisc.obj E:\rdos\kernel\acpi-pre\rsutils.obj E:\rdos\kern&
-el\acpi-pre\rsxface.obj E:\rdos\kernel\acpi-pre\tbfadt.obj E:\rdos\kernel\ac&
-pi-pre\tbfind.obj E:\rdos\kernel\acpi-pre\tbinstal.obj E:\rdos\kernel\acpi-p&
-re\tbutils.obj E:\rdos\kernel\acpi-pre\tbxface.obj E:\rdos\kernel\acpi-pre\t&
-bxfroot.obj E:\rdos\kernel\acpi-pre\utalloc.obj E:\rdos\kernel\acpi-pre\utca&
-che.obj E:\rdos\kernel\acpi-pre\utclib.obj E:\rdos\kernel\acpi-pre\utcopy.ob&
-j E:\rdos\kernel\acpi-pre\utdebug.obj E:\rdos\kernel\acpi-pre\utdelete.obj E&
-:\rdos\kernel\acpi-pre\uteval.obj E:\rdos\kernel\acpi-pre\utglobal.obj E:\rd&
-os\kernel\acpi-pre\utids.obj E:\rdos\kernel\acpi-pre\utinit.obj E:\rdos\kern&
-el\acpi-pre\utlock.obj E:\rdos\kernel\acpi-pre\utmath.obj E:\rdos\kernel\acp&
-i-pre\utmisc.obj E:\rdos\kernel\acpi-pre\utmutex.obj E:\rdos\kernel\acpi-pre&
-\utobject.obj E:\rdos\kernel\acpi-pre\utosi.obj E:\rdos\kernel\acpi-pre\utre&
-src.obj E:\rdos\kernel\acpi-pre\utstate.obj E:\rdos\kernel\acpi-pre\uttrack.&
-obj E:\rdos\kernel\acpi-pre\utxface.obj E:\rdos\kernel\acpi-pre\utxferror.ob&
+C:\rdos\kernel\acpi-pre\acpi.rdv : C:\rdos\kernel\acpi-pre\acpibase.obj C:\r&
+dos\kernel\acpi-pre\acpi.obj C:\rdos\kernel\acpi-pre\adfile.obj C:\rdos\kern&
+el\acpi-pre\getopt.obj C:\rdos\kernel\acpi-pre\dsfield.obj C:\rdos\kernel\ac&
+pi-pre\dsinit.obj C:\rdos\kernel\acpi-pre\dsmethod.obj C:\rdos\kernel\acpi-p&
+re\dsmthdat.obj C:\rdos\kernel\acpi-pre\dsobject.obj C:\rdos\kernel\acpi-pre&
+\dsopcode.obj C:\rdos\kernel\acpi-pre\dsutils.obj C:\rdos\kernel\acpi-pre\ds&
+wexec.obj C:\rdos\kernel\acpi-pre\dswload.obj C:\rdos\kernel\acpi-pre\dswsco&
+pe.obj C:\rdos\kernel\acpi-pre\dswstate.obj C:\rdos\kernel\acpi-pre\evevent.&
+obj C:\rdos\kernel\acpi-pre\evgpe.obj C:\rdos\kernel\acpi-pre\evgpeblk.obj C&
+:\rdos\kernel\acpi-pre\evgpeinit.obj C:\rdos\kernel\acpi-pre\evgpeutil.obj C&
+:\rdos\kernel\acpi-pre\evmisc.obj C:\rdos\kernel\acpi-pre\evregion.obj C:\rd&
+os\kernel\acpi-pre\evrgnini.obj C:\rdos\kernel\acpi-pre\evsci.obj C:\rdos\ke&
+rnel\acpi-pre\evxface.obj C:\rdos\kernel\acpi-pre\evxfevnt.obj C:\rdos\kerne&
+l\acpi-pre\evxfgpe.obj C:\rdos\kernel\acpi-pre\evxfregn.obj C:\rdos\kernel\a&
+cpi-pre\exconfig.obj C:\rdos\kernel\acpi-pre\exconvrt.obj C:\rdos\kernel\acp&
+i-pre\excreate.obj C:\rdos\kernel\acpi-pre\exdebug.obj C:\rdos\kernel\acpi-p&
+re\exdump.obj C:\rdos\kernel\acpi-pre\exfield.obj C:\rdos\kernel\acpi-pre\ex&
+fldio.obj C:\rdos\kernel\acpi-pre\exmisc.obj C:\rdos\kernel\acpi-pre\exmutex&
+.obj C:\rdos\kernel\acpi-pre\exnames.obj C:\rdos\kernel\acpi-pre\exoparg1.ob&
+j C:\rdos\kernel\acpi-pre\exoparg2.obj C:\rdos\kernel\acpi-pre\exoparg3.obj &
+C:\rdos\kernel\acpi-pre\exoparg6.obj C:\rdos\kernel\acpi-pre\exprep.obj C:\r&
+dos\kernel\acpi-pre\exregion.obj C:\rdos\kernel\acpi-pre\exresnte.obj C:\rdo&
+s\kernel\acpi-pre\exresolv.obj C:\rdos\kernel\acpi-pre\exresop.obj C:\rdos\k&
+ernel\acpi-pre\exstore.obj C:\rdos\kernel\acpi-pre\exstoren.obj C:\rdos\kern&
+el\acpi-pre\exstorob.obj C:\rdos\kernel\acpi-pre\exsystem.obj C:\rdos\kernel&
+\acpi-pre\exutils.obj C:\rdos\kernel\acpi-pre\hwacpi.obj C:\rdos\kernel\acpi&
+-pre\hwgpe.obj C:\rdos\kernel\acpi-pre\hwpci.obj C:\rdos\kernel\acpi-pre\hwr&
+egs.obj C:\rdos\kernel\acpi-pre\hwsleep.obj C:\rdos\kernel\acpi-pre\hwtimer.&
+obj C:\rdos\kernel\acpi-pre\hwvalid.obj C:\rdos\kernel\acpi-pre\hwxface.obj &
+C:\rdos\kernel\acpi-pre\nsaccess.obj C:\rdos\kernel\acpi-pre\nsalloc.obj C:\&
+rdos\kernel\acpi-pre\nsdump.obj C:\rdos\kernel\acpi-pre\nsdumpdv.obj C:\rdos&
+\kernel\acpi-pre\nseval.obj C:\rdos\kernel\acpi-pre\nsinit.obj C:\rdos\kerne&
+l\acpi-pre\nsload.obj C:\rdos\kernel\acpi-pre\nsnames.obj C:\rdos\kernel\acp&
+i-pre\nsobject.obj C:\rdos\kernel\acpi-pre\nsparse.obj C:\rdos\kernel\acpi-p&
+re\nspredef.obj C:\rdos\kernel\acpi-pre\nsrepair.obj C:\rdos\kernel\acpi-pre&
+\nsrepair2.obj C:\rdos\kernel\acpi-pre\nssearch.obj C:\rdos\kernel\acpi-pre\&
+nsutils.obj C:\rdos\kernel\acpi-pre\nswalk.obj C:\rdos\kernel\acpi-pre\nsxfe&
+val.obj C:\rdos\kernel\acpi-pre\nsxfname.obj C:\rdos\kernel\acpi-pre\nsxfobj&
+.obj C:\rdos\kernel\acpi-pre\osacpi.obj C:\rdos\kernel\acpi-pre\psargs.obj C&
+:\rdos\kernel\acpi-pre\psloop.obj C:\rdos\kernel\acpi-pre\psopcode.obj C:\rd&
+os\kernel\acpi-pre\psparse.obj C:\rdos\kernel\acpi-pre\psscope.obj C:\rdos\k&
+ernel\acpi-pre\pstree.obj C:\rdos\kernel\acpi-pre\psutils.obj C:\rdos\kernel&
+\acpi-pre\pswalk.obj C:\rdos\kernel\acpi-pre\psxface.obj C:\rdos\kernel\acpi&
+-pre\rsaddr.obj C:\rdos\kernel\acpi-pre\rscalc.obj C:\rdos\kernel\acpi-pre\r&
+screate.obj C:\rdos\kernel\acpi-pre\rsdump.obj C:\rdos\kernel\acpi-pre\rsinf&
+o.obj C:\rdos\kernel\acpi-pre\rsio.obj C:\rdos\kernel\acpi-pre\rsirq.obj C:\&
+rdos\kernel\acpi-pre\rslist.obj C:\rdos\kernel\acpi-pre\rsmemory.obj C:\rdos&
+\kernel\acpi-pre\rsmisc.obj C:\rdos\kernel\acpi-pre\rsutils.obj C:\rdos\kern&
+el\acpi-pre\rsxface.obj C:\rdos\kernel\acpi-pre\tbfadt.obj C:\rdos\kernel\ac&
+pi-pre\tbfind.obj C:\rdos\kernel\acpi-pre\tbinstal.obj C:\rdos\kernel\acpi-p&
+re\tbutils.obj C:\rdos\kernel\acpi-pre\tbxface.obj C:\rdos\kernel\acpi-pre\t&
+bxfroot.obj C:\rdos\kernel\acpi-pre\utalloc.obj C:\rdos\kernel\acpi-pre\utca&
+che.obj C:\rdos\kernel\acpi-pre\utclib.obj C:\rdos\kernel\acpi-pre\utcopy.ob&
+j C:\rdos\kernel\acpi-pre\utdebug.obj C:\rdos\kernel\acpi-pre\utdelete.obj C&
+:\rdos\kernel\acpi-pre\uteval.obj C:\rdos\kernel\acpi-pre\utglobal.obj C:\rd&
+os\kernel\acpi-pre\utids.obj C:\rdos\kernel\acpi-pre\utinit.obj C:\rdos\kern&
+el\acpi-pre\utlock.obj C:\rdos\kernel\acpi-pre\utmath.obj C:\rdos\kernel\acp&
+i-pre\utmisc.obj C:\rdos\kernel\acpi-pre\utmutex.obj C:\rdos\kernel\acpi-pre&
+\utobject.obj C:\rdos\kernel\acpi-pre\utosi.obj C:\rdos\kernel\acpi-pre\utre&
+src.obj C:\rdos\kernel\acpi-pre\utstate.obj C:\rdos\kernel\acpi-pre\uttrack.&
+obj C:\rdos\kernel\acpi-pre\utxface.obj C:\rdos\kernel\acpi-pre\utxferror.ob&
 j .AUTODEPEND
- @E:
- cd E:\rdos\kernel\acpi-pre
+ @C:
+ cd C:\rdos\kernel\acpi-pre
  @%write acpi.lk1 FIL acpibase.obj,acpi.obj,adfile.obj,getopt.obj,dsfield.ob&
 j,dsinit.obj,dsmethod.obj,dsmthdat.obj,dsobject.obj,dsopcode.obj,dsutils.obj&
 ,dswexec.obj,dswload.obj,dswscope.obj,dswstate.obj,evevent.obj,evgpe.obj,evg&
