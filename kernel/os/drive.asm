@@ -6177,6 +6177,71 @@ demand_load_drive_done:
 demand_load_drive       Endp
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateEfiDrive
+;
+;       DESCRIPTION:    Create EFI system drive
+;
+;       PARAMETERS:     GS      Disc sel
+;                       EDX     Start sector
+;                       ECX     Number of sectors
+;                       ES:EDI  File system name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEfiDrive  Proc near
+    push eax
+;
+    IsFileSystemAvailable
+    jc cedDone
+;    
+    AllocateStaticDrive
+    mov ah,gs:disc_nr
+    OpenDrive
+;
+    InstallFileSystem
+    StartFileSystem
+    clc
+
+cedDone:
+    pop eax
+    ret
+CreateEfiDrive  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDrive
+;
+;       DESCRIPTION:    Create drive
+;
+;       PARAMETERS:     GS      Disc sel
+;                       EDX     Start sector
+;                       ECX     Number of sectors
+;                       ES:EDI  File system name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDrive  Proc near
+    push eax
+;
+    IsFileSystemAvailable
+    jc cndDone
+;    
+    AllocateStaticDrive
+    mov ah,gs:disc_nr
+    OpenDrive
+;
+    InstallFileSystem
+    StartFileSystem
+    clc
+
+cndDone:
+    pop eax
+    ret
+CreateDrive  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6472,17 +6537,8 @@ install_part_test_avail:
     mov ecx,eax
     mov di,word ptr cs:[di].FsTab
     movzx edi,di
-    IsFileSystemAvailable
-    jc install_part_done
+    call CreateDrive
 ;
-    AllocateStaticDrive
-    mov ah,gs:disc_nr
-    OpenDrive
-;
-    InstallFileSystem
-    clc
-
-install_part_done:
     popad
     pop es
     ret
@@ -6738,17 +6794,8 @@ InstallEfiPart    Proc near
     mov di,gs
     mov es,di
     mov edi,OFFSET disc_fs_name
-    IsFileSystemAvailable
-    jc iefipDone
-;    
-    AllocateStaticDrive
-    mov ah,gs:disc_nr
-    OpenDrive
+    call CreateEfiDrive
 ;
-    InstallFileSystem
-    clc
-
-iefipDone:
     popad
     pop es    
     pop ds
@@ -6782,16 +6829,8 @@ InstallBasicPart    Proc near
     mov di,gs
     mov es,di
     mov edi,OFFSET disc_fs_name
-    IsFileSystemAvailable
-    jc ibpDone
+    call CreateDrive
 ;
-    AllocateStaticDrive
-    mov ah,gs:disc_nr
-    OpenDrive
-;
-    InstallFileSystem
-
-ibpDone:
     popad
     pop es    
     pop ds
@@ -7096,7 +7135,6 @@ InstallGpt2    Proc near
 igptSectorLoop2:
     mov es:[edi],eax
     mov al,gs:disc_nr
-    mov edx,1
     call fword ptr gs:disc_read_proc
 ;
     inc edx
