@@ -6319,6 +6319,7 @@ aedLoop:
     jmp aedDone
 
 aedTakeB:
+    pop ax
     mov word ptr [si+2],-1
     mov al,1
     clc
