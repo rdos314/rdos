@@ -691,7 +691,6 @@ void RdosBroadcastDriverUdp(short int source, short int dest, int driver_sel, ch
 void RdosSendDriverUdp(short int source, short int dest, long ip, int driver_sel, void *driver_dest, char *buf, int size);
 
 void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
-int RdosInstallDisc(int disc_handle, int read_ahead, int *disc_nr);
 void RdosRegisterDiscChange(__rdos_disc_change_callback *callb_proc);
 void RdosStartDisc(int disc_sel);
 void RdosStopDisc(int disc_sel);

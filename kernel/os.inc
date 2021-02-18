@@ -3255,11 +3255,6 @@ EndDiscHandler    MACRO
     OsGate end_disc_handler_nr
                     ENDM
 
-; OUT NC      Disc handler started
-CondBeginDiscHandler    MACRO
-    OsGate cond_begin_disc_handler_nr
-                    ENDM
-
 SetDiscUse32    MACRO
     OsGate set_disc_use32_nr
                     ENDM
@@ -3273,8 +3268,16 @@ HookInitDisc    MACRO
 ; IN  ECX         Read-ahead
 ; OUT AL          Disc #
 ; OUT BX          Disc sel
-InstallDisc     MACRO
-    OsGate install_disc_nr
+InstallStaticDisc     MACRO
+    OsGate install_static_disc_nr
+                    ENDM
+
+; IN  BX          Handle
+; IN  ECX         Read-ahead
+; OUT AL          Disc #
+; OUT BX          Disc sel
+InstallDynamicDisc     MACRO
+    OsGate install_dynamic_disc_nr
                     ENDM
 
 ;       IN      BX      Disc sel

@@ -2453,7 +2453,7 @@ InstallUnit    Proc near
 ;
     mov bx,ds
     mov ecx,10000h
-    InstallDisc    
+    InstallStaticDisc    
     mov ds:sd_disc_nr,al
     mov ds:sd_disc_sel,bx
 ;

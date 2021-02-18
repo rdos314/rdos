@@ -3584,7 +3584,7 @@ install_disc_unit Proc near
     mov ds,bx
 ;
     mov ecx,10000h
-    InstallDisc
+    InstallStaticDisc
 ;
     mov ds:ap_disc_sel,bx
     mov ds:ap_disc_nr,al

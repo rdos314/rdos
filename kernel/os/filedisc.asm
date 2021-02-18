@@ -366,7 +366,7 @@ cfdSave:
 ;
     mov ecx,200h
     mov bx,es
-    InstallDisc
+    InstallDynamicDisc
 ;
     mov es:fd_disc_sel,bx
     mov es:fd_disc_nr,al
@@ -519,7 +519,7 @@ ofdSave:
 ;
     mov ecx,200h
     mov bx,es
-    InstallDisc
+    InstallDynamicDisc
 ;
     mov es:fd_disc_sel,bx
     mov es:fd_disc_nr,al

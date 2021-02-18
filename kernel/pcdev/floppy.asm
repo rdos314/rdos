@@ -1966,7 +1966,7 @@ install_unit    Proc near
 ;       
     mov ecx,200h
     mov bx,fs
-    InstallDisc
+    InstallStaticDisc
 ;
     mov fs:disc_sel,bx
     mov fs:disc_nr,al

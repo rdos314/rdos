@@ -1364,7 +1364,7 @@ install_unit_ok:
 ;
     mov ecx,10000h
     mov bx,fs
-    InstallDisc
+    InstallStaticDisc
     mov fs:disc_sel,bx
     mov fs:disc_nr,al
     mov fs:disc_ide_sel,ds
@@ -1568,7 +1568,7 @@ install_pci_unit_ok:
 ;
     mov ecx,10000h
     mov bx,fs
-    InstallDisc
+    InstallStaticDisc
     mov fs:disc_sel,bx
     mov fs:disc_nr,al
     mov fs:disc_ide_sel,ds

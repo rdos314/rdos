@@ -96,6 +96,7 @@ drive_wait_struc    ENDS
 DISC_FLAG_STOPPED       = 1
 DISC_FLAG_USE32         = 2
 DISC_FLAG_INSTALLED     = 4
+DISC_FLAG_DYNAMIC       = 8
 
 disc_def_struc      STRUC
 
@@ -2836,15 +2837,10 @@ get_disc_request_array  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-install_disc_name       DB 'Install Disc',0
+install_static_disc_name       DB 'Install Static Disc',0
+install_dynamic_disc_name      DB 'Install Dynamic Disc',0
 
-install_disc    Proc far
-    push ds
-    push es
-    push cx
-    push si
-    push di
-;
+install_disc    Proc near
     push cx
     mov ax,SEG data
     mov ds,ax
@@ -2916,13 +2912,43 @@ install_disc_next:
     stc
 
 install_disc_done:
+    ret
+install_disc    Endp
+
+install_static_disc    Proc far
+    push ds
+    push es
+    push cx
+    push si
+    push di
+;
+    call install_disc
+;
     pop di
     pop si
     pop cx
     pop es
     pop ds
     retf32
-install_disc    Endp
+install_static_disc    Endp
+
+install_dynamic_disc    Proc far
+    push ds
+    push es
+    push cx
+    push si
+    push di
+;
+    call install_disc
+    or ds:disc_flags,DISC_FLAG_DYNAMIC
+;
+    pop di
+    pop si
+    pop cx
+    pop es
+    pop ds
+    retf32
+install_dynamic_disc    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5901,39 +5927,6 @@ end_disc_handler  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CondBeginDiscHandler
-;
-;           DESCRIPTION:    Conditionally begin disc handler
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-cond_begin_disc_handler_name     DB 'Cond Begin Disc Handler',0
-
-cond_begin_disc_handler  Proc far
-    push ds
-    push ax
-;
-    mov ax,SEG data
-    mov ds,ax
-    EnterSection ds:disc_handler_section
-    mov ax,ds:disc_handlers
-    or ax,ax
-    stc
-    jnz hdhcDone
-;  
-    inc ds:disc_handlers
-    clc
-
-hdhcDone:    
-    LeaveSection ds:disc_handler_section
-    pop ax
-    pop ds
-    retf32
-cond_begin_disc_handler  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           HOOK_INIT_DISC
 ;
 ;           DESCRIPTION:    Add an InitDisc hook
@@ -6465,9 +6458,13 @@ CreateEfiDrive  Proc near
     IsFileSystemAvailable
     jc cedDone
 ;    
+    test gs:disc_flags,DISC_FLAG_DYNAMIC
+    jnz cedDyn
+;    
     test gs:disc_flags,DISC_FLAG_INSTALLED
     jz cedStatic
-;
+
+cedDyn:
     call AllocDynamicDrive
     jmp cedOpen
 
@@ -6509,9 +6506,13 @@ CreateDrive  Proc near
     IsFileSystemAvailable
     jc cndDone
 ;    
+    test gs:disc_flags,DISC_FLAG_DYNAMIC
+    jnz cndDyn
+;
     test gs:disc_flags,DISC_FLAG_INSTALLED
     jz cndStatic
-;
+
+cndDyn:
     call AllocDynamicDrive
     jmp cndOpen
 
@@ -7861,6 +7862,9 @@ udLoop:
     pop si
     pop ds
 ;
+    mov al,gs:disc_nr
+    StartDisc
+;
     lock or gs:disc_flags,DISC_FLAG_INSTALLED
 
 udNext:
@@ -8046,14 +8050,14 @@ init    PROC far
     mov ax,end_disc_handler_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET cond_begin_disc_handler
-    mov edi,OFFSET cond_begin_disc_handler_name
-    mov ax,cond_begin_disc_handler_nr
+    mov esi,OFFSET install_static_disc
+    mov edi,OFFSET install_static_disc_name
+    mov ax,install_static_disc_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET install_disc
-    mov edi,OFFSET install_disc_name
-    mov ax,install_disc_nr
+    mov esi,OFFSET install_dynamic_disc
+    mov edi,OFFSET install_dynamic_disc_name
+    mov ax,install_dynamic_disc_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_disc_param
