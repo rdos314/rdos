@@ -7802,8 +7802,6 @@ sync_disc_part      Proc far
     mov ax,flat_sel
     mov es,ax
 ;
-    lock or gs:disc_flags,DISC_FLAG_INSTALLED
-;
     call Assign1
     call Assign2
 
@@ -7815,6 +7813,67 @@ sdpDone:
     pop ds
     retf32
 sync_disc_part      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateDiscs
+;
+;           DESCRIPTION:    Update discs
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateDiscs  Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov si,OFFSET disc_def_arr
+    mov cx,MAX_DRIVES
+
+udLoop:
+    mov ax,ds:[si]
+    or ax,ax
+    jz udNext
+;
+    mov gs,ax
+    test gs:disc_flags,DISC_FLAG_INSTALLED
+    jnz udNext
+;
+    push ds
+    push si
+    push cx
+;
+    call Assign1
+    call Assign2
+;
+    pop cx
+    pop si
+    pop ds
+;
+    lock or gs:disc_flags,DISC_FLAG_INSTALLED
+
+udNext:
+    add si,2
+    loop udLoop
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+UpdateDiscs  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -7911,14 +7970,7 @@ dtRetry:
     jmp dtRetry
     
 dtInitDo:        
-    EnterSection ds:disc_handler_section
-    call run_disc_assign
-    call run_drive_assign1
-    call run_drive_assign2
-;    
-    mov ax,SEG data
-    mov ds,ax
-    LeaveSection ds:disc_handler_section
+    call UpdateDiscs
 ;
     mov ax,fs_sys_data_sel
     mov ds,ax
@@ -7929,6 +7981,7 @@ dtInitDo:
 
 dtWait:
     WaitForSignal
+    call UpdateDiscs
     jmp dtWait
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

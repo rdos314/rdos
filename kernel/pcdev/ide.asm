@@ -674,155 +674,6 @@ WriteTaskFile   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       ReadDrive
-;
-;       DESCRIPTION:    Read data
-;
-;       PARAMETERS:     FS      Disc sel
-;               BX      Sector #
-;               CX      Number of sectors
-;               EDX     Unit #
-;               EDI     Logical address of buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadDrive       Proc near
-    push bx
-    mov ds,fs:disc_ide_sel
-    EnterSection ds:IdeSection
-    GetThread
-    mov ds:IdeThread,ax
-    mov ax,fs:disc_io_base
-    mov ds:IdeIoBase,ax
-    pop bx
-    test fs:drive_lba_flags,LBA_MODE
-    jz ReadDriveIde
-
-ReadDriveLba:
-    push edx
-    movzx eax,fs:drive_sectors_per_unit
-    mul edx
-    movzx ebx,bx
-    add eax,ebx
-    mov edx,eax
-    mov ah,fs:drive_precomp
-    call SetupLbaTaskFile
-    pop edx
-    jmp ReadDriveStart
-
-ReadDriveIde:
-    push bx
-    mov ax,bx
-    div byte ptr fs:drive_sectors_per_cyl
-    mov bh,al
-    mov bl,ah
-    inc bl
-    mov ah,fs:drive_precomp
-    call SetupIdeTaskFile
-    pop bx
-
-ReadDriveStart:
-    jc ReadDriveDone
-;
-    push dx     
-    mov al,20h
-    test fs:drive_lba_flags,LBA_48
-    jz ReadDriveLbaOk
-;
-    or al,4
-
-ReadDriveLbaOk:    
-    mov dx,fs:disc_io_base
-    call ReadTaskFile
-    pop dx
-
-ReadDriveDone:
-    pushf
-    mov ds:IdeThread,0
-    mov ds:IdeIoBase,0
-    LeaveSection ds:IdeSection
-    popf
-    ret
-ReadDrive       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       WriteDrive
-;
-;       DESCRIPTION:    Write data
-;
-;       PARAMETERS:     FS      Disc sel
-;               BX      Sector #
-;               CX      Number of sectors
-;               EDX     Unit #
-;               EDI     Logical address of buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteDrive      Proc near
-    push bx
-    mov ds,fs:disc_ide_sel
-    EnterSection ds:IdeSection
-    GetThread
-    mov ds:IdeThread,ax
-    mov ax,fs:disc_io_base
-    mov ds:IdeIoBase,ax
-    pop bx
-    test fs:drive_lba_flags,LBA_MODE
-    jz WriteDriveIde
-
-WriteDriveLba:
-    push edx
-    movzx eax,fs:drive_sectors_per_unit
-    mul edx
-    movzx ebx,bx
-    add eax,ebx
-    mov edx,eax
-    mov ah,fs:drive_precomp
-    call SetupLbaTaskFile
-    pop edx
-    jmp WriteDriveStart
-
-WriteDriveIde:
-    push bx
-    mov ax,bx
-    div byte ptr fs:drive_sectors_per_cyl
-    mov bh,al
-    mov bl,ah
-    inc bl
-    mov ah,fs:drive_precomp
-    call SetupIdeTaskFile
-    pop bx
-
-WriteDriveStart:
-    jc WriteDriveDone
-;
-    push dx     
-    mov al,30h
-    test fs:drive_lba_flags,LBA_48
-    jz WriteDriveLbaOk
-;
-    or al,4
-
-WriteDriveLbaOk:    
-    mov dx,fs:disc_io_base
-    call WriteTaskFile
-    pop dx
-    
-WriteDriveDone:
-    pushf
-    mov ds:IdeThread,0
-    mov ds:IdeIoBase,0
-    LeaveSection ds:IdeSection
-    popf
-    ret
-WriteDrive      Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:       GetDriveParams
 ;
 ;       DESCRIPTION:    Get drive param
@@ -1013,452 +864,6 @@ calc_param_bios_ok:
     popad
     ret
 CalcParam       Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       ChsToLba
-;
-;       DESCRIPTION:    Convert CHS to LBA
-;
-;       PARAMETERS:     DS      IDE SEGMENT
-;               FS      DRIVE SEGMENT
-;               ES:EDI  CHS address
-;
-;       RETURNS:    EDX     LBA address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ChsToLba    Proc near
-    push eax
-    push ecx
-;
-    mov cl,es:[edi+2]
-    movzx ax,byte ptr es:[edi+1]
-    and al,0C0h
-    shl ax,2
-    mov ch,ah
-    cmp cx,1023
-    je chs_to_lba_fail
-;
-    movzx eax,fs:drive_heads
-    movzx ecx,cx
-    mul ecx
-    movzx ecx,byte ptr es:[edi]
-    add ecx,eax
-    movzx eax,fs:drive_sectors_per_cyl
-    mul ecx
-    movzx ecx,byte ptr es:[edi+1]
-    and cl,3Fh
-    add eax,ecx
-    dec eax
-    mov edx,eax
-    jmp chs_to_lba_done
-
-chs_to_lba_fail:
-    xor edx,edx
-
-chs_to_lba_done:
-    pop ecx
-    pop eax
-    ret
-ChsToLba    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       InstallPartition
-;
-;       DESCRIPTION:    Install partition
-;
-;       PARAMETERS:     DS      IDE SEGMENT
-;               ES      FLAT_SEL
-;               FS      Disc sel
-;               CL      PARTITION TYPE
-;               EDX     START SECTOR
-;               EAX     NUMBER OF SECTORS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-fs_unknown      DB 'UNKNOWN '
-fs_fat12    DB 'FAT12   '
-fs_fat16    DB 'FAT16   '
-fs_fat32    DB 'FAT32   '
-fs_hpfs     DB 'HPFS    '
-fs_rdfs     DB 'RDFS    '
-fs_flashfs  DB 'FLASHFS '
-
-FsTab:
-fs00    DW OFFSET fs_unknown
-fs01    DW OFFSET fs_fat12
-fs02    DW OFFSET fs_unknown
-fs03    DW OFFSET fs_unknown
-fs04    DW OFFSET fs_fat16
-fs05    DW OFFSET fs_unknown
-fs06    DW OFFSET fs_fat16
-fs07    DW OFFSET fs_hpfs
-fs08    DW OFFSET fs_unknown
-fs09    DW OFFSET fs_unknown
-fs0A    DW OFFSET fs_unknown
-fs0B    DW OFFSET fs_fat32
-fs0C    DW OFFSET fs_fat32
-fs0D    DW OFFSET fs_unknown
-fs0E    DW OFFSET fs_unknown
-fs0F    DW OFFSET fs_unknown
-fs10    DW OFFSET fs_unknown
-fs11    DW OFFSET fs_unknown
-fs12    DW OFFSET fs_unknown
-fs13    DW OFFSET fs_unknown
-fs14    DW OFFSET fs_unknown
-fs15    DW OFFSET fs_unknown
-fs16    DW OFFSET fs_unknown
-fs17    DW OFFSET fs_unknown
-fs18    DW OFFSET fs_unknown
-fs19    DW OFFSET fs_unknown
-fs1A    DW OFFSET fs_unknown
-fs1B    DW OFFSET fs_unknown
-fs1C    DW OFFSET fs_unknown
-fs1D    DW OFFSET fs_unknown
-fs1E    DW OFFSET fs_unknown
-fs1F    DW OFFSET fs_unknown
-fs20    DW OFFSET fs_unknown
-fs21    DW OFFSET fs_unknown
-fs22    DW OFFSET fs_unknown
-fs23    DW OFFSET fs_unknown
-fs24    DW OFFSET fs_unknown
-fs25    DW OFFSET fs_unknown
-fs26    DW OFFSET fs_unknown
-fs27    DW OFFSET fs_unknown
-fs28    DW OFFSET fs_unknown
-fs29    DW OFFSET fs_unknown
-fs2A    DW OFFSET fs_unknown
-fs2B    DW OFFSET fs_unknown
-fs2C    DW OFFSET fs_unknown
-fs2D    DW OFFSET fs_unknown
-fs2E    DW OFFSET fs_unknown
-fs2F    DW OFFSET fs_unknown
-fs30    DW OFFSET fs_unknown
-fs31    DW OFFSET fs_unknown
-fs32    DW OFFSET fs_unknown
-fs33    DW OFFSET fs_unknown
-fs34    DW OFFSET fs_unknown
-fs35    DW OFFSET fs_unknown
-fs36    DW OFFSET fs_unknown
-fs37    DW OFFSET fs_unknown
-fs38    DW OFFSET fs_unknown
-fs39    DW OFFSET fs_unknown
-fs3A    DW OFFSET fs_unknown
-fs3B    DW OFFSET fs_unknown
-fs3C    DW OFFSET fs_unknown
-fs3D    DW OFFSET fs_unknown
-fs3E    DW OFFSET fs_unknown
-fs3F    DW OFFSET fs_unknown
-fs40    DW OFFSET fs_unknown
-fs41    DW OFFSET fs_unknown
-fs42    DW OFFSET fs_unknown
-fs43    DW OFFSET fs_unknown
-fs44    DW OFFSET fs_unknown
-fs45    DW OFFSET fs_unknown
-fs46    DW OFFSET fs_unknown
-fs47    DW OFFSET fs_unknown
-fs48    DW OFFSET fs_unknown
-fs49    DW OFFSET fs_unknown
-fs4A    DW OFFSET fs_unknown
-fs4B    DW OFFSET fs_unknown
-fs4C    DW OFFSET fs_unknown
-fs4D    DW OFFSET fs_unknown
-fs4E    DW OFFSET fs_unknown
-fs4F    DW OFFSET fs_unknown
-fs50    DW OFFSET fs_unknown
-fs51    DW OFFSET fs_unknown
-fs52    DW OFFSET fs_unknown
-fs53    DW OFFSET fs_unknown
-fs54    DW OFFSET fs_unknown
-fs55    DW OFFSET fs_unknown
-fs56    DW OFFSET fs_unknown
-fs57    DW OFFSET fs_unknown
-fs58    DW OFFSET fs_unknown
-fs59    DW OFFSET fs_unknown
-fs5A    DW OFFSET fs_unknown
-fs5B    DW OFFSET fs_unknown
-fs5C    DW OFFSET fs_unknown
-fs5D    DW OFFSET fs_unknown
-fs5E    DW OFFSET fs_unknown
-fs5F    DW OFFSET fs_unknown
-fs60    DW OFFSET fs_unknown
-fs61    DW OFFSET fs_unknown
-fs62    DW OFFSET fs_unknown
-fs63    DW OFFSET fs_unknown
-fs64    DW OFFSET fs_unknown
-fs65    DW OFFSET fs_unknown
-fs66    DW OFFSET fs_unknown
-fs67    DW OFFSET fs_unknown
-fs68    DW OFFSET fs_unknown
-fs69    DW OFFSET fs_unknown
-fs6A    DW OFFSET fs_unknown
-fs6B    DW OFFSET fs_unknown
-fs6C    DW OFFSET fs_unknown
-fs6D    DW OFFSET fs_unknown
-fs6E    DW OFFSET fs_unknown
-fs6F    DW OFFSET fs_unknown
-fs70    DW OFFSET fs_unknown
-fs71    DW OFFSET fs_unknown
-fs72    DW OFFSET fs_unknown
-fs73    DW OFFSET fs_unknown
-fs74    DW OFFSET fs_unknown
-fs75    DW OFFSET fs_unknown
-fs76    DW OFFSET fs_unknown
-fs77    DW OFFSET fs_unknown
-fs78    DW OFFSET fs_unknown
-fs79    DW OFFSET fs_unknown
-fs7A    DW OFFSET fs_unknown
-fs7B    DW OFFSET fs_unknown
-fs7C    DW OFFSET fs_unknown
-fs7D    DW OFFSET fs_unknown
-fs7E    DW OFFSET fs_unknown
-fs7F    DW OFFSET fs_unknown
-fs80    DW OFFSET fs_unknown
-fs81    DW OFFSET fs_unknown
-fs82    DW OFFSET fs_unknown
-fs83    DW OFFSET fs_unknown
-fs84    DW OFFSET fs_unknown
-fs85    DW OFFSET fs_unknown
-fs86    DW OFFSET fs_unknown
-fs87    DW OFFSET fs_unknown
-fs88    DW OFFSET fs_unknown
-fs89    DW OFFSET fs_unknown
-fs8A    DW OFFSET fs_unknown
-fs8B    DW OFFSET fs_unknown
-fs8C    DW OFFSET fs_unknown
-fs8D    DW OFFSET fs_unknown
-fs8E    DW OFFSET fs_unknown
-fs8F    DW OFFSET fs_unknown
-fs90    DW OFFSET fs_unknown
-fs91    DW OFFSET fs_unknown
-fs92    DW OFFSET fs_unknown
-fs93    DW OFFSET fs_unknown
-fs94    DW OFFSET fs_unknown
-fs95    DW OFFSET fs_unknown
-fs96    DW OFFSET fs_unknown
-fs97    DW OFFSET fs_unknown
-fs98    DW OFFSET fs_unknown
-fs99    DW OFFSET fs_unknown
-fs9A    DW OFFSET fs_unknown
-fs9B    DW OFFSET fs_unknown
-fs9C    DW OFFSET fs_unknown
-fs9D    DW OFFSET fs_unknown
-fs9E    DW OFFSET fs_unknown
-fs9F    DW OFFSET fs_unknown
-fsA0    DW OFFSET fs_unknown
-fsA1    DW OFFSET fs_unknown
-fsA2    DW OFFSET fs_unknown
-fsA3    DW OFFSET fs_unknown
-fsA4    DW OFFSET fs_unknown
-fsA5    DW OFFSET fs_unknown
-fsA6    DW OFFSET fs_unknown
-fsA7    DW OFFSET fs_unknown
-fsA8    DW OFFSET fs_unknown
-fsA9    DW OFFSET fs_unknown
-fsAA    DW OFFSET fs_unknown
-fsAB    DW OFFSET fs_unknown
-fsAC    DW OFFSET fs_unknown
-fsAD    DW OFFSET fs_unknown
-fsAE    DW OFFSET fs_rdfs
-fsAF    DW OFFSET fs_flashfs
-fsB0    DW OFFSET fs_unknown
-fsB1    DW OFFSET fs_unknown
-fsB2    DW OFFSET fs_unknown
-fsB3    DW OFFSET fs_unknown
-fsB4    DW OFFSET fs_unknown
-fsB5    DW OFFSET fs_unknown
-fsB6    DW OFFSET fs_unknown
-fsB7    DW OFFSET fs_unknown
-fsB8    DW OFFSET fs_unknown
-fsB9    DW OFFSET fs_unknown
-fsBA    DW OFFSET fs_unknown
-fsBB    DW OFFSET fs_unknown
-fsBC    DW OFFSET fs_unknown
-fsBD    DW OFFSET fs_unknown
-fsBE    DW OFFSET fs_unknown
-fsBF    DW OFFSET fs_unknown
-fsC0    DW OFFSET fs_unknown
-fsC1    DW OFFSET fs_unknown
-fsC2    DW OFFSET fs_unknown
-fsC3    DW OFFSET fs_unknown
-fsC4    DW OFFSET fs_unknown
-fsC5    DW OFFSET fs_unknown
-fsC6    DW OFFSET fs_unknown
-fsC7    DW OFFSET fs_unknown
-fsC8    DW OFFSET fs_unknown
-fsC9    DW OFFSET fs_unknown
-fsCA    DW OFFSET fs_unknown
-fsCB    DW OFFSET fs_unknown
-fsCC    DW OFFSET fs_unknown
-fsCD    DW OFFSET fs_unknown
-fsCE    DW OFFSET fs_unknown
-fsCF    DW OFFSET fs_unknown
-fsD0    DW OFFSET fs_unknown
-fsD1    DW OFFSET fs_unknown
-fsD2    DW OFFSET fs_unknown
-fsD3    DW OFFSET fs_unknown
-fsD4    DW OFFSET fs_unknown
-fsD5    DW OFFSET fs_unknown
-fsD6    DW OFFSET fs_unknown
-fsD7    DW OFFSET fs_unknown
-fsD8    DW OFFSET fs_unknown
-fsD9    DW OFFSET fs_unknown
-fsDA    DW OFFSET fs_unknown
-fsDB    DW OFFSET fs_unknown
-fsDC    DW OFFSET fs_unknown
-fsDD    DW OFFSET fs_unknown
-fsDE    DW OFFSET fs_unknown
-fsDF    DW OFFSET fs_unknown
-fsE0    DW OFFSET fs_unknown
-fsE1    DW OFFSET fs_unknown
-fsE2    DW OFFSET fs_unknown
-fsE3    DW OFFSET fs_unknown
-fsE4    DW OFFSET fs_unknown
-fsE5    DW OFFSET fs_unknown
-fsE6    DW OFFSET fs_unknown
-fsE7    DW OFFSET fs_unknown
-fsE8    DW OFFSET fs_unknown
-fsE9    DW OFFSET fs_unknown
-fsEA    DW OFFSET fs_unknown
-fsEB    DW OFFSET fs_unknown
-fsEC    DW OFFSET fs_unknown
-fsED    DW OFFSET fs_unknown
-fsEE    DW OFFSET fs_unknown
-fsEF    DW OFFSET fs_unknown
-fsF0    DW OFFSET fs_unknown
-fsF1    DW OFFSET fs_unknown
-fsF2    DW OFFSET fs_unknown
-fsF3    DW OFFSET fs_unknown
-fsF4    DW OFFSET fs_unknown
-fsF5    DW OFFSET fs_unknown
-fsF6    DW OFFSET fs_unknown
-fsF7    DW OFFSET fs_unknown
-fsF8    DW OFFSET fs_unknown
-fsF9    DW OFFSET fs_unknown
-fsFA    DW OFFSET fs_unknown
-fsFB    DW OFFSET fs_unknown
-fsFC    DW OFFSET fs_unknown
-fsFD    DW OFFSET fs_unknown
-fsFE    DW OFFSET fs_unknown
-fsFF    DW OFFSET fs_unknown
-
-InstallPartition    Proc near
-    push es
-    pushad
-;
-    cmp cl,7
-    je install_check_part
-;
-    cmp cl,0Ch
-    jne install_check_type
-
-install_check_part:
-    push eax
-;
-    push edx
-    mov eax,200h
-    AllocateSmallLinear
-    mov edi,edx
-    pop edx
-;
-    push ecx
-    push edx
-    mov eax,edx
-    xor edx,edx
-    movzx ecx,word ptr fs:drive_sectors_per_unit
-    div ecx
-    mov bx,dx
-    mov edx,eax
-    mov ecx,1
-    call ReadDrive
-    pop edx
-    pop ecx
-;
-    push ds
-    push edx
-;
-    mov al,es:[edi+26h]
-    cmp al,29h
-    je install_use_part_fat
-;
-    mov ax,cs
-    mov ds,ax
-    movzx esi,cl
-    shl si,1
-    mov si,cs:[si].FsTab
-    jmp install_use_part_cont
-
-install_use_part_fat:
-    mov ax,flat_sel
-    mov ds,ax
-    lea esi,[edi+36h]
-
-install_use_part_cont:
-    mov edx,edi
-    mov eax,10h
-    AllocateSmallGlobalMem
-    xor edi,edi
-    movs dword ptr es:[edi],ds:[esi]
-    movs dword ptr es:[edi],ds:[esi]
-    movs dword ptr es:[edi],ds:[esi]
-    movs dword ptr es:[edi],ds:[esi]
-;
-    xor ecx,ecx
-    FreeLinear
-;
-    pop edx
-    pop ds
-;
-    pop ecx
-    xor edi,edi
-    IsFileSystemAvailable
-    jc install_part_free
-;
-    AllocateStaticDrive
-    mov ah,fs:disc_nr
-    OpenDrive
-;
-    InstallFileSystem
-    clc
-
-install_part_free:
-    pushf
-    FreeMem
-    popf
-    jmp install_part_done
-
-install_check_type:
-    mov di,cs
-    mov es,di
-    movzx di,cl
-    shl di,1
-
-install_part_test_avail:
-    mov ecx,eax
-    mov di,word ptr cs:[di].FsTab
-    movzx edi,di
-    IsFileSystemAvailable
-    jc install_part_done
-;
-    AllocateStaticDrive
-    mov ah,fs:disc_nr
-    OpenDrive
-;
-    InstallFileSystem
-    clc
-
-install_part_done:
-    popad
-    pop es
-    ret
-InstallPartition    Endp
-
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2213,418 +1618,6 @@ install_pci_unit_done:
     ret
 install_pci_unit    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       DISC_ASSIGN1
-;
-;       DESCRIPTION:    Assign discs on primary adapter
-;
-;       PARAMETERS:     
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-disc_assign1    Proc far
-    mov dx,1F7h
-    in al,dx
-    and al,7Fh
-    cmp al,7Fh
-    je disc_assign1_done
-;    
-    mov ax,ide_data_sel1
-    mov ds,ax
-    GetThread
-    mov ds:IdeThread,ax
-;       
-    mov al,0
-    mov dx,1F0h
-    call install_unit
-;       
-    mov al,1
-    mov dx,1F0h
-    call install_unit
-    mov ds:IdeThread,0
-
-disc_assign1_done:
-    retf32
-disc_assign1    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       DISC_ASSIGN2
-;
-;       DESCRIPTION:    Assign discs
-;
-;       PARAMETERS:     
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-disc_assign2    Proc far
-    mov dx,177h
-    in al,dx
-    and al,7Fh
-    cmp al,7Fh
-    je disc_assign2_done
-;    
-    mov ax,ide_data_sel2
-    mov ds,ax
-    GetThread
-    mov ds:IdeThread,ax
-;       
-    mov al,0
-    mov dx,170h
-    call install_unit
-;       
-    mov al,1
-    mov dx,170h
-    call install_unit
-    mov ds:IdeThread,0
-
-disc_assign2_done:
-    retf32
-disc_assign2    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       DISC_ASSIGN_PCI
-;
-;       DESCRIPTION:    Assign PCI discs
-;
-;       PARAMETERS:     
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-disc_pci_name   DB 'Ide Pci ',0
-
-disc_assign_pci    Proc far
-    mov ax,SEG data
-    mov es,ax
-    mov es:ide_pci_curr,0
-    mov di,OFFSET pci_name_str
-    mov si,OFFSET disc_pci_name
-
-disc_assign_name_loop:    
-    lods byte ptr cs:[si]
-    stosb
-    or al,al
-    jnz disc_assign_name_loop
-;
-    dec di
-    mov es:pci_curr_ptr,di
-    mov al,'0'
-    stosb
-    mov al,':'
-    stosb
-    mov es:pci_unit_ptr,di
-    mov al,'0'
-    stosb
-    xor al,al
-    stosb
-;
-    xor bx,bx
-    mov cx,es:ide_pci_count
-    or cx,cx
-    jz disc_assign_pci_done
-
-disc_assign_pci_loop:    
-    mov dx,es:[bx].ide_io_arr
-    mov ds,es:[bx].ide_pci_arr
-;    
-    GetThread
-    mov es:pci_thread,ax
-;       
-    mov al,0
-    call install_pci_unit
-;       
-    mov al,1
-    call install_pci_unit
-    mov es:pci_thread,0
-;
-    mov di,es:pci_curr_ptr
-    inc byte ptr es:[di]
-;
-    add bx,2
-    loop disc_assign_pci_loop
-
-disc_assign_pci_done:
-    retf32
-disc_assign_pci    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       DRIVE_ASSIGN1
-;
-;       DESCRIPTION:    Drive assign, pass 1
-;
-;       PARAMETERS:     BX      Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-drive_assign1   Proc far
-    mov fs,bx
-    mov ds,fs:disc_ide_sel
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov eax,200h
-    AllocateSmallLinear
-    mov edi,edx
-;
-    mov ecx,1
-    xor bx,bx
-    xor edx,edx
-    call ReadDrive
-;
-    mov esi,1BEh
-
-drive_assign_loop1:
-    mov cl,es:[esi+edi].part_type
-    or cl,cl
-    jz drive_assign_free1
-;
-    mov eax,es:[esi+edi].part_sectors
-    mov edx,es:[esi+edi].part_start_sector
-    call InstallPartition
-
-drive_assign_next_part1:
-    add si,10h
-    cmp si,1FEh
-    jne drive_assign_loop1
-
-drive_assign_free1:
-    mov ecx,200h
-    mov edx,edi
-    FreeLinear
-;
-    retf32
-drive_assign1   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       InstallExtended
-;
-;       DESCRIPTION:    Install extended partion on drive
-;
-;       PARAMETERS:     DS      IDE SEGMENT
-;               ES      FLAT_SEL
-;               FS      Disc sel
-;               EDX     Current sector
-;               EDI     200H buffer with partition sector
-;               ESI     Partition offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InstallExtended Proc near
-    mov ebp,edx
-    mov eax,200h
-    AllocateSmallLinear
-    mov edi,edx
-;
-    mov eax,ebp
-    xor edx,edx
-    movzx ecx,word ptr fs:drive_sectors_per_unit
-    div ecx
-    mov bx,dx
-    mov edx,eax
-;
-    mov ecx,1
-    call ReadDrive
-;
-    mov esi,1BEh
-
-install_ext_loop1:
-    mov cl,es:[esi+edi].part_type
-    or cl,cl
-    jz install_ext_next_part1
-;
-    cmp cl,5
-    je install_ext_next_part1
-;
-    cmp cl,0Fh
-    je install_ext_next_part1
-;
-    push ebp
-    push edi
-;
-    mov eax,es:[esi+edi].part_sectors
-    lea edi,[esi+edi+1]
-    call ChsToLba
-    or edx,edx
-    jnz install_ext_do
-;
-    mov edx,es:[edi+7]
-    add edx,ebp
-
-install_ext_do:
-    call InstallPartition
-    pop edi
-    pop ebp
-
-install_ext_next_part1:
-    add si,10h
-    cmp si,1FEh
-    jne install_ext_loop1
-;
-    mov esi,1BEh
-
-install_ext_loop2:
-    mov cl,es:[esi+edi].part_type
-    or cl,cl
-    jz install_ext_next_part2
-;
-    cmp cl,5
-    je install_ext_install2
-;
-    cmp cl,0Fh
-    jne install_ext_next_part2
-
-install_ext_install2:
-    push esi
-    push edi
-    push ebp
-;
-    lea edi,[esi+edi+1]
-    call ChsToLba
-    or edx,edx
-    jnz install_ext_link
-;
-    mov edx,es:[edi+7]
-    add edx,ebp
-
-install_ext_link:
-    call InstallExtended
-;
-    pop ebp
-    pop edi
-    pop esi
-
-install_ext_next_part2:
-    add si,10h
-    cmp si,1FEh
-    jne install_ext_loop2
-;
-    mov ecx,200h
-    mov edx,edi
-    FreeLinear
-    ret
-InstallExtended Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       DRIVE_ASSIGN2
-;
-;       DESCRIPTION:    Assign disc drives, pass 2
-;
-;       PARAMETERS:     BX      Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-drive_assign2   Proc far
-    mov ax,flat_sel
-    mov es,ax
-    mov fs,bx
-    mov ds,fs:disc_ide_sel
-;
-    mov eax,200h
-    AllocateSmallLinear
-    mov edi,edx
-;
-    mov ecx,1
-    xor bx,bx
-    xor edx,edx
-    call ReadDrive
-;
-    mov esi,1BEh
-
-drive_assign_loop2:
-    mov cl,es:[esi+edi].part_type
-    or cl,cl
-    jz drive_assign_next_part2
-;
-    cmp cl,5
-    je drive_assign_install2
-;
-    cmp cl,0Fh
-    jne drive_assign_next_part2
-
-drive_assign_install2:
-    push esi
-    push edi
-;
-    lea edi,[esi+edi+1]
-    call ChsToLba
-    or edx,edx
-    jnz drive_assign_ext
-;
-    mov edx,es:[edi+7]
-
-drive_assign_ext:
-    call InstallExtended
-;
-    pop edi
-    pop esi
-
-drive_assign_next_part2:
-    add si,10h
-    cmp si,1FEh
-    jne drive_assign_loop2
-;
-    mov ecx,200h
-    mov edx,edi
-    FreeLinear
-;
-    mov bx,fs:disc_sel
-    StartDisc
-    clc
-    retf32
-drive_assign2   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       DEMAND_MOUNT
-;
-;       DESCRIPTION:    Mount disc drive on demand
-;
-;       PARAMETERS:     BX      Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-demand_mount    Proc far
-    retf32
-demand_mount    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       ERASE
-;
-;       DESCRIPTION:    Erase sectors
-;
-;       PARAMETERS:     BX      Disc handle
-;           EDX     Start sector
-;           ECX     Number of sectors
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-erase   Proc far
-    stc
-    retf32
-erase   Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2735,40 +1728,6 @@ get_ide_done:
     pop ds    
     retf32
 get_ide_disc    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       INIT
-;
-;       DESCRIPTION:    Init device
-;
-;       PARAMETERS:     
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-disc_ctrl1:
-dct100  DD OFFSET disc_assign1,     SEG code
-dct101  DD OFFSET drive_assign1,    SEG code
-dct102  DD OFFSET drive_assign2,    SEG code
-dct103  DD OFFSET demand_mount,     SEG code
-dct104  DD OFFSET erase,            SEG code
-
-disc_ctrl2:
-dct200  DD OFFSET disc_assign2,     SEG code
-dct201  DD OFFSET drive_assign1,    SEG code
-dct202  DD OFFSET drive_assign2,    SEG code
-dct203  DD OFFSET demand_mount,     SEG code
-dct204  DD OFFSET erase,            SEG code
-
-disc_ctrl_pci:
-dcp200  DD OFFSET disc_assign_pci,  SEG code
-dcp201  DD OFFSET drive_assign1,    SEG code
-dcp202  DD OFFSET drive_assign2,    SEG code
-dcp203  DD OFFSET demand_mount,     SEG code
-dcp204  DD OFFSET erase,            SEG code
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3075,6 +2034,163 @@ CheckPciSata Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartIde1
+;
+;       DESCRIPTION:    Start primary IDE
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartIde1    Proc near
+    push ds
+    pushad
+;
+    mov dx,1F7h
+    in al,dx
+    and al,7Fh
+    cmp al,7Fh
+    je disc_assign1_done
+;    
+    mov ax,ide_data_sel1
+    mov ds,ax
+    GetThread
+    mov ds:IdeThread,ax
+;       
+    mov al,0
+    mov dx,1F0h
+    call install_unit
+;       
+    mov al,1
+    mov dx,1F0h
+    call install_unit
+    mov ds:IdeThread,0
+
+disc_assign1_done:
+    popad
+    pop ds
+    ret
+StartIde1    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartIde2
+;
+;       DESCRIPTION:    Start second IDE drive
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartIde2    Proc near
+    push ds
+    pushad
+;
+    mov dx,177h
+    in al,dx
+    and al,7Fh
+    cmp al,7Fh
+    je disc_assign2_done
+;    
+    mov ax,ide_data_sel2
+    mov ds,ax
+    GetThread
+    mov ds:IdeThread,ax
+;       
+    mov al,0
+    mov dx,170h
+    call install_unit
+;       
+    mov al,1
+    mov dx,170h
+    call install_unit
+    mov ds:IdeThread,0
+
+disc_assign2_done:
+    popad
+    pop ds
+    ret
+StartIde2    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StartPci
+;
+;       DESCRIPTION:    Start PCI discs
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_pci_name   DB 'Ide Pci ',0
+
+StartPci    Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SEG data
+    mov es,ax
+    mov es:ide_pci_curr,0
+    mov di,OFFSET pci_name_str
+    mov si,OFFSET disc_pci_name
+
+disc_assign_name_loop:    
+    lods byte ptr cs:[si]
+    stosb
+    or al,al
+    jnz disc_assign_name_loop
+;
+    dec di
+    mov es:pci_curr_ptr,di
+    mov al,'0'
+    stosb
+    mov al,':'
+    stosb
+    mov es:pci_unit_ptr,di
+    mov al,'0'
+    stosb
+    xor al,al
+    stosb
+;
+    xor bx,bx
+    mov cx,es:ide_pci_count
+    or cx,cx
+    jz disc_assign_pci_done
+
+disc_assign_pci_loop:    
+    mov dx,es:[bx].ide_io_arr
+    mov ds,es:[bx].ide_pci_arr
+;    
+    GetThread
+    mov es:pci_thread,ax
+;       
+    mov al,0
+    call install_pci_unit
+;       
+    mov al,1
+    call install_pci_unit
+    mov es:pci_thread,0
+;
+    mov di,es:pci_curr_ptr
+    inc byte ptr es:[di]
+;
+    add bx,2
+    loop disc_assign_pci_loop
+
+disc_assign_pci_done:
+    popad
+    pop es
+    pop ds
+    ret
+StartPci    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init_ide
 ;
 ;           DESCRIPTION:    inits adpater
@@ -3103,8 +2219,6 @@ init_ide_primary:
     je init_ide_second
 ;
     inc bp
-    mov edi,OFFSET disc_ctrl1
-    HookInitDisc
 ;
     mov eax,SIZE ide_data
     mov bx,ide_data_sel1
@@ -3126,6 +2240,8 @@ init_ide_primary:
     mov es,bx
     mov edi,OFFSET ide_int
     RequestIrqHandler
+;
+    call StartIde1
 
 init_ide_second:
     mov dx,177h
@@ -3135,8 +2251,6 @@ init_ide_second:
     je init_ide_done
 ;
     inc bp
-    mov edi,OFFSET disc_ctrl2
-    HookInitDisc
 ;
     mov eax,SIZE ide_data
     mov bx,ide_data_sel2
@@ -3157,6 +2271,8 @@ init_ide_second:
     mov es,bx
     mov edi,OFFSET ide_int
     RequestIrqHandler
+;
+    call StartIde2
 
 init_ide_done:
     mov ax,cs
@@ -3185,11 +2301,7 @@ init_ide_check_count:
     or cx,cx
     jz init_ide_exit
 ;    
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET disc_ctrl_pci
-    HookInitDisc
+    call StartPci
 
 init_ide_exit:
     EndDiscHandler
