@@ -2036,7 +2036,7 @@ set_disc_use32_name     DB 'Set Disc Use32',0
 set_disc_use32  Proc far
     push ds
     mov ds,bx
-    or ds:disc_flags,DISC_FLAG_USE32
+    lock or ds:disc_flags,DISC_FLAG_USE32
     pop ds
     retf32
 set_disc_use32  Endp
@@ -2090,7 +2090,7 @@ stop_disc_request   Proc far
     jz sdrDone
 ;    
     mov ds,bx
-    or ds:disc_flags,DISC_FLAG_STOPPED
+    lock or ds:disc_flags,DISC_FLAG_STOPPED
     mov bx,ds:disc_thread
     Signal
 
@@ -6189,6 +6189,10 @@ ReadDiscSector PROC near
     push ds
     pushad
 ;
+    test gs:disc_flags,DISC_FLAG_STOPPED
+    stc
+    jnz rdsDone
+;
     push es
     push ecx
     push edi
@@ -6236,8 +6240,18 @@ rdsSignal:
     jne rdsFound
 
 rdsBlock:
+    test gs:disc_flags,DISC_FLAG_STOPPED
+    jnz rdsFail
+;
     call block
     jmp rdsLoop
+
+rdsFail:
+    pop edi
+    pop ecx
+    pop es
+    stc
+    jmp rdsDone
 
 rdsFound:
     test es:[edi].dh_flags, FLAG_IO_BUSY
@@ -6261,7 +6275,8 @@ rdsFound:
     mov ds,bx
     LeaveSection ds:disc_section
     clc
-;
+
+rdsDone:
     popad
     pop ds
     ret
@@ -7787,7 +7802,7 @@ sync_disc_part      Proc far
     mov ax,flat_sel
     mov es,ax
 ;
-    or gs:disc_flags,DISC_FLAG_INSTALLED
+    lock or gs:disc_flags,DISC_FLAG_INSTALLED
 ;
     call Assign1
     call Assign2
@@ -7800,21 +7815,6 @@ sdpDone:
     pop ds
     retf32
 sync_disc_part      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           INIT_DISC
-;
-;           DESCRIPTION:    Init discs
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_disc       Proc far
-    retf32
-init_disc       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
