@@ -1790,24 +1790,6 @@ discbuf_thread_loop:
     WaitForDiscRequest
     call perform_one
     jmp discbuf_thread_loop
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadSector
-;
-;           DESCRIPTION:    Read a sector
-;
-;           PARAMETERS:     FS          Disc selector
-;                           EDX         Sector
-;                           ES:EDI      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_sector      Proc far
-    int 3
-    retf32
-read_sector      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1975,9 +1957,6 @@ install_unit_ok:
     shl bx,1
     mov ds:[bx].DriveSelArr,fs
 ;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET read_sector
     mov ecx,10000h
     mov bx,fs
     InstallDisc
@@ -2182,9 +2161,6 @@ install_pci_unit_ok:
     shl bx,1
     mov ds:[bx].DriveSelArr,fs
 ;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET read_sector
     mov ecx,10000h
     mov bx,fs
     InstallDisc

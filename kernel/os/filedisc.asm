@@ -271,25 +271,6 @@ discbuf_thread_loop:
     call perform_one
     jmp discbuf_thread_loop
 
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadSector
-;
-;           DESCRIPTION:    Read a sector
-;
-;           PARAMETERS:     FS          Disc selector
-;                           EDX         Sector
-;                           ES:EDI      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_sector      Proc far
-    int 3
-    retf32
-read_sector      Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -383,14 +364,9 @@ cfdSave:
     mov es:fd_access_drive,cx
     mov es:fd_selector,ax
 ;
-    push es
     mov ecx,200h
     mov bx,es
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET read_sector
     InstallDisc
-    pop es
 ;
     mov es:fd_disc_sel,bx
     mov es:fd_disc_nr,al
@@ -541,14 +517,9 @@ ofdSave:
     mov es:fd_sectors_per_unit,cx
     mov es:fd_units,ax
 ;
-    push es
     mov ecx,200h
     mov bx,es
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET read_sector
     InstallDisc
-    pop es
 ;
     mov es:fd_disc_sel,bx
     mov es:fd_disc_nr,al

@@ -1926,24 +1926,6 @@ discbuf_thread_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadSector
-;
-;           DESCRIPTION:    Read a sector
-;
-;           PARAMETERS:     FS          Disc selector
-;                           EDX         Sector
-;                           ES:EDI      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_sector      Proc far
-    int 3
-    retf32
-read_sector      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           INSTALL_UNIT
 ;
 ;           DESCRIPTION:    Install a disk unit
@@ -1982,16 +1964,9 @@ install_unit    Proc near
     pop ax
     pop ds
 ;       
-    push es
-    push edi
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET read_sector
     mov ecx,200h
     mov bx,fs
     InstallDisc
-    pop edi
-    pop es
 ;
     mov fs:disc_sel,bx
     mov fs:disc_nr,al

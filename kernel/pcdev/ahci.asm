@@ -3555,42 +3555,7 @@ notify_cmd_next:
     mov ax,1
     WaitMilliSec
     jmp notify_discbuf_retry
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadSector
-;
-;           DESCRIPTION:    Read a sector
-;
-;           PARAMETERS:     AL          Disc #
-;                           EDX         Sector
-;                           ES:EDI      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_sector      Proc far
-    push gs
-    pushad
-;
-    movzx si,al
-    shl si,1
-    mov ax,SEG data
-    mov gs,ax
-    mov ax,gs:[si].ahci_disc_arr
-    or ax,ax
-    stc
-    jz rsDone
-;
-    mov gs,ax
-    call ReadSector
-
-rsDone:
-    popad
-    pop gs
-    retf32
-read_sector      Endp
-        
+            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3618,13 +3583,8 @@ install_disc_unit Proc near
     mov bx,ds:[bx]
     mov ds,bx
 ;
-    push es
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET read_sector
     mov ecx,10000h
     InstallDisc
-    pop es
 ;
     mov ds:ap_disc_sel,bx
     mov ds:ap_disc_nr,al

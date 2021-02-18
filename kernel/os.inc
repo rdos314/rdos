@@ -3271,9 +3271,6 @@ HookInitDisc    MACRO
 
 ; IN  BX          Handle
 ; IN  ECX         Read-ahead
-; IN  ES:EDI      Read procedure
-;         FS      Disc handle
-;         EDX     Sector
 ; OUT AL          Disc #
 ; OUT BX          Disc sel
 InstallDisc     MACRO

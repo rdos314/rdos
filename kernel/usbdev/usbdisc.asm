@@ -1842,25 +1842,6 @@ perform_one_done:
     ret
 perform_one     Endp
 
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadSector
-;
-;           DESCRIPTION:    Read a sector
-;
-;           PARAMETERS:     FS          Disc selector
-;                           EDX         Sector
-;                           ES:EDI      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_sector      Proc far
-    int 3
-    retf32
-read_sector      Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;   Disc thread
@@ -1953,16 +1934,9 @@ dtRetry:
 dtOk:
     pop cx
 ;
-    push es
-    push edi
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET read_sector
     mov bx,fs
     mov ecx,10000h
     InstallDisc
-    pop edi
-    pop es
     mov fs:disc_nr,al
     mov fs:disc_handle,bx
 ;
