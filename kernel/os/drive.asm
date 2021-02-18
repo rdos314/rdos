@@ -35,8 +35,9 @@ INCLUDE system.def
 INCLUDE int.def
 INCLUDE system.inc
 INCLUDE ..\drive.inc
+INCLUDE ..\fs.inc
+INCLUDE exec.def
 
-MAX_DRIVES = 'Z' - 'A' + 1
 DRIVE_WAIT_NUM = 32
 
 POLL_TIMEOUT = 1192 * 100
@@ -212,7 +213,7 @@ drive_wait_free         DW ?
 drive_wait_count        DW ?
 disc_handler_section    section_typ <>
 disc_handlers           DW ?
-disc_start_thread       DW ?
+disc_handler_thread     DW ?
 
 data    ENDS
 
@@ -5893,7 +5894,7 @@ end_disc_handler  Proc far
     sub ds:disc_handlers,1
     jnz edhDone
 ;
-    mov bx,ds:disc_start_thread
+    mov bx,ds:disc_handler_thread
     Signal
 
 edhDone:
@@ -7819,23 +7820,104 @@ sync_disc_part      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_disc       Proc far
+    retf32
+init_disc       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           supervise_thread
+;
+;           DESCRIPTION:    Supervisor thread for FS
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+supervise_thread_name DB 'File System Supervisor', 0
+
+supervise_thread:
+    mov ax,fs_sys_data_sel
+    mov ds,ax
+;
+    mov cx,4 * 20
+
+stRetry:
+    mov al,ds:fs_init_done
+    or al,al
+    jnz stDone
+;
+    mov ax,250
+    WaitMilliSec
+;
+    sub cx,1
+    jnz stRetry
+;    
+    SoftReset
+    
+stDone:
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DiscThread
+;
+;           DESCRIPTION:    Disc thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_thread_name DB 'Disc', 0
+
+disc_thread_pr:
     mov ax,SEG data
     mov ds,ax
     ClearSignal
     GetThread
-    mov ds:disc_start_thread,ax
-    sub ds:disc_handlers,1
-    jz init_disc_do
+    mov ds:disc_handler_thread,ax
+;
+    mov ax,wd_code_sel
+    verr ax
+    jnz dtSuperOk
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET supervise_thread
+    mov di,OFFSET supervise_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
 
-init_disc_retry:
+dtSuperOk:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ax,ds:pf_cur_dir_sel
+    or ax,ax
+    jnz dtDirOk
+;
+    CreateCurDir
+    mov ds:pf_cur_dir_sel,ax
+
+dtDirOk:
+    mov ax,SEG data
+    mov ds,ax
+;
+    sub ds:disc_handlers,1
+    jz dtInitDo
+
+dtRetry:
     mov ax,ds:disc_handlers
     or ax,ax
-    jz init_disc_do
+    jz dtInitDo
 ;    
     WaitForSignal
-    jmp init_disc_retry
+    jmp dtRetry
     
-init_disc_do:        
+dtInitDo:        
     EnterSection ds:disc_handler_section
     call run_disc_assign
     call run_drive_assign1
@@ -7844,10 +7926,48 @@ init_disc_do:
     mov ax,SEG data
     mov ds,ax
     LeaveSection ds:disc_handler_section
-    mov ds:disc_start_thread,0
-    retf32
-init_disc       Endp
+;
+    mov ax,fs_sys_data_sel
+    mov ds,ax
+    mov ds:fs_init_done,1
+    LeaveSection ds:fs_init_section
+;
+    StartPrograms
 
+dtWait:
+    WaitForSignal
+    jmp dtWait
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_disc_thread
+;
+;           DESCRIPTION:    Create disc thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_disc_thread    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET disc_thread_pr
+    mov di,OFFSET disc_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    retf32
+init_disc_thread    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8181,8 +8301,8 @@ init    PROC far
     mov ax,erase_disc_sectors_nr
     RegisterUserGate
 ;
-    mov edi,OFFSET init_disc
-    HookInitFileSystem
+    mov edi,OFFSET init_disc_thread
+    HookInitTasking
 ;
     mov bx,SEG data
     mov es,bx

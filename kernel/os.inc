@@ -3487,11 +3487,6 @@ ResetDrive      MACRO
 
 ;;;;;;;;;;;; File system ;;;;;;;;;;;;
 
-;  IN  ES:EDI      INIT CALLBACK
-HookInitFileSystem      MACRO
-    OsGate hook_init_file_system_nr
-                    ENDM
-
 ;  IN   DS:ESI       File system name
 ;  IN   ES:EDI       File system table
 RegisterFileSystem      MACRO

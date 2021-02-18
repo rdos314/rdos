@@ -214,7 +214,6 @@ define_sector_nr                        = 226
 wait_for_sector_nr                      = 227
 reset_drive_nr                          = 228
 
-hook_init_file_system_nr        = 229
 register_file_system_nr         = 230
 define_media_check_nr           = 231
 demand_load_file_system_nr      = 232

@@ -57,13 +57,6 @@ CallFileSystem  MACRO   call_proc
                 ENDM
 
 
-data    SEGMENT byte public 'DATA'
-
-fs_init_hooks           DW ?
-fs_init_hook_arr        DD 32 DUP(?,?)
-
-data    ENDS
-
 code    SEGMENT byte public 'CODE'
 
     .386p
@@ -73,41 +66,6 @@ code    SEGMENT byte public 'CODE'
     extrn init_file:near
     extrn init_dir:near
     extrn init_memmap:near
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           HOOK_INIT_FILE_SYSTEM
-;
-;           DESCRIPTION:    Hook init file system
-;
-;           PARAMETERS:     ES:EDI       CALLBACK
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_init_file_system_name      DB 'Hook Init File System',0
-
-hook_init_file_system   Proc far
-    push ds
-    push ax
-    push bx
-;    
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:fs_init_hooks
-    mov bx,ax
-    shl bx,3
-    add bx,OFFSET fs_init_hook_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc ax
-    mov ds:fs_init_hooks,ax
-;    
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_init_file_system   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -526,140 +484,6 @@ rename_file16   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           supervise_thread
-;
-;           DESCRIPTION:    Supervisor thread for FS
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-supervise_thread_name DB 'File System Supervisor', 0
-
-supervise_thread:
-    mov ax,fs_sys_data_sel
-    mov ds,ax
-;
-    mov cx,4 * 20
-
-stRetry:
-    mov al,ds:fs_init_done
-    or al,al
-    jnz stDone
-;
-    mov ax,250
-    WaitMilliSec
-;
-    sub cx,1
-    jnz stRetry
-;    
-    SoftReset
-    
-stDone:
-    TerminateThread
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Hook_thread
-;
-;           DESCRIPTION:    Run all init file system hooks
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_thread_name DB 'Init File System', 0
-
-hook_thread     PROC far
-    mov ax,wd_code_sel
-    verr ax
-    jnz hook_thread_supervise_ok
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET supervise_thread
-    mov di,OFFSET supervise_thread_name
-    mov ax,3
-    mov cx,stack0_size
-    CreateThread
-
-hook_thread_supervise_ok:
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ax,ds:pf_cur_dir_sel
-    or ax,ax
-    jnz hook_thread_dir_ok
-;
-    CreateCurDir
-    mov ds:pf_cur_dir_sel,ax
-
-hook_thread_dir_ok:
-    mov ax,SEG data
-    mov ds,ax
-    mov cx,ds:fs_init_hooks
-    or cx,cx
-    je hook_thread_done
-;
-    mov bx,OFFSET fs_init_hook_arr
-hook_thread_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    sub cx,1
-    jnz hook_thread_loop
-
-hook_thread_done:
-    mov ax,fs_sys_data_sel
-    mov ds,ax
-    mov ds:fs_init_done,1
-    LeaveSection ds:fs_init_section
-;
-    StartPrograms
-    ret
-hook_thread     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Init_hook_thread
-;
-;           DESCRIPTION:    Create hook thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_hook_thread    Proc far
-    push ds
-    push es
-    pushad
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET hook_thread
-    mov di,OFFSET hook_thread_name
-    mov ax,3
-    mov cx,stack0_size
-    CreateThread
-;
-    popad
-    pop es
-    pop ds
-    retf32
-init_hook_thread    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           INIT
 ;
 ;           DESCRIPTION:    Init driver
@@ -712,11 +536,6 @@ init    PROC far
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET hook_init_file_system
-    mov edi,OFFSET hook_init_file_system_name
-    mov ax,hook_init_file_system_nr
-    RegisterOsGate
-;
     mov esi,OFFSET register_file_system
     mov edi,OFFSET register_file_system_name
     mov ax,register_file_system_nr
@@ -763,9 +582,6 @@ init    PROC far
     mov dx,virt_ds_in OR virt_es_in
     mov ax,rename_file_nr
     RegisterUserGate
-;
-    mov edi,OFFSET init_hook_thread
-    HookInitTasking
 ;       
     mov eax,SIZE fs_data_seg
     mov bx,fs_sys_data_sel
@@ -779,9 +595,6 @@ init    PROC far
     mov ds:fs_init_done,0
     mov ds:file_defs,0
 ;
-    mov ax,SEG data
-    mov ds,ax    
-    mov ds:fs_init_hooks,0
     pop ds
 ;
     mov di,OFFSET fs_sel
