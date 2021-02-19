@@ -58,23 +58,3 @@ dh_time_lsb			DD ?
 dh_data				DD ?
 
 discbuf_handle		ENDS
-
-disc_system_struc 	STRUC
-
-ds_disc_assign_proc	    DD ?,?
-
-;	BX	Disc handle
-ds_drive_assign1_proc	DD ?,?
-
-;	BX	Disc handle
-ds_drive_assign2_proc	DD ?,?
-
-;	BX	Disc handle
-ds_demand_mount_proc	DD ?,?
-
-;   BX  Disc handle
-;   EDX Start sector
-;   ECX Number of sectors
-ds_erase_proc           DD ?,?
-
-disc_system_struc	ENDS
