@@ -169,7 +169,7 @@ demand_load_file_system Endp
 ;
 ;           PARAMETERS:     ES:EDI       FILE SYSTEM NAME
 ;
-;           RETURNS:        ED:EDI       FILE SYSTEM CONTROL TABLE
+;           RETURNS:        ES:EDI       FILE SYSTEM CONTROL TABLE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -271,9 +271,9 @@ install_file_system_name    DB 'Install File System',0
 install_file_system     Proc far
     push ds
     push es
-    push bx
-    push cx
-    push si
+    push ebx
+    push ecx
+    push esi
     push edi
 ;
     mov cx,fs_sys_data_sel
@@ -321,9 +321,9 @@ init_file_old_freed:
 
 install_file_sys_done:
     pop edi
-    pop si
-    pop cx
-    pop bx
+    pop esi
+    pop ecx
+    pop ebx
     pop es
     pop ds
     retf32
@@ -346,14 +346,54 @@ install_file_system     Endp
 format_file_system_name DB 'Format File System',0
 
 format_file_system      Proc far
+    push ds
     push es
+    push ebx
+    push ecx
+    push esi
     push edi
 ;
     call GetFileSystem
     call fword ptr es:[edi].fs_format_proc
+    pushf
+;
+    push es
+    push eax
+;
+    movzx bx,al
+    add bx,bx
+;
+    mov eax,SIZE fs_drive_seg
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+;
+    pop eax
+    pop es
+;
+    mov dword ptr ds:fs_table,edi
+    mov word ptr ds:fs_table+4,es
+    mov dword ptr ds:fs_drive_param,0
+    mov dword ptr ds:fs_drive_param+4,0
+    InitSection ds:fs_list_section
+    InitReadWriteSection ds:fs_access_section
+    mov ds:fs_access_parse,0
+    mov ds:fs_root_dir_sel,0
+    mov ds:fs_mount_id,1
+    mov si,ds
+;
+    mov cx,fs_sys_data_sel
+    mov ds,cx
+    mov ds:[bx],si
+;
+    popf
 ;
     pop edi
+    pop esi
+    pop ecx
+    pop ebx
     pop es
+    pop ds
     retf32
 format_file_system      Endp
 

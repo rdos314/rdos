@@ -7128,6 +7128,55 @@ sync_disc_part      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CopyFsName
+;
+;       DESCRIPTION:    Copy FS name
+;
+;       PARAMETERS:     ES:0    FS name
+;                       ESI     Sector buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyFsName    Proc near
+    push ds
+    push eax
+    push ecx
+    push esi
+;       
+    mov di,flat_sel
+    mov ds,di
+    xor di,di
+    mov cx,8
+    lea esi,[esi].boot_param.boot_fs
+
+cpLoop:
+    mov al,es:[di]
+    or al,al
+    jz cpSpace
+;
+    inc di
+    mov [esi],al
+    inc esi
+    jmp cpNext
+
+cpSpace:
+    mov al,' '
+    mov [esi],al
+    inc esi    
+
+cpNext:
+    loop cpLoop
+;
+    pop esi    
+    pop ecx
+    pop eax
+    pop ds
+    ret
+CopyFsName  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           FormatDrive
 ;
 ;       DESCRIPTION:    Format a drive
@@ -7155,7 +7204,6 @@ format_drive    Proc near
     push edi
     push ebp
 ;
-    int 3
     IsFileSystemAvailable
     jc fdDone
 ;
@@ -7175,6 +7223,8 @@ format_drive    Proc near
 ;
     mov bx,SEG data
     mov ds,bx
+    EnterSection ds:disc_handler_section
+;    
     movzx di,al
     shl di,1
     mov di,ds:[di].disc_def_arr
@@ -7209,12 +7259,8 @@ fdFindNext:
     jnz fdFindLoop
 ;    
     test gs:disc_flags,DISC_FLAG_DYNAMIC
-    jnz fdDyn
-;
-    test gs:disc_flags,DISC_FLAG_INSTALLED
     jz fdStatic
-
-fdDyn:
+;
     call AllocDynamicDrive
     jmp fdOpen
 
@@ -7271,35 +7317,7 @@ fdPart:
 fdNoSmall:
     pop es
 ;       
-    push cx
-    push esi
-;       
-    mov dx,flat_sel
-    mov ds,dx
-    xor di,di
-    mov cx,8
-    lea esi,[esi].boot_param.boot_fs
-
-fdNameLoop:
-    mov dl,es:[di]
-    or dl,dl
-    jz fdNameSpace
-;
-    inc di
-    mov [esi],dl
-    inc esi
-    jmp fdNameNext
-
-fdNameSpace:
-    mov dl,' '
-    mov [esi],dl
-    inc esi    
-
-fdNameNext:
-    loop fdNameLoop
-;
-    pop esi    
-    pop cx
+    call CopyFsName
 ;       
     ModifySector
     UnlockSector
@@ -7316,36 +7334,8 @@ fdMbr:
     xor edx,edx
     LockSector
     pop es
-;       
-    push cx
-    push esi
-;       
-    mov dx,flat_sel
-    mov ds,dx
-    xor di,di
-    mov cx,8
-    lea esi,[esi].boot_param.boot_fs
-
-fdMbrNameLoop:
-    mov dl,es:[di]
-    or dl,dl
-    jz fdMbrNameSpace
 ;
-    inc di
-    mov [esi],dl
-    inc esi
-    jmp fdMbrNameNext
-
-fdMbrNameSpace:
-    mov dl,' '
-    mov [esi],dl
-    inc esi    
-
-fdMbrNameNext:
-    loop fdMbrNameLoop
-;
-    pop esi    
-    pop cx
+    call CopyFsName
 ;       
     ModifySector
     UnlockSector
@@ -7356,11 +7346,21 @@ fdDoSys:
     FormatFileSystem
     jc fdFail
 ;
+    StartFileSystem
+;
+    mov bx,SEG data
+    mov ds,bx
+    LeaveSection ds:disc_handler_section
+;
     FreeMem
     clc
     jmp fdDone
 
 fdFail:
+    mov bx,SEG data
+    mov ds,bx
+    LeaveSection ds:disc_handler_section
+;
     FreeMem
     stc
 
