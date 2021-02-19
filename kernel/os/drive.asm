@@ -1692,7 +1692,6 @@ stop_drives_loop:
     mov ax,si
     sub ax,OFFSET drive_def_arr
     shr ax,1
-    StopFileSystem
     CloseDrive
 
 stop_drives_next:
@@ -3028,7 +3027,6 @@ is_disc_idle    Endp
 remove_drive_name       DB 'Remove Drive',0
 
 remove_drive    Proc far
-    StopFileSystem
     CloseDrive
     retf32
 remove_drive    Endp
@@ -3198,11 +3196,19 @@ close_drive     Proc far
     push ax
     push bx
 ;
+    StopFileSystem
     FlushDrive
-    mov bx,SEG data
-    mov ds,bx
+;
     movzx bx,al
     shl bx,1
+;
+    mov ax,fs_sys_data_sel
+    mov ds,ax
+    xor ax,ax
+    xchg ax,[bx]
+;
+    mov ax,SEG data
+    mov ds,ax
     xor ax,ax
     xchg ax,[bx].drive_def_arr
     or ax,ax

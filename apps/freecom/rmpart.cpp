@@ -146,7 +146,7 @@ int TRemovePartitionCommand::Confirm(TIdeFsPartition *Part)
     {
         DriveStr[0] = 'A' + Part->GetDrive()->GetDriveNr();
         DriveStr[1] = ':';
-        DriveStr[2] = 0;   
+        DriveStr[2] = 0;
 
         sprintf(str, "%3.3f MB", Part->GetTotalSpace());
 
@@ -184,6 +184,9 @@ int TRemovePartitionCommand::Remove(TIdeFsPartition *Part)
         if (!Confirm(Part))
             return 1;
 
+    if (Part->GetDrive())
+        RdosRemoveDrive(Part->GetDrive()->GetDriveNr());
+
     FDiscPart->Delete(FPartNr);
     return 0;
 }
@@ -202,7 +205,7 @@ int TRemovePartitionCommand::Remove(TIdeFsPartition *Part)
 int TRemovePartitionCommand::RemovePart()
 {
     TPartition *Part = 0;
-    
+
     if (FPartNr < FDiscPart->PartCount)
         Part = FDiscPart->PartArr[FPartNr];
 
@@ -238,7 +241,7 @@ int TRemovePartitionCommand::Confirm(TGptPartition *Part)
     {
         DriveStr[0] = 'A' + DriveNr;
         DriveStr[1] = ':';
-        DriveStr[2] = 0;   
+        DriveStr[2] = 0;
 
         sprintf(str, "%3.3f MB", Part->GetTotalSpace());
 
@@ -379,7 +382,7 @@ int TRemovePartitionCommand::Execute(char *param)
         FDisc = new TDisc(d);
         if (FDisc->IsValid())
             if (FDisc->GetDiscNr() == DiscNr)
-                break; 
+                break;
         delete FDisc;
         FDisc = 0;
     }
