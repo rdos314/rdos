@@ -469,7 +469,7 @@ rename_file16   ENDP
 init_fs_thread_name DB 'Init File System', 0
 
 init_fs_thread_pr:
-    mov ax,500
+    mov ax,200
     WaitMilliSec
 ;
     GetThread

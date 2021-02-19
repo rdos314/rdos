@@ -3412,28 +3412,34 @@ check_drive   Proc far
     push edx
     push esi
 ;
-    mov si,fs_sys_data_sel
+    mov si,SEG data
     mov ds,si
+    EnterSection ds:disc_handler_section
+;
     movzx si,al
     shl si,1
 
 chRetry:
+    push ds
+    mov ax,fs_sys_data_sel
+    mov ds,ax
     mov ax,ds:[si].fs_sel
+    pop ds
     or ax,ax
     jnz chIsDefined
 ;
-    push ds
-    mov ax,SEG data
-    mov ds,ax
     GetSystemTime
     sub eax,ds:init_timeout
     sbb edx,ds:init_timeout+4
     cmc
-    pop ds
     jc chDone
+;
+    LeaveSection ds:disc_handler_section
 ;
     mov ax,50
     WaitMilliSec
+;
+    EnterSection ds:disc_handler_section
     jmp chRetry
 
 chIsDefined:
@@ -3447,6 +3453,8 @@ chIsDefined:
     jmp chRetry
 
 chDone:
+    LeaveSection ds:disc_handler_section
+;
     pop esi
     pop edx
     pop eax
