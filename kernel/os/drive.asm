@@ -212,8 +212,10 @@ disc_handler_section    section_typ <>
 disc_handlers           DW ?
 disc_handler_thread     DW ?
 
+init_done               DW ?
+init_timeout            DD ?,?
+
 fs_init_section		section_typ <>
-fs_init_done		DW ?
 
 data    ENDS
 
@@ -3408,41 +3410,47 @@ check_drive_name  DB 'Check Drive', 0
 
 check_drive   Proc far
     push ds
-    push bx
-    push si
+    push eax
+    push edx
+    push esi
 ;
     mov si,fs_sys_data_sel
     mov ds,si
     movzx si,al
-    add si,si
+    shl si,1
 
-validate_drive_retry:
-    mov bx,ds:[si].fs_sel
-    or bx,bx
-    jnz validate_drive_defined
+chRetry:
+    mov ax,ds:[si].fs_sel
+    or ax,ax
+    jnz chIsDefined
 ;
-    mov bx,SEG data
-    mov ds,bx
-    mov bx,ds:fs_init_done
-    or bx,bx
-    stc
-    jnz validate_drive_done
+    int 3
+    mov ax,SEG data
+    mov ds,ax
+    GetSystemTime
+    sub eax,ds:init_timeout
+    sbb edx,ds:init_timeout+4
+    cmc
+    jc chDone
 ;
-    EnterSection ds:fs_init_section
-    LeaveSection ds:fs_init_section
-    jmp validate_drive_retry
+    mov ax,50
+    WaitMilliSec
+    jmp chRetry
 
-validate_drive_defined:
-    cmp bx,-1
+chIsDefined:
+    cmp ax,-1
     clc
-    jnz validate_drive_done
+    jnz chDone
 ;
+    mov ax,si
+    shr ax,1
     DemandLoadDrive
-    jmp validate_drive_retry
+    jmp chRetry
 
-validate_drive_done:
-    pop si
-    pop bx
+chDone:
+    pop esi
+    pop edx
+    pop eax
     pop ds
     retf32
 check_drive   Endp
@@ -7467,7 +7475,7 @@ supervise_thread:
     mov cx,4 * 20
 
 stRetry:
-    mov ax,ds:fs_init_done
+    mov ax,ds:init_done
     or ax,ax
     jnz stDone
 ;
@@ -7546,7 +7554,12 @@ dtInitDo:
 ;
     mov ax,SEG data
     mov ds,ax
-    mov ds:fs_init_done,1
+    GetSystemTime
+    add eax,20 * 1193000
+    adc edx,0
+    mov ds:init_timeout,eax
+    mov ds:init_timeout+4,edx
+    mov ds:init_done,1
     LeaveSection ds:fs_init_section
 ;
     StartPrograms
@@ -7933,7 +7946,9 @@ init_drive_wait_loop:
     mov ds,bx
     InitSection ds:fs_init_section
     EnterSection ds:fs_init_section    
-    mov ds:fs_init_done,0
+    mov ds:init_done,0
+    mov ds:init_timeout,-1
+    mov ds:init_timeout+4,-1
 ;
     call init_ramdrive  
     call init_filedisc
