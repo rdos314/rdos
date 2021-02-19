@@ -212,6 +212,9 @@ disc_handler_section    section_typ <>
 disc_handlers           DW ?
 disc_handler_thread     DW ?
 
+fs_init_section		section_typ <>
+fs_init_done		DW ?
+
 data    ENDS
 
 IFDEF __WASM__
@@ -3389,6 +3392,60 @@ get_drive_param_done:
     retf32
 get_drive_param ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CheckDrive
+;
+;           DESCRIPTION:    Check drive
+;
+;           PARAMETERS:     AL              Drive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+check_drive_name  DB 'Check Drive', 0
+
+check_drive   Proc far
+    push ds
+    push bx
+    push si
+;
+    mov si,fs_sys_data_sel
+    mov ds,si
+    movzx si,al
+    add si,si
+
+validate_drive_retry:
+    mov bx,ds:[si].fs_sel
+    or bx,bx
+    jnz validate_drive_defined
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,ds:fs_init_done
+    or bx,bx
+    stc
+    jnz validate_drive_done
+;
+    EnterSection ds:fs_init_section
+    LeaveSection ds:fs_init_section
+    jmp validate_drive_retry
+
+validate_drive_defined:
+    cmp bx,-1
+    clc
+    jnz validate_drive_done
+;
+    DemandLoadDrive
+    jmp validate_drive_retry
+
+validate_drive_done:
+    pop si
+    pop bx
+    pop ds
+    retf32
+check_drive   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -7404,14 +7461,14 @@ UpdateDiscs  Endp
 supervise_thread_name DB 'File System Supervisor', 0
 
 supervise_thread:
-    mov ax,fs_sys_data_sel
+    mov ax,SEG data
     mov ds,ax
 ;
     mov cx,4 * 20
 
 stRetry:
-    mov al,ds:fs_init_done
-    or al,al
+    mov ax,ds:fs_init_done
+    or ax,ax
     jnz stDone
 ;
     mov ax,250
@@ -7487,7 +7544,7 @@ dtRetry:
 dtInitDo:        
     call UpdateDiscs
 ;
-    mov ax,fs_sys_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov ds:fs_init_done,1
     LeaveSection ds:fs_init_section
@@ -7669,6 +7726,11 @@ init    PROC far
     mov esi,OFFSET flush_drive
     mov edi,OFFSET flush_drive_name
     mov ax,flush_drive_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET check_drive
+    mov edi,OFFSET check_drive_name
+    mov ax,check_drive_nr
     RegisterOsGate
 ;
     mov esi,OFFSET new_sector
@@ -7866,6 +7928,12 @@ init_drive_wait_loop:
     loop init_drive_wait_loop
     mov es:drive_wait_free,di
     mov es:drive_wait_count,DRIVE_WAIT_NUM
+;
+    mov bx,SEG data
+    mov ds,bx
+    InitSection ds:fs_init_section
+    EnterSection ds:fs_init_section    
+    mov ds:fs_init_done,0
 ;
     call init_ramdrive  
     call init_filedisc

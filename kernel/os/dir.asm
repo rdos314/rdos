@@ -111,67 +111,6 @@ ctE8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 ctF0 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 ctF8 DB 0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ValidateDrive
-;
-;           DESCRIPTION:    Validate drive
-;
-;           PARAMETERS:         AL              Drive
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ValidateDrive   Proc near
-    push ds
-    push bx
-    push si
-;
-    mov si,fs_sys_data_sel
-    mov ds,si
-    movzx si,al
-    add si,si
-
-validate_drive_retry:
-    mov bx,ds:[si].fs_sel
-    or bx,bx
-    jnz validate_drive_defined
-;
-    mov bl,ds:fs_init_done
-    or bl,bl
-    stc
-    jnz validate_drive_done
-;
-    EnterSection ds:fs_init_section
-    LeaveSection ds:fs_init_section
-    jmp validate_drive_retry
-
-validate_drive_defined:
-    cmp bx,-1
-    jnz validate_drive_media
-;
-    DemandLoadDrive
-    jmp validate_drive_retry
-
-validate_drive_media:
-;    mov bx,ds:[si].media_check_handle
-;    or bx,bx
-;    clc
-;    jz validate_drive_done
-;
-;    shl si,2
-;    call fword ptr ds:[si].media_check_proc
-    clc
-
-validate_drive_done:
-    pop si
-    pop bx
-    pop ds
-    ret
-ValidateDrive   Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -556,7 +495,7 @@ ParseDir    Proc near
 
 parse_drive_ok:
     mov al,bl
-    call ValidateDrive
+    CheckDrive
     jc parse_dir_fail
 ;
     add edi,2
@@ -1119,7 +1058,7 @@ GetCurDirBase   Proc near
     push edx
     push esi
 ;
-    call ValidateDrive
+    CheckDrive
     jc get_cur_dir_done
 ;
     mov bx,fs_sys_data_sel
@@ -2475,7 +2414,7 @@ open_kernel_file   Endp
 get_drive_info_name     DB 'Get Drive Info',0
 
 get_drive_info:
-    call ValidateDrive
+    CheckDrive
     jc get_drive_info_done
 ;
     CallFileSystem fs_info_proc
@@ -2517,7 +2456,7 @@ set_cur_drive:
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_cur_dir_sel
     pop ax
-    call ValidateDrive
+    CheckDrive
     jc set_cur_drive_done
 ;
     mov ds:pc_drive,al

@@ -49,10 +49,6 @@ fs_drive_seg	ENDS
 
 fs_data_seg		STRUC
 
-fs_init_section		section_typ <>
-fs_init_done		DB ?
-fs_init_pad             DB ?
-
 fs_sel	                DW 256 DUP(?)
 
 fs_data_seg		ENDS

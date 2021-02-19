@@ -3405,6 +3405,11 @@ FlushDrive      MACRO
                     ENDM
 
 ;       IN      AL          Drive #
+CheckDrive      MACRO
+    OsGate check_drive_nr
+                    ENDM
+
+;       IN      AL          Drive #
 ;       OUT     EAX         Readahead
 ;       OUT     ECX     Size
 ;       OUT     SI      Sectors per unit

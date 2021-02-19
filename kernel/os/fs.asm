@@ -58,7 +58,8 @@ CallFileSystem  MACRO   call_proc
 
 data    SEGMENT byte public 'DATA'
 
-file_defs			DB ?
+file_defs	        DB ?
+file_def_pad            DB ?
 file_def_arr		DD 4*32 DUP(?)
 
 data    ENDS
@@ -556,16 +557,9 @@ init    PROC far
     AllocateFixedSystemMem
 ;
     push ds
-    mov ds,bx
-    InitSection ds:fs_init_section
-    EnterSection ds:fs_init_section
-;    
-    mov ds:fs_init_done,0
-;
     mov ax,SEG data
     mov ds,ax
     mov ds:file_defs,0
-;
     pop ds
 ;
     mov di,OFFSET fs_sel
