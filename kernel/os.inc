@@ -3280,6 +3280,14 @@ InstallDynamicDisc     MACRO
     OsGate install_dynamic_disc_nr
                     ENDM
 
+; IN  BX          Handle
+; IN  ECX         Read-ahead
+; OUT AL          Disc #
+; OUT BX          Disc sel
+InstallFixedDisc     MACRO
+    OsGate install_fixed_disc_nr
+                    ENDM
+
 ;       IN      BX      Disc sel
 ;       IN      ES:EDI   Disc change procedure
 RegisterDiscChange      MACRO

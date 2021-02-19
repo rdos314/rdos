@@ -2839,8 +2839,14 @@ get_disc_request_array  Endp
 
 install_static_disc_name       DB 'Install Static Disc',0
 install_dynamic_disc_name      DB 'Install Dynamic Disc',0
+install_fixed_disc_name        DB 'Install Fixed Disc',0
 
 install_disc    Proc near
+    push es
+    push cx
+    push si
+    push di
+;
     push cx
     mov ax,SEG data
     mov ds,ax
@@ -2912,43 +2918,35 @@ install_disc_next:
     stc
 
 install_disc_done:
+    pop di
+    pop si
+    pop cx
+    pop es
     ret
 install_disc    Endp
 
 install_static_disc    Proc far
     push ds
-    push es
-    push cx
-    push si
-    push di
-;
     call install_disc
-;
-    pop di
-    pop si
-    pop cx
-    pop es
     pop ds
     retf32
 install_static_disc    Endp
 
 install_dynamic_disc    Proc far
     push ds
-    push es
-    push cx
-    push si
-    push di
-;
     call install_disc
     or ds:disc_flags,DISC_FLAG_DYNAMIC
-;
-    pop di
-    pop si
-    pop cx
-    pop es
     pop ds
     retf32
 install_dynamic_disc    Endp
+
+install_fixed_disc    Proc far
+    push ds
+    call install_disc
+    or ds:disc_flags,DISC_FLAG_INSTALLED
+    pop ds
+    retf32
+install_fixed_disc    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -8059,6 +8057,11 @@ init    PROC far
     mov esi,OFFSET install_dynamic_disc
     mov edi,OFFSET install_dynamic_disc_name
     mov ax,install_dynamic_disc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET install_fixed_disc
+    mov edi,OFFSET install_fixed_disc_name
+    mov ax,install_fixed_disc_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_disc_param
