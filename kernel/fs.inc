@@ -52,8 +52,6 @@ fs_data_seg		STRUC
 fs_init_section		section_typ <>
 fs_init_done		DB ?
 
-file_defs			DB ?
-file_def_arr		DD 4*32 DUP(?)
 media_check_proc	DD 256 DUP(?,?)
 media_check_handle	DW 256 DUP(?)
 fs_sel				DW 256 DUP(?)

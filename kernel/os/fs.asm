@@ -56,6 +56,13 @@ CallFileSystem  MACRO   call_proc
     pop ds
                 ENDM
 
+data    SEGMENT byte public 'DATA'
+
+file_defs			DB ?
+file_def_arr		DD 4*32 DUP(?)
+
+data    ENDS
+
 
 code    SEGMENT byte public 'CODE'
 
@@ -87,7 +94,7 @@ register_file_system    Proc far
     push bx
     push cx
     mov cx,ds
-    mov ax,fs_sys_data_sel
+    mov ax,SEG data
     mov ds,ax
     mov al,ds:file_defs
     mov bl,al
@@ -206,7 +213,7 @@ GetFileSystem   Proc near
     push cx
     push esi
 ;
-    mov cx,fs_sys_data_sel
+    mov cx,SEG data
     mov ds,cx
     movzx cx,ds:file_defs
     mov bx,OFFSET file_def_arr
@@ -593,6 +600,9 @@ init    PROC far
     EnterSection ds:fs_init_section
 ;    
     mov ds:fs_init_done,0
+;
+    mov ax,SEG data
+    mov ds,ax
     mov ds:file_defs,0
 ;
     pop ds
