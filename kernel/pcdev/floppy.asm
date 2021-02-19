@@ -1383,23 +1383,6 @@ install_main_fs:
     ret
 InstallMain     Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DRIVE_ASSIGN2
-;
-;           DESCRIPTION:    Assign disc drives, pass 2
-;
-;           PARAMETERS:         BX          Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-drive_assign2   Proc far
-    retf32
-drive_assign2   Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1451,26 +1434,6 @@ drive_assign_done1:
     pop ds
     retf32
 demand_mount_proc    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ERASE
-;
-;           DESCRIPTION:    Erase sectors
-;
-;           PARAMETERS:         BX          Disc handle
-;               EDX     Start sector
-;               ECX     Number of sectors
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-erase   Proc far
-    stc
-    retf32
-erase   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

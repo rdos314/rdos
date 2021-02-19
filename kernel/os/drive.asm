@@ -5439,7 +5439,6 @@ demand_load_drive       Proc far
     push ds
     pushad
 ;
-    int 3
     mov bx,SEG data
     mov ds,bx
     movzx bx,al
@@ -5454,7 +5453,6 @@ demand_load_drive       Proc far
     mov ds,ax
     mov ds,ds:drive_disc
     mov bx,ds:disc_handle
-    mov ds,bx
     call fword ptr ds:disc_demand_mount_proc
     jmp demand_load_drive_done
 
