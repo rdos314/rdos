@@ -49,7 +49,6 @@ public:
 	int OpenFileDrive(const char *FileName);
 
 	static TDrive *AllocateFixed(int DriveNr);
-	static TDrive *AllocateDynamic();
 
 protected:
 	int FDrive;

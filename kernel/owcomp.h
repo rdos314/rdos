@@ -1681,11 +1681,6 @@
     __parm [__eax] \
     __value [__eax]
 
-#pragma aux RdosAllocateDynamicDrive = \
-    CallGate_allocate_dynamic_drive  \
-    ValidateDisc \
-    __value [__eax]
-
 #pragma aux RdosGetDriveInfo = \
     CallGate_get_drive_info  \
     "mov gs:[ebx],eax" \

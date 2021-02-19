@@ -176,13 +176,13 @@ int TMountCommand::Mount(TString filename)
 ##########################################################################*/
 int TMountCommand::Execute(char *param)
 {
-        const char *DriveStr;
-        char str[3];
+    const char *DriveStr;
+    char str[3];
 
-        InitOptions();
+    InitOptions();
 
-        if (!ScanCmdLine(param, 0))
-                return 1;
+    if (!ScanCmdLine(param, 0))
+        return 1;
 
     if (FOptD)
     {
@@ -197,37 +197,27 @@ int TMountCommand::Execute(char *param)
                 str[1] = ':';
                 str[2] = 0;
                 strupr(str);
-                                FDrive = TDrive::AllocateFixed(str[0] - 'A');
+                FDrive = TDrive::AllocateFixed(str[0] - 'A');
                 return Mount(FArgList->FList->FName);
             }
             else
-                {
-                        ErrorSyntax(0);
-                        return 1;
-                }
-            
-        
+            {
+                ErrorSyntax(0);
+                return 1;
+            }
         }
         else
         {
-                FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-                Write(FMsg.GetData());
-                    return E_Useage;
-                }
+            FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+            Write(FMsg.GetData());
+            return E_Useage;
+        }
     }
     else
     {
-        if (FArgCount == 1)
-        {
-            FDrive = TDrive::AllocateDynamic(); 
-                return Mount(FArgList->FName);
-        }
-        else
-        {
-                FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-                Write(FMsg.GetData());
-                    return E_Useage;
-                }
+        FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+        Write(FMsg.GetData());
+        return E_Useage;
     }
 
     return 0;

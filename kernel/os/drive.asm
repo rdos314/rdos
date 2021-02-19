@@ -3108,56 +3108,6 @@ afdDone:
     retf32
 allocate_fixed_drive    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ALLOCATE_DYNAMIC_DRIVE
-;
-;           DESCRIPTION:    Allocate dynamic drive (last)
-;
-;           RETURNS:        AL          Drive #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_dynamic_drive_name     DB 'Allocate Dynamic Drive',0
-
-allocate_dynamic_drive  Proc far
-    push ds
-    push cx
-    push si
-;
-    push ax
-    mov ax,SEG data
-    mov ds,ax
-    mov si,OFFSET drive_def_arr + 2 * (MAX_DRIVES - 1)
-    mov cx,MAX_DRIVES
-allocate_dynamic_drive_loop:
-    mov ax,[si]
-    or ax,ax
-    jnz allocate_dynamic_drive_next
-    mov word ptr [si],-1
-    mov cx,si
-    sub cx,OFFSET drive_def_arr
-    shr cx,1
-    pop ax
-    mov al,cl
-    clc
-    jmp allocate_dynamic_drive_done
-    
-allocate_dynamic_drive_next:
-    sub si,2
-    loop allocate_dynamic_drive_loop
-    pop ax
-    stc
-    
-allocate_dynamic_drive_done:
-    pop si
-    pop cx
-    pop ds
-    retf32
-allocate_dynamic_drive  Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -7844,12 +7794,6 @@ init    PROC far
     mov edi,OFFSET allocate_fixed_drive_name
     xor dx,dx
     mov ax,allocate_fixed_drive_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET allocate_dynamic_drive
-    mov edi,OFFSET allocate_dynamic_drive_name
-    xor dx,dx
-    mov ax,allocate_dynamic_drive_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_drive_disc_param
