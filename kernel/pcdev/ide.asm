@@ -89,7 +89,6 @@ PCI_NAME_SIZE = 16
 data    SEGMENT byte public 'DATA'
 
 pci_thread      DW ?
-ide_pci_curr    DW ?
 ide_pci_count   DW ?
 ide_io_arr      DW MAX_PCI_COUNT DUP(?)
 ide_pci_arr     DW MAX_PCI_COUNT DUP(?)
@@ -2134,7 +2133,6 @@ StartPci    Proc near
 ;
     mov ax,SEG data
     mov es,ax
-    mov es:ide_pci_curr,0
     mov di,OFFSET pci_name_str
     mov si,OFFSET disc_pci_name
 
