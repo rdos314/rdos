@@ -35,8 +35,6 @@ INCLUDE system.def
 INCLUDE int.def
 INCLUDE system.inc
 INCLUDE ..\drive.inc
-INCLUDE ..\fs.inc
-INCLUDE exec.def
 
 MAX_DRIVES	EQU 'Z' - 'A' + 1
 
@@ -3425,7 +3423,7 @@ chRetry:
     push ds
     mov ax,fs_sys_data_sel
     mov ds,ax
-    mov ax,ds:[si].fs_sel
+    mov ax,ds:[si]
     pop ds
     or ax,ax
     jnz chIsDefined

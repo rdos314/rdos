@@ -58,7 +58,7 @@ CallFileSystem  MACRO   call_proc
     mov ds,si
     movzx si,al
     add si,si
-    mov ds,ds:[si].fs_sel
+    mov ds,ds:[si]
     lgs ebp,fword ptr ds:fs_table
     lds esi,fword ptr ds:fs_drive_param
     call fword ptr gs:[ebp].&call_proc

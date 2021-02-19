@@ -46,7 +46,7 @@ CallFileSystem  MACRO   call_proc
     mov ds,si
     movzx si,al
     add si,si
-    mov ds,ds:[si].fs_sel
+    mov ds,ds:[si]
     lgs ebp,fword ptr ds:fs_table
     lds esi,fword ptr ds:fs_drive_param
     call fword ptr gs:[ebp].&call_proc
@@ -139,7 +139,7 @@ demand_load_file_system Proc far
 ;
     movzx bx,al
     add bx,bx
-    mov si,ds:[bx].fs_sel
+    mov si,ds:[bx]
     or si,si
     jz demand_load_old_freed
 ;
@@ -151,7 +151,7 @@ demand_load_file_system Proc far
     FreeMem
 
 demand_load_old_freed:
-    mov ds:[bx].fs_sel,-1
+    mov ds:[bx],-1
 ;
     pop si
     pop bx
@@ -286,7 +286,7 @@ install_file_system     Proc far
     push ds
     push es
     push eax
-    mov si,ds:[bx].fs_sel
+    mov si,ds:[bx]
     or si,si
     jz init_file_old_freed
 ;
@@ -316,7 +316,7 @@ init_file_old_freed:
     mov ds:fs_mount_id,1
     mov si,ds
     pop ds
-    mov ds:[bx].fs_sel,si
+    mov ds:[bx],si
     clc
 
 install_file_sys_done:
@@ -382,7 +382,7 @@ start_file_system       Proc far
     mov es,si
     movzx di,al
     add di,di
-    mov ds,es:[di].fs_sel
+    mov ds,es:[di]
     push ds
     lds esi,fword ptr ds:fs_table
     call fword ptr ds:[esi].fs_mount_proc
@@ -579,21 +579,22 @@ init    PROC far
     mov dx,virt_ds_in OR virt_es_in
     mov ax,rename_file_nr
     RegisterUserGate
-;       
-    mov eax,SIZE fs_data_seg
+;  
+    mov al,'Z' - 'A' + 1
+    movzx eax,al     
+    shl eax,1
     mov bx,fs_sys_data_sel
     AllocateFixedSystemMem
 ;
-    push ds
+    xor di,di
+    mov al,'Z' - 'A' + 1
+    movzx cx,al
+    xor ax,ax
+    rep stosw
+;
     mov ax,SEG data
     mov ds,ax
     mov ds:file_defs,0
-    pop ds
-;
-    mov di,OFFSET fs_sel
-    mov cx,256
-    xor ax,ax
-    rep stosw
 ;
     call init_dir
     call init_file

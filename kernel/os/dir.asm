@@ -57,7 +57,7 @@ CallFileSystem  MACRO   call_proc
     mov ds,si
     movzx si,al
     add si,si
-    mov ds,ds:[si].fs_sel
+    mov ds,ds:[si]
     lgs ebp,fword ptr ds:fs_table
     lds esi,fword ptr ds:fs_drive_param
     call fword ptr gs:[ebp].&call_proc
@@ -150,7 +150,7 @@ cache_dir       PROC far
     mov ds,si
     movzx si,al
     add si,si
-    mov si,ds:[si].fs_sel
+    mov si,ds:[si]
     mov ds,si
     mov ebp,ds:fs_mount_id
 ;
@@ -525,7 +525,7 @@ parse_dir_rel:
     mov ds,si
     movzx si,al
     add si,si
-    mov ds,ds:[si].fs_sel
+    mov ds,ds:[si]
     cmp ebp,ds:fs_mount_id
     jne parse_dir_root
 ;
@@ -556,7 +556,7 @@ parse_dir_root:
     mov ds,bx
     movzx si,al
     add si,si
-    mov bx,ds:[si].fs_sel
+    mov bx,ds:[si]
     or bx,bx
     jz parse_dir_fail
 ;
@@ -751,7 +751,7 @@ ParseEnd    Proc near
     add si,si
     mov ax,fs_sys_data_sel
     mov ds,ax
-    mov ds,ds:[si].fs_sel
+    mov ds,ds:[si]
     cli
     mov ds:fs_access_parse,0
     LeaveReadSection ds:fs_access_section
@@ -787,7 +787,7 @@ GetDeviceRoot   Proc near
     mov ds,bx
     movzx si,al
     add si,si
-    mov bx,ds:[si].fs_sel
+    mov bx,ds:[si]
     or bx,bx
     stc
     jz get_device_root_end
@@ -1065,7 +1065,7 @@ GetCurDirBase   Proc near
     mov ds,bx
     movzx bx,al
     add bx,bx
-    mov ds,ds:[bx].fs_sel
+    mov ds,ds:[bx]
     EnterReadSection ds:fs_access_section
     mov ds:fs_access_parse,1
     mov edx,ds:fs_mount_id
@@ -1158,7 +1158,7 @@ get_cur_dir_ok:
     mov ds,bx
     movzx bx,al
     add bx,bx
-    mov ds,ds:[bx].fs_sel
+    mov ds,ds:[bx]
     cli
     mov ds:fs_access_parse,0
     LeaveReadSection ds:fs_access_section
@@ -1789,7 +1789,7 @@ ReadDirBase     Proc near
     mov fs,si
     movzx si,al
     add si,si
-    mov si,fs:[si].fs_sel
+    mov si,fs:[si]
     or si,si
     jz read_dir_fail
 ;
@@ -1877,7 +1877,7 @@ CloseDirBase    Proc near
     mov fs,bx
     movzx bx,al
     add bx,bx
-    mov bx,fs:[bx].fs_sel
+    mov bx,fs:[bx]
     or bx,bx
     jz close_dir_do
 ;
@@ -3081,7 +3081,7 @@ stop_file_system    Proc far
 ;
     movzx si,al
     add si,si
-    mov bx,ds:[si].fs_sel
+    mov bx,ds:[si]
     or bx,bx
     clc
     jz stop_leave_done
@@ -3106,7 +3106,7 @@ stop_file_enter:
     mov ds,bx
     movzx si,al
     add si,si
-    mov bx,ds:[si].fs_sel
+    mov bx,ds:[si]
     or bx,bx
     clc
     jz stop_leave_done

@@ -45,12 +45,6 @@ fs_access_parse		DB ?
 
 fs_drive_seg	ENDS
 
-fs_data_seg		STRUC
-
-fs_sel	                DW 256 DUP(?)
-
-fs_data_seg		ENDS
-
 file_list_struc	STRUC
 
 fl_usage			DW ?
