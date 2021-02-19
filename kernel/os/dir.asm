@@ -766,73 +766,6 @@ ParseEnd    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetDeviceRoot
-;
-;           DESCRIPTION:    Get device root
-;
-;           RETURNS:        DS          Dir selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetDeviceRoot   Proc near
-    push ax
-    push bx
-    push cx
-    push edx
-    push si
-    push ebp
-;
-    mov al,80h
-    mov bx,fs_sys_data_sel
-    mov ds,bx
-    movzx si,al
-    add si,si
-    mov bx,ds:[si]
-    or bx,bx
-    stc
-    jz get_device_root_end
-;    
-    mov ds,bx
-    EnterReadSection ds:fs_access_section
-    EnterSection ds:fs_list_section
-    mov bx,ds:fs_root_dir_sel
-    or bx,bx
-    jnz get_device_root_done
-;
-    xor ebp,ebp
-    xor edx,edx
-    call CreateDirSel
-    CallFileSystem fs_cache_dir_proc
-    mov ds:fs_root_dir_sel,bx
-;
-    push ds
-    push ax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ds,ds:pf_cur_dir_sel
-    mov ds:[si].pc_dir_sel_arr,bx
-    pop ax
-    pop ds
-
-get_device_root_done:
-    LeaveSection ds:fs_list_section
-    mov ds,bx
-    clc
-
-get_device_root_end:
-    pop ebp
-    pop si
-    pop edx
-    pop cx
-    pop bx
-    pop ax
-    ret
-GetDeviceRoot   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           ParseFile
 ;
 ;           DESCRIPTION:    Parse pathname for a valid file
@@ -1945,27 +1878,6 @@ OpenFileBase    Proc near
     mov fs,bx
 ;
     push edi
-    call GetDeviceRoot
-    jnc open_file_device
-;
-    pop edi
-    jmp open_file_normal
-
-open_file_device:
-    call ParseFile
-    pop edi
-    jc open_file_device_end
-;
-    EnterReadSection ds:ds_access_section
-    call RequestFileSel
-    LeaveReadSection ds:ds_access_section
-    jmp open_file_handle
-
-open_file_device_end:
-    call ParseEnd
-
-open_file_normal:
-    push edi
     call ParseDir
     jc open_file_pop_failed
 ;
@@ -2026,27 +1938,6 @@ CreateFileBase  Proc near
     mov bx,flat_sel
     mov fs,bx
 ;
-    push edi
-    call GetDeviceRoot
-    jnc create_file_device
-;    
-    pop edi
-    jmp create_file_normal
-
-create_file_device:
-    call ParseFile
-    pop edi
-    jc create_file_device_end
-;
-    EnterReadSection ds:ds_access_section
-    call RequestFileSel
-    LeaveReadSection ds:ds_access_section
-    jmp create_file_handle
-
-create_file_device_end:
-    call ParseEnd
-
-create_file_normal:
     push edi
     call ParseDir
     jc create_file_pop_failed
