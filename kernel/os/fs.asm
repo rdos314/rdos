@@ -573,11 +573,6 @@ init    PROC far
     xor ax,ax
     rep stosw
 ;
-    mov di,OFFSET media_check_handle
-    mov cx,256
-    xor ax,ax
-    rep stosw
-;
     call init_dir
     call init_file
     call init_memmap

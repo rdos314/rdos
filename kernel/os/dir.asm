@@ -155,10 +155,10 @@ validate_drive_defined:
     jmp validate_drive_retry
 
 validate_drive_media:
-    mov bx,ds:[si].media_check_handle
-    or bx,bx
-    clc
-    jz validate_drive_done
+;    mov bx,ds:[si].media_check_handle
+;    or bx,bx
+;    clc
+;    jz validate_drive_done
 ;
 ;    shl si,2
 ;    call fword ptr ds:[si].media_check_proc

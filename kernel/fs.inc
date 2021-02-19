@@ -51,9 +51,9 @@ fs_data_seg		STRUC
 
 fs_init_section		section_typ <>
 fs_init_done		DB ?
+fs_init_pad             DB ?
 
-media_check_handle	DW 256 DUP(?)
-fs_sel				DW 256 DUP(?)
+fs_sel	                DW 256 DUP(?)
 
 fs_data_seg		ENDS
 
