@@ -561,7 +561,7 @@ CheckDriveWait  Endp
 
 fixup_data   PROC near
     test ds:disc_flags,DISC_FLAG_USE32
-    jz fdDone
+    jz fxdDone
 ;
     push eax
     push ebx
@@ -570,24 +570,24 @@ fixup_data   PROC near
     mov edx,esi
     GetPageEntry
     test al,1
-    jz fdAlloc
+    jz fxdAlloc
 ;
     or ebx,ebx
-    jz fdInRange
+    jz fxdInRange
 ;
     int 3
 
-fdAlloc:            
+fxdAlloc:            
     AllocatePhysical32
     mov al,13h
     SetPageEntry
 
-fdInRange:
+fxdInRange:
     pop edx    
     pop ebx
     pop eax
 
-fdDone:    
+fxdDone:    
     ret
 fixup_data   ENDP
 
@@ -5365,260 +5365,6 @@ get_drive_disc_param_done:
     retf32
 get_drive_disc_param    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           FormatDrive
-;
-;           DESCRIPTION:    Format a drive
-;
-;           PARAMETERS:         AL              Disc #
-;                           EDX             Start sector
-;                           ECX             Number of sectors
-;                           ES:(E)DI    FS name
-;
-;       RETURNS:    AL      Drive #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-format_drive_name       DB 'Format Drive',0
-
-format_drive    Proc near
-    push ds
-    push es
-    push fs
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    push ax
-    mov ax,es
-    mov ds,ax
-    mov esi,edi
-    mov eax,10h
-    AllocateSmallGlobalMem
-    xor edi,edi
-    movs dword ptr es:[edi],ds:[esi]
-    movs dword ptr es:[edi],ds:[esi]
-    movs dword ptr es:[edi],ds:[esi]
-    movs dword ptr es:[edi],ds:[esi]
-    pop ax
-    xor edi,edi
-    IsFileSystemAvailable
-    jc format_fail
-;
-    mov bx,SEG data
-    mov ds,bx
-    movzx di,al
-    shl di,1
-    mov di,ds:[di].disc_def_arr
-    mov si,OFFSET drive_def_arr
-    mov bp,MAX_DRIVES
-
-format_find_drive_loop:
-    mov bx,[si]
-    or bx,bx
-    je format_find_drive_next
-;
-    cmp bx,-1
-    je format_find_drive_next
-;
-    mov fs,bx
-    cmp di,fs:drive_disc
-    jne format_find_drive_next
-;
-    mov ebx,edx
-    sub ebx,fs:drive_start_sector
-    jz format_drive_found
-    ja format_find_drive_above
-
-format_find_drive_below:
-    add ebx,fs:drive_sectors
-    jc format_fail
-    jmp format_find_drive_next
-
-format_find_drive_above:
-;    sub ebx,fs:drive_sectors
-;    jc format_fail
-
-format_find_drive_next:
-    add si,2
-    sub bp,1
-    jnz format_find_drive_loop
-;
-    mov ah,al
-    call AllocStaticDrive
-    OpenDrive
-    jmp format_perf
-
-format_drive_found:
-    push dx
-    mov dl,al
-    sub si,OFFSET drive_def_arr
-    mov ax,si
-    shr al,1
-    mov ah,dl
-    pop dx
-    FlushDrive
-
-format_do:
-    cmp ecx,fs:drive_sectors
-    jbe format_perf
-;
-    mov ecx,fs:drive_sectors
-
-format_perf:
-    dec ecx
-    or edx,edx
-    jz format_mbr
-    
-format_part:    
-    push edx
-    push es
-    mov dx,flat_sel
-    mov es,dx
-    mov dx,cs
-    mov ds,dx
-    xor edx,edx
-    LockSector
-;
-    mov edx,1
-    mov es:[esi].boot_param.boot_mapping_sectors,dx
-    sub ecx,edx
-    mov edx,ecx
-    mov es:[esi].boot_param.boot_sectors,edx
-    cmp edx,10000h
-    jae format_no_small
-;
-    mov es:[esi].boot_param.boot_small_sectors,dx       
-
-format_no_small:
-    pop es
-;       
-    push cx
-    push esi
-;       
-    mov dx,flat_sel
-    mov ds,dx
-    xor di,di
-    mov cx,8
-    lea esi,[esi].boot_param.boot_fs
-
-format_name_loop:
-    mov dl,es:[di]
-    or dl,dl
-    jz format_name_space
-;
-    inc di
-    mov [esi],dl
-    inc esi
-    jmp format_name_next
-
-format_name_space:
-    mov dl,' '
-    mov [esi],dl
-    inc esi    
-
-format_name_next:
-    loop format_name_loop
-;
-    pop esi    
-    pop cx
-;       
-    ModifySector
-    UnlockSector
-    pop edx
-    jmp format_do_sys
-
-format_mbr:
-    push edx
-    push es
-    mov dx,flat_sel
-    mov es,dx
-    mov dx,cs
-    mov ds,dx
-    xor edx,edx
-    LockSector
-    pop es
-;       
-    push cx
-    push esi
-;       
-    mov dx,flat_sel
-    mov ds,dx
-    xor di,di
-    mov cx,8
-    lea esi,[esi].boot_param.boot_fs
-
-format_mbr_name_loop:
-    mov dl,es:[di]
-    or dl,dl
-    jz format_mbr_name_space
-;
-    inc di
-    mov [esi],dl
-    inc esi
-    jmp format_mbr_name_next
-
-format_mbr_name_space:
-    mov dl,' '
-    mov [esi],dl
-    inc esi    
-
-format_mbr_name_next:
-    loop format_mbr_name_loop
-;
-    pop esi    
-    pop cx
-;       
-    ModifySector
-    UnlockSector
-    pop edx
-
-format_do_sys:
-    xor di,di
-    FormatFileSystem
-    jc format_fail
-;
-    FreeMem
-    clc
-    jmp format_done
-
-format_fail:
-    FreeMem
-    stc
-
-format_done:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop fs
-    pop es
-    pop ds
-    ret
-format_drive    Endp
-
-format_drive32  Proc far
-    call format_drive
-    retf32
-format_drive32  Endp
-
-format_drive16  Proc far
-    push edi
-    movzx edi,di
-    call format_drive
-    pop edi
-    retf32
-format_drive16  Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -7378,6 +7124,272 @@ sdpDone:
     pop ds
     retf32
 sync_disc_part      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FormatDrive
+;
+;       DESCRIPTION:    Format a drive
+;
+;       PARAMETERS:     AL          Disc #
+;                       EDX         Start sector
+;                       ECX         Number of sectors
+;                       ES:(E)DI    FS name
+;
+;       RETURNS:        AL      Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+format_drive_name       DB 'Format Drive',0
+
+format_drive    Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    int 3
+    IsFileSystemAvailable
+    jc fdDone
+;
+    push ax
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+    mov eax,10h
+    AllocateSmallGlobalMem
+    xor edi,edi
+    movs dword ptr es:[edi],ds:[esi]
+    movs dword ptr es:[edi],ds:[esi]
+    movs dword ptr es:[edi],ds:[esi]
+    movs dword ptr es:[edi],ds:[esi]
+    pop ax
+    xor edi,edi
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx di,al
+    shl di,1
+    mov di,ds:[di].disc_def_arr
+    mov gs,di
+    mov si,OFFSET drive_def_arr
+    mov bp,MAX_DRIVES
+
+fdFindLoop:
+    mov bx,[si]
+    or bx,bx
+    je fdFindNext
+;
+    cmp bx,-1
+    je fdFindNext
+;
+    mov fs,bx
+    cmp di,fs:drive_disc
+    jne fdFindNext
+;
+    mov ebx,edx
+    sub ebx,fs:drive_start_sector
+    jz fdFound
+    ja fdFindNext
+
+fdFindBelow:
+    add ebx,fs:drive_sectors
+    jc fdFail
+
+fdFindNext:
+    add si,2
+    sub bp,1
+    jnz fdFindLoop
+;    
+    test gs:disc_flags,DISC_FLAG_DYNAMIC
+    jnz fdDyn
+;
+    test gs:disc_flags,DISC_FLAG_INSTALLED
+    jz fdStatic
+
+fdDyn:
+    call AllocDynamicDrive
+    jmp fdOpen
+
+fdStatic:
+    call AllocStaticDrive
+
+fdOpen:
+    jc fdFail
+;
+    mov ah,gs:disc_nr
+    OpenDrive
+    jmp fdPerf
+
+fdFound:
+    push dx
+    mov dl,al
+    sub si,OFFSET drive_def_arr
+    mov ax,si
+    shr al,1
+    mov ah,dl
+    pop dx
+    FlushDrive
+;
+    cmp ecx,fs:drive_sectors
+    jbe fdPerf
+;
+    mov ecx,fs:drive_sectors
+
+fdPerf:
+    dec ecx
+    or edx,edx
+    jz fdMbr
+    
+fdPart:    
+    push edx
+    push es
+    mov dx,flat_sel
+    mov es,dx
+    mov dx,cs
+    mov ds,dx
+    xor edx,edx
+    LockSector
+;
+    mov edx,1
+    mov es:[esi].boot_param.boot_mapping_sectors,dx
+    sub ecx,edx
+    mov edx,ecx
+    mov es:[esi].boot_param.boot_sectors,edx
+    cmp edx,10000h
+    jae fdNoSmall
+;
+    mov es:[esi].boot_param.boot_small_sectors,dx       
+
+fdNoSmall:
+    pop es
+;       
+    push cx
+    push esi
+;       
+    mov dx,flat_sel
+    mov ds,dx
+    xor di,di
+    mov cx,8
+    lea esi,[esi].boot_param.boot_fs
+
+fdNameLoop:
+    mov dl,es:[di]
+    or dl,dl
+    jz fdNameSpace
+;
+    inc di
+    mov [esi],dl
+    inc esi
+    jmp fdNameNext
+
+fdNameSpace:
+    mov dl,' '
+    mov [esi],dl
+    inc esi    
+
+fdNameNext:
+    loop fdNameLoop
+;
+    pop esi    
+    pop cx
+;       
+    ModifySector
+    UnlockSector
+    pop edx
+    jmp fdDoSys
+
+fdMbr:
+    push edx
+    push es
+    mov dx,flat_sel
+    mov es,dx
+    mov dx,cs
+    mov ds,dx
+    xor edx,edx
+    LockSector
+    pop es
+;       
+    push cx
+    push esi
+;       
+    mov dx,flat_sel
+    mov ds,dx
+    xor di,di
+    mov cx,8
+    lea esi,[esi].boot_param.boot_fs
+
+fdMbrNameLoop:
+    mov dl,es:[di]
+    or dl,dl
+    jz fdMbrNameSpace
+;
+    inc di
+    mov [esi],dl
+    inc esi
+    jmp fdMbrNameNext
+
+fdMbrNameSpace:
+    mov dl,' '
+    mov [esi],dl
+    inc esi    
+
+fdMbrNameNext:
+    loop fdMbrNameLoop
+;
+    pop esi    
+    pop cx
+;       
+    ModifySector
+    UnlockSector
+    pop edx
+
+fdDoSys:
+    xor di,di
+    FormatFileSystem
+    jc fdFail
+;
+    FreeMem
+    clc
+    jmp fdDone
+
+fdFail:
+    FreeMem
+    stc
+
+fdDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+format_drive    Endp
+
+format_drive32  Proc far
+    call format_drive
+    retf32
+format_drive32  Endp
+
+format_drive16  Proc far
+    push edi
+    movzx edi,di
+    call format_drive
+    pop edi
+    retf32
+format_drive16  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
