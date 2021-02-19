@@ -3056,12 +3056,12 @@
     __parm [__eax]  \
     __value [__eax]
 
-#pragma aux RdosOpenDisc = \
-    CallGate_open_disc  \
+#pragma aux RdosResetDisc = \
+    CallGate_reset_disc  \
     __parm [__eax]
 
-#pragma aux RdosCloseDisc = \
-    CallGate_close_disc  \
+#pragma aux RdosRemoveDrive = \
+    CallGate_remove_drive  \
     __parm [__eax]
 
 #pragma aux RdosReadDisc = \

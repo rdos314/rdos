@@ -242,7 +242,7 @@ ResetDevice Proc near
 ;
     popad
     ret
-ResetDevice	Endp
+ResetDevice     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1057,7 +1057,7 @@ dtEnd:
     CloseUsbDevice
 ;
     mov bx,fs:disc_handle
-    StopDisc    
+    ResetDisc    
 ;    
     mov bx,fs
     mov es,bx

@@ -3017,17 +3017,36 @@ is_disc_idle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CloseDisc
+;           NAME:           RemoveDrive
 ;
-;           DESCRIPTION:    Close disc
+;           DESCRIPTION:    Remove drive
+;
+;           PARAMETERS:     AL          Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+remove_drive_name       DB 'Remove Drive',0
+
+remove_drive    Proc far
+    StopFileSystem
+    CloseDrive
+    retf32
+remove_drive    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ResetDisc
+;
+;           DESCRIPTION:    Reset disc
 ;
 ;           PARAMETERS:     AL          Disc #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_disc_name       DB 'Close Disc',0
+reset_disc_name       DB 'Reset Disc',0
 
-close_disc    Proc far
+reset_disc    Proc far
     push ds
     push es
     pushad
@@ -3036,7 +3055,7 @@ close_disc    Proc far
     mov ds,bx
 ;
     cmp al,MAX_DRIVES
-    jae close_disc_done
+    jae reset_disc_done
 ;
     movzx bx,al
     shl bx,1
@@ -3045,34 +3064,33 @@ close_disc    Proc far
     mov cx,MAX_DRIVES
     mov si,OFFSET drive_def_arr
 
-close_disc_drives_loop:
+reset_disc_drives_loop:
     mov ax,[si]
     or ax,ax
-    jz close_disc_drives_next
+    jz reset_disc_drives_next
 ;
     cmp ax,-1
-    je close_disc_drives_next
+    je reset_disc_drives_next
 ;
     mov es,ax
     cmp bx,es:drive_disc
-    jne close_disc_drives_next
+    jne reset_disc_drives_next
 ;
     mov ax,si
     sub ax,OFFSET drive_def_arr
     shr ax,1
-    StopFileSystem
-    CloseDrive
+    RemoveDrive
 
-close_disc_drives_next:
+reset_disc_drives_next:
     add si,2
-    loop close_disc_drives_loop   
+    loop reset_disc_drives_loop   
 
-close_disc_done:
+reset_disc_done:
     popad
     pop es
     pop ds
     retf32
-close_disc    Endp
+reset_disc    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3176,6 +3194,7 @@ close_drive_name    DB 'Close Drive',0
 
 close_drive     Proc far
     push ds
+    push es
     push ax
     push bx
 ;
@@ -3198,6 +3217,7 @@ close_drive     Proc far
 cdrDone:
     pop bx
     pop ax
+    pop es
     pop ds
     retf32
 close_drive    Endp
@@ -7847,10 +7867,10 @@ init    PROC far
     mov ax,get_disc_cache_size_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET close_disc
-    mov edi,OFFSET close_disc_name
+    mov esi,OFFSET reset_disc
+    mov edi,OFFSET reset_disc_name
     xor dx,dx
-    mov ax,close_disc_nr
+    mov ax,reset_disc_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET is_disc_idle
@@ -7883,6 +7903,12 @@ init    PROC far
     mov dx,virt_es_in
     mov ax,get_disc_vendor_info_nr
     RegisterUserGate
+;
+    mov esi,OFFSET remove_drive
+    mov edi,OFFSET remove_drive_name
+    xor dx,dx
+    mov ax,remove_drive_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET demand_load_drive
     mov edi,OFFSET demand_load_drive_name

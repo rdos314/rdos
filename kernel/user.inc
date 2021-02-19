@@ -2138,13 +2138,8 @@ GetDiscCacheSize     MACRO
 
 
 ;       IN      AL                      Disc #
-CloseDisc     MACRO
-        UserGate close_disc_nr
-                                                ENDM
-
-;       IN      AL                      Disc #
-OpenDisc     MACRO
-        UserGate open_disc_nr
+ResetDisc     MACRO
+        UserGate reset_disc_nr
                                                 ENDM
 
 ;       OUT     EAX             Cached size
@@ -2157,6 +2152,11 @@ GetFileCacheSize     MACRO
 AllocateFixedDrive      MACRO
         UserGate allocate_fixed_drive_nr
                                         ENDM
+
+;       IN      AL                      Drive #
+RemoveDrive     MACRO
+        UserGate remove_drive_nr
+                                                ENDM
 
 ;       IN      AL              Drive #
 DemandLoadDrive MACRO

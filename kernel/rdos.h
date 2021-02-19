@@ -793,8 +793,7 @@ int RDOSAPI RdosPing(long Node, long Timeout);
 
 int RDOSAPI RdosGetIdeDisc(int UnitNr);
 int RDOSAPI RdosGetFloppyDisc(int UnitNr);
-void RDOSAPI RdosOpenDisc(int UnitNr);
-void RDOSAPI RdosCloseDisc(int UnitNr);
+void RDOSAPI RdosResetDisc(int UnitNr);
 
 int RDOSAPI RdosGetFileCacheSize();
 void RDOSAPI RdosSyncDiscPart(int DiscNr);
@@ -809,6 +808,7 @@ int RDOSAPI RdosIsDiscIdle(int DiscNr);
 void RDOSAPI RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab);
 void RDOSAPI RdosDemandLoadDrive(int DriveNr);
 int RDOSAPI RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
+void RDOSAPI RdosRemoveDrive(int DriveNr);
 
 int RDOSAPI RdosAllocateFixedDrive(int DriveNr);
 

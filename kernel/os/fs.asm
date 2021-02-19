@@ -443,35 +443,6 @@ start_file_system       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           STOP_FILE_SYSTEM
-;
-;           DESCRIPTION:    Stop file system
-;
-;           PARAMETERS:         AL              DRIVE NR
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_file_system_name   DB 'Stop File System',0
-
-stop_file_system    Proc far
-    push ds
-    push es
-    push si
-    push di
-;
-    mov si,fs_sys_data_sel
-    mov es,si
-;
-    pop di
-    pop si
-    pop es
-    pop ds
-    retf32
-stop_file_system    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           RENAME_FILE
 ;
 ;           DESCRIPTION:    Rename file
@@ -606,11 +577,6 @@ init    PROC far
     mov esi,OFFSET start_file_system
     mov edi,OFFSET start_file_system_name
     mov ax,start_file_system_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET stop_file_system
-    mov edi,OFFSET stop_file_system_name
-    mov ax,stop_file_system_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET rename_file16

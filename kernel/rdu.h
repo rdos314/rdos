@@ -834,8 +834,7 @@
 #define usergate_get_disc_cache_size 0x000002AA
 #define usergate_get_file_cache_size 0x000002AB
 
-#define usergate_open_disc 0x000002AC
-#define usergate_close_disc 0x000002AD
+#define usergate_reset_disc 0x000002AD
 
 #define usergate_create_tcp_socket 0x000002AE
 #define usergate_create_udp_socket 0x000002AF
@@ -936,6 +935,7 @@
 #define usergate_close_usb_pipe 0x000002FE
 
 #define usergate_sync_disc_part 0x000002FF
+#define usergate_remove_drive 0x00000300
 
 
 
@@ -1776,8 +1776,7 @@
 #define CallGate_get_disc_cache_size 0x55 0x67 0x9a 170 2 0 0 3 0 0x5d
 #define CallGate_get_file_cache_size 0x55 0x67 0x9a 171 2 0 0 3 0 0x5d
 
-#define CallGate_open_disc 0x55 0x67 0x9a 172 2 0 0 3 0 0x5d
-#define CallGate_close_disc 0x55 0x67 0x9a 173 2 0 0 3 0 0x5d
+#define CallGate_reset_disc 0x55 0x67 0x9a 173 2 0 0 3 0 0x5d
 
 #define CallGate_create_tcp_socket 0x55 0x67 0x9a 174 2 0 0 3 0 0x5d
 #define CallGate_create_udp_socket 0x55 0x67 0x9a 175 2 0 0 3 0 0x5d
@@ -1878,6 +1877,7 @@
 #define CallGate_close_usb_pipe 0x55 0x67 0x9a 254 2 0 0 3 0 0x5d
 
 #define CallGate_sync_disc_part 0x55 0x67 0x9a 255 2 0 0 3 0 0x5d
+#define CallGate_remove_drive 0x55 0x67 0x9a 0 3 0 0 3 0 0x5d
 
 #else
 
@@ -2716,8 +2716,7 @@
 #define CallGate_get_disc_cache_size 0x3e 0x67 0x9a 170 2 0 0 3 0
 #define CallGate_get_file_cache_size 0x3e 0x67 0x9a 171 2 0 0 3 0
 
-#define CallGate_open_disc 0x3e 0x67 0x9a 172 2 0 0 3 0
-#define CallGate_close_disc 0x3e 0x67 0x9a 173 2 0 0 3 0
+#define CallGate_reset_disc 0x3e 0x67 0x9a 173 2 0 0 3 0
 
 #define CallGate_create_tcp_socket 0x3e 0x67 0x9a 174 2 0 0 3 0
 #define CallGate_create_udp_socket 0x3e 0x67 0x9a 175 2 0 0 3 0
@@ -2818,5 +2817,6 @@
 #define CallGate_close_usb_pipe 0x3e 0x67 0x9a 254 2 0 0 3 0
 
 #define CallGate_sync_disc_part 0x3e 0x67 0x9a 255 2 0 0 3 0
+#define CallGate_remove_drive 0x3e 0x67 0x9a 0 3 0 0 3 0
 
 #endif
