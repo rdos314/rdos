@@ -214,7 +214,6 @@
 #define osgate_reset_drive 228
 
 #define osgate_register_file_system 230
-#define osgate_define_media_check 231
 #define osgate_demand_load_file_system 232
 #define osgate_is_file_system_available 233
 #define osgate_install_file_system 234
@@ -1070,7 +1069,6 @@
 #define OsGate_reset_drive 0x3E 0x67 0x9a 228 0 0 0 2 0
 
 #define OsGate_register_file_system 0x3E 0x67 0x9a 230 0 0 0 2 0
-#define OsGate_define_media_check 0x3E 0x67 0x9a 231 0 0 0 2 0
 #define OsGate_demand_load_file_system 0x3E 0x67 0x9a 232 0 0 0 2 0
 #define OsGate_is_file_system_available 0x3E 0x67 0x9a 233 0 0 0 2 0
 #define OsGate_install_file_system 0x3E 0x67 0x9a 234 0 0 0 2 0

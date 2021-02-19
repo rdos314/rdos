@@ -3502,13 +3502,6 @@ RegisterFileSystem      MACRO
     OsGate register_file_system_nr
                     ENDM
 
-;       AL              DRIVE #
-;       BX              HANDLE
-;       ES:EDI       MEDIA CHECK PROCEDURE
-DefineMediaCheck    MACRO
-    OsGate define_media_check_nr
-                    ENDM
-
 ;  IN   AL              DRIVE #
 DemandLoadFileSystem    MACRO
     OsGate demand_load_file_system_nr

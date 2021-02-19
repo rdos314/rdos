@@ -3148,18 +3148,6 @@ open_drive      Proc far
     movzx si,al
     shl si,1
     mov [si].drive_def_arr,es
-;
-    mov ds,bx
-    mov di,word ptr ds:disc_change_proc+4
-    or di,di
-    jz open_drive_done
-;
-    mov es,di
-    mov edi,dword ptr ds:disc_change_proc
-    mov bx,ds:disc_handle
-    DefineMediaCheck
-
-open_drive_done:
     clc
 ;
     pop di

@@ -117,40 +117,6 @@ register_file_system    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DEFINE_MEDIA_CHECK
-;
-;           DESCRIPTION:    Define media check procedure for drive
-;
-;           PARAMETERS:     AL              DRIVE #
-;                           BX              HANDLE
-;                           ES:EDI       MEDIA CHECK PROC
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-define_media_check_name DB 'Define Media Check',0
-
-define_media_check      Proc far
-    push ds
-    push si
-;
-    mov si,fs_sys_data_sel
-    mov ds,si
-;
-    movzx si,al
-    add si,si
-    mov ds:[si].media_check_handle,bx
-    shl si,2
-    mov dword ptr ds:[si].media_check_proc,edi
-    mov word ptr ds:[si+4].media_check_proc,es
-;
-    pop si
-    pop ds
-    retf32
-define_media_check      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DEMAND_LOAD_FILE_SYSTEM
 ;
 ;           DESCRIPTION:    Set file-system to demand-load mode
@@ -548,11 +514,6 @@ init    PROC far
     mov ax,register_file_system_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET define_media_check
-    mov edi,OFFSET define_media_check_name
-    mov ax,define_media_check_nr
-    RegisterOsGate
-;
     mov esi,OFFSET demand_load_file_system
     mov edi,OFFSET demand_load_file_system_name
     mov ax,demand_load_file_system_nr
@@ -616,11 +577,6 @@ init    PROC far
     mov cx,256
     xor ax,ax
     rep stosw
-;
-    mov di,OFFSET media_check_proc
-    mov cx,2*256
-    xor eax,eax
-    rep stosd
 ;
     call init_dir
     call init_file
