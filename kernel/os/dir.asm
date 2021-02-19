@@ -3203,7 +3203,7 @@ create_cur_dir   Proc far
 ;
     mov eax,SIZE proc_cur_dir_struc
     AllocateSmallGlobalMem
-    mov es:pc_drive,MAX_DRIVES - 1
+    mov es:pc_drive,'Z' - 'A'
     mov di,OFFSET pc_dir_sel_arr
     mov cx,256
     xor ax,ax
