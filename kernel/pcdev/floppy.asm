@@ -2084,7 +2084,66 @@ get_floppy_done:
     retf32
 get_floppy_disc Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           init_floppy
+;
+;           DESCRIPTION:    Init floppy
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+init_floppy_name DB 'Init Floppy', 0
+
+init_floppy:
+    int 3
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           init_floppy_thread
+;
+;           DESCRIPTION:    Init floppy thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_floppy_thread    PROC far
+    push ds
+    push es
+    pushad
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+;
+    mov esi,OFFSET init_floppy
+    mov edi,OFFSET init_floppy_name
+    mov cx,stack0_size
+    mov ax,4
+    CreateThread
+;
+    mov esi,OFFSET floppy_super
+    mov edi,OFFSET floppy_super_name
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
+;
+    mov al,6
+    mov ah,14h
+    mov bx,floppy_data_sel
+    mov ds,bx
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET floppy_int
+    RequestIrqHandler
+;
+    popad
+    pop es
+    pop ds
+    retf32
+init_floppy_thread    ENDP
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2096,19 +2155,7 @@ get_floppy_disc Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc_ctrl:
-dct00   DD OFFSET disc_assign,      SEG code
-dct01   DD OFFSET drive_assign1,    SEG code
-dct02   DD OFFSET drive_assign2,    SEG code
-dct03   DD OFFSET demand_mount,     SEG code
-dct04   DD OFFSET erase,        SEG code
-
 init    PROC far
-    mov al,0
-    AllocateFixedDrive
-    mov al,1
-    AllocateFixedDrive
-;
     mov dx,3F4h
     in al,dx
     cmp al,-1
@@ -2130,17 +2177,11 @@ init    PROC far
     mov ax,get_floppy_disc_nr
     RegisterBimodalUserGate
 ;
-    mov edi,OFFSET disc_ctrl
-    HookInitDisc
-;
-    mov al,6
-    mov ah,14h
-    mov bx,floppy_data_sel
-    mov ds,bx
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET floppy_int
-    RequestIrqHandler
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov edi,OFFSET init_floppy_thread
+    HookInitTasking
     clc
 
 init_floppy_done:
@@ -2150,5 +2191,3 @@ init    ENDP
 code ENDS
 
 END init
-
-
