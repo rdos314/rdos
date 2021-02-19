@@ -3422,12 +3422,14 @@ chRetry:
     or ax,ax
     jnz chIsDefined
 ;
+    push ds
     mov ax,SEG data
     mov ds,ax
     GetSystemTime
     sub eax,ds:init_timeout
     sbb edx,ds:init_timeout+4
     cmc
+    pop ds
     jc chDone
 ;
     mov ax,50
