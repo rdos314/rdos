@@ -215,8 +215,6 @@ disc_handler_thread     DW ?
 init_done               DW ?
 init_timeout            DD ?,?
 
-fs_init_section		section_typ <>
-
 data    ENDS
 
 IFDEF __WASM__
@@ -3424,7 +3422,6 @@ chRetry:
     or ax,ax
     jnz chIsDefined
 ;
-    int 3
     mov ax,SEG data
     mov ds,ax
     GetSystemTime
@@ -7346,6 +7343,8 @@ sync_disc_part      Proc far
     shl si,1
     mov ax,SEG data
     mov ds,ax
+    EnterSection ds:disc_handler_section
+;
     mov ax,ds:[si].disc_def_arr
     or ax,ax
     jz sdpDone
@@ -7358,6 +7357,10 @@ sync_disc_part      Proc far
     call Assign2
 
 sdpDone:
+    mov ax,SEG data
+    mov ds,ax
+    LeaveSection ds:disc_handler_section
+;
     popad
     pop gs
     pop fs
@@ -7386,6 +7389,7 @@ UpdateDiscs  Proc near
 ;
     mov ax,SEG data
     mov ds,ax
+    EnterSection ds:disc_handler_section
 ;
     mov ax,flat_sel
     mov es,ax
@@ -7446,6 +7450,8 @@ udLoop2:
 udNext2:
     add si,2
     loop udLoop2
+;
+    LeaveSection ds:disc_handler_section
 ;
     popad
     pop gs
@@ -7560,7 +7566,6 @@ dtInitDo:
     mov ds:init_timeout,eax
     mov ds:init_timeout+4,edx
     mov ds:init_done,1
-    LeaveSection ds:fs_init_section
 ;
     StartPrograms
 
@@ -7944,8 +7949,6 @@ init_drive_wait_loop:
 ;
     mov bx,SEG data
     mov ds,bx
-    InitSection ds:fs_init_section
-    EnterSection ds:fs_init_section    
     mov ds:init_done,0
     mov ds:init_timeout,-1
     mov ds:init_timeout+4,-1
