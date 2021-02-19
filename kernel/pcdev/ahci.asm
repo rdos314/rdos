@@ -326,7 +326,6 @@ ahci_device_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
-ahci_disc_arr       DW MAX_DISCS DUP(?)
 ahci_dev_count      DW ?
 ahci_dev_arr        DW MAX_AHCI_DEVICES DUP(?)
 ahci_port_count     DW ?
@@ -339,9 +338,6 @@ notify_name_ptr     DW ?
 notify_name_str     DB MAX_NAME_SIZE DUP(?)
 
 fs_name             DB 10 DUP(?)
-
-has_efi             DB ?
-has_disc            DB ?
 
 data    ENDS
 
@@ -2633,14 +2629,6 @@ install_disc_unit Proc near
     mov ds:ap_disc_sel,bx
     mov ds:ap_disc_nr,al
 ;
-    push es
-    movzx di,al
-    shl di,1
-    mov ax,SEG data
-    mov es,ax
-    mov es:[di].ahci_disc_arr,ds
-    pop es
-;
     mov cx,512
     mov eax,ds:ap_sector_count
     mov edx,ds:ap_sector_count+4
@@ -2788,19 +2776,10 @@ init_ahci    Proc far
     push es
     pusha
 ;  
-    mov ax,SEG data
-    mov es,ax
-    mov cx,MAX_DISCS
-    mov di,OFFSET ahci_disc_arr
-    xor ax,ax
-    rep stosw
-;
     call InitPciAhci
 ;
     mov ax,SEG data
     mov ds,ax
-    mov ds:has_efi,0
-    mov ds:has_disc,0
     mov cx,ds:ahci_dev_count
     or cx,cx
     jz iaFail
