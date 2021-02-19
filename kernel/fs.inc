@@ -25,8 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MAX_DRIVES	EQU 'Z' - 'A' + 1
-
 FILE_ATTRIB_NOBUFFER = 80h
 
 FILE_LIST_STATE_EMPTY = 0ACh

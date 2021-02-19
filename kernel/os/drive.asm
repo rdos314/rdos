@@ -38,6 +38,8 @@ INCLUDE ..\drive.inc
 INCLUDE ..\fs.inc
 INCLUDE exec.def
 
+MAX_DRIVES	EQU 'Z' - 'A' + 1
+
 DRIVE_WAIT_NUM = 32
 
 POLL_TIMEOUT = 1192 * 100
