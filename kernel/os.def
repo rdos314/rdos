@@ -851,5 +851,6 @@ signal_wait_dev_nr          = 772
 
 install_dynamic_disc_nr     = 773
 install_fixed_disc_nr       = 774
+register_demand_mount_nr    = 775
 
 osgate_entries              = 780

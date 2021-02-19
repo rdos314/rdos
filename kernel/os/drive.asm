@@ -135,6 +135,7 @@ disc_pend_high          DD ?
 disc_io_count           DD ?
 
 disc_change_proc        DD ?,?
+disc_demand_mount_proc  DD ?,?
 disc_fs_name            DB 10 DUP(?)
 disc_vendor_str         DB 256 DUP(?)
 disc_unit_arr           DD ?
@@ -2069,6 +2070,33 @@ register_disc_change    Proc far
     pop ds
     retf32
 register_disc_change    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RegisterDemandMount
+;
+;           DESCRIPTION:    Register demand mount procedure
+;
+;           PARAMETERS:     BX       Disc sel
+;                           ES:EDI   Demand mount proc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_demand_mount_name       DB 'Register Demand Mount',0
+
+register_demand_mount    Proc far
+    push ds
+    push bx
+;
+    mov ds,bx
+    mov dword ptr ds:disc_demand_mount_proc,edi
+    mov word ptr ds:disc_demand_mount_proc+4,es
+;
+    pop bx
+    pop ds
+    retf32
+register_demand_mount    Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2888,6 +2916,8 @@ install_disc_loop:
     mov ds:disc_thread,0
     mov ds:disc_change_proc,0
     mov ds:disc_change_proc+4,0
+    mov ds:disc_demand_mount_proc,0
+    mov ds:disc_demand_mount_proc+4,0
     mov ds:disc_cached_sectors,0
     mov ds:disc_vendor_str,0
     pop dword ptr ds:disc_param
@@ -8087,6 +8117,11 @@ init    PROC far
     mov esi,OFFSET register_disc_change
     mov edi,OFFSET register_disc_change_name
     mov ax,register_disc_change_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET register_demand_mount
+    mov edi,OFFSET register_demand_mount_name
+    mov ax,register_demand_mount_nr
     RegisterOsGate
 ;
     mov esi,OFFSET start_disc

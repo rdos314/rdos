@@ -3294,6 +3294,12 @@ RegisterDiscChange      MACRO
     OsGate register_disc_change_nr
                     ENDM
 
+;       IN      BX      Disc sel
+;       IN      ES:EDI   Demand mount procedure
+RegisterDemandMount      MACRO
+    OsGate register_demand_mount_nr
+                    ENDM
+
 ;       IN  BX      Disc sel
 StartDisc       MACRO
     OsGate start_disc_nr

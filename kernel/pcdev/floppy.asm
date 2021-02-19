@@ -1387,29 +1387,6 @@ InstallMain     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DRIVE_ASSIGN1
-;
-;           DESCRIPTION:    Assign disc drives, pass 1
-;
-;           PARAMETERS:         BX          Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-drive_assign1   Proc far
-    mov es,bx
-    mov al,es:disc_sub_unit
-    mov ah,es:disc_nr
-    xor edx,edx
-    mov ecx,-1
-    OpenDrive
-    DemandLoadFileSystem
-    retf32
-drive_assign1   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DRIVE_ASSIGN2
 ;
 ;           DESCRIPTION:    Assign disc drives, pass 2
@@ -1434,7 +1411,7 @@ drive_assign2   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-demand_mount    Proc far
+demand_mount_proc    Proc far
     push ds
     push es
     pushad
@@ -1473,7 +1450,7 @@ drive_assign_done1:
     pop es
     pop ds
     retf32
-demand_mount    Endp
+demand_mount_proc    Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1893,6 +1870,49 @@ perform_one_done:
     ret
 perform_one     Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetFloppyDisc
+;
+;           description:    Get disc # for a physical disc unit
+;
+;           PARAMETERS:         BL      Floppy disc #
+;
+;       RETURNS:    AL      disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_floppy_disc_name DB 'Get Floppy Disc',0
+
+get_floppy_disc Proc far
+    push ds
+    push bx
+;
+    mov ax,SEG data
+    mov ds,ax
+    cmp bl,2
+    jae get_floppy_fail
+;    
+    movzx bx,bl
+    add bx,bx
+    mov bx,ds:[bx].DiscArr
+    or bx,bx
+    jz get_floppy_fail
+;
+    mov ds,bx
+    mov al,ds:disc_nr
+    clc
+    jmp get_floppy_done
+
+get_floppy_fail:
+    stc
+    
+get_floppy_done:    
+    pop bx
+    pop ds    
+    retf32
+get_floppy_disc Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1966,7 +1986,7 @@ install_unit    Proc near
 ;       
     mov ecx,200h
     mov bx,fs
-    InstallStaticDisc
+    InstallFixedDisc
 ;
     mov fs:disc_sel,bx
     mov fs:disc_nr,al
@@ -1977,6 +1997,10 @@ install_unit    Proc near
     mov es,ax
     mov edi,OFFSET check_media_proc
     RegisterDiscChange
+;
+    mov edi,OFFSET demand_mount_proc
+    RegisterDemandMount
+;
     pop edi
 ;
     mov ax,cs
@@ -1986,103 +2010,15 @@ install_unit    Proc near
     mov ax,2
     mov cx,stack0_size
     CreateThread
+;
+    mov al,fs:disc_sub_unit
+    mov ah,fs:disc_nr
+    xor edx,edx
+    mov ecx,-1
+    OpenDrive
+    DemandLoadFileSystem
     ret
 install_unit    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           disc_assign
-;
-;           DESCRIPTION:    Assign discs
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-floppy0 DB 'Floppy Drive 0',0
-floppy1 DB 'Floppy Drive 1',0
-
-disc_assign     Proc far
-    push ds
-    push es
-    pusha
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET floppy_super
-    mov di,OFFSET floppy_super_name
-    mov ax,4
-    mov cx,stack0_size
-    CreateThread
-;
-;    in al,INT0_MASK
-;    and al,NOT 40h
-;    out INT0_MASK,al
-;
-    mov ax,SEG data
-    mov ds,ax
-    call ResetController
-;
-    mov al,0
-    mov di,OFFSET floppy0
-    call install_unit
-    mov al,1
-    mov di,OFFSET floppy1
-;       call install_unit
-;
-    popa
-    pop es
-    pop ds  
-    retf32
-disc_assign     Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           GetFloppyDisc
-;
-;           description:    Get disc # for a physical disc unit
-;
-;           PARAMETERS:         BL      Floppy disc #
-;
-;       RETURNS:    AL      disc #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_floppy_disc_name DB 'Get Floppy Disc',0
-
-get_floppy_disc Proc far
-    push ds
-    push bx
-;
-    mov ax,SEG data
-    mov ds,ax
-    cmp bl,2
-    jae get_floppy_fail
-;    
-    movzx bx,bl
-    add bx,bx
-    mov bx,ds:[bx].DiscArr
-    or bx,bx
-    jz get_floppy_fail
-;
-    mov ds,bx
-    mov al,ds:disc_nr
-    clc
-    jmp get_floppy_done
-
-get_floppy_fail:
-    stc
-    
-get_floppy_done:    
-    pop bx
-    pop ds    
-    retf32
-get_floppy_disc Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2095,8 +2031,20 @@ get_floppy_disc Endp
 
 init_floppy_name DB 'Init Floppy', 0
 
+floppy0 DB 'Floppy Drive 0',0
+floppy1 DB 'Floppy Drive 1',0
+
 init_floppy:
-    int 3
+    mov ax,SEG data
+    mov ds,ax
+    call ResetController
+;
+    mov al,0
+    AllocateFixedDrive
+;
+    mov al,0
+    mov di,OFFSET floppy0
+    call install_unit
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2143,7 +2091,7 @@ init_floppy_thread    PROC far
     pop ds
     retf32
 init_floppy_thread    ENDP
-;
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
