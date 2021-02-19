@@ -458,6 +458,69 @@ rename_file16   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InitFs
+;
+;           DESCRIPTION:    Init FS thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_fs_thread_name DB 'Init File System', 0
+
+init_fs_thread_pr:
+    mov ax,500
+    WaitMilliSec
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ax,ds:pf_cur_dir_sel
+    or ax,ax
+    jnz ifDirOk
+;
+    CreateCurDir
+    mov ds:pf_cur_dir_sel,ax
+
+ifDirOk:
+    StartPrograms
+;
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_fs
+;
+;           DESCRIPTION:    Create init fs thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_fs    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET init_fs_thread_pr
+    mov di,OFFSET init_fs_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    retf32
+init_fs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           INIT
 ;
 ;           DESCRIPTION:    Init driver
@@ -466,49 +529,14 @@ rename_file16   ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-default_proc    Proc far
-    stc
-    ret
-default_proc    Endp
-
-default_fs:
-df00 DW OFFSET default_proc,    SEG code
-df01 DW OFFSET default_proc,    SEG code
-df02 DW OFFSET default_proc,    SEG code
-df03 DW OFFSET default_proc,    SEG code
-df04 DW OFFSET default_proc,    SEG code
-df05 DW OFFSET default_proc,    SEG code
-df06 DW OFFSET default_proc,    SEG code
-df07 DW OFFSET default_proc,    SEG code
-df08 DW OFFSET default_proc,    SEG code
-df09 DW OFFSET default_proc,    SEG code
-df0A DW OFFSET default_proc,    SEG code
-df0B DW OFFSET default_proc,    SEG code
-df0C DW OFFSET default_proc,    SEG code
-df0D DW OFFSET default_proc,    SEG code
-df0E DW OFFSET default_proc,    SEG code
-df0F DW OFFSET default_proc,    SEG code
-df10 DW OFFSET default_proc,    SEG code
-df11 DW OFFSET default_proc,    SEG code
-df12 DW OFFSET default_proc,    SEG code
-df13 DW OFFSET default_proc,    SEG code
-df14 DW OFFSET default_proc,    SEG code
-df15 DW OFFSET default_proc,    SEG code
-df16 DW OFFSET default_proc,    SEG code
-df17 DW OFFSET default_proc,    SEG code
-df18 DW OFFSET default_proc,    SEG code
-df19 DW OFFSET default_proc,    SEG code
-df1A DW OFFSET default_proc,    SEG code
-df1B DW OFFSET default_proc,    SEG code
-df1C DW OFFSET default_proc,    SEG code
-df1D DW OFFSET default_proc,    SEG code
-df1E DW OFFSET default_proc,    SEG code
-df1F DW OFFSET default_proc,    SEG code
 
 init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET init_fs
+    HookInitTasking
 ;
     mov esi,OFFSET register_file_system
     mov edi,OFFSET register_file_system_name

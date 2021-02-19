@@ -7532,17 +7532,6 @@ disc_thread_pr:
     CreateThread
 
 dtSuperOk:
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ax,ds:pf_cur_dir_sel
-    or ax,ax
-    jnz dtDirOk
-;
-    CreateCurDir
-    mov ds:pf_cur_dir_sel,ax
-
-dtDirOk:
     mov ax,SEG data
     mov ds,ax
 ;
@@ -7568,8 +7557,6 @@ dtInitDo:
     mov ds:init_timeout,eax
     mov ds:init_timeout+4,edx
     mov ds:init_done,1
-;
-    StartPrograms
 
 dtWait:
     WaitForSignal
@@ -7926,6 +7913,9 @@ init    PROC far
     mov es,bx
     InitSection es:disc_handler_section
     mov es:disc_handlers,1
+    mov es:init_done,0
+    mov es:init_timeout,-1
+    mov es:init_timeout+4,-1
 ;
     mov cx,MAX_DRIVES
     mov di,OFFSET disc_def_arr
@@ -7948,12 +7938,6 @@ init_drive_wait_loop:
     loop init_drive_wait_loop
     mov es:drive_wait_free,di
     mov es:drive_wait_count,DRIVE_WAIT_NUM
-;
-    mov bx,SEG data
-    mov ds,bx
-    mov ds:init_done,0
-    mov ds:init_timeout,-1
-    mov ds:init_timeout+4,-1
 ;
     call init_ramdrive  
     call init_filedisc
