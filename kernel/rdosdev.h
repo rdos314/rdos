@@ -690,7 +690,6 @@ int RdosQueryUdp(long timeout_ms, short int dest_port, long ip, char *buf, int s
 void RdosBroadcastDriverUdp(short int source, short int dest, int driver_sel, char *buf, int size);
 void RdosSendDriverUdp(short int source, short int dest, long ip, int driver_sel, void *driver_dest, char *buf, int size);
 
-void RdosHookInitDisc(struct TDiscSystemHeader *disc_table);
 void RdosRegisterDiscChange(__rdos_disc_change_callback *callb_proc);
 void RdosStartDisc(int disc_sel);
 void RdosStopDisc(int disc_sel);
@@ -784,8 +783,6 @@ char RdosWaitForLineStateChange(char port);
 char RdosGetLineState(char port);
 
 void RdosInitUsbDevice(int usb_dev_sel);
-void RdosNotifyUsbAttach(int usb_dev_sel, char port, char speed);
-void RdosNotifyUsbDetach(int usb_dev_sel, char port);
 
 void RdosHookUsbAttach(__rdos_usb_state_callback *callb_proc);
 void RdosHookUsbDetach(__rdos_usb_state_callback *callb_proc);
@@ -1707,18 +1704,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     __value [__ecx] \
     __modify [__es __esi]
 
-#pragma aux RdosHookInitDisc = \
-    OsGate_hook_init_disc \
-    __parm [__es __edi]
-
-#pragma aux RdosInstallDisc = \
-    OsGate_install_disc \
-    "movzx eax,al" \
-    "mov es:[edi],eax" \
-    "movzx ebx,bx" \
-    __parm [__ebx] [__ecx] [__es __edi] \
-    __value [__ebx] \
-    __modify [__eax]
 
 #pragma aux RdosRegisterDiscChange = \
     OsGate_register_disc_change \
@@ -1865,10 +1850,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 #pragma aux RdosResetDrive = \
     OsGate_reset_drive \
     __parm [__eax]
-
-#pragma aux RdosHookInitFileSystem = \
-    OsGate_hook_init_file_system \
-    __parm [__es __edi]
 
 #pragma aux RdosRegisterFileSystem = \
     "push ds" \
@@ -2074,13 +2055,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     OsGate_get_line_state \
     __parm [__al] \
     __value [__al]
-
-#pragma aux RdosNotifyUsbDetach = \
-    "push ds" \
-    "mov ds,edx" \
-    OsGate_notify_usb_detach \
-    "pop ds" \
-    __parm [__edx] [__al]
 
 #pragma aux RdosHookUsbAttach = \
     OsGate_hook_usb_attach \

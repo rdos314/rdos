@@ -188,7 +188,6 @@ write_pci_dword_nr                      = 195
 find_pci_class_nr                       = 196
 find_pci_device_nr                      = 197
 
-hook_init_disc_nr                       = 198
 install_static_disc_nr                  = 199
 register_disc_change_nr         = 200
 start_disc_nr                           = 201

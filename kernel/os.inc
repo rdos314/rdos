@@ -3258,11 +3258,6 @@ EndDiscHandler    MACRO
 SetDiscUse32    MACRO
     OsGate set_disc_use32_nr
                     ENDM
-            
-;       ES:EDI   Disc system table
-HookInitDisc    MACRO
-    OsGate hook_init_disc_nr
-                    ENDM
 
 ; IN  BX          Handle
 ; IN  ECX         Read-ahead

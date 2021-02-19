@@ -123,7 +123,6 @@ disc_awrite_timer       DW ?
 disc_awrite_count       DW ?
 disc_awrite_timeout     DD ?,?
 disc_seq_list           DW ?
-disc_param              DD ?,?
 disc_handle             DW ?
 disc_pend_bitmap        DW ?
 disc_curr_unit          DD ?
@@ -204,9 +203,6 @@ boot_struc          ENDS
 
 data    SEGMENT byte public 'DATA'
 
-disc_params             DB ?
-disc_curr_param         DW ?
-disc_param_arr          DD MAX_DRIVES DUP(?,?)
 disc_def_arr            DW MAX_DRIVES DUP(?)
 drive_def_arr           DW MAX_DRIVES DUP(?)
 drive_wait_arr          DB 4*DRIVE_WAIT_NUM DUP(?)
@@ -2887,9 +2883,6 @@ install_disc_loop:
     jnz install_disc_next
 ;
     push bx
-    mov bx,ds:disc_curr_param
-    push dword ptr [bx+4]
-    push dword ptr [bx]
     mov eax,SIZE disc_def_struc
     AllocateSmallGlobalMem
     xor di,di
@@ -2920,8 +2913,6 @@ install_disc_loop:
     mov ds:disc_demand_mount_proc+4,0
     mov ds:disc_cached_sectors,0
     mov ds:disc_vendor_str,0
-    pop dword ptr ds:disc_param
-    pop dword ptr ds:disc_param+4
     pop ds:disc_handle
 ;
     pop cx
@@ -3019,73 +3010,6 @@ is_disc_idle_done:
     pop ds
     retf32
 is_disc_idle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           OpenDisc
-;
-;           DESCRIPTION:    Open disc
-;
-;           PARAMETERS:     AL          Disc #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_disc_name       DB 'Open Disc',0
-
-open_disc    Proc far
-    push ds
-    push ebx
-;
-    mov bx,SEG data
-    mov ds,bx
-;
-    cmp al,MAX_DRIVES
-    jae open_disc_done
-;
-    movzx bx,al
-    shl bx,1
-    mov bx,ds:[bx].disc_def_arr
-    or bx,bx
-    jz open_disc_done
-;
-    push ds
-    push bx
-    push cx
-    push esi
-;
-    mov ds,bx
-    mov bx,ds:disc_handle
-    lds esi,ds:disc_param
-    call fword ptr ds:[esi].ds_drive_assign1_proc
-;
-    pop esi
-    pop cx
-    pop bx
-    pop ds
-;
-    push ds
-    push bx
-    push cx
-    push esi
-;
-    mov ds,bx
-    mov bx,ds:disc_handle
-    lds esi,ds:disc_param
-    call fword ptr ds:[esi].ds_drive_assign2_proc
-;
-    pop esi
-    pop cx
-    pop bx
-    pop ds
-;
-    StartDisc
-
-open_disc_done:
-    pop ebx
-    pop ds
-    retf32
-open_disc    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4477,166 +4401,6 @@ define_done:
     retf32
 define_sector   ENDP
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           EraseSectors
-;
-;           DESCRIPTION:    Erase a number of sectors
-;
-;           PARAMETERS:         AL          Drive #
-;               ECX     Number of sectors
-;                           EDX         Start sector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-erase_sectors_name      DB 'Erase Sectors',0
-
-erase_sectors   Proc far
-    push ds
-    push es
-    pushad
-;
-    mov bx,SEG data
-    mov ds,bx
-    movzx bx,al
-    add bx,bx
-    mov bx,[bx].drive_def_arr
-    or bx,bx
-    jz erase_sectors_fail
-;
-    cmp bx,-1
-    je erase_sectors_fail
-;
-    mov ds,bx
-    mov ds,ds:drive_disc
-    mov bx,ds:disc_handle
-    lds esi,ds:disc_param
-    call fword ptr ds:[esi].ds_erase_proc
-    jnc erase_sectors_done
-;
-    mov bx,flat_sel
-    mov es,bx
-
-erase_loop:
-    NewSector
-    mov edi,esi
-    push ecx
-    push eax
-    mov eax,-1
-    mov ecx,80h
-    rep stos dword ptr es:[edi]
-    pop eax
-    pop ecx 
-    ModifySector
-    UnlockSector
-;
-    inc edx
-    loop erase_loop
-;
-    clc
-    jmp erase_sectors_done
-
-erase_sectors_fail:
-    stc
-
-erase_sectors_done:
-    popad
-    pop es  
-    pop ds
-    retf32
-erase_sectors   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           EraseDiscSectors
-;
-;           DESCRIPTION:    Erase a number of sectors on a disc
-;
-;           PARAMETERS:         AL          Disc #
-;               ECX     Number of sectors
-;                           EDX         Start sector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-erase_disc_sectors_name DB 'Erase Disc Sectors',0
-
-erase_disc_sectors   Proc near
-    push ds
-    push es
-    pushad
-;
-    cmp al,MAX_DRIVES
-    jae erase_disc_sectors_fail
-;
-    mov bx,SEG data
-    mov ds,bx
-    movzx bx,al
-    add bx,bx
-    mov bx,[bx].disc_def_arr
-    or bx,bx
-    jz erase_disc_sectors_fail
-;
-    cmp bx,-1
-    je erase_disc_sectors_fail
-;
-    mov ds,bx
-    mov bx,ds:disc_handle
-    lds esi,ds:disc_param
-    call fword ptr ds:[esi].ds_erase_proc
-    jnc erase_disc_sectors_done
-;
-    mov bx,flat_sel
-    mov es,bx
-
-erase_disc_loop:
-    NewSector
-    mov edi,esi
-    push ecx
-    push eax
-    mov eax,-1
-    mov ecx,80h
-    rep stos dword ptr es:[edi]
-    pop eax
-    pop ecx 
-    ModifySector
-    UnlockSector
-;
-    inc edx
-    loop erase_disc_loop
-;
-    clc
-    jmp erase_disc_sectors_done
-
-erase_disc_sectors_fail:
-    stc
-
-erase_disc_sectors_done:
-    popad
-    pop es  
-    pop ds
-    ret
-erase_disc_sectors   Endp
-
-erase_disc_sectors32    Proc far
-    call erase_disc_sectors
-    retf32
-erase_disc_sectors32    Endp
-
-erase_disc_sectors16    Proc far
-    push ecx
-;
-    movzx ecx,cx
-    call erase_disc_sectors
-;
-    pop ecx
-    retf32
-erase_disc_sectors16    Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5955,202 +5719,6 @@ end_disc_handler  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           HOOK_INIT_DISC
-;
-;           DESCRIPTION:    Add an InitDisc hook
-;
-;           PARAMETERS:     ES:EDI       Parameter block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_init_disc_name     DB 'Hook Init Disc',0
-
-hook_init_disc  Proc far
-    push ds
-    push ax
-    push bx
-    push cx
-    mov ax,SEG data
-    mov ds,ax
-    mov al,ds:disc_params
-    mov bl,al
-    xor bh,bh
-    shl bx,3
-    add bx,OFFSET disc_param_arr
-    mov [bx],edi
-    mov [bx+4],es
-    inc al
-    mov ds:disc_params,al
-    pop cx
-    pop bx
-    pop ax
-    pop ds
-    retf32
-hook_init_disc  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RUN_DISC_ASSIGN
-;
-;           DESCRIPTION:    Run all disc-assign hooks
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-run_disc_assign Proc near
-    push ds
-    push ax
-    push bx
-    push cx
-;
-    mov ax,SEG data
-    mov ds,ax
-    movzx cx,ds:disc_params
-    mov bx,OFFSET disc_param_arr
-    jcxz run_disc_assign_done
-
-run_disc_assign_loop:
-    push ds
-    push ebx
-    push cx
-    mov ds:disc_curr_param,bx
-    lds ebx,[bx]
-    call fword ptr [ebx].ds_disc_assign_proc
-    pop cx
-    pop ebx
-    pop ds
-    add bx,8
-    loop run_disc_assign_loop       
-
-run_disc_assign_done:
-    pop cx
-    pop bx
-    pop ax
-    pop ds  
-    ret
-run_disc_assign Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RUN_DRIVE_ASSIGN1
-;
-;           DESCRIPTION:    Run drive assign pass 1 for all discs
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-run_drive_assign1       Proc near
-    push ds
-    push ax
-    push bx
-    push cx
-    push si
-;
-    mov ax,SEG data
-    mov ds,ax
-    xor si,si
-    mov cx,MAX_DRIVES
-
-run_drive_assign1_loop:
-    mov bx,[si].disc_def_arr
-    or bx,bx
-    jz run_drive_assign1_next
-;
-    push ds
-    push bx
-    push cx
-    push esi
-;
-    mov ds,bx
-    mov bx,ds:disc_handle
-    lds esi,ds:disc_param
-    call fword ptr ds:[esi].ds_drive_assign1_proc
-;
-    pop esi
-    pop cx
-    pop bx
-    pop ds
-
-run_drive_assign1_next:
-    add si,2
-    sub cx,1
-    jnz run_drive_assign1_loop
-;
-    pop si
-    pop cx
-    pop bx
-    pop ax
-    pop ds
-    ret
-run_drive_assign1       Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           RUN_DRIVE_ASSIGN2
-;
-;           DESCRIPTION:    Run drive assign pass 2 for all discs
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-run_drive_assign2       Proc near
-    push ds
-    push ax
-    push bx
-    push cx
-    push si
-;
-    mov ax,SEG data
-    mov ds,ax
-    xor si,si
-    mov cx,MAX_DRIVES
-
-run_drive_assign2_loop:
-    mov bx,[si].disc_def_arr
-    or bx,bx
-    jz run_drive_assign2_next
-;
-    push ds
-    push bx
-    push cx
-    push esi
-;
-    mov ds,bx
-    mov bx,ds:disc_handle
-    lds esi,ds:disc_param
-    call fword ptr ds:[esi].ds_drive_assign2_proc
-;
-    pop esi
-    pop cx
-    pop bx
-    pop ds
-
-run_drive_assign2_next:
-    add si,2
-    sub cx,1
-    jnz run_drive_assign2_loop
-;
-    pop si
-    pop cx
-    pop bx
-    pop ax
-    pop ds
-    ret
-run_drive_assign2       Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DEMAND_LOAD_DRIVE
 ;
 ;           DESCRIPTION:    Run demand-load for disc exporting drive
@@ -6165,6 +5733,7 @@ demand_load_drive       Proc far
     push ds
     pushad
 ;
+    int 3
     mov bx,SEG data
     mov ds,bx
     movzx bx,al
@@ -6179,8 +5748,8 @@ demand_load_drive       Proc far
     mov ds,ax
     mov ds,ds:drive_disc
     mov bx,ds:disc_handle
-    lds esi,ds:disc_param
-    call fword ptr ds:[esi].ds_demand_mount_proc
+    mov ds,bx
+    call fword ptr ds:disc_demand_mount_proc
     jmp demand_load_drive_done
 
 demand_load_drive_fail:
@@ -7871,20 +7440,45 @@ UpdateDiscs  Proc near
     mov si,OFFSET disc_def_arr
     mov cx,MAX_DRIVES
 
-udLoop:
+udLoop1:
     mov ax,ds:[si]
     or ax,ax
-    jz udNext
+    jz udNext1
 ;
     mov gs,ax
     test gs:disc_flags,DISC_FLAG_INSTALLED
-    jnz udNext
+    jnz udNext1
 ;
     push ds
     push si
     push cx
 ;
     call Assign1
+;
+    pop cx
+    pop si
+    pop ds
+
+udNext1:
+    add si,2
+    loop udLoop1
+;
+    mov si,OFFSET disc_def_arr
+    mov cx,MAX_DRIVES
+
+udLoop2:
+    mov ax,ds:[si]
+    or ax,ax
+    jz udNext2
+;
+    mov gs,ax
+    test gs:disc_flags,DISC_FLAG_INSTALLED
+    jnz udNext2
+;
+    push ds
+    push si
+    push cx
+;
     call Assign2
 ;
     pop cx
@@ -7896,9 +7490,9 @@ udLoop:
 ;
     lock or gs:disc_flags,DISC_FLAG_INSTALLED
 
-udNext:
+udNext2:
     add si,2
-    loop udLoop
+    loop udLoop2
 ;
     popad
     pop gs
@@ -8063,11 +7657,6 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET hook_init_disc
-    mov edi,OFFSET hook_init_disc_name
-    mov ax,hook_init_disc_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET begin_disc_handler
     mov edi,OFFSET begin_disc_handler_name
@@ -8249,11 +7838,6 @@ init    PROC far
     mov ax,define_sector_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET erase_sectors
-    mov edi,OFFSET erase_sectors_name
-    mov ax,erase_sectors_nr
-    RegisterOsGate
-;
     mov esi,OFFSET wait_for_sector
     mov edi,OFFSET wait_for_sector_name
     mov ax,wait_for_sector_nr
@@ -8286,12 +7870,6 @@ init    PROC far
     mov edi,OFFSET get_disc_cache_size_name
     xor dx,dx
     mov ax,get_disc_cache_size_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET open_disc
-    mov edi,OFFSET open_disc_name
-    xor dx,dx
-    mov ax,open_disc_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET close_disc
@@ -8383,20 +7961,12 @@ init    PROC far
     mov ax,write_long_disc_nr
     RegisterUserGate
 ;
-    mov ebx,OFFSET erase_disc_sectors16
-    mov esi,OFFSET erase_disc_sectors32
-    mov edi,OFFSET erase_disc_sectors_name
-    xor dx,dx
-    mov ax,erase_disc_sectors_nr
-    RegisterUserGate
-;
     mov edi,OFFSET init_disc_thread
     HookInitTasking
 ;
     mov bx,SEG data
     mov es,bx
     InitSection es:disc_handler_section
-    mov es:disc_params,0
     mov es:disc_handlers,1
 ;
     mov cx,MAX_DRIVES
