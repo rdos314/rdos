@@ -2153,11 +2153,6 @@ GetFileCacheSize     MACRO
                                                 ENDM
 
 
-;       OUT     AL              Drive #
-AllocateStaticDrive     MACRO
-        UserGate allocate_static_drive_nr
-                                        ENDM
-
 ;       IN      AL              Drive #
 AllocateFixedDrive      MACRO
         UserGate allocate_fixed_drive_nr

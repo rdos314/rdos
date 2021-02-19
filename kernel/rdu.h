@@ -345,7 +345,6 @@
 
 #define usergate_update_time 0x00000131
 
-#define usergate_allocate_static_drive 0x00000132
 #define usergate_allocate_fixed_drive 0x00000133
 #define usergate_allocate_dynamic_drive 0x00000134
 
@@ -1289,7 +1288,6 @@
 
 #define CallGate_update_time 0x55 0x67 0x9a 49 1 0 0 3 0 0x5d
 
-#define CallGate_allocate_static_drive 0x55 0x67 0x9a 50 1 0 0 3 0 0x5d
 #define CallGate_allocate_fixed_drive 0x55 0x67 0x9a 51 1 0 0 3 0 0x5d
 #define CallGate_allocate_dynamic_drive 0x55 0x67 0x9a 52 1 0 0 3 0 0x5d
 
@@ -2231,7 +2229,6 @@
 
 #define CallGate_update_time 0x3e 0x67 0x9a 49 1 0 0 3 0
 
-#define CallGate_allocate_static_drive 0x3e 0x67 0x9a 50 1 0 0 3 0
 #define CallGate_allocate_fixed_drive 0x3e 0x67 0x9a 51 1 0 0 3 0
 #define CallGate_allocate_dynamic_drive 0x3e 0x67 0x9a 52 1 0 0 3 0
 

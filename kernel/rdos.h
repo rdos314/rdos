@@ -811,7 +811,6 @@ void RDOSAPI RdosDemandLoadDrive(int DriveNr);
 int RDOSAPI RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
 
 int RDOSAPI RdosAllocateFixedDrive(int DriveNr);
-int RDOSAPI RdosAllocateStaticDrive(void);
 int RDOSAPI RdosAllocateDynamicDrive(void);
 
 int RDOSAPI RdosGetDriveInfo(int DriveNr, long *FreeUnits, int *BytesPerUnit, long *TotalUnits);

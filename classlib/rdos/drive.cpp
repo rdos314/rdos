@@ -46,24 +46,6 @@ TDrive *TDrive::AllocateFixed(int DriveNr)
         return 0;
 }
 
-/*##################  TDrive::AllocateStatic  #############
-*   Purpose....: Allocate static drive							                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-02 le                                                #
-*##########################################################################*/
-TDrive *TDrive::AllocateStatic()
-{
-	int DriveNr;
-
-	DriveNr = RdosAllocateStaticDrive();
-	if (DriveNr)
-		return new TDrive(DriveNr);
-	else
-		return 0;
-}
-
 /*##################  TDrive::AllocateDynamic  #############
 *   Purpose....: Allocate dynamic drive							                    #
 *   In params..: *                                                          #

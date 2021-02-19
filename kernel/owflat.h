@@ -3108,11 +3108,6 @@
     __parm [__eax] \
     __value [__eax]
 
-#pragma aux RdosAllocateStaticDrive = \
-    CallGate_allocate_static_drive  \
-    ValidateDisc \
-    __value [__eax]
-
 #pragma aux RdosAllocateDynamicDrive = \
     CallGate_allocate_dynamic_drive  \
     ValidateDisc \
