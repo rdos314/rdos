@@ -1241,20 +1241,21 @@ init_ramdrive	PROC near
     mov di,OFFSET drive_sel_arr
     rep stosw
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
-	mov esi,OFFSET fs_name
-	mov edi,OFFSET fs_ctrl
-	RegisterFileSystem
+    mov esi,OFFSET fs_name
+    mov edi,OFFSET fs_ctrl
+    RegisterFileSystem
 ;
-	AllocateDynamicDrive
-	mov edi,OFFSET fs_name
-	InstallFileSystem
-	mov ecx,-1
-	StartFileSystem
-	ret
+    mov al,'Z' - 'A'
+    AllocateFixedDrive
+    mov edi,OFFSET fs_name
+    InstallFileSystem
+    mov ecx,-1
+    StartFileSystem
+    ret
 init_ramdrive	ENDP
 
 code	ENDS
