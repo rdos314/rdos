@@ -60,6 +60,9 @@ boot_efi_linear         EQU 040000000h
 long_buf_linear         EQU 040000000h
 long_buf_size           EQU 07F000000h
 
+fs_linear               EQU 080000000h
+fs_size                 EQU 03C000000h
+
 section_linear          EQU 0BC000000h
 
 flat_size               EQU 0BE000000h

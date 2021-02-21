@@ -53,6 +53,10 @@ INCLUDE exec.def
     extrn create_sys_page_dir_proc:word
     extrn cow_dir_proc:word
     extrn cow_page_proc:word
+
+    extrn get_shared_page_dir_proc:word
+    extrn set_shared_page_dir_proc:word
+    extrn create_shared_page_dir_proc:word
     
 code    SEGMENT byte public 'CODE'
 

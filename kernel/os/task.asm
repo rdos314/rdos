@@ -7967,6 +7967,7 @@ allocate_thread_block   PROC near
     mov es:p_linear,edx
     mov es:p_active,1
     mov es:p_realtime,0
+    mov es:p_shared_dir_sel,0
 ;
     pop edx
     pop ecx
@@ -8004,6 +8005,7 @@ allocate_null_thread_block   PROC near
     mov es:p_linear,edx
     mov es:p_active,0
     mov es:p_realtime,0
+    mov es:p_shared_dir_sel,0
 ;
     pop edx
     pop ecx

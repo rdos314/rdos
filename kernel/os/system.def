@@ -352,6 +352,8 @@ p_kernel_ss             DW ?
 p_kernel_stack  DD ?
 p_linear        DD ?
 
+p_shared_dir_sel       DW ?
+
 p_dr0                   DQ ?
 p_dr1                   DQ ?
 p_dr2                   DQ ?

@@ -87,6 +87,9 @@ code    SEGMENT byte public use16 'CODE'
     public set_sys_page_dir_proc
     public create_page_dir_proc
     public create_sys_page_dir_proc
+    public get_shared_page_dir_proc
+    public set_shared_page_dir_proc
+    public create_shared_page_dir_proc
     public has_page_entry_proc
     public reserve_page_entries_proc
     public allocate_page_entries_proc
@@ -130,6 +133,9 @@ get_sys_page_dir_proc           DW OFFSET local_get_sys_page_dir32
 set_sys_page_dir_proc           DW OFFSET local_set_sys_page_dir32
 create_page_dir_proc            DW OFFSET local_create_page_dir32
 create_sys_page_dir_proc        DW OFFSET local_create_sys_page_dir32
+get_shared_page_dir_proc        DW OFFSET local_get_shared_page_dir32
+set_shared_page_dir_proc        DW OFFSET local_set_shared_page_dir32
+create_shared_page_dir_proc     DW OFFSET local_create_shared_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
 allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 allocate_sys_page_entries_proc  DW OFFSET local_allocate_sys_page_entries32
@@ -173,6 +179,9 @@ get_sys_page_dir_p64            DW OFFSET local_get_sys_page_dir64
 set_sys_page_dir_p64            DW OFFSET local_set_sys_page_dir64
 create_page_dir_p64             DW OFFSET local_create_page_dir64
 create_sys_page_dir_p64         DW OFFSET local_create_sys_page_dir64
+get_shared_page_dir_p64         DW OFFSET local_get_shared_page_dir64
+set_shared_page_dir_p64         DW OFFSET local_set_shared_page_dir64
+create_shared_page_dir_p64      DW OFFSET local_create_shared_page_dir64
 reserve_page_entries_p64        DW OFFSET local_reserve_page_entries64
 allocate_page_entries_p64       DW OFFSET local_allocate_page_entries64
 allocate_sys_page_entries_p64   DW OFFSET local_allocate_sys_page_entries64
@@ -1040,6 +1049,35 @@ local_get_sys_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_get_shared_page_dir32
+;
+;           DESCRIPTION:    Get shared physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           ES          thread
+;
+;           RETURNS:        EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_shared_page_dir32       Proc near
+    push ds
+    push edx
+;    
+    mov ds,es:p_shared_dir_sel
+    shr edx,20
+    and dl,0FCh
+    mov eax,[edx]
+    xor ebx,ebx
+;    
+    pop edx
+    pop ds
+    ret
+local_get_shared_page_dir32    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_set_page_dir32
 ;
 ;           DESCRIPTION:    Set physical dir for linear address
@@ -1094,6 +1132,33 @@ local_set_sys_page_dir32       Proc near
     pop ds
     ret
 local_set_sys_page_dir32    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_shared_page_dir32
+;
+;           DESCRIPTION:    Set shared physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           ES          thread
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_shared_page_dir32       Proc near
+    push ds
+    push edx
+;    
+    mov ds,es:p_shared_dir_sel
+    shr edx,20
+    and dl,0FCh
+    mov [edx],eax
+;    
+    pop edx
+    pop ds
+    ret
+local_set_shared_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1188,6 +1253,60 @@ cspdInit:
     pop eax
     ret
 local_create_sys_page_dir32    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_create_shared_page_dir32
+;
+;           DESCRIPTION:    Create shared page directory entry
+;
+;           PARAMETERS:     EDX         linear address
+;                           ES          thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_shared_page_dir32       Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ds,es:p_shared_dir_sel
+    shr edx,20
+    and dx,0FFCh
+    call local_allocate_physical
+    mov al,7
+    mov [edx],eax    
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    mov al,13h
+    call local_set_page_entry32
+;
+    mov cx,400h
+    xor ebx,ebx
+
+cshpdInit:
+    mov [edx],ebx
+    add edx,4
+    loop cshpdInit
+;
+    xor eax,eax
+    call local_set_page_entry32
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+local_create_shared_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3772,6 +3891,35 @@ local_get_sys_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_get_shared_page_dir64
+;
+;           DESCRIPTION:    Get shared physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           ES          thread
+;
+;           RETURNS:        EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_get_shared_page_dir64       Proc near
+    push ds
+    push edx
+;    
+    mov ds,es:p_shared_dir_sel
+    shr edx,18
+    and dl,0F8h
+    mov eax,[edx]
+    mov ebx,[edx+4]
+;    
+    pop edx
+    pop ds
+    ret
+local_get_shared_page_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_set_page_dir64
 ;
 ;           DESCRIPTION:    Set physical dir for linear address
@@ -3828,6 +3976,34 @@ local_set_sys_page_dir64       Proc near
     pop ds
     ret
 local_set_sys_page_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_set_shared_page_dir64
+;
+;           DESCRIPTION:    Set shared physical dir for linear address
+;
+;           PARAMETERS:     EDX         linear address
+;                           ES          thread
+;                           EBX:EAX     physical address or 0                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_set_shared_page_dir64       Proc near
+    push ds
+    push edx
+;    
+    mov ds,es:p_shared_dir_sel
+    shr edx,18
+    and dl,0F8h
+    mov [edx],eax
+    mov [edx+4],ebx
+;    
+    pop edx
+    pop ds
+    ret
+local_set_shared_page_dir64    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3924,6 +4100,62 @@ cspdInit64:
     pop eax
     ret
 local_create_sys_page_dir64    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_create_shared_page_dir64
+;
+;           DESCRIPTION:    Create shared page directory entry
+;
+;           PARAMETERS:     EDX         linear address
+;                           ES          thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_shared_page_dir64       Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ds,es:p_shared_dir_sel
+    shr edx,18
+    and dx,3FF8h
+    call local_allocate_physical
+    mov al,7
+    mov [edx],eax    
+    mov [edx+4],ebx
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    mov al,13h
+    call local_set_page_entry64
+;
+    mov cx,400h
+    xor ebx,ebx
+
+cshpdInit64:
+    mov [edx],ebx
+    add edx,4
+    loop cshpdInit64
+;
+    xor eax,eax
+    xor ebx,ebx
+    call local_set_page_entry64
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+local_create_shared_page_dir64    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
