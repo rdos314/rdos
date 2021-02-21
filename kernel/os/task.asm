@@ -7967,7 +7967,6 @@ allocate_thread_block   PROC near
     mov es:p_linear,edx
     mov es:p_active,1
     mov es:p_realtime,0
-    mov es:p_shared_dir_sel,0
 ;
     pop edx
     pop ecx
@@ -8692,6 +8691,9 @@ init_thread_block       PROC near
 ;
     mov ax,ds:p_ldt_sel
     mov es:p_ldt_sel,ax
+;
+    mov ax,ds:p_shared_dir_sel
+    mov es:p_shared_dir_sel,ax
 ;
     mov ax,ds:p_console
     mov es:p_console,ax
@@ -10252,6 +10254,7 @@ create_first_thread       PROC near
     mov es:p_parent_console,ax
     mov es:p_ldt_sel,ax
     mov es:p_lib_sel,ax
+    mov es:p_shared_dir_sel,ax
 ;
     mov es:p_irq,0
     mov es:p_debug_event,0
