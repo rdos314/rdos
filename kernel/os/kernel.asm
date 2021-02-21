@@ -932,6 +932,19 @@ prot_init:
     mov bx,flat_data_sel
     CreateDataSelector32
 ;
+    mov edx,shared_linear
+    mov ecx,shared_size
+    mov bx,shared_flat_sel
+    CreateDataSelector32
+;
+    xor edx,edx
+    mov ecx,flat_size
+    mov bx,shared_code_sel
+    CreateCodeSelector32
+;
+    mov bx,shared_data_sel
+    CreateDataSelector32
+;
     StartTasking
     int 3
     
