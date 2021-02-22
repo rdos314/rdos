@@ -4884,6 +4884,55 @@ get_mac_address16   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetNetHwId
+;
+;       DESCRIPTION:    Get network hardware ID
+;
+;       PARAMETERS:     AL      Ethernet port
+;
+;       RETURNS:        EAX     HW ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_net_hw_id_name    DB 'Get Net Hw Id', 0
+
+get_net_hw_id Proc far
+    push ds
+;    
+    or al,al
+    jz ghwid0
+;
+    cmp al,1
+    je ghwid1
+;
+    stc
+    jmp ghwidDone
+
+ghwid0:
+    mov ax,ether_data_sel
+    jmp ghwidDo
+
+ghwid1:
+    mov ax,ether_data2_sel
+
+ghwidDo:
+    mov ds,ax
+    mov ax,ds:Handle
+    or ax,ax
+    stc
+    jz ghwidDone
+;
+    movzx eax,ds:HwId
+    clc
+
+ghwidDone:
+    pop ds
+    retf32
+get_net_hw_id Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init_net
 ;
 ;           DESCRIPTION:    inits adpater
@@ -4935,6 +4984,12 @@ Init    Proc far
     mov dx,virt_es_in
     mov ax,get_mac_address_nr
     RegisterUserGate
+;
+    mov esi,OFFSET get_net_hw_id
+    mov edi,OFFSET get_net_hw_id_name
+    xor dx,dx
+    mov ax,get_net_hw_id_nr
+    RegisterBimodalUserGate
 ;
     mov eax,SIZE data
     mov bx,ether_data_sel

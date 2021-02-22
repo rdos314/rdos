@@ -2456,6 +2456,14 @@
     __value [__ebx] \
     __modify [__edx __eax]
 
+#pragma aux RdosGetNetHwId = \
+    CallGate_get_net_hw_id  \
+    "jnc done" \
+    "xor eax,eax" \
+    "done:" \
+    __parm [__eax]  \
+    __value [__eax]
+
 #pragma aux RdosGetIp = \
     CallGate_get_ip_address  \
     __value [__edx]

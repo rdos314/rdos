@@ -937,4 +937,6 @@ close_usb_pipe_nr                 = 766
 sync_disc_part_nr                 = 767
 remove_drive_nr                   = 768
 
+get_net_hw_id_nr                  = 769
+
 usergate_entries                  = 780

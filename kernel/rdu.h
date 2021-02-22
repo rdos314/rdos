@@ -937,6 +937,8 @@
 #define usergate_sync_disc_part 0x000002FF
 #define usergate_remove_drive 0x00000300
 
+#define usergate_get_net_hw_id 0x00000301
+
 
 
 #ifdef __FLAT__
@@ -1879,6 +1881,8 @@
 #define CallGate_sync_disc_part 0x55 0x67 0x9a 255 2 0 0 3 0 0x5d
 #define CallGate_remove_drive 0x55 0x67 0x9a 0 3 0 0 3 0 0x5d
 
+#define CallGate_get_net_hw_id 0x55 0x67 0x9a 1 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2818,5 +2822,7 @@
 
 #define CallGate_sync_disc_part 0x3e 0x67 0x9a 255 2 0 0 3 0
 #define CallGate_remove_drive 0x3e 0x67 0x9a 0 3 0 0 3 0
+
+#define CallGate_get_net_hw_id 0x3e 0x67 0x9a 1 3 0 0 3 0
 
 #endif

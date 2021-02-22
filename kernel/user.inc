@@ -1760,6 +1760,13 @@ SetFocus        MACRO
 
 ;;;;;;;;;;;;; NETWORK ;;;;;;;;;;;
 
+
+; IN  AL                Adapter #
+; OUT EAX               Hardware ID
+GetNetHwId  MACRO
+        UserGate get_net_hw_id_nr
+                                ENDM
+
 ; OUT EAX               Primary DNS IP address (or 0)
 ; OUT EDX               Secondary DNS IP address (or 0)
 GetDns  MACRO

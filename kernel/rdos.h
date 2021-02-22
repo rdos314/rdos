@@ -687,6 +687,7 @@ void RDOSAPI RdosSetSignal(int Handle);
 void RDOSAPI RdosFreeSignal(int Handle);
 void RDOSAPI RdosAddWaitForSignal(int Handle, int SignalHandle, int ID);
 
+int RDOSAPI RdosGetNetHwId(int Index);
 long RDOSAPI RdosGetIp();
 long RDOSAPI RdosGetGateway();
 int RDOSAPI RdosIpToMac(int Ip, char *mac);
