@@ -33,36 +33,37 @@
 class TDisc
 {
 public:
-	TDisc(int Disc);
-	~TDisc();
+    TDisc(int Disc);
+    ~TDisc();
 
     int IsValid();
     int IsGpt();
-	int GetDiscNr();
-	int GetBytesPerSector();
-	long long GetTotalSectors();
-	int GetSectorsPerCyl();
-	int GetHeads();
+    int GetDiscNr();
+    int GetBytesPerSector();
+    long long GetTotalSectors();
+    int GetSectorsPerCyl();
+    int GetHeads();
 
-	int Read(long long Sector, char *buf, int size);
-	int Write(long long Sector, const char *buf, int size);
-	int GetDrive(long Start, long Size);
+    int Read(long long Sector, char *buf, int size);
+    int Write(long long Sector, const char *buf, int size);
+    int GetDrive(long Start, long Size);
+    void Reset();
 
-	void WaitForIdle();
+    void WaitForIdle();
 
-	long ChsToLba(const char *Data);
-	void LbaToChs(long Sector, char *Data);
+    long ChsToLba(const char *Data);
+    void LbaToChs(long Sector, char *Data);
 
 protected:
     TDisc();
     void Define(int Disc);
 
-	int FDisc;
-	int FBytesPerSector;
-	long long FSectors;
-	int FSectorsPerCyl;
-	int FHeads;
-	int FValid;
+    int FDisc;
+    int FBytesPerSector;
+    long long FSectors;
+    int FSectorsPerCyl;
+    int FHeads;
+    int FValid;
 };
 
 #endif

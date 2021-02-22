@@ -432,10 +432,12 @@ void TInitHdCommand::InitGpt(TDisc *Disc, int DiscNr)
 {
     TGptDiscPartition Part(Disc);
 
+    Disc->Reset();
+
     LoadGptLoader(Disc);
     WriteGptLoader(Disc);
     WriteGptSector(Disc, DiscNr);            
-    Part.Write(FLoaderSectors);
+    Part.Write(FLoaderSectors);    
 }
 
 /*##########################################################################
@@ -581,6 +583,7 @@ int TInitHdCommand::Execute(char *param)
 
         if (ok)
         {
+            Disc->Reset();
             WriteBootLoader(Disc);
             WriteBootSector(Disc, DiscNr);
             return 0;

@@ -203,6 +203,18 @@ void TDisc::WaitForIdle()
         RdosWaitMilli(250);
 }
 
+/*##################  TDisc::Reset  #############
+*   Purpose....: Reset disc
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TDisc::Reset()
+{
+    RdosResetDisc(FDisc);
+}
+
 /*##################  TDisc::Read  #############
 *   Purpose....: Read a sector
 *   In params..: *                                                        #
