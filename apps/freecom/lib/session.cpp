@@ -94,6 +94,7 @@
 #include "showcrash.h"
 #include "switch.h"
 #include "temp.h"
+#include "net.h"
 
 #include "file.h"
 #include "path.h"
@@ -146,6 +147,7 @@ static TCommandFactory *mkdir;
 static TCommandFactory *mkpart;
 static TCommandFactory *mount;
 static TCommandFactory *move;
+static TCommandFactory *net;
 static TCommandFactory *pci;
 static TCommandFactory *ping;
 static TCommandFactory *prompt;
@@ -228,6 +230,7 @@ TSession::TSession()
         pause = new TPauseFactory;
         path = new TPathFactory;
         showpart = new TShowPartitionFactory;
+        net = new TNetFactory;
         move = new TMoveFactory;
         mount = new TMountFactory;
         mkpart = new TMakePartitionFactory;
@@ -345,6 +348,7 @@ TSession::~TSession()
         delete path;
         delete pause;
         delete showpart;
+        delete net;
         delete move;
         delete mount;
         delete mkpart;

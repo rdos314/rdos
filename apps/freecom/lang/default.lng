@@ -1861,6 +1861,16 @@ Shows device information
 DEV
 .
 
+:TEXT_CMDHELP_NET
+Shows network information
+
+NET
+.
+
+:TEXT_NET_HW_ID
+Network card %d has id %d
+.
+
 :TEXT_CMDHELP_PCI
 Shows PCI information
 
