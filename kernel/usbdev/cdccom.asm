@@ -1061,6 +1061,16 @@ pwDoSend:
     mov dl,ds:ucd_bulk_out
     PostUsbRawPipe
 ;
+    push ds
+    mov ds,ds:ucd_port_sel
+    mov bx,ds:send_wait
+    pop ds
+    or bx,bx
+    jz pwSignalDone
+;    
+    Signal
+
+pwSignalDone:
     popad
     pop fs
     ret

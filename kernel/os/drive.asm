@@ -7596,7 +7596,7 @@ dtInitDo:
     mov ax,SEG data
     mov ds,ax
     GetSystemTime
-    add eax,20 * 1193000
+    add eax,5 * 1193000
     adc edx,0
     mov ds:init_timeout,eax
     mov ds:init_timeout+4,edx

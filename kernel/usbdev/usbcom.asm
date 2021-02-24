@@ -3027,6 +3027,16 @@ pwSend:
     mov dl,ds:uds_bulk_out
     PostUsbRawPipe
 ;
+    push ds
+    mov ds,ds:uds_port_sel
+    mov bx,ds:send_wait
+    pop ds
+    or bx,bx
+    jz pwSignalOk
+;    
+    Signal
+
+pwSignalOk:
     popad
     pop fs
     ret
