@@ -2033,7 +2033,7 @@ CheckPciSata Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartIde1
+;       NAME:           InitIde1
 ;
 ;       DESCRIPTION:    Start primary IDE
 ;
@@ -2041,15 +2041,14 @@ CheckPciSata Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartIde1    Proc near
-    push ds
-    pushad
-;
+init_ide1_name DB 'Init Ide 1', 0
+
+init_ide1:
     mov dx,1F7h
     in al,dx
     and al,7Fh
     cmp al,7Fh
-    je disc_assign1_done
+    je ii1Done
 ;    
     mov ax,ide_data_sel1
     mov ds,ax
@@ -2065,32 +2064,30 @@ StartIde1    Proc near
     call install_unit
     mov ds:IdeThread,0
 
-disc_assign1_done:
-    popad
-    pop ds
-    ret
-StartIde1    Endp
+ii1Done:
+    EndDiscHandler
+    TerminateThread
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartIde2
+;       NAME:           InitIde2
 ;
-;       DESCRIPTION:    Start second IDE drive
+;       DESCRIPTION:    Start secondary IDE
 ;
 ;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartIde2    Proc near
-    push ds
-    pushad
-;
+init_ide2_name DB 'Init Ide 2', 0
+
+init_ide2:
     mov dx,177h
     in al,dx
     and al,7Fh
     cmp al,7Fh
-    je disc_assign2_done
+    je ii2Done
 ;    
     mov ax,ide_data_sel2
     mov ds,ax
@@ -2106,11 +2103,9 @@ StartIde2    Proc near
     call install_unit
     mov ds:IdeThread,0
 
-disc_assign2_done:
-    popad
-    pop ds
-    ret
-StartIde2    Endp
+ii2Done:
+    EndDiscHandler
+    TerminateThread
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2125,22 +2120,19 @@ StartIde2    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_pci_name   DB 'Ide Pci ',0
+init_pci_name   DB 'Init Pci', 0
 
-StartPci    Proc near
-    push ds
-    push es
-    pushad
-;
+init_pci:
     mov ax,SEG data
     mov es,ax
     mov di,OFFSET pci_name_str
     mov si,OFFSET disc_pci_name
 
-disc_assign_name_loop:    
+ipNameLoop:    
     lods byte ptr cs:[si]
     stosb
     or al,al
-    jnz disc_assign_name_loop
+    jnz ipNameLoop
 ;
     dec di
     mov es:pci_curr_ptr,di
@@ -2157,9 +2149,9 @@ disc_assign_name_loop:
     xor bx,bx
     mov cx,es:ide_pci_count
     or cx,cx
-    jz disc_assign_pci_done
+    jz ipDone
 
-disc_assign_pci_loop:    
+ipLoop:    
     mov dx,es:[bx].ide_io_arr
     mov ds,es:[bx].ide_pci_arr
 ;    
@@ -2177,14 +2169,11 @@ disc_assign_pci_loop:
     inc byte ptr es:[di]
 ;
     add bx,2
-    loop disc_assign_pci_loop
+    loop ipLoop
 
-disc_assign_pci_done:
-    popad
-    pop es
-    pop ds
-    ret
-StartPci    Endp
+ipDone:
+    EndDiscHandler
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2204,7 +2193,6 @@ init_ide    Proc far
     push es
     pusha
 ;
-    xor bp,bp
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -2215,8 +2203,6 @@ init_ide_primary:
     and al,7Fh
     cmp al,7Fh
     je init_ide_second
-;
-    inc bp
 ;
     mov eax,SIZE ide_data
     mov bx,ide_data_sel1
@@ -2239,7 +2225,16 @@ init_ide_primary:
     mov edi,OFFSET ide_int
     RequestIrqHandler
 ;
-    call StartIde1
+    BeginDiscHandler
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET init_ide1_name
+    mov si,OFFSET init_ide1
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
 
 init_ide_second:
     mov dx,177h
@@ -2270,7 +2265,16 @@ init_ide_second:
     mov edi,OFFSET ide_int
     RequestIrqHandler
 ;
-    call StartIde2
+    BeginDiscHandler
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET init_ide2_name
+    mov si,OFFSET init_ide2
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
 
 init_ide_done:
     mov ax,cs
@@ -2299,7 +2303,16 @@ init_ide_check_count:
     or cx,cx
     jz init_ide_exit
 ;    
-    call StartPci
+    BeginDiscHandler
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov di,OFFSET init_pci_name
+    mov si,OFFSET init_pci
+    mov ax,2
+    mov cx,stack0_size
+    CreateThread
 
 init_ide_exit:
     EndDiscHandler
