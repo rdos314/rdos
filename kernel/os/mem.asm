@@ -18,7 +18,8 @@
 ; along with this program; if not, write to the Free Software
 ; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ;
-; The author of this program may be contacted at leif@rdos.net;
+; The author of this program may be contacted at leif@rdos.net
+;
 ; MEM.ASM
 ; Memory allocation module
 ;
@@ -117,6 +118,576 @@ long_mem_seg   ENDS
 code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CREATE_MEM
+;
+;           DESCRIPTION:    Create memory selectors
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public create_mem
+
+create_mem      PROC near
+    push ds
+    push eax
+    push bx
+    push edx
+;
+    mov edx,system_linear
+    mov ecx,SIZE mem_seg
+    mov bx,mem_sel
+    call local_create_data_sel16
+;
+    mov ds,bx
+    add edx,SIZE mem_seg
+    mov ds:system_alloc_base,edx
+;
+    pop edx
+    pop bx
+    pop eax
+    pop ds
+    ret
+create_mem      ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           INIT_MEM
+;
+;           DESCRIPTION:    Init module
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_mem
+
+init_mem    PROC near
+    pusha
+    push ds
+;
+    mov bx,small_mem_sel
+    mov edx,global_byte_linear
+    mov ecx,global_byte_size
+    CreateDataSelector16
+;
+    mov ds,bx
+    xor eax,eax
+    mov edx,10h
+    mov [eax].slf_next,edx
+    mov [eax].sls_next,edx
+    mov [eax].sls_prev,edx
+    mov eax,edx
+    mov edx,global_byte_size - 10h
+    mov [eax].slf_prev,0
+    mov [eax].slf_next,0
+    mov [eax].sls_prev,0
+    mov [eax].sls_next,edx
+;
+    mov ax,mem_sel
+    mov ds,ax
+    mov edx,global_page_size
+    mov ds:big_avail_mem,edx
+    InitSection ds:big_section
+;
+    mov edx,global_byte_size - 10h
+    mov ds:small_avail_mem,edx
+    InitSection ds:small_section
+;
+    mov ds:big_used_mem,0
+    mov ds:small_used_mem,0
+    mov ds:big_alloc_count,0
+    mov ds:small_alloc_count,0
+    mov ds:process_alloc_base,fixed_process_linear
+    mov ds:fixed_vm_base,fixed_vm_linear
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    xor ebx,ebx
+    xor esi,esi
+    xor edi,edi
+;
+    mov esi,OFFSET init_process_mem
+    mov edi,OFFSET init_process_mem_name
+    xor cl,cl
+    mov ax,init_process_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_global_mem
+    mov edi,OFFSET allocate_global_name
+    xor cl,cl
+    mov ax,allocate_global_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_small_global_mem
+    mov edi,OFFSET allocate_small_global_name
+    xor cl,cl
+    mov ax,allocate_small_global_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_small_mem
+    mov edi,OFFSET allocate_small_mem_name
+    xor cl,cl
+    mov ax,allocate_small_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_small_kernel_mem
+    mov edi,OFFSET allocate_small_kernel_mem_name
+    xor cl,cl
+    mov ax,allocate_small_kernel_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_big_mem
+    mov edi,OFFSET allocate_big_mem_name
+    xor cl,cl
+    mov ax,allocate_big_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_small_mem
+    mov edi,OFFSET log_small_mem_name
+    xor cl,cl
+    mov ax,log_small_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET log_big_mem
+    mov edi,OFFSET log_big_mem_name
+    xor cl,cl
+    mov ax,log_big_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_mem
+    mov edi,OFFSET free_name
+    mov dx,virt_es_in
+    mov ax,free_mem_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET allocate_big_linear
+    mov edi,OFFSET allocate_big_linear_name
+    xor cl,cl
+    mov ax,allocate_big_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_small_linear
+    mov edi,OFFSET allocate_small_linear_name
+    xor cl,cl
+    mov ax,allocate_small_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_fixed_vm_linear
+    mov edi,OFFSET allocate_fixed_vm_linear_name
+    xor cl,cl
+    mov ax,allocate_fixed_vm_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_linear
+    mov edi,OFFSET free_linear_name
+    xor cl,cl
+    mov ax,free_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET resize_linear
+    mov edi,OFFSET resize_linear_name
+    xor cl,cl
+    mov ax,resize_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET available_big_linear
+    mov edi,OFFSET available_big_linear_name
+    xor dx,dx
+    mov ax,available_big_linear_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET available_small_linear
+    mov edi,OFFSET available_small_linear_name
+    xor dx,dx
+    mov ax,available_small_linear_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET used_big_linear
+    mov edi,OFFSET used_big_linear_name
+    xor cl,cl
+    mov ax,used_big_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET used_small_linear
+    mov edi,OFFSET used_small_linear_name
+    xor cl,cl
+    mov ax,used_small_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET selector_to_segment
+    mov edi,OFFSET selector_to_segment_name
+    xor cl,cl
+    mov ax,selector_to_segment_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET segment_to_selector
+    mov edi,OFFSET segment_to_selector_name
+    xor cl,cl
+    mov ax,segment_to_selector_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_selector
+    mov edi,OFFSET free_selector_name
+    xor cl,cl
+    mov ax,free_selector_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_process_linear
+    mov edi,OFFSET allocate_process_linear_name
+    xor cl,cl
+    mov ax,allocate_process_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_system_linear
+    mov edi,OFFSET allocate_system_linear_name
+    xor cl,cl
+    mov ax,allocate_system_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_fixed_process_mem
+    mov edi,OFFSET allocate_fixed_process_mem_name
+    xor cl,cl
+    mov ax,allocate_fixed_process_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_fixed_system_mem
+    mov edi,OFFSET allocate_fixed_system_mem_name
+    xor cl,cl
+    mov ax,allocate_fixed_system_mem_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_thread_selector_page
+    mov edi,OFFSET get_thread_selector_page_name
+    xor cl,cl
+    mov ax,get_thread_selector_page_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_thread_selector
+    mov edi,OFFSET read_thread_selector_name
+    xor cl,cl
+    mov ax,read_thread_selector_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_thread_selector
+    mov edi,OFFSET write_thread_selector_name
+    xor cl,cl
+    mov ax,write_thread_selector_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_thread_segment
+    mov edi,OFFSET read_thread_segment_name
+    xor cl,cl
+    mov ax,read_thread_segment_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_thread_segment
+    mov edi,OFFSET write_thread_segment_name
+    xor cl,cl
+    mov ax,write_thread_segment_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_thread64
+    mov edi,OFFSET read_thread64_name
+    xor cl,cl
+    mov ax,read_thread64_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_thread64
+    mov edi,OFFSET write_thread64_name
+    xor cl,cl
+    mov ax,write_thread64_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_thread_linear
+    mov edi,OFFSET get_thread_linear_name
+    xor dx,dx
+    mov ax,get_thread_linear_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET read_thread_mem16
+    mov esi,OFFSET read_thread_mem32
+    mov edi,OFFSET read_thread_mem_name
+    mov dx,virt_es_in
+    mov ax,read_thread_mem_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET write_thread_mem16
+    mov esi,OFFSET write_thread_mem32
+    mov edi,OFFSET write_thread_mem_name
+    mov dx,virt_es_in
+    mov ax,write_thread_mem_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET allocate_local_linear
+    mov edi,OFFSET allocate_local_linear_name
+    xor cl,cl
+    mov ax,allocate_local_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_debug_local_linear
+    mov edi,OFFSET allocate_debug_local_linear_name
+    xor cl,cl
+    mov ax,allocate_debug_local_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET reserve_local_linear
+    mov edi,OFFSET reserve_local_linear_name
+    xor cl,cl
+    mov ax,reserve_local_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET available_small_local_linear
+    mov edi,OFFSET available_small_local_linear_name
+    xor dx,dx
+    mov ax,available_small_local_linear_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET available_big_local_linear
+    mov edi,OFFSET available_big_local_linear_name
+    xor dx,dx
+    mov ax,available_big_local_linear_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET used_local_linear
+    mov edi,OFFSET used_local_linear_name
+    xor dx,dx
+    mov ax,used_local_linear_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET allocate_vm_linear
+    mov edi,OFFSET allocate_vm_linear_name
+    xor cl,cl
+    mov ax,allocate_vm_linear_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET available_vm_linear
+    mov edi,OFFSET available_vm_linear_name
+    xor dx,dx
+    mov ax,available_vm_linear_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET used_vm_linear
+    mov edi,OFFSET used_vm_linear_name
+    xor dx,dx
+    mov ax,used_vm_linear_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET used_local_linear_thread
+    mov edi,OFFSET used_local_linear_thread_name
+    xor cl,cl
+    mov ax,used_local_linear_thread_nr
+    RegisterOsGate
+;
+    mov ebx,OFFSET allocate_local_mem16
+    mov esi,OFFSET allocate_local_mem32
+    mov edi,OFFSET allocate_local_mem_name
+    mov dx,virt_es_out
+    mov ax,allocate_local_mem_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET resize_flat_linear
+    mov edi,OFFSET resize_flat_linear_name
+    xor dx,dx
+    mov ax,resize_flat_linear_nr
+    RegisterBimodalUserGate
+
+
+;
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+
+;
+    pop ds
+    popa
+    ret
+init_mem    ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           INIT_MEM_SELS
+;
+;           DESCRIPTION:    Init selectors
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_mem_sels
+
+init_mem_sels   PROC near
+    push ds
+    push es
+    pushad
+;
+    AllocatePhysical64
+    and ax,0F000h
+    or ax,807h
+    mov edx,fixed_vm_linear
+    call cs:set_sys_page_entry_proc
+;
+    mov bx,vm_linear_sel
+    mov edx,vm_linear
+    mov ecx,0F000h
+    CreateDataSelector16
+;
+    mov eax,SIZE local_mem_seg
+    mov bx,local_mem_sel
+    AllocateFixedProcessMem
+;    
+    mov ax,system_data_sel
+    mov es,ax
+;
+    mov eax,es:ram2_size
+    or eax,eax
+    jz init_mem_has_multiboot
+;
+    push es
+    mov eax,30h
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+    pop es
+;
+    xor si,si
+    mov ds:[si].mmap_len,14h
+    mov ds:[si].mmap_base,0
+    mov ds:[si].mmap_base+4,0
+    mov eax,es:ram1_size
+    mov ds:[si].mmap_size,eax
+    mov ds:[si].mmap_size+4,0
+    mov ds:[si].mmap_type,1
+;
+    add si,18h
+    mov ds:[si].mmap_len,14h
+    mov eax,es:ram2_base
+    mov ds:[si].mmap_base,eax
+    mov ds:[si].mmap_base+4,0
+    mov eax,es:ram2_size
+    mov ds:[si].mmap_size,eax
+    mov ds:[si].mmap_size+4,0
+    mov ds:[si].mmap_type,1
+    mov es:multiboot_sel,ds
+    mov es:multiboot_size,30h
+    jmp imsDone        
+    
+init_mem_has_multiboot:
+    mov eax,2000h
+    AllocateBigLinear
+    mov esi,edx
+    mov ebp,edx
+    xor ebx,ebx
+    mov eax,es:multiboot_mmap_addr
+    and ax,0F000h
+    or al,67h
+    SetPageEntry
+;
+    add edx,1000h
+    add eax,1000h    
+    SetPageEntry
+;
+    mov eax,es:multiboot_mmap_addr
+    and eax,0FFFh
+    or esi,eax
+    movzx eax,es:multiboot_mmap_len
+    AllocateSmallGlobalMem
+    mov ecx,eax
+;
+    mov ax,flat_sel
+    mov ds,ax
+;
+    push ecx
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]        
+    pop ecx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+;
+    mov ds:multiboot_sel,es
+    mov ds:multiboot_size,cx    
+;    
+    mov ax,system_data_sel
+    mov es,ax
+;    
+    mov cx,es:multiboot_size
+    mov ds,es:multiboot_sel
+    xor di,di
+;   
+    movzx eax,cx
+    AllocateSmallGlobalMem
+    
+OutLoop:  
+    push cx
+    push di
+    xor si,si
+    xor di,di    
+    mov ebx,-1
+    mov ebp,ebx
+
+InLoop:
+    mov eax,ds:[si].mmap_base
+    mov edx,ds:[si].mmap_base+4
+    sub eax,ebx
+    sbb edx,ebp
+    jnc InNext
+;
+    mov ebx,ds:[si].mmap_base
+    mov ebp,ds:[si].mmap_base+4
+    mov di,si
+
+InNext:
+    mov eax,ds:[si].mmap_len
+    add ax,4
+    add si,ax
+    cmp si,cx
+    jnz InLoop
+;
+    mov si,di
+    pop di
+    pop cx    
+;
+    push cx
+    push si
+    mov ecx,ds:[si].mmap_len
+    add cx,4
+    rep movs byte ptr es:[di],ds:[si]
+    pop si
+    pop cx
+;
+    mov eax,-1
+    mov ds:[si].mmap_base,eax
+    mov ds:[si].mmap_base+4,eax
+;
+    cmp di,cx
+    jnz OutLoop
+;
+    mov bx,es
+    mov ax,system_data_sel
+    mov ds,ax    
+    xchg bx,ds:multiboot_sel
+    mov es,bx
+    FreeMem
+
+imsDone:
+    popad
+    pop es
+    pop ds
+    ret
+init_mem_sels   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -300,6 +871,463 @@ no_small_biggest_block:
     retf32
 allocate_small_linear   ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ALLOCATE_LOCAL_LINEAR
+;
+;           DESCRIPTION:    Allocate local memory (in process address space)
+;
+;           PARAMETERS:         EAX         Number of bytes
+;
+;           RETURNS:        EDX         Linear base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_local_linear_name      DB 'Allocate Local Linear',0
+
+allocate_local_linear   PROC far
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov dx,local_mem_sel
+    mov ds,dx
+    mov es,dx
+    EnterSection ds:local_mem_section
+    add ds:local_big_used_mem,eax
+    sub ds:local_big_avail_mem,eax
+    shr eax,12
+;    
+    mov edx,local_page_linear + 1000h
+    mov ecx,eax
+    mov eax,flat_size
+    call cs:allocate_page_entries_proc
+    jnc allocate_page_local_ok
+;
+    int 3
+
+allocate_page_local_ok:    
+    mov ax,local_mem_sel
+    mov ds,ax
+    LeaveSection ds:local_mem_section
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    retf32
+allocate_local_linear   ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ALLOCATE_DEBUG_LOCAL_LINEAR
+;
+;           DESCRIPTION:    Allocate local memory (in process address space)
+;
+;           PARAMETERS:         EAX         Number of bytes
+;
+;           RETURNS:        EDX         Linear base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_debug_local_linear_name    DB 'Allocate Debug Local Linear',0
+
+allocate_debug_local_linear     PROC far
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov dx,local_mem_sel
+    mov ds,dx
+    mov es,dx
+    EnterSection ds:local_mem_section
+    add ds:local_big_used_mem,eax
+    sub ds:local_big_avail_mem,eax
+    shr eax,12
+;    
+    mov edx,ds:local_big_base
+    mov ecx,eax
+    mov eax,flat_size
+    call cs:allocate_page_entries_proc
+    jnc allocate_debug_page_local_ok
+;
+    mov edx,local_page_linear + 1000h
+    call cs:allocate_page_entries_proc
+    jnc allocate_debug_page_local_ok
+;
+    int 3
+
+allocate_debug_page_local_ok:    
+    mov ax,local_mem_sel
+    mov ds,ax
+    shl ecx,12
+    add ecx,edx
+    mov ds:local_big_base,ecx
+    LeaveSection ds:local_mem_section
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    retf32
+allocate_debug_local_linear     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReserveLocalLinear
+;
+;           DESCRIPTION:    Reserve local memory
+;
+;           PARAMETERS:         EAX         Number of bytes
+;                           EDX         Linear base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reserve_local_linear_name       DB 'Reserve Local Linear',0
+
+reserve_local_linear    PROC far
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov bx,local_mem_sel
+    mov ds,bx
+    EnterSection ds:local_mem_section
+    cmp edx,local_page_linear
+    jc reserve_local_linear_inv_range
+    cmp edx,flat_size
+    jae reserve_local_linear_inv_range
+    mov ecx,eax
+    add ecx,edx
+    cmp ecx,local_page_linear
+    jc reserve_local_linear_inv_range
+    cmp ecx,flat_size
+    jae reserve_local_linear_inv_range
+;
+    shr eax,12
+    mov ecx,eax
+    call cs:reserve_page_entries_proc
+    jnc reserve_local_linear_done
+
+reserve_local_linear_inv_range:
+    stc
+
+reserve_local_linear_done:
+    pushf
+    mov ax,local_mem_sel
+    mov ds,ax
+    LeaveSection ds:local_mem_section
+    popf
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+reserve_local_linear    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RESIZE_FLAT_LINEAR
+;
+;           DESCRIPTION:    Resize flat linear
+;
+;           PARAMETERS:         EAX         New size
+;                           ECX         Old size
+;                           EDX         Offset in user-mode flat selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+resize_flat_linear_name DB 'Resize Flat Linear',0
+
+resize_flat_linear      PROC far
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;       
+    mov bx,system_data_sel
+    mov ds,bx
+    mov esi,ds:flat_base
+;
+    mov bx,local_mem_sel
+    mov ds,bx
+    EnterSection ds:local_mem_section
+;
+    cmp edx,flat_size
+    jae resize_flat_leave
+;
+    add edx,esi
+    cmp edx,ds:flat_base
+    jc resize_flat_leave
+;
+    and dx,0F000h
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
+    cmp eax,ecx
+    jz resize_flat_leave
+    jc resize_flat_shrink
+
+resize_flat_grow:
+    push eax
+    push ecx
+    push edx
+;
+    add edx,ecx
+    sub eax,ecx
+    mov ecx,eax
+    push ecx
+    shr ecx,12
+;
+    push ecx
+    push edx
+
+resize_flat_test_grow_loop:
+    GetPageEntry
+    test al,7
+    jnz resize_flat_grow_copy
+;
+    add edx,1000h
+    loop resize_flat_test_grow_loop
+;
+    pop edx
+    pop ecx
+;
+    mov eax,2
+    xor ebx,ebx
+
+resize_flat_grow_loop:
+    SetPageEntry
+    add edx,1000h
+    loop resize_flat_grow_loop
+;
+    pop ecx
+    mov bx,local_mem_sel
+    mov ds,bx
+    sub ds:local_big_avail_mem,ecx
+    add ds:local_big_used_mem,ecx
+    LeaveSection ds:local_mem_section
+    add esp,12
+    clc
+    jmp resize_flat_done
+
+resize_flat_grow_copy:
+    add esp,12
+    mov bx,local_mem_sel
+    mov ds,bx
+    LeaveSection ds:local_mem_section
+;
+    pop ebx
+    pop ecx
+    pop eax
+    AllocateLocalLinear
+;
+    add esp,4
+    sub edx,esi
+    push edx
+    add edx,esi
+;
+    push esi
+    push edi
+    push ecx
+;
+    mov esi,ebx
+    mov edi,edx
+    shr ecx,12
+    CopyPageEntries
+;
+    pop ecx
+    pop edi
+    pop esi
+;    
+    FreeLinear
+    clc
+    jmp resize_flat_done
+
+resize_flat_shrink:
+    add edx,eax
+    sub ecx,eax
+    add ds:local_big_avail_mem,ecx
+    sub ds:local_big_used_mem,ecx
+    shr ecx,12
+;
+    mov eax,flat_size
+    sub eax,edx
+    jc resize_flat_leave
+;    
+    shl eax,12
+    cmp ecx,eax
+    jbe resize_flat_size_ok
+;
+    mov ecx,eax    
+
+resize_flat_size_ok:
+    or ecx,ecx
+    jz resize_flat_leave
+;
+    xor eax,eax
+    call cs:free_page_entries_proc
+    clc
+
+resize_flat_leave:
+    LeaveSection ds:local_mem_section
+
+resize_flat_done:    
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+resize_flat_linear      ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ALLOCATE_VM_LINEAR
+;
+;           DESCRIPTION:    Allocate V86 mode addressable memory
+;
+;           PARAMETERS:         EAX         Number of bytes
+;
+;           RETURNS:        EDX         Linear base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_vm_linear_name DB 'Allocate VM Linear',0
+
+allocate_vm_linear      PROC far
+    push ds
+    push es
+    push bx
+    push cx
+    push si
+    push di
+;
+    mov dx,local_mem_sel
+    mov ds,dx
+    mov es,dx
+    EnterSection ds:vm_mem_section
+    mov dx,es:vm_avail_mem
+    add es:vm_used_mem,ax
+    sub dx,ax
+    sub dx,8
+    add ax,8
+    mov es:vm_avail_mem,dx
+;
+    mov dx,vm_linear_sel
+    mov ds,dx
+    xor si,si
+    xor bx,bx
+    mov si,[si].vmf_next
+allocate_vm_loop:
+    mov cx,[si].vms_next
+    sub cx,si
+    cmp cx,ax
+    jnc allocate_vm_found
+    mov bx,si
+    mov si,[si].vmf_next
+    jmp allocate_vm_loop
+allocate_vm_found:
+    sub cx,ax
+    cmp cx,8
+    jc allocate_vm_no_split
+    mov bx,ax
+    add bx,si
+;       
+    mov di,[si].vms_next
+    mov [bx].vms_next,di
+    mov [bx].vms_prev,si
+    mov [si].vms_next,bx
+    mov [di].vms_prev,bx
+;
+    mov di,[si].vmf_next
+    mov [bx].vmf_next,di
+    mov [si].vmf_next,bx
+    or di,di
+    jz allocate_vm_last_free
+    mov [di].vmf_prev,bx
+allocate_vm_last_free:
+    mov di,[si].vmf_prev
+    mov [bx].vmf_prev,di
+    or di,di
+    jz allocate_vm_first_free
+    mov [di].vmf_next,bx
+allocate_vm_first_free:
+;
+    jmp allocate_vm_done
+allocate_vm_no_split:
+    mov di,[si].vmf_prev
+    mov bx,[si].vmf_next
+    mov [di].vmf_next,bx
+    mov [bx].vmf_prev,di
+allocate_vm_done:
+    xor di,di
+    mov bx,[di].vmf_next
+    cmp bx,si
+    jnz allocate_vm_end
+    mov bx,[si].vmf_next
+    mov [di].vmf_next,bx
+allocate_vm_end:
+    xor di,di
+    mov bx,[di].vms_prev
+    mov cx,[si].vms_next
+    cmp bx,cx
+    jnc no_vm_biggest_block
+    mov [di].vms_prev,cx
+no_vm_biggest_block:    
+    dec di
+    mov [si].vmf_prev,di
+    mov [si].vmf_next,di
+    mov bx,local_mem_sel
+    mov ds,bx
+    LeaveSection ds:vm_mem_section
+    movzx edx,si
+    add edx,vm_linear + 8
+    pop di
+    pop si
+    pop cx
+    pop bx
+    pop es
+    pop ds
+    retf32
+allocate_vm_linear      ENDP
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -349,6 +1377,72 @@ available_small_linear  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AVAILABLE_LOCAL_SMALL_LINEAR
+;
+;           DESCRIPTION:    Available local small (process) memory
+;
+;           RETURNS:        EAX         Number of bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+available_small_local_linear_name     DB 'Available Small Local Linear',0
+
+available_small_local_linear  PROC far
+    xor eax,eax
+    stc
+    retf32
+available_small_local_linear  ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AVAILABLE_LOCAL_BIG_LINEAR
+;
+;           DESCRIPTION:    Available local big (process) memory
+;
+;           RETURNS:        EAX         Number of bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+available_big_local_linear_name     DB 'Available Big Local Linear',0
+
+available_big_local_linear  PROC far
+    push ds
+    mov ax,local_mem_sel
+    mov ds,ax
+    mov eax,ds:local_big_avail_mem
+    pop ds
+    retf32
+available_big_local_linear  ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AVAILABLE_VM_LINEAR
+;
+;           DESCRIPTION:    Available V86 mode addressable memory
+;
+;           RETURNS:        EAX         Number of bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+available_vm_linear_name    DB 'Available VM Linear',0
+
+available_vm_linear     PROC far
+    push ds
+    mov ax,local_mem_sel
+    mov ds,ax
+    movzx eax,ds:vm_avail_mem
+    pop ds
+    retf32
+available_vm_linear     ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           USED_BIG_LINEAR
 ;
 ;           DESCRIPTION:    Used page-aligned kernel memory
@@ -390,6 +1484,100 @@ used_small_linear       PROC far
     pop ds
     retf32
 used_small_linear       ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           USED_LOCAL_LINEAR
+;
+;           DESCRIPTION:    User local (process) memory
+;
+;           PARAMETERS:         EAX     ANTAL BYTE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+used_local_linear_name  DB 'Used Local Linear',0
+
+used_local_linear       PROC far
+    xor eax,eax
+    stc
+    retf32
+used_local_linear       ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           USED_VM_LINEAR
+;
+;           DESCRIPTION:    Used V86 addressable memory
+;
+;           PARAMETERS:         EAX         Number of bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+used_vm_linear_name     DB 'Used VM Linear',0
+
+used_vm_linear  PROC far
+    push ds
+    mov ax,local_mem_sel
+    mov ds,ax
+    movzx eax,ds:vm_used_mem
+    pop ds
+    retf32
+used_vm_linear  ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           USED_LOCAL_LINEAR_THREAD
+;
+;           DESCRIPTION:    User local (process) memory in other thread
+;
+;           PARAMETERS:         BX          Thread
+;
+;           RETURNS:        EAX         Number of bytes
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+used_local_linear_thread_name   DB 'Used Local Linear Thread',0
+
+used_local_linear_thread    PROC far
+    push ds
+    push es
+    push cx
+    push dx
+    push esi
+;
+    mov dx,local_mem_sel
+    xor esi,esi
+    ReadThreadSelector
+    mov cx,ax
+    inc esi
+    ReadThreadSelector
+    mov ah,al
+    mov al,cl
+    push ax
+    inc esi
+    ReadThreadSelector
+    mov cx,ax
+    inc esi
+    ReadThreadSelector
+    mov ah,al
+    mov al,cl
+    shl eax,16
+    pop ax
+;
+    pop esi
+    pop dx
+    pop cx
+    pop es
+    pop ds
+    retf32
+used_local_linear_thread    ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1239,6 +2427,118 @@ alloc_big_big_seg_ok:
     pop ds
     retf32
 allocate_big_mem    ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ALLOCATE_LOCAL_MEM16
+;
+;           DESCRIPTION:    Allocate process memory
+;
+;           PARAMETERS:         EAX         Number of bytes
+;
+;           RETURNS:        ES          Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_mem_name       DB 'Allocate Memory',0
+
+allocate_local_mem_name DB 'Allocate Local Memory',0
+
+allocate_local_mem16    PROC far
+    push ds
+    push eax
+    push bx
+    push cx
+    push edx
+    cmp eax,100000h
+    jc alloc_local_not_page16
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+alloc_local_not_page16:
+    AllocateLocalLinear
+    AllocateLdt
+    cmp eax,100000h
+    jnc alloc_local_big_seg16
+    dec eax
+    mov [bx],ax
+    mov [bx+2],edx
+    mov dl,0F2h
+    xchg dl,[bx+5]
+    shr eax,16
+    and ax,0Fh
+    or ah,dl
+    mov [bx+6],ax
+    jmp alloc_local_big_seg_ok16
+alloc_local_big_seg16:
+    shr eax,12
+    dec ax
+    mov [bx],ax
+    mov [bx+2],edx
+    mov ah,0F2h
+    xchg ah,[bx+5]
+    mov al,80h
+    mov [bx+6],ax
+alloc_local_big_seg_ok16:
+    or bx,7
+    mov es,bx
+    pop edx
+    pop cx
+    pop bx
+    pop eax
+    pop ds
+    retf32
+allocate_local_mem16    ENDP
+
+allocate_local_mem32    PROC far
+    push ds
+    push eax
+    push bx
+    push cx
+    push edx
+    cmp eax,100000h
+    jc alloc_local_not_page32
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+alloc_local_not_page32:
+    AllocateLocalLinear
+    AllocateLdt
+    cmp eax,100000h
+    jnc alloc_local_big_seg32
+    dec eax
+    mov [bx],ax
+    mov [bx+2],edx
+    mov dl,0F2h
+    xchg dl,[bx+5]
+    shr eax,16
+    and ax,0Fh
+    or al,40h
+    or ah,dl
+    mov [bx+6],ax
+    jmp alloc_local_big_seg_ok32
+alloc_local_big_seg32:
+    shr eax,12
+    dec ax
+    mov [bx],ax
+    mov [bx+2],edx
+    mov ah,0F2h
+    xchg ah,[bx+5]
+    mov al,0C0h
+    mov [bx+6],ax
+alloc_local_big_seg_ok32:
+    or bx,7
+    mov es,bx
+    pop edx
+    pop cx
+    pop bx
+    pop eax
+    pop ds
+    retf32
+allocate_local_mem32    ENDP
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2619,492 +3919,32 @@ write_thread64_done:
     retf32
 write_thread64   ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CREATE_MEM
-;
-;           DESCRIPTION:    Create memory selectors
-;
-;           PARAMETERS:         
+;           NAME:           test
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public create_mem
+test_name    DB 'Test',0
 
-create_mem      PROC near
-    push ds
-    push eax
-    push bx
-    push edx
+test_pr:
+    Allocate2MPhysical64
 ;
-    mov edx,system_linear
-    mov ecx,SIZE mem_seg
-    mov bx,mem_sel
-    call local_create_data_sel16
+    int 3
+    mov edx,global_page_linear
+    mov ecx,global_page_linear + global_page_size
+    call cs:allocate_and_map_sys_dir_proc
 ;
-    mov ds,bx
-    add edx,SIZE mem_seg
-    mov ds:system_alloc_base,edx
-;
-    pop edx
-    pop bx
-    pop eax
-    pop ds
-    ret
-create_mem      ENDP
+    mov cx,flat_sel
+    mov ds,cx
+    mov eax,ds:[edx]
+    CrashGate
+    inc edx
+    mov eax,ds:[edx]
+    inc eax
+    mov ds:[edx],eax
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           INIT_MEM
-;
-;           DESCRIPTION:    Init module
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_mem
-
-init_mem    PROC near
-    pusha
-    push ds
-;
-    mov bx,small_mem_sel
-    mov edx,global_byte_linear
-    mov ecx,global_byte_size
-    CreateDataSelector16
-;
-    mov ds,bx
-    xor eax,eax
-    mov edx,10h
-    mov [eax].slf_next,edx
-    mov [eax].sls_next,edx
-    mov [eax].sls_prev,edx
-    mov eax,edx
-    mov edx,global_byte_size - 10h
-    mov [eax].slf_prev,0
-    mov [eax].slf_next,0
-    mov [eax].sls_prev,0
-    mov [eax].sls_next,edx
-;
-    mov ax,mem_sel
-    mov ds,ax
-    mov edx,global_page_size
-    mov ds:big_avail_mem,edx
-    InitSection ds:big_section
-;
-    mov edx,global_byte_size - 10h
-    mov ds:small_avail_mem,edx
-    InitSection ds:small_section
-;
-    mov ds:big_used_mem,0
-    mov ds:small_used_mem,0
-    mov ds:big_alloc_count,0
-    mov ds:small_alloc_count,0
-    mov ds:process_alloc_base,fixed_process_linear
-    mov ds:fixed_vm_base,fixed_vm_linear
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    xor ebx,ebx
-    xor esi,esi
-    xor edi,edi
-;
-    mov esi,OFFSET init_process_mem
-    mov edi,OFFSET init_process_mem_name
-    xor cl,cl
-    mov ax,init_process_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_global_mem
-    mov edi,OFFSET allocate_global_name
-    xor cl,cl
-    mov ax,allocate_global_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_small_global_mem
-    mov edi,OFFSET allocate_small_global_name
-    xor cl,cl
-    mov ax,allocate_small_global_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_small_mem
-    mov edi,OFFSET allocate_small_mem_name
-    xor cl,cl
-    mov ax,allocate_small_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_small_kernel_mem
-    mov edi,OFFSET allocate_small_kernel_mem_name
-    xor cl,cl
-    mov ax,allocate_small_kernel_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_big_mem
-    mov edi,OFFSET allocate_big_mem_name
-    xor cl,cl
-    mov ax,allocate_big_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET log_small_mem
-    mov edi,OFFSET log_small_mem_name
-    xor cl,cl
-    mov ax,log_small_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET log_big_mem
-    mov edi,OFFSET log_big_mem_name
-    xor cl,cl
-    mov ax,log_big_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET free_mem
-    mov edi,OFFSET free_name
-    mov dx,virt_es_in
-    mov ax,free_mem_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET allocate_big_linear
-    mov edi,OFFSET allocate_big_linear_name
-    xor cl,cl
-    mov ax,allocate_big_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_small_linear
-    mov edi,OFFSET allocate_small_linear_name
-    xor cl,cl
-    mov ax,allocate_small_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_fixed_vm_linear
-    mov edi,OFFSET allocate_fixed_vm_linear_name
-    xor cl,cl
-    mov ax,allocate_fixed_vm_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET free_linear
-    mov edi,OFFSET free_linear_name
-    xor cl,cl
-    mov ax,free_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET resize_linear
-    mov edi,OFFSET resize_linear_name
-    xor cl,cl
-    mov ax,resize_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET available_big_linear
-    mov edi,OFFSET available_big_linear_name
-    xor dx,dx
-    mov ax,available_big_linear_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET available_small_linear
-    mov edi,OFFSET available_small_linear_name
-    xor dx,dx
-    mov ax,available_small_linear_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET used_big_linear
-    mov edi,OFFSET used_big_linear_name
-    xor cl,cl
-    mov ax,used_big_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET used_small_linear
-    mov edi,OFFSET used_small_linear_name
-    xor cl,cl
-    mov ax,used_small_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET selector_to_segment
-    mov edi,OFFSET selector_to_segment_name
-    xor cl,cl
-    mov ax,selector_to_segment_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET segment_to_selector
-    mov edi,OFFSET segment_to_selector_name
-    xor cl,cl
-    mov ax,segment_to_selector_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET free_selector
-    mov edi,OFFSET free_selector_name
-    xor cl,cl
-    mov ax,free_selector_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_process_linear
-    mov edi,OFFSET allocate_process_linear_name
-    xor cl,cl
-    mov ax,allocate_process_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_system_linear
-    mov edi,OFFSET allocate_system_linear_name
-    xor cl,cl
-    mov ax,allocate_system_linear_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_fixed_process_mem
-    mov edi,OFFSET allocate_fixed_process_mem_name
-    xor cl,cl
-    mov ax,allocate_fixed_process_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_fixed_system_mem
-    mov edi,OFFSET allocate_fixed_system_mem_name
-    xor cl,cl
-    mov ax,allocate_fixed_system_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_thread_selector_page
-    mov edi,OFFSET get_thread_selector_page_name
-    xor cl,cl
-    mov ax,get_thread_selector_page_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET read_thread_selector
-    mov edi,OFFSET read_thread_selector_name
-    xor cl,cl
-    mov ax,read_thread_selector_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET write_thread_selector
-    mov edi,OFFSET write_thread_selector_name
-    xor cl,cl
-    mov ax,write_thread_selector_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET read_thread_segment
-    mov edi,OFFSET read_thread_segment_name
-    xor cl,cl
-    mov ax,read_thread_segment_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET write_thread_segment
-    mov edi,OFFSET write_thread_segment_name
-    xor cl,cl
-    mov ax,write_thread_segment_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET read_thread64
-    mov edi,OFFSET read_thread64_name
-    xor cl,cl
-    mov ax,read_thread64_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET write_thread64
-    mov edi,OFFSET write_thread64_name
-    xor cl,cl
-    mov ax,write_thread64_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_thread_linear
-    mov edi,OFFSET get_thread_linear_name
-    xor dx,dx
-    mov ax,get_thread_linear_nr
-    RegisterBimodalUserGate
-;
-    mov ebx,OFFSET read_thread_mem16
-    mov esi,OFFSET read_thread_mem32
-    mov edi,OFFSET read_thread_mem_name
-    mov dx,virt_es_in
-    mov ax,read_thread_mem_nr
-    RegisterUserGate
-;
-    mov ebx,OFFSET write_thread_mem16
-    mov esi,OFFSET write_thread_mem32
-    mov edi,OFFSET write_thread_mem_name
-    mov dx,virt_es_in
-    mov ax,write_thread_mem_nr
-    RegisterUserGate
-;
-    pop ds
-    popa
-    ret
-init_mem    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           INIT_MEM_SELS
-;
-;           DESCRIPTION:    Init selectors
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_mem_sels
-
-init_mem_sels   PROC near
-    push ds
-    push es
-    pushad
-;
-    AllocatePhysical64
-    and ax,0F000h
-    or ax,807h
-    mov edx,fixed_vm_linear
-    call cs:set_sys_page_entry_proc
-;
-    mov bx,vm_linear_sel
-    mov edx,vm_linear
-    mov ecx,0F000h
-    CreateDataSelector16
-;
-    mov eax,SIZE local_mem_seg
-    mov bx,local_mem_sel
-    AllocateFixedProcessMem
-;    
-    mov ax,system_data_sel
-    mov es,ax
-;
-    mov eax,es:ram2_size
-    or eax,eax
-    jz init_mem_has_multiboot
-;
-    push es
-    mov eax,30h
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov ds,ax
-    pop es
-;
-    xor si,si
-    mov ds:[si].mmap_len,14h
-    mov ds:[si].mmap_base,0
-    mov ds:[si].mmap_base+4,0
-    mov eax,es:ram1_size
-    mov ds:[si].mmap_size,eax
-    mov ds:[si].mmap_size+4,0
-    mov ds:[si].mmap_type,1
-;
-    add si,18h
-    mov ds:[si].mmap_len,14h
-    mov eax,es:ram2_base
-    mov ds:[si].mmap_base,eax
-    mov ds:[si].mmap_base+4,0
-    mov eax,es:ram2_size
-    mov ds:[si].mmap_size,eax
-    mov ds:[si].mmap_size+4,0
-    mov ds:[si].mmap_type,1
-    mov es:multiboot_sel,ds
-    mov es:multiboot_size,30h
-    jmp imsDone        
-    
-init_mem_has_multiboot:
-    mov eax,2000h
-    AllocateBigLinear
-    mov esi,edx
-    mov ebp,edx
-    xor ebx,ebx
-    mov eax,es:multiboot_mmap_addr
-    and ax,0F000h
-    or al,67h
-    SetPageEntry
-;
-    add edx,1000h
-    add eax,1000h    
-    SetPageEntry
-;
-    mov eax,es:multiboot_mmap_addr
-    and eax,0FFFh
-    or esi,eax
-    movzx eax,es:multiboot_mmap_len
-    AllocateSmallGlobalMem
-    mov ecx,eax
-;
-    mov ax,flat_sel
-    mov ds,ax
-;
-    push ecx
-    xor edi,edi
-    rep movs byte ptr es:[edi],ds:[esi]        
-    pop ecx
-;
-    mov ax,system_data_sel
-    mov ds,ax
-;
-    mov ds:multiboot_sel,es
-    mov ds:multiboot_size,cx    
-;    
-    mov ax,system_data_sel
-    mov es,ax
-;    
-    mov cx,es:multiboot_size
-    mov ds,es:multiboot_sel
-    xor di,di
-;   
-    movzx eax,cx
-    AllocateSmallGlobalMem
-    
-OutLoop:  
-    push cx
-    push di
-    xor si,si
-    xor di,di    
-    mov ebx,-1
-    mov ebp,ebx
-
-InLoop:
-    mov eax,ds:[si].mmap_base
-    mov edx,ds:[si].mmap_base+4
-    sub eax,ebx
-    sbb edx,ebp
-    jnc InNext
-;
-    mov ebx,ds:[si].mmap_base
-    mov ebp,ds:[si].mmap_base+4
-    mov di,si
-
-InNext:
-    mov eax,ds:[si].mmap_len
-    add ax,4
-    add si,ax
-    cmp si,cx
-    jnz InLoop
-;
-    mov si,di
-    pop di
-    pop cx    
-;
-    push cx
-    push si
-    mov ecx,ds:[si].mmap_len
-    add cx,4
-    rep movs byte ptr es:[di],ds:[si]
-    pop si
-    pop cx
-;
-    mov eax,-1
-    mov ds:[si].mmap_base,eax
-    mov ds:[si].mmap_base+4,eax
-;
-    cmp di,cx
-    jnz OutLoop
-;
-    mov bx,es
-    mov ax,system_data_sel
-    mov ds,ax    
-    xchg bx,ds:multiboot_sel
-    mov es,bx
-    FreeMem
-
-imsDone:
-    popad
-    pop es
-    pop ds
-    ret
-init_mem_sels   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
