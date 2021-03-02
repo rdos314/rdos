@@ -44,8 +44,11 @@ public:
     virtual int WasCardInserted() const;
     virtual void ClearCardInserted() const;
 
+    void (*Track1)(TCardReaderDevice *CardReader, const char *track1);
+	
     void (*GoodCard)(TCardReaderDevice *CardReader, const char *strip);
-	void (*BadCard)(TCardReaderDevice *CardReader);
+
+    void (*BadCard)(TCardReaderDevice *CardReader);
 
     void *Owner;
     

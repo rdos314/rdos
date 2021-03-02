@@ -81,13 +81,17 @@ void TCardReaderDevice::Init(int Port)
 {
     char str[512];
 
+    BadCard = 0;
+    Track1 = 0;
+    GoodCard = 0;
+
     FPort = Port - 1;
     FHandle = RdosOpenCardDev(FPort);
 
     if (!RdosGetCardDevName(FHandle, str))
         strcpy(str, "Card reader device");
     
-        Start(str, 0x2000);
+    Start(str, 0x2000);
 }
 
 /*##########################################################################
@@ -192,12 +196,16 @@ void TCardReaderDevice::ClearCardInserted() const
 ##########################################################################*/
 void TCardReaderDevice::Execute()
 {
-    char Strip[40];
+    char Strip[80];
     
     while (FInstalled)
     {
         if (RdosWaitForCard(FHandle, Strip))
         {
+            if (Track1)
+                if (RdosGetCardDevTrack1(FHandle, Strip))
+                    (*Track1)(this, Strip);            
+
             if (GoodCard)
                 (*GoodCard)(this, Strip);
         }
