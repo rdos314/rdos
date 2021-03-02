@@ -196,15 +196,16 @@ void TCardReaderDevice::ClearCardInserted() const
 ##########################################################################*/
 void TCardReaderDevice::Execute()
 {
-    char Strip[80];
+    char Strip[40];
+    char Data[80];
     
     while (FInstalled)
     {
         if (RdosWaitForCard(FHandle, Strip))
         {
             if (Track1)
-                if (RdosGetCardDevTrack1(FHandle, Strip))
-                    (*Track1)(this, Strip);            
+                if (RdosGetCardDevTrack1(FHandle, Data))
+                    (*Track1)(this, Data);            
 
             if (GoodCard)
                 (*GoodCard)(this, Strip);
