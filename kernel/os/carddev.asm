@@ -519,6 +519,71 @@ wait_for_card_done32:
     pop ds
     retf32
 wait_for_card32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetCardDevTrack1
+;
+;       description:    Get track 1 from previous read
+;
+;       PARAMETERS:     BX              Card device handle
+;                       ES:(E)DI        Track 1 buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_carddev_track1_name DB 'Get Card Track 1',0
+
+get_carddev_track1_16       Proc far
+    push ds
+    push eax
+    push ebx
+    push edi
+;
+    mov ax,CARDDEV_HANDLE
+    DerefHandle
+    jc gct1_16
+;
+    movzx edi,di
+    mov ds,[ebx].carddev_sel
+    mov eax,ds:cd_get_track1_proc+4
+    or ax,ax
+    clc
+    jz gct1_16
+;       
+    call fword ptr ds:cd_get_track1_proc
+
+gct1_16:
+    pop edi
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+get_carddev_track1_16       Endp
+
+get_carddev_track1_32       Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,CARDDEV_HANDLE
+    DerefHandle
+    jc gct1_32
+;
+    mov ds,[ebx].carddev_sel
+    mov eax,ds:cd_get_track1_proc+4
+    or ax,ax
+    clc
+    jz gct1_32
+;       
+    call fword ptr ds:cd_get_track1_proc
+
+gct1_32:
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+get_carddev_track1_32       Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -552,6 +617,8 @@ add_carddev    Proc far
     mov ds:cd_clear_inserted_proc+4,0
     mov ds:cd_wait_for_card_proc,0
     mov ds:cd_wait_for_card_proc+4,0
+    mov ds:cd_get_track1_proc,0
+    mov ds:cd_get_track1_proc+4,0
     mov ds:cd_get_name_proc,0
     mov ds:cd_get_name_proc+4,0
 ;
@@ -647,6 +714,13 @@ init    Proc far
     mov edi,OFFSET wait_for_card_name
     mov dx,virt_es_in
     mov ax,wait_for_card_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_carddev_track1_16
+    mov esi,OFFSET get_carddev_track1_32
+    mov edi,OFFSET get_carddev_track1_name
+    mov dx,virt_es_in
+    mov ax,get_carddev_track1_nr
     RegisterUserGate
 ;
     mov ebx,OFFSET get_carddev_name16

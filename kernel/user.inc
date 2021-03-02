@@ -3052,6 +3052,12 @@ WaitForCard       MACRO
         UserGate wait_for_card_nr
                                                 ENDM
 
+;   IN  BX            Card device handle
+;   IN  ES:(E)DI      Track 1 buffer
+GetCardDevTrack1       MACRO
+        UserGate get_carddev_track1_nr
+                                                ENDM
+
 ;;;;;;;;;; SCREEN, TEXT MODE ;;;;;;;;;;
 
 ClearText    MACRO

@@ -38,6 +38,7 @@ INCLUDE ..\os\carddev.inc
 
 CARD_STATE_GOOD = 1
 CARD_STATE_BAD = 2
+CARD_STATE_TRACK1 = 4
 
 hid_card   STRUC
 
@@ -89,7 +90,7 @@ fatal_error         DB ?
 card_dev_reset      DB ?
 card_usb_reset      DB ?
 
-
+track1              DB 80 DUP(?)
 track2              DB 40 DUP(?)
 
 data	ENDS
@@ -364,6 +365,49 @@ wait_for_card    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           get_track1
+;
+;       DESCRIPTION:    get track 1
+;
+;       PARAMETERS:     ES:EDI      Track 1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_track1    Proc far
+    push ds
+    push eax
+    push esi
+    push edi
+;    
+    mov ax,SEG data
+    mov ds,eax
+;
+    test ds:card_state,CARD_STATE_TRACK1
+    stc
+    jz gt1Done
+;    
+    and ds:card_state,NOT CARD_STATE_TRACK1
+    mov esi,OFFSET track1
+
+gt1Loop:
+    lodsb
+    stos byte ptr es:[edi]
+    or al,al
+    jnz gt1Loop
+;
+    clc 
+
+gt1Done:
+    pop edi
+    pop esi
+    pop eax
+    pop ds        
+    ret
+get_track1    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddCardReader
 ;
 ;       DESCRIPTION:    Add card reader device
@@ -405,6 +449,9 @@ AddCardReader	Proc near
 ;    
     mov es:cd_wait_for_card_proc,OFFSET wait_for_card
     mov es:cd_wait_for_card_proc+4,cs
+;    
+    mov es:cd_get_track1_proc,OFFSET get_track1
+    mov es:cd_get_track1_proc+4,cs
 ;
     mov ax,SEG data
     mov ds,eax
@@ -419,15 +466,64 @@ AddCardReader	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           HandleGoodCard
+;   NAME:           HandleTrack1
 ;
-;   DESCRIPTION:    Handle good card
+;   DESCRIPTION:    Handle track 1
 ;
-;   PARAMETERS:     FS:EBX  Card strip
+;   PARAMETERS:     FS:EBX  Track 1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HandleGoodCard   Proc near
+HandleTrack1   Proc near
+    push ds
+    push eax
+    push ebx
+    push esi
+;
+    mov al,fs:[ebx]
+    cmp al,'%'
+    jne ht1Done
+;
+    mov ax,SEG data
+    mov ds,eax
+    inc ebx
+    mov ecx,80
+    mov esi,OFFSET track1
+
+ht1Loop:
+    mov al,fs:[ebx]
+    mov ds:[esi],al
+;
+    or al,al
+    je ht1End
+;
+    inc ebx
+    inc esi
+    loop ht1Loop
+
+ht1End:
+    or ds:card_state,CARD_STATE_TRACK1
+
+ht1Done:
+    pop esi
+    pop ebx
+    pop eax
+    pop ds
+    ret
+HandleTrack1	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleTrack2
+;
+;   DESCRIPTION:    Handle track 2
+;
+;   PARAMETERS:     FS:EBX  Track 2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleTrack2   Proc near
     push ds
     push eax
     push ebx
@@ -435,7 +531,7 @@ HandleGoodCard   Proc near
 ;
     mov al,fs:[ebx]
     cmp al,';'
-    jne hgcDone
+    jne ht2Done
 ;
     mov ax,SEG data
     mov ds,eax
@@ -443,29 +539,29 @@ HandleGoodCard   Proc near
     mov ecx,40
     mov esi,OFFSET track2
 
-hgcLoop:
+ht2Loop:
     mov al,fs:[ebx]
     cmp al,'='
-    jne hgcNotSep
+    jne ht2NotSep
 ;
     mov al,'D'
-    jmp hgcNorm
+    jmp ht2Norm
 
-hgcNotSep:
+ht2NotSep:
     cmp al,'?'
-    je hgcEnd
+    je ht2End
 ;
     or al,al
-    je hgcEnd
+    je ht2End
 
-hgcNorm:
+ht2Norm:
     mov ds:[esi],al
 ;
     inc ebx
     inc esi
-    loop hgcLoop
+    loop ht2Loop
 
-hgcEnd:
+ht2End:
     xor al,al
     mov ds:[esi],al
     or ds:card_state,CARD_STATE_GOOD
@@ -473,13 +569,13 @@ hgcEnd:
     mov bx,ds:carddev_thread
     Signal
 
-hgcDone:
+ht2Done:
     pop esi
     pop ebx
     pop eax
     pop ds
     ret
-HandleGoodCard	Endp
+HandleTrack2	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1476,6 +1572,16 @@ hhrSaveInserted:
     mov es:hid_inserted,al
     
 hhrNoStatus:
+    movzx ebx,es:hid_len1_index
+    mov al,fs:[ebx+esi]
+    or al,al
+    jz hhrNotTrack1
+;
+    movzx ebx,es:hid_track1_index
+    add ebx,esi
+    call HandleTrack1
+
+hhrNotTrack1:
     movzx ebx,es:hid_len2_index
     mov al,fs:[ebx+esi]
     or al,al
@@ -1483,7 +1589,7 @@ hhrNoStatus:
 ;
     movzx ebx,es:hid_track2_index
     add ebx,esi
-    call HandleGoodCard
+    call HandleTrack2
     jmp hhrDone
 
 hhrNotGood2:

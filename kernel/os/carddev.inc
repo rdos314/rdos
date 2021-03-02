@@ -43,6 +43,9 @@ cd_get_name_proc            DD ?,?
 ; IN  ES:EDI    Strip buffer
 cd_wait_for_card_proc       DD ?,?
 
+; IN  ES:EDI    Track 1 buffer
+cd_get_track1_proc          DD ?,?
+
 cd_device                   DW ?,?
 
 carddev_struc	ENDS

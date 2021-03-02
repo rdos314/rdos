@@ -939,6 +939,8 @@
 
 #define usergate_get_net_hw_id 0x00000301
 
+#define usergate_get_carddev_track1 0x00000302
+
 
 
 #ifdef __FLAT__
@@ -1883,6 +1885,8 @@
 
 #define CallGate_get_net_hw_id 0x55 0x67 0x9a 1 3 0 0 3 0 0x5d
 
+#define CallGate_get_carddev_track1 0x55 0x67 0x9a 2 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2824,5 +2828,7 @@
 #define CallGate_remove_drive 0x3e 0x67 0x9a 0 3 0 0 3 0
 
 #define CallGate_get_net_hw_id 0x3e 0x67 0x9a 1 3 0 0 3 0
+
+#define CallGate_get_carddev_track1 0x3e 0x67 0x9a 2 3 0 0 3 0
 
 #endif

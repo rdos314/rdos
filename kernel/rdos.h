@@ -471,6 +471,7 @@ int RDOSAPI RdosIsCardDevInserted(int Handle);
 int RDOSAPI RdosHadCardDevInserted(int Handle);
 void RDOSAPI RdosClearCardDevInserted(int Handle);
 int RDOSAPI RdosWaitForCard(int Handle, char *Strip);
+int RDOSAPI RdosGetCardDevTrack1(int Handle, char *Track1);
 
 int RDOSAPI RdosIsCanOnline();
 int RDOSAPI RdosCreateCanModuleBitmap();

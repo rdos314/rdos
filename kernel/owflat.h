@@ -1267,6 +1267,12 @@
     __parm [__ebx] [__edi] \
     __value [__eax]
 
+#pragma aux RdosGetCardDevTrack1 = \
+    CallGate_get_carddev_track1  \
+    CarryToBool \
+    __parm [__ebx] [__edi] \
+    __value [__eax]
+
 
 #pragma aux RdosCreateCanModuleBitmap = \
     CallGate_create_can_module_bitmap  \
