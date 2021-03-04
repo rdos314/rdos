@@ -101,6 +101,8 @@ pmu_server_thread    DW ?
 pmu_bitmap           DW ?
 pmu_pr_thread        DW ?
 
+pmu_sw_ok            DB ?
+
 pmu_model            DB 32 DUP(?)
 
 data    ENDS
@@ -539,6 +541,286 @@ GetPrinterVersion  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           EnterFunctionMode
+;
+;       DESCRIPTION:    Enter function setting mode
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EnterFunctionMode    Proc near
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz efmDone
+;
+    mov es,ds:pmu_out_buffer
+    xor edi,edi
+;
+    mov al,1Dh
+    stosb
+;
+    mov al,28h
+    stosb
+;
+    mov al,45h
+    stosb
+;
+    mov al,3
+    stosb
+;
+    mov al,0
+    stosb
+;
+    mov al,1
+    stosb
+;
+    mov al,49h
+    stosb
+;
+    mov al,4Eh
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+
+efmDone:
+    ret
+EnterFunctionMode  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LeaveFunctionMode
+;
+;       DESCRIPTION:    Leave function setting mode
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LeaveFunctionMode    Proc near
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz lfmDone
+;
+    mov es,ds:pmu_out_buffer
+    xor edi,edi
+;
+    mov al,1Dh
+    stosb
+;
+    mov al,28h
+    stosb
+;
+    mov al,45h
+    stosb
+;
+    mov al,4
+    stosb
+;
+    mov al,0
+    stosb
+;
+    mov al,2
+    stosb
+;
+    mov al,4Fh
+    stosb
+;
+    mov al,55h
+    stosb
+;
+    mov al,54h
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+
+lfmDone:
+    ret
+LeaveFunctionMode  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetFunctionSwitch
+;
+;       DESCRIPTION:    Get function switch
+;
+;       PARAMETERS:     DS         Printer sel
+;                       BL         Setting
+;
+;       RETURNS:        AL         Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFunctionSwitch    Proc near
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz gfsDone
+;
+    mov es,ds:pmu_out_buffer
+    xor edi,edi
+;
+    mov al,1Dh
+    stosb
+;
+    mov al,28h
+    stosb
+;
+    mov al,45h
+    stosb
+;
+    mov al,2
+    stosb
+;
+    mov al,0
+    stosb
+;
+    mov al,4
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+    jc gfsDone
+;
+    call ReadAnswer
+    cmp cx,8
+    jb gfsDone
+;
+    mov es,ds:pmu_in_buffer
+    xor di,di
+    xor ah,ah
+
+gfsSkip:
+    mov al,es:[di]
+    sub al,'0'
+    jc gfsNext
+;
+    cmp al,2
+    jc gfsDecode
+
+gfsNext:
+    inc di
+    dec cx
+    cmp cx,8
+    jae gfsSkip
+;
+    stc 
+    jmp gfsDone
+
+gfsLoop:
+    mov al,es:[di]
+    or al,al
+    jz gfsOk
+;
+    sub al,'0'
+    jc gfsDone
+;
+    cmp al,2
+    jb gfsDecode
+;
+    stc
+    jmp gfsDone
+
+gfsDecode:
+    rcr al,1
+    rcl ah,1
+    inc di
+    loop gfsLoop
+
+gfsOk:
+    mov al,ah
+    clc
+
+gfsDone:
+    ret
+GetFunctionSwitch  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetFunctionSwitch
+;
+;       DESCRIPTION:    Set function switch
+;
+;       PARAMETERS:     DS         Printer sel
+;                       BL         Setting
+;                       AL         Value
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetFunctionSwitch    Proc near
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz sfsDone
+;
+    mov es,ds:pmu_out_buffer
+    xor edi,edi
+;
+    push ax
+;
+    mov al,1Dh
+    stosb
+;
+    mov al,28h
+    stosb
+;
+    mov al,45h
+    stosb
+;
+    mov al,0Ah
+    stosb
+;
+    mov al,0
+    stosb
+;
+    mov al,3
+    stosb
+;
+    mov al,bl
+    stosb
+;
+    pop ax
+;
+    mov ah,al
+    mov cx,8
+
+sfsLoop:
+    mov al,'0'
+    rcl ah,1
+    adc al,0
+    stosb
+;
+    loop sfsLoop
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+
+sfsDone:
+    ret
+SetFunctionSwitch  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           SendLine
 ;
 ;       DESCRIPTION:    Send graphic line
@@ -809,8 +1091,8 @@ ptLoop:
     call SendLine
     call FinishLine
 ;
-;    mov ax,25
-;    WaitMilliSec
+    mov ax,10
+    WaitMilliSec
 ;
     add dx,24
     cmp dx,es:bs_height
@@ -1484,6 +1766,31 @@ pmuRestart:
 ;
     call GetPrinterModel
     call GetPrinterVersion
+;
+    mov al,ds:pmu_sw_ok
+    or al,al
+    jnz pmuStatusLoop
+;
+    call EnterFunctionMode
+    jc pmuDetached
+;
+    mov bl,6
+    call GetFunctionSwitch
+    jc pmuDetached
+;
+    cmp al,80h
+    je pmuLeaveFunc
+;
+    mov bl,6
+    mov al,80h
+    call SetFunctionSwitch
+    jc pmuDetached
+
+pmuLeaveFunc:
+    call LeaveFunctionMode
+    jc pmuDetached
+;
+    mov ds:pmu_sw_ok,1
 
 pmuStatusLoop:
     mov bx,ds:pmu_dev_handle
@@ -1877,6 +2184,7 @@ init    Proc far
     mov ds:pmu_dev_handle,0
     mov ds:pmu_bitmap,0
     mov ds:pmu_pr_thread,0
+    mov ds:pmu_sw_ok,0
 ;    
     mov ax,cs
     mov ds,ax
