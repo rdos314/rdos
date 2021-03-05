@@ -101,8 +101,6 @@ pmu_server_thread    DW ?
 pmu_bitmap           DW ?
 pmu_pr_thread        DW ?
 
-pmu_sw_ok            DB ?
-
 pmu_model            DB 32 DUP(?)
 
 data    ENDS
@@ -1767,19 +1765,15 @@ pmuRestart:
     call GetPrinterModel
     call GetPrinterVersion
 ;
-    mov al,ds:pmu_sw_ok
-    or al,al
-    jnz pmuStatusLoop
-;
-    call EnterFunctionMode
-    jc pmuDetached
-;
     mov bl,6
     call GetFunctionSwitch
     jc pmuDetached
 ;
     cmp al,80h
-    je pmuLeaveFunc
+    je pmuStatusLoop
+;
+    call EnterFunctionMode
+    jc pmuDetached
 ;
     mov bl,6
     mov al,80h
@@ -1789,8 +1783,6 @@ pmuRestart:
 pmuLeaveFunc:
     call LeaveFunctionMode
     jc pmuDetached
-;
-    mov ds:pmu_sw_ok,1
 
 pmuStatusLoop:
     mov bx,ds:pmu_dev_handle
@@ -2184,7 +2176,6 @@ init    Proc far
     mov ds:pmu_dev_handle,0
     mov ds:pmu_bitmap,0
     mov ds:pmu_pr_thread,0
-    mov ds:pmu_sw_ok,0
 ;    
     mov ax,cs
     mov ds,ax
