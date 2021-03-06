@@ -10729,6 +10729,16 @@ test_pr:
     AllocateSmallShared
     xor bx,bx
     mov al,es:[bx]
+;
+    mov eax,60h
+    AllocateSmallShared
+    xor bx,bx
+    mov al,es:[bx]
+;
+    mov eax,60h
+    AllocateSmallShared
+    xor bx,bx
+    mov al,es:[bx]
 
 
 
