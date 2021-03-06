@@ -154,7 +154,7 @@ allocate_small_shared   PROC far
 ;
     add eax,10h
 ;
-    mov dx,shared_flat_sel
+    mov dx,shared_byte_sel
     mov ds,dx
     xor edx,edx
     xor ebx,ebx
@@ -243,8 +243,8 @@ assNoBiggestBlock:
     pop ecx
     pop ds
     LeaveSection ds:small_section
-    add edx,10h
 ;
+    add edx,shared_byte_linear + 10h
     AllocateLdt
     or bx,4
     CreateDataSelector32
