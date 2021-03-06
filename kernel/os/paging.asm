@@ -376,6 +376,13 @@ ptUser:
     sti
     GetThread
     mov ds,ax
+    mov bx,ds:p_shared_dir_sel
+    or bx,bx
+    jz ptNotShared
+;
+    int 3
+
+ptNotShared:
     mov ds,ds:p_prog_sel
     cmp ax,ds:pr_cow_thread
     jne ptSection
