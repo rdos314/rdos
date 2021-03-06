@@ -381,7 +381,6 @@ ptUser:
     jz ptNotShared
 ;
     mov es,ax
-    int 3
     cmp edx,shared_linear
     jb ptNotShared
 ;
@@ -401,6 +400,13 @@ ptHasShared:
 
 ptSharedDirOk:
     call cs:get_page_entry_proc
+    cmp eax,4
+    je ptFault
+;
+    call local_allocate_physical
+    mov al,07h
+    call cs:set_page_entry_proc
+    jmp ptRetry
 
 ptNotShared:
     mov ds,ds:p_prog_sel

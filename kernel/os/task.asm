@@ -10724,15 +10724,11 @@ test_name    DB 'Test',0
 
 test_pr:
     CreateSharedMem
-    GetThread
-    mov ds,ax
     int 3
-    mov ds:p_shared_dir_sel,bx
-;
-    mov ax,shared_flat_sel
-    mov ds,ax
-    xor ebx,ebx
-    mov al,ds:[bx]
+    mov eax,50h
+    AllocateSmallShared
+    xor bx,bx
+    mov al,es:[bx]
 
 
 

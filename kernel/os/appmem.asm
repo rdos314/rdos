@@ -81,7 +81,6 @@ create_shared_mem  Proc far
     GetThread
     mov ds,ax
     mov ds:p_shared_dir_sel,bx
-    int 3
 ;
     mov ax,shared_byte_sel
     mov ds,ax
@@ -132,10 +131,10 @@ allocate_small_shared_name      DB 'Allocate Small Shared',0
 
 allocate_small_shared   PROC far
     push ds
-    push es
     push eax
     push ebx
     push ecx
+    push edx
 ;
     push ax
     GetThread
@@ -247,12 +246,14 @@ assNoBiggestBlock:
     add edx,10h
 ;
     AllocateLdt
+    or bx,4
     CreateDataSelector32
+    mov es,bx
 ;
+    pop edx
     pop ecx
     pop ebx
     pop eax
-    pop es
     pop ds
     retf32
 allocate_small_shared   ENDP
