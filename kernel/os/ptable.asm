@@ -1307,6 +1307,7 @@ local_create_sys_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_shared_page_dir32       Proc near
+    push ds
     push eax
     push ebx
     push ecx
@@ -1327,13 +1328,18 @@ local_create_shared_page_dir32       Proc near
     mov al,13h
     call local_set_page_entry32
 ;
+    mov bx,flat_sel
+    mov ds,bx
     mov cx,400h
     xor ebx,ebx
+    push edx
 
 cshpdInit:
     mov [edx],ebx
     add edx,4
     loop cshpdInit
+;
+    pop edx
 ;
     xor eax,eax
     call local_set_page_entry32
@@ -1345,6 +1351,7 @@ cshpdInit:
     pop ecx
     pop ebx
     pop eax
+    pop ds
     ret
 local_create_shared_page_dir32    Endp    
 
@@ -4185,6 +4192,7 @@ local_create_sys_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_shared_page_dir64       Proc near
+    push ds
     push eax
     push ebx
     push ecx
@@ -4206,14 +4214,18 @@ local_create_shared_page_dir64       Proc near
     mov al,13h
     call local_set_page_entry64
 ;
+    mov bx,flat_sel
+    mov ds,bx
     mov cx,400h
     xor ebx,ebx
+    push edx
 
 cshpdInit64:
     mov [edx],ebx
     add edx,4
     loop cshpdInit64
 ;
+    pop edx
     xor eax,eax
     xor ebx,ebx
     call local_set_page_entry64
@@ -4225,6 +4237,7 @@ cshpdInit64:
     pop ecx
     pop ebx
     pop eax
+    pop ds
     ret
 local_create_shared_page_dir64    Endp    
 

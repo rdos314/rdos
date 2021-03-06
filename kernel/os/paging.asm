@@ -380,7 +380,27 @@ ptUser:
     or bx,bx
     jz ptNotShared
 ;
+    mov es,ax
     int 3
+    cmp edx,shared_linear
+    jb ptNotShared
+;
+    call cs:get_page_dir_proc
+    test al,1
+    jnz ptSharedDirOk
+;
+    call cs:get_shared_page_dir_proc
+    test al,1
+    jnz ptHasShared
+;
+    call cs:create_shared_page_dir_proc
+    call cs:get_shared_page_dir_proc
+
+ptHasShared:
+    call cs:set_page_dir_proc
+
+ptSharedDirOk:
+    call cs:get_page_entry_proc
 
 ptNotShared:
     mov ds,ds:p_prog_sel

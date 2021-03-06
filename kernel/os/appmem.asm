@@ -81,6 +81,7 @@ create_shared_mem  Proc far
     GetThread
     mov ds,ax
     mov ds:p_shared_dir_sel,bx
+    int 3
 ;
     mov ax,shared_byte_sel
     mov ds,ax
