@@ -133,6 +133,7 @@ get_sys_page_dir_proc           DW OFFSET local_get_sys_page_dir32
 set_sys_page_dir_proc           DW OFFSET local_set_sys_page_dir32
 create_page_dir_proc            DW OFFSET local_create_page_dir32
 create_sys_page_dir_proc        DW OFFSET local_create_sys_page_dir32
+create_shared_proc              DW OFFSET local_create_shared32
 get_shared_page_dir_proc        DW OFFSET local_get_shared_page_dir32
 set_shared_page_dir_proc        DW OFFSET local_set_shared_page_dir32
 create_shared_page_dir_proc     DW OFFSET local_create_shared_page_dir32
@@ -179,6 +180,7 @@ get_sys_page_dir_p64            DW OFFSET local_get_sys_page_dir64
 set_sys_page_dir_p64            DW OFFSET local_set_sys_page_dir64
 create_page_dir_p64             DW OFFSET local_create_page_dir64
 create_sys_page_dir_p64         DW OFFSET local_create_sys_page_dir64
+create_shared_p64               DW OFFSET local_create_shared64
 get_shared_page_dir_p64         DW OFFSET local_get_shared_page_dir64
 set_shared_page_dir_p64         DW OFFSET local_set_shared_page_dir64
 create_shared_page_dir_p64      DW OFFSET local_create_shared_page_dir64
@@ -226,6 +228,12 @@ init_page_table     PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET create_shared_dir
+    mov edi,OFFSET create_shared_dir_name
+    xor cl,cl
+    mov ax,create_shared_dir_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET notify_init_process
     mov edi,OFFSET notify_init_process_name
@@ -821,6 +829,38 @@ local_delete_process32     Proc near
     FreeLinear        
     ret
 local_delete_process32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateShared32
+;
+;           DESCRIPTION:    Create 32-bit shared sel
+;
+;           RETURNS:        BX     Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_shared32       PROC near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,1000h
+    AllocateGlobalMem
+    xor edi,edi
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    mov bx,es
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+local_create_shared32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3579,6 +3619,37 @@ fpProcNextDirPage64:
     ret
 local_free_process64     Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateShared64
+;
+;           DESCRIPTION:    Create 64-bit shared sel
+;
+;           RETURNS:        BX     Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_create_shared64       PROC near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,4000h
+    AllocateGlobalMem
+    xor edi,edi
+    mov ecx,1000h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    mov bx,es
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+local_create_shared64       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6279,6 +6350,24 @@ notify_create_process       Proc far
     call cs:create_process_proc
     retf32
 notify_create_process       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSharedDir
+;
+;           DESCRIPTION:    Create shared dir
+;
+;           PARAMETERS:     BX     Shared sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_shared_dir_name  DB 'Create Shared Dir',0
+
+create_shared_dir       Proc far
+    call cs:create_shared_proc
+    retf32
+create_shared_dir       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

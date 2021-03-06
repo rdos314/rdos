@@ -10724,6 +10724,11 @@ test_name    DB 'Test',0
 
 test_pr:
     int 3
+    CreateSharedDir
+    int 3
+    GetThread
+    mov ds,ax
+    mov ds:p_shared_dir_sel,bx
 
 
 

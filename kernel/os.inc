@@ -539,6 +539,11 @@ NotifyCreateLongProcess MACRO
     OsGate notify_create_long_process_nr
                     ENDM
 
+; IN  BX     Shared sel
+CreateSharedDir MACRO
+    OsGate create_shared_dir_nr
+                    ENDM
+
 ; IN  EAX    CR3
 ; IN  DS     Process sel
 CreateFork MACRO
