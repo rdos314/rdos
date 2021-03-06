@@ -10723,12 +10723,16 @@ get_crash_core32:
 test_name    DB 'Test',0
 
 test_pr:
-    int 3
     CreateSharedDir
-    int 3
     GetThread
     mov ds,ax
+    int 3
     mov ds:p_shared_dir_sel,bx
+;
+    mov ax,shared_flat_sel
+    mov ds,ax
+    xor ebx,ebx
+    mov al,ds:[bx]
 
 
 
