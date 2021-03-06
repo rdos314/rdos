@@ -946,6 +946,16 @@ AllocateFixedVMLinear   MACRO
     OsGate allocate_fixed_vm_linear_nr
                     ENDM
 
+CreateSharedMem    MACRO
+    OsGate create_shared_mem_nr
+                    ENDM
+
+; IN  EAX          Bytes
+; OUT ES           LDT selector
+AllocateSmallShared    MACRO
+    OsGate allocate_small_shared_nr
+                    ENDM
+
 ;;;;;;;;;;;;; MEMORY BLOCK MANAGEMENT ;;;;;;;;;;
 
 ;  IN  AX      Base allocation size

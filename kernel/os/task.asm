@@ -10723,7 +10723,7 @@ get_crash_core32:
 test_name    DB 'Test',0
 
 test_pr:
-    CreateSharedDir
+    CreateSharedMem
     GetThread
     mov ds,ax
     int 3
