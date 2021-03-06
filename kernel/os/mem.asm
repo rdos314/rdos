@@ -499,15 +499,6 @@ init_mem    PROC near
     xor dx,dx
     mov ax,resize_flat_linear_nr
     RegisterBimodalUserGate
-
-
-;
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
-
 ;
     pop ds
     popa
@@ -3918,33 +3909,6 @@ write_thread64_done:
     pop es
     retf32
 write_thread64   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           test
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_name    DB 'Test',0
-
-test_pr:
-    Allocate2MPhysical64
-;
-    int 3
-    mov edx,global_page_linear
-    mov ecx,global_page_linear + global_page_size
-    call cs:allocate_and_map_sys_dir_proc
-;
-    mov cx,flat_sel
-    mov ds,cx
-    mov eax,ds:[edx]
-    CrashGate
-    inc edx
-    mov eax,ds:[edx]
-    inc eax
-    mov ds:[edx],eax
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

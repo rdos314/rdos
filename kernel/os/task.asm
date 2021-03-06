@@ -10712,6 +10712,21 @@ get_crash_core32:
     call get_crash_core
     retf32
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           test
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_name    DB 'Test',0
+
+test_pr:
+    int 3
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -11252,6 +11267,18 @@ timer_free_list_create:
     mov dx,virt_es_in
     mov ax,get_crash_core_info_nr
     RegisterUserGate
+
+
+
+;
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+
+
+
 ;
     mov edi,OFFSET check_list
     HookState
