@@ -3874,6 +3874,7 @@ not_call32:
     call GetOsCall
     jnc check_done
 ;
+    sub esi,7
     mov ebx,[esi+1]
     mov dx,[esi+5]
     add esi,7    
@@ -3901,6 +3902,7 @@ write_call_far16:
     call GetOsCall
     jnc check_done
 ;
+    sub esi,5
     movzx ebx,word ptr [esi+1]
     mov dx,[esi+3]
     add esi,5
