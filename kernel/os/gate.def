@@ -39,6 +39,19 @@ os_gate_name_sel       DW ?
 os_gate_flags          DW ?
 os_gate_entry      ENDS
 
+SHARED_GATE_SHIFT = 4
+
+;
+; this structure cannot be more than 16 bytes long!
+;
+
+shared_gate_entry        STRUC
+shared_gate_proc_offset  DD ?
+shared_gate_proc_sel     DW ?
+shared_gate_name_offset  DD ?
+shared_gate_name_sel     DW ?
+shared_gate_entry        ENDS
+
 ;
 ; this structure cannot be more than 32 bytes long!
 ;

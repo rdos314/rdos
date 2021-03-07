@@ -855,4 +855,6 @@ create_shared_dir_nr        = 777
 create_shared_mem_nr        = 778
 allocate_small_shared_nr    = 779
 
+register_shared_gate_nr     = 780
+
 osgate_entries              = 800

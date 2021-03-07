@@ -161,6 +161,9 @@ __A000                          EQU 283h
 __C000                          EQU 28Bh
 
 chandle_data_sel    EQU 290h
+
+shared_gate_sel     EQU 298h
+
 handle_data_sel     EQU 2A0h
 
 sys_dir_sel                     EQU 2B0h

@@ -186,6 +186,13 @@ IsValidOsGate   MACRO
                     ENDM
 
 ;       AX          GATE NUMBER
+;       DS:ESI      GATE CALL ADDRESS
+;       ES:EDI      GATE NAME ADDRESS
+RegisterSharedGate  MACRO
+    OsGate register_shared_gate_nr
+                    ENDM
+
+;       AX          GATE NUMBER
 ;       DX          SEGMENT TRANSFER
 ;       DS:ESI  GATE CALL ADDRESS
 ;       ES:EDI  GATE NAME ADDRESS

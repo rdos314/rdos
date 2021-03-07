@@ -105,8 +105,9 @@ page0_linear            EQU 0FE022000h
 gdt_core_linear         EQU 0FE023000h
 gdt_linear              EQU 0FE024FB8h      ; this address must be aligned to core_data_sel
 system_linear           EQU 0FE035000h
-system_linear_size      EQU 000F8B000h
+system_linear_size      EQU 000F7B000h
 
+shared_gate_linear      EQU 0FEFB0000h
 osgate_linear           EQU 0FEFC0000h
 usergate_linear         EQU 0FEFD0000h
 

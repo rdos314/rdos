@@ -1,0 +1,4 @@
+
+test_shared_nr              = 0
+
+shared_gate_entries         = 20
