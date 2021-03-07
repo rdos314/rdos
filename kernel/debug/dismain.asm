@@ -3593,6 +3593,74 @@ GetOsCall       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:       GetSharedCall
+;
+;       DESCRIPTION:    Get shared call gate name
+;
+;       PARAMETERS:     ES:EDI       Name buffer
+;                       ECX          Buffer size
+;                       DX:EBX       Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetSharedCall       PROC near
+    push ds
+    push fs
+    push esi
+;
+    push ecx
+    mov ax,shared_gate_sel
+    mov ds,ax
+    xor esi,esi
+    mov ecx,shared_gate_entries
+
+get_shared_call_scan_loop:
+    cmp dx,ds:[esi].shared_gate_proc_sel
+    jne get_shared_call_scan_next
+;
+    cmp ebx,ds:[esi].shared_gate_proc_offset
+    je get_shared_call_found
+
+get_shared_call_scan_next:
+    add esi,1 SHL SHARED_GATE_SHIFT
+    loop get_shared_call_scan_loop
+;
+    pop ecx
+    jmp get_shared_call_error
+
+get_shared_call_found:
+    pop ecx
+    mov fs,[esi].shared_gate_name_sel
+    mov esi,[esi].shared_gate_name_offset
+
+get_shared_call_out_loop:
+    mov al,fs:[esi]
+    or al,al
+    je get_shared_call_out_ok
+;
+    stosb
+    inc esi
+    loop get_shared_call_out_loop
+
+get_shared_call_out_ok:
+    xor al,al
+    stosb
+    clc
+    jmp get_shared_call_end
+
+get_shared_call_error:
+    stc
+
+get_shared_call_end:
+    pop esi
+    pop fs
+    pop ds
+    ret
+GetSharedCall       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:       GetUserCall
 ;
 ;       DESCRIPTION:    Get user gate name
@@ -3805,6 +3873,14 @@ not_call32:
     mov ecx,40
     call GetOsCall
     jnc check_done
+;
+    mov ebx,[esi+1]
+    mov dx,[esi+5]
+    add esi,7    
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetSharedCall
+    jnc check_done
 
 not_call32_user:
     sub esi,7
@@ -3823,6 +3899,14 @@ write_call_far16:
     lea edi,[ebp].opcode_text
     mov ecx,40
     call GetOsCall
+    jnc check_done
+;
+    movzx ebx,word ptr [esi+1]
+    mov dx,[esi+3]
+    add esi,5
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetSharedCall
     jnc check_done
 
 call_far16_user:
@@ -3858,6 +3942,14 @@ not_call_far:
     pop ebx
     jnc check_done
 ;
+    push ebx
+    mov dx,ds:[ebp].reg_cs.d_selector
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetSharedCall
+    pop ebx
+    jnc check_done
+;
     mov dx,ds:[ebp].reg_cs.d_selector
     lea edi,[ebp].opcode_text
     mov ecx,40
@@ -3878,6 +3970,14 @@ write_call_near16:
     lea edi,[ebp].opcode_text
     mov ecx,40
     call GetOsCall
+    pop ebx
+    jnc check_done
+;
+    push ebx
+    mov dx,ds:[ebp].reg_cs.d_selector
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetSharedCall
     pop ebx
     jnc check_done
 ;
