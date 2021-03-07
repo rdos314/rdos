@@ -31,6 +31,7 @@ include kdebug.inc
 include ..\os\gate.def
 include ..\driver.def
 include ..\os.def
+include ..\shared.def
 include ..\user.def
 
 code    SEGMENT byte use32 public 'CODE'
@@ -3440,6 +3441,48 @@ GetIllegalOsGate    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:       GetIllegalSharedGate
+;
+;       DESCRIPTION:    Get illegal shared gate name
+;
+;       PARAMETERS:     ES:EDI       Name buffer
+;                       ECX          Buffer size
+;                       BX           Gate #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetIllegalSharedGate    PROC near
+    push ds
+    push fs
+    push esi
+;    
+    mov ax,shared_gate_sel
+    mov ds,ax
+    mov fs,[bx].shared_gate_name_sel
+    mov esi,[bx].shared_gate_name_offset
+
+illegal_out_shared_loop:
+    mov al,fs:[esi]
+    or al,al
+    je illegal_out_shared_ok
+;
+    stosb
+    inc esi
+    loop illegal_out_shared_loop
+
+illegal_out_shared_ok:
+    xor al,al
+    stosb
+;    
+    pop esi
+    pop fs
+    pop ds
+    ret
+GetIllegalSharedGate    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetIllegalUserGate
 ;
 ;       DESCRIPTION:    Get illegal user gate name
@@ -3701,6 +3744,10 @@ remove_ov_done:
     mov dx,[esi+5]
     cmp dx,2
     je oscall
+;
+    mov dx,[esi+5]
+    cmp dx,4
+    je sharedcall
 ;        
     cmp dx,3
     je usercall_32
@@ -3733,6 +3780,20 @@ oscall:
     lea edi,[ebp].opcode_text
     mov ecx,40
     call GetIllegalOsGate
+    clc
+    jmp check_done
+
+sharedcall:
+    mov eax,[esi+1]
+    cmp eax,shared_gate_entries
+    jnc check_fail
+;
+    add esi,7
+    shl eax,SHARED_GATE_SHIFT
+    mov ebx,eax
+    lea edi,[ebp].opcode_text
+    mov ecx,40
+    call GetIllegalSharedGate
     clc
     jmp check_done
     

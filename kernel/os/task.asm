@@ -30,6 +30,7 @@ INCLUDE port.def
 INCLUDE protseg.def
 INCLUDE ..\user.def
 INCLUDE ..\shared.def
+INCLUDE ..\shared.inc
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE system.def
@@ -10732,21 +10733,8 @@ test_name    DB 'Test',0
 test_pr:
     int 3
     CreateSharedMem
-    mov eax,50h
-    AllocateSmallShared
-    xor bx,bx
-    mov al,es:[bx]
-;
-    mov eax,60h
-    AllocateSmallShared
-    xor bx,bx
-    mov al,es:[bx]
-;
-    mov eax,60h
-    AllocateSmallShared
-    xor bx,bx
-    mov al,es:[bx]
-
+    int 3
+    TestShared
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
