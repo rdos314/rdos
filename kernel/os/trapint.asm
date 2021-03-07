@@ -387,7 +387,7 @@ int67:
     jne int_retry    
 ;
     mov si,ds:[ebx+7]
-    cmp si,4
+    cmp si,5
     jb int_call
 ;
     xor si,si
@@ -1826,7 +1826,7 @@ t13_16:
     or ax,ax
     jz t13_default
 ;
-    cmp ax,3
+    cmp ax,4
     ja t13_default
 
 t13_int_call16:

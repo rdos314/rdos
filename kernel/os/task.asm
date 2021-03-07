@@ -10731,7 +10731,6 @@ test_shared   Endp
 test_name    DB 'Test',0
 
 test_pr:
-    int 3
     CreateSharedMem
     int 3
     TestShared

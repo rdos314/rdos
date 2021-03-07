@@ -166,7 +166,6 @@ register_shared_gate   ENDP
     public do_shared
 
 do_shared   Proc near
-    int 3
     push dword ptr [ebp+20]
     mov [ebp+20],ds    
     mov eax,ebx
