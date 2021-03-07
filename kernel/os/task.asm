@@ -29,6 +29,7 @@ INCLUDE ..\driver.def
 INCLUDE port.def
 INCLUDE protseg.def
 INCLUDE ..\user.def
+INCLUDE ..\shared.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE system.def
@@ -10720,11 +10721,17 @@ get_crash_core32:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+test_shared_name DB 'Test Shared', 0
+
+test_shared   Proc far
+    retf32
+test_shared   Endp
+
 test_name    DB 'Test',0
 
 test_pr:
-    CreateSharedMem
     int 3
+    CreateSharedMem
     mov eax,50h
     AllocateSmallShared
     xor bx,bx
@@ -11291,6 +11298,11 @@ timer_free_list_create:
     xor dx,dx
     mov ax,test_gate_nr
     RegisterBimodalUserGate
+;
+    mov esi,OFFSET test_shared
+    mov edi,OFFSET test_shared_name
+    mov ax,test_shared_nr
+    RegisterSharedGate
 
 
 
