@@ -151,6 +151,77 @@ register_shared_gate   PROC far
     retf32
 register_shared_gate   ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           do_shared
+;
+;           DESCRIPTION:    do shared
+;
+;           PARAMETERS:     DS:EBX      Instruction
+;                           SS:EBP      Stack frame
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public do_shared
+
+do_shared   Proc near
+    int 3
+    push dword ptr [ebp+20]
+    mov [ebp+20],ds    
+    mov eax,ebx
+    add eax,9
+    mov [ebp+16],eax
+    pop dword ptr [ebp+12]
+;   
+    mov edi,ds:[ebx+3]
+    cmp edi,shared_gate_entries    
+    jb do_shared_in_range
+;
+    mov edi,invalid_shared_nr
+
+do_shared_in_range:    
+    shl edi,SHARED_GATE_SHIFT
+    mov ax,shared_gate_sel
+    mov es,ax
+;
+    mov eax,es:[edi].shared_gate_proc_offset
+    mov [ebp+4],eax
+    movzx eax,es:[edi].shared_gate_proc_sel
+    mov [ebp+8],eax
+;
+    push ebx
+    mov bx,ds
+    call local_get_selector_base_size
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+;
+    push edx
+    mov edx,cr0
+    pushf
+    push edx
+    and edx,NOT 10000h
+    cli
+    mov cr0,edx
+;
+    mov eax,es:[edi].shared_gate_proc_offset
+    xchg eax,ds:[ebx+3]
+;
+    mov ax,es:[edi].shared_gate_proc_sel
+    xchg ax,ds:[ebx+7]
+;    
+    mov al,90h
+    xchg al,ds:[ebx]
+;
+    pop edx
+    mov cr0,edx
+    popf
+    pop edx
+    ret
+do_shared  Endp
+
 code    ENDS
 
     END
