@@ -221,6 +221,49 @@ do_shared_in_range:
     ret
 do_shared  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           do_user_shared
+;
+;           DESCRIPTION:    do user mode shared
+;
+;           PARAMETERS:     DS:EBX      Instruction
+;                           SS:EBP      Stack frame
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public do_user_shared
+
+do_user_shared   Proc near
+    AppPatch
+    jnc do_user_shared_done
+
+do_user_shared_norm:    
+    mov edi,ds:[ebx+2]
+    cmp edi,shared_gate_entries    
+    jb do_user_shared_in_range32
+;
+    mov edi,invalid_shared_nr
+
+do_user_shared_in_range32:    
+    shl edi,SHARED_GATE_SHIFT
+    mov ax,shared_gate_sel
+    mov es,ax
+;    
+    push ebx
+    mov bx,ds
+    call local_get_selector_base_size
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax
+
+do_user_shared_done:
+    ret
+do_user_shared   Endp
+
 code    ENDS
 
     END

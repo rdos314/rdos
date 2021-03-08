@@ -10731,10 +10731,15 @@ test_shared   Endp
 test_name    DB 'Test',0
 
 test_pr:
+    push es
+    pushad
+;
     CreateSharedMem
-    int 3
-    TestShared
-
+    CrashGate
+;
+    popad
+    pop es
+    retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

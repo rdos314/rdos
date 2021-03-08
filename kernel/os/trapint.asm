@@ -81,6 +81,7 @@ code    SEGMENT byte use16 public 'CODE'
 
     extrn do_oscall:near
     extrn do_shared:near
+    extrn do_user_shared:near
     extrn do_usercall16:near
     extrn do_usercall32:near
     extrn do_usergate32:near
@@ -433,6 +434,7 @@ igt00   DW OFFSET dummy_gate
 igt01   DW OFFSET dummy_gate
 igt02   DW OFFSET dummy_gate
 igt03   DW OFFSET do_usergate32
+igt04   DW OFFSET do_user_shared
 
 int9A:
 intE8:
@@ -456,7 +458,7 @@ intE8:
     jne intg_retry    
 ;
     mov si,ds:[ebx+6]
-    cmp si,4
+    cmp si,5
     jb intg_call
 ;
     xor si,si
@@ -1870,7 +1872,7 @@ t13_int_user:
     or ax,ax
     jz t13_default
 ;
-    cmp ax,3
+    cmp ax,4
     ja t13_default
 ;
     push ds
