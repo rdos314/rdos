@@ -237,10 +237,6 @@ do_shared  Endp
     public do_user_shared
 
 do_user_shared   Proc near
-    AppPatch
-    jnc do_user_shared_done
-
-do_user_shared_norm:    
     mov edi,ds:[ebx+2]
     cmp edi,shared_gate_entries    
     jb do_user_shared_in_range32
