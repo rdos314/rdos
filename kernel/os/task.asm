@@ -10735,7 +10735,6 @@ test_pr:
     pushad
 ;
     CreateSharedMem
-    CrashGate
 ;
     popad
     pop es

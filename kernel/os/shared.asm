@@ -30,9 +30,12 @@ INCLUDE ..\os.def
 INCLUDE ..\os.inc
 INCLUDE ..\shared.def
 INCLUDE ..\shared.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE gate.def
+INCLUDE share.def
 
 code    SEGMENT byte public 'CODE'
 
@@ -237,14 +240,23 @@ do_shared  Endp
     public do_user_shared
 
 do_user_shared   Proc near
+    push fs
+;
+    GetThread
+    mov fs,ax
+    mov ax,fs:p_shared_dir_sel
+    or ax,ax
+    jz do_user_shared_done
+;
+    mov fs,ax
+;
     mov edi,ds:[ebx+2]
     cmp edi,shared_gate_entries    
-    jb do_user_shared_in_range32
+    jb do_user_shared_in_range
 ;
     mov edi,invalid_shared_nr
 
-do_user_shared_in_range32:    
-    shl edi,SHARED_GATE_SHIFT
+do_user_shared_in_range:    
     mov ax,shared_gate_sel
     mov es,ax
 ;    
@@ -255,8 +267,54 @@ do_user_shared_in_range32:
     add ebx,edx
     mov ax,flat_sel
     mov ds,ax
+;
+    mov ax,fs:[2*edi].share_gate_arr
+    or ax,ax
+    jnz do_user_shared_defined
+;
+    push ds
+    push bx
+    push esi
+;
+    AllocateLdt
+    or bx,7
+    mov fs:[2*edi].share_gate_arr,bx
+;
+    shl edi,SHARED_GATE_SHIFT
+    mov esi,es:[edi].shared_gate_proc_offset
+    mov ds,es:[edi].shared_gate_proc_sel
+    xor cl,cl
+    CreateCallGateSelector32
+    mov ax,bx
+;
+    pop esi
+    pop bx
+    pop ds
+
+do_user_shared_defined:
+    push edx
+    mov edx,cr0
+    pushf
+    push edx
+    and edx,NOT 10000h
+    cli
+    mov cr0,edx
+;
+    xchg ax,ds:[ebx+6]
+;
+    xor eax,eax
+    xchg eax,ds:[ebx+2]
+;    
+    mov al,90h
+    xchg al,ds:[ebx]
+;
+    pop edx
+    mov cr0,edx
+    popf
+    pop edx
 
 do_user_shared_done:
+    pop fs
     ret
 do_user_shared   Endp
 
