@@ -33,6 +33,8 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
+INCLUDE ..\shared.def
+INCLUDE share.def
 
 small_linear_struc      STRUC
 slf_prev    DD ?
@@ -40,20 +42,6 @@ slf_next    DD ?
 sls_prev    DD ?
 sls_next    DD ?
 small_linear_struc      ENDS
-
-mem_seg STRUC
-
-big_avail_mem       DD ?
-small_avail_mem     DD ?
-
-big_used_mem        DD ?
-small_used_mem      DD ?
-
-big_section             section_typ <>
-small_section       section_typ <>
-
-mem_seg ENDS
-
 
     .386p
 
@@ -75,6 +63,7 @@ create_shared_mem_name      DB 'Create Shared Mem',0
 
 create_shared_mem  Proc far
     push ds
+    push es
     pushad
 ;
     CreateSharedDir
@@ -97,18 +86,25 @@ create_shared_mem  Proc far
     mov [eax].sls_next,edx
 ;
     mov ds,bx
+    mov es,bx
     mov edx,shared_size - shared_byte_size
-    mov ds:big_avail_mem,edx
-    InitSection ds:big_section
+    mov ds:share_big_avail_mem,edx
+    InitSection ds:share_big_section
 ;
     mov edx,shared_byte_size - 10h
-    mov ds:small_avail_mem,edx
-    InitSection ds:small_section
+    mov ds:share_small_avail_mem,edx
+    InitSection ds:share_small_section
 ;
-    mov ds:big_used_mem,0
-    mov ds:small_used_mem,0
+    mov ds:share_big_used_mem,0
+    mov ds:share_small_used_mem,0
+;
+    mov di,OFFSET share_gate_arr
+    xor ax,ax
+    mov cx,shared_gate_entries
+    rep stosw
 ;
     popad
+    pop es
     pop ds
     retf32
 create_shared_mem  Endp
@@ -144,7 +140,7 @@ allocate_small_shared   PROC far
     mov es,ax
     pop ax
 ;
-    EnterSection ds:small_section
+    EnterSection ds:share_small_section
     push ds
     push eax
 ;       
@@ -234,15 +230,15 @@ assNoBiggestBlock:
 ;
     mov eax,[edx].sls_next
     sub eax,edx    
-    mov ebx,es:small_avail_mem
+    mov ebx,es:share_small_avail_mem
     sub ebx,eax
-    mov es:small_avail_mem,ebx
+    mov es:share_small_avail_mem,ebx
     sub eax,10h
-    add es:small_used_mem,eax
+    add es:share_small_used_mem,eax
 ;
     pop ecx
     pop ds
-    LeaveSection ds:small_section
+    LeaveSection ds:share_small_section
 ;
     add edx,shared_byte_linear + 10h
     AllocateLdt
