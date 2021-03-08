@@ -25,4 +25,6 @@ void main()
 {
     RdosTestGate("");
     SharedTest();
+    SharedTest();
+    SharedTest();
 }
