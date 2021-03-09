@@ -1056,8 +1056,11 @@ dtEnd:
     mov bx,fs:disc_dev_handle
     CloseUsbDevice
 ;
+    mov al,fs:disc_nr
+    ResetDisc
+;
     mov bx,fs:disc_handle
-    ResetDisc    
+    StopDisc    
 ;    
     mov bx,fs
     mov es,bx
