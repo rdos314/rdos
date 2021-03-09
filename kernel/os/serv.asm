@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; Shared.ASM
-; Shared gate handling module
+; Serv.ASM
+; Server gate handling module
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -35,7 +35,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE gate.def
-INCLUDE share.def
+INCLUDE servdev.def
 
 code    SEGMENT byte public 'CODE'
 
@@ -58,16 +58,16 @@ ENDIF
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           INIT_SHARED
+;           NAME:           INIT_SERVER
 ;
 ;           DESCRIPTION:    Init module
 ;
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public init_shared_gate
+    public init_serv_gate
 
-init_shared_gate     PROC near
+init_serv_gate     PROC near
     push ds
     push es
     pusha
@@ -75,8 +75,8 @@ init_shared_gate     PROC near
     mov ax,cs
     mov ds,ax
 ;
-    mov bx,shared_gate_sel
-    mov edx,shared_gate_linear
+    mov bx,serv_gate_sel
+    mov edx,serv_gate_linear
     mov ecx,serv_gate_entries SHL 4
     call local_create_data_sel16
     mov es,bx
@@ -84,21 +84,21 @@ init_shared_gate     PROC near
     xor di,di
     mov cx,serv_gate_entries
 
-init_shared_gate_loop:
+init_serv_gate_loop:
     mov es:[di].serv_gate_proc_offset,OFFSET illegal_gate
     mov es:[di].serv_gate_proc_sel,cs
     mov es:[di].serv_gate_name_offset,OFFSET illegal_gate_name
     mov es:[di].serv_gate_name_sel,cs
     add di,16
-    loop init_shared_gate_loop
+    loop init_serv_gate_loop
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET register_shared_gate
-    mov edi,OFFSET register_shared_gate_name
-    mov ax,register_shared_gate_nr
+    mov esi,OFFSET register_serv_gate
+    mov edi,OFFSET register_serv_gate_name
+    mov ax,register_serv_gate_nr
     xor cl,cl
     RegisterOsGate
 ;
@@ -106,14 +106,14 @@ init_shared_gate_loop:
     pop es
     pop ds
     ret
-init_shared_gate     ENDP
+init_serv_gate     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           REGISTER_GATE
 ;
-;           DESCRIPTION:    Register a shared gate
+;           DESCRIPTION:    Register a server gate
 ;
 ;           PARAMETERS:     AX          Gate number
 ;                           DS:ESI      Gate call address
@@ -128,9 +128,9 @@ illegal_gate    PROC far
     retf32
 illegal_gate    ENDP
 
-register_shared_gate_name      DB 'Register Shared Gate',0
+register_serv_gate_name      DB 'Register Server Gate',0
 
-register_shared_gate   PROC far
+register_serv_gate   PROC far
     push ds
     push fs
     push gs
@@ -138,7 +138,7 @@ register_shared_gate   PROC far
 ;
     push ds
     mov bx,ax
-    mov ax,shared_gate_sel
+    mov ax,serv_gate_sel
     mov ds,ax
     pop ax
     shl bx,4
@@ -152,23 +152,23 @@ register_shared_gate   PROC far
     pop fs
     pop ds
     retf32
-register_shared_gate   ENDP
+register_serv_gate   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           do_shared
+;           NAME:           do_serv
 ;
-;           DESCRIPTION:    do shared
+;           DESCRIPTION:    do serv
 ;
 ;           PARAMETERS:     DS:EBX      Instruction
 ;                           SS:EBP      Stack frame
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public do_shared
+    public do_serv
 
-do_shared   Proc near
+do_serv   Proc near
     push dword ptr [ebp+20]
     mov [ebp+20],ds    
     mov eax,ebx
@@ -178,13 +178,13 @@ do_shared   Proc near
 ;   
     mov edi,ds:[ebx+3]
     cmp edi,serv_gate_entries    
-    jb do_shared_in_range
+    jb do_serv_in_range
 ;
     mov edi,invalid_serv_nr
 
-do_shared_in_range:    
+do_serv_in_range:    
     shl edi,SERV_GATE_SHIFT
-    mov ax,shared_gate_sel
+    mov ax,serv_gate_sel
     mov es,ax
 ;
     mov eax,es:[edi].serv_gate_proc_offset
@@ -222,42 +222,42 @@ do_shared_in_range:
     popf
     pop edx
     ret
-do_shared  Endp
+do_serv  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           do_user_shared
+;           NAME:           do_user_serv
 ;
-;           DESCRIPTION:    do user mode shared
+;           DESCRIPTION:    do user mode serv
 ;
 ;           PARAMETERS:     DS:EBX      Instruction
 ;                           SS:EBP      Stack frame
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public do_user_shared
+    public do_user_serv
 
-do_user_shared   Proc near
+do_user_serv   Proc near
     push fs
 ;
     GetThread
     mov fs,ax
-    mov ax,fs:p_shared_dir_sel
+    mov ax,fs:p_serv_sel
     or ax,ax
-    jz do_user_shared_done
+    jz do_user_serv_done
 ;
     mov fs,ax
 ;
     mov edi,ds:[ebx+2]
     cmp edi,serv_gate_entries    
-    jb do_user_shared_in_range
+    jb do_user_serv_in_range
 ;
     mov edi,invalid_serv_nr
 
-do_user_shared_in_range:    
-    mov ax,shared_gate_sel
+do_user_serv_in_range:    
+    mov ax,serv_gate_sel
     mov es,ax
 ;    
     push ebx
@@ -268,9 +268,9 @@ do_user_shared_in_range:
     mov ax,flat_sel
     mov ds,ax
 ;
-    mov ax,fs:[2*edi].share_gate_arr
+    mov ax,fs:[2*edi].serv_gate_arr
     or ax,ax
-    jnz do_user_shared_defined
+    jnz do_user_serv_defined
 ;
     push ds
     push bx
@@ -278,7 +278,7 @@ do_user_shared_in_range:
 ;
     AllocateLdt
     or bx,7
-    mov fs:[2*edi].share_gate_arr,bx
+    mov fs:[2*edi].serv_gate_arr,bx
 ;
     shl edi,SERV_GATE_SHIFT
     mov esi,es:[edi].serv_gate_proc_offset
@@ -291,7 +291,7 @@ do_user_shared_in_range:
     pop bx
     pop ds
 
-do_user_shared_defined:
+do_user_serv_defined:
     push edx
     mov edx,cr0
     pushf
@@ -313,10 +313,10 @@ do_user_shared_defined:
     popf
     pop edx
 
-do_user_shared_done:
+do_user_serv_done:
     pop fs
     ret
-do_user_shared   Endp
+do_user_serv   Endp
 
 code    ENDS
 

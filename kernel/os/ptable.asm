@@ -87,9 +87,9 @@ code    SEGMENT byte public use16 'CODE'
     public set_sys_page_dir_proc
     public create_page_dir_proc
     public create_sys_page_dir_proc
-    public get_shared_page_dir_proc
-    public set_shared_page_dir_proc
-    public create_shared_page_dir_proc
+    public get_serv_page_dir_proc
+    public set_serv_page_dir_proc
+    public create_serv_page_dir_proc
     public has_page_entry_proc
     public reserve_page_entries_proc
     public allocate_page_entries_proc
@@ -133,10 +133,10 @@ get_sys_page_dir_proc           DW OFFSET local_get_sys_page_dir32
 set_sys_page_dir_proc           DW OFFSET local_set_sys_page_dir32
 create_page_dir_proc            DW OFFSET local_create_page_dir32
 create_sys_page_dir_proc        DW OFFSET local_create_sys_page_dir32
-create_shared_proc              DW OFFSET local_create_shared32
-get_shared_page_dir_proc        DW OFFSET local_get_shared_page_dir32
-set_shared_page_dir_proc        DW OFFSET local_set_shared_page_dir32
-create_shared_page_dir_proc     DW OFFSET local_create_shared_page_dir32
+create_serv_proc                DW OFFSET local_create_serv32
+get_serv_page_dir_proc          DW OFFSET local_get_serv_page_dir32
+set_serv_page_dir_proc          DW OFFSET local_set_serv_page_dir32
+create_serv_page_dir_proc       DW OFFSET local_create_serv_page_dir32
 reserve_page_entries_proc       DW OFFSET local_reserve_page_entries32
 allocate_page_entries_proc      DW OFFSET local_allocate_page_entries32
 allocate_sys_page_entries_proc  DW OFFSET local_allocate_sys_page_entries32
@@ -180,10 +180,10 @@ get_sys_page_dir_p64            DW OFFSET local_get_sys_page_dir64
 set_sys_page_dir_p64            DW OFFSET local_set_sys_page_dir64
 create_page_dir_p64             DW OFFSET local_create_page_dir64
 create_sys_page_dir_p64         DW OFFSET local_create_sys_page_dir64
-create_shared_p64               DW OFFSET local_create_shared64
-get_shared_page_dir_p64         DW OFFSET local_get_shared_page_dir64
-set_shared_page_dir_p64         DW OFFSET local_set_shared_page_dir64
-create_shared_page_dir_p64      DW OFFSET local_create_shared_page_dir64
+create_serv_p64                 DW OFFSET local_create_serv64
+get_serv_page_dir_p64           DW OFFSET local_get_serv_page_dir64
+set_serv_page_dir_p64           DW OFFSET local_set_serv_page_dir64
+create_serv_page_dir_p64        DW OFFSET local_create_serv_page_dir64
 reserve_page_entries_p64        DW OFFSET local_reserve_page_entries64
 allocate_page_entries_p64       DW OFFSET local_allocate_page_entries64
 allocate_sys_page_entries_p64   DW OFFSET local_allocate_sys_page_entries64
@@ -229,10 +229,10 @@ init_page_table     PROC near
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET create_shared_dir
-    mov edi,OFFSET create_shared_dir_name
+    mov esi,OFFSET create_serv_dir
+    mov edi,OFFSET create_serv_dir_name
     xor cl,cl
-    mov ax,create_shared_dir_nr
+    mov ax,create_serv_dir_nr
     RegisterOsGate
 ;
     mov esi,OFFSET notify_init_process
@@ -833,15 +833,15 @@ local_delete_process32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateShared32
+;           NAME:           CreateServ32
 ;
-;           DESCRIPTION:    Create 32-bit shared sel
+;           DESCRIPTION:    Create 32-bit serv sel
 ;
 ;           RETURNS:        BX     Selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_create_shared32       PROC near
+local_create_serv32       PROC near
     push es
     push eax
     push ecx
@@ -860,7 +860,7 @@ local_create_shared32       PROC near
     pop eax
     pop es
     ret
-local_create_shared32       Endp
+local_create_serv32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1089,9 +1089,9 @@ local_get_sys_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           local_get_shared_page_dir32
+;           NAME:           local_get_serv_page_dir32
 ;
-;           DESCRIPTION:    Get shared physical dir for linear address
+;           DESCRIPTION:    Get serv physical dir for linear address
 ;
 ;           PARAMETERS:     EDX         linear address
 ;                           ES          thread
@@ -1100,11 +1100,11 @@ local_get_sys_page_dir32    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_get_shared_page_dir32       Proc near
+local_get_serv_page_dir32       Proc near
     push ds
     push edx
 ;    
-    mov ds,es:p_shared_dir_sel
+    mov ds,es:p_serv_sel
     shr edx,20
     and dl,0FCh
     mov eax,[edx]
@@ -1113,7 +1113,7 @@ local_get_shared_page_dir32       Proc near
     pop edx
     pop ds
     ret
-local_get_shared_page_dir32    Endp    
+local_get_serv_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1176,9 +1176,9 @@ local_set_sys_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           local_set_shared_page_dir32
+;           NAME:           local_set_serv_page_dir32
 ;
-;           DESCRIPTION:    Set shared physical dir for linear address
+;           DESCRIPTION:    Set serv physical dir for linear address
 ;
 ;           PARAMETERS:     EDX         linear address
 ;                           ES          thread
@@ -1186,11 +1186,11 @@ local_set_sys_page_dir32    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_set_shared_page_dir32       Proc near
+local_set_serv_page_dir32       Proc near
     push ds
     push edx
 ;    
-    mov ds,es:p_shared_dir_sel
+    mov ds,es:p_serv_sel
     shr edx,20
     and dl,0FCh
     mov [edx],eax
@@ -1198,7 +1198,7 @@ local_set_shared_page_dir32       Proc near
     pop edx
     pop ds
     ret
-local_set_shared_page_dir32    Endp    
+local_set_serv_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1297,23 +1297,23 @@ local_create_sys_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           local_create_shared_page_dir32
+;           NAME:           local_create_serv_page_dir32
 ;
-;           DESCRIPTION:    Create shared page directory entry
+;           DESCRIPTION:    Create serv page directory entry
 ;
 ;           PARAMETERS:     EDX         linear address
 ;                           ES          thread
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_create_shared_page_dir32       Proc near
+local_create_serv_page_dir32       Proc near
     push ds
     push eax
     push ebx
     push ecx
     push edx
 ;
-    mov ds,es:p_shared_dir_sel
+    mov ds,es:p_serv_sel
     shr edx,20
     and dx,0FFCh
     call local_allocate_physical
@@ -1353,7 +1353,7 @@ cshpdInit:
     pop eax
     pop ds
     ret
-local_create_shared_page_dir32    Endp    
+local_create_serv_page_dir32    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3629,15 +3629,15 @@ local_free_process64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateShared64
+;           NAME:           CreateServ64
 ;
-;           DESCRIPTION:    Create 64-bit shared sel
+;           DESCRIPTION:    Create 64-bit serv sel
 ;
 ;           RETURNS:        BX     Selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_create_shared64       PROC near
+local_create_serv64       PROC near
     push es
     push eax
     push ecx
@@ -3656,7 +3656,7 @@ local_create_shared64       PROC near
     pop eax
     pop es
     ret
-local_create_shared64       Endp
+local_create_serv64       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3969,9 +3969,9 @@ local_get_sys_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           local_get_shared_page_dir64
+;           NAME:           local_get_serv_page_dir64
 ;
-;           DESCRIPTION:    Get shared physical dir for linear address
+;           DESCRIPTION:    Get serv physical dir for linear address
 ;
 ;           PARAMETERS:     EDX         linear address
 ;                           ES          thread
@@ -3980,11 +3980,11 @@ local_get_sys_page_dir64    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_get_shared_page_dir64       Proc near
+local_get_serv_page_dir64       Proc near
     push ds
     push edx
 ;    
-    mov ds,es:p_shared_dir_sel
+    mov ds,es:p_serv_sel
     shr edx,18
     and dl,0F8h
     mov eax,[edx]
@@ -3993,7 +3993,7 @@ local_get_shared_page_dir64       Proc near
     pop edx
     pop ds
     ret
-local_get_shared_page_dir64    Endp    
+local_get_serv_page_dir64    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4058,9 +4058,9 @@ local_set_sys_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           local_set_shared_page_dir64
+;           NAME:           local_set_serv_page_dir64
 ;
-;           DESCRIPTION:    Set shared physical dir for linear address
+;           DESCRIPTION:    Set serv physical dir for linear address
 ;
 ;           PARAMETERS:     EDX         linear address
 ;                           ES          thread
@@ -4068,11 +4068,11 @@ local_set_sys_page_dir64    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_set_shared_page_dir64       Proc near
+local_set_serv_page_dir64       Proc near
     push ds
     push edx
 ;    
-    mov ds,es:p_shared_dir_sel
+    mov ds,es:p_serv_sel
     shr edx,18
     and dl,0F8h
     mov [edx],eax
@@ -4081,7 +4081,7 @@ local_set_shared_page_dir64       Proc near
     pop edx
     pop ds
     ret
-local_set_shared_page_dir64    Endp    
+local_set_serv_page_dir64    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4182,23 +4182,23 @@ local_create_sys_page_dir64    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           local_create_shared_page_dir64
+;           NAME:           local_create_serv_page_dir64
 ;
-;           DESCRIPTION:    Create shared page directory entry
+;           DESCRIPTION:    Create serv page directory entry
 ;
 ;           PARAMETERS:     EDX         linear address
 ;                           ES          thread
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-local_create_shared_page_dir64       Proc near
+local_create_serv_page_dir64       Proc near
     push ds
     push eax
     push ebx
     push ecx
     push edx
 ;
-    mov ds,es:p_shared_dir_sel
+    mov ds,es:p_serv_sel
     shr edx,18
     and dx,3FF8h
     call local_allocate_physical
@@ -4239,7 +4239,7 @@ cshpdInit64:
     pop eax
     pop ds
     ret
-local_create_shared_page_dir64    Endp    
+local_create_serv_page_dir64    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6367,20 +6367,20 @@ notify_create_process       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateSharedDir
+;           NAME:           CreateServDir
 ;
-;           DESCRIPTION:    Create shared dir
+;           DESCRIPTION:    Create serv dir
 ;
-;           PARAMETERS:     BX     Shared sel
+;           PARAMETERS:     BX     Serv sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_shared_dir_name  DB 'Create Shared Dir',0
+create_serv_dir_name  DB 'Create Server Dir',0
 
-create_shared_dir       Proc far
-    call cs:create_shared_proc
+create_serv_dir       Proc far
+    call cs:create_serv_proc
     retf32
-create_shared_dir       Endp
+create_serv_dir       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

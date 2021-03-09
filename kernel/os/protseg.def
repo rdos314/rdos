@@ -60,11 +60,11 @@ boot_efi_linear         EQU 040000000h
 long_buf_linear         EQU 040000000h
 long_buf_size           EQU 07F000000h
 
-shared_linear           EQU 080000000h
-shared_size             EQU 038000000h
+serv_linear             EQU 080000000h
+serv_size               EQU 038000000h
 
-shared_byte_linear      EQU 0B8000000h
-shared_byte_size        EQU 004000000h
+serv_byte_linear        EQU 0B8000000h
+serv_byte_size          EQU 004000000h
 
 section_linear          EQU 0BC000000h
 
@@ -107,7 +107,7 @@ gdt_linear              EQU 0FE024FB8h      ; this address must be aligned to co
 system_linear           EQU 0FE035000h
 system_linear_size      EQU 000F7B000h
 
-shared_gate_linear      EQU 0FEFB0000h
+serv_gate_linear        EQU 0FEFB0000h
 osgate_linear           EQU 0FEFC0000h
 usergate_linear         EQU 0FEFD0000h
 

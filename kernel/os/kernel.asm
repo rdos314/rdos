@@ -71,7 +71,7 @@ ENDIF
     extrn init_handle:near
     extrn init_mem_sels:near
     extrn init_osgate:near
-    extrn init_shared_gate:near
+    extrn init_serv_gate:near
     extrn init_usergate:near
     extrn init_int:near
     extrn init_trap_vectors:near
@@ -890,7 +890,7 @@ prot_init:
     call create_mem
     call create_gdt
     call init_osgate
-    call init_shared_gate
+    call init_serv_gate
     call init_os_protseg
     call init_usergate
     call init_user_protseg
@@ -934,17 +934,17 @@ prot_init:
     mov bx,flat_data_sel
     CreateDataSelector32
 ;
-    mov edx,shared_linear
-    mov ecx,shared_size
-    mov bx,shared_flat_sel
+    mov edx,serv_linear
+    mov ecx,serv_size
+    mov bx,serv_flat_sel
     CreateDataSelector32
 ;
     xor edx,edx
-    mov ecx,flat_size
-    mov bx,shared_code_sel
+    mov ecx,serv_linear
+    mov bx,serv_code_sel
     CreateCodeSelector32
 ;
-    mov bx,shared_data_sel
+    mov bx,serv_data_sel
     CreateDataSelector32
 ;
     StartTasking

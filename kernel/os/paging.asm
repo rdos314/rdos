@@ -54,9 +54,9 @@ INCLUDE exec.def
     extrn cow_dir_proc:word
     extrn cow_page_proc:word
 
-    extrn get_shared_page_dir_proc:word
-    extrn set_shared_page_dir_proc:word
-    extrn create_shared_page_dir_proc:word
+    extrn get_serv_page_dir_proc:word
+    extrn set_serv_page_dir_proc:word
+    extrn create_serv_page_dir_proc:word
     
 code    SEGMENT byte public 'CODE'
 
@@ -376,29 +376,29 @@ ptUser:
     sti
     GetThread
     mov ds,ax
-    mov bx,ds:p_shared_dir_sel
+    mov bx,ds:p_serv_sel
     or bx,bx
-    jz ptNotShared
+    jz ptNotServ
 ;
     mov es,ax
-    cmp edx,shared_linear
-    jb ptNotShared
+    cmp edx,serv_linear
+    jb ptNotServ
 ;
     call cs:get_page_dir_proc
     test al,1
-    jnz ptSharedDirOk
+    jnz ptServDirOk
 ;
-    call cs:get_shared_page_dir_proc
+    call cs:get_serv_page_dir_proc
     test al,1
-    jnz ptHasShared
+    jnz ptHasServ
 ;
-    call cs:create_shared_page_dir_proc
-    call cs:get_shared_page_dir_proc
+    call cs:create_serv_page_dir_proc
+    call cs:get_serv_page_dir_proc
 
-ptHasShared:
+ptHasServ:
     call cs:set_page_dir_proc
 
-ptSharedDirOk:
+ptServDirOk:
     call cs:get_page_entry_proc
     cmp eax,4
     je ptFault
@@ -408,7 +408,7 @@ ptSharedDirOk:
     call cs:set_page_entry_proc
     jmp ptRetry
 
-ptNotShared:
+ptNotServ:
     mov ds,ds:p_prog_sel
     cmp ax,ds:pr_cow_thread
     jne ptSection

@@ -34,7 +34,7 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE ..\serv.def
-INCLUDE share.def
+INCLUDE servdev.def
 
 small_linear_struc      STRUC
 slf_prev    DD ?
@@ -53,25 +53,25 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CreateSharedMem
+;           NAME:           CreateServMem
 ;
-;           DESCRIPTION:    Create shared mem
+;           DESCRIPTION:    Create serv mem
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_shared_mem_name      DB 'Create Shared Mem',0
+create_serv_mem_name      DB 'Create Server Mem',0
 
-create_shared_mem  Proc far
+create_serv_mem  Proc far
     push ds
     push es
     pushad
 ;
-    CreateSharedDir
+    CreateServDir
     GetThread
     mov ds,ax
-    mov ds:p_shared_dir_sel,bx
+    mov ds:p_serv_sel,bx
 ;
-    mov ax,shared_byte_sel
+    mov ax,serv_byte_sel
     mov ds,ax
     xor eax,eax
     mov edx,10h
@@ -79,7 +79,7 @@ create_shared_mem  Proc far
     mov [eax].sls_next,edx
     mov [eax].sls_prev,edx
     mov eax,edx
-    mov edx,shared_byte_size - 10h
+    mov edx,serv_byte_size - 10h
     mov [eax].slf_prev,0
     mov [eax].slf_next,0
     mov [eax].sls_prev,0
@@ -87,18 +87,18 @@ create_shared_mem  Proc far
 ;
     mov ds,bx
     mov es,bx
-    mov edx,shared_size - shared_byte_size
-    mov ds:share_big_avail_mem,edx
-    InitSection ds:share_big_section
+    mov edx,serv_size - serv_byte_size
+    mov ds:serv_big_avail_mem,edx
+    InitSection ds:serv_big_section
 ;
-    mov edx,shared_byte_size - 10h
-    mov ds:share_small_avail_mem,edx
-    InitSection ds:share_small_section
+    mov edx,serv_byte_size - 10h
+    mov ds:serv_small_avail_mem,edx
+    InitSection ds:serv_small_section
 ;
-    mov ds:share_big_used_mem,0
-    mov ds:share_small_used_mem,0
+    mov ds:serv_big_used_mem,0
+    mov ds:serv_small_used_mem,0
 ;
-    mov di,OFFSET share_gate_arr
+    mov di,OFFSET serv_gate_arr
     xor ax,ax
     mov cx,serv_gate_entries
     rep stosw
@@ -107,15 +107,15 @@ create_shared_mem  Proc far
     pop es
     pop ds
     retf32
-create_shared_mem  Endp
+create_serv_mem  Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           AllocateSmallShared
+;           NAME:           AllocateSmallServ
 ;
-;           DESCRIPTION:    Allocate byte-aligned (dword) shared memory
+;           DESCRIPTION:    Allocate byte-aligned (dword) server memory
 ;
 ;           PARAMETERS:     EAX         # of bytes
 ;
@@ -123,9 +123,9 @@ create_shared_mem  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-allocate_small_shared_name      DB 'Allocate Small Shared',0
+allocate_small_serv_name      DB 'Allocate Small Server',0
 
-allocate_small_shared   PROC far
+allocate_small_serv   PROC far
     push ds
     push eax
     push ebx
@@ -135,12 +135,12 @@ allocate_small_shared   PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ax,ds:p_shared_dir_sel
+    mov ax,ds:p_serv_sel
     mov ds,ax
     mov es,ax
     pop ax
 ;
-    EnterSection ds:share_small_section
+    EnterSection ds:serv_small_section
     push ds
     push eax
 ;       
@@ -150,7 +150,7 @@ allocate_small_shared   PROC far
 ;
     add eax,10h
 ;
-    mov dx,shared_byte_sel
+    mov dx,serv_byte_sel
     mov ds,dx
     xor edx,edx
     xor ebx,ebx
@@ -230,17 +230,17 @@ assNoBiggestBlock:
 ;
     mov eax,[edx].sls_next
     sub eax,edx    
-    mov ebx,es:share_small_avail_mem
+    mov ebx,es:serv_small_avail_mem
     sub ebx,eax
-    mov es:share_small_avail_mem,ebx
+    mov es:serv_small_avail_mem,ebx
     sub eax,10h
-    add es:share_small_used_mem,eax
+    add es:serv_small_used_mem,eax
 ;
     pop ecx
     pop ds
-    LeaveSection ds:share_small_section
+    LeaveSection ds:serv_small_section
 ;
-    add edx,shared_byte_linear + 10h
+    add edx,serv_byte_linear + 10h
     AllocateLdt
     or bx,4
     CreateDataSelector32
@@ -252,7 +252,7 @@ assNoBiggestBlock:
     pop eax
     pop ds
     retf32
-allocate_small_shared   ENDP
+allocate_small_serv   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -272,25 +272,25 @@ init_app_mem    PROC near
     push es
     pushad
 ;
-    mov bx,shared_byte_sel
-    mov edx,shared_byte_linear
-    mov ecx,shared_byte_size
+    mov bx,serv_byte_sel
+    mov edx,serv_byte_linear
+    mov ecx,serv_byte_size
     CreateDataSelector32
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
-    mov esi,OFFSET create_shared_mem
-    mov edi,OFFSET create_shared_mem_name
+    mov esi,OFFSET create_serv_mem
+    mov edi,OFFSET create_serv_mem_name
     xor cl,cl
-    mov ax,create_shared_mem_nr
+    mov ax,create_serv_mem_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET allocate_small_shared
-    mov edi,OFFSET allocate_small_shared_name
+    mov esi,OFFSET allocate_small_serv
+    mov edi,OFFSET allocate_small_serv_name
     xor cl,cl
-    mov ax,allocate_small_shared_nr
+    mov ax,allocate_small_serv_nr
     RegisterOsGate
 ;
     popad

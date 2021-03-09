@@ -188,8 +188,8 @@ IsValidOsGate   MACRO
 ;       AX          GATE NUMBER
 ;       DS:ESI      GATE CALL ADDRESS
 ;       ES:EDI      GATE NAME ADDRESS
-RegisterSharedGate  MACRO
-    OsGate register_shared_gate_nr
+RegisterServGate  MACRO
+    OsGate register_serv_gate_nr
                     ENDM
 
 ;       AX          GATE NUMBER
@@ -546,9 +546,9 @@ NotifyCreateLongProcess MACRO
     OsGate notify_create_long_process_nr
                     ENDM
 
-; IN  BX     Shared sel
-CreateSharedDir MACRO
-    OsGate create_shared_dir_nr
+; IN  BX     Serv sel
+CreateServDir MACRO
+    OsGate create_serv_dir_nr
                     ENDM
 
 ; IN  EAX    CR3
@@ -953,14 +953,14 @@ AllocateFixedVMLinear   MACRO
     OsGate allocate_fixed_vm_linear_nr
                     ENDM
 
-CreateSharedMem    MACRO
-    OsGate create_shared_mem_nr
+CreateServMem    MACRO
+    OsGate create_serv_mem_nr
                     ENDM
 
 ; IN  EAX          Bytes
 ; OUT ES           LDT selector
-AllocateSmallShared    MACRO
-    OsGate allocate_small_shared_nr
+AllocateSmallServ    MACRO
+    OsGate allocate_small_serv_nr
                     ENDM
 
 ;;;;;;;;;;;;; MEMORY BLOCK MANAGEMENT ;;;;;;;;;;

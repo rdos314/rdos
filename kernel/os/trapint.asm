@@ -80,8 +80,8 @@ code    SEGMENT byte use16 public 'CODE'
     extrn virt_exception:near
 
     extrn do_oscall:near
-    extrn do_shared:near
-    extrn do_user_shared:near
+    extrn do_serv:near
+    extrn do_user_serv:near
     extrn do_usercall16:near
     extrn do_usercall32:near
     extrn do_usergate32:near
@@ -365,7 +365,7 @@ ict00   DW OFFSET dummy_gate
 ict01   DW OFFSET do_usercall16
 ict02   DW OFFSET do_oscall
 ict03   DW OFFSET do_usercall32
-ict04   DW OFFSET do_shared
+ict04   DW OFFSET do_serv
 
 int66:
 int67:
@@ -434,7 +434,7 @@ igt00   DW OFFSET dummy_gate
 igt01   DW OFFSET dummy_gate
 igt02   DW OFFSET dummy_gate
 igt03   DW OFFSET do_usergate32
-igt04   DW OFFSET do_user_shared
+igt04   DW OFFSET do_user_serv
 
 int9A:
 intE8:

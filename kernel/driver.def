@@ -81,7 +81,7 @@ phys_detect_sel        EQU 0C8h
 dosb800                         EQU 0D0h
 bios_data                       EQU 0D8h
 ;
-shared_flat_sel         EQU 0E0h
+serv_flat_sel           EQU 0E0h
 ;
 swap_data_sel           EQU 0E8h
 ;
@@ -114,7 +114,7 @@ kernel_tss                      EQU 178h
 virt_tss                        EQU 180h
 kernel_stack            EQU 188h
 ;
-shared_byte_sel     EQU 190h
+serv_byte_sel       EQU 190h
 ;
 hook_sel            EQU 198h
 ;
@@ -162,7 +162,7 @@ __C000                          EQU 28Bh
 
 chandle_data_sel    EQU 290h
 
-shared_gate_sel     EQU 298h
+serv_gate_sel       EQU 298h
 
 handle_data_sel     EQU 2A0h
 
@@ -174,8 +174,8 @@ process_page_sel        EQU 2C8h
 sched_code_sel      EQU 2D0h
 sched_data_sel      EQU 2D8h
 
-shared_code_sel     EQU 2E3h
-shared_data_sel     EQU 2EBh
+serv_code_sel       EQU 2E3h
+serv_data_sel       EQU 2EBh
 
 ;
 ; GDT selectors device-driver selectors
