@@ -26,7 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-SharedGate16    MACRO gate_nr
+ServGate16    MACRO gate_nr
     db 67h
     db 66h
     db 9Ah
@@ -34,7 +34,7 @@ SharedGate16    MACRO gate_nr
     dw 4
             ENDM
 
-SharedGate32    MACRO gate_nr
+ServGate32    MACRO gate_nr
     db 3Eh
     db 67h
     db 9Ah
@@ -42,17 +42,17 @@ SharedGate32    MACRO gate_nr
     dw 2
             ENDM
 
-SharedGate  MACRO gate_nr
+ServGate  MACRO gate_nr
 IF (size $) EQ 0FF02h
-    SharedGate16 gate_nr
+    ServGate16 gate_nr
 ELSE
-    SharedGate32 gate_nr
+    ServGate32 gate_nr
 ENDIF
             ENDM
 
 
 ;;;;;;;;;; REGISTRATION / HOOKS ;;;;;;;;;;;
 
-TestShared  MACRO
-    SharedGate test_shared_nr
+TestServ  MACRO
+    ServGate test_serv_nr
                     ENDM

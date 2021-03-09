@@ -2,21 +2,21 @@
 #include <file.h>
 #include <string.h>
 
-#define MAX_SHARE_SIZE   0x10000
+#define MAX_SERV_SIZE   0x10000
 
 int main()
 {
-    char Buffer[MAX_SHARE_SIZE];
+    char Buffer[MAX_SERV_SIZE];
     char GateName[256];
     int GateId;
     char Macro[256];
     int Size;
     char *ptr;
     char *next;
-    TFile InFile("shared.def");
+    TFile InFile("serv.def");
     TFile OutFile("rds.h", 0);
 
-    Size = InFile.Read(Buffer, MAX_SHARE_SIZE);
+    Size = InFile.Read(Buffer, MAX_SERV_SIZE);
     Buffer[Size] = 0;
 
     ptr = Buffer;
@@ -40,7 +40,7 @@ int main()
         {
             if (sscanf(ptr, "%s = %d", GateName, &GateId) == 2)
             {
-                if (strcmp(GateName, "shared_gate_entries") != 0)
+                if (strcmp(GateName, "serv_gate_entries") != 0)
                 {
                     Size = strlen(GateName);
 
@@ -53,7 +53,7 @@ int main()
                     if (GateName[Size - 3] == '_')
                         GateName[Size - 3] = 0;
 
-                    sprintf(Macro, "#define share_gate_%s 0x%08hX\r\n",
+                    sprintf(Macro, "#define serv_gate_%s 0x%08hX\r\n",
                             GateName,
                             GateId);
 
@@ -69,7 +69,7 @@ int main()
     }
 
     InFile.SetPos(0);
-    Size = InFile.Read(Buffer, MAX_SHARE_SIZE);
+    Size = InFile.Read(Buffer, MAX_SERV_SIZE);
     Buffer[Size] = 0;
 
     ptr = Buffer;
@@ -93,7 +93,7 @@ int main()
         {
             if (sscanf(ptr, "%s = %d", GateName, &GateId) == 2)
             {
-                if (strcmp(GateName, "shared_gate_entries") != 0)
+                if (strcmp(GateName, "serv_gate_entries") != 0)
                 {
                     Size = strlen(GateName);
 
@@ -106,7 +106,7 @@ int main()
                     if (GateName[Size - 3] == '_')
                         GateName[Size - 3] = 0;
 
-                    sprintf(Macro, "#define ShareGate_%s 0x55 0x67 0x9a %d %d %d %d 4 0 0x5d\r\n",
+                    sprintf(Macro, "#define ServGate_%s 0x55 0x67 0x9a %d %d %d %d 4 0 0x5d\r\n",
                             GateName,
                             GateId & 0xFF,
                             (GateId >> 8) & 0xFF,

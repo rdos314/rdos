@@ -28,8 +28,8 @@
 INCLUDE protseg.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
-INCLUDE ..\shared.def
-INCLUDE ..\shared.inc
+INCLUDE ..\serv.def
+INCLUDE ..\serv.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
@@ -77,12 +77,12 @@ init_shared_gate     PROC near
 ;
     mov bx,shared_gate_sel
     mov edx,shared_gate_linear
-    mov ecx,shared_gate_entries SHL 4
+    mov ecx,serv_gate_entries SHL 4
     call local_create_data_sel16
     mov es,bx
 ;    
     xor di,di
-    mov cx,shared_gate_entries
+    mov cx,serv_gate_entries
 
 init_shared_gate_loop:
     mov es:[di].shared_gate_proc_offset,OFFSET illegal_gate
@@ -177,10 +177,10 @@ do_shared   Proc near
     pop dword ptr [ebp+12]
 ;   
     mov edi,ds:[ebx+3]
-    cmp edi,shared_gate_entries    
+    cmp edi,serv_gate_entries    
     jb do_shared_in_range
 ;
-    mov edi,invalid_shared_nr
+    mov edi,invalid_serv_nr
 
 do_shared_in_range:    
     shl edi,SHARED_GATE_SHIFT
@@ -251,10 +251,10 @@ do_user_shared   Proc near
     mov fs,ax
 ;
     mov edi,ds:[ebx+2]
-    cmp edi,shared_gate_entries    
+    cmp edi,serv_gate_entries    
     jb do_user_shared_in_range
 ;
-    mov edi,invalid_shared_nr
+    mov edi,invalid_serv_nr
 
 do_user_shared_in_range:    
     mov ax,shared_gate_sel

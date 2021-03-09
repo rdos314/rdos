@@ -1,0 +1,4 @@
+invalid_serv_nr           = 0
+test_serv_nr              = 1
+
+serv_gate_entries         = 20

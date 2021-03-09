@@ -36,7 +36,7 @@ share_small_used_mem      DD ?
 share_big_section         section_typ <>
 share_small_section       section_typ <>
 
-share_gate_arr            DW shared_gate_entries DUP (?)
+share_gate_arr            DW serv_gate_entries DUP (?)
 
 share_dir_arr             DB ?
 

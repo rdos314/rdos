@@ -33,7 +33,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
-INCLUDE ..\shared.def
+INCLUDE ..\serv.def
 INCLUDE share.def
 
 small_linear_struc      STRUC
@@ -100,7 +100,7 @@ create_shared_mem  Proc far
 ;
     mov di,OFFSET share_gate_arr
     xor ax,ax
-    mov cx,shared_gate_entries
+    mov cx,serv_gate_entries
     rep stosw
 ;
     popad

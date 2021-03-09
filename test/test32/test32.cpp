@@ -1,5 +1,5 @@
 #include <rdos.h>
-#include <shared.h>
+#include <serv.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +24,7 @@
 void main()
 {
     RdosTestGate("");
-    SharedTest();
-    SharedTest();
-    SharedTest();
+    ServTest();
+    ServTest();
+    ServTest();
 }

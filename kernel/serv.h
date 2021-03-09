@@ -1,6 +1,6 @@
 
-#ifndef _RDOS_SHARED_H
-#define _RDOS_SHARED_H
+#ifndef _RDOS_SERV_H
+#define _RDOS_SERV_H
 
 #pragma pack( __push, 1 )
 
@@ -18,14 +18,14 @@
 extern "C" {
 #endif
 
-int RDOSAPI SharedTest();
+int RDOSAPI ServTest();
 
 #ifdef __cplusplus
 }
 #endif
 
 #ifdef __WATCOMC__
-#include "owshared.h"
+#include "owserv.h"
 #endif
 
 #endif
