@@ -805,34 +805,9 @@ usSendDo:
 ;
     mov ecx,10
     xor edi,edi
-;    mov bx,ds:cd_out_pipe
-;    WriteUsbData
-;
-;    StartUsbTransaction        
-;
-    mov ecx,10
-
-usWaitLoop:
-    push ecx
-    GetSystemTime
-    add eax,1193 * 250
-    adc edx,0
-;    mov bx,ds:cd_out_wait
-    WaitWithTimeout
-;
-;    mov bx,ds:cd_out_pipe
-;    IsUsbTransactionDone
-    pop ecx
-    jnc usProgDone
-;
-    loop usWaitLoop
-;
-    jmp usProgFail
-
-usProgDone:
-;    mov bx,ds:cd_out_pipe
-;    WasUsbTransactionOk
-    jc usProgFail
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    PostUsbRawPipe
 
 usSignal:
     mov ds:prog_state,-1
