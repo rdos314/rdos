@@ -85,10 +85,10 @@ init_shared_gate     PROC near
     mov cx,serv_gate_entries
 
 init_shared_gate_loop:
-    mov es:[di].shared_gate_proc_offset,OFFSET illegal_gate
-    mov es:[di].shared_gate_proc_sel,cs
-    mov es:[di].shared_gate_name_offset,OFFSET illegal_gate_name
-    mov es:[di].shared_gate_name_sel,cs
+    mov es:[di].serv_gate_proc_offset,OFFSET illegal_gate
+    mov es:[di].serv_gate_proc_sel,cs
+    mov es:[di].serv_gate_name_offset,OFFSET illegal_gate_name
+    mov es:[di].serv_gate_name_sel,cs
     add di,16
     loop init_shared_gate_loop
 ;
@@ -142,10 +142,10 @@ register_shared_gate   PROC far
     mov ds,ax
     pop ax
     shl bx,4
-    mov [bx].shared_gate_proc_sel,ax
-    mov [bx].shared_gate_proc_offset,esi
-    mov [bx].shared_gate_name_sel,es
-    mov [bx].shared_gate_name_offset,edi
+    mov [bx].serv_gate_proc_sel,ax
+    mov [bx].serv_gate_proc_offset,esi
+    mov [bx].serv_gate_name_sel,es
+    mov [bx].serv_gate_name_offset,edi
 ;
     pop bx
     pop gs
@@ -183,13 +183,13 @@ do_shared   Proc near
     mov edi,invalid_serv_nr
 
 do_shared_in_range:    
-    shl edi,SHARED_GATE_SHIFT
+    shl edi,SERV_GATE_SHIFT
     mov ax,shared_gate_sel
     mov es,ax
 ;
-    mov eax,es:[edi].shared_gate_proc_offset
+    mov eax,es:[edi].serv_gate_proc_offset
     mov [ebp+4],eax
-    movzx eax,es:[edi].shared_gate_proc_sel
+    movzx eax,es:[edi].serv_gate_proc_sel
     mov [ebp+8],eax
 ;
     push ebx
@@ -208,10 +208,10 @@ do_shared_in_range:
     cli
     mov cr0,edx
 ;
-    mov eax,es:[edi].shared_gate_proc_offset
+    mov eax,es:[edi].serv_gate_proc_offset
     xchg eax,ds:[ebx+3]
 ;
-    mov ax,es:[edi].shared_gate_proc_sel
+    mov ax,es:[edi].serv_gate_proc_sel
     xchg ax,ds:[ebx+7]
 ;    
     mov al,90h
@@ -280,9 +280,9 @@ do_user_shared_in_range:
     or bx,7
     mov fs:[2*edi].share_gate_arr,bx
 ;
-    shl edi,SHARED_GATE_SHIFT
-    mov esi,es:[edi].shared_gate_proc_offset
-    mov ds,es:[edi].shared_gate_proc_sel
+    shl edi,SERV_GATE_SHIFT
+    mov esi,es:[edi].serv_gate_proc_offset
+    mov ds,es:[edi].serv_gate_proc_sel
     xor cl,cl
     CreateCallGateSelector32
     mov ax,bx
