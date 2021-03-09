@@ -59,7 +59,6 @@ STOP_TT = 11
 PORT_CONNECTION     = 0
 PORT_ENABLE         = 1
 PORT_SUSPEND        = 2
-PORT_OVER_CURRENT   = 3
 PORT_RESET          = 4
 PORT_POWER          = 8
 PORT_LOW_SPEED      = 9
@@ -233,7 +232,7 @@ PowerOffPort   Proc far
     push edx
 ;
     movzx dx,dl
-    mov ax,PORT_RESET
+    mov ax,PORT_POWER
     call ClearPortFeature
 ;
     pop edx
@@ -258,7 +257,7 @@ PowerOnPort   Proc far
     push edx
 ;
     movzx dx,dl
-    mov ax,PORT_RESET
+    mov ax,PORT_POWER
     call SetPortFeature
 ;
     pop edx
@@ -1147,16 +1146,6 @@ ClearPortFeature Endp
 ClearPortChange  Proc near
     push eax
 ;
-    test ax,8
-    jz cOverCurrentOk
-;
-    push ax
-    mov ax,PORT_POWER
-    call ClearPortFeature
-    pop ax
-    or ds:hub_flags,FLAG_HUB_OVER_CURRENT
-
-cOverCurrentOk:
     shr eax,16
     test ax,1
     jz cpcConnectOk
@@ -1183,19 +1172,8 @@ cpcEnableOk:
     mov ax,C_PORT_SUSPEND
     call ClearPortFeature
     pop ax
-    int 3
 
 cpcSuspendOk:
-    test ax,8
-    jz cpcOverCurrentOk
-;
-    push ax
-    mov ax,PORT_POWER
-    call ClearPortFeature
-    pop ax
-    or ds:hub_flags,FLAG_HUB_OVER_CURRENT
-
-cpcOverCurrentOk:
     test ax,10h
     jz cpcResetOk
 ;
@@ -1738,12 +1716,6 @@ tsStatusLoop:
     call CreatePortThread
 
 tsLoop:
-    test ds:hub_flags,FLAG_HUB_OVER_CURRENT
-    jz tsNotOver
-;
-;    SetUsbOverCurrent
-
-tsNotOver:
     test ds:hub_flags,FLAG_HUB_DISCONNECT
     jnz tsExit
 ;    

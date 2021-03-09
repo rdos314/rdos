@@ -185,6 +185,35 @@ oueFuncLoop:
 ;
     xor di,di
     mov ds,ax
+;
+    mov eax,ds:usb_oc_bitmap
+    or eax,eax
+    jz oueCurrentOk
+;
+    mov ecx,32
+    xor dx,dx
+
+oueCurrentLoop:
+    test al,1
+    jz oueCurrentNext
+;
+    push bx
+    mov bx,es:ues_wr_ptr
+    shl bx,3
+    add bx,OFFSET ues_event_arr
+    mov es:[bx].ue_event,USB_EVENT_OVER_CURRENT
+    mov es:[bx].ue_controller,si
+    mov es:[bx].ue_port,dx
+    mov es:[bx].ue_pipe,-1
+    inc es:ues_wr_ptr
+    pop bx
+
+oueCurrentNext:
+    inc dx
+    shr eax,1
+    loop oueCurrentLoop
+
+oueCurrentOk:
     call fword ptr ds:is_running_proc
     jnc oueFuncOk
 ;
@@ -4564,6 +4593,7 @@ notify_usb_port_state_name DB 'Notify USB Port State', 0
 name_base DB 'USB Dev ', 0
 
 notify_usb_port_state Proc far
+    push eax
     push ebx
     push ecx
     push edi
@@ -4684,6 +4714,7 @@ npsDone:
     pop edi
     pop ecx
     pop ebx
+    pop eax
     retf32
 notify_usb_port_state Endp
 

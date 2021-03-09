@@ -3769,7 +3769,14 @@ UpdatePort   Proc near
     shl si,2
     mov es,ds:ohc_reg_sel
 ;
+    mov eax,es:HcRhStatus
+    test al,2
     mov eax,es:[si].HcRhPortStatus
+    jz upDo
+;
+    or al,8
+
+upDo:
     xor bx,bx
     NotifyUsbPortState
 ;
