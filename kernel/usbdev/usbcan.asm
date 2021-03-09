@@ -753,166 +753,6 @@ HandleMsg   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           Program
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-usProg:
-    mov ds:prog_state,-1
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    AllocatePhysical32
-    or al,13h
-    SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov es,bx
-;
-    mov fs,ds:can_prog_sel
-    xor esi,esi
-
-usProgLoop:
-    WaitForSignal
-    mov al,ds:prog_state
-    cmp al,-1
-    je usProgLoop
-;
-    cmp al,11h
-    je usProgLoop
-;
-    cmp al,10h
-    je usProgFree
-;
-    or al,al
-    jnz usProgFail
-
-usSendNext:
-    mov ecx,ds:can_prog_size
-    cmp ecx,10
-    jbe usSendDo
-;
-    mov ecx,10
-
-usSendDo:    
-    xor edi,edi
-    sub ds:can_prog_size,ecx
-    rep movs byte ptr es:[edi],fs:[esi]    
-;
-    mov ecx,10
-    xor edi,edi
-    mov bx,ds:cd_dev_handle
-    mov dl,2
-    PostUsbRawPipe
-
-usSignal:
-    mov ds:prog_state,-1
-    mov bx,ds:cd_server_thread
-    Signal
-    jmp usProgLoop
-
-usProgFail:
-    mov ds:prog_state,12h
-
-usProgFree:
-    FreeMem
-
-
-ustProg:
-
-    mov ds:prog_state,0
-
-usuProgStart:
-    mov al,ds:prog_state
-    cmp al,-1
-    je usuProgAllDead
-    
-usuProgWaitDead:
-    mov ax,25
-    WaitMilliSec
-    jmp usuProgStart
-
-usuProgAllDead:
-    mov bx,ds:cd_dev_handle
-    mov dl,81h
-    CloseUsbPipe
-;
-    xor bx,bx
-    xchg bx,ds:cd_in_wait
-    CloseWait
-;
-    mov ax,100
-    WaitMilliSec
-;
-    call StartDownload
-    jc usuProgDone
-
-usuProgRetry:
-    call GetDownloadStatus    
-    jc usuProgDone
-;
-    mov ds:prog_state,al
-    or al,al
-    jz usuSendNext
-;
-    cmp al,11h
-    jne usuProgDone
-;
-    mov ax,5
-    WaitMilliSec
-    jmp usuProgRetry
-
-usuSendNext:
-
-usuWaitSend:
-    WaitForSignal
-    mov al,ds:prog_state
-    or al,al
-    jz usuWaitSend
-;
-    cmp al,-1
-    jne usuProgDone
-;
-    mov ecx,ds:can_prog_size
-    or ecx,ecx
-    jnz usuProgRetry
-
-usuProgEndRetry:
-    call GetDownloadStatus    
-    jc usuProgDone
-;
-    mov ds:prog_state,al
-    cmp al,10h
-    je usuProgDone
-;
-    cmp al,11h
-    jne usuProgDone
-;
-    mov ax,5
-    WaitMilliSec
-    jmp usuProgEndRetry
-
-usuProgDone:
-;    mov ds:req_reset,1
-    mov ax,25
-    WaitMilliSec
-;
-    xor ax,ax
-    xchg ax,ds:can_prog_sel
-    mov es,ax
-    FreeMem
-;
-    mov bx,ds:cd_dev_handle
-    mov dl,2
-    CloseUsbPipe
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           USB CAN thread
 ;
 ;       DESCRIPTION:    USB can thread
@@ -1016,6 +856,10 @@ ustMsgWait:
 ;
     mov bx,ds:cd_in_wait
     WaitWithoutTimeout
+;
+    mov ax,ds:can_prog_sel
+    or ax,ax
+    jnz ustProg
 
 ustMsgLoop:
     mov bx,ds:cd_dev_handle
@@ -1049,6 +893,77 @@ ustNoRec:
     PostUsbRawPipe
     jmp ustMsgLoop
 
+ustProg:
+    mov fs,ds:can_prog_sel
+    xor esi,esi
+;
+    mov ds:prog_state,0
+    mov ds:cd_active,0
+;
+    mov bx,ds:cd_dev_handle
+    mov dl,81h
+    CloseUsbPipe
+;
+    xor bx,bx
+    xchg bx,ds:cd_in_wait
+    CloseWait
+;
+    mov ax,100
+    WaitMilliSec
+;
+    call StartDownload
+    jc ustProgFail
+
+ustProgLoop:
+    call GetDownloadStatus    
+    jc ustProgFail
+;
+    mov ds:prog_state,al
+    or al,al
+    jz ustSendNext
+;
+    cmp al,10h
+    je ustProgDone
+;
+    cmp al,11h
+    jne ustProgDone
+;
+    mov ax,5
+    WaitMilliSec
+    jmp ustProgLoop
+
+ustSendNext:
+    mov ecx,ds:can_prog_size
+    or ecx,ecx
+    clc
+    jz ustProgDone
+;
+    cmp ecx,10
+    jbe ustSendDo
+;
+    mov ecx,10
+
+ustSendDo:    
+    mov es,ds:cd_out_buffer
+    xor edi,edi
+    sub ds:can_prog_size,ecx
+    rep movs byte ptr es:[edi],fs:[esi]    
+;
+    mov ecx,10
+    mov bx,ds:cd_dev_handle
+    mov dl,2
+    PostUsbRawPipe
+    jnc ustProgLoop
+
+ustProgFail:
+    mov ds:prog_state,12h
+
+ustProgDone:
+    xor ax,ax
+    xchg ax,ds:can_prog_sel
+    mov es,ax
+    FreeMem
+
 ustReset:
     mov bx,ds:cd_dev_handle
     ResetUsbDevice
@@ -1081,7 +996,6 @@ ustEnd:
     mov ds:cd_active,0
     mov ds:cd_server_thread,0
     TerminateThread
-
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
