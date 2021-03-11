@@ -9615,7 +9615,6 @@ init_regs_iopl_done:
     ret
 init_process_regs    ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -9787,6 +9786,121 @@ cpTssDone:
     add esp,30
     retf32
 create_process  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_serv_proc_regs
+;
+;           DESCRIPTION:    Init server process regs
+;
+;           PARAMETERS:     DS          Thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_serv_proc_regs    PROC near
+    mov eax,OFFSET create_serv_proc_callback
+    mov dword ptr ds:p_rip,eax
+    mov ds:p_cs,cs
+    mov ax,ds:p_kernel_ss
+    mov ds:p_ss,ax
+    mov eax,stack0_size
+    mov dword ptr ds:p_rsp,eax
+;
+    mov ax,[ebp].cr_flags
+    or ax,200h
+    and ax,NOT 7000h
+    movzx eax,ax
+    mov dword ptr ds:p_rflags,eax
+;
+    xor ax,ax
+    mov ds:p_es,ax
+    mov ds:p_ds,ax
+    mov ds:p_fs,ax
+    mov ds:p_gs,ax
+    mov ds:p_stack_sel,0
+    ret
+init_serv_proc_regs    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateServProc
+;
+;           DESCRIPTION:    Create server process
+;
+;           PARAMETERS:     AL          Priority
+;                           DS:ESI      Start address
+;                           ES:EDI      Thread name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_serv_proc_name     DB 'Create Server Process',0
+
+create_serv_proc  PROC far
+    sub esp,30
+    push ebp
+    mov ebp,esp
+    pushf
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov [ebp].cr_seg,ds
+    mov [ebp].cr_offs,esi
+    xor dx,dx
+    mov dl,al       
+    mov [ebp].cr_prio,dx
+    mov [ebp].cr_stack,stack0_size
+    mov [ebp].cr_name,edi
+    mov [ebp+4].cr_name,es
+    xor ax,ax
+    mov fs,ax
+    mov gs,ax
+    call allocate_thread_block
+    mov dx,[ebp].cr_prio
+    call init_thread_block
+    mov es:p_debug_event,0
+;
+    mov ax,es
+    mov ds,ax
+    call create_tss32
+    call init_default_regs
+;
+    NotifyCreateProcess
+    mov es:p_cr3,eax
+;
+    mov bx,1
+    call create_process_sel
+    call add_process_thread
+    call init_prot_thread
+    call init_serv_proc_regs
+    call init_process_callback
+;
+    call wake_new
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popf
+    pop ebp
+    add esp,30
+    retf32
+create_serv_proc  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -10237,6 +10351,21 @@ create_callback_frame_done:
     pop ax
     iretd
 
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           create_serv_proc_callback
+;
+;           DESCRIPTION:    Process startup (in new address space)
+;
+;           PARAMETERS:     DS          Process data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_serv_proc_callback:
+    sti
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -11051,6 +11180,12 @@ timer_free_list_create:
     mov edi,OFFSET create_process_name
     xor cl,cl
     mov ax,create_process_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_serv_proc
+    mov edi,OFFSET create_serv_proc_name
+    xor cl,cl
+    mov ax,create_serv_proc_nr
     RegisterOsGate
 ;
     mov esi,OFFSET fork_process

@@ -268,18 +268,29 @@ test_serv   Proc far
     retf32
 test_serv   Endp
 
+serv_proc_name DB 'Server Process', 0
+
+serv_proc:
+    int 3
+
 test_name    DB 'Test',0
 
 test_pr:
+    push ds
     push es
     pushad
 ;
-    CreateServMem
-    mov eax,40
-    AllocateSmallServ
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET serv_proc
+    mov edi,OFFSET serv_proc_name
+    mov al,4
+    CreateServerProcess
 ;
     popad
     pop es
+    pop ds
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

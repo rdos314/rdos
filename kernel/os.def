@@ -857,4 +857,6 @@ allocate_small_serv_nr      = 779
 
 register_serv_gate_nr       = 780
 
+create_serv_proc_nr         = 781
+
 osgate_entries              = 800
