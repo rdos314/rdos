@@ -839,6 +839,58 @@ ResetSections   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CreateTimer
+;
+;           DESCRIPTION:    New create timer block
+;
+;           PARAMS:         GS      Program selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timer_start:
+
+timer_end:        
+
+CreateTimer  Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov eax,1000h
+    AllocateLocalLinear
+;
+    mov ax,time_data_sel
+    mov ds,ax
+    xor bx,bx
+    mov eax,ds:[bx]
+    mov ebx,ds:[bx+4]
+    mov al,67h
+    SetPageEntry
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+    mov ax,flat_sel
+    mov es,ax
+    mov gs:ppr_user_time,edx
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax    
+    pop es    
+    pop ds
+    ret
+CreateTimer     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           SectionPatch
 ;
 ;           DESCRIPTION:    Patch sections to local calls
@@ -2826,6 +2878,7 @@ fixup_exe Proc far
     mov es,bx
 ;
     call CreateSections
+    call CreateTimer
     call FixupImage
     call InitStack
     call RunImage
