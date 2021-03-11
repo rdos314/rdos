@@ -701,6 +701,22 @@ lusDone:
     ret
 leave_us_section    Endp
 
+get_us_sys_time    Proc near
+    push ebx
+
+p6:
+    mov ebx,12345678h
+
+gustRetry:
+    mov edx,[ebx].ut_system_time+4
+    mov eax,[ebx].ut_system_time
+    cmp edx,[ebx].ut_system_time+4
+    jne gustRetry
+;
+    pop ebx
+    ret
+get_us_sys_time    Endp
+
 ufunc_end:        
 
 CreateUserFunc  Proc near
@@ -711,24 +727,6 @@ CreateUserFunc  Proc near
     push edx
     push esi
     push edi
-;
-    mov eax,1000h
-    AllocateLocalLinear
-;
-    mov ax,time_data_sel
-    mov ds,ax
-    xor bx,bx
-    mov eax,ds:[bx]
-    mov ebx,ds:[bx+4]
-    or ax,867h
-    SetPageEntry
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    sub edx,ds:flat_base
-    mov ax,flat_sel
-    mov es,ax
-    mov gs:ppr_user_time,edx
 ;
     mov esi,OFFSET ufunc_start
     mov eax,OFFSET ufunc_end
@@ -742,6 +740,10 @@ CreateUserFunc  Proc near
     rep movs byte ptr es:[edi],cs:[esi]
 ;
     sub edx,OFFSET ufunc_start
+;    
+    mov edi,edx
+    add edi,OFFSET get_us_sys_time
+    mov gs:ppr_get_system_time_proc,edi
 ;    
     mov edi,edx
     add edi,OFFSET create_us_section
@@ -804,6 +806,25 @@ CreateUserFunc  Proc near
 ;
     mov edi,esi
     add edi,OFFSET p5 + 2
+    mov es:[edi],edx
+;
+    mov eax,1000h
+    AllocateLocalLinear
+;
+    mov ax,time_data_sel
+    mov ds,ax
+    xor bx,bx
+    mov eax,ds:[bx]
+    mov ebx,ds:[bx+4]
+    or ax,867h
+    SetPageEntry
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+;
+    mov edi,esi
+    add edi,OFFSET p6 + 1
     mov es:[edi],edx
 ;
     pop edi
@@ -872,6 +893,9 @@ section_patch     PROC far
     jne spFail
 ;    
     mov ax,ds:[ebx+2]
+    cmp ax,get_system_time_nr
+    je spGetTime
+;
     cmp ax,create_user_section_nr
     je spCreate
 ;    
@@ -888,6 +912,49 @@ section_patch     PROC far
     je spLeave
 ;
     jmp spFail    
+
+spGetTime:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
+    mov eax,gs:ppr_get_system_time_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
 
 spCreate:
     push es
