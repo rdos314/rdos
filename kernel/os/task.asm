@@ -10365,6 +10365,8 @@ create_callback_frame_done:
 
 create_serv_proc_callback:
     sti
+    CreateLdt
+;
     GetThread
     mov fs,ax
 ;
