@@ -34,6 +34,8 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE exec.def
+INCLUDE ..\serv.def
+INCLUDE servdev.def
 
 IFDEF __WASM__
     .686p
@@ -847,12 +849,13 @@ local_create_serv32       PROC near
     push ecx
     push edi
 ;
-    mov eax,1000h
+    mov eax,(sys_page_linear - serv_linear) SHR 20
+    add eax,OFFSET serv_dir_arr
+    mov ecx,eax
     AllocateGlobalMem
     xor edi,edi
-    mov ecx,400h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
+    xor al,al
+    rep stos byte ptr es:[edi]
     mov bx,es
 ;
     pop edi
@@ -1103,13 +1106,14 @@ local_get_sys_page_dir32    Endp
 local_get_serv_page_dir32       Proc near
     push ds
     push edx
-;    
+;
     mov ds,es:p_serv_sel
+    sub edx,serv_linear
     shr edx,20
     and dl,0FCh
-    mov eax,[edx]
+    mov eax,[edx].serv_dir_arr
     xor ebx,ebx
-;    
+;
     pop edx
     pop ds
     ret
@@ -1187,6 +1191,7 @@ local_set_sys_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_set_serv_page_dir32       Proc near
+    int 3
     push ds
     push edx
 ;    
@@ -1307,6 +1312,7 @@ local_create_sys_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_create_serv_page_dir32       Proc near
+    int 3
     push ds
     push eax
     push ebx
@@ -3643,12 +3649,13 @@ local_create_serv64       PROC near
     push ecx
     push edi
 ;
-    mov eax,4000h
+    mov eax,(sys_page_linear - serv_linear) SHR 18
+    add eax,OFFSET serv_dir_arr
+    mov ecx,eax
     AllocateGlobalMem
     xor edi,edi
-    mov ecx,1000h
-    xor eax,eax
-    rep stos dword ptr es:[edi]
+    xor al,al
+    rep stos byte ptr es:[edi]
     mov bx,es
 ;
     pop edi
@@ -3985,10 +3992,11 @@ local_get_serv_page_dir64       Proc near
     push edx
 ;    
     mov ds,es:p_serv_sel
+    sub edx,serv_linear
     shr edx,18
     and dl,0F8h
-    mov eax,[edx]
-    mov ebx,[edx+4]
+    mov eax,[edx].serv_dir_arr
+    mov ebx,[edx+4].serv_dir_arr
 ;    
     pop edx
     pop ds

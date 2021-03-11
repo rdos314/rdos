@@ -38,6 +38,6 @@ serv_small_section       section_typ <>
 
 serv_gate_arr            DW serv_gate_entries DUP (?)
 
-serv_dir_arr             DB ?
+serv_dir_arr             DD ?
 
 serv_struc ENDS
