@@ -719,6 +719,8 @@ get_us_sys_time    Endp
 
 get_us_time    Proc near
     push ebx
+    push esi
+    push edi
 
 p7:
     mov ebx,12345678h
@@ -729,8 +731,16 @@ gutRetry:
     cmp edx,[ebx].ut_system_time+4
     jne gutRetry
 ;
-    add eax,[ebx].ut_time_diff
-    adc edx,[ebx].ut_time_diff+4
+    mov edi,[ebx].ut_time_diff+4
+    mov esi,[ebx].ut_time_diff
+    cmp edi,[ebx].ut_time_diff+4
+    jne gutRetry
+;
+    add eax,esi
+    adc edx,edi
+;
+    pop edi
+    pop esi
     pop ebx
     ret
 get_us_time    Endp
