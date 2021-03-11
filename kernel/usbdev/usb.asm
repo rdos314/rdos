@@ -4596,6 +4596,7 @@ notify_usb_port_state Proc far
     push eax
     push ebx
     push ecx
+    push esi
     push edi
 ;
     movzx edi,dl
@@ -4712,6 +4713,7 @@ npsLeave:
 
 npsDone:
     pop edi
+    pop esi
     pop ecx
     pop ebx
     pop eax
