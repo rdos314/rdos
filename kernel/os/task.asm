@@ -872,6 +872,14 @@ notify_time_drift       Proc far
     cdq
     sub es:time_diff,eax
     sbb es:time_diff+4,edx
+;
+    mov eax,es:time_diff
+    mov edx,es:time_diff+4
+;
+    mov cx,time_data_sel
+    mov es,cx
+    mov es:ut_time_diff+1000h,eax
+    mov es:ut_time_diff+1004h,edx
 
 ntdDone:
     pop edx
@@ -7913,6 +7921,11 @@ update_time     PROC far
     mov ds:time_diff,eax
     mov ds:time_diff+4,edx
     sti
+;
+    mov bx,time_data_sel
+    mov ds,bx
+    mov ds:ut_time_diff+1000h,eax
+    mov ds:ut_time_diff+1004h,edx
 ;
     sub esi,eax
     sbb edi,edx
