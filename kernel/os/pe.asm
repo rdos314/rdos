@@ -717,6 +717,24 @@ gustRetry:
     ret
 get_us_sys_time    Endp
 
+get_us_time    Proc near
+    push ebx
+
+p7:
+    mov ebx,12345678h
+
+gutRetry:
+    mov edx,[ebx].ut_system_time+4
+    mov eax,[ebx].ut_system_time
+    cmp edx,[ebx].ut_system_time+4
+    jne gutRetry
+;
+    add eax,[ebx].ut_time_diff
+    adc edx,[ebx].ut_time_diff+4
+    pop ebx
+    ret
+get_us_time    Endp
+
 ufunc_end:        
 
 CreateUserFunc  Proc near
@@ -744,6 +762,10 @@ CreateUserFunc  Proc near
     mov edi,edx
     add edi,OFFSET get_us_sys_time
     mov gs:ppr_get_system_time_proc,edi
+;    
+    mov edi,edx
+    add edi,OFFSET get_us_time
+    mov gs:ppr_get_time_proc,edi
 ;    
     mov edi,edx
     add edi,OFFSET create_us_section
@@ -827,6 +849,10 @@ CreateUserFunc  Proc near
     add edi,OFFSET p6 + 1
     mov es:[edi],edx
 ;
+    mov edi,esi
+    add edi,OFFSET p7 + 1
+    mov es:[edi],edx
+;
     pop edi
     pop esi
     pop edx
@@ -894,6 +920,9 @@ section_patch     PROC far
 ;    
     mov ax,ds:[ebx+2]
     cmp ax,get_system_time_nr
+    je spGetSysTime
+;
+    cmp ax,get_time_nr
     je spGetTime
 ;
     cmp ax,create_user_section_nr
@@ -912,6 +941,49 @@ section_patch     PROC far
     je spLeave
 ;
     jmp spFail    
+
+spGetSysTime:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
+    mov eax,gs:ppr_get_system_time_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
 
 spGetTime:
     push es
@@ -934,7 +1006,7 @@ spGetTime:
     cli
     mov cr0,ecx
 ;
-    mov eax,gs:ppr_get_system_time_proc    
+    mov eax,gs:ppr_get_time_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]

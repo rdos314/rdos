@@ -152,12 +152,12 @@ pe_program_struc  STRUC
 ppr_base                        program_struc <>
 
 ppr_get_system_time_proc        DD ?
+ppr_get_time_proc               DD ?
 ppr_create_section_proc         DD ?
 ppr_create_named_section_proc   DD ?
 ppr_delete_section_proc         DD ?
 ppr_enter_section_proc          DD ?
 ppr_leave_section_proc          DD ?
-ppr_user_time                   DD ?
 
 ppr_app_name                    DD ?
 ppr_app_env                     DD ?
