@@ -254,6 +254,34 @@ assNoBiggestBlock:
     retf32
 allocate_small_serv   ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           test
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_serv_name DB 'Test Serv', 0
+
+test_serv   Proc far
+    retf32
+test_serv   Endp
+
+test_name    DB 'Test',0
+
+test_pr:
+    push es
+    pushad
+;
+    CreateServMem
+    mov eax,40
+    AllocateSmallServ
+;
+    popad
+    pop es
+    retf32
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -292,6 +320,26 @@ init_app_mem    PROC near
     xor cl,cl
     mov ax,allocate_small_serv_nr
     RegisterOsGate
+
+
+
+
+
+;
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET test_serv
+    mov edi,OFFSET test_serv_name
+    mov ax,test_serv_nr
+    RegisterServGate
+
+
+
+
 ;
     popad
     pop es

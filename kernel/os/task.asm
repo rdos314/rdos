@@ -10731,31 +10731,6 @@ get_crash_core32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           test
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_serv_name DB 'Test Serv', 0
-
-test_serv   Proc far
-    retf32
-test_serv   Endp
-
-test_name    DB 'Test',0
-
-test_pr:
-    push es
-    pushad
-;
-    CreateServMem
-;
-    popad
-    pop es
-    retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           INIT_TASK
 ;
 ;           DESCRIPTION:    Init module
@@ -11293,23 +11268,6 @@ timer_free_list_create:
     mov dx,virt_es_in
     mov ax,get_crash_core_info_nr
     RegisterUserGate
-
-
-
-;
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET test_serv
-    mov edi,OFFSET test_serv_name
-    mov ax,test_serv_nr
-    RegisterServGate
-
-
-
 ;
     mov edi,OFFSET check_list
     HookState
