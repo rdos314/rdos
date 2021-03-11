@@ -31,7 +31,7 @@ include kdebug.inc
 include ..\os\gate.def
 include ..\driver.def
 include ..\os.def
-include ..\shared.def
+include ..\serv.def
 include ..\user.def
 
 code    SEGMENT byte use32 public 'CODE'
@@ -3441,9 +3441,9 @@ GetIllegalOsGate    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       GetIllegalSharedGate
+;       NAME:       GetIllegalServGate
 ;
-;       DESCRIPTION:    Get illegal shared gate name
+;       DESCRIPTION:    Get illegal server gate name
 ;
 ;       PARAMETERS:     ES:EDI       Name buffer
 ;                       ECX          Buffer size
@@ -3451,26 +3451,26 @@ GetIllegalOsGate    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-GetIllegalSharedGate    PROC near
+GetIllegalServGate    PROC near
     push ds
     push fs
     push esi
 ;    
-    mov ax,shared_gate_sel
+    mov ax,serv_gate_sel
     mov ds,ax
-    mov fs,[bx].shared_gate_name_sel
-    mov esi,[bx].shared_gate_name_offset
+    mov fs,[bx].serv_gate_name_sel
+    mov esi,[bx].serv_gate_name_offset
 
-illegal_out_shared_loop:
+illegal_out_serv_loop:
     mov al,fs:[esi]
     or al,al
-    je illegal_out_shared_ok
+    je illegal_out_serv_ok
 ;
     stosb
     inc esi
-    loop illegal_out_shared_loop
+    loop illegal_out_serv_loop
 
-illegal_out_shared_ok:
+illegal_out_serv_ok:
     xor al,al
     stosb
 ;    
@@ -3478,7 +3478,7 @@ illegal_out_shared_ok:
     pop fs
     pop ds
     ret
-GetIllegalSharedGate    ENDP
+GetIllegalServGate    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3593,9 +3593,9 @@ GetOsCall       ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:       GetSharedCall
+;       NAME:       GetServCall
 ;
-;       DESCRIPTION:    Get shared call gate name
+;       DESCRIPTION:    Get server call gate name
 ;
 ;       PARAMETERS:     ES:EDI       Name buffer
 ;                       ECX          Buffer size
@@ -3603,60 +3603,60 @@ GetOsCall       ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-GetSharedCall       PROC near
+GetServCall       PROC near
     push ds
     push fs
     push esi
 ;
     push ecx
-    mov ax,shared_gate_sel
+    mov ax,serv_gate_sel
     mov ds,ax
     xor esi,esi
-    mov ecx,shared_gate_entries
+    mov ecx,serv_gate_entries
 
-get_shared_call_scan_loop:
-    cmp dx,ds:[esi].shared_gate_proc_sel
-    jne get_shared_call_scan_next
+get_serv_call_scan_loop:
+    cmp dx,ds:[esi].serv_gate_proc_sel
+    jne get_serv_call_scan_next
 ;
-    cmp ebx,ds:[esi].shared_gate_proc_offset
-    je get_shared_call_found
+    cmp ebx,ds:[esi].serv_gate_proc_offset
+    je get_serv_call_found
 
-get_shared_call_scan_next:
-    add esi,1 SHL SHARED_GATE_SHIFT
-    loop get_shared_call_scan_loop
+get_serv_call_scan_next:
+    add esi,1 SHL SERV_GATE_SHIFT
+    loop get_serv_call_scan_loop
 ;
     pop ecx
-    jmp get_shared_call_error
+    jmp get_serv_call_error
 
-get_shared_call_found:
+get_serv_call_found:
     pop ecx
-    mov fs,[esi].shared_gate_name_sel
-    mov esi,[esi].shared_gate_name_offset
+    mov fs,[esi].serv_gate_name_sel
+    mov esi,[esi].serv_gate_name_offset
 
-get_shared_call_out_loop:
+get_serv_call_out_loop:
     mov al,fs:[esi]
     or al,al
-    je get_shared_call_out_ok
+    je get_serv_call_out_ok
 ;
     stosb
     inc esi
-    loop get_shared_call_out_loop
+    loop get_serv_call_out_loop
 
-get_shared_call_out_ok:
+get_serv_call_out_ok:
     xor al,al
     stosb
     clc
-    jmp get_shared_call_end
+    jmp get_serv_call_end
 
-get_shared_call_error:
+get_serv_call_error:
     stc
 
-get_shared_call_end:
+get_serv_call_end:
     pop esi
     pop fs
     pop ds
     ret
-GetSharedCall       ENDP
+GetServCall       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3815,7 +3815,7 @@ remove_ov_done:
 ;
     mov dx,[esi+5]
     cmp dx,4
-    je sharedcall
+    je servcall
 ;        
     cmp dx,3
     je usercall_32
@@ -3851,17 +3851,17 @@ oscall:
     clc
     jmp check_done
 
-sharedcall:
+servcall:
     mov eax,[esi+1]
-    cmp eax,shared_gate_entries
+    cmp eax,serv_gate_entries
     jnc check_fail
 ;
     add esi,7
-    shl eax,SHARED_GATE_SHIFT
+    shl eax,SERV_GATE_SHIFT
     mov ebx,eax
     lea edi,[ebp].opcode_text
     mov ecx,40
-    call GetIllegalSharedGate
+    call GetIllegalServGate
     clc
     jmp check_done
     
@@ -3880,7 +3880,7 @@ not_call32:
     add esi,7    
     lea edi,[ebp].opcode_text
     mov ecx,40
-    call GetSharedCall
+    call GetServCall
     jnc check_done
 
 not_call32_user:
@@ -3908,7 +3908,7 @@ write_call_far16:
     add esi,5
     lea edi,[ebp].opcode_text
     mov ecx,40
-    call GetSharedCall
+    call GetServCall
     jnc check_done
 
 call_far16_user:
@@ -3948,7 +3948,7 @@ not_call_far:
     mov dx,ds:[ebp].reg_cs.d_selector
     lea edi,[ebp].opcode_text
     mov ecx,40
-    call GetSharedCall
+    call GetServCall
     pop ebx
     jnc check_done
 ;
@@ -3979,7 +3979,7 @@ write_call_near16:
     mov dx,ds:[ebp].reg_cs.d_selector
     lea edi,[ebp].opcode_text
     mov ecx,40
-    call GetSharedCall
+    call GetServCall
     pop ebx
     jnc check_done
 ;
