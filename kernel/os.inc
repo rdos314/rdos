@@ -546,7 +546,7 @@ NotifyCreateLongProcess MACRO
     OsGate notify_create_long_process_nr
                     ENDM
 
-; IN  BX     Serv sel
+; OUT BX     Serv sel
 CreateServDir MACRO
     OsGate create_serv_dir_nr
                     ENDM
@@ -953,6 +953,7 @@ AllocateFixedVMLinear   MACRO
     OsGate allocate_fixed_vm_linear_nr
                     ENDM
 
+;  IN  BX          Server sel
 CreateServMem    MACRO
     OsGate create_serv_mem_nr
                     ENDM

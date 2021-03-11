@@ -10366,6 +10366,44 @@ create_callback_frame_done:
 create_serv_proc_callback:
     sti
     int 3
+    sti
+    GetThread
+    mov fs,ax
+;
+    push ds
+    call trap_create_process
+    pop ds
+;
+    mov es,ds:cm_process
+    call init_prot_callback_frame
+;
+    CreateServDir
+;
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds:p_serv_sel,bx
+    pop ds
+;
+    CreateServMem
+;
+    mov eax,ds:cm_eax
+    mov ebx,ds:cm_ebx
+    mov ecx,ds:cm_ecx
+    mov edx,ds:cm_edx
+    mov esi,ds:cm_esi
+    mov edi,ds:cm_edi
+    mov ebp,ds:cm_ebp
+    push ax
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    mov fs,ax
+    mov gs,ax
+    FreeMem
+    pop ax
+    iretd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

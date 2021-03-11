@@ -57,6 +57,8 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;           DESCRIPTION:    Create serv mem
 ;
+;           PARAMETERS:     BX     Server sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_serv_mem_name      DB 'Create Server Mem',0
@@ -65,25 +67,6 @@ create_serv_mem  Proc far
     push ds
     push es
     pushad
-;
-    CreateServDir
-    GetThread
-    mov ds,ax
-    mov ds:p_serv_sel,bx
-;
-    mov ax,serv_byte_sel
-    mov ds,ax
-    xor eax,eax
-    mov edx,10h
-    mov [eax].slf_next,edx
-    mov [eax].sls_next,edx
-    mov [eax].sls_prev,edx
-    mov eax,edx
-    mov edx,serv_byte_size - 10h
-    mov [eax].slf_prev,0
-    mov [eax].slf_next,0
-    mov [eax].sls_prev,0
-    mov [eax].sls_next,edx
 ;
     mov ds,bx
     mov es,bx
@@ -102,6 +85,20 @@ create_serv_mem  Proc far
     xor ax,ax
     mov cx,serv_gate_entries
     rep stosw
+;
+    mov ax,serv_byte_sel
+    mov ds,ax
+    xor eax,eax
+    mov edx,10h
+    mov [eax].slf_next,edx
+    mov [eax].sls_next,edx
+    mov [eax].sls_prev,edx
+    mov eax,edx
+    mov edx,serv_byte_size - 10h
+    mov [eax].slf_prev,0
+    mov [eax].slf_next,0
+    mov [eax].sls_prev,0
+    mov [eax].sls_next,edx
 ;
     popad
     pop es
