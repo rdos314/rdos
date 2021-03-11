@@ -169,6 +169,21 @@ ioapic_num      DB ?
 
 ioapic_core_irq_struc   ENDS
 
+time_seg  STRUC
+
+t_phys              DD ?,?
+t_spinlock          DW ?
+t_clock_tics        DW ?
+t_system_time       DD ?,?
+
+t_hpet_guard        DD ?
+t_prev_hpet         DD ?
+t_hpet_sel          DW ?
+t_hpet_factor       DD ?
+t_hpet_counters     DW ?
+
+time_seg  ENDS
+
 
 data    SEGMENT byte public 'DATA'
 
@@ -176,20 +191,10 @@ mp_processor_sign   DD ?
 
 bsp_id              DD ?
 
-time_spinlock       DW ?
-clock_tics          DW ?
-system_time         DD ?,?
-
 ioapic_spinlock     DW ?
 
 apic_tics           DD ?
 apic_rest           DW ?
-
-hpet_guard          DD ?
-prev_hpet           DD ?
-hpet_sel            DW ?
-hpet_factor         DD ?
-hpet_counters       DW ?
 
 vbe_desired         DW ?
 vbe_width           DW ?
@@ -2058,9 +2063,9 @@ start_hpet_timer    Proc far
     push bx
     push edx
 ;
-    mov ax,SEG data
+    mov ax,time_data_sel
     mov ds,ax
-    mov es,ds:hpet_sel
+    mov es,ds:t_hpet_sel
     mov bx,OFFSET hpet_counter_arr    
     mov eax,es:[bx].hpetc_config
     test ax,8000h
@@ -2128,15 +2133,15 @@ reload_hpet_timer    Proc far
     push eax
     push edx
 ;    
-    mov dx,SEG data
+    mov dx,time_data_sel
     mov ds,dx
     movzx eax,ax
     mov edx,31F5C4EDh
     mul edx
-    div ds:hpet_factor
+    div ds:t_hpet_factor
     inc eax
 ;    
-    mov ds,ds:hpet_sel
+    mov ds,ds:t_hpet_sel
     mov ds:hpet_int_status,1
     add eax,ds:hpet_count
     mov ds:hpet_counter_arr.hpetc_compare,eax
@@ -2233,11 +2238,11 @@ get_pit_time_name    DB 'Get System Time', 0
 get_pit_time  Proc far
     push ds
 ;
-    mov ax,SEG data
+    mov ax,time_data_sel
     mov ds,ax
 
 gstSpinLock:    
-    mov ax,ds:time_spinlock
+    mov ax,ds:t_spinlock
     or ax,ax
     je gstGet
 ;
@@ -2248,7 +2253,7 @@ gstSpinLock:
 gstGet:
     cli
     inc ax
-    xchg ax,ds:time_spinlock
+    xchg ax,ds:t_spinlock
     or ax,ax
     jne gstSpinLock
 ;
@@ -2261,16 +2266,19 @@ gstGet:
     in al,TIMER0
     xchg al,ah
     mov dx,ax
-    xchg ax,ds:clock_tics
+    xchg ax,ds:t_clock_tics
     sub ax,dx
     movzx eax,ax
-    add ds:system_time,eax
-    adc ds:system_time+4,0
+    add ds:t_system_time,eax
+    adc ds:t_system_time+4,0
 ;    
-    mov eax,ds:system_time
-    mov edx,ds:system_time+4
+    mov eax,ds:t_system_time
+    mov edx,ds:t_system_time+4
+;
+    mov ds:ut_system_time+1000h,eax
+    mov ds:ut_system_time+1004h,edx
 ;    
-    mov ds:time_spinlock,0
+    mov ds:t_spinlock,0
     sti
     pop ds
     retf32
@@ -2294,11 +2302,12 @@ get_hpet_time  Proc far
     push ds
     push es
 ;
-    mov ax,SEG data
+    mov ax,time_data_sel
     mov ds,ax
+    mov es,ds:t_hpet_sel
 
 ghtSpinLock:    
-    mov ax,ds:time_spinlock
+    mov ax,ds:t_spinlock
     or ax,ax
     je ghtGet
 ;
@@ -2309,29 +2318,31 @@ ghtSpinLock:
 ghtGet:
     cli
     inc ax
-    xchg ax,ds:time_spinlock
+    xchg ax,ds:t_spinlock
     or ax,ax
     jne ghtSpinLock
 ;
-    mov es,ds:hpet_sel
     mov eax,es:hpet_count
     mov edx,eax
-    xchg edx,ds:prev_hpet
+    xchg edx,ds:t_prev_hpet
     sub eax,edx
-    mul ds:hpet_factor
-    add eax,ds:hpet_guard
+    mul ds:t_hpet_factor
+    add eax,ds:t_hpet_guard
     adc edx,0
 ;
     mov ecx,31F5C4EDh
     div ecx
-    mov ds:hpet_guard,edx
-    add ds:system_time,eax
-    adc ds:system_time+4,0
+    mov ds:t_hpet_guard,edx
+    add ds:t_system_time,eax
+    adc ds:t_system_time+4,0
 ;    
-    mov eax,ds:system_time
-    mov edx,ds:system_time+4
+    mov eax,ds:t_system_time
+    mov edx,ds:t_system_time+4
+;
+    mov ds:ut_system_time+1000h,eax
+    mov ds:ut_system_time+1004h,edx
 ;    
-    mov ds:time_spinlock,0
+    mov ds:t_spinlock,0
     sti
 ;
     pop cx
@@ -2372,10 +2383,10 @@ set_system_time_name    DB 'Set System Time',0
 set_system_time PROC far
     push ds
     push bx
-    mov bx,SEG data
+    mov bx,time_data_sel
     mov ds,bx
-    mov ds:system_time,eax
-    mov ds:system_time+4,edx
+    mov ds:t_system_time,eax
+    mov ds:t_system_time+4,edx
     pop bx
     pop ds
     retf32
@@ -2440,9 +2451,9 @@ long_timer_handler      Endp
 long_hpet_handler_name    DB 'Long Hpet Handler', 0
 
 long_hpet_handler      Proc far
-    mov ax,SEG data
+    mov ax,time_data_sel
     mov ds,ax
-    mov ds,ds:hpet_sel
+    mov ds,ds:t_hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
 ;    
@@ -2544,9 +2555,9 @@ hpet_int:
     push es
     push fs
 ;
-    mov ax,SEG data
+    mov ax,time_data_sel
     mov ds,ax
-    mov ds,ds:hpet_sel
+    mov ds,ds:t_hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx
 ;    
@@ -2602,7 +2613,9 @@ hpet_ds_ok:
 
 hpet_ioapic_int Proc far
     lock or fs:cs_flags,CS_FLAG_TIMER_EXPIRED
-    mov ds,ds:hpet_sel
+    mov dx,time_data_sel
+    mov ds,dx
+    mov ds,ds:t_hpet_sel
     mov edx,ds:hpet_int_status
     mov ds:hpet_int_status,edx  
     retf32
@@ -4283,14 +4296,28 @@ apic_tab    DB 'APIC'
 hpet_tab    DB 'HPET'
     
 init    PROC far
+    mov eax,2000h
+    AllocateBigLinear
+;
+    mov bx,time_data_sel
+    mov ecx,2000h
+    CreateDataSelector16
+;
+    mov es,bx
+    xor di,di
+    mov cx,800h
+    xor eax,eax
+    rep stos dword ptr es:[di]
+;
+    add edx,1000h
+    GetPageEntry
+    xor al,al
+    mov es:t_phys,eax
+    mov es:t_phys+4,ebx
+;
     mov ax,SEG data
     mov ds,ax
-    mov ds:system_time,0
-    mov ds:system_time+4,0
-    mov ds:time_spinlock,0
     mov ds:ioapic_spinlock,0
-    mov ds:prev_hpet,0
-    mov ds:hpet_guard,0
 ;    
     mov al,34h
     out TIMER_CONTROL,al
@@ -4299,7 +4326,6 @@ init    PROC far
     out TIMER0,al
     jmp short $+2
     out TIMER0,al
-    mov ds:clock_tics,0
     jmp short $+2
 ;
     mov eax,dword ptr cs:apic_tab
@@ -4476,22 +4502,22 @@ init_hpet_check:
     or al,al
     jz init_hpet_done
 ;
-    mov ax,SEG data
+    mov ax,time_data_sel
     mov ds,ax
-    mov ds:hpet_sel,es
+    mov ds:t_hpet_sel,es
 ;    
     mov eax,es:hpet_config
     and al,NOT 2
     mov es:hpet_config,eax
-;
+;    
     mov eax,es:hpet_period
-    mov ds:hpet_factor,eax
+    mov ds:t_hpet_factor,eax
 ;
     mov eax,es:hpet_cap
     mov al,ah
     and ax,1Fh
     inc ax
-    mov ds:hpet_counters,ax
+    mov ds:t_hpet_counters,ax
 ;
     mov cx,ax
     mov bx,OFFSET hpet_counter_arr    
