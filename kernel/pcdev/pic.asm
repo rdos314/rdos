@@ -37,11 +37,16 @@ INCLUDE ..\os\int.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 
-data    SEGMENT byte public 'DATA'
+time_seg  STRUC
 
-pit_spinlock        DW ?
-clock_tics          DW ?
-system_time         DD ?,?
+t_phys                DD ?,?
+t_pit_spinlock        DW ?
+t_clock_tics          DW ?
+t_system_time         DD ?,?
+
+time_seg  ENDS
+
+data    SEGMENT byte public 'DATA'
 
 detected_irqs       DW ?
 
@@ -889,9 +894,9 @@ start_pit_timer_name    DB 'Start Pit Timer', 0
 
 start_pit_timer    Proc far
     push ds
-    mov ax,SEG data
+    mov ax,time_data_sel
     mov ds,ax
-    mov ds:pit_spinlock,0
+    mov ds:t_pit_spinlock,0
 ;    
     mov al,0B4h
     out TIMER_CONTROL,al
@@ -900,7 +905,7 @@ start_pit_timer    Proc far
     out TIMER2,al
     jmp short $+2
     out TIMER2,al
-    mov ds:clock_tics,0
+    mov ds:t_clock_tics,0
     jmp short $+2
     mov al,0Dh
     out 61h,al
@@ -983,11 +988,11 @@ get_system_time_name    DB 'Get System Time', 0
 get_system_time  Proc far
     push ds
 ;
-    mov ax,SEG data
+    mov ax,time_data_sel
     mov ds,ax
 
 gstSpinLock:    
-    mov ax,ds:pit_spinlock
+    mov ax,ds:t_pit_spinlock
     or ax,ax
     je gstGet
 ;
@@ -998,7 +1003,7 @@ gstSpinLock:
 gstGet:
     cli
     inc ax
-    xchg ax,ds:pit_spinlock
+    xchg ax,ds:t_pit_spinlock
     or ax,ax
     jne gstSpinLock
 ;
@@ -1011,16 +1016,19 @@ gstGet:
     in al,TIMER2
     xchg al,ah
     mov dx,ax
-    xchg ax,ds:clock_tics
+    xchg ax,ds:t_clock_tics
     sub ax,dx
     movzx eax,ax
-    add ds:system_time,eax
-    adc ds:system_time+4,0
+    add ds:t_system_time,eax
+    adc ds:t_system_time+4,0
 ;    
-    mov eax,ds:system_time
-    mov edx,ds:system_time+4
+    mov eax,ds:t_system_time
+    mov edx,ds:t_system_time+4
+;
+    mov ds:ut_system_time+1000h,eax
+    mov ds:ut_system_time+1004h,edx
 ;    
-    mov ds:pit_spinlock,0
+    mov ds:t_pit_spinlock,0
     sti
     pop ds
     retf32
@@ -1044,10 +1052,10 @@ set_system_time_name    DB 'Set System Time',0
 set_system_time PROC far
     push ds
     push bx
-    mov bx,SEG data
+    mov bx,time_data_sel
     mov ds,bx
-    mov ds:system_time,eax
-    mov ds:system_time+4,edx
+    mov ds:t_system_time,eax
+    mov ds:t_system_time+4,edx
     pop bx
     pop ds
     retf32
@@ -1209,10 +1217,27 @@ SetupDefaultIrq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    PROC far
+    mov eax,2000h
+    AllocateBigLinear
+;
+    mov bx,time_data_sel
+    mov ecx,2000h
+    CreateDataSelector16
+;
+    mov es,bx
+    xor di,di
+    mov cx,800h
+    xor eax,eax
+    rep stos dword ptr es:[di]
+;
+    add edx,1000h
+    GetPageEntry
+    xor al,al
+    mov es:t_phys,eax
+    mov es:t_phys+4,ebx
+;
     mov ax,SEG data
     mov ds,ax
-    mov ds:system_time,0
-    mov ds:system_time+4,0
     mov ds:detected_irqs,0
 ;
     mov cx,16

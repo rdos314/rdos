@@ -162,6 +162,13 @@ cs_sel              DW ?
 
 core_base_struc         ENDS
 
+user_time_data_seg  STRUC
+
+ut_system_time      DD ?,?
+ut_time_diff        DD ?,?
+
+user_time_data_seg  ENDS
+
 system_seg      STRUC
 
 dum1                        DD ?
