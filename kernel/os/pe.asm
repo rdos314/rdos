@@ -453,15 +453,15 @@ FreeDllEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CreateSections
+;           NAME:           CreateUserFunc
 ;
-;           DESCRIPTION:    New create section
+;           DESCRIPTION:    New user functions
 ;
 ;           PARAMS:         GS      Program selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-section_start:
+ufunc_start:
 
 create_us_section   Proc near
     push eax
@@ -701,9 +701,9 @@ lusDone:
     ret
 leave_us_section    Endp
 
-section_end:        
+ufunc_end:        
 
-CreateSections  Proc near
+CreateUserFunc  Proc near
     push ds
     push es
     push eax
@@ -712,8 +712,26 @@ CreateSections  Proc near
     push esi
     push edi
 ;
-    mov esi,OFFSET section_start
-    mov eax,OFFSET section_end
+    mov eax,1000h
+    AllocateLocalLinear
+;
+    mov ax,time_data_sel
+    mov ds,ax
+    xor bx,bx
+    mov eax,ds:[bx]
+    mov ebx,ds:[bx+4]
+    or ax,867h
+    SetPageEntry
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+    mov ax,flat_sel
+    mov es,ax
+    mov gs:ppr_user_time,edx
+;
+    mov esi,OFFSET ufunc_start
+    mov eax,OFFSET ufunc_end
     sub eax,esi
     mov ecx,eax
     call allocate_mem
@@ -723,7 +741,7 @@ CreateSections  Proc near
     mov es,ax
     rep movs byte ptr es:[edi],cs:[esi]
 ;
-    sub edx,OFFSET section_start
+    sub edx,OFFSET ufunc_start
 ;    
     mov edi,edx
     add edi,OFFSET create_us_section
@@ -796,18 +814,18 @@ CreateSections  Proc near
     pop es    
     pop ds
     ret
-CreateSections     ENDP
+CreateUserFunc     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           ResetSections
+;           NAME:           ResetUserFunc
 ;
-;           DESCRIPTION:    Reset sections
+;           DESCRIPTION:    Reset user functions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ResetSections     PROC near
+ResetUserFunc     PROC near
     push ds
     pushad
 ;
@@ -817,76 +835,24 @@ ResetSections     PROC near
     mov ebx,section_linear
     mov ecx,MAX_SECTIONS
 
-rsLoop:
+ruLoop:
     mov edx,[ebx]
     or edx,edx
-    jz rsNext
+    jz ruNext
 ;
     mov [edx].fs_handle,0
     mov [edx].fs_val,-1
     mov [edx].fs_counter,0
     mov [edx].fs_owner,0
 
-rsNext:
+ruNext:
     add ebx,4
-    loop rsLoop
+    loop ruLoop
 ;
     popad
     pop ds
     ret
-ResetSections   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CreateTimer
-;
-;           DESCRIPTION:    New create timer block
-;
-;           PARAMS:         GS      Program selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-timer_start:
-
-timer_end:        
-
-CreateTimer  Proc near
-    push ds
-    push es
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov eax,1000h
-    AllocateLocalLinear
-;
-    mov ax,time_data_sel
-    mov ds,ax
-    xor bx,bx
-    mov eax,ds:[bx]
-    mov ebx,ds:[bx+4]
-    mov al,67h
-    SetPageEntry
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    sub edx,ds:flat_base
-    mov ax,flat_sel
-    mov es,ax
-    mov gs:ppr_user_time,edx
-;
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop eax    
-    pop es    
-    pop ds
-    ret
-CreateTimer     ENDP
+ResetUserFunc   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2877,8 +2843,7 @@ fixup_exe Proc far
     mov ds,eax
     mov es,bx
 ;
-    call CreateSections
-    call CreateTimer
+    call CreateUserFunc
     call FixupImage
     call InitStack
     call RunImage
@@ -3803,7 +3768,7 @@ fork_child_completed:
     jmp fork_done
 
 fork_child:
-    call ResetSections
+    call ResetUserFunc
 ;
     pop edx
     pop ecx
