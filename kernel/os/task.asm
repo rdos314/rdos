@@ -10365,8 +10365,6 @@ create_callback_frame_done:
 
 create_serv_proc_callback:
     sti
-    int 3
-    sti
     GetThread
     mov fs,ax
 ;

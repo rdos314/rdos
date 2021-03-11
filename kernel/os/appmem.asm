@@ -106,7 +106,6 @@ create_serv_mem  Proc far
     retf32
 create_serv_mem  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -251,7 +250,6 @@ assNoBiggestBlock:
     retf32
 allocate_small_serv   ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -269,6 +267,8 @@ serv_proc_name DB 'Server Process', 0
 
 serv_proc:
     int 3
+    mov ax,50
+    AllocateSmallServ
 
 test_name    DB 'Test',0
 
