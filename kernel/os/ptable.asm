@@ -1191,14 +1191,14 @@ local_set_sys_page_dir32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 local_set_serv_page_dir32       Proc near
-    int 3
     push ds
     push edx
 ;    
     mov ds,es:p_serv_sel
+    sub edx,serv_linear
     shr edx,20
     and dl,0FCh
-    mov [edx],eax
+    mov [edx].serv_dir_arr,eax
 ;    
     pop edx
     pop ds
@@ -4081,10 +4081,11 @@ local_set_serv_page_dir64       Proc near
     push edx
 ;    
     mov ds,es:p_serv_sel
+    sub edx,serv_linear
     shr edx,18
     and dl,0F8h
-    mov [edx],eax
-    mov [edx+4],ebx
+    mov [edx].serv_dir_arr,eax
+    mov [edx+4].serv_dir_arr,ebx
 ;    
     pop edx
     pop ds
