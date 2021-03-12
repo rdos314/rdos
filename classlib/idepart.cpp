@@ -1015,6 +1015,67 @@ int TIdeDiscPartition::Add(const char *FsName, long Sectors, const char *BootCod
     return FALSE;
 }
 
+/*##################  TIdeDiscPartition::Add  #############
+*   Purpose....: Add IDE partition with space
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+int TIdeDiscPartition::Add(const char *FsName, long Resv, long Sectors, const char *BootCode, int BootSize)
+{
+    int i;
+    TIdeFsPartition *FsPart;
+    long TotalSectors = Resv + Sectors;
+    long Size;
+    long Start;
+    long SectorsPerCyl = FDisc->GetSectorsPerCyl();
+
+    for (i = 0; i < PartCount; i++)
+    {
+        if (PartArr[i]->IsFree())
+        {
+            Start = PartArr[i]->Start;
+            Size = PartArr[i]->Size;
+
+            if (Start < SectorsPerCyl)
+            {
+                if (SectorsPerCyl == 0xFFFF)
+                {
+                    Start += 16;
+                    Size -= 16;
+                }
+                else
+                {
+                    Start += SectorsPerCyl;
+                    Size -= SectorsPerCyl;
+                }
+            }
+                    
+            if (Size >= TotalSectors)
+            {
+                PartArr[i]->Start = Start + Resv;
+                PartArr[i]->Size = Size;
+                if (i == 0)
+                    FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors, 0x80, BootCode, BootSize);
+                else
+                    FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors, 0, BootCode, BootSize);
+
+                if (FsPart)
+                {
+                    PartArr[i]->Size -= TotalSectors;
+                    PartArr[i]->Start += TotalSectors;
+                    PartArr[PartCount] = FsPart;
+                    PartCount++;
+                    Sort();
+                    return TRUE;
+                }
+            }
+        }
+    }
+    return FALSE;
+}
+
 /*##################  TIdeDiscPartition::Delete  #############
 *   Purpose....: Delete IDE partition
 *   In params..: *                                                        #

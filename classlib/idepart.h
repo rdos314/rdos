@@ -137,6 +137,7 @@ public:
 
         virtual void Delete(int Entry);
         virtual int Add(const char *FsName, long Size, const char *BootCode, int BootSize);
+        virtual int Add(const char *FsName, long Resv, long Size, const char *BootCode, int BootSize);
 
         TIdePartitionTable *PartRoot;
 
