@@ -62,6 +62,14 @@ SLEEP_TYPE_WAIT_DEV = 7
 WAIT_DEV_ACTIVE   = 1
 WAIT_DEV_SIGNAL   = 2
 
+server_header	STRUC
+
+serv_size           DD ?
+serv_file_size      DD ?
+serv_name           DB ?
+
+server_header	ENDS
+
 section_handle_seg          STRUC
 
 us_base     handle_header <>
@@ -10646,6 +10654,160 @@ start_tasking:
     call init_first_process
     jmp init_first_thread
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;            NAME:           CheckServer
+;
+;            DESCRIPTION:    Check for server
+;
+;            PARAMETERS:     EDX        Base address
+;                            ES:EDI     Server name
+;
+;            RETURNS:        NC         OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckServer	Proc near
+    push ecx
+    push esi
+    push edi
+;
+    mov esi,edx
+    add esi,SIZE rdos_header
+    add esi,OFFSET serv_name
+
+csLoop:
+    lods byte ptr fs:[esi]
+    cmp al,es:[edi]
+    stc
+    jne csDone
+;
+    inc edi
+    or al,al
+    jnz csLoop
+;
+    clc
+
+csDone:
+    pop edi
+    pop esi
+    pop ecx
+    ret
+CheckServer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;            NAME:           FindAdapterServer
+;
+;            DESCRIPTION:    Find server in adapter
+;
+;            PARAMETERS:     EDX        Base address
+;                            ES:EDI     Server name
+;
+;            RETURNS:        NC         Found
+;                               EDX     Base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindAdapterServer	Proc near
+    push ax
+    push bx
+
+fasLoop:
+    mov ax,fs:[edx].typ
+    cmp ax,RdosServer
+    jne fasNext
+;
+    call CheckServer
+    jnc fasDone
+
+fasNext:
+    cmp ax,RdosEnd
+    stc
+    je fasDone
+;
+    add edx,fs:[edx].len
+    jmp fasLoop
+
+fasDone:
+    pop bx
+    pop ax
+    ret
+FindAdapterServer	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindServer
+;
+;           DESCRIPTION:    Find server module
+;
+;           PARAMETERS:     ES:EDI      Server name
+;
+;            RETURNS:       NC         Found
+;                               EDX     Base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindServer PROC near
+    push fs
+    push gs
+    push ax
+    push bx
+    push cx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov ax,system_data_sel
+    mov gs,ax
+    mov cx,gs:rom_modules
+    mov bx,OFFSET rom_adapters
+
+fsLoop:
+    mov edx,gs:[bx].adapter_base
+    call FindAdapterServer
+    jnc fsDone
+;
+    add bx,SIZE adapter_typ
+    loop fsLoop	
+;
+    stc
+
+fsDone:
+    pop cx
+    pop bx
+    pop ax
+    pop gs
+    pop fs
+    ret
+FindServer  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LoadServer
+;
+;           DESCRIPTION:    Load server module
+;
+;           PARAMETERS:     AL          Priority
+;                           ES:EDI      Server name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_serv_name     DB 'Load Server',0
+
+load_serv  PROC far
+    call FindServer
+    jc lsDone
+;
+    mov edi,edx
+    add edi,SIZE rdos_header
+
+lsDone:
+    retf32
+load_serv  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -11224,6 +11386,12 @@ timer_free_list_create:
     mov edi,OFFSET create_serv_proc_name
     xor cl,cl
     mov ax,create_serv_proc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET load_serv
+    mov edi,OFFSET load_serv_name
+    xor cl,cl
+    mov ax,load_serv_nr
     RegisterOsGate
 ;
     mov esi,OFFSET fork_process

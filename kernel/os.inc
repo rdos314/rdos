@@ -1877,6 +1877,12 @@ CreateServerProcess    MACRO
     OsGate create_serv_proc_nr
                         ENDM
 
+; IN  AL          Priority
+; IN  ES:EDI      Server name
+LoadServer        MACRO
+    OsGate load_serv_nr
+                        ENDM
+
 ; IN  BX    Thread #
 ; OUT BX    Thread sel
 ThreadToSel     MACRO

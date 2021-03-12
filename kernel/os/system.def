@@ -73,6 +73,7 @@ RdosDevice16 = 18
 RdosDevice32 = 19
 RdosLongMode = 20
 RdosRealTime = 21
+RdosServer = 22
 
 RdosEnd = 0E5E5h
 
