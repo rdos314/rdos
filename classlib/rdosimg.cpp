@@ -2407,19 +2407,26 @@ void TRdosServerObject::LoadFileAndHeader(const char *FileName)
     const char *ptr;
     int HeaderSize;
     TDateTime time;
+    char Name[128];
+    char *exeptr;
 
-    if (File.IsOpen())
+    ptr = FileName + strlen(FileName) - 1;
+
+    while (ptr != FileName && *ptr != '\\' && *ptr != '/')
+        ptr--;
+
+    if (*ptr == '\\' || *ptr == '/')
+        ptr++;
+
+    strcpy(Name, ptr);
+    exeptr = strstr(Name, ".exe");
+    if (exeptr)
+        *exeptr = 0;
+
+    if (File.IsOpen() && exeptr)
     {
-         ptr = FileName + strlen(FileName) - 1;
-
-        while (ptr != FileName && *ptr != '\\' && *ptr != '/')
-            ptr--;
-
-        if (*ptr == '\\' || *ptr == '/')
-            ptr++;
-
         HeaderSize = sizeof(TRdosServerHeader);
-        HeaderSize += strlen(ptr);
+        HeaderSize += strlen(Name);
 
         FFileSize = File.GetSize();
         FSize = FFileSize + HeaderSize;
@@ -2428,7 +2435,7 @@ void TRdosServerObject::LoadFileAndHeader(const char *FileName)
         FServerHeader = (TRdosServerHeader *)FData;
         FFileData = FData + HeaderSize;
 
-        strcpy(&FServerHeader->FileName, ptr);
+        strcpy(&FServerHeader->FileName, Name);
 
         FServerHeader->Size = HeaderSize;
         FServerHeader->FileSize = File.GetSize();
