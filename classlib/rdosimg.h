@@ -348,6 +348,28 @@ protected:
     int FFileSize;
 };
 
+class TRdosServerObject : public TRdosObject
+{
+public:
+    TRdosServerObject(const char *FileName);
+    TRdosServerObject(TFile *File, int Size);
+
+#ifdef __RDOS__
+    TRdosServerObject(int adapter, int entry, int size);
+#endif
+
+    virtual ~TRdosServerObject();
+
+    virtual TString GetInfo();
+
+protected:
+    void LoadFileAndHeader(const char *FileName);
+
+    TRdosServerHeader *FServerHeader;
+    char *FFileData;
+    int FFileSize;
+};
+
 class TRdosCommandObject : public TRdosObject
 {
 public:
