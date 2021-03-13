@@ -10788,6 +10788,87 @@ FindServer  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateServerApp
+;
+;           DESCRIPTION:    Create server app
+;
+;           PARAMETERS:     AL          Priority
+;                           ES          Server app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadServerApp:
+    int 3
+
+CreateServerApp  PROC near
+    sub esp,30
+    push ebp
+    mov ebp,esp
+    pushf
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov [ebp].cr_seg,cs
+    mov [ebp].cr_offs,OFFSET LoadServerApp
+    movzx dx,es:sa_prio
+    mov [ebp].cr_prio,dx
+    mov [ebp].cr_stack,stack0_size
+    mov [ebp].cr_mode,0
+    mov [ebp].cr_name,OFFSET sa_name
+    mov [ebp+4].cr_name,es
+    xor ax,ax
+    mov fs,ax
+    mov gs,ax
+    call allocate_thread_block
+    mov dx,[ebp].cr_prio
+    call init_thread_block
+    mov es:p_debug_event,0
+;
+    mov ax,es
+    mov ds,ax
+;
+    call create_tss32
+    call init_default_regs
+;
+    NotifyCreateProcess
+    mov es:p_cr3,eax
+;
+    mov bx,1
+    call create_process_sel
+    call add_process_thread
+    call init_prot_thread
+    call init_process_regs
+    call init_process_callback
+;
+    call wake_new
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popf
+    pop ebp
+    add esp,30
+    ret
+CreateServerApp  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LoadServer
 ;
 ;           DESCRIPTION:    Load server module
@@ -10811,14 +10892,33 @@ load_serv  PROC far
 ;
     push es
     push fs
+    push ecx
+    push esi
+    push edi
 ;
-    push ax
+    push eax
+;
     mov ax,flat_sel
     mov fs,ax
+;
+    xor ecx,ecx
+    mov esi,edx
+    add esi,SIZE rdos_header
+    add esi,OFFSET serv_name
+
+lsSizeLoop:
+    inc ecx
+    lods byte ptr fs:[esi]
+    or al,al
+    jnz lsSizeLoop
+;
+    add ecx,5
     mov eax,SIZE serv_app_struc
+    add eax,ecx
     AllocateSmallGlobalMem
 ;    
     add edx,SIZE rdos_header
+    mov esi,edx
     mov es:sa_info_linear,edx
     mov eax,fs:[edx].serv_header_size
     mov ecx,fs:[edx].serv_file_size
@@ -10828,10 +10928,43 @@ load_serv  PROC far
     mov es:sa_device,bh
     mov es:sa_unit,bl
 ;
-    pop ax
+    add esi,OFFSET serv_name
+    mov edi,OFFSET sa_name
+
+lsCopyLoop:
+    lods byte ptr fs:[esi]
+    or al,al
+    jz lsCopyDone
+;
+    stos byte ptr es:[edi]
+    jmp lsCopyLoop
+
+lsCopyDone:
+    mov al,' '
+    stosb
+;
+    mov al,bh
+    call ToHex
+    stosw
+    mov al,'.'
+    stosb
+;
+    mov al,bl
+    call ToHex
+    stosw
+;
+    xor al,al
+    stosb
+;
+    pop eax
     mov es:sa_prio,al
+;
+    call CreateServerApp
     mov bx,es
 ;
+    pop edi
+    pop esi
+    pop ecx
     pop fs
     pop es
 ;

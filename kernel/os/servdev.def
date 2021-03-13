@@ -50,5 +50,6 @@ sa_code_size             DD ?
 sa_device                DB ?
 sa_unit                  DB ?
 sa_prio                  DB ?
+sa_name                  DB ?
 
 serv_app_struc  ENDS
