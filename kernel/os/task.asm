@@ -10657,6 +10657,7 @@ start_tasking:
 
 create_serv_app_callback:
     sti
+    int 3
     push ds
     call trap_create_process
     pop ds
@@ -10732,6 +10733,8 @@ create_serv_app  PROC far
     push es
     push fs
     push gs
+;
+    mov ax,es
     push eax
     push ebx
     push ecx

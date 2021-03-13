@@ -2989,6 +2989,73 @@ imDone:
     pop ds
     ret
 init_module  Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_serv_module
+;
+;           DESCRIPTION:    Init server module
+;
+;           PARAMETERS:     DS:ESI  Image name
+;                           ES:EDI  Command line
+;                           EDX     Image linear
+;
+;           RETURNS:        BX      Module selector
+;                           AL      Bitness
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_serv_module Proc far
+    push ds
+    push es
+    push fs
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,ds
+    mov fs,ax
+    mov ax,flat_data_sel
+    mov ds,ax
+;
+    mov ax,ds:[edx].exeh_signature
+    cmp ax,5A4Dh
+    stc
+    jne ismDone
+;
+    mov ax,ds:[edx].exeh_reloc_offs
+    cmp ax,40h
+    stc
+    jne ismDone
+;
+    mov ax,es:[3Ch]
+    movzx eax,ax
+    add edx,eax
+;
+    mov ax,ds:[edx]
+    cmp ax,'EP'
+    stc
+    jne ismDone
+;
+;    call CreateLib    
+;    call CreateImage
+;
+    mov al,32
+    mov bx,es
+    clc
+
+ismDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop fs
+    pop es
+    pop ds
+    ret
+init_serv_module  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5633,6 +5700,7 @@ l33 DD OFFSET detach_user_fork_proc,      SEG code
 l34 DD OFFSET detach_kernel_fork_proc,    SEG code
 l35 DD OFFSET is_valid_serv,              SEG code
 l36 DD OFFSET create_serv,                SEG code
+l37 DD OFFSET init_serv_module,           SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

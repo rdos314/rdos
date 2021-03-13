@@ -6350,7 +6350,7 @@ exec_serv:
     mov ax,gs:pr_loader
     mov ds:p_loader,ax
 ;       
-;    mov edx,gs:pr_code_linear
+    mov edx,fs:sa_code_linear
     xor esi,esi
     xor edi,edi
     mov ds,gs:pr_name_sel
@@ -6359,7 +6359,7 @@ exec_serv:
     mov dx,gs:pr_debug_id
     push gs
     mov gs,gs:pr_loader
-    call fword ptr gs:loader_init_exe_proc
+    call fword ptr gs:loader_init_serv_proc
     pop gs
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

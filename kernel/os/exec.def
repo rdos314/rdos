@@ -377,6 +377,13 @@ loader_is_valid_serv_proc         DD ?,?
 ; IN   ES:EDI             Thread name
 loader_create_serv_proc           DD ?,?
 
+; IN   DS:ESI             Image name
+; IN   ES:EDI             Cmd line
+; IN   EDX                Image linear
+; IN   GS                 Program sel
+; OUT  BX                 Module selector
+loader_init_serv_proc             DD ?,?
+
 loader_interface_struc    ENDS
 
 module_struc    STRUC
