@@ -3030,7 +3030,7 @@ init_serv_module Proc far
     stc
     jne ismDone
 ;
-    mov ax,es:[3Ch]
+    mov ax,ds:[edx+3Ch]
     movzx eax,ax
     add edx,eax
 ;

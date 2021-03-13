@@ -6357,7 +6357,6 @@ exec_serv:
     mov ds,gs:pr_name_sel
     mov es,gs:pr_cmd_sel
 ;
-    mov dx,gs:pr_debug_id
     push gs
     mov gs,gs:pr_loader
     call fword ptr gs:loader_init_serv_proc
