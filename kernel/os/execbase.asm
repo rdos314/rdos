@@ -348,13 +348,30 @@ cpsSizeLoop:
     jnz cpsSizeLoop
 ;
     mov eax,ecx
+    add eax,4
     AllocateSmallGlobalMem
 ;
     add edx,SIZE rdos_header
     mov esi,edx
     add esi,OFFSET serv_name
     xor edi,edi
+    dec ecx
     rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov al,'.'
+    stosb
+;
+    mov al,'e'
+    stosb
+;
+    mov al,'x'
+    stosb
+;
+    mov al,'e'
+    stosb
+;
+    xor al,al
+    stosb
 ;
     mov gs:pr_name_sel,es
 ;    
