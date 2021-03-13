@@ -3017,7 +3017,7 @@ init_serv_module Proc far
 ;
     mov ax,ds
     mov fs,ax
-    mov ax,flat_data_sel
+    mov ax,flat_sel
     mov ds,ax
 ;
     mov ax,ds:[edx].exeh_signature
@@ -3039,6 +3039,8 @@ init_serv_module Proc far
     stc
     jne ismDone
 ;
+    mov ax,serv_data_sel
+    mov ds,ax
 ;    call CreateLib    
 ;    call CreateImage
 ;

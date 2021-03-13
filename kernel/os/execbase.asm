@@ -6350,6 +6350,7 @@ exec_serv:
     mov ax,gs:pr_loader
     mov ds:p_loader,ax
 ;       
+    int 3
     mov edx,fs:sa_code_linear
     xor esi,esi
     xor edi,edi
