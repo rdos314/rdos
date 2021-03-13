@@ -6193,8 +6193,6 @@ load_serv  PROC far
     push esi
     push edi
 ;
-    int 3
-;
     call FindServer
     jc lsDone
 ;
@@ -6218,6 +6216,8 @@ load_serv  PROC far
     mov ebx,gs
     ProgramCreated
     pop ebx
+;
+    push eax
 ;
     mov ax,flat_sel
     mov fs,ax
@@ -6277,7 +6277,7 @@ lsCopyDone:
     xor al,al
     stosb
 ;
-    mov ebx,gs
+    pop ebx
     mov ds,gs:pr_loader
     call fword ptr ds:loader_create_serv_proc
 
