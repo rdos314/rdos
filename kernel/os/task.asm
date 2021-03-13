@@ -10784,6 +10784,71 @@ fsDone:
     pop fs
     ret
 FindServer  ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           create_serv_app_callback
+;
+;           DESCRIPTION:    Process startup (in new address space)
+;
+;           PARAMETERS:     DS          Process data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_serv_app_callback:
+    int 3
+    sti
+;
+    push ax
+;
+    GetThread
+    mov fs,ax
+;
+    push ds
+    call trap_create_process
+    pop ds
+;
+    mov es,ds:cm_process
+    call init_prot_callback_frame
+;
+    pop es
+    int 3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_serv_app_regs
+;
+;           DESCRIPTION:    Init server apps regs
+;
+;           PARAMETERS:     DS          Thread
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_serv_app_regs    PROC near
+    mov eax,OFFSET create_serv_app_callback
+    mov dword ptr ds:p_rip,eax
+    mov ds:p_cs,cs
+    mov ax,ds:p_kernel_ss
+    mov ds:p_ss,ax
+    mov eax,stack0_size
+    mov dword ptr ds:p_rsp,eax
+;
+    mov ax,[ebp].cr_flags
+    or ax,200h
+    and ax,NOT 7000h
+    movzx eax,ax
+    mov dword ptr ds:p_rflags,eax
+;
+    xor ax,ax
+    mov ds:p_es,ax
+    mov ds:p_ds,ax
+    mov ds:p_fs,ax
+    mov ds:p_gs,ax
+    mov ds:p_stack_sel,0
+    ret
+init_serv_app_regs    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -10796,9 +10861,6 @@ FindServer  ENDP
 ;                           ES          Server app sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadServerApp:
-    int 3
 
 CreateServerApp  PROC near
     sub esp,30
@@ -10817,12 +10879,12 @@ CreateServerApp  PROC near
     push edi
 ;
     mov [ebp].cr_seg,cs
-    mov [ebp].cr_offs,OFFSET LoadServerApp
+    mov dword ptr [ebp].cr_offs,0
     movzx dx,es:sa_prio
     mov [ebp].cr_prio,dx
     mov [ebp].cr_stack,stack0_size
     mov [ebp].cr_mode,0
-    mov [ebp].cr_name,OFFSET sa_name
+    mov dword ptr [ebp].cr_name,OFFSET sa_name
     mov [ebp+4].cr_name,es
     xor ax,ax
     mov fs,ax
@@ -10845,7 +10907,7 @@ CreateServerApp  PROC near
     call create_process_sel
     call add_process_thread
     call init_prot_thread
-    call init_process_regs
+    call init_serv_app_regs
     call init_process_callback
 ;
     call wake_new
@@ -10959,6 +11021,7 @@ lsCopyDone:
     pop eax
     mov es:sa_prio,al
 ;
+    mov ax,es
     call CreateServerApp
     mov bx,es
 ;
