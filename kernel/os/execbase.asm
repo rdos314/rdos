@@ -363,6 +363,7 @@ cpsSizeLoop:
     pop ecx
     pop eax
     pop es
+    pop ds
     ret
 CreateServ Endp
 
@@ -1288,6 +1289,55 @@ cpaSizeOk:
     pop es
     ret
 CreateParam Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateServParam
+;
+;       DESCRIPTION:    Make global copy of parameters
+;
+;       PARAMETERS:     BH          Device #
+;                       BL          Unit #
+;                       GS          Program sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateServParam Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,7
+    AllocateSmallGlobalMem
+    xor edi,edi
+;
+    mov al,' '
+    stosb
+;
+    mov al,bh
+    call HexToAscii
+    stosw
+;
+    mov al,' '
+    stosb
+;
+    mov al,bl
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    mov gs:pr_cmd_sel,es
+;       
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateServParam Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6115,6 +6165,7 @@ HexToAscii      ENDP
 load_serv_name     DB 'Load Server',0
 
 load_serv  PROC far
+    int 3
     push edx
 ;
     call FindServer
@@ -6127,22 +6178,12 @@ load_serv  PROC far
     mov gs:pr_loader,ax
     mov gs:pr_kernel_file,0
 ;
-    movzx ebx,dx
-    ProcessIdToSel
-    jc lsDebugOk
-;    
-    push ds
-    mov ds,ebx
-    mov ax,ds:pf_module_arr
-    mov gs:pr_debug_id,ax
-    pop ds
-
-lsDebugOk:
     GetThread
     mov gs:pr_parent_thread,ax
 ;
-    int 3
     call CreateServ
+    int 3
+    call CreateServParam
 
 
     push es
