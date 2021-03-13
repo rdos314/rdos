@@ -10672,6 +10672,7 @@ create_serv_app_callback:
     FreeMem
     mov es,dx
     int 3
+    ExecServer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

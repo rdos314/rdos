@@ -6245,7 +6245,9 @@ lsSizeLoop:
     mov ecx,fs:[edx].serv_file_size
     add edx,eax
     mov es:sa_code_linear,edx
+;    mov gs:pr_code_linear,edx
     mov es:sa_code_size,ecx
+;    mov gs:pr_code_size,ecx
     mov es:sa_device,bh
     mov es:sa_unit,bl
 ;
@@ -6294,6 +6296,71 @@ lsDone:
     pop ds
     ret
 load_serv  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Exec serv
+;
+;           DESCRIPTION:    Server startup
+;
+;           PARAMETERS:     BX      Program ID
+;                           ES      Serv app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+exec_serv_name DB 'Exec Server', 0
+
+exec_serv:
+    sti
+;
+    mov ax,es
+    mov fs,ax
+;
+    GetThread
+    mov es,ax
+    mov ax,es:p_console
+    mov es:p_parent_console,ax
+    mov gs,es:p_prog_sel
+;
+    xor eax,eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    mov ebp,esp
+;
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+    push eax
+;
+    GetThread
+    mov gs:pr_thread,ax
+    mov ds,ax
+;
+    mov ax,gs:pr_loader
+    mov ds:p_loader,ax
+;       
+;    mov edx,gs:pr_code_linear
+    xor esi,esi
+    xor edi,edi
+    mov ds,gs:pr_name_sel
+    mov es,gs:pr_cmd_sel
+;
+    mov dx,gs:pr_debug_id
+    push gs
+    mov gs,gs:pr_loader
+    call fword ptr gs:loader_init_exe_proc
+    pop gs
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6453,6 +6520,12 @@ InitExec_    Proc near
     mov edi,OFFSET load_serv_name
     xor cl,cl
     mov ax,load_serv_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET exec_serv
+    mov edi,OFFSET exec_serv_name
+    xor cl,cl
+    mov ax,exec_serv_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_focus
