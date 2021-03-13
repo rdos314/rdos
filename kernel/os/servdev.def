@@ -41,3 +41,14 @@ serv_gate_arr            DW serv_gate_entries DUP (?)
 serv_dir_arr             DD ?
 
 serv_struc ENDS
+
+serv_app_struc  STRUC
+
+sa_info_linear           DD ?
+sa_code_linear           DD ?
+sa_code_size             DD ?
+sa_device                DB ?
+sa_unit                  DB ?
+sa_prio                  DB ?
+
+serv_app_struc  ENDS

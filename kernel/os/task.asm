@@ -43,6 +43,7 @@ INCLUDE ..\apicheck.inc
 include ..\wait.inc
 include gate.def
 include exec.def
+INCLUDE servdev.def
 
 MSR_SYSENTER_CS  = 174h
 MSR_SYSENTER_ESP = 175h
@@ -62,13 +63,13 @@ SLEEP_TYPE_WAIT_DEV = 7
 WAIT_DEV_ACTIVE   = 1
 WAIT_DEV_SIGNAL   = 2
 
-server_header	STRUC
+server_header   STRUC
 
-serv_size           DD ?
+serv_header_size    DD ?
 serv_file_size      DD ?
 serv_name           DB ?
 
-server_header	ENDS
+server_header   ENDS
 
 section_handle_seg          STRUC
 
@@ -10655,7 +10656,7 @@ start_tasking:
     jmp init_first_thread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
 ;            NAME:           CheckServer
 ;
@@ -10668,7 +10669,7 @@ start_tasking:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckServer	Proc near
+CheckServer     Proc near
     push ecx
     push esi
     push edi
@@ -10697,7 +10698,7 @@ csDone:
 CheckServer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+;       
 ;
 ;            NAME:           FindAdapterServer
 ;
@@ -10711,7 +10712,7 @@ CheckServer    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindAdapterServer	Proc near
+FindAdapterServer       Proc near
     push ax
     push bx
 
@@ -10735,7 +10736,7 @@ fasDone:
     pop bx
     pop ax
     ret
-FindAdapterServer	Endp
+FindAdapterServer       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -10771,7 +10772,7 @@ fsLoop:
     jnc fsDone
 ;
     add bx,SIZE adapter_typ
-    loop fsLoop	
+    loop fsLoop 
 ;
     stc
 
@@ -10792,20 +10793,52 @@ FindServer  ENDP
 ;           DESCRIPTION:    Load server module
 ;
 ;           PARAMETERS:     AL          Priority
+;                           BH          Device #
+;                           BL          Unit #
 ;                           ES:EDI      Server name
+;
+;           RETURNS:        BX          Server app sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_serv_name     DB 'Load Server',0
 
 load_serv  PROC far
+    push edx
+;
     call FindServer
     jc lsDone
 ;
-    mov edi,edx
-    add edi,SIZE rdos_header
+    push es
+    push fs
+;
+    push ax
+    mov ax,flat_sel
+    mov fs,ax
+    mov eax,SIZE serv_app_struc
+    AllocateSmallGlobalMem
+;    
+    add edx,SIZE rdos_header
+    mov es:sa_info_linear,edx
+    mov eax,fs:[edx].serv_header_size
+    mov ecx,fs:[edx].serv_file_size
+    add edx,eax
+    mov es:sa_code_linear,edx
+    mov es:sa_code_size,ecx
+    mov es:sa_device,bh
+    mov es:sa_unit,bl
+;
+    pop ax
+    mov es:sa_prio,al
+    mov bx,es
+;
+    pop fs
+    pop es
+;
+    clc
 
 lsDone:
+    pop edx
     retf32
 load_serv  ENDP
 

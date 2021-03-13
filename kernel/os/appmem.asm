@@ -269,10 +269,11 @@ serv_name  DB 'fat', 0
 
 serv_proc:
     int 3
-    mov al,4
     mov ax,cs
     mov es,ax
     mov edi,OFFSET serv_name
+    mov al,4
+    mov bx,100h
     LoadServer
 
 test_name    DB 'Test',0
