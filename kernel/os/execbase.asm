@@ -317,6 +317,58 @@ CreateProg Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           CreateServ
+;
+;       DESCRIPTION:    Make global copy of server name
+;
+;       PARAMETERS:     EDX         Adapter linear
+;                       GS          Program sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateServ Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    xor ecx,ecx
+    mov esi,edx
+    add esi,SIZE rdos_header
+    add esi,OFFSET serv_name
+
+cpsSizeLoop:
+    inc ecx
+    lods byte ptr ds:[esi]
+    or al,al
+    jnz cpsSizeLoop
+;
+    mov eax,ecx
+    AllocateSmallGlobalMem
+;
+    add edx,SIZE rdos_header
+    mov esi,edx
+    add esi,OFFSET serv_name
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov gs:pr_name_sel,es
+;    
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateServ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RemoveProg
 ;
 ;       DESCRIPTION:    Remove prog
@@ -6063,7 +6115,6 @@ HexToAscii      ENDP
 load_serv_name     DB 'Load Server',0
 
 load_serv  PROC far
-    int 3
     push edx
 ;
     call FindServer
@@ -6072,6 +6123,27 @@ load_serv  PROC far
     call GetServerLoader
     jc lsDone
 ;
+    call InitProgramBlock
+    mov gs:pr_loader,ax
+    mov gs:pr_kernel_file,0
+;
+    movzx ebx,dx
+    ProcessIdToSel
+    jc lsDebugOk
+;    
+    push ds
+    mov ds,ebx
+    mov ax,ds:pf_module_arr
+    mov gs:pr_debug_id,ax
+    pop ds
+
+lsDebugOk:
+    GetThread
+    mov gs:pr_parent_thread,ax
+;
+    int 3
+    call CreateServ
+
 
     push es
     push fs
