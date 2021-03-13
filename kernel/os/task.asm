@@ -10376,9 +10376,6 @@ create_serv_proc_callback:
     sti
     CreateLdt
 ;
-    GetThread
-    mov fs,ax
-;
     push ds
     call trap_create_process
     pop ds
@@ -10797,14 +10794,7 @@ FindServer  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_serv_app_callback:
-    int 3
     sti
-;
-    push ax
-;
-    GetThread
-    mov fs,ax
-;
     push ds
     call trap_create_process
     pop ds
@@ -10812,8 +10802,8 @@ create_serv_app_callback:
     mov es,ds:cm_process
     call init_prot_callback_frame
 ;
-    pop es
     int 3
+    mov es,ds:cm_eax
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

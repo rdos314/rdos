@@ -268,13 +268,13 @@ serv_proc_name DB 'Server Process', 0
 serv_name  DB 'fat', 0
 
 serv_proc:
-    int 3
     mov ax,cs
     mov es,ax
     mov edi,OFFSET serv_name
     mov al,4
     mov bx,100h
     LoadServer
+    int 3
 
 test_name    DB 'Test',0
 
