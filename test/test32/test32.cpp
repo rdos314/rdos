@@ -24,7 +24,4 @@
 void main()
 {
     RdosTestGate("");
-    ServTest();
-    ServTest();
-    ServTest();
 }

@@ -10802,8 +10802,14 @@ create_serv_app_callback:
     mov es,ds:cm_process
     call init_prot_callback_frame
 ;
-    int 3
-    mov es,ds:cm_eax
+    mov edx,ds:cm_eax
+    mov ebx,ds:cm_ebx
+    mov ax,ds
+    mov es,ax
+    mov ds,bx
+    FreeMem
+    mov es,dx
+    ExecServer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -859,5 +859,6 @@ register_serv_gate_nr       = 780
 
 create_serv_proc_nr         = 781
 load_serv_nr                = 782
+exec_serv_nr                = 783
 
 osgate_entries              = 800

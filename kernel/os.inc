@@ -1878,9 +1878,17 @@ CreateServerProcess    MACRO
                         ENDM
 
 ; IN  AL          Priority
+; IN  BH          Device #
+; IN  AL          Unit #
 ; IN  ES:EDI      Server name
+; OUT BX          Server app sel
 LoadServer        MACRO
     OsGate load_serv_nr
+                        ENDM
+
+; IN  ES          Server app sel
+ExecServer        MACRO
+    OsGate exec_serv_nr
                         ENDM
 
 ; IN  BX    Thread #

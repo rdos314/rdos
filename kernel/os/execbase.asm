@@ -5807,6 +5807,22 @@ terminate_app_thread_fail:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ExecServ
+;
+;           DESCRIPTION:    Exec server
+;
+;           PARAMETERS:     ES      Server app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+exec_serv_name  DB 'Exec Server', 0
+
+exec_serv:
+    int 3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    init module
@@ -5956,6 +5972,12 @@ InitExec_    Proc near
     mov edi,OFFSET kernel_debug_event_name
     xor cl,cl
     mov ax,kernel_debug_event_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET exec_serv
+    mov edi,OFFSET exec_serv_name
+    xor cl,cl
+    mov ax,exec_serv_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_focus
