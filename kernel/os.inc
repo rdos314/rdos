@@ -1886,9 +1886,10 @@ LoadServer        MACRO
     OsGate load_serv_nr
                         ENDM
 
+; IN  BX          Program #
 ; IN  ES          Server app sel
-ExecServer        MACRO
-    OsGate exec_serv_nr
+CreateServerApp        MACRO
+    OsGate create_serv_app_nr
                         ENDM
 
 ; IN  BX    Thread #

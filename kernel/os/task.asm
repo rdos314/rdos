@@ -10657,6 +10657,7 @@ start_tasking:
 
 create_serv_app_callback:
     sti
+    int 3
     push ds
     call trap_create_process
     pop ds
@@ -10671,7 +10672,7 @@ create_serv_app_callback:
     mov ds,bx
     FreeMem
     mov es,dx
-    ExecServer
+;    ExecServer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -10715,12 +10716,14 @@ init_serv_app_regs    ENDP
 ;
 ;           DESCRIPTION:    Create server app
 ;
-;           PARAMETERS:     AL          Priority
+;           PARAMETERS:     BX          Program sel
 ;                           ES          Server app sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateServerApp  PROC near
+create_serv_app_name DB 'Create Server App', 0
+
+create_serv_app  PROC far
     sub esp,30
     push ebp
     mov ebp,esp
@@ -10761,7 +10764,7 @@ CreateServerApp  PROC near
     NotifyCreateProcess
     mov es:p_cr3,eax
 ;
-    mov bx,1
+    mov bx,[ebp].cr_ebx
     call create_process_sel
     call add_process_thread
     call init_prot_thread
@@ -10783,8 +10786,8 @@ CreateServerApp  PROC near
     popf
     pop ebp
     add esp,30
-    ret
-CreateServerApp  ENDP
+    retf32
+create_serv_app  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -11363,6 +11366,12 @@ timer_free_list_create:
     mov edi,OFFSET create_serv_proc_name
     xor cl,cl
     mov ax,create_serv_proc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_serv_app
+    mov edi,OFFSET create_serv_app_name
+    xor cl,cl
+    mov ax,create_serv_app_nr
     RegisterOsGate
 ;
     mov esi,OFFSET fork_process

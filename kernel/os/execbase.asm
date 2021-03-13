@@ -331,6 +331,7 @@ CreateServ Proc near
     push es
     push eax
     push ecx
+    push edx
     push esi
     push edi
 ;
@@ -377,6 +378,7 @@ cpsSizeLoop:
 ;    
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop eax
     pop es
@@ -6170,8 +6172,7 @@ HexToAscii      ENDP
 ;
 ;           DESCRIPTION:    Load server module
 ;
-;           PARAMETERS:     AL          Priority
-;                           BH          Device #
+;           PARAMETERS:     BH          Device #
 ;                           BL          Unit #
 ;                           ES:EDI      Server name
 ;
@@ -6182,8 +6183,17 @@ HexToAscii      ENDP
 load_serv_name     DB 'Load Server',0
 
 load_serv  PROC far
-    int 3
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
     push edx
+    push esi
+    push edi
+;
+    int 3
 ;
     call FindServer
     jc lsDone
@@ -6204,17 +6214,10 @@ load_serv  PROC far
     mov gs:pr_dir_sel,0
     mov gs:pr_env_sel,0
 ;
+    push ebx
     mov ebx,gs
     ProgramCreated
-
-
-    push es
-    push fs
-    push ecx
-    push esi
-    push edi
-;
-    push eax
+    pop ebx
 ;
     mov ax,flat_sel
     mov fs,ax
@@ -6274,23 +6277,20 @@ lsCopyDone:
     xor al,al
     stosb
 ;
-    pop eax
-    mov es:sa_prio,al
-;
-    mov ax,es
-;    call CreateServerApp
-    mov bx,es
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop fs
-    pop es
-;
-    clc
+    mov ebx,gs
+    mov ds,gs:pr_loader
+    call fword ptr ds:loader_create_serv_proc
 
 lsDone:
+    pop edi
+    pop esi
     pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     retf32
 load_serv  ENDP
 

@@ -373,6 +373,10 @@ loader_detach_kernel_fork_proc    DD ?,?
 ; OUT  GS                 Program sel
 loader_is_valid_serv_proc         DD ?,?
 
+; IN   BX                 Program ID
+; IN   ES:EDI             Thread name
+loader_create_serv_proc           DD ?,?
+
 loader_interface_struc    ENDS
 
 module_struc    STRUC

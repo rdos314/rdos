@@ -3139,6 +3139,23 @@ create_process  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           create_serv
+;
+;           DESCRIPTION:    Create serv
+;
+;           PARAMETERS:     BX                 Program ID
+;                           ES                 Server app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_serv    Proc far
+    CreateServerApp
+    ret
+create_serv  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           unload_user_exe
 ;
 ;           DESCRIPTION:    Unload user exe
@@ -5615,6 +5632,7 @@ l32 DD OFFSET fork_proc,                  SEG code
 l33 DD OFFSET detach_user_fork_proc,      SEG code
 l34 DD OFFSET detach_kernel_fork_proc,    SEG code
 l35 DD OFFSET is_valid_serv,              SEG code
+l36 DD OFFSET create_serv,                SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc
