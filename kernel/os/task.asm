@@ -10657,7 +10657,6 @@ start_tasking:
 
 create_serv_app_callback:
     sti
-    int 3
     push ds
     call trap_create_process
     pop ds
@@ -10672,7 +10671,7 @@ create_serv_app_callback:
     mov ds,bx
     FreeMem
     mov es,dx
-;    ExecServer
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -10739,7 +10738,6 @@ create_serv_app  PROC far
     push esi
     push edi
 ;
-    int 3
     mov [ebp].cr_seg,cs
     mov dword ptr [ebp].cr_offs,0
     mov word ptr [ebp].cr_prio,2

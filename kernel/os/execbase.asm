@@ -6280,6 +6280,7 @@ lsCopyDone:
     pop ebx
     mov ds,gs:pr_loader
     call fword ptr ds:loader_create_serv_proc
+    mov bx,es
 
 lsDone:
     pop edi
@@ -6291,7 +6292,7 @@ lsDone:
     pop fs
     pop es
     pop ds
-    retf32
+    ret
 load_serv  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
