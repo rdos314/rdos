@@ -2841,6 +2841,72 @@ is_valid_exe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           is_valid_serv
+;
+;           DESCRIPTION:    Check for valid server
+;
+;           PARAMETERS:     EDX     Linear address
+;
+;           RETURNS:        GS      Program sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_valid_serv Proc far
+    push ds
+    push es
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov esi,edx
+;
+    xor edx,edx
+    mov eax,SIZE pe_program_struc
+    AllocateSmallGlobalMem
+;
+    mov ax,ds:[esi].exeh_signature
+    cmp ax,5A4Dh
+    jne ivsFail
+;
+    mov ax,ds:[esi].exeh_reloc_offs
+    cmp ax,40h
+    jne ivsFail
+;
+    mov ax,ds:[esi+3Ch]
+    movzx edx,ax
+;
+    mov ax,ds:[esi+edx]
+    cmp ax,'EP'
+    jne ivsFail
+;
+    mov ax,es
+    mov gs,ax
+    mov gs:ppr_app_name,0
+    mov gs:ppr_app_env,0
+    mov gs:ppr_app_cmd_line,0
+    clc
+    jmp ivsDone
+
+ivsFail:
+    FreeMem
+    stc
+
+ivsDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop es
+    pop ds
+    ret
+is_valid_serv Endp
+                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init_module
 ;
 ;           DESCRIPTION:    Init module
@@ -5548,6 +5614,7 @@ l31 DD OFFSET attach_debug,               SEG code
 l32 DD OFFSET fork_proc,                  SEG code
 l33 DD OFFSET detach_user_fork_proc,      SEG code
 l34 DD OFFSET detach_kernel_fork_proc,    SEG code
+l35 DD OFFSET is_valid_serv,              SEG code
 
 init    PROC far
     mov eax,SIZE loader_interface_struc

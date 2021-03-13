@@ -39,6 +39,8 @@ INCLUDE ..\fs.inc
 INCLUDE ..\wait.inc
 INCLUDE chandle.inc
 INCLUDE ..\debevent.inc
+INCLUDE ..\serv.def
+INCLUDE servdev.def
 
 IFDEF __WASM__
     .686p
@@ -46,6 +48,14 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
+
+server_header   STRUC
+
+serv_header_size    DD ?
+serv_file_size      DD ?
+serv_name           DB ?
+
+server_header   ENDS
 
 proc_end_wait_header    STRUC
 
@@ -1090,6 +1100,66 @@ gplDone:
     pop ds
     ret
 GetProgramLoader Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetServerLoader
+;
+;       DESCRIPTION:    Get server loader
+;
+;       PARAMETERS:     EDX     Adapter
+;
+;       RETURNS:        AX      Loader
+;                       GS      Program sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetServerLoader Proc near
+    push ds
+    push fs
+    push ecx
+    push edx
+    push esi
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    add edx,SIZE rdos_header
+    add edx,fs:[edx].serv_header_size
+;
+    mov ax,SEG data
+    mov fs,ax
+    movzx ecx,fs:loader_count
+    or ecx,ecx
+    je gslFail
+;
+    mov esi,OFFSET loader_arr
+
+gslLoop:
+    mov ds,fs:[esi]
+    call fword ptr ds:loader_is_valid_serv_proc
+    jnc gslOk
+;
+    add esi,2
+    loop gslLoop
+
+gslFail:
+    stc
+    jmp gslDone
+
+gslOk:
+    mov ax,fs:[esi]
+    clc
+
+gslDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop fs
+    pop ds
+    ret
+GetServerLoader Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5804,21 +5874,290 @@ terminate_app_thread:
 terminate_app_thread_fail:
     TerminateThread
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
 ;
+;            NAME:           CheckServer
 ;
-;           NAME:           ExecServ
+;            DESCRIPTION:    Check for server
 ;
-;           DESCRIPTION:    Exec server
+;            PARAMETERS:     EDX        Base address
+;                            ES:EDI     Server name
 ;
-;           PARAMETERS:     ES      Server app sel
+;            RETURNS:        NC         OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-exec_serv_name  DB 'Exec Server', 0
+CheckServer     Proc near
+    push ecx
+    push esi
+    push edi
+;
+    mov esi,edx
+    add esi,SIZE rdos_header
+    add esi,OFFSET serv_name
 
-exec_serv:
+csLoop:
+    lods byte ptr fs:[esi]
+    cmp al,es:[edi]
+    stc
+    jne csDone
+;
+    inc edi
+    or al,al
+    jnz csLoop
+;
+    clc
+
+csDone:
+    pop edi
+    pop esi
+    pop ecx
+    ret
+CheckServer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;            NAME:           FindAdapterServer
+;
+;            DESCRIPTION:    Find server in adapter
+;
+;            PARAMETERS:     EDX        Base address
+;                            ES:EDI     Server name
+;
+;            RETURNS:        NC         Found
+;                               EDX     Base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindAdapterServer       Proc near
+    push ax
+    push bx
+
+fasLoop:
+    mov ax,fs:[edx].typ
+    cmp ax,RdosServer
+    jne fasNext
+;
+    call CheckServer
+    jnc fasDone
+
+fasNext:
+    cmp ax,RdosEnd
+    stc
+    je fasDone
+;
+    add edx,fs:[edx].len
+    jmp fasLoop
+
+fasDone:
+    pop bx
+    pop ax
+    ret
+FindAdapterServer       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FindServer
+;
+;           DESCRIPTION:    Find server module
+;
+;           PARAMETERS:     ES:EDI      Server name
+;
+;            RETURNS:       NC         Found
+;                               EDX     Base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindServer PROC near
+    push fs
+    push gs
+    push ax
+    push bx
+    push cx
+;
+    mov ax,flat_sel
+    mov fs,ax
+    mov ax,system_data_sel
+    mov gs,ax
+    mov cx,gs:rom_modules
+    mov bx,OFFSET rom_adapters
+
+fsLoop:
+    mov edx,gs:[bx].adapter_base
+    call FindAdapterServer
+    jnc fsDone
+;
+    add bx,SIZE adapter_typ
+    loop fsLoop 
+;
+    stc
+
+fsDone:
+    pop cx
+    pop bx
+    pop ax
+    pop gs
+    pop fs
+    ret
+FindServer  ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LoadServer
+;
+;           DESCRIPTION:    Load server module
+;
+;           PARAMETERS:     AL          Priority
+;                           BH          Device #
+;                           BL          Unit #
+;                           ES:EDI      Server name
+;
+;           RETURNS:        BX          Server app sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_serv_name     DB 'Load Server',0
+
+load_serv  PROC far
     int 3
+    push edx
+;
+    call FindServer
+    jc lsDone
+;
+    call GetServerLoader
+    jc lsDone
+;
+
+    push es
+    push fs
+    push ecx
+    push esi
+    push edi
+;
+    push eax
+;
+    mov ax,flat_sel
+    mov fs,ax
+;
+    xor ecx,ecx
+    mov esi,edx
+    add esi,SIZE rdos_header
+    add esi,OFFSET serv_name
+
+lsSizeLoop:
+    inc ecx
+    lods byte ptr fs:[esi]
+    or al,al
+    jnz lsSizeLoop
+;
+    add ecx,5
+    mov eax,SIZE serv_app_struc
+    add eax,ecx
+    AllocateSmallGlobalMem
+;    
+    add edx,SIZE rdos_header
+    mov esi,edx
+    mov es:sa_info_linear,edx
+    mov eax,fs:[edx].serv_header_size
+    mov ecx,fs:[edx].serv_file_size
+    add edx,eax
+    mov es:sa_code_linear,edx
+    mov es:sa_code_size,ecx
+    mov es:sa_device,bh
+    mov es:sa_unit,bl
+;
+    add esi,OFFSET serv_name
+    mov edi,OFFSET sa_name
+
+lsCopyLoop:
+    lods byte ptr fs:[esi]
+    or al,al
+    jz lsCopyDone
+;
+    stos byte ptr es:[edi]
+    jmp lsCopyLoop
+
+lsCopyDone:
+    mov al,' '
+    stosb
+;
+    mov al,bh
+    call HexToAscii
+    stosw
+    mov al,'.'
+    stosb
+;
+    mov al,bl
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    pop eax
+    mov es:sa_prio,al
+;
+    mov ax,es
+;    call CreateServerApp
+    mov bx,es
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop fs
+    pop es
+;
+    clc
+
+lsDone:
+    pop edx
+    retf32
+load_serv  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5974,10 +6313,10 @@ InitExec_    Proc near
     mov ax,kernel_debug_event_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET exec_serv
-    mov edi,OFFSET exec_serv_name
+    mov esi,OFFSET load_serv
+    mov edi,OFFSET load_serv_name
     xor cl,cl
-    mov ax,exec_serv_nr
+    mov ax,load_serv_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_focus

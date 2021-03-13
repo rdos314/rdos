@@ -369,6 +369,10 @@ loader_detach_user_fork_proc      DD ?,?
 
 loader_detach_kernel_fork_proc    DD ?,?
 
+; IN   EDX                Image linear
+; OUT  GS                 Program sel
+loader_is_valid_serv_proc         DD ?,?
+
 loader_interface_struc    ENDS
 
 module_struc    STRUC
