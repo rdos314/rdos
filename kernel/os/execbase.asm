@@ -6182,8 +6182,13 @@ load_serv  PROC far
     mov gs:pr_parent_thread,ax
 ;
     call CreateServ
-    int 3
     call CreateServParam
+;
+    mov gs:pr_dir_sel,0
+    mov gs:pr_env_sel,0
+;
+    mov ebx,gs
+    ProgramCreated
 
 
     push es
