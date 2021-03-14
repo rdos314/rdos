@@ -8220,7 +8220,7 @@ trap_init_tasking       PROC near
     SetBitness
 ;
     call trap_create_process
-    CreateLdt
+    CreatePrivateLdt
     CreateHandleData
 ;
     push cx
@@ -10370,7 +10370,7 @@ create_callback_frame_done:
 
 create_serv_proc_callback:
     sti
-    CreateLdt
+    CreateSharedLdt
 ;
     push ds
     call trap_create_process

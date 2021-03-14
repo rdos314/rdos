@@ -1675,7 +1675,7 @@ AddKernelModule     Endp
 
 spawn_startup:
     sti
-    CreateLdt
+    CreatePrivateLdt
     CreateHandleData
 ;
     GetThread
@@ -1977,7 +1977,7 @@ spawn_program32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fork_startup:
-    CreateLdt
+    CreatePrivateLdt
     CreateHandleData
 ;
     xor eax,eax
@@ -2634,7 +2634,7 @@ ukFocusOk:
 
 ukConsoleDone:
     DestroyHandleData
-    DestroyLdt
+    DestroyPrivateLdt
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

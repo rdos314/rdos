@@ -690,8 +690,8 @@ process_terminated_nr       = 648
 process_id_to_sel_nr        = 649
 get_process_id_nr           = 650
 
-create_ldt_nr               = 651
-destroy_ldt_nr              = 652
+create_private_ldt_nr       = 651
+destroy_private_ldt_nr      = 652
 
 create_c_handle_nr          = 653
 clone_c_handle_nr           = 654
@@ -861,5 +861,8 @@ create_serv_proc_nr         = 781
 load_serv_nr                = 782
 create_serv_app_nr          = 783
 exec_serv_nr                = 784
+
+create_shared_ldt_nr        = 785
+destroy_shared_ldt_nr       = 786
 
 osgate_entries              = 800
