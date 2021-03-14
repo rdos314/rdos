@@ -898,7 +898,7 @@ allocate_local_linear   PROC far
 ;    
     mov edx,local_page_linear + 1000h
     mov ecx,eax
-    mov eax,flat_size
+    GetFlatSize
     call cs:allocate_page_entries_proc
     jnc allocate_page_local_ok
 ;
@@ -953,7 +953,7 @@ allocate_debug_local_linear     PROC far
 ;    
     mov edx,ds:local_big_base
     mov ecx,eax
-    mov eax,flat_size
+    GetFlatSize
     call cs:allocate_page_entries_proc
     jnc allocate_debug_page_local_ok
 ;
@@ -999,6 +999,12 @@ reserve_local_linear    PROC far
     push ebx
     push ecx
     push edx
+    push edi
+;
+    push eax
+    GetFlatSize
+    mov edi,eax
+    pop eax
 ;
     dec eax
     and ax,0F000h
@@ -1008,13 +1014,13 @@ reserve_local_linear    PROC far
     EnterSection ds:local_mem_section
     cmp edx,local_page_linear
     jc reserve_local_linear_inv_range
-    cmp edx,flat_size
+    cmp edx,edi
     jae reserve_local_linear_inv_range
     mov ecx,eax
     add ecx,edx
     cmp ecx,local_page_linear
     jc reserve_local_linear_inv_range
-    cmp ecx,flat_size
+    cmp ecx,edi
     jae reserve_local_linear_inv_range
 ;
     shr eax,12
@@ -1032,6 +1038,7 @@ reserve_local_linear_done:
     LeaveSection ds:local_mem_section
     popf
 ;
+    pop edi
     pop edx
     pop ecx
     pop ebx
@@ -1063,7 +1070,13 @@ resize_flat_linear      PROC far
     push ecx
     push edx
     push esi
+    push edi
 ;       
+    push eax
+    GetFlatSize
+    mov edi,eax
+    pop eax
+;
     mov bx,system_data_sel
     mov ds,bx
     mov esi,ds:flat_base
@@ -1072,7 +1085,7 @@ resize_flat_linear      PROC far
     mov ds,bx
     EnterSection ds:local_mem_section
 ;
-    cmp edx,flat_size
+    cmp edx,edi
     jae resize_flat_leave
 ;
     add edx,esi
@@ -1174,7 +1187,7 @@ resize_flat_shrink:
     sub ds:local_big_used_mem,ecx
     shr ecx,12
 ;
-    mov eax,flat_size
+    mov eax,edi
     sub eax,edx
     jc resize_flat_leave
 ;    
@@ -1196,6 +1209,7 @@ resize_flat_leave:
     LeaveSection ds:local_mem_section
 
 resize_flat_done:    
+    pop edi
     pop esi
     pop edx
     pop ecx
@@ -2176,8 +2190,14 @@ resize_linear_name      DB 'Resize Linear',0
 resize_linear   PROC far
     push ds
     push esi
+    push edi
 ;    
-    cmp edx,flat_size
+    push eax
+    GetFlatSize
+    mov edi,eax
+    pop eax
+;
+    cmp edx,edi
     jnc resize_mem_error
 ;
     cmp edx,local_page_linear
@@ -2206,6 +2226,7 @@ resize_mem_error:
     stc
 
 resize_mem_done:
+    pop edi
     pop esi
     pop ds
     retf32
@@ -3928,7 +3949,9 @@ init_process_mem   Proc far
 ;
     mov ax,local_mem_sel
     mov ds,ax
-    mov ds:local_big_avail_mem,flat_size - local_page_linear
+    GetFlatSize
+    sub eax,local_page_linear
+    mov ds:local_big_avail_mem,eax
     mov ds:local_big_used_mem,0
     mov ds:local_big_base,local_page_linear
     InitSection ds:local_mem_section
