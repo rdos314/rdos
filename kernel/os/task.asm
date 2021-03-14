@@ -10688,16 +10688,18 @@ create_serv_app_callback:
     call trap_create_process
     pop ds
 ;
+    int 3
     mov es,ds:cm_process
     call init_prot_callback_frame
 ;
-    mov edx,ds:cm_eax
+    mov edx,ds:cm_edx
     mov ebx,ds:cm_ebx
     mov ax,ds
     mov es,ax
-    mov ds,bx
+    xor ax,ax
+    mov ds,ax
     FreeMem
-    mov es,dx
+;
     ExecServer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -10743,7 +10745,8 @@ init_serv_app_regs    ENDP
 ;           DESCRIPTION:    Create server app
 ;
 ;           PARAMETERS:     BX          Program sel
-;                           ES          Server app sel
+;                           ES:EDI      Thread name
+;                           EDX         Server image header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -10759,7 +10762,6 @@ create_serv_app  PROC far
     push fs
     push gs
 ;
-    mov ax,es
     push eax
     push ebx
     push ecx
@@ -10772,7 +10774,7 @@ create_serv_app  PROC far
     mov word ptr [ebp].cr_prio,2
     mov word ptr [ebp].cr_stack,stack0_size
     mov word ptr [ebp].cr_mode,0
-    mov dword ptr [ebp].cr_name,OFFSET sa_name
+    mov dword ptr [ebp].cr_name,edi
     mov [ebp+4].cr_name,es
     xor ax,ax
     mov fs,ax

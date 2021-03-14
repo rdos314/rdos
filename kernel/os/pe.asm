@@ -3217,7 +3217,8 @@ create_process  Endp
 ;           DESCRIPTION:    Create serv
 ;
 ;           PARAMETERS:     BX                 Program ID
-;                           ES                 Server app sel
+;                           ES:EDI             Thread name
+;                           EDX                Server image header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -155,6 +155,8 @@ pr_ldt_obj           DW ?
 pr_handle_mem_sel    DW ?
 pr_handle_sel        DW ?
 
+pr_server_linear     DD ?
+
 pr_memmap_list       DD ?
 pr_memmap_spinlock   spinlock_typ <>
 
@@ -371,6 +373,7 @@ loader_is_valid_serv_proc         DD ?,?
 
 ; IN   BX                 Program ID
 ; IN   ES:EDI             Thread name
+; IN   EDX                Server image header
 loader_create_serv_proc           DD ?,?
 
 ; IN   DS:ESI             Image name

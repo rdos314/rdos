@@ -6176,7 +6176,7 @@ HexToAscii      ENDP
 ;                           BL          Unit #
 ;                           ES:EDI      Server name
 ;
-;           RETURNS:        BX          Server app sel
+;           RETURNS:        BX          Program ID
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6223,8 +6223,8 @@ load_serv  PROC far
     mov fs,ax
 ;
     xor ecx,ecx
+    add edx,SIZE rdos_header
     mov esi,edx
-    add esi,SIZE rdos_header
     add esi,OFFSET serv_name
 
 lsSizeLoop:
@@ -6233,26 +6233,13 @@ lsSizeLoop:
     or al,al
     jnz lsSizeLoop
 ;
-    add ecx,5
-    mov eax,SIZE serv_app_struc
-    add eax,ecx
+    mov eax,ecx
+    add eax,6
     AllocateSmallGlobalMem
 ;    
-    add edx,SIZE rdos_header
+    xor edi,edi
     mov esi,edx
-    mov es:sa_info_linear,edx
-    mov eax,fs:[edx].serv_header_size
-    mov ecx,fs:[edx].serv_file_size
-    add edx,eax
-    mov es:sa_code_linear,edx
-;    mov gs:pr_code_linear,edx
-    mov es:sa_code_size,ecx
-;    mov gs:pr_code_size,ecx
-    mov es:sa_device,bh
-    mov es:sa_unit,bl
-;
     add esi,OFFSET serv_name
-    mov edi,OFFSET sa_name
 
 lsCopyLoop:
     lods byte ptr fs:[esi]
@@ -6280,9 +6267,11 @@ lsCopyDone:
     stosb
 ;
     pop ebx
+    xor edi,edi
     mov ds,gs:pr_loader
     call fword ptr ds:loader_create_serv_proc
-    mov bx,es
+;
+    FreeMem
 
 lsDone:
     pop edi
@@ -6305,7 +6294,7 @@ load_serv  ENDP
 ;           DESCRIPTION:    Server startup
 ;
 ;           PARAMETERS:     BX      Program ID
-;                           ES      Serv app sel
+;                           EDX     Server image header
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6313,6 +6302,7 @@ exec_serv_name DB 'Exec Server', 0
 
 exec_serv:
     sti
+    int 3
 ;
     mov ax,es
     mov fs,ax
