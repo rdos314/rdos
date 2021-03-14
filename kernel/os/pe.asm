@@ -1335,7 +1335,8 @@ CreateLib       Endp
 ;           DESCRIPTION:    Create server lib
 ;
 ;           PARAMETERS:     FS:ESI      Image name
-;                           EDX         Image base
+;                           EBX         Server image base
+;                           EDX         File pos
 ;
 ;           RETURNS:        ES          Lib handle
 ;
@@ -1380,6 +1381,7 @@ cslSizeOk:
     mov es:mod_size,0
     mov es:mod_size+4,0
     mov es:mod_c_file_handle,0
+    mov es:mod_serv_linear,ebx
     mov es:lib_file_pos,edx
     mov es:lib_init_param,0
     mov es:mod_loader,pe_loader_sel
@@ -2489,6 +2491,7 @@ ciInitServ:
     mov edx,es:lib_file_pos
     mov es:lib_header,edx
     mov eax,edx
+    add edx,es:mod_serv_linear
 ;
     mov si,ds:[edx].peh_nthdr_size
     mov di,ds:[edx].peh_objects
@@ -3113,6 +3116,7 @@ init_serv_module Proc far
     mov ax,flat_sel
     mov ds,ax
     add edx,ds:[edx].serv_header_size
+    mov ebx,edx
 ;
     mov ax,ds:[edx].exeh_signature
     cmp ax,5A4Dh
@@ -3133,6 +3137,7 @@ init_serv_module Proc far
     stc
     jne ismDone
 ;
+    sub edx,ebx
     mov ax,serv_data_sel
     mov ds,ax
     call CreateServLib    

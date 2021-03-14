@@ -395,6 +395,7 @@ mod_id                  DW ?
 
 mod_loader              DW ?
 mod_c_file_handle       DW ?
+mod_serv_linear         DD ?
 
 mod_section             section_typ <>
 mod_key                 DB ?
