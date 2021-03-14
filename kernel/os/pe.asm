@@ -132,6 +132,7 @@ ExceptionEvent Proc near
     push ebp
     mov ebp,[ebp]
     push eax
+    push bx
     push di
 ;
     push eax
@@ -149,14 +150,15 @@ ExceptionEvent Proc near
     mov es:[di].excPtr,eax
 ;
     push ds
-    mov ax,flat_data_sel
-    mov ds,ax
+    mov bx,ds:mod_code_sel
+    mov ds,ds:mod_data_sel
     mov eax,ds:[ebp+20]
     pop ds
     mov es:[di].excEip,eax
-    mov es:[di].excCs,flat_code_sel
+    mov es:[di].excCs,bx
 ;
     pop di
+    pop bx
     pop eax
     pop ebp
     ret
@@ -214,8 +216,7 @@ CreateProcessEvent Proc near
     mov es:[di].cpeStartEip,eax
 ;
     mov ebx,ds:lib_objects
-    mov ax,flat_data_sel
-    mov ds,eax
+    mov ds,ds:mod_data_sel
     mov eax,ds:[ebx].o_va
     mov es:[di].cpeObjectRva,eax
 ;       
