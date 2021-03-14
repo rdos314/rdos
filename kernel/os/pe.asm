@@ -4792,7 +4792,10 @@ reserve_pe_mem  PROC far
     pop bx
     pop ds
 ;
-    cmp edx,flat_size
+    push eax
+    GetFlatSize
+    cmp edx,eax
+    pop eax
     jnc reserve_pe_mem_done
 ;
     dec eax
