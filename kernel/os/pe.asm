@@ -2483,6 +2483,7 @@ ciInitApp:
     jmp ciInitCom
 
 ciInitServ:
+    int 3
     mov bx,flat_sel
     mov ds,bx
     mov edx,es:lib_file_pos
@@ -3132,7 +3133,6 @@ init_serv_module Proc far
     stc
     jne ismDone
 ;
-    int 3
     mov ax,serv_data_sel
     mov ds,ax
     call CreateServLib    

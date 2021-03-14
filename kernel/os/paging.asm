@@ -384,6 +384,9 @@ ptUser:
     cmp edx,serv_linear
     jb ptNotServ
 ;
+    cmp edx,flat_size
+    jae ptNotServ
+;
     call cs:get_page_dir_proc
     test al,1
     jnz ptServDirOk
