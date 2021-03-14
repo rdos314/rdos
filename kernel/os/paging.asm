@@ -697,7 +697,10 @@ set_flat_linear_valid   PROC far
     cmp edx,local_page_linear
     jc set_valid_done
 ;
-    cmp edx,flat_size
+    push eax
+    GetFlatSize
+    cmp edx,eax
+    pop eax
     jae set_valid_done
 ;
     mov ecx,eax
@@ -769,7 +772,10 @@ set_flat_linear_invalid PROC far
     cmp edx,local_page_linear
     jc set_inv_done
 ;
-    cmp edx,flat_size
+    push eax
+    GetFlatSize
+    cmp edx,eax
+    pop eax
     jae set_inv_done
 ;
     push edx
@@ -862,7 +868,10 @@ set_flat_linear_readwrite       PROC far
     cmp edx,local_page_linear
     jc set_readwrite_done
 ;
-    cmp edx,flat_size
+    push eax
+    GetFlatSize
+    cmp edx,eax
+    pop eax
     jae set_readwrite_done
 ;
     push edx
@@ -944,7 +953,10 @@ set_flat_linear_read    PROC far
     cmp edx,local_page_linear
     jc set_read_done
 ;
-    cmp edx,flat_size
+    push eax
+    GetFlatSize
+    cmp edx,eax
+    pop eax
     jae set_read_done
 ;
     mov ecx,eax
