@@ -1330,6 +1330,70 @@ CreateLib       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateServLib
+;
+;           DESCRIPTION:    Create server lib
+;
+;           PARAMETERS:     FS:ESI      Image name
+;                           EDX         Image base
+;
+;           RETURNS:        ES          Lib handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateServLib       Proc near
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    xor cx,cx
+    push esi
+
+cslSizeLoop:
+    mov al,fs:[esi]
+    or al,al
+    jz cslSizeOk
+;
+    cmp al,'.'
+    jz cslSizeOk
+;
+    inc cx
+    inc esi
+    jmp cslSizeLoop
+
+cslSizeOk:
+    pop esi
+    movzx eax,cx
+    mov edi,OFFSET lib_name
+    add eax,edi
+    inc eax
+    AllocateSmallGlobalMem
+;
+    rep movs byte ptr es:[edi],fs:[esi]
+    mov byte ptr es:[edi],0
+;       
+    mov es:mod_name_offs,OFFSET lib_name
+    mov es:mod_sel,serv_code_sel
+    mov es:mod_base,0
+    mov es:mod_base+4,0
+    mov es:mod_size,0
+    mov es:mod_size+4,0
+    mov es:mod_c_file_handle,0
+    mov es:lib_file_pos,edx
+    mov es:lib_init_param,0
+    mov es:mod_loader,pe_loader_sel
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    ret
+CreateServLib       Endp
+                      
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           FindLib
 ;
 ;           DESCRIPTION:    Search for a DLL or app module
@@ -2391,6 +2455,11 @@ CreateImage     Proc near
     mov ds,bx
     mov ebp,ds:flat_base
 ;
+    mov bx,es:mod_c_file_handle
+    or bx,bx
+    jz ciInitServ
+
+ciInitApp:
     mov bx,flat_data_sel
     mov ds,bx
 ;
@@ -2409,9 +2478,26 @@ CreateImage     Proc near
     mov di,es:peh_objects
     FreeMem
     pop es
-;
     pop eax
     mov es:lib_header,eax
+    jmp ciInitCom
+
+ciInitServ:
+    mov bx,flat_sel
+    mov ds,bx
+    mov edx,es:lib_file_pos
+    mov es:lib_header,edx
+    mov eax,edx
+;
+    mov si,ds:[edx].peh_nthdr_size
+    mov di,ds:[edx].peh_objects
+    mov ecx,ds:[edx].peh_image_size
+    mov edx,ds:[edx].peh_image_base
+;
+    mov bx,serv_data_sel
+    mov ds,bx
+
+ciInitCom:
     mov es:mod_base,edx
     mov es:mod_size,ecx
 ;
@@ -3021,7 +3107,6 @@ init_serv_module Proc far
     push esi
     push edi
 ;
-    int 3
     mov ax,ds
     mov fs,ax
     mov ax,flat_sel
@@ -3047,10 +3132,11 @@ init_serv_module Proc far
     stc
     jne ismDone
 ;
+    int 3
     mov ax,serv_data_sel
     mov ds,ax
-;    call CreateLib    
-;    call CreateImage
+    call CreateServLib    
+    call CreateImage
 ;
     mov al,32
     mov bx,es
