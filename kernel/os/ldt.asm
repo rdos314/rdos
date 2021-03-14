@@ -129,7 +129,8 @@ create_ldt      PROC far
     AllocateSmallGlobalMem
     mov ax,es
     mov ds,fs:p_prog_sel
-    mov ds:pr_ldt_sel,ax
+    mov ds:pr_ldt_obj,ax
+    mov fs:p_ldt_obj,ax
     mov ds,ax
 ;
     mov eax,10000h
@@ -199,7 +200,7 @@ destroy_ldt     PROC far
     mov ds,ds:p_prog_sel
 ;
     xor bx,bx
-    xchg bx,ds:pr_ldt_sel
+    xchg bx,ds:pr_ldt_obj
     mov ds,bx
 ;
     xor bx,bx
@@ -247,8 +248,7 @@ allocate_ldt    PROC far
 ;       
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov ds,ds:pr_ldt_sel
+    mov ds,ds:p_ldt_obj
 ;
     mov bx,ds   
     push bx
@@ -409,8 +409,7 @@ allocate_multiple_ldt   PROC far
     push ax
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel 
-    mov ds,ds:pr_ldt_sel
+    mov ds,ds:p_ldt_obj 
     pop ax
     mov bx,ds
     mov es,bx
@@ -519,8 +518,7 @@ free_ldt    PROC far
 ;       
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov ds,ds:pr_ldt_sel
+    mov ds,ds:p_ldt_obj
     and bl,NOT 7
 ;       
     EnterSection ds:ldt_section
@@ -544,7 +542,7 @@ free_ldt    ENDP
 ;
 ;           DESCRIPTION:    Get free entries in LDT
 ;
-;           RETURNS:        AX		Free entries
+;           RETURNS:        AX          Free entries
 ;                                                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -559,8 +557,7 @@ get_free_ldt    PROC far
 ;       
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov ds,ds:pr_ldt_sel
+    mov ds,ds:p_ldt_obj
 ;
     EnterSection ds:ldt_section
     mov bx,ds:ldt_data_sel

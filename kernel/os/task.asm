@@ -8708,6 +8708,9 @@ init_thread_block       PROC near
     mov ax,ds:p_ldt_sel
     mov es:p_ldt_sel,ax
 ;
+    mov ax,ds:p_ldt_obj
+    mov es:p_ldt_obj,ax
+;
     mov ax,ds:p_serv_sel
     mov es:p_serv_sel,ax
 ;
@@ -8994,6 +8997,7 @@ create_tss64    PROC near
 ;
     mov ds:p_tss_sel,0
     mov ds:p_ldt_sel,0
+    mov ds:p_ldt_obj,0
     mov ds:p_ldt,long_ldt_sel
     mov ds:p_futex_id,0
 ;
@@ -10433,6 +10437,7 @@ create_first_thread       PROC near
     mov es:p_console,ax
     mov es:p_parent_console,ax
     mov es:p_ldt_sel,ax
+    mov es:p_ldt_obj,ax
     mov es:p_lib_sel,ax
     mov es:p_serv_sel,ax
 ;

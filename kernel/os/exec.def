@@ -159,7 +159,7 @@ pr_section           section_typ <>
 pr_bitness           DB ?
 pr_filler            DB ?
 
-pr_ldt_sel           DW ?
+pr_ldt_obj           DW ?
 
 pr_handle_mem_sel    DW ?
 pr_handle_sel        DW ?

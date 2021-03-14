@@ -417,6 +417,7 @@ p_sleep_offset      DD ?
 p_wait_list                 DW ?
 p_is_waiting        DB ?
 p_ref_count                 DW ?
+p_ldt_obj                   DW ?
 p_core              DW ?
 p_prog_id           DW ?
 p_prog_sel          DW ?
