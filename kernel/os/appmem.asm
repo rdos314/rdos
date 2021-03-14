@@ -49,24 +49,27 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CreateServMem
+;           NAME:           InitServMem
 ;
 ;           DESCRIPTION:    Create serv mem
 ;
-;           PARAMETERS:     BX     Server sel
+;           PARAMETERS:     BX     Ldt obj
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_serv_mem_name      DB 'Create Server Mem',0
+    public InitServMem
 
-create_serv_mem  Proc far
+InitServMem  Proc near
     push ds
     push es
     pushad
+;
+    GetThread
+    mov ds,ax
+    mov ds:p_serv_sel,bx
 ;
     mov ds,bx
     mov es,bx
@@ -103,8 +106,8 @@ create_serv_mem  Proc far
     popad
     pop es
     pop ds
-    retf32
-create_serv_mem  Endp
+    ret
+InitServMem  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -322,12 +325,6 @@ init_app_mem    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET create_serv_mem
-    mov edi,OFFSET create_serv_mem_name
-    xor cl,cl
-    mov ax,create_serv_mem_nr
-    RegisterOsGate
 ;
     mov esi,OFFSET allocate_small_serv
     mov edi,OFFSET allocate_small_serv_name

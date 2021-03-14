@@ -43,6 +43,8 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+    extern InitServMem:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -229,6 +231,7 @@ create_shared_ldt      PROC far
     push bx
 ;
     CreateServDir
+    call InitServMem
     mov ds,bx
 ;
     call InitLdt

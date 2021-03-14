@@ -961,11 +961,6 @@ AllocateFixedVMLinear   MACRO
     OsGate allocate_fixed_vm_linear_nr
                     ENDM
 
-;  IN  BX          Server sel
-CreateServMem    MACRO
-    OsGate create_serv_mem_nr
-                    ENDM
-
 ; IN  EAX          Bytes
 ; OUT ES           LDT selector
 AllocateSmallServ    MACRO

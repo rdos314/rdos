@@ -10374,17 +10374,14 @@ create_serv_proc_callback:
     mov es:p_ldt,0
     sti
 ;
-    int 3
-    CreateSharedLdt
-;
     push ds
     call trap_create_process
     pop ds
 ;
+    CreateSharedLdt
+;
     mov es,ds:cm_process
     call init_prot_callback_frame
-;
-    CreateServMem
 ;
     mov eax,ds:cm_eax
     mov ebx,ds:cm_ebx
