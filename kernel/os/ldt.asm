@@ -64,8 +64,8 @@ init_ldt    PROC near
     mov ds,ax
     mov es,ax
 ;    
-    mov esi,OFFSET create_ldt
-    mov edi,OFFSET create_ldt_name
+    mov esi,OFFSET create_private_ldt
+    mov edi,OFFSET create_private_ldt_name
     xor cl,cl
     mov ax,create_private_ldt_nr
     RegisterOsGate
@@ -76,14 +76,14 @@ init_ldt    PROC near
     mov ax,destroy_private_ldt_nr
     RegisterOsGate
 ;    
-    mov esi,OFFSET create_ldt
-    mov edi,OFFSET create_ldt_name
+    mov esi,OFFSET create_shared_ldt
+    mov edi,OFFSET create_shared_ldt_name
     xor cl,cl
     mov ax,create_shared_ldt_nr
     RegisterOsGate
 ;    
-    mov esi,OFFSET destroy_ldt
-    mov edi,OFFSET destroy_ldt_name
+    mov esi,OFFSET destroy_shared_ldt
+    mov edi,OFFSET destroy_shared_ldt_name
     xor cl,cl
     mov ax,destroy_shared_ldt_nr
     RegisterOsGate
@@ -116,19 +116,18 @@ init_ldt    PROC near
     ret
 init_ldt    ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CREATE_LDT
+;           NAME:           InitLdt
 ;
-;           DESCRIPTION:    Create LDT for process
+;           DESCRIPTION:    Init ldt
+;
+;           PARAMETERS:     DS           Ldt obj
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_ldt_name   DB 'Create LDT', 0
-
-create_ldt      PROC far
+InitLdt      PROC near
     push ds
     push es
     push fs
@@ -136,14 +135,7 @@ create_ldt      PROC far
 ;
     GetThread
     mov fs,ax
-;
-    mov eax,SIZE ldt_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov ds,fs:p_prog_sel
-    mov ds:pr_ldt_obj,ax
-    mov fs:p_ldt_obj,ax
-    mov ds,ax
+    mov fs:p_ldt_obj,ds
 ;
     mov eax,10000h
     AllocateBigLinear
@@ -164,7 +156,7 @@ create_ldt      PROC far
     mov dx,8
     mov cx,200h
 
-init_ldt_loop:
+ilLoop:
     mov ax,dx
     stosw
     xor ax,ax
@@ -172,7 +164,7 @@ init_ldt_loop:
     stosw
     stosw
     add dx,8
-    loop init_ldt_loop
+    loop ilLoop
 ;
     sub di,8
     stosw
@@ -184,14 +176,81 @@ init_ldt_loop:
     pop fs
     pop es
     pop ds
-    retf32
-create_ldt      ENDP
-
+    ret
+InitLdt      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DESTROY_LDT
+;           NAME:           CreatePrivateLdt
+;
+;           DESCRIPTION:    Create private LDT (for app processes)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_private_ldt_name   DB 'Create Private LDT', 0
+
+create_private_ldt      PROC far
+    push ds
+    push es
+    push eax
+;
+    mov eax,SIZE ldt_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_prog_sel
+    mov es:pr_ldt_obj,ds
+;
+    call InitLdt
+;
+    pop eax
+    pop es
+    pop ds
+    retf32
+create_private_ldt      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSharedLdt
+;
+;           DESCRIPTION:    Create shared LDT (for server processes)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_shared_ldt_name   DB 'Create Shared LDT', 0
+
+create_shared_ldt      PROC far
+    push ds
+    push es
+    push eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov ds:pr_ldt_obj,0
+;
+    mov eax,SIZE ldt_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+;
+    call InitLdt
+;
+    pop eax
+    pop es
+    pop ds
+    retf32
+create_shared_ldt      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DestroyLdt
 ;
 ;           DESCRIPTION:    Destroy LDT
 ;
@@ -213,6 +272,61 @@ destroy_ldt     PROC far
 ;
     xor bx,bx
     xchg bx,ds:pr_ldt_obj
+    or bx,bx
+    jz dlDone
+;
+    mov ds,bx
+;
+    xor bx,bx
+    xchg bx,ds:ldt_sel
+    xor ax,ax
+    lldt ax
+    FreeGdt
+;
+    xor ax,ax
+    xchg ax,ds:ldt_data_sel
+    mov es,ax
+    FreeMem
+;
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem
+
+dlDone:
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    retf32
+destroy_ldt     ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DestroySharedLdt
+;
+;           DESCRIPTION:    Destroy shared LDT
+;
+;           PARAMETERS:         
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+destroy_shared_ldt_name DB 'Destroy Shared LDT', 0
+
+destroy_shared_ldt     PROC far
+    push ds
+    push es
+    push ax
+    push bx
+;
+    GetThread
+    mov ds,ax
+;
+    xor bx,bx
+    xchg bx,ds:p_ldt_obj
     mov ds,bx
 ;
     xor bx,bx
@@ -237,8 +351,7 @@ destroy_ldt     PROC far
     pop es
     pop ds
     retf32
-destroy_ldt     ENDP
-
+destroy_shared_ldt     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
