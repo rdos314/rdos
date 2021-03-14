@@ -2634,7 +2634,7 @@ ukFocusOk:
 
 ukConsoleDone:
     DestroyHandleData
-    DestroyPrivateLdt
+    DestroyLdt
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

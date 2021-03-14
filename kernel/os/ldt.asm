@@ -73,7 +73,7 @@ init_ldt    PROC near
     mov esi,OFFSET destroy_ldt
     mov edi,OFFSET destroy_ldt_name
     xor cl,cl
-    mov ax,destroy_private_ldt_nr
+    mov ax,destroy_ldt_nr
     RegisterOsGate
 ;    
     mov esi,OFFSET create_shared_ldt

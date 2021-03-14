@@ -289,8 +289,8 @@ CreatePrivateLdt     MACRO
     OsGate create_private_ldt_nr
                     ENDM
 
-DestroyPrivateLdt     MACRO
-    OsGate destroy_private_ldt_nr
+DestroyLdt     MACRO
+    OsGate destroy_ldt_nr
                     ENDM
 
 CreateSharedLdt     MACRO
