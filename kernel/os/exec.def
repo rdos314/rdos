@@ -389,7 +389,8 @@ module_struc    STRUC
 
 mod_base                DD ?,?
 mod_size                DD ?,?
-mod_sel                 DW ?
+mod_code_sel            DW ?
+mod_data_sel            DW ?
 mod_name_offs           DW ?
 mod_id                  DW ?
 

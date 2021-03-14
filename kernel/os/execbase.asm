@@ -1631,7 +1631,7 @@ akmSizeLoop:
     mov es:mod_base+4,0
     mov es:mod_size,ebp
     mov es:mod_size+4,0
-    mov es:mod_sel,bx
+    mov es:mod_code_sel,bx
     mov es:mod_name_offs,SIZE module_struc
     mov es:mod_loader,0
     mov es:mod_id,0
@@ -5346,7 +5346,7 @@ get_module_sel    Proc far
     jc gmsDone
 ;
     mov ds,ebx
-    mov ax,ds:mod_sel
+    mov ax,ds:mod_code_sel
     clc
 
 gmsDone:

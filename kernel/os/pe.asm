@@ -1310,7 +1310,8 @@ create_lib_size_ok:
     mov byte ptr es:[edi],0
 ;       
     mov es:mod_name_offs,OFFSET lib_name
-    mov es:mod_sel,flat_code_sel
+    mov es:mod_code_sel,flat_code_sel
+    mov es:mod_data_sel,flat_data_sel
     mov es:mod_base,0
     mov es:mod_base+4,0
     mov es:mod_size,0
@@ -1375,7 +1376,8 @@ cslSizeOk:
     mov byte ptr es:[edi],0
 ;       
     mov es:mod_name_offs,OFFSET lib_name
-    mov es:mod_sel,serv_code_sel
+    mov es:mod_code_sel,serv_code_sel
+    mov es:mod_data_sel,serv_data_sel
     mov es:mod_base,0
     mov es:mod_base+4,0
     mov es:mod_size,0
