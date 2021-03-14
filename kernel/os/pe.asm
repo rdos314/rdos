@@ -799,9 +799,9 @@ CreateUserFunc  Proc near
 ;
     mov esi,edx
 ;
-    mov edx,section_linear
     mov eax,MAX_SECTIONS * 16  ; 4 bytes for index + 12 bytes for data
-    ReserveLocalLinear
+    AllocateLocalLinear
+    mov gs:ppr_section_linear,edx
 ;
     mov ax,system_data_sel
     mov ds,ax
@@ -886,10 +886,14 @@ ResetUserFunc     PROC near
     push ds
     pushad
 ;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_prog_sel
+    mov ebx,ds:ppr_section_linear
+;
     mov eax,flat_sel
     mov ds,eax
 ;
-    mov ebx,section_linear
     mov ecx,MAX_SECTIONS
 
 ruLoop:

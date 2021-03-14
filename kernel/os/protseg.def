@@ -66,8 +66,6 @@ serv_size               EQU 038000000h
 serv_byte_linear        EQU 0B8000000h
 serv_byte_size          EQU 004000000h
 
-section_linear          EQU 0BC000000h
-
 flat_size               EQU 0BE000000h
 
 system_mem_start        EQU 0BE000000h

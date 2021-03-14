@@ -478,9 +478,6 @@ ptUserNotPresent:
     test al,2
     jnz ptUserReserved
 ;
-    cmp edx,section_linear
-    jae ptNormal
-;
     cmp edx,local_page_linear
     jae ptUserPossibleFault
 ;
