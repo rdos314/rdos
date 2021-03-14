@@ -7023,7 +7023,6 @@ get_thread_done:
     ret
 get_thread      ENDP
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -7045,6 +7044,29 @@ get_thread_pr   PROC far
     pop ds
     retf32
 get_thread_pr   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetFlatSize
+;
+;           DESCRIPTION:    Get flat size
+;
+;           PARAMETERS:     EAX          Flat size
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_flat_size_name DB 'Get Flat Size',0
+
+get_flat_size   PROC far
+    push ds
+    mov ax,core_data_sel
+    mov ds,ax
+    mov ds,ds:cs_curr_thread    
+    mov eax,ds:p_flat_size
+    pop ds
+    retf32
+get_flat_size   ENDP
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -11166,6 +11188,12 @@ timer_free_list_create:
     mov edi,OFFSET run_ap_core_name
     xor cl,cl
     mov ax,run_ap_core_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_flat_size
+    mov edi,OFFSET get_flat_size_name
+    xor cl,cl
+    mov ax,get_flat_size_nr
     RegisterOsGate
 ;
     mov esi,OFFSET use_own_preempt_timer

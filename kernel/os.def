@@ -852,6 +852,7 @@ install_fixed_disc_nr       = 774
 register_demand_mount_nr    = 775
 check_drive_nr              = 776
 create_serv_dir_nr          = 777
+get_flat_size_nr            = 778
 allocate_small_serv_nr      = 779
 
 register_serv_gate_nr       = 780

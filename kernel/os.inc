@@ -554,6 +554,11 @@ NotifyCreateLongProcess MACRO
     OsGate notify_create_long_process_nr
                     ENDM
 
+; OUT EAX    Flat size
+GetFlatSize MACRO
+    OsGate get_flat_size_nr
+                    ENDM
+
 ; OUT BX     Serv sel
 CreateServDir MACRO
     OsGate create_serv_dir_nr
