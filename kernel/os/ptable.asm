@@ -671,8 +671,9 @@ local_free_process32     Proc near
     mov bx,process_dir_sel
     mov es,bx
 ;
+    GetFlatSize
+    mov ecx,eax
     xor esi,esi
-    mov ecx,flat_size
     shr ecx,22
     xor edi,edi
 
@@ -718,7 +719,7 @@ fpNextDirPage32:
     add edi,4
     loop fpDirLoop32
 ;
-    mov eax,flat_size
+    GetFlatSize
     shr eax,22
     mov cx,400h
     sub cx,ax
@@ -3473,8 +3474,10 @@ local_free_process64     Proc near
     mov ds,bx
     mov bx,process_dir_sel
     mov es,bx
+;
+    GetFlatSize
     xor esi,esi
-    mov ecx,flat_size
+    mov ecx,eax
     shr ecx,21
     xor edi,edi
 
@@ -3523,7 +3526,7 @@ fpNextDirPage64:
     add edi,8
     loop fpDirLoop64
 ;
-    mov eax,flat_size
+    GetFlatSize
     shr eax,21
     mov cx,800h
     sub cx,ax
