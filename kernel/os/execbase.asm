@@ -49,14 +49,6 @@ ELSE
     .386p
 ENDIF
 
-server_header   STRUC
-
-serv_header_size    DD ?
-serv_file_size      DD ?
-serv_name           DB ?
-
-server_header   ENDS
-
 proc_end_wait_header    STRUC
 
 pew_obj             wait_obj_header <>
@@ -1198,7 +1190,6 @@ GetServerLoader Proc near
     mov fs,ax
 ;
     add edx,SIZE rdos_header
-    add edx,fs:[edx].serv_header_size
 ;
     mov ax,SEG data
     mov fs,ax
@@ -6302,7 +6293,6 @@ exec_serv_name DB 'Exec Server', 0
 
 exec_serv:
     sti
-    int 3
 ;
     mov ax,es
     mov fs,ax
@@ -6340,8 +6330,6 @@ exec_serv:
     mov ax,gs:pr_loader
     mov ds:p_loader,ax
 ;       
-    int 3
-    mov edx,fs:sa_code_linear
     xor esi,esi
     xor edi,edi
     mov ds,gs:pr_name_sel
@@ -6351,6 +6339,8 @@ exec_serv:
     mov gs,gs:pr_loader
     call fword ptr gs:loader_init_serv_proc
     pop gs
+;
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

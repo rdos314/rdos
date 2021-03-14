@@ -268,12 +268,12 @@ test_serv   Endp
 
 serv_proc_name DB 'Server Process', 0
 
-serv_name  DB 'fat', 0
+fat_serv_name  DB 'fat', 0
 
 serv_proc:
     mov ax,cs
     mov es,ax
-    mov edi,OFFSET serv_name
+    mov edi,OFFSET fat_serv_name
     mov al,4
     mov bx,100h
     LoadServer

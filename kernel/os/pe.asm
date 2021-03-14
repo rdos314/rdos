@@ -32,6 +32,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\serv.def
 INCLUDE int.def
 INCLUDE exec.def
 INCLUDE pe.def
@@ -39,7 +40,7 @@ INCLUDE system.inc
 INCLUDE ..\debevent.inc
 INCLUDE ..\handle.inc
 INCLUDE chandle.inc
-
+INCLUDE servdev.def
 
 SYS_BASE EQU 0DE000000h
 
@@ -2865,6 +2866,7 @@ is_valid_serv Proc far
 ;
     mov ax,flat_sel
     mov ds,ax
+    add edx,ds:[edx].serv_header_size
     mov esi,edx
 ;
     xor edx,edx
@@ -3003,7 +3005,7 @@ init_module  Endp
 ;
 ;           PARAMETERS:     DS:ESI  Image name
 ;                           ES:EDI  Command line
-;                           EDX     Image linear
+;                           EDX     Server image header
 ;
 ;           RETURNS:        BX      Module selector
 ;                           AL      Bitness
@@ -3019,10 +3021,12 @@ init_serv_module Proc far
     push esi
     push edi
 ;
+    int 3
     mov ax,ds
     mov fs,ax
     mov ax,flat_sel
     mov ds,ax
+    add edx,ds:[edx].serv_header_size
 ;
     mov ax,ds:[edx].exeh_signature
     cmp ax,5A4Dh

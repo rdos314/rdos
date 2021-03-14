@@ -10688,7 +10688,6 @@ create_serv_app_callback:
     call trap_create_process
     pop ds
 ;
-    int 3
     mov es,ds:cm_process
     call init_prot_callback_frame
 ;
