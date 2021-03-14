@@ -160,9 +160,6 @@ pr_bitness           DB ?
 pr_filler            DB ?
 
 pr_ldt_sel           DW ?
-pr_ldt_data_sel      DW ?
-pr_ldt_free          DW ?
-pr_ldt_section       section_typ <>
 
 pr_handle_mem_sel    DW ?
 pr_handle_sel        DW ?
