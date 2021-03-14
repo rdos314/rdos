@@ -119,7 +119,18 @@ create_ldt_name   DB 'Create LDT', 0
 create_ldt      PROC far
     push ds
     push es
+    push fs
     pushad
+;
+    GetThread
+    mov fs,ax
+;
+    mov eax,SIZE ldt_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,fs:p_prog_sel
+    mov ds:pr_ldt_sel,ax
+    mov ds,ax
 ;
     mov eax,10000h
     AllocateBigLinear
@@ -127,20 +138,14 @@ create_ldt      PROC far
     mov cx,1000h
     CreateLdtSelector
 ;
-    GetThread
-    mov es,ax
-    mov es:p_ldt,bx
-;
-    mov ds,es:p_prog_sel
-    mov ds:pr_ldt_sel,bx
+    mov fs:p_ldt,bx
+    mov ds:ldt_sel,bx
     lldt bx
 ;
     AllocateGdt
     CreateDataSelector16
-    GetThread
-    mov es,ax
-    mov es:p_ldt_sel,bx
-    mov ds:pr_ldt_data_sel,bx
+    mov fs:p_ldt_sel,bx
+    mov ds:ldt_data_sel,bx
     mov es,bx
     xor di,di
     mov dx,8
@@ -159,10 +164,11 @@ init_ldt_loop:
     sub di,8
     stosw
 ;
-    InitSection ds:pr_ldt_section
-    mov ds:pr_ldt_free,ldt_start
+    InitSection ds:ldt_section
+    mov ds:ldt_free,ldt_start
 ;       
     popad
+    pop fs
     pop es
     pop ds
     retf32
@@ -190,16 +196,27 @@ destroy_ldt     PROC far
 ;
     GetThread
     mov ds,ax
+    mov ds,ds:p_prog_sel
 ;
     xor bx,bx
-    xchg bx,ds:p_ldt
+    xchg bx,ds:pr_ldt_sel
+    mov ds,bx
+;
+    xor bx,bx
+    xchg bx,ds:ldt_sel
     xor ax,ax
     lldt ax
     FreeGdt
 ;
     xor ax,ax
-    xchg ax,ds:p_ldt_sel
+    xchg ax,ds:ldt_data_sel
     mov es,ax
+    FreeMem
+;
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
     FreeMem
 ;
     pop bx
@@ -231,16 +248,17 @@ allocate_ldt    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
+    mov ds,ds:pr_ldt_sel
 ;
     mov bx,ds   
     push bx
     mov ds,bx
     mov es,bx
-    EnterSection ds:pr_ldt_section
-    mov ds,ds:pr_ldt_data_sel
+    EnterSection ds:ldt_section
+    mov ds,ds:ldt_data_sel
 
 allocate_ldt_again:
-    mov bx,es:pr_ldt_free
+    mov bx,es:ldt_free
     or bx,bx
     jnz allocate_ldt_ok
 ;
@@ -282,7 +300,7 @@ extend_ldt_loop:
     stosw
     sub dx,1008h
     pop es
-    mov es:pr_ldt_free,dx
+    mov es:ldt_free,dx
     sldt ax
     lldt ax
     pop dx
@@ -298,10 +316,10 @@ allocate_ldt_ok:
     int 3
 
 al1:
-    mov es:pr_ldt_free,di
+    mov es:ldt_free,di
     mov di,ds
     pop ds
-    LeaveSection ds:pr_ldt_section
+    LeaveSection ds:ldt_section
     mov ds,di
     and bl,NOT 7
 ;
@@ -365,7 +383,7 @@ extend_mldt_loop:
     stosw
     pop es
     sub dx,1008h
-    mov es:pr_ldt_free,dx
+    mov es:ldt_free,dx
     pop dx
     add dx,1000h
     pop cx
@@ -392,12 +410,13 @@ allocate_multiple_ldt   PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel 
+    mov ds,ds:pr_ldt_sel
     pop ax
     mov bx,ds
     mov es,bx
     push ds
-    EnterSection ds:pr_ldt_section
-    mov ds,ds:pr_ldt_data_sel
+    EnterSection ds:ldt_section
+    mov ds,ds:ldt_data_sel
     mov bx,ldt_start
 
 allocate_mldt_retry_loop:
@@ -426,7 +445,7 @@ allocate_mldt_next:
     mov dx,cx
     shl dx,3
     sub bx,dx
-    mov ax,es:pr_ldt_free
+    mov ax,es:ldt_free
 
 allocate_mldt_head_first_loop:
     sub ax,bx
@@ -438,7 +457,7 @@ allocate_mldt_head_first_loop:
     add ax,bx
     mov si,ax
     mov ax,[si]
-    mov es:pr_ldt_free,ax
+    mov es:ldt_free,ax
     loop allocate_mldt_head_first_loop
 ;
     jmp allocate_mldt_end
@@ -469,7 +488,7 @@ allocate_mldt_save_head:
 allocate_mldt_end:
     pop cx
     pop ds
-    LeaveSection ds:pr_ldt_section
+    LeaveSection ds:ldt_section
 ;
     pop di
     pop si
@@ -501,15 +520,16 @@ free_ldt    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
+    mov ds,ds:pr_ldt_sel
     and bl,NOT 7
 ;       
-    EnterSection ds:pr_ldt_section
-    mov es,ds:pr_ldt_data_sel
+    EnterSection ds:ldt_section
+    mov es,ds:ldt_data_sel
     mov byte ptr es:[bx+5],0
-    mov ax,ds:pr_ldt_free
+    mov ax,ds:ldt_free
     mov es:[bx],ax
-    mov ds:pr_ldt_free,bx
-    LeaveSection ds:pr_ldt_section
+    mov ds:ldt_free,bx
+    LeaveSection ds:ldt_section
 ;
     pop ax
     pop es
@@ -540,9 +560,10 @@ get_free_ldt    PROC far
     GetThread
     mov ds,ax
     mov ds,ds:p_prog_sel
+    mov ds,ds:pr_ldt_sel
 ;
-    EnterSection ds:pr_ldt_section
-    mov bx,ds:pr_ldt_data_sel
+    EnterSection ds:ldt_section
+    mov bx,ds:ldt_data_sel
     mov es,bx
 ;
     GetSelectorBaseSize
@@ -550,7 +571,7 @@ get_free_ldt    PROC far
     mov ax,2000h
     sub ax,cx
 ;
-    mov bx,ds:pr_ldt_free
+    mov bx,ds:ldt_free
 
 gfLoop:
     or bx,bx
@@ -566,7 +587,7 @@ gfLoop:
     jmp gfLoop
 
 gfDone:
-    LeaveSection ds:pr_ldt_section
+    LeaveSection ds:ldt_section
 ;
     pop edx
     pop ecx

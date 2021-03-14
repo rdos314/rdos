@@ -128,6 +128,14 @@ lp_env_sel          DD ?
 
 load_param_struc   ENDS
 
+ldt_struc    STRUC
+
+ldt_sel           DW ?
+ldt_data_sel      DW ?
+ldt_free          DW ?
+ldt_section       section_typ <>
+
+ldt_struc    ENDS
 
 MAX_PROGRAM_MODULES   = 256
 MAX_PROGRAM_PROCESSES = 256
