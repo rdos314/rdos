@@ -10369,8 +10369,12 @@ create_callback_frame_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_serv_proc_callback:
-    int 3
+    GetThread
+    mov es,ax
+    mov es:p_ldt,0
     sti
+;
+    int 3
     CreateSharedLdt
 ;
     push ds
