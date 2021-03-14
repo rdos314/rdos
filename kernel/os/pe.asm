@@ -2485,7 +2485,6 @@ ciInitApp:
     jmp ciInitCom
 
 ciInitServ:
-    int 3
     mov bx,flat_sel
     mov ds,bx
     mov edx,es:lib_file_pos
@@ -2500,6 +2499,7 @@ ciInitServ:
 ;
     mov bx,serv_data_sel
     mov ds,bx
+    xor bx,bx
 
 ciInitCom:
     mov es:mod_base,edx
@@ -2537,6 +2537,10 @@ create_image_alloced:
     add es:lib_objects,edx
     mov es:mod_base,edx
 ;
+    or bx,bx
+    jz ciObjServ
+
+ciObjApp:
     push es
     push edx
     mov ax,ds
@@ -2546,7 +2550,25 @@ create_image_alloced:
     ReadCFile
     pop edx
     pop es
+    jmp ciObjCom
+
+ciObjServ:
+    push ds
+    push es
 ;
+    mov esi,es:mod_serv_linear
+    mov ax,ds
+    mov es,ax
+    mov ax,flat_sel
+    mov ds,ax
+    mov edi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+    mov edi,edx
+;
+    pop es
+    pop ds
+
+ciObjCom:
     mov esi,es:lib_header
     movzx ecx,[esi].peh_objects
     mov esi,es:lib_objects

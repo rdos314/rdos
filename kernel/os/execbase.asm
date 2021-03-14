@@ -6339,7 +6339,34 @@ exec_serv:
     mov gs,gs:pr_loader
     call fword ptr gs:loader_init_serv_proc
     pop gs
+    jc esFail
 ;
+    int 3
+;
+    SetBitness
+;
+    push ds
+    push es
+    mov es,bx
+;
+    movzx ebx,bx
+    ModuleLoaded
+;
+    mov ebx,eax
+    call AddProgramModule
+    call AddProcessModule
+;
+    InitSection es:mod_section
+    mov es:mod_id,bx
+;
+    mov bx,es
+    pop es
+    pop ds
+;
+    mov fs,gs:pr_loader
+    call fword ptr fs:loader_fixup_exe_proc
+
+esFail:
     int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
