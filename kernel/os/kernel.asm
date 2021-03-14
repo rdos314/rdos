@@ -939,8 +939,11 @@ prot_init:
     mov bx,serv_flat_sel
     CreateDataSelector32
 ;
-    xor edx,edx
+    mov bx,system_data_sel
+    mov ds,bx
+    mov edx,ds:flat_base
     mov ecx,serv_linear
+    sub ecx,edx
     mov bx,serv_code_sel
     CreateCodeSelector32
 ;
