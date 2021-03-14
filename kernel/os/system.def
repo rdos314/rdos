@@ -304,6 +304,15 @@ app_next                    DW ?
 
 app_seg ENDS
 
+ldt_struc    STRUC
+
+ldt_sel           DW ?
+ldt_data_sel      DW ?
+ldt_free          DW ?
+ldt_section       section_typ <>
+
+ldt_struc    ENDS
+
 block_seg       STRUC
         b_next                  DW ?
         b_prev                  DW ?

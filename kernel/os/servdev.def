@@ -25,7 +25,9 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-serv_struc STRUC
+ldt_serv_struc STRUC
+
+ldt_base                 ldt_struc <>
 
 serv_big_avail_mem       DD ?
 serv_small_avail_mem     DD ?
@@ -40,7 +42,7 @@ serv_gate_arr            DW serv_gate_entries DUP (?)
 
 serv_dir_arr             DD ?
 
-serv_struc ENDS
+ldt_serv_struc ENDS
 
 serv_app_struc  STRUC
 

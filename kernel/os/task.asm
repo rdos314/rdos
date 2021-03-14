@@ -10369,6 +10369,7 @@ create_callback_frame_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_serv_proc_callback:
+    int 3
     sti
     CreateSharedLdt
 ;
@@ -10378,14 +10379,6 @@ create_serv_proc_callback:
 ;
     mov es,ds:cm_process
     call init_prot_callback_frame
-;
-    CreateServDir
-;
-    push ds
-    GetThread
-    mov ds,ax
-    mov ds:p_serv_sel,bx
-    pop ds
 ;
     CreateServMem
 ;

@@ -43,7 +43,6 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -227,21 +226,14 @@ create_shared_ldt_name   DB 'Create Shared LDT', 0
 create_shared_ldt      PROC far
     push ds
     push es
-    push eax
+    push bx
 ;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_prog_sel
-    mov ds:pr_ldt_obj,0
-;
-    mov eax,SIZE ldt_struc
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov ds,ax
+    CreateServDir
+    mov ds,bx
 ;
     call InitLdt
 ;
-    pop eax
+    pop bx
     pop es
     pop ds
     retf32
