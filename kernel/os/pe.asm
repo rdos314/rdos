@@ -1791,14 +1791,6 @@ pagefault     Proc far
     call FindLib
     jc pfFail
 ;
-    mov ax,es:mod_data_sel
-    cmp ax,flat_data_sel
-    je pfNotServ
-;
-    int 3
-
-pfNotServ:
-
     mov ds,es:mod_data_sel
     call FindObject
     jc pfFail
@@ -2285,7 +2277,6 @@ load_page_zero:
     jmp load_page_done
 
 load_page_from_file:
-    mov bx,es:mod_c_file_handle
     mov eax,ebp
     sub eax,edi
     sub eax,[esi].o_va
@@ -2302,6 +2293,11 @@ load_page_file:
     mov ecx,1000h
 
 load_page_size_ok:
+    mov bx,es:mod_c_file_handle
+    or bx,bx
+    jz load_page_server
+
+load_page_app:
     push es
     push edx
     push edi
@@ -2314,6 +2310,31 @@ load_page_size_ok:
     jnc load_page_pad
 ;
     xor eax,eax
+    jmp load_page_pad
+
+load_page_server:
+    int 3
+    push ds
+    push es
+    push esi
+    push edi
+;
+    mov edi,edx
+    mov esi,eax
+    add esi,[esi].o_phys_offset
+    add esi,es:mod_serv_linear
+;
+    mov ax,ds
+    mov es,ax
+    mov ax,flat_sel
+    mov ds,ax
+    mov eax,ecx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    pop edi
+    pop esi
+    pop es
+    pop ds
 
 load_page_pad:    
     add edi,eax
