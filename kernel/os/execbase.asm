@@ -5877,6 +5877,9 @@ catStackOk:
     cmp ax,flat_code_sel
     je catFlat
 ;
+    cmp ax,serv_code_sel
+    je catFlat
+;
     int 3
 
 catFlat:

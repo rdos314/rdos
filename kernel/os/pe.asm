@@ -211,7 +211,8 @@ CreateProcessEvent Proc near
     mov eax,ds:mod_size
     mov es:[di].cpeImageSize,eax
 ;
-    mov es:[di].cpeStartCs,flat_code_sel
+    mov ax,ds:mod_code_sel
+    mov es:[di].cpeStartCs,ax
     mov eax,ds:lib_org_eip
     mov es:[di].cpeStartEip,eax
 ;
@@ -264,7 +265,8 @@ CreateAttachException Proc near
 ;
     mov eax,ds:lib_org_eip
     mov es:[di].excEip,eax
-    mov es:[di].excCs,flat_code_sel
+    mov ax,ds:mod_code_sel
+    mov es:[di].excCs,ax
 ;
     popad
     pop ds
@@ -320,6 +322,7 @@ TerminateProcessEvent Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateThreadEvent Proc near
+    push gs
     push eax
     push ebx
     push di
@@ -338,11 +341,14 @@ CreateThreadEvent Proc near
     mov es:[di].cteFsLinear,0
 ;
     mov es:[di].cteStartEip,edx
-    mov es:[di].cteStartCs,flat_code_sel
+    mov gs,ds:p_prog_sel
+    mov ax,gs:mod_code_sel
+    mov es:[di].cteStartCs,ax
 ;
     pop di
     pop ebx
     pop eax
+    pop gs
     ret
 CreateThreadEvent Endp
                       
@@ -932,8 +938,12 @@ ResetUserFunc   Endp
 section_patch     PROC far
     mov ax,ds
     cmp ax,flat_code_sel
+    je spOk
+;
+    cmp ax,serv_code_sel
     jne spFail
-;    
+
+spOk:
     mov ax,ds:[ebx+2]
     cmp ax,get_system_time_nr
     je spGetSysTime
@@ -2868,7 +2878,8 @@ RunImage    Proc near
     push edx
 ;
     mov edi,es:mod_base
-    mov dword ptr [ebp].load_cs,flat_code_sel
+    mov ax,es:mod_code_sel
+    mov dword ptr [ebp].load_cs,eax
     mov eax,es:lib_header
     mov eax,[eax].peh_entry_point
     add eax,edi
