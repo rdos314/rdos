@@ -1786,13 +1786,12 @@ pagefault     Proc far
     mov ds,ax
     mov ecx,ds:flat_base
     sub edx,ecx
-    mov ax,flat_data_sel
-    mov ds,ax
     and dx,0F000h
 ;
     call FindLib
     jc pfFail
 ;
+    mov ds,es:mod_data_sel
     call FindObject
     jc pfFail
 ;
@@ -3260,9 +3259,8 @@ fixup_exe Proc far
     push esi
     push edi
 ;
-    mov ax,flat_data_sel
-    mov ds,eax
     mov es,bx
+    mov ds,es:mod_data_sel
 ;
     call CreateUserFunc
     call FixupImage
@@ -3277,8 +3275,7 @@ fixup_exe Proc far
     push es
     pushad
 ;
-    mov ax,flat_data_sel
-    mov ds,ax
+    mov ds,es:mod_data_sel
     mov esi,[ebp].load_eip
     mov esi,ds:[esi-4]
     mov es:lib_org_eip,esi
@@ -3438,8 +3435,6 @@ init_thread     PROC far
     mov fs,ax
     mov ebp,fs:flat_base
     mov es,word ptr ds:p_rbx
-    mov ax,flat_data_sel
-    mov fs,ax
     mov ebx,es:pvModuleHandle
     mov edx,es:pvProcessHandle
 ;
@@ -3448,6 +3443,7 @@ init_thread     PROC far
     mov gs,ebx
     mov esi,gs:lib_header
     mov edi,gs:mod_base
+    mov fs,gs:mod_data_sel
     pop bx
 ;       
     mov ecx,es:pvArbitrary
@@ -4115,8 +4111,7 @@ ftkNoDebug:
     mov ebx,fs:pvModuleHandle
     ModuleIdToSel
     mov es,ebx
-    mov ax,flat_data_sel
-    mov ds,eax
+    mov ds,es:mod_data_sel
     mov esi,es:lib_header
     mov edi,es:mod_base
     mov eax,[esi].peh_tls_va
@@ -5005,15 +5000,12 @@ show_exception_text     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_current_dll    Proc far
-    push ds
     push es
     push eax
     push edx
     push edi
 ;       
     mov edx,edi
-    mov ax,flat_data_sel
-    mov ds,ax
     and dx,0F000h
     call FindLib
     mov bx,es
@@ -5022,7 +5014,6 @@ get_current_dll    Proc far
     pop edx
     pop eax
     pop es
-    pop ds    
     ret
 get_current_dll     Endp
 
@@ -5063,8 +5054,7 @@ unload_dll    Proc far
     pop es
 
 udWepOk:
-    mov ax,flat_data_sel
-    mov ds,ax
+    mov ds,es:mod_data_sel
     mov edi,es:mod_base
     call FreeImportedDlls
     ret
@@ -5132,8 +5122,7 @@ get_module_proc Proc far
     push es
     mov es,bx
     mov edx,es:mod_base
-    mov ax,flat_data_sel
-    mov ds,ax
+    mov ds,es:mod_data_sel
     mov esi,es:lib_header
     mov esi,[esi].peh_export_va
     pop es
@@ -5289,8 +5278,7 @@ get_resource    Proc far
     mov es,bx
     mov edx,es:mod_base
     mov esi,es:lib_header
-    mov cx,flat_data_sel
-    mov ds,cx
+    mov ds,es:mod_data_sel
     mov ecx,[esi].peh_resource_size
     mov esi,[esi].peh_resource_va
     add esi,edx
