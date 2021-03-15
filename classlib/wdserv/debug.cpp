@@ -208,16 +208,16 @@ int TDebugThread::GetMemoryModel()
 {
     int limit;
     int bitness;
-    
-    if (Cs == 0x1B3)
+
+    if (Cs == 0x1B3 || Cs == 0x2E3)
         return DEBUG_MEMORY_MODEL_FLAT;
 
     if (RdosGetSelectorInfo(Cs, &limit, &bitness))
     {
         if (limit == 0xFFFFFFFF)
             return DEBUG_MEMORY_MODEL_FLAT;
-        
-        if (bitness == 16)    
+
+        if (bitness == 16)
             return DEBUG_MEMORY_MODEL_16;
 
         if (bitness == 32)
@@ -244,7 +244,7 @@ void TDebugThread::SetupGo(TDebugBreak *bp)
     Tss tss;
 
     FDebug = FALSE;
-    
+
     FWasTrace = FALSE;
 
     RdosGetThreadTss(ThreadID, &tss);
@@ -377,7 +377,7 @@ void TDebugThread::SetException(TExceptionEvent *event)
     unsigned char ch = 0;
     int bnum;
 
-    for (bnum = 0; bnum < 4; bnum++)    
+    for (bnum = 0; bnum < 4; bnum++)
         RdosClearBreak(ThreadID, bnum);
 
     FHasBreak = FALSE;
@@ -391,9 +391,9 @@ void TDebugThread::SetException(TExceptionEvent *event)
     Eip = event->Eip;
 
     RdosReadThreadMem(ThreadID, Cs, Eip, (char *)&ch, 1);
-        
+
     if (ch == 0xCC)
-        event->Code = 0x80000003;    
+        event->Code = 0x80000003;
 
     switch (event->Code)
     {
@@ -419,7 +419,7 @@ void TDebugThread::SetException(TExceptionEvent *event)
             FaultText = "Illegal instruction";
             FHasException = TRUE;
             break;
-            
+
         case 0xC0000025:
             FaultText = "Noncontinuable exception";
             FHasException = TRUE;
@@ -551,7 +551,7 @@ void TDebugThread::SetException(TKernelExceptionEvent *event)
     int i;
     int bnum;
 
-    for (bnum = 0; bnum < 4; bnum++)    
+    for (bnum = 0; bnum < 4; bnum++)
         RdosClearBreak(ThreadID, bnum);
 
     FHasBreak = FALSE;
@@ -722,7 +722,7 @@ void TDebugThread::ReadState()
     char str[21];
 
     ok = FALSE;
-    
+
     for (i = 0; i < ThreadCount && !ok; i++)
     {
         RdosGetThreadState(i, &state);
@@ -734,18 +734,18 @@ void TDebugThread::ReadState()
     {
         strncpy(str, state.Name, 20);
         str[20] = 0;
-        
+
         for (i = 19; i >= 0; i--)
             if (str[i] == ' ')
                 str[i] = 0;
             else
                 break;
-    
+
         ThreadName = str;
 
         strncpy(str, state.List, 20);
         str[20] = 0;
-        
+
         for (i = 19; i >= 0; i--)
             if (str[i] == ' ')
                 str[i] = 0;
@@ -753,7 +753,7 @@ void TDebugThread::ReadState()
                 break;
 
         ThreadList = str;
-        
+
         ListOffset = state.Offset;
         ListSel = state.Sel;
     }
@@ -828,7 +828,7 @@ TDebugModule::TDebugModule(int Cs)
 
     FileHandle = 0;
 
-    if (RdosGetDeviceInfo(Cs, Name, &ImageSize, &DataSel, &DataSize)) 
+    if (RdosGetDeviceInfo(Cs, Name, &ImageSize, &DataSel, &DataSize))
     {
         Handle = 0x8000 | Cs;
         ImageBase = 0;
@@ -842,7 +842,7 @@ TDebugModule::TDebugModule(int Cs)
     }
     else
         Handle = 0;
-        
+
     FNew = TRUE;
 }
 
@@ -880,7 +880,7 @@ void TDebugModule::ReadName()
     size = RdosGetModuleName(Handle, str, 255);
     str[size] = 0;
 
-    ModuleName = str;    
+    ModuleName = str;
 }
 
 /*##########################################################################
@@ -952,12 +952,12 @@ TDebug::TDebug(const char *Program, const char *Param, const char *StartDir)
 
     FMemoryModel = DEBUG_MEMORY_MODEL_FLAT;
     FConfigChange = FALSE;
-    
+
     FWaitLoad = TRUE;
     FDone = FALSE;
 
     OnMsg = 0;
-    
+
     Start("Debug device", 0x4000);
 }
 
@@ -1105,7 +1105,7 @@ int TDebug::ReadMem(int Sel, long Offset, char *Buf, int Size)
     TDebugThread *Thread;
     int len;
     long diff;
- 
+
     Thread = CurrentThread;
     if (!Thread)
         Thread = ThreadList;
@@ -1133,7 +1133,7 @@ int TDebug::ReadMem(int Sel, long Offset, char *Buf, int Size)
             b = b->Next;
         }
         FSection.Leave();
-    }    
+    }
 
     return len;
 }
@@ -1181,10 +1181,10 @@ int TDebug::WriteMem(int Sel, long Offset, char *Buf, int Size)
                 b = b->Next;
             }
             FSection.Leave();
-        }    
+        }
         return RdosWriteThreadMem(Thread->ThreadID, Sel, Offset, Buf, Size);
     }
-    
+
     return 0;
 }
 
@@ -1213,7 +1213,7 @@ void TDebug::InsertThread(TDebugThread *thread)
         while (t->Next)
             t = t->Next;
 
-        t->Next = thread;            
+        t->Next = thread;
     }
     else
         ThreadList = thread;
@@ -1281,7 +1281,7 @@ void TDebug::InsertModule(TDebugModule *mod)
         while (m->Next)
             m = m->Next;
 
-        m->Next = mod;            
+        m->Next = mod;
     }
     else
         ModuleList = mod;
@@ -1318,7 +1318,7 @@ void TDebug::RemoveThread(int thread)
                 p->Next = t->Next;
             else
                 ThreadList = t->Next;
-            break;            
+            break;
         }
         else
         {
@@ -1373,7 +1373,7 @@ void TDebug::RemoveModule(int module)
                 p->Next = m->Next;
             else
                 ModuleList = m->Next;
-            break;            
+            break;
         }
         else
         {
@@ -1462,7 +1462,7 @@ int TDebug::HasModuleChange()
         if (m->FNew)
             change = TRUE;
 
-        m = m->Next;            
+        m = m->Next;
     }
 
     FSection.Leave();
@@ -1585,7 +1585,7 @@ void TDebug::SetCurrentThread(int ThreadID)
     TDebugThread *t;
 
     FSection.Enter();
-        
+
     t = ThreadList;
     while (t && t->ThreadID != ThreadID)
         t = t->Next;
@@ -1620,7 +1620,7 @@ int TDebug::GetNextThread(int ThreadID)
         if (t->ThreadID > ThreadID && t->ThreadID < ID)
             ID = t->ThreadID;
 
-        t = t->Next;            
+        t = t->Next;
     }
 
     FSection.Leave();
@@ -1659,7 +1659,7 @@ int TDebug::GetNextModule(int ModuleHandle)
             Handle = m->Handle;
         }
 
-        m = m->Next;            
+        m = m->Next;
     }
 
     FSection.Leave();
@@ -1708,7 +1708,7 @@ TDebugThread *TDebug::LockThread(int ThreadID)
 
     t = ThreadList;
     while (t && t->ThreadID != ThreadID)
-        t = t->Next;            
+        t = t->Next;
 
     return t;
 }
@@ -1748,7 +1748,7 @@ TDebugModule *TDebug::LockModule(int Handle)
 
     m = ModuleList;
     while (m && m->Handle != Handle)
-        m = m->Next;            
+        m = m->Next;
 
     return m;
 }
@@ -1793,8 +1793,8 @@ int TDebug::HasModule(const char *Name)
     {
         if (SearchName == m->ModuleName)
             found = TRUE;
-        m = m->Next;    
-    }        
+        m = m->Next;
+    }
     FSection.Leave();
 
     return found;
@@ -1816,7 +1816,7 @@ void TDebug::UpdateModules()
     TDebugModule *m;
     int model;
 
-    model = CurrentThread->GetMemoryModel();                    
+    model = CurrentThread->GetMemoryModel();
     if (model != FMemoryModel)
     {
         FMemoryModel = model;
@@ -1837,7 +1837,7 @@ void TDebug::UpdateModules()
                 break;
         }
     }
-    
+
     if (FMemoryModel != DEBUG_MEMORY_MODEL_FLAT)
     {
         if (!FindModule(CurrentThread->Cs))
@@ -1887,7 +1887,7 @@ void TDebug::LogBreaks()
     strcat(str, "]");
     LogMsg(str);
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TDebug::AddBreak
@@ -1953,7 +1953,7 @@ TDebugBreak *TDebug::GetHwBreak(int Sel, long Offset)
 {
     TDebugBreak *b;
     int ok = FALSE;
-    
+
     FSection.Enter();
 
     b = HwBreakList;
@@ -1989,7 +1989,7 @@ TDebugBreak *TDebug::GetSwBreak(int Sel, long Offset)
 {
     TDebugBreak *b;
     int ok = FALSE;
-    
+
     FSection.Enter();
 
     b = SwBreakList;
@@ -2025,7 +2025,7 @@ int TDebug::IsWatch(int Sel, long Offset)
 {
     TDebugWatch *w;
     int ok = FALSE;
-    
+
     FSection.Enter();
 
     w = WatchList;
@@ -2073,7 +2073,7 @@ void TDebug::AddBreak(int Sel, long Offset, int Hw)
         LogMsg(str);
         AddBreak(newbr);
     }
-    
+
     FSection.Enter();
 
     newbr->Next = 0;
@@ -2093,7 +2093,7 @@ void TDebug::AddBreak(int Sel, long Offset, int Hw)
         }
 
         if (!found)
-            b->Next = newbr;            
+            b->Next = newbr;
     }
     else
     {
@@ -2141,14 +2141,14 @@ void TDebug::ClearBreak(int Sel, long Offset)
             while (b->Next)
             {
                 delbr = b->Next;
-                
+
                 if (delbr->Offset == Offset && delbr->Sel == Sel)
                 {
                     b->Next = delbr->Next;
                     delete delbr;
                 }
                 else
-                    b = b->Next;                    
+                    b = b->Next;
             }
         }
     }
@@ -2161,7 +2161,7 @@ void TDebug::ClearBreak(int Sel, long Offset)
         {
             sprintf(str, "Remove global break: %04hX:%08lX", Sel, Offset);
             LogMsg(str);
-    
+
             SwBreakList = b->Next;
             RemoveBreak(b);
             delete b;
@@ -2171,7 +2171,7 @@ void TDebug::ClearBreak(int Sel, long Offset)
             while (b->Next)
             {
                 delbr = b->Next;
-                
+
                 if (delbr->Offset == Offset && delbr->Sel == Sel)
                 {
                     sprintf(str, "Remove global break: %04hX:%08lX", Sel, Offset);
@@ -2182,7 +2182,7 @@ void TDebug::ClearBreak(int Sel, long Offset)
                     delete delbr;
                 }
                 else
-                    b = b->Next;                    
+                    b = b->Next;
             }
         }
     }
@@ -2211,7 +2211,7 @@ void TDebug::AddWatch(int Sel, long Offset, int Size)
 
     sprintf(str, "Watch: %04hX:%08lX, %d byte(s)", Sel, Offset, Size);
     LogMsg(str);
-    
+
     FSection.Enter();
 
     neww->Next = 0;
@@ -2227,7 +2227,7 @@ void TDebug::AddWatch(int Sel, long Offset, int Size)
         }
 
         if (!found)
-            w->Next = neww;            
+            w->Next = neww;
     }
     else
         WatchList = neww;
@@ -2250,7 +2250,7 @@ void TDebug::ClearWatch(int Sel, long Offset, int Size)
 {
     TDebugWatch *w;
     TDebugWatch *delw;
-    
+
     FSection.Enter();
 
     w = WatchList;
@@ -2267,14 +2267,14 @@ void TDebug::ClearWatch(int Sel, long Offset, int Size)
             while (w->Next)
             {
                 delw = w->Next;
-                
+
                 if (delw->Offset == Offset && delw->Sel == Sel)
                 {
                     w->Next = delw->Next;
                     delete delw;
                 }
                 else
-                    w = w->Next;                    
+                    w = w->Next;
             }
         }
     }
@@ -2351,7 +2351,7 @@ TDebugBreak *TDebug::DoTrace()
     else
     {
         if (RdosGetDebugThread())
-            for (tries = 0; (RdosGetDebugThread() != CurrentThread->ThreadID) && tries < 100; tries++) 
+            for (tries = 0; (RdosGetDebugThread() != CurrentThread->ThreadID) && tries < 100; tries++)
                 RdosDebugNext();
         RdosDebugTrace();
     }
@@ -2385,7 +2385,7 @@ TDebugBreak *TDebug::DoGo()
     else
     {
         if (RdosGetDebugThread())
-            for (tries = 0; (RdosGetDebugThread() != CurrentThread->ThreadID) && tries < 100; tries++) 
+            for (tries = 0; (RdosGetDebugThread() != CurrentThread->ThreadID) && tries < 100; tries++)
                 RdosDebugNext();
 
         CurrentThread->ActivateBreaks(HwBreakList, WatchList);
@@ -2458,7 +2458,7 @@ int TDebug::PickNewThread()
     FSection.Enter();
 
     Thread = ThreadList;
-    
+
     while (Thread)
     {
         if (Thread->IsDebug())
@@ -2471,7 +2471,7 @@ int TDebug::PickNewThread()
         CurrentThread = Thread;
         FThreadChanged = TRUE;
     }
-        
+
     FSection.Leave();
 
     if (Thread)
@@ -2497,7 +2497,7 @@ void TDebug::FixupAfterTimeout(TDebugBreak *Bp)
     unsigned char ch = 0xCC;
     TDebugThread *Thread;
     TWaitDevice *wait;
-   
+
     wait = UserSignal.WaitTimeout(5);
     while (wait)
         wait = UserSignal.WaitTimeout(5);
@@ -2576,7 +2576,7 @@ int TDebug::AsyncTrace(int Timeout)
     {
         UserSignal.Clear();
 
-        bp = DoTrace();    
+        bp = DoTrace();
         wait = UserSignal.WaitTimeout(Timeout);
         FixupAfterTimeout(bp);
 
@@ -2602,7 +2602,7 @@ int TDebug::AsyncTrace(int Timeout)
 int TDebug::AsyncPoll(int Timeout)
 {
     TWaitDevice *wait;
-    
+
     wait = UserSignal.WaitTimeout(Timeout);
 
     if (wait)
@@ -2640,7 +2640,7 @@ void TDebug::ExitAsync()
 void TDebug::HandleCreateProcess(TCreateProcessEvent *event)
 {
     InsertThread(new TDebugThread(this, event));
-    InsertModule(new TDebugModule(event));       
+    InsertModule(new TDebugModule(event));
 }
 
 /*##########################################################################
@@ -2668,7 +2668,7 @@ void TDebug::HandleTerminateProcess(int exitcode)
         ThreadList = t;
     }
 
-    while (ModuleList)    
+    while (ModuleList)
     {
         m = ModuleList->Next;
         delete ModuleList;
@@ -2820,7 +2820,7 @@ void TDebug::HandleKernelException(TKernelExceptionEvent *event, int thread)
             sprintf(str, "Breakpoint exception: %04hX:%08lX in %d", Thread->Cs, Thread->Eip, thread);
             LogMsg(str);
         }
-    }        
+    }
 
     FSection.Leave();
 }
@@ -2908,7 +2908,7 @@ void TDebug::SignalNewData()
         case EVENT_KERNEL:
             RdosGetDebugEventData(FHandle, &kev);
             HandleKernelException(&kev, ThreadId);
-            break;                    
+            break;
 
         case 0:
             LogMsg("Stopped");
@@ -2979,7 +2979,7 @@ int TDebug::AttachRunning(const char *FileName)
             pname = ProgName;
 
             while (*pptr)
-            { 
+            {
                 if (*pptr == '/' || *pptr == '\\')
                     if (pptr[1] != 0)
                         pname = pptr + 1;
@@ -3036,7 +3036,7 @@ void TDebug::Execute()
 {
     int thread;
     char str[40];
-        
+
     RdosWaitMilli(250);
 
     FHandle = AttachRunning(FProgram.GetData());
@@ -3053,12 +3053,12 @@ void TDebug::Execute()
 
     if (!FHandle)
         FHandle = RdosSpawnDebug(FProgram.GetData(), FParam.GetData(), FStartDir.GetData(), 0, &thread);
-        
+
     RdosWaitMilli(250);
 
     if (!FHandle)
         FInstalled = FALSE;
-        
+
     while (FInstalled)
         WaitTimeout(250);
 

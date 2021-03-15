@@ -6350,8 +6350,6 @@ exec_serv:
     pop gs
     jc esFail
 ;
-    int 3
-;
     SetBitness
 ;
     push ds
@@ -6374,9 +6372,23 @@ exec_serv:
 ;
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
+    int 3
+;
+    mov ds,[ebp].load_ds
+    mov es,[ebp].load_es
+    mov fs,[ebp].load_fs
+    mov gs,[ebp].load_gs
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    iretd
 
 esFail:
-    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
