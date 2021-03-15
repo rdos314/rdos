@@ -6302,6 +6302,7 @@ exec_serv_name DB 'Exec Server', 0
 
 exec_serv:
     sti
+    CreateHandleData
 ;
     mov ax,es
     mov fs,ax
