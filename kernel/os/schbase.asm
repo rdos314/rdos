@@ -606,8 +606,12 @@ get_action_not_app:
     mov ecx,stack0_size
     mov eax,fs:[ecx-4]
     cmp eax,flat_data_sel    
+    je get_action_user_cs
+;
+    cmp eax,serv_data_sel
     jne get_action_user_done
-;    
+
+get_action_user_cs:    
     mov eax,fs:[ecx-12]
     cmp eax,flat_code_sel
     je get_action_user
