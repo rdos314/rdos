@@ -5855,6 +5855,10 @@ create_app_thread    Proc far
     push eax
     push ebx
     push edx
+    push esi
+;
+    mov si,ds:p_cs
+    add si,flat_data_sel - flat_code_sel
 ;
     GetThread
     mov es,ax
@@ -5869,7 +5873,8 @@ create_app_thread    Proc far
 ; 
     mov eax,ecx
     call fword ptr es:loader_allocate_mem_proc
-    mov ds:p_ss,flat_data_sel
+;
+    mov ds:p_ss,si
     mov dword ptr ds:p_rsp,edx
 
 catStackOk:
@@ -5891,7 +5896,7 @@ catFlat:
     mov ebx,stack0_size
 ;
     sub ebx,4
-    mov eax,flat_data_sel
+    movzx eax,si
     mov es:[ebx],eax
 ;
     sub ebx,4
@@ -5911,6 +5916,7 @@ catFlat:
     mov ds:p_cs,ax
     mov dword ptr ds:p_rip,OFFSET app_thread_started
 ;
+    pop esi
     pop edx
     pop ebx
     pop eax
