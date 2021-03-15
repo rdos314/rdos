@@ -6095,7 +6095,7 @@ FindServer PROC near
     mov fs,ax
     mov ax,system_data_sel
     mov gs,ax
-    mov cx,gs:rom_modules
+    movzx ecx,gs:rom_modules
     mov bx,OFFSET rom_adapters
 
 fsLoop:

@@ -271,6 +271,7 @@ serv_proc_name DB 'Server Process', 0
 fat_serv_name  DB 'fat', 0
 
 serv_proc:
+    int 3
     mov ax,cs
     mov es,ax
     mov edi,OFFSET fat_serv_name
