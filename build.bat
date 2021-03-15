@@ -52,6 +52,10 @@ echo "Building USB Device"
 ide2make -p kernel/usbdev/usbdev 1>nul
 wmake -f kernel/usbdev/usbdev.mk -h -e 1>nul
 
+echo "Building FS"
+ide2make -p kernel/fs/fs 1>nul
+wmake -f kernel/fs/fs.mk -h -e 1>nul
+
 echo "Building SSL Device"
 ide2make -p kernel/ssl/ssl 1>nul
 wmake -f kernel/ssl/ssl.mk -h -e 1>nul
