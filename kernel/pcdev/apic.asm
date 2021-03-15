@@ -2092,6 +2092,8 @@ start_hpet_timer    Proc far
     jmp start_hpet_done
 
 start_hpet_msi: 
+    mov ax,SEG data
+    mov ds,ax
     mov eax,40h
     mov edx,ds:bsp_id
     shl edx,12
