@@ -327,6 +327,15 @@ CreateThreadEvent Proc near
     push ebx
     push di
 ;
+    mov gs,ds:p_prog_sel
+    movzx ebx,gs:pr_process_arr
+    ProcessIdToSel
+    mov gs,ebx
+;
+    movzx ebx,gs:pf_module_arr
+    ModuleIdToSel
+    mov gs,ebx
+;
     mov eax,SIZE create_thread_event_struc
     mov di,SIZE debug_event_struc
     add ax,di
@@ -341,7 +350,6 @@ CreateThreadEvent Proc near
     mov es:[di].cteFsLinear,0
 ;
     mov es:[di].cteStartEip,edx
-    mov gs,ds:p_prog_sel
     mov ax,gs:mod_code_sel
     mov es:[di].cteStartCs,ax
 ;
@@ -3424,6 +3432,7 @@ unload_kernel_exe        Endp
 init_thread     PROC far
     push es
     push fs
+    push gs
     push eax
     push ebx
     push edx
@@ -3440,14 +3449,13 @@ init_thread     PROC far
     mov es,word ptr ds:p_rbx
     mov ebx,es:pvModuleHandle
     mov edx,es:pvProcessHandle
-    push es
+;
     push bx
     ModuleIdToSel
-    mov es,ebx
-    mov esi,es:lib_header
-    mov edi,es:mod_base
+    mov gs,ebx
+    mov esi,gs:lib_header
+    mov edi,gs:mod_base
     pop bx
-    pop es
 ;       
     mov ecx,es:pvArbitrary
     push ds
@@ -3475,7 +3483,8 @@ init_thread     PROC far
     mov ds:p_ds,fs
     mov ds:p_ss,fs
     mov ds:p_es,fs
-    mov ds:p_cs,flat_code_sel
+    mov ax,gs:mod_code_sel
+    mov ds:p_cs,ax
     mov ds:p_gs,0
     pop eax
     add eax,200h
@@ -3563,6 +3572,7 @@ init_thread_no_tls:
     pop edx
     pop ebx
     pop eax
+    pop gs
     pop fs
     pop es
     ret
