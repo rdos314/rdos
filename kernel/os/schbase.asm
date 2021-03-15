@@ -582,8 +582,12 @@ get_action_state_found:
 ;
     mov ax,ds:p_cs
     cmp ax,flat_code_sel
+    je get_action_app
+;
+    cmp ax,serv_code_sel
     jne get_action_not_app
-;   
+
+get_action_app:   
     mov edx,edi
     add edx,OFFSET ast_user
     mov eax,dword ptr ds:p_rbp    
@@ -606,8 +610,12 @@ get_action_not_app:
 ;    
     mov eax,fs:[ecx-12]
     cmp eax,flat_code_sel
-    jne get_action_user_done
+    je get_action_user
 ;
+    cmp eax,serv_code_sel
+    jne get_action_user_done
+
+get_action_user:
     mov edx,edi
     add edx,OFFSET ast_user
     mov eax,fs:[ecx-12]
