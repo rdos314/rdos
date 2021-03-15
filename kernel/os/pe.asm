@@ -2307,21 +2307,32 @@ load_page_app:
     mov es,ax
     add edx,[esi].o_phys_offset
     ReadCFile
-    jnc load_page_pad
+    jnc load_page_app_pad
 ;
     xor eax,eax
-    jmp load_page_pad
+
+load_page_app_pad:    
+    add edi,eax
+    mov ecx,1000h
+    sub ecx,eax
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    pop edi
+    pop edx
+    pop es
+    clc
+    jmp load_page_done
 
 load_page_server:
-    int 3
     push ds
     push es
     push esi
     push edi
 ;
     mov edi,edx
+    add eax,[esi].o_phys_offset
     mov esi,eax
-    add esi,[esi].o_phys_offset
     add esi,es:mod_serv_linear
 ;
     mov ax,ds
@@ -2331,21 +2342,15 @@ load_page_server:
     mov eax,ecx
     rep movs byte ptr es:[edi],ds:[esi]
 ;
+    mov ecx,1000h
+    sub ecx,eax
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
     pop edi
     pop esi
     pop es
     pop ds
-
-load_page_pad:    
-    add edi,eax
-    mov ecx,1000h
-    sub ecx,eax
-    shr ecx,2
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-    pop edi
-    pop edx
-    pop es
     clc
 
 load_page_done:
