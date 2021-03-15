@@ -1791,6 +1791,14 @@ pagefault     Proc far
     call FindLib
     jc pfFail
 ;
+    mov ax,es:mod_data_sel
+    cmp ax,flat_data_sel
+    je pfNotServ
+;
+    int 3
+
+pfNotServ:
+
     mov ds,es:mod_data_sel
     call FindObject
     jc pfFail
@@ -2668,7 +2676,6 @@ fixup_app:
     jmp fixup_done
 
 fixup_server:
-    int 3
     mov esi,[esi].o_phys_offset
     add esi,es:mod_serv_linear
     mov ax,ds
@@ -2705,10 +2712,12 @@ Preload Proc near
     mov esi,es:lib_header
     movzx ecx,[esi].peh_objects
     mov esi,es:lib_objects
+
 PreloadAllLoop:
     mov edx,[esi].o_va
     add edx,edi
     mov eax,[esi].o_virt_size
+
 PreloadOneLoop:
     mov al,[edx]
     xor al,al
