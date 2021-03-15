@@ -10795,6 +10795,9 @@ create_serv_app  PROC far
     mov bx,[ebp].cr_ebx
     call create_process_sel
     call add_process_thread
+    call create_c_handle
+    call create_cur_dir
+    call create_env_sel
     call init_prot_thread
     call init_serv_app_regs
     call init_process_callback
