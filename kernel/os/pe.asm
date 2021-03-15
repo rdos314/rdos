@@ -2657,10 +2657,25 @@ FixupImage      Proc near
     UnhookPage
 ;
     mov bx,es:mod_c_file_handle
+    or bx,bx
+    jz fixup_server
+
+fixup_app:
     mov edx,[esi].o_phys_offset
     mov ax,ds
     mov es,ax
     ReadCFile
+    jmp fixup_done
+
+fixup_server:
+    int 3
+    mov esi,[esi].o_phys_offset
+    add esi,es:mod_serv_linear
+    mov ax,ds
+    mov es,ax
+    mov ax,flat_sel
+    mov ds,ax
+    rep movs byte ptr es:[edi],ds:[esi]
 
 fixup_done:
     popad
