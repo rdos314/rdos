@@ -299,7 +299,7 @@ void TStateCommand::WriteOne(ThreadActionState *State)
             for (i = 0; i < State->UserCount; i++)
             {
                 Write(" ");
-                if (State->UserCall[i].Sel != 0x1B3)
+                if (State->UserCall[i].Sel != 0x1B3 && State->UserCall[i].Sel != 0x2E3)
                 {
                     sprintf(str, "%04hX:", State->UserCall[i].Sel);
                     Write(str);
