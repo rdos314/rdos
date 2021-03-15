@@ -6373,7 +6373,6 @@ exec_serv:
 ;
     mov fs,gs:pr_loader
     call fword ptr fs:loader_fixup_exe_proc
-    int 3
 ;
     mov ds,[ebp].load_ds
     mov es,[ebp].load_es
