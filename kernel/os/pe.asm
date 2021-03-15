@@ -2076,8 +2076,7 @@ LoadImportedDlls    Proc near
     pushad
 ;
     mov edi,es:mod_base
-    mov ax,flat_data_sel
-    mov fs,ax
+    mov fs,es:mod_data_sel
 ;
     mov edx,es:lib_header
     mov edx,[edx].peh_import_va
@@ -2199,9 +2198,8 @@ FreeImportedDlls    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fixup_dll       PROC far
-    mov ax,flat_data_sel
-    mov ds,eax
     mov es,bx
+    mov ds,es:mod_data_sel
     call FixupImage
 ;
     mov ecx,es:mod_size
@@ -2209,8 +2207,7 @@ fixup_dll       PROC far
     call Preload
 ;
     push ds
-    mov ax,flat_data_sel
-    mov ds,ax
+    mov ds,es:mod_data_sel
     mov eax,es:lib_objects
     mov eax,ds:[eax].o_va
     mov es:lib_object_rva,eax
@@ -2483,9 +2480,7 @@ CreateImage     Proc near
     jz ciInitServ
 
 ciInitApp:
-    mov bx,flat_data_sel
-    mov ds,bx
-;
+    mov ds,es:mod_data_sel
     mov bx,es:mod_c_file_handle
     mov edx,es:lib_file_pos
     push edx
@@ -2644,9 +2639,7 @@ FixupImage      Proc near
     mov ds,bx
     mov ebp,ds:flat_base
 ;
-    mov bx,flat_data_sel
-    mov ds,bx
-;
+    mov ds,es:mod_data_sel
     mov edi,es:mod_base
     mov esi,es:lib_header
     mov eax,[esi].peh_fixup_size
@@ -2759,7 +2752,8 @@ InitStack       Proc near
     sub edx,ebx
     mov fs:pvBase,edx
 ;
-    mov dword ptr [ebp].load_ss,flat_data_sel
+    movzx eax,es:mod_data_sel
+    mov dword ptr [ebp].load_ss,eax
     mov esi,es:lib_header
     mov eax,[esi].peh_stack_reserve_size
     AllocateLocalLinear
@@ -2886,7 +2880,7 @@ RunImage    Proc near
     push edx
 ;
     mov edi,es:mod_base
-    mov ax,es:mod_code_sel
+    movzx eax,es:mod_code_sel
     mov dword ptr [ebp].load_cs,eax
     mov eax,es:lib_header
     mov eax,[eax].peh_entry_point
@@ -2898,8 +2892,9 @@ RunImage    Proc near
     mov ax,7202h
     SetFlags
     mov [ebp].load_eflags,ax
-    mov dword ptr [ebp].load_ds,flat_data_sel
-    mov dword ptr [ebp].load_es,flat_data_sel
+    movzx eax,es:mod_data_sel
+    mov dword ptr [ebp].load_ds,eax
+    mov dword ptr [ebp].load_es,eax
 ;
     pop edx
     pop ebx
@@ -3226,8 +3221,7 @@ FixupDebug Proc near
     cli
     mov cr0,eax
 ;
-    mov ax,flat_data_sel
-    mov ds,ax
+    mov ds,es:mod_data_sel
     mov esi,es:lib_org_eip
     mov eax,[ebp].load_eip
     sub eax,esi
@@ -3380,8 +3374,7 @@ create_serv  Endp
 
 unload_user_exe        Proc far
     mov es,bx
-    mov ax,flat_data_sel
-    mov ds,ax
+    mov ds,es:mod_data_sel
     mov edi,es:mod_base
     call FreeImportedDlls
     ret
@@ -3444,9 +3437,9 @@ init_thread     PROC far
     mov ax,system_data_sel
     mov fs,ax
     mov ebp,fs:flat_base
+    mov es,word ptr ds:p_rbx
     mov ax,flat_data_sel
     mov fs,ax
-    mov es,word ptr ds:p_rbx
     mov ebx,es:pvModuleHandle
     mov edx,es:pvProcessHandle
 ;
