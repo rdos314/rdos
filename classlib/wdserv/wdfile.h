@@ -49,6 +49,7 @@ public:
 
 protected:
 
+    int GetServer(char *name);
 
     void ReqGetConfig();
     void ReqOpen();

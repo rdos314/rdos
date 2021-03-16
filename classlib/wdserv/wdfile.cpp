@@ -317,6 +317,60 @@ void TWdFileService::ReqErase()
 
 /*##########################################################################
 #
+#   Name       : TWdFileService::GetServer
+#
+#   Purpose....: Get server
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TWdFileService::GetServer(char *name)
+{
+    char NameBuf[100];
+    char ModBuf[100];
+    int i;
+    int j;
+    int ID;
+    int ModId;
+    unsigned short int IdBuf[1];
+    int ModuleCount;
+    int ProgramCount = RdosGetProgramCount();
+
+    for (i = 0; i < ProgramCount; i++)
+    {
+        if (RdosGetProgramInfo(i, &ID, NameBuf, 100))
+        {
+            ModuleCount = RdosGetProgramModules(i, IdBuf, 1);
+            if (ModuleCount)
+            {
+                ModuleCount = RdosGetModuleCount();
+
+                for (j = 0; j < ModuleCount; j++)
+                {
+                    if (RdosGetModuleInfo(j, &ModId, ModBuf, 100))
+                    {
+                        if (ModId == IdBuf[0])
+                        {
+                            if (!strcmp(name, ModBuf))
+                            {
+                                strcpy(name, NameBuf);
+                                return TRUE;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TWdFileService::ReqStrToFullPath
 #
 #   Purpose....: Convert name to full path
@@ -349,10 +403,10 @@ void TWdFileService::ReqStrToFullPath()
     {
         if (FileType == 0)
         {
-	        str = GetFullPathName(FileName, ".com");
+            str = GetFullPathName(FileName, ".com");
 
-	        if (str.GetSize() == 0)
-	            str =  GetFullPathName(FileName, ".exe");
+            if (str.GetSize() == 0)
+                str =  GetFullPathName(FileName, ".exe");
 
             if (str.GetSize())  
             {
@@ -360,8 +414,15 @@ void TWdFileService::ReqStrToFullPath()
                 PutString(str.GetData());
             }
             else                
-                PutDword(MSG_FILE_NOT_FOUND);
-
+            {
+                if (GetServer(FileName))
+                {
+                    PutDword(0);
+                    PutString(FileName);
+                }
+                else
+                    PutDword(MSG_FILE_NOT_FOUND);
+            }
         }
         else
             PutDword(MSG_FILE_NOT_FOUND);

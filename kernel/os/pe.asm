@@ -1368,7 +1368,7 @@ CreateServLib       Proc near
     push esi
     push edi
 ;
-    xor cx,cx
+    xor ecx,ecx
     push esi
 
 cslSizeLoop:
