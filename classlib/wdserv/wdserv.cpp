@@ -983,19 +983,19 @@ void TWdSocketServer::ReqMapAddr()
             switch (Sel)
             {
                 case -2:
-                    str.printf("Module ID=%d, Base: 0x1B3:%08lX, RVA: %08lX, Offset: %08lX, Size: %08lX", Handle, mod->ImageBase, mod->ObjectRva, Offset, mod->ImageSize);
+                    str.printf("Module ID=%d, Base: %04hX:%08lX, RVA: %08lX, Offset: %08lX, Size: %08lX", Handle, mod->DataSel, mod->ImageBase, mod->ObjectRva, Offset, mod->ImageSize);
 
                     PutDword(mod->ImageBase + mod->ObjectRva + Offset);
-                    PutWord(0x1BB);
+                    PutWord(mod->DataSel);
                     PutDword(0);
                     PutDword(mod->ImageSize - 1);
                     break;
 
                 case -1:
-                    str.printf("Module ID=%d, Base: 0x1B3:%08lX, RVA: %08lX, Offset: %08lX, Size: %08lX", Handle, mod->ImageBase, mod->ObjectRva, Offset, mod->ImageSize);
+                    str.printf("Module ID=%d, Base: %04hX:%08lX, RVA: %08lX, Offset: %08lX, Size: %08lX", Handle, mod->CodeSel, mod->ImageBase, mod->ObjectRva, Offset, mod->ImageSize);
 
                     PutDword(mod->ImageBase + mod->ObjectRva + Offset);
-                    PutWord(0x1B3);
+                    PutWord(mod->CodeSel);
                     PutDword(0);
                     PutDword(mod->ImageSize - 1);
                     break;

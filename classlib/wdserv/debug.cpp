@@ -777,8 +777,17 @@ TDebugModule::TDebugModule(TCreateProcessEvent *event)
     ImageBase = event->ImageBase;
     ImageSize = event->ImageSize;
     ObjectRva = event->ObjectRva;
-    CodeSel = 0;
-    DataSel = 0;
+
+    if (event->FileHandle)
+    {
+        CodeSel = 0x1B3;
+        DataSel = 0x1BB;
+    }
+    else
+    {
+        CodeSel = 0x2E3;
+        DataSel = 0x2EB;
+    }
 
     FNew = FALSE;
 
@@ -803,8 +812,17 @@ TDebugModule::TDebugModule(TLoadDllEvent *event)
     ImageBase = event->ImageBase;
     ImageSize = event->ImageSize;
     ObjectRva = event->ObjectRva;
-    CodeSel = 0;
-    DataSel = 0;
+
+    if (event->FileHandle)
+    {
+        CodeSel = 0x1B3;
+        DataSel = 0x1BB;
+    }
+    else
+    {
+        CodeSel = 0x2E3;
+        DataSel = 0x2EB;
+    }
 
     FNew = TRUE;
 
