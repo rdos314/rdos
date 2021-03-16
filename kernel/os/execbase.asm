@@ -6367,6 +6367,10 @@ exec_serv:
     InitSection es:mod_section
     mov es:mod_id,bx
 ;
+    mov ax,41h
+    EnableFocus
+    mov es:mod_key,al
+;
     mov bx,es
     pop es
     pop ds
@@ -6389,6 +6393,7 @@ exec_serv:
     iretd
 
 esFail:
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
