@@ -263,6 +263,7 @@ allocate_small_serv   ENDP
 test_serv_name DB 'Test Serv', 0
 
 test_serv   Proc far
+    WaitForSignal
     retf32
 test_serv   Endp
 
