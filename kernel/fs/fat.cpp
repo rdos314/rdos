@@ -55,8 +55,4 @@ int main(int argc, char **argv)
         default:
             break;
     }
-
-
-    for (;;)
-        RdosWaitMilli(100);
 }
