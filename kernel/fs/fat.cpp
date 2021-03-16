@@ -39,8 +39,17 @@ int main(int argc, char **argv)
 
         case 3:
             ptr = argv[0];
+            printf(ptr);
+            printf("\r\n");
+
             ptr = argv[1];
+            printf(ptr);
+            printf("\r\n");
+
             ptr = argv[2];
+            printf(ptr);
+            printf("\r\n");
+
             break;
 
         default:
