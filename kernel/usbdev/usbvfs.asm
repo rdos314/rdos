@@ -579,11 +579,12 @@ WriteRaw  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;   Disc thread
+;   VFS thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc_thread:
+vfs_thread:
+    int 3
     xor ax,ax
     mov es,ax
 ;
@@ -906,15 +907,14 @@ uaCopyDone:
     xor al,al
     stosb
 ;    
-    mov bx,gs
     xor di,di
 ;    
+    int 3
+    mov bx,gs
     mov dx,cs
     mov ds,dx
-    mov esi,OFFSET disc_thread
-    mov ax,2
-    mov cx,stack0_size
-    CreateThread
+    mov esi,OFFSET vfs_thread
+    StartVfs
 ;
     FreeMem
 

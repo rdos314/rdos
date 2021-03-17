@@ -32,6 +32,7 @@ include ..\user.inc
 include ..\driver.def
 include ..\handle.inc
 include ..\wait.inc
+include vfs.inc
 
     .386p
 
@@ -40,7 +41,28 @@ include ..\wait.inc
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
-    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartVfs
+;
+;       DESCRIPTION:    Start VFS
+;
+;       PARAMETERS:     DS:ESI  Startup proc
+;                       ES:EDI  Server thread name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_vfs_name       DB 'Start VFS',0
+
+start_vfs    Proc far
+    int 3
+    mov al,4
+    CreateServerProcess
+    ret
+start_vfs    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -74,6 +96,12 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET start_vfs
+    mov edi,OFFSET start_vfs_name
+    xor cl,cl
+    mov ax,start_vfs_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET open_dynamic_vfs
     mov edi,OFFSET open_dynamic_vfs_name

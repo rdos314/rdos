@@ -3306,6 +3306,12 @@ GetUdpSocketReadCount               MACRO
 
 ;;;;;;;;;;; VFS ;;;;;;;;;;;;
 
+;  IN  ES:ESI    Server proc
+;  IN  ES:EDI    Server name
+StartVfs    MACRO
+    OsGate start_vfs_nr
+                    ENDM
+
 ; IN  EDX:EAX   Sectors
 ; IN  CX        Bytes per sector
 ; OUT BX        Vfs handle
