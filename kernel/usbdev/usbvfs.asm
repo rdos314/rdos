@@ -974,7 +974,7 @@ uaInsDiscLoop:
     jmp uaFree
 
 uaInsDo:
-    mov ds:[si],bx
+    mov ds:[si],gs
 
 uaFree:
     FreeMem

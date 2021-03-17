@@ -54,11 +54,9 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 VfsServer:
-    int 3
     mov es,bx
     mov bx,es:vfs_param
     call fword ptr es:vfs_init
-    int 3
     GetThread
     mov es:vfs_server,ax
 ;
@@ -135,7 +133,6 @@ stop_vfs    Proc far
     push es
     push ebx
 ;
-    int 3
     mov es,ebx
     mov bx,es:vfs_server
     Signal
