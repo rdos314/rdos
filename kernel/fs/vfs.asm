@@ -40,6 +40,26 @@ include ..\wait.inc
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenDynamicVfs
+;
+;       DESCRIPTION:    Open dynamic vfs
+;
+;       PARAMETERS:     EDX:EAX Sectors
+;                       CX      Bytes per sector
+;
+;       RETURNS:        BX      VFS handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_dynamic_vfs_name       DB 'Open Dynamic VFS',0
+
+open_dynamic_vfs    Proc far
+    ret
+open_dynamic_vfs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -54,6 +74,12 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET open_dynamic_vfs
+    mov edi,OFFSET open_dynamic_vfs_name
+    xor cl,cl
+    mov ax,open_dynamic_vfs_nr
+    RegisterOsGate
     clc
     ret
 init    Endp

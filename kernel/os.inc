@@ -3304,6 +3304,16 @@ GetUdpSocketReadCount               MACRO
     OsGate udp_socket_read_count_nr
                         ENDM
 
+;;;;;;;;;;; VFS ;;;;;;;;;;;;
+
+; IN  EDX:EAX   Sectors
+; IN  CX        Bytes per sector
+; OUT BX        Vfs handle
+OpenDynamicVfs    MACRO
+    OsGate open_dynamic_vfs_nr
+                    ENDM
+
+
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 
 BeginDiscHandler    MACRO

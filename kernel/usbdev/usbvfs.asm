@@ -31,7 +31,6 @@ include ..\user.def
 include ..\user.inc
 include ..\driver.def
 INCLUDE ..\os\protseg.def
-INCLUDE ..\drive.inc
 include ..\usbdev\usb.inc
 
 MAX_DISCS   = 16
@@ -82,10 +81,8 @@ disc_port               DB ?
 disc_nr                 DB ?
 disc_handle             DW ?
 
-disc_sectors            DD ?
-disc_sectors_per_unit   DW ?
-
-disc_drive_arr          DW 4 DUP(?)
+disc_bytes_per_sector   DW ?
+disc_sectors            DD ?,?
 
 disc_serial             DB ?
 disc_vendor             DW ?
@@ -415,15 +412,14 @@ ReadCapacity Proc near
     xchg dl,dh
     rol edx,16
     xchg dl,dh
-    cmp edx,200h
-    stc
-    jne rcDone
+    mov fs:disc_bytes_per_sector,dx
 ;
     xchg al,ah
     rol eax,16
     xchg al,ah
     inc eax
     mov fs:disc_sectors,eax
+    mov fs:disc_sectors+4,0
     clc
 
 rcDone:
@@ -474,13 +470,13 @@ rwBufCopy:
     push ecx
     push esi
 ;
-    mov edi,es:[esi]
-    mov edi,es:[edi].dh_data
-    mov ecx,80h
-    mov ds,fs:disc_bulk_in_buf
-    mov esi,edx
-    rep movs dword ptr es:[edi],ds:[esi]
-    mov edx,esi
+;    mov edi,es:[esi]
+;    mov edi,es:[edi].dh_data
+;    mov ecx,80h
+;    mov ds,fs:disc_bulk_in_buf
+;    mov esi,edx
+;    rep movs dword ptr es:[edi],ds:[esi]
+;    mov edx,esi
 ;
     pop esi
     pop ecx
@@ -500,147 +496,6 @@ rwBufReadDone:
     pop ebp
     ret
 ReadRaw  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       read_drive
-;
-;       DESCRIPTION:    Read drive
-;
-;       PARAMETERS:     FS      Disc selector
-;               ESI     Disc handle array
-;               ECX     Entries
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_drive      Proc near
-
-rdLoop:    
-    push ecx
-    mov edi,es:[esi]
-;
-    mov edx,es:[edi].dh_unit
-    movzx eax,fs:disc_sectors_per_unit
-    mul edx
-    movzx ebx,es:[edi].dh_sector
-    add eax,ebx
-    mov edx,eax
-    mov ebx,edx
-    mov ebp,1
-;
-    push esi    
-
-rdSizeLoop:
-    cmp ecx,ebp
-    jbe rdDoTrans
-;
-    add esi,4
-    mov edi,es:[esi]
-;
-    push ebx
-    mov edx,es:[edi].dh_unit
-    movzx eax,fs:disc_sectors_per_unit
-    mul edx
-    movzx ebx,es:[edi].dh_sector
-    add eax,ebx
-    mov edx,eax
-    pop ebx
-;
-    inc ebx
-    cmp ebx,edx
-    jne rdDoTrans
-;
-    inc ebp
-    jmp rdSizeLoop            
-
-rdDoTrans:
-    pop esi
-;    
-    mov edi,es:[esi]
-    mov edx,es:[edi].dh_unit
-    movzx eax,fs:disc_sectors_per_unit
-    mul edx
-    movzx ebx,es:[edi].dh_sector
-    add eax,ebx
-    mov edx,eax
-;    
-    shl ebp,9
-
-rdRetry:
-    push es
-    mov es,fs:disc_bulk_out_buf    
-    mov es:disc_cbw_tag,edx
-    mov es:disc_cbw_transfer_len,ebp
-    mov es:disc_cbw_flags,80h
-    mov es:disc_cbw_cmd_len,10
-    mov es:disc_cbw_cmd_data,28h
-    mov es:disc_cbw_cmd_data+1,0
-;
-    mov eax,edx
-    xchg al,ah
-    rol eax,16
-    xchg al,ah
-    mov dword ptr es:disc_cbw_cmd_data+2,eax
-;
-    mov es:disc_cbw_cmd_data+6,0
-;
-    shr ebp,9
-    mov ax,bp
-    xchg al,ah    
-    mov word ptr es:disc_cbw_cmd_data+7,ax
-    mov es:disc_cbw_cmd_data+9,0
-;
-    mov eax,edx
-    call SendCbw
-    pop es
-    jc rdFail
-;    
-    call ReadRaw
-    jc rdFail
-;    
-    call ReceiveCsw
-    jnc rdOk
-    
-rdFail:
-    call ResetDevice
-    jmp rdRetry
-
-rdFailLoop:    
-    pop ecx
-;
-    mov edi,es:[esi]
-    mov eax,es:[edi].dh_data
-    mov es:[eax].dh_state,STATE_BAD
-    mov bx,fs:disc_handle
-    DiscRequestCompleted
-    add esi,4
-    sub ecx,1
-    sub ebp,1
-    jnz rdFailLoop
-;    
-    jmp rdNext
-
-rdOk:
-    pop ecx
-
-rdOkLoop:
-    mov edi,es:[esi]
-    mov eax,es:[edi].dh_data
-    mov es:[edi].dh_state,STATE_USED
-    mov bx,fs:disc_handle
-    DiscRequestCompleted
-    add esi,4
-    sub ecx,1
-    sub ebp,1
-    jnz rdOkLoop
-
-rdNext:
-    or ecx,ecx
-    jnz rdLoop
-;
-    ret
-read_drive      Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -681,15 +536,15 @@ wrBufCopy:
     push ecx
     push esi
 ;
-    mov esi,es:[esi]
-    mov esi,es:[esi].dh_data
-    mov ax,es
-    mov ds,ax
-    mov ecx,80h
-    mov es,fs:disc_bulk_out_buf
-    mov edi,edx
-    rep movs dword ptr es:[edi],ds:[esi]
-    mov edx,edi
+;    mov esi,es:[esi]
+;    mov esi,es:[esi].dh_data
+;    mov ax,es
+;    mov ds,ax
+;    mov ecx,80h
+;    mov es,fs:disc_bulk_out_buf
+;    mov edi,edx
+;    rep movs dword ptr es:[edi],ds:[esi]
+;    mov edx,edi
 ;
     pop esi
     pop ecx
@@ -721,187 +576,6 @@ wrBufWriteDone:
     pop ebp
     ret
 WriteRaw  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       write_drive
-;
-;       DESCRIPTION:    Perform a write request
-;
-;       PARAMETERS:     FS      Disc selector
-;               ESI     Disc handle array
-;               ECX     Entries
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_drive     Proc near
-
-wdLoop:    
-    push ecx
-    mov edi,es:[esi]
-;
-    mov edx,es:[edi].dh_unit
-    movzx eax,fs:disc_sectors_per_unit
-    mul edx
-    movzx ebx,es:[edi].dh_sector
-    add eax,ebx
-    mov edx,eax
-    mov ebx,edx
-    mov ebp,1
-;
-    push esi    
-
-wdSizeLoop:
-    cmp ecx,ebp
-    jbe wdDoTrans
-;
-    add esi,4
-    mov edi,es:[esi]
-;
-    push ebx
-    mov edx,es:[edi].dh_unit
-    movzx eax,fs:disc_sectors_per_unit
-    mul edx
-    movzx ebx,es:[edi].dh_sector
-    add eax,ebx
-    mov edx,eax
-    pop ebx
-;
-    inc ebx
-    cmp ebx,edx
-    jne wdDoTrans
-;
-    inc ebp
-    jmp wdSizeLoop            
-
-wdDoTrans:
-    pop esi
-;    
-    mov edi,es:[esi]
-    mov edx,es:[edi].dh_unit
-    movzx eax,fs:disc_sectors_per_unit
-    mul edx
-    movzx ebx,es:[edi].dh_sector
-    add eax,ebx
-    mov edx,eax
-;
-    shl ebp,9
-
-wdRetry:
-    push es
-    mov es,fs:disc_bulk_out_buf    
-    mov es:disc_cbw_tag,edx
-    mov es:disc_cbw_transfer_len,ebp
-    mov es:disc_cbw_flags,0
-    mov es:disc_cbw_cmd_len,10
-    mov es:disc_cbw_cmd_data,2Ah
-    mov es:disc_cbw_cmd_data+1,0
-;    
-    mov eax,edx
-    xchg al,ah
-    rol eax,16
-    xchg al,ah
-    mov dword ptr es:disc_cbw_cmd_data+2,eax
-;
-    mov es:disc_cbw_cmd_data+6,0
-;
-    shr ebp,9
-    mov ax,bp
-    xchg al,ah    
-    mov word ptr es:disc_cbw_cmd_data+7,ax
-    mov es:disc_cbw_cmd_data+9,0
-;
-    mov eax,edx
-    call SendCbw
-    pop es
-    jc wdFail
-;    
-    call WriteRaw
-    jc wdFail
-;    
-    call ReceiveCsw
-    jnc wdOk
-    
-wdFail:
-    call ResetDevice
-    jmp wdRetry
-
-wdFailLoop:    
-    mov edi,es:[esi]
-    mov eax,es:[edi].dh_data
-    mov es:[eax].dh_state,STATE_BAD
-    mov bx,fs:disc_handle
-    DiscRequestCompleted
-    add esi,4
-    sub ecx,1
-    sub ebp,1
-    jnz wdFailLoop
-;    
-    jmp wdNext
-
-wdOk:
-    pop ecx
-
-wdOkLoop:
-    mov edi,es:[esi]
-    mov eax,es:[edi].dh_data
-    mov es:[edi].dh_state,STATE_USED
-    mov bx,fs:disc_handle
-    DiscRequestCompleted
-    add esi,4
-    sub ecx,1
-    sub ebp,1
-    jnz wdOkLoop
-
-wdNext:
-    or ecx,ecx
-    jnz wdLoop
-;
-    ret
-write_drive     Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:       perform_one
-;
-;       DESCRIPTION:    Perform one request
-;
-;       PARAMETERS:     FS      Disc selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-perform_one     Proc near
-
-perform_one_loop:
-    mov ecx,128
-    mov bx,fs:disc_handle
-    GetDiscRequestArray
-    jc perform_one_done
-;
-    mov edi,es:[esi]
-    mov al,es:[edi].dh_state
-    cmp al,STATE_EMPTY
-    je perform_one_read
-;
-    cmp al,STATE_DIRTY
-    je perform_one_write
-;
-    cmp al,STATE_SEQ
-    jne perform_one_done
-
-perform_one_write:
-    call write_drive
-    jmp perform_one_loop
-
-perform_one_read:
-    call read_drive
-    jmp perform_one_loop
-
-perform_one_done:
-    ret
-perform_one     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -910,8 +584,6 @@ perform_one     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_thread:
-    BeginDiscHandler
-;
     xor ax,ax
     mov es,ax
 ;
@@ -988,63 +660,15 @@ dtRetry:
 dtOk:
     pop cx
 ;
-    mov bx,fs
-    mov ecx,10000h
-    InstallDynamicDisc
-    mov fs:disc_nr,al
-    mov fs:disc_handle,bx
-;
-    xor edx,edx
+    int 3
     mov eax,fs:disc_sectors
-    mov cx,512
-    SetDiscLbaParam
-    mov fs:disc_sectors_per_unit,ax
-;
-    push es
-    push cx
-    push si
-    push edi
-;
-    GetDiscVendorInfoBuf
-;
-    mov al,'U'
-    stosb
-    mov al,'S'
-    stosb
-    mov al,'B'
-    stosb
-    mov al,':'
-    stosb
-;
-    mov cx,(16+8+4) SHR 2
-    mov si,OFFSET disc_vendor_str
-    rep movs dword ptr es:[di],fs:[si]    
-;
-    xor al,al
-    stosb
-;
-    pop edi
-    pop si
-    pop cx
-    pop es
-;
-    EndDiscHandler
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov bx,fs:disc_handle
+    mov edx,fs:disc_sectors+4
+    mov cx,fs:disc_bytes_per_sector
+    OpenDynamicVfs
 
-discbuf_thread_loop:
-    WaitForDiscRequest
-    jc dtEnd
-;    
-    call perform_one
-    jmp discbuf_thread_loop
 
 dtFailed:
-    EndDiscHandler    
-    
-dtEnd: 
+    mov fs:disc_handle,bx
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     CloseUsbPipe
@@ -1055,38 +679,8 @@ dtEnd:
 ;
     mov bx,fs:disc_dev_handle
     CloseUsbDevice
-;
-    mov al,fs:disc_nr
-    ResetDisc
-;
-    mov bx,fs:disc_handle
-    StopDisc    
-;    
-    mov bx,fs
-    mov es,bx
-    xor ax,ax
-    mov fs,ax
-    mov ax,SEG data
-    mov ds,ax
-;    
-    mov si,OFFSET disc_device_arr
-    mov cx,MAX_DISCS
-
-dtDelDiscLoop:
-    cmp bx,ds:[si]
-    je dtDelDo
-;
-    add si,2
-    loop dtDelDiscLoop
-;
-    jmp dtDelDone
-
-dtDelDo:
-    mov word ptr ds:[si],0
 
 dtDelDone:
-    mov es,bx
-    FreeMem        
     TerminateThread
                
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
