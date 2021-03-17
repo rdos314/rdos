@@ -58,7 +58,16 @@ VfsServer:
     mov es,bx
     mov bx,es:vfs_param
     call fword ptr es:vfs_init
-
+    int 3
+    GetThread
+    mov es:vfs_server,ax
+;
+    WaitForSignal
+;
+    mov bx,es:vfs_param
+    call fword ptr es:vfs_exit
+;
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -79,8 +88,6 @@ start_vfs    Proc far
     push ds
     push eax
     push esi
-;
-    int 3
 ;
     push es
     push ecx
@@ -114,30 +121,29 @@ start_vfs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           OpenDynamicVfs
+;       NAME:           StopVfs
 ;
-;       DESCRIPTION:    Open dynamic vfs
+;       DESCRIPTION:    Stop vfs
 ;
 ;       PARAMETERS:     BX      VFS handle
-;                       EDX:EAX Sectors
-;                       CX      Bytes per sector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_dynamic_vfs_name       DB 'Open Dynamic VFS',0
+stop_vfs_name       DB 'Stop VFS',0
 
-open_dynamic_vfs    Proc far
+stop_vfs    Proc far
     push es
+    push ebx
 ;
     int 3
-    mov es,bx
-    mov es:vfs_sectors,eax
-    mov es:vfs_sectors+4,edx
-    mov es:vfs_bytes_per_sector,cx
+    mov es,ebx
+    mov bx,es:vfs_server
+    Signal
 ;
-    pop es
+    pop ebx
+    pop es    
     ret
-open_dynamic_vfs    Endp
+stop_vfs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -159,10 +165,10 @@ init    Proc far
     mov ax,start_vfs_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET open_dynamic_vfs
-    mov edi,OFFSET open_dynamic_vfs_name
+    mov esi,OFFSET stop_vfs
+    mov edi,OFFSET stop_vfs_name
     xor cl,cl
-    mov ax,open_dynamic_vfs_nr
+    mov ax,stop_vfs_nr
     RegisterOsGate
     clc
     ret

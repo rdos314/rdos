@@ -432,6 +432,141 @@ ReadCapacity Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InitVfs
+;
+;       DESCRIPTION:    Init disc
+;
+;       PARAMETERS:     BX           Disc selector
+;
+;       RETURNS:        NC
+;                         EDX:EAX    Sectors
+;                         CX         Bytes per sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+InitVfs   Proc far
+    push ds
+    push es
+    push fs
+;
+    mov fs,bx
+;
+    mov bx,fs:disc_controller
+    mov al,fs:disc_port
+    OpenUsbDevice
+    mov fs:disc_dev_handle,bx
+;
+    push es
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_out_pipe
+    mov cx,1000h
+    mov ax,500
+    OpenUsbRawPipe
+    mov fs:disc_bulk_out_buf,es
+    pop es
+;
+    push es
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    mov cx,1000h
+    mov ax,1500
+    OpenUsbRawPipe
+    mov fs:disc_bulk_in_buf,es
+    pop es
+;
+    mov cx,32
+
+ivRetryLoop:
+    push cx
+;    
+    call RequestSense
+    jc ivRetry
+;    
+    call Inquiry    
+    jc ivRetry
+;
+    call ReadCapacity
+    jnc ivOk
+
+ivRetry:
+    pop cx
+    sub cx,1
+    jz ivClose
+;
+    call ResetDevice
+;
+    mov ax,100
+    WaitMilliSec
+    jmp ivRetryLoop
+
+ivClose:
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    CloseUsbPipe
+;
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_out_pipe
+    CloseUsbPipe
+;
+    mov bx,fs:disc_dev_handle
+    CloseUsbDevice
+
+ivFail:
+    stc
+    jmp ivDone
+
+ivOk:
+    pop cx
+;
+    mov eax,fs:disc_sectors
+    mov edx,fs:disc_sectors+4
+    mov cx,fs:disc_bytes_per_sector
+    clc
+
+ivDone:
+    pop fs
+    pop es
+    pop ds
+    retf32
+InitVfs    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ExitVfs
+;
+;       DESCRIPTION:    Exit VFS
+;
+;       PARAMETERS:     BX           Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+ExitVfs   Proc far
+    push fs
+    pushad
+;
+    mov fs,bx
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_in_pipe
+    CloseUsbPipe
+;
+    mov bx,fs:disc_dev_handle
+    mov dl,fs:disc_bulk_out_pipe
+    CloseUsbPipe
+;
+    mov bx,fs:disc_dev_handle
+    CloseUsbDevice
+;
+    popad
+    pop fs
+    retf32
+ExitVfs  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ReadRaw
 ;
 ;       DESCRIPTION:    Read using raw interface
@@ -577,113 +712,6 @@ wrBufWriteDone:
     pop ebp
     ret
 WriteRaw  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;   InitVfs
-;
-;   IN   BX = disc sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitVfs:
-    int 3
-    mov ax,SEG data
-    mov ds,ax
-;
-    mov si,OFFSET disc_device_arr
-    mov cx,MAX_DISCS
-
-dtInsDiscLoop:
-    mov ax,ds:[si]
-    or ax,ax
-    jz dtInsDo
-;
-    add si,2
-    loop dtInsDiscLoop
-;
-    int 3
-    jmp dtDelDone
-
-dtInsDo:
-    mov ds:[si],bx
-;
-    mov fs,bx
-    mov fs:disc_handle,es
-;
-    mov bx,fs:disc_controller
-    mov al,fs:disc_port
-    OpenUsbDevice
-    mov fs:disc_dev_handle,bx
-;
-    push es
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_out_pipe
-    mov cx,1000h
-    mov ax,500
-    OpenUsbRawPipe
-    mov fs:disc_bulk_out_buf,es
-    pop es
-;
-    push es
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_in_pipe
-    mov cx,1000h
-    mov ax,1500
-    OpenUsbRawPipe
-    mov fs:disc_bulk_in_buf,es
-    pop es
-;
-    mov cx,32
-
-dtRetryLoop:
-    push cx
-;    
-    call RequestSense
-    jc dtRetry
-;    
-    call Inquiry    
-    jc dtRetry
-;
-    call ReadCapacity
-    jnc dtOk
-
-dtRetry:
-    pop cx
-    sub cx,1
-    jz dtFailed
-;
-    call ResetDevice
-;
-    mov ax,100
-    WaitMilliSec
-    jmp dtRetryLoop
-
-dtOk:
-    pop cx
-;
-    mov bx,es
-    mov eax,fs:disc_sectors
-    mov edx,fs:disc_sectors+4
-    mov cx,fs:disc_bytes_per_sector
-    OpenDynamicVfs
-
-
-dtFailed:
-    mov fs:disc_handle,bx
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_in_pipe
-    CloseUsbPipe
-;
-    mov bx,fs:disc_dev_handle
-    mov dl,fs:disc_bulk_out_pipe
-    CloseUsbPipe
-;
-    mov bx,fs:disc_dev_handle
-    CloseUsbDevice
-
-dtDelDone:
-    TerminateThread
                
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -738,7 +766,6 @@ HexToAscii      ENDP
 
 disc_name    DB 'Usb Disc ', 0
 
-ExitVfs:
 ReadVfs:
 WriteVfs:
 
@@ -926,6 +953,30 @@ uaCopyDone:
     mov esi,OFFSET vfs_tab
     StartVfs
 ;
+    mov gs:disc_handle,bx
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    mov si,OFFSET disc_device_arr
+    mov cx,MAX_DISCS
+
+uaInsDiscLoop:
+    mov ax,ds:[si]
+    or ax,ax
+    jz uaInsDo
+;
+    add si,2
+    loop uaInsDiscLoop
+;
+    mov bx,gs:disc_handle
+    StopVfs
+    jmp uaFree
+
+uaInsDo:
+    mov ds:[si],bx
+
+uaFree:
     FreeMem
 
 uaDone:    
@@ -973,7 +1024,7 @@ udCheckLoop:
     jne udCheckNext
 ;
     mov bx,es:disc_handle
-    StopDiscRequest
+    StopVfs
 
 udCheckNext:
     add si,2    

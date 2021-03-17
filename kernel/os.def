@@ -866,6 +866,6 @@ create_shared_ldt_nr        = 785
 destroy_shared_ldt_nr       = 786
 
 start_vfs_nr                = 787
-open_dynamic_vfs_nr         = 788
+stop_vfs_nr                 = 788
 
 osgate_entries              = 800

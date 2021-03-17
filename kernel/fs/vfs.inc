@@ -53,6 +53,7 @@ vfs_table                vfs_table_struc <>
 vfs_sectors              DD ?,?
 vfs_bytes_per_sector     DW ?
 vfs_param                DW ?
+vfs_server               DW ?
 
 vfs_struc  ENDS
 
