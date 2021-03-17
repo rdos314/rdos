@@ -24,3 +24,11 @@
 ; File system interface definition
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+vfs_struc  STRUC
+
+vfs_sectors              DD ?,?
+vfs_bytes_per_sector     DW ?
+
+vfs_struc  ENDS
+

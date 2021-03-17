@@ -581,10 +581,11 @@ WriteRaw  Endp
 ;
 ;   VFS thread
 ;
+;   IN   BX = disc sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 vfs_thread:
-    int 3
     xor ax,ax
     mov es,ax
 ;
@@ -909,7 +910,6 @@ uaCopyDone:
 ;    
     xor di,di
 ;    
-    int 3
     mov bx,gs
     mov dx,cs
     mov ds,dx

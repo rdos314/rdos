@@ -3308,6 +3308,7 @@ GetUdpSocketReadCount               MACRO
 
 ;  IN  ES:ESI    Server proc
 ;  IN  ES:EDI    Server name
+;  IN  BX        Data passed to server
 StartVfs    MACRO
     OsGate start_vfs_nr
                     ENDM

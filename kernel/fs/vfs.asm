@@ -49,19 +49,47 @@ code    SEGMENT byte public 'CODE'
 ;
 ;       DESCRIPTION:    Start VFS
 ;
-;       PARAMETERS:     DS:ESI  Startup proc
+;       PARAMETERS:     DS:ESI  Server startup proc
 ;                       ES:EDI  Server thread name
+;                       BX      Data passed to server
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_vfs_name       DB 'Start VFS',0
 
 start_vfs    Proc far
-    int 3
+    push ax
     mov al,4
     CreateServerProcess
+    pop ax
     ret
 start_vfs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateVfs
+;
+;       DESCRIPTION:    Create VFS
+;
+;       PARAMETERS:     EDX:EAX Sectors
+;                       CX      Bytes per sector
+;
+;       RETURNS:        ES      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateVfs   Proc near
+    push eax
+    mov eax,SIZE vfs_struc
+    AllocateSmallGlobalMem
+    pop eax
+;
+    mov es:vfs_sectors,eax
+    mov es:vfs_sectors+4,edx
+    mov es:vfs_bytes_per_sector,cx
+    ret
+CreateVfs  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -80,6 +108,14 @@ start_vfs    Endp
 open_dynamic_vfs_name       DB 'Open Dynamic VFS',0
 
 open_dynamic_vfs    Proc far
+    push es
+;
+    int 3
+    call CreateVfs
+;
+    mov bx,es
+;
+    pop es
     ret
 open_dynamic_vfs    Endp
 
