@@ -25,10 +25,34 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+vfs_table_struc    STRUC
+
+; IN BX        Param
+vfs_init                 DD ?,?
+
+; IN BX        Param
+vfs_exit                 DD ?,?
+
+; IN ECX       Sector count
+; IN EDX:EAX   Start sector
+; IN ES:EDI    Physical entries
+vfs_read                 DD ?,?
+
+; IN ECX       Sector count
+; IN EDX:EAX   Start sector
+; IN ES:EDI    Physical entries
+vfs_write                DD ?,?
+
+vfs_table_struc   ENDS
+
 vfs_struc  STRUC
+
+vfs_table                vfs_table_struc <>
 
 vfs_sectors              DD ?,?
 vfs_bytes_per_sector     DW ?
+vfs_param                DW ?
 
 vfs_struc  ENDS
 

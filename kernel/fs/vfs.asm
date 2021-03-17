@@ -45,51 +45,71 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           VfsServer
+;
+;       DESCRIPTION:    Vfs server
+;
+;       PARAMETERS:     BX      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+VfsServer:
+    int 3
+    mov es,bx
+    mov bx,es:vfs_param
+    call fword ptr es:vfs_init
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           StartVfs
 ;
 ;       DESCRIPTION:    Start VFS
 ;
-;       PARAMETERS:     DS:ESI  Server startup proc
-;                       ES:EDI  Server thread name
-;                       BX      Data passed to server
+;       PARAMETERS:     DS:ESI  VFS table
+;                       ES:EDI  Server name
+;                       BX      Dev param
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_vfs_name       DB 'Start VFS',0
 
 start_vfs    Proc far
-    push ax
-    mov al,4
-    CreateServerProcess
-    pop ax
-    ret
-start_vfs    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreateVfs
-;
-;       DESCRIPTION:    Create VFS
-;
-;       PARAMETERS:     EDX:EAX Sectors
-;                       CX      Bytes per sector
-;
-;       RETURNS:        ES      VFS sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateVfs   Proc near
+    push ds
     push eax
+    push esi
+;
+    int 3
+;
+    push es
+    push ecx
+    push edi
+;
     mov eax,SIZE vfs_struc
     AllocateSmallGlobalMem
-    pop eax
 ;
-    mov es:vfs_sectors,eax
-    mov es:vfs_sectors+4,edx
-    mov es:vfs_bytes_per_sector,cx
+    mov ecx,SIZE vfs_table_struc
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]
+    mov es:vfs_param,bx
+    mov bx,es
+;
+    pop edi
+    pop ecx
+    pop es
+;
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET VfsServer
+    mov al,4
+    CreateServerProcess
+;
+    pop esi
+    pop eax
+    pop ds
     ret
-CreateVfs  Endp
+start_vfs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -98,10 +118,9 @@ CreateVfs  Endp
 ;
 ;       DESCRIPTION:    Open dynamic vfs
 ;
-;       PARAMETERS:     EDX:EAX Sectors
+;       PARAMETERS:     BX      VFS handle
+;                       EDX:EAX Sectors
 ;                       CX      Bytes per sector
-;
-;       RETURNS:        BX      VFS handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -111,9 +130,10 @@ open_dynamic_vfs    Proc far
     push es
 ;
     int 3
-    call CreateVfs
-;
-    mov bx,es
+    mov es,bx
+    mov es:vfs_sectors,eax
+    mov es:vfs_sectors+4,edx
+    mov es:vfs_bytes_per_sector,cx
 ;
     pop es
     ret

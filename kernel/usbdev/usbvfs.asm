@@ -32,6 +32,7 @@ include ..\user.inc
 include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
+include ..\fs\vfs.inc
 
 MAX_DISCS   = 16
 
@@ -579,16 +580,14 @@ WriteRaw  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;   VFS thread
+;   InitVfs
 ;
 ;   IN   BX = disc sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-vfs_thread:
-    xor ax,ax
-    mov es,ax
-;
+InitVfs:
+    int 3
     mov ax,SEG data
     mov ds,ax
 ;
@@ -610,6 +609,7 @@ dtInsDo:
     mov ds:[si],bx
 ;
     mov fs,bx
+    mov fs:disc_handle,es
 ;
     mov bx,fs:disc_controller
     mov al,fs:disc_port
@@ -662,6 +662,7 @@ dtRetry:
 dtOk:
     pop cx
 ;
+    mov bx,es
     mov eax,fs:disc_sectors
     mov edx,fs:disc_sectors+4
     mov cx,fs:disc_bytes_per_sector
@@ -736,6 +737,16 @@ HexToAscii      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_name    DB 'Usb Disc ', 0
+
+ExitVfs:
+ReadVfs:
+WriteVfs:
+
+vfs_tab:
+vfs00   DD OFFSET InitVfs,    DD SEG code
+vfs01   DD OFFSET ExitVfs,    DD SEG code
+vfs02   DD OFFSET ReadVfs,    DD SEG code
+vfs03   DD OFFSET WriteVfs,   DD SEG code
 
 usb_attach  Proc far
     push ds
@@ -912,7 +923,7 @@ uaCopyDone:
     mov bx,gs
     mov dx,cs
     mov ds,dx
-    mov esi,OFFSET vfs_thread
+    mov esi,OFFSET vfs_tab
     StartVfs
 ;
     FreeMem
