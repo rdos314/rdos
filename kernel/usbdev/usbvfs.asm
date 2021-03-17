@@ -662,7 +662,6 @@ dtRetry:
 dtOk:
     pop cx
 ;
-    int 3
     mov eax,fs:disc_sectors
     mov edx,fs:disc_sectors+4
     mov cx,fs:disc_bytes_per_sector
