@@ -47,12 +47,86 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalLockSector
+;
+;       DESCRIPTION:    Lock sector
+;
+;       PARAMETERS:     ES          VFS sel
+;                       EDX:EAX     Sector #
+;
+;       RETURNS:        NC
+;                         EBX:EAX   Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalLockSector    Proc near
+    int 3
+    mov ebx,es:vfs_sectors
+    sub ebx,eax
+    mov ebx,es:vfs_sectors+4
+    sbb ebx,edx
+    jc llsDone
+;
+    mov bx,1
+    mov cl,es:vfs_sector_shift
+    shl bx,cl
+    dec bx
+;
+    mov bp,ax
+    and bp,bx
+;    
+    mov ebx,1
+    ror ebx,cl
+    dec ebx
+;
+    shr eax,cl
+    ror edx,cl
+    mov ecx,edx
+    and edx,ebx
+;
+    not ebx
+    and ecx,ebx
+    or eax,ecx
+;
+    mov esi,eax
+    and esi,1FFh
+    shl esi,3
+;
+    mov cl,9
+    shr eax,cl
+    ror edx,cl
+    mov ecx,edx
+    mov ebx,7FFFFFh
+    and edx,ebx
+    not ebx
+    and ecx,ebx
+    or eax,ecx
+;
+    mov edi,eax
+    and edi,3FFh
+    shl edi,2
+;
+    mov cl,10
+    shr eax,cl
+    ror edx,cl
+    and edx,NOT 3FFFFFh
+    or eax,edx
+    mov ebx,eax
+    shl ebx,3
+
+
+llsDone:
+    ret
+LocalLockSector    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LockVfsSector
 ;
 ;       DESCRIPTION:    Lock VFS sector
 ;
-;       PARAMETERS:     ES          Device sel
-;                       EDX:EAX     Sector #
+;       PARAMETERS:     EDX:EAX     Sector #
 ;
 ;       RETURNS:        NC
 ;                         EBX:EAX   Physical address
@@ -73,8 +147,7 @@ lock_vfs_sector    Endp
 ;
 ;       DESCRIPTION:    Unlock VFS sector
 ;
-;       PARAMETERS:     ES          Device sel
-;                       EDX:EAX     Sector #
+;       PARAMETERS:     EDX:EAX     Sector #
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -231,7 +304,7 @@ VfsServer:
 ;
     xor eax,eax
     xor edx,edx
-    LockVfsSector
+    call LocalLockSector
 
 vfsLoop:
     WaitForSignal

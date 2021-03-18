@@ -57,14 +57,12 @@ TestServ  MACRO
     ServGate test_serv_nr
                     ENDM
 
-; IN  ES               VFS sel
 ; IN  EDX:EAX          Sector #
 ; OUT EBX:EAX          Physical address
 LockVfsSector  MACRO
     ServGate lock_vfs_sector_nr
                     ENDM
 
-; IN  ES               VFS sel
 ; IN  EDX:EAX          Sector #
 UnlockVfsSector  MACRO
     ServGate unlock_vfs_sector_nr
