@@ -256,6 +256,66 @@ allocate_small_serv   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AllocateBigServ
+;
+;           DESCRIPTION:    Allocate page-aligned (dword) server memory
+;
+;           PARAMETERS:     EAX         # of bytes
+;
+;           RETURNS:        EDX         Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_big_serv_name      DB 'Allocate Big Server',0
+
+allocate_big_serv   PROC far
+;
+    push ax
+    GetThread
+    mov ds,ax
+    mov ax,ds:p_serv_sel
+    mov ds,ax
+    mov es,ax
+    pop ax
+;
+    EnterSection ds:serv_big_section
+    push ds
+    push eax
+;    
+    mov edx,serv_size
+    sub edx,ds:serv_big_avail_mem
+    add edx,serv_linear
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    add ds:serv_big_used_mem,eax
+    sub ds:serv_avail_mem,eax
+    shr eax,12
+    mov ecx,eax
+    mov eax,serv_linear + serv_size
+    call cs:allocate_sys_page_entries_proc
+    jnc allocate_big_ok
+
+allocate_big_retry:
+    mov ax,100
+    WaitMilliSec
+;
+    mov edx,global_page_linear
+    mov eax,global_page_linear + global_page_size
+    call cs:allocate_sys_page_entries_proc
+    jc allocate_big_retry
+        
+allocate_big_ok:
+    mov ax,mem_sel
+    mov ds,ax
+    LeaveSection ds:serv_big_section
+
+    retf32
+allocate_big_serv   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           test
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -331,6 +391,12 @@ init_app_mem    PROC near
     mov edi,OFFSET allocate_small_serv_name
     xor cl,cl
     mov ax,allocate_small_serv_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_big_serv
+    mov edi,OFFSET allocate_big_serv_name
+    xor cl,cl
+    mov ax,allocate_big_serv_nr
     RegisterOsGate
 
 
