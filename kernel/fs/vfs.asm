@@ -27,6 +27,8 @@
 
 include ..\os.def
 include ..\os.inc
+include ..\serv.def
+include ..\serv.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
@@ -41,6 +43,48 @@ include vfs.inc
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LockVfsSector
+;
+;       DESCRIPTION:    Lock VFS sector
+;
+;       PARAMETERS:     ES          Device sel
+;                       EDX:EAX     Sector #
+;
+;       RETURNS:        NC
+;                         EBX:EAX   Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_vfs_sector_name       DB 'Lock VFS Sector',0
+
+lock_vfs_sector    Proc far
+    int 3
+    ret
+lock_vfs_sector    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlockVfsSector
+;
+;       DESCRIPTION:    Unlock VFS sector
+;
+;       PARAMETERS:     ES          Device sel
+;                       EDX:EAX     Sector #
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_vfs_sector_name       DB 'Unlock VFS Sector',0
+
+unlock_vfs_sector    Proc far
+    int 3
+    ret
+unlock_vfs_sector    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -184,6 +228,10 @@ VfsServer:
 ;
     call CalcParam
     call CreateBuffer
+;
+    xor eax,eax
+    xor edx,edx
+    LockVfsSector
 
 vfsLoop:
     WaitForSignal
@@ -303,6 +351,18 @@ init    Proc far
     xor cl,cl
     mov ax,stop_vfs_nr
     RegisterOsGate
+;
+    mov esi,OFFSET lock_vfs_sector
+    mov edi,OFFSET lock_vfs_sector_name
+    xor cl,cl
+    mov ax,lock_vfs_sector_nr
+    RegisterServGate
+;
+    mov esi,OFFSET unlock_vfs_sector
+    mov edi,OFFSET unlock_vfs_sector_name
+    xor cl,cl
+    mov ax,unlock_vfs_sector_nr
+    RegisterServGate
     clc
     ret
 init    Endp

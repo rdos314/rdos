@@ -39,7 +39,7 @@ ServGate32    MACRO gate_nr
     db 67h
     db 9Ah
     dd gate_nr
-    dw 2
+    dw 4
             ENDM
 
 ServGate  MACRO gate_nr
@@ -55,4 +55,17 @@ ENDIF
 
 TestServ  MACRO
     ServGate test_serv_nr
+                    ENDM
+
+; IN  ES               VFS sel
+; IN  EDX:EAX          Sector #
+; OUT EBX:EAX          Physical address
+LockVfsSector  MACRO
+    ServGate lock_vfs_sector_nr
+                    ENDM
+
+; IN  ES               VFS sel
+; IN  EDX:EAX          Sector #
+UnlockVfsSector  MACRO
+    ServGate unlock_vfs_sector_nr
                     ENDM

@@ -1,4 +1,6 @@
 invalid_serv_nr           = 0
 test_serv_nr              = 1
+lock_vfs_sector_nr        = 2
+unlock_vfs_sector_nr      = 3
 
 serv_gate_entries         = 20
