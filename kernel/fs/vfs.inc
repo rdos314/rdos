@@ -56,9 +56,35 @@ vfs_table                vfs_table_struc <>
 
 vfs_sectors              DD ?,?
 vfs_bytes_per_sector     DW ?
+vfs_max_req              DW ?
 vfs_param                DW ?
 vfs_server               DW ?
-vfs_flags                DW ?
+vfs_flags                DB ?
+vfs_sector_shift         DB ?
+vfs_phys_shift           DB ?
+vfs_buf_shift0           DB ?
+vfs_buf_shift1           DB ?
 
 vfs_struc  ENDS
 
+VFS_PHYS_PRESENT = 0
+VFS_PHYS_RD_REQ  = 1
+VFS_PHYS_WR_REQ  = 2
+VFS_PHYS_REF     = 4
+
+vfs_phys_entry   STRUC
+
+vfsp_ref_count            DB ?
+vfsp_flags                DB ?
+vfsp_phys                 DW ?,?,?
+
+vfs_phys_entry   ENDS
+
+VFS_BUF_PRESENT = 400h
+
+vfs_buf_entry    STRUC
+
+vfsb_flag_bitmap          DW ?
+vfsb_linear               DW ?
+
+vfs_buf_entry    ENDS

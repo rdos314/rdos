@@ -45,6 +45,62 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CalcParam
+;
+;       DESCRIPTION:    Calculate schedule params
+;
+;       PARAMETERS:     ES      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcParam    Proc near
+    mov ax,es:vfs_bytes_per_sector
+    xor cl,cl
+
+cpSectorLoop:
+    cmp ax,1000h
+    jae cpSectorOk
+;
+    shl ax,1
+    inc cl
+    jmp cpSectorLoop
+
+cpSectorOk:
+    mov es:vfs_sector_shift,cl
+;
+    mov es:vfs_phys_shift,9
+    mov es:vfs_buf_shift0,7
+    mov es:vfs_buf_shift1,0
+;
+    mov eax,es:vfs_sectors+2
+    movzx edx,word ptr es:vfs_sectors+6
+    add eax,1
+    adc edx,0
+;
+    mov cl,7
+
+cpInitLoop0:
+    mov ebx,eax
+    or ebx,edx
+    jz cpInitDone0
+;
+    inc cl
+    clc
+    rcr edx,1
+    rcr eax,1
+    cmp cl,10
+    jne cpInitLoop0
+
+cpInitDone0:
+    mov es:vfs_buf_shift0,cl
+
+
+    ret
+CalcParam    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           VfsServer
 ;
 ;       DESCRIPTION:    Vfs server
@@ -60,6 +116,14 @@ VfsServer:
 ;
     mov bx,es:vfs_param
     call fword ptr es:vfs_init
+    jc vfsTerm
+;
+    int 3
+    mov es:vfs_sectors,eax
+    mov es:vfs_sectors+4,edx
+    mov es:vfs_bytes_per_sector,cx
+    mov es:vfs_max_req,bx
+    call CalcParam
 
 vfsLoop:
     WaitForSignal
@@ -72,7 +136,8 @@ vfsLoop:
 vfsExit:
     mov bx,es:vfs_param
     call fword ptr es:vfs_exit
-;
+
+vfsTerm:
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
