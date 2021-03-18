@@ -47,25 +47,27 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           LocalLockSector
+;       NAME:           SectorToPos
 ;
-;       DESCRIPTION:    Lock sector
+;       DESCRIPTION:    Convert from sector to positions
 ;
 ;       PARAMETERS:     ES          VFS sel
 ;                       EDX:EAX     Sector #
 ;
 ;       RETURNS:        NC
-;                         EBX:EAX   Physical address
+;                         SI        Offset in physical buf
+;                         DI        Offset in mid buf
+;                         BX        Entry number
+;                         BP        Relative sector   
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LocalLockSector    Proc near
-    int 3
+SectorToPos    Proc near
     mov ebx,es:vfs_sectors
     sub ebx,eax
     mov ebx,es:vfs_sectors+4
     sbb ebx,edx
-    jc llsDone
+    jc stpDone
 ;
     mov bx,1
     mov cl,es:vfs_sector_shift
@@ -113,7 +115,32 @@ LocalLockSector    Proc near
     or eax,edx
     mov ebx,eax
     shl ebx,3
+    clc
 
+stpDone:
+    ret
+SectorToPos	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LocalLockSector
+;
+;       DESCRIPTION:    Lock sector
+;
+;       PARAMETERS:     ES          VFS sel
+;                       EDX:EAX     Sector #
+;
+;       RETURNS:        NC
+;                         EBX:EAX   Physical address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalLockSector    Proc near
+    int 3
+    call SectorToPos
+    jc llsDone
+;
 
 llsDone:
     ret
