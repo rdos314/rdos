@@ -522,6 +522,7 @@ ivOk:
     mov eax,fs:disc_sectors
     mov edx,fs:disc_sectors+4
     mov cx,fs:disc_bytes_per_sector
+    mov bx,100h
     clc
 
 ivDone:

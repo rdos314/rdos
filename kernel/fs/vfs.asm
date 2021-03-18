@@ -54,14 +54,22 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 VfsServer:
-    mov es,bx
-    mov bx,es:vfs_param
-    call fword ptr es:vfs_init
     GetThread
+    mov es,bx
     mov es:vfs_server,ax
 ;
+    mov bx,es:vfs_param
+    call fword ptr es:vfs_init
+
+vfsLoop:
     WaitForSignal
 ;
+    test es:vfs_flags,VFS_FLAG_STOPPED
+    jnz vfsExit
+;
+    jmp vfsLoop
+
+vfsExit:
     mov bx,es:vfs_param
     call fword ptr es:vfs_exit
 ;
@@ -98,6 +106,8 @@ start_vfs    Proc far
     xor edi,edi
     rep movs byte ptr es:[edi],ds:[esi]
     mov es:vfs_param,bx
+    mov es:vfs_flags,0
+    mov es:vfs_server,0
     mov bx,es
 ;
     pop edi
@@ -134,6 +144,7 @@ stop_vfs    Proc far
     push ebx
 ;
     mov es,ebx
+    lock or es:vfs_flags,VFS_FLAG_STOPPED
     mov bx,es:vfs_server
     Signal
 ;

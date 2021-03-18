@@ -25,23 +25,27 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+VFS_FLAG_STOPPED   = 1
 
 vfs_table_struc    STRUC
 
-; IN BX        Param
+; IN  BX        Param
+; OUT EDX:EAX   Sector count
+; OUT BX        Max req size in sectors
+; OUT CX        Bytes per sector
 vfs_init                 DD ?,?
 
-; IN BX        Param
+; IN  BX        Param
 vfs_exit                 DD ?,?
 
-; IN ECX       Sector count
-; IN EDX:EAX   Start sector
-; IN ES:EDI    Physical entries
+; IN  CX        Sector count
+; IN  EDX:EAX   Start sector
+; IN  ES:EDI    Physical entries
 vfs_read                 DD ?,?
 
-; IN ECX       Sector count
-; IN EDX:EAX   Start sector
-; IN ES:EDI    Physical entries
+; IN  CX        Sector count
+; IN  EDX:EAX   Start sector
+; IN  ES:EDI    Physical entries
 vfs_write                DD ?,?
 
 vfs_table_struc   ENDS
@@ -54,6 +58,7 @@ vfs_sectors              DD ?,?
 vfs_bytes_per_sector     DW ?
 vfs_param                DW ?
 vfs_server               DW ?
+vfs_flags                DW ?
 
 vfs_struc  ENDS
 
