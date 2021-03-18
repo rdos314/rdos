@@ -55,6 +55,9 @@ vfs_struc  STRUC
 vfs_table                vfs_table_struc <>
 
 vfs_sectors              DD ?,?
+vfs_blocks               DD ?,?
+vfs_dirs                 DD ?,?
+vfs_entries              DD ?
 vfs_bytes_per_sector     DW ?
 vfs_max_req              DW ?
 vfs_param                DW ?

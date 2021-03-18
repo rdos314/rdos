@@ -54,47 +54,54 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CalcParam    Proc near
-    mov ax,es:vfs_bytes_per_sector
+    mov eax,es:vfs_sectors
+    mov edx,es:vfs_sectors+4
+    mov bx,es:vfs_bytes_per_sector
     xor cl,cl
 
 cpSectorLoop:
-    cmp ax,1000h
+    cmp bx,1000h
     jae cpSectorOk
 ;
-    shl ax,1
+    clc
+    rcr edx,1
+    rcr eax,1
+    shl bx,1
     inc cl
     jmp cpSectorLoop
 
 cpSectorOk:
     mov es:vfs_sector_shift,cl
 ;
-    mov es:vfs_phys_shift,9
-    mov es:vfs_buf_shift0,7
-    mov es:vfs_buf_shift1,0
-;
-    mov eax,es:vfs_sectors+2
-    movzx edx,word ptr es:vfs_sectors+6
     add eax,1
     adc edx,0
+    mov es:vfs_blocks,eax
+    mov es:vfs_blocks+4,edx
 ;
-    mov cl,7
+    mov ecx,9
 
-cpInitLoop0:
-    mov ebx,eax
-    or ebx,edx
-    jz cpInitDone0
-;
-    inc cl
+cpPhysLoop:
     clc
     rcr edx,1
     rcr eax,1
-    cmp cl,10
-    jne cpInitLoop0
+    loop cpPhysLoop
+;
+    add eax,1
+    adc edx,0
+    mov es:vfs_dirs,eax
+    mov es:vfs_dirs+4,edx
+;
+    mov ecx,10
 
-cpInitDone0:
-    mov es:vfs_buf_shift0,cl
-
-
+cpDirLoop:
+    clc
+    rcr edx,1
+    rcr eax,1
+    loop cpDirLoop
+;
+    add eax,1
+    mov es:vfs_entries,eax
+;
     ret
 CalcParam    Endp
 
