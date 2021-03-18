@@ -972,6 +972,12 @@ AllocateSmallServ    MACRO
     OsGate allocate_small_serv_nr
                     ENDM
 
+; IN  EAX          Bytes
+; OUT EDX          Linear address
+AllocateBigServ    MACRO
+    OsGate allocate_big_serv_nr
+                    ENDM
+
 ;;;;;;;;;;;;; MEMORY BLOCK MANAGEMENT ;;;;;;;;;;
 
 ;  IN  AX      Base allocation size

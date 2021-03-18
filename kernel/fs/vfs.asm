@@ -124,6 +124,42 @@ SectorToPos	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CreateEntry
+;
+;       DESCRIPTION:    Create entry
+;
+;       RETURNS:        EAX       Entry linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateEntry    Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateBigServ
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    mov eax,edx
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateEntry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LocalLockSector
 ;
 ;       DESCRIPTION:    Lock sector
@@ -141,6 +177,16 @@ LocalLockSector    Proc near
     call SectorToPos
     jc llsDone
 ;
+    mov eax,es:[bx]
+    test ax,VFS_BUF_PRESENT
+    jnz llsEntryOk
+;
+    call CreateEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[bx],eax
+
+llsEntryOk:
+
 
 llsDone:
     ret
