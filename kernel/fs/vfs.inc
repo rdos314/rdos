@@ -20,6 +20,15 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
+; 9 bit phys = 512 sectors, 64 bytes bitmap, 4 byte linear
+; 8 bit 16k bitmap
+; 10 bit linear, 4k linear (4x16k bitmap)
+; 10 bit linear, 16k bitmap + 4k linear
+;
+; 29 bits: 0.5G 4k blocks / entry
+;
+; 48 bits: 0.5M entries, 2M memory
+;
 ; VFS.INC
 ; File system interface definition
 ;
@@ -93,3 +102,4 @@ vfsb_flag_bitmap          DW ?
 vfsb_linear               DW ?
 
 vfs_buf_entry    ENDS
+
