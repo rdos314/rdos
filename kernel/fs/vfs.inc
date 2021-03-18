@@ -57,16 +57,18 @@ vfs_table                vfs_table_struc <>
 vfs_sectors              DD ?,?
 vfs_blocks               DD ?,?
 vfs_dirs                 DD ?,?
-vfs_entries              DD ?
+
 vfs_bytes_per_sector     DW ?
 vfs_max_req              DW ?
 vfs_param                DW ?
 vfs_server               DW ?
 vfs_flags                DB ?
 vfs_sector_shift         DB ?
-vfs_phys_shift           DB ?
-vfs_buf_shift0           DB ?
-vfs_buf_shift1           DB ?
+vfs_pad                  DW ?
+
+vfs_buf_count            DD ?
+
+vfs_buf_arr              DD ?
 
 vfs_struc  ENDS
 

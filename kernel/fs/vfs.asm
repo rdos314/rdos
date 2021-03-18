@@ -100,10 +100,61 @@ cpDirLoop:
     loop cpDirLoop
 ;
     add eax,1
-    mov es:vfs_entries,eax
+    mov es:vfs_buf_count,eax
 ;
     ret
 CalcParam    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateBuffer
+;
+;       DESCRIPTION:    Create buffer
+;
+;       PARAMETERS:     ES      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBuffer    Proc near
+    mov eax,es:vfs_buf_count
+    shl eax,2
+    add eax,OFFSET vfs_buf_arr
+    AllocateSmallLinear
+    mov edi,edx
+;
+    mov bx,es
+    GetSelectorBaseSize
+    mov esi,edx
+;
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov ecx,OFFSET vfs_buf_arr
+    rep movs byte ptr es:[edi],es:[esi]
+;
+    pop edi
+    pop esi
+;
+    mov edx,esi
+    mov ecx,OFFSET vfs_buf_arr
+    FreeLinear
+;
+    mov ecx,es:[edi].vfs_buf_count
+    shl ecx,2
+    add ecx,OFFSET vfs_buf_arr
+    mov edx,edi
+    CreateDataSelector32
+    mov es,bx
+;
+    mov ecx,es:vfs_buf_count
+    mov edi,OFFSET vfs_buf_arr
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ret
+CreateBuffer   Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -130,7 +181,9 @@ VfsServer:
     mov es:vfs_sectors+4,edx
     mov es:vfs_bytes_per_sector,cx
     mov es:vfs_max_req,bx
+;
     call CalcParam
+    call CreateBuffer
 
 vfsLoop:
     WaitForSignal
@@ -171,7 +224,7 @@ start_vfs    Proc far
     push ecx
     push edi
 ;
-    mov eax,SIZE vfs_struc
+    mov eax,OFFSET vfs_buf_arr
     AllocateSmallGlobalMem
 ;
     mov ecx,SIZE vfs_table_struc
