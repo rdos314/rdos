@@ -262,54 +262,58 @@ allocate_small_serv   ENDP
 ;
 ;           PARAMETERS:     EAX         # of bytes
 ;
-;           RETURNS:        EDX         Linear address
+;           RETURNS:        EDX         Offset with server data sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_big_serv_name      DB 'Allocate Big Server',0
 
 allocate_big_serv   PROC far
-;
-    push ax
-    GetThread
-    mov ds,ax
-    mov ax,ds:p_serv_sel
-    mov ds,ax
-    mov es,ax
-    pop ax
-;
-    EnterSection ds:serv_big_section
     push ds
     push eax
-;    
-    mov edx,serv_size
-    sub edx,ds:serv_big_avail_mem
-    add edx,serv_linear
+    push ecx
+;
     dec eax
     and ax,0F000h
     add eax,1000h
-    add ds:serv_big_used_mem,eax
-    sub ds:serv_avail_mem,eax
-    shr eax,12
     mov ecx,eax
-    mov eax,serv_linear + serv_size
-    call cs:allocate_sys_page_entries_proc
-    jnc allocate_big_ok
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_serv_sel
+;
+    EnterSection ds:serv_big_section
+    add ds:serv_big_used_mem,ecx
+    sub ds:serv_big_avail_mem,ecx
+    shr ecx,12
+;    
+    mov edx,serv_size - serv_byte_size
+    sub edx,ds:serv_big_avail_mem
+    add edx,serv_linear
+    mov eax,serv_linear + serv_size - serv_byte_size
+    AllocatePageEntries
+    jnc absOk
 
-allocate_big_retry:
+absRetry:
+    mov edx,serv_linear
+    mov eax,serv_linear + serv_size - serv_byte_size
+    AllocatePageEntries
+    jnc absOk
+;
+    LeaveSection ds:serv_big_section
     mov ax,100
     WaitMilliSec
-;
-    mov edx,global_page_linear
-    mov eax,global_page_linear + global_page_size
-    call cs:allocate_sys_page_entries_proc
-    jc allocate_big_retry
+    EnterSection ds:serv_big_section
+    jmp absRetry
         
-allocate_big_ok:
-    mov ax,mem_sel
-    mov ds,ax
+absOk:
+    sub edx,serv_linear
+    clc
     LeaveSection ds:serv_big_section
-
+;
+    pop ecx
+    pop eax
+    pop ds
     retf32
 allocate_big_serv   ENDP
 

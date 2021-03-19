@@ -385,8 +385,25 @@ ptUser:
     jb ptNotServ
 ;
     cmp edx,flat_size
-    jae ptNotServ
+    jb ptServPage
 ;
+    cmp edx,process_page_linear
+    jc ptNotServ
+
+ptServDir:
+    call cs:fault_to_dir_proc
+    call cs:get_serv_page_dir_proc
+    test al,1
+    jnz ptNotServ
+;
+    call cs:create_serv_page_dir_proc
+    call cs:get_serv_page_dir_proc
+
+ptServDirSet:
+    call cs:set_page_dir_proc
+    jmp ptRetry
+
+ptServPage:
     call cs:get_page_dir_proc
     test al,1
     jnz ptServDirOk

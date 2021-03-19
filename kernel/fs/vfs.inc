@@ -81,24 +81,27 @@ vfs_buf_arr              DD ?
 
 vfs_struc  ENDS
 
-VFS_PHYS_PRESENT = 0
-VFS_PHYS_RD_REQ  = 1
-VFS_PHYS_WR_REQ  = 2
+VFS_PHYS_PRESENT = 1
+VFS_PHYS_RD_REQ  = 2
 VFS_PHYS_REF     = 4
 
 vfs_phys_entry   STRUC
 
-vfsp_ref_count            DB ?
+vfsp_wr_bitmap            DB ?
 vfsp_flags                DB ?
-vfsp_phys                 DW ?,?,?
+vfsp_phys                 DW ?,?
+vfsp_ref_count            DW ?
 
 vfs_phys_entry   ENDS
 
-VFS_BUF_PRESENT = 400h
+VFS_BUF_PRESENT = 1
+VFS_BUF_RD_REQ  = 2
+VFS_BUF_WR_REQ  = 4
 
 vfs_buf_entry    STRUC
 
-vfsb_flag_bitmap          DW ?
+vfsb_ref_count            DB ?
+vfsb_flags                DB ?
 vfsb_linear               DW ?
 
 vfs_buf_entry    ENDS

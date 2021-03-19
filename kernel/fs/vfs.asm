@@ -47,83 +47,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SectorToPos
-;
-;       DESCRIPTION:    Convert from sector to positions
-;
-;       PARAMETERS:     ES          VFS sel
-;                       EDX:EAX     Sector #
-;
-;       RETURNS:        NC
-;                         SI        Offset in physical buf
-;                         DI        Offset in mid buf
-;                         BX        Entry number
-;                         BP        Relative sector   
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SectorToPos    Proc near
-    mov ebx,es:vfs_sectors
-    sub ebx,eax
-    mov ebx,es:vfs_sectors+4
-    sbb ebx,edx
-    jc stpDone
-;
-    mov bx,1
-    mov cl,es:vfs_sector_shift
-    shl bx,cl
-    dec bx
-;
-    mov bp,ax
-    and bp,bx
-;    
-    mov ebx,1
-    ror ebx,cl
-    dec ebx
-;
-    shr eax,cl
-    ror edx,cl
-    mov ecx,edx
-    and edx,ebx
-;
-    not ebx
-    and ecx,ebx
-    or eax,ecx
-;
-    mov esi,eax
-    and esi,1FFh
-    shl esi,3
-;
-    mov cl,9
-    shr eax,cl
-    ror edx,cl
-    mov ecx,edx
-    mov ebx,7FFFFFh
-    and edx,ebx
-    not ebx
-    and ecx,ebx
-    or eax,ecx
-;
-    mov edi,eax
-    and edi,3FFh
-    shl edi,2
-;
-    mov cl,10
-    shr eax,cl
-    ror edx,cl
-    and edx,NOT 3FFFFFh
-    or eax,edx
-    mov ebx,eax
-    shl ebx,3
-    clc
-
-stpDone:
-    ret
-SectorToPos	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           CreateEntry
 ;
 ;       DESCRIPTION:    Create entry
@@ -174,8 +97,6 @@ CreateEntry    Endp
 
 LocalLockSector    Proc near
     int 3
-    call SectorToPos
-    jc llsDone
 ;
     mov eax,es:[bx]
     test ax,VFS_BUF_PRESENT
@@ -261,36 +182,22 @@ cpSectorLoop:
     jmp cpSectorLoop
 
 cpSectorOk:
-    mov es:vfs_sector_shift,cl
+    mov bl,3
+    sub bl,cl
+    mov es:vfs_sector_shift,al
 ;
     add eax,1
     adc edx,0
     mov es:vfs_blocks,eax
     mov es:vfs_blocks+4,edx
 ;
-    mov ecx,9
-
-cpPhysLoop:
-    clc
-    rcr edx,1
-    rcr eax,1
-    loop cpPhysLoop
-;
-    add eax,1
-    adc edx,0
-    mov es:vfs_dirs,eax
-    mov es:vfs_dirs+4,edx
-;
-    mov ecx,10
-
-cpDirLoop:
-    clc
-    rcr edx,1
-    rcr eax,1
-    loop cpDirLoop
-;
-    add eax,1
-    mov es:vfs_buf_count,eax
+    mov ebx,eax
+    rol ebx,3
+    and bl,7
+    shl edx,3
+    or dl,bl
+    inc edx
+    mov es:vfs_buf_count,edx
 ;
     ret
 CalcParam    Endp
@@ -374,6 +281,14 @@ VfsServer:
 ;
     call CalcParam
     call CreateBuffer
+;
+    mov ax,serv_flat_sel
+    mov ds,ax
+    mov eax,5000h
+    AllocateBigServ
+    mov al,ds:[edx]
+    add edx,5000h
+    mov al,ds:[edx]
 ;
     xor eax,eax
     xor edx,edx
