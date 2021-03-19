@@ -419,10 +419,21 @@ ptHasServ:
     call cs:set_page_dir_proc
 
 ptServDirOk:
+    cmp edx,serv_byte_linear
+    jae ptServSmall
+
+ptServBig:
+    call cs:get_page_entry_proc
+    cmp eax,2
+    jne ptFault
+    jmp ptServAlloc
+
+ptServSmall:
     call cs:get_page_entry_proc
     cmp eax,4
     je ptFault
-;
+
+ptServAlloc:
     call local_allocate_physical
     mov al,07h
     call cs:set_page_entry_proc
