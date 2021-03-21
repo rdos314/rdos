@@ -48,6 +48,15 @@ public:
     long double GetUv();
     long double GetRain();
 
+    void (*OnWindDir)(TMisolWeather *Device, long double val);
+    void (*OnWindSpeed)(TMisolWeather *Device, long double val);
+    void (*OnWindGust)(TMisolWeather *Device, long double val);
+    void (*OnTemperature)(TMisolWeather *Device, long double val);
+    void (*OnHumidity)(TMisolWeather *Device, long double val);
+    void (*OnLight)(TMisolWeather *Device, long double val);
+    void (*OnUv)(TMisolWeather *Device, long double val);
+    void (*OnRain)(TMisolWeather *Device, long double val);
+
 protected:
     void DecodeData(const char *buf, int size);
     virtual void Execute();

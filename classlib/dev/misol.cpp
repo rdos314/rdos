@@ -55,6 +55,15 @@ TMisolWeather::TMisolWeather(char *HostStr, int Port)
     FIP = 0;
     FPort = Port;
 
+    OnWindDir = 0;
+    OnWindSpeed = 0;
+    OnWindGust = 0;
+    OnTemperature = 0;
+    OnHumidity = 0;
+    OnLight = 0;
+    OnUv = 0;
+    OnRain = 0;
+
     Start("Misol", 0x8000);
 }
 
@@ -244,22 +253,37 @@ void TMisolWeather::DecodeData(const char *str, int size)
             val += 0x100;
         FWindDir =(long double)val;
 
+        if (OnWindDir)
+            (*OnWindDir)(this, FWindDir);
+
         val = (uch & 0xF) << 8;
         memcpy(&uch, ptr + 4, 1);
         val += uch;
         FTemp = ((long double)val - 400.0) / 10.0;
 
+        if (OnTemperature)
+            (*OnTemperature)(this, FTemp);
+
         memcpy(&uch, ptr + 5, 1);
         val = uch;
         FHumidity = (long double)val;
+
+        if (OnHumidity)
+            (*OnHumidity)(this, FHumidity);
 
         memcpy(&uch, ptr + 6, 1);
         val = uch;
         FWind = (long double)val / 8.0 * 1.12;
 
+        if (OnWindSpeed)
+            (*OnWindSpeed)(this, FWind);
+
         memcpy(&uch, ptr + 7, 1);
         val = uch;
         FGust = (long double)val * 1.12;
+
+        if (OnWindGust)
+            (*OnWindGust)(this, FGust);
 
         memcpy(&uch, ptr + 8, 1);
         val = uch << 8;
@@ -267,11 +291,17 @@ void TMisolWeather::DecodeData(const char *str, int size)
         val += uch;
         FRain = (long double)val * 0.3;
 
+        if (OnRain)
+            (*OnRain)(this, FRain);
+
         memcpy(&uch, ptr + 10, 1);
         val = uch << 8;
         memcpy(&uch, ptr + 11, 1);
         val += uch;
         FUV = (long double)val * 0.01;
+
+        if (OnUv)
+            (*OnUv)(this, FUV);
 
         memcpy(&uch, ptr + 12, 1);
         val = uch << 16;
@@ -280,6 +310,9 @@ void TMisolWeather::DecodeData(const char *str, int size)
         memcpy(&uch, ptr + 14, 1);
         val += uch;
         FLight = (long double)val * 0.1;
+
+        if (OnLight)
+            (*OnLight)(this, FLight);
 
         FOnline = true;
     }
