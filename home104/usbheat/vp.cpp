@@ -969,7 +969,7 @@ void TVp::Execute()
 
     LockGUI();
 
-    Table = new TTableControl(FControl, 5, 275, 800, 350);
+    Table = new TTableControl(FControl, 5, 425, 800, 300);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
@@ -984,28 +984,24 @@ void TVp::Execute()
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
 
-    Table->SetText(0, 0, "Tank temp");
-    Table->SetText(0, 2, "°C");
+    Table->SetText(0, 0, "Cirkulation");
+    Table->SetText(0, 2, "V");
 
-    Table->SetText(1, 0, "Cirkulation");
-    Table->SetText(1, 2, "V");
+    Table->SetText(1, 0, "Heat in");
+    Table->SetText(1, 2, "°C");
 
-    Table->SetText(2, 0, "Heat in");
+    Table->SetText(2, 0, "Heat out");
     Table->SetText(2, 2, "°C");
 
-    Table->SetText(3, 0, "Heat out");
+    Table->SetText(3, 0, "Cold in");
     Table->SetText(3, 2, "°C");
 
-    Table->SetText(4, 0, "Cold in");
-    Table->SetText(4, 2, "°C");
+    Table->SetText(4, 0, "Auto larm");
+    Table->SetText(4, 2, "");
 
-    Table->SetText(5, 0, "Auto larm");
+    Table->SetText(5, 0, "Manual larm");
     Table->SetText(5, 2, "");
-
-    Table->SetText(6, 0, "Manual larm");
-    Table->SetText(6, 2, "");
 
     Table->Show();
 
@@ -1052,24 +1048,24 @@ void TVp::Execute()
         {
             ival = FEch.GetHeatInlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
-            Table->SetText(2, 1, str);
+            Table->SetText(1, 1, str);
 
             ival = FEch.GetHeatOutlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
-            Table->SetText(3, 1, str);
+            Table->SetText(2, 1, str);
 
             ival = FEch.GetColdInlet();
             sprintf(str, "%d.%01d", ival / 10, ival % 10);
-            Table->SetText(4, 1, str);
+            Table->SetText(3, 1, str);
         }
 
         ival = FEch.GetAutoAlarms();
         sprintf(str, "%06hX", ival);
-        Table->SetText(5, 1, str);
+        Table->SetText(4, 1, str);
 
         ival = FEch.GetManualAlarms();
         sprintf(str, "%06hX", ival);
-        Table->SetText(6, 1, str);
+        Table->SetText(5, 1, str);
 
         CurrTime = new TDateTime;
 
@@ -1108,7 +1104,7 @@ void TVp::Execute()
             {
                 val = (long double)FCirc / 10;
                 sprintf(str, "%4.1Lf", val);
-                Table->SetText(1, 1, str);
+                Table->SetText(0, 1, str);
             }
 
             for (i = 1; i < 20; i++)

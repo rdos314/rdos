@@ -35,7 +35,7 @@
 
 #include "frinv.h"
 #include "powinv.h"
-#include "openweather.h"
+#include "misol.h"
 #include "rad.h"
 #include "datetime.h"
 #include "vp.h"
@@ -1263,7 +1263,7 @@ int main()
     TDdns *Ddns;
     TFroniusInverter *SolarInv;
     TSmartPowInverter *WindInv;
-    TOpenWeather *w;
+    TMisolWeather *Misol;
     int i;
     int index;
     int diostat;
@@ -1405,7 +1405,7 @@ int main()
 
     SolarInv = new TFroniusInverter("192.168.1.51");
     WindInv = new TSmartPowInverter("192.168.1.100");
-    w = new TOpenWeather("2715946", "c88ba239c78cdbea4c1fe561ad4f7b3d");
+    Misol = new TMisolWeather("192.168.1.57", 1234);
 
     ResetSolarWind();
 
@@ -1497,7 +1497,7 @@ int main()
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    WeatherTable = new TTableControl(control, 5, 5, 500, 250);
+    WeatherTable = new TTableControl(control, 5, 5, 500, 400);
     WeatherTable->SetBackColor(0, 20, 50);
     WeatherTable->SetRowSpacing(10);
     WeatherTable->SetColSpacing(16);
@@ -1511,6 +1511,9 @@ int main()
     WeatherTable->AddRow(35, 55);
     WeatherTable->AddRow(35, 55);
     WeatherTable->AddRow(35, 55);
+    WeatherTable->AddRow(35, 55);
+    WeatherTable->AddRow(35, 55);
+    WeatherTable->AddRow(35, 55);
 
     WeatherTable->SetText(0, 0, "Temperature");
     WeatherTable->SetText(0, 2, "°C");
@@ -1518,14 +1521,23 @@ int main()
     WeatherTable->SetText(1, 0, "Wind");
     WeatherTable->SetText(1, 2, "m/s");
 
-    WeatherTable->SetText(2, 0, "Pressure");
-    WeatherTable->SetText(2, 2, "hPa");
+    WeatherTable->SetText(2, 0, "Gust");
+    WeatherTable->SetText(2, 2, "m/s");
 
-    WeatherTable->SetText(3, 0, "Humidity");
-    WeatherTable->SetText(3, 2, "%");
+    WeatherTable->SetText(3, 0, "Direction");
+    WeatherTable->SetText(3, 2, "°");
 
-    WeatherTable->SetText(4, 0, "Wind Chill");
-    WeatherTable->SetText(4, 2, "°C");
+    WeatherTable->SetText(4, 0, "Humidity");
+    WeatherTable->SetText(4, 2, "%");
+
+    WeatherTable->SetText(5, 0, "Rain");
+    WeatherTable->SetText(5, 2, "mm");
+
+    WeatherTable->SetText(6, 0, "UV");
+    WeatherTable->SetText(6, 2, "W/m2");
+
+    WeatherTable->SetText(7, 0, "Light");
+    WeatherTable->SetText(7, 2, "Lux");
 
     WeatherTable->Show();
 
@@ -1728,67 +1740,47 @@ int main()
             WindTable->SetText(4, 1, str);
         }
 
-        if (w->IsOnline())
+        if (Misol->IsOnline())
         {
             bool valid = false;
             double temp;
 
-            val = w->GetTemperature();
-            if (val < 100.0 && val > -100.0)
-            {
-                sprintf(str, "%5.1Lf", val);
-                ambient = (int)(10.0 * val);
-
-                temp = val;
-                valid = true;
-            }
-            else
-                strcpy(str, "err");
+            val = Misol->GetTemperature();
+            sprintf(str, "%5.1Lf", val);
+            ambient = (int)(10.0 * val);
             WeatherTable->SetText(0, 1, str);
 
-            val = w->GetWindSpeed();
-            if (val < 100.0 && val >= 0.0)
-            {
-                sprintf(str, "%5.1Lf", val);
-
-                if (valid)
-                    temp = CalcWindChill(temp, val);
-            }
-            else
-            {
-                strcpy(str, "err");
-                valid = false;
-            }
+            val = Misol->GetWindSpeed();
+            sprintf(str, "%5.1Lf", val);
+            temp = CalcWindChill(temp, val);
+            ambient = (int)(10.0 * temp);
             WeatherTable->SetText(1, 1, str);
 
-            if (valid)
-            {
-                ambient = (int)(10.0 * temp);
-                sprintf(str, "%5.1Lf", temp);
-            }
-            else
-                strcpy(str, "err");
-            WeatherTable->SetText(4, 1, str);
-
-            val = w->GetPressure();
-            if (val < 2000.0 && val > 0.0)
-            {
-                ival = (int)val;
-                sprintf(str, "%d", ival);
-            }
-            else
-                strcpy(str, "err");
+            val = Misol->GetWindGust();
+            sprintf(str, "%5.1Lf", val);
             WeatherTable->SetText(2, 1, str);
 
-            val = w->GetHumidity();
-            if (val <= 100.0 && val >= 0)
-            {
-                ival = (int)val;
-                sprintf(str, "%d", ival);
-            }
-            else
-                strcpy(str, "err");
+            val = Misol->GetHumidity();
+            ival = (int)i;
+            sprintf(str, "%4d", ival);
             WeatherTable->SetText(3, 1, str);
+
+            val = Misol->GetHumidity();
+            ival = (int)val;
+            sprintf(str, "%d", ival);
+            WeatherTable->SetText(4, 1, str);
+
+            val = Misol->GetRain();
+            sprintf(str, "%5.1Lf", val);
+            WeatherTable->SetText(5, 1, str);
+
+            val = Misol->GetUv();
+            sprintf(str, "%5.1Lf", val);
+            WeatherTable->SetText(6, 1, str);
+
+            val = Misol->GetLight();
+            sprintf(str, "%5.1Lf", val);
+            WeatherTable->SetText(7, 1, str);
         }
         else
             ambient = 50;
