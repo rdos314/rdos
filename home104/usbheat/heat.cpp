@@ -103,6 +103,32 @@ static double ConsDayE = 0.0;
 
 int WdTimeout;
 
+TSection FWeatherSection;
+
+static int WindDirCount = 0;
+static long double WindDirSum = 0.0;
+
+static int WindSpeedCount = 0;
+static long double WindSpeedSum = 0.0;
+
+static int WindGustCount = 0;
+static long double WindGustSum = 0.0;
+
+static int OutTempCount = 0;
+static long double OutTempSum = 0.0;
+
+static int HumidityCount = 0;
+static long double HumiditySum = 0.0;
+
+static int LightCount = 0;
+static long double LightSum = 0.0;
+
+static int UvCount = 0;
+static long double UvSum = 0.0;
+
+static int RainCount = 0;
+static long double RainSum = 0.0;
+
 /*##################  WatchdogThread  ##############################################
  *   Purpose....: Watchdog thread                                                                           #
  *   In params..: *                                                          #
@@ -145,6 +171,174 @@ void WatchdogThread(void *ptr)
 
         RdosWaitMilli(500);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyWindDir
+#
+#   Purpose....: Notify wind direction
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyWindDir(TMisolWeather *Device, long double val)
+{
+    FWeatherSection.Enter();
+
+    WindDirSum += val;
+    WindDirCount++;
+
+    FWeatherSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyWindSpeed
+#
+#   Purpose....: Notify wind speed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyWindSpeed(TMisolWeather *Device, long double val)
+{
+    FWeatherSection.Enter();
+
+    WindSpeedSum += val;
+    WindSpeedCount++;
+
+    FWeatherSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyWindGust
+#
+#   Purpose....: Notify wind gust
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyWindGust(TMisolWeather *Device, long double val)
+{
+    FWeatherSection.Enter();
+
+    WindGustSum += val;
+    WindGustCount++;
+
+    FWeatherSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyTemperature
+#
+#   Purpose....: Notify temperature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyTemperature(TMisolWeather *Device, long double val)
+{
+    FWeatherSection.Enter();
+
+    OutTempSum += val;
+    OutTempCount++;
+
+    FWeatherSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyHumidity
+#
+#   Purpose....: Notify humidity
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyHumidity(TMisolWeather *Device, long double val)
+{
+    FWeatherSection.Enter();
+
+    HumiditySum += val;
+    HumidityCount++;
+
+    FWeatherSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyLight
+#
+#   Purpose....: Notify light
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyLight(TMisolWeather *Device, long double val)
+{
+    FWeatherSection.Enter();
+
+    LightSum += val;
+    LightCount++;
+
+    FWeatherSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyUv
+#
+#   Purpose....: Notify UV
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyUv(TMisolWeather *Device, long double val)
+{
+    FWeatherSection.Enter();
+
+    UvSum += val;
+    UvCount++;
+
+    FWeatherSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyRain
+#
+#   Purpose....: Notify rain
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyRain(TMisolWeather *Device, long double val)
+{
+    FWeatherSection.Enter();
+
+    RainSum += val;
+    RainCount++;
+
+    FWeatherSection.Leave();
 }
 
 /*##########################################################################
@@ -1415,6 +1609,15 @@ int main()
     WindInv->OnGridPower = NotifyWindGridPower;
     WindInv->OnDumpPower = NotifyWindDumpPower;
     WindInv->OnDayEnergy = NotifyWindDayEnergy;
+
+    Misol->OnWindDir = NotifyWindDir;
+    Misol->OnWindSpeed = NotifyWindSpeed;
+    Misol->OnWindGust = NotifyWindGust;
+    Misol->OnTemperature = NotifyTemperature;
+    Misol->OnHumidity = NotifyHumidity;
+    Misol->OnLight = NotifyLight;
+    Misol->OnUv = NotifyUv;
+    Misol->OnRain = NotifyRain;
 
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
     RdosCreateThread(PerfThread, "Perf", vbe, 0x4000);
