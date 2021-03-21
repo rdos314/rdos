@@ -48,7 +48,25 @@ TModbus::TModbus(TModbusDevice *Device, char Address)
 {
     FDevice = Device;
     FAddress = Address;
+    FBigEndian = TRUE;
+    FReplySize = 0;
+}
 
+/*##########################################################################
+#
+#   Name       : TModbus::TModbus
+#
+#   Purpose....: Constructor for TModbus
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TModbus::TModbus()
+{
+    FDevice = 0;
+    FAddress = 0;
     FBigEndian = TRUE;
     FReplySize = 0;
 }
@@ -86,6 +104,63 @@ TModbusDevice *TModbus::GetDevice()
 
 /*##########################################################################
 #
+#   Name       : TModbus::Session
+#
+#   Purpose....: Do a session
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
+{
+    char msg[256];
+    int datalen;
+    int replylen;
+    int ok = FALSE;
+    int tries;
+
+    for (tries = 0; tries < 10 && !ok; tries++)
+    {
+        msg[0] = FAddress;
+        msg[1] = FunctionCode;
+
+        if (size < 252)
+        {
+            memcpy(&msg[2], buf, size);
+            ok = FDevice->SendAndReceive(msg, size + 2, reply, &datalen, &replylen);
+        }
+    }
+
+    if (ok)
+        return datalen;
+    else
+    {
+        FDevice->Reset();
+        RdosWaitMilli(5000);
+
+        for (tries = 0; tries < 10 && !ok; tries++)
+        {
+            msg[0] = FAddress;
+            msg[1] = FunctionCode;
+
+            if (size < 252)
+            {
+                memcpy(&msg[2], buf, size);
+                ok = FDevice->SendAndReceive(msg, size + 2, reply, &datalen, &replylen);
+            }
+        }
+
+        if (ok)
+            return datalen;
+        else
+            return 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TModbus::ReadCoilStatus
 #
 #   Purpose....: Read status of single coil
@@ -100,23 +175,24 @@ int TModbus::ReadCoilStatus(int Coil)
     int len;
     short int temp;
     char msg[4];
+    char reply[100];
 
     if (Coil > 0)
     {
         temp = (short int)(Coil - 1);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 1;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 1, msg, 4);
+        len = Session(1, msg, 4, reply);
 
         if (len > 0)
-            if (FReplyBuf[1] & 1)
+            if (reply[3] & 1)
                 return TRUE;
     }
     return FALSE;
@@ -138,24 +214,25 @@ int TModbus::ReadInputStatus(int Input)
     int len;
     short int temp;
     char msg[4];
+    char reply[100];
 
     if (Input > 10000)
     {
         temp = (short int)(Input - 10001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 1;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 2, msg, 4);
+        len = Session(2, msg, 4, reply);
 
         if (len >= 1)
         {
-            temp = (unsigned char)FReplyBuf[1];
+            temp = (unsigned char)reply[3];
             return temp;
         }
     }
@@ -178,24 +255,25 @@ int TModbus::ReadHoldingRegister(int Reg)
     int len;
     short int temp;
     char msg[4];
+    char reply[100];
 
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 1;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 3, msg, 4);
+        len = Session(3, msg, 4, reply);
 
         if (len >= 2)
         {
-            memcpy(&temp, FReplyBuf + 1, 2);
+            memcpy(&temp, &reply[3], 2);
             if (FBigEndian)
                 temp = RdosSwapShort(temp);
             return temp;
@@ -220,24 +298,25 @@ int TModbus::ReadInputRegister(int Reg)
     int len;
     short int temp;
     char msg[4];
+    char reply[100];
 
     if (Reg > 30000)
     {
         temp = (short int)(Reg - 30001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 1;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 4, msg, 4);
+        len = Session(4, msg, 4, reply);
 
         if (len >= 2)
         {
-            memcpy(&temp, FReplyBuf + 1, 2);
+            memcpy(&temp, &reply[3], 2);
             if (FBigEndian)
                 temp = RdosSwapShort(temp);
             return temp;
@@ -262,24 +341,25 @@ int TModbus::ReadCoilStatus(int Coil, int *Val)
     int len;
     short int temp;
     char msg[4];
+    char reply[100];
 
     if (Coil > 0)
     {
         temp = (short int)(Coil - 1);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 1;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 1, msg, 4);
+        len = Session(1, msg, 4, reply);
 
         if (len > 0)
         {
-            if (FReplyBuf[1] & 1)
+            if (reply[3] & 1)
                 *Val = TRUE;
             else
                 *Val = FALSE;
@@ -305,24 +385,25 @@ int TModbus::ReadInputStatus(int Input, int *Val)
     int len;
     short int temp;
     char msg[4];
+    char reply[100];
 
     if (Input > 10000)
     {
         temp = (short int)(Input - 10001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 1;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 2, msg, 4);
+        len = Session(2, msg, 4, reply);
 
         if (len >= 1)
         {
-            temp = (unsigned char)FReplyBuf[1];
+            temp = (unsigned char)reply[3];
             *Val = temp;
             return TRUE;
         }
@@ -346,71 +427,28 @@ int TModbus::ReadHoldingRegister(int Reg, int *Val)
     int len;
     short int temp;
     char msg[4];
+    char reply[100];
 
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 1;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 3, msg, 4);
+        len = Session(3, msg, 4, reply);
 
         if (len >= 2)
         {
-            memcpy(&temp, FReplyBuf + 1, 2);
+            memcpy(&temp, &reply[3], 2);
             if (FBigEndian)
                 temp = RdosSwapShort(temp);
             *Val = temp;
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::ReadHoldingRegister32
-#
-#   Purpose....: Read single holding register
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TModbus::ReadHoldingRegister32(int Reg, int *Val)
-{
-    int len;
-    short int temp;
-    int lt;
-    char msg[4];
-
-    if (Reg > 40000)
-    {
-        temp = (short int)(Reg - 40001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
-
-        temp = 2;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
-
-        len = FDevice->Session(this, 3, msg, 4);
-
-        if (len >= 4)
-        {
-            memcpy(&lt, FReplyBuf + 1, 4);
-            if (FBigEndian)
-                lt = RdosSwapLong(lt);
-            *Val = lt;
             return TRUE;
         }
     }
@@ -433,71 +471,28 @@ int TModbus::ReadInputRegister(int Reg, int *Val)
     int len;
     short int temp;
     char msg[4];
+    char reply[100];
 
     if (Reg > 30000)
     {
         temp = (short int)(Reg - 30001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 1;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 4, msg, 4);
+        len = Session(4, msg, 4, reply);
 
         if (len >= 2)
         {
-            memcpy(&temp, FReplyBuf + 1, 2);
+            memcpy(&temp, &reply[3], 2);
             if (FBigEndian)
                 temp = RdosSwapShort(temp);
             *Val = temp;
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::ReadInputRegister32
-#
-#   Purpose....: Read two input registers as 32-bit data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TModbus::ReadInputRegister32(int Reg, int *Val)
-{
-    int len;
-    short int temp;
-    int it;
-    char msg[4];
-
-    if (Reg > 30000)
-    {
-        temp = (short int)(Reg - 30001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
-
-        temp = 1;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
-
-        len = FDevice->Session(this, 4, msg, 4);
-
-        if (len >= 4)
-        {
-            memcpy(&it, FReplyBuf + 1, 4);
-            if (FBigEndian)
-                it = RdosSwapLong(it);
-            *Val = it;
             return TRUE;
         }
     }
@@ -520,23 +515,24 @@ int TModbus::PresetRegister(int Reg, int Val)
     int len;
     short int temp;
     char msg[4];
+    char reply[100];
 
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = (short int)Val;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 6, msg, 4);
+        len = Session(6, msg, 4, reply);
 
         if (len == 4)
-            if (memcmp(msg, FReplyBuf, 4) == 0)
+            if (memcmp(msg, &reply[2], 4) == 0)
                 return TRUE;
     }
     return FALSE;
@@ -559,24 +555,25 @@ int TModbus::ReadHoldingRegisterABCD(int Reg, float *Val)
     short int temp;
     int itemp;
     char msg[4];
+    char reply[100];
 
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 2;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
-        len = FDevice->Session(this, 3, msg, 4);
+        len = Session(3, msg, 4, reply);
 
         if (len >= 4)
         {
-            memcpy(&itemp, FReplyBuf + 1, 4);
+            memcpy(&itemp, &reply[3], 4);
             if (FBigEndian)
                 itemp = RdosSwapLong(itemp);
             memcpy(Val, &itemp, 4);
@@ -603,32 +600,80 @@ int TModbus::PresetRegisterABCD(int Reg, float Val)
     short int temp;
     int itemp;
     char msg[9];
+    char reply[100];
 
     if (Reg > 40000)
     {
         temp = (short int)(Reg - 40001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
+        memcpy(&msg[0], &temp, 2);
 
         temp = 2;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
+        memcpy(&msg[2], &temp, 2);
 
         msg[4] = 4;
 
         memcpy(&itemp, &Val, 4);
         if (FBigEndian)
             itemp = RdosSwapLong(itemp);
-        memcpy(msg + 5, &itemp, 4);
+        memcpy(&msg[5], &itemp, 4);
 
-        len = FDevice->Session(this, 16, msg, 9);
+        len = Session(16, msg, 9, reply);
 
         if (len == 4)
-            if (memcmp(msg, FReplyBuf, 4) == 0)
+            if (memcmp(msg, &reply[2], 4) == 0)
                 return TRUE;
     }
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::ReqHoldingRegisters
+#
+#   Purpose....: Read multiple holding registers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::ReqHoldingRegisters(int Reg, int Count)
+{
+    int len;
+    short int temp;
+    char msg[256];
+    int datalen;
+    int ok = FALSE;
+
+    if (Reg > 40000)
+    {
+        msg[0] = FAddress;
+        msg[1] = 3;
+
+        temp = (short int)(Reg - 40001);
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[2], &temp, 2);
+
+        temp = Count;
+        if (FBigEndian)
+            temp = RdosSwapShort(temp);
+        memcpy(&msg[4], &temp, 2);
+
+        ok = FDevice->SendAndReceive(msg, 6, FReplyBuf, &datalen, &FReplySize);
+
+        if (ok && datalen >= 2)
+        {
+            FStartReg = Reg;
+            FRegCount = Count;
+            return TRUE;
+        }
+    }
+    FReplySize = 0;
     return FALSE;
 }
 
@@ -662,6 +707,73 @@ int TModbus::GetReplySize()
 void TModbus::GetReplyBuf(char *buf)
 {
     memcpy(buf, FReplyBuf, FReplySize);
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::SetBufferedRegisters
+#
+#   Purpose....: Set multiple registers buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbus::SetBufferedRegisters(int Reg, int Count, const char *Buf, int Size)
+{
+    int datalen = 0;
+    int replylen = 0;
+    int ok = FALSE;
+    char crc[2];
+
+    if (Size < 100 && Size >= 3)
+    {
+        switch (Buf[1])
+        {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                datalen = (unsigned int)Buf[2];
+                replylen = datalen + 5;
+                break;
+
+            case 5:
+            case 6:
+            case 15:
+            case 16:
+                datalen = 4;
+                replylen = 8;
+                break;
+        }
+
+        if (replylen == Size)
+            ok = TRUE;
+
+        if (ok)
+        {
+            FDevice->CalcCrc(Buf, replylen - 2, crc);
+
+            if (Buf[replylen - 2] != crc[0])
+                ok = FALSE;
+
+            if (Buf[replylen - 1] != crc[1])
+                ok = FALSE;
+        }
+    }
+
+    if (ok)
+    {
+        FStartReg = Reg;
+        FRegCount = Count;
+        memcpy(FReplyBuf, Buf, Size);
+        FReplySize = Size;
+    }
+    else
+        FReplySize = 0;
+
+    return ok;
 }
 
 /*##########################################################################
@@ -780,12 +892,12 @@ void TModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
         temp = (short int)(Reg - 40001);
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(FWriteBuf, &temp, 2);
+        memcpy(&FWriteBuf[0], &temp, 2);
 
         temp = Count;
         if (FBigEndian)
             temp = RdosSwapShort(temp);
-        memcpy(FWriteBuf + 2, &temp, 2);
+        memcpy(&FWriteBuf[2], &temp, 2);
 
         FWriteBuf[4] = 2 * Count;
 
@@ -794,7 +906,7 @@ void TModbus::StartWritePresetRegisters(int Reg, int Count, int Default)
             temp = RdosSwapShort(temp);
 
         for (i = 0; i < Count; i++)
-            memcpy(FWriteBuf + 5 + 2 * i, &temp, 2);
+            memcpy(&FWriteBuf[5 + 2 * i], &temp, 2);
     }
 }
 
@@ -820,7 +932,7 @@ void TModbus::AddPresetRegister(int Reg, int Val)
         if (FBigEndian)
             temp = RdosSwapShort(temp);
 
-        memcpy(FWriteBuf + 5 + 2 * RelReg, &temp, 2);
+        memcpy(&FWriteBuf[5 + 2 * RelReg], &temp, 2);
     }
 }
 
@@ -845,7 +957,7 @@ void TModbus::AddPresetRegisterABCD(int Reg, float Val)
         memcpy(&itemp, &Val, 4);
         if (FBigEndian)
             itemp = RdosSwapLong(itemp);
-        memcpy(FWriteBuf + 5 + 2 * RelReg, &itemp, 4);
+        memcpy(&FWriteBuf[5 + 2 * RelReg], &itemp, 4);
     }
 }
 
@@ -865,56 +977,12 @@ int TModbus::DoWritePresetRegisters()
     int len;
     char reply[100];
 
-    len = FDevice->Session(this, 16, FWriteBuf, 5 + 2 * FRegCount);
+    len = Session(16, FWriteBuf, 5 + 2 * FRegCount, reply);
 
     if (len == 4)
-        if (memcmp(FWriteBuf, FReplyBuf, 4) == 0)
+        if (memcmp(FWriteBuf, &reply[2], 4) == 0)
             return TRUE;
 
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TModbus::ReqHoldingRegisters
-#
-#   Purpose....: Read multiple holding registers
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TModbus::ReqHoldingRegisters(int Reg, int Count)
-{
-    int len;
-    short int temp;
-    char msg[256];
-    int datalen;
-    int ok = FALSE;
-
-    if (Reg > 40000)
-    {
-        temp = (short int)(Reg - 40001);
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(msg, &temp, 2);
-
-        temp = Count;
-        if (FBigEndian)
-            temp = RdosSwapShort(temp);
-        memcpy(msg + 2, &temp, 2);
-
-        datalen = FDevice->Session(this, 3, msg, 4);
-
-        if (datalen >= 2)
-        {
-            FStartReg = Reg;
-            FRegCount = Count;
-            return TRUE;
-        }
-    }
-    FReplySize = 0;
     return FALSE;
 }
 
@@ -925,18 +993,20 @@ int TModbus::ReqHoldingRegisters(int Reg, int Count)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TModbusDevice::TModbusDevice()
+TModbusDevice::TModbusDevice(TSerialDevice *serial)
  : FSection("Modbus")
 {
     int i;
 
+    FSerial = serial;
+    FHasEcho = FALSE;
     FTimeout = 250;
 
     for (i = 0; i < 0x80; i++)
         FModbusArr[i] = 0;
 }
 
-/*##################  TModbusDevice::~TModbusDevice  ###############
+/*##################  TModbusDevice::TModbusDevice  ###############
 *   Purpose....: Destructor for TModbusDevice                                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
@@ -975,9 +1045,65 @@ int TModbusDevice::IsUsed(int Address)
     return FALSE;
 }
 
+/*##################  TModbusDevice::GetSerial  ###############
+*   Purpose....: Get serial device                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TSerialDevice *TModbusDevice::GetSerial()
+{
+    return FSerial;
+}
+
+/*##################  TModbusDevice::Reset  ###############
+*   Purpose....: Reset serial device                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TModbusDevice::Reset()
+{
+    FSerial->Reset();
+}
+
 /*##########################################################################
 #
-#   Name       : TModbusDevice::SetTimeout
+#   Name       : TModbus::EnableEcho
+#
+#   Purpose....: Enable echo
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbusDevice::EnableEcho()
+{
+    FHasEcho = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::DisableEcho
+#
+#   Purpose....: Disable echo
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbusDevice::DisableEcho()
+{
+    FHasEcho = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::SetTimeout
 #
 #   Purpose....: Set timeout
 #
@@ -991,89 +1117,9 @@ void TModbusDevice::SetTimeout(int ms)
     FTimeout = ms;
 }
 
-/*##################  TSerialModbusDevice::TSerialModbusDevice  ###############
-*   Purpose....: Constructor for TSerialModbusDevice                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-TSerialModbusDevice::TSerialModbusDevice(TSerialDevice *serial)
-{
-    FSerial = serial;
-    FHasEcho = FALSE;
-}
-
-/*##################  TSerialModbusDevice::~TSerialModbusDevice  ###############
-*   Purpose....: Destructor for TSerialModbusDevice                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-TSerialModbusDevice::~TSerialModbusDevice()
-{
-}
-
-/*##################  TSerialModbusDevice::GetSerial  ###############
-*   Purpose....: Get serial device                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-TSerialDevice *TSerialModbusDevice::GetSerial()
-{
-    return FSerial;
-}
-
-/*##################  TSerialModbusDevice::Reset  ###############
-*   Purpose....: Reset serial device                                            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void TSerialModbusDevice::Reset()
-{
-    FSerial->Reset();
-}
-
 /*##########################################################################
 #
-#   Name       : TSerialModbusDevice::EnableEcho
-#
-#   Purpose....: Enable echo
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSerialModbusDevice::EnableEcho()
-{
-    FHasEcho = TRUE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbusDevice::DisableEcho
-#
-#   Purpose....: Disable echo
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSerialModbusDevice::DisableEcho()
-{
-    FHasEcho = FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialModbusDevice::CalcCrc
+#   Name       : TModbusDevice::CalcCrc
 #
 #   Purpose....: Calc CRC
 #
@@ -1082,7 +1128,7 @@ void TSerialModbusDevice::DisableEcho()
 #   Returns....: *
 #
 ##########################################################################*/
-void TSerialModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
+void TModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
 {
     int lcrc = 0xFFFF;
     int pos;
@@ -1110,7 +1156,7 @@ void TSerialModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
 
 /*##########################################################################
 #
-#   Name       : TSerialModbusDevice::Session
+#   Name       : TModbusDevice::SendAndReceive
 #
 #   Purpose....: Send message & receive answer
 #
@@ -1119,33 +1165,29 @@ void TSerialModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
 #   Returns....: *
 #
 ##########################################################################*/
-int TSerialModbusDevice::Session(TModbus *modbus, int code, const char *buf, int size)
+int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen)
 {
+    char msg[256];
     char crc[2];
     char ch;
     int pos;
-    int len;
-    int datalen = 0;
     int i;
     int ok = FALSE;
 
     FSection.Enter();
 
-    FSendBuf[0] = modbus->FAddress;
-    FSendBuf[1] = code;
-
-    if (size < 256)
+    if (size < 254)
     {
-        memcpy(FSendBuf + 2, buf, size);
-        CalcCrc(FSendBuf, size + 2, crc);
-        memcpy(FSendBuf + size + 2, crc, 2);
+        CalcCrc(buf, size, crc);
+        memcpy(msg, buf, size);
+        memcpy(msg+size, crc, 2);
 
-        FSerial->Write(FSendBuf, size + 4);
+        FSerial->Write(msg, size + 2);
 
         if (FHasEcho)
         {
             pos = 0;
-            while (ok && pos < size + 4 && ch == FSendBuf[pos])
+            while (ok && pos < size + 2 && ch == msg[pos])
             {
                 ok = FSerial->WaitForChar(FTimeout);
                 if (ok)
@@ -1161,8 +1203,9 @@ int TSerialModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
         ok = FSerial->WaitForChar(500);
         if (ok)
         {
+
             ch = FSerial->Read();
-            while (ok && ch != FSendBuf[0])
+            while (ok && ch != msg[0])
             {
                 ok = FSerial->WaitForChar(FTimeout);
                 if (ok)
@@ -1175,7 +1218,7 @@ int TSerialModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
                 if (ok)
                 {
                     ch = FSerial->Read();
-                    if (ch != FSendBuf[1])
+                    if (ch != msg[1])
                         ok = FALSE;
                 }
             }
@@ -1183,32 +1226,32 @@ int TSerialModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
 
         if (ok)
         {
-            FRecBuf[0] = FSendBuf[0];
-            FRecBuf[1] = FSendBuf[1];
+            reply[0] = msg[0];
+            reply[1] = msg[1];
 
             ok = FSerial->WaitForChar(250);
             if (ok)
-                FRecBuf[2] = FSerial->Read();
+                reply[2] = FSerial->Read();
         }
 
         if (ok)
         {
-            switch (code)
+            switch (reply[1])
             {
                 case 1:
                 case 2:
                 case 3:
                 case 4:
-                    datalen = (unsigned int)FRecBuf[2];
-                    len = datalen + 5;
+                    *datalen = (unsigned int)reply[2];
+                    *replylen = *datalen + 5;
                     break;
 
                 case 5:
                 case 6:
                 case 15:
                 case 16:
-                    datalen = 4;
-                    len = 8;
+                    *datalen = 4;
+                    *replylen = 8;
                     break;
 
                 default:
@@ -1218,337 +1261,34 @@ int TSerialModbusDevice::Session(TModbus *modbus, int code, const char *buf, int
 
             pos = 3;
 
-            while (ok && pos < len)
+            while (ok && pos < *replylen)
             {
                 ok = FSerial->WaitForChar(250);
                 if (ok)
                 {
-                    FRecBuf[pos] = FSerial->Read();
+                    reply[pos] = FSerial->Read();
                     pos++;
                 }
             }
 
             if (ok)
             {
-                CalcCrc(FRecBuf, len - 2, crc);
+                CalcCrc(reply, *replylen - 2, crc);
 
-                if (FRecBuf[len - 2] != crc[0])
+                if (reply[*replylen - 2] != crc[0])
                     ok = FALSE;
 
-                if (FRecBuf[len - 1] != crc[1])
+                if (reply[*replylen - 1] != crc[1])
                     ok = FALSE;
             }
         }
-    }
-
-    if (ok)
-    {
-        memcpy(modbus->FReplyBuf, FRecBuf + 2, len - 4);
-        modbus->FReplySize = len - 4;
-    }
-    else
-    {
-        while (FSerial->WaitForChar(2 * FTimeout))
-            FSerial->Read();
-
-        modbus->FReplySize = 0;
-        datalen = 0;
-    }
-
-    FSection.Leave();
-
-    return datalen;
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketModbusDevice::TSocketModbusDevice
-#
-#   Purpose....: Constructor for TSocketModbusDevice
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocketModbusDevice::TSocketModbusDevice(long Ip)
-{
-    FIp = Ip;
-    FPort = 502;
-    Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketModbusDevice::TSocketModbusDevice
-#
-#   Purpose....: Constructor for TSocketModbusDevice
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocketModbusDevice::TSocketModbusDevice(long Ip, int Port)
-{
-    FIp = Ip;
-    FPort = Port;
-    Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketModbusDevice::~TSocketModbusDevice
-#
-#   Purpose....: Destructor for TSocketModbusDevice
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocketModbusDevice::~TSocketModbusDevice()
-{
-    if (FSocket)
-        delete FSocket;
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketModbusDevice::Init
-#
-#   Purpose....: Init
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocketModbusDevice::Init()
-{
-    FPushCounter = 0;
-    FSocket = 0;
-    FTransId = (short int)RdosGetRandom(65535);
-    if (FTransId == 0)
-        FTransId++;
-
-    Start("Modbus TCP", 0x8000);
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketModbusDevice::Connect
-#
-#   Purpose....: Connect socket
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TSocketModbusDevice::Connect()
-{
-    TTcpSocket *socket;
-    bool open;
-
-    if (FSocket)
-        open = !FSocket->IsOpen();
-    else
-        open = true;
-
-    if (open)
-    {
-        FPushCounter = 0;
-
-        if (FSocket)
-        {
-            delete FSocket;
-            FSocket = 0;
-        }
-
-        socket = new TTcpSocket(FIp, FPort, 5000, 0x2000);
-        socket->WaitForConnection(5000);
-
-        if (socket->IsOpen())
-        {
-            FSocket = socket;
-            return true;
-        }
-        else
-        {
-            delete socket;
-            return false;
-        }
-    }
-    else
-        return true;
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketModbusDevice::Session
-#
-#   Purpose....: Send message & receive answer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSocketModbusDevice::Session(TModbus *modbus, int code, const char *buf, int size)
-{
-    char ch;
-    int pos;
-    int len;
-    int datalen = 0;
-    char *ptr;
-    int i;
-    short int temp;
-    bool ok = false;
-
-    FSection.Enter();
-
-    FPushCounter = 0;
-
-    FTransId++;
-    if (FTransId == 0)
-        FTransId++;
-
-    temp = RdosSwapShort(FTransId);
-    memcpy(FSendBuf, &temp, 2);
-
-    FSendBuf[2] = 0;
-    FSendBuf[3] = 0;
-
-    temp = size + 2;
-    temp = RdosSwapShort(temp);
-    memcpy(FSendBuf + 4, &temp, 2);
-
-    FSendBuf[6] = modbus->FAddress;
-    FSendBuf[7] = code;
-
-    if (Connect() && size < 256)
-    {
-        memcpy(FSendBuf + 8, buf, size);
-
-        FSocket->Write(FSendBuf, size + 8);
-        FSocket->Push();
-
-        for (pos = 0; pos < 7 && FSocket->WaitForData(FTimeout); pos++)
-            FRecBuf[pos] = FSocket->Read();
-
-        if (pos == 7)
-            ok = true;
-
-        if (ok)
-        {
-            memcpy(&temp, FRecBuf, 2);
-            temp = RdosSwapShort(temp);
-            if (temp != FTransId)
-                ok = false;
-        }
-
-        if (ok)
-        {
-            memcpy(&temp, FRecBuf + 2, 2);
-            if (temp)
-                ok = false;
-        }
-
-        if (ok)
-            if (FRecBuf[6] != modbus->FAddress)
-                ok = false;
-
-        if (ok)
-        {
-            memcpy(&temp, FRecBuf + 4, 2);
-            len = RdosSwapShort(temp);
-            if (len >= 256)
-                ok = false;
-        }
-
-        if (ok)
-        {
-            ptr = modbus->FReplyBuf;
-            len--;
-            modbus->FReplySize = len;
-
-            for (i = 0; i < len && ok; i++)
-            {
-                ok = FSocket->WaitForData(FTimeout);
-                if (ok)
-                {
-                    *ptr = FSocket->Read();
-                    ptr++;
-                }
-            }
-        }
-
-        if (ok)
-        {
-            switch (code)
-            {
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                    datalen = (unsigned int)modbus->FReplyBuf[0];
-                    break;
-
-                case 5:
-                case 6:
-                case 15:
-                case 16:
-                    datalen = 4;
-                    break;
-
-                default:
-                    ok = FALSE;
-                    break;
-            }
-        }
-
     }
 
     if (!ok)
-    {
-        modbus->FReplySize = 0;
-        datalen = 0;
-    }
+        while (FSerial->WaitForChar(2 * FTimeout))
+            FSerial->Read();
 
     FSection.Leave();
 
-    return datalen;
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketModbusDevice::Execute
-#
-#   Purpose....: Execute method
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocketModbusDevice::Execute()
-{
-    for (;;)
-    {
-        if (FSocket)
-        {
-            FPushCounter++;
-            if (FPushCounter == 30)
-            {
-                FSection.Enter();
-
-                if (FSocket && FSocket->IsOpen())
-                    FSocket->Push();
-
-                FSection.Leave();
-            }
-        }
-        RdosWaitMilli(1000);
-    }
+    return ok;
 }
