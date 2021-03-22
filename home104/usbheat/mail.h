@@ -58,6 +58,7 @@ protected:
     bool IsEmpty();
     char *ReadLine();
     void Reply(int Id, const char *Text);
+    void HandleData();
     virtual void HandleSocket();
 
     char *FSocketBuf;

@@ -284,6 +284,42 @@ char *TMailServer::ReadLine()
 
 /*##########################################################################
 #
+#   Name       : TMailServer::HandleData
+#
+#   Purpose....: Handle message data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMailServer::HandleData()
+{
+    char *ptr;
+    bool ok = false;
+
+    ptr = ReadLine();
+    while (ptr)
+    {
+        if (!strcmp(ptr, "."))
+        {
+            Reply(250, "OK");
+            ok = true;
+            break;
+        }
+        else
+        {
+            FLog.Log(0, "Data", ptr);
+            ptr = ReadLine();
+        }
+    }
+
+    if (!ok)
+        Reply(502, "No end");
+}
+
+/*##########################################################################
+#
 #   Name       : TMailServer::HandleSocket
 #
 #   Purpose....: Handle socket
@@ -351,6 +387,13 @@ void TMailServer::HandleSocket()
                     FDest = ptr + 5;
                     Reply(250, "OK");
                     handled = true;
+                }
+
+                if (!strcmp(cmd, "DATA"))
+                {
+                    Reply(354, "OK");
+                    handled = true;
+                    HandleData();
                 }
             }
 
