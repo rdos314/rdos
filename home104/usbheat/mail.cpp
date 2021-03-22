@@ -71,8 +71,9 @@ int GetMailConnectionCount()
 #   Returns....: *
 #
 ##########################################################################*/
-TMailServerFactory::TMailServerFactory(int MaxConnections, int BufferSize)
-  : TSocketServerFactory(25, MaxConnections, BufferSize)
+TMailServerFactory::TMailServerFactory(int MaxConnections, int BufferSize, const char *Host)
+  : TSocketServerFactory(25, MaxConnections, BufferSize),
+    FHost(Host)
 {
 }
 
@@ -104,7 +105,7 @@ TMailServerFactory::~TMailServerFactory()
 ##########################################################################*/
 TSocketServer *TMailServerFactory::Create(TTcpSocket *Socket)
 {
-    TSocketServer *server = new TMailServer("Mail socket", 0x10000, Socket);
+    TSocketServer *server = new TMailServer("Mail socket", 0x10000, Socket, FHost);
     return server;
 }
 
@@ -119,9 +120,10 @@ TSocketServer *TMailServerFactory::Create(TTcpSocket *Socket)
 #   Returns....: *
 #
 ##########################################################################*/
-TMailServer::TMailServer(const char *Name, int StackSize, TTcpSocket *Socket)
+TMailServer::TMailServer(const char *Name, int StackSize, TTcpSocket *Socket, TString &Host)
   : TSocketServer(Name, StackSize, Socket),
-    FLog("Mail")
+    FLog("Mail"),
+    FHost(Host)
 {
 }
 
@@ -288,9 +290,13 @@ void TMailServer::HandleSocket()
 #   Returns....: *
 #
 ##########################################################################*/
-static void MailSocketThread(void *ptr)
+static void MailSocketThread(void *Param)
 {
-    TMailServerFactory fact(10, BUF_SIZE);
+    char *Host = (char *)Param;
+
+    TMailServerFactory fact(10, BUF_SIZE, Host);
+
+    delete Host;
 
     sockfact = &fact;
 
@@ -309,7 +315,12 @@ static void MailSocketThread(void *ptr)
 #   Returns....: *
 #
 ##########################################################################*/
-void InitMail()
+void InitMail(const char *Host)
 {
-    RdosCreateThread(MailSocketThread, "Mail listner", 0, STACK_SIZE);
+    int len = strlen(Host);
+    char *HostName = new char[len+1];
+
+    strcpy(HostName, Host);
+
+    RdosCreateThread(MailSocketThread, "Mail listner", HostName, STACK_SIZE);
 }

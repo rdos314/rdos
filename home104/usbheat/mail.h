@@ -30,24 +30,26 @@
 
 #include "sockobj.h"
 #include "rdoslog.h"
+#include "str.h"
 
-void InitMail();
+void InitMail(const char *Host);
 
 class TMailServerFactory : public TSocketServerFactory
 {
 public:
-    TMailServerFactory(int MaxConnections, int BufferSize);
+    TMailServerFactory(int MaxConnections, int BufferSize, const char *host);
     ~TMailServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket);
 
 protected:
+    TString FHost;
 };
 
 class TMailServer : public TSocketServer
 {
 public:
-    TMailServer(const char *Name, int StackSize, TTcpSocket *Socket);
+    TMailServer(const char *Name, int StackSize, TTcpSocket *Socket, TString &Host);
     ~TMailServer();
 
     int IsOpen();
@@ -61,6 +63,7 @@ protected:
     int FBufCount;
     int FBufPos;
     TRdosLog FLog;
+    TString FHost;
 };
 
 
