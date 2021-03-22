@@ -29,6 +29,7 @@
 #define MAIL_H
 
 #include "sockobj.h"
+#include "rdoslog.h"
 
 void InitMail();
 
@@ -49,8 +50,17 @@ public:
     TMailServer(const char *Name, int StackSize, TTcpSocket *Socket);
     ~TMailServer();
 
+    int IsOpen();
+
 protected:
+    bool IsEmpty();
+    char *ReadLine();
     virtual void HandleSocket();
+
+    char *FSocketBuf;
+    int FBufCount;
+    int FBufPos;
+    TRdosLog FLog;
 };
 
 

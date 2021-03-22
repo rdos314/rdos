@@ -37,6 +37,7 @@
 
 #define BUF_SIZE        0x4000
 #define STACK_SIZE      0x4000
+#define SOCK_BUF_SIZE      513
 
 static TSocketServerFactory *sockfact = 0;
 
@@ -119,7 +120,8 @@ TSocketServer *TMailServerFactory::Create(TTcpSocket *Socket)
 #
 ##########################################################################*/
 TMailServer::TMailServer(const char *Name, int StackSize, TTcpSocket *Socket)
-  : TSocketServer(Name, StackSize, Socket)
+  : TSocketServer(Name, StackSize, Socket),
+    FLog("Mail")
 {
 }
 
@@ -140,6 +142,118 @@ TMailServer::~TMailServer()
 
 /*##########################################################################
 #
+#   Name       : TMailServer::IsOpen
+#
+#   Purpose....: Check if data socket is open
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TMailServer::IsOpen()
+{
+    return FSocket && FSocket->IsOpen();
+}
+
+/*##########################################################################
+#
+#   Name       : TMailServer::IsEmpty
+#
+#   Purpose....: Check if data socket is empty
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TMailServer::IsEmpty()
+{
+    if (FBufCount == FBufPos)
+    {
+        if (FSocket->GetSize() == 0)
+            return true;
+        else
+            return false;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TMailServer::ReadLine
+#
+#   Purpose....: Read a single line from socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TMailServer::ReadLine()
+{
+    char *ptr;
+    char *result;
+    int pos;
+
+    if (FSocketBuf == 0)
+    {
+        FSocketBuf = new char[SOCK_BUF_SIZE + 1];
+        FBufCount = 0;
+        FBufPos = 0;
+    }
+
+    if (FBufCount <= FBufPos)
+    {
+        FBufPos -= FBufCount;
+
+        if (FSocket->WaitForData(5000))
+        {
+            FBufCount = FSocket->Read(FSocketBuf, SOCK_BUF_SIZE);
+            FSocketBuf[FBufCount] = 0;
+        }
+        else
+            return 0;
+    }
+
+    ptr = strchr(&FSocketBuf[FBufPos], 0xd);
+
+    while (!ptr)
+    {
+        if (FBufPos == 0)
+        {
+            FBufCount = 0;
+            return 0;
+        }
+
+        if (!FSocket->WaitForData(5000))
+        {
+            result = &FSocketBuf[FBufPos];
+            FBufPos = 0;
+            FBufCount = 0;
+            return result;
+        }
+
+        memcpy(FSocketBuf, &FSocketBuf[FBufPos], FBufCount - FBufPos);
+        FBufCount -= FBufPos;
+        FBufPos = 0;
+        pos = FBufCount;
+        FBufCount += FSocket->Read(&FSocketBuf[pos], BUF_SIZE - FBufCount);
+        FSocketBuf[FBufCount] = 0;
+
+        ptr = strchr(&FSocketBuf[pos], 0xd);
+    }
+
+    *ptr = 0;
+    result = &FSocketBuf[FBufPos];
+    FBufPos = ptr - FSocketBuf + 2;
+
+    return result;
+}
+
+/*##########################################################################
+#
 #   Name       : TMailServer::HandleSocket
 #
 #   Purpose....: Handle socket
@@ -151,6 +265,16 @@ TMailServer::~TMailServer()
 ##########################################################################*/
 void TMailServer::HandleSocket()
 {
+    char *ptr;
+
+    while (FSocket->IsOpen() || !IsEmpty())
+    {
+        ptr = ReadLine();
+        if (ptr)
+            FLog.Log(0, "Mail", ptr);
+        else
+            break;
+    }
 }
 
 /*##########################################################################
