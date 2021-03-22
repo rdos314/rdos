@@ -37,7 +37,6 @@
 
 #define BUF_SIZE        0x4000
 #define STACK_SIZE      0x4000
-#define SOCK_BUF_SIZE      513
 
 static TSocketServerFactory *sockfact = 0;
 
@@ -161,7 +160,7 @@ void TMailServer::Reply(int Id, const char *Text)
 
     FSocket->Write(str);
     FSocket->Write(Text);
-    
+
     str[0] = 0xd;
     str[1] = 0xa;
     str[2] = 0;
@@ -229,7 +228,7 @@ char *TMailServer::ReadLine()
 
     if (FSocketBuf == 0)
     {
-        FSocketBuf = new char[SOCK_BUF_SIZE + 1];
+        FSocketBuf = new char[BUF_SIZE + 1];
         FBufCount = 0;
         FBufPos = 0;
     }
@@ -240,7 +239,7 @@ char *TMailServer::ReadLine()
 
         if (FSocket->WaitForData(5000))
         {
-            FBufCount = FSocket->Read(FSocketBuf, SOCK_BUF_SIZE);
+            FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
             FSocketBuf[FBufCount] = 0;
         }
         else
@@ -336,6 +335,14 @@ void TMailServer::HandleSocket()
     char cmd[5];
     TString rp;
 
+    RdosWaitMilli(500);
+
+    FSocketBuf = 0;
+    FBufCount = 0;
+    FBufPos = 0;
+
+    FLog.Log(0, "Mail", "start");
+
     Reply(220, FHost.GetData());
 
     while (FSocket->IsOpen() || !IsEmpty())
@@ -355,7 +362,7 @@ void TMailServer::HandleSocket()
                 if (!strcmp(cmd, "HELO"))
                 {
                     FClient = ptr + 5;
-                    rp = FHost + " RDOS Mailserver"; 
+                    rp = FHost + " RDOS Mailserver";
                     Reply(250, rp.GetData());
                     handled = true;
                 }
@@ -363,7 +370,7 @@ void TMailServer::HandleSocket()
                 if (!strcmp(cmd, "EHLO"))
                 {
                     FClient = ptr + 5;
-                    rp = FHost + " RDOS Mailserver"; 
+                    rp = FHost + " RDOS Mailserver";
                     Reply(250, rp.GetData());
                     handled = true;
                 }
@@ -388,13 +395,15 @@ void TMailServer::HandleSocket()
                     Reply(250, "OK");
                     handled = true;
                 }
-
-                if (!strcmp(cmd, "DATA"))
+            }
+            else
+            {
+                if (!strcmp(ptr, "DATA"))
                 {
-                    Reply(354, "OK");
-                    handled = true;
-                    HandleData();
-                }
+                     Reply(354, "OK");
+                     handled = true;
+                     HandleData();
+                 }
             }
 
             if (!handled)

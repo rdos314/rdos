@@ -590,6 +590,8 @@ void TMet::Execute()
     int LastDay;
     int UsedDay;
 
+    FDayFile = 0;
+
     CurrTime = new TDateTime;
     LastMin = CurrTime->GetMin();
     LastDay = CurrTime->GetDay();
