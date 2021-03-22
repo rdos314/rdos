@@ -47,6 +47,7 @@
 #include "jpeg.h"
 #include "file.h"
 #include "web.h"
+#include "mail.h"
 #include "rdoslog.h"
 #include "chart.h"
 #include "timeaxis.h"
@@ -1339,6 +1340,7 @@ int main()
     Log.Log(0, "", "Started");
 
     InitWeb();
+    InitMail();
 
     RdosWriteSerialVal(2, 0, 0);
     RdosWriteSerialVal(2, 1, 0);
