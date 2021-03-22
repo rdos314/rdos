@@ -284,6 +284,48 @@ char *TMailServer::ReadLine()
 
 /*##########################################################################
 #
+#   Name       : TMailServer::Parse
+#
+#   Purpose....: Parse cmd
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TMailServer::Parse(char *str)
+{
+    char cmd[5];
+    TString rp;
+
+    if (strlen(str) >= 4 && str[4] == ' ')
+    {
+        strncpy(cmd, str, 4);
+        cmd[4] = 0;
+
+        if (!strcmp(cmd, "HELO"))
+        {
+            FClient = str + 5;
+
+            rp = FHost + " RDOS Mailserver"; 
+            Reply(250, rp.GetData());
+            return true;
+        }
+
+        if (!strcmp(cmd, "EHLO"))
+        {
+            FClient = str + 5;
+            rp = FHost + " RDOS Mailserver"; 
+            Reply(250, rp.GetData());
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TMailServer::HandleSocket
 #
 #   Purpose....: Handle socket
@@ -296,6 +338,7 @@ char *TMailServer::ReadLine()
 void TMailServer::HandleSocket()
 {
     char *ptr;
+    bool ok;
 
     Reply(220, FHost.GetData());
 
@@ -305,8 +348,12 @@ void TMailServer::HandleSocket()
         if (ptr)
         {
             FLog.Log(0, "Mail", ptr);
-            Reply(421, FHost.GetData());
-            break;
+            ok = Parse(ptr);
+            if (!ok)
+            {
+                Reply(421, FHost.GetData());
+                break;
+            }
         }
         else
             break;
