@@ -144,6 +144,34 @@ TMailServer::~TMailServer()
 
 /*##########################################################################
 #
+#   Name       : TMailServer::Reply
+#
+#   Purpose....: Reply
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMailServer::Reply(int Id, const char *Text)
+{
+    char str[10];
+
+    sprintf(str, "%03d ", Id);
+
+    FSocket->Write(str);
+    FSocket->Write(Text);
+    
+    str[0] = 0xd;
+    str[1] = 0xa;
+    str[2] = 0;
+    FSocket->Write(str);
+
+    FSocket->Push();
+}
+
+/*##########################################################################
+#
 #   Name       : TMailServer::IsOpen
 #
 #   Purpose....: Check if data socket is open
@@ -269,11 +297,17 @@ void TMailServer::HandleSocket()
 {
     char *ptr;
 
+    Reply(220, FHost.GetData());
+
     while (FSocket->IsOpen() || !IsEmpty())
     {
         ptr = ReadLine();
         if (ptr)
+        {
             FLog.Log(0, "Mail", ptr);
+            Reply(421, FHost.GetData());
+            break;
+        }
         else
             break;
     }
