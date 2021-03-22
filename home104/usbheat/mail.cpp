@@ -284,48 +284,6 @@ char *TMailServer::ReadLine()
 
 /*##########################################################################
 #
-#   Name       : TMailServer::Parse
-#
-#   Purpose....: Parse cmd
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TMailServer::Parse(char *str)
-{
-    char cmd[5];
-    TString rp;
-
-    if (strlen(str) >= 4 && str[4] == ' ')
-    {
-        strncpy(cmd, str, 4);
-        cmd[4] = 0;
-
-        if (!strcmp(cmd, "HELO"))
-        {
-            FClient = str + 5;
-
-            rp = FHost + " RDOS Mailserver"; 
-            Reply(250, rp.GetData());
-            return true;
-        }
-
-        if (!strcmp(cmd, "EHLO"))
-        {
-            FClient = str + 5;
-            rp = FHost + " RDOS Mailserver"; 
-            Reply(250, rp.GetData());
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/*##########################################################################
-#
 #   Name       : TMailServer::HandleSocket
 #
 #   Purpose....: Handle socket
@@ -338,7 +296,9 @@ bool TMailServer::Parse(char *str)
 void TMailServer::HandleSocket()
 {
     char *ptr;
-    bool ok;
+    bool handled;
+    char cmd[5];
+    TString rp;
 
     Reply(220, FHost.GetData());
 
@@ -348,12 +308,55 @@ void TMailServer::HandleSocket()
         if (ptr)
         {
             FLog.Log(0, "Mail", ptr);
-            ok = Parse(ptr);
-            if (!ok)
+
+            handled = false;
+
+            if (strlen(ptr) >= 4 && ptr[4] == ' ')
             {
-                Reply(421, FHost.GetData());
-                break;
+                strncpy(cmd, ptr, 4);
+                cmd[4] = 0;
+
+                if (!strcmp(cmd, "HELO"))
+                {
+                    FClient = ptr + 5;
+                    rp = FHost + " RDOS Mailserver"; 
+                    Reply(250, rp.GetData());
+                    handled = true;
+                }
+
+                if (!strcmp(cmd, "EHLO"))
+                {
+                    FClient = ptr + 5;
+                    rp = FHost + " RDOS Mailserver"; 
+                    Reply(250, rp.GetData());
+                    handled = true;
+                }
+
+                if (!strcmp(cmd, "QUIT"))
+                {
+                    Reply(221, "Quiting");
+                    handled = true;
+                    break;
+                }
+
+                if (!strcmp(cmd, "MAIL"))
+                {
+                    FSource = ptr + 5;
+                    Reply(250, "OK");
+                    handled = true;
+                }
+
+                if (!strcmp(cmd, "RCPT"))
+                {
+                    FDest = ptr + 5;
+                    Reply(250, "OK");
+                    handled = true;
+                }
             }
+
+            if (!handled)
+                Reply(502, "Not supported");
+
         }
         else
             break;

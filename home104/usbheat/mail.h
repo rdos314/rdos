@@ -58,7 +58,6 @@ protected:
     bool IsEmpty();
     char *ReadLine();
     void Reply(int Id, const char *Text);
-    bool Parse(char *str);
     virtual void HandleSocket();
 
     char *FSocketBuf;
@@ -67,6 +66,8 @@ protected:
     TRdosLog FLog;
     TString FHost;
     TString FClient;
+    TString FSource;
+    TString FDest;
 };
 
 
