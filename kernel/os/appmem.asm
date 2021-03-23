@@ -295,7 +295,7 @@ allocate_big_serv   PROC far
     jnc absOk
 
 absRetry:
-    mov edx,serv_linear
+    mov edx,serv_linear + 1000h
     mov eax,serv_linear + serv_size - serv_byte_size
     AllocatePageEntries
     jnc absOk
