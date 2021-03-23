@@ -1772,53 +1772,54 @@ int main()
             WeatherTable->SetText(2, 1, str);
 
             val = Misol->GetWindDir();
-            ival = (int)i;
+            ival = (int)val;
+
             if (ival >= 350 || ival <= 11)
                 strcpy(str,"N");
 
-            if (ival >= 12 || ival <= 34)
+            if (ival >= 12 && ival <= 34)
                 strcpy(str,"NNO");
 
-            if (ival >= 35 || ival <= 56)
+            if (ival >= 35 && ival <= 56)
                 strcpy(str,"NO");
 
-            if (ival >= 57 || ival <= 79)
+            if (ival >= 57 && ival <= 79)
                 strcpy(str,"ONO");
 
-            if (ival >= 80 || ival <= 101)
+            if (ival >= 80 && ival <= 101)
                 strcpy(str,"O");
 
-            if (ival >= 102 || ival <= 124)
+            if (ival >= 102 && ival <= 124)
                 strcpy(str,"OSO");
 
-            if (ival >= 125 || ival <= 146)
+            if (ival >= 125 && ival <= 146)
                 strcpy(str,"SO");
 
-            if (ival >= 147 || ival <= 169)
+            if (ival >= 147 && ival <= 169)
                 strcpy(str,"SSO");
 
-            if (ival >= 170 || ival <= 191)
+            if (ival >= 170 && ival <= 191)
                 strcpy(str,"S");
 
-            if (ival >= 192 || ival <= 214)
+            if (ival >= 192 && ival <= 214)
                 strcpy(str,"SSV");
 
-            if (ival >= 215 || ival <= 236)
+            if (ival >= 215 && ival <= 236)
                 strcpy(str,"SV");
 
-            if (ival >= 237 || ival <= 259)
+            if (ival >= 237 && ival <= 259)
                 strcpy(str,"VSV");
 
-            if (ival >= 260 || ival <= 281)
+            if (ival >= 260 && ival <= 281)
                 strcpy(str,"V");
 
-            if (ival >= 282 || ival <= 304)
+            if (ival >= 282 && ival <= 304)
                 strcpy(str,"VNV");
 
-            if (ival >= 305 || ival <= 326)
+            if (ival >= 305 && ival <= 326)
                 strcpy(str,"NV");
 
-            if (ival >= 327 || ival <= 349)
+            if (ival >= 327 && ival <= 349)
                 strcpy(str,"NNV");
 
             WeatherTable->SetText(3, 1, str);

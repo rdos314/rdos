@@ -295,11 +295,16 @@ char *TMailServer::ReadLine()
 void TMailServer::HandleData()
 {
     char *ptr;
+    char *sub;
     bool ok = false;
 
     ptr = ReadLine();
     while (ptr)
     {
+        sub = strstr(ptr, "Subject:");
+        if (sub)
+            FLog.Log(0, "Data", ptr);
+
         if (!strcmp(ptr, "."))
         {
             Reply(250, "OK");
@@ -308,7 +313,6 @@ void TMailServer::HandleData()
         }
         else
         {
-            FLog.Log(0, "Data", ptr);
             ptr = ReadLine();
         }
     }
