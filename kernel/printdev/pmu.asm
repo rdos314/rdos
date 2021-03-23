@@ -1762,6 +1762,7 @@ pmuRestart:
 ;
     call OpenPipes
 ;
+    call CheckStatus
     call GetPrinterModel
     call GetPrinterVersion
 ;
