@@ -6790,7 +6790,9 @@ reserve_page_entries       Endp
 allocate_page_entries_name  DB 'Allocate Page Entries',0
 
 allocate_page_entries       Proc far
+    push ds
     call cs:allocate_page_entries_proc
+    pop ds
     retf32
 allocate_page_entries       Endp
 

@@ -83,6 +83,42 @@ CreateEntry    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CreateBufEntry
+;
+;       DESCRIPTION:    Create
+;
+;       RETURNS:        EAX       Entry linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBufEntry    Proc near
+    push es
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,serv_flat_sel
+    mov es,ax
+;
+    mov eax,1000h
+    AllocateBigServ
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    mov eax,edx
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+    ret
+CreateBufEntry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LocalLockSector
 ;
 ;       DESCRIPTION:    Lock sector
@@ -119,6 +155,8 @@ llsSectorShift:
     jnz llsSectorShift
 
 llsSectorOk:
+    mov esi,eax
+;
     mov ebx,edx
     shl ebx,2
     mov eax,es:[ebx].vfs_buf_arr
@@ -130,6 +168,44 @@ llsSectorOk:
     mov es:[ebx].vfs_buf_arr,eax
 
 llsEntryOk:
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,20
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,ds:[ebx]
+    or eax,eax
+    jnz llsBufPtr
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx],eax
+
+llsBufPtr:
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,10
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,ds:[ebx]
+    or eax,eax
+    jnz llsBufDir
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx],eax
+
+llsBufDir:
+    and ax,0F000h
+    and esi,0FF8h
+    add esi,eax
+    mov eax,ds:[esi]
+    mov ebx,ds:[esi+4]
+    test ax,VFS_BUF_PRESENT    
+    clc
+;
 
 llsFail:
     stc
