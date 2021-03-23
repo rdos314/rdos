@@ -184,7 +184,7 @@ cpSectorLoop:
 cpSectorOk:
     mov bl,3
     sub bl,cl
-    mov es:vfs_sector_shift,al
+    mov es:vfs_sector_shift,bl
 ;
     add eax,1
     adc edx,0
