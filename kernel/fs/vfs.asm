@@ -57,17 +57,18 @@ code    SEGMENT byte public 'CODE'
 
 CreateEntry    Proc near
     push es
-    push eax
     push ecx
     push edx
     push edi
 ;
-    mov ax,flat_sel
+    mov ax,serv_flat_sel
     mov es,ax
-    mov eax,1000h
+;
+    mov eax,5000h
     AllocateBigServ
+;
     mov edi,edx
-    mov ecx,400h
+    mov ecx,5 * 400h
     xor eax,eax
     rep stos dword ptr es:[edi]
     mov eax,edx
@@ -75,7 +76,6 @@ CreateEntry    Proc near
     pop edi
     pop edx
     pop ecx
-    pop eax
     pop es
     ret
 CreateEntry    Endp
@@ -87,7 +87,8 @@ CreateEntry    Endp
 ;
 ;       DESCRIPTION:    Lock sector
 ;
-;       PARAMETERS:     ES          VFS sel
+;       PARAMETERS:     DS          Server flat sel
+;                       ES          VFS sel
 ;                       EDX:EAX     Sector #
 ;
 ;       RETURNS:        NC
@@ -98,16 +99,40 @@ CreateEntry    Endp
 LocalLockSector    Proc near
     int 3
 ;
-    mov eax,es:[bx]
-    test ax,VFS_BUF_PRESENT
+    cmp edx,es:vfs_sectors+4
+    jb llsInRange
+    ja llsFail
+;
+    cmp eax,es:vfs_sectors
+    jae llsFail
+
+llsinRange:
+    mov cl,es:vfs_sector_shift
+    or cl,cl
+    jz llsSectorOk
+
+llsSectorShift:
+    add eax,eax
+    adc edx,edx
+;
+    sub cl,1
+    jnz llsSectorShift
+
+llsSectorOk:
+    mov ebx,edx
+    shl ebx,2
+    mov eax,es:[ebx].vfs_buf_arr
+    or eax,eax
     jnz llsEntryOk
 ;
     call CreateEntry
     or ax,VFS_BUF_PRESENT
-    mov es:[bx],eax
+    mov es:[ebx].vfs_buf_arr,eax
 
 llsEntryOk:
 
+llsFail:
+    stc
 
 llsDone:
     ret
@@ -284,11 +309,6 @@ VfsServer:
 ;
     mov ax,serv_flat_sel
     mov ds,ax
-    mov eax,5000h
-    AllocateBigServ
-    mov al,ds:[edx]
-    add edx,5000h
-    mov al,ds:[edx]
 ;
     xor eax,eax
     xor edx,edx
