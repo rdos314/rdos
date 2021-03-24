@@ -360,7 +360,6 @@ LocalLockSector    Proc near
     push esi
     push edi
 ;
-    int 3
     call SectorToBlock
     jc llsDone
 ;
@@ -415,6 +414,72 @@ llsDone:
     pop edx
     ret
 LocalLockSector    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetIoBuf
+;
+;       DESCRIPTION:    Get IO buffer
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;
+;       RETURNS:        NC
+;                         EDI       Bitmap buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIoBuf    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ebx,ds:vfs_scan_pos+4
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    jz gibNextEntry
+;
+    mov ebx,ds:vfs_scan_pos
+    shr ebx,18
+    and ebx,3FFCh
+    mov ecx,4000h
+    sub ecx,ebx
+    shr ecx,2
+;
+    and ax,0F000h
+    add ebx,eax
+    add ebx,1000h
+
+gibPtrLoop:
+    mov eax,es:[ebx]
+    or eax,eax
+    jz gibPtrNext
+;
+    push ecx
+    mov ecx,1000h
+    mov edi,eax
+    xor eax,eax
+    repz scas dword ptr es:[edi]
+    pop ecx
+
+gibPtrNext:
+    add ebx,4
+    loop gibPtrLoop
+
+
+gibNextEntry:
+    mov ds:vfs_scan_pos,0
+    
+gibDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+GetIoBuf   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -571,7 +636,6 @@ CreateBuffer   Endp
 init_part_name       DB 'VFS Init',0
 
 init_part:
-    int 3
     mov ds,bx
     mov ax,serv_flat_sel
     mov es,ax
@@ -579,6 +643,7 @@ init_part:
     xor eax,eax
     xor edx,edx
     call LocalLockSector
+    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -605,10 +670,12 @@ VfsServer:
     mov ds:vfs_bytes_per_sector,cx
     mov ds:vfs_max_req,bx
 ;
+    mov ds:vfs_scan_pos,0
+    mov ds:vfs_scan_pos+4,0
+;
     call CalcParam
     call CreateBuffer
 ;
-    int 3
     push ds
 ;
     mov bx,ds
@@ -628,6 +695,7 @@ VfsServer:
 vfsLoop:
     WaitForSignal
     int 3
+    call GetIoBuf
 ;
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz vfsExit
