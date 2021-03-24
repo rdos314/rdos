@@ -47,6 +47,107 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CalcParam
+;
+;       DESCRIPTION:    Calculate schedule params
+;
+;       PARAMETERS:     DS      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcParam    Proc near
+    mov eax,ds:vfs_sectors
+    mov edx,ds:vfs_sectors+4
+    mov bx,ds:vfs_bytes_per_sector
+    xor cl,cl
+
+cpSectorLoop:
+    cmp bx,1000h
+    jae cpSectorOk
+;
+    clc
+    rcr edx,1
+    rcr eax,1
+    shl bx,1
+    inc cl
+    jmp cpSectorLoop
+
+cpSectorOk:
+    mov bl,3
+    sub bl,cl
+    mov ds:vfs_sector_shift,bl
+;
+    add eax,1
+    adc edx,0
+    mov ds:vfs_blocks,eax
+    mov ds:vfs_blocks+4,edx
+;
+    mov ebx,eax
+    rol ebx,3
+    and bl,7
+    shl edx,3
+    or dl,bl
+    inc edx
+    mov ds:vfs_buf_count,edx
+;
+    ret
+CalcParam    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateBuffer
+;
+;       DESCRIPTION:    Create buffer
+;
+;       PARAMETERS:     DS      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBuffer    Proc near
+    mov eax,ds:vfs_buf_count
+    shl eax,2
+    add eax,OFFSET vfs_buf_arr
+    AllocateSmallLinear
+    mov edi,edx
+;
+    mov bx,ds
+    GetSelectorBaseSize
+    mov esi,edx
+;
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov ecx,OFFSET vfs_buf_arr
+    rep movs byte ptr es:[edi],es:[esi]
+;
+    pop edi
+    pop esi
+;
+    mov edx,esi
+    mov ecx,OFFSET vfs_buf_arr
+    FreeLinear
+;
+    mov ecx,es:[edi].vfs_buf_count
+    shl ecx,2
+    add ecx,OFFSET vfs_buf_arr
+    mov edx,edi
+    CreateDataSelector32
+    mov ds,bx
+    mov es,bx
+;
+    mov ecx,ds:vfs_buf_count
+    mov edi,OFFSET vfs_buf_arr
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ret
+CreateBuffer   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateEntry
 ;
 ;       DESCRIPTION:    Create entry
@@ -378,6 +479,16 @@ LocalLockSector    Proc near
     mov es:[esi].vfsp_ref_wait,ax
     pop ax
 ;
+    int 3
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+    jnc llsSignal
+;
+    mov ds:vfs_scan_pos,eax
+    mov ds:vfs_scan_pos+4,edx
+
+llsSignal:
     mov bx,ds:vfs_server
     Signal
 ;
@@ -524,107 +635,6 @@ unlock_vfs_sector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CalcParam
-;
-;       DESCRIPTION:    Calculate schedule params
-;
-;       PARAMETERS:     DS      VFS sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcParam    Proc near
-    mov eax,ds:vfs_sectors
-    mov edx,ds:vfs_sectors+4
-    mov bx,ds:vfs_bytes_per_sector
-    xor cl,cl
-
-cpSectorLoop:
-    cmp bx,1000h
-    jae cpSectorOk
-;
-    clc
-    rcr edx,1
-    rcr eax,1
-    shl bx,1
-    inc cl
-    jmp cpSectorLoop
-
-cpSectorOk:
-    mov bl,3
-    sub bl,cl
-    mov ds:vfs_sector_shift,bl
-;
-    add eax,1
-    adc edx,0
-    mov ds:vfs_blocks,eax
-    mov ds:vfs_blocks+4,edx
-;
-    mov ebx,eax
-    rol ebx,3
-    and bl,7
-    shl edx,3
-    or dl,bl
-    inc edx
-    mov ds:vfs_buf_count,edx
-;
-    ret
-CalcParam    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreateBuffer
-;
-;       DESCRIPTION:    Create buffer
-;
-;       PARAMETERS:     DS      VFS sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateBuffer    Proc near
-    mov eax,ds:vfs_buf_count
-    shl eax,2
-    add eax,OFFSET vfs_buf_arr
-    AllocateSmallLinear
-    mov edi,edx
-;
-    mov bx,ds
-    GetSelectorBaseSize
-    mov esi,edx
-;
-    push esi
-    push edi
-;
-    mov ax,flat_sel
-    mov es,ax
-    mov ecx,OFFSET vfs_buf_arr
-    rep movs byte ptr es:[edi],es:[esi]
-;
-    pop edi
-    pop esi
-;
-    mov edx,esi
-    mov ecx,OFFSET vfs_buf_arr
-    FreeLinear
-;
-    mov ecx,es:[edi].vfs_buf_count
-    shl ecx,2
-    add ecx,OFFSET vfs_buf_arr
-    mov edx,edi
-    CreateDataSelector32
-    mov ds,bx
-    mov es,bx
-;
-    mov ecx,ds:vfs_buf_count
-    mov edi,OFFSET vfs_buf_arr
-    xor eax,eax
-    rep stos dword ptr es:[edi]
-    ret
-CreateBuffer   Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           InitPartition
 ;
 ;       DESCRIPTION:    Init partition
@@ -640,7 +650,7 @@ init_part:
     mov ax,serv_flat_sel
     mov es,ax
 ;
-    xor eax,eax
+    mov eax,123456h
     xor edx,edx
     call LocalLockSector
     int 3
@@ -670,8 +680,8 @@ VfsServer:
     mov ds:vfs_bytes_per_sector,cx
     mov ds:vfs_max_req,bx
 ;
-    mov ds:vfs_scan_pos,0
-    mov ds:vfs_scan_pos+4,0
+    mov ds:vfs_scan_pos,-1
+    mov ds:vfs_scan_pos+4,-1
 ;
     call CalcParam
     call CreateBuffer
