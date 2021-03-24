@@ -149,12 +149,12 @@ void TRootPage::SendAnswer()
 
     Write("<font face=\"Bookman Old Style\">\r\n");
     Write("<b>\r\n");
+
     Write("<span style='font-size:20.0pt;color:#0033CC'>\r\n");
-    Write("Weather station data<br>\r\n");
-    Write("<br>\r\n");
+    Write("<br>Weather station data<br>\r\n");
     Write("</span>\r\n");
 
-    Write("<table cellspacing=0 cellpadding=0>\r\n");
+    Write("<table cellspacing=2px cellpadding=2px>\r\n");
 
     Write("<tr style='height:24.75pt'>\r\n");
     Write("<td align='left' valign=top halign=center'>\r\n");
@@ -166,7 +166,7 @@ void TRootPage::SendAnswer()
     Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetTemperature();
-    sprintf(str, "%5.1Lf", val);
+    sprintf(str, " %5.1Lf", val);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
@@ -188,7 +188,7 @@ void TRootPage::SendAnswer()
     Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetWindSpeed();
-    sprintf(str, "%5.1Lf", val);
+    sprintf(str, " %5.1Lf", val);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
@@ -210,7 +210,7 @@ void TRootPage::SendAnswer()
     Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetWindGust();
-    sprintf(str, "%5.1Lf", val);
+    sprintf(str, " %5.1Lf", val);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
@@ -229,7 +229,7 @@ void TRootPage::SendAnswer()
     Write("</span>\r\n");
     Write("</td>\r\n");
 
-    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<td colspan=2 align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetWindDir();
     ival = (int)val;
@@ -298,7 +298,7 @@ void TRootPage::SendAnswer()
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetHumidity();
     ival = (int)val;
-    sprintf(str, "%d", ival);
+    sprintf(str, " %d", ival);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
@@ -320,7 +320,7 @@ void TRootPage::SendAnswer()
     Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetRain();
-    sprintf(str, "%5.1Lf", val);
+    sprintf(str, " %5.1Lf", val);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
@@ -342,7 +342,7 @@ void TRootPage::SendAnswer()
     Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetUv();
-    sprintf(str, "%5.1Lf", val);
+    sprintf(str, " %5.1Lf", val);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
@@ -364,7 +364,7 @@ void TRootPage::SendAnswer()
     Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetLight();
-    sprintf(str, "%5.1Lf", val);
+    sprintf(str, " %5.1Lf", val);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
@@ -376,14 +376,137 @@ void TRootPage::SendAnswer()
     Write("</td>\r\n");
     Write("</tr>\r\n");
 
-    Write("<table>\r\n");
+    Write("</table>\r\n");
+
+    Write("<span style='font-size:20.0pt;color:#0033CC'>\r\n");
+    Write("<br>Solar panels<br>\r\n");
+    Write("</span>\r\n");
+
+    Write("<table cellspacing=2px cellpadding=2px>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Power");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Solar->GetCurrentPower();
+    ival = (int)val;
+    sprintf(str, " %d", ival);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" W");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Energy");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Solar->GetDayEnergy() / 1000.0;
+    ival = (int)val;
+    sprintf(str, " %d", ival);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" kWh");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("</table>\r\n");
+
+    Write("<span style='font-size:20.0pt;color:#0033CC'>\r\n");
+    Write("<br>Wind generator<br>\r\n");
+    Write("</span>\r\n");
+
+    Write("<table cellspacing=2px cellpadding=2px>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Power");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Wind->GetCurrentGrid();
+    ival = (int)val;
+    sprintf(str, " %d", ival);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" W");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Energy");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Wind->GetDayEnergy();
+    ival = (int)val;
+    sprintf(str, "%d", ival);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" kWh");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("State");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td colspan=2 align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Wind->GetCurrentState(str);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("</table>\r\n");
 
     Write("</b>\r\n");
     Write("</p>\r\n");
 
     Write("<form method=\"POST\" action=\"/power/web\">\r\n");
 
-    Write("<input type=\"Submit\" value=\"Power\" name=\"power\">\r\n");
+    Write("<input type=\"Submit\" value=\"Power history\" name=\"power\">\r\n");
 
     Write("</form>\r\n");
 
