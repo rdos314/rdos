@@ -119,6 +119,123 @@ CreateBufEntry    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SectorToPhys
+;
+;       DESCRIPTION:    Converts between sector and physical address
+;
+;       PARAMETERS:     DS          Server flat sel
+;                       ES          VFS sel
+;                       EDX:EAX     Sector #
+;
+;       RETURNS:        NC
+;                         ESI       Physical entry buf
+;                         BP        Offset with entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SectorToPhys    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    cmp edx,es:vfs_sectors+4
+    jb stpInRange
+    ja stpFail
+;
+    cmp eax,es:vfs_sectors
+    jb stpInRange
+
+stpFail:
+    stc
+    jmp stpDone
+
+stpInRange:
+    mov cl,es:vfs_sector_shift
+    or cl,cl
+    jz stpSectorOk
+
+stpSectorShift:
+    add eax,eax
+    adc edx,edx
+;
+    sub cl,1
+    jnz stpSectorShift
+
+stpSectorOk:
+    mov esi,eax
+;
+    mov ebx,edx
+    shl ebx,2
+    mov eax,es:[ebx].vfs_buf_arr
+    or eax,eax
+    jnz stpEntryOk
+;
+    call CreateEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx].vfs_buf_arr,eax
+
+stpEntryOk:
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,20
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,ds:[ebx]
+    or eax,eax
+    jnz stpBufPtr
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx],eax
+
+stpBufPtr:
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,10
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,ds:[ebx]
+    or eax,eax
+    jnz stpBufDir
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx],eax
+
+stpBufDir:
+    mov bp,si
+    and bp,7
+    shl bp,9
+;
+    and ax,0F000h
+    and esi,0FF8h
+    add esi,eax
+    mov eax,ds:[esi]
+    test ah,VFS_PHYS_PRESENT    
+    jnz stpOk
+;
+    AllocatePhysical64
+    or ah,VFS_BUF_PRESENT
+    mov ds:[esi],eax
+    mov ds:[esi+4],ebx
+
+stpOk:
+    clc
+
+stpDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+SectorToPhys   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LocalLockSector
 ;
 ;       DESCRIPTION:    Lock sector
@@ -134,89 +251,22 @@ CreateBufEntry    Endp
 
 LocalLockSector    Proc near
     int 3
+    call SectorToPhys
+    jc llsDone
 ;
-    cmp edx,es:vfs_sectors+4
-    jb llsInRange
-    ja llsFail
+    add ds:[esi].vfsp_ref_count,1
+    jnc llsPhysRefOk
 ;
-    cmp eax,es:vfs_sectors
-    jae llsFail
+    CrashGate
 
-llsinRange:
-    mov cl,es:vfs_sector_shift
-    or cl,cl
-    jz llsSectorOk
-
-llsSectorShift:
-    add eax,eax
-    adc edx,edx
+llsPhysRefOk:
+    test ds:[esi].vfsp_flags,VFS_PHYS_VALID
+    jnz llsDone
 ;
-    sub cl,1
-    jnz llsSectorShift
-
-llsSectorOk:
-    mov esi,eax
-;
-    mov ebx,edx
-    shl ebx,2
-    mov eax,es:[ebx].vfs_buf_arr
-    or eax,eax
-    jnz llsEntryOk
-;
-    call CreateEntry
-    or ax,VFS_BUF_PRESENT
-    mov es:[ebx].vfs_buf_arr,eax
-
-llsEntryOk:
-    and ax,0F000h
-;
-    mov ebx,esi
-    shr ebx,20
-    and ebx,0FFCh
-    add ebx,eax
-    mov eax,ds:[ebx]
-    or eax,eax
-    jnz llsBufPtr
-;
-    call CreateBufEntry
-    or ax,VFS_BUF_PRESENT
-    mov ds:[ebx],eax
-
-llsBufPtr:
-    and ax,0F000h
-;
-    mov ebx,esi
-    shr ebx,10
-    and ebx,0FFCh
-    add ebx,eax
-    mov eax,ds:[ebx]
-    or eax,eax
-    jnz llsBufDir
-;
-    call CreateBufEntry
-    or ax,VFS_BUF_PRESENT
-    mov ds:[ebx],eax
-
-llsBufDir:
-    mov ecx,esi
-    and ax,0F000h
-    and esi,0FF8h
-    add esi,eax
     mov eax,ds:[esi]
-    mov ebx,ds:[esi+4]
-    test ax,VFS_BUF_PRESENT    
-    jnz llsBufPhys
-;
-    AllocatePhysical64
-    or ax,VFS_BUF_PRESENT
-    mov ds:[esi],eax
-    mov ds:[esi+4],ebx
-
-llsBufPhys:
     and ax,0F000h
-    and cx,7
-    shl cx,9
-    or ax,cx
+    or ax,bp
+    movzx ebx,word ptr ds:[esi+4]
     clc
 ;
 

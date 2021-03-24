@@ -82,8 +82,7 @@ vfs_buf_arr              DD ?
 vfs_struc  ENDS
 
 VFS_PHYS_PRESENT = 1
-VFS_PHYS_RD_REQ  = 2
-VFS_PHYS_REF     = 4
+VFS_PHYS_VALID   = 2
 
 vfs_phys_entry   STRUC
 
