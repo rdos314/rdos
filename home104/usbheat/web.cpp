@@ -34,6 +34,7 @@
 #include <math.h>
 
 #include "web.h"
+#include "webroot.h"
 #include "webheat.h"
 
 #define BUF_SIZE        0x4000
@@ -74,9 +75,11 @@ int GetWebConnectionCount()
 static void WebSocketThread(void *ptr)
 {
     TPowerHttpServerFactory fact(80, 10, BUF_SIZE);
+    TRootFactory rootpage("index.htm");
     TPowerJsonDirFactory jsondir("power/json");
     TPowerWebDirFactory webdir("power/web");
 
+    fact.AddCustomPage(&rootpage);
     fact.AddCustomDir(&jsondir);
     fact.AddCustomDir(&webdir);
     fact.RootDir = "d:/www";
