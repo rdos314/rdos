@@ -119,6 +119,42 @@ CreateBufEntry    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CreateBitmapEntry
+;
+;       DESCRIPTION:    Create
+;
+;       RETURNS:        EAX       Entry linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBitmapEntry    Proc near
+    push es
+    push ecx
+    push edx
+    push edi
+;
+    mov ax,serv_flat_sel
+    mov es,ax
+;
+    mov eax,4000h
+    AllocateBigServ
+;
+    mov edi,edx
+    mov ecx,4 * 400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    mov eax,edx
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop es
+    ret
+CreateBitmapEntry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SectorToPhys
 ;
 ;       DESCRIPTION:    Converts between sector and physical address
@@ -235,6 +271,88 @@ SectorToPhys   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SectorToBitmap
+;
+;       DESCRIPTION:    Converts between sector and bitmap
+;
+;       PARAMETERS:     DS          Server flat sel
+;                       ES          VFS sel
+;                       EDX:EAX     Sector #
+;
+;       RETURNS:        NC
+;                         EDI       Bitmap buf
+;                         ECX       Bit #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SectorToBitmap    Proc near
+    push eax
+    push ebx
+    push edx
+;
+    cmp edx,es:vfs_sectors+4
+    jb stbInRange
+    ja stbFail
+;
+    cmp eax,es:vfs_sectors
+    jb stbInRange
+
+stbFail:
+    stc
+    jmp stbDone
+
+stbInRange:
+    mov cl,es:vfs_sector_shift
+    or cl,cl
+    jz stbSectorOk
+
+stbSectorShift:
+    add eax,eax
+    adc edx,edx
+;
+    sub cl,1
+    jnz stbSectorShift
+
+stbSectorOk:
+    mov ecx,eax
+    mov ebx,edx
+    shl ebx,2
+    mov eax,es:[ebx].vfs_buf_arr
+    or eax,eax
+    stc
+    jz stbDone
+;
+    and ax,0F000h
+    mov ebx,ecx
+    shr ebx,18
+    and ebx,3FFCh
+    add ebx,eax
+    add ebx,1000h
+    mov eax,ds:[ebx]
+    or eax,eax
+    jnz stbBufPtr
+;
+    call CreateBitmapEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx],eax
+
+stbBufPtr:
+    and ax,0F000h
+    mov edi,eax
+    shr ecx,3
+    and ecx,1FFFFh
+    clc
+
+stbDone:
+    pop edx
+    pop ebx
+    pop eax
+    ret
+SectorToBitmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LocalLockSector
 ;
 ;       DESCRIPTION:    Lock sector
@@ -260,8 +378,12 @@ LocalLockSector    Proc near
 
 llsPhysRefOk:
     test ds:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz llsDone
+    jnz llsOk
 ;
+    call SectorToBitmap
+    bts ds:[edi],ecx
+
+llsOk:
     mov eax,ds:[esi]
     and ax,0F000h
     or ax,bp
