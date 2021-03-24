@@ -213,14 +213,13 @@ stpBufDir:
     and ax,0F000h
     and esi,0FF8h
     add esi,eax
-    mov eax,ds:[esi]
-    test ah,VFS_PHYS_PRESENT    
+    test ds:[esi].vfsp_flags,VFS_PHYS_PRESENT
     jnz stpOk
 ;
     AllocatePhysical64
-    or ah,VFS_BUF_PRESENT
     mov ds:[esi],eax
     mov ds:[esi+4],ebx
+    or ds:[esi].vfsp_flags,VFS_PHYS_PRESENT
 
 stpOk:
     clc
