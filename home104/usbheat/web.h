@@ -28,6 +28,34 @@
 #ifndef WEB_H
 #define WEB_H
 
-void InitWeb();
+#include "httpfact.h"
+#include "misol.h"
+#include "frinv.h"
+#include "powinv.h"
+
+void InitWeb(TMisolWeather *Misol, TFroniusInverter *Solar, TSmartPowInverter *Wind);
+
+class TRootFactory : public THttpCustomPageFactory
+{
+public:
+    TRootFactory(const char *Name);
+    virtual ~TRootFactory();
+
+    virtual THttpCustomPage *Create(THttpCommand *cmd);
+};
+
+class TRootPage : public THttpCustomPage
+{
+public:
+    TRootPage(THttpCommand *Cmd);
+    virtual ~TRootPage();
+
+protected:
+    void SendAnswer();
+
+    virtual void Get(const char *MatchName, const char *UrlName, THttpParam *Param);
+    virtual void Post(const char *MatchName, const char *UrlName, THttpParam *Param);
+    virtual void Post(const char *Var, const char *Val);
+};
 
 #endif

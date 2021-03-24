@@ -1339,9 +1339,6 @@ int main()
     TRdosDefaultLog Log("d:/log", 50, 128 * 1024, "Log", "");
     Log.Log(0, "", "Started");
 
-    InitWeb();
-    InitMail("home.rdos.net");
-
     RdosWriteSerialVal(2, 0, 0);
     RdosWriteSerialVal(2, 1, 0);
 
@@ -1412,6 +1409,9 @@ int main()
     WindInv = new TSmartPowInverter("192.168.1.100");
     Misol = new TMisolWeather("192.168.1.57", 1234);
     Met = new TMet(Misol);
+
+    InitWeb(Misol, SolarInv, WindInv);
+    InitMail("home.rdos.net");
 
     ResetSolarWind();
 
