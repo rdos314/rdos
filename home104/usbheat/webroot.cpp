@@ -138,7 +138,7 @@ void TRootPage::SendAnswer()
 
     Write("<form method=\"POST\" action=\"/power/web\">\r\n");
 
-    Write("<input type=\"Submit\" value=\"next\" name=\"next\">\r\n");
+    Write("<input type=\"Submit\" value=\"Power\" name=\"power\">\r\n");
 
     Write("</form>\r\n");
 
