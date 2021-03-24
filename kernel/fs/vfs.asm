@@ -51,18 +51,16 @@ code    SEGMENT byte public 'CODE'
 ;
 ;       DESCRIPTION:    Create entry
 ;
+;       PARAMETERS:     ES        Serv flat sel
+;
 ;       RETURNS:        EAX       Entry linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateEntry    Proc near
-    push es
     push ecx
     push edx
     push edi
-;
-    mov ax,serv_flat_sel
-    mov es,ax
 ;
     mov eax,5000h
     AllocateBigServ
@@ -76,7 +74,6 @@ CreateEntry    Proc near
     pop edi
     pop edx
     pop ecx
-    pop es
     ret
 CreateEntry    Endp
 
@@ -87,18 +84,16 @@ CreateEntry    Endp
 ;
 ;       DESCRIPTION:    Create
 ;
+;       PARAMETERS:     ES        Serv flat sel
+;
 ;       RETURNS:        EAX       Entry linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBufEntry    Proc near
-    push es
     push ecx
     push edx
     push edi
-;
-    mov ax,serv_flat_sel
-    mov es,ax
 ;
     mov eax,1000h
     AllocateBigServ
@@ -112,7 +107,6 @@ CreateBufEntry    Proc near
     pop edi
     pop edx
     pop ecx
-    pop es
     ret
 CreateBufEntry    Endp
 
@@ -123,18 +117,16 @@ CreateBufEntry    Endp
 ;
 ;       DESCRIPTION:    Create
 ;
+;       PARAMETERS:     ES        Serv flat sel
+;
 ;       RETURNS:        EAX       Entry linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBitmapEntry    Proc near
-    push es
     push ecx
     push edx
     push edi
-;
-    mov ax,serv_flat_sel
-    mov es,ax
 ;
     mov eax,4000h
     AllocateBigServ
@@ -148,153 +140,33 @@ CreateBitmapEntry    Proc near
     pop edi
     pop edx
     pop ecx
-    pop es
     ret
 CreateBitmapEntry    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SectorToPhys
+;       NAME:           SectorToBlock
 ;
-;       DESCRIPTION:    Converts between sector and physical address
+;       DESCRIPTION:    Converts between sector # and block #
 ;
-;       PARAMETERS:     DS          Server flat sel
-;                       ES          VFS sel
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
 ;                       EDX:EAX     Sector #
 ;
 ;       RETURNS:        NC
-;                         ESI       Physical entry buf
-;                         BP        Offset with entry
+;                         EDX:EAX   Block #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SectorToPhys    Proc near
-    push eax
-    push ebx
-    push ecx
-    push edx
+SectorToBlock    Proc near
+    push cx
 ;
-    cmp edx,es:vfs_sectors+4
-    jb stpInRange
-    ja stpFail
-;
-    cmp eax,es:vfs_sectors
-    jb stpInRange
-
-stpFail:
-    stc
-    jmp stpDone
-
-stpInRange:
-    mov cl,es:vfs_sector_shift
-    or cl,cl
-    jz stpSectorOk
-
-stpSectorShift:
-    add eax,eax
-    adc edx,edx
-;
-    sub cl,1
-    jnz stpSectorShift
-
-stpSectorOk:
-    mov esi,eax
-;
-    mov ebx,edx
-    shl ebx,2
-    mov eax,es:[ebx].vfs_buf_arr
-    or eax,eax
-    jnz stpEntryOk
-;
-    call CreateEntry
-    or ax,VFS_BUF_PRESENT
-    mov es:[ebx].vfs_buf_arr,eax
-
-stpEntryOk:
-    and ax,0F000h
-;
-    mov ebx,esi
-    shr ebx,20
-    and ebx,0FFCh
-    add ebx,eax
-    mov eax,ds:[ebx]
-    or eax,eax
-    jnz stpBufPtr
-;
-    call CreateBufEntry
-    or ax,VFS_BUF_PRESENT
-    mov ds:[ebx],eax
-
-stpBufPtr:
-    and ax,0F000h
-;
-    mov ebx,esi
-    shr ebx,10
-    and ebx,0FFCh
-    add ebx,eax
-    mov eax,ds:[ebx]
-    or eax,eax
-    jnz stpBufDir
-;
-    call CreateBufEntry
-    or ax,VFS_BUF_PRESENT
-    mov ds:[ebx],eax
-
-stpBufDir:
-    mov bp,si
-    and bp,7
-    shl bp,9
-;
-    and ax,0F000h
-    and esi,0FF8h
-    add esi,eax
-    test ds:[esi].vfsp_flags,VFS_PHYS_PRESENT
-    jnz stpOk
-;
-    AllocatePhysical64
-    mov ds:[esi],eax
-    mov ds:[esi+4],ebx
-    or ds:[esi].vfsp_flags,VFS_PHYS_PRESENT
-
-stpOk:
-    clc
-
-stpDone:
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    ret
-SectorToPhys   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           SectorToBitmap
-;
-;       DESCRIPTION:    Converts between sector and bitmap
-;
-;       PARAMETERS:     DS          Server flat sel
-;                       ES          VFS sel
-;                       EDX:EAX     Sector #
-;
-;       RETURNS:        NC
-;                         EDI       Bitmap buf
-;                         ECX       Bit #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SectorToBitmap    Proc near
-    push eax
-    push ebx
-    push edx
-;
-    cmp edx,es:vfs_sectors+4
+    cmp edx,ds:vfs_sectors+4
     jb stbInRange
     ja stbFail
 ;
-    cmp eax,es:vfs_sectors
+    cmp eax,ds:vfs_sectors
     jb stbInRange
 
 stbFail:
@@ -302,53 +174,167 @@ stbFail:
     jmp stbDone
 
 stbInRange:
-    mov cl,es:vfs_sector_shift
+    mov cl,ds:vfs_sector_shift
     or cl,cl
-    jz stbSectorOk
+    jz stbOk
 
-stbSectorShift:
+stbShift:
     add eax,eax
     adc edx,edx
 ;
     sub cl,1
-    jnz stbSectorShift
+    jnz stbShift
 
-stbSectorOk:
-    mov ecx,eax
-    mov ebx,edx
-    shl ebx,2
-    mov eax,es:[ebx].vfs_buf_arr
-    or eax,eax
-    stc
-    jz stbDone
-;
-    and ax,0F000h
-    mov ebx,ecx
-    shr ebx,18
-    and ebx,3FFCh
-    add ebx,eax
-    add ebx,1000h
-    mov eax,ds:[ebx]
-    or eax,eax
-    jnz stbBufPtr
-;
-    call CreateBitmapEntry
-    or ax,VFS_BUF_PRESENT
-    mov ds:[ebx],eax
-
-stbBufPtr:
-    and ax,0F000h
-    mov edi,eax
-    shr ecx,3
-    and ecx,1FFFFh
+stbOk:
     clc
 
 stbDone:
+    pop cx
+    ret
+SectorToBlock   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           BlockToBuf
+;
+;       DESCRIPTION:    Converts between block # and physical address
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Block #
+;
+;       RETURNS:        NC
+;                         ESI       Physical entry buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BlockToBuf    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov esi,eax
+    mov ebx,edx
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    jnz btbEntryOk
+;
+    call CreateEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx].vfs_buf_arr,eax
+
+btbEntryOk:
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,20
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    jnz btbBufPtr
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx],eax
+
+btbBufPtr:
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,10
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    jnz btbBufDir
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx],eax
+
+btbBufDir:
+    and ax,0F000h
+    and esi,0FF8h
+    add esi,eax
+    test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+    jnz btbOk
+;
+    AllocatePhysical64
+    mov es:[esi],eax
+    mov es:[esi+4],ebx
+    or es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+
+btbOk:
+    clc
+
+btbDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+BlockToBuf   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           BlockToBitmap
+;
+;       DESCRIPTION:    Converts between block and bitmap
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Block #
+;
+;       RETURNS:        NC
+;                         EDI       Bitmap buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BlockToBitmap    Proc near
+    push eax
+    push ebx
+    push edx
+;
+    mov ebx,edx
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    jnz btmEntryOk
+;
+    call CreateEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx].vfs_buf_arr,eax
+
+btmEntryOk:
+    mov ebx,eax
+    shr ebx,18
+    and ebx,3FFCh
+    and ax,0F000h
+    add ebx,eax
+    add ebx,1000h
+    mov eax,es:[ebx]
+    or eax,eax
+    jnz btmBufPtr
+;
+    call CreateBitmapEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx],eax
+
+btmBufPtr:
+    and ax,0F000h
+    mov edi,eax
+
+btmDone:
     pop edx
     pop ebx
     pop eax
     ret
-SectorToBitmap   Endp
+BlockToBitmap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -357,8 +343,8 @@ SectorToBitmap   Endp
 ;
 ;       DESCRIPTION:    Lock sector
 ;
-;       PARAMETERS:     DS          Server flat sel
-;                       ES          VFS sel
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
 ;                       EDX:EAX     Sector #
 ;
 ;       RETURNS:        NC
@@ -367,27 +353,38 @@ SectorToBitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LocalLockSector    Proc near
+    push edx
+    push esi
+    push edi
+;
     int 3
-    call SectorToPhys
+    call SectorToBlock
     jc llsDone
 ;
+    call BlockToBuf
     add ds:[esi].vfsp_ref_count,1
     jnc llsPhysRefOk
 ;
     CrashGate
 
 llsPhysRefOk:
-    test ds:[esi].vfsp_flags,VFS_PHYS_VALID
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jnz llsOk
 ;
-    call SectorToBitmap
+    call BlockToBitmap
+    mov ecx,eax
+    shr ecx,3
+    and ecx,1FFFFh
     bts ds:[edi],ecx
 
 llsOk:
+    mov bx,ax
+    and bx,7
+    shl bx,9
     mov eax,ds:[esi]
     and ax,0F000h
-    or ax,bp
-    movzx ebx,word ptr ds:[esi+4]
+    or ax,bx
+    movzx ebx,word ptr es:[esi+4]
     clc
 ;
 
@@ -395,6 +392,9 @@ llsFail:
     stc
 
 llsDone:
+    pop edi
+    pop esi
+    pop edx
     ret
 LocalLockSector    Endp
 
@@ -445,14 +445,14 @@ unlock_vfs_sector    Endp
 ;
 ;       DESCRIPTION:    Calculate schedule params
 ;
-;       PARAMETERS:     ES      VFS sel
+;       PARAMETERS:     DS      VFS sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CalcParam    Proc near
-    mov eax,es:vfs_sectors
-    mov edx,es:vfs_sectors+4
-    mov bx,es:vfs_bytes_per_sector
+    mov eax,ds:vfs_sectors
+    mov edx,ds:vfs_sectors+4
+    mov bx,ds:vfs_bytes_per_sector
     xor cl,cl
 
 cpSectorLoop:
@@ -469,12 +469,12 @@ cpSectorLoop:
 cpSectorOk:
     mov bl,3
     sub bl,cl
-    mov es:vfs_sector_shift,bl
+    mov ds:vfs_sector_shift,bl
 ;
     add eax,1
     adc edx,0
-    mov es:vfs_blocks,eax
-    mov es:vfs_blocks+4,edx
+    mov ds:vfs_blocks,eax
+    mov ds:vfs_blocks+4,edx
 ;
     mov ebx,eax
     rol ebx,3
@@ -482,7 +482,7 @@ cpSectorOk:
     shl edx,3
     or dl,bl
     inc edx
-    mov es:vfs_buf_count,edx
+    mov ds:vfs_buf_count,edx
 ;
     ret
 CalcParam    Endp
@@ -494,18 +494,18 @@ CalcParam    Endp
 ;
 ;       DESCRIPTION:    Create buffer
 ;
-;       PARAMETERS:     ES      VFS sel
+;       PARAMETERS:     DS      VFS sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBuffer    Proc near
-    mov eax,es:vfs_buf_count
+    mov eax,ds:vfs_buf_count
     shl eax,2
     add eax,OFFSET vfs_buf_arr
     AllocateSmallLinear
     mov edi,edx
 ;
-    mov bx,es
+    mov bx,ds
     GetSelectorBaseSize
     mov esi,edx
 ;
@@ -529,9 +529,10 @@ CreateBuffer    Proc near
     add ecx,OFFSET vfs_buf_arr
     mov edx,edi
     CreateDataSelector32
+    mov ds,bx
     mov es,bx
 ;
-    mov ecx,es:vfs_buf_count
+    mov ecx,ds:vfs_buf_count
     mov edi,OFFSET vfs_buf_arr
     xor eax,eax
     rep stos dword ptr es:[edi]
@@ -550,25 +551,25 @@ CreateBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 VfsServer:
+    int 3
     GetThread
-    mov es,bx
-    mov es:vfs_server,ax
+    mov ds,bx
+    mov ds:vfs_server,ax
 ;
-    mov bx,es:vfs_param
-    call fword ptr es:vfs_init
+    mov bx,ds:vfs_param
+    call fword ptr ds:vfs_init
     jc vfsTerm
 ;
-    int 3
-    mov es:vfs_sectors,eax
-    mov es:vfs_sectors+4,edx
-    mov es:vfs_bytes_per_sector,cx
-    mov es:vfs_max_req,bx
+    mov ds:vfs_sectors,eax
+    mov ds:vfs_sectors+4,edx
+    mov ds:vfs_bytes_per_sector,cx
+    mov ds:vfs_max_req,bx
 ;
     call CalcParam
     call CreateBuffer
 ;
     mov ax,serv_flat_sel
-    mov ds,ax
+    mov es,ax
 ;
     xor eax,eax
     xor edx,edx
@@ -577,14 +578,14 @@ VfsServer:
 vfsLoop:
     WaitForSignal
 ;
-    test es:vfs_flags,VFS_FLAG_STOPPED
+    test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz vfsExit
 ;
     jmp vfsLoop
 
 vfsExit:
-    mov bx,es:vfs_param
-    call fword ptr es:vfs_exit
+    mov bx,ds:vfs_param
+    call fword ptr ds:vfs_exit
 
 vfsTerm:
     TerminateThread
