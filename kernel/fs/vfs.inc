@@ -75,6 +75,8 @@ vfs_flags                DB ?
 vfs_sector_shift         DB ?
 vfs_pad                  DW ?
 
+vfs_scan_pos             DD ?,?
+
 vfs_buf_count            DD ?
 
 vfs_buf_arr              DD ?
@@ -89,7 +91,7 @@ vfs_phys_entry   STRUC
 vfsp_wr_bitmap            DB ?
 vfsp_flags                DB ?
 vfsp_phys                 DW ?,?
-vfsp_ref_count            DW ?
+vfsp_ref_wait             DW ?
 
 vfs_phys_entry   ENDS
 

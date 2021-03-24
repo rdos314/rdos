@@ -365,7 +365,28 @@ LocalLockSector    Proc near
     jc llsDone
 ;
     call BlockToBuf
-    add es:[esi].vfsp_ref_count,1
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jnz llsValid
+;
+    call BlockToBitmap
+    mov ecx,eax
+    shr ecx,3
+    and ecx,1FFFFh
+    bts es:[edi],ecx
+;
+    push ax
+    GetThread
+    mov es:[esi].vfsp_ref_wait,ax
+    pop ax
+;
+    mov bx,ds:vfs_server
+    Signal
+;
+    WaitForSignal
+    int 3
+
+llsValid:
+    add es:[esi].vfsp_ref_wait,1
     jnc llsPhysRefOk
 ;
     CrashGate
@@ -373,12 +394,6 @@ LocalLockSector    Proc near
 llsPhysRefOk:
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jnz llsOk
-;
-    call BlockToBitmap
-    mov ecx,eax
-    shr ecx,3
-    and ecx,1FFFFh
-    bts es:[edi],ecx
 
 llsOk:
     mov bx,ax
