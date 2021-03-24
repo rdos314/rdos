@@ -154,64 +154,82 @@ void TRootPage::SendAnswer()
     Write("<br>\r\n");
     Write("</span>\r\n");
 
-    Write("<table border=3 cellspacing=0 cellpadding=0>\r\n");
+    Write("<table cellspacing=0 cellpadding=0>\r\n");
 
     Write("<tr style='height:24.75pt'>\r\n");
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     Write("Temperature");
     Write("</span>\r\n");
     Write("</td>\r\n");
 
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetTemperature();
-    sprintf(str, "%5.1Lf °C", val);
+    sprintf(str, "%5.1Lf", val);
     Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" °C");
     Write("</span>\r\n");
     Write("</td>\r\n");
     Write("</tr>\r\n");
 
     Write("<tr style='height:24.75pt'>\r\n");
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     Write("Wind");
     Write("</span>\r\n");
     Write("</td>\r\n");
 
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetWindSpeed();
-    sprintf(str, "%5.1Lf m/s", val);
+    sprintf(str, "%5.1Lf", val);
     Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" m/s");
     Write("</span>\r\n");
     Write("</td>\r\n");
     Write("</tr>\r\n");
 
     Write("<tr style='height:24.75pt'>\r\n");
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     Write("Gust");
     Write("</span>\r\n");
     Write("</td>\r\n");
 
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetWindGust();
-    sprintf(str, "%5.1Lf m/s", val);
+    sprintf(str, "%5.1Lf", val);
     Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" m/s");
     Write("</span>\r\n");
     Write("</td>\r\n");
     Write("</tr>\r\n");
 
     Write("<tr style='height:24.75pt'>\r\n");
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     Write("Direction");
     Write("</span>\r\n");
     Write("</td>\r\n");
 
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetWindDir();
     ival = (int)val;
@@ -270,60 +288,90 @@ void TRootPage::SendAnswer()
     Write("</tr>\r\n");
 
     Write("<tr style='height:24.75pt'>\r\n");
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     Write("Humidity");
     Write("</span>\r\n");
     Write("</td>\r\n");
 
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetHumidity();
     ival = (int)val;
-    sprintf(str, "%d %%", ival);
+    sprintf(str, "%d", ival);
     Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" %");
     Write("</span>\r\n");
     Write("</td>\r\n");
     Write("</tr>\r\n");
 
     Write("<tr style='height:24.75pt'>\r\n");
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     Write("Rain");
     Write("</span>\r\n");
     Write("</td>\r\n");
 
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetRain();
-    sprintf(str, "%5.1Lf mm", val);
+    sprintf(str, "%5.1Lf", val);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
-    Write("</tr>\r\n");
 
-    Write("<tr style='height:24.75pt'>\r\n");
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
-    Write("UV: ");
-    val = Misol->GetUv();
-    sprintf(str, "%5.1Lf W/m²", val);
+    Write(" mm");
     Write("</span>\r\n");
     Write("</td>\r\n");
     Write("</tr>\r\n");
 
     Write("<tr style='height:24.75pt'>\r\n");
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("UV");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Misol->GetUv();
+    sprintf(str, "%5.1Lf", val);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" W/m²");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     Write("Light");
     Write("</span>\r\n");
     Write("</td>\r\n");
 
-    Write("<td width=\"25%\" colspan=2 valign=top halign=center'>\r\n");
+    Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Misol->GetLight();
-    sprintf(str, "%5.1Lf lux", val);
+    sprintf(str, "%5.1Lf", val);
     Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" lux");
     Write("</span>\r\n");
     Write("</td>\r\n");
     Write("</tr>\r\n");
