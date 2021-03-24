@@ -545,6 +545,29 @@ CreateBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           InitPartition
+;
+;       DESCRIPTION:    Init partition
+;
+;       PARAMETERS:     BX       VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_part_name       DB 'VFS Init',0
+
+init_part:
+    int 3
+    mov ds,bx
+    mov ax,serv_flat_sel
+    mov es,ax
+;
+    xor eax,eax
+    xor edx,edx
+    call LocalLockSector
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           VfsServer
 ;
 ;       DESCRIPTION:    Vfs server
@@ -571,15 +594,25 @@ VfsServer:
     call CreateBuffer
 ;
     int 3
+    push ds
+;
+    mov bx,ds
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET init_part
+    mov edi,OFFSET init_part_name
+    mov al,4
+    CreateThread
+;
+    pop ds
+;
     mov ax,serv_flat_sel
     mov es,ax
-;
-    xor eax,eax
-    xor edx,edx
-    call LocalLockSector
 
 vfsLoop:
     WaitForSignal
+    int 3
 ;
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz vfsExit
