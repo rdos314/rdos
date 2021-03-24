@@ -198,12 +198,25 @@ llsBufPtr:
     mov ds:[ebx],eax
 
 llsBufDir:
+    mov ecx,esi
     and ax,0F000h
     and esi,0FF8h
     add esi,eax
     mov eax,ds:[esi]
     mov ebx,ds:[esi+4]
     test ax,VFS_BUF_PRESENT    
+    jnz llsBufPhys
+;
+    AllocatePhysical64
+    or ax,VFS_BUF_PRESENT
+    mov ds:[esi],eax
+    mov ds:[esi+4],ebx
+
+llsBufPhys:
+    and ax,0F000h
+    and cx,7
+    shl cx,9
+    or ax,cx
     clc
 ;
 
