@@ -479,7 +479,6 @@ LocalLockSector    Proc near
     mov es:[esi].vfsp_ref_wait,ax
     pop ax
 ;
-    int 3
     mov ebx,ds:vfs_scan_pos
     and ebx,ds:vfs_scan_pos+4
     add ebx,1
@@ -570,10 +569,37 @@ gibPtrLoop:
     jz gibPtrNext
 ;
     push ecx
-    mov ecx,1000h
+;
+    and ax,0F000h
     mov edi,eax
+;
+    mov eax,ds:vfs_scan_pos
+    shr eax,6
+    and eax,3FFCh
+    mov ecx,4000h
+    sub ecx,eax
+    shr ecx,2
+    add edi,eax
+    mov eax,es:[edi]
+    or eax,eax
+    jz gibScan
+;
+    push ecx
+    mov ecx,ds:vfs_scan_pos
+    shr ecx,3
+    and cl,1Fh
+    shr eax,cl
+    pop ecx
+
+gibScan:
+    add edi,4
+    sub ecx,1
+    jz gibScanDone
+;
     xor eax,eax
     repz scas dword ptr es:[edi]
+
+gibScanDone:
     pop ecx
 
 gibPtrNext:
