@@ -555,6 +555,8 @@ GetIoBuf    Proc near
     mov ebx,ds:vfs_scan_pos
     shr ebx,18
     and ebx,3FFCh
+    mov esi,ebx
+    shl esi,18
     mov ecx,4000h
     sub ecx,ebx
     shr ecx,2
@@ -566,8 +568,13 @@ GetIoBuf    Proc near
 gibPtrLoop:
     mov eax,es:[ebx]
     or eax,eax
-    jz gibPtrNext
+    jnz gibPtrScan
 ;
+    add esi,1 SHL 20
+    stc
+    jmp gibPtrNext
+
+gibPtrScan:
     push ecx
 ;
     and ax,0F000h
@@ -580,6 +587,8 @@ gibPtrLoop:
     sub ecx,eax
     shr ecx,2
     add edi,eax
+    shl eax,6
+    add esi,eax
     mov eax,es:[edi]
     or eax,eax
     jz gibScan
@@ -587,20 +596,39 @@ gibPtrLoop:
     push ecx
     mov ecx,ds:vfs_scan_pos
     shr ecx,3
-    and cl,1Fh
+    and ecx,1Fh
     shr eax,cl
+    stc
+    jz gibScanAdv
+;
+    shl ecx,3
+    add esi,ecx
+    bsf ecx,eax
+    add esi,ecx
+    clc
+
+gibScanAdv:
     pop ecx
+    jnc gibScanDone
+;
+    int 3
+    stc
 
 gibScan:
     add edi,4
     sub ecx,1
+    stc
     jz gibScanDone
 ;
     xor eax,eax
     repz scas dword ptr es:[edi]
+;
+    int 3
+    stc
 
 gibScanDone:
     pop ecx
+    jnc gibDone
 
 gibPtrNext:
     add ebx,4
