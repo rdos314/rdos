@@ -298,8 +298,10 @@ BlockToBuf   Endp
 BlockToBitmap    Proc near
     push eax
     push ebx
+    push ecx
     push edx
 ;
+    mov ecx,eax
     mov ebx,edx
     shl ebx,2
     mov eax,ds:[ebx].vfs_buf_arr
@@ -311,7 +313,7 @@ BlockToBitmap    Proc near
     mov ds:[ebx].vfs_buf_arr,eax
 
 btmEntryOk:
-    mov ebx,eax
+    mov ebx,ecx
     shr ebx,18
     and ebx,3FFCh
     and ax,0F000h
@@ -331,6 +333,7 @@ btmBufPtr:
 
 btmDone:
     pop edx
+    pop ecx
     pop ebx
     pop eax
     ret
@@ -362,7 +365,7 @@ LocalLockSector    Proc near
     jc llsDone
 ;
     call BlockToBuf
-    add ds:[esi].vfsp_ref_count,1
+    add es:[esi].vfsp_ref_count,1
     jnc llsPhysRefOk
 ;
     CrashGate
@@ -375,13 +378,13 @@ llsPhysRefOk:
     mov ecx,eax
     shr ecx,3
     and ecx,1FFFFh
-    bts ds:[edi],ecx
+    bts es:[edi],ecx
 
 llsOk:
     mov bx,ax
     and bx,7
     shl bx,9
-    mov eax,ds:[esi]
+    mov eax,es:[esi]
     and ax,0F000h
     or ax,bx
     movzx ebx,word ptr es:[esi+4]
@@ -551,7 +554,6 @@ CreateBuffer   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 VfsServer:
-    int 3
     GetThread
     mov ds,bx
     mov ds:vfs_server,ax
@@ -568,6 +570,7 @@ VfsServer:
     call CalcParam
     call CreateBuffer
 ;
+    int 3
     mov ax,serv_flat_sel
     mov es,ax
 ;
