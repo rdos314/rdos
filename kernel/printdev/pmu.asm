@@ -349,6 +349,68 @@ CheckStatus  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ClearBuffer
+;
+;       DESCRIPTION:    Clear buffer
+;
+;       DS              Printer sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearBuffer    Proc near
+    test ds:pmu_flag,FLAG_ATTACHED
+    stc
+    jz cbDone
+;
+    mov es,ds:pmu_out_buffer
+    xor edi,edi
+;
+    mov al,10h
+    stosb
+;
+    mov al,14h
+    stosb
+;
+    mov al,8
+    stosb
+;
+    mov al,1
+    stosb
+;
+    mov al,3
+    stosb
+;
+    mov al,20
+    stosb
+;
+    mov al,1
+    stosb
+;
+    mov al,6
+    stosb
+;
+    mov al,2
+    stosb
+;
+    mov al,8
+    stosb
+;
+    mov cx,di
+;    
+    mov bx,ds:pmu_dev_handle
+    mov dl,ds:pmu_out_pipe
+    PostUsbRawPipe
+    jc csDone
+;
+    call ReadAnswer
+
+cbDone:
+    ret
+ClearBuffer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetPrinterModel
 ;
 ;       DESCRIPTION:    Get printer model
@@ -1201,11 +1263,7 @@ is_paper_low   Proc far
     jz iplDone
 ;
     mov eax,ds:pmu_status
-    test eax,8000000h
-    stc
-    jnz iplDone
-;
-    test eax,4000000h
+    test eax,0C000000h
     stc
     jnz iplDone
 ;
@@ -1241,6 +1299,10 @@ is_paper_end   Proc far
     jz ipeDone
 ;
     mov eax,ds:pmu_status
+    test eax,2000h
+    stc
+    jnz ipeDone
+;
     test eax,20000000h
     stc
     jnz ipeDone
@@ -1763,6 +1825,13 @@ pmuRestart:
     call OpenPipes
 ;
     call CheckStatus
+    mov eax,ds:pmu_status
+    test eax,2000h
+    jz pmuReadSettings
+;
+    call ClearBuffer
+
+pmuReadSettings:
     call GetPrinterModel
     call GetPrinterVersion
 ;
@@ -1796,6 +1865,13 @@ pmuStatusLoop:
     call SendBitmap
     call CheckStatus
 ;
+    mov eax,ds:pmu_status
+    test eax,2000h
+    jz pmuStatusWait
+;
+    call ClearBuffer
+
+pmuStatusWait:
     GetSystemTime
     add eax,250 * 1193
     adc edx,0
