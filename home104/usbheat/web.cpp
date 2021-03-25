@@ -417,8 +417,7 @@ void TRootPage::SendAnswer()
     Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Solar->GetDayEnergy() / 1000.0;
-    ival = (int)val;
-    sprintf(str, " %d", ival);
+    sprintf(str, " %3.1Lf", val);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
@@ -471,8 +470,7 @@ void TRootPage::SendAnswer()
     Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
     val = Wind->GetDayEnergy();
-    ival = (int)val;
-    sprintf(str, "%d", ival);
+    sprintf(str, " %3.1Lf", val);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
@@ -599,6 +597,8 @@ static void WebSocketThread(void *ptr)
     TRootFactory rootpage("index.htm");
     TPowerJsonDirFactory jsondir("power/json");
     TPowerWebDirFactory webdir("power/web");
+
+    rootpage.AddName("");
 
     fact.AddCustomPage(&rootpage);
     fact.AddCustomDir(&jsondir);
