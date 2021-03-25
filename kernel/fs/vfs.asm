@@ -484,7 +484,6 @@ LocalLockSector    Proc near
     add ebx,1
     jnc llsSignal
 ;
-    add eax,8
     mov ds:vfs_scan_pos,eax
     mov ds:vfs_scan_pos+4,edx
 
@@ -529,27 +528,28 @@ LocalLockSector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetIoBuf
+;       NAME:           GetIoStart
 ;
-;       DESCRIPTION:    Get IO buffer
+;       DESCRIPTION:    Get IO start position
 ;
 ;       PARAMETERS:     DS          VFS sel
 ;                       ES          Server flat sel
 ;
 ;       RETURNS:        NC
+;                         EDX:EAX   Block #
 ;                         EDI       Bitmap buf
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetIoBuf    Proc near
+GetIoStart    Proc near
     xor ebp,ebp
 
-gibEntryLoop:
+gisEntryLoop:
     mov ebx,ds:vfs_scan_pos+4
     shl ebx,2
     mov eax,ds:[ebx].vfs_buf_arr
     or eax,eax
-    jz gibNextEntry
+    jz gisNextEntry
 ;
     mov ebx,ds:vfs_scan_pos
     shr ebx,18
@@ -564,15 +564,15 @@ gibEntryLoop:
     add ebx,eax
     add ebx,1000h
 
-gibPtrLoop:
+gisPtrLoop:
     mov eax,es:[ebx]
     or eax,eax
-    jnz gibPtrScan
+    jnz gisPtrScan
 ;
     add esi,1 SHL 20
-    jmp gibPtrNext
+    jmp gisPtrNext
 
-gibPtrScan:
+gisPtrScan:
     push ecx
 ;
     and ax,0F000h
@@ -589,14 +589,14 @@ gibPtrScan:
     add esi,eax
     mov eax,es:[edi]
     or eax,eax
-    jz gibScan
+    jz gisScan
 ;
     push ecx
     mov ecx,ds:vfs_scan_pos
     shr ecx,3
     and ecx,1Fh
     shr eax,cl
-    jz gibScanAdv
+    jz gisScanAdv
 ;
     shl ecx,3
     add esi,ecx
@@ -604,24 +604,27 @@ gibPtrScan:
     shl ecx,3
     add esi,ecx
 ;
+    mov eax,esi
+    mov edx,ds:vfs_scan_pos+4
+;
     pop ecx
     pop ecx
     clc
-    jmp gibDone
+    jmp gisDone
 
-gibScanAdv:
+gisScanAdv:
     pop ecx
 
-gibScan:
+gisScan:
     add esi,1 SHL 8
     add edi,4
     sub ecx,1
-    jz gibScanDone
+    jz gisScanDone
 ;
     mov edx,ecx
     xor eax,eax
     repz scas dword ptr es:[edi]
-    jz gibScanDone
+    jz gisScanDone
 ;
     sub edx,ecx
     dec edx
@@ -634,35 +637,93 @@ gibScan:
     shl ecx,3
     add esi,ecx
 ;
+    mov eax,esi
+    mov edx,ds:vfs_scan_pos+4
+;
     pop ecx
     clc
-    jmp gibDone
+    jmp gisDone
 
-gibScanDone:
+gisScanDone:
     pop ecx
 
-gibPtrNext:
+gisPtrNext:
     add ebx,4
     sub ecx,1
-    jnz gibPtrLoop
+    jnz gisPtrLoop
 
-gibNextEntry:
-    int 3
+gisNextEntry:
     mov ds:vfs_scan_pos,0
     mov ecx,ds:vfs_scan_pos+4
     inc ecx
     mov ds:vfs_scan_pos+4,ecx
     cmp ecx,ds:vfs_buf_count
-    jb gibEntryLoop
+    jb gisEntryLoop
 ;
     or ebp,ebp
     stc
-    jnz gibDone
+    jnz gisDone
 ;
     inc ebp
     mov ds:vfs_scan_pos+4,0
-    jmp gibEntryLoop
+    jmp gisEntryLoop
     
+gisDone:
+    ret
+GetIoStart   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetIoBuf
+;
+;       DESCRIPTION:    Get start IO buf
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Block #
+;
+;       RETURNS:        NC
+;                         ESI       Physical entry buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIoBuf    Proc near
+    mov esi,eax
+    mov ebx,edx
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    stc
+    jz gibDone
+;
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,20
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    stc
+    jz gibDone
+;
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,10
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    stc
+    jz gibDone
+;
+    and ax,0F000h
+    and esi,0FF8h
+    add esi,eax
+    clc
+
 gibDone:
     ret
 GetIoBuf   Endp
@@ -780,7 +841,11 @@ VfsServer:
 vfsLoop:
     WaitForSignal
     int 3
+    call GetIoStart
+    jc vfsLoop
+;
     call GetIoBuf
+    jc vfsLoop
 ;
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz vfsExit
