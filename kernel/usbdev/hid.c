@@ -3112,8 +3112,8 @@ void CreateHid(int controller, int port, char *config)
             dev->ConfigBuf = config;
             dev->Thread = 0;
 
-            sprintf(ThreadName, "Hid %02hX.%02hX", controller, port);
-            RdosCreateKernelThread(5, 0x1000, HidThread, ThreadName, dev);
+                sprintf(ThreadName, "Hid %02hX.%02hX", controller, port);
+                RdosCreateKernelThread(5, 0x1000, HidThread, ThreadName, dev);
 
             break;
         }

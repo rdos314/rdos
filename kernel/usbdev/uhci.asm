@@ -2508,6 +2508,7 @@ FreePacketTds Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenPacket   Proc far
+    push fs
     push gs
     push eax
     push ecx
@@ -2557,6 +2558,7 @@ atdrLoop:
     pop ecx
     pop eax
     pop gs
+    pop fs
     retf32
 OpenPacket   Endp
 
