@@ -484,8 +484,7 @@ LocalLockSector    Proc near
     add ebx,1
     jnc llsSignal
 ;
-    sub eax,100
-    sbb edx,0
+    add eax,8
     mov ds:vfs_scan_pos,eax
     mov ds:vfs_scan_pos+4,edx
 
@@ -543,11 +542,9 @@ LocalLockSector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetIoBuf    Proc near
-    push eax
-    push ebx
-    push ecx
-    push edx
-;
+    xor ebp,ebp
+
+gibEntryLoop:
     mov ebx,ds:vfs_scan_pos+4
     shl ebx,2
     mov eax,ds:[ebx].vfs_buf_arr
@@ -573,7 +570,6 @@ gibPtrLoop:
     jnz gibPtrScan
 ;
     add esi,1 SHL 20
-    stc
     jmp gibPtrNext
 
 gibPtrScan:
@@ -650,15 +646,24 @@ gibPtrNext:
     sub ecx,1
     jnz gibPtrLoop
 
-
 gibNextEntry:
+    int 3
     mov ds:vfs_scan_pos,0
+    mov ecx,ds:vfs_scan_pos+4
+    inc ecx
+    mov ds:vfs_scan_pos+4,ecx
+    cmp ecx,ds:vfs_buf_count
+    jb gibEntryLoop
+;
+    or ebp,ebp
+    stc
+    jnz gibDone
+;
+    inc ebp
+    mov ds:vfs_scan_pos+4,0
+    jmp gibEntryLoop
     
 gibDone:
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
     ret
 GetIoBuf   Endp
 
