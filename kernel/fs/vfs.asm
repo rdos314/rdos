@@ -693,6 +693,9 @@ GetIoStart   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetIoBuf    Proc near
+    push eax
+    push edx
+;
     mov esi,eax
     mov ebx,edx
     shl ebx,2
@@ -729,6 +732,8 @@ GetIoBuf    Proc near
     clc
 
 gibDone:
+    pop edx
+    pop eax
     ret
 GetIoBuf   Endp
 
@@ -790,6 +795,40 @@ griDone:
     pop eax
     ret
 GetReadIo   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ClearIoBitmap
+;
+;       DESCRIPTION:    Clear IO bitmap
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       ECX         Sectors
+;                       EDX:EAX     Block #
+;                       EDI         Bitmap entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearIoBitmap    Proc near
+    push ebx
+    push ecx
+;
+    mov bx,ax
+    and ebx,0FFh
+    shr ebx,3
+
+cibLoop:
+    btr es:[edi],ebx
+    inc ebx
+    sub ecx,8
+    ja cibLoop
+;
+    pop ecx
+    pop ebx
+    ret
+ClearIoBitmap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -924,6 +963,7 @@ vfsWrite:
 vfsRead:
     int 3
     call GetReadIo
+    call ClearIoBitmap
 
 
     test ds:vfs_flags,VFS_FLAG_STOPPED
