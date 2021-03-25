@@ -24,14 +24,5 @@
 ##########################################################################*/
 void main()
 {
-    int i;
-    char *buf;
-    TDisc disc(0);
-
-    buf = new char[512];
-
-    for (i = 0; i < 16; i++)
-        disc.Read(0xFA000 + i, buf, 0x200);
-
     RdosTestGate("");
 }
