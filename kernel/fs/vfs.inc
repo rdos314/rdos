@@ -71,9 +71,12 @@ vfs_bytes_per_sector     DW ?
 vfs_max_req              DW ?
 vfs_param                DW ?
 vfs_server               DW ?
+vfs_req_buf              DW ?
+vfs_sectors_per_block    DW ?
 vfs_flags                DB ?
 vfs_sector_shift         DB ?
-vfs_pad                  DW ?
+
+vfs_word_pad             DW ?
 
 vfs_scan_pos             DD ?,?
 

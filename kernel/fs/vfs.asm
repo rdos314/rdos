@@ -90,6 +90,10 @@ cpSectorOk:
     inc edx
     mov ds:vfs_buf_count,edx
 ;
+    mov ax,1
+    shl ax,cl
+    mov ds:vfs_sectors_per_block,ax
+;
     ret
 CalcParam    Endp
 
@@ -731,6 +735,65 @@ GetIoBuf   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetReadCount
+;
+;       DESCRIPTION:    Get number of read sectors
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       ESI         Physical entry buf
+;
+;       RETURNS:        ECX         Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetReadIo    Proc near
+    push eax
+    push edx
+    push esi
+;
+    mov fs,ds:vfs_req_buf
+    xor ecx,ecx
+    xor edx,edx
+  
+griBlockLoop:
+    mov bp,ds:vfs_sectors_per_block
+    movzx ebx,word ptr es:[esi+4]
+    mov eax,es:[esi]
+    and ax,0F000h
+
+griSave:    
+    mov fs:[edx],eax
+    mov fs:[edx+4],ebx
+    add ax,ds:vfs_bytes_per_sector
+    add edx,8
+    inc cx
+    sub bp,1
+    jnz griSave
+;
+    cmp cx,ds:vfs_max_req
+    jae griDone
+;
+    add esi,8
+    test si,0FFFh
+    jz griDone
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+    jz griDone
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jnz griBlockLoop
+
+griDone:
+    pop esi
+    pop edx
+    pop eax
+    ret
+GetReadIo   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LockVfsSector
 ;
 ;       DESCRIPTION:    Lock VFS sector
@@ -814,7 +877,13 @@ VfsServer:
     mov ds:vfs_sectors,eax
     mov ds:vfs_sectors+4,edx
     mov ds:vfs_bytes_per_sector,cx
+;
+    and bl,0F8h    
     mov ds:vfs_max_req,bx
+    movzx eax,bx
+    shl eax,3
+    AllocateSmallServ
+    mov ds:vfs_req_buf,es
 ;
     mov ds:vfs_scan_pos,-1
     mov ds:vfs_scan_pos+4,-1
@@ -840,13 +909,23 @@ VfsServer:
 
 vfsLoop:
     WaitForSignal
-    int 3
     call GetIoStart
     jc vfsLoop
 ;
     call GetIoBuf
     jc vfsLoop
 ;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz vfsRead
+
+vfsWrite:
+    jmp vfsLoop
+
+vfsRead:
+    int 3
+    call GetReadIo
+
+
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz vfsExit
 ;
