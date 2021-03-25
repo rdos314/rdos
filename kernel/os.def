@@ -869,5 +869,6 @@ start_vfs_nr                = 787
 stop_vfs_nr                 = 788
 
 allocate_big_serv_nr        = 789
+map_serv_entry_nr           = 790
 
 osgate_entries              = 800

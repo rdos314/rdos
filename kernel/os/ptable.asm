@@ -124,6 +124,7 @@ free_process_proc               DW OFFSET local_free_process32
 delete_process_proc             DW OFFSET local_delete_process32
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
+map_serv_entry_proc             DW OFFSET local_map_serv_entry32
 get_sys_page_entry_proc         DW OFFSET local_get_sys_page_entry32
 set_sys_page_entry_proc         DW OFFSET local_set_sys_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
@@ -171,6 +172,7 @@ free_process_p64                DW OFFSET local_free_process64
 delete_process_p64              DW OFFSET local_delete_process64
 get_page_entry_p64              DW OFFSET local_get_page_entry64
 set_page_entry_p64              DW OFFSET local_set_page_entry64
+map_serv_entry_p64              DW OFFSET local_map_serv_entry64
 get_sys_page_entry_p64          DW OFFSET local_get_sys_page_entry64
 set_sys_page_entry_p64          DW OFFSET local_set_sys_page_entry64
 has_page_entry_p64              DW OFFSET local_has_page_entry64
@@ -307,6 +309,12 @@ init_page_table     PROC near
     mov edi,OFFSET set_page_entry_name
     xor cl,cl
     mov ax,set_page_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET map_serv_entry
+    mov edi,OFFSET map_serv_entry_name
+    xor cl,cl
+    mov ax,map_serv_entry_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_sys_page_entry
@@ -957,6 +965,64 @@ local_get_sys_page_entry32       Proc near
     pop ds
     ret
 local_get_sys_page_entry32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_map_serv_entry32
+;
+;           DESCRIPTION:    Map physical page to server area
+;
+;           PARAMETERS:     EDX         offset in serv_flat_sel
+;                           EBX:EAX     physical address                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_map_serv_entry32       Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    or ebx,ebx
+    jnz mseDone32
+;
+    mov cx,process_page_sel
+    mov ds,cx
+    add edx,serv_linear
+    and dx,0F000h
+    and ax,0F000h
+;
+    shr edx,10
+    and dl,0FCh
+    mov ecx,[edx]
+    test cl,1
+    jz mseSet32
+;
+    and cx,0F000h
+    cmp eax,ecx
+    je mseDone32
+;
+    or ax,803h
+    mov [edx],ecx
+;
+    shl edx,10
+    mov cx,flat_sel
+    mov ds,cx
+    invlpg ds:[edx]
+    jmp mseDone32
+
+mseSet32:
+    or ax,803h
+    mov [edx],ecx
+
+mseDone32:
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+local_map_serv_entry32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3852,6 +3918,69 @@ local_get_sys_page_entry64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_map_serv_entry64
+;
+;           DESCRIPTION:    Map physical page to server area
+;
+;           PARAMETERS:     EDX         offset in serv_flat_sel
+;                           EBX:EAX     physical address                       
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_map_serv_entry64       Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    mov cx,process_page_sel
+    mov ds,cx
+    add edx,serv_linear
+    and dx,0F000h
+    and ax,0F000h
+;
+    mov cx,process_page_sel
+    mov ds,cx
+    shr edx,9
+    and dl,0F8h
+    mov ecx,ds:[edx]
+    test cl,1
+    jz mseSet64
+;
+    cmp ebx,ds:[edx+4]
+    jne mseUpdate64
+;
+    and cx,0F000h
+    cmp eax,ecx
+    je mseDone64
+
+mseUpdate64:
+    or ax,803h
+    mov [edx],ecx
+    mov [edx+4],ebx
+;
+    shl edx,9
+    mov cx,flat_sel
+    mov ds,cx
+    invlpg ds:[edx]
+    jmp mseDone64
+
+mseSet64:
+    or ax,803h
+    mov [edx],ecx
+    mov [edx+4],ebx
+
+mseDone64:
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+local_map_serv_entry64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_set_sys_page_entry64
 ;
 ;           DESCRIPTION:    Set physical page for linear address
@@ -6577,6 +6706,34 @@ set_page_entry       Proc far
     call cs:set_page_entry_proc
     retf32
 set_page_entry       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MapServEntry
+;
+;           DESCRIPTION:    Map physical page to server flat sel
+;
+;           PARAMETERS:     EDX         offset in serv_flat_sel
+;                           EBX:EAX     physical address                       
+;
+;           RETURN:         EDX         Updated offset to match physical address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_serv_entry_name  DB 'Map Serv Entry',0
+
+map_serv_entry       Proc far
+    push cx
+    mov cx,ax
+    call cs:map_serv_entry_proc
+    and cx,0FFFh
+    and dx,0F000h
+    or dx,cx
+    pop cx
+    retf32
+map_serv_entry       Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

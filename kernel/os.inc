@@ -973,9 +973,16 @@ AllocateSmallServ    MACRO
                     ENDM
 
 ; IN  EAX          Bytes
-; OUT EDX          Linear address
+; OUT EDX          Offset in serv flat sel
 AllocateBigServ    MACRO
     OsGate allocate_big_serv_nr
+                    ENDM
+
+; IN  EDX          Offset in serv flat sel
+; IN  EBX:EAX      Physical address
+; OUT EDX          Updated offset
+MapServEntry    MACRO
+    OsGate map_serv_entry_nr
                     ENDM
 
 ;;;;;;;;;;;;; MEMORY BLOCK MANAGEMENT ;;;;;;;;;;
