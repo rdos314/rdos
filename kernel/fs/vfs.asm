@@ -301,6 +301,45 @@ SectorToBlock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           BlockToSector
+;
+;       DESCRIPTION:    Converts between block # and sector #
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Block #
+;
+;       RETURNS:        NC
+;                         EDX:EAX   Sector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BlockToSector    Proc near
+    push cx
+;
+    mov cl,ds:vfs_sector_shift
+    or cl,cl
+    jz btsOk
+
+btsShift:
+    clc
+    rcr edx,1
+    rcr eax,1
+;
+    sub cl,1
+    jnz btsShift
+
+btsOk:
+    clc
+
+btsDone:
+    pop cx
+    ret
+BlockToSector   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           BlockToBuf
 ;
 ;       DESCRIPTION:    Converts between block # and physical address
@@ -888,7 +927,7 @@ init_part:
     mov ax,serv_flat_sel
     mov es,ax
 ;
-    mov eax,123456h
+    xor eax,eax
     xor edx,edx
     call LocalLockSector
     int 3
@@ -964,7 +1003,9 @@ vfsRead:
     int 3
     call GetReadIo
     call ClearIoBitmap
-
+    call BlockToSector
+;
+    call ds:vfs_read
 
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz vfsExit
