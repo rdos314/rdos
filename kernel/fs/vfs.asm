@@ -484,6 +484,8 @@ LocalLockSector    Proc near
     add ebx,1
     jnc llsSignal
 ;
+    sub eax,100
+    sbb edx,0
     mov ds:vfs_scan_pos,eax
     mov ds:vfs_scan_pos+4,edx
 
@@ -604,6 +606,7 @@ gibPtrScan:
     shl ecx,3
     add esi,ecx
     bsf ecx,eax
+    shl ecx,3
     add esi,ecx
     clc
 
