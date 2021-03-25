@@ -639,6 +639,7 @@ gisPtrScan:
     shr ecx,3
     and ecx,1Fh
     shr eax,cl
+    or eax,eax
     jz gisScanAdv
 ;
     shl ecx,3
@@ -987,6 +988,7 @@ VfsServer:
 
 vfsLoop:
     WaitForSignal
+    int 3
     call GetIoStart
     jc vfsLoop
 ;
@@ -997,16 +999,19 @@ vfsLoop:
     jz vfsRead
 
 vfsWrite:
+    int 3
     jmp vfsLoop
 
 vfsRead:
-    int 3
     call GetReadIo
     call ClearIoBitmap
     call BlockToSector
 ;
+    push es
+    mov es,ds:vfs_req_buf
     call ds:vfs_read
-
+    pop es
+;
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz vfsExit
 ;

@@ -49,12 +49,12 @@ vfs_exit                 DD ?,?
 
 ; IN  CX        Sector count
 ; IN  EDX:EAX   Start sector
-; IN  ES:EDI    Physical entries
+; IN  ES        Physical entries
 vfs_read                 DD ?,?
 
 ; IN  CX        Sector count
 ; IN  EDX:EAX   Start sector
-; IN  ES:EDI    Physical entries
+; IN  ES        Physical entries
 vfs_write                DD ?,?
 
 vfs_table_struc   ENDS
