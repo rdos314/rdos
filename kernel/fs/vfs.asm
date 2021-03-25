@@ -1009,6 +1009,7 @@ vfsRead:
 ;
     push es
     mov es,ds:vfs_req_buf
+    mov bx,ds:vfs_param
     call ds:vfs_read
     pop es
 ;

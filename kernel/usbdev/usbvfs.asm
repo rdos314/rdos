@@ -568,17 +568,50 @@ ExitVfs  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ReadRaw
+;       NAME:           ReadVfs
 ;
 ;       DESCRIPTION:    Read using raw interface
 ;
-;       PARAMETERS:     FS      Disc selector
-;                       ESI     Disc handle array
-;                       EBP     Entries
+;       PARAMETERS:     BX          Disc selector
+;                       ECX         Sector count
+;                       EDX:EAX     Start sector
+;                       ES          Physical entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadRaw      Proc near
+ReadVfs      Proc far
+    push fs
+    pushad
+;
+    mov fs,bx
+    mov ebp,ecx
+    shl ebp,9
+;
+    mov es,fs:disc_bulk_out_buf    
+    mov es:disc_cbw_tag,eax
+    mov es:disc_cbw_transfer_len,ebp
+    mov es:disc_cbw_flags,80h
+    mov es:disc_cbw_cmd_len,10
+    mov es:disc_cbw_cmd_data,28h
+    mov es:disc_cbw_cmd_data+1,0
+;
+    mov ebx,eax
+    xchg bl,bh
+    rol ebx,16
+    xchg bl,bh
+    mov dword ptr es:disc_cbw_cmd_data+2,ebx
+;
+    mov es:disc_cbw_cmd_data+6,0
+;
+    mov bx,cx
+    xchg bl,bh    
+    mov word ptr es:disc_cbw_cmd_data+7,bx
+    mov es:disc_cbw_cmd_data+9,0
+;
+    call SendCbw
+    jc rvfsFail
+;
+
     push ebp
     push esi
 
@@ -631,23 +664,45 @@ rwBufCopy:
 rwBufReadDone:
     pop esi
     pop ebp
-    ret
-ReadRaw  Endp
+
+
+;    
+    call ReceiveCsw
+    jnc rvfsOk
+    
+rvfsFail:
+    call ResetDevice
+;    jmp rdRetry
+
+
+
+
+rvfsOk:
+    popad
+    pop fs
+    retf32
+ReadVfs  Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           WriteRaw
+;       NAME:           WriteVfs
 ;
 ;       DESCRIPTION:    Write using raw interface
 ;
-;       PARAMETERS:     FS      Disc selector
-;                       ESI     Disc handle array
-;                       EBP     Entries
+;       PARAMETERS:     BX          Disc selector
+;                       CX          Sector count
+;                       EDX:EAX     Start sector
+;                       ES          Physical entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteRaw      Proc near
+WriteVfs      Proc far
+    push fs
+    pushad
+;
+    mov fs,bx
+
     push ebp
     push esi
 
@@ -711,8 +766,12 @@ wrBufWrite:
 wrBufWriteDone:
     pop esi
     pop ebp
-    ret
-WriteRaw  Endp
+
+;
+    popad
+    pop fs
+    retf32
+WriteVfs  Endp
                
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -766,9 +825,6 @@ HexToAscii      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_name    DB 'Usb Disc ', 0
-
-ReadVfs:
-WriteVfs:
 
 vfs_tab:
 vfs00   DD OFFSET InitVfs,    DD SEG code
