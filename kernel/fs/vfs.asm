@@ -600,7 +600,6 @@ gibPtrScan:
     shr ecx,3
     and ecx,1Fh
     shr eax,cl
-    stc
     jz gibScanAdv
 ;
     shl ecx,3
@@ -608,34 +607,48 @@ gibPtrScan:
     bsf ecx,eax
     shl ecx,3
     add esi,ecx
+;
+    pop ecx
+    pop ecx
     clc
+    jmp gibDone
 
 gibScanAdv:
     pop ecx
-    jnc gibScanDone
-;
-    int 3
-    stc
 
 gibScan:
+    add esi,1 SHL 8
     add edi,4
     sub ecx,1
-    stc
     jz gibScanDone
 ;
+    mov edx,ecx
     xor eax,eax
     repz scas dword ptr es:[edi]
+    jz gibScanDone
 ;
-    int 3
-    stc
+    sub edx,ecx
+    dec edx
+    shl edx,8
+    add esi,edx
+;
+    sub edi,4
+    mov eax,es:[edi]
+    bsf ecx,eax
+    shl ecx,3
+    add esi,ecx
+;
+    pop ecx
+    clc
+    jmp gibDone
 
 gibScanDone:
     pop ecx
-    jnc gibDone
 
 gibPtrNext:
     add ebx,4
-    loop gibPtrLoop
+    sub ecx,1
+    jnz gibPtrLoop
 
 
 gibNextEntry:
