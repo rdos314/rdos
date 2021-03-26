@@ -652,6 +652,51 @@ LocalLockSector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalUnlockSector
+;
+;       DESCRIPTION:    Unlock sector
+;
+;       PARAMETERS:     DS          VFS sel
+;                       EDX:EAX     Sector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalUnlockSector    Proc near
+    push es
+    push ecx
+    push edx
+    push esi
+;
+    mov cx,serv_flat_sel
+    mov es,cx
+;
+    EnterSection ds:vfs_section
+;
+    call SectorToBlock
+    jc lusLeave
+;
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz lusLeave
+;
+    sub es:[esi].vfsp_ref_wait,1
+    jnc lusLeave
+;
+    CrashGate
+
+lusLeave:
+    LeaveSection ds:vfs_section
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop es
+    ret
+LocalUnlockSector    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetIoStart
 ;
 ;       DESCRIPTION:    Get IO start position
@@ -1165,6 +1210,10 @@ ipNextPart1:
 
 ipDone1:
     FreeSmallServ
+;
+    xor eax,eax
+    xor edx,edx
+    call LocalUnlockSector
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
