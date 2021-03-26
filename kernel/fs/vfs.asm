@@ -1092,6 +1092,22 @@ unlock_vfs_sector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddPartition
+;
+;       DESCRIPTION:    Add partition
+;
+;       PARAMETERS:     DS      VFS sel
+;                       ES:EDI  Partition name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddPartition   Proc near
+    ret
+AddPartition   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ChsToLba
 ;
 ;       DESCRIPTION:    Convert CHS to LBA
@@ -1140,6 +1156,345 @@ ctlDone:
     pop eax
     ret
 ChsToLba    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallMbrPartition
+;
+;       DESCRIPTION:    Install MBR partition
+;
+;       PARAMETERS:     DS      VFS sel
+;                       ES      Parent partition
+;                       CL      Partition type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fs_unknown      DB 'UNKNOWN '
+fs_fat12        DB 'FAT12   '
+fs_fat16        DB 'FAT16   '
+fs_fat32        DB 'FAT32   '
+fs_hpfs         DB 'HPFS    '
+fs_rdfs         DB 'RDFS    '
+fs_flashfs      DB 'FLASHFS '
+
+FsTab:
+fs00    DD OFFSET fs_unknown
+fs01    DD OFFSET fs_fat12
+fs02    DD OFFSET fs_unknown
+fs03    DD OFFSET fs_unknown
+fs04    DD OFFSET fs_fat16
+fs05    DD OFFSET fs_unknown
+fs06    DD OFFSET fs_fat16
+fs07    DD OFFSET fs_hpfs
+fs08    DD OFFSET fs_unknown
+fs09    DD OFFSET fs_unknown
+fs0A    DD OFFSET fs_unknown
+fs0B    DD OFFSET fs_fat32
+fs0C    DD OFFSET fs_fat32
+fs0D    DD OFFSET fs_unknown
+fs0E    DD OFFSET fs_unknown
+fs0F    DD OFFSET fs_unknown
+fs10    DD OFFSET fs_unknown
+fs11    DD OFFSET fs_unknown
+fs12    DD OFFSET fs_unknown
+fs13    DD OFFSET fs_unknown
+fs14    DD OFFSET fs_unknown
+fs15    DD OFFSET fs_unknown
+fs16    DD OFFSET fs_unknown
+fs17    DD OFFSET fs_unknown
+fs18    DD OFFSET fs_unknown
+fs19    DD OFFSET fs_unknown
+fs1A    DD OFFSET fs_unknown
+fs1B    DD OFFSET fs_unknown
+fs1C    DD OFFSET fs_unknown
+fs1D    DD OFFSET fs_unknown
+fs1E    DD OFFSET fs_unknown
+fs1F    DD OFFSET fs_unknown
+fs20    DD OFFSET fs_unknown
+fs21    DD OFFSET fs_unknown
+fs22    DD OFFSET fs_unknown
+fs23    DD OFFSET fs_unknown
+fs24    DD OFFSET fs_unknown
+fs25    DD OFFSET fs_unknown
+fs26    DD OFFSET fs_unknown
+fs27    DD OFFSET fs_unknown
+fs28    DD OFFSET fs_unknown
+fs29    DD OFFSET fs_unknown
+fs2A    DD OFFSET fs_unknown
+fs2B    DD OFFSET fs_unknown
+fs2C    DD OFFSET fs_unknown
+fs2D    DD OFFSET fs_unknown
+fs2E    DD OFFSET fs_unknown
+fs2F    DD OFFSET fs_unknown
+fs30    DD OFFSET fs_unknown
+fs31    DD OFFSET fs_unknown
+fs32    DD OFFSET fs_unknown
+fs33    DD OFFSET fs_unknown
+fs34    DD OFFSET fs_unknown
+fs35    DD OFFSET fs_unknown
+fs36    DD OFFSET fs_unknown
+fs37    DD OFFSET fs_unknown
+fs38    DD OFFSET fs_unknown
+fs39    DD OFFSET fs_unknown
+fs3A    DD OFFSET fs_unknown
+fs3B    DD OFFSET fs_unknown
+fs3C    DD OFFSET fs_unknown
+fs3D    DD OFFSET fs_unknown
+fs3E    DD OFFSET fs_unknown
+fs3F    DD OFFSET fs_unknown
+fs40    DD OFFSET fs_unknown
+fs41    DD OFFSET fs_unknown
+fs42    DD OFFSET fs_unknown
+fs43    DD OFFSET fs_unknown
+fs44    DD OFFSET fs_unknown
+fs45    DD OFFSET fs_unknown
+fs46    DD OFFSET fs_unknown
+fs47    DD OFFSET fs_unknown
+fs48    DD OFFSET fs_unknown
+fs49    DD OFFSET fs_unknown
+fs4A    DD OFFSET fs_unknown
+fs4B    DD OFFSET fs_unknown
+fs4C    DD OFFSET fs_unknown
+fs4D    DD OFFSET fs_unknown
+fs4E    DD OFFSET fs_unknown
+fs4F    DD OFFSET fs_unknown
+fs50    DD OFFSET fs_unknown
+fs51    DD OFFSET fs_unknown
+fs52    DD OFFSET fs_unknown
+fs53    DD OFFSET fs_unknown
+fs54    DD OFFSET fs_unknown
+fs55    DD OFFSET fs_unknown
+fs56    DD OFFSET fs_unknown
+fs57    DD OFFSET fs_unknown
+fs58    DD OFFSET fs_unknown
+fs59    DD OFFSET fs_unknown
+fs5A    DD OFFSET fs_unknown
+fs5B    DD OFFSET fs_unknown
+fs5C    DD OFFSET fs_unknown
+fs5D    DD OFFSET fs_unknown
+fs5E    DD OFFSET fs_unknown
+fs5F    DD OFFSET fs_unknown
+fs60    DD OFFSET fs_unknown
+fs61    DD OFFSET fs_unknown
+fs62    DD OFFSET fs_unknown
+fs63    DD OFFSET fs_unknown
+fs64    DD OFFSET fs_unknown
+fs65    DD OFFSET fs_unknown
+fs66    DD OFFSET fs_unknown
+fs67    DD OFFSET fs_unknown
+fs68    DD OFFSET fs_unknown
+fs69    DD OFFSET fs_unknown
+fs6A    DD OFFSET fs_unknown
+fs6B    DD OFFSET fs_unknown
+fs6C    DD OFFSET fs_unknown
+fs6D    DD OFFSET fs_unknown
+fs6E    DD OFFSET fs_unknown
+fs6F    DD OFFSET fs_unknown
+fs70    DD OFFSET fs_unknown
+fs71    DD OFFSET fs_unknown
+fs72    DD OFFSET fs_unknown
+fs73    DD OFFSET fs_unknown
+fs74    DD OFFSET fs_unknown
+fs75    DD OFFSET fs_unknown
+fs76    DD OFFSET fs_unknown
+fs77    DD OFFSET fs_unknown
+fs78    DD OFFSET fs_unknown
+fs79    DD OFFSET fs_unknown
+fs7A    DD OFFSET fs_unknown
+fs7B    DD OFFSET fs_unknown
+fs7C    DD OFFSET fs_unknown
+fs7D    DD OFFSET fs_unknown
+fs7E    DD OFFSET fs_unknown
+fs7F    DD OFFSET fs_unknown
+fs80    DD OFFSET fs_unknown
+fs81    DD OFFSET fs_unknown
+fs82    DD OFFSET fs_unknown
+fs83    DD OFFSET fs_unknown
+fs84    DD OFFSET fs_unknown
+fs85    DD OFFSET fs_unknown
+fs86    DD OFFSET fs_unknown
+fs87    DD OFFSET fs_unknown
+fs88    DD OFFSET fs_unknown
+fs89    DD OFFSET fs_unknown
+fs8A    DD OFFSET fs_unknown
+fs8B    DD OFFSET fs_unknown
+fs8C    DD OFFSET fs_unknown
+fs8D    DD OFFSET fs_unknown
+fs8E    DD OFFSET fs_unknown
+fs8F    DD OFFSET fs_unknown
+fs90    DD OFFSET fs_unknown
+fs91    DD OFFSET fs_unknown
+fs92    DD OFFSET fs_unknown
+fs93    DD OFFSET fs_unknown
+fs94    DD OFFSET fs_unknown
+fs95    DD OFFSET fs_unknown
+fs96    DD OFFSET fs_unknown
+fs97    DD OFFSET fs_unknown
+fs98    DD OFFSET fs_unknown
+fs99    DD OFFSET fs_unknown
+fs9A    DD OFFSET fs_unknown
+fs9B    DD OFFSET fs_unknown
+fs9C    DD OFFSET fs_unknown
+fs9D    DD OFFSET fs_unknown
+fs9E    DD OFFSET fs_unknown
+fs9F    DD OFFSET fs_unknown
+fsA0    DD OFFSET fs_unknown
+fsA1    DD OFFSET fs_unknown
+fsA2    DD OFFSET fs_unknown
+fsA3    DD OFFSET fs_unknown
+fsA4    DD OFFSET fs_unknown
+fsA5    DD OFFSET fs_unknown
+fsA6    DD OFFSET fs_unknown
+fsA7    DD OFFSET fs_unknown
+fsA8    DD OFFSET fs_unknown
+fsA9    DD OFFSET fs_unknown
+fsAA    DD OFFSET fs_unknown
+fsAB    DD OFFSET fs_unknown
+fsAC    DD OFFSET fs_unknown
+fsAD    DD OFFSET fs_unknown
+fsAE    DD OFFSET fs_rdfs
+fsAF    DD OFFSET fs_flashfs
+fsB0    DD OFFSET fs_unknown
+fsB1    DD OFFSET fs_unknown
+fsB2    DD OFFSET fs_unknown
+fsB3    DD OFFSET fs_unknown
+fsB4    DD OFFSET fs_unknown
+fsB5    DD OFFSET fs_unknown
+fsB6    DD OFFSET fs_unknown
+fsB7    DD OFFSET fs_unknown
+fsB8    DD OFFSET fs_unknown
+fsB9    DD OFFSET fs_unknown
+fsBA    DD OFFSET fs_unknown
+fsBB    DD OFFSET fs_unknown
+fsBC    DD OFFSET fs_unknown
+fsBD    DD OFFSET fs_unknown
+fsBE    DD OFFSET fs_unknown
+fsBF    DD OFFSET fs_unknown
+fsC0    DD OFFSET fs_unknown
+fsC1    DD OFFSET fs_unknown
+fsC2    DD OFFSET fs_unknown
+fsC3    DD OFFSET fs_unknown
+fsC4    DD OFFSET fs_unknown
+fsC5    DD OFFSET fs_unknown
+fsC6    DD OFFSET fs_unknown
+fsC7    DD OFFSET fs_unknown
+fsC8    DD OFFSET fs_unknown
+fsC9    DD OFFSET fs_unknown
+fsCA    DD OFFSET fs_unknown
+fsCB    DD OFFSET fs_unknown
+fsCC    DD OFFSET fs_unknown
+fsCD    DD OFFSET fs_unknown
+fsCE    DD OFFSET fs_unknown
+fsCF    DD OFFSET fs_unknown
+fsD0    DD OFFSET fs_unknown
+fsD1    DD OFFSET fs_unknown
+fsD2    DD OFFSET fs_unknown
+fsD3    DD OFFSET fs_unknown
+fsD4    DD OFFSET fs_unknown
+fsD5    DD OFFSET fs_unknown
+fsD6    DD OFFSET fs_unknown
+fsD7    DD OFFSET fs_unknown
+fsD8    DD OFFSET fs_unknown
+fsD9    DD OFFSET fs_unknown
+fsDA    DD OFFSET fs_unknown
+fsDB    DD OFFSET fs_unknown
+fsDC    DD OFFSET fs_unknown
+fsDD    DD OFFSET fs_unknown
+fsDE    DD OFFSET fs_unknown
+fsDF    DD OFFSET fs_unknown
+fsE0    DD OFFSET fs_unknown
+fsE1    DD OFFSET fs_unknown
+fsE2    DD OFFSET fs_unknown
+fsE3    DD OFFSET fs_unknown
+fsE4    DD OFFSET fs_unknown
+fsE5    DD OFFSET fs_unknown
+fsE6    DD OFFSET fs_unknown
+fsE7    DD OFFSET fs_unknown
+fsE8    DD OFFSET fs_unknown
+fsE9    DD OFFSET fs_unknown
+fsEA    DD OFFSET fs_unknown
+fsEB    DD OFFSET fs_unknown
+fsEC    DD OFFSET fs_unknown
+fsED    DD OFFSET fs_unknown
+fsEE    DD OFFSET fs_unknown
+fsEF    DD OFFSET fs_unknown
+fsF0    DD OFFSET fs_unknown
+fsF1    DD OFFSET fs_unknown
+fsF2    DD OFFSET fs_unknown
+fsF3    DD OFFSET fs_unknown
+fsF4    DD OFFSET fs_unknown
+fsF5    DD OFFSET fs_unknown
+fsF6    DD OFFSET fs_unknown
+fsF7    DD OFFSET fs_unknown
+fsF8    DD OFFSET fs_unknown
+fsF9    DD OFFSET fs_unknown
+fsFA    DD OFFSET fs_unknown
+fsFB    DD OFFSET fs_unknown
+fsFC    DD OFFSET fs_unknown
+fsFD    DD OFFSET fs_unknown
+fsFE    DD OFFSET fs_unknown
+fsFF    DD OFFSET fs_unknown
+
+InstallMbrPartition    Proc near
+    push es
+    pushad
+;
+    cmp cl,7
+    je impCheckPart
+;
+    cmp cl,0Ch
+    jne impCheckType
+
+impCheckPart:
+    mov eax,ds:vfs_curr_start_sector
+    mov edx,ds:vfs_curr_start_sector+4
+    call LocalLockSector
+;
+    push edx
+    mov edx,ds:vfs_map_entry
+    MapServEntry
+    pop edx
+;
+    mov ax,serv_flat_sel
+    mov es,ax
+    mov edi,ds:vfs_map_entry
+;
+    mov al,es:[edi+26h]
+    cmp al,29h
+    je impUsePartFat
+;
+    mov ax,cs
+    mov es,ax
+    movzx edi,cl
+    shl edi,2
+    mov edi,cs:[edi].FsTab
+    jmp impUsePartAdd
+
+impUsePartFat:
+    lea edi,[edi+36h]
+
+impUsePartAdd:
+    call AddPartition
+;
+    mov eax,ds:vfs_curr_start_sector
+    mov edx,ds:vfs_curr_start_sector+4
+    call LocalUnlockSector    
+    jmp impDone
+
+impCheckType:
+    mov di,cs
+    mov es,di
+    movzx edi,cl
+    shl edi,2
+    mov edi,cs:[edi].FsTab
+    call AddPartition
+
+impDone:
+    popad
+    pop es
+    ret
+InstallMbrPartition    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1197,7 +1552,11 @@ ipLoop1:
     mov edx,es:[si].part_start_sector
 
 ipInst1:
-;    call InstallMbrPartition
+    mov ds:vfs_curr_start_sector,edx
+    mov ds:vfs_curr_start_sector+4,0
+    mov ds:vfs_curr_sector_count,eax
+    mov ds:vfs_curr_sector_count+4,0
+    call InstallMbrPartition
     jmp ipNextPart1
 
 ipGpt1:

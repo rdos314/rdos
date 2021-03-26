@@ -86,6 +86,9 @@ vfs_map_entry            DD ?
 vfs_active_count         DD ?
 vfs_scan_pos             DD ?,?
 
+vfs_curr_start_sector    DD ?,?
+vfs_curr_sector_count    DD ?,?
+
 vfs_buf_count            DD ?
 
 vfs_buf_arr              DD ?
