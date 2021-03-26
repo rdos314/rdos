@@ -1010,8 +1010,9 @@ vfsRead:
     push es
     mov es,ds:vfs_req_buf
     mov bx,ds:vfs_param
-    call ds:vfs_read
+    call fword ptr ds:vfs_read
     pop es
+    int 3
 ;
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz vfsExit

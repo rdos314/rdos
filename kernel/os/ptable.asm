@@ -1004,7 +1004,7 @@ local_map_serv_entry32       Proc near
     je mseDone32
 ;
     or ax,803h
-    mov [edx],ecx
+    mov [edx],eax
 ;
     shl edx,10
     mov cx,flat_sel
@@ -1014,7 +1014,7 @@ local_map_serv_entry32       Proc near
 
 mseSet32:
     or ax,803h
-    mov [edx],ecx
+    mov [edx],eax
 
 mseDone32:
     pop edx
@@ -3956,7 +3956,7 @@ local_map_serv_entry64       Proc near
 
 mseUpdate64:
     or ax,803h
-    mov [edx],ecx
+    mov [edx],eax
     mov [edx+4],ebx
 ;
     shl edx,9
@@ -3967,7 +3967,7 @@ mseUpdate64:
 
 mseSet64:
     or ax,803h
-    mov [edx],ecx
+    mov [edx],eax
     mov [edx+4],ebx
 
 mseDone64:

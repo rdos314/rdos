@@ -76,6 +76,8 @@ disc_bulk_out_maxsize   DW ?
 disc_bulk_in_buf        DW ?
 disc_bulk_out_buf       DW ?
 
+disc_serv_buf           DD ?
+
 disc_controller         DW ?
 disc_port               DB ?
 
@@ -444,13 +446,16 @@ ReadCapacity Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 InitVfs   Proc far
     push ds
     push es
     push fs
 ;
     mov fs,bx
+;
+    mov eax,1000h
+    AllocateBigServ
+    mov fs:disc_serv_buf,edx
 ;
     mov bx,fs:disc_controller
     mov al,fs:disc_port
@@ -580,10 +585,24 @@ ExitVfs  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadVfs      Proc far
+    push ds
+    push es
     push fs
-    pushad
+    push gs
+    push ebx
+    push esi
+    push edi
+    push ebp
 ;
+    mov ebp,es
+    mov gs,ebp
     mov fs,bx
+
+rvfsRetry:
+    push eax
+    push ecx
+    push edx
+;
     mov ebp,ecx
     shl ebp,9
 ;
@@ -611,75 +630,84 @@ ReadVfs      Proc far
     call SendCbw
     jc rvfsFail
 ;
+    xor ebp,ebp
 
-    push ebp
-    push esi
-
-rwBufLoop:  
-    cmp ebp,8
-    ja rwBufWhole
+rvfsLoop:
+    push ecx
+    cmp ecx,8
+    ja rvfsBufWhole
 ;
     mov eax,200h
-    mul ebp
+    mul ecx
     mov ecx,eax
-    jmp rwBufDo
+    jmp rvfsBufDo
 
-rwBufWhole:
+rvfsBufWhole:
     mov ecx,1000h
 
-rwBufDo:
+rvfsBufDo:
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_in_pipe
     PostUsbRawPipe
-    jc rwBufReadDone
-;
-    xor edx,edx
-
-rwBufCopy:
-    push es
-    push ecx
-    push esi
-;
-;    mov edi,es:[esi]
-;    mov edi,es:[edi].dh_data
-;    mov ecx,80h
-;    mov ds,fs:disc_bulk_in_buf
-;    mov esi,edx
-;    rep movs dword ptr es:[edi],ds:[esi]
-;    mov edx,esi
-;
-    pop esi
     pop ecx
-    pop ds
+    jc rvfsFail
 ;
-    add esi,4
-    sub ebp,1
-    clc
-    jz rwBufReadDone
+    push ecx
+    cmp ecx,8
+    ja rvfsSizeOk
 ;
-    sub ecx,200h
-    jnz rwBufCopy
-    jmp rwBufLoop
+    mov ecx,8
 
-rwBufReadDone:
-    pop esi
-    pop ebp
+rvfsSizeOk:
+    mov ds,fs:disc_bulk_in_buf    
+    xor esi,esi
+    mov ax,serv_flat_sel
+    mov es,ax
 
-
+rvfsCopyLoop:
+    mov edx,fs:disc_serv_buf
+    mov eax,gs:[ebp]
+    mov ebx,gs:[ebp+4]
+    MapServEntry
+;
+    push ecx
+    mov edi,edx
+    mov ecx,80h
+    rep movs dword ptr es:[edi],ds:[esi]
+    pop ecx
+;
+    add ebp,8
+    loop rvfsCopyLoop
+;
+    pop ecx
+    sub ecx,8
+    ja rvfsLoop
 ;    
     call ReceiveCsw
-    jnc rvfsOk
+    jc rvfsFail
+;
+    pop edx
+    pop ecx
+    pop eax
+    jmp rvfsDone
     
 rvfsFail:
     call ResetDevice
-;    jmp rdRetry
+;
+    pop edx
+    pop ecx
+    pop eax
+    jmp rvfsRetry
 
-
-
-
-rvfsOk:
-    popad
+rvfsDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop ebx
+    pop gs
     pop fs
+    pop es
+    pop ds
     retf32
 ReadVfs  Endp
     
