@@ -565,7 +565,6 @@ llsSignal:
     Signal
 ;
     WaitForSignal
-    int 3
     EnterSection ds:vfs_section
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jnz llsOk
@@ -922,8 +921,6 @@ NotifyReadBuf    Proc near
     push ecx
     push edx
     push esi
-;
-    int 3
   
 nrbLoop:
     xor dx,dx
@@ -1015,10 +1012,10 @@ init_part:
     mov ax,serv_flat_sel
     mov es,ax
 ;
+    int 3
     xor eax,eax
     xor edx,edx
     call LocalLockSector
-    int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1112,7 +1109,6 @@ vfsRead:
     pop es
     jc vfsFail
 ;
-    int 3
     EnterSection ds:vfs_section
     call NotifyReadBuf
     sub ds:vfs_active_count,ecx
