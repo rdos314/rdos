@@ -256,6 +256,159 @@ allocate_small_serv   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           FreeSmallServ
+;
+;           DESCRIPTION:    Free byte-aligned (dword) server memory
+;
+;           PARAMETERS:     ES          LDT sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_small_serv_name      DB 'Free Small Server',0
+
+free_small_serv   PROC far
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov bx,es
+    GetThread
+    mov ds,ax
+;
+    mov es,ds:p_ldt_sel
+    test bl,4
+    stc
+    jz fssDone
+;
+    and bx,0FFF8h
+    mov edx,es:[bx+2]
+    rol edx,8
+    mov dl,es:[bx+7]
+    ror edx,8
+    mov byte ptr es:[bx+5],0
+    FreeLdt
+;
+    mov ax,ds:p_serv_sel
+    mov ds,ax
+    mov es,ax
+;
+    EnterSection ds:serv_small_section
+    push ds
+    sub edx,serv_byte_linear + 10h
+    mov ax,serv_byte_sel
+    mov ds,ax
+;
+    mov eax,[edx].sls_next
+    sub eax,edx
+    mov ebx,es:serv_small_avail_mem
+    add ebx,eax
+    mov es:serv_small_avail_mem,ebx
+    sub eax,10h
+    sub es:serv_small_used_mem,eax
+;
+    mov eax,[edx].sls_prev
+    or eax,eax
+    jz free_small_no_merge_down
+;
+    mov eax,[eax].slf_next
+    inc eax
+    or eax,eax
+    jz free_small_no_merge_down
+;
+    mov eax,edx
+    mov edx,[eax].sls_prev
+    mov ebx,[eax].sls_next
+    mov [edx].sls_next,ebx
+    mov [ebx].sls_prev,edx
+    jmp free_small_test_up
+
+free_small_no_merge_down:
+    xor eax,eax
+    mov ebx,[eax].slf_next
+    cmp edx,ebx
+    jc free_small_insert_first
+
+free_small_insert_loop:
+    mov ebx,[ebx].slf_next
+    cmp edx,ebx
+    jnc free_small_insert_loop
+;
+    mov eax,[ebx].slf_prev
+    mov [edx].slf_prev,eax
+    mov [eax].slf_next,edx
+    mov [edx].slf_next,ebx
+    mov [ebx].slf_prev,edx
+    jmp free_small_test_up
+
+free_small_insert_first:
+    mov [edx].slf_prev,eax
+    mov ebx,[eax].slf_next
+    mov [edx].slf_next,ebx
+    mov [eax].slf_next,edx
+    mov [ebx].slf_prev,edx
+
+free_small_test_up:
+    mov eax,[edx].sls_next
+    mov eax,[eax].slf_prev
+    inc eax
+    or eax,eax
+    jz free_small_no_merge_up
+    push edx
+    mov edx,[edx].sls_next
+    mov eax,[edx].slf_prev
+    mov ebx,[edx].slf_next
+    or eax,eax
+    jz fm1_bypass
+    mov [eax].slf_next,ebx
+fm1_bypass:
+    or ebx,ebx
+    jz fm2_bypass
+    mov [ebx].slf_prev,eax
+fm2_bypass:
+    xor eax,eax
+    mov ebx,[eax].slf_next
+    cmp ebx,edx
+    jne fm3_bypass
+    mov ebx,[ebx].slf_next
+    mov [eax].slf_next,ebx
+fm3_bypass:
+    pop edx
+    mov ebx,[edx].sls_next
+    mov ebx,[ebx].sls_next
+    mov [ebx].sls_prev,edx
+    mov [edx].sls_next,ebx
+free_small_no_merge_up:
+    xor eax,eax
+    mov ebx,[eax].sls_prev
+    mov eax,[edx].sls_next
+    cmp eax,ebx
+    jc free_small_not_limit_page
+    mov eax,ebx
+    add eax,1000h
+    xor ebx,ebx
+    mov [ebx].sls_prev,edx
+
+free_small_not_limit_page:
+    pop ds
+    LeaveSection ds:serv_small_section
+
+fssDone:
+    xor ax,ax
+    mov es,ax
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+free_small_serv  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           AllocateBigServ
 ;
 ;           DESCRIPTION:    Allocate page-aligned (dword) server memory
@@ -395,6 +548,12 @@ init_app_mem    PROC near
     mov edi,OFFSET allocate_small_serv_name
     xor cl,cl
     mov ax,allocate_small_serv_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_small_serv
+    mov edi,OFFSET free_small_serv_name
+    xor cl,cl
+    mov ax,free_small_serv_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_big_serv

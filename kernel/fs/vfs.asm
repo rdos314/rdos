@@ -1129,6 +1129,7 @@ init_part:
     mov esi,1BEh
     add esi,ds:vfs_map_entry
 ;
+    mov eax,40h
     AllocateSmallServ
     xor edi,edi
     mov ecx,10h
@@ -1163,7 +1164,7 @@ ipNextPart1:
     jne ipLoop1
 
 ipDone1:
-
+    FreeSmallServ
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

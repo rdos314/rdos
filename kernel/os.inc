@@ -972,6 +972,11 @@ AllocateSmallServ    MACRO
     OsGate allocate_small_serv_nr
                     ENDM
 
+; IN  ES           LDT selector
+FreeSmallServ    MACRO
+    OsGate free_small_serv_nr
+                    ENDM
+
 ; IN  EAX          Bytes
 ; OUT EDX          Offset in serv flat sel
 AllocateBigServ    MACRO
