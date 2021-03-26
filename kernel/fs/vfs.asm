@@ -1016,6 +1016,10 @@ init_part:
     xor eax,eax
     xor edx,edx
     call LocalLockSector
+;
+    mov eax,1
+    xor edx,edx
+    call LocalLockSector
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
