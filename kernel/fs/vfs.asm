@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+include ..\os\system.def
 include ..\os.def
 include ..\os.inc
 include ..\serv.def
@@ -504,8 +505,10 @@ LocalLockSector    Proc near
     push esi
     push edi
 ;
+    EnterSection ds:vfs_section
+;
     call SectorToBlock
-    jc llsDone
+    jc llsFail
 ;
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
@@ -516,7 +519,8 @@ LocalLockSector    Proc near
     shr ecx,3
     and ecx,1FFFFh
     bts es:[edi],ecx
-;
+
+llsRetry:
     push ax
     GetThread
     mov es:[esi].vfsp_ref_wait,ax
@@ -531,21 +535,25 @@ LocalLockSector    Proc near
     mov ds:vfs_scan_pos+4,edx
 
 llsSignal:
+    movzx ebx,ds:vfs_sectors_per_block
+    add ds:vfs_active_count,ebx
+    LeaveSection ds:vfs_section
+;
     mov bx,ds:vfs_server
     Signal
 ;
     WaitForSignal
     int 3
+    EnterSection ds:vfs_section
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jnz llsOk
+    jmp llsRetry
 
 llsValid:
     add es:[esi].vfsp_ref_wait,1
-    jnc llsPhysRefOk
+    jnc llsOk
 ;
     CrashGate
-
-llsPhysRefOk:
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz llsOk
 
 llsOk:
     mov bx,ax
@@ -555,10 +563,12 @@ llsOk:
     and ax,0F000h
     or ax,bx
     movzx ebx,word ptr es:[esi+4]
+    LeaveSection ds:vfs_section
     clc
-;
+    jmp llsDone
 
 llsFail:
+    LeaveSection ds:vfs_section
     stc
 
 llsDone:
@@ -886,6 +896,7 @@ ClearIoBitmap   Endp
 
 NotifyReadBuf    Proc near
     push ebx
+    push ecx
     push esi
   
 nrbLoop:
@@ -903,6 +914,7 @@ nrbNext:
     ja nrbLoop
 ;
     pop esi
+    pop ecx
     pop ebx
     ret
 NotifyReadBuf   Endp
@@ -1003,6 +1015,8 @@ VfsServer:
 ;
     mov ds:vfs_scan_pos,-1
     mov ds:vfs_scan_pos+4,-1
+    mov ds:vfs_active_count,0
+    InitSection ds:vfs_section
 ;
     call CalcParam
     call CreateBuffer
@@ -1025,35 +1039,48 @@ VfsServer:
 
 vfsLoop:
     WaitForSignal
-    int 3
+
+vfsRetry:
+    EnterSection ds:vfs_section
+;
     call GetIoStart
-    jc vfsLoop
+    jc vfsLeave
 ;
     call GetIoBuf
-    jc vfsLoop
+    jc vfsLeave
 ;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz vfsRead
 
 vfsWrite:
     int 3
+    LeaveSection ds:vfs_section
+    jmp vfsRetry
+
+vfsLeave:
+    LeaveSection ds:vfs_section
     jmp vfsLoop
 
 vfsRead:
     call GetReadIo
     call ClearIoBitmap
     call BlockToSector
+    LeaveSection ds:vfs_section
 ;
     push es
     mov es,ds:vfs_req_buf
     mov bx,ds:vfs_param
     call fword ptr ds:vfs_read
     pop es
-    int 3
     jc vfsFail
 ;
+    int 3
+    EnterSection ds:vfs_section
     call NotifyReadBuf
-    jmp vfsLoop
+    sub ds:vfs_active_count,ecx
+    LeaveSection ds:vfs_section
+    jz vfsLoop
+    jmp vfsRetry
 
 vfsFail:
     int 3

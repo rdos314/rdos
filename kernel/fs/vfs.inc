@@ -76,8 +76,9 @@ vfs_sectors_per_block    DW ?
 vfs_flags                DB ?
 vfs_sector_shift         DB ?
 
-vfs_word_pad             DW ?
+vfs_section              section_typ <>
 
+vfs_active_count         DD ?
 vfs_scan_pos             DD ?,?
 
 vfs_buf_count            DD ?
