@@ -89,30 +89,138 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           InsertWaitBuf
+;           NAME:           CreateReq
 ;
-;           DESCRIPTION:    Insert thread into block wait list
+;           DESCRIPTION:    Create & insert req bit 0
 ;
-;           PARAMETERS:     ES:ESI       Phys block
+;           PARAMETERS:     DS           VFS sel
+;                           EDX:EAX      Sector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InsertWaitBuf Proc near
-    push ds
+CreateReq Proc near
+    push es
     push eax
+    push edi
+;
+    push eax
+    mov eax,SIZE vfs_req
+    AllocateSmallGlobalMem
+    pop eax
+    mov es:vfsrq_sector,eax
+    mov es:vfsrq_sector+4,edx
 ;
     GetThread
-    mov ds,ax
-    xchg ax,es:[esi].vfsp_ref_wait
-    mov ds:p_link,ax
+    mov es:vfsrq_thread,ax
 ;
+    mov di,ds:vfs_req_list
+    or di,di
+    je crEmpty
+;    
+    push fs
+    push esi
+;
+    mov fs,di
+    mov si,fs:vfsrq_prev
+    mov fs:vfsrq_prev,es
+    mov fs,si
+    mov fs:vfsrq_next,es
+    mov es:vfsrq_next,di
+    mov es:vfsrq_prev,si
+;
+    pop esi
+    pop fs
+    jmp crDone
+    
+crEmpty:
+    mov es:vfsrq_next,es
+    mov es:vfsrq_prev,es
+    mov ds:vfs_req_list,es
+
+crDone:
+    pop edi
     pop eax
-    pop ds
+    pop es
     ret
-InsertWaitBuf Endp
+CreateReq Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RemoveReq
+;
+;           DESCRIPTION:    Remove req & signal thread
+;
+;           PARAMETERS:     DS           VFS sel
+;                           EDX:EAX      Sector
+;                           CX           Lock count in
+;
+;           RETURNS:        CX           Lock count out
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveReq Proc near
+    push es
+    push fs
+    push ebx
+    push ebp
+
+rqRetry:
+    mov bx,ds:vfs_req_list
+    or bx,bx
+    jz rqDone
+;
+    mov bp,bx
+
+rqLoop:
+    mov es,bx
+    cmp eax,es:vfsrq_sector
+    jne rqNext
+;
+    cmp edx,es:vfsrq_sector+4
+    je rqFound
+
+rqNext:
+    mov bx,es:vfsrq_next
+    cmp bx,bp
+    jne rqLoop
+;
+    jmp rqDone
+
+rqFound:
+    mov bx,es:vfsrq_next
+    mov ds:vfs_req_list,bx
+;
+    mov bp,es
+    cmp bp,bx
+;
+    mov bp,es:vfsrq_prev
+    mov fs,bx
+    mov fs:vfsrq_prev,bp
+    mov fs,bp
+    mov fs:vfsrq_next,bx
+    jne rqSignal
+;    
+    mov ds:vfs_req_list,0
+
+rqSignal:
+    inc cx
+    mov bx,es:vfsrq_thread
+    Signal
+    FreeMem
+    jmp rqRetry
+
+rqDone:
+    pop ebp
+    pop ebx
+    pop fs
+    pop es    
+    ret
+RemoveReq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -594,7 +702,8 @@ LocalLockSector    Proc near
     bts es:[edi],ecx
 
 llsRetry:
-    call InsertWaitBuf
+    or es:[esi].vfsp_ref_bitmap,1
+    call CreateReq
 ;
     mov ebx,ds:vfs_scan_pos
     and ebx,ds:vfs_scan_pos+4
@@ -619,7 +728,7 @@ llsSignal:
     jmp llsRetry
 
 llsValid:
-    add es:[esi].vfsp_ref_wait,1
+    add es:[esi].vfsp_ref_bitmap,1
     jnc llsOk
 ;
     CrashGate
@@ -679,7 +788,7 @@ LocalUnlockSector    Proc near
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz lusLeave
 ;
-    sub es:[esi].vfsp_ref_wait,1
+    sub es:[esi].vfsp_ref_bitmap,1
     jnc lusLeave
 ;
     CrashGate
@@ -1005,6 +1114,7 @@ ClearIoBitmap   Endp
 ;
 ;       PARAMETERS:     DS          VFS sel
 ;                       ES          Server flat sel
+;                       EDX:EAX     Sector
 ;                       ESI         Physical entry buf
 ;                       ECX         Sector count
 ;
@@ -1016,31 +1126,32 @@ NotifyReadBuf    Proc near
     push ecx
     push edx
     push esi
+    push ebp
+;
+    mov ebp,ecx
   
 nrbLoop:
-    xor dx,dx
+    xor cx,cx
     or es:[esi].vfsp_flags,VFS_PHYS_VALID
-
-nrbMore:
-    mov bx,es:[esi].vfsp_ref_wait
+    mov bx,es:[esi].vfsp_ref_bitmap
     or bx,bx
     jz nrbNext
 ;
-    push ds
-    mov ds,bx
-    mov ax,ds:p_link
-    pop ds
-    mov es:[esi].vfsp_ref_wait,ax
-    Signal
-    inc dx
-    jmp nrbMore
+    test bx,1
+    jnz nrbReq
+;
+    int 3
+
+nrbReq:
+    call RemoveReq
 
 nrbNext:
-    mov es:[esi].vfsp_ref_wait,dx
+    mov es:[esi].vfsp_ref_bitmap,cx
     add esi,8
-    sub cx,ds:vfs_sectors_per_block
+    sub bp,ds:vfs_sectors_per_block
     ja nrbLoop
 ;
+    pop ebp
     pop esi
     pop edx
     pop ecx
@@ -1609,6 +1720,7 @@ VfsServer:
     mov ds:vfs_scan_pos,-1
     mov ds:vfs_scan_pos+4,-1
     mov ds:vfs_active_count,0
+    mov ds:vfs_req_list,0
     InitSection ds:vfs_section
 ;
     call CalcParam

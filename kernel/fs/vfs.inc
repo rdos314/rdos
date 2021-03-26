@@ -82,6 +82,9 @@ vfs_sector_shift         DB ?
 
 vfs_section              section_typ <>
 
+vfs_word_pad             DW ?
+vfs_req_list             DW ?
+
 vfs_map_entry            DD ?
 vfs_active_count         DD ?
 vfs_scan_pos             DD ?,?
@@ -103,7 +106,7 @@ vfs_phys_entry   STRUC
 vfsp_wr_bitmap            DB ?
 vfsp_flags                DB ?
 vfsp_phys                 DW ?,?
-vfsp_ref_wait             DW ?
+vfsp_ref_bitmap           DW ?
 
 vfs_phys_entry   ENDS
 
@@ -119,3 +122,12 @@ vfsb_linear               DW ?
 
 vfs_buf_entry    ENDS
 
+vfs_req          STRUC
+
+vfsrq_prev                DW ?
+vfsrq_next                DW ?
+
+vfsrq_sector              DD ?,?
+vfsrq_thread              DW ?
+
+vfs_req          ENDS
