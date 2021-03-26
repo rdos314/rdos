@@ -1013,13 +1013,17 @@ init_part:
     mov es,ax
 ;
     int 3
+    mov eax,1000h
+    AllocateBigServ
+    mov esi,edx
+;
     xor eax,eax
     xor edx,edx
     call LocalLockSector
 ;
-    mov eax,1
-    xor edx,edx
-    call LocalLockSector
+    mov edx,esi
+    MapServEntry
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
