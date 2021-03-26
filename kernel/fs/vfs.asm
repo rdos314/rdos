@@ -561,7 +561,6 @@ BlockToBitmap   Endp
 ;       DESCRIPTION:    Lock sector
 ;
 ;       PARAMETERS:     DS          VFS sel
-;                       ES          Server flat sel
 ;                       EDX:EAX     Sector #
 ;
 ;       RETURNS:        NC
@@ -570,9 +569,14 @@ BlockToBitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LocalLockSector    Proc near
+    push es
+    push ecx
     push edx
     push esi
     push edi
+;
+    mov cx,serv_flat_sel
+    mov es,cx
 ;
     EnterSection ds:vfs_section
 ;
@@ -640,6 +644,8 @@ llsDone:
     pop edi
     pop esi
     pop edx
+    pop ecx
+    pop es
     ret
 LocalLockSector    Endp
 
@@ -1046,7 +1052,7 @@ unlock_vfs_sector    Endp
 ;       DESCRIPTION:    Convert CHS to LBA
 ;
 ;       PARAMETERS:     DS       VFS sel
-;                       ES:EDI   CHS address
+;                       ES:SI    CHS address
 ;
 ;       RETURNS:        EDX      LBA address
 ;
@@ -1060,8 +1066,8 @@ ChsToLba    Proc near
     call fword ptr ds:vfs_get_bios
     jc ctlDone
 ;
-    mov cl,es:[edi+2]
-    movzx ax,byte ptr es:[edi+1]
+    mov cl,es:[si+3]
+    movzx ax,byte ptr es:[si+2]
     and al,0C0h
     shl ax,2
     mov ch,ah
@@ -1072,11 +1078,11 @@ ChsToLba    Proc near
     movzx eax,ax
     movzx ecx,cx
     mul ecx
-    movzx ecx,byte ptr es:[edi]
+    movzx ecx,byte ptr es:[si].part_start_head
     add ecx,eax
     movzx eax,bx
     mul ecx
-    movzx ecx,byte ptr es:[edi+1]
+    movzx ecx,byte ptr es:[si+2]
     and cl,3Fh
     add eax,ecx
     dec eax
@@ -1105,8 +1111,6 @@ init_part_name       DB 'VFS Init',0
 
 init_part:
     mov ds,bx
-    mov ax,serv_flat_sel
-    mov es,ax
 ;
     int 3
     mov eax,1000h
@@ -1120,26 +1124,34 @@ init_part:
     mov edx,ds:vfs_map_entry
     MapServEntry
 ;
+    mov ax,serv_flat_sel
+    mov fs,ax
     mov esi,1BEh
+    add esi,ds:vfs_map_entry
+;
+    AllocateSmallServ
+    xor edi,edi
+    mov ecx,10h
+    rep movs dword ptr es:[edi],fs:[esi]
+;
+    xor si,si
 
 ipLoop1:
-    mov edi,ds:vfs_map_entry
-    mov cl,es:[esi+edi].part_type
+    mov cl,es:[si].part_type
     or cl,cl
     jz ipDone1
 ;
     cmp cl,0EEh
     je ipGpt1
 ;
-    mov eax,es:[esi+edi].part_sectors
-    lea edi,[esi+edi+1]
+    mov eax,es:[si].part_sectors
     call ChsToLba
     jnc ipInst1
 ;
-    mov edx,es:[edi+7]
+    mov edx,es:[si].part_start_sector
 
 ipInst1:
-;    call InstallPartition
+;    call InstallMbrPartition
     jmp ipNextPart1
 
 ipGpt1:
@@ -1147,7 +1159,7 @@ ipGpt1:
 
 ipNextPart1:
     add si,10h
-    cmp si,1FEh
+    cmp si,40h
     jne ipLoop1
 
 ipDone1:
