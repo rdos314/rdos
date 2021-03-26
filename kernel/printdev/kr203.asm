@@ -576,7 +576,6 @@ nsReset:
     stc
     jz nsDone
 ;    
-    lock and ds:kr_flag,NOT FLAG_ATTACHED
     mov bx,ds:kr_dev_handle
     ResetUsbDevice
     stc
@@ -1750,7 +1749,6 @@ reset_printer   Proc far
     stc
     jz reset_done
 ;    
-    lock and ds:kr_flag,NOT FLAG_ATTACHED
     mov bx,ds:kr_dev_handle
     ResetUsbDevice
     clc
@@ -1903,7 +1901,6 @@ krInitLoop:
 krRetry:
     loop krInitLoop
 ;
-    lock and ds:kr_flag,NOT FLAG_ATTACHED
     mov bx,ds:kr_dev_handle
     ResetUsbDevice
     jmp krDetached
@@ -1935,6 +1932,20 @@ krDetached:
     xor bx,bx
     xchg bx,ds:kr_dev_handle
     CloseUsbDevice
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz krWaitAttach
+;
+    mov ecx,100
+
+krWaitDetach:
+    mov ax,25
+    WaitMilliSec
+;
+    test ds:kr_flag,FLAG_ATTACHED
+    jz krWaitAttach
+;
+    loop krWaitDetach
 
 krWaitAttach:
     test ds:kr_flag,FLAG_ATTACHED
