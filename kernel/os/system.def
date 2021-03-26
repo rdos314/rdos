@@ -443,6 +443,8 @@ p_int_prot16_stack      DW ?
 p_int_prot32_stack      DW ?
 p_int_real_stack        DD ?
 
+p_link              DW ?
+
 p_active            DB ?
 p_realtime          DB ?
 

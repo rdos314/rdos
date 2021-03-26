@@ -59,83 +59,16 @@ code    SEGMENT byte public 'CODE'
 InsertWaitBuf Proc near
     push ds
     push eax
-    push edi
 ;
     GetThread
     mov ds,ax
+    xchg ax,es:[esi].vfsp_ref_wait
+    mov ds:p_link,ax
 ;
-    mov di,es:[esi].vfsp_ref_wait
-    or di,di
-    je iwEmpty
-;    
-    push fs
-    push esi
-;
-    mov fs,di
-    mov si,fs:p_prev
-    mov fs:p_prev,ds
-    mov fs,si
-    mov fs:p_next,ds
-    mov ds:p_next,di
-    mov ds:p_prev,si
-;
-    pop esi
-    pop fs
-    jmp iwDone
-    
-iwEmpty:
-    mov ds:p_next,ds
-    mov ds:p_prev,ds
-    mov es:[esi].vfsp_ref_wait,ds
-
-iwDone:
-    pop edi
     pop eax
     pop ds
     ret
 InsertWaitBuf Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           RemoveWaitBuf
-;
-;           DESCRIPTION:    Remove thread from block wait list
-;
-;           PARAMETERS:     ES:ESI       Phys block
-;
-;           RETURNS:        BX           Thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveWaitBuf Proc near
-    push ds
-    push fs
-    push edi
-    push ebp
-;
-    mov bx,es:[esi].vfsp_ref_wait
-    mov ds,bx
-    mov di,ds:p_next
-    cmp di,es:[esi].vfsp_ref_wait
-;
-    mov es:[esi].vfsp_ref_wait,di
-    mov bp,ds:p_prev
-    mov fs,di
-    mov fs:p_prev,bp
-    mov fs,bp
-    mov fs:p_next,di
-    jne rwDone
-;    
-    mov es:[esi].vfsp_ref_wait,0
-
-rwDone:
-    pop ebp
-    pop edi
-    pop fs
-    pop ds    
-    ret
-RemoveWaitBuf Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -985,6 +918,7 @@ ClearIoBitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyReadBuf    Proc near
+    push eax
     push ebx
     push ecx
     push edx
@@ -1000,7 +934,11 @@ nrbMore:
     or bx,bx
     jz nrbNext
 ;
-    call RemoveWaitBuf
+    push ds
+    mov ds,bx
+    mov ax,ds:p_link
+    pop ds
+    mov es:[esi].vfsp_ref_wait,ax
     Signal
     inc dx
     jmp nrbMore
@@ -1015,6 +953,7 @@ nrbNext:
     pop edx
     pop ecx
     pop ebx
+    pop eax
     ret
 NotifyReadBuf   Endp
 
