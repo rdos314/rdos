@@ -546,7 +546,6 @@ LocalLockSector    Proc near
     bts es:[edi],ecx
 
 llsRetry:
-    int 3
     call InsertWaitBuf
 ;
     mov ebx,ds:vfs_scan_pos
@@ -928,6 +927,7 @@ NotifyReadBuf    Proc near
   
 nrbLoop:
     xor dx,dx
+    or es:[esi].vfsp_flags,VFS_PHYS_VALID
 
 nrbMore:
     mov bx,es:[esi].vfsp_ref_wait
