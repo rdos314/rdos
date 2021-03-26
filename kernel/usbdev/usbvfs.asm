@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+include ..\os\system.def
 include ..\os.def
 include ..\os.inc
 include ..\user.def
@@ -573,6 +574,23 @@ ExitVfs  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetBiosVfs
+;
+;       DESCRIPTION:    Get BIOS VFS parameters
+;
+;       PARAMETERS:     BX           Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+GetBiosVfs   Proc far
+    stc
+    retf32
+GetBiosVfs  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ReadVfs
 ;
 ;       DESCRIPTION:    Read using raw interface
@@ -857,8 +875,9 @@ disc_name    DB 'Usb Disc ', 0
 vfs_tab:
 vfs00   DD OFFSET InitVfs,    DD SEG code
 vfs01   DD OFFSET ExitVfs,    DD SEG code
-vfs02   DD OFFSET ReadVfs,    DD SEG code
-vfs03   DD OFFSET WriteVfs,   DD SEG code
+vfs02   DD OFFSET GetBiosVfs, DD SEG code
+vfs03   DD OFFSET ReadVfs,    DD SEG code
+vfs04   DD OFFSET WriteVfs,   DD SEG code
 
 usb_attach  Proc far
     push ds

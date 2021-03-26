@@ -39,6 +39,50 @@ include vfs.inc
 
     .386p
 
+part_struc      STRUC
+
+part_status             DB ?
+part_start_head         DB ?
+part_start_cyl_sector   DW ?
+part_type               DB ?
+part_end_head           DB ?
+part_end_cyl_sector     DW ?
+part_start_sector       DD ?
+part_sectors            DD ?
+
+part_struc      ENDS
+
+gpt_part_struc  STRUC
+
+gpt_sign                DB 8 DUP(?)
+gpt_rev                 DB 4 DUP(?)
+gpt_header_size         DD ?
+gpt_crc32               DD ?
+gpt_resv                DD ?
+gpt_curr_lba            DD ?,?
+gpt_other_lba           DD ?,?
+gpt_first_lba           DD ?,?
+gpt_last_lba            DD ?,?
+gpt_guid                DB 16 DUP(?)
+gpt_entry_lba           DD ?,?
+gpt_entry_count         DD ?
+gpt_entry_size          DD ?
+gpt_entry_crc32         DD ?
+
+gpt_part_struc  ENDS
+
+gpt_entry_struc STRUC
+
+gpe_part_guid           DB 16 DUP(?)
+gpe_unique_guid         DB 16 DUP(?)
+gpe_first_lba           DD ?,?
+gpe_last_lba            DD ?,?
+gpe_attrib              DD ?,?
+gpe_name                DB 36 DUP(?)
+
+gpt_entry_struc ENDS
+
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -995,6 +1039,58 @@ unlock_vfs_sector    Proc far
 unlock_vfs_sector    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ChsToLba
+;
+;       DESCRIPTION:    Convert CHS to LBA
+;
+;       PARAMETERS:     DS       VFS sel
+;                       ES:EDI   CHS address
+;
+;       RETURNS:        EDX      LBA address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChsToLba    Proc near
+    push eax
+    push ebx
+    push ecx
+;
+    call fword ptr ds:vfs_get_bios
+    jc ctlDone
+;
+    mov cl,es:[edi+2]
+    movzx ax,byte ptr es:[edi+1]
+    and al,0C0h
+    shl ax,2
+    mov ch,ah
+    cmp cx,1023
+    stc
+    je ctlDone
+;
+    movzx eax,ax
+    movzx ecx,cx
+    mul ecx
+    movzx ecx,byte ptr es:[edi]
+    add ecx,eax
+    movzx eax,bx
+    mul ecx
+    movzx ecx,byte ptr es:[edi+1]
+    and cl,3Fh
+    add eax,ecx
+    dec eax
+    mov edx,eax
+    clc
+
+ctlDone:
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+ChsToLba    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           InitPartition
@@ -1015,14 +1111,47 @@ init_part:
     int 3
     mov eax,1000h
     AllocateBigServ
-    mov esi,edx
+    mov ds:vfs_map_entry,edx
 ;
     xor eax,eax
     xor edx,edx
     call LocalLockSector
 ;
-    mov edx,esi
+    mov edx,ds:vfs_map_entry
     MapServEntry
+;
+    mov esi,1BEh
+
+ipLoop1:
+    mov edi,ds:vfs_map_entry
+    mov cl,es:[esi+edi].part_type
+    or cl,cl
+    jz ipDone1
+;
+    cmp cl,0EEh
+    je ipGpt1
+;
+    mov eax,es:[esi+edi].part_sectors
+    lea edi,[esi+edi+1]
+    call ChsToLba
+    jnc ipInst1
+;
+    mov edx,es:[edi+7]
+
+ipInst1:
+;    call InstallPartition
+    jmp ipNextPart1
+
+ipGpt1:
+;    call InstallGpt1
+
+ipNextPart1:
+    add si,10h
+    cmp si,1FEh
+    jne ipLoop1
+
+ipDone1:
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

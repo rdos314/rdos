@@ -47,6 +47,10 @@ vfs_init                 DD ?,?
 ; IN  BX        Param
 vfs_exit                 DD ?,?
 
+; OUT AX        Heads
+; OUT BX        Sectors per cylinder
+vfs_get_bios             DD ?,?
+
 ; IN  CX        Sector count
 ; IN  EDX:EAX   Start sector
 ; IN  ES        Physical entries
@@ -78,6 +82,7 @@ vfs_sector_shift         DB ?
 
 vfs_section              section_typ <>
 
+vfs_map_entry            DD ?
 vfs_active_count         DD ?
 vfs_scan_pos             DD ?,?
 
