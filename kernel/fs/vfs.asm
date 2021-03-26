@@ -1535,6 +1535,10 @@ init_part:
     mov ecx,10h
     rep movs dword ptr es:[edi],fs:[esi]
 ;
+    xor eax,eax
+    xor edx,edx
+    call LocalUnlockSector
+;
     xor si,si
 
 ipLoop1:
@@ -1569,10 +1573,6 @@ ipNextPart1:
 
 ipDone1:
     FreeSmallServ
-;
-    xor eax,eax
-    xor edx,edx
-    call LocalUnlockSector
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
