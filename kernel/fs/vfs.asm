@@ -873,6 +873,43 @@ ClearIoBitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyReadBuf
+;
+;       DESCRIPTION:    Notify read buffers
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       ESI         Physical entry buf
+;                       ECX         Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyReadBuf    Proc near
+    push ebx
+    push esi
+  
+nrbLoop:
+    mov bx,1
+    xchg bx,word ptr es:[esi].vfsp_ref_wait
+    or es:[esi].vfsp_flags,VFS_PHYS_VALID
+    or bx,bx
+    jz nrbNext
+;
+    Signal
+
+nrbNext:
+    add esi,8
+    sub cx,ds:vfs_sectors_per_block
+    ja nrbLoop
+;
+    pop esi
+    pop ebx
+    ret
+NotifyReadBuf   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LockVfsSector
 ;
 ;       DESCRIPTION:    Lock VFS sector
@@ -1013,7 +1050,14 @@ vfsRead:
     call fword ptr ds:vfs_read
     pop es
     int 3
+    jc vfsFail
 ;
+    call NotifyReadBuf
+    jmp vfsLoop
+
+vfsFail:
+    int 3
+
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz vfsExit
 ;
