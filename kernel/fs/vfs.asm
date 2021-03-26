@@ -48,6 +48,98 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           InsertWaitBuf
+;
+;           DESCRIPTION:    Insert thread into block wait list
+;
+;           PARAMETERS:     ES:ESI       Phys block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertWaitBuf Proc near
+    push ds
+    push eax
+    push edi
+;
+    GetThread
+    mov ds,ax
+;
+    mov di,es:[esi].vfsp_ref_wait
+    or di,di
+    je iwEmpty
+;    
+    push fs
+    push esi
+;
+    mov fs,di
+    mov si,fs:p_prev
+    mov fs:p_prev,ds
+    mov fs,si
+    mov fs:p_next,ds
+    mov ds:p_next,di
+    mov ds:p_prev,si
+;
+    pop esi
+    pop fs
+    jmp iwDone
+    
+iwEmpty:
+    mov ds:p_next,ds
+    mov ds:p_prev,ds
+    mov es:[esi].vfsp_ref_wait,ds
+
+iwDone:
+    pop edi
+    pop eax
+    pop ds
+    ret
+InsertWaitBuf Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           RemoveWaitBuf
+;
+;           DESCRIPTION:    Remove thread from block wait list
+;
+;           PARAMETERS:     ES:ESI       Phys block
+;
+;           RETURNS:        BX           Thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveWaitBuf Proc near
+    push ds
+    push fs
+    push edi
+    push ebp
+;
+    mov bx,es:[esi].vfsp_ref_wait
+    mov ds,bx
+    mov di,ds:p_next
+    cmp di,es:[esi].vfsp_ref_wait
+;
+    mov es:[esi].vfsp_ref_wait,di
+    mov bp,ds:p_prev
+    mov fs,di
+    mov fs:p_prev,bp
+    mov fs,bp
+    mov fs:p_next,di
+    jne rwDone
+;    
+    mov es:[esi].vfsp_ref_wait,0
+
+rwDone:
+    pop ebp
+    pop edi
+    pop fs
+    pop ds    
+    ret
+RemoveWaitBuf Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CalcParam
 ;
 ;       DESCRIPTION:    Calculate schedule params
@@ -521,10 +613,8 @@ LocalLockSector    Proc near
     bts es:[edi],ecx
 
 llsRetry:
-    push ax
-    GetThread
-    mov es:[esi].vfsp_ref_wait,ax
-    pop ax
+    int 3
+    call InsertWaitBuf
 ;
     mov ebx,ds:vfs_scan_pos
     and ebx,ds:vfs_scan_pos+4
@@ -897,23 +987,32 @@ ClearIoBitmap   Endp
 NotifyReadBuf    Proc near
     push ebx
     push ecx
+    push edx
     push esi
+;
+    int 3
   
 nrbLoop:
-    mov bx,1
-    xchg bx,word ptr es:[esi].vfsp_ref_wait
-    or es:[esi].vfsp_flags,VFS_PHYS_VALID
+    xor dx,dx
+
+nrbMore:
+    mov bx,es:[esi].vfsp_ref_wait
     or bx,bx
     jz nrbNext
 ;
+    call RemoveWaitBuf
     Signal
+    inc dx
+    jmp nrbMore
 
 nrbNext:
+    mov es:[esi].vfsp_ref_wait,dx
     add esi,8
     sub cx,ds:vfs_sectors_per_block
     ja nrbLoop
 ;
     pop esi
+    pop edx
     pop ecx
     pop ebx
     ret
