@@ -55,6 +55,57 @@ TMisolWeather::TMisolWeather(char *HostStr, int Port)
     FIP = 0;
     FPort = Port;
 
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TMisolWeather::TMisolWeather
+#
+#   Purpose....: Misol constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TMisolWeather::TMisolWeather(char *HostStr, int Port, const char *IniName)
+  : FIni(IniName)
+{
+    int size = strlen(HostStr);
+
+    FOnline = false;
+
+    FHostStr = new char[size + 1];
+    strcpy(FHostStr, HostStr);
+
+    FIP = 0;
+    FPort = Port;
+
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TMisolWeather::Init
+#
+#   Purpose....: Init
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMisolWeather::Init()
+{
+    int pyear, pmonth, pday;
+    int year, month, day;
+    int hour, min, sec;
+    int ms, us;
+    unsigned long msb, lsb;
+    int count;
+    char str[40];
+
     OnWindDir = 0;
     OnWindSpeed = 0;
     OnWindGust = 0;
@@ -63,6 +114,33 @@ TMisolWeather::TMisolWeather(char *HostStr, int Port)
     OnLight = 0;
     OnUv = 0;
     OnRain = 0;
+
+    RdosGetTime(&msb, &lsb);
+    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+
+    FIni.GotoSection("Misol");
+    FHasRainBase = FIni.ReadVar("Date", str, 50);
+    if (FHasRainBase)
+    {
+        count = sscanf(str, "%04d%02d%02d", &pyear, &pmonth, &pday);
+        if (count != 3)
+            FHasRainBase = false;
+    }
+
+    if (FHasRainBase)
+        if (year != pyear || month != pmonth || day != pday)
+            FHasRainBase = false;
+
+    if (FHasRainBase)
+        FHasRainBase = FIni.ReadVar("Rain", str, 50);
+
+    if (FHasRainBase)
+    {
+        count = sscanf(str, "%Lf", &FRainBase);
+        if (count != 1)
+            FHasRainBase = false;
+    }
 
     Start("Misol", 0x8000);
 }
@@ -223,7 +301,7 @@ long double TMisolWeather::GetUv()
 ##########################################################################*/
 long double TMisolWeather::GetRain()
 {
-    return FRain;
+    return FRain - FRainBase;
 }
 
 /*##########################################################################
@@ -243,6 +321,9 @@ void TMisolWeather::DecodeData(const char *str, int size)
     unsigned char uch;
     long double dval;
     int val;
+    int year, month, day, hour;
+    unsigned long msb, lsb;
+    char rainstr[40];
 
     if (ptr[0] == 0x24 && ptr[1] == 0x6B)
     {
@@ -291,8 +372,27 @@ void TMisolWeather::DecodeData(const char *str, int size)
         val += uch;
         FRain = (long double)val * 0.3;
 
+        RdosGetTime(&msb, &lsb);
+        RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+
+        if (day != FCurrDay)
+            FHasRainBase = false;
+
+        if (!FHasRainBase)
+        {
+            sprintf(rainstr, "%04d%02d%02d", year, month, day);
+            FIni.WriteVar("Date", rainstr);
+
+            sprintf(rainstr, "%5.3Lf", FRain);
+            FIni.WriteVar("Rain", rainstr);
+
+            FCurrDay = day;
+            FHasRainBase = true;
+            FRainBase = FRain;
+        }
+
         if (OnRain)
-            (*OnRain)(this, FRain);
+            (*OnRain)(this, FRain - FRainBase);
 
         memcpy(&uch, ptr + 10, 1);
         val = uch << 8;

@@ -30,10 +30,12 @@
 
 #include "sockobj.h"
 #include "thread.h"
+#include "ini.h"
 
 class TMisolWeather : public TThread
 {
 public:
+    TMisolWeather(char *HostStr, int Port, const char *IniName);
     TMisolWeather(char *HostStr, int Port);
     virtual ~TMisolWeather();
 
@@ -58,6 +60,7 @@ public:
     void (*OnRain)(TMisolWeather *Device, long double val);
 
 protected:
+    void Init();
     void DecodeData(const char *buf, int size);
     virtual void Execute();
 
@@ -69,12 +72,16 @@ protected:
     long double FLight;
     long double FUV;
     long double FRain;
+    long double FRainBase;
+    bool FHasRainBase;
+    int FCurrDay;
 
     bool FOnline;
     long FIP;
     int FPort;
     char *FHostStr;
     TTcpSocket *FSocket;
+    TIniFile FIni;
 };
 
 #endif
