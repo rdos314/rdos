@@ -903,7 +903,7 @@ gisScan:
     mov edx,ecx
     xor eax,eax
     repz scas dword ptr es:[edi]
-    jz gisScanDone
+    jz gisScanFixup
 ;
     sub edx,ecx
     dec edx
@@ -922,6 +922,10 @@ gisScan:
     pop ecx
     clc
     jmp gisDone
+
+gisScanFixup:
+    shl edx,8
+    add esi,edx
 
 gisScanDone:
     pop ecx
@@ -1565,11 +1569,11 @@ impCheckPart:
     push edx
     mov edx,ds:vfs_map_entry
     MapServEntry
+    mov edi,edx
     pop edx
 ;
     mov ax,serv_flat_sel
     mov es,ax
-    mov edi,ds:vfs_map_entry
 ;
     mov al,es:[edi+26h]
     cmp al,29h
@@ -1632,11 +1636,12 @@ InstallMbrExtended Proc near
     push edx
     mov edx,ds:vfs_map_entry
     MapServEntry
+    mov esi,edx
     pop edx
 ;
     mov ax,serv_flat_sel
-    mov es,ax
-    mov edi,ds:vfs_map_entry
+    mov fs,ax
+    add esi,1BEh
 ;
     mov eax,40h
     AllocateSmallServ
@@ -1722,8 +1727,8 @@ init_part:
 ;
     mov ax,serv_flat_sel
     mov fs,ax
-    mov esi,1BEh
-    add esi,ds:vfs_map_entry
+    mov esi,edx
+    add esi,1BEh
 ;
     mov eax,40h
     AllocateSmallServ
