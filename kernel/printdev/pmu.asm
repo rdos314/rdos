@@ -283,6 +283,9 @@ ReadAnswer  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckStatus    Proc near
+    push es
+    pushad
+;
     test ds:pmu_flag,FLAG_ATTACHED
     stc
     jz csDone
@@ -343,6 +346,8 @@ CheckStatus    Proc near
     mov ds:pmu_status,eax
 
 csDone:
+    popad
+    pop es
     ret
 CheckStatus  Endp
 
@@ -902,7 +907,7 @@ SendLine    Proc near
 ;
     xor edi,edi
 ;
-    mov cx,576
+    mov ecx,576
 ;
     mov al,1Bh
     stosb
@@ -1137,6 +1142,7 @@ SendCut  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendBitmap    Proc near
+    xor bp,bp
     xor bx,bx
     xchg bx,ds:pmu_bitmap
     or bx,bx
@@ -1154,10 +1160,31 @@ ptLoop:
     mov ax,10
     WaitMilliSec
 ;
+    cmp bp,10
+    jne ptNext
+;
+    xor bp,bp
+;
+    call CheckStatus
+    mov eax,ds:pmu_status
+    test eax,2000h
+    jnz ptFinish
+;
+    test eax,20000000h
+    jnz ptFinish
+;
+    mov eax,ds:pmu_status
+    test al,8
+    jnz ptFinish
+
+ptNext:
+    inc bp
+;
     add dx,24
     cmp dx,es:bs_height
     jb ptLoop
-;
+
+ptFinish:
     call SendCut
     FreeMem
     pop es
@@ -1304,6 +1331,11 @@ is_paper_end   Proc far
     jnz ipeDone
 ;
     test eax,20000000h
+    stc
+    jnz ipeDone
+;
+    mov eax,ds:pmu_status
+    test al,8
     stc
     jnz ipeDone
 ;
@@ -1827,11 +1859,15 @@ pmuRestart:
     call CheckStatus
     mov eax,ds:pmu_status
     test eax,2000h
-    jz pmuReadSettings
+    jz pmuBufferOk
 ;
     call ClearBuffer
 
-pmuReadSettings:
+pmuBufferOk:
+    mov eax,ds:pmu_status
+    test al,8
+    jnz pmuStatusLoop
+;
     call GetPrinterModel
     call GetPrinterVersion
 ;
