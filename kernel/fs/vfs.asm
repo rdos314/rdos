@@ -1608,6 +1608,91 @@ impDone:
 InstallMbrPartition    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallMbrExtended
+;
+;       DESCRIPTION:    Install extended partion on drive
+;
+;       PARAMETERS:     DS      VFS sel
+;                       ES      Parent partition
+;                       CL      Partition type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallMbrExtended Proc near
+    push es
+    pushad
+;
+    mov eax,ds:vfs_curr_start_sector
+    mov edx,ds:vfs_curr_start_sector+4
+    mov ebp,eax
+    call LocalLockSector
+;
+    push edx
+    mov edx,ds:vfs_map_entry
+    MapServEntry
+    pop edx
+;
+    mov ax,serv_flat_sel
+    mov es,ax
+    mov edi,ds:vfs_map_entry
+;
+    mov eax,40h
+    AllocateSmallServ
+    xor edi,edi
+    mov ecx,10h
+    rep movs dword ptr es:[edi],fs:[esi]
+;
+    mov eax,ds:vfs_curr_start_sector
+    mov edx,ds:vfs_curr_start_sector+4
+    call LocalUnlockSector
+;
+    xor si,si
+
+imeLoop:
+    mov cl,es:[si].part_type
+    or cl,cl
+    jz imeNextPart
+;
+    mov eax,es:[si].part_sectors
+    call ChsToLba
+    jnc imeInst
+;
+    mov edx,es:[si].part_start_sector
+    add edx,ebp
+
+imeInst:
+    mov ds:vfs_curr_start_sector,edx
+    mov ds:vfs_curr_start_sector+4,0
+    mov ds:vfs_curr_sector_count,eax
+    mov ds:vfs_curr_sector_count+4,0
+;
+    cmp cl,5
+    je imeLink
+;
+    cmp cl,0Fh
+    je imeLink
+;
+    call InstallMbrPartition
+    jmp imeNextPart
+
+imeLink:
+    call InstallMbrExtended
+
+imeNextPart:
+    add si,10h
+    cmp si,40h
+    jne imeLoop
+;
+    FreeSmallServ
+;
+    popad
+    pop es
+    ret
+InstallMbrExtended Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           InitPartition
@@ -1652,39 +1737,49 @@ init_part:
 ;
     xor si,si
 
-ipLoop1:
+ipLoop:
     mov cl,es:[si].part_type
     or cl,cl
-    jz ipDone1
+    jz ipDone
 ;
     cmp cl,0EEh
-    je ipGpt1
+    je ipGpt
 ;
     mov eax,es:[si].part_sectors
     call ChsToLba
-    jnc ipInst1
+    jnc ipInst
 ;
     mov edx,es:[si].part_start_sector
 
-ipInst1:
+ipInst:
     mov ds:vfs_curr_start_sector,edx
     mov ds:vfs_curr_start_sector+4,0
     mov ds:vfs_curr_sector_count,eax
     mov ds:vfs_curr_sector_count+4,0
+;
+    cmp cl,5
+    je ipLink
+;
+    cmp cl,0Fh
+    je ipLink
+;
     call InstallMbrPartition
-    jmp ipNextPart1
+    jmp ipNextPart
 
-ipGpt1:
-;    call InstallGpt1
+ipLink:
+    call InstallMbrExtended
+    jmp ipNextPart
 
-ipNextPart1:
+ipGpt:
+;    call InstallGpt
+
+ipNextPart:
     add si,10h
     cmp si,40h
-    jne ipLoop1
+    jne ipLoop
 
-ipDone1:
+ipDone:
     FreeSmallServ
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
