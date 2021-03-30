@@ -1840,6 +1840,158 @@ imeNextPart:
 InstallMbrExtended Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallGpt
+;
+;       DESCRIPTION:    Install GPT partition
+;
+;       PARAMETERS:     DS      VFS sel
+;                       ES      Parent partition
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallGpt    Proc near
+    push es
+    pushad
+;
+    mov eax,1
+    xor edx,edx
+    call LocalLockSector
+;
+    mov edx,ds:vfs_map_entry
+    MapServEntry
+;
+    mov ax,serv_flat_sel
+    mov es,ax
+    mov edi,edx
+;
+    mov eax,dword ptr es:[edi].gpt_sign
+    cmp eax,20494645h
+    jne igptDone
+;
+    mov eax,dword ptr es:[edi].gpt_sign+4
+    cmp eax,54524150h
+    jne igptDone
+;
+    xor edx,edx
+    xchg edx,es:[edi].gpt_crc32
+    mov ecx,es:[edi].gpt_header_size
+    cmp ecx,200h
+    jae igptDone
+;
+    mov eax,-1
+    CalcCrc32
+;
+    cmp eax,edx
+    jne igptDone
+;    
+    mov eax,es:[edi].gpt_entry_size
+    cmp eax,128
+    jne igptDone
+;
+    mov ecx,es:[edi].gpt_entry_count
+    add ecx,8
+    mov eax,ecx
+    shl eax,7
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    AllocateBigServ
+    mov ds:vfs_gpt_base,edx
+;
+    push edx
+    push edi
+;
+    mov ecx,es:[edi].gpt_entry_count
+    mov eax,es:[edi].gpt_entry_lba
+    mov edx,es:[edi].gpt_entry_lba+4
+    mov ds:vfs_curr_start_sector,eax
+    mov ds:vfs_curr_start_sector+4,edx
+;
+    call LocalLockSector
+;
+    push edx
+    mov edx,ds:vfs_gpt_base
+    mov edi,edx
+    MapServEntry
+    mov ds:vfs_gpt_start,edx
+    pop edx
+
+igptSectorLoop:
+    inc ds:vfs_curr_start_sector
+    sub ecx,1
+    jz igptSectorDone
+;
+    mov eax,ds:vfs_curr_start_sector
+    mov edx,ds:vfs_curr_start_sector+4
+    call LocalLockSector
+    test eax,0FFFh
+    jnz igptMap
+;
+    add edi,1000h
+
+igptMap:
+    push edx
+    mov edx,edi
+    MapServEntry
+    pop edx
+    jmp igptSectorLoop
+
+igptSectorDone:
+    pop edi
+    pop edx
+;
+    push edi
+;    
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edi,ds:vfs_gpt_start
+    mov eax,-1
+    CalcCrc32
+;    
+    pop edi
+;
+    cmp eax,es:[edi].gpt_entry_crc32
+    jne igptDone
+;
+    push edi
+    mov ecx,es:[edi].gpt_entry_count
+    mov edi,ds:vfs_gpt_start
+    or ecx,ecx
+    jz igptEntryDone
+
+igptEntryLoop:
+    mov eax,es:[edi].gpe_first_lba
+    or eax,es:[edi].gpe_first_lba+4
+    jz igptEntryNext
+;
+;    call InstallGptEntry
+
+igptEntryNext:
+    add edi,128 
+    sub ecx,1
+    jnz igptEntryLoop
+
+igptEntryDone:     
+    pop edi
+    
+igptDone:
+    or ebp,ebp
+    jz igptEnd
+;
+    mov ecx,es:[edi].gpt_entry_count
+    shl ecx,7
+    mov edx,ebp
+;    FreeLinear
+        
+igptEnd:
+    popad
+    pop es
+    ret
+InstallGpt    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           InitPartition
@@ -1918,7 +2070,7 @@ ipLink:
     jmp ipNextPart
 
 ipGpt:
-;    call InstallGpt
+    call InstallGpt
 
 ipNextPart:
     add si,10h
