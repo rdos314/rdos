@@ -1182,8 +1182,8 @@ ClearIoBitmap    Proc near
     push ebx
     push ecx
 ;
-;    mov ds:vfs_scan_pos,eax
-;    add ds:vfs_scan_pos,ecx
+    mov ds:vfs_scan_pos,eax
+    add ds:vfs_scan_pos,ecx
 ;
     mov bx,ax
     and ebx,0FFh
