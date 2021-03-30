@@ -111,6 +111,7 @@ CreateReq Proc near
     mov eax,SIZE vfs_req
     AllocateSmallGlobalMem
     pop eax
+    and al,0F8h
     mov es:vfsrq_sector,eax
     mov es:vfsrq_sector+4,edx
 ;
