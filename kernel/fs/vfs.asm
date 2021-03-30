@@ -39,6 +39,8 @@ include vfs.inc
 
     .386p
 
+MAX_BITMAP_COUNT =  16
+
 part_struc      STRUC
 
 part_status             DB ?
@@ -81,6 +83,16 @@ gpe_attrib              DD ?,?
 gpe_name                DB 36 DUP(?)
 
 gpt_entry_struc ENDS
+
+
+data    SEGMENT byte public 'DATA'
+
+bitmap_count    DW ?
+bitmap_section  section_typ <>
+
+bitmap_arr      DD MAX_BITMAP_COUNT DUP (?)
+
+data    ENDS
 
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -1993,6 +2005,11 @@ stop_vfs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:bitmap_count,0
+    InitSection ds:bitmap_section
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
