@@ -1904,6 +1904,9 @@ InstallGpt    Proc near
     push edi
 ;
     mov ecx,es:[edi].gpt_entry_count
+    dec ecx
+    shr ecx,2
+    inc ecx
     mov eax,es:[edi].gpt_entry_lba
     mov edx,es:[edi].gpt_entry_lba+4
     mov ds:vfs_curr_start_sector,eax
@@ -1939,6 +1942,7 @@ igptMap:
     jmp igptSectorLoop
 
 igptSectorDone:
+    int 3
     pop edi
     pop edx
 ;
