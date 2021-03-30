@@ -432,7 +432,6 @@ CreateBitmapEntry    Proc near
     or cx,cx
     jz cbeAlloc
 ;
-    int 3
     mov di,cx
     dec di
     shl di,2
@@ -479,7 +478,7 @@ FreeBitmapEntry    Proc near
     push edx
     push edi
 ;
-    int 3
+    and ax,0F000h
     mov cx,SEG data
     mov ds,cx
     EnterSection ds:bitmap_section
@@ -1007,12 +1006,13 @@ gisScanFixup:
     shl edx,8
     add esi,edx
 ;
-    int 3
     mov eax,ds:vfs_scan_pos
     and eax,0FFFFFh
     jnz gisScanDone
 ;
-    int 3
+    xor eax,eax
+    xchg eax,es:[ebx]
+    call FreeBitmapEntry
 
 gisScanDone:
     pop ecx
@@ -1182,8 +1182,8 @@ ClearIoBitmap    Proc near
     push ebx
     push ecx
 ;
-    mov ds:vfs_scan_pos,eax
-    add ds:vfs_scan_pos,ecx
+;    mov ds:vfs_scan_pos,eax
+;    add ds:vfs_scan_pos,ecx
 ;
     mov bx,ax
     and ebx,0FFh
