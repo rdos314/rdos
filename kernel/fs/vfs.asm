@@ -1258,6 +1258,57 @@ NotifyReadBuf   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ClearCurrIoBitmap
+;
+;       DESCRIPTION:    Clear current IO bitmap
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Block #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearCurrIoBitmap    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    mov ebx,edx
+    shl ebx,2
+    mov edi,ds:[ebx].vfs_buf_arr
+    or edi,edi
+    jz ccibDone
+;
+    mov ebx,eax
+    shr ebx,18
+    and ebx,3FFCh
+    mov ecx,4000h
+    sub ecx,ebx
+    shr ecx,2
+;
+    and di,0F000h
+    add ebx,edi
+    add ebx,1000h
+;
+    xor eax,eax
+    xchg eax,es:[ebx]
+    call FreeBitmapEntry
+;
+    mov ds:vfs_scan_pos,-1
+    mov ds:vfs_scan_pos+4,-1
+
+ccibDone:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+ClearCurrIoBitmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LockVfsSector
 ;
 ;       DESCRIPTION:    Lock VFS sector
@@ -1973,8 +2024,14 @@ vfsRead:
     EnterSection ds:vfs_section
     call NotifyReadBuf
     sub ds:vfs_active_count,ecx
+    jnz vfsMore
+;
+    call ClearCurrIoBitmap
     LeaveSection ds:vfs_section
-    jz vfsLoop
+    jmp vfsLoop
+
+vfsMore:
+    LeaveSection ds:vfs_section
     jmp vfsRetry
 
 vfsFail:
