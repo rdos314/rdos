@@ -420,9 +420,29 @@ CreateBufEntry    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBitmapEntry    Proc near
+    push ds
     push ecx
     push edx
     push edi
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:bitmap_section
+    mov cx,ds:bitmap_count
+    or cx,cx
+    jz cbeAlloc
+;
+    int 3
+    mov di,cx
+    dec di
+    shl di,2
+    mov eax,ds:[di].bitmap_arr
+    dec ds:bitmap_count
+    LeaveSection ds:bitmap_section
+    jmp cbeDone
+
+cbeAlloc:
+    LeaveSection ds:bitmap_section
 ;
     mov eax,4000h
     AllocateBigServ
@@ -432,12 +452,59 @@ CreateBitmapEntry    Proc near
     xor eax,eax
     rep stos dword ptr es:[edi]
     mov eax,edx
-;
+
+cbeDone:
     pop edi
     pop edx
     pop ecx
+    pop ds
     ret
 CreateBitmapEntry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeBitmapEntry
+;
+;       DESCRIPTION:    Free
+;
+;       PARAMETERS:     ES        Serv flat sel
+;                       EAX       Entry linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBitmapEntry    Proc near
+    push ds
+    push ecx
+    push edx
+    push edi
+;
+    int 3
+    mov cx,SEG data
+    mov ds,cx
+    EnterSection ds:bitmap_section
+    mov cx,ds:bitmap_count
+    cmp cx,MAX_BITMAP_COUNT
+    je fbeFree
+;
+    mov di,cx
+    shl di,2
+    mov ds:[di].bitmap_arr,eax
+    inc ds:bitmap_count
+    LeaveSection ds:bitmap_section
+    jmp fbeDone
+
+fbeFree:
+    int 3
+    LeaveSection ds:bitmap_section
+
+fbeDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+FreeBitmapEntry    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -939,11 +1006,19 @@ gisScan:
 gisScanFixup:
     shl edx,8
     add esi,edx
+;
+    int 3
+    mov eax,ds:vfs_scan_pos
+    and eax,0FFFFFh
+    jnz gisScanDone
+;
+    int 3
 
 gisScanDone:
     pop ecx
 
 gisPtrNext:
+    mov ds:vfs_scan_pos,esi
     add ebx,4
     sub ecx,1
     jnz gisPtrLoop
