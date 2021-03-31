@@ -9,6 +9,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+static int handle = 0;
+
 /*##########################################################################
 #
 #   Name       : main
@@ -25,6 +27,8 @@ int main(int argc, char **argv)
     char *ptr;
 
     ServTest();
+
+    handle = ServGetVfsHandle();
 
     switch (argc)
     {

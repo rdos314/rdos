@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 int RDOSAPI ServTest();
+int RDOSAPI ServGetVfsHandle();
 
 #ifdef __cplusplus
 }

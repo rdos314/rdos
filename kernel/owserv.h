@@ -28,3 +28,6 @@
 #pragma aux ServTest = \
     ServGate_test_serv
 
+#pragma aux ServGetVfsHandle = \
+    ServGate_get_vfs_handle  \
+    __value [__ebx]

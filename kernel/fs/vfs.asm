@@ -1309,42 +1309,20 @@ ClearCurrIoBitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           LockVfsSector
+;       NAME:           GetVfsHandle
 ;
-;       DESCRIPTION:    Lock VFS sector
+;       DESCRIPTION:    Get VFS handle
 ;
-;       PARAMETERS:     EDX:EAX     Sector #
-;
-;       RETURNS:        NC
-;                         EBX:EAX   Physical address
+;       RETURNS:        EBX         Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lock_vfs_sector_name       DB 'Lock VFS Sector',0
+get_vfs_handle_name       DB 'Get VFS Handle',0
 
-lock_vfs_sector    Proc far
+get_vfs_handle    Proc far
     int 3
     ret
-lock_vfs_sector    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           UnlockVfsSector
-;
-;       DESCRIPTION:    Unlock VFS sector
-;
-;       PARAMETERS:     EDX:EAX     Sector #
-;
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unlock_vfs_sector_name       DB 'Unlock VFS Sector',0
-
-unlock_vfs_sector    Proc far
-    int 3
-    ret
-unlock_vfs_sector    Endp
+get_vfs_handle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2580,16 +2558,10 @@ init    Proc far
     mov ax,stop_vfs_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET lock_vfs_sector
-    mov edi,OFFSET lock_vfs_sector_name
+    mov esi,OFFSET get_vfs_handle
+    mov edi,OFFSET get_vfs_handle_name
     xor cl,cl
-    mov ax,lock_vfs_sector_nr
-    RegisterServGate
-;
-    mov esi,OFFSET unlock_vfs_sector
-    mov edi,OFFSET unlock_vfs_sector_name
-    xor cl,cl
-    mov ax,unlock_vfs_sector_nr
+    mov ax,get_vfs_handle_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv
