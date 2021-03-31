@@ -1842,6 +1842,40 @@ InstallMbrExtended Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InstallEfiPart
+;
+;       DESCRIPTION:    Install EFI partition
+;
+;       PARAMETERS:     DS      VFS sel
+;                       ES      Parent partition
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallEfiPart Proc near
+    int 3
+    ret
+InstallEfiPart Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InstallBasicPart
+;
+;       DESCRIPTION:    Install basic partition
+;
+;       PARAMETERS:     DS      VFS sel
+;                       ES      Parent partition
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallBasicPart Proc near
+    int 3
+    ret
+InstallBasicPart Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InstallGptEntry
 ;
 ;       DESCRIPTION:    Install GPT entry
@@ -1852,6 +1886,45 @@ InstallMbrExtended Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InstallGptEntry Proc near
+    mov eax,dword ptr es:[edi].gpe_part_guid
+    cmp eax,0C12A7328h
+    jne igeNotEfi
+;
+    mov eax,dword ptr es:[edi].gpe_part_guid+4
+    cmp eax,11D2F81Fh
+    jne igeNotEfi
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+8
+    cmp eax,0A0004BBAh
+    jne igeNotEfi
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+12
+    cmp eax,3BC93EC9h
+    jne igeNotEfi
+;
+    call InstallEfiPart
+    jmp igeDone
+
+igeNotEfi:    
+    mov eax,dword ptr es:[edi].gpe_part_guid
+    cmp eax,0EBD0A0A2h
+    jne igeDone
+;
+    mov eax,dword ptr es:[edi].gpe_part_guid+4
+    cmp eax,4433B9E5h
+    jne igeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+8
+    cmp eax,0B668C087h
+    jne igeDone
+;    
+    mov eax,dword ptr es:[edi].gpe_part_guid+12
+    cmp eax,0C79926B7h
+    jne igeDone
+;
+    call InstallBasicPart
+
+igeDone:    
     ret
 InstallGptEntry Endp
 
@@ -2118,6 +2191,7 @@ ipNextPart:
 
 ipDone:
     FreeSmallServ
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
