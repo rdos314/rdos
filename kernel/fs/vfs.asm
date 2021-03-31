@@ -1861,6 +1861,15 @@ InstallEfiPart Proc near
     mov ds:vfs_curr_start_sector,eax
     mov ds:vfs_curr_start_sector+4,edx
 ;
+    mov ecx,es:[edi].gpe_last_lba
+    sub ecx,eax
+    mov ds:vfs_curr_sector_count,ecx
+    mov ecx,es:[edi].gpe_last_lba+4
+    sbb ecx,edx
+    mov ds:vfs_curr_sector_count+4,ecx
+    add ds:vfs_curr_sector_count,1
+    adc ds:vfs_curr_sector_count+4,0
+;
     mov ax,cs
     mov es,ax
     mov edi,OFFSET fs_fat32
@@ -1886,11 +1895,22 @@ InstallEfiPart Endp
 InstallBasicPart Proc near
     pushad
 ;
+    int 3
     mov esi,edi
     mov eax,es:[esi].gpe_first_lba
     mov edx,es:[esi].gpe_first_lba+4
     mov ds:vfs_curr_start_sector,eax
     mov ds:vfs_curr_start_sector+4,edx
+;
+    mov ecx,es:[esi].gpe_last_lba
+    sub ecx,eax
+    mov ds:vfs_curr_sector_count,ecx
+    mov ecx,es:[esi].gpe_last_lba+4
+    sbb ecx,edx
+    mov ds:vfs_curr_sector_count+4,ecx
+    add ds:vfs_curr_sector_count,1
+    adc ds:vfs_curr_sector_count+4,0
+;
     call LocalLockSector
 ;
     mov edx,ds:vfs_map_entry
