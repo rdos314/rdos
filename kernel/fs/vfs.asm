@@ -1349,6 +1349,22 @@ unlock_vfs_sector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddFatPartition
+;
+;       DESCRIPTION:    Add FAT partition
+;
+;       PARAMETERS:     DS      VFS sel
+;                       ES:EDI  Partition name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddFatPartition   Proc near
+    ret
+AddFatPartition   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddPartition
 ;
 ;       DESCRIPTION:    Add partition
@@ -1359,7 +1375,21 @@ unlock_vfs_sector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddPartition   Proc near
+    pushad
+;
     int 3
+    mov ax,es:[edi]
+    cmp ax,'AF'
+    jne apNotFat
+;
+    mov al,es:[edi+2]
+    cmp al,'T'
+    jne apNotFat
+;
+    call AddFatPartition
+
+apNotFat:
+    popad
     ret
 AddPartition   Endp
 
