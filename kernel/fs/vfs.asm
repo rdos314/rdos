@@ -1842,6 +1842,22 @@ InstallMbrExtended Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InstallGptEntry
+;
+;       DESCRIPTION:    Install GPT entry
+;
+;       PARAMETERS:     DS      VFS sel
+;                       ES      Parent partition
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallGptEntry Proc near
+    ret
+InstallGptEntry Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InstallGpt
 ;
 ;       DESCRIPTION:    Install GPT partition
@@ -1900,7 +1916,6 @@ InstallGpt    Proc near
     AllocateBigServ
     mov ds:vfs_gpt_base,edx
 ;
-    push edx
     push edi
 ;
     mov ecx,es:[edi].gpt_entry_count
@@ -1914,17 +1929,15 @@ InstallGpt    Proc near
 ;
     call LocalLockSector
 ;
-    push edx
     mov edx,ds:vfs_gpt_base
     mov edi,edx
     MapServEntry
     mov ds:vfs_gpt_start,edx
-    pop edx
 
-igptSectorLoop:
+igptLockLoop:
     inc ds:vfs_curr_start_sector
     sub ecx,1
-    jz igptSectorDone
+    jz igptLockDone
 ;
     mov eax,ds:vfs_curr_start_sector
     mov edx,ds:vfs_curr_start_sector+4
@@ -1935,16 +1948,12 @@ igptSectorLoop:
     add edi,1000h
 
 igptMap:
-    push edx
     mov edx,edi
     MapServEntry
-    pop edx
-    jmp igptSectorLoop
+    jmp igptLockLoop
 
-igptSectorDone:
-    int 3
+igptLockDone:
     pop edi
-    pop edx
 ;
     push edi
 ;    
@@ -1957,8 +1966,9 @@ igptSectorDone:
     pop edi
 ;
     cmp eax,es:[edi].gpt_entry_crc32
-    jne igptDone
+    jne igptUnlock
 ;
+    int 3
     push edi
     mov ecx,es:[edi].gpt_entry_count
     mov edi,ds:vfs_gpt_start
@@ -1970,26 +1980,42 @@ igptEntryLoop:
     or eax,es:[edi].gpe_first_lba+4
     jz igptEntryNext
 ;
-;    call InstallGptEntry
+    call InstallGptEntry
 
 igptEntryNext:
+
     add edi,128 
     sub ecx,1
     jnz igptEntryLoop
 
 igptEntryDone:     
     pop edi
-    
-igptDone:
-    or ebp,ebp
-    jz igptEnd
+
+igptUnlock:
+    mov eax,es:[edi].gpt_entry_lba
+    mov edx,es:[edi].gpt_entry_lba+4
+    mov ds:vfs_curr_start_sector,eax
+    mov ds:vfs_curr_start_sector+4,edx
 ;
     mov ecx,es:[edi].gpt_entry_count
-    shl ecx,7
-    mov edx,ebp
-;    FreeLinear
-        
-igptEnd:
+    dec ecx
+    shr ecx,2
+    inc ecx
+
+igptUnlockLoop:
+    mov eax,ds:vfs_curr_start_sector
+    mov edx,ds:vfs_curr_start_sector+4
+    call LocalUnlockSector
+;
+    inc ds:vfs_curr_start_sector
+    sub ecx,1
+    jnz igptUnlockLoop
+
+igptDone:
+    mov eax,1
+    xor edx,edx
+    call LocalUnlockSector
+;        
     popad
     pop es
     ret
