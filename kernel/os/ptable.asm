@@ -125,6 +125,7 @@ delete_process_proc             DW OFFSET local_delete_process32
 get_page_entry_proc             DW OFFSET local_get_page_entry32
 set_page_entry_proc             DW OFFSET local_set_page_entry32
 map_serv_entry_proc             DW OFFSET local_map_serv_entry32
+free_serv_page_entries_proc     DW OFFSET local_free_serv_page_entries32
 get_sys_page_entry_proc         DW OFFSET local_get_sys_page_entry32
 set_sys_page_entry_proc         DW OFFSET local_set_sys_page_entry32
 has_page_entry_proc             DW OFFSET local_has_page_entry32
@@ -173,6 +174,7 @@ delete_process_p64              DW OFFSET local_delete_process64
 get_page_entry_p64              DW OFFSET local_get_page_entry64
 set_page_entry_p64              DW OFFSET local_set_page_entry64
 map_serv_entry_p64              DW OFFSET local_map_serv_entry64
+free_serv_page_entries_p64      DW OFFSET local_free_serv_page_entries64
 get_sys_page_entry_p64          DW OFFSET local_get_sys_page_entry64
 set_sys_page_entry_p64          DW OFFSET local_set_sys_page_entry64
 has_page_entry_p64              DW OFFSET local_has_page_entry64
@@ -315,6 +317,12 @@ init_page_table     PROC near
     mov edi,OFFSET map_serv_entry_name
     xor cl,cl
     mov ax,map_serv_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_serv_page_entries
+    mov edi,OFFSET free_serv_page_entries_name
+    xor cl,cl
+    mov ax,free_serv_page_entries_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_sys_page_entry
@@ -1023,6 +1031,64 @@ mseDone32:
     pop ds
     ret
 local_map_serv_entry32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_free_serv_page_entries32
+;
+;           DESCRIPTION:    Free serv page entries 
+;
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_free_serv_page_entries32       Proc near
+    push ds
+    push es
+    pushad
+;   
+    or ecx,ecx
+    jz fspeDone32
+;
+    mov esi,eax
+    mov ebp,edx
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    mov bx,flat_sel
+    mov es,ax
+    shr edx,10
+    and dl,0FCh
+    
+fspeLoop32:
+    mov eax,[edx]
+    test al,1
+    jz fspeMark32
+;
+    test ax,800h
+    jnz fspeMark32
+;
+    xor ebx,ebx
+    FreePhysical
+
+fspeMark32:        
+    mov [edx],esi
+    invlpg es:[ebp]
+;
+    add edx,4
+    add ebp,1000h
+    sub ecx,1
+    jnz fspeLoop32    
+
+fspeDone32:
+    popad
+    pop es
+    pop ds
+    ret
+local_free_serv_page_entries32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3981,6 +4047,64 @@ local_map_serv_entry64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_free_serv_page_entries64
+;
+;           DESCRIPTION:    Free server page entries 
+;
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_free_serv_page_entries64       Proc near
+    push ds
+    push es
+    pushad
+;   
+    or ecx,ecx
+    jz fspeDone64
+;
+    mov esi,eax
+    mov ebp,edx
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    mov bx,flat_sel
+    mov es,bx
+    shr edx,9
+    and dl,0F8h
+    
+fspeLoop64:
+    mov eax,[edx]
+    test al,1
+    jz fspeMark64
+;
+    test ax,800h
+    jnz fspeMark64
+;
+    mov ebx,[edx+4]
+    FreePhysical
+
+fspeMark64:        
+    mov [edx],esi
+    invlpg es:[ebp]
+;
+    add ebp,1000h
+    add edx,8
+    sub ecx,1
+    jnz fspeLoop64
+
+fspeDone64:
+    popad
+    pop es
+    pop ds
+    ret
+local_free_serv_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_set_sys_page_entry64
 ;
 ;           DESCRIPTION:    Set physical page for linear address
@@ -6734,6 +6858,26 @@ map_serv_entry       Proc far
     retf32
 map_serv_entry       Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeServPageEntries
+;
+;           DESCRIPTION:    Free server entries
+;
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_serv_page_entries_name  DB 'Free Serv Page Entries',0
+
+free_serv_page_entries       Proc far
+    call cs:free_serv_page_entries_proc
+    retf32
+free_serv_page_entries       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

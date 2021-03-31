@@ -871,5 +871,7 @@ stop_vfs_nr                 = 788
 allocate_big_serv_nr        = 789
 map_serv_entry_nr           = 790
 free_small_serv_nr          = 791
+free_big_serv_nr            = 792
+free_serv_page_entries_nr   = 793
 
 osgate_entries              = 800

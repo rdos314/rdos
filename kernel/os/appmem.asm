@@ -473,6 +473,50 @@ allocate_big_serv   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           FreeBigServ
+;
+;           DESCRIPTION:    Free page-aligned (dword) server memory
+;
+;           PARAMETERS:     ECX         # of bytes
+;                           EDX         Offset with server data sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_big_serv_name      DB 'Free Big Server',0
+
+free_big_serv   PROC far
+    push ds
+    push eax
+    push ecx
+;
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_serv_sel
+;
+    EnterSection ds:serv_big_section
+    sub ds:serv_big_used_mem,ecx
+    add ds:serv_big_avail_mem,ecx
+    shr ecx,12
+;    
+    add edx,serv_linear
+    xor eax,eax
+    FreeServPageEntries
+;
+    LeaveSection ds:serv_big_section
+;
+    pop ecx
+    pop eax
+    pop ds
+    retf32
+free_big_serv   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           test
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -560,6 +604,12 @@ init_app_mem    PROC near
     mov edi,OFFSET allocate_big_serv_name
     xor cl,cl
     mov ax,allocate_big_serv_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_big_serv
+    mov edi,OFFSET free_big_serv_name
+    xor cl,cl
+    mov ax,free_big_serv_nr
     RegisterOsGate
 
 

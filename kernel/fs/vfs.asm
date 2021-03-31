@@ -1968,7 +1968,6 @@ igptLockDone:
     cmp eax,es:[edi].gpt_entry_crc32
     jne igptUnlock
 ;
-    int 3
     push edi
     mov ecx,es:[edi].gpt_entry_count
     mov edi,ds:vfs_gpt_start
@@ -1992,6 +1991,16 @@ igptEntryDone:
     pop edi
 
 igptUnlock:
+    int 3
+    mov ecx,es:[edi].gpt_entry_count
+    add ecx,8
+    shl ecx,7
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+    mov edx,ds:vfs_gpt_base
+    FreeBigServ
+;
     mov eax,es:[edi].gpt_entry_lba
     mov edx,es:[edi].gpt_entry_lba+4
     mov ds:vfs_curr_start_sector,eax

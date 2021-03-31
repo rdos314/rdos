@@ -703,6 +703,13 @@ FreeGlobalPageEntries MACRO
     OsGate free_global_page_entries_nr
                     ENDM
 
+; IN    EAX         Free bits
+; IN    ECX         Number of entries
+; IN    EDX         Linear address
+FreeServPageEntries MACRO
+    OsGate free_serv_page_entries_nr
+                    ENDM
+
 ; IN    ECX         Number of entries
 ; IN    ESI         Source linear address
 ; IN    EDI         Dest linear address
@@ -981,6 +988,12 @@ FreeSmallServ    MACRO
 ; OUT EDX          Offset in serv flat sel
 AllocateBigServ    MACRO
     OsGate allocate_big_serv_nr
+                    ENDM
+
+; IN  ECX          Bytes
+; IN  EDX          Offset in serv flat sel
+FreeBigServ    MACRO
+    OsGate free_big_serv_nr
                     ENDM
 
 ; IN  EDX          Offset in serv flat sel
