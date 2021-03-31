@@ -1467,7 +1467,16 @@ ClearCurrIoBitmap   Endp
 get_vfs_handle_name       DB 'Get VFS Handle',0
 
 get_vfs_handle    Proc far
+    push ds
+    push eax
+;
     int 3
+    GetThread
+    mov ds,ax
+    mov bx,ds:p_prog_id
+;
+    pop eax
+    pop ds
     ret
 get_vfs_handle    Endp
 
