@@ -371,6 +371,14 @@ pagefault_trap:
 ;
     cmp eax,sys_page_linear
     jae ptKernel
+;
+    cmp eax,serv_linear
+    jae ptUser
+;
+    sti
+    GetThread
+    mov ds,ax
+    jmp ptNotServ
 
 ptUser:
     sti
