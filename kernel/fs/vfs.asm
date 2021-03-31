@@ -2192,6 +2192,7 @@ init_part_name       DB 'VFS Init',0
 init_part:
     mov ds,bx
 ;
+    int 3
     mov eax,1000h
     AllocateBigServ
     mov ds:vfs_map_entry,edx
