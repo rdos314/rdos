@@ -1385,6 +1385,17 @@ AddFatPartition   Proc near
     mov ax,es
     mov ds,ax
     mov esi,edi
+    mov eax,6
+    AllocateSmallGlobalMem
+    xor edi,edi
+    movs dword ptr es:[edi],ds:[esi]
+    movs byte ptr es:[edi],ds:[esi]
+    xor al,al
+    stos byte ptr es:[edi]
+;
+    mov ax,es
+    mov ds,ax
+    xor esi,esi
 ;
     mov ax,cs
     mov es,ax
@@ -1392,6 +1403,12 @@ AddFatPartition   Proc near
     mov al,4
     mov bx,100h
     LoadServer
+;
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
+    FreeMem
 ;
     popad
     pop es
