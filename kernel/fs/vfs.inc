@@ -35,6 +35,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 VFS_FLAG_STOPPED   = 1
+MAX_VFS_PARTITIONS = 15
 
 vfs_table_struc    STRUC
 
@@ -82,7 +83,8 @@ vfs_sector_shift         DB ?
 
 vfs_section              section_typ <>
 
-vfs_word_pad             DW ?
+vfs_disc_nr              DB ?
+vfs_byte_pad             DB ?
 vfs_req_list             DW ?
 
 vfs_map_entry            DD ?
@@ -95,6 +97,8 @@ vfs_gpt_entry_count      DD ?
 vfs_gpt_base             DD ?
 vfs_gpt_start            DD ?
 vfs_gpt_start_sector     DD ?,?
+
+vfs_part_arr             DW MAX_VFS_PARTITIONS DUP(?)
 
 vfs_buf_count            DD ?
 
@@ -135,3 +139,15 @@ vfsrq_sector              DD ?,?
 vfsrq_thread              DW ?
 
 vfs_req          ENDS
+
+vfs_part  STRUC
+
+vfsp_start_sector         DD ?,?
+vfsp_sector_count         DD ?,?
+
+vfsp_app_sel              DW ?
+vfsp_disc_sel             DW ?
+vfsp_disc_nr              DB ?
+vfsp_part_nr              DB ?
+
+vfs_part  ENDS

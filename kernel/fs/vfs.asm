@@ -40,6 +40,7 @@ include vfs.inc
     .386p
 
 MAX_BITMAP_COUNT =  16
+MAX_DISC_COUNT   =  16
 
 part_struc      STRUC
 
@@ -55,7 +56,6 @@ part_sectors            DD ?
 part_struc      ENDS
 
 gpt_part_struc  STRUC
-
 gpt_sign                DB 8 DUP(?)
 gpt_rev                 DB 4 DUP(?)
 gpt_header_size         DD ?
@@ -92,6 +92,8 @@ bitmap_section  section_typ <>
 
 bitmap_arr      DD MAX_BITMAP_COUNT DUP (?)
 
+disc_arr        DW MAX_DISC_COUNT DUP (?)
+
 data    ENDS
 
 
@@ -101,6 +103,151 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateDiscSel
+;
+;       DESCRIPTION:    Create partition selector
+;
+;       PARAMETERS:     DS:ESI  VFS table
+;                       BX      Param
+;
+;       RETURNS:        BX      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDiscSel  Proc near
+    push es
+    push fs
+    push ecx
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,SEG data
+    mov fs,ax
+    mov ebp,OFFSET disc_arr
+    mov ecx,MAX_DISC_COUNT
+
+cdsLoop:
+    mov ax,fs:[ebp]
+    or ax,ax
+    jz cdsFound
+;
+    add ebp,2
+    loop cdsLoop
+;
+    stc
+    jmp cdsDone
+
+cdsFound:
+    mov eax,OFFSET vfs_buf_arr
+    AllocateSmallGlobalMem
+;
+    mov ecx,SIZE vfs_table_struc
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov ecx,OFFSET vfs_buf_arr - SIZE vfs_table_struc
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    mov fs:[ebp],es
+    mov es:vfs_param,bx
+    mov es:vfs_flags,0
+    mov es:vfs_server,0
+;
+    mov eax,ebp
+    sub eax,OFFSET disc_arr
+    shr eax,1
+    mov es:vfs_disc_nr,al
+;
+    mov bx,es
+    clc
+
+cdsDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop fs
+    pop es
+    ret
+CreateDiscSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreatePartSel
+;
+;       DESCRIPTION:    Create partition selector
+;
+;       PARAMETERS:     DS      VFS sel
+;
+;       RETURNS:        BX      Part sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePartSel  Proc near
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov ecx,MAX_VFS_PARTITIONS
+    mov esi,OFFSET vfs_part_arr
+
+cpsLoop:
+    mov ax,ds:[esi]
+    or ax,ax
+    jz cpsFound
+;
+    add esi,2
+    loop cpsLoop
+;
+    stc
+    jmp cpsDone
+
+cpsFound:
+    mov eax,SIZE vfs_part
+    AllocateSmallGlobalMem
+    mov ecx,eax
+    xor edi,edi
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    mov eax,ds:vfs_curr_start_sector
+    mov es:vfsp_start_sector,eax
+    mov eax,ds:vfs_curr_start_sector+4
+    mov es:vfsp_start_sector+4,eax
+    mov eax,ds:vfs_curr_sector_count
+    mov es:vfsp_sector_count,eax
+    mov eax,ds:vfs_curr_sector_count+4
+    mov es:vfsp_sector_count+4,eax
+    mov es:vfsp_disc_sel,ds
+;
+    mov ds:[esi],es
+    mov eax,esi
+    sub eax,OFFSET vfs_part_arr
+    shr eax,1
+    mov es:vfsp_part_nr,al
+;
+    mov al,ds:vfs_disc_nr
+    mov es:vfsp_disc_nr,al
+;
+    mov bx,es
+    clc
+
+cpsDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreatePartSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1357,9 +1504,14 @@ fat_serv_name  DB 'fat', 0
 AddFatPartition   Proc near
     push ds
     push es
+    push fs
     pushad
 ;
-    int 3
+    call CreatePartSel
+    jc afpDone
+;
+    mov fs,bx
+;
     mov ax,es
     mov ds,ax
     mov esi,edi
@@ -1379,16 +1531,21 @@ AddFatPartition   Proc near
     mov es,ax
     mov edi,OFFSET fat_serv_name
     mov al,4
-    mov bx,100h
+    mov bh,fs:vfsp_disc_nr
+    mov bl,fs:vfsp_part_nr
     LoadServer
+;
+    mov fs:vfsp_app_sel,bx
 ;
     mov ax,ds
     mov es,ax
     xor ax,ax
     mov ds,ax
     FreeMem
-;
+
+afpDone:
     popad
+    pop fs
     pop es
     pop ds
     ret
@@ -2469,31 +2626,16 @@ start_vfs    Proc far
     push eax
     push esi
 ;
-    push es
-    push ecx
-    push edi
-;
-    mov eax,OFFSET vfs_buf_arr
-    AllocateSmallGlobalMem
-;
-    mov ecx,SIZE vfs_table_struc
-    xor edi,edi
-    rep movs byte ptr es:[edi],ds:[esi]
-    mov es:vfs_param,bx
-    mov es:vfs_flags,0
-    mov es:vfs_server,0
-    mov bx,es
-;
-    pop edi
-    pop ecx
-    pop es
+    call CreateDiscSel
+    jc svfsDone
 ;
     mov eax,cs
     mov ds,eax
     mov esi,OFFSET VfsServer
     mov al,4
     CreateServerProcess
-;
+
+svfsDone:
     pop esi
     pop eax
     pop ds
@@ -2538,9 +2680,13 @@ stop_vfs    Endp
 
 init    Proc far
     mov ax,SEG data
-    mov ds,ax
-    mov ds:bitmap_count,0
-    InitSection ds:bitmap_section
+    mov es,ax
+    mov es:bitmap_count,0
+    InitSection es:bitmap_section
+    mov edi,OFFSET disc_arr
+    mov ecx,MAX_DISC_COUNT
+    xor ax,ax
+    rep stos word ptr es:[edi]
 ;
     mov ax,cs
     mov ds,ax
