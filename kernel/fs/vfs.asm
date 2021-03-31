@@ -1359,6 +1359,7 @@ unlock_vfs_sector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddPartition   Proc near
+    int 3
     ret
 AddPartition   Endp
 
@@ -1855,7 +1856,6 @@ InstallEfiPart Proc near
     push es
     pushad
 ;
-    int 3
     mov eax,es:[edi].gpe_first_lba
     mov edx,es:[edi].gpe_first_lba+4
     mov ds:vfs_curr_start_sector,eax
@@ -1895,7 +1895,6 @@ InstallEfiPart Endp
 InstallBasicPart Proc near
     pushad
 ;
-    int 3
     mov esi,edi
     mov eax,es:[esi].gpe_first_lba
     mov edx,es:[esi].gpe_first_lba+4
@@ -2139,7 +2138,6 @@ igptEntryDone:
     pop edi
 
 igptUnlock:
-    int 3
     mov ecx,es:[edi].gpt_entry_count
     add ecx,8
     shl ecx,7
@@ -2194,7 +2192,6 @@ init_part_name       DB 'VFS Init',0
 init_part:
     mov ds,bx
 ;
-    int 3
     mov eax,1000h
     AllocateBigServ
     mov ds:vfs_map_entry,edx
