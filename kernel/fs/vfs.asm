@@ -1847,12 +1847,27 @@ InstallMbrExtended Endp
 ;       DESCRIPTION:    Install EFI partition
 ;
 ;       PARAMETERS:     DS      VFS sel
-;                       ES      Parent partition
+;                       ES:EDI  GPT entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InstallEfiPart Proc near
+    push es
+    pushad
+;
     int 3
+    mov eax,es:[edi].gpe_first_lba
+    mov edx,es:[edi].gpe_first_lba+4
+    mov ds:vfs_curr_start_sector,eax
+    mov ds:vfs_curr_start_sector+4,edx
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET fs_fat32
+    call AddPartition
+;
+    popad
+    pop es
     ret
 InstallEfiPart Endp
 
@@ -1864,12 +1879,52 @@ InstallEfiPart Endp
 ;       DESCRIPTION:    Install basic partition
 ;
 ;       PARAMETERS:     DS      VFS sel
-;                       ES      Parent partition
+;                       ES:EDI  GPT entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InstallBasicPart Proc near
-    int 3
+    pushad
+;
+    mov esi,edi
+    mov eax,es:[esi].gpe_first_lba
+    mov edx,es:[esi].gpe_first_lba+4
+    mov ds:vfs_curr_start_sector,eax
+    mov ds:vfs_curr_start_sector+4,edx
+    call LocalLockSector
+;
+    mov edx,ds:vfs_map_entry
+    MapServEntry
+    mov edi,edx
+;
+    mov cl,es:[edi+3]
+    cmp cl,'M'
+    je ibpDos
+;
+    cmp cl,'m'
+    je ibpLinux    
+;
+    cmp cl,'R'
+    je ibpLinux    
+;
+    add edi,3
+    jmp ibpAdd
+
+ibpLinux:
+    add edi,36h
+    jmp ibpAdd
+
+ibpDos:
+    add edi,52h
+
+ibpAdd:
+    call AddPartition
+;
+    mov eax,ds:vfs_curr_start_sector
+    mov edx,ds:vfs_curr_start_sector+4
+    call LocalUnlockSector
+;
+    popad
     ret
 InstallBasicPart Endp
 
@@ -1881,7 +1936,7 @@ InstallBasicPart Endp
 ;       DESCRIPTION:    Install GPT entry
 ;
 ;       PARAMETERS:     DS      VFS sel
-;                       ES      Parent partition
+;                       ES:EDI  GPT entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
