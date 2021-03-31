@@ -1333,8 +1333,8 @@ cspaLoop:
 
 cspaSizeOk:
     mov esi,edi
-    add ecx,7
     mov eax,ecx
+    add eax,8
     AllocateSmallGlobalMem
 ;
     xor edi,edi
