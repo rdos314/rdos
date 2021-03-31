@@ -91,8 +91,10 @@ vfs_scan_pos             DD ?,?
 
 vfs_curr_start_sector    DD ?,?
 vfs_curr_sector_count    DD ?,?
+vfs_gpt_entry_count      DD ?
 vfs_gpt_base             DD ?
 vfs_gpt_start            DD ?
+vfs_gpt_start_sector     DD ?,?
 
 vfs_buf_count            DD ?
 

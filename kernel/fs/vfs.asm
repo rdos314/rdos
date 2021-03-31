@@ -2054,6 +2054,7 @@ InstallGpt    Proc near
     jne igptDone
 ;
     mov ecx,es:[edi].gpt_entry_count
+    mov ds:vfs_gpt_entry_count,ecx
     add ecx,8
     mov eax,ecx
     shl eax,7
@@ -2071,6 +2072,8 @@ InstallGpt    Proc near
     inc ecx
     mov eax,es:[edi].gpt_entry_lba
     mov edx,es:[edi].gpt_entry_lba+4
+    mov ds:vfs_gpt_start_sector,eax
+    mov ds:vfs_gpt_start_sector+4,edx
     mov ds:vfs_curr_start_sector,eax
     mov ds:vfs_curr_start_sector+4,edx
 ;
@@ -2129,7 +2132,6 @@ igptEntryLoop:
     call InstallGptEntry
 
 igptEntryNext:
-
     add edi,128 
     sub ecx,1
     jnz igptEntryLoop
@@ -2138,7 +2140,7 @@ igptEntryDone:
     pop edi
 
 igptUnlock:
-    mov ecx,es:[edi].gpt_entry_count
+    mov ecx,ds:vfs_gpt_entry_count
     add ecx,8
     shl ecx,7
     dec ecx
@@ -2147,12 +2149,12 @@ igptUnlock:
     mov edx,ds:vfs_gpt_base
     FreeBigServ
 ;
-    mov eax,es:[edi].gpt_entry_lba
-    mov edx,es:[edi].gpt_entry_lba+4
+    mov eax,ds:vfs_gpt_start_sector
+    mov edx,ds:vfs_gpt_start_sector+4
     mov ds:vfs_curr_start_sector,eax
     mov ds:vfs_curr_start_sector+4,edx
 ;
-    mov ecx,es:[edi].gpt_entry_count
+    mov ecx,ds:vfs_gpt_entry_count
     dec ecx
     shr ecx,2
     inc ecx
@@ -2192,7 +2194,6 @@ init_part_name       DB 'VFS Init',0
 init_part:
     mov ds,bx
 ;
-    int 3
     mov eax,1000h
     AllocateBigServ
     mov ds:vfs_map_entry,edx
