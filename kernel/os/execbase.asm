@@ -1307,7 +1307,8 @@ CreateParam Endp
 ;
 ;       DESCRIPTION:    Make global copy of parameters
 ;
-;       PARAMETERS:     BH          Device #
+;       PARAMETERS:     DS:ESI      Param pointer
+;                       BH          Device #
 ;                       BL          Unit #
 ;                       GS          Program sel
 ;
@@ -1319,8 +1320,23 @@ CreateServParam Proc near
     push ecx
     push edi
 ;
-    mov eax,7
+    mov edi,esi
+    xor ecx,ecx
+
+cspaLoop:
+    lods byte ptr [esi]
+    or al,al
+    jz cspaSizeOk
+;
+    inc ecx
+    jmp cspaLoop
+
+cspaSizeOk:
+    mov esi,edi
+    add ecx,7
+    mov eax,ecx
     AllocateSmallGlobalMem
+;
     xor edi,edi
 ;
     mov al,' '
@@ -1336,6 +1352,11 @@ CreateServParam Proc near
     mov al,bl
     call HexToAscii
     stosw
+;
+    mov al,' '
+    stosb
+;
+    rep movs byte ptr es:[edi],ds:[esi]     
 ;
     xor al,al
     stosb
@@ -6174,6 +6195,7 @@ HexToAscii      ENDP
 ;
 ;           PARAMETERS:     BH          Device #
 ;                           BL          Unit #
+;                           DS:ESI      Parameters
 ;                           ES:EDI      Server name
 ;
 ;           RETURNS:        BX          Program ID

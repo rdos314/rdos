@@ -1347,6 +1347,22 @@ unlock_vfs_sector    Proc far
 unlock_vfs_sector    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           TestServ
+;
+;       DESCRIPTION:    Test server
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_serv_name DB 'Test Serv', 0
+
+test_serv   Proc far
+    WaitForSignal
+    ret
+test_serv   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           AddFatPartition
@@ -1358,7 +1374,28 @@ unlock_vfs_sector    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+fat_serv_name  DB 'fat', 0
+
 AddFatPartition   Proc near
+    push ds
+    push es
+    pushad
+;
+    int 3
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET fat_serv_name
+    mov al,4
+    mov bx,100h
+    LoadServer
+;
+    popad
+    pop es
+    pop ds
     ret
 AddFatPartition   Endp
 
@@ -1375,9 +1412,8 @@ AddFatPartition   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddPartition   Proc near
-    pushad
+    push eax
 ;
-    int 3
     mov ax,es:[edi]
     cmp ax,'AF'
     jne apNotFat
@@ -1389,7 +1425,7 @@ AddPartition   Proc near
     call AddFatPartition
 
 apNotFat:
-    popad
+    pop eax
     ret
 AddPartition   Endp
 
@@ -2537,6 +2573,11 @@ init    Proc far
     mov edi,OFFSET unlock_vfs_sector_name
     xor cl,cl
     mov ax,unlock_vfs_sector_nr
+    RegisterServGate
+;
+    mov esi,OFFSET test_serv
+    mov edi,OFFSET test_serv_name
+    mov ax,test_serv_nr
     RegisterServGate
     clc
     ret

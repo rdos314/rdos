@@ -517,53 +517,6 @@ free_big_serv   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           test
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_serv_name DB 'Test Serv', 0
-
-test_serv   Proc far
-    WaitForSignal
-    retf32
-test_serv   Endp
-
-serv_proc_name DB 'Server Process', 0
-
-fat_serv_name  DB 'fat', 0
-
-serv_proc:
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET fat_serv_name
-    mov al,4
-    mov bx,100h
-    LoadServer
-    int 3
-
-test_name    DB 'Test',0
-
-test_pr:
-    push ds
-    push es
-    pushad
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET serv_proc
-    mov edi,OFFSET serv_proc_name
-    mov al,4
-    CreateServerProcess
-;
-    popad
-    pop es
-    pop ds
-    retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           INIT_APP_MEM
 ;
 ;           DESCRIPTION:    Init module
@@ -611,26 +564,6 @@ init_app_mem    PROC near
     xor cl,cl
     mov ax,free_big_serv_nr
     RegisterOsGate
-
-
-
-
-
-;
-    mov esi,OFFSET test_pr
-    mov edi,OFFSET test_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET test_serv
-    mov edi,OFFSET test_serv_name
-    mov ax,test_serv_nr
-    RegisterServGate
-
-
-
-
 ;
     popad
     pop es

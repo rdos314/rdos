@@ -1918,7 +1918,8 @@ CreateServerProcess    MACRO
 
 ; IN  AL          Priority
 ; IN  BH          Device #
-; IN  AL          Unit #
+; IN  BL          Unit #
+; IN  DS:ESI      Parameters
 ; IN  ES:EDI      Server name
 ; OUT BX          Server app sel
 LoadServer        MACRO
