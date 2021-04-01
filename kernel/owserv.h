@@ -31,3 +31,17 @@
 #pragma aux ServGetVfsHandle = \
     ServGate_get_vfs_handle  \
     __value [__ebx]
+
+#pragma aux ServGetVfsSectors = \
+    ServGate_get_vfs_sectors  \
+    __parm [__ebx] \
+    __value [__edx __eax]
+
+#pragma aux ServCreateVfsReq = \
+    ServGate_create_vfs_req  \
+    __parm [__ebx] \
+    __value [__ebx]
+
+#pragma aux ServCloseVfsReq = \
+    ServGate_close_vfs_req  \
+    __parm [__ebx]

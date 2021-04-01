@@ -20,6 +20,9 @@ extern "C" {
 
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();
+long long RDOSAPI ServGetVfsSectors();
+int RDOSAPI ServCreateVfsReq(int handle);
+void RDOSAPI ServCloseVfsReq(int handle);
 
 #ifdef __cplusplus
 }

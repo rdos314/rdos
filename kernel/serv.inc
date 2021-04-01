@@ -57,7 +57,25 @@ TestServ  MACRO
     ServGate test_serv_nr
                     ENDM
 
-; OUT EBX              Handle
+; OUT EBX              VFS handle
 GetVfsHandle  MACRO
     ServGate get_vfs_handle_nr
                     ENDM
+
+; IN  EBX              VFS handle
+; OUT EDX:EAX          Sectors
+GetVfsSectors  MACRO
+    ServGate get_vfs_sectors_nr
+                    ENDM
+
+; IN  EBX              VFS handle
+; OUT EBX              Req handle
+CreateVfsReq  MACRO
+    ServGate create_vfs_req_nr
+                    ENDM
+
+; IN  EBX              Req handle
+CloseVfsReq  MACRO
+    ServGate close_vfs_req_nr
+                    ENDM
+

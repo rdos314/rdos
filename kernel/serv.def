@@ -1,5 +1,8 @@
 invalid_serv_nr           = 0
 test_serv_nr              = 1
 get_vfs_handle_nr         = 2
+get_vfs_sectors_nr        = 3
+create_vfs_req_nr         = 4
+close_vfs_req_nr          = 5
 
 serv_gate_entries         = 20
