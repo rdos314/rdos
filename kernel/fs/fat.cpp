@@ -26,9 +26,9 @@ int main(int argc, char **argv)
 {
     char *ptr;
 
-    ServTest();
-
     handle = ServGetVfsHandle();
+
+    ServTest();
 
     switch (argc)
     {

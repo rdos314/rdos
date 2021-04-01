@@ -41,6 +41,7 @@ include vfs.inc
 
 MAX_BITMAP_COUNT =  16
 MAX_DISC_COUNT   =  16
+MAX_PART_COUNT   = 256
 
 part_struc      STRUC
 
@@ -93,6 +94,8 @@ bitmap_section  section_typ <>
 bitmap_arr      DD MAX_BITMAP_COUNT DUP (?)
 
 disc_arr        DW MAX_DISC_COUNT DUP (?)
+
+part_arr        DW MAX_PART_COUNT DUP (?)
 
 data    ENDS
 
@@ -190,6 +193,7 @@ CreateDiscSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreatePartSel  Proc near
+    push ds
     push es
     push eax
     push ecx
@@ -237,6 +241,23 @@ cpsFound:
     mov al,ds:vfs_disc_nr
     mov es:vfsp_disc_nr,al
 ;
+    mov ax,SEG data
+    mov ds,ax
+    mov ecx,MAX_PART_COUNT
+    mov esi,OFFSET part_arr
+
+cpsPartLoop:
+    mov ax,ds:[esi]
+    or ax,ax
+    jz cpsPartFound
+;
+    add esi,2
+    loop cpsPartLoop
+;
+    CrashGate
+
+cpsPartFound:
+    mov ds:[esi],es
     mov bx,es
     clc
 
@@ -246,6 +267,7 @@ cpsDone:
     pop ecx
     pop eax
     pop es
+    pop ds
     ret
 CreatePartSel   Endp
 
@@ -1468,14 +1490,47 @@ get_vfs_handle_name       DB 'Get VFS Handle',0
 
 get_vfs_handle    Proc far
     push ds
+    push es
     push eax
+    push esi
 ;
-    int 3
     GetThread
     mov ds,ax
     mov bx,ds:p_prog_id
 ;
+    mov ax,SEG data
+    mov ds,ax
+
+gvfshRetry:
+    mov esi,OFFSET part_arr
+    mov ecx,MAX_PART_COUNT
+
+gvfshLoop:
+    mov ax,ds:[esi]
+    or ax,ax
+    jz gvfshNext
+;
+    mov es,ax
+    cmp bx,es:vfsp_app_sel
+    je gvfshFound
+
+gvfshNext:
+    add esi,2
+    loop gvfshLoop
+;
+    mov ax,10
+    WaitMilliSec
+    jmp gvfshRetry
+
+gvfshFound:
+    sub esi,OFFSET part_arr
+    shr esi,1
+    inc esi
+    mov ebx,esi
+;
+    pop esi
     pop eax
+    pop es
     pop ds
     ret
 get_vfs_handle    Endp
@@ -2692,8 +2747,14 @@ init    Proc far
     mov es,ax
     mov es:bitmap_count,0
     InitSection es:bitmap_section
+;
     mov edi,OFFSET disc_arr
     mov ecx,MAX_DISC_COUNT
+    xor ax,ax
+    rep stos word ptr es:[edi]
+;
+    mov edi,OFFSET part_arr
+    mov ecx,MAX_PART_COUNT
     xor ax,ax
     rep stos word ptr es:[edi]
 ;
