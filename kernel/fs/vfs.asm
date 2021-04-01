@@ -1476,82 +1476,6 @@ ccibDone:
 ClearCurrIoBitmap   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetVfsHandle
-;
-;       DESCRIPTION:    Get VFS handle
-;
-;       RETURNS:        EBX         Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_vfs_handle_name       DB 'Get VFS Handle',0
-
-get_vfs_handle    Proc far
-    push ds
-    push es
-    push eax
-    push esi
-;
-    GetThread
-    mov ds,ax
-    mov bx,ds:p_prog_id
-;
-    mov ax,SEG data
-    mov ds,ax
-
-gvfshRetry:
-    mov esi,OFFSET part_arr
-    mov ecx,MAX_PART_COUNT
-
-gvfshLoop:
-    mov ax,ds:[esi]
-    or ax,ax
-    jz gvfshNext
-;
-    mov es,ax
-    cmp bx,es:vfsp_app_sel
-    je gvfshFound
-
-gvfshNext:
-    add esi,2
-    loop gvfshLoop
-;
-    mov ax,10
-    WaitMilliSec
-    jmp gvfshRetry
-
-gvfshFound:
-    sub esi,OFFSET part_arr
-    shr esi,1
-    inc esi
-    mov ebx,esi
-;
-    pop esi
-    pop eax
-    pop es
-    pop ds
-    ret
-get_vfs_handle    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           TestServ
-;
-;       DESCRIPTION:    Test server
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_serv_name DB 'Test Serv', 0
-
-test_serv   Proc far
-    WaitForSignal
-    ret
-test_serv   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           AddFatPartition
@@ -2734,6 +2658,129 @@ stop_vfs    Proc far
 stop_vfs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsHandle
+;
+;       DESCRIPTION:    Get VFS handle
+;
+;       RETURNS:        EBX         Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_handle_name       DB 'Get VFS Handle',0
+
+get_vfs_handle    Proc far
+    push ds
+    push es
+    push eax
+    push esi
+;
+    GetThread
+    mov ds,ax
+    mov bx,ds:p_prog_id
+;
+    mov ax,SEG data
+    mov ds,ax
+
+gvfshRetry:
+    mov esi,OFFSET part_arr
+    mov ecx,MAX_PART_COUNT
+
+gvfshLoop:
+    mov ax,ds:[esi]
+    or ax,ax
+    jz gvfshNext
+;
+    mov es,ax
+    cmp bx,es:vfsp_app_sel
+    je gvfshFound
+
+gvfshNext:
+    add esi,2
+    loop gvfshLoop
+;
+    mov ax,10
+    WaitMilliSec
+    jmp gvfshRetry
+
+gvfshFound:
+    sub esi,OFFSET part_arr
+    shr esi,1
+    inc esi
+    mov ebx,esi
+;
+    pop esi
+    pop eax
+    pop es
+    pop ds
+    ret
+get_vfs_handle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsSectors
+;
+;       DESCRIPTION:    Get VFS sectors
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        EDX:EAX     Sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_sectors_name       DB 'Get VFS Sectors',0
+
+get_vfs_sectors    Proc far
+    push es
+    push ebx
+;
+    mov ax,SEG data
+    mov es,ax
+    or bx,bx
+    jz gvsFail
+;
+    cmp bx,MAX_PART_COUNT
+    jb gvsInRange
+
+gvsFail:
+    stc
+    jmp gvsDone
+
+gvsInRange:
+    add ebx,ebx
+    mov ax,es:[ebx].part_arr
+    or ax,ax
+    jz gvsFail
+;
+    mov es,ax
+    mov eax,es:vfsp_sector_count
+    mov edx,es:vfsp_sector_count+4
+    clc
+;
+    pop ebx
+    pop es
+    ret
+get_vfs_sectors    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           TestServ
+;
+;       DESCRIPTION:    Test server
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_serv_name DB 'Test Serv', 0
+
+test_serv   Proc far
+    WaitForSignal
+    ret
+test_serv   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init
@@ -2778,6 +2825,24 @@ init    Proc far
     mov edi,OFFSET get_vfs_handle_name
     xor cl,cl
     mov ax,get_vfs_handle_nr
+    RegisterServGate
+;
+    mov esi,OFFSET get_vfs_sectors
+    mov edi,OFFSET get_vfs_sectors_name
+    xor cl,cl
+    mov ax,get_vfs_sectors_nr
+    RegisterServGate
+;
+    mov esi,OFFSET create_vfs_req
+    mov edi,OFFSET create_vfs_req_name
+    xor cl,cl
+    mov ax,create_vfs_req_nr
+    RegisterServGate
+;
+    mov esi,OFFSET close_vfs_req
+    mov edi,OFFSET close_vfs_req_name
+    xor cl,cl
+    mov ax,close_vfs_req_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv

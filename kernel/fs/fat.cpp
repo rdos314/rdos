@@ -25,10 +25,18 @@ static int handle = 0;
 int main(int argc, char **argv)
 {
     char *ptr;
+    long long sectors;
+    int req;
 
     handle = ServGetVfsHandle();
 
     ServTest();
+
+    sectors = ServGetVfsSectors(handle);
+    printf("Sectors: %lld\r\n", sectors);
+
+    req = ServCreateVfsReq(handle);
+    ServCloseVfsReq(req);    
 
     switch (argc)
     {
