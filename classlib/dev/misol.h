@@ -79,6 +79,7 @@ protected:
     long double FRainBase;
     bool FHasRainBase;
     bool FHasMinMax;
+    bool FHasDay;
     int FCurrDay;
 
     bool FOnline;

@@ -118,6 +118,7 @@ void TMisolWeather::Init()
     OnMaxTemp = 0;
 
     FHasMinMax = false;
+    FHasDay = false;
 
     RdosGetTime(&msb, &lsb);
     RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
@@ -391,6 +392,12 @@ void TMisolWeather::DecodeData(const char *str, int size)
 
         RdosGetTime(&msb, &lsb);
         RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+
+        if (!FHasDay)
+        {
+            FCurrDay = day;
+            FHasDay = true;
+        }
 
         if (day != FCurrDay)
         {
