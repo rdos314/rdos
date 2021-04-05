@@ -49,6 +49,9 @@ protected:
     void CreateDayFile(int year, int month, int day);
     void UpdateDataStore(int hour, int min);
 
+    TFile *CreateMonthFile(int year, int month);
+    void UpdateMonthData();
+
     virtual void Execute();
 
     TFile *FDayFile;

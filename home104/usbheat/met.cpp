@@ -61,11 +61,18 @@ static long double LightSum = 0.0;
 static int UvCount = 0;
 static long double UvSum = 0.0;
 
-static int RainCount = 0;
-static long double RainSum = 0.0;
+static bool HasRain = false;
+static long double Rain = 0.0;
+
+static bool HasMinTemp = false;
+static long double MinTemp = 0.0;
+
+static bool HasMaxTemp = false;
+static long double MaxTemp = 0.0;
 
 #define ROOT_DIR "e:/data/met"
 #define CSV_DAY_HEADER "time;temp;wind;gust;dir;humid;light;uv\r\n"
+#define CSV_MONTH_HEADER "time;rain;min;max\r\n"
 
 /*##########################################################################
 #
@@ -229,8 +236,50 @@ static void NotifyRain(TMisolWeather *Device, long double val)
 {
     FDataSection.Enter();
 
-    RainSum += val;
-    RainCount++;
+    Rain = val;
+    HasRain = true;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyMinTemp
+#
+#   Purpose....: Notify min temp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyMinTemp(TMisolWeather *Device, long double val)
+{
+    FDataSection.Enter();
+
+    MinTemp = val;
+    HasMinTemp = true;
+
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyMaxTemp
+#
+#   Purpose....: Notify max temp
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyMaxTemp(TMisolWeather *Device, long double val)
+{
+    FDataSection.Enter();
+
+    MaxTemp = val;
+    HasMaxTemp = true;
 
     FDataSection.Leave();
 }
@@ -256,6 +305,8 @@ TMet::TMet(TMisolWeather *misol)
     misol->OnLight = NotifyLight;
     misol->OnUv = NotifyUv;
     misol->OnRain = NotifyRain;
+    misol->OnMinTemp = NotifyMinTemp;
+    misol->OnMaxTemp = NotifyMaxTemp;
 
     Start("Met", 0x2000);
 }
@@ -331,6 +382,64 @@ void TMet::CreateDayFile(int year, int month, int day)
 
     if (FDayFile->IsOpen())
         FDayFile->SetPos(FDayFile->GetSize());
+}
+
+/*##########################################################################
+#
+#   Name       : TMet::CreateMonthFile
+#
+#   Purpose....: Create/open a month-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *TMet::CreateMonthFile(int year, int month)
+{
+    char str[20];
+    char filename[256];
+    int i, j;
+    int filesize;
+    TFile *File;
+
+    if (!RdosSetCurDir(ROOT_DIR))
+        RdosMakeDir(ROOT_DIR);
+
+    sprintf(str, "%d", year);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%d/%d", year, month);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+
+    sprintf(str, "%d/%d/total.csv", year, month);
+    strcpy(filename, ROOT_DIR);
+    strcat(filename, "/");
+    strcat(filename, str);
+
+    File = new TFile(filename);
+
+    if (!File->IsOpen())
+    {
+        delete File;
+        File = new TFile(filename, 0);
+        File->Write(CSV_MONTH_HEADER, strlen(CSV_MONTH_HEADER));
+    }
+
+    if (File->IsOpen())
+        File->SetPos(File->GetSize());
+
+    return File;
 }
 
 /*##########################################################################
@@ -567,9 +676,47 @@ void TMet::UpdateDataStore(int hour, int min)
     GetUv(str);
     strcat(str, "\r\n");
     FDayFile->Write(str, strlen(str));
+}
 
-    RainSum = 0.0;
-    RainCount = 0;
+/*##########################################################################
+#
+#   Name       : TMet::UpdateMonthData
+#
+#   Purpose....: Update month data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMet::UpdateMonthData()
+{
+    TDateTime time;
+    TFile *File;
+    char str[50];
+    int val;
+
+    time.AddHour(-6);
+
+    File = CreateMonthFile(time.GetYear(), time.GetMonth());
+
+    sprintf(str, "%d;", time.GetDay());
+    File->Write(str, strlen(str));
+
+    sprintf(str, "%3.1Lf;", Rain);
+    File->Write(str, strlen(str));
+
+    sprintf(str, "%3.1Lf;", MinTemp);
+    File->Write(str, strlen(str));
+
+    sprintf(str, "%3.1Lf\r\n", MaxTemp);
+    File->Write(str, strlen(str));
+
+    delete File;
+
+    HasRain = false;
+    HasMinTemp = false;
+    HasMaxTemp = false;
 }
 
 /*##########################################################################
@@ -615,6 +762,9 @@ void TMet::Execute()
 
             LastMin = CurrTime->GetMin();
             UpdateDataStore(CurrTime->GetHour(), CurrTime->GetMin());
+
+            if (HasRain && HasMinTemp && HasMaxTemp)
+                UpdateMonthData();
 
             FDataSection.Leave();
         }
