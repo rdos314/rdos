@@ -58,6 +58,8 @@ public:
     void (*OnLight)(TMisolWeather *Device, long double val);
     void (*OnUv)(TMisolWeather *Device, long double val);
     void (*OnRain)(TMisolWeather *Device, long double val);
+    void (*OnMinTemp)(TMisolWeather *Device, long double val);
+    void (*OnMaxTemp)(TMisolWeather *Device, long double val);
 
 protected:
     void Init();
@@ -68,12 +70,15 @@ protected:
     long double FWind;
     long double FGust;
     long double FTemp;
+    long double FMinTemp;
+    long double FMaxTemp;
     long double FHumidity;
     long double FLight;
     long double FUV;
     long double FRain;
     long double FRainBase;
     bool FHasRainBase;
+    bool FHasMinMax;
     int FCurrDay;
 
     bool FOnline;

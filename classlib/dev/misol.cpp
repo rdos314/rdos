@@ -114,6 +114,10 @@ void TMisolWeather::Init()
     OnLight = 0;
     OnUv = 0;
     OnRain = 0;
+    OnMinTemp = 0;
+    OnMaxTemp = 0;
+
+    FHasMinMax = false;
 
     RdosGetTime(&msb, &lsb);
     RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
@@ -342,6 +346,19 @@ void TMisolWeather::DecodeData(const char *str, int size)
         val += uch;
         FTemp = ((long double)val - 400.0) / 10.0;
 
+        if (!FHasMinMax)
+        {
+            FMinTemp = FTemp;
+            FMaxTemp = FTemp;
+            FHasMinMax = true;
+        }
+
+        if (FMinTemp > FTemp)
+            FMinTemp = FTemp;
+
+        if (FMaxTemp < FTemp)
+            FMaxTemp = FTemp;
+
         if (OnTemperature)
             (*OnTemperature)(this, FTemp);
 
@@ -376,7 +393,21 @@ void TMisolWeather::DecodeData(const char *str, int size)
         RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
 
         if (day != FCurrDay)
+        {
+            if (OnRain)
+                (*OnRain)(this, FRain - FRainBase);
+
+            if (OnMinTemp)
+                (*OnMinTemp)(this, FMinTemp);
+
+            if (OnMaxTemp)
+                (*OnMaxTemp)(this, FMaxTemp);
+
+            FMinTemp = FTemp;
+            FMaxTemp = FTemp;
+
             FHasRainBase = false;
+        }
 
         if (!FHasRainBase)
         {
@@ -390,9 +421,6 @@ void TMisolWeather::DecodeData(const char *str, int size)
             FHasRainBase = true;
             FRainBase = FRain;
         }
-
-        if (OnRain)
-            (*OnRain)(this, FRain - FRainBase);
 
         memcpy(&uch, ptr + 10, 1);
         val = uch << 8;
