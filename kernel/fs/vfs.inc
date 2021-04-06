@@ -36,6 +36,7 @@
 
 VFS_FLAG_STOPPED   = 1
 MAX_VFS_PARTITIONS = 15
+MAX_VFS_REQ_COUNT  = 15
 
 vfs_table_struc    STRUC
 
@@ -144,6 +145,8 @@ vfs_part  STRUC
 
 vfsp_start_sector         DD ?,?
 vfsp_sector_count         DD ?,?
+
+vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
 
 vfsp_app_sel              DW ?
 vfsp_disc_sel             DW ?

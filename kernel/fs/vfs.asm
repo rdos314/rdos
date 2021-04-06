@@ -2807,16 +2807,45 @@ get_vfs_sectors    Endp
 create_vfs_req_name       DB 'Create VFS Req',0
 
 create_vfs_req    Proc far
+    push ds
     push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov dh,bl
 ;
     call HandleToPart
     jc crvrDone
 ;
-    mov ebx,1
+    mov eax,es
+    mov ds,eax
+    mov ecx,MAX_VFS_REQ_COUNT
+    mov edi,OFFSET vfsp_req_arr
+    xor ax,ax
+    repnz scas word ptr es:[edi]
+    jz crvrFound
+
+crvrFail:
+    stc
+    jmp crvrDone
+
+crvrFound:
+    mov bx,di
+    sub bx,OFFSET vfsp_req_arr
+    mov bh,dh
+    sub edi,2
+;
     clc
 
 crvrDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
     pop es
+    pop ds
     ret
 create_vfs_req    Endp
 
