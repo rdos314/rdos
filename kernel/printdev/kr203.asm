@@ -108,6 +108,8 @@ kr_flag             DB ?
 kr_cmd              DB ?
 kr_present_mm       DB ?
 
+kr_reset_counter    DW ?
+
 kr_server_thread    DW ?
 kr_pr_thread        DW ?
 kr_bitmap           DW ?
@@ -244,6 +246,7 @@ GetByteParam   Proc near
 ;
     xor di,di
     mov al,es:[di]
+    clc
 
 gbpDone:
     pop edi
@@ -394,6 +397,7 @@ GetWordParam   Proc near
     xor di,di
     mov ax,es:[di]
     xchg al,ah
+    clc
 
 gwpDone:
     pop edi
@@ -1780,6 +1784,7 @@ kr203_thread:
     mov ds:kr_server_thread,ax
     mov ds:kr_pr_thread,0
     mov ds:kr_bitmap,0
+    mov ds:kr_reset_counter,0
 ;
     mov eax,SIZE usb_printer_struc
     AllocateSmallGlobalMem
@@ -1901,11 +1906,22 @@ krInitLoop:
 krRetry:
     loop krInitLoop
 ;
+    mov ax,ds:kr_reset_counter
+    cmp ax,10
+    jb krResetUsb
+;
+    HardReset
+
+krResetUsb:
+    inc ds:kr_reset_counter
+;
     mov bx,ds:kr_dev_handle
     ResetUsbDevice
     jmp krDetached
 
 krLoop:
+    mov ds:kr_reset_counter,0
+;
     mov bx,ds:kr_dev_handle
     IsUsbDeviceConnected
     jc krDetached
@@ -1951,7 +1967,10 @@ krWaitAttach:
     test ds:kr_flag,FLAG_ATTACHED
     jnz krRestart
 ;
-    WaitForSignal
+    GetSystemTime
+    add eax,250 * 1193
+    adc edx,0
+    WaitForSignalWithTimeout
     jmp krWaitAttach
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
