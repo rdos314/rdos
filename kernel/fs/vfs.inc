@@ -37,6 +37,7 @@
 VFS_FLAG_STOPPED   = 1
 MAX_VFS_PARTITIONS = 15
 MAX_VFS_REQ_COUNT  = 15
+MAX_VFS_ENTRY_COUNT = 256
 
 vfs_table_struc    STRUC
 
@@ -154,3 +155,17 @@ vfsp_disc_nr              DB ?
 vfsp_part_nr              DB ?
 
 vfs_part  ENDS
+
+vfs_req_entry  STRUC
+
+vfsre_start_sector        DD ?,?
+vfsre_total_count         DD ?
+vfsre_remain_count        DD ?
+
+vfs_req_entry  ENDS
+
+vfs_part_req  STRUC
+
+vfspr_arr                 DB SIZE vfs_req_entry * MAX_VFS_ENTRY_COUNT DUP(?)
+
+vfs_part_req  ENDS

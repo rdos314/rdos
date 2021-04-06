@@ -35,6 +35,7 @@ include ..\user.inc
 include ..\driver.def
 include ..\handle.inc
 include ..\wait.inc
+include ..\os\protseg.def
 include vfs.inc
 
     .386p
@@ -2732,6 +2733,7 @@ get_vfs_handle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleToPart    Proc near
+    push eax
     push ebx
 ;
     mov ax,SEG data
@@ -2758,6 +2760,7 @@ htpInRange:
 
 htpDone:
     pop ebx
+    pop eax
     ret
 HandleToPart    Endp
 
@@ -2834,9 +2837,30 @@ crvrFail:
 crvrFound:
     mov bx,di
     sub bx,OFFSET vfsp_req_arr
+    shr bx,1
     mov bh,dh
     sub edi,2
 ;
+    push ebx
+    mov eax,SIZE vfs_part_req
+    AllocateBigServ
+    mov ecx,eax
+;
+    AllocateLdt
+    or bx,4
+;
+    add edx,serv_linear
+    CreateDataSelector32
+    mov es,bx
+;
+    mov ds:[edi],es
+    pop ebx
+;
+    xor edi,edi
+    mov ecx,SIZE vfs_part_req
+    shr ecx,2
+    xor eax,eax
+    rep stos dword ptr es:[edi]
     clc
 
 crvrDone:
