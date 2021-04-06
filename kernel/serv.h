@@ -23,6 +23,7 @@ int RDOSAPI ServGetVfsHandle();
 long long RDOSAPI ServGetVfsSectors(int handle);
 int RDOSAPI ServCreateVfsReq(int handle);
 void RDOSAPI ServCloseVfsReq(int handle);
+int RDOSAPI ServReqVfsSectors(int handle, long long sector, int count);
 
 #ifdef __cplusplus
 }

@@ -45,3 +45,9 @@
 #pragma aux ServCloseVfsReq = \
     ServGate_close_vfs_req  \
     __parm [__ebx]
+
+#pragma aux ServReqVfsSectors = \
+    ServGate_req_vfs_sectors  \
+    CarryToBool \
+    __parm [__ebx] [__edx __eax] [__ecx] \
+    __value [__eax]

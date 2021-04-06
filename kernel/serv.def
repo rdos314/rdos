@@ -4,5 +4,6 @@ get_vfs_handle_nr         = 2
 get_vfs_sectors_nr        = 3
 create_vfs_req_nr         = 4
 close_vfs_req_nr          = 5
+req_vfs_sectors_nr        = 6
 
 serv_gate_entries         = 20

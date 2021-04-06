@@ -2929,6 +2929,25 @@ close_vfs_req    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ReqVfsSectors
+;
+;       DESCRIPTION:    Req VFS sectors
+;
+;       PARAMETERS:     EBX         Req handle
+;                       EDX:EAX     Start sector
+;                       ECX         Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+req_vfs_sectors_name       DB 'Req VFS Sectors',0
+
+req_vfs_sectors    Proc far
+    ret
+req_vfs_sectors    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           TestServ
 ;
 ;       DESCRIPTION:    Test server
@@ -3005,6 +3024,12 @@ init    Proc far
     mov edi,OFFSET close_vfs_req_name
     xor cl,cl
     mov ax,close_vfs_req_nr
+    RegisterServGate
+;
+    mov esi,OFFSET req_vfs_sectors
+    mov edi,OFFSET req_vfs_sectors_name
+    xor cl,cl
+    mov ax,req_vfs_sectors_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv
