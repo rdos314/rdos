@@ -42,7 +42,7 @@ include vfs.inc
 
 MAX_BITMAP_COUNT =  16
 MAX_DISC_COUNT   =  16
-MAX_PART_COUNT   = 256
+MAX_PART_COUNT   = 255
 
 part_struc      STRUC
 
@@ -2841,20 +2841,9 @@ crvrFound:
     mov bh,dh
     sub edi,2
 ;
-    push ebx
     mov eax,SIZE vfs_part_req
-    AllocateBigServ
-    mov ecx,eax
-;
-    AllocateLdt
-    or bx,4
-;
-    add edx,serv_linear
-    CreateDataSelector32
-    mov es,bx
-;
+    AllocateBigServSel
     mov ds:[edi],es
-    pop ebx
 ;
     xor edi,edi
     mov ecx,SIZE vfs_part_req
@@ -2887,6 +2876,53 @@ create_vfs_req    Endp
 close_vfs_req_name       DB 'Close VFS Req',0
 
 close_vfs_req    Proc far
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    mov ax,SEG data
+    mov ds,ax
+    or bh,bh
+    jz clvrDone
+;
+    cmp bh,MAX_PART_COUNT
+    ja clvrDone
+;
+    movzx esi,bh
+    dec esi
+    add esi,esi
+    mov ax,ds:[esi].part_arr
+    or ax,ax
+    jz clvrDone
+;
+    mov ds,ax
+    movzx ebx,bl
+    or ebx,ebx
+    jz clvrDone
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    xor bx,bx
+    xchg bx,ds:[esi].vfsp_req_arr
+    or bx,bx
+    jz clvrDone
+;
+    mov es,bx
+    FreeBigServSel
+
+clvrDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
     ret
 close_vfs_req    Endp
 

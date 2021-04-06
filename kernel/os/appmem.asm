@@ -517,6 +517,120 @@ free_big_serv   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           AllocateBigServSel
+;
+;           DESCRIPTION:    Allocate page-aligned (dword) server memory
+;
+;           PARAMETERS:     EAX         # of bytes
+;
+;           RETURNS:        ES          LDT sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_big_serv_sel_name      DB 'Allocate Big Server Sel',0
+
+allocate_big_serv_sel   PROC far
+    push ds
+    pushad
+;
+    dec eax
+    and ax,0F000h
+    add eax,1000h
+    mov ecx,eax
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_serv_sel
+;
+    EnterSection ds:serv_big_section
+    add ds:serv_big_used_mem,ecx
+    sub ds:serv_big_avail_mem,ecx
+    shr ecx,12
+;    
+    mov edx,serv_size - serv_byte_size
+    sub edx,ds:serv_big_avail_mem
+    add edx,serv_linear
+    mov eax,serv_linear + serv_size - serv_byte_size
+    AllocatePageEntries
+    jnc abssOk
+
+abssRetry:
+    mov edx,serv_linear + 1000h
+    mov eax,serv_linear + serv_size - serv_byte_size
+    AllocatePageEntries
+    jnc abssOk
+;
+    LeaveSection ds:serv_big_section
+    mov ax,100
+    WaitMilliSec
+    EnterSection ds:serv_big_section
+    jmp abssRetry
+        
+abssOk:
+    LeaveSection ds:serv_big_section
+;
+    AllocateLdt
+    or bx,4
+    shl ecx,12
+    CreateDataSelector32
+    mov es,bx
+    clc
+;
+    popad
+    pop ds
+    retf32
+allocate_big_serv_sel   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeBigServSel
+;
+;           DESCRIPTION:    Free page-aligned (dword) server memory
+;
+;           PARAMETERS:     ES          Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_big_serv_sel_name      DB 'Free Big Server Sel',0
+
+free_big_serv_sel   PROC far
+    push ds
+    pushad
+;
+    mov bx,es
+    GetSelectorBaseSize
+;
+    xor ax,ax
+    mov es,ax
+    FreeLdt
+;
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_serv_sel
+;
+    EnterSection ds:serv_big_section
+    sub ds:serv_big_used_mem,ecx
+    add ds:serv_big_avail_mem,ecx
+    shr ecx,12
+;    
+    xor eax,eax
+    FreeServPageEntries
+;
+    LeaveSection ds:serv_big_section
+;
+    popad
+    pop ds
+    retf32
+free_big_serv_sel   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           INIT_APP_MEM
 ;
 ;           DESCRIPTION:    Init module
@@ -563,6 +677,18 @@ init_app_mem    PROC near
     mov edi,OFFSET free_big_serv_name
     xor cl,cl
     mov ax,free_big_serv_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_big_serv_sel
+    mov edi,OFFSET allocate_big_serv_sel_name
+    xor cl,cl
+    mov ax,allocate_big_serv_sel_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_big_serv_sel
+    mov edi,OFFSET free_big_serv_sel_name
+    xor cl,cl
+    mov ax,free_big_serv_sel_nr
     RegisterOsGate
 ;
     popad

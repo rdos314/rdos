@@ -996,6 +996,17 @@ FreeBigServ    MACRO
     OsGate free_big_serv_nr
                     ENDM
 
+; IN  EAX          Bytes
+; OUT ES           LDT selector
+AllocateBigServSel    MACRO
+    OsGate allocate_big_serv_sel_nr
+                    ENDM
+
+; IN  ES           LDT selector
+FreeBigServSel    MACRO
+    OsGate free_big_serv_sel_nr
+                    ENDM
+
 ; IN  EDX          Offset in serv flat sel
 ; IN  EBX:EAX      Physical address
 ; OUT EDX          Updated offset
