@@ -1112,6 +1112,9 @@ io_close_com_not_reserved:
     mov es,ds:iopps_dev_handle
     mov es:iopds_handle,0
 ;
+    mov ax,25
+    WaitMilliSec    
+;
     pop dx
     pop ax
     pop es
@@ -1630,6 +1633,9 @@ mem_close_com_not_reserved:
 ;   
     mov es,ds:mempps_dev_handle
     mov es:mempds_handle,0
+;
+    mov ax,25
+    WaitMilliSec    
 ;
     pop ebx
     pop ax
