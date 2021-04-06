@@ -1276,7 +1276,7 @@ GetIoBuf   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetReadCount
+;       NAME:           GetReadIo
 ;
 ;       DESCRIPTION:    Get number of read sectors
 ;
@@ -2717,6 +2717,50 @@ gvfshFound:
     ret
 get_vfs_handle    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HandleToPart
+;
+;       DESCRIPTION:    Convert from handle to partition selector
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        ES          VFS part
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleToPart    Proc near
+    push ebx
+;
+    mov ax,SEG data
+    mov es,ax
+    or bx,bx
+    jz htpFail
+;
+    cmp ebx,MAX_PART_COUNT
+    jbe htpInRange
+
+htpFail:
+    stc
+    jmp htpDone
+
+htpInRange:
+    dec ebx
+    add ebx,ebx
+    mov ax,es:[ebx].part_arr
+    or ax,ax
+    jz htpFail
+;
+    mov es,ax
+    clc
+
+htpDone:
+    pop ebx
+    ret
+HandleToPart    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2734,35 +2778,64 @@ get_vfs_sectors_name       DB 'Get VFS Sectors',0
 
 get_vfs_sectors    Proc far
     push es
-    push ebx
 ;
-    mov ax,SEG data
-    mov es,ax
-    or bx,bx
-    jz gvsFail
+    call HandleToPart
+    jc gvsDone
 ;
-    cmp bx,MAX_PART_COUNT
-    jb gvsInRange
-
-gvsFail:
-    stc
-    jmp gvsDone
-
-gvsInRange:
-    add ebx,ebx
-    mov ax,es:[ebx].part_arr
-    or ax,ax
-    jz gvsFail
-;
-    mov es,ax
     mov eax,es:vfsp_sector_count
     mov edx,es:vfsp_sector_count+4
     clc
-;
-    pop ebx
+
+gvsDone:
     pop es
     ret
 get_vfs_sectors    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateVfsReq
+;
+;       DESCRIPTION:    Create a VFS req
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        EBX         Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_vfs_req_name       DB 'Create VFS Req',0
+
+create_vfs_req    Proc far
+    push es
+;
+    call HandleToPart
+    jc crvrDone
+;
+    mov ebx,1
+    clc
+
+crvrDone:
+    pop es
+    ret
+create_vfs_req    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseVfsReq
+;
+;       DESCRIPTION:    Close a VFS req
+;
+;       PARAMETERS:     EBX         Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_vfs_req_name       DB 'Close VFS Req',0
+
+close_vfs_req    Proc far
+    ret
+close_vfs_req    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
