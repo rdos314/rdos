@@ -678,6 +678,50 @@ FreeBitmapEntry    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AdjustCount
+;
+;       DESCRIPTION:    Adjust count to block boundary
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Sector #
+;                       ECX         Count
+;
+;       RETURNS:        NC
+;                         EDX:EAX   Sector #
+;                         ECX       Count
+;                      
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AdjustCount    Proc near
+    push ebx
+;
+    push ecx
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    mov bx,1
+    shl bx,cl
+    dec bx
+    pop ecx
+;
+    and bl,al
+    jz acDone
+
+acLoop:
+    inc ecx
+    dec eax
+    sub bl,1
+    jnz acLoop
+  
+acDone:
+    pop ebx
+    ret
+AdjustCount    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SectorToBlock
 ;
 ;       DESCRIPTION:    Converts between sector # and block #
@@ -3002,6 +3046,7 @@ req_vfs_sectors    Proc far
 ;
     mov si,serv_flat_sel
     mov es,si
+    call AdjustCount
 ;
     EnterSection ds:vfs_section
 ;
