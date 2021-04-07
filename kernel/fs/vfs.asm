@@ -3157,27 +3157,62 @@ req_vfs_sectors    Proc far
     EnterSection ds:vfs_section
 ;
     call SectorCountToBlock
-    jc rqsFail
+    jc rqsLeaveFail
 ;
     call SaveReq
     call GetReqMask
 
-rqsBufLoop:
+rqsLoop:
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz rqsBufNext
+    jnz rqsNext
 ;
     inc gs:[edi].vfsre_remain_count
     or es:[esi].vfsp_ref_bitmap,bp
+;
+    push edi
+;
+    call BlockToBitmap
+    mov ebx,eax
+    shr ebx,3
+    and ebx,1FFFFh
+    bts es:[edi],ebx
+;
+    pop edi
+;
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+    jnc rqsNext
+;
+    mov ds:vfs_scan_pos,eax
+    mov ds:vfs_scan_pos+4,edx
 
-rqsBufNext:
+rqsNext:
     add eax,8
     adc edx,0
     sub ecx,1
-    jnz rqsBufLoop
+    jnz rqsLoop
+;
+    LeaveSection ds:vfs_section
+;
+    mov ecx,gs:[edi].vfsre_remain_count
+    or ecx,ecx
+    clc
+    jz rqsDone
+;
+    mov bx,ds:vfs_server
+    Signal
+    clc
+    jmp rqsDone
 
+rqsLeaveFail:
+    LeaveSection ds:vfs_section
 
 rqsFail:
+    stc
+
+rqsDone:
     pop ebp
     pop edi
     pop esi
