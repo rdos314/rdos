@@ -402,7 +402,7 @@ ptServDir:
     call cs:fault_to_dir_proc
     call cs:get_serv_page_dir_proc
     test al,1
-    jnz ptNotServ
+    jnz ptServDirSet
 ;
     call cs:create_serv_page_dir_proc
     call cs:get_serv_page_dir_proc
