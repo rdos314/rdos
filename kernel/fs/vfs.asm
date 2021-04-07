@@ -3054,6 +3054,33 @@ SaveReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetReqMask
+;
+;       DESCRIPTION:    Get req mask
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       FS          Part sel
+;
+;       RETURNS:        BP          Req mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetReqMask    Proc near
+    push ecx
+;
+    mov cl,fs:vfsp_part_nr
+    inc cl
+    mov bp,1
+    shl bp,cl
+;
+    pop ecx
+    ret
+GetReqMask   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReqVfsSectors
 ;
 ;       DESCRIPTION:    Req VFS sectors
@@ -3078,6 +3105,7 @@ req_vfs_sectors    Proc far
     push edx
     push esi
     push edi
+    push ebp
 ;
     mov si,SEG data
     mov ds,si
@@ -3132,13 +3160,25 @@ req_vfs_sectors    Proc far
     jc rqsFail
 ;
     call SaveReq
+    call GetReqMask
+
+rqsBufLoop:
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz rqsValid
+    jnz rqsBufNext
+;
+    inc gs:[edi].vfsre_remain_count
+    or es:[esi].vfsp_ref_bitmap,bp
 
-rqsValid:
+rqsBufNext:
+    add eax,8
+    adc edx,0
+    sub ecx,1
+    jnz rqsBufLoop
+
 
 rqsFail:
+    pop ebp
     pop edi
     pop esi
     pop edx
