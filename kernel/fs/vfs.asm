@@ -2900,9 +2900,11 @@ close_vfs_req    Proc far
     jz clvrDone
 ;
     mov ds,ax
-    movzx ebx,bl
-    or ebx,ebx
+    or bl,bl
     jz clvrDone
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja clvrDone
 ;
     movzx esi,bl
     dec esi
@@ -2944,6 +2946,84 @@ close_vfs_req    Endp
 req_vfs_sectors_name       DB 'Req VFS Sectors',0
 
 req_vfs_sectors    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    mov si,SEG data
+    mov ds,si
+    or bh,bh
+    jz rqsFail
+;
+    cmp bh,MAX_PART_COUNT
+    ja rqsFail
+;
+    movzx esi,bh
+    dec esi
+    add esi,esi
+    mov si,ds:[esi].part_arr
+    or si,si
+    jz rqsFail
+;
+    mov fs,si
+    or bl,bl
+    jz rqsFail
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja rqsFail
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz rqsFail
+;
+    mov gs,si
+    mov esi,fs:vfsp_sector_count
+    mov edi,fs:vfsp_sector_count+4
+    sub esi,eax
+    sbb edi,edx
+    jc rqsFail
+;
+    sub esi,ecx
+    sbb edi,0
+    jc rqsFail
+;
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+    mov ds,fs:vfsp_disc_sel
+;
+    mov si,serv_flat_sel
+    mov es,si
+;
+    EnterSection ds:vfs_section
+;
+    call SectorToBlock
+    jc rqsFail
+;
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jnz rqsValid
+
+rqsValid:
+
+rqsFail:
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
 req_vfs_sectors    Endp
 
