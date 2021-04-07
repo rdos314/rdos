@@ -82,6 +82,7 @@ CloseVfsReq  MACRO
 ; IN  EBX              Req handle
 ; IN  EDX:EAX          Start sector
 ; IN  ECX              Sector count
+; OUT ECX              Actual sector count requested
 ReqVfsSectors  MACRO
     ServGate req_vfs_sectors_nr
                     ENDM

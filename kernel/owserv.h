@@ -48,6 +48,5 @@
 
 #pragma aux ServReqVfsSectors = \
     ServGate_req_vfs_sectors  \
-    CarryToBool \
     __parm [__ebx] [__edx __eax] [__ecx] \
-    __value [__eax]
+    __value [__ecx]

@@ -2937,6 +2937,8 @@ close_vfs_req    Endp
 ;                       EDX:EAX     Start sector
 ;                       ECX         Sector count
 ;
+;       RETURNS:        ECX         Actual sector count
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_vfs_sectors_name       DB 'Req VFS Sectors',0
