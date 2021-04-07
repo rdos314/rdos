@@ -678,50 +678,6 @@ FreeBitmapEntry    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AdjustCount
-;
-;       DESCRIPTION:    Adjust count to block boundary
-;
-;       PARAMETERS:     DS          VFS sel
-;                       ES          Server flat sel
-;                       EDX:EAX     Sector #
-;                       ECX         Count
-;
-;       RETURNS:        NC
-;                         EDX:EAX   Sector #
-;                         ECX       Count
-;                      
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AdjustCount    Proc near
-    push ebx
-;
-    push ecx
-    mov cl,3
-    sub cl,ds:vfs_sector_shift
-    mov bx,1
-    shl bx,cl
-    dec bx
-    pop ecx
-;
-    and bl,al
-    jz acDone
-
-acLoop:
-    inc ecx
-    dec eax
-    sub bl,1
-    jnz acLoop
-  
-acDone:
-    pop ebx
-    ret
-AdjustCount    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           SectorToBlock
 ;
 ;       DESCRIPTION:    Converts between sector # and block #
@@ -2975,6 +2931,129 @@ close_vfs_req    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SectorCountToBlock
+;
+;       DESCRIPTION:    Converts between sector & count # and block #
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Sector #
+;                       ECX         Sector count
+;
+;       RETURNS:        NC
+;                         EDX:EAX   Block #
+;                         ECX       Block count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SectorCountToBlock    Proc near
+    push ebx
+    push ebp
+;
+    mov ebp,ecx
+;
+    cmp edx,ds:vfs_sectors+4
+    jb sctbInRange
+    ja sctbFail
+;
+    cmp eax,ds:vfs_sectors
+    jb sctbInRange
+
+sctbFail:
+    stc
+    jmp sctbDone
+
+sctbInRange:
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    mov bx,1
+    shl bx,cl
+    dec bx
+    and bl,al
+    jz sctbCountOk
+
+cstbLoop:
+    inc ebp
+    dec eax
+    sub bl,1
+    jnz cstbLoop
+
+sctbCountOk:
+    dec ebp
+    shr ebp,cl
+    inc ebp
+;
+    mov cl,ds:vfs_sector_shift
+    or cl,cl
+    jz sctbOk
+
+sctbShift:
+    add eax,eax
+    adc edx,edx
+;
+    sub cl,1
+    jnz stbShift
+
+sctbOk:
+    mov ecx,ebp
+    clc
+
+sctbDone:
+    pop ebp
+    pop ebx
+    ret
+SectorCountToBlock   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SaveReq
+;
+;       DESCRIPTION:    Save req
+;
+;       PARAMETERS:     GS          Req sel
+;                       EDX:EAX     Start block
+;                       ECX         Block count
+;
+;       RETURNS:        EDI         Req entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SaveReq    Proc near
+    push ebx
+    push ebp
+;
+    xor edi,edi
+    mov ebp,MAX_VFS_ENTRY_COUNT
+
+srSearch:
+    mov ebx,gs:[edi].vfsre_total_count
+    or ebx,ebx
+    jz srFound
+;
+    add edi,SIZE vfs_req_entry
+    sub ebp,1
+    jnz srSearch
+;
+    stc
+    jmp srDone
+
+srFound:
+    mov gs:[edi].vfsre_start_block,eax
+    mov gs:[edi].vfsre_start_block+4,edx
+    mov gs:[edi].vfsre_total_count,ecx
+    mov gs:[edi].vfsre_remain_count,0
+    clc
+
+srDone:
+    pop ebp
+    pop ebx
+    ret
+SaveReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReqVfsSectors
 ;
 ;       DESCRIPTION:    Req VFS sectors
@@ -3046,13 +3125,13 @@ req_vfs_sectors    Proc far
 ;
     mov si,serv_flat_sel
     mov es,si
-    call AdjustCount
 ;
     EnterSection ds:vfs_section
 ;
-    call SectorToBlock
+    call SectorCountToBlock
     jc rqsFail
 ;
+    call SaveReq
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jnz rqsValid

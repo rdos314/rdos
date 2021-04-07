@@ -158,7 +158,7 @@ vfs_part  ENDS
 
 vfs_req_entry  STRUC
 
-vfsre_start_sector        DD ?,?
+vfsre_start_block         DD ?,?
 vfsre_total_count         DD ?
 vfsre_remain_count        DD ?
 
