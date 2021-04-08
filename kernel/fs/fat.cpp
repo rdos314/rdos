@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 
     req = ServCreateVfsReq(handle);
     id = ServReqVfsSectors(req, 121, 16);
-    id = ServReqVfsSectors(req, 124, 8);
+    id = ServReqVfsSectors(req, 131, 8);
     ServStartVfsReq(req);
 
     ServTest();
