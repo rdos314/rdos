@@ -3081,7 +3081,7 @@ GetReqMask   Endp
 ;                       EDX:EAX     Start sector
 ;                       ECX         Sector count
 ;
-;       RETURNS:        ECX         Actual sector count
+;       RETURNS:        EBX         Req #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3093,7 +3093,7 @@ req_vfs_sectors    Proc far
     push fs
     push gs
     push eax
-    push ebx
+    push ecx
     push edx
     push esi
     push edi
@@ -3208,13 +3208,9 @@ rqsNext:
 ;
     LeaveSection ds:vfs_section
 ;
-    mov ecx,gs:[edi].vfsre_remain_count
-    or ecx,ecx
-    clc
-    jz rqsDone
-;
-    mov bx,ds:vfs_server
-    Signal
+    mov ebx,edi
+    shr ebx,5
+    inc ebx
     clc
     jmp rqsDone
 
@@ -3232,7 +3228,7 @@ rqsDone:
     pop edi
     pop esi
     pop edx
-    pop ebx
+    pop ecx
     pop eax
     pop gs
     pop fs

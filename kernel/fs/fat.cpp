@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     char *ptr;
     long long sectors;
     int req;
-    int count;
+    int id;
 
     handle = ServGetVfsHandle();
 
@@ -37,7 +37,8 @@ int main(int argc, char **argv)
     printf("Sectors: %lld\r\n", sectors);
 
     req = ServCreateVfsReq(handle);
-    count = ServReqVfsSectors(req, 121, 16);
+    id = ServReqVfsSectors(req, 121, 16);
+    id = ServReqVfsSectors(req, 124, 8);
     ServCloseVfsReq(req);    
 
     switch (argc)

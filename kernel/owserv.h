@@ -48,5 +48,11 @@
 
 #pragma aux ServReqVfsSectors = \
     ServGate_req_vfs_sectors  \
+    "jc fail" \
+    "mov eax,ebx" \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \
     __parm [__ebx] [__edx __eax] [__ecx] \
-    __value [__ecx]
+    __value [__eax]
