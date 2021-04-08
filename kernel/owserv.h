@@ -56,3 +56,7 @@
     "done:" \
     __parm [__ebx] [__edx __eax] [__ecx] \
     __value [__eax]
+
+#pragma aux ServStartVfsReq = \
+    ServGate_start_vfs_req  \
+    __parm [__ebx]

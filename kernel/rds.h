@@ -5,6 +5,7 @@
 #define serv_gate_create_vfs_req 0x00000004
 #define serv_gate_close_vfs_req 0x00000005
 #define serv_gate_req_vfs_sectors 0x00000006
+#define serv_gate_start_vfs_req 0x00000007
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -13,4 +14,5 @@
 #define ServGate_create_vfs_req 0x55 0x67 0x9a 4 0 0 0 4 0 0x5d
 #define ServGate_close_vfs_req 0x55 0x67 0x9a 5 0 0 0 4 0 0x5d
 #define ServGate_req_vfs_sectors 0x55 0x67 0x9a 6 0 0 0 4 0 0x5d
+#define ServGate_start_vfs_req 0x55 0x67 0x9a 7 0 0 0 4 0 0x5d
 

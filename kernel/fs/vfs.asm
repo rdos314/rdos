@@ -1373,6 +1373,73 @@ ClearIoBitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyPart
+;
+;       DESCRIPTION:    Notify read buffers
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Sector
+;                       BX          Req mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyPart    Proc near
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+    push ebp
+;
+    mov bp,bx
+    mov ebx,OFFSET vfs_part_arr
+    mov ecx,MAX_VFS_PARTITIONS
+
+npLoop:
+    mov si,ds:[ebx]
+    or si,si
+    jz npNext
+;
+    mov fs,si
+    mov esi,eax
+    mov edi,edx
+    add esi,7
+    adc edi,0
+    sub esi,fs:vfsp_start_sector
+    sbb edi,fs:vfsp_start_sector+4
+    jc npNext
+;
+    sub esi,7
+    sbb edi,0
+    jc npHandle
+;
+    sub esi,fs:vfsp_sector_count    
+    sbb edi,fs:vfsp_sector_count+4
+    jnc npNext
+
+npHandle:
+    int 3
+    mov bx,bp
+
+npNext:
+    add ebx,2
+    loop npLoop
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    ret
+NotifyPart    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyReadBuf
 ;
 ;       DESCRIPTION:    Notify read buffers
@@ -1402,12 +1469,17 @@ nrbLoop:
     or bx,bx
     jz nrbNext
 ;
-    test bx,1
-    jnz nrbReq
+    and bx,0FFFEh
+    jz nrbPartOk
 ;
     int 3
+    call NotifyPart
 
-nrbReq:
+nrbPartOk:
+    mov bx,es:[esi].vfsp_ref_bitmap
+    test bx,1
+    jz nrbNext
+;
     call RemoveReq
 
 nrbNext:
@@ -3063,6 +3135,7 @@ GetReqMask    Proc near
     push ecx
 ;
     mov cl,bl
+    inc cl
     mov bp,1
     shl bp,cl
 ;
@@ -3240,6 +3313,74 @@ req_vfs_sectors    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           StartVfsReq
+;
+;       DESCRIPTION:    Start VFS req
+;
+;       PARAMETERS:     EBX         Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_vfs_req_name       DB 'Start VFS Req',0
+
+start_vfs_req    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push esi
+;
+    mov si,SEG data
+    mov ds,si
+    or bh,bh
+    jz srqDone
+;
+    cmp bh,MAX_PART_COUNT
+    ja srqDone
+;
+    movzx esi,bh
+    dec esi
+    add esi,esi
+    mov si,ds:[esi].part_arr
+    or si,si
+    jz srqDone
+;
+    mov fs,si
+    or bl,bl
+    jz srqDone
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja srqDone
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz srqDone
+;
+    mov gs,si
+    mov ds,fs:vfsp_disc_sel
+    mov si,serv_flat_sel
+    mov es,si
+;
+    mov bx,ds:vfs_server
+    Signal
+
+srqDone:
+    pop esi
+    pop ebx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+start_vfs_req   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           TestServ
 ;
 ;       DESCRIPTION:    Test server
@@ -3322,6 +3463,12 @@ init    Proc far
     mov edi,OFFSET req_vfs_sectors_name
     xor cl,cl
     mov ax,req_vfs_sectors_nr
+    RegisterServGate
+;
+    mov esi,OFFSET start_vfs_req
+    mov edi,OFFSET start_vfs_req_name
+    xor cl,cl
+    mov ax,start_vfs_req_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv

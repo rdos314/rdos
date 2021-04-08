@@ -31,14 +31,16 @@ int main(int argc, char **argv)
 
     handle = ServGetVfsHandle();
 
-    ServTest();
-
     sectors = ServGetVfsSectors(handle);
     printf("Sectors: %lld\r\n", sectors);
 
     req = ServCreateVfsReq(handle);
     id = ServReqVfsSectors(req, 121, 16);
     id = ServReqVfsSectors(req, 124, 8);
+    ServStartVfsReq(req);
+
+    ServTest();
+
     ServCloseVfsReq(req);    
 
     switch (argc)

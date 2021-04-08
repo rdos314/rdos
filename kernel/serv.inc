@@ -86,3 +86,8 @@ CloseVfsReq  MACRO
 ReqVfsSectors  MACRO
     ServGate req_vfs_sectors_nr
                     ENDM
+
+; IN  EBX              Req handle
+StartVfsReq  MACRO
+    ServGate start_vfs_req_nr
+                    ENDM
