@@ -1375,6 +1375,25 @@ ClearIoBitmap   Endp
 ;
 ;       NAME:           NotifyPart
 ;
+;       DESCRIPTION:    Notify part
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       FS          Part sel
+;                       EDX:EAX     Sector
+;                       BX          Req mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyPart    Proc near
+    ret
+NotifyPart    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           NotifyVfs
+;
 ;       DESCRIPTION:    Notify read buffers
 ;
 ;       PARAMETERS:     DS          VFS sel
@@ -1384,7 +1403,7 @@ ClearIoBitmap   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-NotifyPart    Proc near
+NotifyVfs    Proc near
     push fs
     push eax
     push ebx
@@ -1397,10 +1416,10 @@ NotifyPart    Proc near
     mov ebx,OFFSET vfs_part_arr
     mov ecx,MAX_VFS_PARTITIONS
 
-npLoop:
+nvfLoop:
     mov si,ds:[ebx]
     or si,si
-    jz npNext
+    jz nvfNext
 ;
     mov fs,si
     mov esi,eax
@@ -1409,23 +1428,26 @@ npLoop:
     adc edi,0
     sub esi,fs:vfsp_start_sector
     sbb edi,fs:vfsp_start_sector+4
-    jc npNext
+    jc nvfNext
 ;
     sub esi,7
     sbb edi,0
-    jc npHandle
+    jc nvfHandle
 ;
     sub esi,fs:vfsp_sector_count    
     sbb edi,fs:vfsp_sector_count+4
-    jnc npNext
+    jnc nvfNext
 
-npHandle:
+nvfHandle:
     int 3
+    push ebx
     mov bx,bp
+    call NotifyPart
+    pop ebx
 
-npNext:
+nvfNext:
     add ebx,2
-    loop npLoop
+    loop nvfLoop
 ;
     pop ebp
     pop edi
@@ -1435,7 +1457,7 @@ npNext:
     pop eax
     pop fs
     ret
-NotifyPart    Endp
+NotifyVfs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1472,8 +1494,7 @@ nrbLoop:
     and bx,0FFFEh
     jz nrbPartOk
 ;
-    int 3
-    call NotifyPart
+    call NotifyVfs
 
 nrbPartOk:
     mov bx,es:[esi].vfsp_ref_bitmap
