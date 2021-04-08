@@ -1390,7 +1390,6 @@ ClearIoBitmap   Endp
 
 NotifyPart    Proc near
     push gs
-    push eax
     push ebx
     push esi
 ;
@@ -1405,17 +1404,17 @@ npLoop:
     movzx esi,si
     dec esi
     add esi,esi
-    mov ax,fs:[esi].vfsp_req_arr
-    or ax,ax
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
     jz npLoop
 ;
-    mov gs,ax
+    int 3
+    mov gs,si
     jmp npLoop
 
 npDone:
     pop esi
     pop ebx
-    pop eax
     pop gs
     ret
 NotifyPart    Endp
@@ -1524,7 +1523,6 @@ nrbLoop:
     and bx,0FFFEh
     jz nrbPartOk
 ;
-    int 3
     call NotifyVfs
 
 nrbPartOk:
