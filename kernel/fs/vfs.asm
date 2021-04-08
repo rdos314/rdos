@@ -1381,7 +1381,10 @@ ClearIoBitmap   Endp
 ;                       ES          Server flat sel
 ;                       FS          Part sel
 ;                       EDX:EAX     Sector
-;                       BX          Req mask
+;                       SI          Req mask
+;                       CX          Lock count
+;
+;       RETURNS:        CX          Lock count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1390,6 +1393,8 @@ NotifyPart    Proc near
     push eax
     push ebx
     push esi
+;
+    mov bx,si
 
 npLoop:
     or bx,bx
@@ -1426,21 +1431,22 @@ NotifyPart    Endp
 ;                       ES          Server flat sel
 ;                       EDX:EAX     Sector
 ;                       BX          Req mask
+;                       CX          Lock count
+;
+;       RETURNS:        CX          Lock count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyVfs    Proc near
     push fs
-    push eax
-    push ebx
-    push ecx
     push esi
     push edi
     push ebp
 ;
-    mov bp,bx
+    push ebx
+;
     mov ebx,OFFSET vfs_part_arr
-    mov ecx,MAX_VFS_PARTITIONS
+    mov ebp,MAX_VFS_PARTITIONS
 
 nvfLoop:
     mov si,ds:[ebx]
@@ -1465,22 +1471,20 @@ nvfLoop:
     jnc nvfNext
 
 nvfHandle:
-    int 3
-    push ebx
-    mov bx,bp
+    pop esi
     call NotifyPart
-    pop ebx
+    push esi
 
 nvfNext:
     add ebx,2
-    loop nvfLoop
+    sub ebp,1
+    jnz nvfLoop
+;
+    pop ebx
 ;
     pop ebp
     pop edi
     pop esi
-    pop ecx
-    pop ebx
-    pop eax
     pop fs
     ret
 NotifyVfs    Endp
@@ -1520,6 +1524,7 @@ nrbLoop:
     and bx,0FFFEh
     jz nrbPartOk
 ;
+    int 3
     call NotifyVfs
 
 nrbPartOk:
