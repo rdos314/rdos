@@ -3117,12 +3117,6 @@ sctbShift:
     jnz stbShift
 
 sctbOk:
-    test ebp,0FFFF0000h
-    jz sctbSizeOk
-;
-    mov ebp,0FFFFh
-
-sctbSizeOk:
     mov ecx,ebp
     clc
 
@@ -3131,47 +3125,6 @@ sctbDone:
     pop ebx
     ret
 SectorCountToBlock   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AllocateReq
-;
-;       DESCRIPTION:    Allocate req
-;
-;       PARAMETERS:     GS          Req sel
-;
-;       RETURNS:        EDI         Req entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateReq    Proc near
-    push eax
-    push ebp
-;
-    xor edi,edi
-    mov ebp,MAX_VFS_ENTRY_COUNT
-
-arSearch:
-    mov ax,gs:[edi].vfsre_total_count
-    or ax,ax
-    jz arFound
-;
-    add edi,SIZE vfs_req_entry
-    sub ebp,1
-    jnz arSearch
-;
-    stc
-    jmp arDone
-
-arFound:
-    clc
-
-arDone:
-    pop ebp
-    pop eax
-    ret
-AllocateReq    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3275,8 +3228,13 @@ req_vfs_sectors    Proc far
 ;
     EnterSection ds:vfs_section
 ;
-    call AllocateReq
-    jc rqsLeaveFail
+    mov edi,gs:vfsrh_entry_count
+    cmp edi,MAX_VFS_ENTRY_COUNT
+    je rqsLeaveFail
+;
+    inc edi
+    mov gs:vfsrh_entry_count,edi
+    shl edi,4
     mov gs:[edi].vfsre_linear,0
 ;
     add eax,fs:vfsp_start_sector
@@ -3303,8 +3261,7 @@ req_vfs_sectors    Proc far
     call SectorCountToBlock
     jc rqsLeaveFail
 ;
-    mov gs:[edi].vfsre_total_count,cx
-    mov gs:[edi].vfsre_remain_count,0
+    mov gs:[edi].vfsre_total_count,ecx
 ;
     call GetReqMask
 
@@ -3313,7 +3270,7 @@ rqsLoop:
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jnz rqsNext
 ;
-    inc gs:[edi].vfsre_remain_count
+    inc gs:vfsrh_remain_count
     or es:[esi].vfsp_ref_bitmap,bp
 ;
     push edi
@@ -3344,7 +3301,6 @@ rqsNext:
 ;
     mov ebx,edi
     shr ebx,4
-    inc ebx
     clc
     jmp rqsDone
 

@@ -158,16 +158,27 @@ vfs_part  ENDS
 
 ; should be 16 bytes!!
 
+vfs_req_header  STRUC
+
+vfsrh_entry_count         DD ?
+vfsrh_remain_count        DD ?
+vfsrh_pad                 DD ?,?
+
+vfs_req_header  ENDS
+
+; should be 16 bytes!!
+
 vfs_req_entry  STRUC
 
 vfsre_start_sector        DD ?,?
-vfsre_total_count         DW ?
-vfsre_remain_count        DW ?
+vfsre_total_count         DD ?
 vfsre_linear              DD ?
 
 vfs_req_entry  ENDS
 
 vfs_part_req  STRUC
+
+vfspr_hdr                 vfs_req_header <>
 
 vfspr_arr                 DB SIZE vfs_req_entry * MAX_VFS_ENTRY_COUNT DUP(?)
 
