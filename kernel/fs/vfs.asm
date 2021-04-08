@@ -1386,6 +1386,32 @@ ClearIoBitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyPart    Proc near
+    push gs
+    push eax
+    push ebx
+    push esi
+
+npLoop:
+    or bx,bx
+    jz npDone
+;
+    bsf si,bx
+    btc bx,si
+    movzx esi,si
+    dec esi
+    add esi,esi
+    mov ax,fs:[esi].vfsp_req_arr
+    or ax,ax
+    jz npLoop
+;
+    mov gs,ax
+    jmp npLoop
+
+npDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop gs
     ret
 NotifyPart    Endp
 
