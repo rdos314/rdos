@@ -3088,6 +3088,12 @@ sctbShift:
     jnz stbShift
 
 sctbOk:
+    test ebp,0FFFF0000h
+    jz sctbSizeOk
+;
+    mov ebp,0FFFFh
+
+sctbSizeOk:
     mov ecx,ebp
     clc
 
@@ -3111,13 +3117,15 @@ SectorCountToBlock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateReq    Proc near
+    push eax
     push ebp
 ;
     xor edi,edi
     mov ebp,MAX_VFS_ENTRY_COUNT
 
 arSearch:
-    test gs:[edi].vfsre_flags,VFS_REQ_ACTIVE
+    mov ax,gs:[edi].vfsre_total_count
+    or ax,ax
     jz arFound
 ;
     add edi,SIZE vfs_req_entry
@@ -3128,11 +3136,11 @@ arSearch:
     jmp arDone
 
 arFound:
-    mov gs:[edi].vfsre_flags,VFS_REQ_ACTIVE
     clc
 
 arDone:
     pop ebp
+    pop eax
     ret
 AllocateReq    Endp
 
@@ -3156,7 +3164,6 @@ GetReqMask    Proc near
     push ecx
 ;
     mov cl,bl
-    inc cl
     mov bp,1
     shl bp,cl
 ;
@@ -3241,29 +3248,33 @@ req_vfs_sectors    Proc far
 ;
     call AllocateReq
     jc rqsLeaveFail
-;
-    mov gs:[edi].vfsre_start_sector,eax
-    mov gs:[edi].vfsre_start_sector+4,edx
     mov gs:[edi].vfsre_linear,0
 ;
     add eax,fs:vfsp_start_sector
     adc edx,fs:vfsp_start_sector+4
 ;
+    push eax
+    push ebx
     push ecx
-    mov ebx,eax
-    mov cl,ds:vfs_sector_shift
-    shl ebx,cl
-    and bx,7
-    shl bx,9
-    mov gs:[edi].vfsre_offset,bx
+;
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    mov bx,1
+    shl bx,cl
+    dec bx
+    not bx
+    and ax,bx
+    mov gs:[edi].vfsre_start_sector,eax
+    mov gs:[edi].vfsre_start_sector+4,edx
+;
     pop ecx
+    pop ebx
+    pop eax
 ;
     call SectorCountToBlock
-    jc rqsFreeFail
+    jc rqsLeaveFail
 ;
-    mov gs:[edi].vfsre_start_block,eax
-    mov gs:[edi].vfsre_start_block+4,edx
-    mov gs:[edi].vfsre_total_count,ecx
+    mov gs:[edi].vfsre_total_count,cx
     mov gs:[edi].vfsre_remain_count,0
 ;
     call GetReqMask
@@ -3303,13 +3314,10 @@ rqsNext:
     LeaveSection ds:vfs_section
 ;
     mov ebx,edi
-    shr ebx,5
+    shr ebx,4
     inc ebx
     clc
     jmp rqsDone
-
-rqsFreeFail:
-    mov gs:[edi].vfsre_flags,0
 
 rqsLeaveFail:
     LeaveSection ds:vfs_section
