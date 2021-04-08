@@ -3007,49 +3007,41 @@ SectorCountToBlock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SaveReq
+;       NAME:           AllocateReq
 ;
-;       DESCRIPTION:    Save req
+;       DESCRIPTION:    Allocate req
 ;
 ;       PARAMETERS:     GS          Req sel
-;                       EDX:EAX     Start block
-;                       ECX         Block count
 ;
 ;       RETURNS:        EDI         Req entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveReq    Proc near
-    push ebx
+AllocateReq    Proc near
     push ebp
 ;
     xor edi,edi
     mov ebp,MAX_VFS_ENTRY_COUNT
 
-srSearch:
-    mov ebx,gs:[edi].vfsre_total_count
-    or ebx,ebx
-    jz srFound
+arSearch:
+    test gs:[edi].vfsre_flags,VFS_REQ_ACTIVE
+    jz arFound
 ;
     add edi,SIZE vfs_req_entry
     sub ebp,1
-    jnz srSearch
+    jnz arSearch
 ;
     stc
-    jmp srDone
+    jmp arDone
 
-srFound:
-    mov gs:[edi].vfsre_start_block,eax
-    mov gs:[edi].vfsre_start_block+4,edx
-    mov gs:[edi].vfsre_total_count,ecx
-    mov gs:[edi].vfsre_remain_count,0
+arFound:
+    mov gs:[edi].vfsre_flags,VFS_REQ_ACTIVE
     clc
 
-srDone:
+arDone:
     pop ebp
-    pop ebx
     ret
-SaveReq    Endp
+AllocateReq    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3061,6 +3053,7 @@ SaveReq    Endp
 ;       PARAMETERS:     DS          VFS sel
 ;                       ES          Server flat sel
 ;                       FS          Part sel
+;                       EBX         Req handle
 ;
 ;       RETURNS:        BP          Req mask
 ;
@@ -3069,8 +3062,7 @@ SaveReq    Endp
 GetReqMask    Proc near
     push ecx
 ;
-    mov cl,fs:vfsp_part_nr
-    inc cl
+    mov cl,bl
     mov bp,1
     shl bp,cl
 ;
@@ -3147,19 +3139,39 @@ req_vfs_sectors    Proc far
     sbb edi,0
     jc rqsFail
 ;
-    add eax,fs:vfsp_start_sector
-    adc edx,fs:vfsp_start_sector+4
     mov ds,fs:vfsp_disc_sel
-;
     mov si,serv_flat_sel
     mov es,si
 ;
     EnterSection ds:vfs_section
 ;
-    call SectorCountToBlock
+    call AllocateReq
     jc rqsLeaveFail
 ;
-    call SaveReq
+    mov gs:[edi].vfsre_start_sector,eax
+    mov gs:[edi].vfsre_start_sector+4,edx
+    mov gs:[edi].vfsre_linear,0
+;
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+;
+    push ecx
+    mov ebx,eax
+    mov cl,ds:vfs_sector_shift
+    shl ebx,cl
+    and bx,7
+    shl bx,9
+    mov gs:[edi].vfsre_offset,bx
+    pop ecx
+;
+    call SectorCountToBlock
+    jc rqsFreeFail
+;
+    mov gs:[edi].vfsre_start_block,eax
+    mov gs:[edi].vfsre_start_block+4,edx
+    mov gs:[edi].vfsre_total_count,ecx
+    mov gs:[edi].vfsre_remain_count,0
+;
     call GetReqMask
 
 rqsLoop:
@@ -3205,6 +3217,9 @@ rqsNext:
     Signal
     clc
     jmp rqsDone
+
+rqsFreeFail:
+    mov gs:[edi].vfsre_flags,0
 
 rqsLeaveFail:
     LeaveSection ds:vfs_section

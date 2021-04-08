@@ -37,7 +37,7 @@
 VFS_FLAG_STOPPED   = 1
 MAX_VFS_PARTITIONS = 15
 MAX_VFS_REQ_COUNT  = 15
-MAX_VFS_ENTRY_COUNT = 256
+MAX_VFS_ENTRY_COUNT = 128
 
 vfs_table_struc    STRUC
 
@@ -168,7 +168,7 @@ vfsre_total_count         DD ?
 vfsre_remain_count        DD ?
 
 vfsre_start_sector        DD ?,?
-vfsre_linear_map          DD ?
+vfsre_linear              DD ?
 vfsre_offset              DW ?
 vfsre_flags               DW ?
 
