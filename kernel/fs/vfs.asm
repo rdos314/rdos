@@ -1392,15 +1392,21 @@ NotifyPart    Proc near
     push gs
     push ebx
     push esi
+    push edi
+    push ebp
 ;
     mov bx,si
+    push ebx
 
 npLoop:
+    pop ebx
     or bx,bx
     jz npDone
 ;
     bsf si,bx
     btc bx,si
+;
+    push ebx
     movzx esi,si
     dec esi
     add esi,esi
@@ -1410,9 +1416,40 @@ npLoop:
 ;
     int 3
     mov gs,si
+    mov ebp,gs:vfsrh_entry_count
+    mov ebx,SIZE vfs_req_header
+    or ebp,ebp
+    jz npLoop
+
+npCheckLoop:
+    mov esi,eax
+    mov edi,edx
+    sub esi,gs:[ebx].vfsre_start_sector
+    sbb edi,gs:[ebx].vfsre_start_sector+4
+    jc npCheckNext
+;
+    or edi,edi
+    jnz npCheckNext
+;
+    cmp esi,gs:[ebx].vfsre_sector_count
+    jae npCheckNext
+;
+    inc cx
+    sub gs:vfsrh_remain_count,1
+    jnz npCheckNext
+;
+    int 3
+
+npCheckNext:
+    add ebx,SIZE vfs_req_entry
+    sub ebp,1
+    jnz npCheckLoop
+;
     jmp npLoop
 
 npDone:
+    pop ebp
+    pop edi
     pop esi
     pop ebx
     pop gs
@@ -3261,7 +3298,17 @@ req_vfs_sectors    Proc far
     call SectorCountToBlock
     jc rqsLeaveFail
 ;
-    mov gs:[edi].vfsre_total_count,ecx
+    push ebx
+    push ecx
+;
+    mov ebx,ecx
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    shl ebx,cl
+    mov gs:[edi].vfsre_sector_count,ebx
+;
+    pop ecx
+    pop ebx
 ;
     call GetReqMask
 
