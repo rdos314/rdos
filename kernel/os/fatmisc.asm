@@ -665,14 +665,17 @@ format32        PROC far
     mov bp,ax
     mov dx,flat_sel
     mov es,dx
-        xor edx,edx
-        LockSector
+    xor edx,edx
+    LockSector
 ;       
     mov al,1
 
 format_cluster_loop32:
     cmp al,8
     je format_cluster_ok32
+;
+    cmp ecx,20000h
+    jb format_cluster_ok32
 ;
     shl al,1
     shr ecx,1
@@ -683,8 +686,8 @@ format_cluster_ok32:
 ;    
     movzx eax,al
     mul ecx
-        mov es:[esi].boot_sectors,eax
-        mov es:[esi].boot_sectors16,0
+    mov es:[esi].boot_sectors,eax
+    mov es:[esi].boot_sectors16,0
 ;
     dec ecx
     shr ecx,7
@@ -700,20 +703,20 @@ format_cluster_ok32:
     mov es:[esi].boot_sectors16,0
     mov es:[esi].boot_fats,2
     mov es:[esi].boot_root_dirs,0
-        mov es:[esi].boot_fs_version,0
-        mov es:[esi].boot_root_cluster,2
-        mov es:[esi].boot_info_sector,1
-        mov es:[esi].boot_backup_sector,6
-        push ebx
-        push esi
+    mov es:[esi].boot_fs_version,0
+    mov es:[esi].boot_root_cluster,2
+    mov es:[esi].boot_info_sector,1
+    mov es:[esi].boot_backup_sector,6
+    push ebx
+    push esi
 ;
     push ecx
     push esi
     mov ax,bp
-        mov edx,6
-        LockSector
-        mov edi,esi
-        pop esi 
+    mov edx,6
+    LockSector
+    mov edi,esi
+    pop esi 
     mov ecx,80h
     rep movs dword ptr es:[edi],es:[esi]
     pop ecx
@@ -723,7 +726,7 @@ format_cluster_ok32:
     pop esi
     pop ebx
     ModifySector
-        UnlockSector
+    UnlockSector
 ;       
     push ecx
 ;

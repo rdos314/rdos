@@ -156,11 +156,21 @@ vfsp_part_nr              DB ?
 
 vfs_part  ENDS
 
+; should be 32 bytes!!
+
+VFS_REQ_ACTIVE = 1
+VFS_REQ_MAPPED = 2
+
 vfs_req_entry  STRUC
 
 vfsre_start_block         DD ?,?
 vfsre_total_count         DD ?
 vfsre_remain_count        DD ?
+
+vfsre_start_sector        DD ?,?
+vfsre_linear_map          DD ?
+vfsre_offset              DW ?
+vfsre_flags               DW ?
 
 vfs_req_entry  ENDS
 
