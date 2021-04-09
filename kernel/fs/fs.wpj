@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-1312
-128
+1520
+145
 8320
 9216
 2
@@ -35,7 +35,7 @@ WRect
 0
 0
 5680
-4317
+4309
 0
 0
 10
@@ -50,8 +50,8 @@ VComponent
 WRect
 0
 0
-5690
-4326
+5685
+4317
 0
 0
 13
@@ -60,4 +60,4 @@ WFileName
 vfs.tgt
 0
 0
-11
+8

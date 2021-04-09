@@ -34,6 +34,121 @@ static int handle = 0;
 
 /*##########################################################################
 #
+#   Name       : TDiscReqEntry::TDisReqEntry
+#
+#   Purpose....: Disc req entry contructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDiscReqEntry::TDiscReqEntry(long long StartSector, int SectorCount)
+{
+    FStartSector = StartSector;
+    FSectorCount = SectorCount;
+    FData = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReqEntry::~TDiscReqEntry
+#
+#   Purpose....: Disc req entry destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDiscReqEntry::~TDiscReqEntry()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReq::TDisReq
+#
+#   Purpose....: Disc req contructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDiscReq::TDiscReq()
+{
+    int i;
+
+    FReq = ServCreateVfsReq(handle);
+
+    for (i = 0; i < MAX_DISC_REQ_ENTRIES; i++)
+        FEntryArr[i] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReq::~TDiscReq
+#
+#   Purpose....: Disc req destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDiscReq::~TDiscReq()
+{
+    int i;
+
+    for (i = 0; i < MAX_DISC_REQ_ENTRIES; i++)
+        if (FEntryArr[i])
+            delete FEntryArr[i];
+
+    ServCloseVfsReq(FReq);
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReq::Add
+#
+#   Purpose....: Add request
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscReq::Add(long long StartSector, int SectorCount)
+{
+    int id = ServReqVfsSectors(FReq, StartSector, SectorCount);
+
+    if (id > 0 && id <= MAX_DISC_REQ_ENTRIES)
+    {
+        FEntryArr[id - 1] = new TDiscReqEntry(StartSector, SectorCount);
+        return id;
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReq::Start
+#
+#   Purpose....: Start request
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDiscReq::Start()
+{
+    ServStartVfsReq(FReq);
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscServer::TDiscServer
 #
 #   Purpose....: Disc server contructor
@@ -46,6 +161,9 @@ static int handle = 0;
 TDiscServer::TDiscServer(int dev, int unit)
 {
     char str[40];
+
+    if (!handle)
+        handle = ServGetVfsHandle();
 
     sprintf(str, "Disc Serv %02hX.%02hX", dev, unit);
     Start(str, 4, 0x4000);    
@@ -64,6 +182,22 @@ TDiscServer::TDiscServer(int dev, int unit)
 ##########################################################################*/
 TDiscServer::~TDiscServer()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscServer::GetPartSectors
+#
+#   Purpose....: Get partition sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TDiscServer::GetPartSectors()
+{
+    return ServGetVfsSectors(handle);
 }
 
 /*##########################################################################

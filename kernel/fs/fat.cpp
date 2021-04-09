@@ -7,7 +7,6 @@
 #include <unistd.h>
 
 #include "discserv.h"
-#include "discreq.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -48,7 +47,7 @@ int main(int argc, char **argv)
 
     TDiscServer server(dev, unit);
 
-    sectors = TDiscReq::GetPartSectors();
+    sectors = server.GetPartSectors();
     printf("Sectors: %lld\r\n", sectors);
 
     TDiscReq req;
