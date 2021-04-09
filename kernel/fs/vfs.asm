@@ -1422,12 +1422,16 @@ npLoop:
     jz npLoop
 ;
     mov gs,si
-    mov ebp,gs:vfsrh_entry_count
+    movzx ebp,gs:vfsrh_entry_count
     mov ebx,SIZE vfs_req_header
     or ebp,ebp
     jz npLoop
 
 npCheckLoop:
+    mov esi,gs:[ebx].vfsre_sector_count
+    or esi,esi
+    jz npCheckNext
+;
     mov esi,eax
     mov edi,edx
     sub esi,gs:[ebx].vfsre_start_sector
@@ -3279,13 +3283,33 @@ req_vfs_sectors    Proc far
 ;
     EnterSection ds:vfs_section
 ;
-    mov edi,gs:vfsrh_entry_count
-    cmp edi,MAX_VFS_ENTRY_COUNT
+    mov di,gs:vfsrh_deleted_count
+    or di,di
+    jz rqsAppend
+;
+    dec di
+    mov gs:vfsrh_deleted_count,di
+;
+    mov edi,SIZE vfs_req_header
+
+rqsScanLoop:
+    mov esi,gs:[edi].vfsre_sector_count
+    or esi,esi
+    jz rqsTake
+;
+    add edi,SIZE vfs_req_entry
+    jmp rqsScanLoop
+
+rqsAppend:
+    movzx edi,gs:vfsrh_entry_count
+    cmp di,MAX_VFS_ENTRY_COUNT
     je rqsLeaveFail
 ;
-    inc edi
-    mov gs:vfsrh_entry_count,edi
+    inc di
+    mov gs:vfsrh_entry_count,di
     shl edi,4
+
+rqsTake:
     mov gs:[edi].vfsre_linear,0
 ;
     add eax,fs:vfsp_start_sector

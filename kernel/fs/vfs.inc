@@ -160,7 +160,8 @@ vfs_part  ENDS
 
 vfs_req_header  STRUC
 
-vfsrh_entry_count         DD ?
+vfsrh_entry_count         DW ?
+vfsrh_deleted_count       DW ?
 vfsrh_remain_count        DD ?
 vfsrh_wait_obj            DW ?
 vfsrh_pad                 DW ?,?,?
