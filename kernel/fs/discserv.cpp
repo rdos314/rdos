@@ -80,6 +80,8 @@ TDiscReq::TDiscReq(TDiscServer *server)
 {
     int i;
 
+    FWaitHandle = RdosCreateWait();
+
     FServer = server;
     FReq = ServCreateVfsReq(handle);
     FServer->Add(FReq & 0xFF, this);
@@ -110,6 +112,53 @@ TDiscReq::~TDiscReq()
             delete FEntryArr[i];
 
     ServCloseVfsReq(FReq);
+
+    RdosCloseWait(FWaitHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReq::WaitForever
+#
+#   Purpose....: Wait forever
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscReq::WaitForever()
+{       
+    return RdosWaitForever(FWaitHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReq::WaitTimeout
+#
+#   Purpose....: Wait timeout
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscReq::WaitTimeout(int MilliSec)
+{       
+    return RdosWaitTimeout(FWaitHandle, MilliSec);
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReq::WaitUntil
+#
+#   Purpose....: Wait until
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscReq::WaitUntil(TDateTime &time)
+{       
+    return RdosWaitUntilTimeout(FWaitHandle, time.GetMsb(), time.GetLsb());
 }
 
 /*##########################################################################

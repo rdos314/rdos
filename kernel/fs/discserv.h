@@ -29,6 +29,7 @@
 #define _DISCSERV_H
 
 #include "thread.h"
+#include "datetime.h"
 
 #define MAX_DISC_REQ_COUNT 15
 #define MAX_DISC_REQ_ENTRIES 255
@@ -55,10 +56,15 @@ public:
     int Add(long long StartSector, int SectorCount);
     void Start();
 
+    int WaitForever();
+    int WaitTimeout(int MilliSec);
+    int WaitUntil(TDateTime &time);
+
 protected:
     TDiscServer *FServer;
     TDiscReqEntry *FEntryArr[MAX_DISC_REQ_ENTRIES];
     int FReq;
+    int FWaitHandle;
 };
 
 class TDiscServer : public TThread
