@@ -34,21 +34,30 @@
 #define MAX_DISC_REQ_COUNT 15
 #define MAX_DISC_REQ_ENTRIES 255
 
+class TDiscServer;
+class TDiscReq;
+
 class TDiscReqEntry
 {
 public:
-    TDiscReqEntry(long long StartSector, int SectorCount);
+    TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCount);
     ~TDiscReqEntry();
 
+    int GetId();
+    long long GetStartSector();
+    int GetSectorCount();
+    char *GetData();
+
+protected:
     long long FStartSector;
     int FSectorCount;
     char *FData;
+    int FId;
 };
-
-class TDiscServer;
 
 class TDiscReq
 {
+friend class TDiscReqEntry;
 public:
     TDiscReq(TDiscServer *server);
     ~TDiscReq();
@@ -61,6 +70,8 @@ public:
     int WaitUntil(TDateTime &time);
 
 protected:
+    void Add(TDiscReqEntry *entry);
+
     TDiscServer *FServer;
     TDiscReqEntry *FEntryArr[MAX_DISC_REQ_ENTRIES];
     int FReq;

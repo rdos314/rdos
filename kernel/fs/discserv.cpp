@@ -43,11 +43,15 @@ static int handle = 0;
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscReqEntry::TDiscReqEntry(long long StartSector, int SectorCount)
+TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCount)
 {
     FStartSector = StartSector;
     FSectorCount = SectorCount;
     FData = 0;
+
+    FId = ServReqVfsSectors(Req->FReq, StartSector, SectorCount);
+
+    Req->Add(this);
 }
 
 /*##########################################################################
@@ -63,6 +67,70 @@ TDiscReqEntry::TDiscReqEntry(long long StartSector, int SectorCount)
 ##########################################################################*/
 TDiscReqEntry::~TDiscReqEntry()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReqEntry::GetId
+#
+#   Purpose....: Get ID
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscReqEntry::GetId()
+{
+    return FId;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReqEntry::GetStartSector
+#
+#   Purpose....: Get start sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TDiscReqEntry::GetStartSector()
+{
+    return FStartSector;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReqEntry::GetSectorCount
+#
+#   Purpose....: Get sector count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscReqEntry::GetSectorCount()
+{
+    return FSectorCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReqEntry::GetData
+#
+#   Purpose....: Get data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TDiscReqEntry::GetData()
+{
+    return FData;
 }
 
 /*##########################################################################
@@ -174,16 +242,29 @@ int TDiscReq::WaitUntil(TDateTime &time)
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscReq::Add(long long StartSector, int SectorCount)
+void TDiscReq::Add(TDiscReqEntry *entry)
 {
-    int id = ServReqVfsSectors(FReq, StartSector, SectorCount);
+    int id = entry->GetId();
 
     if (id > 0 && id <= MAX_DISC_REQ_ENTRIES)
-    {
-        FEntryArr[id - 1] = new TDiscReqEntry(StartSector, SectorCount);
-        return id;
-    }
-    return 0;
+        FEntryArr[id - 1] = entry;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReq::Add
+#
+#   Purpose....: Add request
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscReq::Add(long long StartSector, int SectorCount)
+{
+    TDiscReqEntry *entry = new TDiscReqEntry(this, StartSector, SectorCount);
+    return entry->GetId();
 }
 
 /*##########################################################################

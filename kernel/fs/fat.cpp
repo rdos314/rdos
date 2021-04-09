@@ -52,7 +52,8 @@ int main(int argc, char **argv)
 
     TDiscReq req(&server);
 
-    req.Add(121, 16);
-    req.Add(131, 8);
+    TDiscReqEntry e1(&req, 121, 16);
+    TDiscReqEntry e2(&req, 131, 8);
+
     req.WaitForever();
 }
