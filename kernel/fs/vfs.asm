@@ -3548,8 +3548,8 @@ map_vfs_req    Proc far
     push fs
     push gs
     push eax
+    push ebx
     push ecx
-    push edx
     push esi
     push edi
     push ebp
@@ -3592,9 +3592,9 @@ map_vfs_req    Proc far
 ;
     EnterSection ds:vfs_section
 ;
-    xor eax,eax
-    xchg eax,gs:[edi].vfsre_sector_count
+    mov eax,gs:[edi].vfsre_sector_count
     or eax,eax
+    stc
     jz mvrLeave
 ;
     mov cl,3
@@ -3602,11 +3602,16 @@ map_vfs_req    Proc far
     shr eax,cl
     mov ecx,eax
 ;
-    inc gs:vfsrh_deleted_count
+    shl eax,12
+    AllocateLocalLinear
+    mov ebp,edx
+;
     mov eax,gs:[edi].vfsre_start_sector
     mov edx,gs:[edi].vfsre_start_sector+4
     call SectorToBlock
     jc mvrLeave
+;
+    push ebp
 
 mvrLoop:
     call BlockToBuf
@@ -3615,17 +3620,39 @@ mvrLoop:
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz mvrNext
 ;
-    sub es:[esi].vfsp_ref_bitmap,1
+    push eax
+    push edx
+;
+    mov edx,ebp
+    mov eax,es:[esi]
+    and ax,0F000h
+    or ax,867h
+    movzx ebx,word ptr es:[esi+4]
+    SetPageEntry
+;
+    pop edx
+    pop eax
 
 mvrNext:
+    add ebp,1000h
     add eax,8
     adc edx,0
     sub ecx,1
     jnz mvrLoop
+;
+    pop edx
+    mov eax,gs:[edi].vfsre_linear
+    and eax,0E00h
+    add edx,eax
+    mov gs:[edi].vfsre_linear,edx
+;
+    mov bx,system_data_sel
+    mov es,bx
+    sub edx,es:flat_base
+    clc
 
 mvrLeave:
     LeaveSection ds:vfs_section
-    clc
     jmp mvrDone
 
 mvrFail:
@@ -3635,8 +3662,8 @@ mvrDone:
     pop ebp
     pop edi
     pop esi
-    pop edx
     pop ecx
+    pop ebx
     pop eax
     pop gs
     pop fs
