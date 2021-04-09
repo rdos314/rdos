@@ -44,6 +44,13 @@ MAX_BITMAP_COUNT =  16
 MAX_DISC_COUNT   =  16
 MAX_PART_COUNT   = 255
 
+req_wait_header      STRUC
+
+rw_obj              wait_obj_header <>
+rw_handle           DW ?
+
+req_wait_header      ENDS
+
 part_struc      STRUC
 
 part_status             DB ?
@@ -1414,7 +1421,6 @@ npLoop:
     or si,si
     jz npLoop
 ;
-    int 3
     mov gs,si
     mov ebp,gs:vfsrh_entry_count
     mov ebx,SIZE vfs_req_header
@@ -1438,8 +1444,16 @@ npCheckLoop:
     sub gs:vfsrh_remain_count,1
     jnz npCheckNext
 ;
-    int 3
-
+    xor di,di
+    xchg di,gs:vfsrh_wait_obj
+    or di,di
+    jz npCheckNext
+;
+    push es
+    mov es,edi
+    SignalWait
+    pop es
+    
 npCheckNext:
     add ebx,SIZE vfs_req_entry
     sub ebp,1
@@ -3374,6 +3388,67 @@ req_vfs_sectors    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ReqHandleToSel
+;
+;       DESCRIPTION:    Convert req handle to selector
+;
+;       PARAMETERS:     EBX         Req handle
+;
+;       RETURNS:        NC
+;                           FS      Part sel
+;                           GS      Req sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqHandleToSel  Proc near
+    push ds
+    push esi
+;
+    mov si,SEG data
+    mov ds,si
+    or bh,bh
+    jz rqhsFail
+;
+    cmp bh,MAX_PART_COUNT
+    ja rqhsFail
+;
+    movzx esi,bh
+    dec esi
+    add esi,esi
+    mov si,ds:[esi].part_arr
+    or si,si
+    jz rqhsFail
+;
+    mov fs,si
+    or bl,bl
+    jz rqhsFail
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja rqhsFail
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz rqhsFail
+;
+    mov gs,si
+    clc
+    jmp rqhsDone
+
+rqhsFail:
+    stc
+
+rqhsDone:
+    pop esi
+    pop ds
+    ret
+ReqHandleToSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           StartVfsReq
 ;
 ;       DESCRIPTION:    Start VFS req
@@ -3386,55 +3461,21 @@ start_vfs_req_name       DB 'Start VFS Req',0
 
 start_vfs_req    Proc far
     push ds
-    push es
     push fs
     push gs
     push ebx
-    push esi
 ;
-    mov si,SEG data
-    mov ds,si
-    or bh,bh
-    jz srqDone
+    call ReqHandleToSel
+    jc srqDone
 ;
-    cmp bh,MAX_PART_COUNT
-    ja srqDone
-;
-    movzx esi,bh
-    dec esi
-    add esi,esi
-    mov si,ds:[esi].part_arr
-    or si,si
-    jz srqDone
-;
-    mov fs,si
-    or bl,bl
-    jz srqDone
-;
-    cmp bl,MAX_VFS_REQ_COUNT
-    ja srqDone
-;
-    movzx esi,bl
-    dec esi
-    shl esi,1
-    mov si,fs:[esi].vfsp_req_arr
-    or si,si
-    jz srqDone
-;
-    mov gs,si
     mov ds,fs:vfsp_disc_sel
-    mov si,serv_flat_sel
-    mov es,si
-;
     mov bx,ds:vfs_server
     Signal
 
 srqDone:
-    pop esi
     pop ebx
     pop gs
     pop fs
-    pop es
     pop ds
     ret
 start_vfs_req   Endp
@@ -3453,61 +3494,145 @@ start_vfs_req   Endp
 is_vfs_req_done_name       DB 'Is VFS Req Done',0
 
 is_vfs_req_done    Proc far
-    push ds
-    push es
     push fs
     push gs
-    push ebx
     push esi
 ;
-    mov si,SEG data
-    mov ds,si
-    or bh,bh
-    jz irqdFail
+    call ReqHandleToSel
+    jc irqdDone
 ;
-    cmp bh,MAX_PART_COUNT
-    ja irqdFail
-;
-    movzx esi,bh
-    dec esi
-    add esi,esi
-    mov si,ds:[esi].part_arr
-    or si,si
-    jz irqdFail
-;
-    mov fs,si
-    or bl,bl
-    jz irqdFail
-;
-    cmp bl,MAX_VFS_REQ_COUNT
-    ja irqdFail
-;
-    movzx esi,bl
-    dec esi
-    shl esi,1
-    mov si,fs:[esi].vfsp_req_arr
-    or si,si
-    jz irqdFail
-;
-    mov gs,si
     mov esi,gs:vfsrh_remain_count
     or esi,esi
-    jnz irqdFail
+    stc
+    jnz irqdDone
 ;
     clc
 
-irqdFail:
-    stc
-
 irqdDone:
     pop esi
-    pop ebx
     pop gs
     pop fs
-    pop es
-    pop ds
     ret
 is_vfs_req_done   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForReq
+;
+;           DESCRIPTION:    Start a wait for req
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_req      PROC far
+    push fs
+    push gs
+    push eax
+    push ebx
+;
+    mov bx,es:rw_handle
+    call ReqHandleToSel
+    jc stwrDone
+;
+    mov gs:vfsrh_wait_obj,es
+    mov eax,gs:vfsrh_remain_count
+    or eax,eax
+    jnz stwrDone
+;
+    mov gs:vfsrh_wait_obj,0
+    SignalWait
+
+stwrDone:
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    ret
+start_wait_for_req Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForReq
+;
+;           DESCRIPTION:    Stop a wait for req
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_req       PROC far
+    push fs
+    push gs
+    push eax
+    push ebx
+;
+    mov bx,es:rw_handle
+    call ReqHandleToSel
+    jc spwrDone
+;
+    mov gs:vfsrh_wait_obj,0
+
+spwrDone:
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    ret
+stop_wait_for_req Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearReq
+;
+;           DESCRIPTION:    Clear req
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_req       PROC far
+    ret
+clear_req       Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsReqIdle
+;
+;           DESCRIPTION:    Check if req is idle
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_req_idle     PROC far
+    push fs
+    push gs
+    push eax
+    push ebx
+;
+    mov bx,es:rw_handle
+    call ReqHandleToSel
+    jc iriDone
+;
+    mov eax,gs:vfsrh_remain_count
+    or eax,eax
+    clc
+    jne iriDone
+;
+    stc
+
+iriDone:
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    ret
+is_req_idle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3524,50 +3649,32 @@ is_vfs_req_done   Endp
 
 add_wait_for_vfs_req_name       DB 'Add Wait For VFS Req',0
 
+add_wait_tab:
+aw0 DD OFFSET start_wait_for_req,   SEG code
+aw1 DD OFFSET stop_wait_for_req,    SEG code
+aw2 DD OFFSET clear_req,            SEG code
+aw3 DD OFFSET is_req_idle,          SEG code
+
 add_wait_for_vfs_req    Proc far
     push ds
     push es
-    push fs
-    push gs
-    push ebx
-    push esi
+    push eax
+    push edi
 ;
-    mov si,SEG data
-    mov ds,si
-    or ah,ah
-    jz awrqDone
+    push ax
+    mov eax,cs
+    mov es,eax
+    mov ax,SIZE req_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_tab
+    AddWait
+    pop ax
+    jc awrqDone
 ;
-    cmp ah,MAX_PART_COUNT
-    ja  awrqDone
-;
-    movzx esi,bh
-    dec esi
-    add esi,esi
-    mov si,ds:[esi].part_arr
-    or si,si
-    jz awrqDone
-;
-    mov fs,si
-    or al,al
-    jz awrqDone
-;
-    cmp al,MAX_VFS_REQ_COUNT
-    ja awrqDone
-;
-    movzx esi,al
-    dec esi
-    shl esi,1
-    mov si,fs:[esi].vfsp_req_arr
-    or si,si
-    jz awrqDone
-;
-    mov gs,si
+    mov es:rw_handle,ax
 
 awrqDone:
-    pop esi
-    pop ebx
-    pop gs
-    pop fs
+    pop edi
+    pop eax
     pop es
     pop ds
     ret

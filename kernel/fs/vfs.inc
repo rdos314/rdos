@@ -162,7 +162,8 @@ vfs_req_header  STRUC
 
 vfsrh_entry_count         DD ?
 vfsrh_remain_count        DD ?
-vfsrh_pad                 DD ?,?
+vfsrh_wait_obj            DW ?
+vfsrh_pad                 DW ?,?,?
 
 vfs_req_header  ENDS
 
