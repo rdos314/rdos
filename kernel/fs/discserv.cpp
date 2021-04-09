@@ -81,9 +81,11 @@ TDiscReq::TDiscReq(TDiscServer *server)
     int i;
 
     FWaitHandle = RdosCreateWait();
-
     FServer = server;
     FReq = ServCreateVfsReq(handle);
+
+    ServAddWaitForVfsReq(FWaitHandle, FReq, FReq & 0xFF);
+
     FServer->Add(FReq & 0xFF, this);
 
     for (i = 0; i < MAX_DISC_REQ_ENTRIES; i++)

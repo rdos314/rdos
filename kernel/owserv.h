@@ -60,3 +60,12 @@
 #pragma aux ServStartVfsReq = \
     ServGate_start_vfs_req  \
     __parm [__ebx]
+
+#pragma aux ServIsVfsReqDone = \
+    ServGate_is_vfs_req_done  \
+    CarryToBool \
+    __parm [__ebx]
+
+#pragma aux ServAddWaitForVfsReq = \
+    ServGate_add_wait_for_vfs_req  \
+    __parm [__ebx] [__eax] [__ecx]

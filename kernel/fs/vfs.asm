@@ -3442,6 +3442,140 @@ start_vfs_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           IsVfsReqDone
+;
+;       DESCRIPTION:    Is VFS req done
+;
+;       PARAMETERS:     EBX         Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_vfs_req_done_name       DB 'Is VFS Req Done',0
+
+is_vfs_req_done    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push esi
+;
+    mov si,SEG data
+    mov ds,si
+    or bh,bh
+    jz irqdFail
+;
+    cmp bh,MAX_PART_COUNT
+    ja irqdFail
+;
+    movzx esi,bh
+    dec esi
+    add esi,esi
+    mov si,ds:[esi].part_arr
+    or si,si
+    jz irqdFail
+;
+    mov fs,si
+    or bl,bl
+    jz irqdFail
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja irqdFail
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz irqdFail
+;
+    mov gs,si
+    mov esi,gs:vfsrh_remain_count
+    or esi,esi
+    jnz irqdFail
+;
+    clc
+
+irqdFail:
+    stc
+
+irqdDone:
+    pop esi
+    pop ebx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+is_vfs_req_done   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddWaitForVfsReq
+;
+;       DESCRIPTION:    Add wait for VFS req
+;
+;       PARAMETERS:     EBX         Wait handle
+;                       EAX         Req handle
+;                       ECX         ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_vfs_req_name       DB 'Add Wait For VFS Req',0
+
+add_wait_for_vfs_req    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push esi
+;
+    mov si,SEG data
+    mov ds,si
+    or ah,ah
+    jz awrqDone
+;
+    cmp ah,MAX_PART_COUNT
+    ja  awrqDone
+;
+    movzx esi,bh
+    dec esi
+    add esi,esi
+    mov si,ds:[esi].part_arr
+    or si,si
+    jz awrqDone
+;
+    mov fs,si
+    or al,al
+    jz awrqDone
+;
+    cmp al,MAX_VFS_REQ_COUNT
+    ja awrqDone
+;
+    movzx esi,al
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz awrqDone
+;
+    mov gs,si
+
+awrqDone:
+    pop esi
+    pop ebx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+add_wait_for_vfs_req   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           TestServ
 ;
 ;       DESCRIPTION:    Test server
@@ -3530,6 +3664,18 @@ init    Proc far
     mov edi,OFFSET start_vfs_req_name
     xor cl,cl
     mov ax,start_vfs_req_nr
+    RegisterServGate
+;
+    mov esi,OFFSET is_vfs_req_done
+    mov edi,OFFSET is_vfs_req_done_name
+    xor cl,cl
+    mov ax,is_vfs_req_done_nr
+    RegisterServGate
+;
+    mov esi,OFFSET add_wait_for_vfs_req
+    mov edi,OFFSET add_wait_for_vfs_req_name
+    xor cl,cl
+    mov ax,add_wait_for_vfs_req_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv

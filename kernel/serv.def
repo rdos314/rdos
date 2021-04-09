@@ -6,5 +6,7 @@ create_vfs_req_nr         = 4
 close_vfs_req_nr          = 5
 req_vfs_sectors_nr        = 6
 start_vfs_req_nr          = 7
+is_vfs_req_done_nr        = 8
+add_wait_for_vfs_req_nr   = 9
 
 serv_gate_entries         = 20

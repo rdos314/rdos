@@ -91,3 +91,15 @@ ReqVfsSectors  MACRO
 StartVfsReq  MACRO
     ServGate start_vfs_req_nr
                     ENDM
+
+; IN  EBX              Req handle
+IsVfsReqDone  MACRO
+    ServGate is_vfs_req_done_nr
+                    ENDM
+
+; IN  AX               Req handle
+; IN  BX               Wait handle
+; IN  ECX              Object ID
+AddWaitForVfsReq       MACRO
+    ServGate add_wait_for_vfs_req_nr
+                     ENDM
