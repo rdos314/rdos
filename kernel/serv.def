@@ -4,9 +4,10 @@ get_vfs_handle_nr         = 2
 get_vfs_sectors_nr        = 3
 create_vfs_req_nr         = 4
 close_vfs_req_nr          = 5
-req_vfs_sectors_nr        = 6
-start_vfs_req_nr          = 7
-is_vfs_req_done_nr        = 8
-add_wait_for_vfs_req_nr   = 9
+add_vfs_sectors_nr        = 6
+remove_vfs_sectors_nr     = 7
+start_vfs_req_nr          = 8
+is_vfs_req_done_nr        = 9
+add_wait_for_vfs_req_nr   = 10
 
 serv_gate_entries         = 20

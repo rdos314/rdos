@@ -46,8 +46,8 @@
     ServGate_close_vfs_req  \
     __parm [__ebx]
 
-#pragma aux ServReqVfsSectors = \
-    ServGate_req_vfs_sectors  \
+#pragma aux ServAddVfsSectors = \
+    ServGate_add_vfs_sectors  \
     "jc fail" \
     "mov eax,ebx" \
     "jmp done" \
@@ -56,6 +56,10 @@
     "done:" \
     __parm [__ebx] [__edx __eax] [__ecx] \
     __value [__eax]
+
+#pragma aux ServRemoveVfsSectors = \
+    ServGate_remove_vfs_sectors  \
+    __parm [__ebx] [__eax]
 
 #pragma aux ServStartVfsReq = \
     ServGate_start_vfs_req  \

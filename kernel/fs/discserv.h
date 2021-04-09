@@ -52,6 +52,8 @@ protected:
     long long FStartSector;
     int FSectorCount;
     char *FData;
+
+    TDiscReq *FReq;
     int FId;
 };
 

@@ -3211,9 +3211,9 @@ GetReqMask   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReqVfsSectors
+;       NAME:           AddVfsSectors
 ;
-;       DESCRIPTION:    Req VFS sectors
+;       DESCRIPTION:    Add VFS sectors
 ;
 ;       PARAMETERS:     EBX         Req handle
 ;                       EDX:EAX     Start sector
@@ -3223,9 +3223,9 @@ GetReqMask   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-req_vfs_sectors_name       DB 'Req VFS Sectors',0
+add_vfs_sectors_name       DB 'Add VFS Sectors',0
 
-req_vfs_sectors    Proc far
+add_vfs_sectors    Proc far
     push ds
     push es
     push fs
@@ -3240,42 +3240,42 @@ req_vfs_sectors    Proc far
     mov si,SEG data
     mov ds,si
     or bh,bh
-    jz rqsFail
+    jz arsFail
 ;
     cmp bh,MAX_PART_COUNT
-    ja rqsFail
+    ja arsFail
 ;
     movzx esi,bh
     dec esi
     add esi,esi
     mov si,ds:[esi].part_arr
     or si,si
-    jz rqsFail
+    jz arsFail
 ;
     mov fs,si
     or bl,bl
-    jz rqsFail
+    jz arsFail
 ;
     cmp bl,MAX_VFS_REQ_COUNT
-    ja rqsFail
+    ja arsFail
 ;
     movzx esi,bl
     dec esi
     shl esi,1
     mov si,fs:[esi].vfsp_req_arr
     or si,si
-    jz rqsFail
+    jz arsFail
 ;
     mov gs,si
     mov esi,fs:vfsp_sector_count
     mov edi,fs:vfsp_sector_count+4
     sub esi,eax
     sbb edi,edx
-    jc rqsFail
+    jc arsFail
 ;
     sub esi,ecx
     sbb edi,0
-    jc rqsFail
+    jc arsFail
 ;
     mov ds,fs:vfsp_disc_sel
     mov si,serv_flat_sel
@@ -3285,31 +3285,31 @@ req_vfs_sectors    Proc far
 ;
     mov di,gs:vfsrh_deleted_count
     or di,di
-    jz rqsAppend
+    jz arsAppend
 ;
     dec di
     mov gs:vfsrh_deleted_count,di
 ;
     mov edi,SIZE vfs_req_header
 
-rqsScanLoop:
+arsScanLoop:
     mov esi,gs:[edi].vfsre_sector_count
     or esi,esi
-    jz rqsTake
+    jz arsTake
 ;
     add edi,SIZE vfs_req_entry
-    jmp rqsScanLoop
+    jmp arsScanLoop
 
-rqsAppend:
+arsAppend:
     movzx edi,gs:vfsrh_entry_count
     cmp di,MAX_VFS_ENTRY_COUNT
-    je rqsLeaveFail
+    je arsLeaveFail
 ;
     inc di
     mov gs:vfsrh_entry_count,di
     shl edi,4
 
-rqsTake:
+arsTake:
     mov gs:[edi].vfsre_linear,0
 ;
     add eax,fs:vfsp_start_sector
@@ -3334,7 +3334,7 @@ rqsTake:
     pop eax
 ;
     call SectorCountToBlock
-    jc rqsLeaveFail
+    jc arsLeaveFail
 ;
     push ebx
     push ecx
@@ -3350,10 +3350,10 @@ rqsTake:
 ;
     call GetReqMask
 
-rqsLoop:
+arsLoop:
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz rqsNext
+    jnz arsNext
 ;
     inc gs:vfsrh_remain_count
     or es:[esi].vfsp_ref_bitmap,bp
@@ -3371,31 +3371,31 @@ rqsLoop:
     mov ebx,ds:vfs_scan_pos
     and ebx,ds:vfs_scan_pos+4
     add ebx,1
-    jnc rqsNext
+    jnc arsNext
 ;
     mov ds:vfs_scan_pos,eax
     mov ds:vfs_scan_pos+4,edx
 
-rqsNext:
+arsNext:
     add eax,8
     adc edx,0
     sub ecx,1
-    jnz rqsLoop
+    jnz arsLoop
 ;
     LeaveSection ds:vfs_section
 ;
     mov ebx,edi
     shr ebx,4
     clc
-    jmp rqsDone
+    jmp arsDone
 
-rqsLeaveFail:
+arsLeaveFail:
     LeaveSection ds:vfs_section
 
-rqsFail:
+arsFail:
     stc
 
-rqsDone:
+arsDone:
     pop ebp
     pop edi
     pop esi
@@ -3407,7 +3407,77 @@ rqsDone:
     pop es
     pop ds
     ret
-req_vfs_sectors    Endp
+add_vfs_sectors    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RemoveVfsSectors
+;
+;       DESCRIPTION:    Remove VFS sectors
+;
+;       PARAMETERS:     EBX         Req handle
+;                       EAX         Req #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+remove_vfs_sectors_name       DB 'Remove VFS Sectors',0
+
+remove_vfs_sectors    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov si,SEG data
+    mov ds,si
+    or bh,bh
+    jz rrsFail
+;
+    cmp bh,MAX_PART_COUNT
+    ja rrsFail
+;
+    movzx esi,bh
+    dec esi
+    add esi,esi
+    mov si,ds:[esi].part_arr
+    or si,si
+    jz rrsFail
+;
+    mov fs,si
+    or bl,bl
+    jz rrsFail
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja rrsFail
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz rrsFail
+;
+
+rrsFail:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+remove_vfs_sectors Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3797,10 +3867,16 @@ init    Proc far
     mov ax,close_vfs_req_nr
     RegisterServGate
 ;
-    mov esi,OFFSET req_vfs_sectors
-    mov edi,OFFSET req_vfs_sectors_name
+    mov esi,OFFSET add_vfs_sectors
+    mov edi,OFFSET add_vfs_sectors_name
     xor cl,cl
-    mov ax,req_vfs_sectors_nr
+    mov ax,add_vfs_sectors_nr
+    RegisterServGate
+;
+    mov esi,OFFSET remove_vfs_sectors
+    mov edi,OFFSET remove_vfs_sectors_name
+    xor cl,cl
+    mov ax,remove_vfs_sectors_nr
     RegisterServGate
 ;
     mov esi,OFFSET start_vfs_req

@@ -49,7 +49,9 @@ TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCou
     FSectorCount = SectorCount;
     FData = 0;
 
-    FId = ServReqVfsSectors(Req->FReq, StartSector, SectorCount);
+    FReq = Req;
+
+    FId = ServAddVfsSectors(Req->FReq, StartSector, SectorCount);
 
     Req->Add(this);
 }
@@ -67,6 +69,7 @@ TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCou
 ##########################################################################*/
 TDiscReqEntry::~TDiscReqEntry()
 {
+    ServRemoveVfsSectors(FReq->FReq, FId);
 }
 
 /*##########################################################################
@@ -197,7 +200,7 @@ TDiscReq::~TDiscReq()
 #
 ##########################################################################*/
 int TDiscReq::WaitForever()
-{       
+{
     return RdosWaitForever(FWaitHandle);
 }
 
@@ -212,7 +215,7 @@ int TDiscReq::WaitForever()
 #
 ##########################################################################*/
 int TDiscReq::WaitTimeout(int MilliSec)
-{       
+{
     return RdosWaitTimeout(FWaitHandle, MilliSec);
 }
 
@@ -227,7 +230,7 @@ int TDiscReq::WaitTimeout(int MilliSec)
 #
 ##########################################################################*/
 int TDiscReq::WaitUntil(TDateTime &time)
-{       
+{
     return RdosWaitUntilTimeout(FWaitHandle, time.GetMsb(), time.GetLsb());
 }
 
@@ -306,7 +309,7 @@ TDiscServer::TDiscServer(int dev, int unit)
         FReqArr[i] = 0;
 
     sprintf(str, "Disc Serv %02hX.%02hX", dev, unit);
-    Start(str, 4, 0x4000);    
+    Start(str, 4, 0x4000);
 }
 
 /*##########################################################################
