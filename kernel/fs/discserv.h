@@ -30,6 +30,7 @@
 
 #include "thread.h"
 
+#define MAX_DISC_REQ_COUNT 15
 #define MAX_DISC_REQ_ENTRIES 255
 
 class TDiscReqEntry
@@ -43,22 +44,26 @@ public:
     char *FData;
 };
 
+class TDiscServer;
+
 class TDiscReq
 {
 public:
-    TDiscReq();
+    TDiscReq(TDiscServer *server);
     ~TDiscReq();
 
     int Add(long long StartSector, int SectorCount);
     void Start();
 
 protected:
+    TDiscServer *FServer;
     TDiscReqEntry *FEntryArr[MAX_DISC_REQ_ENTRIES];
     int FReq;
 };
 
 class TDiscServer : public TThread
 {
+friend class TDiscReq;
 public:
     TDiscServer(int dev, int unit);
     ~TDiscServer();
@@ -66,7 +71,11 @@ public:
     long long GetPartSectors();
 
 protected:
+    void Add(int id, TDiscReq *req);
+    void Remove(int id);
     virtual void Execute();
+
+    TDiscReq *FReqArr[MAX_DISC_REQ_COUNT];
 };
 
 #endif

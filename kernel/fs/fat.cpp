@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     sectors = server.GetPartSectors();
     printf("Sectors: %lld\r\n", sectors);
 
-    TDiscReq req;
+    TDiscReq req(&server);
 
     req.Add(121, 16);
     req.Add(131, 8);

@@ -76,11 +76,13 @@ TDiscReqEntry::~TDiscReqEntry()
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscReq::TDiscReq()
+TDiscReq::TDiscReq(TDiscServer *server)
 {
     int i;
 
+    FServer = server;
     FReq = ServCreateVfsReq(handle);
+    FServer->Add(FReq & 0xFF, this);
 
     for (i = 0; i < MAX_DISC_REQ_ENTRIES; i++)
         FEntryArr[i] = 0;
@@ -100,6 +102,8 @@ TDiscReq::TDiscReq()
 TDiscReq::~TDiscReq()
 {
     int i;
+
+    FServer->Remove(FReq & 0xFF);
 
     for (i = 0; i < MAX_DISC_REQ_ENTRIES; i++)
         if (FEntryArr[i])
@@ -161,9 +165,13 @@ void TDiscReq::Start()
 TDiscServer::TDiscServer(int dev, int unit)
 {
     char str[40];
+    int i;
 
     if (!handle)
         handle = ServGetVfsHandle();
+
+    for (i = 0; i < MAX_DISC_REQ_COUNT; i++)
+        FReqArr[i] = 0;
 
     sprintf(str, "Disc Serv %02hX.%02hX", dev, unit);
     Start(str, 4, 0x4000);    
@@ -182,6 +190,40 @@ TDiscServer::TDiscServer(int dev, int unit)
 ##########################################################################*/
 TDiscServer::~TDiscServer()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscServer::Add
+#
+#   Purpose....: Add disc req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDiscServer::Add(int id, TDiscReq *req)
+{
+    if (id > 0 && id <= MAX_DISC_REQ_COUNT)
+        FReqArr[id - 1] = req;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscServer::Remove
+#
+#   Purpose....: Remove disc req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDiscServer::Remove(int id)
+{
+    if (id > 0 && id <= MAX_DISC_REQ_COUNT)
+        FReqArr[id - 1] = 0;
 }
 
 /*##########################################################################
