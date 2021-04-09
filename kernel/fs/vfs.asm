@@ -3438,34 +3438,76 @@ remove_vfs_sectors    Proc far
     mov si,SEG data
     mov ds,si
     or bh,bh
-    jz rrsFail
+    jz rrsDone
 ;
     cmp bh,MAX_PART_COUNT
-    ja rrsFail
+    ja rrsDone
 ;
     movzx esi,bh
     dec esi
     add esi,esi
     mov si,ds:[esi].part_arr
     or si,si
-    jz rrsFail
+    jz rrsDone
 ;
     mov fs,si
     or bl,bl
-    jz rrsFail
+    jz rrsDone
 ;
     cmp bl,MAX_VFS_REQ_COUNT
-    ja rrsFail
+    ja rrsDone
 ;
     movzx esi,bl
     dec esi
     shl esi,1
     mov si,fs:[esi].vfsp_req_arr
     or si,si
-    jz rrsFail
+    jz rrsDone
 ;
+    mov gs,si
+    mov ds,fs:vfsp_disc_sel
+    mov si,serv_flat_sel
+    mov es,si
+    mov edi,eax
+    shl edi,4
+;
+    EnterSection ds:vfs_section
+;
+    inc gs:vfsrh_deleted_count
+    xor ecx,ecx
+    xchg ecx,gs:[edi].vfsre_sector_count
+    or ecx,ecx
+    jz rrsLeave
+;
+    mov eax,gs:[edi].vfsre_start_sector
+    mov edx,gs:[edi].vfsre_start_sector
+    call SectorToBlock
+    jc rrsLeave
 
-rrsFail:
+rrsLoop:
+    call BlockToBuf
+    jc rrsNext
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz rrsDecRem
+
+rrsUnlock:
+    sub es:[esi].vfsp_ref_bitmap,1
+    jmp rrsNext
+
+rrsDecRem:
+    dec gs:vfsrh_remain_count
+
+rrsNext:
+    add edx,8
+    adc edx,0
+    sub ecx,1
+    jnz rrsLoop
+
+rrsLeave:
+    LeaveSection ds:vfs_section
+
+rrsDone:
     pop ebp
     pop edi
     pop esi
