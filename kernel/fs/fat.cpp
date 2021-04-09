@@ -6,10 +6,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "discreq.h"
+
 #define FALSE 0
 #define TRUE !FALSE
-
-static int handle = 0;
 
 /*##########################################################################
 #
@@ -26,22 +26,18 @@ int main(int argc, char **argv)
 {
     char *ptr;
     long long sectors;
-    int req;
     int id;
-
-    handle = ServGetVfsHandle();
-
-    sectors = ServGetVfsSectors(handle);
-    printf("Sectors: %lld\r\n", sectors);
-
-    req = ServCreateVfsReq(handle);
-    id = ServReqVfsSectors(req, 121, 16);
-    id = ServReqVfsSectors(req, 131, 8);
-    ServStartVfsReq(req);
 
     ServTest();
 
-    ServCloseVfsReq(req);
+    sectors = TDiscReq::GetPartSectors();
+    printf("Sectors: %lld\r\n", sectors);
+
+    TDiscReq req;
+
+    req.Add(121, 16);
+    req.Add(131, 8);
+    req.Start();
 
     switch (argc)
     {
