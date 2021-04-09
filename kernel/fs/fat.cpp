@@ -54,6 +54,5 @@ int main(int argc, char **argv)
 
     req.Add(121, 16);
     req.Add(131, 8);
-    req.Start();
     req.WaitForever();
 }

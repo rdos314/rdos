@@ -1444,7 +1444,6 @@ npCheckLoop:
     sub gs:vfsrh_remain_count,1
     jnz npCheckNext
 ;
-    int 3
     xor di,di
     xchg di,gs:vfsrh_wait_obj
     or di,di
@@ -3461,7 +3460,6 @@ ReqHandleToSel  Endp
 start_vfs_req_name       DB 'Start VFS Req',0
 
 start_vfs_req    Proc far
-    push ds
     push fs
     push gs
     push ebx
@@ -3469,15 +3467,20 @@ start_vfs_req    Proc far
     call ReqHandleToSel
     jc srqDone
 ;
+    mov eax,gs:vfsrh_remain_count
+    or eax,eax
+    jz srqDone
+;
+    push ds
     mov ds,fs:vfsp_disc_sel
     mov bx,ds:vfs_server
     Signal
+    pop ds
 
 srqDone:
     pop ebx
     pop gs
     pop fs
-    pop ds
     ret
 start_vfs_req   Endp
 
@@ -3540,10 +3543,18 @@ start_wait_for_req      PROC far
     mov gs:vfsrh_wait_obj,es
     mov eax,gs:vfsrh_remain_count
     or eax,eax
-    jnz stwrDone
+    jnz stwrStart
 ;
     mov gs:vfsrh_wait_obj,0
     SignalWait
+    jmp stwrDone
+
+stwrStart:
+    push ds
+    mov ds,fs:vfsp_disc_sel
+    mov bx,ds:vfs_server
+    Signal
+    pop ds
 
 stwrDone:
     pop ebx
