@@ -1444,6 +1444,7 @@ npCheckLoop:
     sub gs:vfsrh_remain_count,1
     jnz npCheckNext
 ;
+    int 3
     xor di,di
     xchg di,gs:vfsrh_wait_obj
     or di,di
