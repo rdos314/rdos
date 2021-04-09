@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "discserv.h"
 #include "discreq.h"
 
 #define FALSE 0
@@ -26,9 +27,26 @@ int main(int argc, char **argv)
 {
     char *ptr;
     long long sectors;
-    int id;
+    int dev;
+    int unit;
 
     ServTest();
+
+    if (argc >= 3)
+    {
+        ptr = argv[1];
+        dev = atoi(ptr);
+
+        ptr = argv[2];
+        unit = atoi(ptr);
+    }
+    else
+    {
+        dev = 0;
+        unit = 0;
+    }
+
+    TDiscServer server(dev, unit);
 
     sectors = TDiscReq::GetPartSectors();
     printf("Sectors: %lld\r\n", sectors);
@@ -38,53 +56,4 @@ int main(int argc, char **argv)
     req.Add(121, 16);
     req.Add(131, 8);
     req.Start();
-
-    switch (argc)
-    {
-        case 1:
-            ptr = argv[0];
-            break;
-
-        case 2:
-            ptr = argv[0];
-            ptr = argv[1];
-            break;
-
-        case 3:
-            ptr = argv[0];
-            printf(ptr);
-            printf("\r\n");
-
-            ptr = argv[1];
-            printf(ptr);
-            printf("\r\n");
-
-            ptr = argv[2];
-            printf(ptr);
-            printf("\r\n");
-
-            break;
-
-        case 4:
-            ptr = argv[0];
-            printf(ptr);
-            printf("\r\n");
-
-            ptr = argv[1];
-            printf(ptr);
-            printf("\r\n");
-
-            ptr = argv[2];
-            printf(ptr);
-            printf("\r\n");
-
-            ptr = argv[3];
-            printf(ptr);
-            printf("\r\n");
-
-            break;
-
-        default:
-            break;
-    }
 }
