@@ -47,11 +47,14 @@ public:
     long long GetStartSector();
     int GetSectorCount();
     char *GetData();
+    char *Map();
+    void Unmap();
 
 protected:
     long long FStartSector;
     int FSectorCount;
     char *FData;
+    bool FMapped;
 
     TDiscReq *FReq;
     int FId;

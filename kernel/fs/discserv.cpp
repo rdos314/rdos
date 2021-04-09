@@ -70,6 +70,10 @@ TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCou
 TDiscReqEntry::~TDiscReqEntry()
 {
     FReq->Remove(this);
+
+    if (FData)
+        ServUnmapVfsReq(FReq->FReq, FId);
+
     ServRemoveVfsSectors(FReq->FReq, FId);
 }
 
@@ -135,6 +139,40 @@ int TDiscReqEntry::GetSectorCount()
 char *TDiscReqEntry::GetData()
 {
     return FData;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReqEntry::Map
+#
+#   Purpose....: Map sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TDiscReqEntry::Map()
+{
+    FData = ServMapVfsReq(FReq->FReq, FId);
+    return FData;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReqEntry::Unmap
+#
+#   Purpose....: Unmap sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDiscReqEntry::Unmap()
+{
+    ServUnmapVfsReq(FReq->FReq, FId);
+    FData = 0;
 }
 
 /*##########################################################################

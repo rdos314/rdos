@@ -24,12 +24,16 @@
 ##########################################################################*/
 void Test(TDiscServer *server)
 {
+    char *data;
+
     TDiscReq req(server);
 
     TDiscReqEntry e1(&req, 121, 16);
     TDiscReqEntry e2(&req, 131, 8);
 
     req.WaitForever();
+
+    data = e1.Map();
 }
 
 /*##########################################################################

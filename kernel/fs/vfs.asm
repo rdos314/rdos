@@ -3529,6 +3529,143 @@ remove_vfs_sectors Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           MapVfsReq
+;
+;       DESCRIPTION:    Map VFS req
+;
+;       PARAMETERS:     EBX         Req handle
+;                       EAX         Req #
+;
+;       RETURNS:        EDX         Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_vfs_req_name       DB 'Map VFS Req',0
+
+map_vfs_req    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov si,SEG data
+    mov ds,si
+    or bh,bh
+    jz mvrFail
+;
+    cmp bh,MAX_PART_COUNT
+    ja mvrFail
+;
+    movzx esi,bh
+    dec esi
+    add esi,esi
+    mov si,ds:[esi].part_arr
+    or si,si
+    jz mvrFail
+;
+    mov fs,si
+    or bl,bl
+    jz mvrFail
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja mvrFail
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz mvrFail
+;
+    mov gs,si
+    mov ds,fs:vfsp_disc_sel
+    mov si,serv_flat_sel
+    mov es,si
+    mov edi,eax
+    shl edi,4
+;
+    EnterSection ds:vfs_section
+;
+    xor eax,eax
+    xchg eax,gs:[edi].vfsre_sector_count
+    or eax,eax
+    jz mvrLeave
+;
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    shr eax,cl
+    mov ecx,eax
+;
+    inc gs:vfsrh_deleted_count
+    mov eax,gs:[edi].vfsre_start_sector
+    mov edx,gs:[edi].vfsre_start_sector+4
+    call SectorToBlock
+    jc mvrLeave
+
+mvrLoop:
+    call BlockToBuf
+    jc mvrNext
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz mvrNext
+;
+    sub es:[esi].vfsp_ref_bitmap,1
+
+mvrNext:
+    add eax,8
+    adc edx,0
+    sub ecx,1
+    jnz mvrLoop
+
+mvrLeave:
+    LeaveSection ds:vfs_section
+    clc
+    jmp mvrDone
+
+mvrFail:
+    stc
+
+mvrDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+map_vfs_req Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnmapVfsReq
+;
+;       DESCRIPTION:    Unmap VFS req
+;
+;       PARAMETERS:     EBX         Req handle
+;                       EAX         Req #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unmap_vfs_req_name       DB 'Map VFS Req',0
+
+unmap_vfs_req    Proc far
+    ret
+unmap_vfs_req    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReqHandleToSel
 ;
 ;       DESCRIPTION:    Convert req handle to selector
@@ -3924,6 +4061,18 @@ init    Proc far
     mov edi,OFFSET remove_vfs_sectors_name
     xor cl,cl
     mov ax,remove_vfs_sectors_nr
+    RegisterServGate
+;
+    mov esi,OFFSET map_vfs_req
+    mov edi,OFFSET map_vfs_req_name
+    xor cl,cl
+    mov ax,map_vfs_req_nr
+    RegisterServGate
+;
+    mov esi,OFFSET unmap_vfs_req
+    mov edi,OFFSET unmap_vfs_req_name
+    xor cl,cl
+    mov ax,unmap_vfs_req_nr
     RegisterServGate
 ;
     mov esi,OFFSET start_vfs_req
