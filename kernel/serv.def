@@ -9,5 +9,7 @@ remove_vfs_sectors_nr     = 7
 start_vfs_req_nr          = 8
 is_vfs_req_done_nr        = 9
 add_wait_for_vfs_req_nr   = 10
+map_vfs_req_nr            = 11
+unmap_vfs_req_nr          = 12
 
 serv_gate_entries         = 20

@@ -94,6 +94,19 @@ RemoveVfsSectors  MACRO
                     ENDM
 
 ; IN  EBX              Req handle
+; IN  EAX              Req #
+; OUT EDX              Offset to buffer
+MapVfsReq  MACRO
+    ServGate map_vfs_req_nr
+                    ENDM
+
+; IN  EBX              Req handle
+; IN  EAX              Req #
+UnmapVfsReq  MACRO
+    ServGate unmap_vfs_req_nr
+                    ENDM
+
+; IN  EBX              Req handle
 StartVfsReq  MACRO
     ServGate start_vfs_req_nr
                     ENDM

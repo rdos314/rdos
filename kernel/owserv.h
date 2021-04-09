@@ -61,6 +61,15 @@
     ServGate_remove_vfs_sectors  \
     __parm [__ebx] [__eax]
 
+#pragma aux ServMapVfsReq = \
+    ServGate_map_vfs_req  \
+   __parm [__ebx] [__eax] \
+    __value [__edx]
+
+#pragma aux ServUnmapVfsReq = \
+    ServGate_unmap_vfs_req  \
+   __parm [__ebx] [__eax]
+
 #pragma aux ServStartVfsReq = \
     ServGate_start_vfs_req  \
     __parm [__ebx]
