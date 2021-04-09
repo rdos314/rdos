@@ -13,6 +13,27 @@
 
 /*##########################################################################
 #
+#   Name       : test
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void Test(TDiscServer *server)
+{
+    TDiscReq req(server);
+
+    TDiscReqEntry e1(&req, 121, 16);
+    TDiscReqEntry e2(&req, 131, 8);
+
+    req.WaitForever();
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....:
@@ -24,10 +45,10 @@
 ##########################################################################*/
 int main(int argc, char **argv)
 {
-    char *ptr;
-    long long sectors;
     int dev;
     int unit;
+    char *ptr;
+    long long sectors;
 
     ServTest();
 
@@ -50,10 +71,5 @@ int main(int argc, char **argv)
     sectors = server.GetPartSectors();
     printf("Sectors: %lld\r\n", sectors);
 
-    TDiscReq req(&server);
-
-    TDiscReqEntry e1(&req, 121, 16);
-    TDiscReqEntry e2(&req, 131, 8);
-
-    req.WaitForever();
+    Test(&server);
 }

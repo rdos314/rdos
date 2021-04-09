@@ -3473,14 +3473,19 @@ remove_vfs_sectors    Proc far
 ;
     EnterSection ds:vfs_section
 ;
-    inc gs:vfsrh_deleted_count
-    xor ecx,ecx
-    xchg ecx,gs:[edi].vfsre_sector_count
-    or ecx,ecx
+    xor eax,eax
+    xchg eax,gs:[edi].vfsre_sector_count
+    or eax,eax
     jz rrsLeave
 ;
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    shr eax,cl
+    mov ecx,eax
+;
+    inc gs:vfsrh_deleted_count
     mov eax,gs:[edi].vfsre_start_sector
-    mov edx,gs:[edi].vfsre_start_sector
+    mov edx,gs:[edi].vfsre_start_sector+4
     call SectorToBlock
     jc rrsLeave
 
@@ -3499,7 +3504,7 @@ rrsDecRem:
     dec gs:vfsrh_remain_count
 
 rrsNext:
-    add edx,8
+    add eax,8
     adc edx,0
     sub ecx,1
     jnz rrsLoop

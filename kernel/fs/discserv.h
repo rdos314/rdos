@@ -73,6 +73,7 @@ public:
 
 protected:
     void Add(TDiscReqEntry *entry);
+    void Remove(TDiscReqEntry *entry);
 
     TDiscServer *FServer;
     TDiscReqEntry *FEntryArr[MAX_DISC_REQ_ENTRIES];

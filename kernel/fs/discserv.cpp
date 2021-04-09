@@ -69,6 +69,7 @@ TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCou
 ##########################################################################*/
 TDiscReqEntry::~TDiscReqEntry()
 {
+    FReq->Remove(this);
     ServRemoveVfsSectors(FReq->FReq, FId);
 }
 
@@ -251,6 +252,25 @@ void TDiscReq::Add(TDiscReqEntry *entry)
 
     if (id > 0 && id <= MAX_DISC_REQ_ENTRIES)
         FEntryArr[id - 1] = entry;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscReq::Remove
+#
+#   Purpose....: Remove request
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDiscReq::Remove(TDiscReqEntry *entry)
+{
+    int id = entry->GetId();
+
+    if (id > 0 && id <= MAX_DISC_REQ_ENTRIES)
+        FEntryArr[id - 1] = 0;
 }
 
 /*##########################################################################
