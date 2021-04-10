@@ -3611,6 +3611,7 @@ map_vfs_req    Proc far
     call SectorToBlock
     jc mvrLeave
 ;
+    push eax
     push ebp
 
 mvrLoop:
@@ -3641,10 +3642,12 @@ mvrNext:
     jnz mvrLoop
 ;
     pop edx
-    mov eax,gs:[edi].vfsre_linear
-    and eax,0E00h
-    add edx,eax
     mov gs:[edi].vfsre_linear,edx
+;
+    pop ebx
+    and bx,7
+    shl bx,9
+    or dx,bx
 ;
     mov bx,system_data_sel
     mov es,bx
@@ -3687,6 +3690,77 @@ map_vfs_req Endp
 unmap_vfs_req_name       DB 'Map VFS Req',0
 
 unmap_vfs_req    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov si,SEG data
+    mov ds,si
+    or bh,bh
+    jz umvrDone
+;
+    cmp bh,MAX_PART_COUNT
+    ja umvrDone
+;
+    movzx esi,bh
+    dec esi
+    add esi,esi
+    mov si,ds:[esi].part_arr
+    or si,si
+    jz umvrDone
+;
+    mov fs,si
+    or bl,bl
+    jz umvrDone
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja umvrDone
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz umvrDone
+;
+    mov gs,si
+    mov ds,fs:vfsp_disc_sel
+    mov si,serv_flat_sel
+    mov es,si
+    mov edi,eax
+    shl edi,4
+;
+    EnterSection ds:vfs_section
+;
+    mov eax,gs:[edi].vfsre_sector_count
+    or eax,eax
+    stc
+    jz umvrLeave
+;
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    shr eax,cl
+    shl eax,12
+    mov ecx,eax
+    xor edx,edx
+    xchg edx,gs:[edi].vfsre_linear
+    or edx,edx
+    jz umvrLeave
+;
+    and ax,0F00h
+    FreeLinear
+
+umvrLeave:
+    LeaveSection ds:vfs_section
+
+umvrDone:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
 unmap_vfs_req    Endp
 

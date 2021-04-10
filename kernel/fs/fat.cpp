@@ -28,7 +28,7 @@ void Test(TDiscServer *server)
 
     TDiscReq req(server);
 
-    TDiscReqEntry e1(&req, 0, 8);
+    TDiscReqEntry e1(&req, 5, 1);
 
     req.WaitForever();
 
