@@ -3310,8 +3310,6 @@ arsAppend:
     shl edi,4
 
 arsTake:
-    mov gs:[edi].vfsre_linear,0
-;
     add eax,fs:vfsp_start_sector
     adc edx,fs:vfsp_start_sector+4
 ;
@@ -3324,6 +3322,10 @@ arsTake:
     mov bx,1
     shl bx,cl
     dec bx
+    movzx esi,ax
+    and si,bx
+    shl si,9
+    mov gs:[edi].vfsre_linear,esi
     not bx
     and ax,bx
     mov gs:[edi].vfsre_start_sector,eax
@@ -3611,7 +3613,6 @@ map_vfs_req    Proc far
     call SectorToBlock
     jc mvrLeave
 ;
-    push eax
     push ebp
 
 mvrLoop:
@@ -3642,12 +3643,10 @@ mvrNext:
     jnz mvrLoop
 ;
     pop edx
+    mov eax,gs:[edi].vfsre_linear
+    and eax,0E00h
+    add edx,eax
     mov gs:[edi].vfsre_linear,edx
-;
-    pop ebx
-    and bx,7
-    shl bx,9
-    or dx,bx
 ;
     mov bx,system_data_sel
     mov es,bx
@@ -3744,13 +3743,15 @@ unmap_vfs_req    Proc far
     shr eax,cl
     shl eax,12
     mov ecx,eax
-    xor edx,edx
-    xchg edx,gs:[edi].vfsre_linear
-    or edx,edx
+    mov edx,gs:[edi].vfsre_linear
+    and edx,0FFFFF000h
     jz umvrLeave
 ;
-    and ax,0F00h
     FreeLinear
+;
+    mov edx,gs:[edi].vfsre_linear
+    and edx,0FFFh
+    mov gs:[edi].vfsre_linear,edx
 
 umvrLeave:
     LeaveSection ds:vfs_section
