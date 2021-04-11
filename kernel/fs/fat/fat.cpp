@@ -8,6 +8,7 @@
 
 #include "discserv.h"
 #include "fatboot.h"
+#include "tab16.h"
 
 struct TFatInfo
 {
@@ -22,6 +23,8 @@ TDiscServer *Server;
 TFatBoot *Boot;
 
 static int FreeClusters;
+static TFatTable *Tab1;
+static TFatTable *Tab2;
 
 /*##########################################################################
 #
@@ -82,6 +85,8 @@ int main(int argc, char **argv)
     int dev;
     int unit;
     char *ptr;
+    int Free1;
+    int Free2;
 
     ServTest();
 
@@ -100,6 +105,25 @@ int main(int argc, char **argv)
 
         if (Boot->IsValid())
         {
+            switch (Boot->FatSize)
+            {
+                case 16:
+                    Tab1 = new TFatTable16(Server, Boot->SectorsPerCluster, Boot->Fat1Sector, Boot->Clusters);
+                    Tab2 = new TFatTable16(Server, Boot->SectorsPerCluster, Boot->Fat2Sector, Boot->Clusters);
+                    break;
+
+                default:
+                    Tab1 = 0;
+                    Tab2 = 0;
+                    break;
+            }
+
+            if (Tab1)
+                Free1 = Tab1->GetFreeClusters();
+
+            if (Tab2)
+                Free2 = Tab2->GetFreeClusters();
+
             if (Boot->InfoSector)
                 ReadInfo(Boot->InfoSector);
         }
