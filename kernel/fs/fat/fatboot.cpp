@@ -124,11 +124,17 @@ TFatBoot::TFatBoot(TDiscServer *Server, const char *FsName)
         {
             PartSectors = (long long)boot->Sectors;
             FatSectors = boot->FatSectors;
+            RootDirEntries = 0;
+            RootCluster = boot->RootCluster;
+            InfoSector = boot->InfoSector;
         }
         else
         {
             PartSectors = (long long)boot->SectorCount16;
             FatSectors = boot->FatSectors16;
+            RootDirEntries = boot->RootDirEntries;
+            RootCluster = 0;
+            InfoSector = 0;
         }
 
         if (TotalSectors < PartSectors)
@@ -163,6 +169,21 @@ TFatBoot::TFatBoot(TDiscServer *Server, const char *FsName)
             printf("Invalid sectors per cluster: %d", SectorsPerCluster);
             FValid = false;
         }
+    }
+
+    if (FValid)
+    {
+        Fat1Sector = boot->ResvSectors;
+        Fat2Sector = Fat1Sector + FatSectors;
+        StartSector = Fat2Sector + FatSectors;
+        Clusters = PartSectors / SectorsPerCluster + 2;
+    }
+    else
+    {
+        Fat1Sector = 0;
+        Fat2Sector = 0;
+        StartSector = 0;
+        Clusters = 0;
     }
 }
 

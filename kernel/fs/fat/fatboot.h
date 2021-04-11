@@ -43,7 +43,15 @@ public:
     int FatCount;
     int FatSectors;
     int SectorsPerCluster;
-    long long PartStartSector;
+
+    int Clusters;
+    int RootDirEntries;
+    int RootCluster;
+
+    long long Fat1Sector;
+    long long Fat2Sector;
+    long long StartSector;
+    long long InfoSector;
 
 protected:
     bool FValid;
