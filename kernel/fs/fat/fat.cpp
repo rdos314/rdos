@@ -13,20 +13,20 @@
 
 struct TBootSector
 {
-    char Jmp[2];
+    char Jmp[3];
     char Name[8];
     short int BytesPerSector;
     char SectorsPerCluster;
     short int ResvSectors;
     char FatCount;
     short int RootDirEntries;
-    short int SectorCount16;
+    unsigned short int SectorCount16;
     char Media;
     short int FatSectors16;
     short int SectorsPerCyl;
     short int Heads;
     int HiddenSectors;
-    int Sectors;
+    unsigned int Sectors;
     int FatSectors;
     short int ExtFlags;
     short int FsVersion;
@@ -35,7 +35,10 @@ struct TBootSector
     short int BackupSector;
 };
 
-static TDiscServer *server;
+static TDiscServer *Server;
+static int FatSize = 0;
+static int PartSectors;
+static int FatSectors;
 
 /*##########################################################################
 #
@@ -48,17 +51,49 @@ static TDiscServer *server;
 #   Returns....: *
 #
 ##########################################################################*/
-void ProcessBootSector()
+bool ProcessBootSector()
 {
+    long long TotalSectors;
     struct TBootSector *boot;
-    TDiscReq req(server);
-
+    TDiscReq req(Server);
     TDiscReqEntry e1(&req, 0, 1);
 
     req.WaitForever();
 
     boot = (struct TBootSector *)e1.Map();
-    printf(boot->Name);
+
+    if (boot->BytesPerSector != 512)
+    {
+        printf("Unexpected bytes per sector: %d", boot->BytesPerSector);
+        return false;
+    }
+
+    TotalSectors = Server->GetPartSectors();
+
+    if (FatSize == 32)
+    {
+        PartSectors = (long long)boot->Sectors;
+        FatSectors = boot->FatSectors;
+    }
+    else
+    {
+        PartSectors = (long long)boot->SectorCount16;
+        FatSectors = boot->FatSectors16;
+    }
+
+    if (TotalSectors < PartSectors)
+    {
+        printf("Partition size mismatch: Part: %lld, Boot: %lld", TotalSectors, PartSectors);
+        return false;
+    }
+
+    if (FatSectors == 0)
+    {
+        printf("No FAT sectors");
+        return false;
+    }
+
+    return true;
 }
 
 /*##########################################################################
@@ -77,7 +112,7 @@ int main(int argc, char **argv)
     int dev;
     int unit;
     char *ptr;
-    long long sectors;
+    bool ok;
 
     ServTest();
 
@@ -95,10 +130,21 @@ int main(int argc, char **argv)
         unit = 0;
     }
 
-    server = new TDiscServer(dev, unit);
+    if (argc >= 4)
+    {
+        ptr = argv[3];
 
-    sectors = server->GetPartSectors();
-    printf("Sectors: %lld\r\n", sectors);
+        if (strstr(ptr, "FAT12"))
+            FatSize = 12;
 
-    ProcessBootSector();
+        if (strstr(ptr, "FAT16"))
+            FatSize = 16;
+
+        if (strstr(ptr, "FAT32"))
+            FatSize = 32;
+    }
+
+    Server = new TDiscServer(dev, unit);
+
+    ok = ProcessBootSector();
 }
