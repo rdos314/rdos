@@ -20,43 +20,56 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# tab.cpp
-# Fat table base class
+# tab16.cpp
+# 16-bit Fat table class
 #
 ########################################################################*/
 
-#include "tab.h"
+#include "tab16.h"
 
 /*##########################################################################
 #
-#   Name       : TFatTable::TFatTable
+#   Name       : TFatTable16::TFatTable6
 #
-#   Purpose....: Fat table constructor
+#   Purpose....: Fat table16 constructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFatTable::TFatTable(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int Clusters)
- :  FReq(Server)
+TFatTable16::TFatTable16(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int Clusters)
+ :  TFatTable(Server, SectorsPerCluster, StartSector, Clusters)
 {
-    FSectorsPerCluster = SectorsPerCluster;
-    FStartSector = StartSector;
-    FClusters = Clusters;
 }
 
 /*##########################################################################
 #
-#   Name       : TFatTable::~TFatTable
+#   Name       : TFatTable16::~TFatTable16
 #
-#   Purpose....: Fat table destructor
+#   Purpose....: Fat table16 destructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFatTable::~TFatTable()
+TFatTable16::~TFatTable16()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable16::GetFreeClusters
+#
+#   Purpose....: Get free clusters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFatTable16::GetFreeClusters()
+{
+    return 0;
 }

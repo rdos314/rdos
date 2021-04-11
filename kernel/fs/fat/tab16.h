@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2003, Leif Ekblad
+# Copyright (C) 1988-20019, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,43 +20,24 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# tab.cpp
-# Fat table base class
+# tab16.h
+# 16-bit Fat table class
 #
 ########################################################################*/
 
+#ifndef _FAT_TAB16_H
+#define _FAT_TAB16_H
+
 #include "tab.h"
 
-/*##########################################################################
-#
-#   Name       : TFatTable::TFatTable
-#
-#   Purpose....: Fat table constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFatTable::TFatTable(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int Clusters)
- :  FReq(Server)
+class TFatTable16 : public TFatTable
 {
-    FSectorsPerCluster = SectorsPerCluster;
-    FStartSector = StartSector;
-    FClusters = Clusters;
-}
+public:
+    TFatTable16(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int Clusters);
+    virtual ~TFatTable16();
 
-/*##########################################################################
-#
-#   Name       : TFatTable::~TFatTable
-#
-#   Purpose....: Fat table destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFatTable::~TFatTable()
-{
-}
+    virtual int GetFreeClusters();
+};
+
+#endif
+
