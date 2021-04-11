@@ -34,7 +34,7 @@
 class TFat
 {
 public:
-    TFat(int unit, int dev);
+    TFat();
     ~TFat();
 
     void Run(const char *FsName);
@@ -68,7 +68,6 @@ protected:
     int FreeClusters;
 
     TDiscServer Server;
-    bool FValid;
 };
 
 #endif

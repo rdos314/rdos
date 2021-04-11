@@ -79,8 +79,7 @@ struct TFatInfo
 #   Returns....: *
 #
 ##########################################################################*/
-TFat::TFat(int dev, int unit)
- : Server(dev, unit)
+TFat::TFat()
 {
     Tab1 = 0;
     Tab2 = 0;

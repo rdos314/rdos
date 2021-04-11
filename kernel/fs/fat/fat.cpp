@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 
         ptr = argv[3];
 
-        TFat Fat(dev, unit);
+        TFat Fat;
         Fat.Run(ptr);
     }
 }

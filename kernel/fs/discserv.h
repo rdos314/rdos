@@ -84,11 +84,11 @@ protected:
     int FWaitHandle;
 };
 
-class TDiscServer : public TThread
+class TDiscServer
 {
 friend class TDiscReq;
 public:
-    TDiscServer(int dev, int unit);
+    TDiscServer();
     ~TDiscServer();
 
     long long GetPartSectors();
@@ -96,7 +96,6 @@ public:
 protected:
     void Add(int id, TDiscReq *req);
     void Remove(int id);
-    virtual void Execute();
 
     TDiscReq *FReqArr[MAX_DISC_REQ_COUNT];
 };

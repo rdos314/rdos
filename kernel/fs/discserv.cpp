@@ -355,7 +355,7 @@ void TDiscReq::Start()
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscServer::TDiscServer(int dev, int unit)
+TDiscServer::TDiscServer()
 {
     char str[40];
     int i;
@@ -365,9 +365,6 @@ TDiscServer::TDiscServer(int dev, int unit)
 
     for (i = 0; i < MAX_DISC_REQ_COUNT; i++)
         FReqArr[i] = 0;
-
-    sprintf(str, "Disc Serv %02hX.%02hX", dev, unit);
-    Start(str, 4, 0x4000);
 }
 
 /*##########################################################################
@@ -433,23 +430,4 @@ void TDiscServer::Remove(int id)
 long long TDiscServer::GetPartSectors()
 {
     return ServGetVfsSectors(handle);
-}
-
-/*##########################################################################
-#
-#   Name       : TDiscServer::Execute
-#
-#   Purpose....: Execute method
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDiscServer::Execute()
-{
-    while (FInstalled)
-    {
-        RdosWaitMilli(250);
-    }
 }
