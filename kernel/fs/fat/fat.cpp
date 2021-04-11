@@ -11,6 +11,32 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+struct TBootSector
+{
+    char Jmp[2];
+    char Name[8];
+    short int BytesPerSector;
+    char SectorsPerCluster;
+    short int ResvSectors;
+    char FatCount;
+    short int RootDirEntries;
+    short int SectorCount16;
+    char Media;
+    short int FatSectors16;
+    short int SectorsPerCyl;
+    short int Heads;
+    int HiddenSectors;
+    int Sectors;
+    int FatSectors;
+    short int ExtFlags;
+    short int FsVersion;
+    int RootCluster;
+    short int InfoSector;
+    short int BackupSector;
+};
+
+static TDiscServer *server;
+
 /*##########################################################################
 #
 #   Name       : test
@@ -22,17 +48,17 @@
 #   Returns....: *
 #
 ##########################################################################*/
-void Test(TDiscServer *server)
+void ProcessBootSector()
 {
-    char *data;
-
+    struct TBootSector *boot;
     TDiscReq req(server);
 
-    TDiscReqEntry e1(&req, 5, 1);
+    TDiscReqEntry e1(&req, 0, 1);
 
     req.WaitForever();
 
-    data = e1.Map();
+    boot = (struct TBootSector *)e1.Map();
+    printf(boot->Name);
 }
 
 /*##########################################################################
@@ -69,10 +95,10 @@ int main(int argc, char **argv)
         unit = 0;
     }
 
-    TDiscServer server(dev, unit);
+    server = new TDiscServer(dev, unit);
 
-    sectors = server.GetPartSectors();
+    sectors = server->GetPartSectors();
     printf("Sectors: %lld\r\n", sectors);
 
-    Test(&server);
+    ProcessBootSector();
 }
