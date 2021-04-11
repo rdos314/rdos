@@ -209,7 +209,7 @@ TFatBoot::TFatBoot(TDiscServer *Server, const char *FsName)
         else
         {
             RootSector = Fat2Sector + FatSectors;
-            StartSector = RootSector + 16 * RootDirEntries;
+            StartSector = RootSector + RootDirEntries / 16;
         }
 
         Clusters = PartSectors / SectorsPerCluster + 2;
