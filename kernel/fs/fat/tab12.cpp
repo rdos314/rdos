@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <memory.h>
 #include "tab12.h"
 
 /*##########################################################################
@@ -78,15 +79,33 @@ int TFatTable12::GetFreeInBlock(long long Sector, int Clusters)
     int i;
     int FreeClusters = 0;
     TDiscReqEntry e1(&FReq, Sector, 3);
-    short int *tab;
+    char *tab;
+    int val;
 
     FReq.WaitForever();
 
-    tab = (short int *)e1.Map();
+    tab = (char *)e1.Map();
 
-    for (i = 0; i < Clusters; i++)
-        if (tab[i] == 0)
-            FreeClusters++;
+    while (i < Clusters)
+    {
+        val = 0;
+        memcpy(&val, tab, 3);
+        tab += 3;
+        i += 2;
+
+        if (val == 0)
+            FreeClusters += 2;
+        else
+        {
+            if ((val & 0xFFF) == 0)
+                FreeClusters ++;
+
+            val = val >> 12;
+
+            if ((val & 0xFFF) == 0)
+                FreeClusters ++;
+        }
+    }
 
     return FreeClusters;
 }
@@ -114,8 +133,8 @@ int TFatTable12::GetFreeClusters()
     for (i = 0; i <= Blocks; i++)
     {
         Count = FClusters - Cluster;
-        if (Count > 512)
-            Count = 512;
+        if (Count > 512 * 2)
+            Count = 512 * 2;
 
         FreeClusters += GetFreeInBlock(Sector, Count);
         Sector += 3;
