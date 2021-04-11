@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <rdos.h>
 #include "fs.h"
+#include "tab12.h"
 #include "tab16.h"
 #include "tab32.h"
 
@@ -297,6 +298,11 @@ void TFat::CreateTables()
 
     switch (FatSize)
     {
+        case 12:
+            Tab1 = new TFatTable12(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable12(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            break;
+
         case 16:
             Tab1 = new TFatTable16(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
             Tab2 = new TFatTable16(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
@@ -306,26 +312,18 @@ void TFat::CreateTables()
             Tab1 = new TFatTable32(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
             Tab2 = new TFatTable32(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
             break;
-
-        default:
-            Tab1 = 0;
-            Tab2 = 0;
-            break;
     }
 
     if (FatSize == 32 && InfoSector)
        ProcessInfoSector();
 
-    if (Tab1 && Tab2)
-    {
-        Free1 = Tab1->GetFreeClusters();
-        Free2 = Tab2->GetFreeClusters();
+    Free1 = Tab1->GetFreeClusters();
+    Free2 = Tab2->GetFreeClusters();
 
-        if (Free1 > Free2)
-            FreeClusters = Free2;
-        else
-            FreeClusters = Free1;
-    }
+    if (Free1 > Free2)
+        FreeClusters = Free2;
+    else
+        FreeClusters = Free1;
 }
 
 /*##########################################################################
