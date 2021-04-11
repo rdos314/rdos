@@ -52,6 +52,8 @@ struct TBootSector
     int RootCluster;
     short int InfoSector;
     short int BackupSector;
+    short int Pad;
+    char FsName[8];
 };
 
 /*##########################################################################
@@ -67,6 +69,7 @@ struct TBootSector
 ##########################################################################*/
 TFatBoot::TFatBoot(TDiscServer *Server, const char *FsName)
 {
+    char Name[6];
     long long TotalSectors;
     struct TBootSector *boot;
     TDiscReq req(Server);
@@ -74,32 +77,50 @@ TFatBoot::TFatBoot(TDiscServer *Server, const char *FsName)
 
     req.WaitForever();
 
-    FatSize = 0;
+    boot = (struct TBootSector *)e1.Map();
 
-    if (strstr(FsName, "FAT12"))
-        FatSize = 12;
-
-    if (strstr(FsName, "FAT16"))
-        FatSize = 16;
-
-    if (strstr(FsName, "FAT32"))
-        FatSize = 32;
-
-    if (FatSize)
+    if (boot)
         FValid = true;
     else
     {
-        printf("No FAT size specified");
+        printf("Cannot read boot sector");
         FValid = false;
     }
 
     if (FValid)
     {
-        boot = (struct TBootSector *)e1.Map();
+        FatSize = 0;
 
-        if (boot == 0)
+        memcpy(Name, boot->FsName, 5);
+        Name[5] = 0;
+
+        if (!strcmp(Name, "FAT12"))
+            FatSize = 12;
+
+        if (!strcmp(Name, "FAT16"))
+            FatSize = 16;
+
+        if (!strcmp(Name, "FAT32"))
+            FatSize = 32;
+
+        if (!FatSize)
         {
-            printf("Cannot read boot sector");
+            memcpy(Name, FsName, 5);
+            Name[5] = 0;
+
+            if (!strcmp(Name, "FAT12"))
+                FatSize = 12;
+
+            if (!strcmp(Name, "FAT16"))
+                FatSize = 16;
+
+            if (!strcmp(Name, "FAT32"))
+                FatSize = 32;
+        }
+
+        if (!FatSize)
+        {
+            printf("No FAT size specified");
             FValid = false;
         }
     }
