@@ -298,13 +298,13 @@ void TFat::CreateTables()
     switch (FatSize)
     {
         case 16:
-            Tab1 = new TFatTable16(FServer, SectorsPerCluster, Fat1Sector, Clusters);
-            Tab2 = new TFatTable16(FServer, SectorsPerCluster, Fat2Sector, Clusters);
+            Tab1 = new TFatTable16(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable16(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
             break;
 
         case 32:
-            Tab1 = new TFatTable32(FServer, SectorsPerCluster, Fat1Sector, Clusters);
-            Tab2 = new TFatTable32(FServer, SectorsPerCluster, Fat2Sector, Clusters);
+            Tab1 = new TFatTable32(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable32(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
             break;
 
         default:

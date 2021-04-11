@@ -33,13 +33,15 @@
 class TFatTable32 : public TFatTable
 {
 public:
-    TFatTable32(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int Clusters);
+    TFatTable32(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int FatSectors, int Clusters);
     virtual ~TFatTable32();
 
     virtual int GetFreeClusters();
 
 protected:
     int GetFreeInBlock(long long Sector, int Clusters);
+
+    int FClusters;
 };
 
 #endif

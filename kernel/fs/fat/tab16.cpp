@@ -38,9 +38,13 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatTable16::TFatTable16(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int Clusters)
- :  TFatTable(Server, SectorsPerCluster, StartSector, Clusters)
+TFatTable16::TFatTable16(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int FatSectors, int Clusters)
+ :  TFatTable(Server, SectorsPerCluster, StartSector)
 {
+    if (FatSectors * 512 / 2 < Clusters)
+        FClusters = FatSectors * 512 / 2;
+    else
+        FClusters = Clusters;
 }
 
 /*##########################################################################
