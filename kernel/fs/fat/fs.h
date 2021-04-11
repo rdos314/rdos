@@ -20,41 +20,54 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# fatboot.h
-# Fat boot sector class
+# fs.h
+# Fat class
 #
 ########################################################################*/
 
-#ifndef _FAT_BOOT_H
-#define _FAT_BOOT_H
+#ifndef _FAT_FS_H
+#define _FAT_FS_H
 
 #include "discserv.h"
+#include "tab16.h"
 
-class TFatBoot
+class TFat
 {
 public:
-    TFatBoot(TDiscServer *Server, const char *FsName);
-    ~TFatBoot();
+    TFat(TDiscServer *Server, const char *FsName);
+    ~TFat();
 
     bool IsValid();
 
-    int FatSize;
     int PartSectors;
-    int FatCount;
-    int FatSectors;
     int SectorsPerCluster;
+    int ReservedSectors;
 
     int Clusters;
     int RootDirEntries;
     int RootCluster;
 
-    long long Fat1Sector;
-    long long Fat2Sector;
     long long RootSector;
     long long StartSector;
     long long InfoSector;
 
 protected:
+    bool ProcessBootSector(const char *FsName);
+    bool ProcessInfoSector();
+    void CreateTables();
+
+    long long Fat1Sector;
+    long long Fat2Sector;
+    int FatSize;
+    int FatCount;
+    int FatSectors;
+
+    TFatTable *Tab1;
+    TFatTable *Tab2;
+
+    int FreeClusters;
+
+    TDiscServer *FServer;
     bool FValid;
 };
 
