@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <rdos.h>
 #include "fs.h"
+#include "tab16.h"
+#include "tab32.h"
 
 struct TBootSector
 {
@@ -298,6 +300,11 @@ void TFat::CreateTables()
         case 16:
             Tab1 = new TFatTable16(FServer, SectorsPerCluster, Fat1Sector, Clusters);
             Tab2 = new TFatTable16(FServer, SectorsPerCluster, Fat2Sector, Clusters);
+            break;
+
+        case 32:
+            Tab1 = new TFatTable32(FServer, SectorsPerCluster, Fat1Sector, Clusters);
+            Tab2 = new TFatTable32(FServer, SectorsPerCluster, Fat2Sector, Clusters);
             break;
 
         default:
