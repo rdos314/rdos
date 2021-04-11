@@ -79,13 +79,11 @@ struct TFatInfo
 #   Returns....: *
 #
 ##########################################################################*/
-TFat::TFat(TDiscServer *Server, const char *FsName)
+TFat::TFat(int dev, int unit)
+ : Server(dev, unit)
 {
-    FServer = Server;
-
-    FValid = ProcessBootSector(FsName);
-    if (FValid)
-        CreateTables();
+    Tab1 = 0;
+    Tab2 = 0;
 }
 
 /*##########################################################################
@@ -101,22 +99,11 @@ TFat::TFat(TDiscServer *Server, const char *FsName)
 ##########################################################################*/
 TFat::~TFat()
 {
-}
+    if (Tab1)
+        delete Tab1;
 
-/*##########################################################################
-#
-#   Name       : TFat::IsValid
-#
-#   Purpose....: Check if valid
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TFat::IsValid()
-{
-    return FValid;
+    if (Tab2)
+        delete Tab2;
 }
 
 /*##########################################################################
@@ -135,7 +122,7 @@ bool TFat::ProcessBootSector(const char *FsName)
     char Name[6];
     long long TotalSectors;
     struct TBootSector *boot;
-    TDiscReq req(FServer);
+    TDiscReq req(&Server);
     TDiscReqEntry e1(&req, 0, 1);
 
     req.WaitForever();
@@ -189,7 +176,7 @@ bool TFat::ProcessBootSector(const char *FsName)
         return false;
     }
 
-    TotalSectors = FServer->GetPartSectors();
+    TotalSectors = Server.GetPartSectors();
 
     FatCount = boot->FatCount;
     SectorsPerCluster = boot->SectorsPerCluster;
@@ -277,7 +264,7 @@ bool TFat::ProcessBootSector(const char *FsName)
 ##########################################################################*/
 bool TFat::ProcessInfoSector()
 {
-    TDiscReq req(FServer);
+    TDiscReq req(&Server);
     TDiscReqEntry e1(&req, InfoSector, 1);
     struct TFatInfo *info;
 
@@ -337,16 +324,16 @@ void TFat::CreateTables()
             if (Clusters > 0x1000)
                 Clusters = 0x1000;
 
-            Tab1 = new TFatTable12(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
-            Tab2 = new TFatTable12(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            Tab1 = new TFatTable12(&Server, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable12(&Server, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
             break;
 
         case 16:
             if (Clusters > 0x10000)
                 Clusters = 0x10000;
 
-            Tab1 = new TFatTable16(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
-            Tab2 = new TFatTable16(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            Tab1 = new TFatTable16(&Server, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable16(&Server, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
             break;
 
         case 32:
@@ -354,8 +341,8 @@ void TFat::CreateTables()
                 if (InfoSector)
                     ProcessInfoSector();
 
-            Tab1 = new TFatTable32(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
-            Tab2 = new TFatTable32(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            Tab1 = new TFatTable32(&Server, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable32(&Server, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
             break;
     }
 
@@ -369,4 +356,24 @@ void TFat::CreateTables()
         else
             FreeClusters = Free1;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::Run
+#
+#   Purpose....: Run
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::Run(const char *FsName)
+{
+    bool ok;
+
+    ok = ProcessBootSector(FsName);
+    if (ok)
+        CreateTables();
 }

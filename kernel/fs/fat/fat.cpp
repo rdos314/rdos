@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 
         ptr = argv[3];
 
-        Server = new TDiscServer(dev, unit);
-        Boot = new TFat(Server, ptr);
+        TFat Fat(dev, unit);
+        Fat.Run(ptr);
     }
 }

@@ -34,10 +34,15 @@
 class TFat
 {
 public:
-    TFat(TDiscServer *Server, const char *FsName);
+    TFat(int unit, int dev);
     ~TFat();
 
-    bool IsValid();
+    void Run(const char *FsName);
+
+protected:
+    bool ProcessBootSector(const char *FsName);
+    bool ProcessInfoSector();
+    void CreateTables();
 
     int PartSectors;
     int SectorsPerCluster;
@@ -51,11 +56,6 @@ public:
     long long StartSector;
     long long InfoSector;
 
-protected:
-    bool ProcessBootSector(const char *FsName);
-    bool ProcessInfoSector();
-    void CreateTables();
-
     long long Fat1Sector;
     long long Fat2Sector;
     int FatSize;
@@ -67,7 +67,7 @@ protected:
 
     int FreeClusters;
 
-    TDiscServer *FServer;
+    TDiscServer Server;
     bool FValid;
 };
 
