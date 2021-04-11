@@ -42,8 +42,8 @@
 TFatTable12::TFatTable12(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int FatSectors, int Clusters)
  :  TFatTable(Server, SectorsPerCluster, StartSector)
 {
-    if (FatSectors * 512 * 3 / 2 < Clusters)
-        FClusters = FatSectors * 512 * 3 / 2;
+    if (FatSectors * 512 * 2 / 3 < Clusters)
+        FClusters = FatSectors * 512 * 2 / 3;
     else
         FClusters = Clusters;
 }
@@ -85,6 +85,8 @@ int TFatTable12::GetFreeInBlock(long long Sector, int Clusters)
     FReq.WaitForever();
 
     tab = (char *)e1.Map();
+
+    i = 0;
 
     while (i < Clusters)
     {
@@ -128,7 +130,7 @@ int TFatTable12::GetFreeClusters()
     long long Sector = FStartSector;
     int Cluster = 0;
     int Count;
-    int Blocks = FClusters / 512 / 3;
+    int Blocks = FClusters / 512 / 2;
 
     for (i = 0; i <= Blocks; i++)
     {
