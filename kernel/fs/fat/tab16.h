@@ -37,6 +37,9 @@ public:
     virtual ~TFatTable16();
 
     virtual int GetFreeClusters();
+
+protected:
+    int GetFreeInBlock(long long Sector, int Clusters);
 };
 
 #endif

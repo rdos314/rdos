@@ -60,6 +60,35 @@ TFatTable16::~TFatTable16()
 
 /*##########################################################################
 #
+#   Name       : TFatTable16::GetFreeInBlock
+#
+#   Purpose....: Get free clusters in block
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFatTable16::GetFreeInBlock(long long Sector, int Clusters)
+{
+    int i;
+    int FreeClusters = 0;
+    TDiscReqEntry e1(&FReq, Sector, 8);
+    short int *tab;
+
+    FReq.WaitForever();
+
+    tab = (short int *)e1.Map();
+
+    for (i = 0; i < Clusters; i++)
+        if (tab[i] == 0)
+            FreeClusters++;
+
+    return FreeClusters;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatTable16::GetFreeClusters
 #
 #   Purpose....: Get free clusters
@@ -71,5 +100,23 @@ TFatTable16::~TFatTable16()
 ##########################################################################*/
 int TFatTable16::GetFreeClusters()
 {
-    return 0;
+    int FreeClusters = 0;
+    int i;
+    long long Sector = FStartSector;
+    int Cluster = 0;
+    int Count;
+    int Blocks = FClusters / 512 * 2 / 8;
+
+    for (i = 0; i <= Blocks; i++)
+    {
+        Count = FClusters - Cluster;
+        if (Count > 512 * 8 / 2)
+            Count = 512 * 8 / 2;
+
+        FreeClusters += GetFreeInBlock(Sector, Count);
+        Sector += 8;
+        Cluster += Count;
+    }
+
+    return FreeClusters;
 }
