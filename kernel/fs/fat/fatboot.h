@@ -50,6 +50,7 @@ public:
 
     long long Fat1Sector;
     long long Fat2Sector;
+    long long RootSector;
     long long StartSector;
     long long InfoSector;
 

@@ -122,19 +122,44 @@ TFatBoot::TFatBoot(TDiscServer *Server, const char *FsName)
 
         if (FatSize == 32)
         {
-            PartSectors = (long long)boot->Sectors;
+            PartSectors = boot->Sectors;
+            if (!PartSectors)
+                PartSectors = boot->SectorCount16;
+
             FatSectors = boot->FatSectors;
+            if (!FatSectors)
+                FatSectors = boot->FatSectors16;
+
             RootDirEntries = 0;
             RootCluster = boot->RootCluster;
             InfoSector = boot->InfoSector;
+
+            if (!RootCluster)
+            {
+                FatSize = 16;
+                RootDirEntries = boot->RootDirEntries;
+            }
         }
         else
         {
-            PartSectors = (long long)boot->SectorCount16;
+            PartSectors = boot->SectorCount16;
+            if (!PartSectors)
+                PartSectors = boot->Sectors;
+
             FatSectors = boot->FatSectors16;
+            if (!FatSectors)
+                FatSectors = boot->FatSectors;
+
             RootDirEntries = boot->RootDirEntries;
             RootCluster = 0;
             InfoSector = 0;
+
+            if (!RootDirEntries)
+            {
+                FatSize = 32;
+                RootCluster = boot->RootCluster;
+                InfoSector = boot->InfoSector;
+            }
         }
 
         if (TotalSectors < PartSectors)
@@ -175,7 +200,18 @@ TFatBoot::TFatBoot(TDiscServer *Server, const char *FsName)
     {
         Fat1Sector = boot->ResvSectors;
         Fat2Sector = Fat1Sector + FatSectors;
-        StartSector = Fat2Sector + FatSectors;
+
+        if (FatSize == 32)
+        {
+            RootSector = 0;
+            StartSector = Fat2Sector + FatSectors;
+        }
+        else
+        {
+            RootSector = Fat2Sector + FatSectors;
+            StartSector = RootSector + 16 * RootDirEntries;
+        }
+
         Clusters = PartSectors / SectorsPerCluster + 2;
     }
     else
