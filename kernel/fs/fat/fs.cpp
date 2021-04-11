@@ -266,68 +266,6 @@ bool TFat::ProcessBootSector(const char *FsName)
 
 /*##########################################################################
 #
-#   Name       : TFat::CreateTables
-#
-#   Purpose....: Create tables
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFat::CreateTables()
-{
-    int Free1;
-    int Free2;
-
-    Fat1Sector = ReservedSectors;
-    Fat2Sector = Fat1Sector + FatSectors;
-
-    if (FatSize == 32)
-    {
-        RootSector = 0;
-        StartSector = Fat2Sector + FatSectors;
-    }
-    else
-    {
-        RootSector = Fat2Sector + FatSectors;
-        StartSector = RootSector + RootDirEntries / 16;
-    }
-
-    Clusters = PartSectors / SectorsPerCluster + 2;
-
-    switch (FatSize)
-    {
-        case 12:
-            Tab1 = new TFatTable12(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
-            Tab2 = new TFatTable12(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
-            break;
-
-        case 16:
-            Tab1 = new TFatTable16(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
-            Tab2 = new TFatTable16(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
-            break;
-
-        case 32:
-            Tab1 = new TFatTable32(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
-            Tab2 = new TFatTable32(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
-            break;
-    }
-
-    if (FatSize == 32 && InfoSector)
-       ProcessInfoSector();
-
-    Free1 = Tab1->GetFreeClusters();
-    Free2 = Tab2->GetFreeClusters();
-
-    if (Free1 > Free2)
-        FreeClusters = Free2;
-    else
-        FreeClusters = Free1;
-}
-
-/*##########################################################################
-#
 #   Name       : TFat::ProcessInfoSector
 #
 #   Purpose....: Process info sector
@@ -358,4 +296,77 @@ bool TFat::ProcessInfoSector()
 
     FreeClusters = info->FreeClusters;
     return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::CreateTables
+#
+#   Purpose....: Create tables
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::CreateTables()
+{
+    int Free1;
+    int Free2;
+
+    Fat1Sector = ReservedSectors;
+    Fat2Sector = Fat1Sector + FatSectors;
+
+    if (FatSize == 32)
+    {
+        RootSector = 0;
+        StartSector = Fat2Sector + FatSectors;
+    }
+    else
+    {
+        RootSector = Fat2Sector + FatSectors;
+        StartSector = RootSector + RootDirEntries / 16;
+    }
+
+    Clusters = PartSectors / SectorsPerCluster + 2;
+    FreeClusters = 0;
+
+    switch (FatSize)
+    {
+        case 12:
+            if (Clusters > 0x1000)
+                Clusters = 0x1000;
+
+            Tab1 = new TFatTable12(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable12(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            break;
+
+        case 16:
+            if (Clusters > 0x10000)
+                Clusters = 0x10000;
+
+            Tab1 = new TFatTable16(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable16(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            break;
+
+        case 32:
+            if (Clusters > 0x100000)
+                if (InfoSector)
+                    ProcessInfoSector();
+
+            Tab1 = new TFatTable32(FServer, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable32(FServer, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            break;
+    }
+
+    if (!FreeClusters)
+    {
+        Free1 = Tab1->GetFreeClusters();
+        Free2 = Tab2->GetFreeClusters();
+
+        if (Free1 > Free2)
+            FreeClusters = Free2;
+        else
+            FreeClusters = Free1;
+    }
 }
