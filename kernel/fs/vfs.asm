@@ -1080,6 +1080,14 @@ GetIoStart    Proc near
 
 gisEntryLoop:
     mov ebx,ds:vfs_scan_pos+4
+    cmp ebx,ds:vfs_buf_count
+    jb gisEntryRangeOk
+;
+    mov ds:vfs_scan_pos,0
+    mov ds:vfs_scan_pos+4,0
+    mov ebx,ds:vfs_scan_pos+4
+
+gisEntryRangeOk:
     shl ebx,2
     mov eax,ds:[ebx].vfs_buf_arr
     or eax,eax
