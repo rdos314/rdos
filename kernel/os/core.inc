@@ -134,6 +134,7 @@ cs_wakeup_arr           DW CORE_WAKEUP_ENTRIES DUP(?)
 cs_irq_count            DW ?
 cs_irq_stack            DB MAX_IRQ_NESTING DUP(?)
 
+cs_serv_sel             DW ?
 cs_cr3                  DD ?
 cs_mon_linear           DD ?
 cs_tlb                  core_tlb32_struc <>

@@ -1495,6 +1495,9 @@ load_prot_switch_ok:
     ltr bx
 
 load_not_flush:
+    mov ax,es:p_serv_sel
+    mov fs:cs_serv_sel,ax
+;
     mov eax,cr3
     cmp eax,es:p_cr3
     je load_cr3_ok
@@ -3247,6 +3250,7 @@ icWakeupInit:
     add bx,2
     loop icWakeupInit
 ;
+    mov es:cs_serv_sel,0
     mov es:cs_wakeup_count,0
     mov es:cs_nesting,-1
     mov es:cs_curr_thread,0
@@ -4423,6 +4427,7 @@ do_flush_tlb   ENDP
 ;
 ;    PARAMETERS:     EDX        Linear address
 ;                    FS         Core
+;                    BX         Server sel or 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4434,6 +4439,15 @@ AddCoreTlb     Proc near
     cmp edx,system_mem_start 
     jae actTryLock
 ;
+    or bx,bx
+    jz actCheckCr3
+
+actCheckServ:
+    cmp bx,fs:cs_serv_sel
+    je actTryLock
+    jmp actDone
+
+actCheckCr3:
     mov eax,cr3
     and ax,0F000h
     cmp eax,fs:cs_cr3
@@ -4501,8 +4515,22 @@ flush_tlb Proc far
     push fs
     pushad
 ;
+    xor bx,bx
+;
     or cx,cx
     jz nfDone    
+;
+    cmp edx,system_mem_start
+    jae ftlbLoop
+;
+    cmp edx,serv_linear
+    jb ftlbLoop
+;
+    push es
+    GetThread
+    mov es,ax
+    mov bx,es:p_serv_sel
+    pop es
 
 ftlbLoop:
     push cx
