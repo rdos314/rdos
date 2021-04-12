@@ -4213,6 +4213,118 @@ gvdviDone:
 get_vfs_disc_vendor_info   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadOneSector
+;
+;       DESCRIPTION:    Read one sector
+;
+;       PARAMETERS:     DS              Disc sel
+;                       EDX:EAX         Sector
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Remaining size
+;                       EDX:EAX         Next sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadOneSector  Proc near
+    push ebp
+;
+    push eax
+    push edx
+    call LocalLockSector
+;
+    mov ebp,eax
+    movzx eax,ds:vfs_bytes_per_sector
+    cmp ecx,eax
+    ja rosInRange
+;
+    mov eax,ecx
+
+rosInRange:
+    push ds
+    push ecx
+;
+    mov ecx,eax
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov eax,ebp
+    or ax,867h
+    SetPageEntry
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov esi,edx
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    pop ecx
+    pop ds
+;
+    sub ecx,eax
+;
+    pop edx
+    pop eax
+    call LocalUnlockSector
+;
+    add eax,1
+    adc edx,0
+;
+    pop ebp
+    ret
+ReadOneSector  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadVfsDisc
+;
+;       DESCRIPTION:    Read VFS disc
+;
+;       PARAMETERS:     BL              Disc #
+;                       EDX:EAX         Sector
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_vfs_disc_name       DB 'Read VFS Disc',0
+
+read_vfs_disc    Proc far
+    push ds
+    push ebx
+;
+    int 3
+    push bx
+    mov bx,SEG data
+    mov ds,bx
+    pop bx
+    movzx ebx,bx
+    shl ebx,1
+    mov bx,ds:[ebx].disc_arr
+    or bx,bx
+    stc
+    jz rvdDone
+;
+    mov ds,bx
+
+rvdLoop:
+    call ReadOneSector
+    or ecx,ecx
+    jnz rvdLoop
+
+rvdDone:
+    pop ebx
+    pop ds
+    ret
+read_vfs_disc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init
@@ -4263,6 +4375,12 @@ init    Proc far
     mov edi,OFFSET get_vfs_disc_vendor_info_name
     xor cl,cl
     mov ax,get_vfs_disc_vendor_info_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_vfs_disc
+    mov edi,OFFSET read_vfs_disc_name
+    xor cl,cl
+    mov ax,read_vfs_disc_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_vfs_handle

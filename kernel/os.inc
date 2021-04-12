@@ -3377,6 +3377,14 @@ GetVfsDiscVendorInfo     MACRO
         OsGate get_vfs_disc_vendor_info_nr
                     ENDM
 
+;  IN  BL              Disc #
+;  IN  EDX:EAX         Sector
+;  IN  ES:EDI          Buffer
+;  IN  ECX             Size
+ReadVfsDisc     MACRO
+        OsGate read_vfs_disc_nr
+                    ENDM
+
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 
 BeginDiscHandler    MACRO

@@ -5163,17 +5163,22 @@ read_long_disc       PROC near
     cmp bl,MAX_DRIVES
     jae read_long_disc_fail
 ;
-    push bx
-    mov bx,SEG data
-    mov ds,bx
-    pop bx
-    movzx bx,bl
-    add bx,bx
-    mov bx,ds:[bx].disc_def_arr
-    or bx,bx
+    mov si,SEG data
+    mov ds,si
+    movzx si,bl
+    add si,si
+    mov si,ds:[si].disc_def_arr
+    or si,si
     jz read_long_disc_fail
 ;
-    mov ds,bx
+    cmp si,-1
+    jne read_long_disc_norm
+;
+    ReadVfsDisc
+    jmp read_long_disc_done
+
+read_long_disc_norm:
+    mov ds,si
     push ds
     push es
     push ecx
