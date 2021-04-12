@@ -1009,6 +1009,8 @@ ipDone:
 
 CreatePartThread Proc near
     push ds
+    push es
+    pushad
 ;
     mov bx,ds
     mov eax,cs
@@ -1019,6 +1021,8 @@ CreatePartThread Proc near
     mov al,4
     CreateThread
 ;
+    popad
+    pop es
     pop ds
     ret
 CreatePartThread Endp
