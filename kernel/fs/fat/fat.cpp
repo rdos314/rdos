@@ -7,8 +7,7 @@
 #include <unistd.h>
 
 #include "discserv.h"
-#include "fs.h"
-#include "tab16.h"
+#include "fatfs.h"
 
 TDiscServer *Server;
 TFat *Boot;

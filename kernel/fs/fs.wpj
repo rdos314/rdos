@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-1509
-179
+1504
+170
 8320
 9216
 2
@@ -39,7 +39,7 @@ WRect
 0
 0
 5680
-4232
+4224
 0
 0
 11
@@ -53,7 +53,7 @@ VComponent
 13
 WRect
 432
-358
+349
 5680
 4224
 0
@@ -63,15 +63,15 @@ WFileName
 7
 fat.tgt
 0
-0
+2
 15
 VComponent
 16
 WRect
 0
 0
-5690
-4326
+5685
+4317
 0
 0
 17
@@ -80,4 +80,4 @@ WFileName
 fslib.tgt
 0
 0
-15
+12

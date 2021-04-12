@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <rdos.h>
-#include "fs.h"
+#include "fatfs.h"
 #include "tab12.h"
 #include "tab16.h"
 #include "tab32.h"
