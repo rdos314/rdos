@@ -4621,6 +4621,9 @@ get_disc_info   PROC far
     or bx,bx
     jz get_disc_info_fail
 ;
+    cmp bx,-1
+    je get_disc_info_new
+;
     mov ds,bx
     mov eax,ds:disc_total_sectors
     mov edx,ds:disc_total_sectors+4
@@ -4628,6 +4631,10 @@ get_disc_info   PROC far
     mov si,ds:disc_sectors_per_cyl
     mov di,ds:disc_heads
     clc
+    jmp get_disc_info_done
+
+get_disc_info_new:
+    GetVfsDiscInfo
     jmp get_disc_info_done
 
 get_disc_info_fail:

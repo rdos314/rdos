@@ -3361,6 +3361,14 @@ StopVfs    MACRO
     OsGate stop_vfs_nr
                     ENDM
 
+;  IN  AL              Disc #
+;  OUT CX              Bytes / sector
+;  OUT     EDX:EAX     Total # of sectors
+;  OUT SI              BIOS sectors / cylinder
+;  OUT DI              BIOS heads
+GetVfsDiscInfo     MACRO
+        OsGate get_vfs_disc_info_nr
+                                                ENDM
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 

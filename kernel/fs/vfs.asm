@@ -4088,6 +4088,29 @@ test_serv   Proc far
 test_serv   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsDiscInfo
+;
+;       DESCRIPTION:    Get VFS disc info
+;
+;       PARAMETERS:     AL          Disc #
+;
+;       RETURNS:        CX          Bytes / sector
+;                       EDX:EAX     Total sectors
+;                       SI          BIOS sectors / cylinder
+;                       DI          BIOS heads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_disc_info_name       DB 'Get VFS Disc Info',0
+
+get_vfs_disc_info    Proc far
+    int 3
+    ret
+get_vfs_disc_info   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init
@@ -4126,6 +4149,12 @@ init    Proc far
     mov edi,OFFSET stop_vfs_name
     xor cl,cl
     mov ax,stop_vfs_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_vfs_disc_info
+    mov edi,OFFSET get_vfs_disc_info_name
+    xor cl,cl
+    mov ax,get_vfs_disc_info_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_vfs_handle

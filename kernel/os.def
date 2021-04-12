@@ -877,5 +877,6 @@ allocate_big_serv_sel_nr    = 794
 free_big_serv_sel_nr        = 795
 
 install_vfs_disc_nr         = 796
+get_vfs_disc_info_nr        = 797
 
 osgate_entries              = 800
