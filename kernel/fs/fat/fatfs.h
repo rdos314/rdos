@@ -28,10 +28,10 @@
 #ifndef _FAT_FS_H
 #define _FAT_FS_H
 
-#include "discserv.h"
+#include "fs.h"
 #include "tab.h"
 
-class TFat
+class TFat : public TFs
 {
 public:
     TFat();
@@ -66,8 +66,6 @@ protected:
     TFatTable *Tab2;
 
     int FreeClusters;
-
-    TDiscServer Server;
 };
 
 #endif

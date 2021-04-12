@@ -28,13 +28,21 @@
 #ifndef _FS_H
 #define _FS_H
 
+#include "discserv.h"
+
 class TFs
 {
 public:
     TFs();
     virtual ~TFs();
 
-    void Run();
+protected:
+    bool ProcessMsg();
+
+    TDiscServer Server;
+
+private:
+    char FMsgBuf[4096];
 };
 
 #endif

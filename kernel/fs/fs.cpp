@@ -62,15 +62,19 @@ TFs::~TFs()
 
 /*##########################################################################
 #
-#   Name       : TFs::Run
+#   Name       : TFs::ProcessMsg
 #
-#   Purpose....: Wait for commands
+#   Purpose....: Process messages
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::Run()
+bool TFs::ProcessMsg()
 {
+    Server.WaitForMsg(FMsgBuf);
+
+    return true;
+
 }

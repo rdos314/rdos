@@ -372,7 +372,6 @@ void TFat::CreateTables()
 void TFat::Run(const char *FsName)
 {
     bool ok;
-    char *buf = new char[4096];
 
     ok = ProcessBootSector(FsName);
     if (ok)
@@ -381,7 +380,5 @@ void TFat::Run(const char *FsName)
     ServTest();
 
     while (ok)
-        Server.WaitForMsg(buf);
-
-    delete buf;
+        ok = ProcessMsg();
 }
