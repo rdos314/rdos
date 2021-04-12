@@ -58,7 +58,7 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-    extern CreatePartThread:near
+    extern init_part:near
     extern NotifyReadBuf:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1229,6 +1229,53 @@ ccibDone:
     pop eax
     ret
 ClearCurrIoBitmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           PartThread
+;
+;       DESCRIPTION:    Partition thread
+;
+;       PARAMETERS:     BX       VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+part_thread_name       DB 'VFS',0
+
+part_thread:
+    mov ds,bx
+    call init_part
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreatePartThread
+;
+;       DESCRIPTION:    Start part thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePartThread Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bx,ds
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET part_thread
+    mov edi,OFFSET part_thread_name
+    mov al,4
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    ret
+CreatePartThread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

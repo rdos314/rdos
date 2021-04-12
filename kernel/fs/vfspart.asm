@@ -910,19 +910,17 @@ InstallGpt    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           InitPartition
+;       NAME:           init_part
 ;
 ;       DESCRIPTION:    Init partition
 ;
-;       PARAMETERS:     BX       VFS sel
+;       PARAMETERS:     DS     VFS sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_part_name       DB 'VFS Init',0
+    public init_part
 
-init_part:
-    mov ds,bx
-;
+init_part   Proc near
     mov eax,1000h
     AllocateBigServ
     mov ds:vfs_map_entry,edx
@@ -994,38 +992,8 @@ ipNextPart:
 
 ipDone:
     FreeSmallServ
-    TerminateThread
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreatePartThread
-;
-;       DESCRIPTION:    Start part thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CreatePartThread
-
-CreatePartThread Proc near
-    push ds
-    push es
-    pushad
-;
-    mov bx,ds
-    mov eax,cs
-    mov ds,eax
-    mov es,eax
-    mov esi,OFFSET init_part
-    mov edi,OFFSET init_part_name
-    mov al,4
-    CreateThread
-;
-    popad
-    pop es
-    pop ds
     ret
-CreatePartThread Endp
+init_part   Endp
 
 code    ENDS
 
