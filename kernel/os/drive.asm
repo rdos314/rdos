@@ -4782,7 +4782,7 @@ get_disc_vendor_info   PROC near
     push edi
 ;
     cmp al,MAX_DRIVES
-    jae get_disc_vendor_info_fail
+    jae get_disc_vendor_info_done
 ;
     mov bx,SEG data
     mov ds,bx
@@ -4791,10 +4791,17 @@ get_disc_vendor_info   PROC near
     mov bx,ds:[bx].disc_def_arr
     or bx,bx
     stc
-    jz get_disc_vendor_info_fail
+    jz get_disc_vendor_info_done
 ;
+    cmp bx,-1
+    jne get_disc_vendor_normal
+;
+    GetVfsDiscVendorInfo
+    jmp get_disc_vendor_info_done
+
+get_disc_vendor_normal:
     sub ecx,1
-    jbe get_disc_vendor_info_fail
+    jbe get_disc_vendor_info_done
 ;
     cmp ecx,255
     jb get_disc_vendor_info_size_ok
@@ -4833,7 +4840,7 @@ get_disc_vendor_info_term:
     stos byte ptr es:[edi]
     clc
 
-get_disc_vendor_info_fail:
+get_disc_vendor_info_done:
     pop edi
     pop esi
     pop edx

@@ -3368,7 +3368,14 @@ StopVfs    MACRO
 ;  OUT DI              BIOS heads
 GetVfsDiscInfo     MACRO
         OsGate get_vfs_disc_info_nr
-                                                ENDM
+                    ENDM
+
+;  IN  AL              Disc #
+;  IN  ES:EDI          Vendor buffer
+;  IN  ECX             Buffer size
+GetVfsDiscVendorInfo     MACRO
+        OsGate get_vfs_disc_vendor_info_nr
+                    ENDM
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 

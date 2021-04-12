@@ -2681,6 +2681,12 @@ VfsServer:
     AllocateSmallServ
     mov ds:vfs_req_buf,es
 ;
+    mov bx,ds
+    mov es,bx
+    mov edi,OFFSET vfs_vendor_str
+    mov bx,ds:vfs_param
+    call fword ptr ds:vfs_get_vendor
+;
     mov ds:vfs_scan_pos,-1
     mov ds:vfs_scan_pos+4,-1
     mov ds:vfs_active_count,0
@@ -4106,9 +4112,105 @@ test_serv   Endp
 get_vfs_disc_info_name       DB 'Get VFS Disc Info',0
 
 get_vfs_disc_info    Proc far
-    int 3
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov ax,ds:[ebx].disc_arr
+    or ax,ax
+    stc
+    jz gvdiDone
+;
+    mov ds,ax
+    mov cx,ds:vfs_bytes_per_sector
+    mov eax,ds:vfs_sectors
+    mov edx,ds:vfs_sectors+4
+    mov si,-1
+    mov di,-1
+    clc
+
+gvdiDone:
+    pop ebx
+    pop ds
     ret
 get_vfs_disc_info   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsDiscVendorInfo
+;
+;       DESCRIPTION:    Get VFS disc vendor info
+;
+;       PARAMETERS:     AL          Disc #
+;                       ES:EDI      Vendor buffer
+;                       ECX         Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_disc_vendor_info_name       DB 'Get VFS Disc Vendor Info',0
+
+get_vfs_disc_vendor_info    Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].disc_arr
+    or bx,bx
+    stc
+    jz gvdviDone
+;
+    sub ecx,1
+    jbe gvdviDone
+;
+    cmp ecx,255
+    jb gdvdiSizeOk
+;
+    mov ds,bx
+    mov esi,OFFSET vfs_vendor_str
+    mov ecx,255
+
+gdvdiSizeOk:
+    xor edx,edx
+
+gdvdiCopy:
+    lodsb
+    or al,al
+    jz gdvdiEob
+;
+    inc edx
+    stos byte ptr es:[edi]
+    loop gdvdiCopy
+
+gdvdiEob:    
+
+gdvdiTrim:
+    sub edx,1
+    jbe gdvdiTerm    
+;
+    mov al,es:[edi-1]
+    cmp al,' '
+    jne gdvdiTerm 
+;       
+    sub edi,1
+    jmp gdvdiTrim
+
+gdvdiTerm:
+    xor al,al
+    stos byte ptr es:[edi]
+    clc
+
+gvdviDone:
+    pop ebx
+    pop ds
+    ret
+get_vfs_disc_vendor_info   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4155,6 +4257,12 @@ init    Proc far
     mov edi,OFFSET get_vfs_disc_info_name
     xor cl,cl
     mov ax,get_vfs_disc_info_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_vfs_disc_vendor_info
+    mov edi,OFFSET get_vfs_disc_vendor_info_name
+    xor cl,cl
+    mov ax,get_vfs_disc_vendor_info_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_vfs_handle

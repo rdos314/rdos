@@ -48,6 +48,10 @@ vfs_table_struc    STRUC
 vfs_init                 DD ?,?
 
 ; IN  BX        Param
+; IN  EDI       Vendor buffer
+vfs_get_vendor           DD ?,?
+
+; IN  BX        Param
 vfs_exit                 DD ?,?
 
 ; OUT AX        Heads
@@ -99,6 +103,8 @@ vfs_gpt_entry_count      DD ?
 vfs_gpt_base             DD ?
 vfs_gpt_start            DD ?
 vfs_gpt_start_sector     DD ?,?
+
+vfs_vendor_str           DB 256 DUP(?)
 
 vfs_part_arr             DW MAX_VFS_PARTITIONS DUP(?)
 

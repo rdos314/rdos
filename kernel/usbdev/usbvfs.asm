@@ -574,6 +574,45 @@ ExitVfs  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetVfsVendor
+;
+;       DESCRIPTION:    Get vendor
+;
+;       PARAMETERS:     BX           Disc selector
+;                       ES:EDI       Vendor buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+GetVfsVendor   Proc far
+    push fs
+    pushad
+;
+    mov al,'U'
+    stos byte ptr es:[edi]
+    mov al,'S'
+    stos byte ptr es:[edi]
+    mov al,'B'
+    stos byte ptr es:[edi]
+    mov al,':'
+    stos byte ptr es:[edi]
+;
+    mov fs,bx
+    mov esi,OFFSET disc_vendor_str
+    mov ecx,(16+8+4) SHR 2
+    rep movs dword ptr es:[edi],fs:[esi]    
+;
+    xor al,al
+    stos byte ptr es:[edi]
+;
+    popad
+    pop fs
+    retf32
+GetVfsVendor  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           GetBiosVfs
 ;
 ;       DESCRIPTION:    Get BIOS VFS parameters
@@ -873,11 +912,12 @@ HexToAscii      ENDP
 disc_name    DB 'Usb Disc ', 0
 
 vfs_tab:
-vfs00   DD OFFSET InitVfs,    DD SEG code
-vfs01   DD OFFSET ExitVfs,    DD SEG code
-vfs02   DD OFFSET GetBiosVfs, DD SEG code
-vfs03   DD OFFSET ReadVfs,    DD SEG code
-vfs04   DD OFFSET WriteVfs,   DD SEG code
+vfs00   DD OFFSET InitVfs,        DD SEG code
+vfs01   DD OFFSET GetVfsVendor,   DD SEG code
+vfs02   DD OFFSET ExitVfs,        DD SEG code
+vfs03   DD OFFSET GetBiosVfs,     DD SEG code
+vfs04   DD OFFSET ReadVfs,        DD SEG code
+vfs05   DD OFFSET WriteVfs,       DD SEG code
 
 usb_attach  Proc far
     push ds
