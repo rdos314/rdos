@@ -431,3 +431,19 @@ long long TDiscServer::GetPartSectors()
 {
     return ServGetVfsSectors(handle);
 }
+
+/*##########################################################################
+#
+#   Name       : TDiscServer::WaitForMsg
+#
+#   Purpose....: Wait for msg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscServer::WaitForMsg(char *buf)
+{
+    return ServWaitForVfsCmd(handle, buf);
+}

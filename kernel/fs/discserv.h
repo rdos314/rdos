@@ -92,6 +92,7 @@ public:
     ~TDiscServer();
 
     long long GetPartSectors();
+    int WaitForMsg(char *buf);
 
 protected:
     void Add(int id, TDiscReq *req);

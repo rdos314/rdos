@@ -28,6 +28,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <rdos.h>
+#include <serv.h>
 #include "fatfs.h"
 #include "tab12.h"
 #include "tab16.h"
@@ -371,8 +372,16 @@ void TFat::CreateTables()
 void TFat::Run(const char *FsName)
 {
     bool ok;
+    char *buf = new char[4096];
 
     ok = ProcessBootSector(FsName);
     if (ok)
         CreateTables();
+
+    ServTest();
+
+    while (ok)
+        Server.WaitForMsg(buf);
+
+    delete buf;
 }

@@ -4136,6 +4136,27 @@ add_wait_for_vfs_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           WaitForVfsCmd
+;
+;       DESCRIPTION:    Wait for VFS cmd
+;
+;       PARAMETERS:     EBX        VFS handle
+;                       EDX        Buffer
+;
+;       RETURNS:        EAX        Cmd #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_vfs_cmd_name DB 'Wait For VFS Cmd', 0
+
+wait_for_vfs_cmd   Proc far
+    WaitForSignal
+    ret
+wait_for_vfs_cmd   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           TestServ
 ;
 ;       DESCRIPTION:    Test server
@@ -4471,6 +4492,12 @@ init    Proc far
     mov edi,OFFSET add_wait_for_vfs_req_name
     xor cl,cl
     mov ax,add_wait_for_vfs_req_nr
+    RegisterServGate
+;
+    mov esi,OFFSET wait_for_vfs_cmd
+    mov edi,OFFSET wait_for_vfs_cmd_name
+    xor cl,cl
+    mov ax,wait_for_vfs_cmd_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv
