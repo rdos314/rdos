@@ -63,7 +63,6 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-    extern RemoveReq:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
     extern SectorToBlock:near
@@ -369,6 +368,8 @@ NotifyPart    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public NotifyVfs
+
 NotifyVfs    Proc near
     push fs
     push esi
@@ -420,67 +421,6 @@ nvfNext:
     pop fs
     ret
 NotifyVfs    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           NotifyReadBuf
-;
-;       DESCRIPTION:    Notify read buffers
-;
-;       PARAMETERS:     DS          VFS sel
-;                       ES          Server flat sel
-;                       EDX:EAX     Sector
-;                       ESI         Physical entry buf
-;                       ECX         Sector count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public NotifyReadBuf
-
-NotifyReadBuf    Proc near
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push ebp
-;
-    mov ebp,ecx
-  
-nrbLoop:
-    xor cx,cx
-    or es:[esi].vfsp_flags,VFS_PHYS_VALID
-    mov bx,es:[esi].vfsp_ref_bitmap
-    or bx,bx
-    jz nrbNext
-;
-    and bx,0FFFEh
-    jz nrbPartOk
-;
-    call NotifyVfs
-
-nrbPartOk:
-    mov bx,es:[esi].vfsp_ref_bitmap
-    test bx,1
-    jz nrbNext
-;
-    call RemoveReq
-
-nrbNext:
-    mov es:[esi].vfsp_ref_bitmap,cx
-    add esi,8
-    sub bp,ds:vfs_sectors_per_block
-    ja nrbLoop
-;
-    pop ebp
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    ret
-NotifyReadBuf   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1134,7 +1074,6 @@ sctbDone:
     pop ebx
     ret
 SectorCountToBlock   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

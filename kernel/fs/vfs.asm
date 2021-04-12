@@ -55,7 +55,12 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-    extern VfsServer:far
+    extern init_buf:near
+    extern init_server:near
+    extern init_part:near
+
+    extern HandleDisc:near
+    extern CreateBuffer:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -175,6 +180,162 @@ cdsDone:
     pop es
     ret
 CreateDiscSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CalcParam
+;
+;       DESCRIPTION:    Calculate schedule params
+;
+;       PARAMETERS:     DS      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcParam    Proc near
+    mov eax,ds:vfs_sectors
+    mov edx,ds:vfs_sectors+4
+    mov bx,ds:vfs_bytes_per_sector
+    xor cl,cl
+
+cpSectorLoop:
+    cmp bx,1000h
+    jae cpSectorOk
+;
+    clc
+    rcr edx,1
+    rcr eax,1
+    shl bx,1
+    inc cl
+    jmp cpSectorLoop
+
+cpSectorOk:
+    mov bl,3
+    sub bl,cl
+    mov ds:vfs_sector_shift,bl
+;
+    add eax,1
+    adc edx,0
+    mov ds:vfs_blocks,eax
+    mov ds:vfs_blocks+4,edx
+;
+    mov ebx,eax
+    rol ebx,3
+    and bl,7
+    shl edx,3
+    or dl,bl
+    inc edx
+    mov ds:vfs_buf_count,edx
+;
+    mov ax,1
+    shl ax,cl
+    mov ds:vfs_sectors_per_block,ax
+;
+    ret
+CalcParam    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           PartThread
+;
+;       DESCRIPTION:    Partition thread
+;
+;       PARAMETERS:     BX       VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+part_thread_name       DB 'VFS',0
+
+part_thread:
+    mov ds,bx
+    call init_part
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreatePartThread
+;
+;       DESCRIPTION:    Start part thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePartThread Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bx,ds
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET part_thread
+    mov edi,OFFSET part_thread_name
+    mov al,4
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    ret
+CreatePartThread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           VfsServer
+;
+;       DESCRIPTION:    Vfs server
+;
+;       PARAMETERS:     BX      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+VfsServer:
+    GetThread
+    mov ds,bx
+    mov ds:vfs_server,ax
+;
+    mov bx,ds:vfs_param
+    call fword ptr ds:vfs_init
+    jc vfsTerm
+;
+    mov ds:vfs_sectors,eax
+    mov ds:vfs_sectors+4,edx
+    mov ds:vfs_bytes_per_sector,cx
+;
+    and bl,0F8h    
+    mov ds:vfs_max_req,bx
+    movzx eax,bx
+    shl eax,3
+    AllocateSmallServ
+    mov ds:vfs_req_buf,es
+;
+    mov bx,ds
+    mov es,bx
+    mov edi,OFFSET vfs_vendor_str
+    mov bx,ds:vfs_param
+    call fword ptr ds:vfs_get_vendor
+;
+    mov ds:vfs_scan_pos,-1
+    mov ds:vfs_scan_pos+4,-1
+    mov ds:vfs_active_count,0
+    mov ds:vfs_req_list,0
+    InitSection ds:vfs_section
+;
+    call CalcParam
+    call CreateBuffer
+    call CreatePartThread
+    call HandleDisc
+    int 3
+
+vfsExit:
+    mov bx,ds:vfs_param
+    call fword ptr ds:vfs_exit
+
+vfsTerm:
+    TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -446,9 +607,6 @@ read_vfs_disc   Endp
 ;       description:    Init device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    extern init_buf:near
-    extern init_server:near
 
 init    Proc far
     call init_buf

@@ -58,8 +58,7 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-    extern init_part:near
-    extern NotifyReadBuf:near
+    extern NotifyVfs:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -135,8 +134,6 @@ CreateReq Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public RemoveReq
-
 RemoveReq Proc near
     push es
     push fs
@@ -199,59 +196,6 @@ RemoveReq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CalcParam
-;
-;       DESCRIPTION:    Calculate schedule params
-;
-;       PARAMETERS:     DS      VFS sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcParam    Proc near
-    mov eax,ds:vfs_sectors
-    mov edx,ds:vfs_sectors+4
-    mov bx,ds:vfs_bytes_per_sector
-    xor cl,cl
-
-cpSectorLoop:
-    cmp bx,1000h
-    jae cpSectorOk
-;
-    clc
-    rcr edx,1
-    rcr eax,1
-    shl bx,1
-    inc cl
-    jmp cpSectorLoop
-
-cpSectorOk:
-    mov bl,3
-    sub bl,cl
-    mov ds:vfs_sector_shift,bl
-;
-    add eax,1
-    adc edx,0
-    mov ds:vfs_blocks,eax
-    mov ds:vfs_blocks+4,edx
-;
-    mov ebx,eax
-    rol ebx,3
-    and bl,7
-    shl edx,3
-    or dl,bl
-    inc edx
-    mov ds:vfs_buf_count,edx
-;
-    mov ax,1
-    shl ax,cl
-    mov ds:vfs_sectors_per_block,ax
-;
-    ret
-CalcParam    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           CreateBuffer
 ;
 ;       DESCRIPTION:    Create buffer
@@ -259,6 +203,8 @@ CalcParam    Endp
 ;       PARAMETERS:     DS      VFS sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateBuffer:near
 
 CreateBuffer    Proc near
     mov eax,ds:vfs_buf_count
@@ -1233,127 +1179,104 @@ ClearCurrIoBitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           PartThread
+;       NAME:           NotifyReadBuf
 ;
-;       DESCRIPTION:    Partition thread
+;       DESCRIPTION:    Notify read buffers
 ;
-;       PARAMETERS:     BX       VFS sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-part_thread_name       DB 'VFS',0
-
-part_thread:
-    mov ds,bx
-    call init_part
-    TerminateThread
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreatePartThread
-;
-;       DESCRIPTION:    Start part thread
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Sector
+;                       ESI         Physical entry buf
+;                       ECX         Sector count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreatePartThread Proc near
-    push ds
-    push es
-    pushad
+NotifyReadBuf    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push ebp
 ;
-    mov bx,ds
-    mov eax,cs
-    mov ds,eax
-    mov es,eax
-    mov esi,OFFSET part_thread
-    mov edi,OFFSET part_thread_name
-    mov al,4
-    CreateThread
+    mov ebp,ecx
+  
+nrbLoop:
+    xor cx,cx
+    or es:[esi].vfsp_flags,VFS_PHYS_VALID
+    mov bx,es:[esi].vfsp_ref_bitmap
+    or bx,bx
+    jz nrbNext
 ;
-    popad
-    pop es
-    pop ds
+    and bx,0FFFEh
+    jz nrbPartOk
+;
+    call NotifyVfs
+
+nrbPartOk:
+    mov bx,es:[esi].vfsp_ref_bitmap
+    test bx,1
+    jz nrbNext
+;
+    call RemoveReq
+
+nrbNext:
+    mov es:[esi].vfsp_ref_bitmap,cx
+    add esi,8
+    sub bp,ds:vfs_sectors_per_block
+    ja nrbLoop
+;
+    pop ebp
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
     ret
-CreatePartThread Endp
+NotifyReadBuf   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           VfsServer
+;       NAME:           HandleDisc
 ;
-;       DESCRIPTION:    Vfs server
+;       DESCRIPTION:    Handle disc
 ;
-;       PARAMETERS:     BX      VFS sel
+;       PARAMETERS:     DS          VFS sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public VfsServer
+    public HandleDisc
 
-VfsServer:
-    GetThread
-    mov ds,bx
-    mov ds:vfs_server,ax
-;
-    mov bx,ds:vfs_param
-    call fword ptr ds:vfs_init
-    jc vfsTerm
-;
-    mov ds:vfs_sectors,eax
-    mov ds:vfs_sectors+4,edx
-    mov ds:vfs_bytes_per_sector,cx
-;
-    and bl,0F8h    
-    mov ds:vfs_max_req,bx
-    movzx eax,bx
-    shl eax,3
-    AllocateSmallServ
-    mov ds:vfs_req_buf,es
-;
-    mov bx,ds
-    mov es,bx
-    mov edi,OFFSET vfs_vendor_str
-    mov bx,ds:vfs_param
-    call fword ptr ds:vfs_get_vendor
-;
-    mov ds:vfs_scan_pos,-1
-    mov ds:vfs_scan_pos+4,-1
-    mov ds:vfs_active_count,0
-    mov ds:vfs_req_list,0
-    InitSection ds:vfs_section
-;
-    call CalcParam
-    call CreateBuffer
-    call CreatePartThread
-;
+HandleDisc    Proc near
     mov ax,serv_flat_sel
     mov es,ax
 
-vfsLoop:
+hdLoop:
     WaitForSignal
 
-vfsRetry:
+hdRetry:
     EnterSection ds:vfs_section
 ;
     call GetIoStart
-    jc vfsLeave
+    jc hdLeave
 ;
     call GetIoBuf
-    jc vfsLeave
+    jc hdLeave
 ;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz vfsRead
+    jz hdRead
 
-vfsWrite:
+hdWrite:
     int 3
     LeaveSection ds:vfs_section
-    jmp vfsRetry
+    jmp hdRetry
 
-vfsLeave:
+hdLeave:
     LeaveSection ds:vfs_section
-    jmp vfsLoop
+    jmp hdLoop
 
-vfsRead:
+hdRead:
     call GetReadIo
     call ClearIoBitmap
     call BlockToSector
@@ -1364,35 +1287,29 @@ vfsRead:
     mov bx,ds:vfs_param
     call fword ptr ds:vfs_read
     pop es
-    jc vfsFail
+    jc hdFail
 ;
     EnterSection ds:vfs_section
     call NotifyReadBuf
     sub ds:vfs_active_count,ecx
-    jnz vfsMore
+    jnz hdMore
 ;
     call ClearCurrIoBitmap
     LeaveSection ds:vfs_section
-    jmp vfsLoop
+    jmp hdLoop
 
-vfsMore:
+hdMore:
     LeaveSection ds:vfs_section
-    jmp vfsRetry
+    jmp hdRetry
 
-vfsFail:
-    int 3
-
+hdFail:
     test ds:vfs_flags,VFS_FLAG_STOPPED
-    jnz vfsExit
-;
-    jmp vfsLoop
+    jnz hdExit
+    jmp hdLoop
 
-vfsExit:
-    mov bx,ds:vfs_param
-    call fword ptr ds:vfs_exit
-
-vfsTerm:
-    TerminateThread
+hdExit:
+    ret
+HandleDisc   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
