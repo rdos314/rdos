@@ -11,6 +11,7 @@
 #define serv_gate_add_wait_for_vfs_req 0x0000000A
 #define serv_gate_map_vfs_req 0x0000000B
 #define serv_gate_unmap_vfs_req 0x0000000C
+#define serv_gate_wait_for_vfs_cmd 0x0000000D
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -25,4 +26,5 @@
 #define ServGate_add_wait_for_vfs_req 0x55 0x67 0x9a 10 0 0 0 4 0 0x5d
 #define ServGate_map_vfs_req 0x55 0x67 0x9a 11 0 0 0 4 0 0x5d
 #define ServGate_unmap_vfs_req 0x55 0x67 0x9a 12 0 0 0 4 0 0x5d
+#define ServGate_wait_for_vfs_cmd 0x55 0x67 0x9a 13 0 0 0 4 0 0x5d
 

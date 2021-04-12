@@ -5,7 +5,7 @@ VpeMain
 1
 WRect
 1504
-170
+162
 8320
 9216
 2
@@ -53,7 +53,7 @@ VComponent
 13
 WRect
 432
-349
+341
 5680
 4224
 0
@@ -63,15 +63,15 @@ WFileName
 7
 fat.tgt
 0
-2
+0
 15
 VComponent
 16
 WRect
 0
 0
-5685
-4317
+5680
+4309
 0
 0
 17
