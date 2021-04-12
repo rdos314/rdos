@@ -114,6 +114,62 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunVfsReq
+;
+;       DESCRIPTION:    Run VFS req
+;
+;       PARAMETERS:     DS      Disc sel
+;                       ES      Req sel`
+;                       AX      Op
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunVfsReq  Proc near
+    push eax
+;
+    mov es:vch_op,ax
+    GetThread
+    mov es:vch_thread,ax
+;
+    EnterSection ds:vfs_section
+;
+    mov ax,ds:vfs_req_list
+    or ax,ax
+    je rvrEmpty
+;    
+    push ds
+    push esi
+;
+    mov ds,ax
+    mov si,ds:vch_prev
+    mov ds:vch_prev,es
+    mov ds,si
+    mov ds:vch_next,es
+    mov es:vch_next,ax
+    mov es:vch_prev,si
+;
+    pop esi
+    pop ds
+    jmp rvrWait
+    
+rvrEmpty:
+    mov es:vch_next,es
+    mov es:vch_prev,es
+    mov ds:vfs_req_list,es
+
+rvrWait:
+    LeaveSection ds:vfs_section
+;
+    WaitForSignal
+;
+    pop eax
+    ret
+RunVfsReq  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4215,69 +4271,32 @@ get_vfs_disc_vendor_info   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadOneSector
+;       NAME:           ReadRawSectors
 ;
-;       DESCRIPTION:    Read one sector
+;       DESCRIPTION:    Read raw sectors
 ;
 ;       PARAMETERS:     DS              Disc sel
 ;                       EDX:EAX         Sector
-;                       ES:EDI          Buffer
-;                       ECX             Size
-;
-;       RETURNS:        ECX             Remaining size
-;                       EDX:EAX         Next sector
+;                       ECX             Sector count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadOneSector  Proc near
-    push ebp
-;
+ReadRawSectors  Proc near
     push eax
-    push edx
-    call LocalLockSector
-;
-    mov ebp,eax
-    movzx eax,ds:vfs_bytes_per_sector
-    cmp ecx,eax
-    ja rosInRange
-;
     mov eax,ecx
-
-rosInRange:
-    push ds
-    push ecx
-;
-    mov ecx,eax
-    mov eax,1000h
-    AllocateBigLinear
-;
-    mov eax,ebp
-    or ax,867h
-    SetPageEntry
-;
-    mov ax,flat_sel
-    mov ds,ax
-    mov esi,edx
-    rep movs byte ptr es:[edi],ds:[esi]
-;
-    mov ecx,1000h
-    FreeLinear
-;
-    pop ecx
-    pop ds
-;
-    sub ecx,eax
-;
-    pop edx
+    shl eax,3
+    add eax,SIZE vfs_cmd_read
+    AllocateSmallGlobalMem
     pop eax
-    call LocalUnlockSector
 ;
-    add eax,1
-    adc edx,0
-;
-    pop ebp
+    mov es:vcr_sector,eax
+    mov es:vcr_sector+4,edx
+    mov es:vcr_count,ecx
+    mov ax,VFS_READ_MSG
+    call RunVfsReq
+
     ret
-ReadOneSector  Endp
+ReadRawSectors  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4311,12 +4330,17 @@ read_vfs_disc    Proc far
     stc
     jz rvdDone
 ;
+    push ecx
     mov ds,bx
-
-rvdLoop:
-    call ReadOneSector
-    or ecx,ecx
-    jnz rvdLoop
+    mov ebx,ecx
+    dec ebx
+    sub cl,ds:vfs_sector_shift
+    add cl,9
+    shr ebx,cl
+    mov ecx,ebx
+    inc ecx
+    call ReadRawSectors
+    pop ecx
 
 rvdDone:
     pop ebx

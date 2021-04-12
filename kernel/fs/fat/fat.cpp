@@ -29,8 +29,6 @@ int main(int argc, char **argv)
     int unit;
     char *ptr;
 
-    ServTest();
-
     if (argc >= 4)
     {
         ptr = argv[1];
@@ -43,5 +41,8 @@ int main(int argc, char **argv)
 
         TFat Fat;
         Fat.Run(ptr);
+
+        ServTest();
+
     }
 }

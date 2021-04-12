@@ -104,6 +104,8 @@ vfs_gpt_base             DD ?
 vfs_gpt_start            DD ?
 vfs_gpt_start_sector     DD ?,?
 
+vfs_req_list             DW ?
+
 vfs_vendor_str           DB 256 DUP(?)
 
 vfs_part_arr             DW MAX_VFS_PARTITIONS DUP(?)
@@ -191,3 +193,28 @@ vfspr_hdr                 vfs_req_header <>
 vfspr_arr                 DB SIZE vfs_req_entry * MAX_VFS_ENTRY_COUNT DUP(?)
 
 vfs_part_req  ENDS
+
+
+;
+; command messages
+;
+
+vfs_cmd_header      STRUC
+
+vch_prev            DW ?
+vch_next            DW ?
+vch_op              DW ?
+vch_thread          DW ?
+
+vfs_cmd_header      ENDS
+
+VFS_READ_MSG  = 1
+
+vfs_cmd_read        STRUC
+
+vcr_base            vfs_cmd_header <>
+
+vcr_sector          DD ?,?
+vcr_count           DD ?
+
+vfs_cmd_read        ENDS
