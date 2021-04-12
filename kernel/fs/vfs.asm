@@ -138,21 +138,12 @@ CreateDiscSel  Proc near
 ;
     mov ax,SEG data
     mov fs,ax
-    mov ebp,OFFSET disc_arr
-    mov ecx,MAX_DISC_COUNT
-
-cdsLoop:
-    mov ax,fs:[ebp]
-    or ax,ax
-    jz cdsFound
+    InstallVfsDisc
 ;
-    add ebp,2
-    loop cdsLoop
+    movzx ebp,al
+    shl ebp,1
+    add ebp,OFFSET disc_arr
 ;
-    stc
-    jmp cdsDone
-
-cdsFound:
     mov eax,OFFSET vfs_buf_arr
     AllocateSmallGlobalMem
 ;

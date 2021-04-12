@@ -2974,6 +2974,55 @@ install_fixed_disc    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           InstallVfsDisc
+;
+;   DESCRIPTION:    Install VFS disc unit
+;
+;   RETURNS:        AL          Disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_vfs_disc_name       DB 'Install VFS Disc',0
+
+install_vfs_disc    Proc far
+    push ds
+    push cx
+    push si
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov si,OFFSET disc_def_arr
+    mov cx,MAX_DRIVES
+
+install_vfs_disc_loop:
+    mov ax,[si]
+    or ax,ax
+    jnz install_vfs_disc_next
+;
+    mov ax,-1
+    mov [si],ax
+    mov ax,si
+    sub ax,OFFSET disc_def_arr
+    shr ax,1
+    clc
+    jmp install_vfs_disc_done
+
+install_vfs_disc_next:
+    add si,2
+    sub cx,1
+    jnz install_vfs_disc_loop
+    stc
+
+install_vfs_disc_done:
+    pop si
+    pop cx
+    pop ds
+    retf32
+install_vfs_disc    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IsDiscIdle
 ;
 ;           DESCRIPTION:    Check if disc is idle
@@ -7677,6 +7726,11 @@ init    PROC far
     mov esi,OFFSET install_fixed_disc
     mov edi,OFFSET install_fixed_disc_name
     mov ax,install_fixed_disc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET install_vfs_disc
+    mov edi,OFFSET install_vfs_disc_name
+    mov ax,install_vfs_disc_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_disc_param

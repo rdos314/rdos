@@ -3400,6 +3400,11 @@ InstallFixedDisc     MACRO
     OsGate install_fixed_disc_nr
                     ENDM
 
+; OUT AL          Disc #
+InstallVfsDisc     MACRO
+    OsGate install_vfs_disc_nr
+                    ENDM
+
 ;       IN      BX      Disc sel
 ;       IN      ES:EDI   Disc change procedure
 RegisterDiscChange      MACRO
