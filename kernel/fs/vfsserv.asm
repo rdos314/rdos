@@ -66,6 +66,7 @@ code    SEGMENT byte public 'CODE'
     extern BlockToBuf:near
     extern BlockToBitmap:near
     extern SectorToBlock:near
+    extern SectorCountToBlock:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -254,6 +255,7 @@ apNotFat:
     pop eax
     ret
 AddPartition   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -481,7 +483,6 @@ gvfshFound:
     pop ds
     ret
 get_vfs_handle    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -998,82 +999,6 @@ awrqDone:
     pop ds
     ret
 add_wait_for_vfs_req   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           SectorCountToBlock
-;
-;       DESCRIPTION:    Converts between sector & count # and block #
-;
-;       PARAMETERS:     DS          VFS sel
-;                       ES          Server flat sel
-;                       EDX:EAX     Sector #
-;                       ECX         Sector count
-;
-;       RETURNS:        NC
-;                         EDX:EAX   Block #
-;                         ECX       Block count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SectorCountToBlock    Proc near
-    push ebx
-    push ebp
-;
-    mov ebp,ecx
-;
-    cmp edx,ds:vfs_sectors+4
-    jb sctbInRange
-    ja sctbFail
-;
-    cmp eax,ds:vfs_sectors
-    jb sctbInRange
-
-sctbFail:
-    stc
-    jmp sctbDone
-
-sctbInRange:
-    mov cl,3
-    sub cl,ds:vfs_sector_shift
-    mov bx,1
-    shl bx,cl
-    dec bx
-    and bl,al
-    jz sctbCountOk
-
-cstbLoop:
-    inc ebp
-    dec eax
-    sub bl,1
-    jnz cstbLoop
-
-sctbCountOk:
-    dec ebp
-    shr ebp,cl
-    inc ebp
-;
-    mov cl,ds:vfs_sector_shift
-    or cl,cl
-    jz sctbOk
-
-sctbShift:
-    add eax,eax
-    adc edx,edx
-;
-    sub cl,1
-    jnz sctbShift
-
-sctbOk:
-    mov ecx,ebp
-    clc
-
-sctbDone:
-    pop ebp
-    pop ebx
-    ret
-SectorCountToBlock   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
