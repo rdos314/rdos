@@ -41,8 +41,6 @@ include vfs.inc
     .386p
 
 MAX_BITMAP_COUNT =  16
-MAX_DISC_COUNT   =  16
-MAX_PART_COUNT   = 255
 
 data    SEGMENT byte public 'DATA'
 
