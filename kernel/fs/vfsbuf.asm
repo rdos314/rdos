@@ -905,7 +905,8 @@ LockMultiSectors    Proc near
 ;    
     mov si,serv_flat_sel
     mov es,si
-;
+
+lmsRetry:
     push eax
     push ecx
     push edx
@@ -963,13 +964,13 @@ lmsWait:
     WaitForSignal
 
 lmsCheckReady:
+    EnterSection ds:vfs_section
+;
     push eax
     push ecx
     push edx
     push edi
     xor ebp,ebp
-;
-    EnterSection ds:vfs_section
 
 lmsCheckLoop:
     call BlockToBuf
@@ -984,14 +985,16 @@ lmsCheckNext:
     sub ecx,1
     jnz lmsReqLoop
 ;
-    LeaveSection ds:vfs_section
     pop edi
     pop edx
     pop ecx
     pop eax
 ;
     or ebp,ebp
-    jnz lmsWait
+    jz lmsGetData
+;
+    LeaveSection ds:vfs_section
+    jmp lmsWait
 
 lmsGetData:
     push eax
@@ -1000,8 +1003,6 @@ lmsGetData:
     push edi
 ;
     mov ebp,edi
-;
-    EnterSection ds:vfs_section
 
 lmsGetLoop:
     call BlockToBuf
@@ -1021,11 +1022,13 @@ lmsGetLoop:
     sub ecx,1
     jnz lmsGetLoop
 ;    
-    LeaveSection ds:vfs_section
     pop edi
     pop edx
     pop ecx
     pop eax
+;
+    LeaveSection ds:vfs_section
+    clc
 ;
     pop ebp
     pop esi
