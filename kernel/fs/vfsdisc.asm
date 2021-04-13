@@ -42,7 +42,8 @@ include vfs.inc
 
 MAX_DISC_COUNT   =  16
 
-LOCK_DISC_SECTORS = 0
+LOCK_DISC_SECTORS   = 0
+UNLOCK_DISC_SECTORS = 1
 
 vfs_cmd      STRUC
 
@@ -78,6 +79,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern SectorCountToBlock:near
+    extern SectorToBlock:near
     extern LockMultiSectors:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -174,6 +176,28 @@ ServLockDiscSectors   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ServUnlockDiscSectors
+;
+;       DESCRIPTION:    Unlock disc sectors
+;
+;       PARAMETERS:     DS          Disc sel
+;                       EDX:EAX     Block #
+;                       ECX         Count
+;                       ES          Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServUnlockDiscSectors   Proc near
+    int 3
+    mov edi,SIZE vfs_cmd
+;    call LockMultiSectors
+;
+    ret
+ServUnlockDiscSectors   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           HandleDiscMsg
 ;
 ;       DESCRIPTION:    Handle disc msg
@@ -184,6 +208,7 @@ ServLockDiscSectors   Endp
 
 disc_msg_tab:
 dm00 DD OFFSET ServLockDiscSectors
+dm01 DD OFFSET ServUnlockDiscSectors
 
     public HandleDiscMsg
 
@@ -525,12 +550,14 @@ ReqBlockBuf   Proc near
     mov ecx,ebx
     inc ecx
     call SectorCountToBlock
+    jc rsbDone
 ;
     shl ecx,3
     call CreateMsg
 ;
     mov ax,LOCK_DISC_SECTORS
     call RunMsg
+    jc rsbDone
 ;
     mov eax,ecx
     shl eax,12
@@ -553,7 +580,9 @@ rsbMap:
 ;
     pop ecx
     FreeMem
-;
+    clc
+
+rsbDone:
     pop edi
     pop edx
     pop ebx
@@ -561,6 +590,91 @@ rsbMap:
     pop es
     ret
 ReqBlockBuf  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeBlockBuf
+;
+;       DESCRIPTION:    Free block buffer
+;
+;       PARAMETERS:     DS              Disc sel
+;                       EDX:EAX         Sector
+;                       ECX             Block count
+;                       ESI             Linear buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBlockBuf   Proc near
+    push es
+    push eax
+;
+    push ecx
+    push edx
+;
+    mov edx,esi
+    shl ecx,12
+    FreeLinear
+;
+    pop edx
+    pop ecx
+;
+    call SectorToBlock
+    jc fbbDone
+;
+    push ecx
+    xor ecx,ecx
+    call CreateMsg
+    pop ecx
+    mov es:vc_ecx,ecx
+;
+    mov ax,UNLOCK_DISC_SECTORS
+    call RunMsg
+;
+    FreeMem
+    clc
+
+fbbDone:
+    pop eax
+    pop es
+    ret
+FreeBlockBuf  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FixupBuf
+;
+;       DESCRIPTION:    Fixup buffer
+;
+;       PARAMETERS:     DS              Disc sel
+;                       EDX:EAX         Sector
+;                       ESI             Linear buffer
+;
+;       RETURNS:        ESI             Fixed buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FixupBuf   Proc near
+    push ebx
+    push ecx
+    push edx
+;
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    mov bx,1
+    shl bx,cl
+    dec bx
+    movzx edx,ax
+    and dx,bx
+    shl dx,9
+    or si,dx
+;
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+FixupBuf  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -580,11 +694,14 @@ read_vfs_disc_name       DB 'Read VFS Disc',0
 
 read_vfs_disc    Proc far
     push ds
+    push fs
     push ebx
 ;
     push bx
     mov bx,SEG data
     mov ds,bx
+    mov bx,flat_sel
+    mov fs,bx
     pop bx
     movzx ebx,bx
     shl ebx,1
@@ -596,15 +713,33 @@ read_vfs_disc    Proc far
     int 3
     push esi
     push ecx
+;
     mov ds,bx
+    mov ebp,ecx
 ;
     call ReqBlockBuf
+    jc rvsPop
 ;
+    push esi
+    call FixupBuf
+    push ecx
+    mov ecx,ebp
+    shr ecx,2
+    rep movs dword ptr es:[edi],fs:[esi]    
+    pop ecx
+    pop esi
+;
+    call FreeBlockBuf
+;
+    clc
+
+rvsPop:
     pop esi
     pop ecx
 
 rvdDone:
     pop ebx
+    pop fs
     pop ds
     ret
 read_vfs_disc   Endp
