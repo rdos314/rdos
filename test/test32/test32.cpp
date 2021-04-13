@@ -27,8 +27,8 @@ void main()
     TDisc disc(2);
     char *buf;
 
-    buf = new char[512];
-    disc.Read(22, buf, 512);
+    buf = new char[8192];
+    disc.Read(22, buf, 8192);
 
     RdosTestGate("");
 }

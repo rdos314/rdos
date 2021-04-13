@@ -920,11 +920,13 @@ lmsReqLoop:
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jnz lmsReqNext
 ;
+    push ecx
     call BlockToBitmap
     mov ecx,eax
     shr ecx,3
     and ecx,1FFFFh
     bts es:[edi],ecx
+    pop ecx
 ;
     or es:[esi].vfsp_ref_bitmap,1
     call CreateReq
@@ -983,7 +985,7 @@ lmsCheckNext:
     add eax,8
     adc edx,0
     sub ecx,1
-    jnz lmsReqLoop
+    jnz lmsCheckLoop
 ;
     pop edi
     pop edx
