@@ -596,6 +596,7 @@ read_vfs_disc    Proc far
     int 3
     push esi
     push ecx
+    mov ds,bx
 ;
     call ReqBlockBuf
 ;
