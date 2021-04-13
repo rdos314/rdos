@@ -42,13 +42,16 @@ include vfs.inc
 
 MAX_DISC_COUNT   =  16
 
+GET_DISC_SECTORS = 0
+
 vfs_cmd      STRUC
 
 vc_prev            DW ?
 vc_next            DW ?
 vc_thread          DW ?
-vc_flags           DD ?
+vc_op              DW ?
 
+vc_eflags          DD ?
 vc_eax             DD ?
 vc_ebx             DD ?
 vc_ecx             DD ?
@@ -225,17 +228,18 @@ HandleDiscMsg  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RunMsg
+;       NAME:           CreateMsg
 ;
-;       DESCRIPTION:    Run disc msg session
+;       DESCRIPTION:    Create disc msg
 ;
 ;       PARAMETERS:     DS      Disc sel
+;                       ECX     Extra space
 ;
-;       RETURNS:        ES      Reply
+;       RETURNS:        ES      Req msg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RunMsg  Proc near
+CreateMsg  Proc near
     push eax
     mov eax,ecx
     add eax,SIZE vfs_cmd
@@ -243,8 +247,8 @@ RunMsg  Proc near
     pop eax
 ;
     stc
-    pushf
-    pop es:vc_flags
+    pushfd
+    pop es:vc_eflags
 ;
     mov es:vc_eax,eax
     mov es:vc_ebx,ebx
@@ -254,6 +258,26 @@ RunMsg  Proc near
     mov es:vc_edi,edi
     mov es:vc_fs,fs
     mov es:vc_gs,gs
+    ret
+CreateMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunMsg
+;
+;       DESCRIPTION:    Run disc msg
+;
+;       PARAMETERS:     DS      Disc sel
+;                       ES      Req msg
+;                       AX      Op
+;
+;       RETURNS:        ES      Reply msg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunMsg  Proc near
+    mov es:vc_op,ax
 ;
     GetThread
     mov es:vc_thread,ax
@@ -312,8 +336,8 @@ rmCheck:
     mov fs,es:vc_fs
     mov gs,es:vc_gs
 ;
-    push es:vc_flags
-    popf
+    push es:vc_eflags
+    popfd
 
 rmDone:
     ret
@@ -480,8 +504,14 @@ read_vfs_disc    Proc far
     mov ecx,ebx
     inc ecx
     call SectorCountToBlock
+;
     shl ecx,3
+    call CreateMsg
+;
+    mov ax,GET_DISC_SECTORS
     call RunMsg
+;
+    FreeMem
     pop ecx
 
 rvdDone:
