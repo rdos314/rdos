@@ -774,6 +774,14 @@ LocalLockSector    Proc near
     bts es:[edi],ecx
 
 llsRetry:
+    mov bx,es:[esi].vfsp_ref_bitmap
+    or bx,bx
+    jnz llsNotNew
+;
+    movzx ebx,ds:vfs_sectors_per_block
+    add ds:vfs_active_count,ebx
+
+llsNotNew:
     or es:[esi].vfsp_ref_bitmap,1
     call CreateReq
 ;
@@ -786,8 +794,6 @@ llsRetry:
     mov ds:vfs_scan_pos+4,edx
 
 llsSignal:
-    movzx ebx,ds:vfs_sectors_per_block
-    add ds:vfs_active_count,ebx
     LeaveSection ds:vfs_section
 ;
     mov bx,ds:vfs_server
@@ -928,6 +934,14 @@ lmsReqLoop:
     bts es:[edi],ecx
     pop ecx
 ;
+    mov bx,es:[esi].vfsp_ref_bitmap
+    or bx,bx
+    jnz lmsNotNew
+;
+    movzx ebx,ds:vfs_sectors_per_block
+    add ds:vfs_active_count,ebx
+
+lmsNotNew:
     or es:[esi].vfsp_ref_bitmap,1
     call CreateReq
 ;
@@ -940,8 +954,6 @@ lmsReqLoop:
     mov ds:vfs_scan_pos+4,edx
 
 lmsPosOk:
-    movzx ebx,ds:vfs_sectors_per_block
-    add ds:vfs_active_count,ebx
     inc ebp
 
 lmsReqNext:
