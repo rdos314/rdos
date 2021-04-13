@@ -42,7 +42,7 @@ include vfs.inc
 
 MAX_DISC_COUNT   =  16
 
-GET_DISC_SECTORS = 0
+LOCK_DISC_SECTORS = 0
 
 vfs_cmd      STRUC
 
@@ -78,6 +78,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern SectorCountToBlock:near
+    extern LockMultiSectors:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -148,9 +149,9 @@ CreateDiscSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ServGetDiscSectors
+;       NAME:           ServLockDiscSectors
 ;
-;       DESCRIPTION:    Get disc sectors
+;       DESCRIPTION:    Lock disc sectors
 ;
 ;       PARAMETERS:     DS          Disc sel
 ;                       EDX:EAX     Block #
@@ -159,12 +160,16 @@ CreateDiscSel   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ServGetDiscSectors   Proc near
-    int 3
-    clc
-    mov ecx,1234
+ServLockDiscSectors   Proc near
+    push edi
+;
+    shr ecx,3
+    mov edi,SIZE vfs_cmd
+    call LockMultiSectors
+;
+    pop edi
     ret
-ServGetDiscSectors   Endp
+ServLockDiscSectors   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -178,7 +183,7 @@ ServGetDiscSectors   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc_msg_tab:
-dm00 DD OFFSET ServGetDiscSectors
+dm00 DD OFFSET ServLockDiscSectors
 
     public HandleDiscMsg
 
@@ -534,7 +539,7 @@ read_vfs_disc    Proc far
     shl ecx,3
     call CreateMsg
 ;
-    mov ax,GET_DISC_SECTORS
+    mov ax,LOCK_DISC_SECTORS
     call RunMsg
     int 3
 ;

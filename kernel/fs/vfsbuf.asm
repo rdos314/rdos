@@ -880,6 +880,164 @@ LocalUnlockSector    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LockMultiSectors
+;
+;       DESCRIPTION:    Lock multi sector
+;
+;       PARAMETERS:     DS          VFS sel
+;                       EDX:EAX     Block #
+;                       ECX         Count
+;                       ES:EDI      Physical addresses
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LockMultiSectors
+
+LockMultiSectors    Proc near
+    push es
+    push gs
+    push ebx
+    push esi
+    push ebp
+;
+    mov si,es
+    mov gs,si
+;    
+    mov si,serv_flat_sel
+    mov es,si
+;
+    push eax
+    push ecx
+    push edx
+    push edi
+    xor ebp,ebp
+;
+    EnterSection ds:vfs_section
+
+lmsReqLoop:
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jnz lmsReqNext
+;
+    call BlockToBitmap
+    mov ecx,eax
+    shr ecx,3
+    and ecx,1FFFFh
+    bts es:[edi],ecx
+;
+    or es:[esi].vfsp_ref_bitmap,1
+    call CreateReq
+;
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+    jnc lmsPosOk
+;
+    mov ds:vfs_scan_pos,eax
+    mov ds:vfs_scan_pos+4,edx
+
+lmsPosOk:
+    movzx ebx,ds:vfs_sectors_per_block
+    add ds:vfs_active_count,ebx
+    inc ebp
+
+lmsReqNext:
+    add eax,8
+    adc edx,0
+    sub ecx,1
+    jnz lmsReqLoop
+;
+    LeaveSection ds:vfs_section
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+;
+    or ebp,ebp
+    jz lmsCheckReady
+
+lmsWait:
+    mov bx,ds:vfs_server
+    Signal
+;
+    WaitForSignal
+
+lmsCheckReady:
+    push eax
+    push ecx
+    push edx
+    push edi
+    xor ebp,ebp
+;
+    EnterSection ds:vfs_section
+
+lmsCheckLoop:
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jnz lmsCheckNext
+;
+    inc ebp
+
+lmsCheckNext:
+    add eax,8
+    adc edx,0
+    sub ecx,1
+    jnz lmsReqLoop
+;
+    LeaveSection ds:vfs_section
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+;
+    or ebp,ebp
+    jnz lmsWait
+
+lmsGetData:
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov ebp,edi
+;
+    EnterSection ds:vfs_section
+
+lmsGetLoop:
+    call BlockToBuf
+;
+    add es:[esi].vfsp_ref_bitmap,1
+;
+    mov eax,es:[esi]
+    and ax,0F000h
+    mov gs:[ebp],eax
+    add ebp,4
+    movzx eax,word ptr es:[esi+4]
+    mov gs:[ebp],eax
+    add ebp,4
+;
+    add eax,8
+    adc edx,0
+    sub ecx,1
+    jnz lmsGetLoop
+;    
+    LeaveSection ds:vfs_section
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+;
+    pop ebp
+    pop esi
+    pop ebx
+    pop gs
+    pop es
+    ret
+LockMultiSectors    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetIoStart
 ;
 ;       DESCRIPTION:    Get IO start position
