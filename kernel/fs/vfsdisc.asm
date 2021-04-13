@@ -148,19 +148,23 @@ CreateDiscSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ProcessMsg
+;       NAME:           ServGetDiscSectors
 ;
-;       DESCRIPTION:    Process disc msg
+;       DESCRIPTION:    Get disc sectors
 ;
-;       PARAMETERS:     DS      Disc sel
-;                       ES      Msg sel
+;       PARAMETERS:     DS          Disc sel
+;                       EDX:EAX     Block #
+;                       ECX         Count
+;                       ES          Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ProcessMsg   Proc near
+ServGetDiscSectors   Proc near
     int 3
+    clc
+    mov ecx,1234
     ret
-ProcessMsg   Endp
+ServGetDiscSectors   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -173,6 +177,9 @@ ProcessMsg   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+disc_msg_tab:
+dm00 DD OFFSET ServGetDiscSectors
+
     public HandleDiscMsg
 
 HandleDiscMsg  Proc near
@@ -181,7 +188,6 @@ HandleDiscMsg  Proc near
 
 hdLoop:
     WaitForSignal
-    int 3
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz hdExit
 
@@ -214,7 +220,30 @@ hdRetry:
 hdProcess:
     LeaveSection ds:vfs_cmd_section
 ;
-    call ProcessMsg
+    mov eax,es:vc_eax
+    mov ebx,es:vc_ebx
+    mov ecx,es:vc_ecx
+    mov edx,es:vc_edx
+    mov esi,es:vc_esi
+    mov edi,es:vc_edi
+;
+    movzx ebp,es:vc_op
+    shl ebp,2
+    call dword ptr cs:[ebp].disc_msg_tab
+;
+    mov es:vc_eax,eax
+    mov es:vc_ebx,ebx
+    mov es:vc_ecx,ecx
+    mov es:vc_edx,edx
+    mov es:vc_esi,esi
+    mov es:vc_edi,edi
+;    
+    pushfd
+    pop es:vc_eflags
+;
+    xor bx,bx
+    xchg bx,es:vc_thread
+    Signal
     jmp hdRetry
 
 hdLeave:
@@ -256,8 +285,8 @@ CreateMsg  Proc near
     mov es:vc_edx,edx
     mov es:vc_esi,esi
     mov es:vc_edi,edi
-    mov es:vc_fs,fs
-    mov es:vc_gs,gs
+    mov es:vc_fs,0
+    mov es:vc_gs,0
     ret
 CreateMsg  Endp
 
@@ -333,8 +362,6 @@ rmCheck:
     mov edx,es:vc_edx
     mov esi,es:vc_esi
     mov edi,es:vc_edi
-    mov fs,es:vc_fs
-    mov gs,es:vc_gs
 ;
     push es:vc_eflags
     popfd
@@ -482,7 +509,6 @@ read_vfs_disc    Proc far
     push ds
     push ebx
 ;
-    int 3
     push bx
     mov bx,SEG data
     mov ds,bx
@@ -510,6 +536,7 @@ read_vfs_disc    Proc far
 ;
     mov ax,GET_DISC_SECTORS
     call RunMsg
+    int 3
 ;
     FreeMem
     pop ecx
