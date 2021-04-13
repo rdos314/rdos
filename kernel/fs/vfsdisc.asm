@@ -497,6 +497,74 @@ get_vfs_disc_vendor_info   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ReqBlockBuf
+;
+;       DESCRIPTION:    Req block buffer
+;
+;       PARAMETERS:     DS              Disc sel
+;                       EDX:EAX         Sector
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Block count
+;                       ESI             Linear buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqBlockBuf   Proc near
+    push es
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    mov ebx,ecx
+    dec ebx
+    mov cl,9
+    sub cl,ds:vfs_sector_shift
+    shr ebx,cl
+    mov ecx,ebx
+    inc ecx
+    call SectorCountToBlock
+;
+    shl ecx,3
+    call CreateMsg
+;
+    mov ax,LOCK_DISC_SECTORS
+    call RunMsg
+;
+    mov eax,ecx
+    shl eax,12
+    AllocateBigLinear
+    mov esi,edx
+    mov edi,SIZE vfs_cmd
+;
+    push ecx
+
+rsbMap:
+    mov eax,es:[edi]
+    mov ebx,es:[edi+4]
+    or ax,863h
+    SetPageEntry
+;
+    add edx,1000h
+    add edi,8
+    sub ecx,1
+    jnz rsbMap
+;
+    pop ecx
+    FreeMem
+;
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    ret
+ReqBlockBuf  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReadVfsDisc
 ;
 ;       DESCRIPTION:    Read VFS disc
@@ -525,25 +593,13 @@ read_vfs_disc    Proc far
     stc
     jz rvdDone
 ;
-    push ecx
-    mov ds,bx
-    mov ebx,ecx
-    dec ebx
-    mov cl,9
-    sub cl,ds:vfs_sector_shift
-    shr ebx,cl
-    mov ecx,ebx
-    inc ecx
-    call SectorCountToBlock
-;
-    shl ecx,3
-    call CreateMsg
-;
-    mov ax,LOCK_DISC_SECTORS
-    call RunMsg
     int 3
+    push esi
+    push ecx
 ;
-    FreeMem
+    call ReqBlockBuf
+;
+    pop esi
     pop ecx
 
 rvdDone:
