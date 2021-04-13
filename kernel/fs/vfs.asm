@@ -119,12 +119,48 @@ CalcParam    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-part_thread_name       DB 'VFS',0
-
 part_thread:
     mov ds,bx
     call init_part
-    TerminateThread
+    int 3
+               
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -133,27 +169,56 @@ part_thread:
 ;
 ;       DESCRIPTION:    Start part thread
 ;
+;       PARAMETERS:     DS      VFS sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreatePartThread Proc near
+disc_name       DB 'VFS Disc ',0
+
+CreateDiscThread Proc near
     push ds
     push es
     pushad
 ;
+    mov eax,20
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    mov esi,OFFSET disc_name
+
+cdtCopyDev:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz cdtCopyDone
+;
+    stos byte ptr es:[edi]
+    jmp cdtCopyDev
+
+cdtCopyDone:
+    mov al,ds:vfs_disc_nr
+    call HexToAscii
+    stos word ptr es:[edi]
+;
+    xor al,al
+    stos byte ptr es:[edi]
+;    
+    xor edi,edi
+;
     mov bx,ds
     mov eax,cs
     mov ds,eax
-    mov es,eax
     mov esi,OFFSET part_thread
-    mov edi,OFFSET part_thread_name
     mov al,4
     CreateThread
+;
+    FreeMem
 ;
     popad
     pop es
     pop ds
     ret
-CreatePartThread Endp
+CreateDiscThread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -200,7 +265,7 @@ VfsServer:
 ;
     call CalcParam
     call CreateBuffer
-    call CreatePartThread
+    call CreateDiscThread
     call HandleDisc
     int 3
 
