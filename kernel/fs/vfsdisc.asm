@@ -42,6 +42,25 @@ include vfs.inc
 
 MAX_DISC_COUNT   =  16
 
+vfs_cmd      STRUC
+
+vc_prev            DW ?
+vc_next            DW ?
+vc_thread          DW ?
+vc_flags           DD ?
+
+vc_eax             DD ?
+vc_ebx             DD ?
+vc_ecx             DD ?
+vc_edx             DD ?
+vc_esi             DD ?
+vc_edi             DD ?
+vc_fs              DW ?
+vc_gs              DW ?
+
+vfs_cmd      ENDS
+
+
 data    SEGMENT byte public 'DATA'
 
 disc_arr        DW MAX_DISC_COUNT DUP (?)
@@ -54,6 +73,8 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+
+    extern SectorCountToBlock:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -124,6 +145,23 @@ CreateDiscSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           ProcessMsg
+;
+;       DESCRIPTION:    Process disc msg
+;
+;       PARAMETERS:     DS      Disc sel
+;                       ES      Msg sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessMsg   Proc near
+    int 3
+    ret
+ProcessMsg   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           HandleDiscMsg
 ;
 ;       DESCRIPTION:    Handle disc msg
@@ -135,11 +173,49 @@ CreateDiscSel   Endp
     public HandleDiscMsg
 
 HandleDiscMsg  Proc near
+    GetThread
+    mov ds:vfs_cmd_thread,ax
 
 hdLoop:
+    WaitForSignal
     int 3
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz hdExit
+
+hdRetry:
+    EnterSection ds:vfs_cmd_section
+    mov ax,ds:vfs_cmd_list
+    or ax,ax
+    jz hdLeave
+;
+    mov es,ax
+;
+    push ds
+    push edi
+;
+    mov di,es:vc_next
+    cmp di,ds:vfs_cmd_list
+    mov ds:vfs_cmd_list,di
+    mov si,es:vc_prev
+    mov ds,di
+    mov ds:vc_prev,si
+    mov ds,si
+    mov ds:vc_next,di
+;
+    pop edi
+    pop ds
+    jne hdProcess
+;    
+    mov ds:vfs_cmd_list,0
+    
+hdProcess:
+    LeaveSection ds:vfs_cmd_section
+;
+    call ProcessMsg
+    jmp hdRetry
+
+hdLeave:
+    LeaveSection ds:vfs_cmd_section
     jmp hdLoop
 
 hdExit:
@@ -149,57 +225,99 @@ HandleDiscMsg  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RunVfsReq
+;       NAME:           RunMsg
 ;
-;       DESCRIPTION:    Run VFS req
+;       DESCRIPTION:    Run disc msg session
 ;
 ;       PARAMETERS:     DS      Disc sel
-;                       ES      Req sel`
-;                       AX      Op
+;
+;       RETURNS:        ES      Reply
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RunVfsReq  Proc near
+RunMsg  Proc near
     push eax
+    mov eax,ecx
+    add eax,SIZE vfs_cmd
+    AllocateSmallGlobalMem
+    pop eax
 ;
-    mov es:vch_op,ax
+    stc
+    pushf
+    pop es:vc_flags
+;
+    mov es:vc_eax,eax
+    mov es:vc_ebx,ebx
+    mov es:vc_ecx,ecx
+    mov es:vc_edx,edx
+    mov es:vc_esi,esi
+    mov es:vc_edi,edi
+    mov es:vc_fs,fs
+    mov es:vc_gs,gs
+;
     GetThread
-    mov es:vch_thread,ax
+    mov es:vc_thread,ax
 ;
-    EnterSection ds:vfs_section
+    EnterSection ds:vfs_cmd_section
 ;
-    mov ax,ds:vfs_req_list
+    mov ax,ds:vfs_cmd_list
     or ax,ax
-    je rvrEmpty
+    je rmEmpty
 ;    
     push ds
     push esi
 ;
     mov ds,ax
-    mov si,ds:vch_prev
-    mov ds:vch_prev,es
+    mov si,ds:vc_prev
+    mov ds:vc_prev,es
     mov ds,si
-    mov ds:vch_next,es
-    mov es:vch_next,ax
-    mov es:vch_prev,si
+    mov ds:vc_next,es
+    mov es:vc_next,ax
+    mov es:vc_prev,si
 ;
     pop esi
     pop ds
-    jmp rvrWait
+    jmp rmLeave
     
-rvrEmpty:
-    mov es:vch_next,es
-    mov es:vch_prev,es
-    mov ds:vfs_req_list,es
+rmEmpty:
+    mov es:vc_next,es
+    mov es:vc_prev,es
+    mov ds:vfs_cmd_list,es
 
-rvrWait:
-    LeaveSection ds:vfs_section
+rmLeave:
+    LeaveSection ds:vfs_cmd_section
 ;
+    mov bx,ds:vfs_cmd_thread
+    Signal
+
+rmWait:
     WaitForSignal
+    test ds:vfs_flags,VFS_FLAG_STOPPED
+    jz rmCheck
 ;
-    pop eax
+    stc
+    jmp rmDone
+
+rmCheck:
+    mov ax,es:vc_thread
+    or ax,ax
+    jnz rmWait
+;
+    mov eax,es:vc_eax
+    mov ebx,es:vc_ebx
+    mov ecx,es:vc_ecx
+    mov edx,es:vc_edx
+    mov esi,es:vc_esi
+    mov edi,es:vc_edi
+    mov fs,es:vc_fs
+    mov gs,es:vc_gs
+;
+    push es:vc_flags
+    popf
+
+rmDone:
     ret
-RunVfsReq  Endp
+RunMsg  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -323,36 +441,6 @@ get_vfs_disc_vendor_info   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadRawSectors
-;
-;       DESCRIPTION:    Read raw sectors
-;
-;       PARAMETERS:     DS              Disc sel
-;                       EDX:EAX         Sector
-;                       ECX             Sector count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadRawSectors  Proc near
-    push eax
-    mov eax,ecx
-    shl eax,3
-    add eax,SIZE vfs_cmd_read
-    AllocateSmallGlobalMem
-    pop eax
-;
-    mov es:vcr_sector,eax
-    mov es:vcr_sector+4,edx
-    mov es:vcr_count,ecx
-    mov ax,VFS_READ_MSG
-    call RunVfsReq
-
-    ret
-ReadRawSectors  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           ReadVfsDisc
 ;
 ;       DESCRIPTION:    Read VFS disc
@@ -386,12 +474,14 @@ read_vfs_disc    Proc far
     mov ds,bx
     mov ebx,ecx
     dec ebx
+    mov cl,9
     sub cl,ds:vfs_sector_shift
-    add cl,9
     shr ebx,cl
     mov ecx,ebx
     inc ecx
-    call ReadRawSectors
+    call SectorCountToBlock
+    shl ecx,3
+    call RunMsg
     pop ecx
 
 rvdDone:
@@ -413,11 +503,15 @@ read_vfs_disc   Endp
 
 init_disc    Proc near
     mov ax,SEG data
+    mov ds,ax
     mov es,ax
     mov edi,OFFSET disc_arr
     mov ecx,MAX_DISC_COUNT
     xor ax,ax
     rep stos word ptr es:[edi]
+;
+    InitSection ds:vfs_cmd_section
+    mov ds:vfs_cmd_list,0
 ;
     mov ax,cs
     mov ds,ax
