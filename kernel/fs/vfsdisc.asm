@@ -81,6 +81,7 @@ code    SEGMENT byte public 'CODE'
     extern SectorCountToBlock:near
     extern SectorToBlock:near
     extern LockMultiSectors:near
+    extern UnlockMultiSectors:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -165,7 +166,6 @@ CreateDiscSel   Endp
 ServLockDiscSectors   Proc near
     push edi
 ;
-    shr ecx,3
     mov edi,SIZE vfs_cmd
     call LockMultiSectors
 ;
@@ -188,10 +188,7 @@ ServLockDiscSectors   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ServUnlockDiscSectors   Proc near
-    int 3
-    mov edi,SIZE vfs_cmd
-;    call LockMultiSectors
-;
+    call UnlockMultiSectors
     ret
 ServUnlockDiscSectors   Endp
 
@@ -552,8 +549,11 @@ ReqBlockBuf   Proc near
     call SectorCountToBlock
     jc rsbDone
 ;
+    push ecx
     shl ecx,3
     call CreateMsg
+    pop ecx
+    mov es:vc_ecx,ecx
 ;
     mov ax,LOCK_DISC_SECTORS
     call RunMsg
@@ -696,6 +696,10 @@ read_vfs_disc    Proc far
     push ds
     push fs
     push ebx
+    push ecx
+    push esi
+    push edi
+    push ebp
 ;
     push bx
     mov bx,SEG data
@@ -710,15 +714,11 @@ read_vfs_disc    Proc far
     stc
     jz rvdDone
 ;
-    int 3
-    push esi
-    push ecx
-;
     mov ds,bx
     mov ebp,ecx
 ;
     call ReqBlockBuf
-    jc rvsPop
+    jc rvdDone
 ;
     push esi
     call FixupBuf
@@ -730,14 +730,13 @@ read_vfs_disc    Proc far
     pop esi
 ;
     call FreeBlockBuf
-;
     clc
 
-rvsPop:
+rvdDone:
+    pop ebp
+    pop edi
     pop esi
     pop ecx
-
-rvdDone:
     pop ebx
     pop fs
     pop ds

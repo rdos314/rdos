@@ -1041,6 +1041,54 @@ LockMultiSectors    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UnlockMultiSectors
+;
+;       DESCRIPTION:    Unlock multi sectors
+;
+;       PARAMETERS:     DS          VFS sel
+;                       EDX:EAX     Block #
+;                       ECX         Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UnlockMultiSectors
+
+UnlockMultiSectors    Proc near
+    push es
+    push ecx
+    push edx
+    push esi
+;
+    mov si,serv_flat_sel
+    mov es,si
+;
+    EnterSection ds:vfs_section
+
+ulmsLoop:
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz ulmsNext
+;
+    sub es:[esi].vfsp_ref_bitmap,1
+
+ulmsNext:
+    add eax,8
+    adc edx,0
+    sub ecx,1
+    jnz ulmsLoop
+;
+    LeaveSection ds:vfs_section
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop es
+    ret
+UnlockMultiSectors    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetIoStart
 ;
 ;       DESCRIPTION:    Get IO start position
