@@ -58,61 +58,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           RunVfsReq
-;
-;       DESCRIPTION:    Run VFS req
-;
-;       PARAMETERS:     DS      Disc sel
-;                       ES      Req sel`
-;                       AX      Op
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RunVfsReq  Proc near
-    push eax
-;
-    mov es:vch_op,ax
-    GetThread
-    mov es:vch_thread,ax
-;
-    EnterSection ds:vfs_section
-;
-    mov ax,ds:vfs_req_list
-    or ax,ax
-    je rvrEmpty
-;    
-    push ds
-    push esi
-;
-    mov ds,ax
-    mov si,ds:vch_prev
-    mov ds:vch_prev,es
-    mov ds,si
-    mov ds:vch_next,es
-    mov es:vch_next,ax
-    mov es:vch_prev,si
-;
-    pop esi
-    pop ds
-    jmp rvrWait
-    
-rvrEmpty:
-    mov es:vch_next,es
-    mov es:vch_prev,es
-    mov ds:vfs_req_list,es
-
-rvrWait:
-    LeaveSection ds:vfs_section
-;
-    WaitForSignal
-;
-    pop eax
-    ret
-RunVfsReq  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           CreateDiscSel
 ;
 ;       DESCRIPTION:    Create partition selector
@@ -175,6 +120,86 @@ cdsDone:
     pop es
     ret
 CreateDiscSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           HandleDiscMsg
+;
+;       DESCRIPTION:    Handle disc msg
+;
+;       PARAMETERS:     DS      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HandleDiscMsg
+
+HandleDiscMsg  Proc near
+
+hdLoop:
+    int 3
+    test ds:vfs_flags,VFS_FLAG_STOPPED
+    jnz hdExit
+    jmp hdLoop
+
+hdExit:
+    ret
+HandleDiscMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunVfsReq
+;
+;       DESCRIPTION:    Run VFS req
+;
+;       PARAMETERS:     DS      Disc sel
+;                       ES      Req sel`
+;                       AX      Op
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunVfsReq  Proc near
+    push eax
+;
+    mov es:vch_op,ax
+    GetThread
+    mov es:vch_thread,ax
+;
+    EnterSection ds:vfs_section
+;
+    mov ax,ds:vfs_req_list
+    or ax,ax
+    je rvrEmpty
+;    
+    push ds
+    push esi
+;
+    mov ds,ax
+    mov si,ds:vch_prev
+    mov ds:vch_prev,es
+    mov ds,si
+    mov ds:vch_next,es
+    mov es:vch_next,ax
+    mov es:vch_prev,si
+;
+    pop esi
+    pop ds
+    jmp rvrWait
+    
+rvrEmpty:
+    mov es:vch_next,es
+    mov es:vch_prev,es
+    mov ds:vfs_req_list,es
+
+rvrWait:
+    LeaveSection ds:vfs_section
+;
+    WaitForSignal
+;
+    pop eax
+    ret
+RunVfsReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

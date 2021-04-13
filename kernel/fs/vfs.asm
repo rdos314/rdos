@@ -51,7 +51,8 @@ code    SEGMENT byte public 'CODE'
     extern init_part:near
     extern init_disc:near
 
-    extern HandleDisc:near
+    extern HandleDiscReq:near
+    extern HandleDiscMsg:near
     extern CreateBuffer:near
     extern CreateDiscSel:near
 
@@ -111,18 +112,19 @@ CalcParam    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           PartThread
+;       NAME:           DiscThread
 ;
-;       DESCRIPTION:    Partition thread
+;       DESCRIPTION:    Disc init & msg thread
 ;
 ;       PARAMETERS:     BX       VFS sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-part_thread:
+disc_thread:
     mov ds,bx
     call init_part
-    int 3
+    call HandleDiscMsg
+    TerminateThread
                
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -208,7 +210,7 @@ cdtCopyDone:
     mov bx,ds
     mov eax,cs
     mov ds,eax
-    mov esi,OFFSET part_thread
+    mov esi,OFFSET disc_thread
     mov al,4
     CreateThread
 ;
@@ -266,7 +268,7 @@ VfsServer:
     call CalcParam
     call CreateBuffer
     call CreateDiscThread
-    call HandleDisc
+    call HandleDiscReq
     int 3
 
 vfsExit:

@@ -1316,17 +1316,17 @@ NotifyReadBuf   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           HandleDisc
+;       NAME:           HandleDiscReq
 ;
-;       DESCRIPTION:    Handle disc
+;       DESCRIPTION:    Handle disc req
 ;
 ;       PARAMETERS:     DS          VFS sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public HandleDisc
+    public HandleDiscReq
 
-HandleDisc    Proc near
+HandleDiscReq    Proc near
     mov ax,serv_flat_sel
     mov es,ax
 
@@ -1387,7 +1387,7 @@ hdFail:
 
 hdExit:
     ret
-HandleDisc   Endp
+HandleDiscReq   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
