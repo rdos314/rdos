@@ -454,11 +454,11 @@ void TFat::Test()
 
     for (;;)
     {
-        sector = 100000 - 0x10 + RdosGetRandom(900000);
         count = 1 + RdosGetRandom(127);
+        sector = 400000 - 0x10 + RdosGetRandom(600000 - count);
         delay = RdosGetRandom(30);
 
-        printf("Start: %lld, Count: %d\r\n", sector, count);
+//        printf("Start: %lld, Count: %d\r\n", sector, count);
 
         GetSectors(&Req, sector, count);
 
@@ -485,10 +485,7 @@ void TFat::Run(const char *FsName)
     if (ok)
         CreateTables();
 
-
     ServTest();
-
-    Test();
 
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 1", this, 0x4000);
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 2", this, 0x4000);

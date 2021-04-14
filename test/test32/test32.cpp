@@ -54,7 +54,7 @@ void main()
 
     memset(buf, 0x55, 512);
 
-    for (id = 230000; id < 900000; id++)
+    for (id = 250000; id < 350000; id++)
     {
         FillSector(id, buf);
         sector = 100000 + id;
