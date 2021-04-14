@@ -43,6 +43,7 @@ public:
     void Test();
 
 protected:
+    void VerifySector(int id, char *buf);
     void GetSectors(TDiscReq *Req, long long sector, int count);
 
     bool ProcessBootSector(const char *FsName);

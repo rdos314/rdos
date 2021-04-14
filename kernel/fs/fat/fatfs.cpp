@@ -33,6 +33,7 @@
 #include "tab12.h"
 #include "tab16.h"
 #include "tab32.h"
+#include "md5.h"
 
 struct TBootSector
 {
@@ -376,6 +377,36 @@ void TFat::CreateTables()
 
 /*##########################################################################
 #
+#   Name       : VerifySector
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::VerifySector(int id, char *buf)
+{
+    TMd5Hash hash;
+    char hbuf[16];
+    int cid;
+
+    hash.Add(buf + 16, 512 - 16);
+    hash.GetHashData(hbuf);
+
+    if (memcmp(hbuf, buf, 16))
+        printf("Wrong hash\r\n");
+    else
+    {
+        memcpy(&cid, buf + 16, 4);
+        if (id != cid)
+            printf("Wrong sector\r\n");
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::GetSectors
 #
 #   Purpose....: Get sectors
@@ -390,10 +421,17 @@ void TFat::GetSectors(TDiscReq *Req, long long Sector, int Count)
     int i;
     TDiscReqEntry e1(Req, Sector, Count);
     char *ptr;
+    int id = (int)(Sector + 0x10 - 100000);
 
     Req->WaitForever();
 
     ptr = e1.Map();
+
+    for (i = 0; i < Count; i++)
+    {
+        VerifySector(id + i, ptr);
+        ptr += 512;
+    }
 }
 
 /*##########################################################################
@@ -416,11 +454,11 @@ void TFat::Test()
 
     for (;;)
     {
-        sector = RdosGetRandom(1000000);
+        sector = 100000 - 0x10 + RdosGetRandom(900000);
         count = 1 + RdosGetRandom(127);
         delay = RdosGetRandom(30);
 
-//        printf("Start: %lld, Count: %d\r\n", sector, count);
+        printf("Start: %lld, Count: %d\r\n", sector, count);
 
         GetSectors(&Req, sector, count);
 
@@ -447,6 +485,11 @@ void TFat::Run(const char *FsName)
     if (ok)
         CreateTables();
 
+
+    ServTest();
+
+    Test();
+
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 1", this, 0x4000);
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 2", this, 0x4000);
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 3", this, 0x4000);
@@ -457,8 +500,6 @@ void TFat::Run(const char *FsName)
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 8", this, 0x4000);
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 9", this, 0x4000);
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 10", this, 0x4000);
-
-    ServTest();
 
     while (ok)
         ok = ProcessMsg();

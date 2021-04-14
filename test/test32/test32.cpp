@@ -54,10 +54,10 @@ void main()
 
     memset(buf, 0x55, 512);
 
-    for (id = 0; id < 900000; id++)
+    for (id = 230000; id < 900000; id++)
     {
         FillSector(id, buf);
-        sector = 100000;
+        sector = 100000 + id;
         disc.Write(sector, buf, 512);
     }
 
