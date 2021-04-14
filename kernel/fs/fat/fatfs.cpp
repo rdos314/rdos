@@ -399,14 +399,14 @@ void TFat::Test()
 
     for (;;)
     {
-        sector = RdosGetRandom(50000);
-        count = 1 + RdosGetRandom(63);
+        sector = RdosGetRandom(2000000);
+        count = 1 + RdosGetRandom(127);
 
         printf("Start: %lld, Count: %d\r\n", sector, count);
 
         GetSectors(&Req, sector, count);
 
-        RdosWaitMilli(100);
+        RdosWaitMilli(50);
     }
 }
 

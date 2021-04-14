@@ -385,28 +385,6 @@ FreeBitmapEntry    Proc near
     push edx
     push edi
 ;
-
-;
-; check so it is empty!
-;
-    mov edi,eax
-    and di,0F000h
-    mov ecx,1000h
-
-fbCheckLoop:
-    mov edx,es:[edi]
-    or edx,edx
-    jz fbCheckNext
-;
-    int 3
-
-fbCheckNext:
-    add edi,4
-    sub ecx,1
-    jnz fbCheckLoop
-
-
-
     and ax,0F000h
     mov cx,SEG data
     mov ds,cx
@@ -1362,19 +1340,6 @@ GetReadIo    Proc near
     mov fs,ds:vfs_req_buf
     xor ecx,ecx
     xor edx,edx
-
-;
-; check first
-;
-
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz griFirstOk
-;
-    int 3
-
-griFirstOk:
-
-
   
 griBlockLoop:
     mov bp,ds:vfs_sectors_per_block
@@ -1528,10 +1493,7 @@ nrbLoop:
     xor cx,cx
 
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz nrbOk
-;
-    int 3
-    jmp nrbNext
+    jnz nrbNext
 
 nrbOk:
     or es:[esi].vfsp_flags,VFS_PHYS_VALID
