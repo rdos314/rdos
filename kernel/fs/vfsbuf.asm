@@ -1493,7 +1493,7 @@ nrbLoop:
     xor cx,cx
 
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz nrbNext
+    jnz nrbSkip
 
 nrbOk:
     or es:[esi].vfsp_flags,VFS_PHYS_VALID
@@ -1518,6 +1518,8 @@ nrbPartOk:
 
 nrbNext:
     mov es:[esi].vfsp_ref_bitmap,cx
+
+nrbSkip:
     add esi,8
     sub bp,ds:vfs_sectors_per_block
     ja nrbLoop

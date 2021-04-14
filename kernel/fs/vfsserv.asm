@@ -1174,8 +1174,12 @@ arsTake:
 arsLoop:
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz arsNext
+    jz arsReq
 ;
+    inc es:[esi].vfsp_ref_bitmap
+    jmp arsNext
+
+arsReq:
     inc gs:vfsrh_remain_count
     or es:[esi].vfsp_ref_bitmap,bp
 ;
@@ -1214,6 +1218,7 @@ arsLeaveFail:
     LeaveSection ds:vfs_section
 
 arsFail:
+    int 3
     stc
 
 arsDone:
@@ -1319,6 +1324,9 @@ rrsLoop:
 
 rrsUnlock:
     sub es:[esi].vfsp_ref_bitmap,1
+    jnc rrsNext
+;
+    CrashGate
     jmp rrsNext
 
 rrsDecRem:
