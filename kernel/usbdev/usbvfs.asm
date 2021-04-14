@@ -711,7 +711,7 @@ rvfsBufDo:
 ;
     push ecx
     cmp ecx,8
-    ja rvfsSizeOk
+    jb rvfsSizeOk
 ;
     mov ecx,8
 
