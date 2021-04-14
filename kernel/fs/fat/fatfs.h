@@ -30,8 +30,9 @@
 
 #include "fs.h"
 #include "tab.h"
+#include "thread.h"
 
-class TFat : public TFs
+class TFat : public TFs, public TThread
 {
 public:
     TFat();
@@ -39,10 +40,10 @@ public:
 
     void Run(const char *FsName);
 
-protected:
     void Test();
-    void GetSectors(TDiscReq *Req, long long sector, int count);
 
+protected:
+    void GetSectors(TDiscReq *Req, long long sector, int count);
 
     bool ProcessBootSector(const char *FsName);
     bool ProcessInfoSector();

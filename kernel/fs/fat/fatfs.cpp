@@ -71,6 +71,22 @@ struct TFatInfo
 
 /*##########################################################################
 #
+#   Name       : ThreadStartup
+#
+#   Purpose....: Startup procedure for thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ThreadStartup(void *ptr)
+{
+    ((TFat *)ptr)->Test();
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::TFat
 #
 #   Purpose....: Fat constructor
@@ -396,17 +412,19 @@ void TFat::Test()
     TDiscReq Req(&Server);
     int count;
     long long sector;
+    int delay;
 
     for (;;)
     {
         sector = RdosGetRandom(2000000);
         count = 1 + RdosGetRandom(127);
+        delay = RdosGetRandom(100);
 
         printf("Start: %lld, Count: %d\r\n", sector, count);
 
         GetSectors(&Req, sector, count);
 
-        RdosWaitMilli(50);
+        RdosWaitMilli(delay);
     }
 }
 
@@ -429,7 +447,11 @@ void TFat::Run(const char *FsName)
     if (ok)
         CreateTables();
 
-    Test();
+    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 1", this, 0x4000);
+    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 2", this, 0x4000);
+    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 3", this, 0x4000);
+    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 4", this, 0x4000);
+    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 5", this, 0x4000);
 
     ServTest();
 
