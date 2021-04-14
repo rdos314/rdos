@@ -1254,12 +1254,7 @@ remove_vfs_sectors    Proc far
     push es
     push fs
     push gs
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
+    pushad
 ;
     mov si,SEG data
     mov ds,si
@@ -1323,14 +1318,18 @@ rrsLoop:
     jz rrsDecRem
 
 rrsUnlock:
-    sub es:[esi].vfsp_ref_bitmap,1
-    jnc rrsNext
+    mov bx,es:[esi].vfsp_ref_bitmap
+    or bx,bx
+    jz rrsDecRem
 ;
-    CrashGate
+    dec es:[esi].vfsp_ref_bitmap
     jmp rrsNext
 
 rrsDecRem:
-    dec gs:vfsrh_remain_count
+    sub gs:vfsrh_remain_count,1
+    jnc rrsNext
+;
+    CrashGate
 
 rrsNext:
     add eax,8
@@ -1342,12 +1341,7 @@ rrsLeave:
     LeaveSection ds:vfs_section
 
 rrsDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop eax
+    popad
     pop gs
     pop fs
     pop es
