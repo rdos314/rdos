@@ -1513,6 +1513,14 @@ NotifyReadBuf    Proc near
   
 nrbLoop:
     xor cx,cx
+
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz nrbOk
+;
+    int 3
+    jmp nrbNext
+
+nrbOk:
     or es:[esi].vfsp_flags,VFS_PHYS_VALID
     mov bx,es:[esi].vfsp_ref_bitmap
     or bx,bx
@@ -1524,6 +1532,9 @@ nrbLoop:
     call NotifyVfs
 
 nrbPartOk:
+    movzx ebx,ds:vfs_sectors_per_block
+    sub ds:vfs_active_count,ebx
+;
     mov bx,es:[esi].vfsp_ref_bitmap
     test bx,1
     jz nrbNext
@@ -1601,7 +1612,9 @@ hdRead:
 ;
     EnterSection ds:vfs_section
     call NotifyReadBuf
-    sub ds:vfs_active_count,ecx
+;
+    mov ebx,ds:vfs_active_count
+    or ebx,ebx
     jnz hdMore
 ;
     call ClearCurrIoBitmap
