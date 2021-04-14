@@ -418,9 +418,9 @@ void TFat::Test()
     {
         sector = RdosGetRandom(2000000);
         count = 1 + RdosGetRandom(127);
-        delay = RdosGetRandom(100);
+        delay = RdosGetRandom(30);
 
-        printf("Start: %lld, Count: %d\r\n", sector, count);
+//        printf("Start: %lld, Count: %d\r\n", sector, count);
 
         GetSectors(&Req, sector, count);
 
