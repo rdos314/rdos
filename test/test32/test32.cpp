@@ -7,9 +7,30 @@
 #include <unistd.h>
 #include "modbus.h"
 #include "disc.h"
+#include "md5.h"
 
 #define FALSE 0
 #define TRUE !FALSE
+
+/*##########################################################################
+#
+#   Name       : FillSector
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void FillSector(int id, char *buf)
+{
+    TMd5Hash hash;
+
+    memcpy(buf + 16, &id, 4);
+    hash.Add(buf + 16, 512 - 16);
+    hash.GetHashData(buf);
+}
 
 /*##########################################################################
 #
@@ -24,23 +45,20 @@
 ##########################################################################*/
 void main()
 {
-    TDisc disc(1);
+    TDisc disc(2);
     char *buf;
-    int count;
+    int id;
     long long sector;
 
-    buf = new char[16 * 512];
+    buf = new char[512];
 
-    for (;;)
+    memset(buf, 0x55, 512);
+
+    for (id = 0; id < 900000; id++)
     {
-        sector = RdosGetRandom(5000);
-        count = 1 + RdosGetRandom(15);
-
-        printf("Start: %lld, Count: %d\r\n", sector, count);
-
-        disc.Read(sector, buf, 512 * count);
-
-        RdosWaitMilli(1000);
+        FillSector(id, buf);
+        sector = 100000;
+        disc.Write(sector, buf, 512);
     }
 
     RdosTestGate("");
