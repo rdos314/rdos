@@ -1416,6 +1416,18 @@ map_vfs_req    Proc far
     mov ds,fs:vfsp_disc_sel
     mov si,serv_flat_sel
     mov es,si
+
+
+;
+; debug info
+;
+    mov esi,gs:vfsrh_remain_count
+    mov si,gs:vfsrh_deleted_count
+    mov si,gs:vfsrh_wait_obj
+    mov esi,ds:vfs_active_count
+
+
+
     mov edi,eax
     shl edi,4
 ;
