@@ -385,6 +385,28 @@ FreeBitmapEntry    Proc near
     push edx
     push edi
 ;
+
+;
+; check so it is empty!
+;
+    mov edi,eax
+    and di,0F000h
+    mov ecx,1000h
+
+fbCheckLoop:
+    mov edx,es:[edi]
+    or edx,edx
+    jz fbCheckNext
+;
+    int 3
+
+fbCheckNext:
+    add edi,4
+    sub ecx,1
+    jnz fbCheckLoop
+
+
+
     and ax,0F000h
     mov cx,SEG data
     mov ds,cx
@@ -653,6 +675,9 @@ btbBufDir:
     test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
     jnz btbOk
 ;
+    movzx ebx,ds:vfs_sectors_per_block
+    add ds:vfs_active_count,ebx
+;
     AllocatePhysical64
     mov es:[esi],eax
     mov es:[esi+4],ebx
@@ -774,14 +799,6 @@ LocalLockSector    Proc near
     bts es:[edi],ecx
 
 llsRetry:
-    mov bx,es:[esi].vfsp_ref_bitmap
-    or bx,bx
-    jnz llsNotNew
-;
-    movzx ebx,ds:vfs_sectors_per_block
-    add ds:vfs_active_count,ebx
-
-llsNotNew:
     or es:[esi].vfsp_ref_bitmap,1
     call CreateReq
 ;
@@ -934,14 +951,6 @@ lmsReqLoop:
     bts es:[edi],ecx
     pop ecx
 ;
-    mov bx,es:[esi].vfsp_ref_bitmap
-    or bx,bx
-    jnz lmsNotNew
-;
-    movzx ebx,ds:vfs_sectors_per_block
-    add ds:vfs_active_count,ebx
-
-lmsNotNew:
     or es:[esi].vfsp_ref_bitmap,1
     call CreateReq
 ;

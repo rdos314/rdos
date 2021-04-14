@@ -1177,14 +1177,6 @@ arsLoop:
     jnz arsNext
 ;
     inc gs:vfsrh_remain_count
-    mov bx,es:[esi].vfsp_ref_bitmap
-    or bx,bx
-    jnz arsNotNew
-;
-    movzx ebx,ds:vfs_sectors_per_block
-    add ds:vfs_active_count,ebx
-
-arsNotNew:
     or es:[esi].vfsp_ref_bitmap,bp
 ;
     push edi
