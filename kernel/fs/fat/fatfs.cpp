@@ -406,7 +406,7 @@ void TFat::Test()
 
         GetSectors(&Req, sector, count);
 
-        RdosWaitMilli(1000);
+        RdosWaitMilli(100);
     }
 }
 

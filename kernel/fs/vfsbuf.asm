@@ -1362,6 +1362,19 @@ GetReadIo    Proc near
     mov fs,ds:vfs_req_buf
     xor ecx,ecx
     xor edx,edx
+
+;
+; check first
+;
+
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz griFirstOk
+;
+    int 3
+
+griFirstOk:
+
+
   
 griBlockLoop:
     mov bp,ds:vfs_sectors_per_block
@@ -1389,7 +1402,7 @@ griSave:
     jz griDone
 ;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz griBlockLoop
+    jz griBlockLoop
 
 griDone:
     pop esi
