@@ -1564,7 +1564,14 @@ hdRetry:
     jz hdRead
 
 hdWrite:
+    mov al,es:[esi].vfsp_wr_bitmap
+    or al,al
+    jz hdWriteDone
+;
     int 3
+
+hdWriteDone:
+    call ClearIoBitmap
     LeaveSection ds:vfs_section
     jmp hdRetry
 
