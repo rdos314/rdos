@@ -360,6 +360,58 @@ void TFat::CreateTables()
 
 /*##########################################################################
 #
+#   Name       : TFat::GetSectors
+#
+#   Purpose....: Get sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::GetSectors(TDiscReq *Req, long long Sector, int Count)
+{
+    int i;
+    TDiscReqEntry e1(Req, Sector, Count);
+    char *ptr;
+
+    Req->WaitForever();
+
+    ptr = e1.Map();
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::Test
+#
+#   Purpose....: Test read interface
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::Test()
+{
+    TDiscReq Req(&Server);
+    int count;
+    long long sector;
+
+    for (;;)
+    {
+        sector = RdosGetRandom(50000);
+        count = 1 + RdosGetRandom(63);
+
+        printf("Start: %lld, Count: %d\r\n", sector, count);
+
+        GetSectors(&Req, sector, count);
+
+        RdosWaitMilli(1000);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::Run
 #
 #   Purpose....: Run
@@ -376,6 +428,8 @@ void TFat::Run(const char *FsName)
     ok = ProcessBootSector(FsName);
     if (ok)
         CreateTables();
+
+    Test();
 
     ServTest();
 

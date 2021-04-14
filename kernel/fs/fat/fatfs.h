@@ -40,6 +40,10 @@ public:
     void Run(const char *FsName);
 
 protected:
+    void Test();
+    void GetSectors(TDiscReq *Req, long long sector, int count);
+
+
     bool ProcessBootSector(const char *FsName);
     bool ProcessInfoSector();
     void CreateTables();
