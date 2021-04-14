@@ -24,11 +24,24 @@
 ##########################################################################*/
 void main()
 {
-    TDisc disc(2);
+    TDisc disc(1);
     char *buf;
+    int count;
+    long long sector;
 
-    buf = new char[8192];
-    disc.Read(22, buf, 8192);
+    buf = new char[16 * 512];
+
+    for (;;)
+    {
+        sector = RdosGetRandom(5000);
+        count = 1 + RdosGetRandom(15);
+
+        printf("Start: %lld, Count: %d\r\n", sector, count);
+
+        disc.Read(sector, buf, 512 * count);
+
+        RdosWaitMilli(1000);
+    }
 
     RdosTestGate("");
 }
