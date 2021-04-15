@@ -70,7 +70,7 @@ void main()
     {
         count = 1 + RdosGetRandom(127);
         sector = 400000 + RdosGetRandom(600000 - count);
-        delay = RdosGetRandom(30);
+        delay = RdosGetRandom(100);
         disc.Read(sector, buf, 512 * count);
 
         id = (int)(sector - 100000);
@@ -81,6 +81,7 @@ void main()
             VerifySector(id + i, ptr);
             ptr += 512;
         }
+        RdosWaitMilli(delay);
 
     }
 
