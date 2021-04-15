@@ -1506,6 +1506,15 @@ nrbOk:
     and bx,0FFFEh
     jz nrbPartOk
 ;
+
+
+    cmp bx,18h
+    jne brbVfs
+;
+    int 3
+
+brbVfs:
+
     call NotifyVfs
 
 nrbPartOk:

@@ -815,10 +815,22 @@ is_vfs_req_done    Proc far
 ;
     mov esi,gs:vfsrh_remain_count
     or esi,esi
-    stc
-    jnz irqdDone
-;
     clc
+    jz irqdDone
+;
+    stc
+    int 3
+;
+    mov si,serv_flat_sel
+    mov es,si
+    mov ds,fs:vfsp_disc_sel
+;
+    mov ebx,SIZE vfs_req_header
+    mov eax,gs:[ebx].vfsre_start_sector
+    mov edx,gs:[ebx].vfsre_start_sector+4
+    call BlockToBuf
+    mov al,es:[esi].vfsp_flags
+    mov ax,es:[esi].vfsp_ref_bitmap 
 
 irqdDone:
     pop esi
