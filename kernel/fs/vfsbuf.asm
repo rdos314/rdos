@@ -1506,15 +1506,6 @@ nrbOk:
     and bx,0FFFEh
     jz nrbPartOk
 ;
-
-
-    cmp bx,18h
-    jne brbVfs
-;
-    int 3
-
-brbVfs:
-
     call NotifyVfs
 
 nrbPartOk:
@@ -1529,8 +1520,8 @@ nrbPartOk:
 
 nrbNext:
     mov es:[esi].vfsp_ref_bitmap,cx
-
-nrbSkip:
+    add eax,8
+    adc edx,0
     add esi,8
     sub bp,ds:vfs_sectors_per_block
     ja nrbLoop
