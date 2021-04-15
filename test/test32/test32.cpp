@@ -14,7 +14,7 @@
 
 /*##########################################################################
 #
-#   Name       : FillSector
+#   Name       : VerifySector
 #
 #   Purpose....:
 #
@@ -23,13 +23,23 @@
 #   Returns....: *
 #
 ##########################################################################*/
-void FillSector(int id, char *buf)
+void VerifySector(int id, char *buf)
 {
     TMd5Hash hash;
+    char hbuf[16];
+    int cid;
 
-    memcpy(buf + 16, &id, 4);
     hash.Add(buf + 16, 512 - 16);
-    hash.GetHashData(buf);
+    hash.GetHashData(hbuf);
+
+    if (memcmp(hbuf, buf, 16))
+        printf("Wrong hash\r\n");
+    else
+    {
+        memcpy(&cid, buf + 16, 4);
+        if (id != cid)
+            printf("Wrong sector\r\n");
+    }
 }
 
 /*##########################################################################
@@ -47,18 +57,31 @@ void main()
 {
     TDisc disc(2);
     char *buf;
-    int id;
+    int count;
     long long sector;
+    int delay;
+    int i;
+    char *ptr;
+    int id;
 
-    buf = new char[512];
+    buf = new char[512 * 128];
 
-    memset(buf, 0x55, 512);
-
-    for (id = 250000; id < 350000; id++)
+    for (;;)
     {
-        FillSector(id, buf);
-        sector = 100000 + id;
-        disc.Write(sector, buf, 512);
+        count = 1 + RdosGetRandom(127);
+        sector = 400000 + RdosGetRandom(600000 - count);
+        delay = RdosGetRandom(30);
+        disc.Read(sector, buf, 512 * count);
+
+        id = (int)(sector - 100000);
+
+        ptr = buf;
+        for (i = 0; i < count; i++)
+        {
+            VerifySector(id + i, ptr);
+            ptr += 512;
+        }
+
     }
 
     RdosTestGate("");
