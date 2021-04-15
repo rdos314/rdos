@@ -1481,6 +1481,10 @@ Disc %d not found
 Disc %d, %s
 .
 
+:TEXT_SHOWPART_DISC_CACHE
+Cached %15.3f MB
+.
+
 :TEXT_SHOWPART_DISC_LONG
 MBR: %04lX_%08lX BIOS sectors / cyl %04X, heads %04X
 .

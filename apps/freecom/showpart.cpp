@@ -170,7 +170,7 @@ void TShowPartitionCommand::ShowEntry(int Nr, TIdePartition *Entry)
                 DriveStr[0] = 'A' + (char)DriveNr;
                 DriveStr[1] = ':';
                 DriveStr[2] = 0;
-                              
+
                 FreeSpace = Entry->GetFreeSpace();
 
                 sprintf(str,
@@ -384,7 +384,7 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
                     (int)(Start >> 32), (int)(Start & 0xFFFFFFFF),
                     (int)(End >> 32), (int)(End & 0xFFFFFFFF),
                     (int)TotalSpace);
-            Write(str);        
+            Write(str);
         }
 
         memcpy(name, Entry->Name, 8);
@@ -417,7 +417,7 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
                     (int)TotalSpace,
                     guid);
 
-        Write(str);        
+        Write(str);
 
         CurrLba = Entry->Start + Entry->Size + 1;
     }
@@ -432,7 +432,7 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
                 (int)(Start >> 32), (int)(Start & 0xFFFFFFFF),
                 (int)(End >> 32), (int)(End & 0xFFFFFFFF),
                 (int)TotalSpace);
-        Write(str);        
+        Write(str);
     }
 
     delete DiscPart;
@@ -452,12 +452,21 @@ void TShowPartitionCommand::ShowGpt(TDisc *Disc)
 void TShowPartitionCommand::ShowHeader(TDisc *Disc)
 {
     char str[256];
+    long long CacheSize = Disc->GetCached();
+    long double size;
 
     Write("\r\n");
 
     RdosGetDiscVendorInfo(Disc->GetDiscNr(), str, 256);
     FMsg.printf(TEXT_SHOWPART_DISC_HEADER, Disc->GetDiscNr(), str);
     Write(FMsg.GetData());
+
+    if (CacheSize)
+    {
+        size = (long double)CacheSize / 1024.0 / 1024.0;
+        FMsg.printf(TEXT_SHOWPART_DISC_CACHE, size);
+        Write(FMsg.GetData());
+    }
 }
 
 /*##########################################################################
@@ -474,11 +483,11 @@ void TShowPartitionCommand::ShowHeader(TDisc *Disc)
 int TShowPartitionCommand::Show(TDisc *Disc)
 {
     TIdeDiscPartition *DiscPart;
-    
+
     if (Disc->IsValid())
-    {            
+    {
         ShowHeader(Disc);
-        
+
         if (Disc->IsGpt())
         {
             ShowGpt(Disc);
@@ -542,7 +551,7 @@ int TShowPartitionCommand::Execute(char *param)
             Disc = new TDisc(d);
             if (Disc->IsValid())
                 if (Disc->GetDiscNr() == DiscNr)
-                    break; 
+                    break;
             delete Disc;
             Disc = 0;
         }

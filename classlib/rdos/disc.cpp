@@ -113,11 +113,11 @@ int TDisc::IsGpt()
 {
     char *Buf;
     unsigned char Type;
-    
+
     if (FValid)
-    {            
+    {
         Buf = new char[512];
-        Read(0, Buf, 512);        
+        Read(0, Buf, 512);
         Type = Buf[0x1BE + 4];
         delete Buf;
 
@@ -188,6 +188,18 @@ int TDisc::GetSectorsPerCyl()
 int TDisc::GetHeads()
 {
     return FHeads;
+}
+
+/*##################  TDisc::GetCached  #############
+*   Purpose....: Get current cache size                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+long long TDisc::GetCached()
+{
+    return RdosGetDiscCache(FDisc);
 }
 
 /*##################  TDisc::WaitForIdle  #############

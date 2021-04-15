@@ -43,6 +43,7 @@ public:
     long long GetTotalSectors();
     int GetSectorsPerCyl();
     int GetHeads();
+    long long GetCached();
 
     int Read(long long Sector, char *buf, int size);
     int Write(long long Sector, const char *buf, int size);
