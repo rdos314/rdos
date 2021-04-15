@@ -423,15 +423,21 @@ void TFat::GetSectors(TDiscReq *Req, long long Sector, int Count)
     char *ptr;
     int id = (int)(Sector + 0x10 - 100000);
 
-    Req->WaitForever();
+    Req->WaitTimeout(100);
 
-    ptr = e1.Map();
-
-    for (i = 0; i < Count; i++)
+    if (Req->IsDone())
     {
-        VerifySector(id + i, ptr);
-        ptr += 512;
+        ptr = e1.Map();
+
+        for (i = 0; i < Count; i++)
+        {
+            VerifySector(id + i, ptr);
+            ptr += 512;
+        }
     }
+    else
+        printf("Not done, sector: %lld\r\n");
+
 }
 
 /*##########################################################################

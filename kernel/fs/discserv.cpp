@@ -275,6 +275,21 @@ int TDiscReq::WaitUntil(TDateTime &time)
 
 /*##########################################################################
 #
+#   Name       : TDiscReq::IsDone
+#
+#   Purpose....: Check if done
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TDiscReq::IsDone()
+{
+    return ServIsVfsReqDone(FReq);
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscReq::Add
 #
 #   Purpose....: Add request

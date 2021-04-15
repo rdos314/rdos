@@ -73,6 +73,7 @@ public:
     int WaitForever();
     int WaitTimeout(int MilliSec);
     int WaitUntil(TDateTime &time);
+    bool IsDone();
 
 protected:
     void Add(TDiscReqEntry *entry);
