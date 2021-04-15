@@ -130,6 +130,7 @@ CreateDiscSel  Proc near
     mov es:vfs_param,bx
     mov es:vfs_flags,0
     mov es:vfs_server,0
+    mov es:vfs_cached_pages,0
 ;
     mov eax,ebp
     sub eax,OFFSET disc_arr
@@ -744,6 +745,46 @@ rvdDone:
 read_vfs_disc   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetDiscCache
+;
+;       DESCRIPTION:    Get current size of disc cache
+;
+;       PARAMETERS:     AL              Disc #
+;
+;       RETURNS:        EDX:EAX         Size of disc cache in bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_disc_cache_name       DB 'Get Disc Cache',0
+
+get_disc_cache    Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].disc_arr
+    or bx,bx
+    stc
+    jz gdcDone
+;
+    mov ds,bx
+    mov eax,ds:vfs_cached_pages
+    mov edx,1000h
+    mul edx
+    clc
+
+gdcDone:
+    pop ebx
+    pop ds
+    ret
+get_disc_cache   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_disc
@@ -787,6 +828,13 @@ init_disc    Proc near
     xor cl,cl
     mov ax,read_vfs_disc_nr
     RegisterOsGate
+;
+    mov esi,OFFSET get_disc_cache
+    mov edi,OFFSET get_disc_cache_name
+    xor dx,dx
+    mov ax,get_disc_cache_nr
+    RegisterBimodalUserGate
+
     ret
 init_disc    Endp
 

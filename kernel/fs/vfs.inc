@@ -97,6 +97,8 @@ vfs_map_entry            DD ?
 vfs_active_count         DD ?
 vfs_scan_pos             DD ?,?
 
+vfs_cached_pages         DD ?
+
 vfs_curr_start_sector    DD ?,?
 vfs_curr_sector_count    DD ?,?
 vfs_gpt_entry_count      DD ?

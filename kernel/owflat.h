@@ -3056,6 +3056,15 @@
     __parm [__eax] \
     __value [__eax]
 
+#pragma aux RdosGetDiscCache = \
+    CallGate_get_disc_cache  \
+    "jnc Ok"\
+    "xor eax,eax"\
+    "xor edx,edx"\
+    "Ok:"\
+    __parm [__eax] \
+    __value [__edx __eax]
+
 #pragma aux RdosGetDiscVendorInfo = \
     CallGate_get_disc_vendor_info  \
     "jnc Ok" \

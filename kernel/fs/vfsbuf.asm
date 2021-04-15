@@ -660,6 +660,7 @@ btbBufDir:
     mov es:[esi],eax
     mov es:[esi+4],ebx
     or es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+    inc ds:vfs_cached_pages
 
 btbOk:
     clc
