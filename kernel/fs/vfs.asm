@@ -211,7 +211,7 @@ cdtCopyDone:
     mov eax,cs
     mov ds,eax
     mov esi,OFFSET disc_thread
-    mov al,4
+    mov al,2
     CreateThread
 ;
     FreeMem
@@ -304,7 +304,7 @@ start_vfs    Proc far
     mov eax,cs
     mov ds,eax
     mov esi,OFFSET VfsServer
-    mov al,4
+    mov al,2
     CreateServerProcess
 
 svfsDone:

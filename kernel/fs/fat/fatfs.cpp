@@ -492,16 +492,16 @@ void TFat::Run(const char *FsName)
         CreateTables();
 
 
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 1", this, 0x4000);
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 2", this, 0x4000);
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 3", this, 0x4000);
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 4", this, 0x4000);
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 5", this, 0x4000);
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 6", this, 0x4000);
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 7", this, 0x4000);
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 8", this, 0x4000);
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 9", this, 0x4000);
-    RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 10", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 1", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 2", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 3", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 4", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 5", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 6", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 7", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 8", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 9", this, 0x4000);
+    RdosCreateThread(ThreadStartup, "Disc Test 10", this, 0x4000);
 
     ServTest();
 
