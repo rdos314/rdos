@@ -485,7 +485,6 @@ void TFat::Run(const char *FsName)
     if (ok)
         CreateTables();
 
-    ServTest();
 
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 1", this, 0x4000);
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 2", this, 0x4000);
@@ -497,6 +496,8 @@ void TFat::Run(const char *FsName)
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 8", this, 0x4000);
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 9", this, 0x4000);
     RdosCreatePrioThread(ThreadStartup, 4, "Disc Test 10", this, 0x4000);
+
+    ServTest();
 
     while (ok)
         ok = ProcessMsg();

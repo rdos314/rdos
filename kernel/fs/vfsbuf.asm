@@ -1493,7 +1493,9 @@ nrbLoop:
     xor cx,cx
 
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz nrbSkip
+    jz nrbOk
+;
+    CrashGate
 
 nrbOk:
     or es:[esi].vfsp_flags,VFS_PHYS_VALID
