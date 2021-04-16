@@ -132,6 +132,10 @@ CreateDiscSel  Proc near
     mov es:vfs_server,0
     mov es:vfs_cached_pages,0
 ;
+; test only
+;
+    mov es:vfs_max_cached_pages,38000
+;
     mov eax,ebp
     sub eax,OFFSET disc_arr
     shr eax,1
@@ -218,6 +222,12 @@ hdLoop:
     WaitForSignal
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz hdExit
+;
+    mov eax,ds:vfs_cached_pages
+    cmp eax,ds:vfs_max_cached_pages
+    jb hdRetry
+;
+    int 3
 
 hdRetry:
     EnterSection ds:vfs_cmd_section

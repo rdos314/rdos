@@ -660,7 +660,14 @@ btbBufDir:
     mov es:[esi],eax
     mov es:[esi+4],ebx
     or es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+;
     inc ds:vfs_cached_pages
+    mov eax,ds:vfs_cached_pages
+    cmp eax,ds:vfs_max_cached_pages
+    jne btbOk
+;
+    mov bx,ds:vfs_cmd_thread
+    Signal
 
 btbOk:
     clc
@@ -907,6 +914,7 @@ LockMultiSectors    Proc near
 ;    
     mov si,serv_flat_sel
     mov es,si
+    inc ds:vfs_lock_count
 
 lmsRetry:
     push eax
@@ -1029,6 +1037,7 @@ lmsGetLoop:
     pop ecx
     pop eax
 ;
+    dec ds:vfs_lock_count
     LeaveSection ds:vfs_section
     clc
 ;
