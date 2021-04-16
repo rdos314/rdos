@@ -1203,6 +1203,9 @@ icBufDir:
     mov ecx,512
 
 icLoop:
+    test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+    jz icNext
+;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz icNext
 ;
