@@ -108,6 +108,8 @@ vfs_gpt_base             DD ?
 vfs_gpt_start            DD ?
 vfs_gpt_start_sector     DD ?,?
 
+vfs_cache_discard_pos    DD ?,?
+
 vfs_cmd_section          section_typ <>
 vfs_cmd_list             DW ?
 vfs_cmd_thread           DW ?
@@ -124,6 +126,11 @@ vfs_struc  ENDS
 
 VFS_PHYS_PRESENT = 1
 VFS_PHYS_VALID   = 2
+VFS_PHYS_USED    = 4
+
+VFS_PHYS_PRESENT_BIT  = 0
+VFS_PHYS_VALID_BIT    = 1
+VFS_PHYS_USED_BIT     = 2
 
 vfs_phys_entry   STRUC
 

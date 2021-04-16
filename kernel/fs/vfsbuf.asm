@@ -670,6 +670,7 @@ btbBufDir:
     Signal
 
 btbOk:
+    or es:[esi].vfsp_flags,VFS_PHYS_USED
     clc
 
 btbDone:
