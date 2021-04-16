@@ -873,8 +873,13 @@ LocalUnlockSector    Proc near
     jz lusLeave
 ;
     sub es:[esi].vfsp_ref_bitmap,1
-    jnc lusLeave
+    jc lusError
+    jnz lusLeave
 ;
+    dec ds:vfs_locked_pages
+    jmp lusLeave
+
+lusError:
     CrashGate
 
 lusLeave:
@@ -1080,6 +1085,9 @@ ulmsLoop:
     jz ulmsNext
 ;
     sub es:[esi].vfsp_ref_bitmap,1
+    jnz ulmsNext
+;
+    dec ds:vfs_locked_pages
 
 ulmsNext:
     add eax,8
@@ -1675,6 +1683,12 @@ nrbPartOk:
     call RemoveReq
 
 nrbNext:
+    or cx,cx
+    jz nrbLockedOK
+;
+    inc ds:vfs_locked_pages
+
+nrbLockedOk:
     mov es:[esi].vfsp_ref_bitmap,cx
     add eax,8
     adc edx,0

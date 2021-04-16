@@ -202,6 +202,18 @@ long long TDisc::GetCached()
     return RdosGetDiscCache(FDisc);
 }
 
+/*##################  TDisc::GetLocked  #############
+*   Purpose....: Get current locked size                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+long long TDisc::GetLocked()
+{
+    return RdosGetDiscLocked(FDisc);
+}
+
 /*##################  TDisc::WaitForIdle  #############
 *   Purpose....: Wait for disc idle
 *   In params..: *                                                        #

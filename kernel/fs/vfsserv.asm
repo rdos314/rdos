@@ -1322,7 +1322,10 @@ rrsUnlock:
     or bx,bx
     jz rrsDecRem
 ;
-    dec es:[esi].vfsp_ref_bitmap
+    sub es:[esi].vfsp_ref_bitmap,1
+    jnz rrsNext
+;
+    dec ds:vfs_locked_pages
     jmp rrsNext
 
 rrsDecRem:

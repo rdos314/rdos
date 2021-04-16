@@ -453,7 +453,9 @@ void TShowPartitionCommand::ShowHeader(TDisc *Disc)
 {
     char str[256];
     long long CacheSize = Disc->GetCached();
-    long double size;
+    long long LockSize = Disc->GetLocked();
+    long double cached;
+    long double locked;
 
     Write("\r\n");
 
@@ -463,8 +465,9 @@ void TShowPartitionCommand::ShowHeader(TDisc *Disc)
 
     if (CacheSize)
     {
-        size = (long double)CacheSize / 1024.0 / 1024.0;
-        FMsg.printf(TEXT_SHOWPART_DISC_CACHE, size);
+        cached = (long double)CacheSize / 1024.0 / 1024.0;
+        locked = (long double)LockSize / 1024.0 / 1024.0;
+        FMsg.printf(TEXT_SHOWPART_DISC_CACHE, cached, locked);
         Write(FMsg.GetData());
     }
 }

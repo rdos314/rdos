@@ -97,6 +97,7 @@ vfs_map_entry            DD ?
 vfs_active_count         DD ?
 vfs_scan_pos             DD ?,?
 
+vfs_locked_pages         DD ?
 vfs_cached_pages         DD ?
 vfs_max_cached_pages     DD ?
 

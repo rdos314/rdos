@@ -804,6 +804,7 @@ int RDOSAPI RdosGetDiscInfo(int DiscNr, int *SectorSize, long long *Sectors, int
 void RDOSAPI RdosGetDiscVendorInfo(int DiscNr, char *Buf, int Size);
 int RDOSAPI RdosGetDiscCacheSize(int DiscNr);
 long long RDOSAPI RdosGetDiscCache(int DiscNr);
+long long RDOSAPI RdosGetDiscLocked(int DiscNr);
 int RDOSAPI RdosReadDisc(int DiscNr, long long Sector, char *Buf, int Size);
 int RDOSAPI RdosWriteDisc(int DiscNr, long long Sector, const char *Buf, int Size);
 int RDOSAPI RdosIsDiscIdle(int DiscNr);

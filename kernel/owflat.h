@@ -3065,6 +3065,15 @@
     __parm [__eax] \
     __value [__edx __eax]
 
+#pragma aux RdosGetDiscLocked = \
+    CallGate_get_disc_locked  \
+    "jnc Ok"\
+    "xor eax,eax"\
+    "xor edx,edx"\
+    "Ok:"\
+    __parm [__eax] \
+    __value [__edx __eax]
+
 #pragma aux RdosGetDiscVendorInfo = \
     CallGate_get_disc_vendor_info  \
     "jnc Ok" \

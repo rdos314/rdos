@@ -2137,13 +2137,17 @@ GetDiscVendorInfo     MACRO
         UserGate get_disc_vendor_info_nr
                                                 ENDM
 
-
 ; IN   AL              Disc #
 ; OUT EDX:EAX          Cached bytes
 GetDiscCache     MACRO
         UserGate get_disc_cache_nr
                                                ENDM
 
+; IN   AL              Disc #
+; OUT EDX:EAX          Locked bytes
+GetDiscLocked     MACRO
+        UserGate get_disc_locked_nr
+                                               ENDM
 
 ;       IN      AL              Disc #
 ;       OUT     EAX             Cached sectors

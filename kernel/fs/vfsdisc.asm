@@ -801,6 +801,46 @@ gdcDone:
 get_disc_cache   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetDiscLocked
+;
+;       DESCRIPTION:    Get currently locked size
+;
+;       PARAMETERS:     AL              Disc #
+;
+;       RETURNS:        EDX:EAX         Locked size in bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_disc_locked_name       DB 'Get Disc Locked',0
+
+get_disc_locked    Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].disc_arr
+    or bx,bx
+    stc
+    jz gdlDone
+;
+    mov ds,bx
+    mov eax,ds:vfs_locked_pages
+    mov edx,1000h
+    mul edx
+    clc
+
+gdlDone:
+    pop ebx
+    pop ds
+    ret
+get_disc_locked   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_disc
@@ -849,6 +889,12 @@ init_disc    Proc near
     mov edi,OFFSET get_disc_cache_name
     xor dx,dx
     mov ax,get_disc_cache_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_disc_locked
+    mov edi,OFFSET get_disc_locked_name
+    xor dx,dx
+    mov ax,get_disc_locked_nr
     RegisterBimodalUserGate
 
     ret

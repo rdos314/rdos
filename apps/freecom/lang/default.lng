@@ -1482,7 +1482,7 @@ Disc %d, %s
 .
 
 :TEXT_SHOWPART_DISC_CACHE
-Cached %15.3f MB
+Cached %5.3f MB, locked %5.3f MB
 .
 
 :TEXT_SHOWPART_DISC_LONG

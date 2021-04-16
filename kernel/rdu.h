@@ -942,6 +942,7 @@
 #define usergate_get_carddev_track1 0x00000302
 
 #define usergate_get_disc_cache 0x00000303
+#define usergate_get_disc_locked 0x00000304
 
 
 
@@ -1890,6 +1891,7 @@
 #define CallGate_get_carddev_track1 0x55 0x67 0x9a 2 3 0 0 3 0 0x5d
 
 #define CallGate_get_disc_cache 0x55 0x67 0x9a 3 3 0 0 3 0 0x5d
+#define CallGate_get_disc_locked 0x55 0x67 0x9a 4 3 0 0 3 0 0x5d
 
 #else
 
@@ -2836,5 +2838,6 @@
 #define CallGate_get_carddev_track1 0x3e 0x67 0x9a 2 3 0 0 3 0
 
 #define CallGate_get_disc_cache 0x3e 0x67 0x9a 3 3 0 0 3 0
+#define CallGate_get_disc_locked 0x3e 0x67 0x9a 4 3 0 0 3 0
 
 #endif
