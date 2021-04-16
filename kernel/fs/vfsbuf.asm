@@ -1011,12 +1011,12 @@ lmsGetLoop:
 ;
     add es:[esi].vfsp_ref_bitmap,1
 ;
-    mov eax,es:[esi]
-    and ax,0F000h
-    mov gs:[ebp],eax
+    mov ebx,es:[esi]
+    and bx,0F000h
+    mov gs:[ebp],ebx
     add ebp,4
-    movzx eax,word ptr es:[esi+4]
-    mov gs:[ebp],eax
+    movzx ebx,word ptr es:[esi+4]
+    mov gs:[ebp],ebx
     add ebp,4
 ;
     add eax,8

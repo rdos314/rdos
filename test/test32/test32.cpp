@@ -55,7 +55,7 @@ void VerifySector(int id, char *buf)
 ##########################################################################*/
 void main()
 {
-    TDisc disc(2);
+    TDisc disc(1);
     char *buf;
     int count;
     long long sector;
