@@ -82,6 +82,7 @@ code    SEGMENT byte public 'CODE'
     extern SectorToBlock:near
     extern LockMultiSectors:near
     extern UnlockMultiSectors:near
+    extern InvalidateCache:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -222,14 +223,15 @@ hdLoop:
     WaitForSignal
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz hdExit
-;
-    mov eax,ds:vfs_cached_pages
-    cmp eax,ds:vfs_max_cached_pages
-    jb hdRetry
-;
-    int 3
 
 hdRetry:
+    mov eax,ds:vfs_cached_pages
+    cmp eax,ds:vfs_max_cached_pages
+    jb hdCheckCmd
+;
+    call InvalidateCache
+
+hdCheckCmd:
     EnterSection ds:vfs_cmd_section
     mov ax,ds:vfs_cmd_list
     or ax,ax
@@ -286,7 +288,11 @@ hdProcess:
 
 hdLeave:
     LeaveSection ds:vfs_cmd_section
-    jmp hdLoop
+;
+    mov eax,ds:vfs_cached_pages
+    cmp eax,ds:vfs_max_cached_pages
+    jb hdLoop
+    jmp hdRetry
 
 hdExit:
     ret

@@ -1101,6 +1101,150 @@ UnlockMultiSectors    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           InvalidateCache
+;
+;       DESCRIPTION:    Invalidate cache entries
+;
+;       PARAMETERS:     DS          VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InvalidateCache
+
+InvalidateCache    Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov cx,serv_flat_sel
+    mov es,cx
+;
+    EnterSection ds:vfs_section
+
+icSearch:
+    mov ebx,ds:vfs_cache_discard_pos+4
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    jnz icEntryOk
+;
+    shr ebx,2
+    inc ebx
+    cmp ebx,ds:vfs_buf_count
+    jb icBufOk
+;
+    xor ebx,ebx
+
+icBufOk:
+    mov ds:vfs_cache_discard_pos,0
+    mov ds:vfs_cache_discard_pos+4,ebx
+    jmp icSearch
+
+icEntryOk:
+    and ax,0F000h
+;
+    mov ebx,ds:vfs_cache_discard_pos
+    shr ebx,20
+    and ebx,0FFCh
+    mov esi,ebx
+    add esi,eax
+    mov eax,es:[esi]
+    or eax,eax
+    jnz icBufPtr
+
+icEntryLoop:
+    add ebx,4
+    add esi,4
+    test esi,0FFFh
+    jz icEntryRetry
+;
+    mov eax,es:[esi]
+    or eax,eax
+    jz icEntryLoop
+
+icEntryRetry:
+    shl ebx,20
+    mov ds:vfs_cache_discard_pos,ebx
+    jmp icSearch
+
+icBufPtr:
+    and ax,0F000h
+;
+    mov ebx,ds:vfs_cache_discard_pos
+    shr ebx,10
+    and ebx,0FFCh
+    mov esi,ebx
+    add esi,eax
+    mov eax,es:[esi]
+    or eax,eax
+    jnz icBufDir
+
+icBufPtrLoop:
+    add ebx,4
+    add esi,4
+    test esi,0FFFh
+    jz icBufPtrRetry
+;
+    mov eax,es:[esi]
+    or eax,eax
+    jz icBufPtrLoop
+
+icBufPtrRetry:
+    shl ebx,10
+    mov ds:vfs_cache_discard_pos,ebx
+    jmp icSearch
+
+icBufDir:
+    and ax,0F000h
+    mov esi,eax
+;
+    mov ecx,512
+
+icLoop:
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz icNext
+;
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jne icNext
+;
+    btc es:[esi].vfsp_flags,VFS_PHYS_USED_BIT
+    jc icNext
+;
+    xor eax,eax
+    xchg eax,es:[esi]
+    xor ebx,ebx
+    xchg ebx,es:[esi+4]
+    and ax,0F000h
+    FreePhysical
+    dec ds:vfs_cached_pages
+
+icNext:
+    add esi,8
+    loop icLoop
+;
+    add ds:vfs_cache_discard_pos,1000h
+    adc ds:vfs_cache_discard_pos+4,0
+;        
+    LeaveSection ds:vfs_section
+
+icDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+InvalidateCache    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetIoStart
 ;
 ;       DESCRIPTION:    Get IO start position
