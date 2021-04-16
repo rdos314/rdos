@@ -1176,6 +1176,12 @@ arsLoop:
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz arsReq
 ;
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jnz arsLockOk
+;
+    inc ds:vfs_locked_pages
+
+arsLockOk:
     inc es:[esi].vfsp_ref_bitmap
     jmp arsNext
 

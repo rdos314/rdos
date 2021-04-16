@@ -810,6 +810,12 @@ llsSignal:
     jmp llsRetry
 
 llsValid:
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jnz llsLockOk
+;
+    inc ds:vfs_locked_pages
+
+llsLockOk:
     add es:[esi].vfsp_ref_bitmap,1
     jnc llsOk
 ;
@@ -1022,6 +1028,12 @@ lmsGetData:
 lmsGetLoop:
     call BlockToBuf
 ;
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jnz lmsLockOk
+;
+    inc ds:vfs_locked_pages
+
+lmsLockOk:
     add es:[esi].vfsp_ref_bitmap,1
 ;
     mov ebx,es:[esi]
