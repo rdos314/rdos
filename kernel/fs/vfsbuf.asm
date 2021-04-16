@@ -915,7 +915,6 @@ LockMultiSectors    Proc near
 ;    
     mov si,serv_flat_sel
     mov es,si
-    inc ds:vfs_lock_count
 
 lmsRetry:
     push eax
@@ -1038,7 +1037,6 @@ lmsGetLoop:
     pop ecx
     pop eax
 ;
-    dec ds:vfs_lock_count
     LeaveSection ds:vfs_section
     clc
 ;
