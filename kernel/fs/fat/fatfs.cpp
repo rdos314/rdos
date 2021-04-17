@@ -386,7 +386,7 @@ void TFat::CreateTables()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFat::VerifySector(int id, char *buf)
+bool TFat::VerifySector(int id, char *buf)
 {
     TMd5Hash hash;
     char hbuf[16];
@@ -408,9 +408,11 @@ void TFat::VerifySector(int id, char *buf)
             RdosGetTime(&msb, &lsb);
             RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
             RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
-            printf("%04d-%02d-%02 %02d.%02d.%02d,%03d.%03d Wrong sector, expected: %d, found: %d \r\n", year, month, day, hour, min, sec, ms, us, id, cid);
+            printf("%04d-%02d-%02d %02d.%02d.%02d,%03d.%03d Wrong sector, expected: %d, found: %d", year, month, day, hour, min, sec, ms, us, id, cid);
+            return false;
         }
     }
+    return true;
 }
 
 /*##########################################################################
@@ -429,6 +431,7 @@ void TFat::GetSectors(TDiscReq *Req, long long Sector, int Count)
     int i;
     TDiscReqEntry e1(Req, Sector, Count);
     char *ptr;
+    bool ok;
     int id = (int)(Sector + 0x10 - 100000);
 
     Req->WaitForever();
@@ -439,7 +442,9 @@ void TFat::GetSectors(TDiscReq *Req, long long Sector, int Count)
 
         for (i = 0; i < Count; i++)
         {
-            VerifySector(id + i, ptr);
+            ok = VerifySector(id + i, ptr);
+            if (!ok)
+                printf(" Start: %lld, %d (%d)\r\n", Sector, i, Count);
             ptr += 512;
         }
     }
