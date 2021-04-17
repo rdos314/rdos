@@ -1279,7 +1279,6 @@ arsLeaveFail:
     LeaveSection ds:vfs_section
 
 arsFail:
-    int 3
     stc
 
 arsDone:
