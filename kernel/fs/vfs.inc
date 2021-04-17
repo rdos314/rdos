@@ -163,6 +163,8 @@ vfsrq_thread              DW ?
 
 vfs_req          ENDS
 
+VFSP_FLAG_STOPPED   = 1
+
 vfs_part  STRUC
 
 vfsp_start_sector         DD ?,?
@@ -172,6 +174,7 @@ vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
 
 vfsp_app_sel              DW ?
 vfsp_disc_sel             DW ?
+vfsp_flag                 DW ?
 vfsp_disc_nr              DB ?
 vfsp_part_nr              DB ?
 
