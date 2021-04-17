@@ -510,6 +510,7 @@ HandleToPart    Proc near
     jbe htpInRange
 
 htpFail:
+    int 3
     stc
     jmp htpDone
 
@@ -521,6 +522,9 @@ htpInRange:
     jz htpFail
 ;
     mov es,ax
+    test es:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz htpFail
+;
     clc
 
 htpDone:
