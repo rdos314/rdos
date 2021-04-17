@@ -269,13 +269,15 @@ VfsServer:
     call CreateBuffer
     call CreateDiscThread
     call HandleDiscReq
-    int 3
+    mov ds:vfs_server,0
 
 vfsExit:
     mov bx,ds:vfs_param
     call fword ptr ds:vfs_exit
 
 vfsTerm:
+    mov ax,25
+    WaitMilliSec
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -335,6 +337,14 @@ stop_vfs    Proc far
     lock or es:vfs_flags,VFS_FLAG_STOPPED
     mov bx,es:vfs_server
     Signal
+
+spvWait:
+    mov ax,25
+    WaitMilliSec
+;
+    mov bx,es:vfs_server
+    or bx,bx
+    jnz spvWait
 ;
     pop ebx
     pop es    

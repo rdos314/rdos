@@ -1736,6 +1736,9 @@ HandleDiscReq    Proc near
 
 hdLoop:
     WaitForSignal
+;
+    test ds:vfs_flags,VFS_FLAG_STOPPED
+    jnz hdExit
 
 hdRetry:
     EnterSection ds:vfs_section
