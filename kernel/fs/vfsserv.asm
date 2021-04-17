@@ -854,7 +854,7 @@ start_wait_for_req      PROC far
 ;
     test fs:vfsp_flag,VFSP_FLAG_STOPPED
     jnz stwrStop
-
+;
     mov gs:vfsrh_wait_obj,es
     mov eax,gs:vfsrh_remain_count
     or eax,eax
@@ -1090,6 +1090,9 @@ add_vfs_sectors    Proc far
     cmp bl,MAX_VFS_REQ_COUNT
     ja arsFail
 ;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz arsFail
+;
     movzx esi,bl
     dec esi
     shl esi,1
@@ -1296,6 +1299,9 @@ remove_vfs_sectors    Proc far
     cmp bl,MAX_VFS_REQ_COUNT
     ja rrsDone
 ;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz rrsDone
+;
     movzx esi,bl
     dec esi
     shl esi,1
@@ -1419,6 +1425,9 @@ map_vfs_req    Proc far
 ;
     cmp bl,MAX_VFS_REQ_COUNT
     ja mvrFail
+;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz mvrFail
 ;
     movzx esi,bl
     dec esi
@@ -1570,6 +1579,9 @@ unmap_vfs_req    Proc far
 ;
     cmp bl,MAX_VFS_REQ_COUNT
     ja umvrDone
+;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz umvrDone
 ;
     movzx esi,bl
     dec esi
