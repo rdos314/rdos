@@ -709,8 +709,12 @@ rvfsBufWhole:
 rvfsBufDo:
     mov bx,fs:disc_dev_handle
     IsUsbDeviceConnected
-    jc rvfsDetached
+    jnc rvfsRead
 ;
+    pop ecx
+    jmp rvfsDetached
+
+rvfsRead:
     mov dl,fs:disc_bulk_in_pipe
     PostUsbRawPipe
     pop ecx

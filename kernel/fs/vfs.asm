@@ -337,6 +337,9 @@ stop_vfs    Proc far
     lock or es:vfs_flags,VFS_FLAG_STOPPED
     mov bx,es:vfs_server
     Signal
+;
+    mov bx,es:vfs_cmd_thread
+    Signal
 
 spvWait:
     mov ax,25

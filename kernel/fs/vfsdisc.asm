@@ -220,6 +220,9 @@ HandleDiscMsg  Proc near
     mov ds:vfs_cmd_thread,ax
 
 hdLoop:
+    test ds:vfs_flags,VFS_FLAG_STOPPED
+    jnz hdExit
+;
     WaitForSignal
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz hdExit
@@ -232,6 +235,9 @@ hdRetry:
     call InvalidateCache
 
 hdCheckCmd:
+    test ds:vfs_flags,VFS_FLAG_STOPPED
+    jnz hdExit
+;
     EnterSection ds:vfs_cmd_section
     mov ax,ds:vfs_cmd_list
     or ax,ax
@@ -295,6 +301,7 @@ hdLeave:
     jmp hdRetry
 
 hdExit:
+    int 3
     ret
 HandleDiscMsg  Endp
 
