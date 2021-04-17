@@ -391,6 +391,9 @@ void TFat::VerifySector(int id, char *buf)
     TMd5Hash hash;
     char hbuf[16];
     int cid;
+    int year, month, day, hour;
+    int min, sec, ms, us;
+    unsigned long lsb, msb;
 
     hash.Add(buf + 16, 512 - 16);
     hash.GetHashData(hbuf);
@@ -401,7 +404,12 @@ void TFat::VerifySector(int id, char *buf)
     {
         memcpy(&cid, buf + 16, 4);
         if (id != cid)
-            printf("Wrong sector\r\n");
+        {
+            RdosGetTime(&msb, &lsb);
+            RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+            RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+            printf("%04d-%02d-%02 %02d.%02d.%02d,%03d.%03d Wrong sector, expected: %d, found: %d \r\n", year, month, day, hour, min, sec, ms, us, id, cid);
+        }
     }
 }
 
