@@ -375,6 +375,8 @@ TDiscServer::TDiscServer()
     char str[40];
     int i;
 
+    FActive = true;
+
     if (!handle)
         handle = ServGetVfsHandle();
 
@@ -429,6 +431,25 @@ void TDiscServer::Remove(int id)
 {
     if (id > 0 && id <= MAX_DISC_REQ_COUNT)
         FReqArr[id - 1] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscServer::IsActive
+#
+#   Purpose....: Check if active
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TDiscServer::IsActive()
+{
+    if (FActive)
+        FActive = ServIsVfsActive(handle);
+
+    return FActive;
 }
 
 /*##########################################################################

@@ -471,7 +471,7 @@ void TFat::Test()
     long long sector;
     int delay;
 
-    for (;;)
+    while (Server.IsActive())
     {
         count = 1 + RdosGetRandom(127);
         sector = 400000 - 0x10 + RdosGetRandom(600000 - count);

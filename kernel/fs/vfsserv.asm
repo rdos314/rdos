@@ -605,6 +605,28 @@ get_vfs_sectors    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           IsVfsActive
+;
+;       DESCRIPTION:    Is VFS active
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_vfs_active_name       DB 'Is VFS Active',0
+
+is_vfs_active    Proc far
+    push es
+;
+    call HandleToPart
+;
+    pop es
+    ret
+is_vfs_active    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateVfsReq
 ;
 ;       DESCRIPTION:    Create a VFS req
@@ -1737,6 +1759,12 @@ init_server    Proc near
     mov edi,OFFSET get_vfs_handle_name
     xor cl,cl
     mov ax,get_vfs_handle_nr
+    RegisterServGate
+;
+    mov esi,OFFSET is_vfs_active
+    mov edi,OFFSET is_vfs_active_name
+    xor cl,cl
+    mov ax,is_vfs_active_nr
     RegisterServGate
 ;
     mov esi,OFFSET get_vfs_sectors

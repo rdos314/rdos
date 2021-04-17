@@ -94,11 +94,13 @@ public:
 
     long long GetPartSectors();
     int WaitForMsg(char *buf);
+    bool IsActive();
 
 protected:
     void Add(int id, TDiscReq *req);
     void Remove(int id);
 
+    bool FActive;
     TDiscReq *FReqArr[MAX_DISC_REQ_COUNT];
 };
 
