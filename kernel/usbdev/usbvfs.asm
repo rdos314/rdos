@@ -684,6 +684,10 @@ rvfsRetry:
     mov word ptr es:disc_cbw_cmd_data+7,bx
     mov es:disc_cbw_cmd_data+9,0
 ;
+    mov bx,fs:disc_dev_handle
+    IsUsbDeviceConnected
+    jc rvfsDetached
+;
     call SendCbw
     jc rvfsFail
 ;
@@ -704,6 +708,9 @@ rvfsBufWhole:
 
 rvfsBufDo:
     mov bx,fs:disc_dev_handle
+    IsUsbDeviceConnected
+    jc rvfsDetached
+;
     mov dl,fs:disc_bulk_in_pipe
     PostUsbRawPipe
     pop ecx
@@ -740,6 +747,10 @@ rvfsCopyLoop:
     sub ecx,8
     ja rvfsLoop
 ;    
+    mov bx,fs:disc_dev_handle
+    IsUsbDeviceConnected
+    jc rvfsDetached
+;
     call ReceiveCsw
     jc rvfsFail
 ;
@@ -749,12 +760,21 @@ rvfsCopyLoop:
     jmp rvfsDone
     
 rvfsFail:
+    mov bx,fs:disc_dev_handle
+    IsUsbDeviceConnected
+    jc rvfsDetached
+;
     call ResetDevice
 ;
     pop edx
     pop ecx
     pop eax
     jmp rvfsRetry
+
+rvfsDetached:
+    pop edx
+    pop ecx
+    pop eax
 
 rvfsDone:
     pop ebp
