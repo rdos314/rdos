@@ -550,7 +550,6 @@ HandleToPart    Proc near
     jbe htpInRange
 
 htpFail:
-    int 3
     stc
     jmp htpDone
 
@@ -859,6 +858,10 @@ is_vfs_req_done    Proc far
 ;
     mov esi,gs:vfsrh_remain_count
     or esi,esi
+    stc
+    jnz irqdDone
+;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
     stc
     jnz irqdDone
 ;
