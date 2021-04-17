@@ -83,6 +83,7 @@ code    SEGMENT byte public 'CODE'
     extern LockMultiSectors:near
     extern UnlockMultiSectors:near
     extern InvalidateCache:near
+    extern StopPartitions:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -301,6 +302,7 @@ hdLeave:
     jmp hdRetry
 
 hdExit:
+    call StopPartitions
     int 3
     ret
 HandleDiscMsg  Endp

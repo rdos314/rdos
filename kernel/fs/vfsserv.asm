@@ -425,6 +425,46 @@ nvfNext:
 NotifyVfs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopPartitions
+;
+;       DESCRIPTION:    Stop partitions
+;
+;       PARAMETERS:     DS      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public StopPartitions
+
+StopPartitions   Proc near
+    push es
+    push eax
+    push ebx
+;
+    mov ecx,MAX_VFS_PARTITIONS
+    mov ebx,vfs_part_arr
+
+spLoop:
+    mov ax,ds:[ebx]
+    or ax,ax
+    jz spNext
+;
+    mov es,ax
+    or es:vfsp_flag,VFSP_FLAG_STOPPED
+
+spNext:
+    add ebx,2
+    loop spLoop
+;
+    pop ebx
+    pop eax
+    pop es
+    ret
+    ret
+StopPartitions   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           GetVfsHandle
