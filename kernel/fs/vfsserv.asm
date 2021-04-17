@@ -852,11 +852,15 @@ start_wait_for_req      PROC far
     call ReqHandleToSel
     jc stwrDone
 ;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz stwrStop
+
     mov gs:vfsrh_wait_obj,es
     mov eax,gs:vfsrh_remain_count
     or eax,eax
     jnz stwrStart
-;
+
+stwrStop:
     mov gs:vfsrh_wait_obj,0
     SignalWait
     jmp stwrDone
@@ -942,6 +946,10 @@ is_req_idle     PROC far
     mov bx,es:rw_handle
     call ReqHandleToSel
     jc iriDone
+;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    stc
+    jnz iriDone
 ;
     mov eax,gs:vfsrh_remain_count
     or eax,eax
