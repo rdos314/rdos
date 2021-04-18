@@ -63,6 +63,11 @@ GetVfsHandle  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
+IsVfsActive  MACRO
+    ServGate is_vfs_active_nr
+                    ENDM
+
+; IN  EBX              VFS handle
 ; OUT EDX:EAX          Sectors
 GetVfsSectors  MACRO
     ServGate get_vfs_sectors_nr

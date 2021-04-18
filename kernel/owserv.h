@@ -37,6 +37,12 @@
     __parm [__ebx] \
     __value [__edx __eax]
 
+#pragma aux ServIsVfsActive = \
+    ServGate_is_vfs_active  \
+    CarryToBool \
+    __parm [__ebx] \
+    __value [__eax]
+
 #pragma aux ServCreateVfsReq = \
     ServGate_create_vfs_req  \
     __parm [__ebx] \

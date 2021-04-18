@@ -21,6 +21,7 @@ extern "C" {
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();
 long long RDOSAPI ServGetVfsSectors(int handle);
+int RDOSAPI ServIsVfsActive(int handle);
 int RDOSAPI ServCreateVfsReq(int handle);
 void RDOSAPI ServCloseVfsReq(int handle);
 int RDOSAPI ServAddVfsSectors(int handle, long long sector, int count);
