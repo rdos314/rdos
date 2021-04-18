@@ -259,6 +259,102 @@ AddPartition   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           StopPartRequests
+;
+;       DESCRIPTION:    Stop part requests
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       FS          Part sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StopPartRequests    Proc near
+    push gs
+    push eax
+    push ebx
+    push ecx
+;
+    mov ebx,OFFSET vfsp_req_arr
+    mov ecx,MAX_VFS_REQ_COUNT
+
+sprLoop:
+    mov ax,fs:[ebx]
+    or ax,ax
+    jz sprNext
+;
+    mov gs,ax
+    xor ax,ax
+    xchg ax,gs:vfsrh_wait_obj
+    or ax,ax
+    jz sprNext
+;
+    push es
+    mov es,ax
+    SignalWait
+    pop es
+    
+sprNext:
+    add ebx,2
+    loop sprLoop
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop gs
+    ret
+StopPartRequests    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StopRequests
+;
+;       DESCRIPTION:    Stop requests
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public StopRequests
+
+StopRequests    Proc near
+    push fs
+    push esi
+    push edi
+    push ebp
+;
+    push ebx
+;
+    mov ebx,OFFSET vfs_part_arr
+    mov ebp,MAX_VFS_PARTITIONS
+
+srLoop:
+    mov si,ds:[ebx]
+    or si,si
+    jz srNext
+;
+    mov fs,si
+    call StopPartRequests
+
+srNext:
+    add ebx,2
+    sub ebp,1
+    jnz srLoop
+;
+    pop ebx
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop fs
+    ret
+StopRequests    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyPart
 ;
 ;       DESCRIPTION:    Notify part
@@ -1504,18 +1600,6 @@ map_vfs_req    Proc far
     mov ds,fs:vfsp_disc_sel
     mov si,serv_flat_sel
     mov es,si
-
-
-;
-; debug info
-;
-    mov esi,gs:vfsrh_remain_count
-    mov si,gs:vfsrh_deleted_count
-    mov si,gs:vfsrh_wait_obj
-    mov esi,ds:vfs_active_count
-
-
-
     mov edi,eax
     shl edi,4
 ;
