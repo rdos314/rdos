@@ -3023,6 +3023,36 @@ install_vfs_disc    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           RemoveVfsDisc
+;
+;   DESCRIPTION:    Remove VFS disc unit
+;
+;   RETURNS:        AL          Disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+remove_vfs_disc_name       DB 'Remove VFS Disc',0
+
+remove_vfs_disc    Proc far
+    push ds
+    push ax
+    push bx
+;
+    movzx bx,al
+    shl bx,1
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:[bx].disc_def_arr,0
+;
+    pop bx
+    pop ax
+    pop ds
+    retf32
+remove_vfs_disc    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IsDiscIdle
 ;
 ;           DESCRIPTION:    Check if disc is idle
@@ -7750,6 +7780,11 @@ init    PROC far
     mov esi,OFFSET install_vfs_disc
     mov edi,OFFSET install_vfs_disc_name
     mov ax,install_vfs_disc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET remove_vfs_disc
+    mov edi,OFFSET remove_vfs_disc_name
+    mov ax,remove_vfs_disc_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_disc_param

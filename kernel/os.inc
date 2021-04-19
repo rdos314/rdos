@@ -3428,6 +3428,11 @@ InstallVfsDisc     MACRO
     OsGate install_vfs_disc_nr
                     ENDM
 
+; IN  AL          Disc #
+RemoveVfsDisc     MACRO
+    OsGate remove_vfs_disc_nr
+                    ENDM
+
 ;       IN      BX      Disc sel
 ;       IN      ES:EDI   Disc change procedure
 RegisterDiscChange      MACRO

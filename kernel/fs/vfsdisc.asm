@@ -305,6 +305,14 @@ hdLeave:
 hdExit:
     call StopPartitions
     call StopRequests
+    mov al,ds:vfs_disc_nr
+    RemoveVfsDisc
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx bx,al
+    shl bx,1
+    mov ds:[bx].disc_arr,0
     int 3
     ret
 HandleDiscMsg  Endp
