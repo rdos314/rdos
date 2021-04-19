@@ -1191,6 +1191,9 @@ udCheckLoop:
     cmp al,es:disc_port
     jne udCheckNext
 ;
+    xor dx,dx
+    mov [si],dx
+;
     mov bx,es:disc_handle
     StopVfs
 
