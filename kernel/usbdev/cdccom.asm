@@ -163,6 +163,68 @@ get_usb_cdc_com_par     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetUsbCdcComDev
+;
+;   DESCRIPTION:    Get USB cdc com device
+;
+;   PARAMETERS:     AL      Port #
+;
+;   RETURNS:        NC      OK
+;                       BX  Controller
+;                       AX  Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_cdc_com_dev_name    DB 'Get USB CDC Com Device', 0
+
+get_usb_cdc_com_dev Proc far
+    push ds
+    push es
+    push ebx
+    push ecx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    mov ebx,OFFSET sd_port_arr
+    movzx ecx,ds:sd_ports
+    movzx ax,al
+    or ecx,ecx
+    jz gscdFail
+
+gscdLoop:
+    mov dx,ds:[ebx]
+    or dx,dx
+    jz gscdNext
+;
+    mov es,edx
+    cmp ax,es:ucd_port_nr
+    je gscdFound
+
+gscdNext:
+    add ebx,2
+    loop gscdLoop
+
+gscdFail:
+    stc
+    jmp gscdDone
+
+gscdFound:
+    mov ds,es:ucd_cdc_sel
+    mov bx,ds:cdc_controller
+    movzx ax,ds:cdc_port
+    clc
+
+gscdDone:
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+get_usb_cdc_com_dev     ENDP    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           open_com
 ;
 ;           description:    Open a serial port
@@ -1493,6 +1555,15 @@ init_cdc_com    Proc near
     mov edi,OFFSET get_usb_cdc_com_par_name
     xor dx,dx
     mov ax,get_usb_cdc_com_par_nr
+    RegisterBimodalUserGate
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET get_usb_cdc_com_dev
+    mov edi,OFFSET get_usb_cdc_com_dev_name
+    xor dx,dx
+    mov ax,get_usb_cdc_com_dev_nr
     RegisterBimodalUserGate
     ret
 init_cdc_com    Endp

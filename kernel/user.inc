@@ -2687,6 +2687,14 @@ GetUsbComPar       MACRO
         UserGate get_usb_com_par_nr
                                                 ENDM
 
+
+;   IN  AL     Port #
+;   OUT BX     USB controller
+;   OUT AX     USB device
+GetUsbComDevice      MACRO
+        UserGate get_usb_com_dev_nr
+                        ENDM
+
 ;   IN AL      Port #
 ;   NC         OK
 ;   OUT DX     Vendor
@@ -2695,6 +2703,12 @@ GetUsbCdcComPar       MACRO
         UserGate get_usb_cdc_com_par_nr
                                                 ENDM
 
+;   IN  AL     Port #
+;   OUT BX     USB controller
+;   OUT AX     USB device
+GetUsbCdcComDevice      MACRO
+        UserGate get_usb_cdc_com_dev_nr
+                        ENDM
 
 ;   IN AL      Port #
 ;   NC         OK

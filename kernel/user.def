@@ -944,4 +944,7 @@ get_carddev_track1_nr             = 770
 get_disc_cache_nr                 = 771
 get_disc_locked_nr                = 772
 
+get_usb_com_dev_nr                = 773
+get_usb_cdc_com_dev_nr            = 774
+
 usergate_entries                  = 780

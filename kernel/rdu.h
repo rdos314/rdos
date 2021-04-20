@@ -944,6 +944,9 @@
 #define usergate_get_disc_cache 0x00000303
 #define usergate_get_disc_locked 0x00000304
 
+#define usergate_get_usb_com_dev 0x00000305
+#define usergate_get_usb_cdc_com_dev 0x00000306
+
 
 
 #ifdef __FLAT__
@@ -1893,6 +1896,9 @@
 #define CallGate_get_disc_cache 0x55 0x67 0x9a 3 3 0 0 3 0 0x5d
 #define CallGate_get_disc_locked 0x55 0x67 0x9a 4 3 0 0 3 0 0x5d
 
+#define CallGate_get_usb_com_dev 0x55 0x67 0x9a 5 3 0 0 3 0 0x5d
+#define CallGate_get_usb_cdc_com_dev 0x55 0x67 0x9a 6 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2839,5 +2845,8 @@
 
 #define CallGate_get_disc_cache 0x3e 0x67 0x9a 3 3 0 0 3 0
 #define CallGate_get_disc_locked 0x3e 0x67 0x9a 4 3 0 0 3 0
+
+#define CallGate_get_usb_com_dev 0x3e 0x67 0x9a 5 3 0 0 3 0
+#define CallGate_get_usb_cdc_com_dev 0x3e 0x67 0x9a 6 3 0 0 3 0
 
 #endif

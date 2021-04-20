@@ -897,6 +897,22 @@
     __parm [__al] [__esi] \
     __value [__eax]
 
+#pragma aux RdosGetUsbComDevice = \
+    CallGate_get_usb_com_dev  \
+    "jc fail" \
+    "movzx ebx,bx" \
+    "mov [esi],ebx" \
+    "movzx eax,ax" \
+    "mov [edi],eax" \
+    "mov eax,1" \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \
+    __parm [__al] [__esi] [__edi] \
+    __value [__eax] \
+    __modify [__ebx]
+
 #pragma aux RdosGetUsbCdcComPar = \
     CallGate_get_usb_cdc_com_par  \
     "jc fail" \
@@ -911,6 +927,23 @@
     "done:" \
     __parm [__al] [__esi] [__edi] \
     __value [__eax]
+
+#pragma aux RdosGetUsbCdcComDevice = \
+    CallGate_get_usb_cdc_com_dev  \
+    "jc fail" \
+    "movzx ebx,bx" \
+    "mov [esi],ebx" \
+    "movzx eax,ax" \
+    "mov [edi],eax" \
+    "mov eax,1" \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \
+    __parm [__al] [__esi] [__edi] \
+    __value [__eax] \
+    __modify [__ebx]
+
 
 #pragma aux RdosGetUsbBusPar = \
     CallGate_get_usb_bus_par  \
@@ -3608,6 +3641,12 @@
 #pragma aux RdosHasUsbCardUsbReset = \
     CallGate_has_usb_card_usb_reset \
     CarryToBool \
+    __value [__eax]
+
+#pragma aux RdosGetUsbDevice = \
+    CallGate_get_usb_device \
+    CarryToBool \
+    __parm [__ebx] [__eax] [__edi] [__ecx] \
     __value [__eax]
 
 #pragma aux RdosGetUsbAddress = \

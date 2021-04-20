@@ -246,6 +246,66 @@ get_usb_com_par     ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetUsbComDevice
+;
+;   DESCRIPTION:    Get  USB com device
+;
+;   PARAMETERS:     AL      Port #
+;
+;   RETURNS:        NC      OK
+;                       BX  Controller
+;                       AX  Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_com_dev_name    DB 'Get USB Com Device', 0
+
+get_usb_com_dev Proc far
+    push ds
+    push es
+    push dx
+;
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,OFFSET sd_port_arr
+    mov cx,ds:sd_ports
+    movzx ax,al
+    or cx,cx
+    jz gscdFail
+
+gscdLoop:
+    mov dx,ds:[bx]
+    or dx,dx
+    jz gdcdNext
+;    
+    mov es,dx
+    cmp ax,es:uds_port_nr
+    je gscdFound
+
+gdcdNext:
+    add bx,2
+    loop gscdLoop
+
+gscdFail:
+    stc
+    jmp gscdDone
+
+gscdFound:
+    mov es,es:uds_device_sel
+    mov bx,es:uc_controller
+    movzx ax,es:uc_port
+    clc
+
+gscdDone:
+    pop dx
+    pop es
+    pop ds
+    retf32
+get_usb_com_dev     ENDP    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           OpenDevHandle
 ;
 ;   DESCRIPTION:    Open device handle
@@ -4712,6 +4772,12 @@ init    Proc far
     mov edi,OFFSET get_usb_com_par_name
     xor dx,dx
     mov ax,get_usb_com_par_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_usb_com_dev
+    mov edi,OFFSET get_usb_com_dev_name
+    xor dx,dx
+    mov ax,get_usb_com_dev_nr
     RegisterBimodalUserGate
 ;
     mov edi,OFFSET usb_attach
