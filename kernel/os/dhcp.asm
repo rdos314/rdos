@@ -1150,6 +1150,7 @@ ServReqIdData   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindOption   Proc near
+    push ax
     push cx
     push di
 ;
@@ -1159,7 +1160,11 @@ FindOption   Proc near
     mov bx,OFFSET DiscReqOptTab
 
 foLoop:
-    cmp al,es:[di]
+    mov ah,es:[di]
+    cmp ah,-1
+    je foFail
+;
+    cmp al,ah
     je foOk
 ;
     movzx bx,es:[di+1]
@@ -1181,6 +1186,7 @@ foFail:
 foDone:
     pop di
     pop cx
+    pop ax
     ret
 Findoption	Endp
 
