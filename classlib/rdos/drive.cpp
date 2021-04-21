@@ -28,11 +28,11 @@
 #include "rdos.h"
 #include "drive.h"
 
-#define FALSE	0
-#define TRUE	!FALSE
+#define FALSE   0
+#define TRUE    !FALSE
 
 /*##################  TDrive::AllocateFixed  #############
-*   Purpose....: Allocate fixed drive							                    #
+*   Purpose....: Allocate fixed drive                                                                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -47,7 +47,7 @@ TDrive *TDrive::AllocateFixed(int DriveNr)
 }
 
 /*##################  TDrive::TDrive  #############
-*   Purpose....: Drive constructor							                    #
+*   Purpose....: Drive constructor                                                                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -57,22 +57,29 @@ TDrive::TDrive(int Drive)
 {
     long FreeUnits;
 
-	FDrive = Drive;
+    FDrive = Drive;
 
-	FValid = RdosGetDriveInfo(FDrive, &FreeUnits, &FBytesPerUnit, &FUnits);
+    FSectors = RdosGetVfsDriveSize(FDrive);
+    if (FSectors > 0)
+        FValid = TRUE;
+    else
+    {
+        FValid = RdosGetDriveInfo(FDrive, &FreeUnits, &FBytesPerUnit, &FUnits);
 
-	if (FValid && FBytesPerUnit == 0)
-		FValid = FALSE;
+        if (FValid && FBytesPerUnit == 0)
+                FValid = FALSE;
 
-	if (!FValid)
-	{
-	    FBytesPerUnit = 0;
-	    FUnits = 0;
-	}
+        if (!FValid)
+        {
+            FBytesPerUnit = 0;
+            FUnits = 0;
+            FSectors = 0;
+        }
+    }
 }
 
 /*##################  TDrive::~TDrive  #############
-*   Purpose....: Drive destructor							                    #
+*   Purpose....: Drive destructor                                                                           #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -83,7 +90,7 @@ TDrive::~TDrive()
 }
 
 /*##################  TDrive::IsValid  #############
-*   Purpose....: Is drive valid?						                    #
+*   Purpose....: Is drive valid?                                                                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -95,7 +102,7 @@ int TDrive::IsValid()
 }
 
 /*##################  TDrive::GetDriveNr  #############
-*   Purpose....: Get drive #						                    #
+*   Purpose....: Get drive #                                                                #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -104,51 +111,59 @@ int TDrive::IsValid()
 int TDrive::GetDriveNr()
 {
     if (FValid)
-    	return FDrive;
+        return FDrive;
     else
         return 0;
 }
 
 /*##################  TDrive::GetFreeSectors  #############
-*   Purpose....: Get free sectors on drive						                    #
+*   Purpose....: Get free sectors on drive                                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-long TDrive::GetFreeSectors()
+long long TDrive::GetFreeSectors()
 {
     long FreeUnits;
     int BytesPerUnit;
-	long Units;
+        long Units;
 
     if (FValid)
     {
-		RdosGetDriveInfo(FDrive, &FreeUnits, &BytesPerUnit, &Units);
+        if (FSectors > 0)
+            return FSectors;
+        else
+        {
+            RdosGetDriveInfo(FDrive, &FreeUnits, &BytesPerUnit, &Units);
 
-		if (BytesPerUnit >= 512)
-		    return BytesPerUnit / 512 * FreeUnits;
-		else
-    	    return BytesPerUnit * FreeUnits / 512;
-	}
-	else
-	    return 0;
+            if (BytesPerUnit >= 512)
+                return BytesPerUnit / 512 * FreeUnits;
+            else
+                return BytesPerUnit * FreeUnits / 512;
+        }
+    }
+    else
+        return 0;
 }
 
 /*##################  TDrive::GetTotalSectors  #############
-*   Purpose....: Get total sectors on drive						                    #
+*   Purpose....: Get total sectors on drive                                                                 #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-long TDrive::GetTotalSectors()
+long long TDrive::GetTotalSectors()
 {
-	return FBytesPerUnit * FUnits / 512;
+    if (FSectors > 0)
+        return FSectors;
+    else
+        return FBytesPerUnit * FUnits / 512;
 }
 
 /*##################  TDrive::CreateFileDrive  #############
-*   Purpose....: Create a file-base drive				                    #
+*   Purpose....: Create a file-base drive                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -156,11 +171,11 @@ long TDrive::GetTotalSectors()
 *##########################################################################*/
 int TDrive::CreateFileDrive(long Size, const char *FsName, const char *FileName)
 {
-	return RdosCreateFileDrive(FDrive, Size, FsName, FileName);
+    return RdosCreateFileDrive(FDrive, Size, FsName, FileName);
 }
 
 /*##################  TDrive::OpenFileDrive  #############
-*   Purpose....: Open a file-base drive				                    #
+*   Purpose....: Open a file-base drive                                             #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -168,5 +183,5 @@ int TDrive::CreateFileDrive(long Size, const char *FsName, const char *FileName)
 *##########################################################################*/
 int TDrive::OpenFileDrive(const char *FileName)
 {
-	return RdosOpenFileDrive(FDrive, FileName);
+    return RdosOpenFileDrive(FDrive, FileName);
 }

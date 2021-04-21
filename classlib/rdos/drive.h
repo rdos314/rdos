@@ -33,29 +33,30 @@
 class TDrive
 {
 public:
-	TDrive(int Drive);
-	~TDrive();
+    TDrive(int Drive);
+    ~TDrive();
 
     int IsValid();
-	int GetDriveNr();
+    int GetDriveNr();
 
-	long GetFreeSectors();
-	long GetTotalSectors();
+    long long GetFreeSectors();
+    long long GetTotalSectors();
 
-	int Read(long Sector, char *buf, int size);
-	int Write(long Sector, const char *buf, int size);
+    int Read(long long Sector, char *buf, int size);
+    int Write(long long Sector, const char *buf, int size);
 
-	int CreateFileDrive(long Size, const char *FsName, const char *FileName);
-	int OpenFileDrive(const char *FileName);
+    int CreateFileDrive(long Size, const char *FsName, const char *FileName);
+    int OpenFileDrive(const char *FileName);
 
-	static TDrive *AllocateFixed(int DriveNr);
+    static TDrive *AllocateFixed(int DriveNr);
 
 protected:
-	int FDrive;
+    int FDrive;
 
     int FValid;
-	long FUnits;
-	int FBytesPerUnit;
+    long FUnits;
+    int FBytesPerUnit;
+    long long FSectors;
 };
 
 #endif
