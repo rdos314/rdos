@@ -202,6 +202,7 @@ AddFatPartition   Proc near
     jc afpDone
 ;
     mov fs,bx
+    AllocateVfsDrive
 ;
     mov ax,es
     mov ds,ax

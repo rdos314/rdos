@@ -881,5 +881,6 @@ get_vfs_disc_info_nr        = 797
 get_vfs_disc_vendor_info_nr = 798
 read_vfs_disc_nr            = 799
 remove_vfs_disc_nr          = 800
+allocate_vfs_drive_nr       = 801
 
 osgate_entries              = 850

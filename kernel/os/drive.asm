@@ -3053,6 +3053,58 @@ remove_vfs_disc    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           AllocVfsDrive
+;
+;   DESCRIPTION:    Allocate VFS drive
+;
+;   RETURNS:        AL          Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_vfs_drive_name       DB 'Allocate VFS Drive',0
+
+allocate_vfs_drive    Proc far
+    push ds
+    push cx
+    push si
+;
+    push ax
+    mov ax,SEG data
+    mov ds,ax
+    mov si,OFFSET drive_def_arr + 2 * (MAX_DRIVES - 1)
+    mov cx,MAX_DRIVES
+
+avdLoop:
+    mov ax,[si]
+    or ax,ax
+    jnz avdNext
+;
+    mov word ptr [si],-1
+    mov cx,si
+    sub cx,OFFSET drive_def_arr
+    shr cx,1
+    pop ax
+    mov al,cl
+    clc
+    jmp avdDone
+    
+avdNext:
+    sub si,2
+    loop avdLoop
+;
+    pop ax
+    stc
+    
+avdDone:
+    pop si
+    pop cx
+    pop ds
+    retf32
+allocate_vfs_drive  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IsDiscIdle
 ;
 ;           DESCRIPTION:    Check if disc is idle
@@ -7785,6 +7837,11 @@ init    PROC far
     mov esi,OFFSET remove_vfs_disc
     mov edi,OFFSET remove_vfs_disc_name
     mov ax,remove_vfs_disc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_vfs_drive
+    mov edi,OFFSET allocate_vfs_drive_name
+    mov ax,allocate_vfs_drive_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_disc_param

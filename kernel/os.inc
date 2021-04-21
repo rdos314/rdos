@@ -3433,6 +3433,11 @@ RemoveVfsDisc     MACRO
     OsGate remove_vfs_disc_nr
                     ENDM
 
+; OUT AL          Drive #
+AllocateVfsDrive     MACRO
+    OsGate allocate_vfs_drive_nr
+                    ENDM
+
 ;       IN      BX      Disc sel
 ;       IN      ES:EDI   Disc change procedure
 RegisterDiscChange      MACRO
