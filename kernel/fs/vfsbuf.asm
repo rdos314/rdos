@@ -939,8 +939,18 @@ lmsRetry:
 lmsReqLoop:
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jnz lmsReqNext
+    jz lmsReqAdd
 ;
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jnz lmsLockOk
+;
+    inc ds:vfs_locked_pages
+
+lmsLockOk:
+    add es:[esi].vfsp_ref_bitmap,1
+    jmp lmsReqNext
+
+lmsReqAdd:
     push ecx
     call BlockToBitmap
     mov ecx,eax
@@ -1027,14 +1037,6 @@ lmsGetData:
 
 lmsGetLoop:
     call BlockToBuf
-;
-    cmp es:[esi].vfsp_ref_bitmap,0
-    jnz lmsLockOk
-;
-    inc ds:vfs_locked_pages
-
-lmsLockOk:
-    add es:[esi].vfsp_ref_bitmap,1
 ;
     mov ebx,es:[esi]
     and bx,0F000h
