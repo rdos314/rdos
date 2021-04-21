@@ -2080,6 +2080,7 @@ get_vfs_drive_disc   Proc far
 ;
     mov ds,bx
     mov al,ds:vfsp_disc_nr
+    clc
 
 gvddDone:
     pop ebx
@@ -2118,6 +2119,7 @@ get_vfs_drive_start   Proc far
     mov ds,bx
     mov eax,ds:vfsp_start_sector
     mov edx,ds:vfsp_start_sector+4
+    clc
 
 gvdbDone:
     pop ebx
@@ -2156,6 +2158,7 @@ get_vfs_drive_size   Proc far
     mov ds,bx
     mov eax,ds:vfsp_sector_count
     mov edx,ds:vfsp_sector_count+4
+    clc
 
 gvdeDone:
     pop ebx

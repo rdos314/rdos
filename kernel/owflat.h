@@ -3197,17 +3197,30 @@
 
 #pragma aux RdosGetVfsDriveDisc = \
     CallGate_get_vfs_drive_disc  \
-    CarryToBool \
+    "jc fail" \
+    "movzx eax,al" \
+    "jmp done" \
+    "fail:" \
+    "mov eax,-1" \
+    "done:" \
     __parm [__eax] \
     __value [__eax] \
 
 #pragma aux RdosGetVfsDriveStart = \
     CallGate_get_vfs_drive_start  \
+    "jnc done" \
+    "mov edx,-1" \
+    "mov eax,-1" \
+    "done:" \
     __parm [__eax] \
     __value [__edx __eax] \
 
 #pragma aux RdosGetVfsDriveSize = \
     CallGate_get_vfs_drive_size  \
+    "jnc done" \
+    "mov edx,-1" \
+    "mov eax,-1" \
+    "done:" \
     __parm [__eax] \
     __value [__edx __eax] \
 
