@@ -182,6 +182,7 @@ vfsp_disc_sel             DW ?
 vfsp_flag                 DW ?
 vfsp_disc_nr              DB ?
 vfsp_part_nr              DB ?
+vfsp_drive_nr             DB ?
 
 vfs_part  ENDS
 

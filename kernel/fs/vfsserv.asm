@@ -70,6 +70,7 @@ fs_cmd      ENDS
 
 data    SEGMENT byte public 'DATA'
 
+drive_arr       DW MAX_PART_COUNT DUP (?)
 part_arr        DW MAX_PART_COUNT DUP (?)
 
 data    ENDS
@@ -203,6 +204,12 @@ AddFatPartition   Proc near
 ;
     mov fs,bx
     AllocateVfsDrive
+    mov ds:vfsp_drive_nr,al
+    movzx ebx,al
+    shl ebx,1
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:[ebx].drive_arr,fs
 ;
     mov ax,es
     mov ds,ax
@@ -2044,6 +2051,119 @@ test_serv   Proc far
 test_serv   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsDriveDisc
+;
+;       DESCRIPTION:    Get VFS drive disc
+;
+;       PARAMETERS:     AL    Drive #
+;
+;       RETURNS:        AL    Disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_drive_disc_name DB 'Get VFS Drive Disc', 0
+
+get_vfs_drive_disc   Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].drive_arr
+    or bx,bx
+    stc
+    jz gvddDone
+;
+    mov ds,bx
+    mov al,ds:vfsp_disc_nr
+
+gvddDone:
+    pop ebx
+    pop ds
+    ret
+get_vfs_drive_disc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsDriveStart
+;
+;       DESCRIPTION:    Get VFS drive start
+;
+;       PARAMETERS:     AL        Drive #
+;
+;       RETURNS:        EDX:EAX   Start sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_drive_start_name DB 'Get VFS Drive Start', 0
+
+get_vfs_drive_start   Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].drive_arr
+    or bx,bx
+    stc
+    jz gvdbDone
+;
+    mov ds,bx
+    mov eax,ds:vfsp_start_sector
+    mov edx,ds:vfsp_start_sector+4
+
+gvdbDone:
+    pop ebx
+    pop ds
+    ret
+get_vfs_drive_start   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsDriveSize
+;
+;       DESCRIPTION:    Get VFS drive size
+;
+;       PARAMETERS:     AL        Drive #
+;
+;       RETURNS:        EDX:EAX   Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_drive_size_name DB 'Get VFS Drive Size', 0
+
+get_vfs_drive_size   Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].drive_arr
+    or bx,bx
+    stc
+    jz gvdeDone
+;
+    mov ds,bx
+    mov eax,ds:vfsp_sector_count
+    mov edx,ds:vfsp_sector_count+4
+
+gvdeDone:
+    pop ebx
+    pop ds
+    ret
+get_vfs_drive_size   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -2058,6 +2178,11 @@ init_server    Proc near
     mov ax,SEG data
     mov es,ax
     mov edi,OFFSET part_arr
+    mov ecx,MAX_PART_COUNT
+    xor ax,ax
+    rep stos word ptr es:[edi]
+;
+    mov edi,OFFSET drive_arr
     mov ecx,MAX_PART_COUNT
     xor ax,ax
     rep stos word ptr es:[edi]
@@ -2148,6 +2273,25 @@ init_server    Proc near
     xor cl,cl
     mov ax,unmap_vfs_req_nr
     RegisterServGate
+;
+    mov esi,OFFSET get_vfs_drive_disc
+    mov edi,OFFSET get_vfs_drive_disc_name
+    xor dx,dx
+    mov ax,get_vfs_drive_disc_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_vfs_drive_start
+    mov edi,OFFSET get_vfs_drive_start_name
+    xor dx,dx
+    mov ax,get_vfs_drive_start_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_vfs_drive_size
+    mov edi,OFFSET get_vfs_drive_size_name
+    xor dx,dx
+    mov ax,get_vfs_drive_size_nr
+    RegisterBimodalUserGate
+
     ret
 init_server    Endp
 
