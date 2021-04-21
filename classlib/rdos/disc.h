@@ -49,6 +49,7 @@ public:
     int Read(long long Sector, char *buf, int size);
     int Write(long long Sector, const char *buf, int size);
     int GetDrive(long Start, long Size);
+    int GetDrive(long long Start, long long Size);
     void Reset();
 
     void WaitForIdle();

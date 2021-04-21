@@ -947,4 +947,8 @@ get_disc_locked_nr                = 772
 get_usb_com_dev_nr                = 773
 get_usb_cdc_com_dev_nr            = 774
 
+get_vfs_drive_disc_nr             = 775
+get_vfs_drive_start_nr            = 776
+get_vfs_drive_size_nr             = 777
+
 usergate_entries                  = 780

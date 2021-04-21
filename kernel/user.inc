@@ -2252,6 +2252,24 @@ GetDriveDiscParam     MACRO
         UserGate get_drive_disc_param_nr
                                                 ENDM
 
+; IN  AL              Drive #
+; OUT AL              Disc #
+GetVfsDriveDisc     MACRO
+        UserGate get_vfs_drive_disc_nr
+                                                ENDM
+
+; IN  AL              Drive #
+; OUT EDX:EAX         Start sector
+GetVfsDriveStart     MACRO
+        UserGate get_vfs_drive_start_nr
+                                                ENDM
+
+; IN  AL              Drive #
+; OUT EDX:EAX         Sector count
+GetVfsDriveSize     MACRO
+        UserGate get_vfs_drive_size_nr
+                                                ENDM
+
 ;   IN  AL          Drive #   
 ;   IN  ECX         Size of filesystem
 ;       IN      DS:(E)SI        File system name

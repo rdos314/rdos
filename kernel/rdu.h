@@ -947,6 +947,10 @@
 #define usergate_get_usb_com_dev 0x00000305
 #define usergate_get_usb_cdc_com_dev 0x00000306
 
+#define usergate_get_vfs_drive_disc 0x00000307
+#define usergate_get_vfs_drive_start 0x00000308
+#define usergate_get_vfs_drive_size 0x00000309
+
 
 
 #ifdef __FLAT__
@@ -1899,6 +1903,10 @@
 #define CallGate_get_usb_com_dev 0x55 0x67 0x9a 5 3 0 0 3 0 0x5d
 #define CallGate_get_usb_cdc_com_dev 0x55 0x67 0x9a 6 3 0 0 3 0 0x5d
 
+#define CallGate_get_vfs_drive_disc 0x55 0x67 0x9a 7 3 0 0 3 0 0x5d
+#define CallGate_get_vfs_drive_start 0x55 0x67 0x9a 8 3 0 0 3 0 0x5d
+#define CallGate_get_vfs_drive_size 0x55 0x67 0x9a 9 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2848,5 +2856,9 @@
 
 #define CallGate_get_usb_com_dev 0x3e 0x67 0x9a 5 3 0 0 3 0
 #define CallGate_get_usb_cdc_com_dev 0x3e 0x67 0x9a 6 3 0 0 3 0
+
+#define CallGate_get_vfs_drive_disc 0x3e 0x67 0x9a 7 3 0 0 3 0
+#define CallGate_get_vfs_drive_start 0x3e 0x67 0x9a 8 3 0 0 3 0
+#define CallGate_get_vfs_drive_size 0x3e 0x67 0x9a 9 3 0 0 3 0
 
 #endif

@@ -821,6 +821,10 @@ int RDOSAPI RdosAllocateFixedDrive(int DriveNr);
 int RDOSAPI RdosGetDriveInfo(int DriveNr, long *FreeUnits, int *BytesPerUnit, long *TotalUnits);
 int RDOSAPI RdosGetDriveDiscParam(int DriveNr, int *DiscNr, long *StartSector, long *TotalSectors);
 
+int RDOSAPI RdosGetVfsDriveDisc(int DriveNr);
+long long RDOSAPI RdosGetVfsDriveStart(int DriveNr);
+long long RDOSAPI RdosGetVfsDriveSize(int DriveNr);
+
 int RDOSAPI RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
 int RDOSAPI RdosOpenFileDrive(int Drive, const char *FileName);
 

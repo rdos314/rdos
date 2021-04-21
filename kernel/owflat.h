@@ -3195,6 +3195,22 @@
     __value [__eax] \
     __modify [__ecx __edx]
 
+#pragma aux RdosGetVfsDriveDisc = \
+    CallGate_get_vfs_drive_disc  \
+    CarryToBool \
+    __parm [__eax] \
+    __value [__eax] \
+
+#pragma aux RdosGetVfsDriveStart = \
+    CallGate_get_vfs_drive_start  \
+    __parm [__eax] \
+    __value [__edx __eax] \
+
+#pragma aux RdosGetVfsDriveSize = \
+    CallGate_get_vfs_drive_size  \
+    __parm [__eax] \
+    __value [__edx __eax] \
+
 #pragma aux RdosCreateFileDrive = \
     CallGate_create_file_drive  \
     CarryToBool \
