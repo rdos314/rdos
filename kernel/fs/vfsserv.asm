@@ -40,6 +40,8 @@ include vfs.inc
 
     .386p
 
+MAX_PART_COUNT   = 255
+
 req_wait_header      STRUC
 
 rw_obj              wait_obj_header <>
@@ -47,8 +49,24 @@ rw_handle           DW ?
 
 req_wait_header      ENDS
 
+fs_cmd      STRUC
 
-MAX_PART_COUNT   = 255
+fc_prev            DW ?
+fc_next            DW ?
+fc_thread          DW ?
+fc_op              DW ?
+
+fc_eflags          DD ?
+fc_eax             DD ?
+fc_ebx             DD ?
+fc_ecx             DD ?
+fc_edx             DD ?
+fc_esi             DD ?
+fc_edi             DD ?
+fc_fs              DW ?
+fc_gs              DW ?
+
+fs_cmd      ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -1796,9 +1814,217 @@ unmap_vfs_req    Endp
 wait_for_vfs_cmd_name DB 'Wait For VFS Cmd', 0
 
 wait_for_vfs_cmd   Proc far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    call HandleToPart
+    jc wfcDone
+;
+    mov ax,es
+    mov ds,ax
+;
+    GetThread
+    mov ds:vfs_cmd_thread,ax
+
+wfcRetry:
+    test ds:vfs_flags,VFS_FLAG_STOPPED
+    stc
+    jnz wfcDone
+;
     WaitForSignal
+;
+    test ds:vfs_flags,VFS_FLAG_STOPPED
+    stc
+    jnz wfcDone
+;
+    EnterSection ds:vfsp_cmd_section
+    mov ax,ds:vfsp_cmd_list
+    or ax,ax
+    jnz wfcTake
+;
+    LeaveSection ds:vfsp_cmd_section
+    jmp wfcRetry
+
+wfcTake:
+    mov es,ax
+;
+    push ds
+    push edi
+;
+    mov di,es:fc_next
+    cmp di,ds:vfsp_cmd_list
+    mov ds:vfsp_cmd_list,di
+    mov si,es:fc_prev
+    mov ds,di
+    mov ds:fc_prev,si
+    mov ds,si
+    mov ds:fc_next,di
+;
+    pop edi
+    pop ds
+    jne wfcProcess
+;    
+    mov ds:vfsp_cmd_list,0
+    
+wfcProcess:
+    LeaveSection ds:vfsp_cmd_section
+;
+    mov ds:vfsp_cmd_sel,es
+;
+    mov ax,es
+    mov ds,ax
+    mov edi,edx
+    mov ax,flat_data_sel
+    mov es,ax
+    xor esi,esi
+    mov ecx,SIZE fs_cmd
+    add ecx,ds:fc_ecx
+    mov eax,ecx
+    shr ecx,2
+    rep movs dword ptr es:[edi],ds:[esi]
+    mov ecx,eax
+    and ecx,3
+    rep movs byte ptr es:[edi],ds:[esi]
+    movzx eax,ds:fc_op
+    clc
+
+wfcDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
     ret
-wait_for_vfs_cmd   Endp
+wait_for_vfs_cmd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateMsg
+;
+;       DESCRIPTION:    Create fs msg
+;
+;       PARAMETERS:     DS      VFS sel
+;                       FS      Part sel
+;                       ECX     Extra space
+;
+;       RETURNS:        ES      FS msg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateMsg  Proc near
+    push eax
+    mov eax,ecx
+    add eax,SIZE fs_cmd
+    AllocateSmallGlobalMem
+    pop eax
+;
+    stc
+    pushfd
+    pop es:fc_eflags
+;
+    mov es:fc_eax,eax
+    mov es:fc_ebx,ebx
+    mov es:fc_ecx,ecx
+    mov es:fc_edx,edx
+    mov es:fc_esi,esi
+    mov es:fc_edi,edi
+    mov es:fc_fs,0
+    mov es:fc_gs,0
+    ret
+CreateMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunMsg
+;
+;       DESCRIPTION:    Run disc msg
+;
+;       PARAMETERS:     DS      VFS sel
+;                       FS      Part sel
+;                       ES      Req msg
+;                       AX      Op
+;
+;       RETURNS:        ES      Reply msg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunMsg  Proc near
+    push ds
+    mov ax,fs
+    mov ds,ax
+;
+    mov es:fc_op,ax
+;
+    GetThread
+    mov es:fc_thread,ax
+;
+    EnterSection ds:vfsp_cmd_section
+;
+    mov ax,ds:vfsp_cmd_list
+    or ax,ax
+    je rmEmpty
+;    
+    push ds
+    push esi
+;
+    mov ds,ax
+    mov si,ds:fc_prev
+    mov ds:fc_prev,es
+    mov ds,si
+    mov ds:fc_next,es
+    mov es:fc_next,ax
+    mov es:fc_prev,si
+;
+    pop esi
+    pop ds
+    jmp rmLeave
+    
+rmEmpty:
+    mov es:fc_next,es
+    mov es:fc_prev,es
+    mov ds:vfsp_cmd_list,es
+
+rmLeave:
+    LeaveSection ds:vfsp_cmd_section
+;
+    mov bx,ds:vfsp_cmd_thread
+    Signal
+
+rmWait:
+    WaitForSignal
+    test ds:vfs_flags,VFS_FLAG_STOPPED
+    jz rmCheck
+;
+    stc
+    jmp rmDone
+
+rmCheck:
+    mov ax,es:fc_thread
+    or ax,ax
+    jnz rmWait
+;
+    mov eax,es:fc_eax
+    mov ebx,es:fc_ebx
+    mov ecx,es:fc_ecx
+    mov edx,es:fc_edx
+    mov esi,es:fc_esi
+    mov edi,es:fc_edi
+
+    push es:fc_eflags
+    popfd
+
+rmDone:
+    ret
+RunMsg  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
