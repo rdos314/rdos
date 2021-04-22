@@ -40,6 +40,8 @@ include vfs.inc
 
     .386p
 
+GET_FREE_SECTORS   = 0
+
 MAX_PART_COUNT   = 255
 
 req_wait_header      STRUC
@@ -63,8 +65,6 @@ fc_ecx             DD ?
 fc_edx             DD ?
 fc_esi             DD ?
 fc_edi             DD ?
-fc_fs              DW ?
-fc_gs              DW ?
 
 fs_cmd      ENDS
 
@@ -1837,16 +1837,16 @@ wait_for_vfs_cmd   Proc far
     mov ds,ax
 ;
     GetThread
-    mov ds:vfs_cmd_thread,ax
+    mov ds:vfsp_cmd_thread,ax
 
 wfcRetry:
-    test ds:vfs_flags,VFS_FLAG_STOPPED
+    test ds:vfsp_flag,VFSP_FLAG_STOPPED
     stc
     jnz wfcDone
 ;
     WaitForSignal
 ;
-    test ds:vfs_flags,VFS_FLAG_STOPPED
+    test ds:vfsp_flag,VFSP_FLAG_STOPPED
     stc
     jnz wfcDone
 ;
@@ -1944,8 +1944,6 @@ CreateMsg  Proc near
     mov es:fc_edx,edx
     mov es:fc_esi,esi
     mov es:fc_edi,edi
-    mov es:fc_fs,0
-    mov es:fc_gs,0
     ret
 CreateMsg  Endp
 
@@ -2183,7 +2181,10 @@ get_vfs_drive_free_name DB 'Get VFS Drive Free', 0
 
 get_vfs_drive_free   Proc far
     push ds
+    push es
+    push fs
     push ebx
+    push ecx
 ;
     mov bx,SEG data
     mov ds,bx
@@ -2194,13 +2195,20 @@ get_vfs_drive_free   Proc far
     stc
     jz gvdfDone
 ;
-    mov ds,bx
-    mov eax,ds:vfsp_sector_count
-    mov edx,ds:vfsp_sector_count+4
-    clc
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    xor ecx,ecx
+    call CreateMsg
+;
+    mov ax,GET_FREE_SECTORS
+    call RunMsg
 
 gvdfDone:
+    pop ecx
     pop ebx
+    pop fs
+    pop es
     pop ds
     ret
 get_vfs_drive_free   Endp
