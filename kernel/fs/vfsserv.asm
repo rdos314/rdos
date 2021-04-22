@@ -2167,6 +2167,45 @@ gvdeDone:
 get_vfs_drive_size   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsDriveFree
+;
+;       DESCRIPTION:    Get VFS drive free
+;
+;       PARAMETERS:     AL        Drive #
+;
+;       RETURNS:        EDX:EAX   Free sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_drive_free_name DB 'Get VFS Drive Free', 0
+
+get_vfs_drive_free   Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].drive_arr
+    or bx,bx
+    stc
+    jz gvdfDone
+;
+    mov ds,bx
+    mov eax,ds:vfsp_sector_count
+    mov edx,ds:vfsp_sector_count+4
+    clc
+
+gvdfDone:
+    pop ebx
+    pop ds
+    ret
+get_vfs_drive_free   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -2293,6 +2332,12 @@ init_server    Proc near
     mov edi,OFFSET get_vfs_drive_size_name
     xor dx,dx
     mov ax,get_vfs_drive_size_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_vfs_drive_free
+    mov edi,OFFSET get_vfs_drive_free_name
+    xor dx,dx
+    mov ax,get_vfs_drive_free_nr
     RegisterBimodalUserGate
 
     ret
