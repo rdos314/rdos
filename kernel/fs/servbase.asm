@@ -68,6 +68,11 @@ _TEXT   segment use32 word public 'CODE'
 
     public WaitForMsg_
 
+    extern GetFreeSectors:near
+
+msgtab:
+m00 DD OFFSET GetFreeSectors
+
 WaitForMsg_    Proc near
     pushad
 
@@ -84,6 +89,8 @@ wfmLoop:
     mov edi,[edx].fc_edi
     movzx ebp,[edx].fc_op
     mov edx,[edx].fc_edx
+    shl ebp,2
+    call dword ptr [ebp].msgtab
 ;
     pop edx
     jmp wfmLoop
