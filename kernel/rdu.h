@@ -950,6 +950,7 @@
 #define usergate_get_vfs_drive_disc 0x00000307
 #define usergate_get_vfs_drive_start 0x00000308
 #define usergate_get_vfs_drive_size 0x00000309
+#define usergate_get_vfs_drive_free 0x0000030A
 
 
 
@@ -1906,6 +1907,7 @@
 #define CallGate_get_vfs_drive_disc 0x55 0x67 0x9a 7 3 0 0 3 0 0x5d
 #define CallGate_get_vfs_drive_start 0x55 0x67 0x9a 8 3 0 0 3 0 0x5d
 #define CallGate_get_vfs_drive_size 0x55 0x67 0x9a 9 3 0 0 3 0 0x5d
+#define CallGate_get_vfs_drive_free 0x55 0x67 0x9a 10 3 0 0 3 0 0x5d
 
 #else
 
@@ -2860,5 +2862,6 @@
 #define CallGate_get_vfs_drive_disc 0x3e 0x67 0x9a 7 3 0 0 3 0
 #define CallGate_get_vfs_drive_start 0x3e 0x67 0x9a 8 3 0 0 3 0
 #define CallGate_get_vfs_drive_size 0x3e 0x67 0x9a 9 3 0 0 3 0
+#define CallGate_get_vfs_drive_free 0x3e 0x67 0x9a 10 3 0 0 3 0
 
 #endif

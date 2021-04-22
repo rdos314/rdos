@@ -132,7 +132,7 @@ long long TDrive::GetFreeSectors()
     if (FValid)
     {
         if (FSectors > 0)
-            return FSectors;
+            return RdosGetVfsDriveFree(FDrive);
         else
         {
             RdosGetDriveInfo(FDrive, &FreeUnits, &BytesPerUnit, &Units);

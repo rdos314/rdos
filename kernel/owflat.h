@@ -3204,7 +3204,7 @@
     "mov eax,-1" \
     "done:" \
     __parm [__eax] \
-    __value [__eax] \
+    __value [__eax]
 
 #pragma aux RdosGetVfsDriveStart = \
     CallGate_get_vfs_drive_start  \
@@ -3213,7 +3213,7 @@
     "mov eax,-1" \
     "done:" \
     __parm [__eax] \
-    __value [__edx __eax] \
+    __value [__edx __eax]
 
 #pragma aux RdosGetVfsDriveSize = \
     CallGate_get_vfs_drive_size  \
@@ -3222,7 +3222,16 @@
     "mov eax,-1" \
     "done:" \
     __parm [__eax] \
-    __value [__edx __eax] \
+    __value [__edx __eax]
+
+#pragma aux RdosGetVfsDriveFree = \
+    CallGate_get_vfs_drive_free  \
+    "jnc done" \
+    "mov edx,-1" \
+    "mov eax,-1" \
+    "done:" \
+    __parm [__eax] \
+    __value [__edx __eax]
 
 #pragma aux RdosCreateFileDrive = \
     CallGate_create_file_drive  \

@@ -824,6 +824,7 @@ int RDOSAPI RdosGetDriveDiscParam(int DriveNr, int *DiscNr, long *StartSector, l
 int RDOSAPI RdosGetVfsDriveDisc(int DriveNr);
 long long RDOSAPI RdosGetVfsDriveStart(int DriveNr);
 long long RDOSAPI RdosGetVfsDriveSize(int DriveNr);
+long long RDOSAPI RdosGetVfsDriveFree(int DriveNr);
 
 int RDOSAPI RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
 int RDOSAPI RdosOpenFileDrive(int Drive, const char *FileName);

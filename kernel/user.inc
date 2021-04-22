@@ -2270,6 +2270,12 @@ GetVfsDriveSize     MACRO
         UserGate get_vfs_drive_size_nr
                                                 ENDM
 
+; IN  AL              Drive #
+; OUT EDX:EAX         Free sectors
+GetVfsDriveFree     MACRO
+        UserGate get_vfs_drive_free_nr
+                                                ENDM
+
 ;   IN  AL          Drive #   
 ;   IN  ECX         Size of filesystem
 ;       IN      DS:(E)SI        File system name
