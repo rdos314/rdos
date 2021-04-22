@@ -26,30 +26,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-ServGate16    MACRO gate_nr
-    db 67h
-    db 66h
-    db 9Ah
-    dd gate_nr
-    dw 4
-            ENDM
 
-ServGate32    MACRO gate_nr
-    db 3Eh
+ServGate    MACRO gate_nr
+    db 55h
     db 67h
     db 9Ah
     dd gate_nr
     dw 4
+    db 5Dh
             ENDM
-
-ServGate  MACRO gate_nr
-IF (size $) EQ 0FF02h
-    ServGate16 gate_nr
-ELSE
-    ServGate32 gate_nr
-ENDIF
-            ENDM
-
 
 ;;;;;;;;;; REGISTRATION / HOOKS ;;;;;;;;;;;
 

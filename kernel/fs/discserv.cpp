@@ -32,6 +32,13 @@
 
 static int handle = 0;
 
+extern "C" {
+
+extern int WaitForMsg(int handle, char *buf);
+#pragma aux WaitForMsg parm routine [ebx] [edx] value [eax]
+
+}
+
 /*##########################################################################
 #
 #   Name       : TDiscReqEntry::TDisReqEntry
@@ -481,5 +488,5 @@ long long TDiscServer::GetPartSectors()
 ##########################################################################*/
 int TDiscServer::WaitForMsg(char *buf)
 {
-    return ServWaitForVfsCmd(handle, buf);
+    return ::WaitForMsg(handle, buf);
 }
