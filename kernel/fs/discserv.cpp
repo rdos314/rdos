@@ -29,13 +29,20 @@
 #include <rdos.h>
 #include <serv.h>
 #include "discserv.h"
+#include "fs.h"
 
 static int handle = 0;
+static TFs *Server = 0;
 
 extern "C" {
 
 extern int WaitForMsg(int handle, char *buf);
 #pragma aux WaitForMsg parm routine [ebx] [edx] value [eax]
+
+long long GetFreeSectors()
+{
+    return Server->GetFreeSectors();
+}
 
 }
 
@@ -486,7 +493,8 @@ long long TDiscServer::GetPartSectors()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscServer::WaitForMsg(char *buf)
+int TDiscServer::WaitForMsg(TFs *fs, char *buf)
 {
+    Server = fs;
     return ::WaitForMsg(handle, buf);
 }

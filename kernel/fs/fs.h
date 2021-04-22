@@ -36,13 +36,10 @@ public:
     TFs();
     virtual ~TFs();
 
+    long long GetFreeSectors();
+
 protected:
-    bool ProcessMsg();
-
     TDiscServer Server;
-
-private:
-    char FMsgBuf[4096];
 };
 
 #endif

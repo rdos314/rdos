@@ -62,19 +62,16 @@ TFs::~TFs()
 
 /*##########################################################################
 #
-#   Name       : TFs::ProcessMsg
+#   Name       : TFs::GetFreeSectors
 #
-#   Purpose....: Process messages
+#   Purpose....: Get free sectors
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFs::ProcessMsg()
+long long TFs::GetFreeSectors()
 {
-    Server.WaitForMsg(FMsgBuf);
-
-    return true;
-
+    return 50;
 }

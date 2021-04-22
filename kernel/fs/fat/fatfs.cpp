@@ -517,8 +517,6 @@ void TFat::Run(const char *FsName)
     RdosCreateThread(ThreadStartup, "Disc Test 9", this, 0x4000);
     RdosCreateThread(ThreadStartup, "Disc Test 10", this, 0x4000);
 
-    stat = Server.WaitForMsg(buf);
+    stat = Server.WaitForMsg(this, buf);
 
-    while (ok)
-        ok = ProcessMsg();
 }

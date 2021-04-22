@@ -36,6 +36,7 @@
 
 class TDiscServer;
 class TDiscReq;
+class TFs;
 
 class TDiscReqEntry
 {
@@ -93,7 +94,7 @@ public:
     ~TDiscServer();
 
     long long GetPartSectors();
-    int WaitForMsg(char *buf);
+    int WaitForMsg(TFs *fs, char *buf);
     bool IsActive();
 
 protected:

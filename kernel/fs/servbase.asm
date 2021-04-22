@@ -68,10 +68,10 @@ _TEXT   segment use32 word public 'CODE'
 
     public WaitForMsg_
 
-    extern GetFreeSectors:near
+    extern LowGetFreeSectors:near
 
 msgtab:
-m00 DD OFFSET GetFreeSectors
+m00 DD OFFSET LowGetFreeSectors
 
 WaitForMsg_    Proc near
     pushad

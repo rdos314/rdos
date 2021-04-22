@@ -25,14 +25,15 @@
 #
 ########################################################################*/
 
+long long GetFreeSectors();
 
 /*##########################################################################
 #
-#   Name       : GetFreeSectors
+#   Name       : LowGetFreeSectors
 #
 ##########################################################################*/
-#pragma aux GetFreeSectors "*" parm routine value [edx eax]
-long long GetFreeSectors()
+#pragma aux LowGetFreeSectors "*" parm routine value [edx eax]
+long long LowGetFreeSectors()
 {
-    return 50;
+    return GetFreeSectors();
 }
