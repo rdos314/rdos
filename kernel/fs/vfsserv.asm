@@ -1889,16 +1889,16 @@ wfcProcess:
     mov edi,edx
     mov ax,flat_data_sel
     mov es,ax
-    xor esi,esi
+    mov esi,OFFSET fc_op
     mov ecx,SIZE fs_cmd
     add ecx,ds:fc_ecx
+    sub ecx,OFFSET fc_op
     mov eax,ecx
     shr ecx,2
     rep movs dword ptr es:[edi],ds:[esi]
     mov ecx,eax
     and ecx,3
     rep movs byte ptr es:[edi],ds:[esi]
-    movzx eax,ds:fc_op
     clc
 
 wfcDone:
@@ -1965,10 +1965,10 @@ CreateMsg  Endp
 
 RunMsg  Proc near
     push ds
+    mov es:fc_op,ax
+;
     mov ax,fs
     mov ds,ax
-;
-    mov es:fc_op,ax
 ;
     GetThread
     mov es:fc_thread,ax

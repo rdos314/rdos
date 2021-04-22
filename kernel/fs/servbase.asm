@@ -32,6 +32,20 @@ include ..\user.inc
 
 .386p
 
+vfs_cmd_struc   STRUC
+
+fc_op              DW ?
+
+fc_eflags          DD ?
+fc_eax             DD ?
+fc_ebx             DD ?
+fc_ecx             DD ?
+fc_edx             DD ?
+fc_esi             DD ?
+fc_edi             DD ?
+
+vfs_cmd_struc   ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 _TEXT   segment use32 word public 'CODE'
@@ -55,7 +69,27 @@ _TEXT   segment use32 word public 'CODE'
     public WaitForMsg_
 
 WaitForMsg_    Proc near
+    pushad
+
+wfmLoop:
     WaitForVfsCmd
+    jc wfmDone
+;
+    push edx
+;
+    mov eax,[edx].fc_eax
+    mov ebx,[edx].fc_ebx
+    mov ecx,[edx].fc_ecx
+    mov esi,[edx].fc_esi
+    mov edi,[edx].fc_edi
+    movzx ebp,[edx].fc_op
+    mov edx,[edx].fc_edx
+;
+    pop edx
+    jmp wfmLoop
+
+wfmDone:
+    popad
     ret
 WaitForMsg_    Endp
 
