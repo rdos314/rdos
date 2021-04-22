@@ -77,6 +77,7 @@ WaitForMsg_    Proc near
     pushad
 
 wfmLoop:
+    push ebx
     WaitForVfsCmd
     jc wfmDone
 ;
@@ -91,11 +92,24 @@ wfmLoop:
     mov edx,[edx].fc_edx
     shl ebp,2
     call dword ptr [ebp].msgtab
+    mov ebp,edx
 ;
     pop edx
+;
+    mov [edx].fc_eax,eax
+    mov [edx].fc_ebx,ebx
+    mov [edx].fc_ecx,ecx
+    mov [edx].fc_esi,esi
+    mov [edx].fc_edi,edi
+    mov [edx].fc_edx,ebp
+;
+    pop ebx
+    ReplyVfsCmd
     jmp wfmLoop
 
 wfmDone:
+    pop ebx
+;
     popad
     ret
 WaitForMsg_    Endp

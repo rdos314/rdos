@@ -119,3 +119,9 @@ AddWaitForVfsReq       MACRO
 WaitForVfsCmd  MACRO
     ServGate wait_for_vfs_cmd_nr
                     ENDM
+
+; IN  EBX              VFS handle
+; IN  EDX              Buffer      
+ReplyVfsCmd  MACRO
+    ServGate reply_vfs_cmd_nr
+                    ENDM
