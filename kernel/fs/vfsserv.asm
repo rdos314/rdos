@@ -1820,6 +1820,7 @@ wait_for_vfs_cmd_name DB 'Wait For VFS Cmd', 0
 
 wait_for_vfs_cmd   Proc far
     push ds
+    push es
     push eax
     push ebx
     push ecx
@@ -1874,10 +1875,20 @@ wfcSaveHead:
     mov ds:[ebx].vfss_server_linear,edx
 
 wfcMap:
+    push ds
+    push edx
+;
     mov eax,[ebx].vfss_phys
     mov ebx,[ebx].vfss_phys+4
     or ax,867h
+;
+    mov cx,system_data_sel
+    mov ds,cx
+    add edx,ds:flat_base
     SetPageEntry
+;
+    pop edx
+    pop ds
     clc
 
 wfcDone:
@@ -1886,9 +1897,61 @@ wfcDone:
     pop ecx
     pop ebx
     pop eax
+    pop es
     pop ds
     ret
 wait_for_vfs_cmd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReplyVfsCmd
+;
+;       DESCRIPTION:    Reply on VFS cmd
+;
+;       PARAMETERS:     EBX        VFS handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reply_vfs_cmd_name DB 'Reply VFS Cmd', 0
+
+reply_vfs_cmd   Proc far
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    call HandleToPart
+    jc rfcDone
+;
+    mov esi,es:vfsp_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    xor bx,bx
+    xchg bx,es:[esi].vfss_thread
+    Signal
+;
+    mov edx,es:[esi].vfss_server_linear
+    mov eax,es:[esi].vfss_phys
+    mov ebx,es:[esi].vfss_phys+4
+    or ax,863h
+    mov cx,system_data_sel
+    mov es,cx
+    add edx,es:flat_base
+    SetPageEntry
+
+rfcDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+reply_vfs_cmd  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2060,7 +2123,7 @@ rmWait:
     jmp rmDone
 
 rmCheck:
-    mov ax,fs:[esi].vfsp_cmd_arr.vfss_thread
+    mov ax,fs:[esi].vfss_thread
     or ax,ax
     jnz rmWait
 ;
@@ -2338,6 +2401,12 @@ init_server    Proc near
     mov edi,OFFSET wait_for_vfs_cmd_name
     xor cl,cl
     mov ax,wait_for_vfs_cmd_nr
+    RegisterServGate
+;
+    mov esi,OFFSET reply_vfs_cmd
+    mov edi,OFFSET reply_vfs_cmd_name
+    xor cl,cl
+    mov ax,reply_vfs_cmd_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv
