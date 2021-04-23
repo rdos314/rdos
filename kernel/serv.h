@@ -31,7 +31,6 @@ void RDOSAPI ServUnmapVfsReq(int handle, int reqid);
 void RDOSAPI ServStartVfsReq(int handle);
 int RDOSAPI ServIsVfsReqDone(int handle);
 void RDOSAPI ServAddWaitForVfsReq(int waithandle, int handle, int id);
-int RDOSAPI ServWaitForVfsCmd(int handle, char *buf);
 
 #ifdef __cplusplus
 }

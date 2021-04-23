@@ -53,11 +53,7 @@ req_wait_header      ENDS
 
 fs_cmd      STRUC
 
-fc_prev            DW ?
-fc_next            DW ?
-fc_thread          DW ?
-fc_op              DW ?
-
+fc_op              DD ?
 fc_eflags          DD ?
 fc_eax             DD ?
 fc_ebx             DD ?
@@ -140,6 +136,8 @@ cpsFound:
     mov es:vfsp_sector_count+4,eax
     mov es:vfsp_disc_sel,ds
 ;
+    mov es:vfsp_cmd_unused_mask,-1
+;
     mov ds:[esi],es
     mov eax,esi
     sub eax,OFFSET vfs_part_arr
@@ -204,7 +202,7 @@ AddFatPartition   Proc near
 ;
     mov fs,bx
     AllocateVfsDrive
-    mov ds:vfsp_drive_nr,al
+    mov fs:vfsp_drive_nr,al
     movzx ebx,al
     shl ebx,1
     mov ax,SEG data
@@ -1813,9 +1811,8 @@ unmap_vfs_req    Endp
 ;       DESCRIPTION:    Wait for VFS cmd
 ;
 ;       PARAMETERS:     EBX        VFS handle
-;                       EDX        Buffer
 ;
-;       RETURNS:        EAX        Cmd #
+;       RETURNS:        EDX        Msg
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1823,10 +1820,9 @@ wait_for_vfs_cmd_name DB 'Wait For VFS Cmd', 0
 
 wait_for_vfs_cmd   Proc far
     push ds
-    push es
+    push eax
     push ebx
     push ecx
-    push edx
     push esi
     push edi
 ;
@@ -1850,64 +1846,46 @@ wfcRetry:
     stc
     jnz wfcDone
 ;
-    EnterSection ds:vfsp_cmd_section
-    mov ax,ds:vfsp_cmd_list
-    or ax,ax
-    jnz wfcTake
+    movzx ebx,ds:vfsp_cmd_head
+    mov al,ds:[ebx].vfsp_cmd_ring
+    cmp bl,ds:vfsp_cmd_tail
+    je wfcRetry
 ;
-    LeaveSection ds:vfsp_cmd_section
-    jmp wfcRetry
+    inc bl
+    cmp bl,34
+    jb wfcSaveHead
+;
+    xor bl,bl
 
-wfcTake:
-    mov es,ax
+wfcSaveHead:
+    mov ds:vfsp_cmd_head,bl
 ;
-    push ds
-    push edi
+    movzx ebx,al
+    mov ds:vfsp_cmd_curr,ebx
+    dec ebx
+    shl ebx,4
+    add ebx,OFFSET vfsp_cmd_arr
+    mov edx,ds:[ebx].vfss_server_linear
+    or edx,edx
+    jnz wfcMap
 ;
-    mov di,es:fc_next
-    cmp di,ds:vfsp_cmd_list
-    mov ds:vfsp_cmd_list,di
-    mov si,es:fc_prev
-    mov ds,di
-    mov ds:fc_prev,si
-    mov ds,si
-    mov ds:fc_next,di
-;
-    pop edi
-    pop ds
-    jne wfcProcess
-;    
-    mov ds:vfsp_cmd_list,0
-    
-wfcProcess:
-    LeaveSection ds:vfsp_cmd_section
-;
-    mov ds:vfsp_cmd_sel,es
-;
-    mov ax,es
-    mov ds,ax
-    mov edi,edx
-    mov ax,flat_data_sel
-    mov es,ax
-    mov esi,OFFSET fc_op
-    mov ecx,SIZE fs_cmd
-    add ecx,ds:fc_ecx
-    sub ecx,OFFSET fc_op
-    mov eax,ecx
-    shr ecx,2
-    rep movs dword ptr es:[edi],ds:[esi]
-    mov ecx,eax
-    and ecx,3
-    rep movs byte ptr es:[edi],ds:[esi]
+    mov eax,1000h
+    AllocateLocalLinear
+    mov ds:[ebx].vfss_server_linear,edx
+
+wfcMap:
+    mov eax,[ebx].vfss_phys
+    mov ebx,[ebx].vfss_phys+4
+    or ax,867h
+    SetPageEntry
     clc
 
 wfcDone:
     pop edi
     pop esi
-    pop edx
     pop ecx
     pop ebx
-    pop es
+    pop eax
     pop ds
     ret
 wait_for_vfs_cmd  Endp
@@ -1915,37 +1893,122 @@ wait_for_vfs_cmd  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreateMsg
+;       NAME:           GetMsgEntry
 ;
-;       DESCRIPTION:    Create fs msg
+;       DESCRIPTION:    Get fs msg entry
 ;
 ;       PARAMETERS:     DS      VFS sel
 ;                       FS      Part sel
-;                       ECX     Extra space
 ;
-;       RETURNS:        ES      FS msg
+;       RETURNS:        EBX     FS entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateMsg  Proc near
+GetMsgEntry  Proc near
+    push ecx
+
+gmeRetry:
+    mov ebx,fs:vfsp_cmd_free_mask
+    or ebx,ebx
+    jz gmeTryUnused
+;
+    bsf ecx,ebx
+    lock btc fs:vfsp_cmd_free_mask,ecx
+    jc gmeOk
+    jmp gmeRetry
+
+gmeTryUnused:
+    mov ebx,fs:vfsp_cmd_unused_mask
+    or ebx,ebx
+    jz gmeBlock
+;
+    bsf ecx,ebx
+    lock btc fs:vfsp_cmd_unused_mask,ecx
+    jc gmeAlloc
+    jmp gmeRetry
+
+gmeBlock:
+    CrashGate
+
+gmeAlloc:
+    mov ebx,ecx
+    shl ebx,4
+    add ebx,OFFSET vfsp_cmd_arr
+;
     push eax
-    mov eax,ecx
-    add eax,SIZE fs_cmd
-    AllocateSmallGlobalMem
+    push ebx
+    push edx
+    push edi
+;
+    mov edi,ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    mov fs:[edi].vfss_phys,eax
+    mov fs:[edi].vfss_phys+4,ebx
+;
+    or al,63h
+    SetPageEntry
+;    
+    mov ecx,1000h
+    AllocateGdt
+    mov fs:[edi].vfss_sel,bx
+    CreateDataSelector32
+;
+    mov fs:[edi].vfss_server_linear,0
+    mov fs:[edi].vfss_thread,0
+;
+    pop edi
+    pop edx
+    pop ebx
     pop eax
+;
+    clc
+    jmp gmeDone
+
+gmeOk:
+    mov ebx,ecx
+    shl ebx,4
+
+gmeDone:
+    pop ecx
+    ret
+GetMsgEntry  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateMsg
+;
+;       DESCRIPTION:    Allocate fs msg
+;
+;       PARAMETERS:     DS      VFS sel
+;                       FS      Part sel
+;
+;       RETURNS:        EBX     Msg entry
+;                       ES      Msg buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateMsg  Proc near
+    push ebx
+    call GetMsgEntry
+    mov es,fs:[ebx].vfss_sel
+    pop es:fc_ebx
 ;
     stc
     pushfd
     pop es:fc_eflags
 ;
     mov es:fc_eax,eax
-    mov es:fc_ebx,ebx
     mov es:fc_ecx,ecx
     mov es:fc_edx,edx
     mov es:fc_esi,esi
     mov es:fc_edi,edi
     ret
-CreateMsg  Endp
+AllocateMsg  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1956,53 +2019,36 @@ CreateMsg  Endp
 ;
 ;       PARAMETERS:     DS      VFS sel
 ;                       FS      Part sel
-;                       ES      Req msg
-;                       AX      Op
-;
-;       RETURNS:        ES      Reply msg
+;                       ES      Msg buf
+;                       EAX     Op
+;                       EBX     Msg entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RunMsg  Proc near
-    push ds
-    mov es:fc_op,ax
-;
-    mov ax,fs
-    mov ds,ax
+    mov esi,ebx
+    mov es:fc_op,eax
 ;
     GetThread
-    mov es:fc_thread,ax
+    mov fs:[esi].vfss_thread,ax
 ;
-    EnterSection ds:vfsp_cmd_section
+    sub ebx,OFFSET vfsp_cmd_arr
+    shr ebx,2
+    mov al,bl
+    inc al
 ;
-    mov ax,ds:vfsp_cmd_list
-    or ax,ax
-    je rmEmpty
-;    
-    push ds
-    push esi
+    movzx ebx,fs:vfsp_cmd_tail
+    mov fs:[ebx].vfsp_cmd_ring,al
+    inc bl
+    cmp bl,34
+    jb rmSaveTail
 ;
-    mov ds,ax
-    mov si,ds:fc_prev
-    mov ds:fc_prev,es
-    mov ds,si
-    mov ds:fc_next,es
-    mov es:fc_next,ax
-    mov es:fc_prev,si
-;
-    pop esi
-    pop ds
-    jmp rmLeave
-    
-rmEmpty:
-    mov es:fc_next,es
-    mov es:fc_prev,es
-    mov ds:vfsp_cmd_list,es
+    xor bl,bl
 
-rmLeave:
-    LeaveSection ds:vfsp_cmd_section
+rmSaveTail:
+    mov fs:vfsp_cmd_tail,bl
 ;
-    mov bx,ds:vfsp_cmd_thread
+    mov bx,fs:vfsp_cmd_thread
     Signal
 
 rmWait:
@@ -2014,7 +2060,7 @@ rmWait:
     jmp rmDone
 
 rmCheck:
-    mov ax,es:fc_thread
+    mov ax,fs:[esi].vfsp_cmd_arr.vfss_thread
     or ax,ax
     jnz rmWait
 ;
@@ -2198,10 +2244,9 @@ get_vfs_drive_free   Proc far
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
-    xor ecx,ecx
-    call CreateMsg
+    call AllocateMsg
 ;
-    mov ax,GET_FREE_SECTORS
+    mov eax,GET_FREE_SECTORS
     call RunMsg
 
 gvdfDone:

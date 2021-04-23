@@ -34,7 +34,7 @@ include ..\user.inc
 
 vfs_cmd_struc   STRUC
 
-fc_op              DW ?
+fc_op              DD ?
 
 fc_eflags          DD ?
 fc_eax             DD ?
@@ -60,9 +60,6 @@ _TEXT   segment use32 word public 'CODE'
 ;       DESCRIPTION:    Wait for msg
 ;
 ;       PARAMETERS:     EBX     Handle
-;                       EDX     Buffer
-;
-;       RETURNS:        AX      Cmd #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -88,7 +85,7 @@ wfmLoop:
     mov ecx,[edx].fc_ecx
     mov esi,[edx].fc_esi
     mov edi,[edx].fc_edi
-    movzx ebp,[edx].fc_op
+    mov ebp,[edx].fc_op
     mov edx,[edx].fc_edx
     shl ebp,2
     call dword ptr [ebp].msgtab

@@ -499,8 +499,6 @@ void TFat::Test()
 void TFat::Run(const char *FsName)
 {
     bool ok;
-    char *buf = new char[0x1000];
-    int stat;
 
     ok = ProcessBootSector(FsName);
     if (ok)
@@ -517,6 +515,6 @@ void TFat::Run(const char *FsName)
     RdosCreateThread(ThreadStartup, "Disc Test 9", this, 0x4000);
     RdosCreateThread(ThreadStartup, "Disc Test 10", this, 0x4000);
 
-    stat = Server.WaitForMsg(this, buf);
+    Server.WaitForMsg(this);
 
 }

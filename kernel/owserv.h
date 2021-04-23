@@ -88,8 +88,3 @@
 #pragma aux ServAddWaitForVfsReq = \
     ServGate_add_wait_for_vfs_req  \
     __parm [__ebx] [__eax] [__ecx]
-
-#pragma aux ServWaitForVfsCmd = \
-    ServGate_wait_for_vfs_cmd  \
-    __parm [__ebx] [__edx] \
-    __value [__eax]

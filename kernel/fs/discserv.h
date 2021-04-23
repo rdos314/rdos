@@ -94,7 +94,7 @@ public:
     ~TDiscServer();
 
     long long GetPartSectors();
-    int WaitForMsg(TFs *fs, char *buf);
+    void WaitForMsg(TFs *fs);
     bool IsActive();
 
 protected:

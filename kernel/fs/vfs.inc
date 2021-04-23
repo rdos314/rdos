@@ -163,6 +163,17 @@ vfsrq_thread              DW ?
 
 vfs_req          ENDS
 
+; should be 16 bytes!
+
+vfs_server_msg  STRUC
+
+vfss_phys                  DD ?,?
+vfss_server_linear         DD ?
+vfss_sel                   DW ?
+vfss_thread                DW ?
+
+vfs_server_msg  ENDS
+
 VFSP_FLAG_STOPPED   = 1
 
 vfs_part  STRUC
@@ -171,9 +182,15 @@ vfsp_start_sector         DD ?,?
 vfsp_sector_count         DD ?,?
 
 vfsp_cmd_section          section_typ <>
-vfsp_cmd_list             DW ?
 vfsp_cmd_thread           DW ?
-vfsp_cmd_sel              DW ?
+vfsp_cmd_curr             DD ?
+
+vfsp_cmd_unused_mask      DD ?
+vfsp_cmd_free_mask        DD ?
+vfsp_cmd_arr              DD 4 * 32 DUP(?)
+vfsp_cmd_ring             DB 34 DUP(?)
+vfsp_cmd_head             DB ?
+vfsp_cmd_tail             DB ?
 
 vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
 

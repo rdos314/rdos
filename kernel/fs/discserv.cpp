@@ -36,8 +36,8 @@ static TFs *Server = 0;
 
 extern "C" {
 
-extern int WaitForMsg(int handle, char *buf);
-#pragma aux WaitForMsg parm routine [ebx] [edx] value [eax]
+extern void WaitForMsg(int handle);
+#pragma aux WaitForMsg parm routine [ebx]
 
 long long GetFreeSectors()
 {
@@ -493,8 +493,8 @@ long long TDiscServer::GetPartSectors()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscServer::WaitForMsg(TFs *fs, char *buf)
+void TDiscServer::WaitForMsg(TFs *fs)
 {
     Server = fs;
-    return ::WaitForMsg(handle, buf);
+    return ::WaitForMsg(handle);
 }
