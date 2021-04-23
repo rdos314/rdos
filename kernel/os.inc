@@ -3443,6 +3443,12 @@ CheckVfsDrive     MACRO
     OsGate check_vfs_drive_nr
                     ENDM
 
+; IN  AL          Drive #
+; IN  ES:EDI      Path name
+GetVfsCurDir     MACRO
+    OsGate get_vfs_cur_dir_nr
+                    ENDM
+
 ;       IN      BX      Disc sel
 ;       IN      ES:EDI   Disc change procedure
 RegisterDiscChange      MACRO

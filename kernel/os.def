@@ -883,5 +883,6 @@ read_vfs_disc_nr            = 799
 remove_vfs_disc_nr          = 800
 allocate_vfs_drive_nr       = 801
 check_vfs_drive_nr          = 802
+get_vfs_cur_dir_nr          = 803
 
 osgate_entries              = 850

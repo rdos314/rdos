@@ -2205,6 +2205,43 @@ check_vfs_drive   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetVfsCurDir
+;
+;       DESCRIPTION:    Get VFS cur dir
+;
+;       PARAMETERS:     AL        Drive #
+;                       ES:EDI    Path
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_cur_dir_name DB 'Get VFS Cur Dir', 0
+
+get_vfs_cur_dir   Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].drive_arr
+    or bx,bx
+    stc
+    jz gvcdDone
+;
+    xor bl,bl
+    mov es:[edi],bl
+    clc
+
+gvcdDone:
+    pop ebx
+    pop ds
+    ret
+get_vfs_cur_dir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetVfsDriveDisc
 ;
 ;       DESCRIPTION:    Get VFS drive disc
@@ -2487,6 +2524,12 @@ init_server    Proc near
     mov edi,OFFSET check_vfs_drive_name
     xor cl,cl
     mov ax,check_vfs_drive_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_vfs_cur_dir
+    mov edi,OFFSET get_vfs_cur_dir_name
+    xor cl,cl
+    mov ax,get_vfs_cur_dir_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_vfs_drive_disc

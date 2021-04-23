@@ -998,7 +998,15 @@ GetCurDirBase   Proc near
     mov ds,bx
     movzx bx,al
     add bx,bx
-    mov ds,ds:[bx]
+    mov dx,ds:[bx]
+    or dx,dx
+    jnz get_cur_dir_not_vfs
+;
+    GetVfsCurDir
+    jmp get_cur_dir_done
+
+get_cur_dir_not_vfs:
+    mov ds,dx
     EnterReadSection ds:fs_access_section
     mov ds:fs_access_parse,1
     mov edx,ds:fs_mount_id
