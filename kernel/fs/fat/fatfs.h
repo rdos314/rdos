@@ -40,6 +40,8 @@ public:
 
     void Run(const char *FsName);
 
+    virtual long long GetFreeSectors();
+
     void Test();
 
 protected:

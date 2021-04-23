@@ -377,6 +377,22 @@ void TFat::CreateTables()
 
 /*##########################################################################
 #
+#   Name       : TFat::GetFreeSectors
+#
+#   Purpose....: Get free sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TFat::GetFreeSectors()
+{
+    return (long long)FreeClusters * (long long)SectorsPerCluster;
+}
+
+/*##########################################################################
+#
 #   Name       : VerifySector
 #
 #   Purpose....:

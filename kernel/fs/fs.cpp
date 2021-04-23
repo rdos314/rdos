@@ -59,19 +59,3 @@ TFs::TFs()
 TFs::~TFs()
 {
 }
-
-/*##########################################################################
-#
-#   Name       : TFs::GetFreeSectors
-#
-#   Purpose....: Get free sectors
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long long TFs::GetFreeSectors()
-{
-    return 50;
-}

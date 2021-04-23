@@ -36,7 +36,7 @@ public:
     TFs();
     virtual ~TFs();
 
-    long long GetFreeSectors();
+    virtual long long GetFreeSectors() = 0;
 
 protected:
     TDiscServer Server;
