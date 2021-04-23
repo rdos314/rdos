@@ -2034,6 +2034,7 @@ gmeAlloc:
 gmeOk:
     mov ebx,ecx
     shl ebx,4
+    add ebx,OFFSET vfsp_cmd_arr
 
 gmeDone:
     pop ecx
@@ -2085,6 +2086,8 @@ AllocateMsg  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RunMsg  Proc near
+    push ebp
+;
     mov esi,ebx
     mov es:fc_op,eax
 ;
@@ -2119,19 +2122,26 @@ rmWait:
     jmp rmDone
 
 rmCheck:
-    mov ax,fs:[esi].vfss_thread
-    or ax,ax
+    mov bx,fs:[esi].vfss_thread
+    or bx,bx
     jnz rmWait
 ;
-    mov eax,es:fc_eax
+    mov ebp,es:fc_eax
     mov ebx,es:fc_ebx
     mov ecx,es:fc_ecx
     mov edx,es:fc_edx
     mov esi,es:fc_esi
     mov edi,es:fc_edi
+;
+    dec al
+    movzx eax,al
+    lock bts fs:vfsp_cmd_free_mask,eax
+;
+    mov eax,ebp
     clc
 
 rmDone:
+    pop ebp
     ret
 RunMsg  Endp
 
