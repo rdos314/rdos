@@ -35,8 +35,7 @@ include ..\user.inc
 vfs_cmd_struc   STRUC
 
 fc_op              DD ?
-
-fc_eflags          DD ?
+fc_pad             DD ?
 fc_eax             DD ?
 fc_ebx             DD ?
 fc_ecx             DD ?
