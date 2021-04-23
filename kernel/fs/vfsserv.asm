@@ -2095,7 +2095,7 @@ RunMsg  Proc near
     mov fs:[esi].vfss_thread,ax
 ;
     sub ebx,OFFSET vfsp_cmd_arr
-    shr ebx,2
+    shr ebx,4
     mov al,bl
     inc al
 ;
