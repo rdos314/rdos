@@ -3578,29 +3578,36 @@ check_drive   Proc far
 
 chRetry:
     push ds
-    mov ax,fs_sys_data_sel
-    mov ds,ax
-    mov ax,ds:[si]
+    mov dx,fs_sys_data_sel
+    mov ds,dx
+    mov dx,ds:[si]
     pop ds
-    or ax,ax
+    or dx,dx
     jnz chIsDefined
 ;
+    CheckVfsDrive
+    jnc chDone
+;
+    push ax
     GetSystemTime
     sub eax,ds:init_timeout
     sbb edx,ds:init_timeout+4
+    pop ax
     cmc
     jc chDone
 ;
     LeaveSection ds:disc_handler_section
 ;
+    push ax
     mov ax,50
     WaitMilliSec
+    pop ax
 ;
     EnterSection ds:disc_handler_section
     jmp chRetry
 
 chIsDefined:
-    cmp ax,-1
+    cmp dx,-1
     clc
     jnz chDone
 ;

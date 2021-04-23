@@ -2171,6 +2171,40 @@ test_serv   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CheckVfsDrive
+;
+;       DESCRIPTION:    Check VFS drive
+;
+;       PARAMETERS:     AL        Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+check_vfs_drive_name DB 'Check VFS Drive', 0
+
+check_vfs_drive   Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].drive_arr
+    or bx,bx
+    stc
+    jz cvdDone
+;
+    clc
+
+cvdDone:
+    pop ebx
+    pop ds
+    ret
+check_vfs_drive   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetVfsDriveDisc
 ;
 ;       DESCRIPTION:    Get VFS drive disc
@@ -2448,6 +2482,12 @@ init_server    Proc near
     xor cl,cl
     mov ax,unmap_vfs_req_nr
     RegisterServGate
+;
+    mov esi,OFFSET check_vfs_drive
+    mov edi,OFFSET check_vfs_drive_name
+    xor cl,cl
+    mov ax,check_vfs_drive_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET get_vfs_drive_disc
     mov edi,OFFSET get_vfs_drive_disc_name

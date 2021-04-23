@@ -3438,6 +3438,11 @@ AllocateVfsDrive     MACRO
     OsGate allocate_vfs_drive_nr
                     ENDM
 
+; IN  AL          Drive #
+CheckVfsDrive     MACRO
+    OsGate check_vfs_drive_nr
+                    ENDM
+
 ;       IN      BX      Disc sel
 ;       IN      ES:EDI   Disc change procedure
 RegisterDiscChange      MACRO
