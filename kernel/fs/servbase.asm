@@ -35,7 +35,8 @@ include ..\user.inc
 vfs_cmd_struc   STRUC
 
 fc_op              DD ?
-fc_pad             DD ?
+fc_handle          DD ?
+fc_eflags          DD ?
 fc_eax             DD ?
 fc_ebx             DD ?
 fc_ecx             DD ?
@@ -51,6 +52,34 @@ _TEXT   segment use32 word public 'CODE'
 
     assume  cs:_TEXT
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetFreeSectors
+;
+;       DESCRIPTION:    Get free sectors
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowGetFreeSectors:near
+
+GetFreeSectors Proc near
+    push edi
+    call LowGetFreeSectors
+    pop edi
+;
+    mov [edi].fc_eax,eax
+    mov [edi].fc_edx,edx
+    and [edi].fc_eflags,NOT 1
+;
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+GetFreeSectors Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -64,10 +93,8 @@ _TEXT   segment use32 word public 'CODE'
 
     public WaitForMsg_
 
-    extern LowGetFreeSectors:near
-
 msgtab:
-m00 DD OFFSET LowGetFreeSectors
+m00 DD OFFSET GetFreeSectors
 
 WaitForMsg_    Proc near
     pushad
@@ -77,30 +104,16 @@ wfmLoop:
     WaitForVfsCmd
     jc wfmDone
 ;
-    push edx
-;
-    mov eax,[edx].fc_eax
-    mov ebx,[edx].fc_ebx
-    mov ecx,[edx].fc_ecx
-    mov esi,[edx].fc_esi
-    mov edi,[edx].fc_edi
-    mov ebp,[edx].fc_op
-    mov edx,[edx].fc_edx
+    mov edi,edx
+    mov [edi].fc_handle,ebx
+    mov eax,[edi].fc_eax
+    mov ebx,[edi].fc_ebx
+    mov ecx,[edi].fc_ecx
+    mov esi,[edi].fc_esi
+    mov ebp,[edi].fc_op
+    mov edx,[edi].fc_edx
     shl ebp,2
     call dword ptr [ebp].msgtab
-    mov ebp,edx
-;
-    pop edx
-;
-    mov [edx].fc_eax,eax
-    mov [edx].fc_ebx,ebx
-    mov [edx].fc_ecx,ecx
-    mov [edx].fc_esi,esi
-    mov [edx].fc_edi,edi
-    mov [edx].fc_edx,ebp
-;
-    pop ebx
-    ReplyVfsCmd
     jmp wfmLoop
 
 wfmDone:

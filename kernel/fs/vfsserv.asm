@@ -54,7 +54,8 @@ req_wait_header      ENDS
 fs_cmd      STRUC
 
 fc_op              DD ?
-fc_pad             DD ?
+fc_handle          DD ?
+fc_eflags          DD ?
 fc_eax             DD ?
 fc_ebx             DD ?
 fc_ecx             DD ?
@@ -2062,6 +2063,10 @@ AllocateMsg  Proc near
     mov es,fs:[ebx].vfss_sel
     pop es:fc_ebx
 ;
+    stc
+    pushfd
+    pop es:fc_eflags
+;
     mov es:fc_eax,eax
     mov es:fc_ecx,ecx
     mov es:fc_edx,edx
@@ -2138,7 +2143,9 @@ rmCheck:
     lock bts fs:vfsp_cmd_free_mask,eax
 ;
     mov eax,ebp
-    clc
+    push es:fc_eflags
+    popfd
+;
 
 rmDone:
     pop ebp
