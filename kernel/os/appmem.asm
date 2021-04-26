@@ -84,6 +84,9 @@ InitServMem  Proc near
     mov ds:serv_big_used_mem,0
     mov ds:serv_small_used_mem,0
 ;
+    InitSection ds:serv_app_section
+    mov ds:serv_app_alloc,serv_alloc_linear
+;
     mov di,OFFSET serv_gate_arr
     xor ax,ax
     mov cx,serv_gate_entries

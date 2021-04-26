@@ -43,8 +43,11 @@ serv_small_avail_mem     DD ?
 serv_big_used_mem        DD ?
 serv_small_used_mem      DD ?
 
+serv_app_alloc           DD ?
+
 serv_big_section         section_typ <>
 serv_small_section       section_typ <>
+serv_app_section         section_typ <>
 
 serv_gate_arr            DW serv_gate_entries DUP (?)
 

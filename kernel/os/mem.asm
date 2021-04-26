@@ -123,6 +123,28 @@ code    SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GetAllocFlatSize
+;
+;           DESCRIPTION:    Get allocation flat size
+;
+;           RETURNS:        EAX     Alloc flat size         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAllocFlatSize      PROC near
+    GetFlatSize
+    cmp eax,serv_linear
+    jne gafDone
+;
+    mov eax,serv_alloc_linear
+
+gafDone:
+    ret
+GetAllocFlatSize     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           CREATE_MEM
 ;
 ;           DESCRIPTION:    Create memory selectors
@@ -898,7 +920,7 @@ allocate_local_linear   PROC far
 ;    
     mov edx,local_page_linear + 1000h
     mov ecx,eax
-    GetFlatSize
+    call GetAllocFlatSize
     call cs:allocate_page_entries_proc
     jnc allocate_page_local_ok
 ;
@@ -953,7 +975,7 @@ allocate_debug_local_linear     PROC far
 ;    
     mov edx,ds:local_big_base
     mov ecx,eax
-    GetFlatSize
+    call GetAllocFlatSize
     call cs:allocate_page_entries_proc
     jnc allocate_debug_page_local_ok
 ;
@@ -1002,7 +1024,7 @@ reserve_local_linear    PROC far
     push edi
 ;
     push eax
-    GetFlatSize
+    call GetAllocFlatSize
     mov edi,eax
     pop eax
 ;
@@ -1073,7 +1095,7 @@ resize_flat_linear      PROC far
     push edi
 ;       
     push eax
-    GetFlatSize
+    call GetAllocFlatSize
     mov edi,eax
     pop eax
 ;
@@ -2193,7 +2215,7 @@ resize_linear   PROC far
     push edi
 ;    
     push eax
-    GetFlatSize
+    call GetAllocFlatSize
     mov edi,eax
     pop eax
 ;
@@ -3949,7 +3971,7 @@ init_process_mem   Proc far
 ;
     mov ax,local_mem_sel
     mov ds,ax
-    GetFlatSize
+    call GetAllocFlatSize
     sub eax,local_page_linear
     mov ds:local_big_avail_mem,eax
     mov ds:local_big_used_mem,0
