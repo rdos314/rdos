@@ -28,42 +28,40 @@
 #ifndef _DIR_H
 #define _DIR_H
 
-#define MAX_FILE_NAME_SIZE  260
-
-class TDirEntry
+struct TDirEntry
 {
-public:
-    TDirEntry();
-    ~TDirEntry();
-
-    virtual bool IsDir() = 0;
-
-    char FileName[MAX_FILE_NAME_SIZE];
-    long long Time;
+    long long Inode;
+    long long Size;
+    long long CreateTime;
+    long long AccessTime;
+    long long ModifyTime;
+    int EntryNr;
     int Attrib;
+    int Flags;
+    int Uid;
+    int Gid;
+    short int Sel;
+
+    short int PathNameSize;
+    char PathName[];
 };
 
-class TDir : public TDirEntry
+struct TDirVersion
 {
-public:
-    TDir();
+    int Version;
+    int UsageCount;
+    int BlockSize;
+    char *BlockData;
+};
+
+class TDir
+{
+    TDir(long long Parent);
     ~TDir();
 
-    virtual bool IsDir();
-
-    int DirCount;
-    TDirEntry **DirArr;
-};
-
-class TFile : public TDirEntry
-{
-public:
-    TFile();
-    ~TFile();
-
-    virtual bool IsDir();
-
-    long long Size;
+    long long Parent;
+    int Version;
+    struct TDirVersion *Dir;
 };
 
 #endif

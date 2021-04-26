@@ -32,59 +32,31 @@
 
 /*##########################################################################
 #
-#   Name       : TDirEntry::TDirEntry
-#
-#   Purpose....: Dir entry contructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TDirEntry::TDirEntry()
-{
-    FileName[0] = 0;
-    Time = 0;
-    Attrib = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TDirEntry::~TDirEntry
-#
-#   Purpose....: Dir entry destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TDirEntry::~TDirEntry()
-{
-}
-
-/*##########################################################################
-#
 #   Name       : TDir::TDir
 #
-#   Purpose....: Dir contructor
+#   Purpose....: Directory constructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TDir::TDir()
+TDir::TDir(long long parent)
 {
-    DirCount = 0;
-    DirArr = 0;
+    Parent = parent;
+    Version = 0;
+    Dir = new TDirVersion;
+    Dir->Version = Version;
+    Dir->UsageCount = 1;
+    Dir->BlockSize = 0;
+    Dir->BlockData = 0;
 }
-
+    
 /*##########################################################################
 #
 #   Name       : TDir::~TDir
 #
-#   Purpose....: Dir destructor
+#   Purpose....: Directory destructor
 #
 #   In params..: *
 #   Out params.: *
@@ -93,67 +65,12 @@ TDir::TDir()
 ##########################################################################*/
 TDir::~TDir()
 {
-}
+    Dir->UsageCount--;
+    if (Dir->UsageCount == 0)
+    {
+        if (Dir->BlockSize)
+//            RdosFreeBlk(Dir->BlockData, Dir->BlockSize);
 
-/*##########################################################################
-#
-#   Name       : TDir::IsDir
-#
-#   Purpose....: Check if directory entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TDir::IsDir()
-{
-    return true;
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::TFile
-#
-#   Purpose....: File contructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFile::TFile()
-{
-    Size = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::~TFile
-#
-#   Purpose....: File destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFile::~TFile()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::IsDir
-#
-#   Purpose....: Check if directory entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TFile::IsDir()
-{
-    return false;
+        delete Dir;
+    }
 }
