@@ -715,7 +715,6 @@ cssbOk:
     mov eax,edx
     add eax,1000h
     mov ds:serv_app_alloc,eax
-    clc
 ;
     LeaveSection ds:serv_app_section
 ;
@@ -727,6 +726,7 @@ cssbOk:
     mov ax,system_data_sel
     mov ds,ax
     sub edx,ds:flat_base
+    clc
 ;
     pop ecx
     pop ebx
@@ -847,6 +847,43 @@ grow_serv_share_block   PROC far
     jmp gssbDone
 
 gssbCopy:
+    push esi
+    push edi
+;
+    sub edx,ecx
+    shr ecx,12
+    inc ecx
+    mov esi,edx
+;
+    mov edx,ds:serv_app_alloc
+    mov eax,serv_linear
+    AllocatePageEntries
+    jnc gssbCopyDo
+
+gssbRetry:
+    mov edx,serv_alloc_linear
+    mov eax,serv_linear
+    AllocatePageEntries
+    jnc gssbCopyDo
+;
+    LeaveSection ds:serv_app_section
+    mov ax,100
+    WaitMilliSec
+    EnterSection ds:serv_app_section
+    jmp gssbRetry
+
+gssbCopyDo:
+    dec ecx
+    mov edi,edx
+    CopyPageEntries
+;
+    mov edx,esi
+    ClearPageEntries
+;
+    mov edx,edi
+;
+    pop edi
+    pop esi
 
 gssbDone:
     LeaveSection ds:serv_app_section
@@ -854,6 +891,7 @@ gssbDone:
     mov ax,system_data_sel
     mov ds,ax
     sub edx,ds:flat_base
+    clc
 ;
     pop ecx
     pop ebx

@@ -515,7 +515,8 @@ void TFat::Test()
 void TFat::Run(const char *FsName)
 {
     bool ok;
-    struct TShareHeader *sh;
+    struct TShareHeader *sh1;
+    struct TShareHeader *sh2;
 
     ok = ProcessBootSector(FsName);
     if (ok)
@@ -534,9 +535,12 @@ void TFat::Run(const char *FsName)
 
     ServTest();
 
-    sh = ServCreateShareBlock();    
-    sh = ServGrowShareBlock(sh);
-    ServFreeShareBlock(sh);
+    sh1 = ServCreateShareBlock();    
+    sh2 = ServCreateShareBlock();    
+    sh1 = ServGrowShareBlock(sh1);
+    sh2 = ServGrowShareBlock(sh2);
+    ServFreeShareBlock(sh1);
+    ServFreeShareBlock(sh2);
 
     Server.WaitForMsg(this);
 
