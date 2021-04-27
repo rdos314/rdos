@@ -28,6 +28,8 @@
 #ifndef _DIR_H
 #define _DIR_H
 
+#include "block.h"
+
 struct TDirEntry
 {
     long long Inode;
@@ -46,22 +48,16 @@ struct TDirEntry
     char PathName[];
 };
 
-struct TDirVersion
-{
-    int Version;
-    int UsageCount;
-    int BlockSize;
-    char *BlockData;
-};
 
-class TDir
+class TDir : public TBlock
 {
+public:
     TDir(long long Parent);
-    ~TDir();
+    virtual ~TDir();
+
+    struct TDirEntry *Add(const char *path, long long inode);
 
     long long Parent;
-    int Version;
-    struct TDirVersion *Dir;
 };
 
 #endif

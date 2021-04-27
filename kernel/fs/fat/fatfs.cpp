@@ -34,7 +34,7 @@
 #include "tab16.h"
 #include "tab32.h"
 #include "md5.h"
-#include "block.h"
+#include "dir.h"
 
 struct TBootSector
 {
@@ -516,7 +516,7 @@ void TFat::Test()
 void TFat::Run(const char *FsName)
 {
     bool ok;
-    int pos;
+    struct TDirEntry *e;
 
     ok = ProcessBootSector(FsName);
     if (ok)
@@ -535,16 +535,12 @@ void TFat::Run(const char *FsName)
 
     ServTest();
 
-    TBlock bl1;
-    TBlock bl2;
+ 
+    TDir d(567);
 
-    pos = bl1.Add(8000);
-    pos = bl2.Add(12000);
-    pos = bl2.Add(500);
-    pos = bl2.Add(500);
-
-    bl1.CopyOnUsed();
-    bl2.CopyOnUsed();
+    e = d.Add("test", 123);
+    e = d.Add("tre", 0xAA9876);
+    e = d.Add("more.dat", 456);
 
     Server.WaitForMsg(this);
 

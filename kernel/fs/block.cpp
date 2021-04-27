@@ -25,7 +25,6 @@
 #
 ########################################################################*/
 
-#include <stdio.h>
 #include <rdos.h>
 #include <serv.h>
 #include "block.h"

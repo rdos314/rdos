@@ -25,7 +25,7 @@
 #
 ########################################################################*/
 
-#include <stdio.h>
+#include <string.h>
 #include <rdos.h>
 #include <serv.h>
 #include "dir.h"
@@ -44,12 +44,6 @@
 TDir::TDir(long long parent)
 {
     Parent = parent;
-    Version = 0;
-    Dir = new TDirVersion;
-    Dir->Version = Version;
-    Dir->UsageCount = 1;
-    Dir->BlockSize = 0;
-    Dir->BlockData = 0;
 }
     
 /*##########################################################################
@@ -65,12 +59,48 @@ TDir::TDir(long long parent)
 ##########################################################################*/
 TDir::~TDir()
 {
-    Dir->UsageCount--;
-    if (Dir->UsageCount == 0)
-    {
-        if (Dir->BlockSize)
-//            RdosFreeBlk(Dir->BlockData, Dir->BlockSize);
+}
+    
+/*##########################################################################
+#
+#   Name       : TDir::Add
+#
+#   Purpose....: Add directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TDirEntry *TDir::Add(const char *path, long long inode)
+{
+    int pos;
+    short int len = strlen(path);
+    char *ptr;
+    struct TDirEntry *entry;
 
-        delete Dir;
-    }
+    len = len & 0xFFFC;
+    len += 4;
+    
+    CopyOnUsed();
+
+    pos = TBlock::Add(len + sizeof(struct TDirEntry));        
+    ptr = (char *)obj;
+    ptr += pos;
+    entry = (struct TDirEntry *)ptr;
+    entry->Inode = inode;
+    entry->Size = 0;
+    entry->CreateTime = 0;
+    entry->AccessTime = 0;
+    entry->ModifyTime = 0;
+    entry->EntryNr = 0;
+    entry->Attrib = 0;
+    entry->Flags = 0;
+    entry->Uid = 0;
+    entry->Gid = 0;
+    entry->Sel = 0;
+    entry->PathNameSize = len;
+    strcpy(entry->PathName, path);
+
+    return entry;
 }

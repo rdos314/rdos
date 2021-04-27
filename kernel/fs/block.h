@@ -34,13 +34,12 @@ class TBlock
 {
 public:
     TBlock();
-    ~TBlock();
+    virtual ~TBlock();
 
-    int GetHeaderPos();
+protected:
     int Add(int Size);
     void CopyOnUsed();
 
-protected:
     struct TShareHeader *obj;
     int pos;
 };
