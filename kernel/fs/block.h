@@ -36,11 +36,12 @@ public:
     TBlock();
     ~TBlock();
 
-    struct TShareHeader *Get();
-    void Grow(int Size);
+    int GetHeaderPos();
+    int Add(int Size);
 
 protected:
     struct TShareHeader *obj;
+    int pos;
 };
 
 #endif

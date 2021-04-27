@@ -44,6 +44,7 @@
 TBlock::TBlock()
 {
     obj = ServCreateShareBlock();
+    pos = sizeof(TShareHeader);
 }
     
 /*##########################################################################
@@ -64,33 +65,23 @@ TBlock::~TBlock()
     
 /*##########################################################################
 #
-#   Name       : TBlock::Get
+#   Name       : TBlock::Add
 #
-#   Purpose....: Get current block
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-struct TShareHeader *TBlock::Get()
-{
-    return obj;
-}
-    
-/*##########################################################################
-#
-#   Name       : TBlock::Grow
-#
-#   Purpose....: Grow block to new size
+#   Purpose....: Add new data
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TBlock::Grow(int Size)
+int TBlock::Add(int size)
 {
-    while (Size > (obj->PageCount << 12))
+    int retpos = pos;
+
+    pos += size;
+
+    while (pos > (obj->PageCount << 12))
         obj = ServGrowShareBlock(obj);
+
+    return retpos;
 }

@@ -516,6 +516,7 @@ void TFat::Test()
 void TFat::Run(const char *FsName)
 {
     bool ok;
+    int pos;
 
     ok = ProcessBootSector(FsName);
     if (ok)
@@ -537,8 +538,10 @@ void TFat::Run(const char *FsName)
     TBlock bl1;
     TBlock bl2;
 
-    bl1.Grow(8000);
-    bl2.Grow(12000);
+    pos = bl1.Add(8000);
+    pos = bl2.Add(12000);
+    pos = bl2.Add(500);
+    pos = bl2.Add(500);
 
     Server.WaitForMsg(this);
 
