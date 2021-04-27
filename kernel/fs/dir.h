@@ -29,6 +29,7 @@
 #define _DIR_H
 
 #include "block.h"
+#include "section.h"
 
 struct TDirEntry
 {
@@ -58,6 +59,9 @@ public:
     struct TDirEntry *Add(const char *path, long long inode);
 
     long long Parent;
+
+protected:
+    TSection section;
 };
 
 #endif

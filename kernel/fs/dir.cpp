@@ -42,10 +42,11 @@
 #
 ##########################################################################*/
 TDir::TDir(long long parent)
+  : section("dir")
 {
     Parent = parent;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TDir::~TDir
@@ -60,7 +61,7 @@ TDir::TDir(long long parent)
 TDir::~TDir()
 {
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TDir::Add
@@ -81,10 +82,11 @@ struct TDirEntry *TDir::Add(const char *path, long long inode)
 
     len = len & 0xFFFC;
     len += 4;
-    
-    CopyOnUsed();
 
-    pos = TBlock::Add(len + sizeof(struct TDirEntry));        
+    if (obj->UsageCount > 1)
+        CopyOnUsed();
+
+    pos = TBlock::Add(len + sizeof(struct TDirEntry));
     ptr = (char *)obj;
     ptr += pos;
     entry = (struct TDirEntry *)ptr;
