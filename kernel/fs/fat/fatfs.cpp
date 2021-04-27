@@ -535,12 +535,14 @@ void TFat::Run(const char *FsName)
 
     ServTest();
 
- 
+
     TDir d(567);
 
     e = d.Add("test", 123);
     e = d.Add("tre", 0xAA9876);
     e = d.Add("more.dat", 456);
+    e = d.Add("fyra", 0xAA);
+    e = d.Add("sista", 0xCCEE);
 
     Server.WaitForMsg(this);
 

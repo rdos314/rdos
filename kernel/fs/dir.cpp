@@ -32,9 +32,40 @@
 
 /*##########################################################################
 #
+#   Name       : TMetaData::TMetaData
+#
+#   Purpose....: Meta data constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TMetaData::TMetaData(long long parent)
+{
+    Parent = parent;
+}
+
+/*##########################################################################
+#
+#   Name       : TMetaData::~TMetaData
+#
+#   Purpose....: Meta data destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TMetaData::~TMetaData()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TDir::TDir
 #
-#   Purpose....: Directory constructor
+#   Purpose....: Dir constructor
 #
 #   In params..: *
 #   Out params.: *
@@ -42,16 +73,27 @@
 #
 ##########################################################################*/
 TDir::TDir(long long parent)
-  : section("dir")
+  : TMetaData(parent),
+    Section("dir")
 {
-    Parent = parent;
+    int i;
+
+    EntryCount = 0;
+    MaxCount = 4;
+    EntryArr = new TDirLink[MaxCount];
+
+    for (i = 0; i < MaxCount; i++)
+    {
+        EntryArr[i].Offset = 0;
+        EntryArr[i].Link = 0;
+    }
 }
 
 /*##########################################################################
 #
 #   Name       : TDir::~TDir
 #
-#   Purpose....: Directory destructor
+#   Purpose....: Dir destructor
 #
 #   In params..: *
 #   Out params.: *
@@ -60,6 +102,59 @@ TDir::TDir(long long parent)
 ##########################################################################*/
 TDir::~TDir()
 {
+    delete EntryArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::IsDir
+#
+#   Purpose....: Check if dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TDir::IsDir()
+{
+    return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::Grow
+#
+#   Purpose....: Grow link array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::Grow()
+{
+    int i;
+    int Size = 2 * MaxCount;
+    struct TDirLink *NewArr;
+
+    NewArr = new TDirLink[Size];
+
+    for (i = 0; i < MaxCount; i++)
+    {
+        NewArr[i].Offset = EntryArr[i].Offset;
+        NewArr[i].Link = EntryArr[i].Link;
+    }
+
+    for (i = MaxCount; i < Size; i++)
+    {
+        NewArr[i].Offset = 0;
+        NewArr[i].Link = 0;
+    }
+
+    delete EntryArr;
+    EntryArr = NewArr;
+    MaxCount = Size;
 }
 
 /*##########################################################################
@@ -83,10 +178,18 @@ struct TDirEntry *TDir::Add(const char *path, long long inode)
     len = len & 0xFFFC;
     len += 4;
 
+    if (EntryCount == MaxCount)
+        Grow();
+
     if (obj->UsageCount > 1)
         CopyOnUsed();
 
     pos = TBlock::Add(len + sizeof(struct TDirEntry));
+
+    EntryArr[EntryCount].Offset = pos;
+    EntryArr[EntryCount].Link = 0;
+    EntryCount++;
+
     ptr = (char *)obj;
     ptr += pos;
     entry = (struct TDirEntry *)ptr;

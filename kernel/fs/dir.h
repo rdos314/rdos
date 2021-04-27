@@ -49,19 +49,43 @@ struct TDirEntry
     char PathName[];
 };
 
+class TMetaData;
 
-class TDir : public TBlock
+struct TDirLink
+{
+    int Offset;
+    struct TMetaData *Link;
+};
+
+class TMetaData
+{
+public:
+    TMetaData(long long Parent);
+    virtual ~TMetaData();
+
+    virtual bool IsDir() = 0;
+
+    long long Parent;
+};
+
+class TDir : public TMetaData, public TBlock
 {
 public:
     TDir(long long Parent);
     virtual ~TDir();
 
+    virtual bool IsDir();
+
     struct TDirEntry *Add(const char *path, long long inode);
 
-    long long Parent;
+    struct TDirLink *EntryArr;
 
 protected:
-    TSection section;
+    void Grow();
+
+    int EntryCount;
+    int MaxCount;
+    TSection Section;
 };
 
 #endif
