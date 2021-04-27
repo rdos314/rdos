@@ -145,6 +145,7 @@ allocate_sys_page_entries_proc  DW OFFSET local_allocate_sys_page_entries32
 allocate_and_map_sys_dir_proc   DW OFFSET local_allocate_and_map_sys_dir32
 free_page_entries_proc          DW OFFSET local_free_page_entries32
 free_global_page_entries_proc   DW OFFSET local_free_global_page_entries32
+clear_page_entries_proc         DW OFFSET local_clear_page_entries32
 copy_page_entries_proc          DW OFFSET local_copy_page_entries32
 copy_sys_page_entries_proc      DW OFFSET local_copy_sys_page_entries32
 move_page_entries_proc          DW OFFSET local_move_page_entries32
@@ -192,6 +193,7 @@ allocate_sys_page_entries_p64   DW OFFSET local_allocate_sys_page_entries64
 allocate_and_map_sys_dir_p64    DW OFFSET local_allocate_and_map_sys_dir64
 free_page_entries_p64           DW OFFSET local_free_page_entries64
 free_global_page_entries_p64    DW OFFSET local_free_global_page_entries64
+clear_page_entries_p64          DW OFFSET local_clear_page_entries64
 copy_page_entries_p64           DW OFFSET local_copy_page_entries64
 copy_sys_page_entries_p64       DW OFFSET local_copy_sys_page_entries64
 move_page_entries_p64           DW OFFSET local_move_page_entries64
@@ -393,10 +395,10 @@ init_page_table     PROC near
     mov ax,free_page_entries_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET free_global_page_entries
-    mov edi,OFFSET free_global_page_entries_name
+    mov esi,OFFSET clear_page_entries
+    mov edi,OFFSET clear_page_entries_name
     xor cl,cl
-    mov ax,free_global_page_entries_nr
+    mov ax,clear_page_entries_nr
     RegisterOsGate
 ;
     mov esi,OFFSET copy_page_entries
@@ -1795,6 +1797,51 @@ fgpeDone32:
     pop ds
     ret
 local_free_global_page_entries32       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           local_clear_page_entries32
+;
+;           DESCRIPTION:    Clear page entries 
+;
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_clear_page_entries32       Proc near
+    push ds
+    pushad
+;   
+    or ecx,ecx
+    jz lcpeDone32
+;
+    push ecx
+    push edx
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    shr edx,10
+    and dl,0FCh
+    
+lcpeLoop32:
+    mov [edx],eax
+;
+    add edx,4
+    sub ecx,1
+    jnz lcpeLoop32    
+;    
+    pop edx
+    pop ecx
+    FlushTlb
+
+lcpeDone32:
+    popad
+    pop ds
+    ret
+local_clear_page_entries32       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4723,6 +4770,51 @@ local_free_global_page_entries64       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           local_clear_page_entries64
+;
+;           DESCRIPTION:    Clear page entries 
+;
+;           PARAMETERS:     EAX         free signature
+;                           ECX         number of entries
+;                           EDX         linear address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+local_clear_page_entries64       Proc near
+    push ds
+    pushad
+;   
+    or ecx,ecx
+    jz lcpeDone64
+;
+    push ecx
+    push edx
+;
+    mov bx,process_page_sel
+    mov ds,bx
+    shr edx,9
+    and dl,0F8h
+    
+lcpeLoop64:
+    mov [edx],eax
+;
+    add edx,8
+    sub ecx,1
+    jnz cpeLoop64
+;    
+    pop edx
+    pop ecx
+    FlushTlb
+
+lcpeDone64:
+    popad
+    pop ds
+    ret
+local_clear_page_entries64       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           local_copy_page_entries64
 ;
 ;           DESCRIPTION:    Copy page entries 
@@ -6889,9 +6981,9 @@ free_page_entries       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FreeGlobalPageEntries
+;           NAME:           ClearPageEntries
 ;
-;           DESCRIPTION:    Free global page entries 
+;           DESCRIPTION:    Clear page entries 
 ;
 ;           PARAMETERS:     EAX         free signature
 ;                           ECX         number of entries
@@ -6899,12 +6991,12 @@ free_page_entries       Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_global_page_entries_name  DB 'Free Global Page Entries',0
+clear_page_entries_name  DB 'Clear Page Entries',0
 
-free_global_page_entries       Proc far
-    call cs:free_global_page_entries_proc
+clear_page_entries       Proc far
+    call cs:clear_page_entries_proc
     retf32
-free_global_page_entries       Endp
+clear_page_entries       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

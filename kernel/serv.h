@@ -25,6 +25,7 @@ struct TShareHeader
 };
 
 struct TShareHeader * RDOSAPI ServCreateShareBlock();
+void RDOSAPI ServFreeShareBlock(struct TShareHeader *b);
 
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();

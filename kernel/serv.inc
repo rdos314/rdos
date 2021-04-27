@@ -125,6 +125,11 @@ ReplyVfsCmd  MACRO
                     ENDM
 
 ; OUT EDX              Flat address
-CreateShareBlock  MACRO    
-    ServGate create_share_block_nr
+CreateServShareBlock  MACRO    
+    ServGate create_serv_share_block_nr
+                    ENDM
+
+; IN  EDX              Flat address
+FreeServShareBlock  MACRO    
+    ServGate free_serv_share_block_nr
                     ENDM

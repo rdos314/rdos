@@ -699,8 +699,8 @@ FreePageEntries MACRO
 ; IN    EAX         Free bits
 ; IN    ECX         Number of entries
 ; IN    EDX         Linear address
-FreeGlobalPageEntries MACRO
-    OsGate free_global_page_entries_nr
+ClearPageEntries MACRO
+    OsGate clear_page_entries_nr
                     ENDM
 
 ; IN    EAX         Free bits

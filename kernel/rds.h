@@ -14,7 +14,8 @@
 #define serv_gate_wait_for_vfs_cmd 0x0000000D
 #define serv_gate_is_vfs_active 0x0000000E
 #define serv_gate_reply_vfs_cmd 0x0000000F
-#define serv_gate_create_share_block 0x00000010
+#define serv_gate_create_serv_share_block 0x00000010
+#define serv_gate_free_serv_share_block 0x00000011
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -32,5 +33,6 @@
 #define ServGate_wait_for_vfs_cmd 0x55 0x67 0x9a 13 0 0 0 4 0 0x5d
 #define ServGate_is_vfs_active 0x55 0x67 0x9a 14 0 0 0 4 0 0x5d
 #define ServGate_reply_vfs_cmd 0x55 0x67 0x9a 15 0 0 0 4 0 0x5d
-#define ServGate_create_share_block 0x55 0x67 0x9a 16 0 0 0 4 0 0x5d
+#define ServGate_create_serv_share_block 0x55 0x67 0x9a 16 0 0 0 4 0 0x5d
+#define ServGate_free_serv_share_block 0x55 0x67 0x9a 17 0 0 0 4 0 0x5d
 

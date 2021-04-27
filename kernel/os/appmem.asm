@@ -671,19 +671,20 @@ free_big_serv_sel   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           CreateShareBlock
+;           NAME:           CreateServShareBlock
 ;
-;           DESCRIPTION:    Create a new share block
+;           DESCRIPTION:    Create a new share block in server context
 ;
 ;           RETURNS:        EDX      Flat linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_share_block_name      DB 'Create Share Block',0
+create_serv_share_block_name      DB 'Create Serv Share Block',0
 
-create_share_block   PROC far
+create_serv_share_block   PROC far
     push ds
     push eax
+    push ebx
     push ecx
 ;
     mov ax,serv_mem_sel
@@ -695,26 +696,27 @@ create_share_block   PROC far
     mov edx,ds:serv_app_alloc
     mov eax,serv_linear
     AllocatePageEntries
-    jnc csbOk
+    jnc cssbOk
 
-csbRetry:
+cssbRetry:
     mov ecx,1
     mov edx,serv_alloc_linear
     mov eax,serv_linear
     AllocatePageEntries
-    jnc csbOk
+    jnc cssbOk
 ;
     LeaveSection ds:serv_app_section
     mov ax,100
     WaitMilliSec
     EnterSection ds:serv_app_section
-    jmp csbRetry
+    jmp cssbRetry
         
-csbOk:
+cssbOk:
     mov eax,edx
     add eax,1000h
     mov ds:serv_app_alloc,eax
     clc
+;
     LeaveSection ds:serv_app_section
 ;
     mov ax,flat_sel
@@ -727,10 +729,76 @@ csbOk:
     sub edx,ds:flat_base
 ;
     pop ecx
+    pop ebx
     pop eax
     pop ds
     retf32
-create_share_block  Endp
+create_serv_share_block  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeServShareBlock
+;
+;           DESCRIPTION:    Free share block in server context
+;
+;           PARAMETERS:     EDX      Flat linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_serv_share_block_name      DB 'Free Serv Share Block',0
+
+free_serv_share_block   PROC far
+    push ds
+    push eax
+    push ecx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    add edx,ds:flat_base
+;
+    mov ax,flat_sel
+    mov ds,ax
+    movzx ecx,ds:[edx].sb_pages
+;
+    lock sub ds:[edx].sb_usage,1
+    jnz fssbClear
+
+fssbFree:
+    mov ax,serv_mem_sel
+    mov ds,ax
+;
+    EnterSection ds:serv_app_section
+;    
+    mov eax,ecx
+    shl eax,12
+    sub ds:serv_app_alloc,eax
+    xor eax,eax
+    FreePageEntries
+;
+    LeaveSection ds:serv_app_section
+    jmp fssbDone
+
+fssbClear:
+    mov ax,serv_mem_sel
+    mov ds,ax
+;
+    EnterSection ds:serv_app_section
+;    
+    mov eax,ecx
+    shl eax,12
+    sub ds:serv_app_alloc,eax
+    xor eax,eax
+    ClearPageEntries
+;
+    LeaveSection ds:serv_app_section
+        
+fssbDone:
+    pop ecx
+    pop eax
+    pop ds
+    retf32
+free_serv_share_block  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -802,10 +870,16 @@ init_app_mem    PROC near
     mov ax,free_big_serv_sel_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET create_share_block
-    mov edi,OFFSET create_share_block_name
+    mov esi,OFFSET create_serv_share_block
+    mov edi,OFFSET create_serv_share_block_name
     xor dx,dx
-    mov ax,create_share_block_nr
+    mov ax,create_serv_share_block_nr
+    RegisterServGate
+;
+    mov esi,OFFSET free_serv_share_block
+    mov edi,OFFSET free_serv_share_block_name
+    xor dx,dx
+    mov ax,free_serv_share_block_nr
     RegisterServGate
 ;
     popad

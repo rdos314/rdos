@@ -453,7 +453,6 @@ move_page_entries_nr        = 437
 
 has_page_entry_nr           = 438
 free_page_entries_nr        = 439
-free_global_page_entries_nr = 439
 allocate_page_entries_nr    = 440
 reserve_page_entries_nr     = 441
 
@@ -884,5 +883,7 @@ remove_vfs_disc_nr          = 800
 allocate_vfs_drive_nr       = 801
 check_vfs_drive_nr          = 802
 get_vfs_cur_dir_nr          = 803
+
+clear_page_entries_nr       = 804
 
 osgate_entries              = 850

@@ -26,8 +26,12 @@
 #define ValidateDisc 0x73 2 0xB0 0xFF 0xF 0xBE 0xC0
 
 #pragma aux ServCreateShareBlock = \
-    ServGate_create_share_block  \
+    ServGate_create_serv_share_block  \
     __value [__edx]
+
+#pragma aux ServFreeShareBlock = \
+    ServGate_free_serv_share_block  \
+    __parm [__edx]
 
 #pragma aux ServTest = \
     ServGate_test_serv
