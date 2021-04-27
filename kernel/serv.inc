@@ -139,3 +139,9 @@ FreeServShareBlock  MACRO
 GrowServShareBlock  MACRO    
     ServGate grow_serv_share_block_nr
                     ENDM
+
+; IN  EDX              Flat address
+; OUT EDX              Flat address
+ForkServShareBlock  MACRO    
+    ServGate fork_serv_share_block_nr
+                    ENDM

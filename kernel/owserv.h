@@ -38,6 +38,12 @@
     __parm [__edx] \
     __value [__edx]
 
+#pragma aux ServForkShareBlock = \
+    ServGate_fork_serv_share_block  \
+    __parm [__edx] \
+    __value [__edx]
+
+
 #pragma aux ServTest = \
     ServGate_test_serv
 

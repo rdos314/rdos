@@ -543,6 +543,9 @@ void TFat::Run(const char *FsName)
     pos = bl2.Add(500);
     pos = bl2.Add(500);
 
+    bl1.CopyOnUsed();
+    bl2.CopyOnUsed();
+
     Server.WaitForMsg(this);
 
 }

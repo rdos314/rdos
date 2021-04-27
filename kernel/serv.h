@@ -26,6 +26,7 @@ struct TShareHeader
 
 struct TShareHeader * RDOSAPI ServCreateShareBlock();
 struct TShareHeader * RDOSAPI ServGrowShareBlock(struct TShareHeader *b);
+struct TShareHeader * RDOSAPI ServForkShareBlock(struct TShareHeader *b);
 void RDOSAPI ServFreeShareBlock(struct TShareHeader *b);
 
 int RDOSAPI ServTest();

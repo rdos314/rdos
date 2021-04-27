@@ -38,6 +38,7 @@ public:
 
     int GetHeaderPos();
     int Add(int Size);
+    void CopyOnUsed();
 
 protected:
     struct TShareHeader *obj;

@@ -903,6 +903,112 @@ grow_serv_share_block  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           ForkServShareBlock
+;
+;           DESCRIPTION:    Fork share block in server context
+;
+;           PARAMETERS:     EDX      Flat linear address
+;
+;           RETURNS:        EDX      Flat linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fork_serv_share_block_name      DB 'Fork Serv Share Block',0
+
+fork_serv_share_block   PROC far
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    add edx,ds:flat_base
+;
+    mov ax,flat_sel
+    mov ds,ax
+    movzx ecx,ds:[edx].sb_pages
+;
+    lock sub ds:[edx].sb_usage,1
+    jnz frsbCopy
+
+frsbReuse:
+    lock add ds:[edx].sb_usage,1
+    jmp frsbDone
+
+frsbCopy:
+    push esi
+    push edi
+;
+    mov ax,serv_mem_sel
+    mov ds,ax
+;
+    EnterSection ds:serv_app_section
+;
+    mov esi,edx
+;
+    mov edx,ds:serv_app_alloc
+    mov eax,serv_linear
+    AllocatePageEntries
+    jnc frsbCopyDo
+
+frsbRetry:
+    mov edx,serv_alloc_linear
+    mov eax,serv_linear
+    AllocatePageEntries
+    jnc frsbCopyDo
+;
+    LeaveSection ds:serv_app_section
+    mov ax,100
+    WaitMilliSec
+    EnterSection ds:serv_app_section
+    jmp frsbRetry
+
+frsbCopyDo:
+    mov edi,edx
+;
+    push es
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov es,ax
+    shl ecx,10
+    rep movs dword ptr es:[edi],es:[esi]
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+;
+    mov edx,esi
+    ClearPageEntries
+;
+    mov edx,edi
+    mov es:[edx].sb_usage,1
+;
+    pop edi
+    pop esi
+;
+    LeaveSection ds:serv_app_section
+
+frsbDone:
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+    clc
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+fork_serv_share_block  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           INIT_APP_MEM
 ;
 ;           DESCRIPTION:    Init module
@@ -986,6 +1092,12 @@ init_app_mem    PROC near
     mov edi,OFFSET grow_serv_share_block_name
     xor dx,dx
     mov ax,grow_serv_share_block_nr
+    RegisterServGate
+;
+    mov esi,OFFSET fork_serv_share_block
+    mov edi,OFFSET fork_serv_share_block_name
+    xor dx,dx
+    mov ax,fork_serv_share_block_nr
     RegisterServGate
 ;
     popad

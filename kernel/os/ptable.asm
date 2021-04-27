@@ -4800,7 +4800,7 @@ lcpeLoop64:
 ;
     add edx,8
     sub ecx,1
-    jnz cpeLoop64
+    jnz lcpeLoop64
 ;    
     pop edx
     pop ecx

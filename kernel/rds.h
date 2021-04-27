@@ -17,6 +17,7 @@
 #define serv_gate_create_serv_share_block 0x00000010
 #define serv_gate_free_serv_share_block 0x00000011
 #define serv_gate_grow_serv_share_block 0x00000012
+#define serv_gate_fork_serv_share_block 0x00000013
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -37,4 +38,5 @@
 #define ServGate_create_serv_share_block 0x55 0x67 0x9a 16 0 0 0 4 0 0x5d
 #define ServGate_free_serv_share_block 0x55 0x67 0x9a 17 0 0 0 4 0 0x5d
 #define ServGate_grow_serv_share_block 0x55 0x67 0x9a 18 0 0 0 4 0 0x5d
+#define ServGate_fork_serv_share_block 0x55 0x67 0x9a 19 0 0 0 4 0 0x5d
 

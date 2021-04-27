@@ -17,5 +17,6 @@ reply_vfs_cmd_nr           = 15
 create_serv_share_block_nr = 16
 free_serv_share_block_nr   = 17
 grow_serv_share_block_nr   = 18
+fork_serv_share_block_nr   = 19
 
-serv_gate_entries          = 20
+serv_gate_entries          = 30

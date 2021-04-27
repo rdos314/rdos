@@ -85,3 +85,19 @@ int TBlock::Add(int size)
 
     return retpos;
 }
+    
+/*##########################################################################
+#
+#   Name       : TBlock::CopyOnUsed
+#
+#   Purpose....: Copy if block is used
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBlock::CopyOnUsed()
+{
+    obj = ServForkShareBlock(obj);
+}
