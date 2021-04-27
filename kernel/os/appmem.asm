@@ -803,6 +803,68 @@ free_serv_share_block  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           GrowServShareBlock
+;
+;           DESCRIPTION:    Grow share block in server context
+;
+;           PARAMETERS:     EDX      Flat linear address
+;
+;           RETURNS:        EDX      Flat linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+grow_serv_share_block_name      DB 'Grow Serv Share Block',0
+
+grow_serv_share_block   PROC far
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    add edx,ds:flat_base
+;
+    mov ax,flat_sel
+    mov ds,ax
+    movzx ecx,ds:[edx].sb_pages
+    inc ds:[edx].sb_pages
+;
+    mov ax,serv_mem_sel
+    mov ds,ax
+;
+    EnterSection ds:serv_app_section
+    shl ecx,12
+    add edx,ecx
+    GetPageEntry
+    test al,1
+    jnz gssbCopy
+;
+    mov eax,2
+    SetPageEntry
+;
+    sub edx,ecx
+    jmp gssbDone
+
+gssbCopy:
+
+gssbDone:
+    LeaveSection ds:serv_app_section
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+grow_serv_share_block  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           INIT_APP_MEM
 ;
 ;           DESCRIPTION:    Init module
@@ -880,6 +942,12 @@ init_app_mem    PROC near
     mov edi,OFFSET free_serv_share_block_name
     xor dx,dx
     mov ax,free_serv_share_block_nr
+    RegisterServGate
+;
+    mov esi,OFFSET grow_serv_share_block
+    mov edi,OFFSET grow_serv_share_block_name
+    xor dx,dx
+    mov ax,grow_serv_share_block_nr
     RegisterServGate
 ;
     popad

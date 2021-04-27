@@ -535,6 +535,7 @@ void TFat::Run(const char *FsName)
     ServTest();
 
     sh = ServCreateShareBlock();    
+    sh = ServGrowShareBlock(sh);
     ServFreeShareBlock(sh);
 
     Server.WaitForMsg(this);

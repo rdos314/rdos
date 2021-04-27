@@ -16,5 +16,6 @@ is_vfs_active_nr           = 14
 reply_vfs_cmd_nr           = 15
 create_serv_share_block_nr = 16
 free_serv_share_block_nr   = 17
+grow_serv_share_block_nr   = 18
 
 serv_gate_entries          = 20
