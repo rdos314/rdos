@@ -43,6 +43,21 @@ sls_prev    DD ?
 sls_next    DD ?
 small_linear_struc      ENDS
 
+serv_app_struc          STRUC
+
+serv_app_alloc           DD ?
+serv_app_section         section_typ <>
+
+serv_app_struc          ENDS
+
+share_block_struc       STRUC
+
+sb_usage    DW ?
+sb_pages    DW ?
+
+share_block_struc       ENDS
+
+
     .386p
 
 code    SEGMENT byte public use16 'CODE'
@@ -84,9 +99,6 @@ InitServMem  Proc near
     mov ds:serv_big_used_mem,0
     mov ds:serv_small_used_mem,0
 ;
-    InitSection ds:serv_app_section
-    mov ds:serv_app_alloc,serv_alloc_linear
-;
     mov di,OFFSET serv_gate_arr
     xor ax,ax
     mov cx,serv_gate_entries
@@ -111,6 +123,30 @@ InitServMem  Proc near
     pop ds
     ret
 InitServMem  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           InitServProcess
+;
+;           DESCRIPTION:    Create serv process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_serv_proc  Proc far
+    push ds
+    pushad
+;
+    mov ax,serv_mem_sel
+    mov ds,ax
+;
+    InitSection ds:serv_app_section
+    mov ds:serv_app_alloc,serv_alloc_linear
+;
+    popad
+    pop ds
+    retf32
+init_serv_proc  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -631,6 +667,71 @@ free_big_serv_sel   PROC far
     retf32
 free_big_serv_sel   ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           CreateShareBlock
+;
+;           DESCRIPTION:    Create a new share block
+;
+;           RETURNS:        EDX      Flat linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_share_block_name      DB 'Create Share Block',0
+
+create_share_block   PROC far
+    push ds
+    push eax
+    push ecx
+;
+    mov ax,serv_mem_sel
+    mov ds,ax
+;
+    EnterSection ds:serv_app_section
+;    
+    mov ecx,1
+    mov edx,ds:serv_app_alloc
+    mov eax,serv_linear
+    AllocatePageEntries
+    jnc csbOk
+
+csbRetry:
+    mov ecx,1
+    mov edx,serv_alloc_linear
+    mov eax,serv_linear
+    AllocatePageEntries
+    jnc csbOk
+;
+    LeaveSection ds:serv_app_section
+    mov ax,100
+    WaitMilliSec
+    EnterSection ds:serv_app_section
+    jmp csbRetry
+        
+csbOk:
+    mov eax,edx
+    add eax,1000h
+    mov ds:serv_app_alloc,eax
+    clc
+    LeaveSection ds:serv_app_section
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov ds:[edx].sb_usage,1
+    mov ds:[edx].sb_pages,1
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+;
+    pop ecx
+    pop eax
+    pop ds
+    retf32
+create_share_block  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -649,6 +750,10 @@ init_app_mem    PROC near
     push es
     pushad
 ;
+    mov eax,SIZE serv_app_struc
+    mov bx,serv_mem_sel
+    AllocateFixedProcessMem
+;
     mov bx,serv_byte_sel
     mov edx,serv_byte_linear
     mov ecx,serv_byte_size
@@ -657,6 +762,9 @@ init_app_mem    PROC near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET init_serv_proc
+    HookCreateProcess
 ;
     mov esi,OFFSET allocate_small_serv
     mov edi,OFFSET allocate_small_serv_name
@@ -693,6 +801,12 @@ init_app_mem    PROC near
     xor cl,cl
     mov ax,free_big_serv_sel_nr
     RegisterOsGate
+;
+    mov esi,OFFSET create_share_block
+    mov edi,OFFSET create_share_block_name
+    xor dx,dx
+    mov ax,create_share_block_nr
+    RegisterServGate
 ;
     popad
     pop es

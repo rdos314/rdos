@@ -18,6 +18,14 @@
 extern "C" {
 #endif
 
+struct TShareHeader
+{
+    short int UsageCount;
+    short int PageCount;
+};
+
+struct TShareHeader * RDOSAPI ServCreateShareBlock();
+
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();
 long long RDOSAPI ServGetVfsSectors(int handle);

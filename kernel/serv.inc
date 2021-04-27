@@ -123,3 +123,8 @@ WaitForVfsCmd  MACRO
 ReplyVfsCmd  MACRO    
     ServGate reply_vfs_cmd_nr
                     ENDM
+
+; OUT EDX              Flat address
+CreateShareBlock  MACRO    
+    ServGate create_share_block_nr
+                    ENDM

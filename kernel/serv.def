@@ -14,5 +14,6 @@ unmap_vfs_req_nr          = 12
 wait_for_vfs_cmd_nr       = 13
 is_vfs_active_nr          = 14
 reply_vfs_cmd_nr          = 15
+create_share_block_nr     = 16
 
 serv_gate_entries         = 20

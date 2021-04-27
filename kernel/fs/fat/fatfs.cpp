@@ -515,6 +515,7 @@ void TFat::Test()
 void TFat::Run(const char *FsName)
 {
     bool ok;
+    struct TShareHeader *sh;
 
     ok = ProcessBootSector(FsName);
     if (ok)
@@ -530,6 +531,10 @@ void TFat::Run(const char *FsName)
     RdosCreateThread(ThreadStartup, "Disc Test 8", this, 0x4000);
     RdosCreateThread(ThreadStartup, "Disc Test 9", this, 0x4000);
     RdosCreateThread(ThreadStartup, "Disc Test 10", this, 0x4000);
+
+    ServTest();
+
+    sh = ServCreateShareBlock();    
 
     Server.WaitForMsg(this);
 

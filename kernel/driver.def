@@ -178,6 +178,7 @@ sched_data_sel      EQU 2D8h
 
 serv_code_sel       EQU 2E3h
 serv_data_sel       EQU 2EBh
+serv_mem_sel        EQU 2F0h
 
 ;
 ; GDT selectors device-driver selectors
