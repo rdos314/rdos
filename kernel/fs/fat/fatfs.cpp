@@ -34,6 +34,7 @@
 #include "tab16.h"
 #include "tab32.h"
 #include "md5.h"
+#include "block.h"
 
 struct TBootSector
 {
@@ -515,8 +516,6 @@ void TFat::Test()
 void TFat::Run(const char *FsName)
 {
     bool ok;
-    struct TShareHeader *sh1;
-    struct TShareHeader *sh2;
 
     ok = ProcessBootSector(FsName);
     if (ok)
@@ -535,12 +534,11 @@ void TFat::Run(const char *FsName)
 
     ServTest();
 
-    sh1 = ServCreateShareBlock();    
-    sh2 = ServCreateShareBlock();    
-    sh1 = ServGrowShareBlock(sh1);
-    sh2 = ServGrowShareBlock(sh2);
-    ServFreeShareBlock(sh1);
-    ServFreeShareBlock(sh2);
+    TBlock bl1;
+    TBlock bl2;
+
+    bl1.Grow(8000);
+    bl2.Grow(12000);
 
     Server.WaitForMsg(this);
 
