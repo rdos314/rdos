@@ -41,6 +41,12 @@ TFat *CreateFat(TDiscServer *Server, const char *FsName)
         return 0;
     }
 
+    if (boot->BytesPerSector != 512)
+    {
+        printf("Unexpected bytes per sector: %d\r\n", boot->BytesPerSector);
+        return 0;
+    }
+
     FatSize = 0;
 
     memcpy(Name, boot->FsName, 5);
@@ -70,10 +76,15 @@ TFat *CreateFat(TDiscServer *Server, const char *FsName)
             FatSize = 32;
     }
 
-    if (boot->BytesPerSector != 512)
+    if (FatSize == 32)
     {
-        printf("Unexpected bytes per sector: %d\r\n", boot->BytesPerSector);
-        return 0;
+        if (!boot->RootCluster)
+            FatSize = 16;
+    }
+    else
+    {
+        if (!boot->RootDirEntries)
+            FatSize = 32;
     }
 
     switch (FatSize)
