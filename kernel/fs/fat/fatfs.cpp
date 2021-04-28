@@ -120,6 +120,22 @@ bool TFat::Validate()
 
 /*##########################################################################
 #
+#   Name       : TFat::GetFreeSectors
+#
+#   Purpose....: Get free sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TFat::GetFreeSectors()
+{
+    return (long long)FreeClusters * (long long)SectorsPerCluster;
+}
+
+/*##########################################################################
+#
 #   Name       : VerifySector
 #
 #   Purpose....:
@@ -239,7 +255,7 @@ void TFat::Test()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFat::Run(const char *FsName)
+void TFat::Run()
 {
     bool ok;
     struct TDirEntry *e;

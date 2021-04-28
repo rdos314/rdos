@@ -164,9 +164,8 @@ int main(int argc, char **argv)
             Fat = 0;
         }
 
-//        TFat Fat;
-//        Fat.Run(ptr);
-
+        if (Fat)
+            Fat->Run();
 
     }
 }

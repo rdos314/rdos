@@ -65,8 +65,9 @@ public:
     ~TFat();
 
     bool Validate();
+    virtual long long GetFreeSectors();
 
-    void Run(const char *FsName);
+    void Run();
 
     void Test();
 

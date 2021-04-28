@@ -101,19 +101,3 @@ TFat16::TFat16(TDiscServer *server, struct TBootSector *boot)
 TFat16::~TFat16()
 {
 }
-
-/*##########################################################################
-#
-#   Name       : TFat16::GetFreeSectors
-#
-#   Purpose....: Get free sectors
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long long TFat16::GetFreeSectors()
-{
-    return (long long)FreeClusters * (long long)SectorsPerCluster;
-}

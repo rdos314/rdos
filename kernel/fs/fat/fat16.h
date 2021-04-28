@@ -37,8 +37,6 @@ public:
     TFat16(TDiscServer *server, struct TBootSector *boot);
     ~TFat16();
 
-    virtual long long GetFreeSectors();
-
 protected:
     int RootDirEntries;
 

@@ -37,8 +37,6 @@ public:
     TFat32(TDiscServer *server, struct TBootSector *boot);
     ~TFat32();
 
-    virtual long long GetFreeSectors();
-
 protected:
     bool ProcessInfoSector();
 

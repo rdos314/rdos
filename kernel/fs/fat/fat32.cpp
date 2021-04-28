@@ -150,19 +150,3 @@ bool TFat32::ProcessInfoSector()
     FreeClusters = info->FreeClusters;
     return true;
 }
-
-/*##########################################################################
-#
-#   Name       : TFat32::GetFreeSectors
-#
-#   Purpose....: Get free sectors
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long long TFat32::GetFreeSectors()
-{
-    return (long long)FreeClusters * (long long)SectorsPerCluster;
-}
