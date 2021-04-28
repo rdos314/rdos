@@ -31,6 +31,7 @@
 #include "fs.h"
 #include "tab.h"
 #include "thread.h"
+#include "cluster.h"
 
 struct TBootSector
 {
@@ -87,6 +88,8 @@ public:
     unsigned int FreeClusters;
 
 protected:
+    virtual TCluster *GetClusterChain(unsigned int Cluster) = 0;
+
     bool VerifySector(int id, char *buf);
     void GetSectors(TDiscReq *Req, long long sector, int count);
 };

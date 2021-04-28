@@ -148,3 +148,22 @@ bool TFat32::ProcessInfoSector()
     FreeClusters = info->FreeClusters;
     return true;
 }
+
+/*##########################################################################
+#
+#   Name       : TFat32::GetClusterChain
+#
+#   Purpose....: Get cluster chain
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TCluster *TFat32::GetClusterChain(unsigned int Cluster)
+{
+    TCluster *Chain = new TCluster;
+
+    Chain->Add(Cluster);
+    return Chain;
+}

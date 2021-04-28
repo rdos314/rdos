@@ -38,6 +38,8 @@ public:
     ~TFat32();
 
 protected:
+    virtual TCluster *GetClusterChain(unsigned int Cluster);
+
     bool ProcessInfoSector();
 
     unsigned int RootCluster;

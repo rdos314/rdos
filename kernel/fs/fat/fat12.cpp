@@ -101,3 +101,22 @@ TFat12::TFat12(TDiscServer *server, struct TBootSector *boot)
 TFat12::~TFat12()
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TFat12::GetClusterChain
+#
+#   Purpose....: Get cluster chain
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TCluster *TFat12::GetClusterChain(unsigned int Cluster)
+{
+    TCluster *Chain = new TCluster;
+
+    Chain->Add(Cluster);
+    return Chain;
+}

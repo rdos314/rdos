@@ -274,15 +274,14 @@ void TFat::Run()
 
     ServTest();
 
-    TCluster cluster;
+    TCluster *cluster;
     int size;
     unsigned int *chain;
 
-    cluster.Add(123);
-    cluster.Add(234);
+    cluster = GetClusterChain(2);
 
-    size = cluster.GetSize();
-    chain = cluster.GetChain();
+    size = cluster->GetSize();
+    chain = cluster->GetChain();    
 
     Server->WaitForMsg(this);
 

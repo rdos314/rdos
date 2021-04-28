@@ -38,6 +38,8 @@ public:
     ~TFat16();
 
 protected:
+    virtual TCluster *GetClusterChain(unsigned int Cluster);
+
     int RootDirEntries;
     long long RootSector;
 
