@@ -59,6 +59,8 @@ TFat32::TFat32(TDiscServer *server, struct TBootSector *boot)
     int Free1;
     int Free2;
 
+    FatSize = 32;
+
     FValid = ProcessBootSector(boot);
     if (FValid)
     {

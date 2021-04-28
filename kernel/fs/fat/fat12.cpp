@@ -47,8 +47,10 @@ TFat12::TFat12(TDiscServer *server, struct TBootSector *boot)
     Tab1(server),
     Tab2(server)
 {
-    int Free1;
-    int Free2;
+    unsigned int Free1;
+    unsigned int Free2;
+
+    FatSize = 12;
 
     FValid = ProcessBootSector(boot);
     if (FValid)

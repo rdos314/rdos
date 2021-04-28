@@ -43,19 +43,9 @@ protected:
     bool ProcessBootSector(struct TBootSector *boot);
     bool ProcessInfoSector();
 
-    int Clusters;
-    int RootCluster;
-
-    unsigned int PartSectors;
-    int FatSectors;
-
+    unsigned int RootCluster;
     long long InfoSector;
-    long long StartSector;
-    long long Fat1Sector;
-    long long Fat2Sector;
-    long long RootSector;
-
-    int FreeClusters;
+    unsigned int FreeClusters;
 
     TFatTable32 Tab1;
     TFatTable32 Tab2;

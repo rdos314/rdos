@@ -71,7 +71,7 @@ TFatTable12::~TFatTable12()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatTable12::Setup(int SectorsPerCluster, long long StartSector, int FatSectors, int Clusters)
+void TFatTable12::Setup(int SectorsPerCluster, long long StartSector, int FatSectors, unsigned int Clusters)
 {
     FSectorsPerCluster = SectorsPerCluster;
     FStartSector = StartSector;
@@ -93,13 +93,13 @@ void TFatTable12::Setup(int SectorsPerCluster, long long StartSector, int FatSec
 #   Returns....: *
 #
 ##########################################################################*/
-int TFatTable12::GetFreeInBlock(long long Sector, int Clusters)
+unsigned int TFatTable12::GetFreeInBlock(long long Sector, unsigned int Clusters)
 {
-    int i;
-    int FreeClusters = 0;
+    unsigned int i;
+    unsigned int FreeClusters = 0;
     TDiscReqEntry e1(&FReq, Sector, 3);
     char *tab;
-    int val;
+    unsigned int val;
 
     FReq.WaitForever();
 
@@ -142,12 +142,12 @@ int TFatTable12::GetFreeInBlock(long long Sector, int Clusters)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFatTable12::GetFreeClusters()
+unsigned int TFatTable12::GetFreeClusters()
 {
-    int FreeClusters = 0;
+    unsigned int FreeClusters = 0;
     int i;
     long long Sector = FStartSector;
-    int Cluster = 0;
+    unsigned int Cluster = 0;
     int Count;
     int Blocks = FClusters / 512 / 2;
 

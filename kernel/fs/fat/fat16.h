@@ -42,18 +42,9 @@ public:
 protected:
     bool ProcessBootSector(struct TBootSector *boot);
 
-    int Clusters;
     int RootDirEntries;
 
-    unsigned int PartSectors;
-    int FatSectors;
-
-    long long StartSector;
-    long long Fat1Sector;
-    long long Fat2Sector;
-    long long RootSector;
-
-    int FreeClusters;
+    unsigned int FreeClusters;
 
     TFatTable16 Tab1;
     TFatTable16 Tab2;

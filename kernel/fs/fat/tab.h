@@ -36,7 +36,7 @@ public:
     TFatTable(TDiscServer *Server);
     virtual ~TFatTable();
 
-    virtual int GetFreeClusters() = 0;
+    virtual unsigned int GetFreeClusters() = 0;
 
 protected:
     long long FStartSector;

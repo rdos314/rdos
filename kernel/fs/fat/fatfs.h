@@ -43,7 +43,7 @@ struct TBootSector
     short int RootDirEntries;
     unsigned short int SectorCount16;
     char Media;
-    short int FatSectors16;
+    unsigned short int FatSectors16;
     short int SectorsPerCyl;
     short int Heads;
     int HiddenSectors;
@@ -68,14 +68,24 @@ public:
 
     void Test();
 
-protected:
-    bool VerifySector(int id, char *buf);
-    void GetSectors(TDiscReq *Req, long long sector, int count);
-
+    int FatSize;
+    unsigned int PartSectors;
     int SectorsPerCluster;
     int ReservedSectors;
 
+    long long StartSector;
+    long long Fat1Sector;
+    long long Fat2Sector;
+    long long RootSector;
+
     int FatCount;
+    int FatSectors;
+
+    unsigned int Clusters;
+
+protected:
+    bool VerifySector(int id, char *buf);
+    void GetSectors(TDiscReq *Req, long long sector, int count);
 
     bool FValid;
 };

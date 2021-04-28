@@ -36,14 +36,14 @@ public:
     TFatTable32(TDiscServer *Server);
     virtual ~TFatTable32();
 
-    virtual int GetFreeClusters();
+    virtual unsigned int GetFreeClusters();
 
-    void Setup(int SectorsPerCluster, long long StartSector, int FatSectors, int Clusters);
+    void Setup(int SectorsPerCluster, long long StartSector, int FatSectors, unsigned int Clusters);
 
 protected:
-    int GetFreeInBlock(long long Sector, int Clusters);
+    unsigned int GetFreeInBlock(long long Sector, unsigned int Clusters);
 
-    int FClusters;
+    unsigned int FClusters;
 };
 
 #endif

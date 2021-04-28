@@ -50,6 +50,8 @@ TFat16::TFat16(TDiscServer *server, struct TBootSector *boot)
     int Free1;
     int Free2;
 
+    FatSize = 16;
+
     FValid = ProcessBootSector(boot);
     if (FValid)
     {

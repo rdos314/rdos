@@ -95,6 +95,50 @@ TFat *CreateFat(TDiscServer *Server, const char *FsName)
 
 /*##########################################################################
 #
+#   Name       : CheckFat
+#
+#   Purpose....: Check FAT object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool CheckFat(TDiscServer *Server, TFat *Fat)
+{
+    long long TotalSectors;
+
+    TotalSectors = Server->GetPartSectors();
+
+    if (TotalSectors < Fat->PartSectors)
+    {
+        printf("Partition size mismatch: Part: %lld, Boot: %lld\r\n", TotalSectors, Fat->PartSectors);
+        return false;
+    }
+
+    if (Fat->FatSectors == 0)
+    {
+        printf("No FAT sectors\r\n");
+        return false;
+    }
+
+    if (Fat->FatCount != 2)
+    {
+        printf("Must have 2 FAT tables\r\n");
+        return false;
+    }
+
+    if (Fat->SectorsPerCluster <= 0)
+    {
+        printf("Invalid sectors per cluster: %d\r\n", Fat->SectorsPerCluster);
+        return false;
+    }
+
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....:
@@ -126,6 +170,15 @@ int main(int argc, char **argv)
 
         Server = new TDiscServer;
         Fat = CreateFat(Server, ptr);
+
+        if (Fat)
+        {
+            if (!CheckFat(Server, Fat))
+            {
+                delete Fat;
+                Fat = 0;
+            }
+        }
 
 //        TFat Fat;
 //        Fat.Run(ptr);
