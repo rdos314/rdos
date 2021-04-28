@@ -38,13 +38,12 @@ public:
     ~TFat32();
 
 protected:
-    virtual TCluster *GetClusterChain(unsigned int Cluster);
-
     bool ProcessInfoSector();
 
     unsigned int RootCluster;
     long long InfoSector;
 
+private:
     TFatTable32 Tab1;
     TFatTable32 Tab2;
 };

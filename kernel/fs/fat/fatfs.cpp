@@ -70,6 +70,9 @@ TFat::TFat(TDiscServer *server, struct TBootSector *boot)
     FatCount = boot->FatCount;
     SectorsPerCluster = boot->SectorsPerCluster;
     ReservedSectors = boot->ResvSectors;
+
+    FatTable1 = 0;
+    FatTable2 = 0;
 }
 
 /*##########################################################################
@@ -133,6 +136,50 @@ bool TFat::Validate()
 long long TFat::GetFreeSectors()
 {
     return (long long)FreeClusters * (long long)SectorsPerCluster;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::GetClusterChain
+#
+#   Purpose....: Get cluster chain
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TCluster *TFat::GetClusterChain(unsigned int Cluster)
+{
+    TCluster *Chain = new TCluster;
+    unsigned int NextCluster1;
+    unsigned int NextCluster2;
+
+    while (Cluster && Cluster < Clusters)
+    {
+        Chain->Add(Cluster);
+
+        NextCluster1 = FatTable1->GetClusterLink(Cluster);
+        NextCluster2 = FatTable2->GetClusterLink(Cluster);
+
+        if (NextCluster1 == NextCluster2)
+            Cluster = NextCluster1;
+        else
+        {
+            if (NextCluster1 >= Clusters && NextCluster2 >= Clusters)
+                break;
+
+            if (NextCluster1 < Clusters && NextCluster2 < Clusters)
+                break;
+
+            if (NextCluster1 > NextCluster2)
+                Cluster = NextCluster2;
+            else
+                Cluster = NextCluster1;
+        }
+    }
+
+    return Chain;
 }
 
 /*##########################################################################
@@ -278,7 +325,7 @@ void TFat::Run()
     int size;
     unsigned int *chain;
 
-    cluster = GetClusterChain(1000);
+    cluster = GetClusterChain(2);
 
     size = cluster->GetSize();
     chain = cluster->GetChain();

@@ -63,6 +63,9 @@ TFat12::TFat12(TDiscServer *server, struct TBootSector *boot)
 
     if (Validate())
     {
+        FatTable1 = &Tab1;
+        FatTable2 = &Tab2;
+
         Fat1Sector = ReservedSectors;
         Fat2Sector = Fat1Sector + FatSectors;
         RootSector = Fat2Sector + FatSectors;
@@ -100,48 +103,4 @@ TFat12::TFat12(TDiscServer *server, struct TBootSector *boot)
 ##########################################################################*/
 TFat12::~TFat12()
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TFat12::GetClusterChain
-#
-#   Purpose....: Get cluster chain
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TCluster *TFat12::GetClusterChain(unsigned int Cluster)
-{
-    TCluster *Chain = new TCluster;
-    unsigned int NextCluster1;
-    unsigned int NextCluster2;
-
-    while (Cluster && Cluster < Clusters)
-    {
-        Chain->Add(Cluster);
-
-        NextCluster1 = Tab1.GetClusterLink(Cluster);
-        NextCluster2 = Tab2.GetClusterLink(Cluster);
-
-        if (NextCluster1 == NextCluster2)
-            Cluster = NextCluster1;
-        else
-        {
-            if (NextCluster1 >= Clusters && NextCluster2 >= Clusters)
-                break;
-
-            if (NextCluster1 < Clusters && NextCluster2 < Clusters)
-                break;
-
-            if (NextCluster1 > NextCluster2)
-                Cluster = NextCluster2;
-            else
-                Cluster = NextCluster1;
-        }
-    }
-
-    return Chain;
 }

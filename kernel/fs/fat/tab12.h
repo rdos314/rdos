@@ -36,8 +36,7 @@ public:
     TFatTable12(TDiscServer *Server);
     virtual ~TFatTable12();
 
-    unsigned int GetClusterLink(unsigned int Cluster);
-
+    virtual unsigned int GetClusterLink(unsigned int Cluster);
     virtual unsigned int GetFreeClusters();
 
     void Setup(int SectorsPerCluster, long long StartSector, int FatSectors, unsigned int Clusters);

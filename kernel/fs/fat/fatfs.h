@@ -88,10 +88,13 @@ public:
     unsigned int FreeClusters;
 
 protected:
-    virtual TCluster *GetClusterChain(unsigned int Cluster) = 0;
+    TCluster *GetClusterChain(unsigned int Cluster);
 
     bool VerifySector(int id, char *buf);
     void GetSectors(TDiscReq *Req, long long sector, int count);
+
+    TFatTable *FatTable1;
+    TFatTable *FatTable2;
 };
 
 #endif

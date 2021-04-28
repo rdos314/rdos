@@ -38,11 +38,10 @@ public:
     ~TFat12();
 
 protected:
-    virtual TCluster *GetClusterChain(unsigned int Cluster);
-
     int RootDirEntries;
     long long RootSector;
 
+private:
     TFatTable12 Tab1;
     TFatTable12 Tab2;
 };
