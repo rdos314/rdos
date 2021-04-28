@@ -66,40 +66,13 @@ public:
 
     void Run(const char *FsName);
 
-    virtual long long GetFreeSectors();
-
     void Test();
 
 protected:
     bool VerifySector(int id, char *buf);
     void GetSectors(TDiscReq *Req, long long sector, int count);
 
-    bool ProcessBootSector(const char *FsName);
-    bool ProcessInfoSector();
-    void CreateTables();
-
-    int PartSectors;
-    int SectorsPerCluster;
-    int ReservedSectors;
-
-    int Clusters;
-    int RootDirEntries;
-    int RootCluster;
-
-    long long RootSector;
-    long long StartSector;
-    long long InfoSector;
-
-    long long Fat1Sector;
-    long long Fat2Sector;
-    int FatSize;
-    int FatCount;
-    int FatSectors;
-
-    TFatTable *Tab1;
-    TFatTable *Tab2;
-
-    int FreeClusters;
+    bool FValid;
 };
 
 #endif

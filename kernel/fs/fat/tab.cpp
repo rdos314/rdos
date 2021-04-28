@@ -38,11 +38,11 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatTable::TFatTable(TDiscServer *Server, int SectorsPerCluster, long long StartSector)
+TFatTable::TFatTable(TDiscServer *Server)
  :  FReq(Server)
 {
-    FSectorsPerCluster = SectorsPerCluster;
-    FStartSector = StartSector;
+    FSectorsPerCluster = 0;
+    FStartSector = 0;
 }
 
 /*##########################################################################

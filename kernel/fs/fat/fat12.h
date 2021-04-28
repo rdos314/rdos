@@ -20,30 +20,48 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# tab32.h
-# 32-bit Fat table class
+# fat12.h
+# Fat12 class
 #
 ########################################################################*/
 
-#ifndef _FAT_TAB32_H
-#define _FAT_TAB32_H
+#ifndef _FAT12_H
+#define _FAT12_H
 
-#include "tab.h"
+#include "fatfs.h"
+#include "tab12.h"
 
-class TFatTable32 : public TFatTable
+class TFat12 : public TFat
 {
 public:
-    TFatTable32(TDiscServer *Server);
-    virtual ~TFatTable32();
+    TFat12(TDiscServer *server, struct TBootSector *boot);
+    ~TFat12();
 
-    virtual int GetFreeClusters();
-
-    void Setup(int SectorsPerCluster, long long StartSector, int FatSectors, int Clusters);
+    virtual long long GetFreeSectors();
 
 protected:
-    int GetFreeInBlock(long long Sector, int Clusters);
+    bool ProcessBootSector(struct TBootSector *boot);
 
-    int FClusters;
+    int PartSectors;
+    int SectorsPerCluster;
+    int ReservedSectors;
+
+    int Clusters;
+    int RootDirEntries;
+
+    long long StartSector;
+    long long Fat1Sector;
+    long long Fat2Sector;
+    long long RootSector;
+
+    int FatCount;
+    int FatSectors;
+
+    int FreeClusters;
+
+    TFatTable12 Tab1;
+    TFatTable12 Tab2;
 };
 
 #endif
+

@@ -39,13 +39,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatTable12::TFatTable12(TDiscServer *Server, int SectorsPerCluster, long long StartSector, int FatSectors, int Clusters)
- :  TFatTable(Server, SectorsPerCluster, StartSector)
+TFatTable12::TFatTable12(TDiscServer *Server)
+ :  TFatTable(Server)
 {
-    if (FatSectors * 512 * 2 / 3 < Clusters)
-        FClusters = FatSectors * 512 * 2 / 3;
-    else
-        FClusters = Clusters;
+    FClusters = 0;
 }
 
 /*##########################################################################
@@ -61,6 +58,28 @@ TFatTable12::TFatTable12(TDiscServer *Server, int SectorsPerCluster, long long S
 ##########################################################################*/
 TFatTable12::~TFatTable12()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable12::Setup
+#
+#   Purpose....: Setup parameters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable12::Setup(int SectorsPerCluster, long long StartSector, int FatSectors, int Clusters)
+{
+    FSectorsPerCluster = SectorsPerCluster;
+    FStartSector = StartSector;
+
+    if (FatSectors * 512 * 2 / 3 < Clusters)
+        FClusters = FatSectors * 512 * 2 / 3;
+    else
+        FClusters = Clusters;
 }
 
 /*##########################################################################
