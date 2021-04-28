@@ -43,21 +43,17 @@ protected:
     bool ProcessBootSector(struct TBootSector *boot);
     bool ProcessInfoSector();
 
-    int PartSectors;
-    int SectorsPerCluster;
-    int ReservedSectors;
-
     int Clusters;
     int RootCluster;
+
+    unsigned int PartSectors;
+    int FatSectors;
 
     long long InfoSector;
     long long StartSector;
     long long Fat1Sector;
     long long Fat2Sector;
     long long RootSector;
-
-    int FatCount;
-    int FatSectors;
 
     int FreeClusters;
 

@@ -52,7 +52,7 @@ struct TFatInfo
 #
 ##########################################################################*/
 TFat32::TFat32(TDiscServer *server, struct TBootSector *boot)
-  : TFat(server),
+  : TFat(server, boot),
     Tab1(server),
     Tab2(server)
 {
@@ -109,10 +109,6 @@ bool TFat32::ProcessBootSector(struct TBootSector *boot)
     long long TotalSectors;
 
     TotalSectors = Server->GetPartSectors();
-
-    FatCount = boot->FatCount;
-    SectorsPerCluster = boot->SectorsPerCluster;
-    ReservedSectors = boot->ResvSectors;
 
     PartSectors = boot->Sectors;
     if (!PartSectors)

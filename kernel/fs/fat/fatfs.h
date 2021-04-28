@@ -61,7 +61,7 @@ struct TBootSector
 class TFat : public TFs, public TThread
 {
 public:
-    TFat(TDiscServer *server);
+    TFat(TDiscServer *server, struct TBootSector *boot);
     ~TFat();
 
     void Run(const char *FsName);
@@ -71,6 +71,11 @@ public:
 protected:
     bool VerifySector(int id, char *buf);
     void GetSectors(TDiscReq *Req, long long sector, int count);
+
+    int SectorsPerCluster;
+    int ReservedSectors;
+
+    int FatCount;
 
     bool FValid;
 };

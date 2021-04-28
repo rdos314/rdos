@@ -63,9 +63,12 @@ static void ThreadStartup(void *ptr)
 #   Returns....: *
 #
 ##########################################################################*/
-TFat::TFat(TDiscServer *server)
+TFat::TFat(TDiscServer *server, struct TBootSector *boot)
   : TFs(server)
 {
+    FatCount = boot->FatCount;
+    SectorsPerCluster = boot->SectorsPerCluster;
+    ReservedSectors = boot->ResvSectors;
 }
 
 /*##########################################################################

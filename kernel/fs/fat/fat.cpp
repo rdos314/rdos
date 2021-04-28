@@ -7,20 +7,22 @@
 #include <unistd.h>
 
 #include "discserv.h"
-#include "fatfs.h"
+#include "fat12.h"
+#include "fat16.h"
+#include "fat32.h"
 
 /*##########################################################################
 #
-#   Name       : GetFatSize
+#   Name       : CreateFat
 #
-#   Purpose....: Get FAT size
+#   Purpose....: Create FAT object
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int GetFatSize(TDiscServer *Server, const char *FsName, char *BootSector)
+TFat *CreateFat(TDiscServer *Server, const char *FsName)
 {
     char Name[6];
     long long TotalSectors;
@@ -68,20 +70,27 @@ int GetFatSize(TDiscServer *Server, const char *FsName, char *BootSector)
             FatSize = 32;
     }
 
-    if (!FatSize)
-    {
-        printf("No FAT size specified\r\n");
-        return 0;
-    }
-
     if (boot->BytesPerSector != 512)
     {
         printf("Unexpected bytes per sector: %d\r\n", boot->BytesPerSector);
         return 0;
     }
 
-    memcpy(BootSector, boot, 512);
-    return FatSize;
+    switch (FatSize)
+    {
+        case 12:
+            return new TFat12(Server, boot);
+
+        case 16:
+            return new TFat16(Server, boot);
+
+        case 32:
+            return new TFat32(Server, boot);
+
+        default:
+            printf("No FAT size specified\r\n");
+            return 0;
+    }
 }
 
 /*##########################################################################
@@ -101,8 +110,7 @@ int main(int argc, char **argv)
     int unit;
     char *ptr;
     TDiscServer *Server;
-    int FatSize;
-    char *BootSector = new char[512];
+    TFat *Fat;
 
     ServTest();
 
@@ -117,7 +125,7 @@ int main(int argc, char **argv)
         ptr = argv[3];
 
         Server = new TDiscServer;
-        FatSize = GetFatSize(Server, ptr, BootSector);
+        Fat = CreateFat(Server, ptr);
 
 //        TFat Fat;
 //        Fat.Run(ptr);
