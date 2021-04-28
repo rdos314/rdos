@@ -39,6 +39,7 @@ public:
 
 protected:
     int RootDirEntries;
+    long long RootSector;
 
     TFatTable12 Tab1;
     TFatTable12 Tab2;

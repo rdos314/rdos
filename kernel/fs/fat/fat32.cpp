@@ -75,8 +75,6 @@ TFat32::TFat32(TDiscServer *server, struct TBootSector *boot)
     {
         Fat1Sector = ReservedSectors;
         Fat2Sector = Fat1Sector + FatSectors;
-
-        RootSector = 0;
         StartSector = Fat2Sector + FatSectors;
 
         Clusters = PartSectors / SectorsPerCluster + 2;

@@ -65,7 +65,6 @@ TFat16::TFat16(TDiscServer *server, struct TBootSector *boot)
     {
         Fat1Sector = ReservedSectors;
         Fat2Sector = Fat1Sector + FatSectors;
-
         RootSector = Fat2Sector + FatSectors;
         StartSector = RootSector + RootDirEntries / 16;
 

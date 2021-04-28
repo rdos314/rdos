@@ -79,7 +79,6 @@ public:
     long long StartSector;
     long long Fat1Sector;
     long long Fat2Sector;
-    long long RootSector;
 
     int FatCount;
     int FatSectors;
