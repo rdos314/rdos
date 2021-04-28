@@ -43,6 +43,10 @@ TFatTable12::TFatTable12(TDiscServer *Server)
  :  TFatTable(Server)
 {
     FClusters = 0;
+    FReqEntry = 0;
+    FTab = 0;
+
+    SetCacheSize(3);
 }
 
 /*##########################################################################
@@ -80,6 +84,23 @@ void TFatTable12::Setup(int SectorsPerCluster, long long StartSector, int FatSec
         FClusters = FatSectors * 512 * 2 / 3;
     else
         FClusters = Clusters;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable12::SetCacheSize
+#
+#   Purpose....: Set cache size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable12::SetCacheSize(int size)
+{
+    FCachedSectors = size;
+    FCachedClusters = size * 512 * 2 / 3;
 }
 
 /*##########################################################################
@@ -163,4 +184,61 @@ unsigned int TFatTable12::GetFreeClusters()
     }
 
     return FreeClusters;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable12::GetClusterLink
+#
+#   Purpose....: Get cluster link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatTable12::GetClusterLink(unsigned int Cluster)
+{
+    int RelSector;
+    long long Sector;
+    int pos;
+    unsigned short int *shp;
+    unsigned short int val;
+
+    if (FReqEntry)
+    {
+        if (Cluster < FStartCluster || Cluster >= FStartCluster + FCachedClusters)
+        {
+            delete FReqEntry;
+            FReqEntry = 0;
+        }
+    }
+
+    if (!FReqEntry)
+    {
+        RelSector = Cluster / 512 * 3 / 2;
+        while ((RelSector % 3) != 0)
+            RelSector--;
+
+        FStartCluster = RelSector * 512 / 3 * 2;
+        Sector = FStartSector + RelSector;
+        FReqEntry = new TDiscReqEntry(&FReq, Sector, FCachedSectors);
+        FReq.WaitForever();
+        FTab = (char *)FReqEntry->Map();
+    }
+
+    pos = 3 * (Cluster - FStartCluster);
+    if ((pos % 2) == 0)
+    {
+        shp = (unsigned short int *)(FTab + pos / 2);
+        val = *shp;
+        return val & 0xFFF;
+    }
+    else
+    {
+        shp = (unsigned short int *)(FTab + pos / 2);
+        val = *shp;
+        val = val >> 4;
+        return val & 0xFFF;
+    }
 }

@@ -70,8 +70,8 @@ TFat16::TFat16(TDiscServer *server, struct TBootSector *boot)
 
         Clusters = PartSectors / SectorsPerCluster + 2;
 
-        if (Clusters > 0x10000)
-            Clusters = 0x10000;
+        if (Clusters > 0xFFF0)
+            Clusters = 0xFFF0;
 
         Tab1.Setup(SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
         Tab2.Setup(SectorsPerCluster, Fat2Sector, FatSectors, Clusters);

@@ -36,14 +36,23 @@ public:
     TFatTable12(TDiscServer *Server);
     virtual ~TFatTable12();
 
+    unsigned int GetClusterLink(unsigned int Cluster);
+
     virtual unsigned int GetFreeClusters();
 
     void Setup(int SectorsPerCluster, long long StartSector, int FatSectors, unsigned int Clusters);
+    void SetCacheSize(int size);
 
 protected:
     unsigned int GetFreeInBlock(long long Sector, unsigned int Clusters);
 
     unsigned int FClusters;
+
+    int FCachedSectors;
+    int FCachedClusters;
+    unsigned int FStartCluster;
+    TDiscReqEntry *FReqEntry;
+    char *FTab;
 };
 
 #endif

@@ -80,6 +80,9 @@ TFat32::TFat32(TDiscServer *server, struct TBootSector *boot)
         Clusters = PartSectors / SectorsPerCluster + 2;
         FreeClusters = 0;
 
+        if (Clusters > 0xFFFFFFF0)
+            Clusters = 0xFFFFFFF0;
+
         if (Clusters > 0x100000)
             if (InfoSector)
                 ProcessInfoSector();
