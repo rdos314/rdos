@@ -42,6 +42,11 @@ TFatTable32::TFatTable32(TDiscServer *Server)
  :  TFatTable(Server)
 {
     FClusters = 0;
+    FReqEntry = 0;
+    FTab = 0;
+
+    FCachedSectors = 8;
+    FCachedClusters = FCachedSectors * 512 / 4;
 }
 
 /*##########################################################################
@@ -142,4 +147,42 @@ unsigned int TFatTable32::GetFreeClusters()
     }
 
     return FreeClusters;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable32::GetClusterLink
+#
+#   Purpose....: Get cluster link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatTable32::GetClusterLink(unsigned int Cluster)
+{
+    int RelSector;
+    long long Sector;
+
+    if (FReqEntry)
+    {
+        if (Cluster < FStartCluster || Cluster >= FStartCluster + FCachedClusters)
+        {
+            delete FReqEntry;
+            FReqEntry = 0;
+        }
+    }
+
+    if (!FReqEntry)
+    {
+        RelSector = Cluster / 512 * 4;
+        FStartCluster = RelSector * 512 / 4;
+        Sector = FStartSector + RelSector;
+        FReqEntry = new TDiscReqEntry(&FReq, Sector, FCachedSectors);
+        FReq.WaitForever();
+        FTab = (unsigned int *)FReqEntry->Map();
+    }
+
+    return FTab[Cluster - FStartCluster];
 }

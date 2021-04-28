@@ -272,13 +272,13 @@ void TFat::Run()
     RdosCreateThread(ThreadStartup, "Disc Test 9", this, 0x4000);
     RdosCreateThread(ThreadStartup, "Disc Test 10", this, 0x4000);
 
-    ServTest();
+//    ServTest();
 
     TCluster *cluster;
     int size;
     unsigned int *chain;
 
-    cluster = GetClusterChain(2);
+    cluster = GetClusterChain(3);
 
     size = cluster->GetSize();
     chain = cluster->GetChain();    
