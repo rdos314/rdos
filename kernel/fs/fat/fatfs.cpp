@@ -88,6 +88,38 @@ TFat::~TFat()
 
 /*##########################################################################
 #
+#   Name       : TFat::Validate
+#
+#   Purpose....: Validate important parameters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat::Validate()
+{
+    long long TotalSectors;
+
+    TotalSectors = Server->GetPartSectors();
+
+    if (TotalSectors < PartSectors)
+        return false;
+
+    if (FatSectors == 0)
+        return false;
+
+    if (FatCount != 2)
+        return false;
+
+    if (SectorsPerCluster <= 0)
+        return false;
+
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : VerifySector
 #
 #   Purpose....:

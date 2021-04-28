@@ -64,6 +64,8 @@ public:
     TFat(TDiscServer *server, struct TBootSector *boot);
     ~TFat();
 
+    bool Validate();
+
     void Run(const char *FsName);
 
     void Test();
@@ -82,12 +84,11 @@ public:
     int FatSectors;
 
     unsigned int Clusters;
+    unsigned int FreeClusters;
 
 protected:
     bool VerifySector(int id, char *buf);
     void GetSectors(TDiscReq *Req, long long sector, int count);
-
-    bool FValid;
 };
 
 #endif

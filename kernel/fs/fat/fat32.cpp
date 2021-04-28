@@ -60,10 +60,32 @@ TFat32::TFat32(TDiscServer *server, struct TBootSector *boot)
     int Free2;
 
     FatSize = 32;
+    PartSectors = boot->Sectors;
+    if (!PartSectors)
+        PartSectors = boot->SectorCount16;
 
-    FValid = ProcessBootSector(boot);
-    if (FValid)
+    FatSectors = boot->FatSectors;
+    if (!FatSectors)
+        FatSectors = boot->FatSectors16;
+
+    RootCluster = boot->RootCluster;
+    InfoSector = boot->InfoSector;
+
+    if (Validate())
     {
+        Fat1Sector = ReservedSectors;
+        Fat2Sector = Fat1Sector + FatSectors;
+
+        RootSector = 0;
+        StartSector = Fat2Sector + FatSectors;
+
+        Clusters = PartSectors / SectorsPerCluster + 2;
+        FreeClusters = 0;
+
+        if (Clusters > 0x100000)
+            if (InfoSector)
+                ProcessInfoSector();
+
         Tab1.Setup(SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
         Tab2.Setup(SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
 
@@ -93,74 +115,6 @@ TFat32::TFat32(TDiscServer *server, struct TBootSector *boot)
 ##########################################################################*/
 TFat32::~TFat32()
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TFat32::ProcessBootSector
-#
-#   Purpose....: Process boot sector
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TFat32::ProcessBootSector(struct TBootSector *boot)
-{
-    long long TotalSectors;
-
-    TotalSectors = Server->GetPartSectors();
-
-    PartSectors = boot->Sectors;
-    if (!PartSectors)
-        PartSectors = boot->SectorCount16;
-
-    FatSectors = boot->FatSectors;
-    if (!FatSectors)
-        FatSectors = boot->FatSectors16;
-
-    RootCluster = boot->RootCluster;
-    InfoSector = boot->InfoSector;
-
-    if (TotalSectors < PartSectors)
-    {
-        printf("Partition size mismatch: Part: %lld, Boot: %lld\r\n", TotalSectors, PartSectors);
-        return false;
-    }
-
-    if (FatSectors == 0)
-    {
-        printf("No FAT sectors\r\n");
-        return false;
-    }
-
-    if (FatCount != 2)
-    {
-        printf("Must have 2 FAT tables\r\n");
-        return false;
-    }
-
-    if (SectorsPerCluster <= 0)
-    {
-        printf("Invalid sectors per cluster: %d\r\n", SectorsPerCluster);
-        return false;
-    }
-
-    Fat1Sector = ReservedSectors;
-    Fat2Sector = Fat1Sector + FatSectors;
-
-    RootSector = 0;
-    StartSector = Fat2Sector + FatSectors;
-
-    Clusters = PartSectors / SectorsPerCluster + 2;
-    FreeClusters = 0;
-
-    if (Clusters > 0x100000)
-        if (InfoSector)
-            ProcessInfoSector();
-
-    return true;
 }
 
 /*##########################################################################

@@ -40,11 +40,7 @@ public:
     virtual long long GetFreeSectors();
 
 protected:
-    bool ProcessBootSector(struct TBootSector *boot);
-
     int RootDirEntries;
-
-    unsigned int FreeClusters;
 
     TFatTable12 Tab1;
     TFatTable12 Tab2;
