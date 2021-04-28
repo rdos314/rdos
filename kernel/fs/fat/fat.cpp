@@ -142,8 +142,6 @@ int main(int argc, char **argv)
     TDiscServer *Server;
     TFat *Fat;
 
-    ServTest();
-
     if (argc >= 4)
     {
         ptr = argv[1];
@@ -166,6 +164,5 @@ int main(int argc, char **argv)
 
         if (Fat)
             Fat->Run();
-
     }
 }
