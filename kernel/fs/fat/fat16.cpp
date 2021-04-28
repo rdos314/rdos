@@ -115,7 +115,32 @@ TFat16::~TFat16()
 TCluster *TFat16::GetClusterChain(unsigned int Cluster)
 {
     TCluster *Chain = new TCluster;
+    unsigned int NextCluster1;
+    unsigned int NextCluster2;
 
-    Chain->Add(Cluster);
+    while (Cluster < Clusters)
+    {
+        Chain->Add(Cluster);
+
+        NextCluster1 = Tab1.GetClusterLink(Cluster);
+        NextCluster2 = Tab2.GetClusterLink(Cluster);
+
+        if (NextCluster1 == NextCluster2)
+            Cluster = NextCluster1;
+        else
+        {
+            if (NextCluster1 >= Clusters && NextCluster2 >= Clusters)
+                break;
+
+            if (NextCluster1 < Clusters && NextCluster2 < Clusters)
+                break;
+
+            if (NextCluster1 > NextCluster2)
+                Cluster = NextCluster2;
+            else
+                Cluster = NextCluster1;
+        }
+    }
+
     return Chain;
 }

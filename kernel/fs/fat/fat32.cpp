@@ -177,12 +177,18 @@ TCluster *TFat32::GetClusterChain(unsigned int Cluster)
             Cluster = NextCluster1;
         else
         {
+            if (NextCluster1 >= Clusters && NextCluster2 >= Clusters)
+                break;
+
+            if (NextCluster1 < Clusters && NextCluster2 < Clusters)
+                break;
+
             if (NextCluster1 > NextCluster2)
                 Cluster = NextCluster2;
             else
                 Cluster = NextCluster1;
         }
     }
-    
+
     return Chain;
 }

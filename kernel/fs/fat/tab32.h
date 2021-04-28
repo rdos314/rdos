@@ -41,6 +41,7 @@ public:
     virtual unsigned int GetFreeClusters();
 
     void Setup(int SectorsPerCluster, long long StartSector, int FatSectors, unsigned int Clusters);
+    void SetCacheSize(int size);
 
 protected:
     unsigned int GetFreeInBlock(long long Sector, unsigned int Clusters);

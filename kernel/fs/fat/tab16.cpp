@@ -42,6 +42,10 @@ TFatTable16::TFatTable16(TDiscServer *Server)
  :  TFatTable(Server)
 {
     FClusters = 0;
+    FReqEntry = 0;
+    FTab = 0;
+
+    SetCacheSize(4);
 }
 
 /*##########################################################################
@@ -79,6 +83,23 @@ void TFatTable16::Setup(int SectorsPerCluster, long long StartSector, int FatSec
         FClusters = FatSectors * 512 / 2;
     else
         FClusters = Clusters;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable16::SetCacheSize
+#
+#   Purpose....: Set cache size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable16::SetCacheSize(int size)
+{
+    FCachedSectors = size;
+    FCachedClusters = size * 512 / 2;
 }
 
 /*##########################################################################
@@ -142,4 +163,42 @@ unsigned int TFatTable16::GetFreeClusters()
     }
 
     return FreeClusters;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable16::GetClusterLink
+#
+#   Purpose....: Get cluster link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatTable16::GetClusterLink(unsigned int Cluster)
+{
+    int RelSector;
+    long long Sector;
+
+    if (FReqEntry)
+    {
+        if (Cluster < FStartCluster || Cluster >= FStartCluster + FCachedClusters)
+        {
+            delete FReqEntry;
+            FReqEntry = 0;
+        }
+    }
+
+    if (!FReqEntry)
+    {
+        RelSector = Cluster / 512 * 2;
+        FStartCluster = RelSector * 512 / 2;
+        Sector = FStartSector + RelSector;
+        FReqEntry = new TDiscReqEntry(&FReq, Sector, FCachedSectors);
+        FReq.WaitForever();
+        FTab = (unsigned short int *)FReqEntry->Map();
+    }
+
+    return FTab[Cluster - FStartCluster];
 }

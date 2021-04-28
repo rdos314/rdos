@@ -45,8 +45,7 @@ TFatTable32::TFatTable32(TDiscServer *Server)
     FReqEntry = 0;
     FTab = 0;
 
-    FCachedSectors = 8;
-    FCachedClusters = FCachedSectors * 512 / 4;
+    SetCacheSize(8);
 }
 
 /*##########################################################################
@@ -84,6 +83,23 @@ void TFatTable32::Setup(int SectorsPerCluster, long long StartSector, int FatSec
         FClusters = FatSectors * 512 / 4;
     else
         FClusters = Clusters;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable32::SetCacheSize
+#
+#   Purpose....: Set cache size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable32::SetCacheSize(int size)
+{
+    FCachedSectors = size;
+    FCachedClusters = size * 512 / 4;
 }
 
 /*##########################################################################
