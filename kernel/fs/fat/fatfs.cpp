@@ -35,6 +35,7 @@
 #include "tab32.h"
 #include "md5.h"
 #include "dir.h"
+#include "cluster.h"
 
 /*##########################################################################
 #
@@ -273,14 +274,15 @@ void TFat::Run()
 
     ServTest();
 
+    TCluster cluster;
+    int size;
+    unsigned int *chain;
 
-    TDir d(567);
+    cluster.Add(123);
+    cluster.Add(234);
 
-    e = d.Add("test", 123);
-    e = d.Add("tre", 0xAA9876);
-    e = d.Add("more.dat", 456);
-    e = d.Add("fyra", 0xAA);
-    e = d.Add("sista", 0xCCEE);
+    size = cluster.GetSize();
+    chain = cluster.GetChain();
 
     Server->WaitForMsg(this);
 
