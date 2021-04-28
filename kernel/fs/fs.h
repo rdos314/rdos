@@ -33,13 +33,13 @@
 class TFs
 {
 public:
-    TFs();
+    TFs(TDiscServer *server);
     virtual ~TFs();
 
     virtual long long GetFreeSectors() = 0;
 
 protected:
-    TDiscServer Server;
+    TDiscServer *Server;
 };
 
 #endif

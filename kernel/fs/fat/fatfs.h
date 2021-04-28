@@ -32,10 +32,36 @@
 #include "tab.h"
 #include "thread.h"
 
+struct TBootSector
+{
+    char Jmp[3];
+    char Name[8];
+    short int BytesPerSector;
+    char SectorsPerCluster;
+    short int ResvSectors;
+    char FatCount;
+    short int RootDirEntries;
+    unsigned short int SectorCount16;
+    char Media;
+    short int FatSectors16;
+    short int SectorsPerCyl;
+    short int Heads;
+    int HiddenSectors;
+    unsigned int Sectors;
+    int FatSectors;
+    short int ExtFlags;
+    short int FsVersion;
+    int RootCluster;
+    short int InfoSector;
+    short int BackupSector;
+    short int Pad;
+    char FsName[8];
+};
+
 class TFat : public TFs, public TThread
 {
 public:
-    TFat();
+    TFat(TDiscServer *server);
     ~TFat();
 
     void Run(const char *FsName);

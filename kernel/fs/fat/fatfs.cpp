@@ -36,32 +36,6 @@
 #include "md5.h"
 #include "dir.h"
 
-struct TBootSector
-{
-    char Jmp[3];
-    char Name[8];
-    short int BytesPerSector;
-    char SectorsPerCluster;
-    short int ResvSectors;
-    char FatCount;
-    short int RootDirEntries;
-    unsigned short int SectorCount16;
-    char Media;
-    short int FatSectors16;
-    short int SectorsPerCyl;
-    short int Heads;
-    int HiddenSectors;
-    unsigned int Sectors;
-    int FatSectors;
-    short int ExtFlags;
-    short int FsVersion;
-    int RootCluster;
-    short int InfoSector;
-    short int BackupSector;
-    short int Pad;
-    char FsName[8];
-};
-
 struct TFatInfo
 {
     int ExtSign;
@@ -98,7 +72,8 @@ static void ThreadStartup(void *ptr)
 #   Returns....: *
 #
 ##########################################################################*/
-TFat::TFat()
+TFat::TFat(TDiscServer *server)
+  : TFs(server)
 {
     Tab1 = 0;
     Tab2 = 0;
@@ -140,7 +115,7 @@ bool TFat::ProcessBootSector(const char *FsName)
     char Name[6];
     long long TotalSectors;
     struct TBootSector *boot;
-    TDiscReq req(&Server);
+    TDiscReq req(Server);
     TDiscReqEntry e1(&req, 0, 1);
 
     req.WaitForever();
@@ -194,7 +169,7 @@ bool TFat::ProcessBootSector(const char *FsName)
         return false;
     }
 
-    TotalSectors = Server.GetPartSectors();
+    TotalSectors = Server->GetPartSectors();
 
     FatCount = boot->FatCount;
     SectorsPerCluster = boot->SectorsPerCluster;
@@ -282,7 +257,7 @@ bool TFat::ProcessBootSector(const char *FsName)
 ##########################################################################*/
 bool TFat::ProcessInfoSector()
 {
-    TDiscReq req(&Server);
+    TDiscReq req(Server);
     TDiscReqEntry e1(&req, InfoSector, 1);
     struct TFatInfo *info;
 
@@ -342,16 +317,16 @@ void TFat::CreateTables()
             if (Clusters > 0x1000)
                 Clusters = 0x1000;
 
-            Tab1 = new TFatTable12(&Server, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
-            Tab2 = new TFatTable12(&Server, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            Tab1 = new TFatTable12(Server, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable12(Server, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
             break;
 
         case 16:
             if (Clusters > 0x10000)
                 Clusters = 0x10000;
 
-            Tab1 = new TFatTable16(&Server, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
-            Tab2 = new TFatTable16(&Server, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            Tab1 = new TFatTable16(Server, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable16(Server, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
             break;
 
         case 32:
@@ -359,8 +334,8 @@ void TFat::CreateTables()
                 if (InfoSector)
                     ProcessInfoSector();
 
-            Tab1 = new TFatTable32(&Server, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
-            Tab2 = new TFatTable32(&Server, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
+            Tab1 = new TFatTable32(Server, SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
+            Tab2 = new TFatTable32(Server, SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
             break;
     }
 
@@ -483,12 +458,12 @@ void TFat::GetSectors(TDiscReq *Req, long long Sector, int Count)
 ##########################################################################*/
 void TFat::Test()
 {
-    TDiscReq Req(&Server);
+    TDiscReq Req(Server);
     int count;
     long long sector;
     int delay;
 
-    while (Server.IsActive())
+    while (Server->IsActive())
     {
         count = 1 + RdosGetRandom(127);
         sector = 400000 - 0x10 + RdosGetRandom(600000 - count);
@@ -544,6 +519,6 @@ void TFat::Run(const char *FsName)
     e = d.Add("fyra", 0xAA);
     e = d.Add("sista", 0xCCEE);
 
-    Server.WaitForMsg(this);
+    Server->WaitForMsg(this);
 
 }
