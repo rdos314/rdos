@@ -278,7 +278,7 @@ void TFat::Run()
     int size;
     unsigned int *chain;
 
-    cluster = GetClusterChain(3);
+    cluster = GetClusterChain(1000);
 
     size = cluster->GetSize();
     chain = cluster->GetChain();

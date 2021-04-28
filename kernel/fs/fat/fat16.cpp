@@ -118,7 +118,7 @@ TCluster *TFat16::GetClusterChain(unsigned int Cluster)
     unsigned int NextCluster1;
     unsigned int NextCluster2;
 
-    while (Cluster < Clusters)
+    while (Cluster && Cluster < Clusters)
     {
         Chain->Add(Cluster);
 
