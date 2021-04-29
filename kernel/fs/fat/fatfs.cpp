@@ -164,6 +164,38 @@ unsigned int TFat::GetDirCluster(struct TFatDirEntry *entry)
 
 /*##########################################################################
 #
+#   Name       : TFat::DecodeTime
+#
+#   Purpose....: Decode time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TFat::DecodeTime(short int Date, short int Time)
+{
+    int sec = Time & 0x1F;
+    int min = (Time >> 5) & 0x3F;
+    int hour = (Time >> 11) & 0x1F;
+    int day = Date & 0x1F;
+    int month = (Date >> 5) & 0xF;
+    int year = (Date >> 9) & 0x7F;
+    unsigned long lsb, msb;
+    long long res;
+
+    year += 1980;
+    sec = 2 * sec;
+
+    lsb = RdosCodeLsbTics(min, sec, 0, 0);
+    msb = RdosCodeMsbTics(year, month, day, hour);
+
+    res = lsb + ((long long)msb << 32);
+    return res;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::ProcessDir
 #
 #   Purpose....: Process dir
@@ -245,6 +277,14 @@ struct TDirEntry *TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
 ##########################################################################*/
 void TFat::FillDir(struct TDirEntry *dir, struct TFatDirEntry *fat)
 {
+    if (fat->CrDate)
+        dir->CreateTime = DecodeTime(fat->CrDate, fat->CrTime);
+
+    if (fat->WrDate)
+        dir->ModifyTime = DecodeTime(fat->WrDate, fat->WrTime);
+
+    if (fat->AcDate)
+        dir->AccessTime = DecodeTime(fat->AcDate, 0);
 }
 
 /*##########################################################################

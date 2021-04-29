@@ -107,6 +107,7 @@ public:
 
 protected:
     unsigned int GetDirCluster(struct TFatDirEntry *entry);
+    long long DecodeTime(short int Date, short int Time);
     void FillDir(struct TDirEntry *dir, struct TFatDirEntry *fat);
     struct TDirEntry *AddStdDir(TDir *dir, struct TFatDirEntry *entry);
     void GetDir(unsigned int Cluster);
