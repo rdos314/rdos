@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <rdos.h>
 #include <serv.h>
 #include "fatfs.h"
@@ -151,6 +152,56 @@ long long TFat::GetFreeSectors()
 ##########################################################################*/
 void TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
 {
+    char Name[16];
+    char *src;
+    char *dst;
+    char ch;
+    int i;
+
+    src = entry->Base;
+    dst = Name;
+
+    switch (*src)
+    {
+        case ' ':
+        case '.':
+            return;
+    }
+
+    for (i = 0; i < 8; i++)
+    {
+        if (*src == ' ') 
+            break;
+        else
+        {
+            ch = tolower(*src);
+            *dst = ch;
+            src++;
+            dst++;
+        }
+    }
+
+    src = entry->Ext;
+    if (*src != ' ')
+    {
+        *dst = '.';
+        dst++;
+    
+        for (i = 0; i < 3; i++)
+        {
+            if (*src == ' ') 
+                break;
+            else
+            {
+                ch = tolower(*src);
+                *dst = ch;
+                src++;
+                dst++;
+            }
+        }
+    }
+
+    *dst = 0;
 }
 
 /*##########################################################################
