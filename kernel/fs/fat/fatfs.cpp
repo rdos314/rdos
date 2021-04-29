@@ -165,7 +165,6 @@ TDir *TFat::CacheDir(long long inode)
     short int Offset;
     TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
-    struct TDirEntry *DirEntry;
 
     Dir = new TFatDir(Cluster);
 
