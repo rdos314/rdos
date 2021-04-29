@@ -106,6 +106,7 @@ public:
     unsigned int FreeClusters;
 
 protected:
+    unsigned int GetDirCluster(struct TFatDirEntry *entry);
     void AddStdDir(TDir *dir, struct TFatDirEntry *entry);
     void GetDir(unsigned int Cluster);
 

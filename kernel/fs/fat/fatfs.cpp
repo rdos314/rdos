@@ -141,6 +141,29 @@ long long TFat::GetFreeSectors()
 
 /*##########################################################################
 #
+#   Name       : TFat::GetDirCluster
+#
+#   Purpose....: Get dir cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFat::GetDirCluster(struct TFatDirEntry *entry)
+{
+    unsigned int cluster;
+    char *ptr = (char *)&cluster;
+
+    
+    memcpy(ptr, &entry->ClusterLow, 2);
+    memcpy(ptr + 2, &entry->ClusterHi, 2);
+
+    return cluster;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::ProcessDir
 #
 #   Purpose....: Process dir
@@ -157,6 +180,7 @@ void TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
     char *dst;
     char ch;
     int i;
+    unsigned short int cluster;
 
     src = entry->Base;
     dst = Name;
@@ -202,6 +226,8 @@ void TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
     }
 
     *dst = 0;
+
+    cluster = GetDirCluster(entry);
 }
 
 /*##########################################################################
