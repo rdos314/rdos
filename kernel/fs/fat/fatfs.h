@@ -32,6 +32,7 @@
 #include "tab.h"
 #include "thread.h"
 #include "cluster.h"
+#include "dir.h"
 
 struct TBootSector
 {
@@ -105,7 +106,7 @@ public:
     unsigned int FreeClusters;
 
 protected:
-    void ProcessDir(struct TFatDirEntry *entry);
+    void AddStdDir(TDir *dir, struct TFatDirEntry *entry);
     void GetDir(unsigned int Cluster);
 
     bool VerifySector(int id, char *buf);

@@ -149,7 +149,7 @@ long long TFat::GetFreeSectors()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFat::ProcessDir(struct TFatDirEntry *entry)
+void TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
 {
 }
 
@@ -175,7 +175,10 @@ void TFat::GetDir(unsigned int Cluster)
     int size;
     int i, j, k;
     long long Sector;
-    struct TFatDirEntry *DirEntry;
+    TDir *Dir;
+    struct TFatDirEntry *FatDirEntry;
+
+    Dir = new TDir(Cluster);
 
     while (Cluster && Cluster < Clusters)
     {
@@ -220,14 +223,25 @@ void TFat::GetDir(unsigned int Cluster)
         {
             for (i = 0; i < size; i++)
             {
-                DirEntry = (struct TFatDirEntry *)ReqArr[i]->Map();
+                FatDirEntry = (struct TFatDirEntry *)ReqArr[i]->Map();
 
                 for (j = 0; j < SectorsPerCluster; j++)
                 {
+                    if (FatDirEntry->Base[0] == 0)
+                        break;
+
                     for (k = 0; k < 16; k++)
                     {
-                        ProcessDir(DirEntry);
-                        DirEntry++;
+                        if (FatDirEntry->Base[0] == 0)
+                            break;
+
+                        if (FatDirEntry->Base[0] != 0xE5)
+                        {
+                            if (FatDirEntry->Attr != 0xF)
+                                AddStdDir(Dir, FatDirEntry);
+                        }
+
+                        FatDirEntry++;
                     }
                 }
             }
