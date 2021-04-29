@@ -173,7 +173,7 @@ unsigned int TFat::GetDirCluster(struct TFatDirEntry *entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
+struct TDirEntry *TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
 {
     char Name[16];
     char *src;
@@ -189,7 +189,7 @@ void TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
     {
         case ' ':
         case '.':
-            return;
+            return 0;
     }
 
     for (i = 0; i < 8; i++)
@@ -228,6 +228,23 @@ void TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
     *dst = 0;
 
     cluster = GetDirCluster(entry);
+
+    return Dir->Add(Name, cluster);
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::FillDir
+#
+#   Purpose....: Fill in dir info from FAT entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::FillDir(struct TDirEntry *dir, struct TFatDirEntry *fat)
+{
 }
 
 /*##########################################################################
@@ -254,6 +271,7 @@ void TFat::GetDir(unsigned int Cluster)
     long long Sector;
     TDir *Dir;
     struct TFatDirEntry *FatDirEntry;
+    struct TDirEntry *DirEntry;
 
     Dir = new TDir(Cluster);
 
@@ -312,11 +330,16 @@ void TFat::GetDir(unsigned int Cluster)
                         if (FatDirEntry->Base[0] == 0)
                             break;
 
+                        DirEntry = 0;
+
                         if (FatDirEntry->Base[0] != 0xE5)
                         {
                             if (FatDirEntry->Attr != 0xF)
-                                AddStdDir(Dir, FatDirEntry);
+                                DirEntry = AddStdDir(Dir, FatDirEntry);
                         }
+
+                        if (DirEntry)
+                            FillDir(DirEntry, FatDirEntry);
 
                         FatDirEntry++;
                     }
