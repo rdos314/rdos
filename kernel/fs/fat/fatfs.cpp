@@ -141,147 +141,6 @@ long long TFat::GetFreeSectors()
 
 /*##########################################################################
 #
-#   Name       : TFat::GetDirCluster
-#
-#   Purpose....: Get dir cluster
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-unsigned int TFat::GetDirCluster(struct TFatDirEntry *entry)
-{
-    unsigned int cluster;
-    char *ptr = (char *)&cluster;
-
-    
-    memcpy(ptr, &entry->ClusterLow, 2);
-    memcpy(ptr + 2, &entry->ClusterHi, 2);
-
-    return cluster;
-}
-
-/*##########################################################################
-#
-#   Name       : TFat::DecodeTime
-#
-#   Purpose....: Decode time
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long long TFat::DecodeTime(short int Date, short int Time)
-{
-    int sec = Time & 0x1F;
-    int min = (Time >> 5) & 0x3F;
-    int hour = (Time >> 11) & 0x1F;
-    int day = Date & 0x1F;
-    int month = (Date >> 5) & 0xF;
-    int year = (Date >> 9) & 0x7F;
-    unsigned long lsb, msb;
-    long long res;
-
-    year += 1980;
-    sec = 2 * sec;
-
-    lsb = RdosCodeLsbTics(min, sec, 0, 0);
-    msb = RdosCodeMsbTics(year, month, day, hour);
-
-    res = lsb + ((long long)msb << 32);
-    return res;
-}
-
-/*##########################################################################
-#
-#   Name       : TFat::DecodeAttrib
-#
-#   Purpose....: Decode attrib
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFat::DecodeAttrib(char attrib)
-{
-    return attrib;
-}
-
-/*##########################################################################
-#
-#   Name       : TFat::ProcessDir
-#
-#   Purpose....: Process dir
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-struct TDirEntry *TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
-{
-    char Name[16];
-    char *src;
-    char *dst;
-    char ch;
-    int i;
-    unsigned short int cluster;
-
-    src = entry->Base;
-    dst = Name;
-
-    switch (*src)
-    {
-        case ' ':
-        case '.':
-            return 0;
-    }
-
-    for (i = 0; i < 8; i++)
-    {
-        if (*src == ' ') 
-            break;
-        else
-        {
-            ch = tolower(*src);
-            *dst = ch;
-            src++;
-            dst++;
-        }
-    }
-
-    src = entry->Ext;
-    if (*src != ' ')
-    {
-        *dst = '.';
-        dst++;
-    
-        for (i = 0; i < 3; i++)
-        {
-            if (*src == ' ') 
-                break;
-            else
-            {
-                ch = tolower(*src);
-                *dst = ch;
-                src++;
-                dst++;
-            }
-        }
-    }
-
-    *dst = 0;
-
-    cluster = GetDirCluster(entry);
-
-    return Dir->Add(Name, cluster);
-}
-
-/*##########################################################################
-#
 #   Name       : TFat::GetDir
 #
 #   Purpose....: Get dir
@@ -303,11 +162,11 @@ void TFat::GetDir(unsigned int Cluster)
     int i, j, k;
     long long Sector;
     short int Offset;
-    TDir *Dir;
+    TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
     struct TDirEntry *DirEntry;
 
-    Dir = new TDir(Cluster);
+    Dir = new TFatDir(Cluster);
 
     while (Cluster && Cluster < Clusters)
     {
@@ -342,9 +201,9 @@ void TFat::GetDir(unsigned int Cluster)
 
         for (i = 0; i < size; i++)
         {
-            Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster; 
+            Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster;
             ReqArr[i] = new TDiscReqEntry(&Req, Sector, SectorsPerCluster);
-        } 
+        }
 
         Req.WaitForever();
 
@@ -352,7 +211,7 @@ void TFat::GetDir(unsigned int Cluster)
         {
             for (i = 0; i < size; i++)
             {
-                Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster; 
+                Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster;
                 FatDirEntry = (struct TFatDirEntry *)ReqArr[i]->Map();
 
                 for (j = 0; j < SectorsPerCluster; j++)
@@ -367,30 +226,7 @@ void TFat::GetDir(unsigned int Cluster)
                         if (FatDirEntry->Base[0] == 0)
                             break;
 
-                        DirEntry = 0;
-
-                        if (FatDirEntry->Base[0] != 0xE5)
-                        {
-                            if (FatDirEntry->Attr != 0xF)
-                                DirEntry = AddStdDir(Dir, FatDirEntry);
-                        }
-
-                        if (DirEntry)
-                        {
-                            if (FatDirEntry->CrDate)
-                                DirEntry->CreateTime = DecodeTime(FatDirEntry->CrDate, FatDirEntry->CrTime);
-
-                            if (FatDirEntry->WrDate)
-                                DirEntry->ModifyTime = DecodeTime(FatDirEntry->WrDate, FatDirEntry->WrTime);
-
-                            if (FatDirEntry->AcDate)
-                                DirEntry->AccessTime = DecodeTime(FatDirEntry->AcDate, 0);
-
-                            DirEntry->Attrib = DecodeAttrib(FatDirEntry->Attr);
-                            DirEntry->Size = FatDirEntry->FileSize;
-                            DirEntry->Sector = Sector;
-                            DirEntry->Offset = Offset;
-                        }
+                        Dir->Add(Sector, Offset, FatDirEntry);
 
                         FatDirEntry++;
                         Offset += 32;

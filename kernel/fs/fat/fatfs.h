@@ -32,7 +32,7 @@
 #include "tab.h"
 #include "thread.h"
 #include "cluster.h"
-#include "dir.h"
+#include "fatdir.h"
 
 struct TBootSector
 {
@@ -58,23 +58,6 @@ struct TBootSector
     short int BackupSector;
     short int Pad;
     char FsName[8];
-};
-
-struct TFatDirEntry
-{
-    char Base[8];
-    char Ext[3];
-    char Attr;
-    char Resv1;
-    char Resv2;
-    short int CrTime;
-    short int CrDate;
-    short int AcDate;
-    short int ClusterHi;
-    short int WrTime;
-    short int WrDate;
-    short int ClusterLow;
-    unsigned int FileSize;
 };
 
 class TFat : public TFs, public TThread
@@ -106,9 +89,6 @@ public:
     unsigned int FreeClusters;
 
 protected:
-    unsigned int GetDirCluster(struct TFatDirEntry *entry);
-    long long DecodeTime(short int Date, short int Time);
-    int DecodeAttrib(char attrib);
     struct TDirEntry *AddStdDir(TDir *dir, struct TFatDirEntry *entry);
     void GetDir(unsigned int Cluster);
 
