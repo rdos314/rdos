@@ -196,6 +196,22 @@ long long TFat::DecodeTime(short int Date, short int Time)
 
 /*##########################################################################
 #
+#   Name       : TFat::DecodeAttrib
+#
+#   Purpose....: Decode attrib
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFat::DecodeAttrib(char attrib)
+{
+    return attrib;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::ProcessDir
 #
 #   Purpose....: Process dir
@@ -285,6 +301,13 @@ void TFat::FillDir(struct TDirEntry *dir, struct TFatDirEntry *fat)
 
     if (fat->AcDate)
         dir->AccessTime = DecodeTime(fat->AcDate, 0);
+
+    dir->Attrib = DecodeAttrib(fat->Attr);
+
+    if (fat->Attr & 0x10)
+        dir->Size = 0;
+    else
+        dir->Size = fat->FileSize;
 }
 
 /*##########################################################################
@@ -379,7 +402,10 @@ void TFat::GetDir(unsigned int Cluster)
                         }
 
                         if (DirEntry)
+                        {
                             FillDir(DirEntry, FatDirEntry);
+                            DirEntry->EntryNr = 16 * j + k;
+                        }
 
                         FatDirEntry++;
                     }
