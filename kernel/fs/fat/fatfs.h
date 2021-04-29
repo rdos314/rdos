@@ -68,6 +68,7 @@ public:
 
     bool Validate();
     virtual long long GetFreeSectors();
+    virtual TDir *CacheDir(long long inode);
 
     void Run();
 
@@ -90,7 +91,6 @@ public:
 
 protected:
     struct TDirEntry *AddStdDir(TDir *dir, struct TFatDirEntry *entry);
-    void GetDir(unsigned int Cluster);
 
     bool VerifySector(int id, char *buf);
     void GetSectors(TDiscReq *Req, long long sector, int count);

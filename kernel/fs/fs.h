@@ -29,6 +29,7 @@
 #define _FS_H
 
 #include "discserv.h"
+#include "dir.h"
 
 class TFs
 {
@@ -37,6 +38,7 @@ public:
     virtual ~TFs();
 
     virtual long long GetFreeSectors() = 0;
+    virtual TDir *CacheDir(long long inode) = 0;
 
 protected:
     TDiscServer *Server;

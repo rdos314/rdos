@@ -141,17 +141,18 @@ long long TFat::GetFreeSectors()
 
 /*##########################################################################
 #
-#   Name       : TFat::GetDir
+#   Name       : TFat::CacheDir
 #
-#   Purpose....: Get dir
+#   Purpose....: Cache dir
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFat::GetDir(unsigned int Cluster)
+TDir *TFat::CacheDir(long long inode)
 {
+    unsigned int Cluster = inode;
     TDiscReq Req(Server);
     TCluster Chain;
     unsigned int NextCluster1;
@@ -236,7 +237,7 @@ void TFat::GetDir(unsigned int Cluster)
             }
         }
     }
-
+    return Dir;
 }
 
 /*##########################################################################
@@ -362,8 +363,7 @@ void TFat::Test()
 ##########################################################################*/
 void TFat::Run()
 {
-    bool ok;
-    struct TDirEntry *e;
+    TDir *dir;
 
     RdosCreateThread(ThreadStartup, "Disc Test 1", this, 0x4000);
     RdosCreateThread(ThreadStartup, "Disc Test 2", this, 0x4000);
@@ -378,8 +378,8 @@ void TFat::Run()
 
     ServTest();
 
-    GetDir(2);
-    GetDir(818);
+    dir = CacheDir(2);
+    dir = CacheDir(818);
 
     Server->WaitForMsg(this);
 
