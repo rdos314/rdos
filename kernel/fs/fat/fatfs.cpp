@@ -387,12 +387,7 @@ void TFat::GetDir(unsigned int Cluster)
                                 DirEntry->AccessTime = DecodeTime(FatDirEntry->AcDate, 0);
 
                             DirEntry->Attrib = DecodeAttrib(FatDirEntry->Attr);
-
-                            if (FatDirEntry->Attr & 0x10)
-                                DirEntry->Size = 0;
-                            else
-                                DirEntry->Size = FatDirEntry->FileSize;
-
+                            DirEntry->Size = FatDirEntry->FileSize;
                             DirEntry->Sector = Sector;
                             DirEntry->Offset = Offset;
                         }
@@ -548,6 +543,7 @@ void TFat::Run()
     ServTest();
 
     GetDir(2);
+    GetDir(818);
 
     Server->WaitForMsg(this);
 
