@@ -38,12 +38,12 @@ struct TDirEntry
     long long CreateTime;
     long long AccessTime;
     long long ModifyTime;
-    int EntryNr;
     int Attrib;
     int Flags;
     int Uid;
     int Gid;
-    short int Sel;
+    long long Sector;
+    short int Offset;
 
     short int PathNameSize;
     char PathName[];

@@ -282,36 +282,6 @@ struct TDirEntry *TFat::AddStdDir(TDir *Dir, struct TFatDirEntry *entry)
 
 /*##########################################################################
 #
-#   Name       : TFat::FillDir
-#
-#   Purpose....: Fill in dir info from FAT entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFat::FillDir(struct TDirEntry *dir, struct TFatDirEntry *fat)
-{
-    if (fat->CrDate)
-        dir->CreateTime = DecodeTime(fat->CrDate, fat->CrTime);
-
-    if (fat->WrDate)
-        dir->ModifyTime = DecodeTime(fat->WrDate, fat->WrTime);
-
-    if (fat->AcDate)
-        dir->AccessTime = DecodeTime(fat->AcDate, 0);
-
-    dir->Attrib = DecodeAttrib(fat->Attr);
-
-    if (fat->Attr & 0x10)
-        dir->Size = 0;
-    else
-        dir->Size = fat->FileSize;
-}
-
-/*##########################################################################
-#
 #   Name       : TFat::GetDir
 #
 #   Purpose....: Get dir
@@ -332,6 +302,7 @@ void TFat::GetDir(unsigned int Cluster)
     int size;
     int i, j, k;
     long long Sector;
+    short int Offset;
     TDir *Dir;
     struct TFatDirEntry *FatDirEntry;
     struct TDirEntry *DirEntry;
@@ -381,12 +352,15 @@ void TFat::GetDir(unsigned int Cluster)
         {
             for (i = 0; i < size; i++)
             {
+                Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster; 
                 FatDirEntry = (struct TFatDirEntry *)ReqArr[i]->Map();
 
                 for (j = 0; j < SectorsPerCluster; j++)
                 {
                     if (FatDirEntry->Base[0] == 0)
                         break;
+
+                    Offset = 0;
 
                     for (k = 0; k < 16; k++)
                     {
@@ -403,12 +377,30 @@ void TFat::GetDir(unsigned int Cluster)
 
                         if (DirEntry)
                         {
-                            FillDir(DirEntry, FatDirEntry);
-                            DirEntry->EntryNr = 16 * j + k;
+                            if (FatDirEntry->CrDate)
+                                DirEntry->CreateTime = DecodeTime(FatDirEntry->CrDate, FatDirEntry->CrTime);
+
+                            if (FatDirEntry->WrDate)
+                                DirEntry->ModifyTime = DecodeTime(FatDirEntry->WrDate, FatDirEntry->WrTime);
+
+                            if (FatDirEntry->AcDate)
+                                DirEntry->AccessTime = DecodeTime(FatDirEntry->AcDate, 0);
+
+                            DirEntry->Attrib = DecodeAttrib(FatDirEntry->Attr);
+
+                            if (FatDirEntry->Attr & 0x10)
+                                DirEntry->Size = 0;
+                            else
+                                DirEntry->Size = FatDirEntry->FileSize;
+
+                            DirEntry->Sector = Sector;
+                            DirEntry->Offset = Offset;
                         }
 
                         FatDirEntry++;
+                        Offset += 32;
                     }
+                    Sector++;
                 }
             }
         }

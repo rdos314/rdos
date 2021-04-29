@@ -198,12 +198,12 @@ struct TDirEntry *TDir::Add(const char *path, long long inode)
     entry->CreateTime = 0;
     entry->AccessTime = 0;
     entry->ModifyTime = 0;
-    entry->EntryNr = 0;
+    entry->Sector = 0;
+    entry->Offset = 0;
     entry->Attrib = 0;
     entry->Flags = 0;
     entry->Uid = 0;
     entry->Gid = 0;
-    entry->Sel = 0;
     entry->PathNameSize = len;
     strcpy(entry->PathName, path);
 
