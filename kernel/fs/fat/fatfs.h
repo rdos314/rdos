@@ -59,6 +59,23 @@ struct TBootSector
     char FsName[8];
 };
 
+struct TFatDirEntry
+{
+    char Base[8];
+    char Ext[3];
+    char Attr;
+    char Resv1;
+    char Resv2;
+    short int CrTime;
+    short int CrDate;
+    short int AcDate;
+    short int ClusterHi;
+    short int WrTime;
+    short int WrDate;
+    short int ClusterLow;
+    unsigned int FileSize;
+};
+
 class TFat : public TFs, public TThread
 {
 public:
@@ -88,7 +105,8 @@ public:
     unsigned int FreeClusters;
 
 protected:
-    TCluster *GetClusterChain(unsigned int Cluster);
+    void ProcessDir(struct TFatDirEntry *entry);
+    void GetDir(unsigned int Cluster);
 
     bool VerifySector(int id, char *buf);
     void GetSectors(TDiscReq *Req, long long sector, int count);

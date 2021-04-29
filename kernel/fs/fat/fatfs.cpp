@@ -140,24 +140,46 @@ long long TFat::GetFreeSectors()
 
 /*##########################################################################
 #
-#   Name       : TFat::GetClusterChain
+#   Name       : TFat::ProcessDir
 #
-#   Purpose....: Get cluster chain
+#   Purpose....: Process dir
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCluster *TFat::GetClusterChain(unsigned int Cluster)
+void TFat::ProcessDir(struct TFatDirEntry *entry)
 {
-    TCluster *Chain = new TCluster;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::GetDir
+#
+#   Purpose....: Get dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::GetDir(unsigned int Cluster)
+{
+    TDiscReq Req(Server);
+    TCluster Chain;
     unsigned int NextCluster1;
     unsigned int NextCluster2;
+    unsigned int *ClusterArr;
+    TDiscReqEntry **ReqArr;
+    int size;
+    int i, j, k;
+    long long Sector;
+    struct TFatDirEntry *DirEntry;
 
     while (Cluster && Cluster < Clusters)
     {
-        Chain->Add(Cluster);
+        Chain.Add(Cluster);
 
         NextCluster1 = FatTable1->GetClusterLink(Cluster);
         NextCluster2 = FatTable2->GetClusterLink(Cluster);
@@ -179,7 +201,39 @@ TCluster *TFat::GetClusterChain(unsigned int Cluster)
         }
     }
 
-    return Chain;
+    size = Chain.GetSize();
+    ClusterArr = Chain.GetChain();
+
+    if (size)
+    {
+        ReqArr = new TDiscReqEntry *[size];
+
+        for (i = 0; i < size; i++)
+        {
+            Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster; 
+            ReqArr[i] = new TDiscReqEntry(&Req, Sector, SectorsPerCluster);
+        } 
+
+        Req.WaitForever();
+
+        if (Req.IsDone())
+        {
+            for (i = 0; i < size; i++)
+            {
+                DirEntry = (struct TFatDirEntry *)ReqArr[i]->Map();
+
+                for (j = 0; j < SectorsPerCluster; j++)
+                {
+                    for (k = 0; k < 16; k++)
+                    {
+                        ProcessDir(DirEntry);
+                        DirEntry++;
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 /*##########################################################################
@@ -321,14 +375,7 @@ void TFat::Run()
 
     ServTest();
 
-    TCluster *cluster;
-    int size;
-    unsigned int *chain;
-
-    cluster = GetClusterChain(2);
-
-    size = cluster->GetSize();
-    chain = cluster->GetChain();
+    GetDir(2);
 
     Server->WaitForMsg(this);
 

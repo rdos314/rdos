@@ -125,7 +125,7 @@ unsigned int TFatTable32::GetFreeInBlock(long long Sector, unsigned int Clusters
     tab = (int *)e1.Map();
 
     for (i = 0; i < Clusters; i++)
-        if (tab[i] == 0)
+        if ((tab[i] & 0xFFFFFFF) == 0)
             FreeClusters++;
 
     return FreeClusters;
@@ -200,5 +200,5 @@ unsigned int TFatTable32::GetClusterLink(unsigned int Cluster)
         FTab = (unsigned int *)FReqEntry->Map();
     }
 
-    return FTab[Cluster - FStartCluster];
+    return FTab[Cluster - FStartCluster] & 0xFFFFFFF;
 }
