@@ -154,3 +154,19 @@ bool TFat32::ProcessInfoSector()
     FreeClusters = info->FreeClusters;
     return true;
 }
+
+/*##########################################################################
+#
+#   Name       : TFat32::CacheRootDir
+#
+#   Purpose....: CacheRootDir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir *TFat32::CacheRootDir()
+{
+    return CacheDir(RootCluster);
+}

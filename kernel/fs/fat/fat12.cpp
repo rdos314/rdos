@@ -104,3 +104,19 @@ TFat12::TFat12(TDiscServer *server, struct TBootSector *boot)
 TFat12::~TFat12()
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TFat12::CacheRootDir
+#
+#   Purpose....: CacheRootDir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir *TFat12::CacheRootDir()
+{
+    return 0;
+}

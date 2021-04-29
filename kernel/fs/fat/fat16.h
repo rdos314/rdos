@@ -30,12 +30,15 @@
 
 #include "fatfs.h"
 #include "tab16.h"
+#include "dir.h"
 
 class TFat16 : public TFat
 {
 public:
     TFat16(TDiscServer *server, struct TBootSector *boot);
     ~TFat16();
+
+    virtual TDir *CacheRootDir();
 
 protected:
     int RootDirEntries;

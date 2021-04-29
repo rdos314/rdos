@@ -378,7 +378,7 @@ void TFat::Run()
 
     ServTest();
 
-    dir = CacheDir(2);
+    dir = CacheRootDir();
     dir = CacheDir(818);
 
     Server->WaitForMsg(this);
