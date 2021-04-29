@@ -90,7 +90,7 @@ public:
     unsigned int FreeClusters;
 
 protected:
-    struct TDirEntry *AddStdDir(TDir *dir, struct TFatDirEntry *entry);
+    TDir *CacheFixedDir(long long RootSector, int RootDirEntries);
 
     bool VerifySector(int id, char *buf);
     void GetSectors(TDiscReq *Req, long long sector, int count);

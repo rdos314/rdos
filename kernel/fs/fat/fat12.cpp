@@ -118,5 +118,5 @@ TFat12::~TFat12()
 ##########################################################################*/
 TDir *TFat12::CacheRootDir()
 {
-    return 0;
+    return CacheFixedDir(RootSector, RootDirEntries);
 }

@@ -38,6 +38,7 @@ public:
     virtual ~TFs();
 
     virtual long long GetFreeSectors() = 0;
+    virtual TDir *CacheRootDir() = 0;
     virtual TDir *CacheDir(long long inode) = 0;
 
 protected:

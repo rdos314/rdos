@@ -117,44 +117,5 @@ TFat16::~TFat16()
 ##########################################################################*/
 TDir *TFat16::CacheRootDir()
 {
-    int Sectors = RootDirEntries / 16;
-    TDiscReq Req(Server);
-    TDiscReqEntry ReqEntry(&Req, RootSector, Sectors);
-    long long Sector;
-    int Offset;
-    int i, j;
-    TFatDir *Dir;
-    struct TFatDirEntry *FatDirEntry;
-
-    Dir = new TFatDir(0);
-
-    Req.WaitForever();
-
-    if (Req.IsDone())
-    {
-        FatDirEntry = (struct TFatDirEntry *)ReqEntry.Map();
-        Sector = RootSector;
-
-        for (i = 0; i < Sectors; i++)
-        {
-            Offset = 0;
-
-            if (FatDirEntry->Base[0] == 0)
-                break;
-
-            for (j = 0; j < 16; j++)
-            {
-                if (FatDirEntry->Base[0] == 0)
-                    break;
-
-                Dir->Add(Sector, Offset, FatDirEntry);
-
-                FatDirEntry++;
-                Offset += 32;
-            }
-
-            Sector++;
-        }
-    }
-    return Dir;
+    return CacheFixedDir(RootSector, RootDirEntries);
 }
