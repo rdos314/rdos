@@ -20,51 +20,38 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# fatdir.h
-# FAT directory class
+# fatlfn.h
+# FAT LFN class
 #
 ########################################################################*/
 
-#ifndef _FATDIR_H
-#define _FATDIR_H
+#ifndef _FATLFN_H
+#define _FATLFN_H
 
 #include "dir.h"
-#include "fatlfn.h"
 
-struct TFatDirEntry
+struct TFatLfnEntry
 {
-    char Base[8];
-    char Ext[3];
+    char Ord;
+    short int Name1[5];
     char Attr;
-    char Resv1;
-    char Resv2;
-    short int CrTime;
-    short int CrDate;
-    short int AcDate;
-    short int ClusterHi;
-    short int WrTime;
-    short int WrDate;
+    char Type;
+    char ChkSum;
+    short int Name2[6];
     short int ClusterLow;
-    unsigned int FileSize;
+    short int Name3[2];
 };
 
-class TFatDir : public TDir
+class TFatLfn
 {
 public:
-    TFatDir(long long Parent);
-    virtual ~TFatDir();
+    TFatLfn(struct TFatLfnEntry *entry);
+    virtual ~TFatLfn();
 
-    void Add(long long sector, int offset, struct TFatDirEntry *entry);
+    bool Add(struct TFatLfnEntry *entry);
 
 protected:
-    unsigned int GetCluster(struct TFatDirEntry *entry);
-    long long DecodeTime(short int Date, short int Time);
-    int DecodeAttrib(char attrib);
-    void Add(long long sector, int offset, const char *name, struct TFatDirEntry *fat);
-    void AddStd(long long sector, int offset, struct TFatDirEntry *entry);
-
-    struct TFatLfn *FCurrLfn;
-
+    char ChkSum;
 };
 
 #endif

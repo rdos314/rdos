@@ -45,6 +45,7 @@
 TFatDir::TFatDir(long long parent)
   : TDir(parent)
 {
+    FCurrLfn = 0;
 }
 
 /*##########################################################################
@@ -238,6 +239,8 @@ void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
 ##########################################################################*/
 void TFatDir::Add(long long sector, int offset, struct TFatDirEntry *entry)
 {
+    struct TFatLfnEntry *lfn;
+
     switch (entry->Base[0])
     {
         case ' ':
@@ -247,8 +250,38 @@ void TFatDir::Add(long long sector, int offset, struct TFatDirEntry *entry)
             break;
 
         default:
-            if (entry->Attr != 0xF)
+            if (entry->Attr == 0xF)
+            {
+                lfn = (struct TFatLfnEntry *)entry;
+
+                if (lfn->Ord & 0x40)
+                {
+                    if (FCurrLfn)
+                        delete FCurrLfn;
+
+                    FCurrLfn = new struct TFatLfn(lfn);
+                }
+                else
+                {
+                    if (FCurrLfn)
+                    {
+                        if (!FCurrLfn->Add(lfn))
+                        {
+                            delete FCurrLfn;
+                            FCurrLfn = 0;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (FCurrLfn)
+                {
+                    delete FCurrLfn;
+                    FCurrLfn = 0;
+                }
                 AddStd(sector, offset, entry);
+            }
             break;
     }
 }
