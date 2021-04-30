@@ -47,7 +47,8 @@ TFatLfn::TFatLfn(struct TFatLfnEntry *entry)
 {
     ChkSum = entry->ChkSum;
     Count = entry->Ord & 0x3F;
-    Buf = new short int[13 * Count];
+    MaxSize = 13 * (int)Count;
+    Buf = new short int[MaxSize];
 
     AddData(entry);
 }
@@ -115,12 +116,15 @@ void TFatLfn::AddData(struct TFatLfnEntry *entry)
 ##########################################################################*/
 bool TFatLfn::Add(struct TFatLfnEntry *entry)
 {
-    if (entry->ChkSum == ChkSum)
+    if (Count > 0)
     {
-        if (entry->Ord == Count)
+        if (entry->ChkSum == ChkSum)
         {
-            AddData(entry);
-            return true;
+            if (entry->Ord == Count)
+            {
+                AddData(entry);
+                return true;
+            }
         }
     }
     return false;
@@ -143,10 +147,106 @@ bool TFatLfn::Verify(struct TFatDirEntry *entry)
     int i;
     char *ptr = entry->Base;
 
-    sum = 0;
+    if (Count == 0)
+    {
+        sum = 0;
 
-    for (i = 0; i < 11; i++)
-        sum = ((sum & 1) ? 0x80 : 0) + (sum >> 1) + ptr[i];
+        for (i = 0; i < 11; i++)
+            sum = ((sum & 1) ? 0x80 : 0) + (sum >> 1) + ptr[i];
 
-    return true;
+        if (sum == ChkSum)
+            return true;
+    }
+    return false;    
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::GetNameSize
+#
+#   Purpose....: Get max size of name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFatLfn::GetNameSize()
+{
+    return 2 * MaxSize + 1;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::GetName
+#
+#   Purpose....: Get name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatLfn::GetName(char *name)
+{
+    int i;
+    unsigned short int *inptr = (unsigned short int *)Buf;
+    char *outptr = name;
+    int pos = 0;
+    int bits;
+    unsigned int c;
+    unsigned int d;
+
+    while (pos < MaxSize)
+    {
+        c = *inptr;
+        inptr++;
+        pos++;
+        if (c == 0xFFFF)
+            break;
+
+        if ((c & 0xFC00) == 0xD800)
+        {
+            d = *inptr;
+            inptr++;
+            pos++;
+
+            if ((d & 0xFC00) == 0xDC00)
+            {
+                c &= 0x03FF;
+                c <<= 10;
+                c |= d & 0x03FF;
+                c += 0x10000;
+            }
+        }
+
+        if (c < 0x80)
+        {
+            *outptr = c;
+            bits = -6;
+        }
+        else if (c < 0x800)
+        {
+            *outptr = ((c >> 6) & 0x1F) | 0xC0;
+            bits = 0;
+        }
+        else if (c < 0x10000)
+        {
+           *outptr = ((c >> 12) & 0xF) | 0xE0;
+           bits = 6;
+        }
+        else
+        {
+           *outptr = ((c >> 18) & 0x7) | 0xF0;
+           bits = 12;
+        }
+        outptr++;
+
+        for ( ; bits >= 0; bits-= 6)
+        {
+            *outptr = ((c >> bits) & 0x3F) | 0x80;
+            outptr++;
+        }
+    }
+    *outptr = 0;
 }

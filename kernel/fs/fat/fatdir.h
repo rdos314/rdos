@@ -62,7 +62,7 @@ protected:
     int DecodeAttrib(char attrib);
     void Add(long long sector, int offset, const char *name, struct TFatDirEntry *fat);
     void AddStd(long long sector, int offset, struct TFatDirEntry *entry);
-    void AddLfn(long long sector, int offset);
+    void AddLfn(long long sector, int offset, struct TFatDirEntry *entry);
 
     struct TFatLfn *FCurrLfn;
 

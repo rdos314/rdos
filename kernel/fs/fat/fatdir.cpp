@@ -237,8 +237,16 @@ void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::AddLfn(long long sector, int offset)
+void TFatDir::AddLfn(long long sector, int offset, struct TFatDirEntry *entry)
 {
+    int size = FCurrLfn->GetNameSize();
+    char *buf = new char[size];
+
+    FCurrLfn->GetName(buf);
+
+    Add(sector, offset, buf, entry);
+    
+    delete buf;
 }
 
 /*##########################################################################
@@ -293,7 +301,7 @@ void TFatDir::Add(long long sector, int offset, struct TFatDirEntry *entry)
                 if (FCurrLfn)
                 {
                     if (FCurrLfn->Verify(entry))
-                        AddLfn(sector, offset);
+                        AddLfn(sector, offset, entry);
                     else
                         AddStd(sector, offset, entry);
  

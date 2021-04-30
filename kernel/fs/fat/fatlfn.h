@@ -50,12 +50,15 @@ public:
 
     bool Add(struct TFatLfnEntry *entry);
     bool Verify(struct TFatDirEntry *entry);
+    int GetNameSize();
+    void GetName(char *buf);
 
 protected:
     void AddData(struct TFatLfnEntry *entry);
 
     char ChkSum;
     char Count;
+    int MaxSize;
     short int *Buf;
 };
 
