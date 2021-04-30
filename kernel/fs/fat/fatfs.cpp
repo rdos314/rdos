@@ -417,8 +417,6 @@ void TFat::Test()
 ##########################################################################*/
 void TFat::Run()
 {
-    TDir *dir;
-
     RdosCreateThread(ThreadStartup, "Disc Test 1", this, 0x4000);
     RdosCreateThread(ThreadStartup, "Disc Test 2", this, 0x4000);
     RdosCreateThread(ThreadStartup, "Disc Test 3", this, 0x4000);
@@ -430,10 +428,7 @@ void TFat::Run()
     RdosCreateThread(ThreadStartup, "Disc Test 9", this, 0x4000);
     RdosCreateThread(ThreadStartup, "Disc Test 10", this, 0x4000);
 
-    ServTest();
-
-    dir = CacheRootDir();
-    dir = CacheDir(818);
+//    ServTest();
 
     Server->WaitForMsg(this);
 
