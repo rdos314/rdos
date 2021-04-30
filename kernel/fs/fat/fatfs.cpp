@@ -250,7 +250,7 @@ TDir *TFat::CacheDir(long long inode)
     size = Chain.GetSize();
     ClusterArr = Chain.GetChain();
 
-    if (size)
+    if (size && Cluster)
     {
         ReqArr = new TDiscReqEntry *[size];
 
