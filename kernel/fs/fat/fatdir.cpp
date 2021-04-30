@@ -228,6 +228,21 @@ void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
 
 /*##########################################################################
 #
+#   Name       : TFatDir::AddLfn
+#
+#   Purpose....: Add LFN entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::AddLfn(long long sector, int offset)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TFatDir::Add
 #
 #   Purpose....: Add entry
@@ -277,10 +292,16 @@ void TFatDir::Add(long long sector, int offset, struct TFatDirEntry *entry)
             {
                 if (FCurrLfn)
                 {
+                    if (FCurrLfn->Verify(entry))
+                        AddLfn(sector, offset);
+                    else
+                        AddStd(sector, offset, entry);
+ 
                     delete FCurrLfn;
                     FCurrLfn = 0;
                 }
-                AddStd(sector, offset, entry);
+                else
+                    AddStd(sector, offset, entry);
             }
             break;
     }

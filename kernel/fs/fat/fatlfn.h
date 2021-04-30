@@ -49,6 +49,7 @@ public:
     virtual ~TFatLfn();
 
     bool Add(struct TFatLfnEntry *entry);
+    bool Verify(struct TFatDirEntry *entry);
 
 protected:
     void AddData(struct TFatLfnEntry *entry);

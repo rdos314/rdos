@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <rdos.h>
 #include "fatlfn.h"
+#include "fatdir.h"
 
 /*##########################################################################
 #
@@ -123,4 +124,29 @@ bool TFatLfn::Add(struct TFatLfnEntry *entry)
         }
     }
     return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::Verify
+#
+#   Purpose....: Verify again short entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatLfn::Verify(struct TFatDirEntry *entry)
+{
+    char sum;
+    int i;
+    char *ptr = entry->Base;
+
+    sum = 0;
+
+    for (i = 0; i < 11; i++)
+        sum = ((sum & 1) ? 0x80 : 0) + (sum >> 1) + ptr[i];
+
+    return true;
 }
