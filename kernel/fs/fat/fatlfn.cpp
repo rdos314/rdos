@@ -45,6 +45,10 @@
 TFatLfn::TFatLfn(struct TFatLfnEntry *entry)
 {
     ChkSum = entry->ChkSum;
+    Count = entry->Ord & 0x3F;
+    Buf = new short int[13 * Count];
+
+    AddData(entry);
 }
 
 /*##########################################################################
@@ -60,6 +64,41 @@ TFatLfn::TFatLfn(struct TFatLfnEntry *entry)
 ##########################################################################*/
 TFatLfn::~TFatLfn()
 {
+    delete Buf;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::AddData
+#
+#   Purpose....: Add data from LFN entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatLfn::AddData(struct TFatLfnEntry *entry)
+{
+    short int *ptr;
+    int i;
+
+    Count--;
+    ptr = Buf + 13 * Count;
+
+    for (i = 0; i < 5; i++)
+        ptr[i] = entry->Name1[i];
+
+    ptr += 5;
+
+    for (i = 0; i < 6; i++)
+        ptr[i] = entry->Name2[i];
+
+    ptr += 6;
+
+    for (i = 0; i < 2; i++)
+        ptr[i] = entry->Name3[i];
+
 }
 
 /*##########################################################################
@@ -76,7 +115,12 @@ TFatLfn::~TFatLfn()
 bool TFatLfn::Add(struct TFatLfnEntry *entry)
 {
     if (entry->ChkSum == ChkSum)
-        return true;
-    else
-        return false;
+    {
+        if (entry->Ord == Count)
+        {
+            AddData(entry);
+            return true;
+        }
+    }
+    return false;
 }

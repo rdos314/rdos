@@ -51,7 +51,11 @@ public:
     bool Add(struct TFatLfnEntry *entry);
 
 protected:
+    void AddData(struct TFatLfnEntry *entry);
+
     char ChkSum;
+    char Count;
+    short int *Buf;
 };
 
 #endif
