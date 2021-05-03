@@ -36,6 +36,8 @@ include ..\driver.def
 include ..\handle.inc
 include ..\wait.inc
 include ..\os\protseg.def
+include ..\fs.inc
+include ..\os\exec.def
 include vfs.inc
 
     .386p
@@ -2404,6 +2406,88 @@ gvdfDone:
 get_vfs_drive_free   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           IsVfsPath
+;
+;       DESCRIPTION:    Check if VFS path
+;
+;       PARAMETERS:     ES:(E)DI
+;
+;       RETURNS:        NC     VFS path
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_vfs_path_name       DB 'Is VFS Path',0
+
+is_vfs_path    Proc near
+    push eax
+;
+    mov ax,es:[edi]
+    or al,al
+    stc
+    je ivpDone
+;
+    cmp ah,':'
+    jne ivpCurr
+;
+    sub al,'A'
+    jc ivpDone
+;
+    cmp al,26
+    jc ivpCheck
+;
+    sub al,20h
+    jc ivpDone
+;
+    cmp al,26
+    jc ivpCheck
+;
+    stc
+    jmp ivpDone
+
+ivpCurr:
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
+    mov al,ds:pc_drive
+    pop ds
+
+ivpCheck:
+    push ebx
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].drive_arr
+    or bx,bx
+    pop ebx
+    stc
+    jz ivpDone
+;
+    clc
+
+ivpDone:
+    pop eax
+    ret
+is_vfs_path  Endp
+
+is_vfs_path16  Proc far
+    push edi
+    movzx edi,di
+    call is_vfs_path
+    pop edi
+    ret
+is_vfs_path16  Endp
+
+is_vfs_path32  Proc far
+    call is_vfs_path
+    ret
+is_vfs_path32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -2555,6 +2639,14 @@ init_server    Proc near
     xor dx,dx
     mov ax,get_vfs_drive_free_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET is_vfs_path16
+    mov esi,OFFSET is_vfs_path32
+    mov edi,OFFSET is_vfs_path_name
+    mov dx,virt_es_in
+    mov ax,is_vfs_path_nr
+    RegisterUserGate
+
 
     ret
 init_server    Endp

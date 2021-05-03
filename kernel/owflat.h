@@ -3233,6 +3233,12 @@
     __parm [__eax] \
     __value [__edx __eax]
 
+#pragma aux RdosIsVfsPath = \
+    CallGate_is_vfs_path  \
+    CarryToBool \
+    __parm [__edi] \
+    __value [__eax]
+
 #pragma aux RdosCreateFileDrive = \
     CallGate_create_file_drive  \
     CarryToBool \

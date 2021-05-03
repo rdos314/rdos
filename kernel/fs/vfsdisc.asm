@@ -915,7 +915,6 @@ init_disc    Proc near
     xor dx,dx
     mov ax,get_disc_locked_nr
     RegisterBimodalUserGate
-
     ret
 init_disc    Endp
 
