@@ -76,6 +76,14 @@ ds_deleted       DB ?
 
 drive_seg   ENDS
 
+dir_handle_seg  STRUC
+
+dir_handle_base handle_header <>
+
+dir_handle_sel  DW ?
+
+dir_handle_seg  ENDS
+
 data    SEGMENT byte public 'DATA'
 
 drive_arr       DW MAX_PART_COUNT DUP (?)
@@ -2705,6 +2713,47 @@ open_vfs_dir32  Proc far
     ret
 open_vfs_dir32  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Delete handle
+;
+;           DESCRIPTION:    Delete a handle (called from handle module)
+;
+;           PARAMETERS:     BX              HANDLE TO DIR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle   Proc far
+    push ds
+    push ax
+    push ebx
+    push esi
+;
+    mov ax,VFS_DIR_HANDLE
+    DerefHandle
+    jc dhDone
+;
+    mov esi,ebx
+    mov bx,[ebx].dir_handle_sel
+    or bx,bx
+    stc
+    jz dhDone
+;
+;    call CloseDirBase
+    mov ebx,esi
+    FreeHandle
+    clc
+
+dhDone:
+    pop esi
+    pop ebx
+    pop ax
+    pop ds
+    ret
+delete_handle   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2738,6 +2787,10 @@ init_server    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET delete_handle
+    mov ax,VFS_DIR_HANDLE
+    RegisterHandle
 ;
     mov esi,OFFSET get_vfs_handle
     mov edi,OFFSET get_vfs_handle_name
