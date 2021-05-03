@@ -2423,9 +2423,9 @@ get_vfs_drive_free   Endp
 ;
 ;       DESCRIPTION:    Check if VFS path
 ;
-;       PARAMETERS:     ES:(E)DI
+;       PARAMETERS:     ES:(E)DI    Pathname
 ;
-;       RETURNS:        NC     VFS path
+;       RETURNS:        NC          Is VFS path
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2604,6 +2604,108 @@ cdDone:
 close_drive   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetPathDrive
+;
+;       DESCRIPTION:    Get path drive
+;
+;       PARAMETERS:     ES:EDI      Pathname
+;
+;       RETURNS:        AL          Drive
+;                       ES:EDI      Updated pathname without drive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPathDrive    Proc near
+    mov ax,es:[edi]
+    or al,al
+    stc
+    je gpdDone
+;
+    cmp ah,':'
+    jne gpdCurr
+;
+    sub al,'A'
+    jc gpdDone
+;
+    cmp al,26
+    jc gpdAdv
+;
+    sub al,20h
+    jc gpdDone
+;
+    cmp al,26
+    jc gpdAdv
+;
+    stc
+    jmp gpdDone
+
+gpdCurr:
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
+    mov al,ds:pc_drive
+    pop ds
+    clc
+    jmp gpdDone
+
+gpdAdv:
+    add edi,2
+    clc
+
+gpdDone:
+    ret
+GetPathDrive   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenVfsDir
+;
+;       DESCRIPTION:    Open VFS dir
+;
+;       PARAMETERS:     ES:(E)DI       Pathname
+;
+;       RETURNS:        NC
+;                         BX           Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_vfs_dir_name       DB 'Open VFS Dir',0
+
+open_vfs_dir    Proc near
+    push eax
+;    
+    call GetPathDrive
+    jc ovdDone
+;
+    call open_drive
+    jc ovdDone
+;
+    call close_drive
+
+ovdDone:
+    pop eax
+    ret
+open_vfs_dir    Endp
+
+open_vfs_dir16  Proc far
+    push edi
+    movzx edi,di
+    call open_vfs_dir
+    pop edi
+    ret
+open_vfs_dir16  Endp
+
+open_vfs_dir32  Proc far
+    call open_vfs_dir
+    ret
+open_vfs_dir32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -2768,8 +2870,13 @@ init_server    Proc near
     mov dx,virt_es_in
     mov ax,is_vfs_path_nr
     RegisterUserGate
-
-
+;
+    mov ebx,OFFSET open_vfs_dir16
+    mov esi,OFFSET open_vfs_dir32
+    mov edi,OFFSET open_vfs_dir_name
+    mov dx,virt_es_in
+    mov ax,open_vfs_dir_nr
+    RegisterUserGate
     ret
 init_server    Endp
 

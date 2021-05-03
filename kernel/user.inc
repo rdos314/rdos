@@ -2281,6 +2281,12 @@ IsVfsPath     MACRO
         UserGate is_vfs_path_nr
                                                 ENDM
 
+; IN  ES:(E)DI        Pathname
+; OUT BX              Handle
+OpenVfsDir   MACRO
+        UserGate open_vfs_dir_nr
+                                                ENDM
+
 ;   IN  AL          Drive #   
 ;   IN  ECX         Size of filesystem
 ;       IN      DS:(E)SI        File system name
