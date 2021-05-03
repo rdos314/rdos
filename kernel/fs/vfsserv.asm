@@ -67,10 +67,21 @@ fc_edi             DD ?
 
 fs_cmd      ENDS
 
+drive_seg   STRUC
+
+ds_part_sel      DW ?
+ds_ref_count     DW ?
+ds_drive         DB ?
+ds_deleted       DB ?
+
+drive_seg   ENDS
+
 data    SEGMENT byte public 'DATA'
 
 drive_arr       DW MAX_PART_COUNT DUP (?)
 part_arr        DW MAX_PART_COUNT DUP (?)
+drive_sel_arr   DW MAX_PART_COUNT DUP (?)
+drive_section   section_typ <>
 
 data    ENDS
 
@@ -2488,6 +2499,111 @@ is_vfs_path32  Proc far
 is_vfs_path32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           open_drive
+;
+;       DESCRIPTION:    Open drive
+;
+;       PARAMETERS:     AL           Drive #
+;
+;       RETURNS:        NC
+;                         BX         Drive sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_drive   Proc near
+    push ds
+    push es
+;
+    mov bx,SEG data
+    mov ds,bx
+    EnterSection ds:drive_section
+;
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].drive_sel_arr
+    or bx,bx
+    jz odCreate
+;
+    mov es,bx
+    lock add es:ds_ref_count,1
+    clc
+    jmp odLeave
+
+odCreate:
+    mov bx,ds:[ebx].drive_sel_arr
+    or bx,bx
+    stc
+    jz odLeave
+;
+    push eax
+    mov eax,SIZE drive_seg
+    AllocateSmallGlobalMem
+    pop eax
+;
+    mov es:ds_part_sel,bx
+    mov es:ds_ref_count,1
+    mov es:ds_deleted,0
+    mov es:ds_drive,al
+    mov bx,es
+    clc
+
+odLeave:
+    LeaveSection ds:drive_section
+;
+    pop es
+    pop ds
+    ret
+open_drive   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           close_drive
+;
+;       DESCRIPTION:    Close drive
+;
+;       PARAMETERS:     BX           Drive sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_drive   Proc near
+    push ds
+    push es
+    push eax
+;
+    mov es,bx
+    lock sub es:ds_ref_count,1
+    jnz cdDone
+;
+    mov bx,SEG data
+    mov ds,bx
+    EnterSection ds:drive_section
+    movzx ebx,es:ds_drive
+    shl ebx,1
+    mov ax,es
+    cmp ax,ds:[ebx].drive_sel_arr
+    jne cdLeave
+;
+    mov ds:[ebx].drive_sel_arr,0
+
+cdLeave:
+    LeaveSection ds:drive_section
+
+cdFree:
+    FreeMem
+
+cdDone:
+    xor bx,bx
+;
+    pop eax
+    pop es
+    pop ds
+    ret
+close_drive   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -2501,12 +2617,18 @@ is_vfs_path32  Endp
 init_server    Proc near
     mov ax,SEG data
     mov es,ax
+    InitSection es:drive_section
     mov edi,OFFSET part_arr
     mov ecx,MAX_PART_COUNT
     xor ax,ax
     rep stos word ptr es:[edi]
 ;
     mov edi,OFFSET drive_arr
+    mov ecx,MAX_PART_COUNT
+    xor ax,ax
+    rep stos word ptr es:[edi]
+;
+    mov edi,OFFSET drive_sel_arr
     mov ecx,MAX_PART_COUNT
     xor ax,ax
     rep stos word ptr es:[edi]
