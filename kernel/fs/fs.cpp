@@ -72,10 +72,10 @@ TFs::~TFs()
 #   Returns....: *
 #
 ##########################################################################*/
-char *TFs::GetDir(int node, const char *path)
+struct TShareHeader *TFs::GetDir(int node, const char *path)
 {
     TDir *dir;
 
-    dir = CacheDir(0);
-    return 0;
+    dir = CacheRootDir();
+    return dir->Share();
 }

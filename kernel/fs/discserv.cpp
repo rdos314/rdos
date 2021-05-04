@@ -44,7 +44,7 @@ long long GetFreeSectors()
     return Server->GetFreeSectors();
 }
 
-char *GetDir(int node, const char *path)
+struct TShareHeader *GetDir(int node, const char *path)
 {
     return Server->GetDir(node, path);
 }

@@ -209,3 +209,19 @@ struct TDirEntry *TDir::Add(const char *path, long long inode)
 
     return entry;
 }
+
+/*##########################################################################
+#
+#   Name       : TDir::Share
+#
+#   Purpose....: Share directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TShareHeader *TDir::Share()
+{
+    return obj;
+}
