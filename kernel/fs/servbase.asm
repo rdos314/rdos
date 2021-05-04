@@ -71,12 +71,10 @@ GetFreeSectors Proc near
     call LowGetFreeSectors
     pop edi
 ;
-    mov [edi].fc_eax,eax
-    mov [edi].fc_edx,edx
     and [edi].fc_eflags,NOT 1
 ;
     mov ebx,[edi].fc_handle
-    ReplyVfsCmd
+    ReplyVfsBlockCmd
     ret
 GetFreeSectors Endp
 
