@@ -65,10 +65,19 @@ void main()
     int id;
 
     int handle;
-    DirInfo info;
+    struct DirInfo info;
+    struct DirEntry *entry;
 
     handle = RdosOpenVfsDir("y:/", &info);
 
+    ptr = (char *)info.Entry;
+
+    for (i = 0; i < info.Count; i++)
+    {
+        entry = (struct DirEntry *)ptr;
+        ptr += info.HeaderSize;
+        ptr += entry->PathNameSize;
+    }
 
     buf = new char[512 * 128];
 

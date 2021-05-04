@@ -51,7 +51,7 @@ struct TShareHeader *GetDir(int node, const char *path, int *count)
 
 int GetDirHeaderSize()
 {
-    return sizeof(struct DirEntry) - 2;
+    return sizeof(struct DirEntry);
 }
 
 }
