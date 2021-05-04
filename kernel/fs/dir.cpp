@@ -225,3 +225,19 @@ struct TShareHeader *TDir::Share()
 {
     return obj;
 }
+
+/*##########################################################################
+#
+#   Name       : TDir::GetCount
+#
+#   Purpose....: Get count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDir::GetCount()
+{
+    return EntryCount;
+}

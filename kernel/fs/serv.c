@@ -26,7 +26,7 @@
 ########################################################################*/
 
 long long GetFreeSectors();
-int GetDir(int node, const char *path);
+int GetDir(int node, const char *path, int *count);
 
 /*##########################################################################
 #
@@ -44,8 +44,8 @@ long long LowGetFreeSectors()
 #   Name       : LowGetDir
 #
 ##########################################################################*/
-#pragma aux LowGetDir "*" parm routine [eax] [edi] value [edx]
-struct TShareHeader *LowGetDir(int node, const char *path)
+#pragma aux LowGetDir "*" parm routine [eax] [edi] [esi] value [edx]
+struct TShareHeader *LowGetDir(int node, const char *path, int *count)
 {
-    return GetDir(node, path);
+    return GetDir(node, path, count);
 }

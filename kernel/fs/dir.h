@@ -76,6 +76,7 @@ public:
 
     virtual bool IsDir();
     struct TShareHeader *Share();
+    int GetCount();
 
     struct TDirEntry *Add(const char *path, long long inode);
 

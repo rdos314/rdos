@@ -97,12 +97,16 @@ GetDir Proc near
     push edi
     mov eax,[edi].fc_eax
     add edi,SIZE vfs_cmd_struc
+    push ecx
+    mov esi,esp
     call LowGetDir
+    pop ecx
     pop edi
 ;
     or edx,edx
     jz gdFail
 ;
+    mov [edi].fc_ecx,ecx
     and [edi].fc_eflags,NOT 1
 ;
     mov ebx,[edi].fc_handle
