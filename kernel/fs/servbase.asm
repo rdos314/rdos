@@ -100,8 +100,18 @@ GetDir Proc near
     call LowGetDir
     pop edi
 ;
+    or edx,edx
+    jz gdFail
+;
+    and [edi].fc_eflags,NOT 1
+;
     mov ebx,[edi].fc_handle
     ReplyVfsBlockCmd
+    ret
+
+gdFail:
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
     ret
 GetDir Endp
 
