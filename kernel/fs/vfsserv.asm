@@ -2026,6 +2026,7 @@ reply_vfs_block_cmd   Proc far
 
 rfbcCopy:
     GetPageEntry
+    and ax,0F000h
     stosd
     mov eax,ebx
     stosd
