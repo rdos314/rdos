@@ -74,7 +74,7 @@ GetFreeSectors Proc near
     and [edi].fc_eflags,NOT 1
 ;
     mov ebx,[edi].fc_handle
-    ReplyVfsBlockCmd
+    ReplyVfsCmd
     ret
 GetFreeSectors Endp
 
@@ -99,7 +99,7 @@ GetDir Proc near
     pop edi
 ;
     mov ebx,[edi].fc_handle
-    ReplyVfsCmd
+    ReplyVfsBlockCmd
     ret
 GetDir Endp
 

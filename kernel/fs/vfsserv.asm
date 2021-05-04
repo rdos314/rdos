@@ -1977,6 +1977,58 @@ rfcDone:
 reply_vfs_cmd  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReplyVfsBlockCmd
+;
+;       DESCRIPTION:    Reply on VFS block cmd
+;
+;       PARAMETERS:     EBX        VFS handle
+;                       EDX        Block flat
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reply_vfs_block_cmd_name DB 'Reply VFS Block Cmd', 0
+
+reply_vfs_block_cmd   Proc far
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    call HandleToPart
+    jc rfbcDone
+;
+    mov esi,es:vfsp_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    xor bx,bx
+    xchg bx,es:[esi].vfss_thread
+    Signal
+;
+    mov edx,es:[esi].vfss_server_linear
+    mov eax,es:[esi].vfss_phys
+    mov ebx,es:[esi].vfss_phys+4
+    or ax,863h
+    mov cx,system_data_sel
+    mov es,cx
+    add edx,es:flat_base
+    SetPageEntry
+
+rfbcDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+reply_vfs_block_cmd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           GetMsgEntry
@@ -2893,6 +2945,12 @@ init_server    Proc near
     mov edi,OFFSET reply_vfs_cmd_name
     xor cl,cl
     mov ax,reply_vfs_cmd_nr
+    RegisterServGate
+;
+    mov esi,OFFSET reply_vfs_block_cmd
+    mov edi,OFFSET reply_vfs_block_cmd_name
+    xor cl,cl
+    mov ax,reply_vfs_block_cmd_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv
