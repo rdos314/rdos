@@ -2301,6 +2301,7 @@ MapBlock  Proc near
 mbLoop:
     mov eax,es:[esi]
     mov ebx,es:[esi+4]
+    or ax,863h
     SetPageEntry
 ;
     add esi,8
