@@ -50,6 +50,7 @@ code    SEGMENT byte public 'CODE'
     extern init_server:near
     extern init_part:near
     extern init_disc:near
+    extern init_dir:near
 
     extern HandleDiscReq:near
     extern HandleDiscMsg:near
@@ -367,6 +368,7 @@ init    Proc far
     call init_buf
     call init_server
     call init_disc
+    call init_dir
 ;
     mov ax,cs
     mov ds,ax
