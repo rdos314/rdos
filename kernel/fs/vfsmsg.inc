@@ -29,5 +29,7 @@
 VFS_GET_FREE_SECTORS   = 0
 
 ; IN            Path name
+; OUT EAX       Header size
+; OUT ECX       Entry count
 ; OUT           Block
 VFS_GET_DIR            = 1

@@ -92,6 +92,7 @@ GetFreeSectors Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     extern LowGetDir:near
+    extern LowGetDirHeaderSize:near
 
 GetDir Proc near
     push edi
@@ -108,6 +109,11 @@ GetDir Proc near
 ;
     mov [edi].fc_ecx,ecx
     and [edi].fc_eflags,NOT 1
+;
+    push edi
+    call LowGetDirHeaderSize
+    pop edi
+    mov [edi].fc_eax,eax
 ;
     mov ebx,[edi].fc_handle
     ReplyVfsBlockCmd

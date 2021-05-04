@@ -26,6 +26,7 @@
 ########################################################################*/
 
 long long GetFreeSectors();
+int GetDirHeaderSize();
 int GetDir(int node, const char *path, int *count);
 
 /*##########################################################################
@@ -37,6 +38,17 @@ int GetDir(int node, const char *path, int *count);
 long long LowGetFreeSectors()
 {
     return GetFreeSectors();
+}
+
+/*##########################################################################
+#
+#   Name       : LowGetDirHeaderSize
+#
+##########################################################################*/
+#pragma aux LowGetDirHeaderSize "*" parm routine value [eax]
+int LowGetDirHeaderSize()
+{
+    return GetDirHeaderSize();
 }
 
 /*##########################################################################
