@@ -43,6 +43,7 @@ include vfs.inc
     .386p
 
 GET_FREE_SECTORS   = 0
+GET_DIR            = 1
 
 MAX_PART_COUNT   = 255
 
@@ -2688,18 +2689,57 @@ GetPathDrive   Endp
 open_vfs_dir_name       DB 'Open VFS Dir',0
 
 open_vfs_dir    Proc near
+    push ds
+    push es
+    push fs
+    push gs
     push eax
+    push ecx
+    push esi
+    push edi
 ;    
+    mov eax,es
+    mov gs,eax
+;
     call GetPathDrive
     jc ovdDone
 ;
-    call open_drive
-    jc ovdDone
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].drive_arr
+    or bx,bx
+    stc
+    jz ovdDone
 ;
-    call close_drive
+    xor eax,eax
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    call AllocateMsg
+;
+    mov esi,edi
+    mov edi,SIZE fs_cmd
+
+ovdCopyPath:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz ovdCopyPath
+;
+    mov eax,GET_DIR
+    call RunMsg
 
 ovdDone:
+    pop edi
+    pop esi
+    pop ecx
     pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
 open_vfs_dir    Endp
 
