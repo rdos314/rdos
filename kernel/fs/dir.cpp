@@ -168,12 +168,12 @@ void TDir::Grow()
 #   Returns....: *
 #
 ##########################################################################*/
-struct TDirEntry *TDir::Add(const char *path, long long inode)
+struct DirEntry *TDir::Add(const char *path, long long inode)
 {
     int pos;
     short int len = strlen(path);
     char *ptr;
-    struct TDirEntry *entry;
+    struct DirEntry *entry;
 
     len = len & 0xFFFC;
     len += 4;
@@ -184,7 +184,7 @@ struct TDirEntry *TDir::Add(const char *path, long long inode)
     if (obj->UsageCount > 1)
         CopyOnUsed();
 
-    pos = TBlock::Add(len + sizeof(struct TDirEntry));
+    pos = TBlock::Add(len + sizeof(struct DirEntry));
 
     EntryArr[EntryCount].Offset = pos;
     EntryArr[EntryCount].Link = 0;
@@ -192,7 +192,7 @@ struct TDirEntry *TDir::Add(const char *path, long long inode)
 
     ptr = (char *)obj;
     ptr += pos;
-    entry = (struct TDirEntry *)ptr;
+    entry = (struct DirEntry *)ptr;
     entry->Inode = inode;
     entry->Size = 0;
     entry->CreateTime = 0;

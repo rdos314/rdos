@@ -148,7 +148,7 @@ int TFatDir::DecodeAttrib(char attrib)
 void TFatDir::Add(long long sector, int offset, const char *name, struct TFatDirEntry *fat)
 {
     unsigned int cluster = GetCluster(fat);
-    TDirEntry *entry = TDir::Add(name, cluster);
+    DirEntry *entry = TDir::Add(name, cluster);
 
     if (fat->CrDate)
         entry->CreateTime = DecodeTime(fat->CrDate, fat->CrTime);

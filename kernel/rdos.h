@@ -126,6 +126,25 @@ typedef struct UsbEvent
     char Pipe;
 } UsbEvent;
 
+
+typedef struct DirEntry
+{
+    long long Inode;
+    long long Size;
+    long long CreateTime;
+    long long AccessTime;
+    long long ModifyTime;
+    int Attrib;
+    int Flags;
+    int Uid;
+    int Gid;
+    long long Sector;
+    short int Offset;
+
+    short int PathNameSize;
+    char PathName[];
+} DirEntry;
+
 #define USB_EVENT_ATTACH                1
 #define USB_EVENT_DETACH                2
 #define USB_EVENT_CONTROLLER_ERROR      3

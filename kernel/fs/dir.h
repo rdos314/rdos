@@ -30,24 +30,7 @@
 
 #include "block.h"
 #include "section.h"
-
-struct TDirEntry
-{
-    long long Inode;
-    long long Size;
-    long long CreateTime;
-    long long AccessTime;
-    long long ModifyTime;
-    int Attrib;
-    int Flags;
-    int Uid;
-    int Gid;
-    long long Sector;
-    short int Offset;
-
-    short int PathNameSize;
-    char PathName[];
-};
+#include "rdos.h"
 
 class TMetaData;
 
@@ -78,7 +61,7 @@ public:
     struct TShareHeader *Share();
     int GetCount();
 
-    struct TDirEntry *Add(const char *path, long long inode);
+    struct DirEntry *Add(const char *path, long long inode);
 
     struct TDirLink *EntryArr;
 
