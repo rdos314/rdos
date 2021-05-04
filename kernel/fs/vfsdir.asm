@@ -59,9 +59,11 @@ drive_seg   ENDS
 
 dir_handle_seg  STRUC
 
-dir_handle_base handle_header <>
+dh_base          handle_header <>
 
-dir_handle_sel  DW ?
+dh_linear        DD ?
+dh_count         DD ?
+dh_header_size   DD ?
 
 dir_handle_seg  ENDS
 
@@ -442,6 +444,18 @@ ovdCopyPath:
     mov eax,VFS_GET_DIR
     call RunMsg
     jc ovdDone
+;
+    push ecx
+    mov cx,SIZE dir_handle_seg
+    AllocateHandle
+    pop ecx
+;
+    mov [ebx].dh_linear,ebp
+    mov [ebx].dh_count,ecx
+    mov [ebx].dh_header_size,eax
+    mov [ebx].hh_sign,VFS_DIR_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
 
 ovdDone:
     pop ebp
@@ -492,7 +506,8 @@ delete_handle   Proc far
     jc dhDone
 ;
     mov esi,ebx
-    mov bx,[ebx].dir_handle_sel
+    xor bx,bx
+;    mov bx,[ebx].dir_handle_sel
     or bx,bx
     stc
     jz dhDone
