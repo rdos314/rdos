@@ -2171,6 +2171,74 @@ AllocateMsg  Proc near
     ret
 AllocateMsg  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           no_reply
+;
+;       DESCRIPTION:    No reply processing
+;
+;       PARAMETERS:     ES      Msg buf
+;
+;       RETURNS:        EBP     Reply data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+no_reply   Proc near
+    xor ebp,ebp
+    clc
+    ret
+no_reply   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           block_reply
+;
+;       DESCRIPTION:    Block reply processing
+;
+;       PARAMETERS:     ES      Msg buf
+;
+;       RETURNS:        EBP     Reply data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+block_reply  Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    mov esi,SIZE fs_cmd
+    mov ecx,es:[esi]
+    mov eax,ecx
+    shl eax,12
+    AllocateBigLinear
+    mov ebp,edx
+
+brpLoop:
+    mov eax,es:[esi]
+    mov ebx,es:[esi+4]
+    or ax,863h
+    SetPageEntry
+;
+    add esi,8
+    add edx,1000h
+;
+    loop brpLoop
+;
+    clc
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+block_reply  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2184,13 +2252,17 @@ AllocateMsg  Endp
 ;                       EAX     Op
 ;                       EBX     Msg entry
 ;
+;       RETURNS:        EBP     Reply data
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public RunMsg
 
+reply_tab:
+r00 DD OFFSET no_reply
+r01 DD OFFSET block_reply
+
 RunMsg  Proc near
-    push ebp
-;
     mov esi,ebx
     mov es:fc_op,eax
 ;
@@ -2243,69 +2315,17 @@ rmCheck:
     mov eax,ebp
     push es:fc_eflags
     popfd
+    jc rmDone
 ;
+    push ebx
+    mov ebx,es:fc_op
+    shl ebx,2
+    call dword ptr cs:[ebx].reply_tab
+    pop ebx
 
 rmDone:
-    pop ebp
     ret
 RunMsg  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           MapBlock
-;
-;       DESCRIPTION:    Map block in reply
-;
-;       PARAMETERS:     DS      VFS sel
-;                       FS      Part sel
-;                       ES      Msg buf
-;
-;       RETURNS:        ECX     Msg size
-;                       EDX     Linear address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public MapBlock
-
-MapBlock  Proc near
-    push eax
-    push esi
-;
-    mov eax,es:fc_op
-    cmp eax,REPLY_BLOCK
-    stc
-    jne mbDone
-;
-    mov esi,SIZE fs_cmd
-    lods dword ptr es:[esi]
-    mov ecx,eax
-    shl ecx,12
-    AllocateBigLinear
-;
-    push ecx
-    push edx
-
-mbLoop:
-    mov eax,es:[esi]
-    mov ebx,es:[esi+4]
-    or ax,863h
-    SetPageEntry
-;
-    add esi,8
-    add edx,1000h
-;
-    loop mbLoop
-;
-    pop edx
-    pop ecx
-    clc
-
-mbDone:
-    pop esi
-    pop eax
-    ret
-MapBlock  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2489,6 +2509,7 @@ get_vfs_drive_free   Proc far
     push ebx
     push ecx
     push edi
+    push ebp
 ;
     mov bx,SEG data
     mov ds,bx
@@ -2508,6 +2529,7 @@ get_vfs_drive_free   Proc far
     call RunMsg
 
 gvdfDone:
+    pop ebp
     pop edi
     pop ecx
     pop ebx

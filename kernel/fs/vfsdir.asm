@@ -80,7 +80,6 @@ code    SEGMENT byte public 'CODE'
 
     extern AllocateMsg:near
     extern RunMsg:near
-    extern MapBlock:near
     extern GetDrivePart:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -414,6 +413,7 @@ open_vfs_dir    Proc near
     push ecx
     push esi
     push edi
+    push ebp
 ;    
     mov eax,es
     mov gs,eax
@@ -442,10 +442,9 @@ ovdCopyPath:
     mov eax,VFS_GET_DIR
     call RunMsg
     jc ovdDone
-;
-    call MapBlock
 
 ovdDone:
+    pop ebp
     pop edi
     pop esi
     pop ecx
