@@ -45,6 +45,9 @@ include vfs.inc
 GET_FREE_SECTORS   = 0
 GET_DIR            = 1
 
+REPLY_DEFAULT      = 0
+REPLY_BLOCK        = 1
+
 MAX_PART_COUNT   = 255
 
 req_wait_header      STRUC
@@ -53,6 +56,14 @@ rw_obj              wait_obj_header <>
 rw_handle           DW ?
 
 req_wait_header      ENDS
+
+
+share_block_struc       STRUC
+
+sb_usage    DW ?
+sb_pages    DW ?
+
+share_block_struc       ENDS
 
 fs_cmd      STRUC
 
@@ -1946,6 +1957,8 @@ reply_vfs_cmd   Proc far
     push edx
     push esi
 ;
+    mov es:[edi].fc_op,REPLY_DEFAULT
+;
     call HandleToPart
     jc rfcDone
 ;
@@ -1985,12 +1998,14 @@ reply_vfs_cmd  Endp
 ;
 ;       PARAMETERS:     EBX        VFS handle
 ;                       EDX        Block flat
+;                       EDI        Data block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reply_vfs_block_cmd_name DB 'Reply VFS Block Cmd', 0
 
 reply_vfs_block_cmd   Proc far
+    push ds
     push es
     push eax
     push ebx
@@ -1998,6 +2013,27 @@ reply_vfs_block_cmd   Proc far
     push edx
     push esi
 ;
+    mov es:[edi].fc_op,REPLY_BLOCK
+;
+    add edi,SIZE fs_cmd
+    movzx ecx,es:[edx].sb_pages
+    mov eax,ecx
+    stosd
+;
+    lock add es:[edx].sb_usage,1
+    or ecx,ecx
+    jz rfbcSend
+
+rfbcCopy:
+    GetPageEntry
+    stosd
+    mov eax,ebx
+    stosd
+;
+    add edx,1000h
+    loop rfbcCopy
+
+rfbcSend:
     call HandleToPart
     jc rfbcDone
 ;
@@ -2014,8 +2050,8 @@ reply_vfs_block_cmd   Proc far
     mov ebx,es:[esi].vfss_phys+4
     or ax,863h
     mov cx,system_data_sel
-    mov es,cx
-    add edx,es:flat_base
+    mov ds,cx
+    add edx,ds:flat_base
     SetPageEntry
 
 rfbcDone:
@@ -2025,6 +2061,7 @@ rfbcDone:
     pop ebx
     pop eax
     pop es
+    pop ds
     ret
 reply_vfs_block_cmd  Endp
 
