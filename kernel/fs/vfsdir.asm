@@ -39,12 +39,11 @@ include ..\os\protseg.def
 include ..\fs.inc
 include ..\os\exec.def
 include vfs.inc
+include vfsmsg.inc
 
     .386p
 
 MAX_PART_COUNT   = 255
-
-GET_DIR            = 1
 
 REPLY_DEFAULT      = 0
 REPLY_BLOCK        = 1
@@ -440,7 +439,7 @@ ovdCopyPath:
     or al,al
     jnz ovdCopyPath
 ;
-    mov eax,GET_DIR
+    mov eax,VFS_GET_DIR
     call RunMsg
     jc ovdDone
 ;

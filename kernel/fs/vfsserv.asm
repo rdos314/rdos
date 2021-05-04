@@ -39,10 +39,9 @@ include ..\os\protseg.def
 include ..\fs.inc
 include ..\os\exec.def
 include vfs.inc
+include vfsmsg.inc
 
     .386p
-
-GET_FREE_SECTORS   = 0
 
 REPLY_DEFAULT      = 0
 REPLY_BLOCK        = 1
@@ -2505,7 +2504,7 @@ get_vfs_drive_free   Proc far
 ;
     call AllocateMsg
 ;
-    mov eax,GET_FREE_SECTORS
+    mov eax,VFS_GET_FREE_SECTORS
     call RunMsg
 
 gvdfDone:
