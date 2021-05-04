@@ -63,16 +63,11 @@ void main()
     int i;
     char *ptr;
     int id;
-    int ok;
 
-    ok = RdosIsVfsPath("c:/test");
-    ok = RdosIsVfsPath("y:/test");
-    ok = RdosIsVfsPath("z:/test");
-    ok = RdosIsVfsPath("test");
+    int handle;
 
-    RdosSetCurDrive('y' - 'a');
+    handle = RdosOpenVfsDir("y:/");
 
-    ok = RdosIsVfsPath("test");
 
     buf = new char[512 * 128];
 

@@ -2523,6 +2523,7 @@ is_vfs_path32  Endp
 open_drive   Proc near
     push ds
     push es
+    push edx
 ;
     mov bx,SEG data
     mov ds,bx
@@ -2530,18 +2531,18 @@ open_drive   Proc near
 ;
     movzx ebx,al
     shl ebx,1
-    mov bx,ds:[ebx].drive_sel_arr
-    or bx,bx
+    mov dx,ds:[ebx].drive_sel_arr
+    or dx,dx
     jz odCreate
 ;
-    mov es,bx
+    mov es,dx
     lock add es:ds_ref_count,1
     clc
     jmp odLeave
 
 odCreate:
-    mov bx,ds:[ebx].drive_sel_arr
-    or bx,bx
+    mov dx,ds:[ebx].drive_arr
+    or dx,dx
     stc
     jz odLeave
 ;
@@ -2550,16 +2551,18 @@ odCreate:
     AllocateSmallGlobalMem
     pop eax
 ;
-    mov es:ds_part_sel,bx
+    mov es:ds_part_sel,dx
     mov es:ds_ref_count,1
     mov es:ds_deleted,0
     mov es:ds_drive,al
-    mov bx,es
+    mov ds:[ebx].drive_sel_arr,es
+    mov bx,es   
     clc
 
 odLeave:
     LeaveSection ds:drive_section
 ;
+    pop edx
     pop es
     pop ds
     ret
