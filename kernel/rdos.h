@@ -145,6 +145,13 @@ typedef struct DirEntry
     char PathName[];
 } DirEntry;
 
+typedef struct DirInfo
+{
+    struct DirEntry *Entry;
+    int HeaderSize;
+    int Count;
+} DirInfo;
+
 #define USB_EVENT_ATTACH                1
 #define USB_EVENT_DETACH                2
 #define USB_EVENT_CONTROLLER_ERROR      3
@@ -845,7 +852,7 @@ long long RDOSAPI RdosGetVfsDriveStart(int DriveNr);
 long long RDOSAPI RdosGetVfsDriveSize(int DriveNr);
 long long RDOSAPI RdosGetVfsDriveFree(int DriveNr);
 int RDOSAPI RdosIsVfsPath(const char *PathName);
-int RDOSAPI RdosOpenVfsDir(const char *PathName);
+int RDOSAPI RdosOpenVfsDir(const char *PathName, struct DirInfo *Info);
 
 int RDOSAPI RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
 int RDOSAPI RdosOpenFileDrive(int Drive, const char *FileName);

@@ -65,8 +65,9 @@ void main()
     int id;
 
     int handle;
+    DirInfo info;
 
-    handle = RdosOpenVfsDir("y:/");
+    handle = RdosOpenVfsDir("y:/", &info);
 
 
     buf = new char[512 * 128];

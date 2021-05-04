@@ -1992,6 +1992,8 @@ reply_vfs_block_cmd   Proc far
     push edx
     push esi
 ;
+    push ebx
+;
     mov es:[edi].fc_op,REPLY_BLOCK
 ;
     add edi,SIZE fs_cmd
@@ -2014,6 +2016,8 @@ rfbcCopy:
     loop rfbcCopy
 
 rfbcSend:
+    pop ebx
+;
     call HandleToPart
     jc rfbcDone
 ;
@@ -2213,6 +2217,7 @@ block_reply  Proc near
 ;
     mov esi,SIZE fs_cmd
     mov ecx,es:[esi]
+    add esi,4
     mov eax,ecx
     shl eax,12
     AllocateBigLinear
@@ -2326,6 +2331,64 @@ rmCheck:
 rmDone:
     ret
 RunMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           MapBlockToUser
+;
+;       DESCRIPTION:    Map block to user
+;
+;       PARAMETERS:     EDX     Block
+;
+;       RETURNS:        EDX     User mapped block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public MapBlockToUser
+
+MapBlockToUser  Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov esi,edx
+    movzx ecx,ds:[esi].sb_pages
+    mov eax,ecx
+    shl eax,12
+    AllocateLocalLinear
+    mov edi,edx
+;
+    push edx
+
+mbtuLoop:
+    mov edx,esi
+    GetPageEntry
+    and ax,0F000h
+    or ax,825h
+;
+    mov edx,edi
+    SetPageEntry
+;
+    add esi,1000h
+    add edi,1000h
+    loop mbtuLoop
+;
+    pop edx
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+MapBlockToUser  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

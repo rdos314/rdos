@@ -2282,6 +2282,7 @@ IsVfsPath     MACRO
                                                 ENDM
 
 ; IN  ES:(E)DI        Pathname
+; IN  DS:(E)SI        Dir info     
 ; OUT BX              Handle
 OpenVfsDir   MACRO
         UserGate open_vfs_dir_nr

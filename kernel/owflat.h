@@ -3242,7 +3242,7 @@
 #pragma aux RdosOpenVfsDir = \
     CallGate_open_vfs_dir  \
     ValidateHandle \
-    __parm [__edi]  \
+    __parm [__edi] [__esi]  \
     __value [__ebx]
 
 #pragma aux RdosCreateFileDrive = \

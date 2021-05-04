@@ -62,10 +62,26 @@ dir_handle_seg  STRUC
 dh_base          handle_header <>
 
 dh_linear        DD ?
+dh_user          DD ?
 dh_count         DD ?
 dh_header_size   DD ?
 
 dir_handle_seg  ENDS
+
+share_block_struc       STRUC
+
+sb_usage    DW ?
+sb_pages    DW ?
+
+share_block_struc       ENDS
+
+dir_info_struc  STRUC
+
+dis_linear       DD ?
+dis_header_size  DD ?
+dis_count        DD ?
+
+dir_info_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -83,6 +99,7 @@ code    SEGMENT byte public 'CODE'
     extern AllocateMsg:near
     extern RunMsg:near
     extern GetDrivePart:near
+    extern MapBlockToUser:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -398,6 +415,7 @@ GetPathDrive   Endp
 ;       DESCRIPTION:    Open VFS dir
 ;
 ;       PARAMETERS:     ES:(E)DI       Pathname
+;                       DS:(E)SI       Info
 ;
 ;       RETURNS:        NC
 ;                         BX           Handle
@@ -407,26 +425,27 @@ GetPathDrive   Endp
 open_vfs_dir_name       DB 'Open VFS Dir',0
 
 open_vfs_dir    Proc near
-    push ds
     push es
     push fs
     push gs
     push eax
     push ecx
-    push esi
     push edi
     push ebp
 ;    
+    push ds
+    push esi
+;
     mov eax,es
     mov gs,eax
 ;
     call GetPathDrive
-    jc ovdDone
+    jc ovdPop
 ;
     call GetDrivePart
     or bx,bx
     stc
-    jz ovdDone
+    jz ovdPop
 ;
     mov esi,edi
     xor eax,eax
@@ -443,7 +462,7 @@ ovdCopyPath:
 ;
     mov eax,VFS_GET_DIR
     call RunMsg
-    jc ovdDone
+    jc ovdPop
 ;
     push ecx
     mov cx,SIZE dir_handle_seg
@@ -454,27 +473,46 @@ ovdCopyPath:
     mov [ebx].dh_count,ecx
     mov [ebx].dh_header_size,eax
     mov [ebx].hh_sign,VFS_DIR_HANDLE
+;
+    mov edx,ebp
+    call MapBlockToUser
+    mov [ebx].dh_user,edx
+;
     mov bx,[ebx].hh_handle
+;
+    pop esi
+    pop ds
+;
+    add edx,SIZE share_block_struc
+    mov ds:[esi].dis_linear,edx
+    mov ds:[esi].dis_header_size,eax
+    mov ds:[esi].dis_count,ecx
     clc
+    jmp ovdDone
+
+ovdPop:
+    pop esi
+    pop ds
 
 ovdDone:
     pop ebp
     pop edi
-    pop esi
     pop ecx
     pop eax
     pop gs
     pop fs
     pop es
-    pop ds
     ret
 open_vfs_dir    Endp
 
 open_vfs_dir16  Proc far
+    push esi
     push edi
+    movzx esi,si
     movzx edi,di
     call open_vfs_dir
     pop edi
+    pop esi
     ret
 open_vfs_dir16  Endp
 
