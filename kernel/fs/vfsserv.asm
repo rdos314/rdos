@@ -2265,6 +2265,60 @@ rmDone:
 RunMsg  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           MapBlock
+;
+;       DESCRIPTION:    Map block in reply
+;
+;       PARAMETERS:     DS      VFS sel
+;                       FS      Part sel
+;                       ES      Msg buf
+;
+;       RETURNS:        ECX     Msg size
+;                       EDX     Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapBlock  Proc near
+    push eax
+    push esi
+;
+    mov eax,es:fc_op
+    cmp eax,REPLY_BLOCK
+    stc
+    jne mbDone
+;
+    mov esi,SIZE fs_cmd
+    lods dword ptr es:[esi]
+    mov ecx,eax
+    shl ecx,12
+    AllocateBigLinear
+;
+    push ecx
+    push edx
+
+mbLoop:
+    mov eax,es:[esi]
+    mov ebx,es:[esi+4]
+    SetPageEntry
+;
+    add esi,8
+    add edx,1000h
+;
+    loop mbLoop
+;
+    pop edx
+    pop ecx
+    clc
+
+mbDone:
+    pop esi
+    pop eax
+    ret
+MapBlock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           TestServ
@@ -2820,6 +2874,9 @@ ovdCopyPath:
 ;
     mov eax,GET_DIR
     call RunMsg
+    jc ovdDone
+;
+    call MapBlock
 
 ovdDone:
     pop edi
