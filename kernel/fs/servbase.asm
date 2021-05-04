@@ -83,6 +83,31 @@ GetFreeSectors Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetDir
+;
+;       DESCRIPTION:    Get dir
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowGetDir:near
+
+GetDir Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    add edi,SIZE vfs_cmd_struc
+    call LowGetDir
+    pop edi
+;
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+GetDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -95,6 +120,7 @@ GetFreeSectors Endp
 
 msgtab:
 m00 DD OFFSET GetFreeSectors
+m01 DD OFFSET GetDir
 
 WaitForMsg_    Proc near
     pushad

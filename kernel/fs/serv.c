@@ -26,6 +26,7 @@
 ########################################################################*/
 
 long long GetFreeSectors();
+int GetDir(int node, const char *path);
 
 /*##########################################################################
 #
@@ -36,4 +37,15 @@ long long GetFreeSectors();
 long long LowGetFreeSectors()
 {
     return GetFreeSectors();
+}
+
+/*##########################################################################
+#
+#   Name       : LowGetDir
+#
+##########################################################################*/
+#pragma aux LowGetDir "*" parm routine [eax] [edi] value [eax]
+char *LowGetDir(int node, const char *path)
+{
+    return GetDir(node, path);
 }

@@ -60,3 +60,22 @@ TFs::TFs(TDiscServer *server)
 TFs::~TFs()
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TFs::GetDir
+#
+#   Purpose....: Get dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TFs::GetDir(int node, const char *path)
+{
+    TDir *dir;
+
+    dir = CacheDir(0);
+    return 0;
+}
