@@ -65,6 +65,7 @@ public:
     struct TShareHeader *Share();
     int GetCount();
     char *Parse(char *path, int *index);
+    struct DirEntry *Get(int index);
 
     struct DirEntry *Add(const char *path, long long inode);
 

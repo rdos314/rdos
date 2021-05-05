@@ -315,3 +315,31 @@ char *TDir::Parse(char *path, int *index)
     else
         return ptr;
 }
+
+/*##########################################################################
+#
+#   Name       : TDir::Get
+#
+#   Purpose....: Get dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct DirEntry *TDir::Get(int index)
+{
+    int i;
+    char *ptr;
+    struct DirEntry *entry;
+
+    if (index < 0)
+        return 0;
+
+    if (index >= EntryCount)
+        return 0;
+
+    ptr = (char *)obj;
+    ptr += EntryArr[index].Offset;
+    return (struct DirEntry *)ptr;
+}

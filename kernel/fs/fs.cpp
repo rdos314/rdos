@@ -89,6 +89,47 @@ TDir *TFs::GetStartDir(int node)
 
 /*##########################################################################
 #
+#   Name       : TFs::Parse
+#
+#   Purpose....: Parse pathname
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct DirEntry *TFs::Parse(TDir *dir, char *path)
+{
+    int index;
+    struct DirEntry *entry;
+
+    path = dir->Parse(path, &index);
+
+    if (path)
+    {
+        switch (index)
+        {
+            case DIR_SELF:
+                if (path[0] == 0)
+                    return 0;
+                else
+                    return Parse(dir, path);
+
+            case DIR_PARENT:
+                return 0;
+
+            default:
+                if (path[0] == 0)
+                    return dir->Get(index);
+                else
+                    return 0;
+        }
+    }
+
+    return 0;
+}
+/*##########################################################################
+#
 #   Name       : TFs::GetDir
 #
 #   Purpose....: Get dir
@@ -125,9 +166,10 @@ struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
 int TFs::GetDirEntryAttrib(int node, char *path)
 {
     TDir *dir = GetStartDir(node);
-    int index;
+    struct DirEntry *entry = Parse(dir, path);
 
-    path = dir->Parse(path, &index);
-
-    return -1;
+    if (entry)
+        return entry->Attrib;
+    else
+        return -1;
 }

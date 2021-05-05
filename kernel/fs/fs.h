@@ -46,6 +46,7 @@ public:
 
 protected:
     TDir *GetStartDir(int node);
+    struct DirEntry *Parse(TDir *dir, char *path);
 
     TDiscServer *Server;
     TDir *Root;
