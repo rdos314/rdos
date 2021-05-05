@@ -397,7 +397,7 @@ void TDirCommand::WriteHeader(TString &str)
 {
         TPathName path(str);
         FDrive = path.GetDrive();
-        TPathName search(FDrive, "\\*");
+        TPathName search(FDrive, "/*");
         TDirList dir;
         TDirEntry entry;
         const char *ep;

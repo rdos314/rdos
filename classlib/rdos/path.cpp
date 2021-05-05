@@ -143,8 +143,15 @@ TPathName::TPathName(const TString &PathName)
 #
 ##########################################################################*/
 TPathName::TPathName(int Drive, const TString &PathName)
-  : FPathName(((char)Drive + 'a') + ":" + PathName)
 {
+    char str[4];
+
+    str[0] = (char)Drive + 'a';
+    str[1] = ':';
+    str[2] = 0;
+
+    FPathName = str;
+    FPathName += PathName;
 }
 
 /*##########################################################################
@@ -159,8 +166,17 @@ TPathName::TPathName(int Drive, const TString &PathName)
 #
 ##########################################################################*/
 TPathName::TPathName(int Drive, const TString &DirName, const TString &EntryName)
-  : FPathName(((char)Drive + 'a') + ":" + DirName + "\\" + EntryName)
 {
+    char str[4];
+
+    str[0] = (char)Drive + 'a';
+    str[1] = ':';
+    str[2] = 0;
+
+    FPathName = str;
+    FPathName += DirName;
+    FPathName += "/";
+    FPathName += EntryName;
 }
 
 /*##########################################################################
