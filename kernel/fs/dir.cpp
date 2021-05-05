@@ -241,3 +241,32 @@ int TDir::GetCount()
 {
     return EntryCount;
 }
+
+/*##########################################################################
+#
+#   Name       : TDir::Find
+#
+#   Purpose....: Find path
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDir::Find(const char *path)
+{
+    int i;
+    char *ptr;
+    struct DirEntry *entry;
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        ptr = (char *)obj;
+        ptr += EntryArr[i].Offset;
+        entry = (struct DirEntry *)ptr;
+        if (!strcmp(path, entry->PathName))
+            return i;
+    }
+
+    return -1;
+}

@@ -107,11 +107,32 @@ struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
 int TFs::GetDirEntryAttrib(int node, char *path)
 {
     TDir *dir;
+    char *ptr = path;
+    bool sep;
+    int index;
+
+    sep = false;
+
+    while (*ptr && !sep)
+    {
+        if (*ptr == '/' || *ptr == '\\')
+            sep = true;
+        else
+            ptr++;
+    }
+
+    if (sep)
+    {
+        *ptr = 0;
+        ptr++;
+    }
 
     if (!Root)
         Root = CacheRootDir();
 
     dir = Root;
+
+    index = dir->Find(path);
 
     return -1;
 }
