@@ -412,6 +412,42 @@ GetPathDrive   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetRelDir
+;
+;       DESCRIPTION:    Get relative dir
+;
+;       PARAMETERS:     AL          Drive
+;
+;       RETURNS:        AX          Start dir handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetRelDir    Proc near
+    push ds
+    push ebx
+;
+    movzx bx,al
+    shl bx,1
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
+    mov ax,ds:[bx].pc_vfs_sel_arr
+    or ax,ax
+    jz grdDone
+;
+    mov ax,ds:[bx].pc_vfs_handle_arr
+ 
+grdDone:
+    pop ebx
+    pop ds
+    ret
+GetRelDir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           OpenVfsDir
 ;
 ;       DESCRIPTION:    Open VFS dir
@@ -449,21 +485,23 @@ open_vfs_dir    Proc near
     stc
     jz ovdPop
 ;
-    mov al,es:[edi]
-    cmp al,'/'
+    mov ah,es:[edi]
+    cmp ah,'/'
     je ovdRoot
 ;
-    cmp al,'\'
+    cmp ah,'\'
     je ovdRoot
 
 ovdRel:
-    int 3
+    call GetRelDir
+    jmp ovdHasStart
 
 ovdRoot:
     inc edi
-;
+    xor ax,ax
+
+ovdHasStart:
     mov esi,edi
-    xor eax,eax
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
