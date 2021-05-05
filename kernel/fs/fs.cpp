@@ -75,7 +75,7 @@ TFs::~TFs()
 #   Returns....: *
 #
 ##########################################################################*/
-struct TShareHeader *TFs::GetDir(int node, const char *path, int *count)
+struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
 {
     TDir *dir;
 
@@ -104,7 +104,7 @@ struct TShareHeader *TFs::GetDir(int node, const char *path, int *count)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFs::GetDirEntryAttrib(int node, const char *path)
+int TFs::GetDirEntryAttrib(int node, char *path)
 {
     TDir *dir;
 
