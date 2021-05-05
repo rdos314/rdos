@@ -446,6 +446,7 @@ void TDirCommand::WriteFooter()
     long FreeUnits;
     long TotalUnits;
     int BytesPerUnit;
+    long long FreeSpace;
 
     WriteLong(FFileList.GetSize());
         FMsg.Load(TEXT_DIR_FTR_FILES);
@@ -459,11 +460,21 @@ void TDirCommand::WriteFooter()
         FMsg.Load(TEXT_DIR_FTR_DIRS);
         Write(FMsg.GetData());
 
-    FreeUnits = 0;
-    RdosGetDriveInfo(FDrive, &FreeUnits, &BytesPerUnit, &TotalUnits);
+    FreeSpace = RdosGetVfsDriveFree(FDrive);
+    if (FreeSpace > 0)
+    {
+        WriteLong(512 * FreeSpace);
+        FMsg.Load(TEXT_DIR_FTR_BYTES_FREE);
+        Write(FMsg.GetData());    
+    }
+    else
+    {
+        FreeUnits = 0;
+        RdosGetDriveInfo(FDrive, &FreeUnits, &BytesPerUnit, &TotalUnits);
         WriteLong(FreeUnits * BytesPerUnit);
         FMsg.Load(TEXT_DIR_FTR_BYTES_FREE);
         Write(FMsg.GetData());    
+    }
 }
 
 /*##########################################################################

@@ -1320,50 +1320,81 @@ void TDirList::DoSearch()
     char *Name;
     long FileSize;
     int Attrib;
-	unsigned long msb;
-	unsigned long lsb;
-	int ok;
-	int DirHandle;
-	int Index;
+    unsigned long msb;
+    unsigned long lsb;
+    int ok;
+    int DirHandle;
+    int Index;
+    struct DirInfo info;
+    struct DirEntry *entry;
+    char *ptr;
+    int i;
+    long long time;
 	
-	if (FPathName.IsDir())
-	{
-		FBaseString = FPathName.Get();
-		FSearchString = "*";
-	}
-	else
-	{
-		FBaseString = FPathName.GetBaseName();
-		FSearchString = FPathName.GetEntryName();
-
-		if (FBaseString.GetSize() == 0)
-			FBaseString = ".";
-
-		if (FSearchString.GetSize() == 0)
-			FSearchString = "*";
-	}
-
-	DirHandle = RdosOpenDir(FBaseString.GetData());
-    Index = 0;
-
-    if (DirHandle)
+    if (FPathName.IsDir())
     {
-        Name = new char[512];
+        FBaseString = FPathName.Get();
+        FSearchString = "*";
+    }
+    else
+    {
+        FBaseString = FPathName.GetBaseName();
+        FSearchString = FPathName.GetEntryName();
 
-		ok = TRUE;
-		while (ok)
-		{
-	        ok = RdosReadDir(DirHandle, Index, 512, Name, &FileSize, &Attrib, &msb, &lsb);
-			if (ok)
-			{
-        		Index++;
-				if (CheckAttrib(Attrib) && IsMatch(Name))
-				    Add(Name, msb, lsb, FileSize, Attrib);
-			}
+        if (FBaseString.GetSize() == 0)
+            FBaseString = ".";
+
+        if (FSearchString.GetSize() == 0)
+            FSearchString = "*";
+    }
+
+    if (RdosIsVfsPath(FBaseString.GetData()))
+    {
+        DirHandle = RdosOpenVfsDir(FBaseString.GetData(), &info);
+
+        ptr = (char *)info.Entry;
+
+        for (i = 0; i < info.Count; i++)
+        {
+            entry = (struct DirEntry *)ptr;
+
+            if (CheckAttrib(entry->Attrib) && IsMatch(entry->PathName))
+            {
+                time = entry->ModifyTime;
+                memcpy(&lsb, &time, 4);
+                time = time >> 32;
+                memcpy(&msb, &time, 4);
+                Add(entry->PathName, msb, lsb, entry->Size, entry->Attrib);
+            }
+
+            ptr += info.HeaderSize;
+            ptr += entry->PathNameSize;
         }
-        delete Name;
+    }
+    else
+    {
+        DirHandle = RdosOpenDir(FBaseString.GetData());
+        Index = 0;
 
-        RdosCloseDir(DirHandle);
+        if (DirHandle)
+        {
+            Name = new char[512];
+
+            ok = TRUE;
+            while (ok)
+            {
+                ok = RdosReadDir(DirHandle, Index, 512, Name, &FileSize, &Attrib, &msb, &lsb);
+                if (ok)
+                {
+                    Index++;
+                    if (CheckAttrib(Attrib) && IsMatch(Name))
+                        Add(Name, msb, lsb, FileSize, Attrib);
+                }
+            }
+            delete Name;
+
+            RdosCloseDir(DirHandle);
+        }
     }
 }
 
