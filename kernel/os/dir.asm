@@ -3103,10 +3103,22 @@ create_cur_dir   Proc far
     mov eax,SIZE proc_cur_dir_struc
     AllocateSmallGlobalMem
     mov es:pc_drive,'Z' - 'A'
+;
     mov di,OFFSET pc_dir_sel_arr
     mov cx,256
     xor ax,ax
     rep stosw
+;
+    mov di,OFFSET pc_vfs_sel_arr
+    mov cx,32
+    xor ax,ax
+    rep stosw
+;
+    mov di,OFFSET pc_vfs_handle_arr
+    mov cx,32
+    xor ax,ax
+    rep stosw
+;
     mov ax,es
 ;
     pop di
@@ -3158,6 +3170,20 @@ ccdLoop:
 ccdNext:
     add bx,2
     loop ccdLoop
+
+    push di
+;
+    mov di,OFFSET pc_vfs_sel_arr
+    mov cx,32
+    xor ax,ax
+    rep stosw
+;
+    mov di,OFFSET pc_vfs_handle_arr
+    mov cx,32
+    xor ax,ax
+    rep stosw
+;
+    pop di
 ;
     mov ax,es
 ;

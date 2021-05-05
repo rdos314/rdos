@@ -273,6 +273,8 @@ file_system_struc	ENDS
 proc_cur_dir_struc   STRUC
 
 pc_dir_sel_arr        DW 256 DUP(?)
+pc_vfs_sel_arr        DW 32 DUP(?)
+pc_vfs_handle_arr     DW 32 DUP(?)
 pc_drive              DB ?
 
 proc_cur_dir_struc   ENDS
