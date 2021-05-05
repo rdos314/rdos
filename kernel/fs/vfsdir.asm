@@ -628,6 +628,7 @@ close_vfs_dir  Endp
 get_vfs_file_attrib_name DB 'Get VFS File Attrib', 0
 
 get_vfs_file_attrib   Proc far
+    int 3
     xor cx,cx
     stc
     ret

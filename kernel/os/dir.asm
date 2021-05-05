@@ -1372,7 +1372,7 @@ DeleteDirBase   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetFileAttribBase       Proc near
-    IsVfsPath
+    UserGateForce32 is_vfs_path_nr
     jc get_file_attrib_old
 ;
     GetVfsFileAttrib
