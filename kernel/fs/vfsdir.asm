@@ -100,6 +100,8 @@ code    SEGMENT byte public 'CODE'
     extern RunMsg:near
     extern GetDrivePart:near
     extern MapBlockToUser:near
+    extern FreeUserBlock:near
+    extern FreeBlock:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -521,6 +523,60 @@ open_vfs_dir32  Proc far
     ret
 open_vfs_dir32  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseBase
+;
+;       DESCRIPTION:    Close dir, base
+;
+;       PARAMETERS:     DS:EBX          Handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseBase    Proc near
+    ret
+CloseBase    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseVfsDir
+;
+;       DESCRIPTION:    Close VFS dir
+;
+;       PARAMETERS:     BX           Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_vfs_dir_name       DB 'Close VFS Dir',0
+
+close_vfs_dir    Proc far
+    push ds
+    push ax
+    push ebx
+    push edx
+;
+    mov ax,VFS_DIR_HANDLE
+    DerefHandle
+    jc cvdDone
+;
+    mov edx,ds:[ebx].dh_user
+    call FreeUserBlock
+;
+    mov edx,ds:[ebx].dh_linear
+    call FreeBlock
+;
+    FreeHandle
+    clc
+
+ccdDone:
+    pop ebx
+    pop ebx
+    pop ax
+    pop ds
+    ret
+close_vfs_dir  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -537,26 +593,23 @@ delete_handle   Proc far
     push ds
     push ax
     push ebx
-    push esi
+    push edx
 ;
     mov ax,VFS_DIR_HANDLE
     DerefHandle
     jc dhDone
 ;
-    mov esi,ebx
-    xor bx,bx
-;    mov bx,[ebx].dir_handle_sel
-    or bx,bx
-    stc
-    jz dhDone
+    mov edx,ds:[ebx].dh_user
+    call FreeUserBlock
 ;
-;    call CloseDirBase
-    mov ebx,esi
+    mov edx,ds:[ebx].dh_linear
+    call FreeBlock
+;
     FreeHandle
     clc
 
 dhDone:
-    pop esi
+    pop edx
     pop ebx
     pop ax
     pop ds
@@ -617,6 +670,12 @@ init_dir    Proc near
     mov dx,virt_es_in
     mov ax,open_vfs_dir_nr
     RegisterUserGate
+;
+    mov esi,OFFSET close_vfs_dir
+    mov edi,OFFSET close_vfs_dir_name
+    xor dx,dx
+    mov ax,close_vfs_dir_nr
+    RegisterBimodalUserGate
     ret
 init_dir    Endp
 

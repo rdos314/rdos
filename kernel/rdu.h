@@ -953,6 +953,7 @@
 #define usergate_get_vfs_drive_free 0x0000030A
 #define usergate_is_vfs_path 0x0000030B
 #define usergate_open_vfs_dir 0x0000030C
+#define usergate_close_vfs_dir 0x0000030D
 
 
 
@@ -1912,6 +1913,7 @@
 #define CallGate_get_vfs_drive_free 0x55 0x67 0x9a 10 3 0 0 3 0 0x5d
 #define CallGate_is_vfs_path 0x55 0x67 0x9a 11 3 0 0 3 0 0x5d
 #define CallGate_open_vfs_dir 0x55 0x67 0x9a 12 3 0 0 3 0 0x5d
+#define CallGate_close_vfs_dir 0x55 0x67 0x9a 13 3 0 0 3 0 0x5d
 
 #else
 
@@ -2869,5 +2871,6 @@
 #define CallGate_get_vfs_drive_free 0x3e 0x67 0x9a 10 3 0 0 3 0
 #define CallGate_is_vfs_path 0x3e 0x67 0x9a 11 3 0 0 3 0
 #define CallGate_open_vfs_dir 0x3e 0x67 0x9a 12 3 0 0 3 0
+#define CallGate_close_vfs_dir 0x3e 0x67 0x9a 13 3 0 0 3 0
 
 #endif

@@ -2288,6 +2288,11 @@ OpenVfsDir   MACRO
         UserGate open_vfs_dir_nr
                                                 ENDM
 
+; IN  BX              Handle
+CloseVfsDir   MACRO
+        UserGate close_vfs_dir_nr
+                                                ENDM
+
 ;   IN  AL          Drive #   
 ;   IN  ECX         Size of filesystem
 ;       IN      DS:(E)SI        File system name

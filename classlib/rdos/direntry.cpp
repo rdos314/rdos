@@ -1370,6 +1370,8 @@ void TDirList::DoSearch()
             ptr += info.HeaderSize;
             ptr += entry->PathNameSize;
         }
+
+        RdosCloseVfsDir(DirHandle);
     }
     else
     {

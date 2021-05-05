@@ -2391,6 +2391,94 @@ mbtuLoop:
 MapBlockToUser  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeUserBlock
+;
+;       DESCRIPTION:    Free user block
+;
+;       PARAMETERS:     EDX     Block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeUserBlock
+
+FreeUserBlock  Proc near
+    push ds
+    push ecx
+    push edx
+;
+    mov cx,flat_sel
+    mov ds,cx
+    movzx ecx,ds:[edx].sb_pages
+    shl ecx,12
+    FreeLinear
+;
+    pop edx
+    pop ecx
+    pop ds
+    ret
+FreeUserBlock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           FreeBlock
+;
+;       DESCRIPTION:    Free block
+;
+;       PARAMETERS:     EDX     Block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeBlock
+
+FreeBlock  Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov cx,flat_sel
+    mov ds,cx
+    lock sub ds:[edx].sb_usage,1
+    jz fbFreePhys
+;
+    movzx ecx,ds:[edx].sb_pages
+    shl ecx,12
+    FreeLinear
+    jmp fbDone
+
+fbFreePhys:
+    movzx ecx,ds:[edx].sb_pages
+
+fbFreeLoop:
+    GetPageEntry
+    test al,1
+    jz fbFreeNext
+;
+    and ax,0F000h
+    FreePhysical
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+
+fbFreeNext:
+    add edx,1000h
+    loop fbFreeLoop
+
+fbDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+FreeBlock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           TestServ

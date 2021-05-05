@@ -853,6 +853,7 @@ long long RDOSAPI RdosGetVfsDriveSize(int DriveNr);
 long long RDOSAPI RdosGetVfsDriveFree(int DriveNr);
 int RDOSAPI RdosIsVfsPath(const char *PathName);
 int RDOSAPI RdosOpenVfsDir(const char *PathName, struct DirInfo *Info);
+void RDOSAPI RdosCloseVfsDir(int Handle);
 
 int RDOSAPI RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
 int RDOSAPI RdosOpenFileDrive(int Drive, const char *FileName);

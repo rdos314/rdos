@@ -953,5 +953,6 @@ get_vfs_drive_size_nr             = 777
 get_vfs_drive_free_nr             = 778
 is_vfs_path_nr                    = 779
 open_vfs_dir_nr                   = 780
+close_vfs_dir_nr                  = 781
 
 usergate_entries                  = 800
