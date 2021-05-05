@@ -449,6 +449,19 @@ open_vfs_dir    Proc near
     stc
     jz ovdPop
 ;
+    mov al,es:[edi]
+    cmp al,'/'
+    je ovdRoot
+;
+    cmp al,'\'
+    je ovdRoot
+
+ovdRel:
+    int 3
+
+ovdRoot:
+    inc edi
+;
     mov esi,edi
     xor eax,eax
     mov fs,bx
