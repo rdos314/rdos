@@ -1375,7 +1375,10 @@ GetFileAttribBase       Proc near
     UserGateForce32 is_vfs_path_nr
     jc get_file_attrib_old
 ;
-    GetVfsFileAttrib
+    push eax
+    GetVfsDirEntryAttrib
+    mov cx,ax
+    pop eax
     ret
 
 get_file_attrib_old:

@@ -52,7 +52,6 @@ _TEXT   segment use32 word public 'CODE'
 
     assume  cs:_TEXT
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -128,6 +127,41 @@ GetDir Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetDirEntryAttrib
+;
+;       DESCRIPTION:    Get dir entry attrib
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowGetDirEntryAttrib:near
+
+GetDirEntryAttrib Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    add edi,SIZE vfs_cmd_struc
+    push ecx
+    mov esi,esp
+    call LowGetDirEntryAttrib
+    pop ecx
+    pop edi
+;
+    cmp eax,-1
+    je gdeaReply
+;
+    mov [edi].fc_eax,eax
+    and [edi].fc_eflags,NOT 1
+
+gdeaReply:
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+GetDirEntryAttrib Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -141,6 +175,7 @@ GetDir Endp
 msgtab:
 m00 DD OFFSET GetFreeSectors
 m01 DD OFFSET GetDir
+m02 DD OFFSET GetDirEntryAttrib
 
 WaitForMsg_    Proc near
     pushad

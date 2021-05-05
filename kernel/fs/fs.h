@@ -42,6 +42,7 @@ public:
     virtual TDir *CacheDir(long long inode) = 0;
 
     struct TShareHeader *GetDir(int node, const char *path, int *count);
+    int GetDirEntryAttrib(int node, const char *path);
 
 protected:
     TDiscServer *Server;

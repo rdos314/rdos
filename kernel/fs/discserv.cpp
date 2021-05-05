@@ -54,6 +54,11 @@ int GetDirHeaderSize()
     return sizeof(struct DirEntry);
 }
 
+int GetDirEntryAttrib(int node, const char *path)
+{
+    return Server->GetDirEntryAttrib(node, path);
+}
+
 }
 
 /*##########################################################################

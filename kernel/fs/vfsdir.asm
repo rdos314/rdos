@@ -617,22 +617,82 @@ close_vfs_dir  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetVfsFileAttrib
+;       NAME:           GetVfsDirEntryAttrib
 ;
-;       DESCRIPTION:    Get VFS file attrib
+;       DESCRIPTION:    Get VFS dir entry attrib
 ;
-;       PARAMETERS:     ES:EDI    Path
+;       PARAMETERS:     ES:EDI    Pathname
+;
+;       RETURNS:        NC
+;                         EAX     Attribute
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_vfs_file_attrib_name DB 'Get VFS File Attrib', 0
+get_vfs_dir_entry_attrib_name DB 'Get VFS Dir Entry Attrib', 0
 
-get_vfs_file_attrib   Proc far
-    int 3
-    xor cx,cx
+get_vfs_dir_entry_attrib   Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push ecx
+    push esi
+    push edi
+;    
+    mov eax,es
+    mov gs,eax
+;
+    call GetPathDrive
+    jc gvdeaDone
+;
+    call GetDrivePart
+    or bx,bx
     stc
+    jz gvdeaDone
+;
+    mov ah,es:[edi]
+    cmp ah,'/'
+    je gvdeaRoot
+;
+    cmp ah,'\'
+    je gvdeaRoot
+
+gvdeaRel:
+    call GetRelDir
+    jmp gvdeaHasStart
+
+gvdeaRoot:
+    inc edi
+    xor ax,ax
+
+gvdeaHasStart:
+    mov esi,edi
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    call AllocateMsg
+
+gvdeaCopyPath:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz gvdeaCopyPath
+;
+    mov eax,VFS_GET_DIR_ENTRY_ATTRIB
+    call RunMsg
+
+gvdeaDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
-get_vfs_file_attrib   Endp
+get_vfs_dir_entry_attrib   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -713,10 +773,10 @@ init_dir    Proc near
     mov ax,get_vfs_cur_dir_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET get_vfs_file_attrib
-    mov edi,OFFSET get_vfs_file_attrib_name
+    mov esi,OFFSET get_vfs_dir_entry_attrib
+    mov edi,OFFSET get_vfs_dir_entry_attrib_name
     xor cl,cl
-    mov ax,get_vfs_file_attrib_nr
+    mov ax,get_vfs_dir_entry_attrib_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET is_vfs_path16

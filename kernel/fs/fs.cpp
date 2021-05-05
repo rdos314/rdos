@@ -92,3 +92,26 @@ struct TShareHeader *TFs::GetDir(int node, const char *path, int *count)
     else
         return 0;
 }
+
+/*##########################################################################
+#
+#   Name       : TFs::GetDirEntryAttrib
+#
+#   Purpose....: Get dir entry attrib
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::GetDirEntryAttrib(int node, const char *path)
+{
+    TDir *dir;
+
+    if (!Root)
+        Root = CacheRootDir();
+
+    dir = Root;
+
+    return -1;
+}

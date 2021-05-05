@@ -28,8 +28,14 @@
 ; OUT EDX:EAX   Free sectors
 VFS_GET_FREE_SECTORS   = 0
 
+; IN  AX        Start handle
 ; IN            Path name
 ; OUT EAX       Header size
 ; OUT ECX       Entry count
 ; OUT           Block
 VFS_GET_DIR            = 1
+
+; IN  AX        Start handle
+; IN            Path name
+; OUT EAX       Attribute
+VFS_GET_DIR_ENTRY_ATTRIB  = 2

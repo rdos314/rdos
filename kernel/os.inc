@@ -3386,9 +3386,9 @@ ReadVfsDisc     MACRO
                     ENDM
 
 ;  IN  ES:EDI          Pathname
-;  OUT CX              Attrib
-GetVfsFileAttrib     MACRO
-        OsGate get_vfs_file_attrib_nr
+;  OUT EAX             Attrib
+GetVfsDirEntryAttrib     MACRO
+        OsGate get_vfs_dir_entry_attrib_nr
                     ENDM
 
 

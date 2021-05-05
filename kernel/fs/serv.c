@@ -28,6 +28,7 @@
 long long GetFreeSectors();
 int GetDirHeaderSize();
 int GetDir(int node, const char *path, int *count);
+int GetDirEntryAttrib(int node, const char *path);
 
 /*##########################################################################
 #
@@ -60,4 +61,15 @@ int LowGetDirHeaderSize()
 struct TShareHeader *LowGetDir(int node, const char *path, int *count)
 {
     return GetDir(node, path, count);
+}
+
+/*##########################################################################
+#
+#   Name       : LowGetDirEntryAttrib
+#
+##########################################################################*/
+#pragma aux LowGetDirEntryAttrib "*" parm routine [eax] [edi] value [eax]
+struct TShareHeader *LowGetDirEntryAttrib(int node, const char *path)
+{
+    return GetDirEntryAttrib(node, path);
 }
