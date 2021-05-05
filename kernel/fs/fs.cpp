@@ -44,6 +44,7 @@
 TFs::TFs(TDiscServer *server)
 {
     Server = server;
+    Root = 0;
 }
 
 /*##########################################################################
@@ -59,6 +60,8 @@ TFs::TFs(TDiscServer *server)
 ##########################################################################*/
 TFs::~TFs()
 {
+    if (Root)
+        delete Root;
 }
 
 /*##########################################################################
@@ -76,7 +79,10 @@ struct TShareHeader *TFs::GetDir(int node, const char *path, int *count)
 {
     TDir *dir;
 
-    dir = CacheRootDir();
+    if (!Root)
+        Root = CacheRootDir();
+
+    dir = Root;
 
     if (dir)
     {

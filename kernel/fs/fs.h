@@ -45,6 +45,7 @@ public:
 
 protected:
     TDiscServer *Server;
+    TDir *Root;
 };
 
 #endif
