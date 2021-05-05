@@ -32,6 +32,10 @@
 #include "section.h"
 #include "rdos.h"
 
+#define DIR_SELF      -1
+#define DIR_PARENT    -2
+#define DIR_NOT_FOUND -3
+
 class TMetaData;
 
 struct TDirLink
@@ -60,7 +64,7 @@ public:
     virtual bool IsDir();
     struct TShareHeader *Share();
     int GetCount();
-    int Find(const char *path);
+    char *Parse(char *path, int *index);
 
     struct DirEntry *Add(const char *path, long long inode);
 
@@ -68,6 +72,7 @@ public:
 
 protected:
     void Grow();
+    int Find(const char *path);
 
     int EntryCount;
     int MaxCount;

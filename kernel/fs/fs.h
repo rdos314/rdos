@@ -45,6 +45,8 @@ public:
     int GetDirEntryAttrib(int node, char *path);
 
 protected:
+    TDir *GetStartDir(int node);
+
     TDiscServer *Server;
     TDir *Root;
 };

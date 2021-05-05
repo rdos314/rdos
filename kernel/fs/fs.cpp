@@ -66,6 +66,29 @@ TFs::~TFs()
 
 /*##########################################################################
 #
+#   Name       : TFs::GetStartDir
+#
+#   Purpose....: Get start dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir *TFs::GetStartDir(int node)
+{
+    TDir *dir;
+
+    if (!Root)
+        Root = CacheRootDir();
+
+    dir = Root;
+
+    return dir;
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::GetDir
 #
 #   Purpose....: Get dir
@@ -77,12 +100,7 @@ TFs::~TFs()
 ##########################################################################*/
 struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
 {
-    TDir *dir;
-
-    if (!Root)
-        Root = CacheRootDir();
-
-    dir = Root;
+    TDir *dir = GetStartDir(node);
 
     if (dir)
     {
@@ -106,33 +124,10 @@ struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
 ##########################################################################*/
 int TFs::GetDirEntryAttrib(int node, char *path)
 {
-    TDir *dir;
-    char *ptr = path;
-    bool sep;
+    TDir *dir = GetStartDir(node);
     int index;
 
-    sep = false;
-
-    while (*ptr && !sep)
-    {
-        if (*ptr == '/' || *ptr == '\\')
-            sep = true;
-        else
-            ptr++;
-    }
-
-    if (sep)
-    {
-        *ptr = 0;
-        ptr++;
-    }
-
-    if (!Root)
-        Root = CacheRootDir();
-
-    dir = Root;
-
-    index = dir->Find(path);
+    path = dir->Parse(path, &index);
 
     return -1;
 }

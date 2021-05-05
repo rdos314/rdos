@@ -268,5 +268,50 @@ int TDir::Find(const char *path)
             return i;
     }
 
-    return -1;
+    return DIR_NOT_FOUND;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::Parse
+#
+#   Purpose....: Parse path
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TDir::Parse(char *path, int *index)
+{
+    char *ptr = path;
+    bool sep;
+
+    sep = false;
+
+    while (*ptr && !sep)
+    {
+        if (*ptr == '/' || *ptr == '\\')
+            sep = true;
+        else
+            ptr++;
+    }
+
+    if (sep)
+    {
+        *ptr = 0;
+        ptr++;
+    }
+
+    if (!strcmp(path, "."))
+        *index = DIR_SELF;
+    else if (!strcmp(path, ".."))
+        *index = DIR_PARENT;
+    else
+        *index = Find(path);
+
+    if (*index == DIR_NOT_FOUND)
+        return 0;
+    else
+        return ptr;
 }
