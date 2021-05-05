@@ -3385,6 +3385,13 @@ ReadVfsDisc     MACRO
         OsGate read_vfs_disc_nr
                     ENDM
 
+;  IN  ES:EDI          Pathname
+;  OUT CX              Attrib
+GetVfsFileAttrib     MACRO
+        OsGate get_vfs_file_attrib_nr
+                    ENDM
+
+
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 
 BeginDiscHandler    MACRO

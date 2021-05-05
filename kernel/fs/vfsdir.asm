@@ -577,21 +577,6 @@ open_vfs_dir32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CloseBase
-;
-;       DESCRIPTION:    Close dir, base
-;
-;       PARAMETERS:     DS:EBX          Handle data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseBase    Proc near
-    ret
-CloseBase    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           CloseVfsDir
 ;
 ;       DESCRIPTION:    Close VFS dir
@@ -628,6 +613,25 @@ ccdDone:
     pop ds
     ret
 close_vfs_dir  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsFileAttrib
+;
+;       DESCRIPTION:    Get VFS file attrib
+;
+;       PARAMETERS:     ES:EDI    Path
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_file_attrib_name DB 'Get VFS File Attrib', 0
+
+get_vfs_file_attrib   Proc far
+    xor cx,cx
+    stc
+    ret
+get_vfs_file_attrib   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -706,6 +710,12 @@ init_dir    Proc near
     mov edi,OFFSET get_vfs_cur_dir_name
     xor cl,cl
     mov ax,get_vfs_cur_dir_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_vfs_file_attrib
+    mov edi,OFFSET get_vfs_file_attrib_name
+    xor cl,cl
+    mov ax,get_vfs_file_attrib_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET is_vfs_path16

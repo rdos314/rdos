@@ -1372,6 +1372,13 @@ DeleteDirBase   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetFileAttribBase       Proc near
+    IsVfsPath
+    jc get_file_attrib_old
+;
+    GetVfsFileAttrib
+    ret
+
+get_file_attrib_old:
     push ds
     push es
     push fs
@@ -2553,19 +2560,7 @@ remove_dir16    ENDP
 get_file_attribute_name DB 'Get File Attribute',0
 
 get_file_attrib32:
-    ApiSaveEax
-    ApiSaveEbx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
     call GetFileAttribBase
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEbx
-    ApiCheckEax
     retf32
 
 get_file_attrib16       PROC far

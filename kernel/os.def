@@ -885,5 +885,6 @@ check_vfs_drive_nr          = 802
 get_vfs_cur_dir_nr          = 803
 
 clear_page_entries_nr       = 804
+get_vfs_file_attrib_nr      = 805
 
 osgate_entries              = 850
