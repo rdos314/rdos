@@ -37,7 +37,6 @@ public:
     TParser(TDir *Dir, char *PathName);
     ~TParser();
 
-    void Advance();
     bool IsDone();
     bool IsLast();
     bool IsValid();
@@ -45,7 +44,18 @@ public:
     bool IsCurrDir();
     bool IsParentDir();
 
+    TDir *GetDir();
+    struct DirEntry *GetEntry();
+
+    void Advance();
+    void Advance(TDir *dir);
+
+protected:
+    void Process();
+
     struct DirEntry *CurrEntry;
+    bool IsCurr;
+    bool IsParent;
     char *Head;
     char *Next;
     TDir *Dir;

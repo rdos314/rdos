@@ -44,35 +44,11 @@
 ##########################################################################*/
 TParser::TParser(TDir *StartDir, char *PathName)
 {
-    bool sep = false;
-    int index;
-
     Head = PathName;
     Next = Head;
-
-    while (*Next && !sep)
-    {
-        if (*Next == '/' || *Next == '\\')
-            sep = true;
-        else
-            Next++;
-    }
-
-    if (sep)
-    {
-        *Next = 0;
-        Next++;
-    }
-
     Dir = StartDir;
-    CurrEntry = 0;
 
-    if (Dir)
-    {
-        index = Dir->Find(Head);
-        if (index >= 0)
-            CurrEntry = Dir->Get(index);
-    }
+    Process();
 }
 
 /*##########################################################################
@@ -150,7 +126,7 @@ bool TParser::IsValid()
     if (CurrEntry)
         return true;
     else
-        return IsCurrDir() || IsParentDir();
+        return IsCurr || IsParent;
 }
 
 /*##########################################################################
@@ -174,7 +150,7 @@ bool TParser::IsDir()
             return false;
     }
     else
-        return IsCurrDir() || IsParentDir();
+        return IsCurr || IsParent;
 }
 
 /*##########################################################################
@@ -190,15 +166,7 @@ bool TParser::IsDir()
 ##########################################################################*/
 bool TParser::IsCurrDir()
 {
-    if (Dir)
-    {
-        if (!strcmp(Head, "."))
-            return true;
-        else
-            return false;
-    }
-    else
-        return false;
+    return IsCurr;
 }
 
 /*##########################################################################
@@ -214,35 +182,56 @@ bool TParser::IsCurrDir()
 ##########################################################################*/
 bool TParser::IsParentDir()
 {
-    if (Dir && Dir->Parent)
-    {
-        if (!strcmp(Head, ".."))
-            return true;
-        else
-            return false;
-    }
-    else
-        return false;
+    return IsParent;
 }
 
 /*##########################################################################
 #
-#   Name       : TParser::Advance
+#   Name       : TParser::GetEntry
 #
-#   Purpose....: Parser advance
+#   Purpose....: Get current dir entry
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TParser::Advance()
+struct DirEntry *TParser::GetEntry()
 {
-    int index;
-    bool sep = false;
+    return CurrEntry;
+}
 
-    Head = Next;
-    Next = Head;
+/*##########################################################################
+#
+#   Name       : TParser::GetDir
+#
+#   Purpose....: Get current dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir *TParser::GetDir()
+{
+    return Dir;
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::Process
+#
+#   Purpose....: Process next path part
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TParser::Process()
+{
+    bool sep = false;
+    int index;
 
     while (*Next && !sep)
     {
@@ -259,13 +248,63 @@ void TParser::Advance()
     }
 
     CurrEntry = 0;
+    IsCurr = false;
+    IsParent = false;
 
+    if (Dir && Head[0])
+    {
+        if (!strcmp(Head, "."))
+            IsCurr = true;
+       
+        if (!strcmp(Head, ".."))
+            IsParent = true;
+    
+        if (!IsCurr & !IsParent)
+        {
+            index = Dir->Find(Head);
+            if (index >= 0)
+                CurrEntry = Dir->Get(index);
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::Advance
+#
+#   Purpose....: Parser advance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TParser::Advance()
+{
     if (Dir)
     {
-        index = Dir->Find(Head);
-        if (index >= 0)
-            CurrEntry = Dir->Get(index);
+        Head = Next;
+        Next = Head;
+
+        Process();
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::Advance
+#
+#   Purpose....: Parser advance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TParser::Advance(TDir *dir)
+{
+    Dir = dir;
+    Advance();
 }
 
 /*##########################################################################
@@ -340,6 +379,7 @@ void TFs::Advance(TParser *Parser)
 {
     struct DirEntry *entry;    
     bool isdir;
+    TDir *dir;
 
     if (Parser->IsCurrDir())
         Parser->Advance();
@@ -349,7 +389,7 @@ void TFs::Advance(TParser *Parser)
     }
     else
     {
-        entry = Parser->CurrEntry;
+        entry = Parser->GetEntry();
 
         if (entry)
         {
@@ -363,9 +403,9 @@ void TFs::Advance(TParser *Parser)
 
         if (isdir)
         {
-            Parser->Dir = CacheDir(Parser->Dir, entry->Inode);
-            if (Parser->Dir)
-                Parser->Advance();
+            dir = Parser->GetDir();
+            dir = CacheDir(dir, entry->Inode);
+            Parser->Advance(dir);
         }  
     }
 }
@@ -383,6 +423,7 @@ void TFs::Advance(TParser *Parser)
 ##########################################################################*/
 struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
 {
+    TDir *dir;
     TParser Parser(GetStartDir(node), path);
 
     while (!Parser.IsDone())
@@ -393,10 +434,12 @@ struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
             return 0;
     }
 
-    if (Parser.Dir)
+    dir = Parser.GetDir();
+
+    if (dir)
     {
-        *count = Parser.Dir->GetCount();
-        return Parser.Dir->Share();
+        *count = dir->GetCount();
+        return dir->Share();
     }
     else
         return 0;
@@ -426,7 +469,7 @@ int TFs::GetDirEntryAttrib(int node, char *path)
             return -1;
     }
 
-    entry = Parser.CurrEntry;    
+    entry = Parser.GetEntry();    
 
     if (entry)
         return entry->Attrib;
