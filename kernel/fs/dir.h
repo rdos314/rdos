@@ -64,6 +64,8 @@ public:
     virtual bool IsDir();
     struct TShareHeader *Share();
     int GetCount();
+    int Find(const char *path);
+
     char *Parse(char *path, int *index);
     struct DirEntry *Get(int index);
 
@@ -73,7 +75,6 @@ public:
 
 protected:
     void Grow();
-    int Find(const char *path);
 
     int EntryCount;
     int MaxCount;

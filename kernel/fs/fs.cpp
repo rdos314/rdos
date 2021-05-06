@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <stdio.h>
+#include <string.h>
 #include <rdos.h>
 #include <serv.h>
 #include "fs.h"
@@ -41,7 +42,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TParser::TParser(char *PathName)
+TParser::TParser(TDir *StartDir, char *PathName)
 {
     bool sep = false;
 
@@ -62,7 +63,7 @@ TParser::TParser(char *PathName)
         Next++;
     }
 
-    Dir = 0;
+    Dir = StartDir;
 }
 
 /*##########################################################################
@@ -78,6 +79,94 @@ TParser::TParser(char *PathName)
 ##########################################################################*/
 TParser::~TParser()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::IsDone
+#
+#   Purpose....: Check if done
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TParser::IsDone()
+{
+    if (Dir == 0)
+        return true;
+
+    if (*Head == 0)
+        return true;
+
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::IsValid
+#
+#   Purpose....: Check if valid entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TParser::IsValid()
+{
+    int index;
+    struct DirEntry *entry;
+
+    if (Dir)
+    {
+        if (!strcmp(Head, "."))
+            return true;
+
+        if (!strcmp(Head, ".."))
+            return true;
+
+        index = Dir->Find(Head);
+        if (index >= 0)
+            return true;
+    }
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::IsDir
+#
+#   Purpose....: Check if directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TParser::IsDir()
+{
+    int index;
+    struct DirEntry *entry;
+
+    if (Dir)
+    {
+        if (!strcmp(Head, "."))
+            return true;
+
+        if (!strcmp(Head, ".."))
+            return true;
+
+        index = Dir->Find(Head);
+        if (index >= 0)
+        {
+            entry = Dir->Get(index);
+            if (entry->Attrib & FILE_ATTRIBUTE_DIRECTORY)
+                return true;
+        }
+    }
+    return false;
 }
 
 /*##########################################################################
@@ -211,6 +300,7 @@ struct DirEntry *TFs::Parse(TDir *dir, char *path)
 
     return 0;
 }
+
 /*##########################################################################
 #
 #   Name       : TFs::GetDir
@@ -224,12 +314,20 @@ struct DirEntry *TFs::Parse(TDir *dir, char *path)
 ##########################################################################*/
 struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
 {
-    TDir *dir = GetStartDir(node);
+    TParser Parser(GetStartDir(node), path);
 
-    if (dir)
+    while (!Parser.IsDone())
     {
-        *count = dir->GetCount();
-        return dir->Share();
+        if (Parser.IsDir())
+            Parser.Advance();
+        else
+            return 0;
+    }
+
+    if (Parser.Dir)
+    {
+        *count = Parser.Dir->GetCount();
+        return Parser.Dir->Share();
     }
     else
         return 0;

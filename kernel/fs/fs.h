@@ -34,10 +34,13 @@
 class TParser
 {
 public:
-    TParser(char *PathName);
+    TParser(TDir *Dir, char *PathName);
     ~TParser();
 
     void Advance();
+    bool IsDone();
+    bool IsValid();
+    bool IsDir();
 
     char *Head;
     char *Next;
