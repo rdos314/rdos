@@ -193,6 +193,54 @@ bool TParser::IsDir()
 
 /*##########################################################################
 #
+#   Name       : TParser::IsCurrDir
+#
+#   Purpose....: Check if current directory "."
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TParser::IsCurrDir()
+{
+    if (Dir)
+    {
+        if (!strcmp(Head, "."))
+            return true;
+        else
+            return false;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::IsParentDir
+#
+#   Purpose....: Check if parent directory ".."
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TParser::IsParentDir()
+{
+    if (Dir)
+    {
+        if (!strcmp(Head, ".."))
+            return true;
+        else
+            return false;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TParser::Get
 #
 #   Purpose....: Get current dir entry
@@ -315,6 +363,51 @@ TDir *TFs::GetStartDir(int node)
 
 /*##########################################################################
 #
+#   Name       : TFs::Advance
+#
+#   Purpose....: Advance path
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Advance(TParser *Parser)
+{
+    struct DirEntry *entry;    
+    bool isdir;
+
+    if (Parser->IsCurrDir())
+        Parser->Advance();
+    else if (Parser->IsParentDir())
+    {
+        Parser->Advance();
+    }
+    else
+    {
+        entry = Parser->Get();
+
+        if (entry)
+        {
+            if (entry->Attrib & FILE_ATTRIBUTE_DIRECTORY)
+                isdir = true;
+            else
+                isdir = false;
+        }
+        else
+            isdir = false;
+
+        if (isdir)
+        {
+            Parser->Dir = CacheDir(Parser->Dir, entry->Inode);
+            if (Parser->Dir)
+                Parser->Advance();
+        }  
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::GetDir
 #
 #   Purpose....: Get dir
@@ -331,7 +424,7 @@ struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
     while (!Parser.IsDone())
     {
         if (Parser.IsDir())
-            Parser.Advance();
+            Advance(&Parser);
         else
             return 0;
     }
@@ -364,7 +457,7 @@ int TFs::GetDirEntryAttrib(int node, char *path)
     while (!Parser.IsLast())
     {
         if (Parser.IsDir())
-            Parser.Advance();
+            Advance(&Parser);
         else
             return -1;
     }
@@ -375,7 +468,7 @@ int TFs::GetDirEntryAttrib(int node, char *path)
         return entry->Attrib;
     else
     {
-        if (Parser.IsDir())
+        if (Parser.IsCurrDir() || Parser.IsParentDir())
             return FILE_ATTRIBUTE_DIRECTORY;
         else
             return -1;

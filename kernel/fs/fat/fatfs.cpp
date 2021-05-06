@@ -205,7 +205,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 #   Returns....: *
 #
 ##########################################################################*/
-TDir *TFat::CacheDir(long long inode)
+TDir *TFat::CacheDir(TDir *ParentDir, long long inode)
 {
     unsigned int Cluster = inode;
     TDiscReq Req(Server);
@@ -221,7 +221,7 @@ TDir *TFat::CacheDir(long long inode)
     TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
 
-    Dir = new TFatDir(Cluster);
+    Dir = new TFatDir(ParentDir);
 
     while (Cluster && Cluster < Clusters)
     {

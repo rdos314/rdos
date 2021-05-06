@@ -32,37 +32,6 @@
 
 /*##########################################################################
 #
-#   Name       : TMetaData::TMetaData
-#
-#   Purpose....: Meta data constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TMetaData::TMetaData(long long parent)
-{
-    Parent = parent;
-}
-
-/*##########################################################################
-#
-#   Name       : TMetaData::~TMetaData
-#
-#   Purpose....: Meta data destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TMetaData::~TMetaData()
-{
-}
-
-/*##########################################################################
-#
 #   Name       : TDir::TDir
 #
 #   Purpose....: Dir constructor
@@ -72,12 +41,12 @@ TMetaData::~TMetaData()
 #   Returns....: *
 #
 ##########################################################################*/
-TDir::TDir(long long parent)
-  : TMetaData(parent),
-    Section("dir")
+TDir::TDir(TDir *ParentDir)
+  : Section("dir")
 {
     int i;
 
+    Parent = ParentDir;
     EntryCount = 0;
     MaxCount = 4;
     EntryArr = new TDirLink[MaxCount];
@@ -103,22 +72,6 @@ TDir::TDir(long long parent)
 TDir::~TDir()
 {
     delete EntryArr;
-}
-
-/*##########################################################################
-#
-#   Name       : TDir::IsDir
-#
-#   Purpose....: Check if dir
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TDir::IsDir()
-{
-    return true;
 }
 
 /*##########################################################################

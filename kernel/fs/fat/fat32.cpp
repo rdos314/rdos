@@ -168,5 +168,5 @@ bool TFat32::ProcessInfoSector()
 ##########################################################################*/
 TDir *TFat32::CacheRootDir()
 {
-    return CacheDir(RootCluster);
+    return CacheDir(0, RootCluster);
 }

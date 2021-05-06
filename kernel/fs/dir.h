@@ -34,32 +34,18 @@
 
 #define DIR_NOT_FOUND -1
 
-class TMetaData;
-
 struct TDirLink
 {
     int Offset;
-    struct TMetaData *Link;
+    void *Link;
 };
 
-class TMetaData
+class TDir : public TBlock
 {
 public:
-    TMetaData(long long Parent);
-    virtual ~TMetaData();
-
-    virtual bool IsDir() = 0;
-
-    long long Parent;
-};
-
-class TDir : public TMetaData, public TBlock
-{
-public:
-    TDir(long long Parent);
+    TDir(TDir *ParentDir);
     virtual ~TDir();
 
-    virtual bool IsDir();
     struct TShareHeader *Share();
     int GetCount();
     int Find(const char *path);
@@ -68,6 +54,7 @@ public:
     struct DirEntry *Add(const char *path, long long inode);
 
     struct TDirLink *EntryArr;
+    TDir *Parent;
 
 protected:
     void Grow();

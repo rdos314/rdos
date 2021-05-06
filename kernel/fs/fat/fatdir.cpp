@@ -42,8 +42,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatDir::TFatDir(long long parent)
-  : TDir(parent)
+TFatDir::TFatDir(TDir *ParentDir)
+  : TDir(ParentDir)
 {
     FCurrLfn = 0;
 }

@@ -42,6 +42,8 @@ public:
     bool IsLast();
     bool IsValid();
     bool IsDir();
+    bool IsCurrDir();
+    bool IsParentDir();
     struct DirEntry *Get();
 
     char *Head;
@@ -57,13 +59,14 @@ public:
 
     virtual long long GetFreeSectors() = 0;
     virtual TDir *CacheRootDir() = 0;
-    virtual TDir *CacheDir(long long inode) = 0;
+    virtual TDir *CacheDir(TDir *ParentDir, long long inode) = 0;
 
     struct TShareHeader *GetDir(int node, char *path, int *count);
     int GetDirEntryAttrib(int node, char *path);
 
 protected:
     TDir *GetStartDir(int node);
+    void Advance(TParser *Parser);
     struct DirEntry *Parse(TDir *dir, char *path);
 
     TDiscServer *Server;

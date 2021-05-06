@@ -51,7 +51,7 @@ struct TFatDirEntry
 class TFatDir : public TDir
 {
 public:
-    TFatDir(long long Parent);
+    TFatDir(TDir *ParentDir);
     virtual ~TFatDir();
 
     void Add(long long sector, int offset, struct TFatDirEntry *entry);
