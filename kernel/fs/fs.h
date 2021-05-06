@@ -44,8 +44,8 @@ public:
     bool IsDir();
     bool IsCurrDir();
     bool IsParentDir();
-    struct DirEntry *Get();
 
+    struct DirEntry *CurrEntry;
     char *Head;
     char *Next;
     TDir *Dir;
