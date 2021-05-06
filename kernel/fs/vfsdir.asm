@@ -478,12 +478,11 @@ open_vfs_dir    Proc near
     mov gs,eax
 ;
     call GetPathDrive
-    jc ovdPop
+    jc ovdFail
 ;
     call GetDrivePart
     or bx,bx
-    stc
-    jz ovdPop
+    jz ovdFail
 ;
     mov ah,es:[edi]
     cmp ah,'/'
@@ -515,7 +514,7 @@ ovdCopyPath:
 ;
     mov eax,VFS_GET_DIR
     call RunMsg
-    jc ovdPop
+    jc ovdFail
 ;
     push ecx
     mov cx,SIZE dir_handle_seg
@@ -543,9 +542,14 @@ ovdCopyPath:
     clc
     jmp ovdDone
 
-ovdPop:
+ovdFail:
     pop esi
     pop ds
+;
+    mov ds:[esi].dis_linear,0
+    mov ds:[esi].dis_header_size,0
+    mov ds:[esi].dis_count,0
+    stc
 
 ovdDone:
     pop ebp
@@ -595,7 +599,7 @@ close_vfs_dir    Proc far
 ;
     mov ax,VFS_DIR_HANDLE
     DerefHandle
-    jc cvdDone
+    jc ccdDone
 ;
     mov edx,ds:[ebx].dh_user
     call FreeUserBlock
