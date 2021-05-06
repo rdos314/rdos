@@ -45,14 +45,15 @@ public:
     bool IsParentDir();
 
     TDir *GetDir();
+    int GetIndex();
     struct DirEntry *GetEntry();
 
-    void Advance();
     void Advance(TDir *dir);
 
 protected:
     void Process();
 
+    int CurrIndex;
     struct DirEntry *CurrEntry;
     bool IsCurr;
     bool IsParent;

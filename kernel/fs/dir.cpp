@@ -251,3 +251,63 @@ struct DirEntry *TDir::Get(int index)
     ptr += EntryArr[index].Offset;
     return (struct DirEntry *)ptr;
 }
+
+/*##########################################################################
+#
+#   Name       : TDir::GetParentDir
+#
+#   Purpose....: Get parent dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir *TDir::GetParentDir()
+{
+    return Parent;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::GetDirLink
+#
+#   Purpose....: Get dir link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir *TDir::GetDirLink(int index)
+{
+    if (index < 0)
+        return 0;
+
+    if (index >= EntryCount)
+        return 0;
+
+    return (TDir *)EntryArr[index].Link;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::SetDirLink
+#
+#   Purpose....: Set dir link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::SetDirLink(int index, TDir *dir)
+{
+    if (index < 0)
+        return;
+
+    if (index >= EntryCount)
+        return;
+
+    EntryArr[index].Link = dir;
+}

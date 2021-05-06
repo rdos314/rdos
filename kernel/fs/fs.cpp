@@ -187,6 +187,22 @@ bool TParser::IsParentDir()
 
 /*##########################################################################
 #
+#   Name       : TParser::GetIndex
+#
+#   Purpose....: Get current dir entry #
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TParser::GetIndex()
+{
+    return CurrIndex;
+}
+
+/*##########################################################################
+#
 #   Name       : TParser::GetEntry
 #
 #   Purpose....: Get current dir entry
@@ -231,7 +247,6 @@ TDir *TParser::GetDir()
 void TParser::Process()
 {
     bool sep = false;
-    int index;
 
     while (*Next && !sep)
     {
@@ -247,6 +262,7 @@ void TParser::Process()
         Next++;
     }
 
+    CurrIndex = -1;
     CurrEntry = 0;
     IsCurr = false;
     IsParent = false;
@@ -261,32 +277,10 @@ void TParser::Process()
     
         if (!IsCurr & !IsParent)
         {
-            index = Dir->Find(Head);
-            if (index >= 0)
-                CurrEntry = Dir->Get(index);
+            CurrIndex = Dir->Find(Head);
+            if (CurrIndex >= 0)
+                CurrEntry = Dir->Get(CurrIndex);
         }
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TParser::Advance
-#
-#   Purpose....: Parser advance
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TParser::Advance()
-{
-    if (Dir)
-    {
-        Head = Next;
-        Next = Head;
-
-        Process();
     }
 }
 
@@ -304,7 +298,14 @@ void TParser::Advance()
 void TParser::Advance(TDir *dir)
 {
     Dir = dir;
-    Advance();
+
+    if (Dir)
+    {
+        Head = Next;
+        Next = Head;
+
+        Process();
+    }
 }
 
 /*##########################################################################
@@ -380,12 +381,17 @@ void TFs::Advance(TParser *Parser)
     struct DirEntry *entry;    
     bool isdir;
     TDir *dir;
+    TDir *newdir;
+    int index;
+
+    dir = Parser->GetDir();
 
     if (Parser->IsCurrDir())
-        Parser->Advance();
+        Parser->Advance(dir);
     else if (Parser->IsParentDir())
     {
-        Parser->Advance();
+        newdir = dir->GetParentDir();
+        Parser->Advance(newdir);
     }
     else
     {
@@ -403,9 +409,16 @@ void TFs::Advance(TParser *Parser)
 
         if (isdir)
         {
-            dir = Parser->GetDir();
-            dir = CacheDir(dir, entry->Inode);
-            Parser->Advance(dir);
+            index = Parser->GetIndex();
+            newdir = dir->GetDirLink(index);
+            
+            if (!newdir)
+            {
+                newdir = CacheDir(dir, entry->Inode);
+                dir->SetDirLink(index, newdir);
+            }
+
+            Parser->Advance(newdir);
         }  
     }
 }

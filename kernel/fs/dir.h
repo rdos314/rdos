@@ -51,13 +51,17 @@ public:
     int Find(const char *path);
     struct DirEntry *Get(int index);
 
-    struct DirEntry *Add(const char *path, long long inode);
+    TDir *GetParentDir();
+    TDir *GetDirLink(int index);
+    void SetDirLink(int index, TDir *dir);
 
-    struct TDirLink *EntryArr;
-    TDir *Parent;
+    struct DirEntry *Add(const char *path, long long inode);
 
 protected:
     void Grow();
+
+    struct TDirLink *EntryArr;
+    TDir *Parent;
 
     int EntryCount;
     int MaxCount;
