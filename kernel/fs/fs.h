@@ -31,6 +31,19 @@
 #include "discserv.h"
 #include "dir.h"
 
+class TParser
+{
+public:
+    TParser(char *PathName);
+    ~TParser();
+
+    void Advance();
+
+    char *Head;
+    char *Next;
+    TDir *Dir;
+};
+
 class TFs
 {
 public:

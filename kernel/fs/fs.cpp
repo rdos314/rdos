@@ -32,6 +32,89 @@
 
 /*##########################################################################
 #
+#   Name       : TParser::TParser
+#
+#   Purpose....: Parser constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TParser::TParser(char *PathName)
+{
+    bool sep = false;
+
+    Head = PathName;
+    Next = Head;
+
+    while (*Next && !sep)
+    {
+        if (*Next == '/' || *Next == '\\')
+            sep = true;
+        else
+            Next++;
+    }
+
+    if (sep)
+    {
+        *Next = 0;
+        Next++;
+    }
+
+    Dir = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::~TParser
+#
+#   Purpose....: Parser constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TParser::~TParser()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::Advance
+#
+#   Purpose....: Parser advance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TParser::Advance()
+{
+    bool sep = false;
+
+    Head = Next;
+    Next = Head;
+
+    while (*Next && !sep)
+    {
+        if (*Next == '/' || *Next == '\\')
+            sep = true;
+        else
+            Next++;
+    }
+
+    if (sep)
+    {
+        *Next = 0;
+        Next++;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::TFs
 #
 #   Purpose....: FS contructor
