@@ -105,6 +105,28 @@ bool TParser::IsDone()
 
 /*##########################################################################
 #
+#   Name       : TParser::IsLast
+#
+#   Purpose....: Check if at last path compoonent
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TParser::IsLast()
+{
+    if (Dir == 0)
+        return true;
+
+    if (*Next == 0)
+        return true;
+
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TParser::IsValid
 #
 #   Purpose....: Check if valid entry
@@ -167,6 +189,38 @@ bool TParser::IsDir()
         }
     }
     return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TParser::Get
+#
+#   Purpose....: Get current dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct DirEntry *TParser::Get()
+{
+    int index;
+    struct DirEntry *entry;
+
+    if (Dir)
+    {
+        if (!strcmp(Head, "."))
+            return 0;
+
+        if (!strcmp(Head, ".."))
+            return 0;
+
+        index = Dir->Find(Head);
+        if (index >= 0)
+            return Dir->Get(index);
+    }
+
+    return 0;
 }
 
 /*##########################################################################
@@ -261,48 +315,6 @@ TDir *TFs::GetStartDir(int node)
 
 /*##########################################################################
 #
-#   Name       : TFs::Parse
-#
-#   Purpose....: Parse pathname
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-struct DirEntry *TFs::Parse(TDir *dir, char *path)
-{
-    int index;
-    struct DirEntry *entry;
-
-    path = dir->Parse(path, &index);
-
-    if (path)
-    {
-        switch (index)
-        {
-            case DIR_SELF:
-                if (path[0] == 0)
-                    return 0;
-                else
-                    return Parse(dir, path);
-
-            case DIR_PARENT:
-                return 0;
-
-            default:
-                if (path[0] == 0)
-                    return dir->Get(index);
-                else
-                    return 0;
-        }
-    }
-
-    return 0;
-}
-
-/*##########################################################################
-#
 #   Name       : TFs::GetDir
 #
 #   Purpose....: Get dir
@@ -346,11 +358,26 @@ struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
 ##########################################################################*/
 int TFs::GetDirEntryAttrib(int node, char *path)
 {
-    TDir *dir = GetStartDir(node);
-    struct DirEntry *entry = Parse(dir, path);
+    TParser Parser(GetStartDir(node), path);
+    struct DirEntry *entry;
+
+    while (!Parser.IsLast())
+    {
+        if (Parser.IsDir())
+            Parser.Advance();
+        else
+            return -1;
+    }
+
+    entry = Parser.Get();    
 
     if (entry)
         return entry->Attrib;
     else
-        return -1;
+    {
+        if (Parser.IsDir())
+            return FILE_ATTRIBUTE_DIRECTORY;
+        else
+            return -1;
+    }
 }

@@ -32,9 +32,7 @@
 #include "section.h"
 #include "rdos.h"
 
-#define DIR_SELF      -1
-#define DIR_PARENT    -2
-#define DIR_NOT_FOUND -3
+#define DIR_NOT_FOUND -1
 
 class TMetaData;
 
@@ -65,8 +63,6 @@ public:
     struct TShareHeader *Share();
     int GetCount();
     int Find(const char *path);
-
-    char *Parse(char *path, int *index);
     struct DirEntry *Get(int index);
 
     struct DirEntry *Add(const char *path, long long inode);

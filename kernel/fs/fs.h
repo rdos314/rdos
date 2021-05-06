@@ -39,8 +39,10 @@ public:
 
     void Advance();
     bool IsDone();
+    bool IsLast();
     bool IsValid();
     bool IsDir();
+    struct DirEntry *Get();
 
     char *Head;
     char *Next;
