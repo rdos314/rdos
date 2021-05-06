@@ -44,9 +44,9 @@ long long GetFreeSectors()
     return Server->GetFreeSectors();
 }
 
-struct TShareHeader *GetDir(int node, char *path, int *count)
+struct TShareHeader *GetDir(int rel, char *path, int *count)
 {
-    return Server->GetDir(node, path, count);
+    return Server->GetDir(rel, path, count);
 }
 
 int GetDirHeaderSize()
@@ -54,9 +54,14 @@ int GetDirHeaderSize()
     return sizeof(struct DirEntry);
 }
 
-int GetDirEntryAttrib(int node, char *path)
+int GetDirEntryAttrib(int rel, char *path)
 {
-    return Server->GetDirEntryAttrib(node, path);
+    return Server->GetDirEntryAttrib(rel, path);
+}
+
+int LockRelDir(int rel, char *path)
+{
+    return Server->LockRelDir(rel, path);
 }
 
 }

@@ -353,7 +353,7 @@ TFs::~TFs()
 #   Returns....: *
 #
 ##########################################################################*/
-TDir *TFs::GetStartDir(int node)
+TDir *TFs::GetStartDir(int rel)
 {
     TDir *dir;
 
@@ -434,10 +434,10 @@ void TFs::Advance(TParser *Parser)
 #   Returns....: *
 #
 ##########################################################################*/
-struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
+struct TShareHeader *TFs::GetDir(int rel, char *path, int *count)
 {
     TDir *dir;
-    TParser Parser(GetStartDir(node), path);
+    TParser Parser(GetStartDir(rel), path);
 
     while (!Parser.IsDone())
     {
@@ -469,9 +469,9 @@ struct TShareHeader *TFs::GetDir(int node, char *path, int *count)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFs::GetDirEntryAttrib(int node, char *path)
+int TFs::GetDirEntryAttrib(int rel, char *path)
 {
-    TParser Parser(GetStartDir(node), path);
+    TParser Parser(GetStartDir(rel), path);
     struct DirEntry *entry;
 
     while (!Parser.IsLast())
@@ -493,4 +493,33 @@ int TFs::GetDirEntryAttrib(int node, char *path)
         else
             return -1;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::LockRelDir
+#
+#   Purpose....: Lock rel dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::LockRelDir(int rel, char *path)
+{
+    TDir *dir;
+    TParser Parser(GetStartDir(rel), path);
+
+    while (!Parser.IsDone())
+    {
+        if (Parser.IsDir())
+            Advance(&Parser);
+        else
+            return 0;
+    }
+
+    dir = Parser.GetDir();
+
+    return 0;
 }

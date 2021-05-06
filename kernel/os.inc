@@ -3391,6 +3391,10 @@ GetVfsDirEntryAttrib     MACRO
         OsGate get_vfs_dir_entry_attrib_nr
                     ENDM
 
+;  IN  ES:EDI          Pathname
+SetVfsCurDir     MACRO
+        OsGate set_vfs_cur_dir_nr
+                    ENDM
 
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 

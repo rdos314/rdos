@@ -134,38 +134,6 @@ check_vfs_drive   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetVfsCurDir
-;
-;       DESCRIPTION:    Get VFS cur dir
-;
-;       PARAMETERS:     AL        Drive #
-;                       ES:EDI    Path
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_vfs_cur_dir_name DB 'Get VFS Cur Dir', 0
-
-get_vfs_cur_dir   Proc far
-    push ebx
-;
-    call GetDrivePart
-    mov bx,SEG data
-    or bx,bx
-    stc
-    jz gvcdDone
-;
-    xor bl,bl
-    mov es:[edi],bl
-    clc
-
-gvcdDone:
-    pop ebx
-    ret
-get_vfs_cur_dir   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           IsVfsPath
 ;
 ;       DESCRIPTION:    Check if VFS path
@@ -444,6 +412,121 @@ grdDone:
     pop ds
     ret
 GetRelDir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsCurDir
+;
+;       DESCRIPTION:    Get VFS cur dir
+;
+;       PARAMETERS:     AL        Drive #
+;                       ES:EDI    Path
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_cur_dir_name DB 'Get VFS Cur Dir', 0
+
+get_vfs_cur_dir   Proc far
+    push ebx
+;
+    call GetDrivePart
+    mov bx,SEG data
+    or bx,bx
+    stc
+    jz gvcdDone
+;
+    xor bl,bl
+    mov es:[edi],bl
+    clc
+
+gvcdDone:
+    pop ebx
+    ret
+get_vfs_cur_dir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetVfsCurDir
+;
+;       DESCRIPTION:    Set VFS cur dir
+;
+;       PARAMETERS:     ES:EDI    Path
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_vfs_cur_dir_name DB 'Set VFS Cur Dir', 0
+
+set_vfs_cur_dir   Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,es
+    mov gs,eax
+;
+    call GetPathDrive
+    jc svcdFail
+;
+    call GetDrivePart
+    or bx,bx
+    jz svcdFail
+;
+    mov ah,es:[edi]
+    cmp ah,'/'
+    je svcdRoot
+;
+    cmp ah,'\'
+    je svcdRoot
+
+svcdRel:
+    call GetRelDir
+    jmp svcdHasStart
+
+svcdRoot:
+    inc edi
+    xor ax,ax
+
+svcdHasStart:
+    mov esi,edi
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    call AllocateMsg
+
+svcdCopyPath:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz svcdCopyPath
+;
+    mov eax,VFS_LOCK_REL_DIR
+    call RunMsg
+    jc svcdFail
+;
+    clc
+    jmp svcdDone
+
+svcdFail:
+    stc
+
+svcdDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+set_vfs_cur_dir   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -775,6 +858,12 @@ init_dir    Proc near
     mov edi,OFFSET get_vfs_cur_dir_name
     xor cl,cl
     mov ax,get_vfs_cur_dir_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET set_vfs_cur_dir
+    mov edi,OFFSET set_vfs_cur_dir_name
+    xor cl,cl
+    mov ax,set_vfs_cur_dir_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_vfs_dir_entry_attrib

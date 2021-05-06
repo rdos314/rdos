@@ -162,6 +162,41 @@ GetDirEntryAttrib Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LockRelDir
+;
+;       DESCRIPTION:    Lock rel dir
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowLockRelDir:near
+
+LockRelDir Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    add edi,SIZE vfs_cmd_struc
+    push ecx
+    mov esi,esp
+    call LowLockRelDir
+    pop ecx
+    pop edi
+;
+    or eax,eax
+    je lrdReply
+;
+    mov [edi].fc_eax,eax
+    and [edi].fc_eflags,NOT 1
+
+lrdReply:
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LockRelDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -176,6 +211,7 @@ msgtab:
 m00 DD OFFSET GetFreeSectors
 m01 DD OFFSET GetDir
 m02 DD OFFSET GetDirEntryAttrib
+m03 DD OFFSET LockRelDir
 
 WaitForMsg_    Proc near
     pushad

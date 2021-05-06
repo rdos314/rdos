@@ -1129,6 +1129,13 @@ GetCurDirBase   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetCurDirBase   Proc near
+    UserGateForce32 is_vfs_path_nr
+    jc set_cur_dir_old
+;
+    SetVfsCurDir
+    ret
+
+set_cur_dir_old:
     push ds
     push ax
     push edi

@@ -72,11 +72,12 @@ public:
     virtual TDir *CacheRootDir() = 0;
     virtual TDir *CacheDir(TDir *ParentDir, long long inode) = 0;
 
-    struct TShareHeader *GetDir(int node, char *path, int *count);
-    int GetDirEntryAttrib(int node, char *path);
+    struct TShareHeader *GetDir(int rel, char *path, int *count);
+    int GetDirEntryAttrib(int rel, char *path);
+    int LockRelDir(int rel, char *path);
 
 protected:
-    TDir *GetStartDir(int node);
+    TDir *GetStartDir(int rel);
     void Advance(TParser *Parser);
     struct DirEntry *Parse(TDir *dir, char *path);
 
