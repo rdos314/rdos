@@ -42,8 +42,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatDir::TFatDir(TDir *ParentDir)
-  : TDir(ParentDir)
+TFatDir::TFatDir(TDir *ParentDir, long long inode)
+  : TDir(ParentDir, inode)
 {
     FCurrLfn = 0;
 }
@@ -245,7 +245,7 @@ void TFatDir::AddLfn(long long sector, int offset, struct TFatDirEntry *entry)
     FCurrLfn->GetName(buf);
 
     Add(sector, offset, buf, entry);
-    
+
     delete buf;
 }
 
@@ -304,7 +304,7 @@ void TFatDir::Add(long long sector, int offset, struct TFatDirEntry *entry)
                         AddLfn(sector, offset, entry);
                     else
                         AddStd(sector, offset, entry);
- 
+
                     delete FCurrLfn;
                     FCurrLfn = 0;
                 }

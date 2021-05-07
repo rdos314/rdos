@@ -41,13 +41,14 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TDir::TDir(TDir *ParentDir)
+TDir::TDir(TDir *ParentDir, long long inode)
   : Section("dir")
 {
     int i;
 
     Entry = 0;
     Parent = ParentDir;
+    Inode = inode;
     EntryCount = 0;
     MaxCount = 4;
     EntryArr = new TDirLink[MaxCount];
@@ -194,6 +195,51 @@ struct TShareHeader *TDir::Share()
 int TDir::GetCount()
 {
     return EntryCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::GetInode
+#
+#   Purpose....: Get inode
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TDir::GetInode()
+{
+    return Inode;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::Find
+#
+#   Purpose....: Find inode
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDir::Find(long long inode)
+{
+    int i;
+    char *ptr;
+    struct DirEntry *entry;
+
+    for (i = 0; i < EntryCount; i++)
+    {
+        ptr = (char *)obj;
+        ptr += EntryArr[i].Offset;
+        entry = (struct DirEntry *)ptr;
+        if (inode == entry->Inode)
+            return i;
+    }
+
+    return DIR_NOT_FOUND;
 }
 
 /*##########################################################################

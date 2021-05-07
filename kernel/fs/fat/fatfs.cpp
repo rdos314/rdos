@@ -161,7 +161,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
     TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
 
-    Dir = new TFatDir(0);
+    Dir = new TFatDir(0, 0);
 
     Req.WaitForever();
 
@@ -221,7 +221,7 @@ TDir *TFat::CacheDir(TDir *ParentDir, long long inode)
     TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
 
-    Dir = new TFatDir(ParentDir);
+    Dir = new TFatDir(ParentDir, inode);
 
     while (Cluster && Cluster < Clusters)
     {

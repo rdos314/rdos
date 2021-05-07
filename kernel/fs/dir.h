@@ -43,14 +43,16 @@ struct TDirLink
 class TDir : public TBlock
 {
 public:
-    TDir(TDir *ParentDir);
+    TDir(TDir *ParentDir, long long inode);
     virtual ~TDir();
 
     struct TShareHeader *Share();
     int GetCount();
+    int Find(long long inode);
     int Find(const char *path);
     struct DirEntry *Get(int index);
 
+    long long GetInode();
     TDir *GetParentDir();
     TDir *GetDirLink(int index);
     void SetDirLink(int index, TDir *dir);
@@ -64,6 +66,7 @@ protected:
 
     struct TDirLink *EntryArr;
     TDir *Parent;
+    long long Inode;
 
     int EntryCount;
     int MaxCount;

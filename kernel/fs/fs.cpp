@@ -29,6 +29,7 @@
 #include <string.h>
 #include <rdos.h>
 #include <serv.h>
+#include "str.h"
 #include "fs.h"
 
 /*##########################################################################
@@ -687,6 +688,28 @@ void TFs::UnlockRelDir(int rel)
 ##########################################################################*/
 int TFs::GetRelDir(int rel, char *path)
 {
-    strcpy(path, "Test Path");
-    return strlen(path) + 1;
+    TString str;
+    long long inode;
+    int index;
+    struct DirEntry *entry;
+    TDir *dir = GetStartDir(rel);
+
+    while (dir)
+    {
+        inode = dir->GetInode();
+        dir = dir->GetParentDir();
+        if (dir)
+        {
+            index = dir->Find(inode);
+            if (index >= 0)
+            {
+                entry = dir->Get(index);
+                if (entry)
+                    str = TString(entry->PathName) + "/" + str;
+            }
+        }
+    }
+
+    strcpy(path, str.GetData());
+    return strlen(path);
 }
