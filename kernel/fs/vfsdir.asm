@@ -50,7 +50,6 @@ REPLY_BLOCK        = 1
 
 drive_seg   STRUC
 
-ds_part_sel      DW ?
 ds_ref_count     DW ?
 ds_drive         DB ?
 ds_deleted       DB ?
@@ -244,20 +243,11 @@ open_drive   Proc near
     jmp odLeave
 
 odCreate:
-    push ebx
-    call GetDrivePart
-    mov dx,bx
-    pop ebx
-    or dx,dx
-    stc
-    jz odLeave
-;
     push eax
     mov eax,SIZE drive_seg
     AllocateSmallGlobalMem
     pop eax
 ;
-    mov es:ds_part_sel,dx
     mov es:ds_ref_count,1
     mov es:ds_deleted,0
     mov es:ds_drive,al
@@ -405,13 +395,77 @@ GetRelDir    Proc near
     or ax,ax
     jz grdDone
 ;
+    push es
+    mov es,ax
+    xor ax,ax
+    cmp es:ds_deleted,0
+    jnz grdHasHandle
+;    
     mov ax,ds:[bx].pc_vfs_handle_arr
+
+grdHasHandle:
+    pop es
  
 grdDone:
     pop ebx
     pop ds
     ret
 GetRelDir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetRelDir
+;
+;       DESCRIPTION:    Set relative dir
+;
+;       PARAMETERS:     AL          Drive
+;                       BX          Start dir handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetRelDir    Proc near
+    push ds
+    push es
+    push esi
+;
+    movzx si,al
+    shl si,1
+;
+    push ax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_cur_dir_sel
+    pop ax
+;
+    push bx
+;
+    mov bx,ds:[si].pc_vfs_sel_arr
+    or bx,bx
+    jz srdOpen
+;
+    mov es,bx
+    cmp es:ds_deleted,0
+    jz srdLink
+;
+    call close_drive
+
+srdOpen:
+    call open_drive
+    mov ds:[si].pc_vfs_sel_arr,bx
+    mov es,bx
+
+srdLink:    
+    pop bx    
+    mov ds:[si].pc_vfs_handle_arr,bx
+ 
+srdDone:
+    pop esi
+    pop es
+    pop ds
+    ret
+SetRelDir   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -463,10 +517,7 @@ set_vfs_cur_dir   Proc far
     push es
     push fs
     push gs
-    push eax
-    push ecx
-    push esi
-    push edi
+    pushad
 ;
     mov eax,es
     mov gs,eax
@@ -477,6 +528,8 @@ set_vfs_cur_dir   Proc far
     call GetDrivePart
     or bx,bx
     jz svcdFail
+;
+    push eax
 ;
     mov ah,es:[edi]
     cmp ah,'/'
@@ -508,8 +561,11 @@ svcdCopyPath:
 ;
     mov eax,VFS_LOCK_REL_DIR
     call RunMsg
+    mov bx,ax
+    pop eax
     jc svcdFail
 ;
+    call SetRelDir
     clc
     jmp svcdDone
 
@@ -517,10 +573,7 @@ svcdFail:
     stc
 
 svcdDone:
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
+    popad
     pop gs
     pop fs
     pop es
