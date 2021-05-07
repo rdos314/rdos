@@ -44,3 +44,9 @@ VFS_GET_DIR_ENTRY_ATTRIB  = 2
 ; IN            Path name
 ; OUT AX        Handle
 VFS_LOCK_REL_DIR          = 3
+
+; IN  AX        Start handle
+VFS_CLONE_REL_DIR         = 4
+
+; IN  AX        Start handle
+VFS_UNLOCK_REL_DIR        = 5

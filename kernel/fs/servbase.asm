@@ -176,10 +176,7 @@ LockRelDir Proc near
     push edi
     mov eax,[edi].fc_eax
     add edi,SIZE vfs_cmd_struc
-    push ecx
-    mov esi,esp
     call LowLockRelDir
-    pop ecx
     pop edi
 ;
     cmp eax,-1
@@ -193,6 +190,56 @@ lrdReply:
     ReplyVfsCmd
     ret
 LockRelDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloneRelDir
+;
+;       DESCRIPTION:    Clone rel dir
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowCloneRelDir:near
+
+CloneRelDir Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    call LowCloneRelDir
+    pop edi
+;
+    and [edi].fc_eflags,NOT 1
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+CloneRelDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlockRelDir
+;
+;       DESCRIPTION:    Unlock rel dir
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowUnlockRelDir:near
+
+UnlockRelDir Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    call LowUnlockRelDir
+    pop edi
+;
+    and [edi].fc_eflags,NOT 1
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+UnlockRelDir Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -212,6 +259,8 @@ m00 DD OFFSET GetFreeSectors
 m01 DD OFFSET GetDir
 m02 DD OFFSET GetDirEntryAttrib
 m03 DD OFFSET LockRelDir
+m04 DD OFFSET CloneRelDir
+m05 DD OFFSET UnlockRelDir
 
 WaitForMsg_    Proc near
     pushad

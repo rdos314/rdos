@@ -75,6 +75,8 @@ public:
     struct TShareHeader *GetDir(int rel, char *path, int *count);
     int GetDirEntryAttrib(int rel, char *path);
     int LockRelDir(int rel, char *path);
+    void CloneRelDir(int rel);
+    void UnlockRelDir(int rel);
 
 protected:
     void Grow();

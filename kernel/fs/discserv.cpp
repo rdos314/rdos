@@ -64,6 +64,16 @@ int LockRelDir(int rel, char *path)
     return Server->LockRelDir(rel, path);
 }
 
+void CloneRelDir(int rel)
+{
+    Server->CloneRelDir(rel);
+}
+
+void UnlockRelDir(int rel)
+{
+    Server->UnlockRelDir(rel);
+}
+
 }
 
 /*##########################################################################

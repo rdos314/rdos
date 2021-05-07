@@ -643,3 +643,33 @@ int TFs::LockRelDir(int rel, char *path)
     else
         return -1;
 }
+
+/*##########################################################################
+#
+#   Name       : TFs::CloneRelDir
+#
+#   Purpose....: Clone rel dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::CloneRelDir(int rel)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::UnlockRelDir
+#
+#   Purpose....: Unlock rel dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::UnlockRelDir(int rel)
+{
+}

@@ -30,6 +30,8 @@ int GetDirHeaderSize();
 int GetDir(int rel, char *path, int *count);
 int GetDirEntryAttrib(int rel, char *path);
 int LockRelDir(int rel, char *path);
+void CloneRelDir(int rel);
+void UnlockRelDir(int rel);
 
 /*##########################################################################
 #
@@ -84,4 +86,26 @@ struct TShareHeader *LowGetDirEntryAttrib(int rel, char *path)
 int LowLockRelDir(int rel, char *path)
 {
     return LockRelDir(rel, path);
+}
+
+/*##########################################################################
+#
+#   Name       : LowCloneRelDir
+#
+##########################################################################*/
+#pragma aux LowCloneRelDir "*" parm routine [eax] 
+void LowCloneRelDir(int rel)
+{
+    CloneRelDir(rel);
+}
+
+/*##########################################################################
+#
+#   Name       : LowUnlockRelDir
+#
+##########################################################################*/
+#pragma aux LowUnlockRelDir "*" parm routine [eax] 
+void LowUnlockRelDir(int rel)
+{
+    UnlockRelDir(rel);
 }

@@ -370,6 +370,68 @@ GetPathDrive   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CloneRelDir
+;
+;       DESCRIPTION:    Clone relative dir
+;
+;       PARAMETERS:     AL          Drive
+;                       BX          Start dir handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloneRelDir    Proc near
+    pushad
+;
+    push bx
+    call GetDrivePart
+    pop ax
+    or bx,bx
+    jz crdFail
+;
+    call AllocateMsg
+;
+    mov eax,VFS_CLONE_REL_DIR
+    call RunMsg
+
+crdFail:
+    popad
+    ret
+CloneRelDir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeRelDir
+;
+;       DESCRIPTION:    Free relative dir
+;
+;       PARAMETERS:     AL          Drive
+;                       BX          Start dir handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeRelDir    Proc near
+    pushad
+;
+    push bx
+    call GetDrivePart
+    pop ax
+    or bx,bx
+    jz frdFail
+;
+    call AllocateMsg
+;
+    mov eax,VFS_UNLOCK_REL_DIR
+    call RunMsg
+
+frdFail:
+    popad
+    ret
+FreeRelDir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetRelDir
 ;
 ;       DESCRIPTION:    Get relative dir
@@ -482,6 +544,7 @@ SetRelDir   Endp
 clone_vfs_cur_dir_name DB 'Clone VFS Cur Dir', 0
 
 clone_vfs_cur_dir   Proc far
+    push fs
     push eax
     push ebx
     push ecx
@@ -495,6 +558,25 @@ cvcdLoop:
     jz cvcdClear
 ;
     int 3
+    mov fs,ax
+    cmp fs:ds_deleted,0
+    jnz cvcdClear
+;
+    lock add fs:ds_ref_count,1
+    mov es:[bx].pc_vfs_sel_arr,fs
+    mov ax,ds:[bx].pc_vfs_handle_arr
+    or ax,ax
+    jz cvcdSave
+;
+    push bx
+    xchg ax,bx
+    shr al,1
+    call CloneRelDir
+    pop bx
+
+cvcdSave:
+    mov es:[bx].pc_vfs_handle_arr,ax
+    jmp cvcdNext
 
 cvcdClear:
     mov es:[bx].pc_vfs_sel_arr,0
@@ -507,6 +589,7 @@ cvcdNext:
     pop ecx
     pop ebx
     pop eax
+    pop fs
     ret
 clone_vfs_cur_dir   Endp
 
