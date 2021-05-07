@@ -263,7 +263,7 @@ GetRelDir Proc near
 ;
     and [edi].fc_eflags,NOT 1
     mov ebx,[edi].fc_handle
-    ReplyVfsCmd
+    ReplyVfsDataCmd
     ret
 GetRelDir Endp
 

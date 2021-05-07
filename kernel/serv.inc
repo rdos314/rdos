@@ -130,6 +130,11 @@ ReplyVfsBlockCmd  MACRO
     ServGate reply_vfs_block_cmd_nr
                     ENDM
 
+; IN  EBX              VFS handle
+ReplyVfsDataCmd  MACRO    
+    ServGate reply_vfs_data_cmd_nr
+                    ENDM
+
 ; OUT EDX              Flat address
 CreateServShareBlock  MACRO    
     ServGate create_serv_share_block_nr

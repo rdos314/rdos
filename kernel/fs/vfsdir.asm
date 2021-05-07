@@ -705,7 +705,6 @@ get_vfs_cur_dir   Proc far
     pushad
 ;
     call GetDrivePart
-    mov bx,SEG data
     or bx,bx
     stc
     jz gvcdDone

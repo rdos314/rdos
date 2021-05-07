@@ -45,6 +45,7 @@ include vfsmsg.inc
 
 REPLY_DEFAULT      = 0
 REPLY_BLOCK        = 1
+REPLY_DATA         = 2
 
 MAX_PART_COUNT   = 255
 
@@ -2050,6 +2051,59 @@ rfbcDone:
 reply_vfs_block_cmd  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReplyVfsDataCmd
+;
+;       DESCRIPTION:    Reply on VFS data cmd
+;
+;       PARAMETERS:     EBX        VFS handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reply_vfs_data_cmd_name DB 'Reply VFS Data Cmd', 0
+
+reply_vfs_data_cmd   Proc far
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    mov es:[edi].fc_op,REPLY_DATA
+;
+    call HandleToPart
+    jc rvdcDone
+;
+    mov esi,es:vfsp_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    xor bx,bx
+    xchg bx,es:[esi].vfss_thread
+    Signal
+;
+    mov edx,es:[esi].vfss_server_linear
+    mov eax,es:[esi].vfss_phys
+    mov ebx,es:[esi].vfss_phys+4
+    or ax,863h
+    mov cx,system_data_sel
+    mov es,cx
+    add edx,es:flat_base
+    SetPageEntry
+
+rvdcDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+reply_vfs_data_cmd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           GetMsgEntry
@@ -2247,6 +2301,56 @@ block_reply  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           data_reply
+;
+;       DESCRIPTION:    Data reply processing
+;
+;       PARAMETERS:     ES      Msg buf
+;
+;       RETURNS:        EBP     Reply data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+data_reply  Proc near
+    int 3
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov eax,es
+    mov ds,eax
+    mov esi,SIZE fs_cmd
+    xor ecx,ecx
+
+drpSizeLoop:
+    inc ecx
+    lods byte ptr ds:[esi]
+    or al,al
+    jnz drpSizeLoop
+;
+    mov eax,ecx
+    AllocateSmallGlobalMem
+    mov ebp,es
+    mov esi,SIZE fs_cmd
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]
+    clc
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+data_reply  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunMsg
 ;
 ;       DESCRIPTION:    Run disc msg
@@ -2266,6 +2370,7 @@ block_reply  Endp
 reply_tab:
 r00 DD OFFSET no_reply
 r01 DD OFFSET block_reply
+r02 DD OFFSET data_reply
 
 RunMsg  Proc near
     mov esi,ebx
@@ -2315,18 +2420,27 @@ rmCheck:
 ;
     dec al
     movzx eax,al
-    lock bts fs:vfsp_cmd_free_mask,eax
+    push es:fc_eflags
+    push ebp
+    push eax
 ;
-    mov eax,ebp
+    xor ebp,ebp
     push es:fc_eflags
     popfd
-    jc rmDone
+    jc rmFree
 ;
     push ebx
     mov ebx,es:fc_op
     shl ebx,2
     call dword ptr cs:[ebx].reply_tab
     pop ebx
+
+rmFree:
+    pop eax
+    lock bts fs:vfsp_cmd_free_mask,eax
+;
+    pop eax
+    popfd
 
 rmDone:
     ret
@@ -2782,6 +2896,12 @@ init_server    Proc near
     mov edi,OFFSET reply_vfs_block_cmd_name
     xor cl,cl
     mov ax,reply_vfs_block_cmd_nr
+    RegisterServGate
+;
+    mov esi,OFFSET reply_vfs_data_cmd
+    mov edi,OFFSET reply_vfs_data_cmd_name
+    xor cl,cl
+    mov ax,reply_vfs_data_cmd_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv
