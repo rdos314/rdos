@@ -673,3 +673,19 @@ void TFs::CloneRelDir(int rel)
 void TFs::UnlockRelDir(int rel)
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TFs::GetRelDir
+#
+#   Purpose....: Get rel dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::GetRelDir(int rel, char *path)
+{
+    strcpy(path, "Test Path");
+}

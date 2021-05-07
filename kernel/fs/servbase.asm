@@ -244,6 +244,32 @@ UnlockRelDir Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetRelDir
+;
+;       DESCRIPTION:    Get rel dir
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowGetRelDir:near
+
+GetRelDir Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    add edi,SIZE vfs_cmd_struc
+    call LowGetRelDir
+    pop edi
+;
+    and [edi].fc_eflags,NOT 1
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+GetRelDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -261,6 +287,7 @@ m02 DD OFFSET GetDirEntryAttrib
 m03 DD OFFSET LockRelDir
 m04 DD OFFSET CloneRelDir
 m05 DD OFFSET UnlockRelDir
+m06 DD OFFSET GetRelDir
 
 WaitForMsg_    Proc near
     pushad

@@ -74,6 +74,11 @@ void UnlockRelDir(int rel)
     Server->UnlockRelDir(rel);
 }
 
+void GetRelDir(int rel, char *path)
+{
+    Server->GetRelDir(rel, path);
+}
+
 }
 
 /*##########################################################################

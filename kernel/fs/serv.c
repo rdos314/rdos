@@ -32,6 +32,7 @@ int GetDirEntryAttrib(int rel, char *path);
 int LockRelDir(int rel, char *path);
 void CloneRelDir(int rel);
 void UnlockRelDir(int rel);
+void GetRelDir(int rel, char *path);
 
 /*##########################################################################
 #
@@ -108,4 +109,15 @@ void LowCloneRelDir(int rel)
 void LowUnlockRelDir(int rel)
 {
     UnlockRelDir(rel);
+}
+
+/*##########################################################################
+#
+#   Name       : LowGetRelDir
+#
+##########################################################################*/
+#pragma aux LowGetRelDir "*" parm routine [eax] [edi]
+void LowGetRelDir(int rel, char *path)
+{
+    GetRelDir(rel, path);
 }

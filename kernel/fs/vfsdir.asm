@@ -702,7 +702,7 @@ free_vfs_cur_dir   Endp
 get_vfs_cur_dir_name DB 'Get VFS Cur Dir', 0
 
 get_vfs_cur_dir   Proc far
-    push ebx
+    pushad
 ;
     call GetDrivePart
     mov bx,SEG data
@@ -710,12 +710,36 @@ get_vfs_cur_dir   Proc far
     stc
     jz gvcdDone
 ;
+    call GetRelDir
+    or ax,ax
+    jz gvcdRoot
+;
+    push ds
+    push es
+    push fs
+    push gs
+;
+    int 3
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    call AllocateMsg
+;
+    mov eax,VFS_GET_REL_DIR
+    call RunMsg
+;
+    pop gs
+    pop fs
+    pop es
+    pop ds
+
+gvcdRoot:
     xor bl,bl
     mov es:[edi],bl
     clc
 
 gvcdDone:
-    pop ebx
+    popad
     ret
 get_vfs_cur_dir   Endp
 

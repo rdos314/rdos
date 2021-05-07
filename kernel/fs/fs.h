@@ -77,6 +77,7 @@ public:
     int LockRelDir(int rel, char *path);
     void CloneRelDir(int rel);
     void UnlockRelDir(int rel);
+    void GetRelDir(int rel, char *path);
 
 protected:
     void Grow();
