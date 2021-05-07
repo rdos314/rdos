@@ -28,6 +28,7 @@
 #ifndef _FS_H
 #define _FS_H
 
+#include "block.h"
 #include "discserv.h"
 #include "dir.h"
 
@@ -62,7 +63,7 @@ protected:
     TDir *Dir;
 };
 
-class TFs
+class TFs : public TBlock
 {
 public:
     TFs(TDiscServer *server);
@@ -77,9 +78,17 @@ public:
     int LockRelDir(int rel, char *path);
 
 protected:
+    void Grow();
+    void Add(TDir *dir);
+    void Remove(TDir *dir);
+
     TDir *GetStartDir(int rel);
     void Advance(TParser *Parser);
     struct DirEntry *Parse(TDir *dir, char *path);
+
+    TDir **DirArr;
+    int DirCount;
+    int MaxCount;
 
     TDiscServer *Server;
     TDir *Root;

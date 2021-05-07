@@ -57,6 +57,8 @@ public:
 
     struct DirEntry *Add(const char *path, long long inode);
 
+    int Entry;
+
 protected:
     void Grow();
 

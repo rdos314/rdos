@@ -321,8 +321,17 @@ void TParser::Advance(TDir *dir)
 ##########################################################################*/
 TFs::TFs(TDiscServer *server)
 {
+    int i;
+
     Server = server;
     Root = 0;
+
+    DirCount = 0;
+    MaxCount = 4;
+    DirArr = new TDir*[MaxCount];
+
+    for (i = 0; i < MaxCount; i++)
+        DirArr[i] = 0;
 }
 
 /*##########################################################################
@@ -338,8 +347,104 @@ TFs::TFs(TDiscServer *server)
 ##########################################################################*/
 TFs::~TFs()
 {
+    delete DirArr;
+
     if (Root)
         delete Root;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Grow
+#
+#   Purpose....: Grow dir array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Grow()
+{
+    int i;
+    int Size = 2 * MaxCount;
+    TDir **NewArr;
+
+    NewArr = new TDir*[Size];
+
+    for (i = 0; i < MaxCount; i++)
+        NewArr[i] = DirArr[i];
+
+    for (i = MaxCount; i < Size; i++)
+        NewArr[i] = 0;
+
+    delete DirArr;
+    DirArr = NewArr;
+    MaxCount = Size;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Add
+#
+#   Purpose....: Add directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Add(TDir *dir)
+{
+    int i;
+    bool found = false;
+
+    if (DirCount == MaxCount)
+        Grow();
+
+    for (i = DirCount; i < MaxCount && !found; i++)
+    {
+        if (DirArr[i] == 0)
+        {
+            DirArr[i] = dir;
+            dir->Entry = i;
+            found = true;
+        }
+    }
+
+
+    for (i = 0; i < DirCount && !found; i++)
+    {
+        if (DirArr[i] == 0)
+        {
+            DirArr[i] = dir;
+            dir->Entry = i;
+            found = true;
+        }
+    }
+
+    if (found)
+        DirCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Remove
+#
+#   Purpose....: Remove directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Remove(TDir *dir)
+{
+    if (DirArr[dir->Entry] == dir)
+    {
+        DirArr[dir->Entry] = 0;
+        DirCount--;
+    }
 }
 
 /*##########################################################################
@@ -358,7 +463,10 @@ TDir *TFs::GetStartDir(int rel)
     TDir *dir;
 
     if (!Root)
+    {
         Root = CacheRootDir();
+        Add(Root);
+    }
 
     dir = Root;
 
@@ -415,6 +523,7 @@ void TFs::Advance(TParser *Parser)
             if (!newdir)
             {
                 newdir = CacheDir(dir, entry->Inode);
+                Add(newdir);
                 dir->SetDirLink(index, newdir);
             }
 
@@ -521,5 +630,8 @@ int TFs::LockRelDir(int rel, char *path)
 
     dir = Parser.GetDir();
 
-    return 0;
+    if (dir)
+        return dir->Entry;
+    else
+        return 0;
 }

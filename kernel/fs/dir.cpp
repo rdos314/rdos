@@ -46,6 +46,7 @@ TDir::TDir(TDir *ParentDir)
 {
     int i;
 
+    Entry = 0;
     Parent = ParentDir;
     EntryCount = 0;
     MaxCount = 4;
