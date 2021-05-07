@@ -271,10 +271,10 @@ void TParser::Process()
     {
         if (!strcmp(Head, "."))
             IsCurr = true;
-       
+
         if (!strcmp(Head, ".."))
             IsParent = true;
-    
+
         if (!IsCurr & !IsParent)
         {
             CurrIndex = Dir->Find(Head);
@@ -494,7 +494,7 @@ TDir *TFs::GetStartDir(int rel)
 ##########################################################################*/
 void TFs::Advance(TParser *Parser)
 {
-    struct DirEntry *entry;    
+    struct DirEntry *entry;
     bool isdir;
     TDir *dir;
     TDir *newdir;
@@ -527,7 +527,7 @@ void TFs::Advance(TParser *Parser)
         {
             index = Parser->GetIndex();
             newdir = dir->GetDirLink(index);
-            
+
             if (!newdir)
             {
                 newdir = CacheDir(dir, entry->Inode);
@@ -536,7 +536,7 @@ void TFs::Advance(TParser *Parser)
             }
 
             Parser->Advance(newdir);
-        }  
+        }
     }
 }
 
@@ -599,7 +599,7 @@ int TFs::GetDirEntryAttrib(int rel, char *path)
             return -1;
     }
 
-    entry = Parser.GetEntry();    
+    entry = Parser.GetEntry();
 
     if (entry)
         return entry->Attrib;
@@ -685,7 +685,8 @@ void TFs::UnlockRelDir(int rel)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::GetRelDir(int rel, char *path)
+int TFs::GetRelDir(int rel, char *path)
 {
     strcpy(path, "Test Path");
+    return strlen(path) + 1;
 }

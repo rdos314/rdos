@@ -68,6 +68,8 @@ fs_cmd      STRUC
 
 fc_op              DD ?
 fc_handle          DD ?
+fc_buf             DD ?,?
+fc_size            DD ?
 fc_eflags          DD ?
 fc_eax             DD ?
 fc_ebx             DD ?
@@ -2213,6 +2215,7 @@ AllocateMsg  Proc near
     push ebx
     call GetMsgEntry
     mov es,fs:[ebx].vfss_sel
+    mov es:fc_size,0
     pop es:fc_ebx
 ;
     stc
@@ -2229,6 +2232,30 @@ AllocateMsg  Proc near
     ret
 AllocateMsg  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AddMsgBuffer
+;
+;       DESCRIPTION:    Add msg buffer
+;
+;       PARAMETERS:     DS      VFS sel
+;                       ES      Msg buffer
+;                       FS      Part sel
+;                       GS:EDI  Data buffer
+;                       ECX     Size of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AddMsgBuffer
+
+AddMsgBuffer  Proc near
+    mov es:fc_buf,edi
+    mov es:fc_buf+4,gs
+    mov es:fc_size,ecx
+    ret
+AddMsgBuffer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2320,23 +2347,29 @@ data_reply  Proc near
     push esi
     push edi
 ;
+    xor ebp,ebp
     mov eax,es
     mov ds,eax
     mov esi,SIZE fs_cmd
-    xor ecx,ecx
-
-drpSizeLoop:
-    inc ecx
-    lods byte ptr ds:[esi]
-    or al,al
-    jnz drpSizeLoop
+    mov ecx,ds:fc_size
+    or ecx,ecx
+    jz drpDone
 ;
-    mov eax,ecx
-    AllocateSmallGlobalMem
-    mov ebp,es
-    mov esi,SIZE fs_cmd
-    xor edi,edi
+    lods dword ptr ds:[esi]
+    or eax,eax
+    jz drpDone
+;
+    cmp eax,ecx
+    jae drpCopy
+;
+    mov ecx,eax
+
+drpCopy:
+    mov ebp,ecx
+    les edi,ds:fc_buf
     rep movs byte ptr es:[edi],ds:[esi]
+
+drpDone:
     clc
 ;
     pop edi

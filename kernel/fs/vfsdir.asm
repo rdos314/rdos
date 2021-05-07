@@ -96,6 +96,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern AllocateMsg:near
+    extern AddMsgBuffer:near
     extern RunMsg:near
     extern GetDrivePart:near
     extern MapBlockToUser:near
@@ -702,7 +703,11 @@ free_vfs_cur_dir   Endp
 get_vfs_cur_dir_name DB 'Get VFS Cur Dir', 0
 
 get_vfs_cur_dir   Proc far
+    push gs
     pushad
+;
+    mov eax,es
+    mov gs,eax
 ;
     call GetDrivePart
     or bx,bx
@@ -716,18 +721,20 @@ get_vfs_cur_dir   Proc far
     push ds
     push es
     push fs
-    push gs
 ;
     int 3
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
+    push edi
     call AllocateMsg
+    pop edi
+;
+    call AddMsgBuffer
 ;
     mov eax,VFS_GET_REL_DIR
     call RunMsg
 ;
-    pop gs
     pop fs
     pop es
     pop ds
@@ -739,6 +746,7 @@ gvcdRoot:
 
 gvcdDone:
     popad
+    pop gs
     ret
 get_vfs_cur_dir   Endp
 

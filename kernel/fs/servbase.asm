@@ -36,6 +36,8 @@ vfs_cmd_struc   STRUC
 
 fc_op              DD ?
 fc_handle          DD ?
+fc_buf             DD ?,?
+fc_size            DD ?
 fc_eflags          DD ?
 fc_eax             DD ?
 fc_ebx             DD ?
@@ -258,7 +260,13 @@ GetRelDir Proc near
     push edi
     mov eax,[edi].fc_eax
     add edi,SIZE vfs_cmd_struc
+    add edi,4
     call LowGetRelDir
+    pop edi
+;
+    push edi
+    add edi,SIZE vfs_cmd_struc
+    stosd
     pop edi
 ;
     and [edi].fc_eflags,NOT 1
