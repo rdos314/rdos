@@ -380,6 +380,8 @@ GetPathDrive   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloneRelDir    Proc near
+    push ds
+    push fs
     pushad
 ;
     push bx
@@ -388,6 +390,9 @@ CloneRelDir    Proc near
     or bx,bx
     jz crdFail
 ;
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
     call AllocateMsg
 ;
     mov eax,VFS_CLONE_REL_DIR
@@ -395,6 +400,8 @@ CloneRelDir    Proc near
 
 crdFail:
     popad
+    pop fs
+    pop ds
     ret
 CloneRelDir   Endp
 
@@ -411,6 +418,8 @@ CloneRelDir   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeRelDir    Proc near
+    push ds
+    push fs
     pushad
 ;
     push bx
@@ -419,6 +428,9 @@ FreeRelDir    Proc near
     or bx,bx
     jz frdFail
 ;
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
     call AllocateMsg
 ;
     mov eax,VFS_UNLOCK_REL_DIR
@@ -426,6 +438,8 @@ FreeRelDir    Proc near
 
 frdFail:
     popad
+    pop fs
+    pop ds
     ret
 FreeRelDir   Endp
 
@@ -557,7 +571,6 @@ cvcdLoop:
     or ax,ax
     jz cvcdClear
 ;
-    int 3
     mov fs,ax
     cmp fs:ds_deleted,0
     jnz cvcdClear
@@ -568,11 +581,15 @@ cvcdLoop:
     or ax,ax
     jz cvcdSave
 ;
+    push ax
     push bx
+;
     xchg ax,bx
     shr al,1
     call CloneRelDir
+;
     pop bx
+    pop ax
 
 cvcdSave:
     mov es:[bx].pc_vfs_handle_arr,ax
