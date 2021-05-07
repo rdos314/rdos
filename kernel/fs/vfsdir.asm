@@ -211,9 +211,9 @@ is_vfs_path32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           open_drive
+;       NAME:           CreateDriveSel
 ;
-;       DESCRIPTION:    Open drive
+;       DESCRIPTION:    Create drive sel
 ;
 ;       PARAMETERS:     AL           Drive #
 ;
@@ -222,7 +222,7 @@ is_vfs_path32  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_drive   Proc near
+CreateDriveSel   Proc near
     push ds
     push es
     push edx
@@ -235,14 +235,14 @@ open_drive   Proc near
     shl ebx,1
     mov dx,ds:[ebx].drive_arr
     or dx,dx
-    jz odCreate
+    jz cdsCreate
 ;
     mov es,dx
     lock add es:ds_ref_count,1
     clc
-    jmp odLeave
+    jmp cdsLeave
 
-odCreate:
+cdsCreate:
     push eax
     mov eax,SIZE drive_seg
     AllocateSmallGlobalMem
@@ -255,34 +255,34 @@ odCreate:
     mov bx,es   
     clc
 
-odLeave:
+cdsLeave:
     LeaveSection ds:drive_section
 ;
     pop edx
     pop es
     pop ds
     ret
-open_drive   Endp
+CreateDriveSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           close_drive
+;       NAME:           FreeDriveSel
 ;
-;       DESCRIPTION:    Close drive
+;       DESCRIPTION:    Free drive sel
 ;
 ;       PARAMETERS:     BX           Drive sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_drive   Proc near
+FreeDriveSel   Proc near
     push ds
     push es
     push eax
 ;
     mov es,bx
     lock sub es:ds_ref_count,1
-    jnz cdDone
+    jnz fdsDone
 ;
     mov bx,SEG data
     mov ds,bx
@@ -291,24 +291,24 @@ close_drive   Proc near
     shl ebx,1
     mov ax,es
     cmp ax,ds:[ebx].drive_arr
-    jne cdLeave
+    jne fdsLeave
 ;
     mov ds:[ebx].drive_arr,0
 
-cdLeave:
+fdsLeave:
     LeaveSection ds:drive_section
 
-cdFree:
+fdsFree:
     FreeMem
 
-cdDone:
+fdsDone:
     xor bx,bx
 ;
     pop eax
     pop es
     pop ds
     ret
-close_drive   Endp
+FreeDriveSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -395,6 +395,7 @@ CloneRelDir    Proc near
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
+    movzx eax,ax
     call AllocateMsg
 ;
     mov eax,VFS_CLONE_REL_DIR
@@ -437,6 +438,7 @@ FreeRelDir    Proc near
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
+    movzx eax,ax
     call AllocateMsg
 ;
     mov eax,VFS_UNLOCK_REL_DIR
@@ -533,16 +535,20 @@ SetRelDir    Proc near
     cmp es:ds_deleted,0
     jz srdLink
 ;
-    call close_drive
+    call FreeDriveSel
 
 srdOpen:
-    call open_drive
+    call CreateDriveSel
     mov ds:[si].pc_vfs_sel_arr,bx
     mov es,bx
 
 srdLink:    
     pop bx    
-    mov ds:[si].pc_vfs_handle_arr,bx
+    xchg bx,ds:[si].pc_vfs_handle_arr
+    or bx,bx
+    jz srdDone
+;
+    call FreeRelDir
  
 srdDone:
     pop esi
@@ -632,34 +638,52 @@ clone_vfs_cur_dir   Endp
 free_vfs_cur_dir_name DB 'Free VFS Cur Dir', 0
 
 free_vfs_cur_dir   Proc far
+    push ds
     push es
     push eax
     push ebx
     push ecx
+    push esi
 ;
     mov es,ax
 ;
-    xor ebx,ebx
+    xor esi,esi
     mov ecx,32
 
 fvcdLoop:
-    mov ax,es:[bx].pc_vfs_sel_arr
+    mov ax,es:[si].pc_vfs_sel_arr
     or ax,ax
     jz fvcdNext
 ;
-    int 3
+    mov ds,ax
+    cmp ds:ds_deleted,0
+    jnz fvcdFree
+;
+    mov bx,es:[si].pc_vfs_handle_arr
+    or bx,bx
+    jz fvcdFree
+;
+    mov ax,si
+    shr ax,1
+    call FreeRelDir
+
+fvcdFree:
+    mov bx,es:[si].pc_vfs_sel_arr
+    call FreeDriveSel
 
 fvcdNext:
-    add bx,2
+    add si,2
     loop fvcdLoop
 ;
     FreeMem
     clc
 ;
+    pop esi
     pop ecx
     pop ebx
     pop eax
     pop es
+    pop ds
     ret
 free_vfs_cur_dir   Endp
 
@@ -747,6 +771,7 @@ svcdHasStart:
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
+    movzx eax,ax
     call AllocateMsg
 
 svcdCopyPath:
@@ -836,6 +861,7 @@ ovdHasStart:
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
+    movzx eax,ax
     call AllocateMsg
 
 ovdCopyPath:
@@ -1007,6 +1033,7 @@ gvdeaHasStart:
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
+    movzx eax,ax
     call AllocateMsg
 
 gvdeaCopyPath:
