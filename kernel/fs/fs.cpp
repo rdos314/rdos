@@ -640,7 +640,10 @@ int TFs::LockRelDir(int rel, char *path)
     dir = Parser.GetDir();
 
     if (dir)
+    {
+        dir->Lock();
         return dir->Entry;
+    }
     else
         return -1;
 }
@@ -658,6 +661,10 @@ int TFs::LockRelDir(int rel, char *path)
 ##########################################################################*/
 void TFs::CloneRelDir(int rel)
 {
+    TDir *dir = GetStartDir(rel);
+
+    if (dir)
+        dir->Lock();
 }
 
 /*##########################################################################
@@ -673,6 +680,10 @@ void TFs::CloneRelDir(int rel)
 ##########################################################################*/
 void TFs::UnlockRelDir(int rel)
 {
+    TDir *dir = GetStartDir(rel);
+
+    if (dir)
+        dir->Unlock();
 }
 
 /*##########################################################################

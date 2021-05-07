@@ -50,6 +50,7 @@ TDir::TDir(TDir *ParentDir, long long inode)
     Parent = ParentDir;
     Inode = inode;
     EntryCount = 0;
+    LockCount = 1;
     MaxCount = 4;
     EntryArr = new TDirLink[MaxCount];
 
@@ -74,6 +75,38 @@ TDir::TDir(TDir *ParentDir, long long inode)
 TDir::~TDir()
 {
     delete EntryArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::Lock
+#
+#   Purpose....: Lock
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::Lock()
+{
+    LockCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::Unlock
+#
+#   Purpose....: Unlock
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::Unlock()
+{
+    LockCount--;
 }
 
 /*##########################################################################

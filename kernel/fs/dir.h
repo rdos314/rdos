@@ -46,6 +46,9 @@ public:
     TDir(TDir *ParentDir, long long inode);
     virtual ~TDir();
 
+    void Lock();
+    void Unlock();
+
     struct TShareHeader *Share();
     int GetCount();
     int Find(long long inode);
@@ -68,6 +71,7 @@ protected:
     TDir *Parent;
     long long Inode;
 
+    int LockCount;
     int EntryCount;
     int MaxCount;
     TSection Section;
