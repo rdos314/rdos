@@ -887,5 +887,7 @@ get_vfs_cur_dir_nr          = 803
 clear_page_entries_nr       = 804
 get_vfs_dir_entry_attrib_nr = 805
 set_vfs_cur_dir_nr          = 806
+clone_vfs_cur_dir_nr        = 807
+free_vfs_cur_dir_nr         = 808
 
 osgate_entries              = 850

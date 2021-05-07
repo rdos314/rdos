@@ -3396,6 +3396,17 @@ SetVfsCurDir     MACRO
         OsGate set_vfs_cur_dir_nr
                     ENDM
 
+;  IN  DS          Source dir
+;  IN  ES          Dest dir
+CloneVfsCurDir     MACRO
+        OsGate clone_vfs_cur_dir_nr
+                    ENDM
+
+;  IN  AX              Curr dir sel
+FreeVfsCurDir     MACRO
+        OsGate free_vfs_cur_dir_nr
+                    ENDM
+
 ;;;;;;;;;;; DRIVE ;;;;;;;;;;;;
 
 BeginDiscHandler    MACRO

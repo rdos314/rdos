@@ -3160,6 +3160,8 @@ clone_cur_dir   Proc far
     mov al,ds:pc_drive
     mov es:pc_drive,al
 ;
+    CloneVfsCurDir
+;
     mov cx,256
     mov bx,OFFSET pc_dir_sel_arr
 
@@ -3175,20 +3177,6 @@ ccdLoop:
 ccdNext:
     add bx,2
     loop ccdLoop
-
-    push di
-;
-    mov di,OFFSET pc_vfs_sel_arr
-    mov cx,32
-    xor ax,ax
-    rep stosw
-;
-    mov di,OFFSET pc_vfs_handle_arr
-    mov cx,32
-    xor ax,ax
-    rep stosw
-;
-    pop di
 ;
     mov ax,es
 ;
@@ -3234,8 +3222,12 @@ dcdNext:
     add di,2
     loop dcdLoop
 ;
-    FreeMem
+    FreeVfsCurDir
+    jnc dcdFreeDone
 ;
+    FreeMem
+
+dcdFreeDone:
     pop di
     pop cx
     pop bx

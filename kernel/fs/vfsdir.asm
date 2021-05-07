@@ -470,6 +470,94 @@ SetRelDir   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CloneVfsCurDir
+;
+;       DESCRIPTION:    Clone cur dir
+;
+;       PARAMETERS:     DS          Source dir
+;                       ES          Dest dir
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_vfs_cur_dir_name DB 'Clone VFS Cur Dir', 0
+
+clone_vfs_cur_dir   Proc far
+    push eax
+    push ebx
+    push ecx
+;
+    xor ebx,ebx
+    mov ecx,32
+
+cvcdLoop:
+    mov ax,ds:[bx].pc_vfs_sel_arr
+    or ax,ax
+    jz cvcdClear
+;
+    int 3
+
+cvcdClear:
+    mov es:[bx].pc_vfs_sel_arr,0
+    mov es:[bx].pc_vfs_handle_arr,0
+
+cvcdNext:
+    add bx,2
+    loop cvcdLoop
+;
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+clone_vfs_cur_dir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeVfsCurDir
+;
+;       DESCRIPTION:    Free vfs cur dir
+;
+;       PARAMETERS:     AX          Drive sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_vfs_cur_dir_name DB 'Free VFS Cur Dir', 0
+
+free_vfs_cur_dir   Proc far
+    push es
+    push eax
+    push ebx
+    push ecx
+;
+    mov es,ax
+;
+    xor ebx,ebx
+    mov ecx,32
+
+fvcdLoop:
+    mov ax,es:[bx].pc_vfs_sel_arr
+    or ax,ax
+    jz fvcdNext
+;
+    int 3
+
+fvcdNext:
+    add bx,2
+    loop fvcdLoop
+;
+    FreeMem
+    clc
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+free_vfs_cur_dir   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetVfsCurDir
 ;
 ;       DESCRIPTION:    Get VFS cur dir
@@ -900,6 +988,18 @@ init_dir    Proc near
     mov edi,OFFSET delete_handle
     mov ax,VFS_DIR_HANDLE
     RegisterHandle
+;
+    mov esi,OFFSET clone_vfs_cur_dir
+    mov edi,OFFSET clone_vfs_cur_dir_name
+    xor cl,cl
+    mov ax,clone_vfs_cur_dir_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_vfs_cur_dir
+    mov edi,OFFSET free_vfs_cur_dir_name
+    xor cl,cl
+    mov ax,free_vfs_cur_dir_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET check_vfs_drive
     mov edi,OFFSET check_vfs_drive_name
