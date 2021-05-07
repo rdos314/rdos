@@ -324,7 +324,6 @@ TFs::TFs(TDiscServer *server)
     int i;
 
     Server = server;
-    Root = 0;
 
     DirCount = 0;
     MaxCount = 4;
@@ -347,10 +346,13 @@ TFs::TFs(TDiscServer *server)
 ##########################################################################*/
 TFs::~TFs()
 {
-    delete DirArr;
+    int i;
 
-    if (Root)
-        delete Root;
+    for (i = 0; i < MaxCount; i++)
+        if (DirArr[i])
+            delete DirArr[i];
+
+    delete DirArr;
 }
 
 /*##########################################################################
@@ -462,13 +464,19 @@ TDir *TFs::GetStartDir(int rel)
 {
     TDir *dir;
 
-    if (!Root)
+    if (DirCount == 0)
     {
-        Root = CacheRootDir();
-        Add(Root);
+        DirArr[0] = CacheRootDir();
+        DirCount = 1;
     }
 
-    dir = Root;
+    if (rel >= 0 && rel < MaxCount)
+        dir = DirArr[rel];
+    else
+        dir = 0;
+
+    if (!dir)
+        dir = DirArr[0];
 
     return dir;
 }
@@ -633,5 +641,5 @@ int TFs::LockRelDir(int rel, char *path)
     if (dir)
         return dir->Entry;
     else
-        return 0;
+        return -1;
 }

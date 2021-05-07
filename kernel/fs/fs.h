@@ -28,7 +28,6 @@
 #ifndef _FS_H
 #define _FS_H
 
-#include "block.h"
 #include "discserv.h"
 #include "dir.h"
 
@@ -63,7 +62,7 @@ protected:
     TDir *Dir;
 };
 
-class TFs : public TBlock
+class TFs
 {
 public:
     TFs(TDiscServer *server);
@@ -91,7 +90,6 @@ protected:
     int MaxCount;
 
     TDiscServer *Server;
-    TDir *Root;
 };
 
 #endif

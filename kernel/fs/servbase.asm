@@ -182,7 +182,7 @@ LockRelDir Proc near
     pop ecx
     pop edi
 ;
-    or eax,eax
+    cmp eax,-1
     je lrdReply
 ;
     mov [edi].fc_eax,eax
