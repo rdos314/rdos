@@ -705,11 +705,16 @@ int TFs::GetRelDir(int rel, char *path)
             {
                 entry = dir->Get(index);
                 if (entry)
-                    str = TString(entry->PathName) + "/" + str;
+                {
+                    if (str.GetSize())
+                        str = TString(entry->PathName) + "/" + str;
+                    else
+                        str = TString(entry->PathName);
+                }
             }
         }
     }
 
     strcpy(path, str.GetData());
-    return strlen(path);
+    return strlen(path) + 1;
 }
