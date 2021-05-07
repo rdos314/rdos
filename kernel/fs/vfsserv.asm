@@ -2339,7 +2339,6 @@ block_reply  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 data_reply  Proc near
-    int 3
     push ds
     push es
     push eax

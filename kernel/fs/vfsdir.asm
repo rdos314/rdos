@@ -706,8 +706,8 @@ get_vfs_cur_dir   Proc far
     push gs
     pushad
 ;
-    mov eax,es
-    mov gs,eax
+    mov ebx,es
+    mov gs,ebx
 ;
     call GetDrivePart
     or bx,bx
@@ -722,7 +722,6 @@ get_vfs_cur_dir   Proc far
     push es
     push fs
 ;
-    int 3
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
@@ -730,6 +729,7 @@ get_vfs_cur_dir   Proc far
     call AllocateMsg
     pop edi
 ;
+    mov ecx,512
     call AddMsgBuffer
 ;
     mov eax,VFS_GET_REL_DIR
@@ -738,6 +738,8 @@ get_vfs_cur_dir   Proc far
     pop fs
     pop es
     pop ds
+    clc
+    jmp gvcdDone
 
 gvcdRoot:
     xor bl,bl
