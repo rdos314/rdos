@@ -381,7 +381,9 @@ GetPathDrive   Endp
 
 CloneRelDir    Proc near
     push ds
+    push es
     push fs
+    push gs
     pushad
 ;
     push bx
@@ -400,7 +402,9 @@ CloneRelDir    Proc near
 
 crdFail:
     popad
+    pop gs
     pop fs
+    pop es
     pop ds
     ret
 CloneRelDir   Endp
@@ -419,7 +423,9 @@ CloneRelDir   Endp
 
 FreeRelDir    Proc near
     push ds
+    push es
     push fs
+    push gs
     pushad
 ;
     push bx
@@ -438,7 +444,9 @@ FreeRelDir    Proc near
 
 frdFail:
     popad
+    pop gs
     pop fs
+    pop es
     pop ds
     ret
 FreeRelDir   Endp
