@@ -2485,6 +2485,7 @@
 #pragma aux RdosCreateThreadBlock = \
     CallGate_create_thread_block  \
     ValidateHandle  \
+    __parm [__edi] \
     __value [__ebx]
 
 #pragma aux RdosWaitThreadBlock = \

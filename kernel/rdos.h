@@ -716,7 +716,7 @@ void RDOSAPI RdosSetSignal(int Handle);
 void RDOSAPI RdosFreeSignal(int Handle);
 void RDOSAPI RdosAddWaitForSignal(int Handle, int SignalHandle, int ID);
 
-int RDOSAPI RdosCreateThreadBlock(void);
+int RDOSAPI RdosCreateThreadBlock(const char *Name);
 void RDOSAPI RdosWaitThreadBlock(int Handle);
 void RDOSAPI RdosCloseThreadBlock(int Handle);
 

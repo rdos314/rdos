@@ -768,6 +768,7 @@ AddWaitForSignal       MACRO
 
 ;;;;;;;;; Thread blocks ;;;;;;;;;;;;
 
+; IN  ES:(E)DI    Block name
 ; OUT BX          Handle
 CreateThreadBlock       MACRO
         UserGate create_thread_block_nr
