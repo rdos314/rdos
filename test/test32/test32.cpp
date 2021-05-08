@@ -12,6 +12,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+int handle;
+
 /*##########################################################################
 #
 #   Name       : VerifySector
@@ -42,6 +44,11 @@ void VerifySector(int id, char *buf)
     }
 }
 
+static void BlockThread(void *ptr)
+{
+    RdosWaitThreadBlock(handle);
+}
+
 /*##########################################################################
 #
 #   Name       : main
@@ -64,10 +71,11 @@ void main()
     char *ptr;
     int id;
 
-    int handle;
 
     handle = RdosCreateThreadBlock("Test of block");
-    RdosWaitThreadBlock(handle);
+    RdosCreateThread(BlockThread, "Block 1", 0, 0x4000);
+    RdosCreateThread(BlockThread, "Block 2", 0, 0x4000);
+    RdosCloseThreadBlock(handle);
 
     buf = new char[512 * 128];
 
