@@ -766,6 +766,23 @@ AddWaitForSignal       MACRO
                                                 ENDM
 
 
+;;;;;;;;; Thread blocks ;;;;;;;;;;;;
+
+; OUT BX          Handle
+CreateThreadBlock       MACRO
+        UserGate create_thread_block_nr
+                                                ENDM
+
+; IN  BX          Handle
+WaitThreadBlock       MACRO
+        UserGate wait_thread_block_nr
+                                                ENDM
+
+; IN  BX          Handle
+CloseThreadBlock       MACRO
+        UserGate close_thread_block_nr
+                                                ENDM
+
 ;;;;;;;;;;; RANDOM NUMBERS ;;;;
 
 

@@ -955,4 +955,8 @@ is_vfs_path_nr                    = 779
 open_vfs_dir_nr                   = 780
 close_vfs_dir_nr                  = 781
 
+create_thread_block_nr            = 782
+wait_thread_block_nr              = 783
+close_thread_block_nr             = 784
+
 usergate_entries                  = 800

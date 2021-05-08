@@ -716,6 +716,10 @@ void RDOSAPI RdosSetSignal(int Handle);
 void RDOSAPI RdosFreeSignal(int Handle);
 void RDOSAPI RdosAddWaitForSignal(int Handle, int SignalHandle, int ID);
 
+int RDOSAPI RdosCreateThreadBlock(void);
+void RDOSAPI RdosWaitThreadBlock(int Handle);
+void RDOSAPI RdosCloseThreadBlock(int Handle);
+
 int RDOSAPI RdosGetNetHwId(int Index);
 long RDOSAPI RdosGetIp();
 long RDOSAPI RdosGetGateway();

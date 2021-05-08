@@ -2482,6 +2482,19 @@
     CallGate_add_wait_for_signal  \
     __parm [__ebx] [__eax] [__ecx]
 
+#pragma aux RdosCreateThreadBlock = \
+    CallGate_create_thread_block  \
+    ValidateHandle  \
+    __value [__ebx]
+
+#pragma aux RdosWaitThreadBlock = \
+    CallGate_wait_thread_block  \
+    __parm [__ebx]
+
+#pragma aux RdosCloseThreadBlock = \
+    CallGate_close_thread_block  \
+    __parm [__ebx]
+
 #pragma aux RdosGetDhcpEntry = \
     CallGate_get_dhcp_entry  \
     "jnc save" \
