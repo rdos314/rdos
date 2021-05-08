@@ -90,6 +90,7 @@ bh_base     handle_header <>
 
 bh_list     DW ?
 bh_lock     DW ?
+bh_stopped  DW ?
 bh_name     DW ?
 
 block_handle_seg          ENDS
@@ -7105,6 +7106,7 @@ ctbSizeLoop:
     AllocateHandle
     mov ds:[ebx].bh_list,0
     mov ds:[ebx].bh_lock,0
+    mov ds:[ebx].bh_stopped,0
     mov ds:[ebx].bh_name,es
     mov [ebx].hh_sign,BLOCK_HANDLE
     mov bx,[ebx].hh_handle
@@ -7148,6 +7150,64 @@ create_thread_block32 Endp
 wait_thread_block_name    DB 'Wait Thread Block',0
 
 wait_thread_block     PROC far
+    push ds
+    push es
+    pushad
+;
+    mov ax,BLOCK_HANDLE
+    DerefHandle
+    jc wtbDone
+;
+    push ds
+    mov ds,ds:[ebx].bh_name
+    xor esi,esi
+;
+    GetThread
+    mov es,ax
+    mov edi,OFFSET p_list_name
+    mov ecx,31
+
+wtbNameCopy:    
+    lods byte ptr ds:[esi]
+    stos byte ptr es:[edi]
+    or al,al
+    jz wtbNameCopied
+;
+    loop wtbNameCopy
+
+wtbNameCopied:
+    xor al,al
+    stos byte ptr es:[edi]
+    pop ds
+;
+    call LockCore
+    sti
+    call cs:lock_block_proc    
+    mov ax,ds:[ebx].bh_stopped
+    or ax,ax
+    jnz wtbLeave
+;
+    mov ax,ds
+    push OFFSET wtbDone
+    call SaveLockedThread
+    mov ds,ax
+;
+    lea edi,[ebx].bh_list
+    mov es,fs:cs_curr_thread
+    mov fs:cs_curr_thread,0
+;
+    call InsertBlock32
+    call cs:unlock_block_proc
+    jmp LoadThread
+
+wtbLeave:
+    call cs:unlock_block_proc
+    call UnlockCore
+
+wtbDone:
+    popad
+    pop es
+    pop ds
     retf32
 wait_thread_block     ENDP
     
