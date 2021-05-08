@@ -84,6 +84,15 @@ fh_lock     DW ?
 
 futex_handle_seg          ENDS
 
+block_handle_seg          STRUC
+
+bh_base     handle_header <>
+
+bh_list     DW ?
+bh_lock     DW ?
+
+block_handle_seg          ENDS
+
 ; this should always be 4 bytes!
 
 wait_dev_seg  STRUC
@@ -198,6 +207,9 @@ unlock_user_section_proc    DW OFFSET UnlockUserSectionSingle
 
 lock_futex_proc             DW OFFSET LockFutexSingle
 unlock_futex_proc           DW OFFSET UnlockFutexSingle
+
+lock_block_proc             DW OFFSET LockBlockSingle
+unlock_block_proc           DW OFFSET UnlockBlockSingle
 
 flush_tlb_proc              DW OFFSET FlushTlb386
 
@@ -2398,6 +2410,8 @@ start_processor_null_threads    Proc near
     mov ds:unlock_user_section_proc,OFFSET UnlockUserSectionMultiple
     mov ds:lock_futex_proc,OFFSET LockFutexMultiple
     mov ds:unlock_futex_proc,OFFSET UnlockFutexMultiple
+    mov ds:lock_block_proc,OFFSET LockBlockMultiple
+    mov ds:unlock_block_proc,OFFSET UnlockBlockMultiple
     mov ds:fpu_exception_proc,OFFSET FpuExceptionMultiple
     mov ds:fpu_save_proc,OFFSET FpuSaveMultiple
 
@@ -3606,6 +3620,36 @@ UnlockFutexSingle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockBlockSingle
+;
+;           DESCRIPTION:    Lock block, single processor version
+;
+;           PARAMETERS:     DS:EBX      Block handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockBlockSingle  Proc near
+    ret
+LockBlockSingle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockBlockSingle
+;
+;           DESCRIPTION:    Unlock block, single processor version
+;
+;           PARAMETERS:     DS:EBX      Block handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockBlockSingle    Proc near
+    ret
+UnlockBlockSingle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           LockListMultiple
 ;
 ;           DESCRIPTION:    Lock list, multiple processor version
@@ -3822,6 +3866,58 @@ UnlockFutexMultiple    Proc near
     sti
     ret
 UnlockFutexMultiple    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockBlockMultiple
+;
+;           DESCRIPTION:    Lock block, multiple processor version
+;
+;           PARAMETERS:     DS:EBX      Block handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockBlockMultiple  Proc near
+    push ax
+
+lbSpinLock:    
+    mov ax,ds:[ebx].bh_lock
+    or ax,ax
+    je lbGet
+;
+    pause
+    jmp lbSpinLock
+
+lbGet:
+    inc ax
+    xchg ax,ds:[ebx].bh_lock
+    or ax,ax
+    je lbDone
+;
+    jmp lbSpinLock
+
+lbDone:
+    pop ax    
+    ret
+LockBlockMultiple  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockBlockMultiple
+;
+;           DESCRIPTION:    Unlock block, multiple processor version
+;
+;           PARAMETERS:     DS:EBX      Block handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockBlockMultiple    Proc near
+    mov ds:[ebx].bh_lock,0
+    sti
+    ret
+UnlockBlockMultiple    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
