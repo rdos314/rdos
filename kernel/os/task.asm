@@ -90,6 +90,7 @@ bh_base     handle_header <>
 
 bh_list     DW ?
 bh_lock     DW ?
+bh_name     DW ?
 
 block_handle_seg          ENDS
 
@@ -7062,6 +7063,149 @@ cleanup_futex32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           create_thread_block
+;
+;           DESCRIPTION:    Create thread block
+;
+;           PARAMETERS:     ES:(E)DI    Block name
+;
+;           RETURNS:        BX          Block handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_thread_block_name    DB 'Create Thread Block',0
+
+create_thread_block     PROC near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+    xor ecx,ecx
+
+ctbSizeLoop:
+    inc ecx
+    lods byte ptr ds:[esi]
+    or al,al
+    jne ctbSizeLoop
+;
+    mov eax,ecx
+    AllocateSmallGlobalMem    
+;
+    mov esi,edi
+    xor edi,edi
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov cx,SIZE section_handle_seg
+    AllocateHandle
+    mov ds:[ebx].bh_list,0
+    mov ds:[ebx].bh_lock,0
+    mov ds:[ebx].bh_name,es
+    mov [ebx].hh_sign,BLOCK_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+create_thread_block     ENDP
+
+create_thread_block16 Proc far
+    push edi
+;
+    movzx edi,di
+    call create_thread_block
+;
+    pop edi
+    retf32
+create_thread_block16 Endp
+
+create_thread_block32 Proc far
+    call create_thread_block
+    retf32
+create_thread_block32 Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           wait_thread_block
+;
+;           DESCRIPTION:    Wait thread block
+;
+;           PARAMETERS:     BX          Block handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_thread_block_name    DB 'Wait Thread Block',0
+
+wait_thread_block     PROC far
+    retf32
+wait_thread_block     ENDP
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           close_thread_block
+;
+;           DESCRIPTION:    Close thread block
+;
+;           PARAMETERS:     BX          Block handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_thread_block_name    DB 'Close Thread Block',0
+
+close_thread_block     PROC far
+    retf32
+close_thread_block     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Delete thread block handle
+;
+;           DESCRIPTION:    Delete a handle (called from handle module)
+;
+;           PARAMETERS:     BX              HANDLE TO DIR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_thread_block_handle   Proc far
+    push ds
+    push es
+    push ax
+    push ebx
+;
+    mov ax,BLOCK_HANDLE
+    DerefHandle
+    jc dtbhDone
+;
+    mov es,ds:[ebx].bh_name
+    FreeMem
+;
+    FreeHandle
+    clc
+
+dtbhDone:
+    pop ebx
+    pop ax
+    pop es
+    pop ds
+    ret
+delete_thread_block_handle   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           set_thread_action
 ;
 ;           DESCRIPTION:    Set thread action text
@@ -11276,6 +11420,10 @@ timer_free_list_create:
     xor esi,esi
     xor edi,edi
 ;
+    mov edi,OFFSET delete_thread_block_handle
+    mov ax,BLOCK_HANDLE
+    RegisterHandle
+;
     mov esi,OFFSET start_tasking
     mov edi,OFFSET start_tasking_name
     xor cl,cl
@@ -11695,6 +11843,25 @@ timer_free_list_create:
     mov edi,OFFSET leave_user_section_name
     xor dx,dx
     mov ax,leave_user_section_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET create_thread_block16
+    mov esi,OFFSET create_thread_block32
+    mov edi,OFFSET create_thread_block_name
+    mov dx,virt_es_in
+    mov ax,create_thread_block_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET wait_thread_block
+    mov edi,OFFSET wait_thread_block_name
+    xor dx,dx
+    mov ax,wait_thread_block_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_thread_block
+    mov edi,OFFSET close_thread_block_name
+    xor dx,dx
+    mov ax,close_thread_block_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET update_time
