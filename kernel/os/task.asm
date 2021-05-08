@@ -7152,6 +7152,7 @@ wait_thread_block_name    DB 'Wait Thread Block',0
 wait_thread_block     PROC far
     push ds
     push es
+    push fs
     pushad
 ;
     mov ax,BLOCK_HANDLE
@@ -7206,6 +7207,7 @@ wtbLeave:
 
 wtbDone:
     popad
+    pop fs
     pop es
     pop ds
     retf32
@@ -7225,6 +7227,47 @@ wait_thread_block     ENDP
 close_thread_block_name    DB 'Close Thread Block',0
 
 close_thread_block     PROC far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ax,BLOCK_HANDLE
+    DerefHandle
+    jc ctbDone
+;
+    call LockCore
+    sti
+    call cs:lock_block_proc    
+;   
+    inc ds:[ebx].bh_stopped
+
+ctbWake: 
+    mov ax,ds:[ebx].bh_list
+    or ax,ax
+    jz ctbUnlock
+;    
+    lea esi,ds:[ebx].bh_list
+    call RemoveBlock32
+    mov es:p_data,0
+;
+    call InsertWakeup
+    jmp ctbWake
+
+ctbUnlock:
+    call cs:unlock_block_proc
+    call UnlockCore
+;
+    mov es,ds:[ebx].bh_name
+    FreeMem
+;
+    FreeHandle
+
+ctbDone:
+    popad
+    pop fs
+    pop es
+    pop ds
     retf32
 close_thread_block     ENDP
 
