@@ -59,6 +59,7 @@ SLEEP_TYPE_SECTION = 4
 SLEEP_TYPE_DEBUG = 5
 SLEEP_TYPE_SUSPEND = 6
 SLEEP_TYPE_WAIT_DEV = 7
+SLEEP_TYPE_BLOCK = 8
 
 WAIT_DEV_ACTIVE   = 1
 WAIT_DEV_SIGNAL   = 2
@@ -7199,6 +7200,10 @@ wtbNameCopied:
 ;
     call InsertBlock32
     call cs:unlock_block_proc
+;
+    mov es:p_sleep_type,SLEEP_TYPE_BLOCK
+    mov es:p_sleep_sel,ds
+    mov es:p_sleep_offset,esi
     jmp LoadThread
 
 wtbLeave:
@@ -8131,6 +8136,31 @@ check_futex_done:
     jmp check_done
 
 check_not_futex:
+    cmp ax,SLEEP_TYPE_BLOCK
+    jne check_not_block
+;
+    mov si,OFFSET p_list_name
+    mov cx,32
+
+check_block_copy:
+    mov al,fs:[si]
+    or al,al
+    jz check_block_done
+
+    inc si
+    stos byte ptr es:[edi]
+    loop check_block_copy
+
+check_block_done:
+    xor al,al    
+    stos byte ptr es:[edi]
+;
+    xor cx,cx
+    xor edx,edx
+    clc
+    jmp check_done
+
+check_not_block:
     cmp ax,SLEEP_TYPE_WAIT_DEV
     jne check_not_wait_dev
 ;
