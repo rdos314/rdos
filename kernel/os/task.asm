@@ -7241,6 +7241,8 @@ close_thread_block     PROC far
     DerefHandle
     jc ctbDone
 ;
+    mov es:[ebx].hh_sign,0
+;
     call LockCore
     sti
     call cs:lock_block_proc    
@@ -7260,6 +7262,12 @@ ctbWake:
     jmp ctbWake
 
 ctbUnlock:
+    call cs:unlock_block_proc
+    call UnlockCore
+;
+    call LockCore
+    sti
+    call cs:lock_block_proc    
     call cs:unlock_block_proc
     call UnlockCore
 ;
