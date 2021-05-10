@@ -7241,7 +7241,7 @@ close_thread_block     PROC far
     DerefHandle
     jc ctbDone
 ;
-    mov es:[ebx].hh_sign,0
+    mov ds:[ebx].hh_sign,0
 ;
     call LockCore
     sti

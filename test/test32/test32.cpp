@@ -46,7 +46,14 @@ void VerifySector(int id, char *buf)
 
 static void BlockThread(void *ptr)
 {
-    RdosWaitThreadBlock(handle);
+    int delay;
+
+    for (;;)
+    {
+        delay = RdosGetRandom(25);
+        RdosWaitMilli(delay);
+        RdosWaitThreadBlock(handle);
+    }
 }
 
 /*##########################################################################
@@ -70,12 +77,31 @@ void main()
     int i;
     char *ptr;
     int id;
+    int h;
 
+    char str[40];
 
-    handle = RdosCreateThreadBlock("Test of block");
-    RdosCreateThread(BlockThread, "Block 1", 0, 0x4000);
-    RdosCreateThread(BlockThread, "Block 2", 0, 0x4000);
-    RdosCloseThreadBlock(handle);
+    handle = 0;
+
+    for (i = 0; i < 10; i++)
+    {
+        sprintf(str, "Block #%d", i);
+        RdosCreateThread(BlockThread, str, 0, 0x4000);
+    }
+
+    for (i = 0; true; i++)
+    {
+        delay = RdosGetRandom(100);
+        RdosWaitMilli(delay);
+        sprintf(str, "Test #%d", i);
+        handle = RdosCreateThreadBlock(str);
+
+        delay = RdosGetRandom(25);
+        RdosWaitMilli(delay);
+        h = handle;
+        handle = 0;
+        RdosCloseThreadBlock(h);
+    }
 
     buf = new char[512 * 128];
 
