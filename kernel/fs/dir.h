@@ -39,8 +39,8 @@ struct TDirLink
     int Offset;
     void *Link;
     short int WaitHandle;
-    char RefCount;
-    char WaitCount;
+    signed char RefCount;
+    signed char WaitCount;
 };
 
 class TDir : public TBlock

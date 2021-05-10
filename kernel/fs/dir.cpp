@@ -65,6 +65,9 @@ TDir::TDir(TDir *ParentDir, long long inode)
     {
         EntryArr[i].Offset = 0;
         EntryArr[i].Link = 0;
+        EntryArr[i].WaitHandle = 0;
+        EntryArr[i].RefCount = 0;
+        EntryArr[i].WaitCount = 0;
     }
 }
 
@@ -139,12 +142,18 @@ void TDir::Grow()
     {
         NewArr[i].Offset = EntryArr[i].Offset;
         NewArr[i].Link = EntryArr[i].Link;
+        NewArr[i].WaitHandle = EntryArr[i].WaitHandle;
+        NewArr[i].RefCount = EntryArr[i].RefCount;
+        NewArr[i].WaitCount = EntryArr[i].WaitCount;
     }
 
     for (i = MaxCount; i < Size; i++)
     {
         NewArr[i].Offset = 0;
         NewArr[i].Link = 0;
+        NewArr[i].WaitHandle = 0;
+        NewArr[i].RefCount = 0;
+        NewArr[i].WaitCount = 0;
     }
 
     delete EntryArr;
