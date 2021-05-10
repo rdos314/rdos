@@ -33,6 +33,7 @@ int LockRelDir(int rel, char *path);
 void CloneRelDir(int rel);
 void UnlockRelDir(int rel);
 int GetRelDir(int rel, char *path);
+void ReadDirLink(void *dir, void *link);
 
 /*##########################################################################
 #
@@ -120,4 +121,15 @@ void LowUnlockRelDir(int rel)
 int LowGetRelDir(int rel, char *path)
 {
     return GetRelDir(rel, path);
+}
+
+/*##########################################################################
+#
+#   Name       : LowReadDirLink
+#
+##########################################################################*/
+#pragma aux LowReadDirLink "*" parm routine [esi] [edi]
+void LowReadDirLink(void *dir, void *link)
+{
+    ReadDirLink(dir, link);
 }

@@ -7160,6 +7160,14 @@ wait_thread_block     PROC far
     DerefHandle
     jc wtbDone
 ;
+    call LockCore
+    sti
+    call cs:lock_block_proc    
+;
+    mov ax,ds:[ebx].bh_stopped
+    or ax,ax
+    jnz wtbLeave
+;
     push ds
     mov ds,ds:[ebx].bh_name
     xor esi,esi
@@ -7181,13 +7189,6 @@ wtbNameCopied:
     xor al,al
     stos byte ptr es:[edi]
     pop ds
-;
-    call LockCore
-    sti
-    call cs:lock_block_proc    
-    mov ax,ds:[ebx].bh_stopped
-    or ax,ax
-    jnz wtbLeave
 ;
     mov ax,ds
     push OFFSET wtbDone

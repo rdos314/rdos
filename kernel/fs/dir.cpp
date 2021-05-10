@@ -30,6 +30,13 @@
 #include <serv.h>
 #include "dir.h"
 
+extern "C" {
+
+extern void LockDirLinkObject(TDir *dir, struct TDirLink *link);
+#pragma aux LockDirLinkObject parm routine [esi] [edi]
+
+}
+
 /*##########################################################################
 #
 #   Name       : TDir::TDir
@@ -334,6 +341,27 @@ struct DirEntry *TDir::Get(int index)
 
 /*##########################################################################
 #
+#   Name       : TDir::Get
+#
+#   Purpose....: Get dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct DirEntry *TDir::Get(struct TDirLink *link)
+{
+    char *ptr;
+    struct DirEntry *entry;
+
+    ptr = (char *)obj;
+    ptr += link->Offset;
+    return (struct DirEntry *)ptr;
+}
+
+/*##########################################################################
+#
 #   Name       : TDir::GetParentDir
 #
 #   Purpose....: Get parent dir
@@ -350,6 +378,29 @@ TDir *TDir::GetParentDir()
 
 /*##########################################################################
 #
+#   Name       : TDir::LockDirLink
+#
+#   Purpose....: Lock dir link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir *TDir::LockDirLink(int index)
+{
+    if (index < 0)
+        return 0;
+
+    if (index >= EntryCount)
+        return 0;
+
+    LockDirLinkObject(this, &EntryArr[index]);
+    return (TDir *)EntryArr[index].Link;
+}
+
+/*##########################################################################
+#
 #   Name       : TDir::GetDirLink
 #
 #   Purpose....: Get dir link
@@ -359,15 +410,9 @@ TDir *TDir::GetParentDir()
 #   Returns....: *
 #
 ##########################################################################*/
-TDir *TDir::GetDirLink(int index)
+TDir *TDir::GetDirLink(struct TDirLink *link)
 {
-    if (index < 0)
-        return 0;
-
-    if (index >= EntryCount)
-        return 0;
-
-    return (TDir *)EntryArr[index].Link;
+    return (TDir *)link->Link;
 }
 
 /*##########################################################################
@@ -381,13 +426,7 @@ TDir *TDir::GetDirLink(int index)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDir::SetDirLink(int index, TDir *dir)
+void TDir::SetDirLink(struct TDirLink *link, TDir *dir)
 {
-    if (index < 0)
-        return;
-
-    if (index >= EntryCount)
-        return;
-
-    EntryArr[index].Link = dir;
+    link->Link = dir;
 }

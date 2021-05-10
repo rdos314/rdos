@@ -79,6 +79,8 @@ public:
     void UnlockRelDir(int rel);
     int GetRelDir(int rel, char *path);
 
+    void ReadDirLink(TDir *dir, struct TDirLink *link);
+
 protected:
     void Grow();
     void Add(TDir *dir);

@@ -79,6 +79,14 @@ int GetRelDir(int rel, char *path)
     return Server->GetRelDir(rel, path);
 }
 
+void ReadDirLink(void *d, void *l)
+{
+    TDir *dir = (TDir *)d;
+    struct TDirLink *link = (struct TDirLink *)l;
+
+    return Server->ReadDirLink(dir, link);
+}
+
 }
 
 /*##########################################################################

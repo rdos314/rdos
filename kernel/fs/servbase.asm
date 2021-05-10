@@ -48,11 +48,111 @@ fc_edi             DD ?
 
 vfs_cmd_struc   ENDS
 
+dir_link_struc  STRUC
+
+dl_offset          DD ?
+dl_link            DD ?
+dl_wait_handle     DW ?
+dl_ref_count       DB ?
+dl_wait_count      DB ?
+
+dir_link_struc  ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 _TEXT   segment use32 word public 'CODE'
 
     assume  cs:_TEXT
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LockDirLinkObject
+;
+;       DESCRIPTION:    Lock dir link object
+;
+;       PARAMETERS:     ESI           Dir object
+;                       EDI           Link object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowReadDirLink:near
+    public LockDirLinkObject_
+
+wait_name DB "Wait Dir", 0
+
+LockDirLinkObject_ Proc near
+    push eax
+    push ebx
+
+ldlRetry:
+    test [edi].dl_ref_count,80h
+    jnz ldlWait
+;
+    cmp [edi].dl_link,0
+    jnz ldlDone
+;
+    lock sub [edi].dl_ref_count,1
+    jnc ldlLockFailed
+;
+    call LowReadDirLink
+    lock inc [edi].dl_ref_count
+
+ldlWaitLoop:
+    cmp [edi].dl_wait_count,0
+    je ldlWaitOk
+;
+    mov ax,1
+    WaitMilliSec
+    jmp ldlWaitLoop
+
+ldlWaitOk:
+    xor bx,bx
+    xchg bx,[edi].dl_wait_handle
+    or bx,bx
+    jz ldlDone
+;
+    CloseThreadBlock
+    jmp ldlDone
+
+ldlLockFailed:
+    lock inc [edi].dl_ref_count
+    jmp ldlRetry
+
+ldlWait:
+    cmp [edi].dl_wait_handle,0
+    jnz ldlDoWait
+;
+    lock sub [edi].dl_wait_count,1
+    jnc ldlWaitUnlock
+;
+    push edi
+    mov edi,OFFSET wait_name
+    CreateThreadBlock
+    pop edi
+    mov [edi].dl_wait_handle,bx
+
+ldlWaitUnlock:
+    lock inc [edi].dl_wait_count
+
+ldlDoWait:
+    mov bx,[edi].dl_wait_handle
+    or bx,bx
+    jz ldlWaitYield
+;
+    WaitThreadBlock
+    jmp ldlRetry
+
+ldlWaitYield:
+    mov ax,1
+    WaitMilliSec
+    jmp ldlRetry
+
+ldlDone:
+    pop ebx
+    pop eax
+    ret
+LockDirLinkObject_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

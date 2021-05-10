@@ -38,6 +38,9 @@ struct TDirLink
 {
     int Offset;
     void *Link;
+    short int WaitHandle;
+    char RefCount;
+    char WaitCount;
 };
 
 class TDir : public TBlock
@@ -54,11 +57,15 @@ public:
     int Find(long long inode);
     int Find(const char *path);
     struct DirEntry *Get(int index);
+    struct DirEntry *Get(struct TDirLink *link);
 
     long long GetInode();
     TDir *GetParentDir();
-    TDir *GetDirLink(int index);
-    void SetDirLink(int index, TDir *dir);
+
+    TDir *LockDirLink(int index);
+
+    TDir *GetDirLink(struct TDirLink *link);
+    void SetDirLink(struct TDirLink *link, TDir *dir);
 
     struct DirEntry *Add(const char *path, long long inode);
 

@@ -452,6 +452,27 @@ void TFs::Remove(TDir *dir)
 
 /*##########################################################################
 #
+#   Name       : TFs::ReadDirLink
+#
+#   Purpose....: Read dir link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::ReadDirLink(TDir *dir, struct TDirLink *link)
+{
+    struct DirEntry *entry = dir->Get(link);
+    TDir *newdir;
+
+    newdir = CacheDir(dir, entry->Inode);
+    Add(newdir);
+    dir->SetDirLink(link, newdir);
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::GetStartDir
 #
 #   Purpose....: Get start dir
@@ -527,15 +548,7 @@ void TFs::Advance(TParser *Parser)
         if (isdir)
         {
             index = Parser->GetIndex();
-            newdir = dir->GetDirLink(index);
-
-            if (!newdir)
-            {
-                newdir = CacheDir(dir, entry->Inode);
-                Add(newdir);
-                dir->SetDirLink(index, newdir);
-            }
-
+            newdir = dir->LockDirLink(index);
             Parser->Advance(newdir);
         }
     }
