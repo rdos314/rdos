@@ -42,8 +42,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatDir::TFatDir(TDir *ParentDir, long long inode)
-  : TDir(ParentDir, inode)
+TFatDir::TFatDir(TDir *ParentDir, int ParentIndex)
+  : TDir(ParentDir, ParentIndex)
 {
     FCurrLfn = 0;
 }

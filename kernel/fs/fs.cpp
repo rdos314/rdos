@@ -461,14 +461,14 @@ void TFs::Remove(TDir *dir)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::ReadDirLink(TDir *dir, struct TDirLink *link)
+void TFs::ReadDirLink(TDir *dir, int index)
 {
-    struct DirEntry *entry = dir->Get(link);
+    struct DirEntry *entry = dir->Get(index);
     TDir *newdir;
 
-    newdir = CacheDir(dir, entry->Inode);
+    newdir = CacheDir(dir, index, entry->Inode);
     Add(newdir);
-    dir->SetDirLink(link, newdir);
+    dir->SetDirLink(index, newdir);
 }
 
 /*##########################################################################

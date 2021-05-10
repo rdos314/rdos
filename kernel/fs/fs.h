@@ -70,7 +70,7 @@ public:
 
     virtual long long GetFreeSectors() = 0;
     virtual TDir *CacheRootDir() = 0;
-    virtual TDir *CacheDir(TDir *ParentDir, long long inode) = 0;
+    virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode) = 0;
 
     struct TShareHeader *GetDir(int rel, char *path, int *count);
     int GetDirEntryAttrib(int rel, char *path);
@@ -79,7 +79,7 @@ public:
     void UnlockRelDir(int rel);
     int GetRelDir(int rel, char *path);
 
-    void ReadDirLink(TDir *dir, struct TDirLink *link);
+    void ReadDirLink(TDir *dir, int index);
 
 protected:
     void Grow();

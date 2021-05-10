@@ -46,7 +46,7 @@ struct TDirLink
 class TDir : public TBlock
 {
 public:
-    TDir(TDir *ParentDir, long long inode);
+    TDir(TDir *ParentDir, int ParentIndex);
     virtual ~TDir();
 
     void Lock();
@@ -64,8 +64,8 @@ public:
 
     TDir *LockDirLink(int index);
 
-    TDir *GetDirLink(struct TDirLink *link);
-    void SetDirLink(struct TDirLink *link, TDir *dir);
+    TDir *GetDirLink(int index);
+    void SetDirLink(int index, TDir *dir);
 
     struct DirEntry *Add(const char *path, long long inode);
 
@@ -76,6 +76,7 @@ protected:
 
     struct TDirLink *EntryArr;
     TDir *Parent;
+    int ParentIndex;
     long long Inode;
 
     int LockCount;

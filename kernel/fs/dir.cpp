@@ -32,8 +32,8 @@
 
 extern "C" {
 
-extern void LockDirLinkObject(TDir *dir, struct TDirLink *link);
-#pragma aux LockDirLinkObject parm routine [esi] [edi]
+extern void LockDirLinkObject(TDir *dir, int index, struct TDirLink *link);
+#pragma aux LockDirLinkObject parm routine [esi] [edx] [edi]
 
 }
 
@@ -48,14 +48,24 @@ extern void LockDirLinkObject(TDir *dir, struct TDirLink *link);
 #   Returns....: *
 #
 ##########################################################################*/
-TDir::TDir(TDir *ParentDir, long long inode)
+TDir::TDir(TDir *ParentDir, int ParentIndex)
   : Section("dir")
 {
     int i;
+    struct DirEntry *ParentEntry;
 
     Entry = 0;
     Parent = ParentDir;
-    Inode = inode;
+    ParentIndex = ParentIndex;
+
+    if (ParentDir)
+    {
+        ParentEntry = ParentDir->Get(ParentIndex);
+        Inode = ParentEntry->Inode;
+    }
+    else
+        Inode = 0;
+
     EntryCount = 0;
     LockCount = 1;
     MaxCount = 4;
@@ -404,7 +414,7 @@ TDir *TDir::LockDirLink(int index)
     if (index >= EntryCount)
         return 0;
 
-    LockDirLinkObject(this, &EntryArr[index]);
+    LockDirLinkObject(this, index, &EntryArr[index]);
     return (TDir *)EntryArr[index].Link;
 }
 
@@ -419,9 +429,15 @@ TDir *TDir::LockDirLink(int index)
 #   Returns....: *
 #
 ##########################################################################*/
-TDir *TDir::GetDirLink(struct TDirLink *link)
+TDir *TDir::GetDirLink(int index)
 {
-    return (TDir *)link->Link;
+    if (index < 0)
+        return 0;
+
+    if (index >= EntryCount)
+        return 0;
+
+    return (TDir *)EntryArr[index].Link;
 }
 
 /*##########################################################################
@@ -435,7 +451,13 @@ TDir *TDir::GetDirLink(struct TDirLink *link)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDir::SetDirLink(struct TDirLink *link, TDir *dir)
+void TDir::SetDirLink(int index, TDir *dir)
 {
-    link->Link = dir;
+    if (index < 0)
+        return;
+
+    if (index >= EntryCount)
+        return;
+
+    EntryArr[index].Link = dir;
 }
