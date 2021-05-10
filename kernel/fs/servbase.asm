@@ -120,39 +120,57 @@ ldlLockFailed:
     jmp ldlRetry
 
 ldlWait:
-    cmp [edi].dl_wait_handle,0
+    mov bx,[edi].dl_wait_handle
+    or bx,bx
     jnz ldlDoWait
 ;
     lock sub [edi].dl_wait_count,1
-    jnc ldlWaitUnlock
+    jc ldlWaitCreate
 ;
+    lock inc [edi].dl_wait_count
+;
+    mov ax,1
+    WaitMilliSec
+    jmp ldlRetry
+
+ldlWaitCreate:
     push edi
     mov edi,OFFSET wait_name
     CreateThreadBlock
     pop edi
     mov [edi].dl_wait_handle,bx
-
-ldlWaitUnlock:
+;
     lock inc [edi].dl_wait_count
 
 ldlDoWait:
-    mov bx,[edi].dl_wait_handle
-    or bx,bx
-    jz ldlWaitYield
-;
     WaitThreadBlock
     jmp ldlRetry
 
-ldlWaitYield:
-    mov ax,1
-    WaitMilliSec
-    jmp ldlRetry
-
 ldlDone:
+    lock inc [edi].dl_ref_count
+;
     pop ebx
     pop eax
     ret
 LockDirLinkObject_ Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlockDirLinkObject
+;
+;       DESCRIPTION:    Unlock dir link object
+;
+;       PARAMETERS:     EDI           Link object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UnlockDirLinkObject_
+
+UnlockDirLinkObject_ Proc near
+    lock dec [edi].dl_ref_count
+    ret
+UnlockDirLinkObject_ Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
