@@ -604,10 +604,13 @@ void TFs::ReadDirLink(TDir *dir, int index)
     inode = entry->Inode;
     dir->UnlockEntry(entry);
 
-    newdir = CacheDir(dir, index, inode);
+    if (entry->Attrib & FILE_ATTRIBUTE_DIRECTORY)
+    {
+        newdir = CacheDir(dir, index, inode);
 
-    Add(newdir);
-    dir->SetDirLink(index, newdir);
+        Add(newdir);
+        dir->SetDirLink(index, newdir);
+    }
 }
 
 /*##########################################################################
