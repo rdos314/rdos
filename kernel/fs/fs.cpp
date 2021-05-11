@@ -302,16 +302,42 @@ void TParser::Process()
 #   Returns....: *
 #
 ##########################################################################*/
-void TParser::Advance(TDir *dir)
+void TParser::Advance()
 {
-    Dir = dir;
+    bool isdir;
+    TDir *newdir = 0;
 
-    if (Dir)
+    if (IsCurrDir())
+        newdir = Dir;
+    else if (IsParentDir())
+        newdir = Dir->GetParentDir();
+    else
     {
-        Head = Next;
-        Next = Head;
+        if (CurrEntry)
+        {
+            if (CurrEntry->Attrib & FILE_ATTRIBUTE_DIRECTORY)
+                isdir = true;
+            else
+                isdir = false;
+        }
+        else
+            isdir = false;
 
-        Process();
+        if (isdir)
+            newdir = Dir->LockDirLink(CurrIndex);
+    }
+
+    if (newdir)
+    {
+        Dir = newdir;
+
+        if (Dir)
+        {
+            Head = Next;
+            Next = Head;
+
+            Process();
+        }
     }
 }
 
@@ -517,57 +543,6 @@ TDir *TFs::GetStartDir(int rel)
 
 /*##########################################################################
 #
-#   Name       : TFs::Advance
-#
-#   Purpose....: Advance path
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFs::Advance(TParser *Parser)
-{
-    struct DirEntry *entry;
-    bool isdir;
-    TDir *dir;
-    TDir *newdir;
-    int index;
-
-    dir = Parser->GetDir();
-
-    if (Parser->IsCurrDir())
-        Parser->Advance(dir);
-    else if (Parser->IsParentDir())
-    {
-        newdir = dir->GetParentDir();
-        Parser->Advance(newdir);
-    }
-    else
-    {
-        entry = Parser->GetEntry();
-
-        if (entry)
-        {
-            if (entry->Attrib & FILE_ATTRIBUTE_DIRECTORY)
-                isdir = true;
-            else
-                isdir = false;
-        }
-        else
-            isdir = false;
-
-        if (isdir)
-        {
-            index = Parser->GetIndex();
-            newdir = dir->LockDirLink(index);
-            Parser->Advance(newdir);
-        }
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : TFs::GetDir
 #
 #   Purpose....: Get dir
@@ -585,7 +560,7 @@ struct TShareHeader *TFs::GetDir(int rel, char *path, int *count)
     while (!Parser.IsDone())
     {
         if (Parser.IsDir())
-            Advance(&Parser);
+            Parser.Advance();
         else
             return 0;
     }
@@ -620,7 +595,7 @@ int TFs::GetDirEntryAttrib(int rel, char *path)
     while (!Parser.IsLast())
     {
         if (Parser.IsDir())
-            Advance(&Parser);
+            Parser.Advance();
         else
             return -1;
     }
@@ -657,7 +632,7 @@ int TFs::LockRelDir(int rel, char *path)
     while (!Parser.IsDone())
     {
         if (Parser.IsDir())
-            Advance(&Parser);
+            Parser.Advance();
         else
             return 0;
     }

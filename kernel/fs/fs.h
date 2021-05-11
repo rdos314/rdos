@@ -48,7 +48,7 @@ public:
     int GetIndex();
     struct DirEntry *GetEntry();
 
-    void Advance(TDir *dir);
+    void Advance();
 
 protected:
     void Process();
@@ -87,8 +87,6 @@ protected:
     void Remove(TDir *dir);
 
     TDir *GetStartDir(int rel);
-    void Advance(TParser *Parser);
-    struct DirEntry *Parse(TDir *dir, char *path);
 
     TDir **DirArr;
     int DirCount;
