@@ -49,8 +49,8 @@ public:
     TDir(TDir *ParentDir, int ParentIndex);
     virtual ~TDir();
 
-    void Lock();
-    void Unlock();
+    void LockDir();
+    void UnlockDir();
 
     struct TShareHeader *Share();
     int GetCount();
@@ -63,6 +63,7 @@ public:
     TDir *GetParentDir();
 
     TDir *LockDirLink(int index);
+    void UnlockDirLink(int index);
 
     TDir *GetDirLink(int index);
     void SetDirLink(int index, TDir *dir);

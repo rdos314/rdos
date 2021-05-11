@@ -101,7 +101,7 @@ TDir::~TDir()
 
 /*##########################################################################
 #
-#   Name       : TDir::Lock
+#   Name       : TDir::LockDir
 #
 #   Purpose....: Lock
 #
@@ -110,27 +110,27 @@ TDir::~TDir()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDir::Lock()
+void TDir::LockDir()
 {
     if (Parent)
-        LockDirLinkObject(Parent, ParentIndex, &Parent->EntryArr[ParentIndex]);
+        Parent->LockDirLink(ParentIndex);
 }
 
 /*##########################################################################
 #
-#   Name       : TDir::Unlock
+#   Name       : TDir::UnlockDir
 #
-#   Purpose....: Unlock
+#   Purpose....: Unlock dir
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDir::Unlock()
+void TDir::UnlockDir()
 {
     if (Parent)
-        UnlockDirLinkObject(&Parent->EntryArr[ParentIndex]);
+        Parent->UnlockDirLink(ParentIndex);
 }
 
 /*##########################################################################
@@ -293,14 +293,21 @@ int TDir::Find(long long inode)
     char *ptr;
     struct DirEntry *entry;
 
+    Section.Enter();
+
     for (i = 0; i < EntryCount; i++)
     {
         ptr = (char *)obj;
         ptr += EntryArr[i].Offset;
         entry = (struct DirEntry *)ptr;
         if (inode == entry->Inode)
+        {
+            Section.Leave();
             return i;
+        }
     }
+
+    Section.Leave();
 
     return DIR_NOT_FOUND;
 }
@@ -322,14 +329,21 @@ int TDir::Find(const char *path)
     char *ptr;
     struct DirEntry *entry;
 
+    Section.Enter();
+
     for (i = 0; i < EntryCount; i++)
     {
         ptr = (char *)obj;
         ptr += EntryArr[i].Offset;
         entry = (struct DirEntry *)ptr;
         if (!strcmp(path, entry->PathName))
+        {
+            Section.Leave();
             return i;
+        }
     }
+
+    Section.Leave();
 
     return DIR_NOT_FOUND;
 }
@@ -412,6 +426,8 @@ TDir *TDir::GetParentDir()
 ##########################################################################*/
 TDir *TDir::LockDirLink(int index)
 {
+    TDir *dir;
+
     if (index < 0)
         return 0;
 
@@ -419,7 +435,30 @@ TDir *TDir::LockDirLink(int index)
         return 0;
 
     LockDirLinkObject(this, index, &EntryArr[index]);
-    return (TDir *)EntryArr[index].Link;
+    dir = (TDir *)EntryArr[index].Link;
+    return dir;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::UnlockDirLink
+#
+#   Purpose....: Unlock dir link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::UnlockDirLink(int index)
+{
+    if (index < 0)
+        return;
+
+    if (index >= EntryCount)
+        return;
+
+    UnlockDirLinkObject(&EntryArr[index]);
 }
 
 /*##########################################################################

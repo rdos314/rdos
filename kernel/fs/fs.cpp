@@ -654,7 +654,7 @@ int TFs::LockRelDir(int rel, char *path)
 
     if (dir)
     {
-        dir->Lock();
+        dir->LockDir();
         return dir->Entry;
     }
     else
@@ -677,7 +677,7 @@ void TFs::CloneRelDir(int rel)
     TDir *dir = GetStartDir(rel);
 
     if (dir)
-        dir->Lock();
+        dir->LockDir();
 }
 
 /*##########################################################################
@@ -696,7 +696,7 @@ void TFs::UnlockRelDir(int rel)
     TDir *dir = GetStartDir(rel);
 
     if (dir)
-        dir->Unlock();
+        dir->UnlockDir();
 }
 
 /*##########################################################################
