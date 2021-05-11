@@ -358,6 +358,13 @@ TFs::TFs(TDiscServer *server)
 
     for (i = 0; i < MaxDirCount; i++)
         DirArr[i] = 0;
+
+    CurrFileCount = 0;
+    MaxFileCount = 4;
+    FileArr = new TFile*[MaxFileCount];
+
+    for (i = 0; i < MaxFileCount; i++)
+        FileArr[i] = 0;
 }
 
 /*##########################################################################
@@ -380,6 +387,12 @@ TFs::~TFs()
             delete DirArr[i];
 
     delete DirArr;
+
+    for (i = 0; i < MaxFileCount; i++)
+        if (FileArr[i])
+            delete FileArr[i];
+
+    delete FileArr;
 }
 
 /*##########################################################################
@@ -473,6 +486,100 @@ void TFs::Remove(TDir *dir)
     {
         DirArr[dir->Entry] = 0;
         CurrDirCount--;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::GrowFile
+#
+#   Purpose....: Grow file array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::GrowFile()
+{
+    int i;
+    int Size = 2 * MaxFileCount;
+    TFile **NewArr;
+
+    NewArr = new TFile*[Size];
+
+    for (i = 0; i < MaxFileCount; i++)
+        NewArr[i] = FileArr[i];
+
+    for (i = MaxFileCount; i < Size; i++)
+        NewArr[i] = 0;
+
+    delete FileArr;
+    FileArr = NewArr;
+    MaxFileCount = Size;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Add
+#
+#   Purpose....: Add file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Add(TFile *file)
+{
+    int i;
+    bool found = false;
+
+    if (CurrFileCount == MaxFileCount)
+        GrowFile();
+
+    for (i = CurrFileCount; i < MaxFileCount && !found; i++)
+    {
+        if (FileArr[i] == 0)
+        {
+            FileArr[i] = file;
+            file->Entry = i;
+            found = true;
+        }
+    }
+
+
+    for (i = 0; i < CurrFileCount && !found; i++)
+    {
+        if (FileArr[i] == 0)
+        {
+            FileArr[i] = file;
+            file->Entry = i;
+            found = true;
+        }
+    }
+
+    if (found)
+        CurrFileCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Remove
+#
+#   Purpose....: Remove file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Remove(TFile *file)
+{
+    if (FileArr[file->Entry] == file)
+    {
+        FileArr[file->Entry] = 0;
+        CurrFileCount--;
     }
 }
 

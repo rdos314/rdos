@@ -30,6 +30,7 @@
 
 #include "discserv.h"
 #include "dir.h"
+#include "file.h"
 
 class TParser
 {
@@ -86,11 +87,19 @@ protected:
     void Add(TDir *dir);
     void Remove(TDir *dir);
 
+    void GrowFile();
+    void Add(TFile *file);
+    void Remove(TFile *file);
+
     TDir *GetStartDir(int rel);
 
     TDir **DirArr;
     int CurrDirCount;
     int MaxDirCount;
+
+    TFile **FileArr;
+    int CurrFileCount;
+    int MaxFileCount;
 
     TDiscServer *Server;
 };
