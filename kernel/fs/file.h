@@ -41,12 +41,17 @@ public:
     void LockFile();
     void UnlockFile();
 
+    int GetAttrib();
+
     int Entry;
 
 protected:
     TDir *Parent;
     int ParentIndex;
     TSection Section;
+
+    long long Size;
+    int Attrib;
 };
 
 #endif

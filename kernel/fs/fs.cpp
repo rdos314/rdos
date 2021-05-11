@@ -898,3 +898,43 @@ int TFs::OpenFile(int rel, char *path)
     else
         return -1;
 }
+
+/*##########################################################################
+#
+#   Name       : TFs::GetFile
+#
+#   Purpose....: Get file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *TFs::GetFile(int handle)
+{
+    if (handle >= 0 && handle < MaxFileCount)
+        return FileArr[handle];
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::GetFileAttrib
+#
+#   Purpose....: Get file attribute
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::GetFileAttrib(int handle)
+{
+    TFile *file = GetFile(handle);
+
+    if (file)
+        return file->GetAttrib();
+    else
+        return 0;
+}

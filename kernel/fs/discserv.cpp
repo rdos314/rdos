@@ -91,6 +91,11 @@ int OpenFile(int rel, char *path)
     return Server->OpenFile(rel, path);
 }
 
+int GetFileAttrib(int handle)
+{
+    return Server->GetFileAttrib(handle);
+}
+
 }
 
 /*##########################################################################

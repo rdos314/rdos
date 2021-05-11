@@ -80,7 +80,9 @@ public:
     void CloneRelDir(int rel);
     void UnlockRelDir(int rel);
     int GetRelDir(int rel, char *path);
+
     int OpenFile(int rel, char *path);
+    int GetFileAttrib(int handle);
 
     void ReadDirLink(TDir *dir, int index);
 
@@ -94,6 +96,7 @@ protected:
     void Remove(TFile *file);
 
     TDir *GetStartDir(int rel);
+    TFile *GetFile(int handle);
 
     TDir **DirArr;
     int CurrDirCount;

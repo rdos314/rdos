@@ -47,6 +47,8 @@ file_handle_seg  STRUC
 
 fh_base          handle_header <>
 
+fh_pos           DD ?,?
+fh_attrib        DD ?
 fh_vfs_sel       DW ?
 fh_vfs_handle    DW ?
 

@@ -405,6 +405,7 @@ GetRelDir Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     extern LowOpenFile:near
+    extern LowGetFileAttrib:near
 
 LocalOpenFile Proc near
     push edi
@@ -419,7 +420,12 @@ LocalOpenFile Proc near
     cmp eax,-1
     je ofDone
 ;
-    mov [edi].fc_eax,eax
+    mov [edi].fc_ebx,eax
+;
+    push edi
+    call LowGetFileAttrib
+    pop edi
+    mov [edi].fc_ecx,eax
 ;
     mov ebx,[edi].fc_handle
     and [edi].fc_eflags,NOT 1

@@ -43,10 +43,16 @@
 TFile::TFile(TDir *pd, int pi)
   : Section("file")
 {
+    struct DirEntry *entry;
+
     Entry = 0;
     Parent = pd;
     ParentIndex = pi;
 
+    entry = Parent->LockEntry(ParentIndex);
+    Attrib = entry->Attrib;
+    Size = entry->Size;
+    Parent->UnlockEntry(entry);
 }
 
 /*##########################################################################
@@ -92,4 +98,20 @@ void TFile::LockFile()
 ##########################################################################*/
 void TFile::UnlockFile()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::GetAttrib
+#
+#   Purpose....: Get attrib
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFile::GetAttrib()
+{
+    return Attrib;
 }

@@ -58,4 +58,5 @@ VFS_GET_REL_DIR           = 6
 ; IN  EAX       Start handle
 ; IN            Path name
 ; OUT BX        File handle
+; OUT ECX       Attribute
 VFS_OPEN_FILE             = 7
