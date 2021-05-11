@@ -196,22 +196,6 @@ bool TParser::IsParentDir()
 
 /*##########################################################################
 #
-#   Name       : TParser::GetIndex
-#
-#   Purpose....: Get current dir entry #
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TParser::GetIndex()
-{
-    return CurrIndex;
-}
-
-/*##########################################################################
-#
 #   Name       : TParser::GetEntry
 #
 #   Purpose....: Get current dir entry

@@ -45,7 +45,6 @@ public:
     bool IsParentDir();
 
     TDir *GetDir();
-    int GetIndex();
     struct DirEntry *GetEntry();
 
     void Advance();
