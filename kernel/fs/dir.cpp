@@ -51,21 +51,21 @@ extern void UnlockDirLinkObject(struct TDirLink *link);
 #   Returns....: *
 #
 ##########################################################################*/
-TDir::TDir(TDir *ParentDir, int ParentIndex)
+TDir::TDir(TDir *pd, int pi)
   : Section("dir")
 {
     int i;
     struct DirEntry *ParentEntry;
 
     Entry = 0;
-    Parent = ParentDir;
-    ParentIndex = ParentIndex;
+    Parent = pd;
+    ParentIndex = pi;
 
-    if (ParentDir)
+    if (Parent)
     {
-        ParentEntry = ParentDir->LockEntry(ParentIndex);
+        ParentEntry = Parent->LockEntry(ParentIndex);
         Inode = ParentEntry->Inode;
-        ParentDir->UnlockEntry(ParentEntry);
+        Parent->UnlockEntry(ParentEntry);
     }
     else
         Inode = 0;

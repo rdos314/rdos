@@ -48,6 +48,8 @@ TParser::TParser(TDir *StartDir, char *PathName)
     Head = PathName;
     Next = Head;
     Dir = StartDir;
+    if (Dir)
+        Dir->LockDir();
     CurrEntry = 0;
 
     Process();
@@ -68,6 +70,9 @@ TParser::~TParser()
 {
     if (Dir && CurrEntry)
         Dir->UnlockEntry(CurrEntry);
+
+    if (Dir)
+        Dir->UnlockDir();
 }
 
 /*##########################################################################
@@ -308,9 +313,16 @@ void TParser::Advance()
     TDir *newdir = 0;
 
     if (IsCurrDir())
+    {
         newdir = Dir;
+        newdir->LockDir();
+    }
     else if (IsParentDir())
+    {
         newdir = Dir->GetParentDir();
+        if (newdir)
+            newdir->LockDir();
+    }
     else
     {
         if (CurrEntry)
@@ -329,6 +341,7 @@ void TParser::Advance()
 
     if (newdir)
     {
+        Dir->UnlockDir();
         Dir = newdir;
 
         if (Dir)
