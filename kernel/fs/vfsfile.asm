@@ -43,6 +43,16 @@ include vfsmsg.inc
 
     .386p
 
+file_handle_seg  STRUC
+
+fh_base          handle_header <>
+
+fh_vfs_sel       DW ?
+fh_vfs_handle    DW ?
+
+file_handle_seg  ENDS
+
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -126,6 +136,13 @@ ovfCopyPath:
     call RunMsg
     jc ovfFail
 ;
+    mov cx,SIZE file_handle_seg
+    AllocateHandle
+;
+    mov [ebx].fh_vfs_sel,fs
+    mov [ebx].fh_vfs_handle,ax
+    mov [ebx].hh_sign,VFS_FILE_HANDLE
+    mov bx,[ebx].hh_handle
     clc
     jmp ovfDone
 
@@ -164,6 +181,38 @@ open_vfs_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           Delete handle
+;
+;           DESCRIPTION:    Delete a handle (called from handle module)
+;
+;           PARAMETERS:     BX              HANDLE TO FILE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle   Proc far
+    push ds
+    push ax
+    push ebx
+    push edx
+;
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    jc dhDone
+;
+    FreeHandle
+    clc
+
+dhDone:
+    pop edx
+    pop ebx
+    pop ax
+    pop ds
+    ret
+delete_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           init_file
 ;
 ;       description:    Init file
@@ -176,6 +225,10 @@ init_file    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax 
+;
+    mov edi,OFFSET delete_handle
+    mov ax,VFS_FILE_HANDLE
+    RegisterHandle
 ;
     mov ebx,OFFSET open_vfs_file16
     mov esi,OFFSET open_vfs_file32
