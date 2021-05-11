@@ -43,6 +43,8 @@ struct TDirLink
     signed char WaitCount;
 };
 
+class TFile;
+
 class TDir : public TBlock
 {
 public:
@@ -64,6 +66,7 @@ public:
     TDir *GetParentDir();
 
     TDir *LockDirLink(int index);
+    TFile *LockFileLink(int index);
     void UnlockDirLink(int index);
 
     TDir *GetDirLink(int index);

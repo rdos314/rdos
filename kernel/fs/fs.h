@@ -46,6 +46,7 @@ public:
     bool IsParentDir();
 
     TDir *GetDir();
+    TFile *GetFile();
     struct DirEntry *GetEntry();
 
     void Advance();

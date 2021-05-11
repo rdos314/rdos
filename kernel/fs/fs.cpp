@@ -228,6 +228,30 @@ TDir *TParser::GetDir()
 
 /*##########################################################################
 #
+#   Name       : TParser::GetFile
+#
+#   Purpose....: Get current file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *TParser::GetFile()
+{
+    if (CurrEntry)
+    {
+        if (CurrEntry->Attrib & FILE_ATTRIBUTE_DIRECTORY)
+            return 0;
+        else
+            return Dir->LockFileLink(CurrIndex);
+    }
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TParser::Process
 #
 #   Purpose....: Process next path part
@@ -849,7 +873,7 @@ int TFs::GetRelDir(int rel, char *path)
 int TFs::OpenFile(int rel, char *path)
 {
     TParser Parser(GetStartDir(rel), path);
-    struct DirEntry *entry;
+    TFile *file;
 
     while (!Parser.IsLast())
     {
@@ -859,10 +883,10 @@ int TFs::OpenFile(int rel, char *path)
             return -1;
     }
 
-    entry = Parser.GetEntry();
+    file = Parser.GetFile();
 
-    if (entry)
-        return entry->Attrib;
+    if (file)
+        return file->Entry;
     else
         return -1;
 }

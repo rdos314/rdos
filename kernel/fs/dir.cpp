@@ -463,6 +463,32 @@ TDir *TDir::LockDirLink(int index)
 
 /*##########################################################################
 #
+#   Name       : TDir::LockFileLink
+#
+#   Purpose....: Lock file link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *TDir::LockFileLink(int index)
+{
+    TFile *file;
+
+    if (index < 0)
+        return 0;
+
+    if (index >= EntryCount)
+        return 0;
+
+    LockDirLinkObject(this, index, &EntryArr[index]);
+    file = (TFile *)EntryArr[index].Link;
+    return file;
+}
+
+/*##########################################################################
+#
 #   Name       : TDir::UnlockDirLink
 #
 #   Purpose....: Unlock dir link
@@ -482,6 +508,7 @@ void TDir::UnlockDirLink(int index)
 
     UnlockDirLinkObject(&EntryArr[index]);
 }
+
 
 /*##########################################################################
 #
