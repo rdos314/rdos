@@ -416,8 +416,8 @@ LocalOpenFile Proc near
     pop ecx
     pop edi
 ;
-    or eax,eax
-    jz ofDone
+    cmp eax,-1
+    je ofDone
 ;
     mov [edi].fc_eax,eax
 ;
