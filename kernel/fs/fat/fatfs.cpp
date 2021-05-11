@@ -37,6 +37,7 @@
 #include "md5.h"
 #include "dir.h"
 #include "cluster.h"
+#include "fatfile.h"
 
 /*##########################################################################
 #
@@ -307,7 +308,11 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 ##########################################################################*/
 TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 {
-    return 0;
+    TFile *File;
+
+    File = new TFatFile(ParentDir, ParentIndex);
+
+    return File;
 }
 
 /*##########################################################################
