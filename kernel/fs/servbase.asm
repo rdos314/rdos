@@ -396,6 +396,43 @@ GetRelDir Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalOpenFile
+;
+;       DESCRIPTION:    Open file
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowOpenFile:near
+
+LocalOpenFile Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    add edi,SIZE vfs_cmd_struc
+    push ecx
+    mov esi,esp
+    call LowOpenFile
+    pop ecx
+    pop edi
+;
+    or eax,eax
+    jz ofDone
+;
+    mov [edi].fc_eax,eax
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+
+ofDone:
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalOpenFile Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -414,6 +451,7 @@ m03 DD OFFSET LockRelDir
 m04 DD OFFSET CloneRelDir
 m05 DD OFFSET UnlockRelDir
 m06 DD OFFSET GetRelDir
+m07 DD OFFSET LocalOpenFile
 
 WaitForMsg_    Proc near
     pushad

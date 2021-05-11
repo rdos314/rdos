@@ -34,6 +34,7 @@ void CloneRelDir(int rel);
 void UnlockRelDir(int rel);
 int GetRelDir(int rel, char *path);
 void ReadDirLink(void *dir, int index);
+int OpenFile(int rel, char *path);
 
 /*##########################################################################
 #
@@ -132,4 +133,15 @@ int LowGetRelDir(int rel, char *path)
 void LowReadDirLink(void *dir, int index)
 {
     ReadDirLink(dir, index);
+}
+
+/*##########################################################################
+#
+#   Name       : LowOpenFile
+#
+##########################################################################*/
+#pragma aux LowOpenFile "*" parm routine [eax] [edi] value [eax]
+int LowOpenFile(int rel, char *path)
+{
+    return OpenFile(rel, path);
 }

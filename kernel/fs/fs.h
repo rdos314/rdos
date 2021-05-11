@@ -77,6 +77,7 @@ public:
     void CloneRelDir(int rel);
     void UnlockRelDir(int rel);
     int GetRelDir(int rel, char *path);
+    int OpenFile(int rel, char *path);
 
     void ReadDirLink(TDir *dir, int index);
 

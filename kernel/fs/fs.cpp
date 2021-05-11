@@ -727,3 +727,35 @@ int TFs::GetRelDir(int rel, char *path)
     strcpy(path, str.GetData());
     return strlen(path) + 1;
 }
+
+/*##########################################################################
+#
+#   Name       : TFs::OpenFile
+#
+#   Purpose....: Open file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::OpenFile(int rel, char *path)
+{
+    TParser Parser(GetStartDir(rel), path);
+    struct DirEntry *entry;
+
+    while (!Parser.IsLast())
+    {
+        if (Parser.IsDir())
+            Parser.Advance();
+        else
+            return -1;
+    }
+
+    entry = Parser.GetEntry();
+
+    if (entry)
+        return entry->Attrib;
+    else
+        return -1;
+}

@@ -86,6 +86,11 @@ void ReadDirLink(void *d, int index)
     return Server->ReadDirLink(dir, index);
 }
 
+int OpenFile(int rel, char *path)
+{
+    return Server->OpenFile(rel, path);
+}
+
 }
 
 /*##########################################################################
