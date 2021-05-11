@@ -138,11 +138,18 @@ ovfCopyPath:
     call RunMsg
     jc ovfFail
 ;
+    push ebx
+    push ecx
     mov cx,SIZE file_handle_seg
     AllocateHandle
+    pop ecx
+    pop eax
 ;
     mov [ebx].fh_vfs_sel,fs
     mov [ebx].fh_vfs_handle,ax
+    mov [ebx].fh_attrib,ecx
+    mov [ebx].fh_pos,0
+    mov [ebx].fh_pos+4,0
     mov [ebx].hh_sign,VFS_FILE_HANDLE
     mov bx,[ebx].hh_handle
     clc
