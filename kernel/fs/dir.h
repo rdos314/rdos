@@ -71,6 +71,7 @@ public:
 
     TDir *GetDirLink(int index);
     void SetDirLink(int index, TDir *dir);
+    void SetFileLink(int index, TFile *file);
 
     struct DirEntry *Add(const char *path, long long inode);
 

@@ -553,3 +553,25 @@ void TDir::SetDirLink(int index, TDir *dir)
 
     EntryArr[index].Link = dir;
 }
+
+/*##########################################################################
+#
+#   Name       : TDir::SetFileLink
+#
+#   Purpose....: Set file link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::SetFileLink(int index, TFile *file)
+{
+    if (index < 0)
+        return;
+
+    if (index >= EntryCount)
+        return;
+
+    EntryArr[index].Link = file;
+}

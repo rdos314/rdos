@@ -72,6 +72,7 @@ public:
     virtual long long GetFreeSectors() = 0;
     virtual TDir *CacheRootDir() = 0;
     virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode) = 0;
+    virtual TFile *OpenFile(TDir *ParentDir, int ParentIndex, long long Inode) = 0;
 
     struct TShareHeader *GetDir(int rel, char *path, int *count);
     int GetDirEntryAttrib(int rel, char *path);

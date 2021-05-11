@@ -296,6 +296,22 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 
 /*##########################################################################
 #
+#   Name       : TFat::OpenFile
+#
+#   Purpose....: Open file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
+{
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : VerifySector
 #
 #   Purpose....:

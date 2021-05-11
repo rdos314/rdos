@@ -69,6 +69,7 @@ public:
     bool Validate();
     virtual long long GetFreeSectors();
     virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode);
+    virtual TFile *OpenFile(TDir *ParentDir, int ParentIndex, long long Inode);
 
     void Run();
 

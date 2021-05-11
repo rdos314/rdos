@@ -622,6 +622,7 @@ void TFs::ReadDirLink(TDir *dir, int index)
 {
     struct DirEntry *entry;
     TDir *newdir;
+    TFile *file;
     long long inode;
 
     entry = dir->LockEntry(index);
@@ -634,6 +635,13 @@ void TFs::ReadDirLink(TDir *dir, int index)
 
         Add(newdir);
         dir->SetDirLink(index, newdir);
+    }
+    else
+    {
+        file = OpenFile(dir, index, inode);
+
+        Add(file);
+        dir->SetFileLink(index, file);
     }
 }
 
