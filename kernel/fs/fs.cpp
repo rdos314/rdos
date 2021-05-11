@@ -323,18 +323,15 @@ void TParser::Advance()
             newdir = Dir->LockDirLink(CurrIndex);
     }
 
-    if (newdir)
+    Dir->UnlockDir();
+    Dir = newdir;
+
+    if (Dir)
     {
-        Dir->UnlockDir();
-        Dir = newdir;
+        Head = Next;
+        Next = Head;
 
-        if (Dir)
-        {
-            Head = Next;
-            Next = Head;
-
-            Process();
-        }
+        Process();
     }
 }
 
