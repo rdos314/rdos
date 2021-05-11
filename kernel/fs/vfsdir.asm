@@ -325,6 +325,8 @@ FreeDriveSel   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public GetPathDrive
+
 GetPathDrive    Proc near
     mov ax,es:[edi]
     or al,al
@@ -466,6 +468,8 @@ FreeRelDir   Endp
 ;       RETURNS:        AX          Start dir handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetRelDir
 
 GetRelDir    Proc near
     push ds

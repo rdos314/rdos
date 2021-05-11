@@ -54,3 +54,8 @@ VFS_UNLOCK_REL_DIR        = 5
 ; IN  EAX       Start handle
 ; OUT           Path name
 VFS_GET_REL_DIR           = 6
+
+; IN  EAX       Start handle
+; IN            Path name
+; OUT BX        File handle
+VFS_OPEN_FILE             = 7
