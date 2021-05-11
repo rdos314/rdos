@@ -3263,6 +3263,12 @@
     CallGate_close_vfs_dir  \
     __parm [__ebx]
 
+#pragma aux RdosOpenVfsFile = \
+    CallGate_open_vfs_file  \
+    ValidateHandle \
+    __parm [__edi]  \
+    __value [__ebx]
+
 #pragma aux RdosCreateFileDrive = \
     CallGate_create_file_drive  \
     CarryToBool \
