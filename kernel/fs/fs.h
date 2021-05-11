@@ -82,15 +82,15 @@ public:
     void ReadDirLink(TDir *dir, int index);
 
 protected:
-    void Grow();
+    void GrowDir();
     void Add(TDir *dir);
     void Remove(TDir *dir);
 
     TDir *GetStartDir(int rel);
 
     TDir **DirArr;
-    int DirCount;
-    int MaxCount;
+    int CurrDirCount;
+    int MaxDirCount;
 
     TDiscServer *Server;
 };

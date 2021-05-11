@@ -355,11 +355,11 @@ TFs::TFs(TDiscServer *server)
 
     Server = server;
 
-    DirCount = 0;
-    MaxCount = 4;
-    DirArr = new TDir*[MaxCount];
+    CurrDirCount = 0;
+    MaxDirCount = 4;
+    DirArr = new TDir*[MaxDirCount];
 
-    for (i = 0; i < MaxCount; i++)
+    for (i = 0; i < MaxDirCount; i++)
         DirArr[i] = 0;
 }
 
@@ -378,7 +378,7 @@ TFs::~TFs()
 {
     int i;
 
-    for (i = 0; i < MaxCount; i++)
+    for (i = 0; i < MaxDirCount; i++)
         if (DirArr[i])
             delete DirArr[i];
 
@@ -387,7 +387,7 @@ TFs::~TFs()
 
 /*##########################################################################
 #
-#   Name       : TFs::Grow
+#   Name       : TFs::GrowDir
 #
 #   Purpose....: Grow dir array
 #
@@ -396,23 +396,23 @@ TFs::~TFs()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::Grow()
+void TFs::GrowDir()
 {
     int i;
-    int Size = 2 * MaxCount;
+    int Size = 2 * MaxDirCount;
     TDir **NewArr;
 
     NewArr = new TDir*[Size];
 
-    for (i = 0; i < MaxCount; i++)
+    for (i = 0; i < MaxDirCount; i++)
         NewArr[i] = DirArr[i];
 
-    for (i = MaxCount; i < Size; i++)
+    for (i = MaxDirCount; i < Size; i++)
         NewArr[i] = 0;
 
     delete DirArr;
     DirArr = NewArr;
-    MaxCount = Size;
+    MaxDirCount = Size;
 }
 
 /*##########################################################################
@@ -431,10 +431,10 @@ void TFs::Add(TDir *dir)
     int i;
     bool found = false;
 
-    if (DirCount == MaxCount)
-        Grow();
+    if (CurrDirCount == MaxDirCount)
+        GrowDir();
 
-    for (i = DirCount; i < MaxCount && !found; i++)
+    for (i = CurrDirCount; i < MaxDirCount && !found; i++)
     {
         if (DirArr[i] == 0)
         {
@@ -445,7 +445,7 @@ void TFs::Add(TDir *dir)
     }
 
 
-    for (i = 0; i < DirCount && !found; i++)
+    for (i = 0; i < CurrDirCount && !found; i++)
     {
         if (DirArr[i] == 0)
         {
@@ -456,7 +456,7 @@ void TFs::Add(TDir *dir)
     }
 
     if (found)
-        DirCount++;
+        CurrDirCount++;
 }
 
 /*##########################################################################
@@ -475,7 +475,7 @@ void TFs::Remove(TDir *dir)
     if (DirArr[dir->Entry] == dir)
     {
         DirArr[dir->Entry] = 0;
-        DirCount--;
+        CurrDirCount--;
     }
 }
 
@@ -521,13 +521,13 @@ TDir *TFs::GetStartDir(int rel)
 {
     TDir *dir;
 
-    if (DirCount == 0)
+    if (CurrDirCount == 0)
     {
         DirArr[0] = CacheRootDir();
-        DirCount = 1;
+        CurrDirCount = 1;
     }
 
-    if (rel >= 0 && rel < MaxCount)
+    if (rel >= 0 && rel < MaxDirCount)
         dir = DirArr[rel];
     else
         dir = 0;
