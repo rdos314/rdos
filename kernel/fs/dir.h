@@ -56,8 +56,9 @@ public:
     int GetCount();
     int Find(long long inode);
     int Find(const char *path);
-    struct DirEntry *Get(int index);
-    struct DirEntry *Get(struct TDirLink *link);
+    struct DirEntry *LockEntry(int index);
+    struct DirEntry *LockEntry(struct TDirLink *link);
+    void UnlockEntry(struct DirEntry *entry);
 
     long long GetInode();
     TDir *GetParentDir();

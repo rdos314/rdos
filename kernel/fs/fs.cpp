@@ -48,6 +48,7 @@ TParser::TParser(TDir *StartDir, char *PathName)
     Head = PathName;
     Next = Head;
     Dir = StartDir;
+    CurrEntry = 0;
 
     Process();
 }
@@ -65,6 +66,8 @@ TParser::TParser(TDir *StartDir, char *PathName)
 ##########################################################################*/
 TParser::~TParser()
 {
+    if (Dir && CurrEntry)
+        Dir->UnlockEntry(CurrEntry);
 }
 
 /*##########################################################################
@@ -263,6 +266,9 @@ void TParser::Process()
         Next++;
     }
 
+    if (Dir && CurrEntry)
+        Dir->UnlockEntry(CurrEntry);
+
     CurrIndex = -1;
     CurrEntry = 0;
     IsCurr = false;
@@ -280,7 +286,7 @@ void TParser::Process()
         {
             CurrIndex = Dir->Find(Head);
             if (CurrIndex >= 0)
-                CurrEntry = Dir->Get(CurrIndex);
+                CurrEntry = Dir->LockEntry(CurrIndex);
         }
     }
 }
@@ -463,10 +469,16 @@ void TFs::Remove(TDir *dir)
 ##########################################################################*/
 void TFs::ReadDirLink(TDir *dir, int index)
 {
-    struct DirEntry *entry = dir->Get(index);
+    struct DirEntry *entry;
     TDir *newdir;
+    long long inode;
 
-    newdir = CacheDir(dir, index, entry->Inode);
+    entry = dir->LockEntry(index);
+    inode = entry->Inode;
+    dir->UnlockEntry(entry);
+
+    newdir = CacheDir(dir, index, inode);
+
     Add(newdir);
     dir->SetDirLink(index, newdir);
 }
@@ -727,7 +739,7 @@ int TFs::GetRelDir(int rel, char *path)
             index = dir->Find(inode);
             if (index >= 0)
             {
-                entry = dir->Get(index);
+                entry = dir->LockEntry(index);
                 if (entry)
                 {
                     if (str.GetSize())
@@ -735,6 +747,7 @@ int TFs::GetRelDir(int rel, char *path)
                     else
                         str = TString(entry->PathName);
                 }
+                dir->UnlockEntry(entry);
             }
         }
     }

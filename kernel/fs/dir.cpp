@@ -63,8 +63,9 @@ TDir::TDir(TDir *ParentDir, int ParentIndex)
 
     if (ParentDir)
     {
-        ParentEntry = ParentDir->Get(ParentIndex);
+        ParentEntry = ParentDir->LockEntry(ParentIndex);
         Inode = ParentEntry->Inode;
+        ParentDir->UnlockEntry(ParentEntry);
     }
     else
         Inode = 0;
@@ -350,16 +351,16 @@ int TDir::Find(const char *path)
 
 /*##########################################################################
 #
-#   Name       : TDir::Get
+#   Name       : TDir::LockEntry
 #
-#   Purpose....: Get dir entry
+#   Purpose....: Lock dir entry
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-struct DirEntry *TDir::Get(int index)
+struct DirEntry *TDir::LockEntry(int index)
 {
     int i;
     char *ptr;
@@ -371,6 +372,8 @@ struct DirEntry *TDir::Get(int index)
     if (index >= EntryCount)
         return 0;
 
+    Section.Enter();
+
     ptr = (char *)obj;
     ptr += EntryArr[index].Offset;
     return (struct DirEntry *)ptr;
@@ -378,23 +381,42 @@ struct DirEntry *TDir::Get(int index)
 
 /*##########################################################################
 #
-#   Name       : TDir::Get
+#   Name       : TDir::LockEntry
 #
-#   Purpose....: Get dir entry
+#   Purpose....: Lock dir entry
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-struct DirEntry *TDir::Get(struct TDirLink *link)
+struct DirEntry *TDir::LockEntry(struct TDirLink *link)
 {
     char *ptr;
     struct DirEntry *entry;
 
+    Section.Enter();
+
     ptr = (char *)obj;
     ptr += link->Offset;
     return (struct DirEntry *)ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::UnlockEntry
+#
+#   Purpose....: Unlock dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::UnlockEntry(struct DirEntry *entry)
+{
+    if (entry)
+        Section.Leave();
 }
 
 /*##########################################################################
