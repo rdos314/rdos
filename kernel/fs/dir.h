@@ -79,7 +79,6 @@ protected:
     int ParentIndex;
     long long Inode;
 
-    int LockCount;
     int EntryCount;
     int MaxCount;
     TSection Section;

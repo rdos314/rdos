@@ -35,6 +35,9 @@ extern "C" {
 extern void LockDirLinkObject(TDir *dir, int index, struct TDirLink *link);
 #pragma aux LockDirLinkObject parm routine [esi] [edx] [edi]
 
+extern void UnlockDirLinkObject(struct TDirLink *link);
+#pragma aux UnlockDirLinkObject parm routine [edi]
+
 }
 
 /*##########################################################################
@@ -67,7 +70,6 @@ TDir::TDir(TDir *ParentDir, int ParentIndex)
         Inode = 0;
 
     EntryCount = 0;
-    LockCount = 1;
     MaxCount = 4;
     EntryArr = new TDirLink[MaxCount];
 
@@ -110,7 +112,8 @@ TDir::~TDir()
 ##########################################################################*/
 void TDir::Lock()
 {
-    LockCount++;
+    if (Parent)
+        LockDirLinkObject(Parent, ParentIndex, &Parent->EntryArr[ParentIndex]);
 }
 
 /*##########################################################################
@@ -126,7 +129,8 @@ void TDir::Lock()
 ##########################################################################*/
 void TDir::Unlock()
 {
-    LockCount--;
+    if (Parent)
+        UnlockDirLinkObject(&Parent->EntryArr[ParentIndex]);
 }
 
 /*##########################################################################
