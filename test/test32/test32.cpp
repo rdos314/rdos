@@ -44,18 +44,6 @@ void VerifySector(int id, char *buf)
     }
 }
 
-static void BlockThread(void *ptr)
-{
-    int delay;
-
-    for (;;)
-    {
-        delay = RdosGetRandom(25);
-        RdosWaitMilli(delay);
-        RdosWaitThreadBlock(handle);
-    }
-}
-
 /*##########################################################################
 #
 #   Name       : main
@@ -79,29 +67,10 @@ void main()
     int id;
     int h;
 
-    char str[40];
+    int handle;
 
-    handle = 0;
+    handle = RdosOpenVfsFile("y:/rdos/menu/style.ini");
 
-    for (i = 0; i < 10; i++)
-    {
-        sprintf(str, "Block #%d", i);
-        RdosCreateThread(BlockThread, str, 0, 0x4000);
-    }
-
-    for (i = 0; true; i++)
-    {
-        delay = RdosGetRandom(100);
-        RdosWaitMilli(delay);
-        sprintf(str, "Test #%d", i);
-        handle = RdosCreateThreadBlock(str);
-
-        delay = RdosGetRandom(25);
-        RdosWaitMilli(delay);
-        h = handle;
-        handle = 0;
-        RdosCloseThreadBlock(h);
-    }
 
     buf = new char[512 * 128];
 
