@@ -148,7 +148,11 @@ int TFatDir::DecodeAttrib(char attrib)
 void TFatDir::Add(long long sector, int offset, const char *name, struct TFatDirEntry *fat)
 {
     unsigned int cluster = GetCluster(fat);
-    DirEntry *entry = TDir::Add(name, cluster);
+    DirEntry *entry;
+
+    Section.Enter();
+
+    entry = TDir::Add(name, cluster);
 
     if (fat->CrDate)
         entry->CreateTime = DecodeTime(fat->CrDate, fat->CrTime);
@@ -163,6 +167,8 @@ void TFatDir::Add(long long sector, int offset, const char *name, struct TFatDir
     entry->Size = fat->FileSize;
     entry->Sector = sector;
     entry->Offset = offset;
+
+    Section.Leave();
 }
 
 /*##########################################################################
