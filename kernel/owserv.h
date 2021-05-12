@@ -43,6 +43,9 @@
     __parm [__edx] \
     __value [__edx]
 
+#pragma aux ServOpenVfsFile = \
+    ServGate_serv_open_file  \
+    __parm [__edx]
 
 #pragma aux ServTest = \
     ServGate_test_serv

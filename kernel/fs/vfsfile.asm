@@ -87,6 +87,23 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ServOpenFile
+;
+;       DESCRIPTION:    Serv open VFS file req
+;
+;       PARAMETERS:     EDX            Share block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_open_file_name       DB 'Serv Open File',0
+
+serv_open_file    Proc far
+    ret
+serv_open_file    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           OpenVfsFile
 ;
 ;       DESCRIPTION:    Open VFS file
@@ -254,6 +271,12 @@ init_file    Proc near
     mov edi,OFFSET delete_handle
     mov ax,VFS_FILE_HANDLE
     RegisterHandle
+;
+    mov esi,OFFSET serv_open_file
+    mov edi,OFFSET serv_open_file_name
+    xor cl,cl
+    mov ax,serv_open_file_nr
+    RegisterServGate
 ;
     mov ebx,OFFSET open_vfs_file16
     mov esi,OFFSET open_vfs_file32

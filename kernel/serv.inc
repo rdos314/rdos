@@ -156,3 +156,8 @@ GrowServShareBlock  MACRO
 ForkServShareBlock  MACRO    
     ServGate fork_serv_share_block_nr
                     ENDM
+
+; IN  EDX              File block
+ServOpenVfsFile  MACRO
+    ServGate serv_open_file_nr
+                    ENDM
