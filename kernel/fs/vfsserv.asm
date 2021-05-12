@@ -56,14 +56,6 @@ rw_handle           DW ?
 
 req_wait_header      ENDS
 
-share_block_struc       STRUC
-
-sb_usage    DW ?
-sb_pages    DW ?
-
-share_block_struc       ENDS
-
-
 fs_cmd      STRUC
 
 fc_op              DD ?

@@ -67,13 +67,6 @@ dh_header_size   DD ?
 
 dir_handle_seg  ENDS
 
-share_block_struc       STRUC
-
-sb_usage    DW ?
-sb_pages    DW ?
-
-share_block_struc       ENDS
-
 dir_info_struc  STRUC
 
 dis_linear       DD ?

@@ -233,3 +233,9 @@ vfspr_arr                 DB SIZE vfs_req_entry * MAX_VFS_ENTRY_COUNT DUP(?)
 
 vfs_part_req  ENDS
 
+share_block_struc       STRUC
+
+sb_usage    DW ?
+sb_pages    DW ?
+
+share_block_struc       ENDS
