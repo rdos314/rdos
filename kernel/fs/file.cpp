@@ -57,6 +57,16 @@ TFile::TFile(TDir *pd, int pi)
     ptr = (char *)obj;
     Info = (struct TFileInfo *)(ptr + pos);
 
+    Info->FsSize = entry->Size;
+    Info->ReqSize = entry->Size;
+    Info->AccessTime = entry->AccessTime;
+    Info->ModifyTime = entry->ModifyTime;
+    Info->Attrib = entry->Attrib;
+    Info->Flags = entry->Flags;
+    Info->Uid = entry->Uid;
+    Info->Gid = entry->Gid;
+    Info->Handle = 0;
+
     Parent->UnlockEntry(entry);
 }
 
