@@ -125,8 +125,8 @@ serv_open_file    Proc far
     mov ds,bx
     EnterSection ds:fs_section
 ;
-    mov ecx,ds:fs_handle_count
-    cmp ecx,ds:fs_max_size
+    mov ecx,ds:fs_max_size
+    cmp ecx,ds:fs_handle_count
     jne sofScan
 ;
     mov ebx,ecx
@@ -144,6 +144,19 @@ serv_open_file    Proc far
 
 sofScan:
     int 3
+    xor ebx,ebx
+    mov edi,OFFSET fs_handle_arr
+
+sofLoop:
+    mov ax,ds:[edi]
+    or ax,ax
+    jz sofDone
+;
+    inc ebx
+    add edi,2
+    loop sofLoop
+;
+    CrashGate
 
 sofDone:
     inc ds:fs_handle_count
