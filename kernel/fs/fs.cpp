@@ -900,7 +900,7 @@ int TFs::OpenFile(int rel, char *path)
     file = Parser.GetFile();
 
     if (file)
-        return file->GetKernelHandle();
+        return file->GetServHandle();
     else
         return -1;
 }
@@ -941,6 +941,27 @@ int TFs::GetFileAttrib(int handle)
 
     if (file)
         return file->GetAttrib();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::GetFileHandle
+#
+#   Purpose....: Get file kernel handle
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::GetFileHandle(int handle)
+{
+    TFile *file = GetFile(handle);
+
+    if (file)
+        return file->GetKernelHandle();
     else
         return 0;
 }

@@ -96,6 +96,10 @@ int GetFileAttrib(int handle)
     return Server->GetFileAttrib(handle);
 }
 
+int GetFileHandle(int handle)
+{
+    return Server->GetFileHandle(handle);
+}
 }
 
 /*##########################################################################

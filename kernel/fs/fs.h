@@ -82,6 +82,7 @@ public:
     int GetRelDir(int rel, char *path);
 
     int OpenFile(int rel, char *path);
+    int GetFileHandle(int handle);
     int GetFileAttrib(int handle);
 
     void ReadDirLink(TDir *dir, int index);

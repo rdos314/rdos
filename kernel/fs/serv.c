@@ -36,6 +36,7 @@ int GetRelDir(int rel, char *path);
 void ReadDirLink(void *dir, int index);
 int OpenFile(int rel, char *path);
 int GetFileAttrib(int handle);
+int GetFileHandle(int handle);
 
 /*##########################################################################
 #
@@ -156,4 +157,15 @@ int LowOpenFile(int rel, char *path)
 int LowGetFileAttrib(int handle)
 {
     return GetFileAttrib(handle);
+}
+
+/*##########################################################################
+#
+#   Name       : LowGetFileHandle
+#
+##########################################################################*/
+#pragma aux LowGetFileHandle "*" parm routine [eax] value [eax]
+int LowGetFileHandle(int handle)
+{
+    return GetFileHandle(handle);
 }
