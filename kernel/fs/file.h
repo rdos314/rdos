@@ -30,9 +30,23 @@
 
 #include "section.h"
 #include "rdos.h"
+#include "block.h"
 #include "dir.h"
 
-class TFile
+struct TFileInfo
+{
+    long long FsSize;
+    long long ReqSize;
+    long long AccessTime;
+    long long ModifyTime;
+    int Attrib;
+    int Flags;
+    int Uid;
+    int Gid;
+    int Handle;
+};
+
+class TFile : public TBlock
 {
 public:
     TFile(TDir *ParentDir, int ParentIndex);
@@ -50,8 +64,7 @@ protected:
     int ParentIndex;
     TSection Section;
 
-    long long Size;
-    int Attrib;
+    struct TFileInfo *Info;
 };
 
 #endif

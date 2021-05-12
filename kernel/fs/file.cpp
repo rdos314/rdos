@@ -43,15 +43,20 @@
 TFile::TFile(TDir *pd, int pi)
   : Section("file")
 {
+    int pos;
     struct DirEntry *entry;
+    char *ptr;
 
     Entry = 0;
     Parent = pd;
     ParentIndex = pi;
 
     entry = Parent->LockEntry(ParentIndex);
-    Attrib = entry->Attrib;
-    Size = entry->Size;
+
+    pos = Add(sizeof(struct TFileInfo));
+    ptr = (char *)obj;
+    Info = (struct TFileInfo *)(ptr + pos);
+
     Parent->UnlockEntry(entry);
 }
 
@@ -113,5 +118,5 @@ void TFile::UnlockFile()
 ##########################################################################*/
 int TFile::GetAttrib()
 {
-    return Attrib;
+    return Info->Attrib;
 }
