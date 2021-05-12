@@ -163,7 +163,9 @@ ServToSystemShareBlock  MACRO
     ServGate serv_to_system_share_block_nr
                     ENDM
 
+; IN  EBX              VFS handle
 ; IN  EDX              File block
+; OUT BX               Kernel handle
 ServOpenVfsFile  MACRO
     ServGate serv_open_file_nr
                     ENDM

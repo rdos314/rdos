@@ -43,8 +43,14 @@ struct TFileInfo
     int Flags;
     int Uid;
     int Gid;
-    int Handle;
+    int KernelHandle;
+    int ServHandle;
+    char Disc;
+    char Drive;
+    short int Pad;
+    char ReqArr[];
 };
+
 
 class TFile : public TBlock
 {
@@ -52,12 +58,14 @@ public:
     TFile(TDir *ParentDir, int ParentIndex);
     virtual ~TFile();
 
+    void Setup(int VfsHandle, int ServFileHandle);
+
     void LockFile();
     void UnlockFile();
 
+    int GetServHandle();
+    int GetKernelHandle();
     int GetAttrib();
-
-    int Entry;
 
 protected:
     TDir *Parent;

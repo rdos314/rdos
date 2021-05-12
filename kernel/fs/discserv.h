@@ -93,6 +93,8 @@ public:
     TDiscServer();
     ~TDiscServer();
 
+    int GetHandle();
+
     long long GetPartSectors();
     void WaitForMsg(TFs *fs);
     bool IsActive();

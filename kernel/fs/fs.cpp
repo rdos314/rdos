@@ -557,6 +557,7 @@ void TFs::GrowFile()
 void TFs::Add(TFile *file)
 {
     int i;
+    int handle;
     bool found = false;
 
     if (CurrFileCount == MaxFileCount)
@@ -567,7 +568,7 @@ void TFs::Add(TFile *file)
         if (FileArr[i] == 0)
         {
             FileArr[i] = file;
-            file->Entry = i;
+            handle = i;
             found = true;
         }
     }
@@ -578,13 +579,16 @@ void TFs::Add(TFile *file)
         if (FileArr[i] == 0)
         {
             FileArr[i] = file;
-            file->Entry = i;
+            handle = i;
             found = true;
         }
     }
 
     if (found)
+    {
+        file->Setup(Server->GetHandle(), handle);
         CurrFileCount++;
+    }
 }
 
 /*##########################################################################
@@ -600,9 +604,11 @@ void TFs::Add(TFile *file)
 ##########################################################################*/
 void TFs::Remove(TFile *file)
 {
-    if (FileArr[file->Entry] == file)
+    int handle = file->GetServHandle();
+
+    if (FileArr[handle] == file)
     {
-        FileArr[file->Entry] = 0;
+        FileArr[handle] = 0;
         CurrFileCount--;
     }
 }
@@ -894,7 +900,7 @@ int TFs::OpenFile(int rel, char *path)
     file = Parser.GetFile();
 
     if (file)
-        return file->Entry;
+        return file->GetKernelHandle();
     else
         return -1;
 }

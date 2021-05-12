@@ -28,6 +28,7 @@
 #include <string.h>
 #include <rdos.h>
 #include "file.h"
+#include "serv.h"
 
 /*##########################################################################
 #
@@ -47,7 +48,6 @@ TFile::TFile(TDir *pd, int pi)
     struct DirEntry *entry;
     char *ptr;
 
-    Entry = 0;
     Parent = pd;
     ParentIndex = pi;
 
@@ -65,11 +65,10 @@ TFile::TFile(TDir *pd, int pi)
     Info->Flags = entry->Flags;
     Info->Uid = entry->Uid;
     Info->Gid = entry->Gid;
-    Info->Handle = 0;
+    Info->KernelHandle = 0;
+    Info->ServHandle = 0;
 
     Parent->UnlockEntry(entry);
-
-    Info->Handle = ServOpenVfsFile(obj);
 }
 
 /*##########################################################################
@@ -85,6 +84,23 @@ TFile::TFile(TDir *pd, int pi)
 ##########################################################################*/
 TFile::~TFile()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::Setup
+#
+#   Purpose....: Setup handles
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::Setup(int VfsHandle, int ServFileHandle)
+{
+    Info->ServHandle = ServFileHandle;
+    Info->KernelHandle = ServOpenVfsFile(VfsHandle, obj);
 }
 
 /*##########################################################################
@@ -115,6 +131,38 @@ void TFile::LockFile()
 ##########################################################################*/
 void TFile::UnlockFile()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::GetServHandle
+#
+#   Purpose....: Get server handle
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFile::GetServHandle()
+{
+    return Info->ServHandle;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::GetKernelHandle
+#
+#   Purpose....: Get kernel handle
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFile::GetKernelHandle()
+{
+    return Info->KernelHandle;
 }
 
 /*##########################################################################

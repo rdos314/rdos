@@ -467,6 +467,22 @@ TDiscServer::~TDiscServer()
 
 /*##########################################################################
 #
+#   Name       : TDiscServer::GetHandle
+#
+#   Purpose....: Get VFS handle
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscServer::GetHandle()
+{
+    return handle;
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscServer::Add
 #
 #   Purpose....: Add disc req

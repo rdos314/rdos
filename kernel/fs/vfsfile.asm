@@ -56,18 +56,21 @@ file_handle_seg  ENDS
 
 file_info_struc  STRUC
 
-fi_header        share_block_struc <>
-fi_fs_size       DD ?,?
-fi_req_size      DD ?,?
-fi_access        DD ?,?
-fi_modify        DD ?,?
-fi_attrib        DD ?
-fi_flags         DD ?
-fi_uid           DD ?
-fi_gid           DD ?
-fi_handle        DD ?
-
-fi_req_count     DD ?
+fi_header            share_block_struc <>
+fi_fs_size           DD ?,?
+fi_req_size          DD ?,?
+fi_access            DD ?,?
+fi_modify            DD ?,?
+fi_attrib            DD ?
+fi_flags             DD ?
+fi_uid               DD ?
+fi_gid               DD ?
+fi_kernel_handle     DD ?
+fi_serv_handle       DD ?
+fi_disc              DB ?
+fi_drive             DB ?
+fi_pad               DW ?
+fi_req_count         DD ?
 
 file_info_struc  ENDS
 
