@@ -1009,6 +1009,112 @@ fork_serv_share_block  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CreateShareBlock
+;
+;           DESCRIPTION:    Create a new share block in system context
+;
+;           RETURNS:        ES     Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_share_block_name      DB 'Create Share Block',0
+
+create_share_block   PROC far
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocateGdt
+;
+    mov ecx,1000h
+    CreateDataSelector32    
+    mov es,bx
+    mov es:sb_usage,1
+    mov es:sb_pages,1
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    retf32
+create_share_block  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           GrowShareBlock
+;
+;           DESCRIPTION:    Grow block in system context
+;
+;           PARAMETERS:     ES     Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+grow_share_block_name      DB 'Grow Share Block',0
+
+grow_share_block   PROC far
+    pushad
+;
+    mov bx,es
+    GetSelectorBaseSize
+    mov esi,edx
+;
+    inc es:sb_pages
+    movzx eax,es:sb_pages
+    shl eax,12
+    AllocateBigLinear
+    mov edi,edx
+;
+    movzx ecx,es:sb_pages
+    dec ecx
+    mov edi,edx
+    CopyPageEntries
+;
+    mov edx,edi
+    movzx ecx,es:sb_pages
+    shl ecx,12
+    CreateDataSelector32
+    mov es,bx
+;
+    movzx ecx,es:sb_pages
+    dec ecx
+    mov edx,esi
+    ClearPageEntries
+;
+    popad
+    retf32
+grow_share_block  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreeShareBlock
+;
+;           DESCRIPTION:    Free share block in system context
+;
+;           PARAMETERS:     ES     Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_share_block_name      DB 'Free Share Block',0
+
+free_share_block   PROC far
+    lock sub es:sb_usage,1
+    jnz fsbDone
+;
+    FreeMem
+
+fsbDone:
+    retf32
+free_share_block  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           INIT_APP_MEM
 ;
 ;           DESCRIPTION:    Init module
@@ -1074,6 +1180,24 @@ init_app_mem    PROC near
     mov edi,OFFSET free_big_serv_sel_name
     xor cl,cl
     mov ax,free_big_serv_sel_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_share_block
+    mov edi,OFFSET create_share_block_name
+    xor dx,dx
+    mov ax,create_share_block_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET free_share_block
+    mov edi,OFFSET free_share_block_name
+    xor dx,dx
+    mov ax,free_share_block_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET grow_share_block
+    mov edi,OFFSET grow_share_block_name
+    xor dx,dx
+    mov ax,grow_share_block_nr
     RegisterOsGate
 ;
     mov esi,OFFSET create_serv_share_block

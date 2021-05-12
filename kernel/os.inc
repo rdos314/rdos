@@ -913,6 +913,22 @@ ResizeLinear    MACRO
     OsGate resize_linear_nr
                     ENDM
 
+
+; OUT ES           Selector
+CreateShareBlock      MACRO
+    OsGate create_share_block_nr
+                    ENDM
+
+; IN  ES           Selector
+GrowShareBlock      MACRO
+    OsGate grow_share_block_nr
+                    ENDM
+
+; IN  ES           Selector
+FreeShareBlock      MACRO
+    OsGate free_share_block_nr
+                    ENDM
+
 ;       EAX     Bytes
 ;       EDX     Linear base
 AllocateLongBuf     MACRO
