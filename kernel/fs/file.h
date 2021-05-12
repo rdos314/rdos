@@ -47,7 +47,9 @@ struct TFileInfo
     int ServHandle;
     char Disc;
     char Drive;
-    short int Pad;
+    char Part;
+    char Pad;
+    int ReqCount;
     char ReqArr[];
 };
 

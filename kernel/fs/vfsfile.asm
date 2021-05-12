@@ -69,7 +69,8 @@ fi_kernel_handle     DD ?
 fi_serv_handle       DD ?
 fi_disc              DB ?
 fi_drive             DB ?
-fi_pad               DW ?
+fi_part              DB ?
+fi_pad               DB ?
 fi_req_count         DD ?
 
 file_info_struc  ENDS
@@ -100,6 +101,7 @@ code    SEGMENT byte public 'CODE'
     extern GetDrivePart:near
     extern GetPathDrive:near
     extern GetRelDir:near
+    extern HandleToPart:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -119,8 +121,22 @@ serv_open_file_name       DB 'Serv Open File',0
 serv_open_file    Proc far
     push ds
     push es
+    push eax
     push ecx
     push edi
+;
+    call HandleToPart
+    mov bx,flat_sel
+    mov ds,bx
+;
+    mov al,es:vfsp_disc_nr
+    mov ds:[edx].fi_disc,al
+;
+    mov al,es:vfsp_drive_nr
+    mov ds:[edx].fi_drive,al
+;
+    mov al,es:vfsp_part_nr
+    mov ds:[edx].fi_part,al
 ;
     ServToSystemShareBlock
 ;
@@ -170,6 +186,7 @@ sofDone:
 ;
     pop edi
     pop ecx
+    pop eax
     pop es
     pop ds
     ret

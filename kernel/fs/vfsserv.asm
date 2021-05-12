@@ -665,6 +665,8 @@ get_vfs_handle    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public HandleToPart
+
 HandleToPart    Proc near
     push eax
     push ebx
