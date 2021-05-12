@@ -71,6 +71,8 @@ fi_req_count     DD ?
 
 file_info_struc  ENDS
 
+; nust be word aligned!
+
 file_sel         STRUC
 
 fs_header        share_block_struc <>
@@ -79,7 +81,7 @@ fs_section       section_typ <>
 fs_handle_count  DD ?
 fs_max_size      DD ?
 
-fs_handle_arr    DD ?
+fs_handle_arr    DW ?
 
 file_sel         ENDS
 
@@ -115,6 +117,7 @@ serv_open_file    Proc far
     push ds
     push es
     push ecx
+    push edi
 ;
     ServToSystemShareBlock
 ;
@@ -129,6 +132,14 @@ serv_open_file    Proc far
     mov ebx,ecx
     inc ecx
     mov ds:fs_max_size,ecx
+;
+    mov edi,ebx
+    add edi,edi
+    add edi,OFFSET fs_handle_arr
+    test di,0FFFh
+    jnz sofDone
+;
+    GrowShareBlock
     jmp sofDone
 
 sofScan:
@@ -136,13 +147,12 @@ sofScan:
 
 sofDone:
     inc ds:fs_handle_count
-    shl ebx,1
-    mov ds:[ebx].fs_handle_arr,es
+    mov ds:[edi],es
     LeaveSection ds:fs_section
 ;
-    shr ebx,2
     inc ebx
 ;
+    pop edi
     pop ecx
     pop es
     pop ds
