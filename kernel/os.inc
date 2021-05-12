@@ -919,6 +919,12 @@ CreateShareBlock      MACRO
     OsGate create_share_block_nr
                     ENDM
 
+; IN  BX           Selector
+; OUT ES           Selector
+CreateFixedShareBlock      MACRO
+    OsGate create_fixed_share_block_nr
+                    ENDM
+
 ; IN  ES           Selector
 GrowShareBlock      MACRO
     OsGate grow_share_block_nr

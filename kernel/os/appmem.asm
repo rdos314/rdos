@@ -1046,6 +1046,43 @@ create_share_block  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           CreateFixedShareBlock
+;
+;           DESCRIPTION:    Create a fixed share block in system context
+;
+;           PARAMETERS:     BX     Selector
+;
+;           RETURNS:        ES     Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_fixed_share_block_name      DB 'Create Fixed Share Block',0
+
+create_fixed_share_block   PROC far
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    mov ecx,1000h
+    CreateDataSelector32    
+    mov es,bx
+    mov es:sb_usage,1
+    mov es:sb_pages,1
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    retf32
+create_fixed_share_block  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           GrowShareBlock
 ;
 ;           DESCRIPTION:    Grow block in system context
@@ -1186,6 +1223,12 @@ init_app_mem    PROC near
     mov edi,OFFSET create_share_block_name
     xor dx,dx
     mov ax,create_share_block_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_fixed_share_block
+    mov edi,OFFSET create_fixed_share_block_name
+    xor dx,dx
+    mov ax,create_fixed_share_block_nr
     RegisterOsGate
 ;
     mov esi,OFFSET free_share_block

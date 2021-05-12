@@ -98,12 +98,10 @@ code    SEGMENT byte public 'CODE'
 serv_open_file_name       DB 'Serv Open File',0
 
 serv_open_file    Proc far
-    mov ax,0
-    CreateShareBlock
+    mov bx,vfs_file_sel
+    CreateFixedShareBlock
     mov ax,1
     GrowShareBlock
-    mov ax,2
-    FreeShareBlock
     ret
 serv_open_file    Endp
 
