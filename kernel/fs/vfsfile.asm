@@ -71,6 +71,18 @@ fi_req_count     DD ?
 
 file_info_struc  ENDS
 
+file_sel         STRUC
+
+fs_header        share_block_struc <>
+fs_section       section_typ <>
+
+fs_handle_count  DD ?
+fs_max_size      DD ?
+
+fs_handle_arr    DD ?
+
+file_sel         ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -93,15 +105,43 @@ code    SEGMENT byte public 'CODE'
 ;
 ;       PARAMETERS:     EDX            Share block
 ;
+;       RETURNS:        EBX            Handle
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 serv_open_file_name       DB 'Serv Open File',0
 
 serv_open_file    Proc far
+    push ds
+    push ecx
+;
     mov bx,vfs_file_sel
-    CreateFixedShareBlock
-    mov ax,1
-    GrowShareBlock
+    mov ds,bx
+    EnterSection ds:fs_section
+;
+    mov ecx,ds:fs_handle_count
+    cmp ecx,ds:fs_max_size
+    jne sofScan
+;
+    mov ebx,ecx
+    inc ecx
+    mov ds:fs_max_size,ecx
+    jmp sofDone
+
+sofScan:
+    int 3
+
+sofDone:
+    inc ds:fs_handle_count
+    shl ebx,2
+    mov ds:[ebx].fs_handle_arr,edx
+    LeaveSection ds:fs_section
+;
+    shr ebx,2
+    inc ebx
+;
+    pop ecx
+    pop ds
     ret
 serv_open_file    Endp
 
@@ -268,6 +308,12 @@ delete_handle   Endp
     public init_file
 
 init_file    Proc near
+    mov bx,vfs_file_sel
+    CreateFixedShareBlock
+    InitSection es:fs_section
+    mov es:fs_handle_count,0
+    mov es:fs_max_size,0
+;
     mov ax,cs
     mov ds,ax
     mov es,ax 
