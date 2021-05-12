@@ -69,7 +69,7 @@ void main()
 
     int handle;
 
-    handle = RdosOpenVfsFile("y:/rdos/menu/style.ini");
+    handle = RdosOpenVfsFile("y:/logga/anova.txt");
 
 
     buf = new char[512 * 128];
