@@ -877,6 +877,7 @@ gssbCopyDo:
     mov edi,edx
     CopyPageEntries
 ;
+    xor eax,eax
     mov edx,esi
     ClearPageEntries
 ;
@@ -1006,6 +1007,53 @@ frsbDone:
     retf32
 fork_serv_share_block  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ServToSystemShareBlock
+;
+;           DESCRIPTION:    Alias share block in system memory
+;
+;           PARAMETERS:     EDX      Flat linear address
+;
+;           RETURNS:        ES       System share sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_to_system_share_block_name      DB 'Serv To System Share Block',0
+
+serv_to_system_share_block   PROC far
+    pushad
+;
+    mov ax,system_data_sel
+    mov es,ax
+    add edx,es:flat_base
+    mov esi,edx
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    movzx eax,es:[esi].sb_pages
+    shl eax,12
+    AllocateBigLinear
+    mov edi,edx
+;
+    movzx ecx,es:[esi].sb_pages
+    mov edi,edx
+    CopyPageEntries
+;
+    mov edx,edi
+    AllocateGdt
+    movzx ecx,es:[esi].sb_pages
+    shl ecx,12
+    CreateDataSelector32
+    mov es,bx
+;
+    popad
+    retf32
+serv_to_system_share_block   ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1120,6 +1168,7 @@ grow_share_block   PROC far
     movzx ecx,es:sb_pages
     dec ecx
     mov edx,esi
+    xor eax,eax
     ClearPageEntries
 ;
     popad
@@ -1140,12 +1189,29 @@ grow_share_block  Endp
 free_share_block_name      DB 'Free Share Block',0
 
 free_share_block   PROC far
-    lock sub es:sb_usage,1
-    jnz fsbDone
+    pushad
 ;
-    FreeMem
+    mov bx,es
+    GetSelectorBaseSize
+;
+    lock sub es:sb_usage,1
+    jnz fsbClear
 
-fsbDone:
+fsbFree:
+    movzx ecx,es:sb_pages
+    xor eax,eax
+    FreePageEntries
+    jmp fsbOk
+
+fsbClear:
+    movzx ecx,es:sb_pages
+    xor eax,eax
+    ClearPageEntries
+
+fsbOk:
+    FreeMem
+;
+    popad
     retf32
 free_share_block  Endp
 
@@ -1265,6 +1331,12 @@ init_app_mem    PROC near
     mov edi,OFFSET fork_serv_share_block_name
     xor dx,dx
     mov ax,fork_serv_share_block_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_to_system_share_block
+    mov edi,OFFSET serv_to_system_share_block_name
+    xor dx,dx
+    mov ax,serv_to_system_share_block_nr
     RegisterServGate
 ;
     popad

@@ -113,7 +113,10 @@ serv_open_file_name       DB 'Serv Open File',0
 
 serv_open_file    Proc far
     push ds
+    push es
     push ecx
+;
+    ServToSystemShareBlock
 ;
     mov bx,vfs_file_sel
     mov ds,bx
@@ -133,14 +136,15 @@ sofScan:
 
 sofDone:
     inc ds:fs_handle_count
-    shl ebx,2
-    mov ds:[ebx].fs_handle_arr,edx
+    shl ebx,1
+    mov ds:[ebx].fs_handle_arr,es
     LeaveSection ds:fs_section
 ;
     shr ebx,2
     inc ebx
 ;
     pop ecx
+    pop es
     pop ds
     ret
 serv_open_file    Endp

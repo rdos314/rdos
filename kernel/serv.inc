@@ -157,6 +157,12 @@ ForkServShareBlock  MACRO
     ServGate fork_serv_share_block_nr
                     ENDM
 
+; IN  EDX              Flat address
+; OUT ES               selector
+ServToSystemShareBlock  MACRO    
+    ServGate serv_to_system_share_block_nr
+                    ENDM
+
 ; IN  EDX              File block
 ServOpenVfsFile  MACRO
     ServGate serv_open_file_nr

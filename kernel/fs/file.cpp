@@ -69,7 +69,7 @@ TFile::TFile(TDir *pd, int pi)
 
     Parent->UnlockEntry(entry);
 
-    ServOpenVfsFile(obj);
+    Info->Handle = ServOpenVfsFile(obj);
 }
 
 /*##########################################################################
