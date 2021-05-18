@@ -84,6 +84,7 @@ public:
     int OpenFile(int rel, char *path);
     int GetFileHandle(int handle);
     int GetFileAttrib(int handle);
+    int ReqFile(int handle, long long pos, int size);
 
     void ReadDirLink(TDir *dir, int index);
 

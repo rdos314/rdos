@@ -100,6 +100,11 @@ int GetFileHandle(int handle)
 {
     return Server->GetFileHandle(handle);
 }
+
+int ReqFile(int handle, long long pos, int size)
+{
+    return Server->ReqFile(handle, pos, size);
+}
 }
 
 /*##########################################################################

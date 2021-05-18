@@ -965,3 +965,21 @@ int TFs::GetFileHandle(int handle)
     else
         return 0;
 }
+
+/*##########################################################################
+#
+#   Name       : TFs::ReqFile
+#
+#   Purpose....: Req file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::ReqFile(int handle, long long pos, int size)
+{
+    TFile *file = GetFile(handle);
+
+    return 0;
+}
