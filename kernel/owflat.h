@@ -3269,6 +3269,12 @@
     __parm [__edi]  \
     __value [__ebx]
 
+#pragma aux RdosReadVfsFile = \
+    CallGate_read_vfs_file  \
+    ValidateEax \
+    __parm [__ebx] [__edi] [__ecx]  \
+    __value [__eax]
+
 #pragma aux RdosCreateFileDrive = \
     CallGate_create_file_drive  \
     CarryToBool \

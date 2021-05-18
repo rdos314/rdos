@@ -110,7 +110,8 @@ code    SEGMENT byte public 'CODE'
 ;
 ;       DESCRIPTION:    Serv open VFS file req
 ;
-;       PARAMETERS:     EDX            Share block
+;       PARAMETERS:     EBX            VFS handle
+;                       EDX            Share block
 ;
 ;       RETURNS:        EBX            Handle
 ;

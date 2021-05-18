@@ -69,10 +69,11 @@ void main()
 
     int handle;
 
-    handle = RdosOpenVfsFile("y:/logga/anova.txt");
-
-
+    handle = RdosOpenVfsFile("y:/rdos/menu/menu.ini");
     buf = new char[512 * 128];
+    count = RdosReadVfsFile(handle, buf, 512 * 128);
+
+
 
     for (;;)
     {
