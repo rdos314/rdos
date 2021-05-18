@@ -60,3 +60,8 @@ VFS_GET_REL_DIR           = 6
 ; OUT BX        File handle
 ; OUT ECX       Attribute
 VFS_OPEN_FILE             = 7
+
+; IN  BX        File handle
+; IN  EDX:EAX   File position
+; IN  ECX       Req size
+VFS_REQ_FILE              = 8

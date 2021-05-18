@@ -446,6 +446,24 @@ LocalOpenFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalReqFile
+;
+;       DESCRIPTION:    Req file
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+LocalReqFile Proc near
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalReqFile Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -465,6 +483,7 @@ m04 DD OFFSET CloneRelDir
 m05 DD OFFSET UnlockRelDir
 m06 DD OFFSET GetRelDir
 m07 DD OFFSET LocalOpenFile
+m08 DD OFFSET LocalReqFile
 
 WaitForMsg_    Proc near
     pushad

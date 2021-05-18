@@ -403,6 +403,20 @@ TryRead   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddFileReq   Proc near
+    push ds
+    push eax
+    push ebx
+;
+    mov ds,fs:vfsp_disc_sel
+    mov ebx,gs:fi_serv_handle
+    call AllocateMsg
+;
+    mov eax,VFS_REQ_FILE
+    call RunMsg
+;
+    pop ebx
+    pop eax
+    pop ds
     ret
 AddFileReq   Endp
 
