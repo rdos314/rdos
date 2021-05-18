@@ -297,13 +297,10 @@ ovfDone:
 open_vfs_file    Endp
 
 open_vfs_file16  Proc far
-    push esi
     push edi
-    movzx esi,si
     movzx edi,di
     call open_vfs_file
     pop edi
-    pop esi
     ret
 open_vfs_file16  Endp
 
@@ -311,6 +308,175 @@ open_vfs_file32  Proc far
     call open_vfs_file
     ret
 open_vfs_file32  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetFileBlock
+;
+;       DESCRIPTION:    Get file block
+;
+;       PARAMETERS:     DS:EBX             File handle
+;
+;       RETURNS:        GS                 File block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFileBlock   Proc near
+    push ds
+    push eax
+    push ebx
+;
+    movzx ebx,ds:[ebx].fh_vfs_handle
+    or ebx,ebx
+    stc
+    jz gfbDone
+;
+    dec ebx
+    add ebx,ebx
+;
+    mov ax,vfs_file_sel
+    mov ds,eax
+    EnterSection ds:fs_section
+    add ebx,OFFSET fs_handle_arr
+    mov ax,ds:[ebx]
+    LeaveSection ds:fs_section
+;
+    or ax,ax
+    stc
+    jz gfbDone
+;
+    mov gs,ax
+    clc
+
+gfbDone:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+GetFileBlock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           TryRead
+;
+;       DESCRIPTION:    Try to read block
+;
+;       PARAMETERS:     GS             File block
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;       RETURNS:        NC
+;                         EAX          Read size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TryRead   Proc near
+    push ecx
+;
+    mov ecx,gs:fi_req_count
+    or ecx,ecx 
+    stc
+    jz trDone
+;
+    int 3
+
+trDone:
+    pop ecx
+    ret
+TryRead   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddFileReq
+;
+;       DESCRIPTION:    Add file req
+;
+;       PARAMETERS:     FS             VFS sel
+;                       GS             File block
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddFileReq   Proc near
+    ret
+AddFileReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadVfsFile
+;
+;       DESCRIPTION:    Read VFS file
+;
+;       PARAMETERS:     BX             Handle
+;                       ES:(E)DI       Buffer
+;                       (E)CX          Size
+;
+;       RETURNS:        NC
+;                         EAX          Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_vfs_file_name       DB 'Read VFS File',0
+
+read_vfs_file    Proc near
+    push ds
+    push fs
+    push gs
+    push eax
+    push ebx
+    push edx
+;
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    jc rvfDone
+;
+    call GetFileBlock
+    jc rvfDone
+
+rvfTry:
+    mov eax,ds:[ebx].fh_pos
+    mov edx,ds:[ebx].fh_pos+4
+    call TryRead
+    jc rvfReq
+;
+    int 3
+
+rvfReq:
+    mov fs,ds:[ebx].fh_vfs_sel
+    call AddFileReq
+    jnc rvfTry
+
+rvfDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    pop ds
+    ret
+read_vfs_file    Endp
+
+read_vfs_file16  Proc far
+    push ecx
+    push edi
+    movzx ecx,cx
+    movzx edi,di
+    call read_vfs_file
+    pop edi
+    pop ecx
+    ret
+read_vfs_file16  Endp
+
+read_vfs_file32  Proc far
+    call read_vfs_file
+    ret
+read_vfs_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -381,6 +547,13 @@ init_file    Proc near
     mov edi,OFFSET open_vfs_file_name
     mov dx,virt_es_in
     mov ax,open_vfs_file_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET read_vfs_file16
+    mov esi,OFFSET read_vfs_file32
+    mov edi,OFFSET read_vfs_file_name
+    mov dx,virt_es_in
+    mov ax,read_vfs_file_nr
     RegisterUserGate
     ret
 init_file    Endp
