@@ -54,6 +54,18 @@ fh_vfs_handle    DW ?
 
 file_handle_seg  ENDS
 
+file_req_struc   STRUC
+
+fr_pos           DD ?,?
+fr_size          DD ?
+fr_sector_arr    DD ?
+fr_linear        DD ?
+fr_pend_sel      DW ?
+fr_ref_count     DW ?
+
+file_req_struc   ENDS
+
+
 file_info_struc  STRUC
 
 fi_header            share_block_struc <>

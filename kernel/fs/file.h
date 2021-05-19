@@ -33,6 +33,16 @@
 #include "block.h"
 #include "dir.h"
 
+struct TFileReq
+{
+    long long Pos;
+    int Size;
+    long long *SectorBuf;
+    char *KernelData;
+    short int PendingSel;
+    short int RefCount;
+};
+
 struct TFileInfo
 {
     long long FsSize;
@@ -50,7 +60,7 @@ struct TFileInfo
     char Part;
     char Pad;
     int ReqCount;
-    char ReqArr[];
+    struct TFileReq ReqArr[];
 };
 
 
