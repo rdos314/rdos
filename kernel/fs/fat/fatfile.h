@@ -30,12 +30,15 @@
 
 #include "file.h"
 #include "block.h"
+#include "cluster.h"
 
 class TFatFile : public TFile, public TBlock
 {
 public:
-    TFatFile(TDir *ParentDir, int ParentIndex);
+    TFatFile(TDir *ParentDir, int ParentIndex, TCluster *ClusterChain);
     virtual ~TFatFile();
+
+    TCluster *FClusterChain;
 };
 
 #endif

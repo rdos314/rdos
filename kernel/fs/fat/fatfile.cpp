@@ -42,9 +42,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatFile::TFatFile(TDir *ParentDir, int ParentIndex)
+TFatFile::TFatFile(TDir *ParentDir, int ParentIndex, TCluster *ClusterChain)
   : TFile(ParentDir, ParentIndex)
 {
+    FClusterChain = ClusterChain;
 }
 
 /*##########################################################################
@@ -60,4 +61,5 @@ TFatFile::TFatFile(TDir *ParentDir, int ParentIndex)
 ##########################################################################*/
 TFatFile::~TFatFile()
 {
+    delete FClusterChain;
 }

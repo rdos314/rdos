@@ -308,9 +308,40 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 ##########################################################################*/
 TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 {
+    unsigned int Cluster = Inode;
+    TDiscReq Req(Server);
+    TCluster *Chain;
+    unsigned int NextCluster1;
+    unsigned int NextCluster2;
     TFile *File;
 
-    File = new TFatFile(ParentDir, ParentIndex);
+    Chain = new TCluster;
+
+    File = new TFatFile(ParentDir, ParentIndex, Chain);
+
+    while (Cluster && Cluster < Clusters)
+    {
+        Chain->Add(Cluster);
+
+        NextCluster1 = FatTable1->GetClusterLink(Cluster);
+        NextCluster2 = FatTable2->GetClusterLink(Cluster);
+
+        if (NextCluster1 == NextCluster2)
+            Cluster = NextCluster1;
+        else
+        {
+            if (NextCluster1 >= Clusters && NextCluster2 >= Clusters)
+                break;
+
+            if (NextCluster1 < Clusters && NextCluster2 < Clusters)
+                break;
+
+            if (NextCluster1 > NextCluster2)
+                Cluster = NextCluster2;
+            else
+                Cluster = NextCluster1;
+        }
+    }
 
     return File;
 }
