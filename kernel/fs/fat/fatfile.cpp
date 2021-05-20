@@ -70,3 +70,57 @@ TFatFile::~TFatFile()
 {
     delete FClusterChain;
 }
+
+/*##########################################################################
+#
+#   Name       : TFatFile::AdjustStart
+#
+#   Purpose....: Adjust start position
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TFatFile::AdjustStart(long long pos)
+{
+    long long c = pos / FBytesPerCluster;
+
+    if (c >= FClusterCount)
+        c = FClusterCount - 1;
+
+    if (c < 0)
+        c = 0;
+
+    return c * FBytesPerCluster;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatFile::GetSectorCount
+#
+#   Purpose....: Get sector count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFatFile::GetSectorCount(long long pos, int size)
+{
+    long long c = pos / FBytesPerCluster;
+    long long start;
+    int diff;
+
+    if (c >= FClusterCount)
+        c = FClusterCount - 1;
+
+    if (c < 0)
+        c = 0;
+
+    start = c * FBytesPerCluster;
+    diff = start - pos;
+    size += diff;
+
+    return size;
+}

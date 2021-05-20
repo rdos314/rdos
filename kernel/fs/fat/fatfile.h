@@ -40,6 +40,9 @@ public:
     TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster);
     virtual ~TFatFile();
 
+    virtual long long AdjustStart(long long pos);
+    virtual int GetSectorCount(long long pos, int size);
+
 protected:
     int FBytesPerCluster;
     int FClusterCount;

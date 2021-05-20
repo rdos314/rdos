@@ -70,6 +70,9 @@ public:
     TFile(TDir *ParentDir, int ParentIndex);
     virtual ~TFile();
 
+    virtual long long AdjustStart(long long pos) = 0;
+    virtual int GetSectorCount(long long pos, int size) = 0;
+
     void Setup(int VfsHandle, int ServFileHandle);
 
     void LockFile();
