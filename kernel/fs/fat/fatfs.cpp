@@ -126,6 +126,22 @@ bool TFat::Validate()
 
 /*##########################################################################
 #
+#   Name       : TFat::GetBytesPerSector
+#
+#   Purpose....: Get bytes per sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFat::GetBytesPerSector()
+{
+    return 512;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::GetFreeSectors
 #
 #   Purpose....: Get free sectors

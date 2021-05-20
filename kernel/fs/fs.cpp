@@ -983,6 +983,8 @@ int TFs::ReqFile(int handle, long long pos, int size)
     long long start;
     long long end;
     int diff;
+    int SectorCount;
+    long long *SectorArr;
 
     if (file)
     {
@@ -994,6 +996,9 @@ int TFs::ReqFile(int handle, long long pos, int size)
         end = file->AdjustEnd(end);
 
         size = end - start + 1;
+
+        SectorCount = size / GetBytesPerSector();
+        SectorArr = new long long[SectorCount];
     }
 
     return 0;
