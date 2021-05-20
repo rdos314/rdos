@@ -41,7 +41,7 @@ public:
     virtual ~TFatFile();
 
     virtual long long AdjustStart(long long pos);
-    virtual int GetSectorCount(long long pos, int size);
+    virtual long long AdjustEnd(long long pos);
 
 protected:
     int FBytesPerCluster;

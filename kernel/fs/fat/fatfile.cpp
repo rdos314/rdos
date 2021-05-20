@@ -97,20 +97,18 @@ long long TFatFile::AdjustStart(long long pos)
 
 /*##########################################################################
 #
-#   Name       : TFatFile::GetSectorCount
+#   Name       : TFatFile::AdjustEnd
 #
-#   Purpose....: Get sector count
+#   Purpose....: Adjust end position
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TFatFile::GetSectorCount(long long pos, int size)
+long long TFatFile::AdjustEnd(long long pos)
 {
     long long c = pos / FBytesPerCluster;
-    long long start;
-    int diff;
 
     if (c >= FClusterCount)
         c = FClusterCount - 1;
@@ -118,9 +116,5 @@ int TFatFile::GetSectorCount(long long pos, int size)
     if (c < 0)
         c = 0;
 
-    start = c * FBytesPerCluster;
-    diff = start - pos;
-    size += diff;
-
-    return size;
+    return (c + 1) * FBytesPerCluster - 1;
 }

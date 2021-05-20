@@ -71,7 +71,7 @@ public:
     virtual ~TFile();
 
     virtual long long AdjustStart(long long pos) = 0;
-    virtual int GetSectorCount(long long pos, int size) = 0;
+    virtual long long AdjustEnd(long long pos) = 0;
 
     void Setup(int VfsHandle, int ServFileHandle);
 

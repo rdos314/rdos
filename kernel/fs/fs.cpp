@@ -979,14 +979,22 @@ int TFs::GetFileHandle(int handle)
 ##########################################################################*/
 int TFs::ReqFile(int handle, long long pos, int size)
 {
-    int count;
     TFile *file = GetFile(handle);
+    long long start;
+    long long end;
+    int diff;
 
     if (file)
     {
-        pos = file->AdjustStart(pos);  
-        count = file->GetSectorCount(pos, size);              
-    }    
+        start = file->AdjustStart(pos);
+        diff = start - pos;
+        size += diff;
+
+        end = start + size - 1;
+        end = file->AdjustEnd(end);
+
+        size = end - start + 1;
+    }
 
     return 0;
 }

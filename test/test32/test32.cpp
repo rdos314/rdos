@@ -69,7 +69,7 @@ void main()
 
     int handle;
 
-    handle = RdosOpenVfsFile("y:/rdos.bin");
+    handle = RdosOpenVfsFile("y:/main.pdf");
     buf = new char[512 * 128];
     count = RdosReadVfsFile(handle, buf, 512 * 128);
 
