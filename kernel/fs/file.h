@@ -72,6 +72,7 @@ public:
 
     virtual long long AdjustStart(long long pos) = 0;
     virtual long long AdjustEnd(long long pos) = 0;
+    virtual void GetSectors(long long pos, long long *SectorArr, int SectorCount) = 0;
 
     void Setup(int VfsHandle, int ServFileHandle);
 
