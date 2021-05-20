@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <rdos.h>
 #include "fatfile.h"
+#include "fatfs.h"
 
 /*##########################################################################
 #
@@ -42,10 +43,14 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatFile::TFatFile(TDir *ParentDir, int ParentIndex, TCluster *ClusterChain)
+TFatFile::TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster)
   : TFile(ParentDir, ParentIndex)
 {
-    FClusterChain = ClusterChain;
+    FFat = Fat;
+    FClusterChain = Fat->GetClusterChain(Cluster);
+
+    FClusterCount = FClusterChain->GetSize();
+    FClusterArr = FClusterChain->GetChain();
 }
 
 /*##########################################################################

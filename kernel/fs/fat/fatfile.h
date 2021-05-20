@@ -32,12 +32,19 @@
 #include "block.h"
 #include "cluster.h"
 
-class TFatFile : public TFile, public TBlock
+class TFat;
+
+class TFatFile : public TFile
 {
 public:
-    TFatFile(TDir *ParentDir, int ParentIndex, TCluster *ClusterChain);
+    TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster);
     virtual ~TFatFile();
 
+    int FClusterCount;
+    unsigned int *FClusterArr;
+
+protected:
+    TFat *FFat;
     TCluster *FClusterChain;
 };
 

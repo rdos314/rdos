@@ -297,27 +297,23 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 
 /*##########################################################################
 #
-#   Name       : TFat::OpenFile
+#   Name       : TFat::GetClusterChain
 #
-#   Purpose....: Open file
+#   Purpose....: Get cluster chain
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
+TCluster *TFat::GetClusterChain(unsigned int Cluster)
 {
-    unsigned int Cluster = Inode;
     TDiscReq Req(Server);
     TCluster *Chain;
     unsigned int NextCluster1;
     unsigned int NextCluster2;
-    TFile *File;
 
     Chain = new TCluster;
-
-    File = new TFatFile(ParentDir, ParentIndex, Chain);
 
     while (Cluster && Cluster < Clusters)
     {
@@ -343,6 +339,24 @@ TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
         }
     }
 
+    return Chain;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::OpenFile
+#
+#   Purpose....: Open file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
+{
+    unsigned int Cluster = Inode;
+    TFile *File = new TFatFile(this, ParentDir, ParentIndex, Cluster);
     return File;
 }
 
