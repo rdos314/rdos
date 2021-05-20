@@ -40,10 +40,11 @@ public:
     TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster);
     virtual ~TFatFile();
 
+protected:
+    int FBytesPerCluster;
     int FClusterCount;
     unsigned int *FClusterArr;
 
-protected:
     TFat *FFat;
     TCluster *FClusterChain;
 };

@@ -51,6 +51,8 @@ TFatFile::TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Clu
 
     FClusterCount = FClusterChain->GetSize();
     FClusterArr = FClusterChain->GetChain();
+
+    FBytesPerCluster = 512 * Fat->SectorsPerCluster;
 }
 
 /*##########################################################################
