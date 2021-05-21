@@ -30,6 +30,7 @@ struct TShareHeader * RDOSAPI ServForkShareBlock(struct TShareHeader *b);
 void RDOSAPI ServFreeShareBlock(struct TShareHeader *b);
 
 int RDOSAPI ServOpenVfsFile(int handle, struct TShareHeader *b);
+int RDOSAPI ServAddVfsFileReq(int FileHandle, long long FilePos, long long *SectorBuf, int SectorCount);
 
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();

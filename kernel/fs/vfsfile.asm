@@ -59,7 +59,7 @@ file_req_struc   STRUC
 fr_pos           DD ?,?
 fr_size          DD ?
 fr_sector_arr    DD ?
-fr_linear        DD ?
+fr_data_sel      DW ?
 fr_pend_sel      DW ?
 fr_ref_count     DW ?
 
@@ -204,6 +204,28 @@ sofDone:
     pop ds
     ret
 serv_open_file    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServAddFileReq
+;
+;       DESCRIPTION:    Serv add VFS file req
+;
+;       PARAMETERS:     EBX            File handle
+;                       EDX:EAX        File pos
+;                       ECX            Sector count
+;                       Es:EDI         Sector buf
+;
+;       RETURNS:        EAX            Req #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_add_file_req_name       DB 'Serv Add File Req',0
+
+serv_add_file_req    Proc far
+    ret
+serv_add_file_req    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -566,6 +588,12 @@ init_file    Proc near
     mov edi,OFFSET serv_open_file_name
     xor cl,cl
     mov ax,serv_open_file_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_add_file_req
+    mov edi,OFFSET serv_add_file_req_name
+    xor cl,cl
+    mov ax,serv_add_file_req_nr
     RegisterServGate
 ;
     mov ebx,OFFSET open_vfs_file16

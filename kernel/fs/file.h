@@ -38,7 +38,7 @@ struct TFileReq
     long long Pos;
     int Size;
     long long *SectorBuf;
-    char *KernelData;
+    short int DataSel;
     short int PendingSel;
     short int RefCount;
 };

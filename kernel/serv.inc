@@ -169,3 +169,12 @@ ServToSystemShareBlock  MACRO
 ServOpenVfsFile  MACRO
     ServGate serv_open_file_nr
                     ENDM
+
+; IN  BX               Kernel handle
+; IN  EDX:EAX          Start pos
+; IN  ECX              Sector count
+; IN  ES:EDI           Sector buffer
+; OUT EAX              Req #
+ServAddVfsFileReq  MACRO
+    ServGate serv_add_file_req_nr
+                    ENDM

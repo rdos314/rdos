@@ -22,5 +22,6 @@ reply_vfs_block_cmd_nr     = 20
 reply_vfs_data_cmd_nr      = 21
 serv_open_file_nr          = 22
 serv_to_system_share_block_nr = 23
+serv_add_file_req_nr       = 24
 
 serv_gate_entries          = 30
