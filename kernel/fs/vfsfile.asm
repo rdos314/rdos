@@ -59,6 +59,7 @@ file_req_struc   STRUC
 fr_pos           DD ?,?
 fr_sector_count  DD ?
 fr_sector_arr    DD ?
+fr_wait_sel      DW ?
 fr_data_sel      DW ?
 fr_pend_sel      DW ?
 fr_ref_count     DW ?
