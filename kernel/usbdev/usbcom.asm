@@ -2920,7 +2920,11 @@ hdrDo:
     jz hdrDone
 ;
     mov fs,ds:uds_in_buffer
-    mov ds,ds:uds_port_sel
+    mov ax,ds:uds_port_sel
+    or ax,ax
+    jz hdrDone
+;
+    mov ds,ax
     mov es,ds:rec_buf
 
 hdrGetLoop:
