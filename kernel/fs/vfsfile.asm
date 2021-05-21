@@ -234,6 +234,9 @@ serv_open_file    Endp
 ;
 ;       DESCRIPTION:    Allocate req
 ;
+;       PARAMETERS:     ECX            Sector count
+;                       ES:EDI         Sector buf
+;
 ;       RETURNS:        EBX            Req handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -254,7 +257,7 @@ AllocateReq  Endp
 ;                       EDX:EAX        File pos
 ;                       ECX            Sector count
 ;                       ESI            Sector size
-;                       Es:EDI         Sector buf
+;                       ES:EDI         Sector buf
 ;
 ;       RETURNS:        EAX            Req #
 ;
@@ -275,8 +278,11 @@ serv_add_file_req    Proc far
     dec ebx
     shl ebx,1
 ;
-    mov si,vfs_file_sel
-    mov ds,si
+    push eax
+    mov eax,vfs_file_sel
+    mov ds,eax
+    pop eax
+;
     EnterSection ds:fs_section
     mov bx,ds:[ebx].fs_handle_arr
     or bx,bx
