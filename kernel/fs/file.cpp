@@ -67,6 +67,7 @@ TFile::TFile(TDir *pd, int pi)
     Info->Gid = entry->Gid;
     Info->KernelHandle = 0;
     Info->ServHandle = 0;
+    Info->ReqMaxSize = 0;
     Info->ReqCount = 0;
 
     Parent->UnlockEntry(entry);

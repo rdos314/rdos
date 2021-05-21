@@ -41,6 +41,8 @@ struct TFileReq
     short int DataSel;
     short int PendingSel;
     short int RefCount;
+    char Used;
+    char Pad;
 };
 
 struct TFileInfo
@@ -59,6 +61,7 @@ struct TFileInfo
     char Drive;
     char Part;
     char Pad;
+    int ReqMaxSize;
     int ReqCount;
     struct TFileReq ReqArr[];
 };

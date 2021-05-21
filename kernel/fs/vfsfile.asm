@@ -57,11 +57,13 @@ file_handle_seg  ENDS
 file_req_struc   STRUC
 
 fr_pos           DD ?,?
-fr_size          DD ?
+fr_sector_count  DD ?
 fr_sector_arr    DD ?
 fr_data_sel      DW ?
 fr_pend_sel      DW ?
 fr_ref_count     DW ?
+fr_used          DB ?
+fr_pad           DB ?
 
 file_req_struc   ENDS
 
@@ -83,6 +85,7 @@ fi_disc              DB ?
 fi_drive             DB ?
 fi_part              DB ?
 fi_pad               DB ?
+fi_req_max_size      DD ?
 fi_req_count         DD ?
 
 file_info_struc  ENDS
@@ -224,6 +227,43 @@ serv_open_file    Endp
 serv_add_file_req_name       DB 'Serv Add File Req',0
 
 serv_add_file_req    Proc far
+    push ds
+    push es
+    push ebx
+    push esi
+;
+    or ebx,ebx
+    stc
+    jz safDone
+;
+    dec ebx
+    shl ebx,1
+;
+    mov si,vfs_file_sel
+    mov ds,si
+    EnterSection ds:fs_section
+    mov bx,ds:[ebx].fs_handle_arr
+    or bx,bx
+    stc
+    jz safLeave
+;
+    mov es,bx
+    mov ecx,es:fi_req_max_size
+    cmp ecx,es:fi_req_count
+    je safAdd
+
+safScan:
+
+safAdd:
+
+safLeave:
+    LeaveSection ds:fs_section
+
+safDone:
+    pop esi
+    pop ebx
+    pop es
+    pop ds
     ret
 serv_add_file_req    Endp
 
