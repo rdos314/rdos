@@ -1000,6 +1000,8 @@ int TFs::ReqFile(int handle, long long pos, int size)
         SectorCount = size / GetBytesPerSector();
         SectorArr = new long long[SectorCount];
         file->GetSectors(start, SectorArr, SectorCount);
+
+        return ServAddVfsFileReq(file->GetKernelHandle(), start, SectorArr, SectorCount);
     }
 
     return 0;
