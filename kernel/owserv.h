@@ -50,7 +50,7 @@
 
 #pragma aux ServAddVfsFileReq = \
     ServGate_serv_add_file_req  \
-    __parm [__ebx] [__edx __eax] [__edi] [__ecx] \
+    __parm [__ebx] [__edx __eax] [__edi] [__ecx] [__esi] \
     __value [__eax]
 
 #pragma aux ServTest = \

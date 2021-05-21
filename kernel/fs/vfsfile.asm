@@ -54,20 +54,17 @@ fh_vfs_handle    DW ?
 
 file_handle_seg  ENDS
 
+; must be 16 bytes!
+
 file_req_struc   STRUC
 
 fr_pos           DD ?,?
-fr_sector_count  DD ?
-fr_sector_arr    DD ?
-fr_wait_sel      DW ?
-fr_data_sel      DW ?
-fr_pend_sel      DW ?
-fr_ref_count     DW ?
-fr_used          DB ?
-fr_pad           DB ?
+fr_size          DD ?
+fr_handle        DD ?
 
 file_req_struc   ENDS
 
+; must be dword aligned!
 
 file_info_struc  STRUC
 
@@ -91,7 +88,7 @@ fi_req_count         DD ?
 
 file_info_struc  ENDS
 
-; nust be word aligned!
+; must be word aligned!
 
 file_sel         STRUC
 
@@ -104,6 +101,23 @@ fs_max_size      DD ?
 fs_handle_arr    DW ?
 
 file_sel         ENDS
+
+
+handle_req_struc STRUC
+
+hr_sector_count  DD ?
+hr_sector_arr    DD ?
+hr_wait_sel      DW ?
+hr_data_sel      DW ?
+hr_pend_sel      DW ?
+hr_ref_count     DW ?
+hr_used          DB ?
+hr_pad           DB ?
+
+handle_req_struc   ENDS
+
+
+
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -175,7 +189,11 @@ serv_open_file    Proc far
     test di,0FFFh
     jnz sofDone
 ;
+    push es
+    mov ax,ds
+    mov es,ax
     GrowShareBlock
+    pop es
     jmp sofDone
 
 sofScan:
@@ -212,6 +230,22 @@ serv_open_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AllocateReq
+;
+;       DESCRIPTION:    Allocate req
+;
+;       RETURNS:        EBX            Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateReq  Proc near
+    mov ebx,5
+    ret
+AllocateReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServAddFileReq
 ;
 ;       DESCRIPTION:    Serv add VFS file req
@@ -219,6 +253,7 @@ serv_open_file    Endp
 ;       PARAMETERS:     EBX            File handle
 ;                       EDX:EAX        File pos
 ;                       ECX            Sector count
+;                       ESI            Sector size
 ;                       Es:EDI         Sector buf
 ;
 ;       RETURNS:        EAX            Req #
@@ -249,13 +284,68 @@ serv_add_file_req    Proc far
     jz safLeave
 ;
     mov es,bx
+    call AllocateReq
+;
+    push edi
+;
+    push eax
+    push ebx
+    push ecx
+;
     mov ecx,es:fi_req_max_size
     cmp ecx,es:fi_req_count
-    je safAdd
+    jne safScan
+;
+    mov ebx,ecx
+    inc ecx
+    mov es:fi_req_max_size,ecx
+;
+    mov edi,ebx
+    shl edi,4
+    add edi,SIZE file_info_struc
+    test di,0FFFh
+    jnz safFound
+;
+    GrowShareBlock
+    jmp safFound
 
 safScan:
+    int 3
+    xor ebx,ebx
+    mov edi,SIZE file_info_struc
 
-safAdd:
+safLoop:
+    mov eax,es:[edi]
+    or eax,eax
+    jz safFound
+;
+    inc ebx
+    add edi,4
+    loop safLoop
+;
+    CrashGate
+
+safFound:
+    pop ecx
+    pop ebx
+    pop eax
+;
+    inc es:fi_req_count
+    mov es:[edi].fr_handle,ebx
+    mov es:[edi].fr_pos,eax
+    mov es:[edi].fr_pos+4,edx
+;
+    push eax
+    push edx
+;
+    mov eax,esi
+    mul ecx
+    mov es:[edi].fr_size,eax
+;
+    pop edx
+    pop eax
+;
+    pop edi
 
 safLeave:
     LeaveSection ds:fs_section
