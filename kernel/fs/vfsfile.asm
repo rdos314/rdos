@@ -117,6 +117,15 @@ hr_pad           DB ?
 handle_req_struc   ENDS
 
 
+req_sel          STRUC
+
+rs_header        share_block_struc <>
+
+rs_handle_count  DD ?
+rs_max_size      DD ?
+
+req_sel          ENDS
+
 
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -242,7 +251,76 @@ serv_open_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateReq  Proc near
-    mov ebx,5
+    push ds
+    push eax
+    push edx
+    push esi
+;
+    mov ax,vfs_req_sel
+    mov ds,ax
+;
+    push ecx
+;
+    mov ecx,ds:rs_max_size
+    cmp ecx,ds:rs_handle_count
+    jne arScan
+;
+    mov ebx,ecx
+    inc ecx
+    mov ds:rs_max_size,ecx
+;
+    mov eax,SIZE handle_req_struc
+    mul ebx
+    mov esi,eax
+    add esi,SIZE req_sel
+    mov eax,esi
+    add eax,SIZE handle_req_struc
+    movzx edx,ds:sb_pages
+    shl edx,12
+    cmp eax,edx
+    jbe arFound
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    GrowShareBlock
+    pop es
+    jmp arFound
+
+arScan:
+    int 3
+    xor ebx,ebx
+    mov esi,SIZE req_sel
+
+arLoop:
+    mov al,ds:[esi].hr_used
+    or al,al
+    jz arFound
+;
+    inc ebx
+    add esi,SIZE handle_req_struc
+    loop arLoop
+;
+    CrashGate
+
+arFound:
+    pop ecx
+;
+    inc ds:rs_handle_count
+    mov ds:[esi].hr_sector_count,ecx
+    mov ds:[esi].hr_sector_arr,edi
+    mov ds:[esi].hr_wait_sel,0
+    mov ds:[esi].hr_data_sel,0
+    mov ds:[esi].hr_pend_sel,0
+    mov ds:[esi].hr_ref_count,0
+    mov ds:[esi].hr_used,1
+;
+    inc ebx
+;
+    pop esi
+    pop edx
+    pop eax
+    pop ds
     ret
 AllocateReq  Endp
 
@@ -709,6 +787,10 @@ delete_handle   Endp
 init_file    Proc near
     mov bx,vfs_file_sel
     CreateFixedShareBlock
+;
+    mov bx,vfs_req_sel
+    CreateFixedShareBlock
+;
     InitSection es:fs_section
     mov es:fs_handle_count,0
     mov es:fs_max_size,0
