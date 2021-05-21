@@ -762,7 +762,7 @@ read_vfs_file32  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetRandomRange	Proc near
+GetRandomRange  Proc near
     push edx
     mov edx,eax
     GetRandom
@@ -883,6 +883,100 @@ GetMinMax Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CreateReqSel
+;
+;       DESCRIPTION:    Create req selector
+;
+;       PARAMETERS:     ECX             Size
+;                       EDX             Data
+;                       EAX             Min MSB
+;                       EBX             Max MSB
+;
+;       RETURNS:        ES              Req sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+req_msb_struc  STRUC
+
+rqm_ptr        DD ?
+rqm_count      DD ?
+
+req_msb_struc  ENDS
+
+req_sel_struc  STRUC
+
+rqs_sectors    DD ?
+rqs_start_msb  DD ?
+rqs_msb_count  DD ?
+
+rqs_chain_ptr  DD ?
+rqs_sorted_ptr DD ?
+rqs_index_ptr  DD ?
+rqs_msb_ptr    DD ?
+
+req_sel_struc  ENDS
+
+CreateReqSel Proc near
+    pushad
+;
+    push eax
+    push ebx
+;
+    sub ebx,eax
+    inc ebx
+    shl ebx,3
+;
+    mov eax,ecx
+    shl eax,4
+    add eax,ebx
+    add eax,SIZE req_sel_struc
+;
+    AllocateBigMem
+;
+    pop ebx
+    pop eax
+;
+    mov es:rqs_start_msb,eax
+    sub ebx,eax
+    inc ebx
+    mov es:rqs_msb_count,ebx
+    mov es:rqs_sectors,ecx
+;
+    mov edi,SIZE req_sel_struc
+    mov es:rqs_chain_ptr,edi
+;
+    mov esi,edx
+    rep movsd
+    mov es:rqs_sorted_ptr,edi
+;
+    mov ecx,es:rqs_sectors
+    mov eax,-1
+    shl ecx,1
+    rep stosd
+    mov es:rqs_index_ptr,edi
+;
+    mov ecx,es:rqs_sectors
+    xor eax,eax
+
+crqsIndexLoop:
+    stosd
+    inc eax
+    loop crqsIndexLoop
+;    
+    mov es:rqs_msb_ptr,edi
+;
+    mov ecx,es:rqs_msb_count
+    shl ecx,1
+    xor eax,eax
+    rep stosd   
+;
+    popad
+    ret
+CreateReqSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           TestGate
 ;
 ;       DESCRIPTION:    Test sector ordering
@@ -898,6 +992,7 @@ test_gate    Proc far
 ;
     call CreateRandomSectors
     call GetMinMax
+    call CreateReqSel
 ;
     popad
     pop es
