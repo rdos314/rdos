@@ -750,6 +750,114 @@ read_vfs_file32  Proc far
 read_vfs_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetRandomRange
+;
+;       DESCRIPTION:    Get random number range
+;
+;       PARAMETERS:     EAX          Range
+;
+;       RETURNS:        EAX          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetRandomRange	Proc near
+    push edx
+    mov edx,eax
+    GetRandom
+    mul edx
+    mov eax,edx
+    pop edx
+    ret
+GetRandomRange Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateRandomSectors
+;
+;       DESCRIPTION:    Create random sectors
+;
+;       RETURNS:        ECX             Size
+;                       EDX             Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateRandomSectors Proc near
+    push eax
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov eax,100
+    call GetRandomRange
+;
+    mov ecx,eax
+    shl eax,3
+    push ecx
+    AllocateBigLinear
+    pop ecx
+    mov edi,edx
+;
+    mov eax,10
+    call GetRandomRange
+    mov esi,eax
+;
+    mov eax,10
+    call GetRandomRange
+    mov ebp,eax
+;
+    push ecx
+
+crsLoop:
+    GetRandom
+    stosd
+;
+    mov eax,esi
+    call GetRandomRange
+    add eax,ebp
+    stosd
+;
+    loop crsLoop
+;
+    pop ecx
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop eax
+    ret
+CreateRandomSectors Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           TestGate
+;
+;       DESCRIPTION:    Test sector ordering
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name       DB 'Test Gate',0
+
+test_gate    Proc far
+    push ds
+    push es
+    pushad
+;
+    call CreateRandomSectors
+;
+    popad
+    pop es
+    pop ds
+    ret
+test_gate    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           Delete handle
@@ -839,6 +947,12 @@ init_file    Proc near
     mov dx,virt_es_in
     mov ax,read_vfs_file_nr
     RegisterUserGate
+;
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
     ret
 init_file    Endp
 
