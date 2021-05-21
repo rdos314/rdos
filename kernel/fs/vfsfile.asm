@@ -107,6 +107,7 @@ handle_req_struc STRUC
 
 hr_sector_count  DD ?
 hr_sector_arr    DD ?
+hr_file_handle   DD ?
 hr_wait_sel      DW ?
 hr_data_sel      DW ?
 hr_pend_sel      DW ?
@@ -244,7 +245,8 @@ serv_open_file    Endp
 ;       DESCRIPTION:    Allocate req
 ;
 ;       PARAMETERS:     ECX            Sector count
-;                       ES:EDI         Sector buf
+;                       EDI            Sector buf
+;                       ES             File sel
 ;
 ;       RETURNS:        EBX            Req handle
 ;
@@ -309,6 +311,10 @@ arFound:
     inc ds:rs_handle_count
     mov ds:[esi].hr_sector_count,ecx
     mov ds:[esi].hr_sector_arr,edi
+;
+    mov eax,es:fi_kernel_handle
+    mov ds:[esi].hr_file_handle,eax
+;
     mov ds:[esi].hr_wait_sel,0
     mov ds:[esi].hr_data_sel,0
     mov ds:[esi].hr_pend_sel,0
@@ -337,7 +343,7 @@ AllocateReq  Endp
 ;                       ESI            Sector size
 ;                       ES:EDI         Sector buf
 ;
-;       RETURNS:        EAX            Req #
+;       RETURNS:        EAX            Req handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -435,6 +441,8 @@ safLeave:
     LeaveSection ds:fs_section
 
 safDone:
+    mov eax,ebx
+;
     pop esi
     pop ebx
     pop es
@@ -788,12 +796,15 @@ init_file    Proc near
     mov bx,vfs_file_sel
     CreateFixedShareBlock
 ;
-    mov bx,vfs_req_sel
-    CreateFixedShareBlock
-;
     InitSection es:fs_section
     mov es:fs_handle_count,0
     mov es:fs_max_size,0
+;
+    mov bx,vfs_req_sel
+    CreateFixedShareBlock
+;
+    mov es:rs_handle_count,0
+    mov es:rs_max_size,0
 ;
     mov ax,cs
     mov ds,ax
