@@ -128,6 +128,26 @@ rs_max_size      DD ?
 req_sel          ENDS
 
 
+req_msb_struc  STRUC
+
+rqm_ptr        DD ?
+rqm_count      DD ?
+
+req_msb_struc  ENDS
+
+req_sel_struc  STRUC
+
+rqs_sectors    DD ?
+rqs_start_msb  DD ?
+rqs_msb_count  DD ?
+
+rqs_chain_ptr  DD ?
+rqs_sorted_ptr DD ?
+rqs_index_ptr  DD ?
+rqs_msb_ptr    DD ?
+
+req_sel_struc  ENDS
+
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -896,26 +916,6 @@ GetMinMax Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-req_msb_struc  STRUC
-
-rqm_ptr        DD ?
-rqm_count      DD ?
-
-req_msb_struc  ENDS
-
-req_sel_struc  STRUC
-
-rqs_sectors    DD ?
-rqs_start_msb  DD ?
-rqs_msb_count  DD ?
-
-rqs_chain_ptr  DD ?
-rqs_sorted_ptr DD ?
-rqs_index_ptr  DD ?
-rqs_msb_ptr    DD ?
-
-req_sel_struc  ENDS
-
 CreateReqSel Proc near
     pushad
 ;
@@ -956,13 +956,8 @@ CreateReqSel Proc near
     mov es:rqs_index_ptr,edi
 ;
     mov ecx,es:rqs_sectors
-    xor eax,eax
-
-crqsIndexLoop:
-    stosd
-    inc eax
-    loop crqsIndexLoop
-;    
+    mov eax,-1
+    rep stosd
     mov es:rqs_msb_ptr,edi
 ;
     mov ecx,es:rqs_msb_count
@@ -973,6 +968,97 @@ crqsIndexLoop:
     popad
     ret
 CreateReqSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SortMsbReq
+;
+;       DESCRIPTION:    Sort req selector, MSB part
+;
+;       PARAMETERS:     ES              Req sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SortMsbReq  Proc near
+    push ds
+    pushad
+;
+    mov eax,es
+    mov ds,eax
+;
+    mov edx,ds:rqs_start_msb
+    mov edi,ds:rqs_sorted_ptr
+    mov esi,ds:rqs_index_ptr
+    mov ebx,ds:rqs_msb_ptr
+
+smrMsbLoop:
+    mov ds:[ebx].rqm_ptr,edi
+    push ebx
+;
+    mov ebx,ds:rqs_chain_ptr
+    mov ecx,ds:rqs_sectors
+    xor ebp,ebp
+
+smrSectorLoop:
+    cmp edx,ds:[ebx+4]
+    jne smrSectorNext
+;
+    mov eax,ds:[ebx]
+    mov ds:[edi],eax
+    mov ds:[esi],ebx
+    add esi,4
+    add edi,4
+    inc ebp
+
+smrSectorNext:
+    add ebx,8
+    loop smrSectorLoop
+;
+    pop ebx
+;
+    mov ds:[ebx].rqm_count,ebp
+;
+    or ebp,ebp
+    jz smrMsbNext
+;
+    xor cl,cl
+    sub ebp,1
+    jz smrAdjustDone
+    
+smrAdjustLoop:
+    inc cl
+    shr ebp,1
+    jnz smrAdjustLoop
+
+smrAdjustDone:
+    mov eax,1
+    shl eax,cl
+    mov ecx,eax
+    sub ecx,ds:[ebx].rqm_count
+    jz smrMsbNext
+;
+    mov eax,-1
+
+smrPadLoop:
+    mov ds:[esi],eax
+    mov ds:[edi],eax
+    add esi,4
+    add edi,4
+    loop smrPadLoop
+
+smrMsbNext:
+    add ebx,SIZE req_msb_struc
+    inc edx
+    mov eax,edx
+    sub eax,ds:rqs_start_msb
+    cmp eax,ds:rqs_msb_count
+    jne smrMsbLoop
+;
+    popad
+    pop ds
+    ret
+SortMsbReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -993,6 +1079,7 @@ test_gate    Proc far
     call CreateRandomSectors
     call GetMinMax
     call CreateReqSel
+    call SortMsbReq
 ;
     popad
     pop es
