@@ -791,12 +791,14 @@ CreateRandomSectors Proc near
     push ebp
 ;
     mov ax,flat_sel
+    mov ds,ax
     mov es,ax
 ;
     mov eax,100
     call GetRandomRange
-;
     mov ecx,eax
+    inc ecx
+;
     shl eax,3
     push ecx
     AllocateBigLinear
@@ -836,6 +838,51 @@ CreateRandomSectors Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetMinMaxMsb
+;
+;       DESCRIPTION:    Get min & max MSB sector values
+;
+;       PARAMETERS:     ECX             Size
+;                       EDX             Data
+;
+;       RETURNS:        EAX             Min
+;                       EBX             Max
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMinMax Proc near
+    push ecx
+    push esi
+;
+    mov esi,edx
+    add esi,4
+    mov eax,ds:[esi]
+    mov ebx,eax
+
+gmmLoop:
+    cmp eax,ds:[esi]
+    jbe gmmNotMin
+;
+    mov eax,ds:[esi]
+
+gmmNotMin:
+    cmp ebx,ds:[esi]
+    jae gmmNotMax
+;
+    mov ebx,ds:[esi]
+
+gmmNotMax:
+    add esi,8
+    loop gmmLoop
+;
+    pop esi
+    pop ecx   
+    ret
+GetMinMax Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           TestGate
 ;
 ;       DESCRIPTION:    Test sector ordering
@@ -850,6 +897,7 @@ test_gate    Proc far
     pushad
 ;
     call CreateRandomSectors
+    call GetMinMax
 ;
     popad
     pop es

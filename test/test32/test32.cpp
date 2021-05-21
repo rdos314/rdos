@@ -67,6 +67,8 @@ void main()
     int id;
     int h;
 
+    RdosTestGate("");
+
     int handle;
 
     handle = RdosOpenVfsFile("y:/main.pdf");
