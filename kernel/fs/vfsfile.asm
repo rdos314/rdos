@@ -1120,8 +1120,13 @@ sorIntNext:
 
 sorIntFound:
     cmp eax,ds:[4*edx+esi]
-    jae sorIntDone
+    jbe sorIntSwap
 ;
+    inc edx
+    cmp eax,ds:[4*edx+esi]
+    jae sorIntDone
+
+sorIntSwap:
     cmp edx,ebp
     jae sorXch
 ;
