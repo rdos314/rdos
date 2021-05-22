@@ -930,7 +930,7 @@ CreateReqSel Proc near
     shl eax,4
     add ebx,eax
     mov eax,ecx
-    shl eax,2
+    shl eax,3
     add eax,ebx
     add eax,SIZE req_sel_struc
 ;
@@ -960,6 +960,7 @@ CreateReqSel Proc near
     mov es:rqs_index_ptr,edi
 ;
     mov ecx,es:rqs_sectors
+    shl ecx,1
     mov eax,-1
     rep stosd
     mov es:rqs_msb_ptr,edi
@@ -1109,16 +1110,27 @@ test_gate    Proc far
     push ds
     push es
     pushad
-;
+
+test_loop:
     call CreateRandomSectors
     call GetMinMax
     call CreateReqSel
+;
+    push ecx
+    shl ecx,3
+    FreeLinear
+    pop ecx
 ;
     mov eax,es
     mov ds,eax
 ;
     call SortMsbReq
     call CheckReq
+;
+    xor eax,eax
+    mov ds,eax
+    FreeMem
+    jmp test_loop
 ;
     popad
     pop es
