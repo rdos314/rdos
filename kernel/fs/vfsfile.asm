@@ -819,6 +819,7 @@ CreateRandomSectors Proc near
     mov ecx,eax
     inc ecx
 ;
+    mov eax,ecx
     shl eax,3
     push ecx
     AllocateBigLinear
