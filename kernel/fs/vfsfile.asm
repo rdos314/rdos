@@ -1064,37 +1064,113 @@ SortMsbReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CheckReq
+;       NAME:           SortOneReq
 ;
-;       DESCRIPTION:    Check req
+;       DESCRIPTION:    Sort one req
+;
+;       PARAMETERS:     DS              Req sel
+;                       EBX             Sorted & index offset
+;                       ECX             Entry count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SortOneReq  Proc near
+    pushad
+;
+    mov esi,ds:rqs_sorted_ptr
+    mov edi,ds:rqs_index_ptr
+    dec ecx
+    inc ebx
+
+sorSortLoop:
+    mov eax,ds:[4*ebx+esi]
+    cmp eax,ds:[4*ebx+esi-4]
+    jae sorSortNext
+;
+    push ecx
+;
+    xor edx,edx
+    mov ecx,ebx
+    shr ecx,1
+    jz sorIntFound
+
+sorIntLoop:
+    add edx,ecx
+;
+    cmp eax,ds:[4*edx+esi]
+    jae sorIntNext
+;
+    sub edx,ecx
+
+sorIntNext:
+    shr ecx,1
+    jnz sorIntLoop
+
+sorIntFound:
+    cmp eax,ds:[4*edx+esi]
+    jae sorIntDone
+;
+    mov eax,ds:[4*edx+esi]
+    xchg eax,ds:[4*ebx+esi]
+    mov ds:[4*edx+esi],eax
+;
+    mov eax,ds:[4*edx+edi]
+    xchg eax,ds:[4*ebx+edi]
+    mov ds:[4*edx+edi],eax
+
+sorIntDone:
+    pop ecx
+
+sorSortNext:
+    inc ebx
+    loop sorSortLoop
+;
+    popad
+    ret
+SortOneReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SortLsbReq
+;
+;       DESCRIPTION:    Sort req selector, LSB part
 ;
 ;       PARAMETERS:     DS              Req sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckReq  Proc near
-    push ds
-    pushad
+SortLsbReq  Proc near
+    push ebx
+    push ecx
 ;
     mov ebx,ds:rqs_msb_ptr
     mov ecx,ds:rqs_msb_count
-    xor eax,eax
 
-crLoop:
-    add eax,ds:[ebx].rqm_count
+slrLoop:
+    push ebx
+    push ecx
+;
+    mov ecx,ds:[ebx].rqm_count
+    mov ebx,ds:[ebx].rqm_ptr
+    cmp ecx,1
+    jbe slrNext
+;
+    sub ebx,ds:rqs_sorted_ptr
+    shr ebx,2
+    call SortOneReq
+
+slrNext:
+    pop ecx
+    pop ebx
+;
     add ebx,SIZE req_msb_struc
-    loop crLoop
+    loop slrLoop
 ;
-    cmp eax,ds:rqs_sectors
-    je crDone
-;
-    int 3
-
-crDone:
-    popad
-    pop ds
+    pop ecx
+    pop ebx
     ret
-CheckReq Endp
+SortLsbReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1126,7 +1202,7 @@ test_loop:
     mov ds,eax
 ;
     call SortMsbReq
-    call CheckReq
+    call SortLsbReq
 ;
     xor eax,eax
     mov ds,eax
