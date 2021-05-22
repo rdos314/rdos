@@ -1079,6 +1079,18 @@ SortOneReq  Proc near
 ;
     mov esi,ds:rqs_sorted_ptr
     mov edi,ds:rqs_index_ptr
+    shl ebx,2
+    add esi,ebx
+    add edi,ebx
+
+sorRetry:
+    xor ebx,ebx
+;
+    push ecx
+    push esi
+    push edi
+;
+    mov ebp,ecx
     dec ecx
     inc ebx
 
@@ -1110,6 +1122,12 @@ sorIntFound:
     cmp eax,ds:[4*edx+esi]
     jae sorIntDone
 ;
+    cmp edx,ebp
+    jae sorXch
+;
+    mov ebp,edx
+
+sorXch:
     mov eax,ds:[4*edx+esi]
     xchg eax,ds:[4*ebx+esi]
     mov ds:[4*edx+esi],eax
@@ -1125,6 +1143,24 @@ sorSortNext:
     inc ebx
     loop sorSortLoop
 ;
+    pop edi
+    pop esi
+    pop ecx
+;
+    cmp ecx,ebp
+    je sorDone
+;
+    inc ebp
+    sub ecx,ebp
+    cmp ecx,1
+    jbe sorDone
+;
+    shl ebp,2
+    add esi,ebp
+    add edi,ebp
+    jmp sorRetry
+
+sorDone:
     popad
     ret
 SortOneReq  Endp
