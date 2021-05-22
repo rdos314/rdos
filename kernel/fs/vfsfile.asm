@@ -928,6 +928,9 @@ CreateReqSel Proc near
 ;
     mov eax,ecx
     shl eax,4
+    add ebx,eax
+    mov eax,ecx
+    shl eax,2
     add eax,ebx
     add eax,SIZE req_sel_struc
 ;
@@ -945,6 +948,7 @@ CreateReqSel Proc near
     mov edi,SIZE req_sel_struc
     mov es:rqs_chain_ptr,edi
 ;
+    shl ecx,1
     mov esi,edx
     rep movsd
     mov es:rqs_sorted_ptr,edi
@@ -976,16 +980,12 @@ CreateReqSel Endp
 ;
 ;       DESCRIPTION:    Sort req selector, MSB part
 ;
-;       PARAMETERS:     ES              Req sel
+;       PARAMETERS:     DS              Req sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SortMsbReq  Proc near
-    push ds
     pushad
-;
-    mov eax,es
-    mov ds,eax
 ;
     mov edx,ds:rqs_start_msb
     mov edi,ds:rqs_sorted_ptr
@@ -1056,9 +1056,43 @@ smrMsbNext:
     jne smrMsbLoop
 ;
     popad
-    pop ds
     ret
 SortMsbReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CheckReq
+;
+;       DESCRIPTION:    Check req
+;
+;       PARAMETERS:     DS              Req sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckReq  Proc near
+    push ds
+    pushad
+;
+    mov ebx,ds:rqs_msb_ptr
+    mov ecx,ds:rqs_msb_count
+    xor eax,eax
+
+crLoop:
+    add eax,ds:[ebx].rqm_count
+    add ebx,SIZE req_msb_struc
+    loop crLoop
+;
+    cmp eax,ds:rqs_sectors
+    je crDone
+;
+    int 3
+
+crDone:
+    popad
+    pop ds
+    ret
+CheckReq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1079,7 +1113,12 @@ test_gate    Proc far
     call CreateRandomSectors
     call GetMinMax
     call CreateReqSel
+;
+    mov eax,es
+    mov ds,eax
+;
     call SortMsbReq
+    call CheckReq
 ;
     popad
     pop es
