@@ -132,6 +132,8 @@ req_msb_struc  STRUC
 
 rqm_ptr        DD ?
 rqm_count      DD ?
+rqm_size       DD ?
+rqm_pad        DD ?
 
 req_msb_struc  ENDS
 
@@ -925,7 +927,7 @@ CreateReqSel Proc near
 ;
     sub ebx,eax
     inc ebx
-    shl ebx,3
+    shl ebx,4
 ;
     mov eax,ecx
     shl eax,4
@@ -1037,6 +1039,7 @@ smrAdjustDone:
     mov eax,1
     shl eax,cl
     mov ecx,eax
+    mov ds:[ebx].rqm_size,ecx
     sub ecx,ds:[ebx].rqm_count
     jz smrMsbNext
 ;
@@ -1050,7 +1053,7 @@ smrPadLoop:
     loop smrPadLoop
 
 smrMsbNext:
-    add ebx,SIZE req_msb_struc
+    add ebx,16
     inc edx
     mov eax,edx
     sub eax,ds:rqs_start_msb
@@ -1079,7 +1082,6 @@ SortOneReq  Proc near
 ;
     mov esi,ds:rqs_sorted_ptr
     mov edi,ds:rqs_index_ptr
-    shl ebx,2
     add esi,ebx
     add edi,ebx
 
@@ -1198,20 +1200,118 @@ slrLoop:
     jbe slrNext
 ;
     sub ebx,ds:rqs_sorted_ptr
-    shr ebx,2
     call SortOneReq
 
 slrNext:
     pop ecx
     pop ebx
 ;
-    add ebx,SIZE req_msb_struc
+    add ebx,16
     loop slrLoop
 ;
     pop ecx
     pop ebx
     ret
 SortLsbReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindReq
+;
+;       DESCRIPTION:    Find a request
+;
+;       PARAMETERS:     DS              Req sel
+;                       EDX:EAX         Sector
+;
+;       RETURNS:        NC              Found
+;                         EBX           Entry index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindReq  Proc near
+    push ebx
+    push ecx
+    push edx
+;
+    sub edx,ds:rqs_start_msb
+    jc frFail
+;
+    cmp edx,ds:rqs_msb_count
+    jae frFail
+;
+    shl edx,4
+    add edx,ds:rqs_msb_ptr
+    mov ebx,ds:[edx].rqm_ptr
+    mov ecx,ds:[edx].rqm_size
+    shr ecx,1
+    jz frCheck
+
+frLoop:
+    lea edx,[4*ecx]
+    add ebx,edx
+    cmp eax,ds:[ebx]
+    je frFound
+    ja frNext
+;
+    sub ebx,edx
+
+frNext:
+    shr ecx,1
+    jnz frLoop
+
+frCheck:
+    cmp eax,ds:[ebx]
+    je frFound
+
+frFail:
+    stc
+    jmp frDone
+
+frFound:
+    sub ebx,ds:rqs_sorted_ptr
+    shr ebx,2
+    clc
+
+frDone:
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+FindReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CheckReq
+;
+;       DESCRIPTION:    Check correctness of request
+;
+;       PARAMETERS:     DS              Req sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckReq  Proc near
+    pushad
+;
+    mov ebx,ds:rqs_chain_ptr
+    mov ecx,ds:rqs_sectors
+
+crLoop:
+    mov eax,ds:[ebx]
+    mov edx,ds:[ebx+4]
+    call FindReq
+    jnc crNext
+;
+    int 3
+
+crNext:
+    add ebx,8
+    loop crLoop
+;
+    popad
+    ret
+CheckReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1228,8 +1328,7 @@ test_gate    Proc far
     push ds
     push es
     pushad
-
-test_loop:
+;
     call CreateRandomSectors
     call GetMinMax
     call CreateReqSel
@@ -1245,10 +1344,11 @@ test_loop:
     call SortMsbReq
     call SortLsbReq
 ;
+    call CheckReq
+;
     xor eax,eax
     mov ds,eax
     FreeMem
-    jmp test_loop
 ;
     popad
     pop es
