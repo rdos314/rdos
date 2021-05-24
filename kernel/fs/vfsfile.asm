@@ -1140,7 +1140,7 @@ sorXch:
     mov ds:[4*edx+esi],eax
 ;
     mov eax,ds:[4*edx+edi]
-    xchg eax,ds:[4*ebx+edi]
+    xchg eax,ds:[4*edx+edi]
     mov ds:[4*edx+edi],eax
 
 sorIntDone:
@@ -1194,7 +1194,7 @@ slrLoop:
     push ebx
     push ecx
 ;
-    mov ecx,ds:[ebx].rqm_count
+    mov ecx,ds:[ebx].rqm_size
     mov ebx,ds:[ebx].rqm_ptr
     cmp ecx,1
     jbe slrNext
