@@ -67,7 +67,11 @@ void main()
     int id;
     int h;
 
-    RdosTestGate("");
+    for (i = 0;; i++)
+    {
+        printf("%d\r\n", i);
+        RdosTestGate("");
+    }
 
     int handle;
 
