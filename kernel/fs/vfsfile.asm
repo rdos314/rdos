@@ -1304,6 +1304,7 @@ crLoop:
     jnc crNext
 ;
     int 3
+    jmp crLoop
 
 crNext:
     add ebx,8
