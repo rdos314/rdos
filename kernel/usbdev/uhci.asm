@@ -3274,12 +3274,19 @@ FinishRaw   Proc far
     test al,1
     jnz frOk
 ;
-    mov ax,25
+    mov cx,50
+
+frWaitLoop:
+    mov ax,20
     WaitMilliSec
 ;
     mov eax,fs:[edx].uqh_elem
     test al,1
-    jz frFail
+    jnz frOk
+;
+    loop frWaitLoop
+;
+    jmp frFail
     
 frOk:
     lock and gs:usbp_flags,NOT PIPE_FLAG_ACTIVE
