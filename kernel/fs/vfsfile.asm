@@ -930,9 +930,11 @@ CreateReqSel Proc near
     shl ebx,4
 ;
     mov eax,ecx
+    inc eax
     shl eax,4
     add ebx,eax
     mov eax,ecx
+    inc eax
     shl eax,3
     add eax,ebx
     add eax,SIZE req_sel_struc
@@ -957,12 +959,14 @@ CreateReqSel Proc near
     mov es:rqs_sorted_ptr,edi
 ;
     mov ecx,es:rqs_sectors
+    inc ecx
     mov eax,-1
     shl ecx,1
     rep stosd
     mov es:rqs_index_ptr,edi
 ;
     mov ecx,es:rqs_sectors
+    inc ecx
     shl ecx,1
     mov eax,-1
     rep stosd
@@ -1101,6 +1105,12 @@ sorSortLoop:
     cmp eax,ds:[4*ebx+esi-4]
     jae sorSortNext
 ;
+    cmp ebx,ebp
+    jae sorScan
+;
+    mov ebp,ebx
+
+sorScan:
     push ecx
 ;
     xor edx,edx
@@ -1139,9 +1149,9 @@ sorXch:
     xchg eax,ds:[4*ebx+esi]
     mov ds:[4*edx+esi],eax
 ;
-    mov eax,ds:[4*edx+edi]
-    xchg eax,ds:[4*edx+edi]
-    mov ds:[4*edx+edi],eax
+;    mov eax,ds:[4*edx+edi]
+;    xchg eax,ds:[4*ebx+edi]
+;    mov ds:[4*edx+edi],eax
 
 sorIntDone:
     pop ecx
@@ -1157,8 +1167,10 @@ sorSortNext:
     cmp ecx,ebp
     je sorDone
 ;
-    inc ebp
+    mov ebp,1
     sub ecx,ebp
+    jc sorDone
+;
     cmp ecx,1
     jbe sorDone
 ;
@@ -1304,12 +1316,16 @@ crLoop:
     jnc crNext
 ;
     int 3
-    jmp crLoop
+    stc
+    jmp crDone
 
 crNext:
     add ebx,8
     loop crLoop
 ;
+    clc
+
+crDone:
     popad
     ret
 CheckReq  Endp
@@ -1331,13 +1347,10 @@ test_gate    Proc far
     pushad
 ;
     call CreateRandomSectors
+
+tRetry:
     call GetMinMax
     call CreateReqSel
-;
-    push ecx
-    shl ecx,3
-    FreeLinear
-    pop ecx
 ;
     mov eax,es
     mov ds,eax
@@ -1346,6 +1359,19 @@ test_gate    Proc far
     call SortLsbReq
 ;
     call CheckReq
+    jnc tNext
+;
+    int 3
+    xor eax,eax
+    mov ds,eax
+    FreeMem
+    jmp tRetry
+
+tNext:
+    push ecx
+    shl ecx,3
+    FreeLinear
+    pop ecx
 ;
     xor eax,eax
     mov ds,eax
