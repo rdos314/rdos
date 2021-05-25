@@ -1026,6 +1026,7 @@ smrSectorNext:
     pop ebx
 ;
     mov ds:[ebx].rqm_count,ebp
+    mov ds:[ebx].rqm_size,ebp
 ;
     or ebp,ebp
     jz smrMsbNext
