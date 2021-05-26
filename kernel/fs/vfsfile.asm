@@ -1157,9 +1157,9 @@ sorXch:
     xchg eax,ds:[4*ebx+esi]
     mov ds:[4*edx+esi],eax
 ;
-;    mov eax,ds:[4*edx+edi]
-;    xchg eax,ds:[4*ebx+edi]
-;    mov ds:[4*edx+edi],eax
+    mov eax,ds:[4*edx+edi]
+    xchg eax,ds:[4*ebx+edi]
+    mov ds:[4*edx+edi],eax
 
 sorIntDone:
     pop ecx
