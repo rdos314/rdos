@@ -816,7 +816,7 @@ CreateRandomSectors Proc near
     mov ds,ax
     mov es,ax
 ;
-    mov eax,100
+    mov eax,1000
     call GetRandomRange
     mov ecx,eax
     inc ecx
@@ -828,11 +828,11 @@ CreateRandomSectors Proc near
     pop ecx
     mov edi,edx
 ;
-    mov eax,10
+    mov eax,25
     call GetRandomRange
     mov esi,eax
 ;
-    mov eax,10
+    mov eax,25
     call GetRandomRange
     mov ebp,eax
 ;
