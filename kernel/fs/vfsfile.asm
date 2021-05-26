@@ -1083,6 +1083,7 @@ SortMsbReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 so_new_ind EQU 0
+so_min     EQU 4
 
 SortOneReq  Proc near
     pushad
@@ -1099,6 +1100,8 @@ sorRetry:
     push esi
     push edi
 ;
+    mov eax,-1
+    push eax
     push ecx
     mov ebp,esp
 ;
@@ -1166,6 +1169,7 @@ sorSortNext:
     loop sorSortLoop
 ;
     pop eax
+    pop edx
 ;
     pop edi
     pop esi
