@@ -1182,18 +1182,21 @@ sorSortNext:
     pop ecx
 ;
     cmp ecx,eax
-    je sorDone
-;
-    mov eax,1
-    sub ecx,eax
-    jc sorDone
-;
+    jbe sorDone
+
+sorAdvanceLoop:
+    add esi,4
+    add edi,4
+    dec ecx
     cmp ecx,1
     jbe sorDone
 ;
-    shl eax,2
-    add esi,eax
-    add edi,eax
+    cmp edx,ds:[esi]
+    jb sorRetry
+;
+    sub eax,1
+    jnc sorAdvanceLoop
+;
     jmp sorRetry
 
 sorDone:
