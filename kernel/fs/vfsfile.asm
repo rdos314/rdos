@@ -1082,6 +1082,8 @@ SortMsbReq  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+so_new_ind EQU 0
+
 SortOneReq  Proc near
     pushad
 ;
@@ -1097,7 +1099,9 @@ sorRetry:
     push esi
     push edi
 ;
-    mov ebp,ecx
+    push ecx
+    mov ebp,esp
+;
     dec ecx
     inc ebx
 
@@ -1106,10 +1110,10 @@ sorSortLoop:
     cmp eax,ds:[4*ebx+esi-4]
     jae sorSortNext
 ;
-    cmp ebx,ebp
+    cmp ebx,[ebp].so_new_ind
     jae sorScan
 ;
-    mov ebp,ebx
+    mov [ebp].so_new_ind,ebx
 
 sorScan:
     push ecx
@@ -1140,10 +1144,10 @@ sorIntFound:
     jae sorIntDone
 
 sorIntSwap:
-    cmp edx,ebp
+    cmp edx,[ebp].so_new_ind
     jae sorXch
 ;
-    mov ebp,edx
+    mov [ebp].so_new_ind,edx
 
 sorXch:
     mov eax,ds:[4*edx+esi]
@@ -1161,23 +1165,25 @@ sorSortNext:
     inc ebx
     loop sorSortLoop
 ;
+    pop eax
+;
     pop edi
     pop esi
     pop ecx
 ;
-    cmp ecx,ebp
+    cmp ecx,eax
     je sorDone
 ;
-    mov ebp,1
-    sub ecx,ebp
+    mov eax,1
+    sub ecx,eax
     jc sorDone
 ;
     cmp ecx,1
     jbe sorDone
 ;
-    shl ebp,2
-    add esi,ebp
-    add edi,ebp
+    shl eax,2
+    add esi,eax
+    add edi,eax
     jmp sorRetry
 
 sorDone:
