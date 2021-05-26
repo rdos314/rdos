@@ -1144,7 +1144,13 @@ sorIntFound:
 ;
     inc edx
     cmp eax,ds:[4*edx+esi]
+    jb sorIntSwap
+;
+    cmp eax,[ebp].so_min
     jae sorIntDone
+;
+    mov [ebp].so_min,eax
+    jmp sorIntDone
 
 sorIntSwap:
     cmp edx,[ebp].so_new_ind
