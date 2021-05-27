@@ -1257,7 +1257,7 @@ SortLsbReq  Endp
 ;                       EDX:EAX         Sector
 ;
 ;       RETURNS:        NC              Found
-;                         EBX           Entry index
+;                         EAX           Entry index
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1303,6 +1303,7 @@ frFail:
 frFound:
     sub ebx,ds:rqs_sorted_ptr
     shr ebx,2
+    mov eax,ebx
     clc
 
 frDone:
@@ -1327,14 +1328,21 @@ CheckReq  Proc near
     pushad
 ;
     mov ebx,ds:rqs_chain_ptr
+    mov esi,ds:rqs_index_ptr
     mov ecx,ds:rqs_sectors
 
 crLoop:
     mov eax,ds:[ebx]
     mov edx,ds:[ebx+4]
     call FindReq
-    jnc crNext
+    jc crFail
 ;
+    mov eax,ds:[4*eax+esi]
+    mov eax,ds:[eax]
+    cmp eax,ds:[ebx]
+    je crNext
+
+crFail:
     int 3
     stc
     jmp crDone
