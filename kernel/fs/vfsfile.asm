@@ -839,7 +839,19 @@ CreateRandomSectors Proc near
     push ecx
 
 crsLoop:
+    mov eax,0FFFFh
+    call GetRandomRange
+    or ah,ah
+    jne crsBig
+
+crsSmall:
+    movsx eax,al
+    jmp crsSave
+
+crsBig:
     GetRandom
+
+crsSave:
     stosd
 ;
     mov eax,esi
@@ -1265,6 +1277,7 @@ FindReq  Proc near
     push ebx
     push ecx
     push edx
+    push ebp
 ;
     sub edx,ds:rqs_start_msb
     jc frFail
@@ -1275,6 +1288,7 @@ FindReq  Proc near
     shl edx,4
     add edx,ds:rqs_msb_ptr
     mov ebx,ds:[edx].rqm_ptr
+    mov ebp,ebx
     mov ecx,ds:[edx].rqm_size
     shr ecx,1
     jz frCheck
@@ -1301,12 +1315,27 @@ frFail:
     jmp frDone
 
 frFound:
+    cmp eax,-1
+    jne frOk
+
+frMax:
+    cmp ebx,ebp
+    je frOk
+;
+    cmp eax,ds:[ebx-4]
+    jne frOk
+;
+    sub ebx,4
+    jmp frMax
+
+frOk:
     sub ebx,ds:rqs_sorted_ptr
     shr ebx,2
     mov eax,ebx
     clc
 
 frDone:
+    pop ebp
     pop edx
     pop ecx
     pop ebx
@@ -1337,9 +1366,13 @@ crLoop:
     call FindReq
     jc crFail
 ;
-    mov eax,ds:[4*eax+esi]
-    mov eax,ds:[eax]
+    mov edx,ds:[4*eax+esi]
+    mov eax,ds:[edx]
     cmp eax,ds:[ebx]
+    jne crFail
+;
+    mov eax,ds:[edx+4]
+    cmp eax,ds:[ebx+4]
     je crNext
 
 crFail:
