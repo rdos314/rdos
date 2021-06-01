@@ -2518,7 +2518,9 @@ OpenPacket   Proc far
     mov ax,flat_sel
     mov fs,ax
 ;
-    inc cx
+    add cx,2
+    shr cx,1
+    shl cx,1
     movzx eax,cx
     shl ax,3
     add ax,SIZE usb_packet_struc
