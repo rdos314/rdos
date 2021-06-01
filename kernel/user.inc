@@ -142,10 +142,12 @@ UserGateForce32 MACRO gate_nr
                         ENDM
 
 UserGateApp     MACRO gate_nr
+    db 55h
     db 67h
     db 9Ah
     dd gate_nr
     dw 3
+    db 5Dh
                         ENDM
 
 UserGate        MACRO gate_nr
