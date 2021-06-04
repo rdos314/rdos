@@ -76,6 +76,9 @@ d_get_address	DD ?,?
 ; OUT NC        Link ok
 d_get_link_state	DD ?,?
 
+; OUT ES:EDI    MAC
+d_get_mac               DD ?,?
+
 driver_data	ENDS
 
 protocol_data	STRUC

@@ -895,4 +895,6 @@ grow_share_block_nr         = 810
 free_share_block_nr         = 811
 create_fixed_share_block_nr = 812
 
+get_net_mac_nr              = 813
+
 osgate_entries              = 850

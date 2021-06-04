@@ -966,6 +966,31 @@ GetLinkState2     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetMac
+;
+;       DESCRIPTION:    Get Mac address
+;
+;       RETURNS:        ES:EDI    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMac1 Proc far
+    mov di,ether_data_sel
+    mov ds,di
+    mov edi,OFFSET EthernetAddress  
+    retf32
+GetMac1 Endp
+
+GetMac2 Proc far
+    mov di,ether_data2_sel
+    mov ds,di
+    mov edi,OFFSET EthernetAddress  
+    retf32
+GetMac2 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DispatchTable
 ;
 ;           DESCRIPTION:    Driver dispatch table
@@ -983,6 +1008,7 @@ DispTable1:
     DD OFFSET GetAddress1,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET GetLinkState1,    SEG code
+    DD OFFSET GetMac1,          SEG code
 
 DispTable2:
     DD OFFSET Preview2,         SEG code
@@ -993,6 +1019,7 @@ DispTable2:
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET GetLinkState2,    SEG code
+    DD OFFSET GetMac2,          SEG code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1145,52 +1172,6 @@ InitSecondaryPciAdapter Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetMacAddress
-;
-;       DESCRIPTION:    Get Mac address
-;
-;       PARAMETERS:     ES:(E)DI    Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_mac_address_name    DB 'Get Mac Address', 0
-
-get_mac_address Proc near
-    push ds
-    push esi
-    push ecx
-;    
-    mov si,ether_data_sel
-    mov ds,si
-    mov esi,OFFSET EthernetAddress  
-    mov ecx,3
-    rep movs word ptr es:[edi],ds:[esi]
-    clc
-;
-    pop ecx
-    pop esi
-    pop ds
-    ret
-get_mac_address Endp    
-
-get_mac_address32   Proc far
-    push edi
-    call get_mac_address
-    pop edi
-    retf32
-get_mac_address32   Endp
-
-get_mac_address16   Proc far
-    push edi
-    movzx edi,di
-    call get_mac_address
-    pop edi
-    retf32
-get_mac_address16   Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Init_net
 ;
 ;           DESCRIPTION:    inits adpater
@@ -1235,13 +1216,6 @@ Init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov ebx,OFFSET get_mac_address16
-    mov esi,OFFSET get_mac_address32
-    mov edi,OFFSET get_mac_address_name
-    mov dx,virt_es_in
-    mov ax,get_mac_address_nr
-    RegisterUserGate
 ;
     mov eax,SIZE data
     mov bx,ether_data_sel

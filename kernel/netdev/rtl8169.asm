@@ -3812,6 +3812,31 @@ MemGetLinkState2     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetMac
+;
+;       DESCRIPTION:    Get Mac address
+;
+;       RETURNS:        ES:EDI    Mac
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMac1  Proc far
+    mov di,ether_data_sel
+    mov es,di
+    mov edi,OFFSET EthernetAddress  
+    retf32
+GetMac1 Endp    
+
+GetMac2  Proc far
+    mov di,ether_data2_sel
+    mov es,di
+    mov edi,OFFSET EthernetAddress  
+    retf32
+GetMac2 Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DispatchTable
 ;
 ;           DESCRIPTION:    Driver dispatch table
@@ -3829,6 +3854,7 @@ IoDispTable1:
     DD OFFSET GetAddress1,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET IoGetLinkState1,  SEG code
+    DD OFFSET GetMac1,          SEG code
 
 IoDispTable2:
     DD OFFSET IoPreview2,       SEG code
@@ -3839,6 +3865,7 @@ IoDispTable2:
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET IoGetLinkState2,  SEG code
+    DD OFFSET GetMac2,          SEG code
 
 MemDispTable1:
     DD OFFSET MemPreview1,      SEG code
@@ -3849,6 +3876,7 @@ MemDispTable1:
     DD OFFSET GetAddress1,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET MemGetLinkState1, SEG code
+    DD OFFSET GetMac1,          SEG code
 
 MemDispTable2:
     DD OFFSET MemPreview2,      SEG code
@@ -3859,6 +3887,7 @@ MemDispTable2:
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET MemGetLinkState2, SEG code
+    DD OFFSET GetMac2,          SEG code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4838,52 +4867,6 @@ InitSecondaryPciAdapter Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           GetMacAddress
-;
-;       DESCRIPTION:    Get Mac address
-;
-;       PARAMETERS:     ES:(E)DI    Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_mac_address_name    DB 'Get Mac Address', 0
-
-get_mac_address Proc near
-    push ds
-    push esi
-    push ecx
-;    
-    mov si,ether_data_sel
-    mov ds,si
-    mov esi,OFFSET EthernetAddress  
-    mov ecx,3
-    rep movs word ptr es:[edi],ds:[esi]
-    clc
-;
-    pop ecx
-    pop esi
-    pop ds
-    ret
-get_mac_address Endp    
-
-get_mac_address32   Proc far
-    push edi
-    call get_mac_address
-    pop edi
-    retf32
-get_mac_address32   Endp
-
-get_mac_address16   Proc far
-    push edi
-    movzx edi,di
-    call get_mac_address
-    pop edi
-    retf32
-get_mac_address16   Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           GetNetHwId
 ;
 ;       DESCRIPTION:    Get network hardware ID
@@ -4977,13 +4960,6 @@ Init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov ebx,OFFSET get_mac_address16
-    mov esi,OFFSET get_mac_address32
-    mov edi,OFFSET get_mac_address_name
-    mov dx,virt_es_in
-    mov ax,get_mac_address_nr
-    RegisterUserGate
 ;
     mov esi,OFFSET get_net_hw_id
     mov edi,OFFSET get_net_hw_id_name

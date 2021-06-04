@@ -2191,6 +2191,67 @@ ip_to_mac16   PROC far
     pop edi
     retf32
 ip_to_mac16   ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetMac
+;
+;       Purpose:        Get Mac of local network adapter
+;
+;       Parameters:     ES:(E)DI	Mac buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_mac_name   DB 'Get MAC',0
+
+get_mac	proc near
+    push ds
+    push fs
+    pushad
+
+gmDhcpLoop:
+    call IsDhcpDone
+    jnc gmDhcpDone
+;
+    push ax
+    mov ax,10
+    WaitMilliSec
+    pop ax
+    jmp gmDhcpLoop
+
+gmDhcpDone:
+    mov bx,SEG data
+    mov fs,bx
+    mov bx,fs:ip_handle
+;
+    mov dx,SEG data
+    mov ds,dx
+    mov edx,ds:gateway
+    push edx
+    mov ax,ss
+    mov ds,ax
+    mov esi,esp
+    GetNetMac
+    pop edx
+
+gmDone:
+    popad
+    pop fs
+    pop ds  
+    ret
+get_mac    Endp
+
+get_mac32:
+    call get_mac
+    retf32
+
+get_mac16   PROC far
+    push edi
+    movzx edi,di
+    call get_mac
+    pop edi
+    retf32
+get_mac16   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2390,6 +2451,13 @@ init    PROC far
     mov edi,OFFSET ip_to_mac_name
     mov dx,virt_es_in
     mov ax,ip_to_mac_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_mac16
+    mov esi,OFFSET get_mac32
+    mov edi,OFFSET get_mac_name
+    mov dx,virt_es_in
+    mov ax,get_mac_address_nr
     RegisterUserGate
 ;
     mov cx,4

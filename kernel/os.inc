@@ -2946,6 +2946,14 @@ GetNetAddress    MACRO
     OsGate get_net_address_nr
                         ENDM
 
+; IN  BX        Protocol handle
+; IN  DS:ESI    Gateway logical address
+; IN  ES:EDI    Mac buffer
+; OUT NC        SUCCESS
+GetNetMac    MACRO
+    OsGate get_net_mac_nr
+                        ENDM
+
 ; IN  BX        PROTOCOL HANDLE
 ; IN  DS:ESI    DEST ADDRESS
 ; OUT NC        SUCCESS

@@ -1741,6 +1741,61 @@ get_net_address  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           GetNetMac
+;
+;       Purpose:        Get network mac
+;
+;       Parameters:     BX      protocol handle
+;                       DS:ESI  logical address
+;                       ES:EDI  MAC buffer
+;
+;       returns:        NC      success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_net_mac_name     DB 'Get Net Mac',0
+
+get_net_mac  Proc far
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+    push esi
+    push edi
+;
+    mov ax,ds
+    mov fs,ax
+    mov ds,bx
+    call FindAddress
+    jc gnmDone
+;
+    mov fs,ax
+    mov fs,fs:prot_driver
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+    call fword ptr fs:d_get_mac
+    jc gnmDone
+;
+    mov eax,es:[edi]
+    mov ds:[esi],eax
+    mov ax,es:[edi+4]
+    mov ds:[esi+4],ax
+
+gnmDone:
+    pop edi
+    pop esi
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    retf32
+get_net_mac  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           SendNet
 ;
 ;       Purpose:        Send data to network
@@ -3048,6 +3103,12 @@ init    PROC far
     mov edi,OFFSET get_net_address_name
     xor cl,cl
     mov ax,get_net_address_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET get_net_mac
+    mov edi,OFFSET get_net_mac_name
+    xor cl,cl
+    mov ax,get_net_mac_nr
     RegisterOsGate
 ;
     mov esi,OFFSET send_net
