@@ -68,7 +68,7 @@ const int HistoryArr[] = {601, 541, 481, 421, 361, 301, 241, 181, 121, 91, 61, 0
 ##########################################################################*/
 TVp::TVp(TControlThread *control)
   : FLog("TVp"),
-    FSerial(1, 9600, 'E', 8, 1),
+    FSerial(2, 9600, 'E', 8, 1),
     FModDev(&FSerial),
     FEch(&FModDev, 1)
 {
