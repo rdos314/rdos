@@ -114,12 +114,10 @@ io_in_size          DW ?
 io_out_size         DW ?
 io_intr_in          DB ?
 io_bulk_out         DB ?
-io_in_handle        DW ?
-io_out_handle       DW ?
+io_dev_handle       DW ?
 io_in_buffer        DW ?
 io_out_buffer       DW ?
-io_in_req           DW ?
-io_out_req          DW ?
+io_wait             DW ?
 
 io_insert_id        DB ?
 io_process_id       DB ?
@@ -192,36 +190,6 @@ abrDone:
     pop eax
     ret
 AllocateBusReq Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           StartReq
-;
-;   DESCRIPTION:    Start req
-;
-;   PARAMETERS:     BX          Entry offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartReq        Proc near
-    push es
-    pushad
-;
-    mov es,ds:io_out_buffer
-    xor edi,edi
-    movzx esi,bx
-    movsd
-    movsd
-;
-    mov ecx,8
-    mov bx,ds:io_out_req
-;    StartUsbReq
-;
-    popad
-    pop es
-    ret
-StartReq        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -306,31 +274,36 @@ btOff:
 btCreate:
     mov bx,ds:io_controller
     movzx ax,ds:io_address
-    mov dl,ds:io_intr_in
-;    OpenUsbPipe
-    mov ds:io_in_handle,bx
+    OpenUsbDevice
+    mov ds:io_dev_handle,bx
 ;
-;    CreateUsbReq
-    mov ds:io_in_req,bx    
-;    
-    mov cx,ds:io_in_size
-    xor ax,ax
-;    AddReadUsbDataReq
+    push es
+    movzx eax,ds:io_in_size
+    AllocateSmallGlobalMem
     mov ds:io_in_buffer,es
+    pop es
 ;
-    mov bx,ds:io_controller
-    movzx ax,ds:io_address
+    mov bx,ds:io_dev_handle
+    mov dl,ds:io_intr_in
+    mov cx,10
+    mov ax,2
+    OpenUsbPacketPipe
+;
+    mov bx,ds:io_dev_handle
     mov dl,ds:io_bulk_out
-;    OpenUsbPipe    
-    mov ds:io_out_handle,bx
-;
-;    CreateUsbReq
-    mov ds:io_out_req,bx
-;    
     mov cx,ds:io_out_size
-    xor ax,ax
-;    AddWriteUsbDataReq
+    shl cx,2
+    mov ax,5
+    OpenUsbRawPipe
     mov ds:io_out_buffer,es
+;
+    CreateWait
+    mov ds:io_wait,bx
+;
+    mov ax,ds:io_dev_handle
+    mov dl,ds:io_intr_in
+    mov ecx,ds
+    AddWaitForUsbDevicePipe
 
 btRestart:
     EnterSection ds:io_section
@@ -338,33 +311,17 @@ btRestart:
     inc al
     mov ds:io_process_id,al
     LeaveSection ds:io_section
-;
-    mov cx,8
-    mov bx,ds:io_in_req
-;    StartUsbReq
 
 btOn:
-    mov bx,ds:io_in_req
-;    IsUsbReqReady
-    jc btReadDone
-;
-;    GetUsbReqData
-    jc btDataDone
+    mov bx,ds:io_dev_handle
+    mov dl,ds:io_intr_in
+    mov es,ds:io_in_buffer
+    xor edi,edi
+    movzx ecx,ds:io_in_size
+    GetUsbPacketPipe
+    jc btCheckReq
 ;
     call HandleReply
-
-btDataDone:
-    mov cx,8
-    mov bx,ds:io_in_req
-;    StartUsbReq
-
-btReadDone:
-    mov bx,ds:io_out_req
-;    IsUsbReqStarted
-    jc btCheckReq
-;    
-;    IsUsbReqReady
-    jc btWaitOn
 
 btCheckReq:
     EnterSection ds:io_section
@@ -380,7 +337,22 @@ btCheckReq:
     or ax,ax
     jz btReadNext
 ;
-    call StartReq
+    push es
+    pushad
+;
+    mov es,ds:io_out_buffer
+    xor edi,edi
+    movzx esi,bx
+    movsd
+    movsd
+;
+    mov ecx,8
+    mov bx,ds:io_dev_handle
+    mov dl,ds:io_bulk_out
+    PostUsbRawPipe
+;
+    popad
+    pop es
 
 btReadNext:
     inc cl
@@ -396,30 +368,38 @@ btReadSave:
 
 btWaitLeave:
     LeaveSection ds:io_section
+;
+    mov cl,ds:io_process_id
+    cmp cl,ds:io_insert_id
+    jne btCheckReq
 
 btWaitOn:
-    WaitForSignal
+    mov bx,ds:io_wait
+    WaitWithoutTimeout
 
 btCheckOn:
     mov al,ds:io_bulk_out
     or al,al
     jnz btOn
 ;
-    mov bx,ds:io_in_req
-;    CloseUsbReq
-    mov ds:io_in_req,0
+    mov bx,ds:io_dev_handle
+    mov dl,ds:io_intr_in
+    CloseUsbPipe
 ;
-    mov bx,ds:io_in_handle
-;    CloseUsbPipe
-    mov ds:io_in_handle,0
+    mov bx,ds:io_dev_handle
+    mov dl,ds:io_bulk_out
+    CloseUsbPipe
 ;
-    mov bx,ds:io_out_req
-;    CloseUsbReq
-    mov ds:io_out_req,0
+    mov bx,ds:io_dev_handle
+    CloseUsbDevice
+;    
+    push es
+    mov es,ds:io_in_buffer
+    FreeMem
+    pop es
 ;
-    mov bx,ds:io_out_handle
-;    CloseUsbPipe
-    mov ds:io_out_handle,0
+    mov bx,ds:io_wait
+    CloseWait
     jmp btOff
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
