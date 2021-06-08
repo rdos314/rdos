@@ -981,6 +981,11 @@ register_net_class      Endp
 
 register_net_protocol_name      DB 'Register Net Protocol',0
 
+default_cachable Proc far
+    clc
+    ret
+default_cachable Endp
+
 register_net_protocol   Proc far
     push ds
     push es
@@ -997,6 +1002,8 @@ register_net_protocol   Proc far
     pop eax
     mov es:p_callback,edi
     mov word ptr es:p_callback+4,bp
+    mov es:p_is_cachable,OFFSET default_cachable
+    mov es:p_is_cachable+4,cs
     mov es:p_logical_addr_len,cl
     mov es:p_packet_type,dx
     mov es:p_entry_list,0

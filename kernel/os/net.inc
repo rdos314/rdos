@@ -83,7 +83,8 @@ driver_data	ENDS
 
 protocol_data	STRUC
 
-p_callback			DD ?,?
+p_callback		DD ?,?
+p_is_cachable           DD ?,?
 p_packet_type		DW ?
 p_logical_addr_len	DB ?
 p_entry_list		DW ?
