@@ -983,7 +983,7 @@ register_net_protocol_name      DB 'Register Net Protocol',0
 
 default_cachable Proc far
     clc
-    ret
+    retf32
 default_cachable Endp
 
 register_net_protocol   Proc far
@@ -1424,6 +1424,9 @@ add_net_source_address  Proc far
     mov esi,edi
     call FindAddress
     jnc add_src_address_update
+;
+    call fword ptr ds:p_is_cachable
+    jc add_src_address_done
 ;
     mov fs,bp
     push esi
