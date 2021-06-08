@@ -2252,6 +2252,47 @@ get_mac16   PROC far
     pop edi
     retf32
 get_mac16   ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           IsCachable
+;
+;       Purpose:        Check if IP is cachable
+;
+;       Parameters:     ES:EDI	    Ip address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_cachable	Proc far
+    push ds
+    push eax
+    push edx
+;    
+    call IsDhcpDone
+    jnc icCheck
+;
+    clc
+    jmp icDone
+
+icCheck:
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:gateway
+    and eax,ds:ip_mask
+    mov edx,es:[edi]
+    and edx,ds:ip_mask
+    cmp eax,edx
+    clc
+    je icDone
+;
+    stc
+
+icDone:
+    pop edx
+    pop eax
+    pop ds
+    retf32
+is_cachable     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2471,6 +2512,11 @@ init    PROC far
     mov edi,OFFSET receive
     RegisterNetProtocol
     mov ds:ip_handle,bx
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET is_cachable
+    SetupNetCachable
 ;
     mov ax,cs
     mov es,ax

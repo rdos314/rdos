@@ -1028,7 +1028,33 @@ register_net_protocol   Proc far
     retf32
 register_net_protocol   Endp
 
+
         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           SetupNetCachable
+;
+;       Purpose:        Setup net cachable
+;
+;       Parameters:     BX          Protocol handle
+;                       ES:EDI      Cachable handler
+;                         ES:EDI    Address to check
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_net_cachable_name      DB 'Setup Net Cachable',0
+
+setup_net_cachable   Proc far
+    push ds
+;
+    mov ds,bx
+    mov ds:p_is_cachable,edi
+    mov ds:p_is_cachable+4,es
+;
+    pop ds
+    retf32
+setup_net_cachable   Endp       
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Name:           ReceiveData
@@ -3083,6 +3109,12 @@ init    PROC far
     mov edi,OFFSET register_net_protocol_name
     xor cl,cl
     mov ax,register_net_protocol_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET setup_net_cachable
+    mov edi,OFFSET setup_net_cachable_name
+    xor cl,cl
+    mov ax,setup_net_cachable_nr
     RegisterOsGate
 ;
     mov esi,OFFSET register_net_driver

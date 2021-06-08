@@ -2905,6 +2905,12 @@ RegisterNetProtocol     MACRO
     OsGate register_net_protocol_nr
                         ENDM
 
+;       BX          Protocol handle
+;       ES:EDI      Address to check
+SetupNetCachable     MACRO
+    OsGate setup_net_cachable_nr
+                        ENDM
+
 ;       AL          CLASS
 ;       ECX         MAX DATA SIZE
 ;       DS:ESI      DISPATCH TABLE
