@@ -953,13 +953,16 @@ void TSocketServerFactory::SignalNewData()
 {
     int handle;
     TTcpSocket *socket;
+    TSocketServer *server;
 
     Cleanup();
     handle = RdosGetTcpListen(FListenHandle);
     if (handle)
     {
         socket = new TTcpSocket(handle);
-        Insert(Create(socket));
+        server = Create(socket);
+        if (server)
+            Insert(server);
     }
 }
 
