@@ -976,14 +976,14 @@ GetLinkState2     Endp
 
 GetMac1 Proc far
     mov di,ether_data_sel
-    mov ds,di
+    mov es,di
     mov edi,OFFSET EthernetAddress  
     retf32
 GetMac1 Endp
 
 GetMac2 Proc far
     mov di,ether_data2_sel
-    mov ds,di
+    mov es,di
     mov edi,OFFSET EthernetAddress  
     retf32
 GetMac2 Endp
