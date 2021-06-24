@@ -147,6 +147,12 @@ void WriteRuntimeSetting(const char *Name, const char *Value)
 void main()
 {
     int total = 0;
+    int ldt;
+    int Prev;
+    int Curr;
+    int Linear;
+
+    Prev = RdosGetFreeSmallKernelLinear();
 
     for (;;) 
     {
@@ -156,25 +162,35 @@ void main()
         label[0] = '0';
         label[1] = 0;
 
-        sprintf(label, "total_volume_p%d_n%d", 99, 1);
+        sprintf(label, "new_total_volume_p%d_n%d", 99, 1);
 
         // Read the old total from permanent storage
         ReadRuntimeSetting(label, previousValueString, 11);
         long previousVolume = atol(previousValueString);
 
+        Curr = RdosGetFreeSmallKernelLinear();
+        Linear = Curr - Prev;
+        Prev = Curr;
+        printf("Small Read %d\r\n", Linear);
+
         // Write the new value to permanent storage
         sprintf(newValue, "%d", total);
         WriteRuntimeSetting(label, newValue);
 
-        sprintf(label, "total_volume_time_p%d_n%d", 99, 1);
+        Curr = RdosGetFreeSmallKernelLinear();
+        Linear = Curr - Prev;
+        Prev = Curr;
+        printf("Small Write %d\r\n", Linear);
+
+//        sprintf(label, "total_volume_time_p%d_n%d", 99, 1);
 
         // Read the old total time from permanent storage
-        ReadRuntimeSetting(label, previousValueString, 11);
-        long previousVolumeTime = atol(previousValueString);
+//        ReadRuntimeSetting(label, previousValueString, 11);
+//        long previousVolumeTime = atol(previousValueString);
 
         // Write the new value to permanent storage
-        sprintf(newValue, "%d", GetSystemTime());
-        WriteRuntimeSetting(label, newValue);
+//        sprintf(newValue, "%d", GetSystemTime());
+//        WriteRuntimeSetting(label, newValue);
 
         total++;
         RdosWaitMilli(50);
