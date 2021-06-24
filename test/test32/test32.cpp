@@ -13,124 +13,60 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+int Prev;
 
-long DiffTime = 0;
-const int DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-const char AppSection[] = "r1";
-
-/*##################  PassedDays  ###############
-*   Purpose....: Return passed days since 1/1 1970                                      #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-long PassedDays(int year, int month, int day)
+/*##########################################################################
+#
+#   Name       : WriteSmall
+#
+#   Purpose....: Write small
+#
+##########################################################################*/
+int WriteSmall(const char *msg, int base)
 {
-    int i;
-    long days = 0;
+    int Curr;
+    int Linear;
 
-    if (year >= 1970)
-    {
-        for (i = 1970; i < year; i++)
-            if (i % 4)
-                days += 365;
-            else
-                days += 366;
-    }
-    else
-    {
-        for (i = 0; i < year; i++)
-            if (i % 4)
-                days += 365;
-            else
-                days += 366;
-    }
+    Curr = RdosGetFreeSmallKernelLinear();
+    Linear = Curr - base;
+    printf("Small %s %d\r\n", msg, Linear);
 
-    for (i = 1; i < month; i++)
-        if (i == 2)
-        {
-            if (year % 4)
-                days += 28;
-            else
-                days += 29;     
-        }
-        else
-            days += DaysInMonth[i - 1];
-
-    days += day - 1;
-
-    return days;
-}
-
-/*##################  TimeToBinary  ###############
-*   Purpose....: Convert time to binary form                                        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-long TimeToBinary(int year, int month, int day, int hour, int min, int sec)
-{
-    long result;
-
-    result = PassedDays(year, month, day);
-    result = result * 24 + hour;
-    result = result * 60 + min;
-    result = result * 60 + sec;
-
-    return result;
-}
-
-/*##################  GetSystemTime  ###############
-*   Purpose....: Get system time                                                                    #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-long GetSystemTime()
-{
-    int year, month, day, hour, min, sec, milli, micro;
-    unsigned long msb, lsb;
-
-    RdosGetSysTime(&msb, &lsb);
-    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-    RdosDecodeLsbTics(lsb, &min, &sec, &milli, &micro);
-    return TimeToBinary(year, month, day, hour, min, sec);
+    return Curr;
 }
 
 /*##########################################################################
 #
-#   Name       : ReadRuntimeSetting
+#   Name       : WriteIni
 #
-#   Purpose....: Read runtime setting
-#
-##########################################################################*/
-bool ReadRuntimeSetting(const char *Name, char *Value, int MaxSize)
-{
-    bool ok;
-    TIniFile ini("c:\\run.ini");
-
-    ini.GotoSection(AppSection);
-    ok = ini.ReadVar(Name, Value, MaxSize);
-
-    return ok;
-}
-
-/*##########################################################################
-#
-#   Name       : WriteRuntimeSetting
-#
-#   Purpose....: Write runtime setting
+#   Purpose....: Write ini
 #
 ##########################################################################*/
-void WriteRuntimeSetting(const char *Name, const char *Value)
+void WriteIni(int val)
 {
-    TIniFile ini("c:\\run.ini");
+    char label[100];
+    char str[40];
+    TIniFile *ini;
 
-    ini.GotoSection(AppSection);
-    ini.WriteVar(Name, Value);
+    WriteSmall("before", Prev);
+
+    ini = new TIniFile("c:\\run.ini");
+
+    WriteSmall("new", Prev);
+
+    ini->GotoSection("r1");
+
+    WriteSmall("section", Prev);
+
+    sprintf(label, "total_volume_p%d_n%d", 99, 1);
+    sprintf(str, "%d", val);
+    ini->WriteVar(label, str);
+//    ini->ReadVar(label, str, 30);
+
+    WriteSmall("write", Prev);
+
+    delete ini;
+
+    Prev = WriteSmall("delete", Prev);
 }
 
 /*##########################################################################
@@ -147,50 +83,12 @@ void WriteRuntimeSetting(const char *Name, const char *Value)
 void main()
 {
     int total = 0;
-    int ldt;
-    int Prev;
-    int Curr;
-    int Linear;
 
     Prev = RdosGetFreeSmallKernelLinear();
 
     for (;;) 
     {
-        char previousValueString[20];
-        char newValue[20];
-        char label[100];
-        label[0] = '0';
-        label[1] = 0;
-
-        sprintf(label, "new_total_volume_p%d_n%d", 99, 1);
-
-        // Read the old total from permanent storage
-        ReadRuntimeSetting(label, previousValueString, 11);
-        long previousVolume = atol(previousValueString);
-
-        Curr = RdosGetFreeSmallKernelLinear();
-        Linear = Curr - Prev;
-        Prev = Curr;
-        printf("Small Read %d\r\n", Linear);
-
-        // Write the new value to permanent storage
-        sprintf(newValue, "%d", total);
-        WriteRuntimeSetting(label, newValue);
-
-        Curr = RdosGetFreeSmallKernelLinear();
-        Linear = Curr - Prev;
-        Prev = Curr;
-        printf("Small Write %d\r\n", Linear);
-
-//        sprintf(label, "total_volume_time_p%d_n%d", 99, 1);
-
-        // Read the old total time from permanent storage
-//        ReadRuntimeSetting(label, previousValueString, 11);
-//        long previousVolumeTime = atol(previousValueString);
-
-        // Write the new value to permanent storage
-//        sprintf(newValue, "%d", GetSystemTime());
-//        WriteRuntimeSetting(label, newValue);
+        WriteIni(total);
 
         total++;
         RdosWaitMilli(50);
