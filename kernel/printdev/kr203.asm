@@ -109,6 +109,7 @@ kr_cmd              DB ?
 kr_present_mm       DB ?
 
 kr_reset_counter    DW ?
+kr_status_errors    DW ?
 
 kr_server_thread    DW ?
 kr_pr_thread        DW ?
@@ -627,11 +628,25 @@ UpdateStatus   Proc near
     mov bx,ds:kr_dev_handle
     mov dl,ds:kr_out_pipe
     PostUsbRawPipe
-    jc usDone
+    jc usError
 ;
     call ReadAnswer
-    jc usDone
-;
+    jnc usOk
+
+usError:
+    mov ax,ds:kr_status_errors
+    inc ds:kr_status_errors
+    cmp ax,10
+    jb usDone
+
+usResetUsb:
+    mov ds:kr_status_errors,0
+    mov bx,ds:kr_dev_handle
+    ResetUsbDevice
+    jmp usDone
+
+usOk:
+    mov ds:kr_status_errors,0
     call NotifyStatus
 
 usDone:
@@ -642,6 +657,52 @@ usDone:
     pop es
     ret
 UpdateStatus    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           DoHardReset
+;
+;       DESCRIPTION:    Do hard RESET
+;
+;       PARAMETERS:     DS      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoHardReset   Proc near
+    push es
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    mov es,ds:kr_out_buffer
+    xor edi,edi
+;    
+    mov al,ESC
+    stosb
+;
+    mov al,'?'
+    stosb
+;
+    mov cx,di
+    mov bx,ds:kr_dev_handle
+    mov dl,ds:kr_out_pipe
+    PostUsbRawPipe
+    jc hrDone
+;
+    mov ax,250
+    WaitMilliSec
+    clc
+
+hrDone:
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    ret
+DoHardReset    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -958,6 +1019,7 @@ sbCut:
     call SendPrint
     call SendPrint
     call SendCut
+    call UpdateStatus
 
 sbFree:
     push es
@@ -1769,6 +1831,37 @@ reset_printer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StatusTimeout
+;
+;       DESCRIPTION:    Timer that signals control thread in order to read status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StatusTimeout  Proc far
+    mov ax,SEG data
+    mov ds,ax
+    lock or ds:kr_flag,FLAG_STATUS
+;
+    mov bx,ds:kr_server_thread
+    or bx,bx
+    jz stDone
+;    
+    add eax,1193000 * 2 ; 2s to next call
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET StatusTimeout
+    mov bx,ds
+    mov cx,ds       
+    StartTimer
+
+stDone:    
+    ret
+StatusTimeout  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;               NAME:           Kr203Thread
 ;
 ;               DESCRIPTION:    Printer handler thread
@@ -1785,6 +1878,7 @@ kr203_thread:
     mov ds:kr_pr_thread,0
     mov ds:kr_bitmap,0
     mov ds:kr_reset_counter,0
+    mov ds:kr_status_errors,0
 ;
     mov eax,SIZE usb_printer_struc
     AllocateSmallGlobalMem
@@ -1848,6 +1942,16 @@ kr203_thread:
 ;    
     mov es:pr_reset_proc,OFFSET reset_printer
     mov es:pr_reset_proc+4,cs
+;    
+    GetSystemTime
+    add eax,1193000 * 2  ; 2s
+    adc edx,0
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET StatusTimeout
+    mov bx,ds
+    mov cx,ds 
+    StartTimer
 
 krRestart:
     mov bx,ds:kr_controller
@@ -1910,7 +2014,24 @@ krRetry:
     cmp ax,10
     jb krResetUsb
 ;
+    mov ax,1000
+    WaitMilliSec
+;
+    mov ax,ds:kr_reset_counter
+    cmp ax,20
+    jb krResetPrinter
+;
+    HasHardReset
+    jc krDetached
+;
     HardReset
+    jmp krDetached
+
+krResetPrinter:
+    inc ds:kr_reset_counter
+;
+    call DoHardReset
+    jmp krDetached
 
 krResetUsb:
     inc ds:kr_reset_counter
@@ -1929,8 +2050,37 @@ krLoop:
     test ds:kr_flag,FLAG_ATTACHED
     jz krDetached
 ;
-    call SendBitmap
+    test ds:kr_flag,FLAG_STATUS
+    jz krStatusDone
+;
+    lock and ds:kr_flag,NOT FLAG_STATUS    
     call UpdateStatus
+
+krStatusDone:    
+    test ds:kr_status,STATUS_CUTTER_JAM
+    jz krClearCutter
+;
+    test ds:kr_status,STATUS_HEAD_LIFTED
+    jnz krSetLifted
+;
+    test ds:kr_flag,FLAG_WAS_LIFTED
+    jz krClearDone
+;
+    mov ax,1000
+    WaitMilliSec
+;    
+    call DoHardReset
+    jmp krClearCutter
+
+krSetLifted:
+    lock or ds:kr_flag,FLAG_WAS_LIFTED
+    jmp krClearDone
+
+krClearCutter:
+    lock and ds:kr_flag,NOT FLAG_WAS_LIFTED
+
+krClearDone:    
+    call SendBitmap
     call SendCommand
 ;
     GetSystemTime
