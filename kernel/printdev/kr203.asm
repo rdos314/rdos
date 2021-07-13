@@ -640,6 +640,7 @@ usError:
     jb usDone
 
 usResetUsb:
+    lock or ds:kr_status,STATUS_OFFLINE
     mov ds:kr_status_errors,0
     mov bx,ds:kr_dev_handle
     ResetUsbDevice
