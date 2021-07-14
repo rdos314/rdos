@@ -112,6 +112,7 @@ kr_reset_counter    DW ?
 kr_status_errors    DW ?
 
 kr_server_thread    DW ?
+kr_wait_thread      DW ?
 kr_pr_thread        DW ?
 kr_bitmap           DW ?
 
@@ -1683,10 +1684,13 @@ print_bitmap   Proc far
     mov ds:kr_pr_thread,ax
     mov ds:kr_bitmap,bx
 ;
-    mov bx,ds:kr_server_thread
+    mov bx,ds:kr_wait_thread
     signal
 ;
-    WaitForSignal
+    GetSystemTime
+    add eax,5000 * 1193
+    adc edx,0
+    WaitForSignalWithTimeout
     clc
 
 pbDone:
@@ -1721,7 +1725,7 @@ present_media   Proc far
 ;
     mov ds:kr_present_mm,al
     lock or ds:kr_cmd,CMD_PRESENT
-    mov bx,ds:kr_server_thread
+    mov bx,ds:kr_wait_thread
     signal
 
 pmDone:
@@ -1752,7 +1756,7 @@ eject_media   Proc far
     jz emDone
 ;
     lock or ds:kr_cmd,CMD_EJECT
-    mov bx,ds:kr_server_thread
+    mov bx,ds:kr_wait_thread
     signal
 
 emDone:
@@ -1783,7 +1787,7 @@ wait_for_print   Proc far
     jz fpDone
 ;
     lock or ds:kr_cmd,CMD_FORCE
-    mov bx,ds:kr_server_thread
+    mov bx,ds:kr_wait_thread
     signal
 
 fpDone:
@@ -1832,37 +1836,6 @@ reset_printer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StatusTimeout
-;
-;       DESCRIPTION:    Timer that signals control thread in order to read status
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StatusTimeout  Proc far
-    mov ax,SEG data
-    mov ds,ax
-    lock or ds:kr_flag,FLAG_STATUS
-;
-    mov bx,ds:kr_server_thread
-    or bx,bx
-    jz stDone
-;    
-    add eax,1193000 * 2 ; 2s to next call
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET StatusTimeout
-    mov bx,ds
-    mov cx,ds       
-    StartTimer
-
-stDone:    
-    ret
-StatusTimeout  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;               NAME:           Kr203Thread
 ;
 ;               DESCRIPTION:    Printer handler thread
@@ -1878,6 +1851,7 @@ kr203_thread:
     mov ds:kr_server_thread,ax
     mov ds:kr_pr_thread,0
     mov ds:kr_bitmap,0
+    mov ds:kr_wait_thread,0
     mov ds:kr_reset_counter,0
     mov ds:kr_status_errors,0
 ;
@@ -1943,16 +1917,6 @@ kr203_thread:
 ;    
     mov es:pr_reset_proc,OFFSET reset_printer
     mov es:pr_reset_proc+4,cs
-;    
-    GetSystemTime
-    add eax,1193000 * 2  ; 2s
-    adc edx,0
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET StatusTimeout
-    mov bx,ds
-    mov cx,ds 
-    StartTimer
 
 krRestart:
     mov bx,ds:kr_controller
@@ -2051,13 +2015,8 @@ krLoop:
     test ds:kr_flag,FLAG_ATTACHED
     jz krDetached
 ;
-    test ds:kr_flag,FLAG_STATUS
-    jz krStatusDone
-;
-    lock and ds:kr_flag,NOT FLAG_STATUS    
     call UpdateStatus
-
-krStatusDone:    
+;
     test ds:kr_status,STATUS_CUTTER_JAM
     jz krClearCutter
 ;
@@ -2084,10 +2043,15 @@ krClearDone:
     call SendBitmap
     call SendCommand
 ;
+    GetThread
+    mov ds:kr_wait_thread,ax
+;
     GetSystemTime
-    add eax,250 * 1193
+    add eax,1500 * 1193
     adc edx,0
     WaitForSignalWithTimeout
+;
+    mov ds:kr_wait_thread,0
     jmp krLoop
         
 krDetached:
