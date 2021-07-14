@@ -3276,11 +3276,11 @@ FinishRaw   Proc far
     test al,1
     jnz frOk
 ;
-    mov cx,50
+    mov cx,2000
 
 frWaitLoop:
-    mov ax,20
-    WaitMilliSec
+    mov ax,500
+    WaitMicroSec
 ;
     mov eax,fs:[edx].uqh_elem
     test al,1
