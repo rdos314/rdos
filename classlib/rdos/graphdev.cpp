@@ -334,7 +334,7 @@ int TGraphicDevice::GetHandle()
 ##########################################################################*/
 void TGraphicDevice::SetFont(TFont *font)
 {
-    if (FFontHandle != font->FFontHandle)
+    if (font && FFontHandle != font->FFontHandle)
     {
         FFontHandle = font->FFontHandle;
         RdosSetFont(FBitmapHandle, FFontHandle);
