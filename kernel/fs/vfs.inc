@@ -36,7 +36,8 @@
 
 VFS_FLAG_STOPPED   = 1
 MAX_VFS_PARTITIONS = 15
-MAX_VFS_REQ_COUNT  = 15
+MAX_VFS_REQ_COUNT  = 8
+MAX_VFS_READ_COUNT = 7
 MAX_VFS_ENTRY_COUNT = 255
 
 vfs_table_struc    STRUC
@@ -232,6 +233,28 @@ vfspr_hdr                 vfs_req_header <>
 vfspr_arr                 DB SIZE vfs_req_entry * MAX_VFS_ENTRY_COUNT DUP(?)
 
 vfs_part_req  ENDS
+
+vfs_read_msb  STRUC
+
+vfsm_rd_ptr        DD ?
+vfsm_rd_count      DD ?
+vfsm_rd_size       DD ?
+vfsm_rd_pad        DD ?
+
+vfs_read_msb  ENDS
+
+vfs_read_entry  STRUC
+
+vfs_rd_sectors    DD ?
+vfs_rd_start_msb  DD ?
+vfs_rd_msb_count  DD ?
+
+vfs_rd_chain_ptr  DD ?
+vfs_rd_sorted_ptr DD ?
+vfs_rd_index_ptr  DD ?
+vfs_rd_msb_ptr    DD ?
+
+vfs_read_entry  ENDS
 
 share_block_struc       STRUC
 

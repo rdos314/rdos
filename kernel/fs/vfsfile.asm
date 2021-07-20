@@ -127,30 +127,6 @@ rs_max_size      DD ?
 
 req_sel          ENDS
 
-
-req_msb_struc  STRUC
-
-rqm_ptr        DD ?
-rqm_count      DD ?
-rqm_size       DD ?
-rqm_pad        DD ?
-
-req_msb_struc  ENDS
-
-req_sel_struc  STRUC
-
-rqs_sectors    DD ?
-rqs_start_msb  DD ?
-rqs_msb_count  DD ?
-
-rqs_chain_ptr  DD ?
-rqs_sorted_ptr DD ?
-rqs_index_ptr  DD ?
-rqs_msb_ptr    DD ?
-
-req_sel_struc  ENDS
-
-
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -338,42 +314,42 @@ CreateReqSel Proc near
     inc eax
     shl eax,3
     add eax,ebx
-    add eax,SIZE req_sel_struc
+    add eax,SIZE vfs_read_entry
 ;
     AllocateBigMem
 ;
     pop ebx
     pop eax
 ;
-    mov es:rqs_start_msb,eax
+    mov es:vfs_rd_start_msb,eax
     sub ebx,eax
     inc ebx
-    mov es:rqs_msb_count,ebx
-    mov es:rqs_sectors,ecx
+    mov es:vfs_rd_msb_count,ebx
+    mov es:vfs_rd_sectors,ecx
 ;
-    mov edi,SIZE req_sel_struc
-    mov es:rqs_chain_ptr,edi
+    mov edi,SIZE vfs_read_entry
+    mov es:vfs_rd_chain_ptr,edi
 ;
     shl ecx,1
     mov esi,edx
     rep movsd
-    mov es:rqs_sorted_ptr,edi
+    mov es:vfs_rd_sorted_ptr,edi
 ;
-    mov ecx,es:rqs_sectors
+    mov ecx,es:vfs_rd_sectors
     inc ecx
     mov eax,-1
     shl ecx,1
     rep stosd
-    mov es:rqs_index_ptr,edi
+    mov es:vfs_rd_index_ptr,edi
 ;
-    mov ecx,es:rqs_sectors
+    mov ecx,es:vfs_rd_sectors
     inc ecx
     shl ecx,1
     mov eax,-1
     rep stosd
-    mov es:rqs_msb_ptr,edi
+    mov es:vfs_rd_msb_ptr,edi
 ;
-    mov ecx,es:rqs_msb_count
+    mov ecx,es:vfs_rd_msb_count
     shl ecx,1
     xor eax,eax
     rep stosd   
@@ -396,17 +372,17 @@ CreateReqSel Endp
 SortMsbReq  Proc near
     pushad
 ;
-    mov edx,ds:rqs_start_msb
-    mov edi,ds:rqs_sorted_ptr
-    mov esi,ds:rqs_index_ptr
-    mov ebx,ds:rqs_msb_ptr
+    mov edx,ds:vfs_rd_start_msb
+    mov edi,ds:vfs_rd_sorted_ptr
+    mov esi,ds:vfs_rd_index_ptr
+    mov ebx,ds:vfs_rd_msb_ptr
 
 smrMsbLoop:
-    mov ds:[ebx].rqm_ptr,edi
+    mov ds:[ebx].vfsm_rd_ptr,edi
     push ebx
 ;
-    mov ebx,ds:rqs_chain_ptr
-    mov ecx,ds:rqs_sectors
+    mov ebx,ds:vfs_rd_chain_ptr
+    mov ecx,ds:vfs_rd_sectors
     xor ebp,ebp
 
 smrSectorLoop:
@@ -426,8 +402,8 @@ smrSectorNext:
 ;
     pop ebx
 ;
-    mov ds:[ebx].rqm_count,ebp
-    mov ds:[ebx].rqm_size,ebp
+    mov ds:[ebx].vfsm_rd_count,ebp
+    mov ds:[ebx].vfsm_rd_size,ebp
 ;
     or ebp,ebp
     jz smrMsbNext
@@ -445,8 +421,8 @@ smrAdjustDone:
     mov eax,1
     shl eax,cl
     mov ecx,eax
-    mov ds:[ebx].rqm_size,ecx
-    sub ecx,ds:[ebx].rqm_count
+    mov ds:[ebx].vfsm_rd_size,ecx
+    sub ecx,ds:[ebx].vfsm_rd_count
     jz smrMsbNext
 ;
     mov eax,-1
@@ -462,8 +438,8 @@ smrMsbNext:
     add ebx,16
     inc edx
     mov eax,edx
-    sub eax,ds:rqs_start_msb
-    cmp eax,ds:rqs_msb_count
+    sub eax,ds:vfs_rd_start_msb
+    cmp eax,ds:vfs_rd_msb_count
     jne smrMsbLoop
 ;
     popad
@@ -489,8 +465,8 @@ so_min     EQU 4
 SortOneReq  Proc near
     pushad
 ;
-    mov esi,ds:rqs_sorted_ptr
-    mov edi,ds:rqs_index_ptr
+    mov esi,ds:vfs_rd_sorted_ptr
+    mov edi,ds:vfs_rd_index_ptr
     add esi,ebx
     add edi,ebx
 
@@ -620,19 +596,19 @@ SortLsbReq  Proc near
     push ebx
     push ecx
 ;
-    mov ebx,ds:rqs_msb_ptr
-    mov ecx,ds:rqs_msb_count
+    mov ebx,ds:vfs_rd_msb_ptr
+    mov ecx,ds:vfs_rd_msb_count
 
 slrLoop:
     push ebx
     push ecx
 ;
-    mov ecx,ds:[ebx].rqm_size
-    mov ebx,ds:[ebx].rqm_ptr
+    mov ecx,ds:[ebx].vfsm_rd_size
+    mov ebx,ds:[ebx].vfsm_rd_ptr
     cmp ecx,1
     jbe slrNext
 ;
-    sub ebx,ds:rqs_sorted_ptr
+    sub ebx,ds:vfs_rd_sorted_ptr
     call SortOneReq
 
 slrNext:
@@ -1306,17 +1282,17 @@ FindReq  Proc near
     push edx
     push ebp
 ;
-    sub edx,ds:rqs_start_msb
+    sub edx,ds:vfs_rd_start_msb
     jc frFail
 ;
-    cmp edx,ds:rqs_msb_count
+    cmp edx,ds:vfs_rd_msb_count
     jae frFail
 ;
     shl edx,4
-    add edx,ds:rqs_msb_ptr
-    mov ebx,ds:[edx].rqm_ptr
+    add edx,ds:vfs_rd_msb_ptr
+    mov ebx,ds:[edx].vfsm_rd_ptr
     mov ebp,ebx
-    mov ecx,ds:[edx].rqm_size
+    mov ecx,ds:[edx].vfsm_rd_size
     shr ecx,1
     jz frCheck
 
@@ -1356,7 +1332,7 @@ frMax:
     jmp frMax
 
 frOk:
-    sub ebx,ds:rqs_sorted_ptr
+    sub ebx,ds:vfs_rd_sorted_ptr
     shr ebx,2
     mov eax,ebx
     clc
@@ -1383,9 +1359,9 @@ FindReq  Endp
 CheckReq  Proc near
     pushad
 ;
-    mov ebx,ds:rqs_chain_ptr
-    mov esi,ds:rqs_index_ptr
-    mov ecx,ds:rqs_sectors
+    mov ebx,ds:vfs_rd_chain_ptr
+    mov esi,ds:vfs_rd_index_ptr
+    mov ecx,ds:vfs_rd_sectors
 
 crLoop:
     mov eax,ds:[ebx]
