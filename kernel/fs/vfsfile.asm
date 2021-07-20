@@ -774,105 +774,6 @@ read_vfs_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetRandomRange
-;
-;       DESCRIPTION:    Get random number range
-;
-;       PARAMETERS:     EAX          Range
-;
-;       RETURNS:        EAX          Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetRandomRange  Proc near
-    push edx
-    mov edx,eax
-    GetRandom
-    mul edx
-    mov eax,edx
-    pop edx
-    ret
-GetRandomRange Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreateRandomSectors
-;
-;       DESCRIPTION:    Create random sectors
-;
-;       RETURNS:        ECX             Size
-;                       EDX             Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateRandomSectors Proc near
-    push eax
-    push esi
-    push edi
-    push ebp
-;
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,ax
-;
-    mov eax,1000
-    call GetRandomRange
-    mov ecx,eax
-    inc ecx
-;
-    mov eax,ecx
-    shl eax,3
-    push ecx
-    AllocateBigLinear
-    pop ecx
-    mov edi,edx
-;
-    mov eax,25
-    call GetRandomRange
-    mov esi,eax
-;
-    mov eax,25
-    call GetRandomRange
-    mov ebp,eax
-;
-    push ecx
-
-crsLoop:
-    mov eax,0FFFFh
-    call GetRandomRange
-    or ah,ah
-    jne crsBig
-
-crsSmall:
-    movsx eax,al
-    jmp crsSave
-
-crsBig:
-    GetRandom
-
-crsSave:
-    stosd
-;
-    mov eax,esi
-    call GetRandomRange
-    add eax,ebp
-    stosd
-;
-    loop crsLoop
-;
-    pop ecx
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop eax
-    ret
-CreateRandomSectors Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           GetMinMaxMsb
 ;
 ;       DESCRIPTION:    Get min & max MSB sector values
@@ -1257,6 +1158,113 @@ slrNext:
     pop ebx
     ret
 SortLsbReq  Endp
+
+
+;
+;
+; test only
+;
+;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetRandomRange
+;
+;       DESCRIPTION:    Get random number range
+;
+;       PARAMETERS:     EAX          Range
+;
+;       RETURNS:        EAX          Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetRandomRange  Proc near
+    push edx
+    mov edx,eax
+    GetRandom
+    mul edx
+    mov eax,edx
+    pop edx
+    ret
+GetRandomRange Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateRandomSectors
+;
+;       DESCRIPTION:    Create random sectors
+;
+;       RETURNS:        ECX             Size
+;                       EDX             Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateRandomSectors Proc near
+    push eax
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,flat_sel
+    mov ds,ax
+    mov es,ax
+;
+    mov eax,1000
+    call GetRandomRange
+    mov ecx,eax
+    inc ecx
+;
+    mov eax,ecx
+    shl eax,3
+    push ecx
+    AllocateBigLinear
+    pop ecx
+    mov edi,edx
+;
+    mov eax,25
+    call GetRandomRange
+    mov esi,eax
+;
+    mov eax,25
+    call GetRandomRange
+    mov ebp,eax
+;
+    push ecx
+
+crsLoop:
+    mov eax,0FFFFh
+    call GetRandomRange
+    or ah,ah
+    jne crsBig
+
+crsSmall:
+    movsx eax,al
+    jmp crsSave
+
+crsBig:
+    GetRandom
+
+crsSave:
+    stosd
+;
+    mov eax,esi
+    call GetRandomRange
+    add eax,ebp
+    stosd
+;
+    loop crsLoop
+;
+    pop ecx
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop eax
+    ret
+CreateRandomSectors Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
