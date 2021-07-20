@@ -262,518 +262,6 @@ serv_open_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AllocateReq
-;
-;       DESCRIPTION:    Allocate req
-;
-;       PARAMETERS:     ECX            Sector count
-;                       EDI            Sector buf
-;                       ES             File sel
-;
-;       RETURNS:        EBX            Req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateReq  Proc near
-    push ds
-    push eax
-    push edx
-    push esi
-;
-    mov ax,vfs_req_sel
-    mov ds,ax
-;
-    push ecx
-;
-    mov ecx,ds:rs_max_size
-    cmp ecx,ds:rs_handle_count
-    jne arScan
-;
-    mov ebx,ecx
-    inc ecx
-    mov ds:rs_max_size,ecx
-;
-    mov eax,SIZE handle_req_struc
-    mul ebx
-    mov esi,eax
-    add esi,SIZE req_sel
-    mov eax,esi
-    add eax,SIZE handle_req_struc
-    movzx edx,ds:sb_pages
-    shl edx,12
-    cmp eax,edx
-    jbe arFound
-;
-    push es
-    mov ax,ds
-    mov es,ax
-    GrowShareBlock
-    pop es
-    jmp arFound
-
-arScan:
-    int 3
-    xor ebx,ebx
-    mov esi,SIZE req_sel
-
-arLoop:
-    mov al,ds:[esi].hr_used
-    or al,al
-    jz arFound
-;
-    inc ebx
-    add esi,SIZE handle_req_struc
-    loop arLoop
-;
-    CrashGate
-
-arFound:
-    pop ecx
-;
-    inc ds:rs_handle_count
-    mov ds:[esi].hr_sector_count,ecx
-    mov ds:[esi].hr_sector_arr,edi
-;
-    mov eax,es:fi_kernel_handle
-    mov ds:[esi].hr_file_handle,eax
-;
-    mov ds:[esi].hr_wait_sel,0
-    mov ds:[esi].hr_data_sel,0
-    mov ds:[esi].hr_pend_sel,0
-    mov ds:[esi].hr_ref_count,0
-    mov ds:[esi].hr_used,1
-;
-    inc ebx
-;
-    pop esi
-    pop edx
-    pop eax
-    pop ds
-    ret
-AllocateReq  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           ServAddFileReq
-;
-;       DESCRIPTION:    Serv add VFS file req
-;
-;       PARAMETERS:     EBX            File handle
-;                       EDX:EAX        File pos
-;                       ECX            Sector count
-;                       ESI            Sector size
-;                       ES:EDI         Sector buf
-;
-;       RETURNS:        EAX            Req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-serv_add_file_req_name       DB 'Serv Add File Req',0
-
-serv_add_file_req    Proc far
-    push ds
-    push es
-    push ebx
-    push esi
-;
-    or ebx,ebx
-    stc
-    jz safDone
-;
-    dec ebx
-    shl ebx,1
-;
-    push eax
-    mov eax,vfs_file_sel
-    mov ds,eax
-    pop eax
-;
-    EnterSection ds:fs_section
-    mov bx,ds:[ebx].fs_handle_arr
-    or bx,bx
-    stc
-    jz safLeave
-;
-    mov es,bx
-    call AllocateReq
-;
-    push edi
-;
-    push eax
-    push ebx
-    push ecx
-;
-    mov ecx,es:fi_req_max_size
-    cmp ecx,es:fi_req_count
-    jne safScan
-;
-    mov ebx,ecx
-    inc ecx
-    mov es:fi_req_max_size,ecx
-;
-    mov edi,ebx
-    shl edi,4
-    add edi,SIZE file_info_struc
-    test di,0FFFh
-    jnz safFound
-;
-    GrowShareBlock
-    jmp safFound
-
-safScan:
-    int 3
-    xor ebx,ebx
-    mov edi,SIZE file_info_struc
-
-safLoop:
-    mov eax,es:[edi]
-    or eax,eax
-    jz safFound
-;
-    inc ebx
-    add edi,4
-    loop safLoop
-;
-    CrashGate
-
-safFound:
-    pop ecx
-    pop ebx
-    pop eax
-;
-    inc es:fi_req_count
-    mov es:[edi].fr_handle,ebx
-    mov es:[edi].fr_pos,eax
-    mov es:[edi].fr_pos+4,edx
-;
-    push eax
-    push edx
-;
-    mov eax,esi
-    mul ecx
-    mov es:[edi].fr_size,eax
-;
-    pop edx
-    pop eax
-;
-    pop edi
-
-safLeave:
-    LeaveSection ds:fs_section
-
-safDone:
-    mov eax,ebx
-;
-    pop esi
-    pop ebx
-    pop es
-    pop ds
-    ret
-serv_add_file_req    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           OpenVfsFile
-;
-;       DESCRIPTION:    Open VFS file
-;
-;       PARAMETERS:     ES:(E)DI       Pathname
-;
-;       RETURNS:        NC
-;                         BX           Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_vfs_file_name       DB 'Open VFS File',0
-
-open_vfs_file    Proc near
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
-    push ecx
-    push esi
-    push edi
-    push ebp
-;
-    mov eax,es
-    mov gs,eax
-;
-    call GetPathDrive
-    jc ovfFail
-;
-    call GetDrivePart
-    or bx,bx
-    jz ovfFail
-;
-    mov ah,es:[edi]
-    cmp ah,'/'
-    je ovfRoot
-;
-    cmp ah,'\'
-    je ovfRoot
-
-ovfRel:
-    call GetRelDir
-    jmp ovfHasStart
-
-ovfRoot:
-    inc edi
-    xor ax,ax
-
-ovfHasStart:
-    mov esi,edi
-    mov fs,bx
-    mov ds,fs:vfsp_disc_sel
-;
-    movzx eax,ax
-    call AllocateMsg
-
-ovfCopyPath:
-    lods byte ptr gs:[esi]
-    stosb
-    or al,al
-    jnz ovfCopyPath
-;
-    mov eax,VFS_OPEN_FILE
-    call RunMsg
-    jc ovfFail
-;
-    push ebx
-    push ecx
-    mov cx,SIZE file_handle_seg
-    AllocateHandle
-    pop ecx
-    pop eax
-;
-    mov [ebx].fh_vfs_sel,fs
-    mov [ebx].fh_vfs_handle,ax
-    mov [ebx].fh_attrib,ecx
-    mov [ebx].fh_pos,0
-    mov [ebx].fh_pos+4,0
-    mov [ebx].hh_sign,VFS_FILE_HANDLE
-    mov bx,[ebx].hh_handle
-    clc
-    jmp ovfDone
-
-ovfFail:
-    stc
-
-ovfDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    ret
-open_vfs_file    Endp
-
-open_vfs_file16  Proc far
-    push edi
-    movzx edi,di
-    call open_vfs_file
-    pop edi
-    ret
-open_vfs_file16  Endp
-
-open_vfs_file32  Proc far
-    call open_vfs_file
-    ret
-open_vfs_file32  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetFileBlock
-;
-;       DESCRIPTION:    Get file block
-;
-;       PARAMETERS:     DS:EBX             File handle
-;
-;       RETURNS:        GS                 File block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetFileBlock   Proc near
-    push ds
-    push eax
-    push ebx
-;
-    movzx ebx,ds:[ebx].fh_vfs_handle
-    or ebx,ebx
-    stc
-    jz gfbDone
-;
-    dec ebx
-    add ebx,ebx
-;
-    mov ax,vfs_file_sel
-    mov ds,eax
-    EnterSection ds:fs_section
-    add ebx,OFFSET fs_handle_arr
-    mov ax,ds:[ebx]
-    LeaveSection ds:fs_section
-;
-    or ax,ax
-    stc
-    jz gfbDone
-;
-    mov gs,ax
-    clc
-
-gfbDone:
-    pop ebx
-    pop eax
-    pop ds
-    ret
-GetFileBlock  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           TryRead
-;
-;       DESCRIPTION:    Try to read block
-;
-;       PARAMETERS:     GS             File block
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;       RETURNS:        NC
-;                         EAX          Read size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TryRead   Proc near
-    push ecx
-;
-    mov ecx,gs:fi_req_count
-    or ecx,ecx 
-    stc
-    jz trDone
-;
-    int 3
-
-trDone:
-    pop ecx
-    ret
-TryRead   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddFileReq
-;
-;       DESCRIPTION:    Add file req
-;
-;       PARAMETERS:     FS             VFS sel
-;                       GS             File block
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddFileReq   Proc near
-    push ds
-    push eax
-    push ebx
-;
-    mov ds,fs:vfsp_disc_sel
-    mov ebx,gs:fi_serv_handle
-    call AllocateMsg
-;
-    mov eax,VFS_REQ_FILE
-    call RunMsg
-;
-    pop ebx
-    pop eax
-    pop ds
-    ret
-AddFileReq   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           ReadVfsFile
-;
-;       DESCRIPTION:    Read VFS file
-;
-;       PARAMETERS:     BX             Handle
-;                       ES:(E)DI       Buffer
-;                       (E)CX          Size
-;
-;       RETURNS:        NC
-;                         EAX          Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_vfs_file_name       DB 'Read VFS File',0
-
-read_vfs_file    Proc near
-    push ds
-    push fs
-    push gs
-    push eax
-    push ebx
-    push edx
-;
-    mov ax,VFS_FILE_HANDLE
-    DerefHandle
-    jc rvfDone
-;
-    call GetFileBlock
-    jc rvfDone
-
-rvfTry:
-    mov eax,ds:[ebx].fh_pos
-    mov edx,ds:[ebx].fh_pos+4
-    call TryRead
-    jc rvfReq
-;
-    int 3
-
-rvfReq:
-    mov fs,ds:[ebx].fh_vfs_sel
-    call AddFileReq
-    jnc rvfTry
-
-rvfDone:
-    pop edx
-    pop ebx
-    pop eax
-    pop gs
-    pop fs
-    pop ds
-    ret
-read_vfs_file    Endp
-
-read_vfs_file16  Proc far
-    push ecx
-    push edi
-    movzx ecx,cx
-    movzx edi,di
-    call read_vfs_file
-    pop edi
-    pop ecx
-    ret
-read_vfs_file16  Endp
-
-read_vfs_file32  Proc far
-    call read_vfs_file
-    ret
-read_vfs_file32  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           GetMinMaxMsb
 ;
 ;       DESCRIPTION:    Get min & max MSB sector values
@@ -1159,12 +647,543 @@ slrNext:
     ret
 SortLsbReq  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServAddFileReq
+;
+;       DESCRIPTION:    Serv add VFS file req
+;
+;       PARAMETERS:     EBX            File handle
+;                       EDX:EAX        File pos
+;                       ECX            Sector count
+;                       ESI            Sector size
+;                       ES:EDI         Sector buf
+;
+;       RETURNS:        EAX            Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_add_file_req_name       DB 'Serv Add File Req',0
+
+serv_add_file_req    Proc far
+    push ds
+    push es
+    push ebx
+    push esi
+;
+    or ebx,ebx
+    stc
+    jz safDone
+;
+    dec ebx
+    shl ebx,1
+;
+    push eax
+    mov eax,vfs_file_sel
+    mov ds,eax
+    pop eax
+;
+    EnterSection ds:fs_section
+    mov bx,ds:[ebx].fs_handle_arr
+    or bx,bx
+    stc
+    jz safLeave
+;
+    push eax
+    push ebx
+    push edx
+;
+    mov eax,es
+    mov ds,eax
+    mov edx,edi
+    call GetMinMax
+    call CreateReqSel
+;
+    mov eax,es
+    mov ds,eax
+    call SortMsbReq
+    call SortLsbReq
+;
+    pop edx
+    pop ebx
+    pop eax
+
+
+;
+    push edi
+;
+    push eax
+    push ebx
+    push ecx
+;
+    mov ecx,es:fi_req_max_size
+    cmp ecx,es:fi_req_count
+    jne safScan
+;
+    mov ebx,ecx
+    inc ecx
+    mov es:fi_req_max_size,ecx
+;
+    mov edi,ebx
+    shl edi,4
+    add edi,SIZE file_info_struc
+    test di,0FFFh
+    jnz safFound
+;
+    GrowShareBlock
+    jmp safFound
+
+safScan:
+    int 3
+    xor ebx,ebx
+    mov edi,SIZE file_info_struc
+
+safLoop:
+    mov eax,es:[edi]
+    or eax,eax
+    jz safFound
+;
+    inc ebx
+    add edi,4
+    loop safLoop
+;
+    CrashGate
+
+safFound:
+    pop ecx
+    pop ebx
+    pop eax
+;
+    inc es:fi_req_count
+    mov es:[edi].fr_handle,ebx
+    mov es:[edi].fr_pos,eax
+    mov es:[edi].fr_pos+4,edx
+;
+    push eax
+    push edx
+;
+    mov eax,esi
+    mul ecx
+    mov es:[edi].fr_size,eax
+;
+    pop edx
+    pop eax
+;
+    pop edi
+
+safLeave:
+    LeaveSection ds:fs_section
+
+safDone:
+    mov eax,ebx
+;
+    pop esi
+    pop ebx
+    pop es
+    pop ds
+    ret
+serv_add_file_req    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenVfsFile
+;
+;       DESCRIPTION:    Open VFS file
+;
+;       PARAMETERS:     ES:(E)DI       Pathname
+;
+;       RETURNS:        NC
+;                         BX           Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_vfs_file_name       DB 'Open VFS File',0
+
+open_vfs_file    Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov gs,eax
+;
+    call GetPathDrive
+    jc ovfFail
+;
+    call GetDrivePart
+    or bx,bx
+    jz ovfFail
+;
+    mov ah,es:[edi]
+    cmp ah,'/'
+    je ovfRoot
+;
+    cmp ah,'\'
+    je ovfRoot
+
+ovfRel:
+    call GetRelDir
+    jmp ovfHasStart
+
+ovfRoot:
+    inc edi
+    xor ax,ax
+
+ovfHasStart:
+    mov esi,edi
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    movzx eax,ax
+    call AllocateMsg
+
+ovfCopyPath:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz ovfCopyPath
+;
+    mov eax,VFS_OPEN_FILE
+    call RunMsg
+    jc ovfFail
+;
+    push ebx
+    push ecx
+    mov cx,SIZE file_handle_seg
+    AllocateHandle
+    pop ecx
+    pop eax
+;
+    mov [ebx].fh_vfs_sel,fs
+    mov [ebx].fh_vfs_handle,ax
+    mov [ebx].fh_attrib,ecx
+    mov [ebx].fh_pos,0
+    mov [ebx].fh_pos+4,0
+    mov [ebx].hh_sign,VFS_FILE_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+    jmp ovfDone
+
+ovfFail:
+    stc
+
+ovfDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+open_vfs_file    Endp
+
+open_vfs_file16  Proc far
+    push edi
+    movzx edi,di
+    call open_vfs_file
+    pop edi
+    ret
+open_vfs_file16  Endp
+
+open_vfs_file32  Proc far
+    call open_vfs_file
+    ret
+open_vfs_file32  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetFileBlock
+;
+;       DESCRIPTION:    Get file block
+;
+;       PARAMETERS:     DS:EBX             File handle
+;
+;       RETURNS:        GS                 File block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFileBlock   Proc near
+    push ds
+    push eax
+    push ebx
+;
+    movzx ebx,ds:[ebx].fh_vfs_handle
+    or ebx,ebx
+    stc
+    jz gfbDone
+;
+    dec ebx
+    add ebx,ebx
+;
+    mov ax,vfs_file_sel
+    mov ds,eax
+    EnterSection ds:fs_section
+    add ebx,OFFSET fs_handle_arr
+    mov ax,ds:[ebx]
+    LeaveSection ds:fs_section
+;
+    or ax,ax
+    stc
+    jz gfbDone
+;
+    mov gs,ax
+    clc
+
+gfbDone:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+GetFileBlock  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           TryRead
+;
+;       DESCRIPTION:    Try to read block
+;
+;       PARAMETERS:     GS             File block
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;       RETURNS:        NC
+;                         EAX          Read size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TryRead   Proc near
+    push ecx
+;
+    mov ecx,gs:fi_req_count
+    or ecx,ecx 
+    stc
+    jz trDone
+;
+    int 3
+
+trDone:
+    pop ecx
+    ret
+TryRead   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddFileReq
+;
+;       DESCRIPTION:    Add file req
+;
+;       PARAMETERS:     FS             VFS sel
+;                       GS             File block
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddFileReq   Proc near
+    push ds
+    push eax
+    push ebx
+;
+    mov ds,fs:vfsp_disc_sel
+    mov ebx,gs:fi_serv_handle
+    call AllocateMsg
+;
+    mov eax,VFS_REQ_FILE
+    call RunMsg
+;
+    pop ebx
+    pop eax
+    pop ds
+    ret
+AddFileReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadVfsFile
+;
+;       DESCRIPTION:    Read VFS file
+;
+;       PARAMETERS:     BX             Handle
+;                       ES:(E)DI       Buffer
+;                       (E)CX          Size
+;
+;       RETURNS:        NC
+;                         EAX          Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_vfs_file_name       DB 'Read VFS File',0
+
+read_vfs_file    Proc near
+    push ds
+    push fs
+    push gs
+    push eax
+    push ebx
+    push edx
+;
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    jc rvfDone
+;
+    call GetFileBlock
+    jc rvfDone
+
+rvfTry:
+    mov eax,ds:[ebx].fh_pos
+    mov edx,ds:[ebx].fh_pos+4
+    call TryRead
+    jc rvfReq
+;
+    int 3
+
+rvfReq:
+    mov fs,ds:[ebx].fh_vfs_sel
+    call AddFileReq
+    jnc rvfTry
+
+rvfDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop gs
+    pop fs
+    pop ds
+    ret
+read_vfs_file    Endp
+
+read_vfs_file16  Proc far
+    push ecx
+    push edi
+    movzx ecx,cx
+    movzx edi,di
+    call read_vfs_file
+    pop edi
+    pop ecx
+    ret
+read_vfs_file16  Endp
+
+read_vfs_file32  Proc far
+    call read_vfs_file
+    ret
+read_vfs_file32  Endp
+
 
 ;
 ;
 ; test only
 ;
 ;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateReq
+;
+;       DESCRIPTION:    Allocate req
+;
+;       PARAMETERS:     ECX            Sector count
+;                       EDI            Sector buf
+;                       ES             File sel
+;
+;       RETURNS:        EBX            Req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateReq  Proc near
+    push ds
+    push eax
+    push edx
+    push esi
+;
+    mov ax,vfs_req_sel
+    mov ds,ax
+;
+    push ecx
+;
+    mov ecx,ds:rs_max_size
+    cmp ecx,ds:rs_handle_count
+    jne arScan
+;
+    mov ebx,ecx
+    inc ecx
+    mov ds:rs_max_size,ecx
+;
+    mov eax,SIZE handle_req_struc
+    mul ebx
+    mov esi,eax
+    add esi,SIZE req_sel
+    mov eax,esi
+    add eax,SIZE handle_req_struc
+    movzx edx,ds:sb_pages
+    shl edx,12
+    cmp eax,edx
+    jbe arFound
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    GrowShareBlock
+    pop es
+    jmp arFound
+
+arScan:
+    int 3
+    xor ebx,ebx
+    mov esi,SIZE req_sel
+
+arLoop:
+    mov al,ds:[esi].hr_used
+    or al,al
+    jz arFound
+;
+    inc ebx
+    add esi,SIZE handle_req_struc
+    loop arLoop
+;
+    CrashGate
+
+arFound:
+    pop ecx
+;
+    inc ds:rs_handle_count
+    mov ds:[esi].hr_sector_count,ecx
+    mov ds:[esi].hr_sector_arr,edi
+;
+    mov eax,es:fi_kernel_handle
+    mov ds:[esi].hr_file_handle,eax
+;
+    mov ds:[esi].hr_wait_sel,0
+    mov ds:[esi].hr_data_sel,0
+    mov ds:[esi].hr_pend_sel,0
+    mov ds:[esi].hr_ref_count,0
+    mov ds:[esi].hr_used,1
+;
+    inc ebx
+;
+    pop esi
+    pop edx
+    pop eax
+    pop ds
+    ret
+AllocateReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
