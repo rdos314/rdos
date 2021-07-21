@@ -837,9 +837,13 @@ CreateReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartOneReq  Proc near
-    EnterSection ds:vfs_section
+    mov eax,gs:[edi]
+    dec eax
 
 sroLoop:
+    cmp eax,gs:[edi]
+    je sroNext
+;
     mov eax,gs:[edi]
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
@@ -881,8 +885,6 @@ sroNext:
     sub ecx,1
     jnz sroLoop
 ;
-    LeaveSection ds:vfs_section
-;
     ret
 StartOneReq    Endp
 
@@ -917,9 +919,14 @@ StartReq	Proc near
     mov bp,1
     shl bp,cl
 ;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    stc
+    jnz srDone
+;
     mov ds,fs:vfsp_disc_sel
     mov eax,serv_flat_sel
     mov es,eax
+    EnterSection ds:vfs_section
 ;
     mov edi,gs:vfs_rd_msb_ptr
     mov ecx,gs:vfs_rd_msb_count
@@ -941,6 +948,10 @@ srNext:
     add edi,16
     loop srLoop
 ;
+    LeaveSection ds:vfs_section
+    clc
+
+srDone:
     pop ebp
     pop edi
     pop edx
@@ -1023,6 +1034,17 @@ serv_add_file_req    Proc far
     call SortLsbReq
     call CreateReq
     call StartReq
+    jc safLeave
+;
+    mov eax,ds:vfs_rd_remain_count
+    or eax,eax
+    clc
+    jz safLeave
+;
+    mov ds,fs:vfsp_disc_sel
+    mov bx,ds:vfs_server
+    Signal
+    clc
 
 safLeave:
     pop ds
