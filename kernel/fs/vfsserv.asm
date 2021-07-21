@@ -705,6 +705,52 @@ HandleToPart    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetPartSel
+;
+;       DESCRIPTION:    Get partition selector
+;
+;       PARAMETERS:     BX          Part #
+;
+;       RETURNS:        FS          Part sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetPartSel
+
+GetPartSel    Proc near
+    push eax
+    push ebx
+;
+    mov ax,SEG data
+    mov fs,ax
+    cmp ebx,MAX_PART_COUNT
+    jb gpsInRange
+
+gpsFail:
+    stc
+    jmp gpsDone
+
+gpsInRange:
+    add bx,bx
+    mov ax,fs:[bx].part_arr
+    or ax,ax
+    jz htpFail
+;
+    mov fs,ax
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz gpsFail
+;
+    clc
+
+gpsDone:
+    pop ebx
+    pop eax
+    ret
+GetPartSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetVfsSectors
 ;
 ;       DESCRIPTION:    Get VFS sectors

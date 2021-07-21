@@ -140,6 +140,7 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern HandleToPart:near
+    extern GetPartSel:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -280,6 +281,157 @@ gmmNotMax:
     ret
 GetMinMax Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddReq
+;
+;       DESCRIPTION:    Add as a req
+;
+;       PARAMETERS:     DS          Req sel
+;                       FS          Part sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddReq    Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov eax,fs
+    mov es,eax
+
+adLoop:
+    mov ecx,MAX_VFS_READ_COUNT
+    mov edi,OFFSET vfsp_req_arr + 2 * MAX_VFS_REQ_COUNT
+    xor ax,ax
+    repnz scas word ptr es:[edi]
+    jz adFound
+;
+    mov ax,10
+    WaitMilliSec
+    jmp adLoop
+
+adFound:
+    sub edi,2
+    mov es:[edi],ds
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+AddReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CopySectors
+;
+;       DESCRIPTION:    Copy sectors & convert to blocks
+;
+;       PARAMETERS:     FS          Part sel
+;                       ECX         Size
+;                       DS:ESI      Sector buf
+;                       ES:EDI      Block buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+copy512  Proc near
+    mov eax,ds:[esi]
+    mov edx,ds:[esi+4]
+    mov es:[edi],eax
+    mov es:[edi+4],edx
+    add esi,8
+    add edi,8
+    loop copy512
+    ret
+copy512  Endp
+
+copy1k  Proc near
+    mov eax,ds:[esi]
+    mov edx,ds:[esi+4]
+    add eax,eax
+    adc edx,edx
+    mov es:[edi],eax
+    mov es:[edi+4],edx
+    add esi,8
+    add edi,8
+    loop copy1k
+    ret
+copy1k  Endp
+
+copy2k  Proc near
+    mov eax,ds:[esi]
+    mov edx,ds:[esi+4]
+    add eax,eax
+    adc edx,edx
+    add eax,eax
+    adc edx,edx
+    mov es:[edi],eax
+    mov es:[edi+4],edx
+    add esi,8
+    add edi,8
+    loop copy2k
+    ret
+copy2k  Endp
+
+copy4k  Proc near
+    mov eax,ds:[esi]
+    mov edx,ds:[esi+4]
+    add eax,eax
+    adc edx,edx
+    add eax,eax
+    adc edx,edx
+    add eax,eax
+    adc edx,edx
+    mov es:[edi],eax
+    mov es:[edi+4],edx
+    add esi,8
+    add edi,8
+    loop copy4k
+    ret
+copy4k  Endp
+
+copy_tab:
+ct00 dd OFFSET copy512
+ct01 dd OFFSET copy1k
+ct02 dd OFFSET copy2k
+ct03 dd OFFSET copy4k
+
+CopySectors    Proc near
+    push gs
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    or ecx,ecx
+    jz csDone
+;
+    mov gs,fs:vfsp_disc_sel
+    movzx ebx,gs:vfs_sector_shift
+    shl ebx,3
+    call dword ptr cs:[ebx].copy_tab
+
+csDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop gs
+    ret
+CopySectors    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -287,7 +439,8 @@ GetMinMax Endp
 ;
 ;       DESCRIPTION:    Create req selector
 ;
-;       PARAMETERS:     ECX             Size
+;       PARAMETERS:     FS              Part sel
+;                       ECX             Size
 ;                       EDX             Data
 ;                       EAX             Min MSB
 ;                       EBX             Max MSB
@@ -330,9 +483,12 @@ CreateReqSel Proc near
     mov edi,SIZE vfs_read_entry
     mov es:vfs_rd_chain_ptr,edi
 ;
-    shl ecx,1
     mov esi,edx
-    rep movsd
+    call CopySectors
+;
+    mov ecx,es:vfs_rd_sectors
+    shl ecx,3
+    add edi,ecx
     mov es:vfs_rd_sorted_ptr,edi
 ;
     mov ecx,es:vfs_rd_sectors
@@ -645,6 +801,8 @@ serv_add_file_req_name       DB 'Serv Add File Req',0
 serv_add_file_req    Proc far
     push ds
     push es
+    push fs
+    push gs
     push ebx
     push esi
 ;
@@ -661,13 +819,19 @@ serv_add_file_req    Proc far
     pop eax
 ;
     EnterSection ds:fs_section
+    push ds
+;
     mov bx,ds:[ebx].fs_handle_arr
     or bx,bx
     stc
     jz safLeave
 ;
+    mov gs,bx
+    movzx bx,gs:fi_part
+    call GetPartSel
+    jc safLeave
+;
     push eax
-    push ebx
     push edx
 ;
     mov eax,es
@@ -676,86 +840,25 @@ serv_add_file_req    Proc far
     call GetMinMax
     call CreateReqSel
 ;
+    pop edx
+    pop eax
+    jc safLeave
+;
     mov eax,es
     mov ds,eax
     call SortMsbReq
     call SortLsbReq
-;
-    pop edx
-    pop ebx
-    pop eax
-
-
-;
-    push edi
-;
-    push eax
-    push ebx
-    push ecx
-;
-    mov ecx,es:fi_req_max_size
-    cmp ecx,es:fi_req_count
-    jne safScan
-;
-    mov ebx,ecx
-    inc ecx
-    mov es:fi_req_max_size,ecx
-;
-    mov edi,ebx
-    shl edi,4
-    add edi,SIZE file_info_struc
-    test di,0FFFh
-    jnz safFound
-;
-    GrowShareBlock
-    jmp safFound
-
-safScan:
-    int 3
-    xor ebx,ebx
-    mov edi,SIZE file_info_struc
-
-safLoop:
-    mov eax,es:[edi]
-    or eax,eax
-    jz safFound
-;
-    inc ebx
-    add edi,4
-    loop safLoop
-;
-    CrashGate
-
-safFound:
-    pop ecx
-    pop ebx
-    pop eax
-;
-    inc es:fi_req_count
-    mov es:[edi].fr_handle,ebx
-    mov es:[edi].fr_pos,eax
-    mov es:[edi].fr_pos+4,edx
-;
-    push eax
-    push edx
-;
-    mov eax,esi
-    mul ecx
-    mov es:[edi].fr_size,eax
-;
-    pop edx
-    pop eax
-;
-    pop edi
+    call AddReq
 
 safLeave:
+    pop ds
     LeaveSection ds:fs_section
 
 safDone:
-    mov eax,ebx
-;
     pop esi
     pop ebx
+    pop gs
+    pop fs
     pop es
     pop ds
     ret
