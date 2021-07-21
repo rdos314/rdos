@@ -205,15 +205,24 @@ vfsp_drive_nr             DB ?
 
 vfs_part  ENDS
 
+; should be 4 bytes!!
+
+vfs_req_base  STRUC
+
+vfsr_callback             DD ?
+
+vfs_req_base  ENDS
+
 ; should be 16 bytes!!
 
 vfs_req_header  STRUC
 
+vfsrh_header              vfs_req_base <>
 vfsrh_entry_count         DW ?
 vfsrh_deleted_count       DW ?
 vfsrh_remain_count        DD ?
 vfsrh_wait_obj            DW ?
-vfsrh_pad                 DW ?,?,?
+vfsrh_pad                 DW ?
 
 vfs_req_header  ENDS
 
