@@ -181,7 +181,7 @@ vfs_part  STRUC
 vfsp_start_sector         DD ?,?
 vfsp_sector_count         DD ?,?
 
-vfsp_cmd_section          section_typ <>
+vfsp_req_section          section_typ <>
 vfsp_cmd_thread           DW ?
 vfsp_cmd_curr             DD ?
 

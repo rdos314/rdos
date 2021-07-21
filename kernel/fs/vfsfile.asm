@@ -771,41 +771,51 @@ SortLsbReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateReq    Proc near
+    push ds
     push es
     push eax
     push ecx
     push edx
     push edi
+    push ebp
 ;
     mov ds:vfsr_callback, OFFSET NotifyReq
+    mov ebp,ds
+;
     mov eax,fs
+    mov ds,eax
     mov es,eax
 
 crLoop:
+    EnterSection ds:vfsp_req_section
     mov ecx,MAX_VFS_REQ_COUNT
     mov edi,OFFSET vfsp_req_arr
     xor ax,ax
     repnz scas word ptr es:[edi]
     jz crFound
 ;
+    LeaveSection ds:vfsp_req_section
     mov ax,10
     WaitMilliSec
     jmp crLoop
 
 crFound:
     sub edi,2
-    mov es:[edi],ds
+    mov es:[edi],bp
+    LeaveSection ds:vfsp_req_section
 ;
     mov bx,di
     sub bx,OFFSET vfsp_req_arr
     shr bx,1
     inc bx
 ;
+    pop ebp
     pop edi
     pop edx
     pop ecx
     pop eax
     pop es
+    pop ds
     ret
 CreateReq    Endp
 

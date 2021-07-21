@@ -857,6 +857,8 @@ create_vfs_req    Proc far
 ;
     mov eax,es
     mov ds,eax
+    EnterSection ds:vfsp_req_section
+;
     mov ecx,MAX_VFS_REQ_COUNT
     mov edi,OFFSET vfsp_req_arr
     xor ax,ax
@@ -864,6 +866,7 @@ create_vfs_req    Proc far
     jz crvrFound
 
 crvrFail:
+    LeaveSection ds:vfsp_req_section
     stc
     jmp crvrDone
 
@@ -876,14 +879,17 @@ crvrFound:
 ;
     mov eax,SIZE vfs_part_req
     AllocateBigServSel
-    mov ds:[edi],es
-;
+    push edi
     xor edi,edi
     mov ecx,SIZE vfs_part_req
     shr ecx,2
     xor eax,eax
     rep stos dword ptr es:[edi]
     mov es:vfsr_callback,OFFSET NotifyReq
+    pop edi
+;
+    mov ds:[edi],es
+    LeaveSection ds:vfsp_req_section
     clc
 
 crvrDone:
@@ -944,7 +950,9 @@ close_vfs_req    Proc far
     dec esi
     shl esi,1
     xor bx,bx
+    EnterSection ds:vfsp_req_section
     xchg bx,ds:[esi].vfsp_req_arr
+    LeaveSection ds:vfsp_req_section
     or bx,bx
     jz clvrDone
 ;
