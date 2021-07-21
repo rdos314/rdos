@@ -36,8 +36,7 @@
 
 VFS_FLAG_STOPPED   = 1
 MAX_VFS_PARTITIONS = 15
-MAX_VFS_REQ_COUNT  = 8
-MAX_VFS_READ_COUNT = 7
+MAX_VFS_REQ_COUNT  = 15
 MAX_VFS_ENTRY_COUNT = 255
 
 vfs_table_struc    STRUC
@@ -194,7 +193,6 @@ vfsp_cmd_head             DB ?
 vfsp_cmd_tail             DB ?
 
 vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
-vfsp_rd_arr               DW MAX_VFS_READ_COUNT DUP(?)
 
 vfsp_app_sel              DW ?
 vfsp_disc_sel             DW ?
@@ -254,6 +252,8 @@ vfsm_rd_pad        DD ?
 vfs_read_msb  ENDS
 
 vfs_read_entry  STRUC
+
+vfs_rd_header     vfs_req_base <>
 
 vfs_rd_sectors    DD ?
 vfs_rd_start_msb  DD ?

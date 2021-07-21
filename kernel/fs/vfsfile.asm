@@ -239,6 +239,30 @@ serv_open_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyReq
+;
+;       DESCRIPTION:    Notify req
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       FS          Part sel
+;                       GS          Req sel
+;                       EDX:EAX     Sector
+;                       SI          Req mask
+;                       CX          Lock count
+;
+;       RETURNS:        CX          Lock count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyReq    Proc near
+    int 3
+    ret
+NotifyReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetMinMaxMsb
 ;
 ;       DESCRIPTION:    Get min & max MSB sector values
@@ -422,7 +446,7 @@ CreateReqSel Proc near
     add eax,ebx
     add eax,SIZE vfs_read_entry
 ;
-    AllocateBigMem
+    AllocateBigServSel
 ;
     pop ebx
     pop eax
@@ -732,7 +756,6 @@ slrNext:
     ret
 SortLsbReq  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -754,12 +777,13 @@ CreateReq    Proc near
     push edx
     push edi
 ;
+    mov ds:vfsr_callback, OFFSET NotifyReq
     mov eax,fs
     mov es,eax
 
 crLoop:
-    mov ecx,MAX_VFS_READ_COUNT
-    mov edi,OFFSET vfsp_rd_arr
+    mov ecx,MAX_VFS_REQ_COUNT
+    mov edi,OFFSET vfsp_req_arr
     xor ax,ax
     repnz scas word ptr es:[edi]
     jz crFound
@@ -773,9 +797,9 @@ crFound:
     mov es:[edi],ds
 ;
     mov bx,di
-    sub bx,OFFSET vfsp_rd_arr
+    sub bx,OFFSET vfsp_req_arr
     shr bx,1
-    add bx,MAX_VFS_REQ_COUNT
+    inc bx
 ;
     pop edi
     pop edx
