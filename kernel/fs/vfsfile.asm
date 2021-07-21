@@ -281,59 +281,6 @@ gmmNotMax:
     ret
 GetMinMax Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddReq
-;
-;       DESCRIPTION:    Add as a req
-;
-;       PARAMETERS:     DS          Req sel
-;                       FS          Part sel
-;
-;       RETURNS:        BX          Req #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddReq    Proc near
-    push es
-    push eax
-    push ecx
-    push edx
-    push edi
-;
-    mov eax,fs
-    mov es,eax
-
-adLoop:
-    mov ecx,MAX_VFS_READ_COUNT
-    mov edi,OFFSET vfsp_rd_arr
-    xor ax,ax
-    repnz scas word ptr es:[edi]
-    jz adFound
-;
-    mov ax,10
-    WaitMilliSec
-    jmp adLoop
-
-adFound:
-    mov bx,di
-    sub bx,OFFSET vfsp_rd_arr
-    shr bx,1
-    add bx,MAX_VFS_REQ_COUNT
-    sub edi,2
-    mov es:[edi],ds
-;
-    pop edi
-    pop edx
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-    ret
-AddReq    Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -785,6 +732,59 @@ slrNext:
     ret
 SortLsbReq  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateReq
+;
+;       DESCRIPTION:    Create a disc req
+;
+;       PARAMETERS:     DS          Req sel
+;                       FS          Part sel
+;
+;       RETURNS:        BX          Req #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateReq    Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov eax,fs
+    mov es,eax
+
+crLoop:
+    mov ecx,MAX_VFS_READ_COUNT
+    mov edi,OFFSET vfsp_rd_arr
+    xor ax,ax
+    repnz scas word ptr es:[edi]
+    jz crFound
+;
+    mov ax,10
+    WaitMilliSec
+    jmp crLoop
+
+crFound:
+    sub edi,2
+    mov es:[edi],ds
+;
+    mov bx,di
+    sub bx,OFFSET vfsp_rd_arr
+    shr bx,1
+    add bx,MAX_VFS_REQ_COUNT
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateReq    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -854,7 +854,7 @@ serv_add_file_req    Proc far
     mov ds,eax
     call SortMsbReq
     call SortLsbReq
-    call AddReq
+    call CreateReq
 
 safLeave:
     pop ds
@@ -1472,33 +1472,33 @@ CheckReq  Proc near
     mov esi,ds:vfs_rd_index_ptr
     mov ecx,ds:vfs_rd_sectors
 
-crLoop:
+chrLoop:
     mov eax,ds:[ebx]
     mov edx,ds:[ebx+4]
     call FindReq
-    jc crFail
+    jc chrFail
 ;
     mov edx,ds:[4*eax+esi]
     mov eax,ds:[edx]
     cmp eax,ds:[ebx]
-    jne crFail
+    jne chrFail
 ;
     mov eax,ds:[edx+4]
     cmp eax,ds:[ebx+4]
-    je crNext
+    je chrNext
 
-crFail:
+chrFail:
     int 3
     stc
-    jmp crDone
+    jmp chrDone
 
-crNext:
+chrNext:
     add ebx,8
-    loop crLoop
+    loop chrLoop
 ;
     clc
 
-crDone:
+chrDone:
     popad
     ret
 CheckReq  Endp
