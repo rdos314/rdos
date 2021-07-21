@@ -387,6 +387,80 @@ StopRequests    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyReq
+;
+;       DESCRIPTION:    Notify req
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       FS          Part sel
+;                       GS          Req sel
+;                       EDX:EAX     Sector
+;                       SI          Req mask
+;                       CX          Lock count
+;
+;       RETURNS:        CX          Lock count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyReq    Proc near
+    push ebx
+    push esi
+    push edi
+    push ebp
+;
+    movzx ebp,gs:vfsrh_entry_count
+    mov ebx,SIZE vfs_req_header
+    or ebp,ebp
+    jz nrDone
+
+nrCheckLoop:
+    mov esi,gs:[ebx].vfsre_sector_count
+    or esi,esi
+    jz nrCheckNext
+;
+    mov esi,eax
+    mov edi,edx
+    sub esi,gs:[ebx].vfsre_start_sector
+    sbb edi,gs:[ebx].vfsre_start_sector+4
+    jc nrCheckNext
+;
+    or edi,edi
+    jnz nrCheckNext
+;
+    cmp esi,gs:[ebx].vfsre_sector_count
+    jae nrCheckNext
+;
+    inc cx
+    sub gs:vfsrh_remain_count,1
+    jnz nrCheckNext
+;
+    xor di,di
+    xchg di,gs:vfsrh_wait_obj
+    or di,di
+    jz nrCheckNext
+;
+    push es
+    mov es,edi
+    SignalWait
+    pop es
+    
+nrCheckNext:
+    add ebx,SIZE vfs_req_entry
+    sub ebp,1
+    jnz nrCheckLoop
+
+nrDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop ebx
+    ret
+NotifyReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyPart
 ;
 ;       DESCRIPTION:    Notify part
@@ -406,21 +480,16 @@ NotifyPart    Proc near
     push gs
     push ebx
     push esi
-    push edi
-    push ebp
 ;
     mov bx,si
-    push ebx
 
 npLoop:
-    pop ebx
     or bx,bx
     jz npDone
 ;
     bsf si,bx
     btc bx,si
 ;
-    push ebx
     movzx esi,si
     dec esi
     add esi,esi
@@ -429,52 +498,10 @@ npLoop:
     jz npLoop
 ;
     mov gs,si
-    movzx ebp,gs:vfsrh_entry_count
-    mov ebx,SIZE vfs_req_header
-    or ebp,ebp
-    jz npLoop
-
-npCheckLoop:
-    mov esi,gs:[ebx].vfsre_sector_count
-    or esi,esi
-    jz npCheckNext
-;
-    mov esi,eax
-    mov edi,edx
-    sub esi,gs:[ebx].vfsre_start_sector
-    sbb edi,gs:[ebx].vfsre_start_sector+4
-    jc npCheckNext
-;
-    or edi,edi
-    jnz npCheckNext
-;
-    cmp esi,gs:[ebx].vfsre_sector_count
-    jae npCheckNext
-;
-    inc cx
-    sub gs:vfsrh_remain_count,1
-    jnz npCheckNext
-;
-    xor di,di
-    xchg di,gs:vfsrh_wait_obj
-    or di,di
-    jz npCheckNext
-;
-    push es
-    mov es,edi
-    SignalWait
-    pop es
-    
-npCheckNext:
-    add ebx,SIZE vfs_req_entry
-    sub ebp,1
-    jnz npCheckLoop
-;
+    call dword ptr gs:vfsr_callback
     jmp npLoop
 
 npDone:
-    pop ebp
-    pop edi
     pop esi
     pop ebx
     pop gs
@@ -856,6 +883,7 @@ crvrFound:
     shr ecx,2
     xor eax,eax
     rep stos dword ptr es:[edi]
+    mov es:vfsr_callback,OFFSET NotifyReq
     clc
 
 crvrDone:
