@@ -194,6 +194,7 @@ vfsp_cmd_head             DB ?
 vfsp_cmd_tail             DB ?
 
 vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
+vfsp_rd_arr               DW MAX_VFS_READ_COUNT DUP(?)
 
 vfsp_app_sel              DW ?
 vfsp_disc_sel             DW ?

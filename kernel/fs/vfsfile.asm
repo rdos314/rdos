@@ -292,6 +292,8 @@ GetMinMax Endp
 ;       PARAMETERS:     DS          Req sel
 ;                       FS          Part sel
 ;
+;       RETURNS:        BX          Req #
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddReq    Proc near
@@ -306,7 +308,7 @@ AddReq    Proc near
 
 adLoop:
     mov ecx,MAX_VFS_READ_COUNT
-    mov edi,OFFSET vfsp_req_arr + 2 * MAX_VFS_REQ_COUNT
+    mov edi,OFFSET vfsp_rd_arr
     xor ax,ax
     repnz scas word ptr es:[edi]
     jz adFound
@@ -316,6 +318,10 @@ adLoop:
     jmp adLoop
 
 adFound:
+    mov bx,di
+    sub bx,OFFSET vfsp_rd_arr
+    shr bx,1
+    add bx,MAX_VFS_REQ_COUNT
     sub edi,2
     mov es:[edi],ds
 ;
