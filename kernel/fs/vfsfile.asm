@@ -141,6 +141,8 @@ code    SEGMENT byte public 'CODE'
     extern GetRelDir:near
     extern HandleToPart:near
     extern GetPartSel:near
+    extern BlockToBuf:near
+    extern BlockToBitmap:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -822,6 +824,137 @@ CreateReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           StartOneReq
+;
+;       DESCRIPTION:    Start one req
+;
+;       PARAMETERS:     FS          Part sel
+;                       EDX         MSB sector
+;                       GS:EDI      LSB sector array
+;                       ECX         Sector count
+;                       BP          Ref bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartOneReq  Proc near
+    EnterSection ds:vfs_section
+
+sroLoop:
+    mov eax,gs:[edi]
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz sroReq
+;
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jnz sroLockOk
+;
+    inc ds:vfs_locked_pages
+
+sroLockOk:
+    inc es:[esi].vfsp_ref_bitmap
+    jmp sroNext
+
+sroReq:
+    inc gs:vfs_rd_remain_count
+    or es:[esi].vfsp_ref_bitmap,bp
+;
+    push edi
+;
+    call BlockToBitmap
+    mov ebx,eax
+    shr ebx,3
+    and ebx,1FFFFh
+    bts es:[edi],ebx
+;
+    pop edi
+;
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+    jnc sroNext
+;
+    mov ds:vfs_scan_pos,eax
+    mov ds:vfs_scan_pos+4,edx
+
+sroNext:
+    add edi,4
+    sub ecx,1
+    jnz sroLoop
+;
+    LeaveSection ds:vfs_section
+;
+    ret
+StartOneReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartReq
+;
+;       DESCRIPTION:    Start req
+;
+;       PARAMETERS:     DS          Req sel
+;                       FS          Part sel
+;                       BX          Req #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartReq	Proc near
+    push ds
+    push es
+    push gs
+    push eax
+    push ecx
+    push edx
+    push edi
+    push ebp
+;
+    mov eax,ds
+    mov gs,eax
+    mov gs:vfs_rd_remain_count,0
+;
+    mov cl,bl
+    mov bp,1
+    shl bp,cl
+;
+    mov ds,fs:vfsp_disc_sel
+    mov eax,serv_flat_sel
+    mov es,eax
+;
+    mov edi,gs:vfs_rd_msb_ptr
+    mov ecx,gs:vfs_rd_msb_count
+    mov edx,gs:vfs_rd_start_msb
+
+srLoop:
+    push ecx
+    push edi
+;
+    mov ecx,gs:[edi].vfsm_rd_size
+    mov edi,gs:[edi].vfsm_rd_ptr
+    call StartOneReq
+
+srNext:
+    pop edi
+    pop ecx
+;
+    inc edx
+    add edi,16
+    loop srLoop
+;
+    pop ebp
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop es
+    pop ds
+    ret
+StartReq     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServAddFileReq
 ;
 ;       DESCRIPTION:    Serv add VFS file req
@@ -889,6 +1022,7 @@ serv_add_file_req    Proc far
     call SortMsbReq
     call SortLsbReq
     call CreateReq
+    call StartReq
 
 safLeave:
     pop ds
