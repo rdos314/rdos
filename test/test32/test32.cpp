@@ -8,65 +8,40 @@
 #include "modbus.h"
 #include "disc.h"
 #include "md5.h"
-#include "ini.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-int Prev;
+int handle;
 
 /*##########################################################################
 #
-#   Name       : WriteSmall
+#   Name       : VerifySector
 #
-#   Purpose....: Write small
+#   Purpose....:
 #
-##########################################################################*/
-int WriteSmall(const char *msg, int base)
-{
-    int Curr;
-    int Linear;
-
-    Curr = RdosGetFreeSmallKernelLinear();
-    Linear = Curr - base;
-    printf("Small %s %d\r\n", msg, Linear);
-
-    return Curr;
-}
-
-/*##########################################################################
-#
-#   Name       : WriteIni
-#
-#   Purpose....: Write ini
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
 #
 ##########################################################################*/
-void WriteIni(int val)
+void VerifySector(int id, char *buf)
 {
-    char label[100];
-    char str[40];
-    TIniFile *ini;
+    TMd5Hash hash;
+    char hbuf[16];
+    int cid;
 
-    WriteSmall("before", Prev);
+    hash.Add(buf + 16, 512 - 16);
+    hash.GetHashData(hbuf);
 
-    ini = new TIniFile("c:\\run.ini");
-
-    WriteSmall("new", Prev);
-
-    ini->GotoSection("r1");
-
-    WriteSmall("section", Prev);
-
-    sprintf(label, "total_volume_p%d_n%d", 99, 1);
-    sprintf(str, "%d", val);
-    ini->WriteVar(label, str);
-//    ini->ReadVar(label, str, 30);
-
-    WriteSmall("write", Prev);
-
-    delete ini;
-
-    Prev = WriteSmall("delete", Prev);
+    if (memcmp(hbuf, buf, 16))
+        printf("Wrong hash\r\n");
+    else
+    {
+        memcpy(&cid, buf + 16, 4);
+        if (id != cid)
+            printf("Wrong sector\r\n");
+    }
 }
 
 /*##########################################################################
@@ -82,16 +57,47 @@ void WriteIni(int val)
 ##########################################################################*/
 void main()
 {
-    int total = 0;
+    TDisc disc(1);
+    char *buf;
+    int count;
+    long long sector;
+    int delay;
+    int i;
+    char *ptr;
+    int id;
+    int h;
 
-    Prev = RdosGetFreeSmallKernelLinear();
+//    for (i = 0;; i++)
+//    {
+//        printf("%d\r\n", i);
+//        RdosTestGate("");
+//    }
 
-    for (;;) 
+    int handle;
+
+    handle = RdosOpenVfsFile("y:/rdos.bin");
+    buf = new char[512 * 128];
+    count = RdosReadVfsFile(handle, buf, 512 * 128);
+
+
+
+    for (;;)
     {
-        WriteIni(total);
+        count = 1 + RdosGetRandom(127);
+        sector = 400000 + RdosGetRandom(600000 - count);
+        delay = RdosGetRandom(100);
+        disc.Read(sector, buf, 512 * count);
 
-        total++;
-        RdosWaitMilli(50);
+        id = (int)(sector - 100000);
+
+        ptr = buf;
+        for (i = 0; i < count; i++)
+        {
+            VerifySector(id + i, ptr);
+            ptr += 512;
+        }
+        RdosWaitMilli(delay);
+
     }
 
     RdosTestGate("");

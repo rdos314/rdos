@@ -259,8 +259,92 @@ serv_open_file    Endp
 
 NotifyReq    Proc near
     int 3
+    push ebx
+    push ecx
+    push edx
+    push ebp
+;
+    sub edx,gs:vfs_rd_start_msb
+    jc nrqFail
+;
+    cmp edx,gs:vfs_rd_msb_count
+    jae nrqFail
+;
+    shl edx,4
+    add edx,gs:vfs_rd_msb_ptr
+    mov ebx,gs:[edx].vfsm_rd_ptr
+    mov ebp,ebx
+    mov ecx,gs:[edx].vfsm_rd_size
+    shr ecx,1
+    jz nrqCheck
+
+nrqLoop:
+    lea edx,[4*ecx]
+    add ebx,edx
+    cmp eax,gs:[ebx]
+    je nrqFound
+    ja nrqNext
+;
+    sub ebx,edx
+
+nrqNext:
+    shr ecx,1
+    jnz nrqLoop
+
+nrqCheck:
+    cmp eax,gs:[ebx]
+    je nrqFound
+
+nrqFail:
+    stc
+    jmp nrqDone
+
+nrqFound:
+    cmp eax,-1
+    jne nrqOk
+
+nrqMax:
+    cmp ebx,ebp
+    je nrqOk
+;
+    cmp eax,gs:[ebx-4]
+    jne nrqOk
+;
+    sub ebx,4
+    jmp nrqMax
+
+nrqOk:
+    sub ebx,gs:vfs_rd_sorted_ptr
+    shr ebx,2
+    mov eax,ebx
+    clc
+
+nrqDone:
+    pop ebp
+    pop edx
+    pop ecx
+    pop ebx
     ret
 NotifyReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindReq
+;
+;       DESCRIPTION:    Find a request
+;
+;       PARAMETERS:     DS              Req sel
+;                       EDX:EAX         Sector
+;
+;       RETURNS:        NC              Found
+;                         EAX           Entry index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindReq  Proc near
+    ret
+FindReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -837,13 +921,8 @@ CreateReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartOneReq  Proc near
-    mov eax,gs:[edi]
-    dec eax
 
 sroLoop:
-    cmp eax,gs:[edi]
-    je sroNext
-;
     mov eax,gs:[edi]
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
@@ -1359,393 +1438,6 @@ read_vfs_file32  Proc far
     ret
 read_vfs_file32  Endp
 
-
-;
-;
-; test only
-;
-;
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AllocateReq
-;
-;       DESCRIPTION:    Allocate req
-;
-;       PARAMETERS:     ECX            Sector count
-;                       EDI            Sector buf
-;                       ES             File sel
-;
-;       RETURNS:        EBX            Req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateReq  Proc near
-    push ds
-    push eax
-    push edx
-    push esi
-;
-    mov ax,vfs_req_sel
-    mov ds,ax
-;
-    push ecx
-;
-    mov ecx,ds:rs_max_size
-    cmp ecx,ds:rs_handle_count
-    jne arScan
-;
-    mov ebx,ecx
-    inc ecx
-    mov ds:rs_max_size,ecx
-;
-    mov eax,SIZE handle_req_struc
-    mul ebx
-    mov esi,eax
-    add esi,SIZE req_sel
-    mov eax,esi
-    add eax,SIZE handle_req_struc
-    movzx edx,ds:sb_pages
-    shl edx,12
-    cmp eax,edx
-    jbe arFound
-;
-    push es
-    mov ax,ds
-    mov es,ax
-    GrowShareBlock
-    pop es
-    jmp arFound
-
-arScan:
-    int 3
-    xor ebx,ebx
-    mov esi,SIZE req_sel
-
-arLoop:
-    mov al,ds:[esi].hr_used
-    or al,al
-    jz arFound
-;
-    inc ebx
-    add esi,SIZE handle_req_struc
-    loop arLoop
-;
-    CrashGate
-
-arFound:
-    pop ecx
-;
-    inc ds:rs_handle_count
-    mov ds:[esi].hr_sector_count,ecx
-    mov ds:[esi].hr_sector_arr,edi
-;
-    mov eax,es:fi_kernel_handle
-    mov ds:[esi].hr_file_handle,eax
-;
-    mov ds:[esi].hr_wait_sel,0
-    mov ds:[esi].hr_data_sel,0
-    mov ds:[esi].hr_pend_sel,0
-    mov ds:[esi].hr_ref_count,0
-    mov ds:[esi].hr_used,1
-;
-    inc ebx
-;
-    pop esi
-    pop edx
-    pop eax
-    pop ds
-    ret
-AllocateReq  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetRandomRange
-;
-;       DESCRIPTION:    Get random number range
-;
-;       PARAMETERS:     EAX          Range
-;
-;       RETURNS:        EAX          Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetRandomRange  Proc near
-    push edx
-    mov edx,eax
-    GetRandom
-    mul edx
-    mov eax,edx
-    pop edx
-    ret
-GetRandomRange Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreateRandomSectors
-;
-;       DESCRIPTION:    Create random sectors
-;
-;       RETURNS:        ECX             Size
-;                       EDX             Data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateRandomSectors Proc near
-    push eax
-    push esi
-    push edi
-    push ebp
-;
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,ax
-;
-    mov eax,1000
-    call GetRandomRange
-    mov ecx,eax
-    inc ecx
-;
-    mov eax,ecx
-    shl eax,3
-    push ecx
-    AllocateBigLinear
-    pop ecx
-    mov edi,edx
-;
-    mov eax,25
-    call GetRandomRange
-    mov esi,eax
-;
-    mov eax,25
-    call GetRandomRange
-    mov ebp,eax
-;
-    push ecx
-
-crsLoop:
-    mov eax,0FFFFh
-    call GetRandomRange
-    or ah,ah
-    jne crsBig
-
-crsSmall:
-    movsx eax,al
-    jmp crsSave
-
-crsBig:
-    GetRandom
-
-crsSave:
-    stosd
-;
-    mov eax,esi
-    call GetRandomRange
-    add eax,ebp
-    stosd
-;
-    loop crsLoop
-;
-    pop ecx
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop eax
-    ret
-CreateRandomSectors Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FindReq
-;
-;       DESCRIPTION:    Find a request
-;
-;       PARAMETERS:     DS              Req sel
-;                       EDX:EAX         Sector
-;
-;       RETURNS:        NC              Found
-;                         EAX           Entry index
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindReq  Proc near
-    push ebx
-    push ecx
-    push edx
-    push ebp
-;
-    sub edx,ds:vfs_rd_start_msb
-    jc frFail
-;
-    cmp edx,ds:vfs_rd_msb_count
-    jae frFail
-;
-    shl edx,4
-    add edx,ds:vfs_rd_msb_ptr
-    mov ebx,ds:[edx].vfsm_rd_ptr
-    mov ebp,ebx
-    mov ecx,ds:[edx].vfsm_rd_size
-    shr ecx,1
-    jz frCheck
-
-frLoop:
-    lea edx,[4*ecx]
-    add ebx,edx
-    cmp eax,ds:[ebx]
-    je frFound
-    ja frNext
-;
-    sub ebx,edx
-
-frNext:
-    shr ecx,1
-    jnz frLoop
-
-frCheck:
-    cmp eax,ds:[ebx]
-    je frFound
-
-frFail:
-    stc
-    jmp frDone
-
-frFound:
-    cmp eax,-1
-    jne frOk
-
-frMax:
-    cmp ebx,ebp
-    je frOk
-;
-    cmp eax,ds:[ebx-4]
-    jne frOk
-;
-    sub ebx,4
-    jmp frMax
-
-frOk:
-    sub ebx,ds:vfs_rd_sorted_ptr
-    shr ebx,2
-    mov eax,ebx
-    clc
-
-frDone:
-    pop ebp
-    pop edx
-    pop ecx
-    pop ebx
-    ret
-FindReq  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CheckReq
-;
-;       DESCRIPTION:    Check correctness of request
-;
-;       PARAMETERS:     DS              Req sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckReq  Proc near
-    pushad
-;
-    mov ebx,ds:vfs_rd_chain_ptr
-    mov esi,ds:vfs_rd_index_ptr
-    mov ecx,ds:vfs_rd_sectors
-
-chrLoop:
-    mov eax,ds:[ebx]
-    mov edx,ds:[ebx+4]
-    call FindReq
-    jc chrFail
-;
-    mov edx,ds:[4*eax+esi]
-    mov eax,ds:[edx]
-    cmp eax,ds:[ebx]
-    jne chrFail
-;
-    mov eax,ds:[edx+4]
-    cmp eax,ds:[ebx+4]
-    je chrNext
-
-chrFail:
-    int 3
-    stc
-    jmp chrDone
-
-chrNext:
-    add ebx,8
-    loop chrLoop
-;
-    clc
-
-chrDone:
-    popad
-    ret
-CheckReq  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           TestGate
-;
-;       DESCRIPTION:    Test sector ordering
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_gate_name       DB 'Test Gate',0
-
-test_gate    Proc far
-    push ds
-    push es
-    pushad
-;
-    call CreateRandomSectors
-
-tRetry:
-    call GetMinMax
-    call CreateReqSel
-;
-    mov eax,es
-    mov ds,eax
-;
-    call SortMsbReq
-    call SortLsbReq
-;
-    call CheckReq
-    jnc tNext
-;
-    int 3
-    xor eax,eax
-    mov ds,eax
-    FreeMem
-    jmp tRetry
-
-tNext:
-    push ecx
-    shl ecx,3
-    FreeLinear
-    pop ecx
-;
-    xor eax,eax
-    mov ds,eax
-    FreeMem
-;
-    popad
-    pop es
-    pop ds
-    ret
-test_gate    Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1836,12 +1528,6 @@ init_file    Proc near
     mov dx,virt_es_in
     mov ax,read_vfs_file_nr
     RegisterUserGate
-;
-    mov esi,OFFSET test_gate
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
-    RegisterBimodalUserGate
     ret
 init_file    Endp
 
