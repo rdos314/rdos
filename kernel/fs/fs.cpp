@@ -985,7 +985,7 @@ int TFs::ReqFile(int handle, long long pos, int size, int src)
     int diff;
     int SectorCount;
     long long *SectorArr;
-    int res = -1;
+    int res = 0;
 
     if (file)
     {

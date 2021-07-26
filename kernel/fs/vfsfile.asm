@@ -1056,13 +1056,14 @@ StartReq     Endp
 ;
 ;       PARAMETERS:     FS          Part sel
 ;
-;       RETURNS:        EAX         File req entry offset
+;       RETURNS:        EBP         File req entry offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateFileReq	Proc near
     push ds
     push es
+    push eax
     push ecx
     push edi
 ;
@@ -1086,13 +1087,14 @@ afrFound:
     sub edi,2
     mov ax,-1
     mov es:[edi],ax
-    mov eax,edi
+    mov ebp,edi
     LeaveSection ds:vfsp_req_section
     clc
 
 afrDone:
     pop edi
     pop ecx
+    pop eax
     pop es
     pop ds
     ret
@@ -1153,8 +1155,6 @@ serv_add_file_req    Proc far
 ;
     call AllocateFileReq
     jc safLeave
-;
-    mov ebp,eax
 ;
     push eax
     push edx

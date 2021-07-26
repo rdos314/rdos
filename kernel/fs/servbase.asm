@@ -467,7 +467,7 @@ LocalReqFile Proc near
     call LowReqFile
     pop edi
 ;
-    cmp eax,-1
+    or eax,eax
     je lrfReply
 ;
     and [edi].fc_eflags,NOT 1
