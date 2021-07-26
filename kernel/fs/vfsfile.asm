@@ -975,14 +975,13 @@ StartOneReq    Endp
 ;                       FS          Part sel
 ;                       BX          Req #
 ;
-;       RETURNS:        EAX         Queued count
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartReq	Proc near
     push ds
     push es
     push gs
+    push eax
     push ecx
     push edx
     push edi
@@ -1025,8 +1024,8 @@ srNext:
     add edi,16
     loop srLoop
 ;
-    mov eax,gs:vfs_rd_remain_count
     LeaveSection ds:vfs_section
+    mov eax,gs:vfs_rd_remain_count
     or eax,eax
     clc
     jz srDone
@@ -1041,11 +1040,63 @@ srDone:
     pop edi
     pop edx
     pop ecx
+    pop eax
     pop gs
     pop es
     pop ds
     ret
 StartReq     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateFileReq
+;
+;       DESCRIPTION:    Allocate file req entry
+;
+;       PARAMETERS:     FS          Part sel
+;
+;       RETURNS:        EAX         File req entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateFileReq	Proc near
+    push ds
+    push es
+    push ecx
+    push edi
+;
+    mov eax,fs
+    mov ds,eax
+    mov es,eax
+    EnterSection ds:vfsp_req_section
+;
+    mov ecx,MAX_VFS_FILE_COUNT
+    mov edi,OFFSET vfsp_file_arr
+    xor ax,ax
+    repnz scas word ptr es:[edi]
+    jz afrFound
+
+afrFail:
+    LeaveSection ds:vfsp_req_section
+    stc
+    jmp afrDone
+
+afrFound:
+    sub edi,2
+    mov ax,-1
+    mov es:[edi],ax
+    mov eax,edi
+    LeaveSection ds:vfsp_req_section
+    clc
+
+afrDone:
+    pop edi
+    pop ecx
+    pop es
+    pop ds
+    ret
+AllocateFileReq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1073,6 +1124,7 @@ serv_add_file_req    Proc far
     push gs
     push ebx
     push esi
+    push ebp
 ;
     or ebx,ebx
     stc
@@ -1099,6 +1151,11 @@ serv_add_file_req    Proc far
     call GetPartSel
     jc safLeave
 ;
+    call AllocateFileReq
+    jc safLeave
+;
+    mov ebp,eax
+;
     push eax
     push edx
 ;
@@ -1110,7 +1167,7 @@ serv_add_file_req    Proc far
 ;
     pop edx
     pop eax
-    jc safLeave
+    jc safFail
 ;
     mov es:vfs_rd_start,eax
     mov es:vfs_rd_start+4,edx
@@ -1122,12 +1179,31 @@ serv_add_file_req    Proc far
     call SortLsbReq
     call CreateReq
     call StartReq
+    jc safFail
+;
+    mov eax,ds
+    mov fs:[ebp],ax
+    movzx eax,fs:vfsp_part_nr
+    shl eax,24
+    sub ebp,OFFSET vfsp_file_arr
+    shr ebp,1
+    inc ebp
+    or eax,ebp
+    clc
+    jmp safLeave
+
+safFail:
+    mov fs:[ebp],0
 
 safLeave:
     pop ds
     LeaveSection ds:fs_section
+    jnc safDone
+;
+    xor eax,eax
 
 safDone:
+    pop ebp
     pop esi
     pop ebx
     pop gs
