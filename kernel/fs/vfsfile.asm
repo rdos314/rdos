@@ -975,13 +975,14 @@ StartOneReq    Endp
 ;                       FS          Part sel
 ;                       BX          Req #
 ;
+;       RETURNS:        EAX         Queued count
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StartReq	Proc near
     push ds
     push es
     push gs
-    push eax
     push ecx
     push edx
     push edi
@@ -1024,7 +1025,15 @@ srNext:
     add edi,16
     loop srLoop
 ;
+    mov eax,gs:vfs_rd_remain_count
     LeaveSection ds:vfs_section
+    or eax,eax
+    clc
+    jz srDone
+;
+    mov ds,fs:vfsp_disc_sel
+    mov bx,ds:vfs_server
+    Signal
     clc
 
 srDone:
@@ -1032,7 +1041,6 @@ srDone:
     pop edi
     pop edx
     pop ecx
-    pop eax
     pop gs
     pop es
     pop ds
@@ -1052,7 +1060,7 @@ StartReq     Endp
 ;                       ESI            Src of req
 ;                       ES:EDI         Sector buf
 ;
-;       RETURNS:        EAX            Req handle
+;       RETURNS:        EAX            Queued count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1114,17 +1122,6 @@ serv_add_file_req    Proc far
     call SortLsbReq
     call CreateReq
     call StartReq
-    jc safLeave
-;
-    mov eax,ds:vfs_rd_remain_count
-    or eax,eax
-    clc
-    jz safLeave
-;
-    mov ds,fs:vfsp_disc_sel
-    mov bx,ds:vfs_server
-    Signal
-    clc
 
 safLeave:
     pop ds
