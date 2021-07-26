@@ -46,6 +46,7 @@ include vfsmsg.inc
 REPLY_DEFAULT      = 0
 REPLY_BLOCK        = 1
 REPLY_DATA         = 2
+REPLY_FILE         = 3
 
 MAX_PART_COUNT   = 255
 
@@ -2196,6 +2197,43 @@ reply_vfs_data_cmd  Endp
 reply_vfs_file_name       DB 'Reply VFS File',0
 
 reply_vfs_file    Proc far
+    int 3
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    mov es:[edi].fc_op,REPLY_FILE
+;
+    call HandleToPart
+    jc rffDone
+;
+    mov esi,es:vfsp_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    xor bx,bx
+    xchg bx,es:[esi].vfss_thread
+    Signal
+;
+    mov edx,es:[esi].vfss_server_linear
+    mov eax,es:[esi].vfss_phys
+    mov ebx,es:[esi].vfss_phys+4
+    or ax,863h
+    mov cx,system_data_sel
+    mov es,cx
+    add edx,es:flat_base
+    SetPageEntry
+
+rffDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
     ret
 reply_vfs_file    Endp
 
@@ -2477,6 +2515,24 @@ data_reply  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           file_reply
+;
+;       DESCRIPTION:    File reply processing
+;
+;       PARAMETERS:     ES      Msg buf
+;
+;       RETURNS:        EBP     Reply data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+file_reply  Proc near
+    int 3
+    ret
+file_reply  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunMsg
 ;
 ;       DESCRIPTION:    Run disc msg
@@ -2497,6 +2553,7 @@ reply_tab:
 r00 DD OFFSET no_reply
 r01 DD OFFSET block_reply
 r02 DD OFFSET data_reply
+r03 DD OFFSET file_reply
 
 RunMsg  Proc near
     mov esi,ebx
