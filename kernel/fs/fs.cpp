@@ -977,7 +977,7 @@ int TFs::GetFileHandle(int handle)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFs::ReqFile(int handle, long long pos, int size)
+int TFs::ReqFile(int handle, long long pos, int size, int src)
 {
     TFile *file = GetFile(handle);
     long long start;
@@ -985,7 +985,7 @@ int TFs::ReqFile(int handle, long long pos, int size)
     int diff;
     int SectorCount;
     long long *SectorArr;
-    int res = 0;
+    int res = -1;
 
     if (file)
     {
@@ -1002,7 +1002,7 @@ int TFs::ReqFile(int handle, long long pos, int size)
         SectorArr = new long long[SectorCount];
         file->GetSectors(start, SectorArr, SectorCount);
 
-        res = ServAddVfsFileReq(file->GetKernelHandle(), start, SectorArr, SectorCount, GetBytesPerSector());
+        res = ServAddVfsFileReq(file->GetKernelHandle(), start, SectorArr, SectorCount, src);
 
         delete SectorArr;
 

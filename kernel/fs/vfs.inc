@@ -255,6 +255,8 @@ vfs_read_entry  STRUC
 
 vfs_rd_header         vfs_req_base <>
 
+vfs_rd_start          DD ?,?
+vfs_rd_src            DD ?
 vfs_rd_remain_count   DD ?
 vfs_rd_sectors        DD ?
 vfs_rd_start_msb      DD ?

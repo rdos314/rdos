@@ -173,7 +173,7 @@ ServOpenVfsFile  MACRO
 ; IN  BX               Kernel handle
 ; IN  EDX:EAX          Start pos
 ; IN  ECX              Sector count
-; IN  ESI              Sector size
+; IN  ESI              Src of request
 ; IN  ES:EDI           Sector buffer
 ; OUT EAX              Req #
 ServAddVfsFileReq  MACRO

@@ -1049,7 +1049,7 @@ StartReq     Endp
 ;       PARAMETERS:     EBX            File handle
 ;                       EDX:EAX        File pos
 ;                       ECX            Sector count
-;                       ESI            Sector size
+;                       ESI            Src of req
 ;                       ES:EDI         Sector buf
 ;
 ;       RETURNS:        EAX            Req handle
@@ -1103,6 +1103,10 @@ serv_add_file_req    Proc far
     pop edx
     pop eax
     jc safLeave
+;
+    mov es:vfs_rd_start,eax
+    mov es:vfs_rd_start+4,edx
+    mov es:vfs_rd_src,esi
 ;
     mov eax,es
     mov ds,eax
