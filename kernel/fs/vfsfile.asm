@@ -260,69 +260,64 @@ serv_open_file    Endp
 NotifyReq    Proc near
     int 3
     push ebx
-    push ecx
     push edx
+    push edi
     push ebp
 ;
     sub edx,gs:vfs_rd_start_msb
-    jc nrqFail
+    jc nrqDone
 ;
     cmp edx,gs:vfs_rd_msb_count
-    jae nrqFail
+    jae nrqDone
 ;
     shl edx,4
     add edx,gs:vfs_rd_msb_ptr
-    mov ebx,gs:[edx].vfsm_rd_ptr
-    mov ebp,ebx
-    mov ecx,gs:[edx].vfsm_rd_size
-    shr ecx,1
-    jz nrqCheck
+    mov edi,edx
+    mov ebx,gs:[edi].vfsm_rd_ptr
+    mov ebp,gs:[edi].vfsm_rd_size
+;
+    shr ebp,1
+    jz nrqScan
 
-nrqLoop:
-    lea edx,[4*ecx]
+nrqBinLoop:
+    lea edx,[4*ebp]
     add ebx,edx
     cmp eax,gs:[ebx]
-    je nrqFound
-    ja nrqNext
+    ja nrqBinNext
 ;
     sub ebx,edx
 
-nrqNext:
-    shr ecx,1
-    jnz nrqLoop
+nrqBinNext:
+    shr ebp,1
+    jnz nrqBinLoop
 
-nrqCheck:
-    cmp eax,gs:[ebx]
-    je nrqFound
+nrqScan:
+    mov edx,ebx
+    sub edx,gs:[edi].vfsm_rd_ptr
+    shr edx,2
+    mov ebp,gs:[edi].vfsm_rd_count
+    sub ebp,edx
+    jbe nrqDone
 
-nrqFail:
-    stc
-    jmp nrqDone
-
-nrqFound:
-    cmp eax,-1
-    jne nrqOk
-
-nrqMax:
-    cmp ebx,ebp
-    je nrqOk
+nrqScanLoop:
+    mov edx,gs:[ebx]
+    and dl,0F8h
+    cmp eax,edx
+    ja nrqScanNext
+    jne nrqDone
 ;
-    cmp eax,gs:[ebx-4]
-    jne nrqOk
-;
-    sub ebx,4
-    jmp nrqMax
+    inc cx
+    sub gs:vfs_rd_remain_count,1
 
-nrqOk:
-    sub ebx,gs:vfs_rd_sorted_ptr
-    shr ebx,2
-    mov eax,ebx
-    clc
+nrqScanNext:
+    add ebx,4
+    sub ebp,1
+    jnz nrqScanLoop
 
 nrqDone:
     pop ebp
+    pop edi
     pop edx
-    pop ecx
     pop ebx
     ret
 NotifyReq    Endp
