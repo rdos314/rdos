@@ -1216,24 +1216,6 @@ serv_add_file_req    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ServReplyFile
-;
-;       DESCRIPTION:    Serv reply VFS file data
-;
-;       PARAMETERS:     EBX            Server handle
-;                       EAX            File req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-serv_reply_file_name       DB 'Serv Reply File',0
-
-serv_reply_file    Proc far
-    ret
-serv_reply_file    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           OpenVfsFile
 ;
 ;       DESCRIPTION:    Open VFS file
@@ -1605,12 +1587,6 @@ init_file    Proc near
     mov edi,OFFSET serv_add_file_req_name
     xor cl,cl
     mov ax,serv_add_file_req_nr
-    RegisterServGate
-;
-    mov esi,OFFSET serv_reply_file
-    mov edi,OFFSET serv_reply_file_name
-    xor cl,cl
-    mov ax,serv_reply_file_nr
     RegisterServGate
 ;
     mov ebx,OFFSET open_vfs_file16

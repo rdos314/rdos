@@ -2182,6 +2182,24 @@ rvdcDone:
 reply_vfs_data_cmd  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           reply_vfs_file
+;
+;       DESCRIPTION:    Serv reply VFS file data
+;
+;       PARAMETERS:     EBX            VFS handle
+;                       EAX            File req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reply_vfs_file_name       DB 'Reply VFS File',0
+
+reply_vfs_file    Proc far
+    ret
+reply_vfs_file    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           GetMsgEntry
@@ -3010,6 +3028,12 @@ init_server    Proc near
     mov edi,OFFSET reply_vfs_data_cmd_name
     xor cl,cl
     mov ax,reply_vfs_data_cmd_nr
+    RegisterServGate
+;
+    mov esi,OFFSET reply_vfs_file
+    mov edi,OFFSET reply_vfs_file_name
+    xor cl,cl
+    mov ax,reply_vfs_file_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv
