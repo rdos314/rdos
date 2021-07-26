@@ -258,7 +258,6 @@ serv_open_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyReq    Proc near
-    int 3
     push ebx
     push edx
     push edi
@@ -308,6 +307,9 @@ nrqScanLoop:
 ;
     inc cx
     sub gs:vfs_rd_remain_count,1
+    jnz nrqScanNext
+;
+    int 3
 
 nrqScanNext:
     add ebx,4
