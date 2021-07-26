@@ -175,7 +175,13 @@ ServOpenVfsFile  MACRO
 ; IN  ECX              Sector count
 ; IN  ESI              Src of request
 ; IN  ES:EDI           Sector buffer
-; OUT EAX              Req #
+; OUT EAX              File req handle
 ServAddVfsFileReq  MACRO
     ServGate serv_add_file_req_nr
+                    ENDM
+
+; IN  EAX              File req handle
+; IN  EBX              VFS handle
+ReplyVfsFile  MACRO
+    ServGate serv_reply_file_nr
                     ENDM

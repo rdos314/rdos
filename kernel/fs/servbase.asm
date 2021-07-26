@@ -467,9 +467,15 @@ LocalReqFile Proc near
     call LowReqFile
     pop edi
 ;
-    or eax,eax
-    jnz lrfDone
+    cmp eax,-1
+    je lrfReply
 ;
+    and [edi].fc_eflags,NOT 1
+    mov ebx,[edi].fc_handle
+    ReplyVfsFile
+    jmp lrfDone
+
+lrfReply:
     mov ebx,[edi].fc_handle
     ReplyVfsCmd
 
