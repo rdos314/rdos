@@ -92,6 +92,7 @@ code    SEGMENT byte public 'CODE'
     extern SectorToBlock:near
     extern SectorCountToBlock:near
     extern InitFilePart:near
+    extern AddFileData:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2193,6 +2194,7 @@ reply_vfs_data_cmd  Endp
 ;
 ;       PARAMETERS:     EBX            VFS handle
 ;                       EAX            File req handle
+;                       DS:EDI         Req buf
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2211,6 +2213,9 @@ reply_vfs_file    Proc far
 ;
     call HandleToPart
     jc rffDone
+;
+    add edi,SIZE fs_cmd
+    call AddFileData
 ;
     mov esi,es:vfsp_cmd_curr
     dec esi

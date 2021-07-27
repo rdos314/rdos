@@ -191,6 +191,47 @@ InitFilePart    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AddFileData
+;
+;       DESCRIPTION:    Add file data to reply
+;
+;       PARAMETERS:     DS:EDI             Sector buffer
+;                       ES                 Partition
+;                       EAX                File req handle
+;
+;       RETURNS:        ECX                Entry count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AddFileData
+
+AddFileData	Proc near
+    push fs
+    push eax
+;
+    or eax,eax
+    jz afdFail
+;
+    dec eax
+    cmp eax,MAX_VFS_FILE_COUNT
+    jae afdFail
+;
+    shl eax,2
+    add eax,OFFSET vfsp_file_arr
+    mov fs,es:[eax].fp_sel
+
+afdFail:
+    stc
+
+afdDone:
+    pop eax
+    pop fs
+    ret
+AddFileData     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServOpenFile
 ;
 ;       DESCRIPTION:    Serv open VFS file req
