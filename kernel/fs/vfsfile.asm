@@ -199,15 +199,22 @@ InitFilePart    Endp
 ;                       ES                 Partition
 ;                       EAX                File req handle
 ;
-;       RETURNS:        ECX                Entry count
+;       RETURNS:        ECX                Sector count
+;                       EDX:EAX            File offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public AddFileData
 
 AddFileData	Proc near
+    push ds
+    push es
     push fs
-    push eax
+    push gs
+    push ebx
+    push esi
+    push edi
+    push ebp
 ;
     or eax,eax
     jz afdFail
@@ -219,13 +226,63 @@ AddFileData	Proc near
     shl eax,2
     add eax,OFFSET vfsp_file_arr
     mov fs,es:[eax].fp_sel
+;
+    mov eax,ds
+    mov gs,eax
+    mov ebp,edi
+;
+    mov ds,es:vfsp_disc_sel
+    mov eax,serv_flat_sel
+    mov es,eax
+;
+    mov edi,fs:vfs_rd_chain_ptr
+    mov ecx,fs:vfs_rd_sectors
+    or ecx,ecx
+    jz afdOk
 
+afdLoop:
+    mov eax,fs:[edi]
+    mov edx,fs:[edi+4]
+    call BlockToBuf
+    jc afdFail
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz afdFail
+;
+    and eax,7
+    shl eax,9
+    mov ebx,es:[esi]
+    and bx,0F000h
+    or eax,ebx
+    movzx ebx,word ptr es:[esi+4]
+;
+    mov gs:[ebp],eax
+    mov gs:[ebp+4],ebx
+;
+    add edi,8
+    add ebp,8
+    loop afdLoop
+
+afdOk:
+    mov eax,fs:vfs_rd_start
+    mov edx,fs:vfs_rd_start+4
+    mov ecx,fs:vfs_rd_sectors
+    clc
+    jmp afdDone
+    
 afdFail:
+    xor ecx,ecx
     stc
 
 afdDone:
-    pop eax
+    pop ebp
+    pop edi
+    pop esi
+    pop ebx
+    pop gs
     pop fs
+    pop es
+    pop ds
     ret
 AddFileData     Endp
 

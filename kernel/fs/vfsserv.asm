@@ -2201,7 +2201,6 @@ reply_vfs_data_cmd  Endp
 reply_vfs_file_name       DB 'Reply VFS File',0
 
 reply_vfs_file    Proc far
-    int 3
     push es
     push eax
     push ebx
@@ -2209,13 +2208,23 @@ reply_vfs_file    Proc far
     push edx
     push esi
 ;
-    mov es:[edi].fc_op,REPLY_FILE
+    mov ds:[edi].fc_op,REPLY_FILE
 ;
     call HandleToPart
     jc rffDone
 ;
+    push edi
     add edi,SIZE fs_cmd
     call AddFileData
+    pop edi
+    jnc rffOk
+;
+    or ds:[edi].fc_eflags,1
+
+rffOk:
+    mov ds:[edi].fc_eax,eax
+    mov ds:[edi].fc_ecx,ecx
+    mov ds:[edi].fc_edx,edx
 ;
     mov esi,es:vfsp_cmd_curr
     dec esi
