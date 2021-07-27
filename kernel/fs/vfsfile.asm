@@ -150,6 +150,7 @@ code    SEGMENT byte public 'CODE'
     extern GetPartSel:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
+    extern NotifyFileReply:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -191,13 +192,56 @@ InitFilePart    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetFileReq
+;
+;       DESCRIPTION:    Get file req
+;
+;       PARAMETERS:     ES                 Partition
+;                       EAX                File req handle
+;                       DS:EDI             Req
+;
+;       RETURNS:        FS                 File req
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetFileReq
+
+GetFileReq	Proc near
+    push ds
+    push eax
+;
+    or eax,eax
+    jz gfrFail
+;
+    dec eax
+    cmp eax,MAX_VFS_FILE_COUNT
+    jae gfrFail
+;
+    shl eax,2
+    add eax,OFFSET vfsp_file_arr
+    mov fs,es:[eax].fp_sel
+    clc
+    jmp gfrDone
+
+gfrFail:
+    stc
+
+gfrDone:
+    pop eax
+    pop ds
+    ret
+GetFileReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddFileData
 ;
 ;       DESCRIPTION:    Add file data to reply
 ;
 ;       PARAMETERS:     DS:EDI             Sector buffer
 ;                       ES                 Partition
-;                       EAX                File req handle
+;                       FS                 File req
 ;
 ;       RETURNS:        ECX                Sector count
 ;                       EDX:EAX            File offset
@@ -209,23 +253,11 @@ InitFilePart    Endp
 AddFileData	Proc near
     push ds
     push es
-    push fs
     push gs
     push ebx
     push esi
     push edi
     push ebp
-;
-    or eax,eax
-    jz afdFail
-;
-    dec eax
-    cmp eax,MAX_VFS_FILE_COUNT
-    jae afdFail
-;
-    shl eax,2
-    add eax,OFFSET vfsp_file_arr
-    mov fs,es:[eax].fp_sel
 ;
     mov eax,ds
     mov gs,eax
@@ -280,7 +312,6 @@ afdDone:
     pop esi
     pop ebx
     pop gs
-    pop fs
     pop es
     pop ds
     ret
@@ -452,6 +483,47 @@ nrqScanLoop:
     jnz nrqScanNext
 ;
     int 3
+    xor eax,eax
+    xchg eax,gs:vfs_rd_req_phys
+    test al,1
+    jz nrqDone
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    pop eax
+;
+    mov ebx,gs:vfs_rd_req_phys+4
+    mov ecx,1000h
+    SetPageEntry
+;
+    push ds
+    push es
+;
+    mov ebx,gs
+    mov ds,ebx
+    mov ebx,fs
+    mov es,ebx
+    mov eax,gs:vfs_rd_src
+    call GetFileReq
+    jc nrqPop
+;
+    call AddFileData
+
+nrqPop:
+    pop es
+    pop ds
+;
+    pushf
+    mov edx,edi
+    mov ecx,1000h
+    FreeLinear
+    popf
+    jc nrqDone
+;
+    call NotifyFileReply
+    jmp nrqDone
 
 nrqScanNext:
     add ebx,4
@@ -465,25 +537,6 @@ nrqDone:
     pop ebx
     ret
 NotifyReq    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FindReq
-;
-;       DESCRIPTION:    Find a request
-;
-;       PARAMETERS:     DS              Req sel
-;                       EDX:EAX         Sector
-;
-;       RETURNS:        NC              Found
-;                         EAX           Entry index
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindReq  Proc near
-    ret
-FindReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1315,6 +1368,8 @@ serv_add_file_req    Proc far
     mov es:vfs_rd_start,eax
     mov es:vfs_rd_start+4,edx
     mov es:vfs_rd_src,esi
+    mov es:vfs_rd_req_phys,0
+    mov es:vfs_rd_req_phys+4,0
 ;
     mov eax,es
     mov ds,eax

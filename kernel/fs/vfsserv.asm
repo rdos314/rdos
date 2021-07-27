@@ -92,6 +92,7 @@ code    SEGMENT byte public 'CODE'
     extern SectorToBlock:near
     extern SectorCountToBlock:near
     extern InitFilePart:near
+    extern GetFileReq:near
     extern AddFileData:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2001,6 +2002,37 @@ wait_for_vfs_cmd  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyFileReply
+;
+;       DESCRIPTION:    Notify file reply
+;
+;       PARAMETERS:     DS:EDI		Msg buffer
+;                       ES              Partition
+;                       EDX:EAX         File position
+;                       ECX             Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public NotifyFileReply
+
+NotifyFileReply	Proc near
+    mov ds:[edi].fc_eax,eax
+    mov ds:[edi].fc_ecx,ecx
+    mov ds:[edi].fc_edx,edx
+;
+    mov esi,es:vfsp_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    xor bx,bx
+    xchg bx,es:[esi].vfss_thread
+    Signal
+    ret
+NotifyFileReply Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReplyVfsCmd
 ;
 ;       DESCRIPTION:    Reply on VFS cmd
@@ -2202,6 +2234,7 @@ reply_vfs_file_name       DB 'Reply VFS File',0
 
 reply_vfs_file    Proc far
     push es
+    push fs
     push eax
     push ebx
     push ecx
@@ -2212,6 +2245,28 @@ reply_vfs_file    Proc far
 ;
     call HandleToPart
     jc rffDone
+;
+    call GetFileReq
+    jc rffDone
+;
+    push eax
+    mov esi,es:vfsp_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    mov eax,es:[esi].vfss_phys
+    mov ebx,es:[esi].vfss_phys+4
+    or ax,863h
+    mov fs:vfs_rd_req_phys+4,ebx
+    mov fs:vfs_rd_req_phys,eax
+    pop eax
+;
+    mov ecx,vfs_rd_remain_count
+    or ecx,ecx
+    jnz rffDone
+;
+    test fs:vfs_rd_req_phys,1
+    jz rffDone
 ;
     push edi
     add edi,SIZE fs_cmd
@@ -2249,6 +2304,7 @@ rffDone:
     pop ecx
     pop ebx
     pop eax
+    pop fs
     pop es
     ret
 reply_vfs_file    Endp
