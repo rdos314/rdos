@@ -91,6 +91,7 @@ code    SEGMENT byte public 'CODE'
     extern BlockToBitmap:near
     extern SectorToBlock:near
     extern SectorCountToBlock:near
+    extern InitFilePart:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -134,6 +135,7 @@ cpsFound:
     xor edi,edi
     xor al,al
     rep stos byte ptr es:[edi]
+    call InitFilePart
 ;
     mov eax,ds:vfs_curr_start_sector
     mov es:vfsp_start_sector,eax

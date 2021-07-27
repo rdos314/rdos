@@ -127,6 +127,13 @@ rs_max_size      DD ?
 
 req_sel          ENDS
 
+file_part_struc  STRUC
+
+fp_sel           DW ?
+fp_link          DW ?
+
+file_part_struc  ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -143,6 +150,43 @@ code    SEGMENT byte public 'CODE'
     extern GetPartSel:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           InitFilePart
+;
+;       DESCRIPTION:    Init file partition
+;
+;       PARAMETERS:     ES             Partition
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitFilePart
+
+InitFilePart	Proc near
+    push eax
+    push ecx
+    push edi
+;
+    mov ecx,MAX_VFS_FILE_COUNT - 1
+    mov edi,OFFSET vfsp_file_arr
+    mov es:vfsp_file_list,di
+    mov eax,edi
+
+ifpLoop:
+    add eax,4
+    mov es:[edi].fp_link,ax
+    mov edi,eax
+    loop ifpLoop
+;
+    mov es:[edi].fp_link,cx
+;
+    pop edi
+    pop ecx    
+    pop eax
+    ret
+InitFilePart    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1193,7 +1237,7 @@ serv_add_file_req    Proc far
     jmp safLeave
 
 safFail:
-    mov fs:[ebp],0
+    mov word ptr fs:[ebp],0
 
 safLeave:
     pop ds
