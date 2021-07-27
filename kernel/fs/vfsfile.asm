@@ -1106,40 +1106,41 @@ StartReq     Endp
 
 AllocateFileReq	Proc near
     push ds
-    push es
     push eax
-    push ecx
-    push edi
 ;
     mov eax,fs
     mov ds,eax
-    mov es,eax
     EnterSection ds:vfsp_req_section
 ;
-    mov ecx,MAX_VFS_FILE_COUNT
-    mov edi,OFFSET vfsp_file_arr
-    xor ax,ax
-    repnz scas word ptr es:[edi]
-    jz afrFound
-
-afrFail:
+    movzx ebp,ds:vfsp_file_list
+    or ebp,ebp
+    jnz afrOk
+;
+    int 3
     LeaveSection ds:vfsp_req_section
     stc
     jmp afrDone
 
-afrFound:
-    sub edi,2
-    mov ax,-1
-    mov es:[edi],ax
-    mov ebp,edi
+afrOk:
+    mov ax,ds:[ebp].fp_sel
+    or ax,ax
+    jz afrEmpty
+;
+    int 3
+    LeaveSection ds:vfsp_req_section
+    stc
+    jmp afrDone
+
+afrEmpty:
+    mov ds:[ebp].fp_sel,-1
+    mov ax,ds:[ebp].fp_link
+    mov ds:vfsp_file_list,ax
+    clc
     LeaveSection ds:vfsp_req_section
     clc
 
 afrDone:
-    pop edi
-    pop ecx
     pop eax
-    pop es
     pop ds
     ret
 AllocateFileReq Endp
@@ -1226,11 +1227,11 @@ serv_add_file_req    Proc far
     jc safFail
 ;
     mov eax,ds
-    mov fs:[ebp],ax
+    mov fs:[ebp].fp_sel,ax
     movzx eax,fs:vfsp_part_nr
     shl eax,24
     sub ebp,OFFSET vfsp_file_arr
-    shr ebp,1
+    shr ebp,2
     inc ebp
     or eax,ebp
     clc
