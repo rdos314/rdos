@@ -2002,6 +2002,55 @@ wait_for_vfs_cmd  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AliasCmdData
+;
+;       DESCRIPTION:    Alias cmd data
+;
+;       PARAMETERS:     EBX:EAX         Physical address
+;
+;       RETURNS:        EDX             Cmd block
+;                       EDI             Cmd data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AliasCmdData
+
+AliasCmdData	Proc near
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    SetPageEntry
+    mov edi,edx
+    add edi,OFFSET fs_cmd
+    ret
+AliasCmdData   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeCmdData
+;
+;       DESCRIPTION:    Free cmd data
+;
+;       PARAMETERS:     EDX             Cmd block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeCmdData
+
+FreeCmdData	Proc near
+    push ecx
+    mov ecx,1000h
+    FreeLinear
+    pop ecx
+    ret
+FreeCmdData     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyFileReply
 ;
 ;       DESCRIPTION:    Notify file reply
@@ -2261,7 +2310,7 @@ reply_vfs_file    Proc far
     mov fs:vfs_rd_req_phys,eax
     pop eax
 ;
-    mov ecx,vfs_rd_remain_count
+    mov ecx,fs:vfs_rd_remain_count
     or ecx,ecx
     jnz rffDone
 ;

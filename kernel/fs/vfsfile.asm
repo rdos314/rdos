@@ -150,6 +150,8 @@ code    SEGMENT byte public 'CODE'
     extern GetPartSel:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
+    extern AliasCmdData:near
+    extern FreeCmdData:near
     extern NotifyFileReply:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -488,43 +490,39 @@ nrqScanLoop:
     test al,1
     jz nrqDone
 ;
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    mov edi,edx
-    pop eax
-;
     mov ebx,gs:vfs_rd_req_phys+4
-    mov ecx,1000h
-    SetPageEntry
+    call AliasCmdData
+    mov ebp,edx
 ;
     push ds
     push es
+    push fs
 ;
-    mov ebx,gs
+    mov ebx,flat_sel
     mov ds,ebx
     mov ebx,fs
     mov es,ebx
-    mov eax,gs:vfs_rd_src
-    call GetFileReq
-    jc nrqPop
-;
+    mov ebx,gs
+    mov fs,ebx
+    mov eax,fs:vfs_rd_src
     call AddFileData
 
 nrqPop:
+    pop fs
     pop es
     pop ds
+    jc nrqFree
 ;
-    pushf
-    mov edx,edi
-    mov ecx,1000h
-    FreeLinear
-    popf
-    jc nrqDone
-;
+    mov edi,ebp
     call NotifyFileReply
-    jmp nrqDone
 
+nrqFree:
+    pushf
+    mov edx,ebp
+    call FreeCmdData
+    popf
+    jmp nrqDone
+    
 nrqScanNext:
     add ebx,4
     sub ebp,1
