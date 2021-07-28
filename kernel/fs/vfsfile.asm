@@ -1705,6 +1705,46 @@ read_vfs_file32  Proc far
 read_vfs_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HandleFileData
+;
+;       DESCRIPTION:    Handle file data message
+;
+;       PARAMETERS:     ES:EDI      Sector data
+;                       EDX:EAX     Start position
+;                       ECX         Sector count
+;                       ESI         Sector size
+;
+;       RETURNS:        EBP         Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HandleFileData
+
+HandleFileData	Proc near
+    push ds
+    push es
+    push eax
+    push esi
+    push edi
+;
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
+;
+    mov eax,1000h
+    AllocateBigMem
+;
+    pop edi
+    pop esi
+    pop eax
+    pop es
+    pop ds
+    ret
+HandleFileData  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           Delete handle

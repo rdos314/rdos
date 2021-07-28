@@ -94,6 +94,7 @@ code    SEGMENT byte public 'CODE'
     extern InitFilePart:near
     extern GetFileReq:near
     extern AddFileData:near
+    extern HandleFileData:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2641,14 +2642,23 @@ data_reply  Endp
 ;
 ;       DESCRIPTION:    File reply processing
 ;
-;       PARAMETERS:     ES      Msg buf
+;       PARAMETERS:     ES          Msg buf
+;                       EDX:EAX     Start position
+;                       ECX         Sector count
+;                       ESI         Sector size
 ;
-;       RETURNS:        EBP     Reply data
+;       RETURNS:        EBP         Reply data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 file_reply  Proc near
+    push edi
+;
     int 3
+    mov edi,SIZE fs_cmd
+    call HandleFileData
+;
+    pop edi
     ret
 file_reply  Endp
 
