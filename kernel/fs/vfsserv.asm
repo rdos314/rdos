@@ -2002,51 +2002,20 @@ wait_for_vfs_cmd  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AliasCmdData
+;       NAME:           GetCmdData
 ;
-;       DESCRIPTION:    Alias cmd data
+;       DESCRIPTION:    Get cmd data offset
 ;
-;       PARAMETERS:     EBX:EAX         Physical address
-;
-;       RETURNS:        EDX             Cmd block
-;                       EDI             Cmd data
+;       RETURNS:        EDI          Cmd data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public AliasCmdData
+    public GetCmdData
 
-AliasCmdData	Proc near
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    pop eax
-;
-    SetPageEntry
-    mov edi,edx
-    add edi,SIZE fs_cmd
+GetCmdData	Proc near
+    mov edi,SIZE fs_cmd
     ret
-AliasCmdData   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FreeCmdData
-;
-;       DESCRIPTION:    Free cmd data
-;
-;       PARAMETERS:     EDX             Cmd block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public FreeCmdData
-
-FreeCmdData	Proc near
-    push ecx
-    mov ecx,1000h
-    FreeLinear
-    pop ecx
-    ret
-FreeCmdData     Endp
+GetCmdData   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2055,7 +2024,7 @@ FreeCmdData     Endp
 ;
 ;       DESCRIPTION:    Notify file reply
 ;
-;       PARAMETERS:     DS:EDI		Msg buffer
+;       PARAMETERS:     DS  		Msg buffer
 ;                       ES              Partition
 ;                       EDX:EAX         File position
 ;                       ECX             Number of sectors
@@ -2065,9 +2034,9 @@ FreeCmdData     Endp
     public NotifyFileReply
 
 NotifyFileReply	Proc near
-    mov ds:[edi].fc_eax,eax
-    mov ds:[edi].fc_ecx,ecx
-    mov ds:[edi].fc_edx,edx
+    mov ds:fc_eax,eax
+    mov ds:fc_ecx,ecx
+    mov ds:fc_edx,edx
 ;
     mov esi,es:vfsp_cmd_curr
     dec esi
@@ -2078,6 +2047,33 @@ NotifyFileReply	Proc near
     Signal
     ret
 NotifyFileReply Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           NotifyErrorReply
+;
+;       DESCRIPTION:    Notify error reply
+;
+;       PARAMETERS:     DS  		Msg buffer
+;                       ES              Partition
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public NotifyErrorReply
+
+NotifyErrorReply	Proc near
+    or ds:fc_eflags,1
+;
+    mov esi,es:vfsp_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    xor bx,bx
+    xchg bx,es:[esi].vfss_thread
+    Signal
+    ret
+NotifyErrorReply Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2298,23 +2294,19 @@ reply_vfs_file    Proc far
     call GetFileReq
     jc rffDone
 ;
-    push eax
     mov esi,es:vfsp_cmd_curr
     dec esi
     shl esi,4
     add esi,OFFSET vfsp_cmd_arr
-    mov eax,es:[esi].vfss_phys
-    mov ebx,es:[esi].vfss_phys+4
-    or ax,863h
-    mov fs:vfs_rd_req_phys+4,ebx
-    mov fs:vfs_rd_req_phys,eax
-    pop eax
+    mov bx,es:[esi].vfss_sel
+    mov fs:vfs_rd_req_sel,bx
 ;
     mov ecx,fs:vfs_rd_remain_count
     or ecx,ecx
     jnz rffDone
 ;
-    test fs:vfs_rd_req_phys,1
+    mov bx,fs:vfs_rd_req_sel
+    or bx,bx
     jz rffDone
 ;
     push edi

@@ -150,9 +150,9 @@ code    SEGMENT byte public 'CODE'
     extern GetPartSel:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
-    extern AliasCmdData:near
-    extern FreeCmdData:near
+    extern GetCmdData:near
     extern NotifyFileReply:near
+    extern NotifyErrorReply:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -485,27 +485,31 @@ nrqScanLoop:
     jnz nrqScanNext
 ;
     int 3
-    xor eax,eax
-    xchg eax,gs:vfs_rd_req_phys
-    test al,1
+    xor ax,ax
+    xchg ax,gs:vfs_rd_req_sel
+    or ax,ax
     jz nrqDone
-;
-    mov ebx,gs:vfs_rd_req_phys+4
-    call AliasCmdData
-    mov ebp,edx
 ;
     push ds
     push es
     push fs
 ;
-    mov ebx,flat_sel
-    mov ds,ebx
+    mov ds,eax
+    call GetCmdData
+;
     mov ebx,fs
     mov es,ebx
     mov ebx,gs
     mov fs,ebx
-    mov eax,fs:vfs_rd_src
+    movzx eax,fs:vfs_rd_src
     call AddFileData
+    jc nrqNotifyError
+;
+    call NotifyFileReply
+    jmp nrqPop
+
+nrqNotifyError:
+    call NotifyErrorReply
 
 nrqPop:
     pop fs
@@ -513,14 +517,8 @@ nrqPop:
     pop ds
     jc nrqFree
 ;
-    mov edi,ebp
-    call NotifyFileReply
 
 nrqFree:
-    pushf
-    mov edx,ebp
-    call FreeCmdData
-    popf
     jmp nrqDone
     
 nrqScanNext:
@@ -1365,9 +1363,8 @@ serv_add_file_req    Proc far
 ;
     mov es:vfs_rd_start,eax
     mov es:vfs_rd_start+4,edx
-    mov es:vfs_rd_src,esi
-    mov es:vfs_rd_req_phys,0
-    mov es:vfs_rd_req_phys+4,0
+    mov es:vfs_rd_src,si
+    mov es:vfs_rd_req_sel,0
 ;
     mov eax,es
     mov ds,eax
