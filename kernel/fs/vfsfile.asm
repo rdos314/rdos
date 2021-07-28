@@ -257,7 +257,7 @@ AddFileData	Proc near
     push ds
     push es
     push gs
-    push esi
+    push ebx
     push edi
     push ebp
 ;
@@ -312,7 +312,7 @@ afdFail:
 afdDone:
     pop ebp
     pop edi
-    pop esi
+    pop ebx
     pop gs
     pop es
     pop ds
