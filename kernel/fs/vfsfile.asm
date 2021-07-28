@@ -245,9 +245,10 @@ GetFileReq   Endp
 ;                       ES                 Partition
 ;                       FS                 File req
 ;
-;       RETURNS:        ECX                Sector count
+;       RETURNS:        EBX                File req handle
+;                       ECX                Sector count
 ;                       EDX:EAX            File offset
-;                       ESI                File req handle
+;                       ESI                Sector size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -257,7 +258,6 @@ AddFileData	Proc near
     push ds
     push es
     push gs
-    push ebx
     push edi
     push ebp
 ;
@@ -298,10 +298,11 @@ afdLoop:
     loop afdLoop
 
 afdOk:
+    mov ebx,fs:vfs_rd_handle
     mov eax,fs:vfs_rd_start
     mov edx,fs:vfs_rd_start+4
     mov ecx,fs:vfs_rd_sectors
-    mov esi,fs:vfs_rd_handle
+    movzx esi,ds:vfs_bytes_per_sector
     clc
     jmp afdDone
     
@@ -312,7 +313,6 @@ afdFail:
 afdDone:
     pop ebp
     pop edi
-    pop ebx
     pop gs
     pop es
     pop ds

@@ -2026,9 +2026,10 @@ GetCmdData   Endp
 ;
 ;       PARAMETERS:     DS  		Msg buffer
 ;                       ES              Partition
+;                       EBX             File req handle
 ;                       EDX:EAX         File position
 ;                       ECX             Number of sectors
-;                       ESI             File req handle
+;                       ESI             Sector size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2036,6 +2037,7 @@ GetCmdData   Endp
 
 NotifyFileReply	Proc near
     mov ds:fc_eax,eax
+    mov ds:fc_ebx,ebx
     mov ds:fc_ecx,ecx
     mov ds:fc_edx,edx
     mov ds:fc_esi,esi
@@ -2323,6 +2325,7 @@ reply_vfs_file    Proc far
 rffOk:
     mov ds:[edi].fc_op,REPLY_FILE
     mov ds:[edi].fc_eax,eax
+    mov ds:[edi].fc_ebx,ebx
     mov ds:[edi].fc_ecx,ecx
     mov ds:[edi].fc_edx,edx
     mov ds:[edi].fc_esi,esi
