@@ -2039,6 +2039,7 @@ NotifyFileReply	Proc near
     mov ds:fc_ecx,ecx
     mov ds:fc_edx,edx
     mov ds:fc_esi,esi
+    mov ds:fc_op,REPLY_FILE
 ;
     mov esi,es:vfsp_cmd_curr
     dec esi
@@ -2288,8 +2289,6 @@ reply_vfs_file    Proc far
     push edx
     push esi
 ;
-    mov ds:[edi].fc_op,REPLY_FILE
-;
     call HandleToPart
     jc rffDone
 ;
@@ -2319,13 +2318,16 @@ reply_vfs_file    Proc far
     jnc rffOk
 ;
     or ds:[edi].fc_eflags,1
+    jmp rffSignal
 
 rffOk:
+    mov ds:[edi].fc_op,REPLY_FILE
     mov ds:[edi].fc_eax,eax
     mov ds:[edi].fc_ecx,ecx
     mov ds:[edi].fc_edx,edx
     mov ds:[edi].fc_esi,esi
-;
+
+rffSignal:
     mov esi,es:vfsp_cmd_curr
     dec esi
     shl esi,4
