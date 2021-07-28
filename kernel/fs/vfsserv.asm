@@ -2023,7 +2023,7 @@ AliasCmdData	Proc near
 ;
     SetPageEntry
     mov edi,edx
-    add edi,OFFSET fs_cmd
+    add edi,SIZE fs_cmd
     ret
 AliasCmdData   Endp
 
