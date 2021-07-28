@@ -484,7 +484,6 @@ nrqScanLoop:
     sub gs:vfs_rd_remain_count,1
     jnz nrqScanNext
 ;
-    int 3
     xor ax,ax
     xchg ax,gs:vfs_rd_req_sel
     or ax,ax
