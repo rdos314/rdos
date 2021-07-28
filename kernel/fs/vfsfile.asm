@@ -1707,6 +1707,155 @@ read_vfs_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AddOneEntry
+;
+;       DESCRIPTION:    Add one file req entry
+;
+;       PARAMETERS:     DS:ESI      File req entry
+;                       ES:EDI      Sector data
+;                       EDX:EAX     Start position
+;                       ECX         Sector count
+;                       EBX         Sector size
+;
+;       RETURNS:        DS:ESI      Updated
+;                       ES:EDI      Updated
+;                       ECX         Updated
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+file_req_header   STRUC
+
+frh_count    DD ?
+
+file_req_header   ENDS
+
+file_req_entry    STRUC
+
+fre_pos         DD ?,?
+fre_size        DD ?
+fre_next_ptr    DD ?
+fre_first_size  DD ?
+fre_mid_pages   DD ?
+fre_last_size   DD ?
+fre_first_base  DD ?,?
+fre_last_base   DD ?,?
+fre_arr         DD ?,?
+
+file_req_entry    ENDS
+
+
+AddOneEntry	Proc near
+    push eax
+    push ebx
+    push edx
+    push ebp
+;
+    mov ds:[esi].fre_pos,eax
+    mov ds:[esi].fre_pos+4,edx
+    mov ds:[esi].fre_size,ebx
+    mov ds:[esi].fre_first_size,0
+    mov ds:[esi].fre_last_size,0
+    mov ds:[esi].fre_mid_pages,0
+;
+    mov ebp,esi
+    add ebp,OFFSET fre_arr
+;
+    mov eax,es:[edi]
+    mov edx,es:[edi+4]
+    test ax,0FFFh
+    jz aoeFirstDone
+;
+    mov ds:[esi].fre_first_base,eax
+    mov ds:[esi].fre_first_base+4,edx
+
+aoeFirstLoop:
+    add edi,8
+    sub ecx,1
+    jz aoeDone
+;
+    add eax,ebx
+    test ax,0FFFh
+    jz aoeFirstDone
+;
+    cmp eax,es:[edi]
+    jnz aoeDone
+;
+    cmp edx,es:[edi+4]
+    jnz aoeDone
+;
+    add ds:[esi].fre_size,ebx
+    add ds:[esi].fre_first_size,ebx
+    jmp aoeFirstLoop
+
+aoeFirstDone:
+    mov eax,es:[edi]
+    mov edx,es:[edi+4]
+    mov ds:[esi].fre_last_base,eax
+    mov ds:[esi].fre_last_base+4,edx
+    mov ds:[esi].fre_last_size,ebx
+
+aoeMidLoop:
+    add edi,8
+    sub ecx,1
+    jz aoeDone
+;
+    add eax,ebx
+    test ax,0FFFh
+    jz aoeMidNext
+;
+    cmp eax,es:[edi]
+    jnz aoeDone
+;
+    cmp edx,es:[edi+4]
+    jnz aoeDone
+;
+    add ds:[esi].fre_size,ebx
+    add ds:[esi].fre_last_size,ebx
+    jmp aoeMidLoop
+
+aoeMidNext:
+    mov eax,ds:[esi].fre_last_base
+    mov edx,ds:[esi].fre_last_base+4
+    mov ds:[ebp],eax
+    mov ds:[ebp+4],edx
+    add ebp,8
+    inc ds:[esi].fre_mid_pages
+;
+    mov eax,es:[edi]
+    mov edx,es:[edi+4]
+    mov ds:[esi].fre_last_base,eax
+    mov ds:[esi].fre_last_base+4,edx
+    mov ds:[esi].fre_last_size,ebx
+    jmp aoeFirstDone
+
+aoeDone:
+    mov ebx,ds:[esi].fre_last_size
+    cmp ebx,1000h
+    jne aoeAdv
+;
+    mov eax,ds:[esi].fre_last_base
+    mov edx,ds:[esi].fre_last_base+4
+    mov ds:[ebp],ebx
+    mov ds:[ebp+4],edx
+    add ebp,8
+    inc ds:[esi].fre_mid_pages
+    mov ds:[esi].fre_last_size,0
+
+aoeAdv:
+    mov ds:[esi].fre_next_ptr,ebp
+    mov esi,ebp
+;
+    pop ebp
+    pop edx
+    pop ebx
+    pop eax
+    ret
+AddOneEntry     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           HandleFileData
 ;
 ;       DESCRIPTION:    Handle file data message
@@ -1726,18 +1875,41 @@ HandleFileData	Proc near
     push ds
     push es
     push eax
+    push ebx
     push esi
     push edi
 ;
-    mov eax,es
-    mov ds,eax
-    mov esi,edi
+    mov ebx,flat_sel
+    mov ds,ebx
+    mov ebx,esi
+;
+    push eax
+    push ecx
+    push edx
 ;
     mov eax,1000h
-    AllocateBigMem
+    AllocateBigLinear
+    mov ebp,edx
+    mov esi,edx
+    add esi,SIZE file_req_header
 ;
+    pop edx
+    pop ecx
+    pop eax
+;
+    mov ds:[ebp].frh_count,0
+
+hfdLoop:
+    or ecx,ecx
+    jz hfdDone
+;
+    call AddOneEntry
+    jmp hfdLoop
+
+hfdDone:
     pop edi
     pop esi
+    pop ebx
     pop eax
     pop es
     pop ds
