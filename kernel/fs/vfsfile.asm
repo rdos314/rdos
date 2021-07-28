@@ -1768,6 +1768,7 @@ AddOneEntry	Proc near
 ;
     mov ds:[esi].fre_first_base,eax
     mov ds:[esi].fre_first_base+4,edx
+    mov ds:[esi].fre_first_size,ebx
 
 aoeFirstLoop:
     add edi,8
@@ -1821,12 +1822,6 @@ aoeMidNext:
     mov ds:[ebp+4],edx
     add ebp,8
     inc ds:[esi].fre_mid_pages
-;
-    mov eax,es:[edi]
-    mov edx,es:[edi+4]
-    mov ds:[esi].fre_last_base,eax
-    mov ds:[esi].fre_last_base+4,edx
-    mov ds:[esi].fre_last_size,ebx
     jmp aoeFirstDone
 
 aoeDone:
