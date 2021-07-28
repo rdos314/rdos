@@ -247,6 +247,7 @@ GetFileReq   Endp
 ;
 ;       RETURNS:        ECX                Sector count
 ;                       EDX:EAX            File offset
+;                       ESI                File req handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -256,7 +257,6 @@ AddFileData	Proc near
     push ds
     push es
     push gs
-    push ebx
     push esi
     push edi
     push ebp
@@ -301,6 +301,7 @@ afdOk:
     mov eax,fs:vfs_rd_start
     mov edx,fs:vfs_rd_start+4
     mov ecx,fs:vfs_rd_sectors
+    mov esi,fs:vfs_rd_handle
     clc
     jmp afdDone
     
@@ -312,7 +313,6 @@ afdDone:
     pop ebp
     pop edi
     pop esi
-    pop ebx
     pop gs
     pop es
     pop ds
@@ -501,7 +501,6 @@ nrqScanLoop:
     mov es,ebx
     mov ebx,gs
     mov fs,ebx
-    movzx eax,fs:vfs_rd_src
     call AddFileData
     jc nrqNotifyError
 ;
@@ -1363,7 +1362,7 @@ serv_add_file_req    Proc far
 ;
     mov es:vfs_rd_start,eax
     mov es:vfs_rd_start+4,edx
-    mov es:vfs_rd_src,si
+    mov es:vfs_rd_handle,0
     mov es:vfs_rd_req_sel,0
 ;
     mov eax,es
@@ -1382,6 +1381,7 @@ serv_add_file_req    Proc far
     shr ebp,2
     inc ebp
     or eax,ebp
+    mov es:vfs_rd_handle,ebp
     clc
     jmp safLeave
 

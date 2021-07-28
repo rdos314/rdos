@@ -2028,6 +2028,7 @@ GetCmdData   Endp
 ;                       ES              Partition
 ;                       EDX:EAX         File position
 ;                       ECX             Number of sectors
+;                       ESI             File req handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2037,6 +2038,7 @@ NotifyFileReply	Proc near
     mov ds:fc_eax,eax
     mov ds:fc_ecx,ecx
     mov ds:fc_edx,edx
+    mov ds:fc_esi,esi
 ;
     mov esi,es:vfsp_cmd_curr
     dec esi
@@ -2305,7 +2307,8 @@ reply_vfs_file    Proc far
     or ecx,ecx
     jnz rffDone
 ;
-    mov bx,fs:vfs_rd_req_sel
+    xor bx,bx
+    xchg bx,fs:vfs_rd_req_sel
     or bx,bx
     jz rffDone
 ;
@@ -2321,6 +2324,7 @@ rffOk:
     mov ds:[edi].fc_eax,eax
     mov ds:[edi].fc_ecx,ecx
     mov ds:[edi].fc_edx,edx
+    mov ds:[edi].fc_esi,esi
 ;
     mov esi,es:vfsp_cmd_curr
     dec esi
