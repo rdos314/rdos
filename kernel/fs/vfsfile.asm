@@ -1732,15 +1732,14 @@ file_req_header   ENDS
 
 file_req_entry    STRUC
 
-fre_pos         DD ?,?
-fre_size        DD ?
-fre_next_ptr    DD ?
-fre_first_size  DD ?
-fre_mid_pages   DD ?
-fre_last_size   DD ?
-fre_first_base  DD ?,?
-fre_last_base   DD ?,?
-fre_arr         DD ?,?
+fre_pos            DD ?,?
+fre_size           DD ?
+fre_next_ptr       DD ?
+fre_sector_size    DW ?
+fre_first_sectors  DB ?
+fre_last_sectors   DB ?
+fre_pages          DD ?
+fre_arr            DD ?,?
 
 file_req_entry    ENDS
 
@@ -1753,10 +1752,12 @@ AddOneEntry	Proc near
 ;
     mov ds:[esi].fre_pos,eax
     mov ds:[esi].fre_pos+4,edx
+    mov ds:[esi].fre_sector_size,bx
+;
     mov ds:[esi].fre_size,ebx
-    mov ds:[esi].fre_first_size,0
-    mov ds:[esi].fre_last_size,0
-    mov ds:[esi].fre_mid_pages,0
+    mov ds:[esi].fre_first_sectors,0
+    mov ds:[esi].fre_last_sectors,0
+    mov ds:[esi].fre_pages,0
 ;
     mov ebp,esi
     add ebp,OFFSET fre_arr
@@ -1766,16 +1767,20 @@ AddOneEntry	Proc near
     test ax,0FFFh
     jz aoeFirstDone
 ;
-    mov ds:[esi].fre_first_base,eax
-    mov ds:[esi].fre_first_base+4,edx
-    mov ds:[esi].fre_first_size,ebx
+    inc ds:[esi].fre_pages
+    inc ds:[esi].fre_first_sectors
+    mov ds:[ebp],eax
+    mov ds:[ebp+4],edx
+    add ebp,8
 
 aoeFirstLoop:
     add edi,8
     sub ecx,1
     jz aoeDone
 ;
+    add ds:[esi].fre_size,ebx
     add eax,ebx
+;
     test ax,0FFFh
     jz aoeFirstDone
 ;
@@ -1785,25 +1790,27 @@ aoeFirstLoop:
     cmp edx,es:[edi+4]
     jnz aoeDone
 ;
-    add ds:[esi].fre_size,ebx
-    add ds:[esi].fre_first_size,ebx
+    inc ds:[esi].fre_first_sectors
     jmp aoeFirstLoop
 
 aoeFirstDone:
-    mov eax,es:[edi]
-    mov edx,es:[edi+4]
-    mov ds:[esi].fre_last_base,eax
-    mov ds:[esi].fre_last_base+4,edx
-    mov ds:[esi].fre_last_size,ebx
+    mov ds:[ebp],eax
+    mov ds:[ebp+4],edx
+    add ebp,8
+;
+    inc ds:[esi].fre_last_sectors
+    inc ds:[esi].fre_pages
 
-aoeMidLoop:
+aoePageLoop:
     add edi,8
     sub ecx,1
     jz aoeDone
 ;
+    add ds:[esi].fre_size,ebx
     add eax,ebx
+;
     test ax,0FFFh
-    jz aoeMidNext
+    jz aoePageNext
 ;
     cmp eax,es:[edi]
     jnz aoeDone
@@ -1811,33 +1818,14 @@ aoeMidLoop:
     cmp edx,es:[edi+4]
     jnz aoeDone
 ;
-    add ds:[esi].fre_size,ebx
-    add ds:[esi].fre_last_size,ebx
-    jmp aoeMidLoop
+    inc ds:[esi].fre_last_sectors
+    jmp aoePageLoop
 
-aoeMidNext:
-    mov eax,ds:[esi].fre_last_base
-    mov edx,ds:[esi].fre_last_base+4
-    mov ds:[ebp],eax
-    mov ds:[ebp+4],edx
-    add ebp,8
-    inc ds:[esi].fre_mid_pages
+aoePageNext:
+    mov ds:[esi].fre_last_sectors,0
     jmp aoeFirstDone
 
 aoeDone:
-    mov ebx,ds:[esi].fre_last_size
-    cmp ebx,1000h
-    jne aoeAdv
-;
-    mov eax,ds:[esi].fre_last_base
-    mov edx,ds:[esi].fre_last_base+4
-    mov ds:[ebp],ebx
-    mov ds:[ebp+4],edx
-    add ebp,8
-    inc ds:[esi].fre_mid_pages
-    mov ds:[esi].fre_last_size,0
-
-aoeAdv:
     mov ds:[esi].fre_next_ptr,ebp
     mov esi,ebp
 ;
