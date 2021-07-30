@@ -43,6 +43,28 @@ include vfsmsg.inc
 
     .386p
 
+MAX_FILE_REQ_ENTRIES = 8
+
+
+file_req_header   STRUC
+
+frh_count          DW ?
+frh_sector_size    DW ?
+
+file_req_header   ENDS
+
+file_req_entry    STRUC
+
+fre_pos            DD ?,?
+fre_size           DD ?
+fre_next_ptr       DD ?
+fre_last_size      DW ?
+fre_pages          DW ?
+fre_arr            DD ?,?
+
+file_req_entry    ENDS
+
+
 file_handle_seg  STRUC
 
 fh_base          handle_header <>
@@ -1724,26 +1746,6 @@ read_vfs_file32  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-file_req_header   STRUC
-
-frh_count    DD ?
-
-file_req_header   ENDS
-
-file_req_entry    STRUC
-
-fre_pos            DD ?,?
-fre_size           DD ?
-fre_next_ptr       DD ?
-fre_sector_size    DW ?
-fre_last_size      DW ?
-fre_pages          DD ?
-fre_arr            DD ?,?
-
-file_req_entry    ENDS
-
-
 AddOneEntry	Proc near
     push ebx
     push ebp
@@ -1753,7 +1755,6 @@ AddOneEntry	Proc near
 ;
     mov ds:[esi].fre_pos,eax
     mov ds:[esi].fre_pos+4,edx
-    mov ds:[esi].fre_sector_size,bx
 ;
     mov ds:[esi].fre_last_size,0
     mov ds:[esi].fre_pages,0
@@ -1821,7 +1822,7 @@ aoePageNext:
     jmp aoeFirstDone
 
 aoeDone:
-    mov ebx,ds:[esi].fre_pages
+    movzx ebx,ds:[esi].fre_pages
     dec ebx
     shl ebx,12
 ;
@@ -1893,13 +1894,17 @@ HandleFileData	Proc near
     pop eax
 ;
     mov ds:[ebp].frh_count,0
+    mov ds:[ebp].frh_sector_size,bx
 
 hfdLoop:
     or ecx,ecx
     jz hfdDone
 ;
     call AddOneEntry
-    jmp hfdLoop
+;
+    inc ds:[ebp].frh_count
+    cmp ds:[ebp].frh_count,MAX_FILE_REQ_ENTRIES
+    jne hfdLoop
 
 hfdDone:
     pop edi
