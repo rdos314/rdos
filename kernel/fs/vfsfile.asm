@@ -104,9 +104,6 @@ fi_serv_handle       DD ?
 fi_disc              DB ?
 fi_drive             DB ?
 fi_part              DB ?
-fi_pad               DB ?
-fi_req_max_size      DD ?
-fi_req_count         DD ?
 
 file_info_struc  ENDS
 
@@ -1594,7 +1591,7 @@ GetFileBlock  Endp
 TryRead   Proc near
     push ecx
 ;
-    mov ecx,gs:fi_req_count
+    mov ecx,0
     or ecx,ecx 
     stc
     jz trDone
