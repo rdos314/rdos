@@ -44,12 +44,16 @@ include vfsmsg.inc
     .386p
 
 MAX_FILE_REQ_ENTRIES = 8
-
+MAX_FILE_REQ_COUNT   = 128
+MAX_FILE_BLOCK_COUNT = 512
+MAX_FILE_USERS       = 256
 
 file_req_header   STRUC
 
+frh_pos            DD ?,?
+frh_size           DD ?
 frh_count          DW ?
-frh_sector_size    DW ?
+frh_handle         DW ?
 
 file_req_header   ENDS
 
@@ -64,6 +68,16 @@ fre_arr            DD ?,?
 
 file_req_entry    ENDS
 
+file_sys_entry    STRUC
+
+fse_sector_size   DW ?
+fse_req_count     DW ?
+
+fse_handle_arr    DW MAX_FILE_REQ_COUNT DUP(?)
+fse_user_arr      DD MAX_FILE_USERS DUP(?)
+fse_req_arr       DD MAX_FILE_BLOCK_COUNT DUP(?)
+
+file_sys_entry    ENDS
 
 file_handle_seg  STRUC
 
@@ -324,6 +338,59 @@ AddFileData     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AllocateSysFile
+;
+;       DESCRIPTION:    Allocate sys file entry
+;
+;       PARAMETERS:     CX             Sector size
+;
+;       RETURNS:        NC
+;                         AX           File sys sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateSysFile    Proc near
+    push es
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    push ecx
+    mov eax,SIZE file_sys_entry
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,SIZE file_sys_entry
+    CreateDataSelector32
+    pop ecx
+;
+    mov es,ebx
+    mov es:fse_sector_size,cx
+    mov es:fse_req_count,0
+;
+    mov edi,OFFSET fse_handle_arr
+    xor ax,ax
+    mov ecx,MAX_FILE_REQ_COUNT
+    rep stosw
+;
+    mov edi,OFFSET fse_user_arr
+    xor ax,ax
+    mov ecx,MAX_FILE_USERS
+    rep stosw
+;
+    mov eax,es
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+AllocateSysFile   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServOpenFile
 ;
 ;       DESCRIPTION:    Serv open VFS file req
@@ -343,8 +410,13 @@ serv_open_file    Proc far
     push eax
     push ecx
     push edi
+    push ebp
 ;
     call HandleToPart
+;
+    mov ds,es:vfsp_disc_sel
+    mov bp,ds:vfs_bytes_per_sector
+;
     mov bx,flat_sel
     mov ds,bx
 ;
@@ -403,11 +475,16 @@ sofLoop:
 sofDone:
     inc ds:fs_handle_count
     mov ds:[edi].fse_file_info,es
-    mov ds:[edi].fse_file_sel,0
+;
+    mov cx,bp
+    call AllocateSysFile
+    mov ds:[edi].fse_file_sel,ax
+;
     LeaveSection ds:fs_section
 ;
     inc ebx
 ;
+    pop ebp
     pop edi
     pop ecx
     pop eax
@@ -1875,7 +1952,6 @@ HandleFileData	Proc near
     pop eax
 ;
     mov ds:[ebp].frh_count,0
-    mov ds:[ebp].frh_sector_size,bx
 
 hfdLoop:
     or ecx,ecx
