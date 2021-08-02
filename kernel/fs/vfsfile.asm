@@ -125,30 +125,6 @@ fs_handle_arr    DW ?
 file_sel         ENDS
 
 
-handle_req_struc STRUC
-
-hr_sector_count  DD ?
-hr_sector_arr    DD ?
-hr_file_handle   DD ?
-hr_wait_sel      DW ?
-hr_data_sel      DW ?
-hr_pend_sel      DW ?
-hr_ref_count     DW ?
-hr_used          DB ?
-hr_pad           DB ?
-
-handle_req_struc   ENDS
-
-
-req_sel          STRUC
-
-rs_header        share_block_struc <>
-
-rs_handle_count  DD ?
-rs_max_size      DD ?
-
-req_sel          ENDS
-
 file_part_struc  STRUC
 
 fp_sel           DW ?
@@ -1966,12 +1942,6 @@ init_file    Proc near
     InitSection es:fs_section
     mov es:fs_handle_count,0
     mov es:fs_max_size,0
-;
-    mov bx,vfs_req_sel
-    CreateFixedShareBlock
-;
-    mov es:rs_handle_count,0
-    mov es:rs_max_size,0
 ;
     mov ax,cs
     mov ds,ax
