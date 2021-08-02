@@ -110,6 +110,13 @@ fi_req_count         DD ?
 
 file_info_struc  ENDS
 
+file_sel_entry   STRUC
+
+fse_file_info        DW ?
+fse_file_sel         DW ?
+
+file_sel_entry   ENDS
+
 ; must be word aligned!
 
 file_sel         STRUC
@@ -368,7 +375,7 @@ serv_open_file    Proc far
     mov ds:fs_max_size,ecx
 ;
     mov edi,ebx
-    add edi,edi
+    shl edi,2
     add edi,OFFSET fs_handle_arr
     test di,0FFFh
     jnz sofDone
@@ -386,19 +393,20 @@ sofScan:
     mov edi,OFFSET fs_handle_arr
 
 sofLoop:
-    mov ax,ds:[edi]
+    mov ax,ds:[edi].fse_file_info
     or ax,ax
     jz sofDone
 ;
     inc ebx
-    add edi,2
+    add edi,4
     loop sofLoop
 ;
     CrashGate
 
 sofDone:
     inc ds:fs_handle_count
-    mov ds:[edi],es
+    mov ds:[edi].fse_file_info,es
+    mov ds:[edi].fse_file_sel,0
     LeaveSection ds:fs_section
 ;
     inc ebx
@@ -1321,7 +1329,7 @@ serv_add_file_req    Proc far
     jz safDone
 ;
     dec ebx
-    shl ebx,1
+    shl ebx,2
 ;
     push eax
     mov eax,vfs_file_sel
@@ -1544,7 +1552,7 @@ GetFileBlock   Proc near
     jz gfbDone
 ;
     dec ebx
-    add ebx,ebx
+    shl ebx,2
 ;
     mov ax,vfs_file_sel
     mov ds,eax
