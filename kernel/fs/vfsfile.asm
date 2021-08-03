@@ -454,9 +454,13 @@ afhOk:
     mov ds:vfsp_file_list,ax
     LeaveSection ds:vfsp_req_section
 ;
+    movzx eax,ds:vfsp_part_nr
+    inc eax
+    shl eax,24
     sub ebx,OFFSET vfsp_file_arr
     shr ebx,2
     inc ebx
+    or ebx,eax
     clc
 
 afhDone:
