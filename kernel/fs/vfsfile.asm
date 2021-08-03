@@ -84,7 +84,7 @@ fh_base          handle_header <>
 fh_pos           DD ?,?
 fh_attrib        DD ?
 fh_vfs_sel       DW ?
-fh_vfs_handle    DW ?
+fh_vfs_handle    DD ?
 
 file_handle_seg  ENDS
 
@@ -163,7 +163,6 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern HandleToPart:near
-    extern GetPartSel:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
     extern GetCmdData:near
@@ -1433,26 +1432,27 @@ serv_add_file_req    Proc far
     stc
     jz safDone
 ;
-    dec ebx
-    shl ebx,2
+    push es
+    push ebx
 ;
-    push eax
-    mov eax,vfs_file_sel
-    mov ds,eax
-    pop eax
+    shr ebx,24
+    call HandleToPart
 ;
-    EnterSection ds:fs_section
-    push ds
+    mov eax,es
+    mov fs,eax
 ;
-    mov bx,ds:[ebx].fs_handle_arr
+    pop ebx
+    pop es
+    jc safDone
+;
+    movzx ebx,bx
     or bx,bx
     stc
-    jz safLeave
+    jz safDone
 ;
-    mov gs,bx
-    movzx bx,gs:fi_part
-    call GetPartSel
-    jc safLeave
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc safDone
 ;
     call AllocateFileReq
     jc safLeave
@@ -1594,7 +1594,7 @@ ovfCopyPath:
     pop eax
 ;
     mov [ebx].fh_vfs_sel,fs
-    mov [ebx].fh_vfs_handle,ax
+    mov [ebx].fh_vfs_handle,eax
     mov [ebx].fh_attrib,ecx
     mov [ebx].fh_pos,0
     mov [ebx].fh_pos+4,0
@@ -1648,34 +1648,46 @@ open_vfs_file32  Endp
 
 GetFileBlock   Proc near
     push ds
+    push es
     push eax
     push ebx
 ;
-    movzx ebx,ds:[ebx].fh_vfs_handle
+    mov ebx,ds:[ebx].fh_vfs_handle
     or ebx,ebx
     stc
     jz gfbDone
 ;
-    dec ebx
-    shl ebx,2
+    push ebx
+    shr ebx,24
+    call HandleToPart
+    mov eax,es
+    mov gs,eax
+    pop ebx
+    jc gfbDone
 ;
-    mov ax,vfs_file_sel
-    mov ds,eax
-    EnterSection ds:fs_section
-    add ebx,OFFSET fs_handle_arr
-    mov ax,ds:[ebx]
-    LeaveSection ds:fs_section
-;
-    or ax,ax
+    movzx ebx,bx
+    or bx,bx
     stc
     jz gfbDone
 ;
-    mov gs,ax
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc gfbDone
+;
+    dec ebx
+    shl ebx,2
+    mov ax,ds:[ebx].ff_info
+    or ax,ax
+    stc
+    je gfbDone
+;
+    mov gs,eax
     clc
 
 gfbDone:
     pop ebx
     pop eax
+    pop es
     pop ds
     ret
 GetFileBlock  Endp
