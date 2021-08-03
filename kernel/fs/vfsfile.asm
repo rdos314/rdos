@@ -119,13 +119,6 @@ fi_part              DB ?
 
 file_info_struc  ENDS
 
-file_sel_entry   STRUC
-
-fse_file_info        DW ?
-fse_file_sel         DW ?
-
-file_sel_entry   ENDS
-
 ; must be word aligned!
 
 file_sel         STRUC
@@ -147,6 +140,15 @@ fr_sel           DW ?
 fr_link          DW ?
 
 file_part_req_struc  ENDS
+
+file_part_struc  STRUC
+
+ff_link          DW ?
+ff_info          DW ?
+ff_sys           DW ?
+ff_pad           DW ?
+
+file_part_struc  ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -186,16 +188,33 @@ InitFilePart	Proc near
     push ecx
     push edi
 ;
+    mov ecx,MAX_VFS_FILE_COUNT - 1
+    mov edi,OFFSET vfsp_file_arr
+    mov es:vfsp_file_list,di
+    mov eax,edi
+
+ifpFileLoop:
+    add eax,8
+    mov es:[edi].ff_link,ax
+    mov es:[edi].ff_info,0
+    mov es:[edi].ff_sys,0
+    mov es:[edi].ff_pad,0
+    mov edi,eax
+    loop ifpFileLoop
+;
+    mov es:[edi].ff_link,cx
+;
     mov ecx,MAX_VFS_FILE_REQ_COUNT - 1
     mov edi,OFFSET vfsp_file_req_arr
     mov es:vfsp_req_list,di
     mov eax,edi
 
-ifpLoop:
+ifpReqLoop:
     add eax,4
     mov es:[edi].fr_link,ax
+    mov es:[edi].fr_sel,0
     mov edi,eax
-    loop ifpLoop
+    loop ifpReqLoop
 ;
     mov es:[edi].fr_link,cx
 ;
@@ -395,6 +414,60 @@ AllocateSysFile   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AllocateFileHandle
+;
+;       DESCRIPTION:    Allocate file handle
+;
+;       PARAMETERS:     ES          File info sel
+;                       FS          Part sel
+;                       CX          Sector size
+;
+;       RETURNS:        EBX         File handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateFileHandle	Proc near
+    push ds
+    push eax
+;
+    mov eax,fs
+    mov ds,eax
+    EnterSection ds:vfsp_req_section
+;
+    movzx ebx,ds:vfsp_file_list
+    or ebx,ebx
+    jnz afhOk
+;
+    int 3
+    LeaveSection ds:vfsp_req_section
+    stc
+    jmp afhDone
+
+afhOk:
+    mov ds:[ebx].ff_info,es
+;
+    call AllocateSysFile
+    mov ds:[ebx].ff_sys,ax
+;
+    xor ax,ax
+    xchg ax,ds:[ebx].ff_link
+    mov ds:vfsp_file_list,ax
+    LeaveSection ds:vfsp_req_section
+;
+    sub ebx,OFFSET vfsp_file_arr
+    shr ebx,2
+    inc ebx
+    clc
+
+afhDone:
+    pop eax
+    pop ds
+    ret
+AllocateFileHandle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServOpenFile
 ;
 ;       DESCRIPTION:    Serv open VFS file req
@@ -411,15 +484,14 @@ serv_open_file_name       DB 'Serv Open File',0
 serv_open_file    Proc far
     push ds
     push es
+    push fs
     push eax
     push ecx
-    push edi
-    push ebp
 ;
     call HandleToPart
 ;
     mov ds,es:vfsp_disc_sel
-    mov bp,ds:vfs_bytes_per_sector
+    mov cx,ds:vfs_bytes_per_sector
 ;
     mov bx,flat_sel
     mov ds,bx
@@ -433,66 +505,16 @@ serv_open_file    Proc far
     mov al,es:vfsp_part_nr
     mov ds:[edx].fi_part,al
 ;
+    mov eax,es
+    mov fs,eax    
+;
     ServToSystemShareBlock
 ;
-    mov bx,vfs_file_sel
-    mov ds,bx
-    EnterSection ds:fs_section
+    call AllocateFileHandle
 ;
-    mov ecx,ds:fs_max_size
-    cmp ecx,ds:fs_handle_count
-    jne sofScan
-;
-    mov ebx,ecx
-    inc ecx
-    mov ds:fs_max_size,ecx
-;
-    int 3
-    mov edi,ebx
-    shl edi,2
-    add edi,OFFSET fs_handle_arr
-    test di,0FFFh
-    jnz sofDone
-;
-    push es
-    mov ax,ds
-    mov es,ax
-    GrowShareBlock
-    pop es
-    jmp sofDone
-
-sofScan:
-    int 3
-    xor ebx,ebx
-    mov edi,OFFSET fs_handle_arr
-
-sofLoop:
-    mov ax,ds:[edi].fse_file_info
-    or ax,ax
-    jz sofDone
-;
-    inc ebx
-    add edi,4
-    loop sofLoop
-;
-    CrashGate
-
-sofDone:
-    inc ds:fs_handle_count
-    mov ds:[edi].fse_file_info,es
-;
-    mov cx,bp
-    call AllocateSysFile
-    mov ds:[edi].fse_file_sel,ax
-;
-    LeaveSection ds:fs_section
-;
-    inc ebx
-;
-    pop ebp
-    pop edi
     pop ecx
     pop eax
+    pop fs
     pop es
     pop ds
     ret
@@ -1946,7 +1968,7 @@ HandleFileData	Proc near
     mov bx,vfs_file_sel
     mov ds,bx
     EnterSection ds:fs_section
-    mov bx,ds:[ebp].fse_file_sel
+;    mov bx,ds:[ebp].fse_file_sel
     LeaveSection ds:fs_section
     or bx,bx
     stc
