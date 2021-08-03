@@ -2643,6 +2643,7 @@ data_reply  Endp
 ;       DESCRIPTION:    File reply processing
 ;
 ;       PARAMETERS:     ES          Msg buf
+;                       BX          Req handle
 ;                       EDX:EAX     Start position
 ;                       ECX         Sector count
 ;                       ESI         Sector size

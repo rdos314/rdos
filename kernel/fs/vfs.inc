@@ -39,6 +39,7 @@ MAX_VFS_PARTITIONS = 15
 MAX_VFS_REQ_COUNT  = 15
 MAX_VFS_ENTRY_COUNT = 255
 MAX_VFS_FILE_COUNT  = 1024
+MAX_VFS_FILE_REQ_COUNT  = 4096
 
 vfs_table_struc    STRUC
 
@@ -194,9 +195,11 @@ vfsp_cmd_head             DB ?
 vfsp_cmd_tail             DB ?
 
 vfsp_file_list            DW ?
+vfsp_req_list             DW ?
 
 vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
 vfsp_file_arr             DW MAX_VFS_FILE_COUNT DUP(?,?)
+vfsp_file_req_arr         DW MAX_VFS_FILE_REQ_COUNT DUP(?,?)
 
 vfsp_app_sel              DW ?
 vfsp_disc_sel             DW ?

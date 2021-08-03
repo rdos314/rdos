@@ -44,38 +44,36 @@ include vfsmsg.inc
     .386p
 
 MAX_FILE_REQ_ENTRIES = 8
-MAX_FILE_REQ_COUNT   = 128
-MAX_FILE_BLOCK_COUNT = 512
+MAX_FILE_REQ_COUNT   = 64
 MAX_FILE_USERS       = 256
-
-file_req_header   STRUC
-
-frh_pos            DD ?,?
-frh_size           DD ?
-frh_count          DW ?
-frh_handle         DW ?
-
-file_req_header   ENDS
 
 file_req_entry    STRUC
 
 fre_pos            DD ?,?
 fre_size           DD ?
-fre_next_ptr       DD ?
 fre_last_size      DW ?
 fre_pages          DW ?
 fre_arr            DD ?,?
 
 file_req_entry    ENDS
 
+file_req_handle    STRUC
+
+frh_handle        DW ?
+frh_count         DW ?
+ 
+file_req_handle    ENDS
+
 file_sys_entry    STRUC
 
 fse_sector_size   DW ?
 fse_req_count     DW ?
+fse_insert        DW ?
+fse_pad           DW ?
 
-fse_handle_arr    DW MAX_FILE_REQ_COUNT DUP(?)
 fse_user_arr      DD MAX_FILE_USERS DUP(?)
-fse_req_arr       DD MAX_FILE_BLOCK_COUNT DUP(?)
+fse_req_arr       DW MAX_FILE_REQ_COUNT DUP(?,?)
+fse_sorted_arr    DW MAX_FILE_REQ_COUNT DUP(?)
 
 file_sys_entry    ENDS
 
@@ -143,12 +141,12 @@ fs_handle_arr    DW ?
 file_sel         ENDS
 
 
-file_part_struc  STRUC
+file_part_req_struc  STRUC
 
-fp_sel           DW ?
-fp_link          DW ?
+fr_sel           DW ?
+fr_link          DW ?
 
-file_part_struc  ENDS
+file_part_req_struc  ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -188,18 +186,18 @@ InitFilePart	Proc near
     push ecx
     push edi
 ;
-    mov ecx,MAX_VFS_FILE_COUNT - 1
-    mov edi,OFFSET vfsp_file_arr
-    mov es:vfsp_file_list,di
+    mov ecx,MAX_VFS_FILE_REQ_COUNT - 1
+    mov edi,OFFSET vfsp_file_req_arr
+    mov es:vfsp_req_list,di
     mov eax,edi
 
 ifpLoop:
     add eax,4
-    mov es:[edi].fp_link,ax
+    mov es:[edi].fr_link,ax
     mov edi,eax
     loop ifpLoop
 ;
-    mov es:[edi].fp_link,cx
+    mov es:[edi].fr_link,cx
 ;
     pop edi
     pop ecx    
@@ -232,12 +230,12 @@ GetFileReq	Proc near
     jz gfrFail
 ;
     dec eax
-    cmp eax,MAX_VFS_FILE_COUNT
+    cmp eax,MAX_VFS_FILE_REQ_COUNT
     jae gfrFail
 ;
     shl eax,2
-    add eax,OFFSET vfsp_file_arr
-    mov fs,es:[eax].fp_sel
+    add eax,OFFSET vfsp_file_req_arr
+    mov fs,es:[eax].fr_sel
     clc
     jmp gfrDone
 
@@ -367,15 +365,21 @@ AllocateSysFile    Proc near
     mov es,ebx
     mov es:fse_sector_size,cx
     mov es:fse_req_count,0
-;
-    mov edi,OFFSET fse_handle_arr
-    xor ax,ax
-    mov ecx,MAX_FILE_REQ_COUNT
-    rep stosw
+    mov es:fse_insert,SIZE file_sys_entry
 ;
     mov edi,OFFSET fse_user_arr
     xor ax,ax
     mov ecx,MAX_FILE_USERS
+    rep stosw
+;
+    mov edi,OFFSET fse_req_arr
+    xor ax,ax
+    mov ecx,MAX_FILE_REQ_COUNT
+    rep stosw
+;
+    mov edi,OFFSET fse_sorted_arr
+    xor ax,ax
+    mov ecx,MAX_FILE_REQ_COUNT
     rep stosw
 ;
     mov eax,es
@@ -443,6 +447,7 @@ serv_open_file    Proc far
     inc ecx
     mov ds:fs_max_size,ecx
 ;
+    int 3
     mov edi,ebx
     shl edi,2
     add edi,OFFSET fs_handle_arr
@@ -1337,7 +1342,7 @@ AllocateFileReq	Proc near
     mov ds,eax
     EnterSection ds:vfsp_req_section
 ;
-    movzx ebp,ds:vfsp_file_list
+    movzx ebp,ds:vfsp_req_list
     or ebp,ebp
     jnz afrOk
 ;
@@ -1347,7 +1352,7 @@ AllocateFileReq	Proc near
     jmp afrDone
 
 afrOk:
-    mov ax,ds:[ebp].fp_sel
+    mov ax,ds:[ebp].fr_sel
     or ax,ax
     jz afrEmpty
 ;
@@ -1357,9 +1362,9 @@ afrOk:
     jmp afrDone
 
 afrEmpty:
-    mov ds:[ebp].fp_sel,-1
-    mov ax,ds:[ebp].fp_link
-    mov ds:vfsp_file_list,ax
+    mov ds:[ebp].fr_sel,-1
+    mov ax,ds:[ebp].fr_link
+    mov ds:vfsp_req_list,ax
     clc
     LeaveSection ds:vfsp_req_section
     clc
@@ -1453,10 +1458,10 @@ serv_add_file_req    Proc far
     jc safFail
 ;
     mov eax,ds
-    mov fs:[ebp].fp_sel,ax
+    mov fs:[ebp].fr_sel,ax
     movzx eax,fs:vfsp_part_nr
     shl eax,24
-    sub ebp,OFFSET vfsp_file_arr
+    sub ebp,OFFSET vfsp_file_req_arr
     shr ebp,2
     inc ebp
     or eax,ebp
@@ -1899,7 +1904,6 @@ aoeSizeDone:
     add eax,ebx
     adc edx,0
 ;
-    mov ds:[esi].fre_next_ptr,ebp
     mov esi,ebp
 ;
     pop ebp
@@ -1916,6 +1920,7 @@ AddOneEntry     Endp
 ;
 ;       PARAMETERS:     ES:EDI      Sector data
 ;                       EDX:EAX     Start position
+;                       BX          Req handle
 ;                       ECX         Sector count
 ;                       ESI         Sector size
 ;
@@ -1933,35 +1938,33 @@ HandleFileData	Proc near
     push esi
     push edi
 ;
-    mov ebx,flat_sel
-    mov ds,ebx
-    mov ebx,esi
+    mov ebp,ebx
+    dec ebp
+    shl ebp,2
+    add ebp,OFFSET fs_handle_arr
 ;
-    push eax
-    push ecx
-    push edx
+    mov bx,vfs_file_sel
+    mov ds,bx
+    EnterSection ds:fs_section
+    mov bx,ds:[ebp].fse_file_sel
+    LeaveSection ds:fs_section
+    or bx,bx
+    stc
+    jz hfdDone
 ;
-    mov eax,1000h
-    AllocateBigLinear
-    mov ebp,edx
-    mov esi,edx
-    add esi,SIZE file_req_header
-;
-    pop edx
-    pop ecx
-    pop eax
-;
-    mov ds:[ebp].frh_count,0
+    mov ds,bx
+    movzx esi,ds:fse_insert
 
 hfdLoop:
     or ecx,ecx
+    clc
     jz hfdDone
 ;
     call AddOneEntry
+    mov ds:fse_insert,si
+    jmp hfdLoop
 ;
-    inc ds:[ebp].frh_count
-    cmp ds:[ebp].frh_count,MAX_FILE_REQ_ENTRIES
-    jne hfdLoop
+    clc
 
 hfdDone:
     pop edi
