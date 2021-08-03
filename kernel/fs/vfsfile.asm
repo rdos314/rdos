@@ -1647,7 +1647,6 @@ open_vfs_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetFileBlock   Proc near
-    push ds
     push es
     push eax
     push ebx
@@ -1660,8 +1659,6 @@ GetFileBlock   Proc near
     push ebx
     shr ebx,24
     call HandleToPart
-    mov eax,es
-    mov gs,eax
     pop ebx
     jc gfbDone
 ;
@@ -1676,7 +1673,7 @@ GetFileBlock   Proc near
 ;
     dec ebx
     shl ebx,2
-    mov ax,ds:[ebx].ff_info
+    mov ax,es:[ebx].vfsp_file_arr.ff_info
     or ax,ax
     stc
     je gfbDone
@@ -1688,7 +1685,6 @@ gfbDone:
     pop ebx
     pop eax
     pop es
-    pop ds
     ret
 GetFileBlock  Endp
 
