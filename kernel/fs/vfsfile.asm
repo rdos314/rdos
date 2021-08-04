@@ -119,21 +119,6 @@ fi_part              DB ?
 
 file_info_struc  ENDS
 
-; must be word aligned!
-
-file_sel         STRUC
-
-fs_header        share_block_struc <>
-fs_section       section_typ <>
-
-fs_handle_count  DD ?
-fs_max_size      DD ?
-
-fs_handle_arr    DW ?
-
-file_sel         ENDS
-
-
 file_part_req_struc  STRUC
 
 fr_sel           DW ?
@@ -1500,7 +1485,6 @@ safFail:
 
 safLeave:
     pop ds
-    LeaveSection ds:fs_section
     jnc safDone
 ;
     xor eax,eax
@@ -1975,13 +1959,13 @@ HandleFileData	Proc near
     mov ebp,ebx
     dec ebp
     shl ebp,2
-    add ebp,OFFSET fs_handle_arr
+;    add ebp,OFFSET fs_handle_arr
 ;
-    mov bx,vfs_file_sel
-    mov ds,bx
-    EnterSection ds:fs_section
+;    mov bx,vfs_file_sel
+;    mov ds,bx
+;    EnterSection ds:fs_section
 ;    mov bx,ds:[ebp].fse_file_sel
-    LeaveSection ds:fs_section
+;    LeaveSection ds:fs_section
     or bx,bx
     stc
     jz hfdDone
@@ -2054,13 +2038,6 @@ delete_handle   Endp
     public init_file
 
 init_file    Proc near
-    mov bx,vfs_file_sel
-    CreateFixedShareBlock
-;
-    InitSection es:fs_section
-    mov es:fs_handle_count,0
-    mov es:fs_max_size,0
-;
     mov ax,cs
     mov ds,ax
     mov es,ax 

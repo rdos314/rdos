@@ -520,8 +520,6 @@ vfs_data_sel        EQU 0C78h
 usb_vfs_code_sel    EQU 0C80h
 usb_vfs_data_sel    EQU 0C88h
 
-vfs_file_sel        EQU 0C90h
-
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 

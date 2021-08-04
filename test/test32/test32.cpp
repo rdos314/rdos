@@ -73,11 +73,13 @@ void main()
 //        RdosTestGate("");
 //    }
 
-    int handle;
+    int handle1;
+    int handle2;
 
-    handle = RdosOpenVfsFile("y:/rdos.bin");
+    handle1 = RdosOpenVfsFile("y:/boot32.bin");
+    handle2 = RdosOpenVfsFile("y:/rdos.bin");
     buf = new char[512 * 128];
-    count = RdosReadVfsFile(handle, buf, 512 * 128);
+    count = RdosReadVfsFile(handle2, buf, 512 * 128);
 
 
 
