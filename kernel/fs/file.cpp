@@ -44,18 +44,13 @@
 TFile::TFile(TDir *pd, int pi)
   : Section("file")
 {
-    int pos;
     struct DirEntry *entry;
-    char *ptr;
 
     Parent = pd;
     ParentIndex = pi;
 
     entry = Parent->LockEntry(ParentIndex);
-
-    pos = Add(sizeof(struct TFileInfo));
-    ptr = (char *)obj;
-    Info = (struct TFileInfo *)(ptr + pos);
+    Info = (struct TFileInfo *)RdosAllocateMem(0x1000);
 
     Info->FsSize = entry->Size;
     Info->ReqSize = entry->Size;
@@ -100,7 +95,7 @@ TFile::~TFile()
 void TFile::Setup(int VfsHandle, int ServFileHandle)
 {
     Info->ServHandle = ServFileHandle;
-    Info->KernelHandle = ServOpenVfsFile(VfsHandle, obj);
+    Info->KernelHandle = ServOpenVfsFile(VfsHandle, Info);
 }
 
 /*##########################################################################

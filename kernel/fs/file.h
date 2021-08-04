@@ -51,7 +51,7 @@ struct TFileInfo
 };
 
 
-class TFile : public TBlock
+class TFile
 {
 public:
     TFile(TDir *ParentDir, int ParentIndex);
@@ -70,12 +70,12 @@ public:
     int GetKernelHandle();
     int GetAttrib();
 
+    struct TFileInfo *Info;
+
 protected:
     TDir *Parent;
     int ParentIndex;
     TSection Section;
-
-    struct TFileInfo *Info;
 };
 
 #endif

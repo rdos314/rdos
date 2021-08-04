@@ -364,7 +364,7 @@ AllocateFileHandle Endp
 ;       DESCRIPTION:    Serv open VFS file req
 ;
 ;       PARAMETERS:     EBX            VFS handle
-;                       EDX            Share block
+;                       EDX            File info
 ;
 ;       RETURNS:        EBX            Handle
 ;
@@ -399,7 +399,7 @@ serv_open_file    Proc far
     mov eax,es
     mov fs,eax    
 ;
-    ServToSystemShareBlock
+;    ServToSystemShareBlock
 ;
     call AllocateFileHandle
 ;
