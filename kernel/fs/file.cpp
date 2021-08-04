@@ -62,6 +62,7 @@ TFile::TFile(TDir *pd, int pi)
     Info->Gid = entry->Gid;
     Info->KernelHandle = 0;
     Info->ServHandle = 0;
+    strcpy(Info->Name, entry->PathName);
 
     Parent->UnlockEntry(entry);
 }

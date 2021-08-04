@@ -48,6 +48,7 @@ struct TFileInfo
     char Disc;
     char Drive;
     char Part;
+    char Name[1];
 };
 
 
