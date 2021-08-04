@@ -214,7 +214,7 @@ GetFileBlock   Proc near
 ;
     dec ebx
     shl ebx,2
-    mov ax,es:[ebx].vfsp_file_arr.ff_info
+    mov ax,es:[ebx].vfsp_file_arr.ff_sel
     or ax,ax
     stc
     je gfbDone

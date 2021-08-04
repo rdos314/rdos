@@ -81,11 +81,9 @@ InitFilePart	Proc near
     mov eax,edi
 
 ifpFileLoop:
-    add eax,8
+    add eax,4
     mov es:[edi].ff_link,ax
-    mov es:[edi].ff_info,0
-    mov es:[edi].ff_sys,0
-    mov es:[edi].ff_pad,0
+    mov es:[edi].ff_sel,0
     mov edi,eax
     loop ifpFileLoop
 ;
@@ -242,36 +240,48 @@ AddFileData     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AllocateSysFile
+;       NAME:           AllocateFileSel
 ;
-;       DESCRIPTION:    Allocate sys file entry
+;       DESCRIPTION:    Allocate file selector
 ;
 ;       PARAMETERS:     CX             Sector size
+;                       EDX            File info linear
 ;
 ;       RETURNS:        NC
-;                         AX           File sys sel
+;                         AX           File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateSysFile    Proc near
+AllocateFileSel    Proc near
     push es
     push ebx
     push ecx
     push edx
     push edi
 ;
+    GetPageEntry
+    and ax,0F000h
+    or ax,863h
+    push eax
+    push ebx
+;
     push ecx
-    mov eax,SIZE file_sys_entry
+    mov eax,10000h
     AllocateBigLinear
     AllocateGdt
-    mov ecx,SIZE file_sys_entry
+    mov ecx,10000h
     CreateDataSelector32
     pop ecx
 ;
     mov es,ebx
+;
+    pop ebx
+    pop eax
+    SetPageEntry
+;
     mov es:fse_sector_size,cx
     mov es:fse_req_count,0
-    mov es:fse_insert,SIZE file_sys_entry
+    mov es:fse_insert,SIZE file_entry
 ;
     mov edi,OFFSET fse_user_arr
     xor ax,ax
@@ -296,7 +306,7 @@ AllocateSysFile    Proc near
     pop ebx
     pop es
     ret
-AllocateSysFile   Endp
+AllocateFileSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -305,9 +315,9 @@ AllocateSysFile   Endp
 ;
 ;       DESCRIPTION:    Allocate file handle
 ;
-;       PARAMETERS:     ES          File info sel
-;                       FS          Part sel
+;       PARAMETERS:     FS          Part sel
 ;                       CX          Sector size
+;                       EDX         File info linear
 ;
 ;       RETURNS:        EBX         File handle
 ;
@@ -331,10 +341,8 @@ AllocateFileHandle	Proc near
     jmp afhDone
 
 afhOk:
-    mov ds:[ebx].ff_info,es
-;
-    call AllocateSysFile
-    mov ds:[ebx].ff_sys,ax
+    call AllocateFileSel
+    mov ds:[ebx].ff_sel,ax
 ;
     xor ax,ax
     xchg ax,ds:[ebx].ff_link
@@ -384,6 +392,10 @@ serv_open_file    Proc far
     mov ds,es:vfsp_disc_sel
     mov cx,ds:vfs_bytes_per_sector
 ;
+    mov ax,system_data_sel
+    mov ds,ax
+    add edx,ds:flat_base
+;
     mov bx,flat_sel
     mov ds,bx
 ;
@@ -398,9 +410,6 @@ serv_open_file    Proc far
 ;
     mov eax,es
     mov fs,eax    
-;
-;    ServToSystemShareBlock
-;
     call AllocateFileHandle
 ;
     pop ecx

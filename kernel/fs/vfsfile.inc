@@ -46,7 +46,30 @@ frh_count         DW ?
  
 file_req_handle    ENDS
 
-file_sys_entry    STRUC
+
+; shared with server user code!
+
+file_info_struc  STRUC
+
+fi_fs_size           DD ?,?
+fi_req_size          DD ?,?
+fi_access            DD ?,?
+fi_modify            DD ?,?
+fi_attrib            DD ?
+fi_flags             DD ?
+fi_uid               DD ?
+fi_gid               DD ?
+fi_kernel_handle     DD ?
+fi_serv_handle       DD ?
+fi_disc              DB ?
+fi_drive             DB ?
+fi_part              DB ?
+
+file_info_struc  ENDS
+
+file_entry    STRUC
+
+fse_info          DB 1000h DUP(?)
 
 fse_sector_size   DW ?
 fse_req_count     DW ?
@@ -57,7 +80,7 @@ fse_user_arr      DD MAX_FILE_USERS DUP(?)
 fse_req_arr       DW MAX_FILE_REQ_COUNT DUP(?,?)
 fse_sorted_arr    DW MAX_FILE_REQ_COUNT DUP(?)
 
-file_sys_entry    ENDS
+file_entry    ENDS
 
 file_handle_seg  STRUC
 
@@ -80,27 +103,6 @@ fr_handle        DD ?
 
 file_req_struc   ENDS
 
-; must be dword aligned!
-
-file_info_struc  STRUC
-
-fi_header            share_block_struc <>
-fi_fs_size           DD ?,?
-fi_req_size          DD ?,?
-fi_access            DD ?,?
-fi_modify            DD ?,?
-fi_attrib            DD ?
-fi_flags             DD ?
-fi_uid               DD ?
-fi_gid               DD ?
-fi_kernel_handle     DD ?
-fi_serv_handle       DD ?
-fi_disc              DB ?
-fi_drive             DB ?
-fi_part              DB ?
-
-file_info_struc  ENDS
-
 file_part_req_struc  STRUC
 
 fr_sel           DW ?
@@ -110,9 +112,7 @@ file_part_req_struc  ENDS
 
 file_part_struc  STRUC
 
+ff_sel           DW ?
 ff_link          DW ?
-ff_info          DW ?
-ff_sys           DW ?
-ff_pad           DW ?
 
 file_part_struc  ENDS
