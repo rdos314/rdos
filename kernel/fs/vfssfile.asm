@@ -50,7 +50,7 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-    extern HandleToPart:near
+    extern HandleToPartFs:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
     extern GetCmdData:near
@@ -385,14 +385,13 @@ serv_open_file_name       DB 'Serv Open File',0
 
 serv_open_file    Proc far
     push ds
-    push es
     push fs
     push eax
     push ecx
 ;
-    call HandleToPart
+    call HandleToPartFs
 ;
-    mov ds,es:vfsp_disc_sel
+    mov ds,fs:vfsp_disc_sel
     mov cx,ds:vfs_bytes_per_sector
 ;
     mov ax,system_data_sel
@@ -402,23 +401,20 @@ serv_open_file    Proc far
     mov bx,flat_sel
     mov ds,bx
 ;
-    mov al,es:vfsp_disc_nr
+    mov al,fs:vfsp_disc_nr
     mov ds:[edx].fi_disc,al
 ;
-    mov al,es:vfsp_drive_nr
+    mov al,fs:vfsp_drive_nr
     mov ds:[edx].fi_drive,al
 ;
-    mov al,es:vfsp_part_nr
+    mov al,fs:vfsp_part_nr
     mov ds:[edx].fi_part,al
 ;
-    mov eax,es
-    mov fs,eax    
     call AllocateFileHandle
 ;
     pop ecx
     pop eax
     pop fs
-    pop es
     pop ds
     ret
 serv_open_file    Endp
@@ -1332,17 +1328,12 @@ serv_add_file_req    Proc far
     stc
     jz safDone
 ;
-    push es
     push ebx
 ;
     shr ebx,24
-    call HandleToPart
-;
-    mov eax,es
-    mov fs,eax
+    call HandleToPartFs
 ;
     pop ebx
-    pop es
     jc safDone
 ;
     movzx ebx,bx

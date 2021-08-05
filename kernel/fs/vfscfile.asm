@@ -55,7 +55,7 @@ code    SEGMENT byte public 'CODE'
     extern GetDrivePart:near
     extern GetPathDrive:near
     extern GetRelDir:near
-    extern HandleToPart:near
+    extern HandleToPartFs:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -188,7 +188,7 @@ open_vfs_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetFileBlock   Proc near
-    push es
+    push fs
     push eax
     push ebx
 ;
@@ -199,7 +199,7 @@ GetFileBlock   Proc near
 ;
     push ebx
     shr ebx,24
-    call HandleToPart
+    call HandleToPartFs
     pop ebx
     jc gfbDone
 ;
@@ -214,7 +214,7 @@ GetFileBlock   Proc near
 ;
     dec ebx
     shl ebx,2
-    mov ax,es:[ebx].vfsp_file_arr.ff_sel
+    mov ax,fs:[ebx].vfsp_file_arr.ff_sel
     or ax,ax
     stc
     je gfbDone
@@ -225,7 +225,7 @@ GetFileBlock   Proc near
 gfbDone:
     pop ebx
     pop eax
-    pop es
+    pop fs
     ret
 GetFileBlock  Endp
 

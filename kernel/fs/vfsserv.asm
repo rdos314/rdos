@@ -688,7 +688,7 @@ get_vfs_handle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           HandleToPart
+;       NAME:           HandleToPartEs
 ;
 ;       DESCRIPTION:    Convert from handle to partition selector
 ;
@@ -698,42 +698,92 @@ get_vfs_handle    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public HandleToPart
+    public HandleToPartEs
 
-HandleToPart    Proc near
+HandleToPartEs    Proc near
     push eax
     push ebx
 ;
     mov ax,SEG data
     mov es,ax
     or bx,bx
-    jz htpFail
+    jz htpeFail
 ;
     cmp ebx,MAX_PART_COUNT
-    jbe htpInRange
+    jbe htpeInRange
 
-htpFail:
+htpeFail:
     stc
-    jmp htpDone
+    jmp htpeDone
 
-htpInRange:
+htpeInRange:
     dec ebx
     add ebx,ebx
     mov ax,es:[ebx].part_arr
     or ax,ax
-    jz htpFail
+    jz htpeFail
 ;
     mov es,ax
     test es:vfsp_flag,VFSP_FLAG_STOPPED
-    jnz htpFail
+    jnz htpeFail
 ;
     clc
 
-htpDone:
+htpeDone:
     pop ebx
     pop eax
     ret
-HandleToPart    Endp
+HandleToPartEs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HandleToPartFs
+;
+;       DESCRIPTION:    Convert from handle to partition selector
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        FS          VFS part
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HandleToPartFs
+
+HandleToPartFs    Proc near
+    push eax
+    push ebx
+;
+    mov ax,SEG data
+    mov fs,ax
+    or bx,bx
+    jz htpfFail
+;
+    cmp ebx,MAX_PART_COUNT
+    jbe htpfInRange
+
+htpfFail:
+    stc
+    jmp htpfDone
+
+htpfInRange:
+    dec ebx
+    add ebx,ebx
+    mov ax,fs:[ebx].part_arr
+    or ax,ax
+    jz htpfFail
+;
+    mov fs,ax
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz htpfFail
+;
+    clc
+
+htpfDone:
+    pop ebx
+    pop eax
+    ret
+HandleToPartFs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -753,7 +803,7 @@ get_vfs_sectors_name       DB 'Get VFS Sectors',0
 get_vfs_sectors    Proc far
     push es
 ;
-    call HandleToPart
+    call HandleToPartEs
     jc gvsDone
 ;
     mov eax,es:vfsp_sector_count
@@ -781,7 +831,7 @@ is_vfs_active_name       DB 'Is VFS Active',0
 is_vfs_active    Proc far
     push es
 ;
-    call HandleToPart
+    call HandleToPartEs
 ;
     pop es
     ret
@@ -812,7 +862,7 @@ create_vfs_req    Proc far
 ;
     mov dh,bl
 ;
-    call HandleToPart
+    call HandleToPartEs
     jc crvrDone
 ;
     mov eax,es
@@ -1879,7 +1929,7 @@ wait_for_vfs_cmd   Proc far
     push esi
     push edi
 ;
-    call HandleToPart
+    call HandleToPartEs
     jc wfcDone
 ;
     mov ax,es
@@ -2058,7 +2108,7 @@ reply_vfs_cmd   Proc far
 ;
     mov es:[edi].fc_op,REPLY_DEFAULT
 ;
-    call HandleToPart
+    call HandleToPartEs
     jc rfcDone
 ;
     mov esi,es:vfsp_cmd_curr
@@ -2138,7 +2188,7 @@ rfbcCopy:
 rfbcSend:
     pop ebx
 ;
-    call HandleToPart
+    call HandleToPartEs
     jc rfbcDone
 ;
     mov esi,es:vfsp_cmd_curr
@@ -2192,7 +2242,7 @@ reply_vfs_data_cmd   Proc far
 ;
     mov es:[edi].fc_op,REPLY_DATA
 ;
-    call HandleToPart
+    call HandleToPartEs
     jc rvdcDone
 ;
     mov esi,es:vfsp_cmd_curr
@@ -2246,7 +2296,7 @@ reply_vfs_file    Proc far
     push edx
     push esi
 ;
-    call HandleToPart
+    call HandleToPartEs
     jc rffDone
 ;
     call GetFileReq
