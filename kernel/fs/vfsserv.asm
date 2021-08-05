@@ -792,7 +792,8 @@ HandleToPartFs    Endp
 ;
 ;       DESCRIPTION:    Convert upper 8-bits from handle to partition selector
 ;
-;       PARAMETERS:     EBX         VFS Handle
+;       PARAMETERS:     AL          Signature
+;                       EBX         VFS Handle
 ;
 ;       RETURNS:        FS          VFS part
 ;
@@ -804,12 +805,17 @@ HandleHighToPartFs    Proc near
     push eax
     push ebx
 ;
-    or ebx,ebx
+    or bx,bx
     jz hhtpfFail
 ;
-    mov ax,SEG data
-    mov fs,ax
-    shr ebx,24
+    shr ebx,16
+    or bx,bx
+    jz hhtpfFail
+;
+    cmp al,bl
+    jne hhtpfFail
+;
+    movzx ebx,bh
     or ebx,ebx
     jz hhtpfFail
 ;
@@ -823,6 +829,8 @@ hhtpfFail:
     jmp hhtpfDone
 
 hhtpfInRange:
+    mov ax,SEG data
+    mov fs,ax
     dec ebx
     add ebx,ebx
     mov ax,fs:[ebx].part_arr

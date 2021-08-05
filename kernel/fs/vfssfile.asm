@@ -355,7 +355,9 @@ afhOk:
 ;
     movzx eax,ds:vfsp_part_nr
     inc eax
-    shl eax,24
+    shl eax,8
+    mov al,FILE_SIGN
+    shl eax,16
     sub ebx,OFFSET vfsp_file_arr
     shr ebx,2
     inc ebx
@@ -1325,18 +1327,17 @@ serv_add_file_req    Proc far
     push esi
     push ebp
 ;
+    push eax
+    mov al,FILE_SIGN
     call HandleHighToPartFs
+    pop eax
     jc safLeave
-;
-    movzx ebx,bx
-    or bx,bx
-    stc
-    jz safLeave
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
     cmc
     jc safLeave
 ;
+    movzx ebx,bx
     call AllocateFileReq
     jc safLeave
 ;
@@ -1369,12 +1370,15 @@ serv_add_file_req    Proc far
     mov eax,ds
     mov fs:[ebp].fr_sel,ax
     movzx eax,fs:vfsp_part_nr
-    shl eax,24
+    inc eax
+    shl eax,8
+    mov al,REQ_SIGN
+    shl eax,16
     sub ebp,OFFSET vfsp_file_req_arr
     shr ebp,2
     inc ebp
     or eax,ebp
-    mov es:vfs_rd_handle,ebp
+    mov es:vfs_rd_handle,eax
     clc
     jmp safLeave
 

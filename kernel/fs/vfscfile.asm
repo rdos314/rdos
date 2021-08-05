@@ -192,19 +192,16 @@ GetFileBlock   Proc near
     push eax
     push ebx
 ;
+    mov al,FILE_SIGN
     mov ebx,ds:[ebx].fh_vfs_handle
     call HandleHighToPartFs
     jc gfbDone
-;
-    movzx ebx,bx
-    or bx,bx
-    stc
-    jz gfbDone
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
     cmc
     jc gfbDone
 ;
+    movzx ebx,bx
     dec ebx
     shl ebx,2
     mov ax,fs:[ebx].vfsp_file_arr.ff_sel
