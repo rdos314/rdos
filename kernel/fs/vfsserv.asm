@@ -788,6 +788,62 @@ HandleToPartFs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           HandleHighToPartFs
+;
+;       DESCRIPTION:    Convert upper 8-bits from handle to partition selector
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        FS          VFS part
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HandleHighToPartFs
+
+HandleHighToPartFs    Proc near
+    push eax
+    push ebx
+;
+    or ebx,ebx
+    jz hhtpfFail
+;
+    mov ax,SEG data
+    mov fs,ax
+    shr ebx,24
+    or ebx,ebx
+    jz hhtpfFail
+;
+    cmp ebx,MAX_PART_COUNT
+    jbe hhtpfInRange
+
+hhtpfFail:
+    xor ax,ax
+    mov fs,eax
+    stc
+    jmp hhtpfDone
+
+hhtpfInRange:
+    dec ebx
+    add ebx,ebx
+    mov ax,fs:[ebx].part_arr
+    or ax,ax
+    jz hhtpfFail
+;
+    mov fs,ax
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz hhtpfFail
+;
+    clc
+
+hhtpfDone:
+    pop ebx
+    pop eax
+    ret
+HandleHighToPartFs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetVfsSectors
 ;
 ;       DESCRIPTION:    Get VFS sectors

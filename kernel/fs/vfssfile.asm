@@ -51,6 +51,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern HandleToPartFs:near
+    extern HandleHighToPartFs:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
     extern GetCmdData:near
@@ -1324,26 +1325,17 @@ serv_add_file_req    Proc far
     push esi
     push ebp
 ;
-    or ebx,ebx
-    stc
-    jz safDone
-;
-    push ebx
-;
-    shr ebx,24
-    call HandleToPartFs
-;
-    pop ebx
-    jc safDone
+    call HandleHighToPartFs
+    jc safLeave
 ;
     movzx ebx,bx
     or bx,bx
     stc
-    jz safDone
+    jz safLeave
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
     cmc
-    jc safDone
+    jc safLeave
 ;
     call AllocateFileReq
     jc safLeave
@@ -1390,7 +1382,6 @@ safFail:
     mov word ptr fs:[ebp],0
 
 safLeave:
-    pop ds
     jnc safDone
 ;
     xor eax,eax
