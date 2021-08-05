@@ -260,10 +260,11 @@ AllocateFileSel    Proc near
     push edi
 ;
     GetPageEntry
-    and ax,0F000h
-    or ax,863h
     push eax
     push ebx
+;
+    or ax,800h
+    SetPageEntry
 ;
     push ecx
     mov eax,10000h
@@ -277,6 +278,8 @@ AllocateFileSel    Proc near
 ;
     pop ebx
     pop eax
+    and ax,0F000h
+    or ax,63h
     SetPageEntry
 ;
     mov es:fse_sector_size,cx
