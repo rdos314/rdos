@@ -180,8 +180,7 @@ ServAddVfsFileReq  MACRO
     ServGate serv_add_file_req_nr
                     ENDM
 
-; IN  EBX              VFS handle
-; IN  EAX              File req handle
+; IN  EBX              File req handle
 ReplyVfsFile  MACRO
     ServGate reply_vfs_file_nr
                     ENDM

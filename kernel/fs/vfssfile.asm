@@ -51,6 +51,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern HandleToPartFs:near
+    extern HandleHighToPartEs:near
     extern HandleHighToPartFs:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
@@ -117,11 +118,11 @@ InitFilePart    Endp
 ;
 ;       DESCRIPTION:    Get file req
 ;
-;       PARAMETERS:     ES                 Partition
-;                       EAX                File req handle
+;       PARAMETERS:     EBX                File req handle
 ;                       DS:EDI             Req
 ;
-;       RETURNS:        FS                 File req
+;       RETURNS:        ES                 Part sel
+;                       FS                 File req
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -130,17 +131,20 @@ InitFilePart    Endp
 GetFileReq	Proc near
     push ds
     push eax
+    push ebx
 ;
-    or eax,eax
-    jz gfrFail
+    mov al,REQ_SIGN
+    call HandleHighToPartEs
+    jc gfrFail
 ;
-    dec eax
-    cmp eax,MAX_VFS_FILE_REQ_COUNT
+    movzx ebx,bx
+    dec ebx
+    cmp ebx,MAX_VFS_FILE_REQ_COUNT
     jae gfrFail
 ;
-    shl eax,2
-    add eax,OFFSET vfsp_file_req_arr
-    mov fs,es:[eax].fr_sel
+    shl ebx,2
+    add ebx,OFFSET vfsp_file_req_arr
+    mov fs,es:[ebx].fr_sel
     clc
     jmp gfrDone
 
@@ -148,6 +152,7 @@ gfrFail:
     stc
 
 gfrDone:
+    pop ebx
     pop eax
     pop ds
     ret

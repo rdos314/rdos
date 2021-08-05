@@ -788,6 +788,70 @@ HandleToPartFs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           HandleHighToPartEs
+;
+;       DESCRIPTION:    Convert upper 8-bits from handle to partition selector
+;
+;       PARAMETERS:     AL          Signature
+;                       EBX         VFS Handle
+;
+;       RETURNS:        ES          VFS part
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HandleHighToPartEs
+
+HandleHighToPartEs    Proc near
+    push eax
+    push ebx
+;
+    or bx,bx
+    jz hhtpeFail
+;
+    shr ebx,16
+    or bx,bx
+    jz hhtpeFail
+;
+    cmp al,bl
+    jne hhtpeFail
+;
+    movzx ebx,bh
+    or ebx,ebx
+    jz hhtpeFail
+;
+    cmp ebx,MAX_PART_COUNT
+    jbe hhtpeInRange
+
+hhtpeFail:
+    xor ax,ax
+    mov es,eax
+    stc
+    jmp hhtpeDone
+
+hhtpeInRange:
+    mov ax,SEG data
+    mov es,ax
+    dec ebx
+    add ebx,ebx
+    mov ax,es:[ebx].part_arr
+    or ax,ax
+    jz hhtpeFail
+;
+    mov es,ax
+    test es:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz hhtpeFail
+;
+    clc
+
+hhtpeDone:
+    pop ebx
+    pop eax
+    ret
+HandleHighToPartEs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           HandleHighToPartFs
 ;
 ;       DESCRIPTION:    Convert upper 8-bits from handle to partition selector
@@ -2343,8 +2407,7 @@ reply_vfs_data_cmd  Endp
 ;
 ;       DESCRIPTION:    Serv reply VFS file data
 ;
-;       PARAMETERS:     EBX            VFS handle
-;                       EAX            File req handle
+;       PARAMETERS:     EBX            VFS req handle
 ;                       DS:EDI         Req buf
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2359,9 +2422,6 @@ reply_vfs_file    Proc far
     push ecx
     push edx
     push esi
-;
-    call HandleToPartEs
-    jc rffDone
 ;
     call GetFileReq
     jc rffDone

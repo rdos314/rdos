@@ -471,7 +471,7 @@ LocalReqFile Proc near
     je lrfReply
 ;
     and [edi].fc_eflags,NOT 1
-    mov ebx,[edi].fc_handle
+    mov ebx,eax
     ReplyVfsFile
     jmp lrfDone
 
