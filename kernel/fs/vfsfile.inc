@@ -61,6 +61,8 @@ fse_info          DB 1000h DUP(?)
 fse_sector_size   DW ?
 fse_req_count     DW ?
 fse_insert        DW ?
+fse_pend_list     DW ?
+fse_section       section_typ <>
 fse_pad           DW ?
 
 fse_user_arr      DD MAX_FILE_USERS DUP(?)

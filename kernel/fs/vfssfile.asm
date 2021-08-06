@@ -301,7 +301,9 @@ AllocateFileSel    Proc near
 ;
     mov es:fse_sector_size,cx
     mov es:fse_req_count,0
+    mov es:fse_pend_list,0
     mov es:fse_insert,SIZE file_entry
+    InitSection es:fse_section
 ;
     mov edi,OFFSET fse_user_arr
     xor ax,ax
