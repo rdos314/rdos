@@ -66,6 +66,23 @@ fre_arr            DD ?,?
 
 file_req_entry    ENDS
 
+file_entry    STRUC
+
+fse_info          DB 1000h DUP(?)  ; aliased file info
+
+fse_sector_size   DW ?
+fse_req_count     DW ?
+fse_insert        DW ?
+fse_pend_list     DW ?
+fse_section       section_typ <>
+fse_pad           DW ?
+
+fse_user_arr      DD MAX_FILE_USERS DUP(?)
+fse_req_arr       DW MAX_FILE_REQ_COUNT DUP(?,?)
+fse_sorted_arr    DW MAX_FILE_REQ_COUNT DUP(?)
+
+file_entry    ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -78,6 +95,84 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern HandleHighToPartFs:near
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateFileSel
+;
+;       DESCRIPTION:    Create file selector
+;
+;       PARAMETERS:     CX             Sector size
+;                       EDX            File info linear
+;
+;       RETURNS:        NC
+;                         AX           File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateFileSel
+
+CreateFileSel    Proc near
+    push es
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    GetPageEntry
+    push eax
+    push ebx
+;
+    or ax,800h
+    SetPageEntry
+;
+    push ecx
+    mov eax,10000h
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,10000h
+    CreateDataSelector32
+    pop ecx
+;
+    mov es,ebx
+;
+    pop ebx
+    pop eax
+    and ax,0F000h
+    or ax,63h
+    SetPageEntry
+;
+    mov es:fse_sector_size,cx
+    mov es:fse_req_count,0
+    mov es:fse_pend_list,0
+    mov es:fse_insert,SIZE file_entry
+    InitSection es:fse_section
+;
+    mov edi,OFFSET fse_user_arr
+    xor ax,ax
+    mov ecx,MAX_FILE_USERS
+    rep stosw
+;
+    mov edi,OFFSET fse_req_arr
+    xor ax,ax
+    mov ecx,MAX_FILE_REQ_COUNT
+    rep stosw
+;
+    mov edi,OFFSET fse_sorted_arr
+    xor ax,ax
+    mov ecx,MAX_FILE_REQ_COUNT
+    rep stosw
+;
+    mov eax,es
+;
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+CreateFileSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

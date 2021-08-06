@@ -58,6 +58,7 @@ code    SEGMENT byte public 'CODE'
     extern GetCmdData:near
     extern NotifyFileReply:near
     extern NotifyErrorReply:near
+    extern CreateFileSel:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -257,82 +258,6 @@ AddFileData     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AllocateFileSel
-;
-;       DESCRIPTION:    Allocate file selector
-;
-;       PARAMETERS:     CX             Sector size
-;                       EDX            File info linear
-;
-;       RETURNS:        NC
-;                         AX           File sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateFileSel    Proc near
-    push es
-    push ebx
-    push ecx
-    push edx
-    push edi
-;
-    GetPageEntry
-    push eax
-    push ebx
-;
-    or ax,800h
-    SetPageEntry
-;
-    push ecx
-    mov eax,10000h
-    AllocateBigLinear
-    AllocateGdt
-    mov ecx,10000h
-    CreateDataSelector32
-    pop ecx
-;
-    mov es,ebx
-;
-    pop ebx
-    pop eax
-    and ax,0F000h
-    or ax,63h
-    SetPageEntry
-;
-    mov es:fse_sector_size,cx
-    mov es:fse_req_count,0
-    mov es:fse_pend_list,0
-    mov es:fse_insert,SIZE file_entry
-    InitSection es:fse_section
-;
-    mov edi,OFFSET fse_user_arr
-    xor ax,ax
-    mov ecx,MAX_FILE_USERS
-    rep stosw
-;
-    mov edi,OFFSET fse_req_arr
-    xor ax,ax
-    mov ecx,MAX_FILE_REQ_COUNT
-    rep stosw
-;
-    mov edi,OFFSET fse_sorted_arr
-    xor ax,ax
-    mov ecx,MAX_FILE_REQ_COUNT
-    rep stosw
-;
-    mov eax,es
-;
-    pop edi
-    pop edx
-    pop ecx
-    pop ebx
-    pop es
-    ret
-AllocateFileSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AllocateFileHandle
 ;
 ;       DESCRIPTION:    Allocate file handle
@@ -363,7 +288,7 @@ AllocateFileHandle	Proc near
     jmp afhDone
 
 afhOk:
-    call AllocateFileSel
+    call CreateFileSel
     mov ds:[ebx].ff_sel,ax
 ;
     xor ax,ax

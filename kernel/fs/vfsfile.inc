@@ -54,23 +54,6 @@ fi_name              DB ?
 
 file_info_struc  ENDS
 
-file_entry    STRUC
-
-fse_info          DB 1000h DUP(?)
-
-fse_sector_size   DW ?
-fse_req_count     DW ?
-fse_insert        DW ?
-fse_pend_list     DW ?
-fse_section       section_typ <>
-fse_pad           DW ?
-
-fse_user_arr      DD MAX_FILE_USERS DUP(?)
-fse_req_arr       DW MAX_FILE_REQ_COUNT DUP(?,?)
-fse_sorted_arr    DW MAX_FILE_REQ_COUNT DUP(?)
-
-file_entry    ENDS
-
 file_part_req_struc  STRUC
 
 fr_sel           DW ?
