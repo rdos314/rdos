@@ -55,6 +55,16 @@ fh_vfs_handle    DD ?
 
 file_handle_seg  ENDS
 
+file_req_entry    STRUC
+
+fre_pos            DD ?,?
+fre_size           DD ?
+fre_last_size      DW ?
+fre_pages          DW ?
+fre_arr            DD ?,?
+
+file_req_entry    ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'

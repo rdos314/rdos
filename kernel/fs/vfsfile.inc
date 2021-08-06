@@ -32,23 +32,6 @@ MAX_FILE_USERS       = 256
 FILE_SIGN            = 'F'
 REQ_SIGN             = 'R'
 
-file_req_entry    STRUC
-
-fre_pos            DD ?,?
-fre_size           DD ?
-fre_last_size      DW ?
-fre_pages          DW ?
-fre_arr            DD ?,?
-
-file_req_entry    ENDS
-
-file_req_handle    STRUC
-
-frh_handle        DW ?
-frh_count         DW ?
- 
-file_req_handle    ENDS
-
 
 ; shared with server user code!
 
@@ -85,16 +68,6 @@ fse_req_arr       DW MAX_FILE_REQ_COUNT DUP(?,?)
 fse_sorted_arr    DW MAX_FILE_REQ_COUNT DUP(?)
 
 file_entry    ENDS
-
-; must be 16 bytes!
-
-file_req_struc   STRUC
-
-fr_pos           DD ?,?
-fr_size          DD ?
-fr_handle        DD ?
-
-file_req_struc   ENDS
 
 file_part_req_struc  STRUC
 
