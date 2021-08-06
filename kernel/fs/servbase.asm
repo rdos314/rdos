@@ -525,6 +525,8 @@ wfmLoop:
     mov edx,[edi].fc_edx
     shl ebp,2
     call dword ptr [ebp].msgtab
+;
+    pop ebx
     jmp wfmLoop
 
 wfmDone:
