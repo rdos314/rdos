@@ -678,13 +678,39 @@ hfdLoop:
     mov ds:[ebp].frh_entries,bx
     jmp hfdLoop
 
-hfdTruncate:
-    int 3
-
 hfdCheckLast:
     cmp ds:[ebx].fre_last_size,0
     jz hfdSave
 ;
+    cmp ds:[ebx].fre_pages,2
+    jbe hfdSave
+;
+    push eax
+    push edx
+;
+    xor dx,dx
+    mov ax,ds:[ebx].fre_last_size
+    div ds:fse_sector_size
+    movzx ecx,ax
+;
+    pop edx
+    pop eax
+;
+    push esi
+;
+    movzx esi,ds:[ebx].fre_last_size
+    sub ds:[ebx].fre_size,esi
+    sub eax,esi
+    sbb edx,0
+;
+    pop esi
+;
+    mov ds:[ebx].fre_last_size,0
+    dec ds:[ebx].fre_pages
+    sub esi,8
+
+hfdTruncate:
+    int 3
 
 hfdSave:
     sub eax,ds:[ebp].frh_pos
