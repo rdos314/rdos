@@ -200,7 +200,6 @@ open_vfs_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetFileBlock   Proc near
-    push fs
     push eax
     push ebx
 ;
@@ -226,7 +225,6 @@ GetFileBlock   Proc near
 gfbDone:
     pop ebx
     pop eax
-    pop fs
     ret
 GetFileBlock  Endp
 
@@ -268,7 +266,7 @@ TryRead   Endp
 ;
 ;       DESCRIPTION:    Add file req
 ;
-;       PARAMETERS:     FS             VFS sel
+;       PARAMETERS:     FS             Part sel
 ;                       GS             File block
 ;                       EDX:EAX        Position
 ;                       ECX            Size
@@ -338,7 +336,6 @@ rvfTry:
     int 3
 
 rvfReq:
-    mov fs,ds:[ebx].fh_vfs_sel
     call AddFileReq
     jnc rvfTry
 
@@ -524,6 +521,7 @@ HandleFileData	Proc near
     push eax
     mov eax,ebx
     mov ebx,es:[edi]
+    add edi,4
 ;
     shr ebx,16
     cmp bl,REQ_SIGN

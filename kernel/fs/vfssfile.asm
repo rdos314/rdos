@@ -718,7 +718,7 @@ CopySectors    Endp
 ;                       EDX             Data
 ;                       EAX             Min MSB
 ;                       EBX             Max MSB
-;                       EBP             File handle
+;                       ESI             File handle
 ;
 ;       RETURNS:        ES              Req sel
 ;
@@ -749,7 +749,7 @@ CreateReqSel Proc near
     pop ebx
     pop eax
 ;
-    mov es:vfs_rd_file_handle,ebp
+    mov es:vfs_rd_file_handle,esi
     mov es:vfs_rd_start_msb,eax
     sub ebx,eax
     inc ebx
@@ -1355,7 +1355,7 @@ serv_add_file_req    Proc far
     cmc
     jc safLeave
 ;
-    mov ebp,ebx
+    mov esi,ebx
     movzx ebx,bx
     call AllocateFileReq
     jc safLeave
