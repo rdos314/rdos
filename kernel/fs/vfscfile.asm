@@ -56,6 +56,18 @@ fh_file_sel      DW ?
 
 file_handle_seg  ENDS
 
+file_req_header    STRUC
+
+frh_pos            DD ?,?
+frh_size           DD ?
+frh_req_handle     DD ?
+frh_entry_size     DW ?
+frh_entries        DW ?
+frh_next           DW ?
+frh_pad            DW ?
+
+file_req_header    ENDS
+
 file_req_entry    STRUC
 
 fre_pos            DD ?,?
@@ -66,7 +78,7 @@ fre_arr            DD ?,?
 
 file_req_entry    ENDS
 
-file_entry    STRUC
+file_struc    STRUC
 
 fse_info          DB 1000h DUP(?)  ; aliased file info
 
@@ -81,7 +93,7 @@ fse_user_arr      DD MAX_FILE_USERS DUP(?)
 fse_req_arr       DW MAX_FILE_REQ_COUNT DUP(?,?)
 fse_sorted_arr    DW MAX_FILE_REQ_COUNT DUP(?)
 
-file_entry    ENDS
+file_struc    ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -146,7 +158,7 @@ CreateFileSel    Proc near
     mov es:fse_sector_size,cx
     mov es:fse_req_count,0
     mov es:fse_pend_list,0
-    mov es:fse_insert,SIZE file_entry
+    mov es:fse_insert,SIZE file_struc
     InitSection es:fse_section
 ;
     mov edi,OFFSET fse_user_arr
@@ -607,15 +619,15 @@ HandleFileData	Proc near
     cmc
     jc hfdDone
 ;
-    movzx eax,bx
-    dec eax
-    shl eax,2
-    mov ax,fs:[eax].vfsp_file_arr.ff_sel
-    or ax,ax
+    movzx ecx,bx
+    dec ecx
+    shl ecx,2
+    mov cx,fs:[ecx].vfsp_file_arr.ff_sel
+    or cx,cx
     stc
     je hfdDone
 ;
-    mov ds,eax
+    mov ds,ecx
     mov ecx,ebx
     shr ecx,24
     mov ebx,es:[edi]
@@ -641,6 +653,31 @@ HandleFileData	Proc near
     jz hfdDone
 ;
     EnterSection ds:fse_section
+    movzx esi,ds:fse_insert
+    mov ebp,esi
+    mov ds:[ebp].frh_pos,eax
+    mov ds:[ebp].frh_pos+4,edx
+    mov ds:[ebp].frh_req_handle,ebx
+    mov ds:[ebp].frh_entries,0
+    add esi,SIZE file_req_header
+
+hfdLoop:
+    call AddOneEntry
+    inc ds:[ebp].frh_entries
+    or ecx,ecx
+    jnz hfdLoop
+;
+    sub eax,ds:[ebp].frh_pos
+    mov ds:[ebp].frh_size,eax
+;
+    mov ds:fse_insert,si
+    sub esi,ebp
+    mov ds:[ebp].frh_entry_size,si
+;
+    mov ax,ds:fse_pend_list
+    mov ds:[ebp].frh_next,ax
+    mov ds:fse_pend_list,bp
+;
     LeaveSection ds:fse_section
 
 hfdDone:
