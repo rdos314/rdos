@@ -470,7 +470,6 @@ read_vfs_file32  Endp
 ;                       ES:EDI      Sector data
 ;                       EDX:EAX     Start position
 ;                       ECX         Sector count
-;                       EBX         Sector size
 ;
 ;       RETURNS:        DS:ESI      Updated
 ;                       ES:EDI      Updated
@@ -483,6 +482,7 @@ AddOneEntry	Proc near
     push ebx
     push ebp
 ;
+    movzx ebx,ds:fse_sector_size
     push eax
     push edx
 ;
