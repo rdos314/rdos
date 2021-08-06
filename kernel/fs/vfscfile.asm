@@ -44,6 +44,17 @@ include vfsfile.inc
 
     .386p
 
+file_handle_seg  STRUC
+
+fh_base          handle_header <>
+
+fh_pos           DD ?,?
+fh_attrib        DD ?
+fh_vfs_sel       DW ?
+fh_vfs_handle    DD ?
+
+file_handle_seg  ENDS
+
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
 code    SEGMENT byte public 'CODE'
@@ -181,9 +192,10 @@ open_vfs_file32  Endp
 ;
 ;       DESCRIPTION:    Get file block
 ;
-;       PARAMETERS:     DS:EBX             File handle
+;       PARAMETERS:     EBX                File handle
 ;
-;       RETURNS:        GS                 File block
+;       RETURNS:        FS                 Part sel
+;                       GS                 File block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -193,7 +205,6 @@ GetFileBlock   Proc near
     push ebx
 ;
     mov al,FILE_SIGN
-    mov ebx,ds:[ebx].fh_vfs_handle
     call HandleHighToPartFs
     jc gfbDone
 ;
@@ -312,7 +323,10 @@ read_vfs_file    Proc near
     DerefHandle
     jc rvfDone
 ;
+    push ebx
+    mov ebx,ds:[ebx].fh_vfs_handle
     call GetFileBlock
+    pop ebx
     jc rvfDone
 
 rvfTry:
@@ -495,6 +509,8 @@ AddOneEntry     Endp
 HandleFileData	Proc near
     push ds
     push es
+    push fs
+    push gs
     push eax
     push ebx
     push esi
@@ -502,23 +518,37 @@ HandleFileData	Proc near
 ;
     mov ebx,es:[edi]
     add edi,4
+    call GetFileBlock
+    jc hfdDone
+;
+    push eax
+    mov eax,ebx
+    mov ebx,es:[edi]
+;
+    shr ebx,16
+    cmp bl,REQ_SIGN
+    stc
+    jne hfdDone
+;
+    shr eax,24
+    cmp al,bh
+    stc
+    jne hfdDone
+;
     mov ecx,es:[edi]
     add edi,4
 ;
     or ecx,ecx
     clc
     jz hfdDone
-;
-    mov al,REQ_SIGN
-    call HandleHighToPartFs
-    jc hfdDone
-;
 
 hfdDone:
     pop edi
     pop esi
     pop ebx
     pop eax
+    pop gs
+    pop fs
     pop es
     pop ds
     ret

@@ -86,17 +86,6 @@ fse_sorted_arr    DW MAX_FILE_REQ_COUNT DUP(?)
 
 file_entry    ENDS
 
-file_handle_seg  STRUC
-
-fh_base          handle_header <>
-
-fh_pos           DD ?,?
-fh_attrib        DD ?
-fh_vfs_sel       DW ?
-fh_vfs_handle    DD ?
-
-file_handle_seg  ENDS
-
 ; must be 16 bytes!
 
 file_req_struc   STRUC

@@ -184,7 +184,11 @@ AddFileData	Proc near
     push edi
     push ebp
 ;
-    mov eax,fs:vfs_rd_handle
+    mov eax,fs:vfs_rd_file_handle
+    mov ds:[edi],eax
+    add edi,4
+;
+    mov eax,fs:vfs_rd_req_handle
     mov ds:[edi],eax
     add edi,4
 ;
@@ -714,6 +718,7 @@ CopySectors    Endp
 ;                       EDX             Data
 ;                       EAX             Min MSB
 ;                       EBX             Max MSB
+;                       EBP             File handle
 ;
 ;       RETURNS:        ES              Req sel
 ;
@@ -744,6 +749,7 @@ CreateReqSel Proc near
     pop ebx
     pop eax
 ;
+    mov es:vfs_rd_file_handle,ebp
     mov es:vfs_rd_start_msb,eax
     sub ebx,eax
     inc ebx
@@ -1349,6 +1355,7 @@ serv_add_file_req    Proc far
     cmc
     jc safLeave
 ;
+    mov ebp,ebx
     movzx ebx,bx
     call AllocateFileReq
     jc safLeave
@@ -1368,7 +1375,7 @@ serv_add_file_req    Proc far
 ;
     mov es:vfs_rd_start,eax
     mov es:vfs_rd_start+4,edx
-    mov es:vfs_rd_handle,0
+    mov es:vfs_rd_req_handle,0
     mov es:vfs_rd_req_sel,0
 ;
     mov eax,es
@@ -1390,7 +1397,7 @@ serv_add_file_req    Proc far
     shr ebp,2
     inc ebp
     or eax,ebp
-    mov es:vfs_rd_handle,eax
+    mov es:vfs_rd_req_handle,eax
     clc
     jmp safLeave
 
