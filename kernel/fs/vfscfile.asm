@@ -510,6 +510,7 @@ HandleFileData	Proc near
     push gs
     push eax
     push ebx
+    push ecx
     push esi
     push edi
 ;
@@ -518,18 +519,20 @@ HandleFileData	Proc near
     call GetFileBlock
     jc hfdDone
 ;
-    push eax
-    mov eax,ebx
+    mov ecx,ebx
+    shr ecx,24
     mov ebx,es:[edi]
     add edi,4
 ;
+    push ebx
     shr ebx,16
+    mov ch,bh
     cmp bl,REQ_SIGN
+    pop ebx
     stc
     jne hfdDone
 ;
-    shr eax,24
-    cmp al,bh
+    cmp cl,ch
     stc
     jne hfdDone
 ;
@@ -543,6 +546,7 @@ HandleFileData	Proc near
 hfdDone:
     pop edi
     pop esi
+    pop ecx
     pop ebx
     pop eax
     pop gs
