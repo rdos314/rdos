@@ -485,9 +485,6 @@ AddOneEntry     Endp
 ;
 ;       PARAMETERS:     ES:EDI      Sector data
 ;                       EDX:EAX     Start position
-;                       BX          Req handle
-;                       ECX         Sector count
-;                       ESI         Sector size
 ;
 ;       RETURNS:        EBP         Data
 ;
@@ -503,33 +500,19 @@ HandleFileData	Proc near
     push esi
     push edi
 ;
-    mov ebp,ebx
-    dec ebp
-    shl ebp,2
-;    add ebp,OFFSET fs_handle_arr
+    mov ebx,es:[edi]
+    add edi,4
+    mov ecx,es:[edi]
+    add edi,4
 ;
-;    mov bx,vfs_file_sel
-;    mov ds,bx
-;    EnterSection ds:fs_section
-;    mov bx,ds:[ebp].fse_file_sel
-;    LeaveSection ds:fs_section
-    or bx,bx
-    stc
-    jz hfdDone
-;
-    mov ds,bx
-    movzx esi,ds:fse_insert
-
-hfdLoop:
     or ecx,ecx
     clc
     jz hfdDone
 ;
-    call AddOneEntry
-    mov ds:fse_insert,si
-    jmp hfdLoop
+    mov al,REQ_SIGN
+    call HandleHighToPartFs
+    jc hfdDone
 ;
-    clc
 
 hfdDone:
     pop edi
