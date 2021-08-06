@@ -595,6 +595,7 @@ AddOneEntry     Endp
 ;                       EDX:EAX     Start position
 ;
 ;       RETURNS:        EBP         Data
+;                       ECX         Number of sectors to discard
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -605,7 +606,6 @@ HandleFileData	Proc near
     push fs
     push eax
     push ebx
-    push ecx
     push esi
     push edi
 ;
@@ -616,11 +616,11 @@ HandleFileData	Proc near
     mov al,FILE_SIGN
     call HandleHighToPartFs
     pop eax
-    jc hfdDone
+    jc hfdFail
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
     cmc
-    jc hfdDone
+    jc hfdFail
 ;
     movzx ecx,bx
     dec ecx
@@ -628,7 +628,7 @@ HandleFileData	Proc near
     mov cx,fs:[ecx].vfsp_file_arr.ff_sel
     or cx,cx
     stc
-    je hfdDone
+    je hfdFail
 ;
     mov ds,ecx
     mov ecx,ebx
@@ -645,8 +645,7 @@ HandleFileData	Proc near
     jne hfdDone
 ;
     cmp cl,ch
-    stc
-    jne hfdDone
+    jne hfdFail
 ;
     mov ecx,es:[edi]
     add edi,4
@@ -672,10 +671,10 @@ hfdLoop:
 ;
     mov bx,ds:[ebp].frh_entries
     inc bx
-    cmp bx,MAX_FILE_REQ_ENTRIES
-    je hfdTruncate
-;
     mov ds:[ebp].frh_entries,bx
+    cmp bx,MAX_FILE_REQ_ENTRIES
+    je hfdSave
+;
     jmp hfdLoop
 
 hfdCheckLast:
@@ -709,9 +708,6 @@ hfdCheckLast:
     dec ds:[ebx].fre_pages
     sub esi,8
 
-hfdTruncate:
-    int 3
-
 hfdSave:
     sub eax,ds:[ebp].frh_pos
     mov ds:[ebp].frh_size,eax
@@ -725,11 +721,16 @@ hfdSave:
     mov ds:fse_pend_list,ebp
 ;
     LeaveSection ds:fse_section
+    clc
+    jmp hfdDone
+
+hfdFail:
+    xor ecx,ecx
+    stc
 
 hfdDone:
     pop edi
     pop esi
-    pop ecx
     pop ebx
     pop eax
     pop fs
