@@ -44,6 +44,10 @@ include vfsfile.inc
 
     .386p
 
+MAX_FILE_REQ_ENTRIES = 8
+MAX_FILE_REQ_COUNT   = 64
+MAX_FILE_USERS       = 256
+
 file_handle_seg  STRUC
 
 fh_base          handle_header <>
@@ -63,8 +67,7 @@ frh_size           DD ?
 frh_req_handle     DD ?
 frh_entry_size     DW ?
 frh_entries        DW ?
-frh_next           DW ?
-frh_pad            DW ?
+frh_next           DD ?
 
 file_req_header    ENDS
 
@@ -82,10 +85,10 @@ file_struc    STRUC
 
 fse_info          DB 1000h DUP(?)  ; aliased file info
 
+fse_insert        DD ?
+fse_pend_list     DD ?
 fse_sector_size   DW ?
 fse_req_count     DW ?
-fse_insert        DW ?
-fse_pend_list     DW ?
 fse_section       section_typ <>
 fse_pad           DW ?
 
@@ -653,7 +656,7 @@ HandleFileData	Proc near
     jz hfdDone
 ;
     EnterSection ds:fse_section
-    movzx esi,ds:fse_insert
+    mov esi,ds:fse_insert
     mov ebp,esi
     mov ds:[ebp].frh_pos,eax
     mov ds:[ebp].frh_pos+4,edx
@@ -662,21 +665,38 @@ HandleFileData	Proc near
     add esi,SIZE file_req_header
 
 hfdLoop:
+    mov ebx,esi
     call AddOneEntry
-    inc ds:[ebp].frh_entries
     or ecx,ecx
-    jnz hfdLoop
+    jz hfdCheckLast
 ;
+    mov bx,ds:[ebp].frh_entries
+    inc bx
+    cmp bx,MAX_FILE_REQ_ENTRIES
+    je hfdTruncate
+;
+    mov ds:[ebp].frh_entries,bx
+    jmp hfdLoop
+
+hfdTruncate:
+    int 3
+
+hfdCheckLast:
+    cmp ds:[ebx].fre_last_size,0
+    jz hfdSave
+;
+
+hfdSave:
     sub eax,ds:[ebp].frh_pos
     mov ds:[ebp].frh_size,eax
 ;
-    mov ds:fse_insert,si
+    mov ds:fse_insert,esi
     sub esi,ebp
     mov ds:[ebp].frh_entry_size,si
 ;
-    mov ax,ds:fse_pend_list
-    mov ds:[ebp].frh_next,ax
-    mov ds:fse_pend_list,bp
+    mov eax,ds:fse_pend_list
+    mov ds:[ebp].frh_next,eax
+    mov ds:fse_pend_list,ebp
 ;
     LeaveSection ds:fse_section
 

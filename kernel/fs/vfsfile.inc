@@ -25,10 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MAX_FILE_REQ_ENTRIES = 8
-MAX_FILE_REQ_COUNT   = 64
-MAX_FILE_USERS       = 256
-
 FILE_SIGN            = 'F'
 REQ_SIGN             = 'R'
 
