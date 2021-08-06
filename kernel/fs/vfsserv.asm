@@ -2764,14 +2764,14 @@ data_reply  Endp
 ;       PARAMETERS:     ES          Msg buf
 ;                       EDX:EAX     Start position
 ;
-;       RETURNS:        EBP         Reply data
+;       RETURNS:        EBP         Reply data ptr
+;                       ECX         Sectors to discard
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 file_reply  Proc near
     push edi
 ;
-    int 3
     mov edi,SIZE fs_cmd
     call HandleFileData
 ;

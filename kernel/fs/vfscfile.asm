@@ -370,6 +370,7 @@ TryRead   Endp
 
 AddFileReq   Proc near
     push ds
+    push es
     push eax
     push ebx
     push edx
@@ -384,6 +385,7 @@ AddFileReq   Proc near
     pop edx
     pop ebx
     pop eax
+    pop es
     pop ds
     ret
 AddFileReq   Endp
