@@ -50,8 +50,9 @@ fh_base          handle_header <>
 
 fh_pos           DD ?,?
 fh_attrib        DD ?
-fh_vfs_sel       DW ?
-fh_vfs_handle    DD ?
+fh_file_handle   DD ?
+fh_part_sel      DW ?
+fh_file_sel      DW ?
 
 file_handle_seg  ENDS
 
@@ -148,15 +149,33 @@ ovfCopyPath:
     call RunMsg
     jc ovfFail
 ;
-    push ebx
+    mov esi,ebx
     push ecx
     mov cx,SIZE file_handle_seg
     AllocateHandle
     pop ecx
-    pop eax
 ;
-    mov [ebx].fh_vfs_sel,fs
-    mov [ebx].fh_vfs_handle,eax
+    push ebx
+    mov ebx,esi
+    mov al,FILE_SIGN
+    call HandleHighToPartFs
+    pop ebx
+    jc ovfFail
+;
+    cmp si,MAX_VFS_FILE_COUNT    
+    cmc
+    jc ovfFail
+;
+    movzx eax,si
+    dec eax
+    shl eax,2
+    mov ax,fs:[eax].vfsp_file_arr.ff_sel
+    or ax,ax
+    je ovfFail
+;
+    mov [ebx].fh_part_sel,fs
+    mov [ebx].fh_file_handle,esi
+    mov [ebx].fh_file_sel,ax
     mov [ebx].fh_attrib,ecx
     mov [ebx].fh_pos,0
     mov [ebx].fh_pos+4,0
@@ -193,50 +212,6 @@ open_vfs_file32  Proc far
     call open_vfs_file
     ret
 open_vfs_file32  Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetFileBlock
-;
-;       DESCRIPTION:    Get file block
-;
-;       PARAMETERS:     EBX                File handle
-;
-;       RETURNS:        FS                 Part sel
-;                       GS                 File block
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetFileBlock   Proc near
-    push eax
-    push ebx
-;
-    mov al,FILE_SIGN
-    call HandleHighToPartFs
-    jc gfbDone
-;
-    cmp bx,MAX_VFS_FILE_COUNT    
-    cmc
-    jc gfbDone
-;
-    movzx ebx,bx
-    dec ebx
-    shl ebx,2
-    mov ax,fs:[ebx].vfsp_file_arr.ff_sel
-    or ax,ax
-    stc
-    je gfbDone
-;
-    mov gs,eax
-    clc
-
-gfbDone:
-    pop ebx
-    pop eax
-    ret
-GetFileBlock  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -277,7 +252,7 @@ TryRead   Endp
 ;       DESCRIPTION:    Add file req
 ;
 ;       PARAMETERS:     FS             Part sel
-;                       GS             File block
+;                       DS             File sel
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
@@ -287,14 +262,16 @@ AddFileReq   Proc near
     push ds
     push eax
     push ebx
+    push edx
 ;
+    mov ebx,ds:fi_serv_handle
     mov ds,fs:vfsp_disc_sel
-    mov ebx,gs:fi_serv_handle
     call AllocateMsg
 ;
     mov eax,VFS_REQ_FILE
     call RunMsg
 ;
+    pop edx
     pop ebx
     pop eax
     pop ds
@@ -322,24 +299,21 @@ read_vfs_file_name       DB 'Read VFS File',0
 read_vfs_file    Proc near
     push ds
     push fs
-    push gs
-    push eax
     push ebx
-    push edx
 ;
     mov ax,VFS_FILE_HANDLE
     DerefHandle
     jc rvfDone
 ;
-    push ebx
-    mov ebx,ds:[ebx].fh_vfs_handle
-    call GetFileBlock
-    pop ebx
-    jc rvfDone
-
-rvfTry:
+    push eax
+    push edx
+;
     mov eax,ds:[ebx].fh_pos
     mov edx,ds:[ebx].fh_pos+4
+    mov fs,ds:[ebx].fh_part_sel
+    mov ds,ds:[ebx].fh_file_sel    
+
+rvfTry:
     call TryRead
     jc rvfReq
 ;
@@ -351,9 +325,12 @@ rvfReq:
 
 rvfDone:
     pop edx
-    pop ebx
     pop eax
-    pop gs
+;
+    mov ds:[ebx].fh_pos,eax
+    mov ds:[ebx].fh_pos+4,edx
+;
+    pop ebx
     pop fs
     pop ds
     ret
@@ -515,9 +492,7 @@ AddOneEntry     Endp
 
 HandleFileData	Proc near
     push ds
-    push es
     push fs
-    push gs
     push eax
     push ebx
     push ecx
@@ -526,9 +501,26 @@ HandleFileData	Proc near
 ;
     mov ebx,es:[edi]
     add edi,4
-    call GetFileBlock
+;
+    push eax
+    mov al,FILE_SIGN
+    call HandleHighToPartFs
+    pop eax
     jc hfdDone
 ;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc hfdDone
+;
+    movzx eax,bx
+    dec eax
+    shl eax,2
+    mov ax,fs:[eax].vfsp_file_arr.ff_sel
+    or ax,ax
+    stc
+    je hfdDone
+;
+    mov ds,eax
     mov ecx,ebx
     shr ecx,24
     mov ebx,es:[edi]
@@ -552,6 +544,9 @@ HandleFileData	Proc near
     or ecx,ecx
     clc
     jz hfdDone
+;
+    EnterSection ds:fse_section
+    LeaveSection ds:fse_section
 
 hfdDone:
     pop edi
@@ -559,9 +554,7 @@ hfdDone:
     pop ecx
     pop ebx
     pop eax
-    pop gs
     pop fs
-    pop es
     pop ds
     ret
 HandleFileData  Endp
