@@ -192,296 +192,6 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           OpenVfsFile
-;
-;       DESCRIPTION:    Open VFS file
-;
-;       PARAMETERS:     ES:(E)DI       Pathname
-;
-;       RETURNS:        NC
-;                         BX           Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_vfs_file_name       DB 'Open VFS File',0
-
-open_vfs_file    Proc near
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
-    push ecx
-    push esi
-    push edi
-    push ebp
-;
-    mov eax,es
-    mov gs,eax
-;
-    call GetPathDrive
-    jc ovfFail
-;
-    call GetDrivePart
-    or bx,bx
-    jz ovfFail
-;
-    mov ah,es:[edi]
-    cmp ah,'/'
-    je ovfRoot
-;
-    cmp ah,'\'
-    je ovfRoot
-
-ovfRel:
-    call GetRelDir
-    jmp ovfHasStart
-
-ovfRoot:
-    inc edi
-    xor ax,ax
-
-ovfHasStart:
-    mov esi,edi
-    mov fs,bx
-    mov ds,fs:vfsp_disc_sel
-;
-    movzx eax,ax
-    call AllocateMsg
-
-ovfCopyPath:
-    lods byte ptr gs:[esi]
-    stosb
-    or al,al
-    jnz ovfCopyPath
-;
-    mov eax,VFS_OPEN_FILE
-    call RunMsg
-    jc ovfFail
-;
-    mov esi,ebx
-    push ecx
-    mov cx,SIZE file_handle_seg
-    AllocateHandle
-    pop ecx
-;
-    push ebx
-    mov ebx,esi
-    mov al,FILE_SIGN
-    call HandleHighToPartFs
-    pop ebx
-    jc ovfFail
-;
-    cmp si,MAX_VFS_FILE_COUNT    
-    cmc
-    jc ovfFail
-;
-    movzx eax,si
-    dec eax
-    shl eax,2
-    mov ax,fs:[eax].vfsp_file_arr.ff_sel
-    or ax,ax
-    je ovfFail
-;
-    mov [ebx].fh_part_sel,fs
-    mov [ebx].fh_file_handle,esi
-    mov [ebx].fh_file_sel,ax
-    mov [ebx].fh_attrib,ecx
-    mov [ebx].fh_pos,0
-    mov [ebx].fh_pos+4,0
-    mov [ebx].hh_sign,VFS_FILE_HANDLE
-    mov bx,[ebx].hh_handle
-    clc
-    jmp ovfDone
-
-ovfFail:
-    stc
-
-ovfDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop ecx
-    pop eax
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    ret
-open_vfs_file    Endp
-
-open_vfs_file16  Proc far
-    push edi
-    movzx edi,di
-    call open_vfs_file
-    pop edi
-    ret
-open_vfs_file16  Endp
-
-open_vfs_file32  Proc far
-    call open_vfs_file
-    ret
-open_vfs_file32  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           TryRead
-;
-;       DESCRIPTION:    Try to read block
-;
-;       PARAMETERS:     GS             File block
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;       RETURNS:        NC
-;                         EAX          Read size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TryRead   Proc near
-    push ecx
-;
-    mov ecx,0
-    or ecx,ecx 
-    stc
-    jz trDone
-;
-    int 3
-
-trDone:
-    pop ecx
-    ret
-TryRead   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddFileReq
-;
-;       DESCRIPTION:    Add file req
-;
-;       PARAMETERS:     FS             Part sel
-;                       DS             File sel
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddFileReq   Proc near
-    push es
-    push eax
-    push ebx
-    push edx
-;
-    push ds
-    mov ebx,ds:fi_serv_handle
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-;
-    mov eax,VFS_REQ_FILE
-    call RunMsg
-    pop ds
-    jc afrDone
-;
-    or ecx,ecx
-    clc
-    jz afrDone
-;
-    push ds
-    mov ebx,ds:[ebp].frh_req_handle
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-;
-    mov eax,VFS_SHRINK_REQ
-    call RunMsg
-    pop ds
-
-afrDone:
-    pop edx
-    pop ebx
-    pop eax
-    pop es
-    ret
-AddFileReq   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           ReadVfsFile
-;
-;       DESCRIPTION:    Read VFS file
-;
-;       PARAMETERS:     BX             Handle
-;                       ES:(E)DI       Buffer
-;                       (E)CX          Size
-;
-;       RETURNS:        NC
-;                         EAX          Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_vfs_file_name       DB 'Read VFS File',0
-
-read_vfs_file    Proc near
-    push ds
-    push fs
-    push ebx
-;
-    mov ax,VFS_FILE_HANDLE
-    DerefHandle
-    jc rvfDone
-;
-    push eax
-    push edx
-;
-    mov eax,ds:[ebx].fh_pos
-    mov edx,ds:[ebx].fh_pos+4
-    mov fs,ds:[ebx].fh_part_sel
-    mov ds,ds:[ebx].fh_file_sel    
-
-rvfTry:
-    call TryRead
-    jc rvfReq
-;
-    int 3
-
-rvfReq:
-    call AddFileReq
-    jnc rvfTry
-
-rvfDone:
-    pop edx
-    pop eax
-;
-    mov ds:[ebx].fh_pos,eax
-    mov ds:[ebx].fh_pos+4,edx
-;
-    pop ebx
-    pop fs
-    pop ds
-    ret
-read_vfs_file    Endp
-
-read_vfs_file16  Proc far
-    push ecx
-    push edi
-    movzx ecx,cx
-    movzx edi,di
-    call read_vfs_file
-    pop edi
-    pop ecx
-    ret
-read_vfs_file16  Endp
-
-read_vfs_file32  Proc far
-    call read_vfs_file
-    ret
-read_vfs_file32  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddOneEntry
 ;
 ;       DESCRIPTION:    Add one file req entry
@@ -754,6 +464,307 @@ hfdDone:
     pop ds
     ret
 HandleFileData  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenVfsFile
+;
+;       DESCRIPTION:    Open VFS file
+;
+;       PARAMETERS:     ES:(E)DI       Pathname
+;
+;       RETURNS:        NC
+;                         BX           Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_vfs_file_name       DB 'Open VFS File',0
+
+open_vfs_file    Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov gs,eax
+;
+    call GetPathDrive
+    jc ovfFail
+;
+    call GetDrivePart
+    or bx,bx
+    jz ovfFail
+;
+    mov ah,es:[edi]
+    cmp ah,'/'
+    je ovfRoot
+;
+    cmp ah,'\'
+    je ovfRoot
+
+ovfRel:
+    call GetRelDir
+    jmp ovfHasStart
+
+ovfRoot:
+    inc edi
+    xor ax,ax
+
+ovfHasStart:
+    mov esi,edi
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    movzx eax,ax
+    call AllocateMsg
+
+ovfCopyPath:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz ovfCopyPath
+;
+    mov eax,VFS_OPEN_FILE
+    call RunMsg
+    jc ovfFail
+;
+    mov esi,ebx
+    push ecx
+    mov cx,SIZE file_handle_seg
+    AllocateHandle
+    pop ecx
+;
+    push ebx
+    mov ebx,esi
+    mov al,FILE_SIGN
+    call HandleHighToPartFs
+    pop ebx
+    jc ovfFail
+;
+    cmp si,MAX_VFS_FILE_COUNT    
+    cmc
+    jc ovfFail
+;
+    movzx eax,si
+    dec eax
+    shl eax,2
+    mov ax,fs:[eax].vfsp_file_arr.ff_sel
+    or ax,ax
+    je ovfFail
+;
+    mov [ebx].fh_part_sel,fs
+    mov [ebx].fh_file_handle,esi
+    mov [ebx].fh_file_sel,ax
+    mov [ebx].fh_attrib,ecx
+    mov [ebx].fh_pos,0
+    mov [ebx].fh_pos+4,0
+    mov [ebx].hh_sign,VFS_FILE_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+    jmp ovfDone
+
+ovfFail:
+    stc
+
+ovfDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+open_vfs_file    Endp
+
+open_vfs_file16  Proc far
+    push edi
+    movzx edi,di
+    call open_vfs_file
+    pop edi
+    ret
+open_vfs_file16  Endp
+
+open_vfs_file32  Proc far
+    call open_vfs_file
+    ret
+open_vfs_file32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           TryRead
+;
+;       DESCRIPTION:    Try to read block
+;
+;       PARAMETERS:     GS             File block
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;       RETURNS:        NC
+;                         EAX          Read size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TryRead   Proc near
+    push ecx
+;
+    mov ecx,0
+    or ecx,ecx 
+    stc
+    jz trDone
+;
+    int 3
+
+trDone:
+    pop ecx
+    ret
+TryRead   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddFileReq
+;
+;       DESCRIPTION:    Add file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddFileReq   Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push ebp
+;
+    push ds
+    mov ebx,ds:fi_serv_handle
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+;
+    mov eax,VFS_REQ_FILE
+    call RunMsg
+    pop ds
+    jc afrDone
+;
+    or ecx,ecx
+    clc
+    jz afrAdd
+;
+    push ds
+    push ebp
+;
+    mov ebx,ds:[ebp].frh_req_handle
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+;
+    mov eax,VFS_SHRINK_REQ
+    call RunMsg
+;
+    pop ebp
+    pop ds
+    
+afrAdd:
+    clc
+
+afrDone:
+    pop ebp
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+AddFileReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadVfsFile
+;
+;       DESCRIPTION:    Read VFS file
+;
+;       PARAMETERS:     BX             Handle
+;                       ES:(E)DI       Buffer
+;                       (E)CX          Size
+;
+;       RETURNS:        NC
+;                         EAX          Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_vfs_file_name       DB 'Read VFS File',0
+
+read_vfs_file    Proc near
+    push ds
+    push fs
+    push ebx
+;
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    jc rvfDone
+;
+    push eax
+    push edx
+;
+    mov eax,ds:[ebx].fh_pos
+    mov edx,ds:[ebx].fh_pos+4
+    mov fs,ds:[ebx].fh_part_sel
+    mov ds,ds:[ebx].fh_file_sel    
+
+rvfTry:
+    call TryRead
+    jc rvfReq
+;
+    int 3
+
+rvfReq:
+    call AddFileReq
+    jnc rvfTry
+
+rvfDone:
+    pop edx
+    pop eax
+;
+    mov ds:[ebx].fh_pos,eax
+    mov ds:[ebx].fh_pos+4,edx
+;
+    pop ebx
+    pop fs
+    pop ds
+    ret
+read_vfs_file    Endp
+
+read_vfs_file16  Proc far
+    push ecx
+    push edi
+    movzx ecx,cx
+    movzx edi,di
+    call read_vfs_file
+    pop edi
+    pop ecx
+    ret
+read_vfs_file16  Endp
+
+read_vfs_file32  Proc far
+    call read_vfs_file
+    ret
+read_vfs_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
