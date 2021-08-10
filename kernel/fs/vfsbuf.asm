@@ -1777,9 +1777,12 @@ hdRead:
     LeaveSection ds:vfs_section
 ;
     push es
+    push edi
     mov es,ds:vfs_req_buf
+    xor edi,edi
     mov bx,ds:vfs_param
     call fword ptr ds:vfs_read
+    pop edi
     pop es
     jc hdFail
 ;

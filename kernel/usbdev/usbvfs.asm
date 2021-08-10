@@ -637,7 +637,7 @@ GetBiosVfs  Endp
 ;       PARAMETERS:     BX          Disc selector
 ;                       ECX         Sector count
 ;                       EDX:EAX     Start sector
-;                       ES          Physical entries
+;                       ES:EDI      Physical entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -691,7 +691,7 @@ rvfsRetry:
     call SendCbw
     jc rvfsFail
 ;
-    xor ebp,ebp
+    mov ebp,edi
 
 rvfsLoop:
     push ecx
@@ -802,7 +802,7 @@ ReadVfs  Endp
 ;       PARAMETERS:     BX          Disc selector
 ;                       CX          Sector count
 ;                       EDX:EAX     Start sector
-;                       ES          Physical entries
+;                       ES:EDI      Physical entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -62,12 +62,12 @@ vfs_get_bios             DD ?,?
 
 ; IN  CX        Sector count
 ; IN  EDX:EAX   Start sector
-; IN  ES        Physical entries
+; IN  ES:EDI    Physical entries
 vfs_read                 DD ?,?
 
 ; IN  CX        Sector count
 ; IN  EDX:EAX   Start sector
-; IN  ES        Physical entries
+; IN  ES:EDI    Physical entries
 vfs_write                DD ?,?
 
 vfs_table_struc   ENDS
@@ -129,10 +129,12 @@ vfs_struc  ENDS
 VFS_PHYS_PRESENT = 1
 VFS_PHYS_VALID   = 2
 VFS_PHYS_USED    = 4
+VFS_PHYS_ERRORS  = 8
 
 VFS_PHYS_PRESENT_BIT  = 0
 VFS_PHYS_VALID_BIT    = 1
 VFS_PHYS_USED_BIT     = 2
+VFS_PHYS_ERRORS_BIT   = 3
 
 vfs_phys_entry   STRUC
 
