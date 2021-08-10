@@ -184,3 +184,9 @@ ServAddVfsFileReq  MACRO
 ReplyVfsFile  MACRO
     ServGate reply_vfs_file_nr
                     ENDM
+
+; IN  EBX              File req handle
+; IN  ECX              Sectors to remove
+ServShrinkVfsFileReq  MACRO
+    ServGate serv_shrink_file_req_nr
+                    ENDM
