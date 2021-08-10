@@ -1348,6 +1348,52 @@ safDone:
 serv_add_file_req    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServShrinkFileReq
+;
+;       DESCRIPTION:    Serv shrink VFS file req
+;
+;       PARAMETERS:     EBX            File req handle
+;                       ECX            Sector count remove
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_shrink_file_req_name       DB 'Serv Shrink File Req',0
+
+serv_shrink_file_req    Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+;
+    mov al,REQ_SIGN
+    call HandleHighToPartFs
+    pop eax
+    jc sfrFail
+;
+    cmp bx,MAX_VFS_FILE_REQ_COUNT    
+    cmc
+    jc sfrFail
+;
+    movzx ebx,bx
+    dec ebx
+    shl ebx,2
+    mov ax,fs:[ebx].vfsp_file_req_arr
+    or ax,ax
+    stc
+    jz sfrFail
+;
+
+sfrFail:
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_shrink_file_req    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server_file
@@ -1373,6 +1419,12 @@ init_server_file    Proc near
     mov edi,OFFSET serv_add_file_req_name
     xor cl,cl
     mov ax,serv_add_file_req_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_shrink_file_req
+    mov edi,OFFSET serv_shrink_file_req_name
+    xor cl,cl
+    mov ax,serv_shrink_file_req_nr
     RegisterServGate
     ret
 init_server_file    Endp

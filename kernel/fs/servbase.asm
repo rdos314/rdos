@@ -495,12 +495,8 @@ LocalReqFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LocalShrinkReq Proc near
-    push edi
-    mov ebx,[edi].fc_ebx
-    mov edx,[edi].fc_edx
-    mov eax,[edi].fc_eax
     mov ecx,[edi].fc_ecx
-    mov esi,[edi].fc_handle
+    mov ebx,[edi].fc_ebx
     ServShrinkVfsFileReq
 ;
     and [edi].fc_eflags,NOT 1
