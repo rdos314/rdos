@@ -67,7 +67,6 @@ frh_size           DD ?
 frh_req_handle     DD ?
 frh_entry_size     DW ?
 frh_entries        DW ?
-frh_next           DD ?
 
 file_req_header    ENDS
 
@@ -81,20 +80,28 @@ fre_arr            DD ?,?
 
 file_req_entry    ENDS
 
+file_req_link  STRUC
+
+frl_pos            DD ?,?
+frl_ptr            DD ?
+frl_link           DD ?
+
+file_req_link  ENDS
+
 file_struc    STRUC
 
 fse_info          DB 1000h DUP(?)  ; aliased file info
 
 fse_insert        DD ?
-fse_pend_list     DD ?
+fse_req_list      DD ?
 fse_sector_size   DW ?
 fse_req_count     DW ?
 fse_section       section_typ <>
 fse_pad           DW ?
 
 fse_user_arr      DD MAX_FILE_USERS DUP(?)
-fse_req_arr       DW MAX_FILE_REQ_COUNT DUP(?,?)
-fse_sorted_arr    DW MAX_FILE_REQ_COUNT DUP(?)
+fse_req_arr       DD MAX_FILE_REQ_COUNT DUP(?,?,?,?)
+fse_sorted_arr    DD MAX_FILE_REQ_COUNT DUP(?)
 
 file_struc    ENDS
 
@@ -160,7 +167,6 @@ CreateFileSel    Proc near
 ;
     mov es:fse_sector_size,cx
     mov es:fse_req_count,0
-    mov es:fse_pend_list,0
     mov es:fse_insert,SIZE file_struc
     InitSection es:fse_section
 ;
@@ -169,10 +175,21 @@ CreateFileSel    Proc near
     mov ecx,MAX_FILE_USERS
     rep stosw
 ;
+    mov ecx,MAX_FILE_REQ_COUNT - 1
     mov edi,OFFSET fse_req_arr
-    xor ax,ax
-    mov ecx,MAX_FILE_REQ_COUNT
-    rep stosw
+    mov es:fse_req_list,edi
+    mov eax,edi
+
+cfsLoop:
+    add eax,16
+    mov es:[edi].frl_link,eax
+    mov es:[edi].frl_ptr,0
+    mov es:[edi].frl_pos,0
+    mov es:[edi].frl_pos+4,0
+    mov edi,eax
+    loop cfsLoop
+;
+    mov es:[edi].frl_link,ecx
 ;
     mov edi,OFFSET fse_sorted_arr
     xor ax,ax
@@ -443,10 +460,6 @@ hfdSave:
     sub esi,ebp
     mov ds:[ebp].frh_entry_size,si
 ;
-    mov eax,ds:fse_pend_list
-    mov ds:[ebp].frh_next,eax
-    mov ds:fse_pend_list,ebp
-;
     LeaveSection ds:fse_section
     clc
     jmp hfdDone
@@ -680,6 +693,22 @@ AddFileReq   Proc near
     pop ds
     
 afrAdd:
+    EnterSection ds:fse_section
+;
+    mov ebx,ds:fse_req_list
+    mov eax,ds:[ebx].frl_link
+    mov ds:fse_req_list,eax
+    mov ds:[ebx].frl_link,0
+;
+    mov eax,ds:[ebp].frh_pos
+    mov ds:[ebx].frl_pos,eax
+;
+    mov eax,ds:[ebp].frh_pos+4
+    mov ds:[ebx].frl_pos+4,eax
+;
+    mov ds:[ebx].frl_ptr,ebp
+;
+    LeaveSection ds:fse_section
     clc
 
 afrDone:
