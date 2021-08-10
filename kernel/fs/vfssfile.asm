@@ -1364,17 +1364,20 @@ serv_shrink_file_req_name       DB 'Serv Shrink File Req',0
 serv_shrink_file_req    Proc far
     push ds
     push fs
+    push gs
     push eax
     push ebx
+    push edx
+    push esi
 ;
     mov al,REQ_SIGN
     call HandleHighToPartFs
     pop eax
-    jc sfrFail
+    jc sfrDone
 ;
     cmp bx,MAX_VFS_FILE_REQ_COUNT    
     cmc
-    jc sfrFail
+    jc sfrDone
 ;
     movzx ebx,bx
     dec ebx
@@ -1382,12 +1385,50 @@ serv_shrink_file_req    Proc far
     mov ax,fs:[ebx].vfsp_file_req_arr
     or ax,ax
     stc
-    jz sfrFail
+    jz sfrDone
 ;
+    mov gs,ax
+    mov ebx,gs:vfs_rd_msb_count
+    dec ebx
+    mov edx,ebx
+    add edx,gs:vfs_rd_start_msb
+;
+    shl ebx,2
 
-sfrFail:
+sfrFindLoop:
+    mov esi,ebx
+    add esi,gs:vfs_rd_msb_ptr
+    cmp ecx,gs:[esi].vfsm_rd_count
+    jbe sfrDo
+;
+    dec edx
+    sub ebx,4
+    jnz sfrFindLoop
+;
+    stc
+    jmp sfrDone
+
+sfrDo:
+    mov ebx,gs:[esi].vfsm_rd_count
+    sub ebx,ecx
+    mov gs:[esi].vfsm_rd_count,ebx
+;
+    shl ebx,2
+    add ebx,gs:[esi].vfsm_rd_ptr
+
+sfrUnlockLoop:
+    mov eax,gs:[ebx] 
+    add ebx,4
+    loop sfrUnlockLoop
+;
+    clc
+
+sfrDone:
+    pop esi
+    pop edx
     pop ebx
     pop eax
+    pop gs
     pop fs
     pop ds
     ret
