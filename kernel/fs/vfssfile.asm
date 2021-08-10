@@ -1363,6 +1363,7 @@ serv_shrink_file_req_name       DB 'Serv Shrink File Req',0
 
 serv_shrink_file_req    Proc far
     push ds
+    push es
     push fs
     push gs
     push eax
@@ -1372,7 +1373,6 @@ serv_shrink_file_req    Proc far
 ;
     mov al,REQ_SIGN
     call HandleHighToPartFs
-    pop eax
     jc sfrDone
 ;
     cmp bx,MAX_VFS_FILE_REQ_COUNT    
@@ -1413,14 +1413,34 @@ sfrDo:
     sub ebx,ecx
     mov gs:[esi].vfsm_rd_count,ebx
 ;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    stc
+    jnz sfrDone
+;
+    mov ds,fs:vfsp_disc_sel
+    mov eax,serv_flat_sel
+    mov es,eax
+    EnterSection ds:vfs_section
+;
     shl ebx,2
     add ebx,gs:[esi].vfsm_rd_ptr
 
 sfrUnlockLoop:
     mov eax,gs:[ebx] 
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz sfrUnlockNext
+;
+    sub es:[esi].vfsp_ref_bitmap,1
+    jnz sfrUnlockNext
+;
+    dec ds:vfs_locked_pages
+
+sfrUnlockNext:
     add ebx,4
     loop sfrUnlockLoop
 ;
+    LeaveSection ds:vfs_section
     clc
 
 sfrDone:
@@ -1430,6 +1450,7 @@ sfrDone:
     pop eax
     pop gs
     pop fs
+    pop es
     pop ds
     ret
 serv_shrink_file_req    Endp
