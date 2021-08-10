@@ -369,24 +369,39 @@ TryRead   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddFileReq   Proc near
-    push ds
     push es
     push eax
     push ebx
     push edx
 ;
+    push ds
     mov ebx,ds:fi_serv_handle
     mov ds,fs:vfsp_disc_sel
     call AllocateMsg
 ;
     mov eax,VFS_REQ_FILE
     call RunMsg
+    pop ds
+    jc afrDone
 ;
+    or ecx,ecx
+    clc
+    jz afrDone
+;
+    push ds
+    mov ebx,ds:[ebp].frh_req_handle
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+;
+    mov eax,VFS_SHRINK_REQ
+    call RunMsg
+    pop ds
+
+afrDone:
     pop edx
     pop ebx
     pop eax
     pop es
-    pop ds
     ret
 AddFileReq   Endp
 

@@ -65,3 +65,8 @@ VFS_OPEN_FILE             = 7
 ; IN  EDX:EAX   File position
 ; IN  ECX       Req size
 VFS_REQ_FILE              = 8
+
+; IN  BX        File req
+; IN  ECX       Size change requested
+VFS_SHRINK_REQ            = 9
+
