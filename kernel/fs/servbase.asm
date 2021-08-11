@@ -486,28 +486,6 @@ LocalReqFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           LocalShrinkReq
-;
-;       DESCRIPTION:    Shrink req
-;
-;       PARAMETERS:     EDI         Msg data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LocalShrinkReq Proc near
-    mov ecx,[edi].fc_ecx
-    mov ebx,[edi].fc_ebx
-    ServShrinkVfsFileReq
-;
-    and [edi].fc_eflags,NOT 1
-    mov ebx,[edi].fc_handle
-    ReplyVfsCmd
-    ret
-LocalShrinkReq Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -528,7 +506,6 @@ m05 DD OFFSET UnlockRelDir
 m06 DD OFFSET GetRelDir
 m07 DD OFFSET LocalOpenFile
 m08 DD OFFSET LocalReqFile
-m09 DD OFFSET LocalShrinkReq
 
 WaitForMsg_    Proc near
     pushad

@@ -93,7 +93,7 @@ code    SEGMENT byte public 'CODE'
     extern SectorCountToBlock:near
     extern InitFilePart:near
     extern GetFileReq:near
-    extern AddFileData:near
+    extern NotifyFileData:near
     extern HandleFileData:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2135,81 +2135,6 @@ wait_for_vfs_cmd  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetCmdData
-;
-;       DESCRIPTION:    Get cmd data offset
-;
-;       RETURNS:        EDI          Cmd data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public GetCmdData
-
-GetCmdData	Proc near
-    mov edi,SIZE fs_cmd
-    ret
-GetCmdData   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           NotifyFileReply
-;
-;       DESCRIPTION:    Notify file reply
-;
-;       PARAMETERS:     DS  		Msg buffer
-;                       ES              Partition
-;                       EDX:EAX         File position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public NotifyFileReply
-
-NotifyFileReply	Proc near
-    mov ds:fc_eax,eax
-    mov ds:fc_edx,edx
-    mov ds:fc_op,REPLY_FILE
-;
-    mov esi,es:vfsp_cmd_curr
-    dec esi
-    shl esi,4
-    add esi,OFFSET vfsp_cmd_arr
-    xor bx,bx
-    xchg bx,es:[esi].vfss_thread
-    Signal
-    ret
-NotifyFileReply Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           NotifyErrorReply
-;
-;       DESCRIPTION:    Notify error reply
-;
-;       PARAMETERS:     DS  		Msg buffer
-;                       ES              Partition
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public NotifyErrorReply
-
-NotifyErrorReply	Proc near
-    or ds:fc_eflags,1
-;
-    mov esi,es:vfsp_cmd_curr
-    dec esi
-    shl esi,4
-    add esi,OFFSET vfsp_cmd_arr
-    xor bx,bx
-    xchg bx,es:[esi].vfss_thread
-    Signal
-    ret
-NotifyErrorReply Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           ReplyVfsCmd
 ;
 ;       DESCRIPTION:    Reply on VFS cmd
@@ -2422,6 +2347,8 @@ reply_vfs_file    Proc far
 ;
     mov esi,es:vfsp_cmd_curr
     dec esi
+    lock bts es:vfsp_cmd_free_mask,esi
+;
     shl esi,4
     add esi,OFFSET vfsp_cmd_arr
     mov bx,es:[esi].vfss_sel
@@ -2436,28 +2363,7 @@ reply_vfs_file    Proc far
     or bx,bx
     jz rffDone
 ;
-    push edi
-    add edi,SIZE fs_cmd
-    call AddFileData
-    pop edi
-    jnc rffOk
-;
-    or ds:[edi].fc_eflags,1
-    jmp rffSignal
-
-rffOk:
-    mov ds:[edi].fc_op,REPLY_FILE
-    mov ds:[edi].fc_eax,eax
-    mov ds:[edi].fc_edx,edx
-
-rffSignal:
-    mov esi,es:vfsp_cmd_curr
-    dec esi
-    shl esi,4
-    add esi,OFFSET vfsp_cmd_arr
-    xor bx,bx
-    xchg bx,es:[esi].vfss_thread
-    Signal
+    call NotifyFileData
 ;
     mov edx,es:[esi].vfss_server_linear
     mov eax,es:[esi].vfss_phys

@@ -55,9 +55,6 @@ code    SEGMENT byte public 'CODE'
     extern HandleHighToPartFs:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
-    extern GetCmdData:near
-    extern NotifyFileReply:near
-    extern NotifyErrorReply:near
     extern CreateFileSel:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -162,21 +159,18 @@ GetFileReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AddFileData
+;       NAME:           NotifyFileData
 ;
-;       DESCRIPTION:    Add file data to reply
+;       DESCRIPTION:    Notify file data
 ;
-;       PARAMETERS:     DS:EDI             Sector buffer
-;                       ES                 Partition
+;       PARAMETERS:     ES                 Partition
 ;                       FS                 File req
-;
-;       RETURNS:        EDX:EAX            File offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public AddFileData
+    public NotifyFileData
 
-AddFileData	Proc near
+NotifyFileData	Proc near
     push ds
     push es
     push gs
@@ -208,16 +202,16 @@ AddFileData	Proc near
     mov edi,fs:vfs_rd_chain_ptr
     mov ecx,fs:vfs_rd_sectors
     or ecx,ecx
-    jz afdOk
+    jz nfdOk
 
-afdLoop:
+nfdLoop:
     mov eax,fs:[edi]
     mov edx,fs:[edi+4]
     call BlockToBuf
-    jc afdFail
+    jc nfdFail
 ;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz afdFail
+    jz nfdFail
 ;
     and eax,7
     shl eax,9
@@ -231,20 +225,20 @@ afdLoop:
 ;
     add edi,8
     add ebp,8
-    loop afdLoop
+    loop nfdLoop
 
-afdOk:
+nfdOk:
     mov eax,fs:vfs_rd_start
     mov edx,fs:vfs_rd_start+4
     movzx esi,ds:vfs_bytes_per_sector
     clc
-    jmp afdDone
+    jmp nfdDone
     
-afdFail:
+nfdFail:
     xor ecx,ecx
     stc
 
-afdDone:
+nfdDone:
     pop ebp
     pop edi
     pop ecx
@@ -253,7 +247,7 @@ afdDone:
     pop es
     pop ds
     ret
-AddFileData     Endp
+NotifyFileData     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -445,30 +439,15 @@ nrqScanLoop:
     push es
     push fs
 ;
-    mov ds,eax
-    call GetCmdData
-;
     mov ebx,fs
     mov es,ebx
     mov ebx,gs
     mov fs,ebx
-    call AddFileData
-    jc nrqNotifyError
+    call NotifyFileData
 ;
-    call NotifyFileReply
-    jmp nrqPop
-
-nrqNotifyError:
-    call NotifyErrorReply
-
-nrqPop:
     pop fs
     pop es
     pop ds
-    jc nrqFree
-;
-
-nrqFree:
     jmp nrqDone
     
 nrqScanNext:
@@ -1350,18 +1329,18 @@ serv_add_file_req    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ServShrinkFileReq
+;       NAME:           ShrinkFileReq
 ;
-;       DESCRIPTION:    Serv shrink VFS file req
+;       DESCRIPTION:    Shrink VFS file req
 ;
 ;       PARAMETERS:     EBX            File req handle
 ;                       ECX            Sector count remove
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-serv_shrink_file_req_name       DB 'Serv Shrink File Req',0
+    public ShrinkFileReq
 
-serv_shrink_file_req    Proc far
+ShrinkFileReq    Proc near
     push ds
     push es
     push fs
@@ -1453,7 +1432,7 @@ sfrDone:
     pop es
     pop ds
     ret
-serv_shrink_file_req    Endp
+ShrinkFileReq    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1481,12 +1460,6 @@ init_server_file    Proc near
     mov edi,OFFSET serv_add_file_req_name
     xor cl,cl
     mov ax,serv_add_file_req_nr
-    RegisterServGate
-;
-    mov esi,OFFSET serv_shrink_file_req
-    mov edi,OFFSET serv_shrink_file_req_name
-    xor cl,cl
-    mov ax,serv_shrink_file_req_nr
     RegisterServGate
     ret
 init_server_file    Endp
