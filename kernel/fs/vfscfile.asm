@@ -430,7 +430,6 @@ arDo:
     LeaveSection ds:fse_section
 ;
     call InsertReq
-    call FindReq
 ;
     push ebx
 ;
@@ -732,12 +731,31 @@ HandleFileData  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyOneEntry
+;
+;       DESCRIPTION:    Notify one file req entry
+;
+;       PARAMETERS:     EDX:EAX     Phyiscal address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nfe_entry    EQU 0
+nfe_ptr      EQU 4
+nfe_curr     EQU 8
+
+NotifyOneEntry	Proc near
+    
+    ret
+NotifyOneEntry  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyFileData
 ;
 ;       DESCRIPTION:    Notify file data
 ;
-;       PARAMETERS:     FS                 Partition
-;                       GS                 File req
+;       PARAMETERS:     GS                 File req
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -746,11 +764,10 @@ HandleFileData  Endp
 NotifyFileData	Proc near
     push ds
     push es
-    push gs
-    push ebx
-    push ecx
-    push edi
-    push ebp
+    push fs
+    pushad
+    sub esp,16
+    mov ebp,esp
 ;
     mov ebx,gs:vfs_rd_file_handle
     mov al,FILE_SIGN
@@ -762,82 +779,83 @@ NotifyFileData	Proc near
     cmc
     jc nfdFail
 ;
-    movzx ecx,bx
-    dec ecx
-    shl ecx,2
-    mov cx,fs:[ecx].vfsp_file_arr.ff_sel
-    or cx,cx
+    movzx ebx,bx
+    dec ebx
+    shl ebx,2
+    mov bx,fs:[ebx].vfsp_file_arr.ff_sel
+    or bx,bx
     stc
     je nfdFail
 ;
-    mov ds,ecx
-
-
-
-    mov ds:[edi],eax
-    add edi,4
+    mov ds,ebx
+    mov eax,gs:vfs_rd_start
+    mov edx,gs:vfs_rd_start+4
+    call FindReq
+    jc nfdFail
 ;
-    mov eax,gs:vfs_rd_req_handle
-    mov ds:[edi],eax
-    add edi,4
-;
-    mov eax,gs:vfs_rd_sectors
-    mov ds:[edi],eax
-    add edi,4
-;
-    mov eax,ds
-    mov gs,eax
-    mov ebp,edi
-;
-    mov ds,es:vfsp_disc_sel
     mov eax,serv_flat_sel
     mov es,eax
 ;
-    mov edi,fs:vfs_rd_chain_ptr
-    mov ecx,fs:vfs_rd_sectors
+    mov edi,gs:vfs_rd_chain_ptr
+    mov ecx,gs:vfs_rd_sectors
     or ecx,ecx
     jz nfdOk
+;
+    EnterSection ds:fse_section
+    mov esi,ds:fse_insert
+    mov ds:[ebx].frl_ptr,esi
+    mov [ebp].nfe_entry,esi
+    mov eax,gs:vfs_rd_file_handle
+    mov ds:[esi].frh_req_handle,eax
+    mov ds:[esi].frh_entries,0
+    add esi,SIZE file_req_header
+    mov [ebp].nfe_ptr,esi
+    xor esi,esi
+    mov [ebp].nfe_curr,esi
+    mov [ebp].nfe_curr+4,esi
 
 nfdLoop:
-    mov eax,fs:[edi]
-    mov edx,fs:[edi+4]
+    push ds
+    mov ds,fs:vfsp_disc_sel
+    mov eax,gs:[edi]
+    mov edx,gs:[edi+4]
     call BlockToBuf
-    jc nfdFail
+    pop ds
+    jc nfdLeaveFail
 ;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz nfdFail
+    jz nfdLeaveFail
 ;
     and eax,7
     shl eax,9
-    mov ebx,es:[esi]
-    and bx,0F000h
-    or eax,ebx
-    movzx ebx,word ptr es:[esi+4]
-;
-    mov gs:[ebp],eax
-    mov gs:[ebp+4],ebx
+    mov edx,es:[esi]
+    and dx,0F000h
+    or eax,edx
+    movzx edx,word ptr es:[esi+4]
+    call NotifyOneEntry
 ;
     add edi,8
-    add ebp,8
     loop nfdLoop
 
 nfdOk:
+    LeaveSection ds:fse_section
     mov eax,fs:vfs_rd_start
     mov edx,fs:vfs_rd_start+4
     movzx esi,ds:vfs_bytes_per_sector
     clc
     jmp nfdDone
+
+nfdLeaveFail:
+    LeaveSection ds:fse_section
     
 nfdFail:
+    int 3
     xor ecx,ecx
     stc
 
 nfdDone:
-    pop ebp
-    pop edi
-    pop ecx
-    pop ebx
-    pop gs
+    popad
+    pop fs
     pop es
     pop ds
     ret
