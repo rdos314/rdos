@@ -238,6 +238,227 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           FindReq
+;
+;       DESCRIPTION:    Find a file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;                       EDX:EAX        Position
+;
+;       RETURNS:        EBX            Req ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindReq	Proc near
+    push esi
+    push edi
+;
+    EnterSection ds:fse_section
+;
+    mov ebx,OFFSET fse_sorted_arr
+    mov esi,MAX_FILE_REQ_COUNT / 2
+
+frLoop:
+    mov edi,ds:[ebx+4*esi]
+    or edi,edi
+    jz frNext
+;
+    cmp edx,ds:[edi].frl_pos+4
+    jb frNext
+    jz frUp
+;
+    cmp eax,ds:[edi].frl_pos
+    jb frNext
+
+frUp:
+    lea ebx,[ebx+4*esi]
+
+frNext:
+    shr esi,1
+    jnz frLoop
+;
+    mov ebx,ds:[ebx]
+    or ebx,ebx
+    jz frFail
+;
+    push eax
+    push edx
+;
+    sub eax,ds:[ebx].frl_pos
+    sbb edx,ds:[ebx].frl_pos+4
+    mov esi,eax
+;
+    pop edx
+    pop eax
+    jnz frFail
+;
+    cmp esi,ds:[ebx].frl_size
+    ja frFail
+;
+    clc
+    jmp frLeave
+
+frFail:
+    stc
+
+frLeave:
+    LeaveSection ds:fse_section
+;
+    pop edi
+    pop esi
+    ret
+FindReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           InsertReq
+;
+;       DESCRIPTION:    Insert a file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;                       EBX            Req ptr
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertReq	Proc near
+    push ecx
+    push esi
+    push edi
+;
+    EnterSection ds:fse_section
+;
+    mov esi,OFFSET fse_sorted_arr
+    mov edi,MAX_FILE_REQ_COUNT / 2
+
+irLoop:
+    mov ecx,ds:[esi+4*edi]
+    or ecx,ecx
+    jz irNext
+;
+    cmp edx,ds:[ecx].frl_pos+4
+    jb irNext
+    jz irUp
+;
+    cmp eax,ds:[ecx].frl_pos
+    jb irNext
+
+irUp:
+    lea esi,[esi+4*edi]
+
+irNext:
+    shr edi,1
+    jnz irLoop
+;
+    push esi
+;
+    sub esi,OFFSET fse_sorted_arr
+    shr esi,2
+    mov ecx,MAX_FILE_REQ_COUNT
+    sub ecx,esi
+    or ecx,ecx
+    jz irSave
+;
+    sub ecx,1
+    jz irSave
+;
+    mov esi,OFFSET fse_sorted_arr + 4 * MAX_FILE_REQ_COUNT - 4
+
+irMove:
+    mov edi,ds:[esi-4]
+    mov ds:[esi],edi
+    sub esi,4
+    loop irMove
+
+irSave:
+    pop esi
+    mov ds:[esi],ebx
+;
+    LeaveSection ds:fse_section
+;
+    pop edi
+    pop esi
+    pop ecx
+    ret
+InsertReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddReq
+;
+;       DESCRIPTION:    Add a file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;       RETURNS:        EBX            Req ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddReq	Proc near
+    push ds
+    push es
+    push eax
+    push esi
+    push edi
+;
+    EnterSection ds:fse_section
+;
+    movzx ebx,ds:fse_req_list
+    or ebx,ebx
+    jnz arDo
+;
+    int 3
+
+arDo:
+    mov di,ds:[ebx].frl_link
+    mov ds:fse_req_list,di
+    mov ds:[ebx].frl_link,0
+;
+    mov ds:[ebx].frl_pos,eax
+    mov ds:[ebx].frl_pos+4,edx
+    mov ds:[ebx].frl_size,ecx
+    mov ds:[ebx].frl_ptr,0
+    mov ds:[ebx].frl_wait_list,0
+    LeaveSection ds:fse_section
+;
+    call InsertReq
+    call FindReq
+;
+    push ebx
+;
+    mov esi,ebx
+    sub esi,OFFSET fse_req_arr
+    shr esi,4
+    inc esi
+;
+    mov ebx,ds:fi_serv_handle
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+;
+    mov eax,VFS_REQ_FILE
+    call PostMsg
+;
+    pop ebx
+;
+    pop edi
+    pop esi
+    pop eax
+    pop es
+    pop ds
+    ret
+AddReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddOneEntry
 ;
 ;       DESCRIPTION:    Add one file req entry
@@ -755,148 +976,6 @@ open_vfs_file32  Proc far
     call open_vfs_file
     ret
 open_vfs_file32  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FindReq
-;
-;       DESCRIPTION:    Find a file req
-;
-;       PARAMETERS:     FS             Part sel
-;                       DS             File sel
-;                       EDX:EAX        Position
-;
-;       RETURNS:        EBX            Req ptr
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindReq	Proc near
-    push esi
-    push edi
-;
-    EnterSection ds:fse_section
-;
-    mov ebx,OFFSET fse_sorted_arr
-    mov esi,MAX_FILE_REQ_COUNT / 2
-
-frLoop:
-    mov edi,ds:[ebx+4*esi]
-    or edi,edi
-    jz frNext
-;
-    cmp edx,ds:[edi].frl_pos+4
-    jb frNext
-    jz frUp
-;
-    cmp eax,ds:[edi].frl_pos
-    jb frNext
-
-frUp:
-    lea ebx,[ebx+4*esi]
-
-frNext:
-    shr esi,1
-    jnz frLoop
-;
-    mov edi,ds:[ebx]
-    or edi,edi
-    jz frFail
-;
-    push eax
-    push edx
-;
-    sub eax,ds:[ebx].frl_pos
-    sbb edx,ds:[ebx].frl_pos+4
-    mov esi,eax
-;
-    pop edx
-    pop eax
-    jnz frFail
-;
-    cmp esi,ds:[ebx].frl_size
-    ja frFail
-;
-    clc
-    jmp frLeave
-
-frFail:
-    stc
-
-frLeave:
-    LeaveSection ds:fse_section
-;
-    pop edi
-    pop esi
-    ret
-FindReq  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddReq
-;
-;       DESCRIPTION:    Add a file req
-;
-;       PARAMETERS:     FS             Part sel
-;                       DS             File sel
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;       RETURNS:        EBX            Req ptr
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddReq	Proc near
-    push ds
-    push es
-    push eax
-    push esi
-    push edi
-;
-    EnterSection ds:fse_section
-;
-    movzx ebx,ds:fse_req_list
-    or ebx,ebx
-    jnz arDo
-;
-    int 3
-
-arDo:
-    mov di,ds:[ebx].frl_link
-    mov ds:fse_req_list,di
-    mov ds:[ebx].frl_link,0
-;
-    mov ds:[ebx].frl_pos,eax
-    mov ds:[ebx].frl_pos+4,edx
-    mov ds:[ebx].frl_ptr,0
-    mov ds:[ebx].frl_wait_list,0
-;
-    LeaveSection ds:fse_section
-;
-    push ebx
-;
-    mov esi,ebx
-    sub esi,OFFSET fse_req_arr
-    shr esi,4
-    inc esi
-;
-    mov ebx,ds:fi_serv_handle
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-;
-    mov eax,VFS_REQ_FILE
-    call PostMsg
-;
-    pop ebx
-;
-    pop edi
-    pop esi
-    pop eax
-    pop es
-    pop ds
-    ret
-AddReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
