@@ -2881,6 +2881,54 @@ RunMsg  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           PostMsg
+;
+;       DESCRIPTION:    Queue disc msg
+;
+;       PARAMETERS:     DS      VFS sel
+;                       FS      Part sel
+;                       ES      Msg buf
+;                       EAX     Op
+;                       EBX     Msg entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public PostMsg
+
+PostMsg  Proc near
+    push eax
+    push ebx
+;
+    mov es:fc_op,eax
+    mov fs:[ebx].vfss_thread,0
+;
+    sub ebx,OFFSET vfsp_cmd_arr
+    shr ebx,4
+    mov al,bl
+    inc al
+;
+    movzx ebx,fs:vfsp_cmd_tail
+    mov fs:[ebx].vfsp_cmd_ring,al
+    inc bl
+    cmp bl,34
+    jb pmSaveTail
+;
+    xor bl,bl
+
+pmSaveTail:
+    mov fs:vfsp_cmd_tail,bl
+;
+    mov bx,fs:vfsp_cmd_thread
+    Signal
+;
+    pop ebx
+    pop eax
+    ret
+PostMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           MapBlockToUser
 ;
 ;       DESCRIPTION:    Map block to user

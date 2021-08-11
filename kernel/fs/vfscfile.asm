@@ -124,6 +124,7 @@ code    SEGMENT byte public 'CODE'
 
     extern AllocateMsg:near
     extern RunMsg:near
+    extern PostMsg:near
     extern GetDrivePart:near
     extern GetPathDrive:near
     extern GetRelDir:near
@@ -690,7 +691,10 @@ FindReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddReq	Proc near
-    push esi
+    push ds
+    push es
+    push eax
+    push edi
 ;
     EnterSection ds:fse_section
 ;
@@ -701,8 +705,8 @@ AddReq	Proc near
     int 3
 
 arDo:
-    mov si,ds:[ebx].frl_link
-    mov ds:fse_req_list,si
+    mov di,ds:[ebx].frl_link
+    mov ds:fse_req_list,di
     mov ds:[ebx].frl_link,0
 ;
     mov ds:[ebx].frl_pos,eax
@@ -712,7 +716,26 @@ arDo:
 ;
     LeaveSection ds:fse_section
 ;
-    pop esi
+    push ebx
+;
+    mov eax,ebx
+    sub eax,OFFSET fse_req_arr
+    shr eax,4
+    inc eax
+;
+    mov ebx,ds:fi_serv_handle
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+;
+    mov eax,VFS_REQ_FILE
+    call PostMsg
+;
+    pop ebx
+;
+    pop edi
+    pop eax
+    pop es
+    pop ds
     ret
 AddReq  Endp
 
@@ -775,69 +798,6 @@ wfrLeave:
     pop eax
     ret
 WaitForReq      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddFileReq
-;
-;       DESCRIPTION:    Add file req
-;
-;       PARAMETERS:     FS             Part sel
-;                       DS             File sel
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddFileReq   Proc near
-    push es
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push ebp
-;
-    push ds
-    mov ebx,ds:fi_serv_handle
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-;
-    mov eax,VFS_REQ_FILE
-    call RunMsg
-    pop ds
-    jc afrDone
-;
-    or ecx,ecx
-    clc
-    jz afrAdd
-;
-    push ds
-    push ebp
-;
-    mov ebx,ds:[ebp].frh_req_handle
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-;
-    mov eax,VFS_SHRINK_REQ
-    call RunMsg
-;
-    pop ebp
-    pop ds
-    
-afrAdd:
-    int 3
-    clc
-
-afrDone:
-    pop ebp
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-    ret
-AddFileReq   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
