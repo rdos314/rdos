@@ -2336,6 +2336,7 @@ reply_vfs_file_name       DB 'Reply VFS File',0
 reply_vfs_file    Proc far
     push es
     push fs
+    push gs
     push eax
     push ebx
     push ecx
@@ -2345,34 +2346,35 @@ reply_vfs_file    Proc far
     call GetFileReq
     jc rffDone
 ;
-    mov esi,es:vfsp_cmd_curr
+    mov esi,fs:vfsp_cmd_curr
     dec esi
-    lock bts es:vfsp_cmd_free_mask,esi
+    mov ebx,esi
+    shl ebx,4
+    add ebx,OFFSET vfsp_cmd_arr
 ;
-    shl esi,4
-    add esi,OFFSET vfsp_cmd_arr
-    mov bx,es:[esi].vfss_sel
-    mov fs:vfs_rd_req_sel,bx
-;
-    mov ecx,fs:vfs_rd_remain_count
-    or ecx,ecx
-    jnz rffDone
-;
-    xor bx,bx
-    xchg bx,fs:vfs_rd_req_sel
-    or bx,bx
-    jz rffDone
-;
-    call NotifyFileData
-;
-    mov edx,es:[esi].vfss_server_linear
-    mov eax,es:[esi].vfss_phys
-    mov ebx,es:[esi].vfss_phys+4
+    mov edx,fs:[ebx].vfss_server_linear
+    mov eax,fs:[ebx].vfss_phys
+    mov ebx,fs:[ebx].vfss_phys+4
     or ax,863h
     mov cx,system_data_sel
     mov es,cx
     add edx,es:flat_base
     SetPageEntry
+;
+    lock bts fs:vfsp_cmd_free_mask,esi
+;
+    mov gs:vfs_rd_req_sel,-1
+;
+    mov ecx,gs:vfs_rd_remain_count
+    or ecx,ecx
+    jnz rffDone
+;
+    xor bx,bx
+    xchg bx,gs:vfs_rd_req_sel
+    or bx,bx
+    jz rffDone
+;
+    call NotifyFileData
 
 rffDone:
     pop esi
@@ -2380,6 +2382,7 @@ rffDone:
     pop ecx
     pop ebx
     pop eax
+    pop gs
     pop fs
     pop es
     ret

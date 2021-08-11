@@ -63,11 +63,11 @@ file_handle_seg  ENDS
 
 file_req_header    STRUC
 
-frh_pos            DD ?,?
-frh_size           DD ?
 frh_req_handle     DD ?
 frh_entry_size     DW ?
 frh_entries        DW ?
+frh_req_ptr        DW ?
+frh_pad            DW ?
 
 file_req_header    ENDS
 
@@ -84,6 +84,7 @@ file_req_entry    ENDS
 file_req_link  STRUC
 
 frl_pos            DD ?,?
+frl_size           DD ?
 frl_ptr            DD ?
 frl_link           DW ?
 frl_wait_list      DW ?
@@ -111,7 +112,7 @@ fse_pad           DW ?
 
 fse_wait_arr      DD MAX_FILE_WAITS DUP(?)
 fse_user_arr      DD MAX_FILE_USERS DUP(?)
-fse_req_arr       DD MAX_FILE_REQ_COUNT DUP(?,?,?,?)
+fse_req_arr       DD MAX_FILE_REQ_COUNT DUP(?,?,?,?,?)
 fse_sorted_arr    DD MAX_FILE_REQ_COUNT DUP(?)
 
 file_struc    ENDS
@@ -125,6 +126,7 @@ code    SEGMENT byte public 'CODE'
     extern AllocateMsg:near
     extern RunMsg:near
     extern PostMsg:near
+    extern BlockToBuf:near
     extern GetDrivePart:near
     extern GetPathDrive:near
     extern GetRelDir:near
@@ -183,9 +185,9 @@ CreateFileSel    Proc near
     InitSection es:fse_section
 ;
     mov edi,OFFSET fse_user_arr
-    xor ax,ax
+    xor eax,eax
     mov ecx,MAX_FILE_USERS
-    rep stosw
+    rep stosd
 ;
     mov ecx,MAX_FILE_WAITS - 1
     mov edi,OFFSET fse_wait_arr
@@ -207,7 +209,7 @@ cfsWaitLoop:
     mov eax,edi
 
 cfsReqLoop:
-    add eax,16
+    add eax,20
     mov es:[edi].frl_link,ax
     mov es:[edi].frl_wait_list,0
     mov es:[edi].frl_ptr,0
@@ -219,9 +221,9 @@ cfsReqLoop:
     mov es:[edi].frl_link,cx
 ;
     mov edi,OFFSET fse_sorted_arr
-    xor ax,ax
+    xor eax,eax
     mov ecx,MAX_FILE_REQ_COUNT
-    rep stosw
+    rep stosd
 ;
     mov eax,es
 ;
@@ -428,8 +430,8 @@ HandleFileData	Proc near
     EnterSection ds:fse_section
     mov esi,ds:fse_insert
     mov ebp,esi
-    mov ds:[ebp].frh_pos,eax
-    mov ds:[ebp].frh_pos+4,edx
+;    mov ds:[ebp].frh_pos,eax
+;    mov ds:[ebp].frh_pos+4,edx
     mov ds:[ebp].frh_req_handle,ebx
     mov ds:[ebp].frh_entries,0
     add esi,SIZE file_req_header
@@ -480,8 +482,8 @@ hfdCheckLast:
     sub esi,8
 
 hfdSave:
-    sub eax,ds:[ebp].frh_pos
-    mov ds:[ebp].frh_size,eax
+;    sub eax,ds:[ebp].frh_pos
+;    mov ds:[ebp].frh_size,eax
 ;
     mov ds:fse_insert,esi
     sub esi,ebp
@@ -504,6 +506,121 @@ hfdDone:
     pop ds
     ret
 HandleFileData  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           NotifyFileData
+;
+;       DESCRIPTION:    Notify file data
+;
+;       PARAMETERS:     FS                 Partition
+;                       GS                 File req
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public NotifyFileData
+
+NotifyFileData	Proc near
+    push ds
+    push es
+    push gs
+    push ebx
+    push ecx
+    push edi
+    push ebp
+;
+    mov ebx,gs:vfs_rd_file_handle
+    mov al,FILE_SIGN
+    call HandleHighToPartFs
+    pop eax
+    jc nfdFail
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc nfdFail
+;
+    movzx ecx,bx
+    dec ecx
+    shl ecx,2
+    mov cx,fs:[ecx].vfsp_file_arr.ff_sel
+    or cx,cx
+    stc
+    je nfdFail
+;
+    mov ds,ecx
+
+
+
+    mov ds:[edi],eax
+    add edi,4
+;
+    mov eax,gs:vfs_rd_req_handle
+    mov ds:[edi],eax
+    add edi,4
+;
+    mov eax,gs:vfs_rd_sectors
+    mov ds:[edi],eax
+    add edi,4
+;
+    mov eax,ds
+    mov gs,eax
+    mov ebp,edi
+;
+    mov ds,es:vfsp_disc_sel
+    mov eax,serv_flat_sel
+    mov es,eax
+;
+    mov edi,fs:vfs_rd_chain_ptr
+    mov ecx,fs:vfs_rd_sectors
+    or ecx,ecx
+    jz nfdOk
+
+nfdLoop:
+    mov eax,fs:[edi]
+    mov edx,fs:[edi+4]
+    call BlockToBuf
+    jc nfdFail
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz nfdFail
+;
+    and eax,7
+    shl eax,9
+    mov ebx,es:[esi]
+    and bx,0F000h
+    or eax,ebx
+    movzx ebx,word ptr es:[esi+4]
+;
+    mov gs:[ebp],eax
+    mov gs:[ebp+4],ebx
+;
+    add edi,8
+    add ebp,8
+    loop nfdLoop
+
+nfdOk:
+    mov eax,fs:vfs_rd_start
+    mov edx,fs:vfs_rd_start+4
+    movzx esi,ds:vfs_bytes_per_sector
+    clc
+    jmp nfdDone
+    
+nfdFail:
+    xor ecx,ecx
+    stc
+
+nfdDone:
+    pop ebp
+    pop edi
+    pop ecx
+    pop ebx
+    pop gs
+    pop es
+    pop ds
+    ret
+NotifyFileData     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

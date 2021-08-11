@@ -56,6 +56,7 @@ code    SEGMENT byte public 'CODE'
     extern BlockToBuf:near
     extern BlockToBitmap:near
     extern CreateFileSel:near
+    extern NotifyFileData:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -119,8 +120,8 @@ InitFilePart    Endp
 ;       PARAMETERS:     EBX                File req handle
 ;                       DS:EDI             Req
 ;
-;       RETURNS:        ES                 Part sel
-;                       FS                 File req
+;       RETURNS:        FS                 Part sel
+;                       GS                 File req
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -132,7 +133,7 @@ GetFileReq	Proc near
     push ebx
 ;
     mov al,REQ_SIGN
-    call HandleHighToPartEs
+    call HandleHighToPartFs
     jc gfrFail
 ;
     movzx ebx,bx
@@ -142,7 +143,7 @@ GetFileReq	Proc near
 ;
     shl ebx,2
     add ebx,OFFSET vfsp_file_req_arr
-    mov fs,es:[ebx].fr_sel
+    mov gs,fs:[ebx].fr_sel
     clc
     jmp gfrDone
 
@@ -155,99 +156,6 @@ gfrDone:
     pop ds
     ret
 GetFileReq   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           NotifyFileData
-;
-;       DESCRIPTION:    Notify file data
-;
-;       PARAMETERS:     ES                 Partition
-;                       FS                 File req
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public NotifyFileData
-
-NotifyFileData	Proc near
-    push ds
-    push es
-    push gs
-    push ebx
-    push ecx
-    push edi
-    push ebp
-;
-    mov eax,fs:vfs_rd_file_handle
-    mov ds:[edi],eax
-    add edi,4
-;
-    mov eax,fs:vfs_rd_req_handle
-    mov ds:[edi],eax
-    add edi,4
-;
-    mov eax,fs:vfs_rd_sectors
-    mov ds:[edi],eax
-    add edi,4
-;
-    mov eax,ds
-    mov gs,eax
-    mov ebp,edi
-;
-    mov ds,es:vfsp_disc_sel
-    mov eax,serv_flat_sel
-    mov es,eax
-;
-    mov edi,fs:vfs_rd_chain_ptr
-    mov ecx,fs:vfs_rd_sectors
-    or ecx,ecx
-    jz nfdOk
-
-nfdLoop:
-    mov eax,fs:[edi]
-    mov edx,fs:[edi+4]
-    call BlockToBuf
-    jc nfdFail
-;
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz nfdFail
-;
-    and eax,7
-    shl eax,9
-    mov ebx,es:[esi]
-    and bx,0F000h
-    or eax,ebx
-    movzx ebx,word ptr es:[esi+4]
-;
-    mov gs:[ebp],eax
-    mov gs:[ebp+4],ebx
-;
-    add edi,8
-    add ebp,8
-    loop nfdLoop
-
-nfdOk:
-    mov eax,fs:vfs_rd_start
-    mov edx,fs:vfs_rd_start+4
-    movzx esi,ds:vfs_bytes_per_sector
-    clc
-    jmp nfdDone
-    
-nfdFail:
-    xor ecx,ecx
-    stc
-
-nfdDone:
-    pop ebp
-    pop edi
-    pop ecx
-    pop ebx
-    pop gs
-    pop es
-    pop ds
-    ret
-NotifyFileData     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
