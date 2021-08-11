@@ -47,6 +47,7 @@ include vfsfile.inc
 MAX_FILE_REQ_ENTRIES = 8
 MAX_FILE_REQ_COUNT   = 64
 MAX_FILE_USERS       = 256
+MAX_FILE_WAITS       = 16
 
 file_handle_seg  STRUC
 
@@ -84,21 +85,31 @@ file_req_link  STRUC
 
 frl_pos            DD ?,?
 frl_ptr            DD ?
-frl_link           DD ?
+frl_link           DW ?
+frl_wait_list      DW ?
 
 file_req_link  ENDS
+
+file_wait  STRUC
+
+fw_thread          DW ?
+fw_link            DW ?
+
+file_wait  ENDS
 
 file_struc    STRUC
 
 fse_info          DB 1000h DUP(?)  ; aliased file info
 
 fse_insert        DD ?
-fse_req_list      DD ?
 fse_sector_size   DW ?
 fse_req_count     DW ?
+fse_req_list      DW ?
+fse_wait_list     DW ?
 fse_section       section_typ <>
 fse_pad           DW ?
 
+fse_wait_arr      DD MAX_FILE_WAITS DUP(?)
 fse_user_arr      DD MAX_FILE_USERS DUP(?)
 fse_req_arr       DD MAX_FILE_REQ_COUNT DUP(?,?,?,?)
 fse_sorted_arr    DD MAX_FILE_REQ_COUNT DUP(?)
@@ -175,21 +186,36 @@ CreateFileSel    Proc near
     mov ecx,MAX_FILE_USERS
     rep stosw
 ;
-    mov ecx,MAX_FILE_REQ_COUNT - 1
-    mov edi,OFFSET fse_req_arr
-    mov es:fse_req_list,edi
+    mov ecx,MAX_FILE_WAITS - 1
+    mov edi,OFFSET fse_wait_arr
+    mov es:fse_wait_list,di
     mov eax,edi
 
-cfsLoop:
+cfsWaitLoop:
+    add eax,4
+    mov es:[edi].fw_link,ax
+    mov es:[edi].fw_thread,0
+    mov edi,eax
+    loop cfsWaitLoop
+;
+    mov es:[edi].fw_link,cx
+;
+    mov ecx,MAX_FILE_REQ_COUNT - 1
+    mov edi,OFFSET fse_req_arr
+    mov es:fse_req_list,di
+    mov eax,edi
+
+cfsReqLoop:
     add eax,16
-    mov es:[edi].frl_link,eax
+    mov es:[edi].frl_link,ax
+    mov es:[edi].frl_wait_list,0
     mov es:[edi].frl_ptr,0
     mov es:[edi].frl_pos,0
     mov es:[edi].frl_pos+4,0
     mov edi,eax
-    loop cfsLoop
+    loop cfsReqLoop
 ;
-    mov es:[edi].frl_link,ecx
+    mov es:[edi].frl_link,cx
 ;
     mov edi,OFFSET fse_sorted_arr
     xor ax,ax
@@ -615,33 +641,140 @@ open_vfs_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           TryRead
+;       NAME:           FindReq
 ;
-;       DESCRIPTION:    Try to read block
+;       DESCRIPTION:    Find a file req
 ;
-;       PARAMETERS:     GS             File block
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
 ;                       EDX:EAX        Position
-;                       ECX            Size
 ;
-;       RETURNS:        NC
-;                         EAX          Read size
+;       RETURNS:        EBX            Req ptr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TryRead   Proc near
+FindReq	Proc near
     push ecx
 ;
-    mov ecx,0
-    or ecx,ecx 
+    EnterSection ds:fse_section
+;
+    movzx ecx,ds:fse_req_count
+    or ecx,ecx
     stc
-    jz trDone
+    jz frLeave
+;
+    mov ebx,OFFSET fse_sorted_arr
+    clc
+
+frLeave:
+    LeaveSection ds:fse_section
+;
+    pop ecx
+    ret
+FindReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddReq
+;
+;       DESCRIPTION:    Add a file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;       RETURNS:        EBX            Req ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddReq	Proc near
+    push esi
+;
+    EnterSection ds:fse_section
+;
+    movzx ebx,ds:fse_req_list
+    or ebx,ebx
+    jnz arDo
 ;
     int 3
 
-trDone:
-    pop ecx
+arDo:
+    mov si,ds:[ebx].frl_link
+    mov ds:fse_req_list,si
+    mov ds:[ebx].frl_link,0
+;
+    mov ds:[ebx].frl_pos,eax
+    mov ds:[ebx].frl_pos+4,edx
+    mov ds:[ebx].frl_ptr,0
+    mov ds:[ebx].frl_wait_list,0
+;
+    LeaveSection ds:fse_section
+;
+    pop esi
     ret
-TryRead   Endp
+AddReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WaitForReq
+;
+;       DESCRIPTION:    Wait for a file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;                       EBX            Req ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForReq	Proc near
+    push eax
+    push esi
+
+wfrRetry:
+    EnterSection ds:fse_section
+;
+    mov eax,ds:[ebx].frl_ptr
+    or eax,eax
+    jnz wfrLeave
+;
+    movzx esi,ds:fse_wait_list
+    or esi,esi
+    jnz wfrDo
+;
+    LeaveSection ds:fse_section
+    mov ax,10
+    WaitMilliSec
+    jmp wfrRetry
+
+wfrDo:
+    mov ax,ds:[esi].fw_link
+    mov ds:fse_wait_list,ax
+;
+    mov ax,ds:[ebx].frl_wait_list
+    mov ds:[esi].fw_link,ax
+    mov ds:[ebx].frl_wait_list,si
+;
+    GetThread
+    mov ds:[esi].fw_thread,ax
+    LeaveSection ds:fse_section
+
+wfrWait:
+    WaitForSignal
+;
+    mov eax,ds:[ebx].frl_ptr
+    or eax,eax
+    jz wfrWait
+
+wfrLeave:
+    LeaveSection ds:fse_section
+;
+    pop esi
+    pop eax
+    ret
+WaitForReq      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -693,22 +826,7 @@ AddFileReq   Proc near
     pop ds
     
 afrAdd:
-    EnterSection ds:fse_section
-;
-    mov ebx,ds:fse_req_list
-    mov eax,ds:[ebx].frl_link
-    mov ds:fse_req_list,eax
-    mov ds:[ebx].frl_link,0
-;
-    mov eax,ds:[ebp].frh_pos
-    mov ds:[ebx].frl_pos,eax
-;
-    mov eax,ds:[ebp].frh_pos+4
-    mov ds:[ebx].frl_pos+4,eax
-;
-    mov ds:[ebx].frl_ptr,ebp
-;
-    LeaveSection ds:fse_section
+    int 3
     clc
 
 afrDone:
@@ -748,6 +866,7 @@ read_vfs_file    Proc near
     DerefHandle
     jc rvfDone
 ;
+    push ds
     push eax
     push edx
 ;
@@ -755,20 +874,19 @@ read_vfs_file    Proc near
     mov edx,ds:[ebx].fh_pos+4
     mov fs,ds:[ebx].fh_part_sel
     mov ds,ds:[ebx].fh_file_sel    
-
-rvfTry:
-    call TryRead
-    jc rvfReq
 ;
-    int 3
+    call FindReq
+    jnc rvfDo
+;
+    call AddReq
 
-rvfReq:
-    call AddFileReq
-    jnc rvfTry
+rvfDo:
+    call WaitForReq
 
 rvfDone:
     pop edx
     pop eax
+    pop ds
 ;
     mov ds:[ebx].fh_pos,eax
     mov ds:[ebx].fh_pos+4,edx
