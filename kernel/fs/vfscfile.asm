@@ -694,6 +694,7 @@ AddReq	Proc near
     push ds
     push es
     push eax
+    push esi
     push edi
 ;
     EnterSection ds:fse_section
@@ -718,10 +719,10 @@ arDo:
 ;
     push ebx
 ;
-    mov eax,ebx
-    sub eax,OFFSET fse_req_arr
-    shr eax,4
-    inc eax
+    mov esi,ebx
+    sub esi,OFFSET fse_req_arr
+    shr esi,4
+    inc esi
 ;
     mov ebx,ds:fi_serv_handle
     mov ds,fs:vfsp_disc_sel
@@ -733,6 +734,7 @@ arDo:
     pop ebx
 ;
     pop edi
+    pop esi
     pop eax
     pop es
     pop ds
