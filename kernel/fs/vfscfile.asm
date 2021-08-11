@@ -772,7 +772,6 @@ NotifyFileData	Proc near
     mov ebx,gs:vfs_rd_file_handle
     mov al,FILE_SIGN
     call HandleHighToPartFs
-    pop eax
     jc nfdFail
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
@@ -787,25 +786,49 @@ NotifyFileData	Proc near
     stc
     je nfdFail
 ;
+    mov ecx,gs:vfs_rd_sectors
+    or ecx,ecx
+    jz nfdOk
+;
     mov ds,ebx
     mov eax,gs:vfs_rd_start
     mov edx,gs:vfs_rd_start+4
+
+nfdSearch:
     call FindReq
-    jc nfdFail
+    jnc nfdFound
 ;
+    movzx ebx,ds:fse_sector_size
+    add eax,ebx
+    adc edx,0
+    sub ecx,1
+    jnz nfdSearch
+;
+    jmp nfdFail
+
+nfdFound:
+    mov eax,ds:[ebx].frl_ptr
+    or eax,eax
+    jnz nfdFail
+;
+    EnterSection ds:fse_section
+;
+    mov eax,gs:vfs_rd_start
+    mov ds:[ebx].frl_pos,eax
+;
+    mov edx,gs:vfs_rd_start+4
+    mov ds:[ebx].frl_pos+4,eax
+;       
     mov eax,serv_flat_sel
     mov es,eax
 ;
     mov edi,gs:vfs_rd_chain_ptr
     mov ecx,gs:vfs_rd_sectors
-    or ecx,ecx
-    jz nfdOk
 ;
-    EnterSection ds:fse_section
     mov esi,ds:fse_insert
     mov ds:[ebx].frl_ptr,esi
     mov [ebp].nfe_entry,esi
-    mov eax,gs:vfs_rd_file_handle
+    mov eax,gs:vfs_rd_req_handle
     mov ds:[esi].frh_req_handle,eax
     mov ds:[esi].frh_entries,0
     add esi,SIZE file_req_header
