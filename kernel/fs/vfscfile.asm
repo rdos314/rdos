@@ -772,22 +772,62 @@ open_vfs_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindReq	Proc near
-    push ecx
+    push esi
+    push edi
 ;
     EnterSection ds:fse_section
 ;
-    movzx ecx,ds:fse_req_count
-    or ecx,ecx
-    stc
-    jz frLeave
-;
     mov ebx,OFFSET fse_sorted_arr
+    mov esi,MAX_FILE_REQ_COUNT / 2
+
+frLoop:
+    mov edi,ds:[ebx+4*esi]
+    or edi,edi
+    jz frNext
+;
+    cmp edx,ds:[edi].frl_pos+4
+    jb frNext
+    jz frUp
+;
+    cmp eax,ds:[edi].frl_pos
+    jb frNext
+
+frUp:
+    lea ebx,[ebx+4*esi]
+
+frNext:
+    shr esi,1
+    jnz frLoop
+;
+    mov edi,ds:[ebx]
+    or edi,edi
+    jz frFail
+;
+    push eax
+    push edx
+;
+    sub eax,ds:[ebx].frl_pos
+    sbb edx,ds:[ebx].frl_pos+4
+    mov esi,eax
+;
+    pop edx
+    pop eax
+    jnz frFail
+;
+    cmp esi,ds:[ebx].frl_size
+    ja frFail
+;
     clc
+    jmp frLeave
+
+frFail:
+    stc
 
 frLeave:
     LeaveSection ds:fse_section
 ;
-    pop ecx
+    pop edi
+    pop esi
     ret
 FindReq  Endp
 
