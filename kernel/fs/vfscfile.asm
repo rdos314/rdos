@@ -750,6 +750,8 @@ nfe_hdr      DD ?
 nfe_struc   ENDS
 
 NotifyInitEntry	Proc near
+    push eax
+;
     mov esi,[ebp].nfe_hdr
 ;
     mov eax,[ebp].nfe_pos
@@ -764,10 +766,12 @@ NotifyInitEntry	Proc near
     add esi,OFFSET fre_arr
     mov [ebp].nfe_ptr,esi
 ;
-    xor esi,esi
-    mov [ebp].nfe_curr,esi
-    mov [ebp].nfe_curr+4,esi
-    mov [ebp].nfe_entries,esi
+    xor eax,eax
+    mov [ebp].nfe_curr,eax
+    mov [ebp].nfe_curr+4,eax
+    mov [ebp].nfe_entries,eax
+;
+    pop eax
     ret
 NotifyInitEntry  Endp
 
@@ -783,6 +787,9 @@ NotifyInitEntry  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyCalcSize	Proc near
+    push eax
+    push ebx
+;
     mov esi,[ebp].nfe_hdr
 ;
     movzx ebx,ds:[esi].fre_pages
@@ -796,6 +803,12 @@ NotifyCalcSize	Proc near
     movzx eax,ds:[esi].fre_last_size
     add ebx,eax
     mov ds:[esi].fre_size,ebx
+;
+    add [ebp].nfe_pos,ebx
+    adc [ebp].nfe_pos+4,0
+;
+    pop ebx
+    pop eax
     ret
 NotifyCalcSize Endp
 
@@ -849,11 +862,12 @@ noeAddFirst:
     mov [ebp].nfe_curr+4,edx
 ;
     add [ebp].nfe_ptr,8
+    clc
     jmp noeDone
 
 noeCheck:
-;    cmp ecx,6Ah
-;    je noeNew
+    cmp ecx,6Eh
+    je noeNew
 ;
     cmp edx,[ebp].nfe_curr+4
     jne noeNew
@@ -865,11 +879,27 @@ noeCheck:
     adc [ebp].nfe_curr+4,0
 ;    
     add ds:[esi].fre_last_size,bx
+    clc
     jmp noeDone
 
 noeNew:
     int 3
     call NotifyCalcSize
+;
+    mov esi,[ebp].nfe_entry
+    cmp ds:[esi].frh_entries,MAX_FILE_REQ_ENTRIES
+    stc
+    je noeDone
+;
+    inc ds:[esi].frh_entries
+;
+    mov esi,[ebp].nfe_ptr
+    mov [ebp].nfe_hdr,esi
+;
+    call NotifyInitEntry
+;
+    mov esi,[ebp].nfe_hdr
+    jmp noeFirst
 
 noeDone:
     ret
@@ -959,7 +989,7 @@ nfdFound:
     mov [ebp].nfe_entry,esi
     mov eax,gs:vfs_rd_req_handle
     mov ds:[esi].frh_req_handle,eax
-    mov ds:[esi].frh_entries,0
+    mov ds:[esi].frh_entries,1
     add esi,SIZE file_req_header
     mov [ebp].nfe_hdr,esi
     call NotifyInitEntry
@@ -983,10 +1013,12 @@ nfdLoop:
     or eax,edx
     movzx edx,word ptr es:[esi+4]
     call NotifyOneEntry
+    jc nfdTerm
 ;
     add edi,8
     loop nfdLoop
-;
+
+nfdTerm:
     call NotifyCalcSize
 
 nfdOk:
