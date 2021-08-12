@@ -743,16 +743,13 @@ nfe_struc   STRUC
 nfe_entry    DD ?
 nfe_ptr      DD ?
 nfe_pos      DD ?,?
-nfe_curr     DD ?
+nfe_curr     DD ?,?
 nfe_entries  DD ?
 nfe_hdr      DD ?
 
 nfe_struc   ENDS
 
 NotifyInitEntry	Proc near
-    push eax
-    push esi
-;
     mov esi,[ebp].nfe_hdr
 ;
     mov eax,[ebp].nfe_pos
@@ -771,9 +768,6 @@ NotifyInitEntry	Proc near
     mov [ebp].nfe_curr,esi
     mov [ebp].nfe_curr+4,esi
     mov [ebp].nfe_entries,esi
-;
-    pop esi
-    pop eax
     ret
 NotifyInitEntry  Endp
 
@@ -789,7 +783,69 @@ NotifyInitEntry  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyOneEntry	Proc near
-    
+    mov esi,[ebp].nfe_hdr
+    movzx ebx,ds:fse_sector_size
+    cmp [ebp].nfe_entries,0
+    jne noeNormal
+
+noeFirst:
+    test ax,0FFFh
+    jz noeFirstDone
+;
+    cmp ds:[esi].fre_pages,0
+    jne noeHandleFirst
+;
+    mov ds:[esi].fre_last_size,bx
+    inc ds:[esi].fre_pages
+;
+    mov esi,[ebp].nfe_ptr
+    mov ds:[esi],eax
+;
+    mov ds:[esi+4],edx
+;
+    add eax,ebx
+    adc edx,0
+    mov [ebp].nfe_curr,eax
+    mov [ebp].nfe_curr+4,edx
+;
+    add [ebp].nfe_ptr,8
+    jmp noeDone
+
+noeHandleFirst:
+    cmp edx,[ebp].nfe_curr+4
+    jne noeNew
+;
+    cmp eax,[ebp].nfe_curr
+    jne noeNew
+;
+    add [ebp].nfe_curr,ebx
+    adc [ebp].nfe_curr+4,0
+;    
+    add ds:[esi].fre_last_size,bx
+    jmp noeDone
+
+noeFirstDone:
+    inc [ebp].nfe_entries
+    mov ds:[esi].fre_last_size,bx
+    inc ds:[esi].fre_pages
+;
+    mov esi,[ebp].nfe_ptr
+    mov ds:[esi],eax
+    mov ds:[esi+4],edx
+;
+    add eax,ebx
+    adc edx,0
+    mov [ebp].nfe_curr,eax
+    mov [ebp].nfe_curr+4,edx
+;
+    add [ebp].nfe_ptr,8
+    jmp noeDone
+
+noeNew:
+
+noeNormal:
+
+noeDone:
     ret
 NotifyOneEntry  Endp
 
