@@ -977,6 +977,9 @@ nfdLeave:
     pop ds
 
 nfdOk:
+    mov esi,[ebp].nfe_ptr
+    mov ds:fse_insert,esi
+;
     mov eax,[ebp].nfe_pos
     sub eax,gs:vfs_rd_start
 ;
