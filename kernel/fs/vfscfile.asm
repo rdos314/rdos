@@ -131,6 +131,7 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern HandleHighToPartFs:near
+    extern ShrinkFileReq:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -650,11 +651,14 @@ NotifyOneSector  Endp
 NotifyCheckLast	Proc near
     mov esi,[ebp].nfe_hdr
 ;
-    cmp ds:[esi].fre_last_size,0
+    cmp ds:[esi].fre_size,0
     jz nclDone
 ;
     cmp ds:[esi].fre_pages,2
     jbe nclDone
+;
+    cmp ds:[esi].fre_last_size,1000h
+    je nclDone
 ;
     xor dx,dx
     mov ax,ds:[esi].fre_last_size
@@ -663,11 +667,9 @@ NotifyCheckLast	Proc near
     add ecx,edx
 ;
     movzx eax,ds:[esi].fre_last_size
-    sub ds:[ebx].fre_size,eax
-    sub eax,esi
-    sbb edx,0
+    sub ds:[esi].fre_size,eax
 ;
-    mov ds:[esi].fre_last_size,0
+    mov ds:[esi].fre_last_size,1000h
     dec ds:[esi].fre_pages
     sub [ebp].nfe_ptr,8
 
@@ -791,6 +793,12 @@ nfdLoop:
 nfdTerm:
     call NotifyCalcSize
     call NotifyCheckLast
+;
+    or ecx,ecx
+    jz nfdOk
+;
+    mov ebx,gs:vfs_rd_req_handle
+    call ShrinkFileReq
 
 nfdOk:
     LeaveSection ds:fse_section
