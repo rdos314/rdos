@@ -695,11 +695,6 @@ NotifyCheckLast  Endp
 
 NotifyShrinkReq    Proc near
     push ds
-    push es
-    push eax
-    push ebx
-    push edx
-    push esi
 ;
     mov ebx,gs:vfs_rd_msb_count
     dec ebx
@@ -726,14 +721,7 @@ sfrDo:
     sub ebx,ecx
     mov gs:[esi].vfsm_rd_count,ebx
 ;
-    test fs:vfsp_flag,VFSP_FLAG_STOPPED
-    stc
-    jnz sfrDone
-;
     mov ds,fs:vfsp_disc_sel
-    mov eax,serv_flat_sel
-    mov es,eax
-    EnterSection ds:vfs_section
 ;
     shl ebx,2
     add ebx,gs:[esi].vfsm_rd_ptr
@@ -753,15 +741,9 @@ sfrUnlockNext:
     add ebx,4
     loop sfrUnlockLoop
 ;
-    LeaveSection ds:vfs_section
     clc
 
 sfrDone:
-    pop esi
-    pop edx
-    pop ebx
-    pop eax
-    pop es
     pop ds
     ret
 NotifyShrinkReq    Endp
@@ -831,6 +813,11 @@ nfdFound:
 ;
     EnterSection ds:fse_section
 ;
+    push ds
+    mov ds,fs:vfsp_disc_sel
+    EnterSection ds:vfs_section
+    pop ds
+;
     mov [ebp].nfe_req,ebx
 ;
     mov eax,gs:vfs_rd_start
@@ -864,7 +851,7 @@ nfdLoop:
     mov edx,gs:[edi+4]
     call BlockToBuf
     pop ds
-    jc nfdLeaveFail
+    jc nfdLeave
 ;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz nfdLeaveFail
@@ -886,9 +873,15 @@ nfdTerm:
     call NotifyCheckLast
 ;
     or ecx,ecx
-    jz nfdOk
+    jz nfdLeave
 ;
     call NotifyShrinkReq
+
+nfdLeave:
+    push ds
+    mov ds,fs:vfsp_disc_sel
+    LeaveSection ds:vfs_section
+    pop ds
 
 nfdOk:
     mov eax,[ebp].nfe_pos
@@ -898,9 +891,6 @@ nfdOk:
     mov ds:[esi].frl_size,eax
 ;
     LeaveSection ds:fse_section
-    mov eax,fs:vfs_rd_start
-    mov edx,fs:vfs_rd_start+4
-    movzx esi,ds:vfs_bytes_per_sector
     clc
     jmp nfdDone
 
