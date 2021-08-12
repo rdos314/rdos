@@ -2372,7 +2372,10 @@ reply_vfs_file    Proc far
     or bx,bx
     jz rffDone
 ;
+    mov ds,fs:vfsp_disc_sel
+    EnterSection ds:vfs_section
     call NotifyFileData
+    LeaveSection ds:vfs_section
 
 rffDone:
     pop esi

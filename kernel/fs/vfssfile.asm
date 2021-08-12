@@ -343,19 +343,7 @@ nrqScanLoop:
     or ax,ax
     jz nrqDone
 ;
-    push ds
-    push es
-    push fs
-;
-    mov ebx,fs
-    mov es,ebx
-    mov ebx,gs
-    mov fs,ebx
     call NotifyFileData
-;
-    pop fs
-    pop es
-    pop ds
     jmp nrqDone
     
 nrqScanNext:

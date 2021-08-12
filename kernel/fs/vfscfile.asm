@@ -904,17 +904,11 @@ nfdSearch:
     jmp nfdFail
 
 nfdFound:
-    int 3
     mov eax,ds:[ebx].frl_ptr
     or eax,eax
     jnz nfdFail
 ;
     EnterSection ds:fse_section
-;
-    push ds
-    mov ds,fs:vfsp_disc_sel
-    EnterSection ds:vfs_section
-    pop ds
 ;
     mov [ebp].nfe_req,ebx
 ;
@@ -971,15 +965,9 @@ nfdTerm:
     call NotifyCheckLast
 ;
     or ecx,ecx
-    jz nfdLeave
+    jz nfdOk
 ;
     call NotifyShrinkReq
-
-nfdLeave:
-    push ds
-    mov ds,fs:vfsp_disc_sel
-    LeaveSection ds:vfs_section
-    pop ds
 
 nfdOk:
     mov esi,[ebp].nfe_ptr
@@ -997,11 +985,6 @@ nfdOk:
     jmp nfdDone
 
 nfdLeaveFail:
-    push ds
-    mov ds,fs:vfsp_disc_sel
-    LeaveSection ds:vfs_section
-    pop ds
-;
     LeaveSection ds:fse_section
     
 nfdFail:
