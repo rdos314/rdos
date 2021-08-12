@@ -774,6 +774,34 @@ NotifyInitEntry  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyCalcSize
+;
+;       DESCRIPTION:    Notify calc size of entry
+;
+;       PARAMETERS:     DS     File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyCalcSize	Proc near
+    mov esi,[ebp].nfe_hdr
+;
+    movzx ebx,ds:[esi].fre_pages
+    dec ebx
+    shl ebx,12
+;
+    mov eax,ds:[esi].fre_arr
+    and eax,0FFFh
+    sub ebx,eax
+;
+    movzx eax,ds:[esi].fre_last_size
+    add ebx,eax
+    mov ds:[esi].fre_size,ebx
+    ret
+NotifyCalcSize Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyOneEntry
 ;
 ;       DESCRIPTION:    Notify one file req entry
@@ -790,7 +818,7 @@ NotifyOneEntry	Proc near
 
 noeFirst:
     test ax,0FFFh
-    jz noeAdd
+    jz noeAddNoCheck
 ;
     cmp ds:[esi].fre_pages,0
     je noeAddFirst
@@ -801,6 +829,10 @@ noeNormal:
     jnz noeCheck
 
 noeAdd:
+    cmp ds:[esi].fre_last_size,1000h
+    jne noeNew
+
+noeAddNoCheck:
     inc [ebp].nfe_entries
 
 noeAddFirst:
@@ -820,6 +852,9 @@ noeAddFirst:
     jmp noeDone
 
 noeCheck:
+;    cmp ecx,6Ah
+;    je noeNew
+;
     cmp edx,[ebp].nfe_curr+4
     jne noeNew
 ;
@@ -833,6 +868,8 @@ noeCheck:
     jmp noeDone
 
 noeNew:
+    int 3
+    call NotifyCalcSize
 
 noeDone:
     ret
@@ -949,6 +986,8 @@ nfdLoop:
 ;
     add edi,8
     loop nfdLoop
+;
+    call NotifyCalcSize
 
 nfdOk:
     LeaveSection ds:fse_section
