@@ -46,7 +46,6 @@ include vfsmsg.inc
 REPLY_DEFAULT      = 0
 REPLY_BLOCK        = 1
 REPLY_DATA         = 2
-REPLY_FILE         = 3
 
 MAX_PART_COUNT   = 255
 
@@ -94,7 +93,6 @@ code    SEGMENT byte public 'CODE'
     extern InitFilePart:near
     extern GetFileReq:near
     extern NotifyFileData:near
-    extern HandleFileData:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2666,31 +2664,6 @@ data_reply  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           file_reply
-;
-;       DESCRIPTION:    File reply processing
-;
-;       PARAMETERS:     ES          Msg buf
-;                       EDX:EAX     Start position
-;
-;       RETURNS:        EBP         Reply data ptr
-;                       ECX         Sectors to discard
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-file_reply  Proc near
-    push edi
-;
-    mov edi,SIZE fs_cmd
-    call HandleFileData
-;
-    pop edi
-    ret
-file_reply  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           RunMsg
 ;
 ;       DESCRIPTION:    Run disc msg
@@ -2711,7 +2684,6 @@ reply_tab:
 r00 DD OFFSET no_reply
 r01 DD OFFSET block_reply
 r02 DD OFFSET data_reply
-r03 DD OFFSET file_reply
 
 RunMsg  Proc near
     mov esi,ebx

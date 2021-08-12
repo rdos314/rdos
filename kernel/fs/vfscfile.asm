@@ -458,278 +458,6 @@ AddReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AddOneEntry
-;
-;       DESCRIPTION:    Add one file req entry
-;
-;       PARAMETERS:     DS:ESI      File req entry
-;                       ES:EDI      Sector data
-;                       EDX:EAX     Start position
-;                       ECX         Sector count
-;
-;       RETURNS:        DS:ESI      Updated
-;                       ES:EDI      Updated
-;                       ECX         Updated
-;                       EDX:EAX     Updated
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddOneEntry	Proc near
-    push ebx
-    push ebp
-;
-    movzx ebx,ds:fse_sector_size
-    push eax
-    push edx
-;
-    mov ds:[esi].fre_pos,eax
-    mov ds:[esi].fre_pos+4,edx
-;
-    mov ds:[esi].fre_last_size,0
-    mov ds:[esi].fre_pages,0
-;
-    mov ebp,esi
-    add ebp,OFFSET fre_arr
-;
-    mov eax,es:[edi]
-    mov edx,es:[edi+4]
-    test ax,0FFFh
-    jz aoeFirstDone
-;
-    mov ds:[esi].fre_last_size,bx
-    inc ds:[esi].fre_pages
-    mov ds:[ebp],eax
-    mov ds:[ebp+4],edx
-    add ebp,8
-
-aoeFirstLoop:
-    add edi,8
-    sub ecx,1
-    jz aoeDone
-;
-    add eax,ebx
-    test ax,0FFFh
-    jz aoeFirstDone
-;
-    cmp eax,es:[edi]
-    jnz aoeDone
-;
-    cmp edx,es:[edi+4]
-    jnz aoeDone
-;
-    add ds:[esi].fre_last_size,bx
-    jmp aoeFirstLoop
-
-aoeFirstDone:
-    mov ds:[ebp],eax
-    mov ds:[ebp+4],edx
-    add ebp,8
-;
-    mov ds:[esi].fre_last_size,bx
-    inc ds:[esi].fre_pages
-
-aoePageLoop:
-    add edi,8
-    sub ecx,1
-    jz aoeDone
-;
-    add eax,ebx
-    test ax,0FFFh
-    jz aoePageNext
-;
-    cmp eax,es:[edi]
-    jnz aoeDone
-;
-    cmp edx,es:[edi+4]
-    jnz aoeDone
-;
-    add ds:[esi].fre_last_size,bx
-    jmp aoePageLoop
-
-aoePageNext:
-    mov ds:[esi].fre_last_size,0
-    jmp aoeFirstDone
-
-aoeDone:
-    movzx ebx,ds:[esi].fre_pages
-    dec ebx
-    shl ebx,12
-;
-    mov eax,ds:[esi].fre_arr
-    and eax,0FFFh
-    sub ebx,eax
-;
-    movzx eax,ds:[esi].fre_last_size
-    add ebx,eax
-    mov ds:[esi].fre_size,ebx
-
-aoeSizeDone:
-    pop edx
-    pop eax
-;
-    add eax,ebx
-    adc edx,0
-;
-    mov esi,ebp
-;
-    pop ebp
-    pop ebx
-    ret
-AddOneEntry     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           HandleFileData
-;
-;       DESCRIPTION:    Handle file data message
-;
-;       PARAMETERS:     ES:EDI      Sector data
-;                       EDX:EAX     Start position
-;
-;       RETURNS:        EBP         Data
-;                       ECX         Number of sectors to discard
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public HandleFileData
-
-HandleFileData	Proc near
-    push ds
-    push fs
-    push eax
-    push ebx
-    push esi
-    push edi
-;
-    mov ebx,es:[edi]
-    add edi,4
-;
-    push eax
-    mov al,FILE_SIGN
-    call HandleHighToPartFs
-    pop eax
-    jc hfdFail
-;
-    cmp bx,MAX_VFS_FILE_COUNT    
-    cmc
-    jc hfdFail
-;
-    movzx ecx,bx
-    dec ecx
-    shl ecx,2
-    mov cx,fs:[ecx].vfsp_file_arr.ff_sel
-    or cx,cx
-    stc
-    je hfdFail
-;
-    mov ds,ecx
-    mov ecx,ebx
-    shr ecx,24
-    mov ebx,es:[edi]
-    add edi,4
-;
-    push ebx
-    shr ebx,16
-    mov ch,bh
-    cmp bl,REQ_SIGN
-    pop ebx
-    stc
-    jne hfdDone
-;
-    cmp cl,ch
-    jne hfdFail
-;
-    mov ecx,es:[edi]
-    add edi,4
-;
-    or ecx,ecx
-    clc
-    jz hfdDone
-;
-    EnterSection ds:fse_section
-    mov esi,ds:fse_insert
-    mov ebp,esi
-;    mov ds:[ebp].frh_pos,eax
-;    mov ds:[ebp].frh_pos+4,edx
-    mov ds:[ebp].frh_req_handle,ebx
-    mov ds:[ebp].frh_entries,0
-    add esi,SIZE file_req_header
-
-hfdLoop:
-    mov ebx,esi
-    call AddOneEntry
-    or ecx,ecx
-    jz hfdCheckLast
-;
-    mov bx,ds:[ebp].frh_entries
-    inc bx
-    mov ds:[ebp].frh_entries,bx
-    cmp bx,MAX_FILE_REQ_ENTRIES
-    je hfdSave
-;
-    jmp hfdLoop
-
-hfdCheckLast:
-    cmp ds:[ebx].fre_last_size,0
-    jz hfdSave
-;
-    cmp ds:[ebx].fre_pages,2
-    jbe hfdSave
-;
-    push eax
-    push edx
-;
-    xor dx,dx
-    mov ax,ds:[ebx].fre_last_size
-    div ds:fse_sector_size
-    movzx ecx,ax
-;
-    pop edx
-    pop eax
-;
-    push esi
-;
-    movzx esi,ds:[ebx].fre_last_size
-    sub ds:[ebx].fre_size,esi
-    sub eax,esi
-    sbb edx,0
-;
-    pop esi
-;
-    mov ds:[ebx].fre_last_size,0
-    dec ds:[ebx].fre_pages
-    sub esi,8
-
-hfdSave:
-;    sub eax,ds:[ebp].frh_pos
-;    mov ds:[ebp].frh_size,eax
-;
-    mov ds:fse_insert,esi
-    sub esi,ebp
-    mov ds:[ebp].frh_entry_size,si
-;
-    LeaveSection ds:fse_section
-    clc
-    jmp hfdDone
-
-hfdFail:
-    xor ecx,ecx
-    stc
-
-hfdDone:
-    pop edi
-    pop esi
-    pop ebx
-    pop eax
-    pop fs
-    pop ds
-    ret
-HandleFileData  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           NotifyInitEntry
 ;
 ;       DESCRIPTION:    Notify init file req entry
@@ -815,40 +543,41 @@ NotifyCalcSize Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           NotifyOneEntry
+;       NAME:           NotifyOneSector
 ;
-;       DESCRIPTION:    Notify one file req entry
+;       DESCRIPTION:    Notify one file req sector
 ;
-;       PARAMETERS:     EDX:EAX     Phyiscal address
+;       PARAMETERS:     DS          File sel
+;                       EDX:EAX     Phyiscal address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-NotifyOneEntry	Proc near
+NotifyOneSector	Proc near
     mov esi,[ebp].nfe_hdr
     movzx ebx,ds:fse_sector_size
     cmp [ebp].nfe_entries,0
-    jne noeNormal
+    jne nosNormal
 
-noeFirst:
+nosFirst:
     test ax,0FFFh
-    jz noeAddNoCheck
+    jz nosAddNoCheck
 ;
     cmp ds:[esi].fre_pages,0
-    je noeAddFirst
-    jmp noeCheck
+    je nosAddFirst
+    jmp nosCheck
 
-noeNormal:
+nosNormal:
     test ax,0FFFh
-    jnz noeCheck
+    jnz nosCheck
 
-noeAdd:
+nosAdd:
     cmp ds:[esi].fre_last_size,1000h
-    jne noeNew
+    jne nosNew
 
-noeAddNoCheck:
+nosAddNoCheck:
     inc [ebp].nfe_entries
 
-noeAddFirst:
+nosAddFirst:
     mov ds:[esi].fre_last_size,bx
     inc ds:[esi].fre_pages
 ;
@@ -863,33 +592,32 @@ noeAddFirst:
 ;
     add [ebp].nfe_ptr,8
     clc
-    jmp noeDone
+    jmp nosDone
 
-noeCheck:
-    cmp ecx,6Eh
-    je noeNew
+nosCheck:
+    cmp ecx,6Eh  ; test only. Remove later!!
+    je nosNew
 ;
     cmp edx,[ebp].nfe_curr+4
-    jne noeNew
+    jne nosNew
 ;
     cmp eax,[ebp].nfe_curr
-    jne noeNew
+    jne nosNew
 ;
     add [ebp].nfe_curr,ebx
     adc [ebp].nfe_curr+4,0
 ;    
     add ds:[esi].fre_last_size,bx
     clc
-    jmp noeDone
+    jmp nosDone
 
-noeNew:
-    int 3
+nosNew:
     call NotifyCalcSize
 ;
     mov esi,[ebp].nfe_entry
     cmp ds:[esi].frh_entries,MAX_FILE_REQ_ENTRIES
     stc
-    je noeDone
+    je nosDone
 ;
     inc ds:[esi].frh_entries
 ;
@@ -899,11 +627,53 @@ noeNew:
     call NotifyInitEntry
 ;
     mov esi,[ebp].nfe_hdr
-    jmp noeFirst
+    jmp nosFirst
 
-noeDone:
+nosDone:
     ret
-NotifyOneEntry  Endp
+NotifyOneSector  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           NotifyCheckLast
+;
+;       DESCRIPTION:    Notify check last block
+;
+;       PARAMETERS:     DS     File sel
+;                       ECX    Remaining sectors
+;
+;       RETURNS:        ECX    Sectors to discard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyCheckLast	Proc near
+    mov esi,[ebp].nfe_hdr
+;
+    cmp ds:[esi].fre_last_size,0
+    jz nclDone
+;
+    cmp ds:[esi].fre_pages,2
+    jbe nclDone
+;
+    xor dx,dx
+    mov ax,ds:[esi].fre_last_size
+    div ds:fse_sector_size
+    movzx edx,ax
+    add ecx,edx
+;
+    movzx eax,ds:[esi].fre_last_size
+    sub ds:[ebx].fre_size,eax
+    sub eax,esi
+    sbb edx,0
+;
+    mov ds:[esi].fre_last_size,0
+    dec ds:[esi].fre_pages
+    sub [ebp].nfe_ptr,8
+
+nclDone:
+    ret
+NotifyCheckLast  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1012,7 +782,7 @@ nfdLoop:
     and dx,0F000h
     or eax,edx
     movzx edx,word ptr es:[esi+4]
-    call NotifyOneEntry
+    call NotifyOneSector
     jc nfdTerm
 ;
     add edi,8
@@ -1020,6 +790,7 @@ nfdLoop:
 
 nfdTerm:
     call NotifyCalcSize
+    call NotifyCheckLast
 
 nfdOk:
     LeaveSection ds:fse_section
