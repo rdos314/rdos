@@ -1241,7 +1241,8 @@ serv_add_file_req    Endp
 ;
 ;       DESCRIPTION:    Shrink VFS file req
 ;
-;       PARAMETERS:     EBX            File req handle
+;       PARAMETERS:     FS             Part sel
+;                       GS             File req sel
 ;                       ECX            Sector count remove
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1251,30 +1252,11 @@ serv_add_file_req    Endp
 ShrinkFileReq    Proc near
     push ds
     push es
-    push fs
-    push gs
     push eax
     push ebx
     push edx
     push esi
 ;
-    mov al,REQ_SIGN
-    call HandleHighToPartFs
-    jc sfrDone
-;
-    cmp bx,MAX_VFS_FILE_REQ_COUNT    
-    cmc
-    jc sfrDone
-;
-    movzx ebx,bx
-    dec ebx
-    shl ebx,2
-    mov ax,fs:[ebx].vfsp_file_req_arr
-    or ax,ax
-    stc
-    jz sfrDone
-;
-    mov gs,ax
     mov ebx,gs:vfs_rd_msb_count
     dec ebx
     mov edx,ebx
@@ -1335,8 +1317,6 @@ sfrDone:
     pop edx
     pop ebx
     pop eax
-    pop gs
-    pop fs
     pop es
     pop ds
     ret

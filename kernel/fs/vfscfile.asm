@@ -469,6 +469,7 @@ AddReq  Endp
 
 nfe_struc   STRUC
 
+nfe_req      DD ?
 nfe_entry    DD ?
 nfe_ptr      DD ?
 nfe_pos      DD ?,?
@@ -742,6 +743,8 @@ nfdFound:
 ;
     EnterSection ds:fse_section
 ;
+    mov [ebp].nfe_req,ebx
+;
     mov eax,gs:vfs_rd_start
     mov ds:[ebx].frl_pos,eax
     mov [ebp].nfe_pos,eax
@@ -797,10 +800,15 @@ nfdTerm:
     or ecx,ecx
     jz nfdOk
 ;
-    mov ebx,gs:vfs_rd_req_handle
     call ShrinkFileReq
 
 nfdOk:
+    mov eax,[ebp].nfe_pos
+    sub eax,gs:vfs_rd_start
+;
+    mov esi,[ebp].nfe_req
+    mov ds:[esi].frl_size,eax
+;
     LeaveSection ds:fse_section
     mov eax,fs:vfs_rd_start
     mov edx,fs:vfs_rd_start+4
