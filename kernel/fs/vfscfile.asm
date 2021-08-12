@@ -131,7 +131,6 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern HandleHighToPartFs:near
-    extern ShrinkFileReq:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -670,6 +669,9 @@ NotifyCheckLast	Proc near
     movzx eax,ds:[esi].fre_last_size
     sub ds:[esi].fre_size,eax
 ;
+    sub [ebp].nfe_pos,eax
+    sbb [ebp].nfe_pos+4,0
+;
     mov ds:[esi].fre_last_size,1000h
     dec ds:[esi].fre_pages
     sub [ebp].nfe_ptr,8
@@ -677,6 +679,92 @@ NotifyCheckLast	Proc near
 nclDone:
     ret
 NotifyCheckLast  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           NotifyShrinkReq
+;
+;       DESCRIPTION:    Notify shrink file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       GS             File req sel
+;                       ECX            Sector count remove
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyShrinkReq    Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push edx
+    push esi
+;
+    mov ebx,gs:vfs_rd_msb_count
+    dec ebx
+    mov edx,ebx
+    add edx,gs:vfs_rd_start_msb
+;
+    shl ebx,2
+
+sfrFindLoop:
+    mov esi,ebx
+    add esi,gs:vfs_rd_msb_ptr
+    cmp ecx,gs:[esi].vfsm_rd_count
+    jbe sfrDo
+;
+    dec edx
+    sub ebx,4
+    jnz sfrFindLoop
+;
+    stc
+    jmp sfrDone
+
+sfrDo:
+    mov ebx,gs:[esi].vfsm_rd_count
+    sub ebx,ecx
+    mov gs:[esi].vfsm_rd_count,ebx
+;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    stc
+    jnz sfrDone
+;
+    mov ds,fs:vfsp_disc_sel
+    mov eax,serv_flat_sel
+    mov es,eax
+    EnterSection ds:vfs_section
+;
+    shl ebx,2
+    add ebx,gs:[esi].vfsm_rd_ptr
+
+sfrUnlockLoop:
+    mov eax,gs:[ebx] 
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz sfrUnlockNext
+;
+    sub es:[esi].vfsp_ref_bitmap,1
+    jnz sfrUnlockNext
+;
+    dec ds:vfs_locked_pages
+
+sfrUnlockNext:
+    add ebx,4
+    loop sfrUnlockLoop
+;
+    LeaveSection ds:vfs_section
+    clc
+
+sfrDone:
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+NotifyShrinkReq    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -800,7 +888,7 @@ nfdTerm:
     or ecx,ecx
     jz nfdOk
 ;
-    call ShrinkFileReq
+    call NotifyShrinkReq
 
 nfdOk:
     mov eax,[ebp].nfe_pos
