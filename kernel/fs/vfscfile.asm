@@ -389,6 +389,104 @@ InsertReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           WaitForReq
+;
+;       DESCRIPTION:    Wait for a file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;                       EBX            Req ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForReq	Proc near
+    push eax
+    push esi
+
+wfrRetry:
+    EnterSection ds:fse_section
+;
+    mov eax,ds:[ebx].frl_ptr
+    or eax,eax
+    jnz wfrLeave
+;
+    movzx esi,ds:fse_wait_list
+    or esi,esi
+    jnz wfrDo
+;
+    LeaveSection ds:fse_section
+    mov ax,10
+    WaitMilliSec
+    jmp wfrRetry
+
+wfrDo:
+    mov ax,ds:[esi].fw_link
+    mov ds:fse_wait_list,ax
+;
+    mov ax,ds:[ebx].frl_wait_list
+    mov ds:[esi].fw_link,ax
+    mov ds:[ebx].frl_wait_list,si
+;
+    GetThread
+    mov ds:[esi].fw_thread,ax
+    LeaveSection ds:fse_section
+
+wfrWait:
+    WaitForSignal
+;
+    mov eax,ds:[ebx].frl_ptr
+    or eax,eax
+    jz wfrWait
+
+wfrLeave:
+    LeaveSection ds:fse_section
+;
+    pop esi
+    pop eax
+    ret
+WaitForReq      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SignalReq
+;
+;       DESCRIPTION:    Signal a file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;                       EBX            Req ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalReq	Proc near
+    xor esi,esi
+    xchg si,ds:[ebx].frl_wait_list
+    or esi,esi
+    jz srDone
+
+srLoop:
+    push ebx
+    mov bx,ds:[esi].fw_thread
+    Signal
+    pop ebx
+;
+    mov ax,ds:[esi].fw_link
+    mov bx,ds:fse_wait_list
+    mov ds:[esi].fw_link,bx
+    mov ds:fse_wait_list,si
+;
+    mov si,ax
+    or esi,esi
+    jnz srLoop
+
+srDone:
+    ret
+SignalReq      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddReq
 ;
 ;       DESCRIPTION:    Add a file req
@@ -882,8 +980,9 @@ nfdOk:
     mov eax,[ebp].nfe_pos
     sub eax,gs:vfs_rd_start
 ;
-    mov esi,[ebp].nfe_req
-    mov ds:[esi].frl_size,eax
+    mov ebx,[ebp].nfe_req
+    mov ds:[ebx].frl_size,eax
+    call SignalReq
 ;
     LeaveSection ds:fse_section
     clc
@@ -1039,66 +1138,6 @@ open_vfs_file32  Proc far
     call open_vfs_file
     ret
 open_vfs_file32  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           WaitForReq
-;
-;       DESCRIPTION:    Wait for a file req
-;
-;       PARAMETERS:     FS             Part sel
-;                       DS             File sel
-;                       EBX            Req ptr
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitForReq	Proc near
-    push eax
-    push esi
-
-wfrRetry:
-    EnterSection ds:fse_section
-;
-    mov eax,ds:[ebx].frl_ptr
-    or eax,eax
-    jnz wfrLeave
-;
-    movzx esi,ds:fse_wait_list
-    or esi,esi
-    jnz wfrDo
-;
-    LeaveSection ds:fse_section
-    mov ax,10
-    WaitMilliSec
-    jmp wfrRetry
-
-wfrDo:
-    mov ax,ds:[esi].fw_link
-    mov ds:fse_wait_list,ax
-;
-    mov ax,ds:[ebx].frl_wait_list
-    mov ds:[esi].fw_link,ax
-    mov ds:[ebx].frl_wait_list,si
-;
-    GetThread
-    mov ds:[esi].fw_thread,ax
-    LeaveSection ds:fse_section
-
-wfrWait:
-    WaitForSignal
-;
-    mov eax,ds:[ebx].frl_ptr
-    or eax,eax
-    jz wfrWait
-
-wfrLeave:
-    LeaveSection ds:fse_section
-;
-    pop esi
-    pop eax
-    ret
-WaitForReq      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
