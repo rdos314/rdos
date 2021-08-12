@@ -437,10 +437,14 @@ wfrWait:
     mov eax,ds:[ebx].frl_ptr
     or eax,eax
     jz wfrWait
+;
+    int 3
+    jmp wfrDone
 
 wfrLeave:
     LeaveSection ds:fse_section
-;
+
+wfrDone:
     pop esi
     pop eax
     ret
@@ -900,6 +904,7 @@ nfdSearch:
     jmp nfdFail
 
 nfdFound:
+    int 3
     mov eax,ds:[ebx].frl_ptr
     or eax,eax
     jnz nfdFail
@@ -944,7 +949,7 @@ nfdLoop:
     mov edx,gs:[edi+4]
     call BlockToBuf
     pop ds
-    jc nfdLeave
+    jc nfdLeaveFail
 ;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz nfdLeaveFail
@@ -992,6 +997,11 @@ nfdOk:
     jmp nfdDone
 
 nfdLeaveFail:
+    push ds
+    mov ds,fs:vfsp_disc_sel
+    LeaveSection ds:vfs_section
+    pop ds
+;
     LeaveSection ds:fse_section
     
 nfdFail:
