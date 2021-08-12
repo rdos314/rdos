@@ -790,17 +790,25 @@ NotifyOneEntry	Proc near
 
 noeFirst:
     test ax,0FFFh
-    jz noeFirstDone
+    jz noeAdd
 ;
     cmp ds:[esi].fre_pages,0
-    jne noeHandleFirst
-;
+    je noeAddFirst
+    jmp noeCheck
+
+noeNormal:
+    test ax,0FFFh
+    jnz noeCheck
+
+noeAdd:
+    inc [ebp].nfe_entries
+
+noeAddFirst:
     mov ds:[esi].fre_last_size,bx
     inc ds:[esi].fre_pages
 ;
     mov esi,[ebp].nfe_ptr
     mov ds:[esi],eax
-;
     mov ds:[esi+4],edx
 ;
     add eax,ebx
@@ -811,7 +819,7 @@ noeFirst:
     add [ebp].nfe_ptr,8
     jmp noeDone
 
-noeHandleFirst:
+noeCheck:
     cmp edx,[ebp].nfe_curr+4
     jne noeNew
 ;
@@ -824,26 +832,7 @@ noeHandleFirst:
     add ds:[esi].fre_last_size,bx
     jmp noeDone
 
-noeFirstDone:
-    inc [ebp].nfe_entries
-    mov ds:[esi].fre_last_size,bx
-    inc ds:[esi].fre_pages
-;
-    mov esi,[ebp].nfe_ptr
-    mov ds:[esi],eax
-    mov ds:[esi+4],edx
-;
-    add eax,ebx
-    adc edx,0
-    mov [ebp].nfe_curr,eax
-    mov [ebp].nfe_curr+4,edx
-;
-    add [ebp].nfe_ptr,8
-    jmp noeDone
-
 noeNew:
-
-noeNormal:
 
 noeDone:
     ret
