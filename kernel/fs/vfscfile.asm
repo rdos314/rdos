@@ -727,6 +727,55 @@ hfdDone:
     ret
 HandleFileData  Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           NotifyInitEntry
+;
+;       DESCRIPTION:    Notify init file req entry
+;
+;       PARAMETERS:     DS     File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+nfe_struc   STRUC
+
+nfe_entry    DD ?
+nfe_ptr      DD ?
+nfe_pos      DD ?,?
+nfe_curr     DD ?
+nfe_entries  DD ?
+nfe_hdr      DD ?
+
+nfe_struc   ENDS
+
+NotifyInitEntry	Proc near
+    push eax
+    push esi
+;
+    mov esi,[ebp].nfe_hdr
+;
+    mov eax,[ebp].nfe_pos
+    mov ds:[esi].fre_pos,eax
+;
+    mov eax,[ebp].nfe_pos+4
+    mov ds:[esi].fre_pos+4,eax
+;
+    mov ds:[esi].fre_last_size,0
+    mov ds:[esi].fre_pages,0
+;
+    add esi,OFFSET fre_arr
+    mov [ebp].nfe_ptr,esi
+;
+    xor esi,esi
+    mov [ebp].nfe_curr,esi
+    mov [ebp].nfe_curr+4,esi
+    mov [ebp].nfe_entries,esi
+;
+    pop esi
+    pop eax
+    ret
+NotifyInitEntry  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -738,10 +787,6 @@ HandleFileData  Endp
 ;       PARAMETERS:     EDX:EAX     Phyiscal address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-nfe_entry    EQU 0
-nfe_ptr      EQU 4
-nfe_curr     EQU 8
 
 NotifyOneEntry	Proc near
     
@@ -766,7 +811,7 @@ NotifyFileData	Proc near
     push es
     push fs
     pushad
-    sub esp,16
+    sub esp,SIZE nfe_struc
     mov ebp,esp
 ;
     mov ebx,gs:vfs_rd_file_handle
@@ -815,9 +860,11 @@ nfdFound:
 ;
     mov eax,gs:vfs_rd_start
     mov ds:[ebx].frl_pos,eax
+    mov [ebp].nfe_pos,eax
 ;
-    mov edx,gs:vfs_rd_start+4
+    mov eax,gs:vfs_rd_start+4
     mov ds:[ebx].frl_pos+4,eax
+    mov [ebp].nfe_pos+4,eax
 ;       
     mov eax,serv_flat_sel
     mov es,eax
@@ -832,10 +879,8 @@ nfdFound:
     mov ds:[esi].frh_req_handle,eax
     mov ds:[esi].frh_entries,0
     add esi,SIZE file_req_header
-    mov [ebp].nfe_ptr,esi
-    xor esi,esi
-    mov [ebp].nfe_curr,esi
-    mov [ebp].nfe_curr+4,esi
+    mov [ebp].nfe_hdr,esi
+    call NotifyInitEntry
 
 nfdLoop:
     push ds
@@ -877,6 +922,7 @@ nfdFail:
     stc
 
 nfdDone:
+    add esp,SIZE nfe_struc
     popad
     pop fs
     pop es
