@@ -458,28 +458,13 @@ LocalOpenFile Endp
 
 LocalReqFile Proc near
     push edi
-    mov ebx,[edi].fc_ebx
-    mov edx,[edi].fc_edx
-    mov eax,[edi].fc_eax
-    mov ecx,[edi].fc_ecx
     mov esi,[edi].fc_handle
-    add edi,SIZE vfs_cmd_struc
     call LowReqFile
     pop edi
 ;
-    or eax,eax
-    je lrfReply
-;
-    and [edi].fc_eflags,NOT 1
     mov ebx,eax
     ReplyVfsFile
-    jmp lrfDone
-
-lrfReply:
-    mov ebx,[edi].fc_handle
-    ReplyVfsCmd
-
-lrfDone:
+;
     ret
 LocalReqFile Endp
 

@@ -433,11 +433,6 @@ arDo:
 ;
     push ebx
 ;
-    mov esi,ebx
-    sub esi,OFFSET fse_req_arr
-    shr esi,4
-    inc esi
-;
     mov ebx,ds:fi_serv_handle
     mov ds,fs:vfsp_disc_sel
     call AllocateMsg
