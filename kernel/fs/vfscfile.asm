@@ -1004,6 +1004,54 @@ NotifyFileData     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetFileMaster
+;
+;       DESCRIPTION:    Get file master block
+;
+;       RETURNS:        EDX            File block linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFileMaster    Proc near
+    push es
+    push eax
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_prog_sel
+    mov edx,es:pr_file_linear
+    or edx,edx
+    jnz gfmDone
+;
+    push es
+    push ecx
+    push edi
+;
+    mov eax,1000h
+    AllocateLocalLinear
+;
+    mov eax,flat_sel
+    mov es,eax
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+;
+    pop edi
+    pop ecx
+    pop es
+;
+    mov es:pr_file_linear,edx
+
+gfmDone:
+    pop eax
+    pop es
+    ret
+GetFileMaster   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           OpenFile
 ;
 ;       DESCRIPTION:    Open file
@@ -1026,6 +1074,7 @@ open_vfs_file    Proc near
     push gs
     push eax
     push ecx
+    push edx
     push esi
     push edi
     push ebp
@@ -1073,6 +1122,7 @@ ovfCopyPath:
     call RunMsg
     jc ovfFail
 ;
+    call GetFileMaster
     clc
     jmp ovfDone
 
@@ -1083,6 +1133,7 @@ ovfDone:
     pop ebp
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop eax
     pop gs
