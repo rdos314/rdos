@@ -45,3 +45,18 @@ fi_part              DB ?
 fi_name              DB ?
 
 file_info_struc  ENDS
+
+user_file_share    STRUC
+
+ufs_info              DB 1000h DUP(?)  ; aliased file info
+
+ufs_handle            DD ?
+
+user_file_share    ENDS
+
+user_file_entry    STRUC
+
+ufe_shared           DD ?
+ufe_local            DD ? 
+
+user_file_entry    ENDS     

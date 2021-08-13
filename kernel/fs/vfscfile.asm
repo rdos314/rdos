@@ -103,6 +103,7 @@ file_struc    STRUC
 
 fse_info          DB 1000h DUP(?)  ; aliased file info
 
+fse_info_phys     DD ?,?
 fse_insert        DD ?
 fse_sector_size   DW ?
 fse_req_count     DW ?
@@ -179,6 +180,9 @@ CreateFileSel    Proc near
     and ax,0F000h
     or ax,63h
     SetPageEntry
+;
+    mov es:fse_info_phys,eax
+    mov es:fse_info_phys+4,ebx
 ;
     mov es:fse_sector_size,cx
     mov es:fse_req_count,0
@@ -1145,6 +1149,68 @@ AllocateUserFile   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AllocateUserShare
+;
+;       DESCRIPTION:    Allocate user file share
+;
+;       PARAMETERS:     EBX            File handle
+;
+;       RETURNS:        EDX            User file share obj
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateUserShare    Proc near
+    push ds
+    push es
+    push fs
+    push eax
+;
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov al,VFS_FILE_SIGN
+    call HandleHighToPartFs
+    jc ausFail
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc ausFail
+;
+    movzx edx,bx
+    dec edx
+    shl edx,2
+    mov dx,fs:[edx].vfsp_file_arr.ff_sel
+    or dx,dx
+    stc
+    je ausFail
+;
+    mov ds,edx
+;
+    mov eax,2000h
+    AllocateLocalLinear
+;
+    push ebx
+    mov eax,ds:fse_info_phys
+    mov ebx,ds:fse_info_phys+4
+    or ax,800h
+    mov al,65h
+    SetPageEntry
+    pop ebx
+;
+    mov es:[edx].ufs_handle,ebx
+    clc    
+
+ausFail:
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+AllocateUserShare   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           OpenFile
 ;
 ;       DESCRIPTION:    Open file
@@ -1215,9 +1281,18 @@ ovfCopyPath:
     call RunMsg
     jc ovfFail
 ;
+    call AllocateUserShare
+    jc ovfDone
+;
+    mov esi,edx
     call AllocateUserFile
     jc ovfDone
 ;
+    mov es:[edx].ufe_shared,esi
+    mov bx,dx
+    and bx,0FFFh
+    shr bx,3
+    inc bx
     clc
     jmp ovfDone
 
