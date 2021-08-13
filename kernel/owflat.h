@@ -4,8 +4,8 @@
 // check carry flag, and set eax=0 if set and eax=1 if clear
 #define CarryToBool 0x73 4 0x33 0xC0 0xEB 5 0xB8 1 0 0 0
 
-// check carry flag, and set ebx=0 if set and ebx=bx if clear
-#define ValidateHandle 0x73 2 0x33 0xDB 0xF 0xB7 0xDB
+// check carry flag, and set ebx=0 if set 
+#define ValidateHandle 0x73 2 0x33 0xDB
 
 // check carry flag, and set eax=0 if set
 #define ValidateEax 0x73 2 0x33 0xC0
