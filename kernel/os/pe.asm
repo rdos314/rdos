@@ -769,8 +769,11 @@ read_file    Proc near
     je rfVfs
 ;
     UserGateApp read_file_legacy_nr
+    ret
 
 rfVfs:
+f1:
+    mov eax,1234567h
     ret
 read_file    Endp
 
@@ -894,6 +897,34 @@ CreateUserFunc  Proc near
 ;
     mov edi,esi
     add edi,OFFSET p7 + 1
+    mov es:[edi],edx
+;
+    mov edx,gs:pr_file_linear
+    or edx,edx
+    jnz cufFileAlloced
+;
+    mov eax,1000h
+    AllocateLocalLinear
+    mov gs:pr_file_linear,edx
+;
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+    jmp cufFileReloc
+
+cufFileAlloced:
+    mov ax,system_data_sel
+    mov ds,ax
+    sub edx,ds:flat_base
+
+cufFileReloc:
+    mov edi,esi
+    add edi,OFFSET f1 + 1
     mov es:[edi],edx
 ;
     pop edi
