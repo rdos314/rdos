@@ -342,7 +342,6 @@ link_usergate       PROC far
     push fs
     push bx
     push ecx
-    push si
 ;
     mov ecx,ebx
     mov bx,usergate_sel
@@ -350,7 +349,7 @@ link_usergate       PROC far
     mov bx,ax
     shl bx,USER_GATE_SHIFT
     mov eax,fs:[bx].user_gate_entry_offset32
-    mov si,fs:[bx].user_gate_entry_sel32
+    push fs:[bx].user_gate_entry_sel32
     mov fs:[bx].user_gate_name_offset,edi
     mov fs:[bx].user_gate_name_sel,es
     mov fs:[bx].user_gate_entry_offset16,ecx
@@ -364,9 +363,8 @@ link_usergate       PROC far
     xchg dx,fs:[bx].user_gate_transfer
     
 link_user_done:
-    mov dx,si
+    pop dx
 ;
-    pop si
     pop ecx
     pop bx
     pop fs

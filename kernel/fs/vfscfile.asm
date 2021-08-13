@@ -1017,6 +1017,8 @@ NotifyFileData     Endp
 
 open_vfs_file_name       DB 'Open VFS File',0
 
+org_open DD ?,?
+
 open_vfs_file    Proc near
     push ds
     push es
@@ -1221,7 +1223,14 @@ read_vfs_file32  Endp
 test_name       DB 'Test',0
 
 test_pr	Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
     mov ebx,cs
+    mov ds,ebx
+    mov es,ebx
     GetSelectorBaseSize
     int 3
     AllocateGdt
@@ -1229,10 +1238,24 @@ test_pr	Proc far
     CreateDataSelector32
     mov fs,bx
 ;
+    mov ebx,OFFSET open_vfs_file16
+    mov esi,OFFSET open_vfs_file32
+    mov edi,OFFSET open_vfs_file_name
+    mov dx,virt_es_in
+    mov ax,open_vfs_file_nr
+    LinkUserGate
+    mov dword ptr fs:org_open,eax
+    mov word ptr fs:org_open+4,dx
+;
     mov ebx,fs
     xor eax,eax
     mov fs,eax
     FreeGdt    
+;
+    popad
+    pop fs
+    pop es
+    pop ds
     ret
 test_pr Endp
 
@@ -1287,13 +1310,6 @@ init_client_file    Proc near
     mov edi,OFFSET delete_handle
     mov ax,VFS_FILE_HANDLE
     RegisterHandle
-;
-    mov ebx,OFFSET open_vfs_file16
-    mov esi,OFFSET open_vfs_file32
-    mov edi,OFFSET open_vfs_file_name
-    mov dx,virt_es_in
-    mov ax,open_vfs_file_nr
-    RegisterUserGate
 ;
     mov ebx,OFFSET read_vfs_file16
     mov esi,OFFSET read_vfs_file32
