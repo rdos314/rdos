@@ -4,8 +4,11 @@
 // check carry flag, and set eax=0 if set and eax=1 if clear
 #define CarryToBool 0x73 4 0x33 0xC0 0xEB 5 0xB8 1 0 0 0
 
+// check carry flag, and set ebx=0 if set and ebx=bx if clear
+#define ValidateHandle 0x73 2 0x33 0xDB 0xF 0xB7 0xDB
+
 // check carry flag, and set ebx=0 if set 
-#define ValidateHandle 0x73 2 0x33 0xDB
+#define ValidateFileHandle 0x73 2 0x33 0xDB
 
 // check carry flag, and set eax=0 if set
 #define ValidateEax 0x73 2 0x33 0xC0
@@ -1550,13 +1553,13 @@
 
 #pragma aux RdosOpenFile = \
     CallGate_open_file  \
-    ValidateHandle  \
+    ValidateFileHandle  \
     __parm [__edi] [__cl] \
     __value [__ebx]
 
 #pragma aux RdosCreateFile = \
     CallGate_create_file  \
-    ValidateHandle  \
+    ValidateFileHandle  \
     __parm [__edi] [__ecx] \
     __value [__ebx]
 
@@ -1573,7 +1576,7 @@
 
 #pragma aux RdosDuplFile = \
     CallGate_dupl_file  \
-    ValidateHandle  \
+    ValidateFileHandle  \
     __parm [__eax]  \
     __value [__ebx]
 
@@ -3263,12 +3266,6 @@
     CallGate_close_vfs_dir  \
     __parm [__ebx]
 
-#pragma aux RdosOpenVfsFile = \
-    CallGate_open_vfs_file  \
-    ValidateHandle \
-    __parm [__edi]  \
-    __value [__ebx]
-
 #pragma aux RdosReadVfsFile = \
     CallGate_read_vfs_file  \
     ValidateEax \
@@ -3347,7 +3344,7 @@
 
 #pragma aux RdosDuplModuleFileHandle = \
     CallGate_dupl_module_file_handle  \
-    ValidateHandle \
+    ValidateFileHandle \
     __parm [__ebx] \
     __value [__ebx]
 

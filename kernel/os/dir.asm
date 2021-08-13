@@ -1888,7 +1888,7 @@ CloseDirBase    Endp
 ;
 ;           PARAMETERS:         ES:EDI      Pathname
 ;
-;           RETURNS:        BX              FILE HANDLE
+;           RETURNS:        EBX             FILE HANDLE
 ;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1948,7 +1948,7 @@ OpenFileBase    Endp
 ;           PARAMETERS:         ES:EDI      Pathname
 ;                           CX              Attribute
 ;
-;           RETURNS:        BX              FILE HANDLE
+;           RETURNS:        EBX              FILE HANDLE
 ;                           NC              SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2173,9 +2173,9 @@ open_c_file   Endp
 ;
 ;           DESCRIPTION:    Dupl C file to file
 ;
-;           PARAMETERS:     BX          File handle entry
+;           PARAMETERS:     EBX          File handle entry
 ;                           
-;           RETURNS:        BX          File handle
+;           RETURNS:        EBX          File handle
 ;                           NC          Success
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -219,7 +219,7 @@ RemoveFileSel Endp
 ;                           BX              File selector
 ;                           CL              Access
 ;
-;           RETURNS:        BX              Handle
+;           RETURNS:        EBX             Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -240,7 +240,7 @@ CreateFileHandle    Proc near
     mov [ebx].file_handle_access,cl
     mov [ebx].file_handle_drive,al
     mov [ebx].hh_sign,FILE_HANDLE
-    mov bx,[ebx].hh_handle
+    movzx ebx,[ebx].hh_handle
     clc
 ;
     pop si
