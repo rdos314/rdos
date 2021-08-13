@@ -762,6 +762,24 @@ gutRetry:
     ret
 get_us_time    Endp
 
+get_file  Proc near
+    push eax
+f1:
+    mov edx,1234567h
+    mov eax,ebx
+    shr eax,24
+    mov edx,es:[edx+4*eax]
+    or edx,edx
+    stc
+    jz gfDone
+;
+    clc
+
+gfDone:
+    pop eax
+    ret
+get_file  Endp
+    
 read_file    Proc near
     mov eax,ebx
     shr eax,16
@@ -772,8 +790,11 @@ read_file    Proc near
     ret
 
 rfVfs:
-f1:
-    mov eax,1234567h
+    push edx
+;
+    call get_file
+;
+    pop edx
     ret
 read_file    Endp
 

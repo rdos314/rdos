@@ -1005,15 +1005,15 @@ NotifyFileData     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetFileMaster
+;       NAME:           GetUserMaster
 ;
-;       DESCRIPTION:    Get file master block
+;       DESCRIPTION:    Get user mode master block
 ;
-;       RETURNS:        EDX            File block linear
+;       RETURNS:        EDX            User master block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetFileMaster    Proc near
+GetUserMaster    Proc near
     push es
     push eax
 ;
@@ -1022,7 +1022,7 @@ GetFileMaster    Proc near
     mov es,es:p_prog_sel
     mov edx,es:pr_file_linear
     or edx,edx
-    jnz gfmDone
+    jnz gumDone
 ;
     push es
     push ecx
@@ -1044,11 +1044,64 @@ GetFileMaster    Proc near
 ;
     mov es:pr_file_linear,edx
 
-gfmDone:
+gumDone:
     pop eax
     pop es
     ret
-GetFileMaster   Endp
+GetUserMaster   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetUserPart
+;
+;       DESCRIPTION:    Get user partition block
+;
+;       PARAMETERS:     EBX            File handle
+;
+;       RETURNS:        ES             Flat sel
+;                       EDX            User partition block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetUserPart    Proc near
+    push eax
+    push esi
+;
+    mov eax,flat_sel
+    mov es,eax
+    call GetUserMaster
+    mov esi,edx
+;
+    mov eax,ebx
+    shr eax,24
+    mov edx,es:[esi+4*eax]
+    or edx,edx
+    jnz gupDone
+;
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,1000h
+    AllocateLocalLinear
+;
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+;
+    pop edi
+    pop ecx
+    pop eax
+;
+    mov es:[esi+4*eax],edx
+
+gupDone:
+    pop esi
+    pop eax
+    ret
+GetUserPart   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1123,7 +1176,7 @@ ovfCopyPath:
     call RunMsg
     jc ovfFail
 ;
-    call GetFileMaster
+    call GetUserPart
     clc
     jmp ovfDone
 
@@ -1166,6 +1219,44 @@ open_file32  Proc far
 ovf32Done:
     ret
 open_file32  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetFile
+;
+;       DESCRIPTION:    Get file
+;
+;       PARAMETERS:     EBX            Handle
+;
+;       RETURNS:        NC
+;                         GS           Flat sel
+;                         EDX          File pointer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFile  Proc near
+    push eax
+;
+    mov eax,flat_sel
+    mov gs,eax
+    call GetUserMaster
+;
+    mov eax,ebx
+    shr eax,24
+    mov edx,gs:[edx+4*eax]
+    or edx,edx
+    stc
+    jz gfDone
+;
+    clc
+
+gfDone:
+    pop eax
+    ret
+GetFile  Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1243,7 +1334,7 @@ read_file16  Proc far
     jmp rvf16Done
 
 rvf16Vfs:
-    call read_vfs_file
+    call GetFile
 
 rvf16Done:
     pop edi
@@ -1261,7 +1352,7 @@ read_file32  Proc far
     jmp rvf32Done
 
 rvf32Vfs:
-    call read_vfs_file
+    call GetFile
 
 rvf32Done:
     ret
@@ -1309,7 +1400,7 @@ delete_handle   Endp
 test_name       DB 'Test',0
 
 test_pr    Proc far
-    mov ebx,2
+    mov ebx,1460001h
     ReadFile
     ret
 test_pr    Endp
