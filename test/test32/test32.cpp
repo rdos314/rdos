@@ -83,6 +83,7 @@ void main()
     count = RdosReadFile(handle1, buf, 512 * 128);
     count = RdosReadFile(handle2, buf, 512 * 128);
 
+    RdosTestGate("");
 
 
     for (;;)
@@ -103,6 +104,4 @@ void main()
         RdosWaitMilli(delay);
 
     }
-
-    RdosTestGate("");
 }

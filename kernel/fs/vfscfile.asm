@@ -1300,6 +1300,21 @@ dhDone:
 delete_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           Test
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_name       DB 'Test',0
+
+test_pr    Proc far
+    mov ebx,2
+    ReadFile
+    ret
+test_pr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_client_file
@@ -1341,11 +1356,11 @@ init_client_file    Proc near
     mov dword ptr fs:org_read,eax
     mov word ptr fs:org_read+4,dx
 ;
-;    mov esi,OFFSET test_pr
-;    mov edi,OFFSET test_name
-;    xor dx,dx
-;    mov ax,test_gate_nr
-;    RegisterBimodalUserGate
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
 ;
     mov ebx,fs
     xor eax,eax
