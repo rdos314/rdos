@@ -1106,6 +1106,45 @@ GetUserPart   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AllocateUserFile
+;
+;       DESCRIPTION:    Allocate user file handle
+;
+;       PARAMETERS:     EBX            File handle
+;
+;       RETURNS:        ES             Flat sel
+;                       EDX            User file ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateUserFile    Proc near
+    push eax
+    push ecx
+;
+    call GetUserPart
+;
+    mov ecx,200h
+
+aufLoop:
+    mov eax,es:[edx]
+    or eax,es:[edx+4]
+    clc
+    jz aufDone
+;
+    add edx,8
+    loop aufLoop
+;
+    stc
+
+aufDone:
+    pop ecx
+    pop eax
+    ret
+AllocateUserFile   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           OpenFile
 ;
 ;       DESCRIPTION:    Open file
@@ -1176,7 +1215,9 @@ ovfCopyPath:
     call RunMsg
     jc ovfFail
 ;
-    call GetUserPart
+    call AllocateUserFile
+    jc ovfDone
+;
     clc
     jmp ovfDone
 
