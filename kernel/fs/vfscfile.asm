@@ -1210,6 +1210,33 @@ read_vfs_file32  Proc far
 read_vfs_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           Test gate
+;
+;       DESCRIPTION:    Test gate
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_name       DB 'Test',0
+
+test_pr	Proc far
+    mov ebx,cs
+    GetSelectorBaseSize
+    int 3
+    AllocateGdt
+    int 3
+    CreateDataSelector32
+    mov fs,bx
+;
+    mov ebx,fs
+    xor eax,eax
+    mov fs,eax
+    FreeGdt    
+    ret
+test_pr Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           Delete handle
@@ -1274,6 +1301,13 @@ init_client_file    Proc near
     mov dx,virt_es_in
     mov ax,read_vfs_file_nr
     RegisterUserGate
+;
+    mov esi,OFFSET test_pr
+    mov edi,OFFSET test_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
+
     ret
 init_client_file    Endp
 
