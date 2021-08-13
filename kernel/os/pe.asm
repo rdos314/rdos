@@ -766,7 +766,7 @@ read_file    Proc near
     mov eax,ebx
     shr eax,16
     cmp al,VFS_FILE_SIGN
-;    je rfVfs
+    je rfVfs
 ;
     UserGateApp read_file_legacy_nr
 
@@ -991,7 +991,7 @@ spOk:
     cmp ax,leave_user_section_nr
     je spLeave
 ;    
-    cmp ax,read_vfs_file_nr
+    cmp ax,read_file_nr
     je spReadFile
 ;
     jmp spFail    
