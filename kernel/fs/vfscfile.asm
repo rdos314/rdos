@@ -1170,9 +1170,9 @@ open_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadVfsFile
+;       NAME:           ReadFile
 ;
-;       DESCRIPTION:    Read VFS file
+;       DESCRIPTION:    Read file
 ;
 ;       PARAMETERS:     BX             Handle
 ;                       ES:(E)DI       Buffer
@@ -1183,7 +1183,9 @@ open_file32  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_vfs_file_name       DB 'Read VFS File',0
+read_file_name       DB 'Read VFS File',0
+
+org_read DD ?,?
 
 read_vfs_file    Proc near
     push ds
@@ -1225,21 +1227,45 @@ rvfDone:
     ret
 read_vfs_file    Endp
 
-read_vfs_file16  Proc far
+read_file16  Proc far
     push ecx
     push edi
+;
     movzx ecx,cx
     movzx edi,di
+;
+    mov eax,ebx
+    shr eax,16
+    cmp al,VFS_FILE_SIGN
+    je rvf16Vfs
+;
+    call fword ptr cs:org_read
+    jmp rvf16Done
+
+rvf16Vfs:
     call read_vfs_file
+
+rvf16Done:
     pop edi
     pop ecx
     ret
-read_vfs_file16  Endp
+read_file16  Endp
 
-read_vfs_file32  Proc far
+read_file32  Proc far
+    mov eax,ebx
+    shr eax,16
+    cmp al,VFS_FILE_SIGN
+    je rvf32Vfs
+;
+    call fword ptr cs:org_read
+    jmp rvf32Done
+
+rvf32Vfs:
     call read_vfs_file
+
+rvf32Done:
     ret
-read_vfs_file32  Endp
+read_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1306,12 +1332,14 @@ init_client_file    Proc near
     mov dword ptr fs:org_open,eax
     mov word ptr fs:org_open+4,dx
 ;
-    mov ebx,OFFSET read_vfs_file16
-    mov esi,OFFSET read_vfs_file32
-    mov edi,OFFSET read_vfs_file_name
+    mov ebx,OFFSET read_file16
+    mov esi,OFFSET read_file32
+    mov edi,OFFSET read_file_name
     mov dx,virt_es_in
-    mov ax,read_vfs_file_nr
-    RegisterUserGate
+    mov ax,read_file_nr
+    LinkUserGate
+    mov dword ptr fs:org_read,eax
+    mov word ptr fs:org_read+4,dx
 ;
 ;    mov esi,OFFSET test_pr
 ;    mov edi,OFFSET test_name
