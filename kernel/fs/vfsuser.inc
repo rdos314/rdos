@@ -20,24 +20,28 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; VFSfile.inc
-; VFS file includes
+; VFsuser.inc
+; VFS usermode includes
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-REQ_SIGN             = 'R'
+VFS_FILE_SIGN            = 'F'
 
+file_info_struc  STRUC
 
-file_part_req_struc  STRUC
+fi_fs_size           DD ?,?
+fi_req_size          DD ?,?
+fi_access            DD ?,?
+fi_modify            DD ?,?
+fi_attrib            DD ?
+fi_flags             DD ?
+fi_uid               DD ?
+fi_gid               DD ?
+fi_kernel_handle     DD ?
+fi_serv_handle       DD ?
+fi_disc              DB ?
+fi_drive             DB ?
+fi_part              DB ?
+fi_name              DB ?
 
-fr_sel           DW ?
-fr_link          DW ?
-
-file_part_req_struc  ENDS
-
-file_part_struc  STRUC
-
-ff_sel           DW ?
-ff_link          DW ?
-
-file_part_struc  ENDS
+file_info_struc  ENDS

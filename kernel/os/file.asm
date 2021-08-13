@@ -3596,6 +3596,9 @@ init_file       PROC near
     mov ax,read_file_nr
     RegisterSyscall
 ;
+    mov ax,read_file_legacy_nr
+    RegisterUserGate
+;
     mov ebx,OFFSET write_file16
     mov esi,OFFSET write_file32
     mov edi,OFFSET write_file_name

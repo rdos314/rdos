@@ -959,6 +959,8 @@ create_thread_block_nr            = 782
 wait_thread_block_nr              = 783
 close_thread_block_nr             = 784
 
+read_file_legacy_nr               = 785
+
 read_vfs_file_nr                  = 786
 
 usergate_entries                  = 800

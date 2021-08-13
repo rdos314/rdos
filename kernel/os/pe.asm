@@ -41,6 +41,7 @@ INCLUDE ..\debevent.inc
 INCLUDE ..\handle.inc
 INCLUDE chandle.inc
 INCLUDE servdev.def
+INCLUDE ..\fs\vfsuser.inc
 
 SYS_BASE EQU 0DE000000h
 
@@ -764,10 +765,10 @@ get_us_time    Endp
 read_file    Proc near
     mov eax,ebx
     shr eax,16
-    or ax,ax
-    jnz rfVfs
+    cmp al,VFS_FILE_SIGN
+;    je rfVfs
 ;
-    UserGate read_file_nr
+    UserGateApp read_file_legacy_nr
 
 rfVfs:
     ret

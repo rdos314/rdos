@@ -41,6 +41,7 @@ include ..\os\exec.def
 include vfs.inc
 include vfsmsg.inc
 include vfsfile.inc
+include vfsuser.inc
 
     .386p
 
@@ -867,7 +868,7 @@ NotifyFileData	Proc near
     mov ebp,esp
 ;
     mov ebx,gs:vfs_rd_file_handle
-    mov al,FILE_SIGN
+    mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
     jc nfdFail
 ;

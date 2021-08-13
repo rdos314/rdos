@@ -959,7 +959,8 @@
 #define usergate_wait_thread_block 0x0000030F
 #define usergate_close_thread_block 0x00000310
 
-#define usergate_open_vfs_file 0x00000311
+#define usergate_read_file_legacy 0x00000311
+
 #define usergate_read_vfs_file 0x00000312
 
 
@@ -1926,7 +1927,8 @@
 #define CallGate_wait_thread_block 0x55 0x67 0x9a 15 3 0 0 3 0 0x5d
 #define CallGate_close_thread_block 0x55 0x67 0x9a 16 3 0 0 3 0 0x5d
 
-#define CallGate_open_vfs_file 0x55 0x67 0x9a 17 3 0 0 3 0 0x5d
+#define CallGate_read_file_legacy 0x55 0x67 0x9a 17 3 0 0 3 0 0x5d
+
 #define CallGate_read_vfs_file 0x55 0x67 0x9a 18 3 0 0 3 0 0x5d
 
 #else
@@ -2891,7 +2893,8 @@
 #define CallGate_wait_thread_block 0x3e 0x67 0x9a 15 3 0 0 3 0
 #define CallGate_close_thread_block 0x3e 0x67 0x9a 16 3 0 0 3 0
 
-#define CallGate_open_vfs_file 0x3e 0x67 0x9a 17 3 0 0 3 0
+#define CallGate_read_file_legacy 0x3e 0x67 0x9a 17 3 0 0 3 0
+
 #define CallGate_read_vfs_file 0x3e 0x67 0x9a 18 3 0 0 3 0
 
 #endif

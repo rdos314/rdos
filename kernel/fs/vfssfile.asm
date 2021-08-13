@@ -41,6 +41,7 @@ include ..\os\exec.def
 include vfs.inc
 include vfsmsg.inc
 include vfsfile.inc
+include vfsuser.inc
 
     .386p
 
@@ -201,7 +202,7 @@ afhOk:
     movzx eax,ds:vfsp_part_nr
     inc eax
     shl eax,8
-    mov al,FILE_SIGN
+    mov al,VFS_FILE_SIGN
     shl eax,16
     sub ebx,OFFSET vfsp_file_arr
     shr ebx,2
@@ -1148,7 +1149,7 @@ serv_add_file_req    Proc far
     push ebp
 ;
     push eax
-    mov al,FILE_SIGN
+    mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
     pop eax
     jc safLeave
