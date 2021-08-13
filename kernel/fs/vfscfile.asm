@@ -1363,10 +1363,23 @@ GetFile  Proc near
     shr eax,24
     mov edx,gs:[edx+4*eax]
     or edx,edx
-    stc
-    jz gfDone
+    jz gfFail
+;
+    movzx eax,bx
+    dec eax
+    shl eax,3
+    cmp eax,1000h
+    jae gfFail    
+;
+    mov edx,es:[edx+eax]
+    or edx,edx
+    jz gfFail
 ;
     clc
+    jmp gfDone
+
+gfFail:
+    stc
 
 gfDone:
     pop eax
