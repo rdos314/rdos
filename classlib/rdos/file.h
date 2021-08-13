@@ -57,7 +57,7 @@ public:
 protected:
 
 private:
-	int FHandle;
+	long FHandle;
 	char *FFileName;
 };
 

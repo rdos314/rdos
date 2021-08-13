@@ -544,23 +544,23 @@ int RDOSAPI RdosSelect(void *HandleMaskArr, int HandleCount, int Timeout);
 int RDOSAPI RdosSetHandleBlockingMode(int Handle);
 int RDOSAPI RdosSetHandleNonblockingMode(int Handle);
 
-int RDOSAPI RdosOpenFile(const char *FileName, char Access);
-int RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
-void RDOSAPI RdosCloseFile(int Handle);
-int RDOSAPI RdosIsDevice(int Handle);
-int RDOSAPI RdosDuplFile(int Handle);
-long RDOSAPI RdosGetFileSize(int Handle);
-void RDOSAPI RdosSetFileSize(int Handle, long Size);
-long RDOSAPI RdosGetFilePos(int Handle);
-void RDOSAPI RdosSetFilePos(int Handle, long Pos);
-int RDOSAPI RdosReadFile(int Handle, void *Buf, int Size);
-int RDOSAPI RdosWriteFile(int Handle, const void *Buf, int Size);
-void RDOSAPI RdosGetFileTime(int Handle, unsigned long *MsbTime, unsigned long *LsbTime);
-void RDOSAPI RdosSetFileTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
+long RDOSAPI RdosOpenFile(const char *FileName, char Access);
+long RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
+void RDOSAPI RdosCloseFile(long Handle);
+int RDOSAPI RdosIsDevice(long Handle);
+long RDOSAPI RdosDuplFile(long Handle);
+long RDOSAPI RdosGetFileSize(long Handle);
+void RDOSAPI RdosSetFileSize(long Handle, long Size);
+long RDOSAPI RdosGetFilePos(long Handle);
+void RDOSAPI RdosSetFilePos(long Handle, long Pos);
+int RDOSAPI RdosReadFile(long Handle, void *Buf, int Size);
+int RDOSAPI RdosWriteFile(long Handle, const void *Buf, int Size);
+void RDOSAPI RdosGetFileTime(long Handle, unsigned long *MsbTime, unsigned long *LsbTime);
+void RDOSAPI RdosSetFileTime(long Handle, unsigned long MsbTime, unsigned long LsbTime);
 
 int RDOSAPI RdosCreateMapping(int Size);
 int RDOSAPI RdosCreateNamedMapping(const char *Name, int Size);
-int RDOSAPI RdosCreateNamedFileMapping(const char *Name, int Size, int FileHandle);
+int RDOSAPI RdosCreateNamedFileMapping(const char *Name, int Size, long FileHandle);
 int RDOSAPI RdosOpenNamedMapping(const char *Name);
 void RDOSAPI RdosSyncMapping(int Handle);
 void RDOSAPI RdosCloseMapping(int Handle);
@@ -877,7 +877,7 @@ const char *RDOSAPI RdosGetExeName(void);
 const char *RDOSAPI RdosGetCmdLine(void);
 int RDOSAPI RdosLoadDll(const char *Name);
 void RDOSAPI RdosFreeDll(int handle);
-int RDOSAPI RdosDuplModuleFileHandle(int handle);
+long RDOSAPI RdosDuplModuleFileHandle(long handle);
 int RDOSAPI RdosGetModuleName(int handle, char *Buf, int Size);
 int RDOSAPI RdosReadResource(int handle, int ID, char *Buf, int Size);
 int RDOSAPI RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
@@ -955,13 +955,13 @@ void RDOSAPI RdosStartDebugger(int timeout);
 void RDOSAPI RdosKickDebugger();
 void RDOSAPI RdosStopDebugger();
 
-void RDOSAPI RdosStartNetCapture(int FileHandle);
+void RDOSAPI RdosStartNetCapture(long FileHandle);
 void RDOSAPI RdosStopNetCapture();
 
-void RDOSAPI RdosStartCanCapture(int FileHandle);
+void RDOSAPI RdosStartCanCapture(long FileHandle);
 void RDOSAPI RdosStopCanCapture();
 
-void RDOSAPI RdosStartLonCapture(int FileHandle);
+void RDOSAPI RdosStartLonCapture(long FileHandle);
 void RDOSAPI RdosStopLonCapture();
 
 int RDOSAPI RdosHasUsbCardReaderError();

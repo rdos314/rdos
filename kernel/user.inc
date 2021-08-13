@@ -1012,8 +1012,8 @@ GetCurrentDll   MACRO
         UserGate get_current_dll_nr
                                         ENDM
 
-; IN  BX                Module handle
-; OUT BX        Duplicated file handle
+; IN  EBX                Module handle
+; OUT EBX        Duplicated file handle
 DuplModuleFileHandle    MACRO
         UserGate dupl_module_file_handle_nr
                                         ENDM
@@ -2313,12 +2313,6 @@ CloseVfsDir   MACRO
         UserGate close_vfs_dir_nr
                                                 ENDM
 
-; IN  ES:(E)DI        Pathname
-; OUT BX              Handle
-OpenVfsFile        MACRO
-        UserGate open_vfs_file_nr
-                                                ENDM
-
 ; IN  BX              Handle
 ; IN  ES:(E)DI        Buffer
 ; IN  (E)CX           Size
@@ -2425,76 +2419,76 @@ ReadDir        MACRO
 
 ;       IN      ES:(E)DI        Pathname
 ;       IN      CL                      Access mode
-;       OUT     BX                      Handle
+;       OUT     EBX                     Handle
 OpenFile        MACRO
         UserGate open_file_nr
                                                 ENDM
 
 ;       IN      ES:(E)DI        Pathname
 ;       IN      CX              Attribute
-;       OUT     BX              Handle
+;       OUT     EBX             Handle
 CreateFile      MACRO
         UserGate create_file_nr
                                                 ENDM
 
-;       IN      BX              Handle
+;       IN      EBX             Handle
 CloseFile       MACRO
         UserGate close_file_nr
                                                 ENDM
 
-;       IN      AX                      Old handle
-;       OUT     BX                      New handle
+;       IN      EAX                      Old handle
+;       OUT     EBX                      New handle
 DuplFile       MACRO
         UserGate dupl_file_nr
                                                 ENDM
 
-;       IN      BX              Handle
+;       IN      EBX              Handle
 ;       OUT     DX              Device data
 GetIoctlData    MACRO
         UserGate get_ioctl_data_nr
                                                 ENDM
 
 
-;       IN      BX                      Handle
+;       IN      EBX             Handle
 ;       OUT     EAX             Filesize
 GetFileSize     MACRO
         UserGate get_file_size_nr
                                                 ENDM
 
 
-;       IN      BX                      Handle
+;       IN      EBX                     Handle
 ;       IN      EAX                     Filesize
 SetFileSize     MACRO
         UserGate set_file_size_nr
                                                 ENDM
 
 
-;       IN      BX                      Handle
+;       IN      EBX                     Handle
 ;       IN      EAX                     File position
 GetFilePos      MACRO
         UserGate get_file_pos_nr
                                                 ENDM
 
 
-;       IN      BX                      Handle
+;       IN      EBX                     Handle
 ;       IN      EAX                     File position
 SetFilePos      MACRO
         UserGate set_file_pos_nr
                                                 ENDM
 
-;       IN      BX                      Handle
+;       IN      EBX                     Handle
 ;       OUT     EDX:EAX         File system time
 GetFileTime      MACRO
         UserGate get_file_time_nr
                                                 ENDM
 
-;       IN      BX                      Handle
+;       IN      EBX                     Handle
 ;       IN      EDX:EAX         File system time
 SetFileTime      MACRO
         UserGate set_file_time_nr
                                                 ENDM
 
-;       IN      BX              Handle
+;       IN      EBX             Handle
 ;       IN      ES:(E)DI        Buffer
 ;       IN      (E)CX           Number of bytes to read
 ;       OUT     (E)AX           Number of bytes read
@@ -2502,7 +2496,7 @@ ReadFile        MACRO
         UserGate read_file_nr
                                                 ENDM
 
-;       IN      BX              Handle
+;       IN      EBX             Handle
 ;       IN      ES:(E)DI        Buffer
 ;       IN      (E)CX           Number of bytes to write
 ;       OUT (E)AX               Number of bytes written
@@ -2526,14 +2520,14 @@ CreateNamedMapping        MACRO
                                                 ENDM
 
 ;       IN EAX                  Size of mapping object
-;       IN BX                   File handle
+;       IN EBX                  File handle
 ;       OUT BX                  Handle
 CreateFileMapping        MACRO
         UserGate create_file_mapping_nr
                                                 ENDM
 
 ;       IN EAX                  Size of mapping object
-;       IN BX                   File handle
+;       IN EBX                  File handle
 ;       IN ES:(E)DI     Name of mapping
 ;       OUT BX                  Handle
 CreateNamedFileMapping        MACRO
@@ -3653,7 +3647,7 @@ KickDebugger      MACRO
         UserGate kick_debugger_nr
                                                 ENDM
                                                 
-;       IN  BX          File handle
+;       IN  EBX         File handle
 StartNetCapture      MACRO
         UserGate start_net_capture_nr
                                                 ENDM
@@ -3662,7 +3656,7 @@ StopNetCapture      MACRO
         UserGate stop_net_capture_nr
                                                 ENDM
                                                 
-;       IN  BX          File handle
+;       IN  EBX          File handle
 StartCanCapture      MACRO
         UserGate start_can_capture_nr
                                                 ENDM
@@ -3671,7 +3665,7 @@ StopCanCapture      MACRO
         UserGate stop_can_capture_nr
                                                 ENDM
                                                 
-;       IN  BX          File handle
+;       IN  EBX          File handle
 StarLonCapture      MACRO
         UserGate start_lon_capture_nr
                                                 ENDM
