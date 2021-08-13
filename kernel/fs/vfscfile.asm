@@ -1004,9 +1004,9 @@ NotifyFileData     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           OpenVfsFile
+;       NAME:           OpenFile
 ;
-;       DESCRIPTION:    Open VFS file
+;       DESCRIPTION:    Open file
 ;
 ;       PARAMETERS:     ES:(E)DI       Pathname
 ;
@@ -1015,7 +1015,7 @@ NotifyFileData     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_vfs_file_name       DB 'Open VFS File',0
+open_file_name       DB 'Open VFS File',0
 
 org_open DD ?,?
 
@@ -1124,7 +1124,7 @@ ovfDone:
     ret
 open_vfs_file    Endp
 
-open_vfs_file16  Proc far
+open_file16  Proc far
     push edi
     movzx edi,di
     call open_vfs_file
@@ -1135,9 +1135,9 @@ open_vfs_file16  Proc far
 ovf16Done:
     pop edi
     ret
-open_vfs_file16  Endp
+open_file16  Endp
 
-open_vfs_file32  Proc far
+open_file32  Proc far
     call open_vfs_file
     jnc ovf32Done
 ;
@@ -1145,7 +1145,7 @@ open_vfs_file32  Proc far
 
 ovf32Done:
     ret
-open_vfs_file32  Endp
+open_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1277,11 +1277,11 @@ init_client_file    Proc near
     mov ax,VFS_FILE_HANDLE
     RegisterHandle
 ;
-    mov ebx,OFFSET open_vfs_file16
-    mov esi,OFFSET open_vfs_file32
-    mov edi,OFFSET open_vfs_file_name
+    mov ebx,OFFSET open_file16
+    mov esi,OFFSET open_file32
+    mov edi,OFFSET open_file_name
     mov dx,virt_es_in
-    mov ax,open_vfs_file_nr
+    mov ax,open_file_nr
     LinkUserGate
     mov dword ptr fs:org_open,eax
     mov word ptr fs:org_open+4,dx

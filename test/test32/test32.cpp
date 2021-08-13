@@ -76,8 +76,10 @@ void main()
     int handle1;
     int handle2;
 
-    handle1 = RdosOpenVfsFile("y:/boot32.bin");
-    handle2 = RdosOpenVfsFile("y:/rdos.bin");
+    handle1 = RdosOpenFile("c:/system.ini", 0);
+
+    handle1 = RdosOpenFile("y:/boot32.bin", 0);
+    handle2 = RdosOpenFile("y:/rdos.bin", 0);
     buf = new char[512 * 128];
     count = RdosReadVfsFile(handle2, buf, 512 * 128);
 
