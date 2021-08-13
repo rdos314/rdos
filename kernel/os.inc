@@ -225,6 +225,16 @@ RegisterUserGate32      MACRO
     OsGate register_usergate32_nr
                         ENDM
 
+; IN  AX          GATE NUMBER
+; IN  DX          SEGMENT TRANSFER
+; IN  DS:EBX      16-BIT GATE CALL ADDRESS
+; IN  DS:ESI      32-BIT GATE CALL ADDRESS
+; IN  ES:EDI      GATE NAME ADDRESS
+; OUT DX:EAX      Previous 32-bit call address
+LinkUserGate    MACRO
+    OsGate link_usergate_nr
+                        ENDM
+
 ;       AX      Gate number
 ;       ECX     Syscall flags + par      
 ;       DX      Segment transfer

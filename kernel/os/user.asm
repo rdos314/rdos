@@ -113,6 +113,12 @@ init_usergate_loop:
     mov ax,register_usergate_nr
     RegisterOsGate
 ;
+    mov esi,OFFSET link_usergate
+    mov edi,OFFSET link_usergate_name
+    xor cl,cl
+    mov ax,link_usergate_nr
+    RegisterOsGate
+;
     mov esi,OFFSET register_usergate16
     mov edi,OFFSET register_usergate16_name
     xor cl,cl
@@ -312,6 +318,60 @@ register_user_done:
     pop fs
     retf32
 register_usergate       ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Link_USERGATE
+;
+;           DESCRIPTION:    Link 16- & 32-bit gate
+;
+;           PARAMETERS:     AX       GATE NUMBER
+;                           DX       SEGMENT TRANSFER
+;                           DS:EBX   16-BIT GATE CALL ADDRESS
+;                           DS:ESI   32-BIT GATE CALL ADDRESS
+;                           ES:EDI   GATE NAME ADDRESS
+;
+;           RETURNS:        DX:EAX   Previous 32-bit gate call address
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+link_usergate_name  DB 'Link User Gate',0
+
+link_usergate       PROC far
+    push fs
+    push bx
+    push ecx
+    push si
+;
+    mov ecx,ebx
+    mov bx,usergate_sel
+    mov fs,bx
+    mov bx,ax
+    shl bx,USER_GATE_SHIFT
+    mov eax,fs:[bx].user_gate_entry_offset32
+    mov si,fs:[bx].user_gate_entry_sel32
+    mov fs:[bx].user_gate_name_offset,edi
+    mov fs:[bx].user_gate_name_sel,es
+    mov fs:[bx].user_gate_entry_offset16,ecx
+    mov fs:[bx].user_gate_entry_sel16,ds
+    mov fs:[bx].user_gate_entry_offset32,esi
+    mov fs:[bx].user_gate_entry_sel32,ds
+    xchg dx,fs:[bx].user_gate_transfer
+    or dx,dx
+    jz link_user_done
+;
+    xchg dx,fs:[bx].user_gate_transfer
+    
+link_user_done:
+    mov dx,si
+;
+    pop si
+    pop ecx
+    pop bx
+    pop fs
+    retf32
+link_usergate       ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

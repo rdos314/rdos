@@ -453,7 +453,6 @@
 
 #define osgate_has_page_entry 438
 #define osgate_free_page_entries 439
-#define osgate_free_global_page_entries 439
 #define osgate_allocate_page_entries 440
 #define osgate_reserve_page_entries 441
 
@@ -690,7 +689,7 @@
 #define osgate_process_id_to_sel 649
 #define osgate_get_process_id 650
 
-#define osgate_create_ldt 651
+#define osgate_create_private_ldt 651
 #define osgate_destroy_ldt 652
 
 #define osgate_create_c_handle 653
@@ -850,6 +849,56 @@
 #define osgate_install_dynamic_disc 773
 #define osgate_install_fixed_disc 774
 #define osgate_register_demand_mount 775
+#define osgate_check_drive 776
+#define osgate_create_serv_dir 777
+#define osgate_get_flat_size 778
+#define osgate_allocate_small_serv 779
+
+#define osgate_register_serv_gate 780
+
+#define osgate_create_serv_proc 781
+#define osgate_load_serv 782
+#define osgate_create_serv_app 783
+#define osgate_exec_serv 784
+
+#define osgate_create_shared_ldt 785
+#define osgate_destroy_shared_ldt 786
+
+#define osgate_start_vfs 787
+#define osgate_stop_vfs 788
+
+#define osgate_allocate_big_serv 789
+#define osgate_map_serv_entry 790
+#define osgate_free_small_serv 791
+#define osgate_free_big_serv 792
+#define osgate_free_serv_page_entries 793
+#define osgate_allocate_big_serv_sel 794
+#define osgate_free_big_serv_sel 795
+
+#define osgate_install_vfs_disc 796
+#define osgate_get_vfs_disc_info 797
+#define osgate_get_vfs_disc_vendor_info 798
+#define osgate_read_vfs_disc 799
+#define osgate_remove_vfs_disc 800
+#define osgate_allocate_vfs_drive 801
+#define osgate_check_vfs_drive 802
+#define osgate_get_vfs_cur_dir 803
+
+#define osgate_clear_page_entries 804
+#define osgate_get_vfs_dir_entry_attrib 805
+#define osgate_set_vfs_cur_dir 806
+#define osgate_clone_vfs_cur_dir 807
+#define osgate_free_vfs_cur_dir 808
+
+#define osgate_create_share_block 809
+#define osgate_grow_share_block 810
+#define osgate_free_share_block 811
+#define osgate_create_fixed_share_block 812
+
+#define osgate_get_net_mac 813
+#define osgate_setup_net_cachable 814
+
+#define osgate_link_usergate 815
 
 
 
@@ -1308,7 +1357,6 @@
 
 #define OsGate_has_page_entry 0x3E 0x67 0x9a 182 1 0 0 2 0
 #define OsGate_free_page_entries 0x3E 0x67 0x9a 183 1 0 0 2 0
-#define OsGate_free_global_page_entries 0x3E 0x67 0x9a 183 1 0 0 2 0
 #define OsGate_allocate_page_entries 0x3E 0x67 0x9a 184 1 0 0 2 0
 #define OsGate_reserve_page_entries 0x3E 0x67 0x9a 185 1 0 0 2 0
 
@@ -1545,7 +1593,7 @@
 #define OsGate_process_id_to_sel 0x3E 0x67 0x9a 137 2 0 0 2 0
 #define OsGate_get_process_id 0x3E 0x67 0x9a 138 2 0 0 2 0
 
-#define OsGate_create_ldt 0x3E 0x67 0x9a 139 2 0 0 2 0
+#define OsGate_create_private_ldt 0x3E 0x67 0x9a 139 2 0 0 2 0
 #define OsGate_destroy_ldt 0x3E 0x67 0x9a 140 2 0 0 2 0
 
 #define OsGate_create_c_handle 0x3E 0x67 0x9a 141 2 0 0 2 0
@@ -1705,4 +1753,54 @@
 #define OsGate_install_dynamic_disc 0x3E 0x67 0x9a 5 3 0 0 2 0
 #define OsGate_install_fixed_disc 0x3E 0x67 0x9a 6 3 0 0 2 0
 #define OsGate_register_demand_mount 0x3E 0x67 0x9a 7 3 0 0 2 0
+#define OsGate_check_drive 0x3E 0x67 0x9a 8 3 0 0 2 0
+#define OsGate_create_serv_dir 0x3E 0x67 0x9a 9 3 0 0 2 0
+#define OsGate_get_flat_size 0x3E 0x67 0x9a 10 3 0 0 2 0
+#define OsGate_allocate_small_serv 0x3E 0x67 0x9a 11 3 0 0 2 0
+
+#define OsGate_register_serv_gate 0x3E 0x67 0x9a 12 3 0 0 2 0
+
+#define OsGate_create_serv_proc 0x3E 0x67 0x9a 13 3 0 0 2 0
+#define OsGate_load_serv 0x3E 0x67 0x9a 14 3 0 0 2 0
+#define OsGate_create_serv_app 0x3E 0x67 0x9a 15 3 0 0 2 0
+#define OsGate_exec_serv 0x3E 0x67 0x9a 16 3 0 0 2 0
+
+#define OsGate_create_shared_ldt 0x3E 0x67 0x9a 17 3 0 0 2 0
+#define OsGate_destroy_shared_ldt 0x3E 0x67 0x9a 18 3 0 0 2 0
+
+#define OsGate_start_vfs 0x3E 0x67 0x9a 19 3 0 0 2 0
+#define OsGate_stop_vfs 0x3E 0x67 0x9a 20 3 0 0 2 0
+
+#define OsGate_allocate_big_serv 0x3E 0x67 0x9a 21 3 0 0 2 0
+#define OsGate_map_serv_entry 0x3E 0x67 0x9a 22 3 0 0 2 0
+#define OsGate_free_small_serv 0x3E 0x67 0x9a 23 3 0 0 2 0
+#define OsGate_free_big_serv 0x3E 0x67 0x9a 24 3 0 0 2 0
+#define OsGate_free_serv_page_entries 0x3E 0x67 0x9a 25 3 0 0 2 0
+#define OsGate_allocate_big_serv_sel 0x3E 0x67 0x9a 26 3 0 0 2 0
+#define OsGate_free_big_serv_sel 0x3E 0x67 0x9a 27 3 0 0 2 0
+
+#define OsGate_install_vfs_disc 0x3E 0x67 0x9a 28 3 0 0 2 0
+#define OsGate_get_vfs_disc_info 0x3E 0x67 0x9a 29 3 0 0 2 0
+#define OsGate_get_vfs_disc_vendor_info 0x3E 0x67 0x9a 30 3 0 0 2 0
+#define OsGate_read_vfs_disc 0x3E 0x67 0x9a 31 3 0 0 2 0
+#define OsGate_remove_vfs_disc 0x3E 0x67 0x9a 32 3 0 0 2 0
+#define OsGate_allocate_vfs_drive 0x3E 0x67 0x9a 33 3 0 0 2 0
+#define OsGate_check_vfs_drive 0x3E 0x67 0x9a 34 3 0 0 2 0
+#define OsGate_get_vfs_cur_dir 0x3E 0x67 0x9a 35 3 0 0 2 0
+
+#define OsGate_clear_page_entries 0x3E 0x67 0x9a 36 3 0 0 2 0
+#define OsGate_get_vfs_dir_entry_attrib 0x3E 0x67 0x9a 37 3 0 0 2 0
+#define OsGate_set_vfs_cur_dir 0x3E 0x67 0x9a 38 3 0 0 2 0
+#define OsGate_clone_vfs_cur_dir 0x3E 0x67 0x9a 39 3 0 0 2 0
+#define OsGate_free_vfs_cur_dir 0x3E 0x67 0x9a 40 3 0 0 2 0
+
+#define OsGate_create_share_block 0x3E 0x67 0x9a 41 3 0 0 2 0
+#define OsGate_grow_share_block 0x3E 0x67 0x9a 42 3 0 0 2 0
+#define OsGate_free_share_block 0x3E 0x67 0x9a 43 3 0 0 2 0
+#define OsGate_create_fixed_share_block 0x3E 0x67 0x9a 44 3 0 0 2 0
+
+#define OsGate_get_net_mac 0x3E 0x67 0x9a 45 3 0 0 2 0
+#define OsGate_setup_net_cachable 0x3E 0x67 0x9a 46 3 0 0 2 0
+
+#define OsGate_link_usergate 0x3E 0x67 0x9a 47 3 0 0 2 0
 

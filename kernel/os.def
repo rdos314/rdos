@@ -898,4 +898,6 @@ create_fixed_share_block_nr = 812
 get_net_mac_nr              = 813
 setup_net_cachable_nr       = 814
 
+link_usergate_nr            = 815
+
 osgate_entries              = 850
