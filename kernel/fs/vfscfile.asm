@@ -1073,38 +1073,6 @@ ovfCopyPath:
     call RunMsg
     jc ovfFail
 ;
-    mov esi,ebx
-    push ecx
-    mov cx,SIZE file_handle_seg
-    AllocateHandle
-    pop ecx
-;
-    push ebx
-    mov ebx,esi
-    mov al,FILE_SIGN
-    call HandleHighToPartFs
-    pop ebx
-    jc ovfFail
-;
-    cmp si,MAX_VFS_FILE_COUNT    
-    cmc
-    jc ovfFail
-;
-    movzx eax,si
-    dec eax
-    shl eax,2
-    mov ax,fs:[eax].vfsp_file_arr.ff_sel
-    or ax,ax
-    je ovfFail
-;
-    mov [ebx].fh_part_sel,fs
-    mov [ebx].fh_file_handle,esi
-    mov [ebx].fh_file_sel,ax
-    mov [ebx].fh_attrib,ecx
-    mov [ebx].fh_pos,0
-    mov [ebx].fh_pos+4,0
-    mov [ebx].hh_sign,VFS_FILE_HANDLE
-    mov bx,[ebx].hh_handle
     clc
     jmp ovfDone
 
