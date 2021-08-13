@@ -1128,12 +1128,22 @@ open_vfs_file16  Proc far
     push edi
     movzx edi,di
     call open_vfs_file
+    jnc ovf16Done
+;
+    call fword ptr cs:org_open
+
+ovf16Done:
     pop edi
     ret
 open_vfs_file16  Endp
 
 open_vfs_file32  Proc far
     call open_vfs_file
+    jnc ovf32Done
+;
+    call fword ptr cs:org_open
+
+ovf32Done:
     ret
 open_vfs_file32  Endp
 
