@@ -761,6 +761,18 @@ gutRetry:
     ret
 get_us_time    Endp
 
+read_file    Proc near
+    mov eax,ebx
+    shr eax,16
+    or ax,ax
+    jnz rfVfs
+;
+    UserGate read_file_nr
+
+rfVfs:
+    ret
+read_file    Endp
+
 ufunc_end:        
 
 CreateUserFunc  Proc near
@@ -812,6 +824,10 @@ CreateUserFunc  Proc near
     mov edi,edx
     add edi,OFFSET leave_us_section
     mov gs:ppr_leave_section_proc,edi
+;    
+    mov edi,edx
+    add edi,OFFSET read_file
+    mov gs:ppr_read_file_proc,edi
 ;
     mov esi,edx
 ;
@@ -973,6 +989,9 @@ spOk:
 ;    
     cmp ax,leave_user_section_nr
     je spLeave
+;    
+    cmp ax,read_vfs_file_nr
+    je spReadFile
 ;
     jmp spFail    
 
@@ -1256,6 +1275,49 @@ spLeave:
     mov cr0,ecx
 ;
     mov eax,gs:ppr_leave_section_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
+spReadFile:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
+    mov eax,gs:ppr_read_file_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]

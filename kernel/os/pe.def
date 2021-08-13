@@ -159,6 +159,7 @@ ppr_create_named_section_proc   DD ?
 ppr_delete_section_proc         DD ?
 ppr_enter_section_proc          DD ?
 ppr_leave_section_proc          DD ?
+ppr_read_file_proc              DD ?
 
 ppr_app_name                    DD ?
 ppr_app_env                     DD ?
