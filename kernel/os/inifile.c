@@ -856,10 +856,7 @@ void WriteIni(struct TIni *Ini)
 
     handle = RdosOpenFile(Ini->Name, 0);
     if (handle)
-    {
-        RdosSetFileSize(handle, 1);
-        RdosSetFilePos(handle, 0);
-    }
+        RdosSetFileSize(handle, 0);
     else
         handle = RdosCreateFile(Ini->Name, 0);
 
