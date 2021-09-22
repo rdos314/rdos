@@ -32,7 +32,7 @@
 #include "control.h"
 #include "str.h"
 #include "datetime.h"
-#include "ini.h"
+#include "appini.h"
 
 class TScrollControl;
 class TVerScrollControl;
@@ -79,7 +79,7 @@ public:
     TScrollFactory();
     virtual ~TScrollFactory();
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetWidth(int width);
@@ -122,11 +122,11 @@ public:
         THorScrollControl *CreateHor(TControlThread *dev, int xstart, int ystart, int len);
         THorScrollControl *CreateHor(TControl *control, int xstart, int ystart, int len);
 
-        TVerScrollControl *CreateVer(TControlThread *dev, TIniFile *Ini, const char *IniSection);
-        TVerScrollControl *CreateVer(TControl *control, TIniFile *Ini, const char *IniSection);
+        TVerScrollControl *CreateVer(TControlThread *dev, TAppIniFile *Ini, const char *IniSection);
+        TVerScrollControl *CreateVer(TControl *control, TAppIniFile *Ini, const char *IniSection);
 
-        THorScrollControl *CreateHor(TControlThread *dev, TIniFile *Ini, const char *IniSection);
-        THorScrollControl *CreateHor(TControl *control, TIniFile *Ini, const char *IniSection);
+        THorScrollControl *CreateHor(TControlThread *dev, TAppIniFile *Ini, const char *IniSection);
+        THorScrollControl *CreateHor(TControl *control, TAppIniFile *Ini, const char *IniSection);
 
         TVerScrollControl *CreateVer(TControlThread *dev, const char *IniName, const char *IniSection);
         TVerScrollControl *CreateVer(TControl *control, const char *IniName, const char *IniSection);
@@ -162,7 +162,7 @@ public:
     void SetScrollPos(long double relpos);
     long double GetScrollPos();
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetUpShift(int x, int y);

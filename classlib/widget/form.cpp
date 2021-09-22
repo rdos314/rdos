@@ -882,7 +882,7 @@ void TFormControl::OnCreateImage(const char *name, TImageControl *image)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadPanel(TIniFile *Ini, const char *Name)
+void TFormControl::LoadPanel(TAppIniFile *Ini, const char *Name)
 {
     TPanelControl *panel;
 
@@ -904,7 +904,7 @@ void TFormControl::LoadPanel(TIniFile *Ini, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadLabel(TIniFile *Ini, const char *Name)
+void TFormControl::LoadLabel(TAppIniFile *Ini, const char *Name)
 {
     TLabelControl *label;
 
@@ -926,7 +926,7 @@ void TFormControl::LoadLabel(TIniFile *Ini, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadButton(TIniFile *Ini, const char *Name)
+void TFormControl::LoadButton(TAppIniFile *Ini, const char *Name)
 {
     TButtonControl *button;
 
@@ -949,7 +949,7 @@ void TFormControl::LoadButton(TIniFile *Ini, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadFileView(TIniFile *Ini, const char *Name)
+void TFormControl::LoadFileView(TAppIniFile *Ini, const char *Name)
 {
     TFileViewControl *fileview;
 
@@ -972,7 +972,7 @@ void TFormControl::LoadFileView(TIniFile *Ini, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadList(TIniFile *Ini, const char *Name)
+void TFormControl::LoadList(TAppIniFile *Ini, const char *Name)
 {
     TListControl *list;
 
@@ -995,7 +995,7 @@ void TFormControl::LoadList(TIniFile *Ini, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadVerScroll(TIniFile *Ini, const char *Name)
+void TFormControl::LoadVerScroll(TAppIniFile *Ini, const char *Name)
 {
     TVerScrollControl *scroll;
 
@@ -1017,7 +1017,7 @@ void TFormControl::LoadVerScroll(TIniFile *Ini, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadHorScroll(TIniFile *Ini, const char *Name)
+void TFormControl::LoadHorScroll(TAppIniFile *Ini, const char *Name)
 {
     THorScrollControl *scroll;
 
@@ -1039,7 +1039,7 @@ void TFormControl::LoadHorScroll(TIniFile *Ini, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadImage(TIniFile *Ini, const char *Name)
+void TFormControl::LoadImage(TAppIniFile *Ini, const char *Name)
 {
     TImageControl *image;
 
@@ -1061,7 +1061,7 @@ void TFormControl::LoadImage(TIniFile *Ini, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadControl(TIniFile *Ini, const char *Name)
+void TFormControl::LoadControl(TAppIniFile *Ini, const char *Name)
 {
     char str[256];
     int use = TRUE;
@@ -1124,7 +1124,7 @@ void TFormControl::LoadControl(TIniFile *Ini, const char *Name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFormControl::LoadControls(TIniFile *Ini)
+void TFormControl::LoadControls(TAppIniFile *Ini)
 {
     char varstr[40];
     char str[256];
@@ -1165,7 +1165,7 @@ void TFormControl::LoadControls(TIniFile *Ini)
 ##########################################################################*/
 void TFormControl::LoadControls(const char *IniName)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     LoadControls(&Ini);
 }
 

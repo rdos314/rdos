@@ -801,7 +801,7 @@ int TControl::IsTransparent()
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::Set(TIniFile *Ini, const char *IniSection)
+void TControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int StartX, StartY;
@@ -888,7 +888,7 @@ void TControl::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TControl::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 

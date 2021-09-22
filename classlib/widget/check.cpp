@@ -101,7 +101,7 @@ void TCheckFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TCheckFactory::Set(TIniFile *Ini, const char *IniSection)
+void TCheckFactory::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -157,7 +157,7 @@ void TCheckFactory::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TCheckFactory::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 
@@ -537,7 +537,7 @@ int TCheckControl::IsCheckControl(TControl *control)
 #   Returns....: *
 #
 ##########################################################################*/
-void TCheckControl::Set(TIniFile *Ini, const char *IniSection)
+void TCheckControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -597,7 +597,7 @@ void TCheckControl::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TCheckControl::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 

@@ -32,7 +32,7 @@
 #include "scroll.h"
 #include "bitdev.h"
 #include "str.h"
-#include "ini.h"
+#include "appini.h"
 
 class TPanelControl;
 
@@ -99,7 +99,7 @@ public:
 
     void DefineScroll(TPanelScrollFactory *fact);
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetBackground(TBitmapGraphicDevice *bitmap, int xstart, int ystart);
@@ -170,12 +170,12 @@ public:
 
     static int IsPanel(TControl *control);
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void DefineScroll(TPanelScrollFactory *fact);
     void DefineScroll(int width);
-    void DefineScroll(TIniFile *Ini, const char *IniSection);
+    void DefineScroll(TAppIniFile *Ini, const char *IniSection);
     void DefineScroll(const char *IniName, const char *IniSection);
 
     void EnableVerScroll();

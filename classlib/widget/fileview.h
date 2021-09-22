@@ -33,7 +33,7 @@
 #include "str.h"
 #include "file.h"
 #include "strarr.h"
-#include "ini.h"
+#include "appini.h"
 
 class TFileViewControl;
 
@@ -43,7 +43,7 @@ public:
     TFileViewFactory();
     ~TFileViewFactory();
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);
@@ -85,7 +85,7 @@ public:
 
     static int IsFileViewControl(TControl *control);
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);

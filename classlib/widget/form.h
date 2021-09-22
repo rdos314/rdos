@@ -35,7 +35,7 @@
 #include "listbox.h"
 #include "scroll.h"
 #include "image.h"
-#include "ini.h"
+#include "appini.h"
 
 class TFormControlEntry
 {
@@ -70,7 +70,7 @@ public:
 
     static int IsFormControl(TControl *control);
     
-    void LoadControls(TIniFile *Ini);
+    void LoadControls(TAppIniFile *Ini);
     void LoadControls(const char *IniName);
     void Add(const char *name, TControl *control);
 
@@ -100,16 +100,16 @@ protected:
     THorScrollControl *GetHorScroll(const char *name);
     TImageControl *GetImage(const char *name);
 
-    void LoadPanel(TIniFile *Ini, const char *Name);
-    void LoadLabel(TIniFile *Ini, const char *Name);
-    void LoadButton(TIniFile *Ini, const char *Name);
-    void LoadFileView(TIniFile *Ini, const char *Name);
-    void LoadList(TIniFile *Ini, const char *Name);
-    void LoadVerScroll(TIniFile *Ini, const char *Name);
-    void LoadHorScroll(TIniFile *Ini, const char *Name);
-    void LoadImage(TIniFile *Ini, const char *Name);
+    void LoadPanel(TAppIniFile *Ini, const char *Name);
+    void LoadLabel(TAppIniFile *Ini, const char *Name);
+    void LoadButton(TAppIniFile *Ini, const char *Name);
+    void LoadFileView(TAppIniFile *Ini, const char *Name);
+    void LoadList(TAppIniFile *Ini, const char *Name);
+    void LoadVerScroll(TAppIniFile *Ini, const char *Name);
+    void LoadHorScroll(TAppIniFile *Ini, const char *Name);
+    void LoadImage(TAppIniFile *Ini, const char *Name);
 
-    void LoadControl(TIniFile *Ini, const char *Name);
+    void LoadControl(TAppIniFile *Ini, const char *Name);
 
     TFormControlEntry *FControlList;
 

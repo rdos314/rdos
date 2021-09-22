@@ -31,7 +31,7 @@
 #include "bitdev.h"
 #include "control.h"
 #include "str.h"
-#include "ini.h"
+#include "appini.h"
 
 class TButtonControl;
 
@@ -84,7 +84,7 @@ public:
     TButtonFactory();
     ~TButtonFactory();
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void DefineUp(TBitmapGraphicDevice *bitmap, int x, int y);
@@ -133,8 +133,8 @@ public:
         TButtonControl *Create(TControlThread *dev, const char *text, char ch, int xstart, int ystart);
         TButtonControl *Create(TControl *control, const char *text, char ch, int xstart, int ystart);
 
-        TButtonControl *Create(TControlThread *dev, const char *text, char ch, TIniFile *Ini, const char *IniSection);
-        TButtonControl *Create(TControl *control, const char *text, char ch, TIniFile *Ini, const char *IniSection);
+        TButtonControl *Create(TControlThread *dev, const char *text, char ch, TAppIniFile *Ini, const char *IniSection);
+        TButtonControl *Create(TControl *control, const char *text, char ch, TAppIniFile *Ini, const char *IniSection);
 
         TButtonControl *Create(TControlThread *dev, const char *text, char ch, const char *IniName, const char *IniSection);
         TButtonControl *Create(TControl *control, const char *text, char ch, const char *IniName, const char *IniSection);
@@ -190,7 +190,7 @@ public:
 
     virtual void Hide();
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetUpShift(int x, int y);

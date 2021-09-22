@@ -43,7 +43,7 @@ public:
 
     static int IsImageControl(TControl *control);
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void LoadImage(const char *FileName);
@@ -53,7 +53,7 @@ public:
     const char *GetImage();
 
     void SetLoader(TLoaderThread *Loader);
-    void SetLoadIni(const char *Name, TIniFile *Ini, const char *IniSection);
+    void SetLoadIni(const char *Name, TAppIniFile *Ini, const char *IniSection);
     void SetLoadIni(const char *IniName, const char *IniSection);
 
     void SetBackColor(int r, int g, int b);
@@ -79,7 +79,7 @@ protected:
     virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
     virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
 
-    TIniFile *FLoadIni;
+    TAppIniFile *FLoadIni;
     TString FLoadSection;
     int FBackR;
     int FBackG;

@@ -104,7 +104,7 @@ void TLabelFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TLabelFactory::Set(TIniFile *Ini, const char *IniSection)
+void TLabelFactory::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -193,7 +193,7 @@ void TLabelFactory::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TLabelFactory::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 
@@ -783,7 +783,7 @@ int TLabelControl::IsLabelControl(TControl *control)
 #   Returns....: *
 #
 ##########################################################################*/
-void TLabelControl::Set(TIniFile *Ini, const char *IniSection)
+void TLabelControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -884,7 +884,7 @@ void TLabelControl::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TLabelControl::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 

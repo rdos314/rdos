@@ -107,7 +107,7 @@ void TListFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TListFactory::Set(TIniFile *Ini, const char *IniSection)
+void TListFactory::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -174,7 +174,7 @@ void TListFactory::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TListFactory::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 
@@ -597,7 +597,7 @@ void TListControl::NotifyResize()
 #   Returns....: *
 #
 ##########################################################################*/
-void TListControl::Set(TIniFile *Ini, const char *IniSection)
+void TListControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -665,7 +665,7 @@ void TListControl::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TListControl::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 

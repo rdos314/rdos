@@ -387,7 +387,7 @@ TButtonFactory::~TButtonFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::Set(TIniFile *Ini, const char *IniSection)
+void TButtonFactory::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -607,7 +607,7 @@ void TButtonFactory::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TButtonFactory::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 
@@ -1224,7 +1224,7 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
 #   Returns....: *
 #
 ##########################################################################*/
-TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, char ch, TIniFile *Ini, const char *IniSection)
+TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, char ch, TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -1294,7 +1294,7 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
 #   Returns....: *
 #
 ##########################################################################*/
-TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char ch, TIniFile *Ini, const char *IniSection)
+TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char ch, TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -1365,7 +1365,7 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
 ##########################################################################*/
 TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, char ch, const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     return Create(dev, text, ch, &Ini, IniSection);
 }
 
@@ -1382,7 +1382,7 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
 ##########################################################################*/
 TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char ch, const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     return Create(control, text, ch, &Ini, IniSection);
 }
 
@@ -1811,7 +1811,7 @@ void TButtonControl::SetKey(char key)
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonControl::Set(TIniFile *Ini, const char *IniSection)
+void TButtonControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -2067,7 +2067,7 @@ void TButtonControl::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TButtonControl::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 

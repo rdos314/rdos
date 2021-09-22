@@ -884,7 +884,7 @@ void TAppIniFile::Update()
 ##########################################################################*/
 bool TAppIniFile::GotoSection(const char *name)
 {
-    TAppIniSection *FCurrSection = FindSection(name);
+    FCurrSection = FindSection(name);
     FSection = name;
     FCurrVar = 0;
 

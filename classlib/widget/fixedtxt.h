@@ -31,7 +31,6 @@
 #include "bitdev.h"
 #include "panel.h"
 #include "str.h"
-#include "ini.h"
 
 struct TFixedTextChar
 {

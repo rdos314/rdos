@@ -391,7 +391,7 @@ void TImageControl::SetLoader(TLoaderThread *loader)
 #   Returns....: *
 #
 ##########################################################################*/
-void TImageControl::Set(TIniFile *Ini, const char *IniSection)
+void TImageControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
 
@@ -428,7 +428,7 @@ void TImageControl::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TImageControl::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 
@@ -443,7 +443,7 @@ void TImageControl::Set(const char *IniName, const char *IniSection)
 #   Returns....: *
 #
 ##########################################################################*/
-void TImageControl::SetLoadIni(const char *Name, TIniFile *Ini, const char *IniSection)
+void TImageControl::SetLoadIni(const char *Name, TAppIniFile *Ini, const char *IniSection)
 {
     int i;
 
@@ -472,7 +472,7 @@ void TImageControl::SetLoadIni(const char *Name, TIniFile *Ini, const char *IniS
 
     if (Ini)
     {
-        FLoadIni = new TIniFile(*Ini);
+        FLoadIni = new TAppIniFile(*Ini);
         FLoadSection = IniSection;
 
         if (FLoader)
@@ -526,7 +526,7 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
     {
         RdosCloseFile(fh);
 
-        FLoadIni = new TIniFile(IniName);
+        FLoadIni = new TAppIniFile(IniName);
         FLoadSection = IniSection;
 
         if (FLoader)
@@ -661,7 +661,7 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
     int i;
     int fh;
     TBitmapGraphicDevice *bitmap;
-    TIniFile *SeqIni = 0;
+    TAppIniFile *SeqIni = 0;
 
     FLoadActive = TRUE;
 
@@ -721,7 +721,7 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
         {
             RdosCloseFile(fh);
 
-            SeqIni = new TIniFile(str);
+            SeqIni = new TAppIniFile(str);
 
             SeqIni->GotoSection("ALL");
 

@@ -468,7 +468,7 @@ void TPanelFactory::DefineScroll(TPanelScrollFactory *fact)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelFactory::Set(TIniFile *Ini, const char *IniSection)
+void TPanelFactory::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int HasWidth;
@@ -575,7 +575,7 @@ void TPanelFactory::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TPanelFactory::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 
@@ -1172,7 +1172,7 @@ void TPanelControl::DefineScroll(int width)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelControl::DefineScroll(TIniFile *Ini, const char *IniSection)
+void TPanelControl::DefineScroll(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int width = 16;
@@ -1206,7 +1206,7 @@ void TPanelControl::DefineScroll(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TPanelControl::DefineScroll(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     DefineScroll(&Ini, IniSection);
 }
 
@@ -1323,7 +1323,7 @@ void TPanelControl::DisableHorScroll()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPanelControl::Set(TIniFile *Ini, const char *IniSection)
+void TPanelControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int val;
@@ -1439,7 +1439,7 @@ void TPanelControl::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TPanelControl::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 

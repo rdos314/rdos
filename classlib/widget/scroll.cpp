@@ -145,7 +145,7 @@ TScrollFactory::~TScrollFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-void TScrollFactory::Set(TIniFile *Ini, const char *IniSection)
+void TScrollFactory::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
 
@@ -381,7 +381,7 @@ void TScrollFactory::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TScrollFactory::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 
@@ -943,7 +943,7 @@ THorScrollControl *TScrollFactory::CreateHor(TControl *control, int xstart, int 
 #   Returns....: *
 #
 ##########################################################################*/
-TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, TIniFile *Ini, const char *IniSection)
+TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     TVerScrollControl *scroll;
@@ -984,7 +984,7 @@ TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, TIniFile *Ini,
 #   Returns....: *
 #
 ##########################################################################*/
-TVerScrollControl *TScrollFactory::CreateVer(TControl *control, TIniFile *Ini, const char *IniSection)
+TVerScrollControl *TScrollFactory::CreateVer(TControl *control, TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     TVerScrollControl *scroll;
@@ -1025,7 +1025,7 @@ TVerScrollControl *TScrollFactory::CreateVer(TControl *control, TIniFile *Ini, c
 #   Returns....: *
 #
 ##########################################################################*/
-THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, TIniFile *Ini, const char *IniSection)
+THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     THorScrollControl *scroll;
@@ -1066,7 +1066,7 @@ THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, TIniFile *Ini,
 #   Returns....: *
 #
 ##########################################################################*/
-THorScrollControl *TScrollFactory::CreateHor(TControl *control, TIniFile *Ini, const char *IniSection)
+THorScrollControl *TScrollFactory::CreateHor(TControl *control, TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     THorScrollControl *scroll;
@@ -1109,7 +1109,7 @@ THorScrollControl *TScrollFactory::CreateHor(TControl *control, TIniFile *Ini, c
 ##########################################################################*/
 TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     return CreateVer(dev, &Ini, IniSection);
 }
 
@@ -1126,7 +1126,7 @@ TVerScrollControl *TScrollFactory::CreateVer(TControlThread *dev, const char *In
 ##########################################################################*/
 TVerScrollControl *TScrollFactory::CreateVer(TControl *control, const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     return CreateVer(control, &Ini, IniSection);
 }
 
@@ -1143,7 +1143,7 @@ TVerScrollControl *TScrollFactory::CreateVer(TControl *control, const char *IniN
 ##########################################################################*/
 THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     return CreateHor(dev, &Ini, IniSection);
 }
 
@@ -1160,7 +1160,7 @@ THorScrollControl *TScrollFactory::CreateHor(TControlThread *dev, const char *In
 ##########################################################################*/
 THorScrollControl *TScrollFactory::CreateHor(TControl *control, const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     return CreateHor(control, &Ini, IniSection);
 }
 
@@ -1454,7 +1454,7 @@ long double TScrollControl::GetScrollPos()
 #   Returns....: *
 #
 ##########################################################################*/
-void TScrollControl::Set(TIniFile *Ini, const char *IniSection)
+void TScrollControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
 
@@ -1686,7 +1686,7 @@ void TScrollControl::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TScrollControl::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 

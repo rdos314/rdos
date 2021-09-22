@@ -31,7 +31,7 @@
 #include "bitdev.h"
 #include "panel.h"
 #include "strarr.h"
-#include "ini.h"
+#include "appini.h"
 
 class TListControl;
 
@@ -41,7 +41,7 @@ public:
     TListFactory();
     ~TListFactory();
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);
@@ -93,7 +93,7 @@ public:
 
     static int IsListControl(TControl *control);
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int height);

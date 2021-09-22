@@ -99,7 +99,7 @@ void TFileViewFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileViewFactory::Set(TIniFile *Ini, const char *IniSection)
+void TFileViewFactory::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -146,7 +146,7 @@ void TFileViewFactory::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TFileViewFactory::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 
@@ -506,7 +506,7 @@ void TFileViewControl::NotifyResize()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileViewControl::Set(TIniFile *Ini, const char *IniSection)
+void TFileViewControl::Set(TAppIniFile *Ini, const char *IniSection)
 {
     char str[256];
     int size;
@@ -554,7 +554,7 @@ void TFileViewControl::Set(TIniFile *Ini, const char *IniSection)
 ##########################################################################*/
 void TFileViewControl::Set(const char *IniName, const char *IniSection)
 {
-    TIniFile Ini(IniName);
+    TAppIniFile Ini(IniName);
     Set(&Ini, IniSection);
 }
 

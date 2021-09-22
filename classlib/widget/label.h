@@ -31,7 +31,7 @@
 #include "bitdev.h"
 #include "panel.h"
 #include "str.h"
-#include "ini.h"
+#include "appini.h"
 
 #define MAX_LABEL_ROWS    256
 
@@ -51,7 +51,7 @@ public:
     TLabelFactory();
     ~TLabelFactory();
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void SetFont(int id, int height);
@@ -109,7 +109,7 @@ public:
 
     static int IsLabelControl(TControl *control);
 
-    virtual void Set(TIniFile *Ini, const char *IniSection);
+    virtual void Set(TAppIniFile *Ini, const char *IniSection);
     virtual void Set(const char *IniName, const char *IniSection);
 
     void ForceSingle();
