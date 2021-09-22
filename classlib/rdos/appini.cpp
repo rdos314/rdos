@@ -624,6 +624,48 @@ TAppIniFile::TAppIniFile(const char *IniName)
 
 /*##########################################################################
 #
+#   Name       : TAppIniFile::TAppIniFile
+#
+#   Purpose....: Copy constructor for TAppIniFile
+#
+#   In params..: infile to duplicate handle on
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TAppIniFile::TAppIniFile(const TAppIniFile &ini)
+ : FName(ini.FName)
+{
+    int FileHandle;
+    int FileSize = 0;
+    char *buf;
+
+    FModified = false;
+    FCurrSection = 0;
+    FCurrVar = 0;
+    FSectionList = 0;
+
+    FileHandle = RdosOpenFile(ini.FName.GetData(), 0);
+
+    if (FileHandle)
+        FileSize = RdosGetFileSize(FileHandle);
+
+    if (FileSize)
+    {
+        buf = new char[FileSize + 2];
+        RdosReadFile(FileHandle, buf, FileSize);
+        buf[FileSize] = 0;
+        buf[FileSize + 1] = 0;
+        Parse(buf);
+        delete buf;
+    }
+
+    if (FileHandle)
+        RdosCloseFile(FileHandle);    
+}
+
+/*##########################################################################
+#
 #   Name       : TAppIniFile::~TAppIniFile
 #
 #   Purpose....: Destructor for TAppIniFile

@@ -86,6 +86,7 @@ class TAppIniFile
 {
 public:
     TAppIniFile(const char *IniName);
+    TAppIniFile(const TAppIniFile &ini);
     ~TAppIniFile();
 
     bool GotoSection(const char *name);
