@@ -103,6 +103,7 @@ public:
     void Update();
     
 protected:
+    void ClearSections();
     TAppIniSection *FindSection(const char *Name);
     TAppIniSection *AddSection(const char *Name);
 

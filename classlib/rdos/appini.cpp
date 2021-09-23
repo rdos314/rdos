@@ -679,6 +679,8 @@ TAppIniFile::~TAppIniFile()
 {
     if (FModified)
         Update();
+
+    ClearSections();
 }
 
 /*##########################################################################
@@ -904,7 +906,7 @@ void TAppIniFile::Update()
 
         delete buf;
 
-        if (orgsize > RdosGetFileSize(handle))
+        if (orgsize > size)
             RdosSetFileSize(handle, size);
 
         RdosCloseFile(handle);
@@ -1061,6 +1063,31 @@ bool TAppIniFile::DeleteVar(const char *var)
         FModified = true;
 
     return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TAppIniFile::ClearSections
+#
+#   Purpose....: Clear sections
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAppIniFile::ClearSections()
+{
+    TAppIniSection *sect;
+
+    FCurrSection = 0;
+
+    while (FSectionList)
+    {
+        sect = FSectionList->FNextSection;
+        delete FSectionList;
+        FSectionList = sect;
+    }
 }
 
 /*##########################################################################
