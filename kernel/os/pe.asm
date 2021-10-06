@@ -494,9 +494,13 @@ p1:
     mov ecx,MAX_SECTIONS
     xor eax,eax
     repnz scasd
-    stc
-    jnz csDone
+    jz csOK
 ;
+    int 3
+    stc
+    jmp csDone
+
+csOk:
     mov ebx,MAX_SECTIONS
     sub ebx,ecx
 ;
@@ -548,9 +552,13 @@ p1n:
     mov ecx,MAX_SECTIONS
     xor eax,eax
     repnz scasd
-    stc
-    jnz cnsDone
+    jz cnsOk
 ;
+    int 3
+    stc
+    jmp cnsDone
+
+cnsOk:
     mov ebx,MAX_SECTIONS
     sub ebx,ecx
 ;
@@ -718,10 +726,38 @@ lusDone:
     ret
 leave_us_section    Endp
 
+get_used_sections   Proc near
+    push ebx
+    push ecx
+    push edx
+    
+p6:
+    mov edx,12345678h
+    mov ecx,MAX_SECTIONS
+    xor eax,eax
+
+gusLoop:
+    mov ebx,[edx]
+    or ebx,ebx
+    jz gusNext
+;
+    inc eax
+
+gusNext:
+    add edx,4
+    loop gusLoop
+;
+    clc
+    pop edx
+    pop ecx
+    pop ebx    
+    ret
+get_used_sections   Endp
+
 get_us_sys_time    Proc near
     push ebx
 
-p6:
+p7:
     mov ebx,12345678h
 
 gustRetry:
@@ -739,7 +775,7 @@ get_us_time    Proc near
     push esi
     push edi
 
-p7:
+p8:
     mov ebx,12345678h
 
 gutRetry:
@@ -864,12 +900,16 @@ CreateUserFunc  Proc near
     mov gs:ppr_leave_section_proc,edi
 ;    
     mov edi,edx
+    add edi,OFFSET get_used_sections
+    mov gs:ppr_used_sections_proc,edi
+;    
+    mov edi,edx
     add edi,OFFSET read_file
     mov gs:ppr_read_file_proc,edi
 ;
     mov esi,edx
 ;
-    mov eax,MAX_SECTIONS * 16  ; 4 bytes for index + 12 bytes for data
+    mov eax,MAX_SECTIONS * 20  ; 4 bytes for index + 16 bytes for data
     AllocateLocalLinear
     mov gs:ppr_section_linear,edx
 ;
@@ -910,6 +950,10 @@ CreateUserFunc  Proc near
     add edi,OFFSET p5 + 2
     mov es:[edi],edx
 ;
+    mov edi,esi
+    add edi,OFFSET p6 + 1
+    mov es:[edi],edx
+;
     mov eax,1000h
     AllocateLocalLinear
 ;
@@ -926,11 +970,11 @@ CreateUserFunc  Proc near
     sub edx,ds:flat_base
 ;
     mov edi,esi
-    add edi,OFFSET p6 + 1
+    add edi,OFFSET p7 + 1
     mov es:[edi],edx
 ;
     mov edi,esi
-    add edi,OFFSET p7 + 1
+    add edi,OFFSET p8 + 1
     mov es:[edi],edx
 ;
     mov edx,gs:pr_file_linear
@@ -1055,6 +1099,9 @@ spOk:
 ;    
     cmp ax,leave_user_section_nr
     je spLeave
+;    
+    cmp ax,used_user_sections_nr
+    je spUsed
 ;    
     cmp ax,read_file_nr
     je spReadFile
@@ -1341,6 +1388,49 @@ spLeave:
     mov cr0,ecx
 ;
     mov eax,gs:ppr_leave_section_proc    
+    sub eax,esi
+    sub eax,6
+    xchg eax,ds:[ebx+2]
+;
+    mov ax,9090h
+    xchg ax,ds:[ebx+6]
+;
+    mov ax,0E890h    
+    xchg ax,ds:[ebx]
+;
+    pop ecx
+    mov cr0,ecx
+    sti
+    clc
+;
+    pop esi
+    pop ecx
+    pop edx
+    pop es
+    ret
+
+spUsed:
+    push es
+    push edx
+    push ecx
+    push esi
+;
+    mov esi,ebx
+    push ebx
+    mov bx,ds
+    GetSelectorBaseSize
+    pop ebx
+    add ebx,edx
+    mov ax,flat_sel
+    mov ds,ax    
+;
+    mov ecx,cr0
+    push ecx
+    and ecx,NOT 10000h
+    cli
+    mov cr0,ecx
+;
+    mov eax,gs:ppr_used_sections_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]

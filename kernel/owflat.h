@@ -2358,6 +2358,11 @@
     __parm [__edx] \
     __value [__eax]
 
+#pragma aux RdosUsedSections = \
+    CallGate_used_user_sections  \
+    ValidateEax \
+    __value [__eax]
+
 #pragma aux RdosCreateSection = \
     CallGate_create_named_user_section  \
     "jnc Validate" \

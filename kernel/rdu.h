@@ -963,6 +963,8 @@
 
 #define usergate_read_vfs_file 0x00000312
 
+#define usergate_used_user_sections 0x00000313
+
 
 
 #ifdef __FLAT__
@@ -1931,6 +1933,8 @@
 
 #define CallGate_read_vfs_file 0x55 0x67 0x9a 18 3 0 0 3 0 0x5d
 
+#define CallGate_used_user_sections 0x55 0x67 0x9a 19 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2896,5 +2900,7 @@
 #define CallGate_read_file_legacy 0x3e 0x67 0x9a 17 3 0 0 3 0
 
 #define CallGate_read_vfs_file 0x3e 0x67 0x9a 18 3 0 0 3 0
+
+#define CallGate_used_user_sections 0x3e 0x67 0x9a 19 3 0 0 3 0
 
 #endif

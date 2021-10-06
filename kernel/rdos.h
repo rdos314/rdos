@@ -694,6 +694,7 @@ int RDOSAPI RdosCreateSection(const char *Name);
 void RDOSAPI RdosDeleteSection(int Handle);
 void RDOSAPI RdosEnterSection(int Handle);
 void RDOSAPI RdosLeaveSection(int Handle);
+int RDOSAPI RdosUsedSections();
 
 int RDOSAPI RdosCreateWait(void);
 void RDOSAPI RdosCloseWait(int Handle);

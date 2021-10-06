@@ -565,6 +565,12 @@ CleanupFutex    MACRO
         UserGate cleanup_futex_nr
                                         ENDM
 
+
+; OUT EAX               Used sections
+UsedUserSections       MACRO
+        UserGate used_user_sections_nr
+                                        ENDM
+
 ; OUT BX                Section handle
 CreateUserSection       MACRO
         UserGate create_user_section_nr

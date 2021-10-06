@@ -963,4 +963,6 @@ read_file_legacy_nr               = 785
 
 read_vfs_file_nr                  = 786
 
+used_user_sections_nr             = 787
+
 usergate_entries                  = 800
