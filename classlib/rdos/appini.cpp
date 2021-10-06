@@ -891,7 +891,7 @@ void TAppIniFile::Update()
             sect = sect->FNextSection;        
         }
 
-        buf = new char[size];
+        buf = new char[size + 2];
 
         ptr = buf;
         sect = FSectionList;
