@@ -2165,7 +2165,7 @@
     "ok: " \
     __value [__edx __eax]
 
-#pragma aux RdosGetTime = \
+#pragma aux RdosUserGetTime = \
     CallGate_user_get_time  \
     "jnc ok" \
     CallGate_get_time  \
