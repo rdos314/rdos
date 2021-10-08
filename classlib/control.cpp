@@ -1569,30 +1569,23 @@ TControl *TControl::GetControl(int Id)
 ##########################################################################*/
 void TControl::Redraw(int millisec)
 {
-    TDateTime time;
-
     Protect();
 
     SetDirty();
 
+    if (FDelay)
+    {
+        delete FDelay;
+        FDelay = 0;
+    }
+
     if (millisec)
     {
-        time.AddMilli(millisec);
-
-        if (FDelay)
-            *FDelay = time;
-        else
-            FDelay = new TDateTime(time);
+        FDelay = new TDateTime;
+        FDelay->AddMilli(millisec);
     }
     else
-    {
-        if (FDelay)
-        {
-            delete FDelay;
-            FDelay = 0;
-        }
         Update();
-    }
 
     if (FDev)
         FDev->Signal();

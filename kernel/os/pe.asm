@@ -4985,7 +4985,7 @@ debug_allocate_mem      PROC far
 ;
     push edx
     mov eax,SIZE pe_mem_struc
-    AllocateLocalLinear
+    AllocateSmallLinear
     mov edi,edx
     pop edx
 ;        
