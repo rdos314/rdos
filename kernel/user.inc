@@ -1697,6 +1697,16 @@ GetTime   MACRO
         UserGate get_time_nr
                                         ENDM
 
+; OUT EDX:EAX       System time
+UserGetSystemTime   MACRO
+        UserGate user_get_system_time_nr
+                                        ENDM
+
+; OUT EDX:EAX         Real time
+UserGetTime   MACRO
+        UserGate user_get_time_nr
+                                        ENDM
+
 TimeToSystemTime   MACRO
         UserGate time_to_system_time_nr
                                         ENDM

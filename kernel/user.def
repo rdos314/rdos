@@ -965,4 +965,7 @@ read_vfs_file_nr                  = 786
 
 used_user_sections_nr             = 787
 
+user_get_system_time_nr           = 788
+user_get_time_nr                  = 789
+
 usergate_entries                  = 800

@@ -669,6 +669,12 @@ void RDOSAPI RdosGetSysTime(unsigned long *msb, unsigned long *lsb);
 long long RDOSAPI RdosGetLongSysTime(void);
 void RDOSAPI RdosGetTime(unsigned long *msb, unsigned long *lsb);
 long long RDOSAPI RdosGetLongTime(void);
+
+void RDOSAPI RdosUserGetSysTime(unsigned long *msb, unsigned long *lsb);
+long long RDOSAPI RdosUserGetLongSysTime(void);
+void RDOSAPI RdosUserGetTime(unsigned long *msb, unsigned long *lsb);
+long long RDOSAPI RdosUserGetLongTime(void);
+
 void RDOSAPI RdosSetTime(unsigned long msb, unsigned long lsb);
 int RDOSAPI RdosDayOfWeek(int year, int month, int day);
 

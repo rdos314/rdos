@@ -965,6 +965,9 @@
 
 #define usergate_used_user_sections 0x00000313
 
+#define usergate_user_get_system_time 0x00000314
+#define usergate_user_get_time 0x00000315
+
 
 
 #ifdef __FLAT__
@@ -1935,6 +1938,9 @@
 
 #define CallGate_used_user_sections 0x55 0x67 0x9a 19 3 0 0 3 0 0x5d
 
+#define CallGate_user_get_system_time 0x55 0x67 0x9a 20 3 0 0 3 0 0x5d
+#define CallGate_user_get_time 0x55 0x67 0x9a 21 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2902,5 +2908,8 @@
 #define CallGate_read_vfs_file 0x3e 0x67 0x9a 18 3 0 0 3 0
 
 #define CallGate_used_user_sections 0x3e 0x67 0x9a 19 3 0 0 3 0
+
+#define CallGate_user_get_system_time 0x3e 0x67 0x9a 20 3 0 0 3 0
+#define CallGate_user_get_time 0x3e 0x67 0x9a 21 3 0 0 3 0
 
 #endif

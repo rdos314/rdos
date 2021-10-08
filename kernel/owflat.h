@@ -2148,6 +2148,41 @@
     CallGate_get_time  \
     __value [__edx __eax]
 
+#pragma aux RdosUserGetSysTime = \
+    CallGate_user_get_system_time  \
+    "jnc ok" \
+    CallGate_get_system_time  \
+    "ok: " \
+    "mov [esi],edx" \
+    "mov [edi],eax" \
+    __parm [__esi] [__edi] \
+    __modify [__eax __edx]
+
+#pragma aux RdosUserGetLongSysTime = \
+    CallGate_user_get_system_time  \
+    "jnc ok" \
+    CallGate_get_system_time  \
+    "ok: " \
+    __value [__edx __eax]
+
+#pragma aux RdosGetTime = \
+    CallGate_user_get_time  \
+    "jnc ok" \
+    CallGate_get_time  \
+    "ok: " \
+    "mov [esi],edx" \
+    "mov [edi],eax" \
+    __parm [__esi] [__edi] \
+    __modify [__eax __edx]
+
+#pragma aux RdosGetLongTime = \
+    CallGate_user_get_time  \
+    "jnc ok" \
+    CallGate_get_time  \
+    "ok: " \
+    __value [__edx __eax]
+
+
 #pragma aux RdosSetTime = \
     CallGate_get_system_time  \
     "sub esi,eax" \

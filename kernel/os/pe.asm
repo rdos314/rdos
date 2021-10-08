@@ -1079,10 +1079,10 @@ section_patch     PROC far
 
 spOk:
     mov ax,ds:[ebx+2]
-    cmp ax,get_system_time_nr
+    cmp ax,user_get_system_time_nr
     je spGetSysTime
 ;
-    cmp ax,get_time_nr
+    cmp ax,user_get_time_nr
     je spGetTime
 ;
     cmp ax,create_user_section_nr
