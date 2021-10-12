@@ -1223,7 +1223,10 @@ tOpen:
 
 tIsOpen:
     mov bx,ds:ucd_wait
-    WaitWithoutTimeout
+    GetSystemTime
+    add eax,119300
+    adc edx,0
+    WaitWithTimeout
 ;
     mov bx,es:cdc_dev_handle
     IsUsbDeviceConnected
