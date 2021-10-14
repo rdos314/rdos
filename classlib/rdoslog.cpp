@@ -37,7 +37,7 @@ static TSection Section("Log Section");
 
 #define FALSE	0
 #define TRUE	!FALSE
-#define MAX_STR_SIZE	0x1000
+#define MAX_STR_SIZE	0x10000
 
 /*##########################################################################
 #
