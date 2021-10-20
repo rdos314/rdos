@@ -81,6 +81,7 @@ static void ProcessRow(char *str)
     TQuizRow Row;
     int score = 0;
     int corr_count = 0;
+    int absorb = 0;
 
     str++;
 
@@ -180,9 +181,26 @@ static void ProcessRow(char *str)
             default:
                  i = fieldno - 17;
                  Row.Quiz[i] = atoi(valstr);
+
+                 if (i >= 122 && i <= 159)
+                 {
+                     switch (Row.Quiz[i])
+                     {
+                         case 2:
+                             absorb++;
+                             break;
+
+                         case 3:
+                             absorb += 2;
+                             break;
+                     }
+                 }
+
                  break;
         }
     }
+
+    Row.Quiz[121] = absorb + 1;
         
     HandleRow(&Row);
     AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 210);

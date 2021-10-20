@@ -29,94 +29,14 @@
 #define _APP_INI_H
 
 #include "str.h"
+#include "ini.h"
 
-class TAppIniVar
-{
-friend class TAppIniSection;
-friend class TAppIniFile;
-public:
-    TAppIniVar(const char *Name, const char *Val);
-    ~TAppIniVar();
-
-    bool IsMatch(const char *Name);
-    const char *GetName();
-    const char *GetData();
-    void SetData(const char *Val);
-
-    int GetSize();
-    char *Format(char *buf);
-
-protected:
-    TString FName;
-    TString FVal;
-    TAppIniVar *FNextVar;
-};
-
-class TAppIniSection
-{
-friend class TAppIniFile;
-public:
-    TAppIniSection(const char *Name);
-    ~TAppIniSection();
-
-    bool IsMatch(const char *Name);
-
-    int GetSize();
-    char *Format(char *buf);
-
-    TAppIniVar *FindVar(const char *Name);
-    void AddVar(const char *Name, const char *Val);
-    bool DeleteVar(const char *name);
-
-protected:
-    void ClearVars();
-    bool CheckDelim(char ch);
-    char *Trim(char *str);
-    char *FindStartOfLine(char *ptr);
-    void DecodeLine(char *ptr);
-    void Parse(char *ptr);
-
-    TString FName;
-    TAppIniVar *FCurrVar;
-    TAppIniVar *FVarList;
-    TAppIniSection *FNextSection;
-};
-
-class TAppIniFile
+class TAppIniFile : public TIniFile
 {
 public:
     TAppIniFile(const char *IniName);
     TAppIniFile(const TAppIniFile &ini);
     ~TAppIniFile();
-
-    bool GotoSection(const char *name);
-    bool DeleteSection(const char *name);
-
-    bool ReadVar(const char *var, char *str, int maxsize);
-    bool WriteVar(const char *var, const char *str);
-    bool DeleteVar(const char *var);
-
-    bool GotoFirstVar();
-    bool GotoNextVar();
-    bool GetCurrVar(char *var, int maxsize);
-
-    void Update();
-    
-protected:
-    void ClearSections();
-    TAppIniSection *FindSection(const char *Name);
-    TAppIniSection *AddSection(const char *Name);
-
-    char *FindSectionStart(char *ptr);
-    void DecodeSection(char *ptr);
-    void Parse(char *ptr);
-
-    TString FName;
-    TString FSection;
-    bool FModified;
-    TAppIniSection *FSectionList;
-    TAppIniSection *FCurrSection;
-    TAppIniVar *FCurrVar;
 };
 
 #endif

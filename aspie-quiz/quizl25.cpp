@@ -97,7 +97,7 @@ int TQuizL25::GetPcaCount()
 *##########################################################################*/
 int TQuizL25::GetCatCount(int Question)
 {
-    return 3;
+        return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -636,7 +636,8 @@ void TQuizL25::SetupTexts()
   Quiz[119].Text = "Do you accept criticism, correction and direction?";
   Quiz[120].Text = "Do you find it easy to estimate the age of people?";
 
-  Quiz[121].Text = "Unused";
+  Quiz[121].Text = "Absorbtion";
+
   Quiz[122].Text = "Do you feel and experience things as you did when you were a child?`";
   Quiz[123].Text = "Do you get greatly moved by eloquent or poetic language?";
   Quiz[124].Text = "While watching a movie, a TV show, or a play, may you become so involved that you forget about yourself and your surroundings, and experience the story as if it were real?";
@@ -675,6 +676,7 @@ void TQuizL25::SetupTexts()
   Quiz[157].Text = "Can you wake from one dream into another?";
   Quiz[158].Text = "Do you have daymares?";
   Quiz[159].Text = "In your dreams, can people sometimes merge into each other or become other people?";
+
   Quiz[160].Text = "Do you have dreams, daydreams, nightmares in which your body or someone else's body is being stabbed, injured, or torn apart?";
   Quiz[161].Text = "Do things around you seem to change their size and shape?";
   Quiz[162].Text = "Every time something frightening happens to you, do you have nightmares or fantasies or flashbacks involving the frightening event?";
@@ -715,6 +717,7 @@ void TQuizL25::SetupTexts()
   Quiz[197].Text = "Do you think an artist must in part remain a child?";
   Quiz[198].Text = "Do you agree that a good teacher needs to help a child remain special?";
   Quiz[199].Text = "Do you think children and adults have a lot in common and that they should give themselves a chance to be together without any strict roles?";
+
   Quiz[200].Text = "Are you easily hurt?";
   Quiz[201].Text = "Are you a very sensitive person?";
   Quiz[202].Text = "Do you have regular depressions?";
