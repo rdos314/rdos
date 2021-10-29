@@ -262,6 +262,22 @@ void TJsonObject::AddIndent(TJsonDocument *doc, int indent, TString &str)
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::NewLine
+#
+#   Purpose....: Add new line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::NewLine(TJsonDocument *doc, TString &str)
+{
+    doc->NewLine(str);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::Write
 #
 #   Purpose....: Write object data
@@ -1651,11 +1667,13 @@ void TJsonSingleCollection::Write(TJsonDocument *doc, int indent, TString &str)
         AddIndent(doc, indent, str);
         str += "\"";
         str += FFieldName;
-        str += "\":\r\n";
+        str += "\":";
+        NewLine(doc, str);
     }
 
     AddIndent(doc, indent, str);
-    str += "{\r\n";
+    str += "{";
+    NewLine(doc, str);
 
     size = FData.FObjArrayCount;
 
@@ -1664,10 +1682,9 @@ void TJsonSingleCollection::Write(TJsonDocument *doc, int indent, TString &str)
         obj = FData.FObjArr[i];
         obj->Write(doc, indent + 1, str);
 
-        if (size == i + 1)
-            str += "\r\n";
-        else
-            str += ",\r\n";
+        if (size != i + 1)
+            str += ",";
+        NewLine(doc, str);
      }
 
     AddIndent(doc, indent, str);
@@ -1965,7 +1982,8 @@ void TJsonArrayCollection::Write(TJsonDocument *doc, int indent, TString &str)
     AddIndent(doc, indent, str);
     str += "\"";
     str += FFieldName;
-    str += "\":\r\n";
+    str += "\":";
+    NewLine(doc, str);
 
     AddIndent(doc, indent, str);
     str += "[\r\n";
@@ -1975,24 +1993,25 @@ void TJsonArrayCollection::Write(TJsonDocument *doc, int indent, TString &str)
         size = FArray[a]->FObjArrayCount;
 
         AddIndent(doc, indent + 1, str);
-        str += "{\r\n";
+        str += "{";
+        NewLine(doc, str);
 
         for (i = 0; i < size; i++)
         {
             obj = FArray[a]->FObjArr[i];
             obj->Write(doc, indent + 2, str);
 
-            if (size == i + 1)
-                str += "\r\n";
-            else
-                str += ",\r\n";
+            if (size != i + 1)
+                str += ",";
+            NewLine(doc, str);
         }
 
         AddIndent(doc, indent + 1, str);
         if (FArrayCount == a + 1)
-            str += "}\r\n";
+            str += "}";
         else
-            str += "},\r\n";
+            str += "},";
+        NewLine(doc, str);
     }
 
     AddIndent(doc, indent, str);
@@ -4371,11 +4390,51 @@ TJsonCollection *TJsonDocument::GetRoot()
 ##########################################################################*/
 void TJsonDocument::Write(TString &str)
 {
+    FCompact = false;
+
     if (FRootCollection)
     {
         FRootCollection->Write(this, 0, str);
-        str += "\r\n";
+        NewLine(str);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::WriteCompact
+#
+#   Purpose....: Write document without newlines & indentions
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::WriteCompact(TString &str)
+{
+    FCompact = true;
+
+    if (FRootCollection)
+    {
+        FRootCollection->Write(this, 0, str);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::NewLine
+#
+#   Purpose....: New line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDocument::NewLine(TString &str)
+{
+    if (!FCompact)
+        str += "\r\n";
 }
 
 /*##########################################################################
@@ -4393,8 +4452,9 @@ void TJsonDocument::AddIndent(int indent, TString &str)
 {
     int i;
 
-    for (i = 0; i < indent; i++)
-        str += "  ";
+    if (!FCompact)
+        for (i = 0; i < indent; i++)
+            str += "  ";
 }
 
 /*##########################################################################

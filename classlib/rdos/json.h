@@ -56,6 +56,7 @@ public:
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
+    void NewLine(TJsonDocument *doc, TString &str);
     void AddIndent(TJsonDocument *doc, int indent, TString &str);
 
     TString FFieldName;
@@ -395,12 +396,14 @@ public:
     void Reset();
     bool Parse(const char *doc);
     void Write(TString &str);
+    void WriteCompact(TString &str);
 
     TJsonCollection *GetRoot();
     TJsonCollection *CreateRoot();
 
 protected:
     void AddIndent(int indent, TString &str);
+    void NewLine(TString &str);
 
     bool AddLevel();
     bool DeleteLevel();
@@ -417,6 +420,7 @@ protected:
     void AddDouble(double val, int decimals);
     void AddBoolean(bool val);
 
+    bool FCompact;
     int FStartState;
     const char *FDocPtr;
     TString FObjFieldName;
