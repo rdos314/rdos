@@ -36,6 +36,21 @@
 
 class TJsonDocument;
 
+class TJsonFormString : public TString
+{
+public:
+    TJsonFormString();
+    TJsonFormString(const char *str);
+    TJsonFormString(const TString &source);
+    virtual ~TJsonFormString();
+
+    const TJsonFormString &operator=(const TString &src);
+    const TJsonFormString &operator=(const char *str);
+
+protected:
+    void Reformat(const char *str);
+};
+
 class TJsonObject
 {
 public:
@@ -60,7 +75,7 @@ protected:
     void AddIndent(TJsonDocument *doc, int indent, TString &str);
 
     TString FFieldName;
-    TString FText;
+    TJsonFormString FText;
 };
 
 class TJsonArrayObject : public TJsonObject

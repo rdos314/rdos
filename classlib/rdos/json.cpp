@@ -86,6 +86,149 @@
 
 /*##########################################################################
 #
+#   Name       : TJsonFormString::TJsonFormString
+#
+#   Purpose....: Constructor for TJsonFormString
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonFormString::TJsonFormString()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonFormString::TJsonFormString
+#
+#   Purpose....: Constructor for TJsonFormString
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonFormString::TJsonFormString(const char *str)
+{
+   Reformat(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonFormString::TJsonFormString
+#
+#   Purpose....: Constructor for TJsonFormString
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonFormString::TJsonFormString(const TString &src)
+{
+   Reformat(src.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonFormString::~TJsonFormString
+#
+#   Purpose....: Destructor for TJsonFormString
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonFormString::~TJsonFormString()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonFormString::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TJsonFormString &TJsonFormString::operator=(const TString &src)
+{
+    Reformat(src.GetData());
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonFormString::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TJsonFormString &TJsonFormString::operator=(const char *str)
+{
+    Reformat(str);
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonFormString::Reformat
+#
+#   Purpose....: Reformat for JSON text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonFormString::Reformat(const char *str)
+{
+    while (*str)
+    {
+        switch (*str)
+        {
+            case 0x22:
+                Append("\\");
+                Append(0x22);
+                str++;
+                break;
+
+            case 0xd:
+                Append("\\");
+                Append("n");
+                str++;
+                if (*str == 0xa)
+                    str++;
+                break;
+                
+            case 0xa:
+                Append("\\");
+                Append("n");
+                str++;
+                if (*str == 0xd)
+                    str++;
+                break;
+
+            default:
+                Append(*str);
+                str++;
+                break;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::TJsonObject
 #
 #   Purpose....: Constructor for TJsonObject
