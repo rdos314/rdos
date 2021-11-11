@@ -198,13 +198,13 @@ void TJsonFormString::Reformat(const char *str)
         switch (*str)
         {
             case 0x22:
-                Append("\\");
+                Append(0x5C);
                 Append(0x22);
                 str++;
                 break;
 
             case 0xd:
-                Append("\\");
+                Append(0x5C);
                 Append("n");
                 str++;
                 if (*str == 0xa)
@@ -212,7 +212,7 @@ void TJsonFormString::Reformat(const char *str)
                 break;
                 
             case 0xa:
-                Append("\\");
+                Append(0x5C);
                 Append("n");
                 str++;
                 if (*str == 0xd)
@@ -432,11 +432,13 @@ void TJsonObject::NewLine(TJsonDocument *doc, TString &str)
 ##########################################################################*/
 void TJsonObject::Write(TJsonDocument *doc, int indent, TString &str)
 {
+    TJsonFormString EscStr(FText);
+
     AddIndent(doc, indent, str);
     str += "\"";
     str += FFieldName;
     str += "\": ";
-    str += FText;
+    str += EscStr;
 }
 
 /*##########################################################################
@@ -2859,11 +2861,13 @@ TDateTime TJsonString::GetDateTime()
 ##########################################################################*/
 void TJsonString::Write(TJsonDocument *doc, int indent, TString &str)
 {
+    TJsonFormString EscStr(FText);
+
     AddIndent(doc, indent, str);
     str += "\"";
     str += FFieldName;
     str += "\": \"";
-    str += FText;
+    str += EscStr;
     str += "\"";
 }
 

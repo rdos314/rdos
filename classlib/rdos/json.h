@@ -75,7 +75,7 @@ protected:
     void AddIndent(TJsonDocument *doc, int indent, TString &str);
 
     TString FFieldName;
-    TJsonFormString FText;
+    TString FText;
 };
 
 class TJsonArrayObject : public TJsonObject
