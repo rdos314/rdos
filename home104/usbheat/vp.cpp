@@ -88,7 +88,7 @@ TVp::TVp(TControlThread *control)
     FIncCount = 0;
     FHasCirc = FALSE;
     FHistoryCount = 0;
-    FMaxTank = 370;
+    FMaxTank = 350;
     FStartTimeout = 0;
 
     FCurrPower = 0;
@@ -363,30 +363,30 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
             if (FCurrPower >= 2000)
             {
                 if (night)
-                    FMaxTank = 450 - ambient;
+                    FMaxTank = 400 - ambient;
                 else
-                    FMaxTank = 480 - ambient;
+                    FMaxTank = 430 - ambient;
             }
             else
             {
                 if (FCurrPower >= 1000)
                 {
                     if (night)
-                        FMaxTank = 400 - ambient;
+                        FMaxTank = 350 - ambient;
                     else
-                        FMaxTank = 440 - ambient;
+                        FMaxTank = 390 - ambient;
                 }
                 else
                 {
                     if (night)
-                        FMaxTank = 350 - ambient;
+                        FMaxTank = 300 - ambient;
                     else
-                        FMaxTank = 400 - ambient;
+                        FMaxTank = 350 - ambient;
                 }
             }
 
-            if (FMaxTank > 470)
-                FMaxTank = 470;
+            if (FMaxTank > 400)
+                FMaxTank = 400;
         }
         else
             FMaxTank = 200;

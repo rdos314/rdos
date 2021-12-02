@@ -75,11 +75,6 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    Adc.LoadTestData("raw.dat");
-    Adc.RemoveFreq(92.4);
-    Adc.RemoveFreq(97.0);
-    Adc.RemoveFreq(107.0);
-
     Adc.RunAdc();
     Adc.RunAna(10, 22, 10, "res.txt");
 
