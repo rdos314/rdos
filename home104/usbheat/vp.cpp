@@ -362,35 +362,26 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
         {
             if (FCurrPower >= 2000)
             {
-                if (night)
+                if (ambient < 40)
                     FMaxTank = 400 - ambient;
-                else
-                    FMaxTank = 430 - ambient;
             }
             else
             {
                 if (FCurrPower >= 1000)
                 {
-                    if (night)
+                    if (ambient < 20)
                         FMaxTank = 350 - ambient;
-                    else
-                        FMaxTank = 390 - ambient;
                 }
                 else
                 {
-                    if (night)
+                    if (ambient < 0)
                         FMaxTank = 300 - ambient;
-                    else
-                        FMaxTank = 350 - ambient;
                 }
             }
 
             if (FMaxTank > 400)
                 FMaxTank = 400;
         }
-        else
-            FMaxTank = 200;
-
 
         if (!FHasLowTemp)
         {
