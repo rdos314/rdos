@@ -34,7 +34,6 @@
 #include "rdoslog.h"
 #include "ech200.h"
 
-#define MAX_LEVEL_HISTORY   601
 #define POWER_COUNT          30
 
 class TVp : public TFuzzy
@@ -46,12 +45,6 @@ public:
     void DeviceName(char *Name, int Size) const;
 
     int GetTankTemp();
-    int GetHeatTemp();
-
-    int HasValidHeatTemp();
-
-    int HasValidHeatP();
-    long double GetHeatP();
 
     void SetMaxMotor(int motor);
     void SetPower(long double val);
@@ -97,19 +90,7 @@ protected:
 
     int FStartTimeout;
 
-    int FValidHeat;
-
     int FTankTemp;
-    int FHeatTemp;
-
-    int FHeatSum;
-    int FHeatCount;
-
-    int FValidPHeat;
-    long double PHeat;
-
-    int ValidHeatArr[20];
-    long double HeatArr[20];
 
     long double FCurrTemp;
 

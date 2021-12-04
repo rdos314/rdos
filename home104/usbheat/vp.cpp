@@ -74,13 +74,8 @@ TVp::TVp(TControlThread *control)
 
     FControl = control;
 
-    FTankTemp = 200;
-    FHeatTemp = 200;
-
     FTankTemp = FEch.GetHeatInlet();
 
-    FValidHeat = FALSE;
-    FValidPHeat = FALSE;
     FValidAmbient = FALSE;
     FHasLowTemp = FALSE;
     FIncCount = 0;
@@ -94,9 +89,6 @@ TVp::TVp(TControlThread *control)
     FPowerIndex = 0;
 
     FDayFile = 0;
-
-    for (i = 0; i < 20; i++)
-        ValidHeatArr[i] = FALSE;
 
     Start("Vp", 0x2000);
 }
@@ -134,22 +126,6 @@ void TVp::DeviceName(char *Name, int Size) const
 
 /*##########################################################################
 #
-#   Name       : TVp::HasValidHeatTemp
-#
-#   Purpose....: Check for valid heat temperature
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TVp::HasValidHeatTemp()
-{
-        return FValidHeat;
-}
-
-/*##########################################################################
-#
 #   Name       : TVp::GetTankTemp
 #
 #   Purpose....: Get tank temperature
@@ -162,54 +138,6 @@ int TVp::HasValidHeatTemp()
 int TVp::GetTankTemp()
 {
     return FTankTemp;
-}
-
-/*##########################################################################
-#
-#   Name       : TVp::GetHeatTemp
-#
-#   Purpose....: Get heating system temperature
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TVp::GetHeatTemp()
-{
-        return FHeatTemp;
-}
-
-/*##########################################################################
-#
-#   Name       : TVp::HasValidHeatP
-#
-#   Purpose....: Check for valid heat effect
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TVp::HasValidHeatP()
-{
-        return FValidPHeat;
-}
-
-/*##########################################################################
-#
-#   Name       : TVp::GetHeatP
-#
-#   Purpose....: Get current heat effect
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long double TVp::GetHeatP()
-{
-        return PHeat;
 }
 
 /*##########################################################################
@@ -227,7 +155,7 @@ void TVp::SetTempError(int diff)
     FSection.Enter();
 
     TempCount++;
-        TempSum += diff;
+    TempSum += diff;
 
     FSection.Leave();
 }
@@ -716,16 +644,9 @@ void TVp::Execute()
     int LastMin;
     int LastDay;
     int UsedDay;
-    long double val;
-    long double dT;
-    int ival;
     int diostat;
-    int Sum;
-    int Count;
-    int PrevCount;
-    long double PrevVal;
+    int ival;
     char str[50];
-    long double E = 0.0;
 
     TLabelFactory CommentLabelFactory;
     TLabelFactory ValueLabelFactory;
@@ -790,10 +711,6 @@ void TVp::Execute()
 
     TempSum = 0;
     TempCount = 0;
-
-    FHeatSum = 0;
-    FHeatCount = 0;
-    FCurrTemp = 0;
 
     FMotorSum = 0;
     FMotorCount = 0;
@@ -880,65 +797,9 @@ void TVp::Execute()
             FSection.Leave();
         }
 
-        if (LastMin != CurrTime->GetMin() && TempCount)
+        if (LastMin != CurrTime->GetMin())
         {
-            for (i = 1; i < 20; i++)
-            {
-                HeatArr[i-1] = HeatArr[i];
-                ValidHeatArr[i-1] = ValidHeatArr[i];
-            }
-
-            HeatArr[19] = FHeatTemp;
-            ValidHeatArr[19] = FValidHeat;
-
-            if (FValidHeat)
-            {
-                Sum = 0;
-                PrevCount = 0;
-
-                for (i = 0; i < 5; i++)
-                {
-                    if (ValidHeatArr[i])
-                    {
-                        Sum += HeatArr[i] * i;
-                        PrevCount += i;
-                    }
-                }
-
-                if (PrevCount)
-                    PrevVal = (long double)Sum / (long double)PrevCount / 10.0;
-                else
-                    PrevVal = 0;
-
-                Sum = 0;
-                Count = 0;
-
-                for (i = 0; i < 5; i++)
-                {
-                    if (ValidHeatArr[i + 15])
-                    {
-                        Sum += HeatArr[i + 15] * i;
-                        Count += i;
-                    }
-                }
-
-                if (Count)
-                    val = (long double)Sum / (long double)Count / 10.0;
-                else
-                    val = 0;
-
-                if (Count && PrevCount)
-                {
-                    dT = val - PrevVal;
-                    PHeat = 0.07 * VOLUME_HEAT * dT / 15;
-                    FValidPHeat = TRUE;
-                }
-            }
-
             FSection.Enter();
-
-            TempSum = 0;
-            TempCount = 0;
 
             if (LastDay != CurrTime->GetDay())
             {
