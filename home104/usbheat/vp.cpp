@@ -431,7 +431,7 @@ void TVp::UpdateCirc(int diostat)
 #   Returns....: *
 #
 ##########################################################################*/
-void TVp::UpdateVp(int diff)
+void TVp::UpdateVp()
 {
     int tries;
     int diostat;
@@ -524,26 +524,6 @@ void TVp::UpdateVp(int diff)
     UpdateCirc(diostat);
 
     FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TVp::UpdateHistory
-#
-#   Purpose....: Update tank history
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TVp::UpdateHistory(long double val)
-{
-    if (FEch.IsOn() || FVpCircOn)
-        FTankTemp = FEch.GetHeatInlet();
-    else
-        FTankTemp--;
-
-    UpdateVp(0);
 }
 
 /*##########################################################################
@@ -868,7 +848,12 @@ void TVp::Execute()
 
         if (LastMin != CurrTime->GetMin())
         {
-            UpdateHistory(0);
+            if (FEch.IsOn() || FVpCircOn)
+                FTankTemp = FEch.GetHeatInlet();
+            else
+                FTankTemp--;
+
+            UpdateVp();
 
             FSection.Enter();
 

@@ -60,9 +60,8 @@ public:
 
 protected:
     void UpdateCirc(int diostat);
-    void UpdateVp(int diff);
+    void UpdateVp();
     void WriteCircValve(long double value);
-    void UpdateHistory(long double val);
 
     void GetTemp(char *str);
     void GetTank(char *str);
