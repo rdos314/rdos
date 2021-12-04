@@ -80,7 +80,6 @@ TVp::TVp(TControlThread *control)
     FTankTemp = FEch.GetHeatInlet();
 
     FValidHeat = FALSE;
-    FValidPTank = FALSE;
     FValidPHeat = FALSE;
     FValidAmbient = FALSE;
     FHasLowTemp = FALSE;
@@ -179,38 +178,6 @@ int TVp::GetTankTemp()
 int TVp::GetHeatTemp()
 {
         return FHeatTemp;
-}
-
-/*##########################################################################
-#
-#   Name       : TVp::HasValidTankP
-#
-#   Purpose....: Check for valid tank effect
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TVp::HasValidTankP()
-{
-        return FValidPTank;
-}
-
-/*##########################################################################
-#
-#   Name       : TVp::GetTankP
-#
-#   Purpose....: Get current tank effect
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long double TVp::GetTankP()
-{
-        return PTank;
 }
 
 /*##########################################################################
@@ -847,7 +814,6 @@ void TVp::Execute()
     FHeatSum = 0;
     FHeatCount = 0;
     FCurrTemp = 0;
-    PTank = 0;
 
     FMotorSum = 0;
     FMotorCount = 0;

@@ -50,9 +50,6 @@ public:
 
     int HasValidHeatTemp();
 
-    int HasValidTankP();
-    long double GetTankP();
-
     int HasValidHeatP();
     long double GetHeatP();
 
@@ -108,9 +105,6 @@ protected:
 
     int FHeatSum;
     int FHeatCount;
-
-    int FValidPTank;
-    long double PTank;
 
     int FValidPHeat;
     long double PHeat;
