@@ -69,10 +69,7 @@ TVp::TVp(TControlThread *control)
     FControl = control;
     FCheckDelay = 0;
 
-    FTankTemp = FEch.GetHeatInlet();
-
     FValidAmbient = FALSE;
-    FHasLowTemp = FALSE;
     FIncCount = 0;
     FHasCirc = FALSE;
     FMaxTank = 350;
@@ -240,12 +237,6 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
             FMaxTank = 400;
     }
 
-    if (!FHasLowTemp)
-    {
-        FLowTemp = FMaxTank - 30;
-        FHasLowTemp = TRUE;
-    }
-
     FSection.Leave();
 }
 
@@ -300,40 +291,44 @@ void TVp::WriteCircValve(long double value)
 #   Returns....: *
 #
 ##########################################################################*/
-void TVp::UpdateCirc(int diostat)
+void TVp::UpdateCirc()
 {
     int on;
+    int diostat;
 
-    if ((diostat & 0x10) == 0)
-        on = FALSE;
-    else
-        on = TRUE;
-
-    if (FTankTemp > 270)
+    if (RdosReadSerialLines(1, &diostat))
     {
-        if (FCirc == 0)
+        if ((diostat & 0x10) == 0)
+            on = FALSE;
+        else
+            on = TRUE;
+
+        if (FTankTemp > 270)
+        {
+            if (FCirc == 0)
+            {
+                if (on)
+                {
+                    FLog.Log(0, "UpdateCirc", "Circ off");
+                    RdosToggleSerialLine(1, 4);
+                }
+            }
+
+            if (FCirc > 25)
+            {
+                if (!on)
+                {
+                    FLog.Log(0, "UpdateCirc", "Circ on");
+                    RdosToggleSerialLine(1, 4);
+                }
+            }
+        }
+        else
         {
             if (on)
             {
                 FLog.Log(0, "UpdateCirc", "Circ off");
                 RdosToggleSerialLine(1, 4);
-
-                if (RdosReadSerialLines(1, &diostat))
-                    if ((diostat & 0x10) == 0)
-                        on = FALSE;
-            }
-        }
-
-        if (FCirc > 25)
-        {
-            if (!on)
-            {
-                FLog.Log(0, "UpdateCirc", "Circ on");
-                RdosToggleSerialLine(1, 4);
-
-                if (RdosReadSerialLines(1, &diostat))
-                    if ((diostat & 0x10) != 0)
-                        on = TRUE;
             }
         }
     }
@@ -420,6 +415,8 @@ void TVp::UpdateVp()
                 }
 
                 RdosWaitMilli(5000);
+                FEch.UpdateHeatIn();
+                RdosWaitMilli(1500);
             }
         }
 
@@ -466,7 +463,7 @@ void TVp::UpdateVp()
         }
     }
 
-    UpdateCirc(diostat);
+    UpdateCirc();
 
     FSection.Leave();
 }
@@ -686,7 +683,7 @@ void TVp::Execute()
     UnitLabelFactory.SetFont(35);
     UnitLabelFactory.SetBackColor(0, 20, 50);
     UnitLabelFactory.SetDrawColor(0, 0, 0);
-    UnitLabelFactory.AlignLeft();
+   UnitLabelFactory.AlignLeft();
 
     TTableControl *Table;
 
@@ -750,6 +747,10 @@ void TVp::Execute()
         }
         break;
     }
+
+    RdosWaitMilli(2000);
+    FTankTemp = FEch.GetHeatInlet();
+    FLowTemp = FTankTemp;
 
     while (FInstalled)
     {

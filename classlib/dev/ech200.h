@@ -37,6 +37,8 @@ public:
     TEch200(TModbusDevice *moddev, int address);
     virtual ~TEch200();
 
+    void UpdateHeatIn();
+
     void SetHeatLimit(int Limit);
     void SetColdLimit(int Limit);
 
@@ -68,6 +70,8 @@ protected:
     int FHeatSet;
     bool FUpdateHeat;
     int FHeatLimit;
+
+    bool FUpdateHeatIn;
 
     int FHeatInlet;
     int FHeatOutlet;

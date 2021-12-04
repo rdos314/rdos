@@ -53,7 +53,7 @@ public:
 
 protected:
     void SetupCheckDelay();
-    void UpdateCirc(int diostat);
+    void UpdateCirc();
     void UpdateVp();
     void WriteCircValve(long double value);
 
@@ -85,7 +85,6 @@ protected:
     long double FCircSpeed;
     bool FVpCircOn;
 
-    int FHasLowTemp;
     int FLowTemp;
 
     int FCheckDelay;

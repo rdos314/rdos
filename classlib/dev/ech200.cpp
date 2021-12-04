@@ -55,6 +55,7 @@ TEch200::TEch200(TModbusDevice *moddev, int address)
 
     FUpdateHeat = false;
     FUpdateCold = false;
+    FUpdateHeatIn = false;
 
     Start("ECH200", 0x8000);
 }
@@ -72,6 +73,22 @@ TEch200::TEch200(TModbusDevice *moddev, int address)
 ##########################################################################*/
 TEch200::~TEch200()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TEch200::UpdateHeatIn
+#
+#   Purpose....: Force read heat in
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TEch200::UpdateHeatIn()
+{
+    FUpdateHeatIn = true;
 }
 
 /*##########################################################################
@@ -410,6 +427,17 @@ void TEch200::Execute()
 
             FColdSet = ReadParam(1);
             FHeatSet = ReadParam(2);
+        }
+        else
+        {
+            if (FUpdateHeatIn)
+            {
+                FUpdateHeatIn = false;
+
+                high = ReadInput(0x46E);
+                low = ReadInput(0x46F);
+                FHeatInlet = high * 256 + low;
+            }
         }
 
         low = ReadInput(0x47A);

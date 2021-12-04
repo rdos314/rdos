@@ -1411,7 +1411,6 @@ int main()
     Met = new TMet(Misol);
 
     InitWeb(Misol, SolarInv, WindInv);
-    InitMail("home.rdos.net");
 
     ResetSolarWind();
 
