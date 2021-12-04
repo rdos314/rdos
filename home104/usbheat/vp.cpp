@@ -50,8 +50,6 @@
 void LockGUI();
 void UnlockGUI();
 
-const int HistoryArr[] = {601, 541, 481, 421, 361, 301, 241, 181, 121, 91, 61, 0};
-
 #define ROOT_DIR "e:/data/vp"
 #define CSV_DAY_HEADER "time;temp;tank;circ;on\r\n"
 
@@ -79,7 +77,8 @@ TVp::TVp(TControlThread *control)
     FTankTemp = 200;
     FHeatTemp = 200;
 
-    FValidTank = FALSE;
+    FTankTemp = FEch.GetHeatInlet();
+
     FValidHeat = FALSE;
     FValidPTank = FALSE;
     FValidPHeat = FALSE;
@@ -132,22 +131,6 @@ TVp::~TVp()
 void TVp::DeviceName(char *Name, int Size) const
 {
         strcpy(Name, "VP");
-}
-
-/*##########################################################################
-#
-#   Name       : TVp::HasValidTankTemp
-#
-#   Purpose....: Check for valid tank temperature
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TVp::HasValidTankTemp()
-{
-    return FValidTank;
 }
 
 /*##########################################################################
@@ -333,51 +316,47 @@ void TVp::SetPower(long double val)
 ##########################################################################*/
 void TVp::SetAmbient(int ref, int ambient, bool night)
 {
-    if (FValidTank)
+    FSection.Enter();
+
+    FRef = ref;
+    FAmbient = ambient;
+
+    FValidAmbient = TRUE;
+
+    FMaxTank = 200;
+
+    if (ambient < 150)
     {
-
-        FSection.Enter();
-
-        FRef = ref;
-        FAmbient = ambient;
-
-        FValidAmbient = TRUE;
-
-        FMaxTank = 200;
-
-        if (ambient < 150)
+        if (FCurrPower >= 2000)
         {
-            if (FCurrPower >= 2000)
+            if (ambient < 40)
+                FMaxTank = 400 - ambient;
+        }
+        else
+        {
+            if (FCurrPower >= 1000)
             {
-                if (ambient < 40)
-                    FMaxTank = 400 - ambient;
+                if (ambient < 20)
+                    FMaxTank = 350 - ambient;
             }
             else
             {
-                if (FCurrPower >= 1000)
-                {
-                    if (ambient < 20)
-                        FMaxTank = 350 - ambient;
-                }
-                else
-                {
-                    if (ambient < 0)
-                        FMaxTank = 300 - ambient;
-                }
+                if (ambient < 0)
+                    FMaxTank = 300 - ambient;
             }
-
-            if (FMaxTank > 400)
-                FMaxTank = 400;
         }
 
-        if (!FHasLowTemp)
-        {
-            FLowTemp = FMaxTank - 30;
-            FHasLowTemp = TRUE;
-        }
-
-        FSection.Leave();
+        if (FMaxTank > 400)
+            FMaxTank = 400;
     }
+
+    if (!FHasLowTemp)
+    {
+        FLowTemp = FMaxTank - 30;
+        FHasLowTemp = TRUE;
+    }
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -592,12 +571,6 @@ void TVp::UpdateVp(int diff)
 ##########################################################################*/
 void TVp::UpdateHistory(long double val)
 {
-    if (!FValidTank)
-    {
-        FTankTemp = 200;
-        FValidTank = TRUE;
-    }
-
     if (FEch.IsOn() || FVpCircOn)
         FTankTemp = FEch.GetHeatInlet();
     else
@@ -679,20 +652,15 @@ void TVp::GetTemp(char *str)
 {
     int val;
 
-    if (FValidTank)
-    {
-        val = FAmbient;
+    val = FAmbient;
 
-        if (val >= 0)
-            sprintf(str, "%d.%01d", val / 10, val % 10);
-        else
-        {
-            val = -val;
-            sprintf(str, "-%d.%01d", val / 10, val % 10);
-        }
-    }
+    if (val >= 0)
+        sprintf(str, "%d.%01d", val / 10, val % 10);
     else
-        str[0] = 0;
+    {
+        val = -val;
+        sprintf(str, "-%d.%01d", val / 10, val % 10);
+    }
 }
 
 /*##########################################################################
@@ -708,10 +676,7 @@ void TVp::GetTemp(char *str)
 ##########################################################################*/
 void TVp::GetTank(char *str)
 {
-    if (FValidTank)
-        sprintf(str, "%d.%01d", FTankTemp / 10, FTankTemp % 10);
-    else
-        str[0] = 0;
+    sprintf(str, "%d.%01d", FTankTemp / 10, FTankTemp % 10);
 }
 
 /*##########################################################################

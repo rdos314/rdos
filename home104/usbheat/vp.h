@@ -48,7 +48,6 @@ public:
     int GetTankTemp();
     int GetHeatTemp();
 
-    int HasValidTankTemp();
     int HasValidHeatTemp();
 
     int HasValidTankP();
@@ -102,7 +101,6 @@ protected:
 
     int FStartTimeout;
 
-    int FValidTank;
     int FValidHeat;
 
     int FTankTemp;
