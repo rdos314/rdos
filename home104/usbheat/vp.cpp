@@ -53,7 +53,7 @@ void UnlockGUI();
 const int HistoryArr[] = {601, 541, 481, 421, 361, 301, 241, 181, 121, 91, 61, 0};
 
 #define ROOT_DIR "e:/data/vp"
-#define CSV_DAY_HEADER "time;temp;tank;circ;turb;on\r\n"
+#define CSV_DAY_HEADER "time;temp;tank;circ;on\r\n"
 
 /*##########################################################################
 #
@@ -87,7 +87,6 @@ TVp::TVp(TControlThread *control)
     FHasLowTemp = FALSE;
     FIncCount = 0;
     FHasCirc = FALSE;
-    FHistoryCount = 0;
     FMaxTank = 350;
     FStartTimeout = 0;
 
@@ -583,83 +582,6 @@ void TVp::UpdateVp(int diff)
 
 /*##########################################################################
 #
-#   Name       : TVp::CalcLinearRegression
-#
-#   Purpose....: Calculate linear regression parameters
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TVp::CalcLinearRegression(int Size)
-{
-    int i;
-    int j;
-    long double xmean;
-    long double xdiff2;
-    long double sum;
-    long double xydiff;
-    long double val;
-    long double sd;
-
-        xmean = Size / 2;
-
-    xdiff2 = 0;
-    for (i = 0; i < Size; i++)
-    {
-        val = i - xmean;
-        xdiff2 += val * val;
-    }
-
-    sum = 0;
-        for (i = 0; i < Size; i++)
-    {
-        j = (i + FHistoryCount - Size) % MAX_LEVEL_HISTORY;
-        sum += FHistory[j];
-    }
-
-    FCurrMean = sum / Size;
-
-    sum = 0;
-    sd = 0;
-    for (i = 0; i < Size; i++)
-    {
-        j = (i + FHistoryCount - Size) % MAX_LEVEL_HISTORY;
-        val = i - xmean;
-        sum += (FHistory[j] - FCurrMean) * val;
-        sd += FHistory[j] - FCurrMean;
-    }
-
-    xydiff = sum;
-    sd = sd / Size;
-
-    FCurrFlow = xydiff / xdiff2;
-
-    FCurrSlope = xydiff * Size / xdiff2;
-    FCurrSl2 = xydiff * xydiff * Size / xdiff2 * Size / xdiff2;
-
-    sum = 0;
-    for (i = 0; i < Size; i++)
-    {
-        j = (i + FHistoryCount - Size) % MAX_LEVEL_HISTORY;
-        val = i - xmean;
-        val = FHistory[j] - FCurrMean - FCurrSlope * val / Size;
-        sum += val * val;
-    }
-
-    FCurrSd2 = sum  / (Size - 2.0);
-
-    if (sd < 0.1)
-        FCurrSl2 = 0;
-
-    if (FCurrSl2)
-        FCurrTurbulence = 100.0 * FCurrSd2 / FCurrSl2;
-    else
-        FCurrTurbulence = 0.0;
-}
-
-/*##########################################################################
-#
 #   Name       : TVp::UpdateHistory
 #
 #   Purpose....: Update tank history
@@ -813,30 +735,6 @@ void TVp::GetCirc(char *str)
 
 /*##########################################################################
 #
-#   Name       : TVp::GetTurbolence
-#
-#   Purpose....: Get turbolence
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TVp::GetTurbolence(char *str)
-{
-    int val;
-
-    if (FHistoryCount > 60)
-    {
-        val = (int)(10.0 * FCurrTurbulence);
-        sprintf(str, "%d.%01d", val / 10, val % 10);
-    }
-    else
-        str[0] = 0;
-}
-
-/*##########################################################################
-#
 #   Name       : TVp::GetOn
 #
 #   Purpose....: Get on
@@ -881,10 +779,6 @@ void TVp::UpdateDataStore(int hour, int min)
     FDayFile->Write(str, strlen(str));
 
     GetCirc(str);
-    strcat(str, ";");
-    FDayFile->Write(str, strlen(str));
-
-    GetTurbolence(str);
     strcat(str, ";");
     FDayFile->Write(str, strlen(str));
 
@@ -988,7 +882,6 @@ void TVp::Execute()
     FHeatSum = 0;
     FHeatCount = 0;
     FCurrTemp = 0;
-    FCurrTurbulence = 0;
     PTank = 0;
 
     FMotorSum = 0;

@@ -66,13 +66,11 @@ protected:
     void UpdateCirc(int diostat);
     void UpdateVp(int diff);
     void WriteCircValve(long double value);
-    void CalcLinearRegression(int Size);
     void UpdateHistory(long double val);
 
     void GetTemp(char *str);
     void GetTank(char *str);
     void GetCirc(char *str);
-    void GetTurbolence(char *str);
     void GetOn(char *str);
     void CreateDayFile(int year, int month, int day);
     void UpdateDataStore(int hour, int min);
@@ -122,17 +120,6 @@ protected:
     int ValidHeatArr[20];
     long double HeatArr[20];
 
-    long double FRawHistory[MAX_LEVEL_HISTORY];
-    int FHistoryIndex;
-
-    long double FHistory[MAX_LEVEL_HISTORY];
-    int FHistoryCount;
-    long double FCurrMean;
-    long double FCurrSl2;
-    long double FCurrFlow;
-    long double FCurrSlope;
-    long double FCurrSd2;
-    long double FCurrTurbulence;
     long double FCurrTemp;
 
     TFile *FDayFile;
