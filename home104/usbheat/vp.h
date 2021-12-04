@@ -81,8 +81,6 @@ protected:
 
     int TempSum;
     int TempCount;
-    long double AmbientSum;
-    int AmbientCount;
 
     int FMotorCount;
     int FMotorSum;

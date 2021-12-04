@@ -334,10 +334,6 @@ void TVp::SetPower(long double val)
 ##########################################################################*/
 void TVp::SetAmbient(int ref, int ambient, bool night)
 {
-    long double fact;
-    long double ambdiff;
-    long double tankdiff;
-
     if (FValidTank)
     {
 
@@ -345,14 +341,6 @@ void TVp::SetAmbient(int ref, int ambient, bool night)
 
         FRef = ref;
         FAmbient = ambient;
-
-        ambdiff = FRef - FAmbient;
-        tankdiff = FTankTemp - FRef;
-
-        fact = 1.5 * ambdiff / (ambdiff + 2.0 * tankdiff);
-
-        AmbientSum += fact;
-        AmbientCount++;
 
         FValidAmbient = TRUE;
 
@@ -996,8 +984,6 @@ void TVp::Execute()
 
     TempSum = 0;
     TempCount = 0;
-    AmbientSum = 0;
-    AmbientCount = 0;
 
     FHeatSum = 0;
     FHeatCount = 0;
@@ -1144,8 +1130,6 @@ void TVp::Execute()
 
             TempSum = 0;
             TempCount = 0;
-            AmbientSum = 0;
-            AmbientCount = 0;
 
             if (LastDay != CurrTime->GetDay())
             {
