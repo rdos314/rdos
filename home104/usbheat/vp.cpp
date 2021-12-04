@@ -34,16 +34,10 @@
 #include <math.h>
 
 #include "vp.h"
-#include "lowset.h"
-#include "midset.h"
-#include "highset.h"
 #include "table.h"
 
 #define FALSE 0
 #define TRUE !FALSE
-
-#define VOLUME_TANK 500
-#define VOLUME_HEAT 100
 
 #define START_TIMEOUT   5 * 60
 
