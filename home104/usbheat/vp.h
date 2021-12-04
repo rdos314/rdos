@@ -52,6 +52,7 @@ public:
     void SetAmbient(int ref, int ambient, bool night);
 
 protected:
+    void SetupCheckDelay();
     void UpdateCirc(int diostat);
     void UpdateVp();
     void WriteCircValve(long double value);
@@ -77,7 +78,6 @@ protected:
     int FPowerCount;
     int FPowerIndex;
 
-    int FVpOn;
     int FValidCirc;
     int FCirc;
     int FIncCount;
@@ -87,6 +87,8 @@ protected:
 
     int FHasLowTemp;
     int FLowTemp;
+
+    int FCheckDelay;
 
     int FStartTimeout;
 
