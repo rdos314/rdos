@@ -303,7 +303,7 @@ void TVp::UpdateCirc()
         else
             on = TRUE;
 
-        if (FTankTemp > 270)
+        if (FTankTemp > 230)
         {
             if (FCirc == 0)
             {
@@ -414,7 +414,7 @@ void TVp::UpdateVp()
                     FLog.Log(0, "UpdateVp", "Heat started");
                 }
 
-                RdosWaitMilli(5000);
+                RdosWaitMilli(30000);
                 FEch.UpdateHeatIn();
                 RdosWaitMilli(1500);
             }
@@ -750,7 +750,7 @@ void TVp::Execute()
 
     RdosWaitMilli(2000);
     FTankTemp = FEch.GetHeatInlet();
-    FLowTemp = FTankTemp;
+    FLowTemp = 1000;
 
     while (FInstalled)
     {
