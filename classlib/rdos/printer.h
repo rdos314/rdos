@@ -41,7 +41,7 @@ public:
 
     virtual void DeviceName(char *Name, int MaxLen) const;
 
-    virtual int IsOnline() const;
+    virtual int IsOnline();
 
     virtual int IsJammed();
     virtual int IsCutterJammed();

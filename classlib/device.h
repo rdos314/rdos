@@ -62,7 +62,7 @@ public:
     void Close();
     void Enable();
     void Disable();
-    int IsEnabled() const;
+    int IsEnabled();
         
     virtual int IsOpen();
     virtual int IsActive();
@@ -73,8 +73,8 @@ public:
     static void GetDevices(void (*DeviceCallb)(TDevice *Device));
 
     void Install(TDeviceDebug *Debug);
-    virtual void StartDebug();
-    virtual void StopDebug();
+    virtual void StartDeviceDebug();
+    virtual void StopDeviceDebug();
 
     void (*OnOnline)(TDevice *Device);
     void (*OnOffline)(TDevice *Device);

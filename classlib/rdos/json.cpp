@@ -335,7 +335,7 @@ bool TJsonObject::IsArrayObject()
 ##########################################################################*/
 bool TJsonObject::GetBoolean()
 {
-    return false;
+    return GetBaseBoolean();
 }
 
 /*##########################################################################
@@ -351,7 +351,7 @@ bool TJsonObject::GetBoolean()
 ##########################################################################*/
 long long TJsonObject::GetInt()
 {
-    return 0;
+    return GetBaseInt();
 }
 
 /*##########################################################################
@@ -367,7 +367,7 @@ long long TJsonObject::GetInt()
 ##########################################################################*/
 double TJsonObject::GetDouble()
 {
-    return 0.0;
+    return GetBaseDouble();
 }
 
 /*##########################################################################
@@ -382,6 +382,70 @@ double TJsonObject::GetDouble()
 #
 ##########################################################################*/
 TDateTime TJsonObject::GetDateTime()
+{
+    return GetBaseDateTime();
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::GetBaseBoolean
+#
+#   Purpose....: Get boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonObject::GetBaseBoolean()
+{
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::GetBaseInt
+#
+#   Purpose....: Get int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TJsonObject::GetBaseInt()
+{
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::GetBaseDouble
+#
+#   Purpose....: Get double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonObject::GetBaseDouble()
+{
+    return 0.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::GetBaseDateTime
+#
+#   Purpose....: Get date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TJsonObject::GetBaseDateTime()
 {
     TDateTime time;
     return time;
@@ -2351,7 +2415,7 @@ TJsonInt::~TJsonInt()
 
 /*##########################################################################
 #
-#   Name       : TJsonInt::GetBoolean
+#   Name       : TJsonInt::GetBaseBoolean
 #
 #   Purpose....: Get boolean
 #
@@ -2360,7 +2424,7 @@ TJsonInt::~TJsonInt()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonInt::GetBoolean()
+bool TJsonInt::GetBaseBoolean()
 {
     if (Val == 0)
         return false;
@@ -2370,7 +2434,7 @@ bool TJsonInt::GetBoolean()
 
 /*##########################################################################
 #
-#   Name       : TJsonInt::GetInt
+#   Name       : TJsonInt::GetBaseInt
 #
 #   Purpose....: Get int
 #
@@ -2379,14 +2443,14 @@ bool TJsonInt::GetBoolean()
 #   Returns....: *
 #
 ##########################################################################*/
-long long TJsonInt::GetInt()
+long long TJsonInt::GetBaseInt()
 {
     return Val;
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonInt::GetDouble
+#   Name       : TJsonInt::GetBaseDouble
 #
 #   Purpose....: Get double
 #
@@ -2395,14 +2459,14 @@ long long TJsonInt::GetInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonInt::GetDouble()
+double TJsonInt::GetBaseDouble()
 {
     return (double)Val;
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonInt::GetDateTime
+#   Name       : TJsonInt::GetBaseDateTime
 #
 #   Purpose....: Get date & time
 #
@@ -2411,7 +2475,7 @@ double TJsonInt::GetDouble()
 #   Returns....: *
 #
 ##########################################################################*/
-TDateTime TJsonInt::GetDateTime()
+TDateTime TJsonInt::GetBaseDateTime()
 {
     TDateTime time;
 
@@ -2531,7 +2595,7 @@ TJsonDouble::~TJsonDouble()
 
 /*##########################################################################
 #
-#   Name       : TJsonDouble::GetBoolean
+#   Name       : TJsonDouble::GetBaseBoolean
 #
 #   Purpose....: Get boolean
 #
@@ -2540,7 +2604,7 @@ TJsonDouble::~TJsonDouble()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonDouble::GetBoolean()
+bool TJsonDouble::GetBaseBoolean()
 {
     if (Val > 0)
         return true;
@@ -2550,7 +2614,7 @@ bool TJsonDouble::GetBoolean()
 
 /*##########################################################################
 #
-#   Name       : TJsonDouble::GetInt
+#   Name       : TJsonDouble::GetBaseInt
 #
 #   Purpose....: Get int
 #
@@ -2559,7 +2623,7 @@ bool TJsonDouble::GetBoolean()
 #   Returns....: *
 #
 ##########################################################################*/
-long long TJsonDouble::GetInt()
+long long TJsonDouble::GetBaseInt()
 {
     double temp = Val;
 
@@ -2583,7 +2647,7 @@ long long TJsonDouble::GetInt()
 
 /*##########################################################################
 #
-#   Name       : TJsonDouble::GetDouble
+#   Name       : TJsonDouble::GetBaseDouble
 #
 #   Purpose....: Get double
 #
@@ -2592,14 +2656,14 @@ long long TJsonDouble::GetInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonDouble::GetDouble()
+double TJsonDouble::GetBaseDouble()
 {
     return Val;
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonDouble::GetDateTime
+#   Name       : TJsonDouble::GetBaseDateTime
 #
 #   Purpose....: Get date & time
 #
@@ -2608,7 +2672,7 @@ double TJsonDouble::GetDouble()
 #   Returns....: *
 #
 ##########################################################################*/
-TDateTime TJsonDouble::GetDateTime()
+TDateTime TJsonDouble::GetBaseDateTime()
 {
     TDateTime time((long double)Val);
     return time;
@@ -2653,7 +2717,7 @@ TJsonBoolean::~TJsonBoolean()
 
 /*##########################################################################
 #
-#   Name       : TJsonBoolean::GetBoolean
+#   Name       : TJsonBoolean::GetBaseBoolean
 #
 #   Purpose....: Get boolean
 #
@@ -2662,14 +2726,14 @@ TJsonBoolean::~TJsonBoolean()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonBoolean::GetBoolean()
+bool TJsonBoolean::GetBaseBoolean()
 {
     return Val;
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonBoolean::GetInt
+#   Name       : TJsonBoolean::GetBaseInt
 #
 #   Purpose....: Get int
 #
@@ -2678,7 +2742,7 @@ bool TJsonBoolean::GetBoolean()
 #   Returns....: *
 #
 ##########################################################################*/
-long long TJsonBoolean::GetInt()
+long long TJsonBoolean::GetBaseInt()
 {
     if (Val)
         return 1;
@@ -2688,7 +2752,7 @@ long long TJsonBoolean::GetInt()
 
 /*##########################################################################
 #
-#   Name       : TJsonBoolean::GetDouble
+#   Name       : TJsonBoolean::GetBaseDouble
 #
 #   Purpose....: Get double
 #
@@ -2697,7 +2761,7 @@ long long TJsonBoolean::GetInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonBoolean::GetDouble()
+double TJsonBoolean::GetBaseDouble()
 {
     if (Val)
         return 1.0;
@@ -2707,7 +2771,7 @@ double TJsonBoolean::GetDouble()
 
 /*##########################################################################
 #
-#   Name       : TJsonBoolean::GetDateTime
+#   Name       : TJsonBoolean::GetBaseDateTime
 #
 #   Purpose....: Get date & time
 #
@@ -2716,7 +2780,7 @@ double TJsonBoolean::GetDouble()
 #   Returns....: *
 #
 ##########################################################################*/
-TDateTime TJsonBoolean::GetDateTime()
+TDateTime TJsonBoolean::GetBaseDateTime()
 {
     TDateTime time;
     return time;
@@ -2756,7 +2820,7 @@ TJsonString::~TJsonString()
 
 /*##########################################################################
 #
-#   Name       : TJsonString::GetBoolean
+#   Name       : TJsonString::GetBaseBoolean
 #
 #   Purpose....: Get boolean
 #
@@ -2765,7 +2829,7 @@ TJsonString::~TJsonString()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TJsonString::GetBoolean()
+bool TJsonString::GetBaseBoolean()
 {
     if (!strcmp(FText.GetData(), "true"))
         return true;
@@ -2784,7 +2848,7 @@ bool TJsonString::GetBoolean()
 
 /*##########################################################################
 #
-#   Name       : TJsonString::GetInt
+#   Name       : TJsonString::GetBaseInt
 #
 #   Purpose....: Get int
 #
@@ -2793,7 +2857,7 @@ bool TJsonString::GetBoolean()
 #   Returns....: *
 #
 ##########################################################################*/
-long long TJsonString::GetInt()
+long long TJsonString::GetBaseInt()
 {
     char *end = NULL;
 
@@ -2802,7 +2866,7 @@ long long TJsonString::GetInt()
 
 /*##########################################################################
 #
-#   Name       : TJsonString::GetDouble
+#   Name       : TJsonString::GetBaseDouble
 #
 #   Purpose....: Get double
 #
@@ -2811,7 +2875,7 @@ long long TJsonString::GetInt()
 #   Returns....: *
 #
 ##########################################################################*/
-double TJsonString::GetDouble()
+double TJsonString::GetBaseDouble()
 {
     char *end;
 
@@ -2820,7 +2884,7 @@ double TJsonString::GetDouble()
 
 /*##########################################################################
 #
-#   Name       : TJsonString::GetDateTime
+#   Name       : TJsonString::GetBaseDateTime
 #
 #   Purpose....: Get date & time
 #
@@ -2829,7 +2893,7 @@ double TJsonString::GetDouble()
 #   Returns....: *
 #
 ##########################################################################*/
-TDateTime TJsonString::GetDateTime()
+TDateTime TJsonString::GetBaseDateTime()
 {
     int year, month, day;
     int hour, min, sec;

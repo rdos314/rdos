@@ -43,6 +43,7 @@ public:
 class TShareObject
 {
 friend class TStorageListNode;
+friend class TString;
 public:
 	TShareObject();
 	TShareObject(const void *x, int size);

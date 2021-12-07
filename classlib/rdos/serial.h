@@ -60,7 +60,7 @@ public:
     int DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCount, int InChannel, int OutChannel);
     int DumpEvents();
     
-    virtual int IsOpen() const;
+    virtual int IsOpen();
     virtual void Open();
     virtual void Close();
         

@@ -271,7 +271,7 @@ const TString &TString::operator=(const TString &src)
 #   Returns....: *
 #
 ##########################################################################*/
-int TString::Compare(const TString &str) const
+int TString::Compare(const TShareObject &str) const
 {
     int res;
 

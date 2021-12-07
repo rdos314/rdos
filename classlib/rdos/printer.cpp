@@ -160,7 +160,7 @@ void TPrinterDevice::Add(TWait *Wait)
 #   Returns....: TRUE if online
 #
 ##########################################################################*/
-int TPrinterDevice::IsOnline() const
+int TPrinterDevice::IsOnline()
 {
     return RdosIsPrinterOk(FHandle);
 }

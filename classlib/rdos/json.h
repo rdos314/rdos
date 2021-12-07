@@ -63,14 +63,19 @@ public:
     virtual bool IsCollection();
     virtual bool IsArrayObject();
 
-    virtual bool GetBoolean();
-    virtual long long GetInt();
-    virtual double GetDouble();
-    virtual TDateTime GetDateTime();
+    bool GetBoolean();
+    long long GetInt();
+    double GetDouble();
+    TDateTime GetDateTime();
 
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
+    virtual bool GetBaseBoolean();
+    virtual long long GetBaseInt();
+    virtual double GetBaseDouble();
+    virtual TDateTime GetBaseDateTime();
+
     void NewLine(TJsonDocument *doc, TString &str);
     void AddIndent(TJsonDocument *doc, int indent, TString &str);
 
@@ -289,12 +294,12 @@ public:
     TJsonDouble(TString &FieldName, double val, TString &data);
     virtual ~TJsonDouble();
 
-    virtual bool GetBoolean();
-    virtual long long GetInt();
-    virtual double GetDouble();
-    virtual TDateTime GetDateTime();
-
 protected:
+    virtual bool GetBaseBoolean();
+    virtual long long GetBaseInt();
+    virtual double GetBaseDouble();
+    virtual TDateTime GetBaseDateTime();
+
     double Val;
 };
 
@@ -304,12 +309,12 @@ public:
     TJsonBoolean(TString &FieldName, bool val);
     virtual ~TJsonBoolean();
 
-    virtual bool GetBoolean();
-    virtual long long GetInt();
-    virtual double GetDouble();
-    virtual TDateTime GetDateTime();
-
 protected:
+    virtual bool GetBaseBoolean();
+    virtual long long GetBaseInt();
+    virtual double GetBaseDouble();
+    virtual TDateTime GetBaseDateTime();
+
     bool Val;
 };
 
@@ -319,12 +324,12 @@ public:
     TJsonInt(TString &FieldName, long long val);
     virtual ~TJsonInt();
 
-    virtual bool GetBoolean();
-    virtual long long GetInt();
-    virtual double GetDouble();
-    virtual TDateTime GetDateTime();
-
 protected:
+    virtual bool GetBaseBoolean();
+    virtual long long GetBaseInt();
+    virtual double GetBaseDouble();
+    virtual TDateTime GetBaseDateTime();
+
     long long Val;
 };
 
@@ -334,13 +339,13 @@ public:
     TJsonString(TString &FieldName, TString &data);
     virtual ~TJsonString();
 
-    virtual bool GetBoolean();
-    virtual long long GetInt();
-    virtual double GetDouble();
-    virtual TDateTime GetDateTime();
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
+    virtual bool GetBaseBoolean();
+    virtual long long GetBaseInt();
+    virtual double GetBaseDouble();
+    virtual TDateTime GetBaseDateTime();
 };
 
 class TJsonDocument;

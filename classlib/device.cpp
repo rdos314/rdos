@@ -539,7 +539,7 @@ void TDevice::Disable()
 #   Returns....: TRUE if enabled
 #
 ##########################################################################*/
-int TDevice::IsEnabled() const
+int TDevice::IsEnabled()
 {
     return FEnabled;
 }
@@ -738,7 +738,7 @@ void TDevice::Install(TDeviceDebug *Debug)
 
 /*##########################################################################
 #
-#   Name       : TDevice::StartDebug
+#   Name       : TDevice::StartDeviceDebug
 #
 #   Purpose....: Starts device debugging
 #
@@ -747,7 +747,7 @@ void TDevice::Install(TDeviceDebug *Debug)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDevice::StartDebug()
+void TDevice::StartDeviceDebug()
 {
     if (FDebug)
         FDebugFile = FDebug->RequestFile(this);
@@ -755,7 +755,7 @@ void TDevice::StartDebug()
 
 /*##########################################################################
 #
-#   Name       : TDevice::StopDebug
+#   Name       : TDevice::StopDeviceDebug
 #
 #   Purpose....: Stops device debugging
 #
@@ -764,7 +764,7 @@ void TDevice::StartDebug()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDevice::StopDebug()
+void TDevice::StopDeviceDebug()
 {
     if (FDebug)
         FDebug->ReleaseFile(this);

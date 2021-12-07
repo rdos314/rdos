@@ -73,7 +73,7 @@ public:
 
     void ConcatCopy(const char *str1, int len1, const char *str2, int len2);
 
-    virtual int Compare(const TString &str) const;
+    virtual int Compare(const TShareObject &str) const;
 
 protected:
     virtual char Upper(char ch); 

@@ -2144,10 +2144,6 @@
     __parm [__esi] [__edi] \
     __modify [__eax __edx]
 
-#pragma aux RdosGetLongTime = \
-    CallGate_get_time  \
-    __value [__edx __eax]
-
 #pragma aux RdosUserGetSysTime = \
     CallGate_user_get_system_time  \
     "jnc ok" \
@@ -2181,7 +2177,6 @@
     CallGate_get_time  \
     "ok: " \
     __value [__edx __eax]
-
 
 #pragma aux RdosSetTime = \
     CallGate_get_system_time  \
