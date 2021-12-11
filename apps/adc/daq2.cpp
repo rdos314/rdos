@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     TDateTime curr;
     double SampleFreq = 600.0;
 
-    TFreq Freq(0.1, SampleFreq / 2.0, 1, SampleFreq, 250);
+    TFreq Freq(0.1, SampleFreq / 2.0, 1, SampleFreq, 500);
 
     TAdc Adc(0x0, 300, &Freq);
 
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    Adc.RunAdc(100, 22, 10, "res.txt");
+    Adc.RunAdc(100, 3, 10, "res.txt");
 
     for (;;)
         RdosWaitMilli(100);
