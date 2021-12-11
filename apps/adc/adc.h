@@ -49,10 +49,7 @@ public:
     TAdc(char TestMode, int Blocks, TFreq *Freq);
     ~TAdc();
 
-    bool RunAdc();
-    bool LoadTestData(const char *FileName);
-    void RunAna(int Intervals, int Threads, int Min, const char *ResultName);
-    void CleanupAna();
+    bool RunAdc(int Intervals, int Threads, int Min, const char *ResultName);
 
     void RemoveFreq(double Freq);
 

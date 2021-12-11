@@ -75,16 +75,7 @@ int main(int argc, char **argv)
             RdosWaitMilli(1000);
     }
 
-    Adc.RunAdc();
-    Adc.RunAna(10, 22, 10, "res.txt");
-
-    Max =  Adc.GetMaxPeriodic();
-    Freq.CodeFreq(Max, str);
-
-    RdosWriteString("Max: ");
-    RdosWriteString(str);
-
-    Adc.CleanupAna();
+    Adc.RunAdc(100, 22, 10, "res.txt");
 
     for (;;)
         RdosWaitMilli(100);

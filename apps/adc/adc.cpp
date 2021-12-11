@@ -34,7 +34,6 @@
 #include "adcthr.h"
 #include "adcana.h"
 #include "adc.h"
-#include "fmsig.h"
 
 struct TAdcFreqPower
 {
@@ -1654,70 +1653,7 @@ void TAdc::Execute()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TAdc::RunAdc()
-{
-    int i;
-    TAdcData *data;
-
-    if (RdosStartAdc())
-    {
-        RdosWriteString("ADC started\r\n");
-
-        file = new TFile("raw.dat", 0);
-        data = GetBlock(0);
-
-        for (i = 0; i < 0x80000; i++)
-            file->Write(&data[i], sizeof(TAdcData));
-        delete file;
-
-        for (i = 0; i < FBlocks; i++)
-            data = GetBlock(i);
-
-        RdosWriteString("ADC done\r\n");
-        return true;
-    }
-    else
-        return false;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::LoadTestData
-#
-#   Purpose....: Load test data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TAdc::LoadTestData(const char *FileName)
-{
-    TFile file(FileName);
-    TAdcData *data;
-
-    if (file.IsOpen())
-    {
-        TestData = new TAdcData[0x80000];
-        file.Read(TestData, 0x200000);
-        return true;
-    }
-    else
-        return false;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::RunAna
-#
-#   Purpose....: Run analysis
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::RunAna(int iv, int tc, int min, const char *ResultFile)
+bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
 {
     int i;
     int CurrInt;
@@ -1725,730 +1661,76 @@ void TAdc::RunAna(int iv, int tc, int min, const char *ResultFile)
     int CurrPos;
     TAdcAna *ana;
     char str[100];
-
-    Intervals = iv;
-    AnaSize = FBlocks / Intervals;
-
-    AdcAna = new TAdcAna*[Intervals];
-
-    for (i = 0; i < Intervals; i++)
-        AdcAna[i] = new TAdcAna(AnaSize, Freq);
-
-    Min = min;
-    Threads = tc;
-
-    Start("Adc", 0x4000);
-
-    CurrInt = 0;
-    Pos = 0;
-
-    for (CurrInt = 0; CurrInt < Intervals; CurrInt++)
+    if (RdosStartAdc())
     {
-        CurrPos = CurrInt * AnaSize;
-        sprintf(str, "%d", CurrPos);
-        RdosWriteString(str);
+        Min = min;
+        Intervals = iv;
+        Threads = tc;
+        AnaSize = FBlocks / Intervals;
 
-        ana = AdcAna[CurrInt];
+        AdcAna = new TAdcAna*[Intervals];
 
-        while (!ana->IsDone())
+        for (i = 0; i < Intervals; i++)
+            AdcAna[i] = new TAdcAna(AnaSize, Freq);
+
+        Start("Adc", 0x4000);
+
+        RdosWriteString("ADC started\r\n");
+
+        CurrInt = 0;
+        Pos = 0;
+
+        for (CurrInt = 0; CurrInt < Intervals; CurrInt++)
         {
-            CurrPos = CurrInt * AnaSize + ana->GetPos();
-            if (Pos == CurrPos)
-                RdosWaitMilli(250);
-            else
-            {
-                while (Pos != CurrPos)
-                {
-                    if ((Pos % AnaSize) != 0 && (Pos % 50) == 0)
-                    {
-                        RdosWriteString("\r\n");
-                        ana->PrintSnap();
-                        sprintf(str, "%d", Pos);
-                        RdosWriteString(str);
-                    }
-                    else
-                        RdosWriteChar('.');
+            CurrPos = CurrInt * AnaSize;
+            sprintf(str, "%d", CurrPos);
+            RdosWriteString(str);
 
-                    Pos++;
+            ana = AdcAna[CurrInt];
+
+            while (!ana->IsDone())
+            {
+                CurrPos = CurrInt * AnaSize + ana->GetPos();
+                if (Pos == CurrPos)
+                    RdosWaitMilli(250);
+                else
+                {
+                    while (Pos != CurrPos)
+                    {
+                        if ((Pos % AnaSize) != 0 && (Pos % 50) == 0)
+                        {
+                            RdosWriteString("\r\n");
+                            ana->PrintSnap();
+                            sprintf(str, "%d", Pos);
+                            RdosWriteString(str);
+                        }
+                        else
+                            RdosWriteChar('.');
+
+                        Pos++;
+                    }
                 }
             }
+            RdosWriteString("\r\n");
+            ana->PrintSnap();
         }
-        RdosWriteString("\r\n");
-        ana->PrintSnap();
-    }
 
-    while (IsRunning())
-        RdosWaitMilli(250);
+        while (IsRunning())
+            RdosWaitMilli(250);
 
-    file = new TFile(ResultFile, 0);
-    PrintResult();
-    delete file;
-    file = 0;
-}
+        file = new TFile(ResultFile, 0);
+        PrintResult();
+        delete file;
+        file = 0;
 
-/*##########################################################################
-#
-#   Name       : TAdc::CleanupAna
-#
-#   Purpose....: Cleanup analysis
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CleanupAna()
-{
-    int i;
-
-    if (AdcAna)
-    {
         for (i = 0; i < Intervals; i++)
             delete AdcAna[i];
 
         delete AdcAna;
         AdcAna = 0;
+
+        return true;
     }
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::GetMaxPeriodic
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TAdc::GetMaxPeriodic()
-{
-    TAdcAna *ana;
-    int i;
-    int j;
-    double MaxCount = 0.0;
-    double MaxPower = 0.0;
-    int MaxIndex = 0;
-    int SumA;
-    int SumB;
-    int count;
-    double dcount;
-    double dpow;
-
-    for (i = 0; i < FreqCount; i++)
-    {
-        count = 0;
-        SumA = 0;
-        SumB = 0;
-
-        for (j = 0; j < Intervals; j++)
-        {
-            ana = AdcAna[j];
-            count += ana->Count[i];
-            SumA += ana->SumA[i];
-            SumB += ana->SumA[i];
-        }
-
-        dcount = (double)count / (double)ana->Total[i];
-        dpow = sqrt((double)SumA * (double)SumA + (double)SumB * (double)SumB) / (double)count;
-
-        if (dcount > MaxCount)
-        {
-            MaxPower = dpow;
-            MaxCount = dcount;
-            MaxIndex = i;
-        }
-        else
-        {
-            if (dcount == MaxCount && dpow > MaxPower)
-            {
-                MaxPower = dpow;
-                MaxCount = dcount;
-                MaxIndex = i;
-            }
-        }
-    }
-    return MaxIndex;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CalcFmPower
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CalcFmPower(double Freq, TAdcData *Ref, int DataSize)
-{
-    int pi = GetPhaseIncr(Freq);
-    struct TAdcFreqPower res;
-    int val;
-    double dval;
-    int Count = 0x80000 / DataSize;
-    double PowerA = 0;
-    double PowerB = 0;
-    int i;
-
-    for (i = 0; i < Count; i++)
-    {
-        ::CalcFreqPower(Ref + i * DataSize, DataSize, 0, pi, &res);
-
-        res.SinA = res.SinA / DataSize / 0x2000;
-        res.SinB = res.SinB / DataSize / 0x2000;
-        res.CosA = res.CosA / DataSize / 0x2000;
-        res.CosB = res.CosB / DataSize / 0x2000;
-
-        val = res.SinA * res.SinA + res.CosA * res.CosA;
-        PowerA += sqrt(val) / 2.0;
-
-        val = res.SinB * res.SinB + res.CosB * res.CosB;
-        PowerB += sqrt(val) / 2.0;
-    }
-
-    CurrPowerA = round(PowerA / (double)Count);
-    CurrPowerB = round(PowerB / (double)Count);
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CalcFmPhase
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CalcFmPhase(double Freq, TAdcData *Ref, int DataSize)
-{
-    double x, y;
-    double phase;
-    int pi = GetPhaseIncr(Freq);
-    struct TAdcFreqPower res;
-
-    ::CalcFreqPower(Ref, DataSize, 0, pi, &res);
-
-    res.SinA = res.SinA / DataSize / 0x2000;
-    res.SinB = res.SinB / DataSize / 0x2000;
-    res.CosA = res.CosA / DataSize / 0x2000;
-    res.CosB = res.CosB / DataSize / 0x2000;
-
-    x = (double)res.CosA;
-    y = (double)res.SinA;
-    phase = atan2(x, y);
-    phase = phase / M_PI / 2.0;
-    phase = phase * (double)0x10000;
-    phase = phase * (double)0x10000;
-    CurrPhaseA =  (int)phase;
-
-    x = (double)res.CosB;
-    y = (double)res.SinB;
-    phase = atan2(x, y);
-    phase = phase / M_PI / 2.0;
-    phase = phase * (double)0x10000;
-    phase = phase * (double)0x10000;
-    CurrPhaseB =  (int)phase;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CalcInitPhase
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CalcInitPhase(double Freq, TAdcData *Ref)
-{
-    double x, y;
-    double phase;
-    int pi = GetPhaseIncr(Freq);
-    struct TAdcFreqPower res;
-
-    ::CalcFreqPower(Ref, WorkSize, 0, pi, &res);
-
-    res.SinA = res.SinA / WorkSize / 0x2000;
-    res.SinB = res.SinB / WorkSize / 0x2000;
-    res.CosA = res.CosA / WorkSize / 0x2000;
-    res.CosB = res.CosB / WorkSize / 0x2000;
-
-    x = (double)res.CosA;
-    y = (double)res.SinA;
-    phase = atan2(x, y);
-    phase = phase / M_PI / 2.0;
-    phase = phase * (double)0x10000;
-    phase = phase * (double)0x10000;
-    CurrPhaseA =  (int)phase;
-
-    x = (double)res.CosB;
-    y = (double)res.SinB;
-    phase = atan2(x, y);
-    phase = phase / M_PI / 2.0;
-    phase = phase * (double)0x10000;
-    phase = phase * (double)0x10000;
-    CurrPhaseB =  (int)phase;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CreateFreqRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CreateFreqRef(int FreqIncr, TAdcData *Ref)
-{
-    int i;
-
-    ::CreateSignal(WorkBuf, WorkSize, CurrPhaseA, FreqIncr, CurrPowerA);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
-
-    ::CreateSignal(WorkBuf, WorkSize, CurrPhaseB, FreqIncr, CurrPowerB);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CreateAmpRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CreateAmpRef(int PowerA, int PowerB, TAdcData *Ref)
-{
-    int i;
-
-    ::CreateSignal(WorkBuf, WorkSize, CurrPhaseA, CurrFreqIncr, PowerA);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
-
-    ::CreateSignal(WorkBuf, WorkSize, CurrPhaseB, CurrFreqIncr, PowerB);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CreatePhaseRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CreatePhaseRef(int PhaseA, int PhaseB, TAdcData *Ref)
-{
-    int i;
-
-    ::CreateSignal(WorkBuf, WorkSize, PhaseA, CurrFreqIncr, CurrPowerA);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chA = Ref[i].chA - (short int)WorkBuf[i];
-
-    ::CreateSignal(WorkBuf, WorkSize, PhaseB, CurrFreqIncr, CurrPowerB);
-
-    for (i = 0; i < WorkSize; i++)
-        WorkData[i].chB = Ref[i].chB - (short int)WorkBuf[i];
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::UpdateRef
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::UpdateRef(TAdcData *Ref)
-{
-    int i;
-
-    ::CreateSignal(WorkBuf, WorkSize, CurrPhaseA, CurrFreqIncr, CurrPowerA);
-
-    for (i = 0; i < WorkSize; i++)
-        Ref[i].chA = Ref[i].chA - (short int)WorkBuf[i];
-
-    ::CreateSignal(WorkBuf, WorkSize, CurrPhaseB, CurrFreqIncr, CurrPowerB);
-
-    for (i = 0; i < WorkSize; i++)
-        Ref[i].chB = Ref[i].chB - (short int)WorkBuf[i];
-
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CalcDiff
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CalcDiff(int FreqIncr, long long *DiffA, long long *DiffB)
-{
-    struct TAdcFreqPower res;
-
-    ::CalcFreqPower(WorkData, WorkSize, 0, FreqIncr, &res);
-
-    res.SinA = res.SinA / 0x2000;
-    res.SinB = res.SinB / 0x2000;
-    res.CosA = res.CosA / 0x2000;
-    res.CosB = res.CosB / 0x2000;
-
-    *DiffA = (res.SinA * res.SinA + res.CosA * res.CosA) / WorkSize;
-    *DiffB = (res.SinB * res.SinB + res.CosB * res.CosB) / WorkSize;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::OptimizeFreq
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-double TAdc::OptimizeFreq(double InitFreq, double InitStep, TAdcData *Ref)
-{
-    double Step;
-    double CurrFreq;
-    int fi;
-    int i;
-    long long DiffA, DiffB;
-    long long low, mid, high;
-
-    CurrFreq = InitFreq;
-    Step = InitStep;
-
-    fi = GetPhaseIncr(CurrFreq);
-    CreateFreqRef(fi, Ref);
-    CalcDiff(fi, &DiffA, &DiffB);
-    mid = DiffA + DiffB;
-
-    fi = GetPhaseIncr(CurrFreq + Step);
-    CreateFreqRef(fi, Ref);
-    CalcDiff(fi, &DiffA, &DiffB);
-    high = DiffA + DiffB;
-
-    while (high < mid)
-    {
-        mid = high;
-        CurrFreq = CurrFreq + Step;
-
-        fi = GetPhaseIncr(CurrFreq + Step);
-        CreateFreqRef(fi, Ref);
-        CalcDiff(fi, &DiffA, &DiffB);
-        high = DiffA + DiffB;
-    }
-
-    fi = GetPhaseIncr(CurrFreq - Step);
-    CreateFreqRef(fi, Ref);
-    CalcDiff(fi, &DiffA, &DiffB);
-    low = DiffA + DiffB;
-
-    while (low < mid)
-    {
-        mid = low;
-        CurrFreq = CurrFreq - Step;
-
-        fi = GetPhaseIncr(CurrFreq - Step);
-        CreateFreqRef(fi, Ref);
-        CalcDiff(fi, &DiffA, &DiffB);
-        low = DiffA + DiffB;
-    }
-
-    for (i = 0; i < 20; i++)
-    {
-        Step = Step / 2.0;
-
-        fi = GetPhaseIncr(CurrFreq + Step);
-        CreateFreqRef(fi, Ref);
-        CalcDiff(fi, &DiffA, &DiffB);
-        high = DiffA + DiffB;
-
-        if (high < mid)
-        {
-            mid = high;
-            CurrFreq = CurrFreq + Step;
-        }
-        else
-        {
-            fi = GetPhaseIncr(CurrFreq - Step);
-            CreateFreqRef(fi, Ref);
-            CalcDiff(fi, &DiffA, &DiffB);
-            low = DiffA + DiffB;
-
-            if (low < mid)
-            {
-                mid = low;
-                CurrFreq = CurrFreq - Step;
-            }
-        }
-
-        if (low == high)
-            break;
-    }
-
-    return CurrFreq;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::OptimizeAmp
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::OptimizeAmp(TAdcData *Ref)
-{
-    int sa, sb;
-    long long lowa, mida, higha;
-    long long lowb, midb, highb;
-
-    sa = CurrPowerA / 2;
-    if (sa <= 0)
-        sa = 1;
-
-    sb = CurrPowerB / 2;
-    if (sb <= 0)
-        sb = 1;
-
-    CreateAmpRef(CurrPowerA, CurrPowerB, Ref);
-    CalcDiff(CurrFreqIncr, &mida, &midb);
-
-    CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref);
-    CalcDiff(CurrFreqIncr, &higha, &highb);
-
-    while (higha < mida || highb < midb)
-    {
-        if (higha < mida)
-        {
-            mida = higha;
-            CurrPowerA += sa;
-        }
-
-        if (highb < midb)
-        {
-            midb = highb;
-            CurrPowerB += sa;
-        }
-
-        CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref);
-        CalcDiff(CurrFreqIncr, &higha, &highb);
-    }
-
-    CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref);
-    CalcDiff(CurrFreqIncr, &lowa, &lowb);
-
-    while (lowa < mida || lowb < midb)
-    {
-        if (lowa < mida)
-        {
-            mida = lowa;
-            CurrPowerA -= sa;
-        }
-
-        if (lowb < midb)
-        {
-            midb = lowb;
-            CurrPowerB -= sb;
-        }
-
-        CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref);
-        CalcDiff(CurrFreqIncr, &lowa, &lowb);
-    }
-
-    while (sa > 1 && sb > 1)
-    {
-        sa = sa / 2;
-        sb = sb / 2;
-
-        CreateAmpRef(CurrPowerA + sa, CurrPowerB + sb, Ref);
-        CalcDiff(CurrFreqIncr, &higha, &highb);
-
-        if (higha < mida)
-        {
-            mida = higha;
-            CurrPowerA += sa;
-        }
-
-        if (highb < midb)
-        {
-            midb = highb;
-            CurrPowerB += sb;
-        }
-
-        CreateAmpRef(CurrPowerA - sa, CurrPowerB - sb, Ref);
-        CalcDiff(CurrFreqIncr, &lowa, &lowb);
-
-        if (lowa < mida)
-        {
-            mida = lowa;
-            CurrPowerA -= sa;
-        }
-
-        if (lowb < midb)
-        {
-            midb = lowb;
-            CurrPowerB -= sb;
-        }
-    }
-
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::OptimizePhase
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::OptimizePhase(TAdcData *Ref)
-{
-    int step;
-    long long lowa, mida, higha;
-    long long lowb, midb, highb;
-
-    step = 0x10000000;
-
-    CreatePhaseRef(CurrPhaseA, CurrPhaseB, Ref);
-    CalcDiff(CurrFreqIncr, &mida, &midb);
-
-    CreatePhaseRef(CurrPhaseA + step, CurrPhaseB + step, Ref);
-    CalcDiff(CurrFreqIncr, &higha, &highb);
-
-    while (higha < mida || highb < midb)
-    {
-        if (higha < mida)
-        {
-            mida = higha;
-            CurrPhaseA += step;
-        }
-
-        if (highb < midb)
-        {
-            midb = highb;
-            CurrPhaseB += step;
-        }
-
-        CreatePhaseRef(CurrPhaseA + step, CurrPhaseB + step, Ref);
-        CalcDiff(CurrFreqIncr, &higha, &highb);
-    }
-
-    CreatePhaseRef(CurrPhaseA - step, CurrPhaseB - step, Ref);
-    CalcDiff(CurrFreqIncr, &lowa, &lowb);
-
-    while (lowa < mida || lowb < midb)
-    {
-        if (lowa < mida)
-        {
-            mida = lowa;
-            CurrPhaseA -= step;
-        }
-
-        if (lowb < midb)
-        {
-            midb = lowb;
-            CurrPhaseB -= step;
-        }
-
-        CreatePhaseRef(CurrPhaseA - step, CurrPhaseB - step, Ref);
-        CalcDiff(CurrFreqIncr, &lowa, &lowb);
-    }
-
-    while (step > 1)
-    {
-        step = step / 2;
-
-        CreatePhaseRef(CurrPhaseA + step, CurrPhaseB + step, Ref);
-        CalcDiff(CurrFreqIncr, &higha, &highb);
-
-        if (higha < mida)
-        {
-            mida = higha;
-            CurrPhaseA += step;
-        }
-
-        if (highb < midb)
-        {
-            midb = highb;
-            CurrPhaseB += step;
-        }
-
-        CreatePhaseRef(CurrPhaseA - step, CurrPhaseB - step, Ref);
-        CalcDiff(CurrFreqIncr, &lowa, &lowb);
-
-        if (lowa < mida)
-        {
-            mida = lowa;
-            CurrPhaseA -= step;
-        }
-
-        if (lowb < midb)
-        {
-            midb = lowb;
-            CurrPhaseB -= step;
-        }
-    }
-
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::RemoveFreq
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::RemoveFreq(double Freq)
-{
-    int i;
-    TAdcData *Data = TestData;
-    TFmSignal fm(SampleFreq, Freq);
-
-    fm.AddBlock(Data);
+    else
+        return false;
 }
