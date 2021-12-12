@@ -613,6 +613,8 @@ void TAdcThread::AnaFreq( int Index, int *max, int *pos)
         {
             Pos--;
             Power = UpdPower;
+            PhaseA = UpdPhaseA;
+            PhaseB = UpdPhaseB;
 
             UpdPhaseA = UpdatePhaseA(fd, Pos - 1, PhaseA - fd->PhasePerSample, &UpdPowerA);
             UpdPhaseB = UpdatePhaseB(fd, Pos - 1, PhaseB - fd->PhasePerSample, &UpdPowerB);
@@ -629,6 +631,8 @@ void TAdcThread::AnaFreq( int Index, int *max, int *pos)
         {
             Pos++;
             Power = UpdPower;
+            PhaseA = UpdPhaseA;
+            PhaseB = UpdPhaseB;
 
             UpdPhaseA = UpdatePhaseA(fd, Pos + 1, PhaseA + fd->PhasePerSample, &UpdPowerA);
             UpdPhaseB = UpdatePhaseB(fd, Pos + 1, PhaseB + fd->PhasePerSample, &UpdPowerB);
