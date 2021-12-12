@@ -1671,11 +1671,6 @@ void TAdc::PrintResult()
             opt = 0;
         }
     }
-
-    count = FreqCount / OptStep;
-
-    for (i = 0; i < count; i++)
-        PrintFreq(i);
 }
 
 /*##########################################################################
