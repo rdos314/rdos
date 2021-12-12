@@ -34,13 +34,16 @@
 class TAdcFreqAna
 {
 public:
-    TAdcFreqAna();
+    TAdcFreqAna(int Blocks);
     ~TAdcFreqAna();
 
     void Clear();
+    void Add(int Block, int Freq, int MaxVal, int Pos);
 
-    double Freq;
-    int MaxVal;
+    int Blocks;
+    int *Freq;
+    int *MaxVal;
+    int *Pos;
 };
 
 class TAdcAna

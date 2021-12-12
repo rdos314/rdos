@@ -45,8 +45,15 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TAdcFreqAna::TAdcFreqAna()
+TAdcFreqAna::TAdcFreqAna(int bl)
 {
+    int i;
+
+    Blocks = bl;
+    Freq = new int[Blocks];
+    MaxVal = new int[Blocks];
+    Pos = new int[Blocks];
+
     Clear();
 }
 
@@ -63,6 +70,9 @@ TAdcFreqAna::TAdcFreqAna()
 ##########################################################################*/
 TAdcFreqAna::~TAdcFreqAna()
 {
+    delete Freq;
+    delete MaxVal;
+    delete Pos;
 }
 
 /*##########################################################################
@@ -78,8 +88,32 @@ TAdcFreqAna::~TAdcFreqAna()
 ##########################################################################*/
 void TAdcFreqAna::Clear()
 {
-    Freq = 0.0;
-    MaxVal = 0;
+    int i;
+
+    for (i = 0; i < Blocks; i++)
+    {
+        Freq[i] = 0;
+        MaxVal[i] = 0;
+        Pos[i] = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcFreqAna::Add
+#
+#   Purpose....: Add results
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcFreqAna::Add(int block, int freq, int maxval, int pos)
+{
+    Freq[block] = freq;
+    MaxVal[block] = maxval;
+    Pos[block] = pos;
 }
 
 /*##########################################################################
@@ -119,7 +153,7 @@ TAdcAna::TAdcAna(int c, int step, TFreq *f)
     OptFreqArr = new TAdcFreqAna *[OptFreqCount];
 
     for (i = 0; i < OptFreqCount; i++)
-        OptFreqArr[i] = new TAdcFreqAna;
+        OptFreqArr[i] = new TAdcFreqAna(Size);
 
     Clear();
 }
@@ -220,9 +254,6 @@ void TAdcAna::Clear()
         for (j = 0; j < 360; j++)
             Delay[i].Phase[j] = 0;
     }
-
-    for (i = 0; i < OptFreqCount; i++)
-        OptFreqArr[i]->Clear();
 }
 
 /*##########################################################################
@@ -267,6 +298,9 @@ void TAdcAna::Add(TAdcThread *adc)
         for (j = 0; j < 360; j++)
             Delay[i].Phase[j] += adc->Delay[i].Phase[j];
     }
+
+    for (i = 0; i < OptFreqCount; i++)
+        OptFreqArr[i]->Add(Pos, adc->OptFreqIndex[i], adc->OptFreqMax[i], adc->OptFreqPos[i]);
 
     Pos++;
 
