@@ -70,7 +70,7 @@ TFreqData::TFreqData(double Freq, double SampleFreq, int Periods)
         freq = 1000000.0 * SampleFreq;
         lval = lval / (long long)freq;
 
-        Step = (int)lval;
+        PhasePerSample = (int)lval;
 
         Count = 0x80000 / UsedSamples;
         diff = 0x80000 - UsedSamples * Count;
@@ -89,7 +89,7 @@ TFreqData::TFreqData(double Freq, double SampleFreq, int Periods)
         }
     }
     else
-        Step = 0;
+        PhasePerSample = 0;
 }
 
 /*##########################################################################

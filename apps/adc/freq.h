@@ -37,7 +37,7 @@ public:
 
     int UsedSamples;
     int Count;
-    int Step;
+    int PhasePerSample;
 
 protected:
     int Overlap;
