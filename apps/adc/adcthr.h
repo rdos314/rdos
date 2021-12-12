@@ -67,6 +67,7 @@ public:
 protected:
     virtual void Execute();
 
+    int GetPhaseA(TFreqData *fd, int Pos);
     void AnaFreq( int Index, int Max, int Pos);
 
     TAdc *Adc;
