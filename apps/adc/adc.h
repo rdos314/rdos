@@ -63,7 +63,8 @@ public:
     static int GetSin(int Phase);
     static void CalcPower(TAdcData *Data, int Size, int *PowerA, int *PowerB);
     static int CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *PowerA, int *PowerB, int *Delay);
-    static int CreateSignal(int *Buf, int Size, int InitPhase, int PhaseIncr, int Amp);
+    static int CalcPowerA(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *Power);
+    static int CalcPowerB(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *Power);
 
     static void CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd);
     static int CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int Distance);

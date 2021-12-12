@@ -39,8 +39,7 @@ AdcFreqPower	ENDS
 
 AdcFreqChanPower	STRUC
 
-sin_p		DD ?,?
-cos_p		DD ?,?
+pow_c		DD ?,?
 
 AdcFreqChanPower	ENDS
 
@@ -50,14 +49,6 @@ pow_a		DD ?,?
 pow_b		DD ?,?
 
 AdcPower	ENDS
-
-AdcFmPower	STRUC
-
-sin_fm         DD ?,?
-sin_sig        DD ?,?
-cos_sig        DD ?,?
-
-AdcFmPower     ENDS
 
 .code
         
@@ -16594,7 +16585,7 @@ _CalcFreqPower    Endp
 ;                       Size
 ;                       InitPhase
 ;                       PhasePerSample
-;                       Res
+;                       Power
 ;
 ;       RETURNS:        End phase
 ;
@@ -16616,10 +16607,8 @@ _CalcFreqPowerA  Proc near
     mov edi,[esp+2Ch]
 ;
     xor eax,eax
-    mov [edi].sin_p,eax
-    mov [edi].sin_p+4,eax
-    mov [edi].cos_p,eax
-    mov [edi].cos_p+4,eax
+    mov [edi].pow_c,eax
+    mov [edi].pow_c+4,eax
 
 cfpaLoop:
     mov ebx,ebp
@@ -16629,29 +16618,15 @@ cfpaLoop:
     mov ax,[ebx].sin_tab
     imul word ptr [esi]
     movsx edx,dx
-    add word ptr [edi].sin_p,ax
-    adc dword ptr [edi].sin_p+2,edx
-;
-    mov ebx,ebp
-    add ebx,40000000h
-    shr ebx,13
-    and bl,0FEh
-;
-    mov ax,[ebx].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].cos_p,ax
-    adc dword ptr [edi].cos_p+2,edx
+    add word ptr [edi].pow_c,ax
+    adc dword ptr [edi].pow_c+2,edx
 ;
     add esi,4
     add ebp,[esp+28h]
     loop cfpaLoop
 ;
-    movsx eax,word ptr [edi].sin_p+4
-    mov [edi].sin_p+4,eax
-;
-    movsx eax,word ptr [edi].cos_p+4
-    mov [edi].cos_p+4,eax
+    movsx eax,word ptr [edi].pow_c+4
+    mov [edi].pow_c+4,eax
 ;
     mov eax,ebp
 ;
@@ -16698,10 +16673,8 @@ _CalcFreqPowerB  Proc near
     mov edi,[esp+2Ch]
 ;
     xor eax,eax
-    mov [edi].sin_p,eax
-    mov [edi].sin_p+4,eax
-    mov [edi].cos_p,eax
-    mov [edi].cos_p+4,eax
+    mov [edi].pow_c,eax
+    mov [edi].pow_c+4,eax
 
 cfpbLoop:
     mov ebx,ebp
@@ -16711,29 +16684,15 @@ cfpbLoop:
     mov ax,[ebx].sin_tab
     imul word ptr [esi]
     movsx edx,dx
-    add word ptr [edi].sin_p,ax
-    adc dword ptr [edi].sin_p+2,edx
-;
-    mov ebx,ebp
-    add ebx,40000000h
-    shr ebx,13
-    and bl,0FEh
-;
-    mov ax,[ebx].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].cos_p,ax
-    adc dword ptr [edi].cos_p+2,edx
+    add word ptr [edi].pow_c,ax
+    adc dword ptr [edi].pow_c+2,edx
 ;
     add esi,4
     add ebp,[esp+28h]
     loop cfpbLoop
 ;
-    movsx eax,word ptr [edi].sin_p+4
-    mov [edi].sin_p+4,eax
-;
-    movsx eax,word ptr [edi].cos_p+4
-    mov [edi].cos_p+4,eax
+    movsx eax,word ptr [edi].pow_c+4
+    mov [edi].pow_c+4,eax
 ;
     mov eax,ebp
 ;
@@ -16795,361 +16754,6 @@ cpLoop:
     ret 12
 _CalcPower    Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateSignal
-;
-;       DESCRIPTION:    Create signal
-;
-;       PARAMETERS:     Data
-;                       Size
-;                       InitPhase
-;                       PhaseIncr
-;                       Amp
-;
-;       RETURNS:        End phase
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public _CreateSignal
-
-_CreateSignal  Proc near
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov edi,[esp+18h]
-    mov ecx,[esp+1Ch]
-    mov esi,[esp+20h]
-
-csLoop:
-    mov ebx,esi
-    shr ebx,13
-    and bl,0FEh
-;
-    movsx eax,word ptr [ebx].sin_tab
-    imul dword ptr [esp+28h]
-;
-    mov ebx,7FFFh
-    idiv ebx
-    stosd
-;
-    add esi,[esp+24h]
-    loop csLoop
-;
-    mov eax,esi
-;
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    ret 20
-_CreateSignal    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateFmSignal
-;
-;       DESCRIPTION:    Create FM signal
-;
-;       PARAMETERS:     Data
-;                       Size
-;                       Amp
-;                       InitPhase
-;                       InitPeriod
-;                       PeriodDiffArr
-;                       PeriodSamples
-;
-;       RETURNS:        End phase
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public _CreateFmSignal
-
-cfs_data          = 8
-cfs_size          = 12
-cfs_amp           = 16
-cfs_phase         = 20
-cfs_period        = 24
-cfs_per_diff_arr  = 28
-cfs_per_size      = 32
-
-_CreateFmSignal  Proc near
-    push ebp
-    mov ebp,esp
-;
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov edi,[ebp].cfs_data
-    mov esi,[ebp].cfs_per_diff_arr
-
-cfsEntryLoop:
-    mov ecx,[ebp].cfs_per_size
-
-cfsLoop:
-    mov ebx,[ebp].cfs_phase
-    shr ebx,13
-    and bl,0FEh
-;
-    movsx eax,word ptr [ebx].sin_tab
-    imul dword ptr [ebp].cfs_amp
-;
-    mov ebx,7FFFh
-    idiv ebx
-    stosd
-;
-    mov ebx,[ebp].cfs_period
-    add [ebp].cfs_phase,ebx
-    mov ebx,[esi]
-    add [ebp].cfs_period,ebx
-    sub dword ptr [ebp].cfs_size,1
-    jz cfsDone
-;
-    loop cfsLoop
-;
-    add esi,4
-    jmp cfsEntryLoop
-
-cfsDone:
-    mov eax,[ebp].cfs_phase
-;
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop ebp
-    ret 28
-_CreateFmSignal    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CalcFmPowerA
-;
-;       DESCRIPTION:    Calc FM power for channel A at a given frequency using 32-bit frequency
-;
-;       PARAMETERS:     Data
-;                       Size
-;                       InitPhase
-;                       InitPhasePerSample
-;                       PhasePerSampleIncr
-;                       Amp
-;                       Res
-;
-;       RETURNS:        End phase
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public _CalcFmPowerA
-
-_CalcFmPowerA  Proc near
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov esi,[esp+1Ch]  ; data
-    mov ecx,[esp+20h]  ; size
-    mov ebp,[esp+24h]  ; init phase
-    mov edi,[esp+34h]  ; res
-;
-    xor eax,eax
-    mov [edi].sin_fm,eax
-    mov [edi].sin_fm+4,eax
-    mov [edi].sin_sig,eax
-    mov [edi].sin_sig+4,eax
-    mov [edi].cos_sig,eax
-    mov [edi].cos_sig+4,eax
-
-cfmaLoop:
-    mov ebx,ebp
-    shr ebx,13
-    and bl,0FEh
-;
-    movsx eax,word ptr [ebx].sin_tab
-    mov edx,[esp+30h]   ; amp
-    shl edx,17
-    imul edx
-    shr edx,2
-    movsx eax,word ptr [esi]
-    sub eax,edx
-    push edx
-    imul word ptr [ebx].sin_tab
-    movsx edx,dx
-    add word ptr [edi].sin_sig,ax
-    adc dword ptr [edi].sin_sig+2,edx
-    pop eax
-    imul word ptr [ebx].sin_tab
-    movsx edx,dx
-    add word ptr [edi].sin_fm,ax
-    adc dword ptr [edi].sin_fm+2,edx
-;
-    mov ebx,ebp
-    add ebx,40000000h
-    shr ebx,13
-    and bl,0FEh
-;
-    movsx eax,word ptr [ebx].sin_tab
-    mov edx,[esp+30h]   ; amp
-    shl edx,17
-    imul edx
-    shr edx,2
-    movsx eax,word ptr [esi]
-    sub eax,edx
-    imul word ptr [ebx].sin_tab
-    movsx edx,dx
-    add word ptr [edi].cos_sig,ax
-    adc dword ptr [edi].cos_sig+2,edx
-;
-    add esi,4
-    add ebp,[esp+28h]  ; phase per sample
-    mov eax,[esp+2Ch]  ; phase per sample incr
-    add [esp+28h],eax  
-    sub ecx,1
-    jnz cfmaLoop
-;
-    movsx eax,word ptr [edi].sin_fm+4
-    mov [edi].sin_fm+4,eax
-;
-    movsx eax,word ptr [edi].sin_sig+4
-    mov [edi].sin_sig+4,eax
-;
-    movsx eax,word ptr [edi].cos_sig+4
-    mov [edi].cos_sig+4,eax
-;
-    mov eax,ebp
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    ret 24
-_CalcFmPowerA    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CalcFmPowerB
-;
-;       DESCRIPTION:    Calc FM power for channel B at a given frequency using 32-bit frequency
-;
-;       PARAMETERS:     Data
-;                       Size
-;                       InitPhase
-;                       InitPhasePerSample
-;                       PhasePerSampleIncr
-;                       Amp
-;                       Res
-;
-;       RETURNS:        End phase
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public _CalcFmPowerB
-
-_CalcFmPowerB  Proc near
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov esi,[esp+1Ch]  ; data
-    add esi,2
-    mov ecx,[esp+20h]  ; size
-    mov ebp,[esp+24h]  ; init phase
-    mov edi,[esp+34h]  ; res
-;
-    xor eax,eax
-    mov [edi].sin_fm,eax
-    mov [edi].sin_fm+4,eax
-    mov [edi].sin_sig,eax
-    mov [edi].sin_sig+4,eax
-    mov [edi].cos_sig,eax
-    mov [edi].cos_sig+4,eax
-
-cfmbLoop:
-    mov ebx,ebp
-    shr ebx,13
-    and bl,0FEh
-;
-    movsx eax,word ptr [ebx].sin_tab
-    mov edx,[esp+30h]   ; amp
-    shl edx,17
-    imul edx
-    shr edx,2
-    movsx eax,word ptr [esi]
-    sub eax,edx
-    push edx
-    imul word ptr [ebx].sin_tab
-    movsx edx,dx
-    add word ptr [edi].sin_sig,ax
-    adc dword ptr [edi].sin_sig+2,edx
-    pop eax
-    imul word ptr [ebx].sin_tab
-    movsx edx,dx
-    add word ptr [edi].sin_fm,ax
-    adc dword ptr [edi].sin_fm+2,edx
-;
-    mov ebx,ebp
-    add ebx,40000000h
-    shr ebx,13
-    and bl,0FEh
-;
-    movsx eax,word ptr [ebx].sin_tab
-    mov edx,[esp+30h]   ; amp
-    shl edx,17
-    imul edx
-    shr edx,2
-    movsx eax,word ptr [esi]
-    sub eax,edx
-    imul word ptr [ebx].sin_tab
-    movsx edx,dx
-    add word ptr [edi].cos_sig,ax
-    adc dword ptr [edi].cos_sig+2,edx
-;
-    add esi,4
-    add ebp,[esp+28h]  ; phase per sample
-    mov eax,[esp+2Ch]  ; phase per sample incr
-    add [esp+28h],eax  
-    sub ecx,1
-    jnz cfmbLoop
-;
-    movsx eax,word ptr [edi].sin_fm+4
-    mov [edi].sin_fm+4,eax
-;
-    movsx eax,word ptr [edi].sin_sig+4
-    mov [edi].sin_sig+4,eax
-;
-    movsx eax,word ptr [edi].cos_sig+4
-    mov [edi].cos_sig+4,eax
-;
-    mov eax,ebp
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    ret 24
-_CalcFmPowerB    Endp
 
 
   END
