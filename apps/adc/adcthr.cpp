@@ -386,27 +386,61 @@ int TAdcThread::GetPhaseB(TFreqData *fd, int Pos, int *Power)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdcThread::AnaFreq( int Index, int Max, int Pos)
+void TAdcThread::AnaFreq( int Index, int *max, int *pos)
 {
     TFreqData *fd = Freq->FreqData[Index];
     int PowerA;
     int PowerB;
-    int Power;
+    long long Power;
     int PhaseA;
     int PhaseB;
-    int Phase;
+    int UpdPowerA;
+    int UpdPowerB;
+    long long UpdPower;
+    int UpdPhaseA;
+    int UpdPhaseB;
+    int Pos = *pos;
 
-    TAdc::CalcFreqPower(AdcData + Pos, fd->UsedSamples, 0, fd->PhasePerSample , &PowerA, &PowerB, &Phase);
+    PhaseA = GetPhaseA(fd, Pos, &PowerA);
+    PhaseB = GetPhaseB(fd, Pos, &PowerB);
+    Power = (long long)PowerA * (long long)PowerA + (long long)PowerB * (long long)PowerB;
 
-    PhaseA = GetPhaseA(fd, Pos, &Power);
-    Power = Power / 0x2000;
-    if (Power + 1 < PowerA)
-        PowerA = Power;
+    UpdPhaseA = GetPhaseA(fd, Pos - 1, &UpdPowerA);
+    UpdPhaseB = GetPhaseB(fd, Pos - 1, &UpdPowerB);
+    UpdPower = (long long)UpdPowerA * (long long)UpdPowerA + (long long)UpdPowerB * (long long)UpdPowerB;
 
-    PhaseB = GetPhaseB(fd, Pos, &Power);
-    Power = Power / 0x2000;
-    if (Power + 1 < PowerB)
-        PowerB = Power;
+    if (UpdPower > Power)
+    {
+        while (UpdPower > Power && Pos > 0)
+        {
+            Pos--;
+
+            UpdPhaseA = GetPhaseA(fd, Pos - 1, &UpdPowerA);
+            UpdPhaseB = GetPhaseB(fd, Pos - 1, &UpdPowerB);
+            UpdPower = (long long)UpdPowerA * (long long)UpdPowerA + (long long)UpdPowerB * (long long)UpdPowerB;
+        }
+    }
+    else
+    {
+        UpdPhaseA = GetPhaseA(fd, Pos + 1, &UpdPowerA);
+        UpdPhaseB = GetPhaseB(fd, Pos + 1, &UpdPowerB);
+        UpdPower = (long long)UpdPowerA * (long long)UpdPowerA + (long long)UpdPowerB * (long long)UpdPowerB;
+
+        while (UpdPower > Power && Pos < 0x7FFFF)
+        {
+            Pos++;
+
+            UpdPhaseA = GetPhaseA(fd, Pos + 1, &UpdPowerA);
+            UpdPhaseB = GetPhaseB(fd, Pos + 1, &UpdPowerB);
+            UpdPower = (long long)UpdPowerA * (long long)UpdPowerA + (long long)UpdPowerB * (long long)UpdPowerB;
+        }
+    }
+
+    PowerA = PowerA / 0x2000;
+    PowerB = PowerB / 0x2000;
+
+    *pos = Pos;
+    *max = PowerA * PowerA + PowerB * PowerB;
 }
 
 /*##########################################################################
@@ -496,7 +530,7 @@ void TAdcThread::Execute()
                                 {
                                     *OptMax = Power;
                                     *OptIndex = j;
-                                    *OptPos = k;
+                                    *OptPos = fp.Pos;
                                 }
                             }
                         }
@@ -509,7 +543,7 @@ void TAdcThread::Execute()
 
                 if (OptCount == OptFreqStep)
                 {
-                    AnaFreq(*OptIndex, *OptMax, *OptPos);
+                    AnaFreq(*OptIndex, OptMax, OptPos);
 
                     OptCount = 0;
                     OptIndex++;
