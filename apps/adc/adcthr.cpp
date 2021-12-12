@@ -64,6 +64,12 @@ TAdcThread::TAdcThread(int Id, TAdc *adc)
     MaxB = new int[FreqCount];
     Delay = new struct TDelay[FreqCount];
 
+    OptFreqStep = Adc->OptStep;
+    OptFreqCount = FreqCount / OptFreqStep;
+    OptFreqIndex = new int[OptFreqCount];
+    OptFreqMax = new int[OptFreqCount];
+    OptFreqPos = new int[OptFreqCount];
+
     AdcData = 0;
     AdcAna = 0;
     Clear();
@@ -103,6 +109,10 @@ TAdcThread::~TAdcThread()
     delete MaxA;
     delete MaxB;
     delete Delay;
+
+    delete OptFreqIndex;
+    delete OptFreqMax;
+    delete OptFreqPos;
 }
 
 /*##########################################################################
@@ -134,6 +144,13 @@ void TAdcThread::Clear()
 
         for (k = 0; k < 360; k++)
             Delay[j].Phase[k] = 0;
+    }
+
+    for (j = 0; j < OptFreqCount; j++)
+    {
+        OptFreqIndex[j] = 0;
+        OptFreqMax[j] = 0;
+        OptFreqPos[j] = 0;
     }
 }
 
@@ -171,11 +188,19 @@ void TAdcThread::Execute()
 {
     int j;
     int k;
+    int count;
+    int start;
+    int stop;
     int PowerA;
     int PowerB;
     int Phase;
+    int Power;
     TFreqPos fp;
     TFreqData *fd;
+    int *OptIndex;
+    int *OptMax;
+    int *OptPos;
+    int OptCount;
 
     RdosMoveToNewCore();
 
@@ -187,6 +212,11 @@ void TAdcThread::Execute()
         {
             Clear();
 
+            OptCount = 0;
+            OptIndex = OptFreqIndex;
+            OptMax = OptFreqMax;
+            OptPos = OptFreqPos;
+
             for (j = 0; j < FreqCount; j++)
             {
                 fd = Freq->FreqData[j];
@@ -196,7 +226,11 @@ void TAdcThread::Execute()
                     fp.Clear(fd);
                     Total[j] += fd->Count;
 
-                    for (k = 0; k < fd->Count; k++)
+                    count = fd->Count;
+                    start = count / 4;
+                    stop = count - start;
+
+                    for (k = 0; k < count; k++)
                     {
                         TAdc::CalcFreqPower(AdcData + fp.Pos, fd->UsedSamples, 0, fd->PhasePerSample , &PowerA, &PowerB, &Phase);
 
@@ -218,10 +252,31 @@ void TAdcThread::Execute()
                             SumA[j] += PowerA;
                             SumB[j] += PowerB;
                             Delay[j].Phase[Phase]++;
+
+                            if (k >= start && k <= stop)
+                            {
+                                Power = PowerA * PowerA + PowerB * PowerB;
+                                if (*OptMax < Power)
+                                {
+                                    *OptMax = Power;
+                                    *OptIndex = j;
+                                    *OptPos = k;
+                                }
+                            }
                         }
 
                         fp.Next(fd);
                     }
+                }
+
+                OptCount++;
+
+                if (OptCount == OptFreqStep)
+                {
+                    OptCount = 0;
+                    OptIndex++;
+                    OptMax++;
+                    OptPos++;
                 }
             }
             AdcAna->Add(this);

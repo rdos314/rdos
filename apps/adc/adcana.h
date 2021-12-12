@@ -31,10 +31,22 @@
 #include "adcthr.h"
 #include "section.h"
 
+class TAdcFreqAna
+{
+public:
+    TAdcFreqAna();
+    ~TAdcFreqAna();
+
+    void Clear();
+
+    double Freq;
+    int MaxVal;
+};
+
 class TAdcAna
 {
 public:
-    TAdcAna(int Count, TFreq *Freq);
+    TAdcAna(int Count, int OptStep, TFreq *Freq);
     ~TAdcAna();
 
     void Add(TAdcThread *Adc);
@@ -54,6 +66,10 @@ public:
 
     TFreq *Freq;
     int FreqCount;
+
+    TAdcFreqAna **OptFreqArr;
+    int OptFreqCount;
+    int OptFreqStep;
 
 protected:
     void Clear();

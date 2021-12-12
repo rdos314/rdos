@@ -47,7 +47,7 @@ public:
 
     bool Done;
     int FreqCount;
- 
+
     int *Total;
     int *Count;
     int *SumA;
@@ -57,6 +57,12 @@ public:
     int *MaxA;
     int *MaxB;
     struct TDelay *Delay;
+
+    int *OptFreqIndex;
+    int *OptFreqMax;
+    int *OptFreqPos;
+    int OptFreqCount;
+    int OptFreqStep;
 
 protected:
     virtual void Execute();

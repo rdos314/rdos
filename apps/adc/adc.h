@@ -49,7 +49,7 @@ public:
     TAdc(char TestMode, int Blocks, TFreq *Freq);
     ~TAdc();
 
-    bool RunAdc(int Intervals, int Threads, int Min, const char *ResultName);
+    bool RunAdc(int Intervals, int Threads, int Min, int OptStep, const char *ResultName);
 
     void RemoveFreq(double Freq);
 
@@ -72,6 +72,7 @@ public:
     double SampleFreq;
     TFreq *Freq;
     int Min;
+    int OptStep;
 
 protected:
     static void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);

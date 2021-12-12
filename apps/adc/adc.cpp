@@ -1689,7 +1689,7 @@ void TAdc::Execute()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
+bool TAdc::RunAdc(int iv, int tc, int min, int opt, const char *ResultFile)
 {
     int i;
     int CurrInt;
@@ -1700,6 +1700,7 @@ bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
     if (RdosStartAdc())
     {
         Min = min;
+        OptStep = opt;
         Intervals = iv;
         Threads = tc;
         AnaSize = FBlocks / Intervals;
@@ -1707,7 +1708,7 @@ bool TAdc::RunAdc(int iv, int tc, int min, const char *ResultFile)
         AdcAna = new TAdcAna*[Intervals];
 
         for (i = 0; i < Intervals; i++)
-            AdcAna[i] = new TAdcAna(AnaSize, Freq);
+            AdcAna[i] = new TAdcAna(AnaSize, opt, Freq);
 
         Start("Adc", 0x4000);
 

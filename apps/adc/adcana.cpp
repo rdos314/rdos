@@ -36,6 +36,54 @@
 
 /*##########################################################################
 #
+#   Name       : TAdcFreqAna::TAdcFreqAna
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TAdcFreqAna::TAdcFreqAna()
+{
+    Clear();
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcFreqAna::~TAdcFreqAna
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TAdcFreqAna::~TAdcFreqAna()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcFreqAna::Clear
+#
+#   Purpose....: Clear results
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcFreqAna::Clear()
+{
+    Freq = 0.0;
+    MaxVal = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdcAna::TAdcAna
 #
 #   Purpose....: Constructor
@@ -45,9 +93,11 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TAdcAna::TAdcAna(int c, TFreq *f)
+TAdcAna::TAdcAna(int c, int step, TFreq *f)
  : FSection("Ana")
 {
+    int i;
+
     FreqCount = f->FreqCount;
     Freq = f;
 
@@ -63,6 +113,13 @@ TAdcAna::TAdcAna(int c, TFreq *f)
     MaxA = new int[FreqCount];
     MaxB = new int[FreqCount];
     Delay = new struct TDelay[FreqCount];
+
+    OptFreqStep = step;
+    OptFreqCount = FreqCount / step;
+    OptFreqArr = new TAdcFreqAna *[OptFreqCount];
+
+    for (i = 0; i < OptFreqCount; i++)
+        OptFreqArr[i] = new TAdcFreqAna;
 
     Clear();
 }
@@ -80,6 +137,8 @@ TAdcAna::TAdcAna(int c, TFreq *f)
 ##########################################################################*/
 TAdcAna::~TAdcAna()
 {
+    int i;
+
     delete Total;
     delete Count;
     delete SumA;
@@ -89,6 +148,11 @@ TAdcAna::~TAdcAna()
     delete MaxA;
     delete MaxB;
     delete Delay;
+
+    for (i = 0; i < OptFreqCount; i++)
+        delete OptFreqArr[i];
+
+    delete OptFreqArr;
 }
 
 /*##########################################################################
@@ -156,6 +220,9 @@ void TAdcAna::Clear()
         for (j = 0; j < 360; j++)
             Delay[i].Phase[j] = 0;
     }
+
+    for (i = 0; i < OptFreqCount; i++)
+        OptFreqArr[i]->Clear();
 }
 
 /*##########################################################################
