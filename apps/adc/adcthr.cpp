@@ -747,7 +747,8 @@ void TAdcThread::Execute()
 
                 if (OptCount == OptFreqStep)
                 {
-                    AnaFreq(*OptIndex, OptMax, OptPos);
+                    if (*OptMax)
+                        AnaFreq(*OptIndex, OptMax, OptPos);
 
                     OptCount = 0;
                     OptIndex++;
