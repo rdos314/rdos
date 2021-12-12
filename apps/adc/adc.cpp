@@ -575,7 +575,7 @@ int TAdc::CalcPowerA(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int
     int phase;
 
     phase = ::CalcFreqPowerA(Data, Size, InitPhase, PhaseIncr, &dpow);
-    dpow = dpow / Size / 0x2000;
+    dpow = dpow / Size;
     *Power = round(dpow);
 
     return phase;
@@ -598,7 +598,7 @@ int TAdc::CalcPowerB(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int
     int phase;
 
     phase = ::CalcFreqPowerB(Data, Size, InitPhase, PhaseIncr, &dpow);
-    dpow = dpow / Size / 0x2000;
+    dpow = dpow / Size;
     *Power = round(dpow);
 
     return phase;
