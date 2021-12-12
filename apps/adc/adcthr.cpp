@@ -175,6 +175,35 @@ void TAdcThread::Process(TAdcData *Data, TAdcAna *Ana)
 
 /*##########################################################################
 #
+#   Name       : TAdcThread::AnaFreq
+#
+#   Purpose....: Analyze frequency
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcThread::AnaFreq( int Index, int Max, int Pos)
+{
+    TFreqData *fd = Freq->FreqData[Index];
+    int PowerA;
+    int PowerB;
+    int Power;
+    int Phase;
+    int i;
+
+    TAdc::CalcFreqPower(AdcData + Pos, fd->UsedSamples, 0, fd->PhasePerSample , &PowerA, &PowerB, &Phase);
+
+    for (i = 0; i < 16; i++)
+    {
+        TAdc::CalcPowerA(AdcData + Pos, fd->UsedSamples, i * 0x1000, fd->PhasePerSample , &Power);
+        TAdc::CalcPowerB(AdcData + Pos, fd->UsedSamples, i * 0x1000, fd->PhasePerSample , &Power);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TAdcThread::Execute
 #
 #   Purpose....: Execute
@@ -273,6 +302,8 @@ void TAdcThread::Execute()
 
                 if (OptCount == OptFreqStep)
                 {
+                    AnaFreq(*OptIndex, *OptMax, *OptPos);
+
                     OptCount = 0;
                     OptIndex++;
                     OptMax++;

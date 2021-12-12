@@ -67,6 +67,8 @@ public:
 protected:
     virtual void Execute();
 
+    void AnaFreq( int Index, int Max, int Pos);
+
     TAdc *Adc;
     TFreq *Freq;
     TAdcData *AdcData;
