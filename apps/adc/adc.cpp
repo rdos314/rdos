@@ -1555,6 +1555,48 @@ bool TAdc::PrintDelayDetail(int Index)
 
 /*##########################################################################
 #
+#   Name       : TAdc::PrintFreq
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::PrintFreq(int Index)
+{
+    TAdcAna *ana;
+    TAdcFreqAna *fana;
+    int i;
+    int j;
+    int freq;
+    double pow;
+    char fstr[40];
+    char str[100];
+
+    for (i = 0; i < Intervals; i++)
+    {
+        ana = AdcAna[i];
+
+        for (j = 0; j < ana->Size; j++)
+        {
+            fana = ana->OptFreqArr[Index];
+            freq = fana->Freq[j];
+            pow = sqrt(fana->MaxVal[j]);
+
+            Freq->CodeFreq(freq, fstr);
+            sprintf(str, "%s: %5.1Lf ", fstr, pow);
+            Write(str);
+        }
+    }
+
+    sprintf(str, "\r\n");
+    Write(str);
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::PrintResult
 #
 #   Purpose....:
@@ -1609,6 +1651,11 @@ void TAdc::PrintResult()
             }
         }
     }
+
+    count = FreqCount / OptStep;
+
+    for (i = 0; i < count; i++)
+        PrintFreq(i);
 }
 
 /*##########################################################################

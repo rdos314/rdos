@@ -74,11 +74,12 @@ public:
     int OptFreqCount;
     int OptFreqStep;
 
+    int Size;
+
 protected:
     void Clear();
 
     int Pos;
-    int Size;
     TSection FSection;
 };
 
