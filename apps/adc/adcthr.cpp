@@ -197,8 +197,8 @@ void TAdcThread::AnaFreq( int Index, int Max, int Pos)
 
     for (i = 0; i < 16; i++)
     {
-        TAdc::CalcPowerA(AdcData + Pos, fd->UsedSamples, i * 0x1000, fd->PhasePerSample , &Power);
-        TAdc::CalcPowerB(AdcData + Pos, fd->UsedSamples, i * 0x1000, fd->PhasePerSample , &Power);
+        TAdc::CalcPowerA(AdcData + Pos, fd->UsedSamples, i * 0x10000000, fd->PhasePerSample , &Power);
+        TAdc::CalcPowerB(AdcData + Pos, fd->UsedSamples, i * 0x10000000, fd->PhasePerSample , &Power);
     }
 }
 
