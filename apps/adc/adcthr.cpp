@@ -184,7 +184,7 @@ void TAdcThread::Process(TAdcData *Data, TAdcAna *Ana)
 #   Returns....: *
 #
 ##########################################################################*/
-int TAdcThread::GetPhaseA(TFreqData *fd, int Pos)
+int TAdcThread::GetPhaseA(TFreqData *fd, int Pos, int *Power)
 {
     int power;
     int i;
@@ -266,6 +266,109 @@ int TAdcThread::GetPhaseA(TFreqData *fd, int Pos)
         }
     }
 
+    *Power = max;
+
+    opt = opt * step;
+    opt += count * step / 2;
+
+    return opt;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcThread::GetPhaseB
+#
+#   Purpose....: Get phase of channel B
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TAdcThread::GetPhaseB(TFreqData *fd, int Pos, int *Power)
+{
+    int power;
+    int i;
+    int opt = 0;
+    int max = 0;
+    int count = 0;
+    int limit = 16;
+    int phase;
+    int step = 0x10000000;
+
+    for (i = 0; i < 16; i++)
+    {
+        TAdc::CalcPowerB(AdcData + Pos, fd->UsedSamples, i * step, fd->PhasePerSample , &power);
+
+        if (power > max)
+        {
+            max = power;
+            opt = i;
+        }
+    }
+
+    if (opt == 0)
+    {
+        for (i = 15; i; i--)
+        {
+            TAdc::CalcPowerB(AdcData + Pos, fd->UsedSamples, i * step, fd->PhasePerSample , &power);
+
+            if (power == max)
+                opt = i;
+            else
+                break;
+        }
+    }
+
+    for (i = opt + 1; i < 16 + opt; i++)
+    {
+        TAdc::CalcPowerB(AdcData + Pos, fd->UsedSamples, (i % 16) * step, fd->PhasePerSample , &power);
+        if (power == max)
+            count++;
+        else
+            break;
+    }
+
+    while (count == 0 && step > 0x4000)
+    {
+        step = step / 2;
+        opt = opt * 2;
+        limit = limit * 2;
+
+        phase = opt - 1;
+        if (phase < 0)
+            phase += limit;
+
+        TAdc::CalcPowerB(AdcData + Pos, fd->UsedSamples, phase * step, fd->PhasePerSample , &power);
+
+        if (power >= max)
+        {
+            max = power;
+            opt = phase;
+        }
+
+        for (i = opt + 1; i < limit + opt; i++)
+        {
+            TAdc::CalcPowerB(AdcData + Pos, fd->UsedSamples, (i % limit) * step, fd->PhasePerSample , &power);
+
+            if (power > max)
+            {
+                max = power;
+                opt = i % limit;
+                count = 0;
+            }
+            else
+            {
+                if (power < max)
+                    break;
+                else
+                    count++;
+            }
+        }
+    }
+
+    *Power = max;
+
     opt = opt * step;
     opt += count * step / 2;
 
@@ -288,11 +391,22 @@ void TAdcThread::AnaFreq( int Index, int Max, int Pos)
     TFreqData *fd = Freq->FreqData[Index];
     int PowerA;
     int PowerB;
+    int Power;
+    int PhaseA;
+    int PhaseB;
     int Phase;
 
     TAdc::CalcFreqPower(AdcData + Pos, fd->UsedSamples, 0, fd->PhasePerSample , &PowerA, &PowerB, &Phase);
 
-    Phase = GetPhaseA(fd, Pos);
+    PhaseA = GetPhaseA(fd, Pos, &Power);
+    Power = Power / 0x2000;
+    if (Power + 1 < PowerA)
+        PowerA = Power;
+
+    PhaseB = GetPhaseB(fd, Pos, &Power);
+    Power = Power / 0x2000;
+    if (Power + 1 < PowerB)
+        PowerB = Power;
 }
 
 /*##########################################################################
