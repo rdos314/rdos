@@ -1570,8 +1570,10 @@ void TAdc::PrintFreq(int Index)
     TAdcFreqAna *fana;
     int i;
     int j;
+    int val;
     int freq;
     double pow;
+    int count = 0;
     char fstr[40];
     char str[100];
 
@@ -1583,16 +1585,24 @@ void TAdc::PrintFreq(int Index)
         {
             fana = ana->OptFreqArr[Index];
             freq = fana->Freq[j];
-            pow = sqrt(fana->MaxVal[j]);
+            val = fana->MaxVal[j];
 
-            Freq->CodeFreq(freq, fstr);
-            sprintf(str, "%s: %5.1Lf ", fstr, pow);
-            Write(str);
+            if (val)
+            {
+                pow = sqrt(val);
+                count++;
+                Freq->CodeFreq(freq, fstr);
+                sprintf(str, "%s: %5.1Lf  ", fstr, pow);
+                Write(str);
+            }
         }
     }
 
-    sprintf(str, "\r\n");
-    Write(str);
+    if (count)
+    {
+        sprintf(str, "\r\n\r\n");
+        Write(str);
+    }
 }
 
 /*##########################################################################
@@ -1613,8 +1623,11 @@ void TAdc::PrintResult()
     int j;
     bool ok;
     int count;
+    int opt;
     char fstr[40];
     char str[100];
+
+    opt = 0;
 
     for (i = 0; i < FreqCount; i++)
     {
@@ -1649,6 +1662,13 @@ void TAdc::PrintResult()
                 sprintf(str, "\r\n");
                 Write(str);
             }
+        }
+
+        opt++;
+        if (opt == OptStep)
+        {
+            PrintFreq((i - 1) / OptStep);
+            opt = 0;
         }
     }
 
