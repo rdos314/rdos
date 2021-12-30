@@ -121,6 +121,186 @@ int TDeviceDebug::MaxFileSize()
 
 /*##########################################################################
 #
+#   Name       : TDeviceNotify::TDeviceNotify
+#
+#   Purpose....: Virtual base class for device notifications                                           
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeviceNotify::TDeviceNotify()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::~TDeviceNotify
+#
+#   Purpose....: Destructor for device notifications                                           
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeviceNotify::~TDeviceNotify()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyOnline
+#
+#   Purpose....: Online notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyOnline(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyOffline
+#
+#   Purpose....: Offline notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyOffline(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyIdle
+#
+#   Purpose....: Idle notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyIdle(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyBusy
+#
+#   Purpose....: Busy notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyBusy(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyOpen
+#
+#   Purpose....: Open notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyOpen(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyClose
+#
+#   Purpose....: Close notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyClose(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyEnable
+#
+#   Purpose....: Enable notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyEnable(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyDisable
+#
+#   Purpose....: Disable notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyDisable(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyReset
+#
+#   Purpose....: Reset notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyReset(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceNotify::NotifyStateChange
+#
+#   Purpose....: State change notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDeviceNotify::NotifyStateChange(TDevice *Device)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TDevice::InsertDevice
 #
 #   Purpose....: Insert device into m_DeviceList
@@ -246,6 +426,8 @@ TDevice::~TDevice()
 ##########################################################################*/
 void TDevice::Init()
 {
+    int i;
+
     FDebug = 0;
     FDebugFile = 0;
 
@@ -263,7 +445,81 @@ void TDevice::Init()
     OnClose = 0;
     OnStateChange = 0;
 
+    NotifyCount = 0;
+
+    for (i = 0; i < MAX_DEVICE_NOTIFY_COUNT; i++)
+        NotifyArr[i] = 0;
+
     InsertDevice();
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::Attach
+#
+#   Purpose....: Attach notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::Attach(TDeviceNotify *Notify)
+{
+    int i;
+
+    FPropertySection.Enter();
+
+    for (i = 0; i < MAX_DEVICE_NOTIFY_COUNT; i++)
+    {
+        if (NotifyArr[i] == 0)
+        {
+            NotifyArr[i] = Notify;
+            if (i >= NotifyCount)
+                NotifyCount = i + 1;
+
+            break;
+        }
+    }
+
+    FPropertySection.Leave(); 
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::Detach
+#
+#   Purpose....: Detach notification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::Detach(TDeviceNotify *Notify)
+{
+    int i;
+
+    FPropertySection.Enter();
+
+    for (i = 0; i < NotifyCount; i++)
+    {
+        if (NotifyArr[i] == Notify)
+        {
+            NotifyArr[i] = 0;
+            break;
+        }
+    }
+
+    while (NotifyCount)
+    {
+        if (NotifyArr[NotifyCount - 1])
+            break;
+        else
+            NotifyCount--;
+    }
+
+    FPropertySection.Leave(); 
 }
 
 /*##########################################################################
@@ -279,8 +535,14 @@ void TDevice::Init()
 ##########################################################################*/
 void TDevice::NotifyStateChange()
 {
+    int i;
+
     if (OnStateChange)
         (*OnStateChange)(this);
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyStateChange(this);
 }
 
 /*##########################################################################
@@ -296,7 +558,13 @@ void TDevice::NotifyStateChange()
 ##########################################################################*/
 void TDevice::NotifyReset()
 {
+    int i;
+
     FReset = TRUE;
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyReset(this);
 }
 
 /*##########################################################################
@@ -364,13 +632,17 @@ void TDevice::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 void TDevice::NotifyOpen()
 {
+    int i;
+
     FOpen = TRUE;
 
     if (OnOpen)
         (*OnOpen)(this);
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyOpen(this);
 }
-
-
 
 /*##########################################################################
 #
@@ -408,10 +680,16 @@ void TDevice::Open()
 ##########################################################################*/
 void TDevice::NotifyClose()
 {
+    int i;
+
     FOpen = FALSE;
 
     if (OnClose)
         (*OnClose)(this);
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyClose(this);
 }
 
 /*##########################################################################
@@ -465,7 +743,13 @@ int TDevice::IsOpen()
 ##########################################################################*/
 void TDevice::NotifyEnable()
 {
+    int i;
+
     FEnabled = TRUE;
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyEnable(this);
 }
 
 /*##########################################################################
@@ -503,7 +787,13 @@ void TDevice::Enable()
 ##########################################################################*/
 void TDevice::NotifyDisable()
 {
+    int i;
+
     FEnabled = FALSE;
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyDisable(this);
 }
 
 /*##########################################################################
@@ -546,6 +836,31 @@ int TDevice::IsEnabled()
 
 /*##########################################################################
 #
+#   Name       : TDevice::NotifyOnline
+#
+#   Purpose....: Notify online
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::NotifyOnline()
+{
+    int i;
+
+    FOnline = TRUE;
+
+    if (OnOnline)
+        OnOnline(this);
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyOnline(this);
+}
+
+/*##########################################################################
+#
 #   Name       : TDevice::Online
 #
 #   Purpose....: Sets state to online
@@ -560,12 +875,35 @@ void TDevice::Online()
     FPropertySection.Enter();
     if (!FOnline)
     {
-        FOnline = TRUE;
-        if (OnOnline)
-            OnOnline(this);
+        NotifyOnline();
         NotifyStateChange();
     }
     FPropertySection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::NotifyOffline
+#
+#   Purpose....: Notify offline
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::NotifyOffline()
+{
+    int i;
+
+    FOnline = FALSE;
+
+    if (OnOffline)
+        OnOffline(this);
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyOffline(this);
 }
 
 /*##########################################################################
@@ -584,9 +922,7 @@ void TDevice::Offline()
     FPropertySection.Enter();
     if (FOnline)
     {
-        FOnline = FALSE;
-        if (OnOffline)
-            OnOffline(this);
+        NotifyOffline();
         NotifyStateChange();
     }
     FPropertySection.Leave();
@@ -637,9 +973,16 @@ int TDevice::IsActive()
 ##########################################################################*/
 void TDevice::NotifyIdle()
 {
+    int i;
+
     FBusy = FALSE;
+ 
     if (OnIdle)
         OnIdle(this);
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyIdle(this);
 }
 
 /*##########################################################################
@@ -677,9 +1020,16 @@ void TDevice::Idle()
 ##########################################################################*/
 void TDevice::NotifyBusy()
 {
+    int i;
+
     FBusy = TRUE;
+
     if (OnBusy)
         OnBusy(this);
+
+    for (i = 0; i < NotifyCount; i++)
+        if (NotifyArr[i])
+            NotifyArr[i]->NotifyBusy(this);
 }
 
 /*##########################################################################

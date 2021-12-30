@@ -35,6 +35,8 @@
 #include "datetime.h"
 #include "file.h"
 
+#define MAX_DEVICE_NOTIFY_COUNT	10
+
 class TDevice;
 
 class TDeviceDebug : public TThread
@@ -46,6 +48,24 @@ public:
     virtual TFile *RequestFile(TDevice *Device);
     virtual void ReleaseFile(TDevice *Device);
     virtual int MaxFileSize();
+};    
+
+class TDeviceNotify
+{
+public:
+    TDeviceNotify();
+    virtual ~TDeviceNotify();
+
+    virtual void NotifyOnline(TDevice *Device);
+    virtual void NotifyOffline(TDevice *Device);
+    virtual void NotifyIdle(TDevice *Device);
+    virtual void NotifyBusy(TDevice *Device);
+    virtual void NotifyOpen(TDevice *Device);
+    virtual void NotifyClose(TDevice *Device);
+    virtual void NotifyEnable(TDevice *Device);
+    virtual void NotifyDisable(TDevice *Device);
+    virtual void NotifyReset(TDevice *Device);
+    virtual void NotifyStateChange(TDevice *Device);
 };    
 
 class TDevice : public TThread
@@ -75,6 +95,9 @@ public:
     void Install(TDeviceDebug *Debug);
     virtual void StartDeviceDebug();
     virtual void StopDeviceDebug();
+
+    void Attach(TDeviceNotify *Notify);
+    void Detach(TDeviceNotify *Notify);
 
     void (*OnOnline)(TDevice *Device);
     void (*OnOffline)(TDevice *Device);
@@ -115,10 +138,16 @@ protected:
     TDeviceDebug *FDebug;
     TFile *FDebugFile;
 
+    int NotifyCount;
+    TDeviceNotify *NotifyArr[MAX_DEVICE_NOTIFY_COUNT];
+
 private:
     void Init();
     void InsertDevice();
     void RemoveDevice();
+
+    void NotifyOnline();
+    void NotifyOffline();
 
     static TSection FListSection;
     static TDevice *FDeviceList;
