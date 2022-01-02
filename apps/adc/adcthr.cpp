@@ -587,20 +587,21 @@ int TAdcThread::UpdatePhaseB(TFreqData *fd, int Pos, int Phase, int *Power)
 double TAdcThread::OptFreq(TFreqData *fd, double StartFreq, double StopFreq, int Pos)
 {
     int i;
-    double Step = (StopFreq - StartFreq) / 21.0;
-    double Freq = StartFreq;
-    double OptFreq = Freq;
-    int PowerA;
-    int PowerB;
-    int Phase;
-    int Power;
-    int MaxPower = 0;
+    int j;
+    double Step;
+    double Freq;
+    double OptFreq;
+    long long Power;
+    long long MaxPower = 0;
+
+    Step = (StopFreq - StartFreq) / 21.0;
+    Freq = StartFreq;
+    OptFreq = Freq;
 
     for (i = 0; i < 21; i++)
     {
         fd->Update(Freq);
-        TAdc::CalcFreqPower(AdcData + Pos, fd->UsedSamples, 0, fd->PhasePerSample , &PowerA, &PowerB, &Phase);
-        Power = PowerA * PowerA + PowerB * PowerB;
+        Power = TAdc::CalcFreqPower(AdcData + Pos, fd->UsedSamples, 0, fd->PhasePerSample);
         if (Power > MaxPower)
         {
             MaxPower = Power;
@@ -608,6 +609,25 @@ double TAdcThread::OptFreq(TFreqData *fd, double StartFreq, double StopFreq, int
         }
         Freq += Step;
     }
+
+    for (j = 0; j < 4; j++)
+    {
+        Freq = OptFreq - Step;
+        Step = Step / 10.0;
+
+        for (i = 0; i < 21; i++)
+        {
+            fd->Update(Freq);
+            Power = TAdc::CalcFreqPower(AdcData + Pos, fd->UsedSamples, 0, fd->PhasePerSample);
+            if (Power > MaxPower)
+            {
+                MaxPower = Power;
+                OptFreq = Freq;
+            }
+            Freq += Step;
+        }
+    }
+
     return OptFreq;
 }
 

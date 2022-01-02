@@ -63,6 +63,7 @@ public:
     static int GetSin(int Phase);
     static void CalcPower(TAdcData *Data, int Size, int *PowerA, int *PowerB);
     static int CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *PowerA, int *PowerB, int *Delay);
+    static long long CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr);
     static int CalcPowerA(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *Power);
     static int CalcPowerB(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *Power);
 

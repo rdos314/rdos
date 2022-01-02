@@ -560,6 +560,32 @@ int TAdc::CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, 
 
 /*##########################################################################
 #
+#   Name       : TAdc::CalcFreqPower
+#
+#   Purpose....: Calc power at a given frequency
+#
+#   In params..: Data, Size, RelFreq, PowerA, PowerB
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TAdc::CalcFreqPower(TAdcData *Data, int Size, int InitPhase, int PhaseIncr)
+{
+    struct TAdcFreqPower res;
+    long long val;
+
+    ::CalcFreqPower(Data, Size, InitPhase, PhaseIncr, &res);
+
+    res.SinA = res.SinA / Size;
+    res.SinB = res.SinB / Size;
+    res.CosA = res.CosA / Size;
+    res.CosB = res.CosB / Size;
+
+    return res.SinA * res.SinA + res.CosA * res.CosA;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::CalcPowerA
 #
 #   Purpose....: Calc power for A channel at a given frequency & phase
