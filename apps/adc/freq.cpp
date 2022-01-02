@@ -335,6 +335,22 @@ double TFreq::GetFreq(int index)
 
 /*##########################################################################
 #
+#   Name       : TFreq::GetStep
+#
+#   Purpose....: Get step
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TFreq::GetStep()
+{
+    return Step;
+}
+
+/*##########################################################################
+#
 #   Name       : TFreq::CodeFreq
 #
 #   Purpose....: Code frequency

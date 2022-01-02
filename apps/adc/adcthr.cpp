@@ -575,6 +575,44 @@ int TAdcThread::UpdatePhaseB(TFreqData *fd, int Pos, int Phase, int *Power)
 
 /*##########################################################################
 #
+#   Name       : TAdcThread::OptFreq
+#
+#   Purpose....: Optimize frequency
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TAdcThread::OptFreq(TFreqData *fd, double StartFreq, double StopFreq, int Pos)
+{
+    int i;
+    double Step = (StopFreq - StartFreq) / 21.0;
+    double Freq = StartFreq;
+    double OptFreq = Freq;
+    int PowerA;
+    int PowerB;
+    int Phase;
+    int Power;
+    int MaxPower = 0;
+
+    for (i = 0; i < 21; i++)
+    {
+        fd->Update(Freq);
+        TAdc::CalcFreqPower(AdcData + Pos, fd->UsedSamples, 0, fd->PhasePerSample , &PowerA, &PowerB, &Phase);
+        Power = PowerA * PowerA + PowerB * PowerB;
+        if (Power > MaxPower)
+        {
+            MaxPower = Power;
+            OptFreq = Freq;
+        }
+        Freq += Step;
+    }
+    return OptFreq;
+}
+
+/*##########################################################################
+#
 #   Name       : TAdcThread::AnaFreq
 #
 #   Purpose....: Analyze frequency
@@ -674,6 +712,7 @@ void TAdcThread::Execute()
     int *OptMax;
     int *OptPos;
     int OptCount;
+    double freq;
 
     RdosMoveToNewCore();
 
@@ -750,6 +789,10 @@ void TAdcThread::Execute()
                     {
                         fd = Freq->FreqData[*OptIndex];
                         TFreqData fdo(*fd);
+                        freq = Freq->GetFreq(*OptIndex);
+                        freq = OptFreq(&fdo, freq - Freq->GetStep(), freq + Freq->GetStep(), *OptPos);
+
+                        fdo.Update(freq);
                         AnaFreq(&fdo, OptMax, OptPos);
                     }
 

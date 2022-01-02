@@ -74,6 +74,7 @@ public:
 
     void CodeFreq(int index, char *str);
     double GetFreq(int index);
+    double GetStep();
 
     double SampleFreq;
     int Decimals;

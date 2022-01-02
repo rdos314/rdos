@@ -71,6 +71,7 @@ protected:
     int GetPhaseB(TFreqData *fd, int Pos, int *Power);
     int UpdatePhaseA(TFreqData *fd, int Pos, int Phase, int *Power);
     int UpdatePhaseB(TFreqData *fd, int Pos, int Phase, int *Power);
+    double OptFreq(TFreqData *fd, double StartFreq, double StopFreq, int Pos);
     void AnaFreq(TFreqData *fd, int *Max, int *Pos);
 
     TAdc *Adc;
