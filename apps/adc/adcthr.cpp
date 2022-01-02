@@ -66,7 +66,7 @@ TAdcThread::TAdcThread(int Id, TAdc *adc)
 
     OptFreqStep = Adc->OptStep;
     OptFreqCount = FreqCount / OptFreqStep;
-    OptFreqIndex = new int[OptFreqCount];
+    OptFreqVal = new double[OptFreqCount];
     OptFreqMax = new int[OptFreqCount];
     OptFreqPos = new int[OptFreqCount];
 
@@ -110,7 +110,7 @@ TAdcThread::~TAdcThread()
     delete MaxB;
     delete Delay;
 
-    delete OptFreqIndex;
+    delete OptFreqVal;
     delete OptFreqMax;
     delete OptFreqPos;
 }
@@ -148,7 +148,7 @@ void TAdcThread::Clear()
 
     for (j = 0; j < OptFreqCount; j++)
     {
-        OptFreqIndex[j] = 0;
+        OptFreqVal[j] = 0.0;
         OptFreqMax[j] = 0;
         OptFreqPos[j] = 0;
     }
@@ -708,7 +708,8 @@ void TAdcThread::Execute()
     int Power;
     TFreqPos fp;
     TFreqData *fd;
-    int *OptIndex;
+    double *OptCurrFreq;
+    int OptIndex;
     int *OptMax;
     int *OptPos;
     int OptCount;
@@ -725,7 +726,7 @@ void TAdcThread::Execute()
             Clear();
 
             OptCount = 0;
-            OptIndex = OptFreqIndex;
+            OptCurrFreq = OptFreqVal;
             OptMax = OptFreqMax;
             OptPos = OptFreqPos;
 
@@ -770,8 +771,8 @@ void TAdcThread::Execute()
                                 Power = PowerA * PowerA + PowerB * PowerB;
                                 if (*OptMax < Power)
                                 {
+                                    OptIndex = j;
                                     *OptMax = Power;
-                                    *OptIndex = j;
                                     *OptPos = fp.Pos;
                                 }
                             }
@@ -787,17 +788,17 @@ void TAdcThread::Execute()
                 {
                     if (*OptMax)
                     {
-                        fd = Freq->FreqData[*OptIndex];
+                        fd = Freq->FreqData[OptIndex];
                         TFreqData fdo(*fd);
-                        freq = Freq->GetFreq(*OptIndex);
-                        freq = OptFreq(&fdo, freq - Freq->GetStep(), freq + Freq->GetStep(), *OptPos);
+                        freq = Freq->GetFreq(OptIndex);
+                        *OptCurrFreq = OptFreq(&fdo, freq - Freq->GetStep(), freq + Freq->GetStep(), *OptPos);
 
-                        fdo.Update(freq);
+                        fdo.Update(*OptCurrFreq);
                         AnaFreq(&fdo, OptMax, OptPos);
                     }
 
                     OptCount = 0;
-                    OptIndex++;
+                    OptCurrFreq++;
                     OptMax++;
                     OptPos++;
                 }

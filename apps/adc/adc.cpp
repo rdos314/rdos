@@ -1571,7 +1571,7 @@ void TAdc::PrintFreq(int Index)
     int i;
     int j;
     int val;
-    int freq;
+    double freq;
     double pow;
     int count = 0;
     char fstr[40];
@@ -1591,8 +1591,7 @@ void TAdc::PrintFreq(int Index)
             {
                 pow = sqrt(val);
                 count++;
-                Freq->CodeFreq(freq, fstr);
-                sprintf(str, "%s: %5.1Lf  ", fstr, pow);
+                sprintf(str, "%6.4Lf: %5.1Lf  ", freq, pow);
                 Write(str);
             }
         }

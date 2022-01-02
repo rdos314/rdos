@@ -38,10 +38,10 @@ public:
     ~TAdcFreqAna();
 
     void Clear();
-    void Add(int Block, int Freq, int MaxVal, int Pos);
+    void Add(int Block, double Freq, int MaxVal, int Pos);
 
     int Blocks;
-    int *Freq;
+    double *Freq;
     int *MaxVal;
     int *Pos;
 };

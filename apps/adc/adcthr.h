@@ -58,7 +58,7 @@ public:
     int *MaxB;
     struct TDelay *Delay;
 
-    int *OptFreqIndex;
+    double *OptFreqVal;
     int *OptFreqMax;
     int *OptFreqPos;
     int OptFreqCount;

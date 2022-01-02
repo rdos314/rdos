@@ -50,7 +50,7 @@ TAdcFreqAna::TAdcFreqAna(int bl)
     int i;
 
     Blocks = bl;
-    Freq = new int[Blocks];
+    Freq = new double[Blocks];
     MaxVal = new int[Blocks];
     Pos = new int[Blocks];
 
@@ -92,7 +92,7 @@ void TAdcFreqAna::Clear()
 
     for (i = 0; i < Blocks; i++)
     {
-        Freq[i] = 0;
+        Freq[i] = 0.0;
         MaxVal[i] = 0;
         Pos[i] = 0;
     }
@@ -109,7 +109,7 @@ void TAdcFreqAna::Clear()
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdcFreqAna::Add(int block, int freq, int maxval, int pos)
+void TAdcFreqAna::Add(int block, double freq, int maxval, int pos)
 {
     Freq[block] = freq;
     MaxVal[block] = maxval;
@@ -300,7 +300,7 @@ void TAdcAna::Add(TAdcThread *adc)
     }
 
     for (i = 0; i < OptFreqCount; i++)
-        OptFreqArr[i]->Add(Pos, adc->OptFreqIndex[i], adc->OptFreqMax[i], adc->OptFreqPos[i]);
+        OptFreqArr[i]->Add(Pos, adc->OptFreqVal[i], adc->OptFreqMax[i], adc->OptFreqPos[i]);
 
     Pos++;
 
