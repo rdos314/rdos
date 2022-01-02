@@ -70,6 +70,9 @@ TAdcThread::TAdcThread(int Id, TAdc *adc)
     OptFreqMax = new int[OptFreqCount];
     OptFreqPos = new int[OptFreqCount];
 
+    OptFreqArr = new double[0x80000];
+    OptAmpArr = new int[0x80000];
+
     AdcData = 0;
     AdcAna = 0;
     Clear();
@@ -113,6 +116,9 @@ TAdcThread::~TAdcThread()
     delete OptFreqVal;
     delete OptFreqMax;
     delete OptFreqPos;
+
+    delete OptFreqArr;
+    delete OptAmpArr;
 }
 
 /*##########################################################################
@@ -633,16 +639,16 @@ double TAdcThread::OptFreq(TFreqData *fd, double StartFreq, double StopFreq, int
 
 /*##########################################################################
 #
-#   Name       : TAdcThread::AnaFreq
+#   Name       : TAdcThread::OptPosPhase
 #
-#   Purpose....: Analyze frequency
+#   Purpose....: Optimize position & phase
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdcThread::AnaFreq(TFreqData *fd, int *max, int *pos)
+void TAdcThread::OptPosPhase(TFreqData *fd, int *max, int *pos, int *phA, int *phB)
 {
     int PowerA;
     int PowerB;
@@ -702,6 +708,71 @@ void TAdcThread::AnaFreq(TFreqData *fd, int *max, int *pos)
 
     *pos = Pos;
     *max = PowerA * PowerA + PowerB * PowerB;
+    *phA = UpdPhaseA;
+    *phB = UpdPhaseB;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcThread::UpdateFreq
+#
+#   Purpose....: Update frequency
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TAdcThread::UpdateFreq(TFreqData *fd, double Freq, int Pos)
+{
+    int i;
+    int j;
+    double Step = 0.01;
+    double OptFreq = Freq;
+    long long Power;
+    long long MaxPower = 0;
+
+    Freq = OptFreq - Step;
+    Step = Step / 10.0;
+
+    for (i = 0; i < 21; i++)
+    {
+        fd->Update(Freq);
+        Power = TAdc::CalcFreqPower(AdcData + Pos, fd->UsedSamples, 0, fd->PhasePerSample);
+        if (Power > MaxPower)
+        {
+            i = j;
+            MaxPower = Power;
+            OptFreq = Freq;
+        }
+        Freq += Step;
+    }
+
+    if (i == 0)
+        return 0.0;
+
+    if (i == 20)
+        return 0.0;
+
+    for (j = 0; j < 2; j++)
+    {
+        Freq = OptFreq - Step;
+        Step = Step / 10.0;
+
+        for (i = 0; i < 21; i++)
+        {
+            fd->Update(Freq);
+            Power = TAdc::CalcFreqPower(AdcData + Pos, fd->UsedSamples, 0, fd->PhasePerSample);
+            if (Power > MaxPower)
+            {
+                MaxPower = Power;
+                OptFreq = Freq;
+            }
+            Freq += Step;
+        }
+    }
+
+    return OptFreq;
 }
 
 /*##########################################################################
@@ -734,6 +805,10 @@ void TAdcThread::Execute()
     int *OptPos;
     int OptCount;
     double freq;
+    int amp;
+    int pos;
+    int phA;
+    int phB;
 
     RdosMoveToNewCore();
 
@@ -808,13 +883,39 @@ void TAdcThread::Execute()
                 {
                     if (*OptMax)
                     {
+                        pos = *OptPos;
+
                         fd = Freq->FreqData[OptIndex];
                         TFreqData fdo(*fd);
                         freq = Freq->GetFreq(OptIndex);
-                        *OptCurrFreq = OptFreq(&fdo, freq - Freq->GetStep(), freq + Freq->GetStep(), *OptPos);
+                        freq = OptFreq(&fdo, freq - Freq->GetStep(), freq + Freq->GetStep(), pos);
+                        fdo.Update(freq);
+                        OptPosPhase(&fdo, &amp, &pos, &phA, &phB);
 
-                        fdo.Update(*OptCurrFreq);
-                        AnaFreq(&fdo, OptMax, OptPos);
+                        *OptCurrFreq = freq;
+                        *OptMax = amp;
+                        *OptPos = pos;
+
+                        OptFreqArr[pos] = freq;
+                        OptAmpArr[pos] = amp;
+                        OptStartPos = pos;
+                        OptStopPos = pos;
+
+                        freq = *OptCurrFreq;
+
+                        while (pos > 0)
+                        {
+                            pos--;
+                            freq = UpdateFreq(&fdo, freq, pos);
+
+                            if (freq > 0.0)
+                            {
+                                OptFreqArr[pos] = freq;
+                                OptStartPos = pos;
+                            }
+                            else
+                                break;
+                        }
                     }
 
                     OptCount = 0;
