@@ -33,13 +33,20 @@ class TFreqData
 friend class TFreqPos;
 public:
     TFreqData(double Freq, double SampleFreq, int Periods);
+    TFreqData(const TFreqData &source);
     ~TFreqData();
+
+    const TFreqData &operator=(const TFreqData &src);
+
+    void Update(double Freq);
 
     int UsedSamples;
     int Count;
     int PhasePerSample;
 
 protected:
+    double SampleFreq;
+    int Periods;
     int Overlap;
     int Remain;
 };

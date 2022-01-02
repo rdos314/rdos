@@ -584,9 +584,8 @@ int TAdcThread::UpdatePhaseB(TFreqData *fd, int Pos, int Phase, int *Power)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdcThread::AnaFreq( int Index, int *max, int *pos)
+void TAdcThread::AnaFreq(TFreqData *fd, int *max, int *pos)
 {
-    TFreqData *fd = Freq->FreqData[Index];
     int PowerA;
     int PowerB;
     long long Power;
@@ -748,7 +747,11 @@ void TAdcThread::Execute()
                 if (OptCount == OptFreqStep)
                 {
                     if (*OptMax)
-                        AnaFreq(*OptIndex, OptMax, OptPos);
+                    {
+                        fd = Freq->FreqData[*OptIndex];
+                        TFreqData fdo(*fd);
+                        AnaFreq(&fdo, OptMax, OptPos);
+                    }
 
                     OptCount = 0;
                     OptIndex++;

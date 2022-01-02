@@ -43,7 +43,86 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFreqData::TFreqData(double Freq, double SampleFreq, int Periods)
+TFreqData::TFreqData(double Freq, double sf, int periods)
+{
+    SampleFreq = sf;
+    Periods = periods;
+    Update(Freq);
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqData::TFreqData
+#
+#   Purpose....: Copy constructor for freq data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreqData::TFreqData(const TFreqData &src)
+{
+    UsedSamples = src.UsedSamples;
+    Count = src.Count;
+    PhasePerSample = src.PhasePerSample;
+    SampleFreq = src.SampleFreq;
+    Periods = src.Periods;
+    Overlap = src.Overlap;
+    Remain = src.Remain;
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqData::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TFreqData &TFreqData::operator=(const TFreqData &src)
+{
+    UsedSamples = src.UsedSamples;
+    Count = src.Count;
+    PhasePerSample = src.PhasePerSample;
+    SampleFreq = src.SampleFreq;
+    Periods = src.Periods;
+    Overlap = src.Overlap;
+    Remain = src.Remain;
+
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqData::~TFreqData
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFreqData::~TFreqData()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFreqData::Update
+#
+#   Purpose....: Update frequency
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFreqData::Update(double Freq)
 {
     int diff;
     long long lval;
@@ -90,21 +169,6 @@ TFreqData::TFreqData(double Freq, double SampleFreq, int Periods)
     }
     else
         PhasePerSample = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFreqData::~TFreqData
-#
-#   Purpose....: Destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFreqData::~TFreqData()
-{
 }
 
 /*##########################################################################
