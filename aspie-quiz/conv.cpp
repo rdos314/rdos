@@ -159,6 +159,7 @@ void ConvL23();
 void ConvL24();
 void ConvL25();
 void ConvL26();
+void ConvL28();
 
 void ConvM1();
 
@@ -215,7 +216,7 @@ void WriteOne(struct TValArr *entry)
     int i;
     int val;
     char str[12];
-    
+
     for (i = 0; i < entry->Count; i++)
     {
         val = entry->Quiz[i];
@@ -223,13 +224,13 @@ void WriteOne(struct TValArr *entry)
         if (val > 0)
             val--;
 
-        if (i == entry->Count - 1)            
+        if (i == entry->Count - 1)
             sprintf(str, "%d\r\n", val);
         else
             sprintf(str, "%d,", val);
 
         PcaFile->Write(str);
-    } 
+    }
 }
 
 /*##################  WriteRev ##########################
@@ -244,7 +245,7 @@ void WriteRev(struct TValArr *entry)
     int i;
     int val;
     char str[12];
-    
+
     for (i = 0; i < entry->Count; i++)
     {
         val = entry->Quiz[i];
@@ -257,13 +258,13 @@ void WriteRev(struct TValArr *entry)
                 val--;
         }
 
-        if (i == entry->Count - 1)            
+        if (i == entry->Count - 1)
             sprintf(str, "%d\r\n", val);
         else
             sprintf(str, "%d,", val);
 
         PcaFile->Write(str);
-    }  
+    }
 }
 
 /*##################  WriteInv ##########################
@@ -278,7 +279,7 @@ void WriteInv(struct TValArr *entry)
     int i;
     int val;
     char str[12];
-    
+
     for (i = 0; i < entry->Count; i++)
     {
         val = entry->Quiz[i];
@@ -297,13 +298,13 @@ void WriteInv(struct TValArr *entry)
             }
         }
 
-        if (i == entry->Count - 1)            
+        if (i == entry->Count - 1)
             sprintf(str, "%d\r\n", val);
         else
             sprintf(str, "%d,", val);
 
         PcaFile->Write(str);
-    }  
+    }
 }
 
 /*##################  WriteAllPca ##########################
@@ -325,7 +326,7 @@ void WriteAllPca()
     strcat(str, ".csv");
 
     PcaFile = new TFile(str, 0);
-    
+
     for (i = 0; i < ValueCount; i++)
         WriteOne(&ValArr[i]);
 
@@ -352,7 +353,7 @@ void WriteMalePca()
     strcat(str, ".csv");
 
     PcaFile = new TFile(str, 0);
-    
+
     for (i = 0; i < ValueCount; i++)
         if (ValArr[i].Gender == 1)
             WriteOne(&ValArr[i]);
@@ -380,7 +381,7 @@ void WriteFemalePca()
     strcat(str, ".csv");
 
     PcaFile = new TFile(str, 0);
-    
+
     for (i = 0; i < ValueCount; i++)
         if (ValArr[i].Gender == 2)
             WriteOne(&ValArr[i]);
@@ -430,7 +431,7 @@ void WriteGroupPca()
     strcat(str, ".csv");
 
     PcaFile = new TFile(str, 0);
-    
+
     for (i = 0; i < ValueCount; i++)
         WriteRev(&ValArr[i]);
 
@@ -459,7 +460,7 @@ void WriteInverted()
     strcat(str, ".csv");
 
     PcaFile = new TFile(str, 0);
-    
+
     for (i = 0; i < ValueCount; i++)
         WriteInv(&ValArr[i]);
 
@@ -487,7 +488,7 @@ void OpenPca(const char *str)
 
     AsCount = 0;
     NtCount = 0;
-    
+
     for (i = 0; i < MAX_QUESTIONS; i++)
     {
         AsArr[i] = 0;
@@ -560,7 +561,7 @@ void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
     if (ScoreDiff >= 35)
     {
         AsCount++;
-        
+
         for (i = 0; i < Count; i++)
         {
             val = ScoreArr[i];
@@ -572,7 +573,7 @@ void AddPca(int Gender, int BirthYear, int ScoreDiff, char *ScoreArr, int Count)
     if (ScoreDiff <= -35)
     {
         NtCount++;
-    
+
         for (i = 0; i < Count; i++)
         {
             val = ScoreArr[i];
@@ -624,7 +625,7 @@ int main(int argc, char **argv)
     ConvN1();
     ConvN2();
     ConvN3();
-    ConvN4(); 
+    ConvN4();
     ConvFI();
     ConvF1();
     ConvF2();
@@ -718,10 +719,11 @@ int main(int argc, char **argv)
     ConvBr4();
     ConvIt4();
     ConvL24();
- 
-*/
     ConvL25();
+
+*/
     ConvL26();
-        
+    ConvL28();
+
     return 0;
 }
