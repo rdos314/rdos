@@ -66,8 +66,8 @@ protected:
     TPrinterDevice(const char *IniSection);
     TPrinterDevice();
 
-	virtual void SignalNewData();
-	virtual void Add(TWait *Wait);
+    virtual void SignalNewData();
+    virtual void Add(TWait *Wait);
 
 private:
     void Init(int Port);

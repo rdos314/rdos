@@ -455,16 +455,16 @@ void TDevice::Init()
 
 /*##########################################################################
 #
-#   Name       : TDevice::Attach
+#   Name       : TDevice::AddNotify
 #
-#   Purpose....: Attach notification
+#   Purpose....: Add notification
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDevice::Attach(TDeviceNotify *Notify)
+void TDevice::AddNotify(TDeviceNotify *Notify)
 {
     int i;
 
@@ -487,16 +487,16 @@ void TDevice::Attach(TDeviceNotify *Notify)
 
 /*##########################################################################
 #
-#   Name       : TDevice::Detach
+#   Name       : TDevice::RemoveNotify
 #
-#   Purpose....: Detach notification
+#   Purpose....: Remove notification
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDevice::Detach(TDeviceNotify *Notify)
+void TDevice::RemoveNotify(TDeviceNotify *Notify)
 {
     int i;
 

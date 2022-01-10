@@ -96,8 +96,8 @@ public:
     virtual void StartDeviceDebug();
     virtual void StopDeviceDebug();
 
-    void Attach(TDeviceNotify *Notify);
-    void Detach(TDeviceNotify *Notify);
+    void AddNotify(TDeviceNotify *Notify);
+    void RemoveNotify(TDeviceNotify *Notify);
 
     void (*OnOnline)(TDevice *Device);
     void (*OnOffline)(TDevice *Device);
