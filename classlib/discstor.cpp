@@ -67,9 +67,9 @@ TDiscStorage::TDiscStorage(TDisc *Disc)
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscStorage::TDiscStorage(TDisc *Disc, long StartSector, int SectorCount)
+TDiscStorage::TDiscStorage(TDisc *Disc, long long StartSector, int SectorCount)
 {
-    long Sectors;
+    long long Sectors;
 
     FDisc = 0;
 

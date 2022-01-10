@@ -35,7 +35,7 @@ class TDiscStorage : public TStorage
 {
 public:
     TDiscStorage(TDisc *Disc);
-    TDiscStorage(TDisc *Disc, long StartSector, int SectorCount);
+    TDiscStorage(TDisc *Disc, long long StartSector, int SectorCount);
     ~TDiscStorage();
     
     virtual long Size();
@@ -44,7 +44,7 @@ public:
 
 private:
     TDisc *FDisc;
-    long FStartSector;
+    long long FStartSector;
     int FSectorCount;
 
 };
