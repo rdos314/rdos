@@ -159,6 +159,7 @@ void ConvL23();
 void ConvL24();
 void ConvL25();
 void ConvL26();
+void ConvL27();
 void ConvL28();
 
 void ConvM1();
@@ -722,7 +723,7 @@ int main(int argc, char **argv)
     ConvL25();
 
 */
-    ConvL26();
+    ConvL27();
     ConvL28();
 
     return 0;

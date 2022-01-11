@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# QuizL25.cpp
-# Quiz class for L25
+# QuizL27.cpp
+# Quiz class for L27
 #
 #######################################################################*/
 
@@ -29,8 +29,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizL25.h"
-#include "quizdL25.h"
+#include "quizl27.h"
+#include "quizdl27.h"
 
 #define CI      1
 
@@ -41,17 +41,17 @@
 
 /*##########################################################################
 #
-#   Name       : TQuizL25::TQuizL25
+#   Name       : TQuizL27::TQuizL27
 #
-#   Purpose....: Constructor for TQuizL25
+#   Purpose....: Constructor for TQuizL27
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizL25::TQuizL25(const char *FileName)
-  : TQuiz(210),
+TQuizL27::TQuizL27(const char *FileName)
+  : TQuiz(140),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -63,41 +63,70 @@ TQuizL25::TQuizL25(const char *FileName)
 
 /*##########################################################################
 #
-#   Name       : TQuizL25::~TQuizL25
+#   Name       : TQuizL27::~TQuizL27
 #
-#   Purpose....: Destructor for TQuizL25
+#   Purpose....: Destructor for TQuizL27
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizL25::~TQuizL25()
+TQuizL27::~TQuizL27()
 {
 }
 
-/*##################  TQuizL25::GetPcaCount ##########################
+/*##################  TQuizL27::GetPcaCount ##########################
 *   Purpose....: Return number of available PCA axises                          #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizL25::GetPcaCount()
+int TQuizL27::GetPcaCount()
 {
     return 4;
 }
 
-/*##################  TQuizL25::GetCatCount ##########################
+/*##################  TQuizL27::GetCatCount ##########################
 *   Purpose....: Return number of categories for question                       #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizL25::GetCatCount(int Question)
+int TQuizL27::GetCatCount(int Question)
 {
-        return 3;
+    switch (Question)
+    {
+        case 121:
+        case 123:
+        case 124:
+        case 125:
+        case 126:
+        case 128:
+        case 129:
+        case 130:
+        case 131:
+        case 133:
+        case 134:
+        case 135:
+            return 5;
+
+        case 122:
+        case 127:
+        case 132:
+            return 7;
+
+        case 136:
+        case 137:
+        case 138:
+        case 139:
+            return 4;
+
+        default:
+            return 3;
+    }
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -107,14 +136,14 @@ int TQuizL25::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizL25::GetQuizN()
+int TQuizL27::GetQuizN()
 {
-    return 210;
+    return 121;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL25::WriteName
+#   Name       : TQuizL27::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -123,14 +152,14 @@ int TQuizL25::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL25::WriteName(TFile &File)
+void TQuizL27::WriteName(TFile &File)
 {
-    File.Write("L25");
+    File.Write("L27");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL25::WriteLongName
+#   Name       : TQuizL27::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -139,14 +168,14 @@ void TQuizL25::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL25::WriteLongName(TFile &File)
+void TQuizL27::WriteLongName(TFile &File)
 {
-    File.Write("L25");
+    File.Write("L27");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL25::SetupTexts
+#   Name       : TQuizL27::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -155,7 +184,7 @@ void TQuizL25::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL25::SetupTexts()
+void TQuizL27::SetupTexts()
 {
   Quiz[0].Aspie = TRUE;
   Quiz[1].Aspie = TRUE;
@@ -292,15 +321,9 @@ void TQuizL25::SetupTexts()
   Quiz[118].Reverse = TRUE;
   Quiz[119].Reverse = TRUE;
   Quiz[120].Reverse = TRUE;
-  Quiz[169].Reverse = TRUE;
-  Quiz[171].Reverse = TRUE;
-  Quiz[177].Reverse = TRUE;
-  Quiz[180].Reverse = TRUE;
-  Quiz[186].Reverse = TRUE;
-  Quiz[188].Reverse = TRUE;
-  Quiz[189].Reverse = TRUE;
-  Quiz[190].Reverse = TRUE;
-  Quiz[191].Reverse = TRUE;
+  Quiz[122].Reverse = TRUE;
+  Quiz[127].Reverse = TRUE;
+  Quiz[132].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -442,77 +465,6 @@ void TQuizL25::SetupTexts()
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_MIXED;
-  Quiz[140].MyGroup = GROUP_MIXED;
-  Quiz[141].MyGroup = GROUP_MIXED;
-  Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_MIXED;
-  Quiz[144].MyGroup = GROUP_MIXED;
-  Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
-  Quiz[149].MyGroup = GROUP_MIXED;
-  Quiz[150].MyGroup = GROUP_MIXED;
-  Quiz[151].MyGroup = GROUP_MIXED;
-  Quiz[152].MyGroup = GROUP_MIXED;
-  Quiz[153].MyGroup = GROUP_MIXED;
-  Quiz[154].MyGroup = GROUP_MIXED;
-  Quiz[155].MyGroup = GROUP_MIXED;
-  Quiz[156].MyGroup = GROUP_MIXED;
-  Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_MIXED;
-  Quiz[159].MyGroup = GROUP_MIXED;
-  Quiz[160].MyGroup = GROUP_MIXED;
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
-  Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
-  Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_MIXED;
-  Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_MIXED;
-  Quiz[171].MyGroup = GROUP_MIXED;
-  Quiz[172].MyGroup = GROUP_MIXED;
-  Quiz[173].MyGroup = GROUP_MIXED;
-  Quiz[174].MyGroup = GROUP_MIXED;
-  Quiz[175].MyGroup = GROUP_MIXED;
-  Quiz[176].MyGroup = GROUP_MIXED;
-  Quiz[177].MyGroup = GROUP_MIXED;
-  Quiz[178].MyGroup = GROUP_MIXED;
-  Quiz[179].MyGroup = GROUP_MIXED;
-  Quiz[180].MyGroup = GROUP_MIXED;
-  Quiz[180].MyGroup = GROUP_MIXED;
-  Quiz[181].MyGroup = GROUP_MIXED;
-  Quiz[182].MyGroup = GROUP_MIXED;
-  Quiz[183].MyGroup = GROUP_MIXED;
-  Quiz[184].MyGroup = GROUP_MIXED;
-  Quiz[185].MyGroup = GROUP_MIXED;
-  Quiz[186].MyGroup = GROUP_MIXED;
-  Quiz[187].MyGroup = GROUP_MIXED;
-  Quiz[188].MyGroup = GROUP_MIXED;
-  Quiz[189].MyGroup = GROUP_MIXED;
-  Quiz[190].MyGroup = GROUP_MIXED;
-  Quiz[191].MyGroup = GROUP_MIXED;
-  Quiz[192].MyGroup = GROUP_MIXED;
-  Quiz[193].MyGroup = GROUP_MIXED;
-  Quiz[194].MyGroup = GROUP_MIXED;
-  Quiz[195].MyGroup = GROUP_MIXED;
-  Quiz[196].MyGroup = GROUP_MIXED;
-  Quiz[197].MyGroup = GROUP_MIXED;
-  Quiz[198].MyGroup = GROUP_MIXED;
-  Quiz[199].MyGroup = GROUP_MIXED;
-  Quiz[200].MyGroup = GROUP_MIXED;
-  Quiz[201].MyGroup = GROUP_MIXED;
-  Quiz[202].MyGroup = GROUP_MIXED;
-  Quiz[203].MyGroup = GROUP_MIXED;
-  Quiz[204].MyGroup = GROUP_MIXED;
-  Quiz[205].MyGroup = GROUP_MIXED;
-  Quiz[206].MyGroup = GROUP_MIXED;
-  Quiz[207].MyGroup = GROUP_MIXED;
-  Quiz[208].MyGroup = GROUP_MIXED;
-  Quiz[209].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
@@ -636,108 +588,33 @@ void TQuizL25::SetupTexts()
   Quiz[119].Text = "Do you accept criticism, correction and direction?";
   Quiz[120].Text = "Do you find it easy to estimate the age of people?";
 
-  Quiz[121].Text = "Absorbtion";
+  Quiz[121].Text = "V1: Do you think this story could be true?";
+  Quiz[122].Text = "V1: How do you react to this story?";
+  Quiz[123].Text = "V1: Would you like to know more about this topic, to know more stories like this?";
+  Quiz[124].Text = "V1: Do you think this phenomenon can influence our lives?";
+  Quiz[125].Text = "V1: Do you think this phenomenon is related to your religious beliefs?";
 
-// Tellegen
+  Quiz[126].Text = "V2: Do you think this story could be true?";
+  Quiz[127].Text = "V2: How do you react to this story?";
+  Quiz[128].Text = "V2: Would you like to know more about this topic, to know more stories like this?";
+  Quiz[129].Text = "V2: Do you think this phenomenon can influence our lives?";
+  Quiz[130].Text = "V2: Do you think this phenomenon is related to your religious beliefs?";
 
-  Quiz[122].Text = "Do you feel and experience things as you did when you were a child?`";
-  Quiz[123].Text = "Do you get greatly moved by eloquent or poetic language?";
-  Quiz[124].Text = "While watching a movie, a TV show, or a play, may you become so involved that you forget about yourself and your surroundings, and experience the story as if it were real?";
-  Quiz[125].Text = "If you stare at a picture and then look away from it, can you sometimes 'see' an image of the picture, almost as if you were still looking at it?";
-  Quiz[126].Text = "Can you feel as if your mind could envelop the whole world?";
-  Quiz[127].Text = "Do you like to watch cloud shapes change in the sky?";
-  Quiz[128].Text = "If you wish can you imagine things so vividly that it's like watching a good movie or hearing a good story?";
-  Quiz[129].Text = "Do you think you really know what some people mean when they talk about mystical experiences?";
-  Quiz[130].Text = "Do you 'step outside' of your usual self and experience a completely different state of being?";
-  Quiz[131].Text = "Do textures - such as wool, sand, wood - remind you of colors or music?";
-  Quiz[132].Text = "Can you experience things as if they were doubly real?";
-  Quiz[133].Text = "When you listen to music can you get so caught up in it that you don't notice anything else?";
-  Quiz[134].Text = "If you wish, can you imagine that your body is so heavy that you cannot move it?";
-  Quiz[135].Text = "Can you somehow sense the presence of another person before you actually see or hear him/her?";
-  Quiz[136].Text = "Do the crackle and flames of a wood fire stimulate your imagination?";
-  Quiz[137].Text = "When you are immersed in nature or in art can you feel as if your whole state of consciousness has somehow been temporarily changed?";
-  Quiz[138].Text = "Do different colors have distinctive and special meanings for you?";
-  Quiz[139].Text = "Can you wander off into your thoughts so completely while doing a routine task that you actually forget what you are doing and a few minutes later find that you have finished it?";
-  Quiz[140].Text = "Can you recall certain past experiences so clearly and vividly that it is like living them again?";
-  Quiz[141].Text = "Can things that might seem meaningless to others often make sense to you?";
-  Quiz[142].Text = "If you acted in a play do you think that you would really feel the emotions of the character, and 'become' that person for the time being, forgetting both yourself and the audience?";
-  Quiz[143].Text = "Do your thoughts often occur as visual images rather than as words?";
-  Quiz[144].Text = "Are you often delighted by small things (like the colors in soap bubbles and the five pointed star shape that appears when you cut an apple across the core)?";
-  Quiz[145].Text = "When listening to organ music or other powerful music, do you feel as if you are being lifted into the air?";
-  Quiz[146].Text = "Can you change noise into music by the way you listen to it?";
-  Quiz[147].Text = "Are your most vivid memories called up by scents and smells?";
-  Quiz[148].Text = "Can music remind you of pictures or changing patterns of color?";
-  Quiz[149].Text = "Do you often know what someone is going to say before he or she says it?";
-  Quiz[150].Text = "Do you have 'physical memories'; for example, after you've been swimming may feel as if you are still in the water?";
-  Quiz[151].Text = "Can the sound of a voice be so fascinating to you that you can just go on listening to it?";
-  Quiz[152].Text = "Can you at times somehow feel the presence of someone who is not physically there?";
-  Quiz[153].Text = "Can thoughts and images come to you without any effort on your part?";
-  Quiz[154].Text = "Do different smells have different colors?";
-  Quiz[155].Text = "Can you be deeply moved by a sunset?";
-  Quiz[156].Text = "In your daydreams, can people kind of merge into one another or one person turns into another?";
-  Quiz[157].Text = "Can you wake from one dream into another?";
-  Quiz[158].Text = "Do you have daymares?";
-  Quiz[159].Text = "In your dreams, can people sometimes merge into each other or become other people?";
+  Quiz[131].Text = "V3: Do you think this story could be true?";
+  Quiz[132].Text = "V3: How do you react to this story?";
+  Quiz[133].Text = "V3: Would you like to know more about this topic, to know more stories like this?";
+  Quiz[134].Text = "V3: Do you think this phenomenon can influence our lives?";
+  Quiz[135].Text = "V3: Do you think this phenomenon is related to your religious beliefs?";
 
-// Boundary scale
-
-  Quiz[160].Text = "Do you have dreams, daydreams, nightmares in which your body or someone else's body is being stabbed, injured, or torn apart?";
-  Quiz[161].Text = "Do things around you seem to change their size and shape?";
-  Quiz[162].Text = "Every time something frightening happens to you, do you have nightmares or fantasies or flashbacks involving the frightening event?";
-  Quiz[163].Text = "Do you have often had the experience of different senses coming together. For example, have you felt that you could smell a color, or see a sound, or hear an odor?";
-  Quiz[164].Text = "Can your dreams be so vivid that even later you can't tell them from waking reality?";
-  Quiz[165].Text = "Do your body sometimes seem to change its size and shape?";
-  Quiz[166].Text = "Have you had the experience of someone calling you or speaking your name and not being sure whether it was really happening or you were imagining it?";
-  Quiz[167].Text = "Have you had the experience of not knowing whether you were imagining something or it was actually happening?";
-  Quiz[168].Text = "Is there a place for everything and everything should be in its place?";
-  Quiz[169].Text = "Do you think children need strict discipline?";
-  Quiz[170].Text = "In an organization, should everyone have a definite place and a specific role?";
-  Quiz[171].Text = "Do you think that a man is a man and a woman is a woman and that it is very important to maintain that distinction?";
-  Quiz[172].Text = "Do you like stories that have a definite beginning, middle, and end?";
-  Quiz[173].Text = "Can you imagine living with or marrying a person of another race?";
-  Quiz[174].Text = "Do you like clear, precise border?";
-  Quiz[175].Text = "Are the movies and TV shows you like the best the ones where there are good guys and bad guys and you always know who they are?";
-  Quiz[176].Text = "Are good solid frames very important for a picture or a painting?";
-  Quiz[177].Text = "Is being dressed neatly and cleanly very important?";
-  Quiz[178].Text = "Do you like houses where rooms have definite walls and each room has a definite function?";
-  Quiz[179].Text = "Do you agree that East is East and West is West, and never the twain shall meet. (Kipling)?";
-  Quiz[180].Text = "Are you a very open person?";
-  Quiz[181].Text = "Do you trust people easily?";
-  Quiz[182].Text = "Are you always at least a bit on your guard?";
-  Quiz[183].Text = "Can you meet someone and trust him or her so completely that you can share just about everything about yourself at the first meeting?";
-  Quiz[184].Text = "Do you expect other people to keep a certain distance?";
-  Quiz[185].Text = "Are you careful about what you say to people until you get to know them really well?";
-  Quiz[186].Text = "Do you get to appointments right on time?";
-  Quiz[187].Text = "Do you keep your desk and worktable neat and well organized?";
-  Quiz[188].Text = "Are you good at keeping accounts and keeping track of your money?";
-  Quiz[189].Text = "Do you have a clear and distinct sense of time?";
-  Quiz[190].Text = "Do you know exactly what parts of town are safe and what parts are unsafe?";
-  Quiz[191].Text = "Do you have a clear memory of your past and could tell pretty well what happened year by year?";
-  Quiz[192].Text = "Are you a down-to-earth, no-nonsense kind of person?";
-  Quiz[193].Text = "Do think you would be a good psychotherapist?";
-  Quiz[194].Text = "Do you agree that there are no sharp dividing lines between normal people, people with problems, and people who are considered psychotic or crazy?";
-  Quiz[195].Text = "Do you think a good teacher must remain in part a child?";
-  Quiz[196].Text = "Do you think a good parent has to be a bit of a child too?";
-  Quiz[197].Text = "Do you think an artist must in part remain a child?";
-  Quiz[198].Text = "Do you agree that a good teacher needs to help a child remain special?";
-  Quiz[199].Text = "Do you think children and adults have a lot in common and that they should give themselves a chance to be together without any strict roles?";
-  Quiz[200].Text = "Are you easily hurt?";
-  Quiz[201].Text = "Are you a very sensitive person?";
-
-  Quiz[202].Text = "Do you have regular depressions?";
-  Quiz[203].Text = "Do you have panic attacks?";
-  Quiz[204].Text = "Have you been sexually abused?";
-  Quiz[205].Text = "Have you been talked into having sex even if you really didn't want to?";
-  Quiz[206].Text = "Were you abused by parents as a child?";
-  Quiz[207].Text = "Are you sensitive to electromagnetic fields?";
-  Quiz[208].Text = "Do you feel as if the thoughts in your head are not your own?";
-  Quiz[209].Text = "Have you had paranormal experiences?";
-
+  Quiz[136].Text = "R1";
+  Quiz[137].Text = "R2";
+  Quiz[138].Text = "R3";
+  Quiz[139].Text = "R4";
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL25::LoadPopulations
+#   Name       : TQuizL27::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -746,7 +623,7 @@ void TQuizL25::SetupTexts()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL25::LoadPopulations()
+void TQuizL27::LoadPopulations()
 {
         TQuizRow Row;
         int i;
@@ -903,7 +780,7 @@ void TQuizL25::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizL25::SetupCross
+#   Name       : TQuizL27::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -912,17 +789,17 @@ void TQuizL25::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL25::SetupCross()
+void TQuizL27::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 210; i++)
+    for (i = 0; i < 140; i++)
             DefineGlobalId(i, i);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizL25::GetReferer
+#   Name       : TQuizL27::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -931,18 +808,18 @@ void TQuizL25::SetupCross()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizL25::GetReferer(const char *referer, TPopulation *pop)
+void TQuizL27::GetReferer(const char *referer, TPopulation *pop)
 {
 }
 
-/*##################  TQuizL25::ImportMvsp ##########################
+/*##################  TQuizL27::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings                                                   #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizL25::ImportMvsp(const char *filename, int PcaType)
+void TQuizL27::ImportMvsp(const char *filename, int PcaType)
 {
         char buf[MAX_IN_ROW];
         int size;
