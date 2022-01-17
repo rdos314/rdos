@@ -1829,7 +1829,10 @@ bool TJsonCollectionData::Remove(TJsonObject *obj)
                 found = true;
 
     if (found)
+    {
         FObjArrayCount--;
+        FObjArr[FObjArrayCount] = 0;
+    }
 
     return found;
 }
