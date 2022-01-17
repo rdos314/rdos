@@ -324,6 +324,22 @@ bool TJsonObject::IsArrayObject()
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::Rename
+#
+#   Purpose....: Rename object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::Rename(const char *NewFieldName)
+{
+    FFieldName = NewFieldName;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::GetBoolean
 #
 #   Purpose....: Get boolean

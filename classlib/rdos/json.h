@@ -63,6 +63,8 @@ public:
     virtual bool IsCollection();
     virtual bool IsArrayObject();
 
+    void Rename(const char *NewFieldName);
+
     bool GetBoolean();
     long long GetInt();
     double GetDouble();
