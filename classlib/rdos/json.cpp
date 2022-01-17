@@ -1771,7 +1771,7 @@ void TJsonCollectionData::Grow()
 
 /*##########################################################################
 #
-#   Name       : TJsonCollection::Insert
+#   Name       : TJsonCollectionData::Insert
 #
 #   Purpose....: Insert object
 #
@@ -1787,6 +1787,35 @@ void TJsonCollectionData::Insert(TJsonObject *obj)
 
     FObjArr[FObjArrayCount] = obj;
     FObjArrayCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollectionData::Remove
+#
+#   Purpose....: Remove object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonCollectionData::Remove(TJsonObject *obj)
+{
+    int i;
+    bool found = false;
+
+    for (i = 0; i < FObjArrayCount; i++)
+        if (found)
+            FObjArr[i - 1] = FObjArr[i];
+        else
+            if (FObjArr[i] == obj)
+                found = true;
+
+    if (found)
+        FObjArrayCount--;
+
+    return found;
 }
 
 /*##########################################################################
@@ -2332,6 +2361,22 @@ void TJsonSingleCollection::Insert(TJsonObject *obj)
 
 /*##########################################################################
 #
+#   Name       : TJsonSingleCollection::Remove
+#
+#   Purpose....: Remove object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonSingleCollection::Remove(TJsonObject *obj)
+{
+    return FData.Remove(obj);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonSingleCollection::Write
 #
 #   Purpose....: Write object data
@@ -2643,6 +2688,22 @@ void TJsonArrayCollection::Insert(TJsonObject *obj)
         DoAdd();
 
     FArray[FCurrInd]->Insert(obj);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::Remove
+#
+#   Purpose....: Remove object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonArrayCollection::Remove(TJsonObject *obj)
+{
+    return FArray[FCurrInd]->Remove(obj);
 }
 
 /*##########################################################################

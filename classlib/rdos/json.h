@@ -207,6 +207,7 @@ public:
 
     void Grow();
     void Insert(TJsonObject *obj);
+    bool Remove(TJsonObject *obj);
 
     int FObjArraySize;
     int FObjArrayCount;
@@ -226,6 +227,7 @@ public:
     virtual bool IsCollection();
     virtual bool IsArray() = 0;
     virtual void Insert(TJsonObject *obj) = 0;
+    virtual bool Remove(TJsonObject *obj) = 0;
     virtual int GetArrayCount() = 0;
     virtual int GetObjCount() = 0;
     virtual TJsonObject *GetObj(int n) = 0;
@@ -271,6 +273,7 @@ public:
 
     virtual bool IsArray();
     virtual void Insert(TJsonObject *obj);
+    virtual bool Remove(TJsonObject *obj);
     virtual int GetArrayCount();
     virtual int GetObjCount();
     virtual TJsonObject *GetObj(int n);
@@ -293,6 +296,7 @@ public:
     virtual bool IsArray();
     virtual void AddArray();
     virtual void Insert(TJsonObject *obj);
+    virtual bool Remove(TJsonObject *obj);
     virtual int GetArrayCount();
     virtual int GetObjCount();
     virtual TJsonObject *GetObj(int n);
