@@ -388,6 +388,285 @@ TDateTime TJsonObject::GetDateTime()
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::CodeBoolean
+#
+#   Purpose....: Code boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::CodeBoolean(bool v)
+{
+    if (v)
+        FText = "true";
+    else
+        FText = "false";
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::CodeInt
+#
+#   Purpose....: Code int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::CodeInt(long long v)
+{
+    FText.printf("%lld", v);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::CodeDouble
+#
+#   Purpose....: Set value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::CodeDouble(double v, int decimals)
+{
+    double temp;
+    int digits;
+    bool done = false;
+    char str[80];
+
+    if (decimals < 1)
+        decimals = 1;
+
+    if (v == INFINITY)
+    {
+        if (v == -INFINITY)
+            FText = "nan";
+        else
+            FText = "infinity";
+        done = true;
+    }
+
+    if (!done && v == -INFINITY)
+    {
+        FText = "-infinity";
+        done = true;
+    }
+
+    if (!done)
+    {
+        temp = v;
+
+        if (temp < 0)
+        {
+            digits = 2;
+            temp = -temp;
+        }
+        else
+            digits = 1;
+
+        if (temp >= 1e+16)
+        {
+            FText.printf("%Lf", v);
+            done = true;
+        }
+    }
+
+    if (!done)
+    {
+
+        while (temp >= 10.0)
+        {
+            digits++;
+            temp = temp / 10.0;
+        }
+
+        sprintf(str, "%%%d.%dLf", digits + decimals + 1, decimals);
+
+        FText.printf(str, v);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::CodeDateTime
+#
+#   Purpose....: Code date&time object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::CodeDateTime(TDateTime &time)
+{
+     FText.printf("%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::DecodeBoolean
+#
+#   Purpose....: Decode boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonObject::DecodeBoolean()
+{
+    if (!strcmp(FText.GetData(), "true"))
+        return true;
+
+    if (!strcmp(FText.GetData(), "false"))
+        return false;
+
+    if (FText.GetSize() == 0)
+        return false;
+
+    if (!strcmp(FText.GetData(), "0"))
+        return false;
+    else
+        return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::DecodeInt
+#
+#   Purpose....: Decode int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TJsonObject::DecodeInt()
+{
+    char *end = NULL;
+
+    return strtoll(FText.GetData(), &end, 10);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::DecodeDouble
+#
+#   Purpose....: Decode double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonObject::DecodeDouble()
+{
+    char *end;
+
+    return strtod(FText.GetData(), &end);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::DecodeDateTime
+#
+#   Purpose....: Decode date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TJsonObject::DecodeDateTime()
+{
+    int year, month, day;
+    int hour, min, sec;
+    int count;
+
+    year = 1970;
+    month = 1;
+    day = 1;
+    hour = 0;
+    min = 0;
+    sec = 0;
+
+    count = sscanf(FText.GetData(), "%04d-%02d-%02dT%02d:%02d:%02d", &year, &month, &day, &hour, &min, &sec);
+
+    TDateTime time(year, month, day, hour, min, sec);
+    return time;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetBoolean
+#
+#   Purpose....: Set boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetBoolean(bool val)
+{
+    SetBaseBoolean(val);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetInt
+#
+#   Purpose....: Set int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetInt(long long val)
+{
+    SetBaseInt(val);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetDouble
+#
+#   Purpose....: Set double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetDouble(double val, int decimals)
+{
+    SetBaseDouble(val, decimals);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetDateTime
+#
+#   Purpose....: Set date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetDateTime(TDateTime &val)
+{
+    SetBaseDateTime(val);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::GetBaseBoolean
 #
 #   Purpose....: Get boolean
@@ -449,6 +728,66 @@ TDateTime TJsonObject::GetBaseDateTime()
 {
     TDateTime time;
     return time;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetBaseBoolean
+#
+#   Purpose....: Set boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetBaseBoolean(bool val)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetBaseInt
+#
+#   Purpose....: Set int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetBaseInt(long long val)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetBaseDouble
+#
+#   Purpose....: Set double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetBaseDouble(double val, int decimals)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetBaseDateTime
+#
+#   Purpose....: Set date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetBaseDateTime(TDateTime &val)
+{
 }
 
 /*##########################################################################
@@ -2393,9 +2732,7 @@ int TJsonArrayCollection::GetArrayCount()
 TJsonInt::TJsonInt(TString &FieldName, long long v)
  : TJsonObject(FieldName)
 {
-    Val = v;
-
-    FText.printf("%lld", v);
+    SetValue(v);
 }
 
 /*##########################################################################
@@ -2411,6 +2748,23 @@ TJsonInt::TJsonInt(TString &FieldName, long long v)
 ##########################################################################*/
 TJsonInt::~TJsonInt()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonInt::SetValue
+#
+#   Purpose....: Set value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonInt::SetValue(long long v)
+{
+    Val = v;
+    CodeInt(v);
 }
 
 /*##########################################################################
@@ -2489,6 +2843,73 @@ TDateTime TJsonInt::GetBaseDateTime()
 
 /*##########################################################################
 #
+#   Name       : TJsonInt::SetBaseBoolean
+#
+#   Purpose....: Set boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonInt::SetBaseBoolean(bool v)
+{
+    if (v)
+        SetValue(1);
+    else
+        SetValue(0);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonInt::SetBaseInt
+#
+#   Purpose....: Set int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonInt::SetBaseInt(long long v)
+{
+    SetValue(v);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonInt::SetBaseDouble
+#
+#   Purpose....: Set double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonInt::SetBaseDouble(double v, int decimals)
+{
+    SetValue((long long)v);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonInt::SetBaseDateTime
+#
+#   Purpose....: Set date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonInt::SetBaseDateTime(TDateTime &v)
+{
+    SetValue(v.GetLinuxMilliTimestamp());
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDouble::TJsonDouble
 #
 #   Purpose....: Constructor for TJsonDouble
@@ -2519,63 +2940,7 @@ TJsonDouble::TJsonDouble(TString &FieldName, double v, TString &text)
 TJsonDouble::TJsonDouble(TString &FieldName, double v, int decimals)
  : TJsonObject(FieldName)
 {
-    double temp;
-    int digits;
-    bool done = false;
-    char str[80];
-
-    if (decimals < 1)
-        decimals = 1;
-
-    Val = v;
-
-    if (v == INFINITY)
-    {
-        if (v == -INFINITY)
-            FText = "nan";
-        else
-            FText = "infinity";
-        done = true;
-    }
-
-    if (!done && v == -INFINITY)
-    {
-        FText = "-infinity";
-        done = true;
-    }
-
-    if (!done)
-    {
-        temp = v;
-
-        if (temp < 0)
-        {
-            digits = 2;
-            temp = -temp;
-        }
-        else
-            digits = 1;
-
-        if (temp >= 1e+16)
-        {
-            FText.printf("%Lf", v);
-            done = true;
-        }
-    }
-
-    if (!done)
-    {
-
-        while (temp >= 10.0)
-        {
-            digits++;
-            temp = temp / 10.0;
-        }
-
-        sprintf(str, "%%%d.%dLf", digits + decimals + 1, decimals);
-
-        FText.printf(str, v);
-    }
+    SetValue(v, decimals);
 }
 
 /*##########################################################################
@@ -2591,6 +2956,23 @@ TJsonDouble::TJsonDouble(TString &FieldName, double v, int decimals)
 ##########################################################################*/
 TJsonDouble::~TJsonDouble()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDouble::SetValue
+#
+#   Purpose....: Set value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetValue(double v, int decimals)
+{
+    Val = v;
+    CodeDouble(v, decimals);
 }
 
 /*##########################################################################
@@ -2680,6 +3062,73 @@ TDateTime TJsonDouble::GetBaseDateTime()
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::SetBaseBoolean
+#
+#   Purpose....: Set boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetBaseBoolean(bool v)
+{
+    if (v)
+        SetValue(1, 0);
+    else
+        SetValue(0, 0);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDouble::SetBaseInt
+#
+#   Purpose....: Set int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetBaseInt(long long v)
+{
+    SetValue((double)v, 0);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDouble::SetBaseDouble
+#
+#   Purpose....: Set double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetBaseDouble(double v, int decimals)
+{
+    SetValue(v, decimals);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDouble::SetBaseDateTime
+#
+#   Purpose....: Set date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetBaseDateTime(TDateTime &v)
+{
+    SetValue((double)v, 0);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonBoolean::TJsonBoolean
 #
 #   Purpose....: Constructor for TJsonBoolean
@@ -2692,12 +3141,7 @@ TDateTime TJsonDouble::GetBaseDateTime()
 TJsonBoolean::TJsonBoolean(TString &FieldName, bool v)
  : TJsonObject(FieldName)
 {
-    Val = v;
-
-    if (v)
-        FText = "true";
-    else
-        FText = "false";
+    SetValue(v);
 }
 
 /*##########################################################################
@@ -2713,6 +3157,23 @@ TJsonBoolean::TJsonBoolean(TString &FieldName, bool v)
 ##########################################################################*/
 TJsonBoolean::~TJsonBoolean()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBoolean::SetValue
+#
+#   Purpose....: Set value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBoolean::SetValue(bool v)
+{
+    Val = v;
+    CodeBoolean(v);
 }
 
 /*##########################################################################
@@ -2788,6 +3249,79 @@ TDateTime TJsonBoolean::GetBaseDateTime()
 
 /*##########################################################################
 #
+#   Name       : TJsonBoolean::SetBaseBoolean
+#
+#   Purpose....: Set boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBoolean::SetBaseBoolean(bool v)
+{
+    SetValue(v);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBoolean::SetBaseInt
+#
+#   Purpose....: Set int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBoolean::SetBaseInt(long long v)
+{
+    if (v)
+        SetValue(true);
+    else
+        SetValue(false);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBoolean::SetBaseDouble
+#
+#   Purpose....: Set double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBoolean::SetBaseDouble(double v, int decimals)
+{
+    if (v <= 0.0)
+        SetValue(false);
+    else
+        SetValue(true);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBoolean::SetBaseDateTime
+#
+#   Purpose....: Set date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBoolean::SetBaseDateTime(TDateTime &v)
+{
+    if (v.HasExpired())
+        SetValue(true);
+    else
+        SetValue(false);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonString::TJsonString
 #
 #   Purpose....: Constructor for TJsonString
@@ -2831,19 +3365,7 @@ TJsonString::~TJsonString()
 ##########################################################################*/
 bool TJsonString::GetBaseBoolean()
 {
-    if (!strcmp(FText.GetData(), "true"))
-        return true;
-
-    if (!strcmp(FText.GetData(), "false"))
-        return false;
-
-    if (FText.GetSize() == 0)
-        return false;
-
-    if (!strcmp(FText.GetData(), "0"))
-        return false;
-    else
-        return true;
+    return DecodeBoolean();
 }
 
 /*##########################################################################
@@ -2859,9 +3381,7 @@ bool TJsonString::GetBaseBoolean()
 ##########################################################################*/
 long long TJsonString::GetBaseInt()
 {
-    char *end = NULL;
-
-    return strtoll(FText.GetData(), &end, 10);
+    return DecodeInt();
 }
 
 /*##########################################################################
@@ -2877,9 +3397,7 @@ long long TJsonString::GetBaseInt()
 ##########################################################################*/
 double TJsonString::GetBaseDouble()
 {
-    char *end;
-
-    return strtod(FText.GetData(), &end);
+    return DecodeDouble();
 }
 
 /*##########################################################################
@@ -2895,21 +3413,71 @@ double TJsonString::GetBaseDouble()
 ##########################################################################*/
 TDateTime TJsonString::GetBaseDateTime()
 {
-    int year, month, day;
-    int hour, min, sec;
-    int count;
+    return DecodeDateTime();
+}
 
-    year = 1970;
-    month = 1;
-    day = 1;
-    hour = 0;
-    min = 0;
-    sec = 0;
+/*##########################################################################
+#
+#   Name       : TJsonString::SetBaseBoolean
+#
+#   Purpose....: Set boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonString::SetBaseBoolean(bool v)
+{
+    CodeBoolean(v);
+}
 
-    count = sscanf(FText.GetData(), "%04d-%02d-%02dT%02d:%02d:%02d", &year, &month, &day, &hour, &min, &sec);
+/*##########################################################################
+#
+#   Name       : TJsonString::SetBaseInt
+#
+#   Purpose....: Set int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonString::SetBaseInt(long long v)
+{
+    CodeInt(v);
+}
 
-    TDateTime time(year, month, day, hour, min, sec);
-    return time;
+/*##########################################################################
+#
+#   Name       : TJsonString::SetBaseDouble
+#
+#   Purpose....: Set double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonString::SetBaseDouble(double v, int decimals)
+{
+    CodeDouble(v, decimals);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonString::SetBaseDateTime
+#
+#   Purpose....: Set date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonString::SetBaseDateTime(TDateTime &v)
+{
+    CodeDateTime(v);
 }
 
 /*##########################################################################

@@ -68,6 +68,11 @@ public:
     double GetDouble();
     TDateTime GetDateTime();
 
+    void SetBoolean(bool val);
+    void SetInt(long long val);
+    void SetDouble(double val, int decimals);
+    void SetDateTime(TDateTime &val);
+
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
@@ -75,6 +80,21 @@ protected:
     virtual long long GetBaseInt();
     virtual double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
+
+    virtual void SetBaseBoolean(bool val);
+    virtual void SetBaseInt(long long val);
+    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDateTime(TDateTime &val);
+
+    void CodeBoolean(bool v);
+    void CodeInt(long long val);
+    void CodeDouble(double v, int decimals);
+    void CodeDateTime(TDateTime &time);
+
+    bool DecodeBoolean();
+    long long DecodeInt();
+    double DecodeDouble();
+    TDateTime DecodeDateTime();
 
     void NewLine(TJsonDocument *doc, TString &str);
     void AddIndent(TJsonDocument *doc, int indent, TString &str);
@@ -295,10 +315,17 @@ public:
     virtual ~TJsonDouble();
 
 protected:
+    void SetValue(double v, int decimals);
+
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
     virtual double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
+
+    virtual void SetBaseBoolean(bool val);
+    virtual void SetBaseInt(long long val);
+    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDateTime(TDateTime &val);
 
     double Val;
 };
@@ -310,10 +337,17 @@ public:
     virtual ~TJsonBoolean();
 
 protected:
+    void SetValue(bool val);
+
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
     virtual double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
+
+    virtual void SetBaseBoolean(bool val);
+    virtual void SetBaseInt(long long val);
+    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDateTime(TDateTime &val);
 
     bool Val;
 };
@@ -325,10 +359,17 @@ public:
     virtual ~TJsonInt();
 
 protected:
+    void SetValue(long long val);
+
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
     virtual double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
+
+    virtual void SetBaseBoolean(bool val);
+    virtual void SetBaseInt(long long val);
+    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDateTime(TDateTime &val);
 
     long long Val;
 };
@@ -346,6 +387,11 @@ protected:
     virtual long long GetBaseInt();
     virtual double GetBaseDouble();
     virtual TDateTime GetBaseDateTime();
+
+    virtual void SetBaseBoolean(bool val);
+    virtual void SetBaseInt(long long val);
+    virtual void SetBaseDouble(double val, int decimals);
+    virtual void SetBaseDateTime(TDateTime &val);
 };
 
 class TJsonDocument;
