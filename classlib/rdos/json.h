@@ -235,6 +235,11 @@ public:
     virtual TJsonObject *GetObj(const char *FieldName) = 0;
     virtual TJsonCollection *GetCollection(const char *FieldName) = 0;
 
+    bool RemoveObj(const char *FieldName);
+    bool RemoveCollection(const char *FieldName);
+    TJsonObject *DetachObj(const char *FieldName);
+    TJsonCollection *DetachCollection(const char *FieldName);
+
     bool GetBoolean(const char *FieldName, bool Default);
     long long GetInt(const char *FieldName, long long Default);
     double GetDouble(const char *FieldName, double Default);

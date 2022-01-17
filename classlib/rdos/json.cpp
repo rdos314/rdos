@@ -1868,6 +1868,110 @@ bool TJsonCollection::IsCollection()
 
 /*##########################################################################
 #
+#   Name       : TJsonCollection::RemoveObj
+#
+#   Purpose....: Remove object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonCollection::RemoveObj(const char *FieldName)
+{
+    bool ok = false;
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+    {
+        ok = Remove(obj);
+
+        if (ok)
+            delete obj;
+    }
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::RemoveCollection
+#
+#   Purpose....: Remove collection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonCollection::RemoveCollection(const char *FieldName)
+{
+    bool ok = false;
+    TJsonObject *obj = GetCollection(FieldName);
+
+    if (obj)
+    {
+        ok = Remove(obj);
+
+        if (ok)
+            delete obj;
+    }
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::DetachObj
+#
+#   Purpose....: Detach object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonCollection::DetachObj(const char *FieldName)
+{
+    bool ok = false;
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        ok = Remove(obj);
+
+    if (ok)
+        return obj;
+    else
+       return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::DetachCollection
+#
+#   Purpose....: Detach collection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollection *TJsonCollection::DetachCollection(const char *FieldName)
+{
+    bool ok = false;
+    TJsonCollection *coll = GetCollection(FieldName);
+
+    if (coll)
+        ok = Remove(coll);
+
+    if (ok)
+        return coll;
+    else
+       return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonCollection::GetBoolean
 #
 #   Purpose....: Get field as boolean
