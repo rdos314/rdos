@@ -667,6 +667,22 @@ void TJsonObject::SetDateTime(TDateTime &val)
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::SetString
+#
+#   Purpose....: Set string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetString(const char *Str)
+{
+    SetBaseString(Str);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::GetBaseBoolean
 #
 #   Purpose....: Get boolean
@@ -788,6 +804,22 @@ void TJsonObject::SetBaseDouble(double val, int decimals)
 ##########################################################################*/
 void TJsonObject::SetBaseDateTime(TDateTime &val)
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetBaseString
+#
+#   Purpose....: Set string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetBaseString(const char *Str)
+{
+    FText = Str;
 }
 
 /*##########################################################################
@@ -1912,6 +1944,111 @@ TString &TJsonCollection::GetText(const char *FieldName, TString &Default)
 
 /*##########################################################################
 #
+#   Name       : TJsonCollection::SetBoolean
+#
+#   Purpose....: Set field as boolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollection::SetBoolean(const char *FieldName, bool Val)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        obj->SetBoolean(Val);
+    else
+        AddBoolean(FieldName, Val);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::SetInt
+#
+#   Purpose....: Set field as int
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollection::SetInt(const char *FieldName, long long Val)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        obj->SetInt(Val);
+    else
+        AddInt(FieldName, Val);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::SetDouble
+#
+#   Purpose....: Set field as double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollection::SetDouble(const char *FieldName, double Val, int Decimals)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        obj->SetDouble(Val, Decimals);
+    else
+        AddDouble(FieldName, Val, Decimals);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::SetDateTime
+#
+#   Purpose....: Set field as date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollection::SetDateTime(const char *FieldName, TDateTime &Val, int UseText)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        obj->SetDateTime(Val);
+    else
+        AddDateTime(FieldName, Val, UseText);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::SetString
+#
+#   Purpose....: Set field as string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollection::SetString(const char *FieldName, const char *Str)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        obj->SetString(Str);
+    else
+        AddString(FieldName, Str);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonCollection::AddCollection
 #
 #   Purpose....: Add new collection
@@ -2910,6 +3047,23 @@ void TJsonInt::SetBaseDateTime(TDateTime &v)
 
 /*##########################################################################
 #
+#   Name       : TJsonInt::SetBaseString
+#
+#   Purpose....: Set string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonInt::SetBaseString(const char *Str)
+{
+    FText = Str;
+    Val = DecodeInt();
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDouble::TJsonDouble
 #
 #   Purpose....: Constructor for TJsonDouble
@@ -3129,6 +3283,23 @@ void TJsonDouble::SetBaseDateTime(TDateTime &v)
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::SetBaseString
+#
+#   Purpose....: Set string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetBaseString(const char *Str)
+{
+    FText = Str;
+    Val = DecodeDouble();
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonBoolean::TJsonBoolean
 #
 #   Purpose....: Constructor for TJsonBoolean
@@ -3318,6 +3489,23 @@ void TJsonBoolean::SetBaseDateTime(TDateTime &v)
         SetValue(true);
     else
         SetValue(false);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBoolean::SetBaseString
+#
+#   Purpose....: Set string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBoolean::SetBaseString(const char *Str)
+{
+    FText = Str;
+    Val = DecodeBoolean();
 }
 
 /*##########################################################################
