@@ -943,6 +943,22 @@ TJsonArrayObject::TJsonArrayObject(TString &FieldName)
 
 /*##########################################################################
 #
+#   Name       : TJsonArrayObject::TJsonArrayObject
+#
+#   Purpose....: Copy constructor for TJsonArrayObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonArrayObject::TJsonArrayObject(const TJsonArrayObject &src)
+ : TJsonObject(src)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonArrayObject::~TJsonArrayObject
 #
 #   Purpose....: Destructor for TJsonArrayObject
@@ -1073,6 +1089,39 @@ TJsonBooleanArray::TJsonBooleanArray(TString &FieldName)
 
 /*##########################################################################
 #
+#   Name       : TJsonBooleanArray::TJsonBooleanArray
+#
+#   Purpose....: Copy constructor for TJsonBooleanArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonBooleanArray::TJsonBooleanArray(const TJsonBooleanArray &src)
+ : TJsonArrayObject(src)
+{
+    int i;
+
+    if (src.FArrayCount)
+    {
+        FArraySize = src.FArrayCount;
+        FArrayCount = src.FArrayCount;
+        FArr = new bool[FArraySize];
+
+        for (i = 0; i < FArrayCount; i++)
+            FArr[i] = src.FArr[i];
+    }
+    else
+    {
+        FArraySize = 0;
+        FArrayCount = 0;
+        FArr = 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonBooleanArray::~TJsonBooleanArray
 #
 #   Purpose....: Destructor for TJsonBooleanArray
@@ -1086,6 +1135,23 @@ TJsonBooleanArray::~TJsonBooleanArray()
 {
     if (FArr)
         delete FArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonBooleanArray::CloneObj()
+{
+    TJsonObject *obj = new TJsonBooleanArray(*this);
+    return obj;
 }
 
 /*##########################################################################
@@ -1238,6 +1304,39 @@ TJsonIntArray::TJsonIntArray(TString &FieldName)
 
 /*##########################################################################
 #
+#   Name       : TJsonIntArray::TJsonIntArray
+#
+#   Purpose....: Copy constructor for TJsonIntArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonIntArray::TJsonIntArray(const TJsonIntArray &src)
+ : TJsonArrayObject(src)
+{
+    int i;
+
+    if (src.FArrayCount)
+    {
+        FArraySize = src.FArrayCount;
+        FArrayCount = src.FArrayCount;
+        FArr = new long long[FArraySize];
+
+        for (i = 0; i < FArrayCount; i++)
+            FArr[i] = src.FArr[i];
+    }
+    else
+    {
+        FArraySize = 0;
+        FArrayCount = 0;
+        FArr = 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonIntArray::~TJsonIntArray
 #
 #   Purpose....: Destructor for TJsonIntArray
@@ -1251,6 +1350,23 @@ TJsonIntArray::~TJsonIntArray()
 {
     if (FArr)
         delete FArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonIntArray::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonIntArray::CloneObj()
+{
+    TJsonObject *obj = new TJsonIntArray(*this);
+    return obj;
 }
 
 /*##########################################################################
@@ -1407,6 +1523,39 @@ TJsonDoubleArray::TJsonDoubleArray(TString &FieldName, int Decimals)
 
 /*##########################################################################
 #
+#   Name       : TJsonDoubleArray::TJsonDoubleArray
+#
+#   Purpose....: Copy constructor for TJsonDoubleArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDoubleArray::TJsonDoubleArray(const TJsonDoubleArray &src)
+ : TJsonArrayObject(src)
+{
+    int i;
+
+    if (src.FArrayCount)
+    {
+        FArraySize = src.FArrayCount;
+        FArrayCount = src.FArrayCount;
+        FArr = new double[FArraySize];
+
+        for (i = 0; i < FArrayCount; i++)
+            FArr[i] = src.FArr[i];
+    }
+    else
+    {
+        FArraySize = 0;
+        FArrayCount = 0;
+        FArr = 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDoubleArray::~TJsonDoubleArray
 #
 #   Purpose....: Destructor for TJsonDoubleArray
@@ -1420,6 +1569,23 @@ TJsonDoubleArray::~TJsonDoubleArray()
 {
     if (FArr)
         delete FArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonDoubleArray::CloneObj()
+{
+    TJsonObject *obj = new TJsonDoubleArray(*this);
+    return obj;
 }
 
 /*##########################################################################
@@ -1622,6 +1788,49 @@ TJsonStringArray::TJsonStringArray(TString &FieldName)
 
 /*##########################################################################
 #
+#   Name       : TJsonStringArray::TJsonStringArray
+#
+#   Purpose....: Copy constructor for TJsonStringArray
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonStringArray::TJsonStringArray(const TJsonStringArray &src)
+ : TJsonArrayObject(src)
+{
+    int i;
+    int len;
+
+    if (src.FArrayCount)
+    {
+        FArraySize = src.FArrayCount;
+        FArrayCount = src.FArrayCount;
+        FArr = new char *[FArraySize];
+
+        for (i = 0; i < FArrayCount; i++)
+        {
+            if (src.FArr[i])
+            {
+                len = strlen(src.FArr[i]);
+                 FArr[i] = new char[len + 1];
+                 strcpy(FArr[i], src.FArr[i]);
+            }
+            else
+                FArr[i] = 0;
+        }
+    }
+    else
+    {
+        FArraySize = 0;
+        FArrayCount = 0;
+        FArr = 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonStringArray::~TJsonStringArray
 #
 #   Purpose....: Destructor for TJsonStringArray
@@ -1643,6 +1852,23 @@ TJsonStringArray::~TJsonStringArray()
 
         delete FArr;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStringArray::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonStringArray::CloneObj()
+{
+    TJsonObject *obj = new TJsonStringArray(*this);
+    return obj;
 }
 
 /*##########################################################################

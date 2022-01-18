@@ -115,6 +115,7 @@ class TJsonArrayObject : public TJsonObject
 {
 public:
     TJsonArrayObject(TString &FieldName);
+    TJsonArrayObject(const TJsonArrayObject &src);
     virtual ~TJsonArrayObject();
 
     TJsonArrayObject *Clone();
@@ -131,6 +132,7 @@ class TJsonBooleanArray : public TJsonArrayObject
 {
 public:
     TJsonBooleanArray(TString &FieldName);
+    TJsonBooleanArray(const TJsonBooleanArray &src);
     virtual ~TJsonBooleanArray();
 
     virtual bool IsBooleanArray();
@@ -152,6 +154,7 @@ class TJsonIntArray : public TJsonArrayObject
 {
 public:
     TJsonIntArray(TString &FieldName);
+    TJsonIntArray(const TJsonIntArray &src);
     virtual ~TJsonIntArray();
 
     virtual bool IsIntArray();
@@ -173,6 +176,7 @@ class TJsonDoubleArray : public TJsonArrayObject
 {
 public:
     TJsonDoubleArray(TString &FieldName, int Decimals);
+    TJsonDoubleArray(const TJsonDoubleArray &src);
     virtual ~TJsonDoubleArray();
 
     virtual bool IsDoubleArray();
@@ -197,6 +201,7 @@ class TJsonStringArray : public TJsonArrayObject
 {
 public:
     TJsonStringArray(TString &FieldName);
+    TJsonStringArray(const TJsonStringArray &src);
     virtual ~TJsonStringArray();
 
     virtual bool IsStringArray();
