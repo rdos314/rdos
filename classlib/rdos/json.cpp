@@ -3493,6 +3493,23 @@ TJsonDouble::TJsonDouble(TString &FieldName, double v, int decimals)
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::TJsonDouble
+#
+#   Purpose....: Copy constructor for TJsonDouble
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDouble::TJsonDouble(const TJsonDouble &src)
+ : TJsonObject(src)
+{
+    Val = src.Val;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDouble::~TJsonDouble
 #
 #   Purpose....: Destructor for TJsonDouble
@@ -3504,6 +3521,23 @@ TJsonDouble::TJsonDouble(TString &FieldName, double v, int decimals)
 ##########################################################################*/
 TJsonDouble::~TJsonDouble()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDouble::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonDouble::CloneObj()
+{
+    TJsonObject *obj = new TJsonDouble(*this);
+    return obj;
 }
 
 /*##########################################################################
@@ -3727,6 +3761,23 @@ TJsonBoolean::TJsonBoolean(TString &FieldName, bool v)
 
 /*##########################################################################
 #
+#   Name       : TJsonBoolean::TJsonBoolean
+#
+#   Purpose....: Copy constructor for TJsonBoolean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonBoolean::TJsonBoolean(const TJsonBoolean &src)
+ : TJsonObject(src)
+{
+    Val = src.Val;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonBoolean::~TJsonBoolean
 #
 #   Purpose....: Destructor for TJsonBoolean
@@ -3738,6 +3789,23 @@ TJsonBoolean::TJsonBoolean(TString &FieldName, bool v)
 ##########################################################################*/
 TJsonBoolean::~TJsonBoolean()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBoolean::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonBoolean::CloneObj()
+{
+    TJsonObject *obj = new TJsonBoolean(*this);
+    return obj;
 }
 
 /*##########################################################################
@@ -3953,6 +4021,22 @@ TJsonString::TJsonString(TString &FieldName, TString &text)
 
 /*##########################################################################
 #
+#   Name       : TJsonString:TJsonString
+#
+#   Purpose....: Copy constructor for TJsonString
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonString::TJsonString(const TJsonString &src)
+ : TJsonObject(src)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonString::~TJsonString
 #
 #   Purpose....: Destructor for TJsonString
@@ -3964,6 +4048,23 @@ TJsonString::TJsonString(TString &FieldName, TString &text)
 ##########################################################################*/
 TJsonString::~TJsonString()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonString::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonString::CloneObj()
+{
+    TJsonObject *obj = new TJsonString(*this);
+    return obj;
 }
 
 /*##########################################################################

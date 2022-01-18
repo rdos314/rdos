@@ -354,6 +354,7 @@ class TJsonDouble : public TJsonObject
 public:
     TJsonDouble(TString &FieldName, double val, int decimals);
     TJsonDouble(TString &FieldName, double val, TString &data);
+    TJsonDouble(const TJsonDouble &src);
     virtual ~TJsonDouble();
 
     TJsonDouble *Clone();
@@ -380,6 +381,7 @@ class TJsonBoolean : public TJsonObject
 {
 public:
     TJsonBoolean(TString &FieldName, bool val);
+    TJsonBoolean(const TJsonBoolean &src);
     virtual ~TJsonBoolean();
 
     TJsonBoolean *Clone();
@@ -433,6 +435,7 @@ class TJsonString : public TJsonObject
 {
 public:
     TJsonString(TString &FieldName, TString &data);
+    TJsonString(const TJsonString &src);
     virtual ~TJsonString();
 
     TJsonString *Clone();
