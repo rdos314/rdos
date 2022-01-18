@@ -2080,7 +2080,7 @@ TJsonCollectionData::TJsonCollectionData(const TJsonCollectionData &src)
 
         for (i = 0; i < FObjArrayCount; i++)
             if (src.FObjArr[i])
-                FObjArr[i] = FObjArr[i]->Clone();
+                FObjArr[i] = src.FObjArr[i]->Clone();
             else
                 FObjArr[i] = 0;
     }
