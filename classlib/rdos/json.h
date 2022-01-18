@@ -55,6 +55,7 @@ class TJsonObject
 {
 public:
     TJsonObject(TString &FieldName);
+    TJsonObject(const TJsonObject &src);
     virtual ~TJsonObject();
 
     TString &GetFieldName();
@@ -64,6 +65,7 @@ public:
     virtual bool IsArrayObject();
 
     void Rename(const char *NewFieldName);
+    TJsonObject *Clone();
 
     bool GetBoolean();
     long long GetInt();
@@ -79,6 +81,8 @@ public:
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
+    virtual TJsonObject *CloneObj() = 0;
+
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
     virtual double GetBaseDouble();
@@ -113,6 +117,8 @@ public:
     TJsonArrayObject(TString &FieldName);
     virtual ~TJsonArrayObject();
 
+    TJsonArrayObject *Clone();
+
     virtual bool IsArrayObject();
 
     virtual bool IsBooleanArray();
@@ -129,9 +135,11 @@ public:
 
     virtual bool IsBooleanArray();
     void Add(bool val);
+    TJsonBooleanArray *Clone();
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
+    virtual TJsonObject *CloneObj();
     void Grow();
 
     int FArraySize;
@@ -148,9 +156,11 @@ public:
 
     virtual bool IsIntArray();
     void Add(long long val);
+    TJsonIntArray *Clone();
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
+    virtual TJsonObject *CloneObj();
     void Grow();
 
     int FArraySize;
@@ -168,9 +178,11 @@ public:
     virtual bool IsDoubleArray();
     void Add(double val);
     void AddNone();
+    TJsonDoubleArray *Clone();
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
+    virtual TJsonObject *CloneObj();
     void Grow();
 
     int FDecimals;
@@ -190,9 +202,11 @@ public:
     virtual bool IsStringArray();
     void Add(TString &str);
     void Add(const char *str);
+    TJsonStringArray *Clone();
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
+    virtual TJsonObject *CloneObj();
     void Grow();
 
     int FArraySize;
@@ -205,6 +219,7 @@ class TJsonCollectionData
 {
 public:
     TJsonCollectionData();
+    TJsonCollectionData(const TJsonCollectionData &src);
     ~TJsonCollectionData();
 
     void Grow();
@@ -225,6 +240,8 @@ class TJsonCollection : public TJsonObject
 public:
     TJsonCollection(TString &FieldName);
     virtual ~TJsonCollection();
+
+    TJsonCollection *Clone();
 
     virtual bool IsCollection();
     virtual bool IsArray() = 0;
@@ -278,6 +295,8 @@ public:
     TJsonSingleCollection(TString &FieldName);
     virtual ~TJsonSingleCollection();
 
+    TJsonSingleCollection *Clone();
+
     virtual bool IsArray();
     virtual void Insert(TJsonObject *obj);
     virtual bool Remove(TJsonObject *obj);
@@ -290,6 +309,7 @@ public:
     virtual TJsonCollection *GetCollection(const char *FieldName);
 
 protected:
+    virtual TJsonObject *CloneObj();
 
     TJsonCollectionData FData;
 };
@@ -299,6 +319,8 @@ class TJsonArrayCollection : public TJsonCollection
 public:
     TJsonArrayCollection(TString &FieldName);
     virtual ~TJsonArrayCollection();
+
+    TJsonArrayCollection *Clone();
 
     virtual bool IsArray();
     virtual void AddArray();
@@ -315,6 +337,7 @@ public:
     void SelectArray(int n);
 
 protected:
+    virtual TJsonObject *CloneObj();
     void Grow();
     void DoAdd();
 
@@ -333,8 +356,11 @@ public:
     TJsonDouble(TString &FieldName, double val, TString &data);
     virtual ~TJsonDouble();
 
+    TJsonDouble *Clone();
+
 protected:
     void SetValue(double v, int decimals);
+    virtual TJsonObject *CloneObj();
 
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
@@ -356,8 +382,11 @@ public:
     TJsonBoolean(TString &FieldName, bool val);
     virtual ~TJsonBoolean();
 
+    TJsonBoolean *Clone();
+
 protected:
     void SetValue(bool val);
+    virtual TJsonObject *CloneObj();
 
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
@@ -377,10 +406,14 @@ class TJsonInt : public TJsonObject
 {
 public:
     TJsonInt(TString &FieldName, long long val);
+    TJsonInt(const TJsonInt &src);
     virtual ~TJsonInt();
+
+    TJsonInt *Clone();
 
 protected:
     void SetValue(long long val);
+    virtual TJsonObject *CloneObj();
 
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
@@ -402,9 +435,12 @@ public:
     TJsonString(TString &FieldName, TString &data);
     virtual ~TJsonString();
 
+    TJsonString *Clone();
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
 
 protected:
+    virtual TJsonObject *CloneObj();
+
     virtual bool GetBaseBoolean();
     virtual long long GetBaseInt();
     virtual double GetBaseDouble();

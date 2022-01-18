@@ -245,6 +245,23 @@ TJsonObject::TJsonObject(TString &FieldName)
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::TJsonObject
+#
+#   Purpose....: Copy constructor for TJsonObject
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject::TJsonObject(const TJsonObject &src)
+ : FFieldName(src.FFieldName),
+   FText(src.FText)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::~TJsonObject
 #
 #   Purpose....: Destructor for TJsonObject
@@ -256,6 +273,22 @@ TJsonObject::TJsonObject(TString &FieldName)
 ##########################################################################*/
 TJsonObject::~TJsonObject()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonObject::Clone()
+{
+    return CloneObj();
 }
 
 /*##########################################################################
@@ -925,6 +958,22 @@ TJsonArrayObject::~TJsonArrayObject()
 
 /*##########################################################################
 #
+#   Name       : TJsonArrayObject::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonArrayObject *TJsonArrayObject::Clone()
+{
+    return (TJsonArrayObject *)CloneObj();
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonArrayObject::IsArrayObject
 #
 #   Purpose....: Is array object?
@@ -1037,6 +1086,22 @@ TJsonBooleanArray::~TJsonBooleanArray()
 {
     if (FArr)
         delete FArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonBooleanArray *TJsonBooleanArray::Clone()
+{
+    return (TJsonBooleanArray *)CloneObj();
 }
 
 /*##########################################################################
@@ -1190,6 +1255,22 @@ TJsonIntArray::~TJsonIntArray()
 
 /*##########################################################################
 #
+#   Name       : TJsonIntArray::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonIntArray *TJsonIntArray::Clone()
+{
+    return (TJsonIntArray *)CloneObj();
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonIntArray::IsIntArray
 #
 #   Purpose....: Is int array?
@@ -1339,6 +1420,22 @@ TJsonDoubleArray::~TJsonDoubleArray()
 {
     if (FArr)
         delete FArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDoubleArray *TJsonDoubleArray::Clone()
+{
+    return (TJsonDoubleArray *)CloneObj();
 }
 
 /*##########################################################################
@@ -1546,6 +1643,22 @@ TJsonStringArray::~TJsonStringArray()
 
         delete FArr;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStringArray::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonStringArray *TJsonStringArray::Clone()
+{
+    return (TJsonStringArray *)CloneObj();
 }
 
 /*##########################################################################
@@ -1867,6 +1980,22 @@ TJsonCollection::TJsonCollection(TString &FieldName)
 ##########################################################################*/
 TJsonCollection::~TJsonCollection()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollection *TJsonCollection::Clone()
+{
+    return (TJsonCollection *)CloneObj();
 }
 
 /*##########################################################################
@@ -2452,6 +2581,22 @@ TJsonSingleCollection::~TJsonSingleCollection()
 
 /*##########################################################################
 #
+#   Name       : TJsonSingleCollection::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonSingleCollection *TJsonSingleCollection::Clone()
+{
+    return (TJsonSingleCollection *)CloneObj();
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonSingleCollection::IsArray
 #
 #   Purpose....: Is array?
@@ -2692,6 +2837,21 @@ TJsonArrayCollection::~TJsonArrayCollection()
         delete FArray[i];
 
     delete FArray;
+}
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonArrayCollection *TJsonArrayCollection::Clone()
+{
+    return (TJsonArrayCollection *)CloneObj();
 }
 
 /*##########################################################################
@@ -3058,6 +3218,23 @@ TJsonInt::TJsonInt(TString &FieldName, long long v)
 
 /*##########################################################################
 #
+#   Name       : TJsonInt::TJsonInt
+#
+#   Purpose....: Copy constructor for TJsonInt
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonInt::TJsonInt(const TJsonInt &src)
+ : TJsonObject(src)
+{
+    Val = src.Val;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonInt::~TJsonInt
 #
 #   Purpose....: Destructor for TJsonInt
@@ -3069,6 +3246,39 @@ TJsonInt::TJsonInt(TString &FieldName, long long v)
 ##########################################################################*/
 TJsonInt::~TJsonInt()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonInt::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonInt::CloneObj()
+{
+    TJsonObject *obj = new TJsonInt(*this);
+    return obj;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonInt::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonInt *TJsonInt::Clone()
+{
+    return (TJsonInt *)CloneObj();
 }
 
 /*##########################################################################
@@ -3298,6 +3508,22 @@ TJsonDouble::~TJsonDouble()
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDouble *TJsonDouble::Clone()
+{
+    return (TJsonDouble *)CloneObj();
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDouble::SetValue
 #
 #   Purpose....: Set value
@@ -3516,6 +3742,22 @@ TJsonBoolean::~TJsonBoolean()
 
 /*##########################################################################
 #
+#   Name       : TJsonBoolean::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonBoolean *TJsonBoolean::Clone()
+{
+    return (TJsonBoolean *)CloneObj();
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonBoolean::SetValue
 #
 #   Purpose....: Set value
@@ -3722,6 +3964,22 @@ TJsonString::TJsonString(TString &FieldName, TString &text)
 ##########################################################################*/
 TJsonString::~TJsonString()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonString::Clone
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonString *TJsonString::Clone()
+{
+    return (TJsonString *)CloneObj();
 }
 
 /*##########################################################################
