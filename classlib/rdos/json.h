@@ -244,6 +244,7 @@ class TJsonCollection : public TJsonObject
 {
 public:
     TJsonCollection(TString &FieldName);
+    TJsonCollection(const TJsonCollection &src);
     virtual ~TJsonCollection();
 
     TJsonCollection *Clone();
@@ -298,6 +299,7 @@ class TJsonSingleCollection : public TJsonCollection
 {
 public:
     TJsonSingleCollection(TString &FieldName);
+    TJsonSingleCollection(const TJsonSingleCollection &src);
     virtual ~TJsonSingleCollection();
 
     TJsonSingleCollection *Clone();
@@ -323,6 +325,7 @@ class TJsonArrayCollection : public TJsonCollection
 {
 public:
     TJsonArrayCollection(TString &FieldName);
+    TJsonArrayCollection(const TJsonArrayCollection &src);
     virtual ~TJsonArrayCollection();
 
     TJsonArrayCollection *Clone();

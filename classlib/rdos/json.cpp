@@ -2059,6 +2059,41 @@ TJsonCollectionData::TJsonCollectionData()
 
 /*##########################################################################
 #
+#   Name       : TJsonCollectionData::TJsonCollectionData
+#
+#   Purpose....: Copy constructor for TJsonCollectionData
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollectionData::TJsonCollectionData(const TJsonCollectionData &src)
+{
+    int i;
+
+    if (src.FObjArrayCount)
+    {
+        FObjArraySize = src.FObjArrayCount;
+        FObjArrayCount = src.FObjArrayCount;
+        FObjArr = new TJsonObject *[FObjArraySize];
+
+        for (i = 0; i < FObjArrayCount; i++)
+            if (src.FObjArr[i])
+                FObjArr[i] = FObjArr[i]->Clone();
+            else
+                FObjArr[i] = 0;
+    }
+    else
+    {
+        FObjArraySize = 0;
+        FObjArrayCount = 0;
+        FObjArr = 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonCollectionData::~TJsonCollectionData
 #
 #   Purpose....: Destructor for TJsonCollectionData
@@ -2189,6 +2224,23 @@ bool TJsonCollectionData::Remove(TJsonObject *obj)
 ##########################################################################*/
 TJsonCollection::TJsonCollection(TString &FieldName)
  : TJsonObject(FieldName)
+{
+    FParent = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::TJsonCollection
+#
+#   Purpose....: Copy constructor for TJsonCollection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollection::TJsonCollection(const TJsonCollection &src)
+ : TJsonObject(src)
 {
     FParent = 0;
 }
@@ -2628,6 +2680,7 @@ TJsonIntArray *TJsonCollection::AddIntArray(const char *FieldName)
     TJsonIntArray *arr = new TJsonIntArray(fn);
     Insert(arr);
     return arr;
+
 }
 
 /*##########################################################################
@@ -2792,6 +2845,23 @@ TJsonSingleCollection::TJsonSingleCollection(TString &FieldName)
 
 /*##########################################################################
 #
+#   Name       : TJsonSingleCollection::TJsonSingleCollection
+#
+#   Purpose....: Copy constructor for TJsonSingleCollection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonSingleCollection::TJsonSingleCollection(const TJsonSingleCollection &src)
+ : TJsonCollection(src),
+   FData(src.FData)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonSingleCollection::~TJsonSingleCollection
 #
 #   Purpose....: Destructor for TJsonSingleCollection
@@ -2803,6 +2873,23 @@ TJsonSingleCollection::TJsonSingleCollection(TString &FieldName)
 ##########################################################################*/
 TJsonSingleCollection::~TJsonSingleCollection()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonSingleCollection::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonSingleCollection::CloneObj()
+{
+    TJsonObject *obj = new TJsonSingleCollection(*this);
+    return obj;
 }
 
 /*##########################################################################
@@ -3046,6 +3133,44 @@ TJsonArrayCollection::TJsonArrayCollection(TString &FieldName)
 
 /*##########################################################################
 #
+#   Name       : TJsonArrayCollection::TJsonArrayCollection
+#
+#   Purpose....: Copy constructor for TJsonArrayCollection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonArrayCollection::TJsonArrayCollection(const TJsonArrayCollection &src)
+ : TJsonCollection(src)
+{
+    int i;
+
+    FReqAdd = false;
+    FCurrInd = 0;
+
+    FArrayCount = src.FArrayCount;
+    FArraySize = src.FArrayCount;
+
+    if (FArrayCount)
+    {
+        FArray = new TJsonCollectionData *[FArrayCount];
+
+        for (i = 0; i < FArrayCount; i++)
+        {
+            if (src.FArray[i])
+                FArray[i] = new TJsonCollectionData(*src.FArray[i]);
+            else
+                FArray[i] = 0;
+        }
+    }
+    else
+        FArray = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonArrayCollection::~TJsonArrayCollection
 #
 #   Purpose....: Destructor for TJsonArrayCollection
@@ -3064,6 +3189,24 @@ TJsonArrayCollection::~TJsonArrayCollection()
 
     delete FArray;
 }
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::CloneObj
+#
+#   Purpose....: Clone object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonArrayCollection::CloneObj()
+{
+    TJsonObject *obj = new TJsonArrayCollection(*this);
+    return obj;
+}
+
 /*##########################################################################
 #
 #   Name       : TJsonArrayCollection::Clone
