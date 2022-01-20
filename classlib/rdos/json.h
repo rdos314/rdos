@@ -269,6 +269,7 @@ public:
     long long GetInt(const char *FieldName, long long Default);
     double GetDouble(const char *FieldName, double Default);
     TDateTime GetDateTime(const char *FieldName, TDateTime &Default);
+    TString &GetText(const char *FieldName, const char *Default);
     TString &GetText(const char *FieldName, TString &Default);
 
     TJsonSingleCollection *AddCollection(const char *FieldName);
@@ -293,6 +294,7 @@ public:
     TJsonCollection *FParent;
 
 protected:
+    TString FTempStr;
 };
 
 class TJsonSingleCollection : public TJsonCollection

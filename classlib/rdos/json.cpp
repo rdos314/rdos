@@ -2491,6 +2491,30 @@ TDateTime TJsonCollection::GetDateTime(const char *FieldName, TDateTime &Default
 #   Returns....: *
 #
 ##########################################################################*/
+TString &TJsonCollection::GetText(const char *FieldName, const char *Default)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        return obj->GetText();
+    else
+    {
+        FTempStr = Default;
+        return FTempStr;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::GetText
+#
+#   Purpose....: Get field as text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 TString &TJsonCollection::GetText(const char *FieldName, TString &Default)
 {
     TJsonObject *obj = GetObj(FieldName);
