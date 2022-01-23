@@ -164,6 +164,7 @@ void ConvL28();
 void ConvL29();
 void ConvL30();
 void ConvL31();
+void ConvL32();
 
 void ConvM1();
 
@@ -726,11 +727,12 @@ int main(int argc, char **argv)
     ConvL25();
     ConvL27();
     ConvL28();
-
-*/
     ConvL29();
     ConvL30();
+
+*/
     ConvL31();
+    ConvL32();
 
     return 0;
 }
