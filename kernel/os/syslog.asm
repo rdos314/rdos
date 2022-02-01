@@ -200,7 +200,9 @@ gmLoop:
     add si,4
     loop gmLoop
 ;    
-    xor dx,dx
+    xor ax,ax
+    pop cx
+    jmp gmDone
 
 gmFound:
     pop cx
@@ -430,6 +432,60 @@ syslog_receive  Proc far
     mov si,ax
 ;
     call GetMonth
+    or al,al
+    jnz syslog_text_date
+;
+    call GetInt
+    mov al,es:[edi]
+    cmp al,'-'
+    jne syslog_done
+;
+    sub cx,1
+    jbe syslog_done
+;
+    inc edi
+    call GetInt
+    mov al,es:[edi]
+    cmp al,'-'
+    jne syslog_done
+;
+    sub cx,1
+    jbe syslog_done
+;
+    inc edi
+    call GetInt
+    mov al,es:[edi]
+    cmp al,'T'
+    jne syslog_done
+;
+    sub cx,1
+    jbe syslog_done
+;
+    inc edi
+    call GetInt
+    mov al,es:[edi]
+    cmp al,':'
+    jne syslog_done
+;
+    sub cx,1
+    jbe syslog_done
+;
+    inc edi
+    call GetInt
+    mov al,es:[edi]
+    cmp al,':'
+    jne syslog_done
+;
+    sub cx,1
+    jbe syslog_done
+;
+    inc edi
+    call GetInt
+;
+    GetTime
+    jmp syslog_msg_loop
+
+syslog_text_date:
     mov dh,al
     call GetInt
     mov dl,al
@@ -458,19 +514,7 @@ syslog_receive  Proc far
     call GetInt
     mov ah,al
 ;
-;    push cx
-;    push ax
-;    push bx
-;    push dx
-;
     GetTime
-;    BinaryToTime
-;
-;    pop cx
-;    pop bx
-;    pop ax
-;    TimeToBinary 
-;    pop cx
 
 syslog_msg_loop:
     or cx,cx
