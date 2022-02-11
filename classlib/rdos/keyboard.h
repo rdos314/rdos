@@ -151,6 +151,8 @@
 #define VK_LMENU          0xA4
 #define VK_RMENU          0xA5
 
+#define VK_EXT            0xB0
+
 #define	KEY_YES		VK_Y
 #define KEY_NO		VK_N
 #define KEY_PRINT	VK_PRINT

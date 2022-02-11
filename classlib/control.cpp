@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <stdio.h>
+#include <string.h>
 
 #include "rdos.h"
 
@@ -40,6 +41,79 @@
 
 static int CurrId = 0;
 static TSection IdSection("Control ID");
+
+/*##########################################################################
+#
+#   Name       : DecodeKey
+#
+#   Purpose....: Decode key-string to VK-key
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char DecodeKey(const char *key)
+{
+    if (strlen(key) == 1)
+        return key[0];
+
+    if (!strcmp(key, "BACK"))
+        return VK_BACK;    
+
+    if (!strcmp(key, "TAB"))
+        return VK_TAB;    
+
+    if (!strcmp(key, "CLEAR"))
+        return VK_CLEAR;    
+
+    if (!strcmp(key, "RETURN"))
+        return VK_RETURN;    
+
+    if (!strcmp(key, "ESC"))
+        return VK_ESCAPE;    
+
+    if (!strcmp(key, "ESCAPE"))
+        return VK_ESCAPE;    
+
+    if (!strcmp(key, "SPACE"))
+        return VK_SPACE;    
+
+    if (!strcmp(key, "PRIOR"))
+        return VK_PRIOR;    
+
+    if (!strcmp(key, "NEXT"))
+        return VK_NEXT;    
+
+    if (!strcmp(key, "END"))
+        return VK_END;    
+
+    if (!strcmp(key, "HOME"))
+        return VK_HOME;    
+
+    if (!strcmp(key, "LEFT"))
+        return VK_LEFT;    
+
+    if (!strcmp(key, "UP"))
+        return VK_UP;    
+
+    if (!strcmp(key, "RIGHT"))
+        return VK_RIGHT;    
+
+    if (!strcmp(key, "DOWN"))
+        return VK_DOWN;    
+
+    if (!strcmp(key, "INSERT"))
+        return VK_INSERT;    
+
+    if (!strcmp(key, "DELETE"))
+        return VK_DELETE;    
+
+    if (key[0] == 'E')
+        return VK_EXT + atoi(key + 1);
+
+    return 0;        
+}
 
 /*##########################################################################
 #
