@@ -314,7 +314,11 @@ int TKeyboardDevice::Peek()
 ##########################################################################*/
 void TKeyboardDevice::Put(int ch)
 {
-        RdosPutKeyboard(ch, ch, 0);
+    int keycode = ch << 8;
+
+    keycode = keycode & 0xFF00;
+
+    RdosPutKeyboard(keycode, ch, ch);
 }
 
 /*##########################################################################
