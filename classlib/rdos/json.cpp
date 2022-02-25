@@ -5478,6 +5478,9 @@ int TJsonStackEntry::HandleObjectFieldStart(TJsonDocument *doc)
     switch (*FDataPtr)
     {
         case '}':
+            if (!doc->IsArrayData())
+                doc->EndNesting();
+
             FSavedState = json_tokener_state_finish;
             FState = json_tokener_state_eatws;
             break;
