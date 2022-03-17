@@ -1340,10 +1340,12 @@ receive_net_add_ok:
 
 receive_dhcp_done:
     mov eax,es:[di].ip_dest
-    cmp eax,ds:my_ip
+    rol eax,8
+    cmp al,-1
     je receive_this_node
 ;
-    cmp eax,-1
+    ror eax,8
+    cmp eax,ds:my_ip
     je receive_this_node
 ;
     cmp al,127
@@ -1396,7 +1398,7 @@ receive_forward_fail:
     pop gs
     pop es
     jmp receive_done
-    
+
 receive_this_node:
     mov es:[0],bp
     mov cx,ds:protocol_count
