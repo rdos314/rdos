@@ -53,6 +53,7 @@ protected:
     bool FInitDone;
     bool FWasEmpty;
     bool FTimeError;
+    TDateTime FLastTime;
     bool FAdjustTime;
     int FMaxMonths;
 };
@@ -71,6 +72,7 @@ public:
     TRdosLogThread *GetLogger();
     bool WasLogEmpty();
     bool HasTimeError();
+    TDateTime GetLastTime();
 
 protected:
     virtual void Add(int level, TString &str);

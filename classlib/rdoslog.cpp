@@ -354,7 +354,6 @@ void TRdosLogThread::InitFiles()
     TDirEntry entry;
     TString basename;
     TPathName path;
-    TDateTime lasttime;
     TDateTime currtime;
     char *file;
     char *ptr;
@@ -389,7 +388,7 @@ void TRdosLogThread::InitFiles()
             if (index > FCurrId)
             {
                 FCurrId = index;
-                lasttime = entry.GetTime();
+                FLastTime = entry.GetTime();
             }
         }
         else
@@ -408,18 +407,18 @@ void TRdosLogThread::InitFiles()
             FTimeError = false;
         else
         {
-            if (currtime < lasttime)
+            if (currtime < FLastTime)
             {
                 FTimeError = true;
-                lasttime.Set();
+                FLastTime.Set();
             }
             else
             {
                 currtime.AddMonth(-FMaxMonths);
-                if (currtime > lasttime)
+                if (currtime > FLastTime)
                 {
                     FTimeError = true;
-                    lasttime.Set();
+                    FLastTime.Set();
                 }
                 else
                     FTimeError = false;
@@ -688,6 +687,25 @@ bool TRdosLog::HasTimeError()
         RdosWaitMilli(50);
 
     return FDev->FTimeError;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosLog::GetLastTime
+#
+#   Purpose....: Get last time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TRdosLog::GetLastTime()
+{
+    while (!FDev->FInitDone)
+        RdosWaitMilli(50);
+
+    return FDev->FLastTime;
 }
 
 /*##########################################################################
