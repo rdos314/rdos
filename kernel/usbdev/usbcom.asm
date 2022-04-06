@@ -37,7 +37,7 @@ include ..\os\com.inc
 
 MAX_PORTS       = 16
 MAX_DEVICES     = 32
-MAX_COM_UNITS   = 2
+MAX_COM_UNITS   = 4
 
 FLAG_UDS_DISCONNECT = 2
 FLAG_UDS_REINIT = 4
@@ -68,6 +68,7 @@ DEVICE_TYPE_SIO = DEVICE_TYPE_FTDI + 1
 DEVICE_TYPE_FT232AM = DEVICE_TYPE_FTDI + 2
 DEVICE_TYPE_FT232BM = DEVICE_TYPE_FTDI + 3
 DEVICE_TYPE_FT2232C = DEVICE_TYPE_FTDI + 4
+DEVICE_TYPE_FT4232H = DEVICE_TYPE_FTDI + 5
 
 DEVICE_TYPE_PL_01 = DEVICE_TYPE_PL2303 + 1
 DEVICE_TYPE_PL_HX = DEVICE_TYPE_PL2303 + 2
@@ -3668,6 +3669,7 @@ ftAA    DW 5050h,       00400h  ; PAPOUCH
 ftAB    DW 0403h,       0DD20h  ; ACG_HFDUAL
 ftAC    DW 0856h,       0AC27h  ; 232USB9M
 ftAD    DW 0403h,       06015h  ; Vera
+ftAE    DW 0403h,       06011h  ; FT4232H
 
 IsFTDI  Proc near
     push cx
@@ -3678,7 +3680,7 @@ IsFTDI  Proc near
     mov si,es:udd_vendor
     mov di,es:udd_prod
 
-    mov cx,0AEh
+    mov cx,0AFh
     mov bp,OFFSET ftTab
 
 iftLoop:
@@ -3773,7 +3775,16 @@ aftNotAm:
     jmp aftDone
 
 aftMore:
+    cmp cl,2
+    ja aft4
+;
     mov dx,DEVICE_TYPE_FT2232C 
+    call AddUnit
+    jmp aftDescrNext
+
+aft4:
+    jmp aftDone
+    mov dx,DEVICE_TYPE_FT4232H 
     call AddUnit
 
 aftDescrNext:
