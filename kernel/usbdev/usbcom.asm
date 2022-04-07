@@ -503,7 +503,6 @@ get_am_done:
     ret
 Get232AmDivisor Endp
      
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -564,8 +563,60 @@ get_bm_not4001:
     pop eax    
     ret
 Get232BmDivisor Endp
-    
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Get232HDivisor
+;
+;           description:    Get baud-rate divisor, 232H type
+;
+;           PARAMETERS:         DS      Port selector
+;                           ECX         baudrate
+;
+;       RETURNS:    ECX     Divisor to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+Get232HDivisor Proc near
+    push eax
+    push bx
+    push edx
+;    
+    xor edx,edx
+    mov eax,8 * 120000000 / 10
+    div ecx
+    mov ecx,eax
+    shr ecx,3
+;
+    movzx bx,cl
+    and bl,7
+    movzx eax,byte ptr cs:[bx].fractab
+    shl eax,14
+    or ecx,eax
+;
+    cmp ecx,1
+    jne get_hm_not1
+;
+    xor ecx,ecx
+
+get_hm_not1:
+    cmp ecx,4001h
+    jne get_hm_not4001
+;
+    mov ecx,1
+
+get_hm_not4001:        
+    or ecx,20000h
+    clc
+;    
+    pop edx
+    pop bx
+    pop eax    
+    ret
+Get232HDivisor Endp
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -586,6 +637,7 @@ gbd01   DW OFFSET GetSioDivisor
 gbd02   DW OFFSET Get232AmDivisor
 gbd03   DW OFFSET Get232BmDivisor
 gbd04   DW OFFSET Get232BmDivisor
+gbd05   DW OFFSET Get232HDivisor
 gbdend  DW OFFSET GetDivisorError
 
 GetBaudDivisor  Proc near
@@ -690,8 +742,14 @@ set_baud    PROC near
 ;
     mov si,word ptr ds:ups_divisor+2   
     cmp ds:ups_device_type,DEVICE_TYPE_FT2232C
-    jne set_baud_index_ok
+    je set_baud_index_shift
 ;
+    cmp ds:ups_device_type,DEVICE_TYPE_FT4232H
+    je set_baud_index_shift
+;
+    jmp set_baud_index_ok
+
+set_baud_index_shift:
     shl si,8
     mov di,ds:ups_index
     inc di
@@ -3783,7 +3841,6 @@ aftMore:
     jmp aftDescrNext
 
 aft4:
-    jmp aftDone
     mov dx,DEVICE_TYPE_FT4232H 
     call AddUnit
 
