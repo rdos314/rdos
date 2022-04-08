@@ -1112,7 +1112,7 @@ open_usb_dev_sel    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-is_usb_dev_connected_name  DB 'Reset USB Device Connected',0
+is_usb_dev_connected_name  DB 'Is USB Device Connected',0
 
 is_usb_dev_connected     Proc far
     push ds
@@ -1653,7 +1653,7 @@ OpenRaw  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_usb_packet_pipe_name DB 'Configure Usb Packet Pipe', 0
+open_usb_packet_pipe_name DB 'Open Usb Packet Pipe', 0
 
 open_usb_packet_pipe    Proc far
     push ds
@@ -2517,6 +2517,7 @@ start_wait_for_pipe Endp
 
 stop_wait_for_pipe      PROC far
     push ds
+    push es
     push fs
     push gs
     pushad
@@ -2569,6 +2570,7 @@ swfpLeave:
     popad
     pop gs
     pop fs
+    pop es
     pop ds
     retf32
 stop_wait_for_pipe Endp
@@ -2586,6 +2588,7 @@ stop_wait_for_pipe Endp
 
 clear_wait_for_pipe     PROC far
     push ds
+    push es
     push fs
     push gs
     pushad
@@ -2638,6 +2641,7 @@ cwfpLeave:
     popad
     pop gs
     pop fs
+    pop es
     pop ds
     retf32
 clear_wait_for_pipe Endp

@@ -75,7 +75,10 @@ int main(int argc, char **argv)
                     ch = (char)ExtKey;
 
                     if (ch == 0x1b)
+                    {
+                        delete Serial;
                         return 0;
+                    }
                     else
                         Serial->Write(ch);
                 }
