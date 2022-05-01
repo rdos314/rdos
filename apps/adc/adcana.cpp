@@ -149,11 +149,15 @@ TAdcAna::TAdcAna(int c, int step, TFreq *f)
     Delay = new struct TDelay[FreqCount];
 
     OptFreqStep = step;
-    OptFreqCount = FreqCount / step;
-    OptFreqArr = new TAdcFreqAna *[OptFreqCount];
 
-    for (i = 0; i < OptFreqCount; i++)
-        OptFreqArr[i] = new TAdcFreqAna(Size);
+    if (step)
+    {
+        OptFreqCount = FreqCount / step;
+        OptFreqArr = new TAdcFreqAna *[OptFreqCount];
+
+        for (i = 0; i < OptFreqCount; i++)
+            OptFreqArr[i] = new TAdcFreqAna(Size);
+    }
 
     Clear();
 }
@@ -183,10 +187,13 @@ TAdcAna::~TAdcAna()
     delete MaxB;
     delete Delay;
 
-    for (i = 0; i < OptFreqCount; i++)
-        delete OptFreqArr[i];
+    if (OptFreqStep)
+    {
+        for (i = 0; i < OptFreqCount; i++)
+            delete OptFreqArr[i];
 
-    delete OptFreqArr;
+        delete OptFreqArr;
+    }
 }
 
 /*##########################################################################
@@ -299,8 +306,9 @@ void TAdcAna::Add(TAdcThread *adc)
             Delay[i].Phase[j] += adc->Delay[i].Phase[j];
     }
 
-    for (i = 0; i < OptFreqCount; i++)
-        OptFreqArr[i]->Add(Pos, adc->OptFreqVal[i], adc->OptFreqMax[i], adc->OptFreqPos[i]);
+    if (OptFreqStep)
+        for (i = 0; i < OptFreqCount; i++)
+            OptFreqArr[i]->Add(Pos, adc->OptFreqVal[i], adc->OptFreqMax[i], adc->OptFreqPos[i]);
 
     Pos++;
 

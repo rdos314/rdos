@@ -1603,22 +1603,25 @@ void TAdc::PrintFreq(int Index)
     char fstr[40];
     char str[100];
 
-    for (i = 0; i < Intervals; i++)
+    if (OptStep)
     {
-        ana = AdcAna[i];
-
-        for (j = 0; j < ana->Size; j++)
+        for (i = 0; i < Intervals; i++)
         {
-            fana = ana->OptFreqArr[Index];
-            freq = fana->Freq[j];
-            val = fana->MaxVal[j];
+            ana = AdcAna[i];
 
-            if (val)
+            for (j = 0; j < ana->Size; j++)
             {
-                pow = sqrt(val);
-                count++;
-                sprintf(str, "%6.4Lf: %5.1Lf  ", freq, pow);
-                Write(str);
+                fana = ana->OptFreqArr[Index];
+                freq = fana->Freq[j];
+                val = fana->MaxVal[j];
+
+                if (val)
+                {
+                    pow = sqrt(val);
+                    count++;
+                    sprintf(str, "%6.4Lf: %5.1Lf  ", freq, pow);
+                    Write(str);
+                }
             }
         }
     }
@@ -1689,11 +1692,14 @@ void TAdc::PrintResult()
             }
         }
 
-        opt++;
-        if (opt == OptStep)
+        if (OptStep)
         {
-            PrintFreq((i - 1) / OptStep);
-            opt = 0;
+            opt++;
+            if (opt == OptStep)
+            {
+                PrintFreq((i - 1) / OptStep);
+                opt = 0;
+            }
         }
     }
 }

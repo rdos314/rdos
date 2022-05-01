@@ -65,13 +65,17 @@ TAdcThread::TAdcThread(int Id, TAdc *adc)
     Delay = new struct TDelay[FreqCount];
 
     OptFreqStep = Adc->OptStep;
-    OptFreqCount = FreqCount / OptFreqStep;
-    OptFreqVal = new double[OptFreqCount];
-    OptFreqMax = new int[OptFreqCount];
-    OptFreqPos = new int[OptFreqCount];
 
-    OptFreqArr = new double[0x80000];
-    OptAmpArr = new int[0x80000];
+    if (OptFreqStep)
+    {
+        OptFreqCount = FreqCount / OptFreqStep;
+        OptFreqVal = new double[OptFreqCount];
+        OptFreqMax = new int[OptFreqCount];
+        OptFreqPos = new int[OptFreqCount];
+
+        OptFreqArr = new double[0x80000];
+        OptAmpArr = new int[0x80000];
+    }
 
     AdcData = 0;
     AdcAna = 0;
@@ -113,12 +117,15 @@ TAdcThread::~TAdcThread()
     delete MaxB;
     delete Delay;
 
-    delete OptFreqVal;
-    delete OptFreqMax;
-    delete OptFreqPos;
+    if (OptFreqStep)
+    {
+        delete OptFreqVal;
+        delete OptFreqMax;
+        delete OptFreqPos;
 
-    delete OptFreqArr;
-    delete OptAmpArr;
+        delete OptFreqArr;
+        delete OptAmpArr;
+    }
 }
 
 /*##########################################################################
@@ -152,11 +159,14 @@ void TAdcThread::Clear()
             Delay[j].Phase[k] = 0;
     }
 
-    for (j = 0; j < OptFreqCount; j++)
+    if (OptFreqStep)
     {
-        OptFreqVal[j] = 0.0;
-        OptFreqMax[j] = 0;
-        OptFreqPos[j] = 0;
+        for (j = 0; j < OptFreqCount; j++)
+        {
+            OptFreqVal[j] = 0.0;
+            OptFreqMax[j] = 0;
+            OptFreqPos[j] = 0;
+        }
     }
 }
 
@@ -820,10 +830,13 @@ void TAdcThread::Execute()
         {
             Clear();
 
-            OptCount = 0;
-            OptCurrFreq = OptFreqVal;
-            OptMax = OptFreqMax;
-            OptPos = OptFreqPos;
+            if (OptFreqStep)
+            {
+                OptCount = 0;
+                OptCurrFreq = OptFreqVal;
+                OptMax = OptFreqMax;
+                OptPos = OptFreqPos;
+            }
 
             for (j = 0; j < FreqCount; j++)
             {
@@ -861,14 +874,17 @@ void TAdcThread::Execute()
                             SumB[j] += PowerB;
                             Delay[j].Phase[Phase]++;
 
-                            if (k >= start && k <= stop)
+                            if (OptFreqStep)
                             {
-                                Power = PowerA * PowerA + PowerB * PowerB;
-                                if (*OptMax < Power)
+                                if (k >= start && k <= stop)
                                 {
-                                    OptIndex = j;
-                                    *OptMax = Power;
-                                    *OptPos = fp.Pos;
+                                    Power = PowerA * PowerA + PowerB * PowerB;
+                                    if (*OptMax < Power)
+                                    {
+                                        OptIndex = j;
+                                        *OptMax = Power;
+                                        *OptPos = fp.Pos;
+                                    }
                                 }
                             }
                         }
@@ -877,51 +893,54 @@ void TAdcThread::Execute()
                     }
                 }
 
-                OptCount++;
-
-                if (OptCount == OptFreqStep)
+                if (OptFreqStep)
                 {
-                    if (*OptMax)
+                    OptCount++;
+
+                    if (OptCount == OptFreqStep)
                     {
-                        pos = *OptPos;
-
-                        fd = Freq->FreqData[OptIndex];
-                        TFreqData fdo(*fd);
-                        freq = Freq->GetFreq(OptIndex);
-                        freq = OptFreq(&fdo, freq - Freq->GetStep(), freq + Freq->GetStep(), pos);
-                        fdo.Update(freq);
-                        OptPosPhase(&fdo, &amp, &pos, &phA, &phB);
-
-                        *OptCurrFreq = freq;
-                        *OptMax = amp;
-                        *OptPos = pos;
-
-                        OptFreqArr[pos] = freq;
-                        OptAmpArr[pos] = amp;
-                        OptStartPos = pos;
-                        OptStopPos = pos;
-
-                        freq = *OptCurrFreq;
-
-                        while (pos > 0)
+                        if (*OptMax)
                         {
-                            pos--;
-                            freq = UpdateFreq(&fdo, freq, pos);
+                            pos = *OptPos;
 
-                            if (freq > 0.0)
+                            fd = Freq->FreqData[OptIndex];
+                            TFreqData fdo(*fd);
+                            freq = Freq->GetFreq(OptIndex);
+                            freq = OptFreq(&fdo, freq - Freq->GetStep(), freq + Freq->GetStep(), pos);
+                            fdo.Update(freq);
+                            OptPosPhase(&fdo, &amp, &pos, &phA, &phB);
+
+                            *OptCurrFreq = freq;
+                            *OptMax = amp;
+                            *OptPos = pos;
+
+                            OptFreqArr[pos] = freq;
+                            OptAmpArr[pos] = amp;
+                            OptStartPos = pos;
+                            OptStopPos = pos;
+
+                            freq = *OptCurrFreq;
+
+                            while (pos > 0)
                             {
-                                OptFreqArr[pos] = freq;
-                                OptStartPos = pos;
-                            }
-                            else
-                                break;
-                        }
-                    }
+                                pos--;
+                                freq = UpdateFreq(&fdo, freq, pos);
 
-                    OptCount = 0;
-                    OptCurrFreq++;
-                    OptMax++;
-                    OptPos++;
+                                if (freq > 0.0)
+                                {
+                                    OptFreqArr[pos] = freq;
+                                    OptStartPos = pos;
+                                }
+                                else
+                                    break;
+                            }
+                        }
+
+                        OptCount = 0;
+                        OptCurrFreq++;
+                        OptMax++;
+                        OptPos++;
+                    }
                 }
             }
             AdcAna->Add(this);
