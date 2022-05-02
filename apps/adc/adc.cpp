@@ -35,6 +35,8 @@
 #include "adcana.h"
 #include "adc.h"
 
+#define ANTENNA_DISTANCE  210 // centimeters
+
 struct TAdcFreqPower
 {
     long long SinA;
@@ -856,6 +858,54 @@ void TAdc::Write(const char *str)
 
 /*##########################################################################
 #
+#   Name       : TAdc::PrintDirections
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::PrintDirections(int index, struct TDelay *d)
+{
+    double f;
+    int vl;
+    int DirArr[MAX_DIR];
+    int Count;
+    int mean;
+    int sd;
+    int i;
+    char str[100];
+
+    f = Freq->GetFreq(index);
+    vl = (int)(30.0 * 1000.0 / f) ;
+
+    CalcMeanSd(d, &mean, &sd);
+
+    Count = CalcDirections(DirArr, vl, mean, sd, ANTENNA_DISTANCE);
+
+    strcpy(str, "{");
+    Write(str);
+
+    for (i = 0; i < Count; i++)
+    {
+        if (!i)
+        {
+            strcpy(str, " ");
+            Write(str);
+        }
+
+        sprintf(str, "%d", DirArr[i]);
+        Write(str);
+    }
+
+    strcpy(str, "} ");
+    Write(str);
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::PrintDelay
 #
 #   Purpose....:
@@ -1213,6 +1263,11 @@ void TAdc::PrintDelaySumary(int Index)
     Write(str);
 
     PrintDelay(&Delay, true);
+
+    sprintf(str, "Direction: ");
+    Write(str);
+
+    PrintDirections(Index, &Delay);
 }
 
 /*##########################################################################
@@ -1566,6 +1621,40 @@ bool TAdc::PrintDelayDetail(int Index)
                     sprintf(str, "%d:", i);
                     Write(str);
                     PrintDelay(&ana->Delay[Index], false);
+                }
+            }
+        }
+
+        sprintf(str, "\r\n");
+        Write(str);
+
+        sprintf(str, "Direction: ");
+        Write(str);
+
+        if (count > 10)
+        {
+            for (i = 0; i < Intervals; i++)
+            {
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                    PrintDirections(Index, &ana->Delay[Index]);
+                else
+                {
+                    strcpy(str, "* ");
+                    Write(str);
+                }
+            }
+        }
+        else
+        {
+            for (i = 0; i < Intervals; i++)
+            {
+                ana = AdcAna[i];
+                if (ana->Count[Index])
+                {
+                    sprintf(str, "%d:", i);
+                    Write(str);
+                    PrintDirections(Index, &ana->Delay[Index]);
                 }
             }
         }

@@ -81,6 +81,7 @@ protected:
     void Write(const char *str);
 
     void PrintDelay(struct TDelay *delay, bool header);
+    void PrintDirections(int index, struct TDelay *d);
 
     void PrintCountSumary(int Index);
     void PrintASumary(int Index);
