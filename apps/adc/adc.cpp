@@ -788,17 +788,11 @@ int TAdc::CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int
     while (Count < MAX_DIR)
     {
         if (Pos <= -Distance)
-        {
-            DirArr[Count] = 270;
-            Count++;
-        }
+            break;
         else
         {
             if (Pos >= Distance)
-            {
-                DirArr[Count] = 90;
-                Count++;
-            }
+                break;
             else
             {
                 Dir = (double)Pos / (double)Distance;
@@ -885,23 +879,31 @@ void TAdc::PrintDirections(int index, struct TDelay *d)
 
     Count = CalcDirections(DirArr, vl, mean, sd, ANTENNA_DISTANCE);
 
-    strcpy(str, "{");
-    Write(str);
-
-    for (i = 0; i < Count; i++)
+    if (Count)
     {
-        if (!i)
+        strcpy(str, " {");
+        Write(str);
+
+        for (i = 0; i < Count; i++)
         {
-            strcpy(str, " ");
+            if (i)
+            {
+                strcpy(str, " ");
+                Write(str);
+            }
+
+            sprintf(str, "%d", DirArr[i]);
             Write(str);
         }
 
-        sprintf(str, "%d", DirArr[i]);
+        strcpy(str, "}");
         Write(str);
     }
-
-    strcpy(str, "} ");
-    Write(str);
+    else
+    {
+        strcpy(str, "Noise");
+        Write(str);
+    }
 }
 
 /*##########################################################################
@@ -1264,7 +1266,7 @@ void TAdc::PrintDelaySumary(int Index)
 
     PrintDelay(&Delay, true);
 
-    sprintf(str, "Direction: ");
+    sprintf(str, " Direction: ");
     Write(str);
 
     PrintDirections(Index, &Delay);
