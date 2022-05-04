@@ -52,6 +52,7 @@ public:
     long GetLsb() const;
     void SetRaw(unsigned long Msb, unsigned long Lsb);
     int HasExpired() const;
+    void WaitUntilExpired() const;
     void AddTics(long tics);
     void AddMicro(long us);
     void AddMilli(long ms);

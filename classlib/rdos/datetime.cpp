@@ -411,6 +411,22 @@ int TDateTime::HasExpired() const
 
 /*##########################################################################
 #
+#   Name       : TDateTime::WaitUntilExpired
+#
+#   Purpose....: Wait until time expires
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: TRUE if expired
+#
+##########################################################################*/
+void TDateTime::WaitUntilExpired() const
+{
+    RdosWaitUntil(FMsb, FLsb);
+}
+
+/*##########################################################################
+#
 #   Name       : TDateTime::GetDayOfWeek
 #
 #   Purpose....: Get day of week
