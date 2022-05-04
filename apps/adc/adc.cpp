@@ -901,7 +901,7 @@ void TAdc::PrintDirections(int index, struct TDelay *d)
     }
     else
     {
-        strcpy(str, "Noise");
+        strcpy(str, " n");
         Write(str);
     }
 }
@@ -1034,7 +1034,7 @@ void TAdc::PrintDelay(struct TDelay *d, bool header)
 
     if (First)
     {
-        sprintf(str, "Noise ");
+        sprintf(str, "n ");
         Write(str);
     }
     else
