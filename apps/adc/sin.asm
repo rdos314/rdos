@@ -16602,7 +16602,7 @@ cfpaLoop:
     movsx edx,word ptr [esi]
     imul edx
     add dword ptr [edi].pow_c,eax
-    adc dword ptr [edi].pow_c+2,edx
+    adc dword ptr [edi].pow_c+4,edx
 ;
     add esi,4
     add ebp,[esp+28h]
