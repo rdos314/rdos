@@ -16465,9 +16465,8 @@ sin_tab:
 
 _GetSin  Proc near
     mov eax,[esp+4]
-    shr eax,13
-    and al,0FEh
-    movsx eax,word ptr [eax].sin_tab
+    shr eax,14
+    movsx eax,word ptr [2*eax].sin_tab
     ret 4
 _GetSin    Endp
 
@@ -16515,53 +16514,44 @@ _CalcFreqPower  Proc near
 
 cfpLoop:
     mov ebx,ebp
-    shr ebx,13
-    and bl,0FEh
+    shr ebx,14
 ;
-    mov ax,[ebx].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].sin_a,ax
-    adc dword ptr [edi].sin_a+2,edx
+    movsx eax,word ptr [2 * ebx].sin_tab
+    movsx edx,word ptr [esi]
+    imul eax,edx
+    cdq
+    add dword ptr [edi].sin_a,eax
+    adc dword ptr [edi].sin_a+4,edx
 ;
-    mov ax,[ebx].sin_tab
-    imul word ptr [esi+2]
-    movsx edx,dx
-    add word ptr [edi].sin_b,ax
-    adc dword ptr [edi].sin_b+2,edx
+    movsx eax,word ptr [ebx].sin_tab
+    movsx edx,word ptr [esi]
+    imul eax,edx
+    cdq
+    add dword ptr [edi].sin_b,eax
+    adc dword ptr [edi].sin_b+4,edx
 ;
     mov ebx,ebp
     add ebx,40000000h
-    shr ebx,13
-    and bl,0FEh
+    shr ebx,14
 ;
-    mov ax,[ebx].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].cos_a,ax
-    adc dword ptr [edi].cos_a+2,edx
+    movsx eax,word ptr [2 * ebx].sin_tab
+    movsx edx,word ptr [esi]
+    imul eax,edx
+    cdq
+    add dword ptr [edi].cos_a,eax
+    adc dword ptr [edi].cos_a+4,edx
 ;
-    mov ax,[ebx].sin_tab
-    imul word ptr [esi+2]
-    movsx edx,dx
-    add word ptr [edi].cos_b,ax
-    adc dword ptr [edi].cos_b+2,edx
+    movsx eax,word ptr [2 * ebx].sin_tab
+    movsx edx,word ptr [esi]
+    imul eax,edx
+    cdq
+    add dword ptr [edi].cos_b,eax
+    adc dword ptr [edi].cos_b+4,edx
 ;
     add esi,4
     add ebp,[esp+28h]
-    loop cfpLoop
-;
-    movsx eax,word ptr [edi].sin_a+4
-    mov [edi].sin_a+4,eax
-;
-    movsx eax,word ptr [edi].sin_b+4
-    mov [edi].sin_b+4,eax
-;
-    movsx eax,word ptr [edi].cos_a+4
-    mov [edi].cos_a+4,eax
-;
-    movsx eax,word ptr [edi].cos_b+4
-    mov [edi].cos_b+4,eax
+    sub ecx,1
+    jnz cfpLoop
 ;
     mov eax,ebp
 ;
@@ -16612,21 +16602,19 @@ _CalcFreqPowerA  Proc near
 
 cfpaLoop:
     mov ebx,ebp
-    shr ebx,13
-    and bl,0FEh
+    shr ebx,14
 ;
-    mov ax,[ebx].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].pow_c,ax
+    movsx eax,word ptr [2 * ebx].sin_tab
+    movsx edx,word ptr [esi]
+    imul eax,edx
+    cdq
+    add dword ptr [edi].pow_c,eax
     adc dword ptr [edi].pow_c+2,edx
 ;
     add esi,4
     add ebp,[esp+28h]
-    loop cfpaLoop
-;
-    movsx eax,word ptr [edi].pow_c+4
-    mov [edi].pow_c+4,eax
+    sub ecx,1
+    jnz cfpaLoop
 ;
     mov eax,ebp
 ;
@@ -16678,21 +16666,19 @@ _CalcFreqPowerB  Proc near
 
 cfpbLoop:
     mov ebx,ebp
-    shr ebx,13
-    and bl,0FEh
+    shr ebx,14
 ;
-    mov ax,[ebx].sin_tab
-    imul word ptr [esi]
-    movsx edx,dx
-    add word ptr [edi].pow_c,ax
-    adc dword ptr [edi].pow_c+2,edx
+    movsx eax,word ptr [2 * ebx].sin_tab
+    movsx edx,word ptr [esi]
+    imul eax,edx
+    cdq
+    add dword ptr [edi].pow_c,eax
+    adc dword ptr [edi].pow_c+4,edx
 ;
     add esi,4
     add ebp,[esp+28h]
-    loop cfpbLoop
-;
-    movsx eax,word ptr [edi].pow_c+4
-    mov [edi].pow_c+4,eax
+    sub ecx,1
+    jnz cfpbLoop
 ;
     mov eax,ebp
 ;
@@ -16734,21 +16720,22 @@ _CalcPower  Proc near
     mov [edi].pow_b+4,eax
 
 cpLoop:
-    mov ax,[esi]
-    imul ax
-    movsx edx,dx
-    add word ptr [edi].pow_a,ax
-    adc dword ptr [edi].pow_a+2,edx
+    movsx eax,word ptr [esi]
+    imul eax
+    cdq
+    add dword ptr [edi].pow_a,eax
+    adc dword ptr [edi].pow_a+4,edx
     add esi,2
 ;
-    mov ax,[esi]
-    imul ax
-    movsx edx,dx
-    add word ptr [edi].pow_b,ax
-    adc dword ptr [edi].pow_b+2,edx
+    movsx eax,word ptr [esi]
+    imul eax
+    cdq
+    add dword ptr [edi].pow_b,eax
+    adc dword ptr [edi].pow_b+4,edx
     add esi,2
 ;
-    loop cpLoop
+    sub ecx,1
+    jnz cpLoop
 ;
     popad
     ret 12
