@@ -558,6 +558,30 @@ void TJsonObject::CodeDateTime(TDateTime &time)
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::CodeDateTimeZone
+#
+#   Purpose....: Code date&time object with timezone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::CodeDateTimeZone(TDateTime &time, int UtcDiff)
+{
+     if (UtcDiff == 0)
+         FText.printf("%04d-%02d-%02dT%02d:%02d:%02dZ", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+     else if (UtcDiff > 0)
+         FText.printf("%04d-%02d-%02dT%02d:%02d:%02d+%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
+     else
+     {
+         UtcDiff = -UtcDiff;
+         FText.printf("%04d-%02d-%02dT%02d:%02d:%02d-%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
+     }
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::DecodeBoolean
 #
 #   Purpose....: Decode boolean
@@ -716,6 +740,22 @@ void TJsonObject::SetDateTime(TDateTime &val)
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::SetDateTimeZone
+#
+#   Purpose....: Set date & time with timezone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetDateTimeZone(TDateTime &val, int diff)
+{
+    SetBaseDateTimeZone(val, diff);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::SetString
 #
 #   Purpose....: Set string
@@ -852,6 +892,21 @@ void TJsonObject::SetBaseDouble(double val, int decimals)
 #
 ##########################################################################*/
 void TJsonObject::SetBaseDateTime(TDateTime &val)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::SetBaseDateTimeZone
+#
+#   Purpose....: Set date & time with timezone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::SetBaseDateTimeZone(TDateTime &val, int diff)
 {
 }
 
@@ -2611,6 +2666,27 @@ void TJsonCollection::SetDateTime(const char *FieldName, TDateTime &Val, int Use
 
 /*##########################################################################
 #
+#   Name       : TJsonCollection::SetDateTimeZone
+#
+#   Purpose....: Set field as date & time with timezone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollection::SetDateTimeZone(const char *FieldName, TDateTime &Val, int UtcDiff)
+{
+    TJsonObject *obj = GetObj(FieldName);
+
+    if (obj)
+        obj->SetDateTimeZone(Val, UtcDiff);
+    else
+        AddDateTimeZone(FieldName, Val, UtcDiff);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonCollection::SetString
 #
 #   Purpose....: Set field as string
@@ -2827,6 +2903,39 @@ TJsonObject *TJsonCollection::AddDateTime(const char *FieldName, TDateTime &time
     else
         obj = new TJsonInt(fn, time.GetLinuxMilliTimestamp());
 
+    Insert(obj);
+    return obj;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollection::AddDateTimeZone
+#
+#   Purpose....: Add new date&time object with timezone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonObject *TJsonCollection::AddDateTimeZone(const char *FieldName, TDateTime &time, int UtcDiff)
+{
+    TString fn(FieldName);
+    TJsonObject *obj;
+
+    TString str;
+
+    if (UtcDiff == 0)
+        str.printf("%04d-%02d-%02dT%02d:%02d:%02dZ", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+    else if (UtcDiff > 0)
+        str.printf("%04d-%02d-%02dT%02d:%02d:%02d+%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
+    else
+    {
+        UtcDiff = -UtcDiff;
+        str.printf("%04d-%02d-%02dT%02d:%02d:%02d-%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
+    }
+        
+    obj = new TJsonString(fn, str);
     Insert(obj);
     return obj;
 }
@@ -3834,6 +3943,22 @@ void TJsonInt::SetBaseDateTime(TDateTime &v)
 
 /*##########################################################################
 #
+#   Name       : TJsonInt::SetBaseDateTimeZone
+#
+#   Purpose....: Set date & time with timezone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonInt::SetBaseDateTimeZone(TDateTime &v, int diff)
+{
+    SetValue(v.GetLinuxMilliTimestamp());
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonInt::SetBaseString
 #
 #   Purpose....: Set string
@@ -4120,6 +4245,22 @@ void TJsonDouble::SetBaseDateTime(TDateTime &v)
 
 /*##########################################################################
 #
+#   Name       : TJsonDouble::SetBaseDateTimeZone
+#
+#   Purpose....: Set date & time with timezone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDouble::SetBaseDateTimeZone(TDateTime &v, int diff)
+{
+    SetValue((double)v, 0);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonDouble::SetBaseString
 #
 #   Purpose....: Set string
@@ -4380,6 +4521,25 @@ void TJsonBoolean::SetBaseDateTime(TDateTime &v)
 
 /*##########################################################################
 #
+#   Name       : TJsonBoolean::SetBaseDateTimeZone
+#
+#   Purpose....: Set date & time with timezone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBoolean::SetBaseDateTimeZone(TDateTime &v, int diff)
+{
+    if (v.HasExpired())
+        SetValue(true);
+    else
+        SetValue(false);
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonBoolean::SetBaseString
 #
 #   Purpose....: Set string
@@ -4602,6 +4762,22 @@ void TJsonString::SetBaseDouble(double v, int decimals)
 void TJsonString::SetBaseDateTime(TDateTime &v)
 {
     CodeDateTime(v);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonString::SetBaseDateTimeZone
+#
+#   Purpose....: Set date & time with time zone
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonString::SetBaseDateTimeZone(TDateTime &v, int diff)
+{
+    CodeDateTimeZone(v, diff);
 }
 
 /*##########################################################################

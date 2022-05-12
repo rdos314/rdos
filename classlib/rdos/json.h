@@ -76,6 +76,7 @@ public:
     void SetInt(long long val);
     void SetDouble(double val, int decimals);
     void SetDateTime(TDateTime &val);
+    void SetDateTimeZone(TDateTime &val, int UtcDiff);
     void SetString(const char *Str);
 
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
@@ -92,12 +93,14 @@ protected:
     virtual void SetBaseInt(long long val);
     virtual void SetBaseDouble(double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
+    virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
     virtual void SetBaseString(const char *Str);
 
     void CodeBoolean(bool v);
     void CodeInt(long long val);
     void CodeDouble(double v, int decimals);
     void CodeDateTime(TDateTime &time);
+    void CodeDateTimeZone(TDateTime &time, int UtcDiff);
 
     bool DecodeBoolean();
     long long DecodeInt();
@@ -283,12 +286,14 @@ public:
     TJsonObject *AddInt(const char *FieldName, long long Val);
     TJsonObject *AddDouble(const char *FieldName, double Val, int Decimals);
     TJsonObject *AddDateTime(const char *FieldName, TDateTime &time, int UseText);
+    TJsonObject *AddDateTimeZone(const char *FieldName, TDateTime &time, int UtcOffset);
     TJsonObject *AddString(const char *FieldName, const char *Str);
 
     void SetBoolean(const char *FieldName, bool Val);
     void SetInt(const char *FieldName, long long Val);
     void SetDouble(const char *FieldName, double Val, int Decimals);
     void SetDateTime(const char *FieldName, TDateTime &Val, int UseText);
+    void SetDateTimeZone(const char *FieldName, TDateTime &Val, int UtcOffset);
     void SetString(const char *FieldName, const char *Str);
 
     TJsonCollection *FParent;
@@ -382,6 +387,7 @@ protected:
     virtual void SetBaseInt(long long val);
     virtual void SetBaseDouble(double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
+    virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
     virtual void SetBaseString(const char *Str);
 
     double Val;
@@ -409,6 +415,7 @@ protected:
     virtual void SetBaseInt(long long val);
     virtual void SetBaseDouble(double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
+    virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
     virtual void SetBaseString(const char *Str);
 
     bool Val;
@@ -436,6 +443,7 @@ protected:
     virtual void SetBaseInt(long long val);
     virtual void SetBaseDouble(double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
+    virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
     virtual void SetBaseString(const char *Str);
 
     long long Val;
@@ -463,6 +471,7 @@ protected:
     virtual void SetBaseInt(long long val);
     virtual void SetBaseDouble(double val, int decimals);
     virtual void SetBaseDateTime(TDateTime &val);
+    virtual void SetBaseDateTimeZone(TDateTime &val, int UtcDiff);
 };
 
 class TJsonDocument;
