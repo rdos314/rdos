@@ -444,8 +444,8 @@ freetype_data_sel   EQU 0AB8h
 wh1080_code_sel     EQU 0AC0h
 wh1080_data_sel     EQU 0AC8h
 
-ser_print_code_sel  EQU 0AD0h
-ser_print_data_sel  EQU 0AD8h
+ttp_print_code_sel  EQU 0AD0h
+tpp_print_data_sel  EQU 0AD8h
 
 ini_file_code_sel   EQU 0AE0h
 ini_file_data_sel   EQU 0AE8h
