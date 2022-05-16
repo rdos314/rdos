@@ -742,10 +742,7 @@ SendForce   Proc near
     mov es,ds:tp_out_buffer
     xor edi,edi
 ;
-    mov al,ESC
-    stosb
-;    
-    mov al,ACK
+    mov al,19
     stosb
 ;    
     mov al,0FEh
@@ -792,14 +789,10 @@ SendLine   Proc near
     mov al,ESC
     stosb
 ;    
-    mov al,'S'
+    mov al,'s'
     stosb
 ;    
     mov ax,fs:bs_line_size
-    add ax,2
-    stosw
-;
-    mov al,80h
     stosb
 ;
     mov cx,fs:bs_line_size
