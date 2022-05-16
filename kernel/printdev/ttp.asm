@@ -1820,6 +1820,8 @@ prInitLoop:
     jnz prCalc
 ;
     mov al,80
+    mov bl,48
+    call SetByteParam
 
 prCalc:
     mov cl,8
