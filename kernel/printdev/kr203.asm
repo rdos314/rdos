@@ -86,6 +86,7 @@ data    SEGMENT byte public 'DATA'
 
 kr_controller       DW ?
 kr_port             DB ?
+kr_type             DW ?
 
 kr_dev_handle       DW ?
 
@@ -1184,22 +1185,33 @@ ClosePipes   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-my_name DB 'KR203', 0
+my_kr_name DB 'KR203', 0
+my_ttp_name DB 'TTP2030', 0
+
+my_ptr_tab:
+mpt00  DD OFFSET my_kr_name
+mpt01  DD OFFSET my_ttp_name
 
 get_printer_name   Proc far
-    push si
+    push ds
+    push esi
     push edi
 ;
-    mov si,OFFSET my_name
+    mov si,SEG data
+    mov ds,si
+    movzx esi,ds:kr_type
+    shl esi,2
+    mov esi,cs:[esi].my_ptr_tab
 
 get_pr_name_loop:    
-    lods byte ptr cs:[si]
+    lods byte ptr cs:[esi]
     stos byte ptr es:[edi]
     or al,al
     jnz get_pr_name_loop
 ;
     pop edi
-    pop si    
+    pop esi    
+    pop ds
     ret
 get_printer_name   Endp
 
@@ -1843,6 +1855,11 @@ reset_printer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 kr203_thread_name  DB 'KR203 ', 0
+ttp2030_thread_name  DB 'TTP2030 ', 0
+
+thread_name_ptr:
+tnp00 DD OFFSET kr203_thread_name
+tnp01 DD OFFSET ttp2030_thread_name
 
 kr203_thread:
     mov ax,SEG data
@@ -2216,6 +2233,7 @@ OpenPrinterPipes Proc near
     mov si,SEG data
     mov ds,si
 ;    
+    mov ds:kr_type,dx
     mov ds:kr_controller,bx
     mov ds:kr_port,al
     mov ds:kr_out_pipe,0
@@ -2272,8 +2290,11 @@ opDescrDone:
 ;
     lock or ds:kr_flag,FLAG_STARTED    
 ;
+    int 3
+    movzx edi,ds:kr_type
+    shl edi,2
+    mov edi,cs:[edi].thread_name_ptr
     mov esi,OFFSET kr203_thread
-    mov edi,OFFSET kr203_thread_name
     mov ax,2
     call StartThread
     
@@ -2298,6 +2319,7 @@ OpenPrinterPipes Endp
 
 aTab:
 a00     DW 0A5Fh,       00B3h   ; KR203, app mode
+a01     DW 088Ch,       2030h   ; TTP2010
 
 usb_attach  Proc far
     push es
@@ -2318,7 +2340,7 @@ usb_attach  Proc far
     mov si,es:udd_vendor
     mov di,es:udd_prod
 
-    mov cx,1
+    mov cx,2
     mov bp,OFFSET aTab
 
 aLoop:
@@ -2335,6 +2357,9 @@ aNext:
     jmp aDone    
 
 aFound:
+    sub bp,OFFSET aTab
+    shr bp,2
+;
     xor dl,dl
     mov cx,1000h
     xor di,di
@@ -2358,6 +2383,7 @@ aDescrLoop:
     cmp cl,4
     jne aDescrNext
 ; 
+    mov dx,bp
     call OpenPrinterPipes
     jmp aDone
 
