@@ -357,19 +357,20 @@ CheckByteParam  Endp
 ;       PARAMETERS:     DS      Data
 ;                       ES      Status
 ;                       CX      Size of status
+;                       DX      Paper low
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stab:
 st00 DW 0
-st01 DW STATUS_PAPER_JAM
+st01 DW STATUS_PAPER_PRESENTER
 st02 DW STATUS_CUTTER_JAM
 st03 DW STATUS_NO_PAPER
 st04 DW STATUS_HEAD_LIFTED
 st05 DW STATUS_FEED_ERROR
 st06 DW STATUS_TEMP_ERROR
-st07 DW 0
-st08 DW 0
+st07 DW STATUS_PAPER_JAM
+st08 DW STATUS_FEED_ERROR
 st09 DW 0
 st10 DW 0
 st11 DW 0
@@ -380,8 +381,8 @@ st15 DW 0
 st16 DW 0
 st17 DW 0
 st18 DW 0
-st19 DW STATUS_PAPER_LOW
-st20 DW STATUS_PAPER_PRESENTER
+st19 DW 0
+st20 DW 0
 
 NotifyStatus   Proc near
     push ax
@@ -393,7 +394,6 @@ NotifyStatus   Proc near
     or cx,cx
     jz nsReset
 ;
-    xor dx,dx
     cmp cx,1
     jne nsNext
 ;
@@ -461,7 +461,37 @@ UpdateStatus   Proc near
     push edx
     push edi
 ;
-    mov dx,ax
+    mov es,ds:tp_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,ENQ
+    stosb
+;
+    mov al,2
+    stosb
+;
+    mov cx,di
+    mov bx,ds:tp_dev_handle
+    mov dl,ds:tp_out_pipe
+    PostUsbRawPipe
+    jc usError
+;
+    call ReadAnswer
+    jc usError
+
+usLow:
+    xor dx,dx
+    xor di,di
+    mov al,es:[di]
+    or al,al
+    jmp usNorm
+;
+    mov dx,STATUS_PAPER_LOW
+
+usNorm:
     mov es,ds:tp_out_buffer
     xor edi,edi
 ;
@@ -474,10 +504,12 @@ UpdateStatus   Proc near
     mov al,1
     stosb
 ;
+    push dx
     mov cx,di
     mov bx,ds:tp_dev_handle
     mov dl,ds:tp_out_pipe
     PostUsbRawPipe
+    pop dx
     jc usError
 ;
     call ReadAnswer
@@ -1774,7 +1806,6 @@ prRestart:
     mov ds:tp_dev_handle,bx
 ;
     call OpenPipes
-    int 3
 ;    
     lock or ds:tp_status,STATUS_OFFLINE
 ;
