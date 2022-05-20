@@ -1985,7 +1985,11 @@ post_usb_raw_pipe Endp
 GetUsedPackets  Proc near
     push ds
 ;
-    mov ds,gs:usbp_packet_sel
+    mov cx,gs:usbp_packet_sel
+    or cx,cx
+    jz gupDone
+;
+    mov ds,cx
     mov cx,ds:usbpk_wr_ptr
     sub cx,ds:usbpk_rd_ptr
     jnc gupDone
@@ -2014,7 +2018,11 @@ GetFreePackets  Proc near
     push ds
     push ax
 ;
-    mov ds,gs:usbp_packet_sel
+    mov cx,gs:usbp_packet_sel
+    or cx,cx
+    jz gfpEnd
+;
+    mov ds,cx
     mov ax,ds:usbpk_tail_ptr
     sub ax,ds:usbpk_rd_ptr
     jnc gfpDone
@@ -2025,7 +2033,8 @@ gfpDone:
     mov cx,ds:usbpk_entry_count
     sub cx,ax
     dec cx
-;
+
+gfpEnd:
     pop ax
     pop ds
     ret
