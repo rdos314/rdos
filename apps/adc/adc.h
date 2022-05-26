@@ -76,11 +76,10 @@ public:
     int OptStep;
 
 protected:
-    static void CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd);
+    static double CalcSd(int Phase[360], int Start);
 
     void Write(const char *str);
 
-    void PrintDelay(struct TDelay *delay, bool header);
     void PrintDirections(int index, struct TDelay *d);
 
     void PrintCountSumary(int Index);

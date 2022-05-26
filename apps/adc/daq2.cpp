@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     int hour;
     int Max;
     TDateTime curr;
-    double SampleFreq = 600.0;
+    double SampleFreq = 750.0;
 
     TFreq Freq(30.0, SampleFreq / 2.0, 1, SampleFreq, 200);
 

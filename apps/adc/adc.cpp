@@ -35,7 +35,8 @@
 #include "adcana.h"
 #include "adc.h"
 
-#define ANTENNA_DISTANCE  210 // centimeters
+// #define ANTENNA_DISTANCE  210 // centimeters
+#define ANTENNA_DISTANCE  108 // centimeters
 
 struct TAdcFreqPower
 {
@@ -661,7 +662,7 @@ int TAdc::GetPhaseIncr(double Freq)
 
 /*##########################################################################
 #
-#   Name       : TAdc::CalcMeanSdPos
+#   Name       : TAdc::CalcSd
 #
 #   Purpose....:
 #
@@ -670,12 +671,12 @@ int TAdc::GetPhaseIncr(double Freq)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd)
+double TAdc::CalcSd(int Phase[360], int Start)
 {
     int i;
-    int pos;
     long long sum;
     int count;
+    int diff;
     int mean;
     double dval;
 
@@ -684,39 +685,26 @@ void TAdc::CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd)
 
     for (i = 0; i < 360; i++)
     {
-        pos = i - Start;
+        diff = i - Start;
+        if (diff < -180)
+            diff += 360;
 
-        if (pos < -180)
-            pos += 360;
+        if (diff > 180)
+            diff -= 360;
 
-        if (pos >= 180)
-            pos -= 360;
-
-        sum += Delay->Phase[i] * pos;
-        count += Delay->Phase[i];
+        sum += Phase[i] * diff * diff;
+        count += Phase[i];
     }
 
-    mean = round(sum / (long long)count);
-    *Mean = mean;
-
-    sum = 0;
-
-    for (i = 0; i < 360; i++)
+    if (count > 1)
     {
-        pos = i - Start;
-
-        if (pos < -180)
-            pos += 360;
-
-        if (pos >= 180)
-            pos -= 360;
-
-        sum += Delay->Phase[i] * (pos - mean) * (pos - mean);
+        dval = (double)(sum / (long long)count);
+        dval = sqrt(dval);
     }
+    else
+        dval = 360.0;
 
-    dval = (double)(sum / (long long)count);
-    dval = sqrt(dval);
-    *Sd = dval;
+    return dval;
 }
 
 /*##########################################################################
@@ -732,33 +720,70 @@ void TAdc::CalcMeanSdPos(struct TDelay *Delay, int Start, int *Mean, double *Sd)
 ##########################################################################*/
 void TAdc::CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd)
 {
-    int pos;
-    int mean;
-    int cmean;
     double sd;
-    double csd;
+    int i;
+    int val;
+    int Phase[360];
+    int max;
+    int pos;
 
-    cmean = 0;
-    csd = 1000000.0;
+    for (i = 0; i < 360; i++)
+        Phase[i] = 0;
 
-    for (pos = 0; pos < 360; pos++)
+    val = Delay->Phase[0];
+    Phase[358] += val / 4;
+    Phase[359] += val / 2;
+    Phase[0] += val;
+    Phase[1] += val / 2;
+    Phase[2] += val / 4;
+
+    val = Delay->Phase[1];
+    Phase[359] += val / 4;
+    Phase[0] += val / 2;
+    Phase[1] += val;
+    Phase[2] += val / 2;
+    Phase[3] += val / 4;
+
+    val = Delay->Phase[359];
+    Phase[357] += val / 4;
+    Phase[358] += val / 2;
+    Phase[359] += val;
+    Phase[0] += val / 2;
+    Phase[1] += val / 4;
+
+    val = Delay->Phase[358];
+    Phase[356] += val / 4;
+    Phase[357] += val / 2;
+    Phase[358] += val;
+    Phase[359] += val / 2;
+    Phase[0] += val / 4;
+
+    for (i = 2; i < 358; i++)
     {
-        CalcMeanSdPos(Delay, pos, &mean, &sd);
-        if (sd < csd)
+        val = Delay->Phase[i];
+        Phase[i-2] += val / 4;
+        Phase[i-1] += val / 2;
+        Phase[i] += val;
+        Phase[i+1] += val / 2;
+        Phase[i+2] += val / 4;
+    }
+
+    max = 0;
+    pos = 0;
+
+    for (i = 0; i < 360; i++)
+    {
+        if (Phase[i] > max)
         {
-            csd = sd;
-            cmean = pos + mean;
+            max = Phase[i];
+            pos = i;
         }
     }
 
-    while (cmean < -180)
-        cmean += 360;
+    sd = CalcSd(Phase, pos);
 
-    while (cmean >= 180)
-        cmean -= 360;
-
-    *Sd = round(csd);
-    *Mean = cmean;
+    *Sd = round(sd);
+    *Mean = pos;
 }
 
 /*##########################################################################
@@ -877,7 +902,10 @@ void TAdc::PrintDirections(int index, struct TDelay *d)
 
     CalcMeanSd(d, &mean, &sd);
 
-    Count = CalcDirections(DirArr, vl, mean, sd, ANTENNA_DISTANCE);
+    if (sd < 15)
+        Count = CalcDirections(DirArr, vl, mean, sd, ANTENNA_DISTANCE);
+    else
+        Count = 0;
 
     if (Count)
     {
@@ -903,147 +931,6 @@ void TAdc::PrintDirections(int index, struct TDelay *d)
     {
         strcpy(str, " n");
         Write(str);
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::PrintDelay
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::PrintDelay(struct TDelay *d, bool header)
-{
-    int i;
-    int hil;
-    int lowl;
-    int index;
-    double val;
-    double sum;
-    double mean;
-    int HiIndex;
-    int HiVal;
-    bool First;
-    bool Used[360];
-    char str[100];
-
-    sum = 0;
-    for (i = 0; i < 360; i++)
-        sum += (double)d->Phase[i];
-
-    mean = sum / 360.0;
-
-    sum = 0;
-    for (i = 0; i < 360; i++)
-    {
-        val = mean - (double)d->Phase[i];
-        sum += val * val;
-    }
-
-    val = sum / 359.0;
-    hil = (int)(mean + 2.0 * sqrt(val));
-    if (hil < 3)
-        hil = 3;
-
-    lowl = (int)mean;
-    if (lowl < 0)
-        lowl = 0;
-
-    for (i = 0; i < 360; i++)
-        Used[i] = false;
-
-    HiIndex = 0;
-    First = true;
-
-    while (HiIndex >= 0)
-    {
-        HiIndex = -1;
-        HiVal = 0;
-
-        for (i = 0; i < 360; i++)
-        {
-            if (!Used[i] && d->Phase[i] >= hil)
-            {
-                if (d->Phase[i] > HiVal)
-                {
-                    HiVal = d->Phase[i];
-                    HiIndex = i;
-                }
-            }
-        }
-
-        if (HiIndex >= 0)
-        {
-            for (i = 0; i < 360; i++)
-            {
-                index = (HiIndex + i) % 360;
-                if (Used[index])
-                    break;
-                else
-                {
-                    if (d->Phase[index] >= lowl)
-                        Used[index] = true;
-                    else
-                        break;
-                }
-            }
-
-            for (i = 1; i < 360; i++)
-            {
-                index = (HiIndex + 360 - i) % 360;
-                if (Used[index])
-                    break;
-                else
-                {
-                    if (d->Phase[index] >= lowl)
-                        Used[index] = true;
-                    else
-                        break;
-                }
-            }
-
-            if (First)
-            {
-                First = false;
-
-                if (header)
-                    sprintf(str, "Peaks: ");
-                else
-                    sprintf(str, "{");
-
-                Write(str);
-            }
-            else
-            {
-                sprintf(str, " ");
-                Write(str);
-            }
-
-            if (HiIndex > 180)
-                HiIndex -= 360;
-
-            sprintf(str, "%d", HiIndex);
-            Write(str);
-        }
-    }
-
-    if (First)
-    {
-        sprintf(str, "n ");
-        Write(str);
-    }
-    else
-    {
-        if (!header)
-        {
-            sprintf(str, "} ");
-            Write(str);
-        }
     }
 }
 
@@ -1263,8 +1150,6 @@ void TAdc::PrintDelaySumary(int Index)
 
     sprintf(str, "%d (%d) ", mean, sd);
     Write(str);
-
-    PrintDelay(&Delay, true);
 
     sprintf(str, " Direction: ");
     Write(str);
@@ -1596,40 +1481,6 @@ bool TAdc::PrintDelayDetail(int Index)
 
     if (sd > 5)
     {
-        sprintf(str, "Phase: ");
-        Write(str);
-
-        if (count > 10)
-        {
-            for (i = 0; i < Intervals; i++)
-            {
-                ana = AdcAna[i];
-                if (ana->Count[Index])
-                    PrintDelay(&ana->Delay[Index], false);
-                else
-                {
-                    strcpy(str, "* ");
-                    Write(str);
-                }
-            }
-        }
-        else
-        {
-            for (i = 0; i < Intervals; i++)
-            {
-                ana = AdcAna[i];
-                if (ana->Count[Index])
-                {
-                    sprintf(str, "%d:", i);
-                    Write(str);
-                    PrintDelay(&ana->Delay[Index], false);
-                }
-            }
-        }
-
-        sprintf(str, "\r\n");
-        Write(str);
-
         sprintf(str, "Direction: ");
         Write(str);
 
