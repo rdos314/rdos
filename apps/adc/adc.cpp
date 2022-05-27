@@ -35,8 +35,8 @@
 #include "adcana.h"
 #include "adc.h"
 
-// #define ANTENNA_DISTANCE  210 // centimeters
-#define ANTENNA_DISTANCE  108 // centimeters
+#define ANTENNA_DISTANCE  210 // centimeters
+// #define ANTENNA_DISTANCE  108 // centimeters
 
 struct TAdcFreqPower
 {
