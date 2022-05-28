@@ -87,6 +87,8 @@ protected:
     void PrintBSumary(int Index);
     void PrintDelaySumary(int Index);
 
+    void PrintPhase(int Index);
+
     bool PrintCountDetail(int Index);
     bool PrintADetail(int Index);
     bool PrintBDetail(int Index);

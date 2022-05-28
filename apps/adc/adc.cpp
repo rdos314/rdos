@@ -36,7 +36,8 @@
 #include "adc.h"
 
 // #define ANTENNA_DISTANCE  210 // centimeters, wide
-#define ANTENNA_DISTANCE  155 // centimeters, roof
+// #define ANTENNA_DISTANCE  155 // centimeters, roof, edge
+#define ANTENNA_DISTANCE  220 // centimeters, roof, diag
 // #define ANTENNA_DISTANCE  108 // centimeters, narrow
 
 struct TAdcFreqPower
@@ -1160,6 +1161,35 @@ void TAdc::PrintDelaySumary(int Index)
 
 /*##########################################################################
 #
+#   Name       : TAdc::PrintPhase
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdc::PrintPhase(int index)
+{
+    int i;
+    char str[100];
+
+    strcpy(str, "Phase: {");
+    Write(str);
+
+    for (i = 0; i < 360; i++)
+    {
+        if (i == 359)
+            sprintf(str, "%d}\r\n", Delay.Phase[i]);
+        else
+            sprintf(str, "%d,", Delay.Phase[i]);
+        Write(str);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TAdc::PrintCountDetail
 #
 #   Purpose....:
@@ -1622,6 +1652,8 @@ void TAdc::PrintResult()
 
             sprintf(str, "\r\n");
             Write(str);
+
+            PrintPhase(i);
 
             ok = PrintCountDetail(i);
             ok |= PrintADetail(i);
