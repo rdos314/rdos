@@ -67,8 +67,8 @@ public:
     static int CalcPowerA(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *Power);
     static int CalcPowerB(TAdcData *Data, int Size, int InitPhase, int PhaseIncr, int *Power);
 
-    static void CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd);
-    static int CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int Distance);
+    static int CalcPhase(struct TDelay *Delay);
+    static int CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Phase, int Distance);
 
     double SampleFreq;
     TFreq *Freq;
@@ -76,8 +76,6 @@ public:
     int OptStep;
 
 protected:
-    static double CalcSd(int Phase[360], int Start);
-
     void Write(const char *str);
 
     void PrintDirections(int index, struct TDelay *d);

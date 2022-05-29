@@ -329,8 +329,7 @@ void TAdcAna::Add(TAdcThread *adc)
 void TAdcAna::PrintSnap()
 {
     int i;
-    int mean;
-    int sd;
+    int phase;
     int vl;
     int RelA;
     int RelB;
@@ -343,19 +342,16 @@ void TAdcAna::PrintSnap()
     for (i = 0; i < FreqCount; i++)
     {
         if (Count[i])
-            TAdc::CalcMeanSd(&Delay[i], &mean, &sd);
+            phase = TAdc::CalcPhase(&Delay[i]);
         else
-        {
-            mean = 0;
-            sd = 0;
-        }
+            phase = 0;
 
         if (SumA[i] && SumB[i])
         {
             RelA = 10 * SumA[i] / Count[i];
             RelB = 10 * SumB[i] / Count[i];
             Freq->CodeFreq(i, fstr);
-            sprintf(str, "%s: %d.%01d %d.%01d (%d), %d (%d)\r\n", fstr, RelA / 10, RelA % 10, RelB / 10, RelB % 10, Count[i], mean, sd);
+            sprintf(str, "%s: %d.%01d %d.%01d (%d), %d\r\n", fstr, RelA / 10, RelA % 10, RelB / 10, RelB % 10, Count[i], phase);
             RdosWriteString(str);
         }
     }

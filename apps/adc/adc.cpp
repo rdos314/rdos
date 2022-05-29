@@ -36,8 +36,8 @@
 #include "adc.h"
 
 // #define ANTENNA_DISTANCE  210 // centimeters, wide
-// #define ANTENNA_DISTANCE  155 // centimeters, roof, edge
-#define ANTENNA_DISTANCE  220 // centimeters, roof, diag
+#define ANTENNA_DISTANCE  155 // centimeters, roof, edge
+// #define ANTENNA_DISTANCE  220 // centimeters, roof, diag
 // #define ANTENNA_DISTANCE  108 // centimeters, narrow
 
 struct TAdcFreqPower
@@ -86,6 +86,8 @@ int CreateFmSignal(int *Data, int Size, int Amp, int InitPhase, int InitPeriod, 
 };
 
 #define M_PI 3.14159265358979323846
+
+static double CurrPhase[360];
 
 /*##########################################################################
 #
@@ -664,7 +666,7 @@ int TAdc::GetPhaseIncr(double Freq)
 
 /*##########################################################################
 #
-#   Name       : TAdc::CalcSd
+#   Name       : TAdc::CalcPhase
 #
 #   Purpose....:
 #
@@ -673,119 +675,110 @@ int TAdc::GetPhaseIncr(double Freq)
 #   Returns....: *
 #
 ##########################################################################*/
-double TAdc::CalcSd(int Phase[360], int Start)
+int TAdc::CalcPhase(struct TDelay *Delay)
 {
-    int i;
-    long long sum;
-    int count;
-    int diff;
-    int mean;
     double dval;
-
-    sum = 0;
-    count = 0;
-
-    for (i = 0; i < 360; i++)
-    {
-        diff = i - Start;
-        if (diff < -180)
-            diff += 360;
-
-        if (diff > 180)
-            diff -= 360;
-
-        sum += Phase[i] * diff * diff;
-        count += Phase[i];
-    }
-
-    if (count > 1)
-    {
-        dval = (double)(sum / (long long)count);
-        dval = sqrt(dval);
-    }
-    else
-        dval = 360.0;
-
-    return dval;
-}
-
-/*##########################################################################
-#
-#   Name       : TAdc::CalcMeanSd
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdc::CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd)
-{
-    double sd;
     int i;
     int val;
-    int Phase[360];
-    int max;
+    int ip[360];
+    double max;
     int pos;
 
     for (i = 0; i < 360; i++)
-        Phase[i] = 0;
+        ip[i] = 0;
 
     val = Delay->Phase[0];
-    Phase[358] += val / 4;
-    Phase[359] += val / 2;
-    Phase[0] += val;
-    Phase[1] += val / 2;
-    Phase[2] += val / 4;
+    ip[357] += val / 4;
+    ip[358] += val / 2;
+    ip[359] += val;
+    ip[0] += val;
+    ip[1] += val;
+    ip[2] += val / 2;
+    ip[3] += val / 4;
 
     val = Delay->Phase[1];
-    Phase[359] += val / 4;
-    Phase[0] += val / 2;
-    Phase[1] += val;
-    Phase[2] += val / 2;
-    Phase[3] += val / 4;
+    ip[358] += val / 4;
+    ip[359] += val / 2;
+    ip[0] += val;
+    ip[1] += val;
+    ip[2] += val;
+    ip[3] += val / 2;
+    ip[4] += val / 4;
+
+    val = Delay->Phase[2];
+    ip[359] += val / 4;
+    ip[0] += val / 2;
+    ip[1] += val;
+    ip[2] += val;
+    ip[3] += val;
+    ip[4] += val / 2;
+    ip[5] += val / 4;
 
     val = Delay->Phase[359];
-    Phase[357] += val / 4;
-    Phase[358] += val / 2;
-    Phase[359] += val;
-    Phase[0] += val / 2;
-    Phase[1] += val / 4;
+    ip[356] += val / 4;
+    ip[357] += val / 2;
+    ip[358] += val;
+    ip[359] += val;
+    ip[0] += val;
+    ip[1] += val / 2;
+    ip[2] += val / 4;
 
     val = Delay->Phase[358];
-    Phase[356] += val / 4;
-    Phase[357] += val / 2;
-    Phase[358] += val;
-    Phase[359] += val / 2;
-    Phase[0] += val / 4;
+    ip[355] += val / 4;
+    ip[356] += val / 2;
+    ip[357] += val;
+    ip[358] += val;
+    ip[359] += val;
+    ip[0] += val / 2;
+    ip[1] += val / 4;
 
-    for (i = 2; i < 358; i++)
+    val = Delay->Phase[357];
+    ip[354] += val / 4;
+    ip[355] += val / 2;
+    ip[356] += val;
+    ip[357] += val;
+    ip[358] += val;
+    ip[359] += val / 2;
+    ip[0] += val / 4;
+
+    for (i = 3; i < 357; i++)
     {
         val = Delay->Phase[i];
-        Phase[i-2] += val / 4;
-        Phase[i-1] += val / 2;
-        Phase[i] += val;
-        Phase[i+1] += val / 2;
-        Phase[i+2] += val / 4;
+        ip[i-3] += val / 4;
+        ip[i-2] += val / 2;
+        ip[i-1] += val;
+        ip[i] += val;
+        ip[i+1] += val;
+        ip[i+2] += val / 2;
+        ip[i+3] += val / 4;
     }
 
-    max = 0;
+    for (i = 0; i < 360; i++)
+    {
+        dval = (double)(ip[i] + 1);
+        CurrPhase[i] = log10(dval);
+    }
+
+    max = 0.0;
     pos = 0;
 
     for (i = 0; i < 360; i++)
     {
-        if (Phase[i] > max)
+        if (CurrPhase[i] > max)
         {
-            max = Phase[i];
+            max = CurrPhase[i];
             pos = i;
         }
     }
 
-    sd = CalcSd(Phase, pos);
+    for (i = 0; i < 360; i++)
+        if (CurrPhase[i] < max - 1.0 || CurrPhase[i] < 2.0)
+            CurrPhase[i] = 0.0;
 
-    *Sd = round(sd);
-    *Mean = pos;
+    if (max >= 2.0)
+        return pos;
+    else
+        return 360;
 }
 
 /*##########################################################################
@@ -799,15 +792,14 @@ void TAdc::CalcMeanSd(struct TDelay *Delay, int *Mean, int *Sd)
 #   Returns....: *
 #
 ##########################################################################*/
-int TAdc::CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int Distance)
+int TAdc::CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Phase, int Distance)
 {
     int Pos;
     int Count;
     double Dir;
-    int Tol = Sd * WaveLen / 360;
 
-    Pos = Mean * WaveLen / 360;
-    while (Pos - WaveLen + Tol > -Distance)
+    Pos = Phase * WaveLen / 360;
+    while (Pos - WaveLen > -Distance)
         Pos -= WaveLen;
 
     Count = 0;
@@ -850,7 +842,7 @@ int TAdc::CalcDirections(int DirArr[MAX_DIR], int WaveLen, int Mean, int Sd, int
             }
         }
 
-        if (Pos + WaveLen - Tol < Distance)
+        if (Pos + WaveLen < Distance)
             Pos += WaveLen;
         else
             break;
@@ -894,18 +886,16 @@ void TAdc::PrintDirections(int index, struct TDelay *d)
     int vl;
     int DirArr[MAX_DIR];
     int Count;
-    int mean;
-    int sd;
+    int phase;
     int i;
     char str[100];
 
     f = Freq->GetFreq(index);
     vl = (int)(30.0 * 1000.0 / f) ;
 
-    CalcMeanSd(d, &mean, &sd);
-
-    if (sd < 15)
-        Count = CalcDirections(DirArr, vl, mean, sd, ANTENNA_DISTANCE);
+    phase = CalcPhase(d);
+    if (phase < 360)
+        Count = CalcDirections(DirArr, vl, phase, ANTENNA_DISTANCE);
     else
         Count = 0;
 
@@ -1130,8 +1120,7 @@ void TAdc::PrintDelaySumary(int Index)
     TAdcAna *ana;
     int i;
     int j;
-    int mean;
-    int sd;
+    int phase;
     char str[100];
 
     for (i = 0; i < 360; i++)
@@ -1145,18 +1134,21 @@ void TAdc::PrintDelaySumary(int Index)
             Delay.Phase[j] += ana->Delay[Index].Phase[j];
     }
 
-    CalcMeanSd(&Delay, &mean, &sd);
+    phase = CalcPhase(&Delay);
 
-    sprintf(str, "Phase: ");
-    Write(str);
+    if (phase < 360)
+    {
+        sprintf(str, "Phase: ");
+        Write(str);
 
-    sprintf(str, "%d (%d) ", mean, sd);
-    Write(str);
+        sprintf(str, "%d ", phase);
+        Write(str);
 
-    sprintf(str, " Direction: ");
-    Write(str);
+        sprintf(str, " Direction: ");
+        Write(str);
 
-    PrintDirections(Index, &Delay);
+        PrintDirections(Index, &Delay);
+    }
 }
 
 /*##########################################################################
@@ -1181,9 +1173,9 @@ void TAdc::PrintPhase(int index)
     for (i = 0; i < 360; i++)
     {
         if (i == 359)
-            sprintf(str, "%d}\r\n", Delay.Phase[i]);
+            sprintf(str, "%4.2Lf}\r\n", CurrPhase[i]);
         else
-            sprintf(str, "%d,", Delay.Phase[i]);
+            sprintf(str, "4.2Lf,", CurrPhase[i]);
         Write(str);
     }
 }
@@ -1487,8 +1479,7 @@ bool TAdc::PrintDelayDetail(int Index)
     int i;
     int j;
     int val;
-    int mean;
-    int sd;
+    int phase;
     int count;
     char str[100];
 
@@ -1508,9 +1499,9 @@ bool TAdc::PrintDelayDetail(int Index)
             count++;
     }
 
-    CalcMeanSd(&Delay, &mean, &sd);
+    phase = CalcPhase(&Delay);
 
-    if (sd > 5)
+    if (phase < 360)
     {
         sprintf(str, "Direction: ");
         Write(str);
@@ -1542,14 +1533,12 @@ bool TAdc::PrintDelayDetail(int Index)
                 }
             }
         }
-
-        sprintf(str, "\r\n");
-        Write(str);
-
-        return true;
     }
-    else
-        return false;
+
+    sprintf(str, "\r\n");
+    Write(str);
+
+    return true;
 }
 
 /*##########################################################################
