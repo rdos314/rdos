@@ -1175,7 +1175,7 @@ void TAdc::PrintPhase(int index)
         if (i == 359)
             sprintf(str, "%4.2Lf}\r\n", CurrPhase[i]);
         else
-            sprintf(str, "4.2Lf,", CurrPhase[i]);
+            sprintf(str, "%4.2Lf,", CurrPhase[i]);
         Write(str);
     }
 }
