@@ -1153,7 +1153,7 @@ void TAdc::PrintDelaySumary(int Index)
                 phase = phd->GetPhase();
                 sd = phd->GetSd();
 
-                sprintf(str, "%d (%4.2Lf)", phase, sd);
+                sprintf(str, "%d (%5.2Lf)", phase, sd);
                 Write(str);
 
                 sprintf(str, " Direction: ");
