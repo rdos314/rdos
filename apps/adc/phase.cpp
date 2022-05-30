@@ -506,6 +506,7 @@ TPhase::TPhase(int Raw[360])
 {
     int i;
     int val;
+    TPhaseDistr *phase;
     int Diff[360];
 
     FArea = 0;
@@ -518,14 +519,24 @@ TPhase::TPhase(int Raw[360])
     }
 
     FPhaseCount = 0;
-    Add(Raw);
+    phase = Add(Raw);
     CalcDist();
     FCurrFit = CalcFit();
+    FMinPeak = phase->GetPeak() / 10;
 
-    while (FCurrFit > 0.01 && FPhaseCount < MAX_PHASE_DIST)
+    while (phase->GetPeak() > FMinPeak && FPhaseCount < MAX_PHASE_DIST)
     {
         GetDiff(Diff);
-        Add(Diff);
+        phase = Add(Diff);
+        CalcDist();
+        FCurrFit = CalcFit();
+        Optimize();
+    }
+
+    if (phase->GetPeak() <= FMinPeak)
+    {
+        delete phase;
+        FPhaseCount--;
         CalcDist();
         FCurrFit = CalcFit();
         Optimize();
@@ -843,6 +854,7 @@ bool TPhase::Optimize(TPhaseDistr *phase)
         changed = LowerSd(phase);
         changed |= LowerPeak(phase);
         changed |= OptimizePhase(phase);
+        changed |= RaisePeak(phase);
         anych |= changed;
     }
     return anych;

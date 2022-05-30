@@ -87,6 +87,7 @@ protected:
 
     int FArea;
     double FCurrFit;
+    int FMinPeak;
 
     int FRaw[360];
     int FCurrDist[360];
