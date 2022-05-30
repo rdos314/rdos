@@ -34,6 +34,7 @@
 #include "adcthr.h"
 #include "adcana.h"
 #include "adc.h"
+#include "phase.h"
 
 // #define ANTENNA_DISTANCE  210 // centimeters, wide
 #define ANTENNA_DISTANCE  155 // centimeters, roof, edge
@@ -880,20 +881,18 @@ void TAdc::Write(const char *str)
 #   Returns....: *
 #
 ##########################################################################*/
-void TAdc::PrintDirections(int index, struct TDelay *d)
+void TAdc::PrintDirections(int index, int phase)
 {
     double f;
     int vl;
     int DirArr[MAX_DIR];
     int Count;
-    int phase;
     int i;
     char str[100];
 
     f = Freq->GetFreq(index);
     vl = (int)(30.0 * 1000.0 / f) ;
 
-    phase = CalcPhase(d);
     if (phase < 360)
         Count = CalcDirections(DirArr, vl, phase, ANTENNA_DISTANCE);
     else
@@ -1117,10 +1116,13 @@ void TAdc::PrintBSumary(int Index)
 ##########################################################################*/
 void TAdc::PrintDelaySumary(int Index)
 {
+    TPhase *ph;
+    TPhaseDistr *phd;
     TAdcAna *ana;
     int i;
     int j;
     int phase;
+    double sd;
     char str[100];
 
     for (i = 0; i < 360; i++)
@@ -1138,16 +1140,30 @@ void TAdc::PrintDelaySumary(int Index)
 
     if (phase < 360)
     {
-        sprintf(str, "Phase: ");
-        Write(str);
+        ph = new TPhase(Delay.Phase);
 
-        sprintf(str, "%d ", phase);
-        Write(str);
+        for (i = 0; i < MAX_PHASE_DIST; i++)
+        {
+            phd = ph->Get(i);
+            if (phd)
+            {
+                sprintf(str, "Phase: ");
+                Write(str);
 
-        sprintf(str, " Direction: ");
-        Write(str);
+                phase = phd->GetPhase();
+                sd = phd->GetSd();
 
-        PrintDirections(Index, &Delay);
+                sprintf(str, "%d (%4.2Lf)", phase, sd);
+                Write(str);
+
+                sprintf(str, " Direction: ");
+                Write(str);
+
+                PrintDirections(Index, phase);
+            }
+            else
+                break;
+        }
     }
 }
 
@@ -1173,9 +1189,9 @@ void TAdc::PrintPhase(int index)
     for (i = 0; i < 360; i++)
     {
         if (i == 359)
-            sprintf(str, "%4.2Lf}\r\n", CurrPhase[i]);
+            sprintf(str, "%d}\r\n", Delay.Phase[i]);
         else
-            sprintf(str, "%4.2Lf,", CurrPhase[i]);
+            sprintf(str, "%d,", Delay.Phase[i]);
         Write(str);
     }
 }
@@ -1512,7 +1528,10 @@ bool TAdc::PrintDelayDetail(int Index)
             {
                 ana = AdcAna[i];
                 if (ana->Count[Index])
-                    PrintDirections(Index, &ana->Delay[Index]);
+                {
+                    phase = CalcPhase(&ana->Delay[Index]);
+                    PrintDirections(Index, phase);
+                }
                 else
                 {
                     strcpy(str, "* ");
@@ -1529,7 +1548,8 @@ bool TAdc::PrintDelayDetail(int Index)
                 {
                     sprintf(str, "%d:", i);
                     Write(str);
-                    PrintDirections(Index, &ana->Delay[Index]);
+                    phase = CalcPhase(&ana->Delay[Index]);
+                    PrintDirections(Index, phase);
                 }
             }
         }

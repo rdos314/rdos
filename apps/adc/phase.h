@@ -37,6 +37,8 @@ public:
     ~TPhaseDistr();
 
     int GetPeak();
+    int GetPhase();
+    double GetSd();
 
     void AddDist(int Arr[360]);
     void ChangeSd(double diff);
@@ -69,6 +71,8 @@ class TPhase
 public:
     TPhase(int Raw[360]);
     ~TPhase();
+
+    TPhaseDistr *Get(int Index);
 
 protected:
     TPhaseDistr *Add(int Raw[360]);

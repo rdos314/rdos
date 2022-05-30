@@ -201,6 +201,38 @@ int TPhaseDistr::GetPeak()
 
 /*##########################################################################
 #
+#   Name       : TPhaseDistr::GetPhase
+#
+#   Purpose....: Get phase value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPhaseDistr::GetPhase()
+{
+    return FNewPhase;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhaseDistr::GetSd
+#
+#   Purpose....: Get sd value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TPhaseDistr::GetSd()
+{
+    return FNewSd;
+}
+
+/*##########################################################################
+#
 #   Name       : TPhaseDistr::AddDist
 #
 #   Purpose....: Add distro to array
@@ -561,6 +593,25 @@ TPhase::~TPhase()
     for (i = 0; i < FPhaseCount; i++)
         if (FPhaseArr[i])
             delete FPhaseArr[i];
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::Get
+#
+#   Purpose....: Get distr
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPhaseDistr *TPhase::Get(int index)
+{
+    if (index < FPhaseCount)
+        return FPhaseArr[index];
+    else
+        return 0;
 }
 
 /*##########################################################################

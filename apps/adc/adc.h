@@ -78,7 +78,7 @@ public:
 protected:
     void Write(const char *str);
 
-    void PrintDirections(int index, struct TDelay *d);
+    void PrintDirections(int index, int phase);
 
     void PrintCountSumary(int Index);
     void PrintASumary(int Index);
