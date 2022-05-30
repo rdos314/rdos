@@ -164,6 +164,8 @@ TPhaseDistr::TPhaseDistr(int Raw[360])
     more = true;
     for (i = 0; i < 100 && more; i++)
         more = OptSd() || OptPhase();
+
+    RejectChange();
 }
 
 /*##########################################################################
@@ -183,6 +185,22 @@ TPhaseDistr::~TPhaseDistr()
 
 /*##########################################################################
 #
+#   Name       : TPhaseDistr::GetPeak
+#
+#   Purpose....: Get peak value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPhaseDistr::GetPeak()
+{
+    return FNewPeak;
+}
+
+/*##########################################################################
+#
 #   Name       : TPhaseDistr::AddDist
 #
 #   Purpose....: Add distro to array
@@ -198,6 +216,94 @@ void TPhaseDistr::AddDist(int Arr[360])
 
     for (i = 0; i < 360; i++)
         Arr[i] += FCurrDist[i];
+}
+
+/*##########################################################################
+#
+#   Name       : TPhaseDistr::ChangeSD
+#
+#   Purpose....: Modify SD
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhaseDistr::ChangeSd(double diff)
+{
+    FNewSd = FCurrSd + diff;
+    CalcDist(FNewPhase, FNewPeak, FNewSd);
+}
+
+/*##########################################################################
+#
+#   Name       : TPhaseDistr::ChangePeak
+#
+#   Purpose....: Modify peak
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhaseDistr::ChangePeak(int diff)
+{
+    FNewPeak = FCurrPeak + diff;
+    CalcDist(FNewPhase, FNewPeak, FNewSd);
+}
+
+/*##########################################################################
+#
+#   Name       : TPhaseDistr::ChangePhase
+#
+#   Purpose....: Modify phase
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhaseDistr::ChangePhase(int diff)
+{
+    FNewPhase = FCurrPhase + diff;
+    CalcDist(FNewPhase, FNewPeak, FNewSd);
+}
+
+/*##########################################################################
+#
+#   Name       : TPhaseDistr::AcceptChange
+#
+#   Purpose....: Accept change
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhaseDistr::AcceptChange()
+{
+    FCurrSd = FNewSd;
+    FCurrPeak = FNewPeak;
+    FCurrPhase = FNewPhase;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhaseDistr::RejectChange
+#
+#   Purpose....: Reject change
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhaseDistr::RejectChange()
+{
+    FNewSd = FCurrSd;
+    FNewPeak = FCurrPeak;
+    FNewPhase = FCurrPhase;
+    CalcDist(FNewPhase, FNewPeak, FNewSd);
 }
 
 /*##########################################################################
@@ -422,6 +528,7 @@ TPhase::TPhase(int Raw[360])
         Add(Diff);
         CalcDist();
         FCurrFit = CalcFit();
+        Optimize();
     }
 }
 
@@ -541,5 +648,237 @@ void TPhase::GetDiff(int Arr[360])
             Arr[i] = diff;
         else
             Arr[i] = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::LowerSd
+#
+#   Purpose....: Try to lower SD to increase fit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPhase::LowerSd(TPhaseDistr *phase)
+{
+    double fit;
+    bool changed = false;
+
+    phase->ChangeSd(-0.01);
+    CalcDist();
+    fit = CalcFit();
+
+    while (fit < FCurrFit)
+    {
+        changed = true;
+        FCurrFit = fit;
+        phase->AcceptChange();
+        phase->ChangeSd(-0.01);
+        CalcDist();
+        fit = CalcFit();
+    }
+
+    phase->RejectChange();
+    return changed;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::LowerPeak
+#
+#   Purpose....: Try to lower peak to increase fit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPhase::LowerPeak(TPhaseDistr *phase)
+{
+    double fit;
+    int peak = phase->GetPeak();
+    int diff;
+    bool changed = false;
+
+    if (peak > 100)
+        diff = -peak / 100;
+    else
+        diff = -1;
+
+    phase->ChangePeak(diff);
+    CalcDist();
+    fit = CalcFit();
+
+    while (fit < FCurrFit)
+    {
+        changed = true;
+        FCurrFit = fit;
+        phase->AcceptChange();
+        phase->ChangePeak(diff);
+        CalcDist();
+        fit = CalcFit();
+    }
+
+    phase->RejectChange();
+    return changed;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::RaisePeak
+#
+#   Purpose....: Try to raise peak to increase fit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPhase::RaisePeak(TPhaseDistr *phase)
+{
+    double fit;
+    int peak = phase->GetPeak();
+    int diff;
+    bool changed = false;
+
+    if (peak > 100)
+        diff = peak / 100;
+    else
+        diff = 1;
+
+    phase->ChangePeak(diff);
+    CalcDist();
+    fit = CalcFit();
+
+    while (fit < FCurrFit)
+    {
+        changed = true;
+        FCurrFit = fit;
+        phase->AcceptChange();
+        phase->ChangePeak(diff);
+        CalcDist();
+        fit = CalcFit();
+    }
+
+    phase->RejectChange();
+    return changed;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::OptimizePhase
+#
+#   Purpose....: Try to move phase to increase fit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPhase::OptimizePhase(TPhaseDistr *phase)
+{
+    double fit;
+    int diff;
+    bool changed = false;
+
+    phase->ChangePhase(-1);
+    CalcDist();
+    fit = CalcFit();
+
+    if (fit < FCurrFit)
+    {
+        while (fit < FCurrFit)
+        {
+            changed = true;
+            FCurrFit = fit;
+            phase->AcceptChange();
+            phase->ChangePhase(-1);
+            CalcDist();
+            fit = CalcFit();
+        }
+    }
+    else
+    {
+        phase->ChangePhase(1);
+        CalcDist();
+        fit = CalcFit();
+
+        while (fit < FCurrFit)
+        {
+            changed = true;
+            FCurrFit = fit;
+            phase->AcceptChange();
+            phase->ChangePhase(1);
+            CalcDist();
+            fit = CalcFit();
+        }
+    }
+
+    phase->RejectChange();
+    return changed;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::Optimize
+#
+#   Purpose....: Optimize a distro
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPhase::Optimize(TPhaseDistr *phase)
+{
+    bool anych = false;
+    bool changed = true;
+    int count;
+
+    for (count = 0; count < 100 && changed; count++)
+    {
+        changed = LowerSd(phase);
+        changed |= LowerPeak(phase);
+        changed |= OptimizePhase(phase);
+        anych |= changed;
+    }
+    return anych;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::Optimize
+#
+#   Purpose....: Optimize distros
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhase::Optimize()
+{
+    int i;
+    int count;
+    TPhaseDistr *phase;
+    bool changed = true;
+
+    for (count = 0; count < 100 && changed; count++)
+    {
+        changed = false;
+
+        for (i = FPhaseCount - 2; i >= 0; i--)
+        {
+            phase = FPhaseArr[i];
+            changed |= Optimize(phase);
+        }
+
+        phase = FPhaseArr[FPhaseCount-1];
+        changed |= LowerSd(phase);
+        changed |= RaisePeak(phase);
+        changed |= OptimizePhase(phase);
     }
 }

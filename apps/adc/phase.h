@@ -36,13 +36,24 @@ public:
     TPhaseDistr(int Raw[360]);
     ~TPhaseDistr();
 
+    int GetPeak();
+
     void AddDist(int Arr[360]);
+    void ChangeSd(double diff);
+    void ChangePeak(int diff);
+    void ChangePhase(int diff);
+    void AcceptChange();
+    void RejectChange();
 
 protected:
     bool OptSd();
     bool OptPhase();
     void CalcDist(int Mean, int Peak, double Sd);
     double CalcFit();
+
+    int FNewPhase;
+    int FNewPeak;
+    double FNewSd;
 
     double FCurrFit;
     int FCurrArea;
@@ -64,6 +75,12 @@ protected:
     void CalcDist();
     double CalcFit();
     void GetDiff(int Arr[360]);
+    bool LowerSd(TPhaseDistr *phase);
+    bool LowerPeak(TPhaseDistr *phase);
+    bool RaisePeak(TPhaseDistr *phase);
+    bool OptimizePhase(TPhaseDistr *phase);
+    bool Optimize(TPhaseDistr *phase);
+    void Optimize();
 
     int FPhaseCount;
     TPhaseDistr *FPhaseArr[MAX_PHASE_DIST];
