@@ -148,7 +148,7 @@ void CalcPhase(int *Area, int *Phase, int *Peak)
 
 /*##########################################################################
 #
-#   Name       : TAdc::CalcNormal
+#   Name       : CalcNormal
 #
 #   Purpose....:
 #
@@ -164,6 +164,9 @@ void CalcNormal(int Arr[360], int Mean, int Peak, double Sd)
     int ival;
     int pos;
     double amp = (double)Peak;
+
+    for (i = 0; i < 360; i++)
+        Arr[i] = 0;
 
     for (i = 0; i < 180; i++)
     {
@@ -186,6 +189,95 @@ void CalcNormal(int Arr[360], int Mean, int Peak, double Sd)
 
 /*##########################################################################
 #
+#   Name       : CalcFit
+#
+#   Purpose....: Calc goodness of fit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double CalcFit(int Arr[360], int Area)
+{
+    long long diff;
+    long long sum;
+    int i;
+    double val;
+
+    sum = 0;
+    for (i = 0; i < 360; i++)
+    {
+        diff = Arr[i] - phase[i];
+        sum += diff * diff;
+    }    
+
+    val = (double)sum;
+    val = sqrt(val);
+    val = val / (double)Area;
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : OptSd
+#
+#   Purpose....: Optimize SD
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double OptSd(int Arr[360], int Mean, int Peak, int Area, double Sd)
+{
+    double OptFit;
+    double OptSd = Sd;
+    double Fit;
+
+    CalcNormal(Arr, Mean, Peak, Sd);
+    OptFit = CalcFit(Arr, Area);
+
+    Sd = OptSd + 0.01;
+    CalcNormal(Arr, Mean, Peak, Sd);
+    Fit = CalcFit(Arr, Area);
+
+    if (Fit < OptFit)
+    {
+        while (Fit < OptFit)
+        {
+            OptSd = Sd;
+            OptFit = Fit;
+
+            Sd = OptSd + 0.01;
+            CalcNormal(Arr, Mean, Peak, Sd);
+            Fit = CalcFit(Arr, Area);
+        }
+    }
+    else
+    {
+        Sd = OptSd - 0.01;
+        CalcNormal(Arr, Mean, Peak, Sd);
+        Fit = CalcFit(Arr, Area);
+
+        while (Fit < OptFit)
+        {
+            OptSd = Sd;
+            OptFit = Fit;
+
+            Sd = OptSd - 0.01;
+            CalcNormal(Arr, Mean, Peak, Sd);
+            Fit = CalcFit(Arr, Area);
+        }
+    }   
+
+    CalcNormal(Arr, Mean, Peak, OptSd);
+    return OptSd;
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....:
@@ -201,21 +293,12 @@ int main(int argc, char **argv)
     int Peak;
     int Area;
     double Sd;
+    double Fit;
     int Norm[360];
-    long long diff;
-    long long sum;
-    int i;
 
     CalcPhase(&Area, &Mean, &Peak);
 
     Sd = (double)Area / (double)Peak / sqrt(2.0 * 3.1415926);
-    CalcNormal(Norm, Mean, Peak, Sd);
-
-    sum = 0;
-    for (i = 0; i < 360; i++)
-    {
-        diff = Norm[i] - phase[i];
-        sum += diff * diff;
-    }    
-
+    Sd = OptSd(Norm, Mean, Peak, Area, Sd);
+    Fit = CalcFit(Norm, Area);
 }
