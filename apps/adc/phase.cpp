@@ -49,6 +49,7 @@ TPhaseDistr::TPhaseDistr(int Raw[360])
     int val;
     int max;
     int pos;
+    bool more;
     int filtered[360];
 
     FCurrArea = 0;
@@ -89,7 +90,7 @@ TPhaseDistr::TPhaseDistr(int Raw[360])
     filtered[5] += val / 4;
 
     val = Raw[359];
-    filtered[356] += val / 4;
+   filtered[356] += val / 4;
     filtered[357] += val / 2;
     filtered[358] += val;
     filtered[359] += val;
@@ -140,28 +141,29 @@ TPhaseDistr::TPhaseDistr(int Raw[360])
         }
     }
 
-    val = 0;
-    for (i = 0; i < 3; i++)
-    {
-        if (FCurrPhase == 0)
-            pos = 0;
-        else
-            pos = FCurrPhase - 1;
-        val += Raw[pos];
+    val = Raw[FCurrPhase];
 
-        val += Raw[FCurrPhase];
+    if (FCurrPhase == 0)
+        pos = 0;
+    else
+        pos = FCurrPhase - 1;
+    val += Raw[pos];
 
-        if (FCurrPhase == 359)
-            pos = 0;
-        else
-            pos = FCurrPhase + 1;
-        val += Raw[pos];
-    }
+    if (FCurrPhase == 359)
+        pos = 0;
+    else
+        pos = FCurrPhase + 1;
+    val += Raw[pos];
 
     FCurrPeak = val / 3;
+
     FCurrSd = (double)FCurrArea / (double)FCurrPeak / sqrt(2.0 * 3.1415926);
     CalcDist(FCurrPhase, FCurrPeak, FCurrSd);
     FCurrFit = CalcFit();
+
+    more = true;
+    for (i = 0; i < 100 && more; i++)
+        more = OptSd() || OptPhase();
 }
 
 /*##########################################################################
@@ -381,6 +383,9 @@ TPhase::TPhase(int Raw[360])
 
     for (i = 0; i < 360; i++)
         FRaw[i] = Raw[i];
+
+    FPhaseCount = 0;
+    Add(Raw);
 }
 
 /*##########################################################################
@@ -396,4 +401,27 @@ TPhase::TPhase(int Raw[360])
 ##########################################################################*/
 TPhase::~TPhase()
 {
+    int i;
+
+    for (i = 0; i < FPhaseCount; i++)
+        if (FPhaseArr[i])
+            delete FPhaseArr[i];
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::Add
+#
+#   Purpose....: Add distr
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhase::Add(int Raw[360])
+{
+    TPhaseDistr *phase = new TPhaseDistr(Raw);
+    FPhaseArr[FPhaseCount] = phase;
+    FPhaseCount++;
 }

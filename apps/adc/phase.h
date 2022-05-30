@@ -28,16 +28,17 @@
 #ifndef _PHASE_H
 #define _PHASE_H
 
+#define MAX_PHASE_DIST  8
+
 class TPhaseDistr
 {
 public:
     TPhaseDistr(int Raw[360]);
     ~TPhaseDistr();
 
+protected:
     bool OptSd();
     bool OptPhase();
-
-protected:
     void CalcDist(int Mean, int Peak, double Sd);
     double CalcFit();
 
@@ -57,6 +58,10 @@ public:
     ~TPhase();
 
 protected:
+    void Add(int Raw[360]);
+
+    int FPhaseCount;
+    TPhaseDistr *FPhaseArr[MAX_PHASE_DIST];
 
     int FRaw[360];
 };
