@@ -183,6 +183,32 @@ TPhaseDistr::~TPhaseDistr()
 
 /*##########################################################################
 #
+#   Name       : TPhaseDistr::GetDiff
+#
+#   Purpose....: Get difference data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhaseDistr::GetDiff(int Arr[360])
+{
+    int i;
+    int diff;
+
+    for (i = 0; i < 360; i++)
+    {
+        diff = FRaw[i] - FCurrDist[i];
+        if (diff > 0)
+            Arr[i] = diff;
+        else
+            Arr[i] = 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TPhaseDistr::CalcDist
 #
 #   Purpose....: Calc distribution data
@@ -380,12 +406,20 @@ bool TPhaseDistr::OptPhase()
 TPhase::TPhase(int Raw[360])
 {
     int i;
+    TPhaseDistr *phase;
+    int Diff[360];
 
     for (i = 0; i < 360; i++)
         FRaw[i] = Raw[i];
 
     FPhaseCount = 0;
-    Add(Raw);
+    phase = Add(Raw);
+
+    while (FPhaseCount < MAX_PHASE_DIST)
+    {
+        phase->GetDiff(Diff);
+        phase = Add(Diff);
+    }
 }
 
 /*##########################################################################
@@ -419,9 +453,10 @@ TPhase::~TPhase()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPhase::Add(int Raw[360])
+TPhaseDistr *TPhase::Add(int Raw[360])
 {
     TPhaseDistr *phase = new TPhaseDistr(Raw);
     FPhaseArr[FPhaseCount] = phase;
     FPhaseCount++;
+    return phase;
 }
