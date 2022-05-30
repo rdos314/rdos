@@ -36,7 +36,7 @@ int phase[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 /*##########################################################################
 #
-#   Name       : TAdc::CalcPhase
+#   Name       : CalcPhase
 #
 #   Purpose....:
 #
@@ -45,7 +45,7 @@ int phase[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 #   Returns....: *
 #
 ##########################################################################*/
-void CalcPhase(int *Phase, int *Peak)
+void CalcPhase(int *Area, int *Phase, int *Peak)
 {
     double dval;
     int i;
@@ -53,9 +53,16 @@ void CalcPhase(int *Phase, int *Peak)
     int ip[360];
     int max;
     int pos;
+  
+    val = 0;
 
     for (i = 0; i < 360; i++)
+    {
         ip[i] = 0;
+        val += phase[i];
+    }
+
+    *Area = val;
 
     val = phase[0];
     ip[357] += val / 4;
@@ -141,6 +148,44 @@ void CalcPhase(int *Phase, int *Peak)
 
 /*##########################################################################
 #
+#   Name       : TAdc::CalcNormal
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CalcNormal(int Arr[360], int Mean, int Peak, double Sd)
+{
+    int i;
+    double dval;
+    int ival;
+    int pos;
+    double amp = (double)Peak;
+
+    for (i = 0; i < 180; i++)
+    {
+        dval = (double)i;
+        dval = dval * dval / 2.0 / Sd / Sd;
+        dval = amp * exp(-dval);
+        ival = (int)dval;
+
+        pos = Mean + i;
+        if (pos >= 360)
+            pos -= 360;
+        Arr[pos] = ival;
+
+        pos = Mean - i;
+        if (pos < 0)
+            pos += 360;
+        Arr[pos] = ival;    
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....:
@@ -154,6 +199,23 @@ int main(int argc, char **argv)
 {
     int Mean;
     int Peak;
+    int Area;
+    double Sd;
+    int Norm[360];
+    long long diff;
+    long long sum;
+    int i;
 
-    CalcPhase(&Mean, &Peak);
+    CalcPhase(&Area, &Mean, &Peak);
+
+    Sd = (double)Area / (double)Peak / sqrt(2.0 * 3.1415926);
+    CalcNormal(Norm, Mean, Peak, Sd);
+
+    sum = 0;
+    for (i = 0; i < 360; i++)
+    {
+        diff = Norm[i] - phase[i];
+        sum += diff * diff;
+    }    
+
 }
