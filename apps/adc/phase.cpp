@@ -183,28 +183,21 @@ TPhaseDistr::~TPhaseDistr()
 
 /*##########################################################################
 #
-#   Name       : TPhaseDistr::GetDiff
+#   Name       : TPhaseDistr::AddDist
 #
-#   Purpose....: Get difference data
+#   Purpose....: Add distro to array
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TPhaseDistr::GetDiff(int Arr[360])
+void TPhaseDistr::AddDist(int Arr[360])
 {
     int i;
-    int diff;
 
     for (i = 0; i < 360; i++)
-    {
-        diff = FRaw[i] - FCurrDist[i];
-        if (diff > 0)
-            Arr[i] = diff;
-        else
-            Arr[i] = 0;
-    }
+        Arr[i] += FCurrDist[i];
 }
 
 /*##########################################################################
@@ -406,19 +399,29 @@ bool TPhaseDistr::OptPhase()
 TPhase::TPhase(int Raw[360])
 {
     int i;
-    TPhaseDistr *phase;
+    int val;
     int Diff[360];
 
+    FArea = 0;
+
     for (i = 0; i < 360; i++)
-        FRaw[i] = Raw[i];
+    {
+        val = Raw[i];
+        FRaw[i] = val;
+        FArea += val;
+    }
 
     FPhaseCount = 0;
-    phase = Add(Raw);
+    Add(Raw);
+    CalcDist();
+    FCurrFit = CalcFit();
 
-    while (FPhaseCount < MAX_PHASE_DIST)
+    while (FCurrFit > 0.01 && FPhaseCount < MAX_PHASE_DIST)
     {
-        phase->GetDiff(Diff);
-        phase = Add(Diff);
+        GetDiff(Diff);
+        Add(Diff);
+        CalcDist();
+        FCurrFit = CalcFit();
     }
 }
 
@@ -459,4 +462,84 @@ TPhaseDistr *TPhase::Add(int Raw[360])
     FPhaseArr[FPhaseCount] = phase;
     FPhaseCount++;
     return phase;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::CalcDist
+#
+#   Purpose....: Calc dist array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhase::CalcDist()
+{
+    int i;
+
+    for (i = 0; i < 360; i++)
+       FCurrDist[i] = 0;
+
+    for (i = 0; i < FPhaseCount; i++)
+        FPhaseArr[i]->AddDist(FCurrDist);
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::CalcFit
+#
+#   Purpose....: Calc goodness of fit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TPhase::CalcFit()
+{
+    long long diff;
+    long long sum;
+    int i;
+    double val;
+
+    sum = 0;
+    for (i = 0; i < 360; i++)
+    {
+        diff = FCurrDist[i] - FRaw[i];
+        sum += diff * diff;
+    }
+
+    val = (double)sum;
+    val = sqrt(val);
+    val = val / (double)FArea;
+
+    return val;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::GetDiff
+#
+#   Purpose....: Get difference array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhase::GetDiff(int Arr[360])
+{
+    int i;
+    int diff;
+
+    for (i = 0; i < 360; i++)
+    {
+        diff = FCurrDist[i] - FRaw[i];
+        if (diff > 0)
+            Arr[i] = diff;
+        else
+            Arr[i] = 0;
+    }
 }

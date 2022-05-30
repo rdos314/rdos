@@ -36,7 +36,7 @@ public:
     TPhaseDistr(int Raw[360]);
     ~TPhaseDistr();
 
-    void GetDiff(int Arr[360]);
+    void AddDist(int Arr[360]);
 
 protected:
     bool OptSd();
@@ -61,11 +61,18 @@ public:
 
 protected:
     TPhaseDistr *Add(int Raw[360]);
+    void CalcDist();
+    double CalcFit();
+    void GetDiff(int Arr[360]);
 
     int FPhaseCount;
     TPhaseDistr *FPhaseArr[MAX_PHASE_DIST];
 
+    int FArea;
+    double FCurrFit;
+
     int FRaw[360];
+    int FCurrDist[360];
 };
 
 #endif
