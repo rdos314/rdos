@@ -43,7 +43,42 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TPhaseDistr::TPhaseDistr(int Raw[360])
+TPhaseDistr::TPhaseDistr()
+{
+    FCurrArea = 0;
+    FCurrPhase = 0;
+    FCurrPeak = 0;
+    FCurrSd = 0.0;
+    FCurrFit = 0.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhaseDistr::~TPhaseDistr
+#
+#   Purpose....: Destructor for normal distribution for phase data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPhaseDistr::~TPhaseDistr()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPhaseDistr::Define
+#
+#   Purpose....: Define data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhaseDistr::Define(int Raw[360])
 {
     int i;
     int val;
@@ -90,7 +125,7 @@ TPhaseDistr::TPhaseDistr(int Raw[360])
     filtered[5] += val / 4;
 
     val = Raw[359];
-   filtered[356] += val / 4;
+    filtered[356] += val / 4;
     filtered[357] += val / 2;
     filtered[358] += val;
     filtered[359] += val;
@@ -166,21 +201,6 @@ TPhaseDistr::TPhaseDistr(int Raw[360])
         more = OptSd() || OptPhase();
 
     RejectChange();
-}
-
-/*##########################################################################
-#
-#   Name       : TPhaseDistr::~TPhaseDistr
-#
-#   Purpose....: Destructor for normal distribution for phase data
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPhaseDistr::~TPhaseDistr()
-{
 }
 
 /*##########################################################################
@@ -534,7 +554,37 @@ bool TPhaseDistr::OptPhase()
 #   Returns....: *
 #
 ##########################################################################*/
-TPhase::TPhase(int Raw[360])
+TPhase::TPhase()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::~TPhase
+#
+#   Purpose....: Destructor for phase
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPhase::~TPhase()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::Define
+#
+#   Purpose....: Define data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPhase::Define(int Raw[360])
 {
     int i;
     int val;
@@ -567,32 +617,11 @@ TPhase::TPhase(int Raw[360])
 
     if (phase->GetPeak() <= FMinPeak)
     {
-        delete phase;
         FPhaseCount--;
         CalcDist();
         FCurrFit = CalcFit();
         Optimize();
     }
-}
-
-/*##########################################################################
-#
-#   Name       : TPhase::~TPhase
-#
-#   Purpose....: Destructor for phase
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TPhase::~TPhase()
-{
-    int i;
-
-    for (i = 0; i < FPhaseCount; i++)
-        if (FPhaseArr[i])
-            delete FPhaseArr[i];
 }
 
 /*##########################################################################
@@ -609,7 +638,7 @@ TPhase::~TPhase()
 TPhaseDistr *TPhase::Get(int index)
 {
     if (index < FPhaseCount)
-        return FPhaseArr[index];
+        return &FPhaseArr[index];
     else
         return 0;
 }
@@ -627,9 +656,9 @@ TPhaseDistr *TPhase::Get(int index)
 ##########################################################################*/
 TPhaseDistr *TPhase::Add(int Raw[360])
 {
-    TPhaseDistr *phase = new TPhaseDistr(Raw);
-    FPhaseArr[FPhaseCount] = phase;
+    TPhaseDistr *phase = &FPhaseArr[FPhaseCount];
     FPhaseCount++;
+    phase->Define(Raw);
     return phase;
 }
 
@@ -652,7 +681,7 @@ void TPhase::CalcDist()
        FCurrDist[i] = 0;
 
     for (i = 0; i < FPhaseCount; i++)
-        FPhaseArr[i]->AddDist(FCurrDist);
+        FPhaseArr[i].AddDist(FCurrDist);
 }
 
 /*##########################################################################
@@ -935,11 +964,11 @@ void TPhase::Optimize()
 
         for (i = FPhaseCount - 2; i >= 0; i--)
         {
-            phase = FPhaseArr[i];
+            phase = &FPhaseArr[i];
             changed |= Optimize(phase);
         }
 
-        phase = FPhaseArr[FPhaseCount-1];
+        phase = &FPhaseArr[FPhaseCount-1];
         changed |= LowerSd(phase);
         changed |= RaisePeak(phase);
         changed |= OptimizePhase(phase);

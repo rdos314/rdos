@@ -33,8 +33,10 @@
 class TPhaseDistr
 {
 public:
-    TPhaseDistr(int Raw[360]);
+    TPhaseDistr();
     ~TPhaseDistr();
+
+    void Define(int Raw[360]);
 
     int GetPeak();
     int GetPhase();
@@ -69,8 +71,10 @@ protected:
 class TPhase
 {
 public:
-    TPhase(int Raw[360]);
+    TPhase();
     ~TPhase();
+
+    void Define(int Raw[360]);
 
     TPhaseDistr *Get(int Index);
 
@@ -87,7 +91,7 @@ protected:
     void Optimize();
 
     int FPhaseCount;
-    TPhaseDistr *FPhaseArr[MAX_PHASE_DIST];
+    TPhaseDistr FPhaseArr[MAX_PHASE_DIST];
 
     int FArea;
     double FCurrFit;
