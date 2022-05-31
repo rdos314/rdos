@@ -77,9 +77,11 @@ public:
     void Define(int Raw[360]);
 
     TPhaseDistr *Get(int Index);
+    int GetPeak();
 
 protected:
     TPhaseDistr *Add(int Raw[360]);
+    bool CheckSimilar(int Phase);
     void CalcDist();
     double CalcFit();
     void GetDiff(int Arr[360]);
@@ -95,7 +97,7 @@ protected:
 
     int FArea;
     double FCurrFit;
-    int FMinPeak;
+    int FPeak;
 
     int FRaw[360];
     int FCurrDist[360];

@@ -33,6 +33,7 @@
 #include "freq.h"
 #include "file.h"
 #include "adcdata.h"
+#include "phase.h"
 
 #define MAX_DIR 16
 
@@ -132,6 +133,8 @@ protected:
     int WorkSize;
     int *WorkBuf;
     TAdcData *WorkData;
+
+    TPhase PhaseCalc;
 
     TAdcData *TestData;
     TAdcAna **AdcAna;

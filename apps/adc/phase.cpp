@@ -601,26 +601,26 @@ void TPhase::Define(int Raw[360])
     }
 
     FPhaseCount = 0;
-    phase = Add(Raw);
-    CalcDist();
-    FCurrFit = CalcFit();
-    FMinPeak = phase->GetPeak() / 10;
+    FPeak = 0;
 
-    while (phase->GetPeak() > FMinPeak && FPhaseCount < MAX_PHASE_DIST)
+    phase = Add(Raw);
+    if (phase)
+    {
+        CalcDist();
+        FCurrFit = CalcFit();
+        FPeak = phase->GetPeak();
+    }
+
+    while (phase && FPhaseCount < MAX_PHASE_DIST)
     {
         GetDiff(Diff);
         phase = Add(Diff);
-        CalcDist();
-        FCurrFit = CalcFit();
-        Optimize();
-    }
-
-    if (phase->GetPeak() <= FMinPeak)
-    {
-        FPhaseCount--;
-        CalcDist();
-        FCurrFit = CalcFit();
-        Optimize();
+        if (phase)
+        {
+            CalcDist();
+            FCurrFit = CalcFit();
+            Optimize();
+        }
     }
 }
 
@@ -645,6 +645,50 @@ TPhaseDistr *TPhase::Get(int index)
 
 /*##########################################################################
 #
+#   Name       : TPhase::GetPeak
+#
+#   Purpose....: Get peak
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPhase::GetPeak()
+{
+    return FPeak;
+}
+
+/*##########################################################################
+#
+#   Name       : TPhase::CheckSimilar
+#
+#   Purpose....: Check if similar
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPhase::CheckSimilar(int phase)
+{
+    int i;
+    int diff;
+
+    for (i = 0; i < FPhaseCount; i++)
+    {
+        diff = phase - FPhaseArr[i].GetPhase();
+        if (diff < 0)
+            diff = -diff;
+
+        if (diff < 10)
+            return true;
+    }
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TPhase::Add
 #
 #   Purpose....: Add distr
@@ -656,9 +700,24 @@ TPhaseDistr *TPhase::Get(int index)
 ##########################################################################*/
 TPhaseDistr *TPhase::Add(int Raw[360])
 {
+    int peak;
+    int ph;
     TPhaseDistr *phase = &FPhaseArr[FPhaseCount];
-    FPhaseCount++;
+
     phase->Define(Raw);
+    peak = phase->GetPeak();
+    ph = phase->GetPhase();
+
+    if (peak < 100)
+        return 0;
+
+    if (peak * 10 < FPeak)
+        return 0;
+
+    if (CheckSimilar(ph))
+        return 0;
+
+    FPhaseCount++;
     return phase;
 }
 

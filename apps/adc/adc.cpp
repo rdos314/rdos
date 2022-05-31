@@ -34,7 +34,6 @@
 #include "adcthr.h"
 #include "adcana.h"
 #include "adc.h"
-#include "phase.h"
 
 // #define ANTENNA_DISTANCE  210 // centimeters, wide
 #define ANTENNA_DISTANCE  155 // centimeters, roof, edge
@@ -1116,12 +1115,13 @@ void TAdc::PrintBSumary(int Index)
 ##########################################################################*/
 void TAdc::PrintDelaySumary(int Index)
 {
-    TPhase *ph;
-    TPhaseDistr *phd;
+    TPhaseDistr *ph;
     TAdcAna *ana;
     int i;
     int j;
     int phase;
+    int peak;
+    int rel;
     double sd;
     char str[100];
 
@@ -1140,20 +1140,25 @@ void TAdc::PrintDelaySumary(int Index)
 
     if (phase < 360)
     {
-        ph = new TPhase(Delay.Phase);
+        PhaseCalc.Define(Delay.Phase);
+        peak = PhaseCalc.GetPeak();
 
         for (i = 0; i < MAX_PHASE_DIST; i++)
         {
-            phd = ph->Get(i);
-            if (phd)
+            ph = PhaseCalc.Get(i);
+            if (ph)
             {
-                sprintf(str, "Phase: ");
+                if (i == 0)
+                    sprintf(str, "Phase: ");
+                else
+                    sprintf(str, "  ");
                 Write(str);
 
-                phase = phd->GetPhase();
-                sd = phd->GetSd();
+                phase = ph->GetPhase();
+                sd = ph->GetSd();
+                rel = ph->GetPeak() * 100 / peak;
 
-                sprintf(str, "%d (%5.2Lf)", phase, sd);
+                sprintf(str, "%d%% %d (%4.1Lf)", rel, phase, sd);
                 Write(str);
 
                 sprintf(str, " Direction: ");
