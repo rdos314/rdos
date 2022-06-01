@@ -36,8 +36,8 @@
 #include "adc.h"
 
 // #define ANTENNA_DISTANCE  210 // centimeters, wide
-#define ANTENNA_DISTANCE  155 // centimeters, roof, edge
-// #define ANTENNA_DISTANCE  220 // centimeters, roof, diag
+// #define ANTENNA_DISTANCE  155 // centimeters, roof, edge
+#define ANTENNA_DISTANCE  220 // centimeters, roof, diag
 // #define ANTENNA_DISTANCE  108 // centimeters, narrow
 
 struct TAdcFreqPower
