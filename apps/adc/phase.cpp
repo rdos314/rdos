@@ -681,7 +681,7 @@ bool TPhase::CheckSimilar(int phase)
         if (diff < 0)
             diff = -diff;
 
-        if (diff < 10)
+        if (diff < 8)
             return true;
     }
     return false;
@@ -708,7 +708,7 @@ TPhaseDistr *TPhase::Add(int Raw[360])
     peak = phase->GetPeak();
     ph = phase->GetPhase();
 
-    if (peak < 100)
+    if (peak < 50)
         return 0;
 
     if (peak * 10 < FPeak)
@@ -821,7 +821,7 @@ bool TPhase::LowerSd(TPhaseDistr *phase)
     CalcDist();
     fit = CalcFit();
 
-    while (fit < FCurrFit)
+    while (fit < FCurrFit && phase->GetSd() > 0.5)
     {
         changed = true;
         FCurrFit = fit;
@@ -862,7 +862,7 @@ bool TPhase::LowerPeak(TPhaseDistr *phase)
     CalcDist();
     fit = CalcFit();
 
-    while (fit < FCurrFit)
+    while (fit < FCurrFit && phase->GetPeak() > 50)
     {
         changed = true;
         FCurrFit = fit;
