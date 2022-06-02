@@ -318,6 +318,13 @@ void TPhaseDistr::ChangePeak(int diff)
 void TPhaseDistr::ChangePhase(int diff)
 {
     FNewPhase = FCurrPhase + diff;
+
+    while (FNewPhase >= 360)
+        FNewPhase -= 360;
+
+    while (FNewPhase < 0)
+        FNewPhase += 360;
+
     CalcDist(FNewPhase, FNewPeak, FNewSd);
 }
 
@@ -447,6 +454,7 @@ bool TPhaseDistr::OptSd()
     bool changed = false;
     double Fit;
     double Sd;
+    int count = 0;
 
     Sd = FCurrSd + 0.01;
     CalcDist(FCurrPhase, FCurrPeak, Sd);
@@ -454,7 +462,7 @@ bool TPhaseDistr::OptSd()
 
     if (Fit < FCurrFit)
     {
-        while (Fit < FCurrFit)
+        for (count = 0; count < 1000 && Fit < FCurrFit; count++)
         {
             changed = true;
             FCurrSd = Sd;
@@ -471,7 +479,7 @@ bool TPhaseDistr::OptSd()
         CalcDist(FCurrPhase, FCurrPeak, Sd);
         Fit = CalcFit();
 
-        while (Fit < FCurrFit)
+        for (count = 0; count < 1000 && Fit < FCurrFit; count++)
         {
             changed = true;
             FCurrSd = Sd;
@@ -503,6 +511,7 @@ bool TPhaseDistr::OptPhase()
     bool changed = false;
     double Fit;
     int Phase;
+    int count;
 
     Phase = FCurrPhase + 1;
     CalcDist(Phase, FCurrPeak, FCurrSd);
@@ -510,13 +519,15 @@ bool TPhaseDistr::OptPhase()
 
     if (Fit < FCurrFit)
     {
-        while (Fit < FCurrFit)
+        for (count = 0; count < 360 && Fit < FCurrFit; count++)
         {
             changed = true;
             FCurrPhase = Phase;
             FCurrFit = Fit;
 
             Phase = FCurrPhase + 1;
+            if (Phase == 360)
+                Phase = 0;
             CalcDist(Phase, FCurrPeak, FCurrSd);
             Fit = CalcFit();
         }
@@ -524,16 +535,20 @@ bool TPhaseDistr::OptPhase()
     else
     {
         Phase = FCurrPhase - 1;
+        if (Phase == -1)
+            Phase = 359;
         CalcDist(Phase, FCurrPeak, FCurrSd);
         Fit = CalcFit();
 
-        while (Fit < FCurrFit)
+        for (count = 0; count < 360 && Fit < FCurrFit; count++)
         {
             changed = true;
             FCurrPhase = Phase;
             FCurrFit = Fit;
 
             Phase = FCurrPhase - 1;
+            if (Phase == -1)
+                Phase = 359;
             CalcDist(Phase, FCurrPeak, FCurrSd);
             Fit = CalcFit();
         }
@@ -893,6 +908,7 @@ bool TPhase::RaisePeak(TPhaseDistr *phase)
     int peak = phase->GetPeak();
     int diff;
     bool changed = false;
+    int count;
 
     if (peak > 100)
         diff = peak / 100;
@@ -903,7 +919,7 @@ bool TPhase::RaisePeak(TPhaseDistr *phase)
     CalcDist();
     fit = CalcFit();
 
-    while (fit < FCurrFit)
+    for (count = 0; count < 1000 && fit < FCurrFit; count++)
     {
         changed = true;
         FCurrFit = fit;
@@ -933,6 +949,7 @@ bool TPhase::OptimizePhase(TPhaseDistr *phase)
     double fit;
     int diff;
     bool changed = false;
+    int count;
 
     phase->ChangePhase(-1);
     CalcDist();
@@ -940,7 +957,7 @@ bool TPhase::OptimizePhase(TPhaseDistr *phase)
 
     if (fit < FCurrFit)
     {
-        while (fit < FCurrFit)
+        for (count = 0; count < 360 && fit < FCurrFit; count++)
         {
             changed = true;
             FCurrFit = fit;
@@ -956,7 +973,7 @@ bool TPhase::OptimizePhase(TPhaseDistr *phase)
         CalcDist();
         fit = CalcFit();
 
-        while (fit < FCurrFit)
+        for (count = 0; count < 360 && fit < FCurrFit; count++)
         {
             changed = true;
             FCurrFit = fit;
