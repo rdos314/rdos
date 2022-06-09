@@ -968,6 +968,8 @@
 #define usergate_user_get_system_time 0x00000314
 #define usergate_user_get_time 0x00000315
 
+#define usergate_has_power_card 0x00000316
+
 
 
 #ifdef __FLAT__
@@ -1941,6 +1943,8 @@
 #define CallGate_user_get_system_time 0x55 0x67 0x9a 20 3 0 0 3 0 0x5d
 #define CallGate_user_get_time 0x55 0x67 0x9a 21 3 0 0 3 0 0x5d
 
+#define CallGate_has_power_card 0x55 0x67 0x9a 22 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2911,5 +2915,7 @@
 
 #define CallGate_user_get_system_time 0x3e 0x67 0x9a 20 3 0 0 3 0
 #define CallGate_user_get_time 0x3e 0x67 0x9a 21 3 0 0 3 0
+
+#define CallGate_has_power_card 0x3e 0x67 0x9a 22 3 0 0 3 0
 
 #endif

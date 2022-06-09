@@ -625,6 +625,7 @@ int RDOSAPI RdosGetDeviceInfo(int CodeSel, char *Name, unsigned int *CodeSize, u
 
 int RDOSAPI RdosGetSelectorInfo(int CodeSel, int *Limit, int *Bitness);
 
+int RDOSAPI RdosHasPowerCard();
 int RDOSAPI RdosHasHardReset();
 void RDOSAPI RdosSoftReset();
 void RDOSAPI RdosHardReset();

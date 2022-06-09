@@ -1993,6 +1993,11 @@
     __parm [__eax] [__edi] [__ecx] \
     __value [__ecx]
 
+#pragma aux RdosHasPowerCard = \
+    CallGate_has_power_card \
+    CarryToBool \
+    __value [__eax]
+
 #pragma aux RdosHasHardReset = \
     CallGate_has_hard_reset \
     CarryToBool \

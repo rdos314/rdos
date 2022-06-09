@@ -444,6 +444,10 @@ HasHardReset        MACRO
         UserGate has_hard_reset_nr
                                                 ENDM
 
+HasPowerCard        MACRO
+        UserGate has_power_card_nr
+                                                ENDM
+
 ; OUT AX        Active cores
 GetActiveCores        MACRO
         UserGate get_active_cores_nr
