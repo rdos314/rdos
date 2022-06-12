@@ -40,7 +40,8 @@
 // #define ANTENNA_DISTANCE  220 // centimeters, roof, diag
 // #define ANTENNA_DISTANCE  108 // centimeters, narrow
 // #define ANTENNA_DISTANCE  300 // centimeters, aligned (East-West)
-#define ANTENNA_DISTANCE  150 // centimeters, aligned (East-West)
+// #define ANTENNA_DISTANCE  150 // centimeters, aligned (East-West)
+#define ANTENNA_DISTANCE  350 // centimeters, aligned (East-West)
 
 struct TAdcFreqPower
 {
@@ -90,6 +91,7 @@ int CreateFmSignal(int *Data, int Size, int Amp, int InitPhase, int InitPeriod, 
 #define M_PI 3.14159265358979323846
 
 static double CurrPhase[360];
+static int TotalPhase[305][360];
 
 /*##########################################################################
 #
@@ -1201,6 +1203,10 @@ void TAdc::PrintPhase(int index)
             sprintf(str, "%d,", Delay.Phase[i]);
         Write(str);
     }
+
+    if (index < 305)
+        for (i = 0; i < 360; i++)
+            TotalPhase[index][i] = Delay.Phase[i];
 }
 
 /*##########################################################################
@@ -1692,6 +1698,23 @@ void TAdc::PrintResult()
                 opt = 0;
             }
         }
+    }
+
+    sprintf(str, "\r\nFreq Phase Totals:\r\n");
+    Write(str);
+
+    for (j = 0; j < 360; j++)
+    {
+        for (i = 0; i < FreqCount; i++)
+        {
+            if (i < 305)
+            {
+                sprintf(str, "%d ", TotalPhase[i][j]);
+                Write(str);
+            }
+        }
+        sprintf(str, "\r\n");
+        Write(str);
     }
 }
 
