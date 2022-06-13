@@ -35,13 +35,14 @@
 #include "adcana.h"
 #include "adc.h"
 
-// #define ANTENNA_DISTANCE  210 // centimeters, wide
+#define ANTENNA_DISTANCE  210 // centimeters, wide
 // #define ANTENNA_DISTANCE  155 // centimeters, roof, edge
 // #define ANTENNA_DISTANCE  220 // centimeters, roof, diag
 // #define ANTENNA_DISTANCE  108 // centimeters, narrow
 // #define ANTENNA_DISTANCE  300 // centimeters, aligned (East-West)
 // #define ANTENNA_DISTANCE  150 // centimeters, aligned (East-West)
-#define ANTENNA_DISTANCE  350 // centimeters, aligned (East-West)
+// #define ANTENNA_DISTANCE  350 // centimeters, aligned (East-West)
+// #define ANTENNA_DISTANCE  225 // centimeters, aligned (East-West) - 60 deg
 
 struct TAdcFreqPower
 {
