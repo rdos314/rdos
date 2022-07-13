@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "rdos.h"
 #include "bitdev.h"
 #include "testdll.h"
 

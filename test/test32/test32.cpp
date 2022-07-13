@@ -24,5 +24,12 @@
 ##########################################################################*/
 void main()
 {
+    int InitFree = RdosGetFreeBigLocalLinear();
+    int UsedMem;
+
     DllInit();
+
+    UsedMem = RdosGetFreeBigLocalLinear() - InitFree;
+    printf("%d\r\n", UsedMem);
+
 }
