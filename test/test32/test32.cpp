@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "bitdev.h"
+#include "testdll.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -23,10 +24,5 @@
 ##########################################################################*/
 void main()
 {
-    TBitmapGraphicDevice *dev = 0;
-
-    dev = new TBitmapGraphicDevice(1, 640, 1000);
-
-    if (dev)
-        delete dev;
+    DllInit();
 }
