@@ -101,6 +101,8 @@ pmu_server_thread    DW ?
 pmu_bitmap           DW ?
 pmu_pr_thread        DW ?
 
+pmu_error_count      DB ?
+
 pmu_model            DB 32 DUP(?)
 
 data    ENDS
@@ -334,16 +336,26 @@ CheckStatus    Proc near
     mov bx,ds:pmu_dev_handle
     mov dl,ds:pmu_out_pipe
     PostUsbRawPipe
-    jc csDone
+    jc csFail
 ;
     call ReadAnswer
     cmp cx,4
-    jne csDone
+    jne csFail
 ;
     mov es,ds:pmu_in_buffer
     xor bx,bx
     mov eax,es:[bx]
     mov ds:pmu_status,eax
+    mov ds:pmu_error_count,0
+    jmp csDone
+
+csFail:
+    mov al,ds:pmu_error_count
+    cmp al,10
+    je csDone
+;
+    inc al
+    mov ds:pmu_error_count,al
 
 csDone:
     popad
@@ -1157,10 +1169,10 @@ ptLoop:
     call SendLine
     call FinishLine
 ;
-    mov ax,10
+    mov ax,5
     WaitMilliSec
 ;
-    cmp bp,10
+    cmp bp,5
     jne ptNext
 ;
     xor bp,bp
@@ -1406,6 +1418,14 @@ is_ok   Proc far
     stc
     jz iokDone
 ;
+    mov al,ds:pmu_error_count
+    cmp al,10
+    jb iokOk
+;
+    stc
+    jmp iokDone
+
+iokOk:
     clc
 
 iokDone:

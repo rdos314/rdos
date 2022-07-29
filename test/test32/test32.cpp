@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "bitdev.h"
-#include "testdll.h"
+#include "serial.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -24,12 +23,28 @@
 ##########################################################################*/
 void main()
 {
-    int InitFree = RdosGetFreeBigLocalLinear();
-    int UsedMem;
+    bool On = true;
+    RdosWaitMilli(1000);
 
-    DllInit();
+    TSerialDevice Port2(2, 9600, 'N', 8, 1);
 
-    UsedMem = RdosGetFreeBigLocalLinear() - InitFree;
-    printf("%d\r\n", UsedMem);
+    Port2.Open();
 
+    for (;;)
+    {
+        RdosWaitMilli(100);
+
+        if (On)
+        {
+            On = false;
+            Port2.SetDtr();
+        }
+        else
+        {
+            On = true;
+            Port2.ResetDtr();
+        }
+
+        Port2.Write("hello ");
+    }
 }
