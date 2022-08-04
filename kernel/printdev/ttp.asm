@@ -882,8 +882,8 @@ sbDo:
     call SendLine
     inc dx
 ;
-    test dl,0Fh
-    jnz sbNext
+;    test dl,0Fh
+;    jnz sbNext
 ;
     call SendPrint
 
