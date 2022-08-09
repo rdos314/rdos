@@ -2658,7 +2658,13 @@ FinishRaw   Proc far
     clc
     je frRel
 ;
+    mov eax,fs:[edx].oes_headp
+    test al,1
+    jz frTimeout
+;
     call StopTds
+
+frTimeout:
     stc
 
 frRel:
