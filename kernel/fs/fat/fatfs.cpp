@@ -499,9 +499,9 @@ void TFat::Test()
 ##########################################################################*/
 void TFat::Run()
 {
-    RdosCreateThread(ThreadStartup, "Disc Test 1", this, 0x4000);
-    RdosCreateThread(ThreadStartup, "Disc Test 2", this, 0x4000);
-    RdosCreateThread(ThreadStartup, "Disc Test 3", this, 0x4000);
+//    RdosCreateThread(ThreadStartup, "Disc Test 1", this, 0x4000);
+//    RdosCreateThread(ThreadStartup, "Disc Test 2", this, 0x4000);
+//    RdosCreateThread(ThreadStartup, "Disc Test 3", this, 0x4000);
 
 //    ServTest();
 
