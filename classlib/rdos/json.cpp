@@ -339,6 +339,25 @@ TJsonObject::~TJsonObject()
 
 /*##########################################################################
 #
+#   Name       : TJsonObject::Allocate
+#
+#   Purpose....: new
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void *TJsonObject::Allocate(int size)
+{
+    if (FAlloc)
+        return FAlloc->Allocate(size);
+    else
+        return new char[size];
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonObject::new
 #
 #   Purpose....: new
@@ -1243,7 +1262,7 @@ TJsonBooleanArray::TJsonBooleanArray(const TJsonBooleanArray &src, TJsonAlloc *A
     {
         FArraySize = src.FArrayCount;
         FArrayCount = src.FArrayCount;
-        FArr = new bool[FArraySize];
+        FArr = new(Alloc) bool[FArraySize];
 
         for (i = 0; i < FArrayCount; i++)
             FArr[i] = src.FArr[i];
@@ -1336,13 +1355,13 @@ bool TJsonBooleanArray::IsBooleanArray()
 void TJsonBooleanArray::Grow()
 {
     int i;
-    int NewSize;
+    int NewSize; 
     bool *NewArr;
 
     if (FArr)
     {
         NewSize = 2 * FArraySize;
-        NewArr = new bool[NewSize];
+        NewArr = new(FAlloc) bool[NewSize];
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArr[i];
@@ -1350,12 +1369,13 @@ void TJsonBooleanArray::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = false;
 
-        delete FArr;
+        if (FAlloc == 0)
+            delete FArr;
     }
     else
     {
         NewSize = 10;
-        NewArr = new bool[NewSize];
+        NewArr = new(FAlloc) bool[NewSize];
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = false;
@@ -1458,7 +1478,7 @@ TJsonIntArray::TJsonIntArray(const TJsonIntArray &src, TJsonAlloc *Alloc)
     {
         FArraySize = src.FArrayCount;
         FArrayCount = src.FArrayCount;
-        FArr = new long long[FArraySize];
+        FArr = new(FAlloc) long long[FArraySize];
 
         for (i = 0; i < FArrayCount; i++)
             FArr[i] = src.FArr[i];
@@ -1557,7 +1577,7 @@ void TJsonIntArray::Grow()
     if (FArr)
     {
         NewSize = 2 * FArraySize;
-        NewArr = new long long[NewSize];
+        NewArr = new(FAlloc) long long[NewSize];
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArr[i];
@@ -1565,12 +1585,13 @@ void TJsonIntArray::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = 0;
 
-        delete FArr;
+        if (FAlloc == 0)
+            delete FArr;
     }
     else
     {
         NewSize = 10;
-        NewArr = new long long[NewSize];
+        NewArr = new(FAlloc) long long[NewSize];
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = 0;
@@ -1677,7 +1698,7 @@ TJsonDoubleArray::TJsonDoubleArray(const TJsonDoubleArray &src, TJsonAlloc *Allo
     {
         FArraySize = src.FArrayCount;
         FArrayCount = src.FArrayCount;
-        FArr = new double[FArraySize];
+        FArr = new(Alloc) double[FArraySize];
 
         for (i = 0; i < FArrayCount; i++)
             FArr[i] = src.FArr[i];
@@ -1776,7 +1797,7 @@ void TJsonDoubleArray::Grow()
     if (FArr)
     {
         NewSize = 2 * FArraySize;
-        NewArr = new double[NewSize];
+        NewArr = new(FAlloc) double[NewSize];
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArr[i];
@@ -1784,12 +1805,13 @@ void TJsonDoubleArray::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = INFINITY;
 
-        delete FArr;
+        if (FAlloc == 0)
+            delete FArr;
     }
     else
     {
         NewSize = 10;
-        NewArr = new double[NewSize];
+        NewArr = new(FAlloc) double[NewSize];
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = INFINITY;
@@ -1943,14 +1965,14 @@ TJsonStringArray::TJsonStringArray(const TJsonStringArray &src, TJsonAlloc *Allo
     {
         FArraySize = src.FArrayCount;
         FArrayCount = src.FArrayCount;
-        FArr = new char *[FArraySize];
+        FArr = new(Alloc) char *[FArraySize];
 
         for (i = 0; i < FArrayCount; i++)
         {
             if (src.FArr[i])
             {
                 len = strlen(src.FArr[i]);
-                 FArr[i] = new char[len + 1];
+                 FArr[i] = new(Alloc) char[len + 1];
                  strcpy(FArr[i], src.FArr[i]);
             }
             else
@@ -2059,7 +2081,7 @@ void TJsonStringArray::Grow()
     if (FArr)
     {
         NewSize = 2 * FArraySize;
-        NewArr = new char *[NewSize];
+        NewArr = new(FAlloc) char *[NewSize];
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArr[i];
@@ -2067,12 +2089,13 @@ void TJsonStringArray::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = 0;
 
-        delete FArr;
+        if (FAlloc == 0)
+            delete FArr;
     }
     else
     {
         NewSize = 10;
-        NewArr = new char *[NewSize];
+        NewArr = new(FAlloc) char *[NewSize];
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = 0;
@@ -2098,7 +2121,7 @@ void TJsonStringArray::Add(TString &str)
     int size = str.GetSize();
     char *s;
 
-    s = new char[size + 1];
+    s = new(FAlloc) char[size + 1];
     strcpy(s, str.GetData());         
 
     if (FArraySize == FArrayCount)
@@ -2124,7 +2147,7 @@ void TJsonStringArray::Add(const char *str)
     int size = strlen(str);
     char *s;
 
-    s = new char[size + 1];
+    s = new(FAlloc) char[size + 1];
     strcpy(s, str);         
 
     if (FArraySize == FArrayCount)
@@ -2186,11 +2209,12 @@ void TJsonStringArray::Write(TJsonDocument *doc, int indent, TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonCollectionData::TJsonCollectionData()
+TJsonCollectionData::TJsonCollectionData(TJsonAlloc *Alloc)
 {
     FObjArraySize = 0;
     FObjArrayCount = 0;
     FObjArr = 0;
+    FAlloc = Alloc;
 }
 
 /*##########################################################################
@@ -2204,7 +2228,7 @@ TJsonCollectionData::TJsonCollectionData()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonCollectionData::TJsonCollectionData(const TJsonCollectionData &src)
+TJsonCollectionData::TJsonCollectionData(const TJsonCollectionData &src, TJsonAlloc *Alloc)
 {
     int i;
 
@@ -2212,7 +2236,7 @@ TJsonCollectionData::TJsonCollectionData(const TJsonCollectionData &src)
     {
         FObjArraySize = src.FObjArrayCount;
         FObjArrayCount = src.FObjArrayCount;
-        FObjArr = new TJsonObject *[FObjArraySize];
+        FObjArr = new(Alloc) TJsonObject *[FObjArraySize];
 
         for (i = 0; i < FObjArrayCount; i++)
             if (src.FObjArr[i])
@@ -2254,6 +2278,44 @@ TJsonCollectionData::~TJsonCollectionData()
 
 /*##########################################################################
 #
+#   Name       : TJsonCollectionData::Allocate
+#
+#   Purpose....: new
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void *TJsonCollectionData::Allocate(int size)
+{
+    if (FAlloc)
+        return FAlloc->Allocate(size);
+    else
+        return new char[size];
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollectionData::new
+#
+#   Purpose....: new
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void *TJsonCollectionData::operator new(size_t size, TJsonAlloc *alloc)
+{
+    if (alloc)
+        return alloc->Allocate(size);
+    else
+        return new char[size];
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonCollectionData::Grow
 #
 #   Purpose....: Grow array
@@ -2267,12 +2329,14 @@ void TJsonCollectionData::Grow()
 {
     int i;
     int NewSize;
+    void **parr;
     TJsonObject **NewArr;
 
     if (FObjArr)
     {
         NewSize = 2 * FObjArraySize;
-        NewArr = new TJsonObject *[NewSize];
+        parr = (void **)Allocate(sizeof(parr) * NewSize);
+        NewArr = (TJsonObject **)parr;
 
         for (i = 0; i < FObjArrayCount; i++)
             NewArr[i] = FObjArr[i];
@@ -2280,12 +2344,14 @@ void TJsonCollectionData::Grow()
         for (i = FObjArrayCount; i < NewSize; i++)
             NewArr[i] = 0;
 
-        delete FObjArr;
+        if (FAlloc == 0)
+            delete FObjArr;
     }
     else
     {
         NewSize = 10;
-        NewArr = new TJsonObject *[NewSize];
+        parr = (void **)Allocate(sizeof(parr) * NewSize);
+        NewArr = (TJsonObject **)parr;
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = 0;
@@ -3041,7 +3107,8 @@ TJsonObject *TJsonCollection::AddString(const char *FieldName, const char *Str)
 #
 ##########################################################################*/
 TJsonSingleCollection::TJsonSingleCollection(const char *FieldName, TJsonAlloc *Alloc)
- : TJsonCollection(FieldName, Alloc)
+ : TJsonCollection(FieldName, Alloc),
+   FData(Alloc)
 {
 }
 
@@ -3357,12 +3424,12 @@ TJsonArrayCollection::TJsonArrayCollection(const TJsonArrayCollection &src, TJso
 
     if (FArrayCount)
     {
-        FArray = new TJsonCollectionData *[FArrayCount];
+        FArray = new(Alloc) TJsonCollectionData *[FArrayCount];
 
         for (i = 0; i < FArrayCount; i++)
         {
             if (src.FArray[i])
-                FArray[i] = new TJsonCollectionData(*src.FArray[i]);
+                FArray[i] = new(Alloc) TJsonCollectionData(*src.FArray[i]);
             else
                 FArray[i] = 0;
         }
@@ -3456,12 +3523,14 @@ void TJsonArrayCollection::Grow()
 {
     int i;
     int NewSize;
+    void **parr;
     TJsonCollectionData **NewArr;
 
     if (FArray)
     {
         NewSize = 2 * FArraySize;
-        NewArr = new TJsonCollectionData *[NewSize];
+        parr = (void **)Allocate(sizeof(parr) * NewSize);
+        NewArr = (TJsonCollectionData **)parr;
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArray[i];
@@ -3469,12 +3538,14 @@ void TJsonArrayCollection::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = 0;
 
-        delete FArray;
+        if (FAlloc == 0)
+            delete FArray;
     }
     else
     {
         NewSize = 10;
-        NewArr = new TJsonCollectionData *[NewSize];
+        parr = (void **)Allocate(sizeof(parr) * NewSize);
+        NewArr = (TJsonCollectionData **)parr;
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = 0;
@@ -3497,7 +3568,7 @@ void TJsonArrayCollection::Grow()
 ##########################################################################*/
 void TJsonArrayCollection::DoAdd()
 {
-    TJsonCollectionData *entry = new TJsonCollectionData;
+    TJsonCollectionData *entry = new(FAlloc) TJsonCollectionData(FAlloc);
 
     if (FArrayCount == FArraySize)
         Grow();
@@ -4883,8 +4954,9 @@ void TJsonString::Write(TJsonDocument *doc, int indent, TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonStackEntry::TJsonStackEntry()
+TJsonStackEntry::TJsonStackEntry(TJsonAlloc *alloc)
 {
+    FAlloc = alloc;
 }
 
 /*##########################################################################
@@ -4900,6 +4972,25 @@ TJsonStackEntry::TJsonStackEntry()
 ##########################################################################*/
 TJsonStackEntry::~TJsonStackEntry()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStackEntry::new
+#
+#   Purpose....: new
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void *TJsonStackEntry::operator new(size_t size, TJsonAlloc *alloc)
+{
+    if (alloc)
+        return alloc->Allocate(size);
+    else
+        return new char[size];
 }
 
 /*##########################################################################
@@ -6257,7 +6348,7 @@ bool TJsonDocument::AddLevel()
 
         if (entry == 0)
         {
-            entry = new TJsonStackEntry;
+            entry = new(FAlloc) TJsonStackEntry(FAlloc);
             StackArr[FDepth] = entry;
         }
 

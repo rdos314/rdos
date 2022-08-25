@@ -79,6 +79,7 @@ public:
     virtual bool IsCollection();
     virtual bool IsArrayObject();
 
+    void *Allocate(int size);
     void *operator new(size_t size, TJsonAlloc *alloc);
 
     void Rename(const char *NewFieldName);
@@ -244,9 +245,12 @@ protected:
 class TJsonCollectionData
 {
 public:
-    TJsonCollectionData();
-    TJsonCollectionData(const TJsonCollectionData &src);
+    TJsonCollectionData(TJsonAlloc *Alloc);
+    TJsonCollectionData(const TJsonCollectionData &src, TJsonAlloc *Alloc);
     ~TJsonCollectionData();
+
+    void *operator new(size_t size, TJsonAlloc *alloc);
+    void *Allocate(int size);
 
     void Grow();
     void Insert(TJsonObject *obj);
@@ -256,6 +260,7 @@ public:
     int FObjArrayCount;
 
     TJsonObject **FObjArr;
+    TJsonAlloc *FAlloc;
 };
 
 class TJsonSingleCollection;
@@ -499,10 +504,11 @@ class TJsonStackEntry
 friend class TJsonDocument;
 
 public:
-    TJsonStackEntry();
+    TJsonStackEntry(TJsonAlloc *alloc);
     ~TJsonStackEntry();
 
     int Parse(TJsonDocument *doc, const char *ptr, int start_state);
+    void *operator new(size_t size, TJsonAlloc *alloc);
 
 protected:
     int DecodeInt(TJsonDocument *doc);
@@ -544,6 +550,7 @@ protected:
     int FState;
     int FSavedState;
 
+    TJsonAlloc *FAlloc;
     TString FData;
 };
 
