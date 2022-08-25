@@ -79,6 +79,8 @@ public:
     virtual bool IsCollection();
     virtual bool IsArrayObject();
 
+    void *operator new(size_t size, TJsonAlloc *alloc);
+
     void Rename(const char *NewFieldName);
     TJsonObject *Clone();
 
