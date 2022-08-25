@@ -84,6 +84,66 @@
 #define json_ret_add                                    4
 #define json_ret_sub                                    5
 
+/*##################  TJsonAlloc:TJsonAlloc  ###############
+*   Purpose....: Constructor for JSON allocation                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TJsonAlloc::TJsonAlloc(int MaxSize)
+{
+    FSize = MaxSize;
+    FPos = 0;
+    FArr = new char[MaxSize];
+}
+
+/*##################  TJsonAlloc::~TJsonAlloc  ###############
+*   Purpose....: Destructor for JSON allocation                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TJsonAlloc::~TJsonAlloc()
+{
+    if (FArr)
+        delete FArr;
+}
+
+/*##################  TJsonAlloc::Allocate  ###############
+*   Purpose....: Allocate a memory segment                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void *TJsonAlloc::Allocate(int size)
+{
+    char *p;
+    
+    if (FPos + size < FSize)
+    {
+        p = FArr + FPos;
+        FPos += size;
+        return p;
+    }
+    else
+        return 0;
+}
+
+/*##################  TJsonAlloc::Reset  ###############
+*   Purpose....: Reset allocator                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TJsonAlloc::Reset()
+{
+    FPos = 0;
+}
+
 /*##########################################################################
 #
 #   Name       : TJsonFormString::TJsonFormString
@@ -238,9 +298,10 @@ void TJsonFormString::Reformat(const char *str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject::TJsonObject(TString &FieldName)
+TJsonObject::TJsonObject(const char *FieldName, TJsonAlloc *Alloc)
  : FFieldName(FieldName)
 {
+    FAlloc = Alloc;
 }
 
 /*##########################################################################
@@ -254,10 +315,11 @@ TJsonObject::TJsonObject(TString &FieldName)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject::TJsonObject(const TJsonObject &src)
+TJsonObject::TJsonObject(const TJsonObject &src, TJsonAlloc *Alloc)
  : FFieldName(src.FFieldName),
    FText(src.FText)
 {
+    FAlloc = Alloc;
 }
 
 /*##########################################################################
@@ -991,8 +1053,8 @@ void TJsonObject::Write(TJsonDocument *doc, int indent, TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonArrayObject::TJsonArrayObject(TString &FieldName)
- : TJsonObject(FieldName)
+TJsonArrayObject::TJsonArrayObject(const char *FieldName, TJsonAlloc *Alloc)
+ : TJsonObject(FieldName, Alloc)
 {
 }
 
@@ -1007,8 +1069,8 @@ TJsonArrayObject::TJsonArrayObject(TString &FieldName)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonArrayObject::TJsonArrayObject(const TJsonArrayObject &src)
- : TJsonObject(src)
+TJsonArrayObject::TJsonArrayObject(const TJsonArrayObject &src, TJsonAlloc *Alloc)
+ : TJsonObject(src, Alloc)
 {
 }
 
@@ -1134,8 +1196,8 @@ bool TJsonArrayObject::IsStringArray()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonBooleanArray::TJsonBooleanArray(TString &FieldName)
- : TJsonArrayObject(FieldName)
+TJsonBooleanArray::TJsonBooleanArray(const char *FieldName, TJsonAlloc *Alloc)
+ : TJsonArrayObject(FieldName, Alloc)
 {
     FArraySize = 0;
     FArrayCount = 0;
@@ -1153,8 +1215,8 @@ TJsonBooleanArray::TJsonBooleanArray(TString &FieldName)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonBooleanArray::TJsonBooleanArray(const TJsonBooleanArray &src)
- : TJsonArrayObject(src)
+TJsonBooleanArray::TJsonBooleanArray(const TJsonBooleanArray &src, TJsonAlloc *Alloc)
+ : TJsonArrayObject(src, Alloc)
 {
     int i;
 
@@ -1349,8 +1411,8 @@ void TJsonBooleanArray::Write(TJsonDocument *doc, int indent, TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonIntArray::TJsonIntArray(TString &FieldName)
- : TJsonArrayObject(FieldName)
+TJsonIntArray::TJsonIntArray(const char *FieldName, TJsonAlloc *Alloc)
+ : TJsonArrayObject(FieldName, Alloc)
 {
     FArraySize = 0;
     FArrayCount = 0;
@@ -1368,8 +1430,8 @@ TJsonIntArray::TJsonIntArray(TString &FieldName)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonIntArray::TJsonIntArray(const TJsonIntArray &src)
- : TJsonArrayObject(src)
+TJsonIntArray::TJsonIntArray(const TJsonIntArray &src, TJsonAlloc *Alloc)
+ : TJsonArrayObject(src, Alloc)
 {
     int i;
 
@@ -1563,8 +1625,8 @@ void TJsonIntArray::Write(TJsonDocument *doc, int indent, TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDoubleArray::TJsonDoubleArray(TString &FieldName, int Decimals)
- : TJsonArrayObject(FieldName)
+TJsonDoubleArray::TJsonDoubleArray(const char *FieldName, TJsonAlloc *Alloc, int Decimals)
+ : TJsonArrayObject(FieldName, Alloc)
 {
     FArraySize = 0;
     FArrayCount = 0;
@@ -1587,8 +1649,8 @@ TJsonDoubleArray::TJsonDoubleArray(TString &FieldName, int Decimals)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDoubleArray::TJsonDoubleArray(const TJsonDoubleArray &src)
- : TJsonArrayObject(src)
+TJsonDoubleArray::TJsonDoubleArray(const TJsonDoubleArray &src, TJsonAlloc *Alloc)
+ : TJsonArrayObject(src, Alloc)
 {
     int i;
 
@@ -1833,8 +1895,8 @@ void TJsonDoubleArray::Write(TJsonDocument *doc, int indent, TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonStringArray::TJsonStringArray(TString &FieldName)
- : TJsonArrayObject(FieldName)
+TJsonStringArray::TJsonStringArray(const char *FieldName, TJsonAlloc *Alloc)
+ : TJsonArrayObject(FieldName, Alloc)
 {
     FArraySize = 0;
     FArrayCount = 0;
@@ -1852,8 +1914,8 @@ TJsonStringArray::TJsonStringArray(TString &FieldName)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonStringArray::TJsonStringArray(const TJsonStringArray &src)
- : TJsonArrayObject(src)
+TJsonStringArray::TJsonStringArray(const TJsonStringArray &src, TJsonAlloc *Alloc)
+ : TJsonArrayObject(src, Alloc)
 {
     int i;
     int len;
@@ -2277,8 +2339,8 @@ bool TJsonCollectionData::Remove(TJsonObject *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonCollection::TJsonCollection(TString &FieldName)
- : TJsonObject(FieldName)
+TJsonCollection::TJsonCollection(const char *FieldName, TJsonAlloc *Alloc)
+ : TJsonObject(FieldName, Alloc)
 {
     FParent = 0;
 }
@@ -2294,8 +2356,8 @@ TJsonCollection::TJsonCollection(TString &FieldName)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonCollection::TJsonCollection(const TJsonCollection &src)
- : TJsonObject(src)
+TJsonCollection::TJsonCollection(const TJsonCollection &src, TJsonAlloc *Alloc)
+ : TJsonObject(src, Alloc)
 {
     FParent = 0;
 }
@@ -2708,7 +2770,7 @@ void TJsonCollection::SetString(const char *FieldName, const char *Str)
 
 /*##########################################################################
 #
-#   Name       : TJsonCollection::AddCollection
+#   Name       : TJsonSingleCollection::AddCollection
 #
 #   Purpose....: Add new collection
 #
@@ -2719,8 +2781,7 @@ void TJsonCollection::SetString(const char *FieldName, const char *Str)
 ##########################################################################*/
 TJsonSingleCollection *TJsonCollection::AddCollection(const char *FieldName)
 {
-    TString fn(FieldName);
-    TJsonSingleCollection *col = new TJsonSingleCollection(fn);
+    TJsonSingleCollection *col = new TJsonSingleCollection(FieldName, FAlloc);
     Insert(col);
     return col;
 }
@@ -2738,8 +2799,7 @@ TJsonSingleCollection *TJsonCollection::AddCollection(const char *FieldName)
 ##########################################################################*/
 TJsonArrayCollection *TJsonCollection::AddArrayCollection(const char *FieldName)
 {
-    TString fn(FieldName);
-    TJsonArrayCollection *col = new TJsonArrayCollection(fn);
+    TJsonArrayCollection *col = new TJsonArrayCollection(FieldName, FAlloc);
     Insert(col);
     return col;
 }
@@ -2757,8 +2817,7 @@ TJsonArrayCollection *TJsonCollection::AddArrayCollection(const char *FieldName)
 ##########################################################################*/
 TJsonBooleanArray *TJsonCollection::AddBooleanArray(const char *FieldName)
 {
-    TString fn(FieldName);
-    TJsonBooleanArray *arr = new TJsonBooleanArray(fn);
+    TJsonBooleanArray *arr = new TJsonBooleanArray(FieldName, FAlloc);
     Insert(arr);
     return arr;
 }
@@ -2776,8 +2835,7 @@ TJsonBooleanArray *TJsonCollection::AddBooleanArray(const char *FieldName)
 ##########################################################################*/
 TJsonIntArray *TJsonCollection::AddIntArray(const char *FieldName)
 {
-    TString fn(FieldName);
-    TJsonIntArray *arr = new TJsonIntArray(fn);
+    TJsonIntArray *arr = new TJsonIntArray(FieldName, FAlloc);
     Insert(arr);
     return arr;
 
@@ -2796,8 +2854,7 @@ TJsonIntArray *TJsonCollection::AddIntArray(const char *FieldName)
 ##########################################################################*/
 TJsonDoubleArray *TJsonCollection::AddDoubleArray(const char *FieldName, int Decimals)
 {
-    TString fn(FieldName);
-    TJsonDoubleArray *arr = new TJsonDoubleArray(fn, Decimals);
+    TJsonDoubleArray *arr = new TJsonDoubleArray(FieldName, FAlloc, Decimals);
     Insert(arr);
     return arr;
 }
@@ -2815,8 +2872,7 @@ TJsonDoubleArray *TJsonCollection::AddDoubleArray(const char *FieldName, int Dec
 ##########################################################################*/
 TJsonStringArray *TJsonCollection::AddStringArray(const char *FieldName)
 {
-    TString fn(FieldName);
-    TJsonStringArray *arr = new TJsonStringArray(fn);
+    TJsonStringArray *arr = new TJsonStringArray(FieldName, FAlloc);
     Insert(arr);
     return arr;
 }
@@ -2834,8 +2890,7 @@ TJsonStringArray *TJsonCollection::AddStringArray(const char *FieldName)
 ##########################################################################*/
 TJsonObject *TJsonCollection::AddBoolean(const char *FieldName, bool Val)
 {
-    TString fn(FieldName);
-    TJsonObject *obj = new TJsonBoolean(fn, Val);
+    TJsonObject *obj = new TJsonBoolean(FieldName, FAlloc, Val);
     Insert(obj);
     return obj;
 }
@@ -2853,8 +2908,7 @@ TJsonObject *TJsonCollection::AddBoolean(const char *FieldName, bool Val)
 ##########################################################################*/
 TJsonObject *TJsonCollection::AddInt(const char *FieldName, long long Val)
 {
-    TString fn(FieldName);
-    TJsonObject *obj = new TJsonInt(fn, Val);
+    TJsonObject *obj = new TJsonInt(FieldName, FAlloc, Val);
     Insert(obj);
     return obj;
 }
@@ -2872,8 +2926,7 @@ TJsonObject *TJsonCollection::AddInt(const char *FieldName, long long Val)
 ##########################################################################*/
 TJsonObject *TJsonCollection::AddDouble(const char *FieldName, double Val, int Decimals)
 {
-    TString fn(FieldName);
-    TJsonObject *obj = new TJsonDouble(fn, Val, Decimals);
+    TJsonObject *obj = new TJsonDouble(FieldName, FAlloc, Val, Decimals);
     Insert(obj);
     return obj;
 }
@@ -2891,17 +2944,16 @@ TJsonObject *TJsonCollection::AddDouble(const char *FieldName, double Val, int D
 ##########################################################################*/
 TJsonObject *TJsonCollection::AddDateTime(const char *FieldName, TDateTime &time, int UseText)
 {
-    TString fn(FieldName);
     TJsonObject *obj;
 
     if (UseText)
     {
         TString str;
         str.printf("%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
-        obj = new TJsonString(fn, str);
+        obj = new TJsonString(FieldName, FAlloc, str);
     }
     else
-        obj = new TJsonInt(fn, time.GetLinuxMilliTimestamp());
+        obj = new TJsonInt(FieldName, FAlloc, time.GetLinuxMilliTimestamp());
 
     Insert(obj);
     return obj;
@@ -2920,7 +2972,6 @@ TJsonObject *TJsonCollection::AddDateTime(const char *FieldName, TDateTime &time
 ##########################################################################*/
 TJsonObject *TJsonCollection::AddDateTimeZone(const char *FieldName, TDateTime &time, int UtcDiff)
 {
-    TString fn(FieldName);
     TJsonObject *obj;
 
     TString str;
@@ -2935,7 +2986,7 @@ TJsonObject *TJsonCollection::AddDateTimeZone(const char *FieldName, TDateTime &
         str.printf("%04d-%02d-%02dT%02d:%02d:%02d-%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
     }
         
-    obj = new TJsonString(fn, str);
+    obj = new TJsonString(FieldName, FAlloc, str);
     Insert(obj);
     return obj;
 }
@@ -2953,9 +3004,8 @@ TJsonObject *TJsonCollection::AddDateTimeZone(const char *FieldName, TDateTime &
 ##########################################################################*/
 TJsonObject *TJsonCollection::AddString(const char *FieldName, const char *Str)
 {
-    TString fn(FieldName);
     TString str(Str);
-    TJsonObject *obj = new TJsonString(fn, str);
+    TJsonObject *obj = new TJsonString(FieldName, FAlloc, str);
     Insert(obj);
     return obj;
 }
@@ -2971,8 +3021,8 @@ TJsonObject *TJsonCollection::AddString(const char *FieldName, const char *Str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonSingleCollection::TJsonSingleCollection(TString &FieldName)
- : TJsonCollection(FieldName)
+TJsonSingleCollection::TJsonSingleCollection(const char *FieldName, TJsonAlloc *Alloc)
+ : TJsonCollection(FieldName, Alloc)
 {
 }
 
@@ -2987,8 +3037,8 @@ TJsonSingleCollection::TJsonSingleCollection(TString &FieldName)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonSingleCollection::TJsonSingleCollection(const TJsonSingleCollection &src)
- : TJsonCollection(src),
+TJsonSingleCollection::TJsonSingleCollection(const TJsonSingleCollection &src, TJsonAlloc *Alloc)
+ : TJsonCollection(src, Alloc),
    FData(src.FData)
 {
 }
@@ -3253,8 +3303,8 @@ TJsonCollection *TJsonSingleCollection::GetCollection(const char *FieldName)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonArrayCollection::TJsonArrayCollection(TString &FieldName)
- : TJsonCollection(FieldName)
+TJsonArrayCollection::TJsonArrayCollection(const char *FieldName, TJsonAlloc *Alloc)
+ : TJsonCollection(FieldName, Alloc)
 {
     FArrayCount = 0;
     FArraySize = 0;
@@ -3275,8 +3325,8 @@ TJsonArrayCollection::TJsonArrayCollection(TString &FieldName)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonArrayCollection::TJsonArrayCollection(const TJsonArrayCollection &src)
- : TJsonCollection(src)
+TJsonArrayCollection::TJsonArrayCollection(const TJsonArrayCollection &src, TJsonAlloc *Alloc)
+ : TJsonCollection(src, Alloc)
 {
     int i;
 
@@ -3712,8 +3762,8 @@ int TJsonArrayCollection::GetArrayCount()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonInt::TJsonInt(TString &FieldName, long long v)
- : TJsonObject(FieldName)
+TJsonInt::TJsonInt(const char *FieldName, TJsonAlloc *Alloc, long long v)
+ : TJsonObject(FieldName, Alloc)
 {
     SetValue(v);
 }
@@ -3729,7 +3779,7 @@ TJsonInt::TJsonInt(TString &FieldName, long long v)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonInt::TJsonInt(const TJsonInt &src)
+TJsonInt::TJsonInt(const TJsonInt &src, TJsonAlloc *Alloc)
  : TJsonObject(src)
 {
     Val = src.Val;
@@ -3985,8 +4035,8 @@ void TJsonInt::SetBaseString(const char *Str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDouble::TJsonDouble(TString &FieldName, double v, TString &text)
- : TJsonObject(FieldName)
+TJsonDouble::TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double v, TString &text)
+ : TJsonObject(FieldName, Alloc)
 {
     Val = v;
     FText = text;
@@ -4003,8 +4053,8 @@ TJsonDouble::TJsonDouble(TString &FieldName, double v, TString &text)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDouble::TJsonDouble(TString &FieldName, double v, int decimals)
- : TJsonObject(FieldName)
+TJsonDouble::TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double v, int decimals)
+ : TJsonObject(FieldName, Alloc)
 {
     SetValue(v, decimals);
 }
@@ -4020,8 +4070,8 @@ TJsonDouble::TJsonDouble(TString &FieldName, double v, int decimals)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDouble::TJsonDouble(const TJsonDouble &src)
- : TJsonObject(src)
+TJsonDouble::TJsonDouble(const TJsonDouble &src, TJsonAlloc *Alloc)
+ : TJsonObject(src, Alloc)
 {
     Val = src.Val;
 }
@@ -4287,8 +4337,8 @@ void TJsonDouble::SetBaseString(const char *Str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonBoolean::TJsonBoolean(TString &FieldName, bool v)
- : TJsonObject(FieldName)
+TJsonBoolean::TJsonBoolean(const char *FieldName, TJsonAlloc *Alloc, bool v)
+ : TJsonObject(FieldName, Alloc)
 {
     SetValue(v);
 }
@@ -4304,8 +4354,8 @@ TJsonBoolean::TJsonBoolean(TString &FieldName, bool v)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonBoolean::TJsonBoolean(const TJsonBoolean &src)
- : TJsonObject(src)
+TJsonBoolean::TJsonBoolean(const TJsonBoolean &src, TJsonAlloc *Alloc)
+ : TJsonObject(src, Alloc)
 {
     Val = src.Val;
 }
@@ -4566,8 +4616,8 @@ void TJsonBoolean::SetBaseString(const char *Str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonString::TJsonString(TString &FieldName, TString &text)
- : TJsonObject(FieldName)
+TJsonString::TJsonString(const char *FieldName, TJsonAlloc *Alloc, TString &text)
+ : TJsonObject(FieldName, Alloc)
 {
     FText = text;
 }
@@ -4583,8 +4633,8 @@ TJsonString::TJsonString(TString &FieldName, TString &text)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonString::TJsonString(const TJsonString &src)
- : TJsonObject(src)
+TJsonString::TJsonString(const TJsonString &src, TJsonAlloc *Alloc)
+ : TJsonObject(src, Alloc)
 {
 }
 
@@ -5973,6 +6023,24 @@ redo_char:
 ##########################################################################*/
 TJsonDocument::TJsonDocument()
 {
+    FAlloc = 0;
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::TJsonDocument
+#
+#   Purpose....: Constructor for TJsonDocument
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDocument::TJsonDocument(int MaxSize)
+{
+    FAlloc = new TJsonAlloc(MaxSize);
     Init();
 }
 
@@ -5989,6 +6057,25 @@ TJsonDocument::TJsonDocument()
 ##########################################################################*/
 TJsonDocument::TJsonDocument(const char *doc)
 {
+    FAlloc = 0;
+    Init();
+    Parse(doc);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::TJsonDocument
+#
+#   Purpose....: Constructor for TJsonDocument
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonDocument::TJsonDocument(int MaxSize, const char *doc)
+{
+    FAlloc = new TJsonAlloc(MaxSize);
     Init();
     Parse(doc);
 }
@@ -6046,19 +6133,31 @@ void TJsonDocument::Reset()
 {
     int level;
 
-    for (level = 0; level < MAX_JSON_DEPTH; level++)
+    if (FAlloc)
     {
-        if (StackArr[level])
-        {
-             delete StackArr[level];
+        for (level = 0; level < MAX_JSON_DEPTH; level++)
              StackArr[level] = 0;
-        }
-    }
 
-    if (FRootCollection)
-    {
-        delete FRootCollection;
         FRootCollection = 0;
+
+        FAlloc->Reset();
+    }
+    else
+    {
+        for (level = 0; level < MAX_JSON_DEPTH; level++)
+        {
+            if (StackArr[level])
+            {
+                 delete StackArr[level];
+                 StackArr[level] = 0;
+            }
+        }
+
+        if (FRootCollection)
+        {
+            delete FRootCollection;
+            FRootCollection = 0;
+        }
     }
 
     FCurrCollection = 0;
@@ -6231,7 +6330,7 @@ void TJsonDocument::StartNesting()
 
     if (FCurrCollection)
     {
-        c = new TJsonSingleCollection(FObjFieldName);
+        c = new TJsonSingleCollection(FObjFieldName.GetData(), FAlloc);
         FCurrCollection->Insert(c);
         c->FParent = FCurrCollection;
         FCurrCollection = c;
@@ -6240,7 +6339,7 @@ void TJsonDocument::StartNesting()
     {
         if (!FRootCollection)
         {
-            c = new TJsonSingleCollection(FObjFieldName);
+            c = new TJsonSingleCollection(FObjFieldName.GetData(), FAlloc);
             FRootCollection = c;
         }
         FCurrCollection = c;
@@ -6281,7 +6380,7 @@ void TJsonDocument::StartArray()
 
     if (FCurrCollection)
     {
-        c = new TJsonArrayCollection(FObjFieldName);
+        c = new TJsonArrayCollection(FObjFieldName.GetData(), FAlloc);
         FCurrCollection->Insert(c);
         c->FParent = FCurrCollection;
         FCurrCollection = c;
@@ -6327,7 +6426,7 @@ void TJsonDocument::AddString(TString &str)
 
     if (FCurrCollection)
     {
-        obj = new TJsonString(FObjFieldName, str);
+        obj = new TJsonString(FObjFieldName.GetData(), FAlloc, str);
         FCurrCollection->Insert(obj);
     }
 }
@@ -6349,7 +6448,7 @@ void TJsonDocument::AddInt(long long val)
 
     if (FCurrCollection)
     {
-        obj = new TJsonInt(FObjFieldName, val);
+        obj = new TJsonInt(FObjFieldName.GetData(), FAlloc, val);
         FCurrCollection->Insert(obj);
 
         long long v = obj->GetInt();
@@ -6373,7 +6472,7 @@ void TJsonDocument::AddDouble(double val, TString &text)
 
     if (FCurrCollection)
     {
-        obj = new TJsonDouble(FObjFieldName, val, text);
+        obj = new TJsonDouble(FObjFieldName.GetData(), FAlloc, val, text);
         FCurrCollection->Insert(obj);
     }
 }
@@ -6395,7 +6494,7 @@ void TJsonDocument::AddDouble(double val, int decimals)
 
     if (FCurrCollection)
     {
-        obj = new TJsonDouble(FObjFieldName, val, decimals);
+        obj = new TJsonDouble(FObjFieldName.GetData(), FAlloc, val, decimals);
         FCurrCollection->Insert(obj);
     }
 }
@@ -6417,7 +6516,7 @@ void TJsonDocument::AddBoolean(bool val)
 
     if (FCurrCollection)
     {
-        obj = new TJsonBoolean(FObjFieldName, val);
+        obj = new TJsonBoolean(FObjFieldName.GetData(), FAlloc, val);
         FCurrCollection->Insert(obj);
     }
 }
@@ -6435,10 +6534,8 @@ void TJsonDocument::AddBoolean(bool val)
 ##########################################################################*/
 TJsonCollection *TJsonDocument::CreateRoot()
 {
-    TString fn;
-
     if (!FRootCollection)
-        FRootCollection = new TJsonSingleCollection(fn);
+        FRootCollection = new TJsonSingleCollection("", FAlloc);
 
     return FRootCollection;
 }

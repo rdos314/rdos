@@ -36,6 +36,21 @@
 
 class TJsonDocument;
 
+class TJsonAlloc
+{
+public:
+    TJsonAlloc(int MaxSize);
+    ~TJsonAlloc();
+
+    void *Allocate(int size);
+    void Reset();
+
+protected:
+    char *FArr;
+    int FPos;
+    int FSize;
+};
+
 class TJsonFormString : public TString
 {
 public:
@@ -54,8 +69,8 @@ protected:
 class TJsonObject
 {
 public:
-    TJsonObject(TString &FieldName);
-    TJsonObject(const TJsonObject &src);
+    TJsonObject(const char *FieldName, TJsonAlloc *Alloc);
+    TJsonObject(const TJsonObject &src, TJsonAlloc *Alloc);
     virtual ~TJsonObject();
 
     TString &GetFieldName();
@@ -112,13 +127,14 @@ protected:
 
     TString FFieldName;
     TString FText;
+    TJsonAlloc *FAlloc;
 };
 
 class TJsonArrayObject : public TJsonObject
 {
 public:
-    TJsonArrayObject(TString &FieldName);
-    TJsonArrayObject(const TJsonArrayObject &src);
+    TJsonArrayObject(const char *FieldName, TJsonAlloc *Alloc);
+    TJsonArrayObject(const TJsonArrayObject &src, TJsonAlloc *Alloc);
     virtual ~TJsonArrayObject();
 
     TJsonArrayObject *Clone();
@@ -134,8 +150,8 @@ public:
 class TJsonBooleanArray : public TJsonArrayObject
 {
 public:
-    TJsonBooleanArray(TString &FieldName);
-    TJsonBooleanArray(const TJsonBooleanArray &src);
+    TJsonBooleanArray(const char *FieldName, TJsonAlloc *Alloc);
+    TJsonBooleanArray(const TJsonBooleanArray &src, TJsonAlloc *Alloc);
     virtual ~TJsonBooleanArray();
 
     virtual bool IsBooleanArray();
@@ -156,8 +172,8 @@ protected:
 class TJsonIntArray : public TJsonArrayObject
 {
 public:
-    TJsonIntArray(TString &FieldName);
-    TJsonIntArray(const TJsonIntArray &src);
+    TJsonIntArray(const char *FieldName, TJsonAlloc *Alloc);
+    TJsonIntArray(const TJsonIntArray &src, TJsonAlloc *Alloc);
     virtual ~TJsonIntArray();
 
     virtual bool IsIntArray();
@@ -178,8 +194,8 @@ protected:
 class TJsonDoubleArray : public TJsonArrayObject
 {
 public:
-    TJsonDoubleArray(TString &FieldName, int Decimals);
-    TJsonDoubleArray(const TJsonDoubleArray &src);
+    TJsonDoubleArray(const char *FieldName, TJsonAlloc *Alloc, int Decimals);
+    TJsonDoubleArray(const TJsonDoubleArray &src, TJsonAlloc *Alloc);
     virtual ~TJsonDoubleArray();
 
     virtual bool IsDoubleArray();
@@ -203,8 +219,8 @@ protected:
 class TJsonStringArray : public TJsonArrayObject
 {
 public:
-    TJsonStringArray(TString &FieldName);
-    TJsonStringArray(const TJsonStringArray &src);
+    TJsonStringArray(const char *FieldName, TJsonAlloc *Alloc);
+    TJsonStringArray(const TJsonStringArray &src, TJsonAlloc *Alloc);
     virtual ~TJsonStringArray();
 
     virtual bool IsStringArray();
@@ -246,8 +262,8 @@ class TJsonArrayCollection;
 class TJsonCollection : public TJsonObject
 {
 public:
-    TJsonCollection(TString &FieldName);
-    TJsonCollection(const TJsonCollection &src);
+    TJsonCollection(const char *FieldName, TJsonAlloc *Alloc);
+    TJsonCollection(const TJsonCollection &src, TJsonAlloc *Alloc);
     virtual ~TJsonCollection();
 
     TJsonCollection *Clone();
@@ -305,8 +321,8 @@ protected:
 class TJsonSingleCollection : public TJsonCollection
 {
 public:
-    TJsonSingleCollection(TString &FieldName);
-    TJsonSingleCollection(const TJsonSingleCollection &src);
+    TJsonSingleCollection(const char *FieldName, TJsonAlloc *Alloc);
+    TJsonSingleCollection(const TJsonSingleCollection &src, TJsonAlloc *Alloc);
     virtual ~TJsonSingleCollection();
 
     TJsonSingleCollection *Clone();
@@ -331,8 +347,8 @@ protected:
 class TJsonArrayCollection : public TJsonCollection
 {
 public:
-    TJsonArrayCollection(TString &FieldName);
-    TJsonArrayCollection(const TJsonArrayCollection &src);
+    TJsonArrayCollection(const char *FieldName, TJsonAlloc *Alloc);
+    TJsonArrayCollection(const TJsonArrayCollection &src, TJsonAlloc *Alloc);
     virtual ~TJsonArrayCollection();
 
     TJsonArrayCollection *Clone();
@@ -367,9 +383,9 @@ protected:
 class TJsonDouble : public TJsonObject
 {
 public:
-    TJsonDouble(TString &FieldName, double val, int decimals);
-    TJsonDouble(TString &FieldName, double val, TString &data);
-    TJsonDouble(const TJsonDouble &src);
+    TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double val, int decimals);
+    TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double val, TString &data);
+    TJsonDouble(const TJsonDouble &src, TJsonAlloc *Alloc);
     virtual ~TJsonDouble();
 
     TJsonDouble *Clone();
@@ -396,8 +412,8 @@ protected:
 class TJsonBoolean : public TJsonObject
 {
 public:
-    TJsonBoolean(TString &FieldName, bool val);
-    TJsonBoolean(const TJsonBoolean &src);
+    TJsonBoolean(const char *FieldName, TJsonAlloc *Alloc, bool val);
+    TJsonBoolean(const TJsonBoolean &src, TJsonAlloc *Alloc);
     virtual ~TJsonBoolean();
 
     TJsonBoolean *Clone();
@@ -424,8 +440,8 @@ protected:
 class TJsonInt : public TJsonObject
 {
 public:
-    TJsonInt(TString &FieldName, long long val);
-    TJsonInt(const TJsonInt &src);
+    TJsonInt(const char *FieldName, TJsonAlloc *Alloc, long long val);
+    TJsonInt(const TJsonInt &src, TJsonAlloc *Alloc);
     virtual ~TJsonInt();
 
     TJsonInt *Clone();
@@ -452,8 +468,8 @@ protected:
 class TJsonString : public TJsonObject
 {
 public:
-    TJsonString(TString &FieldName, TString &data);
-    TJsonString(const TJsonString &src);
+    TJsonString(const char *FieldName, TJsonAlloc *Alloc, TString &data);
+    TJsonString(const TJsonString &src, TJsonAlloc *Alloc);
     virtual ~TJsonString();
 
     TJsonString *Clone();
@@ -536,7 +552,9 @@ friend class TJsonObject;
 
 public:
     TJsonDocument();
+    TJsonDocument(int MaxSize);
     TJsonDocument(const char *doc);
+    TJsonDocument(int MaxSize, const char *doc);
     ~TJsonDocument();
 
     void Reset();
@@ -581,6 +599,8 @@ private:
     int FErr;
 
     TJsonStackEntry *StackArr[MAX_JSON_DEPTH];
+
+    TJsonAlloc *FAlloc;
 };
 
 class TJsonHttpClient
