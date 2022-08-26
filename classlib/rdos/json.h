@@ -73,8 +73,8 @@ public:
     TJsonObject(const TJsonObject &src, TJsonAlloc *Alloc);
     virtual ~TJsonObject();
 
-    TString &GetFieldName();
-    TString &GetText();
+    const char *GetFieldName();
+    const char *GetText();
 
     virtual bool IsCollection();
     virtual bool IsArrayObject();
@@ -295,8 +295,7 @@ public:
     long long GetInt(const char *FieldName, long long Default);
     double GetDouble(const char *FieldName, double Default);
     TDateTime GetDateTime(const char *FieldName, TDateTime &Default);
-    TString &GetText(const char *FieldName, const char *Default);
-    TString &GetText(const char *FieldName, TString &Default);
+    const char *GetText(const char *FieldName, const char *Default);
 
     TJsonSingleCollection *AddCollection(const char *FieldName);
     TJsonArrayCollection *AddArrayCollection(const char *FieldName);

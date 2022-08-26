@@ -402,9 +402,9 @@ TJsonObject *TJsonObject::Clone()
 #   Returns....: *
 #
 ##########################################################################*/
-TString &TJsonObject::GetFieldName()
+const char *TJsonObject::GetFieldName()
 {
-    return FFieldName;
+    return FFieldName.GetData();
 }
 
 /*##########################################################################
@@ -418,9 +418,9 @@ TString &TJsonObject::GetFieldName()
 #   Returns....: *
 #
 ##########################################################################*/
-TString &TJsonObject::GetText()
+const char *TJsonObject::GetText()
 {
-    return FText;
+    return FText.GetData();
 }
 
 /*##########################################################################
@@ -2693,31 +2693,7 @@ TDateTime TJsonCollection::GetDateTime(const char *FieldName, TDateTime &Default
 #   Returns....: *
 #
 ##########################################################################*/
-TString &TJsonCollection::GetText(const char *FieldName, const char *Default)
-{
-    TJsonObject *obj = GetObj(FieldName);
-
-    if (obj)
-        return obj->GetText();
-    else
-    {
-        FTempStr = Default;
-        return FTempStr;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonCollection::GetText
-#
-#   Purpose....: Get field as text
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TString &TJsonCollection::GetText(const char *FieldName, TString &Default)
+const char *TJsonCollection::GetText(const char *FieldName, const char *Default)
 {
     TJsonObject *obj = GetObj(FieldName);
 
@@ -3337,13 +3313,12 @@ TJsonObject *TJsonSingleCollection::GetObj(const char *FieldName)
 {
     int n;
     TJsonObject *obj;
-    TString name(FieldName);
 
     for (n = 0; n < FData.FObjArrayCount; n++)
     {
         obj = FData.FObjArr[n];
         if (!obj->IsCollection())
-            if (obj->GetFieldName() == name)
+            if (!strcmp(obj->GetFieldName(), FieldName))
                 return obj;
     }
 
@@ -3365,13 +3340,12 @@ TJsonCollection *TJsonSingleCollection::GetCollection(const char *FieldName)
 {
     int n;
     TJsonObject *obj;
-    TString name(FieldName);
 
     for (n = 0; n < FData.FObjArrayCount; n++)
     {
         obj = FData.FObjArr[n];
         if (obj->IsCollection())
-            if (obj->GetFieldName() == name)
+            if (!strcmp(obj->GetFieldName(), FieldName))
                 return (TJsonCollection *)obj;
     }
 
@@ -3772,7 +3746,6 @@ TJsonObject *TJsonArrayCollection::GetObj(const char *FieldName)
 {
     int n;
     TJsonObject *obj;
-    TString name(FieldName);
 
     if (FReqAdd)
     {
@@ -3784,7 +3757,7 @@ TJsonObject *TJsonArrayCollection::GetObj(const char *FieldName)
     {
         obj = FArray[FCurrInd]->FObjArr[n];
         if (!obj->IsCollection())
-            if (obj->GetFieldName() == name)
+            if (!strcmp(obj->GetFieldName(), FieldName))
                 return obj;
     }
 
@@ -3806,7 +3779,6 @@ TJsonCollection *TJsonArrayCollection::GetCollection(const char *FieldName)
 {
     int n;
     TJsonObject *obj;
-    TString name(FieldName);
 
     if (FReqAdd)
     {
@@ -3818,7 +3790,7 @@ TJsonCollection *TJsonArrayCollection::GetCollection(const char *FieldName)
     {
         obj = FArray[FCurrInd]->FObjArr[n];
         if (obj->IsCollection())
-            if (obj->GetFieldName() == name)
+            if (!strcmp(obj->GetFieldName(), FieldName))
                 return (TJsonCollection *)obj;
     }
 
