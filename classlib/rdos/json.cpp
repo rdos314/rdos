@@ -2168,7 +2168,7 @@ TJsonStringArray::TJsonStringArray(const TJsonStringArray &src, TJsonAlloc *Allo
     {
         FArraySize = src.FArrayCount;
         FArrayCount = src.FArrayCount;
-        FArr = new(Alloc) char *[FArraySize];
+        FArr = AllocateArr(FArraySize);
 
         for (i = 0; i < FArrayCount; i++)
         {
@@ -2205,14 +2205,54 @@ TJsonStringArray::~TJsonStringArray()
 {
     int i;
 
-    if (FArr)
+    if (FArr && FAlloc == 0)
     {
         for (i = 0; i < FArrayCount; i++)
             if (FArr[i])
                 delete FArr[i];
-
-        delete FArr;
     }
+
+    Free(FArr);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStringArray::AllocateArr
+#
+#   Purpose....: new
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char **TJsonStringArray::AllocateArr(int count)
+{
+    int size = count * sizeof(char **);
+
+    if (FAlloc)
+        return (char **)FAlloc->Allocate(size);
+    else
+        return new char *[count];
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStringArray::FreeArr
+#
+#   Purpose....: free
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonStringArray::FreeArr(char **arr)
+{
+    char *ptr = (char *)arr;
+
+    if (arr && FAlloc == 0)
+        delete ptr;
 }
 
 /*##########################################################################
@@ -2284,7 +2324,7 @@ void TJsonStringArray::Grow()
     if (FArr)
     {
         NewSize = 2 * FArraySize;
-        NewArr = new(FAlloc) char *[NewSize];
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArr[i];
@@ -2292,13 +2332,12 @@ void TJsonStringArray::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = 0;
 
-        if (FAlloc == 0)
-            delete FArr;
+        FreeArr(FArr);
     }
     else
     {
         NewSize = 10;
-        NewArr = new(FAlloc) char *[NewSize];
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = 0;

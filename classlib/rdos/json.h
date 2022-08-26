@@ -247,6 +247,9 @@ public:
 
 protected:
     virtual TJsonObject *CloneObj();
+
+    char **AllocateArr(int count);
+    void FreeArr(char **arr);
     void Grow();
 
     int FArraySize;
