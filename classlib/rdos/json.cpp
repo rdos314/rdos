@@ -306,6 +306,9 @@ TJsonObject::TJsonObject(const char *FieldName, TJsonAlloc *Alloc)
 
     FFieldName = (char *)Allocate(len + 1);
     strcpy(FFieldName, FieldName);
+
+    FSize = 0;
+    FText = "";
 }
 
 /*##########################################################################
@@ -320,14 +323,27 @@ TJsonObject::TJsonObject(const char *FieldName, TJsonAlloc *Alloc)
 #
 ##########################################################################*/
 TJsonObject::TJsonObject(const TJsonObject &src, TJsonAlloc *Alloc)
- : FText(src.FText)
 {
-    int len = strlen(src.FFieldName);
+    int len;
 
     FAlloc = Alloc;
 
+    len = strlen(src.FFieldName);
     FFieldName = (char *)Allocate(len + 1);
     strcpy(FFieldName, src.FFieldName);
+
+    if (src.FSize)
+    {
+        len = strlen(src.FText);
+        FSize = len + 1;
+        FText = (char *)Allocate(len + 1);
+        strcpy(FText, src.FText);
+    }
+    else
+    {
+        FSize = 0;
+        FText = "";
+    }
 }
 
 /*##########################################################################
@@ -446,7 +462,7 @@ const char *TJsonObject::GetFieldName()
 ##########################################################################*/
 const char *TJsonObject::GetText()
 {
-    return FText.GetData();
+    return FText;
 }
 
 /*##########################################################################
@@ -583,10 +599,14 @@ TDateTime TJsonObject::GetDateTime()
 ##########################################################################*/
 void TJsonObject::CodeBoolean(bool v)
 {
+    const char *ptr;
+
     if (v)
-        FText = "true";
+        ptr = "true";
     else
-        FText = "false";
+        ptr = "false";
+
+    SetBaseString(ptr);
 }
 
 /*##########################################################################
@@ -602,7 +622,10 @@ void TJsonObject::CodeBoolean(bool v)
 ##########################################################################*/
 void TJsonObject::CodeInt(long long v)
 {
-    FText.printf("%lld", v);
+    char str[80];
+
+    sprintf(str, "%lld", v);
+    SetBaseString(str);
 }
 
 /*##########################################################################
@@ -622,6 +645,7 @@ void TJsonObject::CodeDouble(double v, int decimals)
     int digits;
     bool done = false;
     char str[80];
+    char formstr[40];
 
     if (decimals < 1)
         decimals = 1;
@@ -629,15 +653,15 @@ void TJsonObject::CodeDouble(double v, int decimals)
     if (v == INFINITY)
     {
         if (v == -INFINITY)
-            FText = "nan";
+            SetBaseString("nan");
         else
-            FText = "infinity";
+            SetBaseString("infinity");
         done = true;
     }
 
     if (!done && v == -INFINITY)
     {
-        FText = "-infinity";
+        SetBaseString("-infinity");
         done = true;
     }
 
@@ -655,7 +679,8 @@ void TJsonObject::CodeDouble(double v, int decimals)
 
         if (temp >= 1e+16)
         {
-            FText.printf("%Lf", v);
+            sprintf(str, "%Lf", v);
+            SetBaseString(str);
             done = true;
         }
     }
@@ -669,9 +694,9 @@ void TJsonObject::CodeDouble(double v, int decimals)
             temp = temp / 10.0;
         }
 
-        sprintf(str, "%%%d.%dLf", digits + decimals + 1, decimals);
-
-        FText.printf(str, v);
+        sprintf(formstr, "%%%d.%dLf", digits + decimals + 1, decimals);
+        sprintf(str, formstr, v);
+        SetBaseString(str);
     }
 }
 
@@ -688,7 +713,10 @@ void TJsonObject::CodeDouble(double v, int decimals)
 ##########################################################################*/
 void TJsonObject::CodeDateTime(TDateTime &time)
 {
-     FText.printf("%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+    char str[80];
+
+    sprintf(str, "%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+    SetBaseString(str);
 }
 
 /*##########################################################################
@@ -704,15 +732,18 @@ void TJsonObject::CodeDateTime(TDateTime &time)
 ##########################################################################*/
 void TJsonObject::CodeDateTimeZone(TDateTime &time, int UtcDiff)
 {
-     if (UtcDiff == 0)
-         FText.printf("%04d-%02d-%02dT%02d:%02d:%02dZ", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
-     else if (UtcDiff > 0)
-         FText.printf("%04d-%02d-%02dT%02d:%02d:%02d+%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
-     else
-     {
-         UtcDiff = -UtcDiff;
-         FText.printf("%04d-%02d-%02dT%02d:%02d:%02d-%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
-     }
+    char str[80];
+
+    if (UtcDiff == 0)
+        sprintf(str, "%04d-%02d-%02dT%02d:%02d:%02dZ", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+    else if (UtcDiff > 0)
+        sprintf(str, "%04d-%02d-%02dT%02d:%02d:%02d+%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
+    else
+    {
+        UtcDiff = -UtcDiff;
+        sprintf(str, "%04d-%02d-%02dT%02d:%02d:%02d-%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
+    }
+    SetBaseString(str);
 }
 
 /*##########################################################################
@@ -728,16 +759,16 @@ void TJsonObject::CodeDateTimeZone(TDateTime &time, int UtcDiff)
 ##########################################################################*/
 bool TJsonObject::DecodeBoolean()
 {
-    if (!strcmp(FText.GetData(), "true"))
+    if (!strcmp(FText, "true"))
         return true;
 
-    if (!strcmp(FText.GetData(), "false"))
+    if (!strcmp(FText, "false"))
         return false;
 
-    if (FText.GetSize() == 0)
+    if (FText[0] == 0)
         return false;
 
-    if (!strcmp(FText.GetData(), "0"))
+    if (!strcmp(FText, "0"))
         return false;
     else
         return true;
@@ -758,7 +789,7 @@ long long TJsonObject::DecodeInt()
 {
     char *end = NULL;
 
-    return strtoll(FText.GetData(), &end, 10);
+    return strtoll(FText, &end, 10);
 }
 
 /*##########################################################################
@@ -776,7 +807,7 @@ double TJsonObject::DecodeDouble()
 {
     char *end;
 
-    return strtod(FText.GetData(), &end);
+    return strtod(FText, &end);
 }
 
 /*##########################################################################
@@ -803,7 +834,7 @@ TDateTime TJsonObject::DecodeDateTime()
     min = 0;
     sec = 0;
 
-    count = sscanf(FText.GetData(), "%04d-%02d-%02dT%02d:%02d:%02d", &year, &month, &day, &hour, &min, &sec);
+    count = sscanf(FText, "%04d-%02d-%02dT%02d:%02d:%02d", &year, &month, &day, &hour, &min, &sec);
 
     TDateTime time(year, month, day, hour, min, sec);
     return time;
@@ -1058,7 +1089,30 @@ void TJsonObject::SetBaseDateTimeZone(TDateTime &val, int diff)
 ##########################################################################*/
 void TJsonObject::SetBaseString(const char *Str)
 {
-    FText = Str;
+    int len = strlen(Str);
+
+    if (len)
+    {
+        if (len + 1 > FSize)
+        {
+            if (FSize)
+                Free(FText);
+
+            FSize = len + 1;
+            FText = (char *)Allocate(len + 1);
+        }
+    }
+    else
+    {
+        if (FSize)
+            Free(FText);
+
+        FSize = 0;
+        FText = "";
+    }
+
+    if (FSize)
+        strcpy(FText, Str);
 }
 
 /*##########################################################################
@@ -3041,11 +3095,11 @@ TJsonObject *TJsonCollection::AddDouble(const char *FieldName, double Val, int D
 TJsonObject *TJsonCollection::AddDateTime(const char *FieldName, TDateTime &time, int UseText)
 {
     TJsonObject *obj;
+    char str[80];
 
     if (UseText)
     {
-        TString str;
-        str.printf("%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+        sprintf(str, "%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
         obj = new(FAlloc) TJsonString(FieldName, FAlloc, str);
     }
     else
@@ -3069,17 +3123,16 @@ TJsonObject *TJsonCollection::AddDateTime(const char *FieldName, TDateTime &time
 TJsonObject *TJsonCollection::AddDateTimeZone(const char *FieldName, TDateTime &time, int UtcDiff)
 {
     TJsonObject *obj;
-
-    TString str;
+    char str[80];
 
     if (UtcDiff == 0)
-        str.printf("%04d-%02d-%02dT%02d:%02d:%02dZ", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+        sprintf(str, "%04d-%02d-%02dT%02d:%02d:%02dZ", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
     else if (UtcDiff > 0)
-        str.printf("%04d-%02d-%02dT%02d:%02d:%02d+%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
+        sprintf(str, "%04d-%02d-%02dT%02d:%02d:%02d+%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
     else
     {
         UtcDiff = -UtcDiff;
-        str.printf("%04d-%02d-%02dT%02d:%02d:%02d-%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
+        sprintf(str,"%04d-%02d-%02dT%02d:%02d:%02d-%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec(), UtcDiff / 60, UtcDiff % 60);
     }
         
     obj = new(FAlloc) TJsonString(FieldName, FAlloc, str);
@@ -3100,8 +3153,7 @@ TJsonObject *TJsonCollection::AddDateTimeZone(const char *FieldName, TDateTime &
 ##########################################################################*/
 TJsonObject *TJsonCollection::AddString(const char *FieldName, const char *Str)
 {
-    TString str(Str);
-    TJsonObject *obj = new(FAlloc) TJsonString(FieldName, FAlloc, str);
+    TJsonObject *obj = new(FAlloc) TJsonString(FieldName, FAlloc, Str);
     Insert(obj);
     return obj;
 }
@@ -4117,7 +4169,7 @@ void TJsonInt::SetBaseDateTimeZone(TDateTime &v, int diff)
 ##########################################################################*/
 void TJsonInt::SetBaseString(const char *Str)
 {
-    FText = Str;
+    TJsonObject::SetBaseString(Str);
     Val = DecodeInt();
 }
 
@@ -4132,11 +4184,11 @@ void TJsonInt::SetBaseString(const char *Str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDouble::TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double v, TString &text)
+TJsonDouble::TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double v, const char *text)
  : TJsonObject(FieldName, Alloc)
 {
+    TJsonObject::SetBaseString(text);
     Val = v;
-    FText = text;
 }
 
 /*##########################################################################
@@ -4419,7 +4471,7 @@ void TJsonDouble::SetBaseDateTimeZone(TDateTime &v, int diff)
 ##########################################################################*/
 void TJsonDouble::SetBaseString(const char *Str)
 {
-    FText = Str;
+    TJsonObject::SetBaseString(Str);
     Val = DecodeDouble();
 }
 
@@ -4698,7 +4750,7 @@ void TJsonBoolean::SetBaseDateTimeZone(TDateTime &v, int diff)
 ##########################################################################*/
 void TJsonBoolean::SetBaseString(const char *Str)
 {
-    FText = Str;
+    TJsonObject::SetBaseString(Str);
     Val = DecodeBoolean();
 }
 
@@ -4713,10 +4765,10 @@ void TJsonBoolean::SetBaseString(const char *Str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonString::TJsonString(const char *FieldName, TJsonAlloc *Alloc, TString &text)
+TJsonString::TJsonString(const char *FieldName, TJsonAlloc *Alloc, const char *text)
  : TJsonObject(FieldName, Alloc)
 {
-    FText = text;
+    TJsonObject::SetBaseString(text);
 }
 
 /*##########################################################################
@@ -5414,7 +5466,7 @@ int TJsonStackEntry::HandleString(TJsonDocument *doc)
         if(*FDataPtr == FQuoteChar)
         {
             FData.Append(case_start, FDataPtr - case_start);
-            doc->AddString(FData);
+            doc->AddString(FData.GetData());
 
             FSavedState = json_tokener_state_finish;
             FState = json_tokener_state_eatws;
@@ -5616,7 +5668,7 @@ int TJsonStackEntry::DecodeDouble(TJsonDocument *doc)
 
     val = strtod(FData.GetData(), &end);
 
-    doc->AddDouble(val, FData);
+    doc->AddDouble(val, FData.GetData());
 
     FSavedState = json_tokener_state_finish;
     FState = json_tokener_state_eatws;
@@ -6537,7 +6589,7 @@ void TJsonDocument::AddArray()
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDocument::AddString(TString &str)
+void TJsonDocument::AddString(const char *str)
 {
     TJsonString *obj;
 
@@ -6583,7 +6635,7 @@ void TJsonDocument::AddInt(long long val)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDocument::AddDouble(double val, TString &text)
+void TJsonDocument::AddDouble(double val, const char *text)
 {
     TJsonDouble *obj;
 

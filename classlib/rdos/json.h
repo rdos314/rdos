@@ -131,7 +131,9 @@ protected:
     void AddIndent(TJsonDocument *doc, int indent, TString &str);
 
     char *FFieldName;
-    TString FText;
+
+    int FSize;
+    char *FText;
     TJsonAlloc *FAlloc;
 };
 
@@ -392,7 +394,7 @@ class TJsonDouble : public TJsonObject
 {
 public:
     TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double val, int decimals);
-    TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double val, TString &data);
+    TJsonDouble(const char *FieldName, TJsonAlloc *Alloc, double val, const char *data);
     TJsonDouble(const TJsonDouble &src, TJsonAlloc *Alloc);
     virtual ~TJsonDouble();
 
@@ -476,7 +478,7 @@ protected:
 class TJsonString : public TJsonObject
 {
 public:
-    TJsonString(const char *FieldName, TJsonAlloc *Alloc, TString &data);
+    TJsonString(const char *FieldName, TJsonAlloc *Alloc, const char *data);
     TJsonString(const TJsonString &src, TJsonAlloc *Alloc);
     virtual ~TJsonString();
 
@@ -588,9 +590,9 @@ protected:
     void EndNesting();
     void StartArray();
     void AddArray();
-    void AddString(TString &str);
+    void AddString(const char *str);
     void AddInt(long long val);
-    void AddDouble(double val, TString &text);
+    void AddDouble(double val, const char *text);
     void AddDouble(double val, int decimals);
     void AddBoolean(bool val);
 
