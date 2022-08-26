@@ -168,6 +168,9 @@ public:
 
 protected:
     virtual TJsonObject *CloneObj();
+
+    bool *AllocateArr(int count);
+    void FreeArr(bool *arr);
     void Grow();
 
     int FArraySize;
@@ -190,6 +193,9 @@ public:
 
 protected:
     virtual TJsonObject *CloneObj();
+
+    long long *AllocateArr(int count);
+    void FreeArr(long long *arr);
     void Grow();
 
     int FArraySize;
@@ -213,6 +219,9 @@ public:
 
 protected:
     virtual TJsonObject *CloneObj();
+
+    double *AllocateArr(int count);
+    void FreeArr(double *arr);
     void Grow();
 
     int FDecimals;
@@ -255,6 +264,7 @@ public:
 
     void *operator new(size_t size, TJsonAlloc *alloc);
     void *Allocate(int size);
+    void Free(void *ptr);
 
     void Grow();
     void Insert(TJsonObject *obj);

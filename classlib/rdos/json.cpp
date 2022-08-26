@@ -1351,7 +1351,7 @@ TJsonBooleanArray::TJsonBooleanArray(const TJsonBooleanArray &src, TJsonAlloc *A
     {
         FArraySize = src.FArrayCount;
         FArrayCount = src.FArrayCount;
-        FArr = new(Alloc) bool[FArraySize];
+        FArr = AllocateArr(FArraySize);
 
         for (i = 0; i < FArrayCount; i++)
             FArr[i] = src.FArr[i];
@@ -1377,8 +1377,47 @@ TJsonBooleanArray::TJsonBooleanArray(const TJsonBooleanArray &src, TJsonAlloc *A
 ##########################################################################*/
 TJsonBooleanArray::~TJsonBooleanArray()
 {
-    if (FArr)
-        delete FArr;
+    FreeArr(FArr);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::AllocateArr
+#
+#   Purpose....: new
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool *TJsonBooleanArray::AllocateArr(int count)
+{
+    int size = count * sizeof(bool *);
+
+    if (FAlloc)
+        return (bool *)FAlloc->Allocate(size);
+    else
+        return new bool[count];
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::FreeArr
+#
+#   Purpose....: free
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonBooleanArray::FreeArr(bool *arr)
+{
+    char *ptr = (char *)arr;
+
+    if (arr && FAlloc == 0)
+        delete ptr;
 }
 
 /*##########################################################################
@@ -1450,7 +1489,7 @@ void TJsonBooleanArray::Grow()
     if (FArr)
     {
         NewSize = 2 * FArraySize;
-        NewArr = new(FAlloc) bool[NewSize];
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArr[i];
@@ -1458,13 +1497,12 @@ void TJsonBooleanArray::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = false;
 
-        if (FAlloc == 0)
-            delete FArr;
+        FreeArr(FArr);
     }
     else
     {
         NewSize = 10;
-        NewArr = new(FAlloc) bool[NewSize];
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = false;
@@ -1567,7 +1605,7 @@ TJsonIntArray::TJsonIntArray(const TJsonIntArray &src, TJsonAlloc *Alloc)
     {
         FArraySize = src.FArrayCount;
         FArrayCount = src.FArrayCount;
-        FArr = new(FAlloc) long long[FArraySize];
+        FArr = AllocateArr(FArraySize);
 
         for (i = 0; i < FArrayCount; i++)
             FArr[i] = src.FArr[i];
@@ -1593,8 +1631,47 @@ TJsonIntArray::TJsonIntArray(const TJsonIntArray &src, TJsonAlloc *Alloc)
 ##########################################################################*/
 TJsonIntArray::~TJsonIntArray()
 {
-    if (FArr)
-        delete FArr;
+    FreeArr(FArr);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonIntArray::AllocateArr
+#
+#   Purpose....: new
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long *TJsonIntArray::AllocateArr(int count)
+{
+    int size = count * sizeof(long long *);
+
+    if (FAlloc)
+        return (long long *)FAlloc->Allocate(size);
+    else
+        return new long long[count];
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonIntArray::FreeArr
+#
+#   Purpose....: free
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonIntArray::FreeArr(long long *arr)
+{
+    char *ptr = (char *)arr;
+
+    if (arr && FAlloc == 0)
+        delete ptr;
 }
 
 /*##########################################################################
@@ -1666,7 +1743,7 @@ void TJsonIntArray::Grow()
     if (FArr)
     {
         NewSize = 2 * FArraySize;
-        NewArr = new(FAlloc) long long[NewSize];
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArr[i];
@@ -1674,13 +1751,12 @@ void TJsonIntArray::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = 0;
 
-        if (FAlloc == 0)
-            delete FArr;
+        FreeArr(FArr);
     }
     else
     {
         NewSize = 10;
-        NewArr = new(FAlloc) long long[NewSize];
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = 0;
@@ -1787,7 +1863,7 @@ TJsonDoubleArray::TJsonDoubleArray(const TJsonDoubleArray &src, TJsonAlloc *Allo
     {
         FArraySize = src.FArrayCount;
         FArrayCount = src.FArrayCount;
-        FArr = new(Alloc) double[FArraySize];
+        FArr = AllocateArr(FArraySize);
 
         for (i = 0; i < FArrayCount; i++)
             FArr[i] = src.FArr[i];
@@ -1813,8 +1889,47 @@ TJsonDoubleArray::TJsonDoubleArray(const TJsonDoubleArray &src, TJsonAlloc *Allo
 ##########################################################################*/
 TJsonDoubleArray::~TJsonDoubleArray()
 {
-    if (FArr)
-        delete FArr;
+    FreeArr(FArr);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::AllocateArr
+#
+#   Purpose....: new
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double *TJsonDoubleArray::AllocateArr(int count)
+{
+    int size = count * sizeof(double *);
+
+    if (FAlloc)
+        return (double *)FAlloc->Allocate(size);
+    else
+        return new double[count];
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::FreeArr
+#
+#   Purpose....: free
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonDoubleArray::FreeArr(double *arr)
+{
+    char *ptr = (char *)arr;
+
+    if (arr && FAlloc == 0)
+        delete ptr;
 }
 
 /*##########################################################################
@@ -1886,7 +2001,7 @@ void TJsonDoubleArray::Grow()
     if (FArr)
     {
         NewSize = 2 * FArraySize;
-        NewArr = new(FAlloc) double[NewSize];
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArr[i];
@@ -1894,13 +2009,12 @@ void TJsonDoubleArray::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = INFINITY;
 
-        if (FAlloc == 0)
-            delete FArr;
+        FreeArr(FArr);
     }
     else
     {
         NewSize = 10;
-        NewArr = new(FAlloc) double[NewSize];
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = INFINITY;
@@ -2382,6 +2496,23 @@ void *TJsonCollectionData::Allocate(int size)
         return FAlloc->Allocate(size);
     else
         return new char[size];
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonCollectionData::Free
+#
+#   Purpose....: free
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonCollectionData::Free(void *ptr)
+{
+    if (FAlloc == 0)
+        delete ptr;
 }
 
 /*##########################################################################
