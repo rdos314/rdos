@@ -2358,32 +2358,6 @@ void TJsonStringArray::Grow()
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonStringArray::Add(TString &str)
-{
-    int size = str.GetSize();
-    char *s;
-
-    s = new(FAlloc) char[size + 1];
-    strcpy(s, str.GetData());         
-
-    if (FArraySize == FArrayCount)
-        Grow();
-
-    FArr[FArrayCount] = s;
-    FArrayCount++;
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonStringArray::Add
-#
-#   Purpose....: Add value
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 void TJsonStringArray::Add(const char *str)
 {
     int size = strlen(str);
@@ -3653,7 +3627,7 @@ TJsonArrayCollection::TJsonArrayCollection(const TJsonArrayCollection &src, TJso
 
     if (FArrayCount)
     {
-        FArray = new(Alloc) TJsonCollectionData *[FArrayCount];
+        FArray = AllocateArr(FArrayCount);
 
         for (i = 0; i < FArrayCount; i++)
         {
@@ -3682,10 +3656,51 @@ TJsonArrayCollection::~TJsonArrayCollection()
 {
     int i;
 
-    for (i = 0; i < FArrayCount; i++)
-        delete FArray[i];
+    if (FAlloc == 0)
+        for (i = 0; i < FArrayCount; i++)
+            delete FArray[i];
 
-    delete FArray;
+    FreeArr(FArray);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::AllocateArr
+#
+#   Purpose....: new
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonCollectionData **TJsonArrayCollection::AllocateArr(int count)
+{
+    int size = count * sizeof(TJsonCollectionData **);
+
+    if (FAlloc)
+        return (TJsonCollectionData **)FAlloc->Allocate(size);
+    else
+        return new TJsonCollectionData *[count];
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayCollection::FreeArr
+#
+#   Purpose....: free
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonArrayCollection::FreeArr(TJsonCollectionData **arr)
+{
+    char *ptr = (char *)arr;
+
+    if (arr && FAlloc == 0)
+        delete ptr;
 }
 
 /*##########################################################################
@@ -3752,14 +3767,12 @@ void TJsonArrayCollection::Grow()
 {
     int i;
     int NewSize;
-    void **parr;
     TJsonCollectionData **NewArr;
 
     if (FArray)
     {
         NewSize = 2 * FArraySize;
-        parr = (void **)Allocate(sizeof(parr) * NewSize);
-        NewArr = (TJsonCollectionData **)parr;
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < FArrayCount; i++)
             NewArr[i] = FArray[i];
@@ -3767,14 +3780,12 @@ void TJsonArrayCollection::Grow()
         for (i = FArrayCount; i < NewSize; i++)
             NewArr[i] = 0;
 
-        if (FAlloc == 0)
-            delete FArray;
+        FreeArr(FArray);
     }
     else
     {
         NewSize = 10;
-        parr = (void **)Allocate(sizeof(parr) * NewSize);
-        NewArr = (TJsonCollectionData **)parr;
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = 0;
@@ -6082,7 +6093,7 @@ int TJsonStackEntry::HandleObjectField(TJsonDocument *doc)
         if (*FDataPtr == FQuoteChar)
         {
             FData.Append(case_start, FDataPtr - case_start);
-            doc->SetFieldName(FData);
+            doc->SetFieldName(FData.GetData());
 
             FSavedState = json_tokener_state_object_field_end;
             FState = json_tokener_state_eatws;
@@ -6645,7 +6656,7 @@ bool TJsonDocument::IsArrayData()
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonDocument::SetFieldName(TString &str)
+void TJsonDocument::SetFieldName(const char *str)
 {
     FObjFieldName = str;
 }

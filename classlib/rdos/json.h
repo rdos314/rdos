@@ -240,7 +240,6 @@ public:
     virtual ~TJsonStringArray();
 
     virtual bool IsStringArray();
-    void Add(TString &str);
     void Add(const char *str);
     TJsonStringArray *Clone();
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
@@ -336,9 +335,6 @@ public:
     void SetString(const char *FieldName, const char *Str);
 
     TJsonCollection *FParent;
-
-protected:
-    TString FTempStr;
 };
 
 class TJsonSingleCollection : public TJsonCollection
@@ -392,6 +388,10 @@ public:
 
 protected:
     virtual TJsonObject *CloneObj();
+
+    TJsonCollectionData **AllocateArr(int count);
+    void FreeArr(TJsonCollectionData **arr);
+
     void Grow();
     void DoAdd();
 
@@ -598,7 +598,7 @@ protected:
     bool DeleteLevel();
 
     bool IsArrayData();
-    void SetFieldName(TString &name);
+    void SetFieldName(const char *name);
     void StartNesting();
     void EndNesting();
     void StartArray();
