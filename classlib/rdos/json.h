@@ -80,6 +80,8 @@ public:
     virtual bool IsArrayObject();
 
     void *Allocate(int size);
+    void Free(void *ptr);
+
     void *operator new(size_t size, TJsonAlloc *alloc);
 
     void Rename(const char *NewFieldName);
@@ -128,7 +130,7 @@ protected:
     void NewLine(TJsonDocument *doc, TString &str);
     void AddIndent(TJsonDocument *doc, int indent, TString &str);
 
-    TString FFieldName;
+    char *FFieldName;
     TString FText;
     TJsonAlloc *FAlloc;
 };

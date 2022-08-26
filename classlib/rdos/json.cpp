@@ -299,9 +299,13 @@ void TJsonFormString::Reformat(const char *str)
 #
 ##########################################################################*/
 TJsonObject::TJsonObject(const char *FieldName, TJsonAlloc *Alloc)
- : FFieldName(FieldName)
 {
+    int len = strlen(FieldName);
+
     FAlloc = Alloc;
+
+    FFieldName = (char *)Allocate(len + 1);
+    strcpy(FFieldName, FieldName);
 }
 
 /*##########################################################################
@@ -316,10 +320,14 @@ TJsonObject::TJsonObject(const char *FieldName, TJsonAlloc *Alloc)
 #
 ##########################################################################*/
 TJsonObject::TJsonObject(const TJsonObject &src, TJsonAlloc *Alloc)
- : FFieldName(src.FFieldName),
-   FText(src.FText)
+ : FText(src.FText)
 {
+    int len = strlen(src.FFieldName);
+
     FAlloc = Alloc;
+
+    FFieldName = (char *)Allocate(len + 1);
+    strcpy(FFieldName, src.FFieldName);
 }
 
 /*##########################################################################
@@ -335,6 +343,7 @@ TJsonObject::TJsonObject(const TJsonObject &src, TJsonAlloc *Alloc)
 ##########################################################################*/
 TJsonObject::~TJsonObject()
 {
+    Free(FFieldName);
 }
 
 /*##########################################################################
@@ -354,6 +363,23 @@ void *TJsonObject::Allocate(int size)
         return FAlloc->Allocate(size);
     else
         return new char[size];
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonObject::Free
+#
+#   Purpose....: free
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TJsonObject::Free(void *ptr)
+{
+    if (FAlloc == 0)
+        delete ptr;
 }
 
 /*##########################################################################
@@ -404,7 +430,7 @@ TJsonObject *TJsonObject::Clone()
 ##########################################################################*/
 const char *TJsonObject::GetFieldName()
 {
-    return FFieldName.GetData();
+    return FFieldName;
 }
 
 /*##########################################################################
@@ -468,7 +494,16 @@ bool TJsonObject::IsArrayObject()
 ##########################################################################*/
 void TJsonObject::Rename(const char *NewFieldName)
 {
-    FFieldName = NewFieldName;
+    int CurrLen = strlen(FFieldName);
+    int NewLen = strlen(NewFieldName);
+
+    if (NewLen > CurrLen)
+    {
+        Free(FFieldName);
+        FFieldName = (char *)Allocate(NewLen + 1);
+    }
+
+    strcpy(FFieldName, NewFieldName);
 }
 
 /*##########################################################################
@@ -3218,7 +3253,7 @@ void TJsonSingleCollection::Write(TJsonDocument *doc, int indent, TString &str)
     int size;
     TJsonObject *obj;
 
-    if (FFieldName.GetSize())
+    if (FFieldName[0])
     {
         AddIndent(doc, indent, str);
         str += "\"";
