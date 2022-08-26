@@ -266,8 +266,8 @@ public:
     ~TJsonCollectionData();
 
     void *operator new(size_t size, TJsonAlloc *alloc);
-    void *Allocate(int size);
-    void Free(void *ptr);
+    TJsonObject **AllocateArr(int count);
+    void FreeArr(TJsonObject **arr);
 
     void Grow();
     void Insert(TJsonObject *obj);

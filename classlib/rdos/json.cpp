@@ -2478,7 +2478,7 @@ TJsonCollectionData::TJsonCollectionData(const TJsonCollectionData &src, TJsonAl
     {
         FObjArraySize = src.FObjArrayCount;
         FObjArrayCount = src.FObjArrayCount;
-        FObjArr = new(Alloc) TJsonObject *[FObjArraySize];
+        FObjArr = AllocateArr(FObjArraySize);
 
         for (i = 0; i < FObjArrayCount; i++)
             if (src.FObjArr[i])
@@ -2509,18 +2509,16 @@ TJsonCollectionData::~TJsonCollectionData()
 {
     int i;
 
-    if (FObjArr)
-    {
+    if (FObjArr && FAlloc == 0)
         for (i = 0; i < FObjArrayCount; i++)
             delete FObjArr[i];
 
-        delete FObjArr;
-    }
+    FreeArr(FObjArr);
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonCollectionData::Allocate
+#   Name       : TJsonCollectionData::AllocateArr
 #
 #   Purpose....: new
 #
@@ -2529,17 +2527,19 @@ TJsonCollectionData::~TJsonCollectionData()
 #   Returns....: *
 #
 ##########################################################################*/
-void *TJsonCollectionData::Allocate(int size)
+TJsonObject **TJsonCollectionData::AllocateArr(int count)
 {
+    int size = count * sizeof(TJsonObject **);
+
     if (FAlloc)
-        return FAlloc->Allocate(size);
+        return (TJsonObject **)FAlloc->Allocate(size);
     else
-        return new char[size];
+        return new TJsonObject *[count];
 }
 
 /*##########################################################################
 #
-#   Name       : TJsonCollectionData::Free
+#   Name       : TJsonCollectionData::FreeArr
 #
 #   Purpose....: free
 #
@@ -2548,9 +2548,11 @@ void *TJsonCollectionData::Allocate(int size)
 #   Returns....: *
 #
 ##########################################################################*/
-void TJsonCollectionData::Free(void *ptr)
+void TJsonCollectionData::FreeArr(TJsonObject **arr)
 {
-    if (FAlloc == 0)
+    char *ptr = (char *)arr;
+
+    if (arr && FAlloc == 0)
         delete ptr;
 }
 
@@ -2588,14 +2590,12 @@ void TJsonCollectionData::Grow()
 {
     int i;
     int NewSize;
-    void **parr;
     TJsonObject **NewArr;
 
     if (FObjArr)
     {
         NewSize = 2 * FObjArraySize;
-        parr = (void **)Allocate(sizeof(parr) * NewSize);
-        NewArr = (TJsonObject **)parr;
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < FObjArrayCount; i++)
             NewArr[i] = FObjArr[i];
@@ -2603,14 +2603,12 @@ void TJsonCollectionData::Grow()
         for (i = FObjArrayCount; i < NewSize; i++)
             NewArr[i] = 0;
 
-        if (FAlloc == 0)
-            delete FObjArr;
+        FreeArr(FObjArr);
     }
     else
     {
         NewSize = 10;
-        parr = (void **)Allocate(sizeof(parr) * NewSize);
-        NewArr = (TJsonObject **)parr;
+        NewArr = AllocateArr(NewSize);
 
         for (i = 0; i < NewSize; i++)
             NewArr[i] = 0;
