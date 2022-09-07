@@ -428,9 +428,9 @@ void *TJsonObject::operator new(size_t size, TJsonAlloc *alloc)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonObject::Clone()
+TJsonObject *TJsonObject::Clone(TJsonAlloc *Alloc)
 {
-    return CloneObj();
+    return CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -1227,9 +1227,9 @@ TJsonArrayObject::~TJsonArrayObject()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonArrayObject *TJsonArrayObject::Clone()
+TJsonArrayObject *TJsonArrayObject::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonArrayObject *)CloneObj();
+    return (TJsonArrayObject *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -1431,9 +1431,9 @@ void TJsonBooleanArray::FreeArr(bool *arr)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonBooleanArray::CloneObj()
+TJsonObject *TJsonBooleanArray::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonBooleanArray(*this);
+    TJsonObject *obj = new(Alloc) TJsonBooleanArray(*this, Alloc);
     return obj;
 }
 
@@ -1448,9 +1448,9 @@ TJsonObject *TJsonBooleanArray::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonBooleanArray *TJsonBooleanArray::Clone()
+TJsonBooleanArray *TJsonBooleanArray::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonBooleanArray *)CloneObj();
+    return (TJsonBooleanArray *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -1685,9 +1685,9 @@ void TJsonIntArray::FreeArr(long long *arr)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonIntArray::CloneObj()
+TJsonObject *TJsonIntArray::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonIntArray(*this);
+    TJsonObject *obj = new(Alloc) TJsonIntArray(*this, Alloc);
     return obj;
 }
 
@@ -1702,9 +1702,9 @@ TJsonObject *TJsonIntArray::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonIntArray *TJsonIntArray::Clone()
+TJsonIntArray *TJsonIntArray::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonIntArray *)CloneObj();
+    return (TJsonIntArray *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -1943,9 +1943,9 @@ void TJsonDoubleArray::FreeArr(double *arr)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonDoubleArray::CloneObj()
+TJsonObject *TJsonDoubleArray::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonDoubleArray(*this);
+    TJsonObject *obj = new(Alloc) TJsonDoubleArray(*this, Alloc);
     return obj;
 }
 
@@ -1960,9 +1960,9 @@ TJsonObject *TJsonDoubleArray::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDoubleArray *TJsonDoubleArray::Clone()
+TJsonDoubleArray *TJsonDoubleArray::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonDoubleArray *)CloneObj();
+    return (TJsonDoubleArray *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -2266,9 +2266,9 @@ void TJsonStringArray::FreeArr(char **arr)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonStringArray::CloneObj()
+TJsonObject *TJsonStringArray::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonStringArray(*this);
+    TJsonObject *obj = new(Alloc) TJsonStringArray(*this, Alloc);
     return obj;
 }
 
@@ -2283,9 +2283,9 @@ TJsonObject *TJsonStringArray::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonStringArray *TJsonStringArray::Clone()
+TJsonStringArray *TJsonStringArray::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonStringArray *)CloneObj();
+    return (TJsonStringArray *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -2448,6 +2448,8 @@ TJsonCollectionData::TJsonCollectionData(const TJsonCollectionData &src, TJsonAl
 {
     int i;
 
+    FAlloc = Alloc;
+
     if (src.FObjArrayCount)
     {
         FObjArraySize = src.FObjArrayCount;
@@ -2456,7 +2458,7 @@ TJsonCollectionData::TJsonCollectionData(const TJsonCollectionData &src, TJsonAl
 
         for (i = 0; i < FObjArrayCount; i++)
             if (src.FObjArr[i])
-                FObjArr[i] = src.FObjArr[i]->Clone();
+                FObjArr[i] = src.FObjArr[i]->Clone(Alloc);
             else
                 FObjArr[i] = 0;
     }
@@ -2704,9 +2706,9 @@ TJsonCollection::~TJsonCollection()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonCollection *TJsonCollection::Clone()
+TJsonCollection *TJsonCollection::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonCollection *)CloneObj();
+    return (TJsonCollection *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -3330,7 +3332,7 @@ TJsonSingleCollection::TJsonSingleCollection(const char *FieldName, TJsonAlloc *
 ##########################################################################*/
 TJsonSingleCollection::TJsonSingleCollection(const TJsonSingleCollection &src, TJsonAlloc *Alloc)
  : TJsonCollection(src, Alloc),
-   FData(src.FData)
+   FData(src.FData, Alloc)
 {
 }
 
@@ -3360,9 +3362,9 @@ TJsonSingleCollection::~TJsonSingleCollection()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonSingleCollection::CloneObj()
+TJsonObject *TJsonSingleCollection::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonSingleCollection(*this);
+    TJsonObject *obj = new(Alloc) TJsonSingleCollection(*this, Alloc);
     return obj;
 }
 
@@ -3377,9 +3379,9 @@ TJsonObject *TJsonSingleCollection::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonSingleCollection *TJsonSingleCollection::Clone()
+TJsonSingleCollection *TJsonSingleCollection::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonSingleCollection *)CloneObj();
+    return (TJsonSingleCollection *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -3632,7 +3634,7 @@ TJsonArrayCollection::TJsonArrayCollection(const TJsonArrayCollection &src, TJso
         for (i = 0; i < FArrayCount; i++)
         {
             if (src.FArray[i])
-                FArray[i] = new(Alloc) TJsonCollectionData(*src.FArray[i]);
+                FArray[i] = new(Alloc) TJsonCollectionData(*src.FArray[i], Alloc);
             else
                 FArray[i] = 0;
         }
@@ -3714,9 +3716,9 @@ void TJsonArrayCollection::FreeArr(TJsonCollectionData **arr)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonArrayCollection::CloneObj()
+TJsonObject *TJsonArrayCollection::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonArrayCollection(*this);
+    TJsonObject *obj = new(Alloc) TJsonArrayCollection(*this, Alloc);
     return obj;
 }
 
@@ -3731,9 +3733,9 @@ TJsonObject *TJsonArrayCollection::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonArrayCollection *TJsonArrayCollection::Clone()
+TJsonArrayCollection *TJsonArrayCollection::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonArrayCollection *)CloneObj();
+    return (TJsonArrayCollection *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -4108,7 +4110,7 @@ TJsonInt::TJsonInt(const char *FieldName, TJsonAlloc *Alloc, long long v)
 #
 ##########################################################################*/
 TJsonInt::TJsonInt(const TJsonInt &src, TJsonAlloc *Alloc)
- : TJsonObject(src)
+ : TJsonObject(src, Alloc)
 {
     Val = src.Val;
 }
@@ -4139,9 +4141,9 @@ TJsonInt::~TJsonInt()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonInt::CloneObj()
+TJsonObject *TJsonInt::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonInt(*this);
+    TJsonObject *obj = new(Alloc) TJsonInt(*this, Alloc);
     return obj;
 }
 
@@ -4156,9 +4158,9 @@ TJsonObject *TJsonInt::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonInt *TJsonInt::Clone()
+TJsonInt *TJsonInt::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonInt *)CloneObj();
+    return (TJsonInt *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -4430,9 +4432,9 @@ TJsonDouble::~TJsonDouble()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonDouble::CloneObj()
+TJsonObject *TJsonDouble::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonDouble(*this);
+    TJsonObject *obj = new(Alloc) TJsonDouble(*this, Alloc);
     return obj;
 }
 
@@ -4447,9 +4449,9 @@ TJsonObject *TJsonDouble::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonDouble *TJsonDouble::Clone()
+TJsonDouble *TJsonDouble::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonDouble *)CloneObj();
+    return (TJsonDouble *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -4714,9 +4716,9 @@ TJsonBoolean::~TJsonBoolean()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonBoolean::CloneObj()
+TJsonObject *TJsonBoolean::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonBoolean(*this);
+    TJsonObject *obj = new(Alloc) TJsonBoolean(*this, Alloc);
     return obj;
 }
 
@@ -4731,9 +4733,9 @@ TJsonObject *TJsonBoolean::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonBoolean *TJsonBoolean::Clone()
+TJsonBoolean *TJsonBoolean::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonBoolean *)CloneObj();
+    return (TJsonBoolean *)CloneObj(Alloc);
 }
 
 /*##########################################################################
@@ -4992,9 +4994,9 @@ TJsonString::~TJsonString()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonObject *TJsonString::CloneObj()
+TJsonObject *TJsonString::CloneObj(TJsonAlloc *Alloc)
 {
-    TJsonObject *obj = new(FAlloc) TJsonString(*this);
+    TJsonObject *obj = new(Alloc) TJsonString(*this, Alloc);
     return obj;
 }
 
@@ -5009,9 +5011,9 @@ TJsonObject *TJsonString::CloneObj()
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonString *TJsonString::Clone()
+TJsonString *TJsonString::Clone(TJsonAlloc *Alloc)
 {
-    return (TJsonString *)CloneObj();
+    return (TJsonString *)CloneObj(Alloc);
 }
 
 /*##########################################################################
