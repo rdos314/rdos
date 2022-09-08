@@ -327,7 +327,7 @@ TBitmapGraphicDevice *TPrinterDevice::CreateBitmap(int Height)
         Width = dev->GetWidth();
         dev->SetDrawColor(255, 255, 255);
         dev->SetFilledStyle();
-        dev->DrawRect(0, 0, Width - 1, Height - 1);
+        dev->DrawRect(0, 0, dev->GetWidth() - 1, dev->GetHeight() - 1);
         return dev;
     }
     return 0;

@@ -1480,6 +1480,7 @@ create_bitmap   Proc far
     push ax
     push cx
 ;
+    add dx,80
     cmp dx,1000
     ja create_bitmap_size_ok
 ;
