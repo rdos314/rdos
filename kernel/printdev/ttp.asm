@@ -1480,6 +1480,12 @@ create_bitmap   Proc far
     push ax
     push cx
 ;
+    cmp dx,1000
+    ja create_bitmap_size_ok
+;
+    mov dx,1000
+
+create_bitmap_size_ok:
     mov ax,SEG data
     mov ds,ax
     mov cx,ds:tp_width
