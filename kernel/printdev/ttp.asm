@@ -865,14 +865,10 @@ SendBitmap    Proc near
 
 sbLoop:
     inc bp
-    cmp bp,256
+    cmp bp,128
     jne sbDo
 ;
-    call SendPrint
-;
-    mov ax,10
-    WaitMilliSec
-    xor bp,bp
+    call UpdateStatus
 ;
     test ds:tp_flag,FLAG_ATTACHED
     stc
@@ -882,12 +878,6 @@ sbDo:
     call SendLine
     inc dx
 ;
-    test dl,0Fh
-    jnz sbNext
-;
-    call SendPrint
-
-sbNext:
     cmp dx,fs:bs_height
     jnz sbLoop
 
