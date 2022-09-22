@@ -36,6 +36,8 @@
 #include "sockobj.h"
 #include "rdos.h"
 
+#define MIN_BLOCK_SIZE	0x1000
+
 #define json_tokener_success                            1
 #define json_tokener_continue                           2
 #define json_tokener_error_depth                        3
@@ -84,41 +86,41 @@
 #define json_ret_add                                    4
 #define json_ret_sub                                    5
 
-/*##################  TJsonAlloc:TJsonAlloc  ###############
-*   Purpose....: Constructor for JSON allocation                        #
+/*##################  TJsonMem:TJsonMem  ###############
+*   Purpose....: Constructor for JSON memory block                        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TJsonAlloc::TJsonAlloc(int MaxSize)
+TJsonMem::TJsonMem(int MaxSize)
 {
     FSize = MaxSize;
     FPos = 0;
     FArr = new char[MaxSize];
 }
 
-/*##################  TJsonAlloc::~TJsonAlloc  ###############
-*   Purpose....: Destructor for JSON allocation                            #
+/*##################  TJsonMem::~TJsonMem  ###############
+*   Purpose....: Destructor for JSON memory block                            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TJsonAlloc::~TJsonAlloc()
+TJsonMem::~TJsonMem()
 {
     if (FArr)
         delete FArr;
 }
 
-/*##################  TJsonAlloc::Allocate  ###############
+/*##################  TJsonMem::Allocate  ###############
 *   Purpose....: Allocate a memory segment                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void *TJsonAlloc::Allocate(int size)
+void *TJsonMem::Allocate(int size)
 {
     char *p;
     
@@ -132,6 +134,92 @@ void *TJsonAlloc::Allocate(int size)
         return 0;
 }
 
+/*##################  TJsonAlloc:TJsonAlloc  ###############
+*   Purpose....: Constructor for JSON allocation                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TJsonAlloc::TJsonAlloc()
+{
+    FMemCount = 0;
+    FMemSize = 0;
+}
+
+/*##################  TJsonAlloc::~TJsonAlloc  ###############
+*   Purpose....: Destructor for JSON allocation                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TJsonAlloc::~TJsonAlloc()
+{
+    Reset();
+}
+
+/*##################  TJsonAlloc::Allocate  ###############
+*   Purpose....: Allocate a memory segment                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void *TJsonAlloc::Allocate(int size)
+{
+    int i;
+    void *blk = 0;
+    TJsonMem **nmema;
+    int asize;
+    int nsize;
+
+    for (i = 0; i < FMemCount && !blk; i++)
+        blk = FArr[i]->Allocate(size);
+
+    if (!blk)
+    {
+        if (FMemCount == FMemSize)
+        {
+            if (FMemCount)
+            {
+                nsize = 2 * FMemSize;
+                nmema = new TJsonMem *[nsize];
+
+                for (i = 0; i < FMemSize; i++)
+                    nmema[i] = FArr[i];
+
+                for (i = FMemSize; i < nsize; i++)
+                    nmema[i] = 0;
+
+                delete FArr;
+            }
+            else
+            {
+                nsize = 10;
+                nmema = new TJsonMem *[nsize];
+
+                for (i = 0; i < nsize; i++)
+                    nmema[i] = 0;
+            }
+
+            FArr = nmema;
+            FMemSize = nsize;
+        }
+
+        if (size < MIN_BLOCK_SIZE)
+            asize = MIN_BLOCK_SIZE;
+        else
+            asize = size;
+
+        FArr[FMemCount] = new TJsonMem(asize);
+        blk = FArr[FMemCount]->Allocate(size);        
+        FMemCount++;
+    }
+
+    return blk;
+}
+
 /*##################  TJsonAlloc::Reset  ###############
 *   Purpose....: Reset allocator                                  #
 *   In params..: *                                                          #
@@ -141,7 +229,17 @@ void *TJsonAlloc::Allocate(int size)
 *##########################################################################*/
 void TJsonAlloc::Reset()
 {
-    FPos = 0;
+    int i;
+
+    for (i = 0; i < FMemCount; i++)
+        if (FArr[i])
+            delete FArr[i];
+
+    if (FArr)
+        delete FArr;
+
+    FMemSize = 0;
+    FMemCount = 0;
 }
 
 /*##########################################################################
@@ -6373,24 +6471,7 @@ redo_char:
 ##########################################################################*/
 TJsonDocument::TJsonDocument()
 {
-    FAlloc = 0;
-    Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonDocument::TJsonDocument
-#
-#   Purpose....: Constructor for TJsonDocument
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TJsonDocument::TJsonDocument(int MaxSize)
-{
-    FAlloc = new TJsonAlloc(MaxSize);
+    FAlloc = new TJsonAlloc;
     Init();
 }
 
@@ -6407,25 +6488,7 @@ TJsonDocument::TJsonDocument(int MaxSize)
 ##########################################################################*/
 TJsonDocument::TJsonDocument(const char *doc)
 {
-    FAlloc = 0;
-    Init();
-    Parse(doc);
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonDocument::TJsonDocument
-#
-#   Purpose....: Constructor for TJsonDocument
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TJsonDocument::TJsonDocument(int MaxSize, const char *doc)
-{
-    FAlloc = new TJsonAlloc(MaxSize);
+    FAlloc = new TJsonAlloc;
     Init();
     Parse(doc);
 }

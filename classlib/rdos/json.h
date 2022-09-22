@@ -36,19 +36,33 @@
 
 class TJsonDocument;
 
+class TJsonMem
+{
+public:
+    TJsonMem(int MaxSize);
+    ~TJsonMem();
+
+    void *Allocate(int size);
+
+protected:
+    char *FArr;
+    int FPos;
+    int FSize;
+};
+
 class TJsonAlloc
 {
 public:
-    TJsonAlloc(int MaxSize);
+    TJsonAlloc();
     ~TJsonAlloc();
 
     void *Allocate(int size);
     void Reset();
 
 protected:
-    char *FArr;
-    int FPos;
-    int FSize;
+    TJsonMem **FArr;
+    int FMemCount;
+    int FMemSize;
 };
 
 class TJsonFormString : public TString
@@ -577,9 +591,7 @@ friend class TJsonObject;
 
 public:
     TJsonDocument();
-    TJsonDocument(int MaxSize);
     TJsonDocument(const char *doc);
-    TJsonDocument(int MaxSize, const char *doc);
     ~TJsonDocument();
 
     void Reset();
