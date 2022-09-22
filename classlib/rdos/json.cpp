@@ -473,10 +473,7 @@ TJsonObject::~TJsonObject()
 ##########################################################################*/
 void *TJsonObject::Allocate(int size)
 {
-    if (FAlloc)
-        return FAlloc->Allocate(size);
-    else
-        return new char[size];
+    return FAlloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -492,8 +489,6 @@ void *TJsonObject::Allocate(int size)
 ##########################################################################*/
 void TJsonObject::Free(void *ptr)
 {
-    if (FAlloc == 0)
-        delete ptr;
 }
 
 /*##########################################################################
@@ -509,10 +504,7 @@ void TJsonObject::Free(void *ptr)
 ##########################################################################*/
 void *TJsonObject::operator new(size_t size, TJsonAlloc *alloc)
 {
-    if (alloc)
-        return alloc->Allocate(size);
-    else
-        return new char[size];
+    return alloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -1493,10 +1485,7 @@ bool *TJsonBooleanArray::AllocateArr(int count)
 {
     int size = count * sizeof(bool *);
 
-    if (FAlloc)
-        return (bool *)FAlloc->Allocate(size);
-    else
-        return new bool[count];
+    return (bool *)FAlloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -1512,10 +1501,6 @@ bool *TJsonBooleanArray::AllocateArr(int count)
 ##########################################################################*/
 void TJsonBooleanArray::FreeArr(bool *arr)
 {
-    char *ptr = (char *)arr;
-
-    if (arr && FAlloc == 0)
-        delete ptr;
 }
 
 /*##########################################################################
@@ -1747,10 +1732,7 @@ long long *TJsonIntArray::AllocateArr(int count)
 {
     int size = count * sizeof(long long *);
 
-    if (FAlloc)
-        return (long long *)FAlloc->Allocate(size);
-    else
-        return new long long[count];
+    return (long long *)FAlloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -1766,10 +1748,6 @@ long long *TJsonIntArray::AllocateArr(int count)
 ##########################################################################*/
 void TJsonIntArray::FreeArr(long long *arr)
 {
-    char *ptr = (char *)arr;
-
-    if (arr && FAlloc == 0)
-        delete ptr;
 }
 
 /*##########################################################################
@@ -2005,10 +1983,7 @@ double *TJsonDoubleArray::AllocateArr(int count)
 {
     int size = count * sizeof(double *);
 
-    if (FAlloc)
-        return (double *)FAlloc->Allocate(size);
-    else
-        return new double[count];
+    return (double *)FAlloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -2024,10 +1999,6 @@ double *TJsonDoubleArray::AllocateArr(int count)
 ##########################################################################*/
 void TJsonDoubleArray::FreeArr(double *arr)
 {
-    char *ptr = (char *)arr;
-
-    if (arr && FAlloc == 0)
-        delete ptr;
 }
 
 /*##########################################################################
@@ -2301,15 +2272,6 @@ TJsonStringArray::TJsonStringArray(const TJsonStringArray &src, TJsonAlloc *Allo
 ##########################################################################*/
 TJsonStringArray::~TJsonStringArray()
 {
-    int i;
-
-    if (FArr && FAlloc == 0)
-    {
-        for (i = 0; i < FArrayCount; i++)
-            if (FArr[i])
-                delete FArr[i];
-    }
-
     Free(FArr);
 }
 
@@ -2328,10 +2290,7 @@ char **TJsonStringArray::AllocateArr(int count)
 {
     int size = count * sizeof(char **);
 
-    if (FAlloc)
-        return (char **)FAlloc->Allocate(size);
-    else
-        return new char *[count];
+    return (char **)FAlloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -2347,10 +2306,6 @@ char **TJsonStringArray::AllocateArr(int count)
 ##########################################################################*/
 void TJsonStringArray::FreeArr(char **arr)
 {
-    char *ptr = (char *)arr;
-
-    if (arr && FAlloc == 0)
-        delete ptr;
 }
 
 /*##########################################################################
@@ -2581,12 +2536,6 @@ TJsonCollectionData::TJsonCollectionData(const TJsonCollectionData &src, TJsonAl
 ##########################################################################*/
 TJsonCollectionData::~TJsonCollectionData()
 {
-    int i;
-
-    if (FObjArr && FAlloc == 0)
-        for (i = 0; i < FObjArrayCount; i++)
-            delete FObjArr[i];
-
     FreeArr(FObjArr);
 }
 
@@ -2605,10 +2554,7 @@ TJsonObject **TJsonCollectionData::AllocateArr(int count)
 {
     int size = count * sizeof(TJsonObject **);
 
-    if (FAlloc)
-        return (TJsonObject **)FAlloc->Allocate(size);
-    else
-        return new TJsonObject *[count];
+    return (TJsonObject **)FAlloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -2624,10 +2570,6 @@ TJsonObject **TJsonCollectionData::AllocateArr(int count)
 ##########################################################################*/
 void TJsonCollectionData::FreeArr(TJsonObject **arr)
 {
-    char *ptr = (char *)arr;
-
-    if (arr && FAlloc == 0)
-        delete ptr;
 }
 
 /*##########################################################################
@@ -2643,10 +2585,7 @@ void TJsonCollectionData::FreeArr(TJsonObject **arr)
 ##########################################################################*/
 void *TJsonCollectionData::operator new(size_t size, TJsonAlloc *alloc)
 {
-    if (alloc)
-        return alloc->Allocate(size);
-    else
-        return new char[size];
+    return alloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -2842,12 +2781,7 @@ bool TJsonCollection::RemoveObj(const char *FieldName)
     TJsonObject *obj = GetObj(FieldName);
 
     if (obj)
-    {
         ok = Remove(obj);
-
-        if (ok)
-            delete obj;
-    }
 
     return ok;
 }
@@ -2869,12 +2803,7 @@ bool TJsonCollection::RemoveCollection(const char *FieldName)
     TJsonObject *obj = GetCollection(FieldName);
 
     if (obj)
-    {
         ok = Remove(obj);
-
-        if (ok)
-            delete obj;
-    }
 
     return ok;
 }
@@ -3754,12 +3683,6 @@ TJsonArrayCollection::TJsonArrayCollection(const TJsonArrayCollection &src, TJso
 ##########################################################################*/
 TJsonArrayCollection::~TJsonArrayCollection()
 {
-    int i;
-
-    if (FAlloc == 0)
-        for (i = 0; i < FArrayCount; i++)
-            delete FArray[i];
-
     FreeArr(FArray);
 }
 
@@ -3778,10 +3701,7 @@ TJsonCollectionData **TJsonArrayCollection::AllocateArr(int count)
 {
     int size = count * sizeof(TJsonCollectionData **);
 
-    if (FAlloc)
-        return (TJsonCollectionData **)FAlloc->Allocate(size);
-    else
-        return new TJsonCollectionData *[count];
+    return (TJsonCollectionData **)FAlloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -3797,10 +3717,6 @@ TJsonCollectionData **TJsonArrayCollection::AllocateArr(int count)
 ##########################################################################*/
 void TJsonArrayCollection::FreeArr(TJsonCollectionData **arr)
 {
-    char *ptr = (char *)arr;
-
-    if (arr && FAlloc == 0)
-        delete ptr;
 }
 
 /*##########################################################################
@@ -5325,10 +5241,7 @@ TJsonStackEntry::~TJsonStackEntry()
 ##########################################################################*/
 void *TJsonStackEntry::operator new(size_t size, TJsonAlloc *alloc)
 {
-    if (alloc)
-        return alloc->Allocate(size);
-    else
-        return new char[size];
+    return alloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -6471,7 +6384,6 @@ redo_char:
 ##########################################################################*/
 TJsonDocument::TJsonDocument()
 {
-    FAlloc = new TJsonAlloc;
     Init();
 }
 
@@ -6488,7 +6400,6 @@ TJsonDocument::TJsonDocument()
 ##########################################################################*/
 TJsonDocument::TJsonDocument(const char *doc)
 {
-    FAlloc = new TJsonAlloc;
     Init();
     Parse(doc);
 }
@@ -6546,34 +6457,13 @@ void TJsonDocument::Reset()
 {
     int level;
 
-    if (FAlloc)
-    {
-        for (level = 0; level < MAX_JSON_DEPTH; level++)
-             StackArr[level] = 0;
+    for (level = 0; level < MAX_JSON_DEPTH; level++)
+        StackArr[level] = 0;
 
-        FRootCollection = 0;
-
-        FAlloc->Reset();
-    }
-    else
-    {
-        for (level = 0; level < MAX_JSON_DEPTH; level++)
-        {
-            if (StackArr[level])
-            {
-                 delete StackArr[level];
-                 StackArr[level] = 0;
-            }
-        }
-
-        if (FRootCollection)
-        {
-            delete FRootCollection;
-            FRootCollection = 0;
-        }
-    }
-
+    FRootCollection = 0;
     FCurrCollection = 0;
+
+    FAlloc.Reset();
 }
 
 /*##########################################################################
@@ -6651,7 +6541,7 @@ bool TJsonDocument::AddLevel()
 
         if (entry == 0)
         {
-            entry = new(FAlloc) TJsonStackEntry(FAlloc);
+            entry = new(&FAlloc) TJsonStackEntry(&FAlloc);
             StackArr[FDepth] = entry;
         }
 
@@ -6743,7 +6633,7 @@ void TJsonDocument::StartNesting()
 
     if (FCurrCollection)
     {
-        c = new(FAlloc) TJsonSingleCollection(FObjFieldName.GetData(), FAlloc);
+        c = new(&FAlloc) TJsonSingleCollection(FObjFieldName.GetData(), &FAlloc);
         FCurrCollection->Insert(c);
         c->FParent = FCurrCollection;
         FCurrCollection = c;
@@ -6752,7 +6642,7 @@ void TJsonDocument::StartNesting()
     {
         if (!FRootCollection)
         {
-            c = new(FAlloc) TJsonSingleCollection(FObjFieldName.GetData(), FAlloc);
+            c = new(&FAlloc) TJsonSingleCollection(FObjFieldName.GetData(), &FAlloc);
             FRootCollection = c;
         }
         FCurrCollection = c;
@@ -6793,7 +6683,7 @@ void TJsonDocument::StartArray()
 
     if (FCurrCollection)
     {
-        c = new(FAlloc) TJsonArrayCollection(FObjFieldName.GetData(), FAlloc);
+        c = new(&FAlloc) TJsonArrayCollection(FObjFieldName.GetData(), &FAlloc);
         FCurrCollection->Insert(c);
         c->FParent = FCurrCollection;
         FCurrCollection = c;
@@ -6839,7 +6729,7 @@ void TJsonDocument::AddString(const char *str)
 
     if (FCurrCollection)
     {
-        obj = new(FAlloc) TJsonString(FObjFieldName.GetData(), FAlloc, str);
+        obj = new(&FAlloc) TJsonString(FObjFieldName.GetData(), &FAlloc, str);
         FCurrCollection->Insert(obj);
     }
 }
@@ -6861,7 +6751,7 @@ void TJsonDocument::AddInt(long long val)
 
     if (FCurrCollection)
     {
-        obj = new(FAlloc) TJsonInt(FObjFieldName.GetData(), FAlloc, val);
+        obj = new(&FAlloc) TJsonInt(FObjFieldName.GetData(), &FAlloc, val);
         FCurrCollection->Insert(obj);
 
         long long v = obj->GetInt();
@@ -6885,7 +6775,7 @@ void TJsonDocument::AddDouble(double val, const char *text)
 
     if (FCurrCollection)
     {
-        obj = new(FAlloc) TJsonDouble(FObjFieldName.GetData(), FAlloc, val, text);
+        obj = new(&FAlloc) TJsonDouble(FObjFieldName.GetData(), &FAlloc, val, text);
         FCurrCollection->Insert(obj);
     }
 }
@@ -6907,7 +6797,7 @@ void TJsonDocument::AddDouble(double val, int decimals)
 
     if (FCurrCollection)
     {
-        obj = new(FAlloc) TJsonDouble(FObjFieldName.GetData(), FAlloc, val, decimals);
+        obj = new(&FAlloc) TJsonDouble(FObjFieldName.GetData(), &FAlloc, val, decimals);
         FCurrCollection->Insert(obj);
     }
 }
@@ -6929,7 +6819,7 @@ void TJsonDocument::AddBoolean(bool val)
 
     if (FCurrCollection)
     {
-        obj = new(FAlloc) TJsonBoolean(FObjFieldName.GetData(), FAlloc, val);
+        obj = new(&FAlloc) TJsonBoolean(FObjFieldName.GetData(), &FAlloc, val);
         FCurrCollection->Insert(obj);
     }
 }
@@ -6948,7 +6838,7 @@ void TJsonDocument::AddBoolean(bool val)
 TJsonCollection *TJsonDocument::CreateRoot()
 {
     if (!FRootCollection)
-        FRootCollection = new(FAlloc) TJsonSingleCollection("", FAlloc);
+        FRootCollection = new(&FAlloc) TJsonSingleCollection("", &FAlloc);
 
     return FRootCollection;
 }
@@ -6967,6 +6857,22 @@ TJsonCollection *TJsonDocument::CreateRoot()
 TJsonCollection *TJsonDocument::GetRoot()
 {
     return FRootCollection;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDocument::GetAlloc
+#
+#   Purpose....: Get allocator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJsonAlloc *TJsonDocument::GetAlloc()
+{
+    return &FAlloc;
 }
 
 /*##########################################################################

@@ -601,6 +601,7 @@ public:
 
     TJsonCollection *GetRoot();
     TJsonCollection *CreateRoot();
+    TJsonAlloc *GetAlloc();
 
 protected:
     void AddIndent(int indent, TString &str);
@@ -637,7 +638,7 @@ private:
 
     TJsonStackEntry *StackArr[MAX_JSON_DEPTH];
 
-    TJsonAlloc *FAlloc;
+    TJsonAlloc FAlloc;
 };
 
 class TJsonHttpClient
