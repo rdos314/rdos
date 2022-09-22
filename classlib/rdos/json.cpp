@@ -235,7 +235,7 @@ void TJsonAlloc::Reset()
         if (FArr[i])
             delete FArr[i];
 
-    if (FArr)
+    if (FMemCount && FArr)
         delete FArr;
 
     FMemSize = 0;
