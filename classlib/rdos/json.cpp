@@ -5208,9 +5208,8 @@ void TJsonString::Write(TJsonDocument *doc, int indent, TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-TJsonStackEntry::TJsonStackEntry(TJsonAlloc *alloc)
+TJsonStackEntry::TJsonStackEntry()
 {
-    FAlloc = alloc;
 }
 
 /*##########################################################################
@@ -5226,22 +5225,6 @@ TJsonStackEntry::TJsonStackEntry(TJsonAlloc *alloc)
 ##########################################################################*/
 TJsonStackEntry::~TJsonStackEntry()
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TJsonStackEntry::new
-#
-#   Purpose....: new
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void *TJsonStackEntry::operator new(size_t size, TJsonAlloc *alloc)
-{
-    return alloc->Allocate(size);
 }
 
 /*##########################################################################
@@ -6458,7 +6441,11 @@ void TJsonDocument::Reset()
     int level;
 
     for (level = 0; level < MAX_JSON_DEPTH; level++)
+    {
+        if (StackArr[level])
+            delete StackArr[level];
         StackArr[level] = 0;
+    }
 
     FRootCollection = 0;
     FCurrCollection = 0;
@@ -6541,7 +6528,7 @@ bool TJsonDocument::AddLevel()
 
         if (entry == 0)
         {
-            entry = new(&FAlloc) TJsonStackEntry(&FAlloc);
+            entry = new TJsonStackEntry;
             StackArr[FDepth] = entry;
         }
 

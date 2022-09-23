@@ -534,11 +534,10 @@ class TJsonStackEntry
 friend class TJsonDocument;
 
 public:
-    TJsonStackEntry(TJsonAlloc *alloc);
+    TJsonStackEntry();
     ~TJsonStackEntry();
 
     int Parse(TJsonDocument *doc, const char *ptr, int start_state);
-    void *operator new(size_t size, TJsonAlloc *alloc);
 
 protected:
     int DecodeInt(TJsonDocument *doc);
@@ -580,7 +579,6 @@ protected:
     int FState;
     int FSavedState;
 
-    TJsonAlloc *FAlloc;
     TString FData;
 };
 

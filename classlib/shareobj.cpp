@@ -268,8 +268,6 @@ void TShareObject::SetData(const void *x, int size)
         memcpy(FBuf, x, size);
         FData->FDataSize = size;
     }
-    else
-        Init();
 
     FSection.Leave();
 }
@@ -431,10 +429,15 @@ void TShareObject::AllocBeforeWrite(int size)
     
     if (FData)
     {
-        if (FData->FRefs > 1 || size > FData->FAllocSize)
-        {
+        if (size == 0)
             Release();
-            AllocBuffer(size);
+        else
+        {
+            if (FData->FRefs > 1 || size > FData->FAllocSize)
+            {
+                Release();
+                AllocBuffer(size);
+            }
         }
     }
     else
@@ -466,8 +469,6 @@ void TShareObject::AssignCopy(const void *x, int size)
         memcpy(FBuf, x, size);
         FData->FDataSize = size;
     }
-    else
-        Init();
 
     FSection.Leave();
 }
