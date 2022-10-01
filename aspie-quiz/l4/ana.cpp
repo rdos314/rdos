@@ -37,43 +37,56 @@
 
 #define MAX_IN_ROW      0x8000
 
-static int ScoreArr[] = {
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    0,   1,   1,   1,   1,   1,   1,   1,   1,   1,
-    1,   1,   1,   1,   1,   1,   1,   1,   1,   2,
-    2,   2,   2,   2,   2,   2,   2,   2,   3,   3,
-    3,   3,   3,   3,   4,   4,   4,   4,   5,   5,
-    5,   6,   6,   6,   7,   7,   7,   8,   8,   9,
-    9,  10,  10,  11,  11,  12,  12,  13,  14,  14,
-   15,  16,  17,  18,  18,  19,  20,  21,  22,  23,
-   24,  25,  27,  28,  29,  30,  31,  33,  34,  35,
-   37,  38,  39,  41,  42,  44,  45,  46,  48,  49,
-   51,  52,  54,  55,  56,  58,  59,  61,  62,  63,
-   65,  66,  67,  69,  70,  71,  72,  73,  75,  76,
-   77,  78,  79,  80,  81,  82,  82,  83,  84,  85,
-   86,  86,  87,  88,  88,  89,  89,  90,  90,  91,
-   91,  92,  92,  93,  93,  93,  94,  94,  94,  95,
-   95,  95,  96,  96,  96,  96,  97,  97,  97,  97,
-   97,  97,  98,  98,  98,  98,  98,  98,  98,  98,
-   98,  99,  99,  99,  99,  99,  99,  99,  99,  99,
-   99,  99,  99,  99,  99,  99,  99,  99,  99, 100,
-  100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-  100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-  100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-  100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-  100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-  100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
-  100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+static int MaleWeightArr[] =
+{
+  74, 61, 68, 56, 56, 80, 74, 52, 70, 63,
+  72, 64, 64, 51, -61, 51, 60, 51, 34, 74,
+  64, 74, 68, 83, 79, 68, 78, 69, 72, 65,
+  55, 58, -75, 87, 35, -56, -43, 58, 57, 80,
+  68, 74, 73, 57, 71, 77, 47, 69, 65, 51,
+  54, 68, 61, 62, 51, 65, 80, 85, 78, 60,
+  84, 75, 88, 71, 69, 61, 70, 54, 44, 78,
+  62, 64, 63, 67, 62, 62, 52, 41, 58, 58,
+  58, 61, 56, 43, 27, 35, -48, -45, 19, -29,
+  -34, -23, 48, 65, 44, 56, 65, 57, 52, 38,
+  43, 43, 62, 86, 76, 51, 49, -48, 71, 61,
+  48, -52, 59, 48, -48, 45, 51
+};
+
+static int FemaleWeightArr[] =
+{
+  81, 73, 68, 60, 62, 71, 78, 46, 69, 63,
+  69, 64, 51, 47, -56, 51, 59, 49, 52, 63,
+  55, 59, 63, 60, 78, 62, 74, 66, 60, 63,
+  65, 40, -74, 81, 37, -55, -47, 58, 62, 86,
+  80, 86, 79, 61, 79, 79, 46, 78, 71, 63,
+  63, 60, 67, 70, 47, 60, 86, 88, 78, 76,
+  83, 79, 90, 72, 68, 53, 72, 65, 38, 77,
+  68, 73, 71, 74, 63, 60, 62, 40, 60, 68,
+  62, 63, 58, 45, 25, 38, -41, -41, 27, -32,
+ -33, -21, 48, 58, 45, 52, 62, 47, 48, 39,
+  44, 44, 58, 80, 68, 51, 42, -37, 71, 58,
+  45, -56, 44, 43, -49, 36, 45
+};
+
+static int ScoreArr[] =
+{
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  2, 2, 2, 2, 3, 3, 3, 4, 4, 5,
+  5, 6, 7, 8, 9, 10, 11, 12, 13, 15,
+  16, 18, 20, 22, 24, 26, 28, 30, 33, 36,
+  38, 41, 44, 47, 49, 52, 55, 58, 61, 63,
+  66, 68, 71, 73, 75, 77, 79, 81, 83, 84,
+  86, 87, 88, 89, 90, 91, 92, 93, 94, 94,
+  95, 95, 96, 96, 97, 97, 97, 98, 98, 98,
+  98, 98, 99, 99, 99, 99, 99, 99, 99, 99,
+  99, 100, 100, 100, 100, 100, 100, 100, 100, 100,
   100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
   100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
   100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
@@ -103,12 +116,13 @@ static int NtMaleScore[117];
 static int NtFemaleCount[117];
 static int NtFemaleScore[117];
 
-static int MaleArr[401];
-static int FemaleArr[401];
-static int MaleNdArr[401];
-static int MaleNtArr[401];
-static int FemaleNdArr[401];
-static int FemaleNtArr[401];
+static int MaleArr[201];
+static int FemaleArr[201];
+
+static int MaleNdArr[201];
+static int MaleNtArr[201];
+static int FemaleNdArr[201];
+static int FemaleNtArr[201];
 
 static double r2pi = sqrt(2.0 * 3.14159265358979323846);
 
@@ -123,7 +137,7 @@ static void InitArr()
 {
     int i;
 
-    for (i = 0; i < 401; i++)
+    for (i = 0; i < 201; i++)
     {
         MaleArr[i] = 0;
         FemaleArr[i] = 0;
@@ -174,9 +188,9 @@ static void SubNorm(double *arr, double u, double sd, double scale)
     double x;
     double val;
 
-    for (i = 0; i < 601; i++)
+    for (i = 0; i < 301; i++)
     {
-        x = (double)(i - 300);
+        x = (double)(i - 50);
         val = CalcNorm(x, u, sd, scale);
         arr[i] -= val;
     }
@@ -192,37 +206,37 @@ static void SubNorm(double *arr, double u, double sd, double scale)
 static double CalcDiff(double ndu, double ntu, double ndsd, double ntsd, double mndscale, double fndscale, double mntscale, double fntscale)
 {
     int i;
-    double DiffArr[601];
+    double DiffArr[301];
     double diff = 0;
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < 50; i++)
         DiffArr[i] = 0.0;
 
-    for (i = 0; i < 401; i++)
-        DiffArr[i+100] = (double)MaleArr[i];
+    for (i = 0; i < 201; i++)
+        DiffArr[i+50] = (double)MaleArr[i];
 
-    for (i = 501; i < 601; i++)
+    for (i = 251; i < 301; i++)
         DiffArr[i] = 0.0;
 
     SubNorm(DiffArr, ndu, ndsd, mndscale);
     SubNorm(DiffArr, ntu, ntsd, mntscale);
 
-    for (i = 0; i < 401; i++)
+    for (i = 0; i < 201; i++)
         diff = diff + DiffArr[i] * DiffArr[i];
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < 50; i++)
         DiffArr[i] = 0.0;
 
-    for (i = 0; i < 401; i++)
-        DiffArr[i+100] = (double)FemaleArr[i];
+    for (i = 0; i < 201; i++)
+        DiffArr[i+50] = (double)FemaleArr[i];
 
-    for (i = 501; i < 601; i++)
+    for (i = 251; i < 301; i++)
         DiffArr[i] = 0.0;
 
     SubNorm(DiffArr, ndu, ndsd, fndscale);
     SubNorm(DiffArr, ntu, ntsd, fntscale);
 
-    for (i = 0; i < 601; i++)
+    for (i = 0; i < 301; i++)
         diff = diff + DiffArr[i] * DiffArr[i];
 
     return diff;
@@ -243,8 +257,8 @@ static void CalcDist()
     int maxval = 0;
     double val;
     double diff;
-    double ndu = 70;
-    double ntu = -70;
+    double ndu = 125;
+    double ntu = 75;
     double ndsd = 10;
     double ntsd = 10;
     double mndscale = 0;
@@ -257,7 +271,7 @@ static void CalcDist()
 
     maxval = 0;
 
-    for (i = 0; i < 401; i++)
+    for (i = 0; i < 201; i++)
         if (MaleArr[i] > maxval)
             maxval = MaleArr[i];
 
@@ -266,7 +280,7 @@ static void CalcDist()
 
     maxval = 0;
 
-    for (i = 0; i < 401; i++)
+    for (i = 0; i < 201; i++)
         if (MaleArr[i] > maxval)
             maxval = FemaleArr[i];
 
@@ -447,16 +461,16 @@ static void CalcDist()
     printf("ND u: %d, sd: %d\r\n", (int)ndu, (int)ndsd);
     printf("NT u: %d, sd: %d\r\n", (int)ntu, (int)ntsd);
 
-    for (i = 0; i < 401; i++)
+    for (i = 0; i < 201; i++)
     {
-        x = (double)(i - 200);
+        x = (double)i;
         val = CalcNorm(x, ndu, ndsd, mndscale);
         MaleNdArr[i] = (int)val;
 
         val = CalcNorm(x, ntu, ntsd, mntscale);
         MaleNtArr[i] = (int)val;
 
-        x = (double)(i - 200);
+        x = (double)i;
         val = CalcNorm(x, ndu, ndsd, fndscale);
         FemaleNdArr[i] = (int)val;
 
@@ -478,9 +492,9 @@ static void WriteArr(const char *FileName, int *Arr, int *NdArr, int *NtArr)
     char str[80];
     TFile file(FileName, 0);
 
-    for (i = 0; i < 401; i++)
+    for (i = 0; i < 201; i++)
     {
-        sprintf(str, "%d;%d;%d;%d\r\n", i - 200, Arr[i], NdArr[i], NtArr[i]);
+        sprintf(str, "%d;%d;%d;%d\r\n", i, Arr[i], NdArr[i], NtArr[i]);
         file.Write(str);
     }
 }
@@ -549,19 +563,63 @@ static int GetMissing(TQuizRow *Row)
 static void HandleRow(TQuizRow *Row)
 {
     int Missing = GetMissing(Row);
-    int diff = Row->AsResult - Row->NtResult;
-    int index = 200 + diff;
+    int diff;
     bool use = false;
     int i;
     int ndprob;
     int ntprob;
+    int sum;
+    int score;
+    int val;
+    int w;
 
-    if (Missing <= 5 && diff >= -200 && diff <= 200)
+    if (Missing <= 5 && (Row->Gender == 1 || Row->Gender == 2))
         use = true;
 
     if (use)
     {
-        ndprob = ScoreArr[index];
+        sum = 0;
+        score = 0;
+
+        for (i = 0; i < 117; i++)
+        {
+            if (Row->Quiz[i])
+            {
+                if (Row->Gender == 1)
+                {
+                   w = MaleWeightArr[i];
+                   if (w >= 0)
+                       val = Row->Quiz[i] - 1;
+                   else
+                   {
+                       val = 3 - Row->Quiz[i];
+                       w = -w;
+                   }
+
+                   sum += w;
+                   score += val * w;
+                }
+
+                if (Row->Gender == 2)
+                {
+                   w = FemaleWeightArr[i];
+                   if (w >= 0)
+                       val = Row->Quiz[i] - 1;
+                   else
+                   {
+                       val = 3 - Row->Quiz[i];
+                       w = -w;
+                   }
+
+                   sum += w;
+                   score += val * w;
+                }
+            }
+        }
+
+        diff = 100 * score / sum;
+
+        ndprob = ScoreArr[diff];
         ntprob = 100 - ndprob;
 
         for (i = 0; i < 117; i++)
@@ -589,10 +647,10 @@ static void HandleRow(TQuizRow *Row)
         }
 
         if (Row->Gender == 1)
-            MaleArr[index]++;
+            MaleArr[diff]++;
 
         if (Row->Gender == 2)
-            FemaleArr[index]++;
+            FemaleArr[diff]++;
 
         printf("L4: %d, Diff: %d\r\n", Row->ID, diff);
     }
@@ -705,6 +763,6 @@ void main()
         if (ptr)
             ProcessRow(buf);
     }
-//    WriteArr();
+    WriteArr();
     WriteItems();
 }
