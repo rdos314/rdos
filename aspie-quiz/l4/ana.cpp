@@ -39,34 +39,34 @@
 
 static int MaleWeightArr[] =
 {
-  61, 42, 51, 56, 25, 74, 60, 49, 59, 54,
-  56, 57, 67, 50, -50, 44, 41, 53, 29, 54,
-  45, 70, 64, 78, 63, 49, 72, 36, 59, 53,
-  37, 40, -59, 77, 44, -45, -38, 49, 46, 48,
-  45, 67, 36, 43, 52, 54, 29, 63, 53, 44,
-  47, 59, 46, 46, 49, 48, 60, 65, 73, 65,
-  70, 65, 78, 56, 52, 62, 66, 47, 47, 69,
-  24, 47, 49, 44, 32, 52, 45, 25, 31, 23,
-  41, 46, 43, 54, 21, 25, -43, -43, 19, -29,
-  -29, -24, 37, 56, 21, 59, 56, 54, 43, 33,
-  35, 28, 65, 74, 75, -61, 38, -44, 60, 71,
-  35, -47, 60, 50, -64, 44, 46
+  63, 42, 28, 10, 42, 62, 61, 42, 56, 49,
+  52, 54, 43, 49, -34, 41, 37, 43, 23, 29,
+  46, 55, 28, 68, 62, 35, 72, 39, 49, 44,
+  46, 28, -37, 73, 36, -25, -29, 43, 47, 66,
+  64, 64, 56, 60, 53, 58, 35, 71, 43, 38,
+  40, 60, 44, 53, 51, 43, 70, 80, 71, 75,
+  70, 68, 73, 59, 38, 51, 58, 48, 52, 72,
+  46, 51, 33, 50, 35, 49, 47, 9, 59, 36,
+  35, 33, 47, 53, 24, 22, -32, -26, 19, -10,
+  -23, -6, 38, 52, 27, 61, 55, 57, 41, 34,
+  27, 15, 70, 63, 72, -53, 38, -26, 51, 63,
+  54, -44, 37, 59, -49, 42, 38
 };
 
 static int FemaleWeightArr[] =
 {
-  78, 59, 58, 71, 49, 84, 72, 49, 65, 58,
-  67, 59, 67, 52, -63, 44, 38, 52, 43, 66,
-  50, 59, 72, 49, 72, 49, 72, 52, 65, 63,
-  59, 52, -69, 82, 51, -57, -41, 58, 55, 73,
-  52, 77, 67, 61, 64, 63, 31, 76, 62, 47,
-  58, 61, 54, 58, 50, 55, 73, 78, 79, 78,
-  79, 74, 88, 64, 63, 68, 73, 53, 40, 76,
-  30, 60, 60, 58, 31, 51, 52, 25, 35, 22,
-  49, 49, 43, 70, 22, 17, -53, -57, 26, -36,
-  -33, -19, 50, 51, 32, 61, 53, 45, 46, 33,
-  41, 22, 72, 74, 79, -64, 44, -46, 65, 70,
-  36, -58, 56, 53, -69, 40, 36
+  71, 44, 35, 17, 47, 57, 59, 39, 50, 47,
+  50, 48, 43, 45, -35, 40, 29, 38, 29, 32,
+  43, 47, 34, 57, 62, 37, 67, 42, 48, 42,
+  48, 24, -42, 72, 37, -29, -30, 46, 45, 72,
+  66, 68, 65, 67, 57, 62, 33, 71, 51, 39,
+  50, 63, 50, 61, 52, 40, 70, 84, 71, 77,
+  74, 72, 75, 61, 36, 52, 59, 44, 48, 77,
+  37, 52, 27, 48, 44, 50, 56, 11, 63, 33,
+  36, 34, 52, 60, 37, 10, -40, -36, 40, -15,
+  -29, -9, 36, 44, 32, 60, 54, 56, 41, 36,
+  23, 19, 67, 54, 69, -52, 33, -27, 55, 62,
+  56, -47, 26, 56, -52, 31, 39
 };
 
 static int ScoreArr[] =
@@ -76,16 +76,16 @@ static int ScoreArr[] =
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
-  1, 1, 1, 1, 1, 2, 2, 2, 2, 3,
-  3, 3, 4, 4, 5, 5, 6, 7, 7, 8,
-  9, 10, 11, 13, 14, 15, 17, 19, 21, 23,
-  25, 27, 29, 32, 34, 37, 40, 43, 46, 49,
-  51, 54, 57, 60, 63, 66, 68, 71, 73, 75,
-  77, 79, 81, 83, 85, 86, 87, 89, 90, 91,
-  92, 93, 93, 94, 95, 95, 96, 96, 97, 97,
-  97, 98, 98, 98, 98, 99, 99, 99, 99, 99,
-  99, 99, 99, 99, 100, 100, 100, 100, 100, 100,
+  0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+  1, 1, 2, 2, 2, 2, 3, 3, 3, 4,
+  4, 4, 5, 5, 6, 7, 7, 8, 9, 10,
+  11, 12, 13, 15, 16, 18, 19, 21, 23, 25,
+  27, 29, 31, 33, 36, 38, 41, 43, 46, 49,
+  51, 54, 57, 59, 62, 64, 67, 69, 71, 73,
+  75, 77, 79, 81, 82, 84, 85, 87, 88, 89,
+  90, 91, 92, 93, 93, 94, 95, 95, 96, 96,
+  96, 97, 97, 97, 98, 98, 98, 98, 99, 99,
+  99, 99, 99, 99, 99, 99, 99, 100, 100, 100,
   100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
   100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
   100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
@@ -205,7 +205,7 @@ static void SubNorm(double *arr, double u, double sd, double scale)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-static double CalcDiff(double ndu, double ntu, double ndsd, double ntsd, double mndscale, double fndscale, double mntscale, double fntscale)
+static double CalcDiff(double u, double sd, double mndscale, double fndscale, double mntscale, double fntscale)
 {
     int i;
     double DiffArr[301];
@@ -220,8 +220,8 @@ static double CalcDiff(double ndu, double ntu, double ndsd, double ntsd, double 
     for (i = 251; i < 301; i++)
         DiffArr[i] = 0.0;
 
-    SubNorm(DiffArr, ndu, ndsd, mndscale);
-    SubNorm(DiffArr, ntu, ntsd, mntscale);
+    SubNorm(DiffArr, 100 + u, sd, mndscale);
+    SubNorm(DiffArr, 100 - u, sd, mntscale);
 
     for (i = 0; i < 201; i++)
         diff = diff + DiffArr[i] * DiffArr[i];
@@ -235,8 +235,8 @@ static double CalcDiff(double ndu, double ntu, double ndsd, double ntsd, double 
     for (i = 251; i < 301; i++)
         DiffArr[i] = 0.0;
 
-    SubNorm(DiffArr, ndu, ndsd, fndscale);
-    SubNorm(DiffArr, ntu, ntsd, fntscale);
+    SubNorm(DiffArr, 100 + u, sd, fndscale);
+    SubNorm(DiffArr, 100 - u, sd, fntscale);
 
     for (i = 0; i < 301; i++)
         diff = diff + DiffArr[i] * DiffArr[i];
@@ -259,10 +259,8 @@ static void CalcDist()
     int maxval = 0;
     double val;
     double diff;
-    double ndu = 132;
-    double ntu = 68;
-    double ndsd = 28;
-    double ntsd = 28;
+    double u = 35;
+    double sd = 27;
     double mndscale = 0;
     double mntscale = 0;
     double fndscale = 0;
@@ -289,7 +287,7 @@ static void CalcDist()
     fndscale = (double)maxval;
     fntscale = (double)maxval;
 
-    diff = CalcDiff(ndu, ntu, ndsd, ntsd, mndscale, fndscale, mntscale, fntscale);
+    diff = CalcDiff(u, sd, mndscale, fndscale, mntscale, fntscale);
 
     for (i = 0; i < 8; i++)
     {
@@ -298,7 +296,7 @@ static void CalcDist()
         {
             changed = false;
 
-            val = CalcDiff(ndu, ntu, ndsd, ntsd, mndscale + dsc, fndscale, mntscale, fntscale);
+            val = CalcDiff(u, sd, mndscale + dsc, fndscale, mntscale, fntscale);
             if (val < diff)
             {
                 mndscale += dsc;
@@ -307,7 +305,7 @@ static void CalcDist()
             }
             else
             {
-                val = CalcDiff(ndu, ntu, ndsd, ntsd, mndscale - dsc, fndscale, mntscale, fntscale);
+                val = CalcDiff(u, sd, mndscale - dsc, fndscale, mntscale, fntscale);
                 if (val < diff)
                 {
                     mndscale -= dsc;
@@ -316,7 +314,7 @@ static void CalcDist()
                 }
             }
 
-            val = CalcDiff(ndu, ntu, ndsd, ntsd, mndscale, fndscale + dsc, mntscale, fntscale);
+            val = CalcDiff(u, sd, mndscale, fndscale + dsc, mntscale, fntscale);
             if (val < diff)
             {
                 fndscale += dsc;
@@ -325,7 +323,7 @@ static void CalcDist()
             }
             else
             {
-                val = CalcDiff(ndu, ntu, ndsd, ntsd, mndscale, fndscale - dsc, mntscale, fntscale);
+                val = CalcDiff(u, sd, mndscale, fndscale - dsc, mntscale, fntscale);
                 if (val < diff)
                 {
                     fndscale -= dsc;
@@ -334,7 +332,7 @@ static void CalcDist()
                 }
             }
 
-            val = CalcDiff(ndu, ntu, ndsd, ntsd, mndscale, fndscale, mntscale + dsc, fntscale);
+            val = CalcDiff(u, sd, mndscale, fndscale, mntscale + dsc, fntscale);
             if (val < diff)
             {
                 mntscale += dsc;
@@ -343,7 +341,7 @@ static void CalcDist()
             }
             else
             {
-                val = CalcDiff(ndu, ntu, ndsd, ntsd, mndscale, fndscale, mntscale - dsc, fntscale);
+                val = CalcDiff(u, sd, mndscale, fndscale, mntscale - dsc, fntscale);
                 if (val < diff)
                 {
                     mntscale -= dsc;
@@ -352,7 +350,7 @@ static void CalcDist()
                 }
             }
 
-            val = CalcDiff(ndu, ntu, ndsd, ntsd, mndscale, fndscale, mntscale, fntscale + dsc);
+            val = CalcDiff(u, sd, mndscale, fndscale, mntscale, fntscale + dsc);
             if (val < diff)
             {
                 fntscale += dsc;
@@ -361,7 +359,7 @@ static void CalcDist()
             }
             else
             {
-                val = CalcDiff(ndu, ntu, ndsd, ntsd, mndscale, fndscale, mntscale, fntscale - dsc);
+                val = CalcDiff(u, sd, mndscale, fndscale, mntscale, fntscale - dsc);
                 if (val < diff)
                 {
                     fntscale -= dsc;
@@ -371,47 +369,29 @@ static void CalcDist()
             }
         }
 
-/*
         changed = true;
         while (changed)
         {
             changed = false;
 
-            val = CalcDiff(ndu, ntu, ndsd + dsd, ntsd, mndscale, fndscale, mntscale, fntscale);
+            val = CalcDiff(u, sd + dsd, mndscale, fndscale, mntscale, fntscale);
             if (val < diff)
             {
-                ndsd += dsd;
+                sd += dsd;
                 diff = val;
                 changed = true;
             }
             else
             {
-                val = CalcDiff(ndu, ntu, ndsd - dsd, ntsd, mndscale, fndscale, mntscale, fntscale);
+                val = CalcDiff(u, sd - dsd, mndscale, fndscale, mntscale, fntscale);
                 if (val < diff)
                 {
-                    ndsd -= dsd;
+                    sd -= dsd;
                     diff = val;
                     changed = true;
                 }
             }
 
-            val = CalcDiff(ndu, ntu, ndsd, ntsd + dsd, mndscale, fndscale, mntscale, fntscale);
-            if (val < diff)
-            {
-                ntsd += dsd;
-                diff = val;
-                changed = true;
-            }
-            else
-            {
-                val = CalcDiff(ndu, ntu, ndsd, ntsd - dsd, mndscale, fndscale, mntscale, fntscale);
-                if (val < diff)
-                {
-                    ntsd -= dsd;
-                    diff = val;
-                    changed = true;
-                }
-            }
         }
 
         changed = true;
@@ -419,66 +399,48 @@ static void CalcDist()
         {
             changed = false;
 
-            val = CalcDiff(ndu + du, ntu, ndsd, ntsd, mndscale, fndscale, mntscale, fntscale);
+            val = CalcDiff(u + du, sd, mndscale, fndscale, mntscale, fntscale);
             if (val < diff)
             {
-                ndu += du;
+                u += du;
                 diff = val;
                 changed = true;
             }
             else
             {
-                val = CalcDiff(ndu - du, ntu, ndsd, ntsd, mndscale, fndscale, mntscale, fntscale);
+                val = CalcDiff(u - du, sd, mndscale, fndscale, mntscale, fntscale);
                 if (val < diff)
                 {
-                    ndu -= du;
-                    diff = val;
-                    changed = true;
-                }
-            }
-
-            val = CalcDiff(ndu, ntu + du, ndsd, ntsd, mndscale, fndscale, mntscale, fntscale);
-            if (val < diff)
-            {
-                ntu += du;
-                diff = val;
-                changed = true;
-            }
-            else
-            {
-                val = CalcDiff(ndu, ntu - du, ndsd, ntsd, mndscale, fndscale, mntscale, fntscale);
-                if (val < diff)
-                {
-                    ntu -= du;
+                    u -= du;
                     diff = val;
                     changed = true;
                 }
             }
         }
-*/
 
         du = du / 2.0;
         dsc = dsc / 2.0;
         dsd = dsd / 2.0;
     }
 
-    printf("ND u: %d, sd: %d\r\n", (int)ndu, (int)ndsd);
-    printf("NT u: %d, sd: %d\r\n", (int)ntu, (int)ntsd);
+    printf("u: %d, sd: %d\r\n", (int)u, (int)sd);
+    printf("ND m: %d, f: %d\r\n", (int)mndscale, (int)fndscale);
+    printf("NT m: %d, f: %d\r\n", (int)mntscale, (int)fntscale);
 
     for (i = 0; i < 201; i++)
     {
         x = (double)i;
-        val = CalcNorm(x, ndu, ndsd, mndscale);
+        val = CalcNorm(x, 100 + u, sd, mndscale);
         MaleNdArr[i] = (int)val;
 
-        val = CalcNorm(x, ntu, ntsd, mntscale);
+        val = CalcNorm(x, 100 - u, sd, mntscale);
         MaleNtArr[i] = (int)val;
 
         x = (double)i;
-        val = CalcNorm(x, ndu, ndsd, fndscale);
+        val = CalcNorm(x, 100 + u, sd, fndscale);
         FemaleNdArr[i] = (int)val;
 
-        val = CalcNorm(x, ntu, ntsd, fntscale);
+        val = CalcNorm(x, 100 - u, sd, fntscale);
         FemaleNtArr[i] = (int)val;
     }
 }
@@ -745,7 +707,7 @@ void main()
     char buf[MAX_IN_ROW];
     int size;
     long pos = 0;
-    TFile infile("pl4.csv");
+    TFile infile("cn4.csv");
     char *ptr;
 
     InitArr();
