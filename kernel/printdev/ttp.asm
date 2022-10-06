@@ -49,7 +49,6 @@ FLAG_STATUS            = 20h
 
 CMD_PRESENT           = 1
 CMD_EJECT             = 2
-CMD_FORCE             = 4
 
 STATUS_PAPER_JAM       = 1h
 STATUS_CUTTER_JAM      = 2h
@@ -102,6 +101,8 @@ tp_in_pipe          DB ?
 tp_section          section_typ <>
 
 tp_status           DW ?
+tp_sensors          DW ?
+tp_eject_counter    DW ?
 
 tp_width            DW ?
 
@@ -487,9 +488,38 @@ usLow:
     xor di,di
     mov al,es:[di]
     or al,al
-    jmp usNorm
+    jz usSensors
 ;
     mov dx,STATUS_PAPER_LOW
+
+usSensors:
+    mov es,ds:tp_out_buffer
+    xor edi,edi
+;
+    mov al,ESC
+    stosb
+;
+    mov al,ENQ
+    stosb
+;
+    mov al,5
+    stosb
+;
+    push dx
+    mov cx,di
+    mov bx,ds:tp_dev_handle
+    mov dl,ds:tp_out_pipe
+    PostUsbRawPipe
+    pop dx
+    jc usError
+;
+    call ReadAnswer
+    jc usError
+;
+    xor di,di
+    mov ax,es:[di]
+    xchg al,ah
+    mov ds:tp_sensors,ax
 
 usNorm:
     mov es,ds:tp_out_buffer
@@ -636,6 +666,8 @@ SendCut   Proc near
     push es
     pushad
 ;
+    mov ds:tp_eject_counter,1
+;
     mov es,ds:tp_out_buffer
     xor edi,edi
 ;
@@ -711,7 +743,10 @@ SendEject   Proc near
     mov es,ds:tp_out_buffer
     xor edi,edi
 ;
-    mov al,ENQ
+    mov al,25
+    stosb
+;    
+    mov al,0
     stosb
 ;
     mov cx,di
@@ -742,10 +777,13 @@ SendForce   Proc near
     mov es,ds:tp_out_buffer
     xor edi,edi
 ;
-    mov al,19
+    mov al,ESC
     stosb
 ;    
-    mov al,0FEh
+    mov al,FF
+    stosb
+;
+    mov al,50
     stosb
 ;
     mov cx,di
@@ -923,24 +961,36 @@ SendCommand    Proc near
     test ds:tp_cmd,CMD_PRESENT
     jz scNotPresent
 ;
-    lock and ds:tp_cmd,NOT CMD_PRESENT
     call SendPresent
+    jc scNotPresent
+;
+    lock and ds:tp_cmd,NOT CMD_PRESENT
 
 scNotPresent:
     test ds:tp_cmd,CMD_EJECT
     jz scNotEject
 ;
-    lock and ds:tp_cmd,NOT CMD_EJECT
     call SendEject
+    jc scNotEject
+;
+    lock and ds:tp_cmd,NOT CMD_EJECT
 
 scNotEject:
-    test ds:tp_cmd,CMD_FORCE
-    jz scNotForce
+    mov ax,ds:tp_sensors
+    test ax,10h
+    jz scNotClear
 ;
-    lock and ds:tp_cmd,NOT CMD_FORCE
+    mov ax,ds:tp_eject_counter
+    or ax,ax
+    jz scClear
+;
+    dec ds:tp_eject_counter
+    jmp scNotClear
+
+scClear:
     call SendForce
 
-scNotForce:
+scNotClear:
     popad
     ret
 SendCommand  Endp
@@ -1341,8 +1391,8 @@ has_paper_in_presenter   Proc far
     clc
     jz hppDone
 ;
-    mov ax,ds:tp_status
-    test ax,STATUS_PAPER_PRESENTER
+    mov ax,ds:tp_sensors
+    test ax,10h
     clc
     jz hppDone
 ;
@@ -1657,7 +1707,6 @@ wait_for_print   Proc far
     stc
     jz fpDone
 ;
-    lock or ds:tp_cmd,CMD_FORCE
     mov bx,ds:tp_wait_thread
     signal
 
@@ -1725,6 +1774,9 @@ printer_thread:
     mov ds:tp_wait_thread,0
     mov ds:tp_reset_counter,0
     mov ds:tp_status_errors,0
+    mov ds:tp_status,0
+    mov ds:tp_sensors,0
+    mov ds:tp_eject_counter,0
 ;
     mov eax,SIZE usb_printer_struc
     AllocateSmallGlobalMem
