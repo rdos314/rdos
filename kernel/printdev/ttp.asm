@@ -102,7 +102,6 @@ tp_section          section_typ <>
 
 tp_status           DW ?
 tp_sensors          DW ?
-tp_eject_counter    DW ?
 
 tp_width            DW ?
 
@@ -666,8 +665,6 @@ SendCut   Proc near
     push es
     pushad
 ;
-    mov ds:tp_eject_counter,1
-;
     mov es,ds:tp_out_buffer
     xor edi,edi
 ;
@@ -980,14 +977,6 @@ scNotEject:
     test ax,10h
     jz scNotClear
 ;
-    mov ax,ds:tp_eject_counter
-    or ax,ax
-    jz scClear
-;
-    dec ds:tp_eject_counter
-    jmp scNotClear
-
-scClear:
     call SendForce
 
 scNotClear:
@@ -1776,7 +1765,6 @@ printer_thread:
     mov ds:tp_status_errors,0
     mov ds:tp_status,0
     mov ds:tp_sensors,0
-    mov ds:tp_eject_counter,0
 ;
     mov eax,SIZE usb_printer_struc
     AllocateSmallGlobalMem
