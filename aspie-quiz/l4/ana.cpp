@@ -126,6 +126,22 @@ static int NtFemaleMean[] =
   126, 105, 125, 117, 142, 108,  64
 };
 
+static int Mean[] =
+{
+  131, 122, 124, 135,  98, 136,  76, 156, 100,  63,
+  105,  98, 147, 143,  79, 144, 101, 139,  48, 138,
+  122, 135, 108, 137, 112, 104, 104, 101, 123, 100,
+   70, 130,  94, 112,  46, 121, 137,  87,  93, 111,
+   65,  82,  82, 148,  79,  97, 160,  81,  84,  58,
+   65, 130, 112,  98, 138, 111, 117, 104, 129, 122,
+   92,  81,  93, 101, 109, 126,  75, 109,  52, 130,
+  133,  94,  87,  82, 132, 116,  77, 146, 118,  79,
+   84, 123,  63, 141,  64, 106,  67,  70,  34, 107,
+  132, 104,  85, 135, 138,  77,  71, 115,  84,  38,
+   81, 145, 117, 107, 127,  97, 156,  59, 114,  82,
+  149,  71, 140, 139, 112, 125,  88
+};
+
 struct TQuizRow
 {
     long ID;
@@ -147,19 +163,10 @@ static int NtMaleScore[117];
 static int NtFemaleCount[117];
 static int NtFemaleScore[117];
 
-static int NdMaleCorrCount[117][117];
-static long long NdMaleCorrScore[117][117];
-static int NdFemaleCorrCount[117][117];
-static long long NdFemaleCorrScore[117][117];
-static int NtMaleCorrCount[117][117];
-static long long NtMaleCorrScore[117][117];
-static int NtFemaleCorrCount[117][117];
-static long long NtFemaleCorrScore[117][117];
-
-static int NdMaleCorr[117][117];
-static int NdFemaleCorr[117][117];
-static int NtMaleCorr[117][117];
-static int NtFemaleCorr[117][117];
+static int CovCount[117][117];
+static long long CovSum[117][117];
+static long long CovOrg[117][117];
+static int CorrArr[117][117];
 
 static int MaleArr[201];
 static int FemaleArr[201];
@@ -203,14 +210,9 @@ static void InitArr()
 
         for (j = 0; j < 117; j++)
         {
-            NdMaleCorrCount[i][j] = 0;
-            NdMaleCorrScore[i][j] = 0;
-            NdFemaleCorrCount[i][j] = 0;
-            NdFemaleCorrScore[i][j] = 0;
-            NtMaleCorrCount[i][j] = 0;
-            NtMaleCorrScore[i][j] = 0;
-            NtFemaleCorrCount[i][j] = 0;
-            NtFemaleCorrScore[i][j] = 0;
+            CovCount[i][j] = 0;
+            CovSum[i][j] = 0;
+            CovOrg[i][j] = 0;
         }
     }
 }
@@ -569,7 +571,7 @@ static void WriteItems()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-static void CalcCorr(long long score[117][117], int count[117][117], long long sdsum[117], int sdcount[117], int res[117][117])
+static void CalcCorr()
 {
     int i,j;
     long long lv;
@@ -578,49 +580,22 @@ static void CalcCorr(long long score[117][117], int count[117][117], long long s
 
     for (i = 0; i < 117; i++)
     {
-        dval = (double)(sdsum[i] / sdcount[i]);
+        dval = (double)CovSum[i][i] / (double)CovCount[i][i];
         dval = sqrt(dval);
-        sd[i] = (int)(10.0 * dval + 5.0);
+        sd[i] = (int)(10.0 * dval + 0.5);
     }
 
     for (i = 0; i < 117; i++)
     {
         for (j = 0; j < 117; j++)
         {
-            lv = score[i][j];
+            lv = CovSum[i][j];
             lv = lv / sd[i];
-            lv = 1000 * lv;
+            lv = 100 * lv;
             lv = lv / sd[j];
-            lv = 10 * lv;
-            lv = lv / (count[i][j] - 50);
-            res[i][j] = lv;
-        }
-    }
-}
-
-/*##################  WriteOneCorr ##########################
-*   Purpose....: Write one correlation matrix                                                                   #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-static void WriteOneCorr(const char *filename, int corr[117][117])
-{
-    int i, j;
-    char str[160];
-    TFile file(filename, 0);
-
-    for (i = 0; i < 117; i++)
-    {
-        for (j = 0; j < 117; j++)
-        {
-            if (j == 116)
-                sprintf(str, "%d\r\n", corr[i][j]);
-            else
-                sprintf(str, "%d;", corr[i][j]);
-
-            file.Write(str);
+            lv = 100 * lv;
+            lv = lv / CovCount[i][j];
+            CorrArr[i][j] = lv;
         }
     }
 }
@@ -634,6 +609,85 @@ static void WriteOneCorr(const char *filename, int corr[117][117])
 *##########################################################################*/
 static void WriteCorr()
 {
+    int i, j;
+    char str[160];
+    TFile file("corr.csv", 0);
+
+    for (i = 0; i < 117; i++)
+    {
+        for (j = 0; j < 117; j++)
+        {
+            if (j == 116)
+                sprintf(str, "%d\r\n", CorrArr[i][j]);
+            else
+                sprintf(str, "%d;", CorrArr[i][j]);
+
+            file.Write(str);
+        }
+    }
+}
+
+/*##################  CalcOrg ##########################
+*   Purpose....: Calc non-corrected correlation matrix                                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+static void CalcOrg()
+{
+    int i,j;
+    long long lv;
+    int sd[117];
+    double dval;
+
+    for (i = 0; i < 117; i++)
+    {
+        dval = (double)CovOrg[i][i] / (double)CovCount[i][i];
+        dval = sqrt(dval);
+        sd[i] = (int)(10.0 * dval + 0.5);
+    }
+
+    for (i = 0; i < 117; i++)
+    {
+        for (j = 0; j < 117; j++)
+        {
+            lv = CovOrg[i][j];
+            lv = lv / sd[i];
+            lv = 100 * lv;
+            lv = lv / sd[j];
+            lv = 100 * lv;
+            lv = lv / CovCount[i][j];
+            CorrArr[i][j] = lv;
+        }
+    }
+}
+
+/*##################  WriteOrg ##########################
+*   Purpose....: Write original correlation matrix                                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+static void WriteOrg()
+{
+    int i, j;
+    char str[160];
+    TFile file("org.csv", 0);
+
+    for (i = 0; i < 117; i++)
+    {
+        for (j = 0; j < 117; j++)
+        {
+            if (j == 116)
+                sprintf(str, "%d\r\n", CorrArr[i][j]);
+            else
+                sprintf(str, "%d;", CorrArr[i][j]);
+
+            file.Write(str);
+        }
+    }
 }
 
 /*##################  GetMissing ##########################
@@ -676,7 +730,7 @@ static void HandleRow(TQuizRow *Row)
     int val;
     int w;
     long long ld;
-    int di, dj;
+    int nddi, ntdi, di, dj;
     char str[80];
 
     if (Missing <= 5 && (Row->Gender == 1 || Row->Gender == 2))
@@ -743,37 +797,26 @@ static void HandleRow(TQuizRow *Row)
                     NtMaleCount[i] += ntprob;
                     NtMaleScore[i] += ntprob * (Row->Quiz[i] - 1);
 
-                    di = 100 * (Row->Quiz[i] - 1) - NdMaleMean[i];
+                    nddi = 100 * (Row->Quiz[i] - 1) - NdMaleMean[i];
+                    ntdi = 100 * (Row->Quiz[i] - 1) - NtMaleMean[i];
 
-/*
                     for (j = 0; j < 117; j++)
                     {
                         if (Row->Quiz[j])
                         {
                             dj = 100 * (Row->Quiz[j] - 1) - NdMaleMean[j];
-                            ld = di;
+                            ld = nddi;
                             ld = ld * dj * ndprob;
-                            NdMaleCorrCount[i][j] += ndprob;
-                            NdMaleCorrScore[i][j] += ld;
-                        }
-                    }
-*/
+                            CovSum[i][j] += ld;
 
-                    di = 100 * (Row->Quiz[i] - 1) - NtMaleMean[i];
-
-/*
-                    for (j = 0; j < 117; j++)
-                    {
-                        if (Row->Quiz[j])
-                        {
                             dj = 100 * (Row->Quiz[j] - 1) - NtMaleMean[j];
-                            ld = di;
+                            ld = ntdi;
                             ld = ld * dj * ntprob;
-                            NtMaleCorrCount[i][j] += ntprob;
-                            NtMaleCorrScore[i][j] += ld;
+                            CovSum[i][j] += ld;
+
+                            CovCount[i][j]++;
                         }
                     }
-*/
                 }
 
                 if (Row->Gender == 2)
@@ -784,37 +827,38 @@ static void HandleRow(TQuizRow *Row)
                     NtFemaleCount[i] += ntprob;
                     NtFemaleScore[i] += ntprob * (Row->Quiz[i] - 1);
 
-                    di = 100 * (Row->Quiz[i] - 1) - NdFemaleMean[i];
+                    nddi = 100 * (Row->Quiz[i] - 1) - NdFemaleMean[i];
+                    ntdi = 100 * (Row->Quiz[i] - 1) - NtFemaleMean[i];
 
-/*
                     for (j = 0; j < 117; j++)
                     {
                         if (Row->Quiz[j])
                         {
                             dj = 100 * (Row->Quiz[j] - 1) - NdFemaleMean[j];
-                            ld = di;
+                            ld = nddi;
                             ld = ld * dj * ndprob;
-                            NdFemaleCorrCount[i][j] += ndprob;
-                            NdFemaleCorrScore[i][j] += ld;
-                        }
-                    }
-*/
+                            CovSum[i][j] += ld;
 
-                    di = 100 * (Row->Quiz[i] - 1) - NtFemaleMean[i];
-
-/*
-                    for (j = 0; j < 117; j++)
-                    {
-                        if (Row->Quiz[j])
-                        {
                             dj = 100 * (Row->Quiz[j] - 1) - NtFemaleMean[j];
-                            ld = di;
+                            ld = ntdi;
                             ld = ld * dj * ntprob;
-                            NtFemaleCorrCount[i][j] += ntprob;
-                            NtFemaleCorrScore[i][j] += ld;
+                            CovSum[i][j] += ld;
+
+                            CovCount[i][j]++;
                         }
                     }
-*/
+                }
+
+                di = 100 * (Row->Quiz[i] - 1) - Mean[i];
+
+                for (j = 0; j < 117; j++)
+                {
+                    if (Row->Quiz[j])
+                    {
+                        dj = 100 * (Row->Quiz[j] - 1) - Mean[j];
+                        ld = 100 * di * dj;
+                        CovOrg[i][j] += ld;
+                    }
                 }
             }
         }
@@ -939,5 +983,8 @@ void main()
     }
     WriteArr();
     WriteItems();
+    CalcCorr();
     WriteCorr();
+    CalcOrg();
+    WriteOrg();
 }
