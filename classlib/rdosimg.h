@@ -391,6 +391,8 @@ public:
     TRdosSetObject(const char *Param);
     TRdosSetObject(TFile *File, int Size);
 
+    bool IsSetting(const char *var);
+
 #ifdef __RDOS__
     TRdosSetObject(int adapter, int entry, int size);
 #endif
@@ -430,6 +432,8 @@ public:
     int HasKernel();
     int HasShutdown();
     int HasDevice(const char *name);
+
+    void UpdateSetting(const char *name, const char *value);
 
 #ifdef __RDOS__
     void AddRunning();

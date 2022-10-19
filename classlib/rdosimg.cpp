@@ -2634,6 +2634,36 @@ TString TRdosSetObject::GetInfo()
 
 /*##########################################################################
 #
+#   Name       : TRdosSetObject::IsSetting
+#
+#   Purpose....: Check for setting
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TRdosSetObject::IsSetting(const char *var)
+{
+    char str[256];
+    char *ptr;
+
+    strcpy(str, FData);
+    ptr = strchr(str, '=');
+    if (ptr)
+    {
+        *ptr = 0;
+        if (!strcmp(str, var))
+            return true;
+        else
+            return false;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TRdosPathObject::TRdosPathObject
 #
 #   Purpose....: Constructor for TRdosPathObject
@@ -3500,4 +3530,50 @@ int TRdosImage::HasDevice(const char *name)
     }
 
     return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRdosImage::UpdateSetting
+#
+#   Purpose....: Update setting
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRdosImage::UpdateSetting(const char *name, const char *value)
+{
+    int Type;
+    TRdosObject *obj;
+    TRdosSetObject *setting;
+    bool remove = false;
+    char str[80];
+
+    obj = FObjectList;
+
+    while (obj && !remove)
+    {
+        Type = obj->GetType();
+        switch (Type)
+        {
+            case RDOS_OBJECT_SET:
+                setting = (TRdosSetObject *)obj;
+                if (setting->IsSetting(name))
+                    remove = true;
+        }
+
+        if (remove)
+            Remove(obj);
+        else 
+            obj = obj->FLink;
+    }
+
+    strcpy(str, name);
+    strcat(str, "=");
+    strcat(str, value);
+
+    obj = new TRdosSetObject(str);
+    Add(obj);
 }
