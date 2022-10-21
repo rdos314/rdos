@@ -165,7 +165,7 @@ int BIO_socket_ioctl(int fd, long type, void *arg)
 #  if defined ( __DJGPP__ )
     i = ioctlsocket(fd, type, (char *)arg);
 #  elif defined(OPENSSL_SYS_RDOS)
-    i = ioctlsocket(fd, type, arg);
+    return -1;
 #  else
 #   if defined(OPENSSL_SYS_VMS)
     /*-
