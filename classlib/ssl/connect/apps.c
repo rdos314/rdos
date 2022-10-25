@@ -456,31 +456,3 @@ void unbuffer(FILE *fp)
     setbuf(fp, NULL);
 }
 
-static const char *modestr(char mode, int format)
-{
-    OPENSSL_assert(mode == 'a' || mode == 'r' || mode == 'w');
-
-    switch (mode) {
-    case 'a':
-        return istext(format) ? "a" : "ab";
-    case 'r':
-        return istext(format) ? "r" : "rb";
-    case 'w':
-        return istext(format) ? "w" : "wb";
-    }
-    /* The assert above should make sure we never reach this point */
-    return NULL;
-}
-
-static const char *modeverb(char mode)
-{
-    switch (mode) {
-    case 'a':
-        return "appending";
-    case 'r':
-        return "reading";
-    case 'w':
-        return "writing";
-    }
-    return "(doing something)";
-}
