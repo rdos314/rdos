@@ -228,9 +228,6 @@ static FUNCTION functions[] = {
     {FT_cipher, "camellia-256-cbc", enc_main, enc_options},
     {FT_cipher, "camellia-256-ecb", enc_main, enc_options},
     {FT_cipher, "base64", enc_main, enc_options},
-#ifdef ZLIB
-    {FT_cipher, "zlib", enc_main, enc_options},
-#endif
     {FT_cipher, "des", enc_main, enc_options},
     {FT_cipher, "des3", enc_main, enc_options},
     {FT_cipher, "desx", enc_main, enc_options},
