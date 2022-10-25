@@ -172,25 +172,3 @@ void print_array(BIO *out, const char* title, int len, const unsigned char* d)
     BIO_printf(out, "\n};\n");
 }
 
-
-int parse_yesno(const char *str, int def)
-{
-    if (str) {
-        switch (*str) {
-        case 'f':              /* false */
-        case 'F':              /* FALSE */
-        case 'n':              /* no */
-        case 'N':              /* NO */
-        case '0':              /* 0 */
-            return 0;
-        case 't':              /* true */
-        case 'T':              /* TRUE */
-        case 'y':              /* yes */
-        case 'Y':              /* YES */
-        case '1':              /* 1 */
-            return 1;
-        }
-    }
-    return def;
-}
-
