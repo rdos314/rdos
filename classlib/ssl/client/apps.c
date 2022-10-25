@@ -7,22 +7,13 @@
  * https://www.openssl.org/source/license.html
  */
 
-#if !defined(_POSIX_C_SOURCE) && defined(OPENSSL_SYS_VMS)
-/*
- * On VMS, you need to define this to get the declaration of fileno().  The
- * value 2 is to make sure no function defined in POSIX-2 is left undefined.
- */
-# define _POSIX_C_SOURCE 2
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#ifndef OPENSSL_NO_POSIX_IO
 # include <sys/stat.h>
 # include <fcntl.h>
-#endif
 #include <ctype.h>
 #include <errno.h>
 #include <openssl/err.h>
@@ -32,28 +23,11 @@
 #include <openssl/pkcs12.h>
 #include <openssl/ui.h>
 #include <openssl/safestack.h>
-#ifndef OPENSSL_NO_ENGINE
 # include <openssl/engine.h>
-#endif
-#ifndef OPENSSL_NO_RSA
 # include <openssl/rsa.h>
-#endif
 #include <openssl/bn.h>
 #include <openssl/ssl.h>
 #include "apps.h"
-
-#ifdef _WIN32
-static int WIN32_rename(const char *from, const char *to);
-# define rename(from,to) WIN32_rename((from),(to))
-#endif
-
-#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS)
-# include <conio.h>
-#endif
-
-#if defined(OPENSSL_SYS_MSDOS) && !defined(_WIN32)
-# define _kbhit kbhit
-#endif
 
 typedef struct {
     const char *name;
@@ -119,12 +93,10 @@ int chopup_args(ARGS *arg, char *buf)
     return 1;
 }
 
-#ifndef APP_INIT
 int app_init(long mesgwin)
 {
     return 1;
 }
-#endif
 
 int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
                              const char *CApath, int noCAfile, int noCApath)
@@ -140,8 +112,6 @@ int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
     return SSL_CTX_load_verify_locations(ctx, CAfile, CApath);
 }
 
-#ifndef OPENSSL_NO_CT
-
 int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path)
 {
     if (path == NULL)
@@ -149,8 +119,6 @@ int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path)
 
     return SSL_CTX_set_ctlog_list_file(ctx, path);
 }
-
-#endif
 
 static unsigned long nmflag = 0;
 static char nmflag_set = 0;
@@ -263,9 +231,7 @@ static int ui_close(UI *ui)
 int setup_ui_method(void)
 {
     ui_fallback_method = UI_null();
-#ifndef OPENSSL_NO_UI_CONSOLE
     ui_fallback_method = UI_OpenSSL();
-#endif
     ui_method = UI_create_method("OpenSSL application user interface");
     UI_method_set_opener(ui_method, ui_open);
     UI_method_set_reader(ui_method, ui_read);
@@ -405,7 +371,6 @@ static char *app_get_pass(const char *arg, int keepbio)
                 BIO_printf(bio_err, "Can't open file %s\n", arg + 5);
                 return NULL;
             }
-#if !defined(_WIN32)
             /*
              * Under _WIN32, which covers even Win64 and CE, file
              * descriptors referenced by BIO_s_fd are not inherited
@@ -428,7 +393,6 @@ static char *app_get_pass(const char *arg, int keepbio)
              */
             btmp = BIO_new(BIO_f_buffer());
             pwdbio = BIO_push(btmp, pwdbio);
-#endif
         } else if (strcmp(arg, "stdin") == 0) {
             pwdbio = dup_bio_in(FORMAT_TEXT);
             if (!pwdbio) {
@@ -594,7 +558,6 @@ static int load_pkcs12(BIO *in, const char *desc,
     return ret;
 }
 
-#if !defined(OPENSSL_NO_OCSP) && !defined(OPENSSL_NO_SOCK)
 static int load_cert_crl_http(const char *url, X509 **pcert, X509_CRL **pcrl)
 {
     char *host = NULL, *port = NULL, *path = NULL;
@@ -640,7 +603,6 @@ static int load_cert_crl_http(const char *url, X509 **pcert, X509_CRL **pcrl)
     }
     return rv;
 }
-#endif
 
 X509 *load_cert(const char *file, int format, const char *cert_descrip)
 {
@@ -648,9 +610,7 @@ X509 *load_cert(const char *file, int format, const char *cert_descrip)
     BIO *cert;
 
     if (format == FORMAT_HTTP) {
-#if !defined(OPENSSL_NO_OCSP) && !defined(OPENSSL_NO_SOCK)
         load_cert_crl_http(file, &x, NULL);
-#endif
         return x;
     }
 
@@ -690,9 +650,7 @@ X509_CRL *load_crl(const char *infile, int format)
     BIO *in = NULL;
 
     if (format == FORMAT_HTTP) {
-#if !defined(OPENSSL_NO_OCSP) && !defined(OPENSSL_NO_SOCK)
         load_cert_crl_http(infile, NULL, &x);
-#endif
         return x;
     }
 
@@ -736,7 +694,6 @@ EVP_PKEY *load_key(const char *file, int format, int maybe_stdin,
         if (e == NULL) {
             BIO_printf(bio_err, "no engine specified\n");
         } else {
-#ifndef OPENSSL_NO_ENGINE
             if (ENGINE_init(e)) {
                 pkey = ENGINE_load_private_key(e, file, ui_method, &cb_data);
                 ENGINE_finish(e);
@@ -745,9 +702,6 @@ EVP_PKEY *load_key(const char *file, int format, int maybe_stdin,
                 BIO_printf(bio_err, "cannot load %s from engine\n", key_descrip);
                 ERR_print_errors(bio_err);
             }
-#else
-            BIO_printf(bio_err, "engines not supported\n");
-#endif
         }
         goto end;
     }
@@ -770,13 +724,11 @@ EVP_PKEY *load_key(const char *file, int format, int maybe_stdin,
                          (pem_password_cb *)password_callback, &cb_data,
                          &pkey, NULL, NULL))
             goto end;
-#if !defined(OPENSSL_NO_RSA) && !defined(OPENSSL_NO_DSA) && !defined (OPENSSL_NO_RC4)
     } else if (format == FORMAT_MSBLOB) {
         pkey = b2i_PrivateKey_bio(key);
     } else if (format == FORMAT_PVK) {
         pkey = b2i_PVK_bio(key, (pem_password_cb *)password_callback,
                            &cb_data);
-#endif
     } else {
         BIO_printf(bio_err, "bad input format specified for key file\n");
         goto end;
@@ -808,15 +760,11 @@ EVP_PKEY *load_pubkey(const char *file, int format, int maybe_stdin,
         if (e == NULL) {
             BIO_printf(bio_err, "no engine specified\n");
         } else {
-#ifndef OPENSSL_NO_ENGINE
             pkey = ENGINE_load_public_key(e, file, ui_method, &cb_data);
             if (pkey == NULL) {
                 BIO_printf(bio_err, "cannot load %s from engine\n", key_descrip);
                 ERR_print_errors(bio_err);
             }
-#else
-            BIO_printf(bio_err, "engines not supported\n");
-#endif
         }
         goto end;
     }
@@ -831,7 +779,6 @@ EVP_PKEY *load_pubkey(const char *file, int format, int maybe_stdin,
     if (format == FORMAT_ASN1) {
         pkey = d2i_PUBKEY_bio(key, NULL);
     } else if (format == FORMAT_ASN1RSA) {
-#ifndef OPENSSL_NO_RSA
         RSA *rsa;
         rsa = d2i_RSAPublicKey_bio(key, NULL);
         if (rsa) {
@@ -840,12 +787,8 @@ EVP_PKEY *load_pubkey(const char *file, int format, int maybe_stdin,
                 EVP_PKEY_set1_RSA(pkey, rsa);
             RSA_free(rsa);
         } else
-#else
-        BIO_printf(bio_err, "RSA keys not supported\n");
-#endif
             pkey = NULL;
     } else if (format == FORMAT_PEMRSA) {
-#ifndef OPENSSL_NO_RSA
         RSA *rsa;
         rsa = PEM_read_bio_RSAPublicKey(key, NULL,
                                         (pem_password_cb *)password_callback,
@@ -856,18 +799,13 @@ EVP_PKEY *load_pubkey(const char *file, int format, int maybe_stdin,
                 EVP_PKEY_set1_RSA(pkey, rsa);
             RSA_free(rsa);
         } else
-#else
-        BIO_printf(bio_err, "RSA keys not supported\n");
-#endif
             pkey = NULL;
     } else if (format == FORMAT_PEM) {
         pkey = PEM_read_bio_PUBKEY(key, NULL,
                                    (pem_password_cb *)password_callback,
                                    &cb_data);
-#if !defined(OPENSSL_NO_RSA) && !defined(OPENSSL_NO_DSA)
     } else if (format == FORMAT_MSBLOB) {
         pkey = b2i_PublicKey_bio(key);
-#endif
     }
  end:
     BIO_free(key);
@@ -1276,7 +1214,6 @@ X509_STORE *setup_verify(const char *CAfile, const char *CApath, int noCAfile, i
     return NULL;
 }
 
-#ifndef OPENSSL_NO_ENGINE
 /* Try to load an engine in a shareable library */
 static ENGINE *try_load_engine(const char *engine)
 {
@@ -1290,13 +1227,11 @@ static ENGINE *try_load_engine(const char *engine)
     }
     return e;
 }
-#endif
 
 ENGINE *setup_engine(const char *engine, int debug)
 {
     ENGINE *e = NULL;
 
-#ifndef OPENSSL_NO_ENGINE
     if (engine != NULL) {
         if (strcmp(engine, "auto") == 0) {
             BIO_printf(bio_err, "enabling auto ENGINE support\n");
@@ -1322,17 +1257,14 @@ ENGINE *setup_engine(const char *engine, int debug)
 
         BIO_printf(bio_err, "engine \"%s\" set.\n", ENGINE_get_id(e));
     }
-#endif
     return e;
 }
 
 void release_engine(ENGINE *e)
 {
-#ifndef OPENSSL_NO_ENGINE
     if (e != NULL)
         /* Free our "structural" reference. */
         ENGINE_free(e);
-#endif
 }
 
 static unsigned long index_serial_hash(const OPENSSL_CSTRING *a)
@@ -1442,11 +1374,7 @@ int save_serial(const char *serialfile, const char *suffix, const BIGNUM *serial
     if (suffix == NULL)
         OPENSSL_strlcpy(buf[0], serialfile, BSIZE);
     else {
-#ifndef OPENSSL_SYS_VMS
         j = BIO_snprintf(buf[0], sizeof(buf[0]), "%s.%s", serialfile, suffix);
-#else
-        j = BIO_snprintf(buf[0], sizeof(buf[0]), "%s-%s", serialfile, suffix);
-#endif
     }
     out = BIO_new_file(buf[0], "w");
     if (out == NULL) {
@@ -1485,17 +1413,9 @@ int rotate_serial(const char *serialfile, const char *new_suffix,
         BIO_printf(bio_err, "file name too long\n");
         goto err;
     }
-#ifndef OPENSSL_SYS_VMS
     j = BIO_snprintf(buf[0], sizeof(buf[0]), "%s.%s", serialfile, new_suffix);
     j = BIO_snprintf(buf[1], sizeof(buf[1]), "%s.%s", serialfile, old_suffix);
-#else
-    j = BIO_snprintf(buf[0], sizeof(buf[0]), "%s-%s", serialfile, new_suffix);
-    j = BIO_snprintf(buf[1], sizeof(buf[1]), "%s-%s", serialfile, old_suffix);
-#endif
     if (rename(serialfile, buf[1]) < 0 && errno != ENOENT
-#ifdef ENOTDIR
-        && errno != ENOTDIR
-#endif
         ) {
         BIO_printf(bio_err,
                    "unable to rename %s to %s\n", serialfile, buf[1]);
@@ -1545,10 +1465,8 @@ CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
     BIO *in;
     CONF *dbattr_conf = NULL;
     char buf[BSIZE];
-#ifndef OPENSSL_NO_POSIX_IO
     FILE *dbfp;
     struct stat dbst;
-#endif
 
     in = BIO_new_file(dbfile, "r");
     if (in == NULL) {
@@ -1556,7 +1474,6 @@ CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
         goto err;
     }
 
-#ifndef OPENSSL_NO_POSIX_IO
     BIO_get_fp(in, &dbfp);
     if (fstat(fileno(dbfp), &dbst) == -1) {
         SYSerr(SYS_F_FSTAT, errno);
@@ -1564,16 +1481,11 @@ CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
         ERR_print_errors(bio_err);
         goto err;
     }
-#endif
 
     if ((tmpdb = TXT_DB_read(in, DB_NUMBER)) == NULL)
         goto err;
 
-#ifndef OPENSSL_SYS_VMS
     BIO_snprintf(buf, sizeof(buf), "%s.attr", dbfile);
-#else
-    BIO_snprintf(buf, sizeof(buf), "%s-attr", dbfile);
-#endif
     dbattr_conf = app_load_config_quiet(buf);
 
     retdb = app_malloc(sizeof(*retdb), "new DB");
@@ -1593,9 +1505,7 @@ CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
     }
 
     retdb->dbfname = OPENSSL_strdup(dbfile);
-#ifndef OPENSSL_NO_POSIX_IO
     retdb->dbst = dbst;
-#endif
 
  err:
     NCONF_free(dbattr_conf);
@@ -1640,15 +1550,9 @@ int save_index(const char *dbfile, const char *suffix, CA_DB *db)
         BIO_printf(bio_err, "file name too long\n");
         goto err;
     }
-#ifndef OPENSSL_SYS_VMS
     j = BIO_snprintf(buf[2], sizeof(buf[2]), "%s.attr", dbfile);
     j = BIO_snprintf(buf[1], sizeof(buf[1]), "%s.attr.%s", dbfile, suffix);
     j = BIO_snprintf(buf[0], sizeof(buf[0]), "%s.%s", dbfile, suffix);
-#else
-    j = BIO_snprintf(buf[2], sizeof(buf[2]), "%s-attr", dbfile);
-    j = BIO_snprintf(buf[1], sizeof(buf[1]), "%s-attr-%s", dbfile, suffix);
-    j = BIO_snprintf(buf[0], sizeof(buf[0]), "%s-%s", dbfile, suffix);
-#endif
     out = BIO_new_file(buf[0], "w");
     if (out == NULL) {
         perror(dbfile);
@@ -1689,23 +1593,12 @@ int rotate_index(const char *dbfile, const char *new_suffix,
         BIO_printf(bio_err, "file name too long\n");
         goto err;
     }
-#ifndef OPENSSL_SYS_VMS
     j = BIO_snprintf(buf[4], sizeof(buf[4]), "%s.attr", dbfile);
     j = BIO_snprintf(buf[3], sizeof(buf[3]), "%s.attr.%s", dbfile, old_suffix);
     j = BIO_snprintf(buf[2], sizeof(buf[2]), "%s.attr.%s", dbfile, new_suffix);
     j = BIO_snprintf(buf[1], sizeof(buf[1]), "%s.%s", dbfile, old_suffix);
     j = BIO_snprintf(buf[0], sizeof(buf[0]), "%s.%s", dbfile, new_suffix);
-#else
-    j = BIO_snprintf(buf[4], sizeof(buf[4]), "%s-attr", dbfile);
-    j = BIO_snprintf(buf[3], sizeof(buf[3]), "%s-attr-%s", dbfile, old_suffix);
-    j = BIO_snprintf(buf[2], sizeof(buf[2]), "%s-attr-%s", dbfile, new_suffix);
-    j = BIO_snprintf(buf[1], sizeof(buf[1]), "%s-%s", dbfile, old_suffix);
-    j = BIO_snprintf(buf[0], sizeof(buf[0]), "%s-%s", dbfile, new_suffix);
-#endif
     if (rename(dbfile, buf[1]) < 0 && errno != ENOENT
-#ifdef ENOTDIR
-        && errno != ENOTDIR
-#endif
         ) {
         BIO_printf(bio_err, "unable to rename %s to %s\n", dbfile, buf[1]);
         perror("reason");
@@ -1718,9 +1611,6 @@ int rotate_index(const char *dbfile, const char *new_suffix,
         goto err;
     }
     if (rename(buf[4], buf[3]) < 0 && errno != ENOENT
-#ifdef ENOTDIR
-        && errno != ENOTDIR
-#endif
         ) {
         BIO_printf(bio_err, "unable to rename %s to %s\n", buf[4], buf[3]);
         perror("reason");
@@ -2116,157 +2006,7 @@ void store_setup_crl_download(X509_STORE *st)
     X509_STORE_set_lookup_crls_cb(st, crls_http_cb);
 }
 
-/*
- * Platform-specific sections
- */
-#if defined(_WIN32)
-# ifdef fileno
-#  undef fileno
-#  define fileno(a) (int)_fileno(a)
-# endif
 
-# include <windows.h>
-# include <tchar.h>
-
-static int WIN32_rename(const char *from, const char *to)
-{
-    TCHAR *tfrom = NULL, *tto;
-    DWORD err;
-    int ret = 0;
-
-    if (sizeof(TCHAR) == 1) {
-        tfrom = (TCHAR *)from;
-        tto = (TCHAR *)to;
-    } else {                    /* UNICODE path */
-
-        size_t i, flen = strlen(from) + 1, tlen = strlen(to) + 1;
-        tfrom = malloc(sizeof(*tfrom) * (flen + tlen));
-        if (tfrom == NULL)
-            goto err;
-        tto = tfrom + flen;
-# if !defined(_WIN32_WCE) || _WIN32_WCE>=101
-        if (!MultiByteToWideChar(CP_ACP, 0, from, flen, (WCHAR *)tfrom, flen))
-# endif
-            for (i = 0; i < flen; i++)
-                tfrom[i] = (TCHAR)from[i];
-# if !defined(_WIN32_WCE) || _WIN32_WCE>=101
-        if (!MultiByteToWideChar(CP_ACP, 0, to, tlen, (WCHAR *)tto, tlen))
-# endif
-            for (i = 0; i < tlen; i++)
-                tto[i] = (TCHAR)to[i];
-    }
-
-    if (MoveFile(tfrom, tto))
-        goto ok;
-    err = GetLastError();
-    if (err == ERROR_ALREADY_EXISTS || err == ERROR_FILE_EXISTS) {
-        if (DeleteFile(tto) && MoveFile(tfrom, tto))
-            goto ok;
-        err = GetLastError();
-    }
-    if (err == ERROR_FILE_NOT_FOUND || err == ERROR_PATH_NOT_FOUND)
-        errno = ENOENT;
-    else if (err == ERROR_ACCESS_DENIED)
-        errno = EACCES;
-    else
-        errno = EINVAL;         /* we could map more codes... */
- err:
-    ret = -1;
- ok:
-    if (tfrom != NULL && tfrom != (TCHAR *)from)
-        free(tfrom);
-    return ret;
-}
-#endif
-
-/* app_tminterval section */
-#if defined(_WIN32)
-double app_tminterval(int stop, int usertime)
-{
-    FILETIME now;
-    double ret = 0;
-    static ULARGE_INTEGER tmstart;
-    static int warning = 1;
-# ifdef _WIN32_WINNT
-    static HANDLE proc = NULL;
-
-    if (proc == NULL) {
-        if (check_winnt())
-            proc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE,
-                               GetCurrentProcessId());
-        if (proc == NULL)
-            proc = (HANDLE) - 1;
-    }
-
-    if (usertime && proc != (HANDLE) - 1) {
-        FILETIME junk;
-        GetProcessTimes(proc, &junk, &junk, &junk, &now);
-    } else
-# endif
-    {
-        SYSTEMTIME systime;
-
-        if (usertime && warning) {
-            BIO_printf(bio_err, "To get meaningful results, run "
-                       "this program on idle system.\n");
-            warning = 0;
-        }
-        GetSystemTime(&systime);
-        SystemTimeToFileTime(&systime, &now);
-    }
-
-    if (stop == TM_START) {
-        tmstart.u.LowPart = now.dwLowDateTime;
-        tmstart.u.HighPart = now.dwHighDateTime;
-    } else {
-        ULARGE_INTEGER tmstop;
-
-        tmstop.u.LowPart = now.dwLowDateTime;
-        tmstop.u.HighPart = now.dwHighDateTime;
-
-        ret = (__int64)(tmstop.QuadPart - tmstart.QuadPart) * 1e-7;
-    }
-
-    return ret;
-}
-#elif defined(OPENSSL_SYS_VXWORKS)
-# include <time.h>
-
-double app_tminterval(int stop, int usertime)
-{
-    double ret = 0;
-# ifdef CLOCK_REALTIME
-    static struct timespec tmstart;
-    struct timespec now;
-# else
-    static unsigned long tmstart;
-    unsigned long now;
-# endif
-    static int warning = 1;
-
-    if (usertime && warning) {
-        BIO_printf(bio_err, "To get meaningful results, run "
-                   "this program on idle system.\n");
-        warning = 0;
-    }
-# ifdef CLOCK_REALTIME
-    clock_gettime(CLOCK_REALTIME, &now);
-    if (stop == TM_START)
-        tmstart = now;
-    else
-        ret = ((now.tv_sec + now.tv_nsec * 1e-9)
-               - (tmstart.tv_sec + tmstart.tv_nsec * 1e-9));
-# else
-    now = tickGet();
-    if (stop == TM_START)
-        tmstart = now;
-    else
-        ret = (now - tmstart) / (double)sysClkRateGet();
-# endif
-    return ret;
-}
-
-#elif defined(OPENSSL_SYS_RDOS)
 # include <time.h>
 
 double app_tminterval(int stop, int usertime)
@@ -2299,125 +2039,11 @@ double app_tminterval(int stop, int usertime)
     return ret;
 }
 
-#elif defined(OPENSSL_SYSTEM_VMS)
-# include <time.h>
-# include <times.h>
-
-double app_tminterval(int stop, int usertime)
-{
-    static clock_t tmstart;
-    double ret = 0;
-    clock_t now;
-# ifdef __TMS
-    struct tms rus;
-
-    now = times(&rus);
-    if (usertime)
-        now = rus.tms_utime;
-# else
-    if (usertime)
-        now = clock();          /* sum of user and kernel times */
-    else {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        now = (clock_t)((unsigned long long)tv.tv_sec * CLK_TCK +
-                        (unsigned long long)tv.tv_usec * (1000000 / CLK_TCK)
-            );
-    }
-# endif
-    if (stop == TM_START)
-        tmstart = now;
-    else
-        ret = (now - tmstart) / (double)(CLK_TCK);
-
-    return ret;
-}
-
-#elif defined(_SC_CLK_TCK)      /* by means of unistd.h */
-# include <sys/times.h>
-
-double app_tminterval(int stop, int usertime)
-{
-    double ret = 0;
-    struct tms rus;
-    clock_t now = times(&rus);
-    static clock_t tmstart;
-
-    if (usertime)
-        now = rus.tms_utime;
-
-    if (stop == TM_START) {
-        tmstart = now;
-    } else {
-        long int tck = sysconf(_SC_CLK_TCK);
-        ret = (now - tmstart) / (double)tck;
-    }
-
-    return ret;
-}
-
-#else
-# include <sys/time.h>
-# include <sys/resource.h>
-
-double app_tminterval(int stop, int usertime)
-{
-    double ret = 0;
-    struct rusage rus;
-    struct timeval now;
-    static struct timeval tmstart;
-
-    if (usertime)
-        getrusage(RUSAGE_SELF, &rus), now = rus.ru_utime;
-    else
-        gettimeofday(&now, NULL);
-
-    if (stop == TM_START)
-        tmstart = now;
-    else
-        ret = ((now.tv_sec + now.tv_usec * 1e-6)
-               - (tmstart.tv_sec + tmstart.tv_usec * 1e-6));
-
-    return ret;
-}
-#endif
-
 int app_access(const char* name, int flag)
 {
-#ifdef _WIN32
-    return _access(name, flag);
-#else
     return access(name, flag);
-#endif
 }
 
-/* app_isdir section */
-#ifdef _WIN32
-int app_isdir(const char *name)
-{
-    DWORD attr;
-# if defined(UNICODE) || defined(_UNICODE)
-    size_t i, len_0 = strlen(name) + 1;
-    WCHAR tempname[MAX_PATH];
-
-    if (len_0 > MAX_PATH)
-        return -1;
-
-#  if !defined(_WIN32_WCE) || _WIN32_WCE>=101
-    if (!MultiByteToWideChar(CP_ACP, 0, name, len_0, tempname, MAX_PATH))
-#  endif
-        for (i = 0; i < len_0; i++)
-            tempname[i] = (WCHAR)name[i];
-
-    attr = GetFileAttributes(tempname);
-# else
-    attr = GetFileAttributes(name);
-# endif
-    if (attr == INVALID_FILE_ATTRIBUTES)
-        return -1;
-    return ((attr & FILE_ATTRIBUTE_DIRECTORY) != 0);
-}
-#else
 # include <sys/stat.h>
 # ifndef S_ISDIR
 #  if defined(_S_IFMT) && defined(_S_IFDIR)
@@ -2440,77 +2066,27 @@ int app_isdir(const char *name)
     return -1;
 # endif
 }
-#endif
 
 /* raw_read|write section */
-#if defined(__VMS)
-# include "vms_term_sock.h"
-static int stdin_sock = -1;
-
-static void close_stdin_sock(void)
-{
-    TerminalSocket (TERM_SOCK_DELETE, &stdin_sock);
-}
-
-int fileno_stdin(void)
-{
-    if (stdin_sock == -1) {
-        TerminalSocket(TERM_SOCK_CREATE, &stdin_sock);
-        atexit(close_stdin_sock);
-    }
-
-    return stdin_sock;
-}
-#else
 int fileno_stdin(void)
 {
     return fileno(stdin);
 }
-#endif
 
 int fileno_stdout(void)
 {
     return fileno(stdout);
 }
 
-#if defined(_WIN32) && defined(STD_INPUT_HANDLE)
-int raw_read_stdin(void *buf, int siz)
-{
-    DWORD n;
-    if (ReadFile(GetStdHandle(STD_INPUT_HANDLE), buf, siz, &n, NULL))
-        return n;
-    else
-        return -1;
-}
-#elif defined(__VMS)
-# include <sys/socket.h>
-
-int raw_read_stdin(void *buf, int siz)
-{
-    return recv(fileno_stdin(), buf, siz, 0);
-}
-#else
 int raw_read_stdin(void *buf, int siz)
 {
     return read(fileno_stdin(), buf, siz);
 }
-#endif
 
-#if defined(_WIN32) && defined(STD_OUTPUT_HANDLE)
-int raw_write_stdout(const void *buf, int siz)
-{
-    DWORD n;
-    if (WriteFile(GetStdHandle(STD_OUTPUT_HANDLE), buf, siz, &n, NULL))
-        return n;
-    else
-        return -1;
-}
-#else
 int raw_write_stdout(const void *buf, int siz)
 {
     return write(fileno_stdout(), buf, siz);
 }
-#endif
 
 /*
  * Centralized handling if input and output files with format specification
@@ -2538,11 +2114,6 @@ BIO *dup_bio_out(int format)
                         BIO_NOCLOSE | (istext(format) ? BIO_FP_TEXT : 0));
     void *prefix = NULL;
 
-#ifdef OPENSSL_SYS_VMS
-    if (istext(format))
-        b = BIO_push(BIO_new(BIO_f_linebuffer()), b);
-#endif
-
     if (istext(format) && (prefix = getenv("HARNESS_OSSL_PREFIX")) != NULL) {
         if (prefix_method == NULL)
             prefix_method = apps_bf_prefix();
@@ -2557,10 +2128,6 @@ BIO *dup_bio_err(int format)
 {
     BIO *b = BIO_new_fp(stderr,
                         BIO_NOCLOSE | (istext(format) ? BIO_FP_TEXT : 0));
-#ifdef OPENSSL_SYS_VMS
-    if (istext(format))
-        b = BIO_push(BIO_new(BIO_f_linebuffer()), b);
-#endif
     return b;
 }
 
@@ -2579,14 +2146,7 @@ void unbuffer(FILE *fp)
  * above the first 4 GB of memory, so we simply turn off the warning
  * temporarily.
  */
-#if defined(OPENSSL_SYS_VMS) && defined(__DECC)
-# pragma environment save
-# pragma message disable maylosedata2
-#endif
     setbuf(fp, NULL);
-#if defined(OPENSSL_SYS_VMS) && defined(__DECC)
-# pragma environment restore
-#endif
 }
 
 static const char *modestr(char mode, int format)
@@ -2631,32 +2191,14 @@ BIO *bio_open_owner(const char *filename, int format, int private)
         return bio_open_default(filename, 'w', format);
 
     mode = O_WRONLY;
-#ifdef O_CREAT
     mode |= O_CREAT;
-#endif
-#ifdef O_TRUNC
     mode |= O_TRUNC;
-#endif
     textmode = istext(format);
     if (!textmode) {
-#ifdef O_BINARY
         mode |= O_BINARY;
-#elif defined(_O_BINARY)
-        mode |= _O_BINARY;
-#endif
     }
 
-#ifdef OPENSSL_SYS_VMS
-    /* VMS doesn't have O_BINARY, it just doesn't make sense.  But,
-     * it still needs to know that we're going binary, or fdopen()
-     * will fail with "invalid argument"...  so we tell VMS what the
-     * context is.
-     */
-    if (!textmode)
-        fd = open(filename, mode, 0600, "ctx=bin");
-    else
-#endif
-        fd = open(filename, mode, 0600);
+    fd = open(filename, mode, 0600);
     if (fd < 0)
         goto err;
     fp = fdopen(fd, modestr('w', format));
@@ -2725,62 +2267,8 @@ BIO *bio_open_default_quiet(const char *filename, char mode, int format)
 
 void wait_for_async(SSL *s)
 {
-    /* On Windows select only works for sockets, so we simply don't wait  */
-#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_RDOS)
-    int width = 0;
-    fd_set asyncfds;
-    OSSL_ASYNC_FD *fds;
-    size_t numfds;
-    size_t i;
-
-    if (!SSL_get_all_async_fds(s, NULL, &numfds))
-        return;
-    if (numfds == 0)
-        return;
-    fds = app_malloc(sizeof(OSSL_ASYNC_FD) * numfds, "allocate async fds");
-    if (!SSL_get_all_async_fds(s, fds, &numfds)) {
-        OPENSSL_free(fds);
-        return;
-    }
-
-    FD_ZERO(&asyncfds);
-    for (i = 0; i < numfds; i++) {
-        if (width <= (int)fds[i])
-            width = (int)fds[i] + 1;
-        openssl_fdset((int)fds[i], &asyncfds);
-    }
-    select(width, (void *)&asyncfds, NULL, NULL, NULL);
-    OPENSSL_free(fds);
-#endif
 }
 
-/* if OPENSSL_SYS_WINDOWS is defined then so is OPENSSL_SYS_MSDOS */
-#if defined(OPENSSL_SYS_MSDOS)
-int has_stdin_waiting(void)
-{
-# if defined(OPENSSL_SYS_WINDOWS)
-    HANDLE inhand = GetStdHandle(STD_INPUT_HANDLE);
-    DWORD events = 0;
-    INPUT_RECORD inputrec;
-    DWORD insize = 1;
-    BOOL peeked;
-
-    if (inhand == INVALID_HANDLE_VALUE) {
-        return 0;
-    }
-
-    peeked = PeekConsoleInput(inhand, &inputrec, insize, &events);
-    if (!peeked) {
-        /* Probably redirected input? _kbhit() does not work in this case */
-        if (!feof(stdin)) {
-            return 1;
-        }
-        return 0;
-    }
-# endif
-    return _kbhit();
-}
-#endif
 
 /* Corrupt a signature by modifying final byte */
 void corrupt_signature(const ASN1_STRING *signature)
