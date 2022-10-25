@@ -8,9 +8,7 @@
  */
 #include "apps.h"
 #include <string.h>
-#if !defined(OPENSSL_SYS_MSDOS)
 # include OPENSSL_UNISTD
-#endif
 
 #include <stdlib.h>
 #include <errno.h>
@@ -37,57 +35,6 @@ static char prog[40];
 /*
  * Return the simple name of the program; removing various platform gunk.
  */
-#if defined(OPENSSL_SYS_WIN32)
-char *opt_progname(const char *argv0)
-{
-    size_t i, n;
-    const char *p;
-    char *q;
-
-    /* find the last '/', '\' or ':' */
-    for (p = argv0 + strlen(argv0); --p > argv0;)
-        if (*p == '/' || *p == '\\' || *p == ':') {
-            p++;
-            break;
-        }
-
-    /* Strip off trailing nonsense. */
-    n = strlen(p);
-    if (n > 4 &&
-        (strcmp(&p[n - 4], ".exe") == 0 || strcmp(&p[n - 4], ".EXE") == 0))
-        n -= 4;
-
-    /* Copy over the name, in lowercase. */
-    if (n > sizeof(prog) - 1)
-        n = sizeof(prog) - 1;
-    for (q = prog, i = 0; i < n; i++, p++)
-        *q++ = tolower((unsigned char)*p);
-    *q = '\0';
-    return prog;
-}
-
-#elif defined(OPENSSL_SYS_VMS)
-
-char *opt_progname(const char *argv0)
-{
-    const char *p, *q;
-
-    /* Find last special character sys:[foo.bar]openssl */
-    for (p = argv0 + strlen(argv0); --p > argv0;)
-        if (*p == ':' || *p == ']' || *p == '>') {
-            p++;
-            break;
-        }
-
-    q = strrchr(p, '.');
-    strncpy(prog, p, sizeof(prog) - 1);
-    prog[sizeof(prog) - 1] = '\0';
-    if (q != NULL && q - p < sizeof(prog))
-        prog[q - p] = '\0';
-    return prog;
-}
-
-#else
 
 char *opt_progname(const char *argv0)
 {
@@ -103,7 +50,6 @@ char *opt_progname(const char *argv0)
     prog[sizeof(prog) - 1] = '\0';
     return prog;
 }
-#endif
 
 char *opt_getprog(void)
 {
@@ -122,14 +68,11 @@ char *opt_init(int ac, char **av, const OPTIONS *o)
     unknown = NULL;
 
     for (; o->name; ++o) {
-#ifndef NDEBUG
         const OPTIONS *next;
         int duplicated, i;
-#endif
 
         if (o->name == OPT_HELP_STR || o->name == OPT_MORE_STR)
             continue;
-#ifndef NDEBUG
         i = o->valtype;
 
         /* Make sure options are legit. */
@@ -152,7 +95,7 @@ char *opt_init(int ac, char **av, const OPTIONS *o)
             duplicated = strcmp(o->name, next->name) == 0;
             assert(!duplicated);
         }
-#endif
+
         if (o->name[0] == '\0') {
             assert(unknown == NULL);
             unknown = o;
@@ -371,53 +314,6 @@ int opt_long(const char *value, long *result)
     return 1;
 }
 
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L && \
-    defined(INTMAX_MAX) && defined(UINTMAX_MAX)
-
-/* Parse an intmax_t, put it into *result; return 0 on failure, else 1. */
-int opt_imax(const char *value, intmax_t *result)
-{
-    int oerrno = errno;
-    intmax_t m;
-    char *endp;
-
-    errno = 0;
-    m = strtoimax(value, &endp, 0);
-    if (*endp
-            || endp == value
-            || ((m == INTMAX_MAX || m == INTMAX_MIN) && errno == ERANGE)
-            || (m == 0 && errno != 0)) {
-        opt_number_error(value);
-        errno = oerrno;
-        return 0;
-    }
-    *result = m;
-    errno = oerrno;
-    return 1;
-}
-
-/* Parse a uintmax_t, put it into *result; return 0 on failure, else 1. */
-int opt_umax(const char *value, uintmax_t *result)
-{
-    int oerrno = errno;
-    uintmax_t m;
-    char *endp;
-
-    errno = 0;
-    m = strtoumax(value, &endp, 0);
-    if (*endp
-            || endp == value
-            || (m == UINTMAX_MAX && errno == ERANGE)
-            || (m == 0 && errno != 0)) {
-        opt_number_error(value);
-        errno = oerrno;
-        return 0;
-    }
-    *result = m;
-    errno = oerrno;
-    return 1;
-}
-#endif
 
 /*
  * Parse an unsigned long, put it into *result; return 0 on failure, else 1.
