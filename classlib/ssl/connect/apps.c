@@ -134,26 +134,3 @@ void print_name(BIO *out, const char *title, X509_NAME *nm,
         BIO_puts(out, "\n");
     }
 }
-
-void print_bignum_var(BIO *out, const BIGNUM *in, const char *var,
-                      int len, unsigned char *buffer)
-{
-    BIO_printf(out, "    static unsigned char %s_%d[] = {", var, len);
-    if (BN_is_zero(in)) {
-        BIO_printf(out, "\n        0x00");
-    } else {
-        int i, l;
-
-        l = BN_bn2bin(in, buffer);
-        for (i = 0; i < l; i++) {
-            BIO_printf(out, (i % 10) == 0 ? "\n        " : " ");
-            if (i < l - 1)
-                BIO_printf(out, "0x%02X,", buffer[i]);
-            else
-                BIO_printf(out, "0x%02X", buffer[i]);
-        }
-    }
-    BIO_printf(out, "\n    };\n");
-}
-
-
