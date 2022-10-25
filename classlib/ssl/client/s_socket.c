@@ -21,10 +21,6 @@
  * that u_int isn't defined, but only if _POSIX_C_SOURCE is defined, which is
  * needed to have fileno() declared correctly...  So let's define u_int
  */
-#if defined(OPENSSL_SYS_VMS_DECC) && !defined(__U_INT)
-# define __U_INT
-typedef unsigned int u_int;
-#endif
 
 #ifndef OPENSSL_NO_SOCK
 
@@ -127,24 +123,6 @@ int init_client(int *sock, const char *host, const char *port,
                 break;
             }
         }
-
-#ifndef OPENSSL_NO_SCTP
-        if (protocol == IPPROTO_SCTP) {
-            /*
-             * For SCTP we have to set various options on the socket prior to
-             * connecting. This is done automatically by BIO_new_dgram_sctp().
-             * We don't actually need the created BIO though so we free it again
-             * immediately.
-             */
-            BIO *tmpbio = BIO_new_dgram_sctp(*sock, BIO_NOCLOSE);
-
-            if (tmpbio == NULL) {
-                ERR_print_errors(bio_err);
-                return 0;
-            }
-            BIO_free(tmpbio);
-        }
-#endif
 
         if (!BIO_connect(*sock, BIO_ADDRINFO_address(ai),
                          BIO_ADDRINFO_protocol(ai) == IPPROTO_TCP ? BIO_SOCK_NODELAY : 0)) {
@@ -262,25 +240,6 @@ int do_server(int *accept_sock, const char *host, const char *port,
         goto end;
     }
 
-#ifndef OPENSSL_NO_SCTP
-    if (protocol == IPPROTO_SCTP) {
-        /*
-         * For SCTP we have to set various options on the socket prior to
-         * accepting. This is done automatically by BIO_new_dgram_sctp().
-         * We don't actually need the created BIO though so we free it again
-         * immediately.
-         */
-        BIO *tmpbio = BIO_new_dgram_sctp(asock, BIO_NOCLOSE);
-
-        if (tmpbio == NULL) {
-            BIO_closesocket(asock);
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-        BIO_free(tmpbio);
-    }
-#endif
-
     sock_port = BIO_ADDR_rawport(sock_address);
 
     BIO_ADDRINFO_free(res);
@@ -383,10 +342,6 @@ int do_server(int *accept_sock, const char *host, const char *port,
         }
     }
  end:
-# ifdef AF_UNIX
-    if (family == AF_UNIX)
-        unlink(host);
-# endif
     BIO_ADDR_free(ourpeer);
     ourpeer = NULL;
     return ret;
