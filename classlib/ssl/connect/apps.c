@@ -154,29 +154,6 @@ int password_callback(char *buf, int bufsiz, int verify, PW_CB_DATA *cb_tmp)
 
 static char *app_get_pass(const char *arg, int keepbio);
 
-int app_passwd(const char *arg1, const char *arg2, char **pass1, char **pass2)
-{
-    int same;
-    if (arg2 == NULL || arg1 == NULL || strcmp(arg1, arg2))
-        same = 0;
-    else
-        same = 1;
-    if (arg1 != NULL) {
-        *pass1 = app_get_pass(arg1, same);
-        if (*pass1 == NULL)
-            return 0;
-    } else if (pass1 != NULL) {
-        *pass1 = NULL;
-    }
-    if (arg2 != NULL) {
-        *pass2 = app_get_pass(arg2, same ? 2 : 0);
-        if (*pass2 == NULL)
-            return 0;
-    } else if (pass2 != NULL) {
-        *pass2 = NULL;
-    }
-    return 1;
-}
 
 static char *app_get_pass(const char *arg, int keepbio)
 {

@@ -736,10 +736,8 @@ int main(int argc, char **argv)
         } else if (bio_c_out == NULL)
             bio_c_out = dup_bio_out(FORMAT_TEXT);
     }
-    if (!app_passwd(srppass, NULL, &srp_arg.srppassin, NULL)) {
-        BIO_printf(bio_err, "Error getting password\n");
-        goto end;
-    }
+
+    srp_arg.srppassin = NULL;
 
     ctx = SSL_CTX_new(meth);
     if (ctx == NULL) {
