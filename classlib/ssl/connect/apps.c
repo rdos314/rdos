@@ -571,23 +571,3 @@ BIO *bio_open_default_quiet(const char *filename, char mode, int format)
 {
     return bio_open_default_(filename, mode, format, 1);
 }
-
-void wait_for_async(SSL *s)
-{
-}
-
-
-/* Corrupt a signature by modifying final byte */
-void corrupt_signature(const ASN1_STRING *signature)
-{
-        unsigned char *s = signature->data;
-        s[signature->length - 1] ^= 0x1;
-}
-
-void make_uppercase(char *string)
-{
-    int i;
-
-    for (i = 0; string[i] != '\0'; i++)
-        string[i] = toupper((unsigned char)string[i]);
-}
