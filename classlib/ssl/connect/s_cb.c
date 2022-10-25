@@ -1117,8 +1117,6 @@ int ssl_ctx_add_crls(SSL_CTX *ctx, STACK_OF(X509_CRL) *crls, int crl_download)
     X509_STORE *st;
     st = SSL_CTX_get_cert_store(ctx);
     add_crls_store(st, crls);
-    if (crl_download)
-        store_setup_crl_download(st);
     return 1;
 }
 
@@ -1137,8 +1135,6 @@ int ssl_load_stores(SSL_CTX *ctx,
             goto err;
         add_crls_store(vfy, crls);
         SSL_CTX_set1_verify_cert_store(ctx, vfy);
-        if (crl_download)
-            store_setup_crl_download(vfy);
     }
     if (chCApath != NULL || chCAfile != NULL) {
         ch = X509_STORE_new();
