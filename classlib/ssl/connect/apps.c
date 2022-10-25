@@ -83,32 +83,6 @@ int dump_cert_text(BIO *out, X509 *x)
     return 0;
 }
 
-int add_oid_section(CONF *conf)
-{
-    char *p;
-    STACK_OF(CONF_VALUE) *sktmp;
-    CONF_VALUE *cnf;
-    int i;
-
-    if ((p = NCONF_get_string(conf, NULL, "oid_section")) == NULL) {
-        ERR_clear_error();
-        return 1;
-    }
-    if ((sktmp = NCONF_get_section(conf, p)) == NULL) {
-        BIO_printf(bio_err, "problem loading oid section %s\n", p);
-        return 0;
-    }
-    for (i = 0; i < sk_CONF_VALUE_num(sktmp); i++) {
-        cnf = sk_CONF_VALUE_value(sktmp, i);
-        if (OBJ_create(cnf->value, cnf->name, cnf->name) == NID_undef) {
-            BIO_printf(bio_err, "problem creating object %s=%s\n",
-                       cnf->name, cnf->value);
-            return 0;
-        }
-    }
-    return 1;
-}
-
 
 void* app_malloc(int sz, const char *what)
 {
