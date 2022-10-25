@@ -584,26 +584,6 @@ void corrupt_signature(const ASN1_STRING *signature)
         s[signature->length - 1] ^= 0x1;
 }
 
-int set_cert_times(X509 *x, const char *startdate, const char *enddate,
-                   int days)
-{
-    if (startdate == NULL || strcmp(startdate, "today") == 0) {
-        if (X509_gmtime_adj(X509_getm_notBefore(x), 0) == NULL)
-            return 0;
-    } else {
-        if (!ASN1_TIME_set_string_X509(X509_getm_notBefore(x), startdate))
-            return 0;
-    }
-    if (enddate == NULL) {
-        if (X509_time_adj_ex(X509_getm_notAfter(x), days, 0, NULL)
-            == NULL)
-            return 0;
-    } else if (!ASN1_TIME_set_string_X509(X509_getm_notAfter(x), enddate)) {
-        return 0;
-    }
-    return 1;
-}
-
 void make_uppercase(char *string)
 {
     int i;
