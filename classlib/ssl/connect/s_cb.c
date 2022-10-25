@@ -935,44 +935,6 @@ void ssl_excert_free(SSL_EXCERT *exc)
     }
 }
 
-int load_excert(SSL_EXCERT **pexc)
-{
-    SSL_EXCERT *exc = *pexc;
-    if (exc == NULL)
-        return 1;
-    /* If nothing in list, free and set to NULL */
-    if (exc->certfile == NULL && exc->next == NULL) {
-        ssl_excert_free(exc);
-        *pexc = NULL;
-        return 1;
-    }
-    for (; exc; exc = exc->next) {
-        if (exc->certfile == NULL) {
-            BIO_printf(bio_err, "Missing filename\n");
-            return 0;
-        }
-        exc->cert = load_cert(exc->certfile, exc->certform,
-                              "Server Certificate");
-        if (exc->cert == NULL)
-            return 0;
-        if (exc->keyfile != NULL) {
-            exc->key = load_key(exc->keyfile, exc->keyform,
-                                0, NULL, NULL, "Server Key");
-        } else {
-            exc->key = load_key(exc->certfile, exc->certform,
-                                0, NULL, NULL, "Server Key");
-        }
-        if (exc->key == NULL)
-            return 0;
-        if (exc->chainfile != NULL) {
-            if (!load_certs(exc->chainfile, &exc->chain, FORMAT_PEM, NULL,
-                            "Server Chain"))
-                return 0;
-        }
-    }
-    return 1;
-}
-
 enum range { OPT_X_ENUM };
 
 static void print_raw_cipherlist(SSL *s)

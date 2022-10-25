@@ -728,9 +728,6 @@ int main(int argc, char **argv)
 
     next_proto.data = NULL;
 
-    if (!load_excert(&exc))
-        goto end;
-
     if (bio_c_out == NULL) {
         if (c_quiet && !c_debug) {
             bio_c_out = BIO_new(BIO_s_null());
