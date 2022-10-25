@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "bio_lcl.h"
+#include "bio_local.h"
 #ifndef OPENSSL_NO_SOCK
 # define SOCKET_PROTOCOL IPPROTO_TCP
 # ifdef SO_MAXCONN
@@ -162,7 +162,7 @@ int BIO_socket_ioctl(int fd, long type, void *arg)
 {
     int i;
 
-#  if defined ( __DJGPP__ )
+#  ifdef __DJGPP__
     i = ioctlsocket(fd, type, (char *)arg);
 #  elif defined(OPENSSL_SYS_RDOS)
     return -1;
