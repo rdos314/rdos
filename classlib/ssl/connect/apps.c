@@ -235,23 +235,6 @@ int bio_to_mem(unsigned char **out, int maxlen, BIO *in)
     return ret;
 }
 
-int pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value)
-{
-    int rv;
-    char *stmp, *vtmp = NULL;
-    stmp = OPENSSL_strdup(value);
-    if (!stmp)
-        return -1;
-    vtmp = strchr(stmp, ':');
-    if (vtmp) {
-        *vtmp = 0;
-        vtmp++;
-    }
-    rv = EVP_PKEY_CTX_ctrl_str(ctx, stmp, vtmp);
-    OPENSSL_free(stmp);
-    return rv;
-}
-
 static void nodes_print(const char *name, STACK_OF(X509_POLICY_NODE) *nodes)
 {
     X509_POLICY_NODE *node;
@@ -281,31 +264,6 @@ void policies_print(X509_STORE_CTX *ctx)
 
     nodes_print("Authority", X509_policy_tree_get0_policies(tree));
     nodes_print("User", X509_policy_tree_get0_user_policies(tree));
-}
-
-void print_cert_checks(BIO *bio, X509 *x,
-                       const char *checkhost,
-                       const char *checkemail, const char *checkip)
-{
-    if (x == NULL)
-        return;
-    if (checkhost) {
-        BIO_printf(bio, "Hostname %s does%s match certificate\n",
-                   checkhost,
-                   X509_check_host(x, checkhost, 0, 0, NULL) == 1
-                       ? "" : " NOT");
-    }
-
-    if (checkemail) {
-        BIO_printf(bio, "Email %s does%s match certificate\n",
-                   checkemail, X509_check_email(x, checkemail, 0, 0)
-                   ? "" : " NOT");
-    }
-
-    if (checkip) {
-        BIO_printf(bio, "IP %s does%s match certificate\n",
-                   checkip, X509_check_ip_asc(x, checkip, 0) ? "" : " NOT");
-    }
 }
 
 /* Get first http URL from a DIST_POINT structure */
