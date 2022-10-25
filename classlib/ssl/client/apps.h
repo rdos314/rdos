@@ -15,10 +15,8 @@
 # include <assert.h>
 
 # include <sys/types.h>
-# ifndef OPENSSL_NO_POSIX_IO
 #  include <sys/stat.h>
 #  include <fcntl.h>
-# endif
 
 # include <openssl/e_os2.h>
 # include <openssl/ossl_typ.h>
@@ -30,11 +28,7 @@
 # include <openssl/ocsp.h>
 # include <signal.h>
 
-# if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_WINCE)
-#  define openssl_fdset(a,b) FD_SET((unsigned int)a, b)
-# else
 #  define openssl_fdset(a,b) FD_SET(a, b)
-# endif
 
 /*
  * quick macro when you need to pass an unsigned char instead of a char.
@@ -80,9 +74,6 @@ CONF *app_load_config_quiet(const char *filename);
 int app_load_modules(const CONF *config);
 void unbuffer(FILE *fp);
 void wait_for_async(SSL *s);
-# if defined(OPENSSL_SYS_MSDOS)
-int has_stdin_waiting(void);
-# endif
 
 void corrupt_signature(const ASN1_STRING *signature);
 int set_cert_times(X509 *x, const char *startdate, const char *enddate,
@@ -389,16 +380,10 @@ int opt_format(const char *s, unsigned long flags, int *result);
 int opt_int(const char *arg, int *result);
 int opt_ulong(const char *arg, unsigned long *result);
 int opt_long(const char *arg, long *result);
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L && \
-    defined(INTMAX_MAX) && defined(UINTMAX_MAX)
-int opt_imax(const char *arg, intmax_t *result);
-int opt_umax(const char *arg, uintmax_t *result);
-#else
 # define opt_imax opt_long
 # define opt_umax opt_ulong
 # define intmax_t long
 # define uintmax_t unsigned long
-#endif
 int opt_pair(const char *arg, const OPT_PAIR * pairs, int *result);
 int opt_cipher(const char *name, const EVP_CIPHER **cipherp);
 int opt_md(const char *name, const EVP_MD **mdp);
@@ -474,8 +459,6 @@ __owur int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
                                     const char *CApath, int noCAfile,
                                     int noCApath);
 
-#ifndef OPENSSL_NO_CT
-
 /*
  * Sets the file to load the Certificate Transparency log list from.
  * If path is NULL, loads from the default file path.
@@ -483,18 +466,14 @@ __owur int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
  */
 __owur int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path);
 
-#endif
-
 ENGINE *setup_engine(const char *engine, int debug);
 void release_engine(ENGINE *e);
 
-# ifndef OPENSSL_NO_OCSP
 OCSP_RESPONSE *process_responder(OCSP_REQUEST *req,
                                  const char *host, const char *path,
                                  const char *port, int use_ssl,
                                  STACK_OF(CONF_VALUE) *headers,
                                  int req_timeout);
-# endif
 
 /* Functions defined in ca.c and also used in ocsp.c */
 int unpack_revinfo(ASN1_TIME **prevtm, int *preason, ASN1_OBJECT **phold,
@@ -521,9 +500,7 @@ typedef struct ca_db_st {
     DB_ATTR attributes;
     TXT_DB *db;
     char *dbfname;
-# ifndef OPENSSL_NO_POSIX_IO
     struct stat dbst;
-# endif
 } CA_DB;
 
 void* app_malloc(int sz, const char *what);
