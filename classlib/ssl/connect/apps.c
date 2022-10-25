@@ -156,19 +156,4 @@ void print_bignum_var(BIO *out, const BIGNUM *in, const char *var,
     BIO_printf(out, "\n    };\n");
 }
 
-void print_array(BIO *out, const char* title, int len, const unsigned char* d)
-{
-    int i;
-
-    BIO_printf(out, "unsigned char %s[%d] = {", title, len);
-    for (i = 0; i < len; i++) {
-        if ((i % 10) == 0)
-            BIO_printf(out, "\n    ");
-        if (i < len - 1)
-            BIO_printf(out, "0x%02X, ", d[i]);
-        else
-            BIO_printf(out, "0x%02X", d[i]);
-    }
-    BIO_printf(out, "\n};\n");
-}
 
