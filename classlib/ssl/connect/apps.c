@@ -43,14 +43,6 @@ static int set_table_opts(unsigned long *flags, const char *arg,
 static int set_multi_opts(unsigned long *flags, const char *arg,
                           const NAME_EX_TBL * in_tbl);
 
-int app_init(long mesgwin);
-
-
-int app_init(long mesgwin)
-{
-    return 1;
-}
-
 int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
                              const char *CApath, int noCAfile, int noCApath)
 {
