@@ -38,8 +38,6 @@ typedef struct {
 static UI_METHOD *ui_method = NULL;
 static const UI_METHOD *ui_fallback_method = NULL;
 
-static int set_table_opts(unsigned long *flags, const char *arg,
-                          const NAME_EX_TBL * in_tbl);
 
 int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
                              const char *CApath, int noCAfile, int noCApath)
@@ -110,36 +108,6 @@ void* app_malloc(int sz, const char *what)
                          X509_FLAG_NO_HEADER | X509_FLAG_NO_VERSION)
 
 
-
-static int set_table_opts(unsigned long *flags, const char *arg,
-                          const NAME_EX_TBL * in_tbl)
-{
-    char c;
-    const NAME_EX_TBL *ptbl;
-    c = arg[0];
-
-    if (c == '-') {
-        c = 0;
-        arg++;
-    } else if (c == '+') {
-        c = 1;
-        arg++;
-    } else {
-        c = 1;
-    }
-
-    for (ptbl = in_tbl; ptbl->name; ptbl++) {
-        if (strcasecmp(arg, ptbl->name) == 0) {
-            *flags &= ~ptbl->mask;
-            if (c)
-                *flags |= ptbl->flag;
-            else
-                *flags &= ~ptbl->flag;
-            return 1;
-        }
-    }
-    return 0;
-}
 
 void print_name(BIO *out, const char *title, X509_NAME *nm,
                 unsigned long lflags)
