@@ -85,17 +85,6 @@ typedef struct args_st {
     char **argv;
 } ARGS;
 
-/*
- * VMS C only for now, implemented in vms_decc_init.c
- * If other C compilers forget to terminate argv with NULL, this function
- * can be re-used.
- */
-char **copy_argv(int *argc, char *argv[]);
-/*
- * Win32-specific argv initialization that splits OS-supplied UNICODE
- * command line string to array of UTF8-encoded strings.
- */
-void win32_utf8argv(int *argc, char **argv[]);
 
 
 # define PW_MIN_LENGTH 4
@@ -106,17 +95,8 @@ typedef struct pw_cb_data {
 
 int password_callback(char *buf, int bufsiz, int verify, PW_CB_DATA *cb_data);
 
-int setup_ui_method(void);
-void destroy_ui_method(void);
-const UI_METHOD *get_ui_method(void);
-
 int chopup_args(ARGS *arg, char *buf);
 int dump_cert_text(BIO *out, X509 *x);
-void print_name(BIO *out, const char *title, X509_NAME *nm,
-                unsigned long lflags);
-void print_bignum_var(BIO *, const BIGNUM *, const char*,
-                      int, unsigned char *);
-void print_array(BIO *, const char *, int, const unsigned char *);
 unsigned long get_nameopt(void);
 int set_cert_ex(unsigned long *flags, const char *arg);
 int set_name_ex(unsigned long *flags, const char *arg);
