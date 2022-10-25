@@ -15,20 +15,6 @@
 #include <string.h>
 #include <errno.h>
 #include <openssl/e_os2.h>
-
-#ifndef OPENSSL_NO_SOCK
-
-/*
- * With IPv6, it looks like Digital has mixed up the proper order of
- * recursive header file inclusion, resulting in the compiler complaining
- * that u_int isn't defined, but only if _POSIX_C_SOURCE is defined, which is
- * needed to have fileno() declared correctly...  So let's define u_int
- */
-#if defined(OPENSSL_SYS_VMS_DECC) && !defined(__U_INT)
-# define __U_INT
-typedef unsigned int u_int;
-#endif
-
 #include "apps.h"
 #include "progs.h"
 #include <openssl/x509.h>
@@ -39,21 +25,11 @@ typedef unsigned int u_int;
 #include <openssl/ocsp.h>
 #include <openssl/bn.h>
 #include <openssl/async.h>
-#ifndef OPENSSL_NO_SRP
-# include <openssl/srp.h>
-#endif
-#ifndef OPENSSL_NO_CT
-# include <openssl/ct.h>
-#endif
+#include <openssl/srp.h>
+#include <openssl/ct.h>
 #include "s_apps.h"
 #include "timeouts.h"
 #include "internal/sockets.h"
-
-#if defined(__has_feature)
-# if __has_feature(memory_sanitizer)
-#  include <sanitizer/msan_interface.h>
-# endif
-#endif
 
 #undef BUFSIZZ
 #define BUFSIZZ 1024*8
@@ -70,9 +46,7 @@ static char *sess_out = NULL;
 static SSL_SESSION *psksess = NULL;
 
 static void print_stuff(BIO *berr, SSL *con, int full);
-#ifndef OPENSSL_NO_OCSP
 static int ocsp_resp_cb(SSL *s, void *arg);
-#endif
 static int ldap_ExtendedResponse_parse(const char *buf, long rem);
 static int is_dNS_name(const char *host);
 
@@ -120,7 +94,6 @@ static void do_ssl_shutdown(SSL *ssl)
 /* Default PSK identity and key */
 static char *psk_identity = "Client_identity";
 
-#ifndef OPENSSL_NO_PSK
 static unsigned int psk_client_cb(SSL *ssl, const char *hint, char *identity,
                                   unsigned int max_identity_len,
                                   unsigned char *psk,
@@ -178,7 +151,6 @@ static unsigned int psk_client_cb(SSL *ssl, const char *hint, char *identity,
         BIO_printf(bio_err, "Error in PSK client callback\n");
     return 0;
 }
-#endif
 
 const unsigned char tls13_aes128gcmsha256_id[] = { 0x13, 0x01 };
 const unsigned char tls13_aes256gcmsha384_id[] = { 0x13, 0x02 };
@@ -263,7 +235,6 @@ static int ssl_servername_cb(SSL *s, int *ad, void *arg)
     return SSL_TLSEXT_ERR_OK;
 }
 
-#ifndef OPENSSL_NO_SRP
 
 /* This is a context that we pass to all callbacks */
 typedef struct srp_arg_st {
@@ -372,9 +343,7 @@ static char *ssl_give_srp_client_pwd_cb(SSL *s, void *arg)
     return pass;
 }
 
-#endif
 
-#ifndef OPENSSL_NO_NEXTPROTONEG
 /* This the context that we pass to next_proto_cb */
 typedef struct tlsextnextprotoctx_st {
     unsigned char *data;
@@ -407,7 +376,6 @@ static int next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen,
         SSL_select_next_proto(out, outlen, in, inlen, ctx->data, ctx->len);
     return SSL_TLSEXT_ERR_OK;
 }
-#endif                         /* ndef OPENSSL_NO_NEXTPROTONEG */
 
 static int serverinfo_cli_parse_cb(SSL *s, unsigned int ext_type,
                                    const unsigned char *in, size_t inlen,
@@ -579,10 +547,8 @@ typedef enum OPTION_choice {
     OPT_MSG, OPT_MSGFILE, OPT_ENGINE, OPT_TRACE, OPT_SECURITY_DEBUG,
     OPT_SECURITY_DEBUG_VERBOSE, OPT_SHOWCERTS, OPT_NBIO_TEST, OPT_STATE,
     OPT_PSK_IDENTITY, OPT_PSK, OPT_PSK_SESS,
-#ifndef OPENSSL_NO_SRP
     OPT_SRPUSER, OPT_SRPPASS, OPT_SRP_STRENGTH, OPT_SRP_LATEUSER,
     OPT_SRP_MOREGROUPS,
-#endif
     OPT_SSL3, OPT_SSL_CONFIG,
     OPT_TLS1_3, OPT_TLS1_2, OPT_TLS1_1, OPT_TLS1, OPT_DTLS, OPT_DTLS1,
     OPT_DTLS1_2, OPT_SCTP, OPT_TIMEOUT, OPT_MTU, OPT_KEYFORM, OPT_PASS,
@@ -597,9 +563,7 @@ typedef enum OPTION_choice {
     OPT_X_ENUM,
     OPT_S_ENUM,
     OPT_FALLBACKSCSV, OPT_NOCMDS, OPT_PROXY, OPT_DANE_TLSA_DOMAIN,
-#ifndef OPENSSL_NO_CT
     OPT_CT, OPT_NOCT, OPT_CTLOG_FILE,
-#endif
     OPT_DANE_TLSA_RRDATA, OPT_DANE_EE_NO_NAME,
     OPT_ENABLE_PHA,
     OPT_SCTP_LABEL_BUG,
@@ -615,13 +579,7 @@ const OPTIONS s_client_options[] = {
     {"bind", OPT_BIND, 's', "bind local address for connection"},
     {"proxy", OPT_PROXY, 's',
      "Connect to via specified proxy to the real server"},
-#ifdef AF_UNIX
-    {"unix", OPT_UNIX, 's', "Connect over the specified Unix-domain socket"},
-#endif
     {"4", OPT_4, '-', "Use IPv4 only"},
-#ifdef AF_INET6
-    {"6", OPT_6, '-', "Use IPv6 only"},
-#endif
     {"verify", OPT_VERIFY, 'p', "Turn on peer certificate verification"},
     {"cert", OPT_CERT, '<', "Certificate file to use, PEM format assumed"},
     {"certform", OPT_CERTFORM, 'F',
@@ -664,10 +622,8 @@ const OPTIONS s_client_options[] = {
     OPT_R_OPTIONS,
     {"sess_out", OPT_SESS_OUT, '>', "File to write SSL session to"},
     {"sess_in", OPT_SESS_IN, '<', "File to read SSL session from"},
-#ifndef OPENSSL_NO_SRTP
     {"use_srtp", OPT_USE_SRTP, 's',
      "Offer SRTP key management with a colon-separated profile list"},
-#endif
     {"keymatexport", OPT_KEYMATEXPORT, 's',
      "Export keying material using label"},
     {"keymatexportlen", OPT_KEYMATEXPORTLEN, 'p',
@@ -709,9 +665,7 @@ const OPTIONS s_client_options[] = {
      "Do not send the server name (SNI) extension in the ClientHello"},
     {"tlsextdebug", OPT_TLSEXTDEBUG, '-',
      "Hex dump of all TLS extensions received"},
-#ifndef OPENSSL_NO_OCSP
     {"status", OPT_STATUS, '-', "Request certificate status from server"},
-#endif
     {"serverinfo", OPT_SERVERINFO, 's',
      "types  Send empty ClientHello extensions (comma-separated numbers)"},
     {"alpn", OPT_ALPN, 's',
@@ -728,48 +682,20 @@ const OPTIONS s_client_options[] = {
     OPT_S_OPTIONS,
     OPT_V_OPTIONS,
     OPT_X_OPTIONS,
-#ifndef OPENSSL_NO_SSL3
-    {"ssl3", OPT_SSL3, '-', "Just use SSLv3"},
-#endif
-#ifndef OPENSSL_NO_TLS1
     {"tls1", OPT_TLS1, '-', "Just use TLSv1"},
-#endif
-#ifndef OPENSSL_NO_TLS1_1
     {"tls1_1", OPT_TLS1_1, '-', "Just use TLSv1.1"},
-#endif
-#ifndef OPENSSL_NO_TLS1_2
     {"tls1_2", OPT_TLS1_2, '-', "Just use TLSv1.2"},
-#endif
-#ifndef OPENSSL_NO_TLS1_3
     {"tls1_3", OPT_TLS1_3, '-', "Just use TLSv1.3"},
-#endif
-#ifndef OPENSSL_NO_DTLS
     {"dtls", OPT_DTLS, '-', "Use any version of DTLS"},
     {"timeout", OPT_TIMEOUT, '-',
      "Enable send/receive timeout on DTLS connections"},
     {"mtu", OPT_MTU, 'p', "Set the link layer MTU"},
-#endif
-#ifndef OPENSSL_NO_DTLS1
     {"dtls1", OPT_DTLS1, '-', "Just use DTLSv1"},
-#endif
-#ifndef OPENSSL_NO_DTLS1_2
     {"dtls1_2", OPT_DTLS1_2, '-', "Just use DTLSv1.2"},
-#endif
-#ifndef OPENSSL_NO_SCTP
-    {"sctp", OPT_SCTP, '-', "Use SCTP"},
-    {"sctp_label_bug", OPT_SCTP_LABEL_BUG, '-', "Enable SCTP label length bug"},
-#endif
-#ifndef OPENSSL_NO_SSL_TRACE
-    {"trace", OPT_TRACE, '-', "Show trace output of protocol messages"},
-#endif
-#ifdef WATT32
-    {"wdebug", OPT_WDEBUG, '-', "WATT-32 tcp debugging"},
-#endif
     {"nbio", OPT_NBIO, '-', "Use non-blocking IO"},
     {"psk_identity", OPT_PSK_IDENTITY, 's', "PSK identity"},
     {"psk", OPT_PSK, 's', "PSK in hex (without 0x)"},
     {"psk_session", OPT_PSK_SESS, '<', "File to read PSK SSL session from"},
-#ifndef OPENSSL_NO_SRP
     {"srpuser", OPT_SRPUSER, 's', "SRP authentication for 'user'"},
     {"srppass", OPT_SRPPASS, 's', "Password for 'user'"},
     {"srp_lateuser", OPT_SRP_LATEUSER, '-',
@@ -777,21 +703,14 @@ const OPTIONS s_client_options[] = {
     {"srp_moregroups", OPT_SRP_MOREGROUPS, '-',
      "Tolerate other than the known g N values."},
     {"srp_strength", OPT_SRP_STRENGTH, 'p', "Minimal length in bits for N"},
-#endif
-#ifndef OPENSSL_NO_NEXTPROTONEG
     {"nextprotoneg", OPT_NEXTPROTONEG, 's',
      "Enable NPN extension, considering named protocols supported (comma-separated list)"},
-#endif
-#ifndef OPENSSL_NO_ENGINE
     {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
     {"ssl_client_engine", OPT_SSL_CLIENT_ENGINE, 's',
      "Specify engine to be used for client certificate operations"},
-#endif
-#ifndef OPENSSL_NO_CT
     {"ct", OPT_CT, '-', "Request and parse SCTs (also enables OCSP stapling)"},
     {"noct", OPT_NOCT, '-', "Do not request or parse SCTs (default)"},
     {"ctlogfile", OPT_CTLOG_FILE, '<', "CT log list CONF file"},
-#endif
     {"keylogfile", OPT_KEYLOG_FILE, '>', "Write TLS secrets to file"},
     {"early_data", OPT_EARLY_DATA, '<', "File to send as early data"},
     {"enable_pha", OPT_ENABLE_PHA, '-', "Enable post-handshake-authentication"},
@@ -925,23 +844,14 @@ int main(int argc, char **argv)
     int socket_family = AF_UNSPEC, socket_type = SOCK_STREAM, protocol = 0;
     int starttls_proto = PROTO_OFF, crl_format = FORMAT_PEM, crl_download = 0;
     int write_tty, read_tty, write_ssl, read_ssl, tty_on, ssl_pending;
-#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_MSDOS)
     int at_eof = 0;
-#endif
     int read_buf_len = 0;
     int fallback_scsv = 0;
     OPTION_CHOICE o;
-#ifndef OPENSSL_NO_DTLS
     int enable_timeouts = 0;
     long socket_mtu = 0;
-#endif
-#ifndef OPENSSL_NO_ENGINE
     ENGINE *ssl_client_engine = NULL;
-#endif
     ENGINE *e = NULL;
-#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS)
-    struct timeval tv;
-#endif
     const char *servername = NULL;
     char *sname_alloc = NULL;
     int noservername = 0;
@@ -951,21 +861,13 @@ int main(int argc, char **argv)
 #define MAX_SI_TYPES 100
     unsigned short serverinfo_types[MAX_SI_TYPES];
     int serverinfo_count = 0, start = 0, len;
-#ifndef OPENSSL_NO_NEXTPROTONEG
     const char *next_proto_neg_in = NULL;
-#endif
-#ifndef OPENSSL_NO_SRP
     char *srppass = NULL;
     int srp_lateuser = 0;
     SRP_ARG srp_arg = { NULL, NULL, 0, 0, 0, 1024 };
-#endif
-#ifndef OPENSSL_NO_SRTP
     char *srtp_profiles = NULL;
-#endif
-#ifndef OPENSSL_NO_CT
     char *ctlog_file = NULL;
     int ct_validation = 0;
-#endif
     int min_version = 0, max_version = 0, prot_opt = 0, no_prot_opt = 0;
     int async = 0;
     unsigned int max_send_fragment = 0;
@@ -975,29 +877,16 @@ int main(int argc, char **argv)
     uint8_t maxfraglen = 0;
     int c_nbio = 0, c_msg = 0, c_ign_eof = 0, c_brief = 0;
     int c_tlsextdebug = 0;
-#ifndef OPENSSL_NO_OCSP
     int c_status_req = 0;
-#endif
     BIO *bio_c_msg = NULL;
     const char *keylog_file = NULL, *early_data_file = NULL;
-#ifndef OPENSSL_NO_DTLS
     int isdtls = 0;
-#endif
     char *psksessf = NULL;
     int enable_pha = 0;
-#ifndef OPENSSL_NO_SCTP
     int sctp_label_bug = 0;
-#endif
 
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
-/* Known false-positive of MemorySanitizer. */
-#if defined(__has_feature)
-# if __has_feature(memory_sanitizer)
-    __msan_unpoison(&readfds, sizeof(readfds));
-    __msan_unpoison(&writefds, sizeof(writefds));
-# endif
-#endif
 
     prog = opt_progname(argv[0]);
     c_quiet = 0;
@@ -1061,13 +950,6 @@ int main(int argc, char **argv)
             socket_family = AF_INET;
             count4or6++;
             break;
-#ifdef AF_INET6
-        case OPT_6:
-            connect_type = use_inet;
-            socket_family = AF_INET6;
-            count4or6++;
-            break;
-#endif
         case OPT_HOST:
             connect_type = use_inet;
             freeandcopy(&host, opt_arg());
@@ -1087,13 +969,6 @@ int main(int argc, char **argv)
             proxystr = opt_arg();
             starttls_proto = PROTO_CONNECT;
             break;
-#ifdef AF_UNIX
-        case OPT_UNIX:
-            connect_type = use_unix;
-            socket_family = AF_UNIX;
-            freeandcopy(&host, opt_arg());
-            break;
-#endif
         case OPT_XMPPHOST:
             /* fall through, since this is an alias */
         case OPT_PROTOHOST:
@@ -1180,13 +1055,11 @@ int main(int argc, char **argv)
             e = setup_engine(opt_arg(), 1);
             break;
         case OPT_SSL_CLIENT_ENGINE:
-#ifndef OPENSSL_NO_ENGINE
             ssl_client_engine = ENGINE_by_id(opt_arg());
             if (ssl_client_engine == NULL) {
                 BIO_printf(bio_err, "Error getting client auth engine\n");
                 goto opthelp;
             }
-#endif
             break;
         case OPT_R_CASES:
             if (!opt_rand(o))
@@ -1205,14 +1078,9 @@ int main(int argc, char **argv)
             c_tlsextdebug = 1;
             break;
         case OPT_STATUS:
-#ifndef OPENSSL_NO_OCSP
             c_status_req = 1;
-#endif
             break;
         case OPT_WDEBUG:
-#ifdef WATT32
-            dbug_init();
-#endif
             break;
         case OPT_MSG:
             c_msg = 1;
@@ -1221,9 +1089,6 @@ int main(int argc, char **argv)
             bio_c_msg = BIO_new_file(opt_arg(), "w");
             break;
         case OPT_TRACE:
-#ifndef OPENSSL_NO_SSL_TRACE
-            c_msg = 2;
-#endif
             break;
         case OPT_SECURITY_DEBUG:
             sdebug = 1;
@@ -1254,7 +1119,6 @@ int main(int argc, char **argv)
         case OPT_PSK_SESS:
             psksessf = opt_arg();
             break;
-#ifndef OPENSSL_NO_SRP
         case OPT_SRPUSER:
             srp_arg.srplogin = opt_arg();
             if (min_version < TLS1_VERSION)
@@ -1282,7 +1146,6 @@ int main(int argc, char **argv)
             if (min_version < TLS1_VERSION)
                 min_version = TLS1_VERSION;
             break;
-#endif
         case OPT_SSL_CONFIG:
             ssl_config = opt_arg();
             break;
@@ -1290,86 +1153,62 @@ int main(int argc, char **argv)
             min_version = SSL3_VERSION;
             max_version = SSL3_VERSION;
             socket_type = SOCK_STREAM;
-#ifndef OPENSSL_NO_DTLS
             isdtls = 0;
-#endif
             break;
         case OPT_TLS1_3:
             min_version = TLS1_3_VERSION;
             max_version = TLS1_3_VERSION;
             socket_type = SOCK_STREAM;
-#ifndef OPENSSL_NO_DTLS
             isdtls = 0;
-#endif
             break;
         case OPT_TLS1_2:
             min_version = TLS1_2_VERSION;
             max_version = TLS1_2_VERSION;
             socket_type = SOCK_STREAM;
-#ifndef OPENSSL_NO_DTLS
             isdtls = 0;
-#endif
             break;
         case OPT_TLS1_1:
             min_version = TLS1_1_VERSION;
             max_version = TLS1_1_VERSION;
             socket_type = SOCK_STREAM;
-#ifndef OPENSSL_NO_DTLS
             isdtls = 0;
-#endif
             break;
         case OPT_TLS1:
             min_version = TLS1_VERSION;
             max_version = TLS1_VERSION;
             socket_type = SOCK_STREAM;
-#ifndef OPENSSL_NO_DTLS
             isdtls = 0;
-#endif
             break;
         case OPT_DTLS:
-#ifndef OPENSSL_NO_DTLS
             meth = DTLS_client_method();
             socket_type = SOCK_DGRAM;
             isdtls = 1;
-#endif
             break;
         case OPT_DTLS1:
-#ifndef OPENSSL_NO_DTLS1
             meth = DTLS_client_method();
             min_version = DTLS1_VERSION;
             max_version = DTLS1_VERSION;
             socket_type = SOCK_DGRAM;
             isdtls = 1;
-#endif
             break;
         case OPT_DTLS1_2:
-#ifndef OPENSSL_NO_DTLS1_2
             meth = DTLS_client_method();
             min_version = DTLS1_2_VERSION;
             max_version = DTLS1_2_VERSION;
             socket_type = SOCK_DGRAM;
             isdtls = 1;
-#endif
             break;
         case OPT_SCTP:
-#ifndef OPENSSL_NO_SCTP
             protocol = IPPROTO_SCTP;
-#endif
             break;
         case OPT_SCTP_LABEL_BUG:
-#ifndef OPENSSL_NO_SCTP
             sctp_label_bug = 1;
-#endif
             break;
         case OPT_TIMEOUT:
-#ifndef OPENSSL_NO_DTLS
             enable_timeouts = 1;
-#endif
             break;
         case OPT_MTU:
-#ifndef OPENSSL_NO_DTLS
             socket_mtu = atol(opt_arg());
-#endif
             break;
         case OPT_FALLBACKSCSV:
             fallback_scsv = 1;
@@ -1414,7 +1253,6 @@ int main(int argc, char **argv)
         case OPT_NOCAFILE:
             noCAfile = 1;
             break;
-#ifndef OPENSSL_NO_CT
         case OPT_NOCT:
             ct_validation = 0;
             break;
@@ -1424,7 +1262,6 @@ int main(int argc, char **argv)
         case OPT_CTLOG_FILE:
             ctlog_file = opt_arg();
             break;
-#endif
         case OPT_CHAINCAFILE:
             chCAfile = opt_arg();
             break;
@@ -1447,9 +1284,7 @@ int main(int argc, char **argv)
             dane_ee_no_name = 1;
             break;
         case OPT_NEXTPROTONEG:
-#ifndef OPENSSL_NO_NEXTPROTONEG
             next_proto_neg_in = opt_arg();
-#endif
             break;
         case OPT_ALPN:
             alpn_in = opt_arg();
@@ -1477,9 +1312,7 @@ int main(int argc, char **argv)
             noservername = 1;
             break;
         case OPT_USE_SRTP:
-#ifndef OPENSSL_NO_SRTP
             srtp_profiles = opt_arg();
-#endif
             break;
         case OPT_KEYMATEXPORT:
             keymatexportlabel = opt_arg();
@@ -1571,12 +1404,10 @@ int main(int argc, char **argv)
         goto opthelp;
     }
 
-#ifndef OPENSSL_NO_NEXTPROTONEG
     if (min_version == TLS1_3_VERSION && next_proto_neg_in != NULL) {
         BIO_printf(bio_err, "Cannot supply -nextprotoneg with TLSv1.3\n");
         goto opthelp;
     }
-#endif
     if (proxystr != NULL) {
         int res;
         char *tmp_host = host, *tmp_port = port;
@@ -3579,4 +3410,3 @@ static int is_dNS_name(const char *host)
 
     return isdnsname;
 }
-#endif                          /* OPENSSL_NO_SOCK */
