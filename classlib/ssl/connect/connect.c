@@ -99,20 +99,30 @@ static int istext(int format)
     return (format & B_FORMAT_TEXT) == B_FORMAT_TEXT;
 }
 
-BIO *dup_bio_out(int format)
+static BIO *dup_bio_out(int format)
 {
     BIO *b = BIO_new_fp(stdout,
                         BIO_NOCLOSE | (istext(format) ? BIO_FP_TEXT : 0));
     return b;
 }
 
-int raw_write_stdout(const void *buf, int siz)
+static int fileno_stdin(void)
+{
+    return fileno(stdin);
+}
+
+static int fileno_stdout(void)
+{
+    return fileno(stdout);
+}
+
+static int raw_write_stdout(const void *buf, int siz)
 {
     return write(fileno_stdout(), buf, siz);
 }
 
 
-int raw_read_stdin(void *buf, int siz)
+static int raw_read_stdin(void *buf, int siz)
 {
     return read(fileno_stdin(), buf, siz);
 }

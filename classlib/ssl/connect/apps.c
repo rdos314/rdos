@@ -373,14 +373,3 @@ int app_isdir(const char *name)
     else
         return -1;
 }
-
-/* raw_read|write section */
-int fileno_stdin(void)
-{
-    return fileno(stdin);
-}
-
-int fileno_stdout(void)
-{
-    return fileno(stdout);
-}
