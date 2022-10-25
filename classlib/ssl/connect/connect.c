@@ -34,7 +34,6 @@
 #define BUFSIZZ 1024*8
 #define S_CLIENT_IRC_READ_TIMEOUT 8
 
-static char *prog;
 static int c_debug = 0;
 static int c_showcerts = 0;
 static char *keymatexportlabel = NULL;
@@ -55,6 +54,32 @@ char *psk_key = NULL;
 BIO *bio_in = NULL;
 BIO *bio_out = NULL;
 BIO *bio_err = NULL;
+
+static char prog[40];
+
+/*
+ * Return the simple name of the program; removing various platform gunk.
+ */
+
+char *opt_progname(const char *argv0)
+{
+    const char *p;
+
+    /* Could use strchr, but this is like the ones above. */
+    for (p = argv0 + strlen(argv0); --p > argv0;)
+        if (*p == '/') {
+            p++;
+            break;
+        }
+    strncpy(prog, p, sizeof(prog) - 1);
+    prog[sizeof(prog) - 1] = '\0';
+    return prog;
+}
+
+char *opt_getprog(void)
+{
+    return prog;
+}
 
 static void save_errno(void)
 {
@@ -667,7 +692,7 @@ int main(int argc, char **argv)
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
 
-    prog = opt_progname(argv[0]);
+    opt_progname(argv[0]);
     c_quiet = 0;
     c_debug = 0;
     c_showcerts = 0;
