@@ -106,6 +106,11 @@ BIO *dup_bio_out(int format)
     return b;
 }
 
+int raw_write_stdout(const void *buf, int siz)
+{
+    return write(fileno_stdout(), buf, siz);
+}
+
 void wait_for_async(SSL *s)
 {
 }
