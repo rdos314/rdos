@@ -131,7 +131,6 @@ void wait_for_async(SSL *s)
 {
 }
 
-
 static void do_ssl_shutdown(SSL *ssl)
 {
     int ret;
