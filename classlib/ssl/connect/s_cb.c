@@ -28,6 +28,28 @@ static unsigned char cookie_secret[COOKIE_SECRET_LENGTH];
 static int cookie_initialized = 0;
 static BIO *bio_keylog = NULL;
 
+int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
+                             const char *CApath, int noCAfile, int noCApath)
+{
+    if (CAfile == NULL && CApath == NULL) {
+        if (!noCAfile && SSL_CTX_set_default_verify_file(ctx) <= 0)
+            return 0;
+        if (!noCApath && SSL_CTX_set_default_verify_dir(ctx) <= 0)
+            return 0;
+
+        return 1;
+    }
+    return SSL_CTX_load_verify_locations(ctx, CAfile, CApath);
+}
+
+int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path)
+{
+    if (path == NULL)
+        return SSL_CTX_set_default_ctlog_list_file(ctx);
+
+    return SSL_CTX_set_ctlog_list_file(ctx, path);
+}
+
 static const char *lookup(int val, const STRINT_PAIR* list, const char* def)
 {
     for ( ; list->name; ++list)

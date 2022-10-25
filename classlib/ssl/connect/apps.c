@@ -38,48 +38,6 @@ typedef struct {
 static UI_METHOD *ui_method = NULL;
 static const UI_METHOD *ui_fallback_method = NULL;
 
-
-int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
-                             const char *CApath, int noCAfile, int noCApath)
-{
-    if (CAfile == NULL && CApath == NULL) {
-        if (!noCAfile && SSL_CTX_set_default_verify_file(ctx) <= 0)
-            return 0;
-        if (!noCApath && SSL_CTX_set_default_verify_dir(ctx) <= 0)
-            return 0;
-
-        return 1;
-    }
-    return SSL_CTX_load_verify_locations(ctx, CAfile, CApath);
-}
-
-int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path)
-{
-    if (path == NULL)
-        return SSL_CTX_set_default_ctlog_list_file(ctx);
-
-    return SSL_CTX_set_ctlog_list_file(ctx, path);
-}
-
-static unsigned long nmflag = 0;
-static char nmflag_set = 0;
-
-unsigned long get_nameopt(void)
-{
-    return (nmflag_set) ? nmflag : XN_FLAG_ONELINE;
-}
-
-int dump_cert_text(BIO *out, X509 *x)
-{
-    print_name(out, "subject=", X509_get_subject_name(x), get_nameopt());
-    BIO_puts(out, "\n");
-    print_name(out, "issuer=", X509_get_issuer_name(x), get_nameopt());
-    BIO_puts(out, "\n");
-
-    return 0;
-}
-
-
 void* app_malloc(int sz, const char *what)
 {
     void *vp = OPENSSL_malloc(sz);
@@ -93,44 +51,3 @@ void* app_malloc(int sz, const char *what)
     return vp;
 }
 
-
-#define X509V3_EXT_UNKNOWN_MASK         (0xfL << 16)
-/* Return error for unknown extensions */
-#define X509V3_EXT_DEFAULT              0
-/* Print error for unknown extensions */
-#define X509V3_EXT_ERROR_UNKNOWN        (1L << 16)
-/* ASN1 parse unknown extensions */
-#define X509V3_EXT_PARSE_UNKNOWN        (2L << 16)
-/* BIO_dump unknown extensions */
-#define X509V3_EXT_DUMP_UNKNOWN         (3L << 16)
-
-#define X509_FLAG_CA (X509_FLAG_NO_ISSUER | X509_FLAG_NO_PUBKEY | \
-                         X509_FLAG_NO_HEADER | X509_FLAG_NO_VERSION)
-
-
-
-void print_name(BIO *out, const char *title, X509_NAME *nm,
-                unsigned long lflags)
-{
-    char *buf;
-    char mline = 0;
-    int indent = 0;
-
-    if (title)
-        BIO_puts(out, title);
-    if ((lflags & XN_FLAG_SEP_MASK) == XN_FLAG_SEP_MULTILINE) {
-        mline = 1;
-        indent = 4;
-    }
-    if (lflags == XN_FLAG_COMPAT) {
-        buf = X509_NAME_oneline(nm, 0, 0);
-        BIO_puts(out, buf);
-        BIO_puts(out, "\n");
-        OPENSSL_free(buf);
-    } else {
-        if (mline)
-            BIO_puts(out, "\n");
-        X509_NAME_print_ex(out, nm, indent, lflags);
-        BIO_puts(out, "\n");
-    }
-}
