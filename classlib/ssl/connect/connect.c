@@ -94,6 +94,18 @@ static int restore_errno(void)
     return ret;
 }
 
+static int istext(int format)
+{
+    return (format & B_FORMAT_TEXT) == B_FORMAT_TEXT;
+}
+
+BIO *dup_bio_out(int format)
+{
+    BIO *b = BIO_new_fp(stdout,
+                        BIO_NOCLOSE | (istext(format) ? BIO_FP_TEXT : 0));
+    return b;
+}
+
 void wait_for_async(SSL *s)
 {
 }
