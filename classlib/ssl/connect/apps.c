@@ -283,63 +283,6 @@ void policies_print(X509_STORE_CTX *ctx)
     nodes_print("User", X509_policy_tree_get0_user_policies(tree));
 }
 
-/*-
- * next_protos_parse parses a comma separated list of strings into a string
- * in a format suitable for passing to SSL_CTX_set_next_protos_advertised.
- *   outlen: (output) set to the length of the resulting buffer on success.
- *   err: (maybe NULL) on failure, an error message line is written to this BIO.
- *   in: a NUL terminated string like "abc,def,ghi"
- *
- *   returns: a malloc'd buffer or NULL on failure.
- */
-unsigned char *next_protos_parse(size_t *outlen, const char *in)
-{
-    size_t len;
-    unsigned char *out;
-    size_t i, start = 0;
-    size_t skipped = 0;
-
-    len = strlen(in);
-    if (len == 0 || len >= 65535)
-        return NULL;
-
-    out = app_malloc(len + 1, "NPN buffer");
-    for (i = 0; i <= len; ++i) {
-        if (i == len || in[i] == ',') {
-            /*
-             * Zero-length ALPN elements are invalid on the wire, we could be
-             * strict and reject the entire string, but just ignoring extra
-             * commas seems harmless and more friendly.
-             *
-             * Every comma we skip in this way puts the input buffer another
-             * byte ahead of the output buffer, so all stores into the output
-             * buffer need to be decremented by the number commas skipped.
-             */
-            if (i == start) {
-                ++start;
-                ++skipped;
-                continue;
-            }
-            if (i - start > 255) {
-                OPENSSL_free(out);
-                return NULL;
-            }
-            out[start-skipped] = (unsigned char)(i - start);
-            start = i + 1;
-        } else {
-            out[i + 1 - skipped] = in[i];
-        }
-    }
-
-    if (len <= skipped) {
-        OPENSSL_free(out);
-        return NULL;
-    }
-
-    *outlen = len + 1 - skipped;
-    return out;
-}
-
 void print_cert_checks(BIO *bio, X509 *x,
                        const char *checkhost,
                        const char *checkemail, const char *checkip)
