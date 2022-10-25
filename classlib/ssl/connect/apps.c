@@ -40,8 +40,6 @@ static const UI_METHOD *ui_fallback_method = NULL;
 
 static int set_table_opts(unsigned long *flags, const char *arg,
                           const NAME_EX_TBL * in_tbl);
-static int set_multi_opts(unsigned long *flags, const char *arg,
-                          const NAME_EX_TBL * in_tbl);
 
 int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
                              const char *CApath, int noCAfile, int noCApath)
@@ -111,63 +109,7 @@ void* app_malloc(int sz, const char *what)
 #define X509_FLAG_CA (X509_FLAG_NO_ISSUER | X509_FLAG_NO_PUBKEY | \
                          X509_FLAG_NO_HEADER | X509_FLAG_NO_VERSION)
 
-int copy_extensions(X509 *x, X509_REQ *req, int copy_type)
-{
-    STACK_OF(X509_EXTENSION) *exts = NULL;
-    X509_EXTENSION *ext, *tmpext;
-    ASN1_OBJECT *obj;
-    int i, idx, ret = 0;
-    if (!x || !req || (copy_type == EXT_COPY_NONE))
-        return 1;
-    exts = X509_REQ_get_extensions(req);
 
-    for (i = 0; i < sk_X509_EXTENSION_num(exts); i++) {
-        ext = sk_X509_EXTENSION_value(exts, i);
-        obj = X509_EXTENSION_get_object(ext);
-        idx = X509_get_ext_by_OBJ(x, obj, -1);
-        /* Does extension exist? */
-        if (idx != -1) {
-            /* If normal copy don't override existing extension */
-            if (copy_type == EXT_COPY_ADD)
-                continue;
-            /* Delete all extensions of same type */
-            do {
-                tmpext = X509_get_ext(x, idx);
-                X509_delete_ext(x, idx);
-                X509_EXTENSION_free(tmpext);
-                idx = X509_get_ext_by_OBJ(x, obj, -1);
-            } while (idx != -1);
-        }
-        if (!X509_add_ext(x, ext, -1))
-            goto end;
-    }
-
-    ret = 1;
-
- end:
-
-    sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
-
-    return ret;
-}
-
-static int set_multi_opts(unsigned long *flags, const char *arg,
-                          const NAME_EX_TBL * in_tbl)
-{
-    STACK_OF(CONF_VALUE) *vals;
-    CONF_VALUE *val;
-    int i, ret = 1;
-    if (!arg)
-        return 0;
-    vals = X509V3_parse_list(arg);
-    for (i = 0; i < sk_CONF_VALUE_num(vals); i++) {
-        val = sk_CONF_VALUE_value(vals, i);
-        if (!set_table_opts(flags, val->name, in_tbl))
-            ret = 0;
-    }
-    sk_CONF_VALUE_pop_free(vals, X509V3_conf_free);
-    return ret;
-}
 
 static int set_table_opts(unsigned long *flags, const char *arg,
                           const NAME_EX_TBL * in_tbl)
