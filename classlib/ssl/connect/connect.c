@@ -885,33 +885,6 @@ int main(int argc, char **argv)
     if (next_proto.data != NULL)
         SSL_CTX_set_next_proto_select_cb(ctx, next_proto_cb, &next_proto);
 
-    if (alpn_in) {
-        size_t alpn_len;
-        unsigned char *alpn = next_protos_parse(&alpn_len, alpn_in);
-
-        if (alpn == NULL) {
-            BIO_printf(bio_err, "Error parsing -alpn argument\n");
-            goto end;
-        }
-        /* Returns 0 on success! */
-        if (SSL_CTX_set_alpn_protos(ctx, alpn, alpn_len) != 0) {
-            BIO_printf(bio_err, "Error setting ALPN\n");
-            goto end;
-        }
-        OPENSSL_free(alpn);
-    }
-
-    for (i = 0; i < serverinfo_count; i++) {
-        if (!SSL_CTX_add_client_custom_ext(ctx,
-                                           serverinfo_types[i],
-                                           NULL, NULL, NULL,
-                                           serverinfo_cli_parse_cb, NULL)) {
-            BIO_printf(bio_err,
-                       "Warning: Unable to add custom extension %u, skipping\n",
-                       serverinfo_types[i]);
-        }
-    }
-
     if (state)
         SSL_CTX_set_info_callback(ctx, apps_ssl_info_callback);
 
@@ -949,36 +922,9 @@ int main(int argc, char **argv)
     if (!set_cert_key_stuff(ctx, cert, key, chain, build_chain))
         goto end;
 
-    if (!noservername) {
-        tlsextcbp.biodebug = bio_err;
-        SSL_CTX_set_tlsext_servername_callback(ctx, ssl_servername_cb);
-        SSL_CTX_set_tlsext_servername_arg(ctx, &tlsextcbp);
-    }
-
-    if (srp_arg.srplogin) {
-        if (!srp_lateuser && !SSL_CTX_set_srp_username(ctx, srp_arg.srplogin)) {
-            BIO_printf(bio_err, "Unable to set SRP username\n");
-            goto end;
-        }
-        srp_arg.msg = c_msg;
-        srp_arg.debug = c_debug;
-        SSL_CTX_set_srp_cb_arg(ctx, &srp_arg);
-        SSL_CTX_set_srp_client_pwd_callback(ctx, ssl_give_srp_client_pwd_cb);
-        SSL_CTX_set_srp_strength(ctx, srp_arg.strength);
-        if (c_msg || c_debug || srp_arg.amp == 0)
-            SSL_CTX_set_srp_verify_param_callback(ctx,
-                                                  ssl_srp_verify_param_cb);
-    }
-
-    if (dane_tlsa_domain != NULL) {
-        if (SSL_CTX_dane_enable(ctx) <= 0) {
-            BIO_printf(bio_err,
-                       "%s: Error enabling DANE TLSA authentication.\n",
-                       prog);
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-    }
+    tlsextcbp.biodebug = bio_err;
+    SSL_CTX_set_tlsext_servername_callback(ctx, ssl_servername_cb);
+    SSL_CTX_set_tlsext_servername_arg(ctx, &tlsextcbp);
 
     /*
      * In TLSv1.3 NewSessionTicket messages arrive after the handshake and can
