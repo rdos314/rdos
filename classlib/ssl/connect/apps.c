@@ -172,48 +172,6 @@ void print_array(BIO *out, const char* title, int len, const unsigned char* d)
     BIO_printf(out, "\n};\n");
 }
 
-X509_STORE *setup_verify(const char *CAfile, const char *CApath, int noCAfile, int noCApath)
-{
-    X509_STORE *store = X509_STORE_new();
-    X509_LOOKUP *lookup;
-
-    if (store == NULL)
-        goto end;
-
-    if (CAfile != NULL || !noCAfile) {
-        lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file());
-        if (lookup == NULL)
-            goto end;
-        if (CAfile) {
-            if (!X509_LOOKUP_load_file(lookup, CAfile, X509_FILETYPE_PEM)) {
-                BIO_printf(bio_err, "Error loading file %s\n", CAfile);
-                goto end;
-            }
-        } else {
-            X509_LOOKUP_load_file(lookup, NULL, X509_FILETYPE_DEFAULT);
-        }
-    }
-
-    if (CApath != NULL || !noCApath) {
-        lookup = X509_STORE_add_lookup(store, X509_LOOKUP_hash_dir());
-        if (lookup == NULL)
-            goto end;
-        if (CApath) {
-            if (!X509_LOOKUP_add_dir(lookup, CApath, X509_FILETYPE_PEM)) {
-                BIO_printf(bio_err, "Error loading directory %s\n", CApath);
-                goto end;
-            }
-        } else {
-            X509_LOOKUP_add_dir(lookup, NULL, X509_FILETYPE_DEFAULT);
-        }
-    }
-
-    ERR_clear_error();
-    return store;
- end:
-    X509_STORE_free(store);
-    return NULL;
-}
 
 /* Try to load an engine in a shareable library */
 static ENGINE *try_load_engine(const char *engine)
