@@ -17,19 +17,15 @@
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
 #include <openssl/bn.h>
-#ifndef OPENSSL_NO_DH
 # include <openssl/dh.h>
-#endif
 #include "s_apps.h"
 
 #define COOKIE_SECRET_LENGTH    16
 
 VERIFY_CB_ARGS verify_args = { -1, 0, X509_V_OK, 0 };
 
-#ifndef OPENSSL_NO_SOCK
 static unsigned char cookie_secret[COOKIE_SECRET_LENGTH];
 static int cookie_initialized = 0;
-#endif
 static BIO *bio_keylog = NULL;
 
 static const char *lookup(int val, const STRINT_PAIR* list, const char* def)
@@ -305,7 +301,6 @@ int ssl_print_sigalgs(BIO *out, SSL *s)
     return 1;
 }
 
-#ifndef OPENSSL_NO_EC
 int ssl_print_point_formats(BIO *out, SSL *s)
 {
     int i, nformats;
@@ -390,7 +385,6 @@ int ssl_print_groups(BIO *out, SSL *s, int noshared)
     BIO_puts(out, "\n");
     return 1;
 }
-#endif
 
 int ssl_print_tmp_key(BIO *out, SSL *s)
 {
@@ -407,7 +401,6 @@ int ssl_print_tmp_key(BIO *out, SSL *s)
     case EVP_PKEY_DH:
         BIO_printf(out, "DH, %d bits\n", EVP_PKEY_bits(key));
         break;
-#ifndef OPENSSL_NO_EC
     case EVP_PKEY_EC:
         {
             EC_KEY *ec = EVP_PKEY_get1_EC_KEY(key);
@@ -421,7 +414,6 @@ int ssl_print_tmp_key(BIO *out, SSL *s)
             BIO_printf(out, "ECDH, %s, %d bits\n", cname, EVP_PKEY_bits(key));
         }
     break;
-#endif
     default:
         BIO_printf(out, "%s, %d bits\n", OBJ_nid2sn(EVP_PKEY_id(key)),
                    EVP_PKEY_bits(key));
@@ -551,9 +543,7 @@ static STRINT_PAIR handshakes[] = {
     {", CertificateStatus", SSL3_MT_CERTIFICATE_STATUS},
     {", SupplementalData", SSL3_MT_SUPPLEMENTAL_DATA},
     {", KeyUpdate", SSL3_MT_KEY_UPDATE},
-#ifndef OPENSSL_NO_NEXTPROTONEG
     {", NextProto", SSL3_MT_NEXT_PROTO},
-#endif
     {", MessageHash", SSL3_MT_MESSAGE_HASH},
     {NULL}
 };
@@ -601,22 +591,6 @@ void msg_cb(int write_p, int version, int content_type, const void *buf,
         case 23:
             str_content_type = ", ApplicationData";
             break;
-#ifndef OPENSSL_NO_HEARTBEATS
-        case 24:
-            str_details1 = ", Heartbeat";
-
-            if (len > 0) {
-                switch (bp[0]) {
-                case 1:
-                    str_details1 = ", HeartbeatRequest";
-                    break;
-                case 2:
-                    str_details1 = ", HeartbeatResponse";
-                    break;
-                }
-            }
-            break;
-#endif
         }
     }
 
@@ -662,19 +636,6 @@ static STRINT_PAIR tlsext_types[] = {
     {"renegotiation info", TLSEXT_TYPE_renegotiate},
     {"signed certificate timestamps", TLSEXT_TYPE_signed_certificate_timestamp},
     {"TLS padding", TLSEXT_TYPE_padding},
-#ifdef TLSEXT_TYPE_next_proto_neg
-    {"next protocol", TLSEXT_TYPE_next_proto_neg},
-#endif
-#ifdef TLSEXT_TYPE_encrypt_then_mac
-    {"encrypt-then-mac", TLSEXT_TYPE_encrypt_then_mac},
-#endif
-#ifdef TLSEXT_TYPE_application_layer_protocol_negotiation
-    {"application layer protocol negotiation",
-     TLSEXT_TYPE_application_layer_protocol_negotiation},
-#endif
-#ifdef TLSEXT_TYPE_extended_master_secret
-    {"extended master secret", TLSEXT_TYPE_extended_master_secret},
-#endif
     {"key share", TLSEXT_TYPE_key_share},
     {"supported versions", TLSEXT_TYPE_supported_versions},
     {"psk", TLSEXT_TYPE_psk},
@@ -743,7 +704,6 @@ void tlsext_cb(SSL *s, int client_server, int type,
     (void)BIO_flush(bio);
 }
 
-#ifndef OPENSSL_NO_SOCK
 int generate_cookie_callback(SSL *ssl, unsigned char *cookie,
                              unsigned int *cookie_len)
 {
@@ -831,8 +791,6 @@ int verify_stateless_cookie_callback(SSL *ssl, const unsigned char *cookie,
     return verify_cookie_callback(ssl, cookie, cookie_len);
 }
 
-#endif
-
 /*
  * Example of extended certificate handling. Where the standard support of
  * one certificate per algorithm is not sufficient an application can decide
@@ -890,16 +848,6 @@ static int set_cert_cb(SSL *ssl, void *arg)
 {
     int i, rv;
     SSL_EXCERT *exc = arg;
-#ifdef CERT_CB_TEST_RETRY
-    static int retry_cnt;
-    if (retry_cnt < 5) {
-        retry_cnt++;
-        BIO_printf(bio_err,
-                   "Certificate callback retry test: count %d\n",
-                   retry_cnt);
-        return -1;
-    }
-#endif
     SSL_certs_clear(ssl);
 
     if (exc == NULL)
@@ -1221,16 +1169,11 @@ void print_ssl_summary(SSL *s)
         BIO_puts(bio_err, "No peer certificate\n");
     }
     X509_free(peer);
-#ifndef OPENSSL_NO_EC
     ssl_print_point_formats(bio_err, s);
     if (SSL_is_server(s))
         ssl_print_groups(bio_err, s, 1);
     else
         ssl_print_tmp_key(bio_err, s);
-#else
-    if (!SSL_is_server(s))
-        ssl_print_tmp_key(bio_err, s);
-#endif
 }
 
 int config_ctx(SSL_CONF_CTX *cctx, STACK_OF(OPENSSL_STRING) *str,
@@ -1327,9 +1270,7 @@ static STRINT_PAIR callback_types[] = {
     {"Supported Ciphersuite", SSL_SECOP_CIPHER_SUPPORTED},
     {"Shared Ciphersuite", SSL_SECOP_CIPHER_SHARED},
     {"Check Ciphersuite", SSL_SECOP_CIPHER_CHECK},
-#ifndef OPENSSL_NO_DH
     {"Temp DH key bits", SSL_SECOP_TMP_DH},
-#endif
     {"Supported Curve", SSL_SECOP_CURVE_SUPPORTED},
     {"Shared Curve", SSL_SECOP_CURVE_SHARED},
     {"Check Curve", SSL_SECOP_CURVE_CHECK},
@@ -1394,7 +1335,6 @@ static int security_callback_debug(const SSL *s, const SSL_CTX *ctx,
         BIO_puts(sdb->out, SSL_CIPHER_get_name(other));
         break;
 
-#ifndef OPENSSL_NO_EC
     case SSL_SECOP_OTHER_CURVE:
         {
             const char *cname;
@@ -1404,15 +1344,14 @@ static int security_callback_debug(const SSL *s, const SSL_CTX *ctx,
             BIO_puts(sdb->out, cname);
         }
         break;
-#endif
-#ifndef OPENSSL_NO_DH
+
     case SSL_SECOP_OTHER_DH:
         {
             DH *dh = other;
             BIO_printf(sdb->out, "%d", DH_bits(dh));
             break;
         }
-#endif
+
     case SSL_SECOP_OTHER_CERT:
         {
             if (cert_md) {
