@@ -338,38 +338,3 @@ void store_setup_crl_download(X509_STORE *st)
     X509_STORE_set_lookup_crls_cb(st, crls_http_cb);
 }
 
-
-# include <time.h>
-
-double app_tminterval(int stop, int usertime)
-{
-    double ret = 0;
-    static unsigned long tmstart;
-    unsigned long now;
-    static int warning = 1;
-
-    if (usertime && warning) {
-        BIO_printf(bio_err, "To get meaningful results, run "
-                   "this program on idle system.\n");
-        warning = 0;
-    }
-    ret = 0;
-    return ret;
-}
-
-int app_access(const char* name, int flag)
-{
-    return access(name, flag);
-}
-
-# include <sys/stat.h>
-
-int app_isdir(const char *name)
-{
-    struct stat st;
-
-    if (stat(name, &st) == 0)
-        return S_ISDIR(st.st_mode);
-    else
-        return -1;
-}
