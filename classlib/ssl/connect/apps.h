@@ -419,12 +419,6 @@ int set_ext_copy(int *copy_type, const char *arg);
 int copy_extensions(X509 *x, X509_REQ *req, int copy_type);
 int app_passwd(const char *arg1, const char *arg2, char **pass1, char **pass2);
 int add_oid_section(CONF *conf);
-X509 *load_cert(const char *file, int format, const char *cert_descrip);
-X509_CRL *load_crl(const char *infile, int format);
-int load_certs(const char *file, STACK_OF(X509) **certs, int format,
-               const char *pass, const char *cert_descrip);
-int load_crls(const char *file, STACK_OF(X509_CRL) **crls, int format,
-              const char *pass, const char *cert_descrip);
 X509_STORE *setup_verify(const char *CAfile, const char *CApath,
                          int noCAfile, int noCApath);
 __owur int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
