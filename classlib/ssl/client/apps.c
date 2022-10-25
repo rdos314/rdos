@@ -2012,13 +2012,8 @@ void store_setup_crl_download(X509_STORE *st)
 double app_tminterval(int stop, int usertime)
 {
     double ret = 0;
-# ifdef CLOCK_REALTIME
-    static struct timespec tmstart;
-    struct timespec now;
-# else
     static unsigned long tmstart;
     unsigned long now;
-# endif
     static int warning = 1;
 
     if (usertime && warning) {
@@ -2026,16 +2021,7 @@ double app_tminterval(int stop, int usertime)
                    "this program on idle system.\n");
         warning = 0;
     }
-# ifdef CLOCK_REALTIME
-    clock_gettime(CLOCK_REALTIME, &now);
-    if (stop == TM_START)
-        tmstart = now;
-    else
-        ret = ((now.tv_sec + now.tv_nsec * 1e-9)
-               - (tmstart.tv_sec + tmstart.tv_nsec * 1e-9));
-# else
     ret = 0;
-# endif
     return ret;
 }
 
@@ -2045,26 +2031,15 @@ int app_access(const char* name, int flag)
 }
 
 # include <sys/stat.h>
-# ifndef S_ISDIR
-#  if defined(_S_IFMT) && defined(_S_IFDIR)
-#   define S_ISDIR(a)   (((a) & _S_IFMT) == _S_IFDIR)
-#  else
-#   define S_ISDIR(a)   (((a) & S_IFMT) == S_IFDIR)
-#  endif
-# endif
 
 int app_isdir(const char *name)
 {
-# if defined(S_ISDIR)
     struct stat st;
 
     if (stat(name, &st) == 0)
         return S_ISDIR(st.st_mode);
     else
         return -1;
-# else
-    return -1;
-# endif
 }
 
 /* raw_read|write section */
