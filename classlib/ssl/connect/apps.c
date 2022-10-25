@@ -313,24 +313,6 @@ CONF *app_load_config_quiet(const char *filename)
     return conf;
 }
 
-int app_load_modules(const CONF *config)
-{
-    CONF *to_free = NULL;
-
-    if (config == NULL)
-        config = to_free = app_load_config_quiet(default_config_file);
-    if (config == NULL)
-        return 1;
-
-    if (CONF_modules_load(config, NULL, 0) <= 0) {
-        BIO_printf(bio_err, "Error configuring OpenSSL modules\n");
-        ERR_print_errors(bio_err);
-        NCONF_free(to_free);
-        return 0;
-    }
-    NCONF_free(to_free);
-    return 1;
-}
 
 int add_oid_section(CONF *conf)
 {
