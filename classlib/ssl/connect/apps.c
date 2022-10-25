@@ -153,60 +153,6 @@ int password_callback(char *buf, int bufsiz, int verify, PW_CB_DATA *cb_tmp)
 }
 
 
-CONF *app_load_config_bio(BIO *in, const char *filename)
-{
-    long errorline = -1;
-    CONF *conf;
-    int i;
-
-    conf = NCONF_new(NULL);
-    i = NCONF_load_bio(conf, in, &errorline);
-    if (i > 0)
-        return conf;
-
-    if (errorline <= 0) {
-        BIO_printf(bio_err, "%s: Can't load ", opt_getprog());
-    } else {
-        BIO_printf(bio_err, "%s: Error on line %ld of ", opt_getprog(),
-                   errorline);
-    }
-    if (filename != NULL)
-        BIO_printf(bio_err, "config file \"%s\"\n", filename);
-    else
-        BIO_printf(bio_err, "config input");
-
-    NCONF_free(conf);
-    return NULL;
-}
-
-CONF *app_load_config(const char *filename)
-{
-    BIO *in;
-    CONF *conf;
-
-    in = bio_open_default(filename, 'r', FORMAT_TEXT);
-    if (in == NULL)
-        return NULL;
-
-    conf = app_load_config_bio(in, filename);
-    BIO_free(in);
-    return conf;
-}
-
-CONF *app_load_config_quiet(const char *filename)
-{
-    BIO *in;
-    CONF *conf;
-
-    in = bio_open_default_quiet(filename, 'r', FORMAT_TEXT);
-    if (in == NULL)
-        return NULL;
-
-    conf = app_load_config_bio(in, filename);
-    BIO_free(in);
-    return conf;
-}
-
 
 int add_oid_section(CONF *conf)
 {
@@ -778,62 +724,6 @@ int rand_serial(BIGNUM *b, ASN1_INTEGER *ai)
         BN_free(btmp);
 
     return ret;
-}
-
-CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
-{
-    CA_DB *retdb = NULL;
-    TXT_DB *tmpdb = NULL;
-    BIO *in;
-    CONF *dbattr_conf = NULL;
-    char buf[BSIZE];
-    FILE *dbfp;
-    struct stat dbst;
-
-    in = BIO_new_file(dbfile, "r");
-    if (in == NULL) {
-        ERR_print_errors(bio_err);
-        goto err;
-    }
-
-    BIO_get_fp(in, &dbfp);
-    if (fstat(fileno(dbfp), &dbst) == -1) {
-        SYSerr(SYS_F_FSTAT, errno);
-        ERR_add_error_data(3, "fstat('", dbfile, "')");
-        ERR_print_errors(bio_err);
-        goto err;
-    }
-
-    if ((tmpdb = TXT_DB_read(in, DB_NUMBER)) == NULL)
-        goto err;
-
-    BIO_snprintf(buf, sizeof(buf), "%s.attr", dbfile);
-    dbattr_conf = app_load_config_quiet(buf);
-
-    retdb = app_malloc(sizeof(*retdb), "new DB");
-    retdb->db = tmpdb;
-    tmpdb = NULL;
-    if (db_attr)
-        retdb->attributes = *db_attr;
-    else {
-        retdb->attributes.unique_subject = 1;
-    }
-
-    if (dbattr_conf) {
-        char *p = NCONF_get_string(dbattr_conf, NULL, "unique_subject");
-        if (p) {
-            retdb->attributes.unique_subject = parse_yesno(p, 1);
-        }
-    }
-
-    retdb->dbfname = OPENSSL_strdup(dbfile);
-    retdb->dbst = dbst;
-
- err:
-    NCONF_free(dbattr_conf);
-    TXT_DB_free(tmpdb);
-    BIO_free_all(in);
-    return retdb;
 }
 
 /*

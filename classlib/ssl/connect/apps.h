@@ -68,9 +68,6 @@ BIO *dup_bio_err(int format);
 BIO *bio_open_owner(const char *filename, int format, int private);
 BIO *bio_open_default(const char *filename, char mode, int format);
 BIO *bio_open_default_quiet(const char *filename, char mode, int format);
-CONF *app_load_config_bio(BIO *in, const char *filename);
-CONF *app_load_config(const char *filename);
-CONF *app_load_config_quiet(const char *filename);
 int app_load_modules(const CONF *config);
 void unbuffer(FILE *fp);
 void wait_for_async(SSL *s);
@@ -474,7 +471,6 @@ int save_serial(const char *serialfile, const char *suffix, const BIGNUM *serial
 int rotate_serial(const char *serialfile, const char *new_suffix,
                   const char *old_suffix);
 int rand_serial(BIGNUM *b, ASN1_INTEGER *ai);
-CA_DB *load_index(const char *dbfile, DB_ATTR *dbattr);
 int index_index(CA_DB *db);
 int save_index(const char *dbfile, const char *suffix, CA_DB *db);
 int rotate_index(const char *dbfile, const char *new_suffix,
