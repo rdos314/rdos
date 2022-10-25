@@ -384,8 +384,3 @@ int fileno_stdout(void)
 {
     return fileno(stdout);
 }
-
-int raw_read_stdin(void *buf, int siz)
-{
-    return read(fileno_stdin(), buf, siz);
-}

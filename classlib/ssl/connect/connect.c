@@ -111,6 +111,12 @@ int raw_write_stdout(const void *buf, int siz)
     return write(fileno_stdout(), buf, siz);
 }
 
+
+int raw_read_stdin(void *buf, int siz)
+{
+    return read(fileno_stdin(), buf, siz);
+}
+
 void wait_for_async(SSL *s)
 {
 }
