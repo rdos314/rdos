@@ -67,37 +67,7 @@ void destroy_prefix_method(void);
  (o == OPT_S_NOSSL3 || o == OPT_S_NOTLS1 || o == OPT_S_NOTLS1_1 \
   || o == OPT_S_NOTLS1_2 || o == OPT_S_NOTLS1_3)
 
-/*
- * Random state options.
- */
-# define OPT_R_ENUM \
-        OPT_R__FIRST=1500, OPT_R_RAND, OPT_R_WRITERAND, OPT_R__LAST
 
-# define OPT_R_OPTIONS \
-    {"rand", OPT_R_RAND, 's', "Load the file(s) into the random number generator"}, \
-    {"writerand", OPT_R_WRITERAND, '>', "Write random data to the specified file"}
-
-# define OPT_R_CASES \
-        OPT_R__FIRST: case OPT_R__LAST: break; \
-        case OPT_R_RAND: case OPT_R_WRITERAND
-
-/*
- * Option parsing.
- */
-extern const char OPT_HELP_STR[];
-extern const char OPT_MORE_STR[];
-typedef struct options_st {
-    const char *name;
-    int retval;
-    /*
-     * value type: - no value (also the value zero), n number, p positive
-     * number, u unsigned, l long, s string, < input file, > output file,
-     * f any format, F der/pem format, E der/pem/engine format identifier.
-     * l, n and u include zero; p does not.
-     */
-    int valtype;
-    const char *helpstr;
-} OPTIONS;
 
 /*
  * A string/int pairing; widely use for option value lookup, hence the
@@ -108,25 +78,6 @@ typedef struct string_int_pair_st {
     const char *name;
     int retval;
 } OPT_PAIR, STRINT_PAIR;
-
-/* Flags to pass into opt_format; see FORMAT_xxx, below. */
-# define OPT_FMT_PEMDER          (1L <<  1)
-# define OPT_FMT_PKCS12          (1L <<  2)
-# define OPT_FMT_SMIME           (1L <<  3)
-# define OPT_FMT_ENGINE          (1L <<  4)
-# define OPT_FMT_MSBLOB          (1L <<  5)
-/* (1L <<  6) was OPT_FMT_NETSCAPE, but wasn't used */
-# define OPT_FMT_NSS             (1L <<  7)
-# define OPT_FMT_TEXT            (1L <<  8)
-# define OPT_FMT_HTTP            (1L <<  9)
-# define OPT_FMT_PVK             (1L << 10)
-# define OPT_FMT_PDE     (OPT_FMT_PEMDER | OPT_FMT_ENGINE)
-# define OPT_FMT_PDS     (OPT_FMT_PEMDER | OPT_FMT_SMIME)
-# define OPT_FMT_ANY     ( \
-        OPT_FMT_PEMDER | OPT_FMT_PKCS12 | OPT_FMT_SMIME | \
-        OPT_FMT_ENGINE | OPT_FMT_MSBLOB | OPT_FMT_NSS   | \
-        OPT_FMT_TEXT   | OPT_FMT_HTTP   | OPT_FMT_PVK)
-
 
 typedef struct args_st {
     int size;
