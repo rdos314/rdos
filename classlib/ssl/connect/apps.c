@@ -173,59 +173,6 @@ void print_array(BIO *out, const char* title, int len, const unsigned char* d)
 }
 
 
-/* Try to load an engine in a shareable library */
-static ENGINE *try_load_engine(const char *engine)
-{
-    ENGINE *e = ENGINE_by_id("dynamic");
-    if (e) {
-        if (!ENGINE_ctrl_cmd_string(e, "SO_PATH", engine, 0)
-            || !ENGINE_ctrl_cmd_string(e, "LOAD", NULL, 0)) {
-            ENGINE_free(e);
-            e = NULL;
-        }
-    }
-    return e;
-}
-
-ENGINE *setup_engine(const char *engine, int debug)
-{
-    ENGINE *e = NULL;
-
-    if (engine != NULL) {
-        if (strcmp(engine, "auto") == 0) {
-            BIO_printf(bio_err, "enabling auto ENGINE support\n");
-            ENGINE_register_all_complete();
-            return NULL;
-        }
-        if ((e = ENGINE_by_id(engine)) == NULL
-            && (e = try_load_engine(engine)) == NULL) {
-            BIO_printf(bio_err, "invalid engine \"%s\"\n", engine);
-            ERR_print_errors(bio_err);
-            return NULL;
-        }
-        if (debug) {
-            ENGINE_ctrl(e, ENGINE_CTRL_SET_LOGSTREAM, 0, bio_err, 0);
-        }
-        ENGINE_ctrl_cmd(e, "SET_USER_INTERFACE", 0, ui_method, 0, 1);
-        if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
-            BIO_printf(bio_err, "can't use that engine\n");
-            ERR_print_errors(bio_err);
-            ENGINE_free(e);
-            return NULL;
-        }
-
-        BIO_printf(bio_err, "engine \"%s\" set.\n", ENGINE_get_id(e));
-    }
-    return e;
-}
-
-void release_engine(ENGINE *e)
-{
-    if (e != NULL)
-        /* Free our "structural" reference. */
-        ENGINE_free(e);
-}
-
 static unsigned long index_serial_hash(const OPENSSL_CSTRING *a)
 {
     const char *n;
