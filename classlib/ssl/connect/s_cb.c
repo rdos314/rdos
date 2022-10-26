@@ -28,20 +28,6 @@ static unsigned char cookie_secret[COOKIE_SECRET_LENGTH];
 static int cookie_initialized = 0;
 static BIO *bio_keylog = NULL;
 
-int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
-                             const char *CApath, int noCAfile, int noCApath)
-{
-    if (CAfile == NULL && CApath == NULL) {
-        if (!noCAfile && SSL_CTX_set_default_verify_file(ctx) <= 0)
-            return 0;
-        if (!noCApath && SSL_CTX_set_default_verify_dir(ctx) <= 0)
-            return 0;
-
-        return 1;
-    }
-    return SSL_CTX_load_verify_locations(ctx, CAfile, CApath);
-}
-
 int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path)
 {
     if (path == NULL)
@@ -947,11 +933,6 @@ static int set_cert_cb(SSL *ssl, void *arg)
     return 1;
 }
 
-void ssl_ctx_set_excert(SSL_CTX *ctx, SSL_EXCERT *exc)
-{
-    SSL_CTX_set_cert_cb(ctx, set_cert_cb, exc);
-}
-
 static int ssl_excert_prepend(SSL_EXCERT **pexc)
 {
     SSL_EXCERT *exc = OPENSSL_malloc(sizeof(*exc));
@@ -1174,37 +1155,6 @@ int ssl_ctx_add_crls(SSL_CTX *ctx, STACK_OF(X509_CRL) *crls, int crl_download)
     return 1;
 }
 
-int ssl_load_stores(SSL_CTX *ctx,
-                    const char *vfyCApath, const char *vfyCAfile,
-                    const char *chCApath, const char *chCAfile,
-                    STACK_OF(X509_CRL) *crls, int crl_download)
-{
-    X509_STORE *vfy = NULL, *ch = NULL;
-    int rv = 0;
-    if (vfyCApath != NULL || vfyCAfile != NULL) {
-        vfy = X509_STORE_new();
-        if (vfy == NULL)
-            goto err;
-        if (!X509_STORE_load_locations(vfy, vfyCAfile, vfyCApath))
-            goto err;
-        add_crls_store(vfy, crls);
-        SSL_CTX_set1_verify_cert_store(ctx, vfy);
-    }
-    if (chCApath != NULL || chCAfile != NULL) {
-        ch = X509_STORE_new();
-        if (ch == NULL)
-            goto err;
-        if (!X509_STORE_load_locations(ch, chCAfile, chCApath))
-            goto err;
-        SSL_CTX_set1_chain_cert_store(ctx, ch);
-    }
-    rv = 1;
- err:
-    X509_STORE_free(vfy);
-    X509_STORE_free(ch);
-    return rv;
-}
-
 /* Verbose print out of security callback */
 
 typedef struct {
@@ -1349,17 +1299,6 @@ static int security_callback_debug(const SSL *s, const SSL_CTX *ctx,
         BIO_printf(sdb->out, ", security bits=%d", bits);
     BIO_printf(sdb->out, ": %s\n", rv ? "yes" : "no");
     return rv;
-}
-
-void ssl_ctx_security_debug(SSL_CTX *ctx, int verbose)
-{
-    static security_debug_ex sdb;
-
-    sdb.out = bio_err;
-    sdb.verbose = verbose;
-    sdb.old_cb = SSL_CTX_get_security_callback(ctx);
-    SSL_CTX_set_security_callback(ctx, security_callback_debug);
-    SSL_CTX_set0_security_ex_data(ctx, &sdb);
 }
 
 static void keylog_callback(const SSL *ssl, const char *line)

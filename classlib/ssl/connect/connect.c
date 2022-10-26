@@ -824,9 +824,6 @@ int main(int argc, char **argv)
 
     SSL_CTX_clear_mode(ctx, SSL_MODE_AUTO_RETRY);
 
-    if (sdebug)
-        ssl_ctx_security_debug(ctx, sdebug);
-
     if (!config_ctx(cctx, ssl_args, ctx))
         goto end;
 
@@ -839,158 +836,10 @@ int main(int argc, char **argv)
         }
     }
 
-    if (protocol == IPPROTO_SCTP && sctp_label_bug == 1)
-        SSL_CTX_set_mode(ctx, SSL_MODE_DTLS_SCTP_LABEL_LENGTH_BUG);
-
-    if (min_version != 0
-        && SSL_CTX_set_min_proto_version(ctx, min_version) == 0)
-        goto end;
-    if (max_version != 0
-        && SSL_CTX_set_max_proto_version(ctx, max_version) == 0)
-        goto end;
-
-    if (vpmtouched && !SSL_CTX_set1_param(ctx, vpm)) {
-        BIO_printf(bio_err, "Error setting verify params\n");
-        ERR_print_errors(bio_err);
-        goto end;
-    }
-
-    if (async) {
-        SSL_CTX_set_mode(ctx, SSL_MODE_ASYNC);
-    }
-
-    if (max_send_fragment > 0
-        && !SSL_CTX_set_max_send_fragment(ctx, max_send_fragment)) {
-        BIO_printf(bio_err, "%s: Max send fragment size %u is out of permitted range\n",
-                   prog, max_send_fragment);
-        goto end;
-    }
-
-    if (split_send_fragment > 0
-        && !SSL_CTX_set_split_send_fragment(ctx, split_send_fragment)) {
-        BIO_printf(bio_err, "%s: Split send fragment size %u is out of permitted range\n",
-                   prog, split_send_fragment);
-        goto end;
-    }
-
-    if (max_pipelines > 0
-        && !SSL_CTX_set_max_pipelines(ctx, max_pipelines)) {
-        BIO_printf(bio_err, "%s: Max pipelines %u is out of permitted range\n",
-                   prog, max_pipelines);
-        goto end;
-    }
-
-    if (read_buf_len > 0) {
-        SSL_CTX_set_default_read_buffer_len(ctx, read_buf_len);
-    }
-
-    if (maxfraglen > 0
-            && !SSL_CTX_set_tlsext_max_fragment_length(ctx, maxfraglen)) {
-        BIO_printf(bio_err,
-                   "%s: Max Fragment Length code %u is out of permitted values"
-                   "\n", prog, maxfraglen);
-        goto end;
-    }
-
-    if (!ssl_load_stores(ctx, vfyCApath, vfyCAfile, chCApath, chCAfile,
-                         crls, crl_download)) {
-        BIO_printf(bio_err, "Error loading store locations\n");
-        ERR_print_errors(bio_err);
-        goto end;
-    }
-    if (ReqCAfile != NULL) {
-        STACK_OF(X509_NAME) *nm = sk_X509_NAME_new_null();
-
-        if (nm == NULL || !SSL_add_file_cert_subjects_to_stack(nm, ReqCAfile)) {
-            sk_X509_NAME_pop_free(nm, X509_NAME_free);
-            BIO_printf(bio_err, "Error loading CA names\n");
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-        SSL_CTX_set0_CA_list(ctx, nm);
-    }
-
-    if (ssl_client_engine) {
-        if (!SSL_CTX_set_client_cert_engine(ctx, ssl_client_engine)) {
-            BIO_puts(bio_err, "Error setting client auth engine\n");
-            ERR_print_errors(bio_err);
-            ENGINE_free(ssl_client_engine);
-            goto end;
-        }
-        ENGINE_free(ssl_client_engine);
-    }
-
-    if (psk_key != NULL) {
-        if (c_debug)
-            BIO_printf(bio_c_out, "PSK key given, setting client callback\n");
-        SSL_CTX_set_psk_client_callback(ctx, psk_client_cb);
-    }
-
-    if (psksessf != NULL) {
-        BIO *stmp = BIO_new_file(psksessf, "r");
-
-        if (stmp == NULL) {
-            BIO_printf(bio_err, "Can't open PSK session file %s\n", psksessf);
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-        psksess = PEM_read_bio_SSL_SESSION(stmp, NULL, 0, NULL);
-        BIO_free(stmp);
-        if (psksess == NULL) {
-            BIO_printf(bio_err, "Can't read PSK session file %s\n", psksessf);
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-    }
-    if (psk_key != NULL || psksess != NULL)
-        SSL_CTX_set_psk_use_session_callback(ctx, psk_use_session_cb);
-
-    if (srtp_profiles != NULL) {
-        /* Returns 0 on success! */
-        if (SSL_CTX_set_tlsext_use_srtp(ctx, srtp_profiles) != 0) {
-            BIO_printf(bio_err, "Error setting SRTP profile\n");
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-    }
-
-    if (exc != NULL)
-        ssl_ctx_set_excert(ctx, exc);
-
-    if (next_proto.data != NULL)
-        SSL_CTX_set_next_proto_select_cb(ctx, next_proto_cb, &next_proto);
-
-    if (state)
-        SSL_CTX_set_info_callback(ctx, apps_ssl_info_callback);
-
-    /* Enable SCT processing, without early connection termination */
-    if (ct_validation &&
-        !SSL_CTX_enable_ct(ctx, SSL_CT_VALIDATION_PERMISSIVE)) {
-        ERR_print_errors(bio_err);
-        goto end;
-    }
-
-    if (!ctx_set_ctlog_list_file(ctx, ctlog_file)) {
-        if (ct_validation) {
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-
-        /*
-         * If CT validation is not enabled, the log list isn't needed so don't
-         * show errors or abort. We try to load it regardless because then we
-         * can show the names of the logs any SCTs came from (SCTs may be seen
-         * even with validation disabled).
-         */
-        ERR_clear_error();
-    }
-
+    SSL_CTX_set_default_ctlog_list_file(ctx);
+    SSL_CTX_set_default_verify_file(ctx);
+    SSL_CTX_set_default_verify_dir(ctx);
     SSL_CTX_set_verify(ctx, verify, verify_callback);
-
-    if (!ctx_set_verify_locations(ctx, CAfile, CApath, noCAfile, noCApath)) {
-        ERR_print_errors(bio_err);
-        goto end;
-    }
 
     ssl_ctx_add_crls(ctx, crls, crl_download);
 
