@@ -927,6 +927,227 @@ void print_ssl_summary(SSL *s)
         ssl_print_tmp_key(bio_err, s);
 }
 
+static void print_ca_names(BIO *bio, SSL *s)
+{
+    const char *cs = SSL_is_server(s) ? "server" : "client";
+    const STACK_OF(X509_NAME) *sk = SSL_get0_peer_CA_list(s);
+    int i;
+
+    if (sk == NULL || sk_X509_NAME_num(sk) == 0) {
+        if (!SSL_is_server(s))
+            BIO_printf(bio, "---\nNo %s certificate CA names sent\n", cs);
+        return;
+    }
+
+    BIO_printf(bio, "---\nAcceptable %s certificate CA names\n",cs);
+    for (i = 0; i < sk_X509_NAME_num(sk); i++) {
+        X509_NAME_print_ex(bio, sk_X509_NAME_value(sk, i), 0, get_nameopt());
+        BIO_write(bio, "\n", 1);
+    }
+}
+
+static void print_stuff(BIO *bio, SSL *s, int full)
+{
+    X509 *peer = NULL;
+    STACK_OF(X509) *sk;
+    const SSL_CIPHER *c;
+    int i, istls13 = (SSL_version(s) == TLS1_3_VERSION);
+    long verify_result;
+    const COMP_METHOD *comp, *expansion;
+    unsigned char *exportedkeymat;
+    const SSL_CTX *ctx = SSL_get_SSL_CTX(s);
+
+    if (full) {
+        int got_a_chain = 0;
+
+        sk = SSL_get_peer_cert_chain(s);
+        if (sk != NULL) {
+            got_a_chain = 1;
+
+            BIO_printf(bio, "---\nCertificate chain\n");
+            for (i = 0; i < sk_X509_num(sk); i++) {
+                BIO_printf(bio, "%2d s:", i);
+                X509_NAME_print_ex(bio, X509_get_subject_name(sk_X509_value(sk, i)), 0, get_nameopt());
+                BIO_puts(bio, "\n");
+                BIO_printf(bio, "   i:");
+                X509_NAME_print_ex(bio, X509_get_issuer_name(sk_X509_value(sk, i)), 0, get_nameopt());
+                BIO_puts(bio, "\n");
+                if (c_showcerts)
+                    PEM_write_bio_X509(bio, sk_X509_value(sk, i));
+            }
+        }
+
+        BIO_printf(bio, "---\n");
+        peer = SSL_get_peer_certificate(s);
+        if (peer != NULL) {
+            BIO_printf(bio, "Server certificate\n");
+
+            /* Redundant if we showed the whole chain */
+            if (!(c_showcerts && got_a_chain))
+                PEM_write_bio_X509(bio, peer);
+            dump_cert_text(bio, peer);
+        } else {
+            BIO_printf(bio, "no peer certificate available\n");
+        }
+        print_ca_names(bio, s);
+
+        ssl_print_sigalgs(bio, s);
+        ssl_print_tmp_key(bio, s);
+
+        /*
+         * When the SSL session is anonymous, or resumed via an abbreviated
+         * handshake, no SCTs are provided as part of the handshake.  While in
+         * a resumed session SCTs may be present in the session's certificate,
+         * no callbacks are invoked to revalidate these, and in any case that
+         * set of SCTs may be incomplete.  Thus it makes little sense to
+         * attempt to display SCTs from a resumed session's certificate, and of
+         * course none are associated with an anonymous peer.
+         */
+        if (peer != NULL && !SSL_session_reused(s) && SSL_ct_is_enabled(s)) {
+            const STACK_OF(SCT) *scts = SSL_get0_peer_scts(s);
+            int sct_count = scts != NULL ? sk_SCT_num(scts) : 0;
+
+            BIO_printf(bio, "---\nSCTs present (%i)\n", sct_count);
+            if (sct_count > 0) {
+                const CTLOG_STORE *log_store = SSL_CTX_get0_ctlog_store(ctx);
+
+                BIO_printf(bio, "---\n");
+                for (i = 0; i < sct_count; ++i) {
+                    SCT *sct = sk_SCT_value(scts, i);
+
+                    BIO_printf(bio, "SCT validation status: %s\n",
+                               SCT_validation_status_string(sct));
+                    SCT_print(sct, bio, 0, log_store);
+                    if (i < sct_count - 1)
+                        BIO_printf(bio, "\n---\n");
+                }
+                BIO_printf(bio, "\n");
+            }
+        }
+
+        BIO_printf(bio,
+                   "---\nSSL handshake has read %ju bytes "
+                   "and written %ju bytes\n",
+                   BIO_number_read(SSL_get_rbio(s)),
+                   BIO_number_written(SSL_get_wbio(s)));
+    }
+    print_verify_detail(s, bio);
+    BIO_printf(bio, (SSL_session_reused(s) ? "---\nReused, " : "---\nNew, "));
+    c = SSL_get_current_cipher(s);
+    BIO_printf(bio, "%s, Cipher is %s\n",
+               SSL_CIPHER_get_version(c), SSL_CIPHER_get_name(c));
+    if (peer != NULL) {
+        EVP_PKEY *pktmp;
+
+        pktmp = X509_get0_pubkey(peer);
+        BIO_printf(bio, "Server public key is %d bit\n",
+                   EVP_PKEY_bits(pktmp));
+    }
+    BIO_printf(bio, "Secure Renegotiation IS%s supported\n",
+               SSL_get_secure_renegotiation_support(s) ? "" : " NOT");
+    comp = SSL_get_current_compression(s);
+    expansion = SSL_get_current_expansion(s);
+    BIO_printf(bio, "Compression: %s\n",
+               comp ? SSL_COMP_get_name(comp) : "NONE");
+    BIO_printf(bio, "Expansion: %s\n",
+               expansion ? SSL_COMP_get_name(expansion) : "NONE");
+
+    {
+        /* Print out local port of connection: useful for debugging */
+        int sock;
+        union BIO_sock_info_u info;
+
+        sock = SSL_get_fd(s);
+        if ((info.addr = BIO_ADDR_new()) != NULL
+            && BIO_sock_info(sock, BIO_SOCK_INFO_ADDRESS, &info)) {
+            BIO_printf(bio_c_out, "LOCAL PORT is %u\n",
+                       ntohs(BIO_ADDR_rawport(info.addr)));
+        }
+        BIO_ADDR_free(info.addr);
+    }
+
+    if (next_proto.status != -1) {
+        const unsigned char *proto;
+        unsigned int proto_len;
+        SSL_get0_next_proto_negotiated(s, &proto, &proto_len);
+        BIO_printf(bio, "Next protocol: (%d) ", next_proto.status);
+        BIO_write(bio, proto, proto_len);
+        BIO_write(bio, "\n", 1);
+    }
+    {
+        const unsigned char *proto;
+        unsigned int proto_len;
+        SSL_get0_alpn_selected(s, &proto, &proto_len);
+        if (proto_len > 0) {
+            BIO_printf(bio, "ALPN protocol: ");
+            BIO_write(bio, proto, proto_len);
+            BIO_write(bio, "\n", 1);
+        } else
+            BIO_printf(bio, "No ALPN negotiated\n");
+    }
+
+    {
+        SRTP_PROTECTION_PROFILE *srtp_profile =
+            SSL_get_selected_srtp_profile(s);
+
+        if (srtp_profile)
+            BIO_printf(bio, "SRTP Extension negotiated, profile=%s\n",
+                       srtp_profile->name);
+    }
+
+    if (istls13) {
+        switch (SSL_get_early_data_status(s)) {
+        case SSL_EARLY_DATA_NOT_SENT:
+            BIO_printf(bio, "Early data was not sent\n");
+            break;
+
+        case SSL_EARLY_DATA_REJECTED:
+            BIO_printf(bio, "Early data was rejected\n");
+            break;
+
+        case SSL_EARLY_DATA_ACCEPTED:
+            BIO_printf(bio, "Early data was accepted\n");
+            break;
+
+        }
+
+        /*
+         * We also print the verify results when we dump session information,
+         * but in TLSv1.3 we may not get that right away (or at all) depending
+         * on when we get a NewSessionTicket. Therefore we print it now as well.
+         */
+        verify_result = SSL_get_verify_result(s);
+        BIO_printf(bio, "Verify return code: %ld (%s)\n", verify_result,
+                   X509_verify_cert_error_string(verify_result));
+    } else {
+        /* In TLSv1.3 we do this on arrival of a NewSessionTicket */
+        SSL_SESSION_print(bio, SSL_get_session(s));
+    }
+
+    if (SSL_get_session(s) != NULL && keymatexportlabel != NULL) {
+        BIO_printf(bio, "Keying material exporter:\n");
+        BIO_printf(bio, "    Label: '%s'\n", keymatexportlabel);
+        BIO_printf(bio, "    Length: %i bytes\n", keymatexportlen);
+        exportedkeymat = OPENSSL_malloc(keymatexportlen);
+        if (!SSL_export_keying_material(s, exportedkeymat,
+                                        keymatexportlen,
+                                        keymatexportlabel,
+                                        strlen(keymatexportlabel),
+                                        NULL, 0, 0)) {
+            BIO_printf(bio, "    Error\n");
+        } else {
+            BIO_printf(bio, "    Keying material: ");
+            for (i = 0; i < keymatexportlen; i++)
+                BIO_printf(bio, "%02X", exportedkeymat[i]);
+            BIO_printf(bio, "\n");
+        }
+        OPENSSL_free(exportedkeymat);
+    }
+    BIO_printf(bio, "---\n");
+    X509_free(peer);
+    /* flush, or debugging output gets mixed with http response */
+    (void)BIO_flush(bio);
+}
 
 static void do_ssl_shutdown(SSL *ssl)
 {
@@ -1000,6 +1221,180 @@ static int new_session_cb(SSL *s, SSL_SESSION *sess)
      * because we haven't used the reference.
      */
     return 0;
+}
+
+static int ocsp_resp_cb(SSL *s, void *arg)
+{
+    const unsigned char *p;
+    int len;
+    OCSP_RESPONSE *rsp;
+    len = SSL_get_tlsext_status_ocsp_resp(s, &p);
+    BIO_puts(arg, "OCSP response: ");
+    if (p == NULL) {
+        BIO_puts(arg, "no response sent\n");
+        return 1;
+    }
+    rsp = d2i_OCSP_RESPONSE(NULL, &p, len);
+    if (rsp == NULL) {
+        BIO_puts(arg, "response parse error\n");
+        BIO_dump_indent(arg, (char *)p, len, 4);
+        return 0;
+    }
+    BIO_puts(arg, "\n======================================\n");
+    OCSP_RESPONSE_print(arg, rsp, 0);
+    BIO_puts(arg, "======================================\n");
+    OCSP_RESPONSE_free(rsp);
+    return 1;
+}
+
+static int ldap_ExtendedResponse_parse(const char *buf, long rem)
+{
+    const unsigned char *cur, *end;
+    long len;
+    int tag, xclass, inf, ret = -1;
+
+    cur = (const unsigned char *)buf;
+    end = cur + rem;
+
+    /*
+     * From RFC 4511:
+     *
+     *    LDAPMessage ::= SEQUENCE {
+     *         messageID       MessageID,
+     *         protocolOp      CHOICE {
+     *              ...
+     *              extendedResp          ExtendedResponse,
+     *              ... },
+     *         controls       [0] Controls OPTIONAL }
+     *
+     *    ExtendedResponse ::= [APPLICATION 24] SEQUENCE {
+     *         COMPONENTS OF LDAPResult,
+     *         responseName     [10] LDAPOID OPTIONAL,
+     *         responseValue    [11] OCTET STRING OPTIONAL }
+     *
+     *    LDAPResult ::= SEQUENCE {
+     *         resultCode         ENUMERATED {
+     *              success                      (0),
+     *              ...
+     *              other                        (80),
+     *              ...  },
+     *         matchedDN          LDAPDN,
+     *         diagnosticMessage  LDAPString,
+     *         referral           [3] Referral OPTIONAL }
+     */
+
+    /* pull SEQUENCE */
+    inf = ASN1_get_object(&cur, &len, &tag, &xclass, rem);
+    if (inf != V_ASN1_CONSTRUCTED || tag != V_ASN1_SEQUENCE ||
+        (rem = end - cur, len > rem)) {
+        BIO_printf(bio_err, "Unexpected LDAP response\n");
+        goto end;
+    }
+
+    rem = len;  /* ensure that we don't overstep the SEQUENCE */
+
+    /* pull MessageID */
+    inf = ASN1_get_object(&cur, &len, &tag, &xclass, rem);
+    if (inf != V_ASN1_UNIVERSAL || tag != V_ASN1_INTEGER ||
+        (rem = end - cur, len > rem)) {
+        BIO_printf(bio_err, "No MessageID\n");
+        goto end;
+    }
+
+    cur += len; /* shall we check for MessageId match or just skip? */
+
+    /* pull [APPLICATION 24] */
+    rem = end - cur;
+    inf = ASN1_get_object(&cur, &len, &tag, &xclass, rem);
+    if (inf != V_ASN1_CONSTRUCTED || xclass != V_ASN1_APPLICATION ||
+        tag != 24) {
+        BIO_printf(bio_err, "Not ExtendedResponse\n");
+        goto end;
+    }
+
+    /* pull resultCode */
+    rem = end - cur;
+    inf = ASN1_get_object(&cur, &len, &tag, &xclass, rem);
+    if (inf != V_ASN1_UNIVERSAL || tag != V_ASN1_ENUMERATED || len == 0 ||
+        (rem = end - cur, len > rem)) {
+        BIO_printf(bio_err, "Not LDAPResult\n");
+        goto end;
+    }
+
+    /* len should always be one, but just in case... */
+    for (ret = 0, inf = 0; inf < len; inf++) {
+        ret <<= 8;
+        ret |= cur[inf];
+    }
+    /* There is more data, but we don't care... */
+ end:
+    return ret;
+}
+
+/*
+ * Host dNS Name verifier: used for checking that the hostname is in dNS format 
+ * before setting it as SNI
+ */
+static int is_dNS_name(const char *host)
+{
+    const size_t MAX_LABEL_LENGTH = 63;
+    size_t i;
+    int isdnsname = 0;
+    size_t length = strlen(host);
+    size_t label_length = 0;
+    int all_numeric = 1;
+
+    /*
+     * Deviation from strict DNS name syntax, also check names with '_'
+     * Check DNS name syntax, any '-' or '.' must be internal,
+     * and on either side of each '.' we can't have a '-' or '.'.
+     *
+     * If the name has just one label, we don't consider it a DNS name.
+     */
+    for (i = 0; i < length && label_length < MAX_LABEL_LENGTH; ++i) {
+        char c = host[i];
+
+        if ((c >= 'a' && c <= 'z')
+            || (c >= 'A' && c <= 'Z')
+            || c == '_') {
+            label_length += 1;
+            all_numeric = 0;
+            continue;
+        }
+
+        if (c >= '0' && c <= '9') {
+            label_length += 1;
+            continue;
+        }
+
+        /* Dot and hyphen cannot be first or last. */
+        if (i > 0 && i < length - 1) {
+            if (c == '-') {
+                label_length += 1;
+                continue;
+            }
+            /*
+             * Next to a dot the preceding and following characters must not be
+             * another dot or a hyphen.  Otherwise, record that the name is
+             * plausible, since it has two or more labels.
+             */
+            if (c == '.'
+                && host[i + 1] != '.'
+                && host[i - 1] != '-'
+                && host[i + 1] != '-') {
+                label_length = 0;
+                isdnsname = 1;
+                continue;
+            }
+        }
+        isdnsname = 0;
+        break;
+    }
+
+    /* dNS name must not be all numeric and labels must be shorter than 64 characters. */
+    isdnsname &= !all_numeric && !(label_length == MAX_LABEL_LENGTH);
+
+    return isdnsname;
 }
 
 int main(int argc, char **argv)
@@ -1682,399 +2077,3 @@ int main(int argc, char **argv)
     return ret;
 }
 
-
-static void print_ca_names(BIO *bio, SSL *s)
-{
-    const char *cs = SSL_is_server(s) ? "server" : "client";
-    const STACK_OF(X509_NAME) *sk = SSL_get0_peer_CA_list(s);
-    int i;
-
-    if (sk == NULL || sk_X509_NAME_num(sk) == 0) {
-        if (!SSL_is_server(s))
-            BIO_printf(bio, "---\nNo %s certificate CA names sent\n", cs);
-        return;
-    }
-
-    BIO_printf(bio, "---\nAcceptable %s certificate CA names\n",cs);
-    for (i = 0; i < sk_X509_NAME_num(sk); i++) {
-        X509_NAME_print_ex(bio, sk_X509_NAME_value(sk, i), 0, get_nameopt());
-        BIO_write(bio, "\n", 1);
-    }
-}
-
-static void print_stuff(BIO *bio, SSL *s, int full)
-{
-    X509 *peer = NULL;
-    STACK_OF(X509) *sk;
-    const SSL_CIPHER *c;
-    int i, istls13 = (SSL_version(s) == TLS1_3_VERSION);
-    long verify_result;
-    const COMP_METHOD *comp, *expansion;
-    unsigned char *exportedkeymat;
-    const SSL_CTX *ctx = SSL_get_SSL_CTX(s);
-
-    if (full) {
-        int got_a_chain = 0;
-
-        sk = SSL_get_peer_cert_chain(s);
-        if (sk != NULL) {
-            got_a_chain = 1;
-
-            BIO_printf(bio, "---\nCertificate chain\n");
-            for (i = 0; i < sk_X509_num(sk); i++) {
-                BIO_printf(bio, "%2d s:", i);
-                X509_NAME_print_ex(bio, X509_get_subject_name(sk_X509_value(sk, i)), 0, get_nameopt());
-                BIO_puts(bio, "\n");
-                BIO_printf(bio, "   i:");
-                X509_NAME_print_ex(bio, X509_get_issuer_name(sk_X509_value(sk, i)), 0, get_nameopt());
-                BIO_puts(bio, "\n");
-                if (c_showcerts)
-                    PEM_write_bio_X509(bio, sk_X509_value(sk, i));
-            }
-        }
-
-        BIO_printf(bio, "---\n");
-        peer = SSL_get_peer_certificate(s);
-        if (peer != NULL) {
-            BIO_printf(bio, "Server certificate\n");
-
-            /* Redundant if we showed the whole chain */
-            if (!(c_showcerts && got_a_chain))
-                PEM_write_bio_X509(bio, peer);
-            dump_cert_text(bio, peer);
-        } else {
-            BIO_printf(bio, "no peer certificate available\n");
-        }
-        print_ca_names(bio, s);
-
-        ssl_print_sigalgs(bio, s);
-        ssl_print_tmp_key(bio, s);
-
-        /*
-         * When the SSL session is anonymous, or resumed via an abbreviated
-         * handshake, no SCTs are provided as part of the handshake.  While in
-         * a resumed session SCTs may be present in the session's certificate,
-         * no callbacks are invoked to revalidate these, and in any case that
-         * set of SCTs may be incomplete.  Thus it makes little sense to
-         * attempt to display SCTs from a resumed session's certificate, and of
-         * course none are associated with an anonymous peer.
-         */
-        if (peer != NULL && !SSL_session_reused(s) && SSL_ct_is_enabled(s)) {
-            const STACK_OF(SCT) *scts = SSL_get0_peer_scts(s);
-            int sct_count = scts != NULL ? sk_SCT_num(scts) : 0;
-
-            BIO_printf(bio, "---\nSCTs present (%i)\n", sct_count);
-            if (sct_count > 0) {
-                const CTLOG_STORE *log_store = SSL_CTX_get0_ctlog_store(ctx);
-
-                BIO_printf(bio, "---\n");
-                for (i = 0; i < sct_count; ++i) {
-                    SCT *sct = sk_SCT_value(scts, i);
-
-                    BIO_printf(bio, "SCT validation status: %s\n",
-                               SCT_validation_status_string(sct));
-                    SCT_print(sct, bio, 0, log_store);
-                    if (i < sct_count - 1)
-                        BIO_printf(bio, "\n---\n");
-                }
-                BIO_printf(bio, "\n");
-            }
-        }
-
-        BIO_printf(bio,
-                   "---\nSSL handshake has read %ju bytes "
-                   "and written %ju bytes\n",
-                   BIO_number_read(SSL_get_rbio(s)),
-                   BIO_number_written(SSL_get_wbio(s)));
-    }
-    print_verify_detail(s, bio);
-    BIO_printf(bio, (SSL_session_reused(s) ? "---\nReused, " : "---\nNew, "));
-    c = SSL_get_current_cipher(s);
-    BIO_printf(bio, "%s, Cipher is %s\n",
-               SSL_CIPHER_get_version(c), SSL_CIPHER_get_name(c));
-    if (peer != NULL) {
-        EVP_PKEY *pktmp;
-
-        pktmp = X509_get0_pubkey(peer);
-        BIO_printf(bio, "Server public key is %d bit\n",
-                   EVP_PKEY_bits(pktmp));
-    }
-    BIO_printf(bio, "Secure Renegotiation IS%s supported\n",
-               SSL_get_secure_renegotiation_support(s) ? "" : " NOT");
-    comp = SSL_get_current_compression(s);
-    expansion = SSL_get_current_expansion(s);
-    BIO_printf(bio, "Compression: %s\n",
-               comp ? SSL_COMP_get_name(comp) : "NONE");
-    BIO_printf(bio, "Expansion: %s\n",
-               expansion ? SSL_COMP_get_name(expansion) : "NONE");
-
-    {
-        /* Print out local port of connection: useful for debugging */
-        int sock;
-        union BIO_sock_info_u info;
-
-        sock = SSL_get_fd(s);
-        if ((info.addr = BIO_ADDR_new()) != NULL
-            && BIO_sock_info(sock, BIO_SOCK_INFO_ADDRESS, &info)) {
-            BIO_printf(bio_c_out, "LOCAL PORT is %u\n",
-                       ntohs(BIO_ADDR_rawport(info.addr)));
-        }
-        BIO_ADDR_free(info.addr);
-    }
-
-    if (next_proto.status != -1) {
-        const unsigned char *proto;
-        unsigned int proto_len;
-        SSL_get0_next_proto_negotiated(s, &proto, &proto_len);
-        BIO_printf(bio, "Next protocol: (%d) ", next_proto.status);
-        BIO_write(bio, proto, proto_len);
-        BIO_write(bio, "\n", 1);
-    }
-    {
-        const unsigned char *proto;
-        unsigned int proto_len;
-        SSL_get0_alpn_selected(s, &proto, &proto_len);
-        if (proto_len > 0) {
-            BIO_printf(bio, "ALPN protocol: ");
-            BIO_write(bio, proto, proto_len);
-            BIO_write(bio, "\n", 1);
-        } else
-            BIO_printf(bio, "No ALPN negotiated\n");
-    }
-
-    {
-        SRTP_PROTECTION_PROFILE *srtp_profile =
-            SSL_get_selected_srtp_profile(s);
-
-        if (srtp_profile)
-            BIO_printf(bio, "SRTP Extension negotiated, profile=%s\n",
-                       srtp_profile->name);
-    }
-
-    if (istls13) {
-        switch (SSL_get_early_data_status(s)) {
-        case SSL_EARLY_DATA_NOT_SENT:
-            BIO_printf(bio, "Early data was not sent\n");
-            break;
-
-        case SSL_EARLY_DATA_REJECTED:
-            BIO_printf(bio, "Early data was rejected\n");
-            break;
-
-        case SSL_EARLY_DATA_ACCEPTED:
-            BIO_printf(bio, "Early data was accepted\n");
-            break;
-
-        }
-
-        /*
-         * We also print the verify results when we dump session information,
-         * but in TLSv1.3 we may not get that right away (or at all) depending
-         * on when we get a NewSessionTicket. Therefore we print it now as well.
-         */
-        verify_result = SSL_get_verify_result(s);
-        BIO_printf(bio, "Verify return code: %ld (%s)\n", verify_result,
-                   X509_verify_cert_error_string(verify_result));
-    } else {
-        /* In TLSv1.3 we do this on arrival of a NewSessionTicket */
-        SSL_SESSION_print(bio, SSL_get_session(s));
-    }
-
-    if (SSL_get_session(s) != NULL && keymatexportlabel != NULL) {
-        BIO_printf(bio, "Keying material exporter:\n");
-        BIO_printf(bio, "    Label: '%s'\n", keymatexportlabel);
-        BIO_printf(bio, "    Length: %i bytes\n", keymatexportlen);
-        exportedkeymat = OPENSSL_malloc(keymatexportlen);
-        if (!SSL_export_keying_material(s, exportedkeymat,
-                                        keymatexportlen,
-                                        keymatexportlabel,
-                                        strlen(keymatexportlabel),
-                                        NULL, 0, 0)) {
-            BIO_printf(bio, "    Error\n");
-        } else {
-            BIO_printf(bio, "    Keying material: ");
-            for (i = 0; i < keymatexportlen; i++)
-                BIO_printf(bio, "%02X", exportedkeymat[i]);
-            BIO_printf(bio, "\n");
-        }
-        OPENSSL_free(exportedkeymat);
-    }
-    BIO_printf(bio, "---\n");
-    X509_free(peer);
-    /* flush, or debugging output gets mixed with http response */
-    (void)BIO_flush(bio);
-}
-
-static int ocsp_resp_cb(SSL *s, void *arg)
-{
-    const unsigned char *p;
-    int len;
-    OCSP_RESPONSE *rsp;
-    len = SSL_get_tlsext_status_ocsp_resp(s, &p);
-    BIO_puts(arg, "OCSP response: ");
-    if (p == NULL) {
-        BIO_puts(arg, "no response sent\n");
-        return 1;
-    }
-    rsp = d2i_OCSP_RESPONSE(NULL, &p, len);
-    if (rsp == NULL) {
-        BIO_puts(arg, "response parse error\n");
-        BIO_dump_indent(arg, (char *)p, len, 4);
-        return 0;
-    }
-    BIO_puts(arg, "\n======================================\n");
-    OCSP_RESPONSE_print(arg, rsp, 0);
-    BIO_puts(arg, "======================================\n");
-    OCSP_RESPONSE_free(rsp);
-    return 1;
-}
-
-static int ldap_ExtendedResponse_parse(const char *buf, long rem)
-{
-    const unsigned char *cur, *end;
-    long len;
-    int tag, xclass, inf, ret = -1;
-
-    cur = (const unsigned char *)buf;
-    end = cur + rem;
-
-    /*
-     * From RFC 4511:
-     *
-     *    LDAPMessage ::= SEQUENCE {
-     *         messageID       MessageID,
-     *         protocolOp      CHOICE {
-     *              ...
-     *              extendedResp          ExtendedResponse,
-     *              ... },
-     *         controls       [0] Controls OPTIONAL }
-     *
-     *    ExtendedResponse ::= [APPLICATION 24] SEQUENCE {
-     *         COMPONENTS OF LDAPResult,
-     *         responseName     [10] LDAPOID OPTIONAL,
-     *         responseValue    [11] OCTET STRING OPTIONAL }
-     *
-     *    LDAPResult ::= SEQUENCE {
-     *         resultCode         ENUMERATED {
-     *              success                      (0),
-     *              ...
-     *              other                        (80),
-     *              ...  },
-     *         matchedDN          LDAPDN,
-     *         diagnosticMessage  LDAPString,
-     *         referral           [3] Referral OPTIONAL }
-     */
-
-    /* pull SEQUENCE */
-    inf = ASN1_get_object(&cur, &len, &tag, &xclass, rem);
-    if (inf != V_ASN1_CONSTRUCTED || tag != V_ASN1_SEQUENCE ||
-        (rem = end - cur, len > rem)) {
-        BIO_printf(bio_err, "Unexpected LDAP response\n");
-        goto end;
-    }
-
-    rem = len;  /* ensure that we don't overstep the SEQUENCE */
-
-    /* pull MessageID */
-    inf = ASN1_get_object(&cur, &len, &tag, &xclass, rem);
-    if (inf != V_ASN1_UNIVERSAL || tag != V_ASN1_INTEGER ||
-        (rem = end - cur, len > rem)) {
-        BIO_printf(bio_err, "No MessageID\n");
-        goto end;
-    }
-
-    cur += len; /* shall we check for MessageId match or just skip? */
-
-    /* pull [APPLICATION 24] */
-    rem = end - cur;
-    inf = ASN1_get_object(&cur, &len, &tag, &xclass, rem);
-    if (inf != V_ASN1_CONSTRUCTED || xclass != V_ASN1_APPLICATION ||
-        tag != 24) {
-        BIO_printf(bio_err, "Not ExtendedResponse\n");
-        goto end;
-    }
-
-    /* pull resultCode */
-    rem = end - cur;
-    inf = ASN1_get_object(&cur, &len, &tag, &xclass, rem);
-    if (inf != V_ASN1_UNIVERSAL || tag != V_ASN1_ENUMERATED || len == 0 ||
-        (rem = end - cur, len > rem)) {
-        BIO_printf(bio_err, "Not LDAPResult\n");
-        goto end;
-    }
-
-    /* len should always be one, but just in case... */
-    for (ret = 0, inf = 0; inf < len; inf++) {
-        ret <<= 8;
-        ret |= cur[inf];
-    }
-    /* There is more data, but we don't care... */
- end:
-    return ret;
-}
-
-/*
- * Host dNS Name verifier: used for checking that the hostname is in dNS format 
- * before setting it as SNI
- */
-static int is_dNS_name(const char *host)
-{
-    const size_t MAX_LABEL_LENGTH = 63;
-    size_t i;
-    int isdnsname = 0;
-    size_t length = strlen(host);
-    size_t label_length = 0;
-    int all_numeric = 1;
-
-    /*
-     * Deviation from strict DNS name syntax, also check names with '_'
-     * Check DNS name syntax, any '-' or '.' must be internal,
-     * and on either side of each '.' we can't have a '-' or '.'.
-     *
-     * If the name has just one label, we don't consider it a DNS name.
-     */
-    for (i = 0; i < length && label_length < MAX_LABEL_LENGTH; ++i) {
-        char c = host[i];
-
-        if ((c >= 'a' && c <= 'z')
-            || (c >= 'A' && c <= 'Z')
-            || c == '_') {
-            label_length += 1;
-            all_numeric = 0;
-            continue;
-        }
-
-        if (c >= '0' && c <= '9') {
-            label_length += 1;
-            continue;
-        }
-
-        /* Dot and hyphen cannot be first or last. */
-        if (i > 0 && i < length - 1) {
-            if (c == '-') {
-                label_length += 1;
-                continue;
-            }
-            /*
-             * Next to a dot the preceding and following characters must not be
-             * another dot or a hyphen.  Otherwise, record that the name is
-             * plausible, since it has two or more labels.
-             */
-            if (c == '.'
-                && host[i + 1] != '.'
-                && host[i - 1] != '-'
-                && host[i + 1] != '-') {
-                label_length = 0;
-                isdnsname = 1;
-                continue;
-            }
-        }
-        isdnsname = 0;
-        break;
-    }
-
-    /* dNS name must not be all numeric and labels must be shorter than 64 characters. */
-    isdnsname &= !all_numeric && !(label_length == MAX_LABEL_LENGTH);
-
-    return isdnsname;
-}
