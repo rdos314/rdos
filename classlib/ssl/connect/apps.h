@@ -43,27 +43,4 @@
   || o == OPT_S_NOTLS1_2 || o == OPT_S_NOTLS1_3)
 
 
-/* See OPT_FMT_xxx, above. */
-/* On some platforms, it's important to distinguish between text and binary
- * files.  On some, there might even be specific file formats for different
- * contents.  The FORMAT_xxx macros are meant to express an intent with the
- * file being read or created.
- */
-# define B_FORMAT_TEXT   0x8000
-# define FORMAT_UNDEF    0
-# define FORMAT_TEXT    (1 | B_FORMAT_TEXT)     /* Generic text */
-# define FORMAT_BINARY   2                      /* Generic binary */
-# define FORMAT_BASE64  (3 | B_FORMAT_TEXT)     /* Base64 */
-# define FORMAT_ASN1     4                      /* ASN.1/DER */
-# define FORMAT_PEM     (5 | B_FORMAT_TEXT)
-# define FORMAT_PKCS12   6
-# define FORMAT_SMIME   (7 | B_FORMAT_TEXT)
-# define FORMAT_ENGINE   8                      /* Not really a file format */
-# define FORMAT_PEMRSA  (9 | B_FORMAT_TEXT)     /* PEM RSAPubicKey format */
-# define FORMAT_ASN1RSA  10                     /* DER RSAPubicKey format */
-# define FORMAT_MSBLOB   11                     /* MS Key blob format */
-# define FORMAT_PVK      12                     /* MS PVK file format */
-# define FORMAT_HTTP     13                     /* Download using HTTP */
-# define FORMAT_NSS      14                     /* NSS keylog format */
-
 #endif
