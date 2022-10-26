@@ -186,14 +186,6 @@ void store_setup_crl_download(X509_STORE *st);
 # define FORMAT_HTTP     13                     /* Download using HTTP */
 # define FORMAT_NSS      14                     /* NSS keylog format */
 
-# define EXT_COPY_NONE   0
-# define EXT_COPY_ADD    1
-# define EXT_COPY_ALL    2
-
-# define NETSCAPE_CERT_HDR       "certificate"
-
-# define APP_PASS_LEN    1024
-
 /*
  * IETF RFC 5280 says serial number must be <= 20 bytes. Use 159 bits
  * so that the first bit will never be one, so that the DER encoding
