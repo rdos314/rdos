@@ -38,16 +38,6 @@
 #define _UC(c) ((unsigned char)(c))
 
 
-extern char *default_config_file;
-extern BIO *bio_in;
-extern BIO *bio_out;
-extern BIO *bio_err;
-extern const unsigned char tls13_aes128gcmsha256_id[];
-extern const unsigned char tls13_aes256gcmsha384_id[];
-extern BIO_ADDR *ourpeer;
-
-
-
 #define IS_NO_PROT_FLAG(o) \
  (o == OPT_S_NOSSL3 || o == OPT_S_NOTLS1 || o == OPT_S_NOTLS1_1 \
   || o == OPT_S_NOTLS1_2 || o == OPT_S_NOTLS1_3)
