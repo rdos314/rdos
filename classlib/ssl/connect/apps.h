@@ -93,20 +93,6 @@ typedef struct pw_cb_data {
     const char *prompt_info;
 } PW_CB_DATA;
 
-/*
- * Sets the file to load the Certificate Transparency log list from.
- * If path is NULL, loads from the default file path.
- * Returns 1 on success, 0 otherwise.
- */
-__owur int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path);
-
-OCSP_RESPONSE *process_responder(OCSP_REQUEST *req,
-                                 const char *host, const char *path,
-                                 const char *port, int use_ssl,
-                                 STACK_OF(CONF_VALUE) *headers,
-                                 int req_timeout);
-
-
 
 extern char *psk_key;
 
