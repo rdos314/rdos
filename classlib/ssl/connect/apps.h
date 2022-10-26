@@ -43,8 +43,6 @@
   || o == OPT_S_NOTLS1_2 || o == OPT_S_NOTLS1_3)
 
 
-extern char *psk_key;
-
 /* See OPT_FMT_xxx, above. */
 /* On some platforms, it's important to distinguish between text and binary
  * files.  On some, there might even be specific file formats for different
