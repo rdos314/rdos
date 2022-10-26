@@ -14,6 +14,20 @@
 #include <errno.h>
 #include <signal.h>
 #include <openssl/opensslconf.h>
+#include "e_os.h" /* struct timeval for DTLS */
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+# include <openssl/e_os2.h>
+# include <openssl/ossl_typ.h>
+# include <openssl/bio.h>
+# include <openssl/x509.h>
+# include <openssl/conf.h>
+# include <openssl/txt_db.h>
+# include <openssl/engine.h>
+# include <openssl/ocsp.h>
+# include <signal.h>
 
 /*
  * With IPv6, it looks like Digital has mixed up the proper order of
@@ -24,13 +38,14 @@
 
 #ifndef OPENSSL_NO_SOCK
 
-# include "apps.h"
 # include "internal/sockets.h"
 
 # include <openssl/bio.h>
 # include <openssl/err.h>
 
 extern BIO *bio_err;
+
+#define openssl_fdset(a,b) FD_SET(a, b)
 
 
 typedef int (*do_server_cb)(int s, int stype, int prot, unsigned char *context);
