@@ -841,11 +841,6 @@ int main(int argc, char **argv)
     SSL_CTX_set_default_verify_dir(ctx);
     SSL_CTX_set_verify(ctx, verify, verify_callback);
 
-    ssl_ctx_add_crls(ctx, crls, crl_download);
-
-    if (!set_cert_key_stuff(ctx, cert, key, chain, build_chain))
-        goto end;
-
     tlsextcbp.biodebug = bio_err;
     SSL_CTX_set_tlsext_servername_callback(ctx, ssl_servername_cb);
     SSL_CTX_set_tlsext_servername_arg(ctx, &tlsextcbp);
@@ -859,42 +854,9 @@ int main(int argc, char **argv)
                                         | SSL_SESS_CACHE_NO_INTERNAL_STORE);
     SSL_CTX_sess_set_new_cb(ctx, new_session_cb);
 
-    if (set_keylog_file(ctx, keylog_file))
-        goto end;
-
     con = SSL_new(ctx);
     if (con == NULL)
         goto end;
-
-    if (enable_pha)
-        SSL_set_post_handshake_auth(con, 1);
-
-    if (sess_in != NULL) {
-        SSL_SESSION *sess;
-        BIO *stmp = BIO_new_file(sess_in, "r");
-        if (stmp == NULL) {
-            BIO_printf(bio_err, "Can't open session file %s\n", sess_in);
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-        sess = PEM_read_bio_SSL_SESSION(stmp, NULL, 0, NULL);
-        BIO_free(stmp);
-        if (sess == NULL) {
-            BIO_printf(bio_err, "Can't open session file %s\n", sess_in);
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-        if (!SSL_set_session(con, sess)) {
-            BIO_printf(bio_err, "Can't set session\n");
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-
-        SSL_SESSION_free(sess);
-    }
-
-    if (fallback_scsv)
-        SSL_set_mode(con, SSL_MODE_SEND_FALLBACK_SCSV);
 
     if (!noservername && (servername != NULL || dane_tlsa_domain == NULL)) {
         if (servername == NULL) {
@@ -906,31 +868,6 @@ int main(int argc, char **argv)
             ERR_print_errors(bio_err);
             goto end;
         }
-    }
-
-    if (dane_tlsa_domain != NULL) {
-        if (SSL_dane_enable(con, dane_tlsa_domain) <= 0) {
-            BIO_printf(bio_err, "%s: Error enabling DANE TLSA "
-                       "authentication.\n", prog);
-            ERR_print_errors(bio_err);
-            goto end;
-        }
-        if (dane_tlsa_rrset == NULL) {
-            BIO_printf(bio_err, "%s: DANE TLSA authentication requires at "
-                       "least one -dane_tlsa_rrdata option.\n", prog);
-            goto end;
-        }
-        if (tlsa_import_rrset(con, dane_tlsa_rrset) <= 0) {
-            BIO_printf(bio_err, "%s: Failed to import any TLSA "
-                       "records.\n", prog);
-            goto end;
-        }
-        if (dane_ee_no_name)
-            SSL_dane_set_flags(con, DANE_FLAG_NO_DANE_EE_NAMECHECKS);
-    } else if (dane_tlsa_rrset != NULL) {
-        BIO_printf(bio_err, "%s: DANE TLSA authentication requires the "
-                   "-dane_tlsa_domain option.\n", prog);
-        goto end;
     }
 
  re_start:
@@ -1401,7 +1338,6 @@ int main(int argc, char **argv)
     SSL_SESSION_free(psksess);
     OPENSSL_free(next_proto.data);
     SSL_CTX_free(ctx);
-    set_keylog_file(NULL, NULL);
     X509_free(cert);
     sk_X509_CRL_pop_free(crls, X509_CRL_free);
     EVP_PKEY_free(key);
