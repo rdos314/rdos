@@ -43,13 +43,6 @@
   || o == OPT_S_NOTLS1_2 || o == OPT_S_NOTLS1_3)
 
 
-typedef struct args_st {
-    int size;
-    int argc;
-    char **argv;
-} ARGS;
-
-
 extern char *psk_key;
 
 /* See OPT_FMT_xxx, above. */
