@@ -154,15 +154,6 @@ int do_X509_CRL_sign(X509_CRL *x, EVP_PKEY *pkey, const EVP_MD *md,
 
 extern char *psk_key;
 
-
-unsigned char *next_protos_parse(size_t *outlen, const char *in);
-
-void print_cert_checks(BIO *bio, X509 *x,
-                       const char *checkhost,
-                       const char *checkemail, const char *checkip);
-
-void store_setup_crl_download(X509_STORE *st);
-
 /* See OPT_FMT_xxx, above. */
 /* On some platforms, it's important to distinguish between text and binary
  * files.  On some, there might even be specific file formats for different
