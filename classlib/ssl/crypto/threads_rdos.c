@@ -65,22 +65,29 @@ void CRYPTO_THREAD_lock_free(CRYPTO_RWLOCK *lock)
 
 int CRYPTO_THREAD_run_once(CRYPTO_ONCE *once, void (*init)(void))
 {
-    int *lock = once;
     int result;
 
-    if (*lock == ONCE_DONE)
+    if (once->state == ONCE_DONE)
         return 1;
 
-    do {
-        result = RdosXchg(lock, ONCE_ININIT);
-        if (result == ONCE_UNINITED) {
+    do 
+    {
+        result = RdosXchg(&once->state, ONCE_ININIT);
+        if (result == ONCE_UNINITED) 
+        {
+            once->thread = RdosGetThreadHandle();
             init();
-            *lock = ONCE_DONE;
+            once->state = ONCE_DONE;
+            once->thread = 0;
             return 1;
         }
+
+        if (result == ONCE_ININIT && once->thread == RdosGetThreadHandle())
+            return 1;
+
     } while (result == ONCE_ININIT);
 
-    return (*lock == ONCE_DONE);
+    return (once->state == ONCE_DONE);
 }
 
 int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
