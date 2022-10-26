@@ -43,6 +43,11 @@ typedef struct ssl_excert_st SSL_EXCERT;
 
 VERIFY_CB_ARGS verify_args = { -1, 0, X509_V_OK, 0 };
 
+typedef struct string_int_pair_st {
+    const char *name;
+    int retval;
+} STRINT_PAIR;
+
 static int c_debug = 0;
 static int c_showcerts = 0;
 static char *keymatexportlabel = NULL;

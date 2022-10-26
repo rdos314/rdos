@@ -43,17 +43,6 @@
   || o == OPT_S_NOTLS1_2 || o == OPT_S_NOTLS1_3)
 
 
-
-/*
- * A string/int pairing; widely use for option value lookup, hence the
- * name OPT_PAIR. But that name is misleading in s_cb.c, so we also use
- * the "generic" name STRINT_PAIR.
- */
-typedef struct string_int_pair_st {
-    const char *name;
-    int retval;
-} OPT_PAIR, STRINT_PAIR;
-
 typedef struct args_st {
     int size;
     int argc;
