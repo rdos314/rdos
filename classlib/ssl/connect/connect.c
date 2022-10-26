@@ -26,11 +26,14 @@
 #include <openssl/async.h>
 #include <openssl/srp.h>
 #include <openssl/ct.h>
-#include "timeouts.h"
 #include "internal/sockets.h"
 
 #define PORT            "4433"
 #define PROTOCOL        "tcp"
+
+/* numbers in us */
+# define DGRAM_RCV_TIMEOUT         250000
+# define DGRAM_SND_TIMEOUT         250000
 
 typedef struct ssl_excert_st SSL_EXCERT;
 
