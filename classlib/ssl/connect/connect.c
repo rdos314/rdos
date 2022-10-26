@@ -961,27 +961,6 @@ static int ssl_servername_cb(SSL *s, int *ad, void *arg)
     return SSL_TLSEXT_ERR_OK;
 }
 
-static int serverinfo_cli_parse_cb(SSL *s, unsigned int ext_type,
-                                   const unsigned char *in, size_t inlen,
-                                   int *al, void *arg)
-{
-    char pem_name[100];
-    unsigned char ext_buf[4 + 65536];
-
-    /* Reconstruct the type/len fields prior to extension data */
-    inlen &= 0xffff; /* for formal memcmpy correctness */
-    ext_buf[0] = (unsigned char)(ext_type >> 8);
-    ext_buf[1] = (unsigned char)(ext_type);
-    ext_buf[2] = (unsigned char)(inlen >> 8);
-    ext_buf[3] = (unsigned char)(inlen);
-    memcpy(ext_buf + 4, in, inlen);
-
-    BIO_snprintf(pem_name, sizeof(pem_name), "SERVERINFO FOR EXTENSION %d",
-                 ext_type);
-    PEM_write_bio(bio_c_out, pem_name, "", ext_buf, 4 + inlen);
-    return 1;
-}
-
 /*
  * Hex decoder that tolerates optional whitespace.  Returns number of bytes
  * produced, advances inptr to end of input string.
