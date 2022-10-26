@@ -282,6 +282,12 @@ void RDOSAPI RdosLoad32();
 short int RDOSAPI RdosSwapShort(short int val);
 long RDOSAPI RdosSwapLong(long val);
 
+int RDOSAPI RdosXchg(int *pos, int val);
+int RDOSAPI RdosAllocateTls();
+void RDOSAPI RdosFreeTls(int index);
+void *RDOSAPI RdosGetTls(int index);
+void RDOSAPI RdosSetTls(int index, void *val);
+
 int RDOSAPI RdosGetCharSize(const char *str);
 
 long RDOSAPI RdosGetLongRandom(void);

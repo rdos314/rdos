@@ -33,6 +33,53 @@
     __parm [__edi] \
     __value [__eax]
 
+#pragma aux RdosAllocateTls = \
+    "mov ecx,fs:[28h]" \
+    "bsf eax, dword ptr [ecx]" \
+    "jnz ok" \
+    "bsf eax, dword ptr [ecx+4]" \
+    "lea eax, [eax+32]" \
+    "jnz ok" \
+    "or eax,-1" \
+    "jmp done" \
+    "ok: " \
+    "btr dword ptr [ecx], eax" \
+    "done: " \
+    __value [__eax]
+
+#pragma aux RdosFreeTls = \
+    "cmp ecx, 64" \
+    "sbb eax, eax" \
+    "jnc done" \
+    "mov eax,fs:[28h]" \
+    "bts dword ptr [eax],ecx" \
+    "done: " \
+    __parm [__ecx]
+
+
+#pragma aux RdosGetTls = \
+    "xor eax, eax" \
+    "cmp ecx, 64" \
+    "jnc done" \
+    "mov edx, fs:[2Ch]" \
+    "mov eax, [edx + ecx * 4]" \
+    "done: " \
+    __parm [__ecx] \
+    __value [__eax]
+
+#pragma aux RdosSetTls = \
+    "xor eax, eax" \
+    "cmp ecx, 64" \
+    "jnc done" \
+    "mov edx, fs:[2Ch]" \
+    "mov [edx + ecx * 4], eax" \
+    "done: " \
+    __parm [__ecx] [__eax]
+
+#pragma aux RdosXchg = \
+    "xchg eax,[edi]" \
+    __parm [__edi] [__eax] \
+    __value [__eax]
 
 #pragma aux RdosWaitAnio = \
     CallGate_wait_anio  \
