@@ -28,14 +28,6 @@ static unsigned char cookie_secret[COOKIE_SECRET_LENGTH];
 static int cookie_initialized = 0;
 static BIO *bio_keylog = NULL;
 
-int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path)
-{
-    if (path == NULL)
-        return SSL_CTX_set_default_ctlog_list_file(ctx);
-
-    return SSL_CTX_set_ctlog_list_file(ctx, path);
-}
-
 static const char *lookup(int val, const STRINT_PAIR* list, const char* def)
 {
     for ( ; list->name; ++list)
@@ -137,43 +129,6 @@ int verify_callback(int ok, X509_STORE_CTX *ctx)
     if (ok && !verify_args.quiet)
         BIO_printf(bio_err, "verify return:%d\n", ok);
     return ok;
-}
-
-int set_cert_stuff(SSL_CTX *ctx, char *cert_file, char *key_file)
-{
-    if (cert_file != NULL) {
-        if (SSL_CTX_use_certificate_file(ctx, cert_file,
-                                         SSL_FILETYPE_PEM) <= 0) {
-            BIO_printf(bio_err, "unable to get certificate from '%s'\n",
-                       cert_file);
-            ERR_print_errors(bio_err);
-            return 0;
-        }
-        if (key_file == NULL)
-            key_file = cert_file;
-        if (SSL_CTX_use_PrivateKey_file(ctx, key_file, SSL_FILETYPE_PEM) <= 0) {
-            BIO_printf(bio_err, "unable to get private key from '%s'\n",
-                       key_file);
-            ERR_print_errors(bio_err);
-            return 0;
-        }
-
-        /*
-         * If we are using DSA, we can copy the parameters from the private
-         * key
-         */
-
-        /*
-         * Now we know that a key and cert have been set against the SSL
-         * context
-         */
-        if (!SSL_CTX_check_private_key(ctx)) {
-            BIO_printf(bio_err,
-                       "Private key does not match the certificate public key\n");
-            return 0;
-        }
-    }
-    return 1;
 }
 
 static STRINT_PAIR cert_type_list[] = {
