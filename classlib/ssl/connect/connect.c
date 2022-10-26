@@ -219,6 +219,163 @@ int dump_cert_text(BIO *out, X509 *x)
     return 0;
 }
 
+static const char *get_sigtype(int nid)
+{
+    switch (nid) {
+    case EVP_PKEY_RSA:
+        return "RSA";
+
+    case EVP_PKEY_RSA_PSS:
+        return "RSA-PSS";
+
+    case EVP_PKEY_DSA:
+        return "DSA";
+
+     case EVP_PKEY_EC:
+        return "ECDSA";
+
+     case NID_ED25519:
+        return "Ed25519";
+
+     case NID_ED448:
+        return "Ed448";
+
+     case NID_id_GostR3410_2001:
+        return "gost2001";
+
+     case NID_id_GostR3410_2012_256:
+        return "gost2012_256";
+
+     case NID_id_GostR3410_2012_512:
+        return "gost2012_512";
+
+    default:
+        return NULL;
+    }
+}
+
+static int do_print_sigalgs(BIO *out, SSL *s, int shared)
+{
+    int i, nsig, client;
+    client = SSL_is_server(s) ? 0 : 1;
+    if (shared)
+        nsig = SSL_get_shared_sigalgs(s, 0, NULL, NULL, NULL, NULL, NULL);
+    else
+        nsig = SSL_get_sigalgs(s, -1, NULL, NULL, NULL, NULL, NULL);
+    if (nsig == 0)
+        return 1;
+
+    if (shared)
+        BIO_puts(out, "Shared ");
+
+    if (client)
+        BIO_puts(out, "Requested ");
+    BIO_puts(out, "Signature Algorithms: ");
+    for (i = 0; i < nsig; i++) {
+        int hash_nid, sign_nid;
+        unsigned char rhash, rsign;
+        const char *sstr = NULL;
+        if (shared)
+            SSL_get_shared_sigalgs(s, i, &sign_nid, &hash_nid, NULL,
+                                   &rsign, &rhash);
+        else
+            SSL_get_sigalgs(s, i, &sign_nid, &hash_nid, NULL, &rsign, &rhash);
+        if (i)
+            BIO_puts(out, ":");
+        sstr = get_sigtype(sign_nid);
+        if (sstr)
+            BIO_printf(out, "%s", sstr);
+        else
+            BIO_printf(out, "0x%02X", (int)rsign);
+        if (hash_nid != NID_undef)
+            BIO_printf(out, "+%s", OBJ_nid2sn(hash_nid));
+        else if (sstr == NULL)
+            BIO_printf(out, "+0x%02X", (int)rhash);
+    }
+    BIO_puts(out, "\n");
+    return 1;
+}
+
+static int ssl_print_sigalgs(BIO *out, SSL *s)
+{
+    int nid;
+
+    do_print_sigalgs(out, s, 0);
+    do_print_sigalgs(out, s, 1);
+    if (SSL_get_peer_signature_nid(s, &nid) && nid != NID_undef)
+        BIO_printf(out, "Peer signing digest: %s\n", OBJ_nid2sn(nid));
+
+    if (SSL_get_peer_signature_type_nid(s, &nid))
+        BIO_printf(out, "Peer signature type: %s\n", get_sigtype(nid));
+
+    return 1;
+}
+
+enum range { OPT_X_ENUM };
+
+static void print_raw_cipherlist(SSL *s)
+{
+    const unsigned char *rlist;
+    static const unsigned char scsv_id[] = { 0, 0xFF };
+    size_t i, rlistlen, num;
+    if (!SSL_is_server(s))
+        return;
+    num = SSL_get0_raw_cipherlist(s, NULL);
+    OPENSSL_assert(num == 2);
+    rlistlen = SSL_get0_raw_cipherlist(s, &rlist);
+    BIO_puts(bio_err, "Client cipher list: ");
+    for (i = 0; i < rlistlen; i += num, rlist += num) {
+        const SSL_CIPHER *c = SSL_CIPHER_find(s, rlist);
+        if (i)
+            BIO_puts(bio_err, ":");
+        if (c != NULL) {
+            BIO_puts(bio_err, SSL_CIPHER_get_name(c));
+        } else if (memcmp(rlist, scsv_id, num) == 0) {
+            BIO_puts(bio_err, "SCSV");
+        } else {
+            size_t j;
+            BIO_puts(bio_err, "0x");
+            for (j = 0; j < num; j++)
+                BIO_printf(bio_err, "%02X", rlist[j]);
+        }
+    }
+    BIO_puts(bio_err, "\n");
+}
+
+void print_ssl_summary(SSL *s)
+{
+    const SSL_CIPHER *c;
+    X509 *peer;
+
+    BIO_printf(bio_err, "Protocol version: %s\n", SSL_get_version(s));
+    print_raw_cipherlist(s);
+    c = SSL_get_current_cipher(s);
+    BIO_printf(bio_err, "Ciphersuite: %s\n", SSL_CIPHER_get_name(c));
+    do_print_sigalgs(bio_err, s, 0);
+    peer = SSL_get_peer_certificate(s);
+    if (peer != NULL) {
+        int nid;
+
+        BIO_puts(bio_err, "Peer certificate: ");
+        X509_NAME_print_ex(bio_err, X509_get_subject_name(peer),
+                           0, get_nameopt());
+        BIO_puts(bio_err, "\n");
+        if (SSL_get_peer_signature_nid(s, &nid))
+            BIO_printf(bio_err, "Hash used: %s\n", OBJ_nid2sn(nid));
+        if (SSL_get_peer_signature_type_nid(s, &nid))
+            BIO_printf(bio_err, "Signature type: %s\n", get_sigtype(nid));
+        print_verify_detail(s, bio_err);
+    } else {
+        BIO_puts(bio_err, "No peer certificate\n");
+    }
+    X509_free(peer);
+    ssl_print_point_formats(bio_err, s);
+    if (SSL_is_server(s))
+        ssl_print_groups(bio_err, s, 1);
+    else
+        ssl_print_tmp_key(bio_err, s);
+}
+
 
 static void do_ssl_shutdown(SSL *ssl)
 {
