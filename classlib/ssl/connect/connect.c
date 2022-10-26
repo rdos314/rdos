@@ -1352,7 +1352,6 @@ int main(int argc, char **argv)
     OPENSSL_free(host);
     OPENSSL_free(port);
     X509_VERIFY_PARAM_free(vpm);
-    ssl_excert_free(exc);
     sk_OPENSSL_STRING_free(ssl_args);
     sk_OPENSSL_STRING_free(dane_tlsa_rrset);
     SSL_CONF_CTX_free(cctx);
