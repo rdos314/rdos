@@ -153,7 +153,6 @@ typedef struct ca_db_st {
     struct stat dbst;
 } CA_DB;
 
-void* app_malloc(int sz, const char *what);
 int parse_yesno(const char *str, int def);
 
 X509_NAME *parse_name(const char *str, long chtype, int multirdn);

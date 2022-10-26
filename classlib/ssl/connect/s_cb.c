@@ -397,7 +397,7 @@ int ssl_print_groups(BIO *out, SSL *s, int noshared)
     ngroups = SSL_get1_groups(s, NULL);
     if (ngroups <= 0)
         return 1;
-    groups = app_malloc(ngroups * sizeof(int), "groups to print");
+    groups = OPENSSL_malloc(ngroups * sizeof(int));
     SSL_get1_groups(s, groups);
 
     BIO_puts(out, "Supported Elliptic Groups: ");
@@ -796,7 +796,7 @@ int generate_cookie_callback(SSL *ssl, unsigned char *cookie,
     OPENSSL_assert(length != 0);
     port = BIO_ADDR_rawport(peer);
     length += sizeof(port);
-    buffer = app_malloc(length, "cookie generate buffer");
+    buffer = OPENSSL_malloc(length);
 
     memcpy(buffer, &port, sizeof(port));
     BIO_ADDR_rawaddress(peer, buffer + sizeof(port), NULL);
@@ -954,7 +954,7 @@ void ssl_ctx_set_excert(SSL_CTX *ctx, SSL_EXCERT *exc)
 
 static int ssl_excert_prepend(SSL_EXCERT **pexc)
 {
-    SSL_EXCERT *exc = app_malloc(sizeof(*exc), "prepend cert");
+    SSL_EXCERT *exc = OPENSSL_malloc(sizeof(*exc));
 
     memset(exc, 0, sizeof(*exc));
 
@@ -1036,7 +1036,7 @@ static char *hexencode(const unsigned char *data, size_t len)
                    opt_getprog(), len);
         exit(1);
     }
-    cp = out = app_malloc(ilen, "TLSA hex data buffer");
+    cp = out = OPENSSL_malloc(ilen);
 
     while (len-- > 0) {
         *cp++ = hex[(*data >> 4) & 0x0f];

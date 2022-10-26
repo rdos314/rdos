@@ -90,20 +90,6 @@ unsigned long get_nameopt(void)
     return (nmflag_set) ? nmflag : XN_FLAG_ONELINE;
 }
 
-void* app_malloc(int sz, const char *what)
-{
-    void *vp = OPENSSL_malloc(sz);
-
-    if (vp == NULL) {
-        BIO_printf(bio_err, "%s: Could not allocate %d bytes for %s\n",
-                opt_getprog(), sz, what);
-        ERR_print_errors(bio_err);
-        exit(1);
-    }
-    return vp;
-}
-
-
 static void save_errno(void)
 {
     saved_errno = errno;
@@ -521,7 +507,7 @@ static ossl_ssize_t hexdecode(const char **inptr, void *result)
 {
     unsigned char **out = (unsigned char **)result;
     const char *in = *inptr;
-    unsigned char *ret = app_malloc(strlen(in) / 2, "hexdecode");
+    unsigned char *ret = OPENSSL_malloc(strlen(in) / 2);
     unsigned char *cp = ret;
     uint8_t byte;
     int nibble = 0;
@@ -796,9 +782,9 @@ int main(int argc, char **argv)
         goto end;
     }
 
-    cbuf = app_malloc(BUFSIZZ, "cbuf");
-    sbuf = app_malloc(BUFSIZZ, "sbuf");
-    mbuf = app_malloc(BUFSIZZ, "mbuf");
+    cbuf = OPENSSL_malloc(BUFSIZZ);
+    sbuf = OPENSSL_malloc(BUFSIZZ);
+    mbuf = OPENSSL_malloc(BUFSIZZ);
 
     SSL_CONF_CTX_set_flags(cctx, SSL_CONF_FLAG_CLIENT | SSL_CONF_FLAG_CMDLINE);
 
@@ -1777,7 +1763,7 @@ static void print_stuff(BIO *bio, SSL *s, int full)
         BIO_printf(bio, "Keying material exporter:\n");
         BIO_printf(bio, "    Label: '%s'\n", keymatexportlabel);
         BIO_printf(bio, "    Length: %i bytes\n", keymatexportlen);
-        exportedkeymat = app_malloc(keymatexportlen, "export key");
+        exportedkeymat = OPENSSL_malloc(keymatexportlen);
         if (!SSL_export_keying_material(s, exportedkeymat,
                                         keymatexportlen,
                                         keymatexportlabel,
