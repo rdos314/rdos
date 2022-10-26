@@ -140,6 +140,34 @@ void wait_for_async(SSL *s)
 {
 }
 
+int config_ctx(SSL_CONF_CTX *cctx, STACK_OF(OPENSSL_STRING) *str,
+               SSL_CTX *ctx)
+{
+    int i;
+
+    SSL_CONF_CTX_set_ssl_ctx(cctx, ctx);
+    for (i = 0; i < sk_OPENSSL_STRING_num(str); i += 2) {
+        const char *flag = sk_OPENSSL_STRING_value(str, i);
+        const char *arg = sk_OPENSSL_STRING_value(str, i + 1);
+        if (SSL_CONF_cmd(cctx, flag, arg) <= 0) {
+            if (arg != NULL)
+                BIO_printf(bio_err, "Error with command: \"%s %s\"\n",
+                           flag, arg);
+            else
+                BIO_printf(bio_err, "Error with command: \"%s\"\n", flag);
+            ERR_print_errors(bio_err);
+            return 0;
+        }
+    }
+    if (!SSL_CONF_CTX_finish(cctx)) {
+        BIO_puts(bio_err, "Error finishing context\n");
+        ERR_print_errors(bio_err);
+        return 0;
+    }
+    return 1;
+}
+
+
 #define X509V3_EXT_UNKNOWN_MASK         (0xfL << 16)
 /* Return error for unknown extensions */
 #define X509V3_EXT_DEFAULT              0
