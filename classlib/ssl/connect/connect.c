@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
 #include <openssl/e_os2.h>
-#include "apps.h"
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -30,6 +30,8 @@
 
 #define PORT            "4433"
 #define PROTOCOL        "tcp"
+
+#define openssl_fdset(a,b) FD_SET(a, b)
 
 # define B_FORMAT_TEXT   0x8000
 # define FORMAT_UNDEF    0
