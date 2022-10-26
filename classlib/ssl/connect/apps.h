@@ -37,8 +37,6 @@
  */
 #define _UC(c) ((unsigned char)(c))
 
-void app_RAND_load_conf(CONF *c, const char *section);
-void app_RAND_write(void);
 
 extern char *default_config_file;
 extern BIO *bio_in;
