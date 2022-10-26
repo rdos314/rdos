@@ -1365,6 +1365,26 @@ int main(int argc, char **argv)
     return ret;
 }
 
+
+static void print_ca_names(BIO *bio, SSL *s)
+{
+    const char *cs = SSL_is_server(s) ? "server" : "client";
+    const STACK_OF(X509_NAME) *sk = SSL_get0_peer_CA_list(s);
+    int i;
+
+    if (sk == NULL || sk_X509_NAME_num(sk) == 0) {
+        if (!SSL_is_server(s))
+            BIO_printf(bio, "---\nNo %s certificate CA names sent\n", cs);
+        return;
+    }
+
+    BIO_printf(bio, "---\nAcceptable %s certificate CA names\n",cs);
+    for (i = 0; i < sk_X509_NAME_num(sk); i++) {
+        X509_NAME_print_ex(bio, sk_X509_NAME_value(sk, i), 0, get_nameopt());
+        BIO_write(bio, "\n", 1);
+    }
+}
+
 static void print_stuff(BIO *bio, SSL *s, int full)
 {
     X509 *peer = NULL;
