@@ -84,6 +84,13 @@ static char *psk_identity = "Client_identity";
  */
 #define _UC(c) ((unsigned char)(c))
 
+/* This is a context that we pass to callbacks */
+typedef struct tlsextctx_st {
+    BIO *biodebug;
+    int ack;
+} tlsextctx;
+
+
 static int c_debug = 0;
 static int c_showcerts = 0;
 static char *keymatexportlabel = NULL;
@@ -920,12 +927,6 @@ static void do_ssl_shutdown(SSL *ssl)
         }
     } while (ret < 0);
 }
-
-/* This is a context that we pass to callbacks */
-typedef struct tlsextctx_st {
-    BIO *biodebug;
-    int ack;
-} tlsextctx;
 
 static int ssl_servername_cb(SSL *s, int *ad, void *arg)
 {
