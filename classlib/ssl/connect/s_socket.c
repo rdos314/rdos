@@ -30,13 +30,7 @@
 # include <openssl/bio.h>
 # include <openssl/err.h>
 
-extern char *default_config_file;
-extern BIO *bio_in;
-extern BIO *bio_out;
 extern BIO *bio_err;
-extern const unsigned char tls13_aes128gcmsha256_id[];
-extern const unsigned char tls13_aes256gcmsha384_id[];
-extern BIO_ADDR *ourpeer;
 
 
 typedef int (*do_server_cb)(int s, int stype, int prot, unsigned char *context);
