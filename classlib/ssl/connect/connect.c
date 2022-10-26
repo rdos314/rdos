@@ -961,48 +961,6 @@ static int ssl_servername_cb(SSL *s, int *ad, void *arg)
     return SSL_TLSEXT_ERR_OK;
 }
 
-/*
- * Hex decoder that tolerates optional whitespace.  Returns number of bytes
- * produced, advances inptr to end of input string.
- */
-static ossl_ssize_t hexdecode(const char **inptr, void *result)
-{
-    unsigned char **out = (unsigned char **)result;
-    const char *in = *inptr;
-    unsigned char *ret = OPENSSL_malloc(strlen(in) / 2);
-    unsigned char *cp = ret;
-    uint8_t byte;
-    int nibble = 0;
-
-    if (ret == NULL)
-        return -1;
-
-    for (byte = 0; *in; ++in) {
-        int x;
-
-        if (isspace(_UC(*in)))
-            continue;
-        x = OPENSSL_hexchar2int(*in);
-        if (x < 0) {
-            OPENSSL_free(ret);
-            return 0;
-        }
-        byte |= (char)x;
-        if ((nibble ^= 1) == 0) {
-            *cp++ = byte;
-            byte = 0;
-        } else {
-            byte <<= 4;
-        }
-    }
-    if (nibble != 0) {
-        OPENSSL_free(ret);
-        return 0;
-    }
-    *inptr = in;
-
-    return cp - (*out = ret);
-}
 
 /*
  * Decode unsigned 0..255, returns 1 on success, <= 0 on failure. Advances
@@ -1035,66 +993,6 @@ struct tlsa_field {
     const char *name;
     ossl_ssize_t (*parser)(const char **, void *);
 };
-
-static int tlsa_import_rr(SSL *con, const char *rrdata)
-{
-    /* Not necessary to re-init these values; the "parsers" do that. */
-    static uint8_t usage;
-    static uint8_t selector;
-    static uint8_t mtype;
-    static unsigned char *data;
-    static struct tlsa_field tlsa_fields[] = {
-        { &usage, "usage", checked_uint8 },
-        { &selector, "selector", checked_uint8 },
-        { &mtype, "mtype", checked_uint8 },
-        { &data, "data", hexdecode },
-        { NULL, }
-    };
-    struct tlsa_field *f;
-    int ret;
-    const char *cp = rrdata;
-    ossl_ssize_t len = 0;
-
-    for (f = tlsa_fields; f->var; ++f) {
-        /* Returns number of bytes produced, advances cp to next field */
-        if ((len = f->parser(&cp, f->var)) <= 0) {
-            BIO_printf(bio_err, "%s: warning: bad TLSA %s field in: %s\n",
-                       prog, f->name, rrdata);
-            return 0;
-        }
-    }
-    /* The data field is last, so len is its length */
-    ret = SSL_dane_tlsa_add(con, usage, selector, mtype, data, len);
-    OPENSSL_free(data);
-
-    if (ret == 0) {
-        ERR_print_errors(bio_err);
-        BIO_printf(bio_err, "%s: warning: unusable TLSA rrdata: %s\n",
-                   prog, rrdata);
-        return 0;
-    }
-    if (ret < 0) {
-        ERR_print_errors(bio_err);
-        BIO_printf(bio_err, "%s: warning: error loading TLSA rrdata: %s\n",
-                   prog, rrdata);
-        return 0;
-    }
-    return ret;
-}
-
-static int tlsa_import_rrset(SSL *con, STACK_OF(OPENSSL_STRING) *rrset)
-{
-    int num = sk_OPENSSL_STRING_num(rrset);
-    int count = 0;
-    int i;
-
-    for (i = 0; i < num; ++i) {
-        char *rrdata = sk_OPENSSL_STRING_value(rrset, i);
-        if (tlsa_import_rr(con, rrdata) > 0)
-            ++count;
-    }
-    return count > 0;
-}
 
 #define IS_INET_FLAG(o) \
  (o == OPT_4 || o == OPT_6 || o == OPT_HOST || o == OPT_PORT || o == OPT_CONNECT)
