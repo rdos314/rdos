@@ -93,22 +93,6 @@ typedef struct pw_cb_data {
     const char *prompt_info;
 } PW_CB_DATA;
 
-int password_callback(char *buf, int bufsiz, int verify, PW_CB_DATA *cb_data);
-
-int chopup_args(ARGS *arg, char *buf);
-int dump_cert_text(BIO *out, X509 *x);
-unsigned long get_nameopt(void);
-int set_cert_ex(unsigned long *flags, const char *arg);
-int set_name_ex(unsigned long *flags, const char *arg);
-int set_ext_copy(int *copy_type, const char *arg);
-int copy_extensions(X509 *x, X509_REQ *req, int copy_type);
-int add_oid_section(CONF *conf);
-X509_STORE *setup_verify(const char *CAfile, const char *CApath,
-                         int noCAfile, int noCApath);
-__owur int ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile,
-                                    const char *CApath, int noCAfile,
-                                    int noCApath);
-
 /*
  * Sets the file to load the Certificate Transparency log list from.
  * If path is NULL, loads from the default file path.
