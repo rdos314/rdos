@@ -423,7 +423,7 @@ void print_name(BIO *out, const char *title, X509_NAME *nm,
     }
 }
 
-int dump_cert_text(BIO *out, X509 *x)
+static int dump_cert_text(BIO *out, X509 *x)
 {
     print_name(out, "subject=", X509_get_subject_name(x), get_nameopt());
     BIO_puts(out, "\n");
@@ -431,6 +431,42 @@ int dump_cert_text(BIO *out, X509 *x)
     BIO_puts(out, "\n");
 
     return 0;
+}
+
+static int ssl_print_tmp_key(BIO *out, SSL *s)
+{
+    EVP_PKEY *key;
+
+    if (!SSL_get_peer_tmp_key(s, &key))
+        return 1;
+    BIO_puts(out, "Server Temp Key: ");
+    switch (EVP_PKEY_id(key)) {
+    case EVP_PKEY_RSA:
+        BIO_printf(out, "RSA, %d bits\n", EVP_PKEY_bits(key));
+        break;
+
+    case EVP_PKEY_DH:
+        BIO_printf(out, "DH, %d bits\n", EVP_PKEY_bits(key));
+        break;
+    case EVP_PKEY_EC:
+        {
+            EC_KEY *ec = EVP_PKEY_get1_EC_KEY(key);
+            int nid;
+            const char *cname;
+            nid = EC_GROUP_get_curve_name(EC_KEY_get0_group(ec));
+            EC_KEY_free(ec);
+            cname = EC_curve_nid2nist(nid);
+            if (cname == NULL)
+                cname = OBJ_nid2sn(nid);
+            BIO_printf(out, "ECDH, %s, %d bits\n", cname, EVP_PKEY_bits(key));
+        }
+    break;
+    default:
+        BIO_printf(out, "%s, %d bits\n", OBJ_nid2sn(EVP_PKEY_id(key)),
+                   EVP_PKEY_bits(key));
+    }
+    EVP_PKEY_free(key);
+    return 1;
 }
 
 /*
