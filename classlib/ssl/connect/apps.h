@@ -30,11 +30,5 @@
 
 #  define openssl_fdset(a,b) FD_SET(a, b)
 
-/*
- * quick macro when you need to pass an unsigned char instead of a char.
- * this is true for some implementations of the is*() functions, for
- * example.
- */
-#define _UC(c) ((unsigned char)(c))
 
 #endif

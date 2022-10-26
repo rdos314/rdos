@@ -72,6 +72,13 @@ typedef struct verify_options_st {
 
 VERIFY_CB_ARGS verify_args = { -1, 0, X509_V_OK, 0 };
 
+/*
+ * quick macro when you need to pass an unsigned char instead of a char.
+ * this is true for some implementations of the is*() functions, for
+ * example.
+ */
+#define _UC(c) ((unsigned char)(c))
+
 static int c_debug = 0;
 static int c_showcerts = 0;
 static char *keymatexportlabel = NULL;
