@@ -508,21 +508,6 @@ int config_ctx(SSL_CONF_CTX *cctx, STACK_OF(OPENSSL_STRING) *str,
 }
 
 
-#define X509V3_EXT_UNKNOWN_MASK         (0xfL << 16)
-/* Return error for unknown extensions */
-#define X509V3_EXT_DEFAULT              0
-/* Print error for unknown extensions */
-#define X509V3_EXT_ERROR_UNKNOWN        (1L << 16)
-/* ASN1 parse unknown extensions */
-#define X509V3_EXT_PARSE_UNKNOWN        (2L << 16)
-/* BIO_dump unknown extensions */
-#define X509V3_EXT_DUMP_UNKNOWN         (3L << 16)
-
-#define X509_FLAG_CA (X509_FLAG_NO_ISSUER | X509_FLAG_NO_PUBKEY | \
-                         X509_FLAG_NO_HEADER | X509_FLAG_NO_VERSION)
-
-
-
 void print_name(BIO *out, const char *title, X509_NAME *nm,
                 unsigned long lflags)
 {
