@@ -107,20 +107,6 @@ OCSP_RESPONSE *process_responder(OCSP_REQUEST *req,
                                  int req_timeout);
 
 
-int parse_yesno(const char *str, int def);
-
-X509_NAME *parse_name(const char *str, long chtype, int multirdn);
-void policies_print(X509_STORE_CTX *ctx);
-int bio_to_mem(unsigned char **out, int maxlen, BIO *in);
-int pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value);
-int init_gen_str(EVP_PKEY_CTX **pctx,
-                 const char *algname, ENGINE *e, int do_param);
-int do_X509_sign(X509 *x, EVP_PKEY *pkey, const EVP_MD *md,
-                 STACK_OF(OPENSSL_STRING) *sigopts);
-int do_X509_REQ_sign(X509_REQ *x, EVP_PKEY *pkey, const EVP_MD *md,
-                     STACK_OF(OPENSSL_STRING) *sigopts);
-int do_X509_CRL_sign(X509_CRL *x, EVP_PKEY *pkey, const EVP_MD *md,
-                     STACK_OF(OPENSSL_STRING) *sigopts);
 
 extern char *psk_key;
 
