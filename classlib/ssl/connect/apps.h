@@ -66,13 +66,4 @@
 # define FORMAT_HTTP     13                     /* Download using HTTP */
 # define FORMAT_NSS      14                     /* NSS keylog format */
 
-typedef struct verify_options_st {
-    int depth;
-    int quiet;
-    int error;
-    int return_error;
-} VERIFY_CB_ARGS;
-
-extern VERIFY_CB_ARGS verify_args;
-
 #endif

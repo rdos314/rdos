@@ -41,12 +41,19 @@ typedef struct ssl_excert_st SSL_EXCERT;
 #define BUFSIZZ 1024*8
 #define S_CLIENT_IRC_READ_TIMEOUT 8
 
-VERIFY_CB_ARGS verify_args = { -1, 0, X509_V_OK, 0 };
-
 typedef struct string_int_pair_st {
     const char *name;
     int retval;
 } STRINT_PAIR;
+
+typedef struct verify_options_st {
+    int depth;
+    int quiet;
+    int error;
+    int return_error;
+} VERIFY_CB_ARGS;
+
+VERIFY_CB_ARGS verify_args = { -1, 0, X509_V_OK, 0 };
 
 static int c_debug = 0;
 static int c_showcerts = 0;
