@@ -27,6 +27,9 @@ extern "C" {
 #ifndef OPENSSL_SYS_RDOS
 # define OPENSSL_SYS_RDOS 1
 #endif
+#ifndef OPENSSL_THREADS
+# define OPENSSL_THREADS
+#endif
 #ifndef OPENSSL_RAND_SEED_OS
 # define OPENSSL_RAND_SEED_OS
 #endif

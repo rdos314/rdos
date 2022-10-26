@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-800
-657
+1653
+725
 7728
 8192
 2
@@ -31,7 +31,7 @@ WRect
 0
 0
 5680
-4292
+4283
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 11
 connect.tgt
 0
-0
+1
 7

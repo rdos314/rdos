@@ -37,7 +37,7 @@ struct tm *OPENSSL_gmtime(const time_t *timer, struct tm *result)
         memcpy(result, ts2, sizeof(struct tm));
         ts = result;
     }
-#elif defined(OPENSSL_THREADS) && !defined(OPENSSL_SYS_WIN32) && !defined(OPENSSL_SYS_MACOSX)
+#elif defined(OPENSSL_THREADS) && !defined(OPENSSL_SYS_WIN32) && !defined(OPENSSL_SYS_RDOS) && !defined(OPENSSL_SYS_MACOSX)
     if (gmtime_r(timer, result) == NULL)
         return NULL;
     ts = result;
