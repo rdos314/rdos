@@ -961,39 +961,6 @@ static int ssl_servername_cb(SSL *s, int *ad, void *arg)
     return SSL_TLSEXT_ERR_OK;
 }
 
-
-/*
- * Decode unsigned 0..255, returns 1 on success, <= 0 on failure. Advances
- * inptr to next field skipping leading whitespace.
- */
-static ossl_ssize_t checked_uint8(const char **inptr, void *out)
-{
-    uint8_t *result = (uint8_t *)out;
-    const char *in = *inptr;
-    char *endp;
-    long v;
-    int e;
-
-    v = strtol(in, &endp, 10);
-
-    if (((v == LONG_MIN || v == LONG_MAX) && e == ERANGE) ||
-        endp == in || !isspace(_UC(*endp)) ||
-        v != (*result = (uint8_t) v)) {
-        return -1;
-    }
-    for (in = endp; isspace(_UC(*in)); ++in)
-        continue;
-
-    *inptr = in;
-    return 1;
-}
-
-struct tlsa_field {
-    void *var;
-    const char *name;
-    ossl_ssize_t (*parser)(const char **, void *);
-};
-
 #define IS_INET_FLAG(o) \
  (o == OPT_4 || o == OPT_6 || o == OPT_HOST || o == OPT_PORT || o == OPT_CONNECT)
 #define IS_UNIX_FLAG(o) (o == OPT_UNIX)
