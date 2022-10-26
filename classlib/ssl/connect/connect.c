@@ -102,6 +102,15 @@ typedef struct srp_arg_st {
 
 # define SRP_NUMBER_ITERATIONS_FOR_PRIME 64
 
+/* This the context that we pass to next_proto_cb */
+typedef struct tlsextnextprotoctx_st {
+    unsigned char *data;
+    size_t len;
+    int status;
+} tlsextnextprotoctx;
+
+static tlsextnextprotoctx next_proto;
+
 
 static int c_debug = 0;
 static int c_showcerts = 0;
@@ -949,40 +958,6 @@ static int ssl_servername_cb(SSL *s, int *ad, void *arg)
     else
         BIO_printf(bio_err, "Can't use SSL_get_servername\n");
 
-    return SSL_TLSEXT_ERR_OK;
-}
-
-
-/* This the context that we pass to next_proto_cb */
-typedef struct tlsextnextprotoctx_st {
-    unsigned char *data;
-    size_t len;
-    int status;
-} tlsextnextprotoctx;
-
-static tlsextnextprotoctx next_proto;
-
-static int next_proto_cb(SSL *s, unsigned char **out, unsigned char *outlen,
-                         const unsigned char *in, unsigned int inlen,
-                         void *arg)
-{
-    tlsextnextprotoctx *ctx = arg;
-
-    if (!c_quiet) {
-        /* We can assume that |in| is syntactically valid. */
-        unsigned i;
-        BIO_printf(bio_c_out, "Protocols advertised by server: ");
-        for (i = 0; i < inlen;) {
-            if (i)
-                BIO_write(bio_c_out, ", ", 2);
-            BIO_write(bio_c_out, &in[i + 1], in[i]);
-            i += in[i] + 1;
-        }
-        BIO_write(bio_c_out, "\n", 1);
-    }
-
-    ctx->status =
-        SSL_select_next_proto(out, outlen, in, inlen, ctx->data, ctx->len);
     return SSL_TLSEXT_ERR_OK;
 }
 
