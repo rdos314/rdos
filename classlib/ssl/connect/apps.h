@@ -106,33 +106,6 @@ OCSP_RESPONSE *process_responder(OCSP_REQUEST *req,
                                  STACK_OF(CONF_VALUE) *headers,
                                  int req_timeout);
 
-/* Functions defined in ca.c and also used in ocsp.c */
-int unpack_revinfo(ASN1_TIME **prevtm, int *preason, ASN1_OBJECT **phold,
-                   ASN1_GENERALIZEDTIME **pinvtm, const char *str);
-
-# define DB_type         0
-# define DB_exp_date     1
-# define DB_rev_date     2
-# define DB_serial       3      /* index - unique */
-# define DB_file         4
-# define DB_name         5      /* index - unique when active and not
-                                 * disabled */
-# define DB_NUMBER       6
-
-# define DB_TYPE_REV     'R'    /* Revoked  */
-# define DB_TYPE_EXP     'E'    /* Expired  */
-# define DB_TYPE_VAL     'V'    /* Valid ; inserted with: ca ... -valid */
-# define DB_TYPE_SUSP    'S'    /* Suspended  */
-
-typedef struct db_attr_st {
-    int unique_subject;
-} DB_ATTR;
-typedef struct ca_db_st {
-    DB_ATTR attributes;
-    TXT_DB *db;
-    char *dbfname;
-    struct stat dbst;
-} CA_DB;
 
 int parse_yesno(const char *str, int def);
 
