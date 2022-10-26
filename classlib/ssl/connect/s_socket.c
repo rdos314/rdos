@@ -22,12 +22,6 @@
 # include <openssl/e_os2.h>
 # include <openssl/ossl_typ.h>
 # include <openssl/bio.h>
-# include <openssl/x509.h>
-# include <openssl/conf.h>
-# include <openssl/txt_db.h>
-# include <openssl/engine.h>
-# include <openssl/ocsp.h>
-# include <signal.h>
 
 /*
  * With IPv6, it looks like Digital has mixed up the proper order of
