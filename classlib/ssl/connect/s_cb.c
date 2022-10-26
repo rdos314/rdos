@@ -131,37 +131,3 @@ int verify_callback(int ok, X509_STORE_CTX *ctx)
     return ok;
 }
 
-static STRINT_PAIR cert_type_list[] = {
-    {"RSA sign", TLS_CT_RSA_SIGN},
-    {"DSA sign", TLS_CT_DSS_SIGN},
-    {"RSA fixed DH", TLS_CT_RSA_FIXED_DH},
-    {"DSS fixed DH", TLS_CT_DSS_FIXED_DH},
-    {"ECDSA sign", TLS_CT_ECDSA_SIGN},
-    {"RSA fixed ECDH", TLS_CT_RSA_FIXED_ECDH},
-    {"ECDSA fixed ECDH", TLS_CT_ECDSA_FIXED_ECDH},
-    {"GOST01 Sign", TLS_CT_GOST01_SIGN},
-    {"GOST12 Sign", TLS_CT_GOST12_SIGN},
-    {NULL}
-};
-
-static void ssl_print_client_cert_types(BIO *bio, SSL *s)
-{
-    const unsigned char *p;
-    int i;
-    int cert_type_num = SSL_get0_certificate_types(s, &p);
-    if (!cert_type_num)
-        return;
-    BIO_puts(bio, "Client Certificate Types: ");
-    for (i = 0; i < cert_type_num; i++) {
-        unsigned char cert_type = p[i];
-        const char *cname = lookup((int)cert_type, cert_type_list, NULL);
-
-        if (i)
-            BIO_puts(bio, ", ");
-        if (cname != NULL)
-            BIO_puts(bio, cname);
-        else
-            BIO_printf(bio, "UNKNOWN (%d),", cert_type);
-    }
-    BIO_puts(bio, "\n");
-}
