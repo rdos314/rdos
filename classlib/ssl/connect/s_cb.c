@@ -400,37 +400,6 @@ long bio_dump_callback(BIO *bio, int cmd, const char *argp,
     return ret;
 }
 
-void apps_ssl_info_callback(const SSL *s, int where, int ret)
-{
-    const char *str;
-    int w;
-
-    w = where & ~SSL_ST_MASK;
-
-    if (w & SSL_ST_CONNECT)
-        str = "SSL_connect";
-    else if (w & SSL_ST_ACCEPT)
-        str = "SSL_accept";
-    else
-        str = "undefined";
-
-    if (where & SSL_CB_LOOP) {
-        BIO_printf(bio_err, "%s:%s\n", str, SSL_state_string_long(s));
-    } else if (where & SSL_CB_ALERT) {
-        str = (where & SSL_CB_READ) ? "read" : "write";
-        BIO_printf(bio_err, "SSL3 alert %s:%s:%s\n",
-                   str,
-                   SSL_alert_type_string_long(ret),
-                   SSL_alert_desc_string_long(ret));
-    } else if (where & SSL_CB_EXIT) {
-        if (ret == 0)
-            BIO_printf(bio_err, "%s:failed in %s\n",
-                       str, SSL_state_string_long(s));
-        else if (ret < 0)
-            BIO_printf(bio_err, "%s:error in %s\n",
-                       str, SSL_state_string_long(s));
-    }
-}
 
 static STRINT_PAIR ssl_versions[] = {
     {"SSL 3.0", SSL3_VERSION},
@@ -728,23 +697,6 @@ int verify_cookie_callback(SSL *ssl, const unsigned char *cookie,
         return 1;
 
     return 0;
-}
-
-int generate_stateless_cookie_callback(SSL *ssl, unsigned char *cookie,
-                                       size_t *cookie_len)
-{
-    unsigned int temp;
-    int res = generate_cookie_callback(ssl, cookie, &temp);
-
-    if (res != 0)
-        *cookie_len = temp;
-    return res;
-}
-
-int verify_stateless_cookie_callback(SSL *ssl, const unsigned char *cookie,
-                                     size_t cookie_len)
-{
-    return verify_cookie_callback(ssl, cookie, cookie_len);
 }
 
 /*
