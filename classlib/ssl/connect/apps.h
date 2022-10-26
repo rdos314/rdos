@@ -154,21 +154,6 @@ typedef struct ca_db_st {
 } CA_DB;
 
 void* app_malloc(int sz, const char *what);
-BIGNUM *load_serial(const char *serialfile, int create, ASN1_INTEGER **retai);
-int save_serial(const char *serialfile, const char *suffix, const BIGNUM *serial,
-                ASN1_INTEGER **retai);
-int rotate_serial(const char *serialfile, const char *new_suffix,
-                  const char *old_suffix);
-int rand_serial(BIGNUM *b, ASN1_INTEGER *ai);
-int index_index(CA_DB *db);
-int save_index(const char *dbfile, const char *suffix, CA_DB *db);
-int rotate_index(const char *dbfile, const char *new_suffix,
-                 const char *old_suffix);
-void free_index(CA_DB *db);
-# define index_name_cmp_noconst(a, b) \
-        index_name_cmp((const OPENSSL_CSTRING *)CHECKED_PTR_OF(OPENSSL_STRING, a), \
-        (const OPENSSL_CSTRING *)CHECKED_PTR_OF(OPENSSL_STRING, b))
-int index_name_cmp(const OPENSSL_CSTRING *a, const OPENSSL_CSTRING *b);
 int parse_yesno(const char *str, int def);
 
 X509_NAME *parse_name(const char *str, long chtype, int multirdn);
