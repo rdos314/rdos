@@ -95,7 +95,6 @@ static int ocsp_resp_cb(SSL *s, void *arg);
 static int ldap_ExtendedResponse_parse(const char *buf, long rem);
 static int is_dNS_name(const char *host);
 
-static int saved_errno;
 char *default_config_file = NULL;
 char *psk_key = NULL;
 BIO *bio_in = NULL;
@@ -134,19 +133,6 @@ char *opt_getprog(void)
 unsigned long get_nameopt(void)
 {
     return (nmflag_set) ? nmflag : XN_FLAG_ONELINE;
-}
-
-static void save_errno(void)
-{
-    saved_errno = errno;
-    errno = 0;
-}
-
-static int restore_errno(void)
-{
-    int ret = errno;
-    errno = saved_errno;
-    return ret;
 }
 
 static int istext(int format)
@@ -1288,9 +1274,7 @@ static ossl_ssize_t checked_uint8(const char **inptr, void *out)
     long v;
     int e;
 
-    save_errno();
     v = strtol(in, &endp, 10);
-    e = restore_errno();
 
     if (((v == LONG_MIN || v == LONG_MAX) && e == ERANGE) ||
         endp == in || !isspace(_UC(*endp)) ||
