@@ -100,9 +100,6 @@ typedef struct pw_cb_data {
  */
 __owur int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path);
 
-ENGINE *setup_engine(const char *engine, int debug);
-void release_engine(ENGINE *e);
-
 OCSP_RESPONSE *process_responder(OCSP_REQUEST *req,
                                  const char *host, const char *path,
                                  const char *port, int use_ssl,
