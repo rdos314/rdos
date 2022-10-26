@@ -25,11 +25,12 @@
 #ifndef OPENSSL_NO_SOCK
 
 # include "apps.h"
-# include "s_apps.h"
 # include "internal/sockets.h"
 
 # include <openssl/bio.h>
 # include <openssl/err.h>
+
+typedef int (*do_server_cb)(int s, int stype, int prot, unsigned char *context);
 
 /* Keep track of our peer's address for the cookie callback */
 BIO_ADDR *ourpeer = NULL;

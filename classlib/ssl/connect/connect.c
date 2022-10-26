@@ -26,9 +26,13 @@
 #include <openssl/async.h>
 #include <openssl/srp.h>
 #include <openssl/ct.h>
-#include "s_apps.h"
 #include "timeouts.h"
 #include "internal/sockets.h"
+
+#define PORT            "4433"
+#define PROTOCOL        "tcp"
+
+typedef struct ssl_excert_st SSL_EXCERT;
 
 #undef BUFSIZZ
 #define BUFSIZZ 1024*8
