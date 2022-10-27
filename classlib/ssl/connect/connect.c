@@ -1728,84 +1728,7 @@ int main(int argc, char **argv)
         BIO_printf(bio_c_out, "Turned on non blocking io\n");
     }
 
-    if (isdtls) {
-        union BIO_sock_info_u peer_info;
-
-        sbio = BIO_new_dgram(s, BIO_NOCLOSE);
-
-        if ((peer_info.addr = BIO_ADDR_new()) == NULL) {
-            BIO_printf(bio_err, "memory allocation failure\n");
-            BIO_closesocket(s);
-            goto end;
-        }
-        if (!BIO_sock_info(s, BIO_SOCK_INFO_ADDRESS, &peer_info)) {
-            BIO_printf(bio_err, "getsockname:errno=%d\n",
-                       get_last_socket_error());
-            BIO_ADDR_free(peer_info.addr);
-            BIO_closesocket(s);
-            goto end;
-        }
-
-        (void)BIO_ctrl_set_connected(sbio, peer_info.addr);
-        BIO_ADDR_free(peer_info.addr);
-        peer_info.addr = NULL;
-
-        if (enable_timeouts) {
-            timeout.tv_sec = 0;
-            timeout.tv_usec = DGRAM_RCV_TIMEOUT;
-            BIO_ctrl(sbio, BIO_CTRL_DGRAM_SET_RECV_TIMEOUT, 0, &timeout);
-
-            timeout.tv_sec = 0;
-            timeout.tv_usec = DGRAM_SND_TIMEOUT;
-            BIO_ctrl(sbio, BIO_CTRL_DGRAM_SET_SEND_TIMEOUT, 0, &timeout);
-        }
-
-        if (socket_mtu) {
-            if (socket_mtu < DTLS_get_link_min_mtu(con)) {
-                BIO_printf(bio_err, "MTU too small. Must be at least %ld\n",
-                           DTLS_get_link_min_mtu(con));
-                BIO_free(sbio);
-                goto shut;
-            }
-            SSL_set_options(con, SSL_OP_NO_QUERY_MTU);
-            if (!DTLS_set_link_mtu(con, socket_mtu)) {
-                BIO_printf(bio_err, "Failed to set MTU\n");
-                BIO_free(sbio);
-                goto shut;
-            }
-        } else {
-            /* want to do MTU discovery */
-            BIO_ctrl(sbio, BIO_CTRL_DGRAM_MTU_DISCOVER, 0, NULL);
-        }
-    } else
-        sbio = BIO_new_socket(s, BIO_NOCLOSE);
-
-    if (nbio_test) {
-        BIO *test;
-
-        test = BIO_new(BIO_f_nbio_test());
-        sbio = BIO_push(test, sbio);
-    }
-
-    if (c_debug) {
-        BIO_set_callback(sbio, bio_dump_callback);
-        BIO_set_callback_arg(sbio, (char *)bio_c_out);
-    }
-    if (c_msg) {
-        SSL_set_msg_callback(con, msg_cb);
-        SSL_set_msg_callback_arg(con, bio_c_msg ? bio_c_msg : bio_c_out);
-    }
-
-    if (c_tlsextdebug) {
-        SSL_set_tlsext_debug_callback(con, tlsext_cb);
-        SSL_set_tlsext_debug_arg(con, bio_c_out);
-    }
-
-    if (c_status_req) {
-        SSL_set_tlsext_status_type(con, TLSEXT_STATUSTYPE_ocsp);
-        SSL_CTX_set_tlsext_status_cb(ctx, ocsp_resp_cb);
-        SSL_CTX_set_tlsext_status_arg(ctx, bio_c_out);
-    }
+    sbio = BIO_new_socket(s, BIO_NOCLOSE);
 
     SSL_set_bio(con, sbio, sbio);
     SSL_set_connect_state(con);
@@ -1826,43 +1749,6 @@ int main(int argc, char **argv)
     cbuf_off = 0;
     sbuf_len = 0;
     sbuf_off = 0;
-
-    if (early_data_file != NULL
-            && ((SSL_get0_session(con) != NULL
-                 && SSL_SESSION_get_max_early_data(SSL_get0_session(con)) > 0)
-                || (psksess != NULL
-                    && SSL_SESSION_get_max_early_data(psksess) > 0))) {
-        BIO *edfile = BIO_new_file(early_data_file, "r");
-        size_t readbytes, writtenbytes;
-        int finish = 0;
-
-        if (edfile == NULL) {
-            BIO_printf(bio_err, "Cannot open early data file\n");
-            goto shut;
-        }
-
-        while (!finish) {
-            if (!BIO_read_ex(edfile, cbuf, BUFSIZZ, &readbytes))
-                finish = 1;
-
-            while (!SSL_write_early_data(con, cbuf, readbytes, &writtenbytes)) {
-                switch (SSL_get_error(con, 0)) {
-                case SSL_ERROR_WANT_WRITE:
-                case SSL_ERROR_WANT_ASYNC:
-                case SSL_ERROR_WANT_READ:
-                    /* Just keep trying - busy waiting */
-                    continue;
-                default:
-                    BIO_printf(bio_err, "Error writing early data\n");
-                    BIO_free(edfile);
-                    ERR_print_errors(bio_err);
-                    goto shut;
-                }
-            }
-        }
-
-        BIO_free(edfile);
-    }
 
     for (;;) {
         FD_ZERO(&readfds);
