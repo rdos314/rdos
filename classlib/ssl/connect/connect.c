@@ -1420,7 +1420,7 @@ BIO_ADDR *ourpeer = NULL;
  *
  * Returns 1 on success, 0 on failure.
  */
-int init_client(int *sock, const char *host, const char *port,
+static int init_client(int *sock, const char *host, const char *port,
                 const char *bindhost, const char *bindport,
                 int family, int type, int protocol)
 {
