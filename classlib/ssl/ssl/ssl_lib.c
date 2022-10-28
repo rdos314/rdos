@@ -686,6 +686,18 @@ void SSL_define_wait(SSL *s, int wait_handle)
     s->wait_handle = wait_handle;
 }
 
+void SSL_wait_forever(SSL *s)
+{
+    if (s->wait_handle)
+        RdosWaitForever(s->wait_handle);
+}
+
+void SSL_wait_timeout(SSL *s, int ms)
+{
+    if (s->wait_handle)
+        RdosWaitTimeout(s->wait_handle, ms);
+}
+
 #endif
 
 SSL *SSL_new(SSL_CTX *ctx)

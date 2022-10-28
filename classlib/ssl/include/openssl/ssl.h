@@ -1741,6 +1741,8 @@ __owur int SSL_CTX_set_session_id_context(SSL_CTX *ctx,
 #ifdef OPENSSL_SYS_RDOS
 
 void SSL_define_wait(SSL *s, int wait_handle);
+void SSL_wait_forever(SSL *s);
+void SSL_wait_timeout(SSL *s, int ms);
 
 #endif
 
