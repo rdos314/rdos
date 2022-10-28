@@ -1089,6 +1089,11 @@ struct ssl_st {
      * request needs re-doing when in SSL_accept or SSL_connect
      */
     int rwstate;
+
+#ifdef OPENSSL_SYS_RDOS
+    int wait_handle;
+#endif
+
     int (*handshake_func) (SSL *);
     /*
      * Imagine that here's a boolean member "init" that is switched as soon

@@ -702,6 +702,10 @@ SSL *SSL_new(SSL_CTX *ctx)
 
     RECORD_LAYER_init(&s->rlayer, s);
 
+#ifdef OPENSSL_SYS_RDOS
+    s->wait_handle = 0;
+#endif
+
     s->options = ctx->options;
     s->dane.flags = ctx->dane.flags;
     s->min_proto_version = ctx->min_proto_version;
