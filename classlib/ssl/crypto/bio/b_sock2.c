@@ -28,55 +28,6 @@
 
 #include "rdos.h"
 
-static int rdos_socket( int domain, int type, int protocol )
-{
-    if( domain == AF_INET ) {
-        switch( type ) {
-        case SOCK_STREAM:
-            return( RdosCreateTcpSocket() );
-        case SOCK_DGRAM:
-            return( RdosCreateUdpSocket() );
-        default:
-            return -1;
-        }
-    } else {
-        return -1 ;
-    }
-}
-
-static int rdos_connect(int sockfd, const struct sockaddr *serv_addr, socklen_t addrlen)
-{
-    struct sockaddr_in *in;
-
-    in = (struct sockaddr_in *)serv_addr;
-    if( RdosIsIpv4Socket( sockfd ) ) {
-        if( RdosConnectIpv4Socket( sockfd, in->sin_addr.s_addr, htons( in->sin_port ) ) ) {
-            return 0;
-        }
-    }
-    return -1;
-}
-
-static int BIO_connect(int sock, const BIO_ADDR *addr, int options)
-{
-    const int on = 1;
-
-    if (sock == -1) {
-        BIOerr(BIO_F_BIO_CONNECT, BIO_R_INVALID_SOCKET);
-        return 0;
-    }
-
-    if (rdos_connect(sock, BIO_ADDR_sockaddr(addr),
-                BIO_ADDR_sockaddr_size(addr)) == -1) {
-        if (!BIO_sock_should_retry(-1)) {
-            SYSerr(SYS_F_CONNECT, get_last_socket_error());
-            BIOerr(BIO_F_BIO_CONNECT, BIO_R_CONNECT_ERROR);
-        }
-        return 0;
-    }
-    return 1;
-}
-
 /*-
  * BIO_socket - create a socket
  * @domain: the socket domain (AF_INET, AF_INET6, AF_UNIX, ...)
@@ -97,7 +48,8 @@ int BIO_socket(int domain, int socktype, int protocol, int options)
     if (BIO_sock_init() != 1)
         return INVALID_SOCKET;
 
-    sock = rdos_socket(domain, socktype, protocol);
+    sock = RdosCreateTcpSocket();
+
     if (sock == -1) {
         SYSerr(SYS_F_SOCKET, get_last_socket_error());
         BIOerr(BIO_F_BIO_SOCKET, BIO_R_UNABLE_TO_CREATE_SOCKET);
@@ -107,69 +59,44 @@ int BIO_socket(int domain, int socktype, int protocol, int options)
     return sock;
 }
 
-int BIO_open_socket(int *sock, const char *host, const char *port,
+static int string_to_ip(const char *str)
+{
+    int n0,n1,n2,n3;
+
+    if (sscanf(str, "%d.%d.%d.%d", &n3, &n2, &n1, &n0) == 4)
+        return n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
+    else
+        return 0;
+}
+
+int BIO_open_socket(int *sock, const char *host, const char *portstr,
                 int family, int type, int protocol)
 {
-    BIO_ADDRINFO *res = NULL;
-    const BIO_ADDRINFO *ai = NULL;
-    const BIO_ADDRINFO *bi = NULL;
-    int found = 0;
-    int ret;
+    int ip = 0;
+    int port = 0;
+    int ret = 0;
 
     if (BIO_sock_init() != 1)
         return 0;
 
-    ret = BIO_lookup_ex(host, port, BIO_LOOKUP_CLIENT, family, type, protocol,
-                        &res);
-    if (ret == 0)
-        return 0;
+    *sock = RdosCreateTcpSocket();
 
-    ret = 0;
-    for (ai = res; ai != NULL; ai = BIO_ADDRINFO_next(ai)) {
-        *sock = BIO_socket(BIO_ADDRINFO_family(ai), BIO_ADDRINFO_socktype(ai),
-                           BIO_ADDRINFO_protocol(ai), 0);
-        if (*sock == INVALID_SOCKET) {
-            /* Maybe the kernel doesn't support the socket family, even if
-             * BIO_lookup() added it in the returned result...
-             */
-            continue;
-        }
+    ip = string_to_ip(host);
+    if (ip)
+        port = atoi(portstr);
 
-#ifndef OPENSSL_NO_SCTP
-        if (protocol == IPPROTO_SCTP) {
-            /*
-             * For SCTP we have to set various options on the socket prior to
-             * connecting. This is done automatically by BIO_new_dgram_sctp().
-             * We don't actually need the created BIO though so we free it again
-             * immediately.
-             */
-            BIO *tmpbio = BIO_new_dgram_sctp(*sock, BIO_NOCLOSE);
-
-            if (tmpbio == NULL) {
-                return 0;
-            }
-            BIO_free(tmpbio);
-        }
-#endif
-
-        if (!BIO_connect(*sock, BIO_ADDRINFO_address(ai),
-                         BIO_ADDRINFO_protocol(ai) == IPPROTO_TCP ? BIO_SOCK_NODELAY : 0)) {
-            BIO_closesocket(*sock);
+    if (ip && port)
+    {
+        ret = RdosConnectIpv4Socket(*sock, ip, port);
+        if (ret == 0)
+        {
+            RdosCloseHandle(*sock);
             *sock = INVALID_SOCKET;
-            continue;
         }
-
-        /* Success, don't try any more addresses */
-        break;
     }
+    else
+        *sock = INVALID_SOCKET;
 
-    if (*sock == INVALID_SOCKET) {
-        ret = 0;
-    } else {
-        ret = 1;
-    }
-out:
-    BIO_ADDRINFO_free(res);
     return ret;
 }
 
