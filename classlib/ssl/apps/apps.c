@@ -2663,8 +2663,9 @@ BIO *bio_open_default_quiet(const char *filename, char mode, int format)
 
 void wait_for_async(SSL *s)
 {
-    /* On Windows select only works for sockets, so we simply don't wait  */
-#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_RDOS)
+#if defined(OPENSSL_SYS_RDOS)
+    SSL_wait_timeout(s, 6000);
+#elif !defined(OPENSSL_SYS_WINDOWS)
     int width = 0;
     fd_set asyncfds;
     OSSL_ASYNC_FD *fds;
