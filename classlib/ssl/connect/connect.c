@@ -1611,7 +1611,7 @@ int main(int argc, char **argv)
 
     int wait_handle = RdosCreateWait();
     int stdin_handle = fileno_stdin();
-    if (RdosIsDevice(stdin_handle))
+    if (RdosIsHandleDevice(stdin_handle))
         RdosAddWaitForKeyboard(wait_handle, 1);
 
     FD_ZERO(&readfds);
