@@ -707,7 +707,6 @@ int BIO_sock_info(int sock,
 #ifdef OPENSSL_SYS_RDOS
 
 int BIO_open_socket(int *sock, const char *host, const char *port,
-                const char *bindhost, const char *bindport,
                 int family, int type, int protocol);
 
 #else

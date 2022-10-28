@@ -1418,11 +1418,10 @@ int main(int argc, char **argv)
     const SSL_METHOD *meth = TLS_client_method();
     const char *CApath = NULL, *CAfile = NULL;
     char *cbuf = NULL, *sbuf = NULL;
-    char *mbuf = NULL, *proxystr = NULL, *connectstr = NULL, *bindstr = NULL;
+    char *mbuf = NULL, *proxystr = NULL, *connectstr = NULL;
     char *cert_file = NULL, *key_file = NULL, *chain_file = NULL;
     char *chCApath = NULL, *chCAfile = NULL, *host = NULL;
     char *port = OPENSSL_strdup(PORT);
-    char *bindhost = NULL, *bindport = NULL;
     char *passarg = NULL, *pass = NULL, *vfyCApath = NULL, *vfyCAfile = NULL;
     char *ReqCAfile = NULL;
     char *sess_in = NULL, *crl_file = NULL, *p;
@@ -1590,7 +1589,7 @@ int main(int argc, char **argv)
     }
 
  re_start:
-    if (BIO_open_socket(&s, host, port, bindhost, bindport, socket_family,
+    if (BIO_open_socket(&s, host, port, socket_family,
                     socket_type, protocol) == 0) {
         BIO_printf(bio_err, "connect:errno=%d\n", get_last_socket_error());
         BIO_closesocket(s);
@@ -1951,9 +1950,6 @@ int main(int argc, char **argv)
     OPENSSL_free(srp_arg.srppassin);
     OPENSSL_free(sname_alloc);
     OPENSSL_free(connectstr);
-    OPENSSL_free(bindstr);
-    OPENSSL_free(bindhost);
-    OPENSSL_free(bindport);
     OPENSSL_free(host);
     OPENSSL_free(port);
     X509_VERIFY_PARAM_free(vpm);
