@@ -1977,10 +1977,10 @@ int main(int argc, char **argv)
     SSL_set_connect_state(con);
 
     /* ok, lets connect */
-    if (fileno_stdin() > SSL_get_fd(con))
+    if (fileno_stdin() > SSL_get_handle(con))
         width = fileno_stdin() + 1;
     else
-        width = SSL_get_fd(con) + 1;
+        width = SSL_get_handle(con) + 1;
 
     read_tty = 1;
     write_tty = 0;
@@ -2217,68 +2217,6 @@ int main(int argc, char **argv)
             BIO_pop(fbio);
             BIO_free(fbio);
             if (foundit != success) {
-                goto shut;
-            }
-        }
-        break;
-    case PROTO_IRC:
-        {
-            int numeric;
-            BIO *fbio = BIO_new(BIO_f_buffer());
-
-            BIO_push(fbio, sbio);
-            BIO_printf(fbio, "STARTTLS\r\n");
-            (void)BIO_flush(fbio);
-            width = SSL_get_fd(con) + 1;
-
-            do {
-                numeric = 0;
-
-                FD_ZERO(&readfds);
-                openssl_fdset(SSL_get_fd(con), &readfds);
-                timeout.tv_sec = S_CLIENT_IRC_READ_TIMEOUT;
-                timeout.tv_usec = 0;
-                /*
-                 * If the IRCd doesn't respond within
-                 * S_CLIENT_IRC_READ_TIMEOUT seconds, assume
-                 * it doesn't support STARTTLS. Many IRCds
-                 * will not give _any_ sort of response to a
-                 * STARTTLS command when it's not supported.
-                 */
-                if (!BIO_get_buffer_num_lines(fbio)
-                    && !BIO_pending(fbio)
-                    && !BIO_pending(sbio)
-                    && select(width, (void *)&readfds, NULL, NULL,
-                              &timeout) < 1) {
-                    BIO_printf(bio_err,
-                               "Timeout waiting for response (%d seconds).\n",
-                               S_CLIENT_IRC_READ_TIMEOUT);
-                    break;
-                }
-
-                mbuf_len = BIO_gets(fbio, mbuf, BUFSIZZ);
-                if (mbuf_len < 1 || sscanf(mbuf, "%*s %d", &numeric) != 1)
-                    break;
-                /* :example.net 451 STARTTLS :You have not registered */
-                /* :example.net 421 STARTTLS :Unknown command */
-                if ((numeric == 451 || numeric == 421)
-                    && strstr(mbuf, "STARTTLS") != NULL) {
-                    BIO_printf(bio_err, "STARTTLS not supported: %s", mbuf);
-                    break;
-                }
-                if (numeric == 691) {
-                    BIO_printf(bio_err, "STARTTLS negotiation failed: ");
-                    ERR_print_errors(bio_err);
-                    break;
-                }
-            } while (numeric != 670);
-
-            (void)BIO_flush(fbio);
-            BIO_pop(fbio);
-            BIO_free(fbio);
-            if (numeric != 670) {
-                BIO_printf(bio_err, "Server does not support STARTTLS.\n");
-                ret = 1;
                 goto shut;
             }
         }
@@ -2614,7 +2552,7 @@ int main(int argc, char **argv)
                                "drop connection and then reconnect\n");
                     do_ssl_shutdown(con);
                     SSL_set_connect_state(con);
-                    BIO_closesocket(SSL_get_fd(con));
+                    BIO_closesocket(SSL_get_handle(con));
                     goto re_start;
                 }
             }
@@ -2636,9 +2574,9 @@ int main(int argc, char **argv)
                     openssl_fdset(fileno_stdout(), &writefds);
             }
             if (read_ssl)
-                openssl_fdset(SSL_get_fd(con), &readfds);
+                openssl_fdset(SSL_get_handle(con), &readfds);
             if (write_ssl)
-                openssl_fdset(SSL_get_fd(con), &writefds);
+                openssl_fdset(SSL_get_handle(con), &writefds);
 
             /*
              * Note: under VMS with SOCKETSHR the second parameter is
@@ -2660,7 +2598,7 @@ int main(int argc, char **argv)
         if (SSL_is_dtls(con) && DTLSv1_handle_timeout(con) > 0)
             BIO_printf(bio_err, "TIMEOUT occurred\n");
 
-        if (!ssl_pending && FD_ISSET(SSL_get_fd(con), &writefds)) {
+        if (!ssl_pending && FD_ISSET(SSL_get_handle(con), &writefds)) {
             k = SSL_write(con, &(cbuf[cbuf_off]), (unsigned int)cbuf_len);
             switch (SSL_get_error(con, k)) {
             case SSL_ERROR_NONE:
@@ -2742,7 +2680,7 @@ int main(int argc, char **argv)
                 read_ssl = 1;
                 write_tty = 0;
             }
-        } else if (ssl_pending || FD_ISSET(SSL_get_fd(con), &readfds)) {
+        } else if (ssl_pending || FD_ISSET(SSL_get_handle(con), &readfds)) {
             k = SSL_read(con, sbuf, 1024 /* BUFSIZZ */ );
 
             switch (SSL_get_error(con, k)) {
@@ -2865,7 +2803,7 @@ int main(int argc, char **argv)
      * and then closing the socket sends TCP-FIN first followed by
      * TCP-RST. This seems to allow the peer to read the alert data.
      */
-    shutdown(SSL_get_fd(con), 1); /* SHUT_WR */
+    shutdown(SSL_get_handle(con), 1); /* SHUT_WR */
     /*
      * We just said we have nothing else to say, but it doesn't mean that
      * the other side has nothing. It's even recommended to consume incoming
@@ -2879,7 +2817,7 @@ int main(int argc, char **argv)
     } while (select(s + 1, &readfds, NULL, NULL, &timeout) > 0
              && BIO_read(sbio, sbuf, BUFSIZZ) > 0);
 
-    BIO_closesocket(SSL_get_fd(con));
+    BIO_closesocket(SSL_get_handle(con));
  end:
     if (con != NULL) {
         if (prexit != 0)
@@ -3033,7 +2971,7 @@ static void print_stuff(BIO *bio, SSL *s, int full)
         int sock;
         union BIO_sock_info_u info;
 
-        sock = SSL_get_fd(s);
+        sock = SSL_get_handle(s);
         if ((info.addr = BIO_ADDR_new()) != NULL
             && BIO_sock_info(sock, BIO_SOCK_INFO_ADDRESS, &info)) {
             BIO_printf(bio_c_out, "LOCAL PORT is %u\n",

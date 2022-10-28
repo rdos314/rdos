@@ -235,7 +235,12 @@ int s_time_main(int argc, char **argv)
                 bytes_read += i;
         }
         SSL_set_shutdown(scon, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+
+#ifdef OPENSSL_SYS_RDOS
+        BIO_closesocket(SSL_get_handle(scon));
+#else
         BIO_closesocket(SSL_get_fd(scon));
+#endif
 
         nConn += 1;
         if (SSL_session_reused(scon)) {
@@ -289,7 +294,12 @@ int s_time_main(int argc, char **argv)
             continue;
     }
     SSL_set_shutdown(scon, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+
+#ifdef OPENSSL_SYS_RDOS
+    BIO_closesocket(SSL_get_handle(scon));
+#else
     BIO_closesocket(SSL_get_fd(scon));
+#endif
 
     nConn = 0;
     totalTime = 0.0;
@@ -316,7 +326,12 @@ int s_time_main(int argc, char **argv)
                 bytes_read += i;
         }
         SSL_set_shutdown(scon, SSL_SENT_SHUTDOWN | SSL_RECEIVED_SHUTDOWN);
+
+#ifdef OPENSSL_SYS_RDOS
+        BIO_closesocket(SSL_get_handle(scon));
+#else
         BIO_closesocket(SSL_get_fd(scon));
+#endif
 
         nConn += 1;
         if (SSL_session_reused(scon)) {

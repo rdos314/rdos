@@ -1537,9 +1537,18 @@ __owur int SSL_CIPHER_get_auth_nid(const SSL_CIPHER *c);
 __owur const EVP_MD *SSL_CIPHER_get_handshake_digest(const SSL_CIPHER *c);
 __owur int SSL_CIPHER_is_aead(const SSL_CIPHER *c);
 
+#ifdef OPENSSL_SYS_RDOS
+
+__owur int SSL_get_handle(const SSL *s);
+
+#else
+
 __owur int SSL_get_fd(const SSL *s);
 __owur int SSL_get_rfd(const SSL *s);
 __owur int SSL_get_wfd(const SSL *s);
+
+#endif
+
 __owur const char *SSL_get_cipher_list(const SSL *s, int n);
 __owur char *SSL_get_shared_ciphers(const SSL *s, char *buf, int size);
 __owur int SSL_get_read_ahead(const SSL *s);
