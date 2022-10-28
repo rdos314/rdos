@@ -11,7 +11,10 @@
 #include <errno.h>
 #include "bio_local.h"
 #include "internal/cryptlib.h"
+
+#ifdef OPENSSL_SYS_RDOS
 #include "rdos.h"
+#endif
 
 #ifndef OPENSSL_NO_SOCK
 
@@ -94,17 +97,22 @@ static int sock_free(BIO *a)
 static int sock_read(BIO *b, char *out, int outl)
 {
     int ret = 0;
+
+#ifdef OPENSSL_SYS_RDOS
     int i;
+
+    for (i = 0; i < 50 && !ret && out; i++)
+    {
+        ret = RdosReadHandle(b->num, out, outl);
+        if (!ret)
+            RdosWaitMilli(25);
+    }
+
+#else
 
     if (out != NULL) {
         clear_socket_error();
         ret = readsocket(b->num, out, outl);
-
-        for (i = 0; i < 50 && !ret; i++)
-        {
-            RdosWaitMilli(25);
-            ret = readsocket(b->num, out, outl);
-        }
 
         BIO_clear_retry_flags(b);
         if (ret <= 0) {
@@ -112,12 +120,21 @@ static int sock_read(BIO *b, char *out, int outl)
                 BIO_set_retry_read(b);
         }
     }
+
+#endif
+
     return ret;
 }
 
 static int sock_write(BIO *b, const char *in, int inl)
 {
     int ret;
+
+#ifdef OPENSSL_SYS_RDOS
+
+    ret = RdosWriteHandle(b->num, in, inl);
+
+#else
 
     clear_socket_error();
     ret = writesocket(b->num, in, inl);
@@ -126,6 +143,9 @@ static int sock_write(BIO *b, const char *in, int inl)
         if (BIO_sock_should_retry(ret))
             BIO_set_retry_write(b);
     }
+
+#endif
+
     return ret;
 }
 
