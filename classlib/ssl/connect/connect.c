@@ -1580,6 +1580,8 @@ int main(int argc, char **argv)
     if (con == NULL)
         goto end;
 
+    SSL_define_wait(con, wait_handle);
+
     if (!noservername && (servername != NULL || dane_tlsa_domain == NULL)) {
         if (servername == NULL) {
             if(host == NULL || is_dNS_name(host)) 

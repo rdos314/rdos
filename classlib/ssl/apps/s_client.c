@@ -1989,6 +1989,10 @@ int s_client_main(int argc, char **argv)
     if (con == NULL)
         goto end;
 
+#ifdef OPENSSL_SYS_RDOS
+    SSL_define_wait(con, wait_handle);
+#endif
+
     if (enable_pha)
         SSL_set_post_handshake_auth(con, 1);
 

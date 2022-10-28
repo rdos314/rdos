@@ -675,6 +675,15 @@ int SSL_CTX_set_ssl_version(SSL_CTX *ctx, const SSL_METHOD *meth)
     return 1;
 }
 
+#ifdef OPENSSL_SYS_RDOS
+
+void SSL_define_wait(SSL *s, int wait_handle)
+{
+    s->wait_handle = wait_handle;
+}
+
+#endif
+
 SSL *SSL_new(SSL_CTX *ctx)
 {
     SSL *s;
