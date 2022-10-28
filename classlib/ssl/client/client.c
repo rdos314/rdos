@@ -30,6 +30,7 @@
 #include "s_apps.h"
 #include "timeouts.h"
 #include "internal/sockets.h"
+#include "rdos.h"
 
 #undef BUFSIZZ
 #define BUFSIZZ 1024*8
@@ -884,6 +885,11 @@ int main(int argc, char **argv)
     char *psksessf = NULL;
     int enable_pha = 0;
     int sctp_label_bug = 0;
+
+    int wait_handle = RdosCreateWait();
+    int stdin_handle = fileno_stdin();
+    if (RdosIsDevice(stdin_handle))
+        RdosAddWaitForKeyboard(wait_handle, 1);
 
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
@@ -2910,6 +2916,9 @@ int main(int argc, char **argv)
     bio_c_out = NULL;
     BIO_free(bio_c_msg);
     bio_c_msg = NULL;
+
+    RdosCloseWait(wait_handle);
+
     return ret;
 }
 

@@ -67,8 +67,8 @@ r????Include directories:
 1
 17
 WString
-29
-"..;../include;$(%watcom)/rh"
+57
+"\rdos\kernel;\rdos\classlib;..;../include;$(%watcom)/rh"
 0
 18
 MVState

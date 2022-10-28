@@ -16,6 +16,10 @@
 #include <errno.h>
 #include <openssl/e_os2.h>
 
+#ifdef OPENSSL_SYS_RDOS
+#include "rdos.h"
+#endif
+
 #ifndef OPENSSL_NO_SOCK
 
 /*
@@ -982,6 +986,13 @@ int s_client_main(int argc, char **argv)
     int enable_pha = 0;
 #ifndef OPENSSL_NO_SCTP
     int sctp_label_bug = 0;
+#endif
+
+#ifdef OPENSSL_SYS_RDOS
+    int wait_handle = RdosCreateWait();
+    int stdin_handle = fileno_stdin();
+    if (RdosIsDevice(stdin_handle))
+        RdosAddWaitForKeyboard(wait_handle, 1);
 #endif
 
     FD_ZERO(&readfds);
@@ -3179,6 +3190,11 @@ int s_client_main(int argc, char **argv)
     bio_c_out = NULL;
     BIO_free(bio_c_msg);
     bio_c_msg = NULL;
+
+#ifdef OPENSSL_SYS_RDOS
+    RdosCloseWait(wait_handle);
+#endif
+
     return ret;
 }
 
