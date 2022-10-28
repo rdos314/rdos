@@ -23,6 +23,10 @@
 #include "internal/cryptlib.h"
 #include "internal/refcount.h"
 
+#ifdef OPENSSL_SYS_RDOS
+#include "rdos.h"
+#endif
+
 const char SSL_version_str[] = OPENSSL_VERSION_TEXT;
 
 static int ssl_undefined_function_1(SSL *ssl, SSL3_RECORD *r, size_t s, int t)
@@ -1308,6 +1312,11 @@ void SSL_set_bio(SSL *s, BIO *rbio, BIO *wbio)
         SSL_set0_rbio(s, rbio);
         return;
     }
+
+#ifdef OPENSSL_SYS_RDOS
+    if (s->wait_handle)
+        RdosAddWaitForHandleRead(s->wait_handle, rbio, (void *)2);
+#endif
 
     /* Otherwise, adopt both references. */
     SSL_set0_rbio(s, rbio);

@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-794
-1152
+800
+640
 7728
 8192
 2
@@ -51,13 +51,13 @@ WFileName
 10
 libssl.tgt
 0
-4
+0
 13
 VComponent
 14
 WRect
 368
-2065
+2056
 5680
 4224
 0
@@ -75,7 +75,7 @@ WRect
 0
 0
 5680
-4241
+4232
 0
 0
 18
@@ -91,7 +91,7 @@ WRect
 0
 0
 5680
-4258
+4249
 0
 0
 21
@@ -100,4 +100,4 @@ WFileName
 openssl.tgt
 20
 36
-13
+10
