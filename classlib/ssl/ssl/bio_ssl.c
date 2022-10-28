@@ -418,44 +418,6 @@ static int ssl_puts(BIO *bp, const char *str)
     return ret;
 }
 
-BIO *BIO_new_buffer_ssl_connect(SSL_CTX *ctx)
-{
-#ifndef OPENSSL_NO_SOCK
-    BIO *ret = NULL, *buf = NULL, *ssl = NULL;
-
-    if ((buf = BIO_new(BIO_f_buffer())) == NULL)
-        return NULL;
-    if ((ssl = BIO_new_ssl_connect(ctx)) == NULL)
-        goto err;
-    if ((ret = BIO_push(buf, ssl)) == NULL)
-        goto err;
-    return ret;
- err:
-    BIO_free(buf);
-    BIO_free(ssl);
-#endif
-    return NULL;
-}
-
-BIO *BIO_new_ssl_connect(SSL_CTX *ctx)
-{
-#ifndef OPENSSL_NO_SOCK
-    BIO *ret = NULL, *con = NULL, *ssl = NULL;
-
-    if ((con = BIO_new(BIO_s_connect())) == NULL)
-        return NULL;
-    if ((ssl = BIO_new_ssl(ctx, 1)) == NULL)
-        goto err;
-    if ((ret = BIO_push(ssl, con)) == NULL)
-        goto err;
-    return ret;
- err:
-    BIO_free(ssl);
-    BIO_free(con);
-#endif
-    return NULL;
-}
-
 BIO *BIO_new_ssl(SSL_CTX *ctx, int client)
 {
     BIO *ret;

@@ -61,7 +61,6 @@ extern int rsa_main(int argc, char *argv[]);
 extern int rsautl_main(int argc, char *argv[]);
 extern int s_client_main(int argc, char *argv[]);
 extern int s_server_main(int argc, char *argv[]);
-extern int s_time_main(int argc, char *argv[]);
 extern int sess_id_main(int argc, char *argv[]);
 extern int smime_main(int argc, char *argv[]);
 extern int speed_main(int argc, char *argv[]);
@@ -161,7 +160,6 @@ static FUNCTION functions[] = {
     {FT_general, "rsautl", rsautl_main, rsautl_options},
     {FT_general, "s_client", s_client_main, s_client_options},
     {FT_general, "s_server", s_server_main, s_server_options},
-    {FT_general, "s_time", s_time_main, s_time_options},
     {FT_general, "sess_id", sess_id_main, sess_id_options},
     {FT_general, "smime", smime_main, smime_options},
     {FT_general, "speed", speed_main, speed_options},

@@ -704,8 +704,19 @@ int BIO_sock_info(int sock,
 #  define BIO_SOCK_NONBLOCK     0x08
 #  define BIO_SOCK_NODELAY      0x10
 
-int BIO_socket(int domain, int socktype, int protocol, int options);
+#ifdef OPENSSL_SYS_RDOS
+
+int BIO_open_socket(int *sock, const char *host, const char *port,
+                const char *bindhost, const char *bindport,
+                int family, int type, int protocol);
+
+#else
+
 int BIO_connect(int sock, const BIO_ADDR *addr, int options);
+
+#endif
+
+int BIO_socket(int domain, int socktype, int protocol, int options);
 int BIO_bind(int sock, const BIO_ADDR *addr, int options);
 int BIO_listen(int sock, const BIO_ADDR *addr, int options);
 int BIO_accept_ex(int accept_sock, BIO_ADDR *addr, int options);

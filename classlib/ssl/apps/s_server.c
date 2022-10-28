@@ -2811,11 +2811,11 @@ static int init_ssl_connection(SSL *con)
                     BIO_get_fd(wbio, &fd);
                 }
 
-                if (!wbio || BIO_connect(fd, client, 0) == 0) {
-                    BIO_printf(bio_err, "ERROR - unable to connect\n");
-                    BIO_ADDR_free(client);
-                    return 0;
-                }
+//                if (!wbio || BIO_connect(fd, client, 0) == 0) {
+//                    BIO_printf(bio_err, "ERROR - unable to connect\n");
+//                    BIO_ADDR_free(client);
+//                    return 0;
+//                }
 
                 (void)BIO_ctrl_set_connected(wbio, client);
                 BIO_ADDR_free(client);

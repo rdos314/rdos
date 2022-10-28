@@ -1504,8 +1504,6 @@ DECLARE_PEM_rw(SSL_SESSION, SSL_SESSION)
 # endif
 __owur const BIO_METHOD *BIO_f_ssl(void);
 __owur BIO *BIO_new_ssl(SSL_CTX *ctx, int client);
-__owur BIO *BIO_new_ssl_connect(SSL_CTX *ctx);
-__owur BIO *BIO_new_buffer_ssl_connect(SSL_CTX *ctx);
 __owur int BIO_ssl_copy_session_id(BIO *to, BIO *from);
 void BIO_ssl_shutdown(BIO *ssl_bio);
 

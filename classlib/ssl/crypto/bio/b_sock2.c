@@ -24,6 +24,8 @@
 #  define MAX_LISTEN  32
 # endif
 
+
+
 /*-
  * BIO_socket - create a socket
  * @domain: the socket domain (AF_INET, AF_INET6, AF_UNIX, ...)
@@ -54,6 +56,7 @@ int BIO_socket(int domain, int socktype, int protocol, int options)
     return sock;
 }
 
+
 /*-
  * BIO_connect - connect to an address
  * @sock: the socket to connect with
@@ -74,7 +77,11 @@ int BIO_socket(int domain, int socktype, int protocol, int options)
  * Returns 1 on success or 0 on failure.  On failure errno is set
  * and an error status is added to the OpenSSL error stack.
  */
+#ifdef OPENSSL_SYS_RDOS
+static int BIO_connect(int sock, const BIO_ADDR *addr, int options)
+#else
 int BIO_connect(int sock, const BIO_ADDR *addr, int options)
+#endif
 {
     const int on = 1;
 
@@ -114,6 +121,111 @@ int BIO_connect(int sock, const BIO_ADDR *addr, int options)
     }
     return 1;
 }
+
+
+#ifdef OPENSSL_SYS_RDOS
+
+int BIO_open_socket(int *sock, const char *host, const char *port,
+                const char *bindhost, const char *bindport,
+                int family, int type, int protocol)
+{
+    BIO_ADDRINFO *res = NULL;
+    BIO_ADDRINFO *bindaddr = NULL;
+    const BIO_ADDRINFO *ai = NULL;
+    const BIO_ADDRINFO *bi = NULL;
+    int found = 0;
+    int ret;
+
+    if (BIO_sock_init() != 1)
+        return 0;
+
+    ret = BIO_lookup_ex(host, port, BIO_LOOKUP_CLIENT, family, type, protocol,
+                        &res);
+    if (ret == 0)
+        return 0;
+
+    if (bindhost != NULL || bindport != NULL) {
+        ret = BIO_lookup_ex(bindhost, bindport, BIO_LOOKUP_CLIENT,
+                            family, type, protocol, &bindaddr);
+        if (ret == 0) {
+            goto out;
+        }
+    }
+
+    ret = 0;
+    for (ai = res; ai != NULL; ai = BIO_ADDRINFO_next(ai)) {
+        if (bindaddr != NULL) {
+            for (bi = bindaddr; bi != NULL; bi = BIO_ADDRINFO_next(bi)) {
+                if (BIO_ADDRINFO_family(bi) == BIO_ADDRINFO_family(ai))
+                    break;
+            }
+            if (bi == NULL)
+                continue;
+            ++found;
+        }
+
+        *sock = BIO_socket(BIO_ADDRINFO_family(ai), BIO_ADDRINFO_socktype(ai),
+                           BIO_ADDRINFO_protocol(ai), 0);
+        if (*sock == INVALID_SOCKET) {
+            /* Maybe the kernel doesn't support the socket family, even if
+             * BIO_lookup() added it in the returned result...
+             */
+            continue;
+        }
+
+        if (bi != NULL) {
+            if (!BIO_bind(*sock, BIO_ADDRINFO_address(bi),
+                          BIO_SOCK_REUSEADDR)) {
+                BIO_closesocket(*sock);
+                *sock = INVALID_SOCKET;
+                break;
+            }
+        }
+
+#ifndef OPENSSL_NO_SCTP
+        if (protocol == IPPROTO_SCTP) {
+            /*
+             * For SCTP we have to set various options on the socket prior to
+             * connecting. This is done automatically by BIO_new_dgram_sctp().
+             * We don't actually need the created BIO though so we free it again
+             * immediately.
+             */
+            BIO *tmpbio = BIO_new_dgram_sctp(*sock, BIO_NOCLOSE);
+
+            if (tmpbio == NULL) {
+                return 0;
+            }
+            BIO_free(tmpbio);
+        }
+#endif
+
+        if (!BIO_connect(*sock, BIO_ADDRINFO_address(ai),
+                         BIO_ADDRINFO_protocol(ai) == IPPROTO_TCP ? BIO_SOCK_NODELAY : 0)) {
+            BIO_closesocket(*sock);
+            *sock = INVALID_SOCKET;
+            continue;
+        }
+
+        /* Success, don't try any more addresses */
+        break;
+    }
+
+    if (*sock == INVALID_SOCKET) {
+        if (bindaddr != NULL && !found) {
+            ret = 0;
+        }
+    } else {
+        ret = 1;
+    }
+out:
+    if (bindaddr != NULL) {
+        BIO_ADDRINFO_free (bindaddr);
+    }
+    BIO_ADDRINFO_free(res);
+    return ret;
+}
+
+#endif
 
 /*-
  * BIO_bind - bind socket to address

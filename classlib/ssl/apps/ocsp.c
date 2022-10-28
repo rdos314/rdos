@@ -1575,35 +1575,7 @@ OCSP_RESPONSE *process_responder(OCSP_REQUEST *req,
                                  STACK_OF(CONF_VALUE) *headers,
                                  int req_timeout)
 {
-    BIO *cbio = NULL;
-    SSL_CTX *ctx = NULL;
     OCSP_RESPONSE *resp = NULL;
-
-    cbio = BIO_new_connect(host);
-    if (cbio == NULL) {
-        BIO_printf(bio_err, "Error creating connect BIO\n");
-        goto end;
-    }
-    if (port != NULL)
-        BIO_set_conn_port(cbio, port);
-    if (use_ssl == 1) {
-        BIO *sbio;
-        ctx = SSL_CTX_new(TLS_client_method());
-        if (ctx == NULL) {
-            BIO_printf(bio_err, "Error creating SSL context.\n");
-            goto end;
-        }
-        SSL_CTX_set_mode(ctx, SSL_MODE_AUTO_RETRY);
-        sbio = BIO_new_ssl(ctx, 1);
-        cbio = BIO_push(sbio, cbio);
-    }
-
-    resp = query_responder(cbio, host, path, headers, req, req_timeout);
-    if (resp == NULL)
-        BIO_printf(bio_err, "Error querying OCSP responder\n");
- end:
-    BIO_free_all(cbio);
-    SSL_CTX_free(ctx);
     return resp;
 }
 #endif
