@@ -59,45 +59,22 @@ int BIO_socket(int domain, int socktype, int protocol, int options)
     return sock;
 }
 
-static int string_to_ip(const char *str)
+int BIO_open_socket(int ip, int port)
 {
-    int n0,n1,n2,n3;
-
-    if (sscanf(str, "%d.%d.%d.%d", &n3, &n2, &n1, &n0) == 4)
-        return n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
-    else
-        return 0;
-}
-
-int BIO_open_socket(int *sock, const char *host, const char *portstr,
-                int family, int type, int protocol)
-{
-    int ip = 0;
-    int port = 0;
-    int ret = 0;
+    int sock;
 
     if (BIO_sock_init() != 1)
         return 0;
 
-    *sock = RdosCreateTcpSocket();
+    sock = RdosCreateTcpSocket();
 
-    ip = string_to_ip(host);
-    if (ip)
-        port = atoi(portstr);
-
-    if (ip && port)
-    {
-        ret = RdosConnectIpv4Socket(*sock, ip, port);
-        if (ret == 0)
-        {
-            RdosCloseHandle(*sock);
-            *sock = INVALID_SOCKET;
-        }
-    }
+    if (RdosConnectIpv4Socket(sock, ip, port))
+        return sock;
     else
-        *sock = INVALID_SOCKET;
-
-    return ret;
+    {
+        RdosCloseHandle(sock);
+        return 0;
+    }
 }
 
 #else

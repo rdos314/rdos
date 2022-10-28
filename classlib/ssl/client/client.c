@@ -884,6 +884,10 @@ int main(int argc, char **argv)
     int enable_pha = 0;
     int sctp_label_bug = 0;
 
+    int n0,n1,n2,n3;
+    int ip;
+    int portnr;
+
     int wait_handle = RdosCreateWait();
     int stdin_handle = fileno_stdin();
     if (RdosIsHandleDevice(stdin_handle))
@@ -1860,12 +1864,20 @@ int main(int argc, char **argv)
     }
 
  re_start:
-    if (BIO_open_socket(&s, host, port, socket_family,
-                    socket_type, protocol) == 0) {
+    if (sscanf(host, "%d.%d.%d.%d", &n3, &n2, &n1, &n0) == 4)
+        ip = n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
+    else
+        ip = 0;
+
+    portnr = atoi(port);
+
+    s = BIO_open_socket(ip, portnr);
+    if (s == 0) {
         BIO_printf(bio_err, "connect:errno=%d\n", get_last_socket_error());
         BIO_closesocket(s);
         goto end;
     }
+
     BIO_printf(bio_c_out, "CONNECTED(%08X)\n", s);
 
     if (c_nbio) {
