@@ -24,7 +24,58 @@
 #  define MAX_LISTEN  32
 # endif
 
+#ifdef OPENSSL_SYS_RDOS
 
+#include "rdos.h"
+
+static int rdos_socket( int domain, int type, int protocol )
+{
+    if( domain == AF_INET ) {
+        switch( type ) {
+        case SOCK_STREAM:
+            return( RdosCreateTcpSocket() );
+        case SOCK_DGRAM:
+            return( RdosCreateUdpSocket() );
+        default:
+            return -1;
+        }
+    } else {
+        return -1 ;
+    }
+}
+
+static int rdos_connect(int sockfd, const struct sockaddr *serv_addr, socklen_t addrlen)
+{
+    struct sockaddr_in *in;
+
+    in = (struct sockaddr_in *)serv_addr;
+    if( RdosIsIpv4Socket( sockfd ) ) {
+        if( RdosConnectIpv4Socket( sockfd, in->sin_addr.s_addr, htons( in->sin_port ) ) ) {
+            return 0;
+        }
+    }
+    return -1;
+}
+
+static int BIO_connect(int sock, const BIO_ADDR *addr, int options)
+{
+    const int on = 1;
+
+    if (sock == -1) {
+        BIOerr(BIO_F_BIO_CONNECT, BIO_R_INVALID_SOCKET);
+        return 0;
+    }
+
+    if (rdos_connect(sock, BIO_ADDR_sockaddr(addr),
+                BIO_ADDR_sockaddr_size(addr)) == -1) {
+        if (!BIO_sock_should_retry(-1)) {
+            SYSerr(SYS_F_CONNECT, get_last_socket_error());
+            BIOerr(BIO_F_BIO_CONNECT, BIO_R_CONNECT_ERROR);
+        }
+        return 0;
+    }
+    return 1;
+}
 
 /*-
  * BIO_socket - create a socket
@@ -46,7 +97,7 @@ int BIO_socket(int domain, int socktype, int protocol, int options)
     if (BIO_sock_init() != 1)
         return INVALID_SOCKET;
 
-    sock = socket(domain, socktype, protocol);
+    sock = rdos_socket(domain, socktype, protocol);
     if (sock == -1) {
         SYSerr(SYS_F_SOCKET, get_last_socket_error());
         BIOerr(BIO_F_BIO_SOCKET, BIO_R_UNABLE_TO_CREATE_SOCKET);
@@ -55,75 +106,6 @@ int BIO_socket(int domain, int socktype, int protocol, int options)
 
     return sock;
 }
-
-
-/*-
- * BIO_connect - connect to an address
- * @sock: the socket to connect with
- * @addr: the address to connect to
- * @options: BIO socket options
- *
- * Connects to the address using the given socket and options.
- *
- * Options can be a combination of the following:
- * - BIO_SOCK_KEEPALIVE: enable regularly sending keep-alive messages.
- * - BIO_SOCK_NONBLOCK: Make the socket non-blocking.
- * - BIO_SOCK_NODELAY: don't delay small messages.
- *
- * options holds BIO socket options that can be used
- * You should call this for every address returned by BIO_lookup
- * until the connection is successful.
- *
- * Returns 1 on success or 0 on failure.  On failure errno is set
- * and an error status is added to the OpenSSL error stack.
- */
-#ifdef OPENSSL_SYS_RDOS
-static int BIO_connect(int sock, const BIO_ADDR *addr, int options)
-#else
-int BIO_connect(int sock, const BIO_ADDR *addr, int options)
-#endif
-{
-    const int on = 1;
-
-    if (sock == -1) {
-        BIOerr(BIO_F_BIO_CONNECT, BIO_R_INVALID_SOCKET);
-        return 0;
-    }
-
-    if (!BIO_socket_nbio(sock, (options & BIO_SOCK_NONBLOCK) != 0))
-        return 0;
-
-//    if (options & BIO_SOCK_KEEPALIVE) {
-//        if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE,
-//                       (const void *)&on, sizeof(on)) != 0) {
-//            SYSerr(SYS_F_SETSOCKOPT, get_last_socket_error());
-//            BIOerr(BIO_F_BIO_CONNECT, BIO_R_UNABLE_TO_KEEPALIVE);
-//            return 0;
-//        }
-//    }
-
-//    if (options & BIO_SOCK_NODELAY) {
-//        if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,
-//                       (const void *)&on, sizeof(on)) != 0) {
-//            SYSerr(SYS_F_SETSOCKOPT, get_last_socket_error());
-//            BIOerr(BIO_F_BIO_CONNECT, BIO_R_UNABLE_TO_NODELAY);
-//            return 0;
-//        }
-//    }
-
-    if (connect(sock, BIO_ADDR_sockaddr(addr),
-                BIO_ADDR_sockaddr_size(addr)) == -1) {
-        if (!BIO_sock_should_retry(-1)) {
-            SYSerr(SYS_F_CONNECT, get_last_socket_error());
-            BIOerr(BIO_F_BIO_CONNECT, BIO_R_CONNECT_ERROR);
-        }
-        return 0;
-    }
-    return 1;
-}
-
-
-#ifdef OPENSSL_SYS_RDOS
 
 int BIO_open_socket(int *sock, const char *host, const char *port,
                 int family, int type, int protocol)
@@ -189,6 +171,100 @@ int BIO_open_socket(int *sock, const char *host, const char *port,
 out:
     BIO_ADDRINFO_free(res);
     return ret;
+}
+
+#else
+
+/*-
+ * BIO_socket - create a socket
+ * @domain: the socket domain (AF_INET, AF_INET6, AF_UNIX, ...)
+ * @socktype: the socket type (SOCK_STEAM, SOCK_DGRAM)
+ * @protocol: the protocol to use (IPPROTO_TCP, IPPROTO_UDP)
+ * @options: BIO socket options (currently unused)
+ *
+ * Creates a socket.  This should be called before calling any
+ * of BIO_connect and BIO_listen.
+ *
+ * Returns the file descriptor on success or INVALID_SOCKET on failure.  On
+ * failure errno is set, and a status is added to the OpenSSL error stack.
+ */
+int BIO_socket(int domain, int socktype, int protocol, int options)
+{
+    int sock = -1;
+
+    if (BIO_sock_init() != 1)
+        return INVALID_SOCKET;
+
+    sock = socket(domain, socktype, protocol);
+    if (sock == -1) {
+        SYSerr(SYS_F_SOCKET, get_last_socket_error());
+        BIOerr(BIO_F_BIO_SOCKET, BIO_R_UNABLE_TO_CREATE_SOCKET);
+        return INVALID_SOCKET;
+    }
+
+    return sock;
+}
+
+
+/*-
+ * BIO_connect - connect to an address
+ * @sock: the socket to connect with
+ * @addr: the address to connect to
+ * @options: BIO socket options
+ *
+ * Connects to the address using the given socket and options.
+ *
+ * Options can be a combination of the following:
+ * - BIO_SOCK_KEEPALIVE: enable regularly sending keep-alive messages.
+ * - BIO_SOCK_NONBLOCK: Make the socket non-blocking.
+ * - BIO_SOCK_NODELAY: don't delay small messages.
+ *
+ * options holds BIO socket options that can be used
+ * You should call this for every address returned by BIO_lookup
+ * until the connection is successful.
+ *
+ * Returns 1 on success or 0 on failure.  On failure errno is set
+ * and an error status is added to the OpenSSL error stack.
+ */
+int BIO_connect(int sock, const BIO_ADDR *addr, int options)
+{
+    const int on = 1;
+
+    if (sock == -1) {
+        BIOerr(BIO_F_BIO_CONNECT, BIO_R_INVALID_SOCKET);
+        return 0;
+    }
+
+    if (!BIO_socket_nbio(sock, (options & BIO_SOCK_NONBLOCK) != 0))
+        return 0;
+
+//    if (options & BIO_SOCK_KEEPALIVE) {
+//        if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE,
+//                       (const void *)&on, sizeof(on)) != 0) {
+//            SYSerr(SYS_F_SETSOCKOPT, get_last_socket_error());
+//            BIOerr(BIO_F_BIO_CONNECT, BIO_R_UNABLE_TO_KEEPALIVE);
+//            return 0;
+//        }
+//    }
+
+//    if (options & BIO_SOCK_NODELAY) {
+//        if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,
+//                       (const void *)&on, sizeof(on)) != 0) {
+//            SYSerr(SYS_F_SETSOCKOPT, get_last_socket_error());
+//            BIOerr(BIO_F_BIO_CONNECT, BIO_R_UNABLE_TO_NODELAY);
+//            return 0;
+//        }
+//    }
+
+    if (connect(sock, BIO_ADDR_sockaddr(addr),
+                BIO_ADDR_sockaddr_size(addr)) == -1) {
+        if (!BIO_sock_should_retry(-1)) {
+            SYSerr(SYS_F_CONNECT, get_last_socket_error());
+            BIOerr(BIO_F_BIO_CONNECT, BIO_R_CONNECT_ERROR);
+        }
+        return 0;
+    }
+    return 1;
 }
 
 #endif
