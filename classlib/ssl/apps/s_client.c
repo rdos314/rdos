@@ -2067,7 +2067,10 @@ int s_client_main(int argc, char **argv)
     portnr = atoi(port);
 
     s = BIO_open_socket(ip, portnr);
-    if (s == 0) {
+    if (s)
+        RdosAddWaitForHandleRead(wait_handle, s, (void *)2);
+    else
+    {
         BIO_printf(bio_err, "connect:errno=%d\n", get_last_socket_error());
         BIO_closesocket(s);
         goto end;
