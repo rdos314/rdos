@@ -2928,7 +2928,7 @@ int s_client_main(int argc, char **argv)
             BIO_printf(bio_err, "TIMEOUT occurred\n");
 
 #ifdef OPENSSL_SYS_RDOS
-        if (!ssl_pending && cbuf_len && RdosGetHandleWriteBufferSpace(SSL_get_handle(con) >= cbuf_len)) {
+        if (!ssl_pending && write_ssl && RdosGetHandleWriteBufferSpace(SSL_get_handle(con))) {
 #else
         if (!ssl_pending && FD_ISSET(SSL_get_fd(con), &writefds)) {
 #endif

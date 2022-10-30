@@ -2595,7 +2595,7 @@ int main(int argc, char **argv)
         if (SSL_is_dtls(con) && DTLSv1_handle_timeout(con) > 0)
             BIO_printf(bio_err, "TIMEOUT occurred\n");
 
-        if (!ssl_pending && cbuf_len && RdosGetHandleWriteBufferSpace(SSL_get_handle(con) >= cbuf_len)) {
+        if (!ssl_pending && write_ssl && RdosGetHandleWriteBufferSpace(SSL_get_handle(con))) {
             k = SSL_write(con, &(cbuf[cbuf_off]), (unsigned int)cbuf_len);
             switch (SSL_get_error(con, k)) {
             case SSL_ERROR_NONE:
