@@ -2025,7 +2025,7 @@ int s_client_main(int argc, char **argv)
 
     if (!noservername && (servername != NULL || dane_tlsa_domain == NULL)) {
         if (servername == NULL) {
-            if(host == NULL || is_dNS_name(host)) 
+            if(host == NULL || is_dNS_name(host))
                 servername = (host == NULL) ? "localhost" : host;
         }
         if (servername != NULL && !SSL_set_tlsext_host_name(con, servername)) {
@@ -2928,7 +2928,7 @@ int s_client_main(int argc, char **argv)
             BIO_printf(bio_err, "TIMEOUT occurred\n");
 
 #ifdef OPENSSL_SYS_RDOS
-        if (!ssl_pending && FD_ISSET(SSL_get_handle(con), &writefds)) {
+        if (!ssl_pending && cbuf_len && RdosGetHandleWriteBufferSpace(SSL_get_handle(con) >= cbuf_len)) {
 #else
         if (!ssl_pending && FD_ISSET(SSL_get_fd(con), &writefds)) {
 #endif
@@ -2997,7 +2997,7 @@ int s_client_main(int argc, char **argv)
                 goto shut;
             }
         }
-#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_VMS)
+#if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_VMS) || defined(OPENSSL_SYS_RDOS)
         /* Assume Windows/DOS/BeOS can always write */
         else if (!ssl_pending && write_tty)
 #else
@@ -3024,7 +3024,7 @@ int s_client_main(int argc, char **argv)
 
 
 #ifdef OPENSSL_SYS_RDOS
-        } else if (ssl_pending || FD_ISSET(SSL_get_handle(con), &readfds)) {
+        } else if (ssl_pending || RdosGetHandleReadBufferCount(SSL_get_handle(con))) {
 #else
         } else if (ssl_pending || FD_ISSET(SSL_get_fd(con), &readfds)) {
 #endif
@@ -3093,6 +3093,8 @@ int s_client_main(int argc, char **argv)
 /* OPENSSL_SYS_MSDOS includes OPENSSL_SYS_WINDOWS */
 #if defined(OPENSSL_SYS_MSDOS)
         else if (has_stdin_waiting())
+#elif defined(OPENSSL_SYS_RDOS)
+        else if (RdosGetHandleReadBufferCount(fileno_stdin()))
 #else
         else if (FD_ISSET(fileno_stdin(), &readfds))
 #endif
@@ -3132,7 +3134,7 @@ int s_client_main(int argc, char **argv)
                 BIO_printf(bio_err, "RENEGOTIATING\n");
                 SSL_renegotiate(con);
                 cbuf_len = 0;
-	    } else if (!c_ign_eof && (cbuf[0] == 'K' || cbuf[0] == 'k' )
+            } else if (!c_ign_eof && (cbuf[0] == 'K' || cbuf[0] == 'k' )
                     && cmdletters) {
                 BIO_printf(bio_err, "KEYUPDATE\n");
                 SSL_key_update(con,
@@ -3572,7 +3574,7 @@ static int ldap_ExtendedResponse_parse(const char *buf, long rem)
 }
 
 /*
- * Host dNS Name verifier: used for checking that the hostname is in dNS format 
+ * Host dNS Name verifier: used for checking that the hostname is in dNS format
  * before setting it as SNI
  */
 static int is_dNS_name(const char *host)

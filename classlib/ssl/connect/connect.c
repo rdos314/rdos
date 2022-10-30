@@ -1335,7 +1335,7 @@ static int ldap_ExtendedResponse_parse(const char *buf, long rem)
 }
 
 /*
- * Host dNS Name verifier: used for checking that the hostname is in dNS format 
+ * Host dNS Name verifier: used for checking that the hostname is in dNS format
  * before setting it as SNI
  */
 static int is_dNS_name(const char *host)
@@ -1585,7 +1585,7 @@ int main(int argc, char **argv)
 
     if (!noservername && (servername != NULL || dane_tlsa_domain == NULL)) {
         if (servername == NULL) {
-            if(host == NULL || is_dNS_name(host)) 
+            if(host == NULL || is_dNS_name(host))
                 servername = (host == NULL) ? "localhost" : host;
         }
         if (servername != NULL && !SSL_set_tlsext_host_name(con, servername)) {
@@ -1728,7 +1728,7 @@ int main(int argc, char **argv)
         if (SSL_is_dtls(con) && DTLSv1_handle_timeout(con) > 0)
             BIO_printf(bio_err, "TIMEOUT occurred\n");
 
-        if (!ssl_pending && FD_ISSET(SSL_get_handle(con), &writefds)) {
+        if (!ssl_pending && cbuf_len && RdosGetHandleWriteBufferSpace(SSL_get_handle(con) >= cbuf_len)) {
             k = SSL_write(con, &(cbuf[cbuf_off]), (unsigned int)cbuf_len);
             switch (SSL_get_error(con, k)) {
             case SSL_ERROR_NONE:
@@ -1794,7 +1794,7 @@ int main(int argc, char **argv)
                 goto shut;
             }
         }
-        else if (!ssl_pending && FD_ISSET(fileno_stdout(), &writefds))
+        else if (!ssl_pending && write_tty)
         {
             i = raw_write_stdout(&(sbuf[sbuf_off]), sbuf_len);
 
@@ -1810,7 +1810,7 @@ int main(int argc, char **argv)
                 read_ssl = 1;
                 write_tty = 0;
             }
-        } else if (ssl_pending || FD_ISSET(SSL_get_handle(con), &readfds)) {
+        } else if (ssl_pending || RdosGetHandleReadBufferCount(SSL_get_handle(con))) {
             k = SSL_read(con, sbuf, 1024 /* BUFSIZZ */ );
 
             switch (SSL_get_error(con, k)) {
@@ -1864,7 +1864,7 @@ int main(int argc, char **argv)
                 goto shut;
             }
         }
-        else if (FD_ISSET(fileno_stdin(), &readfds))
+        else if (RdosGetHandleReadBufferCount(fileno_stdin()))
         {
             if (crlf) {
                 int j, lf_num;
@@ -1899,7 +1899,7 @@ int main(int argc, char **argv)
                 BIO_printf(bio_err, "RENEGOTIATING\n");
                 SSL_renegotiate(con);
                 cbuf_len = 0;
-	    } else if (!c_ign_eof && (cbuf[0] == 'K' || cbuf[0] == 'k' )
+            } else if (!c_ign_eof && (cbuf[0] == 'K' || cbuf[0] == 'k' )
                     && cmdletters) {
                 BIO_printf(bio_err, "KEYUPDATE\n");
                 SSL_key_update(con,
