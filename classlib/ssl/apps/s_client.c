@@ -2850,13 +2850,25 @@ int s_client_main(int argc, char **argv)
         ssl_pending = read_ssl && SSL_has_pending(con);
 
         if (!ssl_pending) {
-#ifdef OPENSSL_SYS_RDOS
-            if (read_ssl)
-                openssl_fdset(SSL_get_handle(con), &readfds);
-            if (write_ssl)
-                openssl_fdset(SSL_get_handle(con), &writefds);
 
-#elif !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_MSDOS)
+#ifdef OPENSSL_SYS_RDOS
+
+            int wait = RdosCreateWait();
+
+            if (tty_on) {
+                if (read_tty)
+                    RdosAddWaitForHandleRead(wait, fileno_stdin(), (void *)1);
+            }
+            if (read_ssl)
+                RdosAddWaitForHandleRead(wait, SSL_get_handle(con), (void *)2);
+            if (write_ssl)
+                RdosAddWaitForHandleWrite(wait, SSL_get_handle(con), (void *)3);
+
+            RdosWaitForever(wait);
+            RdosCloseWait(wait);
+#else
+
+#if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_MSDOS)
             if (tty_on) {
                 /*
                  * Note that select() returns when read _would not block_,
@@ -2922,6 +2934,7 @@ int s_client_main(int argc, char **argv)
                            get_last_socket_error());
                 goto shut;
             }
+#endif
         }
 
         if (SSL_is_dtls(con) && DTLSv1_handle_timeout(con) > 0)

@@ -2558,38 +2558,19 @@ int main(int argc, char **argv)
         ssl_pending = read_ssl && SSL_has_pending(con);
 
         if (!ssl_pending) {
-            if (tty_on) {
-                /*
-                 * Note that select() returns when read _would not block_,
-                 * and EOF satisfies that.  To avoid a CPU-hogging loop,
-                 * set the flag so we exit.
-                 */
-                if (read_tty && !at_eof)
-                    openssl_fdset(fileno_stdin(), &readfds);
+            int wait = RdosCreateWait();
 
-                if (write_tty)
-                    openssl_fdset(fileno_stdout(), &writefds);
+            if (tty_on) {
+                if (read_tty)
+                    RdosAddWaitForHandleRead(wait, fileno_stdin(), (void *)1);
             }
             if (read_ssl)
-                openssl_fdset(SSL_get_handle(con), &readfds);
+                RdosAddWaitForHandleRead(wait, SSL_get_handle(con), (void *)2);
             if (write_ssl)
-                openssl_fdset(SSL_get_handle(con), &writefds);
+                RdosAddWaitForHandleWrite(wait, SSL_get_handle(con), (void *)3);
 
-            /*
-             * Note: under VMS with SOCKETSHR the second parameter is
-             * currently of type (int *) whereas under other systems it is
-             * (void *) if you don't have a cast it will choke the compiler:
-             * if you do have a cast then you can either go for (int *) or
-             * (void *).
-             */
-            i = select(width, (void *)&readfds, (void *)&writefds,
-                       NULL, timeoutp);
-
-            if (i < 0) {
-                BIO_printf(bio_err, "bad select %d\n",
-                           get_last_socket_error());
-                goto shut;
-            }
+            RdosWaitForever(wait);
+            RdosCloseWait(wait);
         }
 
         if (SSL_is_dtls(con) && DTLSv1_handle_timeout(con) > 0)
