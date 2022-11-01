@@ -1484,14 +1484,6 @@ int main(int argc, char **argv)
     int ip;
     int portnr;
 
-    int wait_handle = RdosCreateWait();
-    int stdin_handle = fileno_stdin();
-    if (RdosIsHandleDevice(stdin_handle))
-        RdosAddWaitForKeyboard(wait_handle, 1);
-
-    FD_ZERO(&readfds);
-    FD_ZERO(&writefds);
-
     opt_progname(argv[0]);
     c_quiet = 0;
     c_debug = 0;
@@ -1580,8 +1572,6 @@ int main(int argc, char **argv)
     con = SSL_new(ctx);
     if (con == NULL)
         goto end;
-
-    SSL_define_wait(con, wait_handle);
 
     if (!noservername && (servername != NULL || dane_tlsa_domain == NULL)) {
         if (servername == NULL) {
@@ -1959,8 +1949,6 @@ int main(int argc, char **argv)
     bio_c_out = NULL;
     BIO_free(bio_c_msg);
     bio_c_msg = NULL;
-
-    RdosCloseWait(wait_handle);
 
     return ret;
 }

@@ -990,15 +990,11 @@ int s_client_main(int argc, char **argv)
     int n0,n1,n2,n3;
     int ip;
     int portnr;
-
-    int wait_handle = RdosCreateWait();
-    int stdin_handle = fileno_stdin();
-    if (RdosIsHandleDevice(stdin_handle))
-        RdosAddWaitForKeyboard(wait_handle, 1);
-#endif
-
+#else
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
+#endif
+
 /* Known false-positive of MemorySanitizer. */
 #if defined(__has_feature)
 # if __has_feature(memory_sanitizer)
@@ -1988,10 +1984,6 @@ int s_client_main(int argc, char **argv)
     con = SSL_new(ctx);
     if (con == NULL)
         goto end;
-
-#ifdef OPENSSL_SYS_RDOS
-    SSL_define_wait(con, wait_handle);
-#endif
 
     if (enable_pha)
         SSL_set_post_handshake_auth(con, 1);
@@ -3251,10 +3243,6 @@ int s_client_main(int argc, char **argv)
     bio_c_out = NULL;
     BIO_free(bio_c_msg);
     bio_c_msg = NULL;
-
-#ifdef OPENSSL_SYS_RDOS
-    RdosCloseWait(wait_handle);
-#endif
 
     return ret;
 }
