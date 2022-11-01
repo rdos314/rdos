@@ -2500,9 +2500,6 @@ int main(int argc, char **argv)
     }
 
     for (;;) {
-        FD_ZERO(&readfds);
-        FD_ZERO(&writefds);
-
         if (SSL_is_dtls(con) && DTLSv1_get_timeout(con, &timeout))
             timeoutp = &timeout;
         else
@@ -2772,19 +2769,6 @@ int main(int argc, char **argv)
      * TCP-RST. This seems to allow the peer to read the alert data.
      */
     shutdown(SSL_get_handle(con), 1); /* SHUT_WR */
-    /*
-     * We just said we have nothing else to say, but it doesn't mean that
-     * the other side has nothing. It's even recommended to consume incoming
-     * data. [In testing context this ensures that alerts are passed on...]
-     */
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 500000;  /* some extreme round-trip */
-    do {
-        FD_ZERO(&readfds);
-        openssl_fdset(s, &readfds);
-    } while (select(s + 1, &readfds, NULL, NULL, &timeout) > 0
-             && BIO_read(sbio, sbuf, BUFSIZZ) > 0);
-
     BIO_closesocket(SSL_get_handle(con));
  end:
     if (con != NULL) {

@@ -2789,8 +2789,10 @@ int s_client_main(int argc, char **argv)
     }
 
     for (;;) {
+#ifndef OPENSSL_SYS_RDOS
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
+#endif
 
         if (SSL_is_dtls(con) && DTLSv1_get_timeout(con, &timeout))
             timeoutp = &timeout;
@@ -3188,6 +3190,11 @@ int s_client_main(int argc, char **argv)
 #else
     shutdown(SSL_get_fd(con), 1); /* SHUT_WR */
 #endif
+
+#ifdef OPENSSL_SYS_RDOS
+    BIO_closesocket(SSL_get_handle(con));
+#else
+
     /*
      * We just said we have nothing else to say, but it doesn't mean that
      * the other side has nothing. It's even recommended to consume incoming
@@ -3201,9 +3208,6 @@ int s_client_main(int argc, char **argv)
     } while (select(s + 1, &readfds, NULL, NULL, &timeout) > 0
              && BIO_read(sbio, sbuf, BUFSIZZ) > 0);
 
-#ifdef OPENSSL_SYS_RDOS
-    BIO_closesocket(SSL_get_handle(con));
-#else
     BIO_closesocket(SSL_get_fd(con));
 #endif
  end:
