@@ -887,6 +887,8 @@ int main(int argc, char **argv)
     int n0,n1,n2,n3;
     int ip;
     int portnr;
+    int key_count = 0;
+    int wait = RdosCreateWait();
 
     prog = opt_progname(argv[0]);
     c_quiet = 0;
@@ -1963,11 +1965,8 @@ int main(int argc, char **argv)
     SSL_set_bio(con, sbio, sbio);
     SSL_set_connect_state(con);
 
-    /* ok, lets connect */
-    if (fileno_stdin() > SSL_get_handle(con))
-        width = fileno_stdin() + 1;
-    else
-        width = SSL_get_handle(con) + 1;
+    RdosAddWaitForTcpConnection(wait, SSL_get_handle(con), 2);
+    RdosAddWaitForKeyboard(wait, 1);
 
     read_tty = 1;
     write_tty = 0;
@@ -2545,19 +2544,13 @@ int main(int argc, char **argv)
         ssl_pending = read_ssl && SSL_has_pending(con);
 
         if (!ssl_pending) {
-            int wait = RdosCreateWait();
-
-            if (tty_on)
-                if (read_tty)
-                    RdosAddWaitForHandleRead(wait, fileno_stdin(), (void *)1);
-
-            if (read_ssl)
-                RdosAddWaitForTcpConnection(wait, SSL_get_handle(con), (void *)2);
-
-            if (!write_ssl)
+            if (write_ssl)
+            {
+                if (RdosGetTcpConnectionWriteSpace(SSL_get_handle(con)) == 0)
+                    RdosWaitMilli(25);
+            }
+            else
                 RdosWaitForever(wait);
-
-            RdosCloseWait(wait);
         }
 
         if (SSL_is_dtls(con) && DTLSv1_handle_timeout(con) > 0)
@@ -2699,56 +2692,25 @@ int main(int argc, char **argv)
                 goto shut;
             }
         }
-        else if (RdosGetHandleReadBufferCount(fileno_stdin()))
+        else if (read_tty && RdosPollKeyboard())
         {
-            if (crlf) {
-                int j, lf_num;
+            char ch = (char)RdosReadKeyboard();
+            printf("%c", ch);
 
-                i = raw_read_stdin(cbuf, BUFSIZZ / 2);
-                lf_num = 0;
-                /* both loops are skipped when i <= 0 */
-                for (j = 0; j < i; j++)
-                    if (cbuf[j] == '\n')
-                        lf_num++;
-                for (j = i - 1; j >= 0; j--) {
-                    cbuf[j + lf_num] = cbuf[j];
-                    if (cbuf[j] == '\n') {
-                        lf_num--;
-                        i++;
-                        cbuf[j + lf_num] = '\r';
-                    }
-                }
-                assert(lf_num == 0);
-            } else
-                i = raw_read_stdin(cbuf, BUFSIZZ);
-            if (i == 0)
-                at_eof = 1;
-
-            if ((!c_ign_eof) && ((i <= 0) || (cbuf[0] == 'Q' && cmdletters))) {
-                BIO_printf(bio_err, "DONE\n");
-                ret = 0;
-                goto shut;
+            if (ch == 0xd)
+            {
+                cbuf[key_count] = 0xd;
+                cbuf[key_count+1] = 0xa;
+                cbuf_len = key_count + 2;
+                key_count = 0;
+                write_ssl = 1;
+                read_tty = 0;
             }
-
-            if ((!c_ign_eof) && (cbuf[0] == 'R' && cmdletters)) {
-                BIO_printf(bio_err, "RENEGOTIATING\n");
-                SSL_renegotiate(con);
-                cbuf_len = 0;
-            } else if (!c_ign_eof && (cbuf[0] == 'K' || cbuf[0] == 'k' )
-                    && cmdletters) {
-                BIO_printf(bio_err, "KEYUPDATE\n");
-                SSL_key_update(con,
-                               cbuf[0] == 'K' ? SSL_KEY_UPDATE_REQUESTED
-                                              : SSL_KEY_UPDATE_NOT_REQUESTED);
-                cbuf_len = 0;
+            else
+            {
+                cbuf[key_count] = ch;
+                key_count++;
             }
-            else {
-                cbuf_len = i;
-                cbuf_off = 0;
-            }
-
-            write_ssl = 1;
-            read_tty = 0;
         }
     }
 
@@ -2768,6 +2730,7 @@ int main(int argc, char **argv)
      * and then closing the socket sends TCP-FIN first followed by
      * TCP-RST. This seems to allow the peer to read the alert data.
      */
+    RdosCloseWait(wait);
     shutdown(SSL_get_handle(con), 1); /* SHUT_WR */
     BIO_closesocket(SSL_get_handle(con));
  end:

@@ -990,6 +990,8 @@ int s_client_main(int argc, char **argv)
     int n0,n1,n2,n3;
     int ip;
     int portnr;
+    int key_count = 0;
+    int wait = RdosCreateWait();
 #else
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
@@ -2176,12 +2178,8 @@ int s_client_main(int argc, char **argv)
     SSL_set_connect_state(con);
 
 #ifdef OPENSSL_SYS_RDOS
-
-    /* ok, lets connect */
-    if (fileno_stdin() > SSL_get_handle(con))
-        width = fileno_stdin() + 1;
-    else
-        width = SSL_get_handle(con) + 1;
+    RdosAddWaitForTcpConnection(wait, SSL_get_handle(con), 2);
+    RdosAddWaitForKeyboard(wait, 1);
 
 #else
 
@@ -2846,21 +2844,13 @@ int s_client_main(int argc, char **argv)
         if (!ssl_pending) {
 
 #ifdef OPENSSL_SYS_RDOS
-
-            int wait = RdosCreateWait();
-
-            if (tty_on)
-                if (read_tty)
-                    RdosAddWaitForHandleRead(wait, fileno_stdin(), (void *)1);
-
-            if (read_ssl)
-                RdosAddWaitForTcpConnection(wait, SSL_get_handle(con), (void *)2);
-
-            if (!write_ssl)
+            if (write_ssl)
+            {
+                if (RdosGetTcpConnectionWriteSpace(SSL_get_handle(con)) == 0)
+                    RdosWaitMilli(25);
+            }
+            else
                 RdosWaitForever(wait);
-
-            RdosCloseWait(wait);
-
 #else
 
 #if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_MSDOS)
@@ -3098,11 +3088,32 @@ int s_client_main(int argc, char **argv)
                 goto shut;
             }
         }
+#if defined(OPENSSL_SYS_RDOS)
+        else if (read_tty && RdosPollKeyboard())
+        {
+            char ch = (char)RdosReadKeyboard();
+            printf("%c", ch);
+
+            if (ch == 0xd)
+            {
+                cbuf[key_count] = 0xd;
+                cbuf[key_count+1] = 0xa;
+                cbuf_len = key_count + 2;
+                key_count = 0;
+                write_ssl = 1;
+                read_tty = 0;
+            }
+            else
+            {
+                cbuf[key_count] = ch;
+                key_count++;
+            }
+        }
+#else
+
 /* OPENSSL_SYS_MSDOS includes OPENSSL_SYS_WINDOWS */
 #if defined(OPENSSL_SYS_MSDOS)
         else if (has_stdin_waiting())
-#elif defined(OPENSSL_SYS_RDOS)
-        else if (RdosGetHandleReadBufferCount(fileno_stdin()))
 #else
         else if (FD_ISSET(fileno_stdin(), &readfds))
 #endif
@@ -3168,6 +3179,7 @@ int s_client_main(int argc, char **argv)
             write_ssl = 1;
             read_tty = 0;
         }
+#endif
     }
 
     ret = 0;
@@ -3187,6 +3199,7 @@ int s_client_main(int argc, char **argv)
      * TCP-RST. This seems to allow the peer to read the alert data.
      */
 #ifdef OPENSSL_SYS_RDOS
+    RdosCloseWait(wait);
     shutdown(SSL_get_handle(con), 1); /* SHUT_WR */
 #else
     shutdown(SSL_get_fd(con), 1); /* SHUT_WR */
