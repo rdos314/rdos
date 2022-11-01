@@ -2186,7 +2186,6 @@ BIO *bio_open_default_quiet(const char *filename, char mode, int format)
 
 void wait_for_async(SSL *s)
 {
-    SSL_wait_timeout(s, 6000);
 }
 
 

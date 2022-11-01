@@ -203,7 +203,6 @@ static int raw_read_stdin(void *buf, int siz)
 
 void wait_for_async(SSL *s)
 {
-    SSL_wait_timeout(s, 6000);
 }
 
 static const char *lookup(int val, const STRINT_PAIR* list, const char* def)

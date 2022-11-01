@@ -679,27 +679,6 @@ int SSL_CTX_set_ssl_version(SSL_CTX *ctx, const SSL_METHOD *meth)
     return 1;
 }
 
-#ifdef OPENSSL_SYS_RDOS
-
-void SSL_define_wait(SSL *s, int wait_handle)
-{
-    s->wait_handle = wait_handle;
-}
-
-void SSL_wait_forever(SSL *s)
-{
-    if (s->wait_handle)
-        RdosWaitForever(s->wait_handle);
-}
-
-void SSL_wait_timeout(SSL *s, int ms)
-{
-    if (s->wait_handle)
-        RdosWaitTimeout(s->wait_handle, ms);
-}
-
-#endif
-
 SSL *SSL_new(SSL_CTX *ctx)
 {
     SSL *s;
@@ -726,10 +705,6 @@ SSL *SSL_new(SSL_CTX *ctx)
     }
 
     RECORD_LAYER_init(&s->rlayer, s);
-
-#ifdef OPENSSL_SYS_RDOS
-    s->wait_handle = 0;
-#endif
 
     s->options = ctx->options;
     s->dane.flags = ctx->dane.flags;

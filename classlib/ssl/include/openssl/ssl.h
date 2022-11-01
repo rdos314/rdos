@@ -1738,14 +1738,6 @@ __owur int SSL_CTX_set_session_id_context(SSL_CTX *ctx,
                                           unsigned int sid_ctx_len);
 
 
-#ifdef OPENSSL_SYS_RDOS
-
-void SSL_define_wait(SSL *s, int wait_handle);
-void SSL_wait_forever(SSL *s);
-void SSL_wait_timeout(SSL *s, int ms);
-
-#endif
-
 SSL *SSL_new(SSL_CTX *ctx);
 int SSL_up_ref(SSL *s);
 int SSL_is_dtls(const SSL *s);
