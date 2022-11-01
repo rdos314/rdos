@@ -97,16 +97,21 @@ static int sock_free(BIO *a)
 static int sock_read(BIO *b, char *out, int outl)
 {
     int ret = 0;
+    int size = 0;
 
 #ifdef OPENSSL_SYS_RDOS
     int i;
 
-    for (i = 0; i < 50 && !ret && out; i++)
+    for (i = 0; i < 50 && !size && out; i++)
     {
-        ret = RdosReadHandle(b->num, out, outl);
-        if (!ret)
+        size = RdosPollTcpConnection(b->num);
+        if (!size)
             RdosWaitMilli(25);
     }
+    if (size > outl)
+        size = outl;
+
+    ret = RdosReadTcpConnection(b->num, out, size);
 
 #else
 
@@ -132,7 +137,7 @@ static int sock_write(BIO *b, const char *in, int inl)
 
 #ifdef OPENSSL_SYS_RDOS
 
-    ret = RdosWriteHandle(b->num, in, inl);
+    ret = RdosWriteTcpConnection(b->num, in, inl);
 
 #else
 

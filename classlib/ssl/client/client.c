@@ -2547,23 +2547,23 @@ int main(int argc, char **argv)
         if (!ssl_pending) {
             int wait = RdosCreateWait();
 
-            if (tty_on) {
+            if (tty_on)
                 if (read_tty)
                     RdosAddWaitForHandleRead(wait, fileno_stdin(), (void *)1);
-            }
-            if (read_ssl)
-                RdosAddWaitForHandleRead(wait, SSL_get_handle(con), (void *)2);
-            if (write_ssl)
-                RdosAddWaitForHandleWrite(wait, SSL_get_handle(con), (void *)3);
 
-            RdosWaitForever(wait);
+            if (read_ssl)
+                RdosAddWaitForTcpConnection(wait, SSL_get_handle(con), (void *)2);
+
+            if (!write_ssl)
+                RdosWaitForever(wait);
+
             RdosCloseWait(wait);
         }
 
         if (SSL_is_dtls(con) && DTLSv1_handle_timeout(con) > 0)
             BIO_printf(bio_err, "TIMEOUT occurred\n");
 
-        if (!ssl_pending && write_ssl && RdosGetHandleWriteBufferSpace(SSL_get_handle(con))) {
+        if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(SSL_get_handle(con))) {
             k = SSL_write(con, &(cbuf[cbuf_off]), (unsigned int)cbuf_len);
             switch (SSL_get_error(con, k)) {
             case SSL_ERROR_NONE:
@@ -2645,7 +2645,7 @@ int main(int argc, char **argv)
                 read_ssl = 1;
                 write_tty = 0;
             }
-        } else if (ssl_pending || RdosGetHandleReadBufferCount(SSL_get_handle(con))) {
+        } else if (ssl_pending || RdosPollTcpConnection(SSL_get_handle(con))) {
             k = SSL_read(con, sbuf, 1024 /* BUFSIZZ */ );
 
             switch (SSL_get_error(con, k)) {

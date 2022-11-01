@@ -66,15 +66,18 @@ int BIO_open_socket(int ip, int port)
     if (BIO_sock_init() != 1)
         return 0;
 
-    sock = RdosCreateTcpSocket();
+    sock = RdosOpenTcpConnection(ip, 0, port, 6000, 0x1000);
 
-    if (RdosConnectIpv4Socket(sock, ip, port))
-        return sock;
-    else
+    if (sock)
     {
-        RdosCloseHandle(sock);
-        return 0;
+        if (!RdosWaitForTcpConnection(sock, 6000))
+        {
+            RdosDeleteTcpConnection(sock);
+            sock = 0;
+        }
     }
+
+    return sock;
 }
 
 #else

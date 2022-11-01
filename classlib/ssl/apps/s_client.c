@@ -2849,17 +2849,18 @@ int s_client_main(int argc, char **argv)
 
             int wait = RdosCreateWait();
 
-            if (tty_on) {
+            if (tty_on)
                 if (read_tty)
                     RdosAddWaitForHandleRead(wait, fileno_stdin(), (void *)1);
-            }
-            if (read_ssl)
-                RdosAddWaitForHandleRead(wait, SSL_get_handle(con), (void *)2);
-            if (write_ssl)
-                RdosAddWaitForHandleWrite(wait, SSL_get_handle(con), (void *)3);
 
-            RdosWaitForever(wait);
+            if (read_ssl)
+                RdosAddWaitForTcpConnection(wait, SSL_get_handle(con), (void *)2);
+
+            if (!write_ssl)
+                RdosWaitForever(wait);
+
             RdosCloseWait(wait);
+
 #else
 
 #if !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_MSDOS)
@@ -2935,7 +2936,7 @@ int s_client_main(int argc, char **argv)
             BIO_printf(bio_err, "TIMEOUT occurred\n");
 
 #ifdef OPENSSL_SYS_RDOS
-        if (!ssl_pending && write_ssl && RdosGetHandleWriteBufferSpace(SSL_get_handle(con))) {
+        if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(SSL_get_handle(con))) {
 #else
         if (!ssl_pending && FD_ISSET(SSL_get_fd(con), &writefds)) {
 #endif
@@ -3031,7 +3032,7 @@ int s_client_main(int argc, char **argv)
 
 
 #ifdef OPENSSL_SYS_RDOS
-        } else if (ssl_pending || RdosGetHandleReadBufferCount(SSL_get_handle(con))) {
+        } else if (ssl_pending || RdosPollTcpConnection(SSL_get_handle(con))) {
 #else
         } else if (ssl_pending || FD_ISSET(SSL_get_fd(con), &readfds)) {
 #endif
