@@ -495,6 +495,8 @@ int ossl_init_thread_start(uint64_t opts)
 
 void OPENSSL_cleanup(void)
 {
+#ifndef __RDOS_DEV__
+
     OPENSSL_INIT_STOP *currhandler, *lasthandler;
     CRYPTO_THREAD_LOCAL key;
 
@@ -601,6 +603,7 @@ void OPENSSL_cleanup(void)
     CRYPTO_secure_malloc_done();
 
     base_inited = 0;
+#endif
 }
 
 /*

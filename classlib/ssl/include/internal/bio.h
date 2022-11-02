@@ -25,7 +25,10 @@ struct bio_method_st {
 };
 
 void bio_free_ex_data(BIO *bio);
+
+#ifndef __RDOSDEV__
 void bio_cleanup(void);
+#endif
 
 
 /* Old style to new style BIO_METHOD conversion functions */
