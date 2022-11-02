@@ -28,6 +28,10 @@ extern "C" {
 # define OPENSSLDIR "d:/ssl"
 #endif
 
+#ifndef ENGINESDIR
+# define ENGINESDIR "d:/ssl"
+#endif
+
 #ifndef OPENSSL_SYS_RDOS
 # define OPENSSL_SYS_RDOS 1
 #endif
