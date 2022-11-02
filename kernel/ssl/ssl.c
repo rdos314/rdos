@@ -104,7 +104,12 @@ void rdos_free(void *Memory)
 #pragma aux CreateConnection "*" rdosdev parm routine value [dx eax]
 void *CreateConnection()
 {   
+    SSL_CONF_CTX *cctx = NULL;
+
     void *p = rdos_alloc(10);
+
+    cctx = SSL_CONF_CTX_new();
+
     return p;
 } 
 
