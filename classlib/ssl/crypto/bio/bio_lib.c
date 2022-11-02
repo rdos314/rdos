@@ -774,6 +774,8 @@ void bio_free_ex_data(BIO *bio)
     CRYPTO_free_ex_data(CRYPTO_EX_INDEX_BIO, bio, &bio->ex_data);
 }
 
+#ifndef __RDOSDEV__
+
 void bio_cleanup(void)
 {
 #ifndef OPENSSL_NO_SOCK
@@ -784,3 +786,5 @@ void bio_cleanup(void)
     CRYPTO_THREAD_lock_free(bio_type_lock);
     bio_type_lock = NULL;
 }
+
+#endif
