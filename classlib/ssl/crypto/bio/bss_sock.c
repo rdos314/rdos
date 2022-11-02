@@ -137,7 +137,15 @@ static int sock_write(BIO *b, const char *in, int inl)
 
 #ifdef OPENSSL_SYS_RDOS
 
-    ret = RdosWriteTcpConnection(b->num, in, inl);
+    ret = RdosGetTcpConnectionWriteSpace(b->num);
+    if (ret > inl)
+        ret = inl;
+
+    if (ret)
+    {
+        RdosWriteTcpConnection(b->num, in, ret);
+        RdosPushTcpConnection(b->num);
+    }
 
 #else
 
