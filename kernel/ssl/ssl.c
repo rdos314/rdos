@@ -32,6 +32,65 @@ void InitSecure();
 
 /*##########################################################################
 #
+#   Name       : rdos_alloc
+#
+##########################################################################*/
+void *rdos_alloc(int Size)
+{
+    long linear;
+
+    if (Size <= 0 || Size > 0x100000)
+        return 0;
+
+    if (Size < 0x1000)
+        return RdosAllocateSmallGlobalMem(Size);
+    else
+        return RdosAllocateBigGlobalMem(Size);
+}
+
+/*##########################################################################
+#
+#   Name       : rdos_free
+#
+##########################################################################*/
+void rdos_free(void *Memory)
+{
+    int linear;
+
+    int sel = RdosPointerToSelector(Memory);    
+
+    if (Memory == 0)
+        return;
+    
+    if (sel == 0x20)
+    {
+        linear = RdosPointerToOffset(Memory);
+        RdosFreeLinear(linear, 0);  // small linear won't require a size!
+    }
+    else
+        RdosFreeMem(sel);
+}
+
+/*##########################################################################
+#
+#   Name       : CreateConnection
+#
+#   Purpose....: Create connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux CreateConnection "*" rdosdev parm routine value [dx eax]
+void *CreateConnection()
+{   
+    void *p = rdos_alloc(10);
+    return p;
+} 
+
+/*##########################################################################
+#
 #   Name       : InitTasking
 #
 #   Purpose....: Init tasking callback

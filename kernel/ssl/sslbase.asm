@@ -42,18 +42,25 @@ ELSE
     .386p
 ENDIF
 
-code    SEGMENT byte public 'CODE'
-    
-    assume cs:code
+secure_handle_seg      STRUC
 
+secure_handle_base     handle_header <>
+secure_handle_sel      DW ?
+
+secure_handle_seg      ENDS
+
+
+_TEXT    SEGMENT byte public 'CODE'
+
+    assume cs:_TEXT
+
+    extrn CreateConnection:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Name:           CreateSecureConnection
 ;
 ;       Purpose:        Create a secure connection
-;
-;       Parameters:     BX          Tcp socket
 ;
 ;       Returns:        NC          ok
 ;                       BX          connection handle
@@ -63,8 +70,42 @@ code    SEGMENT byte public 'CODE'
 create_secure_connection_name    DB 'Create Secure Connection',0
 
 create_secure_connection     Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+    call CreateConnection
+;
+    mov ax,SECURE_HANDLE
+    mov cx,SIZE secure_handle_seg
+    AllocateHandle
+    mov [ebx].secure_handle_sel,dx
+    mov [ebx].hh_sign,SECURE_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
     ret
 create_secure_connection     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Delete_secure_connection
+;
+;           DESCRIPTION:    Delete secure connection (called from handle module)
+;
+;           PARAMETERS:     BX              SECURE CONNECTION HANDLE
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_secure_connection    Proc far
+    ret
+delete_secure_connection    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -82,6 +123,10 @@ InitSecure_    Proc near
     mov ds,ax
     mov es,ax
 ;
+    mov edi,OFFSET delete_secure_connection
+    mov ax,SECURE_HANDLE
+    RegisterHandle
+;
     mov esi,OFFSET create_secure_connection
     mov edi,OFFSET create_secure_connection_name
     xor dx,dx
@@ -91,6 +136,6 @@ InitSecure_    Proc near
     ret
 InitSecure_  ENDP
 
-code    ENDS
+_TEXT    ENDS
 
     END

@@ -25,6 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 ADC_HANDLE =        015FCh 
 FM_INSTR_HANDLE =   017DEh
 DLL_HANDLE16 =      026CFh
@@ -62,6 +63,7 @@ LON_HANDLE      =   0CAF2h
 AUDIO_OUT_HANDLE =  0CEDAh
 HID_HANDLE =        0D736h
 BITMAP_HANDLE =	    0DB57h
+SECURE_HANDLE =     0E254h
 INI_HANDLE =	    0EAF3h
 VFS_DIR_HANDLE =    0F67Ah
 
