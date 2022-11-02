@@ -1837,6 +1837,7 @@ int main(int argc, char **argv)
                 cbuf[key_count+1] = 0xa;
                 cbuf_len = key_count + 2;
                 key_count = 0;
+                cbuf_off = 0;
                 write_ssl = 1;
                 read_tty = 0;
             }
