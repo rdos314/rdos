@@ -970,4 +970,6 @@ user_get_time_nr                  = 789
 
 has_power_card_nr                 = 790
 
+create_secure_connection_nr       = 791
+
 usergate_entries                  = 800

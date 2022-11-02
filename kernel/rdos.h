@@ -792,6 +792,8 @@ int RDOSAPI RdosWriteTcpConnection(int Handle, const void *Buf, int Size);
 int RDOSAPI RdosPollTcpConnection(int Handle);
 int RDOSAPI RdosGetTcpConnectionWriteSpace(int Handle);
 
+int RDOSAPI RdosCreateSecureConnection(int TcpHandle);
+
 int RDOSAPI RdosGetLocalMailslot(const char *Name);
 int RDOSAPI RdosGetRemoteMailslot(long Ip, const char *Name);
 void RDOSAPI RdosFreeMailslot(int Handle);

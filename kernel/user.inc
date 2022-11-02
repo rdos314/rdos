@@ -2126,6 +2126,13 @@ AcceptIpv4Socket               MACRO
     UserGate accept_ipv4_socket_nr
                         ENDM
 
+
+; IN  BX                socket handle
+; OUT BX                connection handle
+CreateSecureConnection       MACRO
+        UserGate create_secure_connection_nr
+                        ENDM
+
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
 
