@@ -411,7 +411,7 @@ typedef DWORD CRYPTO_THREAD_ID;
 typedef LONG CRYPTO_ONCE;
 #    define CRYPTO_ONCE_STATIC_INIT 0
 #   endif
-#  elif defined(__RDOS__)
+#  elif defined(__RDOS__) || defined(__RDOSDEV__)
 typedef int CRYPTO_THREAD_LOCAL;
 typedef int CRYPTO_THREAD_ID;
 typedef struct CRYPTO_ONCE {
