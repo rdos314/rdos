@@ -2883,6 +2883,12 @@
     __parm [__edi] [__ecx] [__edx] \
     __value [__ecx]
 
+#pragma aux RdosCreateSecureConnection = \
+    CallGate_create_secure_connection  \
+    ValidateHandle \
+    __parm [__ebx] \
+    __value [__ebx]
+
 #pragma aux RdosGetLocalMailslot = \
     CallGate_get_local_mailslot  \
     ValidateHandle \

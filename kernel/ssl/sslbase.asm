@@ -35,14 +35,14 @@ INCLUDE ..\os.inc
 include ..\handle.inc
 include ..\wait.inc
 
-code    SEGMENT byte public 'CODE'
-
 IFDEF __WASM__
     .686p
     .xmm2
 ELSE
     .386p
 ENDIF
+
+code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
@@ -63,7 +63,7 @@ ENDIF
 create_secure_connection_name    DB 'Create Secure Connection',0
 
 create_secure_connection     Proc far
-    retf32
+    ret
 create_secure_connection     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
