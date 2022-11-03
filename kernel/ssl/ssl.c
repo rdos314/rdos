@@ -32,6 +32,7 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <float.h>
 #include <openssl/e_os2.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
@@ -46,6 +47,9 @@
 
 #include "rdos.h"
 #include "rdosdev.h"
+
+#pragma aux __8087cw "*";
+unsigned short __8087cw = IC_AFFINE | RC_NEAR | PC_53  | 0x007F;
 
 void InitSecure();
 
