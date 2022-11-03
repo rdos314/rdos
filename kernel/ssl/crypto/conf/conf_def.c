@@ -155,8 +155,10 @@ static int def_destroy_data(CONF *conf)
 
 static int def_load(CONF *conf, const char *name, long *line)
 {
-    int ret;
+    int ret = 0;
     BIO *in = NULL;
+
+#ifndef __RDOSDEV__
 
 #ifdef OPENSSL_SYS_VMS
     in = BIO_new_file(name, "r");
@@ -173,6 +175,8 @@ static int def_load(CONF *conf, const char *name, long *line)
 
     ret = def_load_bio(conf, in, line);
     BIO_free(in);
+
+#endif
 
     return ret;
 }
@@ -198,6 +202,8 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
     char *dirpath = NULL;
     OPENSSL_DIR_CTX *dirctx = NULL;
 #endif
+
+#ifndef __RDOSDEV__
 
     if ((buff = BUF_MEM_new()) == NULL) {
         CONFerr(CONF_F_DEF_LOAD_BIO, ERR_R_BUF_LIB);
@@ -483,6 +489,9 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
         OPENSSL_free(v->value);
         OPENSSL_free(v);
     }
+
+#endif
+
     return 0;
 }
 
@@ -686,7 +695,9 @@ static BIO *process_include(char *include, OPENSSL_DIR_CTX **dirctx,
                             char **dirpath)
 {
     struct stat st = { 0 };
-    BIO *next;
+    BIO *next = 0;
+
+#ifndef __RDOSDEV__
 
     if (stat(include, &st) < 0) {
         SYSerr(SYS_F_STAT, errno);
@@ -709,6 +720,9 @@ static BIO *process_include(char *include, OPENSSL_DIR_CTX **dirctx,
     }
 
     next = BIO_new_file(include, "r");
+
+#endif
+
     return next;
 }
 
@@ -720,6 +734,8 @@ static BIO *get_next_file(const char *path, OPENSSL_DIR_CTX **dirctx)
 {
     const char *filename;
     size_t pathlen;
+
+#ifndef __RDOSDEV__
 
     pathlen = strlen(path);
     while ((filename = OPENSSL_DIR_read(dirctx, path)) != NULL) {
@@ -766,6 +782,9 @@ static BIO *get_next_file(const char *path, OPENSSL_DIR_CTX **dirctx)
         }
     }
     OPENSSL_DIR_end(dirctx);
+
+#endif
+
     *dirctx = NULL;
     return NULL;
 }
