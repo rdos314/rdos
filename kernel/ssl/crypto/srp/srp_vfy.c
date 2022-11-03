@@ -391,7 +391,11 @@ int SRP_VBASE_init(SRP_VBASE *vb, char *verifier_file)
     SRP_user_pwd *user_pwd = NULL;
 
     TXT_DB *tmpdb = NULL;
-    BIO *in = BIO_new(BIO_s_file());
+    BIO *in = 0;
+
+#ifndef __RDOSDEV__
+
+    in = BIO_new(BIO_s_file());
 
     error_code = SRP_ERR_OPEN_FILE;
 
@@ -470,7 +474,11 @@ int SRP_VBASE_init(SRP_VBASE *vb, char *verifier_file)
     }
     error_code = SRP_NO_ERROR;
 
+
+#endif
+
  err:
+
     /*
      * there may be still some leaks to fix, if this fails, the application
      * terminates most likely
