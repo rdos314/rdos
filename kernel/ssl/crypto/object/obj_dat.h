@@ -1078,9 +1078,14 @@ static const unsigned char so[7762] = {
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x02,0x0D,       /* [ 7753] OBJ_hmacWithSHA512_256 */
 };
 
+#ifdef __RDOSDEV__
+#define NUM_NID 1
+#else
 #define NUM_NID 1195
+#endif
 static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"UNDEF", "undefined", NID_undef},
+#ifndef __RDOSDEV__
     {"rsadsi", "RSA Data Security, Inc.", NID_rsadsi, 6, &so[0]},
     {"pkcs", "RSA Data Security, Inc. PKCS", NID_pkcs, 7, &so[6]},
     {"MD2", "md2", NID_md2, 8, &so[13]},
@@ -2275,6 +2280,7 @@ static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"magma-mac", "magma-mac", NID_magma_mac},
     {"hmacWithSHA512-224", "hmacWithSHA512-224", NID_hmacWithSHA512_224, 8, &so[7745]},
     {"hmacWithSHA512-256", "hmacWithSHA512-256", NID_hmacWithSHA512_256, 8, &so[7753]},
+#endif
 };
 
 #define NUM_SN 1186
@@ -5731,3 +5737,4 @@ static const unsigned int obj_objs[NUM_OBJ] = {
     1168,    /* OBJ_uacurve8                     1 2 804 2 1 1 1 1 3 1 1 2 8 */
     1169,    /* OBJ_uacurve9                     1 2 804 2 1 1 1 1 3 1 1 2 9 */
 };
+
