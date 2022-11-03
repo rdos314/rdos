@@ -49,6 +49,9 @@
 
 void InitSecure();
 
+void AssertBreak(char *func, char *fn, int line_num);
+#pragma aux AssertBreak parm routine [fs esi] [es edi] [ecx]
+
 /*##########################################################################
 #
 #   Name       : rdos_alloc
@@ -88,6 +91,22 @@ void rdos_free(void *Memory)
     }
     else
         RdosFreeMem(sel);
+}
+
+/*##########################################################################
+#
+#   Name       : assert99
+#
+##########################################################################*/
+void _assert99(char *expr, char *func, char *fn, int line_num)
+{
+    AssertBreak(func, fn, line_num);
+}
+
+void __assert99(int value, char *expr, char *func, char *fn, int line_num)
+{
+    if (!value) 
+        _assert99(expr, func, fn, line_num);
 }
 
 /*##########################################################################

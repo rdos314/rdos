@@ -8,6 +8,7 @@
  */
 
 
+#include "rdosdev.h"
 #include "rdos.h"
 #include <openssl/crypto.h>
 
@@ -16,44 +17,41 @@
 CRYPTO_RWLOCK *CRYPTO_THREAD_lock_new(void)
 {
     CRYPTO_RWLOCK *lock;
-    int *hptr;
+    struct TKernelSection *hptr;
 
-    lock = OPENSSL_zalloc(sizeof(int));
-    hptr = (int *)lock;
-    *hptr = RdosCreateSection("SSL");    
+    lock = OPENSSL_zalloc(sizeof(struct TKernelSection));
+    hptr = (struct TKernelSection *)lock;
+    RdosInitKernelSection(hptr);    
 
     return lock;
 }
 
 int CRYPTO_THREAD_read_lock(CRYPTO_RWLOCK *lock)
 {
-    int *hptr = (int *)lock;
-    RdosEnterSection(*hptr);
+    struct TKernelSection *hptr = (struct TKernelSection *)lock;
+    RdosEnterKernelSection(hptr);
     return 1;
 }
 
 int CRYPTO_THREAD_write_lock(CRYPTO_RWLOCK *lock)
 {
-    int *hptr = (int *)lock;
-    RdosEnterSection(*hptr);
+    struct TKernelSection *hptr = (struct TKernelSection *)lock;
+    RdosEnterKernelSection(hptr);
     return 1;
 }
 
 int CRYPTO_THREAD_unlock(CRYPTO_RWLOCK *lock)
 {
-    int *hptr = (int *)lock;
-    RdosLeaveSection(*hptr);
+    struct TKernelSection *hptr = (struct TKernelSection *)lock;
+    RdosLeaveKernelSection(hptr);
     return 1;
 }
 
 void CRYPTO_THREAD_lock_free(CRYPTO_RWLOCK *lock)
 {
-    int *hptr = (int *)lock;
-
     if (lock == NULL)
         return;
 
-    RdosDeleteSection(*hptr);
     OPENSSL_free(lock);
 
     return;
@@ -65,57 +63,56 @@ void CRYPTO_THREAD_lock_free(CRYPTO_RWLOCK *lock)
 
 int CRYPTO_THREAD_run_once(CRYPTO_ONCE *once, void (*init)(void))
 {
-    int result;
+    short int flags;
 
     if (once->state == ONCE_DONE)
         return 1;
 
     do 
     {
-        result = RdosXchg(&once->state, ONCE_ININIT);
-        if (result == ONCE_UNINITED) 
+        flags = RdosRequestSpinlock(&once->lock);
+            
+        if (once->state == ONCE_UNINITED) 
         {
+            once->state = ONCE_ININIT;
             once->thread = RdosGetThreadHandle();
+            RdosReleaseSpinlock(&once->lock, flags);
             init();
             once->state = ONCE_DONE;
-            once->thread = 0;
             return 1;
         }
+        else
+        {
+            RdosReleaseSpinlock(&once->lock, flags);
 
-        if (result == ONCE_ININIT && once->thread == RdosGetThreadHandle())
-            return 1;
+            if (once->state == ONCE_ININIT && once->thread == RdosGetThreadHandle())
+                return 1;
+            else
+                RdosWaitMilli(10);
+        }
+    } while (once->state == ONCE_ININIT);
 
-    } while (result == ONCE_ININIT);
-
-    return (once->state == ONCE_DONE);
+    return 1;
 }
 
 int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
 {
-    *key = RdosAllocateTls();
-    if (*key < 0)
-        return 0;
-
-    RdosSetTls(*key, 0);
-
-    return 1;
+    return 0;
 }
 
 void *CRYPTO_THREAD_get_local(CRYPTO_THREAD_LOCAL *key)
 {
-    return RdosGetTls(*key);
+    return 0;
 }
 
 int CRYPTO_THREAD_set_local(CRYPTO_THREAD_LOCAL *key, void *val)
 {
-    RdosSetTls(*key, val);
-    return 1;
+    return 0;
 }
 
 int CRYPTO_THREAD_cleanup_local(CRYPTO_THREAD_LOCAL *key)
 {
-    RdosFreeTls(*key);
-    return 1;
+    return 0;
 }
 
 CRYPTO_THREAD_ID CRYPTO_THREAD_get_current_id(void)

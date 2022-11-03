@@ -414,11 +414,26 @@ typedef LONG CRYPTO_ONCE;
 #  elif defined(__RDOS__) || defined(__RDOSDEV__)
 typedef int CRYPTO_THREAD_LOCAL;
 typedef int CRYPTO_THREAD_ID;
+
+#if defined(__RDOS__)
 typedef struct CRYPTO_ONCE {
     int state;
     int thread;
 } CRYPTO_ONCE;
 #define RDOS_ONCE_INIT {0, 0}
+#endif
+
+#if defined(__RDOSDEV__)
+#include "rdosdev.h"
+typedef struct CRYPTO_ONCE {
+    int state;
+    int thread;
+    struct TSpinlock lock;
+} CRYPTO_ONCE;
+#define RDOS_ONCE_INIT {0, 0, {0}}
+#endif
+
+
 #   define CRYPTO_ONCE_STATIC_INIT RDOS_ONCE_INIT
 #  else
 #   include <pthread.h>
