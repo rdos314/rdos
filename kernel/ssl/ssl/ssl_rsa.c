@@ -42,9 +42,12 @@ int SSL_use_certificate(SSL *ssl, X509 *x)
 
 int SSL_use_certificate_file(SSL *ssl, const char *file, int type)
 {
+    int ret = 0;
+
+#ifndef __RDOSDEV__
+
     int j;
     BIO *in;
-    int ret = 0;
     X509 *x = NULL;
 
     in = BIO_new(BIO_s_file());
@@ -78,6 +81,9 @@ int SSL_use_certificate_file(SSL *ssl, const char *file, int type)
  end:
     X509_free(x);
     BIO_free(in);
+
+#endif
+
     return ret;
 }
 
@@ -166,6 +172,9 @@ static int ssl_set_pkey(CERT *c, EVP_PKEY *pkey)
 int SSL_use_RSAPrivateKey_file(SSL *ssl, const char *file, int type)
 {
     int j, ret = 0;
+
+#ifndef __RDOSDEV__
+
     BIO *in;
     RSA *rsa = NULL;
 
@@ -199,6 +208,9 @@ int SSL_use_RSAPrivateKey_file(SSL *ssl, const char *file, int type)
     RSA_free(rsa);
  end:
     BIO_free(in);
+
+#endif
+
     return ret;
 }
 
@@ -235,6 +247,9 @@ int SSL_use_PrivateKey(SSL *ssl, EVP_PKEY *pkey)
 int SSL_use_PrivateKey_file(SSL *ssl, const char *file, int type)
 {
     int j, ret = 0;
+
+#ifndef __RDOSDEV__
+
     BIO *in;
     EVP_PKEY *pkey = NULL;
 
@@ -268,6 +283,9 @@ int SSL_use_PrivateKey_file(SSL *ssl, const char *file, int type)
     EVP_PKEY_free(pkey);
  end:
     BIO_free(in);
+
+#endif
+
     return ret;
 }
 
@@ -361,6 +379,8 @@ int SSL_CTX_use_certificate_file(SSL_CTX *ctx, const char *file, int type)
     int ret = 0;
     X509 *x = NULL;
 
+#ifndef __RDOSDEV__
+
     in = BIO_new(BIO_s_file());
     if (in == NULL) {
         SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE, ERR_R_BUF_LIB);
@@ -392,6 +412,9 @@ int SSL_CTX_use_certificate_file(SSL_CTX *ctx, const char *file, int type)
  end:
     X509_free(x);
     BIO_free(in);
+
+#endif
+
     return ret;
 }
 
@@ -441,6 +464,9 @@ int SSL_CTX_use_RSAPrivateKey(SSL_CTX *ctx, RSA *rsa)
 int SSL_CTX_use_RSAPrivateKey_file(SSL_CTX *ctx, const char *file, int type)
 {
     int j, ret = 0;
+
+#ifndef __RDOSDEV__
+
     BIO *in;
     RSA *rsa = NULL;
 
@@ -474,6 +500,9 @@ int SSL_CTX_use_RSAPrivateKey_file(SSL_CTX *ctx, const char *file, int type)
     RSA_free(rsa);
  end:
     BIO_free(in);
+
+#endif
+
     return ret;
 }
 
@@ -508,6 +537,9 @@ int SSL_CTX_use_PrivateKey(SSL_CTX *ctx, EVP_PKEY *pkey)
 int SSL_CTX_use_PrivateKey_file(SSL_CTX *ctx, const char *file, int type)
 {
     int j, ret = 0;
+
+#ifndef __RDOSDEV__
+
     BIO *in;
     EVP_PKEY *pkey = NULL;
 
@@ -541,6 +573,9 @@ int SSL_CTX_use_PrivateKey_file(SSL_CTX *ctx, const char *file, int type)
     EVP_PKEY_free(pkey);
  end:
     BIO_free(in);
+
+#endif
+
     return ret;
 }
 
@@ -571,6 +606,9 @@ static int use_certificate_chain_file(SSL_CTX *ctx, SSL *ssl, const char *file)
 {
     BIO *in;
     int ret = 0;
+
+#ifndef __RDOSDEV__
+
     X509 *x = NULL;
     pem_password_cb *passwd_callback;
     void *passwd_callback_userdata;
@@ -661,6 +699,9 @@ static int use_certificate_chain_file(SSL_CTX *ctx, SSL *ssl, const char *file)
  end:
     X509_free(x);
     BIO_free(in);
+
+#endif
+
     return ret;
 }
 
@@ -888,6 +929,10 @@ int SSL_CTX_use_serverinfo(SSL_CTX *ctx, const unsigned char *serverinfo,
 
 int SSL_CTX_use_serverinfo_file(SSL_CTX *ctx, const char *file)
 {
+    int ret = 0;
+
+#ifndef __RDOSDEV__
+
     unsigned char *serverinfo = NULL;
     unsigned char *tmp;
     size_t serverinfo_length = 0;
@@ -897,7 +942,6 @@ int SSL_CTX_use_serverinfo_file(SSL_CTX *ctx, const char *file)
     char *header = NULL;
     char namePrefix1[] = "SERVERINFO FOR ";
     char namePrefix2[] = "SERVERINFOV2 FOR ";
-    int ret = 0;
     BIO *bin = NULL;
     size_t num_extensions = 0, contextoff = 0;
 
@@ -1014,6 +1058,9 @@ int SSL_CTX_use_serverinfo_file(SSL_CTX *ctx, const char *file)
     OPENSSL_free(extension);
     OPENSSL_free(serverinfo);
     BIO_free(bin);
+
+#endif
+
     return ret;
 }
 
