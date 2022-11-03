@@ -160,7 +160,10 @@ static int process_pci_value(CONF_VALUE *val,
             OPENSSL_free(tmp_data2);
         } else if (strncmp(val->value, "file:", 5) == 0) {
             unsigned char buf[2048];
-            int n;
+            int n = -1;
+
+#ifndef __RDOSDEV__
+
             BIO *b = BIO_new_file(val->value + 5, "r");
             if (!b) {
                 X509V3err(X509V3_F_PROCESS_PCI_VALUE, ERR_R_BIO_LIB);
@@ -192,6 +195,8 @@ static int process_pci_value(CONF_VALUE *val,
                 (*policy)->data[(*policy)->length] = '\0';
             }
             BIO_free_all(b);
+
+#endif
 
             if (n < 0) {
                 X509V3err(X509V3_F_PROCESS_PCI_VALUE, ERR_R_BIO_LIB);
