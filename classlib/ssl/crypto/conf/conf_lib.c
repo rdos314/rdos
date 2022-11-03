@@ -45,8 +45,10 @@ int CONF_set_default_method(CONF_METHOD *meth)
 LHASH_OF(CONF_VALUE) *CONF_load(LHASH_OF(CONF_VALUE) *conf, const char *file,
                                 long *eline)
 {
-    LHASH_OF(CONF_VALUE) *ltmp;
+    LHASH_OF(CONF_VALUE) *ltmp = 0;
     BIO *in = NULL;
+
+#ifndef __RDOSDEV__
 
 #ifdef OPENSSL_SYS_VMS
     in = BIO_new_file(file, "r");
@@ -60,6 +62,8 @@ LHASH_OF(CONF_VALUE) *CONF_load(LHASH_OF(CONF_VALUE) *conf, const char *file,
 
     ltmp = CONF_load_bio(conf, in, eline);
     BIO_free(in);
+
+#endif
 
     return ltmp;
 }
