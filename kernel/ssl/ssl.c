@@ -53,6 +53,9 @@
 #pragma aux __8087cw "*";
 unsigned short __8087cw = IC_AFFINE | RC_NEAR | PC_53  | 0x007F;
 
+#pragma aux _fltused_ "*";
+unsigned _fltused_ = 0;
+
 void InitSecure();
 
 void AssertBreak(char *func, char *fn, int line_num);
@@ -60,43 +63,86 @@ void AssertBreak(char *func, char *fn, int line_num);
 
 /*##########################################################################
 #
-#   Name       : rdos_alloc
+#   Name       : AllocateMem
 #
 ##########################################################################*/
-void *rdos_alloc(int Size)
+void *AllocateMem(size_t num, const char *file, int line)
 {
     long linear;
 
-    if (Size <= 0 || Size > 0x100000)
+    if (num <= 0 || num > 0x100000)
         return 0;
 
-    if (Size < 0x1000)
-        return RdosAllocateSmallGlobalMem(Size);
+    if (num < 0x1000)
+        return RdosAllocateSmallGlobalMem(num);
     else
-        return RdosAllocateBigGlobalMem(Size);
+        return RdosAllocateBigGlobalMem(num);
 }
 
 /*##########################################################################
 #
-#   Name       : rdos_free
+#   Name       : FreeMem
 #
 ##########################################################################*/
-void rdos_free(void *Memory)
+void FreeMem(void *str, const char *file, int line)
 {
     int linear;
 
-    int sel = RdosPointerToSelector(Memory);    
+    int sel = RdosPointerToSelector(str);    
 
-    if (Memory == 0)
+    if (str == 0)
         return;
     
     if (sel == 0x20)
     {
-        linear = RdosPointerToOffset(Memory);
-        RdosFreeLinear(linear, 0);  // small linear won't require a size!
+        linear = RdosPointerToOffset(str);
+        RdosFreeLinear(linear, 0);
     }
     else
         RdosFreeMem(sel);
+}
+
+/*##########################################################################
+#
+#   Name       : ReallocateMem
+#
+##########################################################################*/
+void *ReallocateMem(void *str, size_t num, const char *file, int line)
+{
+    char *newmem;
+    int linear;
+    long base;
+    long limit;
+    int size;
+    int sel = RdosPointerToSelector(str);    
+
+    if (str == 0)
+        size = 0;
+    else
+    {
+        if (sel == 0x20)
+            size = num;
+        else
+        {
+            RdosGetSelectorBaseSize(sel, &base, &limit);
+            size = limit + 1;
+        }
+    }
+
+    if (num)
+    {
+        newmem = AllocateMem(num, file, line);
+        if (size > num)
+            size = num;
+
+        memcpy(newmem, str, size);
+    }
+    else
+        newmem = 0;
+
+    FreeMem(str, file, line);
+
+    return newmem;
 }
 
 /*##########################################################################
@@ -449,7 +495,7 @@ void *CreateConnection()
 {   
     SSL_CONF_CTX *cctx = NULL;
 
-    void *p = rdos_alloc(10);
+    void *p = AllocateMem(10, 0, 0);
 
     cctx = SSL_CONF_CTX_new();
 
