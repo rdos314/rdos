@@ -442,6 +442,8 @@ static void get_current_time(struct timeval *t)
 #define LISTEN_SUCCESS              2
 #define LISTEN_SEND_VERIFY_REQUEST  1
 
+#ifndef __RDOSDEV__
+
 #ifndef OPENSSL_NO_SOCK
 int DTLSv1_listen(SSL *s, BIO_ADDR *client)
 {
@@ -857,6 +859,7 @@ int DTLSv1_listen(SSL *s, BIO_ADDR *client)
     BIO_ADDR_free(tmpclient);
     return ret;
 }
+#endif
 #endif
 
 static int dtls1_handshake_write(SSL *s)
