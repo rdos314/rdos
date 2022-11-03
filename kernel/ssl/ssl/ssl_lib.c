@@ -1300,11 +1300,6 @@ void SSL_set_bio(SSL *s, BIO *rbio, BIO *wbio)
         return;
     }
 
-#ifdef OPENSSL_SYS_RDOS
-    if (s->wait_handle)
-        RdosAddWaitForHandleRead(s->wait_handle, rbio, (void *)2);
-#endif
-
     /* Otherwise, adopt both references. */
     SSL_set0_rbio(s, rbio);
     SSL_set0_wbio(s, wbio);
