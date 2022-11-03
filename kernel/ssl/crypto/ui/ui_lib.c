@@ -36,8 +36,11 @@ UI *UI_new_method(const UI_METHOD *method)
         return NULL;
     }
 
+#ifndef __RDOSDEV__
     if (method == NULL)
         method = UI_get_default_method();
+#endif
+
     if (method == NULL)
         method = UI_null();
     ret->meth = method;
