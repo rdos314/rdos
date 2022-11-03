@@ -603,10 +603,13 @@ static unsigned long xname_hash(const X509_NAME *a)
 
 STACK_OF(X509_NAME) *SSL_load_client_CA_file(const char *file)
 {
+    STACK_OF(X509_NAME) *ret = NULL;
+
+#ifndef __RDOSDEV__
+
     BIO *in = BIO_new(BIO_s_file());
     X509 *x = NULL;
     X509_NAME *xn = NULL;
-    STACK_OF(X509_NAME) *ret = NULL;
     LHASH_OF(X509_NAME) *name_hash = lh_X509_NAME_new(xname_hash, xname_cmp);
 
     if ((name_hash == NULL) || (in == NULL)) {
@@ -655,16 +658,22 @@ STACK_OF(X509_NAME) *SSL_load_client_CA_file(const char *file)
     lh_X509_NAME_free(name_hash);
     if (ret != NULL)
         ERR_clear_error();
+
+#endif
     return ret;
 }
 
 int SSL_add_file_cert_subjects_to_stack(STACK_OF(X509_NAME) *stack,
                                         const char *file)
 {
+#ifdef __RDOSDEV__
+    int ret = 0;
+#else
+
+    int ret = 1;
     BIO *in;
     X509 *x = NULL;
     X509_NAME *xn = NULL;
-    int ret = 1;
     int (*oldcmp) (const X509_NAME *const *a, const X509_NAME *const *b);
 
     oldcmp = sk_X509_NAME_set_cmp_func(stack, xname_sk_cmp);
@@ -705,6 +714,9 @@ int SSL_add_file_cert_subjects_to_stack(STACK_OF(X509_NAME) *stack,
     BIO_free(in);
     X509_free(x);
     (void)sk_X509_NAME_set_cmp_func(stack, oldcmp);
+
+#endif
+
     return ret;
 }
 

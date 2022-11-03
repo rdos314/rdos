@@ -39,7 +39,10 @@
 #ifndef OSSL_INTERNAL_O_DIR_H
 # define OSSL_INTERNAL_O_DIR_H
 
+
 typedef struct OPENSSL_dir_context_st OPENSSL_DIR_CTX;
+
+#ifndef __RDOSDEV__
 
 /*
  * returns NULL on error or end-of-directory. If it is end-of-directory,
@@ -48,5 +51,7 @@ typedef struct OPENSSL_dir_context_st OPENSSL_DIR_CTX;
 const char *OPENSSL_DIR_read(OPENSSL_DIR_CTX **ctx, const char *directory);
 /* returns 1 on success, 0 on error */
 int OPENSSL_DIR_end(OPENSSL_DIR_CTX **ctx);
+
+#endif
 
 #endif                          /* LPDIR_H */
