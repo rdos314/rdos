@@ -431,6 +431,11 @@ typedef struct CRYPTO_ONCE {
     struct TSpinlock lock;
 } CRYPTO_ONCE;
 #define RDOS_ONCE_INIT {0, 0, {0}}
+
+void *AllocateMem(size_t num, const char *file, int line);
+void *ReallocateMem(void *str, size_t num, const char *file, int line);
+void FreeMem(void *str, const char *file, int line);
+
 #endif
 
 

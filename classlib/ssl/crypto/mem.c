@@ -212,14 +212,28 @@ void *CRYPTO_malloc(size_t num, const char *file, int line)
 #ifndef OPENSSL_NO_CRYPTO_MDEBUG
     if (call_malloc_debug) {
         CRYPTO_mem_debug_malloc(NULL, num, 0, file, line);
+#ifdef __RDOSDEV__
+        ret = AllocateMem(num, file, line);
+#else
         ret = malloc(num);
+#endif
         CRYPTO_mem_debug_malloc(ret, num, 1, file, line);
     } else {
+#ifdef __RDOSDEV__
+        ret = AllocateMem(num, file, line);
+#else
         ret = malloc(num);
+#endif
     }
 #else
     (void)(file); (void)(line);
+
+#ifdef __RDOSDEV__
+    ret = AllocateMem(num, file, line);
+#else
     ret = malloc(num);
+#endif
+
 #endif
 
     return ret;
@@ -254,14 +268,25 @@ void *CRYPTO_realloc(void *str, size_t num, const char *file, int line)
     if (call_malloc_debug) {
         void *ret;
         CRYPTO_mem_debug_realloc(str, NULL, num, 0, file, line);
+
+#ifdef __RDOSDEV__
+        ret = ReallocateMem(str, num, file, line);
+#else
         ret = realloc(str, num);
+#endif
+
         CRYPTO_mem_debug_realloc(str, ret, num, 1, file, line);
         return ret;
     }
 #else
     (void)(file); (void)(line);
 #endif
+
+#ifdef __RDOSDEV__
+    return  ReallocateMem(str, num, file, line);
+#else
     return realloc(str, num);
+#endif
 
 }
 
@@ -303,13 +328,29 @@ void CRYPTO_free(void *str, const char *file, int line)
 #ifndef OPENSSL_NO_CRYPTO_MDEBUG
     if (call_malloc_debug) {
         CRYPTO_mem_debug_free(str, 0, file, line);
+
+#ifdef __RDOSDEV__
+        FreeMem(str, file, line);
+#else
         free(str);
+#endif
+
         CRYPTO_mem_debug_free(str, 1, file, line);
     } else {
+#ifdef __RDOSDEV__
+        FreeMem(str, file, line);
+#else
         free(str);
+#endif
     }
 #else
-    free(str);
+
+#ifdef __RDOSDEV__
+        FreeMem(str, file, line);
+#else
+        free(str);
+#endif
+
 #endif
 }
 
