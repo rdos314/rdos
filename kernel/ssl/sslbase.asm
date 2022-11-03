@@ -107,6 +107,27 @@ delete_secure_connection    Proc far
     ret
 delete_secure_connection    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AssertBreak
+;
+;           DESCRIPTION:    Assert break
+;
+;           PARAMETERS:     FS:ESI	Function
+;                           ES:EDI      Function name
+;                           ECX         Line number
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AssertBreak_
+
+AssertBreak_    Proc near
+    int 3
+    ret
+AssertBreak_    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
