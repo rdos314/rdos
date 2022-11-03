@@ -4170,14 +4170,21 @@ SSL_CTX *SSL_set_SSL_CTX(SSL *ssl, SSL_CTX *ctx)
 
 int SSL_CTX_set_default_verify_paths(SSL_CTX *ctx)
 {
+#ifdef __RDOSDEV__
+    return 0;
+#else
     return X509_STORE_set_default_paths(ctx->cert_store);
+#endif
 }
 
 int SSL_CTX_set_default_verify_dir(SSL_CTX *ctx)
 {
-    X509_LOOKUP *lookup;
+    X509_LOOKUP *lookup = 0;
 
+#ifndef __RDOSDEV__
     lookup = X509_STORE_add_lookup(ctx->cert_store, X509_LOOKUP_hash_dir());
+#endif
+
     if (lookup == NULL)
         return 0;
     X509_LOOKUP_add_dir(lookup, NULL, X509_FILETYPE_DEFAULT);
@@ -4190,9 +4197,12 @@ int SSL_CTX_set_default_verify_dir(SSL_CTX *ctx)
 
 int SSL_CTX_set_default_verify_file(SSL_CTX *ctx)
 {
-    X509_LOOKUP *lookup;
+    X509_LOOKUP *lookup = 0;
 
+#ifndef __RDOSDEV__
     lookup = X509_STORE_add_lookup(ctx->cert_store, X509_LOOKUP_file());
+#endif
+
     if (lookup == NULL)
         return 0;
 
@@ -4207,7 +4217,11 @@ int SSL_CTX_set_default_verify_file(SSL_CTX *ctx)
 int SSL_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
                                   const char *CApath)
 {
+#ifdef __RDOSDEV__
+    return 0;
+#else
     return X509_STORE_load_locations(ctx->cert_store, CAfile, CApath);
+#endif
 }
 
 void SSL_set_info_callback(SSL *ssl,
