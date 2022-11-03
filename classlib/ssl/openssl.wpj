@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-192
-142
+800
+640
 7728
 8192
 2
@@ -39,7 +39,7 @@ WRect
 448
 256
 5680
-4219
+4215
 0
 0
 11
@@ -55,15 +55,15 @@ WRect
 368
 2048
 5680
-4219
+4215
 0
 0
 14
 WFileName
 13
 libcrypto.tgt
-76
-99
+0
+0
 15
 VComponent
 16
@@ -71,7 +71,7 @@ WRect
 0
 0
 5680
-4247
+4241
 0
 0
 17
@@ -80,4 +80,4 @@ WFileName
 openssl.tgt
 0
 0
-15
+12
