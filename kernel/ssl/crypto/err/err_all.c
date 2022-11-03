@@ -93,8 +93,11 @@ int err_load_crypto_strings_int(void)
 # endif
         ERR_load_ASYNC_strings() == 0 ||
 #endif
-        ERR_load_KDF_strings() == 0 ||
-        ERR_load_OSSL_STORE_strings() == 0)
+        ERR_load_KDF_strings() == 0 
+#ifndef __RDOSDEV__
+       || ERR_load_OSSL_STORE_strings() == 0
+#endif
+)
         return 0;
 
     return 1;
