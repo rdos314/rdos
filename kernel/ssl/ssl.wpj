@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-800
-640
+725
+563
 8624
 8704
 2
@@ -31,13 +31,13 @@ WRect
 0
 0
 5680
-4164
+4155
 0
 0
 9
 WFileName
 7
 ssl.tgt
-0
-2
+335
+346
 7
