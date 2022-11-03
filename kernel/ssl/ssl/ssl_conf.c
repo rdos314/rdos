@@ -536,6 +536,9 @@ static int cmd_ClientCAPath(SSL_CONF_CTX *cctx, const char *value)
 static int cmd_DHParameters(SSL_CONF_CTX *cctx, const char *value)
 {
     int rv = 0;
+
+#ifndef __RDOSDEV__
+
     DH *dh = NULL;
     BIO *in = NULL;
     if (cctx->ctx || cctx->ssl) {
@@ -556,6 +559,9 @@ static int cmd_DHParameters(SSL_CONF_CTX *cctx, const char *value)
  end:
     DH_free(dh);
     BIO_free(in);
+
+#endif
+
     return rv > 0;
 }
 #endif
