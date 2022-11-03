@@ -715,6 +715,8 @@ int SSL_add_dir_cert_subjects_to_stack(STACK_OF(X509_NAME) *stack,
     const char *filename;
     int ret = 0;
 
+#ifndef __RDOSDEV__
+
     /* Note that a side effect is that the CAs will be sorted by name */
 
     while ((filename = OPENSSL_DIR_read(&d, dir))) {
@@ -737,6 +739,7 @@ int SSL_add_dir_cert_subjects_to_stack(STACK_OF(X509_NAME) *stack,
             goto err;
     }
 
+
     if (errno) {
         SYSerr(SYS_F_OPENDIR, get_last_sys_error());
         ERR_add_error_data(3, "OPENSSL_DIR_read(&ctx, '", dir, "')");
@@ -749,6 +752,8 @@ int SSL_add_dir_cert_subjects_to_stack(STACK_OF(X509_NAME) *stack,
  err:
     if (d)
         OPENSSL_DIR_end(&d);
+
+#endif
 
     return ret;
 }
