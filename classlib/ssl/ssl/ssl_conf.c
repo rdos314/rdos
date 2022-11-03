@@ -467,6 +467,10 @@ static int cmd_ServerInfoFile(SSL_CONF_CTX *cctx, const char *value)
 static int do_store(SSL_CONF_CTX *cctx,
                     const char *CAfile, const char *CApath, int verify_store)
 {
+#ifdef __RDOSDEV__
+    return 0;
+#else
+
     CERT *cert;
     X509_STORE **st;
     if (cctx->ctx)
@@ -482,6 +486,7 @@ static int do_store(SSL_CONF_CTX *cctx,
             return 0;
     }
     return X509_STORE_load_locations(*st, CAfile, CApath) > 0;
+#endif
 }
 
 static int cmd_ChainCAPath(SSL_CONF_CTX *cctx, const char *value)
