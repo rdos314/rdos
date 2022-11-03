@@ -24,6 +24,13 @@ extern "C" {
  * OpenSSL was configured with the following options:
  */
 
+#ifdef __RDOSDEV__
+#ifndef OPENSSL_NO_STDIO
+#define OPENSSL_NO_STDIO
+#endif
+#endif
+
+
 #ifndef OPENSSLDIR
 # define OPENSSLDIR "d:/ssl"
 #endif
