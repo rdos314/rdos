@@ -903,6 +903,13 @@
     __parm [__fs __esi] [__es __edi] \
     __modify [__eax __edx]
 
+#pragma aux RdosGetLongTime = \
+    CallGate_user_get_time  \
+    "jnc ok" \
+    CallGate_get_time  \
+    "ok: " \
+    __value [__edx __eax]
+
 #pragma aux RdosSetTime = \
     CallGate_get_system_time  \
     "sub esi,eax" \
