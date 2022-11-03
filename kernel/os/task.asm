@@ -9149,6 +9149,9 @@ init_thread_block       PROC near
     mov ax,ds:p_serv_sel
     mov es:p_serv_sel,ax
 ;
+    mov eax,ds:p_tls_bitmap
+    mov es:p_tls_bitmap,eax
+;
     mov ax,ds:p_console
     mov es:p_console,ax
 ;
@@ -9553,6 +9556,8 @@ init_default_regs    PROC near
     mov dword ptr ds:p_fault_code,0
     mov dword ptr ds:p_fault_code+4,0
     mov ds:p_action_text,0
+;
+    mov ds:p_tls_array,0
     ret
 init_default_regs    ENDP
 
@@ -10053,6 +10058,9 @@ init_regs_iopl_done:
     mov ds:p_fs,ax
     mov ds:p_gs,ax
     mov ds:p_stack_sel,0
+;
+    mov ds:p_tls_bitmap,0
+    mov ds:p_tls_array,0
     ret
 init_process_regs    ENDP
 
@@ -10260,6 +10268,9 @@ init_serv_proc_regs    PROC near
     mov ds:p_fs,ax
     mov ds:p_gs,ax
     mov ds:p_stack_sel,0
+;
+    mov ds:p_tls_bitmap,0
+    mov ds:p_tls_array,0
     ret
 init_serv_proc_regs    ENDP
 

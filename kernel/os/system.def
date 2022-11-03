@@ -408,6 +408,8 @@ p_signal_spinlock   DW ?
 p_free_proc                 DD ?,?
 p_cr3                       DD ?
 p_tls_linear        DQ ?
+p_tls_bitmap        DD ?
+p_tls_array         DD ?
 p_deb_phys          DD ?,?
 p_pm_deb_sel        DW ?
 p_pm_deb_offs       DD ?
