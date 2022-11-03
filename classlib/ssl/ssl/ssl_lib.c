@@ -1373,6 +1373,9 @@ int SSL_get_wfd(const SSL *s)
 int SSL_set_fd(SSL *s, int fd)
 {
     int ret = 0;
+
+#ifndef __RDOSDEV__
+
     BIO *bio = NULL;
 
     bio = BIO_new(BIO_s_socket());
@@ -1385,11 +1388,16 @@ int SSL_set_fd(SSL *s, int fd)
     SSL_set_bio(s, bio, bio);
     ret = 1;
  err:
+
+#endif
+
     return ret;
 }
 
 int SSL_set_wfd(SSL *s, int fd)
 {
+#ifndef __RDOSDEV__
+
     BIO *rbio = SSL_get_rbio(s);
 
     if (rbio == NULL || BIO_method_type(rbio) != BIO_TYPE_SOCKET
@@ -1406,11 +1414,14 @@ int SSL_set_wfd(SSL *s, int fd)
         BIO_up_ref(rbio);
         SSL_set0_wbio(s, rbio);
     }
+#endif
     return 1;
 }
 
 int SSL_set_rfd(SSL *s, int fd)
 {
+#ifndef __RDOSDEV__
+
     BIO *wbio = SSL_get_wbio(s);
 
     if (wbio == NULL || BIO_method_type(wbio) != BIO_TYPE_SOCKET
@@ -1428,6 +1439,7 @@ int SSL_set_rfd(SSL *s, int fd)
         SSL_set0_rbio(s, wbio);
     }
 
+#endif
     return 1;
 }
 #endif
