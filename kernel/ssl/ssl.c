@@ -61,6 +61,20 @@ void InitSecure();
 void AssertBreak(char *func, char *fn, int line_num);
 #pragma aux AssertBreak parm routine [fs esi] [es edi] [ecx]
 
+
+
+int AllocateTls();
+#pragma aux AllocateTls value [eax]
+
+void FreeTls(int entry);
+#pragma aux FreeTls parm routine [ecx]
+
+void *GetTls(int entry);
+#pragma aux GetTls parm routine [ecx] value [dx eax]
+
+void SetTls(int entry, void *val);
+#pragma aux SetTls parm routine [ecx] [dx eax]
+
 /*##########################################################################
 #
 #   Name       : AllocateMem
@@ -493,9 +507,17 @@ int gettimeofday( struct timeval *tv, struct timezone *tz )
 #pragma aux CreateConnection "*" rdosdev parm routine value [dx eax]
 void *CreateConnection()
 {   
+    void *p;
+
     SSL_CONF_CTX *cctx = NULL;
 
-    void *p = AllocateMem(10, 0, 0);
+    int index = AllocateTls();
+    p = GetTls(index);
+    SetTls(index, "Hej");
+    p = GetTls(index);
+    FreeTls(index);
+    
+    p = AllocateMem(10, 0, 0);
 
     cctx = SSL_CONF_CTX_new();
 

@@ -12,6 +12,7 @@
 #include "rdos.h"
 #include <openssl/crypto.h>
 
+
 int AllocateTls();
 #pragma aux AllocateTls value [eax]
 
@@ -19,10 +20,10 @@ void FreeTls(int entry);
 #pragma aux FreeTls parm routine [ecx]
 
 void *GetTls(int entry);
-#pragma aux FreeTls parm routine [ecx] value [edx eax]
+#pragma aux GetTls parm routine [ecx] value [dx eax]
 
 void SetTls(int entry, void *val);
-#pragma aux FreeTls parm routine [ecx] [edx eax]
+#pragma aux SetTls parm routine [ecx] [dx eax]
 
 
 #if defined(OPENSSL_THREADS) && !defined(CRYPTO_TDEBUG) && defined(OPENSSL_SYS_RDOS)
