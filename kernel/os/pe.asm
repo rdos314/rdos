@@ -3063,6 +3063,13 @@ InitStack       Proc near
     mov fs:pvTLSArray,edx
     mov es:p_tls_array,edx
 ;
+    mov ax,ds
+    mov es,ax
+    mov edi,edx
+    mov ecx,40h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
     pop es
     mov eax,[esi].peh_tls_va
     or eax,eax
@@ -3778,6 +3785,15 @@ init_thread     PROC far
     sub edx,100h
     mov es:pvTLSArray,edx
     mov ds:p_tls_array,edx
+;
+    push es
+    mov ax,fs
+    mov es,ax
+    mov edi,edx
+    mov ecx,40h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop es
 ;
     mov eax,ds:p_tls_bitmap
     mov es:pvTLSBitmap,eax
