@@ -18,11 +18,11 @@ int AllocateTls();
 void FreeTls(int entry);
 #pragma aux FreeTls parm routine [ecx]
 
-int GetTls(int entry);
-#pragma aux FreeTls parm routine [ecx] value [eax]
+void *GetTls(int entry);
+#pragma aux FreeTls parm routine [ecx] value [edx eax]
 
-void SetTls(int entry, int val);
-#pragma aux FreeTls parm routine [ecx] [eax]
+void SetTls(int entry, void *val);
+#pragma aux FreeTls parm routine [ecx] [edx eax]
 
 
 #if defined(OPENSSL_THREADS) && !defined(CRYPTO_TDEBUG) && defined(OPENSSL_SYS_RDOS)

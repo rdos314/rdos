@@ -152,11 +152,13 @@ AllocateTls_    Proc near
     GetThread
     mov es,eax
     mov ecx,es:p_tls_bitmap
+
+atRetry:
     bsf eax, dword ptr [ecx]
     jnz atOk
 ;
-    bsf eax, dword ptr [ecx+4]
-    lea eax, [eax+32]
+    add ecx,4
+    bsf eax, dword ptr [ecx]
     jnz atOk
 ;
     or eax,-1
@@ -164,6 +166,22 @@ AllocateTls_    Proc near
 
 atOk:
     btr dword ptr [ecx], eax
+    jnc atRetry
+;
+    inc eax
+    btr dword ptr [ecx], eax
+    jc atDecode
+;
+    dec eax
+    bts dword ptr [ecx], eax
+    inc ecx
+    jmp atRetry
+
+atDecode:
+    sub ecx,es:p_tls_bitmap
+    shl ecx,3
+    dec eax
+    add eax,ecx
 
 atDone:
     pop ecx
@@ -201,6 +219,8 @@ FreeTls_    Proc near
     jae ftDone
 ;
     bts dword ptr [eax],ecx
+    inc ecx
+    bts dword ptr [eax],ecx
 
 ftDone:
     pop eax
@@ -218,7 +238,7 @@ FreeTls_   Endp
 ;
 ;           PARAMETERS:     ECX		Entry
 ;
-;           RETURNS:        EAX         Data
+;           RETURNS:        EDX:EAX     Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -226,7 +246,6 @@ FreeTls_   Endp
 
 GetTls_    Proc near
     push ds
-    push edx
 ;
     GetThread
     mov ds,eax
@@ -239,10 +258,10 @@ GetTls_    Proc near
     cmp ecx,64
     jnc gtDone
 ;
-    mov eax, [edx + ecx * 4]
+    mov eax,[edx + ecx * 4]
+    mov edx,[edx + ecx * 4 + 4]
 
 gtDone:   
-    pop edx
     pop ds
     ret
 GetTls_  Endp
@@ -255,7 +274,7 @@ GetTls_  Endp
 ;           DESCRIPTION:    Set TLS data
 ;
 ;           PARAMETERS:     ECX		Entry
-;                           EAX         Data
+;                           EDX:EAX     Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -264,12 +283,13 @@ GetTls_  Endp
 SetTls_    Proc near
     push ds
     push edx
+    push edi
 ;
     push eax
 ;
     GetThread
     mov ds,eax
-    mov edx,ds:p_tls_array
+    mov edi,ds:p_tls_array
     mov ax,flat_data_sel
     mov ds,ax
 ;
@@ -278,9 +298,11 @@ SetTls_    Proc near
     cmp ecx,64
     jnc stDone
 ;
-    mov [edx + ecx * 4], eax
+    mov [edi + ecx * 4], eax
+    mov [edi + ecx * 4 + 4], edx
 
 stDone:
+    pop edi
     pop edx
     pop ds
     ret

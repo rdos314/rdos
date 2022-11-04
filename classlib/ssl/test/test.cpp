@@ -282,13 +282,10 @@ int main(int argc, char **argv)
         else if (!ssl_pending && write_tty)
         {
             printf(sbuf + sbuf_off);
-            sbuf_len -= i;
-            sbuf_off += i;
-            if (sbuf_len <= 0) 
-            {
-                read_ssl = 1;
-                write_tty = 0;
-            }
+            sbuf_len = 0;
+            sbuf_off = 0;
+            read_ssl = 1;
+            write_tty = 0;
         } 
         else if (ssl_pending || RdosPollTcpConnection(SSL_get_handle(con)))
         {
