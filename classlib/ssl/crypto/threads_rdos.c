@@ -96,8 +96,6 @@ int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
     if (*key < 0)
         return 0;
 
-    RdosSetTls(*key, 0);
-
     return 1;
 }
 

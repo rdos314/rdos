@@ -12,6 +12,19 @@
 #include "rdos.h"
 #include <openssl/crypto.h>
 
+int AllocateTls();
+#pragma aux AllocateTls value [eax]
+
+void FreeTls(int entry);
+#pragma aux FreeTls parm routine [ecx]
+
+int GetTls(int entry);
+#pragma aux FreeTls parm routine [ecx] value [eax]
+
+void SetTls(int entry, int val);
+#pragma aux FreeTls parm routine [ecx] [eax]
+
+
 #if defined(OPENSSL_THREADS) && !defined(CRYPTO_TDEBUG) && defined(OPENSSL_SYS_RDOS)
 
 CRYPTO_RWLOCK *CRYPTO_THREAD_lock_new(void)
@@ -97,22 +110,28 @@ int CRYPTO_THREAD_run_once(CRYPTO_ONCE *once, void (*init)(void))
 
 int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
 {
-    return 0;
+    *key = AllocateTls();
+    if (*key < 0)
+        return 0;
+
+    return 1;
 }
 
 void *CRYPTO_THREAD_get_local(CRYPTO_THREAD_LOCAL *key)
 {
-    return 0;
+    return GetTls(*key);
 }
 
 int CRYPTO_THREAD_set_local(CRYPTO_THREAD_LOCAL *key, void *val)
 {
-    return 0;
+    SetTls(*key, val);
+    return 1;
 }
 
 int CRYPTO_THREAD_cleanup_local(CRYPTO_THREAD_LOCAL *key)
 {
-    return 0;
+    FreeTls(*key);
+    return 1;
 }
 
 CRYPTO_THREAD_ID CRYPTO_THREAD_get_current_id(void)
