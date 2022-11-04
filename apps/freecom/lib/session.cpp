@@ -143,7 +143,7 @@ static TCommandFactory *inithd;
 static TCommandFactory *keyb;
 static TCommandFactory *lon;
 static TCommandFactory *md;
-static TCommandFactory *mkdir;
+static TCommandFactory *mkdirf;
 static TCommandFactory *mkpart;
 static TCommandFactory *mount;
 static TCommandFactory *move;
@@ -234,7 +234,7 @@ TSession::TSession()
         move = new TMoveFactory;
         mount = new TMountFactory;
         mkpart = new TMakePartitionFactory;
-        mkdir = new TMkdirFactory;
+        mkdirf = new TMkdirFactory;
         md = new TMdFactory;
         lon = new TLonFactory;
         keyb = new TKeybFactory;
@@ -352,7 +352,7 @@ TSession::~TSession()
         delete move;
         delete mount;
         delete mkpart;
-        delete mkdir;
+        delete mkdirf;
         delete md;
         delete lon;
         delete inithd;
