@@ -3006,6 +3006,19 @@ InitStack       Proc near
     mov ebx,ds:flat_base
     push bx
 ;
+    push es
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateLocalLinear
+    mov edi,edx
+    mov ecx,400h
+    mov eax,-1
+    rep stos dword ptr es:[edi]
+    sub edx,ebx
+    mov edi,edx
+    pop es
+;
     mov eax,1000h
     AllocateLocalLinear
     AllocateLdt
@@ -3032,11 +3045,14 @@ InitStack       Proc near
     add edx,eax
     sub edx,88h
     mov fs:pvTEB,edx
+;
     GetThread
     push es
     mov es,ax
+    mov es:p_tls_bitmap,edi
+    mov fs:pvTLSBitmap,edi
+;
     movzx eax,es:p_id
-    pop es
     mov fs:pvThreadHandle,eax
     mov fs:pvProcessHandle,eax
     mov [edx+24h],eax
@@ -3045,12 +3061,9 @@ InitStack       Proc near
     mov [ebp].load_ecx,edx
     sub edx,100h
     mov fs:pvTLSArray,edx
+    mov es:p_tls_array,edx
 ;
-    sub edx,8
-    mov fs:pvTLSBitmap,edx
-    mov dword ptr [edx],-1
-    mov dword ptr [edx+4],-1
-;
+    pop es
     mov eax,[esi].peh_tls_va
     or eax,eax
     jz init_stack_no_tls
@@ -3764,11 +3777,10 @@ init_thread     PROC far
     mov dword ptr ds:p_rcx,edx
     sub edx,100h
     mov es:pvTLSArray,edx
-    sub edx,8
+    mov ds:p_tls_array,edx
 ;
-    mov es:pvTLSBitmap,edx
-    mov dword ptr fs:[edx],-1
-    mov dword ptr fs:[edx+4],-1
+    mov eax,ds:p_tls_bitmap
+    mov es:pvTLSBitmap,eax
 ;
     mov eax,fs:[esi].peh_tls_va
     or eax,eax
