@@ -49,13 +49,11 @@
 
 #pragma aux RdosFreeTls = \
     "cmp ecx, 64" \
-    "sbb eax, eax" \
-    "jnc done" \
+    "jae done" \
     "mov eax,fs:[28h]" \
     "bts dword ptr [eax],ecx" \
     "done: " \
     __parm [__ecx]
-
 
 #pragma aux RdosGetTls = \
     "xor eax, eax" \
@@ -68,7 +66,6 @@
     __value [__eax]
 
 #pragma aux RdosSetTls = \
-    "xor eax, eax" \
     "cmp ecx, 64" \
     "jnc done" \
     "mov edx, fs:[2Ch]" \

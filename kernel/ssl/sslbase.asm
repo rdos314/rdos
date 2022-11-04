@@ -131,6 +131,164 @@ AssertBreak_    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateTls
+;
+;           DESCRIPTION:    Allocate TLS
+;
+;           RETURNS:        EAX		Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateTls_
+
+AllocateTls_    Proc near
+    push ds
+    push es
+    push ecx
+;
+    mov ax,flat_data_sel
+    mov ds,ax
+;
+    GetThread
+    mov es,eax
+    mov ecx,es:p_tls_bitmap
+    bsf eax, dword ptr [ecx]
+    jnz atOk
+;
+    bsf eax, dword ptr [ecx+4]
+    lea eax, [eax+32]
+    jnz atOk
+;
+    or eax,-1
+    jmp atDone
+
+atOk:
+    btr dword ptr [ecx], eax
+
+atDone:
+    pop ecx
+    pop es
+    pop ds
+    ret
+AllocateTls_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           FreeTls
+;
+;           DESCRIPTION:    Free TLS
+;
+;           PARAMETERS:     ECX		Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeTls_
+
+FreeTls_    Proc near
+    push ds
+    push es
+    push eax
+;
+    mov ax,flat_data_sel
+    mov ds,ax
+;
+    GetThread
+    mov es,eax
+    mov eax,es:p_tls_bitmap
+;
+    cmp ecx, 64
+    jae ftDone
+;
+    bts dword ptr [eax],ecx
+
+ftDone:
+    pop eax
+    pop es
+    pop ds
+    ret
+FreeTls_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetTls
+;
+;           DESCRIPTION:    Get TLS data
+;
+;           PARAMETERS:     ECX		Entry
+;
+;           RETURNS:        EAX         Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetTls_
+
+GetTls_    Proc near
+    push ds
+    push edx
+;
+    GetThread
+    mov ds,eax
+    mov edx,ds:p_tls_array
+;
+    mov ax,flat_data_sel
+    mov ds,ax
+;
+    xor eax,eax 
+    cmp ecx,64
+    jnc gtDone
+;
+    mov eax, [edx + ecx * 4]
+
+gtDone:   
+    pop edx
+    pop ds
+    ret
+GetTls_  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetTls
+;
+;           DESCRIPTION:    Set TLS data
+;
+;           PARAMETERS:     ECX		Entry
+;                           EAX         Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetTls_
+
+SetTls_    Proc near
+    push ds
+    push edx
+;
+    push eax
+;
+    GetThread
+    mov ds,eax
+    mov edx,ds:p_tls_array
+    mov ax,flat_data_sel
+    mov ds,ax
+;
+    pop eax
+;
+    cmp ecx,64
+    jnc stDone
+;
+    mov [edx + ecx * 4], eax
+
+stDone:
+    pop edx
+    pop ds
+    ret
+SetTls_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           init
 ;
 ;           DESCRIPTION:    Init driver
