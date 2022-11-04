@@ -137,8 +137,10 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_register_atexit)
     if (_onexit(win32atexit) == NULL)
         return 0;
 # else
+#  ifndef __RDOSDEV__
     if (atexit(OPENSSL_cleanup) != 0)
         return 0;
+#  endif
 # endif
 #endif
 
@@ -755,6 +757,8 @@ int OPENSSL_init_crypto(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings)
 
 int OPENSSL_atexit(void (*handler)(void))
 {
+#ifndef __RDOSDEV__
+
     OPENSSL_INIT_STOP *newhand;
 
 #if !defined(OPENSSL_USE_NODELETE)\
@@ -815,6 +819,8 @@ int OPENSSL_atexit(void (*handler)(void))
     newhand->handler = handler;
     newhand->next = stop_handlers;
     stop_handlers = newhand;
+
+#endif
 
     return 1;
 }

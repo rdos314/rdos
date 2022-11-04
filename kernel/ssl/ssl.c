@@ -50,6 +50,8 @@
 #include "rdos.h"
 #include "rdosdev.h"
 
+#define BUFSIZZ 1024*8
+
 #pragma aux __8087cw "*";
 unsigned short __8087cw = IC_AFFINE | RC_NEAR | PC_53  | 0x007F;
 
@@ -60,20 +62,6 @@ void InitSecure();
 
 void AssertBreak(char *func, char *fn, int line_num);
 #pragma aux AssertBreak parm routine [fs esi] [es edi] [ecx]
-
-
-
-int AllocateTls();
-#pragma aux AllocateTls value [eax]
-
-void FreeTls(int entry);
-#pragma aux FreeTls parm routine [ecx]
-
-void *GetTls(int entry);
-#pragma aux GetTls parm routine [ecx] value [dx eax]
-
-void SetTls(int entry, void *val);
-#pragma aux SetTls parm routine [ecx] [dx eax]
 
 /*##########################################################################
 #
@@ -508,20 +496,21 @@ int gettimeofday( struct timeval *tv, struct timezone *tz )
 void *CreateConnection()
 {   
     void *p;
-
     SSL_CONF_CTX *cctx = NULL;
-
-    int index = AllocateTls();
-    p = GetTls(index);
-    SetTls(index, "Hej");
-    p = GetTls(index);
-    FreeTls(index);
+    SSL_CTX *ctx = NULL;
+    char *cbuf = NULL;
+    char *sbuf = NULL;
     
-    p = AllocateMem(10, 0, 0);
-
     cctx = SSL_CONF_CTX_new();
 
-    return p;
+    cbuf = (char *)OPENSSL_malloc(BUFSIZZ);
+    sbuf = (char *)OPENSSL_malloc(BUFSIZZ);
+
+    SSL_CONF_CTX_set_flags(cctx, SSL_CONF_FLAG_CLIENT | SSL_CONF_FLAG_CMDLINE);
+
+    ctx = SSL_CTX_new(TLS_client_method());
+
+    return 0;
 } 
 
 /*##########################################################################
