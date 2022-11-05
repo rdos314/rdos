@@ -1,0 +1,139 @@
+Open Watcom Linker Version 2.0 beta Nov  4 2022 01:03:11 (64-bit)
+Copyright (c) 2002-2022 The Open Watcom Contributors. All Rights Reserved.
+Portions Copyright (c) 1985-2002 Sybase, Inc. All Rights Reserved.
+Created on:       22/11/05 21:27:11
+Executable Image: err.rdv
+creating a 32-bit RDOS Device driver executable
+
+
+                        +------------+
+                        |   Groups   |
+                        +------------+
+
+Group                           Address              Size
+=====                           =======              ====
+
+DGROUP                          0002:00000000        0000c09c
+
+
+
+                        +--------------+
+                        |   Segments   |
+                        +--------------+
+
+Segment                Class          Group          Address         Size
+=======                =====          =====          =======         ====
+
+_TEXT                  CODE           AUTO           0001:00000000   00000308
+BEGTEXT                CODE           AUTO           0001:00000308   00000007
+CONST                  DATA           DGROUP         0002:00000000   00006bd7
+CONST2                 DATA           DGROUP         0002:00006bd8   0000541e
+_DATA                  DATA           DGROUP         0002:0000bff8   0000006f
+XIB                    DATA           DGROUP         0002:0000c068   00000000
+XI                     DATA           DGROUP         0002:0000c068   00000006
+XIE                    DATA           DGROUP         0002:0000c06e   00000000
+YIB                    DATA           DGROUP         0002:0000c06e   00000000
+YI                     DATA           DGROUP         0002:0000c06e   00000000
+YIE                    DATA           DGROUP         0002:0000c06e   00000000
+_NULL                  DATA           DGROUP         0002:0000c070   00000004
+_AFTERNULL             DATA           DGROUP         0002:0000c074   00000002
+DATA                   DATA           DGROUP         0002:0000c076   00000000
+_BSS                   BSS            DGROUP         0002:0000c080   0000001c
+err13_DATA             FAR_DATA       AUTO           0003:00000000   00008c0a
+
+
+                        +----------------+
+                        |   Memory Map   |
+                        +----------------+
+
+* = unreferenced symbol
++ = symbol only referenced locally
+
+Address        Symbol
+=======        ======
+
+Module: err.obj(C:\rdos\classlib\ssl\error\err.c)
+0001:00000000  main_
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(stkrdk.asm)
+0001:00000021  __CHK
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(cstrtrdk.asm)
+0001:0000030b* ___begtext
+0002:0000c070* __nullarea
+0001:00000032  _cexit_
+0001:0000005f  _cstart_
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(mainrdk.c)
+0002:0000c000* __AccessFileH
+0002:0000c004* __ReleaseFileH
+0002:0000c008* __AccessIOB
+0002:0000c00c* __ReleaseIOB
+0002:0000c010* __AccessNHeap
+0002:0000c014* __AccessFHeap
+0002:0000c018* __ReleaseNHeap
+0002:0000c01c* __ReleaseFHeap
+0002:0000c020* __AccessTDList
+0002:0000c024* __ReleaseTDList
+0001:00000130  __RdosMain
+0001:000001c0  __exit_
+0002:0000c028* __AccessFList
+0002:0000c02c* __ReleaseFList
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(initrtns.c)
+0001:000001e0  __InitRtns
+0001:00000230  __FiniRtns
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(crwdata)
+0002:0000c061  __osmajor
+0002:0000c062  __osminor
+0002:0000c038  __LpCmdLine
+0002:0000c03c  __LpPgmName
+0002:0000c030* __dynend
+0002:0000c034* __curbrk
+0002:0000c050* __cbyte
+0002:0000c054* __cbyte2
+0002:0000c058* __child
+0002:0000c05d* __Envptr
+0002:0000c040* __STACKLOW
+0002:0000c044* __STACKTOP
+0002:0000c048  __ASTACKSIZ
+0002:0000c04c  __ASTACKPTR
+0002:0000c05c* __no87
+0002:0000c063* ___FPE_handler
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(cmain386.c)
+0001:00000290  __CMain
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(sgdef086)
+0002:0000c068  __Start_XI
+0002:0000c06e  __End_XI
+0002:0000c06e  __Start_YI
+0002:0000c06e  __End_YI
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(cinit.c)
+0001:000002e0  __CommonInit_
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(___argc.c)
+0002:0000c090  ____Argc
+0002:0000c096  ____Argv
+Module: C:\WATCOM\lib386\rdosdev\clib3r.lib(exit.c)
+0001:000002f0  exit_
+0001:00000303* _exit_
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E2015: file err.obj(C:\rdos\classlib\ssl\error\err.c): bad relocation type specified
+Error! E3137: too many errors encountered
