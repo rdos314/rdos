@@ -143,22 +143,6 @@ void *ReallocateMem(void *str, size_t num, const char *file, int line)
 
 /*##########################################################################
 #
-#   Name       : assert99
-#
-##########################################################################*/
-void _assert99(char *expr, char *func, char *fn, int line_num)
-{
-    AssertBreak(func, fn, line_num);
-}
-
-void __assert99(int value, char *expr, char *func, char *fn, int line_num)
-{
-    if (!value)
-        _assert99(expr, func, fn, line_num);
-}
-
-/*##########################################################################
-#
 #   Name       : CreateConnection
 #
 #   Purpose....: Create connection
