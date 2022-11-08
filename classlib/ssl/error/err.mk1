@@ -1,15 +1,15 @@
 !define BLANK ""
-E:\rdos\classlib\ssl\error\err.obj : E:\rdos\classlib\ssl\error\err.c .AUTOD&
+H:\rdos\classlib\ssl\error\err.obj : H:\rdos\classlib\ssl\error\err.c .AUTOD&
 EPEND
- @E:
- cd E:\rdos\classlib\ssl\error
- *wcc386 err.c -i="e:\watcom/rh" -w4 -e25 -zp1 -zq -od -d2 -bm -fpi87 -zdp -&
+ @H:
+ cd H:\rdos\classlib\ssl\error
+ *wcc386 err.c -i="H:\ow\rel/rh" -w4 -e25 -zp1 -zq -od -d2 -bm -fpi87 -zdp -&
 zff -zu -3r -bt=rdosdev -fo=.obj -mc
 
-E:\rdos\classlib\ssl\error\err.rdv : E:\rdos\classlib\ssl\error\err.obj .AUT&
+H:\rdos\classlib\ssl\error\err.rdv : H:\rdos\classlib\ssl\error\err.obj .AUT&
 ODEPEND
- @E:
- cd E:\rdos\classlib\ssl\error
+ @H:
+ cd H:\rdos\classlib\ssl\error
  @%write err.lk1 FIL err.obj
  @%append err.lk1 
  *wlink name err d all sys rdosdev op codesel=0x100 op datasel=0x108 op m op&

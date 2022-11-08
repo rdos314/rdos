@@ -1,3 +1,3 @@
-project : E:\rdos\classlib\ssl\error\err.rdv .SYMBOLIC
+project : H:\rdos\classlib\ssl\error\err.rdv .SYMBOLIC
 
-!include E:\rdos\classlib\ssl\error\err.mk1
+!include H:\rdos\classlib\ssl\error\err.mk1

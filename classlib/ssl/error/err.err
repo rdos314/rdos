@@ -1,4 +1,4 @@
-err.c(8841): Warning! W202: Symbol 'obj_objs' has been defined, but not referenced
+err.c(9841): Warning! W202: Symbol 'obj_objs' has been defined, but not referenced
 err.c(6271): Warning! W202: Symbol 'nid_objs' has been defined, but not referenced
-err.c(7651): Warning! W202: Symbol 'ln_objs' has been defined, but not referenced
-err.c(6461): Warning! W202: Symbol 'sn_objs' has been defined, but not referenced
+err.c(8651): Warning! W202: Symbol 'ln_objs' has been defined, but not referenced
+err.c(7461): Warning! W202: Symbol 'sn_objs' has been defined, but not referenced
