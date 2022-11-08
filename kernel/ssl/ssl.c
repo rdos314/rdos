@@ -52,12 +52,6 @@
 
 #define BUFSIZZ 1024*8
 
-#pragma aux __8087cw "*";
-unsigned short __8087cw = IC_AFFINE | RC_NEAR | PC_53  | 0x007F;
-
-#pragma aux _fltused_ "*";
-unsigned _fltused_ = 0;
-
 void InitSecure();
 
 void AssertBreak(char *func, char *fn, int line_num);
@@ -90,11 +84,11 @@ void FreeMem(void *str, const char *file, int line)
 {
     int linear;
 
-    int sel = RdosPointerToSelector(str);    
+    int sel = RdosPointerToSelector(str);
 
     if (str == 0)
         return;
-    
+
     if (sel == 0x20)
     {
         linear = RdosPointerToOffset(str);
@@ -116,7 +110,7 @@ void *ReallocateMem(void *str, size_t num, const char *file, int line)
     long base;
     long limit;
     int size;
-    int sel = RdosPointerToSelector(str);    
+    int sel = RdosPointerToSelector(str);
 
     if (str == 0)
         size = 0;
@@ -163,280 +157,6 @@ void __assert99(int value, char *expr, char *func, char *fn, int line_num)
         _assert99(expr, func, fn, line_num);
 }
 
-
-/*##########################################################################
-#
-#   Name       : swap
-#
-##########################################################################*/
-
-#define MAXDEPTH        (sizeof(long) * 8)
-
-#define SHELL           3       /* Shell constant used in shell sort */
-
-#define W sizeof( int )
-
-#define exch( a, b, t)          ( t = a, a = b, b = t )
-#define swap( a, b )    \
-    swaptype != 0 ? BYTESWAP( a, b, size ) : \
-    ( void ) exch( *( int* )( a ), *( int* )( b ), t )
-
-typedef int qcomp( const void *, const void * );
-
-#define inline_swap BYTESWAP
-
-/*##########################################################################
-#
-#   Name       : inline_swap
-#
-#   Purpose....: inline swap
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void BYTESWAP(char *p, char *q, size_t size )
-{
-    long dword;
-    short word;
-    char byte;
-
-    while( size > 3 ) 
-    {
-        dword = *(long *)p;
-        *(long *)p = *(long *)q;
-        *(long *)q = dword;
-        p += 4;
-        q += 4;
-        size -= 4;
-    }
-
-    if( size > 1 ) 
-    {
-        word = *(short *)p;
-        *(short *)p = *(short *)q;
-        *(short *)q = word;
-        p += 2;
-        q += 2;
-        size -= 2;
-    }
-
-    if( size ) 
-    {
-        byte = *p;
-        *p = *q;
-        *q = byte;
-  
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : med3
-#
-#   Purpose....: Med 3
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static char *med3( char *a, char *b, char *c, qcomp cmp )
-{
-    if( cmp( a, b ) > 0 ) {
-        if( cmp( a, c ) > 0 ) {
-            if( cmp( b, c ) > 0 ) {
-                return( b );
-            } else {
-                return( c );
-            }
-        } else {
-            return( a );
-        }
-    } else {
-        if( cmp( a, c ) >= 0 ) {
-            return( a );
-        } else {
-            if( cmp( b, c ) > 0 ) {
-                return( c );
-            } else {
-                return( b );
-            }
-        }
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : qsort
-#
-#   Purpose....: Quick sort
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void qsort(
-    void *in_base,
-    size_t n,
-    size_t size,
-    int (*compar)(const void *, const void *))
-{
-    char *      base = (char*) in_base;
-    char *      p1;
-    char *      p2;
-    char *      pa;
-    char *      pb;
-    char *      pc;
-    char *      pd;
-    char *      pn;
-    char *      pv;
-    char *      mid;
-    int                 v;              /* used in pivot initialization */
-    int                 t;              /* used in exch() macro */
-    int                 comparison, swaptype, shell;
-    size_t              count, r, s;
-    unsigned int        sp;
-    char *              base_stack[MAXDEPTH];
-    unsigned int        n_stack[MAXDEPTH];
-    qcomp *             cmp = (qcomp*) compar;
-
-    /*
-        Initialization of the swaptype variable, which determines which
-        type of swapping should be performed when swap() is called.
-        0 for single-word swaps, 1 for general swapping by words, and
-        2 for swapping by bytes.  W (it's a macro) = sizeof(WORD).
-    */
-    swaptype = ( ( base - (char *)0 ) | size ) % W ? 2 : size > W ? 1 : 0;
-    sp = 0;
-    for(;;) {
-        while( n > 1 ) {
-            if( n < 16 ) {      /* 2-shell sort on smallest arrays */
-                for( shell = (size * SHELL) ;
-                     shell > 0 ;
-                     shell -= ((SHELL-1) * size) ) {
-                    p1 = base + shell;
-                    for( ; p1 < base + n * size; p1 += shell ) {
-                        for( p2 = p1;
-                             p2 > base && cmp( p2 - shell, p2 ) > 0;
-                             p2 -= shell ) {
-                            swap( p2, p2 - shell );
-                        }
-                    }
-                }
-                break;
-            } else {    /* n >= 16 */
-                /* Small array (15 < n < 30), mid element */
-                mid = base + (n >> 1) * size;
-                if( n > 29 ) {
-                    p1 = base;
-                    p2 = base + ( n - 1 ) * size;
-                    if( n > 42 ) {      /* Big array, pseudomedian of 9 */
-                        s = (n >> 3) * size;
-                        p1  = med3( p1, p1 + s, p1 + (s << 1), cmp );
-                        mid = med3( mid - s, mid, mid + s, cmp );
-                        p2  = med3( p2 - (s << 1), p2 - s, p2, cmp );
-                    }
-                    /* Mid-size (29 < n < 43), med of 3 */
-                    mid = med3( p1, mid, p2, cmp );
-                }
-                /*
-                    The following sets up the pivot (pv) for partitioning.
-                    It's better to store the pivot value out of line
-                    instead of swapping it to base. However, it's
-                    inconvenient in C unless the element size is fixed.
-                    So, only the important special case of word-size
-                    objects has utilized it.
-                */
-                if( swaptype != 0 ) { /* Not word-size objects */
-                    pv = base;
-                    swap( pv, mid );
-                } else {        /* Storing the pivot out of line (at v) */
-                    pv = ( char* )&v;
-                    v = *( int* )mid;
-                }
-
-                pa = pb = base;
-                pc = pd = base + ( n - 1 ) * size;
-                count = n;
-                /*
-                    count keeps track of how many entries we have
-                    examined.  Once we have looked at all the entries
-                    then we know that the partitioning is complete.
-                    We use count to terminate the looping, rather than
-                    a pointer comparison, to handle 16bit pointer
-                    limitations that may lead pb or pc to wrap.
-                    i.e. pc  = 0x0000;
-                         pc -= 0x0004;
-                         pc == 0xfffc;
-                         pc is no longer less that 0x0000;
-                */
-                for(;;) {
-                    while(count && (comparison = cmp(pb, pv)) <= 0) {
-                        if( comparison == 0 ) {
-                            swap( pa, pb );
-                            pa += size;
-                        }
-                        pb += size;
-                        count--;
-                    }
-                    while(count && (comparison = cmp(pc, pv)) >= 0) {
-                        if( comparison == 0 ) {
-                            swap( pc, pd );
-                            pd -= size;
-                        }
-                        pc -= size;
-                        count--;
-                    }
-                    if( count == 0 )
-                        break;
-                    swap( pb, pc );
-                    pb += size;
-                    count--;
-                    if( count == 0 )
-                        break;
-                    pc -= size;
-                    count--;
-                }
-                pn = base + n * size;
-                s = min( pa - base, pb - pa );
-                if( s > 0 ) {
-                    inline_swap( base, pb - s, s );
-                }
-                s = min( pd - pc, pn - pd - size);
-                if( s > 0 ) {
-                    inline_swap( pb, pn - s, s );
-                }
-                /* Now, base to (pb-pa) needs to be sorted             */
-                /* Also, pn-(pd-pc) needs to be sorted                 */
-                /* The middle 'chunk' contains all elements=pivot value*/
-                r = pb - pa;
-                s = pd - pc;
-                if( s >= r ) {  /* Stack up the larger chunk */
-                    base_stack[sp] = pn - s;/* Stack up base       */
-                    n_stack[sp] = s / size;     /* Stack up n              */
-                    n = r / size;               /* Set up n for next 'call'*/
-                                            /* next base is still base */
-                } else {
-                    if( r <= size )
-                        break;
-                    base_stack[sp] = base;      /* Stack up base           */
-                    n_stack[sp] = r / size;     /* Stack up n              */
-                    base = pn - s;              /* Set up base and n for   */
-                    n = s / size;               /* next 'call'             */
-                }
-                ++sp;
-            }
-        }
-        if( sp == 0 )
-            break;
-        --sp;
-        base = base_stack[sp];
-        n    = n_stack[sp];
-    }
-}
 
 /*##########################################################################
 #
@@ -494,13 +214,13 @@ int gettimeofday( struct timeval *tv, struct timezone *tz )
 ##########################################################################*/
 #pragma aux CreateConnection "*" rdosdev parm routine value [dx eax]
 void *CreateConnection()
-{   
+{
     void *p;
     SSL_CONF_CTX *cctx = NULL;
     SSL_CTX *ctx = NULL;
     char *cbuf = NULL;
     char *sbuf = NULL;
-    
+
     cctx = SSL_CONF_CTX_new();
 
     cbuf = (char *)OPENSSL_malloc(BUFSIZZ);
@@ -511,7 +231,7 @@ void *CreateConnection()
     ctx = SSL_CTX_new(TLS_client_method());
 
     return 0;
-} 
+}
 
 /*##########################################################################
 #

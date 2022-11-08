@@ -107,7 +107,6 @@ delete_secure_connection    Proc far
     ret
 delete_secure_connection    Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
