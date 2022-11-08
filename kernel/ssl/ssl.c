@@ -153,52 +153,8 @@ void _assert99(char *expr, char *func, char *fn, int line_num)
 
 void __assert99(int value, char *expr, char *func, char *fn, int line_num)
 {
-    if (!value) 
+    if (!value)
         _assert99(expr, func, fn, line_num);
-}
-
-
-/*##########################################################################
-#
-#   Name       : gettimeofday
-#
-#   Purpose....: Get time of day
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int gettimeofday( struct timeval *tv, struct timezone *tz )
-{
-    long long longtime;
-    long long basetime;
-    unsigned long msb;
-
-    /* unused parameters */ (void)tz;
-
-    msb = RdosCodeMsbTics( 2010, 1, 1, 0 );
-    basetime = (long long)msb;
-    basetime = basetime << 32;
-    longtime = RdosGetLongTime();
-    longtime -= basetime;
-
-    tv->tv_sec = (long)(longtime / 1193182);
-    longtime = longtime - (long long)(tv->tv_sec) * 1193182;
-    longtime = longtime * 1000000 / 1193182;
-    tv->tv_usec = (long)longtime;
-
-    while( tv->tv_usec < 0 ) {
-        tv->tv_usec += 1000000;
-        tv->tv_sec--;
-    }
-
-    while( tv->tv_usec >= 1000000 ) {
-        tv->tv_usec -= 1000000;
-        tv->tv_sec++;
-    }
-
-    return( 0 );
 }
 
 /*##########################################################################

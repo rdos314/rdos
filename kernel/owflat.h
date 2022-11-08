@@ -7,7 +7,7 @@
 // check carry flag, and set ebx=0 if set and ebx=bx if clear
 #define ValidateHandle 0x73 2 0x33 0xDB 0xF 0xB7 0xDB
 
-// check carry flag, and set ebx=0 if set 
+// check carry flag, and set ebx=0 if set
 #define ValidateFileHandle 0x73 2 0x33 0xDB
 
 // check carry flag, and set eax=0 if set
@@ -3855,7 +3855,7 @@
 #pragma aux RdosOpenUsbPacketPipe = \
     CallGate_open_usb_packet_pipe \
     CarryToBool \
-    __value [eax] \
+    __value [__eax] \
     __parm [__ebx] [__dl] [__ecx]
 
 #pragma aux RdosGetUsbPacketPipe = \
@@ -3867,7 +3867,7 @@
     "xor eax,eax" \
     "done: " \
     __parm [__ebx] [__dl] [__edi] \
-    __value [eax] \
+    __value [__eax] \
     __modify [__ecx]
 
 #pragma aux RdosCloseUsbPipe = \
@@ -3884,7 +3884,7 @@
     "xor eax,eax" \
     "done: " \
     __parm [__ebx] [__dl] \
-    __value [eax] \
+    __value [__eax] \
     __modify [__ecx]
 
 #pragma aux RdosGetFreeUsbBuffers = \
@@ -3896,7 +3896,7 @@
     "xor eax,eax" \
     "done: " \
     __parm [__ebx] [__dl] \
-    __value [eax] \
+    __value [__eax] \
     __modify [__ecx]
 
 #pragma aux RdosGetUsbBufferSize = \
@@ -3908,7 +3908,7 @@
     "xor eax,eax" \
     "done: " \
     __parm [__ebx] [__dl] \
-    __value [eax] \
+    __value [__eax] \
     __modify [__ecx]
 
 #pragma aux RdosAddWaitForUsbPipe = \
