@@ -13,5 +13,5 @@ ODEPEND
  @%write err.lk1 FIL err.obj
  @%append err.lk1 
  *wlink name err d all sys rdosdev op codesel=0x100 op datasel=0x108 op m op&
- maxe=25 op symf @err.lk1
+ maxe=25 @err.lk1
 

@@ -171,6 +171,7 @@ xhc_params	STRUC
 par_oper_offset    DD ?
 par_db_offset      DD ?
 par_run_offset     DD ?
+par_cap_offset     DD ?
 par_offset         DW ?
 par_intr_count     DW ?
 par_scratch_count  DW ?
@@ -4752,6 +4753,10 @@ crsSlot32:
     mov es:par_slot_size,32
 
 crsSlotOk:
+    shr eax,16
+    shl eax,2
+    mov es:par_cap_offset,eax
+;
     mov eax,ds:[edx].hccDbOff
     mov es:par_db_offset,eax
 ;
@@ -4786,6 +4791,17 @@ crsDbOk:
     mov ecx,eax
 
 crsRunOk:
+    mov eax,es:par_cap_offset
+    or eax,eax
+    jz crsCapOk
+;
+    add eax,100h
+    cmp ecx,eax
+    ja crsCapOk
+;
+    mov ecx,eax
+
+crsCapOk:
     movzx eax,es:par_offset
     add ecx,eax
 ;
