@@ -75,15 +75,6 @@ modify_paged MACRO par, reg, p1, p2
   DW 200h + reg, p2, p1
          ENDM
 
-apply_firmware  MACRO
-                ENDM
-
-apply_firmware_cond  MACRO p1
-                     ENDM
-
-wait_ms  MACRO ms
-         ENDM
-
 8168d_param  MACRO reg, p1
   DW 1Fh, 5
   DW 5, reg
@@ -105,15 +96,6 @@ wait_ms  MACRO ms
   DW 1Fh, 0 
              ENDM
 
-ee_8168g  MACRO
-             ENDM
-
-ee_8168f  MACRO
-             ENDM
-
-write_mmd    MACRO p1, p2, p3
-             ENDM
-
 conf_8168f  MACRO
   8168d_param_mask 08B80h, 0, 6
   modify_extpage_mask 2Dh, 18h, 0, 10h
@@ -129,6 +111,28 @@ conf_8168f  MACRO
   modify_paged 0A43h, 10h, 0, 1003h
              ENDM
 
+apply_firmware_cond  MACRO p1
+                     ENDM
+
+write_mmd    MACRO p1, p2, p3
+             ENDM
+
+
+call_proc  MACRO p
+   DW 300h
+   DW OFFSET p
+           ENDM
+
+wait_ms  MACRO ms
+   DW 400h
+   DW OFFSET ms
+         ENDM
+
+ee_8168g  MACRO
+             ENDM
+
+ee_8168f  MACRO
+             ENDM
 
 cond_8168g1  MACRO
              ENDM
@@ -1286,15 +1290,20 @@ WriteEri	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       NAME:          Config8169
+;       NAME:        ApplyFirmware
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Wait100ms   Proc near
-   mov ax,100
-   WaitMilliSec
-   ret
-Wait100ms   ENDP
+ApplyFirmware	Proc near
+    int 3
+    ret
+ApplyFirmware   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:          Config8169
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ConfigNone:
   DW -1
@@ -1639,7 +1648,7 @@ Config8168d4:
   DW -1 
 
 Config8168e1:
-  apply_firmware
+  call_proc ApplyFirmware
   8168d_param 08B80h, 0C896h
 
   DW 01Fh,  00001h
@@ -1664,7 +1673,7 @@ Config8168e1:
   DW -1
 
 Config8168e2:
-  apply_firmware
+  call_proc ApplyFirmware
   modify_extpage 0ACh, 18h, 6
   8168d_param 08B5Bh, 09222h
   8168d_param 08B6Dh, 08000h
@@ -1690,7 +1699,7 @@ Config8168e2:
   DW -1
   
 Config8168f1:
-  apply_firmware
+  call_proc ApplyFirmware
   write_paged 3, 9, 0A20Fh
 
   8168d_param 08B55h, 0
@@ -1710,12 +1719,12 @@ Config8168f1:
   DW -1
 
 Config8168f2:
-  apply_firmware
+  call_proc ApplyFirmware
   conf_8168f
   DW -1
 	  
 Config8411:
-  apply_firmware
+  call_proc ApplyFirmware
   conf_8168f
 
   8168d_param_mask 08B85h, 0, 4000h
@@ -1749,7 +1758,7 @@ Config8411:
   DW -1
    
 Config8168g1:
-  apply_firmware
+  call_proc ApplyFirmware
   cond_8168g1
 
   modify_paged 0A44h, 11h, 0, 12
@@ -1777,12 +1786,12 @@ Config8168g1:
   DW -1
     
 Config8168g2:
-  apply_firmware
+  call_proc ApplyFirmware
   ee_8168g
   DW -1
   
 Config8168h2:
-  apply_firmware
+  call_proc ApplyFirmware
 
   8168g_param 808Ah, 3Fh, 0Ah
   8168g_param 811h, 0, 800h
@@ -1890,7 +1899,7 @@ Config8401:
 Config8105e:
   DW 018h,  00310h
   wait_ms 100
-  apply_firmware
+  call_proc ApplyFirmware
 
   write_paged 5, 1Ah, 0
   write_paged 3, 1Ch, 0
@@ -1900,7 +1909,7 @@ Config8105e:
 Config8402:
   DW 018h,  00310h
   wait_ms 20
-  apply_firmware
+  call_proc ApplyFirmware
 
   DW 01Fh,  00004h
   DW 010h,  0401Fh
@@ -1911,7 +1920,7 @@ Config8402:
 Config8106e:
   DW 018h,  00310h
   wait_ms 100
-  apply_firmware
+  call_proc ApplyFirmware
 
   DW 01Fh,  00004h
   DW 010h,  0C07Fh
@@ -1990,7 +1999,7 @@ Config8125a2:
 
   8168g_param 8257h, 0FFFFh, 20Fh
   8168g_param 80EAh, 0FFFFh, 7843h
-  apply_firmware
+  call_proc ApplyFirmware
 
   modify_paged 0B54h, 16h, 0FF00h, 0DB00h
   modify_paged 0A45h, 12h, 1, 0
@@ -2003,7 +2012,7 @@ Config8125a2:
   DW -1
 
 Config8125b:
-  apply_firmware
+  call_proc ApplyFirmware
 
   modify_paged 0A44h, 11h, 0, 800h
   modify_paged 0AC4h, 13h, 0F0h, 90h
@@ -2121,13 +2130,10 @@ cLoop:
     je cMerge
 ;
     cmp ah,3
-    je cEri
+    je cProc
 ;
     cmp ah,4
-    je cCall
-;
-    cmp ah,5
-    je cEriMerge
+    je cWait
 ;        
     jmp cDone
 
@@ -2157,30 +2163,14 @@ cMerge:
     add si,6
     jmp cLoop
 
-cEri:
-    mov bx,cs:[si+2]
-    mov ecx,cs:[si+4]
-    mov eax,cs:[si+8]
-    call WriteEri
-    add si,12
-    jmp cLoop
-
-cEriMerge:
-    mov bx,cs:[si+2]
-    xor ecx,ecx
-    call ReadEri
-;
-    mov ecx,cs:[si+8]
-    not ecx
-    and eax,ecx
-    or eax,cs:[si+12]
-    mov ecx,cs:[si+4]
-    call WriteEri
-    add si,16
-    jmp cLoop
-
-cCall:
+cProc:
     call word ptr cs:[si+2]
+    add si,4
+    jmp cLoop
+
+cWait:
+    mov ax,cs:[si+2]
+    WaitMilliSec
     add si,4
     jmp cLoop
 
