@@ -129,9 +129,12 @@ wait_ms  MACRO ms
          ENDM
 
 ee_8168g  MACRO
+  modify_paged 0A43h, 11h, 0, 10h
              ENDM
 
 ee_8168f  MACRO
+  modify_extpage_mask 20h, 15h, 0, 100h
+  8168d_param_mask 8B85h, 0, 2000h
              ENDM
 
 cond_8168g1  MACRO
