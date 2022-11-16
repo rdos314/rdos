@@ -35,6 +35,114 @@ INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\core.inc
 INCLUDE ..\os\net.inc
 
+
+; phy macros
+
+write_paged MACRO sel, reg, val
+  DW 01Fh, sel
+  DW reg, val
+  DW 01Fh, 0h 
+            ENDM
+
+modify_extpage  MACRO sel, reg, val
+  DW 01Fh, 7
+  DW 01Eh, sel
+  DW reg, val
+  DW 01Fh, 0h
+           ENDM
+
+modify_extpage_mask  MACRO sel, reg, mask, val
+  DW 01Fh, 7
+  DW 01Eh, sel
+  DW 200h + reg, val, mask
+  DW 01Fh, 0h
+           ENDM
+
+set_bits  MACRO reg, mask
+  DW 100h + reg, mask
+          ENDM
+
+clear_bits  MACRO reg, mask
+  DW 200h + reg, 0, mask
+          ENDM
+
+modify MACRO reg, mask, val
+  DW 200h + reg, val, mask
+          ENDM
+
+modify_paged MACRO reg, p1, p2, p3
+         ENDM
+
+apply_firmware  MACRO
+                ENDM
+
+apply_firmware_cond  MACRO p1
+                     ENDM
+
+wait_ms  MACRO ms
+         ENDM
+
+8168d_param  MACRO reg, p1
+  DW 1Fh, 5
+  DW 5, reg
+  DW 6, p1
+  DW 1Fh, 0 
+             ENDM
+
+8168d_param_mask  MACRO reg, p1, p2
+  DW 1Fh, 5
+  DW 5, reg
+  DW 206h, p2, p1
+  DW 1Fh, 0 
+             ENDM
+
+8168g_param  MACRO reg, p1, p2
+  DW 1Fh, 0A43h
+  DW 13h, reg
+  DW 214h, p2, p1
+  DW 1Fh, 0 
+             ENDM
+
+ee_8168g  MACRO
+             ENDM
+
+ee_8168f  MACRO
+             ENDM
+
+write_mmd    MACRO p1, p2, p3
+             ENDM
+
+conf_8168f  MACRO
+  8168d_param_mask 08B80h, 0, 6
+  modify_extpage_mask 2Dh, 18h, 0, 10h
+  set_bits 14h, 8000h
+  8168d_param_mask 08B86h, 0, 1
+  ee_8168f
+              ENDM
+
+8168g_10m_aldps MACRO
+  modify_paged 0BCCh, 14h, 100h, 0
+  modify_paged 0A44h, 11h, 0, 80h
+  8168d_param_mask 08084h, 6000h, 0
+  modify_paged 0A43h, 10h, 0, 1003h
+             ENDM
+
+
+cond_8168g1  MACRO
+             ENDM
+
+cond_8168d1  MACRO
+             ENDM
+
+cond_8168d2  MACRO
+             ENDM
+
+cond_8168h2  MACRO
+             ENDM
+
+8125_legacy  MACRO
+             ENDM
+
 RX_DESCR_COUNT = 256
 TX_DESCR_COUNT = 128
 
@@ -1252,17 +1360,9 @@ Config8169s:
   DW -1
 
 Config8169sb:
-  DW 01Fh,  00002h
-  DW 001h,  090D0h
-  DW 01Fh,  00000h
+  write_paged 2, 1, 90D0h
   DW -1
-  
-Config8169scdq:
-  DW 01Fh,  00001h
-  DW 010h,  0F01Bh
-  DW 01Fh,  00000h
-  DW -1
-      
+        
 Config8169scd:
   DW 01Fh,  00001h
   DW 004h,  00000h
@@ -1361,34 +1461,24 @@ Config8169sce:
 
 Config8168bb:
   DW 01Fh,  00001h
-  DW 116h,  00001h
+  set_bits 16h, 1
   DW 010h,  0F41Bh
   DW 01Fh,  00000h
   DW -1
 
 Config8168bef:  
-  DW 01Fh,  00000h
-  DW 01Dh,  00F00h
-  DW 01Fh,  00002h
-  DW 00Ch,  01EC8h
-  DW 01Fh,  00000h
+  write_paged 1, 10h, 0F41Bh
   DW -1
   
 Config8168cp1: 
-  DW 01Fh,  00000h
   DW 01Dh,  00F00h
-  DW 01Fh,  00002h
-  DW 00Ch,  01EC8h
-  DW 01Fh,  00000h
+  write_paged 2, 0Ch, 1EC8h
   DW -1
   
 Config8168cp2: 
-  DW 01Fh,  00000h
-  DW 114h,  00020h
-  DW 10Dh,  00020h
-  DW 01Fh,  00001h
-  DW 01Dh,  03D98h
-  DW 01Fh,  00000h
+  set_bits 14h, 20h
+  set_bits 0Dh, 20h
+  write_paged 1, 1Dh, 3D98h
   DW -1
    
   
@@ -1410,9 +1500,8 @@ Config8168c1:
   DW 01Fh,  00000h
   DW 009h,  02000h
   DW 009h,  00000h  
-  DW 114h,  00020h
-  DW 10Dh,  00020h
-  DW 01Fh,  00000h
+  set_bits 14h, 20h
+  set_bits 0Dh, 20h
   DW -1
   
 Config8168c2: 
@@ -1431,10 +1520,9 @@ Config8168c2:
   DW 01Fh,  00003h
   DW 016h,  00F0Ah
   DW 01Fh,  00000h
-  DW 116h,  00001h
-  DW 114h,  00020h
-  DW 10Dh,  00020h
-  DW 01Fh,  00000h
+  set_bits 16h, 1
+  set_bits 14h, 20h
+  set_bits 0Dh, 20h
   DW -1
      
 Config8168c3: 
@@ -1447,13 +1535,13 @@ Config8168c3:
   DW 01Fh,  00003h
   DW 016h,  00F0Ah
   DW 01Fh,  00000h
-  DW 116h,  00001h
-  DW 114h,  00020h
-  DW 10Dh,  00020h
-  DW 01Fh,  00000h
+  set_bits 16h, 1
+  set_bits 14h, 20h
+  set_bits 0Dh, 20h
   DW -1
 
-Config8168d1_d2: 
+
+Config8168d1: 
   DW 01Fh,  00001h
   DW 006h,  04064h
   DW 007h,  02863h
@@ -1482,89 +1570,75 @@ Config8168d1_d2:
   DW 017h,  00CC0h
   DW 01Fh,  00000h
   DW 00Dh,  0F880h
+
   DW 01Fh,  00002h
-  DW 202h,  00100h,  00600h
-  DW 203h,  00000h,  0E000h
+  modify 0Bh, 0EFh, 10h
+  modify 0Ch, 05D00h, 0A200h
+
+  cond_8168d1
+
   DW 01Fh,  00002h
-  DW 10Fh,  00017h
-  DW 01Fh,  00005h
-  DW 005h,  0001Bh
+  set_bits 0Dh, 300h
+  set_bits 0Fh, 10h
+
+  DW 01Fh,  00002h
+  modify 2, 600h, 100h
+  clear_bits 3, 0E000h
   DW 01Fh,  00000h
+
+  apply_firmware_cond 0BF00h
   DW -1
 
-Config8168d3: 
-  DW 01Fh,  00002h
-  DW 010h,  00008h
-  DW 00Dh,  0006Ch
+Config8168d2: 
+  DW 01Fh,  00001h
+  DW 006h,  04064h
+  DW 007h,  02863h
+  DW 008h,  0059Ch
+  DW 009h,  026B4h
+  DW 00Ah,  06A19h
+  DW 00Bh,  0DCC8h
+  DW 010h,  0F06Dh
+  DW 014h,  07F68h
+  DW 018h,  07FD9h
+  DW 01Ch,  0F0FFh
+  DW 01Dh,  03D9Ch
+  DW 01Fh,  00003h
+  DW 012h,  0F49Fh
+  DW 013h,  0070Bh
+  DW 01Ah,  005ADh
+  DW 014h,  094C0h
 
+  DW 01Fh,  00002h
+  DW 006h,  05561h
+  DW 01Fh,  00005h
+  DW 005h,  08332h
+  DW 006h,  05561h
+
+  DW 01Fh,  00001h
+  DW 017h,  00CC0h
   DW 01Fh,  00000h
   DW 00Dh,  0F880h
 
-  DW 01Fh,  00001h
-  DW 017h,  00CC0h
+  cond_8168d2
 
-  DW 01Fh,  00001h
-  DW 00Bh,  0A4D8h
-  DW 009h,  0281Ch
-  DW 007h,  02883h
-  DW 00Ah,  06B35h
-  DW 01Dh,  03DA4h
-  DW 01Ch,  0EFFDh
-  DW 014h,  07F52h
-  DW 018h,  07FC6h
-  DW 008h,  00601h
-  DW 006h,  04063h
-  DW 010h,  0F074h
-
-  DW 01Fh,  00003h
-  DW 013h,  00789h
-  DW 012h,  0F4BDh
-  DW 01Ah,  004FDh
-  DW 01Fh,  00000h
-  DW 000h,  09200h
-
-  DW 01Fh,  00005h
-  DW 001h,  00340h
-
-  DW 01Fh,  00001h
-  DW 004h,  04000h
-  DW 003h,  01D21h
-  DW 002h,  00C32h
-  DW 001h,  00200h
-  DW 000h,  05554h
-  DW 004h,  04800h
-  DW 004h,  04000h
-  DW 004h,  0F000h
-  DW 003h,  0DF01h
-  DW 002h,  0DF20h
-  DW 001h,  0101Ah
-  DW 000h,  0A0FFh
-  DW 004h,  0F800h
-  DW 004h,  0F000h
+  DW 01Fh,  00002h
+  modify 2, 600h, 100h
+  clear_bits 3, 0E000h
   DW 01Fh,  00000h
 
-  DW 01Fh,  00007h
-  DW 01Eh,  00023h
-  DW 016h,  00000h
-  DW 01Fh,  00000h
+  modify_paged 2, 0Fh, 0, 17h
+  apply_firmware_cond 0B300h
   DW -1
 
 Config8168d4:
-  DW 01Fh,  00001h
-  DW 017h,  00CC0h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Dh
-  DW 018h,  00040h
-  DW 01Fh,  00000h
-  DW 10Dh,  00020h
+  write_paged 1, 17h, 0CC0h
+  modify_extpage 2Dh, 18h, 40h
+  set_bits 0Dh, 20h
   DW -1 
 
 Config8168e1:
-  DW 01Fh,  00005h
-  DW 005h,  08B80h
-  DW 006h,  0C896h
-  DW 01Fh,  00000h
+  apply_firmware
+  8168d_param 08B80h, 0C896h
 
   DW 01Fh,  00001h
   DW 00Bh,  06C20h
@@ -1574,475 +1648,178 @@ Config8168e1:
   DW 014h,  06420h
   DW 01Fh,  00000h
 
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Fh
-  DW 015h,  01919h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  000ACh
-  DW 018h,  00006h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  00023h
-  DW 217h,  00006h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00002h
-  DW 01Eh,  0002Dh
-  DW 218h,  00050h,  00000h
-  DW 01Fh,  00000h
-  DW 214h,  08000h,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  00000h,  02000h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  00020h
-  DW 215h,  00000h,  01100h
-
-  DW 01Fh,  00006h
-  DW 000h,  05A00h
-  DW 01Fh,  00000h
-  DW 00Dh,  00007h
-  DW 00Eh,  0003Ch
-  DW 00Dh,  04007h
-  DW 00Eh,  00000h
-  DW 00Dh,  00000h  
+  modify_extpage 2Fh, 15h, 1919h
+  modify_extpage 0ACh, 18h, 6
+  modify_extpage_mask 23h, 17h, 0, 6
+  modify_paged 2, 8, 7F00h, 8000h
+  modify_extpage_mask 2Dh, 18h, 0, 50h
+  set_bits 14h, 8000h
+  8168d_param_mask 8B86h, 0, 1
+  8168d_param_mask 8B85h, 2000h, 0
+  modify_extpage_mask 20h, 15h, 1100h, 0
+  write_paged 6, 0, 5A00h
+  write_mmd MDIO_MMD_AN, MDIO_AN_EEE_ADV, 0
   DW -1
 
 Config8168e2:
-  DW 01Fh,  00004h
-  DW 01Fh,  00007h
-  DW 01Eh,  000ACh
-  DW 018h,  00006h
-  DW 01Fh,  00002h
-  DW 01Fh,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00003h
-  DW 009h,  0A20Fh
-  DW 01Fh,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B5Bh
-  DW 006h,  09222h
-  DW 005h,  08B6Dh
-  DW 006h,  08000h
-  DW 005h,  08B76h
-  DW 006h,  08000h
-  DW 01Fh,  00000h
+  apply_firmware
+  modify_extpage 0ACh, 18h, 6
+  8168d_param 08B5Bh, 09222h
+  8168d_param 08B6Dh, 08000h
+  8168d_param 08B76h, 08000h
 
   DW 01Fh,  00005h
   DW 005h,  08B80h
-  DW 217h,  00006h,  00000h
+  set_bits 17h, 6
   DW 01Fh,  00000h
 
-  DW 01Fh,  00004h
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Dh
-  DW 218h,  00010h,  00000h
-  DW 01Fh,  00002h
-  DW 01Fh,  0000h
-  DW 214h,  08000h,  00000h
+  modify_extpage_mask 2Dh, 18h, 0, 10h
+  set_bits 14h, 8000h
 
-  DW 01Fh,  00005h
-  DW 005h,  08B86h
-  DW 206h,  00001h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  04000h,  00000h
-  DW 01Fh,  00000h
-
-  DW 500h,  001B0h
-  DD ERIAR_MASK_1111,  00000h,  00003h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  00000h,  02000h
-  DW 01Fh,  00004h
-  DW 01Fh,  00007h
-  DW 01Eh,  00020h
-  DW 215h,  00000h,  00100h
-  DW 01Fh,  00002h
-  DW 01Fh,  00000h
-  DW 00Dh,  00007h
-  DW 00Eh,  0003Ch
-  DW 00Dh,  04007h
-  DW 00Eh,  00000h
-  DW 00Dh,  00000h
+  8168d_param_mask 08B86h, 0, 1
+  8168d_param_mask 08B85h, 0, 4000h
+  ee_8168f
 
   DW 01Fh,  00003h
-  DW 219h,  00000h,  00001h
-  DW 210h,  00000h,  00400h
-  DW 01Fh,  00000h 
-  DW -1
-
-Config8168f:
-  DW 01Fh,  00005h
-  DW 005h,  08B80h
-  DW 206h,  00006h,  00000h
+  set_bits 19h, 1
+  set_bits 10h, 400h
   DW 01Fh,  00000h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Dh
-  DW 218h,  00010h,  00000h
-  DW 01Fh,  00000h
-  DW 214h,  08000h,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B86h
-  DW 206h,  00001h,  00000h
-  DW 01Fh,  00000h
+  modify_paged 5, 1, 0, 100h
   DW -1
   
-Config8168f1_f2:
-  DW 01Fh,  00003h
-  DW 009h,  0A20Fh
-  DW 01Fh,  00000h
+Config8168f1:
+  apply_firmware
+  write_paged 3, 9, 0A20Fh
 
-  DW 01Fh,  00005h
-  DW 005h,  08B55h
-  DW 006h,  00000h
-  DW 005h,  08B5Eh
-  DW 006h,  00000h
-  DW 005h,  08B67h
-  DW 006h,  00000h
-  DW 005h,  08B70h
-  DW 006h,  00000h
-  DW 01Fh,  00000h
-  DW 01Fh,  00007h
-  DW 01Eh,  00078h
-  DW 017h,  00000h
-  DW 019h,  000FBh
-  DW 01Fh,  00000h
+  8168d_param 08B55h, 0
+  8168d_param 08B5Eh, 0
+  8168d_param 08B67h, 0
+  8168d_param 08B70h, 0
 
-  DW 01Fh,  00005h
-  DW 005h,  08B79h
-  DW 006h,  0AA00h
-  DW 01Fh,  00000h
+  modify_extpage 78h, 17h, 0
+  modify_extpage 78h, 19h, 0FBh
 
-  DW 01Fh,  00003h
-  DW 001h,  0328Ah
-  DW 01Fh,  00000h
+  8168d_param 08B79h, 0AA00h
+  write_paged 3, 1, 328Ah
 
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  04000h,  00000h
-  DW 01Fh,  00000h
+  conf_8168f
+
+  8168d_param_mask 08B85h, 0, 4000h
   DW -1
-  
+
+Config8168f2:
+  apply_firmware
+  conf_8168f
+  DW -1
+	  
 Config8411:
-  DW 01Fh,  00005h
-  DW 005h,  08B80h
-  DW 206h,  00006h,  00000h
-  DW 01Fh,  00000h
+  apply_firmware
+  conf_8168f
 
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Dh
-  DW 218h,  00010h,  00000h
-  DW 01Fh,  00000h
-  DW 214h,  08000h,  00000h
+  8168d_param_mask 08B85h, 0, 4000h
+  write_paged 3, 9, 0A20Fh
 
-  DW 01Fh,  00005h
-  DW 005h,  08B86h
-  DW 206h,  00001h,  00000h
-  DW 01Fh,  00000h
+  8168d_param 08B55h, 0
+  8168d_param 08B5Eh, 0
+  8168d_param 08B67h, 0
+  8168d_param 08B70h, 0
 
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  04000h,  00000h
-  DW 01Fh,  00000h
+  modify_extpage 78h, 17h, 0
+  modify_extpage 78h, 19h, 0AAh
 
-  DW 01Fh,  00003h
-  DW 009h,  0A20Fh
-  DW 01Fh,  00000h
+  8168d_param 08B79h, 0AA00h
+  write_paged 3, 1, 328Ah
 
-  DW 01Fh,  00005h
-  DW 005h,  08B55h
-  DW 006h,  00000h
-  DW 005h,  08B5Eh
-  DW 006h,  00000h
-  DW 005h,  08B67h
-  DW 006h,  00000h
-  DW 005h,  08B70h
-  DW 006h,  00000h
-  DW 01Fh,  00000h
-  DW 01Fh,  00007h
-  DW 01Eh,  00078h
-  DW 017h,  00000h
-  DW 019h,  000AAh
-  DW 01Fh,  00000h
+  8168d_param_mask 08B54h, 800h, 0
+  8168d_param_mask 08B5Dh, 800h, 0
+  8168d_param_mask 08A7Ch, 100h, 0
+  8168d_param_mask 08A7Fh, 0, 100h
+  8168d_param_mask 08A82h, 100h, 0
+  8168d_param_mask 08A85h, 100h, 0
+  8168d_param_mask 08A88h, 100h, 0
 
-  DW 01Fh,  00005h
-  DW 005h,  08B79h
-  DW 006h,  0AA00h
-  DW 01Fh,  00000h
+  8168d_param_mask 08B85h, 0, 8000h
 
   DW 01Fh,  00003h
-  DW 001h,  0328Ah
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B54h
-  DW 206h,  00000h,  00800h
-  DW 005h,  08B5Dh
-  DW 206h,  00000h,  00800h
-  DW 005h,  08A7Ch
-  DW 206h,  00000h,  00100h
-  DW 005h,  08A7Fh
-  DW 206h,  00100h,  00000h
-  DW 005h,  08A82h
-  DW 206h,  00000h,  00100h
-  DW 005h,  08A85h
-  DW 206h,  00000h,  00100h
-  DW 005h,  08A88h
-  DW 206h,  00000h,  00100h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  08000h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  00000h,  02000h
-  DW 01Fh,  00004h
-  DW 01Fh,  00007h
-  DW 01Eh,  00020h
-  DW 215h,  00000h,  00100h
-  DW 01Fh,  00000h
-  DW 00Dh,  00007h
-  DW 00Eh,  0003Ch
-  DW 00Dh,  04007h
-  DW 00Eh,  00000h
-  DW 00Dh,  00000h
-
-  DW 01Fh,  00003h
-  DW 219h,  00000h,  00001h
-  DW 210h,  00000h,  00400h
+  clear_bits 19h, 1
+  clear_bits 10h, 400h
   DW 01Fh,  00000h 
   DW -1
    
 Config8168g1:
-  DW 01Fh,  00A44h
-  DW 211h,  0000Ch,  00000h
+  apply_firmware
+  cond_8168g1
 
-  DW 01Fh,  00BCCh
-  DW 214h,  00100h,  00000h
-  DW 01Fh,  00A44h
-  DW 211h,  000C0h,  00000h
-  DW 01Fh,  00A43h
-  DW 013h,  08084h
-  DW 214h,  00000h,  06000h
-  DW 210h,  01003h,  00000h
+  modify_paged 0A44h, 11h, 0, 12
+  8168g_10m_aldps
+  modify_paged 0A4B, 11h, 0, 4
 
-  DW 01Fh,  00A4Bh
-  DW 211h,  00004h,  00000h
-
-  DW 01Fh,  00A43h
-  DW 013h,  08012h
-  DW 214h,  08000h,  00000h
-
-  DW 01Fh,  00C42h
-  DW 211h,  04000h,  02000h
-
-  DW 01Fh,  00BCDh
+  8168g_param 8012h, 0, 8000h
+  modify_paged 0C42h, 11h, 2000h, 4000h
+  
+  DW 01Fh,  0BCDh
   DW 014h,  05065h
   DW 014h,  0D065h
+
   DW 01Fh,  00BC8h
   DW 011h,  05655h
+
   DW 01Fh,  00BCDh
   DW 014h,  01065h
   DW 014h,  09065h
   DW 014h,  01065h
-
   DW 01Fh,  00000h
+
+  modify_paged 0A43h, 10h, 4, 0
+  ee_8168g
   DW -1
     
 Config8168g2:
+  apply_firmware
+  ee_8168g
   DW -1
-
-Config8168h1:
-  DW 01Fh,  00A43h
-  DW 013h,  0809Bh
-  DW 214h,  08000h,  0F800h
-  DW 013h,  080A2h
-  DW 214h,  08000h,  0FF00h
-  DW 013h,  080A4h
-  DW 214h,  08500h,  0FF00h
-  DW 013h,  0809Ch
-  DW 214h,  0BD00h,  0FF00h
-
-  DW 01Fh,  00A43h
-  DW 013h,  080ADh
-  DW 214h,  07000h,  0F800h
-  DW 013h,  080B4h
-  DW 214h,  05000h,  0FF00h
-  DW 013h,  080ACh
-  DW 214h,  04000h,  0FF00h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A43h
-  DW 013h,  0808Eh
-  DW 214h,  01200h,  0FF00h
-  DW 013h,  08090h
-  DW 214h,  0E500h,  0FF00h
-  DW 013h,  08092h
-  DW 214h,  09F00h,  0FF00h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A44h
-  DW 211h,  00800h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00BCAh
-  DW 217h,  04000h,  03000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A43h
-  DW 013h,  0803Fh
-  DW 214h,  00000h,  03000h
-  DW 013h,  08047h
-  DW 214h,  00000h,  03000h
-  DW 013h,  0804Fh
-  DW 214h,  00000h,  03000h
-  DW 013h,  08057h
-  DW 214h,  00000h,  03000h
-  DW 013h,  0805Fh
-  DW 214h,  00000h,  03000h
-  DW 013h,  08067h
-  DW 214h,  00000h,  03000h
-  DW 013h,  0806Fh
-  DW 214h,  00000h,  03000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A44h
-  DW 214h,  00000h,  00080h
-  DW 01Fh,  00000h
-  DW -1  
   
 Config8168h2:
-  DW 01Fh,  00A43h
-  DW 013h,  0808Ah
-  DW 214h,  0000Ah,  0003Fh
-  DW 01Fh,  00000h
+  apply_firmware
 
-  DW 01Fh,  00A43h
-  DW 013h,  00811h
-  DW 214h,  00800h,  00000h
-  DW 01Fh,  00A42h
-  DW 216h,  00002h,  00000h
-  DW 01Fh,  00000h
+  8168g_param 808Ah, 3Fh, 0Ah
+  8168g_param 811h, 0, 800h
+  modify_paged 0A42h, 16h, 0, 2
+  modify_paged 0A44h, 11h, 0, 800h
 
-  DW 01Fh,  00A44h
-  DW 211h,  00800h,  00000h
-  DW 01Fh,  00000h
+  cond_8168h2
 
-  DW 01Fh,  00A44h
-  DW 214h,  00000h,  00080h
-  DW 01Fh,  00000h
-  DW -1
-
-Config8168ep1:
-  DW 01Fh,  00A44h
-  DW 211h,  0000Ch,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00BCCh
-  DW 214h,  00000h,  00100h
-  DW 01Fh,  00A44h
-  DW 211h,  000C0h,  00000h
-  DW 01Fh,  00A43h
-  DW 013h,  08084h
-  DW 214h,  00000h,  06000h
-  DW 210h,  01003h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A4Bh
-  DW 211h,  00004h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A43h
-  DW 013h,  08012h
-  DW 214h,  08000h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00C42h
-  DW 211h,  04000h,  02000h
-  DW 01Fh,  00000h
+  modify_paged 0A43h, 10h, 4, 0
+  ee_8168g
   DW -1
 
 Config8168ep2:
-  DW 01Fh,  00BCCh
-  DW 214h,  00000h,  00100h
-  DW 01Fh,  00A44h
-  DW 211h,  000C0h,  00000h
-  DW 01Fh,  00A43h
-  DW 013h,  08084h
-  DW 214h,  00000h,  06000h
-  DW 210h,  01003h,  00000h
+  8168g_10m_aldps
 
-  DW 01Fh,  00A43h
-  DW 013h,  08012h
-  DW 214h,  08000h,  00000h
-  DW 01Fh,  00000h
+  8168g_param 8012h, 0, 8000h
+  modify_paged 0C42h, 11h, 2000h, 4000h
 
-  DW 01Fh,  00C42h
-  DW 211h,  04000h,  02000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A43h
-  DW 013h,  080F3h
-  DW 214h,  08B00h,  07400h
-  DW 013h,  080F0h
-  DW 214h,  03A00h,  0C500h
-  DW 013h,  080EFh
-  DW 214h,  00500h,  0FA00h
-  DW 013h,  080F6h
-  DW 214h,  06E00h,  09100h
-  DW 013h,  080ECh
-  DW 214h,  06800h,  09700h
-  DW 013h,  080EDh
-  DW 214h,  07C00h,  08300h
-  DW 013h,  080F2h
-  DW 214h,  0F400h,  00B00h
-  DW 013h,  080F4h
-  DW 214h,  08500h,  07A00h
-  DW 01Fh,  00A43h
-  DW 013h,  08110h
-  DW 214h,  0A800h,  05700h
-  DW 013h,  0810Fh
-  DW 214h,  01D00h,  0E200h
-  DW 013h,  08111h
-  DW 214h,  0F500h,  00A00h
-  DW 013h,  08113h
-  DW 214h,  06100h,  09E00h
-  DW 013h,  08115h
-  DW 214h,  09200h,  06D00h
-  DW 013h,  0810Eh
-  DW 214h,  00400h,  0FB00h
-  DW 013h,  0810Ch
-  DW 214h,  07C00h,  08300h
-  DW 013h,  0810Bh
-  DW 214h,  05A00h,  0A500h
-  DW 01Fh,  00A43h
-  DW 013h,  080D1h
-  DW 214h,  0FF00h,  00000h
-  DW 013h,  080CDh
-  DW 214h,  09E00h,  06100h
-  DW 013h,  080D3h
-  DW 214h,  00E00h,  0F100h
-  DW 013h,  080D5h
-  DW 214h,  0CA00h,  03500h
-  DW 013h,  080D7h
-  DW 214h,  08400h,  07B00h
+  8168g_param 80F3h, 0FF00h, 8B00h
+  8168g_param 80F0h, 0FF00h, 3A00h
+  8168g_param 80EFh, 0FF00h, 500h
+  8168g_param 80F6h, 0FF00h, 6E00h
+  8168g_param 80ECh, 0FF00h, 6800h
+  8168g_param 80EDh, 0FF00h, 7C00h
+  8168g_param 80F2h, 0FF00h, 0F400h
+  8168g_param 80F4h, 0FF00h, 8500h
+  8168g_param 8110h, 0FF00h, 0A800h
+  8168g_param 810Fh, 0FF00h, 1D00h
+  8168g_param 8111h, 0FF00h, 0F500h
+  8168g_param 8113h, 0FF00h, 6100h
+  8168g_param 8115h, 0FF00h, 9200h
+  8168g_param 810Eh, 0FF00h, 400h
+  8168g_param 810Ch, 0FF00h, 7C00h
+  8168g_param 810Bh, 0FF00h, 5A00h
+  8168g_param 80D1h, 0FF00h, 0FF00h
+  8168g_param 80CDh, 0FF00h, 9E00h
+  8168g_param 80D3h, 0FF00h, 0E00h
+  8168g_param 80D5h, 0FF00h, 0CA00h
+  8168g_param 80D7h, 0FF00h, 8400h
 
   DW 01Fh,  00BCDh
   DW 014h,  05065h
@@ -2054,13 +1831,48 @@ Config8168ep2:
   DW 014h,  09065h
   DW 014h,  01065h
   DW 01Fh,  00000h
+
+  modify_paged 0A43h, 10h, 4, 0
+  ee_8168g
+  DW -1
+
+Config8117:
+  8168g_param 808Eh, 0FF00h, 4800h
+  8168g_param 8090h, 0FF00h, 0CC00h
+  8168g_param 8092h, 0FF00h, 0B000h
+
+  8168g_param 8088h, 0FF00h, 6000h
+  8168g_param 808Bh, 03F00h, 0B000h
+  8168g_param 808Dh, 01F00h, 600h
+  8168g_param 808Ch, 0FF00h, 0B000h
+  8168g_param 80A0h, 0FF00h, 2800h
+  8168g_param 80A2h, 0FF00h, 5000h
+  8168g_param 809Bh, 0F800h, 0B000h
+  8168g_param 809Ah, 0FF00h, 4B00h
+  8168g_param 809Dh, 03F00h, 800h
+  8168g_param 80A1h, 0FF00h, 7000h
+  8168g_param 809Fh, 01F00h, 300h
+  8168g_param 809Eh, 0FF00h, 8800h
+  8168g_param 80B2h, 0FF00h, 2200h
+  8168g_param 80ADh, 0F800h, 9800h
+  8168g_param 80AFh, 03F00h, 800h
+  8168g_param 80B3h, 0FF00h, 6F00h
+  8168g_param 80B1h, 01F00h, 300h
+  8168g_param 80B0h, 0FF00h, 9300h
+
+  8168g_param 8011h, 0, 800h
+  modify_paged 0A44h, 11h, 0, 800h
+
+  8168g_param 8016h, 0, 400h
+
+  modify_paged 0A43h, 10h, 4, 0
+  ee_8168g
   DW -1
   
 Config8102e:
-  DW 01Fh,  00000h
-  DW 111h,  01000h
-  DW 119h,  02000h
-  DW 110h,  08000h
+  set_bits 11h, 1000h
+  set_bits 19h, 2000h
+  set_bits 10h, 8000h
 
   DW 01Fh,  00003h
   DW 008h,  0441Dh
@@ -2068,26 +1880,25 @@ Config8102e:
   DW 01Fh,  00000h
   DW -1
 
+Config8401:
+  set_bits 11h, 1000h
+  modify_paged 2, 0Fh, 0, 3
+  DW -1
+
 Config8105e:
-  DW 01Fh,  00000h
   DW 018h,  00310h
+  wait_ms 100
+  apply_firmware
 
-  DW 01Fh,  00005h
-  DW 01Ah,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00004h
-  DW 01Ch,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00001h
-  DW 015h,  07701h
-  DW 01Fh,  00000h
+  write_paged 5, 1Ah, 0
+  write_paged 3, 1Ch, 0
+  write_paged 1, 15h, 7701h
   DW -1
 
 Config8402:
-  DW 01Fh,  00000h
   DW 018h,  00310h
+  wait_ms 20
+  apply_firmware
 
   DW 01Fh,  00004h
   DW 010h,  0401Fh
@@ -2096,20 +1907,133 @@ Config8402:
   DW -1
 
 Config8106e:
-  DW 01Fh,  00000h
   DW 018h,  00310h
-  DW 400h,  OFFSET Wait100ms
-
-  DW 300h,  001B0h
-  DD ERIAR_MASK_0011,  00000h
+  wait_ms 100
+  apply_firmware
 
   DW 01Fh,  00004h
   DW 010h,  0C07Fh
   DW 019h,  07030h
   DW 01Fh,  00000h
+  DW -1
 
-  DW 300h,  001D0h
-  DD ERIAR_MASK_0011,  00000h
+Config8125:
+  modify_paged 5ABh, 12h, 8000h, 0
+  DW -1
+
+Config8125a2:
+  modify_paged 0AD4h, 17h, 0, 10h
+  modify_paged 0AD1h, 13h, 3FFh, 3FFh
+  modify_paged 0AD3h, 11h, 3Fh, 6
+  modify_paged 0AC0h, 14h, 1100h, 0
+  modify_paged 0ACCh, 10h, 3, 2
+  modify_paged 0AD4h, 10h, 0E7h, 44h
+  modify_paged 0AC1h, 12h, 80h, 0
+  modify_paged 0AC8h, 10h, 300h, 0
+  modify_paged 0AC5h, 17h, 7, 2
+  write_paged 0AD4h, 16h, 0A8h
+  write_paged 0AC5h, 16h, 1FFh
+  modify_paged 0AC8h, 15h, 0F0h, 30h
+
+  DW 01Fh,  00B87h
+  DW 016h,  080A2h
+  DW 017h,  00153h
+  DW 016h,  0809Ch
+  DW 017h,  00153h
+  DW 01Fh,  00000h
+
+  DW 01Fh,  00A43h
+  DW 013h,  0B1B3h
+  DW 014h,  00043h
+  DW 014h,  000A7h
+  DW 014h,  000D6h
+  DW 014h,  000ECh
+  DW 014h,  000F6h
+  DW 014h,  000FBh
+  DW 014h,  000FDh
+  DW 014h,  000FFh
+  DW 014h,  000BBh
+  DW 014h,  00058h
+  DW 014h,  00029h
+  DW 014h,  00013h
+  DW 014h,  00009h
+  DW 014h,  00004h
+  DW 014h,  00002h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 014h,  00000h
+  DW 01Fh,  00000h
+
+  8168g_param 8257h, 0FFFFh, 20Fh
+  8168g_param 80EAh, 0FFFFh, 7843h
+  apply_firmware
+
+  modify_paged 0B54h, 16h, 0FF00h, 0DB00h
+  modify_paged 0A45h, 12h, 1, 0
+  modify_paged 0A5Dh, 12h, 0, 20h
+  modify_paged 0AD4h, 17h, 10h, 0
+  modify_paged 0A86h, 15h, 1, 0
+
+  modify_paged 0A44h, 11h, 0, 800h
+  ee_8168g
+  DW -1
+
+Config8125b:
+  apply_firmware
+
+  modify_paged 0A44h, 11h, 0, 800h
+  modify_paged 0AC4h, 13h, 0F0h, 90h
+  modify_paged 0AD3h, 10h, 3, 1
+
+  DW 01Fh,  00B87h
+  DW 016h,  080F5h
+  DW 017h,  0760Eh
+  DW 016h,  08107h
+  DW 017h,  0360Eh
+  DW 016h,  08551h
+  modify 17h, 0FF00h, 800h
+  DW 01Fh,  00000h
+
+  modify_paged 0BF0h, 10h, 0E000h, 0A000h
+  modify_paged 0BF4h, 13h, 0F00h, 300h
+
+  8168g_param 8044h, 0FFFFh, 2417h
+  8168g_param 804Ah, 0FFFFh, 2417h
+  8168g_param 8050h, 0FFFFh, 2417h
+  8168g_param 8056h, 0FFFFh, 2417h
+  8168g_param 805Ch, 0FFFFh, 2417h
+  8168g_param 8062h, 0FFFFh, 2417h
+  8168g_param 8068h, 0FFFFh, 2417h
+  8168g_param 806Eh, 0FFFFh, 2417h
+  8168g_param 8074h, 0FFFFh, 2417h
+  8168g_param 807Ah, 0FFFFh, 2417h
+
+  modify_paged 0A4Ch, 15h, 0, 40h
+  modify_paged 0BF8h, 12h, 0E000h, 0A000h
+  8125_legacy
+  ee_8168g
   DW -1
 
 ConfigTab:
@@ -2125,9 +2049,9 @@ ct08 DW OFFSET Config8102e
 ct09 DW OFFSET Config8102e
 ct10 DW OFFSET ConfigNone
 ct11 DW OFFSET Config8168bb
-ct12 DW OFFSET Config8168bef
+ct12 DW OFFSET ConfigNone
 ct13 DW OFFSET ConfigNone
-ct14 DW OFFSET ConfigNone
+ct14 DW OFFSET Config8401
 ct15 DW OFFSET ConfigNone
 ct16 DW OFFSET ConfigNone
 ct17 DW OFFSET Config8168bef
@@ -2135,12 +2059,12 @@ ct18 DW OFFSET Config8168cp1
 ct19 DW OFFSET Config8168c1
 ct20 DW OFFSET Config8168c2
 ct21 DW OFFSET Config8168c3
-ct22 DW OFFSET ConfigNone
+ct22 DW OFFSET Config8168c3
 ct23 DW OFFSET Config8168cp2
 ct24 DW OFFSET Config8168cp2
-ct25 DW OFFSET Config8168d1_d2
-ct26 DW OFFSET Config8168d1_d2
-ct27 DW OFFSET Config8168d3
+ct25 DW OFFSET Config8168d1
+ct26 DW OFFSET Config8168d2
+ct27 DW OFFSET ConfigNone
 ct28 DW OFFSET Config8168d4
 ct29 DW OFFSET Config8105e
 ct30 DW OFFSET Config8105e
@@ -2148,8 +2072,8 @@ ct31 DW OFFSET ConfigNone
 ct32 DW OFFSET Config8168e1
 ct33 DW OFFSET Config8168e1
 ct34 DW OFFSET Config8168e2
-ct35 DW OFFSET Config8168f1_f2
-ct36 DW OFFSET Config8168f1_f2
+ct35 DW OFFSET Config8168f1
+ct36 DW OFFSET Config8168f2
 ct37 DW OFFSET Config8402
 ct38 DW OFFSET Config8411
 ct39 DW OFFSET Config8106e
@@ -2158,13 +2082,25 @@ ct41 DW OFFSET ConfigNone
 ct42 DW OFFSET Config8168g2
 ct43 DW OFFSET Config8168g2
 ct44 DW OFFSET Config8168g2
-ct45 DW OFFSET Config8168h1
+ct45 DW OFFSET ConfigNone
 ct46 DW OFFSET Config8168h2
-ct47 DW OFFSET Config8168h1
+ct47 DW OFFSET ConfigNone
 ct48 DW OFFSET Config8168h2
-ct49 DW OFFSET Config8168ep1
-ct50 DW OFFSET Config8168ep2
+ct49 DW OFFSET ConfigNone
+ct50 DW OFFSET ConfigNone
 ct51 DW OFFSET Config8168ep2
+ct52 DW OFFSET Config8117
+ct53 DW OFFSET Config8117
+ct54 DW OFFSET ConfigNone
+ct55 DW OFFSET ConfigNone
+ct56 DW OFFSET ConfigNone
+ct57 DW OFFSET ConfigNone
+ct58 DW OFFSET ConfigNone
+ct59 DW OFFSET ConfigNone
+ct60 DW OFFSET ConfigNone
+ct61 DW OFFSET Config8125a2
+ct62 DW OFFSET ConfigNone
+ct63 DW OFFSET Config8125b
 
 Config  Proc near
     mov si,ds:HwId
