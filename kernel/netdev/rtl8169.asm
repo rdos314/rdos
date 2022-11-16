@@ -66,11 +66,13 @@ clear_bits  MACRO reg, mask
   DW 200h + reg, 0, mask
           ENDM
 
-modify MACRO reg, mask, val
-  DW 200h + reg, val, mask
+modify MACRO reg, p1, p2
+  DW 200h + reg, p2, p1
           ENDM
 
-modify_paged MACRO reg, p1, p2, p3
+modify_paged MACRO par, reg, p1, p2
+  DW 01Fh, par
+  DW 200h + reg, p2, p1
          ENDM
 
 apply_firmware  MACRO
@@ -1752,7 +1754,7 @@ Config8168g1:
 
   modify_paged 0A44h, 11h, 0, 12
   8168g_10m_aldps
-  modify_paged 0A4B, 11h, 0, 4
+  modify_paged 0A4Bh, 11h, 0, 4
 
   8168g_param 8012h, 0, 8000h
   modify_paged 0C42h, 11h, 2000h, 4000h
