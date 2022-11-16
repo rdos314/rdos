@@ -111,12 +111,14 @@ conf_8168f  MACRO
   modify_paged 0A43h, 10h, 0, 1003h
              ENDM
 
-apply_firmware_cond  MACRO p1
-                     ENDM
-
-write_mmd    MACRO p1, p2, p3
+ee_8168g  MACRO
+  modify_paged 0A43h, 11h, 0, 10h
              ENDM
 
+ee_8168f  MACRO
+  modify_extpage_mask 20h, 15h, 0, 100h
+  8168d_param_mask 8B85h, 0, 2000h
+             ENDM
 
 call_proc  MACRO p
    DW 300h
@@ -128,17 +130,12 @@ wait_ms  MACRO ms
    DW OFFSET ms
          ENDM
 
-ee_8168g  MACRO
-  modify_paged 0A43h, 11h, 0, 10h
+apply_firmware_cond  MACRO p1
+                     ENDM
+
+write_mmd    MACRO p1, p2, p3
              ENDM
 
-ee_8168f  MACRO
-  modify_extpage_mask 20h, 15h, 0, 100h
-  8168d_param_mask 8B85h, 0, 2000h
-             ENDM
-
-cond_8168g1  MACRO
-             ENDM
 
 cond_8168d1  MACRO
              ENDM
@@ -1304,6 +1301,88 @@ ApplyFirmware   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       NAME:        Cond8168g1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Cond8168g1	Proc near
+    mov dl,1Fh
+    mov ax,0A46h
+    call ds:WritePhyProc
+;
+    mov dl,10h
+    call ds:ReadPhyProc
+;
+    test ax,100h
+    jz cg1Clear1
+
+cg1Set1:
+    mov dl,1Fh
+    mov ax,0BCCh
+    call ds:WritePhyProc
+;
+    mov dl,12h
+    call ds:ReadPhyProc
+;
+    mov cx,8000h
+    not cx
+    and ax,cx
+    call ds:WritePhyProc
+    jmp cg1Next
+
+cg1Clear1:
+    mov dl,1Fh
+    mov ax,0BCCh
+    call ds:WritePhyProc
+;
+    mov dl,12h
+    call ds:ReadPhyProc
+;
+    or ax,8000h
+    call ds:WritePhyProc
+    
+cg1Next:
+    mov dl,1Fh
+    mov ax,0A46h
+    call ds:WritePhyProc
+;
+    mov dl,13h
+    call ds:ReadPhyProc
+;
+    test ax,100h
+    jz cg1Clear2
+
+cg1Set2:
+    mov dl,1Fh
+    mov ax,0C41h
+    call ds:WritePhyProc
+;
+    mov dl,15h
+    call ds:ReadPhyProc
+;
+    mov cx,2
+    not cx
+    and ax,cx
+    call ds:WritePhyProc
+    jmp cg1Done
+
+cg1Clear2:
+    mov dl,1Fh
+    mov ax,0C41h
+    call ds:WritePhyProc
+;
+    mov dl,15h
+    call ds:ReadPhyProc
+;
+    or ax,2
+    call ds:WritePhyProc
+
+cg1Done:
+    ret
+Cond8168g1   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       NAME:          Config8169
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1762,7 +1841,7 @@ Config8411:
    
 Config8168g1:
   call_proc ApplyFirmware
-  cond_8168g1
+  call_proc Cond8168g1
 
   modify_paged 0A44h, 11h, 0, 12
   8168g_10m_aldps
