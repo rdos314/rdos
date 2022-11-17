@@ -1294,7 +1294,6 @@ WriteEri   Proc near
 
 WriteEri	Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1336,7 +1335,6 @@ IoReadEfuse     Endp
 ;
 ;       PARAMETERS:     DS      Ether sel
 ;                       BX      Register #
-;
 ;                      
 ;       RETURNS:        EAX     Value
 ;
@@ -1352,6 +1350,7 @@ MemReadEfuse   Proc near
     WaitMilliSec
 ;    
     mov eax,fs:mem_efuse
+    and eax,EFUSEAR_DATA_MASK
     ret
 MemReadEfuse     Endp
 
@@ -1363,6 +1362,7 @@ MemReadEfuse     Endp
 ;       DESCRIPTION:    Read efuse
 ;
 ;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
 ;                      
 ;       RETURNS:        EAX     Value
 ;
@@ -1463,13 +1463,97 @@ ApplyFirmware   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       NAME:        CondD1Common
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondD1Common  Proc near
+    mov dl,0Dh
+    call ds:ReadPhyProc
+    cmp al,6Ch
+    je cd1Done
+;
+    mov bh,ah
+    mov al,65h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,66h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,67h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,68h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,69h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,6Ah
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,6Bh
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,6Ch
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+
+cd1Done:
+    ret
+CondD1Common  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       NAME:        Cond8168d1
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+d1_common:
+  write_paged 2, 5, 669Ah
+  8168d_param 08330h, 669Ah
+  DW 001Fh,  000002h
+  call_proc CondD1Common
+  DW -1
+
+d1_def:
+  write_paged 2, 5, 2642h
+  8168d_param 08330h, 2642h
+  DW -1
+
 Cond8168d1	Proc near
+    push si
+;
+    mov bx,1
+    call ReadEfuse
+    mov si,OFFSET d1_common
+    cmp al,0B1h
+    je d1Do
+;
+    mov si,OFFSET d1_def
+
+d1Do:
+    call RunTableCommands
+;
+    pop si
     ret
 Cond8168d1      Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
