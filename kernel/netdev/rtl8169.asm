@@ -136,10 +136,6 @@ apply_firmware_cond  MACRO p1
 write_mmd    MACRO p1, p2, p3
              ENDM
 
-
-cond_8168d2  MACRO
-             ENDM
-
 cond_8168h2  MACRO
              ENDM
 
@@ -1524,7 +1520,7 @@ CondD1Common  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-d1_common:
+d_common:
   write_paged 2, 5, 669Ah
   8168d_param 08330h, 669Ah
   DW 001Fh,  000002h
@@ -1532,8 +1528,8 @@ d1_common:
   DW -1
 
 d1_def:
-  write_paged 2, 5, 2642h
-  8168d_param 08330h, 2642h
+  write_paged 2, 5, 6662h
+  8168d_param 08330h, 6662h
   DW -1
 
 Cond8168d1	Proc near
@@ -1541,7 +1537,7 @@ Cond8168d1	Proc near
 ;
     mov bx,1
     call ReadEfuse
-    mov si,OFFSET d1_common
+    mov si,OFFSET d_common
     cmp al,0B1h
     je d1Do
 ;
@@ -1554,6 +1550,34 @@ d1Do:
     ret
 Cond8168d1      Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:        Cond8168d2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+d2_def:
+  write_paged 2, 5, 2642h
+  8168d_param 08330h, 2642h
+  DW -1
+
+Cond8168d2	Proc near
+    push si
+;
+    mov bx,1
+    call ReadEfuse
+    mov si,OFFSET d_common
+    cmp al,0B1h
+    je d2Do
+;
+    mov si,OFFSET d2_def
+
+d2Do:
+    call RunTableCommands
+;
+    pop si
+    ret
+Cond8168d2      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1968,7 +1992,7 @@ Config8168d2:
   DW 01Fh,  00000h
   DW 00Dh,  0F880h
 
-  cond_8168d2
+  call_proc Cond8168d2
 
   DW 01Fh,  00002h
   modify 2, 600h, 100h
