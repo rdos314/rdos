@@ -137,9 +137,6 @@ write_mmd    MACRO p1, p2, p3
              ENDM
 
 
-cond_8168d1  MACRO
-             ENDM
-
 cond_8168d2  MACRO
              ENDM
 
@@ -180,12 +177,20 @@ IR_RER = 2
 IR_ROK = 1
 IR_MASK = 3FFh
 
+
 ERIAR_WRITE_CMD = 80000000h
 ERIAR_MASK_0001 = 01000h
 ERIAR_MASK_0011 = 03000h
 ERIAR_MASK_0100 = 04000h
 ERIAR_MASK_0101 = 05000h
 ERIAR_MASK_1111 = 0F000h
+
+EFUSEAR_FLAG = 80000000h
+EFUSEAR_WRITE_CMD = 80000000h
+EFUSEAR_READ_CMD = 0
+EFUSEAR_REG_MASK = 03FFh
+EFUSEAR_REG_SHIFT = 8
+EFUSEAR_DATA_MASK = 0FFh
 
 PHY_10      = 4
 PHY_100     = 8
@@ -229,6 +234,7 @@ REG_ERIDR = 70h
 REG_ERIAR = 74h
 
 REG_RMS = 0DAh
+REG_EFUSE = 0DCh
 REG_CCR = 0E0h
 REG_RDSAR = 0E4h
 REG_MTPS = 0ECh
@@ -320,7 +326,7 @@ mem_res6      DD ?, ?, ?, ?
 mem_res7      DD ?, ?, ?, ?
 mem_res8      DW ?, ?, ?, ?, ?
 mem_rms       DW ?
-mem_res9      DD ?
+mem_efuse     DD ?
 mem_ccr       DW ?, ?
 mem_rdsar     DD ?, ?
 mem_mtps      DB ?, ?, ?, ?             
@@ -1288,6 +1294,162 @@ WriteEri   Proc near
 
 WriteEri	Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IoReadEfuse
+;
+;       DESCRIPTION:    Read efuse
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                      
+;       RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadEfuse   Proc near
+    mov dx,ds:IoBase
+    add dx,REG_EFUSE
+    movzx eax,bx
+    and eax,EFUSEAR_REG_MASK
+    shl eax,EFUSEAR_REG_SHIFT
+    out dx,eax
+;
+    mov ax,1
+    WaitMilliSec
+;    
+    mov dx,ds:IoBase
+    add dx,REG_EFUSE
+    in eax,dx       
+    and eax,EFUSEAR_DATA_MASK
+    ret
+IoReadEfuse     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           MemReadEfuse
+;
+;       DESCRIPTION:    Read efuse
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;
+;                      
+;       RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadEfuse   Proc near
+    movzx eax,bx
+    and eax,EFUSEAR_REG_MASK
+    shl eax,EFUSEAR_REG_SHIFT
+    mov fs:mem_efuse,eax
+;
+    mov ax,1
+    WaitMilliSec
+;    
+    mov eax,fs:mem_efuse
+    ret
+MemReadEfuse     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadEfuse
+;
+;       DESCRIPTION:    Read efuse
+;
+;       PARAMETERS:     DS      Ether sel
+;                      
+;       RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadEfuse	Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadEfuse
+    jmp MemReadEfuse
+
+ReadEfuse	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunTableCommands
+;
+;       DESCRIPTION:    Run table commands
+;
+;       PARAMETERS:     DS      Ether sel
+;                       CS:SI   Table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunTableCommands   Proc near
+
+rtcLoop:
+    mov ax,cs:[si]
+    cmp ah,0
+    je rtcWrite
+;
+    cmp ah,1
+    je rtcPatch
+;
+    cmp ah,2
+    je rtcMerge
+;
+    cmp ah,3
+    je rtcProc
+;
+    cmp ah,4
+    je rtcWait
+;        
+    jmp rtcDone
+
+rtcWrite:
+    mov dl,al
+    mov ax,cs:[si+2]
+    call ds:WritePhyProc
+    add si,4
+    jmp rtcLoop
+
+rtcPatch:
+    mov dl,al
+    call ds:ReadPhyProc
+    or ax,cs:[si+2]
+    call ds:WritePhyProc
+    add si,4
+    jmp rtcLoop
+
+rtcMerge:
+    mov dl,al
+    call ds:ReadPhyProc
+    mov cx,cs:[si+4]
+    not cx
+    and ax,cx
+    or ax,cs:[si+2]
+    call ds:WritePhyProc
+    add si,6
+    jmp rtcLoop
+
+rtcProc:
+    call word ptr cs:[si+2]
+    add si,4
+    jmp rtcLoop
+
+rtcWait:
+    mov ax,cs:[si+2]
+    WaitMilliSec
+    add si,4
+    jmp rtcLoop
+
+rtcDone:
+    ret
+RunTableCommands  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       NAME:        ApplyFirmware
@@ -1298,6 +1460,16 @@ ApplyFirmware	Proc near
     int 3
     ret
 ApplyFirmware   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:        Cond8168d1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Cond8168d1	Proc near
+    ret
+Cond8168d1      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1668,7 +1840,7 @@ Config8168d1:
   modify 0Bh, 0EFh, 10h
   modify 0Ch, 05D00h, 0A200h
 
-  cond_8168d1
+  call_proc Cond8168d1
 
   DW 01Fh,  00002h
   set_bits 0Dh, 300h
@@ -2199,68 +2371,10 @@ Config  Proc near
     mov si,ds:HwId
     add si,si
     mov si,cs:[si].ConfigTab
-
-cLoop:
-    mov ax,cs:[si]
-    cmp ah,0
-    je cWrite
-;
-    cmp ah,1
-    je cPatch
-;
-    cmp ah,2
-    je cMerge
-;
-    cmp ah,3
-    je cProc
-;
-    cmp ah,4
-    je cWait
-;        
-    jmp cDone
-
-cWrite:
-    mov dl,al
-    mov ax,cs:[si+2]
-    call ds:WritePhyProc
-    add si,4
-    jmp cLoop
-
-cPatch:
-    mov dl,al
-    call ds:ReadPhyProc
-    or ax,cs:[si+2]
-    call ds:WritePhyProc
-    add si,4
-    jmp cLoop
-
-cMerge:
-    mov dl,al
-    call ds:ReadPhyProc
-    mov cx,cs:[si+4]
-    not cx
-    and ax,cx
-    or ax,cs:[si+2]
-    call ds:WritePhyProc
-    add si,6
-    jmp cLoop
-
-cProc:
-    call word ptr cs:[si+2]
-    add si,4
-    jmp cLoop
-
-cWait:
-    mov ax,cs:[si+2]
-    WaitMilliSec
-    add si,4
-    jmp cLoop
-
-cDone:
+    call RunTableCommands
     ret
 Config  Endp            
-    
-      
+          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
