@@ -133,7 +133,12 @@ wait_ms  MACRO ms
 apply_firmware_cond  MACRO p1
                      ENDM
 
-write_mmd    MACRO p1, p2, p3
+write_mmd    MACRO adr, port, data
+  DW 00Dh,  adr
+  DW 00Eh,  port
+  DW 00Dh,  04000h + adr
+  DW 00Eh,  data
+  DW 00Dh,  00000h  
              ENDM
 
 cond_8168h2  MACRO
@@ -2031,7 +2036,7 @@ Config8168e1:
   8168d_param_mask 8B85h, 2000h, 0
   modify_extpage_mask 20h, 15h, 1100h, 0
   write_paged 6, 0, 5A00h
-  write_mmd MDIO_MMD_AN, MDIO_AN_EEE_ADV, 0
+  write_mmd 7, 60, 0
   DW -1
 
 Config8168e2:
