@@ -141,9 +141,6 @@ write_mmd    MACRO adr, port, data
   DW 00Dh,  00000h  
              ENDM
 
-cond_8168h2  MACRO
-             ENDM
-
 8125_legacy  MACRO
              ENDM
 
@@ -901,6 +898,8 @@ MemWritePhy8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;r8169_mdio_write
+
 WritePhy8169	Proc near
     push ax
     mov ax,ds:MemSel
@@ -1011,6 +1010,8 @@ MemReadPhy8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;r8169_mdio_read
+
 ReadPhy8169	Proc near
     mov ax,ds:MemSel
     or ax,ax
@@ -1031,6 +1032,8 @@ ReadPhy8169	Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;r8168g_mdio_write
+
 WritePhy8169g    Proc near
     int 3
     ret
@@ -1049,45 +1052,12 @@ WritePhy8169g   Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;r8168g_mdio_read
+
 ReadPhy8169g    Proc near
     int 3
     ret
 ReadPhy8169g    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WritePhy8168dp1
-;
-;           DESCRIPTION:    Write to phy, 8168dp1 version
-;
-;           PARAMETERS:     DL      Register
-;                           AX      Data
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WritePhy8168dp1    Proc near
-    int 3
-    ret
-WritePhy8168dp1   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadPhy8168dp1
-;
-;           DESCRIPTION:    Read from phy, 8168dp1 version
-;
-;           PARAMETERS:     DL      Register
-;
-;           RETURNS:        AX      Data
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadPhy8168dp1    Proc near
-    int 3
-    ret
-ReadPhy8168dp1    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1100,6 +1070,8 @@ ReadPhy8168dp1    Endp
 ;                           AX      Data
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;r8168dp_2_mdio_write
 
 WritePhy8168dp2    Proc near
     int 3
@@ -1118,6 +1090,8 @@ WritePhy8168dp2   Endp
 ;           RETURNS:        AX      Data
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;r8168dp_2_mdio_read
 
 ReadPhy8168dp2    Proc near
     int 3
@@ -1668,6 +1642,48 @@ Cond8168g1   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       NAME:        Cond8168h2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Cond8168h2	Proc near
+    ret
+Cond8168h2	Endp
+
+; u16 rtl8168h_2_get_adc_bias_ioffset(struct rtl8169_private *tp)
+; {
+;	u16 data1, data2, ioffset;
+
+;	r8168_mac_ocp_write(tp, 0xdd02, 0x807d);
+;	data1 = r8168_mac_ocp_read(tp, 0xdd02);
+;	data2 = r8168_mac_ocp_read(tp, 0xdd00);
+
+;	ioffset = (data2 >> 1) & 0x7ff8;
+;	ioffset |= data2 & 0x0007;
+;	if (data1 & BIT(7))
+;		ioffset |= BIT(15);
+
+;	return ioffset;
+;}
+
+
+;	ioffset = rtl8168h_2_get_adc_bias_ioffset(tp);
+;	if (ioffset != 0xffff)
+;		phy_write_paged(phydev, 0x0bcf, 0x16, ioffset);
+;
+;	/* Modify rlen (TX LPF corner frequency) level */
+;	data = phy_read_paged(phydev, 0x0bcd, 0x16);
+;	data &= 0x000f;
+;	rlen = 0;
+;	if (data > 3)
+;		rlen = data - 3;
+;	data = rlen | (rlen << 4) | (rlen << 8) | (rlen << 12);
+;	phy_write_paged(phydev, 0x0bcd, 0x17, data);
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       NAME:          Config8169
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2165,7 +2181,7 @@ Config8168h2:
   modify_paged 0A42h, 16h, 0, 2
   modify_paged 0A44h, 11h, 0, 800h
 
-  cond_8168h2
+  call_proc Cond8168h2
 
   modify_paged 0A43h, 10h, 4, 0
   ee_8168g
@@ -2765,69 +2781,56 @@ MemInitHardware    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mac_tab:
-mt3E DW 07CF0h, 5020h, 51, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt3D DW 07CF0h, 5010h, 50, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt3C DW 07CF0h, 5000h, 49, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt3B DW 07CF0h, 5410h, 46, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt3A DW 07CF0h, 5400h, 45, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt39 DW 07CF0h, 5C80h, 44, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt38 DW 07CF0h, 5090h, 42, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt37 DW 07CF0h, 4C10h, 41, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt36 DW 07CF0h, 4C00h, 40, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt35 DW 07C80h, 4880h, 38, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt34 DW 07CF0h, 4810h, 36, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt33 DW 07CF0h, 4800h, 35, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt32 DW 07C80h, 2C80h, 34, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt31 DW 07CF0h, 2C20h, 33, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt30 DW 07CF0h, 2C10h, 32, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2F DW 07C80h, 2C00h, 33, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2E DW 07CF0h, 2830h, 26, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2D DW 07CF0h, 2810h, 25, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2C DW 07C80h, 2800h, 26, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2B DW 07CF0h, 2880h, 27, OFFSET ReadPhy8168dp1,  OFFSET WritePhy8168dp1
-mt2A DW 07CF0h, 28A0h, 28, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
-mt29 DW 07CF0h, 28B0h, 31, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
-mt28 DW 07CF0h, 3CB0h, 24, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt27 DW 07CF0h, 3C90h, 23, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt26 DW 07CF0h, 3C80h, 18, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt25 DW 07C80h, 3C80h, 24, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt24 DW 07CF0h, 3C00h, 19, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt23 DW 07CF0h, 3C20h, 20, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt22 DW 07CF0h, 3C30h, 21, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt21 DW 07CF0h, 3C40h, 22, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt20 DW 07C80h, 3C00h, 22, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1F DW 07CF0h, 3800h, 12, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1E DW 07CF0h, 3850h, 17, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1D DW 07C80h, 3800h, 17, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1C DW 07C80h, 3000h, 11, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1B DW 07CF0h, 4490h, 39, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1A DW 07C80h, 4480h, 39, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt19 DW 0FC80h, 4400h, 37, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt18 DW 07CF0h, 40B0h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt17 DW 07CF0h, 40A0h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt16 DW 07CF0h, 4090h, 29, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt15 DW 07C80h, 4080h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt14 DW 07CF0h, 34A0h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt13 DW 07CF0h, 24A0h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt12 DW 07CF0h, 3490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt11 DW 07CF0h, 2490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt10 DW 07CF0h, 3480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0F DW 07CF0h, 2480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0E DW 07CF0h, 3400h, 13, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0D DW 07CF0h, 3430h, 10, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0C DW 07CF0h, 3420h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0B DW 07C80h, 3480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0A DW 07C80h, 2480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt09 DW 07C80h, 3400h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt08 DW 0FC80h, 3880h, 15, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt07 DW 0FC80h, 3080h, 14, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt06 DW 0FC80h, 9800h, 6,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt05 DW 0FC80h, 1800h, 5,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt04 DW 0FC80h, 1000h, 4,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt03 DW 0FC80h, 0400h, 3,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt02 DW 0FC80h, 0080h, 2,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt01 DW 0FC80h, 0000h, 1,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt00 DW 00000h, 0000h, 0,  OFFSET ReadPhy8169,     OFFSET WritePhy8169 
+mt30 DW 07CF0h, 6410h, 63, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2F DW 07CF0h, 6090h, 61, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2E DW 07CF0h, 54B0h, 53, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2D DW 07CF0h, 54A0h, 52, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2C DW 07CF0h, 5020h, 51, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2B DW 07CF0h, 5410h, 46, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2A DW 07CF0h, 5C80h, 44, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt29 DW 07CF0h, 5090h, 42, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt28 DW 07CF0h, 4C00h, 40, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt27 DW 07C80h, 4880h, 38, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt26 DW 07CF0h, 4810h, 36, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt25 DW 07CF0h, 4800h, 35, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt24 DW 07C80h, 2C80h, 34, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt23 DW 07CF0h, 2C10h, 32, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt22 DW 07C80h, 2C00h, 33, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt21 DW 07CF0h, 2810h, 25, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt20 DW 07C80h, 2800h, 26, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1F DW 07CF0h, 28A0h, 28, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
+mt1E DW 07CF0h, 28B0h, 31, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
+mt1D DW 07CF0h, 3C90h, 23, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1C DW 07CF0h, 3C80h, 18, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1B DW 07C80h, 3C80h, 24, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1A DW 07CF0h, 3C00h, 19, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt19 DW 07CF0h, 3C20h, 20, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt18 DW 07CF0h, 3C30h, 21, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt17 DW 07C80h, 3C00h, 22, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt16 DW 07CF0h, 3800h, 12, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt15 DW 07C80h, 3800h, 17, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt14 DW 07C80h, 3000h, 11, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt13 DW 07C80h, 4480h, 39, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt12 DW 0FC80h, 4400h, 37, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt11 DW 07CF0h, 4090h, 29, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt10 DW 07C80h, 4080h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0F DW 07CF0h, 3490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0E DW 07CF0h, 2490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0D DW 07CF0h, 3480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0C DW 07CF0h, 2480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0B DW 07CF0h, 3400h, 13, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0A DW 07CF0h, 2400h, 14, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt09 DW 07CF0h, 3430h, 10, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt08 DW 07CF0h, 3420h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt07 DW 07C80h, 3480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt06 DW 07C80h, 2480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt05 DW 07C80h, 3400h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt04 DW 0FC80h, 9800h, 6,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt03 DW 0FC80h, 1800h, 5,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt02 DW 0FC80h, 1000h, 4,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt01 DW 0FC80h, 0400h, 3,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt00 DW 0FC80h, 0080h, 2,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mtxx DW     -1,    -1, 0,                   0,                       0
 
 IoFindHardware    Proc near
     mov dx,ds:IoBase
@@ -2838,12 +2841,23 @@ IoFindHardware    Proc near
 
 iofhLoop:    
     mov dx,ax
-    and dx,cs:[bx]
+    mov ax,cs:[bx]
+    cmp ax,-1
+    je iofFailed
+;
+    and dx,ax
     cmp dx,cs:[bx+2]
     je iofhOk
 ;
     add bx,10  
     jmp iofhLoop
+
+iofFailed:
+    mov ds:HwId,0
+    mov ds:ReadPhyProc,0
+    mov ds:WritePhyProc,0
+    stc
+    ret
 
 iofhOk:
     mov ax,cs:[bx+4]
@@ -2852,6 +2866,7 @@ iofhOk:
     mov ds:ReadPhyProc,ax
     mov ax,cs:[bx+8]
     mov ds:WritePhyProc,ax
+    clc
     ret
 IoFindHardware   Endp
 
@@ -2862,12 +2877,23 @@ MemFindHardware    Proc near
 
 mfhLoop:    
     mov dx,ax
-    and dx,cs:[bx]
+    mov ax,cs:[bx]
+    cmp ax,-1
+    je mfFailed
+;
+    and dx,ax
     cmp dx,cs:[bx+2]
     je mfhOk
 ;
     add bx,10  
     jmp mfhLoop
+
+mfFailed:
+    mov ds:HwId,0
+    mov ds:ReadPhyProc,0
+    mov ds:WritePhyProc,0
+    stc
+    ret
 
 mfhOk:
     mov ax,cs:[bx+4]
@@ -2876,6 +2902,7 @@ mfhOk:
     mov ds:ReadPhyProc,ax
     mov ax,cs:[bx+8]
     mov ds:WritePhyProc,ax
+    clc
     ret
 MemFindHardware   Endp
 
@@ -4798,6 +4825,8 @@ io_pci1:
     call SetupInts
     call IoInitHardware
     call IoFindHardware
+    jc init_pci1_done
+;
     call Config
     mov ax,25
     WaitMilliSec
@@ -4875,6 +4904,8 @@ minit_pci1_next_base_ok:
     call SetupInts
     call MemInitHardware
     call MemFindHardware
+    jc init_pci1_done
+;
     call Config
 ;
     mov ax,25
@@ -4973,7 +5004,8 @@ io_pci2:
 ;
     call SetupInts
     call IoInitHardware
-    call IoFindHardware
+    jc init_pci2_done
+;
     call Config
 ;
     mov ax,1
@@ -5049,6 +5081,8 @@ minit_pci2_next_base_ok:
     call SetupInts
     call MemInitHardware
     call MemFindHardware
+    jc init_pci2_done
+;
     call Config
 ;
     mov ax,1
