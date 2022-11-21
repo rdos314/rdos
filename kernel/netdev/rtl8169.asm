@@ -190,6 +190,8 @@ EFUSEAR_REG_MASK = 03FFh
 EFUSEAR_REG_SHIFT = 8
 EFUSEAR_DATA_MASK = 0FFh
 
+OCPAR_FLAG = 80000000h
+
 PHY_10      = 4
 PHY_100     = 8
 PHY_1000    = 10h
@@ -230,6 +232,8 @@ REG_PHYStatus = 6Ch
 
 REG_ERIDR = 70h
 REG_ERIAR = 74h
+
+REG_GPHY_OCP = 0B8h
 
 REG_RMS = 0DAh
 REG_EFUSE = 0DCh
@@ -316,13 +320,14 @@ mem_tbi_anar  DW ?
 mem_tbi_lpar  DW ?
 mem_phy_stat  DB ?, ?, ?, ?
 mem_eridr     DD ?
-mem_eriar     DD ?                   
-mem_res3      DD ?, ?, ?, ?, ?, ?
-mem_res4      DD ?, ?, ?, ? 
-mem_res5      DD ?, ?, ?, ?
-mem_res6      DD ?, ?, ?, ?
-mem_res7      DD ?, ?, ?, ?
-mem_res8      DW ?, ?, ?, ?, ?
+mem_eriar     DD ?                   ; 74h
+mem_res3      DD ?, ?, ?, ?, ?, ?    ; 78h-8Fh
+mem_res4      DD ?, ?, ?, ?          ; 90h-9Fh
+mem_res5      DD ?, ?, ?, ?          ; A0h-AFh
+mem_res6      DD ?, ?                ; B0h-B7h
+mem_gphy      DD ?                   ; B8h-BBh
+mem_res7      DD ?, ?, ?, ?, ?       ; BCh-CFh
+mem_res8      DW ?, ?, ?, ?, ?       ; D0h-D9h
 mem_rms       DW ?
 mem_efuse     DD ?
 mem_ccr       DW ?, ?
@@ -1023,6 +1028,94 @@ ReadPhy8169	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IoWritePhy8169g
+;
+;           DESCRIPTION:    Write to phy, 8169g version
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoWritePhy8169g    Proc near
+    push eax
+    push cx
+    push dx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;    
+    mov dx,ds:IoBase
+    add dx,REG_GPHY_OCP
+;
+    out dx,eax
+    xor cx,cx
+
+iowpWait8169g:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz iowpDone8169g
+    loop iowpWait8169g
+
+iowpDone8169g:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop dx
+    pop cx
+    pop eax
+    ret
+IoWritePhy8169g    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemWritePhy8169g
+;
+;           DESCRIPTION:    Write to phy, 8169g version
+;
+;           PARAMETERS:     FS      Registers
+;                           DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWritePhy8169g    Proc near
+    push eax
+    push cx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;
+    mov fs:mem_gphy,eax
+    xor cx,cx
+
+mwpWait8169g:    
+    pause
+    mov eax,fs:mem_gphy
+    test eax,80000000h
+    jz mwpDone8169g
+    loop mwpWait8169g
+
+mwpDone8169g:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop cx
+    pop eax
+    ret
+MemWritePhy8169g    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WritePhy8169g
 ;
 ;           DESCRIPTION:    Write to phy, 8169g version
@@ -1035,9 +1128,101 @@ ReadPhy8169	Endp
 ;r8168g_mdio_write
 
 WritePhy8169g    Proc near
-    int 3
-    ret
+    push ax
+    mov ax,ds:MemSel
+    or ax,ax
+    pop ax
+    jz IoWritePhy8169g
+    jmp MemWritePhy8169g
+
 WritePhy8169g   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadPhy8169g
+;
+;           DESCRIPTION:    Read from phy, 8169g version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadPhy8169g    Proc near
+    push cx
+    push dx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;    
+    mov dx,ds:IoBase
+    add dx,REG_GPHY_OCP
+;
+    out dx,eax
+    xor cx,cx
+
+iorpWait8169g:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz iorpDone8169g
+;
+    loop iorpWait8169g
+
+iorpDone8169g:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop dx
+    pop cx
+    ret
+IoReadPhy8169g    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadPhy8169g
+;
+;           DESCRIPTION:    Read from phy, 8169g version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadPhy8169g    Proc near
+    push cx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;
+    mov fs:mem_gphy,eax
+    xor cx,cx
+
+mrpWait8169g:    
+    pause
+    mov eax,fs:mem_gphy
+    test eax,80000000h
+    jnz mrpDone8169g
+;
+    loop mrpWait8169g
+
+mrpDone8169g:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop cx
+    ret
+MemReadPhy8169g    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1055,8 +1240,11 @@ WritePhy8169g   Endp
 ;r8168g_mdio_read
 
 ReadPhy8169g    Proc near
-    int 3
-    ret
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadPhy8169g
+    jmp MemReadPhy8169g
+
 ReadPhy8169g    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
