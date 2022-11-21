@@ -1266,10 +1266,9 @@ IoWriteMac8169    Proc near
     push cx
     push dx
 ;    
-    movzx eax,ax
-    ror eax,8
-    mov ah,dl
-    rol eax,8
+    ror eax,16
+    mov ax,dx
+    rol eax,16
     or eax,80000000h
 ;    
     mov dx,ds:IoBase
@@ -1303,7 +1302,7 @@ IoWriteMac8169    Endp
 ;           DESCRIPTION:    Write to mac, 8169 version
 ;
 ;           PARAMETERS:     FS      Registers
-;                           DL      Register
+;                           DX      Register
 ;                           AX      Data
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1312,10 +1311,9 @@ MemWriteMac8169    Proc near
     push eax
     push cx
 ;    
-    movzx eax,ax
-    ror eax,8
-    mov ah,dl
-    rol eax,8
+    ror eax,16
+    mov ax,dx
+    rol eax,16
     or eax,80000000h
 ;
     mov fs:mem_ocpdr,eax
@@ -1368,7 +1366,7 @@ WriteMac8169   Endp
 ;
 ;           DESCRIPTION:    Read from mac, 8169 version
 ;
-;           PARAMETERS:     DL      Register
+;           PARAMETERS:     DX      Register
 ;
 ;           RETURNS:        AX      Data
 ;                           
@@ -1378,9 +1376,8 @@ IoReadMac8169    Proc near
     push cx
     push dx
 ;    
-    xor eax,eax
-    mov ah,dl
-    rol eax,8
+    movzx eax,dx
+    shl eax,16
 ;    
     mov dx,ds:IoBase
     add dx,REG_OCPDR
@@ -1414,7 +1411,7 @@ IoReadMac8169    Endp
 ;
 ;           DESCRIPTION:    Read from mac, 8169 version
 ;
-;           PARAMETERS:     DL      Register
+;           PARAMETERS:     DX      Register
 ;
 ;           RETURNS:        AX      Data
 ;                           
@@ -1423,9 +1420,8 @@ IoReadMac8169    Endp
 MemReadMac8169    Proc near
     push cx
 ;    
-    xor eax,eax
-    mov ah,dl
-    rol eax,8
+    movzx eax,dx
+    shl eax,16
 ;
     mov fs:mem_ocpdr,eax
     xor cx,cx
@@ -2054,45 +2050,92 @@ Cond8168g1   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       NAME:        GetAdcBiasOffset
+;
+;       RETURNS:     AX Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAdcBiasOffset  Proc near
+    mov dx,0DD02h
+    mov ax,807Dh
+    call WriteMac8169
+;
+    mov dx,0DD02h
+    call ReadMac8169
+    push ax
+;
+    mov dx,0DD00h
+    call ReadMac8169
+    mov dl,al
+    shr ax,1
+    and ax,7FF8h
+    and dl,7
+    or al,dl
+;
+    pop dx
+    and dl,80h
+    shl dx,8
+    or ax,dx
+;    
+    ret
+GetAdcBiasOffset  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       NAME:        Cond8168h2
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Cond8168h2	Proc near
+    call GetAdcBiasOffset
+    or ax,ax
+    je ch2Skip
+;
+    push ax
+    mov dl,1Fh
+    mov ax,0BCFh
+    call ds:WritePhyProc
+    pop ax
+;
+    mov dl,16h
+    call ds:WritePhyProc
+
+ch2Skip:
+    mov dl,1Fh
+    mov ax,0BCDh
+    call ds:WritePhyProc
+;
+    mov dl,16h
+    call ds:ReadPhyProc
+    and ax,0Fh
+;
+    xor dx,dx
+    cmp ax,3
+    jbe ch2Low
+;
+    mov dx,ax
+    sub dx,3
+
+ch2Low:
+    mov ax,dx
+    shl dx,4
+    or ax,dx
+    shl dx,4
+    or ax,dx
+    shl edx,4
+    or ax,dx
+;
+    push ax
+    mov dl,1Fh
+    mov ax,0BCDh
+    call ds:WritePhyProc
+    pop ax
+;
+    mov dl,17h
+    call ds:WritePhyProc
     ret
 Cond8168h2	Endp
-
-; u16 rtl8168h_2_get_adc_bias_ioffset(struct rtl8169_private *tp)
-; {
-;	u16 data1, data2, ioffset;
-
-;	r8168_mac_ocp_write(tp, 0xdd02, 0x807d);
-;	data1 = r8168_mac_ocp_read(tp, 0xdd02);
-;	data2 = r8168_mac_ocp_read(tp, 0xdd00);
-
-;	ioffset = (data2 >> 1) & 0x7ff8;
-;	ioffset |= data2 & 0x0007;
-;	if (data1 & BIT(7))
-;		ioffset |= BIT(15);
-
-;	return ioffset;
-;}
-
-
-;	ioffset = rtl8168h_2_get_adc_bias_ioffset(tp);
-;	if (ioffset != 0xffff)
-;		phy_write_paged(phydev, 0x0bcf, 0x16, ioffset);
-;
-;	/* Modify rlen (TX LPF corner frequency) level */
-;	data = phy_read_paged(phydev, 0x0bcd, 0x16);
-;	data &= 0x000f;
-;	rlen = 0;
-;	if (data > 3)
-;		rlen = data - 3;
-;	data = rlen | (rlen << 4) | (rlen << 8) | (rlen << 12);
-;	phy_write_paged(phydev, 0x0bcd, 0x17, data);
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
