@@ -233,6 +233,7 @@ REG_PHYStatus = 6Ch
 REG_ERIDR = 70h
 REG_ERIAR = 74h
 
+REG_OCPDR = 0B0h
 REG_GPHY_OCP = 0B8h
 
 REG_RMS = 0DAh
@@ -324,7 +325,8 @@ mem_eriar     DD ?                   ; 74h
 mem_res3      DD ?, ?, ?, ?, ?, ?    ; 78h-8Fh
 mem_res4      DD ?, ?, ?, ?          ; 90h-9Fh
 mem_res5      DD ?, ?, ?, ?          ; A0h-AFh
-mem_res6      DD ?, ?                ; B0h-B7h
+mem_ocpdr     DD ?                   ; B0h-B3h
+mem_res6      DD ?                   ; B04-B7h
 mem_gphy      DD ?                   ; B8h-BBh
 mem_res7      DD ?, ?, ?, ?, ?       ; BCh-CFh
 mem_res8      DW ?, ?, ?, ?, ?       ; D0h-D9h
@@ -1246,6 +1248,228 @@ ReadPhy8169g    Proc near
     jmp MemReadPhy8169g
 
 ReadPhy8169g    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoWriteMac8169
+;
+;           DESCRIPTION:    Write to MAC, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoWriteMac8169    Proc near
+    push eax
+    push cx
+    push dx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;    
+    mov dx,ds:IoBase
+    add dx,REG_OCPDR
+;
+    out dx,eax
+    xor cx,cx
+
+iowmWait8169:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz iowmDone8169
+    loop iowmWait8169
+
+iowmDone8169:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop dx
+    pop cx
+    pop eax
+    ret
+IoWriteMac8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemWriteMac8169
+;
+;           DESCRIPTION:    Write to mac, 8169 version
+;
+;           PARAMETERS:     FS      Registers
+;                           DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWriteMac8169    Proc near
+    push eax
+    push cx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;
+    mov fs:mem_ocpdr,eax
+    xor cx,cx
+
+mwmWait8169:    
+    pause
+    mov eax,fs:mem_ocpdr
+    test eax,80000000h
+    jz mwmDone8169
+    loop mwmWait8169
+
+mwmDone8169:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop cx
+    pop eax
+    ret
+MemWriteMac8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteMac8169
+;
+;           DESCRIPTION:    Write to mac, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; r8168_mac_ocp_write
+
+WriteMac8169    Proc near
+    push ax
+    mov ax,ds:MemSel
+    or ax,ax
+    pop ax
+    jz IoWriteMac8169
+    jmp MemWriteMac8169
+
+WriteMac8169   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadMac8169
+;
+;           DESCRIPTION:    Read from mac, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadMac8169    Proc near
+    push cx
+    push dx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;    
+    mov dx,ds:IoBase
+    add dx,REG_OCPDR
+;
+    out dx,eax
+    xor cx,cx
+
+iormWait8169:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz iormDone8169
+;
+    loop iormWait8169
+
+iormDone8169:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop dx
+    pop cx
+    ret
+IoReadMac8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadMac8169
+;
+;           DESCRIPTION:    Read from mac, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadMac8169    Proc near
+    push cx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;
+    mov fs:mem_ocpdr,eax
+    xor cx,cx
+
+mrmWait8169:    
+    pause
+    mov eax,fs:mem_ocpdr
+    test eax,80000000h
+    jnz mrmDone8169
+;
+    loop mrmWait8169
+
+mrmDone8169:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop cx
+    ret
+MemReadMac8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadMac8169
+;
+;           DESCRIPTION:    Read from mac, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; r8168_mac_ocp_read
+
+ReadMac8169    Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadMac8169
+    jmp MemReadMac8169
+
+ReadMac8169    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
