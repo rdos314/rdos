@@ -127,7 +127,7 @@ call_proc  MACRO p
 
 wait_ms  MACRO ms
    DW 400h
-   DW OFFSET ms
+   DW ms
          ENDM
 
 apply_firmware_cond  MACRO p1
