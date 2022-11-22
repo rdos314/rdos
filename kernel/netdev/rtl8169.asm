@@ -142,6 +142,7 @@ write_mmd    MACRO adr, port, data
              ENDM
 
 8125_legacy  MACRO
+  modify_paged 0A5Bh, 12h, 8000h, 0
              ENDM
 
 RX_DESCR_COUNT = 256
@@ -204,6 +205,8 @@ ADV_100_FULL    = 100h
 ADV_1000_HALF   = 400h
 ADV_1000_FULL   = 800h
 
+R8168DP_1_MDIO_ACCESS_BIT = 020000h
+
 REG_IDR0 = 0                ; Ethernet hardware address. 
 REG_MAR0 = 8                ; Multicast
 REG_DTCCR = 10h
@@ -237,6 +240,7 @@ REG_ERIAR = 74h
 REG_OCPDR = 0B0h
 REG_GPHY_OCP = 0B8h
 
+REG_DP2 = 0D0h
 REG_RMS = 0DAh
 REG_EFUSE = 0DCh
 REG_CCR = 0E0h
@@ -330,7 +334,8 @@ mem_ocpdr     DD ?                   ; B0h-B3h
 mem_res6      DD ?                   ; B04-B7h
 mem_gphy      DD ?                   ; B8h-BBh
 mem_res7      DD ?, ?, ?, ?, ?       ; BCh-CFh
-mem_res8      DW ?, ?, ?, ?, ?       ; D0h-D9h
+mem_dp2       DD ?                   ; D0h-D3h
+mem_res8      DW ?, ?, ?             ; D4h-D9h
 mem_rms       DW ?
 mem_efuse     DD ?
 mem_ccr       DW ?, ?
@@ -1558,6 +1563,122 @@ ReadMac8169    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IoWritePhy8169dp2
+;
+;           DESCRIPTION:    Write to phy, 8169 DP2 version
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoWritePhy8169dp2    Proc near
+    push eax
+    push cx
+    push dx
+;    
+    push ax
+    push dx
+;    
+    mov dx,ds:IoBase
+    add dx,REG_DP2
+;
+    in eax,dx
+    and eax,NOT R8168DP_1_MDIO_ACCESS_BIT
+    out dx,eax
+;
+    pop dx
+    pop ax
+;
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;    
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+;
+    out dx,eax
+    xor cx,cx
+
+iowpWait8169dp2:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz iowpDone8169dp2
+    loop iowpWait8169dp2
+
+iowpDone8169dp2:
+    mov ax,20
+    WaitMicroSec
+;
+    mov dx,ds:IoBase
+    add dx,REG_DP2
+;
+    in eax,dx
+    or eax,R8168DP_1_MDIO_ACCESS_BIT
+    out dx,eax
+;    
+    pop dx
+    pop cx
+    pop eax
+    ret
+IoWritePhy8169dp2    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemWritePhy8169dp2
+;
+;           DESCRIPTION:    Write to phy, 8169 DP2 version
+;
+;           PARAMETERS:     FS      Registers
+;                           DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWritePhy8169dp2    Proc near
+    push eax
+    push ecx
+;    
+    mov ecx,fs:mem_dp2
+    and ecx,NOT R8168DP_1_MDIO_ACCESS_BIT
+    mov fs:mem_dp2,ecx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;
+    mov fs:mem_phyar,eax
+    xor cx,cx
+
+mwpWait8169dp2:    
+    pause
+    mov eax,fs:mem_phyar
+    test eax,80000000h
+    jz mwpDone8169dp2
+    loop mwpWait8169dp2
+
+mwpDone8169dp2:
+    mov ax,20
+    WaitMicroSec
+;    
+    mov ecx,fs:mem_dp2
+    or ecx,R8168DP_1_MDIO_ACCESS_BIT
+    mov fs:mem_dp2,ecx
+;    
+    pop ecx
+    pop eax
+    ret
+MemWritePhy8169dp2    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WritePhy8168dp2
 ;
 ;           DESCRIPTION:    Write to phy, 8168dp2 version
@@ -1567,12 +1688,132 @@ ReadMac8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;r8168dp_2_mdio_write
+; r8168dp_2_mdio_write
 
 WritePhy8168dp2    Proc near
-    int 3
-    ret
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoWritePhy8169dp2
+    jmp MemWritePhy8169dp2
+
 WritePhy8168dp2   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadPhy8169dp2
+;
+;           DESCRIPTION:    Read from phy, 8169 DP2 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadPhy8169dp2    Proc near
+    push cx
+    push dx
+;    
+    push dx
+;    
+    mov dx,ds:IoBase
+    add dx,REG_DP2
+;
+    in eax,dx
+    and eax,NOT R8168DP_1_MDIO_ACCESS_BIT
+    out dx,eax
+;
+    pop dx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;    
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+;
+    out dx,eax
+    xor cx,cx
+
+iorpWait8169dp2:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz iorpDone8169dp2
+;
+    loop iorpWait8169dp2
+
+iorpDone8169dp2:
+    push eax
+;
+    mov ax,20
+    WaitMicroSec
+;
+    mov dx,ds:IoBase
+    add dx,REG_DP2
+;
+    in eax,dx
+    or eax,R8168DP_1_MDIO_ACCESS_BIT
+    out dx,eax
+;
+    pop eax
+;    
+    pop dx
+    pop cx
+    ret
+IoReadPhy8169dp2    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadPhy8169dp2
+;
+;           DESCRIPTION:    Read from phy, 8169 DP2 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadPhy8169dp2    Proc near
+    push cx
+;    
+    mov eax,fs:mem_dp2
+    and eax,NOT R8168DP_1_MDIO_ACCESS_BIT
+    mov fs:mem_dp2,eax
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;
+    mov fs:mem_phyar,eax
+    xor cx,cx
+
+mrpWait8169dp2:    
+    pause
+    mov eax,fs:mem_phyar
+    test eax,80000000h
+    jnz mrpDone8169dp2
+;
+    loop mrpWait8169dp2
+
+mrpDone8169dp2:
+    push eax
+;
+    mov ax,20
+    WaitMicroSec
+;    
+    mov eax,fs:mem_dp2
+    or eax,R8168DP_1_MDIO_ACCESS_BIT
+    mov fs:mem_dp2,eax
+;
+    pop eax
+;    
+    pop cx
+    ret
+MemReadPhy8169dp2    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1587,11 +1828,14 @@ WritePhy8168dp2   Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;r8168dp_2_mdio_read
+; r8168dp_2_mdio_read
 
 ReadPhy8168dp2    Proc near
-    int 3
-    ret
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadPhy8169dp2
+    jmp MemReadPhy8169dp2
+
 ReadPhy8168dp2    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1928,7 +2172,6 @@ RunTableCommands  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ApplyFirmware	Proc near
-    int 3
     ret
 ApplyFirmware   Endp
 
