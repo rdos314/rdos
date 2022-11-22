@@ -3541,11 +3541,6 @@ Config  Proc near
     ret
 Config  Endp            
 
-
-
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       NAME:          Start8169
@@ -3555,31 +3550,15 @@ Config  Endp
 StartNone:
   DW -1
 
-Start8102e1:
-  DW -1
-
-Start8102e3:
-  Dw -1
-
-Start8102e2:
-  DW -1
-
 Start8168b:
   DW -1
 
-Start8401:
-  DW -1
-
 Start8168cp1:
-  DW -1
-
-Start8168c1:
-  DW -1
-
-Start8168c2:
-  DW -1
-
-Start8168c4:
+  ephy_init 1,   00000h, 00001h
+  ephy_init 2,   00800h, 01000h
+  ephy_init 3,   00000h, 00042h
+  ephy_init 6,   00080h, 00000h
+  ephy_init 7,   00000h, 02000h
   DW -1
 
 Start8168cp2:
@@ -3588,58 +3567,201 @@ Start8168cp2:
 Start8168cp3:
   DW -1
 
+Start8168c1:
+  ephy_init 2,   00800h, 01000h
+  ephy_init 3,   00000h, 00002h
+  ephy_init 6,   00080h, 00000h
+  DW -1
+
+Start8168c2:
+  ephy_init 1,   00000h, 00001h
+  ephy_init 3,   00400h, 00020h
+  DW -1
+
+Start8168c4:
+  DW -1
+
 Start8168d:
   DW -1
 
 Start8168d4:
-  DW -1
-
-Start8105e1:
-  DW -1
-
-Start8105e2:
+  ephy_init 0Bh, 00000h, 00048h
+  ephy_init 19h, 00020h, 00050h
+  ephy_init 0Ch, 00100h, 00020h
+  ephy_init 10h, 00004h, 00000h
   DW -1
 
 Start8168e1:
+  ephy_init 0,   00200h, 00100h
+  ephy_init 0,   00000h, 00004h
+  ephy_init 6,   00002h, 00001h
+  ephy_init 6,   00000h, 00030h
+  ephy_init 7,   00000h, 02000h
+  ephy_init 0,   00000h, 00020h
+  ephy_init 3,   05800h, 02000h
+  ephy_init 3,   00000h, 00001h
+  ephy_init 1,   00800h, 01000h
+  ephy_init 7,   00000h, 04000h
+  ephy_init 1Eh, 00000h, 02000h
+  ephy_init 19h, 0FFFFh, 0FE6ch
+  ephy_init 0Ah, 00000h, 00040h
   DW -1
 
 Start8168e2:
+  ephy_init 9,   00000h, 00080h
+  ephy_init 19h, 00000h, 00224h
+  ephy_init 0,   00000h, 00004h
+  ephy_init 0Ch, 03DF0h, 00200h
   DW -1
 
 Start8168f1:
-  DW -1
-
-Start8402:
+  ephy_init 6,   000C0h, 00020h
+  ephy_init 8,   00001h, 00002h
+  ephy_init 9,   00000h, 00080h
+  ephy_init 19h, 00000h, 00224h
+  ephy_init 0,   00000h, 00008h
+  ephy_init 0Ch, 03DF0h, 00200h
   DW -1
 
 Start8411:
+  ephy_init 6,   000C0h, 00020h
+  ephy_init 0Fh, 0FFFFh, 05200h
+  ephy_init 19h, 00000h, 00224h
+  ephy_init 0,   00000h, 00008h
+  ephy_init 0Ch, 03DF0h, 00200h
+  DW -1
+
+Start8168g1:
+  ephy_init 0,   00008h, 00000h
+  ephy_init 0Ch, 03FF0h, 00820h
+  ephy_init 1Eh, 00000h, 00001h
+  ephy_init 19h, 08000h, 00000h
+  DW -1
+
+Start8168g2:
+  ephy_init 0,   00008h, 00000h
+  ephy_init 0Ch, 0x3FF0h, 00820h
+  ephy_init 19h, 0FFFFh, 07C00h
+  ephy_init 1Eh, 0FFFFh, 020EBh
+  ephy_init 0Dh, 0FFFFh, 01666h
+  ephy_init 0,   0FFFFh, 010A3h
+  ephy_init 6,   0FFFFh, 0F050h
+  ephy_init 4,   00000h, 00010h
+  ephy_init 1Dh, 04000h, 00000h
+  DW -1
+
+Start8411_2:
+  ephy_init 0,   00008h, 00000h
+  ephy_init 0Ch, 037D0h, 00820h
+  ephy_init 1Eh, 00000h, 00001h
+  ephy_init 19h, 08021h, 00000h
+  ephy_init 1Eh, 00000h, 02000h
+  ephy_init 0Dh, 00100h, 00200h
+  ephy_init 0,   00000h, 00080h
+  ephy_init 6,   00000h, 00010h
+  ephy_init 4,   00000h, 00010h
+  ephy_init 1Dh, 00000h, 04000h
+  DW -1
+
+Start8168h1:
+  ephy_init 1Eh, 00800h, 00001h
+  ephy_init 1Dh, 00000h, 00800h
+  ephy_init 5,   0FFFFh, 02089h
+  ephy_init 6,   0FFFFh, 05881h
+  ephy_init 4,   0FFFFh, 0854Ah
+  ephy_init 1,   0FFFFH, 0068bh
+  DW -1
+
+Start8168ep3:
+  ephy_init 0,   00000h, 00080h
+  ephy_init 0Dh, 00100h, 00200h
+  ephy_init 19h, 08021h, 00000h
+  ephy_init 1Eh, 00000h, 02000h
+  DW -1
+
+Start8117:
+  ephy_init 19h, 00040h, 01100h
+  ephy_init 59h, 00040h, 01100h
+  DW -1
+
+Start8102e1:
+  ephy_init 1,   00000h, 06E65h
+  ephy_init 2,   00000h, 0091Fh
+  ephy_init 3,   00000h, 0C2F9h
+  ephy_init 6,   00000h, 0AFB5h
+  ephy_init 7,   00000h, 00E00h
+  ephy_init 19h, 00000h, 0EC80h
+  ephy_init 1,   00000h, 02E65h
+  ephy_init 1,   00000h, 06E65h
+  DW -1
+
+Start8102e2:
+  DW -1
+
+Start8102e3:
+  ephy_init 3,   0FFFFh, 0C2F9h
+  Dw -1
+
+Start8401:
+  ephy_init 1,   0FFFFh, 06FE5h
+  ephy_init 3,   0FFFFh, 00599h
+  ephy_init 6,   0FFFFh, 0AF25h
+  ephy_init 7,   0FFFFh, 08E68h
+  DW -1
+
+Start8105e1:
+  ephy_init 7,   00000h, 04000h
+  ephy_init 19h, 00000h, 00200h
+  ephy_init 19h, 00000h, 00020h
+  ephy_init 1Eh, 00000h, 02000h
+  ephy_init 3,   00000h, 00001h
+  ephy_init 19h, 00000h, 00100h
+  ephy_init 19h, 00000h, 00004h
+  ephy_init 0Ah, 00000h, 00020h
+  DW -1
+
+Start8105e2:
+  ephy_init 7,   00000h, 04000h
+  ephy_init 19h, 00000h, 00200h
+  ephy_init 19h, 00000h, 00020h
+  ephy_init 1Eh, 00000h, 02000h
+  ephy_init 3,   00000h, 00001h
+  ephy_init 19h, 00000h, 00100h
+  ephy_init 19h, 00000h, 00004h
+  ephy_init 0Ah, 00000h, 00020h
+  ephy_init 1Eh, 0FFFFh, 08000h
+  DW -1
+
+Start8402:
+  ephy_init 19h, 0FFFFh, 0FF64h
+  ephy_init 1Eh, 00000h, 04000h
   DW -1
 
 Start8106:
   DW -1
 
-Start8168g1:
-  DW -1
-
-Start8168g2:
-  DW -1
-
-Start8411_2:
-  DW -1
-
-Start8168h1:
-  DW -1
-
-Start8168ep3:
-  DW -1
-
-Start8117:
-  DW -1
-
 Start8125a2:
+  ephy_init 4,   0FFFFh, 0D000h
+  ephy_init 0Ah, 0FFFFh, 08653h
+  ephy_init 23h, 0FFFFh, 0AB66h
+  ephy_init 20h, 0FFFFh, 09455h
+  ephy_init 21h, 0FFFFh, 099FFh
+  ephy_init 29h, 0FFFFh, 0FE04h
+  ephy_init 44h, 0FFFFh, 0D000h
+  ephy_init 4Ah, 0FFFFh, 08653h
+  ephy_init 63h, 0FFFFh, 0AB66h
+  ephy_init 60h, 0FFFFH, 09455h
+  ephy_init 61h, 0FFFFh, 099FFh
+  ephy_init 69h, 0FFFFh, 0FE04h
   DW -1
 
 Start8125b:
+  ephy_init 0Bh, 0FFFFh, 0A908h
+  ephy_init 1Eh, 0FFFFh, 020EBh
+  ephy_init 4Bh, 0FFFFh, 0A908h
+  ephy_init 5Eh, 0FFFFh, 020EBh
+  ephy_init 22h, 00030h, 00020h
+  ephy_init 62h, 00030h, 00020h
   DW -1
 
 StartTab:
@@ -6040,6 +6162,7 @@ io_pci1:
     call IoFindHardware
     jc init_pci1_done
 ;
+    call StartHw
     call Config
     mov ax,25
     WaitMilliSec
@@ -6118,6 +6241,7 @@ minit_pci1_next_base_ok:
     call MemFindHardware
     jc init_pci1_done
 ;
+    call StartHw
     call Config
 ;
     mov ax,25
@@ -6218,6 +6342,7 @@ io_pci2:
     call IoInitHardware
     jc init_pci2_done
 ;
+    call StartHw
     call Config
 ;
     mov ax,1
@@ -6295,6 +6420,7 @@ minit_pci2_next_base_ok:
     call MemFindHardware
     jc init_pci2_done
 ;
+    call StartHw
     call Config
 ;
     mov ax,1
