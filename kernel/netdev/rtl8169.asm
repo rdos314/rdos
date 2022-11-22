@@ -145,6 +145,10 @@ write_mmd    MACRO adr, port, data
   modify_paged 0A5Bh, 12h, 8000h, 0
              ENDM
 
+ephy_init  MACRO reg, mask, bits
+  DW 500h + reg, mask, bits
+             ENDM
+
 RX_DESCR_COUNT = 256
 TX_DESCR_COUNT = 128
 
@@ -2354,6 +2358,9 @@ rtcLoop:
 ;
     cmp ah,4
     je rtcWait
+;
+    cmp ah,5
+    je rtcEphy
 ;        
     jmp rtcDone
 
@@ -2392,6 +2399,17 @@ rtcWait:
     mov ax,cs:[si+2]
     WaitMilliSec
     add si,4
+    jmp rtcLoop
+
+rtcEphy:
+    mov dl,al
+    call ReadEphy 
+    mov cx,cs:[si+2]
+    not cx
+    and ax,cx
+    or ax,cs:[si+4]
+    call WriteEphy
+    add si,6
     jmp rtcLoop
 
 rtcDone:
@@ -3522,6 +3540,182 @@ Config  Proc near
     call RunTableCommands
     ret
 Config  Endp            
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:          Start8169
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartNone:
+  DW -1
+
+Start8102e1:
+  DW -1
+
+Start8102e3:
+  Dw -1
+
+Start8102e2:
+  DW -1
+
+Start8168b:
+  DW -1
+
+Start8401:
+  DW -1
+
+Start8168cp1:
+  DW -1
+
+Start8168c1:
+  DW -1
+
+Start8168c2:
+  DW -1
+
+Start8168c4:
+  DW -1
+
+Start8168cp2:
+  DW -1
+
+Start8168cp3:
+  DW -1
+
+Start8168d:
+  DW -1
+
+Start8168d4:
+  DW -1
+
+Start8105e1:
+  DW -1
+
+Start8105e2:
+  DW -1
+
+Start8168e1:
+  DW -1
+
+Start8168e2:
+  DW -1
+
+Start8168f1:
+  DW -1
+
+Start8402:
+  DW -1
+
+Start8411:
+  DW -1
+
+Start8106:
+  DW -1
+
+Start8168g1:
+  DW -1
+
+Start8168g2:
+  DW -1
+
+Start8411_2:
+  DW -1
+
+Start8168h1:
+  DW -1
+
+Start8168ep3:
+  DW -1
+
+Start8117:
+  DW -1
+
+Start8125a2:
+  DW -1
+
+Start8125b:
+  DW -1
+
+StartTab:
+st00 DW OFFSET StartNone
+st01 DW OFFSET StartNone
+st02 DW OFFSET StartNone
+st03 DW OFFSET StartNone
+st04 DW OFFSET StartNone
+st05 DW OFFSET StartNone
+st06 DW OFFSET StartNone
+st07 DW OFFSET Start8102e1
+st08 DW OFFSET Start8102e3
+st09 DW OFFSET Start8102e2
+st10 DW OFFSET StartNone
+st11 DW OFFSET Start8168b
+st12 DW OFFSET StartNone
+st13 DW OFFSET StartNone
+st14 DW OFFSET Start8401
+st15 DW OFFSET StartNone
+st16 DW OFFSET StartNone
+st17 DW OFFSET Start8168b
+st18 DW OFFSET Start8168cp1
+st19 DW OFFSET Start8168c1
+st20 DW OFFSET Start8168c2
+st21 DW OFFSET Start8168c2
+st22 DW OFFSET Start8168c4
+st23 DW OFFSET Start8168cp2
+st24 DW OFFSET Start8168cp3
+st25 DW OFFSET Start8168d
+st26 DW OFFSET Start8168d
+st27 DW OFFSET StartNone
+st28 DW OFFSET Start8168d4
+st29 DW OFFSET Start8105e1
+st30 DW OFFSET Start8105e2
+st31 DW OFFSET Start8168d
+st32 DW OFFSET Start8168e1
+st33 DW OFFSET Start8168e1
+st34 DW OFFSET Start8168e2
+st35 DW OFFSET Start8168f1
+st36 DW OFFSET Start8168f1
+st37 DW OFFSET Start8402
+st38 DW OFFSET Start8411
+st39 DW OFFSET Start8106
+st40 DW OFFSET Start8168g1
+st41 DW OFFSET StartNone
+st42 DW OFFSET Start8168g2
+st43 DW OFFSET Start8168g2
+st44 DW OFFSET Start8411_2
+st45 DW OFFSET StartNone
+st46 DW OFFSET Start8168h1
+st47 DW OFFSET StartNone
+st48 DW OFFSET Start8168h1
+st49 DW OFFSET StartNone
+st50 DW OFFSET StartNone
+st51 DW OFFSET Start8168ep3
+st52 DW OFFSET Start8117
+st53 DW OFFSET Start8117
+st54 DW OFFSET StartNone
+st55 DW OFFSET StartNone
+st56 DW OFFSET StartNone
+st57 DW OFFSET StartNone
+st58 DW OFFSET StartNone
+st59 DW OFFSET StartNone
+st60 DW OFFSET StartNone
+st61 DW OFFSET Start8125a2
+st62 DW OFFSET StartNone
+st63 DW OFFSET Start8125b
+
+StartHw  Proc near
+    int 3
+    mov si,ds:HwId
+    add si,si
+    mov si,cs:[si].StartTab
+    call RunTableCommands
+    ret
+StartHw  Endp            
           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
