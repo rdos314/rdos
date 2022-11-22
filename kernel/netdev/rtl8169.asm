@@ -1051,9 +1051,9 @@ IoWritePhyOcp    Proc near
     push cx
     push dx
 ;    
-    ror eax,16
+    ror eax,15
     mov ax,dx
-    rol eax,16
+    rol eax,15
     or eax,80000000h
 ;    
     mov dx,ds:IoBase
@@ -1096,9 +1096,9 @@ MemWritePhyOcp    Proc near
     push eax
     push cx
 ;    
-    ror eax,16
+    ror eax,15
     mov ax,dx
-    rol eax,16
+    rol eax,15
     or eax,80000000h
 ;
     mov fs:mem_gphy,eax
@@ -1159,9 +1159,8 @@ IoReadPhyOcp    Proc near
     push cx
     push dx
 ;    
-    mov ax,dx
-    rol eax,16
-    or eax,80000000h
+    movzx eax,dx
+    rol eax,15
 ;    
     mov dx,ds:IoBase
     add dx,REG_GPHY_OCP
@@ -1204,9 +1203,8 @@ IoReadPhyOcp    Endp
 MemReadPhyOcp    Proc near
     push cx
 ;    
-    mov ax,dx
-    rol eax,16
-    or eax,80000000h
+    movzx eax,dx
+    rol eax,15
 ;
     mov fs:mem_gphy,eax
     xor cx,cx
@@ -1265,8 +1263,6 @@ ReadPhyOcp    Endp
 ;r8168g_mdio_write
 
 WritePhy8169g    Proc near
-    push bx
-;
     cmp dl,1Fh
     jne wpgNotSel
 ;
@@ -1282,6 +1278,9 @@ wpgUseBase:
     ret
 
 wpgNotSel:
+    push bx
+    push dx
+;
     movzx dx,dl
     mov bx,ds:PhyBase
     cmp bx,OCP_STD_PHY_BASE
@@ -1293,6 +1292,8 @@ wpgNotDec:
     add dx,dx
     add dx,ds:PhyBase
     call WritePhyOcp
+;
+    pop dx
     pop bx
     ret
 WritePhy8169g    Endp
@@ -1328,6 +1329,8 @@ rpgUseBase:
     ret
 
 rpgNotSel:
+    push dx
+;
     movzx dx,dl
     mov ax,ds:PhyBase
     cmp ax,OCP_STD_PHY_BASE
@@ -1339,6 +1342,8 @@ rpgNotDec:
     add dx,dx
     add dx,ds:PhyBase
     call ReadPhyOcp
+;
+    pop dx
     ret
 ReadPhy8169g    Endp
 
@@ -3619,7 +3624,6 @@ mt00 DW 0FC80h, 0080h, 2,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
 mtxx DW     -1,    -1, 0,                   0,                       0
 
 IoFindHardware    Proc near
-    int 3
     mov dx,ds:IoBase
     add dx,REG_TCR
     in eax,dx
@@ -5667,7 +5671,6 @@ ioinit_pci1_int_ok:
     jmp init_pci1_done
 
 m_pci1:
-    int 3
     push ebx
     xor ebx,ebx
     test al,4
