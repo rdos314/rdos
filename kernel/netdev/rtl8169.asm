@@ -3831,7 +3831,6 @@ st62 DW OFFSET StartNone
 st63 DW OFFSET Start8125b
 
 StartHw  Proc near
-    int 3
     mov si,ds:HwId
     add si,si
     mov si,cs:[si].StartTab
