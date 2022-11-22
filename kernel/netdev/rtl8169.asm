@@ -3619,6 +3619,7 @@ mt00 DW 0FC80h, 0080h, 2,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
 mtxx DW     -1,    -1, 0,                   0,                       0
 
 IoFindHardware    Proc near
+    int 3
     mov dx,ds:IoBase
     add dx,REG_TCR
     in eax,dx
@@ -3626,9 +3627,8 @@ IoFindHardware    Proc near
     mov bx,OFFSET mac_tab
 
 iofhLoop:    
-    mov dx,ax
-    mov ax,cs:[bx]
-    cmp ax,-1
+    mov dx,cs:[bx]
+    cmp dx,-1
     je iofFailed
 ;
     and dx,ax
@@ -3663,9 +3663,8 @@ MemFindHardware    Proc near
     mov bx,OFFSET mac_tab
 
 mfhLoop:    
-    mov dx,ax
-    mov ax,cs:[bx]
-    cmp ax,-1
+    mov dx,cs:[bx]
+    cmp dx,-1
     je mfFailed
 ;
     and dx,ax
