@@ -191,6 +191,45 @@ modify_eri  MACRO reg, set, clear
   DD set
              ENDM
 
+set_fifo_size  MACRO
+  write_eri 0C8h, ERIAR_MASK_1111, 100002h
+  write_eri 0E8h, ERIAR_MASK_1111, 100006h
+               ENDM
+
+reset_packet_filter  MACRO
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+               ENDM
+
+start_8168f   MACRO
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_1111, 00000h
+  set_fifo_size
+  reset_packet_filter
+  set_eri_bits 01B0h, 10h
+  set_eri_bits 01D0h, 12h
+  write_eri 0CCh, ERIAR_MASK_1111, 000000050h
+  write_eri 0D0h, ERIAR_MASK_1111, 000000060h
+              ENDM
+
+start_8168g   MACRO
+  set_fifo_size
+  reset_packet_filter
+  write_eri 02F8h, ERIAR_MASK_0011, 01D8Fh
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  modify_eri 2FCh, 1, 6
+  clear_eri_bits 01B0h, 1000h
+              ENDM
+
+start_8168ep   MACRO
+  set_fifo_size
+  reset_packet_filter
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  modify_eri 2FCh, 1, 6
+            ENDM
+
 RX_DESCR_COUNT = 256
 TX_DESCR_COUNT = 128
 
@@ -3659,27 +3698,16 @@ Start8168e2:
 
   write_eri 0C0h, ERIAR_MASK_0011, 00000h
   write_eri 0B8h, ERIAR_MASK_1111, 00000h
-  write_eri 0C8h, ERIAR_MASK_1111, 100002h
-  write_eri 0E8h, ERIAR_MASK_1111, 100006h
+  set_fifo_size
   set_eri_bits 01D0h, 2
-  clear_eri_bits 0DCh, 1
-  set_eri_bits 0DCh, 1
+  reset_packet_filter
   set_eri_bits 01B0h, 10h
   write_eri 0CCh, ERIAR_MASK_1111, 000000050h
   write_eri 0D0h, ERIAR_MASK_1111, 007FF0060h
   DW -1
 
 Start8168f1:
-  write_eri 0C0h, ERIAR_MASK_0011, 00000h
-  write_eri 0B8h, ERIAR_MASK_1111, 00000h
-  write_eri 0C8h, ERIAR_MASK_1111, 100002h
-  write_eri 0E8h, ERIAR_MASK_1111, 100006h
-  clear_eri_bits 0DCh, 1
-  set_eri_bits 0DCh, 1
-  set_eri_bits 01B0h, 10h
-  set_eri_bits 01D0h, 12h
-  write_eri 0CCh, ERIAR_MASK_1111, 000000050h
-  write_eri 0D0h, ERIAR_MASK_1111, 000000060h
+  start_8168f
 
   ephy_init 6,   000C0h, 00020h
   ephy_init 8,   00001h, 00002h
@@ -3690,6 +3718,8 @@ Start8168f1:
   DW -1
 
 Start8411:
+  start_8168f
+
   ephy_init 6,   000C0h, 00020h
   ephy_init 0Fh, 0FFFFh, 05200h
   ephy_init 19h, 00000h, 00224h
@@ -3698,13 +3728,7 @@ Start8411:
   DW -1
 
 Start8168g1:
-  clear_eri_bits 0DCh, 1
-  set_eri_bits 0DCh, 1
-  write_eri 02F8h, ERIAR_MASK_0011, 01D8Fh
-  write_eri 0C0h, ERIAR_MASK_0011, 00000h
-  write_eri 0B8h, ERIAR_MASK_0011, 00000h
-  modify_eri 2FCh, 1, 6
-  clear_eri_bits 01B0h, 1000h
+  start_8168g
 
   ephy_init 0,   00008h, 00000h
   ephy_init 0Ch, 03FF0h, 00820h
@@ -3713,13 +3737,7 @@ Start8168g1:
   DW -1
 
 Start8168g2:
-  clear_eri_bits 0DCh, 1
-  set_eri_bits 0DCh, 1
-  write_eri 02F8h, ERIAR_MASK_0011, 01D8Fh
-  write_eri 0C0h, ERIAR_MASK_0011, 00000h
-  write_eri 0B8h, ERIAR_MASK_0011, 00000h
-  modify_eri 2FCh, 1, 6
-  clear_eri_bits 01B0h, 1000h
+  start_8168g
 
   ephy_init 0,   00008h, 00000h
   ephy_init 0Ch, 0x3FF0h, 00820h
@@ -3733,13 +3751,7 @@ Start8168g2:
   DW -1
 
 Start8411_2:
-  clear_eri_bits 0DCh, 1
-  set_eri_bits 0DCh, 1
-  write_eri 02F8h, ERIAR_MASK_0011, 01D8Fh
-  write_eri 0C0h, ERIAR_MASK_0011, 00000h
-  write_eri 0B8h, ERIAR_MASK_0011, 00000h
-  modify_eri 2FCh, 1, 6
-  clear_eri_bits 01B0h, 1000h
+  start_8168g
 
   ephy_init 0,   00008h, 00000h
   ephy_init 0Ch, 037D0h, 00820h
@@ -3761,6 +3773,8 @@ Start8168h1:
   ephy_init 4,   0FFFFh, 0854Ah
   ephy_init 1,   0FFFFH, 0068bh
 
+  set_fifo_size
+  reset_packet_filter
   set_eri_bits 0DCh, 0001Ch
   write_eri 05F0h, ERIAR_MASK_0011, 04F87h
   write_eri 0C0h, ERIAR_MASK_0011, 00000h
@@ -3774,18 +3788,15 @@ Start8168ep3:
   ephy_init 19h, 08021h, 00000h
   ephy_init 1Eh, 00000h, 02000h
 
-  clear_eri_bits 0DCh, 1
-  set_eri_bits 0DCh, 1
-  write_eri 05F0h, ERIAR_MASK_0011, 04F87h
-  modify_eri 2FCh, 1, 6
+  start_8168ep
   DW -1
 
 Start8117:
   ephy_init 19h, 00040h, 01100h
   ephy_init 59h, 00040h, 01100h
 
-  clear_eri_bits 0DCh, 1
-  set_eri_bits 0DCh, 1
+  set_fifo_size
+  reset_packet_filter
   set_eri_bits 0D4h, 00010h
   write_eri 05F0h, ERIAR_MASK_0011, 04F87h
   write_eri 0C0h, ERIAR_MASK_0011, 00000h
@@ -3845,10 +3856,9 @@ Start8402:
   ephy_init 19h, 0FFFFh, 0FF64h
   ephy_init 1Eh, 00000h, 04000h
 
-  write_eri 0C8h, ERIAR_MASK_1111, 100002h
-  write_eri 0E8h, ERIAR_MASK_1111, 100006h
-  clear_eri_bits 0DCh, 1
-  set_eri_bits 0DCh, 1
+  set_fifo_size
+  reset_packet_filter
+
   write_eri 0C0h, ERIAR_MASK_0011, 00000h
   write_eri 0B8h, ERIAR_MASK_0011, 00000h
   modify_eri 0D4h, 0E00h, 0FF00h
