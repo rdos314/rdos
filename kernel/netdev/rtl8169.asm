@@ -3768,6 +3768,14 @@ Start8168g1:
   DW -1
 
 Start8168g2:
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+  write_eri 02F8h, ERIAR_MASK_0011, 01D8Fh
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  modify_eri 2FCh, 1, 6
+  clear_eri_bits 01B0h, 1000h
+
   ephy_init 0,   00008h, 00000h
   ephy_init 0Ch, 0x3FF0h, 00820h
   ephy_init 19h, 0FFFFh, 07C00h
@@ -3780,6 +3788,14 @@ Start8168g2:
   DW -1
 
 Start8411_2:
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+  write_eri 02F8h, ERIAR_MASK_0011, 01D8Fh
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  modify_eri 2FCh, 1, 6
+  clear_eri_bits 01B0h, 1000h
+
   ephy_init 0,   00008h, 00000h
   ephy_init 0Ch, 037D0h, 00820h
   ephy_init 1Eh, 00000h, 00001h
@@ -3799,6 +3815,12 @@ Start8168h1:
   ephy_init 6,   0FFFFh, 05881h
   ephy_init 4,   0FFFFh, 0854Ah
   ephy_init 1,   0FFFFH, 0068bh
+
+  set_eri_bits 0DCh, 0001Ch
+  write_eri 05F0h, ERIAR_MASK_0011, 04F87h
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  clear_eri_bits 01B0h, 1000h
   DW -1
 
 Start8168ep3:
@@ -3806,11 +3828,24 @@ Start8168ep3:
   ephy_init 0Dh, 00100h, 00200h
   ephy_init 19h, 08021h, 00000h
   ephy_init 1Eh, 00000h, 02000h
+
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+  write_eri 05F0h, ERIAR_MASK_0011, 04F87h
+  modify_eri 2FCh, 1, 6
   DW -1
 
 Start8117:
   ephy_init 19h, 00040h, 01100h
   ephy_init 59h, 00040h, 01100h
+
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+  set_eri_bits 0D4h, 00010h
+  write_eri 05F0h, ERIAR_MASK_0011, 04F87h
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  clear_eri_bits 01B0h, 1000h
   DW -1
 
 Start8102e1:
@@ -3864,9 +3899,20 @@ Start8105e2:
 Start8402:
   ephy_init 19h, 0FFFFh, 0FF64h
   ephy_init 1Eh, 00000h, 04000h
+
+  write_eri 0C8h, ERIAR_MASK_1111, 100002h
+  write_eri 0E8h, ERIAR_MASK_1111, 100006h
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  modify_eri 0D4h, 0E00h, 0FF00h
+  write_eri 01B0h, ERIAR_MASK_0011, 00000h
   DW -1
 
 Start8106:
+  write_eri 01D0h, ERIAR_MASK_0011, 00000h
+  write_eri 01B0h, ERIAR_MASK_0011, 00000h
   DW -1
 
 Start8125a2:
