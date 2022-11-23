@@ -6245,7 +6245,6 @@ pci06   DW 1186h, 4302h,    0
 pci07   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
-    int 3
     mov bp,ax
     mov ax,ether_data_sel
     mov ds,ax
