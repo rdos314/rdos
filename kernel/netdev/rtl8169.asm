@@ -38,20 +38,17 @@ INCLUDE ..\os\net.inc
 
 ; phy macros
 
+write MACRO reg, val
+  DW reg, val
+            ENDM
+
 write_paged MACRO sel, reg, val
   DW 01Fh, sel
   DW reg, val
   DW 01Fh, 0h 
             ENDM
 
-modify_extpage  MACRO sel, reg, val
-  DW 01Fh, 7
-  DW 01Eh, sel
-  DW reg, val
-  DW 01Fh, 0h
-           ENDM
-
-modify_extpage_mask  MACRO sel, reg, mask, val
+modify_extpage  MACRO sel, reg, mask, val
   DW 01Fh, 7
   DW 01Eh, sel
   DW 200h + reg, val, mask
@@ -75,14 +72,7 @@ modify_paged MACRO par, reg, p1, p2
   DW 200h + reg, p2, p1
          ENDM
 
-8168d_param  MACRO reg, p1
-  DW 1Fh, 5
-  DW 5, reg
-  DW 6, p1
-  DW 1Fh, 0 
-             ENDM
-
-8168d_param_mask  MACRO reg, p1, p2
+8168d_param  MACRO reg, p1, p2
   DW 1Fh, 5
   DW 5, reg
   DW 206h, p2, p1
@@ -96,28 +86,52 @@ modify_paged MACRO par, reg, p1, p2
   DW 1Fh, 0 
              ENDM
 
+conf_8168d  MACRO
+  write 01Fh,  00001h
+  write 006h,  04064h
+  write 007h,  02863h
+  write 008h,  0059Ch
+  write 009h,  026B4h
+  write 00Ah,  06A19h
+  write 00Bh,  0DCC8h
+  write 010h,  0F06Dh
+  write 014h,  07F68h
+  write 018h,  07FD9h
+  write 01Ch,  0F0FFh
+  write 01Dh,  03D9Ch
+  write 01Fh,  00003h
+  write 012h,  0F49Fh
+  write 013h,  0070Bh
+  write 01Ah,  005ADh
+  write 014h,  094C0h
+
+  write 01Fh,  00002h
+  write 006h,  05561h
+  write 01Fh,  00005h
+  write 005h,  08332h
+  write 006h,  05561h
+
+  write 01Fh,  00001h
+  write 017h,  00CC0h
+  write 01Fh,  00000h
+  write 00Dh,  0F880h
+        ENDM
+
 conf_8168f  MACRO
-  8168d_param_mask 08B80h, 0, 6
-  modify_extpage_mask 2Dh, 18h, 0, 10h
+  8168d_param 08B80h, 0, 6
+  modify_extpage 2Dh, 18h, 0, 0FFFFh, 10h
   set_bits 14h, 8000h
-  8168d_param_mask 08B86h, 0, 1
+  8168d_param 08B86h, 0, 1
   ee_8168f
               ENDM
-
-8168g_10m_aldps MACRO
-  modify_paged 0BCCh, 14h, 100h, 0
-  modify_paged 0A44h, 11h, 0, 80h
-  8168d_param_mask 08084h, 6000h, 0
-  modify_paged 0A43h, 10h, 0, 1003h
-             ENDM
 
 ee_8168g  MACRO
   modify_paged 0A43h, 11h, 0, 10h
              ENDM
 
 ee_8168f  MACRO
-  modify_extpage_mask 20h, 15h, 0, 100h
-  8168d_param_mask 8B85h, 0, 2000h
+  modify_extpage 20h, 15h, 0, 0FFFFh, 100h
+  8168d_param 8B85h, 0, 2000h
              ENDM
 
 call_proc  MACRO p
@@ -2590,14 +2604,14 @@ CondD1Common  Endp
 
 d_common:
   write_paged 2, 5, 669Ah
-  8168d_param 08330h, 669Ah
-  DW 001Fh,  000002h
+  8168d_param 08330h, 0FFFFh, 669Ah
+  write 001Fh,  000002h
   call_proc CondD1Common
   DW -1
 
 d1_def:
   write_paged 2, 5, 6662h
-  8168d_param 08330h, 6662h
+  8168d_param 08330h, 0FFFFh, 6662h
   DW -1
 
 Cond8168d1	Proc near
@@ -2626,7 +2640,7 @@ Cond8168d1      Endp
 
 d2_def:
   write_paged 2, 5, 2642h
-  8168d_param 08330h, 2642h
+  8168d_param 08330h, 0FFFFh, 2642h
   DW -1
 
 Cond8168d2	Proc near
@@ -2990,10 +3004,10 @@ Config8169sce:
   DW -1
 
 Config8168bb:
-  DW 01Fh,  00001h
+  Write 01Fh, 1
   set_bits 16h, 1
-  DW 010h,  0F41Bh
-  DW 01Fh,  00000h
+  write 10h, 0F41Bh
+  write 01Fh, 0
   DW -1
 
 Config8168bef:  
@@ -3001,7 +3015,7 @@ Config8168bef:
   DW -1
   
 Config8168cp1: 
-  DW 01Dh,  00F00h
+  write 01Dh, 00F00h
   write_paged 2, 0Ch, 1EC8h
   DW -1
   
@@ -3013,148 +3027,93 @@ Config8168cp2:
    
   
 Config8168c1: 
-  DW 01Fh,  00001h
-  DW 012h,  02300h
-  DW 01Fh,  00002h
-  DW 000h,  088D4h
-  DW 001h,  082B1h
-  DW 003h,  07002h
-  DW 008h,  09E30h
-  DW 009h,  001F0h
-  DW 00Ah,  05500h
-  DW 00Ch,  000C8h
-  DW 01Fh,  00003h
-  DW 012h,  0C096h
-  DW 016h,  0000Ah
-  DW 01Fh,  00000h
-  DW 01Fh,  00000h
-  DW 009h,  02000h
-  DW 009h,  00000h  
+  write 01Fh,  00001h
+  write 012h,  02300h
+  write 01Fh,  00002h
+  write 000h,  088D4h
+  write 001h,  082B1h
+  write 003h,  07002h
+  write 008h,  09E30h
+  write 009h,  001F0h
+  write 00Ah,  05500h
+  write 00Ch,  000C8h
+  write 01Fh,  00003h
+  write 012h,  0C096h
+  write 016h,  0000Ah
+  write 01Fh,  00000h
+  write 01Fh,  00000h
+  write 009h,  02000h
+  write 009h,  00000h  
   set_bits 14h, 20h
   set_bits 0Dh, 20h
   DW -1
   
 Config8168c2: 
-  DW 01Fh,  00001h
-  DW 012h,  02300h
-  DW 003h,  0802Fh
-  DW 002h,  04F02h
-  DW 001h,  00409h
-  DW 000h,  0F099h
-  DW 004h,  09800h
-  DW 004h,  09000h
-  DW 01Dh,  03D98h
-  DW 01Fh,  00002h
-  DW 00Ch,  07EB8h
-  DW 006h,  00761h
-  DW 01Fh,  00003h
-  DW 016h,  00F0Ah
-  DW 01Fh,  00000h
+  write 01Fh,  00001h
+  write 012h,  02300h
+  write 003h,  0802Fh
+  write 002h,  04F02h
+  write 001h,  00409h
+  write 000h,  0F099h
+  write 004h,  09800h
+  write 004h,  09000h
+  write 01Dh,  03D98h
+  write 01Fh,  00002h
+  write 00Ch,  07EB8h
+  write 006h,  00761h
+  write 01Fh,  00003h
+  write 016h,  00F0Ah
+  write 01Fh,  00000h
   set_bits 16h, 1
   set_bits 14h, 20h
   set_bits 0Dh, 20h
   DW -1
      
 Config8168c3: 
-  DW 01Fh,  00001h
-  DW 012h,  02300h
-  DW 01Dh,  03D98h
-  DW 01Fh,  00002h
-  DW 00Ch,  07EB8h
-  DW 006h,  05461h
-  DW 01Fh,  00003h
-  DW 016h,  00F0Ah
-  DW 01Fh,  00000h
+  write 01Fh,  00001h
+  write 012h,  02300h
+  write 01Dh,  03D98h
+  write 01Fh,  00002h
+  write 00Ch,  07EB8h
+  write 006h,  05461h
+  write 01Fh,  00003h
+  write 016h,  00F0Ah
+  write 01Fh,  00000h
   set_bits 16h, 1
   set_bits 14h, 20h
   set_bits 0Dh, 20h
   DW -1
 
-
 Config8168d1: 
-  DW 01Fh,  00001h
-  DW 006h,  04064h
-  DW 007h,  02863h
-  DW 008h,  0059Ch
-  DW 009h,  026B4h
-  DW 00Ah,  06A19h
-  DW 00Bh,  0DCC8h
-  DW 010h,  0F06Dh
-  DW 014h,  07F68h
-  DW 018h,  07FD9h
-  DW 01Ch,  0F0FFh
-  DW 01Dh,  03D9Ch
-  DW 01Fh,  00003h
-  DW 012h,  0F49Fh
-  DW 013h,  0070Bh
-  DW 01Ah,  005ADh
-  DW 014h,  094C0h
+  conf_8168d
 
-  DW 01Fh,  00002h
-  DW 006h,  05561h
-  DW 01Fh,  00005h
-  DW 005h,  08332h
-  DW 006h,  05561h
-
-  DW 01Fh,  00001h
-  DW 017h,  00CC0h
-  DW 01Fh,  00000h
-  DW 00Dh,  0F880h
-
-  DW 01Fh,  00002h
+  write 01Fh,  00002h
   modify 0Bh, 0EFh, 10h
   modify 0Ch, 05D00h, 0A200h
 
   call_proc Cond8168d1
 
-  DW 01Fh,  00002h
+  write 01Fh,  00002h
   set_bits 0Dh, 300h
   set_bits 0Fh, 10h
 
-  DW 01Fh,  00002h
+  write 01Fh,  00002h
   modify 2, 600h, 100h
   clear_bits 3, 0E000h
-  DW 01Fh,  00000h
+  write 01Fh,  00000h
 
   apply_firmware_cond 0BF00h
   DW -1
 
 Config8168d2: 
-  DW 01Fh,  00001h
-  DW 006h,  04064h
-  DW 007h,  02863h
-  DW 008h,  0059Ch
-  DW 009h,  026B4h
-  DW 00Ah,  06A19h
-  DW 00Bh,  0DCC8h
-  DW 010h,  0F06Dh
-  DW 014h,  07F68h
-  DW 018h,  07FD9h
-  DW 01Ch,  0F0FFh
-  DW 01Dh,  03D9Ch
-  DW 01Fh,  00003h
-  DW 012h,  0F49Fh
-  DW 013h,  0070Bh
-  DW 01Ah,  005ADh
-  DW 014h,  094C0h
-
-  DW 01Fh,  00002h
-  DW 006h,  05561h
-  DW 01Fh,  00005h
-  DW 005h,  08332h
-  DW 006h,  05561h
-
-  DW 01Fh,  00001h
-  DW 017h,  00CC0h
-  DW 01Fh,  00000h
-  DW 00Dh,  0F880h
+  conf_8168d
 
   call_proc Cond8168d2
 
-  DW 01Fh,  00002h
+  write 01Fh,  00002h
   modify 2, 600h, 100h
   clear_bits 3, 0E000h
-  DW 01Fh,  00000h
+  write 01Fh,  00000h
 
   modify_paged 2, 0Fh, 0, 17h
   apply_firmware_cond 0B300h
@@ -3162,58 +3121,59 @@ Config8168d2:
 
 Config8168d4:
   write_paged 1, 17h, 0CC0h
-  modify_extpage 2Dh, 18h, 40h
+  modify_extpage 2Dh, 18h, 0FFFFh, 40h
   set_bits 0Dh, 20h
   DW -1 
 
 Config8168e1:
   call_proc ApplyFirmware
-  8168d_param 08B80h, 0C896h
+  8168d_param 08B80h, 0FFFFh, 0C896h
 
-  DW 01Fh,  00001h
-  DW 00Bh,  06C20h
-  DW 007h,  02872h
-  DW 01Ch,  0EFFFh
-  DW 01Fh,  00003h
-  DW 014h,  06420h
-  DW 01Fh,  00000h
+  write 01Fh,  00001h
+  write 00Bh,  06C20h
+  write 007h,  02872h
+  write 01Ch,  0EFFFh
+  write 01Fh,  00003h
+  write 014h,  06420h
+  write 01Fh,  00000h
 
-  modify_extpage 2Fh, 15h, 1919h
-  modify_extpage 0ACh, 18h, 6
-  modify_extpage_mask 23h, 17h, 0, 6
+  modify_extpage 2Fh, 15h, 0FFFFh, 1919h
+  modify_extpage 0ACh, 18h, 0FFFFh, 6
+  modify_extpage 23h, 17h, 0, 6
   modify_paged 2, 8, 7F00h, 8000h
-  modify_extpage_mask 2Dh, 18h, 0, 50h
+  modify_extpage 2Dh, 18h, 0, 50h
   set_bits 14h, 8000h
-  8168d_param_mask 8B86h, 0, 1
-  8168d_param_mask 8B85h, 2000h, 0
-  modify_extpage_mask 20h, 15h, 1100h, 0
+  8168d_param 8B86h, 0, 1
+  8168d_param 8B85h, 2000h, 0
+  modify_extpage 20h, 15h, 1100h, 0
   write_paged 6, 0, 5A00h
   write_mmd 7, 60, 0
   DW -1
 
 Config8168e2:
   call_proc ApplyFirmware
-  modify_extpage 0ACh, 18h, 6
-  8168d_param 08B5Bh, 09222h
-  8168d_param 08B6Dh, 08000h
-  8168d_param 08B76h, 08000h
+  modify_extpage 0ACh, 18h, 0FFFFh, 6
+  write_paged 3, 9, 0A20Fh
+  8168d_param 08B5Bh, 0FFFFh, 09222h
+  8168d_param 08B6Dh, 0FFFFh, 08000h
+  8168d_param 08B76h, 0FFFFh, 08000h
 
-  DW 01Fh,  00005h
-  DW 005h,  08B80h
+  write 01Fh,  00005h
+  write 005h,  08B80h
   set_bits 17h, 6
-  DW 01Fh,  00000h
+  write 01Fh,  00000h
 
-  modify_extpage_mask 2Dh, 18h, 0, 10h
+  modify_extpage 2Dh, 18h, 0, 10h
   set_bits 14h, 8000h
 
-  8168d_param_mask 08B86h, 0, 1
-  8168d_param_mask 08B85h, 0, 4000h
+  8168d_param 08B86h, 0, 1
+  8168d_param 08B85h, 0, 4000h
   ee_8168f
 
-  DW 01Fh,  00003h
+  write 01Fh,  00003h
   set_bits 19h, 1
   set_bits 10h, 400h
-  DW 01Fh,  00000h
+  write 01Fh,  00000h
   modify_paged 5, 1, 0, 100h
   DW -1
   
@@ -3221,20 +3181,20 @@ Config8168f1:
   call_proc ApplyFirmware
   write_paged 3, 9, 0A20Fh
 
-  8168d_param 08B55h, 0
-  8168d_param 08B5Eh, 0
-  8168d_param 08B67h, 0
-  8168d_param 08B70h, 0
+  8168d_param 08B55h, 0FFFFh, 0
+  8168d_param 08B5Eh, 0FFFFh, 0
+  8168d_param 08B67h, 0FFFFh, 0
+  8168d_param 08B70h, 0FFFFh, 0
 
-  modify_extpage 78h, 17h, 0
-  modify_extpage 78h, 19h, 0FBh
+  modify_extpage 78h, 17h, 0FFFFh, 0
+  modify_extpage 78h, 19h, 0FFFFh, 0FBh
 
-  8168d_param 08B79h, 0AA00h
+  8168d_param 08B79h, 0FFFFh, 0AA00h
   write_paged 3, 1, 328Ah
 
   conf_8168f
 
-  8168d_param_mask 08B85h, 0, 4000h
+  8168d_param 08B85h, 0, 4000h
   DW -1
 
 Config8168f2:
@@ -3246,61 +3206,58 @@ Config8411:
   call_proc ApplyFirmware
   conf_8168f
 
-  8168d_param_mask 08B85h, 0, 4000h
+  8168d_param 08B85h, 0, 4000h
   write_paged 3, 9, 0A20Fh
 
-  8168d_param 08B55h, 0
-  8168d_param 08B5Eh, 0
-  8168d_param 08B67h, 0
-  8168d_param 08B70h, 0
+  8168d_param 08B55h, 0FFFFh, 0
+  8168d_param 08B5Eh, 0FFFFh, 0
+  8168d_param 08B67h, 0FFFFh, 0
+  8168d_param 08B70h, 0FFFFh, 0
 
-  modify_extpage 78h, 17h, 0
-  modify_extpage 78h, 19h, 0AAh
+  modify_extpage 78h, 17h, 0FFFFh, 0
+  modify_extpage 78h, 19h, 0FFFFh, 0AAh
 
-  8168d_param 08B79h, 0AA00h
+  8168d_param 08B79h, 0FFFFh, 0AA00h
   write_paged 3, 1, 328Ah
 
-  8168d_param_mask 08B54h, 800h, 0
-  8168d_param_mask 08B5Dh, 800h, 0
-  8168d_param_mask 08A7Ch, 100h, 0
-  8168d_param_mask 08A7Fh, 0, 100h
-  8168d_param_mask 08A82h, 100h, 0
-  8168d_param_mask 08A85h, 100h, 0
-  8168d_param_mask 08A88h, 100h, 0
+  8168d_param 08B54h, 800h, 0
+  8168d_param 08B5Dh, 800h, 0
+  8168d_param 08A7Ch, 100h, 0
+  8168d_param 08A7Fh, 0, 100h
+  8168d_param 08A82h, 100h, 0
+  8168d_param 08A85h, 100h, 0
+  8168d_param 08A88h, 100h, 0
 
-  8168d_param_mask 08B85h, 0, 8000h
+  8168d_param 08B85h, 0, 8000h
 
-  DW 01Fh,  00003h
+  write 01Fh,  00003h
   clear_bits 19h, 1
   clear_bits 10h, 400h
-  DW 01Fh,  00000h 
+  write 01Fh,  00000h 
   DW -1
    
 Config8168g1:
   call_proc ApplyFirmware
   call_proc Cond8168g1
 
-  modify_paged 0A44h, 11h, 0, 12
-  8168g_10m_aldps
   modify_paged 0A4Bh, 11h, 0, 4
 
   8168g_param 8012h, 0, 8000h
   modify_paged 0C42h, 11h, 2000h, 4000h
   
-  DW 01Fh,  0BCDh
-  DW 014h,  05065h
-  DW 014h,  0D065h
+  write 01Fh,  0BCDh
+  write 014h,  05065h
+  write 014h,  0D065h
 
-  DW 01Fh,  00BC8h
-  DW 011h,  05655h
+  write 01Fh,  00BC8h
+  write 011h,  05655h
 
-  DW 01Fh,  00BCDh
-  DW 014h,  01065h
-  DW 014h,  09065h
-  DW 014h,  01065h
-  DW 01Fh,  00000h
+  write 01Fh,  00BCDh
+  write 014h,  01065h
+  write 014h,  09065h
+  write 014h,  01065h
+  write 01Fh,  00000h
 
-  modify_paged 0A43h, 10h, 4, 0
   ee_8168g
   DW -1
     
@@ -3324,8 +3281,6 @@ Config8168h2:
   DW -1
 
 Config8168ep2:
-  8168g_10m_aldps
-
   8168g_param 8012h, 0, 8000h
   modify_paged 0C42h, 11h, 2000h, 4000h
 
