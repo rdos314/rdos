@@ -6161,8 +6161,8 @@ io_pci1:
     call IoFindHardware
     jc init_pci1_done
 ;
-    call StartHw
     call Config
+    call StartHw
     mov ax,25
     WaitMilliSec
 ;    
@@ -6240,8 +6240,8 @@ minit_pci1_next_base_ok:
     call MemFindHardware
     jc init_pci1_done
 ;
-    call StartHw
     call Config
+    call StartHw
 ;
     mov ax,25
     WaitMilliSec
@@ -6341,8 +6341,8 @@ io_pci2:
     call IoInitHardware
     jc init_pci2_done
 ;
-    call StartHw
     call Config
+    call StartHw
 ;
     mov ax,1
     WaitMilliSec
@@ -6419,8 +6419,8 @@ minit_pci2_next_base_ok:
     call MemFindHardware
     jc init_pci2_done
 ;
-    call StartHw
     call Config
+    call StartHw
 ;
     mov ax,1
     WaitMilliSec
