@@ -170,6 +170,13 @@ set_eri_bits  MACRO reg, bits
   DD bits
              ENDM
 
+modify_eri  MACRO reg, set, clear
+  DW 700h
+  DW reg
+  DD clear
+  DD set
+             ENDM
+
 RX_DESCR_COUNT = 256
 TX_DESCR_COUNT = 128
 
@@ -3704,6 +3711,17 @@ Start8168e2:
   ephy_init 19h, 00000h, 00224h
   ephy_init 0,   00000h, 00004h
   ephy_init 0Ch, 03DF0h, 00200h
+
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_1111, 00000h
+  write_eri 0C8h, ERIAR_MASK_1111, 100002h
+  write_eri 0E8h, ERIAR_MASK_1111, 100006h
+  set_eri_bits 01D0h, 2
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+  set_eri_bits 01B0h, 10h
+  write_eri 0CCh, ERIAR_MASK_1111, 000000050h
+  write_eri 0D0h, ERIAR_MASK_1111, 007FF0060h
   DW -1
 
 Start8168f1:
@@ -3735,6 +3753,14 @@ Start8411:
   DW -1
 
 Start8168g1:
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+  write_eri 02F8h, ERIAR_MASK_0011, 01D8Fh
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  modify_eri 2FCh, 1, 6
+  clear_eri_bits 01B0h, 1000h
+
   ephy_init 0,   00008h, 00000h
   ephy_init 0Ch, 03FF0h, 00820h
   ephy_init 1Eh, 00000h, 00001h
