@@ -3272,16 +3272,14 @@ Config8168h2:
   8168g_param 808Ah, 3Fh, 0Ah
   8168g_param 811h, 0, 800h
   modify_paged 0A42h, 16h, 0, 2
-  modify_paged 0A44h, 11h, 0, 800h
 
   call_proc Cond8168h2
 
-  modify_paged 0A43h, 10h, 4, 0
+  modify_paged 0A44h, 11h, 80h, 0
   ee_8168g
   DW -1
 
 Config8168ep2:
-  8168g_param 8012h, 0, 8000h
   modify_paged 0C42h, 11h, 2000h, 4000h
 
   8168g_param 80F3h, 0FF00h, 8B00h
@@ -3306,18 +3304,17 @@ Config8168ep2:
   8168g_param 80D5h, 0FF00h, 0CA00h
   8168g_param 80D7h, 0FF00h, 8400h
 
-  DW 01Fh,  00BCDh
-  DW 014h,  05065h
-  DW 014h,  0D065h
-  DW 01Fh,  00BC8h
-  DW 012h,  000EDh
-  DW 01Fh,  00BCDh
-  DW 014h,  01065h
-  DW 014h,  09065h
-  DW 014h,  01065h
-  DW 01Fh,  00000h
+  write 01Fh,  00BCDh
+  write 014h,  05065h
+  write 014h,  0D065h
+  write 01Fh,  00BC8h
+  write 012h,  000EDh
+  write 01Fh,  00BCDh
+  write 014h,  01065h
+  write 014h,  09065h
+  write 014h,  01065h
+  write 01Fh,  00000h
 
-  modify_paged 0A43h, 10h, 4, 0
   ee_8168g
   DW -1
 
@@ -3346,11 +3343,8 @@ Config8117:
   8168g_param 80B0h, 0FF00h, 9300h
 
   8168g_param 8011h, 0, 800h
-  modify_paged 0A44h, 11h, 0, 800h
-
   8168g_param 8016h, 0, 400h
 
-  modify_paged 0A43h, 10h, 4, 0
   ee_8168g
   DW -1
   
@@ -3359,10 +3353,10 @@ Config8102e:
   set_bits 19h, 2000h
   set_bits 10h, 8000h
 
-  DW 01Fh,  00003h
-  DW 008h,  0441Dh
-  DW 001h,  09100h
-  DW 01Fh,  00000h
+  write 01Fh,  00003h
+  write 008h,  0441Dh
+  write 001h,  09100h
+  write 01Fh,  00000h
   DW -1
 
 Config8401:
@@ -3381,19 +3375,19 @@ Config8105e:
 Config8402:
   call_proc ApplyFirmware
 
-  DW 01Fh,  00004h
-  DW 010h,  0401Fh
-  DW 019h,  07030h
-  DW 01Fh,  00000h
+  write 01Fh,  00004h
+  write 010h,  0401Fh
+  write 019h,  07030h
+  write 01Fh,  00000h
   DW -1
 
 Config8106e:
   call_proc ApplyFirmware
 
-  DW 01Fh,  00004h
-  DW 010h,  0C07Fh
-  DW 019h,  07030h
-  DW 01Fh,  00000h
+  write 01Fh,  00004h
+  write 010h,  0C07Fh
+  write 019h,  07030h
+  write 01Fh,  00000h
   DW -1
 
 Config8125:
@@ -3414,60 +3408,63 @@ Config8125a2:
   write_paged 0AC5h, 16h, 1FFh
   modify_paged 0AC8h, 15h, 0F0h, 30h
 
-  DW 01Fh,  00B87h
-  DW 016h,  080A2h
-  DW 017h,  00153h
-  DW 016h,  0809Ch
-  DW 017h,  00153h
-  DW 01Fh,  00000h
+  write 01Fh,  00B87h
+  write 016h,  080A2h
+  write 017h,  00153h
+  write 016h,  0809Ch
+  write 017h,  00153h
+  write 01Fh,  00000h
 
-  DW 01Fh,  00A43h
-  DW 013h,  0B1B3h
-  DW 014h,  00043h
-  DW 014h,  000A7h
-  DW 014h,  000D6h
-  DW 014h,  000ECh
-  DW 014h,  000F6h
-  DW 014h,  000FBh
-  DW 014h,  000FDh
-  DW 014h,  000FFh
-  DW 014h,  000BBh
-  DW 014h,  00058h
-  DW 014h,  00029h
-  DW 014h,  00013h
-  DW 014h,  00009h
-  DW 014h,  00004h
-  DW 014h,  00002h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 014h,  00000h
-  DW 01Fh,  00000h
+  write 01Fh,  00A43h
+  write 013h,  0B1B3h
+  write 014h,  00043h
+  write 014h,  000A7h
+  write 014h,  000D6h
+  write 014h,  000ECh
+  write 014h,  000F6h
+  write 014h,  000FBh
+  write 014h,  000FDh
+  write 014h,  000FFh
+  write 014h,  000BBh
+  write 014h,  00058h
+  write 014h,  00029h
+  write 014h,  00013h
+  write 014h,  00009h
+  write 014h,  00004h
+  write 014h,  00002h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 01Fh,  00000h
 
   8168g_param 8257h, 0FFFFh, 20Fh
   8168g_param 80EAh, 0FFFFh, 7843h
   call_proc ApplyFirmware
+
+  modify_paged 0D06h, 14h, 0, 2000h
+  8168g_param 81A2h, 0, 100h
 
   modify_paged 0B54h, 16h, 0FF00h, 0DB00h
   modify_paged 0A45h, 12h, 1, 0
@@ -3475,7 +3472,6 @@ Config8125a2:
   modify_paged 0AD4h, 17h, 10h, 0
   modify_paged 0A86h, 15h, 1, 0
 
-  modify_paged 0A44h, 11h, 0, 800h
   ee_8168g
   DW -1
 
@@ -3486,14 +3482,14 @@ Config8125b:
   modify_paged 0AC4h, 13h, 0F0h, 90h
   modify_paged 0AD3h, 10h, 3, 1
 
-  DW 01Fh,  00B87h
-  DW 016h,  080F5h
-  DW 017h,  0760Eh
-  DW 016h,  08107h
-  DW 017h,  0360Eh
-  DW 016h,  08551h
+  write 01Fh,  00B87h
+  write 016h,  080F5h
+  write 017h,  0760Eh
+  write 016h,  08107h
+  write 017h,  0360Eh
+  write 016h,  08551h
   modify 17h, 0FF00h, 800h
-  DW 01Fh,  00000h
+  write 01Fh,  00000h
 
   modify_paged 0BF0h, 10h, 0E000h, 0A000h
   modify_paged 0BF4h, 13h, 0F00h, 300h
