@@ -149,6 +149,27 @@ ephy_init  MACRO reg, mask, bits
   DW 500h + reg, mask, bits
              ENDM
 
+write_eri  MACRO reg, mask, val
+  DW 600h
+  DW reg
+  DD mask
+  DD val
+             ENDM
+
+clear_eri_bits  MACRO reg, bits
+  DW 700h
+  DW reg
+  DD bits
+  DD 0
+             ENDM
+
+set_eri_bits  MACRO reg, bits
+  DW 700h
+  DW reg
+  DD 0
+  DD bits
+             ENDM
+
 RX_DESCR_COUNT = 256
 TX_DESCR_COUNT = 128
 
@@ -2100,6 +2121,17 @@ IoReadEri   Proc near
     or ax,ERIAR_MASK_1111
     out dx,eax
 ;
+    xor cx,cx
+
+ioreWait:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz ioreDone
+;
+    loop ioreWait
+
+ioreDone:
     mov ax,1
     WaitMilliSec
 ;    
@@ -2132,6 +2164,17 @@ MemReadEri   Proc near
     or ax,ERIAR_MASK_1111
     mov fs:mem_eriar,eax
 ;
+    xor cx,cx
+
+mreWait:    
+    pause
+    mov eax,fs:mem_eriar
+    test eax,80000000h
+    jnz mreDone
+;
+    loop mreWait
+
+mreDone:
     mov ax,1
     WaitMilliSec
 ;    
@@ -2189,6 +2232,17 @@ IoWriteEri   Proc near
     or eax,ERIAR_WRITE_CMD
     out dx,eax
 ;
+    xor cx,cx
+
+ioweWait:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz ioweDone
+;
+    loop ioweWait
+
+ioweDone:
     mov ax,1
     WaitMilliSec
     ret
@@ -2217,6 +2271,17 @@ MemWriteEri   Proc near
     mov fs:mem_eriar,eax
     out dx,eax
 ;
+    xor cx,cx
+
+mweWait:    
+    pause
+    mov eax,fs:mem_eriar
+    test eax,80000000h
+    jz mweDone
+;
+    loop mweWait
+
+mweDone:
     mov ax,1
     WaitMilliSec
     ret
@@ -2361,6 +2426,12 @@ rtcLoop:
 ;
     cmp ah,5
     je rtcEphy
+;
+    cmp ah,6
+    je rtcSetEri
+;
+    cmp ah,7
+    je rtcModifyEri
 ;        
     jmp rtcDone
 
@@ -2410,6 +2481,27 @@ rtcEphy:
     or ax,cs:[si+4]
     call WriteEphy
     add si,6
+    jmp rtcLoop
+
+rtcSetEri:
+    mov bx,cs:[si+2]
+    mov ecx,cs:[si+4]
+    mov eax,cs:[si+8]
+    call WriteEri
+    add si,12
+    jmp rtcLoop
+
+rtcModifyEri:
+    mov bx,cs:[si+2]
+    call ReadEri
+;
+    mov ecx,cs:[si+4]
+    not ecx
+    and eax,ecx
+    or eax,cs:[si+8]
+    mov ecx,ERIAR_MASK_1111
+    call WriteEri
+    add si,12
     jmp rtcLoop
 
 rtcDone:
@@ -3615,6 +3707,17 @@ Start8168e2:
   DW -1
 
 Start8168f1:
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_1111, 00000h
+  write_eri 0C8h, ERIAR_MASK_1111, 100002h
+  write_eri 0E8h, ERIAR_MASK_1111, 100006h
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+  set_eri_bits 01B0h, 10h
+  set_eri_bits 01D0h, 12h
+  write_eri 0CCh, ERIAR_MASK_1111, 000000050h
+  write_eri 0D0h, ERIAR_MASK_1111, 000000060h
+
   ephy_init 6,   000C0h, 00020h
   ephy_init 8,   00001h, 00002h
   ephy_init 9,   00000h, 00080h
