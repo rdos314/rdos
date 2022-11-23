@@ -3416,18 +3416,14 @@ Config8401:
   DW -1
 
 Config8105e:
-  DW 018h,  00310h
-  wait_ms 100
   call_proc ApplyFirmware
 
   write_paged 5, 1Ah, 0
-  write_paged 3, 1Ch, 0
+  write_paged 4, 1Ch, 0
   write_paged 1, 15h, 7701h
   DW -1
 
 Config8402:
-  DW 018h,  00310h
-  wait_ms 20
   call_proc ApplyFirmware
 
   DW 01Fh,  00004h
@@ -3437,8 +3433,6 @@ Config8402:
   DW -1
 
 Config8106e:
-  DW 018h,  00310h
-  wait_ms 100
   call_proc ApplyFirmware
 
   DW 01Fh,  00004h
