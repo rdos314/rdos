@@ -32,68 +32,18 @@
  *  US6,570,884, US6,115,776, and US6,327,625.
  ***********************************************************************************/
 
-/*
- * This driver is modified from r8169.c in Linux kernel 2.6.18
- */
+#include "rdos.h"
+#include "rdosdev.h"
+#include "rtl8168.h"
 
-/* In Linux 5.4 asm_inline was introduced, but it's not supported by clang.
- * Redefine it to just asm to enable successful compilation.
- */
+/************************************************************************************
+ *  This is the RDOS adaptation part
+ ***********************************************************************************/
 
-#include <linux/module.h>
-#include <linux/version.h>
-#include <linux/pci.h>
-#include <linux/netdevice.h>
-#include <linux/etherdevice.h>
-#include <linux/delay.h>
-#include <linux/mii.h>
-#include <linux/if_vlan.h>
-#include <linux/crc32.h>
-#include <linux/interrupt.h>
-#include <linux/in.h>
-#include <linux/ip.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)
-#include <linux/ipv6.h>
-#include <net/ip6_checksum.h>
-#endif
-#include <linux/tcp.h>
-#include <linux/init.h>
-#include <linux/rtnetlink.h>
-#include <linux/completion.h>
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5,4,0)
-#include <linux/pci-aspm.h>
-#endif
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,37)
-#include <linux/prefetch.h>
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-#define dev_printk(A,B,fmt,args...) printk(A fmt,##args)
-#else
-#include <linux/dma-mapping.h>
-#include <linux/moduleparam.h>
-#endif
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31)
-#include <linux/mdio.h>
-#endif
-
-#include <asm/io.h>
-#include <asm/irq.h>
-
-#include "r8168.h"
-#include "r8168_asf.h"
-#include "rtl_eeprom.h"
-#include "rtltool.h"
-#include "r8168_firmware.h"
-
-#ifdef ENABLE_R8168_PROCFS
-#include <linux/proc_fs.h>
-#include <linux/seq_file.h>
-#endif
+/************************************************************************************
+ *  This is the Linux code part
+ ***********************************************************************************/
 
 #define FIRMWARE_8168D_1    "rtl_nic/rtl8168d-1.fw"
 #define FIRMWARE_8168D_2    "rtl_nic/rtl8168d-2.fw"
@@ -30268,5 +30218,7 @@ rtl8168_cleanup_module(void)
 #endif
 }
 
-module_init(rtl8168_init_module);
-module_exit(rtl8168_cleanup_module);
+
+/************************************************************************************
+ *  This is the RDOS initialization part
+ ***********************************************************************************/
