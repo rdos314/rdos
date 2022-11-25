@@ -34,16 +34,23 @@
 
 #include "rdos.h"
 #include "rdosdev.h"
-#include "rtl8168.h"
 
 /************************************************************************************
  *  This is the RDOS adaptation part
  ***********************************************************************************/
 
+#define u64 unsigned long long
+#define u32 unsigned int
+#define u16 unsigned short int
+#define u8 unsigned char
+
+#define spinlock_t struct TSpinlock
 
 /************************************************************************************
  *  This is the Linux code part
  ***********************************************************************************/
+
+#include "rtl8168.h"
 
 #define FIRMWARE_8168D_1    "rtl_nic/rtl8168d-1.fw"
 #define FIRMWARE_8168D_2    "rtl_nic/rtl8168d-2.fw"
