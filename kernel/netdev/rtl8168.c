@@ -44,7 +44,90 @@
 #define u16 unsigned short int
 #define u8 unsigned char
 
+#define ulong unsigned int
+
+#define PCI_VENDOR_ID_REALTEK 0x10ec
+#define PCI_VENDOR_ID_DLINK   0x1186
+#define PCI_ANY_ID (~0)
+
+#define SPEED_10		10
+#define SPEED_100		100
+#define SPEED_1000		1000
+#define SPEED_2500		2500
+#define SPEED_5000		5000
+#define SPEED_10000		10000
+#define SPEED_14000		14000
+#define SPEED_20000		20000
+#define SPEED_25000		25000
+#define SPEED_40000		40000
+#define SPEED_50000		50000
+#define SPEED_56000		56000
+#define SPEED_100000		100000
+#define SPEED_200000		200000
+#define SPEED_400000		400000
+
+#define DUPLEX_HALF		0x00
+#define DUPLEX_FULL		0x01
+#define DUPLEX_UNKNOWN		0xff
+
+enum ethtool_link_mode_bit_indices 
+{
+	ETHTOOL_LINK_MODE_10baseT_Half_BIT	= 0,
+	ETHTOOL_LINK_MODE_10baseT_Full_BIT	= 1,
+	ETHTOOL_LINK_MODE_100baseT_Half_BIT	= 2,
+	ETHTOOL_LINK_MODE_100baseT_Full_BIT	= 3,
+	ETHTOOL_LINK_MODE_1000baseT_Half_BIT	= 4,
+	ETHTOOL_LINK_MODE_1000baseT_Full_BIT	= 5,
+	ETHTOOL_LINK_MODE_Autoneg_BIT		= 6,
+	ETHTOOL_LINK_MODE_TP_BIT		= 7,
+	ETHTOOL_LINK_MODE_AUI_BIT		= 8,
+	ETHTOOL_LINK_MODE_MII_BIT		= 9,
+	ETHTOOL_LINK_MODE_FIBRE_BIT		= 10,
+	ETHTOOL_LINK_MODE_BNC_BIT		= 11,
+	ETHTOOL_LINK_MODE_10000baseT_Full_BIT	= 12
+};
+
+#define __ETHTOOL_LINK_MODE_LEGACY_MASK(base_name)	\
+	(1UL << (ETHTOOL_LINK_MODE_ ## base_name ## _BIT))
+
+#define SUPPORTED_10baseT_Half		__ETHTOOL_LINK_MODE_LEGACY_MASK(10baseT_Half)
+#define SUPPORTED_10baseT_Full		__ETHTOOL_LINK_MODE_LEGACY_MASK(10baseT_Full)
+#define SUPPORTED_100baseT_Half		__ETHTOOL_LINK_MODE_LEGACY_MASK(100baseT_Half)
+#define SUPPORTED_100baseT_Full		__ETHTOOL_LINK_MODE_LEGACY_MASK(100baseT_Full)
+#define SUPPORTED_1000baseT_Half	__ETHTOOL_LINK_MODE_LEGACY_MASK(1000baseT_Half)
+#define SUPPORTED_1000baseT_Full	__ETHTOOL_LINK_MODE_LEGACY_MASK(1000baseT_Full)
+#define SUPPORTED_Autoneg		__ETHTOOL_LINK_MODE_LEGACY_MASK(Autoneg)
+#define SUPPORTED_TP			__ETHTOOL_LINK_MODE_LEGACY_MASK(TP)
+#define SUPPORTED_AUI			__ETHTOOL_LINK_MODE_LEGACY_MASK(AUI)
+#define SUPPORTED_MII			__ETHTOOL_LINK_MODE_LEGACY_MASK(MII)
+#define SUPPORTED_FIBRE			__ETHTOOL_LINK_MODE_LEGACY_MASK(FIBRE)
+#define SUPPORTED_BNC			__ETHTOOL_LINK_MODE_LEGACY_MASK(BNC)
+#define SUPPORTED_10000baseT_Full	__ETHTOOL_LINK_MODE_LEGACY_MASK(10000baseT_Full)
+
+#define ADVERTISED_10baseT_Half		__ETHTOOL_LINK_MODE_LEGACY_MASK(10baseT_Half)
+#define ADVERTISED_10baseT_Full		__ETHTOOL_LINK_MODE_LEGACY_MASK(10baseT_Full)
+#define ADVERTISED_100baseT_Half	__ETHTOOL_LINK_MODE_LEGACY_MASK(100baseT_Half)
+#define ADVERTISED_100baseT_Full	__ETHTOOL_LINK_MODE_LEGACY_MASK(100baseT_Full)
+#define ADVERTISED_1000baseT_Half	__ETHTOOL_LINK_MODE_LEGACY_MASK(1000baseT_Half)
+#define ADVERTISED_1000baseT_Full	__ETHTOOL_LINK_MODE_LEGACY_MASK(1000baseT_Full)
+#define ADVERTISED_Autoneg		__ETHTOOL_LINK_MODE_LEGACY_MASK(Autoneg)
+#define ADVERTISED_TP			__ETHTOOL_LINK_MODE_LEGACY_MASK(TP)
+#define ADVERTISED_AUI			__ETHTOOL_LINK_MODE_LEGACY_MASK(AUI)
+#define ADVERTISED_MII			__ETHTOOL_LINK_MODE_LEGACY_MASK(MII)
+#define ADVERTISED_FIBRE		__ETHTOOL_LINK_MODE_LEGACY_MASK(FIBRE)
+#define ADVERTISED_BNC			__ETHTOOL_LINK_MODE_LEGACY_MASK(BNC)
+#define ADVERTISED_10000baseT_Full	__ETHTOOL_LINK_MODE_LEGACY_MASK(10000baseT_Full)
+
+
 #define spinlock_t struct TSpinlock
+
+struct pci_device_id 
+{
+  u32 vendor, device;		/* Vendor and device ID or PCI_ANY_ID*/
+  u32 subvendor, subdevice;	/* Subsystem ID's or PCI_ANY_ID */
+  u32 class, class_mask;	/* (class,subclass,prog-if) triplet */
+};
+
 
 /************************************************************************************
  *  This is the Linux code part
@@ -120,234 +203,6 @@ static const struct {
         [CFG_METHOD_DEFAULT] = {"Unknown",          },
 };
 
-#define _R(NAME,MAC,RCR,MASK, JumFrameSz) \
-    { .name = NAME, .mcfg = MAC, .RCR_Cfg = RCR, .RxConfigMask = MASK, .jumbo_frame_sz = JumFrameSz }
-
-static const struct {
-        const char *name;
-        u8 mcfg;
-        u32 RCR_Cfg;
-        u32 RxConfigMask;   /* Clears the bits supported by this chip */
-        u32 jumbo_frame_sz;
-} rtl_chip_info[] = {
-        _R("RTL8168B/8111B",
-        CFG_METHOD_1,
-        (Reserved2_data << Reserved2_shift) | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_4k),
-
-        _R("RTL8168B/8111B",
-        CFG_METHOD_2,
-        (Reserved2_data << Reserved2_shift) | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_4k),
-
-        _R("RTL8168B/8111B",
-        CFG_METHOD_3,
-        (Reserved2_data << Reserved2_shift) | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_4k),
-
-        _R("RTL8168C/8111C",
-        CFG_METHOD_4,
-        RxCfg_128_int_en | RxCfg_fet_multi_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_6k),
-
-        _R("RTL8168C/8111C",
-        CFG_METHOD_5,
-        RxCfg_128_int_en | RxCfg_fet_multi_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_6k),
-
-        _R("RTL8168C/8111C",
-        CFG_METHOD_6,
-        RxCfg_128_int_en | RxCfg_fet_multi_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_6k),
-
-        _R("RTL8168CP/8111CP",
-        CFG_METHOD_7,
-        RxCfg_128_int_en | RxCfg_fet_multi_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_6k),
-
-        _R("RTL8168CP/8111CP",
-        CFG_METHOD_8,
-        RxCfg_128_int_en | RxCfg_fet_multi_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_6k),
-
-        _R("RTL8168D/8111D",
-        CFG_METHOD_9,
-        RxCfg_128_int_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168D/8111D",
-        CFG_METHOD_10,
-        RxCfg_128_int_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168DP/8111DP",
-        CFG_METHOD_11,
-        RxCfg_128_int_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168DP/8111DP",
-        CFG_METHOD_12,
-        RxCfg_128_int_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168DP/8111DP",
-        CFG_METHOD_13,
-        RxCfg_128_int_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168E/8111E",
-        CFG_METHOD_14,
-        RxCfg_128_int_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168E/8111E",
-        CFG_METHOD_15,
-        RxCfg_128_int_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168E-VL/8111E-VL",
-        CFG_METHOD_16,
-        RxCfg_128_int_en | RxEarly_off_V1 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e0080,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168E-VL/8111E-VL",
-        CFG_METHOD_17,
-        RxCfg_128_int_en | RxEarly_off_V1 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168F/8111F",
-        CFG_METHOD_18,
-        RxCfg_128_int_en | RxEarly_off_V1 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168F/8111F",
-        CFG_METHOD_19,
-        RxCfg_128_int_en | RxEarly_off_V1 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8411",
-        CFG_METHOD_20,
-        RxCfg_128_int_en | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e1880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168G/8111G",
-        CFG_METHOD_21,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168G/8111G",
-        CFG_METHOD_22,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168EP/8111EP",
-        CFG_METHOD_23,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168GU/8111GU",
-        CFG_METHOD_24,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168GU/8111GU",
-        CFG_METHOD_25,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("8411B",
-        CFG_METHOD_26,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168EP/8111EP",
-        CFG_METHOD_27,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168EP/8111EP",
-        CFG_METHOD_28,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168H/8111H",
-        CFG_METHOD_29,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168H/8111H",
-        CFG_METHOD_30,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168FP/8111FP",
-        CFG_METHOD_31,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168FP/8111FP",
-        CFG_METHOD_32,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168FP/8111FP",
-        CFG_METHOD_33,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168FP/8111FP",
-        CFG_METHOD_34,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("RTL8168H/8111H",
-        CFG_METHOD_35,
-        RxCfg_128_int_en | RxEarly_off_V2 | Rx_Single_fetch_V2 | (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_9k),
-
-        _R("Unknown",
-        CFG_METHOD_DEFAULT,
-        (RX_DMA_BURST << RxCfgDMAShift),
-        0xff7e5880,
-        Jumbo_Frame_1k)
-};
-#undef _R
-
 #ifndef PCI_VENDOR_ID_DLINK
 #define PCI_VENDOR_ID_DLINK 0x1186
 #endif
@@ -360,8 +215,6 @@ static struct pci_device_id rtl8168_pci_tbl[] = {
         { PCI_VENDOR_ID_DLINK, 0x4300, 0x1186, 0x4b10,},
         {0,},
 };
-
-MODULE_DEVICE_TABLE(pci, rtl8168_pci_tbl);
 
 static int rx_copybreak = 0;
 static int use_dac = 1;
@@ -417,85 +270,6 @@ static int s0_magic_packet = 1;
 static int s0_magic_packet = 0;
 #endif
 
-MODULE_AUTHOR("Realtek and the Linux r8168 crew <netdev@vger.kernel.org>");
-MODULE_DESCRIPTION("RealTek RTL-8168 Gigabit Ethernet driver");
-
-module_param(speed_mode, uint, 0);
-MODULE_PARM_DESC(speed_mode, "force phy operation. Deprecated by ethtool (8).");
-
-module_param(duplex_mode, uint, 0);
-MODULE_PARM_DESC(duplex_mode, "force phy operation. Deprecated by ethtool (8).");
-
-module_param(autoneg_mode, uint, 0);
-MODULE_PARM_DESC(autoneg_mode, "force phy operation. Deprecated by ethtool (8).");
-
-module_param(advertising_mode, uint, 0);
-MODULE_PARM_DESC(advertising_mode, "force phy operation. Deprecated by ethtool (8).");
-
-module_param(aspm, int, 0);
-MODULE_PARM_DESC(aspm, "Enable ASPM.");
-
-module_param(dynamic_aspm, int, 0);
-MODULE_PARM_DESC(aspm, "Enable Software Dynamic ASPM.");
-
-module_param(s5wol, int, 0);
-MODULE_PARM_DESC(s5wol, "Enable Shutdown Wake On Lan.");
-
-module_param(s5_keep_curr_mac, int, 0);
-MODULE_PARM_DESC(s5_keep_curr_mac, "Enable Shutdown Keep Current MAC Address.");
-
-module_param(rx_copybreak, int, 0);
-MODULE_PARM_DESC(rx_copybreak, "Copy breakpoint for copy-only-tiny-frames");
-
-module_param(use_dac, int, 0);
-MODULE_PARM_DESC(use_dac, "Enable PCI DAC. Unsafe on 32 bit PCI slot.");
-
-module_param(timer_count, int, 0);
-MODULE_PARM_DESC(timer_count, "Timer Interrupt Interval.");
-
-module_param(eee_enable, int, 0);
-MODULE_PARM_DESC(eee_enable, "Enable Energy Efficient Ethernet.");
-
-module_param(hwoptimize, ulong, 0);
-MODULE_PARM_DESC(hwoptimize, "Enable HW optimization function.");
-
-module_param(s0_magic_packet, int, 0);
-MODULE_PARM_DESC(s0_magic_packet, "Enable S0 Magic Packet.");
-
-module_param(dynamic_aspm_packet_threshold, int, 0);
-MODULE_PARM_DESC(dynamic_aspm_packet_threshold, "Dynamic ASPM packet threshold.");
-
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,0)
-module_param_named(debug, debug.msg_enable, int, 0);
-MODULE_PARM_DESC(debug, "Debug verbosity level (0=none, ..., 16=all)");
-#endif//LINUX_VERSION_CODE > KERNEL_VERSION(2,6,0)
-
-MODULE_LICENSE("GPL");
-#ifdef ENABLE_USE_FIRMWARE_FILE
-MODULE_FIRMWARE(FIRMWARE_8168D_1);
-MODULE_FIRMWARE(FIRMWARE_8168D_2);
-MODULE_FIRMWARE(FIRMWARE_8168E_1);
-MODULE_FIRMWARE(FIRMWARE_8168E_2);
-MODULE_FIRMWARE(FIRMWARE_8168E_3);
-MODULE_FIRMWARE(FIRMWARE_8168E_4);
-MODULE_FIRMWARE(FIRMWARE_8168F_1);
-MODULE_FIRMWARE(FIRMWARE_8168F_2);
-MODULE_FIRMWARE(FIRMWARE_8411_1);
-MODULE_FIRMWARE(FIRMWARE_8411_2);
-MODULE_FIRMWARE(FIRMWARE_8168G_2);
-MODULE_FIRMWARE(FIRMWARE_8168G_3);
-MODULE_FIRMWARE(FIRMWARE_8168EP_1);
-MODULE_FIRMWARE(FIRMWARE_8168EP_2);
-MODULE_FIRMWARE(FIRMWARE_8168EP_3);
-MODULE_FIRMWARE(FIRMWARE_8168H_1);
-MODULE_FIRMWARE(FIRMWARE_8168H_2);
-MODULE_FIRMWARE(FIRMWARE_8168H_3);
-MODULE_FIRMWARE(FIRMWARE_8168FP_3);
-MODULE_FIRMWARE(FIRMWARE_8168FP_4);
-#endif
-
-MODULE_VERSION(RTL8168_VERSION);
-
 static void rtl8168_sleep_rx_enable(struct net_device *dev);
 static void rtl8168_dsm(struct net_device *dev, int dev_state);
 
@@ -513,14 +287,6 @@ static void rtl8168_tx_clear(struct rtl8168_private *tp);
 static void rtl8168_rx_clear(struct rtl8168_private *tp);
 
 static int rtl8168_open(struct net_device *dev);
-static netdev_tx_t rtl8168_start_xmit(struct sk_buff *skb, struct net_device *dev);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-static irqreturn_t rtl8168_interrupt(int irq, void *dev_instance, struct pt_regs *regs);
-#else
-static irqreturn_t rtl8168_interrupt(int irq, void *dev_instance);
-#endif
-static void rtl8168_rx_desc_offset0_init(struct rtl8168_private *, int);
-static int rtl8168_init_ring(struct net_device *dev);
 static void rtl8168_hw_config(struct net_device *dev);
 static void rtl8168_hw_start(struct net_device *dev);
 static int rtl8168_close(struct net_device *dev);
@@ -560,43 +326,6 @@ static int rtl8168_poll(napi_ptr napi, napi_budget budget);
 static void rtl8168_reset_task(void *_data);
 #else
 static void rtl8168_reset_task(struct work_struct *work);
-#endif
-
-static inline struct device *tp_to_dev(struct rtl8168_private *tp)
-{
-        return &tp->pci_dev->dev;
-}
-
-#if ((LINUX_VERSION_CODE < KERNEL_VERSION(4,7,0) && \
-     LINUX_VERSION_CODE >= KERNEL_VERSION(4,6,00)))
-void ethtool_convert_legacy_u32_to_link_mode(unsigned long *dst,
-                u32 legacy_u32)
-{
-        bitmap_zero(dst, __ETHTOOL_LINK_MODE_MASK_NBITS);
-        dst[0] = legacy_u32;
-}
-
-bool ethtool_convert_link_mode_to_legacy_u32(u32 *legacy_u32,
-                const unsigned long *src)
-{
-        bool retval = true;
-
-        /* TODO: following test will soon always be true */
-        if (__ETHTOOL_LINK_MODE_MASK_NBITS > 32) {
-                __ETHTOOL_DECLARE_LINK_MODE_MASK(ext);
-
-                bitmap_zero(ext, __ETHTOOL_LINK_MODE_MASK_NBITS);
-                bitmap_fill(ext, 32);
-                bitmap_complement(ext, ext, __ETHTOOL_LINK_MODE_MASK_NBITS);
-                if (bitmap_intersects(ext, src,
-                                      __ETHTOOL_LINK_MODE_MASK_NBITS)) {
-                        /* src mask goes beyond bit 31 */
-                        retval = false;
-                }
-        }
-        *legacy_u32 = src[0];
-        return retval;
-}
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)
