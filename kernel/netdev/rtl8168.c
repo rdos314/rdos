@@ -128,6 +128,12 @@ struct pci_device_id
   u32 class, class_mask;	/* (class,subclass,prog-if) triplet */
 };
 
+void RTL_W8(struct rtl8168_private *tp, u16 reg, u8 val8);
+void RTL_W16(struct rtl8168_private *tp, u16 reg, u16 val16);
+void RTL_W32(struct rtl8168_private *tp, u16 reg, u32 val32);
+u8 RTL_R8(struct rtl8168_private *tp, u16 reg);
+u16 RTL_R16(struct rtl8168_private *tp, u16 reg);
+u32 RTL_R32(struct rtl8168_private *tp, u16 reg);
 
 /************************************************************************************
  *  This is the Linux code part
@@ -1600,9 +1606,6 @@ static void mdio_real_direct_write_phy_ocp(struct rtl8168_private *tp,
         if (tp->HwSuppPhyOcpVer == 0)
                 goto out;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
-        WARN_ON_ONCE(RegAddr % 2);
-#endif
         data32 = RegAddr/2;
         data32 <<= OCPR_Addr_Reg_shift;
         data32 |= OCPR_Write | value;

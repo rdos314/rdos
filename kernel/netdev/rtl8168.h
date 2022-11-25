@@ -435,14 +435,6 @@ This is free software, and you are welcome to redistribute it under certain cond
 
 #define RTK_MAGIC_DEBUG_VALUE 0x0badbeef
 
-/* write/read MMIO register */
-#define RTL_W8(tp, reg, val8)	writeb((val8), tp->mmio_addr + (reg))
-#define RTL_W16(tp, reg, val16)	writew((val16), tp->mmio_addr + (reg))
-#define RTL_W32(tp, reg, val32)	writel((val32), tp->mmio_addr + (reg))
-#define RTL_R8(tp, reg)		readb(tp->mmio_addr + (reg))
-#define RTL_R16(tp, reg)		readw(tp->mmio_addr + (reg))
-#define RTL_R32(tp, reg)		((unsigned long) readl(tp->mmio_addr + (reg)))
-
 #ifndef DMA_64BIT_MASK
 #define DMA_64BIT_MASK  0xffffffffffffffffULL
 #endif
