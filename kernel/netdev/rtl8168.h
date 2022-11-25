@@ -78,31 +78,6 @@ static inline bool pm_runtime_active(struct device *dev)
                || dev->power.disable_depth;
 }
 #endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)
-#define queue_delayed_work(long_wq, work, delay)	schedule_delayed_work(work, delay)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
-#define netif_printk(priv, type, level, netdev, fmt, args...)	\
-	do {								\
-		if (netif_msg_##type(priv))				\
-			printk(level "%s: " fmt,(netdev)->name , ##args); \
-	} while (0)
-
-#define netif_emerg(priv, type, netdev, fmt, args...)		\
-		netif_printk(priv, type, KERN_EMERG, netdev, fmt, ##args)
-#define netif_alert(priv, type, netdev, fmt, args...)		\
-		netif_printk(priv, type, KERN_ALERT, netdev, fmt, ##args)
-#define netif_crit(priv, type, netdev, fmt, args...)		\
-		netif_printk(priv, type, KERN_CRIT, netdev, fmt, ##args)
-#define netif_err(priv, type, netdev, fmt, args...)		\
-		netif_printk(priv, type, KERN_ERR, netdev, fmt, ##args)
-#define netif_warn(priv, type, netdev, fmt, args...)		\
-		netif_printk(priv, type, KERN_WARNING, netdev, fmt, ##args)
-#define netif_notice(priv, type, netdev, fmt, args...)		\
-		netif_printk(priv, type, KERN_NOTICE, netdev, fmt, ##args)
-#define netif_info(priv, type, netdev, fmt, args...)		\
-		netif_printk(priv, type, KERN_INFO, (netdev), fmt, ##args)
-#endif
-#endif
 #endif
 #endif
 #endif
@@ -208,10 +183,6 @@ do { \
 
 #ifndef dma_mapping_error
 #define dma_mapping_error(a,b) 0
-#endif
-
-#ifndef netif_err
-#define netif_err(a,b,c,d)
 #endif
 
 #ifndef AUTONEG_DISABLE
@@ -1154,7 +1125,7 @@ enum rtl8168_fc_mode {
 struct rtl8168_private {
         void *mmio_addr;    /* memory map physical address */
         struct pci_dev *pci_dev;    /* Index of PCI device */
-//        struct net_device *dev;
+        struct net_device *dev;
 //        struct net_device_stats stats;  /* statistics of net device */
         spinlock_t lock;        /* spin lock flag */
         u32 msg_enable;

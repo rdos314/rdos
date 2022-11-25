@@ -300,6 +300,7 @@ u32 RTL_R32(struct rtl8168_private *tp, u16 reg);
 void udelay(u16 us);
 void mdelay(u32 ms);
 
+static int drv = 0;
 
 static struct rtl8168_private *netdev_priv(const struct net_device *dev)
 {
@@ -317,6 +318,14 @@ static int test_bit(int nr, unsigned const long *addr)
 		return 0;
 }
 
+static void netif_err(const struct rtl8168_private *tp, int type, const struct net_device *dev, const char *format, ...)
+{
+}
+
+static void dprintk(const char *msg)
+{
+}
+
 static bool netif_carrier_ok(const struct net_device *dev)
 {
 	return !test_bit(__LINK_STATE_NOCARRIER, &dev->state);
@@ -325,10 +334,6 @@ static bool netif_carrier_ok(const struct net_device *dev)
 static bool netif_running(const struct net_device *dev)
 {
 	return test_bit(__LINK_STATE_START, &dev->state);
-}
-
-static void dprintk(const char *msg)
-{
 }
 
 
@@ -4773,30 +4778,6 @@ static u8 rtl8168_efuse_read(struct rtl8168_private *tp, u16 reg)
         return efuse_data;
 }
 
-static void
-rtl8168_tally_counter_addr_fill(struct rtl8168_private *tp)
-{
-        if (!tp->tally_paddr)
-                return;
-
-        RTL_W32(tp, CounterAddrHigh, (u64)tp->tally_paddr >> 32);
-        RTL_W32(tp, CounterAddrLow, (u64)tp->tally_paddr & (DMA_BIT_MASK(32)));
-}
-
-static void
-rtl8168_tally_counter_clear(struct rtl8168_private *tp)
-{
-        if (tp->mcfg == CFG_METHOD_1 || tp->mcfg == CFG_METHOD_2 ||
-            tp->mcfg == CFG_METHOD_3 )
-                return;
-
-        if (!tp->tally_paddr)
-                return;
-
-        RTL_W32(tp, CounterAddrHigh, (u64)tp->tally_paddr >> 32);
-        RTL_W32(tp, CounterAddrLow, ((u64)tp->tally_paddr & (DMA_BIT_MASK(32))) | CounterReset);
-}
-
 static
 u16
 rtl8168_get_phy_state(struct rtl8168_private *tp)
@@ -4842,10 +4823,6 @@ rtl8168_wait_phy_state_ready(struct rtl8168_private *tp,
         } while ((i < WaitCount) && (TmpPhyState != PhyState));
 
         PhyStateReady = (i == WaitCount && TmpPhyState != PhyState) ? FALSE : TRUE;
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
-        WARN_ON_ONCE(i == WaitCount);
-#endif
 
 exit:
         return PhyStateReady;
@@ -23840,8 +23817,6 @@ rtl8168_init_one(struct pci_dev *pdev,
                 goto err_out;
         }
 
-        rtl8168_tally_counter_clear(tp);
-
         pci_set_drvdata(pdev, dev);
 
         rc = register_netdev(dev);
@@ -24308,8 +24283,6 @@ rtl8168_hw_config(struct net_device *dev)
                 tp->cp_cmd &= ~PktCntrDisable;
 
         RTL_W16(tp, IntrMitigate, 0x5f51);
-
-        rtl8168_tally_counter_addr_fill(tp);
 
         rtl8168_desc_addr_fill(tp);
 
