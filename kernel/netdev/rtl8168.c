@@ -44,6 +44,7 @@
 #define u16 unsigned short int
 #define u8 unsigned char
 
+#define bool int
 #define ulong unsigned int
 
 #define PCI_VENDOR_ID_REALTEK 0x10ec
@@ -69,6 +70,8 @@
 #define DUPLEX_HALF		0x00
 #define DUPLEX_FULL		0x01
 #define DUPLEX_UNKNOWN		0xff
+
+#define NO_BASE_ADDRESS 0x00000000
 
 enum ethtool_link_mode_bit_indices 
 {
@@ -118,6 +121,115 @@ enum ethtool_link_mode_bit_indices
 #define ADVERTISED_BNC			__ETHTOOL_LINK_MODE_LEGACY_MASK(BNC)
 #define ADVERTISED_10000baseT_Full	__ETHTOOL_LINK_MODE_LEGACY_MASK(10000baseT_Full)
 
+#define MII_BMCR		0x00	/* Basic mode control register */
+#define MII_BMSR		0x01	/* Basic mode status register  */
+#define MII_PHYSID1		0x02	/* PHYS ID 1                   */
+#define MII_PHYSID2		0x03	/* PHYS ID 2                   */
+#define MII_ADVERTISE		0x04	/* Advertisement control reg   */
+#define MII_LPA			0x05	/* Link partner ability reg    */
+#define MII_EXPANSION		0x06	/* Expansion register          */
+#define MII_CTRL1000		0x09	/* 1000BASE-T control          */
+#define MII_STAT1000		0x0a	/* 1000BASE-T status           */
+#define	MII_MMD_CTRL		0x0d	/* MMD Access Control Register */
+#define	MII_MMD_DATA		0x0e	/* MMD Access Data Register */
+#define MII_ESTATUS		0x0f	/* Extended Status             */
+#define MII_DCOUNTER		0x12	/* Disconnect counter          */
+#define MII_FCSCOUNTER		0x13	/* False carrier counter       */
+#define MII_NWAYTEST		0x14	/* N-way auto-neg test reg     */
+#define MII_RERRCOUNTER		0x15	/* Receive error counter       */
+#define MII_SREVISION		0x16	/* Silicon revision            */
+#define MII_RESV1		0x17	/* Reserved...                 */
+#define MII_LBRERROR		0x18	/* Lpback, rx, bypass error    */
+#define MII_PHYADDR		0x19	/* PHY address                 */
+#define MII_RESV2		0x1a	/* Reserved...                 */
+#define MII_TPISTATUS		0x1b	/* TPI status for 10mbps       */
+#define MII_NCONFIG		0x1c	/* Network interface config    */
+
+#define BMCR_RESV		0x003f	/* Unused...                   */
+#define BMCR_SPEED1000		0x0040	/* MSB of Speed (1000)         */
+#define BMCR_CTST		0x0080	/* Collision test              */
+#define BMCR_FULLDPLX		0x0100	/* Full duplex                 */
+#define BMCR_ANRESTART		0x0200	/* Auto negotiation restart    */
+#define BMCR_ISOLATE		0x0400	/* Isolate data paths from MII */
+#define BMCR_PDOWN		0x0800	/* Enable low power state      */
+#define BMCR_ANENABLE		0x1000	/* Enable auto negotiation     */
+#define BMCR_SPEED100		0x2000	/* Select 100Mbps              */
+#define BMCR_LOOPBACK		0x4000	/* TXD loopback bits           */
+#define BMCR_RESET		0x8000	/* Reset to default state      */
+
+#define BMSR_ERCAP		0x0001	/* Ext-reg capability          */
+#define BMSR_JCD		0x0002	/* Jabber detected             */
+#define BMSR_LSTATUS		0x0004	/* Link status                 */
+#define BMSR_ANEGCAPABLE	0x0008	/* Able to do auto-negotiation */
+#define BMSR_RFAULT		0x0010	/* Remote fault detected       */
+#define BMSR_ANEGCOMPLETE	0x0020	/* Auto-negotiation complete   */
+#define BMSR_RESV		0x00c0	/* Unused...                   */
+#define BMSR_ESTATEN		0x0100	/* Extended Status in R15      */
+#define BMSR_100HALF2		0x0200	/* Can do 100BASE-T2 HDX       */
+#define BMSR_100FULL2		0x0400	/* Can do 100BASE-T2 FDX       */
+#define BMSR_10HALF		0x0800	/* Can do 10mbps, half-duplex  */
+#define BMSR_10FULL		0x1000	/* Can do 10mbps, full-duplex  */
+#define BMSR_100HALF		0x2000	/* Can do 100mbps, half-duplex */
+#define BMSR_100FULL		0x4000	/* Can do 100mbps, full-duplex */
+#define BMSR_100BASE4		0x8000	/* Can do 100mbps, 4k packets  */
+
+#define ADVERTISE_SLCT		0x001f	/* Selector bits               */
+#define ADVERTISE_CSMA		0x0001	/* Only selector supported     */
+#define ADVERTISE_10HALF	0x0020	/* Try for 10mbps half-duplex  */
+#define ADVERTISE_1000XFULL	0x0020	/* Try for 1000BASE-X full-duplex */
+#define ADVERTISE_10FULL	0x0040	/* Try for 10mbps full-duplex  */
+#define ADVERTISE_1000XHALF	0x0040	/* Try for 1000BASE-X half-duplex */
+#define ADVERTISE_100HALF	0x0080	/* Try for 100mbps half-duplex */
+#define ADVERTISE_1000XPAUSE	0x0080	/* Try for 1000BASE-X pause    */
+#define ADVERTISE_100FULL	0x0100	/* Try for 100mbps full-duplex */
+#define ADVERTISE_1000XPSE_ASYM	0x0100	/* Try for 1000BASE-X asym pause */
+#define ADVERTISE_100BASE4	0x0200	/* Try for 100mbps 4k packets  */
+#define ADVERTISE_PAUSE_CAP	0x0400	/* Try for pause               */
+#define ADVERTISE_PAUSE_ASYM	0x0800	/* Try for asymetric pause     */
+#define ADVERTISE_RESV		0x1000	/* Unused...                   */
+#define ADVERTISE_RFAULT	0x2000	/* Say we can detect faults    */
+#define ADVERTISE_LPACK		0x4000	/* Ack link partners response  */
+#define ADVERTISE_NPAGE		0x8000	/* Next page bit               */
+
+#define ADVERTISE_FULL		(ADVERTISE_100FULL | ADVERTISE_10FULL | \
+				  ADVERTISE_CSMA)
+#define ADVERTISE_ALL		(ADVERTISE_10HALF | ADVERTISE_10FULL | \
+				  ADVERTISE_100HALF | ADVERTISE_100FULL)
+
+enum {
+	NETIF_MSG_DRV		= 0x0001,
+	NETIF_MSG_PROBE		= 0x0002,
+	NETIF_MSG_LINK		= 0x0004,
+	NETIF_MSG_TIMER		= 0x0008,
+	NETIF_MSG_IFDOWN	= 0x0010,
+	NETIF_MSG_IFUP		= 0x0020,
+	NETIF_MSG_RX_ERR	= 0x0040,
+	NETIF_MSG_TX_ERR	= 0x0080,
+	NETIF_MSG_TX_QUEUED	= 0x0100,
+	NETIF_MSG_INTR		= 0x0200,
+	NETIF_MSG_TX_DONE	= 0x0400,
+	NETIF_MSG_RX_STATUS	= 0x0800,
+	NETIF_MSG_PKTDATA	= 0x1000,
+	NETIF_MSG_HW		= 0x2000,
+	NETIF_MSG_WOL		= 0x4000,
+};
+
+#define netif_msg_drv(p)	((p)->msg_enable & NETIF_MSG_DRV)
+#define netif_msg_probe(p)	((p)->msg_enable & NETIF_MSG_PROBE)
+#define netif_msg_link(p)	((p)->msg_enable & NETIF_MSG_LINK)
+#define netif_msg_timer(p)	((p)->msg_enable & NETIF_MSG_TIMER)
+#define netif_msg_ifdown(p)	((p)->msg_enable & NETIF_MSG_IFDOWN)
+#define netif_msg_ifup(p)	((p)->msg_enable & NETIF_MSG_IFUP)
+#define netif_msg_rx_err(p)	((p)->msg_enable & NETIF_MSG_RX_ERR)
+#define netif_msg_tx_err(p)	((p)->msg_enable & NETIF_MSG_TX_ERR)
+#define netif_msg_tx_queued(p)	((p)->msg_enable & NETIF_MSG_TX_QUEUED)
+#define netif_msg_intr(p)	((p)->msg_enable & NETIF_MSG_INTR)
+#define netif_msg_tx_done(p)	((p)->msg_enable & NETIF_MSG_TX_DONE)
+#define netif_msg_rx_status(p)	((p)->msg_enable & NETIF_MSG_RX_STATUS)
+#define netif_msg_pktdata(p)	((p)->msg_enable & NETIF_MSG_PKTDATA)
+#define netif_msg_hw(p)		((p)->msg_enable & NETIF_MSG_HW)
+#define netif_msg_wol(p)	((p)->msg_enable & NETIF_MSG_WOL)
+
 #define spinlock_t struct TSpinlock
 
 struct pci_device_id 
@@ -137,8 +249,13 @@ struct pci_dev
   u8		 revision;	/* PCI revision, low byte of class word */
 };
 
-int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val);
+struct net_device 
+{
+  struct rtl8168_private *tp;
+};
 
+int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val);
+int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val);
 
 void RTL_W8(struct rtl8168_private *tp, u16 reg, u8 val8);
 void RTL_W16(struct rtl8168_private *tp, u16 reg, u16 val16);
@@ -149,6 +266,16 @@ u32 RTL_R32(struct rtl8168_private *tp, u16 reg);
 
 void udelay(u16 us);
 void mdelay(u16 ms);
+
+
+static struct rtl8168_private *netdev_priv(const struct net_device *dev)
+{
+    return dev->tp;
+}
+
+static dprintk(const char *msg)
+{
+}
 
 /************************************************************************************
  *  This is the Linux code part
@@ -2970,92 +3097,10 @@ static void rtl8168_driver_start(struct rtl8168_private *tp)
                 rtl8168_set_dash_other_fun_dev_state_change(tp, 3, 0xFC);
                 break;
         }
-
-        if (!tp->DASH)
-                return;
-
-        if (HW_DASH_SUPPORT_TYPE_2(tp) || HW_DASH_SUPPORT_TYPE_3(tp)) {
-                int timeout;
-                u32 tmp_value;
-
-                rtl8168_ocp_write(tp, 0x180, 1, OOB_CMD_DRIVER_START);
-                tmp_value = rtl8168_ocp_read(tp, 0x30, 1);
-                tmp_value |= BIT_0;
-                rtl8168_ocp_write(tp, 0x30, 1, tmp_value);
-
-                for (timeout = 0; timeout < 10; timeout++) {
-                        mdelay(10);
-                        if (rtl8168_ocp_read(tp, 0x124, 1) & BIT_0)
-                                break;
-                }
-        } else {
-                int timeout;
-                u32 reg;
-
-                if (tp->mcfg == CFG_METHOD_13) {
-                        RTL_W8(tp, TwiCmdReg, RTL_R8(tp, TwiCmdReg) | ( BIT_7 ));
-                }
-
-                rtl8168_oob_notify(tp, OOB_CMD_DRIVER_START);
-
-                if (tp->mcfg == CFG_METHOD_13)
-                        reg = 0xB8;
-                else
-                        reg = 0x10;
-
-                for (timeout = 0; timeout < 10; timeout++) {
-                        mdelay(10);
-                        if (rtl8168_ocp_read(tp, reg, 2) & BIT_11)
-                                break;
-                }
-        }
 }
 
 static void rtl8168_driver_stop(struct rtl8168_private *tp)
 {
-        if (!tp->DASH)
-                goto update_device_state;
-
-        if (HW_DASH_SUPPORT_TYPE_2(tp) || HW_DASH_SUPPORT_TYPE_3(tp)) {
-                struct net_device *dev = tp->dev;
-                int timeout;
-                u32 tmp_value;
-
-                rtl8168_dash2_disable_txrx(dev);
-
-                rtl8168_ocp_write(tp, 0x180, 1, OOB_CMD_DRIVER_STOP);
-                tmp_value = rtl8168_ocp_read(tp, 0x30, 1);
-                tmp_value |= BIT_0;
-                rtl8168_ocp_write(tp, 0x30, 1, tmp_value);
-
-                for (timeout = 0; timeout < 10; timeout++) {
-                        mdelay(10);
-                        if (!(rtl8168_ocp_read(tp, 0x124, 1) & BIT_0))
-                                break;
-                }
-        } else {
-                int timeout;
-                u32 reg;
-
-                rtl8168_oob_notify(tp, OOB_CMD_DRIVER_STOP);
-
-                if (tp->mcfg == CFG_METHOD_13)
-                        reg = 0xB8;
-                else
-                        reg = 0x10;
-
-                for (timeout = 0; timeout < 10; timeout++) {
-                        mdelay(10);
-                        if ((rtl8168_ocp_read(tp, reg, 2) & BIT_11) == 0)
-                                break;
-                }
-
-                if (tp->mcfg == CFG_METHOD_13) {
-                        RTL_W8(tp, TwiCmdReg, RTL_R8(tp, TwiCmdReg) & ~( BIT_7 ));
-                }
-        }
-
-update_device_state:
         //change other device state to D3.
         switch (tp->mcfg) {
         case CFG_METHOD_23:
@@ -3323,96 +3368,6 @@ rtl8168_hw_reset(struct net_device *dev)
 
 static void rtl8168_mac_loopback_test(struct rtl8168_private *tp)
 {
-        struct pci_dev *pdev = tp->pci_dev;
-        struct net_device *dev = tp->dev;
-        struct sk_buff *skb, *rx_skb;
-        dma_addr_t mapping;
-        struct TxDesc *txd;
-        struct RxDesc *rxd;
-        void *tmpAddr;
-        u32 len, rx_len, rx_cmd = 0;
-        u16 type;
-        u8 pattern;
-        int i;
-
-        if (tp->DASH)
-                return;
-
-        pattern = 0x5A;
-        len = 60;
-        type = htons(ETH_P_IP);
-        txd = tp->TxDescArray;
-        rxd = tp->RxDescArray;
-        rx_skb = tp->Rx_skbuff[0];
-        RTL_W32(tp, TxConfig, (RTL_R32(tp, TxConfig) & ~0x00060000) | 0x00020000);
-
-        do {
-                skb = dev_alloc_skb(len + RTK_RX_ALIGN);
-                if (unlikely(!skb))
-                        dev_printk(KERN_NOTICE, tp_to_dev(tp), "-ENOMEM;\n");
-        } while (unlikely(skb == NULL));
-        skb_reserve(skb, RTK_RX_ALIGN);
-
-        memcpy(skb_put(skb, dev->addr_len), dev->dev_addr, dev->addr_len);
-        memcpy(skb_put(skb, dev->addr_len), dev->dev_addr, dev->addr_len);
-        memcpy(skb_put(skb, sizeof(type)), &type, sizeof(type));
-        tmpAddr = skb_put(skb, len - 14);
-
-        mapping = dma_map_single(tp_to_dev(tp), skb->data, len, DMA_TO_DEVICE);
-        dma_sync_single_for_cpu(tp_to_dev(tp), le64_to_cpu(mapping),
-                                len, DMA_TO_DEVICE);
-        txd->addr = cpu_to_le64(mapping);
-        txd->opts2 = 0;
-        while (1) {
-                memset(tmpAddr, pattern++, len - 14);
-                dma_sync_single_for_device(&tp->pci_dev->dev,
-                                           le64_to_cpu(mapping),
-                                           len, DMA_TO_DEVICE);
-                txd->opts1 = cpu_to_le32(DescOwn | FirstFrag | LastFrag | len);
-
-                RTL_W32(tp, RxConfig, RTL_R32(tp, RxConfig)  | AcceptMyPhys);
-
-                smp_wmb();
-                RTL_W8(tp, TxPoll, NPQ);    /* set polling bit */
-
-                for (i = 0; i < 50; i++) {
-                        udelay(200);
-                        rx_cmd = le32_to_cpu(rxd->opts1);
-                        if ((rx_cmd & DescOwn) == 0)
-                                break;
-                }
-
-                RTL_W32(tp, RxConfig, RTL_R32(tp, RxConfig) & ~(AcceptErr | AcceptRunt | AcceptBroadcast | AcceptMulticast | AcceptMyPhys |  AcceptAllPhys));
-
-                rx_len = rx_cmd & 0x3FFF;
-                rx_len -= 4;
-                rxd->opts1 = cpu_to_le32(DescOwn | tp->rx_buf_sz);
-
-                dma_sync_single_for_cpu(tp_to_dev(tp), le64_to_cpu(mapping), len, DMA_TO_DEVICE);
-
-                if (rx_len == len) {
-                        dma_sync_single_for_cpu(tp_to_dev(tp), le64_to_cpu(rxd->addr), tp->rx_buf_sz, DMA_FROM_DEVICE);
-                        i = memcmp(skb->data, rx_skb->data, rx_len);
-                        dma_sync_single_for_device(&tp->pci_dev->dev, le64_to_cpu(rxd->addr), tp->rx_buf_sz, DMA_FROM_DEVICE);
-                        if (i == 0) {
-//              dev_printk(KERN_INFO, tp_to_dev(tp), "loopback test finished\n",rx_len,len);
-                                break;
-                        }
-                }
-
-                rtl8168_hw_reset(dev);
-                rtl8168_disable_rxdvgate(dev);
-                RTL_W8(tp, ChipCmd, CmdTxEnb | CmdRxEnb);
-        }
-        tp->dirty_tx++;
-        tp->dirty_rx++;
-        tp->cur_tx++;
-        tp->cur_rx++;
-        dma_unmap_single(&pdev->dev, le64_to_cpu(mapping),
-                         len, DMA_TO_DEVICE);
-        RTL_W32(tp, TxConfig, RTL_R32(tp, TxConfig) & ~0x00060000);
-        dev_kfree_skb_any(skb);
-        RTL_W16(tp, IntrStatus, 0xFFBF);
 }
 
 static unsigned int
@@ -3473,8 +3428,7 @@ rtl8168_xmii_reset_enable(struct net_device *dev)
         if (rtl8168_wait_phy_reset_complete(tp) == 0)
                 return;
 
-        if (netif_msg_link(tp))
-                printk(KERN_ERR "%s: PHY reset failed.\n", dev->name);
+        netif_msg_link(tp);
 }
 
 static void
@@ -3568,7 +3522,21 @@ rtl8168_enable_exit_l1_mask(struct rtl8168_private *tp)
                 csi_tmp |= (BIT_10 | BIT_11);
                 rtl8168_eri_write(tp, 0xD4, 4, csi_tmp, ERIAR_ExGMAC);
                 break;
-        case CFG_METHOD_21 ... CFG_METHOD_35:
+        case CFG_METHOD_21:
+        case CFG_METHOD_22:
+        case CFG_METHOD_23:
+        case CFG_METHOD_24:
+        case CFG_METHOD_25:
+        case CFG_METHOD_26:
+        case CFG_METHOD_27:
+        case CFG_METHOD_28:
+        case CFG_METHOD_29:
+        case CFG_METHOD_30:
+        case CFG_METHOD_31:
+        case CFG_METHOD_32:
+        case CFG_METHOD_33:
+        case CFG_METHOD_34:
+        case CFG_METHOD_35:
                 csi_tmp = rtl8168_eri_read(tp, 0xD4, 4, ERIAR_ExGMAC);
                 csi_tmp |= (BIT_7 | BIT_8 | BIT_9 | BIT_10 | BIT_11 | BIT_12);
                 rtl8168_eri_write(tp, 0xD4, 4, csi_tmp, ERIAR_ExGMAC);
@@ -3595,7 +3563,21 @@ rtl8168_disable_exit_l1_mask(struct rtl8168_private *tp)
                 csi_tmp &= ~(BIT_10 | BIT_11);
                 rtl8168_eri_write(tp, 0xD4, 4, csi_tmp, ERIAR_ExGMAC);
                 break;
-        case CFG_METHOD_21 ... CFG_METHOD_35:
+        case CFG_METHOD_21:
+        case CFG_METHOD_22:
+        case CFG_METHOD_23:
+        case CFG_METHOD_24:
+        case CFG_METHOD_25:
+        case CFG_METHOD_26:
+        case CFG_METHOD_27:
+        case CFG_METHOD_28:
+        case CFG_METHOD_29:
+        case CFG_METHOD_30:
+        case CFG_METHOD_31:
+        case CFG_METHOD_32:
+        case CFG_METHOD_33:
+        case CFG_METHOD_34:
+        case CFG_METHOD_35:
                 csi_tmp = rtl8168_eri_read(tp, 0xD4, 4, ERIAR_ExGMAC);
                 csi_tmp &= ~(BIT_7 | BIT_8 | BIT_9 | BIT_10 | BIT_11 | BIT_12);
                 rtl8168_eri_write(tp, 0xD4, 4, csi_tmp, ERIAR_ExGMAC);
@@ -3606,18 +3588,6 @@ rtl8168_disable_exit_l1_mask(struct rtl8168_private *tp)
 static void
 rtl8168_hw_aspm_clkreq_enable(struct rtl8168_private *tp, bool enable)
 {
-        if (!tp->HwSuppAspmClkIntrLock)
-                return;
-
-        if (enable && aspm) {
-                RTL_W8(tp, Config5, RTL_R8(tp, Config5) | ASPM_en);
-                RTL_W8(tp, Config2, RTL_R8(tp, Config2) | ClkReqEn);
-        } else {
-                RTL_W8(tp, Config2, RTL_R8(tp, Config2) & ~ClkReqEn);
-                RTL_W8(tp, Config5, RTL_R8(tp, Config5) & ~ASPM_en);
-        }
-
-        udelay(10);
 }
 
 #ifdef ENABLE_DASH_SUPPORT
