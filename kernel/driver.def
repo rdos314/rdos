@@ -520,6 +520,10 @@ vfs_data_sel        EQU 0C78h
 usb_vfs_code_sel    EQU 0C80h
 usb_vfs_data_sel    EQU 0C88h
 
+alt_ether_code_sel  EQU 0C90h
+alt_ether_data_sel  EQU 0C98h
+
+
 debug_dev32_code_sel    EQU 0EF0h
 debug_dev32_data_sel    EQU 0EF8h
 
