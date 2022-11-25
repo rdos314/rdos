@@ -207,6 +207,8 @@ enum ethtool_link_mode_bit_indices
 #define	EINVAL		22	/* Invalid argument */
 #define	EOPNOTSUPP	95	/* Operation not supported on transport endpoint */
 
+#define ARRAY_SIZE(ARRAY) (sizeof(ARRAY)/sizeof((ARRAY)[0]))
+
 enum {
 	NETIF_MSG_DRV		= 0x0001,
 	NETIF_MSG_PROBE		= 0x0002,
@@ -5057,9 +5059,6 @@ rtl8168_wait_phy_ups_resume(struct net_device *dev, u16 PhyState)
                 i++;
         } while ((i < 100) && (TmpPhyState != PhyState));
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
-        WARN_ON_ONCE(i == 100);
-#endif
 }
 
 void
@@ -5106,14 +5105,6 @@ rtl8168_exit_oob(struct net_device *dev)
                 if (tp->HwSuppSerDesPhyVer == 1) {
                         rtl8168_switch_to_sgmii_mode(tp);
                 }
-        }
-
-        if (HW_DASH_SUPPORT_DASH(tp)) {
-                rtl8168_driver_start(tp);
-                rtl8168_dash2_disable_txrx(dev);
-#ifdef ENABLE_DASH_SUPPORT
-                DashHwInit(dev);
-#endif
         }
 
         //Disable realwow  function
@@ -6721,37 +6712,6 @@ rtl8168_hw_mac_mcu_config(struct net_device *dev)
 }
 #endif
 
-#ifdef ENABLE_USE_FIRMWARE_FILE
-static void rtl8168_release_firmware(struct rtl8168_private *tp)
-{
-        if (tp->rtl_fw) {
-                rtl8168_fw_release_firmware(tp->rtl_fw);
-                kfree(tp->rtl_fw);
-                tp->rtl_fw = NULL;
-        }
-}
-
-void rtl8168_apply_firmware(struct rtl8168_private *tp)
-{
-        /* TODO: release firmware if rtl_fw_write_firmware signals failure. */
-        if (tp->rtl_fw) {
-                rtl8168_fw_write_firmware(tp, tp->rtl_fw);
-                /* At least one firmware doesn't reset tp->ocp_base. */
-                tp->ocp_base = OCP_STD_PHY_BASE;
-
-                /* PHY soft reset may still be in progress */
-                //phy_read_poll_timeout(tp->phydev, MII_BMCR, val,
-                //		      !(val & BMCR_RESET),
-                //		      50000, 600000, true);
-                rtl8168_wait_phy_reset_complete(tp);
-
-                tp->hw_ram_code_ver = rtl8168_get_hw_phy_mcu_code_ver(tp);
-                tp->sw_ram_code_ver = tp->hw_ram_code_ver;
-                tp->HwHasWrRamCodeToMicroP = TRUE;
-        }
-}
-#endif
-
 static void
 rtl8168_hw_init(struct net_device *dev)
 {
@@ -6832,11 +6792,6 @@ rtl8168_hw_init(struct net_device *dev)
         if (tp->mcfg == CFG_METHOD_10 || tp->mcfg == CFG_METHOD_14 || tp->mcfg == CFG_METHOD_15)
                 RTL_W8(tp, 0xF3, RTL_R8(tp, 0xF3) | BIT_2);
 
-#ifndef ENABLE_USE_FIRMWARE_FILE
-        if (!tp->rtl_fw)
-                rtl8168_hw_mac_mcu_config(dev);
-#endif
-
         /*disable ocp phy power saving*/
         if (tp->mcfg == CFG_METHOD_25 || tp->mcfg == CFG_METHOD_26 ||
             tp->mcfg == CFG_METHOD_27 || tp->mcfg == CFG_METHOD_28 ||
@@ -6870,12 +6825,6 @@ rtl8168_hw_init(struct net_device *dev)
         else
                 rtl8168_disable_magic_packet(dev);
 
-#ifdef ENABLE_USE_FIRMWARE_FILE
-        if (tp->rtl_fw &&
-            !(HW_DASH_SUPPORT_TYPE_3(tp) &&
-              tp->HwPkgDet == 0x06))
-                rtl8168_apply_firmware(tp);
-#endif
 }
 
 static void
@@ -7251,7 +7200,21 @@ rtl8168_set_phy_mcu_patch_request(struct rtl8168_private *tp)
         int retval = TRUE;
 
         switch (tp->mcfg) {
-        case CFG_METHOD_21 ... CFG_METHOD_35:
+        case CFG_METHOD_21:
+        case CFG_METHOD_22:
+        case CFG_METHOD_23:
+        case CFG_METHOD_24:
+        case CFG_METHOD_25:
+        case CFG_METHOD_26:
+        case CFG_METHOD_27:
+        case CFG_METHOD_28:
+        case CFG_METHOD_29:
+        case CFG_METHOD_30:
+        case CFG_METHOD_31:
+        case CFG_METHOD_32:
+        case CFG_METHOD_33:
+        case CFG_METHOD_34:
+        case CFG_METHOD_35:
                 rtl8168_mdio_write(tp,0x1f, 0x0B82);
                 rtl8168_set_eth_phy_bit(tp, 0x10, BIT_4);
 
@@ -7281,7 +7244,21 @@ rtl8168_clear_phy_mcu_patch_request(struct rtl8168_private *tp)
         int retval = TRUE;
 
         switch (tp->mcfg) {
-        case CFG_METHOD_21 ... CFG_METHOD_35:
+        case CFG_METHOD_21:
+        case CFG_METHOD_22:
+        case CFG_METHOD_23:
+        case CFG_METHOD_24:
+        case CFG_METHOD_25:
+        case CFG_METHOD_26:
+        case CFG_METHOD_27:
+        case CFG_METHOD_28:
+        case CFG_METHOD_29:
+        case CFG_METHOD_30:
+        case CFG_METHOD_31:
+        case CFG_METHOD_32:
+        case CFG_METHOD_33:
+        case CFG_METHOD_34:
+        case CFG_METHOD_35:
                 rtl8168_mdio_write(tp, 0x1f, 0x0B82);
                 rtl8168_clear_eth_phy_bit(tp, 0x10, BIT_4);
 
@@ -19341,14 +19318,7 @@ rtl8168_hw_phy_config(struct net_device *dev)
 
         tp->phy_reset_enable(dev);
 
-        if (HW_DASH_SUPPORT_TYPE_3(tp) && tp->HwPkgDet == 0x06)
-                return;
-
-#ifndef ENABLE_USE_FIRMWARE_FILE
-        if (!tp->rtl_fw) {
-                rtl8168_init_hw_phy_mcu(dev);
-        }
-#endif
+        rtl8168_init_hw_phy_mcu(dev);
 
         if (tp->mcfg == CFG_METHOD_1) {
                 rtl8168_mdio_write(tp, 0x1F, 0x0001);
@@ -23894,33 +23864,6 @@ rtl8168_set_rxbufsize(struct rtl8168_private *tp,
 
         tp->rx_buf_sz = (mtu > ETH_DATA_LEN) ? mtu + ETH_HLEN + 8 + 1 : RX_BUF_SIZE;
 }
-
-#ifdef ENABLE_USE_FIRMWARE_FILE
-static void rtl8168_request_firmware(struct rtl8168_private *tp)
-{
-        struct rtl8168_fw *rtl_fw;
-
-        /* firmware loaded already or no firmware available */
-        if (tp->rtl_fw || !tp->fw_name)
-                return;
-
-        rtl_fw = kzalloc(sizeof(*rtl_fw), GFP_KERNEL);
-        if (!rtl_fw)
-                return;
-
-        rtl_fw->phy_write = rtl8168_mdio_write;
-        rtl_fw->phy_read = rtl8168_mdio_read;
-        rtl_fw->mac_mcu_write = mac_mcu_write;
-        rtl_fw->mac_mcu_read = mac_mcu_read;
-        rtl_fw->fw_name = tp->fw_name;
-        rtl_fw->dev = tp_to_dev(tp);
-
-        if (rtl8168_fw_request_firmware(rtl_fw))
-                kfree(rtl_fw);
-        else
-                tp->rtl_fw = rtl_fw;
-}
-#endif
 
 static int rtl8168_open(struct net_device *dev)
 {

@@ -1151,8 +1151,8 @@ struct rtl8168_private {
         struct sk_buff *Rx_skbuff[MAX_NUM_RX_DESC]; /* Rx data buffers */
         struct ring_info tx_skb[MAX_NUM_TX_DESC];   /* Tx data buffers */
         unsigned rx_buf_sz;
-//        struct timer_list esd_timer;
-//        struct timer_list link_timer;
+        long long esd_timer;
+        long long link_timer;
 //        struct pci_resource pci_cfg_space;
         unsigned int esd_flag;
         unsigned int pci_cfg_is_read;
