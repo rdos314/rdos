@@ -118,11 +118,6 @@ enum ethtool_link_mode_bit_indices
 #define ADVERTISED_BNC			__ETHTOOL_LINK_MODE_LEGACY_MASK(BNC)
 #define ADVERTISED_10000baseT_Full	__ETHTOOL_LINK_MODE_LEGACY_MASK(10000baseT_Full)
 
-#define HW_DASH_SUPPORT_DASH(_M)        ((_M)->HwSuppDashVer > 0 )
-#define HW_DASH_SUPPORT_TYPE_1(_M)        ((_M)->HwSuppDashVer == 1 )
-#define HW_DASH_SUPPORT_TYPE_2(_M)        ((_M)->HwSuppDashVer == 2 )
-#define HW_DASH_SUPPORT_TYPE_3(_M)        ((_M)->HwSuppDashVer == 3 )
-
 #define spinlock_t struct TSpinlock
 
 struct pci_device_id 
@@ -131,6 +126,19 @@ struct pci_device_id
   u32 subvendor, subdevice;	/* Subsystem ID's or PCI_ANY_ID */
   u32 class, class_mask;	/* (class,subclass,prog-if) triplet */
 };
+
+struct pci_dev 
+{
+  unsigned short vendor;
+  unsigned short device;
+  unsigned short subsystem_vendor;
+  unsigned short subsystem_device;
+  unsigned int	 class;		/* 3 bytes: (base,sub,prog-if) */
+  u8		 revision;	/* PCI revision, low byte of class word */
+};
+
+int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val);
+
 
 void RTL_W8(struct rtl8168_private *tp, u16 reg, u8 val8);
 void RTL_W16(struct rtl8168_private *tp, u16 reg, u16 val16);
@@ -2045,12 +2053,7 @@ u32 rtl8168_ocp_read(struct rtl8168_private *tp, u16 addr, u8 len)
 {
         u32 value = 0;
 
-        if (HW_DASH_SUPPORT_TYPE_2(tp))
-                value = rtl8168_ocp_read_with_oob_base_address(tp, addr, len, NO_BASE_ADDRESS);
-        else if (HW_DASH_SUPPORT_TYPE_3(tp))
-                value = rtl8168_ocp_read_with_oob_base_address(tp, addr, len, RTL8168FP_OOBMAC_BASE);
-        else
-                value = real_ocp_read(tp, addr, len);
+        value = real_ocp_read(tp, addr, len);
 
         return value;
 }
@@ -2107,12 +2110,7 @@ u32 rtl8168_ocp_write_with_oob_base_address(struct rtl8168_private *tp, u16 addr
 
 void rtl8168_ocp_write(struct rtl8168_private *tp, u16 addr, u8 len, u32 value)
 {
-        if (HW_DASH_SUPPORT_TYPE_2(tp))
-                rtl8168_ocp_write_with_oob_base_address(tp, addr, len, value, NO_BASE_ADDRESS);
-        else if (HW_DASH_SUPPORT_TYPE_3(tp))
-                rtl8168_ocp_write_with_oob_base_address(tp, addr, len, value, RTL8168FP_OOBMAC_BASE);
-        else
-                real_ocp_write(tp, addr, len, value);
+        real_ocp_write(tp, addr, len, value);
 }
 
 void rtl8168_oob_mutex_lock(struct rtl8168_private *tp)
@@ -2229,12 +2227,6 @@ void rtl8168_oob_notify(struct rtl8168_private *tp, u8 cmd)
 
 static int rtl8168_check_dash(struct rtl8168_private *tp)
 {
-        if (HW_DASH_SUPPORT_TYPE_2(tp) || HW_DASH_SUPPORT_TYPE_3(tp)) {
-                if (rtl8168_ocp_read(tp, 0x128, 1) & BIT_0)
-                        return 1;
-                else
-                        return 0;
-        } else {
                 u32 reg;
 
                 if (tp->mcfg == CFG_METHOD_13)
@@ -2246,77 +2238,26 @@ static int rtl8168_check_dash(struct rtl8168_private *tp)
                         return 1;
                 else
                         return 0;
-        }
 }
 
 void rtl8168_dash2_disable_tx(struct rtl8168_private *tp)
 {
-        if (!tp->DASH)
-                return;
-
-        if (HW_DASH_SUPPORT_TYPE_2(tp) || HW_DASH_SUPPORT_TYPE_3(tp)) {
-                u16 WaitCnt;
-                u8 TmpUchar;
-
-                //Disable oob Tx
-                RTL_CMAC_W8(tp, CMAC_IBCR2, RTL_CMAC_R8(tp, CMAC_IBCR2) & ~( BIT_0 ));
-                WaitCnt = 0;
-
-                //wait oob tx disable
-                do {
-                        TmpUchar = RTL_CMAC_R8(tp, CMAC_IBISR0);
-
-                        if ( TmpUchar & ISRIMR_DASH_TYPE2_TX_DISABLE_IDLE ) {
-                                break;
-                        }
-
-                        udelay( 50 );
-                        WaitCnt++;
-                } while(WaitCnt < 2000);
-
-                //Clear ISRIMR_DASH_TYPE2_TX_DISABLE_IDLE
-                RTL_CMAC_W8(tp, CMAC_IBISR0, RTL_CMAC_R8(tp, CMAC_IBISR0) | ISRIMR_DASH_TYPE2_TX_DISABLE_IDLE);
-        }
 }
 
 void rtl8168_dash2_enable_tx(struct rtl8168_private *tp)
 {
-        if (!tp->DASH)
-                return;
-
-        if (HW_DASH_SUPPORT_TYPE_2(tp) || HW_DASH_SUPPORT_TYPE_3(tp)) {
-                RTL_CMAC_W8(tp, CMAC_IBCR2, RTL_CMAC_R8(tp, CMAC_IBCR2) | BIT_0);
-        }
 }
 
 void rtl8168_dash2_disable_rx(struct rtl8168_private *tp)
 {
-        if (!tp->DASH)
-                return;
-
-        if (HW_DASH_SUPPORT_TYPE_2(tp) || HW_DASH_SUPPORT_TYPE_3(tp)) {
-                RTL_CMAC_W8(tp, CMAC_IBCR0, RTL_CMAC_R8(tp, CMAC_IBCR0) & ~( BIT_0 ));
-        }
 }
 
 void rtl8168_dash2_enable_rx(struct rtl8168_private *tp)
 {
-        if (!tp->DASH)
-                return;
-
-        if (HW_DASH_SUPPORT_TYPE_2(tp) || HW_DASH_SUPPORT_TYPE_3(tp)) {
-                RTL_CMAC_W8(tp, CMAC_IBCR0, RTL_CMAC_R8(tp, CMAC_IBCR0) | BIT_0);
-        }
 }
 
 static void rtl8168_dash2_disable_txrx(struct net_device *dev)
 {
-        struct rtl8168_private *tp = netdev_priv(dev);
-
-        if (HW_DASH_SUPPORT_TYPE_2(tp) || HW_DASH_SUPPORT_TYPE_3(tp)) {
-                rtl8168_dash2_disable_tx( tp );
-                rtl8168_dash2_disable_rx( tp );
-        }
 }
 
 static u8 rtl8168_check_ephy_addr(struct rtl8168_private *tp, int addr)

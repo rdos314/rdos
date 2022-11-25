@@ -1153,7 +1153,7 @@ enum rtl8168_fc_mode {
 
 struct rtl8168_private {
         void *mmio_addr;    /* memory map physical address */
-//        struct pci_dev *pci_dev;    /* Index of PCI device */
+        struct pci_dev *pci_dev;    /* Index of PCI device */
 //        struct net_device *dev;
 //        struct net_device_stats stats;  /* statistics of net device */
         spinlock_t lock;        /* spin lock flag */
