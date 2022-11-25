@@ -118,6 +118,10 @@ enum ethtool_link_mode_bit_indices
 #define ADVERTISED_BNC			__ETHTOOL_LINK_MODE_LEGACY_MASK(BNC)
 #define ADVERTISED_10000baseT_Full	__ETHTOOL_LINK_MODE_LEGACY_MASK(10000baseT_Full)
 
+#define HW_DASH_SUPPORT_DASH(_M)        ((_M)->HwSuppDashVer > 0 )
+#define HW_DASH_SUPPORT_TYPE_1(_M)        ((_M)->HwSuppDashVer == 1 )
+#define HW_DASH_SUPPORT_TYPE_2(_M)        ((_M)->HwSuppDashVer == 2 )
+#define HW_DASH_SUPPORT_TYPE_3(_M)        ((_M)->HwSuppDashVer == 3 )
 
 #define spinlock_t struct TSpinlock
 
@@ -134,6 +138,9 @@ void RTL_W32(struct rtl8168_private *tp, u16 reg, u32 val32);
 u8 RTL_R8(struct rtl8168_private *tp, u16 reg);
 u16 RTL_R16(struct rtl8168_private *tp, u16 reg);
 u32 RTL_R32(struct rtl8168_private *tp, u16 reg);
+
+void udelay(u16 us);
+void mdelay(u16 ms);
 
 /************************************************************************************
  *  This is the Linux code part
@@ -1743,9 +1750,6 @@ static u32 mdio_real_direct_read_phy_ocp(struct rtl8168_private *tp,
         if (tp->HwSuppPhyOcpVer == 0)
                 goto out;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
-        WARN_ON_ONCE(RegAddr % 2);
-#endif
         data32 = RegAddr/2;
         data32 <<= OCPR_Addr_Reg_shift;
 
@@ -1907,10 +1911,6 @@ void rtl8168_mac_ocp_write(struct rtl8168_private *tp, u16 reg_addr, u16 value)
 {
         u32 data32;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
-        WARN_ON_ONCE(reg_addr % 2);
-#endif
-
         data32 = reg_addr/2;
         data32 <<= OCPR_Addr_Reg_shift;
         data32 += value;
@@ -1923,10 +1923,6 @@ u16 rtl8168_mac_ocp_read(struct rtl8168_private *tp, u16 reg_addr)
 {
         u32 data32;
         u16 data16 = 0;
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,18)
-        WARN_ON_ONCE(reg_addr % 2);
-#endif
 
         data32 = reg_addr/2;
         data32 <<= OCPR_Addr_Reg_shift;

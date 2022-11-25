@@ -1284,6 +1284,13 @@ struct rtl8168_private {
 
         u32 ocp_base;
 
+        //Dash+++++++++++++++++
+        u8 HwSuppDashVer;
+        u8 DASH;
+        u8 dash_printer_enabled;
+        u8 HwPkgDet;
+        void  *mapped_cmac_ioaddr; /* mapped cmac memory map physical address */
+        void  *cmac_ioaddr; /* cmac memory map physical address */
         u32 eee_adv_t;
         u8 eee_enabled;
 
