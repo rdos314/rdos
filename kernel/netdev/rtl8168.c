@@ -279,6 +279,13 @@ struct ethtool_eeprom
   u8	data[1];
 };
 
+struct timer_list 
+{
+  unsigned long	long	expires;
+  void			(*function)(unsigned long);
+  unsigned long		data;
+};
+
 struct net_device 
 {
   struct rtl8168_private *tp;
@@ -356,6 +363,23 @@ static void netif_stop_queue(struct net_device *dev)
 }
 
 static void rtl8168_init_ring(struct net_device *dev)
+{
+}
+
+
+static inline void rtl8168_delete_esd_timer(struct net_device *dev, struct timer_list *timer)
+{
+}
+
+static void rtl8168_request_esd_timer(struct net_device *dev)
+{
+}
+
+static void rtl8168_delete_link_timer(struct net_device *dev, struct timer_list *timer)
+{
+}
+
+static void rtl8168_request_link_timer(struct net_device *dev)
 {
 }
 
@@ -21952,41 +21976,6 @@ rtl8168_hw_phy_config(struct net_device *dev)
         }
 }
 
-static inline void rtl8168_delete_esd_timer(struct net_device *dev, struct timer_list *timer)
-{
-        del_timer_sync(timer);
-}
-
-static inline void rtl8168_request_esd_timer(struct net_device *dev)
-{
-        struct rtl8168_private *tp = netdev_priv(dev);
-        struct timer_list *timer = &tp->esd_timer;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4,14,0)
-        setup_timer(timer, rtl8168_esd_timer, (unsigned long)dev);
-#else
-        timer_setup(timer, rtl8168_esd_timer, 0);
-#endif
-        mod_timer(timer, jiffies + RTL8168_ESD_TIMEOUT);
-}
-
-static inline void rtl8168_delete_link_timer(struct net_device *dev, struct timer_list *timer)
-{
-        del_timer_sync(timer);
-}
-
-static inline void rtl8168_request_link_timer(struct net_device *dev)
-{
-        struct rtl8168_private *tp = netdev_priv(dev);
-        struct timer_list *timer = &tp->link_timer;
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4,14,0)
-        setup_timer(timer, rtl8168_link_timer, (unsigned long)dev);
-#else
-        timer_setup(timer, rtl8168_link_timer, 0);
-#endif
-        mod_timer(timer, jiffies + RTL8168_LINK_TIMEOUT);
-}
-
 #ifdef CONFIG_NET_POLL_CONTROLLER
 /*
  * Polling 'interrupt' - used by things like netconsole to send skbs
@@ -22227,58 +22216,7 @@ rtl8168_init_software_variable(struct net_device *dev)
         if (!aspm || !tp->HwSuppAspmClkIntrLock)
                 dynamic_aspm = 0;
 
-#ifdef ENABLE_REALWOW_SUPPORT
-        rtl8168_get_realwow_hw_version(dev);
-#endif //ENABLE_REALWOW_SUPPORT
-
-        if (HW_DASH_SUPPORT_DASH(tp) && rtl8168_check_dash(tp))
-                tp->DASH = 1;
-        else
-                tp->DASH = 0;
-
-        if (tp->DASH) {
-                if (HW_DASH_SUPPORT_TYPE_3(tp)) {
-                        u64 CmacMemPhysAddress;
-                        void __iomem *cmac_ioaddr = NULL;
-                        struct pci_dev *pdev_cmac;
-
-                        pdev_cmac = pci_get_slot(pdev->bus, PCI_DEVFN(PCI_SLOT(pdev->devfn), 0));
-
-                        //map CMAC IO space
-                        CmacMemPhysAddress = pci_resource_start(pdev_cmac, 2);
-
-                        /* ioremap MMIO region */
-                        cmac_ioaddr = ioremap(CmacMemPhysAddress, R8168_REGS_SIZE);
-
-                        if (cmac_ioaddr == NULL) {
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,0)
-                                if (netif_msg_probe(tp))
-                                        dev_err(&pdev->dev, "cannot remap CMAC MMIO, aborting\n");
-#endif //LINUX_VERSION_CODE > KERNEL_VERSION(2,6,0)
-                                tp->DASH = 0;
-                        } else {
-                                tp->mapped_cmac_ioaddr = cmac_ioaddr;
-                        }
-                }
-
-                eee_enable = 0;
-        }
-
-#ifdef ENABLE_DASH_SUPPORT
-#ifdef ENABLE_DASH_PRINTER_SUPPORT
-        if (tp->DASH) {
-                if (HW_DASH_SUPPORT_TYPE_3(tp) && tp->HwPkgDet == 0x0F)
-                        tp->dash_printer_enabled = 1;
-                else if (HW_DASH_SUPPORT_TYPE_2(tp))
-                        tp->dash_printer_enabled = 1;
-        }
-#endif //ENABLE_DASH_PRINTER_SUPPORT
-#endif //ENABLE_DASH_SUPPORT
-
-        if (HW_DASH_SUPPORT_TYPE_2(tp))
-                tp->cmac_ioaddr = tp->mmio_addr;
-        else if (HW_DASH_SUPPORT_TYPE_3(tp))
-                tp->cmac_ioaddr = tp->mapped_cmac_ioaddr;
+        tp->DASH = 0;
 
         switch (tp->mcfg) {
         case CFG_METHOD_1:
@@ -22297,17 +22235,6 @@ rtl8168_init_software_variable(struct net_device *dev)
                 break;
         }
 
-#ifdef ENABLE_DASH_SUPPORT
-        if (tp->DASH) {
-                if (HW_DASH_SUPPORT_TYPE_2(tp) || HW_DASH_SUPPORT_TYPE_3(tp)) {
-                        tp->timer_intr_mask |= ( ISRIMR_DASH_INTR_EN | ISRIMR_DASH_INTR_CMAC_RESET);
-                        tp->intr_mask |= ( ISRIMR_DASH_INTR_EN | ISRIMR_DASH_INTR_CMAC_RESET);
-                } else {
-                        tp->timer_intr_mask |= ( ISRIMR_DP_DASH_OK | ISRIMR_DP_HOST_OK | ISRIMR_DP_REQSYS_OK );
-                        tp->intr_mask |= ( ISRIMR_DP_DASH_OK | ISRIMR_DP_HOST_OK | ISRIMR_DP_REQSYS_OK );
-                }
-        }
-#endif
         if (aspm) {
                 switch (tp->mcfg) {
                 case CFG_METHOD_21:
@@ -22660,8 +22587,6 @@ rtl8168_init_software_variable(struct net_device *dev)
 
         tp->NicCustLedValue = RTL_R16(tp, CustomLED);
 
-        rtl8168_get_hw_wol(dev);
-
         rtl8168_link_option((u8*)&autoneg_mode, (u32*)&speed_mode, (u8*)&duplex_mode, (u32*)&advertising_mode);
 
         tp->autoneg = autoneg_mode;
@@ -22671,11 +22596,6 @@ rtl8168_init_software_variable(struct net_device *dev)
         tp->fcpause = rtl8168_fc_full;
 
         tp->max_jumbo_frame_size = rtl_chip_info[tp->chipset].jumbo_frame_sz;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,10,0)
-        /* MTU range: 60 - hw-specific max */
-        dev->min_mtu = ETH_MIN_MTU;
-        dev->max_mtu = tp->max_jumbo_frame_size;
-#endif //LINUX_VERSION_CODE >= KERNEL_VERSION(4,10,0)
         tp->eee_enabled = eee_enable;
         tp->eee_adv_t = MDIO_EEE_1000T | MDIO_EEE_100TX;
 
