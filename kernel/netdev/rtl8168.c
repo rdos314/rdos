@@ -214,6 +214,14 @@ enum {
 	NETIF_MSG_WOL		= 0x4000,
 };
 
+enum netdev_state_t {
+	__LINK_STATE_START,
+	__LINK_STATE_PRESENT,
+	__LINK_STATE_NOCARRIER,
+	__LINK_STATE_LINKWATCH_PENDING,
+	__LINK_STATE_DORMANT,
+};
+
 #define netif_msg_drv(p)	((p)->msg_enable & NETIF_MSG_DRV)
 #define netif_msg_probe(p)	((p)->msg_enable & NETIF_MSG_PROBE)
 #define netif_msg_link(p)	((p)->msg_enable & NETIF_MSG_LINK)
@@ -252,6 +260,7 @@ struct pci_dev
 struct net_device 
 {
   struct rtl8168_private *tp;
+  unsigned long	state;
 };
 
 int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val);
@@ -273,7 +282,49 @@ static struct rtl8168_private *netdev_priv(const struct net_device *dev)
     return dev->tp;
 }
 
-static dprintk(const char *msg)
+static int test_bit(int nr, unsigned const long *addr)
+{
+	const unsigned long *a = addr + (nr >> 5);
+	int mask = 1 << (nr & 0x1F);
+
+	if ((*a) & mask)
+ 		return 1;
+	else
+		return 0;
+}
+
+static bool netif_carrier_ok(const struct net_device *dev)
+{
+	return !test_bit(__LINK_STATE_NOCARRIER, &dev->state);
+}
+
+static bool netif_running(const struct net_device *dev)
+{
+	return test_bit(__LINK_STATE_START, &dev->state);
+}
+
+static void dprintk(const char *msg)
+{
+}
+
+
+static void netif_carrier_on(struct net_device *dev)
+{
+}
+
+static void netif_carrier_off(struct net_device *dev)
+{
+}
+
+static void netif_wake_queue(struct net_device *dev)
+{
+}
+
+static void netif_stop_queue(struct net_device *dev)
+{
+}
+
+static void rtl8168_init_ring(struct net_device *dev)
 {
 }
 
@@ -3716,11 +3767,9 @@ rtl8168_check_link_status(struct net_device *dev)
                         tp->phy_reg_anlpar = rtl8168_mdio_read(tp, MII_LPA);
                         tp->phy_reg_gbsr = rtl8168_mdio_read(tp, MII_STAT1000);
 
-                        if (netif_msg_ifup(tp))
-                                printk(KERN_INFO PFX "%s: link up\n", dev->name);
+                        netif_msg_ifup(tp);
                 } else {
-                        if (netif_msg_ifdown(tp))
-                                printk(KERN_INFO PFX "%s: link down\n", dev->name);
+                        netif_msg_ifdown(tp);
 
                         tp->phy_reg_aner = 0;
                         tp->phy_reg_anlpar = 0;
