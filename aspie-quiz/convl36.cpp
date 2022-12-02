@@ -178,6 +178,78 @@ static void ProcessRow(char *str)
                  break;
 
             case 17:
+                 val = atoi(valstr);
+
+                 if (val)
+                 {
+                     Row.Quiz[132] = 1;
+                     Row.Quiz[133] = 1;
+                     Row.Quiz[134] = 1;
+                     Row.Quiz[135] = 1;
+                     Row.Quiz[136] = 1;
+                     Row.Quiz[137] = 1;
+                     Row.Quiz[138] = 1;
+                     Row.Quiz[139] = 1;
+                     Row.Quiz[140] = 1;
+                     Row.Quiz[141] = 1;
+
+                     switch (val)
+                     {
+                         case 2:
+                            Row.Quiz[132] = 2;
+                            break;
+
+                         case 4:
+                            Row.Quiz[133] = 2;
+                            break;
+
+                         case 5:
+                            Row.Quiz[134] = 2;
+                            break;
+
+                         case 6:
+                            Row.Quiz[135] = 2;
+                            break;
+
+                         case 7:
+                            Row.Quiz[136] = 2;
+                            break;
+
+                         case 8:
+                            Row.Quiz[137] = 2;
+                            break;
+
+                         case 9:
+                            Row.Quiz[138] = 2;
+                            break;
+
+                         case 10:
+                            Row.Quiz[139] = 2;
+                            break;
+
+                         case 11:
+                            Row.Quiz[140] = 2;
+                            break;
+
+                         case 14:
+                            Row.Quiz[141] = 2;
+                            break;
+                     }
+                 }
+                 else
+                 {
+                     Row.Quiz[132] = 0;
+                     Row.Quiz[133] = 0;
+                     Row.Quiz[134] = 0;
+                     Row.Quiz[135] = 0;
+                     Row.Quiz[136] = 0;
+                     Row.Quiz[137] = 0;
+                     Row.Quiz[138] = 0;
+                     Row.Quiz[139] = 0;
+                     Row.Quiz[140] = 0;
+                     Row.Quiz[141] = 0;
+                 }
+
                  break;
 
             case 18: // projects
@@ -217,7 +289,7 @@ static void ProcessRow(char *str)
     }
 
     HandleRow(&Row);
-    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 132);
+    AddPca(Row.Gender, Row.BirthYear, Row.AsResult - Row.NtResult, &Row.Quiz[0], 142);
 }
 
 /*################## ConvL36 ##########################

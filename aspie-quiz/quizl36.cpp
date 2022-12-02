@@ -51,7 +51,7 @@
 #
 ##########################################################################*/
 TQuizL36::TQuizL36(const char *FileName)
-  : TQuiz(132),
+  : TQuiz(142),
         FDataFile(FileName)
 {
         SetupTexts();
@@ -97,7 +97,9 @@ int TQuizL36::GetPcaCount()
 *##########################################################################*/
 int TQuizL36::GetCatCount(int Question)
 {
-    if (Question >= 125)
+    if (Question >= 132)
+        return 2;
+    else if (Question >= 125)
         return 5;
     else
         return 3;
@@ -112,7 +114,7 @@ int TQuizL36::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizL36::GetQuizN()
 {
-    return 132;
+    return 142;
 }
 
 /*##########################################################################
@@ -295,6 +297,14 @@ void TQuizL36::SetupTexts()
   Quiz[118].Reverse = TRUE;
   Quiz[119].Reverse = TRUE;
   Quiz[120].Reverse = TRUE;
+  Quiz[122].Reverse = TRUE;
+  Quiz[123].Reverse = TRUE;
+  Quiz[125].Reverse = TRUE;
+  Quiz[126].Reverse = TRUE;
+  Quiz[127].Reverse = TRUE;
+  Quiz[129].Reverse = TRUE;
+  Quiz[130].Reverse = TRUE;
+  Quiz[131].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -428,6 +438,16 @@ void TQuizL36::SetupTexts()
   Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_MIXED;
+  Quiz[138].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_MIXED;
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[1].Text = "Do you have an avid perseverance in gathering and/or cataloguing information on a topic of interest?";
@@ -564,6 +584,17 @@ void TQuizL36::SetupTexts()
   Quiz[129].Text = "Parties";
   Quiz[130].Text = "Friends";
   Quiz[131].Text = "Network";
+
+  Quiz[132].Text = "Study applied and pure sciences";
+  Quiz[133].Text = "Study business and management";
+  Quiz[134].Text = "Study computer science and IT";
+  Quiz[135].Text = "Study creative arts and design";
+  Quiz[136].Text = "Study education and training";
+  Quiz[137].Text = "Study engineering and technology";
+  Quiz[138].Text = "Study health and medicine";
+  Quiz[139].Text = "Study humanities";
+  Quiz[140].Text = "Study law";
+  Quiz[141].Text = "Study social studies and media";
 
 }
 
@@ -748,7 +779,7 @@ void TQuizL36::SetupCross()
 {
     int i;
 
-    for (i = 0; i < 132; i++)
+    for (i = 0; i < 142; i++)
             DefineGlobalId(i, i);
 }
 
