@@ -6270,7 +6270,7 @@ init_pci1_found:
     mov bp,bx
     mov cl,PCI_command_reg
     ReadPciWord
-    or al,PCI_command_busmstr
+    or al,PCI_command_busmstr OR PCI_command_IO OR PCI_command_mem
     WritePciWord
 ;
     mov cl,PCI_card_ExCa_base
@@ -6451,7 +6451,7 @@ init_pci2_found:
     mov bp,bx
     mov cl,PCI_command_reg
     ReadPciWord
-    or al,PCI_command_busmstr
+    or al,PCI_command_busmstr OR PCI_command_IO OR PCI_command_mem
     WritePciWord
 ;
     mov cl,PCI_card_ExCa_base
@@ -6669,6 +6669,7 @@ init_net    Proc far
     push es
     pusha
 ;
+    int 3
     xor ax,ax
     call InitPrimaryPciAdapter
 ;
