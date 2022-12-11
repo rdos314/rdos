@@ -34,16 +34,6 @@ INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\core.inc
 INCLUDE ..\os\net.inc
- 
-data    STRUC
-
-pad  DB ?
-
-data    ENDS
-
-code    SEGMENT byte public 'CODE'
-
-    assume cs:code
 
 IFDEF __WASM__
     .686p
@@ -51,6 +41,138 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
+ 
+data    STRUC
+
+func_sel  DW ?
+
+data    ENDS
+
+code    SEGMENT byte public 'CODE'
+
+    assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           NetInt
+;
+;           DESCRIPTION:    Network card interrupt
+;
+;       PARAMETERS:         DS	Ether sel
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NetInt  Proc far
+    CrashGate
+    ret
+NetInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateFuncSel
+;
+;       DESCRIPTION:    Create function selector
+;
+;       PARAMETERS:     EBX:EAX Physical address of BAR0 
+;
+;       RETURNS:        ES      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateFuncSel   Proc near
+    push eax
+    push ebx
+    push ecx
+;
+    push eax
+    mov eax,10000h
+    AllocateBigLinear
+    pop eax
+;
+    push eax
+    push edx
+;
+    and ax,0F000h
+    or ax,813h
+    mov ecx,10h
+
+cfsLoop:
+    SetPageEntry
+;
+    add edx,1000h
+    add eax,1000h
+    loop cfsLoop
+;
+    pop edx
+    pop eax
+;
+    and ax,0FFFh
+    or dx,ax
+;
+    AllocateGdt
+    mov ecx,10000h
+    CreateDataSelector32
+    mov es,bx    
+;    
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+CreateFuncSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupInts
+;
+;           DESCRIPTION:    Setup PCI or MSI IRQ
+;
+;       PARAMETERS:         BH    Bus
+;                           BL    Device
+;                           CH    Function
+;                           DS    Ether sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupInts   Proc near
+    pushad
+;    
+    GetPciMsi
+    jc siIrq
+
+siMsi:
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc siIrq
+;    
+    mov dl,1
+    SetupPciMsi
+;    
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET NetInt
+    RequestMsiHandler
+    jmp siDone
+
+siIrq:
+    GetPciIrqNr
+    mov ah,14h
+    mov bx,cs
+    mov es,bx
+    mov edi,OFFSET NetInt    
+    RequestIrqHandler
+
+siDone:
+    popad
+    ret
+SetupInts    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -108,7 +230,19 @@ init_pci1_found:
     ReadPciDword
     test al,1
     stc
-    jz init_pci1_done
+    jnz init_pci1_done
+;
+    push eax
+    call SetupInts
+;
+    mov cl,PCI_card_ExCa_base+4
+    ReadPciDword
+;
+    mov ebx,eax
+    pop eax
+;
+    call CreateFuncSel
+    mov ds:func_sel,es
 
 io_pci1:
     mov ax,bp   
@@ -152,7 +286,19 @@ init_pci2_found:
     ReadPciDword
     test al,1
     stc
-    jz init_pci2_done
+    jnz init_pci2_done
+;
+    push eax
+    call SetupInts
+;
+    mov cl,PCI_card_ExCa_base+4
+    ReadPciDword
+;
+    mov ebx,eax
+    pop eax
+;
+    call CreateFuncSel
+    mov ds:func_sel,es
 
 io_pci2:
     mov ax,bp   
@@ -191,7 +337,7 @@ init_net    Proc far
     popa
     pop es
     pop ds
-    retf32
+    ret
 init_net    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -217,20 +363,20 @@ Init    Proc far
     AllocateFixedSystemMem
     mov ds,bx
     mov es,bx
-    mov cx,ax
-    xor di,di
+    mov ecx,eax
+    xor edi,edi
     xor al,al
-    rep stosb
+    rep stos byte ptr es:[edi]
 ;
     mov eax,SIZE data
     mov bx,ether_data2_sel
     AllocateFixedSystemMem
     mov ds,bx
     mov es,bx
-    mov cx,ax
-    xor di,di
+    mov ecx,eax
+    xor edi,edi
     xor al,al
-    rep stosb
+    rep stos byte ptr es:[edi]
 ;
     mov ax,cs
     mov es,ax
