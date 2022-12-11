@@ -6669,7 +6669,6 @@ init_net    Proc far
     push es
     pusha
 ;
-    int 3
     xor ax,ax
     call InitPrimaryPciAdapter
 ;
