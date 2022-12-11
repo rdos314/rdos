@@ -52,6 +52,18 @@ rx_errors       DB ?
 rx_tag          DW ?
 
 rx_descr         ENDS
+
+tx_descr        STRUC
+
+tx_phys         DD ?,?
+tx_len          DW ?
+tx_cso          DB ?
+tx_cmd          DB ?
+tx_sta          DB ?
+tx_resv         DB ?
+tx_tag          DW ?
+
+tx_descr         ENDS
  
 data    STRUC
 
@@ -59,6 +71,9 @@ FuncSel      DW ?
 
 RxRingSel    DW ?
 RxRingPhys   DD ?,?
+
+TxRingPhys   DD ?,?
+TxRingSel    DW ?
 
 data    ENDS
 
@@ -232,13 +247,62 @@ crLoop:
     mov es:[edi].rx_phys+4,ebx
 ;
     add edi,16
-    sub ecx,1
-    jnz crLoop   
+    loop crLoop
 ;
     popad
     pop es
     ret
 CreateRxRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateTxRing
+;
+;           DESCRIPTION:    Create TX ring
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateTxRing    Proc near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateBigLinear
+    AllocatePhysical64
+    mov ds:TxRingPhys,eax
+    mov ds:TxRingPhys+4,ebx
+    or al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:TxRingSel,bx
+;
+    mov es,bx
+    mov ecx,100h
+    xor edi,edi
+
+ctLoop:
+    mov es:[edi].tx_phys,0
+    mov es:[edi].tx_phys+4,0
+    mov es:[edi].tx_len,0
+    mov es:[edi].tx_cso,0
+    mov es:[edi].tx_cmd,0Bh
+    mov es:[edi].tx_sta,0
+    mov es:[edi].tx_resv,0
+    mov es:[edi].tx_tag,0
+;
+    add edi,16
+    loop ctLoop
+;
+    popad
+    pop es
+    ret
+CreateTxRing   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -311,6 +375,7 @@ init_pci1_found:
     mov ds:FuncSel,es
 ;
     call CreateRxRing
+    call CreateTxRing
 
 io_pci1:
     mov ax,bp   
@@ -369,6 +434,7 @@ init_pci2_found:
     mov ds:FuncSel,es
 ;
     call CreateRxRing
+    call CreateTxRing
 
 io_pci2:
     mov ax,bp   
