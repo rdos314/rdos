@@ -68,15 +68,24 @@ tx_descr         ENDS
 CTRL_SC     = 1 SHL 26
 RCTL_RXEN   = 1 SHL 1
 RXDCTL_EN   = 1 SHL 25
+TCTL_TXEN   = 1 SHL 1
+TXDCTL_EN   = 1 SHL 25
 
 REG_CTRL    = 0
 REG_RCTL    = 100h
+REG_TCTL    = 400h
 
 REG_RDBA    = 0C000h
 REG_RDLEN   = 0C008h
 REG_RDH     = 0C010h
 REG_RDT     = 0C018h
 REG_RXDCTL  = 0C028h
+
+REG_TDBA    = 0E000h
+REG_TDLEN   = 0E008h
+REG_TDH     = 0E010h
+REG_TDT     = 0E018h
+REG_TXDCTL  = 0E028h
  
 data    STRUC
 
@@ -373,6 +382,52 @@ InitRx  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InitTx
+;
+;           DESCRIPTION:    Init TX
+;
+;           PARAMETERS:     DS  Ether sel
+;                           ES  Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitTx  Proc near
+    call CreateTxRing
+;
+    mov eax,es:REG_TCTL
+    and eax,NOT TCTL_TXEN
+    mov es:REG_TCTL,eax
+;
+    mov eax,ds:TxRingPhys
+    mov es:REG_TDBA,eax
+    mov eax,ds:TxRingPhys+4
+    mov es:REG_TDBA+4,eax
+;
+    mov dword ptr es:REG_TDLEN,1000h
+;
+    mov eax,es:REG_TXDCTL
+    or eax,TXDCTL_EN
+    mov es:REG_TXDCTL,eax
+;
+    mov ecx,100000h
+
+itWaitEn:    
+    pause
+    mov eax,es:REG_TXDCTL
+    test eax,TXDCTL_EN
+    jnz itDoneEn
+    loop itWaitEn
+
+itDoneEn:
+    mov eax,es:REG_TCTL
+    or eax,TCTL_TXEN
+    mov es:REG_TCTL,eax
+    ret
+InitTx	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitFunc
 ;
 ;           DESCRIPTION:    Init function
@@ -402,6 +457,7 @@ ifWaitReset:
 ifDoneReset:
     int 3
     call InitRx
+    call InitTx
 ;
     popad
     pop es
