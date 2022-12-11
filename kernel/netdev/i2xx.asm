@@ -64,6 +64,12 @@ tx_resv         DB ?
 tx_tag          DW ?
 
 tx_descr         ENDS
+
+CTRL_SC	    = 1 SHL 26
+RCTL_RXEN   = 1 SHL 1
+
+REG_CTRL    = 0
+REG_RCTL    = 100h
  
 data    STRUC
 
@@ -210,6 +216,8 @@ SetupInts    Endp
 ;
 ;           DESCRIPTION:    Create RX ring
 ;
+;           PARAMETERS:     DS  Ether sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateRxRing    Proc near
@@ -261,6 +269,8 @@ CreateRxRing   Endp
 ;
 ;           DESCRIPTION:    Create TX ring
 ;
+;           PARAMETERS:     DS  Ether sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateTxRing    Proc near
@@ -303,6 +313,64 @@ ctLoop:
     pop es
     ret
 CreateTxRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitRx
+;
+;           DESCRIPTION:    Init RX
+;
+;           PARAMETERS:     DS  Ether sel
+;                           ES  Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitRx  Proc near
+    call CreateRxRing
+;
+    mov eax,es:REG_RCTL
+    and eax,NOT RCTL_RXEN
+    mov es:REG_RCTL,eax
+    ret
+InitRx	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitFunc
+;
+;           DESCRIPTION:    Init function
+;
+;           PARAMETERS:     DS  Ether sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitFunc    Proc near
+    push es
+    pushad
+;
+    mov es,ds:FuncSel
+    mov eax,es:REG_CTRL
+    or eax,CTRL_SC
+    mov es:REG_CTRL,eax
+;
+    mov ecx,100000h
+
+ifWaitReset:    
+    pause
+    mov eax,es:REG_CTRL
+    test eax,CTRL_SC
+    jz ifDoneReset
+    loop ifWaitReset
+
+ifDoneReset:
+    call InitRx
+;
+    popad
+    pop es
+    ret
+InitFunc	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -374,8 +442,7 @@ init_pci1_found:
     call CreateFuncSel
     mov ds:FuncSel,es
 ;
-    call CreateRxRing
-    call CreateTxRing
+    call InitFunc
 
 io_pci1:
     mov ax,bp   
@@ -433,8 +500,7 @@ init_pci2_found:
     call CreateFuncSel
     mov ds:FuncSel,es
 ;
-    call CreateRxRing
-    call CreateTxRing
+    call InitFunc
 
 io_pci2:
     mov ax,bp   
