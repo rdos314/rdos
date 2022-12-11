@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; RTL8169.ASM
-; RTL8168/8169/8110/8111/8136 series network driver
+; i2xx.ASM
+; Intel i2xx driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -41,10 +41,24 @@ IFDEF __WASM__
 ELSE
     .386p
 ENDIF
+
+rx_descr        STRUC
+
+rx_phys         DD ?,?
+rx_len          DW ?
+rx_checksum     DW ?
+rx_status       DB ?
+rx_errors       DB ?
+rx_tag          DW ?
+
+rx_descr         ENDS
  
 data    STRUC
 
-func_sel  DW ?
+FuncSel      DW ?
+
+RxRingSel    DW ?
+RxRingPhys   DD ?,?
 
 data    ENDS
 
@@ -59,7 +73,7 @@ code    SEGMENT byte public 'CODE'
 ;
 ;           DESCRIPTION:    Network card interrupt
 ;
-;       PARAMETERS:         DS	Ether sel
+;       PARAMETERS:         DS  Ether sel
 ;
 ;           RETURNS:        
 ;
@@ -177,6 +191,58 @@ SetupInts    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateRxRing
+;
+;           DESCRIPTION:    Create RX ring
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateRxRing    Proc near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,1000h
+    AllocateBigLinear
+    AllocatePhysical64
+    mov ds:RxRingPhys,eax
+    mov ds:RxRingPhys+4,ebx
+    or al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov ds:RxRingSel,bx
+;
+    mov es,bx
+    mov ecx,100h
+    xor edi,edi
+
+crLoop:
+    mov es:[edi].rx_len,1000h
+    mov es:[edi].rx_checksum,0
+    mov es:[edi].rx_status,0
+    mov es:[edi].rx_errors,0
+    mov es:[edi].rx_tag,0
+;
+    AllocatePhysical64
+    mov es:[edi].rx_phys,eax
+    mov es:[edi].rx_phys+4,ebx
+;
+    add edi,16
+    sub ecx,1
+    jnz crLoop   
+;
+    popad
+    pop es
+    ret
+CreateRxRing   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -242,7 +308,9 @@ init_pci1_found:
     pop eax
 ;
     call CreateFuncSel
-    mov ds:func_sel,es
+    mov ds:FuncSel,es
+;
+    call CreateRxRing
 
 io_pci1:
     mov ax,bp   
@@ -298,7 +366,9 @@ init_pci2_found:
     pop eax
 ;
     call CreateFuncSel
-    mov ds:func_sel,es
+    mov ds:FuncSel,es
+;
+    call CreateRxRing
 
 io_pci2:
     mov ax,bp   
