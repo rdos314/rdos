@@ -65,11 +65,18 @@ tx_tag          DW ?
 
 tx_descr         ENDS
 
-CTRL_SC	    = 1 SHL 26
+CTRL_SC     = 1 SHL 26
 RCTL_RXEN   = 1 SHL 1
+RXDCTL_EN   = 1 SHL 25
 
 REG_CTRL    = 0
 REG_RCTL    = 100h
+
+REG_RDBA    = 0C000h
+REG_RDLEN   = 0C008h
+REG_RDH     = 0C010h
+REG_RDT     = 0C018h
+REG_RXDCTL  = 0C028h
  
 data    STRUC
 
@@ -332,8 +339,36 @@ InitRx  Proc near
     mov eax,es:REG_RCTL
     and eax,NOT RCTL_RXEN
     mov es:REG_RCTL,eax
+;
+    mov eax,ds:RxRingPhys
+    mov es:REG_RDBA,eax
+    mov eax,ds:RxRingPhys+4
+    mov es:REG_RDBA+4,eax
+;
+    mov dword ptr es:REG_RDLEN,1000h
+;
+    mov eax,es:REG_RXDCTL
+    or eax,RXDCTL_EN
+    mov es:REG_RXDCTL,eax
+;
+    mov ecx,100000h
+
+irWaitEn:    
+    pause
+    mov eax,es:REG_RXDCTL
+    test eax,RXDCTL_EN
+    jnz irDoneEn
+    loop irWaitEn
+
+irDoneEn:
+    mov eax,0FF0h
+    mov es:REG_RDT,eax
+;
+    mov eax,es:REG_RCTL
+    or eax,RCTL_RXEN
+    mov es:REG_RCTL,eax
     ret
-InitRx	Endp
+InitRx  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -365,12 +400,13 @@ ifWaitReset:
     loop ifWaitReset
 
 ifDoneReset:
+    int 3
     call InitRx
 ;
     popad
     pop es
     ret
-InitFunc	Endp
+InitFunc        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -529,7 +565,6 @@ init_net    Proc far
     push es
     pusha
 ;
-    int 3
     xor ax,ax
     call InitPrimaryPciAdapter
 ;
