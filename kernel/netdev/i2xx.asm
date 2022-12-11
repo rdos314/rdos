@@ -75,6 +75,12 @@ REG_CTRL    = 0
 REG_RCTL    = 100h
 REG_TCTL    = 400h
 
+REG_ICR     = 1500h
+REG_ICS     = 1504h
+REG_IMS     = 1508h
+REG_IMC     = 150Ch
+REG_GPIE    = 1514h
+
 REG_RDBA    = 0C000h
 REG_RDLEN   = 0C008h
 REG_RDH     = 0C010h
@@ -458,6 +464,9 @@ ifDoneReset:
     int 3
     call InitRx
     call InitTx
+;
+    mov eax,014004D5h
+    mov es:REG_IMS,eax
 ;
     popad
     pop es
