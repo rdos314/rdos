@@ -3135,13 +3135,13 @@ void Load()
         AcpiEnableEvent(ACPI_EVENT_POWER_BUTTON, 0);
         AcpiEnableEvent(ACPI_EVENT_SLEEP_BUTTON, 0);
 
-//        if (ProcessorArr[0])
-//        {        
-//            GetPct();
-//            GetPtc();
-//            GetPss();
-//          GetTss();
-//        }
+        if (ProcessorCount)
+        {        
+            GetPct();
+            GetPtc();
+            GetPss();
+            GetTss();
+        }
     }
 }
 

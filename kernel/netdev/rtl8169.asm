@@ -191,6 +191,12 @@ modify_eri  MACRO reg, set, clear
   DD set
              ENDM
 
+modify_config  MACRO reg, set, clear
+  DW 800h + reg
+  DB clear
+  DB set
+             ENDM
+
 set_fifo_size  MACRO
   write_eri 0C8h, ERIAR_MASK_1111, 100002h
   write_eri 0E8h, ERIAR_MASK_1111, 100006h
@@ -229,6 +235,11 @@ start_8168ep   MACRO
   write_eri 0B8h, ERIAR_MASK_0011, 00000h
   modify_eri 2FCh, 1, 6
             ENDM
+
+disable_aspm  MACRO
+  modify_config 2, 0, 80h
+  modify_config 5, 0, 1
+              ENDM
 
 RX_DESCR_COUNT = 256
 TX_DESCR_COUNT = 128
@@ -2456,6 +2467,143 @@ ReadEfuse	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IoWriteByteReg
+;
+;           DESCRIPTION:    Write to reg, IO version
+;
+;           PARAMETERS:     DX      Register
+;                           AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoWriteByteReg    Proc near
+    push dx
+;    
+    add dx,ds:IoBase
+    out dx,al
+;    
+    pop dx
+    ret
+IoWriteByteReg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemWriteByteReg
+;
+;           DESCRIPTION:    Write to reg, mem version
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;                           AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWriteByteReg    Proc near
+    push edx
+;    
+    movzx edx,dx
+    mov fs:[edx],al
+;    
+    pop edx
+    ret
+MemWriteByteReg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteByteReg
+;
+;           DESCRIPTION:    Write to reg
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;                           AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteByteReg	Proc near
+    push ax
+    mov ax,ds:MemSel
+    or ax,ax
+    pop ax
+    jz IoWriteByteReg
+    jmp MemWriteByteReg
+
+WriteByteReg	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadByteReg
+;
+;           DESCRIPTION:    Read from reg, IO version
+;
+;           PARAMETERS:     DX      Register
+;
+;           RETURNS:        AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadByteReg    Proc near
+    push dx
+;    
+    add dx,ds:IoBase
+    in al,dx
+;    
+    pop dx
+    ret
+IoReadByteReg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadByteReg
+;
+;           DESCRIPTION:    Read from reg, mem version
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;
+;           RETURNS:        AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadByteReg    Proc near
+    push edx
+;    
+    movzx edx,dx
+    mov al,fs:[edx]
+;    
+    pop edx
+    ret
+MemReadByteReg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadByteReg
+;
+;           DESCRIPTION:    Read from reg
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;
+;           RETURNS:        AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadByteReg	Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadByteReg
+    jmp MemReadByteReg
+
+ReadByteReg	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunTableCommands
 ;
 ;       DESCRIPTION:    Run table commands
@@ -2492,6 +2640,9 @@ rtcLoop:
 ;
     cmp ah,7
     je rtcModifyEri
+;
+    cmp ah,8
+    je rtcModifyConfig
 ;        
     jmp rtcDone
 
@@ -2562,6 +2713,18 @@ rtcModifyEri:
     mov ecx,ERIAR_MASK_1111
     call WriteEri
     add si,12
+    jmp rtcLoop
+
+rtcModifyConfig:
+    movzx dx,cs:[si]
+    add dx,REG_CONFIG0
+    call ReadByteReg
+    mov ah,cs:[si+2]
+    not ah
+    and al,ah
+    or al,cs:[si+3]
+    call WriteByteReg
+    add si,4
     jmp rtcLoop
 
 rtcDone:
@@ -3634,6 +3797,7 @@ StartNone:
   DW -1
 
 Start8168b:
+  modify_config 4, 0, 1
   DW -1
 
 Start8168cp1:
@@ -3642,29 +3806,43 @@ Start8168cp1:
   ephy_init 3,   00000h, 00042h
   ephy_init 6,   00080h, 00000h
   ephy_init 7,   00000h, 02000h
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
   DW -1
 
 Start8168cp2:
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
   DW -1
 
 Start8168cp3:
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
   DW -1
 
 Start8168c1:
   ephy_init 2,   00800h, 01000h
   ephy_init 3,   00000h, 00002h
   ephy_init 6,   00080h, 00000h
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
   DW -1
 
 Start8168c2:
   ephy_init 1,   00000h, 00001h
   ephy_init 3,   00400h, 00020h
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
   DW -1
 
 Start8168c4:
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
   DW -1
 
 Start8168d:
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
   DW -1
 
 Start8168d4:
@@ -3672,6 +3850,7 @@ Start8168d4:
   ephy_init 19h, 00020h, 00050h
   ephy_init 0Ch, 00100h, 00020h
   ephy_init 10h, 00004h, 00000h
+  modify_config 3, 0, 4
   DW -1
 
 Start8168e1:
@@ -3691,6 +3870,7 @@ Start8168e1:
   DW -1
 
 Start8168e2:
+  disable_aspm
   ephy_init 9,   00000h, 00080h
   ephy_init 19h, 00000h, 00224h
   ephy_init 0,   00000h, 00004h
@@ -3729,6 +3909,7 @@ Start8411:
 
 Start8168g1:
   start_8168g
+  disable_aspm
 
   ephy_init 0,   00008h, 00000h
   ephy_init 0Ch, 03FF0h, 00820h
@@ -3738,6 +3919,7 @@ Start8168g1:
 
 Start8168g2:
   start_8168g
+  disable_aspm
 
   ephy_init 0,   00008h, 00000h
   ephy_init 0Ch, 0x3FF0h, 00820h
@@ -3752,6 +3934,7 @@ Start8168g2:
 
 Start8411_2:
   start_8168g
+  disable_aspm
 
   ephy_init 0,   00008h, 00000h
   ephy_init 0Ch, 037D0h, 00820h
@@ -3766,6 +3949,7 @@ Start8411_2:
   DW -1
 
 Start8168h1:
+  disable_aspm
   ephy_init 1Eh, 00800h, 00001h
   ephy_init 1Dh, 00000h, 00800h
   ephy_init 5,   0FFFFh, 02089h
@@ -3783,6 +3967,7 @@ Start8168h1:
   DW -1
 
 Start8168ep3:
+  disable_aspm
   ephy_init 0,   00000h, 00080h
   ephy_init 0Dh, 00100h, 00200h
   ephy_init 19h, 08021h, 00000h
@@ -3792,6 +3977,7 @@ Start8168ep3:
   DW -1
 
 Start8117:
+  disable_aspm
   ephy_init 19h, 00040h, 01100h
   ephy_init 59h, 00040h, 01100h
 
@@ -3813,9 +3999,13 @@ Start8102e1:
   ephy_init 19h, 00000h, 0EC80h
   ephy_init 1,   00000h, 02E65h
   ephy_init 1,   00000h, 06E65h
+  modify_config 3, 0, 4
+  modify_config 4, 0, 1
   DW -1
 
 Start8102e2:
+  modify_config 3, 0, 4
+  modify_config 4, 0, 1
   DW -1
 
 Start8102e3:
@@ -3866,11 +4056,13 @@ Start8402:
   DW -1
 
 Start8106:
+  disable_aspm
   write_eri 01D0h, ERIAR_MASK_0011, 00000h
   write_eri 01B0h, ERIAR_MASK_0011, 00000h
   DW -1
 
 Start8125a2:
+  disable_aspm
   ephy_init 4,   0FFFFh, 0D000h
   ephy_init 0Ah, 0FFFFh, 08653h
   ephy_init 23h, 0FFFFh, 0AB66h
@@ -3886,6 +4078,7 @@ Start8125a2:
   DW -1
 
 Start8125b:
+  disable_aspm
   ephy_init 0Bh, 0FFFFh, 0A908h
   ephy_init 1Eh, 0FFFFh, 020EBh
   ephy_init 4Bh, 0FFFFh, 0A908h
@@ -4068,6 +4261,12 @@ ioihResetDone:
     add dx,REG_MTPS
     mov al,3Bh
     out dx,al           
+;
+    mov dx,ds:IoBase
+    add dx,REG_CONFIG1
+    in al,dx
+    and al,NOT 1
+    out dx,al
 ;
     mov dx,ds:IoBase
     add dx,REG_CONFIG3
