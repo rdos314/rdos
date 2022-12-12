@@ -82,6 +82,8 @@ REG_IMS     = 1508h
 REG_IMC     = 150Ch
 REG_GPIE    = 1514h
 
+REG_RA      = 5400h
+
 REG_RDBA    = 0C000h
 REG_RDLEN   = 0C008h
 REG_RDH     = 0C010h
@@ -108,6 +110,8 @@ Handle       DW ?
 SuperThread  DW ?
 
 PendInt      DD ?
+
+Mac          DB 6 DUP(?)
 
 data    ENDS
 
@@ -477,6 +481,11 @@ ifDoneReset:
     call InitRx
     call InitTx
 ;
+    mov eax,es:REG_RA
+    mov dword ptr ds:Mac,eax
+    mov ax,es:REG_RA+4
+    mov word ptr ds:Mac+4,ax
+;
     mov eax,014004D5h
     mov es:REG_IMS,eax
 ;
@@ -628,12 +637,16 @@ MemSend2  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetAddress1  Proc far
-    int 3
+    mov esi,ether_data_sel
+    mov ds,esi
+    mov esi,OFFSET Mac
     ret
 GetAddress1     Endp
 
 GetAddress2  Proc far
-    int 3
+    mov esi,ether_data2_sel
+    mov ds,esi
+    mov esi,OFFSET Mac
     ret
 GetAddress2     Endp
 
@@ -719,18 +732,16 @@ MemGetLinkState2     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetMac1  Proc far
-    int 3
-    mov di,ether_data_sel
-    mov es,di
-;    mov edi,OFFSET EthernetAddress  
+    mov edi,ether_data_sel
+    mov es,edi
+    mov edi,OFFSET Mac
     ret
 GetMac1 Endp    
 
 GetMac2  Proc far
-    int 3
-    mov di,ether_data2_sel
-    mov es,di
-;    mov edi,OFFSET EthernetAddress  
+    mov edi,ether_data2_sel
+    mov es,edi
+    mov edi,OFFSET Mac
     ret
 GetMac2 Endp    
 
