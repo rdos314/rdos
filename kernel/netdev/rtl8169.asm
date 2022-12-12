@@ -3798,6 +3798,7 @@ StartNone:
 
 Start8168b:
   modify_config 4, 0, 1
+  modify_config 3, 0, 1
   DW -1
 
 Start8168cp1:
@@ -3806,16 +3807,24 @@ Start8168cp1:
   ephy_init 3,   00000h, 00042h
   ephy_init 6,   00080h, 00000h
   ephy_init 7,   00000h, 02000h
+
+  modify_config 1, 10h, 0
+  modify_config 3, 0, 1
+
   modify_config 3, 0, 4
   modify_config 4, 0, 2
   DW -1
 
 Start8168cp2:
+  modify_config 3, 0, 1
+
   modify_config 3, 0, 4
   modify_config 4, 0, 2
   DW -1
 
 Start8168cp3:
+  modify_config 3, 0, 1
+
   modify_config 3, 0, 4
   modify_config 4, 0, 2
   DW -1
@@ -3824,6 +3833,10 @@ Start8168c1:
   ephy_init 2,   00800h, 01000h
   ephy_init 3,   00000h, 00002h
   ephy_init 6,   00080h, 00000h
+
+  modify_config 1, 10h, 0
+  modify_config 3, 0, 1
+
   modify_config 3, 0, 4
   modify_config 4, 0, 2
   DW -1
@@ -3831,11 +3844,18 @@ Start8168c1:
 Start8168c2:
   ephy_init 1,   00000h, 00001h
   ephy_init 3,   00400h, 00020h
+
+  modify_config 1, 10h, 0
+  modify_config 3, 0, 1
+
   modify_config 3, 0, 4
   modify_config 4, 0, 2
   DW -1
 
 Start8168c4:
+  modify_config 1, 10h, 0
+  modify_config 3, 0, 1
+
   modify_config 3, 0, 4
   modify_config 4, 0, 2
   DW -1
@@ -3867,6 +3887,10 @@ Start8168e1:
   ephy_init 1Eh, 00000h, 02000h
   ephy_init 19h, 0FFFFh, 0FE6ch
   ephy_init 0Ah, 00000h, 00040h
+
+  modify_config 5, 0, 8
+  modify_config 1, 0DCh, 3
+  modify_config 3, 0, 1
   DW -1
 
 Start8168e2:
@@ -3884,6 +3908,10 @@ Start8168e2:
   set_eri_bits 01B0h, 10h
   write_eri 0CCh, ERIAR_MASK_1111, 000000050h
   write_eri 0D0h, ERIAR_MASK_1111, 007FF0060h
+
+  modify_config 5, 0, 8
+  modify_config 1, 0Ch, 3
+  modify_config 3, 0, 1
   DW -1
 
 Start8168f1:
@@ -3895,6 +3923,8 @@ Start8168f1:
   ephy_init 19h, 00000h, 00224h
   ephy_init 0,   00000h, 00008h
   ephy_init 0Ch, 03DF0h, 00200h
+
+  modify_config 5, 0, 8
   DW -1
 
 Start8411:
@@ -3905,6 +3935,8 @@ Start8411:
   ephy_init 19h, 00000h, 00224h
   ephy_init 0,   00000h, 00008h
   ephy_init 0Ch, 03DF0h, 00200h
+
+  modify_config 5, 0, 8
   DW -1
 
 Start8168g1:
@@ -4017,6 +4049,7 @@ Start8401:
   ephy_init 3,   0FFFFh, 00599h
   ephy_init 6,   0FFFFh, 0AF25h
   ephy_init 7,   0FFFFh, 08E68h
+  modify_config 3, 0, 1
   DW -1
 
 Start8105e1:
@@ -4075,6 +4108,8 @@ Start8125a2:
   ephy_init 60h, 0FFFFH, 09455h
   ephy_init 61h, 0FFFFh, 099FFh
   ephy_init 69h, 0FFFFh, 0FE04h
+
+  modify_config 1, 0, 10h
   DW -1
 
 Start8125b:
@@ -4085,6 +4120,8 @@ Start8125b:
   ephy_init 5Eh, 0FFFFh, 020EBh
   ephy_init 22h, 00030h, 00020h
   ephy_init 62h, 00030h, 00020h
+
+  modify_config 1, 0, 10h
   DW -1
 
 StartTab:
