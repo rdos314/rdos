@@ -72,6 +72,7 @@ TCTL_TXEN   = 1 SHL 1
 TXDCTL_EN   = 1 SHL 25
 
 REG_CTRL    = 0
+REG_STATUS  = 8
 REG_RCTL    = 100h
 REG_TCTL    = 400h
 
@@ -103,6 +104,11 @@ RxRingPhys   DD ?,?
 TxRingPhys   DD ?,?
 TxRingSel    DW ?
 
+Handle       DW ?
+SuperThread  DW ?
+
+PendInt      DD ?
+
 data    ENDS
 
 code    SEGMENT byte public 'CODE'
@@ -123,7 +129,12 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetInt  Proc far
-    CrashGate
+    mov es,ds:FuncSel
+    mov eax,es:REG_ICR
+    lock or ds:PendInt,eax
+;
+    mov bx,ds:SuperThread
+    Signal
     ret
 NetInt  Endp
 
@@ -429,7 +440,7 @@ itDoneEn:
     or eax,TCTL_TXEN
     mov es:REG_TCTL,eax
     ret
-InitTx	Endp
+InitTx  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -446,6 +457,8 @@ InitFunc    Proc near
     push es
     pushad
 ;
+    mov ds:PendInt,0
+;
     mov es,ds:FuncSel
     mov eax,es:REG_CTRL
     or eax,CTRL_SC
@@ -461,7 +474,6 @@ ifWaitReset:
     loop ifWaitReset
 
 ifDoneReset:
-    int 3
     call InitRx
     call InitTx
 ;
@@ -472,6 +484,255 @@ ifDoneReset:
     pop es
     ret
 InitFunc        Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           mem_supervisor_thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mem_super_thread:
+    mov ds,bx
+    GetThread
+    mov ds:SuperThread,ax
+    
+mstLoop:
+    WaitForSignal
+    int 3
+    xor eax,eax
+    xchg eax,ds:PendInt
+    jmp mstLoop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemPreview
+;
+;           DESCRIPTION:    Return size of block or no more data
+;
+;           RETURNS:        NC          Data available
+;                           ECX         Size of data (0)
+;                           DX          Packet type
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemPreview1  Proc far
+    stc
+    ret
+MemPreview1  Endp
+
+MemPreview2  Proc far
+    stc
+    ret
+MemPreview2  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Receive
+;
+;       DESCRIPTION:    Receive data
+;
+;       PARAMETERS:     ECX             size of data
+;
+;       RETURNS:        ES:EDI          data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Receive1  Proc far
+    int 3
+    ret
+Receive1  Endp
+
+Receive2  Proc far
+    int 3
+    ret
+Receive2  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Remove
+;
+;           DESCRIPTION:    Remove data from buffer ring
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Remove1  Proc far
+    int 3
+    ret
+Remove1  Endp
+
+Remove2  Proc far
+    int 3
+    ret
+Remove2  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetBuffer
+;
+;           DESCRIPTION:    Get buffer
+;
+;       PARAMETERS:     ECX         size
+;
+;           RETURNS:        ES:EDI  data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBuffer1 Proc far
+    int 3
+    ret
+GetBuffer1 Endp
+
+GetBuffer2 Proc far
+    int 3
+    ret
+GetBuffer2 Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemSend
+;
+;           DESCRIPTION:    Send data
+;
+;       PARAMETERS:     ECX         size
+;                           DX          packet type
+;                           DS:ESI  dest address
+;                           ES:EDI  data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemSend1  Proc far
+    int 3
+    ret
+MemSend1  Endp
+
+MemSend2  Proc far
+    int 3
+    ret
+MemSend2  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetAddress
+;
+;           DESCRIPTION:    Get adapter address
+;
+;           RETURNS:        DS:ESI  address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAddress1  Proc far
+    int 3
+    ret
+GetAddress1     Endp
+
+GetAddress2  Proc far
+    int 3
+    ret
+GetAddress2     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPktAddress
+;
+;           DESCRIPTION:    Get packet addresses
+;
+;           PARAMETERS:         ES          Data buffer selector
+;
+;           RETURNS:        ES:ESI  Source address
+;                           ES:EDI  Dest address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPktAddress   Proc far
+    int 3
+    ret
+GetPktAddress   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemGetLinkState
+;
+;           DESCRIPTION:    Get link state
+;
+;           RETURNS:        NC      Link up
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemGetLinkState1  Proc far
+    push ds
+    push eax
+;
+    mov eax,ether_data_sel
+    mov ds,eax
+    mov ds,ds:FuncSel
+    mov eax,ds:REG_STATUS
+    test al,2
+    clc
+    jnz mgls1Ok
+;
+    stc
+
+mgls1Ok:
+    pop eax
+    pop ds
+    ret
+MemGetLinkState1     Endp
+
+MemGetLinkState2  Proc far
+    push ds
+    push eax
+;
+    mov eax,ether_data2_sel
+    mov ds,eax
+    mov ds,ds:FuncSel
+    mov eax,ds:REG_STATUS
+    test al,2
+    clc
+    jnz mgls2Ok
+;
+    stc
+
+mgls2Ok:
+    pop eax
+    pop ds
+    ret
+MemGetLinkState2     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetMac
+;
+;       DESCRIPTION:    Get Mac address
+;
+;       RETURNS:        ES:EDI    Mac
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMac1  Proc far
+    int 3
+    mov di,ether_data_sel
+    mov es,di
+;    mov edi,OFFSET EthernetAddress  
+    ret
+GetMac1 Endp    
+
+GetMac2  Proc far
+    int 3
+    mov di,ether_data2_sel
+    mov es,di
+;    mov edi,OFFSET EthernetAddress  
+    ret
+GetMac2 Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -491,6 +752,28 @@ DriverName2     DB 'Net i2xx-2',0
 
 SupervisorName1 DB 'Super i2xx-1',0
 SupervisorName2 DB 'Super i2xx-2',0
+
+MemDispTable1:
+    DD OFFSET MemPreview1,      SEG code
+    DD OFFSET Receive1,         SEG code
+    DD OFFSET Remove1,          SEG code
+    DD OFFSET GetBuffer1,       SEG code
+    DD OFFSET MemSend1,         SEG code
+    DD OFFSET GetAddress1,      SEG code
+    DD OFFSET GetPktAddress,    SEG code
+    DD OFFSET MemGetLinkState1, SEG code
+    DD OFFSET GetMac1,          SEG code
+
+MemDispTable2:
+    DD OFFSET MemPreview2,      SEG code
+    DD OFFSET Receive2,         SEG code
+    DD OFFSET Remove2,          SEG code
+    DD OFFSET GetBuffer2,       SEG code
+    DD OFFSET MemSend2,         SEG code
+    DD OFFSET GetAddress2,      SEG code
+    DD OFFSET GetPktAddress,    SEG code
+    DD OFFSET MemGetLinkState2, SEG code
+    DD OFFSET GetMac2,          SEG code
 
 PciVendorTab:
 pci00   DW 8086h, 1539h,    0
@@ -544,8 +827,38 @@ init_pci1_found:
     mov ds:FuncSel,es
 ;
     call InitFunc
+;
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET MemDispTable1
+    mov edi,OFFSET DriverName1
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
+;
+    push ds
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET mem_super_thread
+    mov edi,OFFSET SupervisorName1
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+    pop ds
+;    
+    mov ax,bp   
+    clc
+    jmp init_pci1_done
 
 io_pci1:
+    int 3
     mov ax,bp   
     clc
     jmp init_pci1_done
@@ -602,8 +915,38 @@ init_pci2_found:
     mov ds:FuncSel,es
 ;
     call InitFunc
+;
+    push ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET MemDispTable1
+    mov edi,OFFSET DriverName2
+    mov al,1
+    mov dx,0
+    mov ecx,1600
+    RegisterNetDriver
+    pop ds
+    mov ds:Handle,bx
+;
+    push ds
+    mov bx,ds
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET mem_super_thread
+    mov edi,OFFSET SupervisorName2
+    mov ax,2
+    mov cx,1000h
+    CreateThread
+    pop ds
+;    
+    mov ax,bp   
+    clc
+    jmp init_pci2_done
 
 io_pci2:
+    int 3
     mov ax,bp   
     clc
     jmp init_pci2_done
