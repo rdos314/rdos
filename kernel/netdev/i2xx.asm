@@ -684,7 +684,13 @@ ms1SelOk:
     pop ebx
     pop eax
     FreeMem
+;    
+    cmp ecx,60
+    jae ms1PadOk
 ;
+    mov ecx,60
+
+ms1PadOk: 
     mov es,ds:FuncSel
     mov fs,ds:TxRingSel
     movzx esi,ds:TxTail
@@ -713,7 +719,88 @@ ms1SelOk:
 MemSend1  Endp
 
 MemSend2  Proc far
+    push ds
+    push fs
+    pushad
+;
+    xor edi,edi
+    mov ax,ds:[esi]
+    stos word ptr es:[edi]
+    mov ax,[esi+2]
+    stos word ptr es:[edi]
+    mov ax,[esi+4]
+    stos word ptr es:[edi]
+;
+    mov eax,ether_data2_sel
+    mov ds,eax
+;
+    mov ax,word ptr ds:Mac
+    stos word ptr es:[edi]
+    mov ax,word ptr ds:Mac+2
+    stos word ptr es:[edi]
+    mov ax,word ptr ds:Mac+4
+    stos word ptr es:[edi]
+;    
+    mov ax,dx
+    xchg al,ah
+    mov es:[edi],ax
+;
+    add ecx,14
+    xor edi,edi
+    NotifyEthernetPacket
+;
+    mov ebx,es
+    GetSelectorBaseSize
+    test dx,0FFFh
+    jz ms2SelOk
+;
     int 3
+
+ms2SelOk:
+    GetPageEntry
+    and ax,0F000h
+;
+    push eax
+    push ebx
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    pop ebx
+    pop eax
+    FreeMem
+;    
+    cmp ecx,60
+    jae ms2PadOk
+;
+    mov ecx,60
+
+ms2PadOk: 
+    mov es,ds:FuncSel
+    mov fs,ds:TxRingSel
+    movzx esi,ds:TxTail
+    shl esi,4
+    mov fs:[esi].tx_phys,eax
+    mov fs:[esi].tx_phys+4,ebx
+    mov fs:[esi].tx_len,cx
+    mov fs:[esi].tx_cso,0
+    mov fs:[esi].tx_cmd,0Bh
+    mov fs:[esi].tx_sta,0
+    mov fs:[esi].tx_resv,0
+    mov fs:[esi].tx_tag,0
+;
+    movzx esi,ds:TxTail
+    inc esi
+    mov ds:TxTail,si
+    mov es:REG_TDT,esi
+;
+    xor eax,eax
+    mov es,eax
+;
+    popad
+    pop fs
+    pop ds
     ret
 MemSend2  Endp
 
