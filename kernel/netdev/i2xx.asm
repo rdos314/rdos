@@ -591,15 +591,30 @@ Remove2  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetBuffer1 Proc far
+GetBuffer Proc far
     int 3
+    push eax
+    push ebx
+    push edx
+;
+    push ecx
+    mov eax,1000h
+    AllocateBigLinear
+    pop ecx
+;
+    add ecx,14
+    AllocateGdt
+    CreateDataSelector32
+;
+    mov es,ebx
+    mov edi,14
+    sub ecx,14
+;
+    pop edx
+    pop ebx
+    pop eax
     ret
-GetBuffer1 Endp
-
-GetBuffer2 Proc far
-    int 3
-    ret
-GetBuffer2 Endp
+GetBuffer Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -768,7 +783,7 @@ MemDispTable1:
     DD OFFSET MemPreview1,      SEG code
     DD OFFSET Receive1,         SEG code
     DD OFFSET Remove1,          SEG code
-    DD OFFSET GetBuffer1,       SEG code
+    DD OFFSET GetBuffer,        SEG code
     DD OFFSET MemSend1,         SEG code
     DD OFFSET GetAddress1,      SEG code
     DD OFFSET GetPktAddress,    SEG code
@@ -779,7 +794,7 @@ MemDispTable2:
     DD OFFSET MemPreview2,      SEG code
     DD OFFSET Receive2,         SEG code
     DD OFFSET Remove2,          SEG code
-    DD OFFSET GetBuffer2,       SEG code
+    DD OFFSET GetBuffer,        SEG code
     DD OFFSET MemSend2,         SEG code
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
