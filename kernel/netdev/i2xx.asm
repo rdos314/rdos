@@ -105,6 +105,7 @@ RxRingPhys   DD ?,?
 
 TxRingPhys   DD ?,?
 TxRingSel    DW ?
+TxTail       DW ?
 
 Handle       DW ?
 SuperThread  DW ?
@@ -328,6 +329,7 @@ CreateTxRing    Proc near
     mov ecx,1000h
     CreateDataSelector16
     mov ds:TxRingSel,bx
+    mov ds:TxTail,0
 ;
     mov es,bx
     mov ecx,100h
@@ -632,6 +634,7 @@ GetBuffer Endp
 MemSend1  Proc far
     int 3
     push ds
+    push fs
     pushad
 ;
     xor edi,edi
@@ -683,11 +686,28 @@ ms1SelOk:
     FreeMem
 ;
     mov es,ds:FuncSel
+    mov fs,ds:TxRingSel
+    movzx esi,ds:TxTail
+    shl esi,4
+    mov fs:[esi].tx_phys,eax
+    mov fs:[esi].tx_phys+4,ebx
+    mov fs:[esi].tx_len,cx
+    mov fs:[esi].tx_cso,0
+    mov fs:[esi].tx_cmd,0Bh
+    mov fs:[esi].tx_sta,0
+    mov fs:[esi].tx_resv,0
+    mov fs:[esi].tx_tag,0
+;
+    movzx esi,ds:TxTail
+    inc esi
+    mov ds:TxTail,si
+    mov es:REG_TDT,esi
 ;
     xor eax,eax
     mov es,eax
 ;
     popad
+    pop fs
     pop ds
     ret
 MemSend1  Endp
