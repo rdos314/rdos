@@ -592,7 +592,6 @@ Remove2  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetBuffer Proc far
-    int 3
     push eax
     push ebx
     push edx
@@ -632,6 +631,64 @@ GetBuffer Endp
 
 MemSend1  Proc far
     int 3
+    push ds
+    pushad
+;
+    xor edi,edi
+    mov ax,ds:[esi]
+    stos word ptr es:[edi]
+    mov ax,[esi+2]
+    stos word ptr es:[edi]
+    mov ax,[esi+4]
+    stos word ptr es:[edi]
+;
+    mov eax,ether_data_sel
+    mov ds,eax
+;
+    mov ax,word ptr ds:Mac
+    stos word ptr es:[edi]
+    mov ax,word ptr ds:Mac+2
+    stos word ptr es:[edi]
+    mov ax,word ptr ds:Mac+4
+    stos word ptr es:[edi]
+;    
+    mov ax,dx
+    xchg al,ah
+    mov es:[edi],ax
+;
+    add ecx,14
+    xor edi,edi
+    NotifyEthernetPacket
+;
+    mov ebx,es
+    GetSelectorBaseSize
+    test dx,0FFFh
+    jz ms1SelOk
+;
+    int 3
+
+ms1SelOk:
+    GetPageEntry
+    and ax,0F000h
+;
+    push eax
+    push ebx
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    pop ebx
+    pop eax
+    FreeMem
+;
+    mov es,ds:FuncSel
+;
+    xor eax,eax
+    mov es,eax
+;
+    popad
+    pop ds
     ret
 MemSend1  Endp
 
