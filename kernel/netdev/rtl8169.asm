@@ -2604,6 +2604,42 @@ ReadByteReg	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockConf
+;
+;           DESCRIPTION:    Lock config registers
+;
+;           PARAMETERS:     DS      Registers
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockConf	Proc near
+    mov dx,REG_9346CR
+    xor al,al
+    call WriteByteReg
+    ret
+LockConf	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockConf
+;
+;           DESCRIPTION:    Unlock config registers
+;
+;           PARAMETERS:     DS      Registers
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockConf	Proc near
+    mov dx,REG_9346CR
+    mov al,0Ch
+    call WriteByteReg
+    ret
+UnlockConf	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           RunTableCommands
 ;
 ;       DESCRIPTION:    Run table commands
@@ -3784,6 +3820,8 @@ Config  Proc near
     add si,si
     mov si,cs:[si].ConfigTab
     call RunTableCommands
+;
+    call LockConf
     ret
 Config  Endp            
 
@@ -4252,10 +4290,7 @@ ioihResetDone:
     in eax,dx
     mov word ptr ds:EthernetAddress+4,ax
 ;
-    mov dx,ds:IoBase
-    add dx,REG_9346CR
-    mov al,0C0h
-    out dx,al
+    call UnlockConf
 ;
     mov dx,ds:IoBase
     add dx,REG_CCR
@@ -4309,11 +4344,6 @@ ioihResetDone:
     add dx,REG_CONFIG3
     in al,dx
     or al,40h
-    out dx,al
-;    
-    mov dx,ds:IoBase
-    add dx,REG_9346CR
-    mov al,0
     out dx,al
 ;    
     mov dx,ds:IoBase
@@ -4404,8 +4434,7 @@ mihResetDone:
     mov eax,fs:mem_idr1
     mov word ptr ds:EthernetAddress+4,ax
 ;
-    mov al,0C0h
-    mov fs:mem_9346cr,al
+    call UnlockConf
 ;
     mov ax,fs:mem_ccr
     and ax,NOT 260h
@@ -5972,6 +6001,8 @@ SetSpeed    Endp
 IoUpdateLink  Proc near
     push ax
 ;    
+    call UnlockConf
+;
     mov dx,ds:IoBase
     add dx,REG_PHYStatus
     in al,dx
@@ -6121,6 +6152,7 @@ ioul37_10:
     call WriteEri
 
 ioulDone:
+    call LockConf
     pop ax
     ret
 IoUpdateLink  Endp
@@ -6140,6 +6172,8 @@ IoUpdateLink  Endp
 MemUpdateLink  Proc near
     push ax
 ;    
+    call UnlockConf
+;
     mov al,fs:mem_phy_stat
     test al,2
     jnz mulPatch
@@ -6281,6 +6315,7 @@ mul37_10:
     call WriteEri
 
 mulDone:
+    call LockConf
     pop ax
     ret
 MemUpdateLink  Endp
