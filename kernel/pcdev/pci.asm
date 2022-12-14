@@ -46,15 +46,21 @@ pci_id        DD ?
 
 pci_struc   ENDS
 
+pci_device_struc   STRUC
+
+pcid_vendor_dev_arr DD 8 DUP(?)
+pcid_bridge_arr     DW 8 DUP(?)
+
+pcid_dev_id         DB ?
+pcid_bus_id         DB ?
+
+pci_device_struc   ENDS
+
 pci_bus_struc  STRUC
 
-pcib_device_count   DW ?
-pcib_bridge_count   DW ?
+pcib_device_arr    DW 32 DUP(?)
 
-pcib_bridge_dev     pci_struc <>
-
-pcib_device_arr     DD MAX_PCI_DEVICES DUP(?,?)
-pcib_bridge_arr     DW MAX_PCI_DEVICES DUP(?)
+pcib_bus_id        DB ?
 
 pci_bus_struc  ENDS
 
@@ -97,7 +103,7 @@ pci_init_hook_arr       DD 32 DUP(?,?)
 
 pci_device_arr          DD MAX_PCI_DEVICES DUP(?,?)
 
-pci_root_dev            DW ?
+pci_bus_arr             DW 256 DUP(?)
 
 ext_pci_dev_count       DW ?    
 ext_pci_dev_arr         DW MAX_PCI_DEVICES DUP(?)
@@ -1585,6 +1591,181 @@ init_pci_devices    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ScanPciDevice
+;
+;           DESCRIPTION:    Scan PCI device
+;
+;           PARAMETERS:     BH		Bus #
+;                           BL          Device #
+;
+;           RETURNS:        DX          Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ScanPciDevice Proc near
+    push es
+;
+    xor dx,dx
+    mov es,dx
+;
+    xor ch,ch
+
+spdFuncLoop:
+    xor cl,cl
+    ReadPciDword
+    cmp ax,-1
+    je spdNext
+;
+    or dx,dx
+    jnz spdAdd
+;
+    push eax
+    mov eax,SIZE pci_device_struc
+    AllocateSmallGlobalMem
+;
+    mov di,OFFSET pcid_vendor_dev_arr
+    mov cx,8
+    xor eax,eax
+    rep stosd
+;
+    mov di,OFFSET pcid_bridge_arr
+    mov cx,8
+    xor ax,ax
+    rep stosw
+;
+    mov es:pcid_dev_id,bl
+    mov es:pcid_bus_id,bh
+    mov dx,es
+    pop eax
+
+spdAdd:
+    movzx edi,ch
+    mov es:[4*edi].pcid_vendor_dev_arr,eax
+;
+    mov cl,PCI_header_type
+    ReadPciByte
+    mov ah,al
+    and al,7Fh
+    cmp al,1
+    jne spdFuncNext
+;
+    push ax
+    push bx
+    push cx
+;
+    mov cl,PCI_br_primary_bus
+    ReadPciDword
+    shr eax,8
+    mov bh,al
+    call ScanPciBus
+    mov es:[edi].pcid_bridge_arr,si
+
+spdBusNext:
+    pop cx
+    pop bx
+    pop ax
+
+spdFuncNext:    
+    or ch,ch
+    jnz spdNext
+;
+    test ah,80h
+    jz spdDone
+
+spdNext:
+    inc ch
+    cmp ch,32
+    jne spdFuncLoop
+
+spdDone:
+    pop es
+    ret
+ScanPciDevice Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ScanPciBus
+;
+;           DESCRIPTION:    Scan PCI bus
+;
+;           PARAMETERS:     BH		Bus #
+;
+;           RETURNS:        SI          Bus selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ScanPciBus Proc near
+    push es
+;
+    xor si,si
+    mov es,si
+;
+    xor bl,bl
+
+spbDeviceLoop:
+    call ScanPciDevice
+    or dx,dx
+    jz spbNext
+;
+    or si,si
+    jnz spbAdd
+;
+    mov eax,SIZE pci_bus_struc
+    AllocateSmallGlobalMem
+;
+    mov di,OFFSET pcib_device_arr
+    mov cx,8
+    xor ax,ax
+    rep stosw
+    mov es:pcib_bus_id,bh
+    mov si,es
+
+spbAdd:
+    movzx edi,bl
+    mov es:[2*edi].pcib_device_arr,dx
+
+spbNext:
+    inc bl
+    cmp bl,32
+    jne spbDeviceLoop
+;
+    movzx edi,bh
+    mov ds:[2*edi].pci_bus_arr,si
+    pop es
+    ret
+ScanPciBus Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DetectDevices
+;
+;           DESCRIPTION:    Detect devices
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DetectDevices Proc near
+    mov ax,SEG data
+    mov ds,ax
+    mov es,ax
+;
+    mov di,OFFSET pci_device_arr
+    mov cx,256
+    xor ax,ax
+    rep stosw
+;
+    xor bh,bh
+    call ScanPciBus
+;
+    ret
+DetectDevices  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init_pci_thread
 ;
 ;           DESCRIPTION:    Init_pci_thread
@@ -1597,79 +1778,8 @@ init_pci_thread_name DB 'Init PCI', 0
 
 
 init_pci_thread Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov eax,SIZE pci_bus_struc
-    AllocateSmallGlobalMem
-    mov ds:pci_root_dev,es
-;
-    mov es:pcib_device_count,0
-    mov es:pcib_bridge_count,0
-    mov es:pcib_bridge_dev,0
-;
-    mov ecx,80000000h
-
-spciDevLoop:
-    mov eax,ecx
-    mov dx,0CF8h
-    RequestSpinlock ds:pci_spinlock
-    out dx,eax
-    mov dx,0CFCh
-    in eax,dx
-    ReleaseSpinlock ds:pci_spinlock
-;       
-    or eax,eax
-    jz spciDevNext
-;   
-    cmp eax,-1
-    je spciDevNext
-;   
     int 3
-    mov di,es:pcib_device_count
-    shl di,3
-    add di,OFFSET pcib_device_arr
-;
-    stosd
-    mov eax,ecx
-    stosd
-;
-    inc es:pcib_device_count 
-;   
-    mov eax,ecx
-    mov al,0Ch
-    mov dx,0CF8h
-    and al,0FCh
-    RequestSpinlock ds:pci_spinlock
-    out dx,eax
-    mov dx,0CFCh
-    in eax,dx
-    ReleaseSpinlock ds:pci_spinlock
-;
-    shr eax,16
-    mov ah,al
-    and al,7Fh
-    cmp al,1
-    jne spciBridgeDone
-
-spciBridgeDone:
-    mov al,ch
-    and al,7
-    or al,al
-    jnz spciDevNext
-;
-    test ah,80h
-    jnz spciDevNext
-;
-    add cx,800h
-    or cx,cx
-    jnz spciDevLoop
-
-spciDevNext:
-    add cx,100h
-    or cx,cx
-    jnz spciDevLoop
-
-spciDone:    
+    call DetectDevices
     
 
 
