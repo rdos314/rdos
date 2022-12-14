@@ -46,6 +46,18 @@ pci_id        DD ?
 
 pci_struc   ENDS
 
+pci_bus_struc  STRUC
+
+pcib_device_count   DW ?
+pcib_bridge_count   DW ?
+
+pcib_bridge_dev     pci_struc <>
+
+pcib_device_arr     DD MAX_PCI_DEVICES DUP(?,?)
+pcib_bridge_arr     DW MAX_PCI_DEVICES DUP(?)
+
+pci_bus_struc  ENDS
+
 ext_pci_struc  STRUC
 
 epci_vendor_id  DW ?
@@ -84,6 +96,8 @@ pci_init_hooks          DW ?
 pci_init_hook_arr       DD 32 DUP(?,?)
 
 pci_device_arr          DD MAX_PCI_DEVICES DUP(?,?)
+
+pci_root_dev            DW ?
 
 ext_pci_dev_count       DW ?    
 ext_pci_dev_arr         DW MAX_PCI_DEVICES DUP(?)
@@ -1581,7 +1595,85 @@ init_pci_devices    Endp
 
 init_pci_thread_name DB 'Init PCI', 0
 
+
 init_pci_thread Proc far
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,SIZE pci_bus_struc
+    AllocateSmallGlobalMem
+    mov ds:pci_root_dev,es
+;
+    mov es:pcib_device_count,0
+    mov es:pcib_bridge_count,0
+    mov es:pcib_bridge_dev,0
+;
+    mov ecx,80000000h
+
+spciDevLoop:
+    mov eax,ecx
+    mov dx,0CF8h
+    RequestSpinlock ds:pci_spinlock
+    out dx,eax
+    mov dx,0CFCh
+    in eax,dx
+    ReleaseSpinlock ds:pci_spinlock
+;       
+    or eax,eax
+    jz spciDevNext
+;   
+    cmp eax,-1
+    je spciDevNext
+;   
+    int 3
+    mov di,es:pcib_device_count
+    shl di,3
+    add di,OFFSET pcib_device_arr
+;
+    stosd
+    mov eax,ecx
+    stosd
+;
+    inc es:pcib_device_count 
+;   
+    mov eax,ecx
+    mov al,0Ch
+    mov dx,0CF8h
+    and al,0FCh
+    RequestSpinlock ds:pci_spinlock
+    out dx,eax
+    mov dx,0CFCh
+    in eax,dx
+    ReleaseSpinlock ds:pci_spinlock
+;
+    shr eax,16
+    mov ah,al
+    and al,7Fh
+    cmp al,1
+    jne spciBridgeDone
+
+spciBridgeDone:
+    mov al,ch
+    and al,7
+    or al,al
+    jnz spciDevNext
+;
+    test ah,80h
+    jnz spciDevNext
+;
+    add cx,800h
+    or cx,cx
+    jnz spciDevLoop
+
+spciDevNext:
+    add cx,100h
+    or cx,cx
+    jnz spciDevLoop
+
+spciDone:    
+    
+
+
+
     mov ax,SEG data
     mov ds,ax
     mov cx,ds:pci_init_hooks
