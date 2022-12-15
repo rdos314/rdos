@@ -1625,7 +1625,7 @@ spdFuncLoop:
 ;
     mov di,OFFSET pcid_vendor_dev_arr
     mov cx,8
-    xor eax,eax
+    mov eax,-1
     rep stosd
 ;
     mov di,OFFSET pcid_bridge_arr
@@ -1764,6 +1764,85 @@ DetectDevices  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CopyLegacy
+;
+;           DESCRIPTION:    Copy to legacy struc (should be removed)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyLegacy Proc near
+    mov ax,SEG data
+    mov es,ax
+    mov di,OFFSET pci_device_arr
+    xor bh,bh
+
+clBusloop:
+    movzx si,bh
+    add si,si
+    mov ax,ds:[si].pci_bus_arr
+    or ax,ax
+    jz clBusNext
+;
+    push si
+    xor bl,bl
+    mov es,ax
+
+clDevLoop:
+    movzx si,bl
+    add si,si
+    mov ax,es:[si].pcib_device_arr
+    or ax,ax
+    jz clDevNext
+;
+    push si
+    xor ch,ch
+    mov fs,ax
+    mov si,OFFSET pcid_vendor_dev_arr
+
+clFuncLoop:
+    mov eax,fs:[si]
+    cmp eax,-1
+    je clFuncNext
+;
+    mov ds:[edi],eax
+    add edi,4
+;
+    mov al,bh
+    mov ah,80h
+    shl eax,16
+    mov ah,bl
+    shl ah,3
+    or ah,ch
+    xor al,al
+    mov ds:[edi],eax
+    add edi,4
+
+clFuncNext:
+    add si,4
+    inc ch
+    cmp ch,8
+    jne clFuncLoop
+;
+    pop si
+
+clDevNext:
+    inc bl
+    cmp bl,32
+    jne clDevLoop    
+;
+    pop si
+
+clBusNext:
+    inc bh
+    or bh,bh
+    jnz clBusLoop
+;
+    ret
+CopyLegacy Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init_pci_thread
 ;
 ;           DESCRIPTION:    Init_pci_thread
@@ -1777,6 +1856,7 @@ init_pci_thread_name DB 'Init PCI', 0
 
 init_pci_thread Proc far
     call DetectDevices
+    call CopyLegacy
     
 
 
