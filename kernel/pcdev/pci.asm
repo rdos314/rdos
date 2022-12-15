@@ -1649,21 +1649,18 @@ spdAdd:
     cmp al,1
     jne spdFuncNext
 ;
-    push ax
-    push bx
-    push cx
+    pushad
 ;
-    mov cl,PCI_br_primary_bus
-    ReadPciDword
-    shr eax,8
+    mov cl,PCI_br_secondary_bus
+    ReadPciByte
     mov bh,al
-    call ScanPciBus
-    mov es:[edi].pcid_bridge_arr,si
 
-spdBusNext:
-    pop cx
-    pop bx
-    pop ax
+    push edi    
+    call ScanPciBus
+    pop edi
+    mov es:[2*edi].pcid_bridge_arr,si
+;
+    popad
 
 spdFuncNext:    
     or ch,ch
@@ -1753,7 +1750,7 @@ DetectDevices Proc near
     mov ds,ax
     mov es,ax
 ;
-    mov di,OFFSET pci_device_arr
+    mov di,OFFSET pci_bus_arr
     mov cx,256
     xor ax,ax
     rep stosw
@@ -1779,7 +1776,6 @@ init_pci_thread_name DB 'Init PCI', 0
 
 
 init_pci_thread Proc far
-    int 3
     call DetectDevices
     
 
