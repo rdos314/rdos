@@ -1674,7 +1674,7 @@ spdFuncNext:
 
 spdNext:
     inc ch
-    cmp ch,32
+    cmp ch,8
     jne spdFuncLoop
 
 spdDone:
@@ -1715,9 +1715,10 @@ spbDeviceLoop:
     AllocateSmallGlobalMem
 ;
     mov di,OFFSET pcib_device_arr
-    mov cx,8
+    mov cx,32
     xor ax,ax
     rep stosw
+;
     mov es:pcib_bus_id,bh
     mov si,es
 
