@@ -1614,6 +1614,14 @@ spdAdd:
     add di,OFFSET pcid_func_arr
     mov es:[di].pcif_vendor_dev,eax
 ;
+    mov cl,PCI_subclass
+    ReadPciWord
+    mov es:[di].pcif_class,ax
+;
+    mov cl,PCI_interrupt_pin
+    ReadPciByte
+    mov es:[di].pcif_pin,al
+;
     mov cl,PCI_header_type
     ReadPciByte
     mov ah,al
