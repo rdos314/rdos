@@ -38,14 +38,6 @@ INCLUDE ..\os\core.inc
 
 MAX_PCI_DEVICES = 256
 
-pci_struc   STRUC
-
-pci_vendor    DW ?
-pci_device    DW ?
-pci_id        DD ?
-
-pci_struc   ENDS
-
 
 ; this structure should be 128 bytes!
 
@@ -580,14 +572,14 @@ get_pci_irq  Endp
 ;
 ;           DESCRIPTION:    Find a PCI device
 ;
-;           PARAMETERS:         CX          Device ID
+;           PARAMETERS:     CX          Device ID
 ;                           DX          Vendor ID
-;                           AX          Device number
+;                           AH:AL       Bus & device to start scanning
 ;
 ;           RETURNS:        NC          Success
 ;                           BH          Bus
-;               CH      Function
 ;                           BL          Device
+;                           CH          Function
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -595,56 +587,69 @@ find_pci_device_name    DB 'Find PCI Device',0
 
 find_pci_device Proc far
     push ds
-    push eax
-    push dx
-    push si
-    push di
-;       
-    push ecx
+    push es
+    push fs
+    push esi
 ;
-    mov di,SEG data
-    mov ds,di
-    mov si,OFFSET pci_device_arr
+    mov bx,SEG data
+    mov ds,bx
 ;
-    mov di,ax
-    mov bx,cx
-    shl ebx,16
-    mov bx,dx
+    mov bx,ax
 
-    mov cx,MAX_PCI_DEVICES - 1
-    
-find_pci_device_loop:
-    lodsd
-    cmp eax,ebx
-    jne find_pci_device_next    
+fpdBusLoop:
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz fpdBusNext
 ;
-    mov eax,ds:[si+1]
-    shr al,3
-    cmp ax,di
-    jae find_pci_device_ok
+    mov es,ax
 
-find_pci_device_next:
-    add esi,4
-    loop find_pci_device_loop
+fpdDevLoop:
+    movzx esi,bl
+    mov ax,es:[2*esi].pcib_device_arr
+    or ax,ax
+    jz fpdDevNext
+;
+    mov fs,ax
+    xor al,al
+
+fpdFuncLoop:
+    movzx esi,al
+    shl esi,7
+    add esi,OFFSET pcid_func_arr
+;
+    cmp dx,word ptr fs:[esi].pcif_vendor_dev
+    jne fpdFuncNext
+;
+    cmp cx,word ptr fs:[esi].pcif_vendor_dev+2
+    jne fpdFuncNext
+;
+    mov ch,al
+    clc
+    jmp fpdDone
+
+fpdFuncNext:
+    inc al
+    cmp al,8
+    jne fpdFuncLoop
+
+fpdDevNext:
+    inc bl
+    cmp bl,20h
+    jne fpdDevLoop
+
+fpdBusNext:
+    xor bl,bl
+    inc bh
+    or bh,bh
+    jnz fpdBusLoop
 ;
     stc
-    pop ecx
-    jmp find_pci_device_done
 
-find_pci_device_ok:
-    mov ebx,ds:[si+1]
-    shr bl,3
-;
-    mov cx,ds:[si]
-    and cx,700h
-    add sp,4
-    clc
-
-find_pci_device_done:
-    pop di
-    pop si
-    pop dx
-    pop eax
+fpdDone:
+    pop esi
+    pop fs
+    pop es
     pop ds
     retf32
 find_pci_device Endp
