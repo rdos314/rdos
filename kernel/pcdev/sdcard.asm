@@ -235,7 +235,7 @@ ipdLoop:
     mov ax,si
     mov bh,8
     mov bl,5
-    FindPciClassAll
+    FindPciClass
     jc ipdDone
 ;
     push cx

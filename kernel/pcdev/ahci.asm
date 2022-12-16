@@ -971,7 +971,7 @@ ipaLoop:
     mov ax,si
     mov bh,1
     mov bl,6
-    FindPciClassAll
+    FindPciClass
     jc ipaDone
 ;
     push cx

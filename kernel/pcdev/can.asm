@@ -662,7 +662,7 @@ SetupDevice  Proc near
     xor ax,ax
     mov bh,0Ch
     mov bl,9
-    FindPciClassAll
+    FindPciClass
     jc sdDone
 ;
     push cx

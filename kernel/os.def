@@ -377,7 +377,7 @@ process_key_scan_nr         = 378
 
 get_debug_thread_sel_nr     = 379
 
-find_pci_class_all_nr       = 380
+find_pci_class_nr           = 380
 
 show_proc_debug_nr          = 381
 

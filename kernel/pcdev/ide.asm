@@ -1822,7 +1822,7 @@ CheckPciIde Proc near
     xor ax,ax
     mov bh,1
     mov bl,1
-    FindPciClassAll
+    FindPciClass
     jc cpiDone
 ;
     mov cl,10h
@@ -1868,7 +1868,7 @@ cpiLoop:
     mov ax,dx
     mov bh,1
     mov bl,1
-    FindPciClassAll
+    FindPciClass
     jc cpiDone
 ;   
     mov cl,10h
@@ -1933,7 +1933,7 @@ CheckPciSata Proc near
     xor ax,ax
     mov bh,1
     mov bl,6
-    FindPciClassAll
+    FindPciClass
     jc cpaDone
 ;
     mov cl,10h
@@ -1979,7 +1979,7 @@ cpaLoop:
     mov ax,dx
     mov bh,1
     mov bl,6
-    FindPciClassAll
+    FindPciClass
     jc cpaDone
 ;   
     mov cl,10h

@@ -759,24 +759,24 @@ find_pci_class_interface  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FindPciClassAll
+;           NAME:           FindPciClass
 ;
 ;           DESCRIPTION:    Find PCI class, ignore interface
 ;
-;           PARAMETERS:         BH          Class
+;           PARAMETERS:     BH          Class
 ;                           BL          Sub class
-;                           AX          Device number
+;                           AX          Entry #
 ;
 ;           RETURNS:        NC          Success
 ;                           BH          Bus
 ;                           BL          Device
-;               CH      Function
+;                           CH      Function
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-find_pci_class_all_name DB 'Find PCI Class All',0
+find_pci_class_name DB 'Find PCI Class',0
 
-find_pci_class_all      Proc far
+find_pci_class      Proc far
     push ds
     push eax
     push dx
@@ -830,7 +830,7 @@ find_pci_class_all_done:
     pop eax
     pop ds
     retf32
-find_pci_class_all      Endp
+find_pci_class      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2044,10 +2044,10 @@ init    Proc far
     mov ax,find_pci_class_interface_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET find_pci_class_all
-    mov edi,OFFSET find_pci_class_all_name
+    mov esi,OFFSET find_pci_class
+    mov edi,OFFSET find_pci_class_name
     xor cl,cl
-    mov ax,find_pci_class_all_nr
+    mov ax,find_pci_class_nr
     RegisterOsGate
 ;
     mov esi,OFFSET find_pci_device
