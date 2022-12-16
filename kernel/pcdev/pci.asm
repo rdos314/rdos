@@ -65,6 +65,9 @@ pci_bus_struc  STRUC
 pcib_device_arr    DW 32 DUP(?)
 
 pcib_bus_id        DB ?
+pcib_owner_bus     DB ?
+pcib_owner_dev     DB ?
+pcib_owner_func    DB ?
 
 pci_bus_struc  ENDS
 
@@ -1643,6 +1646,7 @@ spdAdd:
     cmp al,1
     jne spdFuncNext
 ;
+    push es
     pushad
 ;
     mov cl,PCI_br_secondary_bus
@@ -1654,7 +1658,22 @@ spdAdd:
     pop edi
     mov es:[di].pcif_bridge,si
 ;
+    or si,si
+    jz spdEmptyBus
+;
+    mov es,si
     popad
+;
+    mov es:pcib_owner_bus,bh
+    mov es:pcib_owner_dev,bl
+    mov es:pcib_owner_func,ch
+;
+    pop es
+    jmp spdFuncNext
+
+spdEmptyBus:
+    popad
+    pop es
 
 spdFuncNext:    
     or ch,ch
@@ -1711,6 +1730,9 @@ spbDeviceLoop:
     rep stosw
 ;
     mov es:pcib_bus_id,bh
+    mov es:pcib_owner_bus,0
+    mov es:pcib_owner_dev,0
+    mov es:pcib_owner_func,0
     mov si,es
 
 spbAdd:
@@ -1890,6 +1912,47 @@ init_pci    Proc far
 init_pci    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciBus
+;
+;           DESCRIPTION:    Get PCI bus
+;
+;           PARAMETERS:     BH          Bus
+;
+;           RETURNS:        BH          Bus
+;                           BL          Device
+;                           CH          Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_bus_name DB 'Get Pci Bus',0
+
+get_pci_bus     Proc far    
+    push ds
+    push esi
+;
+    mov si,SEG data
+    mov ds,si
+    movzx esi,bh
+    mov si,ds:[2*esi].pci_bus_arr
+    or si,si
+    stc
+    jz gpbDone
+;
+    mov ds,si
+    mov bh,ds:pcib_owner_bus
+    mov bl,ds:pcib_owner_dev
+    mov ch,ds:pcib_owner_func
+    clc
+    
+gpbDone:
+    pop esi
+    pop ds
+    retf32
+get_pci_bus     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           init
@@ -2044,6 +2107,12 @@ init    Proc far
     xor cl,cl
     mov ax,get_pci_irq_nr
     RegisterOsGate
+;
+    mov esi,OFFSET get_pci_bus
+    mov edi,OFFSET get_pci_bus_name
+    xor dx,dx
+    mov ax,get_pci_bus_nr
+    RegisterBimodalUserGate
 ;
     call DetectDevices
     clc

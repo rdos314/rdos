@@ -533,6 +533,7 @@ get_acpi_device_irq_nr          = 451
 get_acpi_device_io_nr           = 452
 get_acpi_device_mem_nr          = 453
 
+
 get_core_load_nr                = 462
 get_core_duty_nr                = 463
 
@@ -965,5 +966,11 @@ user_get_time_nr                  = 789
 has_power_card_nr                 = 790
 
 create_secure_connection_nr       = 791
+
+get_pci_bus_nr                    = 792
+get_pci_dev_name_nr               = 793
+get_pci_dev_vendor_nr             = 794
+get_pci_dev_class_nr              = 795
+get_pci_dev_irq_nr                = 796
 
 usergate_entries                  = 800

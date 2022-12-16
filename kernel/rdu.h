@@ -533,6 +533,7 @@
 #define usergate_get_acpi_device_io 0x000001C4
 #define usergate_get_acpi_device_mem 0x000001C5
 
+
 #define usergate_get_core_load 0x000001CE
 #define usergate_get_core_duty 0x000001CF
 
@@ -965,6 +966,12 @@
 #define usergate_has_power_card 0x00000316
 
 #define usergate_create_secure_connection 0x00000317
+
+#define usergate_get_pci_bus 0x00000318
+#define usergate_get_pci_dev_name 0x00000319
+#define usergate_get_pci_dev_vendor 0x0000031A
+#define usergate_get_pci_dev_class 0x0000031B
+#define usergate_get_pci_dev_irq 0x0000031C
 
 
 
@@ -1504,6 +1511,7 @@
 #define CallGate_get_acpi_device_io 0x55 0x67 0x9a 196 1 0 0 3 0 0x5d
 #define CallGate_get_acpi_device_mem 0x55 0x67 0x9a 197 1 0 0 3 0 0x5d
 
+
 #define CallGate_get_core_load 0x55 0x67 0x9a 206 1 0 0 3 0 0x5d
 #define CallGate_get_core_duty 0x55 0x67 0x9a 207 1 0 0 3 0 0x5d
 
@@ -1936,6 +1944,12 @@
 #define CallGate_has_power_card 0x55 0x67 0x9a 22 3 0 0 3 0 0x5d
 
 #define CallGate_create_secure_connection 0x55 0x67 0x9a 23 3 0 0 3 0 0x5d
+
+#define CallGate_get_pci_bus 0x55 0x67 0x9a 24 3 0 0 3 0 0x5d
+#define CallGate_get_pci_dev_name 0x55 0x67 0x9a 25 3 0 0 3 0 0x5d
+#define CallGate_get_pci_dev_vendor 0x55 0x67 0x9a 26 3 0 0 3 0 0x5d
+#define CallGate_get_pci_dev_class 0x55 0x67 0x9a 27 3 0 0 3 0 0x5d
+#define CallGate_get_pci_dev_irq 0x55 0x67 0x9a 28 3 0 0 3 0 0x5d
 
 #else
 
@@ -2473,6 +2487,7 @@
 #define CallGate_get_acpi_device_io 0x3e 0x67 0x9a 196 1 0 0 3 0
 #define CallGate_get_acpi_device_mem 0x3e 0x67 0x9a 197 1 0 0 3 0
 
+
 #define CallGate_get_core_load 0x3e 0x67 0x9a 206 1 0 0 3 0
 #define CallGate_get_core_duty 0x3e 0x67 0x9a 207 1 0 0 3 0
 
@@ -2905,5 +2920,11 @@
 #define CallGate_has_power_card 0x3e 0x67 0x9a 22 3 0 0 3 0
 
 #define CallGate_create_secure_connection 0x3e 0x67 0x9a 23 3 0 0 3 0
+
+#define CallGate_get_pci_bus 0x3e 0x67 0x9a 24 3 0 0 3 0
+#define CallGate_get_pci_dev_name 0x3e 0x67 0x9a 25 3 0 0 3 0
+#define CallGate_get_pci_dev_vendor 0x3e 0x67 0x9a 26 3 0 0 3 0
+#define CallGate_get_pci_dev_class 0x3e 0x67 0x9a 27 3 0 0 3 0
+#define CallGate_get_pci_dev_irq 0x3e 0x67 0x9a 28 3 0 0 3 0
 
 #endif

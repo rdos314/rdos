@@ -46,6 +46,9 @@ public:
     TPciCommand(TSession *session, const char *param);
 
     virtual int Execute(char *param);
+
+protected:
+    void PrintBusDevices(int Bus);
 };
 
 #endif

@@ -135,6 +135,91 @@
     CallGate_create_uuid  \
     __parm [__edi]
 
+#pragma aux RdosGetPciBus = \
+    "mov bh,al" \
+    CallGate_get_pci_bus  \
+    "jc PciFail" \
+    "movzx eax,bh" \
+    "mov [edx],eax" \
+    "movzx eax,bl" \
+    "mov [esi],eax" \
+    "movzx eax,ch" \
+    "mov [edi],eax" \
+    "mov eax,1" \
+    "jmp PciDone" \
+    "PciFail: " \
+    "xor eax,eax" \
+    "PciDone: " \
+    __parm [__eax] [__edx] [__esi] [__edi] \
+    __value [__eax]
+
+#pragma aux RdosGetPciDeviceName = \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_dev_name  \
+    CarryToBool \
+    __parm [__eax] [__ecx] [__edx] [__edi] \
+    __value [__eax] \
+    __modify [__ebx]
+
+#pragma aux RdosGetPciDeviceVendor = \
+    "push edx" \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_dev_vendor  \
+    "jc Fail" \
+    "movzx eax,ax" \
+    "mov [esi],eax" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    "mov eax,1" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    "pop edx" \
+    __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
+    __value [__eax] \
+    __modify [__ebx]
+
+#pragma aux RdosGetPciDeviceClass = \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_dev_class  \
+    "jc Fail" \
+    "push edx" \
+    "movzx edx,ah" \
+    "mov [esi],edx" \
+    "movzx edx,al" \
+    "mov [edi],edx" \
+    "mov eax,1" \
+    "pop edx" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
+    __value [__eax] \
+    __modify [__ebx]
+
+#pragma aux RdosGetPciDeviceIrq = \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_dev_irq  \
+    "jc Fail" \
+    "movzx eax,al" \
+    "jmp Done" \
+    "Fail:" \
+    "mov eax,-1" \
+    "Done:" \
+    __parm [__eax] [__ecx] [__edx] \
+    __value [__eax] \
+    __modify [__ebx]
+
 #pragma aux RdosGetAcpiStatus = \
     CallGate_get_acpi_status  \
     "jnc AcpiDone" \

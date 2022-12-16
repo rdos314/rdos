@@ -87,6 +87,64 @@ TPciCommand::TPciCommand(TSession *session, const char *param)
 
 /*##########################################################################
 #
+#   Name       : TPciCommand::PrintBusDevices
+#
+#   Purpose....: Print bus devices
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPciCommand::PrintBusDevices(int Bus)
+{
+    int ok;
+    char AcpiName[128];
+    char Str[100];
+    int Device;
+    int Function;
+    int VendorID;
+    int DeviceID;
+    int Class;
+    int SubClass;
+    int Irq;
+
+    Write("ACPI Name                     ");
+    Write("Vendor/dev Class  Dev Func  IRQ\r\n");
+
+    for (Device = 0; Device < 32; Device++)
+    {
+        for (Function = 0; Function < 8; Function++)
+        {
+            if (RdosGetPciDeviceVendor(Bus, Device, Function, &VendorID, &DeviceID))
+            {
+                if (!RdosGetPciDeviceName(Bus, Device, Function, AcpiName))
+                    AcpiName[0] = 0;
+
+                while (strlen(AcpiName) < 30)
+                    strcat(AcpiName, " ");
+
+                Write(AcpiName);
+
+                RdosGetPciDeviceClass(Bus, Device, Function, &Class, &SubClass);
+                Irq = RdosGetPciDeviceIrq(Bus, Device, Function);
+
+                sprintf(Str, "%04hX %04hX  %02hX%02hX  %4 %4d  ", VendorID, DeviceID, Class, SubClass, Device, Function);
+                Write(Str);
+
+                if (Irq)
+                    sprintf(Str, "%3d\r\n", Irq);
+                else
+                    strcpy(Str, "   \r\n");
+                Write(Str);
+            }
+        }
+    }
+    Write("\r\n");
+}
+
+/*##########################################################################
+#
 #   Name       : TPciCommand::Execute
 #
 #   Purpose....: Run command
@@ -98,8 +156,23 @@ TPciCommand::TPciCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TPciCommand::Execute(char *param)
 {
+    int i;
+    int bus, dev, func;
+    char Str[80];
+
     if (LeadOptions(&param, 0) != E_None)
         return 1;
+
+    for (i = 0; i < 256; i++)
+    {
+        if (RdosGetPciBus(i, &bus, &dev, &func))
+        {
+            sprintf(Str, "Bus %d (Bus: %d, Device: %d, Function: %d)\r\n", i, bus, dev, func);
+            Write(Str);
+
+            PrintBusDevices(i);
+        }
+    }
 
     return 0;
 }

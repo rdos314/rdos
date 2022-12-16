@@ -4232,6 +4232,50 @@ AddWaitForSyslog      MACRO
                         ENDM
 
 
+;;;;;;;;;;; PCI ;;;;;;;;;;
+
+;   IN  BH          Bus #
+;   OUT BH          Bus #
+;   OUT BL          Device #
+;   OUT CH          Function #
+GetPciBus      MACRO
+        UserGate get_pci_bus_nr
+                        ENDM
+
+;   IN  BH          Bus #
+;   IN  BL          Device #
+;   IN  CH          Function #
+;   IN  ES:E(DI)    ACPI name buffer
+GetPciDeviceName      MACRO
+        UserGate get_pci_device_name_nr
+                        ENDM
+
+;   IN  BH          Bus #
+;   IN  BL          Device #
+;   IN  CH          Function #
+;   OUT AX          Vendor ID
+;   OUT DX          Device ID
+GetPciDeviceVendor      MACRO
+        UserGate get_pci_device_vendor_nr
+                        ENDM
+
+;   IN  BH          Bus #
+;   IN  BL          Device #
+;   IN  CH          Function #
+;   OUT AH          Class
+;   OUT AL          Sub class
+GetPciDeviceClass      MACRO
+        UserGate get_pci_device_class_nr
+                        ENDM
+
+;   IN  BH          Bus #
+;   IN  BL          Device #
+;   IN  CH          Function #
+;   OUT AL          IRQ #
+GetPciDeviceIrq      MACRO
+    UserGate get_pci_device_irq_nr
+                        ENDM
+
 ;;;;;;;;;;; ACPI ;;;;;;;;;;
 
 ;   OUT EAX         ACPI status
