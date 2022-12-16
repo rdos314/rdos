@@ -555,53 +555,38 @@ get_pci_irq_name    DB 'Get Pci IRQ',0
 get_pci_irq  Proc far
     push ds
     push es
-    push dx
-    push si
+    push esi
 ;
-    mov dx,SEG data    
-    mov ds,dx
-    mov si,OFFSET ext_pci_dev_arr
-    mov dx,ds:ext_pci_dev_count
-    or dx,dx    
-    jz gpiNoAcpi
-
-gpiLoop:
-    mov es,ds:[si]
-    cmp bh,es:epci_bus
-    jne gpiNext
+    mov ax,SEG data    
+    mov ds,ax
 ;
-    cmp bl,es:epci_device
-    jne gpiNext
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz gpiFail
 ;
-    cmp ch,es:epci_function
-    je gpiOk
-
-gpiNext:
-    add si,2
-    sub dx,1
-    jnz gpiLoop
-
-gpiFail:
-    stc
-    jmp gpiDone
-
-gpiNoAcpi:
-    mov cl,PCI_interrupt_line
-    ReadPciByte
-    clc
-    jmp gpiDone
-
-gpiOk:
-    mov al,es:epci_pin
+    mov es,ax
+    movzx esi,bl
+    mov ax,es:[2*esi].pcib_device_arr
+    or ax,ax
+    jz gpiFail
+;
+    mov es,ax
+    movzx esi,ch
+    shl esi,7
+    movzx ax,es:[esi].pcif_irq
     or al,al
     jz gpiFail
-;        
-    mov al,es:epci_irq
+;
     clc
+    jmp gpiDone
+
+gpiFail:
+    xor ax,ax
+    stc
 
 gpiDone:
-    pop si
-    pop dx
+    pop esi
     pop es
     pop ds
     retf32
@@ -1622,6 +1607,10 @@ spdAdd:
     ReadPciByte
     mov es:[di].pcif_pin,al
 ;
+    mov cl,PCI_interrupt_line
+    ReadPciByte
+    mov es:[di].pcif_irq,al
+;
     mov cl,PCI_header_type
     ReadPciByte
     mov ah,al
@@ -2157,7 +2146,6 @@ init_pci_thread_name DB 'Init PCI', 0
 
 
 init_pci_thread Proc far
-    int 3
     call GetLegacyAcpi
     call SetupLegacyAcpi
 ;
