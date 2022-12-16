@@ -46,10 +46,11 @@ pci_func_struc   STRUC
 pcif_vendor_dev DD ?
 pcif_bridge     DW ?
 pcif_class      DW ?
+pcif_interface  DB ?
 pcif_pin        DB ?
 pcif_irq        DB ?
 pcif_acpi_index DD ?
-pcif_acpi_name  DB 114 DUP(?)
+pcif_acpi_name  DB 113 DUP(?)
 
 pci_func_struc   ENDS
 
@@ -661,15 +662,15 @@ find_pci_device Endp
 ;
 ;           DESCRIPTION:    Find PCI class
 ;
-;           PARAMETERS:         BH          Class
+;           PARAMETERS:     BH          Class
 ;                           BL          Sub class
 ;                           CH          Interface
-;                           AX          Device number
+;                           AX          Entry #
 ;
 ;           RETURNS:        NC          Success
 ;                           BH          Bus
 ;                           BL          Device
-;               CH      Function
+;                           CH          Function
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -677,60 +678,80 @@ find_pci_class_name     DB 'Find PCI Class',0
 
 find_pci_class  Proc far
     push ds
-    push eax
-    push dx
-    push si
-    push di
+    push es
+    push fs
+    push edx
+    push esi
+    push edi
+    push ebp
 ;
-    mov di,ax
-    movzx eax,bx
-    shl eax,16
-    mov ah,ch
-    mov ebx,eax
+    mov bp,ax
+    mov dx,SEG data
+    mov ds,dx
 ;
-    mov si,SEG data
-    mov ds,si
-    mov si,OFFSET pci_device_arr
-    mov cx,MAX_PCI_DEVICES - 1
+    mov dl,ch
+    mov di,bx
+    xor bx,bx
 
-find_pci_class_loop:
-    mov eax,ds:[si+4]
-    mov dx,0CF8h
-    mov al,8
-    RequestSpinlock ds:pci_spinlock
-    out dx,eax
-    mov dx,0CFCh
-    in eax,dx
-    ReleaseSpinlock ds:pci_spinlock
-    xor al,al
-    cmp eax,ebx
-    jne find_pci_class_next 
+fpciBusLoop:
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz fpciBusNext
 ;
-    or di,di
-    jz find_pci_class_ok
-;
-    sub di,1
+    mov es,ax
+    xor bl,bl
 
-find_pci_class_next:
-    add si,8
-    loop find_pci_class_loop
+fpciDevLoop:
+    movzx esi,bl
+    mov ax,es:[2*esi].pcib_device_arr
+    or ax,ax
+    jz fpciDevNext
+;
+    mov fs,ax
+    xor ch,ch
+
+fpciFuncLoop:
+    movzx esi,ch
+    shl esi,7
+    add esi,OFFSET pcid_func_arr
+;
+    cmp di,fs:[esi].pcif_class
+    jne fpciFuncNext
+;
+    cmp dl,fs:[esi].pcif_interface
+    jne fpciFuncNext
+;
+    or bp,bp
+    clc
+    je fpciDone
+;
+    dec bp
+
+fpciFuncNext:
+    inc ch
+    cmp ch,8
+    jne fpciFuncLoop
+
+fpciDevNext:
+    inc bl
+    cmp bl,20h
+    jne fpciDevLoop
+
+fpciBusNext:
+    inc bh
+    or bh,bh
+    jnz fpciBusLoop
 ;
     stc
-    jmp find_pci_class_done
 
-find_pci_class_ok:
-    mov ebx,ds:[si+5]
-    shr bl,3
-;
-    mov cx,ds:[si+4]
-    and cx,700h
-    clc
-
-find_pci_class_done:
-    pop di
-    pop si
-    pop dx
-    pop eax
+fpciDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop fs
+    pop es
     pop ds
     retf32
 find_pci_class  Endp
@@ -1104,7 +1125,7 @@ setup_pci_msi     Endp
 ;           DESCRIPTION:    Move MSI to new core
 ;
 ;           PARAMETERS:     AL          Int base
-;                           FS		Core
+;                           FS          Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1532,7 +1553,7 @@ bios_pci_int    Endp
 ;
 ;           DESCRIPTION:    Scan PCI device
 ;
-;           PARAMETERS:     BH		Bus #
+;           PARAMETERS:     BH          Bus #
 ;                           BL          Device #
 ;
 ;           RETURNS:        DX          Device selector
@@ -1567,6 +1588,7 @@ spdInitFunc:
     mov es:[di].pcif_vendor_dev,-1
     mov es:[di].pcif_bridge,0
     mov es:[di].pcif_class,0
+    mov es:[di].pcif_interface,0
     mov es:[di].pcif_pin,0
     mov es:[di].pcif_irq,0
     mov es:[di].pcif_acpi_index,0
@@ -1588,6 +1610,10 @@ spdAdd:
     mov cl,PCI_subclass
     ReadPciWord
     mov es:[di].pcif_class,ax
+;
+    mov cl,PCI_progIF
+    ReadPciByte
+    mov es:[di].pcif_interface,al
 ;
     mov cl,PCI_interrupt_pin
     ReadPciByte
@@ -1641,7 +1667,7 @@ ScanPciDevice Endp
 ;
 ;           DESCRIPTION:    Scan PCI bus
 ;
-;           PARAMETERS:     BH		Bus #
+;           PARAMETERS:     BH          Bus #
 ;
 ;           RETURNS:        SI          Bus selector
 ;
