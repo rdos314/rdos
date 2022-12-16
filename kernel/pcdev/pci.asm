@@ -778,56 +778,74 @@ find_pci_class_name DB 'Find PCI Class',0
 
 find_pci_class      Proc far
     push ds
-    push eax
-    push dx
-    push si
-    push di
+    push es
+    push fs
+    push esi
+    push edi
+    push ebp
 ;
-    mov di,ax
+    mov bp,ax
+    mov dx,SEG data
+    mov ds,dx
 ;
-    mov si,SEG data
-    mov ds,si
-    mov si,OFFSET pci_device_arr
-    mov cx,MAX_PCI_DEVICES - 1
+    mov di,bx
+    xor bx,bx
 
-find_pci_class_all_loop:
-    mov eax,ds:[si+4]
-    mov dx,0CF8h
-    mov al,8
-    RequestSpinlock ds:pci_spinlock
-    out dx,eax
-    mov dx,0CFCh
-    in eax,dx
-    ReleaseSpinlock ds:pci_spinlock
-    shr eax,16
-    cmp ax,bx
-    jne find_pci_class_all_next     
+fpcoBusLoop:
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz fpcoBusNext
 ;
-    or di,di
-    jz find_pci_class_all_ok
-;
-    sub di,1
+    mov es,ax
+    xor bl,bl
 
-find_pci_class_all_next:
-    add si,8
-    loop find_pci_class_all_loop
+fpcoDevLoop:
+    movzx esi,bl
+    mov ax,es:[2*esi].pcib_device_arr
+    or ax,ax
+    jz fpcoDevNext
+;
+    mov fs,ax
+    xor ch,ch
+
+fpcoFuncLoop:
+    movzx esi,ch
+    shl esi,7
+    add esi,OFFSET pcid_func_arr
+;
+    cmp di,fs:[esi].pcif_class
+    jne fpcoFuncNext
+;
+    or bp,bp
+    clc
+    je fpcoDone
+;
+    dec bp
+
+fpcoFuncNext:
+    inc ch
+    cmp ch,8
+    jne fpcoFuncLoop
+
+fpcoDevNext:
+    inc bl
+    cmp bl,20h
+    jne fpcoDevLoop
+
+fpcoBusNext:
+    inc bh
+    or bh,bh
+    jnz fpcoBusLoop
 ;
     stc
-    jmp find_pci_class_all_done
 
-find_pci_class_all_ok:
-    mov ebx,ds:[si+5]
-    shr bl,3
-;
-    mov cx,ds:[si+4]
-    and cx,700h
-    clc
-
-find_pci_class_all_done:
-    pop di
-    pop si
-    pop dx
-    pop eax
+fpcoDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop fs
+    pop es
     pop ds
     retf32
 find_pci_class      Endp
