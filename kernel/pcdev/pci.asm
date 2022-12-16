@@ -1824,7 +1824,7 @@ CopyLegacy Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AddPciDevice
+;           NAME:           AddLegacyPciDevice
 ;
 ;           DESCRIPTION:    Add PCI device from ACPI
 ;
@@ -1835,7 +1835,7 @@ CopyLegacy Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddPciDevice    Proc near
+AddLegacyPciDevice    Proc near
     push bx
     push cx
     push eax
@@ -1852,10 +1852,10 @@ AddPciDevice    Proc near
     mov si,OFFSET pci_device_arr
     mov di,MAX_PCI_DEVICES
 
-apdLoop:
+alpdLoop:
     mov edx,[si+4]
     cmp eax,edx
-    jne apdNext
+    jne alpdNext
 ;
     mov eax,SIZE ext_pci_struc
     AllocateSmallGlobalMem
@@ -1888,7 +1888,7 @@ apdLoop:
     mov es:epci_pin,al
     mov es:epci_irq,0
     or al,al
-    jz apdNoInt
+    jz alpdNoInt
 ;
     pop eax
     push eax
@@ -1897,31 +1897,31 @@ apdLoop:
     GetAcpiPciDeviceIrq
     mov es:epci_irq,al
 
-apdNoInt:    
+alpdNoInt:    
     mov si,OFFSET ext_pci_dev_arr
     mov ax,ds:ext_pci_dev_count
     add ax,ax
     add si,ax
     mov ds:[si],es
     inc ds:ext_pci_dev_count
-    jmp apdDone
+    jmp alpdDone
 
-apdNext: 
+alpdNext: 
     add si,8
     sub di,1
-    jnz apdLoop   
+    jnz alpdLoop   
 
-apdDone:    
+alpdDone:    
     pop eax
     pop cx
     pop bx
     ret
-AddPciDevice    Endp    
+AddLegacyPciDevice    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CheckPciDevice
+;           NAME:           CheckLegacyPciDevice
 ;
 ;           DESCRIPTION:    Check if PCI-device is part of extended struc
 ;
@@ -1929,7 +1929,7 @@ AddPciDevice    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckPciDevice    Proc near
+CheckLegacyPciDevice    Proc near
     push es
     pushad
 ;    
@@ -1943,23 +1943,23 @@ CheckPciDevice    Proc near
     mov di,OFFSET ext_pci_dev_arr
     mov bp,ds:ext_pci_dev_count
     or bp,bp
-    jz cpdDone
+    jz clpdDone
 
-cpdLoop:
+clpdLoop:
     mov es,ds:[di]
     cmp bh,es:epci_bus
-    jne cpdNext
+    jne clpdNext
 ;
     cmp bl,es:epci_device
-    jne cpdNext
+    jne clpdNext
 ;
     cmp ch,es:epci_function
-    je cpdDone
+    je clpdDone
 
-cpdNext:
+clpdNext:
     add di,2
     sub bp,1
-    jnz cpdLoop
+    jnz clpdLoop
 ;    
     mov eax,SIZE ext_pci_struc
     AllocateSmallGlobalMem
@@ -1987,13 +1987,13 @@ cpdNext:
     mov es:epci_pin,al
     mov es:epci_irq,0
     or al,al
-    jz cpdNoInt
+    jz clpdNoInt
 ;
 ; should not happen, but fix this later!
 ;
     mov es:epci_irq,1
 
-cpdNoInt:    
+clpdNoInt:    
     mov si,OFFSET ext_pci_dev_arr
     mov ax,ds:ext_pci_dev_count
     add ax,ax
@@ -2001,16 +2001,16 @@ cpdNoInt:
     mov ds:[si],es
     inc ds:ext_pci_dev_count
 
-cpdDone:                
+clpdDone:                
     popad   
     pop es
     ret
-CheckPciDevice    Endp    
+CheckLegacyPciDevice    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetAcpi
+;           NAME:           GetLegacyAcpi
 ;
 ;           DESCRIPTION:    Get ACPI devices
 ;
@@ -2018,41 +2018,41 @@ CheckPciDevice    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetAcpi    Proc near
+GetLegacyAcpi    Proc near
     mov ax,SEG data
     mov ds,ax  
     mov ax,acpi_code_sel
     verr ax
-    jnz gaDone
+    jnz glaDone
 ;    
     xor eax,eax
 
-gaDevLoop:
+glaDevLoop:
     GetAcpiPciDeviceInfo
-    jc gaDone
+    jc glaDone
 ;
-    call AddPciDevice
+    call AddLegacyPciDevice
     or bh,bh
-    jz gaNext
+    jz glaNext
 
-gaBusLoop:
+glaBusLoop:
     inc ch
-    call AddPciDevice
+    call AddLegacyPciDevice
     cmp ch,7
-    jne gaBusLoop
+    jne glaBusLoop
     
-gaNext:
+glaNext:
     inc eax
-    jmp gaDevLoop
+    jmp glaDevLoop
     
-gaDone:
+glaDone:
     ret
-GetAcpi   Endp
+GetLegacyAcpi   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetupAcpi
+;           NAME:           SetupLegacyAcpi
 ;
 ;           DESCRIPTION:    Setup irqs & links
 ;
@@ -2060,29 +2060,29 @@ GetAcpi   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupAcpi    Proc near
+SetupLegacyAcpi    Proc near
     mov ax,SEG data
     mov ds,ax  
     mov ax,acpi_code_sel
     verr ax
-    jnz saDone
+    jnz slaDone
 ;
     mov si,OFFSET pci_device_arr
     mov cx,MAX_PCI_DEVICES    
 
-saLoop:    
+slaLoop:    
     add si,4
     mov eax,ds:[si]
     cmp eax,-1
-    je saDone
+    je slaDone
 ;
-    call CheckPciDevice
+    call CheckLegacyPciDevice
     add si,4
-    loop saLoop    
+    loop slaLoop    
 
-saDone:    
+slaDone:    
     ret
-SetupAcpi   Endp
+SetupLegacyAcpi   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2100,8 +2100,8 @@ init_pci_thread_name DB 'Init PCI', 0
 
 init_pci_thread Proc far
     int 3
-    call GetAcpi
-    call SetupAcpi
+    call GetLegacyAcpi
+    call SetupLegacyAcpi
 ;
     mov ax,SEG data
     mov ds,ax
