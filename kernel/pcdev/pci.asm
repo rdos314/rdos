@@ -1744,6 +1744,64 @@ DetectDevices  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           UpdateAcpi
+;
+;           DESCRIPTION:    Update device with ACPI info
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateAcpi    Proc near
+    mov ax,SEG data
+    mov ds,ax  
+    mov ax,acpi_code_sel
+    verr ax
+    jnz uaDone
+;    
+    xor eax,eax
+
+uaLoop:
+    GetAcpiPciDeviceInfo
+    jc uaDone
+;
+    movzx esi,bh
+    mov dx,ds:[2*esi].pci_bus_arr
+    or dx,dx
+    jz uaNext
+;
+    mov es,dx
+    movzx esi,bl
+    mov dx,es:[2*esi].pcib_device_arr
+    or dx,dx
+    jz uaNext
+;
+    mov es,dx
+    movzx esi,ch
+    shl esi,7
+    mov es:[esi].pcif_acpi_index,eax 
+;
+    lea edi,[esi].pcif_acpi_name
+    GetAcpiPciDeviceName
+;
+    push eax
+    movzx edx,es:[esi].pcif_pin
+    dec edx
+    GetAcpiPciDeviceIrq
+    mov es:[esi].pcif_irq,al
+    pop eax
+    
+uaNext:
+    inc eax
+    jmp uaLoop
+    
+uaDone:
+    ret
+UpdateAcpi   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CopyLegacy
 ;
 ;           DESCRIPTION:    Copy to legacy struc (should be removed)
@@ -2141,6 +2199,8 @@ init_pci    Proc far
     push ds
     push es
     pushad
+;
+    call UpdateAcpi
 ;
     mov ax,cs
     mov ds,ax
