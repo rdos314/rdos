@@ -1746,12 +1746,18 @@ uaLoop:
     jz uaNext
 ;
     mov es,dx
+    cmp bl,20h
+    jae uaNext
+;
     movzx esi,bl
     mov dx,es:[2*esi].pcib_device_arr
     or dx,dx
     jz uaNext
 ;
     mov es,dx
+    cmp ch,8
+    jae uaNext
+;
     movzx esi,ch
     shl esi,7
     mov es:[esi].pcif_acpi_index,eax 
