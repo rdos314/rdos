@@ -559,8 +559,6 @@ InitAdc Endp
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
 ;
-;       PARAMETERS:     AX      Device number
-;
 ;           RETURNS:        NC          Adapter found
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -573,6 +571,7 @@ InitPciAdapter   Proc near
     mov esi,OFFSET PciVendorTab
 
 InitPciLoop:
+    xor ax,ax
     mov dx,cs:[esi]
     mov cx,cs:[esi+2]
     or dx,dx
