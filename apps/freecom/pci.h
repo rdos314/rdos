@@ -46,9 +46,6 @@ public:
     TPciCommand(TSession *session, const char *param);
 
     virtual int Execute(char *param);
-
-protected:
-    void ShowDevices();
 };
 
 #endif

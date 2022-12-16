@@ -305,11 +305,6 @@ int RDOSAPI RdosGetAcpiDevice(int Index, char *AcpiName);
 int RDOSAPI RdosGetAcpiDeviceIrq(int Device, int Index, int *Share, int *Polarity, int *TriggerMode);
 int RDOSAPI RdosGetAcpiDeviceIo(int Device, int Index, int *Start, int *End);
 int RDOSAPI RdosGetAcpiDeviceMem(int Device, int Index, int *Start, int *End);
-int RDOSAPI RdosGetPciDeviceName(int Index, char *AcpiName);
-int RDOSAPI RdosGetPciDeviceInfo(int Index, int *Bus, int *Device, int *Function);
-int RDOSAPI RdosGetPciDeviceVendor(int Index, int *Vendor, int *Device);
-int RDOSAPI RdosGetPciDeviceClass(int Index, int *Class, int *Subclass);
-int RDOSAPI RdosGetPciDeviceIrq(int Index);
 int RDOSAPI RdosGetCpuTemperature();
 
 int RDOSAPI RdosGetHidDevice(int Device, int *UsbController, int *UsbPort);

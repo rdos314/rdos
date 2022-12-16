@@ -533,12 +533,6 @@
 #define usergate_get_acpi_device_io 0x000001C4
 #define usergate_get_acpi_device_mem 0x000001C5
 
-#define usergate_get_pci_device_name 0x000001C6
-#define usergate_get_pci_device_info 0x000001C7
-#define usergate_get_pci_device_vendor 0x000001C8
-#define usergate_get_pci_device_class 0x000001C9
-#define usergate_get_pci_device_irq 0x000001CA
-
 #define usergate_get_core_load 0x000001CE
 #define usergate_get_core_duty 0x000001CF
 
@@ -1510,12 +1504,6 @@
 #define CallGate_get_acpi_device_io 0x55 0x67 0x9a 196 1 0 0 3 0 0x5d
 #define CallGate_get_acpi_device_mem 0x55 0x67 0x9a 197 1 0 0 3 0 0x5d
 
-#define CallGate_get_pci_device_name 0x55 0x67 0x9a 198 1 0 0 3 0 0x5d
-#define CallGate_get_pci_device_info 0x55 0x67 0x9a 199 1 0 0 3 0 0x5d
-#define CallGate_get_pci_device_vendor 0x55 0x67 0x9a 200 1 0 0 3 0 0x5d
-#define CallGate_get_pci_device_class 0x55 0x67 0x9a 201 1 0 0 3 0 0x5d
-#define CallGate_get_pci_device_irq 0x55 0x67 0x9a 202 1 0 0 3 0 0x5d
-
 #define CallGate_get_core_load 0x55 0x67 0x9a 206 1 0 0 3 0 0x5d
 #define CallGate_get_core_duty 0x55 0x67 0x9a 207 1 0 0 3 0 0x5d
 
@@ -2484,12 +2472,6 @@
 #define CallGate_get_acpi_device_irq 0x3e 0x67 0x9a 195 1 0 0 3 0
 #define CallGate_get_acpi_device_io 0x3e 0x67 0x9a 196 1 0 0 3 0
 #define CallGate_get_acpi_device_mem 0x3e 0x67 0x9a 197 1 0 0 3 0
-
-#define CallGate_get_pci_device_name 0x3e 0x67 0x9a 198 1 0 0 3 0
-#define CallGate_get_pci_device_info 0x3e 0x67 0x9a 199 1 0 0 3 0
-#define CallGate_get_pci_device_vendor 0x3e 0x67 0x9a 200 1 0 0 3 0
-#define CallGate_get_pci_device_class 0x3e 0x67 0x9a 201 1 0 0 3 0
-#define CallGate_get_pci_device_irq 0x3e 0x67 0x9a 202 1 0 0 3 0
 
 #define CallGate_get_core_load 0x3e 0x67 0x9a 206 1 0 0 3 0
 #define CallGate_get_core_duty 0x3e 0x67 0x9a 207 1 0 0 3 0

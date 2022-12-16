@@ -87,63 +87,6 @@ TPciCommand::TPciCommand(TSession *session, const char *param)
 
 /*##########################################################################
 #
-#   Name       : TPciCommand::ShowDevices
-#
-#   Purpose....: Show devices
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPciCommand::ShowDevices()
-{
-    int ok;
-    char AcpiName[128];
-    char Str[100];
-    int DevNr;
-    int Bus;
-    int Device;
-    int Function;
-    int VendorID;
-    int DeviceID;
-    int Class;
-    int SubClass;
-    int Irq;
-
-    Write("ACPI Name                     ");
-    Write("Vendor/dev Class  Bus  Dev Func  IRQ\r\n");
-    
-    for (DevNr = 0; DevNr < 0x1000; DevNr++)
-    {
-        ok = RdosGetPciDeviceName(DevNr, AcpiName);
-        if (ok)
-        {
-            while (strlen(AcpiName) < 30)
-                strcat(AcpiName, " ");
-            Write(AcpiName);
-        
-            RdosGetPciDeviceInfo(DevNr, &Bus, &Device, &Function);
-            RdosGetPciDeviceVendor(DevNr, &VendorID, &DeviceID);
-            RdosGetPciDeviceClass(DevNr, &Class, &SubClass);            
-            Irq = RdosGetPciDeviceIrq(DevNr);
-            
-            sprintf(Str, "%04hX %04hX  %02hX%02hX  %4d %4d %4d  ", VendorID, DeviceID, Class, SubClass, Bus, Device, Function);
-            Write(Str);
-
-            if (Irq)
-                sprintf(Str, "%3d\r\n", Irq);
-            else
-                strcpy(Str, "   \r\n");
-            Write(Str);
-        }
-        else
-            break;
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : TPciCommand::Execute
 #
 #   Purpose....: Run command
@@ -155,50 +98,8 @@ void TPciCommand::ShowDevices()
 ##########################################################################*/
 int TPciCommand::Execute(char *param)
 {
-    long AcpiStatus;
-    int error;
-    char SubSystem[80];
-    char Str[100];
-
     if (LeadOptions(&param, 0) != E_None)
         return 1;
 
-    AcpiStatus = RdosGetAcpiStatus();
-
-    if (AcpiStatus == 0)
-        ShowDevices();
-    else
-    {
-        if (AcpiStatus == -1)
-            Write("No ACPI device-driver loaded");
-        else
-        {
-            error = AcpiStatus & 0xFFFF;
-            switch (AcpiStatus & 0xFFFF0000)
-            {
-                case 0:
-                    strcpy(SubSystem, "InitializeSubsystem");
-                    break;
-
-                case 0x10000:
-                    strcpy(SubSystem, "InitializeTables");
-                    break;
-
-                case 0x20000:
-                    strcpy(SubSystem, "LoadTables");
-                    break;
-
-                case 0x30000:
-                    strcpy(SubSystem, "EnableSubsystem");
-                    break;
-
-                case 0x40000:
-                    strcpy(SubSystem, "InitializeObjects");
-                    break;
-            }
-            sprintf(Str, "Error %d during %s", error, SubSystem);
-            Write(Str);                                 
-        }
-    }
     return 0;
 }
