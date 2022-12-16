@@ -46,10 +46,24 @@ pci_id        DD ?
 
 pci_struc   ENDS
 
+
+; this structure should be 128 bytes!
+
+pci_func_struc   STRUC
+
+pcif_vendor_dev DD ?
+pcif_bridge     DW ?
+pcif_class      DW ?
+pcif_pin        DB ?
+pcif_irq        DB ?
+pcif_acpi_index DD ?
+pcif_acpi_name  DB 114 DUP(?)
+
+pci_func_struc   ENDS
+
 pci_device_struc   STRUC
 
-pcid_vendor_dev_arr DD 8 DUP(?)
-pcid_bridge_arr     DW 8 DUP(?)
+pcid_func_arr       DB 8*128 DUP(?)
 
 pcid_dev_id         DB ?
 pcid_bus_id         DB ?
@@ -1575,15 +1589,19 @@ spdFuncLoop:
     mov eax,SIZE pci_device_struc
     AllocateSmallGlobalMem
 ;
-    mov di,OFFSET pcid_vendor_dev_arr
+    mov di,OFFSET pcid_func_arr
     mov cx,8
-    mov eax,-1
-    rep stosd
-;
-    mov di,OFFSET pcid_bridge_arr
-    mov cx,8
-    xor ax,ax
-    rep stosw
+
+spdInitFunc:
+    mov es:[di].pcif_vendor_dev,-1
+    mov es:[di].pcif_bridge,0
+    mov es:[di].pcif_class,0
+    mov es:[di].pcif_pin,0
+    mov es:[di].pcif_irq,0
+    mov es:[di].pcif_acpi_index,0
+    mov es:[di].pcif_acpi_name,0
+    add di,SIZE pci_func_struc
+    loop spdInitFunc
 ;
     mov es:pcid_dev_id,bl
     mov es:pcid_bus_id,bh
@@ -1591,8 +1609,10 @@ spdFuncLoop:
     pop eax
 
 spdAdd:
-    movzx edi,ch
-    mov es:[4*edi].pcid_vendor_dev_arr,eax
+    movzx di,ch
+    shl di,7
+    add di,OFFSET pcid_func_arr
+    mov es:[di].pcif_vendor_dev,eax
 ;
     mov cl,PCI_header_type
     ReadPciByte
@@ -1610,7 +1630,7 @@ spdAdd:
     push edi    
     call ScanPciBus
     pop edi
-    mov es:[2*edi].pcid_bridge_arr,si
+    mov es:[di].pcif_bridge,si
 ;
     popad
 
@@ -1750,10 +1770,10 @@ clDevLoop:
     push si
     xor ch,ch
     mov fs,ax
-    mov si,OFFSET pcid_vendor_dev_arr
+    mov si,OFFSET pcid_func_arr
 
 clFuncLoop:
-    mov eax,fs:[si]
+    mov eax,fs:[si].pcif_vendor_dev
     cmp eax,-1
     je clFuncNext
 ;
@@ -1771,7 +1791,7 @@ clFuncLoop:
     add edi,4
 
 clFuncNext:
-    add si,4
+    add si,SIZE pci_func_struc
     inc ch
     cmp ch,8
     jne clFuncLoop
@@ -1792,44 +1812,6 @@ clBusNext:
 ;
     ret
 CopyLegacy Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Init_pci_thread
-;
-;           DESCRIPTION:    Init_pci_thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_pci_thread_name DB 'Init PCI', 0
-
-
-init_pci_thread Proc far
-    mov ax,SEG data
-    mov ds,ax
-    mov cx,ds:pci_init_hooks
-    or cx,cx
-    je hook_thread_done
-;
-    mov bx,OFFSET pci_init_hook_arr
-
-hook_thread_loop:
-    push ds
-    push bx
-    push cx
-    call fword ptr [bx]
-    pop cx
-    pop bx
-    pop ds
-    add bx,8
-    loop hook_thread_loop
-
-hook_thread_done:
-    ret
-init_pci_thread Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2020,6 +2002,125 @@ CheckPciDevice    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetAcpi
+;
+;           DESCRIPTION:    Get ACPI devices
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAcpi    Proc near
+    mov ax,SEG data
+    mov ds,ax  
+    mov ax,acpi_code_sel
+    verr ax
+    jnz gaDone
+;    
+    xor eax,eax
+
+gaDevLoop:
+    GetAcpiPciDeviceInfo
+    jc gaDone
+;
+    call AddPciDevice
+    or bh,bh
+    jz gaNext
+
+gaBusLoop:
+    inc ch
+    call AddPciDevice
+    cmp ch,7
+    jne gaBusLoop
+    
+gaNext:
+    inc eax
+    jmp gaDevLoop
+    
+gaDone:
+    ret
+GetAcpi   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupAcpi
+;
+;           DESCRIPTION:    Setup irqs & links
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupAcpi    Proc near
+    mov ax,SEG data
+    mov ds,ax  
+    mov ax,acpi_code_sel
+    verr ax
+    jnz saDone
+;
+    mov si,OFFSET pci_device_arr
+    mov cx,MAX_PCI_DEVICES    
+
+saLoop:    
+    add si,4
+    mov eax,ds:[si]
+    cmp eax,-1
+    je saDone
+;
+    call CheckPciDevice
+    add si,4
+    loop saLoop    
+
+saDone:    
+    ret
+SetupAcpi   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_pci_thread
+;
+;           DESCRIPTION:    Init_pci_thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_pci_thread_name DB 'Init PCI', 0
+
+
+init_pci_thread Proc far
+    int 3
+    call GetAcpi
+    call SetupAcpi
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov cx,ds:pci_init_hooks
+    or cx,cx
+    je hook_thread_done
+;
+    mov bx,OFFSET pci_init_hook_arr
+
+hook_thread_loop:
+    push ds
+    push bx
+    push cx
+    call fword ptr [bx]
+    pop cx
+    pop bx
+    pop ds
+    add bx,8
+    loop hook_thread_loop
+
+hook_thread_done:
+    ret
+init_pci_thread Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           Init_pci
 ;
 ;           DESCRIPTION:    Create hook thread
@@ -2033,47 +2134,6 @@ init_pci    Proc far
     push es
     pushad
 ;
-    mov ax,SEG data
-    mov ds,ax  
-    mov ax,acpi_code_sel
-    verr ax
-    jnz get_pci_device_done
-;    
-    xor eax,eax
-
-get_pci_device_loop:
-    GetAcpiPciDeviceInfo
-    jc get_pci_device_done
-;
-    call AddPciDevice
-    or bh,bh
-    jz get_pci_device_next
-
-get_pci_device_bus_loop:
-    inc ch
-    call AddPciDevice
-    cmp ch,7
-    jne get_pci_device_bus_loop
-    
-get_pci_device_next:
-    inc eax
-    jmp get_pci_device_loop
-    
-get_pci_device_done:
-    mov si,OFFSET pci_device_arr
-    mov cx,MAX_PCI_DEVICES    
-
-check_dev_loop:    
-    add si,4
-    mov eax,ds:[si]
-    cmp eax,-1
-    je check_dev_done
-;
-    call CheckPciDevice
-    add si,4
-    loop check_dev_loop    
-
-check_dev_done:    
     mov ax,cs
     mov ds,ax
     mov es,ax
