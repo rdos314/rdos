@@ -658,7 +658,7 @@ find_pci_device Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           FindPciClass
+;           NAME:           FindPciClassInterface
 ;
 ;           DESCRIPTION:    Find PCI class
 ;
@@ -674,9 +674,9 @@ find_pci_device Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-find_pci_class_name     DB 'Find PCI Class',0
+find_pci_class_interface_name     DB 'Find PCI Class Interface',0
 
-find_pci_class  Proc far
+find_pci_class_interface  Proc far
     push ds
     push es
     push fs
@@ -754,7 +754,7 @@ fpciDone:
     pop es
     pop ds
     retf32
-find_pci_class  Endp
+find_pci_class_interface  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1421,7 +1421,7 @@ pci_find_class  Proc near
     mov bl,ah
     shr eax,16
     mov bh,al
-    FindPciClass
+    FindPciClassInterface
     jc pci_find_fail
 ;
     shl bl,3
@@ -2038,10 +2038,10 @@ init    Proc far
     mov ax,write_pci_dword_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET find_pci_class
-    mov edi,OFFSET find_pci_class_name
+    mov esi,OFFSET find_pci_class_interface
+    mov edi,OFFSET find_pci_class_interface_name
     xor cl,cl
-    mov ax,find_pci_class_nr
+    mov ax,find_pci_class_interface_nr
     RegisterOsGate
 ;
     mov esi,OFFSET find_pci_class_all

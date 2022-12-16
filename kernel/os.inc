@@ -4085,8 +4085,8 @@ PciPowerOn       MACRO
 ; IN  AX    Device number
 ; OUT BH    Bus
 ; OUT BL    Device
-FindPciClass    MACRO
-    OsGate find_pci_class_nr
+FindPciClassInterface    MACRO
+    OsGate find_pci_class_interface_nr
                     ENDM
 
 ; IN  BH    Class

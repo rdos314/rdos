@@ -185,7 +185,7 @@ read_pci_dword_nr                       = 192
 write_pci_byte_nr                       = 193
 write_pci_word_nr                       = 194
 write_pci_dword_nr                      = 195
-find_pci_class_nr                       = 196
+find_pci_class_interface_nr             = 196
 find_pci_device_nr                      = 197
 
 install_static_disc_nr                  = 199

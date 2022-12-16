@@ -1686,7 +1686,7 @@ init_pci_probe_done:
     mov bh,4
     mov bl,3
     xor ch,ch
-    FindPciClass
+    FindPciClassInterface
     jc init_pci_done
 ;
     mov cl,10h
@@ -1707,7 +1707,7 @@ init_pci_loop:
     mov bh,4
     mov bl,3
     xor ch,ch
-    FindPciClass
+    FindPciClassInterface
     jc init_pci_done
 ;       
     mov cl,10h

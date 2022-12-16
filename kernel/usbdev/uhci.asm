@@ -4307,7 +4307,7 @@ InitPciAdapter  Proc near
     mov bh,0Ch
     mov bl,3
     mov ch,0
-    FindPciClass
+    FindPciClassInterface
     jc init_pci_done
 ;
     mov cl,20h
@@ -4324,7 +4324,7 @@ init_pci_next_device:
     mov bh,0Ch
     mov bl,3
     mov ch,0
-    FindPciClass
+    FindPciClassInterface
     jc init_pci_done
 ;       
     mov cl,20h
