@@ -36,9 +36,6 @@ INCLUDE ..\os.inc
 INCLUDE pci.inc
 INCLUDE ..\os\core.inc
 
-MAX_PCI_DEVICES = 256
-
-
 ; this structure should be 128 bytes!
 
 pci_func_struc   STRUC
@@ -91,8 +88,6 @@ pci_msi_arr             DD 256 DUP(?,?)
 
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 32 DUP(?,?)
-
-pci_device_arr          DD MAX_PCI_DEVICES DUP(?,?)
 
 pci_bus_arr             DW 256 DUP(?)
 
@@ -1827,86 +1822,6 @@ UpdateAcpi   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CopyLegacy
-;
-;           DESCRIPTION:    Copy to legacy struc (should be removed)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyLegacy Proc near
-    mov ax,SEG data
-    mov ds,ax
-    mov es,ax
-    mov di,OFFSET pci_device_arr
-    xor bh,bh
-
-clBusloop:
-    movzx si,bh
-    add si,si
-    mov ax,ds:[si].pci_bus_arr
-    or ax,ax
-    jz clBusNext
-;
-    push si
-    xor bl,bl
-    mov es,ax
-
-clDevLoop:
-    movzx si,bl
-    add si,si
-    mov ax,es:[si].pcib_device_arr
-    or ax,ax
-    jz clDevNext
-;
-    push si
-    xor ch,ch
-    mov fs,ax
-    mov si,OFFSET pcid_func_arr
-
-clFuncLoop:
-    mov eax,fs:[si].pcif_vendor_dev
-    cmp eax,-1
-    je clFuncNext
-;
-    mov ds:[edi],eax
-    add edi,4
-;
-    mov al,bh
-    mov ah,80h
-    shl eax,16
-    mov ah,bl
-    shl ah,3
-    or ah,ch
-    xor al,al
-    mov ds:[edi],eax
-    add edi,4
-
-clFuncNext:
-    add si,SIZE pci_func_struc
-    inc ch
-    cmp ch,8
-    jne clFuncLoop
-;
-    pop si
-
-clDevNext:
-    inc bl
-    cmp bl,32
-    jne clDevLoop    
-;
-    pop si
-
-clBusNext:
-    inc bh
-    or bh,bh
-    jnz clBusLoop
-;
-    ret
-CopyLegacy Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Init_pci_thread
 ;
 ;           DESCRIPTION:    Init_pci_thread
@@ -1989,10 +1904,6 @@ init    Proc far
     mov bx,SEG data
     mov ds,bx
     mov es,bx
-    mov cx,2 * MAX_PCI_DEVICES
-    mov eax,-1
-    mov di,OFFSET pci_device_arr
-    rep stosd
 ;
     mov di,OFFSET pci_msi_arr
     xor eax,eax
@@ -2135,7 +2046,6 @@ init    Proc far
     RegisterOsGate
 ;
     call DetectDevices
-    call CopyLegacy
     clc
     ret
 init    Endp
