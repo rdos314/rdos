@@ -1543,54 +1543,6 @@ bios_pci_int    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           init_pci_devices
-;
-;           DESCRIPTION:    Init PCI devices
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_pci_devices    Proc near
-    mov ax,SEG data
-    mov es,ax
-    mov di,OFFSET pci_device_arr
-
-    mov ecx,80000000h
-
-init_pci_device_loop:
-    mov eax,ecx
-    mov dx,0CF8h
-    and al,0FCh
-    RequestSpinlock es:pci_spinlock
-    out dx,eax
-    mov dx,0CFCh
-    in eax,dx
-    ReleaseSpinlock es:pci_spinlock
-;       
-    or eax,eax
-    jz init_pci_next
-;   
-    cmp eax,-1
-    je init_pci_next
-;   
-    stosd
-    mov eax,ecx
-    stosd
-
-init_pci_next:
-    cmp di,8 * MAX_PCI_DEVICES
-    je init_pci_device_done
-;
-    add ecx,100h
-    cmp ecx,81000000h
-    jne init_pci_device_loop
-
-init_pci_device_done:   
-    ret
-init_pci_devices    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           ScanPciDevice
 ;
 ;           DESCRIPTION:    Scan PCI device
@@ -1772,6 +1724,7 @@ DetectDevices  Endp
 
 CopyLegacy Proc near
     mov ax,SEG data
+    mov ds,ax
     mov es,ax
     mov di,OFFSET pci_device_arr
     xor bh,bh
@@ -1855,12 +1808,6 @@ init_pci_thread_name DB 'Init PCI', 0
 
 
 init_pci_thread Proc far
-    call DetectDevices
-    call CopyLegacy
-    
-
-
-
     mov ax,SEG data
     mov ds,ax
     mov cx,ds:pci_init_hooks
@@ -2406,8 +2353,6 @@ init    Proc far
     mov ds:ext_pci_dev_count,0
     InitSpinlock ds:pci_spinlock
 ;
-    call init_pci_devices
-;
     mov ax,cs
     mov ds,ax
     mov es,ax
@@ -2570,8 +2515,9 @@ init    Proc far
     xor cl,cl
     mov ax,get_pci_irq_nr
     RegisterOsGate
-
-init_pci_done:
+;
+    call DetectDevices
+    call CopyLegacy
     clc
     ret
 init    Endp
