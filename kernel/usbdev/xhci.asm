@@ -224,6 +224,11 @@ xhc_db_offset           DD ?
 xhc_port_offset         DD ?
 xhc_intr_offset         DD ?
 
+xhc_pci_bus             DB ?
+xhc_pci_dev             DB ?
+xhc_pci_func            DB ?
+xhc_pci_pad             DB ?
+
 xhc_has_64              DB ?
 xhc_int_base            DB ?
 
@@ -4242,6 +4247,12 @@ cetXhciDone:
     xor al,al
     stosb
 ;
+    mov bh,ds:xhc_pci_bus
+    mov bl,ds:xhc_pci_dev
+    mov ch,ds:xhc_pci_func
+    xor edi,edi
+    SetPciDeviceName
+;
     mov bx,ds
     mov ax,cs
     mov ds,ax
@@ -4457,52 +4468,6 @@ CreateScratchPad   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           PowerOn
-;
-;           DESCRIPTION:    Power on device
-;
-;           PARAMETERS:     BH    Bus
-;                           BL    Device
-;                           CH    Function
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PowerOn  Proc near
-    push es
-    pushad
-;
-    mov eax,100h
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov esi,OFFSET xhci_name
-
-poLoop:
-    mov al,cs:[si]
-    inc si
-    stosb
-    or al,al
-    jnz poLoop
-;
-    dec di
-    mov ax,ds:usb_controller_id
-    call HexToAscii
-    stosw
-;
-    xor al,al
-    stosb
-;
-    xor edi,edi
-    PciPowerOn
-    FreeMem
-;
-    popad
-    pop es
-    ret
-PowerOn   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           AddFunction
 ;
 ;           DESCRIPTION:    Add XHCI function
@@ -4550,8 +4515,6 @@ AddFunction    Proc near
     push es
     push fs
     pushad
-;
-    call PowerOn
 ;
     InitSection ds:xhc_cmd_section
 ;
@@ -4652,6 +4615,10 @@ ifIrq:
     pop ds
 
 ifIntDone:    
+    mov ds:xhc_pci_bus,bh
+    mov ds:xhc_pci_dev,bl
+    mov ds:xhc_pci_func,ch
+;
     mov edi,ds:xhc_oper_offset
     movzx eax,ds:xhc_slot_count
     mov ds:[edi].orsConfig,eax
@@ -5201,6 +5168,15 @@ InitPciAdapter  Proc near
     mov ch,30h
     FindPciClassInterface
     jc init_pci_done
+;
+    push es
+    push edi
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET xhci_name
+    PciPowerOn
+    pop edi
+    pop es
 ;
     mov cl,PCI_command_reg
     ReadPciWord

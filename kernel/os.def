@@ -898,4 +898,6 @@ setup_net_cachable_nr       = 814
 
 link_usergate_nr            = 815
 
+set_pci_device_name_nr      = 816
+
 osgate_entries              = 850

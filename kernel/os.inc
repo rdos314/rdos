@@ -4076,6 +4076,14 @@ FindPciCapability       MACRO
 ; IN  BL      Device
 ; IN  CH      Function
 ; IN  ES:EDI  Device name
+SetPciDeviceName       MACRO
+    OsGate set_pci_device_name_nr
+                    ENDM
+
+; IN  BH      Bus
+; IN  BL      Device
+; IN  CH      Function
+; IN  ES:EDI  Device name
 PciPowerOn       MACRO
     OsGate pci_power_on_nr
                     ENDM
