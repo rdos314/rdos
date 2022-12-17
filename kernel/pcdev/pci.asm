@@ -1103,15 +1103,47 @@ find_pci_cap    Endp
 ;           PARAMETERS:     BH          Bus
 ;                           BL          Device
 ;                           CH          Function
+;                           ES:EDI      Device name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pci_power_on_name       DB 'PCI Power On',0
 
 pci_power_on    Proc far
-    push eax
-    push edx
+    push ds
+    push es
+    pushad
 ;
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+;
+    mov ax,SEG data    
+    mov es,ax
+;
+    movzx edi,bh
+    mov ax,es:[2*edi].pci_bus_arr
+    or ax,ax
+    jz ppoStart
+;
+    mov es,ax
+    movzx edi,bl
+    mov ax,es:[2*edi].pcib_device_arr
+    or ax,ax
+    jz ppoStart
+;
+    mov es,ax
+    movzx edi,ch
+    shl edi,7
+    add edi,OFFSET pcif_acpi_name
+
+ppoCopyName:
+    lods byte ptr ds:[esi]
+    stos byte ptr es:[edi]
+    or al,al
+    jnz ppoCopyName
+
+ppoStart:
     mov al,1
     FindPciCapability
     jc ppoDone
@@ -1134,12 +1166,12 @@ ppoInD0:
     WritePciWord
 
 ppoDone:
-    pop edx
-    pop eax
+    popad
+    pop es
+    pop ds
     retf32
 pci_power_on    Endp
         
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;

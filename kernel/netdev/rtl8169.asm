@@ -6515,8 +6515,13 @@ pci05   DW 1186h, 4300h,    0
 pci06   DW 1186h, 4302h,    0
 pci07   DW 0,     0
 
+DevName1 DB 'RTL8169-1', 0
+DevName2 DB 'RTL8169-2', 0
+
 InitPrimaryPciAdapter   Proc near
     mov bp,ax
+    mov ax,cs
+    mov es,ax
     mov ax,ether_data_sel
     mov ds,ax
     mov ds:Handle,0
@@ -6536,6 +6541,7 @@ init_pci1_loop:
     jmp init_pci1_loop
 
 init_pci1_found:
+    mov edi,OFFSET DevName1
     PciPowerOn
 ;
     mov bp,bx
@@ -6698,6 +6704,8 @@ InitPrimaryPciAdapter   Endp
 
 InitSecondaryPciAdapter Proc near
     mov bp,ax
+    mov ax,cs
+    mov es,ax
     mov ax,ether_data2_sel
     mov ds,ax
     mov ds:Handle,0
@@ -6717,6 +6725,7 @@ init_pci2_loop:
     jmp init_pci2_loop
 
 init_pci2_found:
+    mov edi,OFFSET DevName2
     PciPowerOn
 ;
     mov bp,bx

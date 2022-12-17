@@ -1645,11 +1645,15 @@ AddFunction Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+DevName  DB 'HDA', 0
+
 PciVendorTab:
 pci00   DW 1106h, 3288h
 pci01   DW 0,     0
 
 InitPciAdapter  Proc near
+    mov ax,cs
+    mov es,ax
     mov ax,SEG data
     mov ds,ax
     mov ds:HdaCount,0
@@ -1676,6 +1680,7 @@ init_pci_probe_found:
     test al,1
     jnz init_pci_probe_done
 ;    
+    mov edi,OFFSET DevName
     PciPowerOn
     and ax,0FFF0h
     mov ebp,eax
@@ -1694,6 +1699,7 @@ init_pci_probe_done:
     test al,1
     jnz init_pci_more
 ;    
+    mov edi,OFFSET DevName
     PciPowerOn
     and ax,0FFF0h
     mov ebp,eax
@@ -1719,6 +1725,7 @@ init_pci_loop:
     cmp eax,ebp
     je init_pci_done
 ;       
+    mov edi,OFFSET DevName
     PciPowerOn
     call AddFunction
 

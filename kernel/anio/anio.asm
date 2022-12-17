@@ -563,6 +563,8 @@ InitAdc Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+DevName DB 'ANIO', 0
+
 PciVendorTab:
 pci00   DW 10EEh, 0AACCh
 pci07   DW 0,     0
@@ -585,6 +587,9 @@ InitPciLoop:
     jmp InitPciLoop
 
 InitPciFound:
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET DevName
     PciPowerOn
 ;
     mov cl,PCI_command_reg

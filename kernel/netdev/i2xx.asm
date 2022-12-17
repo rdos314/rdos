@@ -969,7 +969,13 @@ PciVendorTab:
 pci00   DW 8086h, 1539h,    0
 pci07   DW 0,     0
 
+DevName1 DB 'i2xx-1', 0
+DevName2 DB 'i2xx-2', 0
+
 InitPrimaryPciAdapter   Proc near
+    mov ax,cs
+    mov es,ax
+    xor ax,ax
     mov bp,ax
     mov ax,ether_data_sel
     mov ds,ax
@@ -990,6 +996,7 @@ init_pci1_loop:
     jmp init_pci1_loop
 
 init_pci1_found:
+    mov edi,OFFSET DevName1
     PciPowerOn
 ;
     mov bp,bx
@@ -1059,6 +1066,8 @@ InitPrimaryPciAdapter   Endp
 
 InitSecondaryPciAdapter Proc near
     mov bp,ax
+    mov ax,cs
+    mov es,ax
     mov ax,ether_data2_sel
     mov ds,ax
     mov si,OFFSET PciVendorTab
@@ -1078,6 +1087,7 @@ init_pci2_loop:
     jmp init_pci2_loop
 
 init_pci2_found:
+    mov edi,OFFSET DevName2
     PciPowerOn
 ;
     mov bp,bx
