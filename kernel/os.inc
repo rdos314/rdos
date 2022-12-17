@@ -4110,14 +4110,6 @@ FindPciDevice   MACRO
 ; IN  BH    Bus
 ; IN  BL    Device
 ; IN  CH    Function
-; OUT AL    Global int #
-GetPciIrqNr     MACRO
-    OsGate get_pci_irq_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
 ; OUT CL    MSI Register base
 ; OUT DL    Requested vectors
 GetPciMsi    MACRO

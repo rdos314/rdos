@@ -153,6 +153,21 @@
     __parm [__eax] [__edx] [__esi] [__edi] \
     __value [__eax]
 
+#pragma aux RdosGetPciIrq = \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_irq  \
+    "jc Fail" \
+    "movzx eax,al" \
+    "jmp Done" \
+    "Fail:" \
+    "mov eax,-1" \
+    "Done:" \
+    __parm [__eax] [__ecx] [__edx] \
+    __value [__eax] \
+    __modify [__ebx]
+
 #pragma aux RdosGetPciDeviceName = \
     "mov bh,al" \
     "mov bl,cl" \
@@ -202,21 +217,6 @@
     "xor eax,eax" \
     "Done:" \
     __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
-    __value [__eax] \
-    __modify [__ebx]
-
-#pragma aux RdosGetPciDeviceIrq = \
-    "mov bh,al" \
-    "mov bl,cl" \
-    "mov ch,dl" \
-    CallGate_get_pci_dev_irq  \
-    "jc Fail" \
-    "movzx eax,al" \
-    "jmp Done" \
-    "Fail:" \
-    "mov eax,-1" \
-    "Done:" \
-    __parm [__eax] [__ecx] [__edx] \
     __value [__eax] \
     __modify [__ebx]
 

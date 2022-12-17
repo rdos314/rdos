@@ -381,8 +381,6 @@ find_pci_class_nr           = 380
 
 show_proc_debug_nr          = 381
 
-get_pci_irq_nr              = 382
-
 preempt_expired_nr          = 383
 
 send_eoi_nr                 = 384

@@ -968,10 +968,11 @@
 #define usergate_create_secure_connection 0x00000317
 
 #define usergate_get_pci_bus 0x00000318
-#define usergate_get_pci_dev_name 0x00000319
-#define usergate_get_pci_dev_vendor 0x0000031A
-#define usergate_get_pci_dev_class 0x0000031B
-#define usergate_get_pci_dev_irq 0x0000031C
+#define usergate_get_pci_irq 0x00000319
+
+#define usergate_get_pci_dev_name 0x0000031A
+#define usergate_get_pci_dev_vendor 0x0000031B
+#define usergate_get_pci_dev_class 0x0000031C
 
 
 
@@ -1946,10 +1947,11 @@
 #define CallGate_create_secure_connection 0x55 0x67 0x9a 23 3 0 0 3 0 0x5d
 
 #define CallGate_get_pci_bus 0x55 0x67 0x9a 24 3 0 0 3 0 0x5d
-#define CallGate_get_pci_dev_name 0x55 0x67 0x9a 25 3 0 0 3 0 0x5d
-#define CallGate_get_pci_dev_vendor 0x55 0x67 0x9a 26 3 0 0 3 0 0x5d
-#define CallGate_get_pci_dev_class 0x55 0x67 0x9a 27 3 0 0 3 0 0x5d
-#define CallGate_get_pci_dev_irq 0x55 0x67 0x9a 28 3 0 0 3 0 0x5d
+#define CallGate_get_pci_irq 0x55 0x67 0x9a 25 3 0 0 3 0 0x5d
+
+#define CallGate_get_pci_dev_name 0x55 0x67 0x9a 26 3 0 0 3 0 0x5d
+#define CallGate_get_pci_dev_vendor 0x55 0x67 0x9a 27 3 0 0 3 0 0x5d
+#define CallGate_get_pci_dev_class 0x55 0x67 0x9a 28 3 0 0 3 0 0x5d
 
 #else
 
@@ -2922,9 +2924,10 @@
 #define CallGate_create_secure_connection 0x3e 0x67 0x9a 23 3 0 0 3 0
 
 #define CallGate_get_pci_bus 0x3e 0x67 0x9a 24 3 0 0 3 0
-#define CallGate_get_pci_dev_name 0x3e 0x67 0x9a 25 3 0 0 3 0
-#define CallGate_get_pci_dev_vendor 0x3e 0x67 0x9a 26 3 0 0 3 0
-#define CallGate_get_pci_dev_class 0x3e 0x67 0x9a 27 3 0 0 3 0
-#define CallGate_get_pci_dev_irq 0x3e 0x67 0x9a 28 3 0 0 3 0
+#define CallGate_get_pci_irq 0x3e 0x67 0x9a 25 3 0 0 3 0
+
+#define CallGate_get_pci_dev_name 0x3e 0x67 0x9a 26 3 0 0 3 0
+#define CallGate_get_pci_dev_vendor 0x3e 0x67 0x9a 27 3 0 0 3 0
+#define CallGate_get_pci_dev_class 0x3e 0x67 0x9a 28 3 0 0 3 0
 
 #endif

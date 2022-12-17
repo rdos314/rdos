@@ -2102,16 +2102,16 @@ init    Proc far
     mov ax,setup_pci_msix_entry_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET get_pci_irq
-    mov edi,OFFSET get_pci_irq_name
-    xor cl,cl
-    mov ax,get_pci_irq_nr
-    RegisterOsGate
-;
     mov esi,OFFSET get_pci_bus
     mov edi,OFFSET get_pci_bus_name
     xor dx,dx
     mov ax,get_pci_bus_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_irq
+    mov edi,OFFSET get_pci_irq_name
+    xor dx,dx
+    mov ax,get_pci_irq_nr
     RegisterBimodalUserGate
 ;
     call DetectDevices

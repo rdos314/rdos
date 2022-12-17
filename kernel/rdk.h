@@ -185,7 +185,7 @@
 #define osgate_write_pci_byte 193
 #define osgate_write_pci_word 194
 #define osgate_write_pci_dword 195
-#define osgate_find_pci_class 196
+#define osgate_find_pci_class_interface 196
 #define osgate_find_pci_device 197
 
 #define osgate_install_static_disc 199
@@ -377,11 +377,9 @@
 
 #define osgate_get_debug_thread_sel 379
 
-#define osgate_find_pci_class_all 380
+#define osgate_find_pci_class 380
 
 #define osgate_show_proc_debug 381
-
-#define osgate_get_pci_irq 382
 
 #define osgate_preempt_expired 383
 
@@ -1089,7 +1087,7 @@
 #define OsGate_write_pci_byte 0x3E 0x67 0x9a 193 0 0 0 2 0
 #define OsGate_write_pci_word 0x3E 0x67 0x9a 194 0 0 0 2 0
 #define OsGate_write_pci_dword 0x3E 0x67 0x9a 195 0 0 0 2 0
-#define OsGate_find_pci_class 0x3E 0x67 0x9a 196 0 0 0 2 0
+#define OsGate_find_pci_class_interface 0x3E 0x67 0x9a 196 0 0 0 2 0
 #define OsGate_find_pci_device 0x3E 0x67 0x9a 197 0 0 0 2 0
 
 #define OsGate_install_static_disc 0x3E 0x67 0x9a 199 0 0 0 2 0
@@ -1281,11 +1279,9 @@
 
 #define OsGate_get_debug_thread_sel 0x3E 0x67 0x9a 123 1 0 0 2 0
 
-#define OsGate_find_pci_class_all 0x3E 0x67 0x9a 124 1 0 0 2 0
+#define OsGate_find_pci_class 0x3E 0x67 0x9a 124 1 0 0 2 0
 
 #define OsGate_show_proc_debug 0x3E 0x67 0x9a 125 1 0 0 2 0
-
-#define OsGate_get_pci_irq 0x3E 0x67 0x9a 126 1 0 0 2 0
 
 #define OsGate_preempt_expired 0x3E 0x67 0x9a 127 1 0 0 2 0
 

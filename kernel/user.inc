@@ -4268,13 +4268,13 @@ GetPciDeviceClass      MACRO
         UserGate get_pci_device_class_nr
                         ENDM
 
-;   IN  BH          Bus #
-;   IN  BL          Device #
-;   IN  CH          Function #
-;   OUT AL          IRQ #
-GetPciDeviceIrq      MACRO
-    UserGate get_pci_device_irq_nr
-                        ENDM
+;  IN  BH    Bus
+;  IN  BL    Device
+;  IN  CH    Function
+;  OUT AL    Global int #
+GetPciIrqNr     MACRO
+    UserGate get_pci_irq_nr
+                    ENDM
 
 ;;;;;;;;;;; ACPI ;;;;;;;;;;
 

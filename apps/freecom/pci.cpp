@@ -127,7 +127,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                 Write(AcpiName);
 
                 RdosGetPciDeviceClass(Bus, Device, Function, &Class, &SubClass);
-                Irq = RdosGetPciDeviceIrq(Bus, Device, Function);
+                Irq = RdosGetPciIrq(Bus, Device, Function);
 
                 sprintf(Str, "%04hX %04hX  %02hX%02hX  %4 %4d  ", VendorID, DeviceID, Class, SubClass, Device, Function);
                 Write(Str);
