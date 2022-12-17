@@ -38,24 +38,6 @@ INCLUDE ..\os\core.inc
 
 ; this structure should be 128 bytes!
 
-pci_alias_entry  STRUC
-
-pciae_acpi_index DD ?
-pciae_acpi_name  DW 126 DUP(?)
-
-pci_alias_entry  ENDS
-
-; this structure should be 4096 bytes or less!
-
-pci_alias_struc  STRUC
-
-pcia_arr         DB 31 * 128 DUP(?)
-pcia_count       DW ?
-
-pci_alias_struc  ENDS
-
-; this structure should be 128 bytes!
-
 pci_func_struc   STRUC
 
 pcif_vendor_dev DD ?
@@ -65,8 +47,7 @@ pcif_interface  DB ?
 pcif_pin        DB ?
 pcif_irq        DB ?
 pcif_acpi_index DD ?
-pcif_alias      DW ?
-pcif_acpi_name  DB 111 DUP(?)
+pcif_acpi_name  DB 113 DUP(?)
 
 pci_func_struc   ENDS
 
@@ -1810,7 +1791,6 @@ spdInitFunc:
     mov es:[di].pcif_irq,0
     mov es:[di].pcif_acpi_index,-1
     mov es:[di].pcif_acpi_name,0
-    mov es:[di].pcif_alias,0
     add di,SIZE pci_func_struc    
     loop spdInitFunc
 ;
@@ -2027,57 +2007,9 @@ uaLoop:
     cmp edx,-1
     jz uaFirst
 ;
-    mov dx,es:[esi].pcif_alias
-    or dx,dx
-    jnz uaAlias
-;
-    push ds
-    push es
-    push eax
-    push ecx
-    push esi
-;
-    mov ax,es
-    mov ds,ax
-;
-    mov eax,1000h
-    AllocateGlobalMem
-    mov es:pcia_count,1
-    mov ds:[esi].pcif_alias,es
-;
-    mov eax,ds:[esi].pcif_acpi_index
-    mov es:pciae_acpi_index,eax
-;
-    add esi,OFFSET pcif_acpi_name
-    mov edi,OFFSET pciae_acpi_name
-    
-uaAliasLoop:
-    lods byte ptr ds:[esi]
-    stos byte ptr es:[edi]
-    or al,al
-    jnz uaAliasLoop
-;
-    mov dx,es
-;
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-
-uaAlias:
-    mov es,dx
-    mov di,es:pcia_count
-    cmp di,31
-    je uaNext
-;
-    movzx edi,es:pcia_count
-    shl edi,7
-    mov es:[edi].pciae_acpi_index,eax
-    add edi,OFFSET pciae_acpi_name
-    GetAcpiPciDeviceName
-    inc es:pcia_count
-    jmp uaNext
+    mov dl,es:[esi].pcif_acpi_name
+    or dl,dl
+    jnz uaNext
 
 uaFirst:
     mov es:[esi].pcif_acpi_index,eax 
