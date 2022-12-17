@@ -2078,6 +2078,85 @@ DetectDevices  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CheckAcpiBuses
+;
+;           DESCRIPTION:    Check for additional ACPI buses
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckAcpiBuses    Proc near
+    mov ax,SEG data
+    mov ds,ax  
+    mov ax,acpi_code_sel
+    verr ax
+    jnz cabDone
+;
+    xor bp,bp
+    xor bl,bl
+
+cabRetry:    
+    xor eax,eax
+
+cabLoop:
+    GetAcpiPciDeviceInfo
+    jc cabCheck
+;
+    movzx esi,bh
+    mov dx,ds:[2*esi].pci_bus_arr
+    or dx,dx
+    jnz cabNext
+;
+    cmp bx,bp
+    jbe cabNext
+;
+    mov ds:[2*esi].pci_bus_arr,-1
+    
+cabNext:
+    inc eax
+    jmp cabLoop
+
+cabCheck:
+    mov bx,bp
+
+cabCheckLoop:
+    movzx esi,bh
+    mov dx,ds:[2*esi].pci_bus_arr
+    cmp dx,-1
+    jne cabCheckNext
+;
+    mov bp,bx
+
+cabClearLoop:
+    movzx esi,bh
+    mov dx,ds:[2*esi].pci_bus_arr
+    cmp dx,-1
+    jne cabClearNext
+;
+    mov ds:[2*esi].pci_bus_arr,0
+
+cabClearNext:
+    inc bh
+    or bh,bh
+    jnz cabClearLoop
+;
+    mov bx,bp
+    call ScanPciBus
+    jmp cabRetry
+
+cabCheckNext:
+    inc bh
+    or bh,bh
+    jnz cabCheckLoop
+    
+cabDone:
+    ret
+CheckAcpiBuses   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateAcpi
 ;
 ;           DESCRIPTION:    Update device with ACPI info
@@ -2206,6 +2285,7 @@ init_pci    Proc far
     push es
     pushad
 ;
+    call CheckAcpiBuses
     call UpdateAcpi
 ;
     mov ax,cs
