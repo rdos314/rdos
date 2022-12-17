@@ -676,6 +676,8 @@ has_audio  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+DevName DB 'Via82a', 0
+
 PciVendorTab:
 pci00   DW 1106h, 3058h
 pci01   DW 0,     0
@@ -685,6 +687,8 @@ init_dev    Proc far
     push es
     pusha
 ;
+    mov ax,cs
+    mov es,ax
     mov ax,SEG data
     mov ds,ax
     mov ds:IoBase,0
@@ -704,6 +708,9 @@ init_pci_loop:
     jmp init_pci_loop
 
 init_pci_found:
+    mov edi,OFFSET DevName
+    PciPowerOn
+;
     mov cl,PCI_card_ExCa_base
     ReadPciDword
     mov dx,ax

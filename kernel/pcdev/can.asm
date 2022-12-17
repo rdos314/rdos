@@ -658,12 +658,23 @@ InitMsg Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+DevName DB 'CAN', 0
+
 SetupDevice  Proc near
     xor ax,ax
     mov bh,0Ch
     mov bl,9
     FindPciClass
     jc sdDone
+;
+    push es
+    push edi
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET DevName
+    PciPowerOn
+    pop edi
+    pop es
 ;
     push cx
     mov eax,1000h    

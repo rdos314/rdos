@@ -1053,6 +1053,8 @@ pci11   DW 0,     0
 
 InitPrimaryPciAdapter   Proc near
     mov bp,ax
+    mov ax,cs
+    mov es,ax
     mov ax,ether_data_sel
     mov ds,ax
     mov si,OFFSET PciVendorTab
@@ -1071,6 +1073,9 @@ init_pci1_loop:
     jmp init_pci1_loop
 
 init_pci1_found:
+    mov edi,OFFSET DriverName1
+    PciPowerOn
+;
     mov bp,bx
     mov cl,PCI_card_ExCa_base
     ReadPciDword
@@ -1112,6 +1117,8 @@ InitPrimaryPciAdapter   Endp
 
 InitSecondaryPciAdapter Proc near
     mov bp,ax
+    mov ax,cs
+    mov es,ax
     mov ax,ether_data2_sel
     mov ds,ax
     mov si,OFFSET PciVendorTab
@@ -1130,6 +1137,9 @@ init_pci2_loop:
     jmp init_pci2_loop
 
 init_pci2_found:
+    mov edi,OFFSET DriverName2
+    PciPowerOn
+;
     mov bp,bx
     mov cl,PCI_card_ExCa_base
     ReadPciDword

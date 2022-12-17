@@ -133,9 +133,9 @@ void TPciCommand::PrintBusDevices(int Bus)
                 Write(Str);
 
                 if (Irq)
-                    sprintf(Str, "%3d\r\n", Irq);
+                    sprintf(Str, "%02hX\r\n", Irq);
                 else
-                    strcpy(Str, "   \r\n");
+                    strcpy(Str, "  \r\n");
                 Write(Str);
             }
         }

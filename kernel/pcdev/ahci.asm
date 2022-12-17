@@ -337,6 +337,9 @@ req_name_str        DB MAX_NAME_SIZE DUP(?)
 notify_name_ptr     DW ?
 notify_name_str     DB MAX_NAME_SIZE DUP(?)
 
+pci_name_ptr        DW ?
+pci_name_str        DB MAX_NAME_SIZE DUP(?)
+
 fs_name             DB 10 DUP(?)
 
 data    ENDS
@@ -960,10 +963,29 @@ AddDevice   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+DevName DB 'AHCI', 0
+
 InitPciAhci Proc near
     mov ax,SEG data
     mov ds,ax
+    mov es,ax
     mov ds:ahci_dev_count,0
+
+    mov di,OFFSET pci_name_str
+    mov si,OFFSET DevName
+
+ipaNameLoop:    
+    lods byte ptr cs:[si]
+    stosb
+    or al,al
+    jnz ipaNameLoop
+;
+    dec di
+    mov ds:pci_name_ptr,di
+    mov al,'0'
+    stosb
+    xor al,al
+    stosb
 ;    
     xor si,si
 
@@ -979,6 +1001,15 @@ ipaLoop:
     AllocateBigLinear
     pop cx
 ;    
+    mov ax,ds:ahci_dev_count
+    add al,'0'
+    mov di,ds:pci_name_ptr
+    mov ds:[di],al
+    mov ax,ds
+    mov es,ax
+    mov edi,OFFSET pci_name_str
+    PciPowerOn
+;
     mov cl,PCI_nbr_base_address5
     ReadPciDword
 ;

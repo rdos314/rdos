@@ -1236,13 +1236,39 @@ setup_pci_msi_name DB 'Setup PCI MSI',0
 
 setup_pci_msi     Proc far    
     push ds
-    push ax
-    push cx
+    push es
+    push eax
+    push ecx
     push edx
-    push si
+    push esi
 ;    
-    mov si,SEG data
-    mov ds,si
+    push eax
+;
+    mov ax,SEG data
+    mov ds,ax
+;
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz spmPop
+;
+    mov es,ax
+    movzx esi,bl
+    mov ax,es:[2*esi].pcib_device_arr
+    or ax,ax
+    jz spmPop
+;
+    mov es,ax
+    movzx esi,ch
+    shl esi,7
+    pop eax
+    mov es:[esi].pcif_irq,al
+    jmp spmStart
+
+spmPop:
+    pop eax
+
+spmStart:
     movzx si,al
     shl si,3
     add si,OFFSET pci_msi_arr
@@ -1339,10 +1365,11 @@ spmVector:
     WritePciWord
 
 spmDone:
-    pop si
+    pop esi
     pop edx
-    pop cx
-    pop ax
+    pop ecx
+    pop eax
+    pop es
     pop ds
     retf32
 setup_pci_msi     Endp
