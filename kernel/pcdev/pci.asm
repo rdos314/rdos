@@ -526,7 +526,6 @@ get_pci_irq_name    DB 'Get Pci IRQ',0
 
 get_pci_irq  Proc far
     push ds
-    push es
     push esi
 ;
     mov ax,SEG data    
@@ -537,17 +536,20 @@ get_pci_irq  Proc far
     or ax,ax
     jz gpiFail
 ;
-    mov es,ax
+    mov ds,ax
     movzx esi,bl
-    mov ax,es:[2*esi].pcib_device_arr
+    mov ax,ds:[2*esi].pcib_device_arr
     or ax,ax
     jz gpiFail
 ;
-    mov es,ax
+    mov ds,ax
     movzx esi,ch
     shl esi,7
-    movzx ax,es:[esi].pcif_irq
+    movzx ax,ds:[esi].pcif_irq
     or al,al
+    jz gpiFail
+;
+    cmp al,-1
     jz gpiFail
 ;
     clc
@@ -559,10 +561,190 @@ gpiFail:
 
 gpiDone:
     pop esi
-    pop es
     pop ds
     retf32
 get_pci_irq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           GetPciClass
+;
+;    DESCRIPTION:    Get PCI class
+;
+;    PARAMETERS:     BH          Bus
+;                    BL          Device
+;                    CH          Function
+;
+;    RETURNS:        AH          Class
+;                    AL          Sub-class
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_class_name DB 'Get PCI Class', 0
+
+get_pci_class   Proc far
+    push ds
+    push esi
+;
+    mov ax,SEG data    
+    mov ds,ax
+;
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz gpcFail
+;
+    mov ds,ax
+    movzx esi,bl
+    mov ax,ds:[2*esi].pcib_device_arr
+    or ax,ax
+    jz gpcFail
+;
+    mov ds,ax
+    movzx esi,ch
+    shl esi,7
+    mov ax,ds:[esi].pcif_class
+    clc
+    jmp gpcDone
+
+gpcFail:
+    xor ax,ax
+    stc
+
+gpcDone:
+    pop esi
+    pop ds
+    retf32
+get_pci_class   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;    NAME:           GetPciDeviceName16/32
+;
+;    DESCRIPTION:    Get PCI device name
+;
+;    PARAMETERS:     BH          Bus
+;                    BL          Device
+;                    CH          Function
+;                    ES:(E)DI    Name buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_device_name DB 'Get PCI Device Name', 0
+
+GetDevName  Proc near
+    push ds
+    push eax
+    push esi
+;
+    mov ax,SEG data    
+    mov ds,ax
+;
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz gpdnFail
+;
+    mov ds,ax
+    movzx esi,bl
+    mov ax,ds:[2*esi].pcib_device_arr
+    or ax,ax
+    jz gpdnFail
+;
+    mov ds,ax
+    movzx esi,ch
+    shl esi,7
+    add esi,OFFSET pcif_acpi_name
+
+gpdnLoop:
+    lods byte ptr ds:[esi]
+    stos byte ptr es:[edi]
+    or al,al
+    jnz gpdnLoop
+;
+    clc
+    jmp gpdnDone
+
+gpdnFail:
+    stc
+
+gpdnDone:
+    pop esi
+    pop eax
+    pop ds
+    ret
+GetDevName   Endp
+
+get_pci_device_name16  Proc far
+    push edi
+    movzx edi,di
+    call GetDevName
+    pop edi
+    retf32
+get_pci_device_name16  Endp
+
+get_pci_device_name32  Proc far
+    call GetDevName
+    retf32
+get_pci_device_name32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetPciDeviceVendor
+;
+;           DESCRIPTION:    Get PCI device vendor & device
+;
+;           PARAMETERS:     AX          Index
+;
+;           RETURNS:        AX          Vendor ID
+;                           DX          Device ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_device_vendor_name DB 'Get PCI Device Vendor', 0
+
+get_pci_device_vendor  Proc far
+    push ds
+    push esi
+;
+    mov ax,SEG data    
+    mov ds,ax
+;
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz gpdvFail
+;
+    mov ds,ax
+    movzx esi,bl
+    mov ax,ds:[2*esi].pcib_device_arr
+    or ax,ax
+    jz gpdvFail
+;
+    mov ds,ax
+    movzx esi,ch
+    shl esi,7
+    mov ax,word ptr ds:[esi].pcif_vendor_dev
+    mov dx,word ptr ds:[esi].pcif_vendor_dev+2
+    cmp ax,-1
+    je gpdvFail
+;
+    clc
+    jmp gpdvDone
+
+gpdvFail:
+    xor ax,ax
+    xor dx,dx
+    stc
+
+gpdvDone:
+    pop esi
+    pop ds
+    retf32
+get_pci_device_vendor  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2112,6 +2294,25 @@ init    Proc far
     mov edi,OFFSET get_pci_irq_name
     xor dx,dx
     mov ax,get_pci_irq_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_class
+    mov edi,OFFSET get_pci_class_name
+    xor dx,dx
+    mov ax,get_pci_class_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_pci_device_name16
+    mov esi,OFFSET get_pci_device_name32
+    mov edi,OFFSET get_pci_device_name
+    mov dx,virt_es_in
+    mov ax,get_pci_device_name_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET get_pci_device_vendor
+    mov edi,OFFSET get_pci_device_vendor_name
+    xor dx,dx
+    mov ax,get_pci_device_vendor_nr
     RegisterBimodalUserGate
 ;
     call DetectDevices

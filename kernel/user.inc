@@ -4242,6 +4242,23 @@ GetPciBus      MACRO
         UserGate get_pci_bus_nr
                         ENDM
 
+;  IN  BH    Bus
+;  IN  BL    Device
+;  IN  CH    Function
+;  OUT AL    Global int #
+GetPciIrqNr     MACRO
+    UserGate get_pci_irq_nr
+                    ENDM
+
+;   IN  BH          Bus #
+;   IN  BL          Device #
+;   IN  CH          Function #
+;   OUT AH          Class
+;   OUT AL          Sub class
+GetPciClass      MACRO
+        UserGate get_pci_class_nr
+                        ENDM
+
 ;   IN  BH          Bus #
 ;   IN  BL          Device #
 ;   IN  CH          Function #
@@ -4258,23 +4275,6 @@ GetPciDeviceName      MACRO
 GetPciDeviceVendor      MACRO
         UserGate get_pci_device_vendor_nr
                         ENDM
-
-;   IN  BH          Bus #
-;   IN  BL          Device #
-;   IN  CH          Function #
-;   OUT AH          Class
-;   OUT AL          Sub class
-GetPciDeviceClass      MACRO
-        UserGate get_pci_device_class_nr
-                        ENDM
-
-;  IN  BH    Bus
-;  IN  BL    Device
-;  IN  CH    Function
-;  OUT AL    Global int #
-GetPciIrqNr     MACRO
-    UserGate get_pci_irq_nr
-                    ENDM
 
 ;;;;;;;;;;; ACPI ;;;;;;;;;;
 

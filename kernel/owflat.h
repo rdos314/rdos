@@ -162,48 +162,17 @@
     "movzx eax,al" \
     "jmp Done" \
     "Fail:" \
-    "mov eax,-1" \
+    "xor eax,eax" \
     "Done:" \
     __parm [__eax] [__ecx] [__edx] \
     __value [__eax] \
     __modify [__ebx]
 
-#pragma aux RdosGetPciDeviceName = \
+#pragma aux RdosGetPciClass = \
     "mov bh,al" \
     "mov bl,cl" \
     "mov ch,dl" \
-    CallGate_get_pci_dev_name  \
-    CarryToBool \
-    __parm [__eax] [__ecx] [__edx] [__edi] \
-    __value [__eax] \
-    __modify [__ebx]
-
-#pragma aux RdosGetPciDeviceVendor = \
-    "push edx" \
-    "mov bh,al" \
-    "mov bl,cl" \
-    "mov ch,dl" \
-    CallGate_get_pci_dev_vendor  \
-    "jc Fail" \
-    "movzx eax,ax" \
-    "mov [esi],eax" \
-    "movzx edx,dx" \
-    "mov [edi],edx" \
-    "mov eax,1" \
-    "jmp Done" \
-    "Fail:" \
-    "xor eax,eax" \
-    "Done:" \
-    "pop edx" \
-    __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
-    __value [__eax] \
-    __modify [__ebx]
-
-#pragma aux RdosGetPciDeviceClass = \
-    "mov bh,al" \
-    "mov bl,cl" \
-    "mov ch,dl" \
-    CallGate_get_pci_dev_class  \
+    CallGate_get_pci_class  \
     "jc Fail" \
     "push edx" \
     "movzx edx,ah" \
@@ -216,6 +185,37 @@
     "Fail:" \
     "xor eax,eax" \
     "Done:" \
+    __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
+    __value [__eax] \
+    __modify [__ebx]
+
+#pragma aux RdosGetPciDeviceName = \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_device_name  \
+    CarryToBool \
+    __parm [__eax] [__ecx] [__edx] [__edi] \
+    __value [__eax] \
+    __modify [__ebx]
+
+#pragma aux RdosGetPciDeviceVendor = \
+    "push edx" \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_device_vendor  \
+    "jc Fail" \
+    "movzx eax,ax" \
+    "mov [esi],eax" \
+    "movzx edx,dx" \
+    "mov [edi],edx" \
+    "mov eax,1" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    "pop edx" \
     __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
     __value [__eax] \
     __modify [__ebx]
