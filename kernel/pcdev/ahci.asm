@@ -963,7 +963,7 @@ AddDevice   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DevName DB 'AHCI', 0
+DevName DB 'AHCI ', 0
 
 InitPciAhci Proc near
     mov ax,SEG data

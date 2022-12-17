@@ -224,7 +224,11 @@ AddDevice   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+DevName DB 'SD-card', 0
+
 InitPciDev Proc near
+    mov ax,cs
+    mov es,ax
     mov ax,SEG data
     mov ds,ax
     mov ds:sd_dev_count,0
@@ -242,7 +246,10 @@ ipdLoop:
     mov eax,1000h
     AllocateBigLinear
     pop cx
-;    
+;
+    mov edi,OFFSET DevName
+    PciPowerOn    
+;
     mov cl,PCI_nbr_base_address0
     ReadPciDword
 ;    

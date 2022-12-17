@@ -4457,6 +4457,52 @@ CreateScratchPad   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           PowerOn
+;
+;           DESCRIPTION:    Power on device
+;
+;           PARAMETERS:     BH    Bus
+;                           BL    Device
+;                           CH    Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PowerOn  Proc near
+    push es
+    pushad
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov esi,OFFSET xhci_name
+
+poLoop:
+    mov al,cs:[si]
+    inc si
+    stosb
+    or al,al
+    jnz poLoop
+;
+    dec di
+    mov ax,ds:usb_controller_id
+    call HexToAscii
+    stosw
+;
+    xor al,al
+    stosb
+;
+    xor edi,edi
+    PciPowerOn
+    FreeMem
+;
+    popad
+    pop es
+    ret
+PowerOn   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           AddFunction
 ;
 ;           DESCRIPTION:    Add XHCI function
@@ -4504,6 +4550,8 @@ AddFunction    Proc near
     push es
     push fs
     pushad
+;
+    call PowerOn
 ;
     InitSection ds:xhc_cmd_section
 ;
