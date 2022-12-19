@@ -44,11 +44,13 @@ pcif_vendor_dev DD ?
 pcif_bridge     DW ?
 pcif_class      DW ?
 pcif_interface  DB ?
+pcif_used       DB ?
 pcif_pin        DB ?
 pcif_irq        DB ?
 pcif_msi        DB ?
+pcif_msix       DB ?
 pcif_acpi_index DD ?
-pcif_acpi_name  DB 112 DUP(?)
+pcif_acpi_name  DB 110 DUP(?)
 
 pci_func_struc   ENDS
 
@@ -507,6 +509,56 @@ write_pci_dword Proc far
     pop ds
     retf32
 write_pci_dword Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           IsPciFunctionUsed
+;
+;   DESCRIPTION:    Check if function is used
+;
+;   PARAMETERS:     BH          Bus
+;                   BL          Device
+;                   CH          Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_pci_function_used_name    DB 'Is Pci Function Used',0
+
+is_pci_function_used  Proc far
+    push ds
+    push esi
+;
+    mov ax,SEG data    
+    mov ds,ax
+;
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz ipfuFail
+;
+    mov ds,ax
+    movzx esi,bl
+    mov ax,ds:[2*esi].pcib_device_arr
+    or ax,ax
+    jz ipfuFail
+;
+    mov ds,ax
+    movzx esi,ch
+    shl esi,7
+    movzx ax,ds:[esi].pcif_used
+    or al,al
+    clc
+    jnz ipfuDone
+
+ipfuFail:
+    stc
+
+ipfuDone:
+    pop esi
+    pop ds
+    retf32
+is_pci_function_used  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1273,6 +1325,7 @@ pci_power_on    Proc far
     mov es,ax
     movzx edi,ch
     shl edi,7
+    mov es:[di].pcif_used,1
     add edi,OFFSET pcif_acpi_name
 
 ppoCopyName:
@@ -1984,9 +2037,11 @@ spdInitFunc:
     mov es:[di].pcif_bridge,0
     mov es:[di].pcif_class,0
     mov es:[di].pcif_interface,0
+    mov es:[di].pcif_used,0
     mov es:[di].pcif_pin,0
     mov es:[di].pcif_irq,0
     mov es:[di].pcif_msi,0
+    mov es:[di].pcif_msix,0
     mov es:[di].pcif_acpi_index,-1
     mov es:[di].pcif_acpi_name,0
     add di,SIZE pci_func_struc    
@@ -2026,6 +2081,13 @@ spdAdd:
     mov es:[di].pcif_msi,al
 
 spMsiDone:
+    mov al,11h
+    FindPciCapability
+    jc spMsiXDone
+;
+    mov es:[di].pcif_msix,al
+
+spMsiXDone:
     mov cl,PCI_header_type
     ReadPciByte
     mov ah,al
@@ -2619,6 +2681,12 @@ init    Proc far
     mov edi,OFFSET get_pci_device_vendor_name
     xor dx,dx
     mov ax,get_pci_device_vendor_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_pci_function_used
+    mov edi,OFFSET is_pci_function_used_name
+    xor dx,dx
+    mov ax,is_pci_function_used_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_pci_msi
