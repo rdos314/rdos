@@ -147,6 +147,38 @@ void TPciCommand::PrintBusDevices(int Bus)
 
 /*##########################################################################
 #
+#   Name       : TPciCommand::PrintBus
+#
+#   Purpose....: Print bus
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPciCommand::PrintBus(int index)
+{
+    int bus, dev, func;
+    char Str[80];
+
+    if (RdosGetPciBus(index, &bus, &dev, &func))
+    {
+        if (!bus && !dev && !func)
+        {
+            sprintf(Str, "Bus %d \r\n", index);
+            Write(Str);
+        }
+        else
+        {
+            sprintf(Str, "Bus %d (Bus: %d, Device: %d, Function: %d)\r\n", index, bus, dev, func);
+            Write(Str);
+        }
+        PrintBusDevices(index);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TPciCommand::Execute
 #
 #   Purpose....: Run command
@@ -159,21 +191,17 @@ void TPciCommand::PrintBusDevices(int Bus)
 int TPciCommand::Execute(char *param)
 {
     int i;
-    int bus, dev, func;
-    char Str[80];
+    int bus;
 
     if (LeadOptions(&param, 0) != E_None)
         return 1;
 
-    for (i = 0; i < 256; i++)
+    if (sscanf(param, "%d", &bus) == 1)
+        PrintBus(bus);
+    else
     {
-        if (RdosGetPciBus(i, &bus, &dev, &func))
-        {
-            sprintf(Str, "Bus %d (Bus: %d, Device: %d, Function: %d)\r\n", i, bus, dev, func);
-            Write(Str);
-
-            PrintBusDevices(i);
-        }
+        for (i = 0; i < 256; i++)
+            PrintBus(i);
     }
 
     return 0;

@@ -49,6 +49,7 @@ public:
 
 protected:
     void PrintBusDevices(int Bus);
+    void PrintBus(int Bus);
 };
 
 #endif
