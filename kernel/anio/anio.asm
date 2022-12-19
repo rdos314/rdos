@@ -570,6 +570,7 @@ pci00   DW 10EEh, 0AACCh
 pci07   DW 0,     0
 
 InitPciAdapter   Proc near
+    xor ax,ax
     mov esi,OFFSET PciVendorTab
 
 InitPciLoop:
