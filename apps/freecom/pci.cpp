@@ -115,7 +115,7 @@ void TPciCommand::PrintBusDevices(int Bus)
     int Used;
 
     Write("ACPI Name                     ");
-    Write("Vendor/dev Class    Dev Func  IRQ\r\n");
+    Write("Vendor/dev Class    Dev Func  Interrupt\r\n");
 
     for (Device = 0; Device < 32; Device++)
     {
@@ -153,7 +153,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                         if (Irq)
                             sprintf(Str, "IRQ    %02hX\r\n", Irq);
                         else
-                            sprintf(Str, "IRQ\r\n", Irq);
+                            sprintf(Str, "\r\n");
                     }
                 }
                 else
@@ -167,7 +167,7 @@ void TPciCommand::PrintBusDevices(int Bus)
                         if (Irq)
                             sprintf(Str, "IRQ    %02hX\r\n", Irq);
                         else
-                            sprintf(Str, "IRQ\r\n", Irq);
+                            sprintf(Str, "\r\n");
                     }
                 }
                 Write(Str);
