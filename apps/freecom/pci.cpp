@@ -105,12 +105,13 @@ void TPciCommand::PrintBusDevices(int Bus)
     int Function;
     int VendorID;
     int DeviceID;
+    int Interface;
     int Class;
     int SubClass;
     int Irq;
 
     Write("ACPI Name                     ");
-    Write("Vendor/dev Class  Dev Func  IRQ\r\n");
+    Write("Vendor/dev Class    Dev Func  IRQ\r\n");
 
     for (Device = 0; Device < 32; Device++)
     {
@@ -127,9 +128,10 @@ void TPciCommand::PrintBusDevices(int Bus)
                 Write(AcpiName);
 
                 RdosGetPciClass(Bus, Device, Function, &Class, &SubClass);
+                Interface = RdosGetPciInterface(Bus, Device, Function);
                 Irq = RdosGetPciIrq(Bus, Device, Function);
 
-                sprintf(Str, "%04hX %04hX  %02hX%02hX  %4d %4d  ", VendorID, DeviceID, Class, SubClass, Device, Function);
+                sprintf(Str, "%04hX %04hX  %02hX%02hX%02hX  %4d %4d  ", VendorID, DeviceID, Class, SubClass, Interface, Device, Function);
                 Write(Str);
 
                 if (Irq)

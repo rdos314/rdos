@@ -972,6 +972,8 @@
 #define usergate_get_pci_class 0x0000031A
 #define usergate_get_pci_device_name 0x0000031B
 #define usergate_get_pci_device_vendor 0x0000031C
+#define usergate_get_pci_irq_pin 0x0000031D
+#define usergate_get_pci_interface 0x0000031E
 
 
 
@@ -1950,6 +1952,8 @@
 #define CallGate_get_pci_class 0x55 0x67 0x9a 26 3 0 0 3 0 0x5d
 #define CallGate_get_pci_device_name 0x55 0x67 0x9a 27 3 0 0 3 0 0x5d
 #define CallGate_get_pci_device_vendor 0x55 0x67 0x9a 28 3 0 0 3 0 0x5d
+#define CallGate_get_pci_irq_pin 0x55 0x67 0x9a 29 3 0 0 3 0 0x5d
+#define CallGate_get_pci_interface 0x55 0x67 0x9a 30 3 0 0 3 0 0x5d
 
 #else
 
@@ -2926,5 +2930,7 @@
 #define CallGate_get_pci_class 0x3e 0x67 0x9a 26 3 0 0 3 0
 #define CallGate_get_pci_device_name 0x3e 0x67 0x9a 27 3 0 0 3 0
 #define CallGate_get_pci_device_vendor 0x3e 0x67 0x9a 28 3 0 0 3 0
+#define CallGate_get_pci_irq_pin 0x3e 0x67 0x9a 29 3 0 0 3 0
+#define CallGate_get_pci_interface 0x3e 0x67 0x9a 30 3 0 0 3 0
 
 #endif

@@ -646,6 +646,58 @@ get_pci_class   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;    NAME:           GetPciInterface
+;
+;    DESCRIPTION:    Get PCI interface
+;
+;    PARAMETERS:     BH          Bus
+;                    BL          Device
+;                    CH          Function
+;
+;    RETURNS:        AL          Interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_interface_name DB 'Get PCI Interface', 0
+
+get_pci_interface   Proc far
+    push ds
+    push esi
+;
+    mov ax,SEG data    
+    mov ds,ax
+;
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz gpinFail
+;
+    mov ds,ax
+    movzx esi,bl
+    mov ax,ds:[2*esi].pcib_device_arr
+    or ax,ax
+    jz gpinFail
+;
+    mov ds,ax
+    movzx esi,ch
+    shl esi,7
+    mov al,ds:[esi].pcif_interface
+    clc
+    jmp gpinDone
+
+gpinFail:
+    xor ax,ax
+    stc
+
+gpinDone:
+    pop esi
+    pop ds
+    retf32
+get_pci_interface   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;    NAME:           GetPciDeviceName16/32
 ;
 ;    DESCRIPTION:    Get PCI device name
@@ -2548,6 +2600,12 @@ init    Proc far
     mov edi,OFFSET get_pci_class_name
     xor dx,dx
     mov ax,get_pci_class_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_interface
+    mov edi,OFFSET get_pci_interface_name
+    xor dx,dx
+    mov ax,get_pci_interface_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET get_pci_device_name16

@@ -189,6 +189,21 @@
     __value [__eax] \
     __modify [__ebx]
 
+#pragma aux RdosGetPciInterface = \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_interface  \
+    "jc Fail" \
+    "movzx eax,al" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    __parm [__eax] [__ecx] [__edx] \
+    __value [__eax] \
+    __modify [__ebx]
+
 #pragma aux RdosGetPciDeviceName = \
     "mov bh,al" \
     "mov bl,cl" \
