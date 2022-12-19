@@ -2143,6 +2143,7 @@ cabClearNext:
 ;
     mov bx,bp
     call ScanPciBus
+    inc bp
     jmp cabRetry
 
 cabCheckNext:

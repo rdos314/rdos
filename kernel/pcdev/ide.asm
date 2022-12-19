@@ -1743,6 +1743,8 @@ get_ide_disc    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckPciBar    Proc near
+    push es
+;
     or si,si
     stc
     jz cpbDone
@@ -1805,6 +1807,7 @@ cpbOk:
     clc
 
 cpbDone:
+    pop es
     ret
 CheckPciBar Endp
 
@@ -1818,7 +1821,15 @@ CheckPciBar Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+DevName1 DB 'IDE-1', 0
+DevName3 DB 'IDE-3', 0
+DevName2 DB 'IDE-2', 0
+DevName4 DB 'IDE-4', 0
+
 CheckPciIde Proc near
+    mov ax,cs
+    mov es,ax
+;
     xor ax,ax
     mov bh,1
     mov bl,1
@@ -1841,6 +1852,9 @@ CheckPciIde Proc near
     GetPciIrqNr
     jc cpiBar1Done
 ;
+    mov edi,OFFSET DevName1
+    PciPowerOn
+;
     call CheckPciBar
 
 cpiBar1Done:
@@ -1859,6 +1873,9 @@ cpiBar1Done:
     GetPciIrqNr
     jc cpiBar3Done
 ;    
+    mov edi,OFFSET DevName3
+    PciPowerOn
+;
     call CheckPciBar
 
 cpiBar3Done:
@@ -1891,6 +1908,9 @@ cpiLoop:
     GetPciIrqNr
     jc cpiNextBar1Done
 ;    
+    mov edi,OFFSET DevName2
+    PciPowerOn
+;
     call CheckPciBar    
 
 cpiNextBar1Done:
@@ -1909,6 +1929,9 @@ cpiNextBar1Done:
     GetPciIrqNr
     jc cpiNextBar3Done
 ;    
+    mov edi,OFFSET DevName4
+    PciPowerOn
+;    
     call CheckPciBar
 
 cpiNextBar3Done:    
@@ -1919,7 +1942,6 @@ cpiDone:
     ret
 CheckPciIde Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1929,7 +1951,15 @@ CheckPciIde Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+SataName1 DB 'SATA-1', 0
+SataName3 DB 'SATA-3', 0
+SataName2 DB 'SATA-2', 0
+SataName4 DB 'SATA-4', 0
+
 CheckPciSata Proc near
+    mov ax,cs
+    mov es,ax
+;
     xor ax,ax
     mov bh,1
     mov bl,6
@@ -1951,7 +1981,10 @@ CheckPciSata Proc near
     mov si,ax
     GetPciIrqNr
     jc cpaBar1Done
-;    
+;
+    mov edi,OFFSET SataName1
+    PciPowerOn
+;
     call CheckPciBar
 
 cpaBar1Done:
@@ -1969,6 +2002,9 @@ cpaBar1Done:
     mov si,ax
     GetPciIrqNr
     jc cpaBar3Done
+;
+    mov edi,OFFSET SataName3
+    PciPowerOn
 ;    
     call CheckPciBar
 
@@ -2001,6 +2037,9 @@ cpaLoop:
     mov si,ax
     GetPciIrqNr
     jc cpaNextBar1Done
+;
+    mov edi,OFFSET SataName2
+    PciPowerOn
 ;    
     call CheckPciBar    
 
@@ -2019,6 +2058,9 @@ cpaNextBar1Done:
     mov si,ax
     GetPciIrqNr
     jc cpaNextBar3Done
+;
+    mov edi,OFFSET SataName4
+    PciPowerOn
 ;    
     call CheckPciBar
 
