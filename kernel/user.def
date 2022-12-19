@@ -972,5 +972,6 @@ get_pci_irq_nr                    = 793
 get_pci_class_nr                  = 794
 get_pci_device_name_nr            = 795
 get_pci_device_vendor_nr          = 796
+get_pci_irq_pin_nr                = 797
 
 usergate_entries                  = 800

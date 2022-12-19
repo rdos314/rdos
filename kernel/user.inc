@@ -4250,6 +4250,14 @@ GetPciIrqNr     MACRO
     UserGate get_pci_irq_nr
                     ENDM
 
+;  IN  BH    Bus
+;  IN  BL    Device
+;  IN  CH    Function
+;  OUT AL    Pin #
+GetPciIrqPin     MACRO
+    UserGate get_pci_irq_pin_nr
+                    ENDM
+
 ;   IN  BH          Bus #
 ;   IN  BL          Device #
 ;   IN  CH          Function #

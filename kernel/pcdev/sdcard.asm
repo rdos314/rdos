@@ -319,8 +319,8 @@ SetupInts Proc near
 
 siIrq:
     GetPciIrqNr
-    cmp al,1
-    jne siIrqOk
+    cmp al,10
+    jnz siIrqOk
 ;
     mov al,10h
 

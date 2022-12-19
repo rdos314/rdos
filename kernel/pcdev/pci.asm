@@ -566,6 +566,31 @@ gpiDone:
 get_pci_irq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           GetPciIrqPin
+;
+;   DESCRIPTION:    Get PCI IRQ pin
+;
+;   PARAMETERS:     BH          Bus
+;                   BL          Device
+;                   CH          Function
+;
+;   RETURNS:        AL          Pin #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pci_irq_pin_name    DB 'Get Pci IRQ Pin',0
+
+get_pci_irq_pin  Proc far
+    push cx
+    mov cl,PCI_interrupt_pin
+    ReadPciByte
+    pop cx
+    retf32
+get_pci_irq_pin  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;    NAME:           GetPciClass
@@ -2511,6 +2536,12 @@ init    Proc far
     mov edi,OFFSET get_pci_irq_name
     xor dx,dx
     mov ax,get_pci_irq_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_irq_pin
+    mov edi,OFFSET get_pci_irq_pin_name
+    xor dx,dx
+    mov ax,get_pci_irq_pin_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_pci_class
