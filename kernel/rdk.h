@@ -426,7 +426,6 @@
 
 #define osgate_enter_c3 418
 
-#define osgate_get_pci_msi 419
 #define osgate_setup_pci_msi 420
 #define osgate_request_msi_handler 421
 #define osgate_request_irq_handler 422
@@ -574,7 +573,6 @@
 
 #define osgate_get_disc_vendor_info_buf 549
 
-#define osgate_get_pci_msix 550
 #define osgate_enable_pci_msix 551
 #define osgate_setup_pci_msix_entry 552
 
@@ -897,6 +895,8 @@
 #define osgate_setup_net_cachable 814
 
 #define osgate_link_usergate 815
+
+#define osgate_set_pci_device_name 816
 
 
 
@@ -1328,7 +1328,6 @@
 
 #define OsGate_enter_c3 0x3E 0x67 0x9a 162 1 0 0 2 0
 
-#define OsGate_get_pci_msi 0x3E 0x67 0x9a 163 1 0 0 2 0
 #define OsGate_setup_pci_msi 0x3E 0x67 0x9a 164 1 0 0 2 0
 #define OsGate_request_msi_handler 0x3E 0x67 0x9a 165 1 0 0 2 0
 #define OsGate_request_irq_handler 0x3E 0x67 0x9a 166 1 0 0 2 0
@@ -1476,7 +1475,6 @@
 
 #define OsGate_get_disc_vendor_info_buf 0x3E 0x67 0x9a 37 2 0 0 2 0
 
-#define OsGate_get_pci_msix 0x3E 0x67 0x9a 38 2 0 0 2 0
 #define OsGate_enable_pci_msix 0x3E 0x67 0x9a 39 2 0 0 2 0
 #define OsGate_setup_pci_msix_entry 0x3E 0x67 0x9a 40 2 0 0 2 0
 
@@ -1799,4 +1797,6 @@
 #define OsGate_setup_net_cachable 0x3E 0x67 0x9a 46 3 0 0 2 0
 
 #define OsGate_link_usergate 0x3E 0x67 0x9a 47 3 0 0 2 0
+
+#define OsGate_set_pci_device_name 0x3E 0x67 0x9a 48 3 0 0 2 0
 

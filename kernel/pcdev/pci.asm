@@ -46,8 +46,9 @@ pcif_class      DW ?
 pcif_interface  DB ?
 pcif_pin        DB ?
 pcif_irq        DB ?
+pcif_msi        DB ?
 pcif_acpi_index DD ?
-pcif_acpi_name  DB 113 DUP(?)
+pcif_acpi_name  DB 112 DUP(?)
 
 pci_func_struc   ENDS
 
@@ -1126,6 +1127,8 @@ find_pci_class      Endp
 find_pci_cap_name       DB 'Find PCI Capability',0
 
 find_pci_cap    Proc far
+    push dx
+;
     mov dl,al
     mov cl,6
     ReadPciWord
@@ -1167,6 +1170,7 @@ fpcOk:
     clc
 
 fpcDone:    
+    pop dx
     retf32
 find_pci_cap    Endp
 
@@ -1982,6 +1986,7 @@ spdInitFunc:
     mov es:[di].pcif_interface,0
     mov es:[di].pcif_pin,0
     mov es:[di].pcif_irq,0
+    mov es:[di].pcif_msi,0
     mov es:[di].pcif_acpi_index,-1
     mov es:[di].pcif_acpi_name,0
     add di,SIZE pci_func_struc    
@@ -2014,6 +2019,13 @@ spdAdd:
     ReadPciByte
     mov es:[di].pcif_irq,al
 ;
+    mov al,5
+    FindPciCapability
+    jc spMsiDone
+;
+    mov es:[di].pcif_msi,al
+
+spMsiDone:
     mov cl,PCI_header_type
     ReadPciByte
     mov ah,al
@@ -2536,12 +2548,6 @@ init    Proc far
     mov ax,set_pci_device_name_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET get_pci_msi
-    mov edi,OFFSET get_pci_msi_name
-    xor cl,cl
-    mov ax,get_pci_msi_nr
-    RegisterOsGate
-;
     mov esi,OFFSET setup_pci_msi
     mov edi,OFFSET setup_pci_msi_name
     xor cl,cl
@@ -2558,12 +2564,6 @@ init    Proc far
     mov edi,OFFSET move_pci_msi_name
     xor cl,cl
     mov ax,move_pci_msi_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_pci_msix
-    mov edi,OFFSET get_pci_msix_name
-    xor cl,cl
-    mov ax,get_pci_msix_nr
     RegisterOsGate
 ;
     mov esi,OFFSET enable_pci_msix
@@ -2619,6 +2619,18 @@ init    Proc far
     mov edi,OFFSET get_pci_device_vendor_name
     xor dx,dx
     mov ax,get_pci_device_vendor_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_msi
+    mov edi,OFFSET get_pci_msi_name
+    xor dx,dx
+    mov ax,get_pci_msi_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_pci_msix
+    mov edi,OFFSET get_pci_msix_name
+    xor dx,dx
+    mov ax,get_pci_msix_nr
     RegisterBimodalUserGate
 ;
     call DetectDevices

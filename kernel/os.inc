@@ -4116,15 +4116,6 @@ FindPciDevice   MACRO
     OsGate find_pci_device_nr
                     ENDM
 
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; OUT CL    MSI Register base
-; OUT DL    Requested vectors
-GetPciMsi    MACRO
-    OsGate get_pci_msi_nr
-                    ENDM
-
 ; IN  AL    IRQ
 ; IN  FS    Core
 MovePciMsi    MACRO
@@ -4139,15 +4130,6 @@ MovePciMsi    MACRO
 ; IN  DL    Allocated vectors
 SetupPciMsi    MACRO
     OsGate setup_pci_msi_nr
-                    ENDM
-
-; IN  BH    Bus
-; IN  BL    Device
-; IN  CH    Function
-; OUT CL    MSI-X Register base
-; OUT DL    Number of vectors
-GetPciMsiX    MACRO
-    OsGate get_pci_msix_nr
                     ENDM
 
 ; IN  BH    Bus

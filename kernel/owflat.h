@@ -153,6 +153,21 @@
     __parm [__eax] [__edx] [__esi] [__edi] \
     __value [__eax]
 
+#pragma aux RdosIsPciFunctionUsed = \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_is_pci_function_used  \
+    "jc Fail" \
+    "mov eax,1" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    __parm [__eax] [__ecx] [__edx] \
+    __value [__eax] \
+    __modify [__ebx]
+
 #pragma aux RdosGetPciIrq = \
     "mov bh,al" \
     "mov bl,cl" \
@@ -213,6 +228,45 @@
     __parm [__eax] [__ecx] [__edx] [__edi] \
     __value [__eax] \
     __modify [__ebx]
+
+#pragma aux RdosGetPciMsi = \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_msi  \
+    "jc Fail" \
+    "movzx eax,al" \
+    "mov [esi],eax" \
+    "movzx edx,dl" \
+    "mov [edi],edx" \
+    "mov eax,1" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
+    __value [__eax] \
+    __modify [__ebx __edx]
+
+
+#pragma aux RdosGetPciMsiX = \
+    "mov bh,al" \
+    "mov bl,cl" \
+    "mov ch,dl" \
+    CallGate_get_pci_msix  \
+    "jc Fail" \
+    "movzx eax,al" \
+    "mov [esi],eax" \
+    "movzx edx,dl" \
+    "mov [edi],edx" \
+    "mov eax,1" \
+    "jmp Done" \
+    "Fail:" \
+    "xor eax,eax" \
+    "Done:" \
+    __parm [__eax] [__ecx] [__edx] [__esi] [__edi] \
+    __value [__eax] \
+    __modify [__ebx __edx]
 
 #pragma aux RdosGetPciDeviceVendor = \
     "push edx" \

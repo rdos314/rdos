@@ -4292,6 +4292,31 @@ GetPciDeviceVendor      MACRO
         UserGate get_pci_device_vendor_nr
                         ENDM
 
+;  IN  BH    Bus
+;  IN  BL    Device
+;  IN  CH    Function
+IsPciFunctionUsedNr     MACRO
+    UserGate is_pci_function_used_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; OUT CL    MSI Register base
+; OUT DL    Requested vectors
+GetPciMsi    MACRO
+        UserGate get_pci_msi_nr
+                    ENDM
+
+; IN  BH    Bus
+; IN  BL    Device
+; IN  CH    Function
+; OUT CL    MSI-X Register base
+; OUT DL    Number of vectors
+GetPciMsiX    MACRO
+        UserGate get_pci_msix_nr
+                    ENDM
+
 ;;;;;;;;;;; ACPI ;;;;;;;;;;
 
 ;   OUT EAX         ACPI status

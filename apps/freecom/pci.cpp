@@ -109,6 +109,10 @@ void TPciCommand::PrintBusDevices(int Bus)
     int Class;
     int SubClass;
     int Irq;
+    int Msi = 0;
+    int MsiX = 0;
+    int Count;
+    int Used;
 
     Write("ACPI Name                     ");
     Write("Vendor/dev Class    Dev Func  IRQ\r\n");
@@ -130,14 +134,42 @@ void TPciCommand::PrintBusDevices(int Bus)
                 RdosGetPciClass(Bus, Device, Function, &Class, &SubClass);
                 Interface = RdosGetPciInterface(Bus, Device, Function);
                 Irq = RdosGetPciIrq(Bus, Device, Function);
+                Used = RdosIsPciFunctionUsed(Bus, Device, Function);
+
+                RdosGetPciMsi(Bus, Device, Function, &Msi, &Count);
+                RdosGetPciMsiX(Bus, Device, Function, &MsiX, &Count);
 
                 sprintf(Str, "%04hX %04hX  %02hX%02hX%02hX  %4d %4d  ", VendorID, DeviceID, Class, SubClass, Interface, Device, Function);
                 Write(Str);
 
-                if (Irq)
-                    sprintf(Str, "%02hX\r\n", Irq);
+                if (Used)
+                {
+                    if (Msi)
+                        sprintf(Str, "MSI    %02hX\r\n", Irq);
+                    else if (MsiX)
+                        sprintf(Str, "MSI-X  %02hX\r\n", Irq);
+                    else
+                    {
+                        if (Irq)
+                            sprintf(Str, "IRQ    %02hX\r\n", Irq);
+                        else
+                            sprintf(Str, "IRQ\r\n", Irq);
+                    }
+                }
                 else
-                    strcpy(Str, "  \r\n");
+                {
+                    if (Msi)
+                        sprintf(Str, "MSI\r\n");
+                    else if (MsiX)
+                        sprintf(Str, "MSI-X\r\n");
+                    else
+                    {
+                        if (Irq)
+                            sprintf(Str, "IRQ    %02hX\r\n", Irq);
+                        else
+                            sprintf(Str, "IRQ\r\n", Irq);
+                    }
+                }
                 Write(Str);
             }
         }
