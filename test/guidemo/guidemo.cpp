@@ -204,7 +204,7 @@ void Pattern3(TGraphicDevice *dev)
 void TestAll(TGraphicDevice *dev)
 {
         TFont *font;
-        
+
         font = new TFont(26);
         dev->SetFont(font);
 
@@ -252,7 +252,7 @@ TBitmapGraphicDevice *CreateMouseMask()
         TFont *font;
 
         mono = new TBitmapGraphicDevice(1, 40, 40);
-        
+
 /*        font = new TFont(28);
         mono->SetLgopNone();
         mono->SetFont(font);
@@ -275,7 +275,7 @@ TBitmapGraphicDevice *CreateMouseMask()
         mono->DrawLine(1, 1, 41, 41);
         mono->DrawLine(1, 41, 41, 1);
         mono->DrawLine(1, 1, 40, 40);
-        mono->DrawLine(1, 40, 40, 1); 
+        mono->DrawLine(1, 40, 40, 1);
 
         return mono;
 }
@@ -433,13 +433,13 @@ void cdecl main()
 
         RdosWaitMilli(2500);
 
-        vbe = new TVideoGraphicDevice(32, 1366, 768);
+//        vbe = new TVideoGraphicDevice(32, 1366, 768);
 //      vbe = new TVideoGraphicDevice(24, 1280, 800);
 //      vbe = new TVideoGraphicDevice(24, 1280, 1024);
 //        vbe = new TVideoGraphicDevice(24, 640, 480);
 //      vbe = new TVideoGraphicDevice(24, 800, 600);
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
-//        vbe = new TVideoGraphicDevice(32, 1920, 1080);
+        vbe = new TVideoGraphicDevice(32, 1920, 1080);
 
         ControlThread = new TDisplayControlThread("Control thread", vbe);
 
@@ -475,7 +475,7 @@ void cdecl main()
         Wait.StartThreadHandler("IO Thread", 0x1000);
 
         bitmap = new TBitmapGraphicDevice(8, 1366, 768);
-        
+
         bitmap->SetDrawColor(255,255,255);
         bitmap->DrawLine(0, 0, vbe->GetWidth(), vbe->GetHeight());
         bitmap->DrawLine(240, 0, 0, 128);
