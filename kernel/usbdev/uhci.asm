@@ -3961,6 +3961,11 @@ sfCopyDone:
 ;
     xor al,al
     stosb
+;
+    mov bx,ds:uhc_pci_bus_dev
+    mov ch,ds:uhc_pci_func
+    xor edi,edi
+    SetPciDeviceName
 ;   
     pop si         
     mov bx,ds
@@ -4310,6 +4315,15 @@ InitPciAdapter  Proc near
     FindPciClassInterface
     jc init_pci_done
 ;
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET uhci_name
+    PciPowerOn
+    pop edi
+    pop es
+;
     mov cl,20h
     ReadPciDword
     mov dx,ax
@@ -4327,6 +4341,15 @@ init_pci_next_device:
     FindPciClassInterface
     jc init_pci_done
 ;       
+    push es
+    push edi
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET uhci_name
+    PciPowerOn
+    pop edi
+    pop es
+;
     mov cl,20h
     ReadPciDword
     cmp ax,bp

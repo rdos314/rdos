@@ -4897,6 +4897,15 @@ init_pci_next_device:
     FindPciClassInterface
     jc init_pci_done
 ;       
+    push es
+    push edi
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET ehci_name
+    PciPowerOn
+    pop edi
+    pop es
+;
     mov cl,10h
     ReadPciDword
     and ax,0F000h
