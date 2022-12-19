@@ -4424,6 +4424,12 @@ sfCopyDone:
 ;
     xor al,al
     stosb
+;
+    mov bh,ds:ehc_bus
+    mov bl,ds:ehc_device
+    mov ch,ds:ehc_function
+    xor edi,edi
+    SetPciDeviceName
 ;   
     pop si         
     mov bx,ds
@@ -4865,6 +4871,15 @@ InitPciAdapter  Proc near
     mov ch,20h
     FindPciClassInterface
     jc init_pci_done
+;
+    push es
+    push edi
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET ehci_name
+    PciPowerOn
+    pop edi
+    pop es
 ;
     mov cl,10h
     ReadPciDword
