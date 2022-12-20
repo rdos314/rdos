@@ -1899,36 +1899,27 @@ disable_all_irq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           RegisterMsi
+;       NAME:           GetMsiVector
 ;
-;       DESCRIPTION:    Register MSI and return parameters
+;       DESCRIPTION:    Get MSI vector
 ;
-;       PARAMETERS:     AL      Int base
-;                       BH      Bus
-;                       BL      Device
-;                       CH      Function
-;                       CL      MSI address register
+;       PARAMETERS:     AL      IRQ
+;                       FS      Core
 ;
 ;       RETURNS:        EDX     MSI address
 ;                       AX      MSI data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-register_msi_name    DB 'Register MSI',0
+get_msi_vector_name    DB 'Get MSI Vector',0
 
-register_msi  Proc far
-    push ds
-;
-    mov dx,SEG data
-    mov ds,dx
-;    
-    xor ah,ah
-    mov edx,ds:bsp_id
+get_msi_vector  Proc far
+    movzx ax,al
+    mov edx,fs:cs_apic
     shl edx,12
     or edx,0FEE00000h
-    pop ds
     retf32
-register_msi  Endp
+get_msi_vector  Endp
    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4423,10 +4414,10 @@ init    PROC far
     mov ax,request_irq_handler_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET register_msi
-    mov edi,OFFSET register_msi_name
+    mov esi,OFFSET get_msi_vector
+    mov edi,OFFSET get_msi_vector_name
     xor cl,cl
-    mov ax,register_msi_nr
+    mov ax,get_msi_vector_nr
     RegisterOsGate
 ;
     mov esi,OFFSET request_msi_handler

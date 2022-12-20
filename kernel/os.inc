@@ -2249,15 +2249,12 @@ DisableAllIrq   MACRO
     OsGate disable_all_irq_nr
                     ENDM
 
-; IN  AL        Int base
-; IN  BH        Bus
-; IN  BL        Device
-; IN  CH        Function
-; IN  CL        MSI address register
+; IN  AL        IRQ
+; IN  FS        Core
 ; OUT EDX       MSI address
 ; OUT AX        MSI data
-RegisterMsi    MACRO
-    OsGate register_msi_nr
+GetMsiVector    MACRO
+    OsGate get_msi_vector_nr
                     ENDM
 
 ; IN  AL        Int base

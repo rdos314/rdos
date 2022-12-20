@@ -1412,6 +1412,93 @@ get_pci_msi     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupMsiVector
+;
+;           DESCRIPTION:    Setup MSI vector
+;
+;           PARAMETERS:     BH          Bus
+;                           BL          Device
+;                           CH          Function
+;                           CL          MSI register base
+;                           AL          IRQ
+;                           FS          Core
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupMsiVector     Proc near
+    push eax
+    push ecx
+    push edx
+    push esi
+;
+    mov si,ax
+;
+    ReadPciWord
+    add cl,2
+;
+    test ax,100h
+    jnz smvVector
+;
+    test ax,80h
+    jnz smv64
+
+smv32:
+    mov ax,si
+    GetMsiVector
+; 
+    push ax
+    mov eax,edx
+    WritePciDword
+    pop ax
+;
+    add cl,4    
+    WritePciWord
+    jmp smvDone
+
+smv64:
+    mov ax,si
+    GetMsiVector
+;
+    push ax
+    mov eax,edx
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+    pop ax
+;    
+    add cl,4    
+    WritePciWord
+    jmp smvDone
+
+smvVector:
+    mov ax,si
+    GetMsiVector
+;
+    push ax
+    mov eax,edx
+    WritePciDword
+;
+    add cl,4
+    xor eax,eax
+    WritePciDword
+    pop ax
+;    
+    add cl,4    
+    WritePciWord
+
+smvDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    ret
+SetupMsiVector	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetupPciMsi
 ;
 ;           DESCRIPTION:    Setup PCI MSI interface
@@ -1430,6 +1517,7 @@ setup_pci_msi_name DB 'Setup PCI MSI',0
 setup_pci_msi     Proc far    
     push ds
     push es
+    push fs
     push eax
     push ecx
     push edx
@@ -1499,69 +1587,16 @@ spmAllocDone:
     or al,1
     WritePciWord
 ;
-    test ax,100h
-    jnz spmVector
-;
-    test ax,80h
-    jnz spm64
-
-spm32:
     mov al,dh
-    add cl,2
-;
-    RegisterMsi
-    push ax
-; 
-    mov eax,edx
-    WritePciDword
-;
-    pop ax
-    add cl,4    
-    WritePciWord
-    jmp spmDone
-
-spm64:
-    mov al,dh
-    add cl,2
-;    
-    RegisterMsi
-    push ax
-;
-    mov eax,edx
-    WritePciDword
-;
-    add cl,4
-    xor eax,eax
-    WritePciDword
-;    
-    pop ax
-    add cl,4    
-    WritePciWord
-    jmp spmDone
-
-spmVector:
-    mov al,dh
-    add cl,2
-;    
-    RegisterMsi
-    push ax
-;
-    mov eax,edx
-    WritePciDword
-;
-    add cl,4
-    xor eax,eax
-    WritePciDword
-;    
-    pop ax
-    add cl,4    
-    WritePciWord
+    GetCore
+    call SetupMsiVector
 
 spmDone:
     pop esi
     pop edx
     pop ecx
     pop eax
+    pop fs
     pop es
     pop ds
     retf32
@@ -1585,6 +1620,7 @@ move_pci_msi     Proc far
     push ds
     pushad
 ;    
+    int 3
     mov si,SEG data
     mov ds,si
     movzx si,al
@@ -1598,19 +1634,18 @@ move_pci_msi     Proc far
     or cl,cl
     jz mpmDone
 ;
-    mov ax,fs:cs_id
-    mov ds:[si].msi_core,ax
-    mov edx,fs:cs_apic
-    shl edx,12
+    mov dx,fs:cs_id
+    mov ds:[si].msi_core,dx
 ;
-    ReadPciWord
-    WritePciWord
-;
-    add cl,2
-    ReadPciDword
-    and eax,0FFF00000h
-    or eax,edx
+    GetMsiVector
+; 
+    push ax
+    mov eax,edx
     WritePciDword
+    pop ax
+;
+    add cl,4    
+    WritePciWord
 
 mpmDone:
     popad
@@ -1802,7 +1837,9 @@ setup_pci_msix_entry     Proc far
     movzx si,dl
     shl si,4
 ;
-    RegisterMsi
+    xor dx,dx
+    GetMsiVector
+;
     mov es:[si],edx
     movzx eax,ax
     mov es:[si+8],eax
