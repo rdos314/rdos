@@ -50,10 +50,11 @@ pcif_msi        DB ?
 pcif_msi_core   DW ?
 pcif_msi_count  DB ?
 pcif_msix       DB ?
+pcif_msix_count DW ?
 pcif_msix_sel   DW ?
 pcif_used       DW ?
 pcif_acpi_index DD ?
-pcif_acpi_name  DB 104 DUP(?)
+pcif_acpi_name  DB 102 DUP(?)
 
 pci_func_struc   ENDS
 
@@ -1772,21 +1773,43 @@ get_pci_msi_info      Endp
 get_pci_msix_name DB 'Get PCI MSI-X',0
 
 get_pci_msix     Proc far    
-    push ax
-;    
-    mov al,11h
-    FindPciCapability
-    jc gpmxDone
+    push ds
+    push eax
+    push esi
 ;
-    mov cl,al
-    add cl,2
-    ReadPciWord
-    mov dl,al
-    inc dl
+    int 3
+    mov ax,SEG data    
+    mov ds,ax
+;
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz gpmxFail
+;
+    mov ds,ax
+    movzx esi,bl
+    mov ax,ds:[2*esi].pcib_device_arr
+    or ax,ax
+    jz gpmxFail
+;
+    mov ds,ax
+    movzx esi,ch
+    shl esi,7
+    mov cl,ds:[esi].pcif_msix
+    mov dl,byte ptr ds:[esi].pcif_msi_count
+    or cl,cl
+    jz gpmxFail
+;
     clc
+    jmp gpmxDone
 
-gpmxDone:       
-    pop ax 
+gpmxFail:
+    stc
+
+gpmxDone:
+    pop esi
+    pop eax
+    pop ds
     retf32
 get_pci_msix     Endp
 
@@ -2141,6 +2164,7 @@ spdInitFunc:
     mov es:[di].pcif_msix,0
     mov es:[di].pcif_msi_count,0
     mov es:[di].pcif_msix_sel,0
+    mov es:[di].pcif_msix_count,0
     mov es:[di].pcif_acpi_index,-1
     mov es:[di].pcif_acpi_name,0
     add di,SIZE pci_func_struc    
@@ -2197,6 +2221,18 @@ spMsiDone:
 ;
     add al,2
     mov es:[di].pcif_msix,al
+;
+    mov cl,al
+    ReadPciWord
+    and ax,7FFh
+    inc ax
+    cmp ax,32
+    jbe spMsiXCountOk
+;
+    mov ax,32
+
+spMsiXCountOk:
+    mov es:[di].pcif_msix_count,ax
 
 spMsiXDone:
     mov cl,PCI_header_type
