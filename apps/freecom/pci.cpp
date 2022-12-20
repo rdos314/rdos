@@ -111,7 +111,8 @@ void TPciCommand::PrintBusDevices(int Bus)
     int Irq;
     int Msi = 0;
     int MsiX = 0;
-    int Count;
+    int MsiCount;
+    int MsiXCount;
     int Used;
 
     Write("ACPI Name                     ");
@@ -136,41 +137,59 @@ void TPciCommand::PrintBusDevices(int Bus)
                 Irq = RdosGetPciIrq(Bus, Device, Function);
                 Used = RdosIsPciFunctionUsed(Bus, Device, Function);
 
-                RdosGetPciMsi(Bus, Device, Function, &Msi, &Count);
-                RdosGetPciMsiX(Bus, Device, Function, &MsiX, &Count);
+                RdosGetPciMsi(Bus, Device, Function, &Msi, &MsiCount);
+                RdosGetPciMsiX(Bus, Device, Function, &MsiX, &MsiXCount);
 
                 sprintf(Str, "%04hX %04hX  %02hX%02hX%02hX  %4d %4d  ", VendorID, DeviceID, Class, SubClass, Interface, Device, Function);
                 Write(Str);
 
+                Str[0] = 0;
                 if (Used)
                 {
                     if (Msi)
-                        sprintf(Str, "MSI    %02hX\r\n", Irq);
-                    else if (MsiX)
-                        sprintf(Str, "MSI-X  %02hX\r\n", Irq);
+                    {
+                        if (MsiCount == 1)
+                            sprintf(Str, "MSI    %02hX", Irq);
+                        else
+                            sprintf(Str, "MSI    %02hX-%02hX", Irq, Irq + MsiCount - 1);
+                    }
                     else
                     {
-                        if (Irq)
-                            sprintf(Str, "IRQ    %02hX\r\n", Irq);
+                        if (MsiX)
+                        {
+                            if (MsiXCount == 1)
+                                sprintf(Str, "MSI-X  %02hX", Irq);
+                            else
+                                sprintf(Str, "MSI-X  %02hX-%02hX", Irq, Irq + MsiXCount - 1);
+                        }
                         else
-                            sprintf(Str, "\r\n");
+                        {
+                            if (Irq)
+                                sprintf(Str, "IRQ    %02hX", Irq);
+                        }
                     }
                 }
                 else
                 {
                     if (Msi)
-                        sprintf(Str, "MSI\r\n");
-                    else if (MsiX)
-                        sprintf(Str, "MSI-X\r\n");
+                    {
+                        sprintf(Str, "MSI");
+                        if (MsiX)
+                            strcat(Str, "/MSI-X");
+                    }
                     else
                     {
-                        if (Irq)
-                            sprintf(Str, "IRQ    %02hX\r\n", Irq);
+                        if (MsiX)
+                            sprintf(Str, "MSI-X");
                         else
-                            sprintf(Str, "\r\n");
+                        {
+                            if (Irq)
+                                sprintf(Str, "IRQ    %02hX", Irq);
+                        }
                     }
                 }
                 Write(Str);
+                Write("\r\n");
             }
         }
     }
