@@ -1620,7 +1620,6 @@ move_pci_msi     Proc far
     push ds
     pushad
 ;    
-    int 3
     mov si,SEG data
     mov ds,si
     movzx si,al
