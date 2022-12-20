@@ -50,8 +50,8 @@ pcif_msi        DB ?
 pcif_msi_core   DW ?
 pcif_msi_count  DB ?
 pcif_msix       DB ?
-pcif_used       DW ?
 pcif_msix_sel   DW ?
+pcif_used       DW ?
 pcif_acpi_index DD ?
 pcif_acpi_name  DB 104 DUP(?)
 
@@ -1534,38 +1534,63 @@ setup_pci_msi     Proc far
     push ds
     push es
     push fs
-    push eax
-    push ecx
-    push edx
-    push esi
-;    
-    push eax
+    pushad
 ;
+    mov di,ax
     mov ax,SEG data
     mov ds,ax
 ;
     movzx esi,bh
     mov ax,ds:[2*esi].pci_bus_arr
     or ax,ax
-    jz spmPop
+    jz spmLegacy
 ;
     mov es,ax
     movzx esi,bl
     mov ax,es:[2*esi].pcib_device_arr
     or ax,ax
-    jz spmPop
+    jz spmLegacy
 ;
     mov es,ax
     movzx esi,ch
     shl esi,7
-    pop eax
+    mov ax,di
     mov es:[esi].pcif_irq,al
-    jmp spmStart
+;
+    cmp dl,es:[esi].pcif_msi_count
+    jbe spmCountOk
+;
+    mov dl,es:[esi].pcif_msi_count
 
-spmPop:
-    pop eax
+spmCountOk:
+    mov es:[esi].pcif_msi_count,dl
+;
+    xor ah,ah
 
-spmStart:
+spmAllocLoop:
+    shr dl,1
+    jc spmAllocDone
+;
+    inc ah
+    jmp spmAllocLoop
+
+spmAllocDone:
+    mov dl,ah
+    shl dl,4
+    ReadPciWord
+    and al,NOT 70h
+    or al,dl
+    or al,1
+    WritePciWord
+;
+    GetCore
+    mov es:[esi].pcif_msi_core,fs
+;
+    mov al,es:[esi].pcif_irq
+    call SetupMsiVector
+
+spmLegacy:
+    mov dl,es:[esi].pcif_msi_count
     movzx si,al
     shl si,3
     add si,OFFSET pci_msi_arr
@@ -1582,36 +1607,9 @@ spmEntryLoop:
     add si,8
     sub dh,1
     jnz spmEntryLoop
-;
-    mov dh,al
-    xor ah,ah
-
-spmAllocLoop:
-    shr dl,1
-    jc spmAllocDone
-;
-    inc ah
-    jmp spmAllocLoop
-
-spmAllocDone:
-    mov dl,ah
-    shl dl,4
-;
-    ReadPciWord
-    and al,NOT 70h
-    or al,dl
-    or al,1
-    WritePciWord
-;
-    mov al,dh
-    GetCore
-    call SetupMsiVector
 
 spmDone:
-    pop esi
-    pop edx
-    pop ecx
-    pop eax
+    popad
     pop fs
     pop es
     pop ds
