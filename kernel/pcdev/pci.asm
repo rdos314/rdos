@@ -44,15 +44,16 @@ pcif_vendor_dev DD ?
 pcif_bridge     DW ?
 pcif_class      DW ?
 pcif_interface  DB ?
-pcif_used       DB ?
 pcif_pin        DB ?
 pcif_irq        DB ?
 pcif_msi        DB ?
+pcif_msi_core   DW ?
+pcif_msi_count  DB ?
 pcif_msix       DB ?
-pcif_msi_count  DW ?
+pcif_used       DW ?
 pcif_msix_sel   DW ?
 pcif_acpi_index DD ?
-pcif_acpi_name  DB 106 DUP(?)
+pcif_acpi_name  DB 104 DUP(?)
 
 pci_func_struc   ENDS
 
@@ -548,7 +549,7 @@ is_pci_function_used  Proc far
     mov ds,ax
     movzx esi,ch
     shl esi,7
-    movzx ax,ds:[esi].pcif_used
+    mov ax,ds:[esi].pcif_used
     or al,al
     clc
     jnz ipfuDone
@@ -1407,7 +1408,7 @@ get_pci_msi     Proc far
     movzx esi,ch
     shl esi,7
     mov cl,ds:[esi].pcif_msi
-    mov dl,byte ptr ds:[esi].pcif_msi_count
+    mov dl,ds:[esi].pcif_msi_count
     or cl,cl
     jz gpmFail
 ;
@@ -2085,6 +2086,7 @@ spdInitFunc:
     mov es:[di].pcif_pin,0
     mov es:[di].pcif_irq,0
     mov es:[di].pcif_msi,0
+    mov es:[di].pcif_msi_core,0
     mov es:[di].pcif_msix,0
     mov es:[di].pcif_msi_count,0
     mov es:[di].pcif_msix_sel,0
@@ -2133,9 +2135,9 @@ spdAdd:
     mov cl,al
     shr cl,1
     and cl,3
-    mov ax,1
-    shl ax,cl
-    mov es:[di].pcif_msi_count,ax
+    mov al,1
+    shl al,cl
+    mov es:[di].pcif_msi_count,al
 
 spMsiDone:
     mov al,11h
