@@ -1515,6 +1515,97 @@ SetupMsiVector	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           FindIrq
+;
+;           DESCRIPTION:    Find IRQ
+;
+;           PARAMETERS:     AL          IRQ
+;
+;           RETURNS:        BH          Bus
+;                           BL          Device
+;                           CH          Function
+;                           ES:EDI      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindIrq     Proc near
+    push ds
+    push fs
+    push edx
+;
+    mov dx,SEG data
+    mov ds,dx
+;
+    xor bx,bx
+
+fiBusLoop:
+    movzx esi,bh
+    mov dx,ds:[2*esi].pci_bus_arr
+    or dx,dx
+    jz fiBusNext
+;
+    mov fs,dx
+    xor bl,bl
+
+fiDevLoop:
+    movzx edi,bl
+    mov dx,fs:[2*edi].pcib_device_arr
+    or dx,dx
+    jz fiDevNext
+;
+    mov es,dx
+    xor ch,ch
+
+fiFuncLoop:
+    movzx edi,ch
+    shl edi,7
+    add edi,OFFSET pcid_func_arr
+;
+    mov cl,byte ptr es:[edi].pcif_used
+    or cl,cl
+    jz fiFuncNext
+;
+    mov cl,es:[edi].pcif_msi
+    or cl,cl
+    jz fiFuncNext
+;
+    mov ah,al
+    sub ah,es:[edi].pcif_irq
+    jb fiFuncNext
+;
+    cmp ah,es:[edi].pcif_msi_count
+    jae fiFuncNext
+;
+    clc
+    jmp fiDone
+
+fiFuncNext:
+    inc ch
+    cmp ch,8
+    jne fiFuncLoop
+
+fiDevNext:
+    inc bl
+    cmp bl,20h
+    jne fiDevLoop
+
+fiBusNext:
+    inc bh
+    or bh,bh
+    jnz fiBusLoop
+;
+    stc
+
+fiDone:
+    pop edx
+    pop fs
+    pop ds
+    ret
+FindIrq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           SetupPciMsi
 ;
 ;           DESCRIPTION:    Setup PCI MSI interface
@@ -1631,29 +1722,36 @@ setup_pci_msi     Endp
 move_pci_msi_name DB 'Move PCI MSI',0
 
 move_pci_msi     Proc far    
-    push ds
+    push es
     pushad
 ;    
+    call FindIrq
+    jc mpmDone
+;
+    mov cl,es:[edi].pcif_msi
+    or cl,cl
+    jz mpmDone
+;
+    mov es:[edi].pcif_msi_core,fs
+;
+    mov al,es:[edi].pcif_irq
+    call SetupMsiVector
+
+mpmLegacy:
+    push ds
     mov si,SEG data
     mov ds,si
     movzx si,al
     shl si,3
     add si,OFFSET pci_msi_arr
-;
-    mov bh,ds:[si].msi_bus
-    mov bl,ds:[si].msi_device
-    mov ch,ds:[si].msi_function
-    mov cl,ds:[si].msi_reg
-    or cl,cl
-    jz mpmDone
-;
     mov dx,fs:cs_id
     mov ds:[si].msi_core,dx
-    call SetupMsiVector
+    pop ds
+    clc
 
 mpmDone:
     popad
-    pop ds
+    pop es
     retf32
 move_pci_msi     Endp
 
