@@ -1146,7 +1146,6 @@ GetCoreInts_	Endp
     public GetPciMsiBase_
     
 GetPciMsiBase_ PROC near
-    push ecx
     push edx
 ;
     GetPciMsiInfo
@@ -1160,7 +1159,6 @@ gpmbFail:
 
 gpmbDone:
     pop edx
-    pop ecx
     ret
 GetPciMsiBase_	Endp
     

@@ -1720,8 +1720,7 @@ move_pci_msi     Endp
 ;
 ;           PARAMETERS:     AL          Irq #
 ;
-;           RETURNS:        CL          Int count
-;                           AL          Base int
+;           RETURNS:        AL          Base int
 ;                           DX          Core
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1742,7 +1741,6 @@ get_pci_msi_info     Proc far
     jz gpmiDone
 ;
     mov al,es:[edi].pcif_irq
-    mov cl,es:[edi].pcif_msi_count
     mov es,es:[edi].pcif_msi_core
     mov dx,es:cs_id
     clc
