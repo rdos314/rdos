@@ -77,23 +77,9 @@ pcib_owner_func    DB ?
 
 pci_bus_struc  ENDS
 
-msi_struc       STRUC
-
-msi_bus         DB ?
-msi_device      DB ?
-msi_function    DB ?
-msi_reg         DB ?
-msi_int_base    DB ?
-msi_int_count   DB ?
-msi_core        DW ?
-
-msi_struc       ENDS
-
 data    SEGMENT byte public 'DATA'
 
 pci_spinlock            spinlock_typ <>
-
-pci_msi_arr             DD 256 DUP(?,?)
 
 pci_init_hooks          DW ?
 pci_init_hook_arr       DD 32 DUP(?,?)
@@ -1634,13 +1620,13 @@ setup_pci_msi     Proc far
     movzx esi,bh
     mov ax,ds:[2*esi].pci_bus_arr
     or ax,ax
-    jz spmLegacy
+    jz spmDone
 ;
     mov es,ax
     movzx esi,bl
     mov ax,es:[2*esi].pcib_device_arr
     or ax,ax
-    jz spmLegacy
+    jz spmDone
 ;
     mov es,ax
     movzx esi,ch
@@ -1680,25 +1666,6 @@ spmAllocDone:
     mov al,es:[esi].pcif_irq
     call SetupMsiVector
 
-spmLegacy:
-    mov dl,es:[esi].pcif_msi_count
-    movzx si,al
-    shl si,3
-    add si,OFFSET pci_msi_arr
-    mov dh,dl
-
-spmEntryLoop:
-    mov ds:[si].msi_bus,bh
-    mov ds:[si].msi_device,bl
-    mov ds:[si].msi_function,ch
-    mov ds:[si].msi_reg,cl
-    mov ds:[si].msi_int_base,al
-    mov ds:[si].msi_int_count,dl
-    mov ds:[si].msi_core,0
-    add si,8
-    sub dh,1
-    jnz spmEntryLoop
-
 spmDone:
     popad
     pop fs
@@ -1736,17 +1703,6 @@ move_pci_msi     Proc far
 ;
     mov al,es:[edi].pcif_irq
     call SetupMsiVector
-
-mpmLegacy:
-    push ds
-    mov si,SEG data
-    mov ds,si
-    movzx si,al
-    shl si,3
-    add si,OFFSET pci_msi_arr
-    mov dx,fs:cs_id
-    mov ds:[si].msi_core,dx
-    pop ds
     clc
 
 mpmDone:
@@ -2667,12 +2623,6 @@ get_pci_bus     Endp
 init    Proc far
     mov bx,SEG data
     mov ds,bx
-    mov es,bx
-;
-    mov di,OFFSET pci_msi_arr
-    xor eax,eax
-    mov cx,2 * 256
-    rep stosd
 ;
     mov ds:pci_init_hooks,0
     InitSpinlock ds:pci_spinlock
