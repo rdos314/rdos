@@ -2111,6 +2111,16 @@ spdAdd:
 ;
     add al,2
     mov es:[di].pcif_msi,al
+;
+    mov cl,al
+    ReadPciWord
+;
+    mov cl,al
+    shr cl,1
+    and cl,3
+    mov ax,1
+    shl ax,cl
+    mov es:[di].pcif_msi_count,ax
 
 spMsiDone:
     mov al,11h
