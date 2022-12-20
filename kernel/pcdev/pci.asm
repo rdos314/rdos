@@ -2326,12 +2326,6 @@ ScanPciBus Endp
 DetectDevices Proc near
     mov ax,SEG data
     mov ds,ax
-    mov es,ax
-;
-    mov di,OFFSET pci_bus_arr
-    mov cx,256
-    xor ax,ax
-    rep stosw
 ;
     xor bh,bh
     call ScanPciBus
@@ -2623,9 +2617,15 @@ get_pci_bus     Endp
 init    Proc far
     mov bx,SEG data
     mov ds,bx
+    mov es,bx
 ;
     mov ds:pci_init_hooks,0
     InitSpinlock ds:pci_spinlock
+;
+    mov di,OFFSET pci_bus_arr
+    mov cx,256
+    xor ax,ax
+    rep stosw
 ;
     mov ax,cs
     mov ds,ax
