@@ -1245,7 +1245,7 @@ siMsiMulti:
 siMultiLoop:
     mov dx,ds:[si]
     or dx,dx
-    jz siMultiFree
+    jz siMultiNext
 
 siMultiSetup:
     push ds
@@ -1256,9 +1256,6 @@ siMultiSetup:
     RequestMsiHandler
     pop ds
     jmp siMultiNext
-
-siMultiFree:
-    FreeInt
 
 siMultiNext:
     inc al
