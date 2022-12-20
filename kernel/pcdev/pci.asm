@@ -1773,27 +1773,28 @@ move_pci_msi     Endp
 get_pci_msi_info_name DB 'Get PCI MSI Info',0
 
 get_pci_msi_info     Proc far    
-    push ds
-    push si
-;    
-    mov si,SEG data
-    mov ds,si
-    movzx si,al
-    shl si,3
-    add si,OFFSET pci_msi_arr
-    mov al,ds:[si].msi_reg
+    push es
+    push ebx
+    push edi
+;
+    call FindIrq
+    jc gpmiDone
+;
+    mov al,es:[edi].pcif_msi
     or al,al
     stc
     jz gpmiDone
 ;
-    mov al,ds:[si].msi_int_base
-    mov cl,ds:[si].msi_int_count
-    mov dx,ds:[si].msi_core
+    mov al,es:[edi].pcif_irq
+    mov cl,es:[edi].pcif_msi_count
+    mov es,es:[edi].pcif_msi_core
+    mov dx,es:cs_id
     clc
 
 gpmiDone:
-    pop si
-    pop ds
+    pop edi
+    pop ebx
+    pop es
     retf32
 get_pci_msi_info      Endp
 
