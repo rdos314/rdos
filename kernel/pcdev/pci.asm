@@ -1742,7 +1742,12 @@ get_pci_msi_info     Proc far
     jz gpmiDone
 ;
     mov al,es:[edi].pcif_irq
-    mov es,es:[edi].pcif_msi_core
+    mov dx,es:[edi].pcif_msi_core
+    or dx,dx
+    stc
+    jz gpmiDone
+;
+    mov es,dx
     mov dx,es:cs_id
     clc
 
@@ -1777,7 +1782,6 @@ get_pci_msix     Proc far
     push eax
     push esi
 ;
-    int 3
     mov ax,SEG data    
     mov ds,ax
 ;
@@ -1832,6 +1836,7 @@ get_pci_msix     Endp
 enable_pci_msix_name DB 'Enable PCI MSI-X',0
 
 enable_pci_msix     Proc far    
+    int 3
     push eax
     push ebx
     push cx
