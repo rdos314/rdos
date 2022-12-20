@@ -49,8 +49,10 @@ pcif_pin        DB ?
 pcif_irq        DB ?
 pcif_msi        DB ?
 pcif_msix       DB ?
+pcif_msi_count  DW ?
+pcif_msix_sel   DW ?
 pcif_acpi_index DD ?
-pcif_acpi_name  DB 110 DUP(?)
+pcif_acpi_name  DB 106 DUP(?)
 
 pci_func_struc   ENDS
 
@@ -2042,6 +2044,8 @@ spdInitFunc:
     mov es:[di].pcif_irq,0
     mov es:[di].pcif_msi,0
     mov es:[di].pcif_msix,0
+    mov es:[di].pcif_msi_count,0
+    mov es:[di].pcif_msix_sel,0
     mov es:[di].pcif_acpi_index,-1
     mov es:[di].pcif_acpi_name,0
     add di,SIZE pci_func_struc    
@@ -2078,6 +2082,7 @@ spdAdd:
     FindPciCapability
     jc spMsiDone
 ;
+    add al,2
     mov es:[di].pcif_msi,al
 
 spMsiDone:
@@ -2085,6 +2090,7 @@ spMsiDone:
     FindPciCapability
     jc spMsiXDone
 ;
+    add al,2
     mov es:[di].pcif_msix,al
 
 spMsiXDone:
