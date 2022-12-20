@@ -1385,27 +1385,42 @@ pci_power_on    Endp
 get_pci_msi_name DB 'Get PCI MSI',0
 
 get_pci_msi     Proc far    
-    push ax
-;    
-    mov al,5
-    FindPciCapability
-    jc gpmDone
+    push ds
+    push eax
+    push esi
 ;
-    mov cl,al
-    add cl,2
-    ReadPciWord
+    mov ax,SEG data    
+    mov ds,ax
 ;
-    push cx
-    mov cl,al
-    shr cl,1
-    and cl,3
-    mov dl,1
-    shl dl,cl
-    pop cx
+    movzx esi,bh
+    mov ax,ds:[2*esi].pci_bus_arr
+    or ax,ax
+    jz gpmFail
+;
+    mov ds,ax
+    movzx esi,bl
+    mov ax,ds:[2*esi].pcib_device_arr
+    or ax,ax
+    jz gpmFail
+;
+    mov ds,ax
+    movzx esi,ch
+    shl esi,7
+    mov cl,ds:[esi].pcif_msi
+    mov dl,byte ptr ds:[esi].pcif_msi_count
+    or cl,cl
+    jz gpmFail
+;
     clc
+    jmp gpmDone
 
-gpmDone:       
-    pop ax 
+gpmFail:
+    stc
+
+gpmDone:
+    pop esi
+    pop eax
+    pop ds
     retf32
 get_pci_msi     Endp
 
