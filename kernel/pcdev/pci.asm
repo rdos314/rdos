@@ -1635,16 +1635,7 @@ move_pci_msi     Proc far
 ;
     mov dx,fs:cs_id
     mov ds:[si].msi_core,dx
-;
-    GetMsiVector
-; 
-    push ax
-    mov eax,edx
-    WritePciDword
-    pop ax
-;
-    add cl,4    
-    WritePciWord
+    call SetupMsiVector
 
 mpmDone:
     popad
