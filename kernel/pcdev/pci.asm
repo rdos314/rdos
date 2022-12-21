@@ -1258,7 +1258,6 @@ set_pci_device_name    Proc far
     mov es,ax
     movzx edi,ch
     shl edi,7
-    mov es:[di].pcif_used,1
     add edi,OFFSET pcif_acpi_name
 
 spdnCopyName:
