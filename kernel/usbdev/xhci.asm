@@ -4292,6 +4292,85 @@ XhciInt Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupIrq
+;
+;       DESCRIPTION:    Setup IRQs
+;
+;       PARAMETERS:     DS          Function sel
+;                       BH          Bus
+;                       BL          Device
+;                       CH          Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupIrq  Proc near
+    push ds
+    push es
+    push esi
+    push edi
+;
+    GetPciMsi
+    jc siCheckMsiX
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc siIrq
+
+siMsiSetup:
+    mov ds:xhc_int_base,al
+    mov dx,1
+    SetupPciMsi
+    jmp siReg
+
+siCheckMsiX:
+    GetPciMsiX
+    jc siIrq
+;
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc siIrq
+;
+    EnablePciMsiX
+;
+    xor dl,dl
+    SetupPciMsiXEntry
+
+siReg:    
+    mov di,ds:xhc_intr_sel
+    mov ds,di
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET XhciInt
+    RequestMsiHandler
+    jmp siDone
+
+siIrq:
+    GetPciIrqNr
+    mov ah,14h
+    mov di,ds:xhc_intr_sel
+    mov ds,di
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET XhciInt
+    RequestIrqHandler
+
+siDone:    
+    pop edi
+    pop esi
+    pop es
+    pop ds
+    ret
+SetupIrq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           CreateEventRing
 ;
 ;       DESCRIPTION:    Init event ring
@@ -4541,80 +4620,8 @@ ifWaitReset:
     jmp ifWaitReset
 
 ifWaitReseted:        
-    GetPciMsi
-    jc ifCheckMsiX
+    call SetupIrq
 ;
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jnc ifMsiSetup
-;
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jc ifIrq
-
-ifMsiSetup:
-    mov ds:xhc_int_base,al
-    mov dx,1
-    SetupPciMsi
-    jmp ifReg
-
-ifCheckMsiX:
-    GetPciMsiX
-    jc ifIrq
-;
-    push es
-    EnablePciMsiX
-    xor dl,dl
-;
-    push cx
-    mov cx,1
-    mov al,14h
-    AllocateInts
-    pop cx
-    jnc ifMsiX
-;
-    pop es
-    jc ifIrq
-
-ifMsiX:    
-    SetupPciMsiXEntry
-    pop es
-    jmp ifReg
-
-ifReg:    
-    push ds
-    push es
-    mov di,ds:xhc_intr_sel
-    mov ds,di
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET XhciInt
-    RequestMsiHandler
-    pop es
-    pop ds
-    jmp ifIntDone
-
-ifIrq:
-    push ds
-    push es
-    GetPciIrqNr
-    mov ah,14h
-    mov di,ds:xhc_intr_sel
-    mov ds,di
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET XhciInt
-    RequestIrqHandler
-    pop es
-    pop ds
-
-ifIntDone:    
     mov ds:xhc_pci_bus,bh
     mov ds:xhc_pci_dev,bl
     mov ds:xhc_pci_func,ch
