@@ -4437,6 +4437,40 @@ AddFunction Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetupPci
+;
+;           DESCRIPTION:    Setup PCI
+;
+;           PARAMETERS:     BH          Bus
+;                           BL          Device
+;                           CH          Function
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupPci  Proc near
+    push es
+    push eax
+    push edi
+;
+    mov ax,cs
+    mov es,ax
+    mov edi,OFFSET ohci_name
+    PciPowerOn
+;
+    mov cl,PCI_command_reg
+    ReadPciWord
+    or al,PCI_command_busmstr
+    WritePciWord
+;
+    pop edi
+    pop eax
+    pop es
+    ret
+SetupPci  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -4455,14 +4489,7 @@ InitPciAdapter  Proc near
     FindPciClassInterface
     jc init_pci_done
 ;
-    push es
-    push edi
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET ohci_name
-    PciPowerOn
-    pop edi
-    pop es
+    call SetupPci
 ;
     mov cl,10h
     ReadPciDword
@@ -4480,14 +4507,7 @@ init_pci_next_device:
     FindPciClassInterface
     jc init_pci_done
 ;       
-    push es
-    push edi
-    mov di,cs
-    mov es,di
-    mov edi,OFFSET ohci_name
-    PciPowerOn
-    pop edi
-    pop es
+    call SetupPci
 ;
     mov cl,10h
     ReadPciDword
