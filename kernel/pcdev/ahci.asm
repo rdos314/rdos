@@ -1214,8 +1214,51 @@ SetupInts Proc near
 ;
     cmp dl,1
     je siAllocOne
+;
+    GetPciMsix
+    jc siMsiMany
+;
+    int 3
+    EnablePciMsiX
+;
+    mov ds:ad_msi,1
+;
+    movzx cx,dl
+    mov si,OFFSET ad_port_arr
 
-siAllocMany:
+siMsiXLoop:
+    mov di,ds:[si]
+    or di,di
+    jz siMsiXNext
+
+siMsiXSetup:
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc siMsiXNext
+;
+    push ds
+    push es
+    mov ds,dx
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET AhciPortInt
+    RequestMsiHandler
+    pop es
+    pop ds
+;
+    SetupPciMsiXEntry
+
+siMsiXNext:
+    inc dl
+    add si,2
+    loop siMsiXLoop
+;
+    jmp siOk
+
+siMsiMany:
     push cx
     movzx cx,dl
     mov al,14h
