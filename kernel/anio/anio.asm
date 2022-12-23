@@ -716,12 +716,15 @@ adc_thread:
 
 adc_wait_signal:
     mov ax,ds:adc_index
+    or ax,ax
     jz adc_wait_signal
 ;
     mov bx,ds:start_thread
     Signal
 
 adc_loop:
+    mov ax,1
+    WaitMilliSec
     cmp cx,ds:adc_index
     jne adc_loop
 ;
