@@ -247,7 +247,7 @@ InitAdcBar      proc near
     mov ecx,80000h
     CreateDataSelector16
 ;
-    or ax,80Bh
+    or ax,813h
     xor ebx,ebx
     mov ecx,80h
 
