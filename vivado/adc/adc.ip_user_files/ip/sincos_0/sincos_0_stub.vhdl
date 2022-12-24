@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Mon May  4 22:24:14 2020
+-- Date        : Sat Dec 24 22:33:10 2022
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub C:/rdos/vivado/adc/adc.runs/sincos_0_synth_1/sincos_0_stub.vhdl
 -- Design      : sincos_0

@@ -393,29 +393,6 @@ jesd204_rx_0 jesd204_rx_0_inst
 );
 
 
-ila_0 ila_0_inst (
-    .clk(rx_clk),                      // input wire clk
-    .probe0(adc_started),              // input wire [0:0]  probe0  
-    .probe1(adc_probing),              // input wire [0:0]  probe0  
-    .probe2(adc_running),              // input wire [0:0]  probe0  
-    .probe3(adc_delay),                // input wire [0:0]  probe0  
-    .probe4(adc_start_found),          // input wire [0:0]  probe0  
-    .probe5(rx_test_ok),               // input wire [0:0]  probe0  
-    .probe6(rx_valid),                 // input wire [0:0]  probe0  
-    .probe7(adcA_0),                   // input wire [13:0]  probe0  
-    .probe8(adcB_0),                   // input wire [13:0]  probe0  
-    .probe9(adcA_1),                   // input wire [13:0]  probe0  
-    .probe10(adcB_1),                  // input wire [13:0]  probe0  
-    .probe11(adcA_2),                  // input wire [13:0]  probe0  
-    .probe12(adcB_2),                  // input wire [13:0]  probe0  
-    .probe13(adcA_3),                  // input wire [13:0]  probe0  
-    .probe14(adcB_3),                  // input wire [13:0]  probe0  
-    .probe15(adc_sync_ok_cnt),         // input wire [15:0]  probe0
-    .probe16(adc_sync_fail_cnt),       // input wire [1:0]   probe0
-    .probe17(delay_cnt),               // input wire [7:0]   probe0
-    .probe18(adc_wr)                   // input wire [0:0]   probe0
-);
-
 function check_valid;
   input [13:0] adcA_0;
   input [13:0] adcB_0;

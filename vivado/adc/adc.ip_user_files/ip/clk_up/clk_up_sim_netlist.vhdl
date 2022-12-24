@@ -1,9 +1,10 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Fri Apr 10 13:05:40 2020
+-- Date        : Sat Dec 24 22:17:55 2022
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim C:/rdos/vivado/adc/adc.runs/clk_up_synth_1/clk_up_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim -rename_top clk_up -prefix
+--               clk_up_ clk_up_sim_netlist.vhdl
 -- Design      : clk_up
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -18,8 +19,6 @@ entity clk_up_clk_up_clk_wiz is
     clk_out1 : out STD_LOGIC;
     clk_in1 : in STD_LOGIC
   );
-  attribute ORIG_REF_NAME : string;
-  attribute ORIG_REF_NAME of clk_up_clk_up_clk_wiz : entity is "clk_up_clk_wiz";
 end clk_up_clk_up_clk_wiz;
 
 architecture STRUCTURE of clk_up_clk_up_clk_wiz is
