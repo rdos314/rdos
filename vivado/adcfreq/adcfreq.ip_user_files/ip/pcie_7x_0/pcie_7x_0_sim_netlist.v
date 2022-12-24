@@ -1,9 +1,10 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Sat Apr 25 22:25:51 2020
+// Date        : Sat Dec 24 21:19:13 2022
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim C:/rdos/vivado/adc/adc.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim
+//               C:/rdos/vivado/adcfreq/adcfreq.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.v
 // Design      : pcie_7x_0
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -552,8 +553,8 @@ module pcie_7x_0
   (* SHARED_LOGIC_IN_CORE = "TRUE" *) 
   (* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) 
   (* bar_0 = "FFFFF000" *) 
-  (* bar_1 = "FFF80000" *) 
-  (* bar_2 = "FFF80000" *) 
+  (* bar_1 = "00000000" *) 
+  (* bar_2 = "00000000" *) 
   (* bar_3 = "00000000" *) 
   (* bar_4 = "00000000" *) 
   (* bar_5 = "00000000" *) 
@@ -619,25 +620,25 @@ module pcie_7x_0
   (* c_lnk_bndwdt_notif = "FALSE" *) 
   (* c_msi = "1" *) 
   (* c_msi_64b_addr = "TRUE" *) 
-  (* c_msi_cap_on = "TRUE" *) 
+  (* c_msi_cap_on = "FALSE" *) 
   (* c_msi_mult_msg_extn = "0" *) 
   (* c_msi_per_vctr_mask_cap = "FALSE" *) 
-  (* c_msix_cap_on = "FALSE" *) 
+  (* c_msix_cap_on = "TRUE" *) 
   (* c_msix_next_ptr = "00" *) 
   (* c_msix_pba_bir = "0" *) 
   (* c_msix_pba_offset = "0" *) 
   (* c_msix_table_bir = "0" *) 
   (* c_msix_table_offset = "0" *) 
-  (* c_msix_table_size = "000" *) 
+  (* c_msix_table_size = "015" *) 
   (* c_pci_cfg_space_addr = "3F" *) 
   (* c_pcie_blk_locn = "0" *) 
-  (* c_pcie_cap_next_ptr = "00" *) 
+  (* c_pcie_cap_next_ptr = "9C" *) 
   (* c_pcie_cap_slot_implemented = "FALSE" *) 
   (* c_pcie_dbg_ports = "FALSE" *) 
   (* c_pcie_fast_config = "0" *) 
   (* c_perf_level_high = "TRUE" *) 
   (* c_phantom_functions = "0" *) 
-  (* c_pm_cap_next_ptr = "48" *) 
+  (* c_pm_cap_next_ptr = "60" *) 
   (* c_pme_support = "09" *) 
   (* c_rbar_base_ptr = "000" *) 
   (* c_rbar_cap_control_encodedbar0 = "00" *) 
@@ -713,7 +714,7 @@ module pcie_7x_0
   (* cost_table = "1" *) 
   (* d1_sup = "0" *) 
   (* d2_sup = "0" *) 
-  (* dev_id = "AACC" *) 
+  (* dev_id = "AACD" *) 
   (* dev_port_type = "0000" *) 
   (* dis_scl_fctr_d0_state = "0" *) 
   (* dis_scl_fctr_d1_state = "0" *) 
@@ -21343,8 +21344,8 @@ endmodule
 (* LINK_CAP_MAX_LINK_WIDTH = "8" *) (* ORIG_REF_NAME = "pcie_7x_0_pcie2_top" *) (* PCIE_ASYNC_EN = "FALSE" *) 
 (* PCIE_EXT_CLK = "FALSE" *) (* PCIE_EXT_GT_COMMON = "FALSE" *) (* PIPE_SIM = "FALSE" *) 
 (* PL_INTERFACE = "TRUE" *) (* RCV_MSG_IF = "FALSE" *) (* SHARED_LOGIC_IN_CORE = "TRUE" *) 
-(* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) (* bar_0 = "FFFFF000" *) (* bar_1 = "FFF80000" *) 
-(* bar_2 = "FFF80000" *) (* bar_3 = "00000000" *) (* bar_4 = "00000000" *) 
+(* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) (* bar_0 = "FFFFF000" *) (* bar_1 = "00000000" *) 
+(* bar_2 = "00000000" *) (* bar_3 = "00000000" *) (* bar_4 = "00000000" *) 
 (* bar_5 = "00000000" *) (* bram_lat = "2" *) (* c_aer_base_ptr = "000" *) 
 (* c_aer_cap_ecrc_check_capable = "FALSE" *) (* c_aer_cap_ecrc_gen_capable = "FALSE" *) (* c_aer_cap_multiheader = "FALSE" *) 
 (* c_aer_cap_nextptr = "000" *) (* c_aer_cap_on = "FALSE" *) (* c_aer_cap_optional_err_support = "000000" *) 
@@ -21366,13 +21367,13 @@ endmodule
 (* c_ll_ack_timeout = "0000" *) (* c_ll_ack_timeout_enable = "FALSE" *) (* c_ll_ack_timeout_function = "0" *) 
 (* c_ll_replay_timeout = "0000" *) (* c_ll_replay_timeout_enable = "FALSE" *) (* c_ll_replay_timeout_func = "1" *) 
 (* c_lnk_bndwdt_notif = "FALSE" *) (* c_msi = "1" *) (* c_msi_64b_addr = "TRUE" *) 
-(* c_msi_cap_on = "TRUE" *) (* c_msi_mult_msg_extn = "0" *) (* c_msi_per_vctr_mask_cap = "FALSE" *) 
-(* c_msix_cap_on = "FALSE" *) (* c_msix_next_ptr = "00" *) (* c_msix_pba_bir = "0" *) 
+(* c_msi_cap_on = "FALSE" *) (* c_msi_mult_msg_extn = "0" *) (* c_msi_per_vctr_mask_cap = "FALSE" *) 
+(* c_msix_cap_on = "TRUE" *) (* c_msix_next_ptr = "00" *) (* c_msix_pba_bir = "0" *) 
 (* c_msix_pba_offset = "0" *) (* c_msix_table_bir = "0" *) (* c_msix_table_offset = "0" *) 
-(* c_msix_table_size = "000" *) (* c_pci_cfg_space_addr = "3F" *) (* c_pcie_blk_locn = "0" *) 
-(* c_pcie_cap_next_ptr = "00" *) (* c_pcie_cap_slot_implemented = "FALSE" *) (* c_pcie_dbg_ports = "FALSE" *) 
+(* c_msix_table_size = "015" *) (* c_pci_cfg_space_addr = "3F" *) (* c_pcie_blk_locn = "0" *) 
+(* c_pcie_cap_next_ptr = "9C" *) (* c_pcie_cap_slot_implemented = "FALSE" *) (* c_pcie_dbg_ports = "FALSE" *) 
 (* c_pcie_fast_config = "0" *) (* c_perf_level_high = "TRUE" *) (* c_phantom_functions = "0" *) 
-(* c_pm_cap_next_ptr = "48" *) (* c_pme_support = "09" *) (* c_rbar_base_ptr = "000" *) 
+(* c_pm_cap_next_ptr = "60" *) (* c_pme_support = "09" *) (* c_rbar_base_ptr = "000" *) 
 (* c_rbar_cap_control_encodedbar0 = "00" *) (* c_rbar_cap_control_encodedbar1 = "00" *) (* c_rbar_cap_control_encodedbar2 = "00" *) 
 (* c_rbar_cap_control_encodedbar3 = "00" *) (* c_rbar_cap_control_encodedbar4 = "00" *) (* c_rbar_cap_control_encodedbar5 = "00" *) 
 (* c_rbar_cap_index0 = "0" *) (* c_rbar_cap_index1 = "0" *) (* c_rbar_cap_index2 = "0" *) 
@@ -21397,7 +21398,7 @@ endmodule
 (* cap_ver = "2" *) (* cardbus_cis_ptr = "00000000" *) (* class_code = "098000" *) 
 (* cmps = "0" *) (* con_scl_fctr_d0_state = "0" *) (* con_scl_fctr_d1_state = "0" *) 
 (* con_scl_fctr_d2_state = "0" *) (* con_scl_fctr_d3_state = "0" *) (* cost_table = "1" *) 
-(* d1_sup = "0" *) (* d2_sup = "0" *) (* dev_id = "AACC" *) 
+(* d1_sup = "0" *) (* d2_sup = "0" *) (* dev_id = "AACD" *) 
 (* dev_port_type = "0000" *) (* dis_scl_fctr_d0_state = "0" *) (* dis_scl_fctr_d1_state = "0" *) 
 (* dis_scl_fctr_d2_state = "0" *) (* dis_scl_fctr_d3_state = "0" *) (* dsi = "0" *) 
 (* ep_l0s_accpt_lat = "000" *) (* ep_l1_accpt_lat = "111" *) (* ext_tag_fld_sup = "FALSE" *) 
@@ -24374,8 +24375,8 @@ module pcie_7x_0_pcie_7x_0_pcie_7x
     .AER_CAP_VERSION(4'h1),
     .ALLOW_X8_GEN2("TRUE"),
     .BAR0(32'hFFFFF000),
-    .BAR1(32'hFFF80000),
-    .BAR2(32'hFFF80000),
+    .BAR1(32'h00000000),
+    .BAR2(32'h00000000),
     .BAR3(32'h00000000),
     .BAR4(32'h00000000),
     .BAR5(32'h00000000),
@@ -24475,19 +24476,19 @@ module pcie_7x_0_pcie_7x_0_pcie_7x
     .MSIX_BASE_PTR(8'h9C),
     .MSIX_CAP_ID(8'h11),
     .MSIX_CAP_NEXTPTR(8'h00),
-    .MSIX_CAP_ON("FALSE"),
+    .MSIX_CAP_ON("TRUE"),
     .MSIX_CAP_PBA_BIR(0),
     .MSIX_CAP_PBA_OFFSET(29'h00000000),
     .MSIX_CAP_TABLE_BIR(0),
     .MSIX_CAP_TABLE_OFFSET(29'h00000000),
-    .MSIX_CAP_TABLE_SIZE(11'h000),
+    .MSIX_CAP_TABLE_SIZE(11'h015),
     .MSI_BASE_PTR(8'h48),
     .MSI_CAP_64_BIT_ADDR_CAPABLE("TRUE"),
     .MSI_CAP_ID(8'h05),
     .MSI_CAP_MULTIMSGCAP(1),
     .MSI_CAP_MULTIMSG_EXTENSION(0),
     .MSI_CAP_NEXTPTR(8'h60),
-    .MSI_CAP_ON("TRUE"),
+    .MSI_CAP_ON("FALSE"),
     .MSI_CAP_PER_VECTOR_MASKING_CAPABLE("FALSE"),
     .N_FTS_COMCLK_GEN1(255),
     .N_FTS_COMCLK_GEN2(255),
@@ -24497,7 +24498,7 @@ module pcie_7x_0_pcie_7x_0_pcie_7x
     .PCIE_CAP_CAPABILITY_ID(8'h10),
     .PCIE_CAP_CAPABILITY_VERSION(4'h2),
     .PCIE_CAP_DEVICE_PORT_TYPE(4'h0),
-    .PCIE_CAP_NEXTPTR(8'h00),
+    .PCIE_CAP_NEXTPTR(8'h9C),
     .PCIE_CAP_ON("TRUE"),
     .PCIE_CAP_RSVD_15_14(0),
     .PCIE_CAP_SLOT_IMPLEMENTED("FALSE"),
@@ -24514,7 +24515,7 @@ module pcie_7x_0_pcie_7x_0_pcie_7x
     .PM_CAP_D2SUPPORT("FALSE"),
     .PM_CAP_DSI("FALSE"),
     .PM_CAP_ID(8'h01),
-    .PM_CAP_NEXTPTR(8'h48),
+    .PM_CAP_NEXTPTR(8'h60),
     .PM_CAP_ON("TRUE"),
     .PM_CAP_PMESUPPORT(5'h09),
     .PM_CAP_PME_CLOCK("FALSE"),
@@ -24682,7 +24683,7 @@ module pcie_7x_0_pcie_7x_0_pcie_7x
         .CFGDEVCONTROLNOSNOOPEN(cfg_dcommand[11]),
         .CFGDEVCONTROLPHANTOMEN(cfg_dcommand[9]),
         .CFGDEVCONTROLURERRREPORTINGEN(cfg_dcommand[3]),
-        .CFGDEVID({1'b1,1'b0,1'b1,1'b0,1'b1,1'b0,1'b1,1'b0,1'b1,1'b1,1'b0,1'b0,1'b1,1'b1,1'b0,1'b0}),
+        .CFGDEVID({1'b1,1'b0,1'b1,1'b0,1'b1,1'b0,1'b1,1'b0,1'b1,1'b1,1'b0,1'b0,1'b1,1'b1,1'b0,1'b1}),
         .CFGDEVSTATUSCORRERRDETECTED(cfg_dstatus[0]),
         .CFGDEVSTATUSFATALERRDETECTED(cfg_dstatus[2]),
         .CFGDEVSTATUSNONFATALERRDETECTED(cfg_dstatus[1]),

@@ -1,9 +1,10 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sat Apr 25 22:25:52 2020
+-- Date        : Sat Dec 24 21:19:14 2022
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim C:/rdos/vivado/adc/adc.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim
+--               C:/rdos/vivado/adcfreq/adcfreq.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.vhdl
 -- Design      : pcie_7x_0
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -133933,8 +133934,8 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       AER_CAP_VERSION => X"1",
       ALLOW_X8_GEN2 => "TRUE",
       BAR0 => X"FFFFF000",
-      BAR1 => X"FFF80000",
-      BAR2 => X"FFF80000",
+      BAR1 => X"00000000",
+      BAR2 => X"00000000",
       BAR3 => X"00000000",
       BAR4 => X"00000000",
       BAR5 => X"00000000",
@@ -134034,19 +134035,19 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       MSIX_BASE_PTR => X"9C",
       MSIX_CAP_ID => X"11",
       MSIX_CAP_NEXTPTR => X"00",
-      MSIX_CAP_ON => "FALSE",
+      MSIX_CAP_ON => "TRUE",
       MSIX_CAP_PBA_BIR => 0,
       MSIX_CAP_PBA_OFFSET => X"00000000",
       MSIX_CAP_TABLE_BIR => 0,
       MSIX_CAP_TABLE_OFFSET => X"00000000",
-      MSIX_CAP_TABLE_SIZE => X"000",
+      MSIX_CAP_TABLE_SIZE => X"015",
       MSI_BASE_PTR => X"48",
       MSI_CAP_64_BIT_ADDR_CAPABLE => "TRUE",
       MSI_CAP_ID => X"05",
       MSI_CAP_MULTIMSGCAP => 1,
       MSI_CAP_MULTIMSG_EXTENSION => 0,
       MSI_CAP_NEXTPTR => X"60",
-      MSI_CAP_ON => "TRUE",
+      MSI_CAP_ON => "FALSE",
       MSI_CAP_PER_VECTOR_MASKING_CAPABLE => "FALSE",
       N_FTS_COMCLK_GEN1 => 255,
       N_FTS_COMCLK_GEN2 => 255,
@@ -134056,7 +134057,7 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       PCIE_CAP_CAPABILITY_ID => X"10",
       PCIE_CAP_CAPABILITY_VERSION => X"2",
       PCIE_CAP_DEVICE_PORT_TYPE => X"0",
-      PCIE_CAP_NEXTPTR => X"00",
+      PCIE_CAP_NEXTPTR => X"9C",
       PCIE_CAP_ON => "TRUE",
       PCIE_CAP_RSVD_15_14 => 0,
       PCIE_CAP_SLOT_IMPLEMENTED => "FALSE",
@@ -134073,7 +134074,7 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       PM_CAP_D2SUPPORT => "FALSE",
       PM_CAP_DSI => "FALSE",
       PM_CAP_ID => X"01",
-      PM_CAP_NEXTPTR => X"48",
+      PM_CAP_NEXTPTR => X"60",
       PM_CAP_ON => "TRUE",
       PM_CAP_PMESUPPORT => X"09",
       PM_CAP_PME_CLOCK => "FALSE",
@@ -134242,7 +134243,7 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       CFGDEVCONTROLNOSNOOPEN => cfg_dcommand(11),
       CFGDEVCONTROLPHANTOMEN => cfg_dcommand(9),
       CFGDEVCONTROLURERRREPORTINGEN => cfg_dcommand(3),
-      CFGDEVID(15 downto 0) => B"1010101011001100",
+      CFGDEVID(15 downto 0) => B"1010101011001101",
       CFGDEVSTATUSCORRERRDETECTED => cfg_dstatus(0),
       CFGDEVSTATUSFATALERRDETECTED => cfg_dstatus(2),
       CFGDEVSTATUSNONFATALERRDETECTED => cfg_dstatus(1),
@@ -137858,9 +137859,9 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute bar_0 : string;
   attribute bar_0 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FFFFF000";
   attribute bar_1 : string;
-  attribute bar_1 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FFF80000";
+  attribute bar_1 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
   attribute bar_2 : string;
-  attribute bar_2 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FFF80000";
+  attribute bar_2 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
   attribute bar_3 : string;
   attribute bar_3 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
   attribute bar_4 : string;
@@ -137992,13 +137993,13 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute c_msi_64b_addr : string;
   attribute c_msi_64b_addr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_msi_cap_on : string;
-  attribute c_msi_cap_on of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
+  attribute c_msi_cap_on of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_msi_mult_msg_extn : string;
   attribute c_msi_mult_msg_extn of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msi_per_vctr_mask_cap : string;
   attribute c_msi_per_vctr_mask_cap of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_msix_cap_on : string;
-  attribute c_msix_cap_on of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
+  attribute c_msix_cap_on of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "TRUE";
   attribute c_msix_next_ptr : string;
   attribute c_msix_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_msix_pba_bir : string;
@@ -138010,13 +138011,13 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute c_msix_table_offset : string;
   attribute c_msix_table_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msix_table_size : string;
-  attribute c_msix_table_size of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "000";
+  attribute c_msix_table_size of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "015";
   attribute c_pci_cfg_space_addr : string;
   attribute c_pci_cfg_space_addr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "3F";
   attribute c_pcie_blk_locn : string;
   attribute c_pcie_blk_locn of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_pcie_cap_next_ptr : string;
-  attribute c_pcie_cap_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
+  attribute c_pcie_cap_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "9C";
   attribute c_pcie_cap_slot_implemented : string;
   attribute c_pcie_cap_slot_implemented of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FALSE";
   attribute c_pcie_dbg_ports : string;
@@ -138028,7 +138029,7 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute c_phantom_functions : string;
   attribute c_phantom_functions of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_pm_cap_next_ptr : string;
-  attribute c_pm_cap_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "48";
+  attribute c_pm_cap_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "60";
   attribute c_pme_support : string;
   attribute c_pme_support of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "09";
   attribute c_rbar_base_ptr : string;
@@ -138182,7 +138183,7 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute d2_sup : string;
   attribute d2_sup of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute dev_id : string;
-  attribute dev_id of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "AACC";
+  attribute dev_id of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "AACD";
   attribute dev_port_type : string;
   attribute dev_port_type of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0000";
   attribute dis_scl_fctr_d0_state : string;
@@ -139468,9 +139469,9 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute bar_0 : string;
   attribute bar_0 of inst : label is "FFFFF000";
   attribute bar_1 : string;
-  attribute bar_1 of inst : label is "FFF80000";
+  attribute bar_1 of inst : label is "00000000";
   attribute bar_2 : string;
-  attribute bar_2 of inst : label is "FFF80000";
+  attribute bar_2 of inst : label is "00000000";
   attribute bar_3 : string;
   attribute bar_3 of inst : label is "00000000";
   attribute bar_4 : string;
@@ -139602,13 +139603,13 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute c_msi_64b_addr : string;
   attribute c_msi_64b_addr of inst : label is "TRUE";
   attribute c_msi_cap_on : string;
-  attribute c_msi_cap_on of inst : label is "TRUE";
+  attribute c_msi_cap_on of inst : label is "FALSE";
   attribute c_msi_mult_msg_extn : string;
   attribute c_msi_mult_msg_extn of inst : label is "0";
   attribute c_msi_per_vctr_mask_cap : string;
   attribute c_msi_per_vctr_mask_cap of inst : label is "FALSE";
   attribute c_msix_cap_on : string;
-  attribute c_msix_cap_on of inst : label is "FALSE";
+  attribute c_msix_cap_on of inst : label is "TRUE";
   attribute c_msix_next_ptr : string;
   attribute c_msix_next_ptr of inst : label is "00";
   attribute c_msix_pba_bir : string;
@@ -139620,13 +139621,13 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute c_msix_table_offset : string;
   attribute c_msix_table_offset of inst : label is "0";
   attribute c_msix_table_size : string;
-  attribute c_msix_table_size of inst : label is "000";
+  attribute c_msix_table_size of inst : label is "015";
   attribute c_pci_cfg_space_addr : string;
   attribute c_pci_cfg_space_addr of inst : label is "3F";
   attribute c_pcie_blk_locn : string;
   attribute c_pcie_blk_locn of inst : label is "0";
   attribute c_pcie_cap_next_ptr : string;
-  attribute c_pcie_cap_next_ptr of inst : label is "00";
+  attribute c_pcie_cap_next_ptr of inst : label is "9C";
   attribute c_pcie_cap_slot_implemented : string;
   attribute c_pcie_cap_slot_implemented of inst : label is "FALSE";
   attribute c_pcie_dbg_ports : string;
@@ -139638,7 +139639,7 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute c_phantom_functions : string;
   attribute c_phantom_functions of inst : label is "0";
   attribute c_pm_cap_next_ptr : string;
-  attribute c_pm_cap_next_ptr of inst : label is "48";
+  attribute c_pm_cap_next_ptr of inst : label is "60";
   attribute c_pme_support : string;
   attribute c_pme_support of inst : label is "09";
   attribute c_rbar_base_ptr : string;
@@ -139790,7 +139791,7 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute d2_sup : string;
   attribute d2_sup of inst : label is "0";
   attribute dev_id : string;
-  attribute dev_id of inst : label is "AACC";
+  attribute dev_id of inst : label is "AACD";
   attribute dev_port_type : string;
   attribute dev_port_type of inst : label is "0000";
   attribute dis_scl_fctr_d0_state : string;
