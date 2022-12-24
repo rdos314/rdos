@@ -157,10 +157,6 @@ set_false_path -from [get_pins control_bar_inst/ctrl_bar_gen.tx_control_msg_reg/
 set_false_path -from [get_pins {control_bar_inst/ctrl_bar_gen.tx_control_index_reg[*]/C}] -to [get_pins {adc.rx_up_control_index_reg[*]/D}]
 set_false_path -from [get_pins {control_bar_inst/ctrl_bar_gen.tx_control_data_reg[*]/C}] -to [get_pins {adc.rx_up_control_data_reg[*]/D}]
 
-set_false_path -from [get_pins adc.pci_det_change_reg/C] -to [get_pins adc.det_change_1_reg/D]
-set_false_path -from [get_pins {adc.pci_det_phase_incr_reg[*]/C}] -to [get_pins {adc.rx_det_phase_incr_reg[*]/D}]
-set_false_path -from [get_pins {adc.pci_det_window_bits_reg[*]/C}] -to [get_pins {adc.rx_det_window_bits_reg[*]/D}]
-
 set_false_path -from [get_pins adc_app_inst/adc_app.tx_control_msg_reg/C] -to [get_pins adc.rx_pci_control_msg_1_reg/D]
 set_false_path -from [get_pins {adc_app_inst/adc_app.tx_control_index_reg[*]/C}] -to [get_pins {adc.rx_pci_control_index_reg[*]/D}]
 set_false_path -from [get_pins {adc_app_inst/adc_app.tx_control_data_reg[*]/C}] -to [get_pins {adc.rx_pci_control_data_reg[*]/D}]
@@ -173,8 +169,6 @@ set_false_path -from [get_pins adc.adc_delay_reg/C] -to [get_pins adc.adc_delay_
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_started_reg/C] -to [get_pins adc_app_inst/adc_app.adc_started_1_reg/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_probing_reg/C] -to [get_pins adc_app_inst/adc_app.adc_probing_1_reg/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_running_reg/C] -to [get_pins adc_app_inst/adc_app.adc_running_1_reg/D]
-set_false_path -from [get_pins adc_app_inst/adc_app.q_full_reg/C] -to [get_pins adc_app_inst/adc_app.adc_full_1_reg/D]
-set_false_path -from [get_pins adc_app_inst/adc_app.q_almost_full_reg/C] -to [get_pins adc_app_inst/adc_app.adc_almost_full_1_reg/D]
 
 set_false_path -from [get_pins adc_app_inst/adc_app.up_bar_irq_reg/C] -to [get_pins adc_app_inst/adc_app.pci_bar_irq_1_reg/D]
 set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_wr_reg/C] -to [get_pins adc_app_inst/adc_app.up_adc_started_1_reg/D]

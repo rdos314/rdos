@@ -23,6 +23,7 @@
     <Option Name="ProjectType" Val="Default"/>
     <Option Name="IPRepoPath" Val="$PPRDIR/../../../vivado/analogdev/library/xilinx"/>
     <Option Name="IPRepoPath" Val="$PPRDIR/../../../vivado/analogdev/library/jesd204"/>
+    <Option Name="IPOutputRepo" Val="$PCACHEDIR/ip"/>
     <Option Name="IPCachePermission" Val="read"/>
     <Option Name="IPCachePermission" Val="write"/>
     <Option Name="EnableCoreContainer" Val="TRUE"/>
@@ -38,13 +39,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="383"/>
-    <Option Name="WTModelSimExportSim" Val="382"/>
-    <Option Name="WTQuestaExportSim" Val="382"/>
-    <Option Name="WTIesExportSim" Val="381"/>
-    <Option Name="WTVcsExportSim" Val="381"/>
-    <Option Name="WTRivieraExportSim" Val="380"/>
-    <Option Name="WTActivehdlExportSim" Val="380"/>
+    <Option Name="WTXSimExportSim" Val="384"/>
+    <Option Name="WTModelSimExportSim" Val="383"/>
+    <Option Name="WTQuestaExportSim" Val="383"/>
+    <Option Name="WTIesExportSim" Val="382"/>
+    <Option Name="WTVcsExportSim" Val="382"/>
+    <Option Name="WTRivieraExportSim" Val="381"/>
+    <Option Name="WTActivehdlExportSim" Val="381"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -60,24 +61,6 @@
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sources_1/ip/bram_phys.xcix">
-        <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/bram_phys.xcix"/>
-          <Attr Name="ImportTime" Val="1671877468"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/ip/bram_phys/bram_phys.xci">
-        <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/bram_phys/bram_phys.xci"/>
-          <Attr Name="ImportTime" Val="1585867976"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PSRCDIR/sources_1/ip/adc_fifo_1.xcix">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/adc_fifo_1.xcix"/>
@@ -150,15 +133,6 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/adc.srcs/adc_trig.v">
-        <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/adc_trig.v"/>
-          <Attr Name="ImportTime" Val="1671837365"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PSRCDIR/sources_1/imports/adc.srcs/control_bar.v">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/control_bar.v"/>
@@ -213,19 +187,29 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/adc.srcs/phys_bar.v">
+      <File Path="$PSRCDIR/sources_1/imports/adc.srcs/adc.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/phys_bar.v"/>
-          <Attr Name="ImportTime" Val="1671837365"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/adc.v"/>
+          <Attr Name="ImportTime" Val="1671917325"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/adc.srcs/adc.v">
+      <File Path="$PSRCDIR/sources_1/ip/bram_phys.xcix">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/adc.v"/>
-          <Attr Name="ImportTime" Val="1671917325"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/bram_phys.xcix"/>
+          <Attr Name="ImportTime" Val="1671877468"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/ip/bram_phys/bram_phys.xci">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/bram_phys/bram_phys.xci"/>
+          <Attr Name="ImportTime" Val="1585867976"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -482,6 +466,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/ila_2/ila_2.xci">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/ila_2/ila_2.xci"/>
           <Attr Name="ImportTime" Val="1587924462"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -506,6 +491,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/ila_1/ila_1.xci">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/ila_1/ila_1.xci"/>
           <Attr Name="ImportTime" Val="1589313696"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -530,6 +516,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/sincos_0/sincos_0.xci">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/sincos_0/sincos_0.xci"/>
           <Attr Name="ImportTime" Val="1588623764"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -554,6 +541,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/multiply_0/multiply_0.xci">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/multiply_0/multiply_0.xci"/>
           <Attr Name="ImportTime" Val="1588714576"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -578,6 +566,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/trig_fifo_0/trig_fifo_0.xci">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/trig_fifo_0/trig_fifo_0.xci"/>
           <Attr Name="ImportTime" Val="1588797860"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -602,6 +591,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/mult_square_0/mult_square_0.xci">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/mult_square_0/mult_square_0.xci"/>
           <Attr Name="ImportTime" Val="1589310466"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -626,6 +616,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/sqrt_0/sqrt_0.xci">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/sqrt_0/sqrt_0.xci"/>
           <Attr Name="ImportTime" Val="1589312754"/>
           <Attr Name="UsedIn" Val="synthesis"/>
