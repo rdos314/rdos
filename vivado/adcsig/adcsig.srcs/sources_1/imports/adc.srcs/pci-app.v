@@ -48,7 +48,7 @@ module pci_app (
   output reg [9:0]     bar0_rd_address,
   output reg           bar0_rd,
 
-  input wire [9:0]     bar0_rp_data,
+  input wire [31:0]    bar0_rp_data,
   input wire           bar0_rp,
 
   output reg [9:0]     bar0_wr_address,
@@ -79,6 +79,10 @@ module pci_app (
   reg [17:0]       poll_cnt;
 
   wire             req_stop;
+
+  reg              int_req;
+  wire             int_ack;
+  reg              int_num;
   
   // Tx
   wire [5:0]       tx_buf_av;
@@ -333,7 +337,11 @@ pcie_7x_0 pcie_i
   //------------------------------------------------//
   // EP Only                                        //
   //------------------------------------------------//
+  .cfg_interrupt                             ( int_req ),
+  .cfg_interrupt_rdy                         ( int_ack ),
   .cfg_interrupt_assert                      ( cfg_interrupt_assert ),
+  .cfg_interrupt_di                          ( int_num ),
+  .cfg_interrupt_do                          ( ),
   .cfg_interrupt_mmenable                    ( ),
   .cfg_interrupt_msienable                   ( ),
   .cfg_interrupt_msixenable                  ( cfg_interrupt_msixenable ),
@@ -679,12 +687,12 @@ generate
           begin
             bar1_rd <= 0;
             bar1_wr <= 0;
-          end
-        end
+                end
+                end
 
-      end
-      else
-      begin
+                end
+            else
+            begin
         bar0_rd <= 0;
         bar0_wr <= 0;
         bar1_rd <= 0;
@@ -719,8 +727,8 @@ generate
         else
           if (bar1_ack)
             q_bar1_send <= 0;
+        end
       end
-    end
 
 
     always @ ( posedge user_clk ) 
@@ -763,13 +771,20 @@ generate
             begin
               bar1_ack <= 0;
 
+              end
+              end
             end
           end
         end
-      end
-    end
    
+
+    always @ ( posedge user_clk ) 
+    begin
+      int_req <= 0;
+      int_num <= 0;
+    end
   end
+
 endgenerate
 
 endmodule
