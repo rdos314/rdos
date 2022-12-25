@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sun Dec 25 19:51:54 2022
+-- Date        : Sun Dec 25 21:36:49 2022
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               C:/rdos/vivado/adcsig/adcsig.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.vhdl
@@ -134039,8 +134039,8 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       MSIX_CAP_PBA_BIR => 0,
       MSIX_CAP_PBA_OFFSET => X"00000002",
       MSIX_CAP_TABLE_BIR => 0,
-      MSIX_CAP_TABLE_OFFSET => X"00000004",
-      MSIX_CAP_TABLE_SIZE => X"015",
+      MSIX_CAP_TABLE_OFFSET => X"00000003",
+      MSIX_CAP_TABLE_SIZE => X"00F",
       MSI_BASE_PTR => X"48",
       MSI_CAP_64_BIT_ADDR_CAPABLE => "TRUE",
       MSI_CAP_ID => X"05",
@@ -138005,13 +138005,13 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute c_msix_pba_bir : string;
   attribute c_msix_pba_bir of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msix_pba_offset : string;
-  attribute c_msix_pba_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "16";
+  attribute c_msix_pba_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "10";
   attribute c_msix_table_bir : string;
   attribute c_msix_table_bir of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msix_table_offset : string;
-  attribute c_msix_table_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "24";
+  attribute c_msix_table_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "18";
   attribute c_msix_table_size : string;
-  attribute c_msix_table_size of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "015";
+  attribute c_msix_table_size of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00F";
   attribute c_pci_cfg_space_addr : string;
   attribute c_pci_cfg_space_addr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "3F";
   attribute c_pcie_blk_locn : string;
@@ -139615,13 +139615,13 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute c_msix_pba_bir : string;
   attribute c_msix_pba_bir of inst : label is "0";
   attribute c_msix_pba_offset : string;
-  attribute c_msix_pba_offset of inst : label is "16";
+  attribute c_msix_pba_offset of inst : label is "10";
   attribute c_msix_table_bir : string;
   attribute c_msix_table_bir of inst : label is "0";
   attribute c_msix_table_offset : string;
-  attribute c_msix_table_offset of inst : label is "24";
+  attribute c_msix_table_offset of inst : label is "18";
   attribute c_msix_table_size : string;
-  attribute c_msix_table_size of inst : label is "015";
+  attribute c_msix_table_size of inst : label is "00F";
   attribute c_pci_cfg_space_addr : string;
   attribute c_pci_cfg_space_addr of inst : label is "3F";
   attribute c_pcie_blk_locn : string;

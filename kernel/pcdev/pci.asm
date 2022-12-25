@@ -1800,7 +1800,7 @@ get_pci_msix     Proc far
     movzx esi,ch
     shl esi,7
     mov cl,ds:[esi].pcif_msix
-    mov dl,byte ptr ds:[esi].pcif_msi_count
+    mov dl,byte ptr ds:[esi].pcif_msix_count
     or cl,cl
     jz gpmxFail
 ;

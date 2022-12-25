@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Sun Dec 25 19:51:53 2022
+// Date        : Sun Dec 25 21:36:48 2022
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               C:/rdos/vivado/adcsig/adcsig.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.v
@@ -626,10 +626,10 @@ module pcie_7x_0
   (* c_msix_cap_on = "TRUE" *) 
   (* c_msix_next_ptr = "00" *) 
   (* c_msix_pba_bir = "0" *) 
-  (* c_msix_pba_offset = "16" *) 
+  (* c_msix_pba_offset = "10" *) 
   (* c_msix_table_bir = "0" *) 
-  (* c_msix_table_offset = "24" *) 
-  (* c_msix_table_size = "015" *) 
+  (* c_msix_table_offset = "18" *) 
+  (* c_msix_table_size = "00F" *) 
   (* c_pci_cfg_space_addr = "3F" *) 
   (* c_pcie_blk_locn = "0" *) 
   (* c_pcie_cap_next_ptr = "9C" *) 
@@ -21369,8 +21369,8 @@ endmodule
 (* c_lnk_bndwdt_notif = "FALSE" *) (* c_msi = "1" *) (* c_msi_64b_addr = "TRUE" *) 
 (* c_msi_cap_on = "FALSE" *) (* c_msi_mult_msg_extn = "0" *) (* c_msi_per_vctr_mask_cap = "FALSE" *) 
 (* c_msix_cap_on = "TRUE" *) (* c_msix_next_ptr = "00" *) (* c_msix_pba_bir = "0" *) 
-(* c_msix_pba_offset = "16" *) (* c_msix_table_bir = "0" *) (* c_msix_table_offset = "24" *) 
-(* c_msix_table_size = "015" *) (* c_pci_cfg_space_addr = "3F" *) (* c_pcie_blk_locn = "0" *) 
+(* c_msix_pba_offset = "10" *) (* c_msix_table_bir = "0" *) (* c_msix_table_offset = "18" *) 
+(* c_msix_table_size = "00F" *) (* c_pci_cfg_space_addr = "3F" *) (* c_pcie_blk_locn = "0" *) 
 (* c_pcie_cap_next_ptr = "9C" *) (* c_pcie_cap_slot_implemented = "FALSE" *) (* c_pcie_dbg_ports = "FALSE" *) 
 (* c_pcie_fast_config = "0" *) (* c_perf_level_high = "TRUE" *) (* c_phantom_functions = "0" *) 
 (* c_pm_cap_next_ptr = "60" *) (* c_pme_support = "09" *) (* c_rbar_base_ptr = "000" *) 
@@ -24480,8 +24480,8 @@ module pcie_7x_0_pcie_7x_0_pcie_7x
     .MSIX_CAP_PBA_BIR(0),
     .MSIX_CAP_PBA_OFFSET(29'h00000002),
     .MSIX_CAP_TABLE_BIR(0),
-    .MSIX_CAP_TABLE_OFFSET(29'h00000004),
-    .MSIX_CAP_TABLE_SIZE(11'h015),
+    .MSIX_CAP_TABLE_OFFSET(29'h00000003),
+    .MSIX_CAP_TABLE_SIZE(11'h00F),
     .MSI_BASE_PTR(8'h48),
     .MSI_CAP_64_BIT_ADDR_CAPABLE("TRUE"),
     .MSI_CAP_ID(8'h05),

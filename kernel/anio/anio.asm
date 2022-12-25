@@ -60,6 +60,7 @@ adc_pages       DW ?
 
 start_thread    DW ?
 
+dev_id          DW ?
 
 data    ENDS
 
@@ -102,6 +103,20 @@ AdcBlockInt Proc far
     inc ds:adc_index
     ret
 AdcBlockInt     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           FreqInt
+;
+;           DESCRIPTION:    Freq interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreqInt Proc far
+    CrashGate
+    ret
+FreqInt       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -567,9 +582,13 @@ DevName DB 'ANIO', 0
 
 PciVendorTab:
 pci00   DW 10EEh, 0AACCh
+pci01   DW 10EEh, 0AACDh
 pci07   DW 0,     0
 
 InitPciAdapter   Proc near
+    mov ax,SEG data
+    mov ds,ax
+;
     xor ax,ax
     mov esi,OFFSET PciVendorTab
 
@@ -577,6 +596,7 @@ InitPciLoop:
     xor ax,ax
     mov dx,cs:[esi]
     mov cx,cs:[esi+2]
+    mov ds:dev_id,cx
     or dx,dx
     stc
     jz InitPciDone
@@ -598,6 +618,45 @@ InitPciFound:
     or al,PCI_command_busmstr
     WritePciWord
 ;
+    cmp ds:dev_id,0AACCh
+    je InitPciRaw
+
+InitPciFreq:
+    int 3
+    GetPciMsiX
+    jc InitPciDone
+;
+    EnablePciMsiX
+;
+    mov cx,1
+    xor dl,dl
+
+InitPciMsiXLoop:
+    push cx
+    mov cx,1
+    mov al,6
+    AllocateInts
+    pop cx
+    jc InitPciMsiXNext
+;
+    push ds
+    push es
+    mov ds,dx
+    mov di,cs
+    mov es,di
+    mov edi,OFFSET FreqInt
+    RequestMsiHandler
+    pop es
+    pop ds
+;
+    SetupPciMsiXEntry
+
+InitPciMsiXNext:
+    inc dl
+    loop InitPciMsiXLoop
+
+
+InitPciRaw:
     GetPciMsi
     jc InitPciDone
 ;
