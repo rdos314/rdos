@@ -1836,7 +1836,6 @@ get_pci_msix     Endp
 enable_pci_msix_name DB 'Enable PCI MSI-X',0
 
 enable_pci_msix     Proc far    
-    int 3
     push eax
     push ebx
     push cx
@@ -1876,7 +1875,7 @@ enable_pci_msix     Proc far
     pop ebx
     pop eax
 ;
-    and eax,0E00h
+    and eax,0FFFh
     add edx,eax
 ;    
     AllocateGdt
@@ -1915,14 +1914,15 @@ enable_pci_msix     Endp
 setup_pci_msix_entry_name DB 'Setup PCI MSI-X Entry',0
 
 setup_pci_msix_entry     Proc far    
+    push fs
     push eax
     push edx
     push esi
 ;    
+    GetCore
     movzx si,dl
     shl si,4
 ;
-    xor dx,dx
     GetMsiVector
 ;
     mov es:[si],edx
@@ -1936,6 +1936,7 @@ setup_pci_msix_entry     Proc far
     pop esi
     pop edx
     pop eax
+    pop fs
     retf32
 setup_pci_msix_entry    Endp
 

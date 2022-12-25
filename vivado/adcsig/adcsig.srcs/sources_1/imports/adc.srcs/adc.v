@@ -213,6 +213,17 @@ module adc (
   wire [3:0]           pci_bar1_wr_be;
   wire                 pci_bar1_wr;
 
+  wire [9:0]           pci_bar2_rd_address;
+  wire                 pci_bar2_rd;
+
+  wire [31:0]          pci_bar2_rp_data;
+  wire                 pci_bar2_rp;
+
+  wire [9:0]           pci_bar2_wr_address;
+  wire [31:0]          pci_bar2_wr_data;
+  wire [3:0]           pci_bar2_wr_be;
+  wire                 pci_bar2_wr;
+
 // sys module
 
   wire                 tx_pci_control_msg;
@@ -424,7 +435,16 @@ pci_app pci_app_inst (
     .bar1_wr_address(pci_bar1_wr_address),
     .bar1_wr_data(pci_bar1_wr_data),
     .bar1_wr_be(pci_bar1_wr_be),
-    .bar1_wr(pci_bar1_wr)
+    .bar1_wr(pci_bar1_wr),
+
+    .bar2_rd_address(pci_bar2_rd_address),
+    .bar2_rd(pci_bar2_rd),
+    .bar2_rp_data(pci_bar2_rp_data),
+    .bar2_rp(pci_bar2_rp),
+    .bar2_wr_address(pci_bar2_wr_address),
+    .bar2_wr_data(pci_bar2_wr_data),
+    .bar2_wr_be(pci_bar2_wr_be),
+    .bar2_wr(pci_bar2_wr)
 );
 
 
@@ -554,7 +574,16 @@ adc_app adc_app_inst (
     .adc_B0(adc_B0),
     .adc_B1(adc_B1),
     .adc_B2(adc_B2),
-    .adc_B3(adc_B3)
+    .adc_B3(adc_B3),
+    
+    .rd_address(pci_bar2_rd_address),
+    .rd(pci_bar2_rd),
+    .rp_data(pci_bar2_rp_data),
+    .rp(pci_bar2_rp),
+    .wr_address(pci_bar2_wr_address),
+    .wr_data(pci_bar2_wr_data),
+    .wr_be(pci_bar2_wr_be),
+    .wr(pci_bar2_wr)
 );
 
  //-----------------------------I/O BUFFERS------------------------//

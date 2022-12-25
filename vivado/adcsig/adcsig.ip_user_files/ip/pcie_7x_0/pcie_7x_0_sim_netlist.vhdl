@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sun Dec 25 21:36:49 2022
+-- Date        : Sun Dec 25 22:25:53 2022
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               C:/rdos/vivado/adcsig/adcsig.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.vhdl
@@ -133935,7 +133935,7 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       ALLOW_X8_GEN2 => "TRUE",
       BAR0 => X"FFFFF000",
       BAR1 => X"FFF00000",
-      BAR2 => X"00000000",
+      BAR2 => X"FFFFF000",
       BAR3 => X"00000000",
       BAR4 => X"00000000",
       BAR5 => X"00000000",
@@ -134036,10 +134036,10 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       MSIX_CAP_ID => X"11",
       MSIX_CAP_NEXTPTR => X"00",
       MSIX_CAP_ON => "TRUE",
-      MSIX_CAP_PBA_BIR => 0,
-      MSIX_CAP_PBA_OFFSET => X"00000002",
-      MSIX_CAP_TABLE_BIR => 0,
-      MSIX_CAP_TABLE_OFFSET => X"00000003",
+      MSIX_CAP_PBA_BIR => 2,
+      MSIX_CAP_PBA_OFFSET => X"00000000",
+      MSIX_CAP_TABLE_BIR => 2,
+      MSIX_CAP_TABLE_OFFSET => X"00000001",
       MSIX_CAP_TABLE_SIZE => X"00F",
       MSI_BASE_PTR => X"48",
       MSI_CAP_64_BIT_ADDR_CAPABLE => "TRUE",
@@ -137861,7 +137861,7 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute bar_1 : string;
   attribute bar_1 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FFF00000";
   attribute bar_2 : string;
-  attribute bar_2 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
+  attribute bar_2 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "FFFFF000";
   attribute bar_3 : string;
   attribute bar_3 of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00000000";
   attribute bar_4 : string;
@@ -138003,13 +138003,13 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute c_msix_next_ptr : string;
   attribute c_msix_next_ptr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00";
   attribute c_msix_pba_bir : string;
-  attribute c_msix_pba_bir of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
+  attribute c_msix_pba_bir of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "2";
   attribute c_msix_pba_offset : string;
-  attribute c_msix_pba_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "10";
+  attribute c_msix_pba_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
   attribute c_msix_table_bir : string;
-  attribute c_msix_table_bir of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "0";
+  attribute c_msix_table_bir of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "2";
   attribute c_msix_table_offset : string;
-  attribute c_msix_table_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "18";
+  attribute c_msix_table_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "8";
   attribute c_msix_table_size : string;
   attribute c_msix_table_size of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00F";
   attribute c_pci_cfg_space_addr : string;
@@ -139471,7 +139471,7 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute bar_1 : string;
   attribute bar_1 of inst : label is "FFF00000";
   attribute bar_2 : string;
-  attribute bar_2 of inst : label is "00000000";
+  attribute bar_2 of inst : label is "FFFFF000";
   attribute bar_3 : string;
   attribute bar_3 of inst : label is "00000000";
   attribute bar_4 : string;
@@ -139613,13 +139613,13 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute c_msix_next_ptr : string;
   attribute c_msix_next_ptr of inst : label is "00";
   attribute c_msix_pba_bir : string;
-  attribute c_msix_pba_bir of inst : label is "0";
+  attribute c_msix_pba_bir of inst : label is "2";
   attribute c_msix_pba_offset : string;
-  attribute c_msix_pba_offset of inst : label is "10";
+  attribute c_msix_pba_offset of inst : label is "0";
   attribute c_msix_table_bir : string;
-  attribute c_msix_table_bir of inst : label is "0";
+  attribute c_msix_table_bir of inst : label is "2";
   attribute c_msix_table_offset : string;
-  attribute c_msix_table_offset of inst : label is "18";
+  attribute c_msix_table_offset of inst : label is "8";
   attribute c_msix_table_size : string;
   attribute c_msix_table_size of inst : label is "00F";
   attribute c_pci_cfg_space_addr : string;
