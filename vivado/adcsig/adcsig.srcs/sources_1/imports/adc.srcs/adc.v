@@ -162,14 +162,10 @@ module adc (
   wire [13:0]          adc_B2;
   wire [13:0]          adc_B3;
 
-  wire                 pci_adc_bar_irq;
-  wire                 pci_adc_block_irq;
-
   wire                 up_adc_started;
   wire                 up_adc_probing;
   wire                 up_adc_running;
   wire                 up_adc_delay;
-  wire                 up_adc_irq;
   reg                  adc_delay;
 
   wire                 rx_adc_sync_ok;
@@ -205,6 +201,17 @@ module adc (
   wire [31:0]          pci_bar0_wr_data;
   wire [3:0]           pci_bar0_wr_be;
   wire                 pci_bar0_wr;
+
+  wire [9:0]           pci_bar1_rd_address;
+  wire                 pci_bar1_rd;
+
+  wire [31:0]          pci_bar1_rp_data;
+  wire                 pci_bar1_rp;
+
+  wire [9:0]           pci_bar1_wr_address;
+  wire [31:0]          pci_bar1_wr_data;
+  wire [3:0]           pci_bar1_wr_be;
+  wire                 pci_bar1_wr;
 
 // sys module
 
@@ -410,8 +417,14 @@ pci_app pci_app_inst (
     .bar0_wr_be(pci_bar0_wr_be),
     .bar0_wr(pci_bar0_wr),
 
-    .adc_bar_irq(pci_adc_bar_irq),
-    .adc_block_irq(pci_adc_block_irq)
+    .bar1_rd_address(pci_bar1_rd_address),
+    .bar1_rd(pci_bar1_rd),
+    .bar1_rp_data(pci_bar1_rp_data),
+    .bar1_rp(pci_bar1_rp),
+    .bar1_wr_address(pci_bar1_wr_address),
+    .bar1_wr_data(pci_bar1_wr_data),
+    .bar1_wr_be(pci_bar1_wr_be),
+    .bar1_wr(pci_bar1_wr)
 );
 
 
@@ -524,7 +537,6 @@ adc_app adc_app_inst (
     .adc_probing(up_adc_probing),
     .adc_running(up_adc_running),
     .adc_delay(up_adc_delay),
-    .adc_irq(up_adc_irq),
 
     .state(adc_state),
 

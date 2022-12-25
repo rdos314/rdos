@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Sat Dec 24 23:26:53 2022
+// Date        : Sun Dec 25 15:28:40 2022
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               C:/rdos/vivado/adcsig/adcsig.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.v
@@ -553,7 +553,7 @@ module pcie_7x_0
   (* SHARED_LOGIC_IN_CORE = "TRUE" *) 
   (* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) 
   (* bar_0 = "FFFFF000" *) 
-  (* bar_1 = "00000000" *) 
+  (* bar_1 = "FFFFF000" *) 
   (* bar_2 = "00000000" *) 
   (* bar_3 = "00000000" *) 
   (* bar_4 = "00000000" *) 
@@ -625,10 +625,10 @@ module pcie_7x_0
   (* c_msi_per_vctr_mask_cap = "FALSE" *) 
   (* c_msix_cap_on = "TRUE" *) 
   (* c_msix_next_ptr = "00" *) 
-  (* c_msix_pba_bir = "0" *) 
-  (* c_msix_pba_offset = "32" *) 
-  (* c_msix_table_bir = "0" *) 
-  (* c_msix_table_offset = "16" *) 
+  (* c_msix_pba_bir = "1" *) 
+  (* c_msix_pba_offset = "0" *) 
+  (* c_msix_table_bir = "1" *) 
+  (* c_msix_table_offset = "8" *) 
   (* c_msix_table_size = "015" *) 
   (* c_pci_cfg_space_addr = "3F" *) 
   (* c_pcie_blk_locn = "0" *) 
@@ -21344,7 +21344,7 @@ endmodule
 (* LINK_CAP_MAX_LINK_WIDTH = "8" *) (* ORIG_REF_NAME = "pcie_7x_0_pcie2_top" *) (* PCIE_ASYNC_EN = "FALSE" *) 
 (* PCIE_EXT_CLK = "FALSE" *) (* PCIE_EXT_GT_COMMON = "FALSE" *) (* PIPE_SIM = "FALSE" *) 
 (* PL_INTERFACE = "TRUE" *) (* RCV_MSG_IF = "FALSE" *) (* SHARED_LOGIC_IN_CORE = "TRUE" *) 
-(* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) (* bar_0 = "FFFFF000" *) (* bar_1 = "00000000" *) 
+(* TRANSCEIVER_CTRL_STATUS_PORTS = "FALSE" *) (* bar_0 = "FFFFF000" *) (* bar_1 = "FFFFF000" *) 
 (* bar_2 = "00000000" *) (* bar_3 = "00000000" *) (* bar_4 = "00000000" *) 
 (* bar_5 = "00000000" *) (* bram_lat = "2" *) (* c_aer_base_ptr = "000" *) 
 (* c_aer_cap_ecrc_check_capable = "FALSE" *) (* c_aer_cap_ecrc_gen_capable = "FALSE" *) (* c_aer_cap_multiheader = "FALSE" *) 
@@ -21368,8 +21368,8 @@ endmodule
 (* c_ll_replay_timeout = "0000" *) (* c_ll_replay_timeout_enable = "FALSE" *) (* c_ll_replay_timeout_func = "1" *) 
 (* c_lnk_bndwdt_notif = "FALSE" *) (* c_msi = "1" *) (* c_msi_64b_addr = "TRUE" *) 
 (* c_msi_cap_on = "FALSE" *) (* c_msi_mult_msg_extn = "0" *) (* c_msi_per_vctr_mask_cap = "FALSE" *) 
-(* c_msix_cap_on = "TRUE" *) (* c_msix_next_ptr = "00" *) (* c_msix_pba_bir = "0" *) 
-(* c_msix_pba_offset = "32" *) (* c_msix_table_bir = "0" *) (* c_msix_table_offset = "16" *) 
+(* c_msix_cap_on = "TRUE" *) (* c_msix_next_ptr = "00" *) (* c_msix_pba_bir = "1" *) 
+(* c_msix_pba_offset = "0" *) (* c_msix_table_bir = "1" *) (* c_msix_table_offset = "8" *) 
 (* c_msix_table_size = "015" *) (* c_pci_cfg_space_addr = "3F" *) (* c_pcie_blk_locn = "0" *) 
 (* c_pcie_cap_next_ptr = "9C" *) (* c_pcie_cap_slot_implemented = "FALSE" *) (* c_pcie_dbg_ports = "FALSE" *) 
 (* c_pcie_fast_config = "0" *) (* c_perf_level_high = "TRUE" *) (* c_phantom_functions = "0" *) 
@@ -24375,7 +24375,7 @@ module pcie_7x_0_pcie_7x_0_pcie_7x
     .AER_CAP_VERSION(4'h1),
     .ALLOW_X8_GEN2("TRUE"),
     .BAR0(32'hFFFFF000),
-    .BAR1(32'h00000000),
+    .BAR1(32'hFFFFF000),
     .BAR2(32'h00000000),
     .BAR3(32'h00000000),
     .BAR4(32'h00000000),
@@ -24477,10 +24477,10 @@ module pcie_7x_0_pcie_7x_0_pcie_7x
     .MSIX_CAP_ID(8'h11),
     .MSIX_CAP_NEXTPTR(8'h00),
     .MSIX_CAP_ON("TRUE"),
-    .MSIX_CAP_PBA_BIR(0),
-    .MSIX_CAP_PBA_OFFSET(29'h00000006),
-    .MSIX_CAP_TABLE_BIR(0),
-    .MSIX_CAP_TABLE_OFFSET(29'h00000002),
+    .MSIX_CAP_PBA_BIR(1),
+    .MSIX_CAP_PBA_OFFSET(29'h00000000),
+    .MSIX_CAP_TABLE_BIR(1),
+    .MSIX_CAP_TABLE_OFFSET(29'h00000001),
     .MSIX_CAP_TABLE_SIZE(11'h015),
     .MSI_BASE_PTR(8'h48),
     .MSI_CAP_64_BIT_ADDR_CAPABLE("TRUE"),

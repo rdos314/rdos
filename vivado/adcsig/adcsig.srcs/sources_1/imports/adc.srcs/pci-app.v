@@ -56,8 +56,16 @@ module pci_app (
   output reg [3:0]     bar0_wr_be,
   output reg           bar0_wr,
 
-  input wire           adc_bar_irq,
-  input wire           adc_block_irq
+  output reg [16:0]    bar1_rd_address,
+  output reg           bar1_rd,
+
+  input wire [31:0]    bar1_rp_data,
+  input wire           bar1_rp,
+
+  output reg [16:0]    bar1_wr_address,
+  output reg [31:0]    bar1_wr_data,
+  output reg [3:0]     bar1_wr_be,
+  output reg           bar1_wr
 );
 
 
@@ -71,12 +79,6 @@ module pci_app (
   reg [17:0]       poll_cnt;
 
   wire             req_stop;
-
-  reg              int_req;
-  wire             int_ack;
-  reg              int_num;
-  reg              pend_adc_bar_irq;
-  reg              pend_adc_block_irq;
   
   // Tx
   wire [5:0]       tx_buf_av;
@@ -164,6 +166,11 @@ module pci_app (
   reg  [31:0]      q_bar0_data;
   reg              q_bar0_send;
   reg              bar0_ack;
+
+  reg  [95:0]      q_bar1_rp_header;
+  reg  [31:0]      q_bar1_data;
+  reg              q_bar1_send;
+  reg              bar1_ack;
   
   
   //-------------------------------------------------------
@@ -326,11 +333,7 @@ pcie_7x_0 pcie_i
   //------------------------------------------------//
   // EP Only                                        //
   //------------------------------------------------//
-  .cfg_interrupt                             ( int_req ),
-  .cfg_interrupt_rdy                         ( int_ack ),
   .cfg_interrupt_assert                      ( cfg_interrupt_assert ),
-  .cfg_interrupt_di                          ( int_num ),
-  .cfg_interrupt_do                          ( ),
   .cfg_interrupt_mmenable                    ( ),
   .cfg_interrupt_msienable                   ( ),
   .cfg_interrupt_msixenable                  ( cfg_interrupt_msixenable ),
@@ -609,12 +612,83 @@ generate
         begin
           bar0_rd <= 0;
           bar0_wr <= 0;
+
+          if (rx_bar_sel[1])
+          begin
+            case (rx_bar_type)
+              8'b000_00000, 
+              8'b001_00000,
+              8'b000_00001,
+              8'b001_00001: 
+              begin
+                bar1_rd_address <= rx_bar_address[18:2];
+
+                q_bar1_rp_header[95:72] <= rx_bar_header[63:40];
+                q_bar1_rp_header[71] <= 0;
+                q_bar1_rp_header[70:66] <= rx_bar_header[70:66];
+
+                casex (rx_bar_be[3:0])
+                  4'b0000 : q_bar1_rp_header[65:64] <= 0;
+                  4'bxxx1 : q_bar1_rp_header[65:64] <= 0;
+                  4'bxx10 : q_bar1_rp_header[65:64] <= 1;
+                  4'bx100 : q_bar1_rp_header[65:64] <= 2;
+                  4'b1000 : q_bar1_rp_header[65:64] <= 3;
+                endcase
+
+                q_bar1_rp_header[63:48] <= 16'b0;                  // completer ID
+                q_bar1_rp_header[47:45] <= 3'b0;                   // completion code = 000
+                q_bar1_rp_header[44] <= 1'b0;                      // BCM
+                q_bar1_rp_header[39:32] <= rx_bar_count;           // byte count
+                q_bar1_rp_header[43:40] <= 0;                      // high byte count = 0
+
+                if (rx_bar_count)
+                  q_bar1_rp_header[31:25] <= 6'b10_0101;           // Type + Fmt (data)
+                 else
+                  q_bar1_rp_header[31:25] <= 6'b00_0101;           // Type + Fmt (no data)
+
+                q_bar1_rp_header[24] <= rx_bar_header[24];
+                q_bar1_rp_header[23] <= 1'b0;                      // R
+                q_bar1_rp_header[22:20] <= rx_bar_header[22:20];
+                q_bar1_rp_header[19:16] <= 4'b0;                   // TH, AttrH, R
+                q_bar1_rp_header[15:12] <= rx_bar_header[15:12];
+                q_bar1_rp_header[11:10] <= 2'b0;                   // AT
+                q_bar1_rp_header[9:0] <= rx_bar_header[9:0];
+
+                bar1_rd <= 1;
+                bar1_wr <= 0;
+              end
+
+              8'b010_00000,
+              8'b011_00000:
+              begin       
+                bar1_wr_address <= rx_bar_address[18:2];
+                bar1_wr_data <= rx_bar_data[31:0];
+                bar1_wr_be <= rx_bar_be[3:0];
+                bar1_wr <= 1;
+                bar1_rd <= 0;
+              end
+
+              default:
+              begin
+                bar1_rd <= 0;
+                bar1_wr <= 0;
+              end
+            endcase
+          end
+          else
+          begin
+            bar1_rd <= 0;
+            bar1_wr <= 0;
+          end
         end
+
       end
       else
       begin
         bar0_rd <= 0;
         bar0_wr <= 0;
+        bar1_rd <= 0;
+        bar1_wr <= 0;
       end
     end
 
@@ -624,6 +698,7 @@ generate
       if (user_reset)
       begin
         q_bar0_send <= 0;
+        q_bar1_send <= 0;
       end
       else
       begin
@@ -635,6 +710,15 @@ generate
         else
           if (bar0_ack)
             q_bar0_send <= 0;
+
+        if (bar1_rp)
+        begin
+          q_bar1_data <= bar1_rp_data;
+          q_bar1_send <= 1;
+        end
+        else
+          if (bar1_ack)
+            q_bar1_send <= 0;
       end
     end
 
@@ -644,6 +728,7 @@ generate
       if (user_reset)
       begin
         bar0_ack <= 0;
+        bar1_ack <= 0;
       end
       else
       begin
@@ -651,6 +736,7 @@ generate
         begin
           tx_bar_wr <= 0;
           bar0_ack <= 0;
+          bar1_ack <= 0;
         end
         else
         begin
@@ -660,90 +746,29 @@ generate
             tx_bar_header <= q_bar0_rp_header;
             tx_bar_wr <= 1;
             bar0_ack <= 1;
+            bar1_ack <= 0;
           end
           else
           begin
             bar0_ack <= 0;
+
+            if (q_bar1_send && !bar1_ack)
+            begin
+              tx_bar_data <= q_bar1_data;
+              tx_bar_header <= q_bar1_rp_header;
+              tx_bar_wr <= 1;
+              bar1_ack <= 1;
+            end
+            else
+            begin
+              bar1_ack <= 0;
+
+            end
           end
         end
       end
     end
    
-
-    always @ ( posedge user_clk ) 
-    begin
-      if (user_reset)
-      begin
-        int_req <= 0;
-        int_num <= 0;
-        pend_adc_bar_irq <= 0;
-        pend_adc_block_irq <= 0;
-      end
-      else
-      begin
-        if (adc_bar_irq)
-        begin
-          if (adc_block_irq)
-            pend_adc_block_irq <= 1;
-
-          if (int_req)
-          begin
-            pend_adc_bar_irq <= 1;
-            if (int_ack)
-              int_req <= 0;
-          end
-          else
-          begin       
-            int_req <= 1;
-            int_num <= 0;
-          end
-        end
-        else
-        begin
-          if (adc_block_irq)
-          begin
-            if (int_req)
-            begin
-              pend_adc_block_irq <= 1;
-              if (int_ack)
-                int_req <= 0;
-            end
-            else
-            begin       
-              int_req <= 1;
-              int_num <= 1;
-            end
-          end
-          else
-          begin
-            if (int_req)
-            begin
-              if (int_ack)
-                int_req <= 0;
-            end
-            else
-            begin
-              if (pend_adc_bar_irq)
-              begin
-                pend_adc_bar_irq <= 0;
-                int_req <= 1;
-                int_num <= 0;
-              end
-              else
-              begin
-                if (pend_adc_block_irq)
-                begin
-                  pend_adc_block_irq <= 0;
-                  int_req <= 1;
-                  int_num <= 1;
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-
   end
 endgenerate
 
