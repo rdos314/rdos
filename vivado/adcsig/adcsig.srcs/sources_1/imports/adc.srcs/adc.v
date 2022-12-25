@@ -202,13 +202,13 @@ module adc (
   wire [3:0]           pci_bar0_wr_be;
   wire                 pci_bar0_wr;
 
-  wire [9:0]           pci_bar1_rd_address;
+  wire [17:0]          pci_bar1_rd_address;
   wire                 pci_bar1_rd;
 
   wire [31:0]          pci_bar1_rp_data;
   wire                 pci_bar1_rp;
 
-  wire [9:0]           pci_bar1_wr_address;
+  wire [17:0]          pci_bar1_wr_address;
   wire [31:0]          pci_bar1_wr_data;
   wire [3:0]           pci_bar1_wr_be;
   wire                 pci_bar1_wr;
@@ -490,6 +490,21 @@ control_bar control_bar_inst (
     .rx_control_data(rx_pci_control_data)
 );
 
+adc_ana adc_ana_inst (
+    .pci_reset (pcie_user_reset),
+    .pci_clk (pcie_user_clk),
+    .clk (rx_clk),
+
+    .rd_address(pci_bar1_rd_address),
+    .rd(pci_bar1_rd),
+    .rp_data(pci_bar1_rp_data),
+    .rp(pci_bar1_rp),
+    .wr_address(pci_bar1_wr_address),
+    .wr_data(pci_bar1_wr_data),
+    .wr_be(pci_bar1_wr_be),
+    .wr(pci_bar1_wr)
+);
+
 adc_app adc_app_inst (
     .rx_clk (rx_clk),
     .pci_reset (pcie_user_reset),
@@ -504,15 +519,6 @@ adc_app adc_app_inst (
     .spi_out_data(adc_spi_out_data),
     .spi_running(adc_spi_running),
     .spi_done(adc_spi_done),
-
-    .bar_rd_address(pci_bar1_rd_address),
-    .bar_rd(pci_bar1_rd),
-    .bar_rp_data(pci_bar1_rp_data),
-    .bar_rp(pci_bar1_rp),
-    .bar_wr_address(pci_bar1_wr_address),
-    .bar_wr_data(pci_bar1_wr_data),
-    .bar_wr_be(pci_bar1_wr_be),
-    .bar_wr(pci_bar1_wr),
 
     .rx_control_msg(rx_up_control_msg),
     .rx_control_index(rx_up_control_index),

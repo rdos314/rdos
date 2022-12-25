@@ -56,13 +56,13 @@ module pci_app (
   output reg [3:0]     bar0_wr_be,
   output reg           bar0_wr,
 
-  output reg [9:0]     bar1_rd_address,
+  output reg [17:0]    bar1_rd_address,
   output reg           bar1_rd,
 
   input wire [31:0]    bar1_rp_data,
   input wire           bar1_rp,
 
-  output reg [9:0]     bar1_wr_address,
+  output reg [17:0]    bar1_wr_address,
   output reg [31:0]    bar1_wr_data,
   output reg [3:0]     bar1_wr_be,
   output reg           bar1_wr
@@ -621,7 +621,7 @@ generate
               8'b000_00001,
               8'b001_00001: 
               begin
-                bar1_rd_address <= rx_bar_address[18:2];
+                bar1_rd_address <= rx_bar_address[19:2];
 
                 q_bar1_rp_header[95:72] <= rx_bar_header[63:40];
                 q_bar1_rp_header[71] <= 0;
@@ -661,7 +661,7 @@ generate
               8'b010_00000,
               8'b011_00000:
               begin       
-                bar1_wr_address <= rx_bar_address[18:2];
+                bar1_wr_address <= rx_bar_address[19:2];
                 bar1_wr_data <= rx_bar_data[31:0];
                 bar1_wr_be <= rx_bar_be[3:0];
                 bar1_wr <= 1;

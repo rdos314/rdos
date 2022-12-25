@@ -83,7 +83,7 @@ module pcie_7x_0_core_top # (
   parameter         AER_CAP_PERMIT_ROOTERR_UPDATE = "FALSE",
 
   parameter [31:0]  BAR0 = 32'hFFFFF000,
-  parameter [31:0]  BAR1 = 32'hFFFFF000,
+  parameter [31:0]  BAR1 = 32'hFFF00000,
   parameter [31:0]  BAR2 = 32'h00000000,
   parameter [31:0]  BAR3 = 32'h00000000,
   parameter [31:0]  BAR4 = 32'h00000000,
@@ -152,10 +152,10 @@ module pcie_7x_0_core_top # (
   parameter         MSI_CAP_64_BIT_ADDR_CAPABLE = "TRUE",
 
   parameter         MSIX_CAP_ON = "TRUE",
-  parameter         MSIX_CAP_PBA_BIR = 1,
-  parameter [28:0]  MSIX_CAP_PBA_OFFSET = 29'h0,
-  parameter         MSIX_CAP_TABLE_BIR = 1,
-  parameter [28:0]  MSIX_CAP_TABLE_OFFSET = 29'h8,
+  parameter         MSIX_CAP_PBA_BIR = 0,
+  parameter [28:0]  MSIX_CAP_PBA_OFFSET = 29'h16,
+  parameter         MSIX_CAP_TABLE_BIR = 0,
+  parameter [28:0]  MSIX_CAP_TABLE_OFFSET = 29'h24,
   parameter [10:0]  MSIX_CAP_TABLE_SIZE = 11'h015,
 
   parameter [3:0]   PCIE_CAP_DEVICE_PORT_TYPE = 4'h0,
