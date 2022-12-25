@@ -20,29 +20,26 @@
 //
 // The author of this program may be contacted at leif@rdos.net
 //
-// phys_bar.v
-// Physical address list bar (1 & 2)
+// adc_ana.v
+// ADC analyser 
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-module adc_bar (
+module adc_ana (
   input wire              reset,
+  input wire              pci_clk,
   input wire              clk,
 
-  input wire [9:0]        rd_address,
+  input wire [11:0]       rd_address,
   input wire              rd,
 
   output reg [31:0]       rp_data,
   output reg              rp,
 
-  input wire [9:0]        wr_address,
+  input wire [11:0]       wr_address,
   input wire [31:0]       wr_data,
   input wire [3:0]        wr_be,
   input wire              wr,
-
-  input wire [9:0]        adr,
-  output reg [31:0]       data,
-  output reg              valid
 );
 
 // local bar
@@ -65,6 +62,7 @@ module adc_bar (
   reg  [3:0]             q_we;
   reg  [9:0]             q_adr;
   reg  [31:0]            q_data;
+
 
 bram_adc bram_adc_inst 
 (
