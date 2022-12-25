@@ -61,24 +61,6 @@
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sources_1/ip/adc_fifo_1.xcix">
-        <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/adc_fifo_1.xcix"/>
-          <Attr Name="ImportTime" Val="1671877467"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/ip/adc_fifo_1/adc_fifo.xci">
-        <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/adc_fifo_1/adc_fifo.xci"/>
-          <Attr Name="ImportTime" Val="1588426772"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PSRCDIR/sources_1/ip/spi_fifo_rp.xcix">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/spi_fifo_rp.xcix"/>
@@ -191,6 +173,25 @@
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/adc.v"/>
           <Attr Name="ImportTime" Val="1671917325"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/ip/adc_fifo_1.xcix">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/adc_fifo_1.xcix"/>
+          <Attr Name="ImportTime" Val="1671877467"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/ip/adc_fifo_1/adc_fifo.xci">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/adc_fifo_1/adc_fifo.xci"/>
+          <Attr Name="ImportTime" Val="1588426772"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>

@@ -171,7 +171,7 @@ set_false_path -from [get_pins adc_app_inst/adc_app.adc_probing_reg/C] -to [get_
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_running_reg/C] -to [get_pins adc_app_inst/adc_app.adc_running_1_reg/D]
 
 set_false_path -from [get_pins adc_app_inst/adc_app.up_bar_irq_reg/C] -to [get_pins adc_app_inst/adc_app.pci_bar_irq_1_reg/D]
-set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_wr_reg/C] -to [get_pins adc_app_inst/adc_app.up_adc_started_1_reg/D]
+set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_en_reg/C] -to [get_pins adc_app_inst/adc_app.up_adc_started_1_reg/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_stopped_reg/C] -to [get_pins adc_app_inst/adc_app.up_adc_stopped_1_reg/D]
 
 

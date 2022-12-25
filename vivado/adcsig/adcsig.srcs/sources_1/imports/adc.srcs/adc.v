@@ -151,8 +151,16 @@ module adc (
 
 // ADC
 
-  wire                 rx_adc_wr;
-  wire [127:0]         rx_adc_data;
+
+  wire                 adc_en;
+  wire [13:0]          adc_A0;
+  wire [13:0]          adc_A1;
+  wire [13:0]          adc_A2;
+  wire [13:0]          adc_A3;
+  wire [13:0]          adc_B0;
+  wire [13:0]          adc_B1;
+  wire [13:0]          adc_B2;
+  wire [13:0]          adc_B3;
 
   wire                 pci_adc_bar_irq;
   wire                 pci_adc_block_irq;
@@ -161,6 +169,7 @@ module adc (
   wire                 up_adc_probing;
   wire                 up_adc_running;
   wire                 up_adc_delay;
+  wire                 up_adc_irq;
   reg                  adc_delay;
 
   wire                 rx_adc_sync_ok;
@@ -362,8 +371,15 @@ daq2_app daq2_app_inst (
     .adc_sync_ok(rx_adc_sync_ok),    
     .adc_sync_fail(rx_adc_sync_fail),    
 
-    .adc_wr(rx_adc_wr),
-    .adc_data(rx_adc_data)
+    .adc_en(adc_en),
+    .adc_A0(adc_A0),
+    .adc_A1(adc_A1),
+    .adc_A2(adc_A2),
+    .adc_A3(adc_A3),
+    .adc_B0(adc_B0),
+    .adc_B1(adc_B1),
+    .adc_B2(adc_B2),
+    .adc_B3(adc_B3)
 );
 
 pci_app pci_app_inst (
@@ -501,19 +517,26 @@ adc_app adc_app_inst (
     .adc_pll_locked(adc_pll_locked),
     .adc_rst_done(adc_rst_done),
 
+    .adc_sync_ok(up_adc_sync_ok),
+    .adc_sync_fail(up_adc_sync_fail),
+
     .adc_started(up_adc_started),
     .adc_probing(up_adc_probing),
     .adc_running(up_adc_running),
     .adc_delay(up_adc_delay),
+    .adc_irq(up_adc_irq),
 
-    .adc_sync_ok(up_adc_sync_ok),
-    .adc_sync_fail(up_adc_sync_fail),
+    .state(adc_state),
 
-    .bar_irq(pci_adc_bar_irq),
-    .block_irq(pci_adc_block_irq),
-    .phys_index(pci_adc_phys_index),
-
-    .state(adc_state)
+    .adc_en(adc_en),
+    .adc_A0(adc_A0),
+    .adc_A1(adc_A1),
+    .adc_A2(adc_A2),
+    .adc_A3(adc_A3),
+    .adc_B0(adc_B0),
+    .adc_B1(adc_B1),
+    .adc_B2(adc_B2),
+    .adc_B3(adc_B3)
 );
 
  //-----------------------------I/O BUFFERS------------------------//

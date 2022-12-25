@@ -75,8 +75,15 @@ module daq2_app
   output wire             adc_sync_ok,
   output wire             adc_sync_fail,
 
-  output reg              adc_wr,
-  output reg [127:0]      adc_data
+  output reg              adc_en,
+  output reg [13:0]       adc_A0,
+  output reg [13:0]       adc_A1,
+  output reg [13:0]       adc_A2,
+  output reg [13:0]       adc_A3,
+  output reg [13:0]       adc_B0,
+  output reg [13:0]       adc_B1,
+  output reg [13:0]       adc_B2,
+  output reg [13:0]       adc_B3
 );
 
  wire [15:0]              rx_phy_charisk;
@@ -480,40 +487,21 @@ generate
     begin
       if (rx_valid)
       begin
-        adc_data[13:0] <= adcA_0;
-        adc_data[14] <= adcA_0[13];
-        adc_data[15] <= adcA_0[13];
-        adc_data[29:16] <= adcB_0;
-        adc_data[30] <= adcB_0[13];
-        adc_data[31] <= adcB_0[13];
-
-        adc_data[45:32] <= adcA_1;
-        adc_data[46] <= adcA_1[13];
-        adc_data[47] <= adcA_1[13];
-        adc_data[61:48] <= adcB_1;
-        adc_data[62] <= adcB_1[13];
-        adc_data[63] <= adcB_1[13];
-
-        adc_data[77:64] <= adcA_2;
-        adc_data[78] <= adcA_2[13];
-        adc_data[79] <= adcA_2[13];
-        adc_data[93:80] <= adcB_2;
-        adc_data[94] <= adcB_2[13];
-        adc_data[95] <= adcB_2[13];
-
-        adc_data[109:96] <= adcA_3;
-        adc_data[110] <= adcA_3[13];
-        adc_data[111] <= adcA_3[13];
-        adc_data[125:112] <= adcB_3;
-        adc_data[126] <= adcB_3[13];
-        adc_data[127] <= adcB_3[13];
+        adc_A0 <= adcA_0;
+        adc_A1 <= adcA_1;
+        adc_A2 <= adcA_2;
+        adc_A3 <= adcA_3;
+        adc_B0 <= adcB_0;
+        adc_B1 <= adcB_1;
+        adc_B2 <= adcB_2;
+        adc_B3 <= adcB_3;
 
         if (adc_running)
         begin
           if (adc_probing && !adc_start_found)
           begin
             if (rx_test_ok)
-              adc_wr <= 0;
+              adc_en <= 0;
             else
             begin
               if (adc_delay)
@@ -525,24 +513,24 @@ generate
               end
               else
               begin               
-                adc_wr <= 1;
+                adc_en <= 1;
                 adc_start_found <= 1;
               end
             end
           end
           else
-            adc_wr <= 1;
+            adc_en <= 1;
         end
         else
         begin
-          adc_wr <= 0;
+          adc_en <= 0;
           adc_start_found <= 0;
           delay_cnt <= 8'hFF;
         end
       end
       else
       begin
-        adc_wr <= 0;
+        adc_en <= 0;
         adc_start_found <= 0;
         delay_cnt <= 8'hFF;
       end

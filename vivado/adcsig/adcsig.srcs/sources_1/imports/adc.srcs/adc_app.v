@@ -74,15 +74,20 @@ module adc_app (
   output reg              adc_probing,
   output reg              adc_running,
   output wire             adc_delay,
+  output reg              adc_irq,
 
-  output reg              bar_irq,
-  output reg              block_irq,
-  output reg [15:0]       phys_index,
-
-  input wire              adc_wr,
-  input wire [127:0]      adc_wr_data,
-
-  output wire [2:0]       state
+  output wire [2:0]       state,
+    
+  input wire              adc_en,
+  input wire [13:0]       adc_A0,
+  input wire [13:0]       adc_A1,
+  input wire [13:0]       adc_A2,
+  input wire [13:0]       adc_A3,
+  input wire [13:0]       adc_B0,
+  input wire [13:0]       adc_B1,
+  input wire [13:0]       adc_B2,
+  input wire [13:0]       adc_B3
+  
 );
 
 // up domain
@@ -111,15 +116,6 @@ module adc_app (
 
   reg                     adc_stopped;
 
-// FIFO
-
-  wire                    fifo_reset;
-  wire                    fifo_full;
-  wire                    fifo_almost_full;
-  reg                     q_full;
-  reg                     up_fifo_full;
-  reg                     q_almost_full;
-
 
 // clock domain crossings
 
@@ -147,21 +143,6 @@ module adc_app (
 
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped;
-
-adc_fifo adc_fifo_inst (
-  .rst(fifo_reset),                 // input wire rst
-  .wr_clk(rx_clk),                  // input wire wr_clk
-  .rd_clk(pci_clk),                 // input wire rd_clk
-  .din(adc_wr_data),                // input wire [127 : 0] din
-  .wr_en(adc_wr),                   // input wire wr_en
-  .rd_en(adc_rd),                   // input wire rd_en
-  .dout(adc_rd_data),               // output wire [127 : 0] dout
-  .full(fifo_full),                 // output wire full
-  .prog_full(fifo_almost_full),     // output wire almost full
-  .prog_empty(adc_almost_empty)     // output wire almost empty
-);
-
-  assign fifo_reset = !adc_started;
 
   assign adc_rst = up_adc_rst_cnt[3];
   assign adc_user_ready = up_adc_user_ready_cnt[6];
@@ -331,12 +312,6 @@ begin : adc_app
               if (up_adc_started)
               begin
                 adc_probing <= 0;
-                if (up_fifo_full)
-                begin
-                  adc_started <= 0;
-                  adc_running <= 0;
-                  irq_state <= irq_state | 8'h10;
-                end
               end
               else
               begin
@@ -415,7 +390,7 @@ begin : adc_app
 
     always @ ( posedge up_clk ) 
     begin
-      up_adc_started_1 <= adc_wr;
+      up_adc_started_1 <= adc_en;
       up_adc_started <= up_adc_started_1;
     end
 
@@ -443,23 +418,6 @@ begin : adc_app
       pci_adc_running <= adc_running_1;
     end
 
-    always @ ( posedge rx_clk ) 
-    begin
-      q_full <= fifo_full;
-    end
-
-    always @ ( posedge up_clk ) 
-    begin
-      adc_full_1 <= q_full;
-      adc_full_2 <= adc_full_1;
-      up_fifo_full <= adc_full_2;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      q_almost_full <= fifo_almost_full;
-    end
-
     always @ ( posedge pci_clk ) 
     begin
       pci_bar_irq_1 <= up_bar_irq;
@@ -467,9 +425,9 @@ begin : adc_app
       pci_bar_irq_3 <= pci_bar_irq_2;
       
       if (!pci_bar_irq_3 && pci_bar_irq_2)
-        bar_irq <= 1;
+        adc_irq <= 1;
       else
-        bar_irq <= 0;
+        adc_irq <= 0;
     end
 
 
