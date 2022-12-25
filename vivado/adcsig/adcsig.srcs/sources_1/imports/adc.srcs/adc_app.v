@@ -144,6 +144,27 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped;
 
+
+adc_bar adc_bar_inst (
+    .clk(pci_clk),
+    .reset(pci_reset),
+
+    .rd_address(bar_rd_address),
+    .rd(bar_rd),
+    .rp_data(bar_rp_data),
+    .rp(bar_rp),
+
+    .wr_address(bar_wr_address),
+    .wr_data(bar_wr_data),
+    .wr_be(bar_wr_be),
+    .wr(bar_wr),
+
+    .index(phys_index),
+    .page(phys_page),
+    .valid(phys_valid)
+);
+
+
   assign adc_rst = up_adc_rst_cnt[3];
   assign adc_user_ready = up_adc_user_ready_cnt[6];
 
@@ -312,7 +333,7 @@ begin : adc_app
               if (up_adc_started)
               begin
                 adc_probing <= 0;
-              end
+                end
               else
               begin
                 if (adc_sync_ok)

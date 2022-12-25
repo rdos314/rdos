@@ -25,7 +25,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-module phys_bar (
+module adc_bar (
   input wire              reset,
   input wire              clk,
 
