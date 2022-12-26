@@ -262,7 +262,7 @@ begin : adc_bar_gen
     begin    
       if (wr)
       begin
-        pci_adr <= wr_address;
+        pci_adr <= wr_address[13:2];
         pci_sin_in <= wr_data[15:0];
         pci_cos_in <= wr_data[31:16];
         pci_bank <= wr_address[1:0];
@@ -300,7 +300,7 @@ begin : adc_bar_gen
         begin
           pci_bank <= rd_address[1:0];
           pci_wr <= 4'b0000;
-          pci_adr <= rd_address;
+          pci_adr <= rd_address[13:2];
           pci_rd_pend <= 1;
           pci_wr_pend <= 0;
   

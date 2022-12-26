@@ -237,6 +237,49 @@ InitControlBar  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InitCoeffBar
+;
+;       DESCRIPTION:    Init coefficient bar
+;
+;       PARAMETERS:     BX:CH       PCI device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitCoeffBar      proc near
+    pushad
+;
+    mov cl,PCI_nbr_base_address1
+    ReadPciDword
+    test al,1
+    jnz icbaDone
+;
+    push eax
+    mov eax,100000h
+    AllocateBigLinear
+    pop eax
+;
+    mov bx,anio_coeff_sel
+    mov ecx,100000h
+    CreateDataSelector32
+;
+    or ax,813h
+    xor ebx,ebx
+    mov ecx,100h
+
+icbaLoop:
+    SetPageEntry
+    add eax,1000h
+    add edx,1000h
+    loop icbaLoop
+
+icbaDone:
+    popad
+    ret
+InitCoeffBar      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitAdcBar
 ;
 ;       DESCRIPTION:    Init ADC bar
@@ -260,7 +303,7 @@ InitAdcBar      proc near
 ;
     mov bx,anio_adc_sel
     mov ecx,80000h
-    CreateDataSelector16
+    CreateDataSelector32
 ;
     or ax,813h
     xor ebx,ebx
@@ -622,7 +665,6 @@ InitPciFound:
     je InitPciRaw
 
 InitPciFreq:
-    int 3
     GetPciMsiX
     jc InitPciDone
 ;
@@ -654,7 +696,9 @@ InitPciMsiXLoop:
 InitPciMsiXNext:
     inc dl
     loop InitPciMsiXLoop
-
+;
+    clc
+    jmp InitPciDone
 
 InitPciRaw:
     GetPciMsi
@@ -993,7 +1037,17 @@ init_pci    PROC far
     call InitPciAdapter
     jc ipDone
 ;
+    int 3
     call InitControlBar
+;
+    cmp ds:dev_id,0AACCh
+    je ipRaw
+;
+    call InitCoeffBar
+    jmp ipDone
+
+
+ipRaw:
     call InitAdcBar
     call InitClk
     call InitAdc
