@@ -77,13 +77,13 @@ module adc_app (
   input wire [13:0]       adc_B2,
   input wire [13:0]       adc_B3,
 
-  input wire [13:0]       rd_address,
+  input wire [9:0]        rd_address,
   input wire              rd,
 
   output reg [31:0]       rp_data,
   output reg              rp,
 
-  input wire [13:0]       wr_address,
+  input wire [9:0]        wr_address,
   input wire [31:0]       wr_data,
   input wire [3:0]        wr_be,
   input wire              wr  
@@ -115,12 +115,15 @@ module adc_app (
 
   reg                     adc_stopped;
 
+  reg                     pci_en;
   reg                     pci_rd;
+  reg                     pci_wr;
   reg                     pci_rd_pend;
-  reg  [3:0]              pci_wr_en;
-  reg  [13:0]             pci_adr;
+  reg                     pci_wr_pend;
+  reg  [9:0]              pci_adr;
   reg  [31:0]             pci_in;
   wire [31:0]             pci_out;
+  reg  [3:0]              pci_be;
 
 // clock domain crossings
 
@@ -159,38 +162,36 @@ module adc_app (
   assign adc_delay = up_test_mode ? 0 : 1;
 
 bram_msix bram_msix_inst (
-  .clka(pci_clk),         // input wire clka
-  .rsta(pci_reset),       // input wire rsta
-  .wea(pci_wr_en),        // input wire [3 : 0] wea
-  .addra(pci_adr),        // input wire [31 : 0] addra
-  .dina(pci_in),          // input wire [31 : 0] dina
-  .douta(pci_out),        // output wire [31 : 0] douta
-  .clkb(rx_clk),          // input wire clkb
-  .web(0),                // input wire [3 : 0] web
-  .addrb(0),              // input wire [31 : 0] addrb
-  .dinb(0),               // input wire [31 : 0] dinb
-  .doutb(),               // output wire [31 : 0] doutb
-  .rsta_busy(),           // output wire rsta_busy
-  .rstb_busy()            // output wire rstb_busy
+  .clka(pci_clk),    // input wire clka
+  .ena(pci_en),      // input wire ena
+  .wea(pci_wr),      // input wire [0 : 0] wea
+  .addra(pci_adr),   // input wire [9 : 0] addra
+  .dina(pci_in),     // input wire [31 : 0] dina
+  .douta(pci_out),   // output wire [31 : 0] douta
+  .clkb(rx_clk),     // input wire clkb
+  .enb(0),           // input wire enb
+  .web(0),           // input wire [0 : 0] web
+  .addrb(0),         // input wire [9 : 0] addrb
+  .dinb(0),          // input wire [31 : 0] dinb
+  .doutb(0)          // output wire [31 : 0] doutb
 );
 
-
 ila_0 ila_0_inst (
-	.clk(pci_clk), // input wire clk
-	.probe0(rd_address), // input wire [13:0]  probe0  
-	.probe1(rd), // input wire [0:0]  probe1 
-	.probe2(rp_data), // input wire [31:0]  probe2 
-	.probe3(rp), // input wire [0:0]  probe3 
-	.probe4(wr_address), // input wire [13:0]  probe4 
-	.probe5(wr_data), // input wire [31:0]  probe5 
-	.probe6(wr_be), // input wire [3:0]  probe6 
-	.probe7(wr), // input wire [0:0]  probe7
-	.probe8(pci_rd), // input wire [0:0]  probe8 
-	.probe9(pci_rd_pend), // input wire [0:0]  probe9 
-	.probe10(pci_wr_en), // input wire [3:0]  probe10 
-	.probe11(pci_adr), // input wire [13:0]  probe11 
-	.probe12(pci_in), // input wire [31:0]  probe12 
-	.probe13(pci_out) // input wire [31:0]  probe13
+	.clk(pci_clk),          // input wire clk
+	.probe0(rd_address),    // input wire [9:0]  probe0  
+	.probe1(rd),            // input wire [0:0]  probe1 
+	.probe2(rp_data),       // input wire [31:0]  probe2 
+	.probe3(rp),            // input wire [0:0]  probe3 
+	.probe4(wr_address),    // input wire [9:0]  probe4 
+	.probe5(wr_data),       // input wire [31:0]  probe5 
+	.probe6(wr_be),         // input wire [3:0]  probe6 
+	.probe7(wr),            // input wire [0:0]  probe7 
+	.probe8(pci_en),        // input wire [0:0]  probe8 
+	.probe9(pci_rd),        // input wire [0:0]  probe9 
+	.probe10(pci_wr),       // input wire [0:0]  probe10 
+	.probe11(pci_adr),      // input wire [9:0]  probe11 
+	.probe12(pci_in),       // input wire [31:0]  probe12 
+	.probe13(pci_out)       // input wire [31:0]  probe13
 );
 
 generate
@@ -474,7 +475,7 @@ begin : adc_app
   begin
     if (pci_rd)
     begin
-      rp_data = pci_out;
+      rp_data <= pci_out;
       rp <= 1;
     end
     else
@@ -487,27 +488,76 @@ begin : adc_app
   begin
     if (pci_reset)
     begin
+      pci_en <= 0;
       pci_rd_pend <= 0;
-      pci_wr_en <= 4'b0000;
+      pci_wr_pend <= 0;
+      pci_wr <= 0;
     end
     else
     begin
       if (wr)
       begin
-        pci_adr = wr_address;
-        pci_rd_pend <= 0;
+        pci_adr <= wr_address;
         pci_in <= wr_data;
-        pci_wr_en = wr_be;
+
+        if (wr_be == 4'b1111)
+        begin
+          pci_en <= 1;
+          pci_rd_pend <= 0;
+          pci_wr_pend <= 0;
+          pci_wr <= 1;
+        end
+        else
+        begin
+          pci_en <= 1;
+          pci_rd_pend <= 0;
+          pci_wr_pend <= 1;
+          pci_wr <= 0;
+          pci_be <= wr_be;
+        end
       end
       else
       begin
-        pci_adr = rd_address;
-        pci_wr_en <= 4'b0000;
-        pci_rd_pend <= rd;
+        if (rd)
+        begin
+          pci_adr <= rd_address;
+          pci_en <= 1;
+          pci_rd_pend <= 1;
+          pci_wr_pend <= 0;
+          pci_wr <= 0;
+        end
+        else
+        begin
+          if (pci_wr_pend)
+          begin
+            if (!pci_be[0])
+              pci_in[7:0] <= pci_out[7:0];
+              
+            if (!pci_be[1])
+              pci_in[15:8] <= pci_out[15:8];
+            
+            if (!pci_be[2])
+              pci_in[23:16] <= pci_out[23:16];
+            
+            if (!pci_be[3])
+              pci_in[31:24] <= pci_out[31:24];
+              
+            pci_en <= 1;
+            pci_rd_pend <= 0;
+            pci_wr_pend <= 0;
+            pci_wr <= 1;
+          end
+          else
+          begin
+            pci_en <= 0;
+            pci_rd_pend <= 0;
+            pci_wr_pend <= 0;
+            pci_wr <= 0;
+          end
+        end
       end
     end
   end
-
 
 end
 endgenerate
