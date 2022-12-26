@@ -198,6 +198,28 @@ bram_coeff cos_3_inst (
   .doutb(q_cos_3)         // output wire [15 : 0] doutb
 );
 
+ila_0 ila_0_inst (
+  .clk(pci_clk),          // input wire clk
+  .probe0(rd_address),    // input wire [13:0]  probe0  
+  .probe1(rd),            // input wire [0:0]  probe1 
+  .probe2(rp_data),       // input wire [31:0]  probe2 
+  .probe3(rp),            // input wire [0:0]  probe3 
+  .probe4(wr_address),    // input wire [13:0]  probe4 
+  .probe5(wr_data),       // input wire [31:0]  probe5 
+  .probe6(wr_be),         // input wire [3:0]  probe6 
+  .probe7(wr),            // input wire [0:0]  probe7 
+  .probe8(pci_en),        // input wire [3:0]  probe8 
+  .probe9(pci_rd_pend),   // input wire [0:0]  probe9 
+  .probe10(pci_rd),       // input wire [0:0]  probe10 
+  .probe11(pci_wr_pend),  // input wire [0:0]  probe11 
+  .probe12(pci_wr),       // input wire [3:0]  probe12 
+  .probe13(pci_be),       // input wire [3:0]  probe13 
+  .probe14(pci_bank),     // input wire [1:0]  probe14 
+  .probe15(pci_adr),      // input wire [11:0]  probe15 
+  .probe16(pci_sin_in),   // input wire [15:0]  probe16 
+  .probe17(pci_cos_in)    // input wire [15:0]  probe17
+);
+
 generate
 begin : adc_bar_gen
 
