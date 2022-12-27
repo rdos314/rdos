@@ -201,8 +201,8 @@ bram_msix bram_msix_inst (
 );
 
 adc_ana adc_ana_0_inst (
-    .pci_reset (pcie_user_reset),
-    .pci_clk (pcie_user_clk),
+    .pci_reset (pci_reset),
+    .pci_clk (pci_clk),
     .clk (rx_clk),
 
     .rd_address(ana_rd_adr),
@@ -213,6 +213,29 @@ adc_ana adc_ana_0_inst (
     .wr_data(ana_wr_data),
     .wr_be(ana_wr_be),
     .wr(ana_wr[0])
+);
+
+
+ila_2 ila_2_inst (
+  .clk(pci_clk),             // input wire clk
+  .probe0(bar1_rd_address),  // input wire [17:0]  probe0  
+  .probe1(bar1_rd),          // input wire [0:0]  probe1 
+  .probe2(bar1_rp_data),     // input wire [31:0]  probe2 
+  .probe3(bar1_rp),          // input wire [0:0]  probe3 
+  .probe4(bar1_wr_address),  // input wire [17:0]  probe4 
+  .probe5(bar1_wr_data),     // input wire [31:0]  probe5 
+  .probe6(bar1_wr_be),       // input wire [3:0]  probe6 
+  .probe7(bar1_wr),          // input wire [0:0]  probe7 
+  .probe8(ana_rd_adr),       // input wire [13:0]  probe8 
+  .probe9(ana_rd),           // input wire [15:0]  probe9 
+  .probe10(ana_rd_chan),     // input wire [3:0]  probe10 
+  .probe11(ana_missing_rp),  // input wire [0:0]  probe11 
+  .probe12(ana_wr_adr),      // input wire [13:0]  probe12 
+  .probe13(ana_wr_data),     // input wire [31:0]  probe13 
+  .probe14(ana_wr_be),       // input wire [3:0]  probe14
+  .probe15(ana_wr),          // input wire [15:0]  probe15 
+  .probe16(ana_rp),          // input wire [0:0]  probe16
+  .probe17(ana_0_rp_data)    // input wire [31:0]  probe17
 );
 
 generate
@@ -614,27 +637,10 @@ begin : adc_app
       if (bar1_wr)
       begin
         ana_missing_rp <= 0;
+        ana_rd <= 16'h0000;
         ana_wr_adr <= bar1_wr_address[13:0];
         ana_wr_data <= bar1_wr_data;
-
-        case (bar1_wr_address[17:14])
-          4'h0 : ana_wr <= 16'b0000000000000001;
-          4'h1 : ana_wr <= 16'b0000000000000010;
-          4'h2 : ana_wr <= 16'b0000000000000100;
-          4'h3 : ana_wr <= 16'b0000000000001000;
-          4'h4 : ana_wr <= 16'b0000000000010000;
-          4'h5 : ana_wr <= 16'b0000000000100000;
-          4'h6 : ana_wr <= 16'b0000000001000000;
-          4'h7 : ana_wr <= 16'b0000000010000000;
-          4'h8 : ana_wr <= 16'b0000000100000000;
-          4'h9 : ana_wr <= 16'b0000001000000000;
-          4'hA : ana_wr <= 16'b0000010000000000;
-          4'hB : ana_wr <= 16'b0000100000000000;
-          4'hC : ana_wr <= 16'b0001000000000000;
-          4'hD : ana_wr <= 16'b0010000000000000;
-          4'hE : ana_wr <= 16'b0100000000000000;
-          4'hF : ana_wr <= 16'b1000000000000000;
-        endcase
+        ana_wr <= 1 << bar1_wr_address[17:14];
       end
       else
       begin
@@ -642,6 +648,8 @@ begin : adc_app
         begin
           ana_rd_adr <= bar1_rd_address[13:0];
           ana_rd_chan <= bar1_rd_address[17:14];
+          ana_rd <= 1 << bar1_rd_address[17:14];
+          ana_wr <= 16'h0000;
 
           case (bar1_rd_address[17:14])
             4'h0 : ana_missing_rp <= 0;
@@ -661,28 +669,11 @@ begin : adc_app
             4'hE : ana_missing_rp <= 1;
             4'hF : ana_missing_rp <= 1;
           endcase          
-
-          case (bar1_rd_address[17:14])
-            4'h0 : ana_rd <= 16'b0000000000000001;
-            4'h1 : ana_rd <= 16'b0000000000000010;
-            4'h2 : ana_rd <= 16'b0000000000000100;
-            4'h3 : ana_rd <= 16'b0000000000001000;
-            4'h4 : ana_rd <= 16'b0000000000010000;
-            4'h5 : ana_rd <= 16'b0000000000100000;
-            4'h6 : ana_rd <= 16'b0000000001000000;
-            4'h7 : ana_rd <= 16'b0000000010000000;
-            4'h8 : ana_rd <= 16'b0000000100000000;
-            4'h9 : ana_rd <= 16'b0000001000000000;
-            4'hA : ana_rd <= 16'b0000010000000000;
-            4'hB : ana_rd <= 16'b0000100000000000;
-            4'hC : ana_rd <= 16'b0001000000000000;
-            4'hD : ana_rd <= 16'b0010000000000000;
-            4'hE : ana_rd <= 16'b0100000000000000;
-            4'hF : ana_rd <= 16'b1000000000000000;
-          endcase
         end
         else
           ana_missing_rp <= 0;
+          ana_rd <= 16'h0000;
+          ana_wr <= 16'h0000;
       end
     end
   end

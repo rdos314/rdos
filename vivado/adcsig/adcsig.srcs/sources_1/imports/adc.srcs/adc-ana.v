@@ -248,6 +248,28 @@ ila_0 ila_0_inst (
   .probe17(pci_cos_in)    // input wire [15:0]  probe17
 );
 
+
+ila_1 ila_1_inst (
+  .clk(pci_clk),             // input wire clk
+  .probe0(rd_address),       // input wire [13:0]  probe0  
+  .probe1(rd),               // input wire [0:0]  probe1 
+  .probe2(rp_data),          // input wire [31:0]  probe2 
+  .probe3(rp),               // input wire [0:0]  probe3 
+  .probe4(wr_address),       // input wire [13:0]  probe4 
+  .probe5(wr_data),          // input wire [31:0]  probe5 
+  .probe6(wr_be),            // input wire [3:0]  probe6 
+  .probe7(wr),               // input wire [0:0]  probe7 
+  .probe8(pci_hdr_en),       // input wire [0:0]  probe8 
+  .probe9(pci_hdr_rd_pend),  // input wire [0:0]  probe9 
+  .probe10(pci_hdr_rd),      // input wire [0:0]  probe10 
+  .probe11(pci_hdr_wr_pend), // input wire [0:0]  probe11 
+  .probe12(pci_hdr_wr),      // input wire [0:0]  probe12 
+  .probe13(pci_hdr_be),      // input wire [3:0]  probe13 
+  .probe14(pci_hdr_adr),     // input wire [1:0]  probe14
+  .probe15(pci_hdr_in),      // input wire [31:0]  probe15 
+  .probe16(pci_hdr_out)      // input wire [31:0]  probe16
+);
+
 generate
 begin : adc_bar_gen
 
@@ -311,63 +333,52 @@ begin : adc_bar_gen
 
           if (wr_be == 4'b1111)
           begin
-            pci_hdr_en <= 1;
             pci_hdr_rd_pend <= 0;
             pci_hdr_wr_pend <= 0;
+            pci_hdr_en <= 1;
             pci_hdr_wr <= 1;
           end
           else
           begin
-            pci_hdr_en <= 1;
             pci_hdr_rd_pend <= 0;
             pci_hdr_wr_pend <= 1;
+            pci_hdr_en <= 1;
             pci_hdr_wr <= 0;
             pci_hdr_be <= wr_be;
           end
 
-          pci_en <= 4'b0000;
           pci_rd_pend <= 0;
           pci_wr_pend <= 0;
+          pci_en <= 4'b0000;
           pci_wr <= 4'b0000;
         end
         else
         begin
-          pci_hdr_en <= 0;
-          pci_hdr_rd_pend <= 0;
-          pci_hdr_wr_pend <= 0;
-          pci_hdr_wr <= 0;
-
           pci_adr <= wr_address[13:2] - 1;
           pci_sin_in <= wr_data[15:0];
           pci_cos_in <= wr_data[31:16];
           pci_bank <= wr_address[1:0];
-
-          case (wr_address[1:0])
-            2'b00 : pci_en <= 4'b0001;
-            2'b01 : pci_en <= 4'b0010;
-            2'b10 : pci_en <= 4'b0100;
-            2'b11 : pci_en <= 4'b1000;
-          endcase
         
           if (wr_be == 4'b1111)
           begin
             pci_rd_pend <= 0;
             pci_wr_pend <= 0;
-  
-            case (wr_address[1:0])
-              2'b00 : pci_wr <= 4'b0001;
-              2'b01 : pci_wr <= 4'b0010;
-              2'b10 : pci_wr <= 4'b0100;
-              2'b11 : pci_wr <= 4'b1000;
-            endcase
+            pci_en <= 1 << wr_address[1:0];
+            pci_wr <= 1 << wr_address[1:0];
           end
           else
           begin
             pci_rd_pend <= 0;
             pci_wr_pend <= 1;
+            pci_en <= 1 << wr_address[1:0];
             pci_wr <= 4'b0000;
             pci_be <= wr_be;
           end
+
+          pci_hdr_rd_pend <= 0;
+          pci_hdr_wr_pend <= 0;
+          pci_hdr_en <= 0;
+          pci_hdr_wr <= 0;
         end
       end
       else
@@ -377,35 +388,31 @@ begin : adc_bar_gen
           if (rd_address[13:4] == 10'b0000000000)
           begin
             pci_hdr_adr <= rd_address[3:2];
-            pci_hdr_en <= 1;
+
             pci_hdr_rd_pend <= 1;
             pci_hdr_wr_pend <= 0;
+            pci_hdr_en <= 1;
             pci_hdr_wr <= 0;
 
-            pci_en <= 4'b0000;
             pci_rd_pend <= 0;
             pci_wr_pend <= 0;
+            pci_en <= 4'b0000;
             pci_wr <= 4'b0000;
           end
           else
           begin
-            pci_hdr_en <= 0;
-            pci_hdr_rd_pend <= 0;
-            pci_hdr_wr_pend <= 0;
-            pci_hdr_wr <= 0;
-
             pci_bank <= rd_address[1:0];
-            pci_wr <= 4'b0000;
             pci_adr <= rd_address[13:2] - 1;
+
             pci_rd_pend <= 1;
             pci_wr_pend <= 0;
-  
-            case (rd_address[1:0])
-              2'b00 : pci_en <= 4'b0001;
-              2'b01 : pci_en <= 4'b0010;
-              2'b10 : pci_en <= 4'b0100;
-              2'b11 : pci_en <= 4'b1000;
-            endcase
+            pci_en <= 1 << rd_address[1:0];
+            pci_wr <= 4'b0000;
+
+            pci_hdr_rd_pend <= 0;
+            pci_hdr_wr_pend <= 0;
+            pci_hdr_en <= 0;
+            pci_hdr_wr <= 0;
           end
         end
         else
@@ -424,16 +431,16 @@ begin : adc_bar_gen
             if (!pci_hdr_be[3])
               pci_hdr_in[31:24] <= pci_hdr_out[31:24];
               
-            pci_hdr_en <= 1;
             pci_hdr_rd_pend <= 0;
             pci_hdr_wr_pend <= 0;
+            pci_hdr_en <= 1;
             pci_hdr_wr <= 1;
           end
           else
           begin
-            pci_hdr_en <= 0;
             pci_hdr_rd_pend <= 0;
             pci_hdr_wr_pend <= 0;
+            pci_hdr_en <= 0;
             pci_hdr_wr <= 0;
           end
 
@@ -473,26 +480,14 @@ begin : adc_bar_gen
               
             pci_rd_pend <= 0;
             pci_wr_pend <= 0;
-
-            case (pci_bank)
-              2'b00 : pci_en <= 4'b0001;
-              2'b01 : pci_en <= 4'b0010;
-              2'b10 : pci_en <= 4'b0100;
-              2'b11 : pci_en <= 4'b1000;
-            endcase
-
-            case (pci_bank)
-              2'b00 : pci_wr <= 4'b0001;
-              2'b01 : pci_wr <= 4'b0010;
-              2'b10 : pci_wr <= 4'b0100;
-              2'b11 : pci_wr <= 4'b1000;
-            endcase
+            pci_en <= 1 << pci_bank;
+            pci_wr <= 1 << pci_bank;
           end
           else
           begin          
-            pci_en <= 4'b0000;
             pci_rd_pend <= 0;
             pci_wr_pend <= 0;
+            pci_en <= 4'b0000;
             pci_wr <= 4'b0000;
           end
         end
