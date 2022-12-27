@@ -77,16 +77,27 @@ module adc_app (
   input wire [13:0]       adc_B2,
   input wire [13:0]       adc_B3,
 
-  input wire [9:0]        rd_address,
-  input wire              rd,
+  input wire [17:0]       bar1_rd_address,
+  input wire              bar1_rd,
 
-  output reg [31:0]       rp_data,
-  output reg              rp,
+  output reg [31:0]       bar1_rp_data,
+  output reg              bar1_rp,
 
-  input wire [9:0]        wr_address,
-  input wire [31:0]       wr_data,
-  input wire [3:0]        wr_be,
-  input wire              wr  
+  input wire [17:0]       bar1_wr_address,
+  input wire [31:0]       bar1_wr_data,
+  input wire [3:0]        bar1_wr_be,
+  input wire              bar1_wr,
+
+  input wire [9:0]        bar2_rd_address,
+  input wire              bar2_rd,
+
+  output reg [31:0]       bar2_rp_data,
+  output reg              bar2_rp,
+
+  input wire [9:0]        bar2_wr_address,
+  input wire [31:0]       bar2_wr_data,
+  input wire [3:0]        bar2_wr_be,
+  input wire              bar2_wr  
 );
 
 // up domain
@@ -114,16 +125,29 @@ module adc_app (
 // pci domain
 
   reg                     adc_stopped;
+  
+  reg  [13:0]             ana_rd_adr;
+  reg  [15:0]             ana_rd;
+  reg   [3:0]             ana_rd_chan;
+  reg                     ana_missing_rp;
 
-  reg                     pci_en;
-  reg                     pci_rd;
-  reg                     pci_wr;
-  reg                     pci_rd_pend;
-  reg                     pci_wr_pend;
-  reg  [9:0]              pci_adr;
-  reg  [31:0]             pci_in;
-  wire [31:0]             pci_out;
-  reg  [3:0]              pci_be;
+  reg  [13:0]             ana_wr_adr;
+  reg  [31:0]             ana_wr_data;
+  reg   [3:0]             ana_wr_be;
+  reg  [15:0]             ana_wr;
+
+  wire  [0:0]             ana_rp;
+  wire [31:0]             ana_0_rp_data;
+
+  reg                     pci2_en;
+  reg                     pci2_rd;
+  reg                     pci2_wr;
+  reg                     pci2_rd_pend;
+  reg                     pci2_wr_pend;
+  reg  [9:0]              pci2_adr;
+  reg  [31:0]             pci2_in;
+  wire [31:0]             pci2_out;
+  reg  [3:0]              pci2_be;
 
 // clock domain crossings
 
@@ -163,17 +187,32 @@ module adc_app (
 
 bram_msix bram_msix_inst (
   .clka(pci_clk),    // input wire clka
-  .ena(pci_en),      // input wire ena
-  .wea(pci_wr),      // input wire [0 : 0] wea
-  .addra(pci_adr),   // input wire [9 : 0] addra
-  .dina(pci_in),     // input wire [31 : 0] dina
-  .douta(pci_out),   // output wire [31 : 0] douta
+  .ena(pci2_en),     // input wire ena
+  .wea(pci2_wr),     // input wire [0 : 0] wea
+  .addra(pci2_adr),  // input wire [9 : 0] addra
+  .dina(pci2_in),    // input wire [31 : 0] dina
+  .douta(pci2_out),  // output wire [31 : 0] douta
   .clkb(rx_clk),     // input wire clkb
   .enb(0),           // input wire enb
   .web(0),           // input wire [0 : 0] web
   .addrb(0),         // input wire [9 : 0] addrb
   .dinb(0),          // input wire [31 : 0] dinb
   .doutb(0)          // output wire [31 : 0] doutb
+);
+
+adc_ana adc_ana_0_inst (
+    .pci_reset (pcie_user_reset),
+    .pci_clk (pcie_user_clk),
+    .clk (rx_clk),
+
+    .rd_address(ana_rd_adr),
+    .rd(ana_rd[0]),
+    .rp_data(ana_0_rp_data),
+    .rp(ana_rp[0]),
+    .wr_address(ana_wr_adr),
+    .wr_data(ana_wr_data),
+    .wr_be(ana_wr_be),
+    .wr(ana_wr[0])
 );
 
 generate
@@ -455,88 +494,195 @@ begin : adc_app
 
   always @ ( posedge pci_clk ) 
   begin
-    if (pci_rd)
+    if (pci2_rd)
     begin
-      rp_data <= pci_out;
-      rp <= 1;
+      bar2_rp_data <= pci2_out;
+      bar2_rp <= 1;
     end
     else
-      rp <= 0;
+      bar2_rp <= 0;
 
-    pci_rd <= pci_rd_pend;
+    pci2_rd <= pci2_rd_pend;
   end
 
   always @ ( posedge pci_clk ) 
   begin
     if (pci_reset)
     begin
-      pci_en <= 0;
-      pci_rd_pend <= 0;
-      pci_wr_pend <= 0;
-      pci_wr <= 0;
+      pci2_en <= 0;
+      pci2_rd_pend <= 0;
+      pci2_wr_pend <= 0;
+      pci2_wr <= 0;
     end
     else
     begin
-      if (wr)
+      if (bar2_wr)
       begin
-        pci_adr <= wr_address;
-        pci_in <= wr_data;
+        pci2_adr <= bar2_wr_address;
+        pci2_in <= bar2_wr_data;
 
-        if (wr_be == 4'b1111)
+        if (bar2_wr_be == 4'b1111)
         begin
-          pci_en <= 1;
-          pci_rd_pend <= 0;
-          pci_wr_pend <= 0;
-          pci_wr <= 1;
+          pci2_en <= 1;
+          pci2_rd_pend <= 0;
+          pci2_wr_pend <= 0;
+          pci2_wr <= 1;
         end
         else
         begin
-          pci_en <= 1;
-          pci_rd_pend <= 0;
-          pci_wr_pend <= 1;
-          pci_wr <= 0;
-          pci_be <= wr_be;
+          pci2_en <= 1;
+          pci2_rd_pend <= 0;
+          pci2_wr_pend <= 1;
+          pci2_wr <= 0;
+          pci2_be <= bar2_wr_be;
         end
       end
       else
       begin
-        if (rd)
+        if (bar2_rd)
         begin
-          pci_adr <= rd_address;
-          pci_en <= 1;
-          pci_rd_pend <= 1;
-          pci_wr_pend <= 0;
-          pci_wr <= 0;
+          pci2_adr <= bar2_rd_address;
+          pci2_en <= 1;
+          pci2_rd_pend <= 1;
+          pci2_wr_pend <= 0;
+          pci2_wr <= 0;
         end
         else
         begin
-          if (pci_wr_pend)
+          if (pci2_wr_pend)
           begin
-            if (!pci_be[0])
-              pci_in[7:0] <= pci_out[7:0];
+            if (!pci2_be[0])
+              pci2_in[7:0] <= pci2_out[7:0];
               
-            if (!pci_be[1])
-              pci_in[15:8] <= pci_out[15:8];
+            if (!pci2_be[1])
+              pci2_in[15:8] <= pci2_out[15:8];
             
-            if (!pci_be[2])
-              pci_in[23:16] <= pci_out[23:16];
+            if (!pci2_be[2])
+              pci2_in[23:16] <= pci2_out[23:16];
             
-            if (!pci_be[3])
-              pci_in[31:24] <= pci_out[31:24];
+            if (!pci2_be[3])
+              pci2_in[31:24] <= pci2_out[31:24];
               
-            pci_en <= 1;
-            pci_rd_pend <= 0;
-            pci_wr_pend <= 0;
-            pci_wr <= 1;
+            pci2_en <= 1;
+            pci2_rd_pend <= 0;
+            pci2_wr_pend <= 0;
+            pci2_wr <= 1;
           end
           else
           begin
-            pci_en <= 0;
-            pci_rd_pend <= 0;
-            pci_wr_pend <= 0;
-            pci_wr <= 0;
+            pci2_en <= 0;
+            pci2_rd_pend <= 0;
+            pci2_wr_pend <= 0;
+            pci2_wr <= 0;
           end
         end
+      end
+    end
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (ana_missing_rp)
+    begin
+      bar1_rp_data <= 32'hFFFFFFFF;
+      bar1_rp <= 1;
+    end
+    else
+    begin
+      if (ana_rp)
+      begin
+        case (ana_rd_chan)
+          4'h0 : bar1_rp_data <= ana_0_rp_data;
+        endcase        
+        bar1_rp <= 1;
+      end
+      else
+        bar1_rp <= 0;
+    end
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+    begin
+      ana_missing_rp <= 0;
+      ana_rd <= 16'h0000;
+      ana_wr <= 16'h0000;
+    end
+    else
+    begin
+      if (bar1_wr)
+      begin
+        ana_missing_rp <= 0;
+        ana_wr_adr <= bar1_wr_address[13:0];
+        ana_wr_data <= bar1_wr_data;
+
+        case (bar1_wr_address[17:14])
+          4'h0 : ana_wr <= 16'b0000000000000001;
+          4'h1 : ana_wr <= 16'b0000000000000010;
+          4'h2 : ana_wr <= 16'b0000000000000100;
+          4'h3 : ana_wr <= 16'b0000000000001000;
+          4'h4 : ana_wr <= 16'b0000000000010000;
+          4'h5 : ana_wr <= 16'b0000000000100000;
+          4'h6 : ana_wr <= 16'b0000000001000000;
+          4'h7 : ana_wr <= 16'b0000000010000000;
+          4'h8 : ana_wr <= 16'b0000000100000000;
+          4'h9 : ana_wr <= 16'b0000001000000000;
+          4'hA : ana_wr <= 16'b0000010000000000;
+          4'hB : ana_wr <= 16'b0000100000000000;
+          4'hC : ana_wr <= 16'b0001000000000000;
+          4'hD : ana_wr <= 16'b0010000000000000;
+          4'hE : ana_wr <= 16'b0100000000000000;
+          4'hF : ana_wr <= 16'b1000000000000000;
+        endcase
+      end
+      else
+      begin
+        if (bar1_rd)
+        begin
+          ana_rd_adr <= bar1_rd_address[13:0];
+          ana_rd_chan <= bar1_rd_address[17:14];
+
+          case (bar1_rd_address[17:14])
+            4'h0 : ana_missing_rp <= 0;
+            4'h1 : ana_missing_rp <= 1;
+            4'h2 : ana_missing_rp <= 1;
+            4'h3 : ana_missing_rp <= 1;
+            4'h4 : ana_missing_rp <= 1;
+            4'h5 : ana_missing_rp <= 1;
+            4'h6 : ana_missing_rp <= 1;
+            4'h7 : ana_missing_rp <= 1;
+            4'h8 : ana_missing_rp <= 1;
+            4'h9 : ana_missing_rp <= 1;
+            4'hA : ana_missing_rp <= 1;
+            4'hB : ana_missing_rp <= 1;
+            4'hC : ana_missing_rp <= 1;
+            4'hD : ana_missing_rp <= 1;
+            4'hE : ana_missing_rp <= 1;
+            4'hF : ana_missing_rp <= 1;
+          endcase          
+
+          case (bar1_rd_address[17:14])
+            4'h0 : ana_rd <= 16'b0000000000000001;
+            4'h1 : ana_rd <= 16'b0000000000000010;
+            4'h2 : ana_rd <= 16'b0000000000000100;
+            4'h3 : ana_rd <= 16'b0000000000001000;
+            4'h4 : ana_rd <= 16'b0000000000010000;
+            4'h5 : ana_rd <= 16'b0000000000100000;
+            4'h6 : ana_rd <= 16'b0000000001000000;
+            4'h7 : ana_rd <= 16'b0000000010000000;
+            4'h8 : ana_rd <= 16'b0000000100000000;
+            4'h9 : ana_rd <= 16'b0000001000000000;
+            4'hA : ana_rd <= 16'b0000010000000000;
+            4'hB : ana_rd <= 16'b0000100000000000;
+            4'hC : ana_rd <= 16'b0001000000000000;
+            4'hD : ana_rd <= 16'b0010000000000000;
+            4'hE : ana_rd <= 16'b0100000000000000;
+            4'hF : ana_rd <= 16'b1000000000000000;
+          endcase
+        end
+        else
+          ana_missing_rp <= 0;
       end
     end
   end

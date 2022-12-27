@@ -510,21 +510,6 @@ control_bar control_bar_inst (
     .rx_control_data(rx_pci_control_data)
 );
 
-adc_ana adc_ana_inst (
-    .pci_reset (pcie_user_reset),
-    .pci_clk (pcie_user_clk),
-    .clk (rx_clk),
-
-    .rd_address(pci_bar1_rd_address),
-    .rd(pci_bar1_rd),
-    .rp_data(pci_bar1_rp_data),
-    .rp(pci_bar1_rp),
-    .wr_address(pci_bar1_wr_address),
-    .wr_data(pci_bar1_wr_data),
-    .wr_be(pci_bar1_wr_be),
-    .wr(pci_bar1_wr)
-);
-
 adc_app adc_app_inst (
     .rx_clk (rx_clk),
     .pci_reset (pcie_user_reset),
@@ -575,15 +560,24 @@ adc_app adc_app_inst (
     .adc_B1(adc_B1),
     .adc_B2(adc_B2),
     .adc_B3(adc_B3),
+
+    .bar1_rd_address(pci_bar1_rd_address),
+    .bar1_rd(pci_bar1_rd),
+    .bar1_rp_data(pci_bar1_rp_data),
+    .bar1_rp(pci_bar1_rp),
+    .bar1_wr_address(pci_bar1_wr_address),
+    .bar1_wr_data(pci_bar1_wr_data),
+    .bar1_wr_be(pci_bar1_wr_be),
+    .bar1_wr(pci_bar1_wr),
     
-    .rd_address(pci_bar2_rd_address),
-    .rd(pci_bar2_rd),
-    .rp_data(pci_bar2_rp_data),
-    .rp(pci_bar2_rp),
-    .wr_address(pci_bar2_wr_address),
-    .wr_data(pci_bar2_wr_data),
-    .wr_be(pci_bar2_wr_be),
-    .wr(pci_bar2_wr)
+    .bar2_rd_address(pci_bar2_rd_address),
+    .bar2_rd(pci_bar2_rd),
+    .bar2_rp_data(pci_bar2_rp_data),
+    .bar2_rp(pci_bar2_rp),
+    .bar2_wr_address(pci_bar2_wr_address),
+    .bar2_wr_data(pci_bar2_wr_data),
+    .bar2_wr_be(pci_bar2_wr_be),
+    .bar2_wr(pci_bar2_wr)
 );
 
  //-----------------------------I/O BUFFERS------------------------//
