@@ -126,15 +126,15 @@ module adc_app (
 
   reg                     adc_stopped;
   
-  reg  [13:0]             ana_rd_adr;
-  reg  [15:0]             ana_rd;
-  reg   [3:0]             ana_rd_chan;
+  reg  [12:0]             ana_rd_adr;
+  reg  [31:0]             ana_rd;
+  reg   [4:0]             ana_rd_chan;
   reg                     ana_missing_rp;
 
-  reg  [13:0]             ana_wr_adr;
+  reg  [12:0]             ana_wr_adr;
   reg  [31:0]             ana_wr_data;
   reg   [3:0]             ana_wr_be;
-  reg  [15:0]             ana_wr;
+  reg  [31:0]             ana_wr;
 
   wire  [0:0]             ana_rp;
   wire [31:0]             ana_0_rp_data;
@@ -206,13 +206,13 @@ adc_ana adc_ana_0_inst (
     .clk (rx_clk),
 
     .rd_address(ana_rd_adr),
-    .rd(ana_rd[0]),
+    .rd(ana_rd[0:0]),
     .rp_data(ana_0_rp_data),
-    .rp(ana_rp[0]),
+    .rp(ana_rp[0:0]),
     .wr_address(ana_wr_adr),
     .wr_data(ana_wr_data),
     .wr_be(ana_wr_be),
-    .wr(ana_wr[0])
+    .wr(ana_wr[0:0])
 );
 
 
@@ -226,14 +226,14 @@ ila_2 ila_2_inst (
   .probe5(bar1_wr_data),     // input wire [31:0]  probe5 
   .probe6(bar1_wr_be),       // input wire [3:0]  probe6 
   .probe7(bar1_wr),          // input wire [0:0]  probe7 
-  .probe8(ana_rd_adr),       // input wire [13:0]  probe8 
-  .probe9(ana_rd),           // input wire [15:0]  probe9 
+  .probe8(ana_rd_adr),       // input wire [12:0]  probe8 
+  .probe9(ana_rd),           // input wire [31:0]  probe9 
   .probe10(ana_rd_chan),     // input wire [3:0]  probe10 
   .probe11(ana_missing_rp),  // input wire [0:0]  probe11 
-  .probe12(ana_wr_adr),      // input wire [13:0]  probe12 
+  .probe12(ana_wr_adr),      // input wire [12:0]  probe12 
   .probe13(ana_wr_data),     // input wire [31:0]  probe13 
   .probe14(ana_wr_be),       // input wire [3:0]  probe14
-  .probe15(ana_wr),          // input wire [15:0]  probe15 
+  .probe15(ana_wr),          // input wire [31:0]  probe15 
   .probe16(ana_rp),          // input wire [0:0]  probe16
   .probe17(ana_0_rp_data)    // input wire [31:0]  probe17
 );
@@ -615,7 +615,7 @@ begin : adc_app
       if (ana_rp)
       begin
         case (ana_rd_chan)
-          4'h0 : bar1_rp_data <= ana_0_rp_data;
+          5'b00000 : bar1_rp_data <= ana_0_rp_data;
         endcase        
         bar1_rp <= 1;
       end
@@ -629,51 +629,70 @@ begin : adc_app
     if (pci_reset)
     begin
       ana_missing_rp <= 0;
-      ana_rd <= 16'h0000;
-      ana_wr <= 16'h0000;
+      ana_rd <= 32'h00000000;
+      ana_wr <= 32'h00000000;
     end
     else
     begin
       if (bar1_wr)
       begin
         ana_missing_rp <= 0;
-        ana_rd <= 16'h0000;
-        ana_wr_adr <= bar1_wr_address[13:0];
+        ana_rd <= 32'h00000000;
+        ana_wr <= 1 << bar1_wr_address[17:13];
+        ana_wr_adr <= bar1_wr_address[12:0];
         ana_wr_data <= bar1_wr_data;
-        ana_wr <= 1 << bar1_wr_address[17:14];
+        ana_wr_be <= bar1_wr_be;
       end
       else
       begin
         if (bar1_rd)
         begin
-          ana_rd_adr <= bar1_rd_address[13:0];
-          ana_rd_chan <= bar1_rd_address[17:14];
-          ana_rd <= 1 << bar1_rd_address[17:14];
-          ana_wr <= 16'h0000;
+          ana_rd_adr <= bar1_rd_address[12:0];
+          ana_rd_chan <= bar1_rd_address[17:13];
+          ana_wr <= 32'h00000000;
+          ana_rd <= 1 << bar1_rd_address[17:13];
 
-          case (bar1_rd_address[17:14])
-            4'h0 : ana_missing_rp <= 0;
-            4'h1 : ana_missing_rp <= 1;
-            4'h2 : ana_missing_rp <= 1;
-            4'h3 : ana_missing_rp <= 1;
-            4'h4 : ana_missing_rp <= 1;
-            4'h5 : ana_missing_rp <= 1;
-            4'h6 : ana_missing_rp <= 1;
-            4'h7 : ana_missing_rp <= 1;
-            4'h8 : ana_missing_rp <= 1;
-            4'h9 : ana_missing_rp <= 1;
-            4'hA : ana_missing_rp <= 1;
-            4'hB : ana_missing_rp <= 1;
-            4'hC : ana_missing_rp <= 1;
-            4'hD : ana_missing_rp <= 1;
-            4'hE : ana_missing_rp <= 1;
-            4'hF : ana_missing_rp <= 1;
+          case (bar1_rd_address[17:13])
+            5'b00000 : ana_missing_rp <= 0;
+            5'b00001 : ana_missing_rp <= 1;
+            5'b00010 : ana_missing_rp <= 1;
+            5'b00011 : ana_missing_rp <= 1;
+            5'b00100 : ana_missing_rp <= 1;
+            5'b00101 : ana_missing_rp <= 1;
+            5'b00110 : ana_missing_rp <= 1;
+            5'b00111 : ana_missing_rp <= 1;
+            5'b01000 : ana_missing_rp <= 1;
+            5'b01001 : ana_missing_rp <= 1;
+            5'b01010 : ana_missing_rp <= 1;
+            5'b01011 : ana_missing_rp <= 1;
+            5'b01100 : ana_missing_rp <= 1;
+            5'b01101 : ana_missing_rp <= 1;
+            5'b01110 : ana_missing_rp <= 1;
+            5'b01111 : ana_missing_rp <= 1;
+            5'b10000 : ana_missing_rp <= 1;
+            5'b10001 : ana_missing_rp <= 1;
+            5'b10010 : ana_missing_rp <= 1;
+            5'b10011 : ana_missing_rp <= 1;
+            5'b10100 : ana_missing_rp <= 1;
+            5'b10101 : ana_missing_rp <= 1;
+            5'b10110 : ana_missing_rp <= 1;
+            5'b10111 : ana_missing_rp <= 1;
+            5'b11000 : ana_missing_rp <= 1;
+            5'b11001 : ana_missing_rp <= 1;
+            5'b11010 : ana_missing_rp <= 1;
+            5'b11011 : ana_missing_rp <= 1;
+            5'b11100 : ana_missing_rp <= 1;
+            5'b11101 : ana_missing_rp <= 1;
+            5'b11110 : ana_missing_rp <= 1;
+            5'b11111 : ana_missing_rp <= 1;
           endcase          
         end
         else
+        begin
           ana_missing_rp <= 0;
-          ana_rd <= 16'h0000;
-          ana_wr <= 16'h0000;
+          ana_rd <= 32'h00000000;
+          ana_wr <= 32'h00000000;
+        end
       end
     end
   end
