@@ -215,29 +215,6 @@ adc_ana adc_ana_0_inst (
     .wr(ana_wr[0:0])
 );
 
-
-ila_2 ila_2_inst (
-  .clk(pci_clk),             // input wire clk
-  .probe0(bar1_rd_address),  // input wire [17:0]  probe0  
-  .probe1(bar1_rd),          // input wire [0:0]  probe1 
-  .probe2(bar1_rp_data),     // input wire [31:0]  probe2 
-  .probe3(bar1_rp),          // input wire [0:0]  probe3 
-  .probe4(bar1_wr_address),  // input wire [17:0]  probe4 
-  .probe5(bar1_wr_data),     // input wire [31:0]  probe5 
-  .probe6(bar1_wr_be),       // input wire [3:0]  probe6 
-  .probe7(bar1_wr),          // input wire [0:0]  probe7 
-  .probe8(ana_rd_adr),       // input wire [12:0]  probe8 
-  .probe9(ana_rd),           // input wire [31:0]  probe9 
-  .probe10(ana_rd_chan),     // input wire [3:0]  probe10 
-  .probe11(ana_missing_rp),  // input wire [0:0]  probe11 
-  .probe12(ana_wr_adr),      // input wire [12:0]  probe12 
-  .probe13(ana_wr_data),     // input wire [31:0]  probe13 
-  .probe14(ana_wr_be),       // input wire [3:0]  probe14
-  .probe15(ana_wr),          // input wire [31:0]  probe15 
-  .probe16(ana_rp),          // input wire [0:0]  probe16
-  .probe17(ana_0_rp_data)    // input wire [31:0]  probe17
-);
-
 generate
 begin : adc_app
 

@@ -44,7 +44,12 @@ module adc_ana (
 
 // Analysis
 
+  reg                    ana_start;
+  reg                    ana_en;
   reg  [10:0]            ana_adr;
+  reg  [10:0]            ana_last;
+
+  reg                    hdr_en;
   reg   [1:0]            hdr_adr;
 
   wire [31:0]            q_hdr_data;
@@ -57,6 +62,14 @@ module adc_ana (
   wire [15:0]            q_cos_2;
   wire [15:0]            q_sin_3;
   wire [15:0]            q_cos_3;
+  
+  reg                    pd1;
+  reg                    pd2;
+  reg                    pd3;
+  reg                    pdone;
+
+  reg  [40:0]            sum_sin_A0;
+  wire [40:0]            p_sin_A0;  
 
 
 // PCI domain
@@ -99,7 +112,7 @@ bram_header header_inst (
   .dina(pci_hdr_in),      // input wire [31 : 0] dina
   .douta(pci_hdr_out),    // output wire [31 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(0),                // input wire enb
+  .enb(hdr_en),           // input wire enb
   .web(0),                // input wire [0 : 0] web
   .addrb(hdr_adr),        // input wire [1 : 0] addrb
   .dinb(0),               // input wire [31 : 0] dinb
@@ -114,7 +127,7 @@ bram_coeff sin_0_inst (
   .dina(pci_sin_in),      // input wire [15 : 0] dina
   .douta(pci_sin_0),      // output wire [15 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(0),                // input wire enb
+  .enb(ana_en),           // input wire enb
   .web(0),                // input wire [0 : 0] web
   .addrb(ana_adr),        // input wire [10 : 0] addrb
   .dinb(d0),              // input wire [15 : 0] dinb
@@ -129,7 +142,7 @@ bram_coeff cos_0_inst (
   .dina(pci_cos_in),      // input wire [15 : 0] dina
   .douta(pci_cos_0),      // output wire [15 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(0),                // input wire enb
+  .enb(ana_en),           // input wire enb
   .web(0),                // input wire [0 : 0] web
   .addrb(ana_adr),        // input wire [10 : 0] addrb
   .dinb(d0),              // input wire [15 : 0] dinb
@@ -144,7 +157,7 @@ bram_coeff sin_1_inst (
   .dina(pci_sin_in),      // input wire [15 : 0] dina
   .douta(pci_sin_1),      // output wire [15 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(0),                // input wire enb
+  .enb(ana_en),           // input wire enb
   .web(0),                // input wire [0 : 0] web
   .addrb(ana_adr),        // input wire [10 : 0] addrb
   .dinb(d0),              // input wire [15 : 0] dinb
@@ -159,7 +172,7 @@ bram_coeff cos_1_inst (
   .dina(pci_cos_in),      // input wire [15 : 0] dina
   .douta(pci_cos_1),      // output wire [15 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(0),                // input wire enb
+  .enb(ana_en),           // input wire enb
   .web(0),                // input wire [0 : 0] web
   .addrb(ana_adr),        // input wire [10 : 0] addrb
   .dinb(d0),              // input wire [15 : 0] dinb
@@ -174,7 +187,7 @@ bram_coeff sin_2_inst (
   .dina(pci_sin_in),      // input wire [15 : 0] dina
   .douta(pci_sin_2),      // output wire [15 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(0),                // input wire enb
+  .enb(ana_en),           // input wire enb
   .web(0),                // input wire [0 : 0] web
   .addrb(ana_adr),        // input wire [10 : 0] addrb
   .dinb(d0),              // input wire [15 : 0] dinb
@@ -189,7 +202,7 @@ bram_coeff cos_2_inst (
   .dina(pci_cos_in),      // input wire [15 : 0] dina
   .douta(pci_cos_2),      // output wire [15 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(0),                // input wire enb
+  .enb(ana_en),           // input wire enb
   .web(0),                // input wire [0 : 0] web
   .addrb(ana_adr),        // input wire [10 : 0] addrb
   .dinb(d0),              // input wire [15 : 0] dinb
@@ -204,7 +217,7 @@ bram_coeff sin_3_inst (
   .dina(pci_sin_in),      // input wire [15 : 0] dina
   .douta(pci_sin_3),      // output wire [15 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(0),                // input wire enb
+  .enb(ana_en),           // input wire enb
   .web(0),                // input wire [0 : 0] web
   .addrb(ana_adr),        // input wire [10 : 0] addrb
   .dinb(d0),              // input wire [15 : 0] dinb
@@ -219,56 +232,49 @@ bram_coeff cos_3_inst (
   .dina(pci_cos_in),      // input wire [15 : 0] dina
   .douta(pci_cos_3),      // output wire [15 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(0),                // input wire enb
+  .enb(ana_en),           // input wire enb
   .web(0),                // input wire [0 : 0] web
   .addrb(ana_adr),        // input wire [10 : 0] addrb
   .dinb(d0),              // input wire [15 : 0] dinb
   .doutb(q_cos_3)         // output wire [15 : 0] doutb
 );
 
+multiply m_sin_A0 (
+  .CLK(clk),            // input wire CLK
+  .A(2),                // input wire [13 : 0] A
+  .B(q_sin_0),          // input wire [15 : 0] B
+  .P(p_sin_A0[29:0])    // output wire [29 : 0] P
+);
+
 ila_0 ila_0_inst (
-  .clk(pci_clk),          // input wire clk
-  .probe0(rd_address),    // input wire [12:0]  probe0  
-  .probe1(rd),            // input wire [0:0]  probe1 
-  .probe2(rp_data),       // input wire [31:0]  probe2 
-  .probe3(rp),            // input wire [0:0]  probe3 
-  .probe4(wr_address),    // input wire [12:0]  probe4 
-  .probe5(wr_data),       // input wire [31:0]  probe5 
-  .probe6(wr_be),         // input wire [3:0]  probe6 
-  .probe7(wr),            // input wire [0:0]  probe7 
-  .probe8(pci_en),        // input wire [3:0]  probe8 
-  .probe9(pci_rd_pend),   // input wire [0:0]  probe9 
-  .probe10(pci_rd),       // input wire [0:0]  probe10 
-  .probe11(pci_wr_pend),  // input wire [0:0]  probe11 
-  .probe12(pci_wr),       // input wire [3:0]  probe12 
-  .probe13(pci_be),       // input wire [3:0]  probe13 
-  .probe14(pci_bank),     // input wire [1:0]  probe14 
-  .probe15(pci_adr),      // input wire [10:0]  probe15 
-  .probe16(pci_sin_in),   // input wire [15:0]  probe16 
-  .probe17(pci_cos_in)    // input wire [15:0]  probe17
+  .clk(clk),              // input wire clk
+  .probe0(ana_en),        // input wire [0:0]  probe0  
+  .probe1(ana_adr),       // input wire [10:0]  probe1 
+  .probe2(hdr_en),        // input wire [0:0]  probe2 
+  .probe3(hdr_adr),       // input wire [1:0]  probe3 
+  .probe4(ana_start),     // input wire [0:0]  probe4 
+  .probe5(ana_last),      // input wire [10:0]  probe5 
+  .probe6(q_hdr_data),    // input wire [31:0]  probe6 
+  .probe7(q_sin_0),       // input wire [15:0]  probe7 
+  .probe8(sum_sin_A0),    // input wire [40:0]  probe8 
+  .probe9(p_sin_A0),      // input wire [40:0]  probe9
+  .probe10(pd1),          // input wire [0:0]  probe10 
+  .probe11(pd2),          // input wire [0:0]  probe11
+  .probe12(pd3),          // input wire [0:0]  probe12
+  .probe13(pdone)         // input wire [0:0]  probe13
 );
 
-
-ila_1 ila_1_inst (
-  .clk(pci_clk),             // input wire clk
-  .probe0(rd_address),       // input wire [12:0]  probe0  
-  .probe1(rd),               // input wire [0:0]  probe1 
-  .probe2(rp_data),          // input wire [31:0]  probe2 
-  .probe3(rp),               // input wire [0:0]  probe3 
-  .probe4(wr_address),       // input wire [12:0]  probe4 
-  .probe5(wr_data),          // input wire [31:0]  probe5 
-  .probe6(wr_be),            // input wire [3:0]  probe6 
-  .probe7(wr),               // input wire [0:0]  probe7 
-  .probe8(pci_hdr_en),       // input wire [0:0]  probe8 
-  .probe9(pci_hdr_rd_pend),  // input wire [0:0]  probe9 
-  .probe10(pci_hdr_rd),      // input wire [0:0]  probe10 
-  .probe11(pci_hdr_wr_pend), // input wire [0:0]  probe11 
-  .probe12(pci_hdr_wr),      // input wire [0:0]  probe12 
-  .probe13(pci_hdr_be),      // input wire [3:0]  probe13 
-  .probe14(pci_hdr_adr),     // input wire [1:0]  probe14
-  .probe15(pci_hdr_in),      // input wire [31:0]  probe15 
-  .probe16(pci_hdr_out)      // input wire [31:0]  probe16
-);
+  assign p_sin_A0[30] = p_sin_A0[29];
+  assign p_sin_A0[31] = p_sin_A0[29];
+  assign p_sin_A0[32] = p_sin_A0[29];
+  assign p_sin_A0[33] = p_sin_A0[29];
+  assign p_sin_A0[34] = p_sin_A0[29];
+  assign p_sin_A0[35] = p_sin_A0[29];
+  assign p_sin_A0[36] = p_sin_A0[29];
+  assign p_sin_A0[37] = p_sin_A0[29];
+  assign p_sin_A0[38] = p_sin_A0[29];
+  assign p_sin_A0[39] = p_sin_A0[29];
+  assign p_sin_A0[40] = p_sin_A0[29];
 
 generate
 begin : adc_bar_gen
@@ -494,6 +500,74 @@ begin : adc_bar_gen
       end
     end
   end
+
+  always @ ( posedge clk ) 
+  begin
+    if (ana_en)
+    begin
+      if (pdone)
+      begin
+        sum_sin_A0 <= p_sin_A0;
+      end
+      else
+        sum_sin_A0 <= sum_sin_A0 + p_sin_A0;      
+    end
+    else
+      sum_sin_A0 <= 0;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (ana_en)
+    begin
+      if (ana_start)
+      begin
+        ana_adr <= 0;
+        pd1 <= 1;
+      end
+      else
+      begin
+        if (ana_adr == ana_last)
+        begin
+          ana_adr <= 0;
+          pd1 <= 1;
+        end
+        else
+        begin
+           ana_adr <= ana_adr + 1;
+           pd1 <= 0;
+         end
+      end
+    end
+    pd2 <= pd1;
+    pd3 <= pd2;
+    pdone <= pd3;
+  end
+  
+  always @ ( posedge clk ) 
+  begin
+    hdr_en <= 1;
+    hdr_adr <= 0;
+
+    if (q_hdr_data[10:0] > 3)
+    begin
+      if (ana_en)
+        ana_start <= 0;
+      else
+      begin
+        ana_start <= 1;
+        ana_last <= q_hdr_data[10:0] - 1;
+      end     
+        
+      ana_en <= 1;
+    end
+    else
+    begin
+      ana_en <= 0;
+      ana_start <= 0;
+    end
+      
+  end     
 
 end
 

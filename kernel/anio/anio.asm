@@ -1037,15 +1037,16 @@ init_pci    PROC far
     call InitPciAdapter
     jc ipDone
 ;
-    int 3
     call InitControlBar
 ;
     cmp ds:dev_id,0AACCh
     je ipRaw
 ;
     call InitCoeffBar
+    call InitClk
+    call InitAdc
+    int 3
     jmp ipDone
-
 
 ipRaw:
     call InitAdcBar
