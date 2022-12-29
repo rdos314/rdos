@@ -20,13 +20,15 @@
 //
 // The author of this program may be contacted at leif@rdos.net
 //
-// adc_ana.v
-// ADC analyser 
+// ana_slice.v
+// Multiplier slice 
 //
 ////////////////////////////////////////////////////////////////////////////////
 
 module adc_slice (
   input wire              clk,
+
+  input wire              done,
 
   input wire [15:0]       coeff_0,
   input wire [15:0]       coeff_1,
@@ -38,9 +40,7 @@ module adc_slice (
   input wire [13:0]       in_2,
   input wire [13:0]       in_3,
 
-  output reg [42:0]       sum,
-
-  input wire              done
+  output reg [42:0]       sum
 );
 
   reg  [42:0]            sum_0;

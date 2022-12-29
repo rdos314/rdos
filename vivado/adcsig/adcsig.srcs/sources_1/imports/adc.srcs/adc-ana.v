@@ -259,60 +259,60 @@ bram_coeff cos_3_inst (
   .doutb(q_cos_3)         // output wire [15 : 0] doutb
 );
 
-multiply m_sin_A0 (
-  .CLK(clk),            // input wire CLK
-  .A(2),                // input wire [13 : 0] A
-  .B(q_sin_0),          // input wire [15 : 0] B
-  .P(p_sin_A0[29:0])    // output wire [29 : 0] P
+adc_slice sin_A (
+  .clk(clk),            // input wire CLK
+  .done(pdone),         // input wire [0 : 0] done
+  .in_0(in_A0),         // input wire [13 : 0] in_0
+  .in_1(in_A1),         // input wire [13 : 0] in_1
+  .in_2(in_A2),         // input wire [13 : 0] in_2
+  .in_3(in_A3),         // input wire [13 : 0] in_3
+  .coeff_0(sin_0),      // input wire [15 : 0] coeff_0
+  .coeff_1(sin_1),      // input wire [15 : 0] coeff_1
+  .coeff_2(sin_2),      // input wire [15 : 0] coeff_2
+  .coeff_3(sin_3),      // input wire [15 : 0] coeff_3
+  .sum(sum_sin_A)       // output wire [42 : 0] sum
 );
 
-multiply m_cos_A0 (
-  .CLK(clk),            // input wire CLK
-  .A(2),                // input wire [13 : 0] A
-  .B(q_cos_0),          // input wire [15 : 0] B
-  .P(p_cos_A0[29:0])    // output wire [29 : 0] P
+adc_slice cos_A (
+  .clk(clk),            // input wire CLK
+  .done(pdone),         // input wire [0 : 0] done
+  .in_0(in_A0),         // input wire [13 : 0] in_0
+  .in_1(in_A1),         // input wire [13 : 0] in_1
+  .in_2(in_A2),         // input wire [13 : 0] in_2
+  .in_3(in_A3),         // input wire [13 : 0] in_3
+  .coeff_0(cos_0),      // input wire [15 : 0] coeff_0
+  .coeff_1(cos_1),      // input wire [15 : 0] coeff_1
+  .coeff_2(cos_2),      // input wire [15 : 0] coeff_2
+  .coeff_3(cos_3),      // input wire [15 : 0] coeff_3
+  .sum(sum_cos_A)       // output wire [42 : 0] sum
 );
 
-multiply m_sin_A1 (
-  .CLK(clk),            // input wire CLK
-  .A(1),                // input wire [13 : 0] A
-  .B(q_sin_1),          // input wire [15 : 0] B
-  .P(p_sin_A1[29:0])    // output wire [29 : 0] P
+adc_slice sin_B (
+  .clk(clk),            // input wire CLK
+  .done(pdone),         // input wire [0 : 0] done
+  .in_0(in_B0),         // input wire [13 : 0] in_0
+  .in_1(in_B1),         // input wire [13 : 0] in_1
+  .in_2(in_B2),         // input wire [13 : 0] in_2
+  .in_3(in_B3),         // input wire [13 : 0] in_3
+  .coeff_0(sin_0),      // input wire [15 : 0] coeff_0
+  .coeff_1(sin_1),      // input wire [15 : 0] coeff_1
+  .coeff_2(sin_2),      // input wire [15 : 0] coeff_2
+  .coeff_3(sin_3),      // input wire [15 : 0] coeff_3
+  .sum(sum_sin_b)       // output wire [42 : 0] sum
 );
 
-multiply m_cos_A1 (
-  .CLK(clk),            // input wire CLK
-  .A(-1),                // input wire [13 : 0] A
-  .B(q_cos_1),          // input wire [15 : 0] B
-  .P(p_cos_A1[29:0])    // output wire [29 : 0] P
-);
-
-multiply m_sin_A2 (
-  .CLK(clk),            // input wire CLK
-  .A(2),                // input wire [13 : 0] A
-  .B(q_sin_2),          // input wire [15 : 0] B
-  .P(p_sin_A2[29:0])    // output wire [29 : 0] P
-);
-
-multiply m_cos_A2 (
-  .CLK(clk),            // input wire CLK
-  .A(-2),                // input wire [13 : 0] A
-  .B(q_cos_2),          // input wire [15 : 0] B
-  .P(p_cos_A2[29:0])    // output wire [29 : 0] P
-);
-
-multiply m_sin_A3 (
-  .CLK(clk),            // input wire CLK
-  .A(3),                // input wire [13 : 0] A
-  .B(q_sin_3),          // input wire [15 : 0] B
-  .P(p_sin_A3[29:0])    // output wire [29 : 0] P
-);
-
-multiply m_cos_A3 (
-  .CLK(clk),            // input wire CLK
-  .A(-3),                // input wire [13 : 0] A
-  .B(q_cos_3),          // input wire [15 : 0] B
-  .P(p_cos_A3[29:0])    // output wire [29 : 0] P
+adc_slice cos_B (
+  .clk(clk),            // input wire CLK
+  .done(pdone),         // input wire [0 : 0] done
+  .in_0(in_B0),         // input wire [13 : 0] in_0
+  .in_1(in_B1),         // input wire [13 : 0] in_1
+  .in_2(in_B2),         // input wire [13 : 0] in_2
+  .in_3(in_B3),         // input wire [13 : 0] in_3
+  .coeff_0(cos_0),      // input wire [15 : 0] coeff_0
+  .coeff_1(cos_1),      // input wire [15 : 0] coeff_1
+  .coeff_2(cos_2),      // input wire [15 : 0] coeff_2
+  .coeff_3(cos_3),      // input wire [15 : 0] coeff_3
+  .sum(sum_cos_B)       // output wire [42 : 0] sum
 );
 
 ila_0 ila_0_inst (
