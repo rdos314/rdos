@@ -46,7 +46,7 @@ module adc_ana (
 
   reg                    ana_start;
   reg                    ana_en;
-  reg  [10:0]            ana_adr;
+  wire [10:0]            ana_adr;
   reg  [10:0]            ana_last;
 
   reg                    hdr_en;
@@ -62,35 +62,16 @@ module adc_ana (
   wire [15:0]            q_cos_2;
   wire [15:0]            q_sin_3;
   wire [15:0]            q_cos_3;
-  
-  reg                    pd1;
-  reg                    pd2;
-  reg                    pd3;
-  reg                    pd4;
-  reg                    pd5;
-  reg                    pdone;
-  reg                    pres;
 
-  reg  [42:0]            sum_sin_A0;
-  reg  [42:0]            sum_cos_A0;
-  reg  [42:0]            sum_sin_A1;
-  reg  [42:0]            sum_cos_A1;
-  reg  [42:0]            sum_sin_A2;
-  reg  [42:0]            sum_cos_A2;
-  reg  [42:0]            sum_sin_A3;
-  reg  [42:0]            sum_cos_A3;
-  
-  reg  [42:0]            sum_sin_A;
-  reg  [42:0]            sum_cos_A;
+  reg  [13:0]            q_A0;
+  reg  [13:0]            q_A1;
+  reg  [13:0]            q_A2;
+  reg  [13:0]            q_A3;
 
-  wire [42:0]            p_sin_A0;  
-  wire [42:0]            p_cos_A0;  
-  wire [42:0]            p_sin_A1;  
-  wire [42:0]            p_cos_A1;  
-  wire [42:0]            p_sin_A2;  
-  wire [42:0]            p_cos_A2;  
-  wire [42:0]            p_sin_A3;  
-  wire [42:0]            p_cos_A3;  
+  reg  [13:0]            q_B0;
+  reg  [13:0]            q_B1;
+  reg  [13:0]            q_B2;
+  reg  [13:0]            q_B3;
 
 // PCI domain
 
@@ -259,196 +240,30 @@ bram_coeff cos_3_inst (
   .doutb(q_cos_3)         // output wire [15 : 0] doutb
 );
 
-adc_slice sin_A (
-  .clk(clk),            // input wire CLK
-  .done(pdone),         // input wire [0 : 0] done
-  .in_0(in_A0),         // input wire [13 : 0] in_0
-  .in_1(in_A1),         // input wire [13 : 0] in_1
-  .in_2(in_A2),         // input wire [13 : 0] in_2
-  .in_3(in_A3),         // input wire [13 : 0] in_3
-  .coeff_0(sin_0),      // input wire [15 : 0] coeff_0
-  .coeff_1(sin_1),      // input wire [15 : 0] coeff_1
-  .coeff_2(sin_2),      // input wire [15 : 0] coeff_2
-  .coeff_3(sin_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_sin_A)       // output wire [42 : 0] sum
+ana_freq base (
+  .clk(pci_clk),          // input wire clk
+  .en(ana_en),            // input wire en
+  .start(ana_start),      // input wire start
+  .last(ana_last),        // input wire [10:0] last
+  .adr(ana_adr),          // input wire [10:0] adr
+  .sin_0(q_sin_0),        // input wire [15:0] sin_0
+  .sin_1(q_sin_1),        // input wire [15:0] sin_1
+  .sin_2(q_sin_2),        // input wire [15:0] sin_2
+  .sin_3(q_sin_3),        // input wire [15:0] sin_3
+  .cos_0(q_cos_0),        // input wire [15:0] cos_0
+  .cos_1(q_cos_1),        // input wire [15:0] cos_1
+  .cos_2(q_cos_2),        // input wire [15:0] cos_2
+  .cos_3(q_cos_3),        // input wire [15:0] cos_3
+  .in_A0(q_A0),           // input wire [13:0] in_A0
+  .in_A1(q_A1),           // input wire [13:0] in_A1
+  .in_A2(q_A2),           // input wire [13:0] in_A2
+  .in_A3(q_A3),           // input wire [13:0] in_A3
+  .in_B0(q_B0),           // input wire [13:0] in_B0
+  .in_B1(q_B1),           // input wire [13:0] in_B1
+  .in_B2(q_B2),           // input wire [13:0] in_B2
+  .in_B3(q_B3)            // input wire [13:0] in_B3
 );
 
-adc_slice cos_A (
-  .clk(clk),            // input wire CLK
-  .done(pdone),         // input wire [0 : 0] done
-  .in_0(in_A0),         // input wire [13 : 0] in_0
-  .in_1(in_A1),         // input wire [13 : 0] in_1
-  .in_2(in_A2),         // input wire [13 : 0] in_2
-  .in_3(in_A3),         // input wire [13 : 0] in_3
-  .coeff_0(cos_0),      // input wire [15 : 0] coeff_0
-  .coeff_1(cos_1),      // input wire [15 : 0] coeff_1
-  .coeff_2(cos_2),      // input wire [15 : 0] coeff_2
-  .coeff_3(cos_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_cos_A)       // output wire [42 : 0] sum
-);
-
-adc_slice sin_B (
-  .clk(clk),            // input wire CLK
-  .done(pdone),         // input wire [0 : 0] done
-  .in_0(in_B0),         // input wire [13 : 0] in_0
-  .in_1(in_B1),         // input wire [13 : 0] in_1
-  .in_2(in_B2),         // input wire [13 : 0] in_2
-  .in_3(in_B3),         // input wire [13 : 0] in_3
-  .coeff_0(sin_0),      // input wire [15 : 0] coeff_0
-  .coeff_1(sin_1),      // input wire [15 : 0] coeff_1
-  .coeff_2(sin_2),      // input wire [15 : 0] coeff_2
-  .coeff_3(sin_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_sin_b)       // output wire [42 : 0] sum
-);
-
-adc_slice cos_B (
-  .clk(clk),            // input wire CLK
-  .done(pdone),         // input wire [0 : 0] done
-  .in_0(in_B0),         // input wire [13 : 0] in_0
-  .in_1(in_B1),         // input wire [13 : 0] in_1
-  .in_2(in_B2),         // input wire [13 : 0] in_2
-  .in_3(in_B3),         // input wire [13 : 0] in_3
-  .coeff_0(cos_0),      // input wire [15 : 0] coeff_0
-  .coeff_1(cos_1),      // input wire [15 : 0] coeff_1
-  .coeff_2(cos_2),      // input wire [15 : 0] coeff_2
-  .coeff_3(cos_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_cos_B)       // output wire [42 : 0] sum
-);
-
-ila_0 ila_0_inst (
-  .clk(clk),              // input wire clk
-  .probe0(ana_en),        // input wire [0:0]  probe0  
-  .probe1(ana_adr),       // input wire [10:0]  probe1 
-  .probe2(ana_start),     // input wire [0:0]  probe4 
-  .probe3(ana_last),      // input wire [10:0]  probe5 
-  .probe4(sum_sin_A0),    // input wire [42:0]  probe8 
-  .probe5(sum_cos_A0),    // input wire [42:0]  probe8 
-  .probe6(sum_sin_A1),    // input wire [42:0]  probe8 
-  .probe7(sum_cos_A1),    // input wire [42:0]  probe8 
-  .probe8(sum_sin_A2),    // input wire [42:0]  probe8 
-  .probe9(sum_cos_A2),    // input wire [42:0]  probe8 
-  .probe10(sum_sin_A3),    // input wire [42:0]  probe8 
-  .probe11(sum_cos_A3),    // input wire [42:0]  probe8 
-  .probe12(sum_sin_A),     // input wire [42:0]  probe8 
-  .probe13(sum_cos_A),     // input wire [42:0]  probe8 
-  .probe14(pd3),          // input wire [0:0]  probe12
-  .probe15(pd4),          // input wire [0:0]  probe13
-  .probe16(pd5),          // input wire [0:0]  probe14
-  .probe17(pdone),        // input wire [0:0]  probe15
-  .probe18(pres)          // input wire [0:0]  probe16
-);
-
-  assign p_sin_A0[30] = p_sin_A0[29];
-  assign p_sin_A0[31] = p_sin_A0[29];
-  assign p_sin_A0[32] = p_sin_A0[29];
-  assign p_sin_A0[33] = p_sin_A0[29];
-  assign p_sin_A0[34] = p_sin_A0[29];
-  assign p_sin_A0[35] = p_sin_A0[29];
-  assign p_sin_A0[36] = p_sin_A0[29];
-  assign p_sin_A0[37] = p_sin_A0[29];
-  assign p_sin_A0[38] = p_sin_A0[29];
-  assign p_sin_A0[39] = p_sin_A0[29];
-  assign p_sin_A0[40] = p_sin_A0[29];
-  assign p_sin_A0[41] = p_sin_A0[29];
-  assign p_sin_A0[42] = p_sin_A0[29];
-
-  assign p_cos_A0[30] = p_cos_A0[29];
-  assign p_cos_A0[31] = p_cos_A0[29];
-  assign p_cos_A0[32] = p_cos_A0[29];
-  assign p_cos_A0[33] = p_cos_A0[29];
-  assign p_cos_A0[34] = p_cos_A0[29];
-  assign p_cos_A0[35] = p_cos_A0[29];
-  assign p_cos_A0[36] = p_cos_A0[29];
-  assign p_cos_A0[37] = p_cos_A0[29];
-  assign p_cos_A0[38] = p_cos_A0[29];
-  assign p_cos_A0[39] = p_cos_A0[29];
-  assign p_cos_A0[40] = p_cos_A0[29];
-  assign p_cos_A0[41] = p_cos_A0[29];
-  assign p_cos_A0[42] = p_cos_A0[29];
-
-  assign p_sin_A1[30] = p_sin_A1[29];
-  assign p_sin_A1[31] = p_sin_A1[29];
-  assign p_sin_A1[32] = p_sin_A1[29];
-  assign p_sin_A1[33] = p_sin_A1[29];
-  assign p_sin_A1[34] = p_sin_A1[29];
-  assign p_sin_A1[35] = p_sin_A1[29];
-  assign p_sin_A1[36] = p_sin_A1[29];
-  assign p_sin_A1[37] = p_sin_A1[29];
-  assign p_sin_A1[38] = p_sin_A1[29];
-  assign p_sin_A1[39] = p_sin_A1[29];
-  assign p_sin_A1[40] = p_sin_A1[29];
-  assign p_sin_A1[41] = p_sin_A1[29];
-  assign p_sin_A1[42] = p_sin_A1[29];
-
-  assign p_cos_A1[30] = p_cos_A1[29];
-  assign p_cos_A1[31] = p_cos_A1[29];
-  assign p_cos_A1[32] = p_cos_A1[29];
-  assign p_cos_A1[33] = p_cos_A1[29];
-  assign p_cos_A1[34] = p_cos_A1[29];
-  assign p_cos_A1[35] = p_cos_A1[29];
-  assign p_cos_A1[36] = p_cos_A1[29];
-  assign p_cos_A1[37] = p_cos_A1[29];
-  assign p_cos_A1[38] = p_cos_A1[29];
-  assign p_cos_A1[39] = p_cos_A1[29];
-  assign p_cos_A1[40] = p_cos_A1[29];
-  assign p_cos_A1[41] = p_cos_A1[29];
-  assign p_cos_A1[42] = p_cos_A1[29];
-
-  assign p_sin_A2[30] = p_sin_A2[29];
-  assign p_sin_A2[31] = p_sin_A2[29];
-  assign p_sin_A2[32] = p_sin_A2[29];
-  assign p_sin_A2[33] = p_sin_A2[29];
-  assign p_sin_A2[34] = p_sin_A2[29];
-  assign p_sin_A2[35] = p_sin_A2[29];
-  assign p_sin_A2[36] = p_sin_A2[29];
-  assign p_sin_A2[37] = p_sin_A2[29];
-  assign p_sin_A2[38] = p_sin_A2[29];
-  assign p_sin_A2[39] = p_sin_A2[29];
-  assign p_sin_A2[40] = p_sin_A2[29];
-  assign p_sin_A2[41] = p_sin_A2[29];
-  assign p_sin_A2[42] = p_sin_A2[29];
-
-  assign p_cos_A2[30] = p_cos_A2[29];
-  assign p_cos_A2[31] = p_cos_A2[29];
-  assign p_cos_A2[32] = p_cos_A2[29];
-  assign p_cos_A2[33] = p_cos_A2[29];
-  assign p_cos_A2[34] = p_cos_A2[29];
-  assign p_cos_A2[35] = p_cos_A2[29];
-  assign p_cos_A2[36] = p_cos_A2[29];
-  assign p_cos_A2[37] = p_cos_A2[29];
-  assign p_cos_A2[38] = p_cos_A2[29];
-  assign p_cos_A2[39] = p_cos_A2[29];
-  assign p_cos_A2[40] = p_cos_A2[29];
-  assign p_cos_A2[41] = p_cos_A2[29];
-  assign p_cos_A2[42] = p_cos_A2[29];
-
-  assign p_sin_A3[30] = p_sin_A3[29];
-  assign p_sin_A3[31] = p_sin_A3[29];
-  assign p_sin_A3[32] = p_sin_A3[29];
-  assign p_sin_A3[33] = p_sin_A3[29];
-  assign p_sin_A3[34] = p_sin_A3[29];
-  assign p_sin_A3[35] = p_sin_A3[29];
-  assign p_sin_A3[36] = p_sin_A3[29];
-  assign p_sin_A3[37] = p_sin_A3[29];
-  assign p_sin_A3[38] = p_sin_A3[29];
-  assign p_sin_A3[39] = p_sin_A3[29];
-  assign p_sin_A3[40] = p_sin_A3[29];
-  assign p_sin_A3[41] = p_sin_A3[29];
-  assign p_sin_A3[42] = p_sin_A3[29];
-
-  assign p_cos_A3[30] = p_cos_A3[29];
-  assign p_cos_A3[31] = p_cos_A3[29];
-  assign p_cos_A3[32] = p_cos_A3[29];
-  assign p_cos_A3[33] = p_cos_A3[29];
-  assign p_cos_A3[34] = p_cos_A3[29];
-  assign p_cos_A3[35] = p_cos_A3[29];
-  assign p_cos_A3[36] = p_cos_A3[29];
-  assign p_cos_A3[37] = p_cos_A3[29];
-  assign p_cos_A3[38] = p_cos_A3[29];
-  assign p_cos_A3[39] = p_cos_A3[29];
-  assign p_cos_A3[40] = p_cos_A3[29];
-  assign p_cos_A3[41] = p_cos_A3[29];
-  assign p_cos_A3[42] = p_cos_A3[29];
 
 generate
 begin : adc_bar_gen
@@ -677,146 +492,15 @@ begin : adc_bar_gen
 
   always @ ( posedge clk ) 
   begin
-    if (pdone)
-    begin
-      sum_sin_A <= sum_sin_A0 + sum_sin_A1 + sum_sin_A2 + sum_sin_A3;
-      sum_cos_A <= sum_cos_A0 + sum_cos_A1 + sum_cos_A2 + sum_cos_A3;
-    end
-  end
+    q_A0 = 1;
+    q_A1 = 2;
+    q_A2 = 3;
+    q_A3 = 4;
 
-  always @ ( posedge clk ) 
-  begin
-    if (ana_en)
-    begin
-      if (pdone)
-        sum_sin_A0 <= p_sin_A0;
-      else
-        sum_sin_A0 <= sum_sin_A0 + p_sin_A0;      
-    end
-    else
-      sum_sin_A0 <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (ana_en)
-    begin
-      if (pdone)
-        sum_cos_A0 <= p_cos_A0;
-      else
-        sum_cos_A0 <= sum_cos_A0 + p_cos_A0;      
-    end
-    else
-      sum_cos_A0 <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (ana_en)
-    begin
-      if (pdone)
-        sum_sin_A1 <= p_sin_A1;
-      else
-        sum_sin_A1 <= sum_sin_A1 + p_sin_A1;      
-    end
-    else
-      sum_sin_A1 <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (ana_en)
-    begin
-      if (pdone)
-        sum_cos_A1 <= p_cos_A1;
-      else
-        sum_cos_A1 <= sum_cos_A1 + p_cos_A1;      
-    end
-    else
-      sum_cos_A1 <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (ana_en)
-    begin
-      if (pdone)
-        sum_sin_A2 <= p_sin_A2;
-      else
-        sum_sin_A2 <= sum_sin_A2 + p_sin_A2;      
-    end
-    else
-      sum_sin_A2 <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (ana_en)
-    begin
-      if (pdone)
-        sum_cos_A2 <= p_cos_A2;
-      else
-        sum_cos_A2 <= sum_cos_A2 + p_cos_A2;      
-    end
-    else
-      sum_cos_A2 <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (ana_en)
-    begin
-      if (pdone)
-        sum_sin_A3 <= p_sin_A3;
-      else
-        sum_sin_A3 <= sum_sin_A3 + p_sin_A3;      
-    end
-    else
-      sum_sin_A3 <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (ana_en)
-    begin
-      if (pdone)
-        sum_cos_A3 <= p_cos_A3;
-      else
-        sum_cos_A3 <= sum_cos_A3 + p_cos_A3;      
-    end
-    else
-      sum_cos_A3 <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (ana_en)
-    begin
-      if (ana_start)
-      begin
-        ana_adr <= 0;
-        pd1 <= 1;
-      end
-      else
-      begin
-        if (ana_adr == ana_last)
-        begin
-          ana_adr <= 0;
-          pd1 <= 1;
-        end
-        else
-        begin
-           ana_adr <= ana_adr + 1;
-           pd1 <= 0;
-         end
-      end
-    end
-    pd2 <= pd1;
-    pd3 <= pd2;
-    pd4 <= pd3;
-    pd5 <= pd4;
-    pdone <= pd5;
-    pres <= pdone;
+    q_B0 = -1;
+    q_B1 = -2;
+    q_B2 = -3;
+    q_B3 = -4;
   end
   
   always @ ( posedge clk ) 
