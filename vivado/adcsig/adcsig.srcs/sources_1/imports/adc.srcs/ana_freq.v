@@ -85,7 +85,7 @@ adc_slice sin_A (
   .coeff_1(sin_1),      // input wire [15 : 0] coeff_1
   .coeff_2(sin_2),      // input wire [15 : 0] coeff_2
   .coeff_3(sin_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_sin_A)       // output wire [42 : 0] sum
+  .sum(sum_sin_A)       // output wire [31 : 0] sum
 );
 
 adc_slice cos_A (
@@ -103,7 +103,7 @@ adc_slice cos_A (
   .coeff_1(cos_1),      // input wire [15 : 0] coeff_1
   .coeff_2(cos_2),      // input wire [15 : 0] coeff_2
   .coeff_3(cos_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_cos_A)       // output wire [42 : 0] sum
+  .sum(sum_cos_A)       // output wire [31 : 0] sum
 );
 
 adc_slice sin_B (
@@ -121,7 +121,7 @@ adc_slice sin_B (
   .coeff_1(sin_1),      // input wire [15 : 0] coeff_1
   .coeff_2(sin_2),      // input wire [15 : 0] coeff_2
   .coeff_3(sin_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_sin_b)       // output wire [42 : 0] sum
+  .sum(sum_sin_b)       // output wire [31 : 0] sum
 );
 
 adc_slice cos_B (
@@ -139,7 +139,7 @@ adc_slice cos_B (
   .coeff_1(cos_1),      // input wire [15 : 0] coeff_1
   .coeff_2(cos_2),      // input wire [15 : 0] coeff_2
   .coeff_3(cos_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_cos_B)       // output wire [42 : 0] sum
+  .sum(sum_cos_B)       // output wire [31 : 0] sum
 );
 
 ila_0 ila_0_inst (
@@ -148,17 +148,19 @@ ila_0 ila_0_inst (
   .probe1(start),         // input wire [0:0]  probe1
   .probe2(skip),          // input wire [0:0]  probe2
   .probe3(adr),           // input wire [10:0]  probe3
-  .probe4(last),          // input wire [10:0]  probe4
-  .probe5(sum_sin_A),     // input wire [42:0]  probe5 
-  .probe6(sum_cos_A),     // input wire [42:0]  probe6
-  .probe7(sum_sin_B),     // input wire [42:0]  probe7 
-  .probe8(sum_cos_B),     // input wire [42:0]  probe8 
-  .probe9(pd1),           // input wire [0:0]  probe9
-  .probe10(pd2),          // input wire [0:0]  probe10
-  .probe11(pd3),          // input wire [0:0]  probe11
-  .probe12(pd4),          // input wire [0:0]  probe12
-  .probe13(pd5),          // input wire [0:0]  probe13
-  .probe14(pd6)           // input wire [0:0]  probe14
+  .probe4(count),         // input wire [12:0]  probe4
+  .probe5(last_en),       // input wire [3:0]  probe5
+  .probe6(sum_sin_A),     // input wire [31:0]  probe6 
+  .probe7(sum_cos_A),     // input wire [31:0]  probe7
+  .probe8(sum_sin_B),     // input wire [31:0]  probe8 
+  .probe9(sum_cos_B),     // input wire [31:0]  probe9 
+  .probe10(pd1),           // input wire [0:0]  probe10
+  .probe11(pd2),          // input wire [0:0]  probe11
+  .probe12(pd3),          // input wire [0:0]  probe12
+  .probe13(pd4),          // input wire [0:0]  probe13
+  .probe14(pd5),          // input wire [0:0]  probe14
+  .probe15(pd6),          // input wire [0:0]  probe15
+  .probe16(pd7)           // input wire [0:0]  probe16
 );
 
 generate
