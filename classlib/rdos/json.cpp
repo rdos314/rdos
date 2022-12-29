@@ -377,6 +377,12 @@ void TJsonFormString::Reformat(const char *str)
                     str++;
                 break;
 
+            case 0x5C:
+                Append(0x5C);
+                Append(0x5C);
+                str++;
+                break;
+
             default:
                 Append(*str);
                 str++;
