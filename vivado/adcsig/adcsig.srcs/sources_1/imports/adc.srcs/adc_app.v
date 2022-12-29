@@ -197,7 +197,7 @@ bram_msix bram_msix_inst (
   .web(0),           // input wire [0 : 0] web
   .addrb(0),         // input wire [9 : 0] addrb
   .dinb(0),          // input wire [31 : 0] dinb
-  .doutb(0)          // output wire [31 : 0] doutb
+  .doutb()          // output wire [31 : 0] doutb
 );
 
 adc_ana adc_ana_0_inst (

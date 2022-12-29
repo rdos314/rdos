@@ -44,14 +44,13 @@ module adc_slice (
   input wire [13:0]       in_2,
   input wire [13:0]       in_3,
 
-  output reg [31:0]       sum
+  output reg [42:0]       sum
 );
 
   reg  [42:0]            sum_0;
   reg  [42:0]            sum_1;
   reg  [42:0]            sum_2;
   reg  [42:0]            sum_3;
-  reg  [42:0]            temp_sum;
 
   wire [42:0]            p_0;  
   wire [42:0]            p_1;  
@@ -85,28 +84,6 @@ multiply m_3 (
   .A(in_3),             // input wire [13 : 0] A
   .B(coeff_3),          // input wire [15 : 0] B
   .P(p_3[29:0])         // output wire [29 : 0] P
-);
-
-ila_1 ila_1_inst (
-  .clk(clk),               // input wire clk
-  .probe0(p5),             // input wire [0:0]  probe0
-  .probe1(p6),             // input wire [0:0]  probe1
-  .probe2(p7),             // input wire [0:0]  probe2
-  .probe3(count),          // input wire [12:0]  probe3
-  .probe4(last_en),        // input wire [3:0]  probe4
-  .probe5(coeff_0),        // input wire [15:0]  probe5
-  .probe6(coeff_1),        // input wire [15:0]  probe6 
-  .probe7(coeff_2),        // input wire [15:0]  probe7
-  .probe8(coeff_3),        // input wire [15:0]  probe8 
-  .probe9(in_0),           // input wire [13:0]  probe9 
-  .probe10(in_1),          // input wire [13:0]  probe10
-  .probe11(in_2),          // input wire [13:0]  probe11
-  .probe12(in_3),          // input wire [13:0]  probe12
-  .probe13(sum_0),         // input wire [31:0]  probe13 
-  .probe14(sum_1),         // input wire [42:0]  probe14
-  .probe15(sum_2),         // input wire [42:0]  probe15
-  .probe16(sum_3),         // input wire [42:0]  probe16
-  .probe17(temp_sum)       // input wire [42:0]  probe17
 );
 
   assign p_0[30] = p_0[29];
@@ -168,16 +145,11 @@ ila_1 ila_1_inst (
 generate
 begin : ana_slice_gen
 
-  always @ ( posedge clk ) 
-  begin
-    if (p7)
-      sum <= temp_sum[42:11];
-  end
 
   always @ ( posedge clk ) 
   begin
     if (p6)
-      temp_sum <= sum_0 + sum_1 + sum_2 + sum_3;
+      sum <= sum_0 + sum_1 + sum_2 + sum_3;
   end
 
   always @ ( posedge clk ) 

@@ -54,11 +54,10 @@ module ana_freq (
   input wire [13:0]       in_B3
 );
 
-  wire [31:0]            sum_sin_A;
-  wire [31:0]            sum_cos_A;
-  wire [31:0]            sum_sin_B;
-  wire [31:0]            sum_cos_B;
+  wire [42:0]            sum_sin_A;
+  reg  [42:0]            prev_sin_A;
 
+  reg  [15:0]            errors;
   reg  [10:0]            last;
   reg  [3:0]             last_en;
 
@@ -71,12 +70,32 @@ module ana_freq (
   reg                    pd6;
   reg                    pd7;
 
+bram_freq bram_sin (
+  .clka(clk),    // input wire clka
+  .ena(ena),      // input wire ena
+  .wea(wea),      // input wire [0 : 0] wea
+  .addra(addra),  // input wire [10 : 0] addra
+  .dina(dina),    // input wire [63 : 0] dina
+  .douta(douta)  // output wire [63 : 0] douta
+);
+
+bram_freq bram_cos (
+  .clka(clk),    // input wire clka
+  .ena(ena),      // input wire ena
+  .wea(wea),      // input wire [0 : 0] wea
+  .addra(addra),  // input wire [10 : 0] addra
+  .dina(dina),    // input wire [63 : 0] dina
+  .douta(douta)  // output wire [63 : 0] douta
+);
+
+
 adc_slice sin_A (
   .clk(clk),            // input wire CLK
   .p5(pd5),             // input wire [0 : 0] p5
   .p6(pd6),             // input wire [0 : 0] p6
   .p7(pd7),             // input wire [0 : 0] p7
-  .last(last_en),       // input wire [3 : 0] last
+  .count(count),        // input wire [12 : 0] count
+  .last_en(last_en),    // input wire [3 : 0] last
   .in_0(in_A0),         // input wire [13 : 0] in_0
   .in_1(in_A1),         // input wire [13 : 0] in_1
   .in_2(in_A2),         // input wire [13 : 0] in_2
@@ -88,60 +107,6 @@ adc_slice sin_A (
   .sum(sum_sin_A)       // output wire [31 : 0] sum
 );
 
-adc_slice cos_A (
-  .clk(clk),            // input wire CLK
-  .p5(pd5),             // input wire [0 : 0] p5
-  .p6(pd6),             // input wire [0 : 0] p6
-  .p7(pd7),             // input wire [0 : 0] p7
-  .count(count),        // input wire [12 : 0] count
-  .last(last_en),       // input wire [3 : 0] last
-  .in_0(in_A0),         // input wire [13 : 0] in_0
-  .in_1(in_A1),         // input wire [13 : 0] in_1
-  .in_2(in_A2),         // input wire [13 : 0] in_2
-  .in_3(in_A3),         // input wire [13 : 0] in_3
-  .coeff_0(cos_0),      // input wire [15 : 0] coeff_0
-  .coeff_1(cos_1),      // input wire [15 : 0] coeff_1
-  .coeff_2(cos_2),      // input wire [15 : 0] coeff_2
-  .coeff_3(cos_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_cos_A)       // output wire [31 : 0] sum
-);
-
-adc_slice sin_B (
-  .clk(clk),            // input wire CLK
-  .p5(pd5),             // input wire [0 : 0] p5
-  .p6(pd6),             // input wire [0 : 0] p6
-  .p7(pd7),             // input wire [0 : 0] p7
-  .count(count),        // input wire [12 : 0] count
-  .last(last_en),       // input wire [3 : 0] last
-  .in_0(in_B0),         // input wire [13 : 0] in_0
-  .in_1(in_B1),         // input wire [13 : 0] in_1
-  .in_2(in_B2),         // input wire [13 : 0] in_2
-  .in_3(in_B3),         // input wire [13 : 0] in_3
-  .coeff_0(sin_0),      // input wire [15 : 0] coeff_0
-  .coeff_1(sin_1),      // input wire [15 : 0] coeff_1
-  .coeff_2(sin_2),      // input wire [15 : 0] coeff_2
-  .coeff_3(sin_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_sin_b)       // output wire [31 : 0] sum
-);
-
-adc_slice cos_B (
-  .clk(clk),            // input wire CLK
-  .p5(pd5),             // input wire [0 : 0] p5
-  .p6(pd6),             // input wire [0 : 0] p6
-  .p7(pd7),             // input wire [0 : 0] p7
-  .count(count),        // input wire [12 : 0] count
-  .last(last_en),       // input wire [3 : 0] last
-  .in_0(in_B0),         // input wire [13 : 0] in_0
-  .in_1(in_B1),         // input wire [13 : 0] in_1
-  .in_2(in_B2),         // input wire [13 : 0] in_2
-  .in_3(in_B3),         // input wire [13 : 0] in_3
-  .coeff_0(cos_0),      // input wire [15 : 0] coeff_0
-  .coeff_1(cos_1),      // input wire [15 : 0] coeff_1
-  .coeff_2(cos_2),      // input wire [15 : 0] coeff_2
-  .coeff_3(cos_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_cos_B)       // output wire [31 : 0] sum
-);
-
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(en),            // input wire [0:0]  probe0
@@ -150,18 +115,17 @@ ila_0 ila_0_inst (
   .probe3(adr),           // input wire [10:0]  probe3
   .probe4(count),         // input wire [12:0]  probe4
   .probe5(last_en),       // input wire [3:0]  probe5
-  .probe6(sum_sin_A),     // input wire [31:0]  probe6 
-  .probe7(sum_cos_A),     // input wire [31:0]  probe7
-  .probe8(sum_sin_B),     // input wire [31:0]  probe8 
-  .probe9(sum_cos_B),     // input wire [31:0]  probe9 
-  .probe10(pd1),           // input wire [0:0]  probe10
-  .probe11(pd2),          // input wire [0:0]  probe11
-  .probe12(pd3),          // input wire [0:0]  probe12
-  .probe13(pd4),          // input wire [0:0]  probe13
-  .probe14(pd5),          // input wire [0:0]  probe14
-  .probe15(pd6),          // input wire [0:0]  probe15
-  .probe16(pd7)           // input wire [0:0]  probe16
+  .probe6(sum_sin_A),     // input wire [42:0]  probe6 
+  .probe7(errors),        // input wire [15:0]  probe7 
+  .probe8(pd1),          // input wire [0:0]  probe8
+  .probe9(pd2),          // input wire [0:0]  probe9
+  .probe10(pd3),          // input wire [0:0]  probe10
+  .probe11(pd4),          // input wire [0:0]  probe11
+  .probe12(pd5),          // input wire [0:0]  probe12
+  .probe13(pd6),          // input wire [0:0]  probe13
+  .probe14(pd7)           // input wire [0:0]  probe14
 );
+
 
 generate
 begin : ana_freq_gen
@@ -170,7 +134,25 @@ begin : ana_freq_gen
   begin
     if (en)
     begin
-      if (pdone)
+      if (pd6)
+      begin
+         if (!skip)
+         begin
+            if (sum_sin_A != prev_sin_A)
+              errors <= errors + 1;
+         end
+         prev_sin_A <= sum_sin_A;
+       end
+    end
+    else
+      errors <= 0;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (en)
+    begin
+      if (pd6)
          skip <= 0;
     end
     else
