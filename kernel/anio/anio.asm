@@ -755,6 +755,10 @@ setup_adc  Proc far
 ;
     mov bx,SEG data
     mov ds,ebx
+    cmp ds:dev_id,0AACCh
+    stc
+    jne setup_adc_done
+;
     mov ds:adc_pages,cx
 ;
     mov bx,anio_control_sel
@@ -791,7 +795,8 @@ setup_adc_phys_loop:
     xor eax,eax
     mov ds:[edi],eax
     mov ds:[edi+4],eax
-;
+
+setup_adc_done:
     pop edi
     pop ecx
     pop ebx
@@ -884,6 +889,9 @@ start_adc  Proc far
 ;
     mov bx,SEG data
     mov ds,ebx
+    cmp ds:dev_id,0AACCh
+    jne start_adc_do
+;
     GetThread
     mov ds:start_thread,ax
     mov ds:adc_index,0
@@ -900,12 +908,13 @@ start_adc  Proc far
 ;
     mov ax,500
     WaitMilliSec
-;
+
+start_adc_do:
     mov bx,anio_control_sel
     mov es,ebx
     or es:cb_adc_control,80h
     WaitForSignal
-;
+
     pop edi
     pop esi
     pop ecx
@@ -1023,6 +1032,42 @@ map_adc_block  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SetupAdcChan
+;
+;       DESCRIPTION:    Setup ADC channel
+;
+;       PARAMETERS:     BX       Channel
+;                       EAX      Frequency i Hz
+;                       ECX      Periods
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_adc_chan_name      DB 'Setup ADC Channel', 0
+
+setup_adc_chan  Proc far
+    ret
+setup_adc_chan  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ClearAdcChan
+;
+;       DESCRIPTION:    Clear ADC channel
+;
+;       PARAMETERS:     BX       Channel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_adc_chan_name      DB 'Clear ADC Channel', 0
+
+clear_adc_chan  Proc far
+    ret
+clear_adc_chan  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           init_pci
 ;
 ;           DESCRIPTION:    Init PCI
@@ -1046,6 +1091,37 @@ init_pci    PROC far
     call InitClk
     call InitAdc
     int 3
+;
+    mov esi,OFFSET start_adc
+    mov edi,OFFSET start_adc_name
+    xor dx,dx
+    mov ax,start_adc_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET stop_adc
+    mov edi,OFFSET stop_adc_name
+    xor dx,dx
+    mov ax,stop_adc_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET setup_adc_chan
+    mov edi,OFFSET setup_adc_chan_name
+    xor dx,dx
+    mov ax,setup_adc_chan_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET setup_adc_chan
+    mov edi,OFFSET setup_adc_chan_name
+    xor dx,dx
+    mov ax,setup_adc_chan_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET clear_adc_chan
+    mov edi,OFFSET clear_adc_chan_name
+    xor dx,dx
+    mov ax,clear_adc_chan_nr
+    RegisterBimodalUserGate
+
     jmp ipDone
 
 ipRaw:
