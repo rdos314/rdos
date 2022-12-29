@@ -54,10 +54,10 @@ module ana_freq (
   input wire [13:0]       in_B3
 );
 
-  wire [42:0]            sum_sin_A;
-  wire [42:0]            sum_cos_A;
-  wire [42:0]            sum_sin_B;
-  wire [42:0]            sum_cos_B;
+  wire [31:0]            sum_sin_A;
+  wire [31:0]            sum_cos_A;
+  wire [31:0]            sum_sin_B;
+  wire [31:0]            sum_cos_B;
 
   reg  [10:0]            last;
   reg  [3:0]             last_en;
@@ -69,11 +69,13 @@ module ana_freq (
   reg                    pd4;
   reg                    pd5;
   reg                    pd6;
+  reg                    pd7;
 
 adc_slice sin_A (
   .clk(clk),            // input wire CLK
   .p5(pd5),             // input wire [0 : 0] p5
   .p6(pd6),             // input wire [0 : 0] p6
+  .p7(pd7),             // input wire [0 : 0] p7
   .last(last_en),       // input wire [3 : 0] last
   .in_0(in_A0),         // input wire [13 : 0] in_0
   .in_1(in_A1),         // input wire [13 : 0] in_1
@@ -90,6 +92,8 @@ adc_slice cos_A (
   .clk(clk),            // input wire CLK
   .p5(pd5),             // input wire [0 : 0] p5
   .p6(pd6),             // input wire [0 : 0] p6
+  .p7(pd7),             // input wire [0 : 0] p7
+  .count(count),        // input wire [12 : 0] count
   .last(last_en),       // input wire [3 : 0] last
   .in_0(in_A0),         // input wire [13 : 0] in_0
   .in_1(in_A1),         // input wire [13 : 0] in_1
@@ -106,6 +110,8 @@ adc_slice sin_B (
   .clk(clk),            // input wire CLK
   .p5(pd5),             // input wire [0 : 0] p5
   .p6(pd6),             // input wire [0 : 0] p6
+  .p7(pd7),             // input wire [0 : 0] p7
+  .count(count),        // input wire [12 : 0] count
   .last(last_en),       // input wire [3 : 0] last
   .in_0(in_B0),         // input wire [13 : 0] in_0
   .in_1(in_B1),         // input wire [13 : 0] in_1
@@ -122,6 +128,8 @@ adc_slice cos_B (
   .clk(clk),            // input wire CLK
   .p5(pd5),             // input wire [0 : 0] p5
   .p6(pd6),             // input wire [0 : 0] p6
+  .p7(pd7),             // input wire [0 : 0] p7
+  .count(count),        // input wire [12 : 0] count
   .last(last_en),       // input wire [3 : 0] last
   .in_0(in_B0),         // input wire [13 : 0] in_0
   .in_1(in_B1),         // input wire [13 : 0] in_1
@@ -211,6 +219,7 @@ begin : ana_freq_gen
     pd4 <= pd3;
     pd5 <= pd4;
     pd6 <= pd5;
+    pd7 <= pd6;
   end
   
 end

@@ -30,6 +30,8 @@ module adc_slice (
 
   input wire              p5,
   input wire              p6,
+  input wire              p7,
+  input wire [12:0]       count,
   input wire [3:0]        last_en,
 
   input wire [15:0]       coeff_0,
@@ -42,13 +44,14 @@ module adc_slice (
   input wire [13:0]       in_2,
   input wire [13:0]       in_3,
 
-  output reg [42:0]       sum
+  output reg [31:0]       sum
 );
 
   reg  [42:0]            sum_0;
   reg  [42:0]            sum_1;
   reg  [42:0]            sum_2;
   reg  [42:0]            sum_3;
+  reg  [42:0]            temp_sum;
 
   wire [42:0]            p_0;  
   wire [42:0]            p_1;  
@@ -145,8 +148,14 @@ begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
+    if (p7)
+      sum <= temp_sum[42:11];
+  end
+
+  always @ ( posedge clk ) 
+  begin
     if (p6)
-      sum <= sum_0 + sum_1 + sum_2 + sum_3;
+      temp_sum <= sum_0 + sum_1 + sum_2 + sum_3;
   end
 
   always @ ( posedge clk ) 
