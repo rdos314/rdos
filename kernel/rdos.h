@@ -933,6 +933,10 @@ void RDOSAPI RdosStopAdc();
 int RDOSAPI RdosMapAdcBlock(int Index, void *Buf);
 void RDOSAPI RdosSetAdcTrigger(int PhaseIncr, char WindowBits);
 
+int RDOSAPI RdosSetupAdcChannel(int Chan, int Freq, int Periods);
+void RDOSAPI RdosClearAdcChannel(int Chan);
+
+
 int RDOSAPI RdosReadSerialLines(int device, int *val);
 int RDOSAPI RdosToggleSerialLine(int device, int line);
 int RDOSAPI RdosSetSerialLine(int device, int line);

@@ -978,4 +978,7 @@ get_pci_msi_nr                    = 799
 get_pci_msix_nr                   = 800
 is_pci_function_used_nr           = 801
 
+setup_adc_chan_nr                 = 802
+clear_adc_chan_nr                 = 803
+
 usergate_entries                  = 820

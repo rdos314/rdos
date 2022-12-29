@@ -3626,6 +3626,16 @@
     __parm [__eax] [__cl]
 
 
+#pragma aux RdosSetupAdcChannel = \
+    CallGate_setup_adc_chan  \
+    CarryToBool \
+    __parm [__ebx] [__eax] [__ecx] \
+    __value [__eax]
+
+#pragma aux RdosClearAdcChannel = \
+    CallGate_clear_adc_chan  \
+    __parm [__ebx]
+
 #pragma aux RdosReadSerialLines = \
     "mov dh,cl" \
     CallGate_read_serial_lines  \

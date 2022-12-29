@@ -3573,6 +3573,20 @@ SetAdcTrigger     MACRO
         UserGate set_adc_trigger_nr
                                                 ENDM
 
+;   IN  BX      Channel
+;   IN  EAX     Frequency i Hz
+;   IN  ECX     Periods
+SetupAdcChannel      MACRO
+        UserGate setup_adc_chan_nr
+                                                ENDM
+
+
+;   IN  BX      Channel
+ClearAdcChannel      MACRO
+        UserGate setup_adc_chan_nr
+                                                ENDM
+
+
 ;       IN  AX          Adc channel
 ;       OUT BX          Adc handle
 OpenAdc      MACRO
