@@ -30,7 +30,7 @@ module ana_freq (
 
   input wire              en,
   input wire              start,
-  input wire [10:0]       last,
+  input wire [12:0]       count,
   output reg [10:0]       adr,
 
   input wire [15:0]       sin_0,
@@ -59,17 +59,22 @@ module ana_freq (
   wire [42:0]            sum_sin_B;
   wire [42:0]            sum_cos_B;
 
+  reg  [10:0]            last;
+  reg  [3:0]             last_en;
+
   reg                    skip;
   reg                    pd1;
   reg                    pd2;
   reg                    pd3;
   reg                    pd4;
   reg                    pd5;
-  reg                    pdone;
+  reg                    pd6;
 
 adc_slice sin_A (
   .clk(clk),            // input wire CLK
-  .done(pdone),         // input wire [0 : 0] done
+  .p5(pd5),             // input wire [0 : 0] p5
+  .p6(pd6),             // input wire [0 : 0] p6
+  .last(last_en),       // input wire [3 : 0] last
   .in_0(in_A0),         // input wire [13 : 0] in_0
   .in_1(in_A1),         // input wire [13 : 0] in_1
   .in_2(in_A2),         // input wire [13 : 0] in_2
@@ -83,7 +88,9 @@ adc_slice sin_A (
 
 adc_slice cos_A (
   .clk(clk),            // input wire CLK
-  .done(pdone),         // input wire [0 : 0] done
+  .p5(pd5),             // input wire [0 : 0] p5
+  .p6(pd6),             // input wire [0 : 0] p6
+  .last(last_en),       // input wire [3 : 0] last
   .in_0(in_A0),         // input wire [13 : 0] in_0
   .in_1(in_A1),         // input wire [13 : 0] in_1
   .in_2(in_A2),         // input wire [13 : 0] in_2
@@ -97,7 +104,9 @@ adc_slice cos_A (
 
 adc_slice sin_B (
   .clk(clk),            // input wire CLK
-  .done(pdone),         // input wire [0 : 0] done
+  .p5(pd5),             // input wire [0 : 0] p5
+  .p6(pd6),             // input wire [0 : 0] p6
+  .last(last_en),       // input wire [3 : 0] last
   .in_0(in_B0),         // input wire [13 : 0] in_0
   .in_1(in_B1),         // input wire [13 : 0] in_1
   .in_2(in_B2),         // input wire [13 : 0] in_2
@@ -111,7 +120,9 @@ adc_slice sin_B (
 
 adc_slice cos_B (
   .clk(clk),            // input wire CLK
-  .done(pdone),         // input wire [0 : 0] done
+  .p5(pd5),             // input wire [0 : 0] p5
+  .p6(pd6),             // input wire [0 : 0] p6
+  .last(last_en),       // input wire [3 : 0] last
   .in_0(in_B0),         // input wire [13 : 0] in_0
   .in_1(in_B1),         // input wire [13 : 0] in_1
   .in_2(in_B2),         // input wire [13 : 0] in_2
@@ -139,7 +150,7 @@ ila_0 ila_0_inst (
   .probe11(pd3),          // input wire [0:0]  probe11
   .probe12(pd4),          // input wire [0:0]  probe12
   .probe13(pd5),          // input wire [0:0]  probe13
-  .probe14(pdone)         // input wire [0:0]  probe14
+  .probe14(pd6)           // input wire [0:0]  probe14
 );
 
 generate
@@ -179,11 +190,27 @@ begin : ana_freq_gen
          end
       end
     end
+    else
+    begin
+      case (count[1:0])
+        2'b00 : last_en <= 4'b1111;
+        2'b01 : last_en <= 4'b0001;
+        2'b10 : last_en <= 4'b0011;
+        2'b11 : last_en <= 4'b0111;
+      endcase
+
+      if (count[1:0] == 2'b00)
+        last <= count[12:2] - 1;
+      else
+        last <= count[12:2];
+
+    end
+
     pd2 <= pd1;
     pd3 <= pd2;
     pd4 <= pd3;
     pd5 <= pd4;
-    pdone <= pd5;
+    pd6 <= pd5;
   end
   
 end

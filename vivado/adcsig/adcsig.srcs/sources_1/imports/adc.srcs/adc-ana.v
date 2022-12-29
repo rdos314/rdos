@@ -47,7 +47,7 @@ module adc_ana (
   reg                    ana_start;
   reg                    ana_en;
   wire [10:0]            ana_adr;
-  reg  [10:0]            ana_last;
+  reg  [12:0]            ana_count;
 
   reg                    hdr_en;
   reg   [1:0]            hdr_adr;
@@ -244,7 +244,7 @@ ana_freq base (
   .clk(pci_clk),          // input wire clk
   .en(ana_en),            // input wire en
   .start(ana_start),      // input wire start
-  .last(ana_last),        // input wire [10:0] last
+  .count(ana_count),      // input wire [12:0] count
   .adr(ana_adr),          // input wire [10:0] adr
   .sin_0(q_sin_0),        // input wire [15:0] sin_0
   .sin_1(q_sin_1),        // input wire [15:0] sin_1
@@ -508,22 +508,21 @@ begin : adc_bar_gen
     hdr_en <= 1;
     hdr_adr <= 0;
 
-    if (q_hdr_data[10:0] > 3)
+    ana_count <= q_hdr_data[12:0];
+
+    if (ana_count[12:4] == 0)
+    begin
+      ana_en <= 0;
+      ana_start <= 0;
+    end
+    else
     begin
       if (ana_en)
         ana_start <= 0;
       else
-      begin
         ana_start <= 1;
-        ana_last <= q_hdr_data[10:0] - 1;
-      end     
         
       ana_en <= 1;
-    end
-    else
-    begin
-      ana_en <= 0;
-      ana_start <= 0;
     end
       
   end     
