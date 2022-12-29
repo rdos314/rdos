@@ -39,13 +39,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="423"/>
-    <Option Name="WTModelSimExportSim" Val="422"/>
-    <Option Name="WTQuestaExportSim" Val="422"/>
-    <Option Name="WTIesExportSim" Val="421"/>
-    <Option Name="WTVcsExportSim" Val="421"/>
-    <Option Name="WTRivieraExportSim" Val="420"/>
-    <Option Name="WTActivehdlExportSim" Val="420"/>
+    <Option Name="WTXSimExportSim" Val="425"/>
+    <Option Name="WTModelSimExportSim" Val="424"/>
+    <Option Name="WTQuestaExportSim" Val="424"/>
+    <Option Name="WTIesExportSim" Val="423"/>
+    <Option Name="WTVcsExportSim" Val="423"/>
+    <Option Name="WTRivieraExportSim" Val="422"/>
+    <Option Name="WTActivehdlExportSim" Val="422"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -117,6 +117,20 @@
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/adc_app.v"/>
           <Attr Name="ImportTime" Val="1671917325"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/imports/adc.srcs/ana_freq.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/imports/adc.srcs/ana_slice.v">
+        <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -494,7 +508,6 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/ila_1/ila_1.xci">
         <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/ila_1/ila_1.xci"/>
           <Attr Name="ImportTime" Val="1589313696"/>
           <Attr Name="UsedIn" Val="synthesis"/>
