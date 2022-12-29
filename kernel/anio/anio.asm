@@ -1044,7 +1044,27 @@ map_adc_block  Endp
 
 setup_adc_chan_name      DB 'Setup ADC Channel', 0
 
+c_freq DD 750000000
+
 setup_adc_chan  Proc far
+    push ds
+    push edx
+    push edi
+;
+    mov dx,anio_coeff_sel
+    mov ds,dx
+    movzx edi,bx
+    shl edi,15
+;
+    push eax
+    fild dword ptr ss:[esp]
+    fild dword ptr cs:c_freq
+    fdivp st(1),st(0)
+    pop eax
+;
+    pop edi
+    pop edx
+    pop ds
     ret
 setup_adc_chan  Endp
 
