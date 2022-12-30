@@ -32,15 +32,8 @@ module adc_slice (
   input wire              p8,
   input wire [12:0]       count,
 
-  input wire [15:0]       coeff_0,
-  input wire [15:0]       coeff_1,
-  input wire [15:0]       coeff_2,
-  input wire [15:0]       coeff_3,
-
-  input wire [13:0]       in_0,
-  input wire [13:0]       in_1,
-  input wire [13:0]       in_2,
-  input wire [13:0]       in_3,
+  input wire [63:0]       coeff,
+  input wire [55:0]       in,
 
   output reg [42:0]       sum
 );
@@ -57,6 +50,26 @@ module adc_slice (
   wire [42:0]            p_1;  
   wire [42:0]            p_2;  
   wire [42:0]            p_3;  
+
+  wire [15:0]            coeff_0;
+  wire [15:0]            coeff_1;
+  wire [15:0]            coeff_2;
+  wire [15:0]            coeff_3;
+
+  wire [13:0]            in_0;
+  wire [13:0]            in_1;
+  wire [13:0]            in_2;
+  wire [13:0]            in_3;
+
+  assign coeff_0 = coeff[15:0];
+  assign coeff_1 = coeff[31:16];
+  assign coeff_2 = coeff[47:32];
+  assign coeff_3 = coeff[63:48];
+
+  assign in_0 = in[13:0];
+  assign in_1 = in[27:14];
+  assign in_2 = in[41:28];
+  assign in_3 = in[55:42];
 
 
 multiply m_0 (
