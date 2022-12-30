@@ -1047,24 +1047,6 @@ setup_adc_chan_name      DB 'Setup ADC Channel', 0
 c_freq DD 750000000
 
 setup_adc_chan  Proc far
-    push ds
-    push edx
-    push edi
-;
-    mov dx,anio_coeff_sel
-    mov ds,dx
-    movzx edi,bx
-    shl edi,15
-;
-    push eax
-    fild dword ptr ss:[esp]
-    fild dword ptr cs:c_freq
-    fdivp st(1),st(0)
-    pop eax
-;
-    pop edi
-    pop edx
-    pop ds
     ret
 setup_adc_chan  Endp
 
@@ -1084,6 +1066,80 @@ clear_adc_chan_name      DB 'Clear ADC Channel', 0
 clear_adc_chan  Proc far
     ret
 clear_adc_chan  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           InitTest
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sin_tab:
+  dw 0, 5690, 11207, 16383, 21062, 25101, 28377, 30791, 32269
+  dw 32767, 32269, 30791, 28377, 25101, 21062, 16384, 11207, 5690
+  dw 0, -5690, -11207, -16383, -21062, -25101, -28377, -30791, -32269
+  dw -32767, -32269, -30791, -28377, -25101, -21062, -16384, -11207, -5690
+
+; 0000 163A 2BC7 3FFF 5246 620D 6ED9 7847 7E0D 
+; 7FFF 7E0D 7847 6ED9 620D 5246 4000 2BC7 163A
+; 0000 E9C6 D439 C001 ADBA 9DF3 9127 87B9 81F3
+; 8001 81F3 87B9 9127 9DF3 ADBA C000 D439 E9C6
+
+cos_tab:
+  dw 32767, 32269, 30791, 28377, 25101, 21062, 16384, 11207, 5690
+  dw 0, -5690, -11207, -16383, -21062, -25101, -28377, -30791, -32269
+  dw -32767, -32269, -30791, -28377, -25101, -21062, -16384, -11207, -5690
+  dw 0, 5690, 11207, 16383, 21062, 25101, 28377, 30791, 32269
+
+; 7FFF 7E0D 7847 6ED9 620D 5246 4000 2BC7 163A
+; 0000 E9C6 D439 C001 ADBA 9DF3 9127 87B9 81F3
+; 8001 81F3 87B9 9127 9DF3 ADBA C000 D439 81F3
+; 0000 163A 2BC7 3FFF 5246 620D 6ED9 7847 7E0D
+
+InitTest  Proc near
+    push ds
+    pushad
+;
+    mov dx,anio_coeff_sel
+    mov ds,dx
+    xor ebx,ebx
+    shl ebx,15
+    push ebx
+;
+    add ebx,10h
+;
+    mov ebp,5
+
+saYLoop:
+    mov esi, OFFSET sin_tab
+    mov edi, OFFSET cos_tab
+    mov ecx,36
+
+saILoop:
+    mov ax,cs:[esi]
+    mov ds:[ebx],ax
+    add ebx,2
+    add esi,2
+;
+    mov ax,cs:[edi]
+    mov ds:[ebx],ax
+    add ebx,2
+    add edi,2
+;
+    loop saILoop
+;
+    sub ebp,1
+    jnz saYLoop
+;
+    int 3
+    pop ebx
+    mov ax,5 * 36
+    mov ds:[ebx],ax
+;
+    popad
+    pop ds
+    ret
+InitTest   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1110,7 +1166,9 @@ init_pci    PROC far
     call InitCoeffBar
     call InitClk
     call InitAdc
+;
     int 3
+    call InitTest
 ;
     mov esi,OFFSET start_adc
     mov edi,OFFSET start_adc_name

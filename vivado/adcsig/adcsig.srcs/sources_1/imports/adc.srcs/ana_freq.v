@@ -32,7 +32,6 @@ module ana_freq (
   input wire [12:0]       count,
   input wire              load,
   input wire              wr,
-  input wire [10:0]       wr_adr,
   input wire [63:0]       wr_sin,
   input wire [63:0]       wr_cos,
 
@@ -63,6 +62,7 @@ module ana_freq (
   wire [15:0]            res_sin_A;
   reg  [15:0]            prev_sin_A;
 
+  reg  [10:0]            adr;
   reg  [10:0]            last;
   reg  [3:0]             last_en;
 
@@ -112,31 +112,22 @@ ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(en),            // input wire [0:0]  probe0
   .probe1(load),          // input wire [0:0]  probe1
-  .probe2(wr),            // input wire [0:0]  probe2
-  .probe3(wr_adr),        // input wire [10:0]  probe3
-  .probe4(wr_sin),        // input wire [63:0]  probe4
-  .probe5(wr_cos),        // input wire [63:0]  probe5
-  .probe6(start),         // input wire [0:0]  probe6
-  .probe7(running),       // input wire [0:0]  probe7
-  .probe8(coeff_en),      // input wire [0:0]  probe8
-  .probe9(coeff_wr),      // input wire [0:0]  probe9
-  .probe10(coeff_adr),    // input wire [10:0]  probe10
-  .probe11(sin_coeff_in), // input wire [63:0]  probe11
-  .probe12(cos_coeff_in), // input wire [63:0]  probe12
-  .probe13(sin_coeff_out), // input wire [63:0]  probe13
-  .probe14(cos_coeff_out), // input wire [63:0]  probe14
-  .probe15(count),         // input wire [12:0]  probe15
-  .probe16(last_en),       // input wire [3:0]  probe16
-  .probe17(res_sin_A),     // input wire [15:0]  probe17 
-  .probe18(errors),        // input wire [15:0]  probe18
-  .probe19(skip),          // input wire [0:0]  probe19
-  .probe20(pd1),          // input wire [0:0]  probe20
-  .probe21(pd2),          // input wire [0:0]  probe21
-  .probe22(pd3),          // input wire [0:0]  probe22
-  .probe23(pd4),          // input wire [0:0]  probe23
-  .probe24(pd5),          // input wire [0:0]  probe24
-  .probe25(pd6),          // input wire [0:0]  probe25
-  .probe26(pd7)           // input wire [0:0]  probe26
+  .probe2(start),         // input wire [0:0]  probe2
+  .probe3(running),       // input wire [0:0]  probe3
+  .probe4(coeff_en),      // input wire [0:0]  probe4
+  .probe5(coeff_adr),    // input wire [10:0]  probe5
+  .probe6(sin_coeff_out), // input wire [63:0]  probe6
+  .probe7(cos_coeff_out), // input wire [63:0]  probe7
+  .probe8(res_sin_A),     // input wire [15:0]  probe8 
+  .probe9(errors),        // input wire [15:0]  probe9
+  .probe10(skip),          // input wire [0:0]  probe10
+  .probe11(pd1),          // input wire [0:0]  probe11
+  .probe12(pd2),          // input wire [0:0]  probe12
+  .probe13(pd3),          // input wire [0:0]  probe13
+  .probe14(pd4),          // input wire [0:0]  probe14
+  .probe15(pd5),          // input wire [0:0]  probe15
+  .probe16(pd6),          // input wire [0:0]  probe16
+  .probe17(pd7)           // input wire [0:0]  probe17
 );
 
 generate
@@ -197,10 +188,11 @@ begin : ana_freq_gen
 
       if (wr)
       begin
-        coeff_adr <= wr_adr;
+        adr <= adr + 1;
+        coeff_adr <= adr;
         coeff_wr <= 1;
 
-        if (wr_adr == last)
+        if (adr == last)
         begin
           if (last_en[0])
           begin
@@ -267,6 +259,7 @@ begin : ana_freq_gen
     else
     begin
       start <= 0;
+      adr <= 0;
 
       if (running)
       begin

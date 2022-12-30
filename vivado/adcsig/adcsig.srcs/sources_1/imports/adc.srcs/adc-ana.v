@@ -66,6 +66,8 @@ module adc_ana (
   reg                    pd2;
   reg                    pd3;
   reg                    pd4;
+  
+  reg                    delay;
 
   reg  [13:0]            q_A0;
   reg  [13:0]            q_A1;
@@ -128,7 +130,6 @@ ana_freq base (
   .count(ana_count),      // input wire [12:0] count
   .load(ana_load),        // input wire load
   .wr(ana_wr),            // input wire wr
-  .wr_adr(ana_adr),       // input wire [10:0] wr_adr
   .wr_sin(ana_sin),       // input wire [63:0] wr_sin
   .wr_cos(ana_cos),       // input wire [63:0] wr_cos
   .in_A0(q_A0),           // input wire [13:0] in_A0
@@ -142,7 +143,6 @@ ana_freq base (
 );
 
 /*
-
 ila_1 ila_1_inst (
   .clk(clk),               // input wire clk
   .probe0(ana_on),         // input wire [0:0]  probe0
@@ -171,7 +171,6 @@ ila_1 ila_1_inst (
   .probe23(pd3),           // input wire [0:0]  probe23
   .probe24(pd4)            // input wire [0:0]  probe24
 );
-
 */
 
 generate
@@ -267,15 +266,54 @@ begin : adc_bar_gen
 
   always @ ( posedge clk ) 
   begin
-    q_A0 = 1;
-    q_A1 = 2;
-    q_A2 = 3;
-    q_A3 = 4;
+    if (ana_on)
+    begin
+      if (delay)
+        delay <= delay - 1;
+      else
+      begin
+        if (q_A0[13])
+        begin
+          delay <= 4;
+          q_A0 <= 14'b01111111111111;
+          q_A1 <= 14'b01111111111111;
+          q_A2 <= 14'b01111111111111;
+          q_A3 <= 14'b01111111111111;
 
-    q_B0 = -1;
-    q_B1 = -2;
-    q_B2 = -3;
-    q_B3 = -4;
+          q_B0 <= 14'b10000000000001;
+          q_B1 <= 14'b10000000000001;
+          q_B2 <= 14'b10000000000001;
+          q_B3 <= 14'b10000000000001;
+        end
+        else
+        begin
+          delay <= 5;
+          q_A0 <= 14'b10000000000001;
+          q_A1 <= 14'b10000000000001;
+          q_A2 <= 14'b10000000000001;
+          q_A3 <= 14'b10000000000001;
+
+          q_B0 <= 14'b01111111111111;
+          q_B1 <= 14'b01111111111111;
+          q_B2 <= 14'b01111111111111;
+          q_B3 <= 14'b01111111111111;
+        end
+      end
+    end
+    else
+    begin
+      q_A0 <= 14'b01111111111111;
+      q_A1 <= 14'b01111111111111;
+      q_A2 <= 14'b01111111111111;
+      q_A3 <= 14'b01111111111111;
+
+      q_B0 <= 14'b10000000000001;
+      q_B1 <= 14'b10000000000001;
+      q_B2 <= 14'b10000000000001;
+      q_B3 <= 14'b10000000000001;
+      
+      delay <= 4;
+    end
   end
 
   always @ ( posedge clk ) 
@@ -299,10 +337,7 @@ begin : adc_bar_gen
         ana_cos[63:48] <= bram_7;
 
         if (ana_adr == ana_last)
-        begin
-          ana_load <= 0;
           bram_adr <= 0;
-        end
         else
           bram_adr <= bram_adr + 1;
      
@@ -316,7 +351,11 @@ begin : adc_bar_gen
       end
 
       if (pd4)
-          ana_adr <= ana_adr + 1;
+      begin
+        ana_adr <= ana_adr + 1;
+        if (ana_adr == ana_last)
+          ana_load <= 0;
+      end
 
     end
     else
