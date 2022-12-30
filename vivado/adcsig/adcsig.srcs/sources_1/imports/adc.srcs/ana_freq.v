@@ -139,7 +139,6 @@ ila_0 ila_0_inst (
   .probe26(pd7)           // input wire [0:0]  probe26
 );
 
-
 generate
 begin : ana_freq_gen
 
@@ -154,7 +153,7 @@ begin : ana_freq_gen
             if (res_sin_A != prev_sin_A)
               errors <= errors + 1;
          end
-         res_sin_A <= sum_sin_A;
+         prev_sin_A <= res_sin_A;
        end
     end
     else

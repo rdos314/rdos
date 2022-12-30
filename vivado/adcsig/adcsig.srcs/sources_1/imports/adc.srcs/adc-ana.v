@@ -50,6 +50,7 @@ module adc_ana (
   reg                    ana_wr;
   reg                    ana_load;
   reg  [10:0]            ana_adr;
+  reg  [10:0]            ana_last;
   reg  [12:0]            ana_count;
   reg  [63:0]            ana_sin;
   reg  [63:0]            ana_cos;
@@ -140,6 +141,7 @@ ana_freq base (
   .in_B3(q_B3)            // input wire [13:0] in_B3
 );
 
+/*
 
 ila_1 ila_1_inst (
   .clk(clk),               // input wire clk
@@ -170,6 +172,8 @@ ila_1 ila_1_inst (
   .probe24(pd4)            // input wire [0:0]  probe24
 );
 
+*/
+
 generate
 begin : adc_bar_gen
 
@@ -183,7 +187,7 @@ begin : adc_bar_gen
     else
       rp <= 0;
 
-    rd <= pci_rd_pend;
+    pci_rd <= pci_rd_pend;
   end
 
   always @ ( posedge pci_clk ) 
@@ -308,7 +312,7 @@ begin : adc_bar_gen
       else
       begin
         pd1 <= 0;
-        ana_wr < 0;
+        ana_wr <= 0;
       end
 
       if (pd4)
@@ -317,7 +321,7 @@ begin : adc_bar_gen
     end
     else
     begin
-      ana_wr < 0;
+      ana_wr <= 0;
 
       if (ana_on)
       begin
@@ -371,6 +375,7 @@ begin : adc_bar_gen
               pd1 <= 0;
             else
               pd1 <= 1;
+          end
         end
       end
     end
