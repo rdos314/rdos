@@ -35,7 +35,7 @@ module adc_slice (
   input wire [63:0]       coeff,
   input wire [55:0]       in,
 
-  output reg [42:0]       sum
+  output reg [15:0]       res
 );
 
   reg  [42:0]            sum_0;
@@ -60,6 +60,15 @@ module adc_slice (
   wire [13:0]            in_1;
   wire [13:0]            in_2;
   wire [13:0]            in_3;
+
+  reg                    start;
+  reg                    running;
+  reg                    sign;
+  reg  [29:0]            divend;
+  reg  [29:0]            curr;
+  reg  [16:0]            mask;
+  reg  [16:0]            quot;
+
 
   assign coeff_0 = coeff[15:0];
   assign coeff_1 = coeff[31:16];
@@ -98,6 +107,19 @@ multiply m_3 (
   .A(in_3),             // input wire [13 : 0] A
   .B(coeff_3),          // input wire [15 : 0] B
   .P(p_3[29:0])         // output wire [29 : 0] P
+);
+
+
+ila_2 ila_2_inst (
+  .clk(clk),            // input wire clk
+  .probe0(start),       // input wire [0:0]  probe0
+  .probe1(running),     // input wire [0:0]  probe1
+  .probe2(sign),        // input wire [0:0]  probe2
+  .probe3(divend),      // input wire [29:0]  probe3
+  .probe4(curr),        // input wire [29:0]  probe4
+  .probe5(mask),        // input wire [16:0]  probe5
+  .probe6(quot),        // input wire [16:0]  probe6
+  .probe7(sum)          // input wire [42:0]  probe7
 );
 
   assign p_0[30] = p_0[29];
@@ -159,6 +181,59 @@ multiply m_3 (
 generate
 begin : ana_slice_gen
 
+  always @ ( posedge clk ) 
+  begin
+    if (start)
+    begin
+      mask[16] <= 1;
+      mask[15:0] <= 0;
+      curr[29:17] <= count;
+      curr[16:0] <= 0;
+      quot[16:0] <= 0;
+
+      if (sum[42])
+      begin
+        sign <= 1;
+        divend <= !sum[41:12];
+      end
+      else
+      begin
+        sign <= 0;
+        divend <= sum[41:12];
+      end
+
+      running <= 1;
+    end
+    else
+    begin
+      if (running)
+      begin
+        if (mask == 0)
+        begin
+          res[15] <= sign;
+
+          if (sign)
+            res[14:0] <= !quot[16:2];
+          else
+            res[14:0] <= quot[16:2];
+
+          running <= 0;
+        end
+        else
+        begin
+           if (divend >= curr)
+           begin
+            divend <= divend - curr;
+            quot <= quot | mask;
+          end
+
+          mask <= mask >> 1;
+          curr <= curr >> 1;
+        end
+      end
+    end
+  end
+
 
   always @ ( posedge clk ) 
   begin
@@ -169,7 +244,12 @@ begin : ana_slice_gen
     end
 
     if (p8)
+    begin
       sum <= sum_01 + sum_23;
+      start <= 1;
+    end
+    else
+      start <= 0;
   end
 
   always @ ( posedge clk ) 

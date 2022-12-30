@@ -60,8 +60,8 @@ module ana_freq (
   reg  [55:0]            in_A;
   reg  [55:0]            in_B;
 
-  wire [42:0]            sum_sin_A;
-  reg  [42:0]            prev_sin_A;
+  wire [15:0]            res_sin_A;
+  reg  [15:0]            prev_sin_A;
 
   reg  [10:0]            last;
   reg  [3:0]             last_en;
@@ -105,7 +105,7 @@ adc_slice sin_A (
   .count(count),         // input wire [12 : 0] count
   .in(in_A),             // input wire [55 : 0] in
   .coeff(sin_coeff_out), // input wire [63 : 0] coeff
-  .sum(sum_sin_A)        // output wire [42 : 0] sum
+  .res(res_sin_A)        // output wire [15 : 0] sum
 );
 
 ila_0 ila_0_inst (
@@ -127,7 +127,7 @@ ila_0 ila_0_inst (
   .probe14(cos_coeff_out), // input wire [63:0]  probe14
   .probe15(count),         // input wire [12:0]  probe15
   .probe16(last_en),       // input wire [3:0]  probe16
-  .probe17(sum_sin_A),     // input wire [42:0]  probe17 
+  .probe17(res_sin_A),     // input wire [15:0]  probe17 
   .probe18(errors),        // input wire [15:0]  probe18
   .probe19(skip),          // input wire [0:0]  probe19
   .probe20(pd1),          // input wire [0:0]  probe20
@@ -151,10 +151,10 @@ begin : ana_freq_gen
       begin
          if (!skip)
          begin
-            if (sum_sin_A != prev_sin_A)
+            if (res_sin_A != prev_sin_A)
               errors <= errors + 1;
          end
-         prev_sin_A <= sum_sin_A;
+         res_sin_A <= sum_sin_A;
        end
     end
     else
