@@ -76,6 +76,24 @@ module adc_ana (
   reg  [13:0]            q_B2;
   reg  [13:0]            q_B3;
 
+  wire [15:0]            bram_0;
+  wire [15:0]            bram_1;
+  wire [15:0]            bram_2;
+  wire [15:0]            bram_3;
+  wire [15:0]            bram_4;
+  wire [15:0]            bram_5;
+  wire [15:0]            bram_6;
+  wire [15:0]            bram_7;
+
+  assign bram_0 = bram_data_out[15:0];
+  assign bram_1 = bram_data_out[31:16];
+  assign bram_2 = bram_data_out[47:32];
+  assign bram_3 = bram_data_out[63:48];
+  assign bram_4 = bram_data_out[79:64];
+  assign bram_5 = bram_data_out[95:80];
+  assign bram_6 = bram_data_out[111:96];
+  assign bram_7 = bram_data_out[127:112];
+
 // PCI domain
 
   reg                    pci_en;
@@ -120,6 +138,36 @@ ana_freq base (
   .in_B1(q_B1),           // input wire [13:0] in_B1
   .in_B2(q_B2),           // input wire [13:0] in_B2
   .in_B3(q_B3)            // input wire [13:0] in_B3
+);
+
+
+ila_1 ila_1_inst (
+  .clk(clk),               // input wire clk
+  .probe0(ana_on),         // input wire [0:0]  probe0
+  .probe1(ana_off),        // input wire [0:0]  probe1
+  .probe2(ana_en),         // input wire [0:0]  probe2
+  .probe3(ana_wr),         // input wire [0:0]  probe3
+  .probe4(ana_load),       // input wire [0:0]  probe4
+  .probe5(ana_adr),        // input wire [10:0]  probe5
+  .probe6(ana_count),      // input wire [12:0]  probe6
+  .probe7(ana_sin),        // input wire [63:0]  probe7
+  .probe8(ana_cos),        // input wire [63:0]  probe8
+  .probe9(bram_en),        // input wire [0:0]  probe9
+  .probe10(bram_wr),       // input wire [0:0]  probe10
+  .probe11(bram_adr),      // input wire [10:0]  probe11
+  .probe12(bram_last),     // input wire [10:0]  probe12
+  .probe13(bram_0),        // input wire [15:0]  probe13
+  .probe14(bram_1),        // input wire [15:0]  probe14
+  .probe15(bram_2),        // input wire [15:0]  probe15
+  .probe16(bram_3),        // input wire [15:0]  probe16
+  .probe17(bram_4),        // input wire [15:0]  probe17
+  .probe18(bram_5),        // input wire [15:0]  probe18
+  .probe19(bram_6),        // input wire [15:0]  probe19
+  .probe20(bram_7),        // input wire [15:0]  probe20
+  .probe21(pd1),           // input wire [0:0]  probe21
+  .probe22(pd2),           // input wire [0:0]  probe22
+  .probe23(pd3),           // input wire [0:0]  probe23
+  .probe24(pd4)            // input wire [0:0]  probe24
 );
 
 generate
@@ -237,14 +285,14 @@ begin : adc_bar_gen
 
       if (pd3)
       begin
-        ana_sin[15:0] <= bram_data_out[15:0];
-        ana_cos[15:0] <= bram_data_out[31:16];
-        ana_sin[31:16] <= bram_data_out[47:32];
-        ana_cos[31:16] <= bram_data_out[63:48];
-        ana_sin[47:32] <= bram_data_out[79:64];
-        ana_cos[47:32] <= bram_data_out[95:80];
-        ana_sin[63:48] <= bram_data_out[111:96];
-        ana_cos[63:48] <= bram_data_out[127:112];
+        ana_sin[15:0] <= bram_0;
+        ana_cos[15:0] <= bram_1;
+        ana_sin[31:16] <= bram_2;
+        ana_cos[31:16] <= bram_3;
+        ana_sin[47:32] <= bram_4;
+        ana_cos[47:32] <= bram_5;
+        ana_sin[63:48] <= bram_6;
+        ana_cos[63:48] <= bram_7;
 
         if (ana_adr == ana_last)
         begin
