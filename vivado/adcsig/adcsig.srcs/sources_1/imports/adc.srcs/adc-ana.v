@@ -44,24 +44,27 @@ module adc_ana (
 
 // Analysis
 
-  reg                    ana_start;
+  reg                    ana_on;
+  reg                    ana_off;
   reg                    ana_en;
-  wire [10:0]            ana_adr;
+  reg                    ana_wr;
+  reg                    ana_load;
+  reg  [10:0]            ana_adr;
   reg  [12:0]            ana_count;
+  reg  [63:0]            ana_sin;
+  reg  [63:0]            ana_cos;
 
-  reg                    hdr_en;
-  reg   [1:0]            hdr_adr;
+  reg                    bram_en;
+  reg                    bram_wr;
+  reg  [10:0]            bram_adr;
+  reg  [10:0]            bram_last;
+  reg  [127:0]           bram_data_in;
+  wire [127:0]           bram_data_out;
 
-  wire [31:0]            q_hdr_data;
-
-  wire [15:0]            q_sin_0;
-  wire [15:0]            q_cos_0;
-  wire [15:0]            q_sin_1;
-  wire [15:0]            q_cos_1;
-  wire [15:0]            q_sin_2;
-  wire [15:0]            q_cos_2;
-  wire [15:0]            q_sin_3;
-  wire [15:0]            q_cos_3;
+  reg                    pd1;
+  reg                    pd2;
+  reg                    pd3;
+  reg                    pd4;
 
   reg  [13:0]            q_A0;
   reg  [13:0]            q_A1;
@@ -75,185 +78,40 @@ module adc_ana (
 
 // PCI domain
 
-  reg   [3:0]            pci_en;
-  reg                    pci_rd_pend;
+  reg                    pci_en;
   reg                    pci_rd;
+  reg                    pci_wr;
+  reg                    pci_rd_pend;
   reg                    pci_wr_pend;
-  reg   [3:0]            pci_wr;
-  reg   [3:0]            pci_be;
-  reg   [1:0]            pci_bank;
-  reg  [10:0]            pci_adr;
-  reg  [15:0]            pci_sin_in;
-  reg  [15:0]            pci_cos_in;
+  reg  [12:0]            pci_adr;
+  reg  [31:0]            pci_in;
+  wire [31:0]            pci_out;
+  reg  [3:0]             pci_be;
 
-  wire [15:0]            pci_sin_0;
-  wire [15:0]            pci_cos_0;
-  wire [15:0]            pci_sin_1;
-  wire [15:0]            pci_cos_1;
-  wire [15:0]            pci_sin_2;
-  wire [15:0]            pci_cos_2;
-  wire [15:0]            pci_sin_3;
-  wire [15:0]            pci_cos_3;
-
-  reg                    pci_hdr_en;
-  reg                    pci_hdr_rd;
-  reg                    pci_hdr_wr;
-  reg                    pci_hdr_rd_pend;
-  reg                    pci_hdr_wr_pend;
-  reg  [1:0]             pci_hdr_adr;
-  reg  [31:0]            pci_hdr_in;
-  wire [31:0]            pci_hdr_out;
-  reg  [3:0]             pci_hdr_be;
-
-bram_header header_inst (
+bram_coeff bram_coeff_inst (
   .clka(pci_clk),         // input wire clka
-  .ena(pci_hdr_en),       // input wire ena
-  .wea(pci_hdr_wr),       // input wire [0 : 0] wea
-  .addra(pci_hdr_adr),    // input wire [1 : 0] addra
-  .dina(pci_hdr_in),      // input wire [31 : 0] dina
-  .douta(pci_hdr_out),    // output wire [31 : 0] douta
-  .clkb(clk),             // input wire clkb
-  .enb(hdr_en),           // input wire enb
-  .web(0),                // input wire [0 : 0] web
-  .addrb(hdr_adr),        // input wire [1 : 0] addrb
-  .dinb(0),               // input wire [31 : 0] dinb
-  .doutb(q_hdr_data)      // output wire [31 : 0] doutb
-);
-
-bram_coeff sin_0_inst (
-  .clka(pci_clk),         // input wire clka
-  .ena(pci_en[0]),        // input wire ena
-  .wea(pci_wr[0]),        // input wire [0 : 0] wea
+  .ena(pci_en),           // input wire ena
+  .wea(pci_wr),           // input wire [0 : 0] wea
   .addra(pci_adr),        // input wire [10 : 0] addra
-  .dina(pci_sin_in),      // input wire [15 : 0] dina
-  .douta(pci_sin_0),      // output wire [15 : 0] douta
+  .dina(pci_in),          // input wire [31 : 0] dina
+  .douta(pci_out),        // output wire [31 : 0] douta
   .clkb(clk),             // input wire clkb
-  .enb(ana_en),           // input wire enb
-  .web(0),                // input wire [0 : 0] web
-  .addrb(ana_adr),        // input wire [10 : 0] addrb
-  .dinb(d0),              // input wire [15 : 0] dinb
-  .doutb(q_sin_0)         // output wire [15 : 0] doutb
-);
-
-bram_coeff cos_0_inst (
-  .clka(pci_clk),         // input wire clka
-  .ena(pci_en[0]),        // input wire ena
-  .wea(pci_wr[0]),        // input wire [0 : 0] wea
-  .addra(pci_adr),        // input wire [10 : 0] addra
-  .dina(pci_cos_in),      // input wire [15 : 0] dina
-  .douta(pci_cos_0),      // output wire [15 : 0] douta
-  .clkb(clk),             // input wire clkb
-  .enb(ana_en),           // input wire enb
-  .web(0),                // input wire [0 : 0] web
-  .addrb(ana_adr),        // input wire [10 : 0] addrb
-  .dinb(d0),              // input wire [15 : 0] dinb
-  .doutb(q_cos_0)         // output wire [15 : 0] doutb
-);
-
-bram_coeff sin_1_inst (
-  .clka(pci_clk),         // input wire clka
-  .ena(pci_en[1]),        // input wire ena
-  .wea(pci_wr[1]),        // input wire [0 : 0] wea
-  .addra(pci_adr),        // input wire [10 : 0] addra
-  .dina(pci_sin_in),      // input wire [15 : 0] dina
-  .douta(pci_sin_1),      // output wire [15 : 0] douta
-  .clkb(clk),             // input wire clkb
-  .enb(ana_en),           // input wire enb
-  .web(0),                // input wire [0 : 0] web
-  .addrb(ana_adr),        // input wire [10 : 0] addrb
-  .dinb(d0),              // input wire [15 : 0] dinb
-  .doutb(q_sin_1)         // output wire [15 : 0] doutb
-);
-
-bram_coeff cos_1_inst (
-  .clka(pci_clk),         // input wire clka
-  .ena(pci_en[1]),        // input wire ena
-  .wea(pci_wr[1]),        // input wire [0 : 0] wea
-  .addra(pci_adr),        // input wire [10 : 0] addra
-  .dina(pci_cos_in),      // input wire [15 : 0] dina
-  .douta(pci_cos_1),      // output wire [15 : 0] douta
-  .clkb(clk),             // input wire clkb
-  .enb(ana_en),           // input wire enb
-  .web(0),                // input wire [0 : 0] web
-  .addrb(ana_adr),        // input wire [10 : 0] addrb
-  .dinb(d0),              // input wire [15 : 0] dinb
-  .doutb(q_cos_1)         // output wire [15 : 0] doutb
-);
-
-bram_coeff sin_2_inst (
-  .clka(pci_clk),         // input wire clka
-  .ena(pci_en[2]),        // input wire ena
-  .wea(pci_wr[2]),        // input wire [0 : 0] wea
-  .addra(pci_adr),        // input wire [10 : 0] addra
-  .dina(pci_sin_in),      // input wire [15 : 0] dina
-  .douta(pci_sin_2),      // output wire [15 : 0] douta
-  .clkb(clk),             // input wire clkb
-  .enb(ana_en),           // input wire enb
-  .web(0),                // input wire [0 : 0] web
-  .addrb(ana_adr),        // input wire [10 : 0] addrb
-  .dinb(d0),              // input wire [15 : 0] dinb
-  .doutb(q_sin_2)         // output wire [15 : 0] doutb
-);
-
-bram_coeff cos_2_inst (
-  .clka(pci_clk),         // input wire clka
-  .ena(pci_en[2]),        // input wire ena
-  .wea(pci_wr[2]),        // input wire [0 : 0] wea
-  .addra(pci_adr),        // input wire [10 : 0] addra
-  .dina(pci_cos_in),      // input wire [15 : 0] dina
-  .douta(pci_cos_2),      // output wire [15 : 0] douta
-  .clkb(clk),             // input wire clkb
-  .enb(ana_en),           // input wire enb
-  .web(0),                // input wire [0 : 0] web
-  .addrb(ana_adr),        // input wire [10 : 0] addrb
-  .dinb(d0),              // input wire [15 : 0] dinb
-  .doutb(q_cos_2)         // output wire [15 : 0] doutb
-);
-
-bram_coeff sin_3_inst (
-  .clka(pci_clk),         // input wire clka
-  .ena(pci_en[3]),        // input wire ena
-  .wea(pci_wr[3]),        // input wire [0 : 0] wea
-  .addra(pci_adr),        // input wire [10 : 0] addra
-  .dina(pci_sin_in),      // input wire [15 : 0] dina
-  .douta(pci_sin_3),      // output wire [15 : 0] douta
-  .clkb(clk),             // input wire clkb
-  .enb(ana_en),           // input wire enb
-  .web(0),                // input wire [0 : 0] web
-  .addrb(ana_adr),        // input wire [10 : 0] addrb
-  .dinb(d0),              // input wire [15 : 0] dinb
-  .doutb(q_sin_3)         // output wire [15 : 0] doutb
-);
-
-bram_coeff cos_3_inst (
-  .clka(pci_clk),         // input wire clka
-  .ena(pci_en[3]),        // input wire ena
-  .wea(pci_wr[3]),        // input wire [0 : 0] wea
-  .addra(pci_adr),        // input wire [10 : 0] addra
-  .dina(pci_cos_in),      // input wire [15 : 0] dina
-  .douta(pci_cos_3),      // output wire [15 : 0] douta
-  .clkb(clk),             // input wire clkb
-  .enb(ana_en),           // input wire enb
-  .web(0),                // input wire [0 : 0] web
-  .addrb(ana_adr),        // input wire [10 : 0] addrb
-  .dinb(d0),              // input wire [15 : 0] dinb
-  .doutb(q_cos_3)         // output wire [15 : 0] doutb
+  .enb(bram_en),          // input wire enb
+  .web(bram_wr),          // input wire [0 : 0] web
+  .addrb(bram_adr),       // input wire [10 : 0] addrb
+  .dinb(bram_data_in),    // input wire [127 : 0] dinb
+  .doutb(bram_data_out)   // output wire [127 : 0] doutb
 );
 
 ana_freq base (
   .clk(pci_clk),          // input wire clk
   .en(ana_en),            // input wire en
-  .start(ana_start),      // input wire start
   .count(ana_count),      // input wire [12:0] count
-  .adr(ana_adr),          // input wire [10:0] adr
-  .sin_0(q_sin_0),        // input wire [15:0] sin_0
-  .sin_1(q_sin_1),        // input wire [15:0] sin_1
-  .sin_2(q_sin_2),        // input wire [15:0] sin_2
-  .sin_3(q_sin_3),        // input wire [15:0] sin_3
-  .cos_0(q_cos_0),        // input wire [15:0] cos_0
-  .cos_1(q_cos_1),        // input wire [15:0] cos_1
-  .cos_2(q_cos_2),        // input wire [15:0] cos_2
-  .cos_3(q_cos_3),        // input wire [15:0] cos_3
+  .load(ana_load),        // input wire load
+  .wr(ana_wr),            // input wire wr
+  .wr_adr(ana_adr),       // input wire [10:0] wr_adr
+  .wr_sin(ana_sin),       // input wire [63:0] wr_sin
+  .wr_cos(ana_cos),       // input wire [63:0] wr_cos
   .in_A0(q_A0),           // input wire [13:0] in_A0
   .in_A1(q_A1),           // input wire [13:0] in_A1
   .in_A2(q_A2),           // input wire [13:0] in_A2
@@ -264,7 +122,6 @@ ana_freq base (
   .in_B3(q_B3)            // input wire [13:0] in_B3
 );
 
-
 generate
 begin : adc_bar_gen
 
@@ -272,218 +129,84 @@ begin : adc_bar_gen
   begin
     if (pci_rd)
     begin
-      case (pci_bank)
-        2'b00 : rp_data[15:0] <= pci_sin_0;
-        2'b01 : rp_data[15:0] <= pci_sin_1;
-        2'b10 : rp_data[15:0] <= pci_sin_2;
-        2'b11 : rp_data[15:0] <= pci_sin_3;
-      endcase
-
-      case (pci_bank)
-        2'b00 : rp_data[31:16] <= pci_cos_0;
-        2'b01 : rp_data[31:16] <= pci_cos_1;
-        2'b10 : rp_data[31:16] <= pci_cos_2;
-        2'b11 : rp_data[31:16] <= pci_cos_3;
-      endcase
-      
+      rp_data <= pci_out;
       rp <= 1;
     end
     else
-    begin
-      if (pci_hdr_rd)
-      begin
-        rp_data <= pci_hdr_out;
-        rp <= 1;
-      end
-      else
-        rp <= 0;
-    end
+      rp <= 0;
 
-    pci_hdr_rd <= pci_hdr_rd_pend;
-    pci_rd <= pci_rd_pend;
+    rd <= pci_rd_pend;
   end
 
   always @ ( posedge pci_clk ) 
   begin
     if (pci_reset)
     begin
-      pci_en <= 4'b0000;
+      pci_en <= 0;
       pci_rd_pend <= 0;
       pci_wr_pend <= 0;
-      pci_wr <= 4'b0000;
-
-      pci_hdr_en <= 0;
-      pci_hdr_rd_pend <= 0;
-      pci_hdr_wr_pend <= 0;
-      pci_hdr_wr <= 0;
+      pci_wr <= 0;
     end
     else
-    begin    
+    begin
       if (wr)
       begin
-        if (wr_address[12:2] == 11'b000000000)
+        pci_adr <= wr_address;
+        pci_in <= wr_data;
+
+        if (wr_be == 4'b1111)
         begin
-          pci_hdr_adr <= wr_address[1:0];
-          pci_hdr_in <= wr_data;
-
-          if (wr_be == 4'b1111)
-          begin
-            pci_hdr_rd_pend <= 0;
-            pci_hdr_wr_pend <= 0;
-            pci_hdr_en <= 1;
-            pci_hdr_wr <= 1;
-          end
-          else
-          begin
-            pci_hdr_rd_pend <= 0;
-            pci_hdr_wr_pend <= 1;
-            pci_hdr_en <= 1;
-            pci_hdr_wr <= 0;
-            pci_hdr_be <= wr_be;
-          end
-
+          pci_en <= 1;
           pci_rd_pend <= 0;
           pci_wr_pend <= 0;
-          pci_en <= 4'b0000;
-          pci_wr <= 4'b0000;
+          pci_wr <= 1;
         end
         else
         begin
-          pci_adr <= wr_address[12:2] - 1;
-          pci_sin_in <= wr_data[15:0];
-          pci_cos_in <= wr_data[31:16];
-          pci_bank <= wr_address[1:0];
-        
-          if (wr_be == 4'b1111)
-          begin
-            pci_rd_pend <= 0;
-            pci_wr_pend <= 0;
-            pci_en <= 1 << wr_address[1:0];
-            pci_wr <= 1 << wr_address[1:0];
-          end
-          else
-          begin
-            pci_rd_pend <= 0;
-            pci_wr_pend <= 1;
-            pci_en <= 1 << wr_address[1:0];
-            pci_wr <= 4'b0000;
-            pci_be <= wr_be;
-          end
-
-          pci_hdr_rd_pend <= 0;
-          pci_hdr_wr_pend <= 0;
-          pci_hdr_en <= 0;
-          pci_hdr_wr <= 0;
+          pci_en <= 1;
+          pci_rd_pend <= 0;
+          pci_wr_pend <= 1;
+          pci_wr <= 0;
+          pci_be <= wr_be;
         end
       end
       else
       begin
         if (rd)
         begin
-          if (rd_address[12:2] == 11'b000000000)
-          begin
-            pci_hdr_adr <= rd_address[1:0];
-
-            pci_hdr_rd_pend <= 1;
-            pci_hdr_wr_pend <= 0;
-            pci_hdr_en <= 1;
-            pci_hdr_wr <= 0;
-
-            pci_rd_pend <= 0;
-            pci_wr_pend <= 0;
-            pci_en <= 4'b0000;
-            pci_wr <= 4'b0000;
-          end
-          else
-          begin
-            pci_bank <= rd_address[1:0];
-            pci_adr <= rd_address[12:2] - 1;
-
-            pci_rd_pend <= 1;
-            pci_wr_pend <= 0;
-            pci_en <= 1 << rd_address[1:0];
-            pci_wr <= 4'b0000;
-
-            pci_hdr_rd_pend <= 0;
-            pci_hdr_wr_pend <= 0;
-            pci_hdr_en <= 0;
-            pci_hdr_wr <= 0;
-          end
+          pci_adr <= rd_address;
+          pci_en <= 1;
+          pci_rd_pend <= 1;
+          pci_wr_pend <= 0;
+          pci_wr <= 0;
         end
         else
         begin
-          if (pci_hdr_wr_pend)
-          begin
-            if (!pci_hdr_be[0])
-              pci_hdr_in[7:0] <= pci_hdr_out[7:0];
-              
-            if (!pci_hdr_be[1])
-              pci_hdr_in[15:8] <= pci_hdr_out[15:8];
-            
-            if (!pci_hdr_be[2])
-              pci_hdr_in[23:16] <= pci_hdr_out[23:16];
-            
-            if (!pci_hdr_be[3])
-              pci_hdr_in[31:24] <= pci_hdr_out[31:24];
-              
-            pci_hdr_rd_pend <= 0;
-            pci_hdr_wr_pend <= 0;
-            pci_hdr_en <= 1;
-            pci_hdr_wr <= 1;
-          end
-          else
-          begin
-            pci_hdr_rd_pend <= 0;
-            pci_hdr_wr_pend <= 0;
-            pci_hdr_en <= 0;
-            pci_hdr_wr <= 0;
-          end
-
           if (pci_wr_pend)
           begin
             if (!pci_be[0])
-              case (pci_bank)
-                2'b00 : pci_sin_in[7:0] <= pci_sin_0[7:0];
-                2'b01 : pci_sin_in[7:0] <= pci_sin_1[7:0];
-                2'b10 : pci_sin_in[7:0] <= pci_sin_2[7:0];
-                2'b11 : pci_sin_in[7:0] <= pci_sin_3[7:0];
-              endcase
-      
+              pci_in[7:0] <= pci_out[7:0];
+              
             if (!pci_be[1])
-              case (pci_bank)
-                2'b00 : pci_sin_in[15:8] <= pci_sin_0[15:8];
-                2'b01 : pci_sin_in[15:8] <= pci_sin_1[15:8];
-                2'b10 : pci_sin_in[15:8] <= pci_sin_2[15:8];
-                2'b11 : pci_sin_in[15:8] <= pci_sin_3[15:8];
-              endcase
+              pci_in[15:8] <= pci_out[15:8];
             
             if (!pci_be[2])
-              case (pci_bank)
-                2'b00 : pci_cos_in[7:0] <= pci_cos_0[7:0];
-                2'b01 : pci_cos_in[7:0] <= pci_cos_1[7:0];
-                2'b10 : pci_cos_in[7:0] <= pci_cos_2[7:0];
-                2'b11 : pci_cos_in[7:0] <= pci_cos_3[7:0];
-              endcase
+              pci_in[23:16] <= pci_out[23:16];
             
             if (!pci_be[3])
-              case (pci_bank)
-                2'b00 : pci_cos_in[15:8] <= pci_cos_0[15:8];
-                2'b01 : pci_cos_in[15:8] <= pci_cos_1[15:8];
-                2'b10 : pci_cos_in[15:8] <= pci_cos_2[15:8];
-                2'b11 : pci_cos_in[15:8] <= pci_cos_3[15:8];
-              endcase
+              pci_in[31:24] <= pci_out[31:24];
               
+            pci_en <= 1;
             pci_rd_pend <= 0;
             pci_wr_pend <= 0;
-            pci_en <= 1 << pci_bank;
-            pci_wr <= 1 << pci_bank;
+            pci_wr <= 1;
           end
           else
-          begin          
+          begin
+            pci_en <= 0;
             pci_rd_pend <= 0;
             pci_wr_pend <= 0;
-            pci_en <= 4'b0000;
-            pci_wr <= 4'b0000;
+            pci_wr <= 0;
           end
         end
       end
@@ -502,30 +225,112 @@ begin : adc_bar_gen
     q_B2 = -3;
     q_B3 = -4;
   end
-  
+
   always @ ( posedge clk ) 
   begin
-    hdr_en <= 1;
-    hdr_adr <= 0;
+    bram_en <= 1;
+    bram_wr <= 0;
 
-    ana_count <= q_hdr_data[12:0];
-
-    if (ana_count[12:4] == 0)
+    if (ana_load)
     begin
-      ana_en <= 0;
-      ana_start <= 0;
+      ana_en <= 1;
+
+      if (pd3)
+      begin
+        ana_sin[15:0] <= bram_data_out[15:0];
+        ana_cos[15:0] <= bram_data_out[31:16];
+        ana_sin[31:16] <= bram_data_out[47:32];
+        ana_cos[31:16] <= bram_data_out[63:48];
+        ana_sin[47:32] <= bram_data_out[79:64];
+        ana_cos[47:32] <= bram_data_out[95:80];
+        ana_sin[63:48] <= bram_data_out[111:96];
+        ana_cos[63:48] <= bram_data_out[127:112];
+
+        if (ana_adr == ana_last)
+        begin
+          ana_load <= 0;
+          bram_adr <= 0;
+        end
+        else
+          bram_adr <= bram_adr + 1;
+     
+        pd1 <= 1;
+        ana_wr <= 1;
+      end
+      else
+      begin
+        pd1 <= 0;
+        ana_wr < 0;
+      end
+
+      if (pd4)
+          ana_adr <= ana_adr + 1;
+
     end
     else
     begin
-      if (ana_en)
-        ana_start <= 0;
+      ana_wr < 0;
+
+      if (ana_on)
+      begin
+        pd1 <= 0;
+
+        if (ana_count != bram_data_out[12:0])
+        begin
+          ana_en <= 0;
+          ana_on <= 0;
+          ana_off <= 1;
+        end
+      end
       else
-        ana_start <= 1;
-        
-      ana_en <= 1;
+      begin
+        ana_adr <= 0;
+
+        if (ana_off)
+        begin
+          ana_en <= 0;
+
+          ana_count <= bram_data_out[12:0];
+          if (ana_count[12:4] != 0)
+          begin
+            if (ana_count[1:0] == 0)
+              ana_last <= ana_count[12:2] - 1;
+            else
+              ana_last <= ana_count[12:2];
+
+            ana_off <= 0;
+            bram_adr <= 1;
+            ana_load <= 1;
+            pd1 <= 1;
+          end
+          else
+            pd1 <= 0;
+        end
+        else
+        begin
+          bram_adr <= 0;
+
+          if (pd3)
+          begin
+            if (ana_en)
+              ana_on <= 1;
+            else
+              ana_off <= 1;
+          end
+          else
+          begin
+            if (pd1 || pd2)
+              pd1 <= 0;
+            else
+              pd1 <= 1;
+        end
+      end
     end
-      
-  end     
+
+    pd2 <= pd1;
+    pd3 <= pd2;
+    pd4 <= pd3;
+  end
 
 end
 

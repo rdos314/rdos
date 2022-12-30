@@ -143,6 +143,23 @@ ila_0 ila_0_inst (
 generate
 begin : ana_freq_gen
 
+  always @ ( posedge clk ) 
+  begin
+    if (running)
+    begin
+      if (pd7)
+      begin
+         if (!skip)
+         begin
+            if (sum_sin_A != prev_sin_A)
+              errors <= errors + 1;
+         end
+         prev_sin_A <= sum_sin_A;
+       end
+    end
+    else
+      errors <= 0;
+  end
 
   always @ ( posedge clk ) 
   begin
@@ -166,7 +183,7 @@ begin : ana_freq_gen
       in_B[41:28] <= in_B2;
       in_B[55:42] <= in_B3;
 
-      if (pd6)
+      if (pd7)
          skip <= 0;
     end
     else
