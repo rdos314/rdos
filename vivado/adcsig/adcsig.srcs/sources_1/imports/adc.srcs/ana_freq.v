@@ -29,19 +29,13 @@ module ana_freq (
   input wire              clk,
 
   input wire              en,
-  input wire              start,
   input wire [12:0]       count,
-  output reg [10:0]       adr,
 
-  input wire [15:0]       sin_0,
-  input wire [15:0]       sin_1,
-  input wire [15:0]       sin_2,
-  input wire [15:0]       sin_3,
-
-  input wire [15:0]       cos_0,
-  input wire [15:0]       cos_1,
-  input wire [15:0]       cos_2,
-  input wire [15:0]       cos_3,
+  input wire              load,
+  input wire              wr,
+  input wire [10:0]       wr_adr,
+  input wire [63:0]       wr_sin,
+  input wire [63:0]       wr_cos,
 
   input wire [13:0]       in_A0,
   input wire [13:0]       in_A1,
@@ -53,6 +47,15 @@ module ana_freq (
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3
 );
+
+  reg                    start;
+  reg                    running;
+  reg                    coeff_en;
+  reg                    coeff_wr;
+  reg  [10:0]            coeff_adr;
+  reg  [63:0]            sin_coeff_in;
+  reg  [63:0]            cos_coeff_in;
+
 
   wire [42:0]            sum_sin_A;
   reg  [42:0]            prev_sin_A;
@@ -69,33 +72,32 @@ module ana_freq (
   reg                    pd5;
   reg                    pd6;
   reg                    pd7;
+  reg                    pd8;
 
 bram_freq bram_sin (
-  .clka(clk),    // input wire clka
-  .ena(ena),      // input wire ena
-  .wea(wea),      // input wire [0 : 0] wea
-  .addra(addra),  // input wire [10 : 0] addra
-  .dina(dina),    // input wire [63 : 0] dina
-  .douta(douta)  // output wire [63 : 0] douta
+  .clka(clk),          // input wire clka
+  .ena(coeff_en),      // input wire ena
+  .wea(coeff_wr),      // input wire [0 : 0] wea
+  .addra(coeff_adr),   // input wire [10 : 0] addra
+  .dina(sin_coeff_in), // input wire [63 : 0] dina
+  .douta(douta)        // output wire [63 : 0] douta
 );
 
 bram_freq bram_cos (
-  .clka(clk),    // input wire clka
-  .ena(ena),      // input wire ena
-  .wea(wea),      // input wire [0 : 0] wea
-  .addra(addra),  // input wire [10 : 0] addra
-  .dina(dina),    // input wire [63 : 0] dina
-  .douta(douta)  // output wire [63 : 0] douta
+  .clka(clk),          // input wire clka
+  .ena(coeff_en),      // input wire ena
+  .wea(coeff_wr),      // input wire [0 : 0] wea
+  .addra(coeff_adr),   // input wire [10 : 0] addra
+  .dina(cos_coeff_in), // input wire [63 : 0] dina
+  .douta(douta)        // output wire [63 : 0] douta
 );
 
 
 adc_slice sin_A (
   .clk(clk),            // input wire CLK
-  .p5(pd5),             // input wire [0 : 0] p5
-  .p6(pd6),             // input wire [0 : 0] p6
   .p7(pd7),             // input wire [0 : 0] p7
+  .p8(pd8),             // input wire [0 : 0] p8
   .count(count),        // input wire [12 : 0] count
-  .last_en(last_en),    // input wire [3 : 0] last
   .in_0(in_A0),         // input wire [13 : 0] in_0
   .in_1(in_A1),         // input wire [13 : 0] in_1
   .in_2(in_A2),         // input wire [13 : 0] in_2
@@ -104,7 +106,7 @@ adc_slice sin_A (
   .coeff_1(sin_1),      // input wire [15 : 0] coeff_1
   .coeff_2(sin_2),      // input wire [15 : 0] coeff_2
   .coeff_3(sin_3),      // input wire [15 : 0] coeff_3
-  .sum(sum_sin_A)       // output wire [31 : 0] sum
+  .sum(sum_sin_A)       // output wire [42 : 0] sum
 );
 
 ila_0 ila_0_inst (
@@ -130,23 +132,6 @@ ila_0 ila_0_inst (
 generate
 begin : ana_freq_gen
 
-  always @ ( posedge clk ) 
-  begin
-    if (en)
-    begin
-      if (pd6)
-      begin
-         if (!skip)
-         begin
-            if (sum_sin_A != prev_sin_A)
-              errors <= errors + 1;
-         end
-         prev_sin_A <= sum_sin_A;
-       end
-    end
-    else
-      errors <= 0;
-  end
 
   always @ ( posedge clk ) 
   begin
@@ -158,6 +143,105 @@ begin : ana_freq_gen
     else
       skip <= 1;
   end
+
+
+  always @ ( posedge clk ) 
+  begin
+    if (load)
+    begin
+      coeff_en <= 1;
+      running <= 0;
+
+      if (wr)
+      begin
+        coeff_adr <= wr_adr;
+
+        if (wr_adr == last)
+        begin
+          if (last_en[0])
+          begin
+            sin_coeff_in[15:0] <= wr_sin[15:0];
+            cos_coeff_in[15:0] <= wr_cos[15:0];
+          end
+          else            
+          begin
+            sin_coeff_in[15:0] <= 0;
+            cos_coeff_in[15:0] <= 0;
+          end
+
+          if (last_en[1])
+          begin
+            sin_coeff_in[31:16] <= wr_sin[31:16];
+            cos_coeff_in[31:16] <= wr_cos[31:16];
+          end
+          else            
+          begin
+            sin_coeff_in[31:16] <= 0;
+            cos_coeff_in[31:16] <= 0;
+          end
+
+          if (last_en[2])
+          begin
+            sin_coeff_in[47:32] <= wr_sin[47:32];
+            cos_coeff_in[47:32] <= wr_cos[47:32];
+          end
+          else            
+          begin
+            sin_coeff_in[47:32] <= 0;
+            cos_coeff_in[47:32] <= 0;
+          end
+
+          if (last_en[3])
+          begin
+            sin_coeff_in[63:48] <= wr_sin[63:48];
+            cos_coeff_in[63:48] <= wr_cos[63:48];
+          end
+          else            
+          begin
+            sin_coeff_in[63:48] <= 0;
+            cos_coeff_in[63:48] <= 0;
+          end
+          start <= 1;
+        end
+        else
+        begin
+          sin_coeff_in <= wr_sin;
+          cos_coeff_in <= wr_cos;
+          start <= 0;
+        end
+
+        coeff_wr <= 1;
+      end
+      else
+      begin
+        coeff_wr <= 0;
+        start <= 0;
+      end
+    end
+    else
+    begin
+      if (running)
+      begin
+      end
+
+      coeff_wr <= 0;
+      start <= 0;
+
+      case (count[1:0])
+        2'b00 : last_en <= 4'b1111;
+        2'b01 : last_en <= 4'b0001;
+        2'b10 : last_en <= 4'b0011;
+        2'b11 : last_en <= 4'b0111;
+      endcase
+
+      if (count[1:0] == 2'b00)
+        last <= count[12:2] - 1;
+      else
+        last <= count[12:2];
+
+    end
+  end
+
 
   always @ ( posedge clk ) 
   begin
@@ -183,18 +267,6 @@ begin : ana_freq_gen
       end
     end
     else
-    begin
-      case (count[1:0])
-        2'b00 : last_en <= 4'b1111;
-        2'b01 : last_en <= 4'b0001;
-        2'b10 : last_en <= 4'b0011;
-        2'b11 : last_en <= 4'b0111;
-      endcase
-
-      if (count[1:0] == 2'b00)
-        last <= count[12:2] - 1;
-      else
-        last <= count[12:2];
 
     end
 
@@ -204,7 +276,9 @@ begin : ana_freq_gen
     pd5 <= pd4;
     pd6 <= pd5;
     pd7 <= pd6;
+    pd8 <= pd7;
   end
+
   
 end
 

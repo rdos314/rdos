@@ -28,11 +28,9 @@
 module adc_slice (
   input wire              clk,
 
-  input wire              p5,
-  input wire              p6,
   input wire              p7,
+  input wire              p8,
   input wire [12:0]       count,
-  input wire [3:0]        last_en,
 
   input wire [15:0]       coeff_0,
   input wire [15:0]       coeff_1,
@@ -51,6 +49,9 @@ module adc_slice (
   reg  [42:0]            sum_1;
   reg  [42:0]            sum_2;
   reg  [42:0]            sum_3;
+
+  reg  [42:0]            sum_01;
+  reg  [42:0]            sum_23;
 
   wire [42:0]            p_0;  
   wire [42:0]            p_1;  
@@ -148,52 +149,46 @@ begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
-    if (p6)
-      sum <= sum_0 + sum_1 + sum_2 + sum_3;
+    if (p7)
+    begin
+      sum_01 <= sum_0 + sum_1;
+      sum_23 <= sum_2 + sum_3;
+    end
+
+    if (p8)
+      sum <= sum_01 + sum_23;
   end
 
   always @ ( posedge clk ) 
   begin
-    if (p6)
+    if (p7)
       sum_0 <= p_0;
     else
-    begin
-      if (p5 == 0 || last_en[0])
-        sum_0 <= sum_0 + p_0;      
-    end
+      sum_0 <= sum_0 + p_0;      
   end
 
   always @ ( posedge clk ) 
   begin
-    if (p6)
+    if (p7)
       sum_1 <= p_1;
     else
-    begin
-      if (p5 == 0 || last_en[1])
-        sum_1 <= sum_1 + p_1;      
-    end
+      sum_1 <= sum_1 + p_1;      
   end
 
   always @ ( posedge clk ) 
   begin
-    if (p6)
+    if (p7)
       sum_2 <= p_2;
     else
-    begin
-      if (p5 == 0 || last_en[2])
-        sum_2 <= sum_2 + p_2;      
-    end
+      sum_2 <= sum_2 + p_2;      
   end
 
   always @ ( posedge clk ) 
   begin
-    if (p6)
+    if (p7)
       sum_3 <= p_3;
     else
-    begin
-      if (p5 == 0 || last_en[3])
-        sum_3 <= sum_3 + p_3;      
-    end
+      sum_3 <= sum_3 + p_3;      
   end
 
 end
