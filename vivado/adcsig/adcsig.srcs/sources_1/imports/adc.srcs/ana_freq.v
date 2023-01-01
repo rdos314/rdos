@@ -27,6 +27,7 @@
 
 module ana_freq (
   input wire              clk,
+  input wire              reset,
 
   input wire              en,
   input wire [12:0]       count,
@@ -43,7 +44,12 @@ module ana_freq (
   input wire [13:0]       in_B0,
   input wire [13:0]       in_B1,
   input wire [13:0]       in_B2,
-  input wire [13:0]       in_B3
+  input wire [13:0]       in_B3,
+
+  output wire [15:0]      res_sin_A,
+  output wire [15:0]      res_cos_A,
+  output wire [15:0]      res_sin_B,
+  output wire [15:0]      res_cos_B
 );
 
   reg                    start;
@@ -59,9 +65,6 @@ module ana_freq (
   reg  [55:0]            in_A;
   reg  [55:0]            in_B;
 
-  wire [15:0]            res_sin_A;
-  reg  [15:0]            prev_sin_A;
-
   reg  [10:0]            adr;
   reg  [10:0]            last;
   reg  [3:0]             last_en;
@@ -76,8 +79,6 @@ module ana_freq (
   reg                    pd6;
   reg                    pd7;
   reg                    pd8;
-
-  reg  [15:0]            errors;
 
 bram_freq bram_sin (
   .clka(clk),           // input wire clka
@@ -108,48 +109,20 @@ adc_slice sin_A (
   .res(res_sin_A)        // output wire [15 : 0] sum
 );
 
+
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(en),            // input wire [0:0]  probe0
   .probe1(load),          // input wire [0:0]  probe1
   .probe2(start),         // input wire [0:0]  probe2
   .probe3(running),       // input wire [0:0]  probe3
-  .probe4(coeff_en),      // input wire [0:0]  probe4
-  .probe5(coeff_adr),    // input wire [10:0]  probe5
-  .probe6(sin_coeff_out), // input wire [63:0]  probe6
-  .probe7(cos_coeff_out), // input wire [63:0]  probe7
-  .probe8(res_sin_A),     // input wire [15:0]  probe8 
-  .probe9(errors),        // input wire [15:0]  probe9
-  .probe10(skip),          // input wire [0:0]  probe10
-  .probe11(pd1),          // input wire [0:0]  probe11
-  .probe12(pd2),          // input wire [0:0]  probe12
-  .probe13(pd3),          // input wire [0:0]  probe13
-  .probe14(pd4),          // input wire [0:0]  probe14
-  .probe15(pd5),          // input wire [0:0]  probe15
-  .probe16(pd6),          // input wire [0:0]  probe16
-  .probe17(pd7)           // input wire [0:0]  probe17
+  .probe4(wr),            // input wire [0:0]  probe3
+  .probe5(adr),           // input wire [0:0]  probe3
+  .probe6(last)           // input wire [0:0]  probe3
 );
 
 generate
 begin : ana_freq_gen
-
-  always @ ( posedge clk ) 
-  begin
-    if (running)
-    begin
-      if (pd7)
-      begin
-         if (!skip)
-         begin
-            if (res_sin_A != prev_sin_A)
-              errors <= errors + 1;
-         end
-         prev_sin_A <= res_sin_A;
-       end
-    end
-    else
-      errors <= 0;
-  end
 
   always @ ( posedge clk ) 
   begin
@@ -182,134 +155,147 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (load)
+    if (reset)
     begin
-      coeff_en <= 1;
-
-      if (wr)
+      coeff_en <= 0;
+      coeff_wr <= 0;
+      adr <= 0;
+      last <= 0;
+      start <= 0;
+      running <= 0;
+      pd1 <= 0;
+    end
+    else
+    begin
+      if (load)
       begin
-        adr <= adr + 1;
-        coeff_adr <= adr;
-        coeff_wr <= 1;
+        coeff_en <= 1;
 
-        if (adr == last)
+        if (wr)
         begin
-          if (last_en[0])
-          begin
-            sin_coeff_in[15:0] <= wr_sin[15:0];
-            cos_coeff_in[15:0] <= wr_cos[15:0];
-          end
-          else            
-          begin
-            sin_coeff_in[15:0] <= 0;
-            cos_coeff_in[15:0] <= 0;
-          end
+          adr <= adr + 1;
+          coeff_adr <= adr;
+          coeff_wr <= 1;
 
-          if (last_en[1])
+          if (adr == last)
           begin
-            sin_coeff_in[31:16] <= wr_sin[31:16];
-            cos_coeff_in[31:16] <= wr_cos[31:16];
-          end
-          else            
-          begin
-            sin_coeff_in[31:16] <= 0;
-            cos_coeff_in[31:16] <= 0;
-          end
+            if (last_en[0])
+            begin
+              sin_coeff_in[15:0] <= wr_sin[15:0];
+              cos_coeff_in[15:0] <= wr_cos[15:0];
+            end
+            else            
+            begin
+              sin_coeff_in[15:0] <= 0;
+              cos_coeff_in[15:0] <= 0;
+            end
 
-          if (last_en[2])
-          begin
-            sin_coeff_in[47:32] <= wr_sin[47:32];
-            cos_coeff_in[47:32] <= wr_cos[47:32];
-          end
-          else            
-          begin
-            sin_coeff_in[47:32] <= 0;
-            cos_coeff_in[47:32] <= 0;
-          end
+            if (last_en[1])
+            begin
+              sin_coeff_in[31:16] <= wr_sin[31:16];
+              cos_coeff_in[31:16] <= wr_cos[31:16];
+            end
+            else            
+            begin
+              sin_coeff_in[31:16] <= 0;
+              cos_coeff_in[31:16] <= 0;
+            end
 
-          if (last_en[3])
-          begin
-            sin_coeff_in[63:48] <= wr_sin[63:48];
-            cos_coeff_in[63:48] <= wr_cos[63:48];
-          end
-          else            
-          begin
-            sin_coeff_in[63:48] <= 0;
-            cos_coeff_in[63:48] <= 0;
-          end
+            if (last_en[2])
+            begin
+              sin_coeff_in[47:32] <= wr_sin[47:32];
+              cos_coeff_in[47:32] <= wr_cos[47:32];
+            end
+            else            
+            begin
+              sin_coeff_in[47:32] <= 0;
+              cos_coeff_in[47:32] <= 0;
+            end
 
-          start <= 1;
-          running <= 1;
+            if (last_en[3])
+            begin
+              sin_coeff_in[63:48] <= wr_sin[63:48];
+              cos_coeff_in[63:48] <= wr_cos[63:48];
+            end
+            else            
+            begin
+              sin_coeff_in[63:48] <= 0;
+              cos_coeff_in[63:48] <= 0;
+            end
+
+            start <= 1;
+            running <= 1;
+          end
+          else
+          begin
+            sin_coeff_in <= wr_sin;
+            cos_coeff_in <= wr_cos;
+            start <= 0;
+            running <= 0;
+          end
         end
         else
         begin
-          sin_coeff_in <= wr_sin;
-          cos_coeff_in <= wr_cos;
+          coeff_wr <= 0;
           start <= 0;
           running <= 0;
         end
       end
       else
       begin
-        coeff_wr <= 0;
         start <= 0;
-        running <= 0;
-      end
-    end
-    else
-    begin
-      start <= 0;
-      adr <= 0;
+        adr <= 0;
 
-      if (running)
-      begin
-        if (en)
+        if (running)
         begin
-          coeff_en <= 1;
-          coeff_wr <= 0;
+          if (en)
+          begin
+            coeff_en <= 1;
+            coeff_wr <= 0;
 
-          if (start)
-          begin
-            coeff_adr <= 0;
-            pd1 <= 1;
-          end
-          else
-          begin
-            if (coeff_adr == last)
+            if (start)
             begin
               coeff_adr <= 0;
               pd1 <= 1;
             end
             else
             begin
-              coeff_adr <= coeff_adr + 1;
-              pd1 <= 0;
+              if (coeff_adr == last)
+              begin
+                coeff_adr <= 0;
+                pd1 <= 1;
+              end
+              else
+              begin
+                coeff_adr <= coeff_adr + 1;
+                pd1 <= 0;
+              end
             end
+          end
+          else
+          begin
+            running <= 0;
+            coeff_en <= 0;
+            coeff_wr <= 0;
           end
         end
         else
         begin
-          running <= 0;
           coeff_en <= 0;
           coeff_wr <= 0;
+
+          case (count[1:0])
+            2'b00 : last_en <= 4'b1111;
+            2'b01 : last_en <= 4'b0001;
+            2'b10 : last_en <= 4'b0011;
+            2'b11 : last_en <= 4'b0111;
+          endcase
+
+          if (count[1:0] == 2'b00)
+            last <= count[12:2] - 1;
+          else
+            last <= count[12:2];
         end
-      end
-      else
-      begin
-        coeff_en <= 0;
-        coeff_wr <= 0;
-
-        case (count[1:0])
-          2'b00 : last_en <= 4'b1111;
-          2'b01 : last_en <= 4'b0001;
-          2'b10 : last_en <= 4'b0011;
-          2'b11 : last_en <= 4'b0111;
-        endcase
-
-        if (count[1:0] == 2'b00)
-          last <= count[12:2] - 1;
-        else
-          last <= count[12:2];
       end
     end
   end

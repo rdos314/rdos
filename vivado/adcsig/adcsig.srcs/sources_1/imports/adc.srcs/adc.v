@@ -147,6 +147,9 @@ module adc (
 
   reg                  q_user_reset;
   reg [7:0]            pci_reset_cnt;
+  
+  reg                  rx_reset_req;
+  reg                  rx_reset_ack;
 
 
 // ADC
@@ -162,11 +165,18 @@ module adc (
   wire [13:0]          adc_B2;
   wire [13:0]          adc_B3;
 
+  wire [15:0]          res_sin_A;
+  wire [15:0]          res_cos_A;
+  wire [15:0]          res_sin_B;
+  wire [15:0]          res_cos_B;
+
   wire                 up_adc_started;
   wire                 up_adc_probing;
   wire                 up_adc_running;
   wire                 up_adc_delay;
   reg                  adc_delay;
+  
+  reg                  adc_led;
 
   wire                 rx_adc_sync_ok;
   wire                 rx_adc_sync_fail;
@@ -258,6 +268,12 @@ module adc (
 
  (* ASYNC_REG="TRUE" *)  reg                  up_reset_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_reset;
+
+ (* ASYNC_REG="TRUE" *)  reg                  rx_reset_1;
+ (* ASYNC_REG="TRUE" *)  reg                  rx_reset;
+
+ (* ASYNC_REG="TRUE" *)  reg                  pci_rx_ack_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_rx_ack;
 
  (* ASYNC_REG="TRUE" *)  reg                  rx_up_control_msg_1;
  (* ASYNC_REG="TRUE" *)  reg                  rx_up_control_msg_2;
@@ -511,6 +527,7 @@ control_bar control_bar_inst (
 );
 
 adc_app adc_app_inst (
+    .rx_reset (rx_reset),
     .rx_clk (rx_clk),
     .pci_reset (pcie_user_reset),
     .pci_clk (pcie_user_clk),
@@ -560,6 +577,11 @@ adc_app adc_app_inst (
     .adc_B1(adc_B1),
     .adc_B2(adc_B2),
     .adc_B3(adc_B3),
+  
+    .res_sin_A(res_sin_A),  // input wire [15:0] res_sin_A
+    .res_cos_A(res_cos_A),  // input wire [15:0] res_cos_A
+    .res_sin_B(res_sin_B),  // input wire [15:0] res_sin_B
+    .res_cos_B(res_cos_B),  // input wire [15:0] res_cos_B
 
     .bar1_rd_address(pci_bar1_rd_address),
     .bar1_rd(pci_bar1_rd),
@@ -586,12 +608,11 @@ adc_app adc_app_inst (
   OBUF   led_0_obuf (.O(led_0), .I(pcie_led));
   OBUF   led_1_obuf (.O(led_1), .I(control_led));
   OBUF   led_2_obuf (.O(led_2), .I(rx_led));
-  OBUF   led_3_obuf (.O(led_3), .I(0));
+  OBUF   led_3_obuf (.O(led_3), .I(adc_led));
   OBUF   led_4_obuf (.O(led_4), .I(rx_adc_sync_ok));
   OBUF   led_5_obuf (.O(led_5), .I(adc_state[0]));
   OBUF   led_6_obuf (.O(led_6), .I(adc_state[1]));
   OBUF   led_7_obuf (.O(led_7), .I(adc_state[2]));
-
 
 generate
   begin : adc
@@ -625,9 +646,13 @@ generate
       begin
         control_led_cnt <= 0;
         control_led <= 0;
+        rx_reset_req <= 1;
       end
       else
       begin
+        if (pci_rx_ack)
+          rx_reset_req <= 0;
+
         if (control_rd)
         begin
           if (control_led_cnt == 499)
@@ -641,10 +666,15 @@ generate
       end
     end
 
-
     always @ ( posedge pcie_user_clk ) 
     begin
       q_user_reset <= pcie_user_reset;
+    end
+
+    always @ ( posedge pcie_user_clk ) 
+    begin
+      pci_rx_ack_1 <= rx_reset_ack;
+      pci_rx_ack <= pci_rx_ack_1;
     end
     
     always @ ( posedge up_clk ) 
@@ -653,6 +683,20 @@ generate
       up_reset <= up_reset_1;
     end
 
+    always @ ( posedge rx_clk ) 
+    begin
+      rx_reset_1 <= rx_reset_req;
+      rx_reset <= rx_reset_1;
+    end
+    
+    always @ ( posedge rx_clk ) 
+    begin
+      if (rx_reset)
+        rx_reset_ack <= 1;
+      else
+        rx_reset_ack <= 0;
+    end
+    
     always @ ( posedge rx_clk ) 
     begin
       adc_started_1 <= up_adc_started;
@@ -734,6 +778,11 @@ generate
       end
       else
         rx_pci_control_msg <= 0;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      adc_led <= ~^res_sin_A;
     end
 
 

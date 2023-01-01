@@ -26,6 +26,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module adc_app (
+  input                   rx_reset,
   input                   rx_clk,
   input                   pci_reset,
   input                   pci_clk,
@@ -76,6 +77,11 @@ module adc_app (
   input wire [13:0]       adc_B1,
   input wire [13:0]       adc_B2,
   input wire [13:0]       adc_B3,
+
+  output wire [15:0]      res_sin_A,
+  output wire [15:0]      res_cos_A,
+  output wire [15:0]      res_sin_B,
+  output wire [15:0]      res_cos_B,
 
   input wire [17:0]       bar1_rd_address,
   input wire              bar1_rd,
@@ -202,6 +208,7 @@ bram_msix bram_msix_inst (
 
 adc_ana adc_ana_0_inst (
     .pci_reset (pci_reset),
+    .reset (rx_reset),
     .pci_clk (pci_clk),
     .clk (rx_clk),
 
@@ -212,7 +219,13 @@ adc_ana adc_ana_0_inst (
     .wr_address(ana_wr_adr),
     .wr_data(ana_wr_data),
     .wr_be(ana_wr_be),
-    .wr(ana_wr[0:0])
+    .wr(ana_wr[0:0]),
+
+    .res_sin_A(res_sin_A),  // input wire [15:0] res_sin_A
+    .res_cos_A(res_cos_A),  // input wire [15:0] res_cos_A
+    .res_sin_B(res_sin_B),  // input wire [15:0] res_sin_B
+    .res_cos_B(res_cos_B)  // input wire [15:0] res_cos_B
+    
 );
 
 generate

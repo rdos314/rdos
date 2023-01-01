@@ -131,17 +131,11 @@ set_property PACKAGE_PIN E28 [get_ports trig_p]
 set_property PACKAGE_PIN D28 [get_ports trig_n]
 
 # ADC/DAC clocks
-# 750 MHz
-create_clock -period 2.667 -name rx_ref_clk [get_ports rx_ref_clk_p]
-create_clock -period 2.667 -name tx_ref_clk [get_ports tx_ref_clk_p]
-create_clock -period 170.667 -name rx_sysref [get_ports rx_sysref_p]
-create_clock -period 170.667 -name tx_sysref [get_ports tx_sysref_p]
-
-# 600 MHz
-# create_clock -period 3.333 -name rx_ref_clk [get_ports rx_ref_clk_p]
-# create_clock -period 3.333 -name tx_ref_clk [get_ports tx_ref_clk_p]
-# create_clock -period 213.333 -name rx_sysref [get_ports rx_sysref_p]
-# create_clock -period 213.333 -name tx_sysref [get_ports tx_sysref_p]
+# 1 GHz
+create_clock -period 2.000 -name rx_ref_clk [get_ports rx_ref_clk_p]
+create_clock -period 2.000 -name tx_ref_clk [get_ports tx_ref_clk_p]
+create_clock -period 128.000 -name rx_sysref [get_ports rx_sysref_p]
+create_clock -period 128.000 -name tx_sysref [get_ports tx_sysref_p]
 
 # Synchronization paths
 
@@ -152,6 +146,9 @@ set_false_path -from [get_ports tx_sysref_p]
 set_false_path -from [get_pins adc.q_user_reset_reg/C] -to [get_pins adc.up_reset_1_reg/D]
 set_false_path -from [get_pins adc.adc_sync_ok_reg/C] -to [get_pins adc.adc_sync_ok_1_reg/D]
 set_false_path -from [get_pins adc.adc_sync_fail_reg/C] -to [get_pins adc.adc_sync_fail_1_reg/D]
+
+set_false_path -from [get_pins adc.rx_reset_req_reg/C] -to [get_pins adc.rx_reset_1_reg/D]
+set_false_path -from [get_pins adc.rx_reset_ack_reg/C] -to [get_pins adc.pci_rx_ack_1_reg/D]
 
 set_false_path -from [get_pins control_bar_inst/ctrl_bar_gen.tx_control_msg_reg/C] -to [get_pins adc.rx_up_control_msg_1_reg/D]
 set_false_path -from [get_pins {control_bar_inst/ctrl_bar_gen.tx_control_index_reg[*]/C}] -to [get_pins {adc.rx_up_control_index_reg[*]/D}]

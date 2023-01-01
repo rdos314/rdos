@@ -26,6 +26,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 module adc_ana (
+  input wire              reset,
   input wire              pci_reset,
   input wire              pci_clk,
   input wire              clk,
@@ -39,7 +40,12 @@ module adc_ana (
   input wire [12:0]       wr_address,
   input wire [31:0]       wr_data,
   input wire [3:0]        wr_be,
-  input wire              wr
+  input wire              wr,
+
+  output wire [15:0]      res_sin_A,
+  output wire [15:0]      res_cos_A,
+  output wire [15:0]      res_sin_B,
+  output wire [15:0]      res_cos_B
 );
 
 // Analysis
@@ -125,7 +131,8 @@ bram_coeff bram_coeff_inst (
 );
 
 ana_freq base (
-  .clk(pci_clk),          // input wire clk
+  .clk(clk),              // input wire clk
+  .reset(reset),          // input wire clk
   .en(ana_en),            // input wire en
   .count(ana_count),      // input wire [12:0] count
   .load(ana_load),        // input wire load
@@ -139,39 +146,22 @@ ana_freq base (
   .in_B0(q_B0),           // input wire [13:0] in_B0
   .in_B1(q_B1),           // input wire [13:0] in_B1
   .in_B2(q_B2),           // input wire [13:0] in_B2
-  .in_B3(q_B3)            // input wire [13:0] in_B3
+  .in_B3(q_B3),           // input wire [13:0] in_B3
+  .res_sin_A(res_sin_A),  // input wire [15:0] res_sin_A
+  .res_cos_A(res_cos_A),  // input wire [15:0] res_cos_A
+  .res_sin_B(res_sin_B),  // input wire [15:0] res_sin_B
+  .res_cos_B(res_cos_B)  // input wire [15:0] res_cos_B
 );
 
-/*
+
 ila_1 ila_1_inst (
   .clk(clk),               // input wire clk
-  .probe0(ana_on),         // input wire [0:0]  probe0
-  .probe1(ana_off),        // input wire [0:0]  probe1
-  .probe2(ana_en),         // input wire [0:0]  probe2
-  .probe3(ana_wr),         // input wire [0:0]  probe3
-  .probe4(ana_load),       // input wire [0:0]  probe4
-  .probe5(ana_adr),        // input wire [10:0]  probe5
-  .probe6(ana_count),      // input wire [12:0]  probe6
-  .probe7(ana_sin),        // input wire [63:0]  probe7
-  .probe8(ana_cos),        // input wire [63:0]  probe8
-  .probe9(bram_en),        // input wire [0:0]  probe9
-  .probe10(bram_wr),       // input wire [0:0]  probe10
-  .probe11(bram_adr),      // input wire [10:0]  probe11
-  .probe12(bram_last),     // input wire [10:0]  probe12
-  .probe13(bram_0),        // input wire [15:0]  probe13
-  .probe14(bram_1),        // input wire [15:0]  probe14
-  .probe15(bram_2),        // input wire [15:0]  probe15
-  .probe16(bram_3),        // input wire [15:0]  probe16
-  .probe17(bram_4),        // input wire [15:0]  probe17
-  .probe18(bram_5),        // input wire [15:0]  probe18
-  .probe19(bram_6),        // input wire [15:0]  probe19
-  .probe20(bram_7),        // input wire [15:0]  probe20
-  .probe21(pd1),           // input wire [0:0]  probe21
-  .probe22(pd2),           // input wire [0:0]  probe22
-  .probe23(pd3),           // input wire [0:0]  probe23
-  .probe24(pd4)            // input wire [0:0]  probe24
+  .probe0(reset),         // input wire [0:0]  probe0
+  .probe1(ana_on),         // input wire [0:0]  probe0
+  .probe2(ana_off),        // input wire [0:0]  probe1
+  .probe3(ana_load),       // input wire [0:0]  probe1
+  .probe4(ana_en)         // input wire [0:0]  probe2
 );
-*/
 
 generate
 begin : adc_bar_gen
@@ -274,7 +264,7 @@ begin : adc_bar_gen
       begin
         if (q_A0[13])
         begin
-          delay <= 4;
+          delay <= 8;
           q_A0 <= 14'b01111111111111;
           q_A1 <= 14'b01111111111111;
           q_A2 <= 14'b01111111111111;
@@ -287,7 +277,7 @@ begin : adc_bar_gen
         end
         else
         begin
-          delay <= 5;
+          delay <= 8;
           q_A0 <= 14'b10000000000001;
           q_A1 <= 14'b10000000000001;
           q_A2 <= 14'b10000000000001;
@@ -312,108 +302,123 @@ begin : adc_bar_gen
       q_B2 <= 14'b10000000000001;
       q_B3 <= 14'b10000000000001;
       
-      delay <= 4;
+      delay <= 8;
     end
   end
 
   always @ ( posedge clk ) 
   begin
-    bram_en <= 1;
-    bram_wr <= 0;
-
-    if (ana_load)
+    if (reset)
     begin
-      ana_en <= 1;
-
-      if (pd3)
-      begin
-        ana_sin[15:0] <= bram_0;
-        ana_cos[15:0] <= bram_1;
-        ana_sin[31:16] <= bram_2;
-        ana_cos[31:16] <= bram_3;
-        ana_sin[47:32] <= bram_4;
-        ana_cos[47:32] <= bram_5;
-        ana_sin[63:48] <= bram_6;
-        ana_cos[63:48] <= bram_7;
-
-        if (ana_adr == ana_last)
-          bram_adr <= 0;
-        else
-          bram_adr <= bram_adr + 1;
-     
-        pd1 <= 1;
-        ana_wr <= 1;
-      end
-      else
-      begin
-        pd1 <= 0;
-        ana_wr <= 0;
-      end
-
-      if (pd4)
-      begin
-        ana_adr <= ana_adr + 1;
-        if (ana_adr == ana_last)
-          ana_load <= 0;
-      end
-
+      bram_en <= 0;
+      bram_wr <= 0;
+      ana_en <= 0;
+      ana_load <= 0;
+      ana_on <= 0;
+      ana_off <= 0;
+      ana_count <= 0;
+      bram_adr <= 0;
+      pd1 <= 0;
     end
     else
     begin
-      ana_wr <= 0;
+      bram_en <= 1;
+      bram_wr <= 0;
 
-      if (ana_on)
+      if (ana_load)
       begin
-        pd1 <= 0;
+        ana_en <= 1;
 
-        if (ana_count != bram_data_out[12:0])
+        if (pd3)
         begin
-          ana_en <= 0;
-          ana_on <= 0;
-          ana_off <= 1;
-        end
-      end
-      else
-      begin
-        ana_adr <= 0;
+          ana_sin[15:0] <= bram_0;
+          ana_cos[15:0] <= bram_1;
+          ana_sin[31:16] <= bram_2;
+          ana_cos[31:16] <= bram_3;
+          ana_sin[47:32] <= bram_4;
+          ana_cos[47:32] <= bram_5;
+          ana_sin[63:48] <= bram_6;
+          ana_cos[63:48] <= bram_7;
 
-        if (ana_off)
-        begin
-          ana_en <= 0;
-
-          ana_count <= bram_data_out[12:0];
-          if (ana_count[12:4] != 0)
-          begin
-            if (ana_count[1:0] == 0)
-              ana_last <= ana_count[12:2] - 1;
-            else
-              ana_last <= ana_count[12:2];
-
-            ana_off <= 0;
-            bram_adr <= 1;
-            ana_load <= 1;
-            pd1 <= 1;
-          end
+          if (ana_adr == ana_last)
+            bram_adr <= 0;
           else
-            pd1 <= 0;
+            bram_adr <= bram_adr + 1;
+     
+          pd1 <= 1;
+          ana_wr <= 1;
         end
         else
         begin
-          bram_adr <= 0;
+          pd1 <= 0;
+          ana_wr <= 0;
+        end
 
-          if (pd3)
+        if (pd4)
+        begin
+          ana_adr <= ana_adr + 1;
+          if (ana_adr == ana_last)
+            ana_load <= 0;
+        end
+
+      end
+      else
+      begin
+        ana_wr <= 0;
+
+        if (ana_on)
+        begin
+          pd1 <= 0;
+
+          if (ana_count != bram_data_out[12:0])
           begin
-            if (ana_en)
-              ana_on <= 1;
+            ana_en <= 0;
+            ana_on <= 0;
+            ana_off <= 1;
+          end
+        end
+        else
+        begin
+          ana_adr <= 0;
+
+          if (ana_off)
+          begin
+            ana_en <= 0;
+
+            ana_count <= bram_data_out[12:0];
+            if (ana_count[12:4] != 0)
+            begin
+              if (ana_count[1:0] == 0)
+                ana_last <= ana_count[12:2] - 1;
+              else
+                ana_last <= ana_count[12:2];
+
+              ana_off <= 0;
+              bram_adr <= 1;
+              ana_load <= 1;
+              pd1 <= 1;
+            end
             else
-              ana_off <= 1;
+              pd1 <= 0;
           end
           else
           begin
-            if (pd1 || pd2)
-              pd1 <= 0;
+            bram_adr <= 0;
+
+            if (pd3)
+            begin
+              if (ana_en)
+                ana_on <= 1;
+              else
+                ana_off <= 1;
+            end
             else
-              pd1 <= 1;
+            begin
+              if (pd1 || pd2)
+                pd1 <= 0;
+              else
+                pd1 <= 1;
+            end
           end
         end
       end
