@@ -256,6 +256,8 @@ module adc (
   reg [31:0]           pcie_cnt;
   reg [31:0]           rx_cnt;
   reg [8:0]            control_led_cnt;
+  
+  reg [15:0]           temp;
 
   reg                  pcie_led;
   reg                  rx_led;
@@ -778,7 +780,8 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      adc_led <= ~^pow_A +  ~^pow_B;
+      temp <= pow_A + pow_B;
+      adc_led <= temp[0]+temp[1]+temp[2]+temp[3]+temp[4]+temp[5]+temp[6]+temp[7]+temp[8]+temp[9]+temp[10]+temp[11]+temp[12]+temp[13]+temp[14]+temp[15];
     end
 
 

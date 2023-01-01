@@ -46,8 +46,8 @@ module ana_freq (
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
 
-  output wire [15:0]      pow_A,
-  output wire [15:0]      pow_B
+  output reg  [15:0]      pow_A,
+  output reg  [15:0]      pow_B
 
 );
 
@@ -147,24 +147,6 @@ adc_slice cos_B (
   .res(res_cos_B)        // output wire [15 : 0] sum
 );
 
-power power_A(
-  .clk(clk),             // input wire clk
-  .reset(reset),         // input wire reset
-  .start(input_done),    // input wire start
-  .in_sin(res_sin_A),    // input wire [15 : 0] sin
-  .in_cos(res_cos_A),    // input wire [15 : 0] cos
-  .res(pow_A)            // output wire [15:0] res
-);
-
-power power_B(
-  .clk(clk),             // input wire clk
-  .reset(reset),         // input wire reset
-  .start(input_done),    // input wire start
-  .in_sin(res_sin_B),    // input wire [15 : 0] sin
-  .in_cos(res_cos_B),    // input wire [15 : 0] cos
-  .res(pow_B)            // output wire [15:0] res
-);
-
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(en),            // input wire [0:0]  probe0
@@ -209,7 +191,11 @@ begin : ana_freq_gen
               input_done <= 0;
             end
             else
+            begin
+              pow_A <= res_sin_A + res_cos_A;
+              pow_B <= res_sin_B + res_cos_B;
               input_done <= 1;
+            end
           end
           else
             input_done <= 0;

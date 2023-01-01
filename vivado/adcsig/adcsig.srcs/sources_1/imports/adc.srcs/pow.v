@@ -25,7 +25,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-module power(
+module calc_power(
   input wire              clk,
   input wire              reset,
 
@@ -44,28 +44,31 @@ module power(
   reg                     sq_valid;
   reg  [7:0]              sq_cnt;
   wire                    sq_done;
-  wire [23:0]             sq_data;
+  wire [15:0]             sq_data;
+  
+  assign sin_sq[31] = 0;
+  assign cos_sq[31] = 0;
 
-square square_sin (
+mult_self square_sin (
   .CLK(clk),         // input wire CLK
   .A(in_sin),        // input wire [15 : 0] A
   .B(in_sin),        // input wire [15 : 0] B
-  .P(sin_sq)         // output wire [31 : 0] P
+  .P(sin_sq)         // output wire [30 : 0] P
 );
 
-square square_cos (
+mult_self square_cos (
   .CLK(clk),         // input wire CLK
   .A(in_cos),        // input wire [15 : 0] A
   .B(in_cos),        // input wire [15 : 0] B
-  .P(cos_sq)         // output wire [31 : 0] P
+  .P(cos_sq)         // output wire [30 : 0] P
 );
 
-sqrt sqrt_inst (
+ana_sqrt sqrt_inst (
   .aclk(clk),                                        // input wire aclk
   .s_axis_cartesian_tvalid(sq_valid),                // input wire s_axis_cartesian_tvalid
   .s_axis_cartesian_tdata(pow_sq),                   // input wire [31 : 0] s_axis_cartesian_tdata
   .m_axis_dout_tvalid(sq_done),                      // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(sq_data)                        // output wire [23 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(sq_data)                        // output wire [15 : 0] m_axis_dout_tdata
 );
 
 ila_2 ila_2_inst (
@@ -91,21 +94,9 @@ begin : ana_pow_gen
   begin
     if (reset)
     begin
-      res <= 0;
-    end
-    else
-    begin
-      if (sq_done)
-        res <= sq_data[15:0];
-    end
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (reset)
-    begin
       sq_cnt <= 0;
       sq_valid <= 0;
+      res <= 0;
     end
     else
     begin
@@ -118,14 +109,22 @@ begin : ana_pow_gen
       begin
         if (sq_cnt)
         begin
-          sq_cnt <= sq_cnt + 1;
-          
+          sq_cnt <= sq_cnt + 1;          
           if (sq_cnt == 8)
+          begin
             pow_sq <= sin_sq + cos_sq;
             sq_valid <= 1;
+          end
         end
         else
+        begin
+          if (sq_done)
+          begin
+            res <= sq_data;               
+            sq_cnt <= 0;
+          end
           sq_valid <= 0;
+        end
       end
     end
   end
