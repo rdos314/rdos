@@ -46,11 +46,9 @@ module ana_freq (
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
 
-  output reg              done,
-  output wire [15:0]      res_sin_A,
-  output wire [15:0]      res_cos_A,
-  output wire [15:0]      res_sin_B,
-  output wire [15:0]      res_cos_B
+  output wire [15:0]      pow_A,
+  output wire [15:0]      pow_B
+
 );
 
   reg                    start;
@@ -76,7 +74,9 @@ module ana_freq (
   reg  [3:0]             last_en;
   
   reg [4:0]              delay;
-
+  
+  reg                    input_done;
+  
   reg  [10:0]            curr_count;
   reg                    skip;
   reg                    pd1;
@@ -147,32 +147,22 @@ adc_slice cos_B (
   .res(res_cos_B)        // output wire [15 : 0] sum
 );
 
-square square_sin_A (
-  .CLK(clk),         // input wire CLK
-  .A(res_sin_A),     // input wire [15 : 0] A
-  .B(res_sin_A),     // input wire [15 : 0] B
-  .P(sin_A2)         // output wire [31 : 0] P
+power power_A(
+  .clk(clk),             // input wire clk
+  .reset(reset),         // input wire reset
+  .start(input_done),    // input wire start
+  .in_sin(res_sin_A),    // input wire [15 : 0] sin
+  .in_cos(res_cos_A),    // input wire [15 : 0] cos
+  .res(pow_A)            // output wire [15:0] res
 );
 
-square square_cos_A (
-  .CLK(clk),         // input wire CLK
-  .A(res_cos_A),     // input wire [15 : 0] A
-  .B(res_cos_A),     // input wire [15 : 0] B
-  .P(cos_A2)         // output wire [31 : 0] P
-);
-
-square square_sin_B (
-  .CLK(clk),         // input wire CLK
-  .A(res_sin_B),     // input wire [15 : 0] A
-  .B(res_sin_B),     // input wire [15 : 0] B
-  .P(sin_B2)         // output wire [31 : 0] P
-);
-
-square square_cos_B (
-  .CLK(clk),         // input wire CLK
-  .A(res_cos_B),     // input wire [15 : 0] A
-  .B(res_cos_B),     // input wire [15 : 0] B
-  .P(cos_AB)         // output wire [31 : 0] P
+power power_B(
+  .clk(clk),             // input wire clk
+  .reset(reset),         // input wire reset
+  .start(input_done),    // input wire start
+  .in_sin(res_sin_B),    // input wire [15 : 0] sin
+  .in_cos(res_cos_B),    // input wire [15 : 0] cos
+  .res(pow_B)            // output wire [15:0] res
 );
 
 ila_0 ila_0_inst (
@@ -190,10 +180,8 @@ ila_0 ila_0_inst (
   .probe10(res_cos_A),    // input wire [15:0]  probe3
   .probe11(res_sin_B),    // input wire [15:0]  probe3
   .probe12(res_cos_B),    // input wire [15:0]  probe3
-  .probe13(sin_A2),       // input wire [31:0]  probe3
-  .probe14(cos_A2),       // input wire [31:0]  probe3
-  .probe15(sin_B2),       // input wire [31:0]  probe3
-  .probe16(cos_B2)        // input wire [31:0]  probe3
+  .probe13(pow_A),        // input wire [15:0]  probe3
+  .probe14(pow_B)         // input wire [15:0]  probe3
 );
 
 generate
@@ -206,7 +194,7 @@ begin : ana_freq_gen
       if (pd7)
       begin
         delay <= 5'b11000;
-        done <= 0;
+        input_done <= 0;
       end
       else
       begin
@@ -218,22 +206,22 @@ begin : ana_freq_gen
             if (skip)
             begin
               skip <= 0;
-              done <= 0;
+              input_done <= 0;
             end
             else
-              done <= 1;
+              input_done <= 1;
           end
           else
-            done <= 0;
+            input_done <= 0;
         end
         else
-          done <= 0;
+          input_done <= 0;
       end
     end
     else
     begin
       delay <= 0;
-      done <= 0;
+      input_done <= 0;
       skip <= 1;
     end
   end

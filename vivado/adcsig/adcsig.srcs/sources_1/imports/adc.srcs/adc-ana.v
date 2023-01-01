@@ -42,10 +42,8 @@ module adc_ana (
   input wire [3:0]        wr_be,
   input wire              wr,
 
-  output wire [15:0]      res_sin_A,
-  output wire [15:0]      res_cos_A,
-  output wire [15:0]      res_sin_B,
-  output wire [15:0]      res_cos_B
+  output wire [15:0]      pow_A,
+  output wire [15:0]      pow_B
 );
 
 // Analysis
@@ -148,10 +146,8 @@ ana_freq base (
   .in_B1(q_B1),           // input wire [13:0] in_B1
   .in_B2(q_B2),           // input wire [13:0] in_B2
   .in_B3(q_B3),           // input wire [13:0] in_B3
-  .res_sin_A(res_sin_A),  // input wire [15:0] res_sin_A
-  .res_cos_A(res_cos_A),  // input wire [15:0] res_cos_A
-  .res_sin_B(res_sin_B),  // input wire [15:0] res_sin_B
-  .res_cos_B(res_cos_B)  // input wire [15:0] res_cos_B
+  .pow_A(pow_A),          // input wire [15:0] res_sin_A
+  .pow_B(pow_B)          // input wire [15:0] res_cos_B
 );
 
 

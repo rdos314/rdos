@@ -165,10 +165,8 @@ module adc (
   wire [13:0]          adc_B2;
   wire [13:0]          adc_B3;
 
-  wire [15:0]          res_sin_A;
-  wire [15:0]          res_cos_A;
-  wire [15:0]          res_sin_B;
-  wire [15:0]          res_cos_B;
+  wire [15:0]          pow_A;
+  wire [15:0]          pow_B;
 
   wire                 up_adc_started;
   wire                 up_adc_probing;
@@ -578,10 +576,8 @@ adc_app adc_app_inst (
     .adc_B2(adc_B2),
     .adc_B3(adc_B3),
   
-    .res_sin_A(res_sin_A),  // input wire [15:0] res_sin_A
-    .res_cos_A(res_cos_A),  // input wire [15:0] res_cos_A
-    .res_sin_B(res_sin_B),  // input wire [15:0] res_sin_B
-    .res_cos_B(res_cos_B),  // input wire [15:0] res_cos_B
+    .pow_A(pow_A),
+    .pow_B(pow_B),
 
     .bar1_rd_address(pci_bar1_rd_address),
     .bar1_rd(pci_bar1_rd),
@@ -782,7 +778,7 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      adc_led <= ~^res_sin_A + ~^res_cos_A + ~^res_sin_B + ~^res_cos_B;
+      adc_led <= ~^pow_A +  ~^pow_B;
     end
 
 
