@@ -613,6 +613,292 @@ InitAdc Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           InitFreqClk
+;
+;       DESCRIPTION:    Init freq clk driver chip
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitFreqClk proc near
+    mov bx,anio_control_sel
+    mov ds,ebx
+    mov bx,OFFSET cb_spi_clk
+;
+    mov dx,10h
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,12h
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,16h
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,18h
+    mov al,80h
+    call WriteSpiByte
+;
+    mov dx,1Ah
+    mov al,5
+    call WriteSpiByte
+;
+    mov dx,1Bh
+    mov al,60h
+    call WriteSpiByte
+;
+    mov dx,1Ch
+    mov al,84h
+    call WriteSpiByte
+;
+    mov dx,1Dh
+    mov al,1h
+    call WriteSpiByte
+;
+    mov dx,0F0h
+    mov al,76h
+    call WriteSpiByte
+;
+    mov dx,0F1h
+    mov al,6h
+    call WriteSpiByte
+;
+    mov dx,0F2h
+    mov al,13h
+    call WriteSpiByte
+;
+    mov dx,0F3h
+    mov al,2h
+    call WriteSpiByte
+;
+    mov dx,0F4h
+    mov al,00h   ; 1 GHz
+    call WriteSpiByte
+;
+    mov dx,0F5h
+    mov al,3Ah
+    call WriteSpiByte
+;
+    mov dx,0F7h
+    mov al,1h
+    call WriteSpiByte
+;
+    mov dx,190h
+    mov al,20h
+    call WriteSpiByte
+;
+    mov dx,193h
+    mov al,3h
+    call WriteSpiByte
+;
+    mov dx,194h
+    mov al,0h
+    call WriteSpiByte
+;
+    mov dx,196h
+    mov al,20h
+    call WriteSpiByte
+;
+    mov dx,199h
+    mov al,20h
+    call WriteSpiByte
+;
+    mov dx,19Ch
+    mov al,3h
+    call WriteSpiByte
+;
+    mov dx,19Dh
+    mov al,1h
+    call WriteSpiByte
+;
+    mov dx,19Fh
+    mov al,3h
+    call WriteSpiByte
+;
+    mov dx,1A0h
+    mov al,7Fh
+    call WriteSpiByte
+;
+    mov dx,1A2h
+    mov al,3h
+    call WriteSpiByte
+;
+    mov dx,1A3h
+    mov al,7Fh
+    call WriteSpiByte
+;
+    mov dx,1A5h
+    mov al,3h
+    call WriteSpiByte
+;
+    mov dx,1A6h
+    mov al,7Fh
+    call WriteSpiByte
+;
+    mov dx,1A8h
+    mov al,3h
+    call WriteSpiByte
+;
+    mov dx,1A9h
+    mov al,7Fh
+    call WriteSpiByte
+;
+    mov dx,1ABh
+    mov al,3h
+    call WriteSpiByte
+;
+    mov dx,1ACh
+    mov al,1h
+    call WriteSpiByte
+;
+    mov dx,1AEh
+    mov al,20h
+    call WriteSpiByte
+;
+    mov dx,1B1h
+    mov al,20h
+    call WriteSpiByte
+;
+    mov dx,1B4h
+    mov al,20h
+    call WriteSpiByte
+;
+    mov dx,1B7h
+    mov al,3h
+    call WriteSpiByte
+;
+    mov dx,1B8h
+    mov al,0h
+    call WriteSpiByte
+;
+    mov dx,230h
+    mov al,2h
+    call WriteSpiByte
+;
+    mov dx,231h
+    mov al,3h
+    call WriteSpiByte
+;
+    mov dx,233h
+    mov al,0h
+    call WriteSpiByte
+;
+    mov dx,234h
+    mov al,1h
+    call WriteSpiByte
+;
+    ret
+InitFreqClk Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitFreqAdc
+;
+;       DESCRIPTION:    Init ADC chip
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitFreqAdc proc near
+    mov bx,anio_control_sel
+    mov ds,ebx
+    mov bx,OFFSET cb_spi_adc
+;
+    mov dx,580h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,581h
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,570h
+    mov al,88h
+    call WriteSpiByte
+;
+    mov dx,583h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,584h
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,585h
+    mov al,2
+    call WriteSpiByte
+;
+    mov dx,586h
+    mov al,3
+    call WriteSpiByte
+;
+    mov dx,5B2h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,5B3h
+    mov al,11h
+    call WriteSpiByte
+;
+    mov dx,5B5h
+    mov al,22h
+    call WriteSpiByte
+;
+    mov dx,5B6h
+    mov al,33h
+    call WriteSpiByte
+;
+    mov dx,58Bh
+    mov al,83h
+    call WriteSpiByte
+;
+    mov dx,58Dh
+    mov al,31
+    call WriteSpiByte
+;
+    mov dx,58Eh
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,58Fh
+    mov al,13
+    call WriteSpiByte
+;
+    mov dx,590h
+    mov al,2Fh
+    call WriteSpiByte
+;
+    mov dx,26Fh
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,550h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,120h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,121h
+    mov al,0Fh
+    call WriteSpiByte
+;
+    mov dx,120h
+    mov al,0Ah
+    call WriteSpiByte
+;
+    mov dx,56Eh
+    mov al,0          ; 1 GHz
+    call WriteSpiByte
+;
+    ret
+InitFreqAdc Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitPciAdapter
 ;
 ;           DESCRIPTION:    Init PCI adapter if found
@@ -1108,7 +1394,7 @@ InitTest  Proc near
 ;
     add ebx,10h
 ;
-    mov ebp,5
+    mov ebp,8
 
 saYLoop:
     mov esi, OFFSET sin_tab
@@ -1133,7 +1419,7 @@ saILoop:
 ;
     int 3
     pop ebx
-    mov ax,5 * 36
+    mov ax,8 * 36
     mov ds:[ebx],ax
 ;
     popad
@@ -1164,8 +1450,8 @@ init_pci    PROC far
     je ipRaw
 ;
     call InitCoeffBar
-    call InitClk
-    call InitAdc
+    call InitFreqClk
+    call InitFreqAdc
 ;
     int 3
     call InitTest

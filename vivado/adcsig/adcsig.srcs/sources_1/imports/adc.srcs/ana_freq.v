@@ -109,6 +109,35 @@ adc_slice sin_A (
   .res(res_sin_A)        // output wire [15 : 0] sum
 );
 
+adc_slice cos_A (
+  .clk(clk),             // input wire CLK
+  .p7(pd7),              // input wire [0 : 0] p7
+  .p8(pd8),              // input wire [0 : 0] p8
+  .count(count),         // input wire [12 : 0] count
+  .in(in_A),             // input wire [55 : 0] in
+  .coeff(cos_coeff_out), // input wire [63 : 0] coeff
+  .res(res_cos_A)        // output wire [15 : 0] sum
+);
+
+adc_slice sin_B (
+  .clk(clk),             // input wire CLK
+  .p7(pd7),              // input wire [0 : 0] p7
+  .p8(pd8),              // input wire [0 : 0] p8
+  .count(count),         // input wire [12 : 0] count
+  .in(in_B),             // input wire [55 : 0] in
+  .coeff(sin_coeff_out), // input wire [63 : 0] coeff
+  .res(res_sin_B)        // output wire [15 : 0] sum
+);
+
+adc_slice cos_B (
+  .clk(clk),             // input wire CLK
+  .p7(pd7),              // input wire [0 : 0] p7
+  .p8(pd8),              // input wire [0 : 0] p8
+  .count(count),         // input wire [12 : 0] count
+  .in(in_B),             // input wire [55 : 0] in
+  .coeff(cos_coeff_out), // input wire [63 : 0] coeff
+  .res(res_cos_B)        // output wire [15 : 0] sum
+);
 
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
@@ -116,9 +145,13 @@ ila_0 ila_0_inst (
   .probe1(load),          // input wire [0:0]  probe1
   .probe2(start),         // input wire [0:0]  probe2
   .probe3(running),       // input wire [0:0]  probe3
-  .probe4(wr),            // input wire [0:0]  probe3
-  .probe5(adr),           // input wire [0:0]  probe3
-  .probe6(last)           // input wire [0:0]  probe3
+  .probe4(coeff_en),      // input wire [0:0]  probe3
+  .probe5(coeff_adr),     // input wire [10:0]  probe3
+  .probe6(last),          // input wire [0:0]  probe3
+  .probe7(res_sin_A),     // input wire [15:0]  probe3
+  .probe8(res_cos_A),     // input wire [15:0]  probe3
+  .probe9(res_sin_B),     // input wire [15:0]  probe3
+  .probe10(res_cos_B)     // input wire [15:0]  probe3
 );
 
 generate

@@ -58,24 +58,29 @@ module adc_slice (
   wire [15:0]            coeff_2;
   wire [15:0]            coeff_3;
 
-  reg  [13:0]            in_0;
-  reg  [13:0]            in_1;
-  reg  [13:0]            in_2;
-  reg  [13:0]            in_3;
+  wire [13:0]            in_0;
+  wire [13:0]            in_1;
+  wire [13:0]            in_2;
+  wire [13:0]            in_3;
 
   reg                    start;
   reg                    running;
   reg                    sign;
   reg  [29:0]            divend;
   reg  [29:0]            curr;
-  reg  [16:0]            mask;
-  reg  [16:0]            quot;
+  reg  [17:0]            mask;
+  reg  [17:0]            quot;
 
 
   assign coeff_0 = coeff[15:0];
   assign coeff_1 = coeff[31:16];
   assign coeff_2 = coeff[47:32];
   assign coeff_3 = coeff[63:48];
+
+  assign in_0 = in[13:0];
+  assign in_1 = in[27:14];
+  assign in_2 = in[41:28];
+  assign in_3 = in[55:42];
 
 multiply m_0 (
   .CLK(clk),            // input wire CLK
@@ -105,32 +110,21 @@ multiply m_3 (
   .P(p_3[29:0])         // output wire [29 : 0] P
 );
 
-
+/*
 ila_2 ila_2_inst (
   .clk(clk),            // input wire clk
   .probe0(start),       // input wire [0:0]  probe0
   .probe1(running),     // input wire [0:0]  probe1
-  .probe2(in_0),        // input wire [13:0]  probe2
-  .probe3(in_1),        // input wire [13:0]  probe2
-  .probe4(in_2),        // input wire [13:0]  probe2
-  .probe5(in_3),        // input wire [13:0]  probe2
-  .probe6(coeff_0),     // input wire [15:0]  probe2
-  .probe7(coeff_1),     // input wire [15:0]  probe2
-  .probe8(coeff_2),     // input wire [15:0]  probe2
-  .probe9(coeff_3),     // input wire [15:0]  probe2
-  .probe10(sum_0),       // input wire [42:0]  probe2
-  .probe11(sum_1),       // input wire [42:0]  probe2
-  .probe12(sum_2),       // input wire [42:0]  probe2
-  .probe13(sum_3),       // input wire [42:0]  probe2
-  .probe14(sum_01),       // input wire [42:0]  probe2
-  .probe15(sum_23),       // input wire [42:0]  probe2
-  .probe16(sum),         // input wire [42:0]  probe7
-  .probe17(sign),        // input wire [0:0]  probe2
-  .probe18(divend),      // input wire [29:0]  probe3
-  .probe19(curr),        // input wire [29:0]  probe4
-  .probe20(mask),        // input wire [16:0]  probe5
-  .probe21(quot)        // input wire [16:0]  probe6
+  .probe2(sum),        // input wire [42:0]  probe7
+  .probe3(sign),       // input wire [0:0]  probe2
+  .probe4(divend),     // input wire [29:0]  probe3
+  .probe5(curr),       // input wire [29:0]  probe4
+  .probe6(mask),       // input wire [17:0]  probe5
+  .probe7(quot),       // input wire [17:0]  probe6
+  .probe8(res)         // input wire [15:0]  probe6
 );
+
+*/
 
   assign p_0[30] = p_0[29];
   assign p_0[31] = p_0[29];
@@ -195,8 +189,8 @@ begin : ana_slice_gen
   begin
     if (start)
     begin
-      mask[16] <= 1;
-      mask[15:0] <= 0;
+      mask[17] <= 1;
+      mask[16:0] <= 0;
       curr[29:17] <= count;
       curr[16:0] <= 0;
       quot[16:0] <= 0;
@@ -223,9 +217,19 @@ begin : ana_slice_gen
           res[15] <= sign;
 
           if (sign)
-            res[14:0] <= ~quot[16:2];
+          begin
+            if (quot[0])
+              res[14:0] <= (~quot[15:1]) - 1;
+            else
+              res[14:0] <= ~quot[15:1];
+          end
           else
-            res[14:0] <= quot[16:2];
+          begin
+            if (quot[0])
+              res[14:0] <= quot[15:1] + 1;
+            else
+              res[14:0] <= quot[15:1];
+          end
 
           running <= 0;
         end
@@ -292,14 +296,6 @@ begin : ana_slice_gen
       sum_3 <= p_3;
     else
       sum_3 <= sum_3 + p_3;      
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    in_0 <= in[13:0];
-    in_1 <= in[27:14];
-    in_2 <= in[41:28];
-    in_3 <= in[55:42];
   end
 
 end

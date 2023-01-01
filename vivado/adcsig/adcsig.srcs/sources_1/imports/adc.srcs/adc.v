@@ -782,7 +782,7 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      adc_led <= ~^res_sin_A;
+      adc_led <= ~^res_sin_A + ~^res_cos_A + ~^res_sin_B + ~^res_cos_B;
     end
 
 

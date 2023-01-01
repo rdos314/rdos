@@ -73,7 +73,7 @@ module adc_ana (
   reg                    pd3;
   reg                    pd4;
   
-  reg                    delay;
+  reg   [4:0]            delay;
 
   reg  [13:0]            q_A0;
   reg  [13:0]            q_A1;
@@ -123,6 +123,7 @@ bram_coeff bram_coeff_inst (
   .dina(pci_in),          // input wire [31 : 0] dina
   .douta(pci_out),        // output wire [31 : 0] douta
   .clkb(clk),             // input wire clkb
+  .rstb(reset),           // input wire rstb
   .enb(bram_en),          // input wire enb
   .web(bram_wr),          // input wire [0 : 0] web
   .addrb(bram_adr),       // input wire [10 : 0] addrb
@@ -264,7 +265,7 @@ begin : adc_bar_gen
       begin
         if (q_A0[13])
         begin
-          delay <= 8;
+          delay <= 3;
           q_A0 <= 14'b01111111111111;
           q_A1 <= 14'b01111111111111;
           q_A2 <= 14'b01111111111111;
@@ -277,16 +278,32 @@ begin : adc_bar_gen
         end
         else
         begin
-          delay <= 8;
-          q_A0 <= 14'b10000000000001;
-          q_A1 <= 14'b10000000000001;
-          q_A2 <= 14'b10000000000001;
-          q_A3 <= 14'b10000000000001;
+          if (q_A3[13])
+          begin
+            delay <= 3;
+            q_A0 <= 14'b10000000000001;
+            q_A1 <= 14'b10000000000001;
+            q_A2 <= 14'b10000000000001;
+            q_A3 <= 14'b10000000000001;
 
-          q_B0 <= 14'b01111111111111;
-          q_B1 <= 14'b01111111111111;
-          q_B2 <= 14'b01111111111111;
-          q_B3 <= 14'b01111111111111;
+            q_B0 <= 14'b01111111111111;
+            q_B1 <= 14'b01111111111111;
+            q_B2 <= 14'b01111111111111;
+            q_B3 <= 14'b01111111111111;
+          end
+          else
+          begin
+            delay <= 0;
+            q_A0 <= 14'b01111111111111;
+            q_A1 <= 14'b01111111111111;
+            q_A2 <= 14'b10000000000001;
+            q_A3 <= 14'b10000000000001;
+
+            q_B0 <= 14'b10000000000001;
+            q_B1 <= 14'b10000000000001;
+            q_B2 <= 14'b01111111111111;
+            q_B3 <= 14'b01111111111111;
+          end
         end
       end
     end
@@ -302,7 +319,7 @@ begin : adc_bar_gen
       q_B2 <= 14'b10000000000001;
       q_B3 <= 14'b10000000000001;
       
-      delay <= 8;
+      delay <= 3;
     end
   end
 
