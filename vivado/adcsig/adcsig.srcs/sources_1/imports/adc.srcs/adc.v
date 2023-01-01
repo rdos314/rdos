@@ -165,8 +165,10 @@ module adc (
   wire [13:0]          adc_B2;
   wire [13:0]          adc_B3;
 
-  wire [15:0]          pow_A;
-  wire [15:0]          pow_B;
+  wire [15:0]          res_sin_A;
+  wire [15:0]          res_cos_A;
+  wire [15:0]          res_sin_B;
+  wire [15:0]          res_cos_B;
 
   wire                 up_adc_started;
   wire                 up_adc_probing;
@@ -256,8 +258,6 @@ module adc (
   reg [31:0]           pcie_cnt;
   reg [31:0]           rx_cnt;
   reg [8:0]            control_led_cnt;
-  
-  reg [15:0]           temp;
 
   reg                  pcie_led;
   reg                  rx_led;
@@ -578,8 +578,10 @@ adc_app adc_app_inst (
     .adc_B2(adc_B2),
     .adc_B3(adc_B3),
   
-    .pow_A(pow_A),
-    .pow_B(pow_B),
+    .res_sin_A(res_sin_A),  // input wire [15:0] res_sin_A
+    .res_cos_A(res_cos_A),  // input wire [15:0] res_cos_A
+    .res_sin_B(res_sin_B),  // input wire [15:0] res_sin_B
+    .res_cos_B(res_cos_B),  // input wire [15:0] res_cos_B
 
     .bar1_rd_address(pci_bar1_rd_address),
     .bar1_rd(pci_bar1_rd),
@@ -780,8 +782,7 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      temp <= pow_A + pow_B;
-      adc_led <= temp[0]+temp[1]+temp[2]+temp[3]+temp[4]+temp[5]+temp[6]+temp[7]+temp[8]+temp[9]+temp[10]+temp[11]+temp[12]+temp[13]+temp[14]+temp[15];
+      adc_led <= ~^res_sin_A + ~^res_cos_A + ~^res_sin_B + ~^res_cos_B;
     end
 
 
