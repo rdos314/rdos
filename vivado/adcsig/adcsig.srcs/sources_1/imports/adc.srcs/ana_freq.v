@@ -46,6 +46,7 @@ module ana_freq (
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
 
+  output reg              done,
   output wire [15:0]      res_sin_A,
   output wire [15:0]      res_cos_A,
   output wire [15:0]      res_sin_B,
@@ -61,6 +62,11 @@ module ana_freq (
   reg  [63:0]            cos_coeff_in;
   wire [63:0]            sin_coeff_out;
   wire [63:0]            cos_coeff_out;
+  
+  wire [31:0]            sin_A2;
+  wire [31:0]            cos_A2;
+  wire [31:0]            sin_B2;
+  wire [31:0]            cos_B2;
 
   reg  [55:0]            in_A;
   reg  [55:0]            in_B;
@@ -68,6 +74,8 @@ module ana_freq (
   reg  [10:0]            adr;
   reg  [10:0]            last;
   reg  [3:0]             last_en;
+  
+  reg [4:0]              delay;
 
   reg  [10:0]            curr_count;
   reg                    skip;
@@ -139,6 +147,34 @@ adc_slice cos_B (
   .res(res_cos_B)        // output wire [15 : 0] sum
 );
 
+square square_sin_A (
+  .CLK(clk),         // input wire CLK
+  .A(res_sin_A),     // input wire [15 : 0] A
+  .B(res_sin_A),     // input wire [15 : 0] B
+  .P(sin_A2)         // output wire [31 : 0] P
+);
+
+square square_cos_A (
+  .CLK(clk),         // input wire CLK
+  .A(res_cos_A),     // input wire [15 : 0] A
+  .B(res_cos_A),     // input wire [15 : 0] B
+  .P(cos_A2)         // output wire [31 : 0] P
+);
+
+square square_sin_B (
+  .CLK(clk),         // input wire CLK
+  .A(res_sin_B),     // input wire [15 : 0] A
+  .B(res_sin_B),     // input wire [15 : 0] B
+  .P(sin_B2)         // output wire [31 : 0] P
+);
+
+square square_cos_B (
+  .CLK(clk),         // input wire CLK
+  .A(res_cos_B),     // input wire [15 : 0] A
+  .B(res_cos_B),     // input wire [15 : 0] B
+  .P(cos_AB)         // output wire [31 : 0] P
+);
+
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(en),            // input wire [0:0]  probe0
@@ -148,14 +184,59 @@ ila_0 ila_0_inst (
   .probe4(coeff_en),      // input wire [0:0]  probe3
   .probe5(coeff_adr),     // input wire [10:0]  probe3
   .probe6(last),          // input wire [0:0]  probe3
-  .probe7(res_sin_A),     // input wire [15:0]  probe3
-  .probe8(res_cos_A),     // input wire [15:0]  probe3
-  .probe9(res_sin_B),     // input wire [15:0]  probe3
-  .probe10(res_cos_B)     // input wire [15:0]  probe3
+  .probe7(done),          // input wire [0:0]  probe3
+  .probe8(delay),         // input wire [4:0]  probe3
+  .probe9(res_sin_A),     // input wire [15:0]  probe3
+  .probe10(res_cos_A),    // input wire [15:0]  probe3
+  .probe11(res_sin_B),    // input wire [15:0]  probe3
+  .probe12(res_cos_B),    // input wire [15:0]  probe3
+  .probe13(sin_A2),       // input wire [31:0]  probe3
+  .probe14(cos_A2),       // input wire [31:0]  probe3
+  .probe15(sin_B2),       // input wire [31:0]  probe3
+  .probe16(cos_B2)        // input wire [31:0]  probe3
 );
 
 generate
 begin : ana_freq_gen
+
+  always @ ( posedge clk ) 
+  begin
+    if (running)
+    begin
+      if (pd7)
+      begin
+        delay <= 5'b11000;
+        done <= 0;
+      end
+      else
+      begin
+        if (delay)
+        begin
+          delay <= delay - 1;
+          if (delay == 1)
+          begin
+            if (skip)
+            begin
+              skip <= 0;
+              done <= 0;
+            end
+            else
+              done <= 1;
+          end
+          else
+            done <= 0;
+        end
+        else
+          done <= 0;
+      end
+    end
+    else
+    begin
+      delay <= 0;
+      done <= 0;
+      skip <= 1;
+    end
+  end
 
   always @ ( posedge clk ) 
   begin
@@ -178,12 +259,7 @@ begin : ana_freq_gen
       in_B[27:14] <= in_B1;
       in_B[41:28] <= in_B2;
       in_B[55:42] <= in_B3;
-
-      if (pd7)
-         skip <= 0;
     end
-    else
-      skip <= 1;
   end
 
   always @ ( posedge clk ) 
