@@ -46,7 +46,6 @@ module ana_freq (
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
 
-  output reg              done,
   output wire [15:0]      res_sin_A,
   output wire [15:0]      res_cos_A,
   output wire [15:0]      res_sin_B,
@@ -76,7 +75,9 @@ module ana_freq (
   reg  [3:0]             last_en;
   
   reg [4:0]              delay;
-
+  
+  reg                    input_done;
+  
   reg  [10:0]            curr_count;
   reg                    skip;
   reg                    pd1;
@@ -206,7 +207,7 @@ begin : ana_freq_gen
       if (pd7)
       begin
         delay <= 5'b11000;
-        done <= 0;
+        input_done <= 0;
       end
       else
       begin
@@ -218,22 +219,22 @@ begin : ana_freq_gen
             if (skip)
             begin
               skip <= 0;
-              done <= 0;
+              input_done <= 0;
             end
             else
-              done <= 1;
+              input_done <= 1;
           end
           else
-            done <= 0;
+            input_done <= 0;
         end
         else
-          done <= 0;
+          input_done <= 0;
       end
     end
     else
     begin
       delay <= 0;
-      done <= 0;
+      input_done <= 0;
       skip <= 1;
     end
   end
