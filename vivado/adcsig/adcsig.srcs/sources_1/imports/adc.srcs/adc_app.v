@@ -78,10 +78,8 @@ module adc_app (
   input wire [13:0]       adc_B2,
   input wire [13:0]       adc_B3,
 
-  output wire [15:0]      res_sin_A,
-  output wire [15:0]      res_cos_A,
-  output wire [15:0]      res_sin_B,
-  output wire [15:0]      res_cos_B,
+  output wire [15:0]      pow_A,
+  output wire [15:0]      pow_B,
 
   input wire [17:0]       bar1_rd_address,
   input wire              bar1_rd,
@@ -190,6 +188,14 @@ module adc_app (
   assign state[2] = adc_running;
 
   assign adc_delay = up_test_mode ? 0 : 1;
+
+  wire [15:0]             res_sin_A;
+  wire [15:0]             res_cos_A;
+  wire [15:0]             res_sin_B;
+  wire [15:0]             res_cos_B;
+
+  assign pow_A = res_sin_A + res_cos_A;
+  assign pow_B = res_sin_B + res_cos_B;
 
 bram_msix bram_msix_inst (
   .clka(pci_clk),    // input wire clka
