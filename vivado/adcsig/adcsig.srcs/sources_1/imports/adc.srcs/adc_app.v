@@ -81,6 +81,9 @@ module adc_app (
   output wire [15:0]      pow_A,
   output wire [15:0]      pow_B,
 
+  input wire              config_wr,
+  input wire [47:0]       config_data,
+
   input wire [17:0]       bar1_rd_address,
   input wire              bar1_rd,
 
@@ -153,6 +156,20 @@ module adc_app (
   wire [31:0]             pci2_out;
   reg  [3:0]              pci2_be;
 
+
+// analyser config
+
+  reg                     config_rd;
+  wire                    config_empty;
+  wire [47:0]             config_out;
+  wire [4:0]              config_channel;
+  wire [23:0]             config_incr;
+  wire [12:0]             config_count;
+
+  assign config_channel = config_out[4:0];
+  assign config_incr =    config_out[31:8];
+  assign config_count =   config_out[44:32];
+
 // clock domain crossings
 
 
@@ -196,6 +213,34 @@ module adc_app (
 
   assign pow_A = res_sin_A + res_cos_A;
   assign pow_B = res_sin_B + res_cos_B;
+
+
+
+ana_fifo ana_fifo_inst (
+  .rst(pci_reset),             // input wire rst
+  .wr_clk(pci_clk),            // input wire wr_clk
+  .rd_clk(rx_clk),             // input wire rd_clk
+  .din(config_data),           // input wire [47 : 0] din
+  .wr_en(config_wr),           // input wire wr_en
+  .rd_en(config_rd),           // input wire rd_en
+  .dout(config_out),           // output wire [47 : 0] dout
+  .full(),                     // output wire full
+  .empty(config_empty)         // output wire empty
+);
+
+ana_fifo ana_fifo_inst (
+  .clka(pci_clk),    // input wire clka
+  .ena(ana_wr),      // input wire ena
+  .wea(ana_wr),      // input wire [0 : 0] wea
+  .dina(ana_data),   // input wire [47 : 0] dina
+  .douta(pci2_out),  // output wire [31 : 0] douta
+  .clkb(rx_clk),     // input wire clkb
+  .enb(0),           // input wire enb
+  .web(0),           // input wire [0 : 0] web
+  .addrb(0),         // input wire [9 : 0] addrb
+  .dinb(0),          // input wire [31 : 0] dinb
+  .doutb()          // output wire [31 : 0] doutb
+);
 
 bram_msix bram_msix_inst (
   .clka(pci_clk),    // input wire clka
@@ -692,6 +737,20 @@ begin : adc_app
       end
     end
   end
+
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+    begin
+      config_rd <= 0;
+    end
+    else
+    begin
+      config_rd <= 0;
+    end
+  end
+
 
 end
 endgenerate

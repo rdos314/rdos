@@ -57,7 +57,10 @@ module control_bar (
 
   output reg              tx_control_msg,
   output reg [7:0]        tx_control_index,
-  output reg [7:0]        tx_control_data
+  output reg [7:0]        tx_control_data,
+
+  output reg              ana_config,
+  output reg [47:0]       ana_data,
 );
 
 // internal
@@ -81,7 +84,6 @@ module control_bar (
   reg [7:0]               adc_test_mode;
 
   reg [1:0]               tx_control_delay;
-
 
 generate
   begin : ctrl_bar_gen
@@ -147,6 +149,7 @@ generate
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
+                ana_config <= 0;
               end
             
               1:
@@ -189,6 +192,7 @@ generate
 
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
+                ana_config <= 0;
               end
 
               2:
@@ -231,6 +235,7 @@ generate
 
                 spi_clk_valid <= 0;
                 spi_dac_valid <= 0;
+                ana_config <= 0;
               end
 
               3:
@@ -273,6 +278,7 @@ generate
 
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
+                ana_config <= 0;
               end
 
               4:
@@ -287,6 +293,46 @@ generate
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
+                ana_config <= 0;
+              end
+
+
+              5:
+              begin
+                if (wr_be[0])
+                  ana_data[7:0] <= wr_data[7:0];
+ 
+                if (wr_be[1])
+                  ana_data[15:8] <= wr_data[15:8];
+ 
+                if (wr_be[2])
+                  ana_data[23:16] <= wr_data[23:16];
+
+                if (wr_be[3])
+                  ana_data[31:24] <= wr_data[31:24];
+
+                spi_clk_valid <= 0;
+                spi_adc_valid <= 0;
+                spi_dac_valid <= 0;
+                ana_config <= 0;
+              end
+
+              6:
+              begin
+                if (wr_be[0])
+                  ana_data[39:32] <= wr_data[7:0];
+ 
+                if (wr_be[1])
+                begin
+                  ana_data[47:40] <= wr_data[15:8];
+                  ana_config <= 1;
+                end
+                else
+                  ana_config <= 0;
+ 
+                spi_clk_valid <= 0;
+                spi_adc_valid <= 0;
+                spi_dac_valid <= 0;
               end
             
               default:
@@ -294,6 +340,7 @@ generate
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
+                ana_config <= 0;
               end
 
               8:
@@ -309,6 +356,8 @@ generate
 
                 if (wr_be[3])
                   control_base[31:24] <= wr_data[31:24];
+
+                ana_config <= 0;
               end
             endcase
           end
@@ -323,6 +372,7 @@ generate
             spi_clk_valid <= 0;
             spi_adc_valid <= 0;
             spi_dac_valid <= 0;
+            ana_config <= 0;
 
             if (spi_rp)
             begin
