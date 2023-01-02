@@ -198,7 +198,7 @@ begin : ana_slice_gen
       if (sum[42])
       begin
         sign <= 1;
-        divend <= ~sum[41:12];
+        divend <= (~sum[41:12]) + 1;
       end
       else
       begin
@@ -219,9 +219,9 @@ begin : ana_slice_gen
           if (sign)
           begin
             if (quot[0])
-              res[14:0] <= (~quot[15:1]) - 1;
-            else
               res[14:0] <= ~quot[15:1];
+            else
+              res[14:0] <= (~quot[15:1]) + 1;
           end
           else
           begin
