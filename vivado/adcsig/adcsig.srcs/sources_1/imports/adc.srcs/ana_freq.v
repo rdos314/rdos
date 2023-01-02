@@ -60,10 +60,10 @@ module ana_freq (
   wire [63:0]            sin_coeff_out;
   wire [63:0]            cos_coeff_out;
 
-  wire [15:0]            res_sin_A,
-  wire [15:0]            res_cos_A,
-  wire [15:0]            res_sin_B,
-  wire [15:0]            res_cos_B
+  wire [15:0]            res_sin_A;
+  wire [15:0]            res_cos_A;
+  wire [15:0]            res_sin_B;
+  wire [15:0]            res_cos_B;
   
   wire [31:0]            sin_A2;
   wire [31:0]            cos_A2;

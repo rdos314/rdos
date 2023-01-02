@@ -60,7 +60,7 @@ module control_bar (
   output reg [7:0]        tx_control_data,
 
   output reg              ana_config,
-  output reg [47:0]       ana_data,
+  output reg [47:0]       ana_data
 );
 
 // internal

@@ -197,7 +197,7 @@ module adc_app (
   reg  [13:0]             chan0_A1;
   reg  [13:0]             chan0_A2;
   reg  [13:0]             chan0_A3;
-  reg  [13:0]             chan0_B0,
+  reg  [13:0]             chan0_B0;
   reg  [13:0]             chan0_B1;
   reg  [13:0]             chan0_B2;
   reg  [13:0]             chan0_B3;
