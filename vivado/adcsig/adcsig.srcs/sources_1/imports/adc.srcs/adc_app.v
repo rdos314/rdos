@@ -162,13 +162,16 @@ module adc_app (
   reg                     config_rd;
   wire                    config_empty;
   wire [47:0]             config_out;
-  wire [4:0]              config_channel;
-  wire [23:0]             config_incr;
-  wire [12:0]             config_count;
 
-  assign config_channel = config_out[4:0];
-  assign config_incr =    config_out[31:8];
-  assign config_count =   config_out[44:32];
+  reg  [4:0]              config_channel;
+  reg  [23:0]             config_incr;
+  reg  [15:0]             config_count;
+
+  reg                     config_start;
+  reg                     config_running;
+  reg  [15:0]             config_adr;
+  reg  [23:0]             config_phase;
+
 
 // clock domain crossings
 
@@ -228,20 +231,6 @@ ana_fifo ana_fifo_inst (
   .empty(config_empty)         // output wire empty
 );
 
-ana_fifo ana_fifo_inst (
-  .clka(pci_clk),    // input wire clka
-  .ena(ana_wr),      // input wire ena
-  .wea(ana_wr),      // input wire [0 : 0] wea
-  .dina(ana_data),   // input wire [47 : 0] dina
-  .douta(pci2_out),  // output wire [31 : 0] douta
-  .clkb(rx_clk),     // input wire clkb
-  .enb(0),           // input wire enb
-  .web(0),           // input wire [0 : 0] web
-  .addrb(0),         // input wire [9 : 0] addrb
-  .dinb(0),          // input wire [31 : 0] dinb
-  .doutb()          // output wire [31 : 0] doutb
-);
-
 bram_msix bram_msix_inst (
   .clka(pci_clk),    // input wire clka
   .ena(pci2_en),     // input wire ena
@@ -254,7 +243,7 @@ bram_msix bram_msix_inst (
   .web(0),           // input wire [0 : 0] web
   .addrb(0),         // input wire [9 : 0] addrb
   .dinb(0),          // input wire [31 : 0] dinb
-  .doutb()          // output wire [31 : 0] doutb
+  .doutb()           // output wire [31 : 0] doutb
 );
 
 adc_ana adc_ana_0_inst (
@@ -743,11 +732,57 @@ begin : adc_app
   begin
     if (rx_reset)
     begin
-      config_rd <= 0;
+      config_running <= 0;
+      config_phase <= 0;
     end
     else
     begin
+      if (config_start)
+      begin
+        config_running <= 1;
+        config_phase <= 0;
+        config_adr <= 0;
+      end
+      else
+      begin
+        if (config_adr == 16'hFFFF)
+          config_running <= 0;
+        else
+          config_adr <= config_adr + 1;
+      end
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+    begin
+      config_start <= 0;
+    end
+    else
+    begin
+      if (config_rd)
+      begin
+        config_channel <= config_out[4:0];
+        config_incr <= config_out[31:8];
+        config_count <= config_out[47:32];
+        config_start <= 1;
+      end
+      else
+        config_start <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
       config_rd <= 0;
+    else
+    begin
+      if (config_empty || config_running || config_start)
+        config_rd <= 0;
+      else
+        config_rd <= 1;
     end
   end
 
