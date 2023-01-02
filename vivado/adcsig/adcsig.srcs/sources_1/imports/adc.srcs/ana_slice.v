@@ -35,6 +35,11 @@ module adc_slice (
   input wire [63:0]       coeff,
   input wire [55:0]       in,
 
+  input wire [17:0]       div_mask,
+  input wire              p_start,
+  input wire              p_running,
+  input wire              p_post,
+
   output reg [42:0]       sum,
   output reg [15:0]       res
 );
@@ -63,12 +68,9 @@ module adc_slice (
   wire [13:0]            in_2;
   wire [13:0]            in_3;
 
-  reg                    start;
-  reg                    running;
   reg                    sign;
   reg  [29:0]            divend;
   reg  [29:0]            curr;
-  reg  [17:0]            mask;
   reg  [17:0]            quot;
 
 
@@ -187,10 +189,8 @@ begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
-    if (start)
+    if (p_start)
     begin
-      mask[17] <= 1;
-      mask[16:0] <= 0;
       curr[29:17] <= count;
       curr[16:0] <= 0;
       quot[16:0] <= 0;
@@ -205,49 +205,46 @@ begin : ana_slice_gen
         sign <= 0;
         divend <= sum[41:12];
       end
-
-      running <= 1;
     end
     else
     begin
-      if (running)
+      if (p_running)
       begin
-        if (mask == 0)
-        begin
-          res[15] <= sign;
-
-          if (sign)
-          begin
-            if (quot[0])
-              res[14:0] <= ~quot[15:1];
-            else
-              res[14:0] <= (~quot[15:1]) + 1;
-          end
-          else
-          begin
-            if (quot[0])
-              res[14:0] <= quot[15:1] + 1;
-            else
-              res[14:0] <= quot[15:1];
-          end
-
-          running <= 0;
-        end
-        else
+        if (div_mask)
         begin
            if (divend >= curr)
            begin
             divend <= divend - curr;
-            quot <= quot | mask;
+            quot <= quot | div_mask;
           end
-
-          mask <= mask >> 1;
           curr <= curr >> 1;
         end
       end
     end
   end
 
+  always @ ( posedge clk ) 
+  begin
+    if (p_post)
+    begin
+      res[15] <= sign;
+
+      if (sign)
+      begin
+        if (quot[0])
+          res[14:0] <= ~quot[15:1];
+        else
+          res[14:0] <= (~quot[15:1]) + 1;
+      end
+      else
+      begin
+        if (quot[0])
+          res[14:0] <= quot[15:1] + 1;
+        else
+          res[14:0] <= quot[15:1];
+      end
+    end
+  end
 
   always @ ( posedge clk ) 
   begin
@@ -256,14 +253,11 @@ begin : ana_slice_gen
       sum_01 <= sum_0 + sum_1;
       sum_23 <= sum_2 + sum_3;
     end
-
+  end
+  always @ ( posedge clk ) 
+  begin
     if (p8)
-    begin
       sum <= sum_01 + sum_23;
-      start <= 1;
-    end
-    else
-      start <= 0;
   end
 
   always @ ( posedge clk ) 

@@ -96,6 +96,11 @@ module ana_freq (
   reg                    pd6;
   reg                    pd7;
   reg                    pd8;
+  
+  reg                    pd_start;
+  reg                    pd_running;
+  reg                    pd_post;
+  reg  [17:0]            div_mask;
 
   reg  [31:0]             pow_sq_A;
   reg  [31:0]             pow_sq_B;
@@ -139,6 +144,10 @@ adc_slice sin_A (
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
   .count(count),         // input wire [12 : 0] count
+  .div_mask(div_mask),   // input wire [0 : 0] div mask
+  .p_start(pd_start),    // input wire [0 : 0] start
+  .p_running(pd_running),// input wire [0 : 0] running
+  .p_post(pd_post),      // input wire [0 : 0] post
   .in(in_A),             // input wire [55 : 0] in
   .coeff(sin_coeff_out), // input wire [63 : 0] coeff
   .sum(sum_sin_A),       // output wire [42 : 0] sum
@@ -150,6 +159,10 @@ adc_slice cos_A (
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
   .count(count),         // input wire [12 : 0] count
+  .div_mask(div_mask),   // input wire [0 : 0] div mask
+  .p_start(pd_start),    // input wire [0 : 0] start
+  .p_running(pd_running),// input wire [0 : 0] running
+  .p_post(pd_post),      // input wire [0 : 0] post
   .in(in_A),             // input wire [55 : 0] in
   .coeff(cos_coeff_out), // input wire [63 : 0] coeff
   .sum(sum_cos_A),       // output wire [42 : 0] sum
@@ -161,6 +174,10 @@ adc_slice sin_B (
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
   .count(count),         // input wire [12 : 0] count
+  .div_mask(div_mask),   // input wire [0 : 0] div mask
+  .p_start(pd_start),    // input wire [0 : 0] start
+  .p_running(pd_running),// input wire [0 : 0] running
+  .p_post(pd_post),      // input wire [0 : 0] post
   .in(in_B),             // input wire [55 : 0] in
   .coeff(sin_coeff_out), // input wire [63 : 0] coeff
   .sum(sum_sin_B),       // output wire [42 : 0] sum
@@ -172,6 +189,10 @@ adc_slice cos_B (
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
   .count(count),         // input wire [12 : 0] count
+  .div_mask(div_mask),   // input wire [0 : 0] div mask
+  .p_start(pd_start),    // input wire [0 : 0] start
+  .p_running(pd_running),// input wire [0 : 0] running
+  .p_post(pd_post),      // input wire [0 : 0] post
   .in(in_B),             // input wire [55 : 0] in
   .coeff(cos_coeff_out), // input wire [63 : 0] coeff
   .sum(sum_cos_B),       // output wire [42 : 0] sum
@@ -241,13 +262,16 @@ ila_0 ila_0_inst (
   .probe14(cos_A2),       // input wire [31:0]  probe3
   .probe15(sin_B2),       // input wire [31:0]  probe3
   .probe16(cos_B2),       // input wire [31:0]  probe3
-  .probe17(sq_valid),     // input wire [0:0]  probe3
-  .probe18(sq_done_A),    // input wire [0:0]  probe3
-  .probe19(sq_done_B),    // input wire [0:0]  probe3
-  .probe20(pow_sq_A),     // input wire [31:0]  probe3
-  .probe21(pow_sq_B),     // input wire [31:0]  probe3
-  .probe22(power_A),      // input wire [15:0]  probe3
-  .probe23(power_B)       // input wire [15:0]  probe3
+  .probe17(pd_start),     // input wire [0:0]  probe3
+  .probe18(pd_running),   // input wire [0:0]  probe3
+  .probe19(pd_post),   // input wire [0:0]  probe3
+  .probe20(sq_valid),     // input wire [0:0]  probe3
+  .probe21(sq_done_A),    // input wire [0:0]  probe3
+  .probe22(sq_done_B),    // input wire [0:0]  probe3
+  .probe23(pow_sq_A),     // input wire [31:0]  probe3
+  .probe24(pow_sq_B),     // input wire [31:0]  probe3
+  .probe25(power_A),      // input wire [15:0]  probe3
+  .probe26(power_B)       // input wire [15:0]  probe3
 );
 
 generate
@@ -329,6 +353,45 @@ begin : ana_freq_gen
       skip <= 1;
     end
   end
+
+
+  always @ ( posedge clk ) 
+  begin
+    if (pd_start)
+    begin
+      div_mask[17] <= 1;
+      div_mask[16:0] <= 0;
+      pd_running <= 1;
+      pd_post <= 0;
+    end
+    else
+    begin
+      if (pd_running)
+      begin
+        if (div_mask == 0)
+        begin
+          pd_running <= 0;
+          pd_post <= 1;
+        end
+        else
+          div_mask <= div_mask >> 1;
+      end
+      else
+        pd_post <= 0;
+    end
+  end
+
+
+  always @ ( posedge clk ) 
+  begin
+    if (pd8)
+    begin
+      pd_start <= 1;
+    end
+    else
+      pd_start <= 0;
+  end
+
 
   always @ ( posedge clk ) 
   begin
