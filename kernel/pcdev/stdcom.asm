@@ -44,6 +44,7 @@ IER_BITS    = 8
 
 FLG_ENABLE_CTS  = 1
 FLG_ENABLE_AUTO_RTS  = 2
+FLG_FINTEK     = 4
 
 mem_reg_struc   STRUC
 
@@ -64,6 +65,7 @@ iopps_base_struc  com_port_struc <>
 
 iopps_char_time       DD ?
 iopps_flgs            DB ?
+iopps_id              DB ?
 iopps_base            DW ?
 iopps_dev_handle      DW ?
 iopps_baud_base       DD ?
@@ -80,6 +82,8 @@ iopds_baud_base     DD ?
 iopds_line_thread   DW ?
 iopds_line          DB ?
 iopds_irq           DB ?
+iopds_flags         DB ?
+iopds_id            DB ?
 iopds_port_nr       DW ?
 
 io_com_device_struc   ENDS
@@ -425,6 +429,9 @@ io_trans_end:
 ;
     test ds:iopps_flgs, FLG_ENABLE_AUTO_RTS
     jz io_trans_signal_wait
+;
+    test ds:iopps_flgs, FLG_FINTEK
+    jnz io_trans_signal_wait
 ;
     GetSystemTime
     add eax,ds:iopps_char_time
@@ -973,8 +980,33 @@ io_open_com    Proc far
     RequestSpinlock ds:com_spinlock
     mov es:iopds_handle,ds
     mov ds:iopps_dev_handle,es
-    mov ds:iopps_flgs,0
+    mov al,es:iopds_flags
+    mov ds:iopps_flgs,al
+    mov al,es:iopds_id
+    mov ds:iopps_id,al
     ReleaseSpinlock ds:com_spinlock
+;
+    test ds:iopps_flgs, FLG_FINTEK
+    jz io_open_norm
+;
+    mov al,87h
+    out 2Eh,al
+    out 2Eh,al
+;
+    mov al,7
+    out 2Eh,al
+    mov al,ds:iopps_id
+    out 2Fh,al
+;
+    mov al,0F0h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+;
+    mov al,0AAh
+    out 2Eh,al
+
+io_open_norm:
     pop ax
 ;
     mov dl,ah
@@ -1177,12 +1209,36 @@ io_enable_auto_rts PROC far
     push dx
 ;
     or ds:iopps_flgs,FLG_ENABLE_AUTO_RTS
+    test ds:iopps_flgs, FLG_FINTEK
+    jz io_enable_auto_norm
+
+io_enable_auto_fintek:
+    mov al,87h
+    out 2Eh,al
+    out 2Eh,al
+;
+    mov al,7
+    out 2Eh,al
+    mov al,ds:iopps_id
+    out 2Fh,al
+;
+    mov al,0F0h
+    out 2Eh,al
+    mov al,30h
+    out 2Fh,al
+;
+    mov al,0AAh
+    out 2Eh,al
+    jmp io_enable_auto_done
+
+io_enable_auto_norm:
     mov dx,ds:iopps_base
     add dx,4
     in al,dx
     and al,NOT 2
     out dx,al
-;   
+
+io_enable_auto_done:
     pop dx
     pop ax
     retf32
@@ -1202,16 +1258,42 @@ io_enable_auto_rts Endp
 
 io_disable_auto_rts    PROC far
     push ax
+    push bx
     push dx
-;    
+;
     and ds:iopps_flgs,NOT FLG_ENABLE_AUTO_RTS
+    test ds:iopps_flgs, FLG_FINTEK
+    jz io_disable_auto_norm
+
+io_disable_auto_fintek:
+    mov al,87h
+    out 2Eh,al
+    out 2Eh,al
+;
+    mov al,7
+    out 2Eh,al
+    mov al,ds:iopps_id
+    out 2Fh,al
+;
+    mov al,0F0h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+;
+    mov al,0AAh
+    out 2Eh,al
+    jmp io_disable_auto_done
+
+io_disable_auto_norm:
     mov dx,ds:iopps_base
     add dx,4
     in al,dx
     or al,2
     out dx,al
-;   
+
+io_disable_auto_done:   
     pop dx
+    pop bx
     pop ax
     retf32
 io_disable_auto_rts Endp
@@ -1300,6 +1382,9 @@ io_start_send  PROC far
     test ds:iopps_flgs, FLG_ENABLE_AUTO_RTS
     jz io_com_send_timer_stopped
 ;
+    test ds:iopps_flgs, FLG_FINTEK
+    jnz io_com_send_timer_stopped
+;
     mov bx,ds
     StopTimer
 
@@ -1317,6 +1402,9 @@ io_com_send_timer_stopped:
 io_com_send_enable:
     test ds:iopps_flgs, FLG_ENABLE_AUTO_RTS
     jz io_com_send_start
+;   
+    test ds:iopps_flgs, FLG_FINTEK
+    jnz io_com_send_start
 ;   
     mov dx,ds:iopps_base
     add dx,4
@@ -2654,8 +2742,10 @@ DetectIrq   Endp
 ;       DESCRIPTION:    Add IO port to list of available ports
 ;
 ;       PARAMETERS:     DX      Base
-;               AL      IRQ
-;               ECX     Baud base
+;                       AL      IRQ
+;                       AH      flags
+;                       BL      index
+;                       ECX     Baud base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2677,6 +2767,8 @@ AddIoPort Proc near
     mov es:iopds_baud_base,ecx
     pop ax
     mov es:iopds_irq,al
+    mov es:iopds_flags,ah
+    mov es:iopds_id,bl
 ;
     mov bx,ds:sd_ports
     add bx,bx
@@ -2969,9 +3061,11 @@ init_pci_found:
     mov cl,PCI_interrupt_line
     ReadPciByte
 ;
+    xor ah,ah
     mov ecx,921600
     call AddIoPort
 ;
+    xor ah,ah
     add dx,8
     call AddIoPort    
     clc
@@ -3294,7 +3388,8 @@ sfpAdd:
     push cx
     or si,ax
     mov al,cl
-    mov ecx,115200
+    mov ah,FLG_FINTEK
+    mov ecx,115200   
     call AddIoPort
     call InitDetect
     pop cx
@@ -3475,6 +3570,7 @@ init_pci    Proc far
     jc dt1
 ;
     mov ecx,115200
+    xor ah,ah
     call AddIoPort    
     call InitDetect
 
@@ -3483,6 +3579,7 @@ dt1:
     call DetectIrq
     jc dt2
 ;
+    xor ah,ah
     mov ecx,115200
     call AddIoPort
     call InitDetect
@@ -3492,6 +3589,7 @@ dt2:
     call DetectIrq
     jc dt3
 ;    
+    xor ah,ah
     mov ecx,115200
     call AddIoPort
     call InitDetect
@@ -3501,6 +3599,7 @@ dt3:
     call DetectIrq
     jc dt4
 ;    
+    xor ah,ah
     mov ecx,115200
     call AddIoPort
     call InitDetect
@@ -3510,6 +3609,7 @@ dt4:
     call DetectIrq
     jc dt5
 ;    
+    xor ah,ah
     mov ecx,115200
     call AddIoPort
     call InitDetect
@@ -3519,6 +3619,7 @@ dt5:
     call DetectIrq
     jc dtpci
 ;    
+    xor ah,ah
     mov ecx,115200
     call AddIoPort
     call InitDetect
