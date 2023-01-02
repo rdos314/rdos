@@ -35,6 +35,7 @@ module adc_slice (
   input wire [63:0]       coeff,
   input wire [55:0]       in,
 
+  output reg [42:0]       sum,
   output reg [15:0]       res
 );
 
@@ -46,7 +47,6 @@ module adc_slice (
   reg  [42:0]            sum_01;
   reg  [42:0]            sum_23;
 
-  reg  [42:0]            sum;
 
   wire [42:0]            p_0;  
   wire [42:0]            p_1;  

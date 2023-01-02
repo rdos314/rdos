@@ -239,14 +239,6 @@ module adc_app (
 
   assign adc_delay = up_test_mode ? 0 : 1;
 
-  wire [15:0]             res_sin_A;
-  wire [15:0]             res_cos_A;
-  wire [15:0]             res_sin_B;
-  wire [15:0]             res_cos_B;
-
-  assign pow_A = res_sin_A + res_cos_A;
-  assign pow_B = res_sin_B + res_cos_B;
-
 
 ana_fifo ana_fifo_inst (
   .rst(pci_reset),             // input wire rst
@@ -301,11 +293,8 @@ adc_ana adc_ana_0_inst (
 
     .running(chan0_running),
 
-    .res_sin_A(res_sin_A),  // input wire [15:0] res_sin_A
-    .res_cos_A(res_cos_A),  // input wire [15:0] res_cos_A
-    .res_sin_B(res_sin_B),  // input wire [15:0] res_sin_B
-    .res_cos_B(res_cos_B)  // input wire [15:0] res_cos_B
-    
+    .power_A(pow_A),  // input wire [15:0] power_A
+    .power_B(pow_B)   // input wire [15:0] power_B    
 );
 
 generate

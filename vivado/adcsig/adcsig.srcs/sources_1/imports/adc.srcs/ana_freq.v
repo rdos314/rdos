@@ -46,10 +46,8 @@ module ana_freq (
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
 
-  output wire [15:0]      res_sin_A,
-  output wire [15:0]      res_cos_A,
-  output wire [15:0]      res_sin_B,
-  output wire [15:0]      res_cos_B
+  output wire [15:0]      power_A,
+  output wire [15:0]      power_B
 );
 
   reg                    start;
@@ -61,11 +59,21 @@ module ana_freq (
   reg  [63:0]            cos_coeff_in;
   wire [63:0]            sin_coeff_out;
   wire [63:0]            cos_coeff_out;
+
+  wire [15:0]            res_sin_A,
+  wire [15:0]            res_cos_A,
+  wire [15:0]            res_sin_B,
+  wire [15:0]            res_cos_B
   
   wire [31:0]            sin_A2;
   wire [31:0]            cos_A2;
   wire [31:0]            sin_B2;
   wire [31:0]            cos_B2;
+
+  wire [42:0]            sum_sin_A2;
+  wire [42:0]            sum_cos_A2;
+  wire [42:0]            sum_sin_B2;
+  wire [42:0]            sum_cos_B2;
 
   wire [55:0]            in_A;
   wire [55:0]            in_B;
@@ -95,8 +103,6 @@ module ana_freq (
   reg  [7:0]              sq_cnt;
   wire                    sq_done_A;
   wire                    sq_done_B;
-  wire [15:0]             sq_data_A;
-  wire [15:0]             sq_data_B;
 
   assign in_A[13:0] = in_A0;
   assign in_A[27:14] = in_A1;
@@ -135,7 +141,8 @@ adc_slice sin_A (
   .count(count),         // input wire [12 : 0] count
   .in(in_A),             // input wire [55 : 0] in
   .coeff(sin_coeff_out), // input wire [63 : 0] coeff
-  .res(res_sin_A)        // output wire [15 : 0] sum
+  .sum(sum_sin_A),       // output wire [42 : 0] sum
+  .res(res_sin_A)        // output wire [15 : 0] res
 );
 
 adc_slice cos_A (
@@ -145,7 +152,8 @@ adc_slice cos_A (
   .count(count),         // input wire [12 : 0] count
   .in(in_A),             // input wire [55 : 0] in
   .coeff(cos_coeff_out), // input wire [63 : 0] coeff
-  .res(res_cos_A)        // output wire [15 : 0] sum
+  .sum(sum_cos_A),       // output wire [42 : 0] sum
+  .res(res_cos_A)        // output wire [15 : 0] res
 );
 
 adc_slice sin_B (
@@ -155,7 +163,8 @@ adc_slice sin_B (
   .count(count),         // input wire [12 : 0] count
   .in(in_B),             // input wire [55 : 0] in
   .coeff(sin_coeff_out), // input wire [63 : 0] coeff
-  .res(res_sin_B)        // output wire [15 : 0] sum
+  .sum(sum_sin_B),       // output wire [42 : 0] sum
+  .res(res_sin_B)        // output wire [15 : 0] res
 );
 
 adc_slice cos_B (
@@ -165,7 +174,8 @@ adc_slice cos_B (
   .count(count),         // input wire [12 : 0] count
   .in(in_B),             // input wire [55 : 0] in
   .coeff(cos_coeff_out), // input wire [63 : 0] coeff
-  .res(res_cos_B)        // output wire [15 : 0] sum
+  .sum(sum_cos_B),       // output wire [42 : 0] sum
+  .res(res_cos_B)        // output wire [15 : 0] res
 );
 
 square square_sin_A (
@@ -193,7 +203,7 @@ square square_cos_B (
   .CLK(clk),         // input wire CLK
   .A(res_cos_B),     // input wire [15 : 0] A
   .B(res_cos_B),     // input wire [15 : 0] B
-  .P(cos_AB)         // output wire [31 : 0] P
+  .P(cos_B2)         // output wire [31 : 0] P
 );
 
 ana_sqrt sqrt_A (
@@ -201,7 +211,7 @@ ana_sqrt sqrt_A (
   .s_axis_cartesian_tvalid(sq_valid),                // input wire s_axis_cartesian_tvalid
   .s_axis_cartesian_tdata(pow_sq_A),                 // input wire [31 : 0] s_axis_cartesian_tdata
   .m_axis_dout_tvalid(sq_done_A),                    // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(sq_data_A)                      // output wire [15 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(power_A)                        // output wire [15 : 0] m_axis_dout_tdata
 );
 
 ana_sqrt sqrt_B (
@@ -209,7 +219,7 @@ ana_sqrt sqrt_B (
   .s_axis_cartesian_tvalid(sq_valid),                // input wire s_axis_cartesian_tvalid
   .s_axis_cartesian_tdata(pow_sq_B),                 // input wire [31 : 0] s_axis_cartesian_tdata
   .m_axis_dout_tvalid(sq_done_B),                    // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(sq_data_B)                      // output wire [15 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(power_B)                        // output wire [15 : 0] m_axis_dout_tdata
 );
 
 ila_0 ila_0_inst (
