@@ -89,6 +89,15 @@ module ana_freq (
   reg                    pd7;
   reg                    pd8;
 
+  reg  [31:0]             pow_sq_A;
+  reg  [31:0]             pow_sq_B;
+  reg                     sq_valid;
+  reg  [7:0]              sq_cnt;
+  wire                    sq_done_A;
+  wire                    sq_done_B;
+  wire [15:0]             sq_data_A;
+  wire [15:0]             sq_data_B;
+
 bram_freq bram_sin (
   .clka(clk),           // input wire clka
   .ena(coeff_en),       // input wire ena
@@ -176,6 +185,22 @@ square square_cos_B (
   .P(cos_AB)         // output wire [31 : 0] P
 );
 
+ana_sqrt sqrt_A (
+  .aclk(clk),                                        // input wire aclk
+  .s_axis_cartesian_tvalid(sq_valid),                // input wire s_axis_cartesian_tvalid
+  .s_axis_cartesian_tdata(pow_sq_A),                 // input wire [31 : 0] s_axis_cartesian_tdata
+  .m_axis_dout_tvalid(sq_done_A),                    // output wire m_axis_dout_tvalid
+  .m_axis_dout_tdata(sq_data_A)                      // output wire [15 : 0] m_axis_dout_tdata
+);
+
+ana_sqrt sqrt_B (
+  .aclk(clk),                                        // input wire aclk
+  .s_axis_cartesian_tvalid(sq_valid),                // input wire s_axis_cartesian_tvalid
+  .s_axis_cartesian_tdata(pow_sq_B),                 // input wire [31 : 0] s_axis_cartesian_tdata
+  .m_axis_dout_tvalid(sq_done_B),                    // output wire m_axis_dout_tvalid
+  .m_axis_dout_tdata(sq_data_B)                      // output wire [15 : 0] m_axis_dout_tdata
+);
+
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(en),            // input wire [0:0]  probe0
@@ -199,6 +224,44 @@ ila_0 ila_0_inst (
 
 generate
 begin : ana_freq_gen
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+    begin
+      sq_cnt <= 0;
+      sq_valid <= 0;
+    end
+    else
+    begin
+      if (input_done)
+      begin
+        sq_cnt <= 1;
+        sq_valid <= 0;
+      end
+      else
+      begin
+        if (sq_cnt)
+        begin
+          sq_cnt <= sq_cnt + 1;          
+          if (sq_cnt == 8)
+          begin
+            pow_sq_A <= sin_A2 + cos_A2;
+            pow_sq_B <= sin_B2 + cos_B2;
+            sq_valid <= 1;
+          end
+        end
+        else
+        begin
+          if (sq_done_A && sq_done_B)
+          begin
+            sq_cnt <= 0;
+          end
+          sq_valid <= 0;
+        end
+      end
+    end
+  end
 
   always @ ( posedge clk ) 
   begin
