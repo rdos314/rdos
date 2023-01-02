@@ -255,6 +255,23 @@ ana_fifo ana_fifo_inst (
   .empty(config_empty)         // output wire empty
 );
 
+ana_synt ana_synt_inst (
+  .aclk(rx_clk),                              // input wire aclk
+  .s_axis_phase_tvalid(1),  // input wire s_axis_phase_tvalid
+  .s_axis_phase_tdata(config_phase),    // input wire [23 : 0] s_axis_phase_tdata
+  .m_axis_dout_tvalid(),    // output wire m_axis_dout_tvalid
+  .m_axis_dout_tdata()      // output wire [31 : 0] m_axis_dout_tdata
+);
+
+bram_sample bram_sample_inst (
+  .clka(rx_clk),    // input wire clka
+  .ena(0),      // input wire ena
+  .wea(0),      // input wire [0 : 0] wea
+  .addra(0),  // input wire [15 : 0] addra
+  .dina(0),    // input wire [55 : 0] dina
+  .douta()  // output wire [55 : 0] douta
+);
+
 bram_msix bram_msix_inst (
   .clka(pci_clk),    // input wire clka
   .ena(pci2_en),     // input wire ena

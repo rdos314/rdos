@@ -108,13 +108,13 @@ module ana_freq (
   reg  [31:0]            pow_sq_A;
   reg  [31:0]            pow_sq_B;
   reg                    conv_start;
-  wire                   pow_done_A;
-  wire                   pow_done_B;
+  wire                   power_done_A;
+  wire                   power_done_B;
+  wire                   phase_done_A;
+  wire                   phase_done_B;
 
   wire [31:0]            phase_sin_cos_A;
   wire [31:0]            phase_sin_cos_B;
-  wire                   phase_done_A;
-  wire                   phase_done_B;
   
   wire                   shift_sin_A;
   wire                   shift_cos_A;
@@ -262,7 +262,7 @@ ana_sqrt sqrt_A (
   .aclk(clk),                                        // input wire aclk
   .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
   .s_axis_cartesian_tdata(pow_sq_A),                 // input wire [31 : 0] s_axis_cartesian_tdata
-  .m_axis_dout_tvalid(pow_done_A),                   // output wire m_axis_dout_tvalid
+  .m_axis_dout_tvalid(power_done_A),                   // output wire m_axis_dout_tvalid
   .m_axis_dout_tdata(power_A)                        // output wire [15 : 0] m_axis_dout_tdata
 );
 
@@ -270,7 +270,7 @@ ana_sqrt sqrt_B (
   .aclk(clk),                                        // input wire aclk
   .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
   .s_axis_cartesian_tdata(pow_sq_B),                 // input wire [31 : 0] s_axis_cartesian_tdata
-  .m_axis_dout_tvalid(pow_done_B),                   // output wire m_axis_dout_tvalid
+  .m_axis_dout_tvalid(power_done_B),                 // output wire m_axis_dout_tvalid
   .m_axis_dout_tdata(power_B)                        // output wire [15 : 0] m_axis_dout_tdata
 );
 
@@ -309,22 +309,18 @@ ila_0 ila_0_inst (
   .probe14(sum_cos_A),    // input wire [15:0]  probe3
   .probe15(sum_sin_B),    // input wire [15:0]  probe3
   .probe16(sum_cos_B),    // input wire [15:0]  probe3
-  .probe17(sin_A2),       // input wire [31:0]  probe3
-  .probe18(cos_A2),       // input wire [31:0]  probe3
-  .probe19(sin_B2),       // input wire [31:0]  probe3
-  .probe20(cos_B2),       // input wire [31:0]  probe3
-  .probe21(pd_start),     // input wire [0:0]  probe3
-  .probe22(pd_running),   // input wire [0:0]  probe3
-  .probe23(pd_post),      // input wire [0:0]  probe3
-  .probe24(sq_valid),     // input wire [0:0]  probe3
-  .probe25(sq_done_A),    // input wire [0:0]  probe3
-  .probe26(sq_done_B),    // input wire [0:0]  probe3
-  .probe27(pow_sq_A),     // input wire [31:0]  probe3
-  .probe28(pow_sq_B),     // input wire [31:0]  probe3
-  .probe29(power_A),      // input wire [15:0]  probe3
-  .probe30(power_B),      // input wire [15:0]  probe3
-  .probe31(phase_A),      // input wire [15:0]  probe3
-  .probe32(phase_B)       // input wire [15:0]  probe3
+  .probe17(pd_start),     // input wire [0:0]  probe3
+  .probe18(pd_running),   // input wire [0:0]  probe3
+  .probe19(pd_post),      // input wire [0:0]  probe3
+  .probe20(conv_start),   // input wire [0:0]  probe3
+  .probe21(power_done_A), // input wire [0:0]  probe3
+  .probe22(power_done_B), // input wire [0:0]  probe3
+  .probe23(phase_done_A), // input wire [0:0]  probe3
+  .probe24(phase_done_B), // input wire [0:0]  probe3
+  .probe25(power_A),      // input wire [15:0]  probe3
+  .probe26(power_B),      // input wire [15:0]  probe3
+  .probe27(phase_A),      // input wire [15:0]  probe3
+  .probe28(phase_B)       // input wire [15:0]  probe3
 );
 
 generate
