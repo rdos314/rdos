@@ -53,7 +53,9 @@ module adc_ana (
 
   output reg              running,
   output wire [15:0]      power_A,
-  output wire [15:0]      power_B
+  output wire [15:0]      power_B,
+  output wire [15:0]      phase_A,
+  output wire [15:0]      phase_B
 );
 
 // Analysis
@@ -156,7 +158,9 @@ ana_freq base (
   .in_B2(q_B2),           // input wire [13:0] in_B2
   .in_B3(q_B3),           // input wire [13:0] in_B3
   .power_A(power_A),      // input wire [15:0] power_A
-  .power_B(power_B)       // input wire [15:0] power_B
+  .power_B(power_B),       // input wire [15:0] power_B
+  .phase_A(phase_A),      // input wire [15:0] phase_A
+  .phase_B(phase_B)       // input wire [15:0] phase_B
 );
 
 

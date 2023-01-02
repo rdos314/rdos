@@ -39,9 +39,12 @@ module adc_slice (
   input wire              p_start,
   input wire              p_running,
   input wire              p_post,
+  
+  output wire             req_shift,
+  input wire              do_shift,         
 
-  output reg [42:0]       sum,
-  output reg [15:0]       res
+  output reg [15:0]       phase,
+  output reg [15:0]       power
 );
 
   reg  [42:0]            sum_0;
@@ -52,6 +55,7 @@ module adc_slice (
   reg  [42:0]            sum_01;
   reg  [42:0]            sum_23;
 
+  reg  [42:0]            phase_sum;
 
   wire [42:0]            p_0;  
   wire [42:0]            p_1;  
@@ -83,6 +87,8 @@ module adc_slice (
   assign in_1 = in[27:14];
   assign in_2 = in[41:28];
   assign in_3 = in[55:42];
+  
+  assign req_shift = phase_sum[42] == phase_sum[41];
 
 multiply m_0 (
   .CLK(clk),            // input wire CLK
@@ -195,15 +201,15 @@ begin : ana_slice_gen
       curr[16:0] <= 0;
       quot[16:0] <= 0;
 
-      if (sum[42])
+      if (phase_sum[42])
       begin
         sign <= 1;
-        divend <= (~sum[41:12]) + 1;
+        divend <= (~phase_sum[41:12]) + 1;
       end
       else
       begin
         sign <= 0;
-        divend <= sum[41:12];
+        divend <= phase_sum[41:12];
       end
     end
     else
@@ -227,21 +233,22 @@ begin : ana_slice_gen
   begin
     if (p_post)
     begin
-      res[15] <= sign;
+      phase <= phase_sum[42:27];
+      power[15] <= sign;
 
       if (sign)
       begin
         if (quot[0])
-          res[14:0] <= ~quot[15:1];
+          power[14:0] <= ~quot[15:1];
         else
-          res[14:0] <= (~quot[15:1]) + 1;
+          power[14:0] <= (~quot[15:1]) + 1;
       end
       else
       begin
         if (quot[0])
-          res[14:0] <= quot[15:1] + 1;
+          power[14:0] <= quot[15:1] + 1;
         else
-          res[14:0] <= quot[15:1];
+          power[14:0] <= quot[15:1];
       end
     end
   end
@@ -256,8 +263,11 @@ begin : ana_slice_gen
   end
   always @ ( posedge clk ) 
   begin
-    if (p8)
-      sum <= sum_01 + sum_23;
+    if (p_running && do_shift)
+      phase_sum <= phase_sum << 1;
+    else    
+      if (p8)
+        phase_sum <= sum_01 + sum_23;
   end
 
   always @ ( posedge clk ) 
@@ -291,6 +301,7 @@ begin : ana_slice_gen
     else
       sum_3 <= sum_3 + p_3;      
   end
+
 
 end
 

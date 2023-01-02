@@ -78,8 +78,11 @@ module adc_app (
   input wire [13:0]       adc_B2,
   input wire [13:0]       adc_B3,
 
-  output wire [15:0]      pow_A,
-  output wire [15:0]      pow_B,
+  output wire [15:0]      power_A,
+  output wire [15:0]      power_B,
+
+  output wire [15:0]      phase_A,
+  output wire [15:0]      phase_B,
 
   input wire              config_wr,
   input wire [47:0]       config_data,
@@ -293,8 +296,10 @@ adc_ana adc_ana_0_inst (
 
     .running(chan0_running),
 
-    .power_A(pow_A),  // input wire [15:0] power_A
-    .power_B(pow_B)   // input wire [15:0] power_B    
+    .power_A(power_A),  // input wire [15:0] power_A
+    .power_B(power_B),   // input wire [15:0] power_B    
+    .phase_A(phase_A),  // input wire [15:0] phase_A
+    .phase_B(phase_B)   // input wire [15:0] phase_B    
 );
 
 generate
