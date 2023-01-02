@@ -60,10 +60,10 @@ module ana_freq (
   wire [63:0]            sin_coeff_out;
   wire [63:0]            cos_coeff_out;
 
-  wire [15:0]            res_sin_A;
-  wire [15:0]            res_cos_A;
-  wire [15:0]            res_sin_B;
-  wire [15:0]            res_cos_B;
+  wire [15:0]            pow_sin_A;
+  wire [15:0]            pow_cos_A;
+  wire [15:0]            pow_sin_B;
+  wire [15:0]            pow_cos_B;
   
   wire [31:0]            sin_A2;
   wire [31:0]            cos_A2;
@@ -142,7 +142,7 @@ adc_slice sin_A (
   .in(in_A),             // input wire [55 : 0] in
   .coeff(sin_coeff_out), // input wire [63 : 0] coeff
   .sum(sum_sin_A),       // output wire [42 : 0] sum
-  .res(res_sin_A)        // output wire [15 : 0] res
+  .res(pow_sin_A)        // output wire [15 : 0] res
 );
 
 adc_slice cos_A (
@@ -153,7 +153,7 @@ adc_slice cos_A (
   .in(in_A),             // input wire [55 : 0] in
   .coeff(cos_coeff_out), // input wire [63 : 0] coeff
   .sum(sum_cos_A),       // output wire [42 : 0] sum
-  .res(res_cos_A)        // output wire [15 : 0] res
+  .res(pow_cos_A)        // output wire [15 : 0] res
 );
 
 adc_slice sin_B (
@@ -164,7 +164,7 @@ adc_slice sin_B (
   .in(in_B),             // input wire [55 : 0] in
   .coeff(sin_coeff_out), // input wire [63 : 0] coeff
   .sum(sum_sin_B),       // output wire [42 : 0] sum
-  .res(res_sin_B)        // output wire [15 : 0] res
+  .res(pow_sin_B)        // output wire [15 : 0] res
 );
 
 adc_slice cos_B (
@@ -175,34 +175,34 @@ adc_slice cos_B (
   .in(in_B),             // input wire [55 : 0] in
   .coeff(cos_coeff_out), // input wire [63 : 0] coeff
   .sum(sum_cos_B),       // output wire [42 : 0] sum
-  .res(res_cos_B)        // output wire [15 : 0] res
+  .res(pow_cos_B)        // output wire [15 : 0] res
 );
 
 square square_sin_A (
   .CLK(clk),         // input wire CLK
-  .A(res_sin_A),     // input wire [15 : 0] A
-  .B(res_sin_A),     // input wire [15 : 0] B
+  .A(pow_sin_A),     // input wire [15 : 0] A
+  .B(pow_sin_A),     // input wire [15 : 0] B
   .P(sin_A2)         // output wire [31 : 0] P
 );
 
 square square_cos_A (
   .CLK(clk),         // input wire CLK
-  .A(res_cos_A),     // input wire [15 : 0] A
-  .B(res_cos_A),     // input wire [15 : 0] B
+  .A(pow_cos_A),     // input wire [15 : 0] A
+  .B(pow_cos_A),     // input wire [15 : 0] B
   .P(cos_A2)         // output wire [31 : 0] P
 );
 
 square square_sin_B (
   .CLK(clk),         // input wire CLK
-  .A(res_sin_B),     // input wire [15 : 0] A
-  .B(res_sin_B),     // input wire [15 : 0] B
+  .A(pow_sin_B),     // input wire [15 : 0] A
+  .B(pow_sin_B),     // input wire [15 : 0] B
   .P(sin_B2)         // output wire [31 : 0] P
 );
 
 square square_cos_B (
   .CLK(clk),         // input wire CLK
-  .A(res_cos_B),     // input wire [15 : 0] A
-  .B(res_cos_B),     // input wire [15 : 0] B
+  .A(pow_cos_B),     // input wire [15 : 0] A
+  .B(pow_cos_B),     // input wire [15 : 0] B
   .P(cos_B2)         // output wire [31 : 0] P
 );
 
@@ -233,14 +233,21 @@ ila_0 ila_0_inst (
   .probe6(last),          // input wire [0:0]  probe3
   .probe7(done),          // input wire [0:0]  probe3
   .probe8(delay),         // input wire [4:0]  probe3
-  .probe9(res_sin_A),     // input wire [15:0]  probe3
-  .probe10(res_cos_A),    // input wire [15:0]  probe3
-  .probe11(res_sin_B),    // input wire [15:0]  probe3
-  .probe12(res_cos_B),    // input wire [15:0]  probe3
+  .probe9(pow_sin_A),     // input wire [15:0]  probe3
+  .probe10(pow_cos_A),    // input wire [15:0]  probe3
+  .probe11(pow_sin_B),    // input wire [15:0]  probe3
+  .probe12(pow_cos_B),    // input wire [15:0]  probe3
   .probe13(sin_A2),       // input wire [31:0]  probe3
   .probe14(cos_A2),       // input wire [31:0]  probe3
   .probe15(sin_B2),       // input wire [31:0]  probe3
-  .probe16(cos_B2)        // input wire [31:0]  probe3
+  .probe16(cos_B2),       // input wire [31:0]  probe3
+  .probe17(sq_valid),     // input wire [0:0]  probe3
+  .probe18(sq_done_A),    // input wire [0:0]  probe3
+  .probe19(sq_done_B),    // input wire [0:0]  probe3
+  .probe20(pow_sq_A),     // input wire [31:0]  probe3
+  .probe21(pow_sq_B),     // input wire [31:0]  probe3
+  .probe22(power_A),      // input wire [15:0]  probe3
+  .probe23(power_B)       // input wire [15:0]  probe3
 );
 
 generate
