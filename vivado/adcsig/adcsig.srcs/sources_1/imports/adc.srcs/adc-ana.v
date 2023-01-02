@@ -42,6 +42,16 @@ module adc_ana (
   input wire [3:0]        wr_be,
   input wire              wr,
 
+  input wire [13:0]       in_A0,
+  input wire [13:0]       in_A1,
+  input wire [13:0]       in_A2,
+  input wire [13:0]       in_A3,
+  input wire [13:0]       in_B0,
+  input wire [13:0]       in_B1,
+  input wire [13:0]       in_B2,
+  input wire [13:0]       in_B3,
+
+  output reg              running,
   output wire [15:0]      res_sin_A,
   output wire [15:0]      res_cos_A,
   output wire [15:0]      res_sin_B,
@@ -50,7 +60,6 @@ module adc_ana (
 
 // Analysis
 
-  reg                    ana_on;
   reg                    ana_off;
   reg                    ana_en;
   reg                    ana_wr;
@@ -157,8 +166,8 @@ ana_freq base (
 
 ila_1 ila_1_inst (
   .clk(clk),               // input wire clk
-  .probe0(reset),         // input wire [0:0]  probe0
-  .probe1(ana_on),         // input wire [0:0]  probe0
+  .probe0(reset),          // input wire [0:0]  probe0
+  .probe1(running),        // input wire [0:0]  probe0
   .probe2(ana_off),        // input wire [0:0]  probe1
   .probe3(ana_load),       // input wire [0:0]  probe1
   .probe4(ana_en)         // input wire [0:0]  probe2
@@ -257,7 +266,7 @@ begin : adc_bar_gen
 
   always @ ( posedge clk ) 
   begin
-    if (ana_on)
+    if (running)
     begin
       if (delay)
         delay <= delay - 1;
@@ -331,7 +340,7 @@ begin : adc_bar_gen
       bram_wr <= 0;
       ana_en <= 0;
       ana_load <= 0;
-      ana_on <= 0;
+      running <= 0;
       ana_off <= 0;
       ana_count <= 0;
       bram_adr <= 0;
@@ -383,14 +392,14 @@ begin : adc_bar_gen
       begin
         ana_wr <= 0;
 
-        if (ana_on)
+        if (running)
         begin
           pd1 <= 0;
 
           if (ana_count != bram_data_out[12:0])
           begin
             ana_en <= 0;
-            ana_on <= 0;
+            running <= 0;
             ana_off <= 1;
           end
         end
@@ -425,7 +434,7 @@ begin : adc_bar_gen
             if (pd3)
             begin
               if (ana_en)
-                ana_on <= 1;
+                running <= 1;
               else
                 ana_off <= 1;
             end

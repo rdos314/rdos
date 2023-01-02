@@ -67,8 +67,8 @@ module ana_freq (
   wire [31:0]            sin_B2;
   wire [31:0]            cos_B2;
 
-  reg  [55:0]            in_A;
-  reg  [55:0]            in_B;
+  wire [55:0]            in_A;
+  wire [55:0]            in_B;
 
   reg  [10:0]            adr;
   reg  [10:0]            last;
@@ -97,6 +97,17 @@ module ana_freq (
   wire                    sq_done_B;
   wire [15:0]             sq_data_A;
   wire [15:0]             sq_data_B;
+
+  assign in_A[13:0] = in_A0;
+  assign in_A[27:14] = in_A1;
+  assign in_A[41:28] = in_A2;
+  assign in_A[55:42] = in_A3;
+
+  assign in_B[13:0] = in_B0;
+  assign in_B[27:14] = in_B1;
+  assign in_B[41:28] = in_B2;
+  assign in_B[55:42] = in_B3;
+
 
 bram_freq bram_sin (
   .clka(clk),           // input wire clka
@@ -313,16 +324,6 @@ begin : ana_freq_gen
       pd6 <= pd5;
       pd7 <= pd6;
       pd8 <= pd7;
-
-      in_A[13:0] <= in_A0;
-      in_A[27:14] <= in_A1;
-      in_A[41:28] <= in_A2;
-      in_A[55:42] <= in_A3;
-
-      in_B[13:0] <= in_B0;
-      in_B[27:14] <= in_B1;
-      in_B[41:28] <= in_B2;
-      in_B[55:42] <= in_B3;
     end
   end
 

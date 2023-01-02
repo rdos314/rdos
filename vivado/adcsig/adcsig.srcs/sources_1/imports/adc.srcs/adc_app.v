@@ -172,6 +172,36 @@ module adc_app (
   reg  [15:0]             config_adr;
   reg  [23:0]             config_phase;
 
+  wire [13:0]             config_A0;
+  wire [13:0]             config_A1;
+  wire [13:0]             config_A2;
+  wire [13:0]             config_A3;
+  wire [13:0]             config_B0;
+  wire [13:0]             config_B1;
+  wire [13:0]             config_B2;
+  wire [13:0]             config_B3;
+
+  assign config_A0 = 0;
+  assign config_A1 = 0;
+  assign config_A2 = 0;
+  assign config_A3 = 0;
+  assign config_B0 = 0;
+  assign config_B1 = 0;
+  assign config_B2 = 0;
+  assign config_B3 = 0;
+
+// analyser freq blocks
+
+  wire                    chan0_running;
+  reg  [13:0]             chan0_A0;
+  reg  [13:0]             chan0_A1;
+  reg  [13:0]             chan0_A2;
+  reg  [13:0]             chan0_A3;
+  reg  [13:0]             chan0_B0,
+  reg  [13:0]             chan0_B1;
+  reg  [13:0]             chan0_B2;
+  reg  [13:0]             chan0_B3;
+
 
 // clock domain crossings
 
@@ -218,7 +248,6 @@ module adc_app (
   assign pow_B = res_sin_B + res_cos_B;
 
 
-
 ana_fifo ana_fifo_inst (
   .rst(pci_reset),             // input wire rst
   .wr_clk(pci_clk),            // input wire wr_clk
@@ -260,6 +289,17 @@ adc_ana adc_ana_0_inst (
     .wr_data(ana_wr_data),
     .wr_be(ana_wr_be),
     .wr(ana_wr[0:0]),
+
+    .in_A0(chan0_A0),
+    .in_A1(chan0_A1),
+    .in_A2(chan0_A2),
+    .in_A3(chan0_A3),
+    .in_B0(chan0_B0),
+    .in_B1(chan0_B1),
+    .in_B2(chan0_B2),
+    .in_B3(chan0_B3),
+
+    .running(chan0_running),
 
     .res_sin_A(res_sin_A),  // input wire [15:0] res_sin_A
     .res_cos_A(res_cos_A),  // input wire [15:0] res_cos_A
@@ -748,7 +788,10 @@ begin : adc_app
         if (config_adr == 16'hFFFF)
           config_running <= 0;
         else
+        begin
           config_adr <= config_adr + 1;
+          config_phase <= config_phase + config_incr;
+        end
       end
     end
   end
@@ -783,6 +826,47 @@ begin : adc_app
         config_rd <= 0;
       else
         config_rd <= 1;
+    end
+  end
+
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (config_running && (config_channel == 0))
+    begin
+      chan0_A0 <= config_A0;      
+      chan0_A1 <= config_A1;      
+      chan0_A2 <= config_A2;      
+      chan0_A3 <= config_A3;      
+      chan0_B0 <= config_B0;      
+      chan0_B1 <= config_B1;      
+      chan0_B2 <= config_B2;      
+      chan0_B3 <= config_B3;      
+    end
+    else
+    begin
+      if (adc_en && chan0_running)
+      begin
+        chan0_A0 <= adc_A0;
+        chan0_A1 <= adc_A1;
+        chan0_A2 <= adc_A2;
+        chan0_A3 <= adc_A3;
+        chan0_B0 <= adc_B0;
+        chan0_B1 <= adc_B1;
+        chan0_B2 <= adc_B2;
+        chan0_B3 <= adc_B3;
+      end
+      else
+      begin
+        chan0_A0 <= 0;
+        chan0_A1 <= 0;
+        chan0_A2 <= 0;
+        chan0_A3 <= 0;
+        chan0_B0 <= 0;
+        chan0_B1 <= 0;
+        chan0_B2 <= 0;
+        chan0_B3 <= 0;
+      end
     end
   end
 
