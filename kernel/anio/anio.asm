@@ -46,7 +46,7 @@ cb_adc_irq        DB ?          ; 4
 cb_adc_test_mode  DB ?
 cb_adc_index      DW ?
 cb_adc_phase_incr DD ?          ; 5
-cb_adc_window     DB ?,?,?,?    ; 6
+cb_adc_size       DW ?,?        ; 6
 
 control_bar     ENDS
 
@@ -1127,34 +1127,6 @@ adc_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           set_adc_trigger
-;
-;       DESCRIPTION:    Set ADC trigger
-;
-;       PARAMETERS:     EAX     Phase incr
-;                       CL      Window bits
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_adc_trigger_name    DB 'Set ADC Trigger', 0
-
-set_adc_trigger  Proc far
-    push ds
-    push ebx
-;
-    mov bx,anio_control_sel
-    mov ds,ebx
-    mov ds:cb_adc_phase_incr,eax
-    mov ds:cb_adc_window,cl
-;
-    pop ebx
-    pop ds
-    ret
-set_adc_trigger Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           start_adc
 ;
 ;       DESCRIPTION:    Start ADC
@@ -1330,9 +1302,68 @@ map_adc_block  Endp
 
 setup_adc_chan_name      DB 'Setup ADC Channel', 0
 
-c_freq DD 750000000
+c_freq DD 1000000000
 
 setup_adc_chan  Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    int 3
+    push ecx
+    mov ecx,anio_control_sel
+    mov ds,ecx
+;
+    mov edx,eax
+    xor eax,eax
+    mov ecx,cs:c_freq
+    div ecx
+;
+    shr ecx,1
+    cmp edx,ecx
+    jb sacIncrOk
+;
+    inc eax
+
+sacIncrOk:
+    pop ecx
+;
+    add eax,80h
+    mov al,bl
+    mov ds:cb_adc_phase_incr,eax
+;
+    xor al,al
+    mov ebx,eax
+    mov edx,ecx
+    xor eax,eax
+    div ebx        
+;
+    shr ebx,1
+    cmp edx,ebx
+    jb sacCountOk
+;
+    inc eax
+
+sacCountOk:
+    cmp eax,8192
+    jb sacCountHighOk
+;
+    mov eax,8191
+
+sacCountHighOk:
+    cmp ax,100
+    jae sacCountLowOk
+;
+    mov ax,100
+
+sacCountLowOk:
+    mov ds:cb_adc_size,ax
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
     ret
 setup_adc_chan  Endp
 
@@ -1441,6 +1472,18 @@ init_pci    PROC far
     push es
     pushad
 ;
+;  for test only!
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+;
+    mov esi,OFFSET setup_adc_chan
+    mov edi,OFFSET setup_adc_chan_name
+    xor dx,dx
+    mov ax,setup_adc_chan_nr
+    RegisterBimodalUserGate
+;
     call InitPciAdapter
     jc ipDone
 ;
@@ -1456,6 +1499,10 @@ init_pci    PROC far
     int 3
     call InitTest
 ;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+;
     mov esi,OFFSET start_adc
     mov edi,OFFSET start_adc_name
     xor dx,dx
@@ -1466,12 +1513,6 @@ init_pci    PROC far
     mov edi,OFFSET stop_adc_name
     xor dx,dx
     mov ax,stop_adc_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET setup_adc_chan
-    mov edi,OFFSET setup_adc_chan_name
-    xor dx,dx
-    mov ax,setup_adc_chan_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET setup_adc_chan
@@ -1519,12 +1560,6 @@ ipRaw:
     mov edi,OFFSET map_adc_block_name
     xor dx,dx
     mov ax,map_adc_block_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET set_adc_trigger
-    mov edi,OFFSET set_adc_trigger_name
-    xor dx,dx
-    mov ax,set_adc_trigger_nr
     RegisterBimodalUserGate
 
 ipDone:
