@@ -35,7 +35,6 @@ module adc_slice (
   input wire [63:0]       coeff,
   input wire [55:0]       in,
 
-  input wire [17:0]       div_mask,
   input wire              p_start,
   input wire              p_running,
   input wire              p_post,
@@ -72,6 +71,7 @@ module adc_slice (
   wire [13:0]            in_2;
   wire [13:0]            in_3;
 
+  reg [17:0]             mask;
   reg                    sign;
   reg  [29:0]            divend;
   reg  [29:0]            curr;
@@ -197,6 +197,8 @@ begin : ana_slice_gen
   begin
     if (p_start)
     begin
+      mask[17] <= 1;
+      mask[16:0] <= 0;
       curr[29:17] <= count;
       curr[16:0] <= 0;
       quot[16:0] <= 0;
@@ -216,15 +218,13 @@ begin : ana_slice_gen
     begin
       if (p_running)
       begin
-        if (div_mask)
+        if (divend >= curr)
         begin
-           if (divend >= curr)
-           begin
-            divend <= divend - curr;
-            quot <= quot | div_mask;
-          end
-          curr <= curr >> 1;
+          divend <= divend - curr;
+          quot <= quot | mask;
         end
+        curr <= curr >> 1;
+        mask <= mask >> 1;
       end
     end
   end
@@ -261,10 +261,14 @@ begin : ana_slice_gen
       sum_23 <= sum_2 + sum_3;
     end
   end
+
   always @ ( posedge clk ) 
   begin
-    if (p_running && do_shift)
-      phase_sum <= phase_sum << 1;
+    if (p_running)
+    begin
+      if (do_shift)
+        phase_sum <= phase_sum << 1;
+    end
     else    
       if (p8)
         phase_sum <= sum_01 + sum_23;

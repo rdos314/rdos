@@ -172,8 +172,22 @@ module adc_app (
 
   reg                     config_start;
   reg                     config_running;
-  reg  [15:0]             config_adr;
+  reg  [13:0]             config_adr;
   reg  [23:0]             config_phase;
+  reg  [25:0]             cordic_phase;
+  reg  [55:0]             config_data;
+
+  reg                     synt_start;
+  wire                    synt_done;
+  reg                     synt_prev;
+  reg                     synt_wr;
+
+  wire [31:0]             synt_data;
+  wire [15:0]             synt_sin;
+  wire [15:0]             synt_cos;
+
+  assign synt_cos = synt_data[15:0];
+  assign synt_sin = synt_data[31:16];
 
   wire [13:0]             config_A0;
   wire [13:0]             config_A1;
@@ -256,18 +270,18 @@ ana_fifo ana_fifo_inst (
 );
 
 ana_synt ana_synt_inst (
-  .aclk(rx_clk),                              // input wire aclk
-  .s_axis_phase_tvalid(1),  // input wire s_axis_phase_tvalid
-  .s_axis_phase_tdata(config_phase),    // input wire [23 : 0] s_axis_phase_tdata
-  .m_axis_dout_tvalid(),    // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata()      // output wire [31 : 0] m_axis_dout_tdata
+  .aclk(rx_clk),                       // input wire aclk
+  .s_axis_phase_tvalid(synt_start),    // input wire s_axis_phase_tvalid
+  .s_axis_phase_tdata(cordic_phase),   // input wire [25 : 0] s_axis_phase_tdata
+  .m_axis_dout_tvalid(synt_done),      // output wire m_axis_dout_tvalid
+  .m_axis_dout_tdata(synt_data)        // output wire [31 : 0] m_axis_dout_tdata
 );
 
 bram_sample bram_sample_inst (
   .clka(rx_clk),    // input wire clka
   .ena(0),      // input wire ena
   .wea(0),      // input wire [0 : 0] wea
-  .addra(0),  // input wire [15 : 0] addra
+  .addra(0),  // input wire [11 : 0] addra
   .dina(0),    // input wire [55 : 0] dina
   .douta()  // output wire [55 : 0] douta
 );
@@ -785,6 +799,9 @@ begin : adc_app
     begin
       config_running <= 0;
       config_phase <= 0;
+      cordic_phase <= 0;
+      synt_start <= 0;
+      synt_wr <= 0;
     end
     else
     begin
@@ -792,16 +809,74 @@ begin : adc_app
       begin
         config_running <= 1;
         config_phase <= 0;
+        cordic_phase <= 0;
         config_adr <= 0;
+        synt_start <= 1;
+        synt_wr <= 0;
+        synt_prev <= synt_done;
       end
       else
       begin
-        if (config_adr == 16'hFFFF)
-          config_running <= 0;
+        if (config_running)
+        begin
+          if (synt_prev != synt_done)
+          begin
+            synt_prev <= synt_done;
+
+            if (synt_done)
+            begin
+              case (config_adr[1:0])
+                2'b00 : config_data[13:0] <= synt_sin[15:2];
+                2'b01 : config_data[27:14] <= synt_sin[15:2];
+                2'b10 : config_data[41:28] <= synt_sin[15:2];
+                2'b11 : config_data[55:42] <= synt_sin[15:2];
+              endcase
+
+              synt_wr <= 1;
+
+              if (config_adr == 16'hFFFF)
+              begin
+                config_running <= 0;
+                synt_start <= 0;
+              end
+              else
+              begin
+                if (config_phase[23])
+                begin
+                  cordic_phase[25] <= 1;
+                  cordic_phase[24] <= 1;
+                  cordic_phase[23] <= 1;
+                  cordic_phase[22:0] <= (~config_phase[22:0]) + 1; 
+                end
+                else
+                begin
+                  cordic_phase[25] <= 0;
+                  cordic_phase[24] <= 0;
+                  cordic_phase[23] <= 0;
+                  cordic_phase[22:0] <= config_phase[22:0]; 
+                end
+
+                config_adr <= config_adr + 1;
+                config_phase <= config_phase + config_incr;
+                synt_start <= 1;
+              end
+            end
+            else
+            begin
+              synt_start <= 0;
+              synt_wr <= 0;
+            end
+          end
+          else
+          begin
+            synt_start <= 0;
+            synt_wr <= 0;
+          end
+        end
         else
         begin
-          config_adr <= config_adr + 1;
-          config_phase <= config_phase + config_incr;
+          synt_start <= 0;
+          synt_wr <= 0;
         end
       end
     end

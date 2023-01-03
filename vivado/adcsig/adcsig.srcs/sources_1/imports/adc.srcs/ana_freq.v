@@ -49,8 +49,8 @@ module ana_freq (
   output wire [15:0]      power_A,
   output wire [15:0]      power_B,
 
-  output wire [15:0]      phase_A,
-  output wire [15:0]      phase_B
+  output reg  [15:0]      phase_A,
+  output reg  [15:0]      phase_B
 );
 
   reg                    start;
@@ -78,6 +78,9 @@ module ana_freq (
   wire [15:0]            sum_sin_B;
   wire [15:0]            sum_cos_B;
 
+  wire [17:0]            cordic_phase_A,
+  wire [17:0]            cordic_phase_B
+
   wire [55:0]            in_A;
   wire [55:0]            in_B;
 
@@ -101,9 +104,8 @@ module ana_freq (
   reg                    pd_start;
   reg                    pd_running;
   reg                    pd_post;
-  reg  [17:0]            div_mask;
-  reg  [5:0]             div_delay;
-  reg  [3:0]             mul_delay;
+  reg  [4:0]             div_delay;
+  reg  [2:0]             mul_delay;
 
   reg  [31:0]            pow_sq_A;
   reg  [31:0]            pow_sq_B;
@@ -134,11 +136,15 @@ module ana_freq (
   assign in_B[41:28] = in_B2;
   assign in_B[55:42] = in_B3;
 
-  assign phase_sin_cos_A[15:0] = sum_sin_A;
-  assign phase_sin_cos_A[31:16] = sum_cos_A;
+  assign phase_sin_cos_A[15:0] = sum_cos_A;
+  assign phase_sin_cos_A[16] = sum_cos_A[15];
+  assign phase_sin_cos_A[32:17] = sum_sin_A;
+  assign phase_sin_cos_A[33] = sum_sin_A[15];
 
-  assign phase_sin_cos_B[15:0] = sum_sin_B;
-  assign phase_sin_cos_B[31:16] = sum_cos_B;
+  assign phase_sin_cos_B[15:0] = sum_cos_B;
+  assign phase_sin_cos_B[16] = sum_cos_B[15];
+  assign phase_sin_cos_B[32:17] = sum_sin_B;
+  assign phase_sin_cos_B[33] = sum_sin_B[15];
   
   assign do_shift_A = shift_sin_A & shift_cos_A;
   assign do_shift_B = shift_sin_B & shift_cos_B;
@@ -167,7 +173,6 @@ adc_slice sin_A (
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
   .count(count),         // input wire [12 : 0] count
-  .div_mask(div_mask),   // input wire [0 : 0] div mask
   .p_start(pd_start),    // input wire [0 : 0] start
   .p_running(pd_running),// input wire [0 : 0] running
   .p_post(pd_post),      // input wire [0 : 0] post
@@ -184,7 +189,6 @@ adc_slice cos_A (
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
   .count(count),         // input wire [12 : 0] count
-  .div_mask(div_mask),   // input wire [0 : 0] div mask
   .p_start(pd_start),    // input wire [0 : 0] start
   .p_running(pd_running),// input wire [0 : 0] running
   .p_post(pd_post),      // input wire [0 : 0] post
@@ -201,7 +205,6 @@ adc_slice sin_B (
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
   .count(count),         // input wire [12 : 0] count
-  .div_mask(div_mask),   // input wire [0 : 0] div mask
   .p_start(pd_start),    // input wire [0 : 0] start
   .p_running(pd_running),// input wire [0 : 0] running
   .p_post(pd_post),      // input wire [0 : 0] post
@@ -218,7 +221,6 @@ adc_slice cos_B (
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
   .count(count),         // input wire [12 : 0] count
-  .div_mask(div_mask),   // input wire [0 : 0] div mask
   .p_start(pd_start),    // input wire [0 : 0] start
   .p_running(pd_running),// input wire [0 : 0] running
   .p_post(pd_post),      // input wire [0 : 0] post
@@ -277,17 +279,17 @@ ana_sqrt sqrt_B (
 ana_atan atan_A (
   .aclk(clk),                                        // input wire aclk
   .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
-  .s_axis_cartesian_tdata(phase_sin_cos_A),          // input wire [31 : 0] s_axis_cartesian_tdata
+  .s_axis_cartesian_tdata(phase_sin_cos_A),          // input wire [33 : 0] s_axis_cartesian_tdata
   .m_axis_dout_tvalid(phase_done_A),                 // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(phase_A)                        // output wire [15 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(cordic_phase_A)                 // output wire [17 : 0] m_axis_dout_tdata
 );
 
 ana_atan atan_B (
   .aclk(clk),                                        // input wire aclk
   .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
-  .s_axis_cartesian_tdata(phase_sin_cos_B),          // input wire [31 : 0] s_axis_cartesian_tdata
+  .s_axis_cartesian_tdata(phase_sin_cos_B),          // input wire [33 : 0] s_axis_cartesian_tdata
   .m_axis_dout_tvalid(phase_done_B),                 // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(phase_B)                        // output wire [15 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(cordic_phase_B)                 // output wire [17 : 0] m_axis_dout_tdata
 );
 
 ila_0 ila_0_inst (
@@ -329,6 +331,50 @@ begin : ana_freq_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
+      phase_A <= 0;
+    else
+    begin
+      if (phase_done_A)
+      begin
+        if (cordic_phase_A[15:0] == 0)
+          phase_A <= 16'h8000;
+        else
+        begin
+          phase_A[15] <= cordic_phase_A[17];
+
+          if (cordic_phase_A[17])
+            phase_A[14:0] <= (~cordic_phase_A[14:0]) + 1;
+          else
+            phase_A[14:0] <= cordic_phase_A[14:0];
+      end
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      phase_B <= 0;
+    else
+    begin
+      if (phase_done_B)
+      begin
+        if (cordic_phase_B[15:0] == 0)
+          phase_B <= 16'h8000;
+        else
+        begin
+          phase_B[15] <= cordic_phase_B[17];
+
+          if (cordic_phase_B[17])
+            phase_B[14:0] <= (~cordic_phase_B[14:0]) + 1;
+          else
+            phase_B[14:0] <= cordic_phase_B[14:0];
+      end
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
     begin
       mul_delay <= 0;
       conv_start <= 0;
@@ -364,7 +410,7 @@ begin : ana_freq_gen
     begin
       if (pd7)
       begin
-        div_delay <= 5'b11000;
+        div_delay <= 5'b11111;
         input_done <= 0;
       end
       else
@@ -401,8 +447,6 @@ begin : ana_freq_gen
   begin
     if (pd_start)
     begin
-      div_mask[17] <= 1;
-      div_mask[16:0] <= 0;
       pd_running <= 1;
       pd_post <= 0;
     end
@@ -410,13 +454,11 @@ begin : ana_freq_gen
     begin
       if (pd_running)
       begin
-        if (div_mask == 0)
+        if (div_delay == 2)
         begin
           pd_running <= 0;
           pd_post <= 1;
         end
-        else
-          div_mask <= div_mask >> 1;
       end
       else
         pd_post <= 0;
