@@ -42,7 +42,7 @@ module adc_slice (
   output wire             req_shift,
   input wire              do_shift,         
 
-  output reg [15:0]       phase,
+  output reg [22:0]       phase,
   output reg [15:0]       power
 );
 
@@ -233,7 +233,7 @@ begin : ana_slice_gen
   begin
     if (p_post)
     begin
-      phase <= phase_sum[42:27];
+      phase <= phase_sum[42:20];
       power[15] <= sign;
 
       if (sign)

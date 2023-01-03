@@ -73,13 +73,13 @@ module ana_freq (
   wire [31:0]            sin_B2;
   wire [31:0]            cos_B2;
 
-  wire [15:0]            sum_sin_A;
-  wire [15:0]            sum_cos_A;
-  wire [15:0]            sum_sin_B;
-  wire [15:0]            sum_cos_B;
+  wire [22:0]            sum_sin_A;
+  wire [22:0]            sum_cos_A;
+  wire [22:0]            sum_sin_B;
+  wire [22:0]            sum_cos_B;
 
-  wire [17:0]            cordic_phase_A,
-  wire [17:0]            cordic_phase_B
+  wire [23:0]            cordic_phase_A;
+  wire [23:0]            cordic_phase_B;
 
   wire [55:0]            in_A;
   wire [55:0]            in_B;
@@ -115,8 +115,8 @@ module ana_freq (
   wire                   phase_done_A;
   wire                   phase_done_B;
 
-  wire [31:0]            phase_sin_cos_A;
-  wire [31:0]            phase_sin_cos_B;
+  wire [47:0]            phase_sin_cos_A;
+  wire [47:0]            phase_sin_cos_B;
   
   wire                   shift_sin_A;
   wire                   shift_cos_A;
@@ -136,15 +136,15 @@ module ana_freq (
   assign in_B[41:28] = in_B2;
   assign in_B[55:42] = in_B3;
 
-  assign phase_sin_cos_A[15:0] = sum_cos_A;
-  assign phase_sin_cos_A[16] = sum_cos_A[15];
-  assign phase_sin_cos_A[32:17] = sum_sin_A;
-  assign phase_sin_cos_A[33] = sum_sin_A[15];
+  assign phase_sin_cos_A[22:0] = sum_cos_A;
+  assign phase_sin_cos_A[23] = sum_cos_A[22];
+  assign phase_sin_cos_A[46:24] = sum_sin_A;
+  assign phase_sin_cos_A[47] = sum_sin_A[22];
 
-  assign phase_sin_cos_B[15:0] = sum_cos_B;
-  assign phase_sin_cos_B[16] = sum_cos_B[15];
-  assign phase_sin_cos_B[32:17] = sum_sin_B;
-  assign phase_sin_cos_B[33] = sum_sin_B[15];
+  assign phase_sin_cos_B[22:0] = sum_cos_B;
+  assign phase_sin_cos_B[23] = sum_cos_B[22];
+  assign phase_sin_cos_B[46:24] = sum_sin_B;
+  assign phase_sin_cos_B[47] = sum_sin_B[22];
   
   assign do_shift_A = shift_sin_A & shift_cos_A;
   assign do_shift_B = shift_sin_B & shift_cos_B;
@@ -279,17 +279,19 @@ ana_sqrt sqrt_B (
 ana_atan atan_A (
   .aclk(clk),                                        // input wire aclk
   .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
-  .s_axis_cartesian_tdata(phase_sin_cos_A),          // input wire [33 : 0] s_axis_cartesian_tdata
+  .s_axis_cartesian_tready(),                        // output wire s_axis_cartesian_tready
+  .s_axis_cartesian_tdata(phase_sin_cos_A),          // input wire [47 : 0] s_axis_cartesian_tdata
   .m_axis_dout_tvalid(phase_done_A),                 // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(cordic_phase_A)                 // output wire [17 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(cordic_phase_A)                 // output wire [23 : 0] m_axis_dout_tdata
 );
 
 ana_atan atan_B (
   .aclk(clk),                                        // input wire aclk
   .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
-  .s_axis_cartesian_tdata(phase_sin_cos_B),          // input wire [33 : 0] s_axis_cartesian_tdata
+  .s_axis_cartesian_tready(),                        // output wire s_axis_cartesian_tready
+  .s_axis_cartesian_tdata(phase_sin_cos_B),          // input wire [47 : 0] s_axis_cartesian_tdata
   .m_axis_dout_tvalid(phase_done_B),                 // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(cordic_phase_B)                 // output wire [17 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(cordic_phase_B)                 // output wire [23 : 0] m_axis_dout_tdata
 );
 
 ila_0 ila_0_inst (
@@ -298,31 +300,28 @@ ila_0 ila_0_inst (
   .probe1(load),          // input wire [0:0]  probe1
   .probe2(start),         // input wire [0:0]  probe2
   .probe3(running),       // input wire [0:0]  probe3
-  .probe4(coeff_en),      // input wire [0:0]  probe3
-  .probe5(coeff_adr),     // input wire [10:0]  probe3
-  .probe6(last),          // input wire [0:0]  probe3
-  .probe7(done),          // input wire [0:0]  probe3
-  .probe8(delay),         // input wire [4:0]  probe3
-  .probe9(pow_sin_A),     // input wire [15:0]  probe3
-  .probe10(pow_cos_A),    // input wire [15:0]  probe3
-  .probe11(pow_sin_B),    // input wire [15:0]  probe3
-  .probe12(pow_cos_B),    // input wire [15:0]  probe3
-  .probe13(sum_sin_A),     // input wire [15:0]  probe3
-  .probe14(sum_cos_A),    // input wire [15:0]  probe3
-  .probe15(sum_sin_B),    // input wire [15:0]  probe3
-  .probe16(sum_cos_B),    // input wire [15:0]  probe3
-  .probe17(pd_start),     // input wire [0:0]  probe3
-  .probe18(pd_running),   // input wire [0:0]  probe3
-  .probe19(pd_post),      // input wire [0:0]  probe3
-  .probe20(conv_start),   // input wire [0:0]  probe3
-  .probe21(power_done_A), // input wire [0:0]  probe3
-  .probe22(power_done_B), // input wire [0:0]  probe3
-  .probe23(phase_done_A), // input wire [0:0]  probe3
-  .probe24(phase_done_B), // input wire [0:0]  probe3
-  .probe25(power_A),      // input wire [15:0]  probe3
-  .probe26(power_B),      // input wire [15:0]  probe3
-  .probe27(phase_A),      // input wire [15:0]  probe3
-  .probe28(phase_B)       // input wire [15:0]  probe3
+  .probe4(pow_sin_A),     // input wire [15:0]  probe3
+  .probe5(pow_cos_A),    // input wire [15:0]  probe3
+  .probe6(pow_sin_B),    // input wire [15:0]  probe3
+  .probe7(pow_cos_B),    // input wire [15:0]  probe3
+  .probe8(sum_sin_A),     // input wire [22:0]  probe3
+  .probe9(sum_cos_A),    // input wire [22:0]  probe3
+  .probe10(sum_sin_B),    // input wire [22:0]  probe3
+  .probe11(sum_cos_B),    // input wire [22:0]  probe3
+  .probe12(pd_start),     // input wire [0:0]  probe3
+  .probe13(pd_running),   // input wire [0:0]  probe3
+  .probe14(pd_post),      // input wire [0:0]  probe3
+  .probe15(conv_start),   // input wire [0:0]  probe3
+  .probe16(power_done_A), // input wire [0:0]  probe3
+  .probe17(power_done_B), // input wire [0:0]  probe3
+  .probe18(phase_done_A), // input wire [0:0]  probe3
+  .probe19(phase_done_B), // input wire [0:0]  probe3
+  .probe20(cordic_phase_A),// input wire [23:0]  probe3
+  .probe21(cordic_phase_B),// input wire [23:0]  probe3
+  .probe22(power_A),      // input wire [15:0]  probe3
+  .probe23(power_B),      // input wire [15:0]  probe3
+  .probe24(phase_A),      // input wire [15:0]  probe3
+  .probe25(phase_B)       // input wire [15:0]  probe3
 );
 
 generate
@@ -335,7 +334,7 @@ begin : ana_freq_gen
     else
     begin
       if (phase_done_A)
-        phase_A <= cordic_phase_A[15:0];
+        phase_A <= cordic_phase_A[21:6];
     end
   end
 
@@ -346,7 +345,7 @@ begin : ana_freq_gen
     else
     begin
       if (phase_done_B)
-        phase_B <= cordic_phase_B[15:0];
+        phase_B <= cordic_phase_B[21:6];
     end
   end
 

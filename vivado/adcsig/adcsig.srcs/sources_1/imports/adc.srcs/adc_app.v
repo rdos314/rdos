@@ -175,7 +175,7 @@ module adc_app (
   reg  [13:0]             config_adr;
   reg  [23:0]             config_phase;
   reg  [25:0]             cordic_phase;
-  reg  [55:0]             config_data;
+  reg  [55:0]             config_data_out;
   reg                     config_en;
 
   reg  [15:0]             config_sin;
@@ -270,9 +270,10 @@ ana_fifo ana_fifo_inst (
 ana_synt ana_synt_inst (
   .aclk(rx_clk),                       // input wire aclk
   .s_axis_phase_tvalid(synt_start),    // input wire s_axis_phase_tvalid
-  .s_axis_phase_tdata(cordic_phase),   // input wire [25 : 0] s_axis_phase_tdata
+  .s_axis_phase_tready(),              // output wire s_axis_phase_tready
+  .s_axis_phase_tdata(cordic_phase),   // input wire [31 : 0] s_axis_phase_tdata
   .m_axis_dout_tvalid(synt_done),      // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(synt_data)        // output wire [33 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(synt_data)        // output wire [47 : 0] m_axis_dout_tdata
 );
 
 bram_sample bram_sample_inst (
@@ -280,7 +281,7 @@ bram_sample bram_sample_inst (
   .ena(config_running),     // input wire ena
   .wea(synt_wr),            // input wire [0 : 0] wea
   .addra(config_adr[13:2]), // input wire [11 : 0] addra
-  .dina(config_data),       // input wire [55 : 0] dina
+  .dina(config_data_out),   // input wire [55 : 0] dina
   .douta(sample_data)       // output wire [55 : 0] douta
 );
 
@@ -818,13 +819,13 @@ begin : adc_app
         if (config_save)
         begin
           case (config_adr[1:0])
-            2'b00 : config_data[13:0] <= config_sin[15:2];
-            2'b01 : config_data[27:14] <= config_sin[15:2];
-            2'b10 : config_data[41:28] <= config_sin[15:2];
-            2'b11 : config_data[55:42] <= config_sin[15:2];
+            2'b00 : config_data_out[13:0] <= config_sin[15:2];
+            2'b01 : config_data_out[27:14] <= config_sin[15:2];
+            2'b10 : config_data_out[41:28] <= config_sin[15:2];
+            2'b11 : config_data_out[55:42] <= config_sin[15:2];
           endcase
 
-          if (config_adr[1:0] == 2b11)
+          if (config_adr[1:0] == 2'b11)
             synt_wr <= 1;
           else
             synt_wr <= 0;
@@ -890,22 +891,13 @@ begin : adc_app
 
             end
             else
-            begin
-              synt_start <= 0;
               config_save <= 0;
-            end
           end
           else
-          begin
-            synt_start <= 0;
             config_save <= 0;
-          end
         end
         else
-        begin
-          synt_start <= 0;
           config_save <= 0;
-        end
       end
     end
   end
