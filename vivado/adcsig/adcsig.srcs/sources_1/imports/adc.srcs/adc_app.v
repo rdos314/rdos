@@ -176,6 +176,7 @@ module adc_app (
   reg  [23:0]             config_phase;
   reg  [25:0]             cordic_phase;
   reg  [55:0]             config_data;
+  reg                     config_en;
 
   reg                     synt_start;
   wire                    synt_done;
@@ -189,23 +190,16 @@ module adc_app (
   assign synt_cos = synt_data[15:0];
   assign synt_sin = synt_data[31:16];
 
-  wire [13:0]             config_A0;
-  wire [13:0]             config_A1;
-  wire [13:0]             config_A2;
-  wire [13:0]             config_A3;
-  wire [13:0]             config_B0;
-  wire [13:0]             config_B1;
-  wire [13:0]             config_B2;
-  wire [13:0]             config_B3;
+  wire [13:0]             config_0;
+  wire [13:0]             config_1;
+  wire [13:0]             config_2;
+  wire [13:0]             config_3;
+  wire [55:0]             sample_data;
 
-  assign config_A0 = 0;
-  assign config_A1 = 0;
-  assign config_A2 = 0;
-  assign config_A3 = 0;
-  assign config_B0 = 0;
-  assign config_B1 = 0;
-  assign config_B2 = 0;
-  assign config_B3 = 0;
+  assign config_0 = sample_data[13:0];
+  assign config_1 = sample_data[27:14];
+  assign config_2 = sample_data[41:28];
+  assign config_3 = sample_data[55:42];
 
 // analyser freq blocks
 
@@ -278,12 +272,12 @@ ana_synt ana_synt_inst (
 );
 
 bram_sample bram_sample_inst (
-  .clka(rx_clk),    // input wire clka
-  .ena(0),      // input wire ena
-  .wea(0),      // input wire [0 : 0] wea
-  .addra(0),  // input wire [11 : 0] addra
-  .dina(0),    // input wire [55 : 0] dina
-  .douta()  // output wire [55 : 0] douta
+  .clka(rx_clk),            // input wire clka
+  .ena(config_running),     // input wire ena
+  .wea(synt_wr),            // input wire [0 : 0] wea
+  .addra(config_adr[13:2]), // input wire [11 : 0] addra
+  .dina(config_data),       // input wire [55 : 0] dina
+  .douta(sample_data)       // output wire [55 : 0] douta
 );
 
 bram_msix bram_msix_inst (
@@ -832,9 +826,12 @@ begin : adc_app
                 2'b11 : config_data[55:42] <= synt_sin[15:2];
               endcase
 
-              synt_wr <= 1;
+              if (config_adr[1:0] == 2b11)
+                synt_wr <= 1;
+              else
+                synt_wr <= 0;
 
-              if (config_adr == 16'hFFFF)
+              if (config_adr == 14'h3FFF)
               begin
                 config_running <= 0;
                 synt_start <= 0;
@@ -920,14 +917,14 @@ begin : adc_app
   begin
     if (config_running && (config_channel == 0))
     begin
-      chan0_A0 <= config_A0;      
-      chan0_A1 <= config_A1;      
-      chan0_A2 <= config_A2;      
-      chan0_A3 <= config_A3;      
-      chan0_B0 <= config_B0;      
-      chan0_B1 <= config_B1;      
-      chan0_B2 <= config_B2;      
-      chan0_B3 <= config_B3;      
+      chan0_A0 <= config_0;      
+      chan0_A1 <= config_1;      
+      chan0_A2 <= config_2;      
+      chan0_A3 <= config_3;      
+      chan0_B0 <= config_0;      
+      chan0_B1 <= config_1;      
+      chan0_B2 <= config_2;      
+      chan0_B3 <= config_3;      
     end
     else
     begin
