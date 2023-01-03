@@ -136,15 +136,15 @@ module ana_freq (
   assign in_B[41:28] = in_B2;
   assign in_B[55:42] = in_B3;
 
-  assign phase_sin_cos_A[22:0] = sum_cos_A;
-  assign phase_sin_cos_A[23] = sum_cos_A[22];
-  assign phase_sin_cos_A[46:24] = sum_sin_A;
-  assign phase_sin_cos_A[47] = sum_sin_A[22];
+  assign phase_sin_cos_A[22:0] = sum_sin_A;
+  assign phase_sin_cos_A[23] = sum_sin_A[22];
+  assign phase_sin_cos_A[46:24] = sum_cos_A;
+  assign phase_sin_cos_A[47] = sum_cos_A[22];
 
-  assign phase_sin_cos_B[22:0] = sum_cos_B;
-  assign phase_sin_cos_B[23] = sum_cos_B[22];
-  assign phase_sin_cos_B[46:24] = sum_sin_B;
-  assign phase_sin_cos_B[47] = sum_sin_B[22];
+  assign phase_sin_cos_B[22:0] = sum_sin_B;
+  assign phase_sin_cos_B[23] = sum_sin_B[22];
+  assign phase_sin_cos_B[46:24] = sum_cos_B;
+  assign phase_sin_cos_B[47] = sum_cos_B[22];
   
   assign do_shift_A = shift_sin_A & shift_cos_A;
   assign do_shift_B = shift_sin_B & shift_cos_B;
