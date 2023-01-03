@@ -178,17 +178,21 @@ module adc_app (
   reg  [55:0]             config_data;
   reg                     config_en;
 
+  reg  [15:0]             config_sin;
+  reg  [15:0]             config_cos;
+  reg                     config_save;
+
   reg                     synt_start;
   wire                    synt_done;
   reg                     synt_prev;
   reg                     synt_wr;
 
-  wire [31:0]             synt_data;
-  wire [15:0]             synt_sin;
-  wire [15:0]             synt_cos;
+  wire [33:0]             synt_data;
+  wire [16:0]             synt_sin;
+  wire [16:0]             synt_cos;
 
-  assign synt_cos = synt_data[15:0];
-  assign synt_sin = synt_data[31:16];
+  assign synt_cos       = synt_data[16:0];
+  assign synt_sin       = synt_data[33:17];
 
   wire [13:0]             config_0;
   wire [13:0]             config_1;
@@ -268,7 +272,7 @@ ana_synt ana_synt_inst (
   .s_axis_phase_tvalid(synt_start),    // input wire s_axis_phase_tvalid
   .s_axis_phase_tdata(cordic_phase),   // input wire [25 : 0] s_axis_phase_tdata
   .m_axis_dout_tvalid(synt_done),      // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(synt_data)        // output wire [31 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(synt_data)        // output wire [33 : 0] m_axis_dout_tdata
 );
 
 bram_sample bram_sample_inst (
@@ -791,9 +795,10 @@ begin : adc_app
   begin
     if (rx_reset)
     begin
-      config_running <= 0;
       config_phase <= 0;
       cordic_phase <= 0;
+      config_adr <= 0;
+      config_running <= 0;
       synt_start <= 0;
       synt_wr <= 0;
     end
@@ -801,12 +806,64 @@ begin : adc_app
     begin
       if (config_start)
       begin
-        config_running <= 1;
         config_phase <= 0;
         cordic_phase <= 0;
         config_adr <= 0;
+        config_running <= 1;
         synt_start <= 1;
         synt_wr <= 0;
+      end
+      else
+      begin
+        if (config_save)
+        begin
+          case (config_adr[1:0])
+            2'b00 : config_data[13:0] <= config_sin[15:2];
+            2'b01 : config_data[27:14] <= config_sin[15:2];
+            2'b10 : config_data[41:28] <= config_sin[15:2];
+            2'b11 : config_data[55:42] <= config_sin[15:2];
+          endcase
+
+          if (config_adr[1:0] == 2b11)
+            synt_wr <= 1;
+          else
+            synt_wr <= 0;
+
+          if (config_adr == 14'h3FFF)
+          begin
+            config_running <= 0;
+            synt_start <= 0;
+          end
+          else
+          begin
+            cordic_phase[25] <= config_phase[23];
+            cordic_phase[24] <= config_phase[23];
+            cordic_phase[23:0] <= config_phase[23:0]; 
+
+            config_adr <= config_adr + 1;
+            config_phase <= config_phase + config_incr;
+            synt_start <= 1;
+          end
+        end
+        else
+        begin
+          synt_start <= 0;
+          synt_wr <= 0;
+        end
+      end
+    end
+  end
+
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      config_save <= 0;
+    else
+    begin
+      if (config_start)
+      begin
+        config_save <= 0;
         synt_prev <= synt_done;
       end
       else
@@ -819,61 +876,35 @@ begin : adc_app
 
             if (synt_done)
             begin
-              case (config_adr[1:0])
-                2'b00 : config_data[13:0] <= synt_sin[15:2];
-                2'b01 : config_data[27:14] <= synt_sin[15:2];
-                2'b10 : config_data[41:28] <= synt_sin[15:2];
-                2'b11 : config_data[55:42] <= synt_sin[15:2];
-              endcase
+              config_save <= 1;
 
-              if (config_adr[1:0] == 2b11)
-                synt_wr <= 1;
+              if (synt_sin[16:15] == 2'b01)
+                config_sin <= 16'h7FFF;
               else
-                synt_wr <= 0;
+                config_sin <= synt_sin[15:0];                
 
-              if (config_adr == 14'h3FFF)
-              begin
-                config_running <= 0;
-                synt_start <= 0;
-              end
+              if (synt_cos[16:15] == 2'b01)
+                config_cos <= 16'h7FFF;
               else
-              begin
-                if (config_phase[23])
-                begin
-                  cordic_phase[25] <= 1;
-                  cordic_phase[24] <= 1;
-                  cordic_phase[23] <= 1;
-                  cordic_phase[22:0] <= (~config_phase[22:0]) + 1; 
-                end
-                else
-                begin
-                  cordic_phase[25] <= 0;
-                  cordic_phase[24] <= 0;
-                  cordic_phase[23] <= 0;
-                  cordic_phase[22:0] <= config_phase[22:0]; 
-                end
+                config_cos <= synt_cos[15:0];                
 
-                config_adr <= config_adr + 1;
-                config_phase <= config_phase + config_incr;
-                synt_start <= 1;
-              end
             end
             else
             begin
               synt_start <= 0;
-              synt_wr <= 0;
+              config_save <= 0;
             end
           end
           else
           begin
             synt_start <= 0;
-            synt_wr <= 0;
+            config_save <= 0;
           end
         end
         else
         begin
           synt_start <= 0;
-          synt_wr <= 0;
+          config_save <= 0;
         end
       end
     end

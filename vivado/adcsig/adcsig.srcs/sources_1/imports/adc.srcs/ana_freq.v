@@ -335,18 +335,7 @@ begin : ana_freq_gen
     else
     begin
       if (phase_done_A)
-      begin
-        if (cordic_phase_A[15:0] == 0)
-          phase_A <= 16'h8000;
-        else
-        begin
-          phase_A[15] <= cordic_phase_A[17];
-
-          if (cordic_phase_A[17])
-            phase_A[14:0] <= (~cordic_phase_A[14:0]) + 1;
-          else
-            phase_A[14:0] <= cordic_phase_A[14:0];
-      end
+        phase_A <= cordic_phase_A[15:0];
     end
   end
 
@@ -357,18 +346,7 @@ begin : ana_freq_gen
     else
     begin
       if (phase_done_B)
-      begin
-        if (cordic_phase_B[15:0] == 0)
-          phase_B <= 16'h8000;
-        else
-        begin
-          phase_B[15] <= cordic_phase_B[17];
-
-          if (cordic_phase_B[17])
-            phase_B[14:0] <= (~cordic_phase_B[14:0]) + 1;
-          else
-            phase_B[14:0] <= cordic_phase_B[14:0];
-      end
+        phase_B <= cordic_phase_B[15:0];
     end
   end
 
