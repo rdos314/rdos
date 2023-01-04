@@ -296,13 +296,12 @@ ana_atan atan_B (
   .m_axis_dout_tdata(cordic_phase_B)                 // output wire [23 : 0] m_axis_dout_tdata
 );
 
-/*
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
-  .probe0(en),            // input wire [0:0]  probe0
-  .probe1(load),          // input wire [0:0]  probe1
-  .probe2(start),         // input wire [0:0]  probe2
-  .probe3(running),       // input wire [0:0]  probe3
+  .probe0(init),          // input wire [0:0]  probe0
+  .probe1(run),           // input wire [0:0]  probe1
+  .probe2(count),         // input wire [12:0]  probe2
+  .probe3(wr),            // input wire [0:0]  probe3
   .probe4(pow_sin_A),     // input wire [15:0]  probe3
   .probe5(pow_cos_A),    // input wire [15:0]  probe3
   .probe6(pow_sin_B),    // input wire [15:0]  probe3
@@ -326,7 +325,6 @@ ila_0 ila_0_inst (
   .probe24(phase_A),      // input wire [15:0]  probe3
   .probe25(phase_B)       // input wire [15:0]  probe3
 );
-*/
 
 generate
 begin : ana_freq_gen
