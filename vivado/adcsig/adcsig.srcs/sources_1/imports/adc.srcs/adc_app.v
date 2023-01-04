@@ -136,19 +136,6 @@ module adc_app (
 
   reg                     adc_stopped;
   
-  reg  [12:0]             ana_rd_adr;
-  reg  [31:0]             ana_rd;
-  reg   [4:0]             ana_rd_chan;
-  reg                     ana_missing_rp;
-
-  reg  [12:0]             ana_wr_adr;
-  reg  [31:0]             ana_wr_data;
-  reg   [3:0]             ana_wr_be;
-  reg  [31:0]             ana_wr;
-
-  wire  [0:0]             ana_rp;
-  wire [31:0]             ana_0_rp_data;
-
   reg                     pci2_en;
   reg                     pci2_rd;
   reg                     pci2_wr;
@@ -168,46 +155,119 @@ module adc_app (
 
   reg  [4:0]              config_channel;
   reg  [23:0]             config_incr;
-  reg  [15:0]             config_count;
-
-  reg                     config_start;
-  reg                     config_running;
+  reg  [13:0]             config_count;
   reg  [13:0]             config_adr;
-  reg  [23:0]             config_phase;
-  reg  [25:0]             cordic_phase;
-  reg  [55:0]             config_data_out;
+
+  reg                     config_init;
+  reg                     config_start;
+  reg                     config_stop;
+  reg                     config_running;
+  reg                     config_raw_coeff;
+  reg                     config_has_coeff;
+  reg                     config_coeff_wr;
+  
   reg                     config_en;
 
-  reg  [15:0]             config_sin;
-  reg  [15:0]             config_cos;
-  reg                     config_save;
+  reg  [30:0]             synt_phase;
+  wire [31:0]             cordic_phase;
+
+  assign cordic_phase[30:0] = synt_phase[30:0];
+  assign cordic_phase[31]   = config_phase[31];
 
   reg                     synt_start;
   wire                    synt_done;
   reg                     synt_prev;
-  reg                     synt_wr;
 
-  wire [33:0]             synt_data;
-  wire [16:0]             synt_sin;
-  wire [16:0]             synt_cos;
+  wire [47:0]             coeff_data;
+  wire [23:0]             coeff_sin;
+  wire [23:0]             coeff_cos;
+  wire [23:0]             coeff_comp_sin;
+  wire [23:0]             coeff_comp_cos;
 
-  assign synt_cos       = synt_data[16:0];
-  assign synt_sin       = synt_data[33:17];
+  reg  [23:0]             config_comp_sin;
+  reg  [23:0]             config_comp_cos;
 
-  wire [13:0]             config_0;
-  wire [13:0]             config_1;
-  wire [13:0]             config_2;
-  wire [13:0]             config_3;
+  reg  [15:0]             config_sin;
+  reg  [15:0]             config_cos;
+
+  reg  [55:0]             config_sample_data;
+  reg  [63:0]             config_coeff_sin;
+  reg  [63:0]             config_coeff_cos;
+
+  assign coeff_raw_cos       = coeff_data[23:0];
+  assign coeff_raw_sin       = coeff_data[47:24];
+
+  assign coeff_comp_cos[23] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[22] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[21] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[20] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[19] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[18] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[17] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[16] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[15] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[14] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[13] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[12] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[11] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[10] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[9] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[8] = assign coeff_raw_cos[23];
+  assign coeff_comp_cos[7] = assign coeff_raw_cos[22];
+  assign coeff_comp_cos[6] = assign coeff_raw_cos[21];
+  assign coeff_comp_cos[5] = assign coeff_raw_cos[20];
+  assign coeff_comp_cos[4] = assign coeff_raw_cos[19];
+  assign coeff_comp_cos[3] = assign coeff_raw_cos[18];
+  assign coeff_comp_cos[2] = assign coeff_raw_cos[17];
+  assign coeff_comp_cos[1] = assign coeff_raw_cos[16];
+  assign coeff_comp_cos[0] = assign coeff_raw_cos[15];
+
+  assign coeff_comp_sin[23] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[22] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[21] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[20] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[19] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[18] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[17] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[16] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[15] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[14] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[13] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[12] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[11] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[10] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[9] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[8] = assign coeff_raw_sin[23];
+  assign coeff_comp_sin[7] = assign coeff_raw_sin[22];
+  assign coeff_comp_sin[6] = assign coeff_raw_sin[21];
+  assign coeff_comp_sin[5] = assign coeff_raw_sin[20];
+  assign coeff_comp_sin[4] = assign coeff_raw_sin[19];
+  assign coeff_comp_sin[3] = assign coeff_raw_sin[18];
+  assign coeff_comp_sin[2] = assign coeff_raw_sin[17];
+  assign coeff_comp_sin[1] = assign coeff_raw_sin[16];
+  assign coeff_comp_sin[0] = assign coeff_raw_sin[15];
+
+
+// test sequence
+
+  wire [13:0]             sample_0;
+  wire [13:0]             sample_1;
+  wire [13:0]             sample_2;
+  wire [13:0]             sample_3;
   wire [55:0]             sample_data;
 
-  assign config_0 = sample_data[13:0];
-  assign config_1 = sample_data[27:14];
-  assign config_2 = sample_data[41:28];
-  assign config_3 = sample_data[55:42];
+  assign sample_0 = sample_data[13:0];
+  assign sample_1 = sample_data[27:14];
+  assign sample_2 = sample_data[41:28];
+  assign sample_3 = sample_data[55:42];
 
 // analyser freq blocks
 
-  wire                    chan0_running;
+  reg                     chan0_init;
+  reg                     chan0_start;
+  reg                     chan0_stop;
+  reg                     chan0_wr;
+
   reg  [13:0]             chan0_A0;
   reg  [13:0]             chan0_A1;
   reg  [13:0]             chan0_A2;
@@ -216,6 +276,19 @@ module adc_app (
   reg  [13:0]             chan0_B1;
   reg  [13:0]             chan0_B2;
   reg  [13:0]             chan0_B3;
+
+  wire                    chan0_report;
+  wire [15:0]             chan0_power_A;
+  wire [15:0]             chan0_power_B;
+  wire [15:0]             chan0_phase_A;
+  wire [15:0]             chan0_phase_B;
+
+// temporary fix to avoid removal of code
+
+  assign power_A = chan0_power_A;
+  assign power_B = chan0_power_B;
+  assign phase_A = chan0_phase_A;
+  assign phase_B = chan0_phase_B;
 
 
 // clock domain crossings
@@ -273,15 +346,15 @@ ana_synt ana_synt_inst (
   .s_axis_phase_tready(),              // output wire s_axis_phase_tready
   .s_axis_phase_tdata(cordic_phase),   // input wire [31 : 0] s_axis_phase_tdata
   .m_axis_dout_tvalid(synt_done),      // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(synt_data)        // output wire [47 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(coeff_data)       // output wire [47 : 0] m_axis_dout_tdata
 );
 
 bram_sample bram_sample_inst (
   .clka(rx_clk),            // input wire clka
   .ena(config_running),     // input wire ena
-  .wea(synt_wr),            // input wire [0 : 0] wea
+  .wea(config_coeff_wr),    // input wire [0 : 0] wea
   .addra(config_adr[13:2]), // input wire [11 : 0] addra
-  .dina(config_data_out),   // input wire [55 : 0] dina
+  .dina(config_sample_data),// input wire [55 : 0] dina
   .douta(sample_data)       // output wire [55 : 0] douta
 );
 
@@ -301,19 +374,18 @@ bram_msix bram_msix_inst (
 );
 
 adc_ana adc_ana_0_inst (
-    .pci_reset (pci_reset),
-    .reset (rx_reset),
-    .pci_clk (pci_clk),
     .clk (rx_clk),
+    .reset (rx_reset),
 
-    .rd_address(ana_rd_adr),
-    .rd(ana_rd[0:0]),
-    .rp_data(ana_0_rp_data),
-    .rp(ana_rp[0:0]),
-    .wr_address(ana_wr_adr),
-    .wr_data(ana_wr_data),
-    .wr_be(ana_wr_be),
-    .wr(ana_wr[0:0]),
+    .init(chan0_init),
+    .count(config_count[12:0]),
+    .start(chan0_start),
+    .stop(chan0_stop),
+
+    .wr(chan0_wr),
+    .wr_adr(config_adr[12:2]),
+    .wr_sin(config_coeff_sin),
+    .wr_cos(config_coeff_cos),
 
     .in_A0(chan0_A0),
     .in_A1(chan0_A1),
@@ -324,12 +396,11 @@ adc_ana adc_ana_0_inst (
     .in_B2(chan0_B2),
     .in_B3(chan0_B3),
 
-    .running(chan0_running),
-
-    .power_A(power_A),  // input wire [15:0] power_A
-    .power_B(power_B),   // input wire [15:0] power_B    
-    .phase_A(phase_A),  // input wire [15:0] phase_A
-    .phase_B(phase_B)   // input wire [15:0] phase_B    
+    .report(chan0_report),
+    .power_A(chan0_power_A),
+    .power_B(chan0_power_B),
+    .phase_A(chan0_phase_A),
+    .phase_B(chan0_phase_B) 
 );
 
 generate
@@ -796,75 +867,135 @@ begin : adc_app
   begin
     if (rx_reset)
     begin
-      config_phase <= 0;
-      cordic_phase <= 0;
-      config_adr <= 0;
+      config_init <= 0;
       config_running <= 0;
+    end
+    else
+    begin
+      if (config_rd)
+      begin
+        config_channel <= config_out[4:0];
+        config_incr <= config_out[31:8];
+        config_count <= config_out[47:32];
+        config_init <= 1;
+        config_running <= 1;
+      end
+      else
+        config_init <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      config_rd <= 0;
+    else
+    begin
+      if (config_empty || config_running)
+        config_rd <= 0;
+      else
+        config_rd <= 1;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+    begin
       synt_start <= 0;
-      synt_wr <= 0;
+      config_test <= 0;
     end
     else
     begin
       if (config_start)
-      begin
-        config_phase <= 0;
-        cordic_phase <= 0;
-        config_adr <= 0;
-        config_running <= 1;
         synt_start <= 1;
-        synt_wr <= 0;
-      end
       else
       begin
-        if (config_save)
+        if (config_has_coeff)
         begin
-          case (config_adr[1:0])
-            2'b00 : config_data_out[13:0] <= config_sin[15:2];
-            2'b01 : config_data_out[27:14] <= config_sin[15:2];
-            2'b10 : config_data_out[41:28] <= config_sin[15:2];
-            2'b11 : config_data_out[55:42] <= config_sin[15:2];
-          endcase
-
-          if (config_adr[1:0] == 2'b11)
-            synt_wr <= 1;
-          else
-            synt_wr <= 0;
-
           if (config_adr == 14'h3FFF)
           begin
-            config_running <= 0;
+            config_test <= 1;
             synt_start <= 0;
           end
           else
           begin
-            cordic_phase[25] <= config_phase[23];
-            cordic_phase[24] <= config_phase[23];
-            cordic_phase[23:0] <= config_phase[23:0]; 
-
             config_adr <= config_adr + 1;
             config_phase <= config_phase + config_incr;
             synt_start <= 1;
           end
         end
-        else
-        begin
-          synt_start <= 0;
-          synt_wr <= 0;
-        end
       end
+      else
+        synt_start <= 0;
     end
   end
-
 
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
-      config_save <= 0;
+      config_coeff_wr <= 0;
     else
     begin
-      if (config_start)
+      if (config_init)
+        config_coeff_wr <= 0;
+      else
       begin
-        config_save <= 0;
+        if (config_has_coeff)
+        begin
+          case (config_adr[1:0])
+            2'b00 : config_sample_data[13:0] <= config_sin[15:2];
+            2'b01 : config_sample_data[27:14] <= config_sin[15:2];
+            2'b10 : config_sample_data[41:28] <= config_sin[15:2];
+            2'b11 : config_sample_data[55:42] <= config_sin[15:2];
+          endcase
+
+          case (config_adr[1:0])
+            2'b00 : config_coeff_sin[15:0] <= config_sin;
+            2'b01 : config_coeff_sin[31:16] <= config_sin;
+            2'b10 : config_coeff_sin[47:32] <= config_sin;
+            2'b11 : config_coeff_sin[63:48] <= config_sin;
+          endcase
+
+          case (config_adr[1:0])
+            2'b00 : config_coeff_cos[15:0] <= config_cos;
+            2'b01 : config_coeff_cos[31:16] <= config_cos;
+            2'b10 : config_coeff_cos[47:32] <= config_cos;
+            2'b11 : config_coeff_cos[63:48] <= config_cos;
+          endcase
+
+          if (config_adr[1:0] == 2'b11)
+            config_coeff_wr <= 1;
+          else
+            config_coeff_wr <= 0;
+        end
+        else
+          config_coeff_wr <= 0;
+      end
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (config_raw_coeff)
+    begin
+      config_sin <= coeff_comp_sin[22:7];
+      config_cos <= coeff_comp_cos[22:7];
+      config_has_coeff <= 1;
+    end
+    else
+      config_has_coeff <= 0;
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      config_raw_coeff <= 0;
+    else
+    begin
+      if (config_init)
+      begin
+        config_raw_coeff <= 0;
         synt_prev <= synt_done;
       end
       else
@@ -877,81 +1008,75 @@ begin : adc_app
 
             if (synt_done)
             begin
-              config_save <= 1;
-
-              if (synt_sin[16:15] == 2'b01)
-                config_sin <= 16'h7FFF;
-              else
-                config_sin <= synt_sin[15:0];                
-
-              if (synt_cos[16:15] == 2'b01)
-                config_cos <= 16'h7FFF;
-              else
-                config_cos <= synt_cos[15:0];                
-
+              coeff_comp_sin <= coeff_raw_sin - coeff_comp_sin;
+              coeff_comp_cos <= coeff_raw_cos - coeff_comp_cos;
+              config_raw_coeff <= 1;
             end
             else
-              config_save <= 0;
+              config_raw_coeff <= 0;
           end
           else
-            config_save <= 0;
+            config_raw_coeff <= 0;
         end
         else
-          config_save <= 0;
+          config_raw_coeff <= 0;
       end
     end
   end
 
   always @ ( posedge rx_clk ) 
   begin
-    if (rx_reset)
-    begin
-      config_start <= 0;
-    end
+    if (config_init && (config_channel == 5'h00))
+      chan0_init <= 1;
     else
-    begin
-      if (config_rd)
-      begin
-        config_channel <= config_out[4:0];
-        config_incr <= config_out[31:8];
-        config_count <= config_out[47:32];
-        config_start <= 1;
-      end
-      else
-        config_start <= 0;
-    end
+      chan0_init <= 0;
   end
 
   always @ ( posedge rx_clk ) 
   begin
-    if (rx_reset)
-      config_rd <= 0;
+    if (config_start && (config_channel == 5'h00))
+      chan0_start <= 1;
     else
-    begin
-      if (config_empty || config_running || config_start)
-        config_rd <= 0;
-      else
-        config_rd <= 1;
-    end
+      chan0_start <= 0;
   end
-
 
   always @ ( posedge rx_clk ) 
   begin
-    if (config_running && (config_channel == 0))
+    if (config_stop && (config_channel == 5'h00))
+      chan0_stop <= 1;
+    else
+      chan0_stop <= 0;
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (config_coeff_wr && (config_channel == 5'h00))
     begin
-      chan0_A0 <= config_0;      
-      chan0_A1 <= config_1;      
-      chan0_A2 <= config_2;      
-      chan0_A3 <= config_3;      
-      chan0_B0 <= config_0;      
-      chan0_B1 <= config_1;      
-      chan0_B2 <= config_2;      
-      chan0_B3 <= config_3;      
+      if (config_adr < config_count)
+        chan0_wr <= 1;
+      else
+        chan0_wr <= 0;
+    end
+    else
+      chan0_wr <= 0;
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (chan0_config)
+    begin
+      chan0_A0 <= sample_0;      
+      chan0_A1 <= sample_1;      
+      chan0_A2 <= sample_2;      
+      chan0_A3 <= sample_3;      
+      chan0_B0 <= sample_0;      
+      chan0_B1 <= sample_1;      
+      chan0_B2 <= sample_2;      
+      chan0_B3 <= sample_3;      
     end
     else
     begin
-      if (adc_en && chan0_running)
+      if (adc_en)
       begin
         chan0_A0 <= adc_A0;
         chan0_A1 <= adc_A1;

@@ -29,10 +29,12 @@ module ana_freq (
   input wire              clk,
   input wire              reset,
 
-  input wire              en,
+  input wire              init,
   input wire [12:0]       count,
-  input wire              load,
+  input wire              run,
+
   input wire              wr,
+  input wire [10:0]       wr_adr,
   input wire [63:0]       wr_sin,
   input wire [63:0]       wr_cos,
 
@@ -46,6 +48,8 @@ module ana_freq (
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
 
+  output reg              report,
+
   output wire [15:0]      power_A,
   output wire [15:0]      power_B,
 
@@ -54,7 +58,7 @@ module ana_freq (
 );
 
   reg                    start;
-  reg                    running;
+  reg  [12:0]            coeff_count;
   reg                    coeff_en;
   reg                    coeff_wr;
   reg  [10:0]            coeff_adr;
@@ -84,13 +88,11 @@ module ana_freq (
   wire [55:0]            in_A;
   wire [55:0]            in_B;
 
-  reg  [10:0]            adr;
   reg  [10:0]            last;
   reg  [3:0]             last_en;
   
   reg                    input_done;
   
-  reg  [10:0]            curr_count;
   reg                    skip;
   reg                    pd1;
   reg                    pd2;
@@ -172,7 +174,7 @@ adc_slice sin_A (
   .clk(clk),             // input wire CLK
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
-  .count(count),         // input wire [12 : 0] count
+  .count(coeff_count),   // input wire [12 : 0] count
   .p_start(pd_start),    // input wire [0 : 0] start
   .p_running(pd_running),// input wire [0 : 0] running
   .p_post(pd_post),      // input wire [0 : 0] post
@@ -188,7 +190,7 @@ adc_slice cos_A (
   .clk(clk),             // input wire CLK
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
-  .count(count),         // input wire [12 : 0] count
+  .count(coeff_count),   // input wire [12 : 0] count
   .p_start(pd_start),    // input wire [0 : 0] start
   .p_running(pd_running),// input wire [0 : 0] running
   .p_post(pd_post),      // input wire [0 : 0] post
@@ -204,7 +206,7 @@ adc_slice sin_B (
   .clk(clk),             // input wire CLK
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
-  .count(count),         // input wire [12 : 0] count
+  .count(coeff_count),   // input wire [12 : 0] count
   .p_start(pd_start),    // input wire [0 : 0] start
   .p_running(pd_running),// input wire [0 : 0] running
   .p_post(pd_post),      // input wire [0 : 0] post
@@ -220,7 +222,7 @@ adc_slice cos_B (
   .clk(clk),             // input wire CLK
   .p7(pd7),              // input wire [0 : 0] p7
   .p8(pd8),              // input wire [0 : 0] p8
-  .count(count),         // input wire [12 : 0] count
+  .count(coeff_count),   // input wire [12 : 0] count
   .p_start(pd_start),    // input wire [0 : 0] start
   .p_running(pd_running),// input wire [0 : 0] running
   .p_post(pd_post),      // input wire [0 : 0] post
@@ -329,6 +331,14 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
+    if (phase_done_A & !skip)
+       report <= 1;
+    else
+       report <= 0;
+  end
+
+  always @ ( posedge clk ) 
+  begin
     if (reset)
       phase_A <= 0;
     else
@@ -383,7 +393,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (running)
+    if (run)
     begin
       if (pd7)
       begin
@@ -445,18 +455,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (pd8)
-    begin
-      pd_start <= 1;
-    end
-    else
-      pd_start <= 0;
-  end
-
-
-  always @ ( posedge clk ) 
-  begin
-    if (running)
+    if (run)
     begin
       pd2 <= pd1;
       pd3 <= pd2;
@@ -465,8 +464,36 @@ begin : ana_freq_gen
       pd6 <= pd5;
       pd7 <= pd6;
       pd8 <= pd7;
+      pd_start <= pd8;
     end
   end
+
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      coeff_count <= 0;
+    else
+    begin
+      if (init)
+      begin
+        coeff_count <= count;
+
+        case (count[1:0])
+          2'b00 : last_en <= 4'b1111;
+          2'b01 : last_en <= 4'b0001;
+          2'b10 : last_en <= 4'b0011;
+          2'b11 : last_en <= 4'b0111;
+        endcase
+
+        if (count[1:0] == 2'b00)
+          last <= count[12:2] - 1;
+        else
+          last <= count[12:2];
+      end
+    end
+  end
+
 
   always @ ( posedge clk ) 
   begin
@@ -474,142 +501,106 @@ begin : ana_freq_gen
     begin
       coeff_en <= 0;
       coeff_wr <= 0;
-      adr <= 0;
       last <= 0;
-      start <= 0;
-      running <= 0;
+      start <= 1;
       pd1 <= 0;
     end
     else
     begin
-      if (load)
+      if (wr)
       begin
+        coeff_adr <= wr_adr;
         coeff_en <= 1;
+        coeff_wr <= 1;
+        start <= 1;
 
-        if (wr)
+        if (wr_adr == last)
         begin
-          adr <= adr + 1;
-          coeff_adr <= adr;
-          coeff_wr <= 1;
-
-          if (adr == last)
+          if (last_en[0])
           begin
-            if (last_en[0])
-            begin
-              sin_coeff_in[15:0] <= wr_sin[15:0];
-              cos_coeff_in[15:0] <= wr_cos[15:0];
-            end
-            else            
-            begin
-              sin_coeff_in[15:0] <= 0;
-              cos_coeff_in[15:0] <= 0;
-            end
-
-            if (last_en[1])
-            begin
-              sin_coeff_in[31:16] <= wr_sin[31:16];
-              cos_coeff_in[31:16] <= wr_cos[31:16];
-            end
-            else            
-            begin
-              sin_coeff_in[31:16] <= 0;
-              cos_coeff_in[31:16] <= 0;
-            end
-
-            if (last_en[2])
-            begin
-              sin_coeff_in[47:32] <= wr_sin[47:32];
-              cos_coeff_in[47:32] <= wr_cos[47:32];
-            end
-            else            
-            begin
-              sin_coeff_in[47:32] <= 0;
-              cos_coeff_in[47:32] <= 0;
-            end
-
-            if (last_en[3])
-            begin
-              sin_coeff_in[63:48] <= wr_sin[63:48];
-              cos_coeff_in[63:48] <= wr_cos[63:48];
-            end
-            else            
-            begin
-              sin_coeff_in[63:48] <= 0;
-              cos_coeff_in[63:48] <= 0;
-            end
-
-            start <= 1;
-            running <= 1;
+            sin_coeff_in[15:0] <= wr_sin[15:0];
+            cos_coeff_in[15:0] <= wr_cos[15:0];
           end
-          else
+          else            
           begin
-            sin_coeff_in <= wr_sin;
-            cos_coeff_in <= wr_cos;
-            start <= 0;
-            running <= 0;
+            sin_coeff_in[15:0] <= 0;
+            cos_coeff_in[15:0] <= 0;
+          end
+
+          if (last_en[1])
+          begin
+            sin_coeff_in[31:16] <= wr_sin[31:16];
+            cos_coeff_in[31:16] <= wr_cos[31:16];
+          end
+          else            
+          begin
+            sin_coeff_in[31:16] <= 0;
+            cos_coeff_in[31:16] <= 0;
+          end
+
+          if (last_en[2])
+          begin
+            sin_coeff_in[47:32] <= wr_sin[47:32];
+            cos_coeff_in[47:32] <= wr_cos[47:32];
+          end
+          else            
+          begin
+            sin_coeff_in[47:32] <= 0;
+            cos_coeff_in[47:32] <= 0;
+          end
+
+          if (last_en[3])
+          begin
+            sin_coeff_in[63:48] <= wr_sin[63:48];
+            cos_coeff_in[63:48] <= wr_cos[63:48];
+          end
+          else            
+          begin
+            sin_coeff_in[63:48] <= 0;
+            cos_coeff_in[63:48] <= 0;
           end
         end
         else
         begin
-          coeff_wr <= 0;
-          start <= 0;
-          running <= 0;
+          sin_coeff_in <= wr_sin;
+          cos_coeff_in <= wr_cos;
         end
       end
       else
       begin
-        start <= 0;
-        adr <= 0;
-
-        if (running)
+        if (run)
         begin
-          if (en)
-          begin
-            coeff_en <= 1;
-            coeff_wr <= 0;
+          coeff_en <= 1;
+          coeff_wr <= 0;
 
-            if (start)
+          if (start)
+          begin
+            coeff_adr <= 0;
+            pd1 <= 1;
+          end
+          else
+          begin
+            start <= 0;
+
+            if (coeff_adr == last)
             begin
               coeff_adr <= 0;
               pd1 <= 1;
             end
             else
             begin
-              if (coeff_adr == last)
-              begin
-                coeff_adr <= 0;
-                pd1 <= 1;
-              end
-              else
-              begin
-                coeff_adr <= coeff_adr + 1;
-                pd1 <= 0;
-              end
+              coeff_adr <= coeff_adr + 1;
+              pd1 <= 0;
             end
-          end
-          else
-          begin
-            running <= 0;
-            coeff_en <= 0;
-            coeff_wr <= 0;
           end
         end
         else
         begin
+          start <= 1;
           coeff_en <= 0;
           coeff_wr <= 0;
-
-          case (count[1:0])
-            2'b00 : last_en <= 4'b1111;
-            2'b01 : last_en <= 4'b0001;
-            2'b10 : last_en <= 4'b0011;
-            2'b11 : last_en <= 4'b0111;
-          endcase
-
-          if (count[1:0] == 2'b00)
-            last <= count[12:2] - 1;
-          else
-            last <= count[12:2];
+          coeff_adr <= 0;
+          pd1 <= 0;
         end
       end
     end
