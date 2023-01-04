@@ -1329,8 +1329,10 @@ setup_adc_chan  Proc far
 sacIncrOk:
     pop ecx
 ;
-    add eax,80h
-    mov al,bl
+    add eax,20h
+    and al,0E0h
+    and bl,1Fh
+    or al,bl
     mov ds:cb_adc_phase_incr,eax
 ;
     xor al,al
