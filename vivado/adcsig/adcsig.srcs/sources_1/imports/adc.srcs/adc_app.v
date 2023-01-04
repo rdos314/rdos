@@ -393,6 +393,38 @@ adc_ana adc_ana_0_inst (
     .phase_B(chan0_phase_B) 
 );
 
+ila_0 ila_0_inst (
+  .clk(clk),                    // input wire clk
+  .probe0(config_rd),           // input wire [0:0]
+  .probe1(config_empty),        // input wire [0:0]
+  .probe2(config_out),          // input wire [47:0]
+  .probe3(config_channel),      // input wire [4:0]
+  .probe4(config_incr),         // input wire [29:0]
+  .probe5(config_count),        // input wire [13:0]
+  .probe6(config_adr),          // input wire [13:0]
+  .probe7(config_init),         // input wire [0:0]
+  .probe8(config_start),        // input wire [0:0]
+  .probe9(config_running),      // input wire [0:0]
+  .probe10(config_raw_coeff),   // input wire [0:0]
+  .probe11(config_has_coeff),   // input wire [0:0]
+  .probe12(config_coeff_wr),    // input wire [0:0]
+  .probe13(config_validate),    // input wire [0:0]
+  .probe14(config_done),        // input wire [0:0]
+  .probe15(config_l_sin),       // input wire [23:0]
+  .probe16(config_l_cos),       // input wire [23:0]
+  .probe17(config_sin),         // input wire [15:0]
+  .probe18(config_cos),         // input wire [15:0]
+  .probe19(config_sample_data), // input wire [55:0]
+  .probe20(config_coeff_sin),   // input wire [63:0]
+  .probe21(config_coeff_cos),   // input wire [63:0]
+  .probe22(synt_start),         // input wire [0:0]
+  .probe23(synt_done),          // input wire [0:0]
+  .probe24(synt_phase),         // input wire [29:0]
+  .probe25(cordic_phase),       // input wire [31:0]
+  .probe26(synt_raw_sin),       // input wire [23:0]
+  .probe27(synt_raw_cos)        // input wire [23:0]
+);
+
 generate
 begin : adc_app
 
