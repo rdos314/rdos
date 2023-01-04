@@ -146,6 +146,7 @@ module adc_app (
   reg  [29:0]             config_incr;
   reg  [13:0]             config_count;
   reg  [13:0]             config_adr;
+  reg  [11:0]             wr_adr;
 
   reg                     config_init;
   reg                     config_start;
@@ -344,7 +345,7 @@ bram_sample bram_sample_inst (
   .clka(rx_clk),            // input wire clka
   .ena(config_running),     // input wire ena
   .wea(config_coeff_wr),    // input wire [0 : 0] wea
-  .addra(config_adr[13:2]), // input wire [11 : 0] addra
+  .addra(wr_adr),           // input wire [11 : 0] addra
   .dina(config_sample_data),// input wire [55 : 0] dina
   .douta(sample_data)       // output wire [55 : 0] douta
 );
@@ -374,7 +375,7 @@ adc_ana adc_ana_0_inst (
     .stop(chan0_stop),
 
     .wr(chan0_wr),
-    .wr_adr(config_adr[12:2]),
+    .wr_adr(wr_adr[10:0]),
     .wr_sin(config_coeff_sin),
     .wr_cos(config_coeff_cos),
 
@@ -922,6 +923,8 @@ begin : adc_app
             2'b10 : config_coeff_cos[47:32] <= config_cos;
             2'b11 : config_coeff_cos[63:48] <= config_cos;
           endcase
+          
+          wr_adr <= config_adr[13:2];
 
           if (config_adr[1:0] == 2'b11)
             config_coeff_wr <= 1;
