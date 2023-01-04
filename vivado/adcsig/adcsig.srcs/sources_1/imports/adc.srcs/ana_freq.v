@@ -579,11 +579,10 @@ begin : ana_freq_gen
           begin
             coeff_adr <= 0;
             pd1 <= 1;
+            start <= 0;
           end
           else
           begin
-            start <= 0;
-
             if (coeff_adr == last)
             begin
               coeff_adr <= 0;
