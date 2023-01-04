@@ -32,7 +32,7 @@ module adc_ana (
   input wire              init,
   input wire [12:0]       count,
   input wire              start,
-  input wire              stop;
+  input wire              stop,
 
   input wire              wr,
   input wire [10:0]       wr_adr,

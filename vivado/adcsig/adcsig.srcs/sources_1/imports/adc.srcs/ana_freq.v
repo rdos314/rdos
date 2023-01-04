@@ -474,7 +474,10 @@ begin : ana_freq_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
+    begin
       coeff_count <= 0;
+      last <= 0;
+    end
     else
     begin
       if (init)
@@ -503,7 +506,6 @@ begin : ana_freq_gen
     begin
       coeff_en <= 0;
       coeff_wr <= 0;
-      last <= 0;
       start <= 1;
       pd1 <= 0;
     end

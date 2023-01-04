@@ -4,7 +4,7 @@
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
+// the Free Software Fouconfig_channelndation; either version 2 of the License, or
 // (at your option) any later version. The only exception to this rule
 // is for commercial usage in embedded systems. For information on
 // usage in commercial embedded systems, contact embedded@rdos.net
@@ -253,6 +253,7 @@ module adc_app (
 
 // analyser freq blocks
 
+  reg                     chan0_config;
   reg                     chan0_init;
   reg                     chan0_start;
   reg                     chan0_stop;
@@ -393,8 +394,8 @@ adc_ana adc_ana_0_inst (
     .phase_B(chan0_phase_B) 
 );
 
-ila_0 ila_0_inst (
-  .clk(clk),                    // input wire clk
+ila_2 ila_2_inst (
+  .clk(rx_clk),                 // input wire clk
   .probe0(config_rd),           // input wire [0:0]
   .probe1(config_empty),        // input wire [0:0]
   .probe2(config_out),          // input wire [47:0]
@@ -712,7 +713,7 @@ begin : adc_app
     else
       bar1_rp <= 0;
 
-    pci_rd <= pci1_rd_pend;
+    pci_rd <= pci_rd_pend;
   end
 
   always @ ( posedge pci_clk ) 

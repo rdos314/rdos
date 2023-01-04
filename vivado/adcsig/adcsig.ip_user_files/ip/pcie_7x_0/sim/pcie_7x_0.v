@@ -1,4 +1,4 @@
-// (c) Copyright 1995-2022 Xilinx, Inc. All rights reserved.
+// (c) Copyright 1995-2023 Xilinx, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
@@ -500,7 +500,7 @@ input wire sys_rst_n;
     .c_pcie_fast_config(0),
     .bar_0("FFFFF000"),
     .bar_1("FFF00000"),
-    .bar_2("FFFFF000"),
+    .bar_2("00000000"),
     .bar_3("00000000"),
     .bar_4("00000000"),
     .bar_5("00000000"),
@@ -572,9 +572,9 @@ input wire sys_rst_n;
     .c_pcie_cap_next_ptr("9C"),
     .c_msix_table_size("00F"),
     .c_msix_table_offset("8"),
-    .c_msix_table_bir("2"),
+    .c_msix_table_bir("1"),
     .c_msix_pba_offset("0"),
-    .c_msix_pba_bir("2"),
+    .c_msix_pba_bir("1"),
     .dsi("0"),
     .c_dsi_bool("FALSE"),
     .d1_sup("0"),
