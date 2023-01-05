@@ -973,6 +973,7 @@ begin : adc_app
           config_start <= 0;
           config_done <= 0;
           config_coeff_wr <= 0;
+          bram_adr <= 0;
         end
         else
         begin
@@ -982,23 +983,15 @@ begin : adc_app
             config_coeff_wr <= 0;
             synt_start <= 0;
 
-            if (config_coeff_wr)
+            if (bram_adr == 12'hFFF)
             begin
-              bram_adr <= 0;
-              config_done <= 0;
+              config_validate <= 0;
+              config_done <= 1;
             end
             else
             begin
-              if (bram_adr == 12'hFFF)
-              begin
-                config_validate <= 0;
-                config_done <= 1;
-              end
-              else
-              begin
-                config_done <= 0;
-                bram_adr <= bram_adr + 1;
-              end
+              config_done <= 0;
+              bram_adr <= bram_adr + 1;
             end
           end
           else
