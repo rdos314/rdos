@@ -146,7 +146,6 @@ module adc_app (
   reg  [29:0]             config_incr;
   reg  [13:0]             config_count;
   reg  [13:0]             config_adr;
-  reg  [11:0]             wr_adr;
 
   reg                     config_init;
   reg                     config_start;
@@ -163,10 +162,6 @@ module adc_app (
 
   reg  [15:0]             config_sin;
   reg  [15:0]             config_cos;
-
-  reg  [55:0]             config_sample_data;
-  reg  [63:0]             config_coeff_sin;
-  reg  [63:0]             config_coeff_cos;
   
   reg                     synt_start;
   wire                    synt_done;
@@ -241,46 +236,61 @@ module adc_app (
 
 // test sequence
 
-  wire [13:0]             sample_0;
-  wire [13:0]             sample_1;
-  wire [13:0]             sample_2;
-  wire [13:0]             sample_3;
-  wire [55:0]             sample_data;
+  wire                    bram_en;
+  wire                    bram_wr;
+  reg  [11:0]             bram_adr;
 
-  assign sample_0 = sample_data[13:0];
-  assign sample_1 = sample_data[27:14];
-  assign sample_2 = sample_data[41:28];
-  assign sample_3 = sample_data[55:42];
+  reg  [55:0]             bram_in;
+  wire [13:0]             bram_in_0;
+  wire [13:0]             bram_in_1;
+  wire [13:0]             bram_in_2;
+  wire [13:0]             bram_in_3;
 
-  wire [13:0]             sample_wr_0;
-  wire [13:0]             sample_wr_1;
-  wire [13:0]             sample_wr_2;
-  wire [13:0]             sample_wr_3;
+  assign bram_in_0 = bram_in[13:0];
+  assign bram_in_1 = bram_in[27:14];
+  assign bram_in_2 = bram_in[41:28];
+  assign bram_in_3 = bram_in[55:42];
 
-  assign sample_wr_0 = config_sample_data[13:0];
-  assign sample_wr_1 = config_sample_data[27:14];
-  assign sample_wr_2 = config_sample_data[41:28];
-  assign sample_wr_3 = config_sample_data[55:42];
+  assign bram_en = config_running;
+  assign bram_wr = config_coeff_wr;
 
-  wire [15:0]             sin_wr_0;
-  wire [15:0]             sin_wr_1;
-  wire [15:0]             sin_wr_2;
-  wire [15:0]             sin_wr_3;
+  wire [55:0]             bram_out_data;
+  wire [13:0]             bram_out_0;
+  wire [13:0]             bram_out_1;
+  wire [13:0]             bram_out_2;
+  wire [13:0]             bram_out_3;
 
-  wire [15:0]             cos_wr_0;
-  wire [15:0]             cos_wr_1;
-  wire [15:0]             cos_wr_2;
-  wire [15:0]             cos_wr_3;
+  assign bram_out_0 = bram_out_data[13:0];
+  assign bram_out_1 = bram_out_data[27:14];
+  assign bram_out_2 = bram_out_data[41:28];
+  assign bram_out_3 = bram_out_data[55:42];
 
-  assign sin_wr_0 = config_coeff_sin[15:0];
-  assign sin_wr_1 = config_coeff_sin[31:16];
-  assign sin_wr_2 = config_coeff_sin[47:32];
-  assign sin_wr_3 = config_coeff_sin[63:48];
+  wire [11:0]             coeff_adr;
+  
+  assign coeff_adr = bram_adr;
 
-  assign cos_wr_0 = config_coeff_cos[15:0];
-  assign cos_wr_1 = config_coeff_cos[31:16];
-  assign cos_wr_2 = config_coeff_cos[47:32];
-  assign cos_wr_3 = config_coeff_cos[63:48];
+  reg  [63:0]             coeff_sin;
+  reg  [63:0]             coeff_cos;
+
+  wire [15:0]             coeff_sin_0;
+  wire [15:0]             coeff_sin_1;
+  wire [15:0]             coeff_sin_2;
+  wire [15:0]             coeff_sin_3;
+
+  wire [15:0]             coeff_cos_0;
+  wire [15:0]             coeff_cos_1;
+  wire [15:0]             coeff_cos_2;
+  wire [15:0]             coeff_cos_3;
+
+  assign coeff_sin_0 = coeff_sin[15:0];
+  assign coeff_sin_1 = coeff_sin[31:16];
+  assign coeff_sin_2 = coeff_sin[47:32];
+  assign coeff_sin_3 = coeff_sin[63:48];
+
+  assign coeff_cos_0 = coeff_cos[15:0];
+  assign coeff_cos_1 = coeff_cos[31:16];
+  assign coeff_cos_2 = coeff_cos[47:32];
+  assign coeff_cos_3 = coeff_cos[63:48];
 
 // analyser freq blocks
 
@@ -388,11 +398,11 @@ ana_synt ana_synt_inst (
 
 bram_sample bram_sample_inst (
   .clka(rx_clk),            // input wire clka
-  .ena(config_running),     // input wire ena
-  .wea(config_coeff_wr),    // input wire [0 : 0] wea
-  .addra(wr_adr),           // input wire [11 : 0] addra
-  .dina(config_sample_data),// input wire [55 : 0] dina
-  .douta(sample_data)       // output wire [55 : 0] douta
+  .ena(bram_en),            // input wire ena
+  .wea(bram_wr),            // input wire [0 : 0] wea
+  .addra(bram_adr),         // input wire [11 : 0] addra
+  .dina(bram_in),           // input wire [55 : 0] dina
+  .douta(bram_out)          // output wire [55 : 0] douta
 );
 
 bram_msix bram_msix_inst (
@@ -420,9 +430,9 @@ adc_ana adc_ana_0_inst (
     .stop(stop[0]),
 
     .wr(wr[0]),
-    .wr_adr(wr_adr[10:0]),
-    .wr_sin(config_coeff_sin),
-    .wr_cos(config_coeff_cos),
+    .wr_adr(coeff_adr),
+    .wr_sin(coeff_sin),
+    .wr_cos(coeff_cos),
 
     .in_A0(chan0_A0),
     .in_A1(chan0_A1),
@@ -445,28 +455,28 @@ ila_2 ila_2_inst (
   .clk(rx_clk),                 // input wire clk
   .probe0(config_rd),           // input wire [0:0]
   .probe1(config_empty),        // input wire [0:0]
-  .probe2(config_running),      // input wire [0:0]
-  .probe3(config_coeff_wr),     // input wire [0:0]
-  .probe4(wr_adr),              // input wire [13:0]
+  .probe2(bram_en),             // input wire [0:0]
+  .probe3(bram_wr),             // input wire [0:0]
+  .probe4(bram_adr),            // input wire [13:0]
   .probe5(config_incr),         // input wire [29:0]
   .probe6(config_count),        // input wire [13:0]
-  .probe7(sample_wr_0),          // input wire [13:0]
-  .probe8(sample_wr_1),          // input wire [13:0]
-  .probe9(sample_wr_2),          // input wire [13:0]
-  .probe10(sample_wr_3),          // input wire [13:0]
-  .probe11(sample_0),            // input wire [13:0]
-  .probe12(sample_1),            // input wire [13:0]
-  .probe13(sample_2),            // input wire [13:0]
-  .probe14(sample_3),            // input wire [13:0]
+  .probe7(bram_in_0),           // input wire [13:0]
+  .probe8(bram_in_1),           // input wire [13:0]
+  .probe9(bram_in_2),           // input wire [13:0]
+  .probe10(bram_in_3),           // input wire [13:0]
+  .probe11(bram_out_0),          // input wire [13:0]
+  .probe12(bram_out_1),          // input wire [13:0]
+  .probe13(bram_out_2),          // input wire [13:0]
+  .probe14(bram_out_3),          // input wire [13:0]
   .probe15(wr[0]),               // input wire [0:0]
-  .probe16(sin_wr_0),            // input wire [15:0]
-  .probe17(sin_wr_1),            // input wire [15:0]
-  .probe18(sin_wr_2),            // input wire [15:0]
-  .probe19(sin_wr_3),            // input wire [15:0]
-  .probe20(cos_wr_0),            // input wire [15:0]
-  .probe21(cos_wr_1),            // input wire [15:0]
-  .probe22(cos_wr_2),            // input wire [15:0]
-  .probe23(cos_wr_3),            // input wire [15:0]
+  .probe16(coeff_sin_0),            // input wire [15:0]
+  .probe17(coeff_sin_1),            // input wire [15:0]
+  .probe18(coeff_sin_2),            // input wire [15:0]
+  .probe19(coeff_sin_3),            // input wire [15:0]
+  .probe20(coeff_cos_0),            // input wire [15:0]
+  .probe21(coeff_cos_1),            // input wire [15:0]
+  .probe22(coeff_cos_2),            // input wire [15:0]
+  .probe23(coeff_cos_3),            // input wire [15:0]
   .probe24(config_validate)      // input wire [0:0]
 );
 
@@ -937,58 +947,13 @@ begin : adc_app
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
-      config_coeff_wr <= 0;
-    else
-    begin
-      if (config_init)
-        config_coeff_wr <= 0;
-      else
-      begin
-        if (config_has_coeff)
-        begin
-          case (config_adr[1:0])
-            2'b00 : config_sample_data[13:0] <= config_sin[15:2];
-            2'b01 : config_sample_data[27:14] <= config_sin[15:2];
-            2'b10 : config_sample_data[41:28] <= config_sin[15:2];
-            2'b11 : config_sample_data[55:42] <= config_sin[15:2];
-          endcase
-
-          case (config_adr[1:0])
-            2'b00 : config_coeff_sin[15:0] <= config_sin;
-            2'b01 : config_coeff_sin[31:16] <= config_sin;
-            2'b10 : config_coeff_sin[47:32] <= config_sin;
-            2'b11 : config_coeff_sin[63:48] <= config_sin;
-          endcase
-
-          case (config_adr[1:0])
-            2'b00 : config_coeff_cos[15:0] <= config_cos;
-            2'b01 : config_coeff_cos[31:16] <= config_cos;
-            2'b10 : config_coeff_cos[47:32] <= config_cos;
-            2'b11 : config_coeff_cos[63:48] <= config_cos;
-          endcase
-          
-          wr_adr <= config_adr[13:2];
-
-          if (config_adr[1:0] == 2'b11)
-            config_coeff_wr <= 1;
-          else
-            config_coeff_wr <= 0;
-        end
-        else
-          config_coeff_wr <= 0;
-      end
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset)
     begin
       synt_start <= 0;
       config_start <= 0;
       config_validate <= 0;
       config_done <= 0;
       config_adr <= 0;
+      config_coeff_wr <= 0;
     end
     else
     begin
@@ -998,6 +963,7 @@ begin : adc_app
         config_start <= 0;
         config_done <= 0;
         config_validate <= 0;
+        config_coeff_wr <= 0;
       end
       else
       begin
@@ -1006,35 +972,75 @@ begin : adc_app
           synt_start <= 0;
           config_start <= 0;
           config_done <= 0;
+          config_coeff_wr <= 0;
         end
         else
         begin
           if (config_validate)
           begin
             config_start <= 0;
-
+            config_coeff_wr <= 0;
             synt_start <= 0;
-            if (config_adr[13:2] == 12'hFFF)
+
+            if (config_coeff_wr)
             begin
-              config_validate <= 0;
-              config_done <= 1;
+              bram_adr <= 0;
+              config_done <= 0;
             end
             else
             begin
-              config_done <= 0;
-              config_adr[13:2] <= config_adr[13:2] + 1;
+              if (bram_adr == 12'hFFF)
+              begin
+                config_validate <= 0;
+                config_done <= 1;
+              end
+              else
+              begin
+                config_done <= 0;
+                bram_adr <= bram_adr + 1;
+              end
             end
           end
           else
           begin
             if (config_has_coeff)
             begin
+              case (config_adr[1:0])
+                2'b00 :
+                  begin
+                    bram_in[13:0] <= config_sin[15:2];
+                    coeff_sin[15:0] <= config_sin;
+                    coeff_cos[15:0] <= config_cos;
+                    config_coeff_wr <= 0;
+                  end
+                2'b01 : 
+                  begin
+                    bram_in[27:14] <= config_sin[15:2];
+                    coeff_sin[31:16] <= config_sin;
+                    coeff_cos[31:16] <= config_cos;
+                    config_coeff_wr <= 0;
+                  end
+                2'b10 : 
+                  begin
+                    bram_in[41:28] <= config_sin[15:2];
+                    coeff_sin[47:32] <= config_sin;
+                    coeff_cos[47:32] <= config_cos;
+                    config_coeff_wr <= 0;
+                  end
+                2'b11 :
+                  begin
+                    bram_in[55:42] <= config_sin[15:2];
+                    coeff_sin[63:48] <= config_sin;
+                    coeff_cos[63:48] <= config_cos;
+                    config_coeff_wr <= 1;
+                  end
+              endcase
+              
               if (config_adr == 14'h3FFF)
               begin
                 config_done <= 0;
                 config_start <= 1;
                 config_validate <= 1;
-                config_adr <= 0;
                 synt_start <= 0;
               end
               else
@@ -1049,9 +1055,13 @@ begin : adc_app
             end
             else
             begin
+              if (config_coeff_wr)
+                bram_adr <= bram_adr + 1;
+               
               config_done <= 0;
               config_start <= 0;
               synt_start <= 0;
+              config_coeff_wr <= 0;
             end
           end
         end
@@ -1088,14 +1098,14 @@ begin : adc_app
   begin
     if (chan0_config)
     begin
-      chan0_A0 <= sample_0;      
-      chan0_A1 <= sample_1;      
-      chan0_A2 <= sample_2;      
-      chan0_A3 <= sample_3;      
-      chan0_B0 <= sample_0;      
-      chan0_B1 <= sample_1;      
-      chan0_B2 <= sample_2;      
-      chan0_B3 <= sample_3;      
+      chan0_A0 <= bram_out_0;      
+      chan0_A1 <= bram_out_1;      
+      chan0_A2 <= bram_out_2;      
+      chan0_A3 <= bram_out_3;      
+      chan0_B0 <= -bram_out_0;      
+      chan0_B1 <= -bram_out_1;      
+      chan0_B2 <= -bram_out_2;      
+      chan0_B3 <= -bram_out_3;      
     end
     else
     begin
