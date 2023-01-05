@@ -252,13 +252,59 @@ module adc_app (
   assign sample_2 = sample_data[41:28];
   assign sample_3 = sample_data[55:42];
 
+  wire [13:0]             sample_wr_0;
+  wire [13:0]             sample_wr_1;
+  wire [13:0]             sample_wr_2;
+  wire [13:0]             sample_wr_3;
+
+  assign sample_wr_0 = config_sample_data[13:0];
+  assign sample_wr_1 = config_sample_data[27:14];
+  assign sample_wr_2 = config_sample_data[41:28];
+  assign sample_wr_3 = config_sample_data[55:42];
+
+  wire [15:0]             sin_wr_0;
+  wire [15:0]             sin_wr_1;
+  wire [15:0]             sin_wr_2;
+  wire [15:0]             sin_wr_3;
+
+  wire [15:0]             cos_wr_0;
+  wire [15:0]             cos_wr_1;
+  wire [15:0]             cos_wr_2;
+  wire [15:0]             cos_wr_3;
+
+  assign sin_wr_0 = config_coeff_sin[15:0];
+  assign sin_wr_1 = config_coeff_sin[31:16];
+  assign sin_wr_2 = config_coeff_sin[47:32];
+  assign sin_wr_3 = config_coeff_sin[63:48];
+
+  assign cos_wr_0 = config_coeff_cos[15:0];
+  assign cos_wr_1 = config_coeff_cos[31:16];
+  assign cos_wr_2 = config_coeff_cos[47:32];
+  assign cos_wr_3 = config_coeff_cos[63:48];
+
 // analyser freq blocks
+
+  wire [31:0]             start;
+  wire [31:0]             stop;
+  wire [31:0]             wr;
+  wire [31:0]             chan_report;
+ 
+  wire                    is_chan_wr; 
+  
+  assign is_chan_wr = config_adr < config_count;
+  
+  wire                    chan_0;
+
+  assign chan_0 = config_channel == 0;
+  
+  assign start[0] = config_start & chan_0;
+  
+  assign stop[0] = config_stop & chan_0;
+  
+  assign wr[0] = is_chan_wr & config_coeff_wr & chan_0;
 
   reg                     chan0_config;
   reg                     chan0_init;
-  reg                     chan0_start;
-  reg                     chan0_stop;
-  reg                     chan0_wr;
 
   reg  [13:0]             chan0_A0;
   reg  [13:0]             chan0_A1;
@@ -269,7 +315,6 @@ module adc_app (
   reg  [13:0]             chan0_B2;
   reg  [13:0]             chan0_B3;
 
-  wire                    chan0_report;
   wire [15:0]             chan0_power_A;
   wire [15:0]             chan0_power_B;
   wire [15:0]             chan0_phase_A;
@@ -371,10 +416,10 @@ adc_ana adc_ana_0_inst (
 
     .init(chan0_init),
     .count(config_count[12:0]),
-    .start(chan0_start),
-    .stop(chan0_stop),
+    .start(start[0]),
+    .stop(stop[0]),
 
-    .wr(chan0_wr),
+    .wr(wr[0]),
     .wr_adr(wr_adr[10:0]),
     .wr_sin(config_coeff_sin),
     .wr_cos(config_coeff_cos),
@@ -388,43 +433,41 @@ adc_ana adc_ana_0_inst (
     .in_B2(chan0_B2),
     .in_B3(chan0_B3),
 
-    .report(chan0_report),
+    .report(chan_report[0]),
     .power_A(chan0_power_A),
     .power_B(chan0_power_B),
     .phase_A(chan0_phase_A),
     .phase_B(chan0_phase_B) 
 );
 
+  
 ila_2 ila_2_inst (
   .clk(rx_clk),                 // input wire clk
   .probe0(config_rd),           // input wire [0:0]
   .probe1(config_empty),        // input wire [0:0]
-  .probe2(config_out),          // input wire [47:0]
-  .probe3(config_channel),      // input wire [4:0]
-  .probe4(config_incr),         // input wire [29:0]
-  .probe5(config_count),        // input wire [13:0]
-  .probe6(config_adr),          // input wire [13:0]
-  .probe7(config_init),         // input wire [0:0]
-  .probe8(config_start),        // input wire [0:0]
-  .probe9(config_running),      // input wire [0:0]
-  .probe10(config_raw_coeff),   // input wire [0:0]
-  .probe11(config_has_coeff),   // input wire [0:0]
-  .probe12(config_coeff_wr),    // input wire [0:0]
-  .probe13(config_validate),    // input wire [0:0]
-  .probe14(config_done),        // input wire [0:0]
-  .probe15(config_l_sin),       // input wire [23:0]
-  .probe16(config_l_cos),       // input wire [23:0]
-  .probe17(config_sin),         // input wire [15:0]
-  .probe18(config_cos),         // input wire [15:0]
-  .probe19(config_sample_data), // input wire [55:0]
-  .probe20(config_coeff_sin),   // input wire [63:0]
-  .probe21(config_coeff_cos),   // input wire [63:0]
-  .probe22(synt_start),         // input wire [0:0]
-  .probe23(synt_done),          // input wire [0:0]
-  .probe24(synt_phase),         // input wire [29:0]
-  .probe25(cordic_phase),       // input wire [31:0]
-  .probe26(synt_raw_sin),       // input wire [23:0]
-  .probe27(synt_raw_cos)        // input wire [23:0]
+  .probe2(config_running),      // input wire [0:0]
+  .probe3(config_coeff_wr),     // input wire [0:0]
+  .probe4(wr_adr),              // input wire [13:0]
+  .probe5(config_incr),         // input wire [29:0]
+  .probe6(config_count),        // input wire [13:0]
+  .probe7(sample_wr_0),          // input wire [13:0]
+  .probe8(sample_wr_1),          // input wire [13:0]
+  .probe9(sample_wr_2),          // input wire [13:0]
+  .probe10(sample_wr_3),          // input wire [13:0]
+  .probe11(sample_0),            // input wire [13:0]
+  .probe12(sample_1),            // input wire [13:0]
+  .probe13(sample_2),            // input wire [13:0]
+  .probe14(sample_3),            // input wire [13:0]
+  .probe15(wr[0]),               // input wire [0:0]
+  .probe16(sin_wr_0),            // input wire [15:0]
+  .probe17(sin_wr_1),            // input wire [15:0]
+  .probe18(sin_wr_2),            // input wire [15:0]
+  .probe19(sin_wr_3),            // input wire [15:0]
+  .probe20(cos_wr_0),            // input wire [15:0]
+  .probe21(cos_wr_1),            // input wire [15:0]
+  .probe22(cos_wr_2),            // input wire [15:0]
+  .probe23(cos_wr_3),            // input wire [15:0]
+  .probe24(config_validate)      // input wire [0:0]
 );
 
 generate
@@ -1022,35 +1065,6 @@ begin : adc_app
       chan0_init <= 1;
     else
       chan0_init <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_start && (config_channel == 5'h00))
-      chan0_start <= 1;
-    else
-      chan0_start <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_stop && (config_channel == 5'h00))
-      chan0_stop <= 1;
-    else
-      chan0_stop <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_coeff_wr && (config_channel == 5'h00))
-    begin
-      if (config_adr < config_count)
-        chan0_wr <= 1;
-      else
-        chan0_wr <= 0;
-    end
-    else
-      chan0_wr <= 0;
   end
 
   always @ ( posedge rx_clk ) 

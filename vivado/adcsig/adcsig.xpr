@@ -39,13 +39,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="473"/>
-    <Option Name="WTModelSimExportSim" Val="471"/>
-    <Option Name="WTQuestaExportSim" Val="471"/>
-    <Option Name="WTIesExportSim" Val="470"/>
-    <Option Name="WTVcsExportSim" Val="470"/>
-    <Option Name="WTRivieraExportSim" Val="469"/>
-    <Option Name="WTActivehdlExportSim" Val="469"/>
+    <Option Name="WTXSimExportSim" Val="475"/>
+    <Option Name="WTModelSimExportSim" Val="473"/>
+    <Option Name="WTQuestaExportSim" Val="473"/>
+    <Option Name="WTIesExportSim" Val="472"/>
+    <Option Name="WTVcsExportSim" Val="472"/>
+    <Option Name="WTRivieraExportSim" Val="471"/>
+    <Option Name="WTActivehdlExportSim" Val="471"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -61,7 +61,7 @@
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PSRCDIR/sources_1/ip/square_1.xcix">
+      <File Path="$PSRCDIR/sources_1/ip/square.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -213,7 +213,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/ip/square.xcix">
+      <File Path="$PSRCDIR/sources_1/ip/square_1.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
