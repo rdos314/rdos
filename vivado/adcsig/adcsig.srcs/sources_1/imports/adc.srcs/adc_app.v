@@ -454,7 +454,12 @@ ila_2 ila_2_inst (
   .probe4(chan0_A0),             // input wire [13:0]
   .probe5(chan0_A1),             // input wire [13:0]
   .probe6(chan0_A2),             // input wire [13:0]
-  .probe7(chan0_A3)              // input wire [13:0]
+  .probe7(chan0_A3),             // input wire [13:0]
+  .probe8(chan_report[0]),       // input wire [0:0]
+  .probe9(chan0_power_A),        // input wire [15:0]
+  .probe10(chan0_power_B),       // input wire [15:0]
+  .probe11(chan0_phase_A),       // input wire [15:0]
+  .probe12(chan0_phase_B)        // input wire [15:0]
 );
 
 generate

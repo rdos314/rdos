@@ -48,14 +48,29 @@ module adc_ana (
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
 
-  output wire             report,
-  output wire [15:0]      power_A,
-  output wire [15:0]      power_B,
-  output wire [15:0]      phase_A,
-  output wire [15:0]      phase_B
+  output reg              report,
+  output reg [15:0]       power_A,
+  output reg [15:0]       power_B,
+  output reg [15:0]       phase_A,
+  output reg [15:0]       phase_B
 );
 
+  wire                    b_report;
+  wire [15:0]             b_power_A;
+  wire [15:0]             b_power_B;
+  wire [15:0]             b_phase_A;
+  wire [15:0]             b_phase_B;
+
+  wire                    d_report;
+  wire [15:0]             d_power_A;
+  wire [15:0]             d_power_B;
+  wire [15:0]             d_phase_A;
+  wire [15:0]             d_phase_B;
+
   reg                     base_run;
+  reg  [9:0]              delay_count;
+  reg  [9:0]              curr_count;
+  reg                     delay_run;
 
 ana_freq base (
   .clk(clk),              // input wire clk
@@ -75,15 +90,124 @@ ana_freq base (
   .in_B1(in_B1),          // input wire [13:0] in_B1
   .in_B2(in_B2),          // input wire [13:0] in_B2
   .in_B3(in_B3),          // input wire [13:0] in_B3
-  .report(report),        // output wire report
-  .power_A(power_A),      // output wire [15:0] power_A
-  .power_B(power_B),      // output wire [15:0] power_B
-  .phase_A(phase_A),      // output wire [15:0] phase_A
-  .phase_B(phase_B)       // output wire [15:0] phase_B
+  .report(b_report),      // output wire report
+  .power_A(b_power_A),    // output wire [15:0] power_A
+  .power_B(b_power_B),    // output wire [15:0] power_B
+  .phase_A(b_phase_A),    // output wire [15:0] phase_A
+  .phase_B(b_phase_B)     // output wire [15:0] phase_B
+);
+
+ana_freq delayed (
+  .clk(clk),              // input wire clk
+  .reset(reset),          // input wire clk
+  .init(init),            // input wire init
+  .count(count),          // input wire [12:0] count
+  .run(delay_run),        // input wire run
+  .wr(wr),                // input wire wr
+  .wr_adr(wr_adr),        // input wire [12:0] wr_adr
+  .wr_sin(wr_sin),        // input wire [63:0] wr_sin
+  .wr_cos(wr_cos),        // input wire [63:0] wr_cos
+  .in_A0(in_A0),          // input wire [13:0] in_A0
+  .in_A1(in_A1),          // input wire [13:0] in_A1
+  .in_A2(in_A2),          // input wire [13:0] in_A2
+  .in_A3(in_A3),          // input wire [13:0] in_A3
+  .in_B0(in_B0),          // input wire [13:0] in_B0
+  .in_B1(in_B1),          // input wire [13:0] in_B1
+  .in_B2(in_B2),          // input wire [13:0] in_B2
+  .in_B3(in_B3),          // input wire [13:0] in_B3
+  .report(d_report),      // output wire report
+  .power_A(d_power_A),    // output wire [15:0] power_A
+  .power_B(d_power_B),    // output wire [15:0] power_B
+  .phase_A(d_phase_A),    // output wire [15:0] phase_A
+  .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
 
 generate
 begin : adc_bar_gen
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+    begin
+      power_A <= 0;
+      power_B <= 0;
+      phase_A <= 0;
+      phase_B <= 0;
+      report <= 0;
+    end
+    else
+    begin
+      if (b_report)
+      begin
+        report <= 1;
+        power_A <= b_power_A;
+        power_B <= b_power_B;
+        phase_A <= b_phase_A;
+        phase_B <= b_phase_B;
+      end
+      else
+      begin
+        if (d_report)
+        begin
+          report <= 1;
+          power_A <= d_power_A;
+          power_B <= d_power_B;
+          phase_A <= d_phase_A;
+          phase_B <= d_phase_B;
+        end
+        else
+          report <= 0;
+      end
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+    begin
+      delay_count <= 0;
+      delay_run <= 0;
+      curr_count <= 0;
+    end
+    else
+    begin
+      if (init)
+      begin
+        delay_run <= 0;
+        curr_count <= 0;
+        if (count[2])
+          delay_count <= count[12:3] + 1;
+        else
+          delay_count <= count[12:3];          
+      end
+      else
+      begin
+        if (start)
+        begin
+          curr_count <= delay_count;
+          delay_run <= 0;
+        end
+        else
+        begin
+          if (stop)
+          begin
+            curr_count <= 0;
+            delay_run <= 0;
+          end
+          else
+          begin
+            if (curr_count)
+            begin
+              if (curr_count == 1)
+                delay_run <= 1;
+              else
+                curr_count <= curr_count - 1;
+            end
+          end
+        end
+      end
+    end
+  end
 
   always @ ( posedge clk ) 
   begin
