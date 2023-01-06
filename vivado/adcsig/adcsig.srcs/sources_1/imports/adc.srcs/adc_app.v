@@ -150,10 +150,8 @@ module adc_app (
   reg                     config_init;
   reg                     config_start;
   reg                     config_stop;
-  reg                     config_running;
   reg                     config_raw_coeff;
   reg                     config_has_coeff;
-  reg                     config_coeff_wr;
   reg                     config_validate;
   reg                     config_done;
 
@@ -236,8 +234,8 @@ module adc_app (
 
 // test sequence
 
-  wire                    bram_en;
-  wire                    bram_wr;
+  reg                     bram_en;
+  reg                     bram_wr;
   reg  [11:0]             bram_adr;
 
   reg  [55:0]             bram_in;
@@ -251,19 +249,7 @@ module adc_app (
   assign bram_in_2 = bram_in[41:28];
   assign bram_in_3 = bram_in[55:42];
 
-  assign bram_en = config_running;
-  assign bram_wr = config_coeff_wr;
-
-  wire [55:0]             bram_out_data;
-  wire [13:0]             bram_out_0;
-  wire [13:0]             bram_out_1;
-  wire [13:0]             bram_out_2;
-  wire [13:0]             bram_out_3;
-
-  assign bram_out_0 = bram_out_data[13:0];
-  assign bram_out_1 = bram_out_data[27:14];
-  assign bram_out_2 = bram_out_data[41:28];
-  assign bram_out_3 = bram_out_data[55:42];
+  wire [55:0]             bram_out;
 
   wire [11:0]             coeff_adr;
   
@@ -301,7 +287,7 @@ module adc_app (
  
   wire                    is_chan_wr; 
   
-  assign is_chan_wr = config_adr < config_count;
+  assign is_chan_count = config_adr < config_count;
   
   wire                    chan_0;
 
@@ -311,7 +297,7 @@ module adc_app (
   
   assign stop[0] = config_stop & chan_0;
   
-  assign wr[0] = is_chan_wr & config_coeff_wr & chan_0;
+  assign wr[0] = is_chan_count & bram_wr & chan_0;
 
   reg                     chan0_config;
   reg                     chan0_init;
@@ -430,7 +416,7 @@ adc_ana adc_ana_0_inst (
     .stop(stop[0]),
 
     .wr(wr[0]),
-    .wr_adr(coeff_adr),
+    .wr_adr(bram_adr),
     .wr_sin(coeff_sin),
     .wr_cos(coeff_cos),
 
@@ -450,7 +436,6 @@ adc_ana adc_ana_0_inst (
     .phase_B(chan0_phase_B) 
 );
 
-  
 ila_2 ila_2_inst (
   .clk(rx_clk),                 // input wire clk
   .probe0(config_rd),           // input wire [0:0]
@@ -464,10 +449,10 @@ ila_2 ila_2_inst (
   .probe8(bram_in_1),           // input wire [13:0]
   .probe9(bram_in_2),           // input wire [13:0]
   .probe10(bram_in_3),           // input wire [13:0]
-  .probe11(bram_out_0),          // input wire [13:0]
-  .probe12(bram_out_1),          // input wire [13:0]
-  .probe13(bram_out_2),          // input wire [13:0]
-  .probe14(bram_out_3),          // input wire [13:0]
+  .probe11(bram_out[13:0]),          // input wire [13:0]
+  .probe12(bram_out[27:14]),          // input wire [13:0]
+  .probe13(bram_out[41:28]),          // input wire [13:0]
+  .probe14(bram_out[55:42]),          // input wire [13:0]
   .probe15(wr[0]),               // input wire [0:0]
   .probe16(coeff_sin_0),            // input wire [15:0]
   .probe17(coeff_sin_1),            // input wire [15:0]
@@ -852,7 +837,7 @@ begin : adc_app
       config_rd <= 0;
     else
     begin
-      if (config_empty || config_running)
+      if (config_empty || bram_en)
         config_rd <= 0;
       else
         config_rd <= 1;
@@ -864,7 +849,7 @@ begin : adc_app
     if (rx_reset)
     begin
       config_init <= 0;
-      config_running <= 0;
+      bram_en <= 0;
     end
     else
     begin
@@ -875,12 +860,12 @@ begin : adc_app
         config_incr[2:0] <= 0;
         config_count <= config_out[47:32];
         config_init <= 1;
-        config_running <= 1;
+        bram_en <= 1;
       end
       else
       begin
         if (config_done)
-          config_running <= 0;
+          bram_en <= 0;
         config_init <= 0;
       end
     end
@@ -899,7 +884,7 @@ begin : adc_app
       end
       else
       begin
-        if (config_running)
+        if (bram_en)
         begin
           if (synt_prev != synt_done)
           begin
@@ -953,7 +938,8 @@ begin : adc_app
       config_validate <= 0;
       config_done <= 0;
       config_adr <= 0;
-      config_coeff_wr <= 0;
+      bram_adr <= 0;
+      bram_wr <= 0;
     end
     else
     begin
@@ -963,7 +949,9 @@ begin : adc_app
         config_start <= 0;
         config_done <= 0;
         config_validate <= 0;
-        config_coeff_wr <= 0;
+        bram_wr <= 0;
+        config_adr <= 0;
+        bram_adr <= 0;
       end
       else
       begin
@@ -972,7 +960,7 @@ begin : adc_app
           synt_start <= 0;
           config_start <= 0;
           config_done <= 0;
-          config_coeff_wr <= 0;
+          bram_wr <= 0;
           bram_adr <= 0;
         end
         else
@@ -980,7 +968,7 @@ begin : adc_app
           if (config_validate)
           begin
             config_start <= 0;
-            config_coeff_wr <= 0;
+            bram_wr <= 0;
             synt_start <= 0;
 
             if (bram_adr == 12'hFFF)
@@ -1004,28 +992,28 @@ begin : adc_app
                     bram_in[13:0] <= config_sin[15:2];
                     coeff_sin[15:0] <= config_sin;
                     coeff_cos[15:0] <= config_cos;
-                    config_coeff_wr <= 0;
+                    bram_wr <= 0;
                   end
                 2'b01 : 
                   begin
                     bram_in[27:14] <= config_sin[15:2];
                     coeff_sin[31:16] <= config_sin;
                     coeff_cos[31:16] <= config_cos;
-                    config_coeff_wr <= 0;
+                    bram_wr <= 0;
                   end
                 2'b10 : 
                   begin
                     bram_in[41:28] <= config_sin[15:2];
                     coeff_sin[47:32] <= config_sin;
                     coeff_cos[47:32] <= config_cos;
-                    config_coeff_wr <= 0;
+                    bram_wr <= 0;
                   end
                 2'b11 :
                   begin
                     bram_in[55:42] <= config_sin[15:2];
                     coeff_sin[63:48] <= config_sin;
                     coeff_cos[63:48] <= config_cos;
-                    config_coeff_wr <= 1;
+                    bram_wr <= 1;
                   end
               endcase
               
@@ -1048,13 +1036,13 @@ begin : adc_app
             end
             else
             begin
-              if (config_coeff_wr)
-                bram_adr <= bram_adr + 1;
+              if (bram_wr)
+                bram_adr <= config_adr[13:2];
                
               config_done <= 0;
               config_start <= 0;
               synt_start <= 0;
-              config_coeff_wr <= 0;
+              bram_wr <= 0;
             end
           end
         end
@@ -1091,14 +1079,14 @@ begin : adc_app
   begin
     if (chan0_config)
     begin
-      chan0_A0 <= bram_out_0;      
-      chan0_A1 <= bram_out_1;      
-      chan0_A2 <= bram_out_2;      
-      chan0_A3 <= bram_out_3;      
-      chan0_B0 <= -bram_out_0;      
-      chan0_B1 <= -bram_out_1;      
-      chan0_B2 <= -bram_out_2;      
-      chan0_B3 <= -bram_out_3;      
+      chan0_A0 <= bram_out[13:0];      
+      chan0_A1 <= bram_out[27:14];      
+      chan0_A2 <= bram_out[41:28];      
+      chan0_A3 <= bram_out[55:42];      
+      chan0_B0 <= -bram_out[13:0];      
+      chan0_B1 <= -bram_out[27:14];      
+      chan0_B2 <= -bram_out[41:28];      
+      chan0_B3 <= -bram_out[55:42];      
     end
     else
     begin
