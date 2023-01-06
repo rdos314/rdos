@@ -72,6 +72,19 @@ module adc_ana (
   reg  [9:0]              curr_count;
   reg                     delay_run;
 
+  reg  [15:0]             phase_incr;
+
+  reg                     base_wait;
+  reg                     base_sync;
+  reg                     base_update;
+  reg  [15:0]             base_curr_phase_A;
+  reg  [15:0]             base_curr_phase_B;
+
+  reg                     delay_sync;
+  reg                     delay_update;
+  reg  [15:0]             delay_curr_phase_A;
+  reg  [15:0]             delay_curr_phase_B;
+
 ana_freq base (
   .clk(clk),              // input wire clk
   .reset(reset),          // input wire clk
@@ -134,29 +147,105 @@ begin : adc_bar_gen
       phase_A <= 0;
       phase_B <= 0;
       report <= 0;
+      phase_incr <= 0;
+      base_wait <= 0;
+      base_sync <= 0;
+      delay_sync <= 0;
+      base_update <= 0;
+      delay_update <= 0;
+      base_curr_phase_A <= 0;
+      base_curr_phase_B <= 0;
+      delay_curr_phase_A <= 0;      
+      delay_curr_phase_B <= 0;      
     end
     else
     begin
-      if (b_report)
+      if (start)
       begin
-        report <= 1;
-        power_A <= b_power_A;
-        power_B <= b_power_B;
-        phase_A <= b_phase_A;
-        phase_B <= b_phase_B;
+        base_wait <= 1;
+        base_sync <= 0;
+        delay_sync <= 1;
+        base_update <= 0;
+        delay_update <= 0;
       end
       else
       begin
-        if (d_report)
+        if (b_report)
         begin
           report <= 1;
-          power_A <= d_power_A;
-          power_B <= d_power_B;
-          phase_A <= d_phase_A;
-          phase_B <= d_phase_B;
+          power_A <= b_power_A;
+          power_B <= b_power_B;
+
+          if (base_wait)
+          begin
+            base_curr_phase_A <= b_phase_A;
+            base_curr_phase_B <= b_phase_B;
+            base_wait <= 0;
+            base_sync <= 1;
+            phase_A <= 0;
+            phase_B <= 0;
+          end
+          else
+          begin
+            base_update <= 1;
+            base_wait <= 0;
+            base_sync <= 0;
+
+            if (base_sync)
+            begin
+              phase_incr <= b_phase_A - base_curr_phase_A;
+              base_curr_phase_A <= b_phase_A;
+              base_curr_phase_B <= b_phase_B;
+              phase_A <= b_phase_A - base_curr_phase_A;
+              phase_B <= b_phase_B - base_curr_phase_B;
+            end 
+            else
+            begin         
+              base_update <= 1;
+              phase_A <= b_phase_A - base_curr_phase_A;
+              phase_B <= b_phase_B - base_curr_phase_B;
+            end
+          end
         end
         else
-          report <= 0;
+        begin
+          if (d_report)
+          begin
+            report <= 1;
+            power_A <= d_power_A;
+            power_B <= d_power_B;
+
+            if (delay_sync)
+            begin
+              delay_sync <= 0;
+              delay_curr_phase_A <= d_phase_A;
+              delay_curr_phase_B <= d_phase_B;
+              phase_A <= 0;
+              phase_B <= 0;
+            end 
+            else
+            begin         
+              delay_update <= 1;
+              phase_A <= d_phase_A - delay_curr_phase_A;
+              phase_B <= d_phase_B - delay_curr_phase_B;
+            end
+          end
+          else
+          begin
+            if (base_update)
+            begin
+              base_update <= 0;
+              base_curr_phase_A <= base_curr_phase_A + phase_incr;
+              base_curr_phase_B <= base_curr_phase_B + phase_incr;
+            end
+            if (delay_update)
+            begin
+              delay_update <= 0;
+              delay_curr_phase_A <= delay_curr_phase_A + phase_incr;
+              delay_curr_phase_B <= delay_curr_phase_B + phase_incr;
+            end
+          end 
+        end
       end
     end
   end

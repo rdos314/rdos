@@ -1,10 +1,10 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Sat Mar  7 16:34:06 2020
+// Date        : Fri Jan  6 20:41:26 2023
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim -rename_top spi_fifo_rp -prefix
-//               spi_fifo_rp_ spi_fifo_rp_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim
+//               C:/rdos/vivado/adcsig/adcsig.runs/spi_fifo_rp_synth_1/spi_fifo_rp_sim_netlist.v
 // Design      : spi_fifo_rp
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -603,6 +603,7 @@ module spi_fifo_rp
         .wr_rst_busy(NLW_U0_wr_rst_busy_UNCONNECTED));
 endmodule
 
+(* ORIG_REF_NAME = "builtin_extdepth_v6" *) 
 module spi_fifo_rp_builtin_extdepth_v6
    (empty,
     full,
@@ -669,6 +670,7 @@ module spi_fifo_rp_builtin_extdepth_v6
         .wr_en(wr_en));
 endmodule
 
+(* ORIG_REF_NAME = "builtin_prim_v6" *) 
 module spi_fifo_rp_builtin_prim_v6
    (empty,
     full,
@@ -783,6 +785,7 @@ module spi_fifo_rp_builtin_prim_v6
         .WRERR(overflow_i));
 endmodule
 
+(* ORIG_REF_NAME = "builtin_top_v6" *) 
 module spi_fifo_rp_builtin_top_v6
    (empty,
     full,
@@ -825,6 +828,7 @@ module spi_fifo_rp_builtin_top_v6
         .wr_en(wr_en));
 endmodule
 
+(* ORIG_REF_NAME = "fifo_generator_top" *) 
 module spi_fifo_rp_fifo_generator_top
    (empty,
     full,
@@ -934,7 +938,7 @@ endmodule
 (* C_WR_DEPTH_WRCH = "16" *) (* C_WR_FREQ = "100" *) (* C_WR_PNTR_WIDTH = "10" *) 
 (* C_WR_PNTR_WIDTH_AXIS = "10" *) (* C_WR_PNTR_WIDTH_RACH = "4" *) (* C_WR_PNTR_WIDTH_RDCH = "10" *) 
 (* C_WR_PNTR_WIDTH_WACH = "4" *) (* C_WR_PNTR_WIDTH_WDCH = "10" *) (* C_WR_PNTR_WIDTH_WRCH = "4" *) 
-(* C_WR_RESPONSE_LATENCY = "1" *) 
+(* C_WR_RESPONSE_LATENCY = "1" *) (* ORIG_REF_NAME = "fifo_generator_v13_2_5" *) 
 module spi_fifo_rp_fifo_generator_v13_2_5
    (backup,
     backup_marker,
@@ -1952,6 +1956,7 @@ module spi_fifo_rp_fifo_generator_v13_2_5
         .wr_en(wr_en));
 endmodule
 
+(* ORIG_REF_NAME = "fifo_generator_v13_2_5_builtin" *) 
 module spi_fifo_rp_fifo_generator_v13_2_5_builtin
    (empty,
     full,
@@ -2000,6 +2005,7 @@ module spi_fifo_rp_fifo_generator_v13_2_5_builtin
         .wr_en(wr_en));
 endmodule
 
+(* ORIG_REF_NAME = "fifo_generator_v13_2_5_synth" *) 
 module spi_fifo_rp_fifo_generator_v13_2_5_synth
    (empty,
     full,
@@ -2042,6 +2048,7 @@ module spi_fifo_rp_fifo_generator_v13_2_5_synth
         .wr_en(wr_en));
 endmodule
 
+(* ORIG_REF_NAME = "reset_builtin" *) 
 module spi_fifo_rp_reset_builtin
    (RST,
     wr_clk,

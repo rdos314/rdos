@@ -119,19 +119,23 @@ multiply m_3 (
 );
 
 /*
-ila_2 ila_2_inst (
+ila_1 ila_1_inst (
   .clk(clk),            // input wire clk
-  .probe0(start),       // input wire [0:0]  probe0
-  .probe1(running),     // input wire [0:0]  probe1
-  .probe2(sum),        // input wire [42:0]  probe7
-  .probe3(sign),       // input wire [0:0]  probe2
-  .probe4(divend),     // input wire [29:0]  probe3
-  .probe5(curr),       // input wire [29:0]  probe4
-  .probe6(mask),       // input wire [17:0]  probe5
-  .probe7(quot),       // input wire [17:0]  probe6
-  .probe8(res)         // input wire [15:0]  probe6
+  .probe0(p_start),     // input wire [0:0]  probe0
+  .probe1(p_running),   // input wire [0:0]  probe1
+  .probe2(in_0),        // input wire [13:0]  probe7
+  .probe3(in_1),        // input wire [13:0]  probe2
+  .probe4(in_2),        // input wire [13:0]  probe3
+  .probe5(in_3),        // input wire [13:0]  probe4
+  .probe6(coeff_0),     // input wire [15:0]  probe5
+  .probe7(coeff_1),     // input wire [15:0]  probe6
+  .probe8(coeff_2),     // input wire [15:0]  probe6
+  .probe9(coeff_3),     // input wire [15:0]  probe6
+  .probe10(p_0),        // input wire [29:0]  probe6
+  .probe11(p_1),        // input wire [29:0]  probe6
+  .probe12(p_2),        // input wire [29:0]  probe6
+  .probe13(p_3)         // input wire [29:0]  probe6
 );
-
 */
 
   assign p_0[30] = p_0[29];

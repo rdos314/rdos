@@ -1,10 +1,10 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sat Mar  7 16:31:08 2020
+-- Date        : Fri Jan  6 20:41:25 2023
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode funcsim -rename_top spi_fifo_rq -prefix
---               spi_fifo_rq_ spi_fifo_rq_sim_netlist.vhdl
+-- Command     : write_vhdl -force -mode funcsim
+--               C:/rdos/vivado/adcsig/adcsig.runs/spi_fifo_rq_synth_1/spi_fifo_rq_sim_netlist.vhdl
 -- Design      : spi_fifo_rq
 -- Purpose     : This VHDL netlist is a functional simulation representation of the design and should not be modified or
 --               synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -26,6 +26,8 @@ entity spi_fifo_rq_builtin_prim_v6 is
     wr_en : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 31 downto 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of spi_fifo_rq_builtin_prim_v6 : entity is "builtin_prim_v6";
 end spi_fifo_rq_builtin_prim_v6;
 
 architecture STRUCTURE of spi_fifo_rq_builtin_prim_v6 is
@@ -152,6 +154,8 @@ entity spi_fifo_rq_reset_builtin is
     wr_clk : in STD_LOGIC;
     \^rst\ : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of spi_fifo_rq_reset_builtin : entity is "reset_builtin";
 end spi_fifo_rq_reset_builtin;
 
 architecture STRUCTURE of spi_fifo_rq_reset_builtin is
@@ -481,6 +485,8 @@ entity spi_fifo_rq_builtin_extdepth_v6 is
     wr_en : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 31 downto 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of spi_fifo_rq_builtin_extdepth_v6 : entity is "builtin_extdepth_v6";
 end spi_fifo_rq_builtin_extdepth_v6;
 
 architecture STRUCTURE of spi_fifo_rq_builtin_extdepth_v6 is
@@ -560,6 +566,8 @@ entity spi_fifo_rq_builtin_top_v6 is
     wr_en : in STD_LOGIC;
     din : in STD_LOGIC_VECTOR ( 31 downto 0 )
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of spi_fifo_rq_builtin_top_v6 : entity is "builtin_top_v6";
 end spi_fifo_rq_builtin_top_v6;
 
 architecture STRUCTURE of spi_fifo_rq_builtin_top_v6 is
@@ -593,6 +601,8 @@ entity spi_fifo_rq_fifo_generator_v13_2_5_builtin is
     din : in STD_LOGIC_VECTOR ( 31 downto 0 );
     rst : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of spi_fifo_rq_fifo_generator_v13_2_5_builtin : entity is "fifo_generator_v13_2_5_builtin";
 end spi_fifo_rq_fifo_generator_v13_2_5_builtin;
 
 architecture STRUCTURE of spi_fifo_rq_fifo_generator_v13_2_5_builtin is
@@ -634,6 +644,8 @@ entity spi_fifo_rq_fifo_generator_top is
     din : in STD_LOGIC_VECTOR ( 31 downto 0 );
     rst : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of spi_fifo_rq_fifo_generator_top : entity is "fifo_generator_top";
 end spi_fifo_rq_fifo_generator_top;
 
 architecture STRUCTURE of spi_fifo_rq_fifo_generator_top is
@@ -667,6 +679,8 @@ entity spi_fifo_rq_fifo_generator_v13_2_5_synth is
     din : in STD_LOGIC_VECTOR ( 31 downto 0 );
     rst : in STD_LOGIC
   );
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of spi_fifo_rq_fifo_generator_v13_2_5_synth : entity is "fifo_generator_v13_2_5_synth";
 end spi_fifo_rq_fifo_generator_v13_2_5_synth;
 
 architecture STRUCTURE of spi_fifo_rq_fifo_generator_v13_2_5_synth is
@@ -1326,6 +1340,8 @@ entity spi_fifo_rq_fifo_generator_v13_2_5 is
   attribute C_WR_PNTR_WIDTH_WRCH of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 4;
   attribute C_WR_RESPONSE_LATENCY : integer;
   attribute C_WR_RESPONSE_LATENCY of spi_fifo_rq_fifo_generator_v13_2_5 : entity is 1;
+  attribute ORIG_REF_NAME : string;
+  attribute ORIG_REF_NAME of spi_fifo_rq_fifo_generator_v13_2_5 : entity is "fifo_generator_v13_2_5";
 end spi_fifo_rq_fifo_generator_v13_2_5;
 
 architecture STRUCTURE of spi_fifo_rq_fifo_generator_v13_2_5 is
