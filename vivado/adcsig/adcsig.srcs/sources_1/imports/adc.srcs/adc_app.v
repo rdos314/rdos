@@ -250,6 +250,15 @@ module adc_app (
   assign bram_in_3 = bram_in[55:42];
 
   wire [55:0]             bram_out;
+  wire [13:0]             bram_out_0;
+  wire [13:0]             bram_out_1;
+  wire [13:0]             bram_out_2;
+  wire [13:0]             bram_out_3;
+
+  assign bram_out_0 = bram_out[13:0];
+  assign bram_out_1 = bram_out[27:14];
+  assign bram_out_2 = bram_out[41:28];
+  assign bram_out_3 = bram_out[55:42];
 
   wire [11:0]             coeff_adr;
   
@@ -449,10 +458,10 @@ ila_2 ila_2_inst (
   .probe8(bram_in_1),           // input wire [13:0]
   .probe9(bram_in_2),           // input wire [13:0]
   .probe10(bram_in_3),           // input wire [13:0]
-  .probe11(bram_out[13:0]),          // input wire [13:0]
-  .probe12(bram_out[27:14]),          // input wire [13:0]
-  .probe13(bram_out[41:28]),          // input wire [13:0]
-  .probe14(bram_out[55:42]),          // input wire [13:0]
+  .probe11(bram_out_0),          // input wire [13:0]
+  .probe12(bram_out_1),          // input wire [13:0]
+  .probe13(bram_out_2),          // input wire [13:0]
+  .probe14(bram_out_3),          // input wire [13:0]
   .probe15(wr[0]),               // input wire [0:0]
   .probe16(coeff_sin_0),            // input wire [15:0]
   .probe17(coeff_sin_1),            // input wire [15:0]
@@ -1079,14 +1088,14 @@ begin : adc_app
   begin
     if (chan0_config)
     begin
-      chan0_A0 <= bram_out[13:0];      
-      chan0_A1 <= bram_out[27:14];      
-      chan0_A2 <= bram_out[41:28];      
-      chan0_A3 <= bram_out[55:42];      
-      chan0_B0 <= -bram_out[13:0];      
-      chan0_B1 <= -bram_out[27:14];      
-      chan0_B2 <= -bram_out[41:28];      
-      chan0_B3 <= -bram_out[55:42];      
+      chan0_A0 <= bram_out_0;      
+      chan0_A1 <= bram_out_1;      
+      chan0_A2 <= bram_out_2;      
+      chan0_A3 <= bram_out_3;      
+      chan0_B0 <= -bram_out_0;      
+      chan0_B1 <= -bram_out_1;      
+      chan0_B2 <= -bram_out_2;      
+      chan0_B3 <= -bram_out_3;      
     end
     else
     begin
