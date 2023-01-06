@@ -446,32 +446,15 @@ adc_ana adc_ana_0_inst (
 );
 
 ila_2 ila_2_inst (
-  .clk(rx_clk),                 // input wire clk
-  .probe0(config_rd),           // input wire [0:0]
-  .probe1(config_empty),        // input wire [0:0]
-  .probe2(bram_en),             // input wire [0:0]
-  .probe3(bram_wr),             // input wire [0:0]
-  .probe4(bram_adr),            // input wire [13:0]
-  .probe5(config_incr),         // input wire [29:0]
-  .probe6(config_count),        // input wire [13:0]
-  .probe7(bram_in_0),           // input wire [13:0]
-  .probe8(bram_in_1),           // input wire [13:0]
-  .probe9(bram_in_2),           // input wire [13:0]
-  .probe10(bram_in_3),           // input wire [13:0]
-  .probe11(bram_out_0),          // input wire [13:0]
-  .probe12(bram_out_1),          // input wire [13:0]
-  .probe13(bram_out_2),          // input wire [13:0]
-  .probe14(bram_out_3),          // input wire [13:0]
-  .probe15(wr[0]),               // input wire [0:0]
-  .probe16(coeff_sin_0),            // input wire [15:0]
-  .probe17(coeff_sin_1),            // input wire [15:0]
-  .probe18(coeff_sin_2),            // input wire [15:0]
-  .probe19(coeff_sin_3),            // input wire [15:0]
-  .probe20(coeff_cos_0),            // input wire [15:0]
-  .probe21(coeff_cos_1),            // input wire [15:0]
-  .probe22(coeff_cos_2),            // input wire [15:0]
-  .probe23(coeff_cos_3),            // input wire [15:0]
-  .probe24(config_validate)      // input wire [0:0]
+  .clk(rx_clk),                  // input wire clk
+  .probe0(config_rd),            // input wire [0:0]
+  .probe1(config_empty),         // input wire [0:0]
+  .probe2(config_validate),      // input wire [0:0]
+  .probe3(start[0]),             // input wire [0:0]
+  .probe4(chan0_A0),             // input wire [13:0]
+  .probe5(chan0_A1),             // input wire [13:0]
+  .probe6(chan0_A2),             // input wire [13:0]
+  .probe7(chan0_A3)              // input wire [13:0]
 );
 
 generate

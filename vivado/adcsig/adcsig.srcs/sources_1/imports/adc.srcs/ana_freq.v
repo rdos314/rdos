@@ -67,6 +67,27 @@ module ana_freq (
   wire [63:0]            sin_coeff_out;
   wire [63:0]            cos_coeff_out;
 
+  wire [15:0]            sin_coeff_0;
+  wire [15:0]            sin_coeff_1;
+  wire [15:0]            sin_coeff_2;
+  wire [15:0]            sin_coeff_3;
+
+  assign sin_coeff_0 = sin_coeff_out[15:0];
+  assign sin_coeff_1 = sin_coeff_out[31:16];
+  assign sin_coeff_2 = sin_coeff_out[47:32];
+  assign sin_coeff_3 = sin_coeff_out[63:48];
+
+  wire [15:0]            cos_coeff_0;
+  wire [15:0]            cos_coeff_1;
+  wire [15:0]            cos_coeff_2;
+  wire [15:0]            cos_coeff_3;
+
+  assign cos_coeff_0 = cos_coeff_out[15:0];
+  assign cos_coeff_1 = cos_coeff_out[31:16];
+  assign cos_coeff_2 = cos_coeff_out[47:32];
+  assign cos_coeff_3 = cos_coeff_out[63:48];
+
+
   wire [15:0]            pow_sin_A;
   wire [15:0]            pow_cos_A;
   wire [15:0]            pow_sin_B;
@@ -300,30 +321,19 @@ ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(init),          // input wire [0:0]  probe0
   .probe1(run),           // input wire [0:0]  probe1
-  .probe2(count),         // input wire [12:0]  probe2
-  .probe3(wr),            // input wire [0:0]  probe3
-  .probe4(pow_sin_A),     // input wire [15:0]  probe3
-  .probe5(pow_cos_A),    // input wire [15:0]  probe3
-  .probe6(pow_sin_B),    // input wire [15:0]  probe3
-  .probe7(pow_cos_B),    // input wire [15:0]  probe3
-  .probe8(sum_sin_A),     // input wire [22:0]  probe3
-  .probe9(sum_cos_A),    // input wire [22:0]  probe3
-  .probe10(sum_sin_B),    // input wire [22:0]  probe3
-  .probe11(sum_cos_B),    // input wire [22:0]  probe3
-  .probe12(pd_start),     // input wire [0:0]  probe3
-  .probe13(pd_running),   // input wire [0:0]  probe3
-  .probe14(pd_post),      // input wire [0:0]  probe3
-  .probe15(conv_start),   // input wire [0:0]  probe3
-  .probe16(power_done_A), // input wire [0:0]  probe3
-  .probe17(power_done_B), // input wire [0:0]  probe3
-  .probe18(phase_done_A), // input wire [0:0]  probe3
-  .probe19(phase_done_B), // input wire [0:0]  probe3
-  .probe20(cordic_phase_A),// input wire [23:0]  probe3
-  .probe21(cordic_phase_B),// input wire [23:0]  probe3
-  .probe22(power_A),      // input wire [15:0]  probe3
-  .probe23(power_B),      // input wire [15:0]  probe3
-  .probe24(phase_A),      // input wire [15:0]  probe3
-  .probe25(phase_B)       // input wire [15:0]  probe3
+  .probe2(in_A0),         // input wire [13:0]  probe2
+  .probe3(in_A1),         // input wire [13:0]  probe3
+  .probe4(in_A2),         // input wire [13:0]  probe3
+  .probe5(in_A3),         // input wire [13:0]  probe3
+  .probe6(sin_coeff_0),   // input wire [15:0]  probe3
+  .probe7(sin_coeff_1),   // input wire [15:0]  probe3
+  .probe8(sin_coeff_2),   // input wire [15:0]  probe3
+  .probe9(sin_coeff_3),   // input wire [15:0]  probe3
+  .probe10(report),       // input wire [0:0]  probe3
+  .probe11(power_A),      // input wire [15:0]  probe3
+  .probe12(power_B),      // input wire [15:0]  probe3
+  .probe13(phase_A),      // input wire [15:0]  probe3
+  .probe14(phase_B)       // input wire [15:0]  probe3
 );
 
 generate
