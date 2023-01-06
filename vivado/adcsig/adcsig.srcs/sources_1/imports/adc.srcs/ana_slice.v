@@ -118,7 +118,7 @@ multiply m_3 (
   .P(p_3[29:0])         // output wire [29 : 0] P
 );
 
-/*
+
 ila_1 ila_1_inst (
   .clk(clk),            // input wire clk
   .probe0(p_start),     // input wire [0:0]  probe0
@@ -134,9 +134,12 @@ ila_1 ila_1_inst (
   .probe10(p_0),        // input wire [29:0]  probe6
   .probe11(p_1),        // input wire [29:0]  probe6
   .probe12(p_2),        // input wire [29:0]  probe6
-  .probe13(p_3)         // input wire [29:0]  probe6
+  .probe13(p_3),        // input wire [29:0]  probe6
+  .probe14(sum_0),      // input wire [42:0]  probe6
+  .probe15(sum_1),      // input wire [42:0]  probe6
+  .probe16(sum_2),      // input wire [42:0]  probe6
+  .probe17(sum_3)      // input wire [42:0]  probe6
 );
-*/
 
   assign p_0[30] = p_0[29];
   assign p_0[31] = p_0[29];
