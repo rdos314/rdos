@@ -27,24 +27,31 @@
 
 module adc_slice (
   input wire              clk,
+  input wire              reset,
 
-  input wire              p7,
-  input wire              p8,
-  input wire [12:0]       count,
+  input wire              start,
+  input wire              stop,
+  input wire              next,
 
   input wire [63:0]       coeff,
   input wire [55:0]       in,
 
-  input wire              p_start,
-  input wire              p_running,
-  input wire              p_post,
-  
-  output wire             req_shift,
-  input wire              do_shift,         
-
-  output reg [22:0]       phase,
-  output reg [15:0]       power
+  output reg              report,
+  output reg [42:0]       sum
 );
+
+  reg                    p1;
+  reg                    p2;
+  reg                    p3;
+  reg                    p4;
+
+  reg                    s1;
+  reg                    s2;
+  reg                    s3;
+  reg                    s4;
+  reg                    s5;
+  
+  reg                    run;
 
   reg  [42:0]            sum_0;
   reg  [42:0]            sum_1;
@@ -54,92 +61,10 @@ module adc_slice (
   reg  [42:0]            sum_01;
   reg  [42:0]            sum_23;
 
-  reg  [42:0]            phase_sum;
-
   wire [42:0]            p_0;  
   wire [42:0]            p_1;  
   wire [42:0]            p_2;  
   wire [42:0]            p_3;  
-
-  wire [15:0]            coeff_0;
-  wire [15:0]            coeff_1;
-  wire [15:0]            coeff_2;
-  wire [15:0]            coeff_3;
-
-  wire [13:0]            in_0;
-  wire [13:0]            in_1;
-  wire [13:0]            in_2;
-  wire [13:0]            in_3;
-
-  reg [17:0]             mask;
-  reg                    sign;
-  reg  [29:0]            divend;
-  reg  [29:0]            curr;
-  reg  [17:0]            quot;
-
-
-  assign coeff_0 = coeff[15:0];
-  assign coeff_1 = coeff[31:16];
-  assign coeff_2 = coeff[47:32];
-  assign coeff_3 = coeff[63:48];
-
-  assign in_0 = in[13:0];
-  assign in_1 = in[27:14];
-  assign in_2 = in[41:28];
-  assign in_3 = in[55:42];
-  
-  assign req_shift = phase_sum[42] == phase_sum[41];
-
-multiply m_0 (
-  .CLK(clk),            // input wire CLK
-  .A(in_0),             // input wire [13 : 0] A
-  .B(coeff_0),          // input wire [15 : 0] B
-  .P(p_0[29:0])         // output wire [29 : 0] P
-);
-
-multiply m_1 (
-  .CLK(clk),            // input wire CLK
-  .A(in_1),             // input wire [13 : 0] A
-  .B(coeff_1),          // input wire [15 : 0] B
-  .P(p_1[29:0])         // output wire [29 : 0] P
-);
-
-multiply m_2 (
-  .CLK(clk),            // input wire CLK
-  .A(in_2),             // input wire [13 : 0] A
-  .B(coeff_2),          // input wire [15 : 0] B
-  .P(p_2[29:0])         // output wire [29 : 0] P
-);
-
-multiply m_3 (
-  .CLK(clk),            // input wire CLK
-  .A(in_3),             // input wire [13 : 0] A
-  .B(coeff_3),          // input wire [15 : 0] B
-  .P(p_3[29:0])         // output wire [29 : 0] P
-);
-
-
-ila_1 ila_1_inst (
-  .clk(clk),            // input wire clk
-  .probe0(p_start),     // input wire [0:0]  probe0
-  .probe1(p_running),   // input wire [0:0]  probe1
-  .probe2(in_0),        // input wire [13:0]  probe7
-  .probe3(in_1),        // input wire [13:0]  probe2
-  .probe4(in_2),        // input wire [13:0]  probe3
-  .probe5(in_3),        // input wire [13:0]  probe4
-  .probe6(coeff_0),     // input wire [15:0]  probe5
-  .probe7(coeff_1),     // input wire [15:0]  probe6
-  .probe8(coeff_2),     // input wire [15:0]  probe6
-  .probe9(coeff_3),     // input wire [15:0]  probe6
-  .probe10(p_0),        // input wire [29:0]  probe6
-  .probe11(p_1),        // input wire [29:0]  probe6
-  .probe12(p_2),        // input wire [29:0]  probe6
-  .probe13(p_3),        // input wire [29:0]  probe6
-  .probe14(sum_0),      // input wire [42:0]  probe6
-  .probe15(sum_1),      // input wire [42:0]  probe6
-  .probe16(sum_2),      // input wire [42:0]  probe6
-  .probe17(sum_3)      // input wire [42:0]  probe6
-);
 
   assign p_0[30] = p_0[29];
   assign p_0[31] = p_0[29];
@@ -197,72 +122,192 @@ ila_1 ila_1_inst (
   assign p_3[41] = p_3[29];
   assign p_3[42] = p_3[29];
 
+  wire [15:0]            coeff_0;
+  wire [15:0]            coeff_1;
+  wire [15:0]            coeff_2;
+  wire [15:0]            coeff_3;
+
+  wire [13:0]            in_0;
+  wire [13:0]            in_1;
+  wire [13:0]            in_2;
+  wire [13:0]            in_3;
+
+  assign coeff_0 = coeff[15:0];
+  assign coeff_1 = coeff[31:16];
+  assign coeff_2 = coeff[47:32];
+  assign coeff_3 = coeff[63:48];
+
+  assign in_0 = in[13:0];
+  assign in_1 = in[27:14];
+  assign in_2 = in[41:28];
+  assign in_3 = in[55:42];
+
+multiply m_0 (
+  .CLK(clk),            // input wire CLK
+  .A(in_0),             // input wire [13 : 0] A
+  .B(coeff_0),          // input wire [15 : 0] B
+  .P(p_0[29:0])         // output wire [29 : 0] P
+);
+
+multiply m_1 (
+  .CLK(clk),            // input wire CLK
+  .A(in_1),             // input wire [13 : 0] A
+  .B(coeff_1),          // input wire [15 : 0] B
+  .P(p_1[29:0])         // output wire [29 : 0] P
+);
+
+multiply m_2 (
+  .CLK(clk),            // input wire CLK
+  .A(in_2),             // input wire [13 : 0] A
+  .B(coeff_2),          // input wire [15 : 0] B
+  .P(p_2[29:0])         // output wire [29 : 0] P
+);
+
+multiply m_3 (
+  .CLK(clk),            // input wire CLK
+  .A(in_3),             // input wire [13 : 0] A
+  .B(coeff_3),          // input wire [15 : 0] B
+  .P(p_3[29:0])         // output wire [29 : 0] P
+);
+
+ila_1 ila_1_inst (
+  .clk(clk),            // input wire clk
+  .probe0(start),       // input wire [0:0]  probe0
+  .probe1(stop),        // input wire [0:0]  probe0
+  .probe2(p1),          // input wire [0:0]  probe0
+  .probe3(p2),          // input wire [0:0]  probe0
+  .probe4(p3),          // input wire [0:0]  probe0
+  .probe5(p4),          // input wire [0:0]  probe0
+  .probe6(s1),          // input wire [0:0]  probe0
+  .probe7(s2),          // input wire [0:0]  probe0
+  .probe8(s3),          // input wire [0:0]  probe0
+  .probe9(s4),          // input wire [0:0]  probe0
+  .probe10(s5),          // input wire [0:0]  probe0
+  .probe11(next),        // input wire [0:0]  probe0
+  .probe12(in_0),        // input wire [13:0]  probe7
+  .probe13(in_1),       // input wire [13:0]  probe2
+  .probe14(in_2),       // input wire [13:0]  probe3
+  .probe15(in_3),       // input wire [13:0]  probe4
+  .probe16(coeff_0),    // input wire [15:0]  probe5
+  .probe17(coeff_1),    // input wire [15:0]  probe6
+  .probe18(coeff_2),    // input wire [15:0]  probe6
+  .probe19(coeff_3),    // input wire [15:0]  probe6
+  .probe20(p_0),        // input wire [29:0]  probe6
+  .probe21(p_1),        // input wire [29:0]  probe6
+  .probe22(p_2),        // input wire [29:0]  probe6
+  .probe23(p_3),        // input wire [29:0]  probe6
+  .probe24(sum_0),      // input wire [42:0]  probe6
+  .probe25(sum_1),      // input wire [42:0]  probe6
+  .probe26(sum_2),      // input wire [42:0]  probe6
+  .probe27(sum_3),      // input wire [42:0]  probe6
+  .probe28(sum_01),     // input wire [42:0]  probe6
+  .probe29(sum_23),     // input wire [42:0]  probe6
+  .probe30(report),     // input wire [0:0]   probe6
+  .probe31(sum)         // input wire [42:0]  probe6
+);
+
 generate
 begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
-    if (p_start)
-    begin
-      mask[17] <= 1;
-      mask[16:0] <= 0;
-      curr[29:17] <= count;
-      curr[16:0] <= 0;
-      quot[16:0] <= 0;
+    p2 <= p1;
+    p3 <= p2;
+    p4 <= p3;
+  end
 
-      if (phase_sum[42])
-      begin
-        sign <= 1;
-        divend <= (~phase_sum[41:12]) + 1;
-      end
-      else
-      begin
-        sign <= 0;
-        divend <= phase_sum[41:12];
-      end
+  always @ ( posedge clk ) 
+  begin
+    s2 <= s1;
+    s3 <= s2;
+    s4 <= s3;
+    s5 <= s4;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+    begin
+      run <= 0;
+      p1 <= 0;
+      s1 <= 0;
     end
     else
     begin
-      if (p_running)
+      if (start)
       begin
-        if (divend >= curr)
-        begin
-          divend <= divend - curr;
-          quot <= quot | mask;
-        end
-        curr <= curr >> 1;
-        mask <= mask >> 1;
-      end
-    end
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (p_post)
-    begin
-      phase <= phase_sum[42:20];
-      power[15] <= sign;
-
-      if (sign)
-      begin
-        if (quot[0])
-          power[14:0] <= ~quot[15:1];
-        else
-          power[14:0] <= (~quot[15:1]) + 1;
+        run <= 1;
+        p1 <= 1;
+        s1 <= 0;
       end
       else
       begin
-        if (quot[0])
-          power[14:0] <= quot[15:1] + 1;
+        if (stop)
+        begin
+          run <= 0;
+          p1 <= 0;
+          s1 <= 0;
+        end
         else
-          power[14:0] <= quot[15:1];
+        begin
+          if (run)
+          begin
+            if (next)
+            begin
+              p1 <= 1;
+              s1 <= 1;
+            end
+            else
+            begin
+              p1 <= 0;
+              s1 <= 0;
+            end          
+          end
+          else
+          begin
+            p1 <= 0;
+            s1 <= 0;
+          end
+        end
       end
     end
   end
 
   always @ ( posedge clk ) 
   begin
-    if (p7)
+    if (p4)
+      sum_0 <= p_0;
+    else
+      sum_0 <= sum_0 + p_0;      
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (p4)
+      sum_1 <= p_1;
+    else
+      sum_1 <= sum_1 + p_1;      
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (p4)
+      sum_2 <= p_2;
+    else
+      sum_2 <= sum_2 + p_2;      
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (p4)
+      sum_3 <= p_3;
+    else
+      sum_3 <= sum_3 + p_3;      
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (s4)
     begin
       sum_01 <= sum_0 + sum_1;
       sum_23 <= sum_2 + sum_3;
@@ -271,48 +316,14 @@ begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
-    if (p_running)
+    if (s5)
     begin
-      if (do_shift)
-        phase_sum <= phase_sum << 1;
+      report <= 1;
+      sum <= sum_01 + sum_23;       
     end
-    else    
-      if (p8)
-        phase_sum <= sum_01 + sum_23;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (p7)
-      sum_0 <= p_0;
     else
-      sum_0 <= sum_0 + p_0;      
+      report <= 0;
   end
-
-  always @ ( posedge clk ) 
-  begin
-    if (p7)
-      sum_1 <= p_1;
-    else
-      sum_1 <= sum_1 + p_1;      
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (p7)
-      sum_2 <= p_2;
-    else
-      sum_2 <= sum_2 + p_2;      
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (p7)
-      sum_3 <= p_3;
-    else
-      sum_3 <= sum_3 + p_3;      
-  end
-
 
 end
 

@@ -67,9 +67,11 @@ module adc_ana (
   wire [15:0]             d_phase_A;
   wire [15:0]             d_phase_B;
 
+  reg                     base_start;
   reg                     base_run;
   reg  [9:0]              delay_count;
   reg  [9:0]              curr_count;
+  reg                     delay_start;
   reg                     delay_run;
 
   reg  [15:0]             phase_incr;
@@ -90,6 +92,8 @@ ana_freq base (
   .reset(reset),          // input wire clk
   .init(init),            // input wire init
   .count(count),          // input wire [12:0] count
+  .start(base_start),     // input wire start
+  .stop(stop),            // input wire stop
   .run(base_run),         // input wire run
   .wr(wr),                // input wire wr
   .wr_adr(wr_adr),        // input wire [12:0] wr_adr
@@ -115,6 +119,8 @@ ana_freq delayed (
   .reset(reset),          // input wire clk
   .init(init),            // input wire init
   .count(count),          // input wire [12:0] count
+  .start(delay_start),    // input wire start
+  .stop(stop),            // input wire stop
   .run(delay_run),        // input wire run
   .wr(wr),                // input wire wr
   .wr_adr(wr_adr),        // input wire [12:0] wr_adr
@@ -254,6 +260,7 @@ begin : adc_bar_gen
   begin
     if (reset)
     begin
+      delay_start <= 0;
       delay_count <= 0;
       delay_run <= 0;
       curr_count <= 0;
@@ -262,6 +269,7 @@ begin : adc_bar_gen
     begin
       if (init)
       begin
+        delay_start <= 0;
         delay_run <= 0;
         curr_count <= 0;
         if (count[2])
@@ -275,6 +283,7 @@ begin : adc_bar_gen
         begin
           curr_count <= delay_count;
           delay_run <= 0;
+          delay_start <= 0;
         end
         else
         begin
@@ -282,16 +291,23 @@ begin : adc_bar_gen
           begin
             curr_count <= 0;
             delay_run <= 0;
+            delay_start <= 0;
           end
           else
           begin
             if (curr_count)
             begin
+              curr_count <= curr_count - 1;
               if (curr_count == 1)
+              begin
                 delay_run <= 1;
+                delay_start <= 1;
+              end
               else
-                curr_count <= curr_count - 1;
+                delay_start <= 0;
             end
+            else
+              delay_start <= 0;
           end
         end
       end
@@ -319,6 +335,13 @@ begin : adc_bar_gen
     end
   end
 
+  always @ ( posedge clk ) 
+  begin
+    if (start)
+      base_start <= 1;
+    else
+      base_start <= 0;
+  end
 
 end
 
