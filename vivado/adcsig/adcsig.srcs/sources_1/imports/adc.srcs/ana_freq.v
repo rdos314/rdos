@@ -55,8 +55,8 @@ module ana_freq (
   output wire [15:0]      power_A,
   output wire [15:0]      power_B,
 
-  output reg  [15:0]      phase_A,
-  output reg  [15:0]      phase_B
+  output wire [15:0]      phase_A,
+  output wire [15:0]      phase_B
 );
 
   reg                    start_1;
@@ -110,6 +110,9 @@ module ana_freq (
   wire [42:0]            sum_cos_A;
   wire [42:0]            sum_sin_B;
   wire [42:0]            sum_cos_B;
+  
+  wire                   sum_done_A;
+  wire                   sum_done_B;
 
   wire [23:0]            cordic_phase_A;
   wire [23:0]            cordic_phase_B;
@@ -196,7 +199,7 @@ adc_slice sin_A (
   .next(last_3),           // input wire [0 : 0] next
   .in(in_A),               // input wire [55 : 0] in
   .coeff(sin_coeff_out),   // input wire [63 : 0] coeff
-  .report(),               // output wire [0 : 0] report
+  .report(sum_done_A),     // output wire [0 : 0] report
   .sum(sum_sin_A)          // output wire [42 : 0] sum
 );
 
@@ -220,7 +223,7 @@ adc_slice sin_B (
   .next(last_3),           // input wire [0 : 0] next
   .in(in_B),               // input wire [55 : 0] in
   .coeff(sin_coeff_out),   // input wire [63 : 0] coeff
-  .report(),               // output wire [0 : 0] report
+  .report(sum_done_B),     // output wire [0 : 0] report
   .sum(sum_sin_B)          // output wire [42 : 0] sum
 );
 
@@ -233,7 +236,7 @@ adc_slice cos_B (
   .in(in_B),               // input wire [55 : 0] in
   .coeff(cos_coeff_out),   // input wire [63 : 0] coeff
   .report(),               // output wire [0 : 0] report
-  .sum(sum_cos_A)          // output wire [42 : 0] sum
+  .sum(sum_cos_B)          // output wire [42 : 0] sum
 );
 
 /*
@@ -284,25 +287,25 @@ ana_sqrt sqrt_B (
 );
 */
 
-/*
-ana_atan atan_A (
-  .aclk(clk),                                        // input wire aclk
-  .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
-  .s_axis_cartesian_tready(),                        // output wire s_axis_cartesian_tready
-  .s_axis_cartesian_tdata(phase_sin_cos_A),          // input wire [47 : 0] s_axis_cartesian_tdata
-  .m_axis_dout_tvalid(phase_done_A),                 // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(cordic_phase_A)                 // output wire [23 : 0] m_axis_dout_tdata
+ana_phase ana_phase_A (
+  .clk(clk),
+  .reset(reset),
+  .start(sum_done_A),
+  .sin_sum(sum_sin_A),
+  .cos_sum(sum_cos_A),
+  .report(),
+  .phase(phase_A)
 );
 
-ana_atan atan_B (
-  .aclk(clk),                                        // input wire aclk
-  .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
-  .s_axis_cartesian_tready(),                        // output wire s_axis_cartesian_tready
-  .s_axis_cartesian_tdata(phase_sin_cos_B),          // input wire [47 : 0] s_axis_cartesian_tdata
-  .m_axis_dout_tvalid(phase_done_B),                 // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(cordic_phase_B)                 // output wire [23 : 0] m_axis_dout_tdata
+ana_phase ana_phase_B (
+  .clk(clk),
+  .reset(reset),
+  .start(sum_done_B),
+  .sin_sum(sum_sin_B),
+  .cos_sum(sum_cos_B),
+  .report(),
+  .phase(phase_B)
 );
-*/
 
 /*
 ila_0 ila_0_inst (
@@ -352,28 +355,6 @@ begin : ana_freq_gen
        report <= 1;
     else
        report <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (reset)
-      phase_A <= 0;
-    else
-    begin
-      if (phase_done_A)
-        phase_A <= cordic_phase_A[21:6];
-    end
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (reset)
-      phase_B <= 0;
-    else
-    begin
-      if (phase_done_B)
-        phase_B <= cordic_phase_B[21:6];
-    end
   end
 
   always @ ( posedge clk ) 
