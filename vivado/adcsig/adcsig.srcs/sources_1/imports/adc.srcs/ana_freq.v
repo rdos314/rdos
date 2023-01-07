@@ -239,35 +239,6 @@ adc_slice cos_B (
   .sum(sum_cos_B)          // output wire [42 : 0] sum
 );
 
-/*
-square square_sin_A (
-  .CLK(clk),         // input wire CLK
-  .A(pow_sin_A),     // input wire [15 : 0] A
-  .B(pow_sin_A),     // input wire [15 : 0] B
-  .P(sin_A2)         // output wire [31 : 0] P
-);
-
-square square_cos_A (
-  .CLK(clk),         // input wire CLK
-  .A(pow_cos_A),     // input wire [15 : 0] A
-  .B(pow_cos_A),     // input wire [15 : 0] B
-  .P(cos_A2)         // output wire [31 : 0] P
-);
-
-square square_sin_B (
-  .CLK(clk),         // input wire CLK
-  .A(pow_sin_B),     // input wire [15 : 0] A
-  .B(pow_sin_B),     // input wire [15 : 0] B
-  .P(sin_B2)         // output wire [31 : 0] P
-);
-
-square square_cos_B (
-  .CLK(clk),         // input wire CLK
-  .A(pow_cos_B),     // input wire [15 : 0] A
-  .B(pow_cos_B),     // input wire [15 : 0] B
-  .P(cos_B2)         // output wire [31 : 0] P
-);
-*/
 
 /*
 ana_sqrt sqrt_A (
@@ -286,6 +257,28 @@ ana_sqrt sqrt_B (
   .m_axis_dout_tdata(power_B)                        // output wire [15 : 0] m_axis_dout_tdata
 );
 */
+
+ana_amp amp_A_inst (
+  .clk(clk),
+  .reset(reset),
+  .start(sum_done_A),
+  .count(count),
+  .sin_sum(sum_sin_A),
+  .cos_sum(sum_cos_A),
+  .report(),
+  .amp(power_A)
+);
+
+ana_amp amp_B_inst (
+  .clk(clk),
+  .reset(reset),
+  .start(sum_done_B),
+  .count(count),
+  .sin_sum(sum_sin_B),
+  .cos_sum(sum_cos_B),
+  .report(),
+  .amp(power_B)
+);
 
 ana_phase ana_phase_A (
   .clk(clk),

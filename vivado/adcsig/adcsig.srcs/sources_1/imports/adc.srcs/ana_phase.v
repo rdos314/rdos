@@ -56,25 +56,6 @@ ana_atan atan (
   .m_axis_dout_tdata(cordic_phase)                   // output wire [23 : 0] m_axis_dout_tdata
 );
 
-ila_0 ila_0_inst (
-  .clk(clk),                   // input wire clk
-  .probe0(start),              // input wire [0:0]  probe0
-  .probe1(sin_sum),            // input wire [42:0]  probe1
-  .probe2(cos_sum),            // input wire [42:0]  probe2
-  .probe3(report),             // input wire [0:0]  probe3
-  .probe4(phase),              // input wire [15:0]  probe3
-  .probe5(run_rot),            // input wire [0:0]  probe3
-  .probe6(run_atan),           // input wire [0:0]  probe3
-  .probe7(pend_atan),          // input wire [0:0]  probe3
-  .probe8(start_atan),         // input wire [0:0]  probe3
-  .probe9(phase_done),         // input wire [0:0]  probe3
-  .probe10(phase_sin),         // input wire [42:0]  probe3
-  .probe11(phase_cos),         // input wire [42:0]  probe3
-  .probe12(phase_atan[23:0]),  // input wire [23:0]  probe3
-  .probe13(phase_atan[47:24]), // input wire [23:0]  probe3
-  .probe14(cordic_phase)       // input wire [23:0]  probe3
-);
-
 generate
 begin : ana_phase_gen
 
