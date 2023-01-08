@@ -264,16 +264,8 @@ module adc_app (
   wire [31:0]             stop;
   reg  [31:0]             wr;
   wire [31:0]             chan_report;
+  reg  [31:0]             chan_config;
    
-  wire                    chan_0;
-
-  assign chan_0 = config_channel == 0;
-  
-  assign start[0] = config_start & chan_0;
-  
-  assign stop[0] = config_stop & chan_0;
-  
-  reg                     chan0_config;
   reg                     chan0_init;
 
   reg  [10:0]             chan0_adr;
@@ -978,7 +970,7 @@ begin : adc_app
     end
     else
     begin
-      if (config_init | config_start)
+      if (config_init)
       begin
         bram_adr <= 0;
         config_start <= 0;
@@ -987,42 +979,51 @@ begin : adc_app
       end
       else
       begin
-        if (config_validate)
+        if (config_start)
         begin
-          if (bram_adr == 12'hFFF)
-          begin
-            config_validate <= 0;
-            config_done <= 1;
-          end
-          else
-          begin
-            config_done <= 0;
-            bram_adr <= bram_adr + 1;
-          end
+          bram_adr <= 0;
+          config_start <= 0;
+          config_done <= 0;
         end
         else
         begin
-          if (bram_req)
+          if (config_validate)
           begin
             if (bram_adr == 12'hFFF)
             begin
-              config_done <= 0;
-              config_start <= 1;
-              config_validate <= 1;
+              config_validate <= 0;
+              config_done <= 1;
             end
             else
             begin
               config_done <= 0;
-              config_start <= 0;
+              bram_adr <= bram_adr + 1;
             end
           end
           else
           begin
-            if (bram_wr)
-              bram_adr <= bram_adr + 1;
-
-            config_done <= 0;
-            config_start <= 0;
+            if (bram_req)
+            begin
+              if (bram_adr == 12'hFFF)
+              begin
+                config_done <= 0;
+                config_start <= 1;
+                config_validate <= 1;
+              end
+              else
+              begin
+                config_done <= 0;
+                config_start <= 0;
+              end
+            end
+            else
+            begin
+              if (bram_wr)
+                bram_adr <= bram_adr + 1;
+  
+              config_done <= 0;
+              config_start <= 0;
+            end
           end
         end
       end
@@ -1085,17 +1086,17 @@ begin : adc_app
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
-      chan0_config <= 0;
+      chan_config[0] <= 0;
     else
     begin
-      if (chan0_config)
+      if (chan_config[0])
       begin
         if (config_done)
-          chan0_config <= 0;
+          chan_config[0] <= 0;
       end
       else
       if (chan0_init)
-        chan0_config <= 1;
+        chan_config[0] <= 1;
     end
   end
 
@@ -1116,7 +1117,7 @@ begin : adc_app
         chan0_sin_3 <= coeff_sin_3;
         chan0_cos_3 <= coeff_cos_3;
 
-        if ((config_adr < config_count) && (config_channel == 5'h00))    
+        if ((bram_adr[11] == 0) && chan_config[0])    
           wr[0] <= 1;
       end
       else
@@ -1133,7 +1134,7 @@ begin : adc_app
 
   always @ ( posedge rx_clk ) 
   begin
-    if (chan0_config)
+    if (chan_config[0])
     begin
       chan0_A0 <= bram_out[13:0];      
       chan0_A1 <= bram_out[27:14];      
