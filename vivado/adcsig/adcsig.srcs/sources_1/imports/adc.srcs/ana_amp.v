@@ -183,8 +183,8 @@ begin : ana_amp_gen
 
             if (divend_cos >= curr)
             begin
-              divend_sin <= divend_sin - curr;
-              quot_sin <= quot_sin | mask;
+              divend_cos <= divend_cos - curr;
+              quot_cos <= quot_cos | mask;
             end
 
             curr <= curr >> 1;
@@ -223,9 +223,9 @@ begin : ana_amp_gen
         else
         begin
           if (quot_sin[0])
-            amp_sin[14:0] <= amp_sin[15:1] + 1;
+            amp_sin[14:0] <= quot_sin[15:1] + 1;
           else
-            amp_sin[14:0] <= amp_sin[15:1];
+            amp_sin[14:0] <= quot_sin[15:1];
         end
 
         amp_cos[15] <= sign_cos;
@@ -240,9 +240,9 @@ begin : ana_amp_gen
         else
         begin
           if (quot_cos[0])
-            amp_cos[14:0] <= amp_cos[15:1] + 1;
+            amp_cos[14:0] <= quot_cos[15:1] + 1;
           else
-            amp_cos[14:0] <= amp_cos[15:1];
+            amp_cos[14:0] <= quot_cos[15:1];
         end
       end
       else
@@ -256,8 +256,17 @@ begin : ana_amp_gen
     p3 <= p2;
     p4 <= p3;
     p5 <= p4;
-    amp_2 <= 0;
-    sqrt_start <= 0;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (p5)
+    begin
+      sqrt_start <= 1;
+      amp_2 <= sin_2 + cos_2;
+    end
+    else
+      sqrt_start <= 0;
   end
 
 end
