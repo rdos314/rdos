@@ -52,8 +52,8 @@ module ana_freq (
 
   output reg              report,
 
-  output wire [15:0]      power_A,
-  output wire [15:0]      power_B,
+  output wire [15:0]      amp_A,
+  output wire [15:0]      amp_B,
 
   output wire [15:0]      phase_A,
   output wire [15:0]      phase_B
@@ -62,14 +62,46 @@ module ana_freq (
   reg                    start_1;
   reg                    start_2;
   reg                    start_3;
-  reg                    last_1;
-  reg                    last_2;
-  reg                    last_3;
+  reg                    next_1;
+  reg                    next_2;
+  reg                    next_3;
+
+  reg  [10:0]            last;
+  reg  [3:0]             last_en;
+
+  wire                   notify_sin_A;
+  wire                   notify_cos_A;
+  wire                   notify_sin_B;
+  wire                   notify_cos_B;
+
+  wire [42:0]            out_sin_A;
+  wire [42:0]            out_cos_A;
+  wire [42:0]            out_sin_B;
+  wire [42:0]            out_cos_B;
+  
+  reg                    sum_notify_A;
+  reg                    sum_notify_B;
+
+  reg  [42:0]            in_sin_A;
+  reg  [42:0]            in_cos_A;
+  reg  [42:0]            in_sin_B;
+  reg  [42:0]            in_cos_B;
+
+  wire                   amp_notify_A;
+  reg                    amp_done_A;
+  wire                   amp_notify_B;
+  reg                    amp_done_B;
+
+  wire                   phase_notify_A;
+  reg                    phase_done_A;
+  wire                   phase_notify_B;
+  reg                    phase_done_B;
 
   reg  [12:0]            coeff_count;
   reg                    coeff_en;
   reg                    coeff_wr;
   reg  [10:0]            coeff_adr;
+
   reg  [63:0]            sin_coeff_in;
   reg  [63:0]            cos_coeff_in;
   wire [63:0]            sin_coeff_out;
@@ -95,71 +127,9 @@ module ana_freq (
   assign cos_coeff_2 = cos_coeff_out[47:32];
   assign cos_coeff_3 = cos_coeff_out[63:48];
 
-
-  wire [15:0]            pow_sin_A;
-  wire [15:0]            pow_cos_A;
-  wire [15:0]            pow_sin_B;
-  wire [15:0]            pow_cos_B;
-  
-  wire [31:0]            sin_A2;
-  wire [31:0]            cos_A2;
-  wire [31:0]            sin_B2;
-  wire [31:0]            cos_B2;
-
-  wire [42:0]            sum_sin_A;
-  wire [42:0]            sum_cos_A;
-  wire [42:0]            sum_sin_B;
-  wire [42:0]            sum_cos_B;
-  
-  wire                   sum_done_A;
-  wire                   sum_done_B;
-
-  wire [23:0]            cordic_phase_A;
-  wire [23:0]            cordic_phase_B;
-
   wire [55:0]            in_A;
   wire [55:0]            in_B;
-
-  reg  [10:0]            last;
-  reg  [3:0]             last_en;
   
-  reg                    input_done;
-  
-  reg                    skip;
-  reg                    pd1;
-  reg                    pd2;
-  reg                    pd3;
-  reg                    pd4;
-  reg                    pd5;
-  reg                    pd6;
-  reg                    pd7;
-  reg                    pd8;
-  
-  reg                    pd_start;
-  reg                    pd_running;
-  reg                    pd_post;
-  reg  [4:0]             div_delay;
-  reg  [2:0]             mul_delay;
-
-  reg  [31:0]            pow_sq_A;
-  reg  [31:0]            pow_sq_B;
-  reg                    conv_start;
-  wire                   power_done_A;
-  wire                   power_done_B;
-  wire                   phase_done_A;
-  wire                   phase_done_B;
-
-  wire [47:0]            phase_sin_cos_A;
-  wire [47:0]            phase_sin_cos_B;
-  
-  wire                   shift_sin_A;
-  wire                   shift_cos_A;
-  wire                   shift_sin_B;
-  wire                   shift_cos_B;
-
-  wire                   do_shift_A;
-  wire                   do_shift_B;
-
   assign in_A[13:0] = in_A0;
   assign in_A[27:14] = in_A1;
   assign in_A[41:28] = in_A2;
@@ -170,9 +140,6 @@ module ana_freq (
   assign in_B[41:28] = in_B2;
   assign in_B[55:42] = in_B3;
   
-  assign do_shift_A = shift_sin_A & shift_cos_A;
-  assign do_shift_B = shift_sin_B & shift_cos_B;
-
 bram_freq bram_sin (
   .clka(clk),           // input wire clka
   .ena(coeff_en),       // input wire ena
@@ -196,11 +163,11 @@ adc_slice sin_A (
   .reset(reset),           // input wire [0 : 0] reset
   .start(start_3),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
-  .next(last_3),           // input wire [0 : 0] next
+  .next(next_3),           // input wire [0 : 0] next
   .in(in_A),               // input wire [55 : 0] in
   .coeff(sin_coeff_out),   // input wire [63 : 0] coeff
-  .report(sum_done_A),     // output wire [0 : 0] report
-  .sum(sum_sin_A)          // output wire [42 : 0] sum
+  .report(notify_sin_A),   // output wire [0 : 0] report
+  .sum(out_sin_A)          // output wire [42 : 0] sum
 );
 
 adc_slice cos_A (
@@ -208,11 +175,11 @@ adc_slice cos_A (
   .reset(reset),           // input wire [0 : 0] reset
   .start(start_3),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
-  .next(last_3),           // input wire [0 : 0] next
+  .next(next_3),           // input wire [0 : 0] next
   .in(in_A),               // input wire [55 : 0] in
   .coeff(cos_coeff_out),   // input wire [63 : 0] coeff
-  .report(),               // output wire [0 : 0] report
-  .sum(sum_cos_A)          // output wire [42 : 0] sum
+  .report(notify_cos_A),   // output wire [0 : 0] report
+  .sum(out_cos_A)          // output wire [42 : 0] sum
 );
 
 adc_slice sin_B (
@@ -220,11 +187,11 @@ adc_slice sin_B (
   .reset(reset),           // input wire [0 : 0] reset
   .start(start_3),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
-  .next(last_3),           // input wire [0 : 0] next
+  .next(next_3),           // input wire [0 : 0] next
   .in(in_B),               // input wire [55 : 0] in
   .coeff(sin_coeff_out),   // input wire [63 : 0] coeff
-  .report(sum_done_B),     // output wire [0 : 0] report
-  .sum(sum_sin_B)          // output wire [42 : 0] sum
+  .report(notify_sin_B),   // output wire [0 : 0] report
+  .sum(out_sin_B)          // output wire [42 : 0] sum
 );
 
 adc_slice cos_B (
@@ -232,97 +199,202 @@ adc_slice cos_B (
   .reset(reset),           // input wire [0 : 0] reset
   .start(start_3),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
-  .next(last_3),           // input wire [0 : 0] next
+  .next(next_3),           // input wire [0 : 0] next
   .in(in_B),               // input wire [55 : 0] in
   .coeff(cos_coeff_out),   // input wire [63 : 0] coeff
-  .report(),               // output wire [0 : 0] report
-  .sum(sum_cos_B)          // output wire [42 : 0] sum
+  .report(notify_cos_B),   // output wire [0 : 0] report
+  .sum(out_cos_B)          // output wire [42 : 0] sum
 );
-
-
-/*
-ana_sqrt sqrt_A (
-  .aclk(clk),                                        // input wire aclk
-  .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
-  .s_axis_cartesian_tdata(pow_sq_A),                 // input wire [31 : 0] s_axis_cartesian_tdata
-  .m_axis_dout_tvalid(power_done_A),                   // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(power_A)                        // output wire [15 : 0] m_axis_dout_tdata
-);
-
-ana_sqrt sqrt_B (
-  .aclk(clk),                                        // input wire aclk
-  .s_axis_cartesian_tvalid(conv_start),              // input wire s_axis_cartesian_tvalid
-  .s_axis_cartesian_tdata(pow_sq_B),                 // input wire [31 : 0] s_axis_cartesian_tdata
-  .m_axis_dout_tvalid(power_done_B),                 // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(power_B)                        // output wire [15 : 0] m_axis_dout_tdata
-);
-*/
 
 ana_amp amp_A_inst (
   .clk(clk),
   .reset(reset),
-  .start(sum_done_A),
+  .start(sum_notify_A),
   .count(count),
-  .sin_sum(sum_sin_A),
-  .cos_sum(sum_cos_A),
-  .report(),
-  .amp(power_A)
+  .sin_sum(in_sin_A),
+  .cos_sum(in_cos_A),
+  .report(amp_notify_A),
+  .amp(amp_A)
 );
 
 ana_amp amp_B_inst (
   .clk(clk),
   .reset(reset),
-  .start(sum_done_B),
+  .start(sum_notify_B),
   .count(count),
-  .sin_sum(sum_sin_B),
-  .cos_sum(sum_cos_B),
-  .report(),
-  .amp(power_B)
+  .sin_sum(in_sin_B),
+  .cos_sum(in_cos_B),
+  .report(amp_notify_B),
+  .amp(amp_B)
 );
 
 ana_phase ana_phase_A (
   .clk(clk),
   .reset(reset),
-  .start(sum_done_A),
-  .sin_sum(sum_sin_A),
-  .cos_sum(sum_cos_A),
-  .report(),
+  .start(sum_notify_A),
+  .sin_sum(in_sin_A),
+  .cos_sum(in_cos_A),
+  .report(phase_notify_A),
   .phase(phase_A)
 );
 
 ana_phase ana_phase_B (
   .clk(clk),
   .reset(reset),
-  .start(sum_done_B),
-  .sin_sum(sum_sin_B),
-  .cos_sum(sum_cos_B),
-  .report(),
+  .start(sum_notify_B),
+  .sin_sum(in_sin_B),
+  .cos_sum(in_cos_B),
+  .report(phase_notify_B),
   .phase(phase_B)
 );
 
-/*
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(init),          // input wire [0:0]  probe0
-  .probe1(run),           // input wire [0:0]  probe1
-  .probe2(in_A0),         // input wire [13:0]  probe2
-  .probe3(in_A1),         // input wire [13:0]  probe3
-  .probe4(in_A2),         // input wire [13:0]  probe3
-  .probe5(in_A3),         // input wire [13:0]  probe3
-  .probe6(sin_coeff_0),   // input wire [15:0]  probe3
-  .probe7(sin_coeff_1),   // input wire [15:0]  probe3
-  .probe8(sin_coeff_2),   // input wire [15:0]  probe3
-  .probe9(sin_coeff_3),   // input wire [15:0]  probe3
-  .probe10(report),       // input wire [0:0]  probe3
-  .probe11(power_A),      // input wire [15:0]  probe3
-  .probe12(power_B),      // input wire [15:0]  probe3
-  .probe13(phase_A),      // input wire [15:0]  probe3
-  .probe14(phase_B)       // input wire [15:0]  probe3
+  .probe1(count),         // input wire [12:0]  probe1
+  .probe2(start),         // input wire [0:0]  probe2
+  .probe3(stop),          // input wire [0:0]  probe3
+  .probe4(wr),            // input wire [0:0]  probe3
+  .probe5(wr_adr),        // input wire [10:0]  probe3
+  .probe6(wr_sin),        // input wire [63:0]  probe3
+  .probe7(wr_cos),        // input wire [63:0]  probe3
+  .probe8(in_A0),         // input wire [13:0]  probe3
+  .probe9(in_A1),         // input wire [13:0]  probe3
+  .probe10(in_A2),        // input wire [13:0]  probe3
+  .probe11(in_A3),        // input wire [13:0]  probe3
+  .probe12(in_B0),        // input wire [13:0]  probe3
+  .probe13(in_B1),        // input wire [13:0]  probe3
+  .probe14(in_B2),        // input wire [13:0]  probe3
+  .probe15(in_B3),        // input wire [13:0]  probe3
+  .probe16(coeff_en),     // input wire [0:0]  probe3
+  .probe17(coeff_wr),     // input wire [0:0]  probe3
+  .probe18(coeff_adr),    // input wire [10:0]  probe3
+  .probe19(sin_coeff_in), // input wire [63:0]  probe3
+  .probe20(cos_coeff_in), // input wire [63:0]  probe3
+  .probe21(sin_coeff_out), // input wire [63:0]  probe3
+  .probe22(cos_coeff_out)  // input wire [63:0]  probe3
 );
-*/
 
 generate
 begin : ana_freq_gen
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      sum_notify_A <= 0;
+    else
+    begin
+      if (notify_sin_A | notify_cos_A)
+        sum_notify_A <= 1;
+      else
+        sum_notify_A <= 0;
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      sum_notify_B <= 0;
+    else
+    begin
+      if (notify_sin_B | notify_cos_B)
+        sum_notify_B <= 1;
+      else
+        sum_notify_B <= 0;
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      in_sin_A <= 0;
+    else
+      if (notify_sin_A)
+        in_sin_A <= out_sin_A;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      in_cos_A <= 0;
+    else
+      if (notify_cos_A)
+        in_cos_A <= out_cos_A;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      in_sin_B <= 0;
+    else
+      if (notify_sin_B)
+        in_sin_B <= out_sin_B;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      in_cos_B <= 0;
+    else
+      if (notify_cos_B)
+        in_cos_B <= out_cos_B;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset | start_3 | next_3)
+      amp_done_A <= 0;
+    else
+      if (amp_notify_A)
+        amp_done_A <= 1;
+      else
+        if (report)
+          amp_done_A <= 0;
+  end 
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset | start_3 | next_3)
+      amp_done_B <= 0;
+    else
+      if (amp_notify_B)
+        amp_done_B <= 1;
+      else
+        if (report)
+          amp_done_B <= 0;
+  end 
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset | start_3 | next_3)
+      phase_done_A <= 0;
+    else
+      if (phase_notify_A)
+        phase_done_A <= 1;
+      else
+        if (report)
+          phase_done_A <= 0;
+  end 
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset | start_3 | next_3)
+      phase_done_B <= 0;
+    else
+      if (phase_notify_B)
+        phase_done_B <= 1;
+      else
+        if (report)
+          phase_done_B <= 0;
+  end 
+
+  always @ ( posedge clk ) 
+  begin
+    if (amp_done_A & amp_done_B & phase_done_A & phase_done_B)
+      report <= 1;
+    else
+      report <= 0;
+  end
 
   always @ ( posedge clk ) 
   begin
@@ -334,131 +406,13 @@ begin : ana_freq_gen
   always @ ( posedge clk ) 
   begin
     if (coeff_adr == last)
-      last_1 <= 1;
+      next_1 <= 1;
     else
-      last_1 <= 0;
+      next_1 <= 0;
 
-    last_2 <= last_1;
-    last_3 <= last_2;
+    next_2 <= next_1;
+    next_3 <= next_2;
   end
-
-  always @ ( posedge clk ) 
-  begin
-    if (phase_done_A & !skip)
-       report <= 1;
-    else
-       report <= 0;
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (reset)
-    begin
-      mul_delay <= 0;
-      conv_start <= 0;
-    end
-    else
-    begin
-      if (input_done)
-      begin
-        mul_delay <= 5;
-        conv_start <= 0;
-      end
-      else
-      begin
-        if (mul_delay)
-        begin
-          mul_delay <= mul_delay - 1;
-          if (mul_delay == 1)
-          begin
-            pow_sq_A <= sin_A2 + cos_A2;
-            pow_sq_B <= sin_B2 + cos_B2;
-            conv_start <= 1;
-          end
-        end
-        else
-          conv_start <= 0;
-      end
-    end
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (run)
-    begin
-      if (pd7)
-      begin
-        div_delay <= 5'b11111;
-        input_done <= 0;
-      end
-      else
-      begin
-        if (div_delay)
-        begin
-          div_delay <= div_delay - 1;
-          if (div_delay == 1)
-          begin
-            if (skip)
-            begin
-              skip <= 0;
-              input_done <= 0;
-            end
-            else
-              input_done <= 1;
-          end
-          else
-            input_done <= 0;
-        end
-        else
-          input_done <= 0;
-      end
-    end
-    else
-    begin
-      div_delay <= 0;
-      input_done <= 0;
-      skip <= 1;
-    end
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (pd_start)
-    begin
-      pd_running <= 1;
-      pd_post <= 0;
-    end
-    else
-    begin
-      if (pd_running)
-      begin
-        if (div_delay == 2)
-        begin
-          pd_running <= 0;
-          pd_post <= 1;
-        end
-      end
-      else
-        pd_post <= 0;
-    end
-  end
-
-
-  always @ ( posedge clk ) 
-  begin
-    if (run)
-    begin
-      pd2 <= pd1;
-      pd3 <= pd2;
-      pd4 <= pd3;
-      pd5 <= pd4;
-      pd6 <= pd5;
-      pd7 <= pd6;
-      pd8 <= pd7;
-      pd_start <= pd8;
-    end
-  end
-
 
   always @ ( posedge clk ) 
   begin
@@ -488,14 +442,12 @@ begin : ana_freq_gen
     end
   end
 
-
   always @ ( posedge clk ) 
   begin
     if (reset)
     begin
       coeff_en <= 0;
       coeff_wr <= 0;
-      pd1 <= 0;
     end
     else
     begin
@@ -565,22 +517,13 @@ begin : ana_freq_gen
           coeff_wr <= 0;
 
           if (start)
-          begin
             coeff_adr <= 0;
-            pd1 <= 1;
-          end
           else
           begin
             if (coeff_adr == last)
-            begin
               coeff_adr <= 0;
-              pd1 <= 1;
-            end
             else
-            begin
               coeff_adr <= coeff_adr + 1;
-              pd1 <= 0;
-            end
           end
         end
         else
@@ -588,7 +531,6 @@ begin : ana_freq_gen
           coeff_en <= 0;
           coeff_wr <= 0;
           coeff_adr <= 0;
-          pd1 <= 0;
         end
       end
     end

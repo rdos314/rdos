@@ -108,8 +108,8 @@ ana_freq base (
   .in_B2(in_B2),          // input wire [13:0] in_B2
   .in_B3(in_B3),          // input wire [13:0] in_B3
   .report(b_report),      // output wire report
-  .power_A(b_power_A),    // output wire [15:0] power_A
-  .power_B(b_power_B),    // output wire [15:0] power_B
+  .amp_A(b_power_A),      // output wire [15:0] power_A
+  .amp_B(b_power_B),      // output wire [15:0] power_B
   .phase_A(b_phase_A),    // output wire [15:0] phase_A
   .phase_B(b_phase_B)     // output wire [15:0] phase_B
 );
@@ -135,8 +135,8 @@ ana_freq delayed (
   .in_B2(in_B2),          // input wire [13:0] in_B2
   .in_B3(in_B3),          // input wire [13:0] in_B3
   .report(d_report),      // output wire report
-  .power_A(d_power_A),    // output wire [15:0] power_A
-  .power_B(d_power_B),    // output wire [15:0] power_B
+  .amp_A(d_power_A),      // output wire [15:0] power_A
+  .amp_B(d_power_B),      // output wire [15:0] power_B
   .phase_A(d_phase_A),    // output wire [15:0] phase_A
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
