@@ -241,53 +241,22 @@ module adc_app (
   reg  [11:0]             bram_adr;
 
   reg  [55:0]             bram_in;
-  wire [13:0]             bram_in_0;
-  wire [13:0]             bram_in_1;
-  wire [13:0]             bram_in_2;
-  wire [13:0]             bram_in_3;
-
-  assign bram_in_0 = bram_in[13:0];
-  assign bram_in_1 = bram_in[27:14];
-  assign bram_in_2 = bram_in[41:28];
-  assign bram_in_3 = bram_in[55:42];
+  reg  [13:0]             bram_in_0;
+  reg  [13:0]             bram_in_1;
+  reg  [13:0]             bram_in_2;
+  reg  [13:0]             bram_in_3;
 
   wire [55:0]             bram_out;
-  wire [13:0]             bram_out_0;
-  wire [13:0]             bram_out_1;
-  wire [13:0]             bram_out_2;
-  wire [13:0]             bram_out_3;
 
-  assign bram_out_0 = bram_out[13:0];
-  assign bram_out_1 = bram_out[27:14];
-  assign bram_out_2 = bram_out[41:28];
-  assign bram_out_3 = bram_out[55:42];
+  reg  [15:0]             coeff_sin_0;
+  reg  [15:0]             coeff_sin_1;
+  reg  [15:0]             coeff_sin_2;
+  reg  [15:0]             coeff_sin_3;
 
-  wire [11:0]             coeff_adr;
-  
-  assign coeff_adr = bram_adr;
-
-  reg  [63:0]             coeff_sin;
-  reg  [63:0]             coeff_cos;
-
-  wire [15:0]             coeff_sin_0;
-  wire [15:0]             coeff_sin_1;
-  wire [15:0]             coeff_sin_2;
-  wire [15:0]             coeff_sin_3;
-
-  wire [15:0]             coeff_cos_0;
-  wire [15:0]             coeff_cos_1;
-  wire [15:0]             coeff_cos_2;
-  wire [15:0]             coeff_cos_3;
-
-  assign coeff_sin_0 = coeff_sin[15:0];
-  assign coeff_sin_1 = coeff_sin[31:16];
-  assign coeff_sin_2 = coeff_sin[47:32];
-  assign coeff_sin_3 = coeff_sin[63:48];
-
-  assign coeff_cos_0 = coeff_cos[15:0];
-  assign coeff_cos_1 = coeff_cos[31:16];
-  assign coeff_cos_2 = coeff_cos[47:32];
-  assign coeff_cos_3 = coeff_cos[63:48];
+  reg  [15:0]             coeff_cos_0;
+  reg  [15:0]             coeff_cos_1;
+  reg  [15:0]             coeff_cos_2;
+  reg  [15:0]             coeff_cos_3;
 
 // analyser freq blocks
 
@@ -306,6 +275,16 @@ module adc_app (
   
   reg                     chan0_config;
   reg                     chan0_init;
+
+  reg  [10:0]             chan0_adr;
+  reg  [15:0]             chan0_sin_0;
+  reg  [15:0]             chan0_cos_0;
+  reg  [15:0]             chan0_sin_1;
+  reg  [15:0]             chan0_cos_1;
+  reg  [15:0]             chan0_sin_2;
+  reg  [15:0]             chan0_cos_2;
+  reg  [15:0]             chan0_sin_3;
+  reg  [15:0]             chan0_cos_3;
 
   reg  [13:0]             chan0_A0;
   reg  [13:0]             chan0_A1;
@@ -421,9 +400,15 @@ adc_ana adc_ana_0_inst (
     .stop(stop[0]),
 
     .wr(wr[0]),
-    .wr_adr(bram_adr[10:0]),
-    .wr_sin(coeff_sin),
-    .wr_cos(coeff_cos),
+    .wr_adr(chan0_adr),
+    .wr_sin_0(chan0_sin_0),
+    .wr_cos_0(chan0_cos_0),
+    .wr_sin_1(chan0_sin_1),
+    .wr_cos_1(chan0_cos_1),
+    .wr_sin_2(chan0_sin_2),
+    .wr_cos_2(chan0_cos_2),
+    .wr_sin_3(chan0_sin_3),
+    .wr_cos_3(chan0_cos_3),
 
     .in_A0(chan0_A0),
     .in_A1(chan0_A1),
@@ -446,24 +431,17 @@ ila_2 ila_2_inst (
   .probe0(config_rd),            // input wire [0:0]
   .probe1(config_empty),         // input wire [0:0]
   .probe2(config_validate),      // input wire [0:0]
-  .probe3(start[0]),             // input wire [0:0]
-  .probe4(wr[0]),                // input wire [0:0]
+  .probe3(bram_en),              // input wire [0:0]
+  .probe4(bram_wr),              // input wire [0:0]
   .probe5(bram_adr),             // input wire [11:0]
-  .probe6(coeff_sin),            // input wire [63:0]
-  .probe7(coeff_cos),            // input wire [63:0]
-  .probe8(chan0_A0),             // input wire [13:0]
-  .probe9(chan0_A1),             // input wire [13:0]
-  .probe10(chan0_A2),             // input wire [13:0]
-  .probe11(chan0_A3),             // input wire [13:0]
-  .probe12(chan0_B0),             // input wire [13:0]
-  .probe13(chan0_B1),             // input wire [13:0]
-  .probe14(chan0_B2),             // input wire [13:0]
-  .probe15(chan0_B3),             // input wire [13:0]
-  .probe16(chan_report[0]),       // input wire [0:0]
-  .probe17(chan0_power_A),        // input wire [15:0]
-  .probe18(chan0_power_B),       // input wire [15:0]
-  .probe19(chan0_phase_A),       // input wire [15:0]
-  .probe20(chan0_phase_B)        // input wire [15:0]
+  .probe6(bram_in),              // input wire [55:0]
+  .probe7(bram_out),             // input wire [55:0]
+  .probe8(start[0]),             // input wire [0:0]
+  .probe9(chan_report[0]),       // input wire [0:0]
+  .probe10(chan0_power_A),        // input wire [15:0]
+  .probe11(chan0_power_B),       // input wire [15:0]
+  .probe12(chan0_phase_A),       // input wire [15:0]
+  .probe13(chan0_phase_B)        // input wire [15:0]
 );
 
 generate
@@ -941,30 +919,30 @@ begin : adc_app
         case (config_adr[1:0])
           2'b00 :
             begin
-              bram_in[13:0] <= config_sin[15:2];
-              coeff_sin[15:0] <= config_sin;
-              coeff_cos[15:0] <= config_cos;
+              bram_in_0 <= config_sin[15:2];
+              coeff_sin_0 <= config_sin;
+              coeff_cos_0 <= config_cos;
               bram_req <= 0;
             end
           2'b01 : 
             begin
-              bram_in[27:14] <= config_sin[15:2];
-              coeff_sin[31:16] <= config_sin;
-              coeff_cos[31:16] <= config_cos;
+              bram_in_1 <= config_sin[15:2];
+              coeff_sin_1 <= config_sin;
+              coeff_cos_1 <= config_cos;
               bram_req <= 0;
             end
           2'b10 : 
             begin
-              bram_in[41:28] <= config_sin[15:2];
-              coeff_sin[47:32] <= config_sin;
-              coeff_cos[47:32] <= config_cos;
+              bram_in_2 <= config_sin[15:2];
+              coeff_sin_2 <= config_sin;
+              coeff_cos_2 <= config_cos;
               bram_req <= 0;
             end
           2'b11 :
             begin
-              bram_in[55:42] <= config_sin[15:2];
-              coeff_sin[63:48] <= config_sin;
-              coeff_cos[63:48] <= config_cos;
+              bram_in_3 <= config_sin[15:2];
+              coeff_sin_3 <= config_sin;
+              coeff_cos_3 <= config_cos;
               bram_req <= 1;
             end
         endcase
@@ -977,7 +955,14 @@ begin : adc_app
   always @ ( posedge rx_clk ) 
   begin
     if (bram_req)
+    begin
+      bram_in[13:0] <= bram_in_0;      
+      bram_in[27:14] <= bram_in_1;      
+      bram_in[41:28] <= bram_in_2;      
+      bram_in[55:42] <= bram_in_3;      
+
       bram_wr <= 1;
+    end
     else
       bram_wr <= 0;
   end
@@ -1119,8 +1104,21 @@ begin : adc_app
     if (rx_reset)
       wr[0] <= 0;
     else
-      if (bram_req && (config_adr < config_count) && (config_channel == 5'h00))    
-        wr[0] <= 1;
+      if (bram_req)    
+      begin
+        chan0_adr <= bram_adr[10:0];
+        chan0_sin_0 <= coeff_sin_0;
+        chan0_cos_0 <= coeff_cos_0;
+        chan0_sin_1 <= coeff_sin_1;
+        chan0_cos_1 <= coeff_cos_1;
+        chan0_sin_2 <= coeff_sin_2;
+        chan0_cos_2 <= coeff_cos_2;
+        chan0_sin_3 <= coeff_sin_3;
+        chan0_cos_3 <= coeff_cos_3;
+
+        if ((config_adr < config_count) && (config_channel == 5'h00))    
+          wr[0] <= 1;
+      end
       else
         wr[0] <= 0;
   end
@@ -1137,14 +1135,14 @@ begin : adc_app
   begin
     if (chan0_config)
     begin
-      chan0_A0 <= bram_out_0;      
-      chan0_A1 <= bram_out_1;      
-      chan0_A2 <= bram_out_2;      
-      chan0_A3 <= bram_out_3;      
-      chan0_B0 <= -bram_out_0;      
-      chan0_B1 <= -bram_out_1;      
-      chan0_B2 <= -bram_out_2;      
-      chan0_B3 <= -bram_out_3;      
+      chan0_A0 <= bram_out[13:0];      
+      chan0_A1 <= bram_out[27:14];      
+      chan0_A2 <= bram_out[41:28];      
+      chan0_A3 <= bram_out[55:42];      
+      chan0_B0 <= -bram_out[13:0];      
+      chan0_B1 <= -bram_out[27:14];      
+      chan0_B2 <= -bram_out[41:28];      
+      chan0_B3 <= -bram_out[55:42];      
     end
     else
     begin

@@ -37,8 +37,14 @@ module ana_freq (
 
   input wire              wr,
   input wire [10:0]       wr_adr,
-  input wire [63:0]       wr_sin,
-  input wire [63:0]       wr_cos,
+  input wire [15:0]       wr_sin_0,
+  input wire [15:0]       wr_cos_0,
+  input wire [15:0]       wr_sin_1,
+  input wire [15:0]       wr_cos_1,
+  input wire [15:0]       wr_sin_2,
+  input wire [15:0]       wr_cos_2,
+  input wire [15:0]       wr_sin_3,
+  input wire [15:0]       wr_cos_3,
 
   input wire [13:0]       in_A0,
   input wire [13:0]       in_A1,
@@ -249,30 +255,26 @@ ana_phase ana_phase_B (
 );
 
 ila_0 ila_0_inst (
-  .clk(clk),              // input wire clk
-  .probe0(init),          // input wire [0:0]  probe0
-  .probe1(count),         // input wire [12:0]  probe1
-  .probe2(start),         // input wire [0:0]  probe2
-  .probe3(stop),          // input wire [0:0]  probe3
-  .probe4(wr),            // input wire [0:0]  probe3
-  .probe5(wr_adr),        // input wire [10:0]  probe3
-  .probe6(wr_sin),        // input wire [63:0]  probe3
-  .probe7(wr_cos),        // input wire [63:0]  probe3
-  .probe8(in_A0),         // input wire [13:0]  probe3
-  .probe9(in_A1),         // input wire [13:0]  probe3
-  .probe10(in_A2),        // input wire [13:0]  probe3
-  .probe11(in_A3),        // input wire [13:0]  probe3
-  .probe12(in_B0),        // input wire [13:0]  probe3
-  .probe13(in_B1),        // input wire [13:0]  probe3
-  .probe14(in_B2),        // input wire [13:0]  probe3
-  .probe15(in_B3),        // input wire [13:0]  probe3
-  .probe16(coeff_en),     // input wire [0:0]  probe3
-  .probe17(coeff_wr),     // input wire [0:0]  probe3
-  .probe18(coeff_adr),    // input wire [10:0]  probe3
-  .probe19(sin_coeff_in), // input wire [63:0]  probe3
-  .probe20(cos_coeff_in), // input wire [63:0]  probe3
-  .probe21(sin_coeff_out), // input wire [63:0]  probe3
-  .probe22(cos_coeff_out)  // input wire [63:0]  probe3
+  .clk(clk),                // input wire clk
+  .probe0(wr),              // input wire [0:0]  probe3
+  .probe1(wr_adr),          // input wire [10:0]  probe3
+  .probe2(wr_sin_0),        // input wire [15:0]  probe3
+  .probe3(wr_cos_0),        // input wire [15:0]  probe3
+  .probe4(wr_sin_1),        // input wire [15:0]  probe3
+  .probe5(wr_cos_1),        // input wire [15:0]  probe3
+  .probe6(wr_sin_2),        // input wire [15:0]  probe3
+  .probe7(wr_cos_2),        // input wire [15:0]  probe3
+  .probe8(wr_sin_3),        // input wire [15:0]  probe3
+  .probe9(wr_cos_3),        // input wire [15:0]  probe3
+  .probe10(in_A0),           // input wire [13:0]  probe3
+  .probe11(in_A1),           // input wire [13:0]  probe3
+  .probe12(in_A2),           // input wire [13:0]  probe3
+  .probe13(in_A3),           // input wire [13:0]  probe3
+  .probe14(in_B0),           // input wire [13:0]  probe3
+  .probe15(in_B1),           // input wire [13:0]  probe3
+  .probe16(in_B2),           // input wire [13:0]  probe3
+  .probe17(in_B3),           // input wire [13:0]  probe3
+  .probe18(report)           // input wire [0:0]  probe3
 );
 
 generate
@@ -461,8 +463,8 @@ begin : ana_freq_gen
         begin
           if (last_en[0])
           begin
-            sin_coeff_in[15:0] <= wr_sin[15:0];
-            cos_coeff_in[15:0] <= wr_cos[15:0];
+            sin_coeff_in[15:0] <= wr_sin_0;
+            cos_coeff_in[15:0] <= wr_cos_0;
           end
           else            
           begin
@@ -472,8 +474,8 @@ begin : ana_freq_gen
 
           if (last_en[1])
           begin
-            sin_coeff_in[31:16] <= wr_sin[31:16];
-            cos_coeff_in[31:16] <= wr_cos[31:16];
+            sin_coeff_in[31:16] <= wr_sin_1;
+            cos_coeff_in[31:16] <= wr_cos_1;
           end
           else            
           begin
@@ -483,8 +485,8 @@ begin : ana_freq_gen
 
           if (last_en[2])
           begin
-            sin_coeff_in[47:32] <= wr_sin[47:32];
-            cos_coeff_in[47:32] <= wr_cos[47:32];
+            sin_coeff_in[47:32] <= wr_sin_2;
+            cos_coeff_in[47:32] <= wr_cos_2;
           end
           else            
           begin
@@ -494,8 +496,8 @@ begin : ana_freq_gen
 
           if (last_en[3])
           begin
-            sin_coeff_in[63:48] <= wr_sin[63:48];
-            cos_coeff_in[63:48] <= wr_cos[63:48];
+            sin_coeff_in[63:48] <= wr_sin_3;
+            cos_coeff_in[63:48] <= wr_cos_3;
           end
           else            
           begin
@@ -505,8 +507,14 @@ begin : ana_freq_gen
         end
         else
         begin
-          sin_coeff_in <= wr_sin;
-          cos_coeff_in <= wr_cos;
+          sin_coeff_in[15:0] <= wr_sin_0;
+          cos_coeff_in[15:0] <= wr_cos_0;
+          sin_coeff_in[31:16] <= wr_sin_1;
+          cos_coeff_in[31:16] <= wr_cos_1;
+          sin_coeff_in[47:32] <= wr_sin_2;
+          cos_coeff_in[47:32] <= wr_cos_2;
+          sin_coeff_in[63:48] <= wr_sin_3;
+          cos_coeff_in[63:48] <= wr_cos_3;
         end
       end
       else
