@@ -156,6 +156,12 @@ module adc_app (
   reg                     config_validate;
   reg                     config_done;
 
+  reg  [29:0]             config_last_phase;
+  reg  [10:0]             config_last;
+  reg  [3:0]              config_last_en;
+  reg  [10:0]             config_delay_last;
+  reg  [29:0]             config_delay_phase;
+
   reg  [23:0]             config_l_sin;
   reg  [23:0]             config_l_cos;
 
@@ -258,19 +264,23 @@ module adc_app (
   reg  [15:0]             coeff_cos_2;
   reg  [15:0]             coeff_cos_3;
 
-// analyser freq blocks
+// analyser freq blocks rx domain
 
-  wire [31:0]             start;
+  reg  [31:0]             start;
   wire [31:0]             stop;
   reg  [31:0]             wr;
-  wire [31:0]             chan_report;
   reg  [31:0]             chan_config;
    
-  assign start[0] = config_start & chan_config[0];
   assign stop[0] = config_stop & chan_config[0];
   
   reg                     chan0_init;
+  reg  [12:0]             chan0_count;
+  reg  [10:0]             chan0_last;
+  reg  [3:0]              chan0_last_en;
 
+  reg  [15:0]             chan0_phase_incr;
+  reg  [9:0]              chan0_delay_count;
+  reg  [15:0]             chan0_delay_phase;
   reg  [10:0]             chan0_adr;
   reg  [15:0]             chan0_sin_0;
   reg  [15:0]             chan0_cos_0;
@@ -289,6 +299,12 @@ module adc_app (
   reg  [13:0]             chan0_B1;
   reg  [13:0]             chan0_B2;
   reg  [13:0]             chan0_B3;
+
+
+// analyser freq blocks pci domain
+
+  wire [31:0]             empty;
+  reg  [31:0]             rd;
 
   wire [15:0]             chan0_power_A;
   wire [15:0]             chan0_power_B;
@@ -385,27 +401,21 @@ bram_msix bram_msix_inst (
   .doutb()           // output wire [31 : 0] doutb
 );
 
-fifo_signal fifo_0_inst (
-  .rst(pci_reset),          // input wire rst
-  .wr_clk(rx_clk),          // input wire wr_clk
-  .rd_clk(pci_clk),         // input wire rd_clk
-  .din(din),                // input wire [63 : 0] din
-  .wr_en(wr_en),            // input wire wr_en
-  .rd_en(rd_en),            // input wire rd_en
-  .dout(dout),              // output wire [63 : 0] dout
-  .full(full),              // output wire full
-  .empty(empty),            // output wire empty
-  .prog_empty(prog_empty)  // output wire prog_empty
-);
-
-
 adc_ana adc_ana_0_inst (
     .clk (rx_clk),
     .reset (rx_reset),
+    .pci_clk(pci_clk),
 
     .init(chan0_init),
-    .count(config_count[12:0]),
+    .count(chan0_count),
+    .last(chan0_last),
+    .last_en(chan0_last_en),
+
     .start(start[0]),
+    .phase_incr(chan0_phase_incr)
+    .delay_count(chan0_delay_count)
+    .delay_phase(chan0_delay_phase)
+
     .stop(stop[0]),
 
     .wr(wr[0]),
@@ -428,11 +438,12 @@ adc_ana adc_ana_0_inst (
     .in_B2(chan0_B2),
     .in_B3(chan0_B3),
 
-    .report(chan_report[0]),
+    .empty(empty[0]),
+    .rd(rd[0]),
     .power_A(chan0_power_A),
-    .power_B(chan0_power_B),
+    .power_B(chan0_power_A),
     .phase_A(chan0_phase_A),
-    .phase_B(chan0_phase_B) 
+    .phase_B(chan0_phase_A)
 );
 
 ila_2 ila_2_inst (
@@ -445,12 +456,7 @@ ila_2 ila_2_inst (
   .probe5(bram_adr),             // input wire [11:0]
   .probe6(bram_in),              // input wire [55:0]
   .probe7(bram_out),             // input wire [55:0]
-  .probe8(start[0]),             // input wire [0:0]
-  .probe9(chan_report[0]),       // input wire [0:0]
-  .probe10(chan0_power_A),        // input wire [15:0]
-  .probe11(chan0_power_B),       // input wire [15:0]
-  .probe12(chan0_phase_A),       // input wire [15:0]
-  .probe13(chan0_phase_B)        // input wire [15:0]
+  .probe8(start[0])              // input wire [0:0]
 );
 
 generate
@@ -819,6 +825,20 @@ begin : adc_app
   end
 
 
+  always @ ( posedge pci_clk ) 
+  begin
+    if (empty[0])
+    begin
+      report <= 0;
+      rd[0] <= 0;
+    else
+    begin
+      report <= 1;
+      rd[0] <= 1;
+    end
+  end
+
+
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
@@ -861,8 +881,35 @@ begin : adc_app
 
   always @ ( posedge rx_clk ) 
   begin
+    if (config_init)
+    begin
+      case (config_count[1:0])
+        2'b00 : config_last_en <= 4'b1111;
+        2'b01 : config_last_en <= 4'b0001;
+        2'b10 : config_last_en <= 4'b0011;
+        2'b11 : config_last_en <= 4'b0111;
+      endcase
+
+      if (config_count[1])
+        config_last <= config_count[12:2];
+      else
+        config_last <= config_count[12:2] - 1;
+
+      config_delay_last[10] <= 0;
+      if (config_count[2])
+        config_delay_last[9:0] <= config_count[12:3];
+      else
+        config_delay_last[9:0] <= config_count[12:3] - 1;          
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
     if (rx_reset)
+    begin
       config_raw_coeff <= 0;
+      config_delay_count <= 0;
+    end
     else
     begin
       if (config_init)
@@ -1049,6 +1096,30 @@ begin : adc_app
 
   always @ ( posedge rx_clk ) 
   begin
+    if (config_has_coeff)
+    begin
+      if ((config_adr[1:0] == 0) && (config_adr[13] == 0))
+      begin
+        if (config_adr[12:2] == config_last)
+          config_last_phase <= synt_phase - 1;
+      end
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (config_has_coeff)
+    begin
+      if ((config_adr[1:0] == 0) && (config_adr[13] == 0))
+      begin
+        if (config_adr[12:2] == config_delay_last)
+          config_delay_phase <= synt_phase;
+      end
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
     if (rx_reset)
     begin
       synt_start <= 0;
@@ -1095,9 +1166,27 @@ begin : adc_app
   always @ ( posedge rx_clk ) 
   begin
     if (config_init && (config_channel == 5'h00))
+    begin
+      chan0_count <= config_count[12:0];
+      chan0_last <= config_last;
+      chan0_last_en <= config_last_en;
       chan0_init <= 1;
+    end
     else
       chan0_init <= 0;
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (config_start & chan_config[0])
+    begin
+      chan0_phase_incr <= ~config_last_phase[29:14];
+      chan0_delay_count <= config_delay_last[9:0] + 1;
+      chan0_delay_phase <= config_delay_phase[29:14];
+      start[0] <= 1;
+    end
+    else
+      start[0] <= 0;
   end
 
   always @ ( posedge rx_clk ) 
@@ -1139,14 +1228,6 @@ begin : adc_app
       end
       else
         wr[0] <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (chan_report[0])
-      report <= 1;
-    else
-      report <= 0;
   end
 
   always @ ( posedge rx_clk ) 

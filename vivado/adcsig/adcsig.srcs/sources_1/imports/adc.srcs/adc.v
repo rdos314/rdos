@@ -615,8 +615,7 @@ generate
 
     always @ ( posedge rx_clk ) 
     begin
-      if (rx_cnt == 93750000)   // 750 MHz
-//      if (rx_cnt == 75000000)   // 600 MHz
+      if (rx_cnt == 125000000)   // 1 GHz
       begin
         rx_led <= !rx_led;
         rx_cnt <= 0;

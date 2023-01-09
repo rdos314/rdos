@@ -31,6 +31,9 @@ module ana_freq (
 
   input wire              init,
   input wire [12:0]       count,
+  input wire [10:0]       last,
+  input wire [3:0]        last_en,
+
   input wire              start,
   input wire              stop,
   input wire              run,
@@ -67,13 +70,9 @@ module ana_freq (
 
   reg                    start_1;
   reg                    start_2;
-  reg                    start_3;
   reg                    next_1;
   reg                    next_2;
   reg                    next_3;
-
-  reg  [10:0]            last;
-  reg  [3:0]             last_en;
 
   wire                   notify_sin_A;
   wire                   notify_cos_A;
@@ -167,7 +166,7 @@ bram_freq bram_cos (
 adc_slice sin_A (
   .clk(clk),               // input wire CLK
   .reset(reset),           // input wire [0 : 0] reset
-  .start(start_3),         // input wire [0 : 0] start
+  .start(start_2),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
   .next(next_3),           // input wire [0 : 0] next
   .in(in_A),               // input wire [55 : 0] in
@@ -179,7 +178,7 @@ adc_slice sin_A (
 adc_slice cos_A (
   .clk(clk),               // input wire CLK
   .reset(reset),           // input wire [0 : 0] reset
-  .start(start_3),         // input wire [0 : 0] start
+  .start(start_2),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
   .next(next_3),           // input wire [0 : 0] next
   .in(in_A),               // input wire [55 : 0] in
@@ -191,7 +190,7 @@ adc_slice cos_A (
 adc_slice sin_B (
   .clk(clk),               // input wire CLK
   .reset(reset),           // input wire [0 : 0] reset
-  .start(start_3),         // input wire [0 : 0] start
+  .start(start_2),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
   .next(next_3),           // input wire [0 : 0] next
   .in(in_B),               // input wire [55 : 0] in
@@ -203,7 +202,7 @@ adc_slice sin_B (
 adc_slice cos_B (
   .clk(clk),               // input wire CLK
   .reset(reset),           // input wire [0 : 0] reset
-  .start(start_3),         // input wire [0 : 0] start
+  .start(start_2),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
   .next(next_3),           // input wire [0 : 0] next
   .in(in_B),               // input wire [55 : 0] in
@@ -259,7 +258,6 @@ ila_0 ila_0_inst (
   .clk(clk),                 // input wire clk
   .probe0(start_1),          // input wire [0:0]  probe3
   .probe1(start_2),          // input wire [0:0]  probe3
-  .probe2(start_3),          // input wire [0:0]  probe3
   .probe3(next_1),           // input wire [0:0]  probe3
   .probe4(next_2),           // input wire [0:0]  probe3
   .probe5(next_3),           // input wire [0:0]  probe3
@@ -349,7 +347,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset | start_3 | next_3)
+    if (reset | start_2 | next_3)
       amp_done_A <= 0;
     else
       if (amp_notify_A)
@@ -361,7 +359,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset | start_3 | next_3)
+    if (reset | start_2 | next_3)
       amp_done_B <= 0;
     else
       if (amp_notify_B)
@@ -373,7 +371,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset | start_3 | next_3)
+    if (reset | start_2 | next_3)
       phase_done_A <= 0;
     else
       if (phase_notify_A)
@@ -385,7 +383,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset | start_3 | next_3)
+    if (reset | start_2 | next_3)
       phase_done_B <= 0;
     else
       if (phase_notify_B)
@@ -407,7 +405,6 @@ begin : ana_freq_gen
   begin
     start_1 <= start;
     start_2 <= start_1;
-    start_3 <= start_2;
   end
 
   always @ ( posedge clk ) 
@@ -424,28 +421,11 @@ begin : ana_freq_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
-    begin
       coeff_count <= 0;
-      last <= 0;
-    end
     else
     begin
       if (init)
-      begin
         coeff_count <= count;
-
-        case (count[1:0])
-          2'b00 : last_en <= 4'b1111;
-          2'b01 : last_en <= 4'b0001;
-          2'b10 : last_en <= 4'b0011;
-          2'b11 : last_en <= 4'b0111;
-        endcase
-
-        if (count[1:0] == 2'b00)
-          last <= count[12:2] - 1;
-        else
-          last <= count[12:2];
-      end
     end
   end
 
