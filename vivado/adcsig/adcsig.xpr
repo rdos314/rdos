@@ -39,13 +39,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="501"/>
-    <Option Name="WTModelSimExportSim" Val="499"/>
-    <Option Name="WTQuestaExportSim" Val="499"/>
-    <Option Name="WTIesExportSim" Val="498"/>
-    <Option Name="WTVcsExportSim" Val="498"/>
-    <Option Name="WTRivieraExportSim" Val="497"/>
-    <Option Name="WTActivehdlExportSim" Val="497"/>
+    <Option Name="WTXSimExportSim" Val="517"/>
+    <Option Name="WTModelSimExportSim" Val="515"/>
+    <Option Name="WTQuestaExportSim" Val="515"/>
+    <Option Name="WTIesExportSim" Val="514"/>
+    <Option Name="WTVcsExportSim" Val="514"/>
+    <Option Name="WTRivieraExportSim" Val="513"/>
+    <Option Name="WTActivehdlExportSim" Val="513"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -89,7 +89,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/ip/square.xcix">
+      <File Path="$PSRCDIR/sources_1/ip/square_1.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -212,7 +212,21 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/imports/adc.srcs/ana_amp.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/imports/adc.srcs/ana_freq.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/imports/adc.srcs/ana_phase.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -289,7 +303,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/ip/square_1.xcix">
+      <File Path="$PSRCDIR/sources_1/ip/square.xcix">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -365,25 +379,6 @@
       <File Path="$PSRCDIR/sources_1/ip/bram_coeff/bram_coeff.xci">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/ip/ila_0_2.xcix">
-        <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/ila_0_2.xcix"/>
-          <Attr Name="ImportTime" Val="1671877468"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/ip/ila_0_2/ila_0.xci">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/ila_0_2/ila_0.xci"/>
-          <Attr Name="ImportTime" Val="1588192192"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -538,6 +533,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/ip/ila_1/ila_1.xci">
         <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/ila_1/ila_1.xci"/>
           <Attr Name="ImportTime" Val="1589313696"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -619,6 +615,50 @@
       </File>
       <Config>
         <Option Name="TopModule" Val="ila_2"/>
+        <Option Name="UseBlackboxStub" Val="1"/>
+      </Config>
+    </FileSet>
+    <FileSet Name="ila_0" Type="BlockSrcs" RelSrcDir="$PSRCDIR/ila_0">
+      <File Path="$PSRCDIR/sources_1/ip/ila_0_2.xcix">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/ila_0_2.xcix"/>
+          <Attr Name="ImportTime" Val="1671877468"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/ip/ila_0_2/ila_0.xci">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../adc/adc.srcs/sources_1/ip/ila_0_2/ila_0.xci"/>
+          <Attr Name="ImportTime" Val="1588192192"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <Config>
+        <Option Name="TopModule" Val="ila_0"/>
+        <Option Name="UseBlackboxStub" Val="1"/>
+      </Config>
+    </FileSet>
+    <FileSet Name="fifo_signal" Type="BlockSrcs" RelSrcDir="$PSRCDIR/fifo_signal">
+      <File Path="$PSRCDIR/sources_1/ip/fifo_signal.xcix">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/ip/fifo_signal/fifo_signal.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <Config>
+        <Option Name="TopModule" Val="fifo_signal"/>
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
@@ -725,6 +765,28 @@
     <Run Id="ila_2_synth_1" Type="Ft3:Synth" SrcSet="ila_2" Part="xc7k325tffg900-2" ConstrsSet="ila_2" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/ila_2_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2019"/>
+        <Step Id="synth_design"/>
+      </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
+      <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2019"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="ila_0_synth_1" Type="Ft3:Synth" SrcSet="ila_0" Part="xc7k325tffg900-2" ConstrsSet="ila_0" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/ila_0_synth_1" IncludeInArchive="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2019"/>
+        <Step Id="synth_design"/>
+      </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
+      <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2019"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="fifo_signal_synth_1" Type="Ft3:Synth" SrcSet="fifo_signal" Part="xc7k325tffg900-2" ConstrsSet="fifo_signal" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/fifo_signal_synth_1" IncludeInArchive="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2019">
+          <Desc>Vivado Synthesis Defaults</Desc>
+        </StratHandle>
         <Step Id="synth_design"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
@@ -872,6 +934,42 @@
     <Run Id="ila_2_impl_1" Type="Ft2:EntireDesign" Part="xc7k325tffg900-2" ConstrsSet="ila_2" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="ila_2_synth_1" IncludeInArchive="false" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2019"/>
+        <Step Id="init_design"/>
+        <Step Id="opt_design"/>
+        <Step Id="power_opt_design"/>
+        <Step Id="place_design"/>
+        <Step Id="post_place_power_opt_design"/>
+        <Step Id="phys_opt_design" EnableStepBool="1"/>
+        <Step Id="route_design"/>
+        <Step Id="post_route_phys_opt_design"/>
+        <Step Id="write_bitstream"/>
+      </Strategy>
+      <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2019"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="ila_0_impl_1" Type="Ft2:EntireDesign" Part="xc7k325tffg900-2" ConstrsSet="ila_0" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="ila_0_synth_1" IncludeInArchive="false" GenFullBitstream="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2019"/>
+        <Step Id="init_design"/>
+        <Step Id="opt_design"/>
+        <Step Id="power_opt_design"/>
+        <Step Id="place_design"/>
+        <Step Id="post_place_power_opt_design"/>
+        <Step Id="phys_opt_design" EnableStepBool="1"/>
+        <Step Id="route_design"/>
+        <Step Id="post_route_phys_opt_design"/>
+        <Step Id="write_bitstream"/>
+      </Strategy>
+      <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2019"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="fifo_signal_impl_1" Type="Ft2:EntireDesign" Part="xc7k325tffg900-2" ConstrsSet="fifo_signal" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="fifo_signal_synth_1" IncludeInArchive="false" GenFullBitstream="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2019">
+          <Desc>Default settings for Implementation.</Desc>
+        </StratHandle>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>

@@ -254,27 +254,32 @@ ana_phase ana_phase_B (
   .phase(phase_B)
 );
 
+
 ila_0 ila_0_inst (
-  .clk(clk),                // input wire clk
-  .probe0(wr),              // input wire [0:0]  probe3
-  .probe1(wr_adr),          // input wire [10:0]  probe3
-  .probe2(wr_sin_0),        // input wire [15:0]  probe3
-  .probe3(wr_cos_0),        // input wire [15:0]  probe3
-  .probe4(wr_sin_1),        // input wire [15:0]  probe3
-  .probe5(wr_cos_1),        // input wire [15:0]  probe3
-  .probe6(wr_sin_2),        // input wire [15:0]  probe3
-  .probe7(wr_cos_2),        // input wire [15:0]  probe3
-  .probe8(wr_sin_3),        // input wire [15:0]  probe3
-  .probe9(wr_cos_3),        // input wire [15:0]  probe3
-  .probe10(in_A0),           // input wire [13:0]  probe3
-  .probe11(in_A1),           // input wire [13:0]  probe3
-  .probe12(in_A2),           // input wire [13:0]  probe3
-  .probe13(in_A3),           // input wire [13:0]  probe3
-  .probe14(in_B0),           // input wire [13:0]  probe3
-  .probe15(in_B1),           // input wire [13:0]  probe3
-  .probe16(in_B2),           // input wire [13:0]  probe3
-  .probe17(in_B3),           // input wire [13:0]  probe3
-  .probe18(report)           // input wire [0:0]  probe3
+  .clk(clk),                 // input wire clk
+  .probe0(start_1),          // input wire [0:0]  probe3
+  .probe1(start_2),          // input wire [0:0]  probe3
+  .probe2(start_3),          // input wire [0:0]  probe3
+  .probe3(next_1),           // input wire [0:0]  probe3
+  .probe4(next_2),           // input wire [0:0]  probe3
+  .probe5(next_3),           // input wire [0:0]  probe3
+  .probe6(notify_sin_A),     // input wire [0:0]  probe3
+  .probe7(notify_cos_A),     // input wire [0:0]  probe3
+  .probe8(notify_sin_B),     // input wire [0:0]  probe3
+  .probe9(notify_cos_B),     // input wire [0:0]  probe3
+  .probe10(amp_notify_A),    // input wire [0:0]  probe3
+  .probe11(amp_notify_B),    // input wire [0:0]  probe3
+  .probe12(amp_done_A),      // input wire [0:0]  probe3
+  .probe13(amp_done_B),      // input wire [0:0]  probe3
+  .probe14(phase_notify_A),  // input wire [0:0]  probe3
+  .probe15(phase_notify_B),  // input wire [0:0]  probe3
+  .probe16(phase_done_A),    // input wire [0:0]  probe3
+  .probe17(phase_done_B),    // input wire [0:0]  probe3
+  .probe18(amp_A),           // input wire [15:0]  probe3
+  .probe19(amp_B),           // input wire [15:0]  probe3
+  .probe20(phase_A),         // input wire [15:0]  probe3
+  .probe21(phase_B),         // input wire [15:0]  probe3
+  .probe22(report)           // input wire [0:0]  probe3
 );
 
 generate
