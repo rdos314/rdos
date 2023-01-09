@@ -40,12 +40,10 @@ module ana_amp (
 
   reg                    run_div;
   reg                    save_div;
+  reg                    temp_div;
   
   reg                    sqrt_start;
   
-  reg  [15:0]            amp_sin;
-  reg  [15:0]            amp_cos;
-
   wire [31:0]            sin_2;
   wire [31:0]            cos_2;
   reg  [31:0]            amp_2;
@@ -62,10 +60,21 @@ module ana_amp (
   reg                    sign_sin;
   reg  [29:0]            divend_sin;
   reg  [17:0]            quot_sin;
+  reg                    incr_sin;
+  reg  [29:0]            div_sin;
+  reg  [15:0]            temp_sin;
+  reg                    temp_incr_sin;
+  reg  [15:0]            amp_sin;
 
   reg                    sign_cos;
   reg  [29:0]            divend_cos;
   reg  [17:0]            quot_cos;
+  reg                    incr_cos;
+  reg  [29:0]            div_cos;
+  reg  [15:0]            temp_cos;
+  reg                    temp_incr_cos;
+  reg  [15:0]            amp_cos;
+
 
 square square_sin_inst (
   .CLK(clk),         // input wire CLK
@@ -127,33 +136,24 @@ begin : ana_amp_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
-    begin
-      run_div <= 0;
-      save_div <= 0;
-    end
+      pend_div <= 0;
     else
     begin
       if (start)
       begin
-        run_div <= 1;
-
-        mask[17] <= 1;
-        mask[16:0] <= 0;
-
-        curr[29:17] <= count;
-        curr[16:0] <= 0;
-
-        quot_sin[16:0] <= 0;
+        pend_div <= 1;
 
         if (sin_sum[42])
         begin
           sign_sin <= 1;
-          divend_sin <= (~sin_sum[41:12]) + 1;
+          incr_sin <= ~sín_sum[11];
+          div_sin <= ~sin_sum[41:12];
         end
         else
         begin
           sign_sin <= 0;
-          divend_sin <= sin_sum[41:12];
+          incr_sin <= sín_sum[11];
+          div_sin <= sin_sum[41:12];
         end
 
         quot_cos[16:0] <= 0;
@@ -161,46 +161,123 @@ begin : ana_amp_gen
         if (cos_sum[42])
         begin
           sign_cos <= 1;
-          divend_cos <= (~cos_sum[41:12]) + 1;
+          incr_cos <= ~sín_sum[11];
+          div_cos <= ~cos_sum[41:12];
         end
         else
         begin
-          sign_cos <= 0;
-          divend_cos <= cos_sum[41:12];
+          incr_cos <= cos_sum[11];
+          div_cos <= cos_sum[41:12];
+        end
+      end
+      else
+        pend_div <= 0;
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+    begin
+      run_div <= 0;
+      save_div <= 0;
+    end
+    else
+    begin
+      if (run_div)
+      begin
+        if (mask)
+        begin
+          save_div <= 0;
+
+          if (divend_sin >= curr)
+          begin
+            divend_sin <= divend_sin - curr;
+            quot_sin <= quot_sin | mask;
+          end
+
+          if (divend_cos >= curr)
+          begin
+            divend_cos <= divend_cos - curr;
+            quot_cos <= quot_cos | mask;
+          end
+
+          curr <= curr >> 1;
+          mask <= mask >> 1;
+
+        end
+        else
+        begin
+          run_div <= 0;
+          save_div <= 1;
         end
       end
       else
       begin
-        if (run_div)
+        save_div <= 0;
+
+        if (pend_div)
         begin
-          save_div <= 0;
+          run_div <= 1;
 
-          if (mask)
-          begin
-            if (divend_sin >= curr)
-            begin
-              divend_sin <= divend_sin - curr;
-              quot_sin <= quot_sin | mask;
-            end
+          mask[17] <= 1;
+          mask[16:0] <= 0;
 
-            if (divend_cos >= curr)
-            begin
-              divend_cos <= divend_cos - curr;
-              quot_cos <= quot_cos | mask;
-            end
+          curr[29:17] <= count;
+          curr[16:0] <= 0;
 
-            curr <= curr >> 1;
-            mask <= mask >> 1;
-          end
+          quot_sin[16:0] <= 0;
+
+          if (incr_sin)
+            divend_sin <= div_sin + 1;
           else
-          begin
-            run_div <= 0;
-            save_div <= 1;
-          end
+            divend_sin <= div_sin;
+
+          if (incr_cos)
+            divend_cos <= div_cos + 1;
+          else
+            divend_cos <= div_cos;
+        end
+      end
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      temp_div <= 0;      
+    else
+    begin
+      if (save_div)
+      begin
+        temp_div <= 1;
+
+        temp_sin[15] <= sign_sin;
+        if (sign_sin)
+        begin
+          temp_sin[14:0] <= ~quot_cos[15:1];
+          temp_sin_incr <= ~quot_cos[0];
         end
         else
-          save_div <= 0;
+        begin
+          temp_sin[14:0] <= quot_cos[15:1];
+          temp_sin_incr <= quot_cos[0];
+        end
+
+        temp_cos[15] <= sign_cos;  
+        if (sign_cos)
+        begin
+          temp_cos[14:0] <= ~quot_cos[15:1];
+          temp_cos_incr <= ~quot_cos[0];
+        end
+        else
+        begin
+          temp_cos[14:0] <= quot_cos[15:1];
+          temp_cos_incr <= quot_cos[0];
+        end
       end
+      else
+        temp_div <= 0;
     end
   end
 
@@ -210,42 +287,19 @@ begin : ana_amp_gen
       p1 <= 0;      
     else
     begin
-      if (save_div)
+      if (temp_div)
       begin
         p1 <= 1;
-        amp_sin[15] <= sign_sin;
-
-        if (sign_sin)
-        begin
-          if (quot_sin[0])
-            amp_sin[14:0] <= ~quot_sin[15:1];
-          else
-            amp_sin[14:0] <= (~quot_sin[15:1]) + 1;
-        end
+        
+        if (temp_sin_incr)
+          amp_sin <= temp_sin + 1;
         else
-        begin
-          if (quot_sin[0])
-            amp_sin[14:0] <= quot_sin[15:1] + 1;
-          else
-            amp_sin[14:0] <= quot_sin[15:1];
-        end
-
-        amp_cos[15] <= sign_cos;
-
-        if (sign_cos)
-        begin
-          if (quot_cos[0])
-            amp_cos[14:0] <= ~quot_cos[15:1];
-          else
-            amp_cos[14:0] <= (~quot_cos[15:1]) + 1;
-        end
+          amp_sin <= temp_sin;
+        
+        if (temp_cos_incr)
+          amp_cos <= temp_cos + 1;
         else
-        begin
-          if (quot_cos[0])
-            amp_cos[14:0] <= quot_cos[15:1] + 1;
-          else
-            amp_cos[14:0] <= quot_cos[15:1];
-        end
+          amp_cos <= temp_cos;
       end
       else
         p1 <= 0;
@@ -254,10 +308,20 @@ begin : ana_amp_gen
 
   always @ ( posedge clk ) 
   begin
-    p2 <= p1;
-    p3 <= p2;
-    p4 <= p3;
-    p5 <= p4;
+    if (reset)
+    begin
+      p2 <= 0;
+      p3 <= 0;
+      p4 <= 0;
+      p5 <= 0;
+    end
+    else
+    begin
+      p2 <= p1;
+      p3 <= p2;
+      p4 <= p3;
+      p5 <= p4;
+    end
   end
 
   always @ ( posedge clk ) 

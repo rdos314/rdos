@@ -38,6 +38,7 @@ module ana_phase (
 );
 
   reg                     run_rot;
+  reg                     run_done;
   reg                     run_atan;
   reg                     pend_atan;
   reg                     start_atan;
@@ -62,6 +63,38 @@ begin : ana_phase_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
+      run_done <= 0;
+    else
+    begin
+      if (start)
+      begin
+        phase_sin <= sin_sum;
+        phase_cos <= cos_sum;
+        run_done <= 0;
+      end
+      else
+      begin
+        if (phase_sin[42] == phase_sin[41])
+        begin
+          if (phase_cos[42] == phase_cos[41])
+          begin
+            phase_sin[42:1] <= phase_sin[41:0];
+            phase_sin[0] <= 0;
+            phase_cos[42:1] <= phase_cos[41:0];
+            phase_cos[0] <= 0;
+          end
+          else
+            rot_done <= 1;
+        end
+        else
+          rot_done <= 1;
+      end
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
     begin
       run_rot <= 0;
       pend_atan <= 0;
@@ -72,33 +105,13 @@ begin : ana_phase_gen
       begin
         run_rot <= 1;
         pend_atan <= 0;
-        phase_sin <= sin_sum;
-        phase_cos <= cos_sum;
       end
       else
       begin
-        if (run_rot)
+        if (run_rot & rot_done)
         begin
-          if (phase_sin[42] == phase_sin[41])
-          begin
-            if (phase_cos[42] == phase_cos[41])
-            begin
-              phase_sin[42:1] <= phase_sin[41:0];
-              phase_sin[0] <= 0;
-              phase_cos[42:1] <= phase_cos[41:0];
-              phase_cos[0] <= 0;
-           end
-           else
-           begin
-             run_rot <= 0;
-             pend_atan <= 1;
-           end
-         end
-         else
-         begin
-           run_rot <= 0;
-           pend_atan <= 1;
-         end
+          run_rot <= 0;
+          pend_atan <= 1;
         end
         else
           pend_atan <= 0;

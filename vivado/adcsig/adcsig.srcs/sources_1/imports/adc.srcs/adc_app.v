@@ -156,11 +156,11 @@ module adc_app (
   reg                     config_validate;
   reg                     config_done;
 
-  reg  [29:0]             config_last_phase;
+  reg  [16:0]             config_last_phase;
   reg  [10:0]             config_last;
   reg  [3:0]              config_last_en;
   reg  [10:0]             config_delay_last;
-  reg  [29:0]             config_delay_phase;
+  reg  [16:0]             config_delay_phase;
 
   reg  [23:0]             config_l_sin;
   reg  [23:0]             config_l_cos;
@@ -264,16 +264,18 @@ module adc_app (
   reg  [15:0]             coeff_cos_2;
   reg  [15:0]             coeff_cos_3;
 
-// analyser freq blocks rx domain
+// analyser freq blocks in rx domain
 
+// all channels
+
+  reg  [31:0]             init;
   reg  [31:0]             start;
-  wire [31:0]             stop;
+  reg  [31:0]             stop;
   reg  [31:0]             wr;
   reg  [31:0]             chan_config;
+
+// channel 0
    
-  assign stop[0] = config_stop & chan_config[0];
-  
-  reg                     chan0_init;
   reg  [12:0]             chan0_count;
   reg  [10:0]             chan0_last;
   reg  [3:0]              chan0_last_en;
@@ -301,10 +303,15 @@ module adc_app (
   reg  [13:0]             chan0_B3;
 
 
-// analyser freq blocks pci domain
+// analyser freq blocks in pci domain
+
+
+// all channels
 
   wire [31:0]             empty;
   reg  [31:0]             rd;
+
+// channel 0
 
   wire [15:0]             chan0_power_A;
   wire [15:0]             chan0_power_B;
@@ -404,9 +411,8 @@ bram_msix bram_msix_inst (
 adc_ana adc_ana_0_inst (
     .clk (rx_clk),
     .reset (rx_reset),
-    .pci_clk(pci_clk),
 
-    .init(chan0_init),
+    .init(init[0]),
     .count(chan0_count),
     .last(chan0_last),
     .last_en(chan0_last_en),
@@ -437,6 +443,8 @@ adc_ana adc_ana_0_inst (
     .in_B1(chan0_B1),
     .in_B2(chan0_B2),
     .in_B3(chan0_B3),
+
+    .pci_clk(pci_clk),
 
     .empty(empty[0]),
     .rd(rd[0]),
@@ -1101,7 +1109,7 @@ begin : adc_app
       if ((config_adr[1:0] == 0) && (config_adr[13] == 0))
       begin
         if (config_adr[12:2] == config_last)
-          config_last_phase <= synt_phase - 1;
+          config_last_phase <= ~synt_phase[29:13];
       end
     end
   end
@@ -1113,7 +1121,7 @@ begin : adc_app
       if ((config_adr[1:0] == 0) && (config_adr[13] == 0))
       begin
         if (config_adr[12:2] == config_delay_last)
-          config_delay_phase <= synt_phase;
+          config_delay_phase <= synt_phase[29:13];
       end
     end
   end
@@ -1128,37 +1136,27 @@ begin : adc_app
     end
     else
     begin
-      if (config_init)
+      if (config_has_coeff)
       begin
-        synt_start <= 1;
-        config_adr <= 0;
-        synt_phase <= 0;
-      end
-      else
-      begin
-        if (config_start)
+        if (config_adr == 14'h3FFF)
           synt_start <= 0;
         else
         begin
-          if (config_validate)
-            synt_start <= 0;
-          else
-          begin
-            if (config_has_coeff)
-            begin
-              if (config_adr == 14'h3FFF)
-                synt_start <= 0;
-              else
-              begin
-                config_adr <= config_adr + 1;
-                synt_phase <= synt_phase + config_incr;
-                synt_start <= 1;
-              end
-            end
-            else
-              synt_start <= 0;
-          end
+          config_adr <= config_adr + 1;
+          synt_phase <= synt_phase + config_incr;
+          synt_start <= 1;
         end
+      end
+      else
+      begin
+        if (config_init)
+        begin
+          synt_start <= 1;
+          config_adr <= 0;
+          synt_phase <= 0;
+        end
+        else
+          synt_start <= 0;
       end
     end
   end
@@ -1170,23 +1168,10 @@ begin : adc_app
       chan0_count <= config_count[12:0];
       chan0_last <= config_last;
       chan0_last_en <= config_last_en;
-      chan0_init <= 1;
+      init[0] <= 1;
     end
     else
-      chan0_init <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_start & chan_config[0])
-    begin
-      chan0_phase_incr <= ~config_last_phase[29:14];
-      chan0_delay_count <= config_delay_last[9:0] + 1;
-      chan0_delay_phase <= config_delay_phase[29:14];
-      start[0] <= 1;
-    end
-    else
-      start[0] <= 0;
+      init[0] <= 0;
   end
 
   always @ ( posedge rx_clk ) 
@@ -1201,9 +1186,39 @@ begin : adc_app
           chan_config[0] <= 0;
       end
       else
-      if (chan0_init)
+      if (init[0])
         chan_config[0] <= 1;
     end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (config_start & chan_config[0])
+    begin
+      chan0_delay_count <= config_delay_last[9:0] + 1;
+
+      if (config_last_phase[0])
+        chan0_phase_incr <= config_last_phase[16:1] + 1;
+      else
+        chan0_phase_incr <= config_last_phase[16:1];
+
+      if (config_delay_phase[0])
+        chan0_delay_phase <= config_delay_phase[16:1] + 1;
+      else
+        chan0_delay_phase <= config_delay_phase[16:1];
+
+      start[0] <= 1;
+    end
+    else
+      start[0] <= 0;
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (config_stop & chan_config[0])
+      stop[0] <= 1;
+    else
+      stop[0] <= 0;
   end
 
   always @ ( posedge rx_clk ) 
@@ -1234,14 +1249,28 @@ begin : adc_app
   begin
     if (chan_config[0])
     begin
-      chan0_A0 <= bram_out[13:0];      
-      chan0_A1 <= bram_out[27:14];      
-      chan0_A2 <= bram_out[41:28];      
-      chan0_A3 <= bram_out[55:42];      
-      chan0_B0 <= -bram_out[13:0];      
-      chan0_B1 <= -bram_out[27:14];      
-      chan0_B2 <= -bram_out[41:28];      
-      chan0_B3 <= -bram_out[55:42];      
+      if (config_validate)
+      begin
+        chan0_A0 <= bram_out[13:0];      
+        chan0_A1 <= bram_out[27:14];      
+        chan0_A2 <= bram_out[41:28];      
+        chan0_A3 <= bram_out[55:42];      
+        chan0_B0 <= -bram_out[13:0];      
+        chan0_B1 <= -bram_out[27:14];      
+        chan0_B2 <= -bram_out[41:28];      
+        chan0_B3 <= -bram_out[55:42];      
+      end
+      else
+      begin
+        chan0_A0 <= 0;
+        chan0_A1 <= 0;
+        chan0_A2 <= 0;
+        chan0_A3 <= 0;
+        chan0_B0 <= 0;
+        chan0_B1 <= 0;
+        chan0_B2 <= 0;
+        chan0_B3 <= 0;
+      end
     end
     else
     begin
@@ -1256,6 +1285,8 @@ begin : adc_app
         chan0_B2 <= adc_B2;
         chan0_B3 <= adc_B3;
       end
+    else
+    begin
       else
       begin
         chan0_A0 <= 0;

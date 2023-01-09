@@ -213,17 +213,36 @@ begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
-    p2 <= p1;
-    p3 <= p2;
-    p4 <= p3;
+    if (reset)
+    begin
+      p2 <= 0;
+      p3 <= 0;
+      p4 <= 0;
+    end
+    else
+    begin
+      p2 <= p1;
+      p3 <= p2;
+      p4 <= p3;
+    end
   end
 
   always @ ( posedge clk ) 
   begin
-    s2 <= s1;
-    s3 <= s2;
-    s4 <= s3;
-    s5 <= s4;
+    if (reset)
+    begin
+      s2 <= 0;
+      s3 <= 0;
+      s4 <= 0;
+      s5 <= 0;
+    end
+    else
+    begin
+      s2 <= s1;
+      s3 <= s2;
+      s4 <= s3;
+      s5 <= s4;
+    end
   end
 
   always @ ( posedge clk ) 

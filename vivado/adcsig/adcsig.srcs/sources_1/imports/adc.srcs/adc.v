@@ -764,7 +764,7 @@ generate
         rx_pci_control_msg <= 0;
     end
 
-    always @ ( posedge rx_clk ) 
+    always @ ( posedge pcie_user_clk ) 
     begin
       temp <= power_A + power_B + phase_A + phase_B;
       adc_led <= report + temp[0]+temp[1]+temp[2]+temp[3]+temp[4]+temp[5]+temp[6]+temp[7]+temp[8]+temp[9]+temp[10]+temp[11]+temp[12]+temp[13]+temp[14]+temp[15];

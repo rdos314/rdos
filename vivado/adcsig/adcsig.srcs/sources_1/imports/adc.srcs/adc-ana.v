@@ -97,10 +97,8 @@ module adc_ana (
   wire [15:0]             d_phase_B;
 
   reg                     base_start;
-  reg                     base_run;
   reg  [9:0]              curr_count;
   reg                     delay_start;
-  reg                     delay_run;
 
   reg                     base_update;
   reg  [15:0]             base_curr_phase_A;
@@ -120,8 +118,7 @@ fifo_signal signal_inst (
   .rd_en(rd),               // input wire rd_en
   .dout(sig_out),           // output wire [63 : 0] dout
   .full(),                  // output wire full
-  .empty(),                 // output wire empty
-  .prog_empty(empty)        // output wire prog_empty
+  .empty(empty)             // output wire empty
 );
 
 
@@ -134,7 +131,6 @@ ana_freq base (
   .last_en(last_en),      // input wire [3:0] last_en
   .start(base_start),     // input wire start
   .stop(stop),            // input wire stop
-  .run(base_run),         // input wire run
   .wr(wr),                // input wire wr
   .wr_adr(wr_adr),        // input wire [12:0] wr_adr
   .wr_sin_0(wr_sin_0),    // input wire [15:0] wr_sin_0
@@ -169,7 +165,6 @@ ana_freq delayed (
   .last_en(last_en),      // input wire [3:0] last_en
   .start(delay_start),    // input wire start
   .stop(stop),            // input wire stop
-  .run(delay_run),        // input wire run
   .wr(wr),                // input wire wr
   .wr_adr(wr_adr),        // input wire [12:0] wr_adr
   .wr_sin_0(wr_sin_0),    // input wire [15:0] wr_sin_0
@@ -299,71 +294,27 @@ begin : adc_ana_gen
     begin
       delay_start <= 0;
       delay_count <= 0;
-      delay_run <= 0;
       curr_count <= 0;
     end
     else
     begin
-      if (init)
+      if (start)
       begin
+        curr_count <= delay_count;
         delay_start <= 0;
-        delay_run <= 0;
-        curr_count <= 0;
       end
       else
       begin
-        if (start)
+        if (curr_count)
         begin
-          curr_count <= delay_count;
-          delay_run <= 0;
-          delay_start <= 0;
-        end
-        else
-        begin
-          if (stop)
-          begin
-            curr_count <= 0;
-            delay_run <= 0;
-            delay_start <= 0;
-          end
+          curr_count <= curr_count - 1;
+          if (curr_count == 1)
+            delay_start <= 1;
           else
-          begin
-            if (curr_count)
-            begin
-              curr_count <= curr_count - 1;
-              if (curr_count == 1)
-              begin
-                delay_run <= 1;
-                delay_start <= 1;
-              end
-              else
-                delay_start <= 0;
-            end
-            else
-              delay_start <= 0;
-          end
+            delay_start <= 0;
         end
-      end
-    end
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (reset)
-      base_run <= 0;
-    else
-    begin
-      if (init)
-        base_run <= 0;
-      else
-      begin
-        if (start)
-          base_run <= 1;
         else
-        begin
-          if (stop)
-            base_run <= 0;
-        end
+          delay_start <= 0;
       end
     end
   end
