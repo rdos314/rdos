@@ -38,7 +38,7 @@ module ana_phase (
 );
 
   reg                     run_rot;
-  reg                     run_done;
+  reg                     rot_done;
   reg                     run_atan;
   reg                     pend_atan;
   reg                     start_atan;
@@ -63,14 +63,14 @@ begin : ana_phase_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
-      run_done <= 0;
+      rot_done <= 0;
     else
     begin
       if (start)
       begin
         phase_sin <= sin_sum;
         phase_cos <= cos_sum;
-        run_done <= 0;
+        rot_done <= 0;
       end
       else
       begin

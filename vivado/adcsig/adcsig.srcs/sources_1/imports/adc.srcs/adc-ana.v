@@ -118,7 +118,8 @@ fifo_signal signal_inst (
   .rd_en(rd),               // input wire rd_en
   .dout(sig_out),           // output wire [63 : 0] dout
   .full(),                  // output wire full
-  .empty(empty)             // output wire empty
+  .empty(),                 // output wire empty
+  .prog_empty(empty)        // output wire empty
 );
 
 
@@ -214,7 +215,8 @@ begin : adc_ana_gen
           base_curr_phase_A <= 0;
           base_curr_phase_B <= 0;
         end
-     end
+      end
+    end
   end
 
   always @ ( posedge clk ) 
@@ -293,7 +295,6 @@ begin : adc_ana_gen
     if (reset)
     begin
       delay_start <= 0;
-      delay_count <= 0;
       curr_count <= 0;
     end
     else

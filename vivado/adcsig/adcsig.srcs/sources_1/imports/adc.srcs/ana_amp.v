@@ -41,6 +41,7 @@ module ana_amp (
   reg                    run_div;
   reg                    save_div;
   reg                    temp_div;
+  reg                    pend_div;
   
   reg                    sqrt_start;
   
@@ -146,22 +147,20 @@ begin : ana_amp_gen
         if (sin_sum[42])
         begin
           sign_sin <= 1;
-          incr_sin <= ~sín_sum[11];
+          incr_sin <= ~sin_sum[11];
           div_sin <= ~sin_sum[41:12];
         end
         else
         begin
           sign_sin <= 0;
-          incr_sin <= sín_sum[11];
+          incr_sin <= sin_sum[11];
           div_sin <= sin_sum[41:12];
         end
-
-        quot_cos[16:0] <= 0;
 
         if (cos_sum[42])
         begin
           sign_cos <= 1;
-          incr_cos <= ~sín_sum[11];
+          incr_cos <= ~sin_sum[11];
           div_cos <= ~cos_sum[41:12];
         end
         else
@@ -256,24 +255,24 @@ begin : ana_amp_gen
         if (sign_sin)
         begin
           temp_sin[14:0] <= ~quot_cos[15:1];
-          temp_sin_incr <= ~quot_cos[0];
+          temp_incr_sin <= ~quot_cos[0];
         end
         else
         begin
           temp_sin[14:0] <= quot_cos[15:1];
-          temp_sin_incr <= quot_cos[0];
+          temp_incr_sin <= quot_cos[0];
         end
 
         temp_cos[15] <= sign_cos;  
         if (sign_cos)
         begin
           temp_cos[14:0] <= ~quot_cos[15:1];
-          temp_cos_incr <= ~quot_cos[0];
+          temp_incr_cos <= ~quot_cos[0];
         end
         else
         begin
           temp_cos[14:0] <= quot_cos[15:1];
-          temp_cos_incr <= quot_cos[0];
+          temp_incr_cos <= quot_cos[0];
         end
       end
       else
@@ -291,12 +290,12 @@ begin : ana_amp_gen
       begin
         p1 <= 1;
         
-        if (temp_sin_incr)
+        if (temp_incr_sin)
           amp_sin <= temp_sin + 1;
         else
           amp_sin <= temp_sin;
         
-        if (temp_cos_incr)
+        if (temp_incr_cos)
           amp_cos <= temp_cos + 1;
         else
           amp_cos <= temp_cos;

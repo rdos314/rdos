@@ -418,9 +418,9 @@ adc_ana adc_ana_0_inst (
     .last_en(chan0_last_en),
 
     .start(start[0]),
-    .phase_incr(chan0_phase_incr)
-    .delay_count(chan0_delay_count)
-    .delay_phase(chan0_delay_phase)
+    .phase_incr(chan0_phase_incr),
+    .delay_count(chan0_delay_count),
+    .delay_phase(chan0_delay_phase),
 
     .stop(stop[0]),
 
@@ -449,9 +449,9 @@ adc_ana adc_ana_0_inst (
     .empty(empty[0]),
     .rd(rd[0]),
     .power_A(chan0_power_A),
-    .power_B(chan0_power_A),
+    .power_B(chan0_power_B),
     .phase_A(chan0_phase_A),
-    .phase_B(chan0_phase_A)
+    .phase_B(chan0_phase_B)
 );
 
 ila_2 ila_2_inst (
@@ -839,6 +839,7 @@ begin : adc_app
     begin
       report <= 0;
       rd[0] <= 0;
+    end
     else
     begin
       report <= 1;
@@ -914,10 +915,7 @@ begin : adc_app
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
-    begin
       config_raw_coeff <= 0;
-      config_delay_count <= 0;
-    end
     else
     begin
       if (config_init)
@@ -1285,8 +1283,6 @@ begin : adc_app
         chan0_B2 <= adc_B2;
         chan0_B3 <= adc_B3;
       end
-    else
-    begin
       else
       begin
         chan0_A0 <= 0;
