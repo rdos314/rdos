@@ -71,6 +71,7 @@ module ana_freq (
 
   reg                    start_1;
   reg                    start_2;
+  reg                    start_3;
   reg                    next_1;
   reg                    next_2;
   reg                    next_3;
@@ -133,19 +134,9 @@ module ana_freq (
   assign cos_coeff_2 = cos_coeff_out[47:32];
   assign cos_coeff_3 = cos_coeff_out[63:48];
 
-  wire [55:0]            in_A;
-  wire [55:0]            in_B;
-  
-  assign in_A[13:0] = in_A0;
-  assign in_A[27:14] = in_A1;
-  assign in_A[41:28] = in_A2;
-  assign in_A[55:42] = in_A3;
-
-  assign in_B[13:0] = in_B0;
-  assign in_B[27:14] = in_B1;
-  assign in_B[41:28] = in_B2;
-  assign in_B[55:42] = in_B3;
-  
+  reg  [55:0]            in_A;
+  reg  [55:0]            in_B;
+    
 bram_freq bram_sin (
   .clka(clk),           // input wire clka
   .ena(coeff_en),       // input wire ena
@@ -167,7 +158,7 @@ bram_freq bram_cos (
 adc_slice sin_A (
   .clk(clk),               // input wire CLK
   .reset(reset),           // input wire [0 : 0] reset
-  .start(start_2),         // input wire [0 : 0] start
+  .start(start_3),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
   .next(next_3),           // input wire [0 : 0] next
   .in(in_A),               // input wire [55 : 0] in
@@ -179,7 +170,7 @@ adc_slice sin_A (
 adc_slice cos_A (
   .clk(clk),               // input wire CLK
   .reset(reset),           // input wire [0 : 0] reset
-  .start(start_2),         // input wire [0 : 0] start
+  .start(start_3),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
   .next(next_3),           // input wire [0 : 0] next
   .in(in_A),               // input wire [55 : 0] in
@@ -191,7 +182,7 @@ adc_slice cos_A (
 adc_slice sin_B (
   .clk(clk),               // input wire CLK
   .reset(reset),           // input wire [0 : 0] reset
-  .start(start_2),         // input wire [0 : 0] start
+  .start(start_3),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
   .next(next_3),           // input wire [0 : 0] next
   .in(in_B),               // input wire [55 : 0] in
@@ -203,7 +194,7 @@ adc_slice sin_B (
 adc_slice cos_B (
   .clk(clk),               // input wire CLK
   .reset(reset),           // input wire [0 : 0] reset
-  .start(start_2),         // input wire [0 : 0] start
+  .start(start_3),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
   .next(next_3),           // input wire [0 : 0] next
   .in(in_B),               // input wire [55 : 0] in
@@ -254,7 +245,7 @@ ana_phase ana_phase_B (
   .phase(phase_B)
 );
 
-
+/*
 ila_0 ila_0_inst (
   .clk(clk),                 // input wire clk
   .probe0(start_1),          // input wire [0:0]  probe3
@@ -281,9 +272,23 @@ ila_0 ila_0_inst (
   .probe21(phase_B),         // input wire [15:0]  probe3
   .probe22(report)           // input wire [0:0]  probe3
 );
+*/
 
 generate
 begin : ana_freq_gen
+
+  always @ ( posedge clk ) 
+  begin
+    in_A[13:0] <= in_A0;
+    in_A[27:14] <= in_A1;
+    in_A[41:28] <= in_A2;
+    in_A[55:42] <= in_A3;
+
+    in_B[13:0] <= in_B0;
+    in_B[27:14] <= in_B1;
+    in_B[41:28] <= in_B2;
+    in_B[55:42] <= in_B3;
+  end
 
   always @ ( posedge clk ) 
   begin
@@ -349,7 +354,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset | start_2 | next_3)
+    if (reset | start_3 | next_3)
       amp_done_A <= 0;
     else
       if (amp_notify_A)
@@ -361,7 +366,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset | start_2 | next_3)
+    if (reset | start_3 | next_3)
       amp_done_B <= 0;
     else
       if (amp_notify_B)
@@ -373,7 +378,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset | start_2 | next_3)
+    if (reset | start_3 | next_3)
       phase_done_A <= 0;
     else
       if (phase_notify_A)
@@ -385,7 +390,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (reset | start_2 | next_3)
+    if (reset | start_3 | next_3)
       phase_done_B <= 0;
     else
       if (phase_notify_B)
@@ -407,6 +412,7 @@ begin : ana_freq_gen
   begin
     start_1 <= start;
     start_2 <= start_1;
+    start_3 <= start_2;
   end
 
   always @ ( posedge clk ) 
