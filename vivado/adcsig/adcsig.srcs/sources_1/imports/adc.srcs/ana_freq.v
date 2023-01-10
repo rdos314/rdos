@@ -517,15 +517,10 @@ begin : ana_freq_gen
           coeff_en <= 1;
           coeff_wr <= 0;
 
-          if (start)
+          if (coeff_adr == last)
             coeff_adr <= 0;
           else
-          begin
-            if (coeff_adr == last)
-              coeff_adr <= 0;
-            else
-              coeff_adr <= coeff_adr + 1;
-          end
+            coeff_adr <= coeff_adr + 1;
         end
         else
         begin

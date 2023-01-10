@@ -35,6 +35,212 @@ INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\core.inc
 INCLUDE ..\os\net.inc
 
+
+; phy macros
+
+write MACRO reg, val
+  DW reg, val
+            ENDM
+
+write_paged MACRO sel, reg, val
+  DW 01Fh, sel
+  DW reg, val
+  DW 01Fh, 0h 
+            ENDM
+
+modify_extpage  MACRO sel, reg, mask, val
+  DW 01Fh, 7
+  DW 01Eh, sel
+  DW 200h + reg, val, mask
+  DW 01Fh, 0h
+           ENDM
+
+set_bits  MACRO reg, mask
+  DW 100h + reg, mask
+          ENDM
+
+clear_bits  MACRO reg, mask
+  DW 200h + reg, 0, mask
+          ENDM
+
+modify MACRO reg, p1, p2
+  DW 200h + reg, p2, p1
+          ENDM
+
+modify_paged MACRO par, reg, p1, p2
+  DW 01Fh, par
+  DW 200h + reg, p2, p1
+         ENDM
+
+8168d_param  MACRO reg, p1, p2
+  DW 1Fh, 5
+  DW 5, reg
+  DW 206h, p2, p1
+  DW 1Fh, 0 
+             ENDM
+
+8168g_param  MACRO reg, p1, p2
+  DW 1Fh, 0A43h
+  DW 13h, reg
+  DW 214h, p2, p1
+  DW 1Fh, 0 
+             ENDM
+
+conf_8168d  MACRO
+  write 01Fh,  00001h
+  write 006h,  04064h
+  write 007h,  02863h
+  write 008h,  0059Ch
+  write 009h,  026B4h
+  write 00Ah,  06A19h
+  write 00Bh,  0DCC8h
+  write 010h,  0F06Dh
+  write 014h,  07F68h
+  write 018h,  07FD9h
+  write 01Ch,  0F0FFh
+  write 01Dh,  03D9Ch
+  write 01Fh,  00003h
+  write 012h,  0F49Fh
+  write 013h,  0070Bh
+  write 01Ah,  005ADh
+  write 014h,  094C0h
+
+  write 01Fh,  00002h
+  write 006h,  05561h
+  write 01Fh,  00005h
+  write 005h,  08332h
+  write 006h,  05561h
+
+  write 01Fh,  00001h
+  write 017h,  00CC0h
+  write 01Fh,  00000h
+  write 00Dh,  0F880h
+        ENDM
+
+conf_8168f  MACRO
+  8168d_param 08B80h, 0, 6
+  modify_extpage 2Dh, 18h, 0, 0FFFFh, 10h
+  set_bits 14h, 8000h
+  8168d_param 08B86h, 0, 1
+  ee_8168f
+              ENDM
+
+ee_8168g  MACRO
+  modify_paged 0A43h, 11h, 0, 10h
+             ENDM
+
+ee_8168f  MACRO
+  modify_extpage 20h, 15h, 0, 0FFFFh, 100h
+  8168d_param 8B85h, 0, 2000h
+             ENDM
+
+call_proc  MACRO p
+   DW 300h
+   DW OFFSET p
+           ENDM
+
+wait_ms  MACRO ms
+   DW 400h
+   DW ms
+         ENDM
+
+apply_firmware_cond  MACRO p1
+                     ENDM
+
+write_mmd    MACRO adr, port, data
+  DW 00Dh,  adr
+  DW 00Eh,  port
+  DW 00Dh,  04000h + adr
+  DW 00Eh,  data
+  DW 00Dh,  00000h  
+             ENDM
+
+8125_legacy  MACRO
+  modify_paged 0A5Bh, 12h, 8000h, 0
+             ENDM
+
+ephy_init  MACRO reg, mask, bits
+  DW 500h + reg, mask, bits
+             ENDM
+
+write_eri  MACRO reg, mask, val
+  DW 600h
+  DW reg
+  DD mask
+  DD val
+             ENDM
+
+clear_eri_bits  MACRO reg, bits
+  DW 700h
+  DW reg
+  DD bits
+  DD 0
+             ENDM
+
+set_eri_bits  MACRO reg, bits
+  DW 700h
+  DW reg
+  DD 0
+  DD bits
+             ENDM
+
+modify_eri  MACRO reg, set, clear
+  DW 700h
+  DW reg
+  DD clear
+  DD set
+             ENDM
+
+modify_config  MACRO reg, set, clear
+  DW 800h + reg
+  DB clear
+  DB set
+             ENDM
+
+set_fifo_size  MACRO
+  write_eri 0C8h, ERIAR_MASK_1111, 100002h
+  write_eri 0E8h, ERIAR_MASK_1111, 100006h
+               ENDM
+
+reset_packet_filter  MACRO
+  clear_eri_bits 0DCh, 1
+  set_eri_bits 0DCh, 1
+               ENDM
+
+start_8168f   MACRO
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_1111, 00000h
+  set_fifo_size
+  reset_packet_filter
+  set_eri_bits 01B0h, 10h
+  set_eri_bits 01D0h, 12h
+  write_eri 0CCh, ERIAR_MASK_1111, 000000050h
+  write_eri 0D0h, ERIAR_MASK_1111, 000000060h
+              ENDM
+
+start_8168g   MACRO
+  set_fifo_size
+  reset_packet_filter
+  write_eri 02F8h, ERIAR_MASK_0011, 01D8Fh
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  modify_eri 2FCh, 1, 6
+  clear_eri_bits 01B0h, 1000h
+              ENDM
+
+start_8168ep   MACRO
+  set_fifo_size
+  reset_packet_filter
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  modify_eri 2FCh, 1, 6
+            ENDM
+
+disable_aspm  MACRO
+  modify_config 2, 0, 80h
+  modify_config 5, 0, 1
+              ENDM
+
 RX_DESCR_COUNT = 256
 TX_DESCR_COUNT = 128
 
@@ -66,12 +272,23 @@ IR_RER = 2
 IR_ROK = 1
 IR_MASK = 3FFh
 
+
 ERIAR_WRITE_CMD = 80000000h
 ERIAR_MASK_0001 = 01000h
 ERIAR_MASK_0011 = 03000h
 ERIAR_MASK_0100 = 04000h
 ERIAR_MASK_0101 = 05000h
 ERIAR_MASK_1111 = 0F000h
+
+EFUSEAR_FLAG = 80000000h
+EFUSEAR_WRITE_CMD = 80000000h
+EFUSEAR_READ_CMD = 0
+EFUSEAR_REG_MASK = 03FFh
+EFUSEAR_REG_SHIFT = 8
+EFUSEAR_DATA_MASK = 0FFh
+
+OCPAR_FLAG = 80000000h
+OCP_STD_PHY_BASE = 0A400h
 
 PHY_10      = 4
 PHY_100     = 8
@@ -83,6 +300,8 @@ ADV_100_HALF    = 80h
 ADV_100_FULL    = 100h
 ADV_1000_HALF   = 400h
 ADV_1000_FULL   = 800h
+
+R8168DP_1_MDIO_ACCESS_BIT = 020000h
 
 REG_IDR0 = 0                ; Ethernet hardware address. 
 REG_MAR0 = 8                ; Multicast
@@ -114,7 +333,14 @@ REG_PHYStatus = 6Ch
 REG_ERIDR = 70h
 REG_ERIAR = 74h
 
+REG_EPHYAR = 80h
+
+REG_OCPDR = 0B0h
+REG_GPHY_OCP = 0B8h
+
+REG_DP2 = 0D0h
 REG_RMS = 0DAh
+REG_EFUSE = 0DCh
 REG_CCR = 0E0h
 REG_RDSAR = 0E4h
 REG_MTPS = 0ECh
@@ -198,15 +424,20 @@ mem_tbi_anar  DW ?
 mem_tbi_lpar  DW ?
 mem_phy_stat  DB ?, ?, ?, ?
 mem_eridr     DD ?
-mem_eriar     DD ?                   
-mem_res3      DD ?, ?, ?, ?, ?, ?
-mem_res4      DD ?, ?, ?, ? 
-mem_res5      DD ?, ?, ?, ?
-mem_res6      DD ?, ?, ?, ?
-mem_res7      DD ?, ?, ?, ?
-mem_res8      DW ?, ?, ?, ?, ?
+mem_eriar     DD ?                   ; 74h
+mem_res3      DD ?, ?                ; 78h
+mem_ephyar    DD ?                   ; 80h
+mem_res4      DD ?, ?, ?             ; 84h-8Fh
+mem_res5      DD ?, ?, ?, ?          ; 90h-9Fh
+mem_res6      DD ?, ?, ?, ?          ; A0h-AFh
+mem_ocpdr     DD ?                   ; B0h-B3h
+mem_res7      DD ?                   ; B04-B7h
+mem_gphy      DD ?                   ; B8h-BBh
+mem_res8      DD ?, ?, ?, ?, ?       ; BCh-CFh
+mem_dp2       DD ?                   ; D0h-D3h
+mem_res9      DW ?, ?, ?             ; D4h-D9h
 mem_rms       DW ?
-mem_res9      DD ?
+mem_efuse     DD ?
 mem_ccr       DW ?, ?
 mem_rdsar     DD ?, ?
 mem_mtps      DB ?, ?, ?, ?             
@@ -231,6 +462,7 @@ TxCurrDescr         DW ?
 TxLastDescr         DW ?
 SuperThread         DW ?
 HwId                DW ?
+PhyBase             DW ?
 ReadPhyProc         DW ?
 WritePhyProc        DW ?
 PhyTimeout          DD ?,?
@@ -780,6 +1012,8 @@ MemWritePhy8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;r8169_mdio_write
+
 WritePhy8169	Proc near
     push ax
     mov ax,ds:MemSel
@@ -890,6 +1124,8 @@ MemReadPhy8169    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;r8169_mdio_read
+
 ReadPhy8169	Proc near
     mov ax,ds:MemSel
     or ax,ax
@@ -901,19 +1137,266 @@ ReadPhy8169	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IoWritePhyOcp
+;
+;           DESCRIPTION:    Write to phy, OCP version
+;
+;           PARAMETERS:     DX      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoWritePhyOcp    Proc near
+    push eax
+    push cx
+    push dx
+;    
+    ror eax,15
+    mov ax,dx
+    rol eax,15
+    or eax,80000000h
+;    
+    mov dx,ds:IoBase
+    add dx,REG_GPHY_OCP
+;
+    out dx,eax
+    xor cx,cx
+
+iowpWaitOcp:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz iowpDoneOcp
+    loop iowpWaitOcp
+
+iowpDoneOcp:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop dx
+    pop cx
+    pop eax
+    ret
+IoWritePhyOcp    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemWritePhyOcp
+;
+;           DESCRIPTION:    Write to phy, OCP version
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWritePhyOcp    Proc near
+    push eax
+    push cx
+;    
+    ror eax,15
+    mov ax,dx
+    rol eax,15
+    or eax,80000000h
+;
+    mov fs:mem_gphy,eax
+    xor cx,cx
+
+mwpWaitOcp:    
+    pause
+    mov eax,fs:mem_gphy
+    test eax,80000000h
+    jz mwpDoneOcp
+    loop mwpWaitOcp
+
+mwpDoneOcp:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop cx
+    pop eax
+    ret
+MemWritePhyOcp    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WritePhyOcp
+;
+;           DESCRIPTION:    Write to phy, OCP version
+;
+;           PARAMETERS:     DX      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WritePhyOcp    Proc near
+    push ax
+    mov ax,ds:MemSel
+    or ax,ax
+    pop ax
+    jz IoWritePhyOcp
+    jmp MemWritePhyOcp
+
+WritePhyOcp   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadPhyOcp
+;
+;           DESCRIPTION:    Read from phy, OCP version
+;
+;           PARAMETERS:     DX      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadPhyOcp    Proc near
+    push cx
+    push dx
+;    
+    movzx eax,dx
+    rol eax,15
+;    
+    mov dx,ds:IoBase
+    add dx,REG_GPHY_OCP
+;
+    out dx,eax
+    xor cx,cx
+
+iorpWaitOcp:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz iorpDoneOcp
+;
+    loop iorpWaitOcp
+
+iorpDoneOcp:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop dx
+    pop cx
+    ret
+IoReadPhyOcp    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadPhyOcp
+;
+;           DESCRIPTION:    Read from phy, OCP version
+;
+;           PARAMETERS:     DX      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadPhyOcp    Proc near
+    push cx
+;    
+    movzx eax,dx
+    rol eax,15
+;
+    mov fs:mem_gphy,eax
+    xor cx,cx
+
+mrpWaitOcp:    
+    pause
+    mov eax,fs:mem_gphy
+    test eax,80000000h
+    jnz mrpDoneOcp
+;
+    loop mrpWaitOcp
+
+mrpDoneOcp:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop cx
+    ret
+MemReadPhyOcp    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadPhyOcp
+;
+;           DESCRIPTION:    Read from phy, OCP version
+;
+;           PARAMETERS:     DX      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadPhyOcp    Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadPhyOcp
+    jmp MemReadPhyOcp
+
+ReadPhyOcp    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WritePhy8169g
 ;
-;           DESCRIPTION:    Write to phy, 8169g version
+;           DESCRIPTION:    Write from phy, 8169g version
 ;
 ;           PARAMETERS:     DL      Register
 ;                           AX      Data
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;r8168g_mdio_write
+
 WritePhy8169g    Proc near
-    int 3
+    cmp dl,1Fh
+    jne wpgNotSel
+;
+    or ax,ax
+    jz wpgUseBase
+;
+    shl ax,4
+    mov ds:PhyBase,ax
     ret
-WritePhy8169g   Endp
+
+wpgUseBase:
+    mov ds:PhyBase,OCP_STD_PHY_BASE
+    ret
+
+wpgNotSel:
+    push bx
+    push dx
+;
+    movzx dx,dl
+    mov bx,ds:PhyBase
+    cmp bx,OCP_STD_PHY_BASE
+    je wpgNotDec
+;
+    sub dx,10h
+
+wpgNotDec:
+    add dx,dx
+    add dx,ds:PhyBase
+    call WritePhyOcp
+;
+    pop dx
+    pop bx
+    ret
+WritePhy8169g    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -928,45 +1411,157 @@ WritePhy8169g   Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;r8168g_mdio_read
+
 ReadPhy8169g    Proc near
-    int 3
+    cmp dl,1Fh
+    jne rpgNotSel
+;
+    mov ax,ds:PhyBase
+    cmp ax,OCP_STD_PHY_BASE
+    je rpgUseBase
+;
+    shr ax,4
+    ret
+
+rpgUseBase:
+    xor ax,ax
+    ret
+
+rpgNotSel:
+    push dx
+;
+    movzx dx,dl
+    mov ax,ds:PhyBase
+    cmp ax,OCP_STD_PHY_BASE
+    je rpgNotDec
+;
+    sub dx,10h
+
+rpgNotDec:
+    add dx,dx
+    add dx,ds:PhyBase
+    call ReadPhyOcp
+;
+    pop dx
     ret
 ReadPhy8169g    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WritePhy8168dp1
+;           NAME:           IoWritePhy8169dp2
 ;
-;           DESCRIPTION:    Write to phy, 8168dp1 version
+;           DESCRIPTION:    Write to phy, 8169 DP2 version
 ;
 ;           PARAMETERS:     DL      Register
 ;                           AX      Data
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WritePhy8168dp1    Proc near
-    int 3
+IoWritePhy8169dp2    Proc near
+    push eax
+    push cx
+    push dx
+;    
+    push ax
+    push dx
+;    
+    mov dx,ds:IoBase
+    add dx,REG_DP2
+;
+    in eax,dx
+    and eax,NOT R8168DP_1_MDIO_ACCESS_BIT
+    out dx,eax
+;
+    pop dx
+    pop ax
+;
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;    
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+;
+    out dx,eax
+    xor cx,cx
+
+iowpWait8169dp2:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz iowpDone8169dp2
+    loop iowpWait8169dp2
+
+iowpDone8169dp2:
+    mov ax,20
+    WaitMicroSec
+;
+    mov dx,ds:IoBase
+    add dx,REG_DP2
+;
+    in eax,dx
+    or eax,R8168DP_1_MDIO_ACCESS_BIT
+    out dx,eax
+;    
+    pop dx
+    pop cx
+    pop eax
     ret
-WritePhy8168dp1   Endp
+IoWritePhy8169dp2    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadPhy8168dp1
+;           NAME:           MemWritePhy8169dp2
 ;
-;           DESCRIPTION:    Read from phy, 8168dp1 version
+;           DESCRIPTION:    Write to phy, 8169 DP2 version
 ;
-;           PARAMETERS:     DL      Register
-;
-;           RETURNS:        AX      Data
+;           PARAMETERS:     FS      Registers
+;                           DL      Register
+;                           AX      Data
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadPhy8168dp1    Proc near
-    int 3
+MemWritePhy8169dp2    Proc near
+    push eax
+    push ecx
+;    
+    mov ecx,fs:mem_dp2
+    and ecx,NOT R8168DP_1_MDIO_ACCESS_BIT
+    mov fs:mem_dp2,ecx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;
+    mov fs:mem_phyar,eax
+    xor cx,cx
+
+mwpWait8169dp2:    
+    pause
+    mov eax,fs:mem_phyar
+    test eax,80000000h
+    jz mwpDone8169dp2
+    loop mwpWait8169dp2
+
+mwpDone8169dp2:
+    mov ax,20
+    WaitMicroSec
+;    
+    mov ecx,fs:mem_dp2
+    or ecx,R8168DP_1_MDIO_ACCESS_BIT
+    mov fs:mem_dp2,ecx
+;    
+    pop ecx
+    pop eax
     ret
-ReadPhy8168dp1    Endp
+MemWritePhy8169dp2    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -980,10 +1575,132 @@ ReadPhy8168dp1    Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; r8168dp_2_mdio_write
+
 WritePhy8168dp2    Proc near
-    int 3
-    ret
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoWritePhy8169dp2
+    jmp MemWritePhy8169dp2
+
 WritePhy8168dp2   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadPhy8169dp2
+;
+;           DESCRIPTION:    Read from phy, 8169 DP2 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadPhy8169dp2    Proc near
+    push cx
+    push dx
+;    
+    push dx
+;    
+    mov dx,ds:IoBase
+    add dx,REG_DP2
+;
+    in eax,dx
+    and eax,NOT R8168DP_1_MDIO_ACCESS_BIT
+    out dx,eax
+;
+    pop dx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;    
+    mov dx,ds:IoBase
+    add dx,REG_PHYAR
+;
+    out dx,eax
+    xor cx,cx
+
+iorpWait8169dp2:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz iorpDone8169dp2
+;
+    loop iorpWait8169dp2
+
+iorpDone8169dp2:
+    push eax
+;
+    mov ax,20
+    WaitMicroSec
+;
+    mov dx,ds:IoBase
+    add dx,REG_DP2
+;
+    in eax,dx
+    or eax,R8168DP_1_MDIO_ACCESS_BIT
+    out dx,eax
+;
+    pop eax
+;    
+    pop dx
+    pop cx
+    ret
+IoReadPhy8169dp2    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadPhy8169dp2
+;
+;           DESCRIPTION:    Read from phy, 8169 DP2 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadPhy8169dp2    Proc near
+    push cx
+;    
+    mov eax,fs:mem_dp2
+    and eax,NOT R8168DP_1_MDIO_ACCESS_BIT
+    mov fs:mem_dp2,eax
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;
+    mov fs:mem_phyar,eax
+    xor cx,cx
+
+mrpWait8169dp2:    
+    pause
+    mov eax,fs:mem_phyar
+    test eax,80000000h
+    jnz mrpDone8169dp2
+;
+    loop mrpWait8169dp2
+
+mrpDone8169dp2:
+    push eax
+;
+    mov ax,20
+    WaitMicroSec
+;    
+    mov eax,fs:mem_dp2
+    or eax,R8168DP_1_MDIO_ACCESS_BIT
+    mov fs:mem_dp2,eax
+;
+    pop eax
+;    
+    pop cx
+    ret
+MemReadPhy8169dp2    Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -998,10 +1715,457 @@ WritePhy8168dp2   Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; r8168dp_2_mdio_read
+
 ReadPhy8168dp2    Proc near
-    int 3
-    ret
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadPhy8169dp2
+    jmp MemReadPhy8169dp2
+
 ReadPhy8168dp2    Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoWriteMac8169
+;
+;           DESCRIPTION:    Write to MAC, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoWriteMac8169    Proc near
+    push eax
+    push cx
+    push dx
+;    
+    ror eax,16
+    mov ax,dx
+    rol eax,16
+    or eax,80000000h
+;    
+    mov dx,ds:IoBase
+    add dx,REG_OCPDR
+;
+    out dx,eax
+    xor cx,cx
+
+iowmWait8169:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz iowmDone8169
+    loop iowmWait8169
+
+iowmDone8169:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop dx
+    pop cx
+    pop eax
+    ret
+IoWriteMac8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemWriteMac8169
+;
+;           DESCRIPTION:    Write to mac, 8169 version
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWriteMac8169    Proc near
+    push eax
+    push cx
+;    
+    ror eax,16
+    mov ax,dx
+    rol eax,16
+    or eax,80000000h
+;
+    mov fs:mem_ocpdr,eax
+    xor cx,cx
+
+mwmWait8169:    
+    pause
+    mov eax,fs:mem_ocpdr
+    test eax,80000000h
+    jz mwmDone8169
+    loop mwmWait8169
+
+mwmDone8169:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop cx
+    pop eax
+    ret
+MemWriteMac8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteMac8169
+;
+;           DESCRIPTION:    Write to mac, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; r8168_mac_ocp_write
+
+WriteMac8169    Proc near
+    push ax
+    mov ax,ds:MemSel
+    or ax,ax
+    pop ax
+    jz IoWriteMac8169
+    jmp MemWriteMac8169
+
+WriteMac8169   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadMac8169
+;
+;           DESCRIPTION:    Read from mac, 8169 version
+;
+;           PARAMETERS:     DX      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadMac8169    Proc near
+    push cx
+    push dx
+;    
+    movzx eax,dx
+    shl eax,16
+;    
+    mov dx,ds:IoBase
+    add dx,REG_OCPDR
+;
+    out dx,eax
+    xor cx,cx
+
+iormWait8169:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz iormDone8169
+;
+    loop iormWait8169
+
+iormDone8169:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop dx
+    pop cx
+    ret
+IoReadMac8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadMac8169
+;
+;           DESCRIPTION:    Read from mac, 8169 version
+;
+;           PARAMETERS:     DX      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadMac8169    Proc near
+    push cx
+;    
+    movzx eax,dx
+    shl eax,16
+;
+    mov fs:mem_ocpdr,eax
+    xor cx,cx
+
+mrmWait8169:    
+    pause
+    mov eax,fs:mem_ocpdr
+    test eax,80000000h
+    jnz mrmDone8169
+;
+    loop mrmWait8169
+
+mrmDone8169:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop cx
+    ret
+MemReadMac8169    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadMac8169
+;
+;           DESCRIPTION:    Read from mac, 8169 version
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; r8168_mac_ocp_read
+
+ReadMac8169    Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadMac8169
+    jmp MemReadMac8169
+
+ReadMac8169    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoWriteEphy
+;
+;           DESCRIPTION:    Write to ephy
+;
+;           PARAMETERS:     DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoWriteEphy    Proc near
+    push eax
+    push cx
+    push dx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;    
+    mov dx,ds:IoBase
+    add dx,REG_EPHYAR
+;
+    out dx,eax
+    xor cx,cx
+
+iowepWait:   
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz iowepDone
+    loop iowepWait
+
+iowepDone:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop dx
+    pop cx
+    pop eax
+    ret
+IoWriteEphy    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemWriteEphy
+;
+;           DESCRIPTION:    Write to ephy
+;
+;           PARAMETERS:     FS      Registers
+;                           DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWriteEphy    Proc near
+    push eax
+    push cx
+;    
+    movzx eax,ax
+    ror eax,8
+    mov ah,dl
+    rol eax,8
+    or eax,80000000h
+;
+    mov fs:mem_ephyar,eax
+    xor cx,cx
+
+mwepWait:    
+    pause
+    mov eax,fs:mem_ephyar
+    test eax,80000000h
+    jz mwepDone
+    loop mwepWait
+
+mwepDone:
+    mov ax,20
+    WaitMicroSec
+;    
+    pop cx
+    pop eax
+    ret
+MemWriteEphy    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteEphy
+;
+;           DESCRIPTION:    Write to ephy
+;
+;           PARAMETERS:     FS      Registers
+;                           DL      Register
+;                           AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;rtl_ephy_write
+
+WriteEphy	Proc near
+    push ax
+    mov ax,ds:MemSel
+    or ax,ax
+    pop ax
+    jz IoWriteEphy
+    jmp MemWriteEphy
+
+WriteEphy	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadEphy
+;
+;           DESCRIPTION:    Read from ephy
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadEphy    Proc near
+    push cx
+    push dx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;    
+    mov dx,ds:IoBase
+    add dx,REG_EPHYAR
+;
+    out dx,eax
+    xor cx,cx
+
+iorepWait:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz iorepDone
+;
+    loop iorepWait
+
+iorepDone:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop dx
+    pop cx
+    ret
+IoReadEphy    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadEphy
+;
+;           DESCRIPTION:    Read from ephy
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadEphy    Proc near
+    push cx
+;    
+    xor eax,eax
+    mov ah,dl
+    rol eax,8
+;
+    mov fs:mem_ephyar,eax
+    xor cx,cx
+
+mrepWait:    
+    pause
+    mov eax,fs:mem_ephyar
+    test eax,80000000h
+    jnz mrepDone
+;
+    loop mrepWait
+
+mrepDone:
+    push eax
+    mov ax,20
+    WaitMicroSec
+    pop eax
+;    
+    pop cx
+    ret
+MemReadEphy    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadEphy
+;
+;           DESCRIPTION:    Read from ephy
+;
+;           PARAMETERS:     DL      Register
+;
+;           RETURNS:        AX      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;rtl_ephy_read
+
+ReadEphy	Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadEphy
+    jmp MemReadEphy
+
+ReadEphy	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1028,6 +2192,17 @@ IoReadEri   Proc near
     or ax,ERIAR_MASK_1111
     out dx,eax
 ;
+    xor cx,cx
+
+ioreWait:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jnz ioreDone
+;
+    loop ioreWait
+
+ioreDone:
     mov ax,1
     WaitMilliSec
 ;    
@@ -1060,6 +2235,17 @@ MemReadEri   Proc near
     or ax,ERIAR_MASK_1111
     mov fs:mem_eriar,eax
 ;
+    xor cx,cx
+
+mreWait:    
+    pause
+    mov eax,fs:mem_eriar
+    test eax,80000000h
+    jnz mreDone
+;
+    loop mreWait
+
+mreDone:
     mov ax,1
     WaitMilliSec
 ;    
@@ -1117,6 +2303,17 @@ IoWriteEri   Proc near
     or eax,ERIAR_WRITE_CMD
     out dx,eax
 ;
+    xor cx,cx
+
+ioweWait:    
+    pause
+    in eax,dx
+    test eax,80000000h
+    jz ioweDone
+;
+    loop ioweWait
+
+ioweDone:
     mov ax,1
     WaitMilliSec
     ret
@@ -1145,6 +2342,17 @@ MemWriteEri   Proc near
     mov fs:mem_eriar,eax
     out dx,eax
 ;
+    xor cx,cx
+
+mweWait:    
+    pause
+    mov eax,fs:mem_eriar
+    test eax,80000000h
+    jz mweDone
+;
+    loop mweWait
+
+mweDone:
     mov ax,1
     WaitMilliSec
     ret
@@ -1176,15 +2384,697 @@ WriteEri	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       NAME:          Config8169
+;
+;       NAME:           IoReadEfuse
+;
+;       DESCRIPTION:    Read efuse
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                      
+;       RETURNS:        EAX     Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Wait100ms   Proc near
-   mov ax,100
-   WaitMilliSec
-   ret
-Wait100ms   ENDP
+IoReadEfuse   Proc near
+    mov dx,ds:IoBase
+    add dx,REG_EFUSE
+    movzx eax,bx
+    and eax,EFUSEAR_REG_MASK
+    shl eax,EFUSEAR_REG_SHIFT
+    out dx,eax
+;
+    mov ax,1
+    WaitMilliSec
+;    
+    mov dx,ds:IoBase
+    add dx,REG_EFUSE
+    in eax,dx       
+    and eax,EFUSEAR_DATA_MASK
+    ret
+IoReadEfuse     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           MemReadEfuse
+;
+;       DESCRIPTION:    Read efuse
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                      
+;       RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadEfuse   Proc near
+    movzx eax,bx
+    and eax,EFUSEAR_REG_MASK
+    shl eax,EFUSEAR_REG_SHIFT
+    mov fs:mem_efuse,eax
+;
+    mov ax,1
+    WaitMilliSec
+;    
+    mov eax,fs:mem_efuse
+    and eax,EFUSEAR_DATA_MASK
+    ret
+MemReadEfuse     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadEfuse
+;
+;       DESCRIPTION:    Read efuse
+;
+;       PARAMETERS:     DS      Ether sel
+;                       BX      Register #
+;                      
+;       RETURNS:        EAX     Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadEfuse	Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadEfuse
+    jmp MemReadEfuse
+
+ReadEfuse	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoWriteByteReg
+;
+;           DESCRIPTION:    Write to reg, IO version
+;
+;           PARAMETERS:     DX      Register
+;                           AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoWriteByteReg    Proc near
+    push dx
+;    
+    add dx,ds:IoBase
+    out dx,al
+;    
+    pop dx
+    ret
+IoWriteByteReg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemWriteByteReg
+;
+;           DESCRIPTION:    Write to reg, mem version
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;                           AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemWriteByteReg    Proc near
+    push edx
+;    
+    movzx edx,dx
+    mov fs:[edx],al
+;    
+    pop edx
+    ret
+MemWriteByteReg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteByteReg
+;
+;           DESCRIPTION:    Write to reg
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;                           AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteByteReg	Proc near
+    push ax
+    mov ax,ds:MemSel
+    or ax,ax
+    pop ax
+    jz IoWriteByteReg
+    jmp MemWriteByteReg
+
+WriteByteReg	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IoReadByteReg
+;
+;           DESCRIPTION:    Read from reg, IO version
+;
+;           PARAMETERS:     DX      Register
+;
+;           RETURNS:        AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IoReadByteReg    Proc near
+    push dx
+;    
+    add dx,ds:IoBase
+    in al,dx
+;    
+    pop dx
+    ret
+IoReadByteReg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MemReadByteReg
+;
+;           DESCRIPTION:    Read from reg, mem version
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;
+;           RETURNS:        AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MemReadByteReg    Proc near
+    push edx
+;    
+    movzx edx,dx
+    mov al,fs:[edx]
+;    
+    pop edx
+    ret
+MemReadByteReg    Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadByteReg
+;
+;           DESCRIPTION:    Read from reg
+;
+;           PARAMETERS:     FS      Registers
+;                           DX      Register
+;
+;           RETURNS:        AL      Data
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadByteReg	Proc near
+    mov ax,ds:MemSel
+    or ax,ax
+    jz IoReadByteReg
+    jmp MemReadByteReg
+
+ReadByteReg	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           LockConf
+;
+;           DESCRIPTION:    Lock config registers
+;
+;           PARAMETERS:     DS      Registers
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockConf	Proc near
+    mov dx,REG_9346CR
+    xor al,al
+    call WriteByteReg
+    ret
+LockConf	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockConf
+;
+;           DESCRIPTION:    Unlock config registers
+;
+;           PARAMETERS:     DS      Registers
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockConf	Proc near
+    mov dx,REG_9346CR
+    mov al,0Ch
+    call WriteByteReg
+    ret
+UnlockConf	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunTableCommands
+;
+;       DESCRIPTION:    Run table commands
+;
+;       PARAMETERS:     DS      Ether sel
+;                       CS:SI   Table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunTableCommands   Proc near
+
+rtcLoop:
+    mov ax,cs:[si]
+    cmp ah,0
+    je rtcWrite
+;
+    cmp ah,1
+    je rtcPatch
+;
+    cmp ah,2
+    je rtcMerge
+;
+    cmp ah,3
+    je rtcProc
+;
+    cmp ah,4
+    je rtcWait
+;
+    cmp ah,5
+    je rtcEphy
+;
+    cmp ah,6
+    je rtcSetEri
+;
+    cmp ah,7
+    je rtcModifyEri
+;
+    cmp ah,8
+    je rtcModifyConfig
+;        
+    jmp rtcDone
+
+rtcWrite:
+    mov dl,al
+    mov ax,cs:[si+2]
+    call ds:WritePhyProc
+    add si,4
+    jmp rtcLoop
+
+rtcPatch:
+    mov dl,al
+    call ds:ReadPhyProc
+    or ax,cs:[si+2]
+    call ds:WritePhyProc
+    add si,4
+    jmp rtcLoop
+
+rtcMerge:
+    mov dl,al
+    call ds:ReadPhyProc
+    mov cx,cs:[si+4]
+    not cx
+    and ax,cx
+    or ax,cs:[si+2]
+    call ds:WritePhyProc
+    add si,6
+    jmp rtcLoop
+
+rtcProc:
+    call word ptr cs:[si+2]
+    add si,4
+    jmp rtcLoop
+
+rtcWait:
+    mov ax,cs:[si+2]
+    WaitMilliSec
+    add si,4
+    jmp rtcLoop
+
+rtcEphy:
+    mov dl,al
+    call ReadEphy 
+    mov cx,cs:[si+2]
+    not cx
+    and ax,cx
+    or ax,cs:[si+4]
+    call WriteEphy
+    add si,6
+    jmp rtcLoop
+
+rtcSetEri:
+    mov bx,cs:[si+2]
+    mov ecx,cs:[si+4]
+    mov eax,cs:[si+8]
+    call WriteEri
+    add si,12
+    jmp rtcLoop
+
+rtcModifyEri:
+    mov bx,cs:[si+2]
+    call ReadEri
+;
+    mov ecx,cs:[si+4]
+    not ecx
+    and eax,ecx
+    or eax,cs:[si+8]
+    mov ecx,ERIAR_MASK_1111
+    call WriteEri
+    add si,12
+    jmp rtcLoop
+
+rtcModifyConfig:
+    movzx dx,cs:[si]
+    add dx,REG_CONFIG0
+    call ReadByteReg
+    mov ah,cs:[si+2]
+    not ah
+    and al,ah
+    or al,cs:[si+3]
+    call WriteByteReg
+    add si,4
+    jmp rtcLoop
+
+rtcDone:
+    ret
+RunTableCommands  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:        ApplyFirmware
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ApplyFirmware	Proc near
+    ret
+ApplyFirmware   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:        CondD1Common
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CondD1Common  Proc near
+    mov dl,0Dh
+    call ds:ReadPhyProc
+    cmp al,6Ch
+    je cd1Done
+;
+    mov bh,ah
+    mov al,65h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,66h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,67h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,68h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,69h
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,6Ah
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,6Bh
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+;
+    mov al,6Ch
+    mov ah,bh
+    mov dl,0Dh
+    call ds:WritePhyProc
+
+cd1Done:
+    ret
+CondD1Common  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:        Cond8168d1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+d_common:
+  write_paged 2, 5, 669Ah
+  8168d_param 08330h, 0FFFFh, 669Ah
+  write 001Fh,  000002h
+  call_proc CondD1Common
+  DW -1
+
+d1_def:
+  write_paged 2, 5, 6662h
+  8168d_param 08330h, 0FFFFh, 6662h
+  DW -1
+
+Cond8168d1	Proc near
+    push si
+;
+    mov bx,1
+    call ReadEfuse
+    mov si,OFFSET d_common
+    cmp al,0B1h
+    je d1Do
+;
+    mov si,OFFSET d1_def
+
+d1Do:
+    call RunTableCommands
+;
+    pop si
+    ret
+Cond8168d1      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:        Cond8168d2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+d2_def:
+  write_paged 2, 5, 2642h
+  8168d_param 08330h, 0FFFFh, 2642h
+  DW -1
+
+Cond8168d2	Proc near
+    push si
+;
+    mov bx,1
+    call ReadEfuse
+    mov si,OFFSET d_common
+    cmp al,0B1h
+    je d2Do
+;
+    mov si,OFFSET d2_def
+
+d2Do:
+    call RunTableCommands
+;
+    pop si
+    ret
+Cond8168d2      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:        Cond8168g1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Cond8168g1	Proc near
+    mov dl,1Fh
+    mov ax,0A46h
+    call ds:WritePhyProc
+;
+    mov dl,10h
+    call ds:ReadPhyProc
+;
+    test ax,100h
+    jz cg1Clear1
+
+cg1Set1:
+    mov dl,1Fh
+    mov ax,0BCCh
+    call ds:WritePhyProc
+;
+    mov dl,12h
+    call ds:ReadPhyProc
+;
+    mov cx,8000h
+    not cx
+    and ax,cx
+    call ds:WritePhyProc
+    jmp cg1Next
+
+cg1Clear1:
+    mov dl,1Fh
+    mov ax,0BCCh
+    call ds:WritePhyProc
+;
+    mov dl,12h
+    call ds:ReadPhyProc
+;
+    or ax,8000h
+    call ds:WritePhyProc
+    
+cg1Next:
+    mov dl,1Fh
+    mov ax,0A46h
+    call ds:WritePhyProc
+;
+    mov dl,13h
+    call ds:ReadPhyProc
+;
+    test ax,100h
+    jz cg1Clear2
+
+cg1Set2:
+    mov dl,1Fh
+    mov ax,0C41h
+    call ds:WritePhyProc
+;
+    mov dl,15h
+    call ds:ReadPhyProc
+;
+    mov cx,2
+    not cx
+    and ax,cx
+    call ds:WritePhyProc
+    jmp cg1Done
+
+cg1Clear2:
+    mov dl,1Fh
+    mov ax,0C41h
+    call ds:WritePhyProc
+;
+    mov dl,15h
+    call ds:ReadPhyProc
+;
+    or ax,2
+    call ds:WritePhyProc
+
+cg1Done:
+    ret
+Cond8168g1   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:        GetAdcBiasOffset
+;
+;       RETURNS:     AX Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAdcBiasOffset  Proc near
+    mov dx,0DD02h
+    mov ax,807Dh
+    call WriteMac8169
+;
+    mov dx,0DD02h
+    call ReadMac8169
+    push ax
+;
+    mov dx,0DD00h
+    call ReadMac8169
+    mov dl,al
+    shr ax,1
+    and ax,7FF8h
+    and dl,7
+    or al,dl
+;
+    pop dx
+    and dl,80h
+    shl dx,8
+    or ax,dx
+;    
+    ret
+GetAdcBiasOffset  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:        Cond8168h2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Cond8168h2	Proc near
+    call GetAdcBiasOffset
+    or ax,ax
+    je ch2Skip
+;
+    push ax
+    mov dl,1Fh
+    mov ax,0BCFh
+    call ds:WritePhyProc
+    pop ax
+;
+    mov dl,16h
+    call ds:WritePhyProc
+
+ch2Skip:
+    mov dl,1Fh
+    mov ax,0BCDh
+    call ds:WritePhyProc
+;
+    mov dl,16h
+    call ds:ReadPhyProc
+    and ax,0Fh
+;
+    xor dx,dx
+    cmp ax,3
+    jbe ch2Low
+;
+    mov dx,ax
+    sub dx,3
+
+ch2Low:
+    mov ax,dx
+    shl dx,4
+    or ax,dx
+    shl dx,4
+    or ax,dx
+    shl edx,4
+    or ax,dx
+;
+    push ax
+    mov dl,1Fh
+    mov ax,0BCDh
+    call ds:WritePhyProc
+    pop ax
+;
+    mov dl,17h
+    call ds:WritePhyProc
+    ret
+Cond8168h2	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:          Config8169
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ConfigNone:
   DW -1
@@ -1252,17 +3142,9 @@ Config8169s:
   DW -1
 
 Config8169sb:
-  DW 01Fh,  00002h
-  DW 001h,  090D0h
-  DW 01Fh,  00000h
+  write_paged 2, 1, 90D0h
   DW -1
-  
-Config8169scdq:
-  DW 01Fh,  00001h
-  DW 010h,  0F01Bh
-  DW 01Fh,  00000h
-  DW -1
-      
+        
 Config8169scd:
   DW 01Fh,  00001h
   DW 004h,  00000h
@@ -1360,756 +3242,511 @@ Config8169sce:
   DW -1
 
 Config8168bb:
-  DW 01Fh,  00001h
-  DW 116h,  00001h
-  DW 010h,  0F41Bh
-  DW 01Fh,  00000h
+  Write 01Fh, 1
+  set_bits 16h, 1
+  write 10h, 0F41Bh
+  write 01Fh, 0
   DW -1
 
 Config8168bef:  
-  DW 01Fh,  00000h
-  DW 01Dh,  00F00h
-  DW 01Fh,  00002h
-  DW 00Ch,  01EC8h
-  DW 01Fh,  00000h
+  write_paged 1, 10h, 0F41Bh
   DW -1
   
 Config8168cp1: 
-  DW 01Fh,  00000h
-  DW 01Dh,  00F00h
-  DW 01Fh,  00002h
-  DW 00Ch,  01EC8h
-  DW 01Fh,  00000h
+  write 01Dh, 00F00h
+  write_paged 2, 0Ch, 1EC8h
   DW -1
   
 Config8168cp2: 
-  DW 01Fh,  00000h
-  DW 114h,  00020h
-  DW 10Dh,  00020h
-  DW 01Fh,  00001h
-  DW 01Dh,  03D98h
-  DW 01Fh,  00000h
+  set_bits 14h, 20h
+  set_bits 0Dh, 20h
+  write_paged 1, 1Dh, 3D98h
   DW -1
    
   
 Config8168c1: 
-  DW 01Fh,  00001h
-  DW 012h,  02300h
-  DW 01Fh,  00002h
-  DW 000h,  088D4h
-  DW 001h,  082B1h
-  DW 003h,  07002h
-  DW 008h,  09E30h
-  DW 009h,  001F0h
-  DW 00Ah,  05500h
-  DW 00Ch,  000C8h
-  DW 01Fh,  00003h
-  DW 012h,  0C096h
-  DW 016h,  0000Ah
-  DW 01Fh,  00000h
-  DW 01Fh,  00000h
-  DW 009h,  02000h
-  DW 009h,  00000h  
-  DW 114h,  00020h
-  DW 10Dh,  00020h
-  DW 01Fh,  00000h
+  write 01Fh,  00001h
+  write 012h,  02300h
+  write 01Fh,  00002h
+  write 000h,  088D4h
+  write 001h,  082B1h
+  write 003h,  07002h
+  write 008h,  09E30h
+  write 009h,  001F0h
+  write 00Ah,  05500h
+  write 00Ch,  000C8h
+  write 01Fh,  00003h
+  write 012h,  0C096h
+  write 016h,  0000Ah
+  write 01Fh,  00000h
+  write 01Fh,  00000h
+  write 009h,  02000h
+  write 009h,  00000h  
+  set_bits 14h, 20h
+  set_bits 0Dh, 20h
   DW -1
   
 Config8168c2: 
-  DW 01Fh,  00001h
-  DW 012h,  02300h
-  DW 003h,  0802Fh
-  DW 002h,  04F02h
-  DW 001h,  00409h
-  DW 000h,  0F099h
-  DW 004h,  09800h
-  DW 004h,  09000h
-  DW 01Dh,  03D98h
-  DW 01Fh,  00002h
-  DW 00Ch,  07EB8h
-  DW 006h,  00761h
-  DW 01Fh,  00003h
-  DW 016h,  00F0Ah
-  DW 01Fh,  00000h
-  DW 116h,  00001h
-  DW 114h,  00020h
-  DW 10Dh,  00020h
-  DW 01Fh,  00000h
+  write 01Fh,  00001h
+  write 012h,  02300h
+  write 003h,  0802Fh
+  write 002h,  04F02h
+  write 001h,  00409h
+  write 000h,  0F099h
+  write 004h,  09800h
+  write 004h,  09000h
+  write 01Dh,  03D98h
+  write 01Fh,  00002h
+  write 00Ch,  07EB8h
+  write 006h,  00761h
+  write 01Fh,  00003h
+  write 016h,  00F0Ah
+  write 01Fh,  00000h
+  set_bits 16h, 1
+  set_bits 14h, 20h
+  set_bits 0Dh, 20h
   DW -1
      
 Config8168c3: 
-  DW 01Fh,  00001h
-  DW 012h,  02300h
-  DW 01Dh,  03D98h
-  DW 01Fh,  00002h
-  DW 00Ch,  07EB8h
-  DW 006h,  05461h
-  DW 01Fh,  00003h
-  DW 016h,  00F0Ah
-  DW 01Fh,  00000h
-  DW 116h,  00001h
-  DW 114h,  00020h
-  DW 10Dh,  00020h
-  DW 01Fh,  00000h
+  write 01Fh,  00001h
+  write 012h,  02300h
+  write 01Dh,  03D98h
+  write 01Fh,  00002h
+  write 00Ch,  07EB8h
+  write 006h,  05461h
+  write 01Fh,  00003h
+  write 016h,  00F0Ah
+  write 01Fh,  00000h
+  set_bits 16h, 1
+  set_bits 14h, 20h
+  set_bits 0Dh, 20h
   DW -1
 
-Config8168d1_d2: 
-  DW 01Fh,  00001h
-  DW 006h,  04064h
-  DW 007h,  02863h
-  DW 008h,  0059Ch
-  DW 009h,  026B4h
-  DW 00Ah,  06A19h
-  DW 00Bh,  0DCC8h
-  DW 010h,  0F06Dh
-  DW 014h,  07F68h
-  DW 018h,  07FD9h
-  DW 01Ch,  0F0FFh
-  DW 01Dh,  03D9Ch
-  DW 01Fh,  00003h
-  DW 012h,  0F49Fh
-  DW 013h,  0070Bh
-  DW 01Ah,  005ADh
-  DW 014h,  094C0h
+Config8168d1: 
+  conf_8168d
 
-  DW 01Fh,  00002h
-  DW 006h,  05561h
-  DW 01Fh,  00005h
-  DW 005h,  08332h
-  DW 006h,  05561h
+  write 01Fh,  00002h
+  modify 0Bh, 0EFh, 10h
+  modify 0Ch, 05D00h, 0A200h
 
-  DW 01Fh,  00001h
-  DW 017h,  00CC0h
-  DW 01Fh,  00000h
-  DW 00Dh,  0F880h
-  DW 01Fh,  00002h
-  DW 202h,  00100h,  00600h
-  DW 203h,  00000h,  0E000h
-  DW 01Fh,  00002h
-  DW 10Fh,  00017h
-  DW 01Fh,  00005h
-  DW 005h,  0001Bh
-  DW 01Fh,  00000h
+  call_proc Cond8168d1
+
+  write 01Fh,  00002h
+  set_bits 0Dh, 300h
+  set_bits 0Fh, 10h
+
+  write 01Fh,  00002h
+  modify 2, 600h, 100h
+  clear_bits 3, 0E000h
+  write 01Fh,  00000h
+
+  apply_firmware_cond 0BF00h
   DW -1
 
-Config8168d3: 
-  DW 01Fh,  00002h
-  DW 010h,  00008h
-  DW 00Dh,  0006Ch
+Config8168d2: 
+  conf_8168d
 
-  DW 01Fh,  00000h
-  DW 00Dh,  0F880h
+  call_proc Cond8168d2
 
-  DW 01Fh,  00001h
-  DW 017h,  00CC0h
+  write 01Fh,  00002h
+  modify 2, 600h, 100h
+  clear_bits 3, 0E000h
+  write 01Fh,  00000h
 
-  DW 01Fh,  00001h
-  DW 00Bh,  0A4D8h
-  DW 009h,  0281Ch
-  DW 007h,  02883h
-  DW 00Ah,  06B35h
-  DW 01Dh,  03DA4h
-  DW 01Ch,  0EFFDh
-  DW 014h,  07F52h
-  DW 018h,  07FC6h
-  DW 008h,  00601h
-  DW 006h,  04063h
-  DW 010h,  0F074h
-
-  DW 01Fh,  00003h
-  DW 013h,  00789h
-  DW 012h,  0F4BDh
-  DW 01Ah,  004FDh
-  DW 01Fh,  00000h
-  DW 000h,  09200h
-
-  DW 01Fh,  00005h
-  DW 001h,  00340h
-
-  DW 01Fh,  00001h
-  DW 004h,  04000h
-  DW 003h,  01D21h
-  DW 002h,  00C32h
-  DW 001h,  00200h
-  DW 000h,  05554h
-  DW 004h,  04800h
-  DW 004h,  04000h
-  DW 004h,  0F000h
-  DW 003h,  0DF01h
-  DW 002h,  0DF20h
-  DW 001h,  0101Ah
-  DW 000h,  0A0FFh
-  DW 004h,  0F800h
-  DW 004h,  0F000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  00023h
-  DW 016h,  00000h
-  DW 01Fh,  00000h
+  modify_paged 2, 0Fh, 0, 17h
+  apply_firmware_cond 0B300h
   DW -1
 
 Config8168d4:
-  DW 01Fh,  00001h
-  DW 017h,  00CC0h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Dh
-  DW 018h,  00040h
-  DW 01Fh,  00000h
-  DW 10Dh,  00020h
+  write_paged 1, 17h, 0CC0h
+  modify_extpage 2Dh, 18h, 0FFFFh, 40h
+  set_bits 0Dh, 20h
   DW -1 
 
 Config8168e1:
-  DW 01Fh,  00005h
-  DW 005h,  08B80h
-  DW 006h,  0C896h
-  DW 01Fh,  00000h
+  call_proc ApplyFirmware
+  8168d_param 08B80h, 0FFFFh, 0C896h
 
-  DW 01Fh,  00001h
-  DW 00Bh,  06C20h
-  DW 007h,  02872h
-  DW 01Ch,  0EFFFh
-  DW 01Fh,  00003h
-  DW 014h,  06420h
-  DW 01Fh,  00000h
+  write 01Fh,  00001h
+  write 00Bh,  06C20h
+  write 007h,  02872h
+  write 01Ch,  0EFFFh
+  write 01Fh,  00003h
+  write 014h,  06420h
+  write 01Fh,  00000h
 
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Fh
-  DW 015h,  01919h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  000ACh
-  DW 018h,  00006h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  00023h
-  DW 217h,  00006h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00002h
-  DW 01Eh,  0002Dh
-  DW 218h,  00050h,  00000h
-  DW 01Fh,  00000h
-  DW 214h,  08000h,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  00000h,  02000h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  00020h
-  DW 215h,  00000h,  01100h
-
-  DW 01Fh,  00006h
-  DW 000h,  05A00h
-  DW 01Fh,  00000h
-  DW 00Dh,  00007h
-  DW 00Eh,  0003Ch
-  DW 00Dh,  04007h
-  DW 00Eh,  00000h
-  DW 00Dh,  00000h  
+  modify_extpage 2Fh, 15h, 0FFFFh, 1919h
+  modify_extpage 0ACh, 18h, 0FFFFh, 6
+  modify_extpage 23h, 17h, 0, 6
+  modify_paged 2, 8, 7F00h, 8000h
+  modify_extpage 2Dh, 18h, 0, 50h
+  set_bits 14h, 8000h
+  8168d_param 8B86h, 0, 1
+  8168d_param 8B85h, 2000h, 0
+  modify_extpage 20h, 15h, 1100h, 0
+  write_paged 6, 0, 5A00h
+  write_mmd 7, 60, 0
   DW -1
 
 Config8168e2:
-  DW 01Fh,  00004h
-  DW 01Fh,  00007h
-  DW 01Eh,  000ACh
-  DW 018h,  00006h
-  DW 01Fh,  00002h
-  DW 01Fh,  00000h
-  DW 01Fh,  00000h
+  call_proc ApplyFirmware
+  modify_extpage 0ACh, 18h, 0FFFFh, 6
+  write_paged 3, 9, 0A20Fh
+  8168d_param 08B5Bh, 0FFFFh, 09222h
+  8168d_param 08B6Dh, 0FFFFh, 08000h
+  8168d_param 08B76h, 0FFFFh, 08000h
 
-  DW 01Fh,  00003h
-  DW 009h,  0A20Fh
-  DW 01Fh,  00000h
-  DW 01Fh,  00000h
+  write 01Fh,  00005h
+  write 005h,  08B80h
+  set_bits 17h, 6
+  write 01Fh,  00000h
 
-  DW 01Fh,  00005h
-  DW 005h,  08B5Bh
-  DW 006h,  09222h
-  DW 005h,  08B6Dh
-  DW 006h,  08000h
-  DW 005h,  08B76h
-  DW 006h,  08000h
-  DW 01Fh,  00000h
+  modify_extpage 2Dh, 18h, 0, 10h
+  set_bits 14h, 8000h
 
-  DW 01Fh,  00005h
-  DW 005h,  08B80h
-  DW 217h,  00006h,  00000h
-  DW 01Fh,  00000h
+  8168d_param 08B86h, 0, 1
+  8168d_param 08B85h, 0, 4000h
+  ee_8168f
 
-  DW 01Fh,  00004h
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Dh
-  DW 218h,  00010h,  00000h
-  DW 01Fh,  00002h
-  DW 01Fh,  0000h
-  DW 214h,  08000h,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B86h
-  DW 206h,  00001h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  04000h,  00000h
-  DW 01Fh,  00000h
-
-  DW 500h,  001B0h
-  DD ERIAR_MASK_1111,  00000h,  00003h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  00000h,  02000h
-  DW 01Fh,  00004h
-  DW 01Fh,  00007h
-  DW 01Eh,  00020h
-  DW 215h,  00000h,  00100h
-  DW 01Fh,  00002h
-  DW 01Fh,  00000h
-  DW 00Dh,  00007h
-  DW 00Eh,  0003Ch
-  DW 00Dh,  04007h
-  DW 00Eh,  00000h
-  DW 00Dh,  00000h
-
-  DW 01Fh,  00003h
-  DW 219h,  00000h,  00001h
-  DW 210h,  00000h,  00400h
-  DW 01Fh,  00000h 
-  DW -1
-
-Config8168f:
-  DW 01Fh,  00005h
-  DW 005h,  08B80h
-  DW 206h,  00006h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Dh
-  DW 218h,  00010h,  00000h
-  DW 01Fh,  00000h
-  DW 214h,  08000h,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B86h
-  DW 206h,  00001h,  00000h
-  DW 01Fh,  00000h
+  write 01Fh,  00003h
+  set_bits 19h, 1
+  set_bits 10h, 400h
+  write 01Fh,  00000h
+  modify_paged 5, 1, 0, 100h
   DW -1
   
-Config8168f1_f2:
-  DW 01Fh,  00003h
-  DW 009h,  0A20Fh
-  DW 01Fh,  00000h
+Config8168f1:
+  call_proc ApplyFirmware
+  write_paged 3, 9, 0A20Fh
 
-  DW 01Fh,  00005h
-  DW 005h,  08B55h
-  DW 006h,  00000h
-  DW 005h,  08B5Eh
-  DW 006h,  00000h
-  DW 005h,  08B67h
-  DW 006h,  00000h
-  DW 005h,  08B70h
-  DW 006h,  00000h
-  DW 01Fh,  00000h
-  DW 01Fh,  00007h
-  DW 01Eh,  00078h
-  DW 017h,  00000h
-  DW 019h,  000FBh
-  DW 01Fh,  00000h
+  8168d_param 08B55h, 0FFFFh, 0
+  8168d_param 08B5Eh, 0FFFFh, 0
+  8168d_param 08B67h, 0FFFFh, 0
+  8168d_param 08B70h, 0FFFFh, 0
 
-  DW 01Fh,  00005h
-  DW 005h,  08B79h
-  DW 006h,  0AA00h
-  DW 01Fh,  00000h
+  modify_extpage 78h, 17h, 0FFFFh, 0
+  modify_extpage 78h, 19h, 0FFFFh, 0FBh
 
-  DW 01Fh,  00003h
-  DW 001h,  0328Ah
-  DW 01Fh,  00000h
+  8168d_param 08B79h, 0FFFFh, 0AA00h
+  write_paged 3, 1, 328Ah
 
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  04000h,  00000h
-  DW 01Fh,  00000h
+  conf_8168f
+
+  8168d_param 08B85h, 0, 4000h
   DW -1
-  
+
+Config8168f2:
+  call_proc ApplyFirmware
+  conf_8168f
+  DW -1
+	  
 Config8411:
-  DW 01Fh,  00005h
-  DW 005h,  08B80h
-  DW 206h,  00006h,  00000h
-  DW 01Fh,  00000h
+  call_proc ApplyFirmware
+  conf_8168f
 
-  DW 01Fh,  00007h
-  DW 01Eh,  0002Dh
-  DW 218h,  00010h,  00000h
-  DW 01Fh,  00000h
-  DW 214h,  08000h,  00000h
+  8168d_param 08B85h, 0, 4000h
+  write_paged 3, 9, 0A20Fh
 
-  DW 01Fh,  00005h
-  DW 005h,  08B86h
-  DW 206h,  00001h,  00000h
-  DW 01Fh,  00000h
+  8168d_param 08B55h, 0FFFFh, 0
+  8168d_param 08B5Eh, 0FFFFh, 0
+  8168d_param 08B67h, 0FFFFh, 0
+  8168d_param 08B70h, 0FFFFh, 0
 
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  04000h,  00000h
-  DW 01Fh,  00000h
+  modify_extpage 78h, 17h, 0FFFFh, 0
+  modify_extpage 78h, 19h, 0FFFFh, 0AAh
 
-  DW 01Fh,  00003h
-  DW 009h,  0A20Fh
-  DW 01Fh,  00000h
+  8168d_param 08B79h, 0FFFFh, 0AA00h
+  write_paged 3, 1, 328Ah
 
-  DW 01Fh,  00005h
-  DW 005h,  08B55h
-  DW 006h,  00000h
-  DW 005h,  08B5Eh
-  DW 006h,  00000h
-  DW 005h,  08B67h
-  DW 006h,  00000h
-  DW 005h,  08B70h
-  DW 006h,  00000h
-  DW 01Fh,  00000h
-  DW 01Fh,  00007h
-  DW 01Eh,  00078h
-  DW 017h,  00000h
-  DW 019h,  000AAh
-  DW 01Fh,  00000h
+  8168d_param 08B54h, 800h, 0
+  8168d_param 08B5Dh, 800h, 0
+  8168d_param 08A7Ch, 100h, 0
+  8168d_param 08A7Fh, 0, 100h
+  8168d_param 08A82h, 100h, 0
+  8168d_param 08A85h, 100h, 0
+  8168d_param 08A88h, 100h, 0
 
-  DW 01Fh,  00005h
-  DW 005h,  08B79h
-  DW 006h,  0AA00h
-  DW 01Fh,  00000h
+  8168d_param 08B85h, 0, 8000h
 
-  DW 01Fh,  00003h
-  DW 001h,  0328Ah
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B54h
-  DW 206h,  00000h,  00800h
-  DW 005h,  08B5Dh
-  DW 206h,  00000h,  00800h
-  DW 005h,  08A7Ch
-  DW 206h,  00000h,  00100h
-  DW 005h,  08A7Fh
-  DW 206h,  00100h,  00000h
-  DW 005h,  08A82h
-  DW 206h,  00000h,  00100h
-  DW 005h,  08A85h
-  DW 206h,  00000h,  00100h
-  DW 005h,  08A88h
-  DW 206h,  00000h,  00100h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  08000h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00005h
-  DW 005h,  08B85h
-  DW 206h,  00000h,  02000h
-  DW 01Fh,  00004h
-  DW 01Fh,  00007h
-  DW 01Eh,  00020h
-  DW 215h,  00000h,  00100h
-  DW 01Fh,  00000h
-  DW 00Dh,  00007h
-  DW 00Eh,  0003Ch
-  DW 00Dh,  04007h
-  DW 00Eh,  00000h
-  DW 00Dh,  00000h
-
-  DW 01Fh,  00003h
-  DW 219h,  00000h,  00001h
-  DW 210h,  00000h,  00400h
-  DW 01Fh,  00000h 
+  write 01Fh,  00003h
+  clear_bits 19h, 1
+  clear_bits 10h, 400h
+  write 01Fh,  00000h 
   DW -1
    
 Config8168g1:
-  DW 01Fh,  00A44h
-  DW 211h,  0000Ch,  00000h
+  call_proc ApplyFirmware
+  call_proc Cond8168g1
 
-  DW 01Fh,  00BCCh
-  DW 214h,  00100h,  00000h
-  DW 01Fh,  00A44h
-  DW 211h,  000C0h,  00000h
-  DW 01Fh,  00A43h
-  DW 013h,  08084h
-  DW 214h,  00000h,  06000h
-  DW 210h,  01003h,  00000h
+  modify_paged 0A4Bh, 11h, 0, 4
 
-  DW 01Fh,  00A4Bh
-  DW 211h,  00004h,  00000h
+  8168g_param 8012h, 0, 8000h
+  modify_paged 0C42h, 11h, 2000h, 4000h
+  
+  write 01Fh,  0BCDh
+  write 014h,  05065h
+  write 014h,  0D065h
 
-  DW 01Fh,  00A43h
-  DW 013h,  08012h
-  DW 214h,  08000h,  00000h
+  write 01Fh,  00BC8h
+  write 011h,  05655h
 
-  DW 01Fh,  00C42h
-  DW 211h,  04000h,  02000h
+  write 01Fh,  00BCDh
+  write 014h,  01065h
+  write 014h,  09065h
+  write 014h,  01065h
+  write 01Fh,  00000h
 
-  DW 01Fh,  00BCDh
-  DW 014h,  05065h
-  DW 014h,  0D065h
-  DW 01Fh,  00BC8h
-  DW 011h,  05655h
-  DW 01Fh,  00BCDh
-  DW 014h,  01065h
-  DW 014h,  09065h
-  DW 014h,  01065h
-
-  DW 01Fh,  00000h
+  ee_8168g
   DW -1
     
 Config8168g2:
+  call_proc ApplyFirmware
+  ee_8168g
   DW -1
-
-Config8168h1:
-  DW 01Fh,  00A43h
-  DW 013h,  0809Bh
-  DW 214h,  08000h,  0F800h
-  DW 013h,  080A2h
-  DW 214h,  08000h,  0FF00h
-  DW 013h,  080A4h
-  DW 214h,  08500h,  0FF00h
-  DW 013h,  0809Ch
-  DW 214h,  0BD00h,  0FF00h
-
-  DW 01Fh,  00A43h
-  DW 013h,  080ADh
-  DW 214h,  07000h,  0F800h
-  DW 013h,  080B4h
-  DW 214h,  05000h,  0FF00h
-  DW 013h,  080ACh
-  DW 214h,  04000h,  0FF00h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A43h
-  DW 013h,  0808Eh
-  DW 214h,  01200h,  0FF00h
-  DW 013h,  08090h
-  DW 214h,  0E500h,  0FF00h
-  DW 013h,  08092h
-  DW 214h,  09F00h,  0FF00h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A44h
-  DW 211h,  00800h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00BCAh
-  DW 217h,  04000h,  03000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A43h
-  DW 013h,  0803Fh
-  DW 214h,  00000h,  03000h
-  DW 013h,  08047h
-  DW 214h,  00000h,  03000h
-  DW 013h,  0804Fh
-  DW 214h,  00000h,  03000h
-  DW 013h,  08057h
-  DW 214h,  00000h,  03000h
-  DW 013h,  0805Fh
-  DW 214h,  00000h,  03000h
-  DW 013h,  08067h
-  DW 214h,  00000h,  03000h
-  DW 013h,  0806Fh
-  DW 214h,  00000h,  03000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A44h
-  DW 214h,  00000h,  00080h
-  DW 01Fh,  00000h
-  DW -1  
   
 Config8168h2:
-  DW 01Fh,  00A43h
-  DW 013h,  0808Ah
-  DW 214h,  0000Ah,  0003Fh
-  DW 01Fh,  00000h
+  call_proc ApplyFirmware
 
-  DW 01Fh,  00A43h
-  DW 013h,  00811h
-  DW 214h,  00800h,  00000h
-  DW 01Fh,  00A42h
-  DW 216h,  00002h,  00000h
-  DW 01Fh,  00000h
+  8168g_param 808Ah, 3Fh, 0Ah
+  8168g_param 811h, 0, 800h
+  modify_paged 0A42h, 16h, 0, 2
 
-  DW 01Fh,  00A44h
-  DW 211h,  00800h,  00000h
-  DW 01Fh,  00000h
+  call_proc Cond8168h2
 
-  DW 01Fh,  00A44h
-  DW 214h,  00000h,  00080h
-  DW 01Fh,  00000h
-  DW -1
-
-Config8168ep1:
-  DW 01Fh,  00A44h
-  DW 211h,  0000Ch,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00BCCh
-  DW 214h,  00000h,  00100h
-  DW 01Fh,  00A44h
-  DW 211h,  000C0h,  00000h
-  DW 01Fh,  00A43h
-  DW 013h,  08084h
-  DW 214h,  00000h,  06000h
-  DW 210h,  01003h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A4Bh
-  DW 211h,  00004h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00A43h
-  DW 013h,  08012h
-  DW 214h,  08000h,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00C42h
-  DW 211h,  04000h,  02000h
-  DW 01Fh,  00000h
+  modify_paged 0A44h, 11h, 80h, 0
+  ee_8168g
   DW -1
 
 Config8168ep2:
-  DW 01Fh,  00BCCh
-  DW 214h,  00000h,  00100h
-  DW 01Fh,  00A44h
-  DW 211h,  000C0h,  00000h
-  DW 01Fh,  00A43h
-  DW 013h,  08084h
-  DW 214h,  00000h,  06000h
-  DW 210h,  01003h,  00000h
+  modify_paged 0C42h, 11h, 2000h, 4000h
 
-  DW 01Fh,  00A43h
-  DW 013h,  08012h
-  DW 214h,  08000h,  00000h
-  DW 01Fh,  00000h
+  8168g_param 80F3h, 0FF00h, 8B00h
+  8168g_param 80F0h, 0FF00h, 3A00h
+  8168g_param 80EFh, 0FF00h, 500h
+  8168g_param 80F6h, 0FF00h, 6E00h
+  8168g_param 80ECh, 0FF00h, 6800h
+  8168g_param 80EDh, 0FF00h, 7C00h
+  8168g_param 80F2h, 0FF00h, 0F400h
+  8168g_param 80F4h, 0FF00h, 8500h
+  8168g_param 8110h, 0FF00h, 0A800h
+  8168g_param 810Fh, 0FF00h, 1D00h
+  8168g_param 8111h, 0FF00h, 0F500h
+  8168g_param 8113h, 0FF00h, 6100h
+  8168g_param 8115h, 0FF00h, 9200h
+  8168g_param 810Eh, 0FF00h, 400h
+  8168g_param 810Ch, 0FF00h, 7C00h
+  8168g_param 810Bh, 0FF00h, 5A00h
+  8168g_param 80D1h, 0FF00h, 0FF00h
+  8168g_param 80CDh, 0FF00h, 9E00h
+  8168g_param 80D3h, 0FF00h, 0E00h
+  8168g_param 80D5h, 0FF00h, 0CA00h
+  8168g_param 80D7h, 0FF00h, 8400h
 
-  DW 01Fh,  00C42h
-  DW 211h,  04000h,  02000h
-  DW 01Fh,  00000h
+  write 01Fh,  00BCDh
+  write 014h,  05065h
+  write 014h,  0D065h
+  write 01Fh,  00BC8h
+  write 012h,  000EDh
+  write 01Fh,  00BCDh
+  write 014h,  01065h
+  write 014h,  09065h
+  write 014h,  01065h
+  write 01Fh,  00000h
 
-  DW 01Fh,  00A43h
-  DW 013h,  080F3h
-  DW 214h,  08B00h,  07400h
-  DW 013h,  080F0h
-  DW 214h,  03A00h,  0C500h
-  DW 013h,  080EFh
-  DW 214h,  00500h,  0FA00h
-  DW 013h,  080F6h
-  DW 214h,  06E00h,  09100h
-  DW 013h,  080ECh
-  DW 214h,  06800h,  09700h
-  DW 013h,  080EDh
-  DW 214h,  07C00h,  08300h
-  DW 013h,  080F2h
-  DW 214h,  0F400h,  00B00h
-  DW 013h,  080F4h
-  DW 214h,  08500h,  07A00h
-  DW 01Fh,  00A43h
-  DW 013h,  08110h
-  DW 214h,  0A800h,  05700h
-  DW 013h,  0810Fh
-  DW 214h,  01D00h,  0E200h
-  DW 013h,  08111h
-  DW 214h,  0F500h,  00A00h
-  DW 013h,  08113h
-  DW 214h,  06100h,  09E00h
-  DW 013h,  08115h
-  DW 214h,  09200h,  06D00h
-  DW 013h,  0810Eh
-  DW 214h,  00400h,  0FB00h
-  DW 013h,  0810Ch
-  DW 214h,  07C00h,  08300h
-  DW 013h,  0810Bh
-  DW 214h,  05A00h,  0A500h
-  DW 01Fh,  00A43h
-  DW 013h,  080D1h
-  DW 214h,  0FF00h,  00000h
-  DW 013h,  080CDh
-  DW 214h,  09E00h,  06100h
-  DW 013h,  080D3h
-  DW 214h,  00E00h,  0F100h
-  DW 013h,  080D5h
-  DW 214h,  0CA00h,  03500h
-  DW 013h,  080D7h
-  DW 214h,  08400h,  07B00h
+  ee_8168g
+  DW -1
 
-  DW 01Fh,  00BCDh
-  DW 014h,  05065h
-  DW 014h,  0D065h
-  DW 01Fh,  00BC8h
-  DW 012h,  000EDh
-  DW 01Fh,  00BCDh
-  DW 014h,  01065h
-  DW 014h,  09065h
-  DW 014h,  01065h
-  DW 01Fh,  00000h
+Config8117:
+  8168g_param 808Eh, 0FF00h, 4800h
+  8168g_param 8090h, 0FF00h, 0CC00h
+  8168g_param 8092h, 0FF00h, 0B000h
+
+  8168g_param 8088h, 0FF00h, 6000h
+  8168g_param 808Bh, 03F00h, 0B000h
+  8168g_param 808Dh, 01F00h, 600h
+  8168g_param 808Ch, 0FF00h, 0B000h
+  8168g_param 80A0h, 0FF00h, 2800h
+  8168g_param 80A2h, 0FF00h, 5000h
+  8168g_param 809Bh, 0F800h, 0B000h
+  8168g_param 809Ah, 0FF00h, 4B00h
+  8168g_param 809Dh, 03F00h, 800h
+  8168g_param 80A1h, 0FF00h, 7000h
+  8168g_param 809Fh, 01F00h, 300h
+  8168g_param 809Eh, 0FF00h, 8800h
+  8168g_param 80B2h, 0FF00h, 2200h
+  8168g_param 80ADh, 0F800h, 9800h
+  8168g_param 80AFh, 03F00h, 800h
+  8168g_param 80B3h, 0FF00h, 6F00h
+  8168g_param 80B1h, 01F00h, 300h
+  8168g_param 80B0h, 0FF00h, 9300h
+
+  8168g_param 8011h, 0, 800h
+  8168g_param 8016h, 0, 400h
+
+  ee_8168g
   DW -1
   
 Config8102e:
-  DW 01Fh,  00000h
-  DW 111h,  01000h
-  DW 119h,  02000h
-  DW 110h,  08000h
+  set_bits 11h, 1000h
+  set_bits 19h, 2000h
+  set_bits 10h, 8000h
 
-  DW 01Fh,  00003h
-  DW 008h,  0441Dh
-  DW 001h,  09100h
-  DW 01Fh,  00000h
+  write 01Fh,  00003h
+  write 008h,  0441Dh
+  write 001h,  09100h
+  write 01Fh,  00000h
+  DW -1
+
+Config8401:
+  set_bits 11h, 1000h
+  modify_paged 2, 0Fh, 0, 3
   DW -1
 
 Config8105e:
-  DW 01Fh,  00000h
-  DW 018h,  00310h
+  call_proc ApplyFirmware
 
-  DW 01Fh,  00005h
-  DW 01Ah,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00004h
-  DW 01Ch,  00000h
-  DW 01Fh,  00000h
-
-  DW 01Fh,  00001h
-  DW 015h,  07701h
-  DW 01Fh,  00000h
+  write_paged 5, 1Ah, 0
+  write_paged 4, 1Ch, 0
+  write_paged 1, 15h, 7701h
   DW -1
 
 Config8402:
-  DW 01Fh,  00000h
-  DW 018h,  00310h
+  call_proc ApplyFirmware
 
-  DW 01Fh,  00004h
-  DW 010h,  0401Fh
-  DW 019h,  07030h
-  DW 01Fh,  00000h
+  write 01Fh,  00004h
+  write 010h,  0401Fh
+  write 019h,  07030h
+  write 01Fh,  00000h
   DW -1
 
 Config8106e:
-  DW 01Fh,  00000h
-  DW 018h,  00310h
-  DW 400h,  OFFSET Wait100ms
+  call_proc ApplyFirmware
 
-  DW 300h,  001B0h
-  DD ERIAR_MASK_0011,  00000h
+  write 01Fh,  00004h
+  write 010h,  0C07Fh
+  write 019h,  07030h
+  write 01Fh,  00000h
+  DW -1
 
-  DW 01Fh,  00004h
-  DW 010h,  0C07Fh
-  DW 019h,  07030h
-  DW 01Fh,  00000h
+Config8125:
+  modify_paged 5ABh, 12h, 8000h, 0
+  DW -1
 
-  DW 300h,  001D0h
-  DD ERIAR_MASK_0011,  00000h
+Config8125a2:
+  modify_paged 0AD4h, 17h, 0, 10h
+  modify_paged 0AD1h, 13h, 3FFh, 3FFh
+  modify_paged 0AD3h, 11h, 3Fh, 6
+  modify_paged 0AC0h, 14h, 1100h, 0
+  modify_paged 0ACCh, 10h, 3, 2
+  modify_paged 0AD4h, 10h, 0E7h, 44h
+  modify_paged 0AC1h, 12h, 80h, 0
+  modify_paged 0AC8h, 10h, 300h, 0
+  modify_paged 0AC5h, 17h, 7, 2
+  write_paged 0AD4h, 16h, 0A8h
+  write_paged 0AC5h, 16h, 1FFh
+  modify_paged 0AC8h, 15h, 0F0h, 30h
+
+  write 01Fh,  00B87h
+  write 016h,  080A2h
+  write 017h,  00153h
+  write 016h,  0809Ch
+  write 017h,  00153h
+  write 01Fh,  00000h
+
+  write 01Fh,  00A43h
+  write 013h,  0B1B3h
+  write 014h,  00043h
+  write 014h,  000A7h
+  write 014h,  000D6h
+  write 014h,  000ECh
+  write 014h,  000F6h
+  write 014h,  000FBh
+  write 014h,  000FDh
+  write 014h,  000FFh
+  write 014h,  000BBh
+  write 014h,  00058h
+  write 014h,  00029h
+  write 014h,  00013h
+  write 014h,  00009h
+  write 014h,  00004h
+  write 014h,  00002h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 014h,  00000h
+  write 01Fh,  00000h
+
+  8168g_param 8257h, 0FFFFh, 20Fh
+  8168g_param 80EAh, 0FFFFh, 7843h
+  call_proc ApplyFirmware
+
+  modify_paged 0D06h, 14h, 0, 2000h
+  8168g_param 81A2h, 0, 100h
+
+  modify_paged 0B54h, 16h, 0FF00h, 0DB00h
+  modify_paged 0A45h, 12h, 1, 0
+  modify_paged 0A5Dh, 12h, 0, 20h
+  modify_paged 0AD4h, 17h, 10h, 0
+  modify_paged 0A86h, 15h, 1, 0
+
+  ee_8168g
+  DW -1
+
+Config8125b:
+  call_proc ApplyFirmware
+
+  modify_paged 0A44h, 11h, 0, 800h
+  modify_paged 0AC4h, 13h, 0F0h, 90h
+  modify_paged 0AD3h, 10h, 3, 1
+
+  write 01Fh,  00B87h
+  write 016h,  080F5h
+  write 017h,  0760Eh
+  write 016h,  08107h
+  write 017h,  0360Eh
+  write 016h,  08551h
+  modify 17h, 0FF00h, 800h
+  write 01Fh,  00000h
+
+  modify_paged 0BF0h, 10h, 0E000h, 0A000h
+  modify_paged 0BF4h, 13h, 0F00h, 300h
+
+  8168g_param 8044h, 0FFFFh, 2417h
+  8168g_param 804Ah, 0FFFFh, 2417h
+  8168g_param 8050h, 0FFFFh, 2417h
+  8168g_param 8056h, 0FFFFh, 2417h
+  8168g_param 805Ch, 0FFFFh, 2417h
+  8168g_param 8062h, 0FFFFh, 2417h
+  8168g_param 8068h, 0FFFFh, 2417h
+  8168g_param 806Eh, 0FFFFh, 2417h
+  8168g_param 8074h, 0FFFFh, 2417h
+  8168g_param 807Ah, 0FFFFh, 2417h
+
+  modify_paged 0A4Ch, 15h, 0, 40h
+  modify_paged 0BF8h, 12h, 0E000h, 0A000h
+  8125_legacy
+  ee_8168g
   DW -1
 
 ConfigTab:
@@ -2125,9 +3762,9 @@ ct08 DW OFFSET Config8102e
 ct09 DW OFFSET Config8102e
 ct10 DW OFFSET ConfigNone
 ct11 DW OFFSET Config8168bb
-ct12 DW OFFSET Config8168bef
+ct12 DW OFFSET ConfigNone
 ct13 DW OFFSET ConfigNone
-ct14 DW OFFSET ConfigNone
+ct14 DW OFFSET Config8401
 ct15 DW OFFSET ConfigNone
 ct16 DW OFFSET ConfigNone
 ct17 DW OFFSET Config8168bef
@@ -2135,12 +3772,12 @@ ct18 DW OFFSET Config8168cp1
 ct19 DW OFFSET Config8168c1
 ct20 DW OFFSET Config8168c2
 ct21 DW OFFSET Config8168c3
-ct22 DW OFFSET ConfigNone
+ct22 DW OFFSET Config8168c3
 ct23 DW OFFSET Config8168cp2
 ct24 DW OFFSET Config8168cp2
-ct25 DW OFFSET Config8168d1_d2
-ct26 DW OFFSET Config8168d1_d2
-ct27 DW OFFSET Config8168d3
+ct25 DW OFFSET Config8168d1
+ct26 DW OFFSET Config8168d2
+ct27 DW OFFSET ConfigNone
 ct28 DW OFFSET Config8168d4
 ct29 DW OFFSET Config8105e
 ct30 DW OFFSET Config8105e
@@ -2148,8 +3785,8 @@ ct31 DW OFFSET ConfigNone
 ct32 DW OFFSET Config8168e1
 ct33 DW OFFSET Config8168e1
 ct34 DW OFFSET Config8168e2
-ct35 DW OFFSET Config8168f1_f2
-ct36 DW OFFSET Config8168f1_f2
+ct35 DW OFFSET Config8168f1
+ct36 DW OFFSET Config8168f2
 ct37 DW OFFSET Config8402
 ct38 DW OFFSET Config8411
 ct39 DW OFFSET Config8106e
@@ -2158,99 +3795,447 @@ ct41 DW OFFSET ConfigNone
 ct42 DW OFFSET Config8168g2
 ct43 DW OFFSET Config8168g2
 ct44 DW OFFSET Config8168g2
-ct45 DW OFFSET Config8168h1
+ct45 DW OFFSET ConfigNone
 ct46 DW OFFSET Config8168h2
-ct47 DW OFFSET Config8168h1
+ct47 DW OFFSET ConfigNone
 ct48 DW OFFSET Config8168h2
-ct49 DW OFFSET Config8168ep1
-ct50 DW OFFSET Config8168ep2
+ct49 DW OFFSET ConfigNone
+ct50 DW OFFSET ConfigNone
 ct51 DW OFFSET Config8168ep2
+ct52 DW OFFSET Config8117
+ct53 DW OFFSET Config8117
+ct54 DW OFFSET ConfigNone
+ct55 DW OFFSET ConfigNone
+ct56 DW OFFSET ConfigNone
+ct57 DW OFFSET ConfigNone
+ct58 DW OFFSET ConfigNone
+ct59 DW OFFSET ConfigNone
+ct60 DW OFFSET ConfigNone
+ct61 DW OFFSET Config8125a2
+ct62 DW OFFSET ConfigNone
+ct63 DW OFFSET Config8125b
 
 Config  Proc near
     mov si,ds:HwId
     add si,si
     mov si,cs:[si].ConfigTab
-
-cLoop:
-    mov ax,cs:[si]
-    cmp ah,0
-    je cWrite
+    call RunTableCommands
 ;
-    cmp ah,1
-    je cPatch
-;
-    cmp ah,2
-    je cMerge
-;
-    cmp ah,3
-    je cEri
-;
-    cmp ah,4
-    je cCall
-;
-    cmp ah,5
-    je cEriMerge
-;        
-    jmp cDone
-
-cWrite:
-    mov dl,al
-    mov ax,cs:[si+2]
-    call ds:WritePhyProc
-    add si,4
-    jmp cLoop
-
-cPatch:
-    mov dl,al
-    call ds:ReadPhyProc
-    or ax,cs:[si+2]
-    call ds:WritePhyProc
-    add si,4
-    jmp cLoop
-
-cMerge:
-    mov dl,al
-    call ds:ReadPhyProc
-    mov cx,cs:[si+4]
-    not cx
-    and ax,cx
-    or ax,cs:[si+2]
-    call ds:WritePhyProc
-    add si,6
-    jmp cLoop
-
-cEri:
-    mov bx,cs:[si+2]
-    mov ecx,cs:[si+4]
-    mov eax,cs:[si+8]
-    call WriteEri
-    add si,12
-    jmp cLoop
-
-cEriMerge:
-    mov bx,cs:[si+2]
-    xor ecx,ecx
-    call ReadEri
-;
-    mov ecx,cs:[si+8]
-    not ecx
-    and eax,ecx
-    or eax,cs:[si+12]
-    mov ecx,cs:[si+4]
-    call WriteEri
-    add si,16
-    jmp cLoop
-
-cCall:
-    call word ptr cs:[si+2]
-    add si,4
-    jmp cLoop
-
-cDone:
+    call LockConf
     ret
 Config  Endp            
-    
-      
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       NAME:          Start8169
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartNone:
+  DW -1
+
+Start8168b:
+  modify_config 4, 0, 1
+  modify_config 3, 0, 1
+  DW -1
+
+Start8168cp1:
+  ephy_init 1,   00000h, 00001h
+  ephy_init 2,   00800h, 01000h
+  ephy_init 3,   00000h, 00042h
+  ephy_init 6,   00080h, 00000h
+  ephy_init 7,   00000h, 02000h
+
+  modify_config 1, 10h, 0
+  modify_config 3, 0, 1
+
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
+  DW -1
+
+Start8168cp2:
+  modify_config 3, 0, 1
+
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
+  DW -1
+
+Start8168cp3:
+  modify_config 3, 0, 1
+
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
+  DW -1
+
+Start8168c1:
+  ephy_init 2,   00800h, 01000h
+  ephy_init 3,   00000h, 00002h
+  ephy_init 6,   00080h, 00000h
+
+  modify_config 1, 10h, 0
+  modify_config 3, 0, 1
+
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
+  DW -1
+
+Start8168c2:
+  ephy_init 1,   00000h, 00001h
+  ephy_init 3,   00400h, 00020h
+
+  modify_config 1, 10h, 0
+  modify_config 3, 0, 1
+
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
+  DW -1
+
+Start8168c4:
+  modify_config 1, 10h, 0
+  modify_config 3, 0, 1
+
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
+  DW -1
+
+Start8168d:
+  modify_config 3, 0, 4
+  modify_config 4, 0, 2
+  DW -1
+
+Start8168d4:
+  ephy_init 0Bh, 00000h, 00048h
+  ephy_init 19h, 00020h, 00050h
+  ephy_init 0Ch, 00100h, 00020h
+  ephy_init 10h, 00004h, 00000h
+  modify_config 3, 0, 4
+  DW -1
+
+Start8168e1:
+  ephy_init 0,   00200h, 00100h
+  ephy_init 0,   00000h, 00004h
+  ephy_init 6,   00002h, 00001h
+  ephy_init 6,   00000h, 00030h
+  ephy_init 7,   00000h, 02000h
+  ephy_init 0,   00000h, 00020h
+  ephy_init 3,   05800h, 02000h
+  ephy_init 3,   00000h, 00001h
+  ephy_init 1,   00800h, 01000h
+  ephy_init 7,   00000h, 04000h
+  ephy_init 1Eh, 00000h, 02000h
+  ephy_init 19h, 0FFFFh, 0FE6ch
+  ephy_init 0Ah, 00000h, 00040h
+
+  modify_config 5, 0, 8
+  modify_config 1, 0DCh, 3
+  modify_config 3, 0, 1
+  DW -1
+
+Start8168e2:
+  disable_aspm
+  ephy_init 9,   00000h, 00080h
+  ephy_init 19h, 00000h, 00224h
+  ephy_init 0,   00000h, 00004h
+  ephy_init 0Ch, 03DF0h, 00200h
+
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_1111, 00000h
+  set_fifo_size
+  set_eri_bits 01D0h, 2
+  reset_packet_filter
+  set_eri_bits 01B0h, 10h
+  write_eri 0CCh, ERIAR_MASK_1111, 000000050h
+  write_eri 0D0h, ERIAR_MASK_1111, 007FF0060h
+
+  modify_config 5, 0, 8
+  modify_config 1, 0Ch, 3
+  modify_config 3, 0, 1
+  DW -1
+
+Start8168f1:
+  start_8168f
+
+  ephy_init 6,   000C0h, 00020h
+  ephy_init 8,   00001h, 00002h
+  ephy_init 9,   00000h, 00080h
+  ephy_init 19h, 00000h, 00224h
+  ephy_init 0,   00000h, 00008h
+  ephy_init 0Ch, 03DF0h, 00200h
+
+  modify_config 5, 0, 8
+  DW -1
+
+Start8411:
+  start_8168f
+
+  ephy_init 6,   000C0h, 00020h
+  ephy_init 0Fh, 0FFFFh, 05200h
+  ephy_init 19h, 00000h, 00224h
+  ephy_init 0,   00000h, 00008h
+  ephy_init 0Ch, 03DF0h, 00200h
+
+  modify_config 5, 0, 8
+  DW -1
+
+Start8168g1:
+  start_8168g
+  disable_aspm
+
+  ephy_init 0,   00008h, 00000h
+  ephy_init 0Ch, 03FF0h, 00820h
+  ephy_init 1Eh, 00000h, 00001h
+  ephy_init 19h, 08000h, 00000h
+  DW -1
+
+Start8168g2:
+  start_8168g
+  disable_aspm
+
+  ephy_init 0,   00008h, 00000h
+  ephy_init 0Ch, 0x3FF0h, 00820h
+  ephy_init 19h, 0FFFFh, 07C00h
+  ephy_init 1Eh, 0FFFFh, 020EBh
+  ephy_init 0Dh, 0FFFFh, 01666h
+  ephy_init 0,   0FFFFh, 010A3h
+  ephy_init 6,   0FFFFh, 0F050h
+  ephy_init 4,   00000h, 00010h
+  ephy_init 1Dh, 04000h, 00000h
+  DW -1
+
+Start8411_2:
+  start_8168g
+  disable_aspm
+
+  ephy_init 0,   00008h, 00000h
+  ephy_init 0Ch, 037D0h, 00820h
+  ephy_init 1Eh, 00000h, 00001h
+  ephy_init 19h, 08021h, 00000h
+  ephy_init 1Eh, 00000h, 02000h
+  ephy_init 0Dh, 00100h, 00200h
+  ephy_init 0,   00000h, 00080h
+  ephy_init 6,   00000h, 00010h
+  ephy_init 4,   00000h, 00010h
+  ephy_init 1Dh, 00000h, 04000h
+  DW -1
+
+Start8168h1:
+  disable_aspm
+  ephy_init 1Eh, 00800h, 00001h
+  ephy_init 1Dh, 00000h, 00800h
+  ephy_init 5,   0FFFFh, 02089h
+  ephy_init 6,   0FFFFh, 05881h
+  ephy_init 4,   0FFFFh, 0854Ah
+  ephy_init 1,   0FFFFH, 0068bh
+
+  set_fifo_size
+  reset_packet_filter
+  set_eri_bits 0DCh, 0001Ch
+  write_eri 05F0h, ERIAR_MASK_0011, 04F87h
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  clear_eri_bits 01B0h, 1000h
+  DW -1
+
+Start8168ep3:
+  disable_aspm
+  ephy_init 0,   00000h, 00080h
+  ephy_init 0Dh, 00100h, 00200h
+  ephy_init 19h, 08021h, 00000h
+  ephy_init 1Eh, 00000h, 02000h
+
+  start_8168ep
+  DW -1
+
+Start8117:
+  disable_aspm
+  ephy_init 19h, 00040h, 01100h
+  ephy_init 59h, 00040h, 01100h
+
+  set_fifo_size
+  reset_packet_filter
+  set_eri_bits 0D4h, 00010h
+  write_eri 05F0h, ERIAR_MASK_0011, 04F87h
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  clear_eri_bits 01B0h, 1000h
+  DW -1
+
+Start8102e1:
+  ephy_init 1,   00000h, 06E65h
+  ephy_init 2,   00000h, 0091Fh
+  ephy_init 3,   00000h, 0C2F9h
+  ephy_init 6,   00000h, 0AFB5h
+  ephy_init 7,   00000h, 00E00h
+  ephy_init 19h, 00000h, 0EC80h
+  ephy_init 1,   00000h, 02E65h
+  ephy_init 1,   00000h, 06E65h
+  modify_config 3, 0, 4
+  modify_config 4, 0, 1
+  DW -1
+
+Start8102e2:
+  modify_config 3, 0, 4
+  modify_config 4, 0, 1
+  DW -1
+
+Start8102e3:
+  ephy_init 3,   0FFFFh, 0C2F9h
+  Dw -1
+
+Start8401:
+  ephy_init 1,   0FFFFh, 06FE5h
+  ephy_init 3,   0FFFFh, 00599h
+  ephy_init 6,   0FFFFh, 0AF25h
+  ephy_init 7,   0FFFFh, 08E68h
+  modify_config 3, 0, 1
+  DW -1
+
+Start8105e1:
+  ephy_init 7,   00000h, 04000h
+  ephy_init 19h, 00000h, 00200h
+  ephy_init 19h, 00000h, 00020h
+  ephy_init 1Eh, 00000h, 02000h
+  ephy_init 3,   00000h, 00001h
+  ephy_init 19h, 00000h, 00100h
+  ephy_init 19h, 00000h, 00004h
+  ephy_init 0Ah, 00000h, 00020h
+  DW -1
+
+Start8105e2:
+  ephy_init 7,   00000h, 04000h
+  ephy_init 19h, 00000h, 00200h
+  ephy_init 19h, 00000h, 00020h
+  ephy_init 1Eh, 00000h, 02000h
+  ephy_init 3,   00000h, 00001h
+  ephy_init 19h, 00000h, 00100h
+  ephy_init 19h, 00000h, 00004h
+  ephy_init 0Ah, 00000h, 00020h
+  ephy_init 1Eh, 0FFFFh, 08000h
+  DW -1
+
+Start8402:
+  ephy_init 19h, 0FFFFh, 0FF64h
+  ephy_init 1Eh, 00000h, 04000h
+
+  set_fifo_size
+  reset_packet_filter
+
+  write_eri 0C0h, ERIAR_MASK_0011, 00000h
+  write_eri 0B8h, ERIAR_MASK_0011, 00000h
+  modify_eri 0D4h, 0E00h, 0FF00h
+  write_eri 01B0h, ERIAR_MASK_0011, 00000h
+  DW -1
+
+Start8106:
+  disable_aspm
+  write_eri 01D0h, ERIAR_MASK_0011, 00000h
+  write_eri 01B0h, ERIAR_MASK_0011, 00000h
+  DW -1
+
+Start8125a2:
+  disable_aspm
+  ephy_init 4,   0FFFFh, 0D000h
+  ephy_init 0Ah, 0FFFFh, 08653h
+  ephy_init 23h, 0FFFFh, 0AB66h
+  ephy_init 20h, 0FFFFh, 09455h
+  ephy_init 21h, 0FFFFh, 099FFh
+  ephy_init 29h, 0FFFFh, 0FE04h
+  ephy_init 44h, 0FFFFh, 0D000h
+  ephy_init 4Ah, 0FFFFh, 08653h
+  ephy_init 63h, 0FFFFh, 0AB66h
+  ephy_init 60h, 0FFFFH, 09455h
+  ephy_init 61h, 0FFFFh, 099FFh
+  ephy_init 69h, 0FFFFh, 0FE04h
+
+  modify_config 1, 0, 10h
+  DW -1
+
+Start8125b:
+  disable_aspm
+  ephy_init 0Bh, 0FFFFh, 0A908h
+  ephy_init 1Eh, 0FFFFh, 020EBh
+  ephy_init 4Bh, 0FFFFh, 0A908h
+  ephy_init 5Eh, 0FFFFh, 020EBh
+  ephy_init 22h, 00030h, 00020h
+  ephy_init 62h, 00030h, 00020h
+
+  modify_config 1, 0, 10h
+  DW -1
+
+StartTab:
+st00 DW OFFSET StartNone
+st01 DW OFFSET StartNone
+st02 DW OFFSET StartNone
+st03 DW OFFSET StartNone
+st04 DW OFFSET StartNone
+st05 DW OFFSET StartNone
+st06 DW OFFSET StartNone
+st07 DW OFFSET Start8102e1
+st08 DW OFFSET Start8102e3
+st09 DW OFFSET Start8102e2
+st10 DW OFFSET StartNone
+st11 DW OFFSET Start8168b
+st12 DW OFFSET StartNone
+st13 DW OFFSET StartNone
+st14 DW OFFSET Start8401
+st15 DW OFFSET StartNone
+st16 DW OFFSET StartNone
+st17 DW OFFSET Start8168b
+st18 DW OFFSET Start8168cp1
+st19 DW OFFSET Start8168c1
+st20 DW OFFSET Start8168c2
+st21 DW OFFSET Start8168c2
+st22 DW OFFSET Start8168c4
+st23 DW OFFSET Start8168cp2
+st24 DW OFFSET Start8168cp3
+st25 DW OFFSET Start8168d
+st26 DW OFFSET Start8168d
+st27 DW OFFSET StartNone
+st28 DW OFFSET Start8168d4
+st29 DW OFFSET Start8105e1
+st30 DW OFFSET Start8105e2
+st31 DW OFFSET Start8168d
+st32 DW OFFSET Start8168e1
+st33 DW OFFSET Start8168e1
+st34 DW OFFSET Start8168e2
+st35 DW OFFSET Start8168f1
+st36 DW OFFSET Start8168f1
+st37 DW OFFSET Start8402
+st38 DW OFFSET Start8411
+st39 DW OFFSET Start8106
+st40 DW OFFSET Start8168g1
+st41 DW OFFSET StartNone
+st42 DW OFFSET Start8168g2
+st43 DW OFFSET Start8168g2
+st44 DW OFFSET Start8411_2
+st45 DW OFFSET StartNone
+st46 DW OFFSET Start8168h1
+st47 DW OFFSET StartNone
+st48 DW OFFSET Start8168h1
+st49 DW OFFSET StartNone
+st50 DW OFFSET StartNone
+st51 DW OFFSET Start8168ep3
+st52 DW OFFSET Start8117
+st53 DW OFFSET Start8117
+st54 DW OFFSET StartNone
+st55 DW OFFSET StartNone
+st56 DW OFFSET StartNone
+st57 DW OFFSET StartNone
+st58 DW OFFSET StartNone
+st59 DW OFFSET StartNone
+st60 DW OFFSET StartNone
+st61 DW OFFSET Start8125a2
+st62 DW OFFSET StartNone
+st63 DW OFFSET Start8125b
+
+StartHw  Proc near
+    mov si,ds:HwId
+    add si,si
+    mov si,cs:[si].StartTab
+    call RunTableCommands
+    ret
+StartHw  Endp            
+          
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2305,10 +4290,7 @@ ioihResetDone:
     in eax,dx
     mov word ptr ds:EthernetAddress+4,ax
 ;
-    mov dx,ds:IoBase
-    add dx,REG_9346CR
-    mov al,0C0h
-    out dx,al
+    call UnlockConf
 ;
     mov dx,ds:IoBase
     add dx,REG_CCR
@@ -2353,14 +4335,15 @@ ioihResetDone:
     out dx,al           
 ;
     mov dx,ds:IoBase
+    add dx,REG_CONFIG1
+    in al,dx
+    and al,NOT 1
+    out dx,al
+;
+    mov dx,ds:IoBase
     add dx,REG_CONFIG3
     in al,dx
     or al,40h
-    out dx,al
-;    
-    mov dx,ds:IoBase
-    add dx,REG_9346CR
-    mov al,0
     out dx,al
 ;    
     mov dx,ds:IoBase
@@ -2451,8 +4434,7 @@ mihResetDone:
     mov eax,fs:mem_idr1
     mov word ptr ds:EthernetAddress+4,ax
 ;
-    mov al,0C0h
-    mov fs:mem_9346cr,al
+    call UnlockConf
 ;
     mov ax,fs:mem_ccr
     and ax,NOT 260h
@@ -2528,69 +4510,56 @@ MemInitHardware    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mac_tab:
-mt3E DW 07CF0h, 5020h, 51, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt3D DW 07CF0h, 5010h, 50, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt3C DW 07CF0h, 5000h, 49, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt3B DW 07CF0h, 5410h, 46, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt3A DW 07CF0h, 5400h, 45, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt39 DW 07CF0h, 5C80h, 44, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt38 DW 07CF0h, 5090h, 42, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt37 DW 07CF0h, 4C10h, 41, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt36 DW 07CF0h, 4C00h, 40, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
-mt35 DW 07C80h, 4880h, 38, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt34 DW 07CF0h, 4810h, 36, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt33 DW 07CF0h, 4800h, 35, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt32 DW 07C80h, 2C80h, 34, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt31 DW 07CF0h, 2C20h, 33, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt30 DW 07CF0h, 2C10h, 32, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2F DW 07C80h, 2C00h, 33, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2E DW 07CF0h, 2830h, 26, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2D DW 07CF0h, 2810h, 25, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2C DW 07C80h, 2800h, 26, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt2B DW 07CF0h, 2880h, 27, OFFSET ReadPhy8168dp1,  OFFSET WritePhy8168dp1
-mt2A DW 07CF0h, 28A0h, 28, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
-mt29 DW 07CF0h, 28B0h, 31, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
-mt28 DW 07CF0h, 3CB0h, 24, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt27 DW 07CF0h, 3C90h, 23, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt26 DW 07CF0h, 3C80h, 18, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt25 DW 07C80h, 3C80h, 24, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt24 DW 07CF0h, 3C00h, 19, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt23 DW 07CF0h, 3C20h, 20, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt22 DW 07CF0h, 3C30h, 21, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt21 DW 07CF0h, 3C40h, 22, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt20 DW 07C80h, 3C00h, 22, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1F DW 07CF0h, 3800h, 12, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1E DW 07CF0h, 3850h, 17, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1D DW 07C80h, 3800h, 17, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1C DW 07C80h, 3000h, 11, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1B DW 07CF0h, 4490h, 39, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt1A DW 07C80h, 4480h, 39, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt19 DW 0FC80h, 4400h, 37, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt18 DW 07CF0h, 40B0h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt17 DW 07CF0h, 40A0h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt16 DW 07CF0h, 4090h, 29, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt15 DW 07C80h, 4080h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt14 DW 07CF0h, 34A0h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt13 DW 07CF0h, 24A0h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt12 DW 07CF0h, 3490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt11 DW 07CF0h, 2490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt10 DW 07CF0h, 3480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0F DW 07CF0h, 2480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0E DW 07CF0h, 3400h, 13, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0D DW 07CF0h, 3430h, 10, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0C DW 07CF0h, 3420h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0B DW 07C80h, 3480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt0A DW 07C80h, 2480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt09 DW 07C80h, 3400h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt08 DW 0FC80h, 3880h, 15, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt07 DW 0FC80h, 3080h, 14, OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt06 DW 0FC80h, 9800h, 6,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt05 DW 0FC80h, 1800h, 5,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt04 DW 0FC80h, 1000h, 4,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt03 DW 0FC80h, 0400h, 3,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt02 DW 0FC80h, 0080h, 2,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt01 DW 0FC80h, 0000h, 1,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
-mt00 DW 00000h, 0000h, 0,  OFFSET ReadPhy8169,     OFFSET WritePhy8169 
+mt30 DW 07CF0h, 6410h, 63, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2F DW 07CF0h, 6090h, 61, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2E DW 07CF0h, 54B0h, 53, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2D DW 07CF0h, 54A0h, 52, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2C DW 07CF0h, 5020h, 51, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2B DW 07CF0h, 5410h, 46, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt2A DW 07CF0h, 5C80h, 44, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt29 DW 07CF0h, 5090h, 42, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt28 DW 07CF0h, 4C00h, 40, OFFSET ReadPhy8169g,    OFFSET WritePhy8169g
+mt27 DW 07C80h, 4880h, 38, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt26 DW 07CF0h, 4810h, 36, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt25 DW 07CF0h, 4800h, 35, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt24 DW 07C80h, 2C80h, 34, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt23 DW 07CF0h, 2C10h, 32, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt22 DW 07C80h, 2C00h, 33, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt21 DW 07CF0h, 2810h, 25, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt20 DW 07C80h, 2800h, 26, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1F DW 07CF0h, 28A0h, 28, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
+mt1E DW 07CF0h, 28B0h, 31, OFFSET ReadPhy8168dp2,  OFFSET WritePhy8168dp2
+mt1D DW 07CF0h, 3C90h, 23, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1C DW 07CF0h, 3C80h, 18, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1B DW 07C80h, 3C80h, 24, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt1A DW 07CF0h, 3C00h, 19, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt19 DW 07CF0h, 3C20h, 20, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt18 DW 07CF0h, 3C30h, 21, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt17 DW 07C80h, 3C00h, 22, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt16 DW 07CF0h, 3800h, 12, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt15 DW 07C80h, 3800h, 17, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt14 DW 07C80h, 3000h, 11, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt13 DW 07C80h, 4480h, 39, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt12 DW 0FC80h, 4400h, 37, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt11 DW 07CF0h, 4090h, 29, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt10 DW 07C80h, 4080h, 30, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0F DW 07CF0h, 3490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0E DW 07CF0h, 2490h, 8,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0D DW 07CF0h, 3480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0C DW 07CF0h, 2480h, 7,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0B DW 07CF0h, 3400h, 13, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt0A DW 07CF0h, 2400h, 14, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt09 DW 07CF0h, 3430h, 10, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt08 DW 07CF0h, 3420h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt07 DW 07C80h, 3480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt06 DW 07C80h, 2480h, 9,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt05 DW 07C80h, 3400h, 16, OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt04 DW 0FC80h, 9800h, 6,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt03 DW 0FC80h, 1800h, 5,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt02 DW 0FC80h, 1000h, 4,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt01 DW 0FC80h, 0400h, 3,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mt00 DW 0FC80h, 0080h, 2,  OFFSET ReadPhy8169,     OFFSET WritePhy8169
+mtxx DW     -1,    -1, 0,                   0,                       0
 
 IoFindHardware    Proc near
     mov dx,ds:IoBase
@@ -2600,13 +4569,23 @@ IoFindHardware    Proc near
     mov bx,OFFSET mac_tab
 
 iofhLoop:    
-    mov dx,ax
-    and dx,cs:[bx]
+    mov dx,cs:[bx]
+    cmp dx,-1
+    je iofFailed
+;
+    and dx,ax
     cmp dx,cs:[bx+2]
     je iofhOk
 ;
     add bx,10  
     jmp iofhLoop
+
+iofFailed:
+    mov ds:HwId,0
+    mov ds:ReadPhyProc,0
+    mov ds:WritePhyProc,0
+    stc
+    ret
 
 iofhOk:
     mov ax,cs:[bx+4]
@@ -2615,6 +4594,8 @@ iofhOk:
     mov ds:ReadPhyProc,ax
     mov ax,cs:[bx+8]
     mov ds:WritePhyProc,ax
+    mov ds:PhyBase,OCP_STD_PHY_BASE
+    clc
     ret
 IoFindHardware   Endp
 
@@ -2624,13 +4605,23 @@ MemFindHardware    Proc near
     mov bx,OFFSET mac_tab
 
 mfhLoop:    
-    mov dx,ax
-    and dx,cs:[bx]
+    mov dx,cs:[bx]
+    cmp dx,-1
+    je mfFailed
+;
+    and dx,ax
     cmp dx,cs:[bx+2]
     je mfhOk
 ;
     add bx,10  
     jmp mfhLoop
+
+mfFailed:
+    mov ds:HwId,0
+    mov ds:ReadPhyProc,0
+    mov ds:WritePhyProc,0
+    stc
+    ret
 
 mfhOk:
     mov ax,cs:[bx+4]
@@ -2639,6 +4630,8 @@ mfhOk:
     mov ds:ReadPhyProc,ax
     mov ax,cs:[bx+8]
     mov ds:WritePhyProc,ax
+    mov ds:PhyBase,OCP_STD_PHY_BASE
+    clc
     ret
 MemFindHardware   Endp
 
@@ -4008,6 +6001,8 @@ SetSpeed    Endp
 IoUpdateLink  Proc near
     push ax
 ;    
+    call UnlockConf
+;
     mov dx,ds:IoBase
     add dx,REG_PHYStatus
     in al,dx
@@ -4157,6 +6152,7 @@ ioul37_10:
     call WriteEri
 
 ioulDone:
+    call LockConf
     pop ax
     ret
 IoUpdateLink  Endp
@@ -4176,6 +6172,8 @@ IoUpdateLink  Endp
 MemUpdateLink  Proc near
     push ax
 ;    
+    call UnlockConf
+;
     mov al,fs:mem_phy_stat
     test al,2
     jnz mulPatch
@@ -4317,6 +6315,7 @@ mul37_10:
     call WriteEri
 
 mulDone:
+    call LockConf
     pop ax
     ret
 MemUpdateLink  Endp
@@ -4567,7 +6566,10 @@ io_pci1:
     call SetupInts
     call IoInitHardware
     call IoFindHardware
+    jc init_pci1_done
+;
     call Config
+    call StartHw
     mov ax,25
     WaitMilliSec
 ;    
@@ -4620,7 +6622,6 @@ ioinit_pci1_int_ok:
     jmp init_pci1_done
 
 m_pci1:
-    int 3
     push ebx
     xor ebx,ebx
     test al,4
@@ -4644,7 +6645,10 @@ minit_pci1_next_base_ok:
     call SetupInts
     call MemInitHardware
     call MemFindHardware
+    jc init_pci1_done
+;
     call Config
+    call StartHw
 ;
     mov ax,25
     WaitMilliSec
@@ -4745,8 +6749,10 @@ io_pci2:
 ;
     call SetupInts
     call IoInitHardware
-    call IoFindHardware
+    jc init_pci2_done
+;
     call Config
+    call StartHw
 ;
     mov ax,1
     WaitMilliSec
@@ -4821,7 +6827,10 @@ minit_pci2_next_base_ok:
     call SetupInts
     call MemInitHardware
     call MemFindHardware
+    jc init_pci2_done
+;
     call Config
+    call StartHw
 ;
     mov ax,1
     WaitMilliSec
