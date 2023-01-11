@@ -897,7 +897,7 @@ begin : adc_app
       end
       else
       begin
-        if (config_done)
+        if (config_coeff_done)
           bram_en <= 0;
         config_init <= 0;
       end
@@ -1052,7 +1052,7 @@ begin : adc_app
       bram_adr <= 0;
       config_start <= 0;
       config_validate <= 0;
-      config_done <= 0;
+      config_coeff_done <= 0;
     end
     else
     begin
@@ -1061,7 +1061,7 @@ begin : adc_app
         bram_adr <= 0;
         config_start <= 0;
         config_validate <= 0;
-        config_done <= 0;
+        config_coeff_done <= 0;
       end
       else
       begin
@@ -1069,7 +1069,7 @@ begin : adc_app
         begin
           bram_adr <= 0;
           config_start <= 0;
-          config_done <= 0;
+          config_coeff_done <= 0;
         end
         else
         begin
@@ -1078,11 +1078,11 @@ begin : adc_app
             if (bram_adr == 12'hFFF)
             begin
               config_validate <= 0;
-              config_done <= 1;
+              config_coeff_done <= 1;
             end
             else
             begin
-              config_done <= 0;
+              config_coeff_done <= 0;
               bram_adr <= bram_adr + 1;
             end
           end
@@ -1092,13 +1092,13 @@ begin : adc_app
             begin
               if (bram_adr == 12'hFFF)
               begin
-                config_done <= 0;
+                config_coeff_done <= 0;
                 config_start <= 1;
                 config_validate <= 1;
               end
               else
               begin
-                config_done <= 0;
+                config_coeff_done <= 0;
                 config_start <= 0;
               end
             end
@@ -1107,7 +1107,7 @@ begin : adc_app
               if (bram_wr)
                 bram_adr <= bram_adr + 1;
   
-              config_done <= 0;
+              config_coeff_done <= 0;
               config_start <= 0;
             end
           end
@@ -1202,7 +1202,7 @@ begin : adc_app
             chan_cos[15:0] <= 0;
           end
 
-          if (last_en[1])
+          if (config_last_en[1])
           begin
             chan_sin[31:16] <= coeff_sin_1;
             chan_cos[31:16] <= coeff_cos_1;
@@ -1213,7 +1213,7 @@ begin : adc_app
             chan_cos[31:16] <= 0;
           end
 
-          if (last_en[2])
+          if (config_last_en[2])
           begin
             chan_sin[47:32] <= coeff_sin_2;
             chan_cos[47:32] <= coeff_cos_2;
@@ -1224,7 +1224,7 @@ begin : adc_app
             chan_cos[47:32] <= 0;
           end
 
-          if (last_en[3])
+          if (config_last_en[3])
           begin
             chan_sin[63:48] <= coeff_sin_3;
             chan_cos[63:48] <= coeff_cos_3;
@@ -1246,9 +1246,9 @@ begin : adc_app
             chan_cos[15:0] <= coeff_cos_0;
             chan_sin[31:16] <= coeff_sin_1;
             chan_cos[31:16] <= coeff_cos_1;
-            chan_sin{47:32] <= coeff_sin_2;
+            chan_sin[47:32] <= coeff_sin_2;
             chan_cos[47:32] <= coeff_cos_2;
-            chan_sin[63:48[ <= coeff_sin_3;
+            chan_sin[63:48] <= coeff_sin_3;
             chan_cos[63:48] <= coeff_cos_3;
           end
         end
@@ -1310,7 +1310,7 @@ begin : adc_app
     begin
       if (chan_config[0])
       begin
-        if (config_done)
+        if (config_coeff_done)
           chan_config[0] <= 0;
       end
       else

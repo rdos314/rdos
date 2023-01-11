@@ -61,7 +61,7 @@ module ana_freq (
 );
 
   reg                    run;
-  reg                    config;
+  reg                    conf;
 
   reg                    start_1;
   reg                    start_2;
@@ -104,6 +104,9 @@ module ana_freq (
 
   reg  [63:0]            sin_coeff_in;
   reg  [63:0]            cos_coeff_in;
+
+  wire [63:0]            sin_coeff_out;
+  wire [63:0]            cos_coeff_out;
 
   reg  [55:0]            in_A;
   reg  [55:0]            in_B;
@@ -221,27 +224,19 @@ ila_0 ila_0_inst (
   .clk(clk),                 // input wire clk
   .probe0(start_1),          // input wire [0:0]  probe3
   .probe1(start_2),          // input wire [0:0]  probe3
-  .probe2(run),              // input wire [0:0]  probe3
-  .probe3(next_1),           // input wire [0:0]  probe3
-  .probe4(next_2),           // input wire [0:0]  probe3
-  .probe5(next_3),           // input wire [0:0]  probe3
-  .probe6(notify_sin_A),     // input wire [0:0]  probe3
-  .probe7(notify_cos_A),     // input wire [0:0]  probe3
-  .probe8(notify_sin_B),     // input wire [0:0]  probe3
-  .probe9(notify_cos_B),     // input wire [0:0]  probe3
-  .probe10(amp_notify_A),    // input wire [0:0]  probe3
-  .probe11(amp_notify_B),    // input wire [0:0]  probe3
-  .probe12(amp_done_A),      // input wire [0:0]  probe3
-  .probe13(amp_done_B),      // input wire [0:0]  probe3
-  .probe14(phase_notify_A),  // input wire [0:0]  probe3
-  .probe15(phase_notify_B),  // input wire [0:0]  probe3
-  .probe16(phase_done_A),    // input wire [0:0]  probe3
-  .probe17(phase_done_B),    // input wire [0:0]  probe3
-  .probe18(amp_A),           // input wire [15:0]  probe3
-  .probe19(amp_B),           // input wire [15:0]  probe3
-  .probe20(phase_A),         // input wire [15:0]  probe3
-  .probe21(phase_B),         // input wire [15:0]  probe3
-  .probe22(report)           // input wire [0:0]  probe3
+  .probe2(start_3),          // input wire [0:0]  probe3
+  .probe3(run),              // input wire [0:0]  probe3
+  .probe4(conf),             // input wire [0:0]  probe3
+  .probe5(next_1),           // input wire [0:0]  probe3
+  .probe6(next_2),           // input wire [0:0]  probe3
+  .probe7(next_3),           // input wire [0:0]  probe3
+  .probe8(coeff_en),         // input wire [0:0]  probe3
+  .probe9(coeff_wr),         // input wire [0:0]  probe3
+  .probe10(coeff_adr),       // input wire [10:0]  probe3
+  .probe11(sin_coeff_in),    // input wire [63:0]  probe3
+  .probe12(cos_coeff_in),    // input wire [63:0]  probe3
+  .probe13(sin_coeff_out),   // input wire [63:0]  probe3
+  .probe14(cos_coeff_out)    // input wire [63:0]  probe3
 );
 */
 
@@ -420,10 +415,10 @@ begin : ana_freq_gen
     end
     else
     begin
-      if (config)
+      if (start)
       begin
+        coeff_adr <= 0;
         coeff_en <= 1;
-        coeff_adr <= wr_adr;
       end
       else
       begin
@@ -438,8 +433,16 @@ begin : ana_freq_gen
         end
         else
         begin
-          coeff_adr <= 0;
-          coeff_en <= start;
+          if (conf)
+          begin
+            coeff_en <= 1;
+            coeff_adr <= wr_adr;
+          end
+          else
+          begin
+            coeff_adr <= 0;
+            coeff_en <= 0;
+          end
         end
       end
     end
@@ -451,28 +454,28 @@ begin : ana_freq_gen
     if (reset)
     begin
       run <= 0;
-      config <= 0;
+      conf <= 0;
     end
     else
     begin
       if (init)
       begin
         run <= 0;
-        config <= 1;
+        conf <= 1;
       end
       else
       begin
         if (start)
         begin
           run <= 1;
-          config <= 0;
+          conf <= 0;
         end
         else
         begin
           if (stop)
           begin
             run <= 0;
-            config <= 0;
+            conf <= 0;
           end
         end
       end

@@ -170,7 +170,6 @@ multiply m_3 (
   .P(p_3[29:0])         // output wire [29 : 0] P
 );
 
-
 ila_1 ila_1_inst (
   .clk(clk),            // input wire clk
   .probe0(start),       // input wire [0:0]  probe0
