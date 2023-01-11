@@ -154,7 +154,7 @@ module adc_app (
   reg                     config_raw_coeff;
   reg                     config_has_coeff;
   reg                     config_validate;
-  reg                     config_done;
+  reg                     config_coeff_done;
 
   reg  [16:0]             config_last_phase;
   reg  [10:0]             config_last;
@@ -167,6 +167,17 @@ module adc_app (
 
   reg  [15:0]             config_sin;
   reg  [15:0]             config_cos;
+
+  reg                     chan_done;
+  reg                     chan_req;
+  reg  [63:0]             chan_sin;
+  reg  [63:0]             chan_cos;
+  reg  [10:0]             chan_adr;
+
+  reg                     chan_p1;
+  reg                     chan_p2;
+  reg                     chan_p3;
+  reg                     chan_p4;
   
   reg                     synt_start;
   wire                    synt_done;
@@ -283,15 +294,6 @@ module adc_app (
   reg  [15:0]             chan0_phase_incr;
   reg  [9:0]              chan0_delay_count;
   reg  [15:0]             chan0_delay_phase;
-  reg  [10:0]             chan0_adr;
-  reg  [15:0]             chan0_sin_0;
-  reg  [15:0]             chan0_cos_0;
-  reg  [15:0]             chan0_sin_1;
-  reg  [15:0]             chan0_cos_1;
-  reg  [15:0]             chan0_sin_2;
-  reg  [15:0]             chan0_cos_2;
-  reg  [15:0]             chan0_sin_3;
-  reg  [15:0]             chan0_cos_3;
 
   reg  [13:0]             chan0_A0;
   reg  [13:0]             chan0_A1;
@@ -415,7 +417,6 @@ adc_ana adc_ana_0_inst (
     .init(init[0]),
     .count(chan0_count),
     .last(chan0_last),
-    .last_en(chan0_last_en),
 
     .start(start[0]),
     .phase_incr(chan0_phase_incr),
@@ -425,15 +426,9 @@ adc_ana adc_ana_0_inst (
     .stop(stop[0]),
 
     .wr(wr[0]),
-    .wr_adr(chan0_adr),
-    .wr_sin_0(chan0_sin_0),
-    .wr_cos_0(chan0_cos_0),
-    .wr_sin_1(chan0_sin_1),
-    .wr_cos_1(chan0_cos_1),
-    .wr_sin_2(chan0_sin_2),
-    .wr_cos_2(chan0_cos_2),
-    .wr_sin_3(chan0_sin_3),
-    .wr_cos_3(chan0_cos_3),
+    .wr_adr(chan_adr),
+    .wr_sin(chan_sin),
+    .wr_cos(chan_cos),
 
     .in_A0(chan0_A0),
     .in_A1(chan0_A1),
@@ -1182,6 +1177,120 @@ begin : adc_app
 
   always @ ( posedge rx_clk ) 
   begin
+    if (rx_reset)
+    begin
+      chan_req <= 0;
+      chan_done <= 0;
+    end
+    else
+    begin
+      if (bram_req)    
+      begin        
+        if (bram_adr[10:0] == config_last)
+        begin
+          chan_done <= 1;
+          chan_req <= 1;
+
+          if (config_last_en[0])
+          begin
+            chan_sin[15:0] <= coeff_sin_0;
+            chan_cos[15:0] <= coeff_cos_0;
+          end
+          else            
+          begin
+            chan_sin[15:0] <= 0;
+            chan_cos[15:0] <= 0;
+          end
+
+          if (last_en[1])
+          begin
+            chan_sin[31:16] <= coeff_sin_1;
+            chan_cos[31:16] <= coeff_cos_1;
+          end
+          else            
+          begin
+            chan_sin[31:16] <= 0;
+            chan_cos[31:16] <= 0;
+          end
+
+          if (last_en[2])
+          begin
+            chan_sin[47:32] <= coeff_sin_2;
+            chan_cos[47:32] <= coeff_cos_2;
+          end
+          else            
+          begin
+            chan_sin[47:32] <= 0;
+            chan_cos[47:32] <= 0;
+          end
+
+          if (last_en[3])
+          begin
+            chan_sin[63:48] <= coeff_sin_3;
+            chan_cos[63:48] <= coeff_cos_3;
+          end
+          else            
+          begin
+            chan_sin[63:48] <= 0;
+            chan_cos[63:48] <= 0;
+          end
+        end
+        else     
+        begin
+          if (chan_done)
+            chan_req <= 0;
+          else
+          begin
+            chan_req <= 1;
+            chan_sin[15:0] <= coeff_sin_0;
+            chan_cos[15:0] <= coeff_cos_0;
+            chan_sin[31:16] <= coeff_sin_1;
+            chan_cos[31:16] <= coeff_cos_1;
+            chan_sin{47:32] <= coeff_sin_2;
+            chan_cos[47:32] <= coeff_cos_2;
+            chan_sin[63:48[ <= coeff_sin_3;
+            chan_cos[63:48] <= coeff_cos_3;
+          end
+        end
+      end
+      else
+      begin
+        chan_req <= 0;
+        if (init)
+          chan_done <= 0;
+      end
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+    begin
+      chan_p1 <= 0;
+      chan_p2 <= 0;
+      chan_p3 <= 0;
+      chan_p4 <= 0;
+    end
+    else
+    begin
+      chan_p1 <= chan_req;
+      chan_p2 <= chan_p1;
+      chan_p3 <= chan_p2;
+      chan_p4 <= chan_p3;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset | init)
+      chan_adr <= 0;
+    else
+      if (chan_p4)
+        chan_adr <= bram_adr[10:0];
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
     if (config_init && (config_channel == 5'h00))
     begin
       chan0_count <= config_count[12:0];
@@ -1245,23 +1354,12 @@ begin : adc_app
     if (rx_reset)
       wr[0] <= 0;
     else
-      if (bram_req)    
-      begin
-        chan0_adr <= bram_adr[10:0];
-        chan0_sin_0 <= coeff_sin_0;
-        chan0_cos_0 <= coeff_cos_0;
-        chan0_sin_1 <= coeff_sin_1;
-        chan0_cos_1 <= coeff_cos_1;
-        chan0_sin_2 <= coeff_sin_2;
-        chan0_cos_2 <= coeff_cos_2;
-        chan0_sin_3 <= coeff_sin_3;
-        chan0_cos_3 <= coeff_cos_3;
-
-        if ((bram_adr[11] == 0) && chan_config[0])    
-          wr[0] <= 1;
-      end
+    begin
+      if (chan_p1 & chan_config[0])    
+        wr[0] <= 1;
       else
         wr[0] <= 0;
+    end
   end
 
   always @ ( posedge rx_clk ) 

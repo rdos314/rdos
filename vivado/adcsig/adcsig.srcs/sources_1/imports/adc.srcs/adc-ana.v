@@ -33,7 +33,6 @@ module adc_ana (
   input wire              init,
   input wire [12:0]       count,
   input wire [10:0]       last,
-  input wire [3:0]        last_en,
 
   input wire              start,
   input wire [15:0]       phase_incr,
@@ -44,14 +43,8 @@ module adc_ana (
 
   input wire              wr,
   input wire [10:0]       wr_adr,
-  input wire [15:0]       wr_sin_0,
-  input wire [15:0]       wr_cos_0,
-  input wire [15:0]       wr_sin_1,
-  input wire [15:0]       wr_cos_1,
-  input wire [15:0]       wr_sin_2,
-  input wire [15:0]       wr_cos_2,
-  input wire [15:0]       wr_sin_3,
-  input wire [15:0]       wr_cos_3,
+  input wire [63:0]       wr_sin,
+  input wire [63:0]       wr_cos,
 
   input wire [13:0]       in_A0,
   input wire [13:0]       in_A1,
@@ -129,19 +122,12 @@ ana_freq base (
   .init(init),            // input wire init
   .count(count),          // input wire [12:0] count
   .last(last),            // input wire [10:0] last
-  .last_en(last_en),      // input wire [3:0] last_en
   .start(base_start),     // input wire start
   .stop(stop),            // input wire stop
   .wr(wr),                // input wire wr
-  .wr_adr(wr_adr),        // input wire [12:0] wr_adr
-  .wr_sin_0(wr_sin_0),    // input wire [15:0] wr_sin_0
-  .wr_cos_0(wr_cos_0),    // input wire [15:0] wr_cos_0
-  .wr_sin_1(wr_sin_1),    // input wire [15:0] wr_sin_1
-  .wr_cos_1(wr_cos_1),    // input wire [15:0] wr_cos_1
-  .wr_sin_2(wr_sin_2),    // input wire [15:0] wr_sin_2
-  .wr_cos_2(wr_cos_2),    // input wire [15:0] wr_cos_2
-  .wr_sin_3(wr_sin_3),    // input wire [15:0] wr_sin_3
-  .wr_cos_3(wr_cos_3),    // input wire [15:0] wr_cos_3
+  .wr_adr(wr_adr),        // input wire [10:0] wr_adr
+  .wr_sin(wr_sin),        // input wire [63:0] wr_sin
+  .wr_cos(wr_cos),        // input wire [63:0] wr_cos
   .in_A0(in_A0),          // input wire [13:0] in_A0
   .in_A1(in_A1),          // input wire [13:0] in_A1
   .in_A2(in_A2),          // input wire [13:0] in_A2
@@ -163,19 +149,12 @@ ana_freq delayed (
   .init(init),            // input wire init
   .count(count),          // input wire [12:0] count
   .last(last),            // input wire [10:0] last
-  .last_en(last_en),      // input wire [3:0] last_en
   .start(delay_start),    // input wire start
   .stop(stop),            // input wire stop
   .wr(wr),                // input wire wr
-  .wr_adr(wr_adr),        // input wire [12:0] wr_adr
-  .wr_sin_0(wr_sin_0),    // input wire [15:0] wr_sin_0
-  .wr_cos_0(wr_cos_0),    // input wire [15:0] wr_cos_0
-  .wr_sin_1(wr_sin_1),    // input wire [15:0] wr_sin_1
-  .wr_cos_1(wr_cos_1),    // input wire [15:0] wr_cos_1
-  .wr_sin_2(wr_sin_2),    // input wire [15:0] wr_sin_2
-  .wr_cos_2(wr_cos_2),    // input wire [15:0] wr_cos_2
-  .wr_sin_3(wr_sin_3),    // input wire [15:0] wr_sin_3
-  .wr_cos_3(wr_cos_3),    // input wire [15:0] wr_cos_3
+  .wr_adr(wr_adr),        // input wire [10:0] wr_adr
+  .wr_sin(wr_sin),        // input wire [63:0] wr_sin
+  .wr_cos(wr_cos),        // input wire [63:0] wr_cos
   .in_A0(in_A0),          // input wire [13:0] in_A0
   .in_A1(in_A1),          // input wire [13:0] in_A1
   .in_A2(in_A2),          // input wire [13:0] in_A2

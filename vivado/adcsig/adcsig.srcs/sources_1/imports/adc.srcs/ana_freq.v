@@ -32,21 +32,14 @@ module ana_freq (
   input wire              init,
   input wire [12:0]       count,
   input wire [10:0]       last,
-  input wire [3:0]        last_en,
 
   input wire              start,
   input wire              stop,
 
   input wire              wr,
   input wire [10:0]       wr_adr,
-  input wire [15:0]       wr_sin_0,
-  input wire [15:0]       wr_cos_0,
-  input wire [15:0]       wr_sin_1,
-  input wire [15:0]       wr_cos_1,
-  input wire [15:0]       wr_sin_2,
-  input wire [15:0]       wr_cos_2,
-  input wire [15:0]       wr_sin_3,
-  input wire [15:0]       wr_cos_3,
+  input wire [63:0]       wr_sin,
+  input wire [63:0]       wr_cos,
 
   input wire [13:0]       in_A0,
   input wire [13:0]       in_A1,
@@ -68,6 +61,7 @@ module ana_freq (
 );
 
   reg                    run;
+  reg                    config;
 
   reg                    start_1;
   reg                    start_2;
@@ -104,35 +98,12 @@ module ana_freq (
   wire                   phase_notify_B;
   reg                    phase_done_B;
 
-  reg  [12:0]            coeff_count;
   reg                    coeff_en;
   reg                    coeff_wr;
   reg  [10:0]            coeff_adr;
 
   reg  [63:0]            sin_coeff_in;
   reg  [63:0]            cos_coeff_in;
-  wire [63:0]            sin_coeff_out;
-  wire [63:0]            cos_coeff_out;
-
-  wire [15:0]            sin_coeff_0;
-  wire [15:0]            sin_coeff_1;
-  wire [15:0]            sin_coeff_2;
-  wire [15:0]            sin_coeff_3;
-
-  assign sin_coeff_0 = sin_coeff_out[15:0];
-  assign sin_coeff_1 = sin_coeff_out[31:16];
-  assign sin_coeff_2 = sin_coeff_out[47:32];
-  assign sin_coeff_3 = sin_coeff_out[63:48];
-
-  wire [15:0]            cos_coeff_0;
-  wire [15:0]            cos_coeff_1;
-  wire [15:0]            cos_coeff_2;
-  wire [15:0]            cos_coeff_3;
-
-  assign cos_coeff_0 = cos_coeff_out[15:0];
-  assign cos_coeff_1 = cos_coeff_out[31:16];
-  assign cos_coeff_2 = cos_coeff_out[47:32];
-  assign cos_coeff_3 = cos_coeff_out[63:48];
 
   reg  [55:0]            in_A;
   reg  [55:0]            in_B;
@@ -429,12 +400,15 @@ begin : ana_freq_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
-      coeff_count <= 0;
+      coeff_wr <= 0;
     else
-    begin
-      if (init)
-        coeff_count <= count;
-    end
+      coeff_wr <= wr;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    sin_coeff_in <= wr_sin;
+    cos_coeff_in <= wr_cos;
   end
 
   always @ ( posedge clk ) 
@@ -442,80 +416,20 @@ begin : ana_freq_gen
     if (reset)
     begin
       coeff_en <= 0;
-      coeff_wr <= 0;
+      coeff_adr <= 0;
     end
     else
     begin
-      if (wr)
+      if (config)
       begin
-        coeff_adr <= wr_adr;
         coeff_en <= 1;
-        coeff_wr <= 1;
-
-        if (wr_adr == last)
-        begin
-          if (last_en[0])
-          begin
-            sin_coeff_in[15:0] <= wr_sin_0;
-            cos_coeff_in[15:0] <= wr_cos_0;
-          end
-          else            
-          begin
-            sin_coeff_in[15:0] <= 0;
-            cos_coeff_in[15:0] <= 0;
-          end
-
-          if (last_en[1])
-          begin
-            sin_coeff_in[31:16] <= wr_sin_1;
-            cos_coeff_in[31:16] <= wr_cos_1;
-          end
-          else            
-          begin
-            sin_coeff_in[31:16] <= 0;
-            cos_coeff_in[31:16] <= 0;
-          end
-
-          if (last_en[2])
-          begin
-            sin_coeff_in[47:32] <= wr_sin_2;
-            cos_coeff_in[47:32] <= wr_cos_2;
-          end
-          else            
-          begin
-            sin_coeff_in[47:32] <= 0;
-            cos_coeff_in[47:32] <= 0;
-          end
-
-          if (last_en[3])
-          begin
-            sin_coeff_in[63:48] <= wr_sin_3;
-            cos_coeff_in[63:48] <= wr_cos_3;
-          end
-          else            
-          begin
-            sin_coeff_in[63:48] <= 0;
-            cos_coeff_in[63:48] <= 0;
-          end
-        end
-        else
-        begin
-          sin_coeff_in[15:0] <= wr_sin_0;
-          cos_coeff_in[15:0] <= wr_cos_0;
-          sin_coeff_in[31:16] <= wr_sin_1;
-          cos_coeff_in[31:16] <= wr_cos_1;
-          sin_coeff_in[47:32] <= wr_sin_2;
-          cos_coeff_in[47:32] <= wr_cos_2;
-          sin_coeff_in[63:48] <= wr_sin_3;
-          cos_coeff_in[63:48] <= wr_cos_3;
-        end
+        coeff_adr <= wr_adr;
       end
       else
       begin
         if (run)
         begin
           coeff_en <= 1;
-          coeff_wr <= 0;
 
           if (coeff_adr == last)
             coeff_adr <= 0;
@@ -524,9 +438,8 @@ begin : ana_freq_gen
         end
         else
         begin
-          coeff_en <= 0;
-          coeff_wr <= 0;
           coeff_adr <= 0;
+          coeff_en <= start;
         end
       end
     end
@@ -536,19 +449,31 @@ begin : ana_freq_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
+    begin
       run <= 0;
+      config <= 0;
+    end
     else
     begin
       if (init)
+      begin
         run <= 0;
+        config <= 1;
+      end
       else
       begin
         if (start)
+        begin
           run <= 1;
+          config <= 0;
+        end
         else
         begin
           if (stop)
+          begin
             run <= 0;
+            config <= 0;
+          end
         end
       end
     end
