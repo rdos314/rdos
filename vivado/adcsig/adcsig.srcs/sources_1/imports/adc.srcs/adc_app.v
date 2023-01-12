@@ -1372,10 +1372,10 @@ begin : adc_app
         chan0_A1 <= bram_out[27:14];      
         chan0_A2 <= bram_out[41:28];      
         chan0_A3 <= bram_out[55:42];      
-        chan0_B0 <= -bram_out[13:0];      
-        chan0_B1 <= -bram_out[27:14];      
-        chan0_B2 <= -bram_out[41:28];      
-        chan0_B3 <= -bram_out[55:42];      
+        chan0_B0 <= ~bram_out[13:0];      
+        chan0_B1 <= ~bram_out[27:14];      
+        chan0_B2 <= ~bram_out[41:28];      
+        chan0_B3 <= ~bram_out[55:42];      
       end
       else
       begin

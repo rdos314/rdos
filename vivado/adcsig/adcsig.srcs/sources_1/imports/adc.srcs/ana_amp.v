@@ -216,8 +216,8 @@ begin : ana_amp_gen
         end
         else
         begin
-          run_div <= 0;
           save_div <= 1;
+          run_div <= 0;
         end
       end
       else
@@ -235,6 +235,7 @@ begin : ana_amp_gen
           curr[16:0] <= 0;
 
           quot_sin[16:0] <= 0;
+          quot_cos[16:0] <= 0;
 
           if (incr_sin)
             divend_sin <= div_sin + 1;
@@ -246,6 +247,8 @@ begin : ana_amp_gen
           else
             divend_cos <= div_cos;
         end
+        else
+          run_div <= 0;
       end
     end
   end
@@ -263,13 +266,13 @@ begin : ana_amp_gen
         temp_sin[15] <= sign_sin;
         if (sign_sin)
         begin
-          temp_sin[14:0] <= ~quot_cos[15:1];
-          temp_incr_sin <= ~quot_cos[0];
+          temp_sin[14:0] <= ~quot_sin[15:1];
+          temp_incr_sin <= ~quot_sin[0];
         end
         else
         begin
-          temp_sin[14:0] <= quot_cos[15:1];
-          temp_incr_sin <= quot_cos[0];
+          temp_sin[14:0] <= quot_sin[15:1];
+          temp_incr_sin <= quot_sin[0];
         end
 
         temp_cos[15] <= sign_cos;  
