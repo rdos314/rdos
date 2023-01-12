@@ -58,7 +58,6 @@ module ana_amp (
   reg  [17:0]            mask;
   reg  [29:0]            curr;
 
-  reg                    sign_sin;
   reg  [29:0]            divend_sin;
   reg  [17:0]            quot_sin;
   reg                    incr_sin;
@@ -67,7 +66,6 @@ module ana_amp (
   reg                    temp_incr_sin;
   reg  [15:0]            amp_sin;
 
-  reg                    sign_cos;
   reg  [29:0]            divend_cos;
   reg  [17:0]            quot_cos;
   reg                    incr_cos;
@@ -155,20 +153,17 @@ begin : ana_amp_gen
 
         if (sin_sum[42])
         begin
-          sign_sin <= 1;
           incr_sin <= ~sin_sum[11];
           div_sin <= ~sin_sum[41:12];
         end
         else
         begin
-          sign_sin <= 0;
           incr_sin <= sin_sum[11];
           div_sin <= sin_sum[41:12];
         end
 
         if (cos_sum[42])
         begin
-          sign_cos <= 1;
           incr_cos <= ~sin_sum[11];
           div_cos <= ~cos_sum[41:12];
         end
@@ -263,29 +258,13 @@ begin : ana_amp_gen
       begin
         temp_div <= 1;
 
-        temp_sin[15] <= sign_sin;
-        if (sign_sin)
-        begin
-          temp_sin[14:0] <= ~quot_sin[15:1];
-          temp_incr_sin <= ~quot_sin[0];
-        end
-        else
-        begin
-          temp_sin[14:0] <= quot_sin[15:1];
-          temp_incr_sin <= quot_sin[0];
-        end
+        temp_sin[15] <= 0;
+        temp_sin[14:0] <= quot_sin[15:1];
+        temp_incr_sin <= quot_sin[0];
 
-        temp_cos[15] <= sign_cos;  
-        if (sign_cos)
-        begin
-          temp_cos[14:0] <= ~quot_cos[15:1];
-          temp_incr_cos <= ~quot_cos[0];
-        end
-        else
-        begin
-          temp_cos[14:0] <= quot_cos[15:1];
-          temp_incr_cos <= quot_cos[0];
-        end
+        temp_cos[15] <= 0;  
+        temp_cos[14:0] <= quot_cos[15:1];
+        temp_incr_cos <= quot_cos[0];
       end
       else
         temp_div <= 0;
