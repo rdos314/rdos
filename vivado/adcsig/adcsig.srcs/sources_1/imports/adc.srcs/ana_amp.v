@@ -99,7 +99,6 @@ ana_sqrt sqrt_inst (
   .m_axis_dout_tdata(amp)                            // output wire [15 : 0] m_axis_dout_tdata
 );
 
-/*
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(start),         // input wire [0:0]  probe0
@@ -109,27 +108,37 @@ ila_0 ila_0_inst (
   .probe4(report),        // input wire [0:0]  probe3
   .probe5(run_div),       // input wire [0:0]  probe3
   .probe6(save_div),      // input wire [0:0]  probe3
-  .probe7(amp),           // input wire [15:0]  probe3
-  .probe8(amp_sin),       // input wire [15:0]  probe3
-  .probe9(amp_cos),       // input wire [15:0]  probe3
-  .probe10(sin_2),         // input wire [31:0]  probe3
-  .probe11(cos_2),         // input wire [31:0]  probe3
-  .probe12(amp_2),        // input wire [31:0]  probe3
-  .probe13(p1),           // input wire [0:0]  probe3
-  .probe14(p2),           // input wire [0:0]  probe3
-  .probe15(p3),           // input wire [0:0]  probe3
-  .probe16(p4),           // input wire [0:0]  probe3
-  .probe17(p5),           // input wire [0:0]  probe3
-  .probe18(mask),         // input wire [17:0]  probe3
-  .probe19(curr),         // input wire [29:0]  probe3
-  .probe20(sign_sin),     // input wire [0:0]  probe3
-  .probe21(divend_sin),   // input wire [29:0]  probe3
-  .probe22(quot_sin),     // input wire [17:0]  probe3
-  .probe23(sign_cos),     // input wire [0:0]  probe3
-  .probe24(divend_cos),   // input wire [29:0]  probe3
-  .probe25(quot_cos)      // input wire [17:0]  probe3
+  .probe7(temp_div),      // input wire [0:0]  probe3
+  .probe8(pend_div),      // input wire [0:0]  probe3
+  .probe9(sqrt_start),    // input wire [0:0]  probe3
+  .probe10(amp),          // input wire [15:0]  probe3
+  .probe11(amp_sin),      // input wire [15:0]  probe3
+  .probe12(amp_cos),      // input wire [15:0]  probe3
+  .probe13(sin_2),        // input wire [31:0]  probe3
+  .probe14(cos_2),        // input wire [31:0]  probe3
+  .probe15(amp_2),        // input wire [31:0]  probe3
+  .probe16(p1),           // input wire [0:0]  probe3
+  .probe17(p2),           // input wire [0:0]  probe3
+  .probe18(p3),           // input wire [0:0]  probe3
+  .probe19(p4),           // input wire [0:0]  probe3
+  .probe20(p5),           // input wire [0:0]  probe3
+  .probe21(mask),         // input wire [17:0]  probe3
+  .probe22(curr),         // input wire [29:0]  probe3
+  .probe23(sign_sin),     // input wire [0:0]  probe3
+  .probe24(divend_sin),   // input wire [29:0]  probe3
+  .probe25(quot_sin),     // input wire [17:0]  probe3
+  .probe26(incr_sin),     // input wire [0:0]  probe3
+  .probe27(div_sin),      // input wire [29:0]  probe3
+  .probe28(temp_sin),     // input wire [15:0]  probe3
+  .probe29(temp_incr_sin), // input wire [0:0]  probe3
+  .probe30(sign_cos),     // input wire [0:0]  probe3
+  .probe31(divend_cos),   // input wire [29:0]  probe3
+  .probe32(quot_cos),     // input wire [17:0]  probe3
+  .probe33(incr_cos),     // input wire [0:0]  probe3
+  .probe34(div_cos),      // input wire [29:0]  probe3
+  .probe35(temp_cos),     // input wire [15:0]  probe3
+  .probe36(temp_incr_cos) // input wire [0:0]  probe3
 );
-*/
 
 generate
 begin : ana_amp_gen

@@ -170,6 +170,7 @@ multiply m_3 (
   .P(p_3[29:0])         // output wire [29 : 0] P
 );
 
+/*
 ila_1 ila_1_inst (
   .clk(clk),            // input wire clk
   .probe0(start),       // input wire [0:0]  probe0
@@ -205,6 +206,7 @@ ila_1 ila_1_inst (
   .probe30(report),     // input wire [0:0]   probe6
   .probe31(sum)         // input wire [42:0]  probe6
 );
+*/
 
 generate
 begin : ana_slice_gen
