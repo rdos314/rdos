@@ -57,8 +57,8 @@ module adc_ana (
 
   output wire             empty,
   input wire              rd,
-  output wire [15:0]      power_A,
-  output wire [15:0]      power_B,
+  output wire [15:0]      amp_A,
+  output wire [15:0]      amp_B,
   output wire [15:0]      phase_A,
   output wire [15:0]      phase_B
 );
@@ -67,8 +67,8 @@ module adc_ana (
 
   wire [63:0]             sig_out;
 
-  assign power_A = sig_out[15:0];
-  assign power_B = sig_out[31:16];
+  assign amp_A = sig_out[15:0];
+  assign amp_B = sig_out[31:16];
   assign phase_A = sig_out[47:32];
   assign phase_B = sig_out[63:48];
 
@@ -77,15 +77,25 @@ module adc_ana (
   reg                     report;
   reg  [63:0]             sig_in;
 
+  wire [15:0]             sig_amp_A;
+  wire [15:0]             sig_amp_B;
+  wire [15:0]             sig_phase_A;
+  wire [15:0]             sig_phase_B;
+
+  assign sig_amp_A = sig_in[15:0];
+  assign sig_amp_B = sig_in[31:16];
+  assign sig_phase_A = sig_in[47:32];
+  assign sig_phase_B = sig_in[63:48];
+
   wire                    b_report;
-  wire [15:0]             b_power_A;
-  wire [15:0]             b_power_B;
+  wire [15:0]             b_amp_A;
+  wire [15:0]             b_amp_B;
   wire [15:0]             b_phase_A;
   wire [15:0]             b_phase_B;
 
   wire                    d_report;
-  wire [15:0]             d_power_A;
-  wire [15:0]             d_power_B;
+  wire [15:0]             d_amp_A;
+  wire [15:0]             d_amp_B;
   wire [15:0]             d_phase_A;
   wire [15:0]             d_phase_B;
 
@@ -94,12 +104,10 @@ module adc_ana (
   reg                     delay_start;
 
   reg                     base_update;
-  reg  [15:0]             base_curr_phase_A;
-  reg  [15:0]             base_curr_phase_B;
+  reg  [15:0]             base_curr_phase;
 
   reg                     delay_update;
-  reg  [15:0]             delay_curr_phase_A;
-  reg  [15:0]             delay_curr_phase_B;
+  reg  [15:0]             delay_curr_phase;
 
 
 fifo_signal signal_inst (
@@ -137,8 +145,8 @@ ana_freq base (
   .in_B2(in_B2),          // input wire [13:0] in_B2
   .in_B3(in_B3),          // input wire [13:0] in_B3
   .report(b_report),      // output wire report
-  .amp_A(b_power_A),      // output wire [15:0] power_A
-  .amp_B(b_power_B),      // output wire [15:0] power_B
+  .amp_A(b_amp_A),        // output wire [15:0] amp_A
+  .amp_B(b_amp_B),        // output wire [15:0] amp_B
   .phase_A(b_phase_A),    // output wire [15:0] phase_A
   .phase_B(b_phase_B)     // output wire [15:0] phase_B
 );
@@ -164,8 +172,8 @@ ana_freq delayed (
   .in_B2(in_B2),          // input wire [13:0] in_B2
   .in_B3(in_B3),          // input wire [13:0] in_B3
   .report(d_report),      // output wire report
-  .amp_A(d_power_A),      // output wire [15:0] power_A
-  .amp_B(d_power_B),      // output wire [15:0] power_B
+  .amp_A(d_amp_A),        // output wire [15:0] amp_A
+  .amp_B(d_amp_B),        // output wire [15:0] amp_B
   .phase_A(d_phase_A),    // output wire [15:0] phase_A
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
@@ -173,26 +181,27 @@ ana_freq delayed (
 ila_0 ila_0_inst (
   .clk(clk),                 // input wire clk
   .probe0(report),           // input wire [0:0]  probe3
-  .probe1(sig_in),           // input wire [63:0]  probe3
-  .probe2(b_report),         // input wire [0:0]  probe3
-  .probe3(b_power_A),        // input wire [15:0]  probe3
-  .probe4(b_power_B),        // input wire [15:0]  probe3
-  .probe5(b_phase_A),        // input wire [15:0]  probe3
-  .probe6(b_phase_B),        // input wire [15:0]  probe3
-  .probe7(d_report),         // input wire [0:0]  probe3
-  .probe8(d_power_A),        // input wire [15:0]  probe3
-  .probe9(d_power_B),        // input wire [15:0]  probe3
-  .probe10(d_phase_A),       // input wire [15:0]  probe3
-  .probe11(d_phase_B),       // input wire [15:0]  probe3
-  .probe12(base_start),      // input wire [0:0]  probe3
-  .probe13(curr_count),      // input wire [9:0]  probe3
-  .probe14(delay_start),     // input wire [0:0]  probe3
-  .probe15(base_update),     // input wire [0:0]  probe3
-  .probe16(base_curr_phase_A), // input wire [15:0]  probe3
-  .probe17(base_curr_phase_B), // input wire [15:0]  probe3
-  .probe18(delay_update),     // input wire [0:0]  probe3
-  .probe19(delay_curr_phase_A), // input wire [15:0]  probe3
-  .probe20(delay_curr_phase_B) // input wire [15:0]  probe3
+  .probe1(sig_amp_A),        // input wire [15:0]  probe3
+  .probe2(sig_amp_B),        // input wire [15:0]  probe3
+  .probe3(sig_phase_A),      // input wire [15:0]  probe3
+  .probe4(sig_phase_B),      // input wire [15:0]  probe3
+  .probe5(b_report),         // input wire [0:0]  probe3
+  .probe6(b_amp_A),          // input wire [15:0]  probe3
+  .probe7(b_amp_B),          // input wire [15:0]  probe3
+  .probe8(b_phase_A),        // input wire [15:0]  probe3
+  .probe9(b_phase_B),        // input wire [15:0]  probe3
+  .probe10(d_report),        // input wire [0:0]  probe3
+  .probe11(d_amp_A),         // input wire [15:0]  probe3
+  .probe12(d_amp_B),         // input wire [15:0]  probe3
+  .probe13(d_phase_A),       // input wire [15:0]  probe3
+  .probe14(d_phase_B),       // input wire [15:0]  probe3
+  .probe15(base_start),      // input wire [0:0]  probe3
+  .probe16(curr_count),      // input wire [9:0]  probe3
+  .probe17(delay_start),     // input wire [0:0]  probe3
+  .probe18(base_update),     // input wire [0:0]  probe3
+  .probe19(base_curr_phase), // input wire [15:0]  probe3
+  .probe20(delay_update),    // input wire [0:0]  probe3
+  .probe21(delay_curr_phase) // input wire [15:0]  probe3
 );
 
 generate
@@ -201,24 +210,15 @@ begin : adc_ana_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
-    begin
-      base_curr_phase_A <= 0;
-      base_curr_phase_B <= 0;
-    end
+      base_curr_phase <= 0;
     else
     begin
       if (base_update)
-      begin
-        base_curr_phase_A <= base_curr_phase_A + phase_incr;
-        base_curr_phase_B <= base_curr_phase_B + phase_incr;
-      end
+        base_curr_phase <= base_curr_phase + phase_incr;
       else
       begin
         if (start)
-        begin
-          base_curr_phase_A <= 0;
-          base_curr_phase_B <= 0;
-        end
+          base_curr_phase <= 0;
       end
     end
   end
@@ -226,24 +226,15 @@ begin : adc_ana_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
-    begin
-      delay_curr_phase_A <= 0;      
-      delay_curr_phase_B <= 0;      
-    end
+      delay_curr_phase <= 0;      
     else
     begin
       if (delay_update)
-      begin
-        delay_curr_phase_A <= delay_curr_phase_A + phase_incr;
-        delay_curr_phase_B <= delay_curr_phase_B + phase_incr;
-      end
+        delay_curr_phase <= delay_curr_phase + phase_incr;
       else
       begin
         if (start)
-        begin
-          delay_curr_phase_A <= delay_phase;
-          delay_curr_phase_B <= delay_phase;
-        end
+          delay_curr_phase <= delay_phase;
       end
     end
   end
@@ -264,11 +255,11 @@ begin : adc_ana_gen
         delay_update <= 0;
         report <= 1;
 
-        sig_in[15:0] <= b_power_A;
-        sig_in[31:16] <= b_power_B;
+        sig_in[15:0] <= b_amp_A;
+        sig_in[31:16] <= b_amp_B;
 
-        sig_in[47:32] <= b_phase_A - base_curr_phase_A;
-        sig_in[63:48] <= b_phase_B - base_curr_phase_B;
+        sig_in[47:32] <= b_phase_A - base_curr_phase;
+        sig_in[63:48] <= b_phase_B - base_curr_phase;
       end
       else
       begin
@@ -278,11 +269,11 @@ begin : adc_ana_gen
           delay_update <= 1;
           report <= 1;
 
-          sig_in[15:0] <= d_power_A;
-          sig_in[31:16] <= d_power_B;
+          sig_in[15:0] <= d_amp_A;
+          sig_in[31:16] <= d_amp_B;
         
-          sig_in[47:32] <= d_phase_A - delay_curr_phase_A;
-          sig_in[63:48] <= d_phase_B - delay_curr_phase_B;
+          sig_in[47:32] <= d_phase_A - delay_curr_phase;
+          sig_in[63:48] <= d_phase_B - delay_curr_phase;
         end
         else
         begin

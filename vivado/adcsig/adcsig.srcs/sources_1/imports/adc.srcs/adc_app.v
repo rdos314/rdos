@@ -158,8 +158,10 @@ module adc_app (
 
   reg  [16:0]             config_last_phase;
   reg  [10:0]             config_last;
+  reg  [10:0]             config_last_1;
   reg  [3:0]              config_last_en;
   reg  [10:0]             config_delay_last;
+  reg  [10:0]             config_delay_last_1;
   reg  [16:0]             config_delay_phase;
 
   reg  [23:0]             config_l_sin;
@@ -443,8 +445,8 @@ adc_ana adc_ana_0_inst (
 
     .empty(empty[0]),
     .rd(rd[0]),
-    .power_A(chan0_power_A),
-    .power_B(chan0_power_B),
+    .amp_A(chan0_power_A),
+    .amp_B(chan0_power_B),
     .phase_A(chan0_phase_A),
     .phase_B(chan0_phase_B)
 );
@@ -459,28 +461,14 @@ ila_2 ila_2_inst (
   .probe5(config_incr),          // input wire [29:0]
   .probe6(config_count),         // input wire [13:0]
   .probe7(config_adr),           // input wire [13:0]
-  .probe8(bram_en),              // input wire [0:0]
-  .probe9(bram_wr),              // input wire [0:0]
-  .probe10(bram_adr),            // input wire [11:0]
-  .probe11(bram_in),             // input wire [55:0]
-  .probe12(bram_out),            // input wire [55:0]
-  .probe13(start[0]),            // input wire [0:0]
-  .probe14(wr[0]),               // input wire [0:0]
-  .probe15(chan0_adr),           // input wire [10:0]
-  .probe16(chan0_sin_0),         // input wire [15:0]
-  .probe17(chan0_cos_0),         // input wire [15:0]
-  .probe18(chan0_sin_1),         // input wire [15:0]
-  .probe19(chan0_cos_1),         // input wire [15:0]
-  .probe20(chan0_sin_2),         // input wire [15:0]
-  .probe21(chan0_cos_2),         // input wire [15:0]
-  .probe22(chan0_sin_3),         // input wire [15:0]
-  .probe23(chan0_cos_3),         // input wire [15:0]
-  .probe24(config_last_phase),   // input wire [16:0]
-  .probe25(config_last),         // input wire [10:0]
-  .probe26(config_last_en),      // input wire [3:0]
-  .probe27(config_delay_last),   // input wire [10:0]
-  .probe28(config_delay_phase)   // input wire [16:0]
+  .probe8(config_last_phase),    // input wire [16:0]
+  .probe9(config_last),          // input wire [10:0]
+  .probe10(config_delay_last),   // input wire [10:0]
+  .probe11(config_delay_phase),  // input wire [16:0]
+  .probe12(chan0_phase_incr),    // input wire [15:0]
+  .probe13(chan0_delay_phase)    // input wire [15:0]
 );
+
 
 
 generate
@@ -920,11 +908,23 @@ begin : adc_app
       else
         config_last <= config_count[12:2] - 1;
 
+      if (config_count[1])
+        config_last_1 <= config_count[12:2] + 1;
+      else
+        config_last_1 <= config_count[12:2];
+
       config_delay_last[10] <= 0;
       if (config_count[2])
         config_delay_last[9:0] <= config_count[12:3];
       else
         config_delay_last[9:0] <= config_count[12:3] - 1;          
+
+      config_delay_last_1[10] <= 0;
+      if (config_count[2])
+        config_delay_last_1[9:0] <= config_count[12:3] + 1;
+      else
+        config_delay_last_1[9:0] <= config_count[12:3];          
+
     end
   end
 
@@ -1122,8 +1122,8 @@ begin : adc_app
     begin
       if ((config_adr[1:0] == 0) && (config_adr[13] == 0))
       begin
-        if (config_adr[12:2] == config_last)
-          config_last_phase <= ~synt_phase[29:13];
+        if (config_adr[12:2] == config_last_1)
+          config_last_phase <= synt_phase[29:13];
       end
     end
   end
@@ -1134,7 +1134,7 @@ begin : adc_app
     begin
       if ((config_adr[1:0] == 0) && (config_adr[13] == 0))
       begin
-        if (config_adr[12:2] == config_delay_last)
+        if (config_adr[12:2] == config_delay_last_1)
           config_delay_phase <= synt_phase[29:13];
       end
     end
@@ -1152,14 +1152,13 @@ begin : adc_app
     begin
       if (config_has_coeff)
       begin
+        config_adr <= config_adr + 1;
+        synt_phase <= synt_phase + config_incr;
+
         if (config_adr == 14'h3FFF)
           synt_start <= 0;
         else
-        begin
-          config_adr <= config_adr + 1;
-          synt_phase <= synt_phase + config_incr;
           synt_start <= 1;
-        end
       end
       else
       begin

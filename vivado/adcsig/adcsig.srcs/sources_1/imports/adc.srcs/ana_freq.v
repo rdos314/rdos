@@ -358,7 +358,7 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (amp_done_A & amp_done_B & phase_done_A & phase_done_B)
+    if (amp_done_A & amp_done_B & phase_done_A & phase_done_B & !report)
       report <= 1;
     else
       report <= 0;
