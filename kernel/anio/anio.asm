@@ -1148,8 +1148,14 @@ start_adc  Proc far
     mov bx,SEG data
     mov ds,ebx
     cmp ds:dev_id,0AACCh
-    jne start_adc_do
+    je start_adc_raw
 ;
+    mov bx,anio_control_sel
+    mov es,ebx
+    or es:cb_adc_control,80h
+    jmp start_adc_done
+
+start_adc_raw:
     GetThread
     mov ds:start_thread,ax
     mov ds:adc_index,0
@@ -1173,6 +1179,7 @@ start_adc_do:
     or es:cb_adc_control,80h
     WaitForSignal
 
+start_adc_done:
     pop edi
     pop esi
     pop ecx
@@ -1389,80 +1396,6 @@ clear_adc_chan  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           InitTest
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-sin_tab:
-  dw 0, 5690, 11207, 16383, 21062, 25101, 28377, 30791, 32269
-  dw 32767, 32269, 30791, 28377, 25101, 21062, 16384, 11207, 5690
-  dw 0, -5690, -11207, -16383, -21062, -25101, -28377, -30791, -32269
-  dw -32767, -32269, -30791, -28377, -25101, -21062, -16384, -11207, -5690
-
-; 0000 163A 2BC7 3FFF 5246 620D 6ED9 7847 7E0D 
-; 7FFF 7E0D 7847 6ED9 620D 5246 4000 2BC7 163A
-; 0000 E9C6 D439 C001 ADBA 9DF3 9127 87B9 81F3
-; 8001 81F3 87B9 9127 9DF3 ADBA C000 D439 E9C6
-
-cos_tab:
-  dw 32767, 32269, 30791, 28377, 25101, 21062, 16384, 11207, 5690
-  dw 0, -5690, -11207, -16383, -21062, -25101, -28377, -30791, -32269
-  dw -32767, -32269, -30791, -28377, -25101, -21062, -16384, -11207, -5690
-  dw 0, 5690, 11207, 16383, 21062, 25101, 28377, 30791, 32269
-
-; 7FFF 7E0D 7847 6ED9 620D 5246 4000 2BC7 163A
-; 0000 E9C6 D439 C001 ADBA 9DF3 9127 87B9 81F3
-; 8001 81F3 87B9 9127 9DF3 ADBA C000 D439 81F3
-; 0000 163A 2BC7 3FFF 5246 620D 6ED9 7847 7E0D
-
-InitTest  Proc near
-    push ds
-    pushad
-;
-    mov dx,anio_coeff_sel
-    mov ds,dx
-    xor ebx,ebx
-    shl ebx,15
-    push ebx
-;
-    add ebx,10h
-;
-    mov ebp,8
-
-saYLoop:
-    mov esi, OFFSET sin_tab
-    mov edi, OFFSET cos_tab
-    mov ecx,36
-
-saILoop:
-    mov ax,cs:[esi]
-    mov ds:[ebx],ax
-    add ebx,2
-    add esi,2
-;
-    mov ax,cs:[edi]
-    mov ds:[ebx],ax
-    add ebx,2
-    add edi,2
-;
-    loop saILoop
-;
-    sub ebp,1
-    jnz saYLoop
-;
-    int 3
-    pop ebx
-    mov ax,8 * 36
-    mov ds:[ebx],ax
-;
-    popad
-    pop ds
-    ret
-InitTest   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;           NAME:           init_pci
 ;
 ;           DESCRIPTION:    Init PCI
@@ -1497,9 +1430,6 @@ init_pci    PROC far
     call InitCoeffBar
     call InitFreqClk
     call InitFreqAdc
-;
-    int 3
-    call InitTest
 ;
     mov eax,cs
     mov ds,eax
