@@ -219,26 +219,15 @@ ana_phase ana_phase_B (
   .phase(phase_B)
 );
 
-/*
+
 ila_0 ila_0_inst (
   .clk(clk),                 // input wire clk
-  .probe0(start_1),          // input wire [0:0]  probe3
-  .probe1(start_2),          // input wire [0:0]  probe3
-  .probe2(start_3),          // input wire [0:0]  probe3
-  .probe3(run),              // input wire [0:0]  probe3
-  .probe4(conf),             // input wire [0:0]  probe3
-  .probe5(next_1),           // input wire [0:0]  probe3
-  .probe6(next_2),           // input wire [0:0]  probe3
-  .probe7(next_3),           // input wire [0:0]  probe3
-  .probe8(coeff_en),         // input wire [0:0]  probe3
-  .probe9(coeff_wr),         // input wire [0:0]  probe3
-  .probe10(coeff_adr),       // input wire [10:0]  probe3
-  .probe11(sin_coeff_in),    // input wire [63:0]  probe3
-  .probe12(cos_coeff_in),    // input wire [63:0]  probe3
-  .probe13(sin_coeff_out),   // input wire [63:0]  probe3
-  .probe14(cos_coeff_out)    // input wire [63:0]  probe3
+  .probe0(report),           // input wire [0:0]  probe3
+  .probe1(amp_A),            // input wire [15:0]  probe3
+  .probe2(amp_B),            // input wire [15:0]  probe3
+  .probe3(phase_A),          // input wire [15:0]  probe3
+  .probe4(phase_B)           // input wire [15:0]  probe3
 );
-*/
 
 generate
 begin : ana_freq_gen
