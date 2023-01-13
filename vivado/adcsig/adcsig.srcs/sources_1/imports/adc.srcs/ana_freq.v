@@ -219,7 +219,7 @@ ana_phase ana_phase_B (
   .phase(phase_B)
 );
 
-
+/*
 ila_0 ila_0_inst (
   .clk(clk),                 // input wire clk
   .probe0(report),           // input wire [0:0]  probe3
@@ -228,6 +228,7 @@ ila_0 ila_0_inst (
   .probe3(phase_A),          // input wire [15:0]  probe3
   .probe4(phase_B)           // input wire [15:0]  probe3
 );
+*/
 
 generate
 begin : ana_freq_gen

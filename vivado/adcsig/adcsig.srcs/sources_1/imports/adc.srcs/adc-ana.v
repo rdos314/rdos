@@ -170,6 +170,31 @@ ana_freq delayed (
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
 
+ila_0 ila_0_inst (
+  .clk(clk),                 // input wire clk
+  .probe0(report),           // input wire [0:0]  probe3
+  .probe1(sig_in),           // input wire [63:0]  probe3
+  .probe2(b_report),         // input wire [0:0]  probe3
+  .probe3(b_power_A),        // input wire [15:0]  probe3
+  .probe4(b_power_B),        // input wire [15:0]  probe3
+  .probe5(b_phase_A),        // input wire [15:0]  probe3
+  .probe6(b_phase_B),        // input wire [15:0]  probe3
+  .probe7(d_report),         // input wire [0:0]  probe3
+  .probe8(d_power_A),        // input wire [15:0]  probe3
+  .probe9(d_power_B),        // input wire [15:0]  probe3
+  .probe10(d_phase_A),       // input wire [15:0]  probe3
+  .probe11(d_phase_B),       // input wire [15:0]  probe3
+  .probe12(base_start),      // input wire [0:0]  probe3
+  .probe13(curr_count),      // input wire [9:0]  probe3
+  .probe14(delay_start),     // input wire [0:0]  probe3
+  .probe15(base_update),     // input wire [0:0]  probe3
+  .probe16(base_curr_phase_A), // input wire [15:0]  probe3
+  .probe17(base_curr_phase_B), // input wire [15:0]  probe3
+  .probe18(delay_update),     // input wire [0:0]  probe3
+  .probe19(delay_curr_phase_A), // input wire [15:0]  probe3
+  .probe20(delay_curr_phase_B) // input wire [15:0]  probe3
+);
+
 generate
 begin : adc_ana_gen
 
