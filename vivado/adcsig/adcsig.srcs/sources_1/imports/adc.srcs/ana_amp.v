@@ -97,6 +97,7 @@ ana_sqrt sqrt_inst (
   .m_axis_dout_tdata(amp)                            // output wire [15 : 0] m_axis_dout_tdata
 );
 
+/*
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(start),         // input wire [0:0]  probe0
@@ -137,6 +138,7 @@ ila_0 ila_0_inst (
   .probe35(temp_cos),     // input wire [15:0]  probe3
   .probe36(temp_incr_cos) // input wire [0:0]  probe3
 );
+*/
 
 generate
 begin : ana_amp_gen

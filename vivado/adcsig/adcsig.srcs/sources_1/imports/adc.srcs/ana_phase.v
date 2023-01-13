@@ -57,6 +57,25 @@ ana_atan atan (
   .m_axis_dout_tdata(cordic_phase)                   // output wire [23 : 0] m_axis_dout_tdata
 );
 
+ila_0 ila_0_inst (
+  .clk(clk),              // input wire clk
+  .probe0(start),         // input wire [0:0]  probe0
+  .probe1(sin_sum),       // input wire [42:0]  probe0
+  .probe2(cos_sum),       // input wire [42:0]  probe0
+  .probe3(run_rot),       // input wire [0:0]  probe0
+  .probe4(rot_done),      // input wire [0:0]  probe0
+  .probe5(run_atan),      // input wire [0:0]  probe0
+  .probe6(pend_atan),     // input wire [0:0]  probe0
+  .probe7(start_atan),    // input wire [0:0]  probe0
+  .probe8(phase_done),    // input wire [0:0]  probe0
+  .probe9(phase_sin),     // input wire [42:0]  probe0
+  .probe10(phase_cos),    // input wire [42:0]  probe0
+  .probe11(phase_atan),   // input wire [47:0]  probe0
+  .probe12(cordic_phase), // input wire [23:0]  probe0
+  .probe13(report),       // input wire [0:0]  probe0
+  .probe14(phase)         // input wire [15:0]  probe3
+);
+
 generate
 begin : ana_phase_gen
 
@@ -74,20 +93,23 @@ begin : ana_phase_gen
       end
       else
       begin
-        if (phase_sin[42] == phase_sin[41])
+        if (run_rot)
         begin
-          if (phase_cos[42] == phase_cos[41])
+          if (phase_sin[42] == phase_sin[41])
           begin
-            phase_sin[42:1] <= phase_sin[41:0];
-            phase_sin[0] <= 0;
-            phase_cos[42:1] <= phase_cos[41:0];
-            phase_cos[0] <= 0;
+            if (phase_cos[42] == phase_cos[41])
+            begin
+              phase_sin[42:1] <= phase_sin[41:0];
+              phase_sin[0] <= 0;
+              phase_cos[42:1] <= phase_cos[41:0];
+              phase_cos[0] <= 0;
+            end
+            else
+              rot_done <= 1;
           end
           else
             rot_done <= 1;
         end
-        else
-          rot_done <= 1;
       end
     end
   end
@@ -141,9 +163,9 @@ begin : ana_phase_gen
       end
       else
       begin
+        start_atan <= 0;
         if (run_atan)
         begin
-          start_atan <= 0;
           if (phase_done)
           begin
             run_atan <= 0;
