@@ -93,23 +93,21 @@ begin : ana_phase_gen
       end
       else
       begin
-        if (run_rot)
+        if (phase_sin[42] == phase_sin[41])
         begin
-          if (phase_sin[42] == phase_sin[41])
+          if (phase_cos[42] == phase_cos[41])
           begin
-            if (phase_cos[42] == phase_cos[41])
-            begin
-              phase_sin[42:1] <= phase_sin[41:0];
-              phase_sin[0] <= 0;
-              phase_cos[42:1] <= phase_cos[41:0];
-              phase_cos[0] <= 0;
-            end
-            else
-              rot_done <= 1;
+            phase_sin[42:1] <= phase_sin[41:0];
+            phase_sin[0] <= 0;
+            phase_cos[42:1] <= phase_cos[41:0];
+            phase_cos[0] <= 0;
+            rot_done <= 0;
           end
           else
             rot_done <= 1;
         end
+        else
+          rot_done <= 1;
       end
     end
   end
@@ -169,9 +167,11 @@ begin : ana_phase_gen
           if (phase_done)
           begin
             run_atan <= 0;
-            report <= 1;
             phase <= cordic_phase[21:6];
+            report <= 1;
           end
+          else
+            report <= 0;
         end
         else
           report <= 0;
