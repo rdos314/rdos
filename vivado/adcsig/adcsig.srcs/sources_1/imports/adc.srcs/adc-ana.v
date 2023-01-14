@@ -301,20 +301,20 @@ ila_0 ila_0_inst (
   .probe11(config_raw_coeff), // input wire [0:0]  probe3
   .probe12(config_coeff_done), // input wire [0:0]  probe3
   .probe13(config_has_coeff), // input wire [0:0]  probe3
-  .probe14(b_report),         // input wire [0:0]  probe3
-  .probe15(b_amp_A),          // input wire [15:0]  probe3
-  .probe16(b_amp_B),          // input wire [15:0]  probe3
-  .probe17(b_phase_A),        // input wire [15:0]  probe3
-  .probe18(b_phase_B),        // input wire [15:0]  probe3
-  .probe19(d_report),        // input wire [0:0]  probe3
-  .probe20(d_amp_A),         // input wire [15:0]  probe3
-  .probe21(d_amp_B),         // input wire [15:0]  probe3
-  .probe22(d_phase_A),       // input wire [15:0]  probe3
-  .probe23(d_phase_B),       // input wire [15:0]  probe3
-  .probe24(base_start),      // input wire [0:0]  probe3
-  .probe25(curr_count),      // input wire [9:0]  probe3
-  .probe26(delay_start),     // input wire [0:0]  probe3
-  .probe27(base_update),     // input wire [0:0]  probe3
+  .probe14(coeff_wr),        // input wire [0:0]  probe3
+  .probe15(coeff_adr),        // input wire [10:0]  probe3
+  .probe16(coeff_sin),        // input wire [63:0]  probe3
+  .probe17(coeff_cos),        // input wire [63:0]  probe3
+  .probe18(coeff_sin_0),      // input wire [15:0]  probe3
+  .probe19(coeff_sin_1),      // input wire [15:0]  probe3
+  .probe20(coeff_sin_2),      // input wire [15:0]  probe3
+  .probe21(coeff_sin_3),      // input wire [15:0]  probe3
+  .probe22(coeff_cos_0),      // input wire [15:0]  probe3
+  .probe23(coeff_cos_1),      // input wire [15:0]  probe3
+  .probe24(coeff_cos_2),      // input wire [15:0]  probe3
+  .probe25(coeff_cos_3),      // input wire [15:0]  probe3
+  .probe26(base_start),      // input wire [0:0]  probe3
+  .probe27(delay_start),     // input wire [0:0]  probe3
   .probe28(base_curr_phase), // input wire [15:0]  probe3
   .probe29(delay_update),    // input wire [0:0]  probe3
   .probe30(delay_curr_phase),// input wire [15:0]  probe3
@@ -324,6 +324,11 @@ ila_0 ila_0_inst (
   .probe34(phase_A),         // input wire [15:0]  probe3
   .probe35(phase_B)         // input wire [15:0]  probe3
 );
+
+  reg  [15:0]             coeff_sin_0;
+  reg  [15:0]             coeff_sin_1;
+  reg  [15:0]             coeff_sin_2;
+  reg  [15:0]             coeff_sin_3;
 
 generate
 begin : adc_ana_gen
@@ -642,7 +647,7 @@ begin : adc_ana_gen
     end
     else
     begin
-      if (coeff_req)    
+      if (sample_req)    
       begin        
         if (sample_adr[10:0] == config_last)
         begin
