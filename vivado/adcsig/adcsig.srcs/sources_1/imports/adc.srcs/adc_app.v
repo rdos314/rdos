@@ -136,199 +136,25 @@ module adc_app (
   wire [31:0]             pci_out;
   reg  [3:0]              pci_be;
 
-
-// analyser config
+// rx domain
 
   reg                     config_rd;
   wire                    config_empty;
   wire [47:0]             config_out;
 
-  reg  [4:0]              config_channel;
-  reg  [29:0]             config_incr;
-  reg  [13:0]             config_count;
-  reg  [13:0]             config_adr;
-
-  reg                     config_init;
-  reg                     config_start;
-  reg                     config_stop;
-  reg                     config_raw_coeff;
-  reg                     config_has_coeff;
-  reg                     config_validate;
-  reg                     config_coeff_done;
-
-  reg  [16:0]             config_last_phase;
-  reg  [10:0]             config_last;
-  reg  [10:0]             config_last_1;
-  reg  [3:0]              config_last_en;
-  reg  [10:0]             config_delay_last;
-  reg  [10:0]             config_delay_last_1;
-  reg  [16:0]             config_delay_phase;
-
-  reg  [23:0]             config_l_sin;
-  reg  [23:0]             config_l_cos;
-
-  reg  [15:0]             config_sin;
-  reg  [15:0]             config_cos;
-
-  reg                     chan_done;
-  reg                     chan_req;
-  reg  [63:0]             chan_sin;
-  reg  [63:0]             chan_cos;
-  reg  [10:0]             chan_adr;
-
-  reg                     chan_p1;
-  reg                     chan_p2;
-  reg                     chan_p3;
-  reg                     chan_p4;
-  
-  reg                     synt_start;
-  wire                    synt_done;
-  reg                     synt_prev;
-
-  reg  [29:0]             synt_phase;
-  wire [31:0]             cordic_phase;
-
-  assign cordic_phase[29:0] = synt_phase[29:0];
-  assign cordic_phase[30]   = synt_phase[29];
-  assign cordic_phase[31]   = synt_phase[29];
-
-  wire [47:0]             synt_data;
-  wire [23:0]             synt_raw_sin;
-  wire [23:0]             synt_raw_cos;
-  wire [23:0]             synt_comp_sin;
-  wire [23:0]             synt_comp_cos;
-
-  assign synt_raw_cos       = synt_data[23:0];
-  assign synt_raw_sin       = synt_data[47:24];
-
-  assign synt_comp_cos[23]  = synt_raw_cos[23];
-  assign synt_comp_cos[22]  = synt_raw_cos[23];
-  assign synt_comp_cos[21]  = synt_raw_cos[23];
-  assign synt_comp_cos[20]  = synt_raw_cos[23];
-  assign synt_comp_cos[19]  = synt_raw_cos[23];
-  assign synt_comp_cos[18]  = synt_raw_cos[23];
-  assign synt_comp_cos[17]  = synt_raw_cos[23];
-  assign synt_comp_cos[16]  = synt_raw_cos[23];
-  assign synt_comp_cos[15]  = synt_raw_cos[23];
-  assign synt_comp_cos[14]  = synt_raw_cos[23];
-  assign synt_comp_cos[13]  = synt_raw_cos[23];
-  assign synt_comp_cos[12]  = synt_raw_cos[23];
-  assign synt_comp_cos[11]  = synt_raw_cos[23];
-  assign synt_comp_cos[10]  = synt_raw_cos[23];
-  assign synt_comp_cos[9]   = synt_raw_cos[23];
-  assign synt_comp_cos[8]   = synt_raw_cos[23];
-  assign synt_comp_cos[7]   = synt_raw_cos[22];
-  assign synt_comp_cos[6]   = synt_raw_cos[21];
-  assign synt_comp_cos[5]   = synt_raw_cos[20];
-  assign synt_comp_cos[4]   = synt_raw_cos[19];
-  assign synt_comp_cos[3]   = synt_raw_cos[18];
-  assign synt_comp_cos[2]   = synt_raw_cos[17];
-  assign synt_comp_cos[1]   = synt_raw_cos[16];
-  assign synt_comp_cos[0]   = synt_raw_cos[15];
-
-  assign synt_comp_sin[23]  = synt_raw_sin[23];
-  assign synt_comp_sin[22]  = synt_raw_sin[23];
-  assign synt_comp_sin[21]  = synt_raw_sin[23];
-  assign synt_comp_sin[20]  = synt_raw_sin[23];
-  assign synt_comp_sin[19]  = synt_raw_sin[23];
-  assign synt_comp_sin[18]  = synt_raw_sin[23];
-  assign synt_comp_sin[17]  = synt_raw_sin[23];
-  assign synt_comp_sin[16]  = synt_raw_sin[23];
-  assign synt_comp_sin[15]  = synt_raw_sin[23];
-  assign synt_comp_sin[14]  = synt_raw_sin[23];
-  assign synt_comp_sin[13]  = synt_raw_sin[23];
-  assign synt_comp_sin[12]  = synt_raw_sin[23];
-  assign synt_comp_sin[11]  = synt_raw_sin[23];
-  assign synt_comp_sin[10]  = synt_raw_sin[23];
-  assign synt_comp_sin[9]   = synt_raw_sin[23];
-  assign synt_comp_sin[8]   = synt_raw_sin[23];
-  assign synt_comp_sin[7]   = synt_raw_sin[22];
-  assign synt_comp_sin[6]   = synt_raw_sin[21];
-  assign synt_comp_sin[5]   = synt_raw_sin[20];
-  assign synt_comp_sin[4]   = synt_raw_sin[19];
-  assign synt_comp_sin[3]   = synt_raw_sin[18];
-  assign synt_comp_sin[2]   = synt_raw_sin[17];
-  assign synt_comp_sin[1]   = synt_raw_sin[16];
-  assign synt_comp_sin[0]   = synt_raw_sin[15];
-
-
-// test sequence
-
-  reg                     bram_req;
-  reg                     bram_en;
-  reg                     bram_wr;
-  reg  [11:0]             bram_adr;
-
-  reg  [55:0]             bram_in;
-  reg  [13:0]             bram_in_0;
-  reg  [13:0]             bram_in_1;
-  reg  [13:0]             bram_in_2;
-  reg  [13:0]             bram_in_3;
-
-  wire [55:0]             bram_out;
-
-  reg  [15:0]             coeff_sin_0;
-  reg  [15:0]             coeff_sin_1;
-  reg  [15:0]             coeff_sin_2;
-  reg  [15:0]             coeff_sin_3;
-
-  reg  [15:0]             coeff_cos_0;
-  reg  [15:0]             coeff_cos_1;
-  reg  [15:0]             coeff_cos_2;
-  reg  [15:0]             coeff_cos_3;
-
-// analyser freq blocks in rx domain
-
-// all channels
-
-  reg  [31:0]             init;
-  reg  [31:0]             start;
-  reg  [31:0]             stop;
-  reg  [31:0]             wr;
-  reg  [31:0]             chan_config;
-
-// channel 0
-   
-  reg  [12:0]             chan0_count;
-  reg  [10:0]             chan0_last;
-  reg  [3:0]              chan0_last_en;
-
-  reg  [15:0]             chan0_phase_incr;
-  reg  [9:0]              chan0_delay_count;
-  reg  [15:0]             chan0_delay_phase;
-
-  reg  [13:0]             chan0_A0;
-  reg  [13:0]             chan0_A1;
-  reg  [13:0]             chan0_A2;
-  reg  [13:0]             chan0_A3;
-  reg  [13:0]             chan0_B0;
-  reg  [13:0]             chan0_B1;
-  reg  [13:0]             chan0_B2;
-  reg  [13:0]             chan0_B3;
-
-
-// analyser freq blocks in pci domain
-
-
-// all channels
-
-  wire [31:0]             empty;
-  reg  [31:0]             rd;
 
 // channel 0
 
+  reg                     chan0_conf;   
+  reg  [13:0]             chan0_count;
+  reg  [29:0]             chan0_incr;
+
+  wire                    chan0_run;   
+  wire                    chan0_report;
   wire [15:0]             chan0_power_A;
   wire [15:0]             chan0_power_B;
   wire [15:0]             chan0_phase_A;
   wire [15:0]             chan0_phase_B;
-
-// temporary fix to avoid removal of code
-
-  assign power_A = chan0_power_A;
-  assign power_B = chan0_power_B;
-  assign phase_A = chan0_phase_A;
-  assign phase_B = chan0_phase_B;
-
 
 // clock domain crossings
 
@@ -366,6 +192,18 @@ module adc_app (
 
   assign adc_delay = up_test_mode ? 0 : 1;
 
+fifo_signal signal_inst (
+  .rst(pci_reset),          // input wire rst
+  .wr_clk(rx_clk),          // input wire wr_clk
+  .rd_clk(pci_clk),         // input wire rd_clk
+  .din(sig_in),             // input wire [63 : 0] din
+  .wr_en(report),           // input wire wr_en
+  .rd_en(rd),               // input wire rd_en
+  .dout(sig_out),           // output wire [63 : 0] dout
+  .full(),                  // output wire full
+  .empty(empty),            // output wire empty
+  .prog_empty()             // output wire empty
+);
 
 ana_fifo ana_fifo_inst (
   .rst(pci_reset),             // input wire rst
@@ -377,24 +215,6 @@ ana_fifo ana_fifo_inst (
   .dout(config_out),           // output wire [47 : 0] dout
   .full(),                     // output wire full
   .empty(config_empty)         // output wire empty
-);
-
-ana_synt ana_synt_inst (
-  .aclk(rx_clk),                       // input wire aclk
-  .s_axis_phase_tvalid(synt_start),    // input wire s_axis_phase_tvalid
-  .s_axis_phase_tready(),              // output wire s_axis_phase_tready
-  .s_axis_phase_tdata(cordic_phase),   // input wire [31 : 0] s_axis_phase_tdata
-  .m_axis_dout_tvalid(synt_done),      // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(synt_data)        // output wire [47 : 0] m_axis_dout_tdata
-);
-
-bram_sample bram_sample_inst (
-  .clka(rx_clk),            // input wire clka
-  .ena(bram_en),            // input wire ena
-  .wea(bram_wr),            // input wire [0 : 0] wea
-  .addra(bram_adr),         // input wire [11 : 0] addra
-  .dina(bram_in),           // input wire [55 : 0] dina
-  .douta(bram_out)          // output wire [55 : 0] douta
 );
 
 bram_msix bram_msix_inst (
@@ -416,35 +236,22 @@ adc_ana adc_ana_0_inst (
     .clk (rx_clk),
     .reset (rx_reset),
 
-    .init(init[0]),
+    .conf(chan0_conf),
+    .incr(chan0_incr),
     .count(chan0_count),
-    .last(chan0_last),
+    .stop(0),
 
-    .start(start[0]),
-    .phase_incr(chan0_phase_incr),
-    .delay_count(chan0_delay_count),
-    .delay_phase(chan0_delay_phase),
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
 
-    .stop(stop[0]),
-
-    .wr(wr[0]),
-    .wr_adr(chan_adr),
-    .wr_sin(chan_sin),
-    .wr_cos(chan_cos),
-
-    .in_A0(chan0_A0),
-    .in_A1(chan0_A1),
-    .in_A2(chan0_A2),
-    .in_A3(chan0_A3),
-    .in_B0(chan0_B0),
-    .in_B1(chan0_B1),
-    .in_B2(chan0_B2),
-    .in_B3(chan0_B3),
-
-    .pci_clk(pci_clk),
-
-    .empty(empty[0]),
-    .rd(rd[0]),
+    .run(chan0_run),
+    .report(chan0_report),
     .amp_A(chan0_power_A),
     .amp_B(chan0_power_B),
     .phase_A(chan0_phase_A),
@@ -455,21 +262,16 @@ ila_2 ila_2_inst (
   .clk(rx_clk),                  // input wire clk
   .probe0(config_rd),            // input wire [0:0]
   .probe1(config_empty),         // input wire [0:0]
-  .probe2(config_validate),      // input wire [0:0]
-  .probe3(synt_start),           // input wire [0:0]
-  .probe4(synt_phase),           // input wire [29:0]
-  .probe5(config_incr),          // input wire [29:0]
-  .probe6(config_count),         // input wire [13:0]
-  .probe7(config_adr),           // input wire [13:0]
-  .probe8(config_last_phase),    // input wire [16:0]
-  .probe9(config_last),          // input wire [10:0]
-  .probe10(config_delay_last),   // input wire [10:0]
-  .probe11(config_delay_phase),  // input wire [16:0]
-  .probe12(chan0_phase_incr),    // input wire [15:0]
-  .probe13(chan0_delay_phase)    // input wire [15:0]
+  .probe2(chan0_conf),           // input wire [0:0]
+  .probe3(chan0_incr),           // input wire [29:0]
+  .probe4(chan0_count),          // input wire [13:0]
+  .probe5(chan0_run),            // input wire [0:0]
+  .probe6(chan0_report),         // input wire [0:0]
+  .probe7(chan0_power_A),        // input wire [15:0]
+  .probe8(chan0_power_B),        // input wire [15:0]
+  .probe9(chan0_phase_A),        // input wire [15:0]
+  .probe10(chan0_phase_B)        // input wire [15:0]
 );
-
-
 
 generate
 begin : adc_app
@@ -837,28 +639,13 @@ begin : adc_app
   end
 
 
-  always @ ( posedge pci_clk ) 
-  begin
-    if (empty[0])
-    begin
-      report <= 0;
-      rd[0] <= 0;
-    end
-    else
-    begin
-      report <= 1;
-      rd[0] <= 1;
-    end
-  end
-
-
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
       config_rd <= 0;
     else
     begin
-      if (config_empty || bram_en)
+      if (config_empty)
         config_rd <= 0;
       else
         config_rd <= 1;
@@ -868,553 +655,20 @@ begin : adc_app
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
-    begin
-      config_init <= 0;
-      bram_en <= 0;
-    end
+      chan0_conf <= 0;
     else
     begin
       if (config_rd)
       begin
-        config_channel <= config_out[4:0];
-        config_incr[29:3] <= config_out[31:5];
-        config_incr[2:0] <= 0;
-        config_count <= config_out[47:32];
-        config_init <= 1;
-        bram_en <= 1;
+        chan0_incr[29:3] <= config_out[31:5];
+        chan0_incr[2:0] <= 0;
+        chan0_count <= config_out[47:32];
+        chan0_conf <= 1;
       end
       else
-      begin
-        if (config_coeff_done)
-          bram_en <= 0;
-        config_init <= 0;
-      end
+        chan0_conf <= 0;
     end
   end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_init)
-    begin
-      case (config_count[1:0])
-        2'b00 : config_last_en <= 4'b1111;
-        2'b01 : config_last_en <= 4'b0001;
-        2'b10 : config_last_en <= 4'b0011;
-        2'b11 : config_last_en <= 4'b0111;
-      endcase
-
-      if (config_count[1])
-        config_last <= config_count[12:2];
-      else
-        config_last <= config_count[12:2] - 1;
-
-      if (config_count[1])
-        config_last_1 <= config_count[12:2] + 1;
-      else
-        config_last_1 <= config_count[12:2];
-
-      config_delay_last[10] <= 0;
-      if (config_count[2])
-        config_delay_last[9:0] <= config_count[12:3];
-      else
-        config_delay_last[9:0] <= config_count[12:3] - 1;          
-
-      config_delay_last_1[10] <= 0;
-      if (config_count[2])
-        config_delay_last_1[9:0] <= config_count[12:3] + 1;
-      else
-        config_delay_last_1[9:0] <= config_count[12:3];          
-
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset)
-      config_raw_coeff <= 0;
-    else
-    begin
-      if (config_init)
-      begin
-        config_raw_coeff <= 0;
-        synt_prev <= synt_done;
-      end
-      else
-      begin
-        if (bram_en)
-        begin
-          if (synt_prev != synt_done)
-          begin
-            synt_prev <= synt_done;
-
-            if (synt_done)
-            begin
-              config_l_sin <= synt_raw_sin - synt_comp_sin;
-              config_l_cos <= synt_raw_cos - synt_comp_cos;
-              config_raw_coeff <= 1;
-            end
-            else
-              config_raw_coeff <= 0;
-          end
-          else
-            config_raw_coeff <= 0;
-        end
-        else
-          config_raw_coeff <= 0;
-      end
-    end
-  end
-
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_raw_coeff)
-    begin
-      if (config_l_sin[6])
-        config_sin <= config_l_sin[22:7] + 1;
-      else
-        config_sin <= config_l_sin[22:7];
-
-      if (config_l_cos[6])
-        config_cos <= config_l_cos[22:7] + 1;
-      else
-        config_cos <= config_l_cos[22:7];
-
-      config_has_coeff <= 1;
-    end
-    else
-      config_has_coeff <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset)
-      bram_req <= 0;
-    else
-    begin
-      if (config_has_coeff)
-      begin
-        case (config_adr[1:0])
-          2'b00 :
-            begin
-              bram_in_0 <= config_sin[15:2];
-              coeff_sin_0 <= config_sin;
-              coeff_cos_0 <= config_cos;
-              bram_req <= 0;
-            end
-          2'b01 : 
-            begin
-              bram_in_1 <= config_sin[15:2];
-              coeff_sin_1 <= config_sin;
-              coeff_cos_1 <= config_cos;
-              bram_req <= 0;
-            end
-          2'b10 : 
-            begin
-              bram_in_2 <= config_sin[15:2];
-              coeff_sin_2 <= config_sin;
-              coeff_cos_2 <= config_cos;
-              bram_req <= 0;
-            end
-          2'b11 :
-            begin
-              bram_in_3 <= config_sin[15:2];
-              coeff_sin_3 <= config_sin;
-              coeff_cos_3 <= config_cos;
-              bram_req <= 1;
-            end
-        endcase
-      end
-      else
-        bram_req <= 0;
-    end
-  end              
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (bram_req)
-    begin
-      bram_in[13:0] <= bram_in_0;      
-      bram_in[27:14] <= bram_in_1;      
-      bram_in[41:28] <= bram_in_2;      
-      bram_in[55:42] <= bram_in_3;      
-
-      bram_wr <= 1;
-    end
-    else
-      bram_wr <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset)
-    begin
-      bram_adr <= 0;
-      config_start <= 0;
-      config_validate <= 0;
-      config_coeff_done <= 0;
-    end
-    else
-    begin
-      if (config_init)
-      begin
-        bram_adr <= 0;
-        config_start <= 0;
-        config_validate <= 0;
-        config_coeff_done <= 0;
-      end
-      else
-      begin
-        if (config_start)
-        begin
-          bram_adr <= 0;
-          config_start <= 0;
-          config_coeff_done <= 0;
-        end
-        else
-        begin
-          if (config_validate)
-          begin
-            if (bram_adr == 12'hFFF)
-            begin
-              config_validate <= 0;
-              config_coeff_done <= 1;
-            end
-            else
-            begin
-              config_coeff_done <= 0;
-              bram_adr <= bram_adr + 1;
-            end
-          end
-          else
-          begin
-            if (bram_req)
-            begin
-              if (bram_adr == 12'hFFF)
-              begin
-                config_coeff_done <= 0;
-                config_start <= 1;
-                config_validate <= 1;
-              end
-              else
-              begin
-                config_coeff_done <= 0;
-                config_start <= 0;
-              end
-            end
-            else
-            begin
-              if (bram_wr)
-                bram_adr <= bram_adr + 1;
-  
-              config_coeff_done <= 0;
-              config_start <= 0;
-            end
-          end
-        end
-      end
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_has_coeff)
-    begin
-      if ((config_adr[1:0] == 0) && (config_adr[13] == 0))
-      begin
-        if (config_adr[12:2] == config_last_1)
-          config_last_phase <= synt_phase[29:13];
-      end
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_has_coeff)
-    begin
-      if ((config_adr[1:0] == 0) && (config_adr[13] == 0))
-      begin
-        if (config_adr[12:2] == config_delay_last_1)
-          config_delay_phase <= synt_phase[29:13];
-      end
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset)
-    begin
-      synt_start <= 0;
-      config_adr <= 0;
-      synt_phase <= 0;
-    end
-    else
-    begin
-      if (config_has_coeff)
-      begin
-        config_adr <= config_adr + 1;
-        synt_phase <= synt_phase + config_incr;
-
-        if (config_adr == 14'h3FFF)
-          synt_start <= 0;
-        else
-          synt_start <= 1;
-      end
-      else
-      begin
-        if (config_init)
-        begin
-          synt_start <= 1;
-          config_adr <= 0;
-          synt_phase <= 0;
-        end
-        else
-          synt_start <= 0;
-      end
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset)
-    begin
-      chan_req <= 0;
-      chan_done <= 0;
-    end
-    else
-    begin
-      if (bram_req)    
-      begin        
-        if (bram_adr[10:0] == config_last)
-        begin
-          chan_done <= 1;
-          chan_req <= 1;
-
-          if (config_last_en[0])
-          begin
-            chan_sin[15:0] <= coeff_sin_0;
-            chan_cos[15:0] <= coeff_cos_0;
-          end
-          else            
-          begin
-            chan_sin[15:0] <= 0;
-            chan_cos[15:0] <= 0;
-          end
-
-          if (config_last_en[1])
-          begin
-            chan_sin[31:16] <= coeff_sin_1;
-            chan_cos[31:16] <= coeff_cos_1;
-          end
-          else            
-          begin
-            chan_sin[31:16] <= 0;
-            chan_cos[31:16] <= 0;
-          end
-
-          if (config_last_en[2])
-          begin
-            chan_sin[47:32] <= coeff_sin_2;
-            chan_cos[47:32] <= coeff_cos_2;
-          end
-          else            
-          begin
-            chan_sin[47:32] <= 0;
-            chan_cos[47:32] <= 0;
-          end
-
-          if (config_last_en[3])
-          begin
-            chan_sin[63:48] <= coeff_sin_3;
-            chan_cos[63:48] <= coeff_cos_3;
-          end
-          else            
-          begin
-            chan_sin[63:48] <= 0;
-            chan_cos[63:48] <= 0;
-          end
-        end
-        else     
-        begin
-          if (chan_done)
-            chan_req <= 0;
-          else
-          begin
-            chan_req <= 1;
-            chan_sin[15:0] <= coeff_sin_0;
-            chan_cos[15:0] <= coeff_cos_0;
-            chan_sin[31:16] <= coeff_sin_1;
-            chan_cos[31:16] <= coeff_cos_1;
-            chan_sin[47:32] <= coeff_sin_2;
-            chan_cos[47:32] <= coeff_cos_2;
-            chan_sin[63:48] <= coeff_sin_3;
-            chan_cos[63:48] <= coeff_cos_3;
-          end
-        end
-      end
-      else
-      begin
-        chan_req <= 0;
-        if (init)
-          chan_done <= 0;
-      end
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset)
-    begin
-      chan_p1 <= 0;
-      chan_p2 <= 0;
-      chan_p3 <= 0;
-      chan_p4 <= 0;
-    end
-    else
-    begin
-      chan_p1 <= chan_req;
-      chan_p2 <= chan_p1;
-      chan_p3 <= chan_p2;
-      chan_p4 <= chan_p3;
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset | init)
-      chan_adr <= 0;
-    else
-      if (chan_p4)
-        chan_adr <= bram_adr[10:0];
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_init && (config_channel == 5'h00))
-    begin
-      chan0_count <= config_count[12:0];
-      chan0_last <= config_last;
-      chan0_last_en <= config_last_en;
-      init[0] <= 1;
-    end
-    else
-      init[0] <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset)
-      chan_config[0] <= 0;
-    else
-    begin
-      if (chan_config[0])
-      begin
-        if (config_coeff_done)
-          chan_config[0] <= 0;
-      end
-      else
-      if (init[0])
-        chan_config[0] <= 1;
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_start & chan_config[0])
-    begin
-      chan0_delay_count <= config_delay_last[9:0] + 1;
-
-      if (config_last_phase[0])
-        chan0_phase_incr <= config_last_phase[16:1] + 1;
-      else
-        chan0_phase_incr <= config_last_phase[16:1];
-
-      if (config_delay_phase[0])
-        chan0_delay_phase <= config_delay_phase[16:1] + 1;
-      else
-        chan0_delay_phase <= config_delay_phase[16:1];
-
-      start[0] <= 1;
-    end
-    else
-      start[0] <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (config_stop & chan_config[0])
-      stop[0] <= 1;
-    else
-      stop[0] <= 0;
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (rx_reset)
-      wr[0] <= 0;
-    else
-    begin
-      if (chan_p1 & chan_config[0])    
-        wr[0] <= 1;
-      else
-        wr[0] <= 0;
-    end
-  end
-
-  always @ ( posedge rx_clk ) 
-  begin
-    if (chan_config[0])
-    begin
-      if (config_validate)
-      begin
-        chan0_A0 <= bram_out[13:0];      
-        chan0_A1 <= bram_out[27:14];      
-        chan0_A2 <= bram_out[41:28];      
-        chan0_A3 <= bram_out[55:42];      
-        chan0_B0 <= ~bram_out[13:0];      
-        chan0_B1 <= ~bram_out[27:14];      
-        chan0_B2 <= ~bram_out[41:28];      
-        chan0_B3 <= ~bram_out[55:42];      
-      end
-      else
-      begin
-        chan0_A0 <= 0;
-        chan0_A1 <= 0;
-        chan0_A2 <= 0;
-        chan0_A3 <= 0;
-        chan0_B0 <= 0;
-        chan0_B1 <= 0;
-        chan0_B2 <= 0;
-        chan0_B3 <= 0;
-      end
-    end
-    else
-    begin
-      if (adc_en)
-      begin
-        chan0_A0 <= adc_A0;
-        chan0_A1 <= adc_A1;
-        chan0_A2 <= adc_A2;
-        chan0_A3 <= adc_A3;
-        chan0_B0 <= adc_B0;
-        chan0_B1 <= adc_B1;
-        chan0_B2 <= adc_B2;
-        chan0_B3 <= adc_B3;
-      end
-      else
-      begin
-        chan0_A0 <= 0;
-        chan0_A1 <= 0;
-        chan0_A2 <= 0;
-        chan0_A3 <= 0;
-        chan0_B0 <= 0;
-        chan0_B1 <= 0;
-        chan0_B2 <= 0;
-        chan0_B3 <= 0;
-      end
-    end
-  end
-
 
 end
 endgenerate
