@@ -42,6 +42,12 @@ module adc_ana (
   input wire [13:0]       in_B1,
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
+  
+  output reg              sample_ok,
+  output wire             base_sin_ok,
+  output wire             base_cos_ok,
+  output wire             delay_sin_ok,
+  output wire             delay_cos_ok,
 
   output reg              run,
   output reg              report,
@@ -50,6 +56,9 @@ module adc_ana (
   output reg [15:0]       phase_A,
   output reg [15:0]       phase_B
 );
+
+  reg  [55:0]             sample_sum;
+
 
   reg                     config_init;
   reg                     config_start;
@@ -89,6 +98,9 @@ module adc_ana (
   reg                     p3;
   reg                     p4;
 
+  reg                     s1;
+  reg                     s2;
+  reg                     s3;
   reg                     synt_start;
   wire                    synt_done;
   reg                     synt_prev;
@@ -251,6 +263,8 @@ ana_freq base (
   .in_B1(out_B1),         // input wire [13:0] in_B1
   .in_B2(out_B2),         // input wire [13:0] in_B2
   .in_B3(out_B3),         // input wire [13:0] in_B3
+  .sin_ok(base_sin_ok),   // output wire [0:0] in sin_sum 
+  .cos_ok(base_cos_ok),   // output wire [0:0] in cos_sum 
   .report(b_report),      // output wire report
   .amp_A(b_amp_A),        // output wire [15:0] amp_A
   .amp_B(b_amp_B),        // output wire [15:0] amp_B
@@ -278,6 +292,8 @@ ana_freq delayed (
   .in_B1(out_B1),         // input wire [13:0] in_B1
   .in_B2(out_B2),         // input wire [13:0] in_B2
   .in_B3(out_B3),         // input wire [13:0] in_B3
+  .sin_ok(delay_sin_ok),  // output wire [0:0] in sin_sum 
+  .cos_ok(delay_cos_ok),  // output wire [0:0] in cos_sum 
   .report(d_report),      // output wire report
   .amp_A(d_amp_A),        // output wire [15:0] amp_A
   .amp_B(d_amp_B),        // output wire [15:0] amp_B
@@ -285,6 +301,7 @@ ana_freq delayed (
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
 
+/*
 ila_0 ila_0_inst (
   .clk(clk),                 // input wire clk
   .probe0(conf),             // input wire [0:0]  probe3
@@ -324,14 +341,23 @@ ila_0 ila_0_inst (
   .probe34(phase_A),         // input wire [15:0]  probe3
   .probe35(phase_B)         // input wire [15:0]  probe3
 );
-
-  reg  [15:0]             coeff_sin_0;
-  reg  [15:0]             coeff_sin_1;
-  reg  [15:0]             coeff_sin_2;
-  reg  [15:0]             coeff_sin_3;
+*/
 
 generate
 begin : adc_ana_gen
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      sample_ok <= 0;
+    else
+    begin
+      if (sample_sum == 56'H89880F9767EE85)
+        sample_ok <= 1;
+      else
+        sample_ok <= 0;
+    end
+  end
 
   always @ ( posedge clk ) 
   begin
@@ -512,6 +538,15 @@ begin : adc_ana_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
+      sample_sum <= 0;
+    else
+      if (sample_wr)
+        sample_sum <= sample_sum ^ sample_in;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
     begin
       sample_adr <= 0;
       config_start <= 0;
@@ -608,7 +643,7 @@ begin : adc_ana_gen
   begin
     if (reset)
     begin
-      synt_start <= 0;
+      s1 <= 0;
       config_adr <= 0;
       synt_phase <= 0;
     end
@@ -620,21 +655,37 @@ begin : adc_ana_gen
         synt_phase <= synt_phase + incr;
 
         if (config_adr == 14'h3FFF)
-          synt_start <= 0;
+          s1 <= 0;
         else
-          synt_start <= 1;
+          s1 <= 1;
       end
       else
       begin
         if (config_init)
         begin
-          synt_start <= 1;
+          s1 <= 1;
           config_adr <= 0;
           synt_phase <= 0;
         end
         else
-          synt_start <= 0;
+          s1 <= 0;
       end
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+    begin
+      s2 <= 0;
+      s3 <= 0;
+      synt_start <= 0;
+    end
+    else
+    begin
+      s2 <= s1;
+      s3 <= s2;
+      synt_start <= s3;
     end
   end
 

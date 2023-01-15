@@ -156,6 +156,31 @@ module adc_app (
   wire [15:0]             chan0_phase_A;
   wire [15:0]             chan0_phase_B;
 
+  wire                    chan0_sample_ok;
+  wire                    chan0_base_sin_ok;
+  wire                    chan0_base_cos_ok;
+  wire                    chan0_delay_sin_ok;
+  wire                    chan0_delay_cos_ok;
+
+// channel 1
+
+  reg                     chan1_conf;   
+  reg  [13:0]             chan1_count;
+  reg  [29:0]             chan1_incr;
+
+  wire                    chan1_run;   
+  wire                    chan1_report;
+  wire [15:0]             chan1_power_A;
+  wire [15:0]             chan1_power_B;
+  wire [15:0]             chan1_phase_A;
+  wire [15:0]             chan1_phase_B;
+
+  wire                    chan1_sample_ok;
+  wire                    chan1_base_sin_ok;
+  wire                    chan1_base_cos_ok;
+  wire                    chan1_delay_sin_ok;
+  wire                    chan1_delay_cos_ok;
+
 // clock domain crossings
 
 
@@ -232,7 +257,7 @@ bram_msix bram_msix_inst (
   .doutb()           // output wire [31 : 0] doutb
 );
 
-adc_ana adc_ana_0_inst (
+adc_ana ana_0 (
     .clk (rx_clk),
     .reset (rx_reset),
 
@@ -250,12 +275,50 @@ adc_ana adc_ana_0_inst (
     .in_B2(adc_B2),
     .in_B3(adc_B3),
 
+    .sample_ok(chan0_sample_ok),
+    .base_sin_ok(chan0_base_sin_ok),
+    .base_cos_ok(chan0_base_cos_ok),
+    .delay_sin_ok(chan0_delay_sin_ok),
+    .delay_cos_ok(chan0_delay_cos_ok),
+    
     .run(chan0_run),
     .report(chan0_report),
     .amp_A(chan0_power_A),
     .amp_B(chan0_power_B),
     .phase_A(chan0_phase_A),
     .phase_B(chan0_phase_B)
+);
+
+adc_ana ana_1 (
+    .clk (rx_clk),
+    .reset (rx_reset),
+
+    .conf(chan1_conf),
+    .incr(chan1_incr),
+    .count(chan1_count),
+    .stop(0),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+
+    .sample_ok(chan1_sample_ok),
+    .base_sin_ok(chan1_base_sin_ok),
+    .base_cos_ok(chan1_base_cos_ok),
+    .delay_sin_ok(chan1_delay_sin_ok),
+    .delay_cos_ok(chan1_delay_cos_ok),
+    
+    .run(chan1_run),
+    .report(chan1_report),
+    .amp_A(chan1_power_A),
+    .amp_B(chan1_power_B),
+    .phase_A(chan1_phase_A),
+    .phase_B(chan1_phase_B)
 );
 
 ila_2 ila_2_inst (
@@ -270,7 +333,26 @@ ila_2 ila_2_inst (
   .probe7(chan0_power_A),        // input wire [15:0]
   .probe8(chan0_power_B),        // input wire [15:0]
   .probe9(chan0_phase_A),        // input wire [15:0]
-  .probe10(chan0_phase_B)        // input wire [15:0]
+  .probe10(chan0_phase_B),        // input wire [15:0]
+  .probe11(chan0_sample_ok),      // input wire [0:0]
+  .probe12(chan0_base_sin_ok),    // input wire [0:0]
+  .probe13(chan0_base_cos_ok),    // input wire [0:0]
+  .probe14(chan0_delay_sin_ok),   // input wire [0:0]
+  .probe15(chan0_delay_cos_ok),   // input wire [0:0]
+  .probe16(chan1_conf),           // input wire [0:0]
+  .probe17(chan1_incr),           // input wire [29:0]
+  .probe18(chan1_count),          // input wire [13:0]
+  .probe19(chan1_run),            // input wire [0:0]
+  .probe20(chan1_report),         // input wire [0:0]
+  .probe21(chan1_power_A),        // input wire [15:0]
+  .probe22(chan1_power_B),        // input wire [15:0]
+  .probe23(chan1_phase_A),        // input wire [15:0]
+  .probe24(chan1_phase_B),        // input wire [15:0]
+  .probe25(chan1_sample_ok),      // input wire [0:0]
+  .probe26(chan1_base_sin_ok),    // input wire [0:0]
+  .probe27(chan1_base_cos_ok),    // input wire [0:0]
+  .probe28(chan1_delay_sin_ok),   // input wire [0:0]
+  .probe29(chan1_delay_cos_ok)    // input wire [0:0]
 );
 
 generate
@@ -667,6 +749,24 @@ begin : adc_app
       end
       else
         chan0_conf <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      chan1_conf <= 0;
+    else
+    begin
+      if (config_rd)
+      begin
+        chan1_incr[29:3] <= config_out[31:5];
+        chan1_incr[2:0] <= 0;
+        chan1_count <= config_out[47:32];
+        chan1_conf <= 1;
+      end
+      else
+        chan1_conf <= 0;
     end
   end
 

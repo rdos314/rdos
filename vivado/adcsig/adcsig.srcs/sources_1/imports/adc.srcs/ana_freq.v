@@ -51,6 +51,9 @@ module ana_freq (
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
 
+  output reg              sin_ok,
+  output reg              cos_ok,
+
   output reg              report,
 
   output wire [15:0]      amp_A,
@@ -59,6 +62,9 @@ module ana_freq (
   output wire [15:0]      phase_A,
   output wire [15:0]      phase_B
 );
+
+  reg [63:0]             sin_sum;
+  reg [63:0]             cos_sum;
 
   reg                    run;
   reg                    conf;
@@ -232,6 +238,32 @@ ila_0 ila_0_inst (
 
 generate
 begin : ana_freq_gen
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      sin_ok <= 0;
+    else
+    begin
+      if (sin_sum == 64'H32F951B237CE0BC1)
+        sin_ok <= 1;
+      else
+        sin_ok <= 0;
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      cos_ok <= 0;
+    else
+    begin
+      if (cos_sum == 64'HF43DFD58F4297549)
+        cos_ok <= 1;
+      else
+        cos_ok <= 0;
+    end
+  end
 
   always @ ( posedge clk ) 
   begin
@@ -472,7 +504,25 @@ begin : ana_freq_gen
     end
   end
 
-  
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      sin_sum <= 0;
+    else
+      if (wr)
+        sin_sum <= sin_sum ^ wr_sin;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      cos_sum <= 0;
+    else
+      if (wr)
+        cos_sum <= cos_sum ^ wr_cos;
+  end
+
+
 end
 
 endgenerate
