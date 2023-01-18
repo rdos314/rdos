@@ -1737,14 +1737,13 @@ get_ide_disc    Endp
 ;
 ;       PARAMETERS:         SI      IO port
 ;                           AL      IRQ
+;                           FS      Data sel
 ;
 ;           RETURNS:        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckPciBar    Proc near
-    push es
-;
     or si,si
     stc
     jz cpbDone
@@ -1769,12 +1768,11 @@ cpbFailPop:
 cpbOk:
     pop ax
 ;    
-    mov di,es:ide_pci_count
+    mov di,fs:ide_pci_count
     add di,di
-    mov es:[di].ide_io_arr,si
+    mov fs:[di].ide_io_arr,si
 ;
     push ds
-    push es
     push ax    
     mov eax,SIZE ide_data
     AllocateSmallGlobalMem
@@ -1782,15 +1780,13 @@ cpbOk:
     mov ds,ax
     InitSection ds:IdeSection
     pop ax
-    pop es
 ;       
     mov ds:IdeThread,0
     mov ds:IdeIoBase,0
     mov ds:DriveSelArr,0
     mov ds:DriveSelArr+2,0
-    mov es:[di].ide_pci_arr,ds
+    mov fs:[di].ide_pci_arr,ds
 ;
-    push es
     push bx
 ;    
     mov ah,12h
@@ -1800,14 +1796,12 @@ cpbOk:
     RequestIrqHandler
 ;
     pop bx
-    pop es
     pop ds
 ;
-    inc es:ide_pci_count
+    inc fs:ide_pci_count
     clc
 
 cpbDone:
-    pop es
     ret
 CheckPciBar Endp
 
@@ -1895,7 +1889,7 @@ cpiLoop:
     cmp ax,bp
     je cpiDone
 ;    
-    cmp es:ide_pci_count,MAX_PCI_COUNT
+    cmp fs:ide_pci_count,MAX_PCI_COUNT
     je cpiDone
 ;    
     cmp ax,1F0h
@@ -2025,7 +2019,7 @@ cpaLoop:
     cmp ax,bp
     je cpaDone
 ;    
-    cmp es:ide_pci_count,MAX_PCI_COUNT
+    cmp fs:ide_pci_count,MAX_PCI_COUNT
     je cpaDone
 ;    
     cmp ax,1F0h
@@ -2233,6 +2227,7 @@ ipDone:
 init_ide    Proc far
     push ds
     push es
+    push fs
     pusha
 ;
     mov ax,cs
@@ -2330,8 +2325,8 @@ init_ide_done:
 
 init_ide_pci:
     mov ax,SEG data
-    mov es,ax
-    mov es:ide_pci_count,0
+    mov fs,ax
+    mov fs:ide_pci_count,0
 ;
     call CheckPciIde
     mov ax,ahci_code_sel
@@ -2341,7 +2336,7 @@ init_ide_pci:
     call CheckPciSata
 
 init_ide_check_count:    
-    mov cx,es:ide_pci_count
+    mov cx,fs:ide_pci_count
     or cx,cx
     jz init_ide_exit
 ;    
@@ -2360,6 +2355,7 @@ init_ide_exit:
     EndDiscHandler
 ;
     popa
+    pop fs
     pop es
     pop ds
     retf32

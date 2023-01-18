@@ -1259,6 +1259,8 @@ siMsiXNext:
     jmp siOk
 
 siMsiMany:
+    GetPciMsi
+;
     push cx
     movzx cx,dl
     mov al,14h
