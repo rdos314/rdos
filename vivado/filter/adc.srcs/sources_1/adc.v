@@ -356,7 +356,7 @@ clk_up clk_up_inst
 ); 
 
 daq2_app daq2_app_inst (
-    .reset(up_reset),
+    .reset(rx_reset),
     .up_clk(up_clk),
     .rx_clk(rx_clk),
     .tx_clk(tx_clk),
