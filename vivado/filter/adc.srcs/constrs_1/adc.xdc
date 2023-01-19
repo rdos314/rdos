@@ -161,7 +161,7 @@ set_false_path -from [get_pins adc_app_inst/adc_app.tx_control_msg_reg/C] -to [g
 set_false_path -from [get_pins {adc_app_inst/adc_app.tx_control_index_reg[*]/C}] -to [get_pins {adc.rx_pci_control_index_reg[*]/D}]
 set_false_path -from [get_pins {adc_app_inst/adc_app.tx_control_data_reg[*]/C}] -to [get_pins {adc.rx_pci_control_data_reg[*]/D}]
 
-set_false_path -from [get_pins adc_app_inst/adc_app.up_adc_started_reg/C] -to [get_pins adc.adc_started_1_reg/D]
+set_false_path -from [get_pins adc_app_inst/adc_app.adc_started_reg/C] -to [get_pins adc.adc_started_1_reg/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_probing_reg/C] -to [get_pins adc.adc_probing_1_reg/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.adc_running_reg/C] -to [get_pins adc.adc_running_1_reg/D]
 set_false_path -from [get_pins adc.adc_delay_reg/C] -to [get_pins adc.adc_delay_1_reg/D]
