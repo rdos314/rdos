@@ -35,6 +35,8 @@ INCLUDE ..\user.inc
 INCLUDE ..\pcdev\pci.inc
 INCLUDE ..\os\core.inc
 
+CHANNEL_COUNT   = 32
+
 control_bar     STRUC
 
 cb_adc_control    DB ?          ; 0
@@ -45,10 +47,31 @@ cb_spi_dac        DD ?          ; 3
 cb_adc_irq        DB ?          ; 4
 cb_adc_test_mode  DB ?
 cb_adc_index      DW ?
-cb_adc_phase_incr DD ?          ; 5
-cb_adc_size       DW ?,?        ; 6
+cb_chan_started   DD ?          ; 5
 
 control_bar     ENDS
+
+; this should be at most 32 bytes (8 DD)
+
+signal_bar_entry     STRUC
+
+sbe_phase_incr    DD ?
+sbe_size          DW ?
+sbe_flags         DW ?
+
+sbe_send_pos      DD ?
+sbe_rec_pos       DD ?
+
+sbe_phys          DD ?,?
+
+signal_bar_entry     ENDS
+
+signal_bar     STRUC
+
+sb_signal_arr     DB 32 * CHANNEL_COUNT DUP(?)
+sb_msix_arr       DB 8 * CHANNEL_COUNT DUP(?)
+
+signal_bar     ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -237,7 +260,7 @@ InitControlBar  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           InitCoeffBar
+;       NAME:           InitSignalBar
 ;
 ;       DESCRIPTION:    Init coefficient bar
 ;
@@ -245,37 +268,49 @@ InitControlBar  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitCoeffBar      proc near
+InitSignalBar      proc near
+    push es
     pushad
 ;
     mov cl,PCI_nbr_base_address1
     ReadPciDword
     test al,1
-    jnz icbaDone
+    jnz isbaDone
 ;
     push eax
-    mov eax,100000h
+    mov eax,1000h
     AllocateBigLinear
     pop eax
 ;
-    mov bx,anio_coeff_sel
-    mov ecx,100000h
+    mov bx,anio_signal_sel
+    mov ecx,1000h
     CreateDataSelector32
+    mov es,bx
 ;
     or ax,813h
     xor ebx,ebx
-    mov ecx,100h
+    mov ecx,1
 
-icbaLoop:
+isbaLoop:
     SetPageEntry
     add eax,1000h
     add edx,1000h
-    loop icbaLoop
+    loop isbaLoop
 
-icbaDone:
+isbaDone:
+    xor edi,edi
+    mov ecx,SIZE signal_bar
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    mov bx,anio_control_sel
+    mov es,ebx
+    mov es:cb_chan_started,0
+;
     popad
+    pop es
     ret
-InitCoeffBar      Endp
+InitSignalBar      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1315,12 +1350,25 @@ setup_adc_chan  Proc far
     push ds
     push eax
     push ebx
+    push ecx
     push edx
+    push edi
 ;
     int 3
+    cmp bx,CHANNEL_COUNT
+    jb sacOk
+;
+    stc
+    jmp sacDone
+
+sacOk:
     push ecx
-    mov ecx,anio_control_sel
+    mov ecx,anio_signal_sel
     mov ds,ecx
+;
+    movzx edi,bx
+    shl edi,5
+    add edi,OFFSET sb_signal_arr
 ;
     mov edx,eax
     xor eax,eax
@@ -1336,11 +1384,7 @@ setup_adc_chan  Proc far
 sacIncrOk:
     pop ecx
 ;
-    add eax,20h
-    and al,0E0h
-    and bl,1Fh
-    or al,bl
-    mov ds:cb_adc_phase_incr,eax
+    mov ds:[edi].sbe_phase_incr,eax
 ;
     xor al,al
     mov ebx,eax
@@ -1367,9 +1411,29 @@ sacCountHighOk:
     mov ax,100
 
 sacCountLowOk:
-    mov ds:cb_adc_size,ax
+    mov ds:[edi].sbe_size,ax
 ;
+    mov eax,anio_control_sel
+    mov ds,eax
+    mov eax,1
+    mov cl,bl
+    shl eax,cl
+    lock or ds:cb_chan_started,eax
+
+sacWait:
+    test ds:cb_chan_started,eax
+    jnz sacStarted
+;
+    pause
+    jmp sacWait
+
+sacStarted:
+    clc
+
+sacDone:
+    pop edi
     pop edx
+    pop ecx
     pop ebx
     pop eax
     pop ds
@@ -1427,7 +1491,7 @@ init_pci    PROC far
     cmp ds:dev_id,0AACCh
     je ipRaw
 ;
-    call InitCoeffBar
+    call InitSignalBar
     call InitFreqClk
     call InitFreqAdc
 ;
