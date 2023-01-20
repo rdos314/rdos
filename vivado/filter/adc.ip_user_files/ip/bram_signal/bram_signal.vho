@@ -52,7 +52,7 @@
 -- The following code must appear in the VHDL architecture header.
 
 ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
-COMPONENT bram_msix
+COMPONENT bram_signal
   PORT (
     clka : IN STD_LOGIC;
     ena : IN STD_LOGIC;
@@ -74,7 +74,7 @@ END COMPONENT;
 -- body. Substitute your own instance name and net names.
 
 ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-your_instance_name : bram_msix
+your_instance_name : bram_signal
   PORT MAP (
     clka => clka,
     ena => ena,
@@ -91,7 +91,7 @@ your_instance_name : bram_msix
   );
 -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
--- You must compile the wrapper file bram_msix.vhd when simulating
--- the core, bram_msix. When compiling the wrapper file, be sure to
+-- You must compile the wrapper file bram_signal.vhd when simulating
+-- the core, bram_signal. When compiling the wrapper file, be sure to
 -- reference the VHDL simulation library.
 

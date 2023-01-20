@@ -53,7 +53,7 @@
 `timescale 1ns/1ps
 
 (* DowngradeIPIdentifiedWarnings = "yes" *)
-module bram_msix (
+module bram_signal (
   clka,
   ena,
   wea,
@@ -113,7 +113,7 @@ output wire [31 : 0] doutb;
     .C_PRIM_TYPE(1),
     .C_LOAD_INIT_FILE(0),
     .C_INIT_FILE_NAME("no_coe_file_loaded"),
-    .C_INIT_FILE("bram_msix.mem"),
+    .C_INIT_FILE("bram_signal.mem"),
     .C_USE_DEFAULT_DATA(1),
     .C_DEFAULT_DATA("0"),
     .C_HAS_RSTA(0),

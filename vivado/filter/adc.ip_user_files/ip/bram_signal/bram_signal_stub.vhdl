@@ -3,7 +3,8 @@
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
 -- Date        : Wed Jan 18 22:19:38 2023
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
--- Command     : write_vhdl -force -mode synth_stub C:/rdos/vivado/filter/adc.runs/bram_msix_synth_1/bram_msix_stub.vhdl
+-- Command     : write_vhdl -force -mode synth_stub -rename_top bram_signal -prefix
+--               bram_signal_ bram_msix_stub.vhdl
 -- Design      : bram_msix
 -- Purpose     : Stub declaration of top-level module interface
 -- Device      : xc7k325tffg900-2
@@ -11,7 +12,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity bram_msix is
+entity bram_signal is
   Port ( 
     clka : in STD_LOGIC;
     ena : in STD_LOGIC;
@@ -27,9 +28,9 @@ entity bram_msix is
     doutb : out STD_LOGIC_VECTOR ( 31 downto 0 )
   );
 
-end bram_msix;
+end bram_signal;
 
-architecture stub of bram_msix is
+architecture stub of bram_signal is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;

@@ -3,8 +3,8 @@
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
 // Date        : Wed Jan 18 22:19:38 2023
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
-// Command     : write_verilog -force -mode funcsim
-//               C:/rdos/vivado/filter/adc.runs/bram_msix_synth_1/bram_msix_sim_netlist.v
+// Command     : write_verilog -force -mode funcsim -rename_top bram_signal -prefix
+//               bram_signal_ bram_msix_sim_netlist.v
 // Design      : bram_msix
 // Purpose     : This verilog netlist is a functional simulation representation of the design and should not be modified
 //               or synthesized. This netlist cannot be used for SDF annotated simulation.
@@ -14,7 +14,7 @@
 
 (* CHECK_LICENSE_TYPE = "bram_msix,blk_mem_gen_v8_4_4,{}" *) (* downgradeipidentifiedwarnings = "yes" *) (* x_core_info = "blk_mem_gen_v8_4_4,Vivado 2019.2" *) 
 (* NotValidForBitStream *)
-module bram_msix
+module bram_signal
    (clka,
     ena,
     wea,
@@ -148,7 +148,7 @@ module bram_msix
   (* C_WRITE_WIDTH_B = "32" *) 
   (* C_XDEVICEFAMILY = "kintex7" *) 
   (* downgradeipidentifiedwarnings = "yes" *) 
-  bram_msix_blk_mem_gen_v8_4_4 U0
+  bram_signal_blk_mem_gen_v8_4_4 U0
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -214,8 +214,7 @@ module bram_msix
         .web(web));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_generic_cstr" *) 
-module bram_msix_blk_mem_gen_generic_cstr
+module bram_signal_blk_mem_gen_generic_cstr
    (douta,
     doutb,
     clka,
@@ -254,7 +253,7 @@ module bram_msix_blk_mem_gen_generic_cstr
   wire [0:0]wea;
   wire [0:0]web;
 
-  bram_msix_blk_mem_gen_prim_width \ramloop[0].ram.r 
+  bram_signal_blk_mem_gen_prim_width \ramloop[0].ram.r 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -269,8 +268,7 @@ module bram_msix_blk_mem_gen_generic_cstr
         .web(web));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_prim_width" *) 
-module bram_msix_blk_mem_gen_prim_width
+module bram_signal_blk_mem_gen_prim_width
    (douta,
     doutb,
     clka,
@@ -309,7 +307,7 @@ module bram_msix_blk_mem_gen_prim_width
   wire [0:0]wea;
   wire [0:0]web;
 
-  bram_msix_blk_mem_gen_prim_wrapper_init \prim_init.ram 
+  bram_signal_blk_mem_gen_prim_wrapper_init \prim_init.ram 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -324,8 +322,7 @@ module bram_msix_blk_mem_gen_prim_width
         .web(web));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_prim_wrapper_init" *) 
-module bram_msix_blk_mem_gen_prim_wrapper_init
+module bram_signal_blk_mem_gen_prim_wrapper_init
    (douta,
     doutb,
     clka,
@@ -590,8 +587,7 @@ module bram_msix_blk_mem_gen_prim_wrapper_init
         .WEBWE({1'b0,1'b0,1'b0,1'b0,web,web,web,web}));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_top" *) 
-module bram_msix_blk_mem_gen_top
+module bram_signal_blk_mem_gen_top
    (douta,
     doutb,
     clka,
@@ -630,7 +626,7 @@ module bram_msix_blk_mem_gen_top
   wire [0:0]wea;
   wire [0:0]web;
 
-  bram_msix_blk_mem_gen_generic_cstr \valid.cstr 
+  bram_signal_blk_mem_gen_generic_cstr \valid.cstr 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -670,8 +666,8 @@ endmodule
 (* C_WEA_WIDTH = "1" *) (* C_WEB_WIDTH = "1" *) (* C_WRITE_DEPTH_A = "1024" *) 
 (* C_WRITE_DEPTH_B = "1024" *) (* C_WRITE_MODE_A = "WRITE_FIRST" *) (* C_WRITE_MODE_B = "WRITE_FIRST" *) 
 (* C_WRITE_WIDTH_A = "32" *) (* C_WRITE_WIDTH_B = "32" *) (* C_XDEVICEFAMILY = "kintex7" *) 
-(* ORIG_REF_NAME = "blk_mem_gen_v8_4_4" *) (* downgradeipidentifiedwarnings = "yes" *) 
-module bram_msix_blk_mem_gen_v8_4_4
+(* downgradeipidentifiedwarnings = "yes" *) 
+module bram_signal_blk_mem_gen_v8_4_4
    (clka,
     rsta,
     ena,
@@ -891,7 +887,7 @@ module bram_msix_blk_mem_gen_v8_4_4
   assign sbiterr = \<const0> ;
   GND GND
        (.G(\<const0> ));
-  bram_msix_blk_mem_gen_v8_4_4_synth inst_blk_mem_gen
+  bram_signal_blk_mem_gen_v8_4_4_synth inst_blk_mem_gen
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),
@@ -906,8 +902,7 @@ module bram_msix_blk_mem_gen_v8_4_4
         .web(web));
 endmodule
 
-(* ORIG_REF_NAME = "blk_mem_gen_v8_4_4_synth" *) 
-module bram_msix_blk_mem_gen_v8_4_4_synth
+module bram_signal_blk_mem_gen_v8_4_4_synth
    (douta,
     doutb,
     clka,
@@ -946,7 +941,7 @@ module bram_msix_blk_mem_gen_v8_4_4_synth
   wire [0:0]wea;
   wire [0:0]web;
 
-  bram_msix_blk_mem_gen_top \gnbram.gnativebmg.native_blk_mem_gen 
+  bram_signal_blk_mem_gen_top \gnbram.gnativebmg.native_blk_mem_gen 
        (.addra(addra),
         .addrb(addrb),
         .clka(clka),

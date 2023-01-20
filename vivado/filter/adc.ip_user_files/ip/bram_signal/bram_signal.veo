@@ -54,7 +54,7 @@
 // (in parentheses) to your own signal names.
 
 //----------- Begin Cut here for INSTANTIATION Template ---// INST_TAG
-bram_msix your_instance_name (
+bram_signal your_instance_name (
   .clka(clka),    // input wire clka
   .ena(ena),      // input wire ena
   .wea(wea),      // input wire [0 : 0] wea
@@ -70,7 +70,7 @@ bram_msix your_instance_name (
 );
 // INST_TAG_END ------ End INSTANTIATION Template ---------
 
-// You must compile the wrapper file bram_msix.v when simulating
-// the core, bram_msix. When compiling the wrapper file, be sure to
+// You must compile the wrapper file bram_signal.v when simulating
+// the core, bram_signal. When compiling the wrapper file, be sure to
 // reference the Verilog simulation library.
 
