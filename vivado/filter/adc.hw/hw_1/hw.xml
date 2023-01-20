@@ -58,7 +58,7 @@
       <Properties Property="CORE_REFRESH_RATE_MS" value="500"/>
     </Object>
     <Object name="adc_app_inst/ila_2_inst" gui_info="">
-      <Properties Property="CONTROL.TRIGGER_CONDITION" value="AND"/>
+      <Properties Property="CONTROL.TRIGGER_CONDITION" value="OR"/>
       <Properties Property="CORE_REFRESH_RATE_MS" value="500"/>
     </Object>
     <Object name="adc_bar_inst/ila_4_inst" gui_info="">
@@ -216,6 +216,7 @@
     <Object name="adc_app_inst/chan0_conf" gui_info=""/>
     <Object name="adc_app_inst/chan0_report" gui_info=""/>
     <Object name="adc_app_inst/chan0_run" gui_info=""/>
+    <Object name="adc_app_inst/chan1_report" gui_info=""/>
     <Object name="adc_app_inst/config_rd" gui_info=""/>
     <Object name="adc_app_inst/fifo_full" gui_info=""/>
     <Object name="adc_app_inst/fifo_rd" gui_info=""/>

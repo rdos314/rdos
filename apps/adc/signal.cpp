@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     int ok;
 
     ok = RdosSetupAdcChannel(0, 44700000, 25);
+    ok = RdosSetupAdcChannel(1, 46700000, 50);
 
-    if (ok)
-        RdosClearAdcChannel(0);
+    RdosClearAdcChannel(0);
 }

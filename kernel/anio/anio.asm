@@ -1350,7 +1350,6 @@ setup_adc_chan  Proc far
     push edx
     push edi
 ;
-    int 3
     cmp bx,CHANNEL_COUNT
     jb sacOk
 ;
@@ -1435,6 +1434,7 @@ setup_adc_chan  Endp
 clear_adc_chan_name      DB 'Clear ADC Channel', 0
 
 clear_adc_chan  Proc far
+    int 3
     ret
 clear_adc_chan  Endp
 
