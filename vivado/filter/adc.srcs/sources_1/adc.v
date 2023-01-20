@@ -214,13 +214,13 @@ module adc (
   wire [3:0]           pci_bar0_wr_be;
   wire                 pci_bar0_wr;
 
-  wire [6:0]           pci_bar1_rd_address;
+  wire [7:0]           pci_bar1_rd_address;
   wire                 pci_bar1_rd;
 
   wire [31:0]          pci_bar1_rp_data;
   wire                 pci_bar1_rp;
 
-  wire [6:0]           pci_bar1_wr_address;
+  wire [7:0]           pci_bar1_wr_address;
   wire [31:0]          pci_bar1_wr_data;
   wire [3:0]           pci_bar1_wr_be;
   wire                 pci_bar1_wr;

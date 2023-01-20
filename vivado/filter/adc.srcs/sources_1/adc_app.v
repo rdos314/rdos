@@ -85,13 +85,13 @@ module adc_app (
   output wire [15:0]      phase_A,
   output wire [15:0]      phase_B,
 
-  input wire [6:0]        bar1_rd_address,
+  input wire [7:0]        bar1_rd_address,
   input wire              bar1_rd,
 
   output reg [31:0]       bar1_rp_data,
   output reg              bar1_rp,
 
-  input wire [6:0]        bar1_wr_address,
+  input wire [7:0]        bar1_wr_address,
   input wire [31:0]       bar1_wr_data,
   input wire [3:0]        bar1_wr_be,
   input wire              bar1_wr
@@ -128,7 +128,7 @@ module adc_app (
   reg                     pci_wr;
   reg                     pci_rd_pend;
   reg                     pci_wr_pend;
-  reg  [6:0]              pci_adr;
+  reg  [7:0]              pci_adr;
   reg  [31:0]             pci_in;
   wire [31:0]             pci_out;
   reg  [3:0]              pci_be;
@@ -147,9 +147,9 @@ module adc_app (
 
   reg                     rx_en;
   reg                     rx_wr;
-  reg  [6:0]              rx_adr;
+  reg  [7:0]              rx_adr;
   reg  [31:0]             rx_in;
-  reg  [31:0]             rx_out;
+  wire [31:0]             rx_out;
 
 // channel 0
 
@@ -231,13 +231,13 @@ bram_signal bram_signal_inst (
   .clka(pci_clk),    // input wire clka
   .ena(pci_en),      // input wire ena
   .wea(pci_wr),      // input wire [0 : 0] wea
-  .addra(pci_adr),   // input wire [6 : 0] addra
+  .addra(pci_adr),   // input wire [7 : 0] addra
   .dina(pci_in),     // input wire [31 : 0] dina
   .douta(pci_out),   // output wire [31 : 0] douta
   .clkb(rx_clk),     // input wire clkb
   .enb(rx_en),       // input wire enb
   .web(rx_wr),       // input wire [0 : 0] web
-  .addrb(rx_adr),    // input wire [6 : 0] addrb
+  .addrb(rx_adr),    // input wire [7 : 0] addrb
   .dinb(rx_in),      // input wire [31 : 0] dinb
   .doutb(rx_out)     // output wire [31 : 0] doutb
 );
@@ -309,7 +309,7 @@ ila_2 ila_2_inst (
   .probe1(rx_init),              // input wire [15:0]
   .probe2(rx_conf),              // input wire [15:0]
   .probe3(rx_en),                // input wire [0:0]
-  .probe4(rx_adr),               // input wire [6:0]
+  .probe4(rx_adr),               // input wire [7:0]
   .probe5(rx_out),               // input wire [31:0]
   .probe6(chan0_incr),           // input wire [29:0]
   .probe7(chan0_count),          // input wire [13:0]
@@ -702,7 +702,7 @@ begin : adc_app
     begin
       if (pci_wr)
       begin
-        if (pci_adr[2:0] == 6)
+        if ((pci_adr[2:0]) == 6 && (pci_adr[7] == 0))
         begin
           pci_ana_req <= 1;
           pci_ana_chan <= pci_adr[6:3];
@@ -766,7 +766,7 @@ begin : adc_app
   begin
     if (rx_reset)
     begin
-      rx_req < = 0;
+      rx_req <= 0;
       rx_pend <= 0;
     end
     else
@@ -813,112 +813,112 @@ begin : adc_app
           16'bxxxxxxxxxxxxxxx1 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h00;
+              rx_adr <= 8'h00;
               rx_init[0] <= 1;
             end
 
           16'bxxxxxxxxxxxxxx10 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h08;
+              rx_adr <= 8'h08;
               rx_init[1] <= 1;
             end
 
           16'bxxxxxxxxxxxxx100 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h10;
+              rx_adr <= 8'h10;
               rx_init[2] <= 1;
             end
 
           16'bxxxxxxxxxxxx1000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h18;
+              rx_adr <= 8'h18;
               rx_init[3] <= 1;
             end
 
             16'bxxxxxxxxxxx10000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h20;
+              rx_adr <= 8'h20;
               rx_init[4] <= 1;
             end
 
             16'bxxxxxxxxxx100000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h28;
+              rx_adr <= 8'h28;
               rx_init[5] <= 1;
             end
 
             16'bxxxxxxxxx1000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h30;
+              rx_adr <= 8'h30;
               rx_init[6] <= 1;
             end
 
             16'bxxxxxxxx10000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h38;
+              rx_adr <= 8'h38;
               rx_init[7] <= 1;
             end
 
             16'bxxxxxxx100000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h40;
+              rx_adr <= 8'h40;
               rx_init[8] <= 1;
             end
 
             16'bxxxxxx1000000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h48;
+              rx_adr <= 8'h48;
               rx_init[9] <= 1;
             end
 
             16'bxxxxx10000000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h50;
+              rx_adr <= 8'h50;
               rx_init[10] <= 1;
             end
 
             16'bxxxx100000000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h58;
+              rx_adr <= 8'h58;
               rx_init[11] <= 1;
             end
 
             16'bxxx1000000000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h60;
+              rx_adr <= 8'h60;
               rx_init[12] <= 1;
             end
 
             16'bxx10000000000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h68;
+              rx_adr <= 8'h68;
               rx_init[13] <= 1;
             end
 
             16'bx100000000000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h70;
+              rx_adr <= 8'h70;
               rx_init[14] <= 1;
             end
 
             16'b1000000000000000 :
             begin
               rx_en <= 1;
-              rx_adr <= 7'h78;
+              rx_adr <= 8'h78;
               rx_init[15] <= 1;
             end
           endcase
@@ -967,7 +967,7 @@ begin : adc_app
     end
   end
 
-end
+
 endgenerate
 
 endmodule

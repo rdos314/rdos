@@ -56,13 +56,13 @@ module pci_app (
   output reg [3:0]     bar0_wr_be,
   output reg           bar0_wr,
 
-  output reg [6:0]     bar1_rd_address,
+  output reg [7:0]     bar1_rd_address,
   output reg           bar1_rd,
 
   input wire [31:0]    bar1_rp_data,
   input wire           bar1_rp,
 
-  output reg [6:0]     bar1_wr_address,
+  output reg [7:0]     bar1_wr_address,
   output reg [31:0]    bar1_wr_data,
   output reg [3:0]     bar1_wr_be,
   output reg           bar1_wr
