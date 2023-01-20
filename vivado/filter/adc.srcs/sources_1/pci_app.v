@@ -629,7 +629,7 @@ generate
               8'b000_00001,
               8'b001_00001: 
               begin
-                bar1_rd_address <= rx_bar_address[8:2];
+                bar1_rd_address <= rx_bar_address[9:2];
 
                 q_bar1_rp_header[95:72] <= rx_bar_header[63:40];
                 q_bar1_rp_header[71] <= 0;
@@ -669,7 +669,7 @@ generate
               8'b010_00000,
               8'b011_00000:
               begin       
-                bar1_wr_address <= rx_bar_address[8:2];
+                bar1_wr_address <= rx_bar_address[9:2];
                 bar1_wr_data <= rx_bar_data[31:0];
                 bar1_wr_be <= rx_bar_be[3:0];
                 bar1_wr <= 1;
