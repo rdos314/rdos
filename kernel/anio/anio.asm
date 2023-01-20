@@ -301,7 +301,7 @@ isbaDone:
     xor edi,edi
     mov ecx,SIZE signal_bar
     xor al,al
-    rep stos byte ptr es:[edi]
+;    rep stos byte ptr es:[edi]
 ;
     popad
     pop es

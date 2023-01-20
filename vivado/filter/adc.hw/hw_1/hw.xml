@@ -215,7 +215,7 @@
     <Object name="adc_app_inst/block_irq" gui_info=""/>
     <Object name="adc_app_inst/chan0_conf" gui_info=""/>
     <Object name="adc_app_inst/chan0_report" gui_info=""/>
-    <Object name="adc_app_inst/chan0_run" gui_info="Trigger Setup=0"/>
+    <Object name="adc_app_inst/chan0_run" gui_info=""/>
     <Object name="adc_app_inst/config_rd" gui_info=""/>
     <Object name="adc_app_inst/fifo_full" gui_info=""/>
     <Object name="adc_app_inst/fifo_rd" gui_info=""/>
@@ -227,7 +227,7 @@
     <Object name="adc_app_inst/req_start" gui_info=""/>
     <Object name="adc_app_inst/rp" gui_info=""/>
     <Object name="adc_app_inst/rx_control_msg" gui_info=""/>
-    <Object name="adc_app_inst/rx_en" gui_info=""/>
+    <Object name="adc_app_inst/rx_en" gui_info="Trigger Setup=0"/>
     <Object name="adc_app_inst/sample_counter[4:0]" gui_info="Trigger Setup=0"/>
     <Object name="adc_app_inst/spi_done" gui_info=""/>
     <Object name="adc_app_inst/spi_read" gui_info="Trigger Setup=0"/>
@@ -8844,7 +8844,7 @@
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
-        <Option Id="COMPARE_VALUE.0" value="eq1&apos;bX"/>
+        <Option Id="COMPARE_VALUE.0" value="eq1&apos;b1"/>
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
         <Option Id="DISPLAY_RADIX" value="HEX"/>
@@ -8855,7 +8855,7 @@
         <Option Id="NAME.CUSTOM" value=""/>
         <Option Id="NAME.SELECT" value="Long"/>
         <Option Id="SOURCE" value="netlist"/>
-        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;bX"/>
+        <Option Id="TRIGGER_COMPARE_VALUE" value="eq1&apos;b1"/>
         <Option Id="WAVEFORM_STYLE" value="Digital"/>
       </probeOptions>
       <nets>
