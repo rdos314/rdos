@@ -47,7 +47,6 @@ cb_spi_dac        DD ?          ; 3
 cb_adc_irq        DB ?          ; 4
 cb_adc_test_mode  DB ?
 cb_adc_index      DW ?
-cb_chan_started   DD ?          ; 5
 
 control_bar     ENDS
 
@@ -55,9 +54,11 @@ control_bar     ENDS
 
 signal_bar_entry     STRUC
 
-sbe_phase_incr    DD ?
 sbe_size          DW ?
-sbe_flags         DW ?
+sbe_run           DB ?
+sbe_cmd           DB ?
+
+sbe_phase_incr    DD ?
 
 sbe_send_pos      DD ?
 sbe_rec_pos       DD ?
@@ -302,10 +303,6 @@ isbaDone:
     mov ecx,SIZE signal_bar
     xor al,al
     rep stos byte ptr es:[edi]
-;
-    mov bx,anio_control_sel
-    mov es,ebx
-    mov es:cb_chan_started,0
 ;
     popad
     pop es
@@ -1412,17 +1409,11 @@ sacCountHighOk:
 
 sacCountLowOk:
     mov ds:[edi].sbe_size,ax
-;
-    mov eax,anio_control_sel
-    mov ds,eax
-    mov eax,1
-    mov cl,bl
-    shl eax,cl
-    lock or ds:cb_chan_started,eax
+    mov ds:[edi].sbe_cmd,1
 
 sacWait:
-    test ds:cb_chan_started,eax
-    jnz sacStarted
+    cmp ds:[edi].sbe_run,0
+    jz sacStarted
 ;
     pause
     jmp sacWait
