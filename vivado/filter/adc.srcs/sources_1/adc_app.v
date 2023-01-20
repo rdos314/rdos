@@ -163,12 +163,6 @@ module adc_app (
   wire [15:0]             chan0_phase_A;
   wire [15:0]             chan0_phase_B;
 
-  wire                    chan0_sample_ok;
-  wire                    chan0_base_sin_ok;
-  wire                    chan0_base_cos_ok;
-  wire                    chan0_delay_sin_ok;
-  wire                    chan0_delay_cos_ok;
-
 // channel 1
 
   reg  [13:0]             chan1_count;
@@ -180,12 +174,6 @@ module adc_app (
   wire [15:0]             chan1_power_B;
   wire [15:0]             chan1_phase_A;
   wire [15:0]             chan1_phase_B;
-
-  wire                    chan1_sample_ok;
-  wire                    chan1_base_sin_ok;
-  wire                    chan1_base_cos_ok;
-  wire                    chan1_delay_sin_ok;
-  wire                    chan1_delay_cos_ok;
 
 // clock domain crossings
 
@@ -271,12 +259,6 @@ adc_ana ana_0 (
     .in_B1(adc_B1),
     .in_B2(adc_B2),
     .in_B3(adc_B3),
-
-    .sample_ok(chan0_sample_ok),
-    .base_sin_ok(chan0_base_sin_ok),
-    .base_cos_ok(chan0_base_cos_ok),
-    .delay_sin_ok(chan0_delay_sin_ok),
-    .delay_cos_ok(chan0_delay_cos_ok),
     
     .run(chan0_run),
     .report(chan0_report),
@@ -303,12 +285,6 @@ adc_ana ana_1 (
     .in_B1(adc_B1),
     .in_B2(adc_B2),
     .in_B3(adc_B3),
-
-    .sample_ok(chan1_sample_ok),
-    .base_sin_ok(chan1_base_sin_ok),
-    .base_cos_ok(chan1_base_cos_ok),
-    .delay_sin_ok(chan1_delay_sin_ok),
-    .delay_cos_ok(chan1_delay_cos_ok),
     
     .run(chan1_run),
     .report(chan1_report),
@@ -339,7 +315,7 @@ ila_2 ila_2_inst (
   .probe7(chan0_count),          // input wire [13:0]
   .probe8(chan0_run),            // input wire [0:0]
   .probe9(chan0_report),         // input wire [0:0]
-  .probe10(chan0_power_A),        // input wire [15:0]
+  .probe10(chan0_power_A),       // input wire [15:0]
   .probe11(chan0_power_B),       // input wire [15:0]
   .probe12(chan0_phase_A),       // input wire [15:0]
   .probe13(chan0_phase_B),       // input wire [15:0]
