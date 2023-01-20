@@ -203,8 +203,9 @@ module adc (
   wire [31:0]          control_base;
   wire                 control_rd;
 
-  wire                 pci_ana_wr;
-  wire [47:0]          pci_ana_data;
+  wire                 pci_ana_config_change;
+  wire [31:0]          pci_ana_config_req;
+  wire [31:0]          pci_ana_config_ack;
 
   wire [9:0]           pci_bar0_rd_address;
   wire                 pci_bar0_rd;
@@ -512,8 +513,9 @@ control_bar control_bar_inst (
     .rx_control_index(rx_pci_control_index),
     .rx_control_data(rx_pci_control_data),
 
-    .ana_config(pci_ana_wr),
-    .ana_data(pci_ana_data)
+    .ana_config_change(pci_ana_config_change),
+    .ana_config_req(pci_ana_config_req),
+    .ana_config_ack(pci_ana_config_ack)
 );
 
 adc_app adc_app_inst (
@@ -574,8 +576,9 @@ adc_app adc_app_inst (
     .phase_A(phase_A),
     .phase_B(phase_B),
 
-    .config_wr(pci_ana_wr),
-    .config_data(pci_ana_data),
+    .config_change(pci_ana_config_change),
+    .config_req(pci_ana_config_req),
+    .config_ack(pci_ana_config_ack),
 
     .bar1_rd_address(pci_bar1_rd_address),
     .bar1_rd(pci_bar1_rd),

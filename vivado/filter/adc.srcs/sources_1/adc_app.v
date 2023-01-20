@@ -85,8 +85,9 @@ module adc_app (
   output wire [15:0]      phase_A,
   output wire [15:0]      phase_B,
 
-  input wire              config_wr,
-  input wire [47:0]       config_data,
+  input wire              config_change,
+  input wire [31:0]       config_req,
+  output reg [31:0]       config_ack,
 
   input wire [17:0]       bar1_rd_address,
   input wire              bar1_rd,
