@@ -54,16 +54,15 @@ control_bar     ENDS
 
 signal_bar_entry     STRUC
 
-sbe_size          DW ?
-sbe_run           DB ?
-sbe_cmd           DB ?
-
+sbe_size          DD ?
 sbe_phase_incr    DD ?
 
 sbe_send_pos      DD ?
 sbe_rec_pos       DD ?
 
 sbe_phys          DD ?,?
+
+sbe_run           DD ?
 
 signal_bar_entry     ENDS
 
@@ -1402,23 +1401,14 @@ sacCountOk:
     mov eax,8191
 
 sacCountHighOk:
-    cmp ax,100
+    cmp eax,100
     jae sacCountLowOk
 ;
-    mov ax,100
+    mov eax,100
 
 sacCountLowOk:
-    mov ds:[edi].sbe_size,ax
-    mov ds:[edi].sbe_cmd,1
-
-sacWait:
-    cmp ds:[edi].sbe_run,0
-    jz sacStarted
-;
-    pause
-    jmp sacWait
-
-sacStarted:
+    mov ds:[edi].sbe_size,eax
+    mov ds:[edi].sbe_run,1
     clc
 
 sacDone:

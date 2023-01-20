@@ -57,11 +57,7 @@ module control_bar (
 
   output reg              tx_control_msg,
   output reg [7:0]        tx_control_index,
-  output reg [7:0]        tx_control_data,
-
-  output reg              ana_config_change,
-  output reg [31:0]       ana_config_req,
-  input wire [31:0]       ana_config_ack
+  output reg [7:0]        tx_control_data
 );
 
 // internal
@@ -121,7 +117,6 @@ generate
             2: rp_data <= bar_spi_adc;
             3: rp_data <= bar_spi_dac;
             4: rp_data <= {adc_phys_index, adc_test_mode, adc_irq_state};
-            5: rp_data <= ana_config_ack;
             default: rp_data <= 32'hffffffff;
           endcase     
 
@@ -150,7 +145,6 @@ generate
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
-                ana_config <= 0;
               end
             
               1:
@@ -193,7 +187,6 @@ generate
 
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
-                ana_config_change <= 0;
               end
 
               2:
@@ -236,7 +229,6 @@ generate
 
                 spi_clk_valid <= 0;
                 spi_dac_valid <= 0;
-                ana_config_change <= 0;
               end
 
               3:
@@ -279,7 +271,6 @@ generate
 
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
-                ana_config_change <= 0;
               end
 
               4:
@@ -294,38 +285,7 @@ generate
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
-                ana_config_change <= 0;
               end
-
-
-              5:
-              begin
-                if (wr_be[0])
-                  ana_config_req[7:0] <= wr_data[7:0];
-                else
-                  ana_config_req[7:0] <= ana_config_ack[7:0];
- 
-                if (wr_be[1])
-                  ana_config_req[15:8] <= wr_data[15:8];
-                else
-                  ana_config_req[15:8] <= ana_config_ack[15:8];
- 
-                if (wr_be[2])
-                  ana_config_req[23:16] <= wr_data[23:16];
-                else
-                  ana_config_req[23:16] <= ana_config_ack[23:16];
-
-                if (wr_be[3])
-                  ana_config_req[31:24] <= wr_data[31:24];
-                else
-                  ana_config_req[31:24] <= ana_config_ack[31:24];
-
-                spi_clk_valid <= 0;
-                spi_adc_valid <= 0;
-                spi_dac_valid <= 0;
-                ana_config_change <= 1;
-              end
-
             endcase
           end
           else
@@ -339,7 +299,6 @@ generate
             spi_clk_valid <= 0;
             spi_adc_valid <= 0;
             spi_dac_valid <= 0;
-            ana_config_change <= 0;
 
             if (spi_rp)
             begin

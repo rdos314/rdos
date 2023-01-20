@@ -85,17 +85,13 @@ module adc_app (
   output wire [15:0]      phase_A,
   output wire [15:0]      phase_B,
 
-  input wire              config_change,
-  input wire [31:0]       config_req,
-  output reg [31:0]       config_ack,
-
-  input wire [17:0]       bar1_rd_address,
+  input wire [6:0]        bar1_rd_address,
   input wire              bar1_rd,
 
   output reg [31:0]       bar1_rp_data,
   output reg              bar1_rp,
 
-  input wire [17:0]       bar1_wr_address,
+  input wire [6:0]        bar1_wr_address,
   input wire [31:0]       bar1_wr_data,
   input wire [3:0]        bar1_wr_be,
   input wire              bar1_wr
@@ -132,21 +128,31 @@ module adc_app (
   reg                     pci_wr;
   reg                     pci_rd_pend;
   reg                     pci_wr_pend;
-  reg  [9:0]              pci_adr;
+  reg  [6:0]              pci_adr;
   reg  [31:0]             pci_in;
   wire [31:0]             pci_out;
   reg  [3:0]              pci_be;
 
+  reg                     pci_ana_req;
+  reg  [3:0]              pci_ana_chan;
+
+  reg  [15:0]             pci_pend;
+  reg  [1:0]              pci_count;
+
 // rx domain
 
-  reg                     config_rd;
-  wire                    config_empty;
-  wire [47:0]             config_out;
+  reg  [15:0]             rx_req;
+  reg  [15:0]             rx_init;
+  reg  [15:0]             rx_conf;
 
+  reg                     rx_en;
+  reg                     rx_wr;
+  reg  [6:0]              rx_adr;
+  reg  [31:0]             rx_in;
+  reg  [31:0]             rx_out;
 
 // channel 0
 
-  reg                     chan0_conf;   
   reg  [13:0]             chan0_count;
   reg  [29:0]             chan0_incr;
 
@@ -165,7 +171,6 @@ module adc_app (
 
 // channel 1
 
-  reg                     chan1_conf;   
   reg  [13:0]             chan1_count;
   reg  [29:0]             chan1_incr;
 
@@ -209,6 +214,9 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped;
 
+ (* ASYNC_REG="TRUE" *)  reg [15:0]           temp_pend;
+ (* ASYNC_REG="TRUE" *)  reg [15:0]           rx_pend;
+
   assign adc_rst = up_adc_rst_cnt[3];
   assign adc_user_ready = up_adc_user_ready_cnt[6];
 
@@ -231,38 +239,26 @@ fifo_signal signal_inst (
   .prog_empty()             // output wire empty
 );
 
-ana_fifo ana_fifo_inst (
-  .rst(pci_reset),             // input wire rst
-  .wr_clk(pci_clk),            // input wire wr_clk
-  .rd_clk(rx_clk),             // input wire rd_clk
-  .din(config_data),           // input wire [47 : 0] din
-  .wr_en(config_wr),           // input wire wr_en
-  .rd_en(config_rd),           // input wire rd_en
-  .dout(config_out),           // output wire [47 : 0] dout
-  .full(),                     // output wire full
-  .empty(config_empty)         // output wire empty
-);
-
-bram_msix bram_msix_inst (
+bram_signal bram_signal_inst (
   .clka(pci_clk),    // input wire clka
   .ena(pci_en),      // input wire ena
   .wea(pci_wr),      // input wire [0 : 0] wea
-  .addra(pci_adr),   // input wire [9 : 0] addra
+  .addra(pci_adr),   // input wire [6 : 0] addra
   .dina(pci_in),     // input wire [31 : 0] dina
   .douta(pci_out),   // output wire [31 : 0] douta
   .clkb(rx_clk),     // input wire clkb
-  .enb(0),           // input wire enb
-  .web(0),           // input wire [0 : 0] web
-  .addrb(0),         // input wire [9 : 0] addrb
-  .dinb(0),          // input wire [31 : 0] dinb
-  .doutb()           // output wire [31 : 0] doutb
+  .enb(rx_en),       // input wire enb
+  .web(rx_wr),       // input wire [0 : 0] web
+  .addrb(rx_adr),    // input wire [6 : 0] addrb
+  .dinb(rx_in),      // input wire [31 : 0] dinb
+  .doutb(rx_out)     // output wire [31 : 0] doutb
 );
 
 adc_ana ana_0 (
     .clk (rx_clk),
     .reset (rx_reset),
 
-    .conf(chan0_conf),
+    .conf(rx_conf[0]),
     .incr(chan0_incr),
     .count(chan0_count),
     .stop(0),
@@ -294,7 +290,7 @@ adc_ana ana_1 (
     .clk (rx_clk),
     .reset (rx_reset),
 
-    .conf(chan1_conf),
+    .conf(rx_conf[1]),
     .incr(chan1_incr),
     .count(chan1_count),
     .stop(0),
@@ -322,38 +318,39 @@ adc_ana ana_1 (
     .phase_B(chan1_phase_B)
 );
 
+
+ila_1 ila_1_inst (
+  .clk(pci_clk),                 // input wire clk
+  .probe0(pci_ana_req),          // input wire [0:0]
+  .probe1(pci_ana_chan),         // input wire [3:0]
+  .probe2(pci_pend),             // input wire [15:0]
+  .probe3(pci_count)             // input wire [1:0]
+);
+
 ila_2 ila_2_inst (
   .clk(rx_clk),                  // input wire clk
-  .probe0(config_rd),            // input wire [0:0]
-  .probe1(config_empty),         // input wire [0:0]
-  .probe2(chan0_conf),           // input wire [0:0]
-  .probe3(chan0_incr),           // input wire [29:0]
-  .probe4(chan0_count),          // input wire [13:0]
-  .probe5(chan0_run),            // input wire [0:0]
-  .probe6(chan0_report),         // input wire [0:0]
-  .probe7(chan0_power_A),        // input wire [15:0]
-  .probe8(chan0_power_B),        // input wire [15:0]
-  .probe9(chan0_phase_A),        // input wire [15:0]
-  .probe10(chan0_phase_B),        // input wire [15:0]
-  .probe11(chan0_sample_ok),      // input wire [0:0]
-  .probe12(chan0_base_sin_ok),    // input wire [0:0]
-  .probe13(chan0_base_cos_ok),    // input wire [0:0]
-  .probe14(chan0_delay_sin_ok),   // input wire [0:0]
-  .probe15(chan0_delay_cos_ok),   // input wire [0:0]
-  .probe16(chan1_conf),           // input wire [0:0]
-  .probe17(chan1_incr),           // input wire [29:0]
-  .probe18(chan1_count),          // input wire [13:0]
-  .probe19(chan1_run),            // input wire [0:0]
-  .probe20(chan1_report),         // input wire [0:0]
-  .probe21(chan1_power_A),        // input wire [15:0]
-  .probe22(chan1_power_B),        // input wire [15:0]
-  .probe23(chan1_phase_A),        // input wire [15:0]
-  .probe24(chan1_phase_B),        // input wire [15:0]
-  .probe25(chan1_sample_ok),      // input wire [0:0]
-  .probe26(chan1_base_sin_ok),    // input wire [0:0]
-  .probe27(chan1_base_cos_ok),    // input wire [0:0]
-  .probe28(chan1_delay_sin_ok),   // input wire [0:0]
-  .probe29(chan1_delay_cos_ok)    // input wire [0:0]
+  .probe0(rx_req),               // input wire [15:0]
+  .probe1(rx_init),              // input wire [15:0]
+  .probe2(rx_conf),              // input wire [15:0]
+  .probe3(rx_en),                // input wire [0:0]
+  .probe4(rx_adr),               // input wire [6:0]
+  .probe5(rx_out),               // input wire [31:0]
+  .probe6(chan0_incr),           // input wire [29:0]
+  .probe7(chan0_count),          // input wire [13:0]
+  .probe8(chan0_run),            // input wire [0:0]
+  .probe9(chan0_report),         // input wire [0:0]
+  .probe10(chan0_power_A),        // input wire [15:0]
+  .probe11(chan0_power_B),       // input wire [15:0]
+  .probe12(chan0_phase_A),       // input wire [15:0]
+  .probe13(chan0_phase_B),       // input wire [15:0]
+  .probe14(chan1_incr),          // input wire [29:0]
+  .probe15(chan1_count),         // input wire [13:0]
+  .probe16(chan1_run),           // input wire [0:0]
+  .probe17(chan1_report),        // input wire [0:0]
+  .probe18(chan1_power_A),       // input wire [15:0]
+  .probe19(chan1_power_B),       // input wire [15:0]
+  .probe20(chan1_phase_A),       // input wire [15:0]
+  .probe21(chan1_phase_B)        // input wire [15:0]
 );
 
 generate
@@ -721,53 +718,276 @@ begin : adc_app
     end
   end
 
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+      pci_ana_req <= 0;
+    else
+    begin
+      if (pci_wr)
+      begin
+        if (pci_adr[2:0] == 6)
+        begin
+          pci_ana_req <= 1;
+          pci_ana_chan <= pci_adr[6:3];
+        end
+        else
+          pci_ana_req <= 0;
+      end
+      else
+        pci_ana_req <= 0;
+    end
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+    begin
+      pci_pend <= 0;
+      pci_count <= 0;
+    end
+    else
+    begin
+      if (pci_ana_req)
+      begin
+        pci_count <= 2'b11;
+
+        case (pci_ana_chan)
+          4'h0: pci_pend[0] <= 1;
+          4'h1: pci_pend[1] <= 1;
+          4'h2: pci_pend[2] <= 1;
+          4'h3: pci_pend[3] <= 1;
+          4'h4: pci_pend[4] <= 1;
+          4'h5: pci_pend[5] <= 1;
+          4'h6: pci_pend[6] <= 1;
+          4'h7: pci_pend[7] <= 1;
+          4'h8: pci_pend[8] <= 1;
+          4'h9: pci_pend[9] <= 1;
+          4'hA: pci_pend[10] <= 1;
+          4'hB: pci_pend[11] <= 1;
+          4'hC: pci_pend[12] <= 1;
+          4'hD: pci_pend[13] <= 1;
+          4'hE: pci_pend[14] <= 1;
+          4'hF: pci_pend[15] <= 1;
+        endcase     
+      end
+      else
+      begin
+        if (pci_count)
+          pci_count <= pci_count - 1;
+        else
+          pci_pend <= 0;
+      end
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    temp_pend <= pci_pend;
+  end
 
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
-      config_rd <= 0;
+    begin
+      rx_req < = 0;
+      rx_pend <= 0;
+    end
     else
     begin
-      if (config_empty)
-        config_rd <= 0;
+      if (rx_conf)
+        rx_req <= rx_req & !rx_conf;
       else
-        config_rd <= 1;
+      begin
+        rx_pend <= temp_pend;
+        rx_req <= rx_req | (rx_pend & (rx_pend ^ temp_pend));
+      end
     end
   end
 
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
-      chan0_conf <= 0;
+    begin
+      rx_en <= 0;
+      rx_wr <= 0;
+      rx_init <= 0;
+    end
     else
     begin
-      if (config_rd)
+      if (rx_en)
       begin
-        chan0_incr[29:3] <= config_out[31:5];
-        chan0_incr[2:0] <= 0;
-        chan0_count <= config_out[47:32];
-        chan0_conf <= 1;
+        if (rx_adr[2] == 1)
+        begin
+          rx_en <= 0;
+          rx_init <= 0;
+        end
+        else
+          rx_adr <= rx_adr + 1;
       end
       else
-        chan0_conf <= 0;
+      begin
+        casex (rx_req)
+          16'b0000000000000000 : 
+            begin
+              rx_en <= 0;
+              rx_init <= 0;
+            end
+
+          16'bxxxxxxxxxxxxxxx1 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h00;
+              rx_init[0] <= 1;
+            end
+
+          16'bxxxxxxxxxxxxxx10 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h08;
+              rx_init[1] <= 1;
+            end
+
+          16'bxxxxxxxxxxxxx100 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h10;
+              rx_init[2] <= 1;
+            end
+
+          16'bxxxxxxxxxxxx1000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h18;
+              rx_init[3] <= 1;
+            end
+
+            16'bxxxxxxxxxxx10000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h20;
+              rx_init[4] <= 1;
+            end
+
+            16'bxxxxxxxxxx100000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h28;
+              rx_init[5] <= 1;
+            end
+
+            16'bxxxxxxxxx1000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h30;
+              rx_init[6] <= 1;
+            end
+
+            16'bxxxxxxxx10000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h38;
+              rx_init[7] <= 1;
+            end
+
+            16'bxxxxxxx100000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h40;
+              rx_init[8] <= 1;
+            end
+
+            16'bxxxxxx1000000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h48;
+              rx_init[9] <= 1;
+            end
+
+            16'bxxxxx10000000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h50;
+              rx_init[10] <= 1;
+            end
+
+            16'bxxxx100000000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h58;
+              rx_init[11] <= 1;
+            end
+
+            16'bxxx1000000000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h60;
+              rx_init[12] <= 1;
+            end
+
+            16'bxx10000000000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h68;
+              rx_init[13] <= 1;
+            end
+
+            16'bx100000000000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h70;
+              rx_init[14] <= 1;
+            end
+
+            16'b1000000000000000 :
+            begin
+              rx_en <= 1;
+              rx_adr <= 7'h78;
+              rx_init[15] <= 1;
+            end
+          endcase
+        end
+      end
     end
   end
 
   always @ ( posedge rx_clk ) 
   begin
     if (rx_reset)
-      chan1_conf <= 0;
+      rx_conf[0] <= 0;
     else
     begin
-      if (config_rd)
+      if (rx_init[0])
       begin
-        chan1_incr[29:3] <= config_out[31:5];
-        chan1_incr[2:0] <= 0;
-        chan1_count <= config_out[47:32];
-        chan1_conf <= 1;
+        case (rx_adr[2:0])
+          0 : chan0_count <= rx_out[15:0];
+          1 : chan0_incr <= rx_out;
+          2 : rx_conf[0] <= 1;
+          default: rx_conf[0] <= 0;
+        endcase
       end
       else
-        chan1_conf <= 0;
+        rx_conf[0] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[1] <= 0;
+    else
+    begin
+      if (rx_init[1])
+      begin
+        case (rx_adr[2:0])
+          0 : chan1_count <= rx_out[15:0];
+          1 : chan1_incr <= rx_out;
+          2 : rx_conf[1] <= 1;
+          default: rx_conf[1] <= 0;
+        endcase
+      end
+      else
+        rx_conf[1] <= 0;
     end
   end
 
