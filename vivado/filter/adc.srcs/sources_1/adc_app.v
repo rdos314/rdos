@@ -158,12 +158,6 @@ module adc_app (
 // pci domain
 
 // channel 0
-
-  wire                    chan0_report;
-  wire [15:0]             chan0_power_A;
-  wire [15:0]             chan0_power_B;
-  wire [15:0]             chan0_phase_A;
-  wire [15:0]             chan0_phase_B;
   
   reg  [47:0]             chan0_phys;
   wire [47:0]             chan0_adr;
@@ -171,12 +165,6 @@ module adc_app (
 
 // channel 1
 
-  wire                    chan1_report;
-  wire [15:0]             chan1_power_A;
-  wire [15:0]             chan1_power_B;
-  wire [15:0]             chan1_phase_A;
-  wire [15:0]             chan1_phase_B;
-  
   reg  [47:0]             chan1_phys;
   wire [47:0]             chan1_adr;
   reg  [20:0]             chan1_ack_pos;
@@ -258,13 +246,7 @@ adc_ana ana_0 (
     .init(pci_init[0]),
     .phys_adr(chan0_phys),
     .curr_adr(chan0_adr),
-    .ack_pos(chan0_ack_pos),
-    
-    .report(chan0_report),
-    .amp_A(chan0_power_A),
-    .amp_B(chan0_power_B),
-    .phase_A(chan0_phase_A),
-    .phase_B(chan0_phase_B)
+    .ack_pos(chan0_ack_pos)
 );
 
 adc_ana ana_1 (
@@ -290,13 +272,7 @@ adc_ana ana_1 (
     .init(pci_init[1]),
     .phys_adr(chan1_phys),
     .curr_adr(chan1_adr),
-    .ack_pos(chan1_ack_pos),
-    
-    .report(chan1_report),
-    .amp_A(chan1_power_A),
-    .amp_B(chan1_power_B),
-    .phase_A(chan1_phase_A),
-    .phase_B(chan1_phase_B)
+    .ack_pos(chan1_ack_pos)
 );
 
 
@@ -310,19 +286,9 @@ ila_1 ila_1_inst (
   .probe5(chan0_phys),           // input wire [47:0]
   .probe6(chan0_adr),            // input wire [47:0]
   .probe7(chan0_ack_pos),        // input wire [20:0]
-  .probe8(chan0_report),         // input wire [0:0]
-  .probe9(chan0_power_A),        // input wire [15:0]
-  .probe10(chan0_power_B),       // input wire [15:0]
-  .probe11(chan0_phase_A),       // input wire [15:0]
-  .probe12(chan0_phase_B),       // input wire [15:0]
-  .probe13(chan1_phys),          // input wire [47:0]
-  .probe14(chan1_adr),           // input wire [47:0]
-  .probe15(chan1_ack_pos),       // input wire [20:0]
-  .probe16(chan1_report),        // input wire [0:0]
-  .probe17(chan1_power_A),       // input wire [15:0]
-  .probe18(chan1_power_B),       // input wire [15:0]
-  .probe19(chan1_phase_A),       // input wire [15:0]
-  .probe20(chan1_phase_B)        // input wire [15:0]
+  .probe8(chan1_phys),          // input wire [47:0]
+  .probe9(chan1_adr),           // input wire [47:0]
+  .probe10(chan1_ack_pos)       // input wire [20:0]
  );
 
 ila_2 ila_2_inst (

@@ -48,13 +48,7 @@ module adc_ana (
   input wire              init,
   input wire [47:0]       phys_adr,
   output reg [47:0]       curr_adr,  
-  input wire [20:0]       ack_pos,
-
-  output reg              report,
-  output wire [15:0]      amp_A,
-  output wire [15:0]      amp_B,
-  output wire [15:0]      phase_A,
-  output wire [15:0]      phase_B
+  input wire [20:0]       ack_pos
 );
 
   reg                     config_init;
@@ -229,11 +223,36 @@ module adc_ana (
   wire [63:0]             fifo_out;
   wire                    fifo_empty;
   reg                     fifo_rd;
+
+  wire [15:0]             amp_A;
+  wire [15:0]             amp_B;
+  wire [15:0]             phase_A;
+  wire [15:0]             phase_B;
   
   assign amp_A = fifo_out[15:0];
   assign amp_B = fifo_out[31:16];
   assign phase_A = fifo_out[47:32];
   assign phase_B = fifo_out[63:48];
+
+  reg                     d_pend;
+  reg                     d_done;
+  reg  [3:0]              d_adr;
+  reg  [63:0]             d_0;
+  reg  [63:0]             d_1;
+  reg  [63:0]             d_2;
+  reg  [63:0]             d_3;
+  reg  [63:0]             d_4;
+  reg  [63:0]             d_5;
+  reg  [63:0]             d_6;
+  reg  [63:0]             d_7;
+  reg  [63:0]             d_8;
+  reg  [63:0]             d_9;
+  reg  [63:0]             d_10;
+  reg  [63:0]             d_11;
+  reg  [63:0]             d_12;
+  reg  [63:0]             d_13;
+  reg  [63:0]             d_14;
+  reg  [63:0]             d_15;
 
 ana_synt synt (
   .aclk(clk),                             // input wire aclk
@@ -319,16 +338,33 @@ ana_freq delayed (
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
 
-
 ila_0 ila_0_inst (
   .clk(pci_clk),             // input wire clk
   .probe0(fifo_empty),       // input wire [0:0]  probe3
   .probe1(fifo_rd),          // input wire [0:0]  probe3
-  .probe2(report),           // input wire [0:0]  probe3
-  .probe3(amp_A),            // input wire [15:0]  probe3
-  .probe4(amp_B),            // input wire [15:0]  probe3
-  .probe5(phase_A),          // input wire [15:0]  probe3
-  .probe6(phase_B)           // input wire [15:0]  probe3
+  .probe2(d_pend),           // input wire [0:0]  probe3
+  .probe3(d_done),           // input wire [0:0]  probe3
+  .probe4(d_adr),            // input wire [3:0]  probe3
+  .probe5(d_0),              // input wire [63:0]  probe3
+  .probe6(d_1),              // input wire [63:0]  probe3
+  .probe7(d_2),              // input wire [63:0]  probe3
+  .probe8(d_3),              // input wire [63:0]  probe3
+  .probe9(d_4),              // input wire [63:0]  probe3
+  .probe10(d_5),              // input wire [63:0]  probe3
+  .probe11(d_6),              // input wire [63:0]  probe3
+  .probe12(d_7),              // input wire [63:0]  probe3
+  .probe13(d_8),              // input wire [63:0]  probe3
+  .probe14(d_9),              // input wire [63:0]  probe3
+  .probe15(d_10),             // input wire [63:0]  probe3
+  .probe16(d_11),             // input wire [63:0]  probe3
+  .probe17(d_12),             // input wire [63:0]  probe3
+  .probe18(d_13),             // input wire [63:0]  probe3
+  .probe19(d_14),             // input wire [63:0]  probe3
+  .probe20(d_15),             // input wire [63:0]  probe3
+  .probe21(amp_A),            // input wire [15:0]  probe3
+  .probe22(amp_B),            // input wire [15:0]  probe3
+  .probe23(phase_A),          // input wire [15:0]  probe3
+  .probe24(phase_B)           // input wire [15:0]  probe3
 );
 
 generate
@@ -963,19 +999,63 @@ end
       fifo_rd <= 0;
     else
     begin
-      if (fifo_rd)
+      if (d_done)
         fifo_rd <= 0;
       else
-        fifo_rd <= 1;
+      begin
+        if (fifo_rd)
+          fifo_rd <= 0;
+        else
+          fifo_rd <= 1;
+      end
     end
   end
 
   always @ ( posedge pci_clk ) 
   begin
     if (fifo_rd)
-      report <= 1;
+      d_pend <= 1;
     else
-      report <= 0;
+      d_pend <= 0;
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+    begin
+      d_adr <= 0;
+      d_done <= 0;
+    end
+    else
+    begin
+      if (d_pend)
+      begin
+        if (d_adr == 15)
+          d_done <= 1;
+        else
+          d_done <= 0;
+          
+        d_adr <= d_adr + 1;
+        case (d_adr)
+          0: d_0 <= fifo_out;
+          1: d_1 <= fifo_out;
+          2: d_2 <= fifo_out;
+          3: d_3 <= fifo_out;
+          4: d_4 <= fifo_out;
+          5: d_5 <= fifo_out;
+          6: d_6 <= fifo_out;
+          7: d_7 <= fifo_out;
+          8: d_8 <= fifo_out;
+          9: d_9 <= fifo_out;
+          10: d_10 <= fifo_out;
+          11: d_11 <= fifo_out;
+          12: d_12 <= fifo_out;
+          13: d_13 <= fifo_out;
+          14: d_14 <= fifo_out;
+          15: d_15 <= fifo_out;
+        endcase
+      end
+    end
   end
 
 endgenerate
