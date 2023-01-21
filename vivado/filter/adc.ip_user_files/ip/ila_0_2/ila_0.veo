@@ -60,8 +60,8 @@ ila_0 your_instance_name (
 	.probe0(probe0), // input wire [0:0]  probe0  
 	.probe1(probe1), // input wire [0:0]  probe1 
 	.probe2(probe2), // input wire [0:0]  probe2 
-	.probe3(probe3), // input wire [0:0]  probe3 
-	.probe4(probe4), // input wire [3:0]  probe4 
+	.probe3(probe3), // input wire [3:0]  probe3 
+	.probe4(probe4), // input wire [63:0]  probe4 
 	.probe5(probe5), // input wire [63:0]  probe5 
 	.probe6(probe6), // input wire [63:0]  probe6 
 	.probe7(probe7), // input wire [63:0]  probe7 
@@ -77,11 +77,14 @@ ila_0 your_instance_name (
 	.probe17(probe17), // input wire [63:0]  probe17 
 	.probe18(probe18), // input wire [63:0]  probe18 
 	.probe19(probe19), // input wire [63:0]  probe19 
-	.probe20(probe20), // input wire [63:0]  probe20 
+	.probe20(probe20), // input wire [15:0]  probe20 
 	.probe21(probe21), // input wire [15:0]  probe21 
 	.probe22(probe22), // input wire [15:0]  probe22 
 	.probe23(probe23), // input wire [15:0]  probe23 
-	.probe24(probe24) // input wire [15:0]  probe24
+	.probe24(probe24), // input wire [0:0]  probe24 
+	.probe25(probe25), // input wire [0:0]  probe25 
+	.probe26(probe26), // input wire [3:0]  probe26 
+	.probe27(probe27) // input wire [63:0]  probe27
 );
 
 // INST_TAG_END ------ End INSTANTIATION Template ---------

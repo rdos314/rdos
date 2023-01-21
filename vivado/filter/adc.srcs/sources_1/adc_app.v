@@ -157,17 +157,43 @@ module adc_app (
 
 // pci domain
 
-// channel 0
+  reg  [3:0]              rd_adr;
+  reg  [3:0]              data_adr;
+  reg  [15:0]             rd;
+  wire [15:0]             d_req;
+  reg  [63:0]             d_in;
+  reg  [127:0]            d_0;
+  reg  [127:0]            d_1;
+  reg  [127:0]            d_2;
+  reg  [127:0]            d_3;
+  reg  [127:0]            d_4;
+  reg  [127:0]            d_5;
+  reg  [127:0]            d_6;
+  reg  [127:0]            d_7;
   
+  wire [15:0]             d_power_A;
+  wire [15:0]             d_power_B;
+  wire [15:0]             d_phase_A;
+  wire [15:0]             d_phase_B;
+  
+  assign d_power_A = d_in[15:0];
+  assign d_power_B = d_in[31:16];
+  assign d_phase_A = d_in[47:32];
+  assign d_phase_B = d_in[63:48];
+
+// channel 0
+
   reg  [47:0]             chan0_phys;
   wire [47:0]             chan0_adr;
   reg  [20:0]             chan0_ack_pos;
+  wire [63:0]             chan0_data;
 
 // channel 1
 
   reg  [47:0]             chan1_phys;
   wire [47:0]             chan1_adr;
   reg  [20:0]             chan1_ack_pos;
+  wire [63:0]             chan1_data;
 
 // clock domain crossings
 
@@ -246,7 +272,12 @@ adc_ana ana_0 (
     .init(pci_init[0]),
     .phys_adr(chan0_phys),
     .curr_adr(chan0_adr),
-    .ack_pos(chan0_ack_pos)
+    .ack_pos(chan0_ack_pos),
+    
+    .report(d_req[0]),
+    .rd(rd[0]),
+    .rd_adr(rd_adr),
+    .rp_data(chan0_data)
 );
 
 adc_ana ana_1 (
@@ -272,7 +303,12 @@ adc_ana ana_1 (
     .init(pci_init[1]),
     .phys_adr(chan1_phys),
     .curr_adr(chan1_adr),
-    .ack_pos(chan1_ack_pos)
+    .ack_pos(chan1_ack_pos),
+    
+    .report(d_req[1]),
+    .rd(rd[1]),
+    .rd_adr(rd_adr),
+    .rp_data(chan1_data)
 );
 
 
@@ -286,9 +322,17 @@ ila_1 ila_1_inst (
   .probe5(chan0_phys),           // input wire [47:0]
   .probe6(chan0_adr),            // input wire [47:0]
   .probe7(chan0_ack_pos),        // input wire [20:0]
-  .probe8(chan1_phys),          // input wire [47:0]
-  .probe9(chan1_adr),           // input wire [47:0]
-  .probe10(chan1_ack_pos)       // input wire [20:0]
+  .probe8(chan1_phys),           // input wire [47:0]
+  .probe9(chan1_adr),            // input wire [47:0]
+  .probe10(chan1_ack_pos),       // input wire [20:0]
+  .probe11(d_req),               // input wire [15:0]
+  .probe12(rd),                  // input wire [15:0]
+  .probe13(rd_adr),              // input wire [3:0]
+  .probe14(data_adr),            // input wire [3:0]
+  .probe15(d_power_A),           // input wire [15:0]
+  .probe16(d_power_B),           // input wire [15:0]
+  .probe17(d_phase_A),           // input wire [15:0]
+  .probe18(d_phase_B)            // input wire [15:0]
  );
 
 ila_2 ila_2_inst (
@@ -817,6 +861,61 @@ begin : adc_app
     end
   end
 
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+    begin
+      rd <= 0;
+      rd_adr <= 0;
+    end
+    else
+    begin
+      if (rd)
+      begin
+        rd_adr <= rd_adr + 1;
+        if (data_adr == 15)
+          rd <= 0;
+      end
+      else
+      begin
+        rd_adr <= 0;
+        casex (d_req)
+          16'b0000000000000000 : rd <= 0;
+          16'bxxxxxxxxxxxxxxx1 : rd[0] <= 1; 
+          16'bxxxxxxxxxxxxxx10 : rd[1] <= 1;
+          16'bxxxxxxxxxxxxx100 : rd[2] <= 1;
+          16'bxxxxxxxxxxxx1000 : rd[3] <= 1;
+          16'bxxxxxxxxxxx10000 : rd[4] <= 1;
+          16'bxxxxxxxxxx100000 : rd[5] <= 1;
+          16'bxxxxxxxxx1000000 : rd[6] <= 1;
+          16'bxxxxxxxx10000000 : rd[7] <= 1;
+          16'bxxxxxxx100000000 : rd[8] <= 1;
+          16'bxxxxxx1000000000 : rd[9] <= 1;
+          16'bxxxxx10000000000 : rd[10] <= 1;
+          16'bxxxx100000000000 : rd[11] <= 1;
+          16'bxxx1000000000000 : rd[12] <= 1;
+          16'bxx10000000000000 : rd[13] <= 1;
+          16'bx100000000000000 : rd[14] <= 1;
+          16'b1000000000000000 : rd[15] <= 1;
+        endcase
+      end
+    end
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    data_adr <= rd_adr;
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    case (rd)
+      16'b0000000000000001 : d_in <= chan0_data; 
+      16'b0000000000000010 : d_in <= chan1_data;
+      default : d_in <= 0;     
+    endcase
+  end
+
   always @ ( posedge rx_clk ) 
   begin
     temp_pend <= pci_pend;
@@ -1026,7 +1125,6 @@ begin : adc_app
         rx_conf[1] <= 0;
     end
   end
-
 
 endgenerate
 
