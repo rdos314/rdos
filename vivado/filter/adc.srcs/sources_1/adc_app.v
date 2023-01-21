@@ -326,10 +326,10 @@ ila_1 ila_1_inst (
   .probe3(pci_count),            // input wire [1:0]
   .probe4(pci_init),             // input wire [15:0]
   .probe5(chan0_phys),           // input wire [47:0]
-  .probe6(chan0_curr),           // input wire [47:0]
+  .probe6(chan0_adr),            // input wire [47:0]
   .probe7(chan0_ack_pos),        // input wire [20:0]
   .probe8(chan1_phys),           // input wire [47:0]
-  .probe9(chan1_curr),           // input wire [47:0]
+  .probe9(chan1_adr),            // input wire [47:0]
   .probe10(chan1_ack_pos)        // input wire [20:0]
 );
 

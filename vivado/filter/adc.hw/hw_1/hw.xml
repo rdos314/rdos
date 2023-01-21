@@ -23,7 +23,7 @@
     <Object name="xc7k325t_0" gui_info="">
       <Properties Property="FULL_PROBES.FILE" value="$_project_name_.runs/impl_1/$_project_name_.ltx"/>
       <Properties Property="PROBES.FILE" value="$_project_name_.runs/impl_1/$_project_name_.ltx"/>
-      <Properties Property="PROGRAM.HW_BITSTREAM" value="F:/Xilinx/Vivado/2019.2/data/xicom/cfgmem/bitfile/bpi_xc7k325t_pullnone.bit"/>
+      <Properties Property="PROGRAM.HW_BITSTREAM" value="$_project_name_.runs/impl_1/$_project_name_.bit"/>
       <Properties Property="PROGRAM.HW_CFGMEM_PART" value="28f00ap30t-bpi-x16"/>
       <Properties Property="SLR.COUNT" value="1"/>
     </Object>
@@ -7716,6 +7716,71 @@
         <net name="adc_app_inst/chan0_ack_pos[0]"/>
       </nets>
     </probe>
+    <probe type="ila_data" busType="bus" source="netlist" spec="ILA_DATA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe6[47:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/chan0_adr[47]"/>
+        <net name="adc_app_inst/chan0_adr[46]"/>
+        <net name="adc_app_inst/chan0_adr[45]"/>
+        <net name="adc_app_inst/chan0_adr[44]"/>
+        <net name="adc_app_inst/chan0_adr[43]"/>
+        <net name="adc_app_inst/chan0_adr[42]"/>
+        <net name="adc_app_inst/chan0_adr[41]"/>
+        <net name="adc_app_inst/chan0_adr[40]"/>
+        <net name="adc_app_inst/chan0_adr[39]"/>
+        <net name="adc_app_inst/chan0_adr[38]"/>
+        <net name="adc_app_inst/chan0_adr[37]"/>
+        <net name="adc_app_inst/chan0_adr[36]"/>
+        <net name="adc_app_inst/chan0_adr[35]"/>
+        <net name="adc_app_inst/chan0_adr[34]"/>
+        <net name="adc_app_inst/chan0_adr[33]"/>
+        <net name="adc_app_inst/chan0_adr[32]"/>
+        <net name="adc_app_inst/chan0_adr[31]"/>
+        <net name="adc_app_inst/chan0_adr[30]"/>
+        <net name="adc_app_inst/chan0_adr[29]"/>
+        <net name="adc_app_inst/chan0_adr[28]"/>
+        <net name="adc_app_inst/chan0_adr[27]"/>
+        <net name="adc_app_inst/chan0_adr[26]"/>
+        <net name="adc_app_inst/chan0_adr[25]"/>
+        <net name="adc_app_inst/chan0_adr[24]"/>
+        <net name="adc_app_inst/chan0_adr[23]"/>
+        <net name="adc_app_inst/chan0_adr[22]"/>
+        <net name="adc_app_inst/chan0_adr[21]"/>
+        <net name="adc_app_inst/chan0_adr[20]"/>
+        <net name="adc_app_inst/chan0_adr[19]"/>
+        <net name="adc_app_inst/chan0_adr[18]"/>
+        <net name="adc_app_inst/chan0_adr[17]"/>
+        <net name="adc_app_inst/chan0_adr[16]"/>
+        <net name="adc_app_inst/chan0_adr[15]"/>
+        <net name="adc_app_inst/chan0_adr[14]"/>
+        <net name="adc_app_inst/chan0_adr[13]"/>
+        <net name="adc_app_inst/chan0_adr[12]"/>
+        <net name="adc_app_inst/chan0_adr[11]"/>
+        <net name="adc_app_inst/chan0_adr[10]"/>
+        <net name="adc_app_inst/chan0_adr[9]"/>
+        <net name="adc_app_inst/chan0_adr[8]"/>
+        <net name="adc_app_inst/chan0_adr[7]"/>
+        <net name="adc_app_inst/chan0_adr[6]"/>
+        <net name="adc_app_inst/chan0_adr[5]"/>
+        <net name="adc_app_inst/chan0_adr[4]"/>
+        <net name="adc_app_inst/chan0_adr[3]"/>
+        <net name="adc_app_inst/chan0_adr[2]"/>
+        <net name="adc_app_inst/chan0_adr[1]"/>
+        <net name="adc_app_inst/chan0_adr[0]"/>
+      </nets>
+    </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="CAPTURE_COMPARE_VALUE" value="eq1&apos;bX"/>
@@ -8081,7 +8146,7 @@
         <net name="adc_app_inst/chan0_power_A[0]"/>
       </nets>
     </probe>
-    <probe type="ila_data" busType="net" source="netlist" spec="ILA_DATA_V2_RT">
+    <probe type="ila_data" busType="bus" source="netlist" spec="ILA_DATA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
@@ -8213,6 +8278,71 @@
         <net name="adc_app_inst/chan1_ack_pos[2]"/>
         <net name="adc_app_inst/chan1_ack_pos[1]"/>
         <net name="adc_app_inst/chan1_ack_pos[0]"/>
+      </nets>
+    </probe>
+    <probe type="ila_data" busType="bus" source="netlist" spec="ILA_DATA_V2_RT">
+      <probeOptions Id="DebugProbeParams">
+        <Option Id="DISPLAY_AS_ENUM" value="1"/>
+        <Option Id="DISPLAY_HINT" value=""/>
+        <Option Id="DISPLAY_RADIX" value="HEX"/>
+        <Option Id="DISPLAY_VISIBILITY" value=""/>
+        <Option Id="HW_ILA" value="hw_ila_1"/>
+        <Option Id="LINK_TO_WAVEFORM" value="1"/>
+        <Option Id="MAP" value="probe9[47:0]"/>
+        <Option Id="NAME.CUSTOM" value=""/>
+        <Option Id="NAME.SELECT" value="Long"/>
+        <Option Id="SOURCE" value="netlist"/>
+        <Option Id="WAVEFORM_STYLE" value="Digital"/>
+      </probeOptions>
+      <nets>
+        <net name="adc_app_inst/chan1_adr[47]"/>
+        <net name="adc_app_inst/chan1_adr[46]"/>
+        <net name="adc_app_inst/chan1_adr[45]"/>
+        <net name="adc_app_inst/chan1_adr[44]"/>
+        <net name="adc_app_inst/chan1_adr[43]"/>
+        <net name="adc_app_inst/chan1_adr[42]"/>
+        <net name="adc_app_inst/chan1_adr[41]"/>
+        <net name="adc_app_inst/chan1_adr[40]"/>
+        <net name="adc_app_inst/chan1_adr[39]"/>
+        <net name="adc_app_inst/chan1_adr[38]"/>
+        <net name="adc_app_inst/chan1_adr[37]"/>
+        <net name="adc_app_inst/chan1_adr[36]"/>
+        <net name="adc_app_inst/chan1_adr[35]"/>
+        <net name="adc_app_inst/chan1_adr[34]"/>
+        <net name="adc_app_inst/chan1_adr[33]"/>
+        <net name="adc_app_inst/chan1_adr[32]"/>
+        <net name="adc_app_inst/chan1_adr[31]"/>
+        <net name="adc_app_inst/chan1_adr[30]"/>
+        <net name="adc_app_inst/chan1_adr[29]"/>
+        <net name="adc_app_inst/chan1_adr[28]"/>
+        <net name="adc_app_inst/chan1_adr[27]"/>
+        <net name="adc_app_inst/chan1_adr[26]"/>
+        <net name="adc_app_inst/chan1_adr[25]"/>
+        <net name="adc_app_inst/chan1_adr[24]"/>
+        <net name="adc_app_inst/chan1_adr[23]"/>
+        <net name="adc_app_inst/chan1_adr[22]"/>
+        <net name="adc_app_inst/chan1_adr[21]"/>
+        <net name="adc_app_inst/chan1_adr[20]"/>
+        <net name="adc_app_inst/chan1_adr[19]"/>
+        <net name="adc_app_inst/chan1_adr[18]"/>
+        <net name="adc_app_inst/chan1_adr[17]"/>
+        <net name="adc_app_inst/chan1_adr[16]"/>
+        <net name="adc_app_inst/chan1_adr[15]"/>
+        <net name="adc_app_inst/chan1_adr[14]"/>
+        <net name="adc_app_inst/chan1_adr[13]"/>
+        <net name="adc_app_inst/chan1_adr[12]"/>
+        <net name="adc_app_inst/chan1_adr[11]"/>
+        <net name="adc_app_inst/chan1_adr[10]"/>
+        <net name="adc_app_inst/chan1_adr[9]"/>
+        <net name="adc_app_inst/chan1_adr[8]"/>
+        <net name="adc_app_inst/chan1_adr[7]"/>
+        <net name="adc_app_inst/chan1_adr[6]"/>
+        <net name="adc_app_inst/chan1_adr[5]"/>
+        <net name="adc_app_inst/chan1_adr[4]"/>
+        <net name="adc_app_inst/chan1_adr[3]"/>
+        <net name="adc_app_inst/chan1_adr[2]"/>
+        <net name="adc_app_inst/chan1_adr[1]"/>
+        <net name="adc_app_inst/chan1_adr[0]"/>
       </nets>
     </probe>
     <probe type="ila" busType="net" source="netlist" spec="ILA_V2_RT">
@@ -8580,7 +8710,7 @@
         <net name="adc_app_inst/chan1_power_A[0]"/>
       </nets>
     </probe>
-    <probe type="ila_data" busType="bus" source="netlist" spec="ILA_DATA_V2_RT">
+    <probe type="ila_data" busType="net" source="netlist" spec="ILA_DATA_V2_RT">
       <probeOptions Id="DebugProbeParams">
         <Option Id="DISPLAY_AS_ENUM" value="1"/>
         <Option Id="DISPLAY_HINT" value=""/>
