@@ -50,12 +50,11 @@ module adc_ana (
   output reg [47:0]       curr_adr,  
   input wire [20:0]       ack_pos,
 
-  output reg              run,
   output reg              report,
-  output reg [15:0]       amp_A,
-  output reg [15:0]       amp_B,
-  output reg [15:0]       phase_A,
-  output reg [15:0]       phase_B
+  output wire [15:0]      amp_A,
+  output wire [15:0]      amp_B,
+  output wire [15:0]      phase_A,
+  output wire [15:0]      phase_B
 );
 
   reg                     config_init;
@@ -222,6 +221,19 @@ module adc_ana (
   reg                     delay_update;
   reg  [15:0]             delay_curr_phase;
 
+  reg                     fifo_wr;
+  reg  [63:0]             fifo_in;
+
+// pci domain
+
+  wire [63:0]             fifo_out;
+  wire                    fifo_empty;
+  reg                     fifo_rd;
+  
+  assign amp_A = fifo_out[15:0];
+  assign amp_B = fifo_out[31:16];
+  assign phase_A = fifo_out[47:32];
+  assign phase_B = fifo_out[63:48];
 
 ana_synt synt (
   .aclk(clk),                             // input wire aclk
@@ -239,6 +251,18 @@ bram_sample sample (
   .addra(sample_adr),         // input wire [11 : 0] addra
   .dina(sample_in),           // input wire [55 : 0] dina
   .douta(sample_out)          // output wire [55 : 0] douta
+);
+
+fifo_signal signal_inst (
+  .rst(pci_reset),          // input wire rst
+  .wr_clk(clk),             // input wire wr_clk
+  .rd_clk(pci_clk),         // input wire rd_clk
+  .din(fifo_in),            // input wire [63 : 0] din
+  .wr_en(fifo_wr),          // input wire wr_en
+  .rd_en(fifo_rd),          // input wire rd_en
+  .dout(fifo_out),          // output wire [63 : 0] dout
+  .full(),                  // output wire full
+  .empty(fifo_empty)        // output wire empty
 );
 
 ana_freq base (
@@ -295,47 +319,17 @@ ana_freq delayed (
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
 
-/*
+
 ila_0 ila_0_inst (
-  .clk(clk),                 // input wire clk
-  .probe0(conf),             // input wire [0:0]  probe3
-  .probe1(incr),             // input wire [29:0]  probe3
-  .probe2(count),            // input wire [13:0]  probe3
-  .probe3(config_init),      // input wire [0:0]  probe3
-  .probe4(config_start),     // input wire [0:0]  probe3
-  .probe5(config_validate),  // input wire [0:0]  probe3
-  .probe6(config_count),     // input wire [12:0]  probe3
-  .probe7(config_adr),       // input wire [13:0]  probe3
-  .probe8(config_last_en),   // input wire [3:0]  probe3
-  .probe9(config_last),      // input wire [10:0]  probe3
-  .probe10(config_delay_last), // input wire [10:0]  probe3
-  .probe11(config_raw_coeff), // input wire [0:0]  probe3
-  .probe12(config_coeff_done), // input wire [0:0]  probe3
-  .probe13(config_has_coeff), // input wire [0:0]  probe3
-  .probe14(coeff_wr),        // input wire [0:0]  probe3
-  .probe15(coeff_adr),        // input wire [10:0]  probe3
-  .probe16(coeff_sin),        // input wire [63:0]  probe3
-  .probe17(coeff_cos),        // input wire [63:0]  probe3
-  .probe18(coeff_sin_0),      // input wire [15:0]  probe3
-  .probe19(coeff_sin_1),      // input wire [15:0]  probe3
-  .probe20(coeff_sin_2),      // input wire [15:0]  probe3
-  .probe21(coeff_sin_3),      // input wire [15:0]  probe3
-  .probe22(coeff_cos_0),      // input wire [15:0]  probe3
-  .probe23(coeff_cos_1),      // input wire [15:0]  probe3
-  .probe24(coeff_cos_2),      // input wire [15:0]  probe3
-  .probe25(coeff_cos_3),      // input wire [15:0]  probe3
-  .probe26(base_start),      // input wire [0:0]  probe3
-  .probe27(delay_start),     // input wire [0:0]  probe3
-  .probe28(base_curr_phase), // input wire [15:0]  probe3
-  .probe29(delay_update),    // input wire [0:0]  probe3
-  .probe30(delay_curr_phase),// input wire [15:0]  probe3
-  .probe31(report),          // input wire [0:0]  probe3
-  .probe32(amp_A),           // input wire [15:0]  probe3
-  .probe33(amp_B),           // input wire [15:0]  probe3
-  .probe34(phase_A),         // input wire [15:0]  probe3
-  .probe35(phase_B)         // input wire [15:0]  probe3
+  .clk(pci_clk),             // input wire clk
+  .probe0(fifo_empty),       // input wire [0:0]  probe3
+  .probe1(fifo_rd),          // input wire [0:0]  probe3
+  .probe2(report),           // input wire [0:0]  probe3
+  .probe3(amp_A),            // input wire [15:0]  probe3
+  .probe4(amp_B),            // input wire [15:0]  probe3
+  .probe5(phase_A),          // input wire [15:0]  probe3
+  .probe6(phase_B)           // input wire [15:0]  probe3
 );
-*/
 
 generate
 begin : adc_ana_gen
@@ -872,7 +866,7 @@ begin : adc_ana_gen
   begin
     if (reset)
     begin
-      report <= 0;
+      fifo_wr <= 0;
       base_update <= 0;
       delay_update <= 0;
     end
@@ -882,13 +876,12 @@ begin : adc_ana_gen
       begin
         base_update <= 1;
         delay_update <= 0;
-        report <= 1;
 
-        amp_A <= b_amp_A;
-        amp_B <= b_amp_B;
-
-        phase_A <= b_phase_A - base_curr_phase;
-        phase_B <= b_phase_B - base_curr_phase;
+        fifo_wr <= 1;
+        fifo_in[15:0] <= b_amp_A;        
+        fifo_in[31:16] <= b_amp_B;        
+        fifo_in[47:32] <= b_phase_A - base_curr_phase;
+        fifo_in[63:48] <= b_phase_B - base_curr_phase;
       end
       else
       begin
@@ -896,19 +889,18 @@ begin : adc_ana_gen
         begin
           base_update <= 0;
           delay_update <= 1;
-          report <= 1;
 
-          amp_A <= d_amp_A;
-          amp_B <= d_amp_B;
-        
-          phase_A <= d_phase_A - delay_curr_phase;
-          phase_B <= d_phase_B - delay_curr_phase;
+          fifo_wr <= 1;
+          fifo_in[15:0] <= d_amp_A;        
+          fifo_in[31:16] <= d_amp_B;        
+          fifo_in[47:32] <= d_phase_A - delay_curr_phase;
+          fifo_in[63:48] <= d_phase_B - delay_curr_phase;
         end
         else
         begin
+          fifo_wr <= 0;
           base_update <= 0;
           delay_update <= 0;
-          report <= 0;
         end
       end
     end
@@ -964,6 +956,27 @@ end
         curr_adr <= phys_adr;
     end
   end      
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (fifo_empty)
+      fifo_rd <= 0;
+    else
+    begin
+      if (fifo_rd)
+        fifo_rd <= 0;
+      else
+        fifo_rd <= 1;
+    end
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (fifo_rd)
+      report <= 1;
+    else
+      report <= 0;
+  end
 
 endgenerate
 

@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Fri Jan 20 20:46:36 2023
+-- Date        : Sat Jan 21 18:16:28 2023
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode synth_stub C:/rdos/vivado/filter/adc.runs/ila_2_synth_1/ila_2_stub.vhdl
 -- Design      : ila_2
@@ -22,20 +22,8 @@ entity ila_2 is
     probe5 : in STD_LOGIC_VECTOR ( 31 downto 0 );
     probe6 : in STD_LOGIC_VECTOR ( 29 downto 0 );
     probe7 : in STD_LOGIC_VECTOR ( 13 downto 0 );
-    probe8 : in STD_LOGIC_VECTOR ( 0 to 0 );
-    probe9 : in STD_LOGIC_VECTOR ( 0 to 0 );
-    probe10 : in STD_LOGIC_VECTOR ( 15 downto 0 );
-    probe11 : in STD_LOGIC_VECTOR ( 15 downto 0 );
-    probe12 : in STD_LOGIC_VECTOR ( 15 downto 0 );
-    probe13 : in STD_LOGIC_VECTOR ( 15 downto 0 );
-    probe14 : in STD_LOGIC_VECTOR ( 29 downto 0 );
-    probe15 : in STD_LOGIC_VECTOR ( 13 downto 0 );
-    probe16 : in STD_LOGIC_VECTOR ( 0 to 0 );
-    probe17 : in STD_LOGIC_VECTOR ( 0 to 0 );
-    probe18 : in STD_LOGIC_VECTOR ( 15 downto 0 );
-    probe19 : in STD_LOGIC_VECTOR ( 15 downto 0 );
-    probe20 : in STD_LOGIC_VECTOR ( 15 downto 0 );
-    probe21 : in STD_LOGIC_VECTOR ( 15 downto 0 )
+    probe8 : in STD_LOGIC_VECTOR ( 29 downto 0 );
+    probe9 : in STD_LOGIC_VECTOR ( 13 downto 0 )
   );
 
 end ila_2;
@@ -44,7 +32,7 @@ architecture stub of ila_2 is
 attribute syn_black_box : boolean;
 attribute black_box_pad_pin : string;
 attribute syn_black_box of stub : architecture is true;
-attribute black_box_pad_pin of stub : architecture is "clk,probe0[15:0],probe1[15:0],probe2[15:0],probe3[0:0],probe4[8:0],probe5[31:0],probe6[29:0],probe7[13:0],probe8[0:0],probe9[0:0],probe10[15:0],probe11[15:0],probe12[15:0],probe13[15:0],probe14[29:0],probe15[13:0],probe16[0:0],probe17[0:0],probe18[15:0],probe19[15:0],probe20[15:0],probe21[15:0]";
+attribute black_box_pad_pin of stub : architecture is "clk,probe0[15:0],probe1[15:0],probe2[15:0],probe3[0:0],probe4[8:0],probe5[31:0],probe6[29:0],probe7[13:0],probe8[29:0],probe9[13:0]";
 attribute X_CORE_INFO : string;
 attribute X_CORE_INFO of stub : architecture is "ila,Vivado 2019.2";
 begin

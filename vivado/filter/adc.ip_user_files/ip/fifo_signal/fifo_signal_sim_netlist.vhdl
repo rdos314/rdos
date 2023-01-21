@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Wed Jan 18 22:13:01 2023
+-- Date        : Sat Jan 21 15:59:31 2023
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               C:/rdos/vivado/filter/adc.runs/fifo_signal_synth_1/fifo_signal_sim_netlist.vhdl
@@ -16,7 +16,6 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity fifo_signal_builtin_prim_v6 is
   port (
-    prog_empty : out STD_LOGIC;
     empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 63 downto 0 );
@@ -35,6 +34,7 @@ architecture STRUCTURE of fifo_signal_builtin_prim_v6 is
   signal RDCOUNT : STD_LOGIC_VECTOR ( 12 downto 9 );
   signal WRCOUNT : STD_LOGIC_VECTOR ( 12 downto 9 );
   signal dbiterr_i : STD_LOGIC;
+  signal \gf36e1_inst.sngfifo36e1_n_0\ : STD_LOGIC;
   signal \gf36e1_inst.sngfifo36e1_n_1\ : STD_LOGIC;
   signal \gf36e1_inst.sngfifo36e1_n_100\ : STD_LOGIC;
   signal \gf36e1_inst.sngfifo36e1_n_101\ : STD_LOGIC;
@@ -71,7 +71,7 @@ architecture STRUCTURE of fifo_signal_builtin_prim_v6 is
 begin
 \gf36e1_inst.sngfifo36e1\: unisim.vcomponents.FIFO36E1
     generic map(
-      ALMOST_EMPTY_OFFSET => X"0010",
+      ALMOST_EMPTY_OFFSET => X"0005",
       ALMOST_FULL_OFFSET => X"0007",
       DATA_WIDTH => 72,
       DO_REG => 1,
@@ -91,7 +91,7 @@ begin
       SRVAL => X"000000000000000000"
     )
         port map (
-      ALMOSTEMPTY => prog_empty,
+      ALMOSTEMPTY => \gf36e1_inst.sngfifo36e1_n_0\,
       ALMOSTFULL => \gf36e1_inst.sngfifo36e1_n_1\,
       DBITERR => dbiterr_i,
       DI(63 downto 60) => B"0000",
@@ -479,7 +479,6 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity fifo_signal_builtin_extdepth_v6 is
   port (
-    prog_empty : out STD_LOGIC;
     empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 63 downto 0 );
@@ -549,7 +548,6 @@ begin
       dout(63 downto 0) => dout(63 downto 0),
       empty => empty,
       full => full,
-      prog_empty => prog_empty,
       rd_clk => rd_clk,
       rd_en => rd_en,
       wr_clk => wr_clk,
@@ -562,7 +560,6 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity fifo_signal_builtin_top_v6 is
   port (
-    prog_empty : out STD_LOGIC;
     empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 63 downto 0 );
@@ -586,7 +583,6 @@ begin
       dout(63 downto 0) => dout(63 downto 0),
       empty => empty,
       full => full,
-      prog_empty => prog_empty,
       rd_clk => rd_clk,
       rd_en => rd_en,
       wr_clk => wr_clk,
@@ -599,7 +595,6 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity fifo_signal_fifo_generator_v13_2_5_builtin is
   port (
-    prog_empty : out STD_LOGIC;
     empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 63 downto 0 );
@@ -631,7 +626,6 @@ begin
       dout(63 downto 0) => dout(63 downto 0),
       empty => empty,
       full => full,
-      prog_empty => prog_empty,
       rd_clk => rd_clk,
       rd_en => rd_en,
       wr_clk => wr_clk,
@@ -644,7 +638,6 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity fifo_signal_fifo_generator_top is
   port (
-    prog_empty : out STD_LOGIC;
     empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 63 downto 0 );
@@ -667,7 +660,6 @@ begin
       dout(63 downto 0) => dout(63 downto 0),
       empty => empty,
       full => full,
-      prog_empty => prog_empty,
       rd_clk => rd_clk,
       rd_en => rd_en,
       rst => rst,
@@ -681,7 +673,6 @@ library UNISIM;
 use UNISIM.VCOMPONENTS.ALL;
 entity fifo_signal_fifo_generator_v13_2_5_synth is
   port (
-    prog_empty : out STD_LOGIC;
     empty : out STD_LOGIC;
     full : out STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 63 downto 0 );
@@ -704,7 +695,6 @@ begin
       dout(63 downto 0) => dout(63 downto 0),
       empty => empty,
       full => full,
-      prog_empty => prog_empty,
       rd_clk => rd_clk,
       rd_en => rd_en,
       rst => rst,
@@ -1191,7 +1181,7 @@ entity fifo_signal_fifo_generator_v13_2_5 is
   attribute C_PRIM_FIFO_TYPE_WRCH : string;
   attribute C_PRIM_FIFO_TYPE_WRCH of fifo_signal_fifo_generator_v13_2_5 : entity is "512x36";
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of fifo_signal_fifo_generator_v13_2_5 : entity is 16;
+  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of fifo_signal_fifo_generator_v13_2_5 : entity is 5;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS of fifo_signal_fifo_generator_v13_2_5 : entity is 1022;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH : integer;
@@ -1205,9 +1195,9 @@ entity fifo_signal_fifo_generator_v13_2_5 is
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH of fifo_signal_fifo_generator_v13_2_5 : entity is 1022;
   attribute C_PROG_EMPTY_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of fifo_signal_fifo_generator_v13_2_5 : entity is 17;
+  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of fifo_signal_fifo_generator_v13_2_5 : entity is 6;
   attribute C_PROG_EMPTY_TYPE : integer;
-  attribute C_PROG_EMPTY_TYPE of fifo_signal_fifo_generator_v13_2_5 : entity is 1;
+  attribute C_PROG_EMPTY_TYPE of fifo_signal_fifo_generator_v13_2_5 : entity is 0;
   attribute C_PROG_EMPTY_TYPE_AXIS : integer;
   attribute C_PROG_EMPTY_TYPE_AXIS of fifo_signal_fifo_generator_v13_2_5 : entity is 0;
   attribute C_PROG_EMPTY_TYPE_RACH : integer;
@@ -1779,6 +1769,7 @@ begin
   m_axis_tuser(0) <= \<const0>\;
   m_axis_tvalid <= \<const0>\;
   overflow <= \<const0>\;
+  prog_empty <= \<const0>\;
   prog_full <= \<const0>\;
   rd_data_count(8) <= \<const0>\;
   rd_data_count(7) <= \<const0>\;
@@ -1897,7 +1888,6 @@ inst_fifo_gen: entity work.fifo_signal_fifo_generator_v13_2_5_synth
       dout(63 downto 0) => dout(63 downto 0),
       empty => empty,
       full => full,
-      prog_empty => prog_empty,
       rd_clk => rd_clk,
       rd_en => rd_en,
       rst => rst,
@@ -1919,8 +1909,7 @@ entity fifo_signal is
     rd_en : in STD_LOGIC;
     dout : out STD_LOGIC_VECTOR ( 63 downto 0 );
     full : out STD_LOGIC;
-    empty : out STD_LOGIC;
-    prog_empty : out STD_LOGIC
+    empty : out STD_LOGIC
   );
   attribute NotValidForBitStream : boolean;
   attribute NotValidForBitStream of fifo_signal : entity is true;
@@ -1981,6 +1970,7 @@ architecture STRUCTURE of fifo_signal is
   signal NLW_U0_m_axis_tlast_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_m_axis_tvalid_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_overflow_UNCONNECTED : STD_LOGIC;
+  signal NLW_U0_prog_empty_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_prog_full_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_rd_rst_busy_UNCONNECTED : STD_LOGIC;
   signal NLW_U0_s_axi_arready_UNCONNECTED : STD_LOGIC;
@@ -2296,7 +2286,7 @@ architecture STRUCTURE of fifo_signal is
   attribute C_PRIM_FIFO_TYPE_WRCH : string;
   attribute C_PRIM_FIFO_TYPE_WRCH of U0 : label is "512x36";
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of U0 : label is 16;
+  attribute C_PROG_EMPTY_THRESH_ASSERT_VAL of U0 : label is 5;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS of U0 : label is 1022;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH : integer;
@@ -2310,9 +2300,9 @@ architecture STRUCTURE of fifo_signal is
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH : integer;
   attribute C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH of U0 : label is 1022;
   attribute C_PROG_EMPTY_THRESH_NEGATE_VAL : integer;
-  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of U0 : label is 17;
+  attribute C_PROG_EMPTY_THRESH_NEGATE_VAL of U0 : label is 6;
   attribute C_PROG_EMPTY_TYPE : integer;
-  attribute C_PROG_EMPTY_TYPE of U0 : label is 1;
+  attribute C_PROG_EMPTY_TYPE of U0 : label is 0;
   attribute C_PROG_EMPTY_TYPE_AXIS : integer;
   attribute C_PROG_EMPTY_TYPE_AXIS of U0 : label is 0;
   attribute C_PROG_EMPTY_TYPE_RACH : integer;
@@ -2623,7 +2613,7 @@ U0: entity work.fifo_signal_fifo_generator_v13_2_5
       m_axis_tuser(3 downto 0) => NLW_U0_m_axis_tuser_UNCONNECTED(3 downto 0),
       m_axis_tvalid => NLW_U0_m_axis_tvalid_UNCONNECTED,
       overflow => NLW_U0_overflow_UNCONNECTED,
-      prog_empty => prog_empty,
+      prog_empty => NLW_U0_prog_empty_UNCONNECTED,
       prog_empty_thresh(8 downto 0) => B"000000000",
       prog_empty_thresh_assert(8 downto 0) => B"000000000",
       prog_empty_thresh_negate(8 downto 0) => B"000000000",

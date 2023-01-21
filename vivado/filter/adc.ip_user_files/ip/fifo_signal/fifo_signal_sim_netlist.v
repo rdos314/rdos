@@ -1,7 +1,7 @@
 // Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-// Date        : Wed Jan 18 22:13:01 2023
+// Date        : Sat Jan 21 15:59:31 2023
 // Host        : Leif-I7 running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               C:/rdos/vivado/filter/adc.runs/fifo_signal_synth_1/fifo_signal_sim_netlist.v
@@ -23,8 +23,7 @@ module fifo_signal
     rd_en,
     dout,
     full,
-    empty,
-    prog_empty);
+    empty);
   input rst;
   (* x_interface_info = "xilinx.com:signal:clock:1.0 write_clk CLK" *) (* x_interface_parameter = "XIL_INTERFACENAME write_clk, FREQ_HZ 250000000, PHASE 0.000, INSERT_VIP 0" *) input wr_clk;
   (* x_interface_info = "xilinx.com:signal:clock:1.0 read_clk CLK" *) (* x_interface_parameter = "XIL_INTERFACENAME read_clk, FREQ_HZ 250000000, PHASE 0.000, INSERT_VIP 0" *) input rd_clk;
@@ -34,13 +33,11 @@ module fifo_signal
   (* x_interface_info = "xilinx.com:interface:fifo_read:1.0 FIFO_READ RD_DATA" *) output [63:0]dout;
   (* x_interface_info = "xilinx.com:interface:fifo_write:1.0 FIFO_WRITE FULL" *) output full;
   (* x_interface_info = "xilinx.com:interface:fifo_read:1.0 FIFO_READ EMPTY" *) output empty;
-  output prog_empty;
 
   wire [63:0]din;
   wire [63:0]dout;
   wire empty;
   wire full;
-  wire prog_empty;
   wire rd_clk;
   wire rd_en;
   wire rst;
@@ -94,6 +91,7 @@ module fifo_signal
   wire NLW_U0_m_axis_tlast_UNCONNECTED;
   wire NLW_U0_m_axis_tvalid_UNCONNECTED;
   wire NLW_U0_overflow_UNCONNECTED;
+  wire NLW_U0_prog_empty_UNCONNECTED;
   wire NLW_U0_prog_full_UNCONNECTED;
   wire NLW_U0_rd_rst_busy_UNCONNECTED;
   wire NLW_U0_s_axi_arready_UNCONNECTED;
@@ -289,15 +287,15 @@ module fifo_signal
   (* C_PRIM_FIFO_TYPE_WACH = "512x36" *) 
   (* C_PRIM_FIFO_TYPE_WDCH = "1kx36" *) 
   (* C_PRIM_FIFO_TYPE_WRCH = "512x36" *) 
-  (* C_PROG_EMPTY_THRESH_ASSERT_VAL = "16" *) 
+  (* C_PROG_EMPTY_THRESH_ASSERT_VAL = "5" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RDCH = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WACH = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WDCH = "1022" *) 
   (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH = "1022" *) 
-  (* C_PROG_EMPTY_THRESH_NEGATE_VAL = "17" *) 
-  (* C_PROG_EMPTY_TYPE = "1" *) 
+  (* C_PROG_EMPTY_THRESH_NEGATE_VAL = "6" *) 
+  (* C_PROG_EMPTY_TYPE = "0" *) 
   (* C_PROG_EMPTY_TYPE_AXIS = "0" *) 
   (* C_PROG_EMPTY_TYPE_RACH = "0" *) 
   (* C_PROG_EMPTY_TYPE_RDCH = "0" *) 
@@ -521,7 +519,7 @@ module fifo_signal
         .m_axis_tuser(NLW_U0_m_axis_tuser_UNCONNECTED[3:0]),
         .m_axis_tvalid(NLW_U0_m_axis_tvalid_UNCONNECTED),
         .overflow(NLW_U0_overflow_UNCONNECTED),
-        .prog_empty(prog_empty),
+        .prog_empty(NLW_U0_prog_empty_UNCONNECTED),
         .prog_empty_thresh({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
         .prog_empty_thresh_assert({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
         .prog_empty_thresh_negate({1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0,1'b0}),
@@ -607,8 +605,7 @@ endmodule
 
 (* ORIG_REF_NAME = "builtin_extdepth_v6" *) 
 module fifo_signal_builtin_extdepth_v6
-   (prog_empty,
-    empty,
+   (empty,
     full,
     dout,
     rd_clk,
@@ -617,7 +614,6 @@ module fifo_signal_builtin_extdepth_v6
     wr_clk,
     wr_en,
     din);
-  output prog_empty;
   output empty;
   output full;
   output [63:0]dout;
@@ -635,7 +631,6 @@ module fifo_signal_builtin_extdepth_v6
   wire [63:0]dout;
   wire empty;
   wire full;
-  wire prog_empty;
   wire rd_clk;
   wire rd_en;
   (* async_reg = "true" *) (* msgon = "true" *) wire sbr_as_reg;
@@ -669,7 +664,6 @@ module fifo_signal_builtin_extdepth_v6
         .dout(dout),
         .empty(empty),
         .full(full),
-        .prog_empty(prog_empty),
         .rd_clk(rd_clk),
         .rd_en(rd_en),
         .wr_clk(wr_clk),
@@ -678,8 +672,7 @@ endmodule
 
 (* ORIG_REF_NAME = "builtin_prim_v6" *) 
 module fifo_signal_builtin_prim_v6
-   (prog_empty,
-    empty,
+   (empty,
     full,
     dout,
     rd_clk,
@@ -688,7 +681,6 @@ module fifo_signal_builtin_prim_v6
     wr_clk,
     wr_en,
     din);
-  output prog_empty;
   output empty;
   output full;
   output [63:0]dout;
@@ -707,6 +699,7 @@ module fifo_signal_builtin_prim_v6
   wire [63:0]dout;
   wire empty;
   wire full;
+  wire \gf36e1_inst.sngfifo36e1_n_0 ;
   wire \gf36e1_inst.sngfifo36e1_n_1 ;
   wire \gf36e1_inst.sngfifo36e1_n_100 ;
   wire \gf36e1_inst.sngfifo36e1_n_101 ;
@@ -735,7 +728,6 @@ module fifo_signal_builtin_prim_v6
   wire \gf36e1_inst.sngfifo36e1_n_98 ;
   wire \gf36e1_inst.sngfifo36e1_n_99 ;
   wire overflow_i;
-  wire prog_empty;
   wire rd_clk;
   wire rd_en;
   wire sbiterr_i;
@@ -746,7 +738,7 @@ module fifo_signal_builtin_prim_v6
 
   (* box_type = "PRIMITIVE" *) 
   FIFO36E1 #(
-    .ALMOST_EMPTY_OFFSET(13'h0010),
+    .ALMOST_EMPTY_OFFSET(13'h0005),
     .ALMOST_FULL_OFFSET(13'h0007),
     .DATA_WIDTH(72),
     .DO_REG(1),
@@ -765,7 +757,7 @@ module fifo_signal_builtin_prim_v6
     .SIM_DEVICE("7SERIES"),
     .SRVAL(72'h000000000000000000)) 
     \gf36e1_inst.sngfifo36e1 
-       (.ALMOSTEMPTY(prog_empty),
+       (.ALMOSTEMPTY(\gf36e1_inst.sngfifo36e1_n_0 ),
         .ALMOSTFULL(\gf36e1_inst.sngfifo36e1_n_1 ),
         .DBITERR(dbiterr_i),
         .DI({1'b0,1'b0,1'b0,1'b0,din[63:36],din[31:0]}),
@@ -793,8 +785,7 @@ endmodule
 
 (* ORIG_REF_NAME = "builtin_top_v6" *) 
 module fifo_signal_builtin_top_v6
-   (prog_empty,
-    empty,
+   (empty,
     full,
     dout,
     rd_clk,
@@ -803,7 +794,6 @@ module fifo_signal_builtin_top_v6
     wr_clk,
     wr_en,
     din);
-  output prog_empty;
   output empty;
   output full;
   output [63:0]dout;
@@ -819,7 +809,6 @@ module fifo_signal_builtin_top_v6
   wire [63:0]dout;
   wire empty;
   wire full;
-  wire prog_empty;
   wire rd_clk;
   wire rd_en;
   wire wr_clk;
@@ -831,7 +820,6 @@ module fifo_signal_builtin_top_v6
         .dout(dout),
         .empty(empty),
         .full(full),
-        .prog_empty(prog_empty),
         .rd_clk(rd_clk),
         .rd_en(rd_en),
         .wr_clk(wr_clk),
@@ -840,8 +828,7 @@ endmodule
 
 (* ORIG_REF_NAME = "fifo_generator_top" *) 
 module fifo_signal_fifo_generator_top
-   (prog_empty,
-    empty,
+   (empty,
     full,
     dout,
     wr_clk,
@@ -850,7 +837,6 @@ module fifo_signal_fifo_generator_top
     wr_en,
     din,
     rst);
-  output prog_empty;
   output empty;
   output full;
   output [63:0]dout;
@@ -865,7 +851,6 @@ module fifo_signal_fifo_generator_top
   wire [63:0]dout;
   wire empty;
   wire full;
-  wire prog_empty;
   wire rd_clk;
   wire rd_en;
   wire rst;
@@ -877,7 +862,6 @@ module fifo_signal_fifo_generator_top
         .dout(dout),
         .empty(empty),
         .full(full),
-        .prog_empty(prog_empty),
         .rd_clk(rd_clk),
         .rd_en(rd_en),
         .rst(rst),
@@ -925,9 +909,9 @@ endmodule
 (* C_PRELOAD_LATENCY = "1" *) (* C_PRELOAD_REGS = "0" *) (* C_PRIM_FIFO_TYPE = "512x72" *) 
 (* C_PRIM_FIFO_TYPE_AXIS = "1kx18" *) (* C_PRIM_FIFO_TYPE_RACH = "512x36" *) (* C_PRIM_FIFO_TYPE_RDCH = "1kx36" *) 
 (* C_PRIM_FIFO_TYPE_WACH = "512x36" *) (* C_PRIM_FIFO_TYPE_WDCH = "1kx36" *) (* C_PRIM_FIFO_TYPE_WRCH = "512x36" *) 
-(* C_PROG_EMPTY_THRESH_ASSERT_VAL = "16" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH = "1022" *) 
+(* C_PROG_EMPTY_THRESH_ASSERT_VAL = "5" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_AXIS = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RACH = "1022" *) 
 (* C_PROG_EMPTY_THRESH_ASSERT_VAL_RDCH = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WACH = "1022" *) (* C_PROG_EMPTY_THRESH_ASSERT_VAL_WDCH = "1022" *) 
-(* C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH = "1022" *) (* C_PROG_EMPTY_THRESH_NEGATE_VAL = "17" *) (* C_PROG_EMPTY_TYPE = "1" *) 
+(* C_PROG_EMPTY_THRESH_ASSERT_VAL_WRCH = "1022" *) (* C_PROG_EMPTY_THRESH_NEGATE_VAL = "6" *) (* C_PROG_EMPTY_TYPE = "0" *) 
 (* C_PROG_EMPTY_TYPE_AXIS = "0" *) (* C_PROG_EMPTY_TYPE_RACH = "0" *) (* C_PROG_EMPTY_TYPE_RDCH = "0" *) 
 (* C_PROG_EMPTY_TYPE_WACH = "0" *) (* C_PROG_EMPTY_TYPE_WDCH = "0" *) (* C_PROG_EMPTY_TYPE_WRCH = "0" *) 
 (* C_PROG_FULL_THRESH_ASSERT_VAL = "505" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_AXIS = "1023" *) (* C_PROG_FULL_THRESH_ASSERT_VAL_RACH = "1023" *) 
@@ -1423,7 +1407,6 @@ module fifo_signal_fifo_generator_v13_2_5
   wire [63:0]dout;
   wire empty;
   wire full;
-  wire prog_empty;
   wire rd_clk;
   wire rd_en;
   wire rst;
@@ -1847,6 +1830,7 @@ module fifo_signal_fifo_generator_v13_2_5
   assign m_axis_tuser[0] = \<const0> ;
   assign m_axis_tvalid = \<const0> ;
   assign overflow = \<const0> ;
+  assign prog_empty = \<const0> ;
   assign prog_full = \<const0> ;
   assign rd_data_count[8] = \<const0> ;
   assign rd_data_count[7] = \<const0> ;
@@ -1960,7 +1944,6 @@ module fifo_signal_fifo_generator_v13_2_5
         .dout(dout),
         .empty(empty),
         .full(full),
-        .prog_empty(prog_empty),
         .rd_clk(rd_clk),
         .rd_en(rd_en),
         .rst(rst),
@@ -1970,8 +1953,7 @@ endmodule
 
 (* ORIG_REF_NAME = "fifo_generator_v13_2_5_builtin" *) 
 module fifo_signal_fifo_generator_v13_2_5_builtin
-   (prog_empty,
-    empty,
+   (empty,
     full,
     dout,
     wr_clk,
@@ -1980,7 +1962,6 @@ module fifo_signal_fifo_generator_v13_2_5_builtin
     wr_en,
     din,
     rst);
-  output prog_empty;
   output empty;
   output full;
   output [63:0]dout;
@@ -1995,7 +1976,6 @@ module fifo_signal_fifo_generator_v13_2_5_builtin
   wire [63:0]dout;
   wire empty;
   wire full;
-  wire prog_empty;
   wire rd_clk;
   wire rd_en;
   wire rst;
@@ -2014,7 +1994,6 @@ module fifo_signal_fifo_generator_v13_2_5_builtin
         .dout(dout),
         .empty(empty),
         .full(full),
-        .prog_empty(prog_empty),
         .rd_clk(rd_clk),
         .rd_en(rd_en),
         .wr_clk(wr_clk),
@@ -2023,8 +2002,7 @@ endmodule
 
 (* ORIG_REF_NAME = "fifo_generator_v13_2_5_synth" *) 
 module fifo_signal_fifo_generator_v13_2_5_synth
-   (prog_empty,
-    empty,
+   (empty,
     full,
     dout,
     wr_clk,
@@ -2033,7 +2011,6 @@ module fifo_signal_fifo_generator_v13_2_5_synth
     wr_en,
     din,
     rst);
-  output prog_empty;
   output empty;
   output full;
   output [63:0]dout;
@@ -2048,7 +2025,6 @@ module fifo_signal_fifo_generator_v13_2_5_synth
   wire [63:0]dout;
   wire empty;
   wire full;
-  wire prog_empty;
   wire rd_clk;
   wire rd_en;
   wire rst;
@@ -2060,7 +2036,6 @@ module fifo_signal_fifo_generator_v13_2_5_synth
         .dout(dout),
         .empty(empty),
         .full(full),
-        .prog_empty(prog_empty),
         .rd_clk(rd_clk),
         .rd_en(rd_en),
         .rst(rst),

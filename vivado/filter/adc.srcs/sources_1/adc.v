@@ -165,13 +165,6 @@ module adc (
   wire [13:0]          adc_B2;
   wire [13:0]          adc_B3;
 
-  wire                 report;
-  wire [15:0]          power_A;
-  wire [15:0]          power_B;
-
-  wire [15:0]          phase_A;
-  wire [15:0]          phase_B;
-
   wire                 up_adc_started;
   wire                 up_adc_probing;
   wire                 up_adc_running;
@@ -562,12 +555,6 @@ adc_app adc_app_inst (
     .adc_B2(adc_B2),
     .adc_B3(adc_B3),
   
-    .report(report),
-    .power_A(power_A),
-    .power_B(power_B),
-    .phase_A(phase_A),
-    .phase_B(phase_B),
-
     .bar1_rd_address(pci_bar1_rd_address),
     .bar1_rd(pci_bar1_rd),
     .bar1_rp_data(pci_bar1_rp_data),
@@ -753,12 +740,6 @@ generate
       end
       else
         rx_pci_control_msg <= 0;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      temp <= power_A + power_B + phase_A + phase_B;
-      adc_led <= report + temp[0]+temp[1]+temp[2]+temp[3]+temp[4]+temp[5]+temp[6]+temp[7]+temp[8]+temp[9]+temp[10]+temp[11]+temp[12]+temp[13]+temp[14]+temp[15];
     end
 
 

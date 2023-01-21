@@ -62,8 +62,7 @@ module fifo_signal (
   rd_en,
   dout,
   full,
-  empty,
-  prog_empty
+  empty
 );
 
 input wire rst;
@@ -85,7 +84,6 @@ output wire [63 : 0] dout;
 output wire full;
 (* X_INTERFACE_INFO = "xilinx.com:interface:fifo_read:1.0 FIFO_READ EMPTY" *)
 output wire empty;
-output wire prog_empty;
 
   fifo_generator_v13_2_5 #(
     .C_COMMON_CLOCK(0),
@@ -124,9 +122,9 @@ output wire prog_empty;
     .C_PRELOAD_LATENCY(1),
     .C_PRELOAD_REGS(0),
     .C_PRIM_FIFO_TYPE("512x72"),
-    .C_PROG_EMPTY_THRESH_ASSERT_VAL(16),
-    .C_PROG_EMPTY_THRESH_NEGATE_VAL(17),
-    .C_PROG_EMPTY_TYPE(1),
+    .C_PROG_EMPTY_THRESH_ASSERT_VAL(5),
+    .C_PROG_EMPTY_THRESH_NEGATE_VAL(6),
+    .C_PROG_EMPTY_TYPE(0),
     .C_PROG_FULL_THRESH_ASSERT_VAL(505),
     .C_PROG_FULL_THRESH_NEGATE_VAL(504),
     .C_PROG_FULL_TYPE(0),
@@ -326,7 +324,7 @@ output wire prog_empty;
     .rd_data_count(),
     .wr_data_count(),
     .prog_full(),
-    .prog_empty(prog_empty),
+    .prog_empty(),
     .sbiterr(),
     .dbiterr(),
     .wr_rst_busy(),
