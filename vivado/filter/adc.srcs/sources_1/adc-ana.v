@@ -42,6 +42,13 @@ module adc_ana (
   input wire [13:0]       in_B1,
   input wire [13:0]       in_B2,
   input wire [13:0]       in_B3,
+  
+  input wire              pci_clk,
+  input wire              pci_reset,
+  input wire              init,
+  input wire [47:0]       phys_adr,
+  output reg [47:0]       curr_adr,  
+  input wire [20:0]       ack_pos,
 
   output reg              run,
   output reg              report,
@@ -946,6 +953,17 @@ begin : adc_ana_gen
   end
 
 end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+      curr_adr <= 0;
+    else
+    begin
+      if (init)
+        curr_adr <= phys_adr;
+    end
+  end      
 
 endgenerate
 

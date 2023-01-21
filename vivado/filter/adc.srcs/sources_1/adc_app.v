@@ -137,6 +137,7 @@ module adc_app (
   reg  [3:0]              pci_ana_chan;
 
   reg  [15:0]             pci_pend;
+  reg  [15:0]             pci_init;
   reg  [1:0]              pci_count;
 
 // rx domain
@@ -162,6 +163,10 @@ module adc_app (
   wire [15:0]             chan0_power_B;
   wire [15:0]             chan0_phase_A;
   wire [15:0]             chan0_phase_B;
+  
+  reg  [47:0]             chan0_phys;
+  wire [47:0]             chan0_adr;
+  reg  [20:0]             chan0_ack_pos;
 
 // channel 1
 
@@ -174,6 +179,10 @@ module adc_app (
   wire [15:0]             chan1_power_B;
   wire [15:0]             chan1_phase_A;
   wire [15:0]             chan1_phase_B;
+  
+  reg  [47:0]             chan1_phys;
+  wire [47:0]             chan1_adr;
+  reg  [20:0]             chan1_ack_pos;
 
 // clock domain crossings
 
@@ -260,6 +269,13 @@ adc_ana ana_0 (
     .in_B2(adc_B2),
     .in_B3(adc_B3),
     
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .init(pci_init[0]),
+    .phys_adr(chan0_phys),
+    .curr_adr(chan0_adr),
+    .ack_pos(chan0_ack_pos),
+    
     .run(chan0_run),
     .report(chan0_report),
     .amp_A(chan0_power_A),
@@ -285,6 +301,13 @@ adc_ana ana_1 (
     .in_B1(adc_B1),
     .in_B2(adc_B2),
     .in_B3(adc_B3),
+
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .init(pci_init[1]),
+    .phys_adr(chan1_phys),
+    .curr_adr(chan1_adr),
+    .ack_pos(chan1_ack_pos),
     
     .run(chan1_run),
     .report(chan1_report),
@@ -300,7 +323,14 @@ ila_1 ila_1_inst (
   .probe0(pci_ana_req),          // input wire [0:0]
   .probe1(pci_ana_chan),         // input wire [3:0]
   .probe2(pci_pend),             // input wire [15:0]
-  .probe3(pci_count)             // input wire [1:0]
+  .probe3(pci_count),            // input wire [1:0]
+  .probe4(pci_init),             // input wire [15:0]
+  .probe5(chan0_phys),           // input wire [47:0]
+  .probe6(chan0_curr),           // input wire [47:0]
+  .probe7(chan0_ack_pos),        // input wire [20:0]
+  .probe8(chan1_phys),           // input wire [47:0]
+  .probe9(chan1_curr),           // input wire [47:0]
+  .probe10(chan1_ack_pos)        // input wire [20:0]
 );
 
 ila_2 ila_2_inst (
@@ -610,8 +640,24 @@ begin : adc_app
   begin
     if (pci_rd)
     begin
-      bar1_rp_data <= pci_out;
       bar1_rp <= 1;
+
+      if (pci_adr[7] == 0)
+      begin
+        case (pci_adr[2:0])
+          3 : 
+            begin
+              bar1_rp_data[31:21] <= 0;
+              case (pci_adr[6:3])
+                0 : bar1_rp_data[20:0] <= chan0_adr[20:0];
+                1 : bar1_rp_data[20:0] <= chan1_adr[20:0];
+              endcase
+            end 
+          default : bar1_rp_data <= pci_out;
+        endcase
+      end
+      else
+        bar1_rp_data <= pci_out;
     end
     else
       bar1_rp <= 0;
@@ -697,21 +743,89 @@ begin : adc_app
   always @ ( posedge pci_clk ) 
   begin
     if (pci_reset)
+    begin
+      pci_init <= 0;
       pci_ana_req <= 0;
+    end
     else
     begin
       if (pci_wr)
       begin
-        if ((pci_adr[2:0]) == 6 && (pci_adr[7] == 0))
+        if (pci_adr[7] == 0)
         begin
-          pci_ana_req <= 1;
-          pci_ana_chan <= pci_adr[6:3];
+          case (pci_adr[2:0])
+            2 : 
+              begin
+                pci_init <= 0;
+                pci_ana_req <= 0;
+                case (pci_adr[6:3])
+                  0 : chan0_ack_pos <= pci_in[20:0];
+                  1 : chan1_ack_pos <= pci_in[20:0];
+                endcase
+              end
+
+            4 : 
+              begin
+                pci_init <= 0;
+                pci_ana_req <= 0;
+                case (pci_adr[6:3])
+                  0 : chan0_phys[31:0] <= pci_in;
+                  1 : chan1_phys[31:0] <= pci_in;
+                endcase
+              end
+
+            5 : 
+              begin
+                pci_init <= 0;
+                pci_ana_req <= 0;
+                case (pci_adr[6:3])
+                  0 : chan0_phys[47:32] <= pci_in[15:0];
+                  1 : chan1_phys[47:32] <= pci_in[15:0];
+                endcase
+              end
+              
+            6 :
+              begin
+                pci_ana_req <= 1;
+                pci_ana_chan <= pci_adr[6:3];
+                case (pci_adr[6:3])
+                  0: pci_init[0] <= 1;
+                  1: pci_init[1] <= 1;
+                  2: pci_init[2] <= 1;
+                  3: pci_init[3] <= 1;
+                  4: pci_init[4] <= 1;
+                  5: pci_init[5] <= 1;
+                  6: pci_init[6] <= 1;
+                  7: pci_init[7] <= 1;
+                  8: pci_init[8] <= 1;
+                  9: pci_init[9] <= 1;
+                  10: pci_init[10] <= 1;
+                  11: pci_init[11] <= 1;
+                  12: pci_init[12] <= 1;
+                  13: pci_init[13] <= 1;
+                  14: pci_init[14] <= 1;
+                  15: pci_init[15] <= 1;
+                endcase     
+              end
+              
+            default : 
+              begin
+                pci_ana_req <= 0;
+                pci_init <= 0;
+              end
+          endcase
         end
         else
+        begin
           pci_ana_req <= 0;
+          pci_init <= 0;
+        end
       end
       else
+      begin
         pci_ana_req <= 0;
+        pci_init <= 0;
+      end
     end
   end
 

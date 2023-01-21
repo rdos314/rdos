@@ -1407,6 +1407,11 @@ sacCountHighOk:
 
 sacCountLowOk:
     mov ds:[edi].sbe_size,eax
+;
+    Allocate2MPhysical64
+    mov ds:[edi].sbe_phys,eax
+    mov ds:[edi].sbe_phys+4,ebx
+;
     mov ds:[edi].sbe_run,1
     clc
 
