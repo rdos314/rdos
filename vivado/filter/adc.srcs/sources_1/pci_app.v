@@ -46,7 +46,7 @@ module pci_app (
   output reg           control_rd,
   
   input wire           adc_report,
-  output reg           adc_clear,
+  output wire          adc_clear,
   input wire [47:0]    adc_adr,
   input wire [127:0]   adc_d0,
   input wire [127:0]   adc_d1,
@@ -516,23 +516,20 @@ pci_tx pci_tx_inst (
     .bar_data( tx_bar_data),                 // I
     .bar_header( tx_bar_header),             // I
     .bar_wr (tx_bar_wr),                     // I
-    .bar_busy (tx_bar_busy)                 // O
-);
+    .bar_busy (tx_bar_busy),                 // O
 
-ila_0 ila_0_inst (
-  .clk(user_clk),               // input wire clk
-  .probe0(adc_report),              // input wire [0:0]
-  .probe1(adc_clear),               // input wire [0:0]
-  .probe2(adc_adr),                 // input wire [47:0]
-  .probe3(adc_d0),                 // input wire [127:0]
-  .probe4(adc_d1),                 // input wire [127:0]
-  .probe5(adc_d2),                 // input wire [127:0]
-  .probe6(adc_d3),                 // input wire [127:0]
-  .probe7(adc_d4),                 // input wire [127:0]
-  .probe8(adc_d5),                 // input wire [127:0]
-  .probe9(adc_d6),                 // input wire [127:0]
-  .probe10(adc_d7)                  // input wire [127:0]
- );
+    .adc_report(adc_report),
+    .adc_clear(adc_clear),
+    .adc_adr(adc_adr),
+    .adc_d0(adc_d0),
+    .adc_d1(adc_d1),
+    .adc_d2(adc_d2),
+    .adc_d3(adc_d3),
+    .adc_d4(adc_d4),
+    .adc_d5(adc_d5),
+    .adc_d6(adc_d6),
+    .adc_d7(adc_d7)
+);
  
 generate
   begin : pci_app
@@ -540,11 +537,6 @@ generate
     assign rx_bar_len = rx_bar_header[9:0];
     assign rx_bar_type = rx_bar_header[31:24];
     assign rx_bar_address = rx_bar_header[95:64];
-
-    always @ ( posedge user_clk ) 
-    begin
-      adc_clear <= adc_report;
-    end
 
     always @ ( posedge user_clk ) 
     begin

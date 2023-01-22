@@ -59,9 +59,9 @@ module pci_tx (
   input  wire               bar_wr,
   output wire               bar_busy,
 
-  input wire [63:0]         adc_address,
   input wire                adc_report,
   output reg                adc_clear,
+  input wire [47:0]         adc_adr,
   input wire [127:0]        adc_d0,
   input wire [127:0]        adc_d1,
   input wire [127:0]        adc_d2,
@@ -97,10 +97,32 @@ module pci_tx (
   reg                       bar_start;
   reg [9:0]                 bar_count;
 
-  reg [127:0]               adc_data
+  reg [127:0]               adc_data;
   wire [127:0]              adc_pkt_data;
   reg [2:0]                 adc_count;
   reg                       adc_pend;
+
+
+ila_0 ila_0_inst (
+    .clk(clk),                           // input wire clk
+    .probe0(adc_report),                // input wire [0:0]
+    .probe1(adc_clear),                 // input wire [0:0]
+    .probe2(adc_pend),                  // input wire [0:0]
+    .probe3(adc_adr),                   // input wire [47:0]
+    .probe4(s_axis_tx_tready),          // input wire [0:0]  probe0  
+    .probe5(s_axis_tx_tvalid),          // input wire [0:0]  probe0  
+    .probe6(s_axis_tx_tlast),           // input wire [0:0]  probe0  
+    .probe7(s_axis_tx_tdata[31:0]),     // input wire [31:0]  probe0  
+    .probe8(s_axis_tx_tdata[63:32]),    // input wire [31:0]  probe0  
+    .probe9(s_axis_tx_tdata[95:64]),    // input wire [31:0]  probe0  
+    .probe10(s_axis_tx_tdata[127:96]),   // input wire [31:0]  probe0  
+    .probe11(s_axis_tx_tkeep),           // input wire [15:0]  probe0  
+    .probe12(tx_buf_av),                 // input wire [5:0]  probe0  
+    .probe13(tx_cfg_req),                // input wire [0:0]  probe0  
+    .probe14(tx_err_drop),               // input wire [0:0]  probe0  
+    .probe15(fc_pd),                     // input wire [11:0]  probe0  
+    .probe16(fc_ph)                      // input wire [7:0]  probe0  
+ );
 
 generate
   begin : gen_pci_tx
@@ -204,6 +226,7 @@ generate
         bar_pend <= 0;
         bar_start <= 0;
         adc_pend <= 0;
+        adc_clear <= 0;
       end
       else
       begin
@@ -212,7 +235,8 @@ generate
           if (adc_pend)
           begin
             rd_sent <= 0;
-            bar_pend <= 0;
+
+            adc_count <= adc_count + 1;
 
             case (adc_count)
               0: adc_data <= adc_d1;
@@ -224,14 +248,15 @@ generate
               6: adc_data <= adc_d7;
             endcase
 
-            adc_count <= adc_count + 1;
             s_axis_tx_tdata <= adc_pkt_data;
+
             s_axis_tx_tkeep[15:0] <= 16'hffff;
 
             if (adc_count == 3'b111)
             begin
               s_axis_tx_tlast <= 1;
               adc_clear <= 1;
+              adc_pend <= 0;
             end
             else
             begin
@@ -241,6 +266,7 @@ generate
           end
           else
           begin
+            adc_clear <= 0;
             if (bar_pend)
             begin
               rd_sent <= 0;
@@ -316,7 +342,7 @@ generate
               end
               else
               begin
-                if (adc_report)
+                if (adc_report & !adc_clear)
                 begin
                   rd_sent <= 0;
                   adc_pend <= 1;
@@ -327,8 +353,8 @@ generate
                   s_axis_tx_tkeep[15:0] <= 16'hffff;
                   s_axis_tx_tlast <= 0;
 
-                  s_axis_tx_tdata[127:96] <= adc_address[31:0];     // address low
-                  s_axis_tx_tdata[79:64] <= adc_address[47:32];     // address high
+                  s_axis_tx_tdata[127:96] <= adc_adr[31:0];         // address low
+                  s_axis_tx_tdata[79:64] <= adc_adr[47:32];         // address high
                   s_axis_tx_tdata[95:80] <= 0;                      // address high
                   s_axis_tx_tdata[63:48] <= req_id;                 // Requester ID
                   s_axis_tx_tdata[47:40] <= 0;                      // tag
@@ -387,9 +413,10 @@ generate
         else
         begin
           rd_sent <= 0;
-          end
+          adc_clear <= 0;
         end
       end
+    end
 
 
   end
