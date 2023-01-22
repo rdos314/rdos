@@ -47,13 +47,27 @@ module adc_ana (
   input wire              pci_reset,
   input wire              init,
   input wire [47:0]       phys_adr,
-  output reg [47:0]       curr_adr,  
   input wire [20:0]       ack_pos,
   
   output reg              report,
-  input wire              rd,
-  input wire [3:0]        rd_adr,
-  output reg [63:0]       rp_data
+  input wire              clear,
+  output reg [47:0]       adr,  
+  output reg  [63:0]      d_0,
+  output reg  [63:0]      d_1,
+  output reg  [63:0]      d_2,
+  output reg  [63:0]      d_3,
+  output reg  [63:0]      d_4,
+  output reg  [63:0]      d_5,
+  output reg  [63:0]      d_6,
+  output reg  [63:0]      d_7,
+  output reg  [63:0]      d_8,
+  output reg  [63:0]      d_9,
+  output reg  [63:0]      d_10,
+  output reg  [63:0]      d_11,
+  output reg  [63:0]      d_12,
+  output reg  [63:0]      d_13,
+  output reg  [63:0]      d_14,
+  output reg  [63:0]      d_15
 );
 
   reg                     config_init;
@@ -241,22 +255,6 @@ module adc_ana (
 
   reg                     d_pend;
   reg  [3:0]              d_adr;
-  reg  [63:0]             d_0;
-  reg  [63:0]             d_1;
-  reg  [63:0]             d_2;
-  reg  [63:0]             d_3;
-  reg  [63:0]             d_4;
-  reg  [63:0]             d_5;
-  reg  [63:0]             d_6;
-  reg  [63:0]             d_7;
-  reg  [63:0]             d_8;
-  reg  [63:0]             d_9;
-  reg  [63:0]             d_10;
-  reg  [63:0]             d_11;
-  reg  [63:0]             d_12;
-  reg  [63:0]             d_13;
-  reg  [63:0]             d_14;
-  reg  [63:0]             d_15;
 
 ana_synt synt (
   .aclk(clk),                             // input wire aclk
@@ -342,6 +340,7 @@ ana_freq delayed (
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
 
+/*
 ila_0 ila_0_inst (
   .clk(pci_clk),             // input wire clk
   .probe0(fifo_empty),       // input wire [0:0]  probe3
@@ -373,6 +372,7 @@ ila_0 ila_0_inst (
   .probe26(rd_adr),           // input wire [3:0]  probe3
   .probe27(rp_data)           // input wire [63:0]  probe3
 );
+*/
 
 generate
 begin : adc_ana_gen
@@ -987,19 +987,6 @@ begin : adc_ana_gen
       base_start <= 0;
   end
 
-end
-
-  always @ ( posedge pci_clk ) 
-  begin
-    if (pci_reset)
-      curr_adr <= 0;
-    else
-    begin
-      if (init)
-        curr_adr <= phys_adr;
-    end
-  end      
-
   always @ ( posedge pci_clk ) 
   begin
     if (fifo_empty)
@@ -1030,70 +1017,60 @@ end
   begin
     if (pci_reset)
     begin
+      adr <= 0;
       d_adr <= 0;
       report <= 0;
     end
     else
     begin
-      if (d_pend)
+      if (init)
       begin
-        if (d_adr == 15)
-          report <= 1;
-        else
-          report <= 0;
-          
-        d_adr <= d_adr + 1;
-        case (d_adr)
-          0: d_0 <= fifo_out;
-          1: d_1 <= fifo_out;
-          2: d_2 <= fifo_out;
-          3: d_3 <= fifo_out;
-          4: d_4 <= fifo_out;
-          5: d_5 <= fifo_out;
-          6: d_6 <= fifo_out;
-          7: d_7 <= fifo_out;
-          8: d_8 <= fifo_out;
-          9: d_9 <= fifo_out;
-          10: d_10 <= fifo_out;
-          11: d_11 <= fifo_out;
-          12: d_12 <= fifo_out;
-          13: d_13 <= fifo_out;
-          14: d_14 <= fifo_out;
-          15: d_15 <= fifo_out;
-        endcase
+        adr <= phys_adr;
+        d_adr <= 0;
+        report <= 0;
       end
       else
       begin
-        if (rd && (rd_adr == 15))
-          report <= 0;
+        if (d_pend)
+        begin
+          if (d_adr == 15)
+            report <= 1;
+          else
+            report <= 0;
+          
+          d_adr <= d_adr + 1;
+          case (d_adr)
+            0: d_0 <= fifo_out;
+            1: d_1 <= fifo_out;
+            2: d_2 <= fifo_out;
+            3: d_3 <= fifo_out;
+            4: d_4 <= fifo_out;
+            5: d_5 <= fifo_out;
+            6: d_6 <= fifo_out;
+            7: d_7 <= fifo_out;
+            8: d_8 <= fifo_out;
+            9: d_9 <= fifo_out;
+            10: d_10 <= fifo_out;
+            11: d_11 <= fifo_out;
+            12: d_12 <= fifo_out;
+            13: d_13 <= fifo_out;
+            14: d_14 <= fifo_out;
+            15: d_15 <= fifo_out;
+          endcase
+        end
+        else
+        begin
+          if (clear)
+          begin
+            report <= 0;
+            adr[20:7] <= adr[20:7] + 1;
+          end          
+        end
       end
     end
   end
 
-  always @ ( posedge pci_clk ) 
-  begin
-    if (rd)
-    begin
-      case (rd_adr)
-        0: rp_data <= d_0;
-        1: rp_data <= d_1;
-        2: rp_data <= d_2;
-        3: rp_data <= d_3;
-        4: rp_data <= d_4;
-        5: rp_data <= d_5;
-        6: rp_data <= d_6;
-        7: rp_data <= d_7;
-        8: rp_data <= d_8;
-        9: rp_data <= d_9;
-        10: rp_data <= d_10;
-        11: rp_data <= d_11;
-        12: rp_data <= d_12;
-        13: rp_data <= d_13;
-        14: rp_data <= d_14;
-        15: rp_data <= d_15;
-      endcase
-    end
-  end    
+end
 
 endgenerate
 

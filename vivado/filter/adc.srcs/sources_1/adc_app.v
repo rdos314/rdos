@@ -77,6 +77,17 @@ module adc_app (
   input wire [13:0]       adc_B1,
   input wire [13:0]       adc_B2,
   input wire [13:0]       adc_B3,
+  
+  output reg              report,
+  output reg [47:0]       adr,
+  output reg [127:0]      d_0,
+  output reg [127:0]      d_1,
+  output reg [127:0]      d_2,
+  output reg [127:0]      d_3,
+  output reg [127:0]      d_4,
+  output reg [127:0]      d_5,
+  output reg [127:0]      d_6,
+  output reg [127:0]      d_7,
 
   input wire [7:0]        bar1_rd_address,
   input wire              bar1_rd,
@@ -157,43 +168,52 @@ module adc_app (
 
 // pci domain
 
-  reg  [3:0]              rd_adr;
-  reg  [3:0]              data_adr;
-  reg  [15:0]             rd;
+  reg  [15:0]             d_clear;
   wire [15:0]             d_req;
-  reg  [63:0]             d_in;
-  reg  [127:0]            d_0;
-  reg  [127:0]            d_1;
-  reg  [127:0]            d_2;
-  reg  [127:0]            d_3;
-  reg  [127:0]            d_4;
-  reg  [127:0]            d_5;
-  reg  [127:0]            d_6;
-  reg  [127:0]            d_7;
-  
-  wire [15:0]             d_power_A;
-  wire [15:0]             d_power_B;
-  wire [15:0]             d_phase_A;
-  wire [15:0]             d_phase_B;
-  
-  assign d_power_A = d_in[15:0];
-  assign d_power_B = d_in[31:16];
-  assign d_phase_A = d_in[47:32];
-  assign d_phase_B = d_in[63:48];
 
 // channel 0
 
   reg  [47:0]             chan0_phys;
   wire [47:0]             chan0_adr;
   reg  [20:0]             chan0_ack_pos;
-  wire [63:0]             chan0_data;
+  wire [63:0]             chan0_d0;
+  wire [63:0]             chan0_d1;
+  wire [63:0]             chan0_d2;
+  wire [63:0]             chan0_d3;
+  wire [63:0]             chan0_d4;
+  wire [63:0]             chan0_d5;
+  wire [63:0]             chan0_d6;
+  wire [63:0]             chan0_d7;
+  wire [63:0]             chan0_d8;
+  wire [63:0]             chan0_d9;
+  wire [63:0]             chan0_d10;
+  wire [63:0]             chan0_d11;
+  wire [63:0]             chan0_d12;
+  wire [63:0]             chan0_d13;
+  wire [63:0]             chan0_d14;
+  wire [63:0]             chan0_d15;
 
 // channel 1
 
   reg  [47:0]             chan1_phys;
   wire [47:0]             chan1_adr;
   reg  [20:0]             chan1_ack_pos;
-  wire [63:0]             chan1_data;
+  wire [63:0]             chan1_d0;
+  wire [63:0]             chan1_d1;
+  wire [63:0]             chan1_d2;
+  wire [63:0]             chan1_d3;
+  wire [63:0]             chan1_d4;
+  wire [63:0]             chan1_d5;
+  wire [63:0]             chan1_d6;
+  wire [63:0]             chan1_d7;
+  wire [63:0]             chan1_d8;
+  wire [63:0]             chan1_d9;
+  wire [63:0]             chan1_d10;
+  wire [63:0]             chan1_d11;
+  wire [63:0]             chan1_d12;
+  wire [63:0]             chan1_d13;
+  wire [63:0]             chan1_d14;
+  wire [63:0]             chan1_d15;
 
 // clock domain crossings
 
@@ -271,13 +291,27 @@ adc_ana ana_0 (
     .pci_reset(pci_reset),
     .init(pci_init[0]),
     .phys_adr(chan0_phys),
-    .curr_adr(chan0_adr),
     .ack_pos(chan0_ack_pos),
     
     .report(d_req[0]),
-    .rd(rd[0]),
-    .rd_adr(rd_adr),
-    .rp_data(chan0_data)
+    .clear(d_clear[0]),
+    .adr(chan0_adr),
+    .d_0(chan0_d0),
+    .d_1(chan0_d1),
+    .d_2(chan0_d2),
+    .d_3(chan0_d3),
+    .d_4(chan0_d4),
+    .d_5(chan0_d5),
+    .d_6(chan0_d6),
+    .d_7(chan0_d7),
+    .d_8(chan0_d8),
+    .d_9(chan0_d9),
+    .d_10(chan0_d10),
+    .d_11(chan0_d11),
+    .d_12(chan0_d12),
+    .d_13(chan0_d13),
+    .d_14(chan0_d14),
+    .d_15(chan0_d15)
 );
 
 adc_ana ana_1 (
@@ -302,13 +336,27 @@ adc_ana ana_1 (
     .pci_reset(pci_reset),
     .init(pci_init[1]),
     .phys_adr(chan1_phys),
-    .curr_adr(chan1_adr),
     .ack_pos(chan1_ack_pos),
     
     .report(d_req[1]),
-    .rd(rd[1]),
-    .rd_adr(rd_adr),
-    .rp_data(chan1_data)
+    .clear(d_clear[1]),
+    .adr(chan1_adr),
+    .d_0(chan1_d0),
+    .d_1(chan1_d1),
+    .d_2(chan1_d2),
+    .d_3(chan1_d3),
+    .d_4(chan1_d4),
+    .d_5(chan1_d5),
+    .d_6(chan1_d6),
+    .d_7(chan1_d7),
+    .d_8(chan1_d8),
+    .d_9(chan1_d9),
+    .d_10(chan1_d10),
+    .d_11(chan1_d11),
+    .d_12(chan1_d12),
+    .d_13(chan1_d13),
+    .d_14(chan1_d14),
+    .d_15(chan1_d15)
 );
 
 
@@ -326,13 +374,17 @@ ila_1 ila_1_inst (
   .probe9(chan1_adr),            // input wire [47:0]
   .probe10(chan1_ack_pos),       // input wire [20:0]
   .probe11(d_req),               // input wire [15:0]
-  .probe12(rd),                  // input wire [15:0]
-  .probe13(rd_adr),              // input wire [3:0]
-  .probe14(data_adr),            // input wire [3:0]
-  .probe15(d_power_A),           // input wire [15:0]
-  .probe16(d_power_B),           // input wire [15:0]
-  .probe17(d_phase_A),           // input wire [15:0]
-  .probe18(d_phase_B)            // input wire [15:0]
+  .probe12(d_clear),             // input wire [15:0]
+  .probe13(report),              // input wire [0:0]
+  .probe14(adr),                 // input wire [47:0]
+  .probe15(d_0),                 // input wire [127:0]
+  .probe16(d_1),                 // input wire [127:0]
+  .probe17(d_2),                 // input wire [127:0]
+  .probe18(d_3),                 // input wire [127:0]
+  .probe19(d_4),                 // input wire [127:0]
+  .probe20(d_5),                 // input wire [127:0]
+  .probe21(d_6),                 // input wire [127:0]
+  .probe22(d_7)                  // input wire [127:0]
  );
 
 ila_2 ila_2_inst (
@@ -865,38 +917,32 @@ begin : adc_app
   begin
     if (pci_reset)
     begin
-      rd <= 0;
-      rd_adr <= 0;
+      d_clear <= 0;
     end
     else
     begin
-      if (rd)
-      begin
-        rd_adr <= rd_adr + 1;
-        if (data_adr == 15)
-          rd <= 0;
-      end
+      if (report)
+        d_clear <= 0;
       else
       begin
-        rd_adr <= 0;
         casex (d_req)
-          16'b0000000000000000 : rd <= 0;
-          16'bxxxxxxxxxxxxxxx1 : rd[0] <= 1; 
-          16'bxxxxxxxxxxxxxx10 : rd[1] <= 1;
-          16'bxxxxxxxxxxxxx100 : rd[2] <= 1;
-          16'bxxxxxxxxxxxx1000 : rd[3] <= 1;
-          16'bxxxxxxxxxxx10000 : rd[4] <= 1;
-          16'bxxxxxxxxxx100000 : rd[5] <= 1;
-          16'bxxxxxxxxx1000000 : rd[6] <= 1;
-          16'bxxxxxxxx10000000 : rd[7] <= 1;
-          16'bxxxxxxx100000000 : rd[8] <= 1;
-          16'bxxxxxx1000000000 : rd[9] <= 1;
-          16'bxxxxx10000000000 : rd[10] <= 1;
-          16'bxxxx100000000000 : rd[11] <= 1;
-          16'bxxx1000000000000 : rd[12] <= 1;
-          16'bxx10000000000000 : rd[13] <= 1;
-          16'bx100000000000000 : rd[14] <= 1;
-          16'b1000000000000000 : rd[15] <= 1;
+          16'b0000000000000000 : d_clear <= 0;
+          16'bxxxxxxxxxxxxxxx1 : d_clear[0] <= 1; 
+          16'bxxxxxxxxxxxxxx10 : d_clear[1] <= 1;
+          16'bxxxxxxxxxxxxx100 : d_clear[2] <= 1;
+          16'bxxxxxxxxxxxx1000 : d_clear[3] <= 1;
+          16'bxxxxxxxxxxx10000 : d_clear[4] <= 1;
+          16'bxxxxxxxxxx100000 : d_clear[5] <= 1;
+          16'bxxxxxxxxx1000000 : d_clear[6] <= 1;
+          16'bxxxxxxxx10000000 : d_clear[7] <= 1;
+          16'bxxxxxxx100000000 : d_clear[8] <= 1;
+          16'bxxxxxx1000000000 : d_clear[9] <= 1;
+          16'bxxxxx10000000000 : d_clear[10] <= 1;
+          16'bxxxx100000000000 : d_clear[11] <= 1;
+          16'bxxx1000000000000 : d_clear[12] <= 1;
+          16'bxx10000000000000 : d_clear[13] <= 1;
+          16'bx100000000000000 : d_clear[14] <= 1;
+          16'b1000000000000000 : d_clear[15] <= 1;
         endcase
       end
     end
@@ -904,16 +950,61 @@ begin : adc_app
 
   always @ ( posedge pci_clk ) 
   begin
-    data_adr <= rd_adr;
-  end
+    if (pci_reset)
+    begin
+      adr <= 0;
+      report <= 0;
+    end
+    else
+    begin
+      case (d_clear)
+        16'b0000000000000001 : 
+          begin
+            adr <= chan0_adr;
+            d_0[63:0] <= chan0_d0; 
+            d_0[127:64] <= chan0_d1; 
+            d_1[63:0] <= chan0_d2; 
+            d_1[127:64] <= chan0_d3;  
+            d_2[63:0] <= chan0_d4; 
+            d_2[127:64] <= chan0_d5; 
+            d_3[63:0] <= chan0_d6; 
+            d_3[127:64] <= chan0_d7; 
+            d_4[63:0] <= chan0_d8; 
+            d_4[127:64] <= chan0_d9; 
+            d_5[63:0] <= chan0_d10; 
+            d_5[127:64] <= chan0_d11; 
+            d_6[63:0] <= chan0_d12; 
+            d_6[127:64] <= chan0_d13; 
+            d_7[63:0] <= chan0_d14; 
+            d_7[127:64] <= chan0_d15; 
+            report <= 1;
+          end          
+          
+        16'b0000000000000010 :
+          begin
+            adr <= chan1_adr;
+            d_0[63:0] <= chan1_d0; 
+            d_0[127:64] <= chan1_d1; 
+            d_1[63:0] <= chan1_d2; 
+            d_1[127:64] <= chan1_d3;  
+            d_2[63:0] <= chan1_d4; 
+            d_2[127:64] <= chan1_d5; 
+            d_3[63:0] <= chan1_d6; 
+            d_3[127:64] <= chan1_d7; 
+            d_4[63:0] <= chan1_d8; 
+            d_4[127:64] <= chan1_d9; 
+            d_5[63:0] <= chan1_d10; 
+            d_5[127:64] <= chan1_d11; 
+            d_6[63:0] <= chan1_d12; 
+            d_6[127:64] <= chan1_d13; 
+            d_7[63:0] <= chan1_d14; 
+            d_7[127:64] <= chan1_d15; 
+            report <= 1;
+          end          
 
-  always @ ( posedge pci_clk ) 
-  begin
-    case (rd)
-      16'b0000000000000001 : d_in <= chan0_data; 
-      16'b0000000000000010 : d_in <= chan1_data;
-      default : d_in <= 0;     
-    endcase
+        default : ;
+      endcase
+    end
   end
 
   always @ ( posedge rx_clk ) 
