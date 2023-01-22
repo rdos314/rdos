@@ -79,6 +79,7 @@ module adc_app (
   input wire [13:0]       adc_B3,
   
   output reg              report,
+  input wire              clear,
   output reg [47:0]       adr,
   output reg [127:0]      d_0,
   output reg [127:0]      d_1,
@@ -376,15 +377,7 @@ ila_1 ila_1_inst (
   .probe11(d_req),               // input wire [15:0]
   .probe12(d_clear),             // input wire [15:0]
   .probe13(report),              // input wire [0:0]
-  .probe14(adr),                 // input wire [47:0]
-  .probe15(d_0),                 // input wire [127:0]
-  .probe16(d_1),                 // input wire [127:0]
-  .probe17(d_2),                 // input wire [127:0]
-  .probe18(d_3),                 // input wire [127:0]
-  .probe19(d_4),                 // input wire [127:0]
-  .probe20(d_5),                 // input wire [127:0]
-  .probe21(d_6),                 // input wire [127:0]
-  .probe22(d_7)                  // input wire [127:0]
+  .probe14(adr)                 // input wire [47:0]
  );
 
 ila_2 ila_2_inst (
@@ -921,7 +914,7 @@ begin : adc_app
     end
     else
     begin
-      if (report)
+      if (report || d_clear)
         d_clear <= 0;
       else
       begin
@@ -957,53 +950,61 @@ begin : adc_app
     end
     else
     begin
-      case (d_clear)
-        16'b0000000000000001 : 
-          begin
-            adr <= chan0_adr;
-            d_0[63:0] <= chan0_d0; 
-            d_0[127:64] <= chan0_d1; 
-            d_1[63:0] <= chan0_d2; 
-            d_1[127:64] <= chan0_d3;  
-            d_2[63:0] <= chan0_d4; 
-            d_2[127:64] <= chan0_d5; 
-            d_3[63:0] <= chan0_d6; 
-            d_3[127:64] <= chan0_d7; 
-            d_4[63:0] <= chan0_d8; 
-            d_4[127:64] <= chan0_d9; 
-            d_5[63:0] <= chan0_d10; 
-            d_5[127:64] <= chan0_d11; 
-            d_6[63:0] <= chan0_d12; 
-            d_6[127:64] <= chan0_d13; 
-            d_7[63:0] <= chan0_d14; 
-            d_7[127:64] <= chan0_d15; 
-            report <= 1;
-          end          
+      if (report)
+      begin
+        if (clear)
+          report <= 0;
+      end
+      else
+      begin      
+        case (d_clear)
+          16'b0000000000000001 : 
+            begin
+              adr <= chan0_adr;
+              d_0[63:0] <= chan0_d0; 
+              d_0[127:64] <= chan0_d1; 
+              d_1[63:0] <= chan0_d2; 
+              d_1[127:64] <= chan0_d3;  
+              d_2[63:0] <= chan0_d4; 
+              d_2[127:64] <= chan0_d5; 
+              d_3[63:0] <= chan0_d6; 
+              d_3[127:64] <= chan0_d7; 
+              d_4[63:0] <= chan0_d8; 
+              d_4[127:64] <= chan0_d9; 
+              d_5[63:0] <= chan0_d10; 
+              d_5[127:64] <= chan0_d11; 
+              d_6[63:0] <= chan0_d12; 
+              d_6[127:64] <= chan0_d13; 
+              d_7[63:0] <= chan0_d14; 
+              d_7[127:64] <= chan0_d15; 
+              report <= 1;
+            end          
           
-        16'b0000000000000010 :
-          begin
-            adr <= chan1_adr;
-            d_0[63:0] <= chan1_d0; 
-            d_0[127:64] <= chan1_d1; 
-            d_1[63:0] <= chan1_d2; 
-            d_1[127:64] <= chan1_d3;  
-            d_2[63:0] <= chan1_d4; 
-            d_2[127:64] <= chan1_d5; 
-            d_3[63:0] <= chan1_d6; 
-            d_3[127:64] <= chan1_d7; 
-            d_4[63:0] <= chan1_d8; 
-            d_4[127:64] <= chan1_d9; 
-            d_5[63:0] <= chan1_d10; 
-            d_5[127:64] <= chan1_d11; 
-            d_6[63:0] <= chan1_d12; 
-            d_6[127:64] <= chan1_d13; 
-            d_7[63:0] <= chan1_d14; 
-            d_7[127:64] <= chan1_d15; 
-            report <= 1;
-          end          
+          16'b0000000000000010 :
+            begin
+              adr <= chan1_adr;
+              d_0[63:0] <= chan1_d0; 
+              d_0[127:64] <= chan1_d1; 
+              d_1[63:0] <= chan1_d2; 
+              d_1[127:64] <= chan1_d3;  
+              d_2[63:0] <= chan1_d4; 
+              d_2[127:64] <= chan1_d5; 
+              d_3[63:0] <= chan1_d6; 
+              d_3[127:64] <= chan1_d7; 
+              d_4[63:0] <= chan1_d8; 
+              d_4[127:64] <= chan1_d9; 
+              d_5[63:0] <= chan1_d10; 
+              d_5[127:64] <= chan1_d11; 
+              d_6[63:0] <= chan1_d12; 
+              d_6[127:64] <= chan1_d13; 
+              d_7[63:0] <= chan1_d14; 
+              d_7[127:64] <= chan1_d15; 
+              report <= 1;
+            end          
 
-        default : ;
-      endcase
+          default : ;
+        endcase
+      end
     end
   end
 

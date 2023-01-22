@@ -125,6 +125,17 @@ module adc (
 
   wire                 trig;
 
+  wire                 adc_report;
+  wire                 adc_clear;
+  wire [47:0]          adc_adr;
+  wire [127:0]         adc_d0;  
+  wire [127:0]         adc_d1;  
+  wire [127:0]         adc_d2;  
+  wire [127:0]         adc_d3;  
+  wire [127:0]         adc_d4;  
+  wire [127:0]         adc_d5;  
+  wire [127:0]         adc_d6;  
+  wire [127:0]         adc_d7;  
 
 // SPI
 
@@ -420,6 +431,18 @@ pci_app pci_app_inst (
 
     .control_base(control_base),
     .control_rd(control_rd),
+    
+    .adc_report(adc_report),
+    .adc_clear(adc_clear),
+    .adc_adr(adc_adr),
+    .adc_d0(adc_d0),
+    .adc_d1(adc_d1),
+    .adc_d2(adc_d2),
+    .adc_d3(adc_d3),
+    .adc_d4(adc_d4),
+    .adc_d5(adc_d5),
+    .adc_d6(adc_d6),
+    .adc_d7(adc_d7),
 
     .bar0_rd_address(pci_bar0_rd_address),
     .bar0_rd(pci_bar0_rd),
@@ -554,6 +577,18 @@ adc_app adc_app_inst (
     .adc_B1(adc_B1),
     .adc_B2(adc_B2),
     .adc_B3(adc_B3),
+    
+    .report(adc_report),
+    .clear(adc_clear),
+    .adr(adc_adr),
+    .d_0(adc_d0),
+    .d_1(adc_d1),
+    .d_2(adc_d2),
+    .d_3(adc_d3),
+    .d_4(adc_d4),
+    .d_5(adc_d5),
+    .d_6(adc_d6),
+    .d_7(adc_d7),
   
     .bar1_rd_address(pci_bar1_rd_address),
     .bar1_rd(pci_bar1_rd),
