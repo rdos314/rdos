@@ -57,7 +57,19 @@ module pci_tx (
   input  wire [127:0]       bar_data,
   input  wire [127:0]       bar_header,
   input  wire               bar_wr,
-  output wire               bar_busy
+  output wire               bar_busy,
+
+  input wire [63:0]         adc_address,
+  input wire                adc_report,
+  output reg                adc_clear,
+  input wire [127:0]        adc_d0,
+  input wire [127:0]        adc_d1,
+  input wire [127:0]        adc_d2,
+  input wire [127:0]        adc_d3,
+  input wire [127:0]        adc_d4,
+  input wire [127:0]        adc_d5,
+  input wire [127:0]        adc_d6,
+  input wire [127:0]        adc_d7
 );
 
 
@@ -85,10 +97,10 @@ module pci_tx (
   reg                       bar_start;
   reg [9:0]                 bar_count;
 
+  reg [127:0]               adc_data
   wire [127:0]              adc_pkt_data;
   reg [2:0]                 adc_count;
-  reg                       adc_pend_rd;
-  reg [127:0]               adc_pend_data;
+  reg                       adc_pend;
 
 generate
   begin : gen_pci_tx
@@ -120,6 +132,27 @@ generate
     assign bar_pkt_data[119:112] = q_bar_data[111:104];
     assign bar_pkt_data[111:104] = q_bar_data[119:112];
     assign bar_pkt_data[103:96] = q_bar_data[127:120];
+
+    assign adc_pkt_data[31:24] = adc_data[7:0];
+    assign adc_pkt_data[23:16] = adc_data[15:8];
+    assign adc_pkt_data[15:8] = adc_data[23:16];
+    assign adc_pkt_data[7:0] = adc_data[31:24];
+
+    assign adc_pkt_data[63:56] = adc_data[39:32];
+    assign adc_pkt_data[55:48] = adc_data[47:40];
+    assign adc_pkt_data[47:40] = adc_data[55:48];
+    assign adc_pkt_data[39:32] = adc_data[63:56];
+
+    assign adc_pkt_data[95:88] = adc_data[71:64];
+    assign adc_pkt_data[87:80] = adc_data[79:72];
+    assign adc_pkt_data[79:72] = adc_data[87:80];
+    assign adc_pkt_data[71:64] = adc_data[95:88];
+
+    assign adc_pkt_data[127:120] = adc_data[103:96];
+    assign adc_pkt_data[119:112] = adc_data[111:104];
+    assign adc_pkt_data[111:104] = adc_data[119:112];
+    assign adc_pkt_data[103:96] = adc_data[127:120];
+
 
     always @ ( posedge clk ) 
     begin
@@ -170,12 +203,43 @@ generate
         bar_count <= 0;
         bar_pend <= 0;
         bar_start <= 0;
-        adc_pend_rd <= 0;
+        adc_pend <= 0;
       end
       else
       begin
         if (s_axis_tx_tready)
         begin
+          if (adc_pend)
+          begin
+            rd_sent <= 0;
+            bar_pend <= 0;
+
+            case (adc_count)
+              0: adc_data <= adc_d1;
+              1: adc_data <= adc_d2;
+              2: adc_data <= adc_d3;
+              3: adc_data <= adc_d4;
+              4: adc_data <= adc_d5;
+              5: adc_data <= adc_d6;
+              6: adc_data <= adc_d7;
+            endcase
+
+            adc_count <= adc_count + 1;
+            s_axis_tx_tdata <= adc_pkt_data;
+            s_axis_tx_tkeep[15:0] <= 16'hffff;
+
+            if (adc_count == 3'b111)
+            begin
+              s_axis_tx_tlast <= 1;
+              adc_clear <= 1;
+            end
+            else
+            begin
+              s_axis_tx_tlast <= 0;
+              adc_clear <= 0;
+            end
+          end
+          else
           begin
             if (bar_pend)
             begin
@@ -252,6 +316,34 @@ generate
               end
               else
               begin
+                if (adc_report)
+                begin
+                  rd_sent <= 0;
+                  adc_pend <= 1;
+                  adc_data <= adc_d0;
+                  adc_count <= 0;
+
+                  s_axis_tx_tvalid <= 1;
+                  s_axis_tx_tkeep[15:0] <= 16'hffff;
+                  s_axis_tx_tlast <= 0;
+
+                  s_axis_tx_tdata[127:96] <= adc_address[31:0];     // address low
+                  s_axis_tx_tdata[79:64] <= adc_address[47:32];     // address high
+                  s_axis_tx_tdata[95:80] <= 0;                      // address high
+                  s_axis_tx_tdata[63:48] <= req_id;                 // Requester ID
+                  s_axis_tx_tdata[47:40] <= 0;                      // tag
+                  s_axis_tx_tdata[39:36] <= 4'b1111;                // last be
+                  s_axis_tx_tdata[35:32] <= 4'b1111;                // 1st be
+                  s_axis_tx_tdata[31:24] <= 8'b011_00000;           // Type + 64-bit FMT
+                  s_axis_tx_tdata[23] <= 1'b0;                      // R
+                  s_axis_tx_tdata[22:20] <= 3'b000;                 // TC
+                  s_axis_tx_tdata[19:16] <= 4'b0000;                // TH, AttrH, R
+                  s_axis_tx_tdata[15:12] <= 4'b0010;                // TD, EP, Attr
+                  s_axis_tx_tdata[11:10] <= 2'b0;                   // AT
+                  s_axis_tx_tdata[9:8] <= 2'b0;                     // len high
+                  s_axis_tx_tdata[7:0] <= 8'h20;                    // 128 byte size
+                end
+                else
                 begin
                   if (rd_active & !rd_sent)
                   begin
@@ -295,9 +387,9 @@ generate
         else
         begin
           rd_sent <= 0;
+          end
         end
       end
-    end
 
 
   end
