@@ -40,12 +40,12 @@ CHANNEL_COUNT   = 32
 control_bar     STRUC
 
 cb_adc_control    DB ?          ; 0
-cd_resv1          DB ?,?,?
+cb_adc_progr      DB ?          ; 0
+cb_adc_test_mode  DB ?
+cd_resv1          DB ?
 cb_spi_clk        DD ?          ; 1
 cb_spi_adc        DD ?          ; 2
 cb_spi_dac        DD ?          ; 3
-cb_adc_irq        DB ?          ; 4
-cb_adc_test_mode  DB ?
 cb_adc_index      DW ?
 
 control_bar     ENDS

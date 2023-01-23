@@ -35,6 +35,7 @@ module ana_freq (
 
   input wire              start,
   input wire              stop,
+  output reg              run,
 
   input wire              wr,
   input wire [10:0]       wr_adr,
@@ -60,7 +61,6 @@ module ana_freq (
   output wire [15:0]      phase_B
 );
 
-  reg                    run;
   reg                    conf;
 
   reg                    start_1;

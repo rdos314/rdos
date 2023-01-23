@@ -32,7 +32,6 @@ module adc_ana (
   input wire              conf,
   input wire [29:0]       incr,
   input wire [13:0]       count,
-  input wire              stop,
 
   input wire [13:0]       in_A0,
   input wire [13:0]       in_A1,
@@ -48,7 +47,9 @@ module adc_ana (
   input wire              init,
   input wire [47:0]       phys_adr,
   input wire [20:0]       ack_pos,
-  
+  input wire              on,
+  output reg              stop,
+
   output reg              report,
   input wire              clear,
   output reg [47:0]       adr,  
@@ -191,6 +192,12 @@ module adc_ana (
   reg  [9:0]              delay_count;
   reg  [15:0]             delay_phase;
 
+  reg  [1:0]              adc_delay;
+  reg                     adc_on;
+  reg                     pend_run;
+  reg                     adc_run;
+  reg                     adc_active;
+
   reg  [13:0]             out_A0;
   reg  [13:0]             out_A1;
   reg  [13:0]             out_A2;
@@ -215,12 +222,14 @@ module adc_ana (
   reg                     base_start;
   reg  [9:0]              curr_count;
   reg                     delay_start;
+  wire                    base_run;
 
   reg                     base_update;
   reg  [15:0]             base_curr_phase;
 
   reg                     delay_update;
   reg  [15:0]             delay_curr_phase;
+  wire                    delay_run;
 
   reg                     fifo_wr;
   reg  [63:0]             fifo_in;
@@ -243,6 +252,11 @@ module adc_ana (
 
   reg                     d_pend;
   reg  [1:0]              d_adr;
+
+
+// clock domain crossings
+
+ (* ASYNC_REG="TRUE" *)  reg                  adc_on_1;
 
 ana_synt synt (
   .aclk(clk),                             // input wire aclk
@@ -281,7 +295,8 @@ ana_freq base (
   .count(config_count),   // input wire [12:0] count
   .last(config_last),     // input wire [10:0] last
   .start(base_start),     // input wire start
-  .stop(0),               // input wire stop
+  .stop(!adc_run),        // input wire stop
+  .run(base_run),         // output wire run
   .wr(coeff_wr),          // input wire coeff_wr
   .wr_adr(coeff_adr),     // input wire [10:0] coeff_adr
   .wr_sin(coeff_sin),     // input wire [63:0] coeff_sin
@@ -308,7 +323,8 @@ ana_freq delayed (
   .count(config_count),   // input wire [12:0] count
   .last(config_last),     // input wire [10:0] last
   .start(delay_start),    // input wire start
-  .stop(0),               // input wire stop
+  .stop(!adc_run),        // input wire stop
+  .run(delay_run),        // output wire run
   .wr(coeff_wr),          // input wire coeff_wr
   .wr_adr(coeff_adr),     // input wire [10:0] coeff_adr
   .wr_sin(coeff_sin),     // input wire [63:0] coeff_sin
@@ -371,6 +387,7 @@ begin : adc_ana_gen
     begin
       config_init <= 0;
       sample_en <= 0;
+      pend_run <= 0;
     end
     else
     begin
@@ -378,12 +395,16 @@ begin : adc_ana_gen
       begin
         config_init <= 1;
         sample_en <= 1;
+        pend_run <= 0;
       end
       else
       begin
-        if (config_coeff_done)
-          sample_en <= 0;
         config_init <= 0;
+        if (config_coeff_done)
+        begin
+          sample_en <= 0;
+          pend_run <= 1;
+        end
       end
     end
   end
@@ -895,43 +916,121 @@ begin : adc_ana_gen
 
   always @ ( posedge clk ) 
   begin
+    adc_on_1 <= on;
+    adc_on <= adc_on_1;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      adc_run <= 0;
+    else
+    begin
+      if (conf)
+        adc_run <= 0;
+      else
+      begin
+        if (adc_on)
+        begin        
+          if (pend_run)
+            adc_run <= 1;
+        end
+        else
+          adc_run <= 0;
+      end
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
     if (reset)
     begin
       fifo_wr <= 0;
       base_update <= 0;
       delay_update <= 0;
+      adc_active <= 0;
     end
     else
     begin
-      if (b_report)
+      if (init)
       begin
-        base_update <= 1;
-        delay_update <= 0;
-
-        fifo_wr <= 1;
-        fifo_in[15:0] <= b_amp_A;        
-        fifo_in[31:16] <= b_amp_B;        
-        fifo_in[47:32] <= b_phase_A - base_curr_phase;
-        fifo_in[63:48] <= b_phase_B - base_curr_phase;
+        adc_active <= 0;
+        adc_delay <= 0;
       end
       else
       begin
-        if (d_report)
+        if (b_report)
         begin
-          base_update <= 0;
-          delay_update <= 1;
+          base_update <= 1;
+          delay_update <= 0;
 
-          fifo_wr <= 1;
-          fifo_in[15:0] <= d_amp_A;        
-          fifo_in[31:16] <= d_amp_B;        
-          fifo_in[47:32] <= d_phase_A - delay_curr_phase;
-          fifo_in[63:48] <= d_phase_B - delay_curr_phase;
+          if (adc_active)
+          begin
+            fifo_wr <= 1;
+            fifo_in[15:0] <= b_amp_A;        
+            fifo_in[31:16] <= b_amp_B;        
+            fifo_in[47:32] <= b_phase_A - base_curr_phase;
+            fifo_in[63:48] <= b_phase_B - base_curr_phase;
+          end
+          else
+          begin
+            if (adc_run)
+            begin
+              if (adc_delay == 3)
+                adc_active <= 1;
+              else
+              begin
+                adc_delay <= adc_delay + 1;
+                adc_active <= 0;
+              end
+            end
+            else
+              adc_active <= 0;          
+          end
         end
         else
         begin
-          fifo_wr <= 0;
-          base_update <= 0;
-          delay_update <= 0;
+          if (d_report)
+          begin
+            base_update <= 0;
+            delay_update <= 1;
+ 
+            if (adc_active)
+            begin
+              fifo_wr <= 1;
+              fifo_in[15:0] <= d_amp_A;        
+              fifo_in[31:16] <= d_amp_B;        
+              fifo_in[47:32] <= d_phase_A - delay_curr_phase;
+              fifo_in[63:48] <= d_phase_B - delay_curr_phase;
+            end
+            else
+            begin
+              if (adc_run)
+              begin
+                if (adc_delay == 3)
+                  adc_active <= 1;
+                else
+                begin
+                  adc_delay <= adc_delay + 1;
+                  adc_active <= 0;
+                end
+              end
+              else
+                adc_active <= 0;          
+            end
+          end
+          else
+          begin
+            fifo_wr <= 0;
+            base_update <= 0;
+            delay_update <= 0;
+
+            if (!adc_run)
+            begin
+              adc_active <= 0;
+              adc_delay <= 0;
+            end
+          end
         end
       end
     end
@@ -1008,6 +1107,7 @@ begin : adc_ana_gen
       adr <= 0;
       d_adr <= 0;
       report <= 0;
+      stop <= 0;
     end
     else
     begin
@@ -1016,11 +1116,14 @@ begin : adc_ana_gen
         adr <= phys_adr;
         d_adr <= 0;
         report <= 0;
+        stop <= 0;
       end
       else
       begin
         if (d_pend)
         begin
+          stop <= 0;
+
           if (d_adr == 2'b11)
             report <= 1;
           else
@@ -1040,11 +1143,16 @@ begin : adc_ana_gen
           begin
             report <= 0;
             adr[20:5] <= adr[20:5] + 1;
+            if (adr[20:5] + 1 == ack_pos[20:5])
+              stop <= 1;
           end          
+          else
+            stop <= 0;
         end
       end
     end
   end
+
 
 end
 

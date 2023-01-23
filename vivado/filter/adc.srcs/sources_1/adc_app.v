@@ -134,6 +134,8 @@ module adc_app (
   reg  [15:0]             pci_init;
   reg  [1:0]              pci_count;
 
+  reg                     pci_adc_en;
+
 // rx domain
 
   reg                     adc_on;
@@ -160,8 +162,12 @@ module adc_app (
 
 // pci domain
 
-  reg  [15:0]             d_clear;
-  wire [15:0]             d_req;
+  reg  [15:0]             pci_clear;
+  wire [15:0]             pci_req;
+
+  wire [15:0]             pci_stop;
+  reg  [15:0]             pci_on;
+  reg  [15:0]             pci_active;
 
 // channel 0
 
@@ -193,6 +199,7 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
 
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_en_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_1;
 
  (* ASYNC_REG="TRUE" *)  reg                  up_on_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_on_2;
@@ -236,7 +243,6 @@ adc_ana ana_0 (
     .conf(rx_conf[0]),
     .incr(chan0_incr),
     .count(chan0_count),
-    .stop(0),
 
     .in_A0(adc_A0),
     .in_A1(adc_A1),
@@ -252,9 +258,11 @@ adc_ana ana_0 (
     .init(pci_init[0]),
     .phys_adr(chan0_phys),
     .ack_pos(chan0_ack_pos),
+    .on(pci_on[0]),
+    .stop(pci_stop[0]),
     
-    .report(d_req[0]),
-    .clear(d_clear[0]),
+    .report(pci_req[0]),
+    .clear(pci_clear[0]),
     .adr(chan0_adr),
     .d_0(chan0_d0),
     .d_1(chan0_d1),
@@ -269,7 +277,6 @@ adc_ana ana_1 (
     .conf(rx_conf[1]),
     .incr(chan1_incr),
     .count(chan1_count),
-    .stop(0),
 
     .in_A0(adc_A0),
     .in_A1(adc_A1),
@@ -285,9 +292,11 @@ adc_ana ana_1 (
     .init(pci_init[1]),
     .phys_adr(chan1_phys),
     .ack_pos(chan1_ack_pos),
+    .on(pci_on[1]),
+    .stop(pci_stop[1]),
     
-    .report(d_req[1]),
-    .clear(d_clear[1]),
+    .report(pci_req[1]),
+    .clear(pci_clear[1]),
     .adr(chan1_adr),
     .d_0(chan1_d0),
     .d_1(chan1_d1),
@@ -309,10 +318,14 @@ ila_1 ila_1_inst (
   .probe8(chan1_phys),           // input wire [47:0]
   .probe9(chan1_adr),            // input wire [47:0]
   .probe10(chan1_ack_pos),       // input wire [20:0]
-  .probe11(d_req),               // input wire [15:0]
-  .probe12(d_clear),             // input wire [15:0]
-  .probe13(report),              // input wire [0:0]
-  .probe14(adr)                 // input wire [47:0]
+  .probe11(pci_req),             // input wire [15:0]
+  .probe12(pci_clear),           // input wire [15:0]
+  .probe13(pci_adc_en),          // input wire [15:0]
+  .probe14(pci_on),              // input wire [15:0]
+  .probe15(pci_stop),            // input wire [15:0]
+  .probe16(pci_active),          // input wire [15:0]
+  .probe17(report),              // input wire [0:0]
+  .probe18(adr)                  // input wire [47:0]
  );
 
 ila_2 ila_2_inst (
@@ -829,34 +842,61 @@ begin : adc_app
   begin
     if (pci_reset)
     begin
-      d_clear <= 0;
+      pci_clear <= 0;
     end
     else
     begin
-      if (report || d_clear)
-        d_clear <= 0;
+      if (report || pci_clear)
+        pci_clear <= 0;
       else
       begin
-        casex (d_req)
-          16'b0000000000000000 : d_clear <= 0;
-          16'bxxxxxxxxxxxxxxx1 : d_clear[0] <= 1; 
-          16'bxxxxxxxxxxxxxx10 : d_clear[1] <= 1;
-          16'bxxxxxxxxxxxxx100 : d_clear[2] <= 1;
-          16'bxxxxxxxxxxxx1000 : d_clear[3] <= 1;
-          16'bxxxxxxxxxxx10000 : d_clear[4] <= 1;
-          16'bxxxxxxxxxx100000 : d_clear[5] <= 1;
-          16'bxxxxxxxxx1000000 : d_clear[6] <= 1;
-          16'bxxxxxxxx10000000 : d_clear[7] <= 1;
-          16'bxxxxxxx100000000 : d_clear[8] <= 1;
-          16'bxxxxxx1000000000 : d_clear[9] <= 1;
-          16'bxxxxx10000000000 : d_clear[10] <= 1;
-          16'bxxxx100000000000 : d_clear[11] <= 1;
-          16'bxxx1000000000000 : d_clear[12] <= 1;
-          16'bxx10000000000000 : d_clear[13] <= 1;
-          16'bx100000000000000 : d_clear[14] <= 1;
-          16'b1000000000000000 : d_clear[15] <= 1;
+        casex (pci_req)
+          16'b0000000000000000 : pci_clear <= 0;
+          16'bxxxxxxxxxxxxxxx1 : pci_clear[0] <= 1; 
+          16'bxxxxxxxxxxxxxx10 : pci_clear[1] <= 1;
+          16'bxxxxxxxxxxxxx100 : pci_clear[2] <= 1;
+          16'bxxxxxxxxxxxx1000 : pci_clear[3] <= 1;
+          16'bxxxxxxxxxxx10000 : pci_clear[4] <= 1;
+          16'bxxxxxxxxxx100000 : pci_clear[5] <= 1;
+          16'bxxxxxxxxx1000000 : pci_clear[6] <= 1;
+          16'bxxxxxxxx10000000 : pci_clear[7] <= 1;
+          16'bxxxxxxx100000000 : pci_clear[8] <= 1;
+          16'bxxxxxx1000000000 : pci_clear[9] <= 1;
+          16'bxxxxx10000000000 : pci_clear[10] <= 1;
+          16'bxxxx100000000000 : pci_clear[11] <= 1;
+          16'bxxx1000000000000 : pci_clear[12] <= 1;
+          16'bxx10000000000000 : pci_clear[13] <= 1;
+          16'bx100000000000000 : pci_clear[14] <= 1;
+          16'b1000000000000000 : pci_clear[15] <= 1;
         endcase
       end
+    end
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    pci_adc_en_1 <= adc_en;
+    pci_adc_en <= pci_adc_en_1;
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+      pci_active <= 0;
+    else
+      pci_active <= (pci_active | pci_init) & !pci_stop;
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+      pci_on <= 0;
+    else
+    begin
+      if (pci_adc_en)
+        pci_on <= pci_active;
+      else
+        pci_on <= 0;
     end
   end
 
@@ -876,7 +916,7 @@ begin : adc_app
       end
       else
       begin      
-        case (d_clear)
+        case (pci_clear)
           16'b0000000000000001 : 
             begin
               adr <= chan0_adr;
