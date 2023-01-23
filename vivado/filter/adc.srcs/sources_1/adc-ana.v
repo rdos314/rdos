@@ -55,19 +55,7 @@ module adc_ana (
   output reg  [63:0]      d_0,
   output reg  [63:0]      d_1,
   output reg  [63:0]      d_2,
-  output reg  [63:0]      d_3,
-  output reg  [63:0]      d_4,
-  output reg  [63:0]      d_5,
-  output reg  [63:0]      d_6,
-  output reg  [63:0]      d_7,
-  output reg  [63:0]      d_8,
-  output reg  [63:0]      d_9,
-  output reg  [63:0]      d_10,
-  output reg  [63:0]      d_11,
-  output reg  [63:0]      d_12,
-  output reg  [63:0]      d_13,
-  output reg  [63:0]      d_14,
-  output reg  [63:0]      d_15
+  output reg  [63:0]      d_3
 );
 
   reg                     config_init;
@@ -254,7 +242,7 @@ module adc_ana (
   assign phase_B = fifo_out[63:48];
 
   reg                     d_pend;
-  reg  [3:0]              d_adr;
+  reg  [1:0]              d_adr;
 
 ana_synt synt (
   .aclk(clk),                             // input wire aclk
@@ -1033,7 +1021,7 @@ begin : adc_ana_gen
       begin
         if (d_pend)
         begin
-          if (d_adr == 15)
+          if (d_adr == 2'b11)
             report <= 1;
           else
             report <= 0;
@@ -1044,18 +1032,6 @@ begin : adc_ana_gen
             1: d_1 <= fifo_out;
             2: d_2 <= fifo_out;
             3: d_3 <= fifo_out;
-            4: d_4 <= fifo_out;
-            5: d_5 <= fifo_out;
-            6: d_6 <= fifo_out;
-            7: d_7 <= fifo_out;
-            8: d_8 <= fifo_out;
-            9: d_9 <= fifo_out;
-            10: d_10 <= fifo_out;
-            11: d_11 <= fifo_out;
-            12: d_12 <= fifo_out;
-            13: d_13 <= fifo_out;
-            14: d_14 <= fifo_out;
-            15: d_15 <= fifo_out;
           endcase
         end
         else
@@ -1063,7 +1039,7 @@ begin : adc_ana_gen
           if (clear)
           begin
             report <= 0;
-            adr[20:7] <= adr[20:7] + 1;
+            adr[20:5] <= adr[20:5] + 1;
           end          
         end
       end

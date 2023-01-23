@@ -63,13 +63,7 @@ module pci_tx (
   output reg                adc_clear,
   input wire [47:0]         adc_adr,
   input wire [127:0]        adc_d0,
-  input wire [127:0]        adc_d1,
-  input wire [127:0]        adc_d2,
-  input wire [127:0]        adc_d3,
-  input wire [127:0]        adc_d4,
-  input wire [127:0]        adc_d5,
-  input wire [127:0]        adc_d6,
-  input wire [127:0]        adc_d7
+  input wire [127:0]        adc_d1
 );
 
 
@@ -99,7 +93,7 @@ module pci_tx (
 
   reg [127:0]               adc_data;
   wire [127:0]              adc_pkt_data;
-  reg [2:0]                 adc_count;
+  reg [0:0]                 adc_count;
   reg                       adc_pend;
 
 
@@ -238,21 +232,11 @@ generate
 
             adc_count <= adc_count + 1;
 
-            case (adc_count)
-              0: adc_data <= adc_d1;
-              1: adc_data <= adc_d2;
-              2: adc_data <= adc_d3;
-              3: adc_data <= adc_d4;
-              4: adc_data <= adc_d5;
-              5: adc_data <= adc_d6;
-              6: adc_data <= adc_d7;
-            endcase
-
             s_axis_tx_tdata <= adc_pkt_data;
 
             s_axis_tx_tkeep[15:0] <= 16'hffff;
 
-            if (adc_count == 3'b111)
+            if (adc_count == 1)
             begin
               s_axis_tx_tlast <= 1;
               adc_clear <= 1;
@@ -260,6 +244,7 @@ generate
             end
             else
             begin
+              adc_data <= adc_d1;
               s_axis_tx_tlast <= 0;
               adc_clear <= 0;
             end

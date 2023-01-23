@@ -83,12 +83,6 @@ module adc_app (
   output reg [47:0]       adr,
   output reg [127:0]      d_0,
   output reg [127:0]      d_1,
-  output reg [127:0]      d_2,
-  output reg [127:0]      d_3,
-  output reg [127:0]      d_4,
-  output reg [127:0]      d_5,
-  output reg [127:0]      d_6,
-  output reg [127:0]      d_7,
 
   input wire [7:0]        bar1_rd_address,
   input wire              bar1_rd,
@@ -181,18 +175,6 @@ module adc_app (
   wire [63:0]             chan0_d1;
   wire [63:0]             chan0_d2;
   wire [63:0]             chan0_d3;
-  wire [63:0]             chan0_d4;
-  wire [63:0]             chan0_d5;
-  wire [63:0]             chan0_d6;
-  wire [63:0]             chan0_d7;
-  wire [63:0]             chan0_d8;
-  wire [63:0]             chan0_d9;
-  wire [63:0]             chan0_d10;
-  wire [63:0]             chan0_d11;
-  wire [63:0]             chan0_d12;
-  wire [63:0]             chan0_d13;
-  wire [63:0]             chan0_d14;
-  wire [63:0]             chan0_d15;
 
 // channel 1
 
@@ -203,18 +185,6 @@ module adc_app (
   wire [63:0]             chan1_d1;
   wire [63:0]             chan1_d2;
   wire [63:0]             chan1_d3;
-  wire [63:0]             chan1_d4;
-  wire [63:0]             chan1_d5;
-  wire [63:0]             chan1_d6;
-  wire [63:0]             chan1_d7;
-  wire [63:0]             chan1_d8;
-  wire [63:0]             chan1_d9;
-  wire [63:0]             chan1_d10;
-  wire [63:0]             chan1_d11;
-  wire [63:0]             chan1_d12;
-  wire [63:0]             chan1_d13;
-  wire [63:0]             chan1_d14;
-  wire [63:0]             chan1_d15;
 
 // clock domain crossings
 
@@ -300,19 +270,7 @@ adc_ana ana_0 (
     .d_0(chan0_d0),
     .d_1(chan0_d1),
     .d_2(chan0_d2),
-    .d_3(chan0_d3),
-    .d_4(chan0_d4),
-    .d_5(chan0_d5),
-    .d_6(chan0_d6),
-    .d_7(chan0_d7),
-    .d_8(chan0_d8),
-    .d_9(chan0_d9),
-    .d_10(chan0_d10),
-    .d_11(chan0_d11),
-    .d_12(chan0_d12),
-    .d_13(chan0_d13),
-    .d_14(chan0_d14),
-    .d_15(chan0_d15)
+    .d_3(chan0_d3)
 );
 
 adc_ana ana_1 (
@@ -345,19 +303,7 @@ adc_ana ana_1 (
     .d_0(chan1_d0),
     .d_1(chan1_d1),
     .d_2(chan1_d2),
-    .d_3(chan1_d3),
-    .d_4(chan1_d4),
-    .d_5(chan1_d5),
-    .d_6(chan1_d6),
-    .d_7(chan1_d7),
-    .d_8(chan1_d8),
-    .d_9(chan1_d9),
-    .d_10(chan1_d10),
-    .d_11(chan1_d11),
-    .d_12(chan1_d12),
-    .d_13(chan1_d13),
-    .d_14(chan1_d14),
-    .d_15(chan1_d15)
+    .d_3(chan1_d3)
 );
 
 
@@ -965,18 +911,6 @@ begin : adc_app
               d_0[127:64] <= chan0_d1; 
               d_1[63:0] <= chan0_d2; 
               d_1[127:64] <= chan0_d3;  
-              d_2[63:0] <= chan0_d4; 
-              d_2[127:64] <= chan0_d5; 
-              d_3[63:0] <= chan0_d6; 
-              d_3[127:64] <= chan0_d7; 
-              d_4[63:0] <= chan0_d8; 
-              d_4[127:64] <= chan0_d9; 
-              d_5[63:0] <= chan0_d10; 
-              d_5[127:64] <= chan0_d11; 
-              d_6[63:0] <= chan0_d12; 
-              d_6[127:64] <= chan0_d13; 
-              d_7[63:0] <= chan0_d14; 
-              d_7[127:64] <= chan0_d15; 
               report <= 1;
             end          
           
@@ -987,18 +921,6 @@ begin : adc_app
               d_0[127:64] <= chan1_d1; 
               d_1[63:0] <= chan1_d2; 
               d_1[127:64] <= chan1_d3;  
-              d_2[63:0] <= chan1_d4; 
-              d_2[127:64] <= chan1_d5; 
-              d_3[63:0] <= chan1_d6; 
-              d_3[127:64] <= chan1_d7; 
-              d_4[63:0] <= chan1_d8; 
-              d_4[127:64] <= chan1_d9; 
-              d_5[63:0] <= chan1_d10; 
-              d_5[127:64] <= chan1_d11; 
-              d_6[63:0] <= chan1_d12; 
-              d_6[127:64] <= chan1_d13; 
-              d_7[63:0] <= chan1_d14; 
-              d_7[127:64] <= chan1_d15; 
               report <= 1;
             end          
 
