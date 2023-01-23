@@ -170,18 +170,14 @@ module adc (
   wire [13:0]          adc_B2;
   wire [13:0]          adc_B3;
 
-  wire                 up_adc_started;
-  wire                 up_adc_probing;
-  wire                 up_adc_running;
+  wire                 adc_started;
+  wire                 adc_probing;
+  wire                 adc_running;
   
   reg                  adc_led;
 
-  wire                 rx_adc_sync_ok;
-  wire                 rx_adc_sync_fail;
-
-  reg                  adc_sync_ok;
-  reg                  adc_sync_fail;
-
+  wire                 adc_sync_ok;
+  wire                 adc_sync_fail;
 
   wire [2:0]           adc_state;
 
@@ -223,13 +219,6 @@ module adc (
 
 // sys module
 
-  wire                 tx_pci_control_msg;
-  wire [7:0]           tx_pci_control_index;
-  wire [7:0]           tx_pci_control_data;
-  reg                  rx_up_control_msg_3;
-  reg                  rx_up_control_msg;
-  reg  [7:0]           rx_up_control_index;
-  reg  [7:0]           rx_up_control_data;
 
 
   wire                 tx_up_control_msg;
@@ -269,21 +258,6 @@ module adc (
 
  (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_1;
  (* ASYNC_REG="TRUE" *)  reg                  rx_pci_control_msg_2;
-
- (* ASYNC_REG="TRUE" *)  reg                  adc_started_1;
- (* ASYNC_REG="TRUE" *)  reg                  rx_adc_started;
-
- (* ASYNC_REG="TRUE" *)  reg                  adc_probing_1;
- (* ASYNC_REG="TRUE" *)  reg                  rx_adc_probing;
-
- (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
- (* ASYNC_REG="TRUE" *)  reg                  rx_adc_running;
-
- (* ASYNC_REG="TRUE" *)  reg                  adc_sync_ok_1;
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_ok;
-
- (* ASYNC_REG="TRUE" *)  reg                  adc_sync_fail_1;
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_fail;
 
   IBUF   pci_reset_n_ibuf (.O(pcie_rst_n), .I(pci_rst_n));
   IBUFDS_GTE2 pci_refclk_ibuf (.O(pcie_ref_clk), .ODIV2(), .I(pci_ref_clk_p), .CEB(1'b0), .IB(pci_ref_clk_n));
@@ -383,12 +357,12 @@ daq2_app daq2_app_inst (
     .adc_pll_locked(adc_pll_locked),
     .adc_rst_done(adc_rst_done),
 
-    .adc_started(rx_adc_started),    
-    .adc_probing(rx_adc_probing),    
-    .adc_running(rx_adc_running),    
+    .adc_started(adc_started),    
+    .adc_probing(adc_probing),    
+    .adc_running(adc_running),    
 
-    .adc_sync_ok(rx_adc_sync_ok),    
-    .adc_sync_fail(rx_adc_sync_fail),    
+    .adc_sync_ok(adc_sync_ok),    
+    .adc_sync_fail(adc_sync_fail),    
 
     .adc_en(adc_en),
     .adc_A0(adc_A0),
@@ -496,11 +470,7 @@ control_bar control_bar_inst (
     .spi_rp (spi_rp),
     .spi_rp_data (spi_rp_data),
     .spi_rp_ack (spi_rp_ack),
-    
-    .tx_control_msg(tx_pci_control_msg),
-    .tx_control_index(tx_pci_control_index),
-    .tx_control_data(tx_pci_control_data),
-    
+        
     .rx_control_msg(rx_pci_control_msg),
     .rx_control_index(rx_pci_control_index),
     .rx_control_data(rx_pci_control_data)
@@ -522,9 +492,6 @@ adc_app adc_app_inst (
     .spi_running(adc_spi_running),
     .spi_done(adc_spi_done),
 
-    .rx_control_msg(rx_up_control_msg),
-    .rx_control_index(rx_up_control_index),
-    .rx_control_data(rx_up_control_data),
 
     .tx_control_msg(tx_up_control_msg),
     .tx_control_index(tx_up_control_index),
@@ -538,12 +505,12 @@ adc_app adc_app_inst (
     .adc_pll_locked(adc_pll_locked),
     .adc_rst_done(adc_rst_done),
 
-    .adc_sync_ok(up_adc_sync_ok),
-    .adc_sync_fail(up_adc_sync_fail),
+    .adc_sync_ok(adc_sync_ok),
+    .adc_sync_fail(adc_sync_fail),
 
-    .adc_started(up_adc_started),
-    .adc_probing(up_adc_probing),
-    .adc_running(up_adc_running),
+    .adc_started(adc_started),
+    .adc_probing(adc_probing),
+    .adc_running(adc_running),
 
     .state(adc_state),
 
@@ -667,62 +634,6 @@ generate
         rx_reset_ack <= 0;
     end
     
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_started_1 <= up_adc_started;
-      rx_adc_started <= adc_started_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_probing_1 <= up_adc_probing;
-      rx_adc_probing <= adc_probing_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_running_1 <= up_adc_running;
-      rx_adc_running <= adc_running_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_sync_ok <= rx_adc_sync_ok;
-    end
-
-    always @ ( posedge up_clk ) 
-    begin
-      adc_sync_ok_1 <= adc_sync_ok;
-      up_adc_sync_ok <= adc_sync_ok_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_sync_fail <= rx_adc_sync_fail;
-    end
-
-    always @ ( posedge up_clk ) 
-    begin
-      adc_sync_fail_1 <= adc_sync_fail;
-      up_adc_sync_fail <= adc_sync_fail_1;
-    end
-
-    always @ ( posedge up_clk ) 
-    begin
-      rx_up_control_msg_1 <= tx_pci_control_msg;
-      rx_up_control_msg_2 <= rx_up_control_msg_1;
-      rx_up_control_msg_3 <= rx_up_control_msg_2;
-      
-      if (!rx_up_control_msg_3 && rx_up_control_msg_2)
-      begin
-        rx_up_control_msg <= 1;
-        rx_up_control_index <= tx_pci_control_index;
-        rx_up_control_data <= tx_pci_control_data;
-      end
-      else
-        rx_up_control_msg <= 0;
-    end
-
     always @ ( posedge pcie_user_clk ) 
     begin
       rx_pci_control_msg_1 <= tx_up_control_msg;

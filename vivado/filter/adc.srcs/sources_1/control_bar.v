@@ -51,11 +51,7 @@ module control_bar (
 
   input wire              rx_control_msg,
   input wire [7:0]        rx_control_index,
-  input wire [7:0]        rx_control_data,
-
-  output reg              tx_control_msg,
-  output reg [7:0]        tx_control_index,
-  output reg [7:0]        tx_control_data
+  input wire [7:0]        rx_control_data
 );
 
 // internal
@@ -68,13 +64,8 @@ module control_bar (
   reg [31:0]              bar_spi_adc;
   reg [31:0]              bar_spi_dac;
 
-  reg                     req_send_adc_state;
-  reg                     ack_send_adc_state;
-  reg [7:0]               adc_state;
-  reg [1:0]               adc_req_state;
+  reg [1:0]               adc_state;
   reg [7:0]               adc_progr_state;
-
-  reg [1:0]               tx_control_delay;
 
 generate
   begin : ctrl_bar_gen
@@ -84,10 +75,7 @@ generate
       if (reset)
       begin
         control_base <= 0;
-
-        adc_state[5:0] <= 0;
-        adc_req_state <= 0;
-        req_send_adc_state <= 0;
+        adc_state <= 0;
 
         bar_spi_clk <= 0;
         bar_spi_adc <= 0;
@@ -104,7 +92,7 @@ generate
         if (rd)
         begin
           case (rd_address)
-            0: rp_data <= {16'hffffff, adc_progr_state, adc_state};
+            0: rp_data <= {16'hffff, adc_progr_state, 6'b000000, adc_state};
             1: rp_data <= bar_spi_clk;
             2: rp_data <= bar_spi_adc;
             3: rp_data <= bar_spi_dac;
@@ -126,18 +114,6 @@ generate
             case (wr_address)
               0: 
               begin
-                if (wr_be[0])
-                begin
-                  adc_state[5:0] <= wr_data[5:0];
-                  adc_req_state[1:0] <= wr_data[7:6];
-                  req_send_adc_state <= 1;
-                end
-
-                spi_clk_valid <= 0;
-                spi_adc_valid <= 0;
-                spi_dac_valid <= 0;
-              end
-
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
                 spi_dac_valid <= 0;
@@ -273,9 +249,6 @@ generate
           end
           else
           begin
-            if (ack_send_adc_state)
-              req_send_adc_state <= 0;
-          
             spi_clk_valid <= 0;
             spi_adc_valid <= 0;
             spi_dac_valid <= 0;
@@ -441,51 +414,12 @@ generate
       end
     end
 
-    always @ ( posedge clk ) 
-    begin
-      if (reset)
-      begin
-        tx_control_msg <= 0;
-        tx_control_delay <= 0;
-        tx_control_data <= 0;
-        ack_send_adc_state <= 0;
-      end
-      else
-      begin
-        if (tx_control_delay)
-          tx_control_delay <= tx_control_delay - 1;
-        else
-        begin        
-          if (req_send_adc_state)
-          begin
-            if (ack_send_adc_state)
-            begin
-              ack_send_adc_state <= 0;
-              tx_control_msg <= 0;
-            end
-            else
-            begin
-              tx_control_index <= 0;
-              tx_control_data <= adc_req_state;
-              tx_control_msg <= 1;
-              tx_control_delay <= 3;
-              ack_send_adc_state <= 1;
-            end
-          end
-          else
-          begin
-            ack_send_adc_state <= 0;
-            tx_control_msg <= 0;
-          end
-        end
-      end
-    end
 
     always @ ( posedge clk ) 
     begin
       if (reset)
       begin
-        adc_state[7:6] <= 0;
+        adc_state <= 0;
         adc_progr_state <= 0;
       end
       else
@@ -493,38 +427,12 @@ generate
         if (rx_control_msg)
         begin
           case (rx_control_index)
-            0: 
-            if (rx_control_data[0])
-            begin
-              if (rx_control_data[1])
-              begin
-                adc_state[7] <= 1;
-                if (rx_control_data[2])
-                  adc_state[6] <= 1;
-                else
-                  adc_state[6] <= 0;
-              end
-              else
-              begin
-                adc_state[6] <= 1;
-                adc_state[7] <= 0;
-              end
-            end
-            else
-            begin
-              adc_state[6] <= 0;
-              adc_state[7] <= 0;
-            end
-
-            1: 
-            begin
-              adc_progr_state <= rx_control_data;
-            end
+            0:  adc_state <= rx_control_data[1:0];
+            1:  adc_progr_state <= rx_control_data;
           endcase
         end
       end
     end  
-
 
   end
 endgenerate

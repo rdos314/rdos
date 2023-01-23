@@ -41,10 +41,6 @@ module adc_app (
   input wire              spi_running,
   input wire              spi_done,
 
-  input wire              rx_control_msg,
-  input wire [7:0]        rx_control_index,
-  input wire [7:0]        rx_control_data,
-
   output reg              tx_control_msg,
   output reg [7:0]        tx_control_index,
   output reg [7:0]        tx_control_data,
@@ -109,14 +105,17 @@ module adc_app (
   reg                     up_req_stop;
   reg                     up_pend_start;
 
+  reg                     up_adc_started;
+  reg                     up_adc_probing;
+  reg                     up_adc_running;
+  reg                     up_adc_en;
+
   reg                     up_spi_test_done;
   reg [3:0]               up_pll_rst_cnt; 
   reg [3:0]               up_adc_rst_cnt;
   reg [6:0]               up_adc_user_ready_cnt;  
 
 // pci domain
-
-  reg                     adc_stopped;
   
   reg                     pci_en;
   reg                     pci_rd;
@@ -136,6 +135,8 @@ module adc_app (
   reg  [1:0]              pci_count;
 
 // rx domain
+
+  reg                     adc_on;
 
   reg  [15:0]             rx_req;
   reg  [15:0]             rx_init;
@@ -186,28 +187,25 @@ module adc_app (
 
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_started_1;
- (* ASYNC_REG="TRUE" *)  reg                  pci_adc_started;
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_probing_1;
- (* ASYNC_REG="TRUE" *)  reg                  pci_adc_probing;
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
- (* ASYNC_REG="TRUE" *)  reg                  pci_adc_running;
 
- (* ASYNC_REG="TRUE" *)  reg                  adc_full_1;
- (* ASYNC_REG="TRUE" *)  reg                  adc_full_2;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_en_1;
 
- (* ASYNC_REG="TRUE" *)  reg                  adc_almost_full_1;
- (* ASYNC_REG="TRUE" *)  reg                  adc_almost_full_2;
-
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_started_1;
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_started;
-
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped_1;
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_stopped;
+ (* ASYNC_REG="TRUE" *)  reg                  up_on_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_on_2;
 
  (* ASYNC_REG="TRUE" *)  reg [15:0]           temp_pend;
  (* ASYNC_REG="TRUE" *)  reg [15:0]           rx_pend;
+
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_ok_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_ok;
+
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_fail_1;
+ (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_fail;
+
 
   assign adc_rst = up_adc_rst_cnt[3];
   assign adc_user_ready = up_adc_user_ready_cnt[6];
@@ -334,48 +332,62 @@ ila_2 ila_2_inst (
 generate
 begin : adc_app
 
+    always @ ( posedge rx_clk ) 
+    begin
+      up_adc_sync_ok <= adc_sync_ok;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_adc_sync_ok_1 <= up_adc_sync_ok;
+      up_adc_sync_ok <= aup_dc_sync_ok_1;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      up_adc_sync_fail <= adc_sync_fail;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_adc_sync_fail_1 <= up_adc_sync_fail;
+      up_adc_sync_fail <= up_adc_sync_fail_1;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      up_adc_en_1 <= adc_en;
+      up_adc_en <= up_adc_en_1;
+    end
+
     always @ ( posedge up_clk ) 
     begin
       if (up_reset)
       begin
         up_req_start <= 0;
         up_req_stop <= 0;
-        up_req_state <= 0;
+        up_on_1 <= 0;
+        up_on_2 <= 0;
+        up_on_3 <= 0;
       end
       else
       begin
-        if (rx_control_msg)
+        up_on_1 <= adc_on;
+        up_on_2 <= up_on_1;
+        up_on_3 <= up_on_2;
+      
+        if (!up_on_3 && up_on_2)
         begin
-          case (rx_control_index)
-            0:
-            begin
-              up_req_state <= rx_control_data[1:0];
-              if (up_req_state[1] != rx_control_data[1])
-              begin
-                if (rx_control_data[1])
-                begin
-                  up_req_start <= 1;
-                  up_req_stop <= 0;
-                end
-                else
-                begin
-                  up_req_start <= 0;
-                  up_req_stop <= 1;
-                end
-              end
-              else
-              begin
-                up_req_start <= 0;
-                up_req_stop <= 0;
-              end
-            end
-
-            default:
-            begin
-              up_req_start <= 0;
-              up_req_stop <= 0;
-            end
-          endcase
+          if (up_on_2)
+          begin
+            up_req_start <= 1;
+            up_req_stop <= 0;
+          end
+          else
+          begin
+            up_req_start <= 0;
+            up_req_stop <= 1;
+          end
         end
         else
         begin
@@ -383,16 +395,16 @@ begin : adc_app
           up_req_stop <= 0;
         end
       end
-     end
+    end
 
     always @ ( posedge up_clk ) 
     begin
       if (up_reset)
       begin
         spi_write <= 0;
-        adc_started <= 0;
-        adc_probing <= 0;
-        adc_running <= 0;
+        up_adc_started <= 0;
+        up_adc_probing <= 0;
+        up_adc_running <= 0;
         up_rstn <= 0;
         qpll_rst <= 0;
         up_pend_start <= 0;
@@ -403,9 +415,9 @@ begin : adc_app
       begin
         if (up_req_start)
         begin
-          adc_started <= 0;
-          adc_probing <= 0;
-          adc_running <= 0;
+          up_adc_started <= 0;
+          up_adc_probing <= 0;
+          up_adc_running <= 0;
           up_spi_test_done <= 0;
           up_rstn <= 0;
           qpll_rst <= 1;
@@ -419,9 +431,11 @@ begin : adc_app
         begin
           qpll_rst <= 0;
 
-          if (up_req_stop | up_adc_stopped)
+          if (up_req_stop)
           begin
-            adc_started <= 0;
+            up_adc_started <= 0;
+            up_adc_probing <= 0;
+            up_adc_running <= 0;
             up_rstn <= 0;
             up_progr_state <= up_progr_state | 8'h80;
           end
@@ -431,7 +445,7 @@ begin : adc_app
 
             if (up_pend_start)
             begin
-              if (adc_started)
+              if (up_adc_started)
               begin
                 if (spi_done)
                 begin
@@ -461,7 +475,7 @@ begin : adc_app
                       if (adc_rst_done == 4'b1111)
                       begin
                         up_pend_start <= 0;
-                        adc_probing <= 1;
+                        up_adc_probing <= 1;
                         up_progr_state <= up_progr_state | 8'h1;
                       end
                     end
@@ -473,24 +487,24 @@ begin : adc_app
                 spi_adr <= 12'h550;
                 spi_out_data <= 8'h37;
                 spi_write <= 1;
-                adc_started <= 1;
+                up_adc_started <= 1;
                 up_progr_state <= up_progr_state | 8'h2;
               end
             end
             else
             begin
-              if (up_adc_started)
+              if (up_adc_en)
               begin
-                adc_probing <= 0;
+                up_adc_probing <= 0;
               end
               else
               begin
-                if (adc_sync_ok)
+                if (up_adc_sync_ok)
                 begin
                   spi_adr <= 12'h550;
                   spi_out_data <= 0;  // test mode
                   spi_write <= 1;
-                  adc_running <= 1;
+                  up_adc_running <= 1;
                   up_progr_state <= up_progr_state | 8'h20;
                 end
                 else
@@ -498,10 +512,10 @@ begin : adc_app
                   if (spi_done)
                     spi_write <= 0;
  
-                  if (adc_sync_fail)
+                  if (up_adc_sync_fail)
                   begin
-                    adc_started <= 0;
-                    adc_probing <= 0;
+                    up_adc_started <= 0;
+                    up_adc_probing <= 0;
                     up_progr_state <= up_progr_state | 8'h40;
                   end
                 end
@@ -558,34 +572,22 @@ begin : adc_app
       end
     end
 
-    always @ ( posedge up_clk ) 
+    always @ ( posedge rx_clk ) 
     begin
-      up_adc_started_1 <= adc_en;
-      up_adc_started <= up_adc_started_1;
+      adc_started_1 <= up_adc_started;
+      adc_started <= adc_started_1;
     end
 
-    always @ ( posedge up_clk ) 
+    always @ ( posedge rx_clk ) 
     begin
-      up_adc_stopped_1 <= adc_stopped;
-      up_adc_stopped <= up_adc_stopped_1;
+      adc_probing_1 <= up_adc_probing;
+      adc_probing <= adc_probing_1;
     end
 
-    always @ ( posedge pci_clk ) 
+    always @ ( posedge rx_clk ) 
     begin
-      adc_started_1 <= adc_started;
-      pci_adc_started <= adc_started_1;
-    end
-
-    always @ ( posedge pci_clk ) 
-    begin
-      adc_probing_1 <= adc_probing;
-      pci_adc_probing <= adc_probing_1;
-    end
-
-    always @ ( posedge pci_clk ) 
-    begin
-      adc_running_1 <= adc_running;
-      pci_adc_running <= adc_running_1;
+      adc_running_1 <= up_adc_running;
+      adc_running <= adc_running_1;
     end
 
   always @ ( posedge pci_clk ) 
