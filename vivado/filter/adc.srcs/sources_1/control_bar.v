@@ -49,8 +49,6 @@ module control_bar (
   input wire [29:0]       spi_rp_data,
   output reg              spi_rp_ack,
 
-  input [15:0]            adc_phys_index,
-
   input wire              rx_control_msg,
   input wire [7:0]        rx_control_index,
   input wire [7:0]        rx_control_data,
@@ -74,11 +72,7 @@ module control_bar (
   reg                     ack_send_adc_state;
   reg [7:0]               adc_state;
   reg [1:0]               adc_req_state;
-  reg [7:0]               adc_irq_state;
-
-  reg                     req_send_adc_test_mode;
-  reg                     ack_send_adc_test_mode;
-  reg [7:0]               adc_test_mode;
+  reg [7:0]               adc_progr_state;
 
   reg [1:0]               tx_control_delay;
 
@@ -93,9 +87,7 @@ generate
 
         adc_state[5:0] <= 0;
         adc_req_state <= 0;
-        adc_test_mode <= 0;
         req_send_adc_state <= 0;
-        req_send_adc_test_mode <= 0;
 
         bar_spi_clk <= 0;
         bar_spi_adc <= 0;
@@ -112,11 +104,10 @@ generate
         if (rd)
         begin
           case (rd_address)
-            0: rp_data <= {24'hffffff, adc_state};
+            0: rp_data <= {16'hffffff, adc_progr_state, adc_state};
             1: rp_data <= bar_spi_clk;
             2: rp_data <= bar_spi_adc;
             3: rp_data <= bar_spi_dac;
-            4: rp_data <= {adc_phys_index, adc_test_mode, adc_irq_state};
             default: rp_data <= 32'hffffffff;
           endcase     
 
@@ -141,6 +132,11 @@ generate
                   adc_req_state[1:0] <= wr_data[7:6];
                   req_send_adc_state <= 1;
                 end
+
+                spi_clk_valid <= 0;
+                spi_adc_valid <= 0;
+                spi_dac_valid <= 0;
+              end
 
                 spi_clk_valid <= 0;
                 spi_adc_valid <= 0;
@@ -273,19 +269,6 @@ generate
                 spi_adc_valid <= 0;
               end
 
-              4:
-              begin
-                if (wr_be[1])
-                begin
-                  adc_test_mode[7:0] <= wr_data[15:8]; 
-                  if (adc_test_mode[7:0] != wr_data[15:8])
-                    req_send_adc_test_mode <= 1;
-                end
-
-                spi_clk_valid <= 0;
-                spi_adc_valid <= 0;
-                spi_dac_valid <= 0;
-              end
             endcase
           end
           else
@@ -293,9 +276,6 @@ generate
             if (ack_send_adc_state)
               req_send_adc_state <= 0;
           
-            if (ack_send_adc_test_mode)
-              req_send_adc_test_mode <= 0;
-
             spi_clk_valid <= 0;
             spi_adc_valid <= 0;
             spi_dac_valid <= 0;
@@ -469,7 +449,6 @@ generate
         tx_control_delay <= 0;
         tx_control_data <= 0;
         ack_send_adc_state <= 0;
-        ack_send_adc_test_mode <= 0;
       end
       else
       begin
@@ -496,28 +475,7 @@ generate
           else
           begin
             ack_send_adc_state <= 0;
-
-            if (req_send_adc_test_mode)
-            begin
-              if (ack_send_adc_test_mode)
-              begin
-                ack_send_adc_test_mode <= 0;
-                tx_control_msg <= 0;
-              end
-              else
-              begin
-                tx_control_index <= 1;
-                tx_control_data <= adc_test_mode;
-                tx_control_msg <= 1;
-                tx_control_delay <= 3;
-                ack_send_adc_test_mode <= 1;
-              end
-            end            
-            else
-            begin
-              ack_send_adc_test_mode <= 0;
-              tx_control_msg <= 0;
-            end
+            tx_control_msg <= 0;
           end
         end
       end
@@ -528,7 +486,7 @@ generate
       if (reset)
       begin
         adc_state[7:6] <= 0;
-        adc_irq_state <= 0;
+        adc_progr_state <= 0;
       end
       else
       begin
@@ -560,7 +518,7 @@ generate
 
             1: 
             begin
-              adc_irq_state <= rx_control_data;
+              adc_progr_state <= rx_control_data;
             end
           endcase
         end

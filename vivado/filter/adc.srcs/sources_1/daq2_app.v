@@ -70,7 +70,6 @@ module daq2_app
   input                   adc_started,
   input                   adc_probing,
   input                   adc_running,
-  input                   adc_delay,
 
   output wire             adc_sync_ok,
   output wire             adc_sync_fail,
@@ -118,7 +117,6 @@ module daq2_app
  reg [1:0]                adc_sync_fail_cnt;
  reg [15:0]               adc_sync_ok_cnt;
  reg                      adc_start_found;
- reg [7:0]                delay_cnt;
  
  wire [13:0]              adcA_0;
  wire [13:0]              adcA_1;
@@ -504,18 +502,8 @@ generate
               adc_en <= 0;
             else
             begin
-              if (adc_delay)
-              begin
-                if (delay_cnt)
-                  delay_cnt <= delay_cnt - 1;
-                else
-                  adc_start_found <= 1;
-              end
-              else
-              begin               
-                adc_en <= 1;
-                adc_start_found <= 1;
-              end
+              adc_en <= 1;
+              adc_start_found <= 1;
             end
           end
           else
@@ -525,14 +513,12 @@ generate
         begin
           adc_en <= 0;
           adc_start_found <= 0;
-          delay_cnt <= 8'hFF;
         end
       end
       else
       begin
         adc_en <= 0;
         adc_start_found <= 0;
-        delay_cnt <= 8'hFF;
       end
     end
 

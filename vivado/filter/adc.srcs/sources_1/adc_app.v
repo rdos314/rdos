@@ -63,8 +63,6 @@ module adc_app (
   output reg              adc_started,
   output reg              adc_probing,
   output reg              adc_running,
-  output wire             adc_delay,
-  output reg              adc_irq,
 
   output wire [2:0]       state,
     
@@ -100,14 +98,12 @@ module adc_app (
 
   reg [1:0]               up_req_state;
   reg [2:0]               up_curr_state;
-  reg [7:0]               up_test_mode;
 
-  reg [7:0]               irq_state;
-  reg [7:0]               up_curr_irq;
+  reg [7:0]               up_progr;
+  reg [7:0]               up_curr_progr;
 
-  reg [3:0]               up_bar_irq_cnt;
-  reg                     up_bar_irq;
-  reg                     pci_bar_irq_3;
+  reg [3:0]               up_bar_progr_cnt;
+  reg                     up_bar_progr;
 
   reg                     up_req_start;
   reg                     up_req_stop;
@@ -204,9 +200,6 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  adc_almost_full_1;
  (* ASYNC_REG="TRUE" *)  reg                  adc_almost_full_2;
 
- (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_1;
- (* ASYNC_REG="TRUE" *)  reg                  pci_bar_irq_2;
-
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_started_1;
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_started;
 
@@ -222,8 +215,6 @@ module adc_app (
   assign state[0] = adc_started;
   assign state[1] = adc_probing;
   assign state[2] = adc_running;
-
-  assign adc_delay = up_test_mode ? 0 : 1;
 
 bram_signal bram_signal_inst (
   .clka(pci_clk),    // input wire clka
@@ -350,7 +341,6 @@ begin : adc_app
         up_req_start <= 0;
         up_req_stop <= 0;
         up_req_state <= 0;
-        up_test_mode <= 0;
       end
       else
       begin
@@ -380,13 +370,6 @@ begin : adc_app
               end
             end
 
-            1:
-            begin
-              up_req_start <= 0;
-              up_req_stop <= 0;
-              up_test_mode <= rx_control_data;
-            end
-
             default:
             begin
               up_req_start <= 0;
@@ -414,7 +397,7 @@ begin : adc_app
         qpll_rst <= 0;
         up_pend_start <= 0;
         up_spi_test_done <= 0;
-        irq_state <= 0;
+        up_progr_state <= 0;
       end
       else
       begin
@@ -430,7 +413,7 @@ begin : adc_app
           up_adc_rst_cnt <= 4'h8;    
           up_adc_user_ready_cnt <= 7'h00;  
           up_pend_start <= 1;
-          irq_state <= 0;
+          up_progr_state <= 0;
         end
         else
         begin
@@ -440,7 +423,7 @@ begin : adc_app
           begin
             adc_started <= 0;
             up_rstn <= 0;
-            irq_state <= irq_state | 8'h80;
+            up_progr_state <= up_progr_state | 8'h80;
           end
           else
           begin
@@ -479,7 +462,7 @@ begin : adc_app
                       begin
                         up_pend_start <= 0;
                         adc_probing <= 1;
-                        irq_state <= irq_state | 8'h1;
+                        up_progr_state <= up_progr_state | 8'h1;
                       end
                     end
                   end
@@ -491,7 +474,7 @@ begin : adc_app
                 spi_out_data <= 8'h37;
                 spi_write <= 1;
                 adc_started <= 1;
-                irq_state <= irq_state | 8'h2;
+                up_progr_state <= up_progr_state | 8'h2;
               end
             end
             else
@@ -499,16 +482,16 @@ begin : adc_app
               if (up_adc_started)
               begin
                 adc_probing <= 0;
-                end
+              end
               else
               begin
                 if (adc_sync_ok)
                 begin
                   spi_adr <= 12'h550;
-                  spi_out_data <= up_test_mode;
+                  spi_out_data <= 0;  // test mode
                   spi_write <= 1;
                   adc_running <= 1;
-                  irq_state <= irq_state | 8'h20;
+                  up_progr_state <= up_progr_state | 8'h20;
                 end
                 else
                 begin
@@ -519,7 +502,7 @@ begin : adc_app
                   begin
                     adc_started <= 0;
                     adc_probing <= 0;
-                    irq_state <= irq_state | 8'h40;
+                    up_progr_state <= up_progr_state | 8'h40;
                   end
                 end
               end
@@ -536,19 +519,19 @@ begin : adc_app
       begin
         tx_control_msg <= 0;
         up_curr_state <= 0;
-        up_curr_irq <= 0;
-        up_bar_irq <= 0;
+        up_curr_progr <= 0;
+        up_bar_progr <= 0;
       end
       else
       begin
-        up_curr_irq <= irq_state;
-        if (up_curr_irq != irq_state)
+        up_curr_progr <= up_progr_state;
+        if (up_curr_progr != up_progr_state)
         begin
           tx_control_index <= 1;
-          tx_control_data <= irq_state;
+          tx_control_data <= up_progr_state;
           tx_control_msg <= 1;
-          up_bar_irq <= 1;
-          up_bar_irq_cnt <= 0;
+          up_bar_progr <= 1;
+          up_bar_progr_cnt <= 0;
         end
         else
         begin
@@ -563,12 +546,12 @@ begin : adc_app
           begin
             tx_control_msg <= 0;
 
-            if (up_bar_irq)
+            if (up_bar_progr)
             begin
-              if (up_bar_irq_cnt[3])
-                up_bar_irq <= 0;
+              if (up_bar_progr_cnt[3])
+                up_bar_progr <= 0;
               else
-                up_bar_irq_cnt <= up_bar_irq_cnt + 1;
+                up_bar_progr_cnt <= up_progr_cnt + 1;
             end
           end
         end
@@ -603,18 +586,6 @@ begin : adc_app
     begin
       adc_running_1 <= adc_running;
       pci_adc_running <= adc_running_1;
-    end
-
-    always @ ( posedge pci_clk ) 
-    begin
-      pci_bar_irq_1 <= up_bar_irq;
-      pci_bar_irq_2 <= pci_bar_irq_1;
-      pci_bar_irq_3 <= pci_bar_irq_2;
-      
-      if (!pci_bar_irq_3 && pci_bar_irq_2)
-        adc_irq <= 1;
-      else
-        adc_irq <= 0;
     end
 
   always @ ( posedge pci_clk ) 
