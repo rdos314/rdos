@@ -6,7 +6,7 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version. The only exception to this rule
-// is for commercial usage in embedded systems. For information on
+// is for commercial usage in embedded systems. For information onad
 // usage in commercial embedded systems, contact embedded@rdos.net
 //
 // This program is distributed in the hope that it will be useful,
@@ -75,7 +75,6 @@ generate
       if (reset)
       begin
         control_base <= 0;
-        adc_state <= 0;
 
         bar_spi_clk <= 0;
         bar_spi_adc <= 0;

@@ -50,12 +50,6 @@ module pci_app (
   input wire [47:0]    adc_adr,
   input wire [127:0]   adc_d0,
   input wire [127:0]   adc_d1,
-  input wire [127:0]   adc_d2,
-  input wire [127:0]   adc_d3,
-  input wire [127:0]   adc_d4,
-  input wire [127:0]   adc_d5,
-  input wire [127:0]   adc_d6,
-  input wire [127:0]   adc_d7,
 
   output reg [9:0]     bar0_rd_address,
   output reg           bar0_rd,
@@ -522,13 +516,7 @@ pci_tx pci_tx_inst (
     .adc_clear(adc_clear),
     .adc_adr(adc_adr),
     .adc_d0(adc_d0),
-    .adc_d1(adc_d1),
-    .adc_d2(adc_d2),
-    .adc_d3(adc_d3),
-    .adc_d4(adc_d4),
-    .adc_d5(adc_d5),
-    .adc_d6(adc_d6),
-    .adc_d7(adc_d7)
+    .adc_d1(adc_d1)
 );
  
 generate

@@ -109,6 +109,13 @@ module adc_app (
   reg                     up_adc_probing;
   reg                     up_adc_running;
   reg                     up_adc_en;
+  reg                     up_progr_state;
+  
+  reg                     up_adc_sync_ok;
+  reg                     up_adc_sync_fail;
+  
+  reg                     up_on_2;
+  reg                     up_on_3;
 
   reg                     up_spi_test_done;
   reg [3:0]               up_pll_rst_cnt; 
@@ -199,27 +206,24 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
 
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_en_1;
- (* ASYNC_REG="TRUE" *)  reg                  pci_adc_1;
+ (* ASYNC_REG="TRUE" *)  reg                  pci_adc_en_1;
 
  (* ASYNC_REG="TRUE" *)  reg                  up_on_1;
- (* ASYNC_REG="TRUE" *)  reg                  up_on_2;
 
  (* ASYNC_REG="TRUE" *)  reg [15:0]           temp_pend;
  (* ASYNC_REG="TRUE" *)  reg [15:0]           rx_pend;
 
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_ok_1;
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_ok;
+ (* ASYNC_REG="TRUE" *)  reg                  adc_sync_ok_1;
 
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_fail_1;
- (* ASYNC_REG="TRUE" *)  reg                  up_adc_sync_fail;
+ (* ASYNC_REG="TRUE" *)  reg                  adc_sync_fail_1;
 
 
   assign adc_rst = up_adc_rst_cnt[3];
   assign adc_user_ready = up_adc_user_ready_cnt[6];
 
-  assign state[0] = adc_started;
-  assign state[1] = adc_probing;
-  assign state[2] = adc_running;
+  assign state[0] = up_adc_started;
+  assign state[1] = up_adc_probing;
+  assign state[2] = up_adc_running;
 
 bram_signal bram_signal_inst (
   .clka(pci_clk),    // input wire clka
@@ -345,32 +349,22 @@ ila_2 ila_2_inst (
 generate
 begin : adc_app
 
-    always @ ( posedge rx_clk ) 
-    begin
-      up_adc_sync_ok <= adc_sync_ok;
-    end
-
-    always @ ( posedge up_clk ) 
-    begin
-      up_adc_sync_ok_1 <= up_adc_sync_ok;
-      up_adc_sync_ok <= aup_dc_sync_ok_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      up_adc_sync_fail <= adc_sync_fail;
-    end
-
-    always @ ( posedge up_clk ) 
-    begin
-      up_adc_sync_fail_1 <= up_adc_sync_fail;
-      up_adc_sync_fail <= up_adc_sync_fail_1;
-    end
-
     always @ ( posedge up_clk ) 
     begin
       up_adc_en_1 <= adc_en;
       up_adc_en <= up_adc_en_1;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      adc_sync_ok_1 <= adc_sync_ok;
+      up_adc_sync_ok <= adc_sync_ok_1;
+    end
+
+    always @ ( posedge up_clk ) 
+    begin
+      adc_sync_fail_1 <= adc_sync_fail;
+      up_adc_sync_fail <= adc_sync_fail_1;
     end
 
     always @ ( posedge up_clk ) 
@@ -539,7 +533,6 @@ begin : adc_app
       end
     end
 
-
     always @ ( posedge up_clk ) 
     begin
       if (up_reset)
@@ -578,30 +571,13 @@ begin : adc_app
               if (up_bar_progr_cnt[3])
                 up_bar_progr <= 0;
               else
-                up_bar_progr_cnt <= up_progr_cnt + 1;
+                up_bar_progr_cnt <= up_bar_progr_cnt + 1;
             end
           end
         end
       end
     end
 
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_started_1 <= up_adc_started;
-      adc_started <= adc_started_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_probing_1 <= up_adc_probing;
-      adc_probing <= adc_probing_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_running_1 <= up_adc_running;
-      adc_running <= adc_running_1;
-    end
 
   always @ ( posedge pci_clk ) 
   begin
@@ -942,6 +918,24 @@ begin : adc_app
       end
     end
   end
+ 
+    always @ ( posedge rx_clk ) 
+    begin
+      adc_started_1 <= up_adc_started;
+      adc_started <= adc_started_1;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      adc_probing_1 <= up_adc_probing;
+      adc_probing <= adc_probing_1;
+    end
+
+    always @ ( posedge rx_clk ) 
+    begin
+      adc_running_1 <= up_adc_running;
+      adc_running <= adc_running_1;
+    end
 
   always @ ( posedge rx_clk ) 
   begin
