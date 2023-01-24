@@ -952,7 +952,7 @@ begin : adc_ana_gen
     end
     else
     begin
-      if (init)
+      if (config_init)
       begin
         adc_active <= 0;
         adc_delay <= 0;

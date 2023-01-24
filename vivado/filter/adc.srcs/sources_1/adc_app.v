@@ -366,7 +366,19 @@ ila_3 ila_3_inst (
   .probe15(up_adc_sync_fail),    // input wire [0:0]
   .probe16(up_on_1),             // input wire [0:0]
   .probe17(up_on_2),             // input wire [0:0]
-  .probe18(up_on_3)              // input wire [0:0]
+  .probe18(up_on_3),             // input wire [0:0]
+  .probe19(spi_read),            // input wire [0:0]
+  .probe20(spi_write),           // input wire [0:0]
+  .probe21(spi_adr),             // input wire [11:0]
+  .probe22(spi_in_data),         // input wire [7:0]
+  .probe23(spi_out_data),        // input wire [7:0]
+  .probe24(spi_running),         // input wire [0:0]
+  .probe25(spi_done),            // input wire [0:0]
+  .probe26(up_spi_test_done),    // input wire [0:0]
+  .probe27(up_pll_rst_cnt),      // input wire [3:0]
+  .probe28(adc_pll_locked),      // input wire [3:0]
+  .probe29(up_adc_user_ready_cnt), // input wire [6:0]
+  .probe30(adc_rst_done)         // input wire [3:0]
 );
 
 generate
@@ -378,7 +390,7 @@ begin : adc_app
       up_adc_en <= up_adc_en_1;
     end
 
-    always @ ( posedge up_clk ) 
+    always @ ( posedge up_clk ) 	
     begin
       adc_sync_ok_1 <= adc_sync_ok;
       up_adc_sync_ok <= adc_sync_ok_1;

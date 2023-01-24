@@ -165,6 +165,8 @@ set_false_path -from [get_pins adc_app_inst/adc_app.tx_control_msg_reg/C] -to [g
 set_false_path -from [get_pins adc_app_inst/adc_app.tx_control_data_reg[*]/C] -to [get_pins adc.rx_pci_control_data_reg[*]/D]
 set_false_path -from [get_pins adc_app_inst/adc_app.tx_control_index_reg[*]/C] -to [get_pins adc.rx_pci_control_index_reg[*]/D]
 
+set_false_path -from [get_pins adc_app_inst/adc_app.pci_adc_on_reg/C] -to [get_pins adc_app_inst/adc_app.up_on_1_reg/D]
+
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
 set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
