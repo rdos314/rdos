@@ -993,15 +993,27 @@ void DeleteHandle(int Handle)
 
     if (IniHandle)
     {
-        if (IniHandle->SectionName)
-        {
-            sel = RdosPointerToSelector(IniHandle->SectionName);
-            RdosFreeMem(sel);
-        }
-
         Ini = IniHandle->Ini;
 
+        LockIni(Ini);
+
+        if (IniHandle->SectionName)
+            sel = RdosPointerToSelector(IniHandle->SectionName);
+        else
+            sel = 0;
+
         RdosFreeHandle((struct THandleHeader *)IniHandle);
+
+        UnlockIni(Ini);
+
+        RdosWaitMilli(10);
+
+        LockIni(Ini);
+
+        if (sel)
+            RdosFreeMem(sel);
+
+        UnlockIni(Ini);
 
         Lock();
             

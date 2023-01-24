@@ -145,11 +145,11 @@ module adc_app (
 
 // rx domain
 
-  reg                     adc_on;
-
   reg  [15:0]             rx_req;
   reg  [15:0]             rx_init;
   reg  [15:0]             rx_conf;
+  reg  [15:0]             rx_pend;
+  reg  [15:0]             rx_pend_2;
 
   reg                     rx_en;
   reg                     rx_wr;
@@ -175,6 +175,8 @@ module adc_app (
   wire [15:0]             pci_stop;
   reg  [15:0]             pci_on;
   reg  [15:0]             pci_active;
+  reg                     pci_adc_on;
+
 
 // channel 0
 
@@ -200,9 +202,7 @@ module adc_app (
 
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_started_1;
-
  (* ASYNC_REG="TRUE" *)  reg                  adc_probing_1;
-
  (* ASYNC_REG="TRUE" *)  reg                  adc_running_1;
 
  (* ASYNC_REG="TRUE" *)  reg                  up_adc_en_1;
@@ -210,11 +210,9 @@ module adc_app (
 
  (* ASYNC_REG="TRUE" *)  reg                  up_on_1;
 
- (* ASYNC_REG="TRUE" *)  reg [15:0]           temp_pend;
- (* ASYNC_REG="TRUE" *)  reg [15:0]           rx_pend;
+ (* ASYNC_REG="TRUE" *)  reg [15:0]           rx_pend_1;
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_sync_ok_1;
-
  (* ASYNC_REG="TRUE" *)  reg                  adc_sync_fail_1;
 
 
@@ -328,8 +326,9 @@ ila_1 ila_1_inst (
   .probe14(pci_on),              // input wire [15:0]
   .probe15(pci_stop),            // input wire [15:0]
   .probe16(pci_active),          // input wire [15:0]
-  .probe17(report),              // input wire [0:0]
-  .probe18(adr)                  // input wire [47:0]
+  .probe17(pci_adc_on),          // input wire [0:0]
+  .probe18(report),              // input wire [0:0]
+  .probe19(adr)                  // input wire [47:0]
  );
 
 ila_2 ila_2_inst (
@@ -337,13 +336,37 @@ ila_2 ila_2_inst (
   .probe0(rx_req),               // input wire [15:0]
   .probe1(rx_init),              // input wire [15:0]
   .probe2(rx_conf),              // input wire [15:0]
-  .probe3(rx_en),                // input wire [0:0]
-  .probe4(rx_adr),               // input wire [7:0]
-  .probe5(rx_out),               // input wire [31:0]
-  .probe6(chan0_incr),           // input wire [29:0]
-  .probe7(chan0_count),          // input wire [13:0]
-  .probe8(chan1_incr),          // input wire [29:0]
-  .probe9(chan1_count)          // input wire [13:0]
+  .probe3(rx_pend),              // input wire [15:0]
+  .probe4(rx_en),                // input wire [0:0]
+  .probe5(rx_adr),               // input wire [7:0]
+  .probe6(rx_out),               // input wire [31:0]
+  .probe7(chan0_incr),           // input wire [29:0]
+  .probe8(chan0_count),          // input wire [13:0]
+  .probe9(chan1_incr),           // input wire [29:0]
+  .probe10(chan1_count)          // input wire [13:0]
+);
+
+ila_3 ila_3_inst (
+  .clk(up_clk),                  // input wire clk
+  .probe0(up_req_state),         // input wire [1:0]
+  .probe1(up_curr_state),        // input wire [2:0]
+  .probe2(up_progr),             // input wire [7:0]
+  .probe3(up_curr_progr),        // input wire [7:0]
+  .probe4(up_bar_progr_cnt),     // input wire [3:0]
+  .probe5(up_bar_progr),         // input wire [0:0]
+  .probe6(up_req_start),         // input wire [0:0]
+  .probe7(up_req_stop),          // input wire [0:0]
+  .probe8(up_pend_start),        // input wire [0:0]
+  .probe9(up_adc_started),       // input wire [0:0]
+  .probe10(up_adc_probing),      // input wire [0:0]
+  .probe11(up_adc_running),      // input wire [0:0]
+  .probe12(up_adc_en),           // input wire [0:0]
+  .probe13(up_progr_state),      // input wire [0:0]
+  .probe14(up_adc_sync_ok),      // input wire [0:0]
+  .probe15(up_adc_sync_fail),    // input wire [0:0]
+  .probe16(up_on_1),             // input wire [0:0]
+  .probe17(up_on_2),             // input wire [0:0]
+  .probe18(up_on_3)              // input wire [0:0]
 );
 
 generate
@@ -379,7 +402,7 @@ begin : adc_app
       end
       else
       begin
-        up_on_1 <= adc_on;
+        up_on_1 <= pci_adc_on;
         up_on_2 <= up_on_1;
         up_on_3 <= up_on_2;
       
@@ -866,6 +889,19 @@ begin : adc_app
   always @ ( posedge pci_clk ) 
   begin
     if (pci_reset)
+      pci_adc_on <= 0;
+    else
+    begin
+      if (pci_active)
+        pci_adc_on <= 1;
+      else
+        pci_adc_on <= 0;
+    end
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
       pci_on <= 0;
     else
     begin
@@ -919,27 +955,28 @@ begin : adc_app
     end
   end
  
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_started_1 <= up_adc_started;
-      adc_started <= adc_started_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_probing_1 <= up_adc_probing;
-      adc_probing <= adc_probing_1;
-    end
-
-    always @ ( posedge rx_clk ) 
-    begin
-      adc_running_1 <= up_adc_running;
-      adc_running <= adc_running_1;
-    end
+  always @ ( posedge rx_clk ) 
+  begin
+    adc_started_1 <= up_adc_started;
+    adc_started <= adc_started_1;
+  end
 
   always @ ( posedge rx_clk ) 
   begin
-    temp_pend <= pci_pend;
+    adc_probing_1 <= up_adc_probing;
+    adc_probing <= adc_probing_1;
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    adc_running_1 <= up_adc_running;
+    adc_running <= adc_running_1;
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    rx_pend_1 <= pci_pend;
+    rx_pend_2 <= rx_pend_1;
   end
 
   always @ ( posedge rx_clk ) 
@@ -955,8 +992,8 @@ begin : adc_app
         rx_req <= rx_req & !rx_conf;
       else
       begin
-        rx_pend <= temp_pend;
-        rx_req <= rx_req | (rx_pend & (rx_pend ^ temp_pend));
+        rx_pend <= rx_pend_2;
+        rx_req <= rx_req | (rx_pend & (rx_pend ^ rx_pend_2));
       end
     end
   end
