@@ -377,8 +377,13 @@ ila_3 ila_3_inst (
   .probe26(up_spi_test_done),    // input wire [0:0]
   .probe27(up_pll_rst_cnt),      // input wire [3:0]
   .probe28(adc_pll_locked),      // input wire [3:0]
+  .probe29(up_adc_rst_cnt),      // input wire [3:0]
   .probe29(up_adc_user_ready_cnt), // input wire [6:0]
-  .probe30(adc_rst_done)         // input wire [3:0]
+  .probe30(qpll_rst),            // input wire [0:0]
+  .probe31(up_rstn),             // input wire [0:0]
+  .probe32(adc_rst),             // input wire [0:0]
+  .probe33(adc_user_ready),      // input wire [0:0]
+  .probe34(adc_rst_done)         // input wire [3:0]
 );
 
 generate
