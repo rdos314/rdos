@@ -646,7 +646,7 @@ InitAdc Endp
 ;
 ;       NAME:           InitFreqClk
 ;
-;       DESCRIPTION:    Init freq clk driver chip
+;       DESCRIPTION:    Init AD9523-1 clk driver chip
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -655,69 +655,103 @@ InitFreqClk proc near
     mov ds,ebx
     mov bx,OFFSET cb_spi_clk
 ;
+; REF A divider (1)
+;
     mov dx,10h
     mov al,1
     call WriteSpiByte
+;
+; REF B divider (1)
 ;
     mov dx,12h
     mov al,1
     call WriteSpiByte
 ;
+; PLL feedback divider (1)
+;
     mov dx,16h
     mov al,1
     call WriteSpiByte
+;
+; PLL1 charge pump (tristate)
 ;
     mov dx,18h
     mov al,80h
     call WriteSpiByte
 ;
+; PLL1 receive control (0000 0001), REF A & B enabled, single-ended
+;
     mov dx,1Ah
-    mov al,5
+    mov al,1
     call WriteSpiByte
+;
+; Control (0110 0000), divider bypass, internal zero delay mode
 ;
     mov dx,1Bh
     mov al,60h
     call WriteSpiByte
 ;
+; PLL1 control (1000 0100), REFB divider enabled, 
+;
     mov dx,1Ch
     mov al,84h
     call WriteSpiByte
+;
+; PLL1 loop zero resistor, 677 kb
 ;
     mov dx,1Dh
     mov al,1h
     call WriteSpiByte
 ;
+; PLL2 charge pump current
+;
     mov dx,0F0h
     mov al,76h
     call WriteSpiByte
+;
+; PLL2 feedback, (00000110), A = 0, B = 6, div 24-26
 ;
     mov dx,0F1h
     mov al,6h
     call WriteSpiByte
 ;
+; PLL2 control, (0001 0011), min backlash, pump normal 
+;
     mov dx,0F2h
     mov al,13h
     call WriteSpiByte
+;
+; VCO control, (0010), VCO calibration
 ;
     mov dx,0F3h
     mov al,2h
     call WriteSpiByte
 ;
+; VCO divider, (0), M1 & M2 divide = 3
+;
     mov dx,0F4h
-    mov al,00h   ; 1 GHz
+    mov al,00h
     call WriteSpiByte
+;
+; PLL2 loop filter (0011 1010), 900 ohm, 1850 ohm, 19 pF
 ;
     mov dx,0F5h
     mov al,3Ah
     call WriteSpiByte
 ;
+; PLL2 R2 divider (1)
+;
     mov dx,0F7h
     mov al,1h
     call WriteSpiByte
 ;
+; OUT 0, tristate, off
+;
     mov dx,190h
     mov al,20h
     call WriteSpiByte
+;
+; OUT 1, DAC convert clock (LVDS 7mA, div = 1)
 ;
     mov dx,193h
     mov al,3h
@@ -727,13 +761,19 @@ InitFreqClk proc near
     mov al,0h
     call WriteSpiByte
 ;
+; OUT 2, tristate, off
+;
     mov dx,196h
     mov al,20h
     call WriteSpiByte
 ;
+; OUT 3, tristate, off
+;
     mov dx,199h
     mov al,20h
     call WriteSpiByte
+;
+; OUT 4, ADC FPGA clock (LVDS 7mA, div = 2)
 ;
     mov dx,19Ch
     mov al,3h
@@ -743,6 +783,8 @@ InitFreqClk proc near
     mov al,1h
     call WriteSpiByte
 ;
+;  OUT 5, ADC converter SYSREF (LVDS 7mA, div = 128)
+;
     mov dx,19Fh
     mov al,3h
     call WriteSpiByte
@@ -750,6 +792,8 @@ InitFreqClk proc near
     mov dx,1A0h
     mov al,7Fh
     call WriteSpiByte
+;
+;  OUT 6, ADC FPGA SYSREF (LVDS 7mA, div = 128)
 ;
     mov dx,1A2h
     mov al,3h
@@ -759,6 +803,8 @@ InitFreqClk proc near
     mov al,7Fh
     call WriteSpiByte
 ;
+;  OUT 7, DAC FPGA SYSREF (LVDS 7mA, div = 128)
+;
     mov dx,1A5h
     mov al,3h
     call WriteSpiByte
@@ -766,6 +812,8 @@ InitFreqClk proc near
     mov dx,1A6h
     mov al,7Fh
     call WriteSpiByte
+;
+;  OUT 8, DAC converter SYSREF (LVDS 7mA, div = 128)
 ;
     mov dx,1A8h
     mov al,3h
@@ -775,6 +823,8 @@ InitFreqClk proc near
     mov al,7Fh
     call WriteSpiByte
 ;
+;  OUT 9, DAC FPGA clock (LVDS 7mA, div = 2)
+;
     mov dx,1ABh
     mov al,3h
     call WriteSpiByte
@@ -783,17 +833,25 @@ InitFreqClk proc near
     mov al,1h
     call WriteSpiByte
 ;
+;  OUT 10, tristate, off
+;
     mov dx,1AEh
     mov al,20h
     call WriteSpiByte
+;
+;  OUT 11, tristate, off
 ;
     mov dx,1B1h
     mov al,20h
     call WriteSpiByte
 ;
+;  OUT 12, tristate, off
+;
     mov dx,1B4h
     mov al,20h
     call WriteSpiByte
+;
+;  OUT 13, ADC converter clock (LVDS 7mA, div = 1)
 ;
     mov dx,1B7h
     mov al,3h
@@ -803,17 +861,13 @@ InitFreqClk proc near
     mov al,0h
     call WriteSpiByte
 ;
-    mov dx,230h
-    mov al,2h
-    call WriteSpiByte
-;
-    mov dx,231h
-    mov al,3h
-    call WriteSpiByte
+; Power up
 ;
     mov dx,233h
     mov al,0h
     call WriteSpiByte
+;
+; update registers
 ;
     mov dx,234h
     mov al,1h
@@ -827,7 +881,7 @@ InitFreqClk Endp
 ;
 ;       NAME:           InitFreqAdc
 ;
-;       DESCRIPTION:    Init ADC chip
+;       DESCRIPTION:    Init AD9680 ADC chip
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -836,92 +890,32 @@ InitFreqAdc proc near
     mov ds,ebx
     mov bx,OFFSET cb_spi_adc
 ;
-    mov dx,580h
-    mov al,0
-    call WriteSpiByte
-;
-    mov dx,581h
-    mov al,1
-    call WriteSpiByte
-;
-    mov dx,570h
-    mov al,88h
-    call WriteSpiByte
-;
-    mov dx,583h
-    mov al,0
-    call WriteSpiByte
-;
-    mov dx,584h
-    mov al,1
-    call WriteSpiByte
-;
-    mov dx,585h
-    mov al,2
-    call WriteSpiByte
-;
-    mov dx,586h
-    mov al,3
-    call WriteSpiByte
-;
-    mov dx,5B2h
-    mov al,0
-    call WriteSpiByte
-;
-    mov dx,5B3h
-    mov al,11h
-    call WriteSpiByte
-;
-    mov dx,5B5h
-    mov al,22h
-    call WriteSpiByte
-;
-    mov dx,5B6h
-    mov al,33h
-    call WriteSpiByte
-;
-    mov dx,58Bh
-    mov al,83h
+    mov dx,571h
+    mov al,15h
     call WriteSpiByte
 ;
     mov dx,58Dh
-    mov al,31
-    call WriteSpiByte
-;
-    mov dx,58Eh
-    mov al,1
+    mov al,1Fh
     call WriteSpiByte
 ;
     mov dx,58Fh
-    mov al,13
+    mov al,2Dh
     call WriteSpiByte
 ;
     mov dx,590h
     mov al,2Fh
     call WriteSpiByte
 ;
-    mov dx,26Fh
-    mov al,1
-    call WriteSpiByte
-;
-    mov dx,550h
-    mov al,0
-    call WriteSpiByte
-;
-    mov dx,120h
-    mov al,0
-    call WriteSpiByte
-;
-    mov dx,121h
-    mov al,0Fh
-    call WriteSpiByte
-;
-    mov dx,120h
-    mov al,0Ah
+    mov dx,570h
+    mov al,88h
     call WriteSpiByte
 ;
     mov dx,56Eh
-    mov al,0          ; 1 GHz
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,571h
+    mov al,14h
     call WriteSpiByte
 ;
     ret
