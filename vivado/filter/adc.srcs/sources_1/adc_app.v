@@ -331,6 +331,7 @@ ila_1 ila_1_inst (
   .probe19(adr)                  // input wire [47:0]
  );
 
+/*
 ila_2 ila_2_inst (
   .clk(rx_clk),                  // input wire clk
   .probe0(rx_req),               // input wire [15:0]
@@ -345,6 +346,7 @@ ila_2 ila_2_inst (
   .probe9(chan1_incr),           // input wire [29:0]
   .probe10(chan1_count)          // input wire [13:0]
 );
+*/
 
 ila_3 ila_3_inst (
   .clk(up_clk),                  // input wire clk
@@ -378,12 +380,12 @@ ila_3 ila_3_inst (
   .probe27(up_pll_rst_cnt),      // input wire [3:0]
   .probe28(adc_pll_locked),      // input wire [3:0]
   .probe29(up_adc_rst_cnt),      // input wire [3:0]
-  .probe29(up_adc_user_ready_cnt), // input wire [6:0]
-  .probe30(qpll_rst),            // input wire [0:0]
-  .probe31(up_rstn),             // input wire [0:0]
-  .probe32(adc_rst),             // input wire [0:0]
-  .probe33(adc_user_ready),      // input wire [0:0]
-  .probe34(adc_rst_done)         // input wire [3:0]
+  .probe30(up_adc_user_ready_cnt), // input wire [6:0]
+  .probe31(qpll_rst),            // input wire [0:0]
+  .probe32(up_rstn),             // input wire [0:0]
+  .probe33(adc_rst),             // input wire [0:0]
+  .probe34(adc_user_ready),      // input wire [0:0]
+  .probe35(adc_rst_done)         // input wire [3:0]
 );
 
 generate
