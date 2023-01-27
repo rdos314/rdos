@@ -929,34 +929,37 @@ begin : adc_ana_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
-    begin
       adc_run <= 0;
-      msix_start <= 0;
-    end
     else
     begin
       if (conf)
-      begin
         adc_run <= 0;
-        msix_start <= 0;
-      end
       else
       begin
         if (adc_on)
         begin        
           if (pend_run)
-          begin
             adc_run <= 1;
-            msix_start <= 1;
-          end
-          else
-            msix_start <= 0;
         end
         else
-        begin
           adc_run <= 0;
-          msix_start <= 0;
-        end
+      end
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      msix_start <= 0;
+    else
+    begin
+      if (msix_clear)
+        msix_start <= 0;
+      else
+      begin    
+        if (adc_on & pend_run)
+          if (!adc_run)
+            msix_start <= 1;
       end
     end
   end

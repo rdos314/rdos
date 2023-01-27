@@ -101,8 +101,6 @@ module pci_tx (
   reg [0:0]                 adc_count;
   reg                       adc_pend;
 
-  reg [31:0]                q_msix_adr;
-  reg [31:0]                q_msix_data;
   wire [31:0]               msix_pkt_data;
   reg                       msix_pend;
 
@@ -121,11 +119,10 @@ ila_0 ila_0_inst (
     .probe9(s_axis_tx_tdata[95:64]),    // input wire [31:0]  probe0  
     .probe10(s_axis_tx_tdata[127:96]),   // input wire [31:0]  probe0  
     .probe11(s_axis_tx_tkeep),           // input wire [15:0]  probe0  
-    .probe12(tx_buf_av),                 // input wire [5:0]  probe0  
-    .probe13(tx_cfg_req),                // input wire [0:0]  probe0  
-    .probe14(tx_err_drop),               // input wire [0:0]  probe0  
-    .probe15(fc_pd),                     // input wire [11:0]  probe0  
-    .probe16(fc_ph)                      // input wire [7:0]  probe0  
+    .probe12(msix_issue),                // input wire [0:0]  probe0  
+    .probe13(msix_clear),                // input wire [0:0]  probe0  
+    .probe14(msix_adr),                   // input wire [31:0]  probe0  
+    .probe15(msix_data)                   // input wire [31:0]  probe0  
  );
 
 generate
@@ -205,7 +202,7 @@ generate
 
     always @ ( posedge clk ) 
     begin
-      if (reset)
+     if (reset)
         rd_active <= 0;
       else
       begin
