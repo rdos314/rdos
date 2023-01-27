@@ -395,7 +395,6 @@ pci_app pci_app_inst (
     .user_lnk_up(pcie_user_lnk_up),
     .user_lnk_rate(pcie_user_lnk_rate),
     .user_lnk_width(pcie_user_lnk_width),
-    .cfg_interrupt_msixenable(cfg_interrupt_msixenable),
 
     .control_base(control_base),
     .control_rd(control_rd),

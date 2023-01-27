@@ -347,7 +347,7 @@ ila_1 ila_1_inst (
   .probe10(chan1_ack_pos),       // input wire [20:0]
   .probe11(pci_req),             // input wire [15:0]
   .probe12(pci_clear),           // input wire [15:0]
-  .probe13(msix_enabled)         // input wire [0:0]
+  .probe13(msix_enabled),        // input wire [0:0]
   .probe14(msix_req),            // input wire [15:0]
   .probe15(msix_ack),            // input wire [15:0]
   .probe16(msix_issue),          // input wire [0:0]
@@ -1126,8 +1126,8 @@ begin : adc_app
     else
     begin
       rx_active_1 <= pci_active;
-      rx_active_2 <= up_active_1;
-      rx_active_3 <= up_active_2;
+      rx_active_2 <= rx_active_1;
+      rx_active_3 <= rx_active_2;
       rx_stop <= rx_active_3 & (rx_active_3 ^ rx_active_2);
     end
   end

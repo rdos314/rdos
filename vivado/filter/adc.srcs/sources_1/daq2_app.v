@@ -397,6 +397,7 @@ jesd204_rx_0 jesd204_rx_0_inst
         .lmfc_clk(lmfc_clk)
 );
 
+/*
 ila_2 ila_2_inst (
   .clk(up_clk),                  // input wire clk
   .probe0(adc_up_rstn),          // input wire [0:0]
@@ -406,6 +407,7 @@ ila_2 ila_2_inst (
   .probe4(adc_pll_locked),       // input wire [3:0]
   .probe5(adc_rst_done)          // input wire [3:0]
 );
+*/
 	
 
 function check_valid;
