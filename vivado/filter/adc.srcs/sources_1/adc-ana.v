@@ -57,7 +57,10 @@ module adc_ana (
   output reg  [63:0]      d_0,
   output reg  [63:0]      d_1,
   output reg  [63:0]      d_2,
-  output reg  [63:0]      d_3
+  output reg  [63:0]      d_3,
+
+  output reg              msix_issue,
+  input wire              msix_clear
 );
 
   reg                     config_init;
@@ -253,6 +256,8 @@ module adc_ana (
 
   reg                     d_pend;
   reg  [1:0]              d_adr;
+
+  reg                     msix_start;
 
 
 // clock domain crossings
@@ -924,20 +929,34 @@ begin : adc_ana_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
+    begin
       adc_run <= 0;
+      msix_start <= 0;
+    end
     else
     begin
       if (conf)
+      begin
         adc_run <= 0;
+        msix_start <= 0;
+      end
       else
       begin
         if (adc_on)
         begin        
           if (pend_run)
+          begin
             adc_run <= 1;
+            msix_start <= 1;
+          end
+          else
+            msix_start <= 0;
         end
         else
+        begin
           adc_run <= 0;
+          msix_start <= 0;
+        end
       end
     end
   end
@@ -1150,6 +1169,25 @@ begin : adc_ana_gen
           else
             pci_stop <= 0;
         end
+      end
+    end
+  end
+
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+    begin
+      msix_issue <= 0;
+    end
+    else
+    begin
+      if (msix_clear)
+        msix_issue <= 0;
+      else
+      begin
+        if (pci_stop | msix_start)
+          msix_issue <= 1;
       end
     end
   end

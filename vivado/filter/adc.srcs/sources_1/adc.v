@@ -131,6 +131,11 @@ module adc (
   wire [127:0]         adc_d0;  
   wire [127:0]         adc_d1;  
 
+  wire                 msix_issue;
+  wire                 msix_clear;
+  wire [31:0]          msix_adr;
+  wire [31:0]          msix_data;  
+
 // SPI
 
   wire                 adc_spi_read;
@@ -399,6 +404,11 @@ pci_app pci_app_inst (
     .adc_adr(adc_adr),
     .adc_d0(adc_d0),
     .adc_d1(adc_d1),
+    
+    .msix_issue(msix_issue),
+    .msix_clear(msix_clear),
+    .msix_adr(msix_adr),
+    .msix_data(msix_data),
 
     .bar0_rd_address(pci_bar0_rd_address),
     .bar0_rd(pci_bar0_rd),

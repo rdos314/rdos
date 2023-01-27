@@ -63,7 +63,12 @@ module pci_tx (
   output reg                adc_clear,
   input wire [47:0]         adc_adr,
   input wire [127:0]        adc_d0,
-  input wire [127:0]        adc_d1
+  input wire [127:0]        adc_d1,
+
+  input wire                msix_issue,
+  output reg                msix_clear,
+  input wire [31:0]         msix_adr,
+  input wire [31:0]         msix_data
 );
 
 
@@ -95,6 +100,11 @@ module pci_tx (
   wire [127:0]              adc_pkt_data;
   reg [0:0]                 adc_count;
   reg                       adc_pend;
+
+  reg [31:0]                q_msix_adr;
+  reg [31:0]                q_msix_data;
+  wire [31:0]               msix_pkt_data;
+  reg                       msix_pend;
 
 
 ila_0 ila_0_inst (
@@ -169,6 +179,11 @@ generate
     assign adc_pkt_data[111:104] = adc_data[119:112];
     assign adc_pkt_data[103:96] = adc_data[127:120];
 
+    assign msix_pkt_data[31:24] = msix_data[7:0];
+    assign msix_pkt_data[23:16] = msix_data[15:8];
+    assign msix_pkt_data[15:8] = msix_data[23:16];
+    assign msix_pkt_data[7:0] = msix_data[31:24];
+
 
     always @ ( posedge clk ) 
     begin
@@ -221,6 +236,8 @@ generate
         bar_start <= 0;
         adc_pend <= 0;
         adc_clear <= 0;
+        msix_pend <= 0;
+        msix_clear <= 0;
       end
       else
       begin
@@ -229,6 +246,7 @@ generate
           if (adc_pend)
           begin
             rd_sent <= 0;
+            msix_clear <= 0;
 
             adc_count <= adc_count + 1;
 
@@ -252,10 +270,12 @@ generate
           else
           begin
             adc_clear <= 0;
+
             if (bar_pend)
             begin
               rd_sent <= 0;
               bar_pend <= 0;
+              msix_clear <= 0;
 
               s_axis_tx_tdata  <= bar_pkt_data;
               s_axis_tx_tlast <= 1;
@@ -274,6 +294,7 @@ generate
               begin
                 rd_sent <= 0;
                 bar_start <= 0;
+                msix_clear <= 0;
 
                 s_axis_tx_tvalid <= 1;
 
@@ -330,6 +351,7 @@ generate
                 if (adc_report & !adc_clear)
                 begin
                   rd_sent <= 0;
+                  msix_clear <= 0;
                   adc_pend <= 1;
                   adc_data <= adc_d0;
                   adc_count <= 0;
@@ -356,38 +378,65 @@ generate
                 end
                 else
                 begin
-                  if (rd_active & !rd_sent)
+                  if (msix_issue & !msix_clear)
                   begin
-                    rd_sent <= 1;
+                    rd_sent <= 0;
+                    msix_clear <= 1;
                     s_axis_tx_tvalid <= 1;
-                    s_axis_tx_tkeep[15:0] <= 16'h0fff;
+                    s_axis_tx_tkeep[15:0] <= 16'hffff;
                     s_axis_tx_tlast <= 1;
-                    s_axis_tx_tdata[95:64] <= q_rd_address;         // address
+                    s_axis_tx_tdata[127:96] <= msix_pkt_data[31:0]; // data
+                    s_axis_tx_tdata[95:64] <= msix_adr;             // address
                     s_axis_tx_tdata[63:48] <= req_id;               // Requester ID
-                    s_axis_tx_tdata[47:40] <= q_rd_tag;             // tag
-                    s_axis_tx_tdata[39:36] <= 4'b0000;              // last be
+                    s_axis_tx_tdata[47:40] <= 0;                    // tag
+                    s_axis_tx_tdata[39:36] <= 4'b1111;              // last be
                     s_axis_tx_tdata[35:32] <= 4'b1111;              // 1st be
-                    s_axis_tx_tdata[31:24] <= 8'b000_00000;         // Type + 32-bit FMT
+                    s_axis_tx_tdata[31:24] <= 8'b010_00000;         // Type + 32-bit FMT
                     s_axis_tx_tdata[23] <= 1'b0;                    // R
                     s_axis_tx_tdata[22:20] <= 3'b000;               // TC
                     s_axis_tx_tdata[19:16] <= 4'b0000;              // TH, AttrH, R
                     s_axis_tx_tdata[15:12] <= 4'b0010;              // TD, EP, Attr
                     s_axis_tx_tdata[11:10] <= 2'b0;                 // AT
                     s_axis_tx_tdata[9:8] <= 2'b0;                   // len high
-                    s_axis_tx_tdata[7:0] <= 1;                      // read DWs
+                    s_axis_tx_tdata[7:0] <= 1;                      // write DWs
                   end
                   else
                   begin
-                    rd_sent <= 0;
-                    s_axis_tx_tvalid <= 0;
-                    s_axis_tx_tdata <= 0;
-                    s_axis_tx_tkeep <= 0;
-                    s_axis_tx_tlast <= 0;
+                    msix_clear <= 0;
 
-                    if (bar_loaded)
+                    if (rd_active & !rd_sent)
                     begin
-                      bar_start <= 1;
-                      q_bar_data <= loaded_bar_data;
+                      rd_sent <= 1;
+                      s_axis_tx_tvalid <= 1;
+                      s_axis_tx_tkeep[15:0] <= 16'h0fff;
+                      s_axis_tx_tlast <= 1;
+                      s_axis_tx_tdata[95:64] <= q_rd_address;         // address
+                      s_axis_tx_tdata[63:48] <= req_id;               // Requester ID
+                      s_axis_tx_tdata[47:40] <= q_rd_tag;             // tag
+                      s_axis_tx_tdata[39:36] <= 4'b0000;              // last be
+                      s_axis_tx_tdata[35:32] <= 4'b1111;              // 1st be
+                      s_axis_tx_tdata[31:24] <= 8'b000_00000;         // Type + 32-bit FMT
+                      s_axis_tx_tdata[23] <= 1'b0;                    // R
+                      s_axis_tx_tdata[22:20] <= 3'b000;               // TC
+                      s_axis_tx_tdata[19:16] <= 4'b0000;              // TH, AttrH, R
+                      s_axis_tx_tdata[15:12] <= 4'b0010;              // TD, EP, Attr
+                      s_axis_tx_tdata[11:10] <= 2'b0;                 // AT
+                      s_axis_tx_tdata[9:8] <= 2'b0;                   // len high
+                      s_axis_tx_tdata[7:0] <= 1;                      // read DWs
+                    end
+                    else
+                    begin
+                      rd_sent <= 0;
+                      s_axis_tx_tvalid <= 0;
+                      s_axis_tx_tdata <= 0;
+                      s_axis_tx_tkeep <= 0;
+                      s_axis_tx_tlast <= 0;
+  
+                      if (bar_loaded)
+                      begin
+                        bar_start <= 1;
+                        q_bar_data <= loaded_bar_data;
+                      end
                     end
                   end
                 end
@@ -399,6 +448,7 @@ generate
         begin
           rd_sent <= 0;
           adc_clear <= 0;
+          msix_clear <= 0;
         end
       end
     end
