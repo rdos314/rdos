@@ -131,6 +131,7 @@ module adc (
   wire [127:0]         adc_d0;  
   wire [127:0]         adc_d1;  
 
+  wire                 msix_enabled;
   wire                 msix_issue;
   wire                 msix_clear;
   wire [31:0]          msix_adr;
@@ -405,6 +406,7 @@ pci_app pci_app_inst (
     .adc_d0(adc_d0),
     .adc_d1(adc_d1),
     
+    .msix_enabled(msix_enabled),
     .msix_issue(msix_issue),
     .msix_clear(msix_clear),
     .msix_adr(msix_adr),
@@ -502,7 +504,6 @@ adc_app adc_app_inst (
     .spi_running(adc_spi_running),
     .spi_done(adc_spi_done),
 
-
     .tx_control_msg(tx_up_control_msg),
     .tx_control_index(tx_up_control_index),
     .tx_control_data(tx_up_control_data),
@@ -539,6 +540,12 @@ adc_app adc_app_inst (
     .adr(adc_adr),
     .d_0(adc_d0),
     .d_1(adc_d1),
+
+    .msix_enabled(msix_enabled),
+    .msix_issue(msix_issue),
+    .msix_clear(msix_clear),
+    .msix_adr(msix_adr),
+    .msix_data(msix_data),
   
     .bar1_rd_address(pci_bar1_rd_address),
     .bar1_rd(pci_bar1_rd),

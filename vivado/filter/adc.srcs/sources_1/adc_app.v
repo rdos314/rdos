@@ -78,6 +78,7 @@ module adc_app (
   output reg [127:0]      d_0,
   output reg [127:0]      d_1,
   
+  input wire              msix_enabled,
   output reg              msix_issue,
   input wire              msix_clear,
   output reg [31:0]       msix_adr,
@@ -346,17 +347,18 @@ ila_1 ila_1_inst (
   .probe10(chan1_ack_pos),       // input wire [20:0]
   .probe11(pci_req),             // input wire [15:0]
   .probe12(pci_clear),           // input wire [15:0]
-  .probe13(msix_req),            // input wire [15:0]
-  .probe14(msix_ack),            // input wire [15:0]
-  .probe15(msix_issue),          // input wire [0:0]
-  .probe16(msix_clear),          // input wire [0:0]
-  .probe17(pci_adc_en),          // input wire [15:0]
-  .probe18(pci_on),              // input wire [15:0]
-  .probe19(pci_stop),            // input wire [15:0]
-  .probe20(pci_active),          // input wire [15:0]
-  .probe21(pci_adc_on),          // input wire [0:0]
-  .probe22(report),              // input wire [0:0]
-  .probe23(adr)                  // input wire [47:0]
+  .probe13(msix_enabled)         // input wire [0:0]
+  .probe14(msix_req),            // input wire [15:0]
+  .probe15(msix_ack),            // input wire [15:0]
+  .probe16(msix_issue),          // input wire [0:0]
+  .probe17(msix_clear),          // input wire [0:0]
+  .probe18(pci_adc_en),          // input wire [15:0]
+  .probe19(pci_on),              // input wire [15:0]
+  .probe20(pci_stop),            // input wire [15:0]
+  .probe21(pci_active),          // input wire [15:0]
+  .probe22(pci_adc_on),          // input wire [0:0]
+  .probe23(report),              // input wire [0:0]
+  .probe24(adr)                  // input wire [47:0]
  );
 
 ila_2 ila_2_inst (
@@ -1054,23 +1056,28 @@ begin : adc_app
       end
       else
       begin      
-        case (msix_ack)
-          16'b0000000000000001 : 
-            begin
-              msix_adr <= chan0_msix_adr;
-              msix_data <= chan0_msix_data;
-              msix_issue <= 1;
-            end          
+        if (msix_enabled)
+        begin
+          case (msix_ack)
+            16'b0000000000000001 : 
+              begin
+                msix_adr <= chan0_msix_adr;
+                msix_data <= chan0_msix_data;
+                msix_issue <= 1;
+              end          
           
-          16'b0000000000000010 :
-            begin
-              msix_adr <= chan1_msix_adr;
-              msix_data <= chan1_msix_data;
-              msix_issue <= 1;
-            end          
+            16'b0000000000000010 :
+              begin
+                msix_adr <= chan1_msix_adr;
+                msix_data <= chan1_msix_data;
+                msix_issue <= 1;
+              end          
 
-          default : ;
-        endcase
+            default : msix_issue <= 0;
+          endcase
+        end
+        else
+          msix_issue <= 0;
       end
     end
   end

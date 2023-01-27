@@ -40,7 +40,6 @@ module pci_app (
   
   output               user_lnk_rate,
   output   [1:0]       user_lnk_width,
-  output               cfg_interrupt_msixenable,
 
   input wire [31:0]    control_base,
   output reg           control_rd,
@@ -50,7 +49,8 @@ module pci_app (
   input wire [47:0]    adc_adr,
   input wire [127:0]   adc_d0,
   input wire [127:0]   adc_d1,
-  
+
+  output wire          msix_enabled,  
   input wire           msix_issue,
   output wire          msix_clear,
   input wire [31:0]    msix_adr,
@@ -90,10 +90,10 @@ module pci_app (
   reg [17:0]       poll_cnt;
 
   wire             req_stop;
-
-  reg              int_req;
+  
+  wire             int_req;
   wire             int_ack;
-  reg              int_num;
+  wire             int_num;
   
   // Tx
   wire [5:0]       tx_buf_av;
@@ -355,7 +355,7 @@ pcie_7x_0 pcie_i
   .cfg_interrupt_do                          ( ),
   .cfg_interrupt_mmenable                    ( ),
   .cfg_interrupt_msienable                   ( ),
-  .cfg_interrupt_msixenable                  ( cfg_interrupt_msixenable ),
+  .cfg_interrupt_msixenable                  ( msix_enabled ),
   .cfg_interrupt_msixfm                      ( ),
   .cfg_interrupt_stat                        ( cfg_interrupt_stat ),
   .cfg_pciecap_interrupt_msgnum              ( cfg_pciecap_interrupt_msgnum ),
@@ -438,6 +438,9 @@ pcie_7x_0 pcie_i
   assign pl_directed_link_speed = 1'b0;            // Zero out directed link speed
   assign pl_directed_link_auton = 1'b0;            // Zero out link autonomous input
   assign pl_upstream_prefer_deemph = 1'b1;         // Zero out preferred de-emphasis of upstream port
+
+  assign int_req = 1'b0;
+  assign int_num = 1'b0;
 
   assign rx_np_ok = 1'b1;
   assign rx_np_req = 1'b1;
@@ -799,14 +802,6 @@ generate
       end
     end
    
-
-    always @ ( posedge user_clk ) 
-    begin
-        int_req <= 0;
-        int_num <= 0;
-      end
-    end
-
 endgenerate
 
 endmodule
