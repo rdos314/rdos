@@ -376,7 +376,9 @@ ila_2 ila_2_inst (
   .probe10(chan0_incr),          // input wire [29:0]
   .probe11(chan0_count),         // input wire [13:0]
   .probe12(chan1_incr),          // input wire [29:0]
-  .probe13(chan1_count)          // input wire [13:0]
+  .probe13(chan1_count),         // input wire [13:0]
+  .probe14(adc_sync_ok),         // input wire [0:0]
+  .probe15(adc_sync_fail)        // input wire [0:0]
 );
 
 
