@@ -150,6 +150,9 @@ module adc_app (
   reg  [15:0]             rx_conf;
   reg  [15:0]             rx_pend;
   reg  [15:0]             rx_pend_2;
+  reg  [15:0]             rx_active_2;
+  reg  [15:0]             rx_active_3;
+  reg  [15:0]             rx_stop;
 
   reg                     rx_en;
   reg                     rx_wr;
@@ -211,6 +214,7 @@ module adc_app (
  (* ASYNC_REG="TRUE" *)  reg                  up_on_1;
 
  (* ASYNC_REG="TRUE" *)  reg [15:0]           rx_pend_1;
+ (* ASYNC_REG="TRUE" *)  reg [15:0]           rx_active_1;
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_sync_ok_1;
  (* ASYNC_REG="TRUE" *)  reg                  adc_sync_fail_1;
@@ -245,6 +249,7 @@ adc_ana ana_0 (
     .conf(rx_conf[0]),
     .incr(chan0_incr),
     .count(chan0_count),
+    .stop(rx_stop[0]),
 
     .in_A0(adc_A0),
     .in_A1(adc_A1),
@@ -261,7 +266,7 @@ adc_ana ana_0 (
     .phys_adr(chan0_phys),
     .ack_pos(chan0_ack_pos),
     .on(pci_on[0]),
-    .stop(pci_stop[0]),
+    .pci_stop(pci_stop[0]),
     
     .report(pci_req[0]),
     .clear(pci_clear[0]),
@@ -279,6 +284,7 @@ adc_ana ana_1 (
     .conf(rx_conf[1]),
     .incr(chan1_incr),
     .count(chan1_count),
+    .stop(rx_stop[1]),
 
     .in_A0(adc_A0),
     .in_A1(adc_A1),
@@ -295,7 +301,7 @@ adc_ana ana_1 (
     .phys_adr(chan1_phys),
     .ack_pos(chan1_ack_pos),
     .on(pci_on[1]),
-    .stop(pci_stop[1]),
+    .pci_stop(pci_stop[1]),
     
     .report(pci_req[1]),
     .clear(pci_clear[1]),
@@ -331,22 +337,24 @@ ila_1 ila_1_inst (
   .probe19(adr)                  // input wire [47:0]
  );
 
-/*
 ila_2 ila_2_inst (
   .clk(rx_clk),                  // input wire clk
   .probe0(rx_req),               // input wire [15:0]
   .probe1(rx_init),              // input wire [15:0]
   .probe2(rx_conf),              // input wire [15:0]
   .probe3(rx_pend),              // input wire [15:0]
-  .probe4(rx_en),                // input wire [0:0]
-  .probe5(rx_adr),               // input wire [7:0]
-  .probe6(rx_out),               // input wire [31:0]
-  .probe7(chan0_incr),           // input wire [29:0]
-  .probe8(chan0_count),          // input wire [13:0]
-  .probe9(chan1_incr),           // input wire [29:0]
-  .probe10(chan1_count)          // input wire [13:0]
+  .probe4(rx_active_2),          // input wire [15:0]
+  .probe5(rx_active_3),          // input wire [15:0]
+  .probe6(rx_stop),              // input wire [15:0]
+  .probe7(rx_en),                // input wire [0:0]
+  .probe8(rx_adr),               // input wire [7:0]
+  .probe9(rx_out),               // input wire [31:0]
+  .probe10(chan0_incr),          // input wire [29:0]
+  .probe11(chan0_count),         // input wire [13:0]
+  .probe12(chan1_incr),          // input wire [29:0]
+  .probe13(chan1_count)          // input wire [13:0]
 );
-*/
+
 
 ila_3 ila_3_inst (
   .clk(up_clk),                  // input wire clk
@@ -996,6 +1004,24 @@ begin : adc_app
   begin
     rx_pend_1 <= pci_pend;
     rx_pend_2 <= rx_pend_1;
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+    begin
+      rx_active_1 <= 0;
+      rx_active_2 <= 0;
+      rx_active_3 <= 0;
+      rx_stop <= 0;
+    end
+    else
+    begin
+      rx_active_1 <= pci_active;
+      rx_active_2 <= up_active_1;
+      rx_active_3 <= up_active_2;
+      rx_stop <= rx_active_3 & (rx_active_3 ^ rx_active_2);
+    end
   end
 
   always @ ( posedge rx_clk ) 

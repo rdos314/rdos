@@ -32,6 +32,7 @@ module adc_ana (
   input wire              conf,
   input wire [29:0]       incr,
   input wire [13:0]       count,
+  input wire              stop,
 
   input wire [13:0]       in_A0,
   input wire [13:0]       in_A1,
@@ -48,7 +49,7 @@ module adc_ana (
   input wire [47:0]       phys_adr,
   input wire [20:0]       ack_pos,
   input wire              on,
-  output reg              stop,
+  output reg              pci_stop,
 
   output reg              report,
   input wire              clear,
@@ -295,7 +296,7 @@ ana_freq base (
   .count(config_count),   // input wire [12:0] count
   .last(config_last),     // input wire [10:0] last
   .start(base_start),     // input wire start
-  .stop(!adc_run),        // input wire stop
+  .stop(stop),            // input wire stop
   .run(base_run),         // output wire run
   .wr(coeff_wr),          // input wire coeff_wr
   .wr_adr(coeff_adr),     // input wire [10:0] coeff_adr
@@ -323,7 +324,7 @@ ana_freq delayed (
   .count(config_count),   // input wire [12:0] count
   .last(config_last),     // input wire [10:0] last
   .start(delay_start),    // input wire start
-  .stop(!adc_run),        // input wire stop
+  .stop(stop),            // input wire stop
   .run(delay_run),        // output wire run
   .wr(coeff_wr),          // input wire coeff_wr
   .wr_adr(coeff_adr),     // input wire [10:0] coeff_adr
@@ -1107,7 +1108,7 @@ begin : adc_ana_gen
       adr <= 0;
       d_adr <= 0;
       report <= 0;
-      stop <= 0;
+      pci_stop <= 0;
     end
     else
     begin
@@ -1116,13 +1117,13 @@ begin : adc_ana_gen
         adr <= phys_adr;
         d_adr <= 0;
         report <= 0;
-        stop <= 0;
+        pci_stop <= 0;
       end
       else
       begin
         if (d_pend)
         begin
-          stop <= 0;
+          pci_stop <= 0;
 
           if (d_adr == 2'b11)
             report <= 1;
@@ -1144,10 +1145,10 @@ begin : adc_ana_gen
             report <= 0;
             adr[20:5] <= adr[20:5] + 1;
             if (adr[20:5] + 1 == ack_pos[20:5])
-              stop <= 1;
+              pci_stop <= 1;
           end          
           else
-            stop <= 0;
+            pci_stop <= 0;
         end
       end
     end
