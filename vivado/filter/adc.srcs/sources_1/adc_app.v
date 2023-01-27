@@ -262,10 +262,10 @@ adc_ana ana_0 (
     
     .pci_clk(pci_clk),
     .pci_reset(pci_reset),
-    .init(pci_init[0]),
+    .pci_init(pci_init[0]),
     .phys_adr(chan0_phys),
     .ack_pos(chan0_ack_pos),
-    .on(pci_on[0]),
+    .pci_on(pci_on[0]),
     .pci_stop(pci_stop[0]),
     
     .report(pci_req[0]),
@@ -297,10 +297,10 @@ adc_ana ana_1 (
 
     .pci_clk(pci_clk),
     .pci_reset(pci_reset),
-    .init(pci_init[1]),
+    .pci_init(pci_init[1]),
     .phys_adr(chan1_phys),
     .ack_pos(chan1_ack_pos),
-    .on(pci_on[1]),
+    .pci_on(pci_on[1]),
     .pci_stop(pci_stop[1]),
     
     .report(pci_req[1]),
