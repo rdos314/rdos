@@ -679,10 +679,10 @@ InitFreqClk proc near
     mov al,80h
     call WriteSpiByte
 ;
-; PLL1 receive control (0000 0001), REF A & B enabled, single-ended
+; PLL1 receive control (0001 0001), REF A & B enabled, single-ended
 ;
     mov dx,1Ah
-    mov al,1
+    mov al,5
     call WriteSpiByte
 ;
 ; Control (0110 0000), divider bypass, internal zero delay mode
@@ -730,7 +730,7 @@ InitFreqClk proc near
 ; VCO divider, (0), M1 & M2 divide = 3
 ;
     mov dx,0F4h
-    mov al,00h
+    mov al,00h   ; 1GHz
     call WriteSpiByte
 ;
 ; PLL2 loop filter (0011 1010), 900 ohm, 1850 ohm, 19 pF
@@ -861,7 +861,16 @@ InitFreqClk proc near
     mov al,0h
     call WriteSpiByte
 ;
+
 ; Power up
+;
+    mov dx,230h
+    mov al,2h
+    call WriteSpiByte
+;
+    mov dx,231h
+    mov al,3h
+    call WriteSpiByte
 ;
     mov dx,233h
     mov al,0h
@@ -890,32 +899,92 @@ InitFreqAdc proc near
     mov ds,ebx
     mov bx,OFFSET cb_spi_adc
 ;
-    mov dx,571h
-    mov al,15h
+    mov dx,580h
+    mov al,0
     call WriteSpiByte
 ;
-    mov dx,58Dh
-    mov al,1Fh
-    call WriteSpiByte
-;
-    mov dx,58Fh
-    mov al,2Dh
-    call WriteSpiByte
-;
-    mov dx,590h
-    mov al,2Fh
+    mov dx,581h
+    mov al,1
     call WriteSpiByte
 ;
     mov dx,570h
     mov al,88h
     call WriteSpiByte
 ;
-    mov dx,56Eh
+    mov dx,583h
     mov al,0
     call WriteSpiByte
 ;
-    mov dx,571h
-    mov al,14h
+    mov dx,584h
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,585h
+    mov al,2
+    call WriteSpiByte
+;
+    mov dx,586h
+    mov al,3
+    call WriteSpiByte
+;
+    mov dx,5B2h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,5B3h
+    mov al,11h
+    call WriteSpiByte
+;
+    mov dx,5B5h
+    mov al,22h
+    call WriteSpiByte
+;
+    mov dx,5B6h
+    mov al,33h
+    call WriteSpiByte
+;
+    mov dx,58Bh
+    mov al,83h
+    call WriteSpiByte
+;
+    mov dx,58Dh
+    mov al,31
+    call WriteSpiByte
+;
+    mov dx,58Eh
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,58Fh
+    mov al,13
+    call WriteSpiByte
+;
+    mov dx,590h
+    mov al,2Fh
+    call WriteSpiByte
+;
+    mov dx,26Fh
+    mov al,1
+    call WriteSpiByte
+;
+    mov dx,550h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,120h
+    mov al,0
+    call WriteSpiByte
+;
+    mov dx,121h
+    mov al,0Fh
+    call WriteSpiByte
+;
+    mov dx,120h
+    mov al,0Ah
+    call WriteSpiByte
+;
+    mov dx,56Eh
+    mov al,0          ; 1 GHz
     call WriteSpiByte
 ;
     ret

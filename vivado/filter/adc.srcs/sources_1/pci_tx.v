@@ -102,7 +102,6 @@ module pci_tx (
   reg                       adc_pend;
 
   wire [31:0]               msix_pkt_data;
-  reg                       msix_pend;
 
 
 ila_0 ila_0_inst (
@@ -233,7 +232,6 @@ generate
         bar_start <= 0;
         adc_pend <= 0;
         adc_clear <= 0;
-        msix_pend <= 0;
         msix_clear <= 0;
       end
       else
@@ -248,7 +246,6 @@ generate
             adc_count <= adc_count + 1;
 
             s_axis_tx_tdata <= adc_pkt_data;
-
             s_axis_tx_tkeep[15:0] <= 16'hffff;
 
             if (adc_count == 1)
@@ -375,19 +372,18 @@ generate
                 end
                 else
                 begin
-                  if (0)
-//                  if (msix_issue & !msix_clear)
+                  if (msix_issue & !msix_clear)
                   begin
                     rd_sent <= 0;
                     msix_clear <= 1;
                     s_axis_tx_tvalid <= 1;
                     s_axis_tx_tkeep[15:0] <= 16'hffff;
                     s_axis_tx_tlast <= 1;
-                    s_axis_tx_tdata[127:96] <= msix_pkt_data[31:0]; // data
+                    s_axis_tx_tdata[127:96] <= msix_pkt_data;       // data
                     s_axis_tx_tdata[95:64] <= msix_adr;             // address
                     s_axis_tx_tdata[63:48] <= req_id;               // Requester ID
                     s_axis_tx_tdata[47:40] <= 0;                    // tag
-                    s_axis_tx_tdata[39:36] <= 4'b1111;              // last be
+                    s_axis_tx_tdata[39:36] <= 4'b0000;              // last be
                     s_axis_tx_tdata[35:32] <= 4'b1111;              // 1st be
                     s_axis_tx_tdata[31:24] <= 8'b010_00000;         // Type + 32-bit FMT
                     s_axis_tx_tdata[23] <= 1'b0;                    // R
