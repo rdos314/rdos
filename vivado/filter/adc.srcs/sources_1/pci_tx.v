@@ -371,11 +371,12 @@ generate
                   s_axis_tx_tdata[15:12] <= 4'b0010;                // TD, EP, Attr
                   s_axis_tx_tdata[11:10] <= 2'b0;                   // AT
                   s_axis_tx_tdata[9:8] <= 2'b0;                     // len high
-                  s_axis_tx_tdata[7:0] <= 8'h20;                    // 128 byte size
+                  s_axis_tx_tdata[7:0] <= 8'h8;                     // 32 byte size
                 end
                 else
                 begin
-                  if (msix_issue & !msix_clear)
+                  if (0)
+//                  if (msix_issue & !msix_clear)
                   begin
                     rd_sent <= 0;
                     msix_clear <= 1;
