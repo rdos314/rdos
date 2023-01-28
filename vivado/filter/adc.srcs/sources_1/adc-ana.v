@@ -59,6 +59,7 @@ module adc_ana (
   output reg  [63:0]      d_2,
   output reg  [63:0]      d_3,
 
+  input wire              msix_mask,
   output reg              msix_issue,
   input wire              msix_clear
 );
@@ -258,7 +259,7 @@ module adc_ana (
   reg  [1:0]              d_adr;
 
   reg                     msix_start;
-
+  reg                     msix_sig;
 
 // clock domain crossings
 
@@ -1131,6 +1132,7 @@ begin : adc_ana_gen
       d_adr <= 0;
       report <= 0;
       pci_stop <= 0;
+      msix_sig <= 0;
     end
     else
     begin
@@ -1140,6 +1142,7 @@ begin : adc_ana_gen
         d_adr <= 0;
         report <= 0;
         pci_stop <= 0;
+        msix_sig <= 0;
       end
       else
       begin
@@ -1168,9 +1171,15 @@ begin : adc_ana_gen
             adr[20:5] <= adr[20:5] + 1;
             if (adr[20:5] + 1 == ack_pos[20:5])
               pci_stop <= 1;
+              
+            if (adr[9:0] == 0)
+              msix_sig <= 1;
           end          
           else
+          begin
             pci_stop <= 0;
+            msix_sig <= 0;
+          end
         end
       end
     end
@@ -1189,8 +1198,9 @@ begin : adc_ana_gen
         msix_issue <= 0;
       else
       begin
-        if (pci_stop | msix_start)
-          msix_issue <= 1;
+        if (pci_stop | msix_start | msix_sig)
+          if (!msix_mask)
+            msix_issue <= 1;
       end
     end
   end

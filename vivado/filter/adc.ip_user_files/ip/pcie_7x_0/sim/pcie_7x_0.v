@@ -570,7 +570,7 @@ input wire sys_rst_n;
     .c_msix_cap_on("TRUE"),
     .c_msix_next_ptr("00"),
     .c_pcie_cap_next_ptr("9C"),
-    .c_msix_table_size("00F"),
+    .c_msix_table_size("001"),
     .c_msix_table_offset("200"),
     .c_msix_table_bir("1"),
     .c_msix_pba_offset("300"),

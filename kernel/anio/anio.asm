@@ -85,6 +85,8 @@ start_thread    DW ?
 
 dev_id          DW ?
 
+msi_irq_count   DD ?
+
 data    ENDS
 
 IFDEF __WASM__
@@ -137,7 +139,7 @@ AdcBlockInt     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreqInt Proc far
-    CrashGate
+    inc ds:msi_irq_count
     ret
 FreqInt       Endp
 
@@ -1050,7 +1052,7 @@ InitPciFreq:
 ;
     EnablePciMsiX
 ;
-    mov cx,1
+    movzx cx,dl
     xor dl,dl
 
 InitPciMsiXLoop:
@@ -1061,15 +1063,12 @@ InitPciMsiXLoop:
     pop cx
     jc InitPciMsiXNext
 ;
-    push ds
     push es
-    mov ds,dx
     mov di,cs
     mov es,di
     mov edi,OFFSET FreqInt
     RequestMsiHandler
     pop es
-    pop ds
 ;
     SetupPciMsiXEntry
 
@@ -1632,6 +1631,7 @@ Init    Proc far
     mov ds,eax
     mov ds:start_thread,0
     mov ds:adc_buf_sel,0
+    mov ds:msi_irq_count,0
 ;
     mov eax,cs
     mov ds,eax

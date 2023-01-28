@@ -1882,7 +1882,7 @@ enable_pci_msix     Proc far
     mov cx,si
     and cx,1FFh
     inc cx
-    shl cx,3
+    shl cx,4
     CreateDataSelector16
     mov es,bx
 ;

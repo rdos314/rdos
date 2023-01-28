@@ -183,6 +183,7 @@ module adc_app (
 
   wire [15:0]             msix_req;
   reg  [15:0]             msix_ack;
+  reg  [15:0]             msix_mask;
 
   wire [15:0]             pci_stop;
   reg  [15:0]             pci_on;
@@ -289,6 +290,7 @@ adc_ana ana_0 (
     .d_2(chan0_d2),
     .d_3(chan0_d3),
 
+    .msix_mask(msix_mask[0]),
     .msix_issue(msix_req[0]),
     .msix_clear(msix_ack[0])
 );
@@ -327,6 +329,7 @@ adc_ana ana_1 (
     .d_2(chan1_d2),
     .d_3(chan1_d3),
 
+    .msix_mask(msix_mask[1]),
     .msix_issue(msix_req[1]),
     .msix_clear(msix_ack[1])
 );
@@ -347,18 +350,23 @@ ila_1 ila_1_inst (
   .probe10(chan1_ack_pos),       // input wire [20:0]
   .probe11(pci_req),             // input wire [15:0]
   .probe12(pci_clear),           // input wire [15:0]
-  .probe13(msix_enabled),        // input wire [0:0]
-  .probe14(msix_req),            // input wire [15:0]
-  .probe15(msix_ack),            // input wire [15:0]
-  .probe16(msix_issue),          // input wire [0:0]
-  .probe17(msix_clear),          // input wire [0:0]
-  .probe18(pci_adc_en),          // input wire [15:0]
-  .probe19(pci_on),              // input wire [15:0]
-  .probe20(pci_stop),            // input wire [15:0]
-  .probe21(pci_active),          // input wire [15:0]
-  .probe22(pci_adc_on),          // input wire [0:0]
-  .probe23(report),              // input wire [0:0]
-  .probe24(adr)                  // input wire [47:0]
+  .probe13(msix_mask),           // input wire [15:0]
+  .probe14(chan0_msix_adr),      // input wire [31:0]
+  .probe15(chan0_msix_data),     // input wire [31:0]
+  .probe16(chan1_msix_adr),      // input wire [31:0]
+  .probe17(chan1_msix_data),     // input wire [31:0]
+  .probe18(msix_enabled),        // input wire [0:0]
+  .probe19(msix_req),            // input wire [15:0]
+  .probe20(msix_ack),            // input wire [15:0]
+  .probe21(msix_issue),          // input wire [0:0]
+  .probe22(msix_clear),          // input wire [0:0]
+  .probe23(pci_adc_en),          // input wire [15:0]
+  .probe24(pci_on),              // input wire [15:0]
+  .probe25(pci_stop),            // input wire [15:0]
+  .probe26(pci_active),          // input wire [15:0]
+  .probe27(pci_adc_on),          // input wire [0:0]
+  .probe28(report),              // input wire [0:0]
+  .probe29(adr)                  // input wire [47:0]
  );
 
 ila_2 ila_2_inst (
@@ -761,10 +769,20 @@ begin : adc_app
 
   always @ ( posedge pci_clk ) 
   begin
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
     if (pci_reset)
     begin
       pci_init <= 0;
       pci_ana_req <= 0;
+
+      msix_mask <= 16'hffff;
+      chan0_msix_adr <= 0;
+      chan0_msix_data <= 0;
+      chan1_msix_adr <= 0;
+      chan1_msix_data <= 0;
     end
     else
     begin
@@ -838,6 +856,15 @@ begin : adc_app
         begin
           pci_ana_req <= 0;
           pci_init <= 0;
+          
+          case (pci_adr[6:0])
+            0 : chan0_msix_adr <= pci_in;
+            2 : chan0_msix_data <= pci_in;
+            3 : msix_mask[0] <= pci_in[0];
+            4 : chan1_msix_adr <= pci_in;
+            6 : chan1_msix_data <= pci_in;
+            7 : msix_mask[1] <= pci_in[0];
+          endcase          
         end
       end
       else
@@ -1082,14 +1109,6 @@ begin : adc_app
           msix_issue <= 0;
       end
     end
-  end
-
-  always @ ( posedge pci_clk ) 
-  begin
-    chan0_msix_adr <= 32'h30000000;
-    chan0_msix_data <= 32'h12345678;
-    chan0_msix_adr <= 32'h30000004;
-    chan0_msix_data <= 32'hFEDCBA98;
   end
  
   always @ ( posedge rx_clk ) 
