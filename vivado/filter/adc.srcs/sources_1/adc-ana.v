@@ -258,6 +258,8 @@ module adc_ana (
   reg                     d_pend;
   reg  [1:0]              d_adr;
 
+  reg                     update_adr;
+
   reg                     msix_start;
   reg                     msix_sig;
 
@@ -1131,7 +1133,7 @@ begin : adc_ana_gen
       adr <= 0;
       d_adr <= 0;
       report <= 0;
-      pci_stop <= 0;
+      update_adr <= 0;
       msix_sig <= 0;
     end
     else
@@ -1141,14 +1143,14 @@ begin : adc_ana_gen
         adr <= phys_adr;
         d_adr <= 0;
         report <= 0;
-        pci_stop <= 0;
+        update_adr <= 0;
         msix_sig <= 0;
       end
       else
       begin
         if (d_pend)
         begin
-          pci_stop <= 0;
+          update_adr <= 0;
 
           if (d_adr == 2'b11)
             report <= 1;
@@ -1169,15 +1171,14 @@ begin : adc_ana_gen
           begin
             report <= 0;
             adr[20:5] <= adr[20:5] + 1;
-            if (adr[20:5] + 1 == ack_pos[20:5])
-              pci_stop <= 1;
+            update_adr <= 1;
               
             if (adr[9:0] == 0)
               msix_sig <= 1;
           end          
           else
           begin
-            pci_stop <= 0;
+            update_adr <= 0;
             msix_sig <= 0;
           end
         end
@@ -1185,26 +1186,28 @@ begin : adc_ana_gen
     end
   end
 
-
   always @ ( posedge pci_clk ) 
   begin
     if (pci_reset)
-    begin
-      msix_issue <= 0;
-    end
+      pci_stop <= 0;
     else
     begin
-      if (msix_clear)
-        msix_issue <= 0;
+      if (pci_init)
+        pci_stop <= 0;
       else
       begin
-        if (pci_stop | msix_start | msix_sig)
-          if (!msix_mask)
-            msix_issue <= 1;
+        if (update_adr)
+        begin
+          if (adr[20:5] == ack_pos[20:5])
+              pci_stop <= 1;
+          else
+            pci_stop <= 0;
+        end
+        else
+          pci_stop <= 0;
       end
     end
   end
-
 
 end
 

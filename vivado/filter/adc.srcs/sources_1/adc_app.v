@@ -998,7 +998,7 @@ begin : adc_app
     if (pci_reset)
       pci_active <= 0;
     else
-      pci_active <= (pci_active | pci_init) & !pci_stop;
+      pci_active <= (pci_active | pci_init) & (~pci_stop);
   end
 
   always @ ( posedge pci_clk ) 
@@ -1163,7 +1163,7 @@ begin : adc_app
     else
     begin
       if (rx_conf)
-        rx_req <= rx_req & !rx_conf;
+        rx_req <= rx_req & (~rx_conf);
       else
       begin
         rx_pend <= rx_pend_2;
