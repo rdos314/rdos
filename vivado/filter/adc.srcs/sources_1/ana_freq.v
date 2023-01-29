@@ -36,6 +36,7 @@ module ana_freq (
   input wire              start,
   input wire              stop,
   output reg              run,
+  input wire              validate,
 
   input wire              wr,
   input wire [10:0]       wr_adr,
@@ -219,16 +220,19 @@ ana_phase ana_phase_B (
   .phase(phase_B)
 );
 
-/*
-ila_0 ila_0_inst (
+ila_1 ila_1_inst (
   .clk(clk),                 // input wire clk
   .probe0(report),           // input wire [0:0]  probe3
-  .probe1(amp_A),            // input wire [15:0]  probe3
-  .probe2(amp_B),            // input wire [15:0]  probe3
-  .probe3(phase_A),          // input wire [15:0]  probe3
-  .probe4(phase_B)           // input wire [15:0]  probe3
+  .probe1(validate),         // input wire [0:0]  probe3
+  .probe2(out_sin_A),        // input wire [42:0]  probe3
+  .probe3(out_sin_B),        // input wire [42:0]  probe3
+  .probe4(out_cos_A),        // input wire [42:0]  probe3
+  .probe5(out_cos_B),        // input wire [42:0]  probe3
+  .probe6(amp_A),            // input wire [15:0]  probe3
+  .probe7(amp_B),            // input wire [15:0]  probe3
+  .probe8(phase_A),          // input wire [15:0]  probe3
+  .probe9(phase_B)           // input wire [15:0]  probe3
 );
-*/
 
 generate
 begin : ana_freq_gen

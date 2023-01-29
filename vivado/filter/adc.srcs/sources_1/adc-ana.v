@@ -306,6 +306,7 @@ ana_freq base (
   .start(base_start),     // input wire start
   .stop(stop),            // input wire stop
   .run(base_run),         // output wire run
+  .validate(config_validate),  // input wire validate
   .wr(coeff_wr),          // input wire coeff_wr
   .wr_adr(coeff_adr),     // input wire [10:0] coeff_adr
   .wr_sin(coeff_sin),     // input wire [63:0] coeff_sin
@@ -334,6 +335,7 @@ ana_freq delayed (
   .start(delay_start),    // input wire start
   .stop(stop),            // input wire stop
   .run(delay_run),        // output wire run
+  .validate(config_validate),  // input wire validate
   .wr(coeff_wr),          // input wire coeff_wr
   .wr_adr(coeff_adr),     // input wire [10:0] coeff_adr
   .wr_sin(coeff_sin),     // input wire [63:0] coeff_sin
@@ -1205,6 +1207,25 @@ begin : adc_ana_gen
         end
         else
           pci_stop <= 0;
+      end
+    end
+  end
+
+  always @ ( posedge pci_clk ) 
+  begin
+    if (pci_reset)
+    begin
+      msix_issue <= 0;
+    end
+    else
+    begin
+      if (msix_clear)
+        msix_issue <= 0;
+      else
+      begin
+        if (pci_stop | msix_start | msix_sig)
+          if (!msix_mask)
+            msix_issue <= 1;
       end
     end
   end

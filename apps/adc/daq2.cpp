@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     TDateTime curr;
     double SampleFreq = 750.0;
 
-    TFreq Freq(47.8, 63.2, 1, SampleFreq, 70);
+    TFreq Freq(88.0, 109.0, 1, SampleFreq, 100);
 
     TAdc Adc(0x0, 30000, &Freq);
 

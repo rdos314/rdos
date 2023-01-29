@@ -334,7 +334,7 @@ adc_ana ana_1 (
     .msix_clear(msix_ack[1])
 );
 
-
+/*
 ila_1 ila_1_inst (
   .clk(pci_clk),                 // input wire clk
   .probe0(pci_ana_req),          // input wire [0:0]
@@ -368,7 +368,9 @@ ila_1 ila_1_inst (
   .probe28(report),              // input wire [0:0]
   .probe29(adr)                  // input wire [47:0]
  );
+*/
 
+/*
 ila_2 ila_2_inst (
   .clk(rx_clk),                  // input wire clk
   .probe0(rx_req),               // input wire [15:0]
@@ -388,8 +390,9 @@ ila_2 ila_2_inst (
   .probe14(adc_sync_ok),         // input wire [0:0]
   .probe15(adc_sync_fail)        // input wire [0:0]
 );
+*/
 
-
+/*
 ila_3 ila_3_inst (
   .clk(up_clk),                  // input wire clk
   .probe0(up_req_state),         // input wire [1:0]
@@ -429,6 +432,7 @@ ila_3 ila_3_inst (
   .probe34(adc_user_ready),      // input wire [0:0]
   .probe35(adc_rst_done)         // input wire [3:0]
 );
+*/
 
 generate
 begin : adc_app
@@ -467,7 +471,7 @@ begin : adc_app
         up_on_2 <= up_on_1;
         up_on_3 <= up_on_2;
       
-        if (!up_on_3 && up_on_2)
+        if (up_on_3 ^ up_on_2)
         begin
           if (up_on_2)
           begin
@@ -587,6 +591,9 @@ begin : adc_app
               if (up_adc_en)
               begin
                 up_adc_probing <= 0;
+          
+                if (spi_done)
+                  spi_write <= 0;
               end
               else
               begin

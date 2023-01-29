@@ -732,7 +732,7 @@ InitFreqClk proc near
 ; VCO divider, (0), M1 & M2 divide = 3
 ;
     mov dx,0F4h
-    mov al,00h   ; 1GHz
+    mov al,11h   ; 750 MHz
     call WriteSpiByte
 ;
 ; PLL2 loop filter (0011 1010), 900 ohm, 1850 ohm, 19 pF
@@ -986,7 +986,7 @@ InitFreqAdc proc near
     call WriteSpiByte
 ;
     mov dx,56Eh
-    mov al,0          ; 1 GHz
+    mov al,0          ; 750 MHz
     call WriteSpiByte
 ;
     ret
@@ -1402,7 +1402,7 @@ map_adc_block  Endp
 
 setup_adc_chan_name      DB 'Setup ADC Channel', 0
 
-c_freq DD 1000000000
+c_freq DD 750000000
 
 setup_adc_chan  Proc far
     push ds
