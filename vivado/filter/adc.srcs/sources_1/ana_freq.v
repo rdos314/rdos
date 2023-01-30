@@ -109,6 +109,26 @@ module ana_freq (
   wire [63:0]            sin_coeff_out;
   wire [63:0]            cos_coeff_out;
 
+  wire [15:0]            sin_0;
+  wire [15:0]            sin_1;
+  wire [15:0]            sin_2;
+  wire [15:0]            sin_3;
+
+  assign sin_0 = sin_coeff_out[15:0];
+  assign sin_1 = sin_coeff_out[31:16];
+  assign sin_2 = sin_coeff_out[47:32];
+  assign sin_3 = sin_coeff_out[63:48];
+
+  wire [15:0]            cos_0;
+  wire [15:0]            cos_1;
+  wire [15:0]            cos_2;
+  wire [15:0]            cos_3;
+
+  assign cos_0 = cos_coeff_out[15:0];
+  assign cos_1 = cos_coeff_out[31:16];
+  assign cos_2 = cos_coeff_out[47:32];
+  assign cos_3 = cos_coeff_out[63:48];
+
   reg  [55:0]            in_A;
   reg  [55:0]            in_B;
     
@@ -220,19 +240,29 @@ ana_phase ana_phase_B (
   .phase(phase_B)
 );
 
+/*
 ila_1 ila_1_inst (
   .clk(clk),                 // input wire clk
   .probe0(report),           // input wire [0:0]  probe3
   .probe1(validate),         // input wire [0:0]  probe3
-  .probe2(out_sin_A),        // input wire [42:0]  probe3
-  .probe3(out_sin_B),        // input wire [42:0]  probe3
-  .probe4(out_cos_A),        // input wire [42:0]  probe3
-  .probe5(out_cos_B),        // input wire [42:0]  probe3
-  .probe6(amp_A),            // input wire [15:0]  probe3
-  .probe7(amp_B),            // input wire [15:0]  probe3
-  .probe8(phase_A),          // input wire [15:0]  probe3
-  .probe9(phase_B)           // input wire [15:0]  probe3
+  .probe2(sin_0),            // input wire [15:0]  probe3
+  .probe3(sin_1),            // input wire [15:0]  probe3
+  .probe4(sin_2),            // input wire [15:0]  probe3
+  .probe5(sin_3),            // input wire [15:0]  probe3
+  .probe6(cos_0),            // input wire [15:0]  probe3
+  .probe7(cos_1),            // input wire [15:0]  probe3
+  .probe8(cos_2),            // input wire [15:0]  probe3
+  .probe9(cos_3),            // input wire [15:0]  probe3
+  .probe10(out_sin_A),       // input wire [42:0]  probe3
+  .probe11(out_sin_B),       // input wire [42:0]  probe3
+  .probe12(out_cos_A),       // input wire [42:0]  probe3
+  .probe13(out_cos_B),       // input wire [42:0]  probe3
+  .probe14(amp_A),           // input wire [15:0]  probe3
+  .probe15(amp_B),           // input wire [15:0]  probe3
+  .probe16(phase_A),         // input wire [15:0]  probe3
+  .probe17(phase_B)          // input wire [15:0]  probe3
 );
+*/
 
 generate
 begin : ana_freq_gen

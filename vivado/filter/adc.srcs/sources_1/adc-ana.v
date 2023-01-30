@@ -355,39 +355,27 @@ ana_freq delayed (
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
 
-/*
-ila_0 ila_0_inst (
+
+
+ila_1 ila_1_inst (
   .clk(pci_clk),             // input wire clk
-  .probe0(fifo_empty),       // input wire [0:0]  probe3
-  .probe1(fifo_rd),          // input wire [0:0]  probe3
-  .probe2(d_pend),           // input wire [0:0]  probe3
-  .probe3(d_adr),            // input wire [3:0]  probe3
-  .probe4(d_0),              // input wire [63:0]  probe3
-  .probe5(d_1),              // input wire [63:0]  probe3
-  .probe6(d_2),              // input wire [63:0]  probe3
-  .probe7(d_3),              // input wire [63:0]  probe3
-  .probe8(d_4),              // input wire [63:0]  probe3
-  .probe9(d_5),              // input wire [63:0]  probe3
-  .probe10(d_6),              // input wire [63:0]  probe3
-  .probe11(d_7),              // input wire [63:0]  probe3
-  .probe12(d_8),              // input wire [63:0]  probe3
-  .probe13(d_9),              // input wire [63:0]  probe3
-  .probe14(d_10),             // input wire [63:0]  probe3
-  .probe15(d_11),             // input wire [63:0]  probe3
-  .probe16(d_12),             // input wire [63:0]  probe3
-  .probe17(d_13),             // input wire [63:0]  probe3
-  .probe18(d_14),             // input wire [63:0]  probe3
-  .probe19(d_15),             // input wire [63:0]  probe3
-  .probe20(amp_A),            // input wire [15:0]  probe3
-  .probe21(amp_B),            // input wire [15:0]  probe3
-  .probe22(phase_A),          // input wire [15:0]  probe3
-  .probe23(phase_B),          // input wire [15:0]  probe3
-  .probe24(report),           // input wire [0:0]  probe3
-  .probe25(rd),               // input wire [0:0]  probe3
-  .probe26(rd_adr),           // input wire [3:0]  probe3
-  .probe27(rp_data)           // input wire [63:0]  probe3
+  .probe0(incr),             // input wire [29:0]  probe3
+  .probe1(count),            // input wire [13:0]  probe3
+  .probe2(synt_phase),       // input wire [29:0]  probe3
+  .probe3(synt_cordic_phase), // input wire [31:0]  probe3
+  .probe4(synt_raw_sin),     // input wire [23:0]  probe3
+  .probe5(synt_raw_cos),     // input wire [23:0]  probe3
+  .probe6(coeff_wr),         // input wire [0:0]  probe3
+  .probe7(coeff_adr),        // input wire [10:0]  probe3
+  .probe8(coeff_sin_0),      // input wire [15:0]  probe3
+  .probe9(coeff_sin_1),      // input wire [15:0]  probe3
+  .probe10(coeff_sin_2),     // input wire [15:0]  probe3
+  .probe11(coeff_sin_3),     // input wire [15:0]  probe3
+  .probe12(coeff_cos_0),     // input wire [15:0]  probe3
+  .probe13(coeff_cos_1),     // input wire [15:0]  probe3
+  .probe14(coeff_cos_2),     // input wire [15:0]  probe3
+  .probe15(coeff_cos_3)      // input wire [15:0]  probe3
 );
-*/
 
 generate
 begin : adc_ana_gen

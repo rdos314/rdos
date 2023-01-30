@@ -1335,7 +1335,7 @@ begin : adc_app
       begin
         case (rx_adr[2:0])
           1 : chan0_count <= rx_out[15:0];
-          2 : chan0_incr <= rx_out;
+          2 : chan0_incr <= rx_out[31:2];
           3 : rx_conf[0] <= 1;
           default: rx_conf[0] <= 0;
         endcase
@@ -1355,7 +1355,7 @@ begin : adc_app
       begin
         case (rx_adr[2:0])
           1 : chan1_count <= rx_out[15:0];
-          2 : chan1_incr <= rx_out;
+          2 : chan1_incr <= rx_out[31:2];
           3 : rx_conf[1] <= 1;
           default: rx_conf[1] <= 0;
         endcase
