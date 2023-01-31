@@ -31,8 +31,8 @@ module ana_amp (
 
   input wire              start,
   input wire [12:0]       count,
-  input wire [42:0]       sin_sum,
-  input wire [42:0]       cos_sum,
+  input wire [43:0]       sin_sum,
+  input wire [43:0]       cos_sum,
 
   output wire             report,
   output wire [15:0]      amp
@@ -75,14 +75,14 @@ module ana_amp (
   reg  [15:0]            amp_cos;
 
 
-square square_sin_inst (
+mult_16_16 square_sin_inst (
   .CLK(clk),         // input wire CLK
   .A(amp_sin),       // input wire [15 : 0] A
   .B(amp_sin),       // input wire [15 : 0] B
   .P(sin_2)          // output wire [31 : 0] P
 );
 
-square square_cos_inst (
+mult_16_16 square_cos_inst (
   .CLK(clk),         // input wire CLK
   .A(amp_cos),       // input wire [15 : 0] A
   .B(amp_cos),       // input wire [15 : 0] B
@@ -102,8 +102,8 @@ ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(start),         // input wire [0:0]  probe0
   .probe1(count),         // input wire [12:0]  probe1
-  .probe2(sin_sum),       // input wire [42:0]  probe2
-  .probe3(cos_sum),       // input wire [42:0]  probe3
+  .probe2(sin_sum),       // input wire [43:0]  probe2
+  .probe3(cos_sum),       // input wire [43:0]  probe3
   .probe4(report),        // input wire [0:0]  probe3
   .probe5(run_div),       // input wire [0:0]  probe3
   .probe6(save_div),      // input wire [0:0]  probe3
@@ -153,26 +153,26 @@ begin : ana_amp_gen
       begin
         pend_div <= 1;
 
-        if (sin_sum[42])
+        if (sin_sum[43])
         begin
-          incr_sin <= ~sin_sum[11];
-          div_sin <= ~sin_sum[41:12];
+          incr_sin <= ~sin_sum[12];
+          div_sin <= ~sin_sum[42:13];
         end
         else
         begin
-          incr_sin <= sin_sum[11];
-          div_sin <= sin_sum[41:12];
+          incr_sin <= sin_sum[12];
+          div_sin <= sin_sum[42:13];
         end
 
-        if (cos_sum[42])
+        if (cos_sum[43])
         begin
-          incr_cos <= ~sin_sum[11];
-          div_cos <= ~cos_sum[41:12];
+          incr_cos <= ~sin_sum[12];
+          div_cos <= ~cos_sum[42:13];
         end
         else
         begin
-          incr_cos <= cos_sum[11];
-          div_cos <= cos_sum[41:12];
+          incr_cos <= cos_sum[12];
+          div_cos <= cos_sum[42:13];
         end
       end
       else

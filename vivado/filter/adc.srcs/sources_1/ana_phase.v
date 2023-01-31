@@ -30,8 +30,8 @@ module ana_phase (
   input wire              reset,
 
   input wire              start,
-  input wire [42:0]       sin_sum,
-  input wire [42:0]       cos_sum,
+  input wire [43:0]       sin_sum,
+  input wire [43:0]       cos_sum,
 
   output reg              report,
   output reg [15:0]       phase
@@ -43,8 +43,8 @@ module ana_phase (
   reg                     pend_atan;
   reg                     start_atan;
   wire                    phase_done;
-  reg  [42:0]             phase_sin;
-  reg  [42:0]             phase_cos;
+  reg  [43:0]             phase_sin;
+  reg  [43:0]             phase_cos;
   reg  [47:0]             phase_atan;
   wire [23:0]             cordic_phase;
 
@@ -61,16 +61,16 @@ ana_atan atan (
 ila_0 ila_0_inst (
   .clk(clk),              // input wire clk
   .probe0(start),         // input wire [0:0]  probe0
-  .probe1(sin_sum),       // input wire [42:0]  probe0
-  .probe2(cos_sum),       // input wire [42:0]  probe0
+  .probe1(sin_sum),       // input wire [43:0]  probe0
+  .probe2(cos_sum),       // input wire [43:0]  probe0
   .probe3(run_rot),       // input wire [0:0]  probe0
   .probe4(rot_done),      // input wire [0:0]  probe0
   .probe5(run_atan),      // input wire [0:0]  probe0
   .probe6(pend_atan),     // input wire [0:0]  probe0
   .probe7(start_atan),    // input wire [0:0]  probe0
   .probe8(phase_done),    // input wire [0:0]  probe0
-  .probe9(phase_sin),     // input wire [42:0]  probe0
-  .probe10(phase_cos),    // input wire [42:0]  probe0
+  .probe9(phase_sin),     // input wire [43:0]  probe0
+  .probe10(phase_cos),    // input wire [43:0]  probe0
   .probe11(phase_atan),   // input wire [47:0]  probe0
   .probe12(cordic_phase), // input wire [23:0]  probe0
   .probe13(report),       // input wire [0:0]  probe0
@@ -95,13 +95,13 @@ begin : ana_phase_gen
       end
       else
       begin
-        if (phase_sin[42] == phase_sin[41])
+        if (phase_sin[43] == phase_sin[42])
         begin
-          if (phase_cos[42] == phase_cos[41])
+          if (phase_cos[43] == phase_cos[42])
           begin
-            phase_sin[42:1] <= phase_sin[41:0];
+            phase_sin[43:1] <= phase_sin[42:0];
             phase_sin[0] <= 0;
-            phase_cos[42:1] <= phase_cos[41:0];
+            phase_cos[43:1] <= phase_cos[42:0];
             phase_cos[0] <= 0;
             rot_done <= 0;
           end
@@ -153,10 +153,10 @@ begin : ana_phase_gen
     begin
       if (pend_atan)
       begin
-        phase_atan[22:0] <= phase_sin[42:20];
-        phase_atan[23] <= phase_sin[42];
-        phase_atan[46:24] <= phase_cos[42:20];
-        phase_atan[47] <= phase_cos[42];
+        phase_atan[22:0] <= phase_sin[43:21];
+        phase_atan[23] <= phase_sin[43];
+        phase_atan[46:24] <= phase_cos[43:21];
+        phase_atan[47] <= phase_cos[43];
         start_atan <= 1;
         run_atan <= 1;
         report <= 0;

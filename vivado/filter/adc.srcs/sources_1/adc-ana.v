@@ -64,6 +64,7 @@ module adc_ana (
   input wire              msix_clear
 );
 
+  reg                     config_wnd;
   reg                     config_init;
   reg                     config_start;
   reg                     config_validate;
@@ -79,6 +80,9 @@ module adc_ana (
   reg                     config_has_coeff;
   reg  [16:0]             config_last_phase;
   reg  [16:0]             config_delay_phase;
+
+  reg                     config_pend_coeff;
+  reg                     config_pend_wnd;
 
   reg  [23:0]             config_l_sin;
   reg  [23:0]             config_l_cos;
@@ -96,6 +100,12 @@ module adc_ana (
   reg  [15:0]             coeff_cos_1;
   reg  [15:0]             coeff_cos_2;
   reg  [15:0]             coeff_cos_3;
+
+  reg  [31:0]             coeff_wnd;
+  reg  [7:0]              coeff_wnd_0;
+  reg  [7:0]              coeff_wnd_1;
+  reg  [7:0]              coeff_wnd_2;
+  reg  [7:0]              coeff_wnd_3;
 
   reg                     p1;
   reg                     p2;
@@ -173,6 +183,58 @@ module adc_ana (
   assign synt_comp_sin[2]   = synt_raw_sin[17];
   assign synt_comp_sin[1]   = synt_raw_sin[16];
   assign synt_comp_sin[0]   = synt_raw_sin[15];
+
+  reg  [15:0]             wnd_mask;
+  reg  [27:0]             wnd_curr;
+  reg  [27:0]             wnd_divend;
+  reg  [15:0]             wnd_incr;
+  reg  [15:0]             wnd_phase;
+
+  wire [31:0]             wnd_cordic_phase;
+  wire                    wnd_done;
+  reg                     wnd_prev;
+  wire [47:0]             wnd_data;
+  wire [23:0]             wnd_raw_coeff;
+  wire [23:0]             wnd_comp_coeff;
+
+  assign wnd_cordic_phase[13:0]  = 0;
+  assign wnd_cordic_phase[29:14] = wnd_phase[15:0];
+  assign wnd_cordic_phase[30]    = wnd_phase[15];
+  assign wnd_cordic_phase[31]    = wnd_phase[15];
+
+  assign wnd_raw_coeff          = wnd_data[23:0];
+
+  assign wnd_comp_coeff[23]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[22]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[21]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[20]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[19]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[18]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[17]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[16]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[15]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[14]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[13]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[12]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[11]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[10]  = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[9]   = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[8]   = wnd_raw_coeff[23];
+  assign wnd_comp_coeff[7]   = wnd_raw_coeff[22];
+  assign wnd_comp_coeff[6]   = wnd_raw_coeff[21];
+  assign wnd_comp_coeff[5]   = wnd_raw_coeff[20];
+  assign wnd_comp_coeff[4]   = wnd_raw_coeff[19];
+  assign wnd_comp_coeff[3]   = wnd_raw_coeff[18];
+  assign wnd_comp_coeff[2]   = wnd_raw_coeff[17];
+  assign wnd_comp_coeff[1]   = wnd_raw_coeff[16];
+  assign wnd_comp_coeff[0]   = wnd_raw_coeff[15];
+
+  reg  [23:0]             wnd_raw;
+  reg  [31:0]             wnd_2;
+  reg                     w1;
+  reg                     w2;
+  reg                     w3;
+  
 
   reg                     sample_en;
   reg                     sample_req;
@@ -267,13 +329,29 @@ module adc_ana (
 
  (* ASYNC_REG="TRUE" *)  reg                  adc_on_1;
 
-ana_synt synt (
+ana_synt trig_synt (
   .aclk(clk),                             // input wire aclk
   .s_axis_phase_tvalid(synt_start),       // input wire s_axis_phase_tvalid
   .s_axis_phase_tready(),                 // output wire s_axis_phase_tready
   .s_axis_phase_tdata(synt_cordic_phase), // input wire [31 : 0] s_axis_phase_tdata
   .m_axis_dout_tvalid(synt_done),         // output wire m_axis_dout_tvalid
   .m_axis_dout_tdata(synt_data)           // output wire [47 : 0] m_axis_dout_tdata
+);
+
+ana_synt wnd_synt (
+  .aclk(clk),                             // input wire aclk
+  .s_axis_phase_tvalid(synt_start),       // input wire s_axis_phase_tvalid
+  .s_axis_phase_tready(),                 // output wire s_axis_phase_tready
+  .s_axis_phase_tdata(wnd_cordic_phase),  // input wire [31 : 0] s_axis_phase_tdata
+  .m_axis_dout_tvalid(wnd_done),          // output wire m_axis_dout_tvalid
+  .m_axis_dout_tdata(wnd_data)            // output wire [47 : 0] m_axis_dout_tdata
+);
+
+mult_16_16 m_wnd (
+  .CLK(clk),            // input wire CLK
+  .A(wnd_raw[23:8]),    // input wire [15 : 0] A
+  .B(wnd_raw[23:8]),    // input wire [15 : 0] B
+  .P(wnd_2)             // output wire [31 : 0] P
 );
 
 bram_sample sample (
@@ -311,6 +389,7 @@ ana_freq base (
   .wr_adr(coeff_adr),     // input wire [10:0] coeff_adr
   .wr_sin(coeff_sin),     // input wire [63:0] coeff_sin
   .wr_cos(coeff_cos),     // input wire [63:0] coeff_cos
+  .wr_wnd(coeff_wnd),     // input wire [31:0] coeff_cos
   .in_A0(out_A0),         // input wire [13:0] in_A0
   .in_A1(out_A1),         // input wire [13:0] in_A1
   .in_A2(out_A2),         // input wire [13:0] in_A2
@@ -340,6 +419,7 @@ ana_freq delayed (
   .wr_adr(coeff_adr),     // input wire [10:0] coeff_adr
   .wr_sin(coeff_sin),     // input wire [63:0] coeff_sin
   .wr_cos(coeff_cos),     // input wire [63:0] coeff_cos
+  .wr_wnd(coeff_wnd),     // input wire [31:0] coeff_cos
   .in_A0(out_A0),         // input wire [13:0] in_A0
   .in_A1(out_A1),         // input wire [13:0] in_A1
   .in_A2(out_A2),         // input wire [13:0] in_A2
@@ -380,10 +460,12 @@ ila_1 ila_1_inst (
 generate
 begin : adc_ana_gen
 
+
   always @ ( posedge clk ) 
   begin
     if (reset)
     begin
+      config_wnd <= 0;
       config_init <= 0;
       sample_en <= 0;
       pend_run <= 0;
@@ -392,17 +474,58 @@ begin : adc_ana_gen
     begin
       if (conf)
       begin
-        config_init <= 1;
-        sample_en <= 1;
+        config_count <= count[12:0];
+
+        config_wnd <= 1;
+        config_init <= 0;
+        sample_en <= 0;
         pend_run <= 0;
+
+        wnd_mask[15] <= 1;
+        wnd_mask[14:0] <= 0;
+
+        wnd_divend[27:15] <= 0;
+        wnd_divend[16] <= 1;
+        wnd_divend[15:0] <= 0;
+
+        wnd_curr[27:15] <= count[12:0] - 1;
+        wnd_curr[14:0] <= 0;
+
+        wnd_incr[15:0] <= 0;
       end
       else
       begin
-        config_init <= 0;
-        if (config_coeff_done)
+        if (config_wnd)
         begin
-          sample_en <= 0;
-          pend_run <= 1;
+          pend_run <= 0;
+          if (mask)
+          begin
+            if (wnd_divend >= wnd_curr)
+            begin
+              wnd_divend <= wnd_divend - wnd_curr;
+              wnd_incr <= wnd_incr | wnd_mask;
+            end
+
+            wnd_curr <= wnd_curr >> 1;
+            wnd_mask <= wnd_mask >> 1;
+
+            config_init <= 0;
+            sample_en <= 0;
+          end
+          else
+          begin
+            config_init <= 1;
+            sample_en <= 1;
+          end
+        end
+        else
+        begin
+          config_init <= 0;
+          if (config_coeff_done)
+          begin
+            sample_en <= 0;
+            pend_run <= 1;
+          end
         end
       end
     end
@@ -412,8 +535,6 @@ begin : adc_ana_gen
   begin
     if (config_init)
     begin
-      config_count <= count[12:0];
-
       case (count[1:0])
         2'b00 : config_last_en <= 4'b1111;
         2'b01 : config_last_en <= 4'b0001;
@@ -485,22 +606,108 @@ begin : adc_ana_gen
 
   always @ ( posedge clk ) 
   begin
-    if (config_raw_coeff)
+    if (reset)
+      w1 <= 0;
+    else
     begin
-      if (config_l_sin[6])
-        config_sin <= config_l_sin[22:7] + 1;
+      if (config_init)
+      begin
+        w1 <= 0;
+        wnd_prev <= wnd_done;
+      end
       else
-        config_sin <= config_l_sin[22:7];
+      begin
+        if (sample_en)
+        begin
+          if (wnd_prev != wnd_done)
+          begin
+            wnd_prev <= wnd_done;
 
-      if (config_l_cos[6])
-        config_cos <= config_l_cos[22:7] + 1;
-      else
-        config_cos <= config_l_cos[22:7];
+            if (wnd_done)
+            begin
+              wnd_raw <= wnd_raw_coeff - wnd_comp_coeff;
+              w1 <= 1;
+            end
+            else
+              w1 <= 0;
+          end
+          else
+            w1 <= 0;
+        end
+        else
+          w1 <= 0;
+      end
+    end
+  end
 
-      config_has_coeff <= 1;
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+    begin
+      w2 <= 0;
+      w3 <= 0;
     end
     else
+    begin
+      w2 <= w1;
+      w3 <= w2;
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+       config_pend_wnd <= 0;
+    else
+    begin
+      if (w3)
+      begin
+        config_wnd <= wnd_2[30:23];
+        config_pend_wnd <= 1;
+      end
+      else
+        if (config_pend_wnd & config_pend_coeff)
+          config_pend_wnd <= 0;
+    end 
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      config_pend_coeff <= 0;
+    else
+    begin
+      if (config_raw_coeff)
+      begin
+        if (config_l_sin[6])
+          config_sin <= config_l_sin[22:7] + 1;
+        else
+          config_sin <= config_l_sin[22:7];
+
+        if (config_l_cos[6])
+          config_cos <= config_l_cos[22:7] + 1;
+        else
+          config_cos <= config_l_cos[22:7];
+
+        config_pend_coeff <= 1;
+      end
+      else
+        if (config_pend_wnd & config_pend_coeff)
+          config_pend_coeff <= 0;
+    end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
       config_has_coeff <= 0;
+    else
+    begin
+      if (config_pend_wnd & config_pend_coeff)
+        config_has_coeff <= 1;
+      else
+        config_has_coeff <= 0;
+    end
   end
 
   always @ ( posedge clk ) 
@@ -517,6 +724,7 @@ begin : adc_ana_gen
               sample_in_0 <= config_sin[15:2];
               coeff_sin_0 <= config_sin;
               coeff_cos_0 <= config_cos;
+              coeff_wnd_0 <= config_wnd;
               sample_req <= 0;
             end
           2'b01 : 
@@ -524,6 +732,7 @@ begin : adc_ana_gen
               sample_in_1 <= config_sin[15:2];
               coeff_sin_1 <= config_sin;
               coeff_cos_1 <= config_cos;
+              coeff_wnd_1 <= config_wnd;
               sample_req <= 0;
             end
           2'b10 : 
@@ -531,6 +740,7 @@ begin : adc_ana_gen
               sample_in_2 <= config_sin[15:2];
               coeff_sin_2 <= config_sin;
               coeff_cos_2 <= config_cos;
+              coeff_wnd_2 <= config_wnd;
               sample_req <= 0;
             end
           2'b11 :
@@ -538,6 +748,7 @@ begin : adc_ana_gen
               sample_in_3 <= config_sin[15:2];
               coeff_sin_3 <= config_sin;
               coeff_cos_3 <= config_cos;
+              coeff_wnd_3 <= config_wnd;
               sample_req <= 1;
             end
         endcase
@@ -726,44 +937,52 @@ begin : adc_ana_gen
           begin
             coeff_sin[15:0] <= coeff_sin_0;
             coeff_cos[15:0] <= coeff_cos_0;
+            coeff_wnd[7:0] <= coeff_wnd_0;
           end
           else            
           begin
             coeff_sin[15:0] <= 0;
             coeff_cos[15:0] <= 0;
+            coeff_wnd[7:0] <= 0;
           end
 
           if (config_last_en[1])
           begin
             coeff_sin[31:16] <= coeff_sin_1;
             coeff_cos[31:16] <= coeff_cos_1;
+            coeff_wnd[15:8] <= coeff_wnd_1;
           end
           else            
           begin
             coeff_sin[31:16] <= 0;
             coeff_cos[31:16] <= 0;
+            coeff_wnd[15:8] <= 0;
           end
 
           if (config_last_en[2])
           begin
             coeff_sin[47:32] <= coeff_sin_2;
             coeff_cos[47:32] <= coeff_cos_2;
+            coeff_wnd[23:16] <= coeff_wnd_2;
           end
           else            
           begin
             coeff_sin[47:32] <= 0;
             coeff_cos[47:32] <= 0;
+            coeff_wnd[23:16] <= 0;
           end
 
           if (config_last_en[3])
           begin
             coeff_sin[63:48] <= coeff_sin_3;
             coeff_cos[63:48] <= coeff_cos_3;
+            coeff_wnd[31:24] <= coeff_wnd_3;
           end
           else            
           begin
             coeff_sin[63:48] <= 0;
             coeff_cos[63:48] <= 0;
+            coeff_wnd[31:24] <= 0;
           end
         end
         else     
@@ -775,12 +994,19 @@ begin : adc_ana_gen
             coeff_req <= 1;
             coeff_sin[15:0] <= coeff_sin_0;
             coeff_cos[15:0] <= coeff_cos_0;
+            coeff_wnd[7:0] <= coeff_wnd_0;
+
             coeff_sin[31:16] <= coeff_sin_1;
             coeff_cos[31:16] <= coeff_cos_1;
+            coeff_wnd[15:8] <= coeff_wnd_1;
+
             coeff_sin[47:32] <= coeff_sin_2;
             coeff_cos[47:32] <= coeff_cos_2;
+            coeff_wnd[23:16] <= coeff_wnd_2;
+
             coeff_sin[63:48] <= coeff_sin_3;
             coeff_cos[63:48] <= coeff_cos_3;
+            coeff_wnd[31:24] <= coeff_wnd_3;
           end
         end
       end

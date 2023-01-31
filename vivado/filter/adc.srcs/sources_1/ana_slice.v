@@ -34,10 +34,10 @@ module adc_slice (
   input wire              next,
 
   input wire [63:0]       coeff,
-  input wire [55:0]       in,
+  input wire [63:0]       in,
 
   output reg              report,
-  output reg [42:0]       sum
+  output reg [43:0]       sum
 );
 
   reg                    p1;
@@ -53,121 +53,117 @@ module adc_slice (
   
   reg                    run;
 
-  reg  [42:0]            sum_0;
-  reg  [42:0]            sum_1;
-  reg  [42:0]            sum_2;
-  reg  [42:0]            sum_3;
+  reg  [43:0]            sum_0;
+  reg  [43:0]            sum_1;
+  reg  [43:0]            sum_2;
+  reg  [43:0]            sum_3;
 
-  reg  [42:0]            sum_01;
-  reg  [42:0]            sum_23;
+  reg  [43:0]            sum_01;
+  reg  [43:0]            sum_23;
 
-  wire [42:0]            p_0;  
-  wire [42:0]            p_1;  
-  wire [42:0]            p_2;  
-  wire [42:0]            p_3;  
+  wire [43:0]            p_0;  
+  wire [43:0]            p_1;  
+  wire [43:0]            p_2;  
+  wire [43:0]            p_3;  
 
-  assign p_0[30] = p_0[29];
-  assign p_0[31] = p_0[29];
-  assign p_0[32] = p_0[29];
-  assign p_0[33] = p_0[29];
-  assign p_0[34] = p_0[29];
-  assign p_0[35] = p_0[29];
-  assign p_0[36] = p_0[29];
-  assign p_0[37] = p_0[29];
-  assign p_0[38] = p_0[29];
-  assign p_0[39] = p_0[29];
-  assign p_0[40] = p_0[29];
-  assign p_0[41] = p_0[29];
-  assign p_0[42] = p_0[29];
+  assign p_0[32] = p_0[31];
+  assign p_0[33] = p_0[31];
+  assign p_0[34] = p_0[31];
+  assign p_0[35] = p_0[31];
+  assign p_0[36] = p_0[31];
+  assign p_0[37] = p_0[31];
+  assign p_0[38] = p_0[31];
+  assign p_0[39] = p_0[31];
+  assign p_0[40] = p_0[31];
+  assign p_0[41] = p_0[31];
+  assign p_0[42] = p_0[31];
+  assign p_0[43] = p_0[31];
 
-  assign p_1[30] = p_1[29];
-  assign p_1[31] = p_1[29];
-  assign p_1[32] = p_1[29];
-  assign p_1[33] = p_1[29];
-  assign p_1[34] = p_1[29];
-  assign p_1[35] = p_1[29];
-  assign p_1[36] = p_1[29];
-  assign p_1[37] = p_1[29];
-  assign p_1[38] = p_1[29];
-  assign p_1[39] = p_1[29];
-  assign p_1[40] = p_1[29];
-  assign p_1[41] = p_1[29];
-  assign p_1[42] = p_1[29];
+  assign p_1[32] = p_1[31];
+  assign p_1[33] = p_1[31];
+  assign p_1[34] = p_1[31];
+  assign p_1[35] = p_1[31];
+  assign p_1[36] = p_1[31];
+  assign p_1[37] = p_1[31];
+  assign p_1[38] = p_1[31];
+  assign p_1[39] = p_1[31];
+  assign p_1[40] = p_1[31];
+  assign p_1[41] = p_1[31];
+  assign p_1[42] = p_1[31];
+  assign p_1[43] = p_1[31];
 
-  assign p_2[30] = p_2[29];
-  assign p_2[31] = p_2[29];
-  assign p_2[32] = p_2[29];
-  assign p_2[33] = p_2[29];
-  assign p_2[34] = p_2[29];
-  assign p_2[35] = p_2[29];
-  assign p_2[36] = p_2[29];
-  assign p_2[37] = p_2[29];
-  assign p_2[38] = p_2[29];
-  assign p_2[39] = p_2[29];
-  assign p_2[40] = p_2[29];
-  assign p_2[41] = p_2[29];
-  assign p_2[42] = p_2[29];
+  assign p_2[32] = p_2[31];
+  assign p_2[33] = p_2[31];
+  assign p_2[34] = p_2[31];
+  assign p_2[35] = p_2[31];
+  assign p_2[36] = p_2[31];
+  assign p_2[37] = p_2[31];
+  assign p_2[38] = p_2[31];
+  assign p_2[39] = p_2[31];
+  assign p_2[40] = p_2[31];
+  assign p_2[41] = p_2[31];
+  assign p_2[42] = p_2[31];
+  assign p_2[43] = p_2[31];
 
-  assign p_3[30] = p_3[29];
-  assign p_3[31] = p_3[29];
-  assign p_3[32] = p_3[29];
-  assign p_3[33] = p_3[29];
-  assign p_3[34] = p_3[29];
-  assign p_3[35] = p_3[29];
-  assign p_3[36] = p_3[29];
-  assign p_3[37] = p_3[29];
-  assign p_3[38] = p_3[29];
-  assign p_3[39] = p_3[29];
-  assign p_3[40] = p_3[29];
-  assign p_3[41] = p_3[29];
-  assign p_3[42] = p_3[29];
+  assign p_3[32] = p_3[31];
+  assign p_3[33] = p_3[31];
+  assign p_3[34] = p_3[31];
+  assign p_3[35] = p_3[31];
+  assign p_3[36] = p_3[31];
+  assign p_3[37] = p_3[31];
+  assign p_3[38] = p_3[31];
+  assign p_3[39] = p_3[31];
+  assign p_3[40] = p_3[31];
+  assign p_3[41] = p_3[31];
+  assign p_3[42] = p_3[31];
+  assign p_3[43] = p_3[31];
 
   wire [15:0]            coeff_0;
   wire [15:0]            coeff_1;
   wire [15:0]            coeff_2;
   wire [15:0]            coeff_3;
 
-  wire [13:0]            in_0;
-  wire [13:0]            in_1;
-  wire [13:0]            in_2;
-  wire [13:0]            in_3;
+  wire [15:0]            in_0;
+  wire [15:0]            in_1;
+  wire [15:0]            in_2;
+  wire [15:0]            in_3;
 
   assign coeff_0 = coeff[15:0];
   assign coeff_1 = coeff[31:16];
   assign coeff_2 = coeff[47:32];
   assign coeff_3 = coeff[63:48];
 
-  assign in_0 = in[13:0];
-  assign in_1 = in[27:14];
-  assign in_2 = in[41:28];
-  assign in_3 = in[55:42];
+  assign in_0 = in[15:0];
+  assign in_1 = in[31:16];
+  assign in_2 = in[47:32];
+  assign in_3 = in[63:48];
 
-multiply m_0 (
+mult_16_16 m_0 (
   .CLK(clk),            // input wire CLK
-  .A(in_0),             // input wire [13 : 0] A
+  .A(in_0),             // input wire [15 : 0] A
   .B(coeff_0),          // input wire [15 : 0] B
-  .P(p_0[29:0])         // output wire [29 : 0] P
+  .P(p_0[31:0])         // output wire [31 : 0] P
 );
 
-multiply m_1 (
+mult_16_16 m_1 (
   .CLK(clk),            // input wire CLK
-  .A(in_1),             // input wire [13 : 0] A
+  .A(in_1),             // input wire [15 : 0] A
   .B(coeff_1),          // input wire [15 : 0] B
-  .P(p_1[29:0])         // output wire [29 : 0] P
+  .P(p_1[31:0])         // output wire [31 : 0] P
 );
 
-multiply m_2 (
+mult_16_16 m_2 (
   .CLK(clk),            // input wire CLK
-  .A(in_2),             // input wire [13 : 0] A
+  .A(in_2),             // input wire [15 : 0] A
   .B(coeff_2),          // input wire [15 : 0] B
-  .P(p_2[29:0])         // output wire [29 : 0] P
+  .P(p_2[31:0])         // output wire [31 : 0] P
 );
 
-multiply m_3 (
+mult_16_16 m_3 (
   .CLK(clk),            // input wire CLK
-  .A(in_3),             // input wire [13 : 0] A
+  .A(in_3),             // input wire [15 : 0] A
   .B(coeff_3),          // input wire [15 : 0] B
-  .P(p_3[29:0])         // output wire [29 : 0] P
+  .P(p_3[31:0])         // output wire [31 : 0] P
 );
 
 /*
@@ -197,14 +193,14 @@ ila_1 ila_1_inst (
   .probe21(p_1),        // input wire [29:0]  probe6
   .probe22(p_2),        // input wire [29:0]  probe6
   .probe23(p_3),        // input wire [29:0]  probe6
-  .probe24(sum_0),      // input wire [42:0]  probe6
-  .probe25(sum_1),      // input wire [42:0]  probe6
-  .probe26(sum_2),      // input wire [42:0]  probe6
-  .probe27(sum_3),      // input wire [42:0]  probe6
-  .probe28(sum_01),     // input wire [42:0]  probe6
-  .probe29(sum_23),     // input wire [42:0]  probe6
+  .probe24(sum_0),      // input wire [43:0]  probe6
+  .probe25(sum_1),      // input wire [43:0]  probe6
+  .probe26(sum_2),      // input wire [43:0]  probe6
+  .probe27(sum_3),      // input wire [43:0]  probe6
+  .probe28(sum_01),     // input wire [43:0]  probe6
+  .probe29(sum_23),     // input wire [43:0]  probe6
   .probe30(report),     // input wire [0:0]   probe6
-  .probe31(sum)         // input wire [42:0]  probe6
+  .probe31(sum)         // input wire [43:0]  probe6
 );
 */
 
