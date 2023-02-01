@@ -42,7 +42,7 @@ module ana_freq (
   input wire [10:0]       wr_adr,
   input wire [63:0]       wr_sin,
   input wire [63:0]       wr_cos,
-  input wire [31:0]       wr_wnd,
+  input wire [47:0]       wr_wnd,
 
   input wire [13:0]       in_A0,
   input wire [13:0]       in_A1,
@@ -121,11 +121,11 @@ module ana_freq (
 
   reg  [63:0]            sin_coeff_in;
   reg  [63:0]            cos_coeff_in;
-  reg  [31:0]            wnd_coeff_in;
+  reg  [47:0]            wnd_coeff_in;
 
   wire [63:0]            sin_coeff_out;
   wire [63:0]            cos_coeff_out;
-  wire [31:0]            wnd_coeff_out;
+  wire [47:0]            wnd_coeff_out;
 
   wire [15:0]            sin_0;
   wire [15:0]            sin_1;
@@ -147,24 +147,24 @@ module ana_freq (
   assign cos_2 = cos_coeff_out[47:32];
   assign cos_3 = cos_coeff_out[63:48];
 
-  wire [7:0]            wnd_0;
-  wire [7:0]            wnd_1;
-  wire [7:0]            wnd_2;
-  wire [7:0]            wnd_3;
+  wire [11:0]            wnd_0;
+  wire [11:0]            wnd_1;
+  wire [11:0]            wnd_2;
+  wire [11:0]            wnd_3;
 
-  assign wnd_0 = wnd_coeff_out[7:0];
-  assign wnd_1 = wnd_coeff_out[15:8];
-  assign wnd_2 = wnd_coeff_out[23:16];
-  assign wnd_3 = wnd_coeff_out[31:24];
+  assign wnd_0 = wnd_coeff_out[11:0];
+  assign wnd_1 = wnd_coeff_out[23:12];
+  assign wnd_2 = wnd_coeff_out[35:24];
+  assign wnd_3 = wnd_coeff_out[47:36];
 
-  wire [21:0]            out_A0;
-  wire [21:0]            out_A1;
-  wire [21:0]            out_A2;
-  wire [21:0]            out_A3;
-  wire [21:0]            out_B0;
-  wire [21:0]            out_B1;
-  wire [21:0]            out_B2;
-  wire [21:0]            out_B3;
+  wire [25:0]            out_A0;
+  wire [25:0]            out_A1;
+  wire [25:0]            out_A2;
+  wire [25:0]            out_A3;
+  wire [25:0]            out_B0;
+  wire [25:0]            out_B1;
+  wire [25:0]            out_B2;
+  wire [25:0]            out_B3;
 
   reg [63:0]             in_A;
   reg [63:0]             in_B;
@@ -192,64 +192,64 @@ bram_wnd bram_wnd (
   .ena(wnd_en),         // input wire ena
   .wea(wnd_wr),         // input wire [0 : 0] wea
   .addra(wnd_adr),      // input wire [10 : 0] addra
-  .dina(wnd_coeff_in),  // input wire [31 : 0] dina
-  .douta(wnd_coeff_out) // output wire [31 : 0] douta
+  .dina(wnd_coeff_in),  // input wire [47 : 0] dina
+  .douta(wnd_coeff_out) // output wire [47 : 0] douta
 );
 
-mult_14_8 mul_A0 (
+mult_14_12 mul_A0 (
   .CLK(clk),            // input wire CLK
   .A(in_A0),            // input wire [13 : 0] A
-  .B(wnd_0),            // input wire [7 : 0] B
-  .P(out_A0)            // output wire [21 : 0] P
+  .B(wnd_0),            // input wire [11 : 0] B
+  .P(out_A0)            // output wire [25 : 0] P
 );
 
-mult_14_8 mul_A1 (
+mult_14_12 mul_A1 (
   .CLK(clk),            // input wire CLK
   .A(in_A1),            // input wire [13 : 0] A
-  .B(wnd_1),            // input wire [7 : 0] B
-  .P(out_A1)            // output wire [21 : 0] P
+  .B(wnd_1),            // input wire [11 : 0] B
+  .P(out_A1)            // output wire [25 : 0] P
 );
 
-mult_14_8 mul_A2 (
+mult_14_12 mul_A2 (
   .CLK(clk),            // input wire CLK
   .A(in_A2),            // input wire [13 : 0] A
-  .B(wnd_2),            // input wire [7 : 0] B
-  .P(out_A2)            // output wire [21 : 0] P
+  .B(wnd_2),            // input wire [11 : 0] B
+  .P(out_A2)            // output wire [25 : 0] P
 );
 
-mult_14_8 mul_A3 (
+mult_14_12 mul_A3 (
   .CLK(clk),            // input wire CLK
   .A(in_A3),            // input wire [13 : 0] A
-  .B(wnd_3),            // input wire [7 : 0] B
-  .P(out_A3)            // output wire [21 : 0] P
+  .B(wnd_3),            // input wire [11 : 0] B
+  .P(out_A3)            // output wire [25 : 0] P
 );
 
-mult_14_8 mul_B0 (
+mult_14_12 mul_B0 (
   .CLK(clk),            // input wire CLK
   .A(in_B0),            // input wire [13 : 0] A
-  .B(wnd_0),            // input wire [7 : 0] B
-  .P(out_B0)            // output wire [21 : 0] P
+  .B(wnd_0),            // input wire [11 : 0] B
+  .P(out_B0)            // output wire [25 : 0] P
 );
 
-mult_14_8 mul_B1 (
+mult_14_12 mul_B1 (
   .CLK(clk),            // input wire CLK
   .A(in_B1),            // input wire [13 : 0] A
-  .B(wnd_1),            // input wire [7 : 0] B
-  .P(out_B1)            // output wire [21 : 0] P
+  .B(wnd_1),            // input wire [11 : 0] B
+  .P(out_B1)            // output wire [25 : 0] P
 );
 
-mult_14_8 mul_B2 (
+mult_14_12 mul_B2 (
   .CLK(clk),            // input wire CLK
   .A(in_B2),            // input wire [13 : 0] A
-  .B(wnd_2),            // input wire [7 : 0] B
-  .P(out_B2)            // output wire [21 : 0] P
+  .B(wnd_2),            // input wire [11 : 0] B
+  .P(out_B2)            // output wire [25 : 0] P
 );
 
-mult_14_8 mul_B3 (
+mult_14_12 mul_B3 (
   .CLK(clk),            // input wire CLK
   .A(in_B3),            // input wire [13 : 0] A
-  .B(wnd_3),            // input wire [7 : 0] B
-  .P(out_B3)            // output wire [21 : 0] P
+  .B(wnd_3),            // input wire [11 : 0] B
+  .P(out_B3)            // output wire [25 : 0] P
 );
 
 adc_slice sin_A (
@@ -535,13 +535,13 @@ begin : ana_freq_gen
           end
           else
           begin
-            w_1 <= 0:
+            w_1 <= 0;
             wnd_adr <= wnd_adr + 1;
           end
         end
         else
         begin
-          w_1 <= 0:
+          w_1 <= 0;
 
           if (conf)
           begin
@@ -633,45 +633,45 @@ begin : ana_freq_gen
 
       if (w_3)
       begin
-        if (out_A0[4])
-          in_A[15:0] <= out_A0[20:5] + 1;
+        if (out_A0[8])
+          in_A[15:0] <= out_A0[24:9] + 1;
         else
-          in_A[15:0] <= out_A0[20:5];
+          in_A[15:0] <= out_A0[24:9];
 
-        if (out_A1[4])
-          in_A[31:16] <= out_A1[20:5] + 1;
+        if (out_A1[8])
+          in_A[31:16] <= out_A1[24:9] + 1;
         else
-          in_A[31:16] <= out_A1[20:5];
+          in_A[31:16] <= out_A1[24:9];
 
-        if (out_A2[4])
-          in_A[47:32] <= out_A2[20:5] + 1;
+        if (out_A2[8])
+          in_A[47:32] <= out_A2[24:9] + 1;
         else
-          in_A[47:32] <= out_A2[20:5];
+          in_A[47:32] <= out_A2[24:9];
 
-        if (out_A3[4])
-          in_A[63:48] <= out_A3[20:5] + 1;
+        if (out_A3[8])
+          in_A[63:48] <= out_A3[24:9] + 1;
         else
-          in_A[63:48] <= out_A3[20:5];
+          in_A[63:48] <= out_A3[24:9];
 
-        if (out_B0[4])
-          in_B[15:0] <= out_B0[20:5] + 1;
+        if (out_B0[8])
+          in_B[15:0] <= out_B0[24:9] + 1;
         else
-          in_B[15:0] <= out_B0[20:5];
+          in_B[15:0] <= out_B0[24:9];
 
-        if (out_B1[4])
-          in_B[31:16] <= out_B1[20:5] + 1;
+        if (out_B1[8])
+          in_B[31:16] <= out_B1[24:9] + 1;
         else
-          in_B[31:16] <= out_B1[20:5];
+          in_B[31:16] <= out_B1[24:9];
 
-        if (out_B2[4])
-          in_B[47:32] <= out_B2[20:5] + 1;
+        if (out_B2[8])
+          in_B[47:32] <= out_B2[24:9] + 1;
         else
-          in_B[47:32] <= out_B2[20:5];
+          in_B[47:32] <= out_B2[24:9];
 
-        if (out_B3[4])
-          in_B[63:48] <= out_B3[20:5] + 1;
+        if (out_B3[8])
+          in_B[63:48] <= out_B3[24:9] + 1;
         else
-          in_B[63:48] <= out_B3[20:5];
+          in_B[63:48] <= out_B3[24:9];
       end
     end
   end
