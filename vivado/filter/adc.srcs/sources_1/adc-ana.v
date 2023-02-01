@@ -185,7 +185,7 @@ module adc_ana (
   assign synt_comp_sin[1]   = synt_raw_sin[16];
   assign synt_comp_sin[0]   = synt_raw_sin[15];
 
-  reg  [14:0]             wnd_mask;
+  reg  [13:0]             wnd_mask;
   reg  [25:0]             wnd_curr;
   reg  [25:0]             wnd_divend;
   reg  [13:0]             wnd_incr;
@@ -194,32 +194,40 @@ module adc_ana (
   wire [15:0]             wnd_cordic_phase;
   wire                    wnd_done;
   reg                     wnd_prev;
-  wire [23:0]             wnd_data;
-  wire [11:0]             wnd_raw_coeff;
-  wire [11:0]             wnd_comp_coeff;
+  wire [31:0]             wnd_data;
+  wire [15:0]             wnd_raw_coeff;
+  wire [15:0]             wnd_comp_coeff;
 
   assign wnd_cordic_phase[13:0]  = wnd_phase;
   assign wnd_cordic_phase[14]    = wnd_phase[13];
   assign wnd_cordic_phase[15]    = wnd_phase[13];
 
-  assign wnd_comp_coeff[11]   = wnd_data[7];
-  assign wnd_comp_coeff[10]   = wnd_data[7];
-  assign wnd_comp_coeff[9]   = wnd_data[7];
-  assign wnd_comp_coeff[8]   = wnd_data[7];
-  assign wnd_comp_coeff[7]   = wnd_data[7];
-  assign wnd_comp_coeff[6]   = wnd_data[7];
-  assign wnd_comp_coeff[5]   = wnd_data[7];
-  assign wnd_comp_coeff[4]   = wnd_data[7];
-  assign wnd_comp_coeff[3]   = wnd_data[7];
-  assign wnd_comp_coeff[2]   = wnd_data[7];
-  assign wnd_comp_coeff[1]   = wnd_data[7];
-  assign wnd_comp_coeff[0]   = wnd_data[6];
+  assign wnd_raw_coeff        = wnd_data[31:16];
 
-  reg  [11:0]             wnd_raw;
-  wire [23:0]             wnd_2;
+  assign wnd_comp_coeff[15]   = wnd_data[31];
+  assign wnd_comp_coeff[14]   = wnd_data[31];
+  assign wnd_comp_coeff[13]   = wnd_data[31];
+  assign wnd_comp_coeff[12]   = wnd_data[31];
+  assign wnd_comp_coeff[11]   = wnd_data[31];
+  assign wnd_comp_coeff[10]   = wnd_data[31];
+  assign wnd_comp_coeff[9]   = wnd_data[31];
+  assign wnd_comp_coeff[8]   = wnd_data[31];
+  assign wnd_comp_coeff[7]   = wnd_data[31];
+  assign wnd_comp_coeff[6]   = wnd_data[31];
+  assign wnd_comp_coeff[5]   = wnd_data[31];
+  assign wnd_comp_coeff[4]   = wnd_data[31];
+  assign wnd_comp_coeff[3]   = wnd_data[31];
+  assign wnd_comp_coeff[2]   = wnd_data[31];
+  assign wnd_comp_coeff[1]   = wnd_data[31];
+  assign wnd_comp_coeff[0]   = wnd_data[30];
+
+  reg  [15:0]             wnd_raw;
+  wire [31:0]             wnd_2;
   reg                     w1;
   reg                     w2;
   reg                     w3;
+  reg                     w4;
+  reg                     w5;
   
 
   reg                     sample_en;
@@ -328,14 +336,14 @@ wnd_synt wnd_synt_inst (
   .s_axis_phase_tready(),                 // output wire s_axis_phase_tready
   .s_axis_phase_tdata(wnd_cordic_phase),  // input wire [15 : 0] s_axis_phase_tdata
   .m_axis_dout_tvalid(wnd_done),          // output wire m_axis_dout_tvalid
-  .m_axis_dout_tdata(wnd_data)            // output wire [23 : 0] m_axis_dout_tdata
+  .m_axis_dout_tdata(wnd_data)            // output wire [31 : 0] m_axis_dout_tdata
 );
 
-mult_12_12 m_wnd (
+mult_16_16 m_wnd (
   .CLK(clk),            // input wire CLK
-  .A(wnd_raw),          // input wire [11 : 0] A
-  .B(wnd_raw),          // input wire [11 : 0] B
-  .P(wnd_2)             // output wire [23 : 0] P
+  .A(wnd_raw),          // input wire [15 : 0] A
+  .B(wnd_raw),          // input wire [15 : 0] B
+  .P(wnd_2)             // output wire [31 : 0] P
 );
 
 bram_sample sample (
@@ -428,38 +436,36 @@ ana_freq delayed (
 );
 
 ila_1 ila_1_inst (
-  .clk(pci_clk),             // input wire clk
+  .clk(clk),                 // input wire clk
   .probe0(config_div_wnd),   // input wire [0:0]  probe3
-  .probe1(wnd_mask),         // input wire [13:0]  probe3
-  .probe2(wnd_curr),         // input wire [25:0]  probe3
-  .probe3(wnd_divend),       // input wire [25:0]  probe3
-  .probe4(incr),             // input wire [29:0]  probe3
-  .probe5(count),            // input wire [13:0]  probe3
-  .probe6(wnd_incr),         // input wire [13:0]  probe3
-  .probe7(synt_start),       // input wire [0:0]  probe3
-  .probe8(synt_phase),       // input wire [29:0]  probe3
-  .probe9(synt_cordic_phase), // input wire [31:0]  probe3
-  .probe10(synt_done),         // input wire [0:0]  probe3
-  .probe11(synt_raw_sin),     // input wire [23:0]  probe3
-  .probe12(synt_raw_cos),     // input wire [23:0]  probe3
-  .probe13(wmd_phase),        // input wire [13:0]  probe3
-  .probe14(wnd_cordic_phase), // input wire [15:0]  probe3
-  .probe15(wnd_done),         // input wire [0:0]  probe3
-  .probe16(wnd_raw_coeff),    // input wire [11:0]  probe3
-  .probe17(coeff_wr),         // input wire [0:0]  probe3
-  .probe18(coeff_adr),       // input wire [10:0]  probe3
-  .probe19(coeff_sin_0),     // input wire [15:0]  probe3
-  .probe20(coeff_sin_1),      // input wire [15:0]  probe3
-  .probe21(coeff_sin_2),     // input wire [15:0]  probe3
-  .probe22(coeff_sin_3),     // input wire [15:0]  probe3
-  .probe23(coeff_cos_0),     // input wire [15:0]  probe3
-  .probe24coeff_cos_1),     // input wire [15:0]  probe3
-  .probe25(coeff_cos_2),     // input wire [15:0]  probe3
-  .probe26(coeff_cos_3),      // input wire [15:0]  probe3
-  .probe27(coeff_wmd_0),     // input wire [11:0]  probe3
-  .probe28(coeff_wnd_1),     // input wire [11:0]  probe3
-  .probe29(coeff_wnd_2),     // input wire [11:0]  probe3
-  .probe30(coeff_wnd_3)      // input wire [11:0]  probe3
+  .probe1(incr),             // input wire [29:0]  probe3
+  .probe2(count),            // input wire [13:0]  probe3
+  .probe3(wnd_incr),         // input wire [13:0]  probe3
+  .probe4(synt_start),       // input wire [0:0]  probe3
+  .probe5(synt_phase),       // input wire [29:0]  probe3
+  .probe6(synt_cordic_phase), // input wire [31:0]  probe3
+  .probe7(synt_done),         // input wire [0:0]  probe3
+  .probe8(synt_raw_sin),      // input wire [23:0]  probe3
+  .probe9(synt_raw_cos),      // input wire [23:0]  probe3
+  .probe10(wnd_phase),        // input wire [13:0]  probe3
+  .probe11(wnd_cordic_phase), // input wire [15:0]  probe3
+  .probe12(wnd_done),         // input wire [0:0]  probe3
+  .probe13(wnd_raw_coeff),    // input wire [11:0]  probe3
+  .probe14(coeff_wr),         // input wire [0:0]  probe3
+  .probe15(coeff_adr),        // input wire [10:0]  probe3
+  .probe16(config_wnd),       // input wire [11:0]  probe3
+  .probe17(w1),               // input wire [0:0]  probe3
+  .probe18(w2),               // input wire [0:0]  probe3
+  .probe19(w3),               // input wire [0:0]  probe3
+  .probe20(w4),               // input wire [0:0]  probe3
+  .probe21(w5),               // input wire [0:0]  probe3
+  .probe22(wnd_raw),          // input wire [15:0]  probe3
+  .probe23(wnd_2),            // input wire [31:0]  probe3
+  .probe24(coeff_wnd),        // input wire [47:0]  probe3
+  .probe25(coeff_wnd_0),      // input wire [11:0]  probe3
+  .probe26(coeff_wnd_1),      // input wire [11:0]  probe3
+  .probe27(coeff_wnd_2),      // input wire [11:0]  probe3
+  .probe28(coeff_wnd_3)       // input wire [11:0]  probe3
 );
 
 generate
@@ -486,9 +492,9 @@ begin : adc_ana_gen
         sample_en <= 0;
         pend_run <= 0;
 
-        wnd_mask[14] <= 0;
-        wnd_mask[13] <= 1;
-        wnd_mask[12:0] <= 0;
+        wnd_mask[13] <= 0;
+        wnd_mask[12] <= 1;
+        wnd_mask[11:0] <= 0;
         wnd_divend[25:15] <= 0;
         wnd_divend[14] <= 1;
         wnd_divend[13:0] <= 0;
@@ -519,6 +525,7 @@ begin : adc_ana_gen
           end
           else
           begin
+            config_div_wnd <= 0;
             config_init <= 1;
             sample_en <= 1;
           end
@@ -651,11 +658,15 @@ begin : adc_ana_gen
     begin
       w2 <= 0;
       w3 <= 0;
+      w4 <= 0;
+      w5 <= 0;
     end
     else
     begin
       w2 <= w1;
       w3 <= w2;
+      w4 <= w3;
+      w5 <= w4;
     end
   end
 
@@ -665,9 +676,9 @@ begin : adc_ana_gen
        config_pend_wnd <= 0;
     else
     begin
-      if (w3)
+      if (w5)
       begin
-        config_wnd <= wnd_2[23:12];
+        config_wnd <= wnd_2[30:19];
         config_pend_wnd <= 1;
       end
       else
