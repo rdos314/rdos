@@ -49,6 +49,8 @@ module pci_app (
   input wire [47:0]    adc_adr,
   input wire [127:0]   adc_d0,
   input wire [127:0]   adc_d1,
+  input wire [127:0]   adc_d2,
+  input wire [127:0]   adc_d3,
 
   output wire          msix_enabled,  
   input wire           msix_issue,
@@ -525,6 +527,8 @@ pci_tx pci_tx_inst (
     .adc_adr(adc_adr),
     .adc_d0(adc_d0),
     .adc_d1(adc_d1),
+    .adc_d2(adc_d2),
+    .adc_d3(adc_d3),
 
     .msix_issue(msix_issue),
     .msix_clear(msix_clear),

@@ -35,6 +35,8 @@ module ana_amp (
   input wire [43:0]       cos_sum,
 
   output wire             report,
+  output reg  [15:0]      amp_sin,
+  output reg  [15:0]      amp_cos,
   output wire [15:0]      amp
 );
 
@@ -64,7 +66,6 @@ module ana_amp (
   reg  [29:0]            div_sin;
   reg  [15:0]            temp_sin;
   reg                    temp_incr_sin;
-  reg  [15:0]            amp_sin;
 
   reg  [29:0]            divend_cos;
   reg  [17:0]            quot_cos;
@@ -72,7 +73,6 @@ module ana_amp (
   reg  [29:0]            div_cos;
   reg  [15:0]            temp_cos;
   reg                    temp_incr_cos;
-  reg  [15:0]            amp_cos;
 
 
 mult_16_16 square_sin_inst (

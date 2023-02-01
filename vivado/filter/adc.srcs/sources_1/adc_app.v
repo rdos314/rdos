@@ -77,6 +77,8 @@ module adc_app (
   output reg [47:0]       adr,
   output reg [127:0]      d_0,
   output reg [127:0]      d_1,
+  output reg [127:0]      d_2,
+  output reg [127:0]      d_3,
   
   input wire              msix_enabled,
   output reg              msix_issue,
@@ -196,10 +198,10 @@ module adc_app (
   reg  [47:0]             chan0_phys;
   wire [47:0]             chan0_adr;
   reg  [20:0]             chan0_ack_pos;
-  wire [63:0]             chan0_d0;
-  wire [63:0]             chan0_d1;
-  wire [63:0]             chan0_d2;
-  wire [63:0]             chan0_d3;
+  wire [127:0]            chan0_d0;
+  wire [127:0]            chan0_d1;
+  wire [127:0]            chan0_d2;
+  wire [127:0]            chan0_d3;
   reg  [31:0]             chan0_msix_adr;
   reg  [31:0]             chan0_msix_data;
 
@@ -208,10 +210,10 @@ module adc_app (
   reg  [47:0]             chan1_phys;
   wire [47:0]             chan1_adr;
   reg  [20:0]             chan1_ack_pos;
-  wire [63:0]             chan1_d0;
-  wire [63:0]             chan1_d1;
-  wire [63:0]             chan1_d2;
-  wire [63:0]             chan1_d3;
+  wire [127:0]            chan1_d0;
+  wire [127:0]            chan1_d1;
+  wire [127:0]            chan1_d2;
+  wire [127:0]            chan1_d3;
   reg  [31:0]             chan1_msix_adr;
   reg  [31:0]             chan1_msix_data;
 
@@ -1054,20 +1056,20 @@ begin : adc_app
           16'b0000000000000001 : 
             begin
               adr <= chan0_adr;
-              d_0[63:0] <= chan0_d0; 
-              d_0[127:64] <= chan0_d1; 
-              d_1[63:0] <= chan0_d2; 
-              d_1[127:64] <= chan0_d3;  
+              d_0 <= chan0_d0; 
+              d_1 <= chan0_d1; 
+              d_2 <= chan0_d2; 
+              d_3 <= chan0_d3;  
               report <= 1;
             end          
           
           16'b0000000000000010 :
             begin
               adr <= chan1_adr;
-              d_0[63:0] <= chan1_d0; 
-              d_0[127:64] <= chan1_d1; 
-              d_1[63:0] <= chan1_d2; 
-              d_1[127:64] <= chan1_d3;  
+              d_0 <= chan1_d0; 
+              d_1 <= chan1_d1; 
+              d_2 <= chan1_d2; 
+              d_3 <= chan1_d3;  
               report <= 1;
             end          
 

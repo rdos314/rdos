@@ -56,6 +56,11 @@ module ana_freq (
 
   output reg              report,
 
+  output wire [15:0]      amp_sin_A,
+  output wire [15:0]      amp_cos_A,
+  output wire [15:0]      amp_sin_B,
+  output wire [15:0]      amp_cos_B,
+
   output wire [15:0]      amp_A,
   output wire [15:0]      amp_B,
 
@@ -308,6 +313,8 @@ ana_amp amp_A_inst (
   .sin_sum(in_sin_A),
   .cos_sum(in_cos_A),
   .report(amp_notify_A),
+  .amp_sin(amp_sin_A),
+  .amp_cos(amp_cos_A),
   .amp(amp_A)
 );
 
@@ -319,6 +326,8 @@ ana_amp amp_B_inst (
   .sin_sum(in_sin_B),
   .cos_sum(in_cos_B),
   .report(amp_notify_B),
+  .amp_sin(amp_sin_B),
+  .amp_cos(amp_cos_B),
   .amp(amp_B)
 );
 

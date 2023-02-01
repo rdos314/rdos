@@ -130,7 +130,9 @@ module adc (
   wire [47:0]          adc_adr;
   wire [127:0]         adc_d0;  
   wire [127:0]         adc_d1;  
-
+  wire [127:0]         adc_d2;  
+  wire [127:0]         adc_d3; 
+ 
   wire                 msix_enabled;
   wire                 msix_issue;
   wire                 msix_clear;
@@ -404,6 +406,8 @@ pci_app pci_app_inst (
     .adc_adr(adc_adr),
     .adc_d0(adc_d0),
     .adc_d1(adc_d1),
+    .adc_d2(adc_d2),
+    .adc_d3(adc_d3),
     
     .msix_enabled(msix_enabled),
     .msix_issue(msix_issue),
@@ -539,6 +543,8 @@ adc_app adc_app_inst (
     .adr(adc_adr),
     .d_0(adc_d0),
     .d_1(adc_d1),
+    .d_2(adc_d2),
+    .d_3(adc_d3),
 
     .msix_enabled(msix_enabled),
     .msix_issue(msix_issue),

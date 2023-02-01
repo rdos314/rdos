@@ -54,10 +54,10 @@ module adc_ana (
   output reg              report,
   input wire              clear,
   output reg [47:0]       adr,  
-  output reg  [63:0]      d_0,
-  output reg  [63:0]      d_1,
-  output reg  [63:0]      d_2,
-  output reg  [63:0]      d_3,
+  output reg  [127:0]     d_0,
+  output reg  [127:0]     d_1,
+  output reg  [127:0]     d_2,
+  output reg  [127:0]     d_3,
 
   input wire              msix_mask,
   output reg              msix_issue,
@@ -261,12 +261,20 @@ module adc_ana (
   reg  [13:0]             out_B3;
 
   wire                    b_report;
+  wire [15:0]             b_amp_sin_A;
+  wire [15:0]             b_amp_cos_A;
+  wire [15:0]             b_amp_sin_B;
+  wire [15:0]             b_amp_cos_B;
   wire [15:0]             b_amp_A;
   wire [15:0]             b_amp_B;
   wire [15:0]             b_phase_A;
   wire [15:0]             b_phase_B;
 
   wire                    d_report;
+  wire [15:0]             d_amp_sin_A;
+  wire [15:0]             d_amp_cos_A;
+  wire [15:0]             d_amp_sin_B;
+  wire [15:0]             d_amp_cos_B;
   wire [15:0]             d_amp_A;
   wire [15:0]             d_amp_B;
   wire [15:0]             d_phase_A;
@@ -285,23 +293,13 @@ module adc_ana (
   wire                    delay_run;
 
   reg                     fifo_wr;
-  reg  [63:0]             fifo_in;
+  reg  [127:0]            fifo_in;
 
 // pci domain
 
-  wire [63:0]             fifo_out;
+  wire [127:0]            fifo_out;
   wire                    fifo_empty;
   reg                     fifo_rd;
-
-  wire [15:0]             amp_A;
-  wire [15:0]             amp_B;
-  wire [15:0]             phase_A;
-  wire [15:0]             phase_B;
-  
-  assign amp_A = fifo_out[15:0];
-  assign amp_B = fifo_out[31:16];
-  assign phase_A = fifo_out[47:32];
-  assign phase_B = fifo_out[63:48];
 
   reg                     d_pend;
   reg  [1:0]              d_adr;
@@ -353,10 +351,10 @@ fifo_signal signal_inst (
   .rst(pci_reset),          // input wire rst
   .wr_clk(clk),             // input wire wr_clk
   .rd_clk(pci_clk),         // input wire rd_clk
-  .din(fifo_in),            // input wire [63 : 0] din
+  .din(fifo_in),            // input wire [127 : 0] din
   .wr_en(fifo_wr),          // input wire wr_en
   .rd_en(fifo_rd),          // input wire rd_en
-  .dout(fifo_out),          // output wire [63 : 0] dout
+  .dout(fifo_out),          // output wire [127 : 0] dout
   .full(),                  // output wire full
   .empty(fifo_empty)        // output wire empty
 );
@@ -385,6 +383,10 @@ ana_freq base (
   .in_B2(out_B2),         // input wire [13:0] in_B2
   .in_B3(out_B3),         // input wire [13:0] in_B3
   .report(b_report),      // output wire report
+  .amp_sin_A(b_amp_sin_A),// output wire [15:0] amp_sin_A
+  .amp_cos_A(b_amp_cos_A),// output wire [15:0] amp_cos_A
+  .amp_sin_B(b_amp_sin_B),// output wire [15:0] amp_sin_B
+  .amp_cos_B(b_amp_cos_B),// output wire [15:0] amp_cos_B
   .amp_A(b_amp_A),        // output wire [15:0] amp_A
   .amp_B(b_amp_B),        // output wire [15:0] amp_B
   .phase_A(b_phase_A),    // output wire [15:0] phase_A
@@ -415,6 +417,10 @@ ana_freq delayed (
   .in_B2(out_B2),         // input wire [13:0] in_B2
   .in_B3(out_B3),         // input wire [13:0] in_B3
   .report(d_report),      // output wire report
+  .amp_sin_A(d_amp_sin_A),// output wire [15:0] amp_sin_A
+  .amp_cos_A(d_amp_cos_A),// output wire [15:0] amp_cos_A
+  .amp_sin_B(d_amp_sin_B),// output wire [15:0] amp_sin_B
+  .amp_cos_B(d_amp_cos_B),// output wire [15:0] amp_cos_B
   .amp_A(d_amp_A),        // output wire [15:0] amp_A
   .amp_B(d_amp_B),        // output wire [15:0] amp_B
   .phase_A(d_phase_A),    // output wire [15:0] phase_A
@@ -430,27 +436,30 @@ ila_1 ila_1_inst (
   .probe4(incr),             // input wire [29:0]  probe3
   .probe5(count),            // input wire [13:0]  probe3
   .probe6(wnd_incr),         // input wire [13:0]  probe3
-  .probe7(synt_phase),       // input wire [29:0]  probe3
-  .probe8(synt_cordic_phase), // input wire [31:0]  probe3
-  .probe9(synt_raw_sin),     // input wire [23:0]  probe3
-  .probe10(synt_raw_cos),     // input wire [23:0]  probe3
-  .probe11(wmd_phase),        // input wire [13:0]  probe3
-  .probe12(wnd_cordic_phase), // input wire [15:0]  probe3
-  .probe13(wnd_raw_coeff),    // input wire [11:0]  probe3
-  .probe14(coeff_wr),         // input wire [0:0]  probe3
-  .probe15(coeff_adr),       // input wire [10:0]  probe3
-  .probe16(coeff_sin_0),     // input wire [15:0]  probe3
-  .probe17(coeff_sin_1),      // input wire [15:0]  probe3
-  .probe18(coeff_sin_2),     // input wire [15:0]  probe3
-  .probe19(coeff_sin_3),     // input wire [15:0]  probe3
-  .probe20(coeff_cos_0),     // input wire [15:0]  probe3
-  .probe21(coeff_cos_1),     // input wire [15:0]  probe3
-  .probe22(coeff_cos_2),     // input wire [15:0]  probe3
-  .probe23(coeff_cos_3),      // input wire [15:0]  probe3
-  .probe24(coeff_wmd_0),     // input wire [11:0]  probe3
-  .probe25(coeff_wnd_1),     // input wire [11:0]  probe3
-  .probe26(coeff_wnd_2),     // input wire [11:0]  probe3
-  .probe27(coeff_wnd_3)      // input wire [11:0]  probe3
+  .probe7(synt_start),       // input wire [0:0]  probe3
+  .probe8(synt_phase),       // input wire [29:0]  probe3
+  .probe9(synt_cordic_phase), // input wire [31:0]  probe3
+  .probe10(synt_done),         // input wire [0:0]  probe3
+  .probe11(synt_raw_sin),     // input wire [23:0]  probe3
+  .probe12(synt_raw_cos),     // input wire [23:0]  probe3
+  .probe13(wmd_phase),        // input wire [13:0]  probe3
+  .probe14(wnd_cordic_phase), // input wire [15:0]  probe3
+  .probe15(wnd_done),         // input wire [0:0]  probe3
+  .probe16(wnd_raw_coeff),    // input wire [11:0]  probe3
+  .probe17(coeff_wr),         // input wire [0:0]  probe3
+  .probe18(coeff_adr),       // input wire [10:0]  probe3
+  .probe19(coeff_sin_0),     // input wire [15:0]  probe3
+  .probe20(coeff_sin_1),      // input wire [15:0]  probe3
+  .probe21(coeff_sin_2),     // input wire [15:0]  probe3
+  .probe22(coeff_sin_3),     // input wire [15:0]  probe3
+  .probe23(coeff_cos_0),     // input wire [15:0]  probe3
+  .probe24coeff_cos_1),     // input wire [15:0]  probe3
+  .probe25(coeff_cos_2),     // input wire [15:0]  probe3
+  .probe26(coeff_cos_3),      // input wire [15:0]  probe3
+  .probe27(coeff_wmd_0),     // input wire [11:0]  probe3
+  .probe28(coeff_wnd_1),     // input wire [11:0]  probe3
+  .probe29(coeff_wnd_2),     // input wire [11:0]  probe3
+  .probe30(coeff_wnd_3)      // input wire [11:0]  probe3
 );
 
 generate
@@ -1212,6 +1221,10 @@ begin : adc_ana_gen
             fifo_in[31:16] <= b_amp_B;        
             fifo_in[47:32] <= b_phase_A - base_curr_phase;
             fifo_in[63:48] <= b_phase_B - base_curr_phase;
+            fifo_in[79:64] <= b_amp_sin_A;        
+            fifo_in[95:80] <= b_amp_cos_A;        
+            fifo_in[111:96] <= b_amp_sin_B;        
+            fifo_in[127:112] <= b_amp_cos_B;        
           end
           else
           begin
@@ -1243,6 +1256,10 @@ begin : adc_ana_gen
               fifo_in[31:16] <= d_amp_B;        
               fifo_in[47:32] <= d_phase_A - delay_curr_phase;
               fifo_in[63:48] <= d_phase_B - delay_curr_phase;
+              fifo_in[79:64] <= d_amp_sin_A;        
+              fifo_in[95:80] <= d_amp_cos_A;        
+              fifo_in[111:96] <= d_amp_sin_B;        
+              fifo_in[127:112] <= d_amp_cos_B;        
             end
             else
             begin
@@ -1385,7 +1402,7 @@ begin : adc_ana_gen
           if (clear)
           begin
             report <= 0;
-            adr[20:5] <= adr[20:5] + 1;
+            adr[20:6] <= adr[20:6] + 1;
             update_adr <= 1;
               
             if (adr[9:0] == 0)

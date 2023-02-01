@@ -64,6 +64,8 @@ module pci_tx (
   input wire [47:0]         adc_adr,
   input wire [127:0]        adc_d0,
   input wire [127:0]        adc_d1,
+  input wire [127:0]        adc_d2,
+  input wire [127:0]        adc_d3,
 
   input wire                msix_issue,
   output reg                msix_clear,
@@ -248,7 +250,13 @@ generate
             s_axis_tx_tdata <= adc_pkt_data;
             s_axis_tx_tkeep[15:0] <= 16'hffff;
 
-            if (adc_count == 1)
+            case (adc_count)
+              0: adc_data <= adc_d1;
+              1: adc_data <= adc_d2;
+              2: adc_data <= adc_d3;
+            endcase
+
+            if (adc_count == 3)
             begin
               s_axis_tx_tlast <= 1;
               adc_clear <= 1;
@@ -256,7 +264,6 @@ generate
             end
             else
             begin
-              adc_data <= adc_d1;
               s_axis_tx_tlast <= 0;
               adc_clear <= 0;
             end
@@ -368,7 +375,7 @@ generate
                   s_axis_tx_tdata[15:12] <= 4'b0010;                // TD, EP, Attr
                   s_axis_tx_tdata[11:10] <= 2'b0;                   // AT
                   s_axis_tx_tdata[9:8] <= 2'b0;                     // len high
-                  s_axis_tx_tdata[7:0] <= 8'h8;                     // 32 byte size
+                  s_axis_tx_tdata[7:0] <= 8'h10;                    // 64 byte size
                 end
                 else
                 begin
