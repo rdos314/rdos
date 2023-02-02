@@ -101,9 +101,6 @@ module ana_freq (
   reg                    coeff_en;
   reg                    coeff_wr;
   reg  [10:0]            coeff_adr;
-
-  reg                    wnd_en;
-  reg                    wnd_wr;
   reg  [10:0]            wnd_adr;
 
   reg                    s_1;
@@ -194,8 +191,8 @@ bram_freq bram_cos (
 
 bram_wnd bram_wnd (
   .clka(clk),           // input wire clka
-  .ena(wnd_en),         // input wire ena
-  .wea(wnd_wr),         // input wire [0 : 0] wea
+  .ena(coeff_en),       // input wire ena
+  .wea(coeff_wr),       // input wire [0 : 0] wea
   .addra(wnd_adr),      // input wire [10 : 0] addra
   .dina(wnd_coeff_in),  // input wire [47 : 0] dina
   .douta(wnd_coeff_out) // output wire [47 : 0] douta
@@ -351,29 +348,34 @@ ana_phase ana_phase_B (
   .phase(phase_B)
 );
 
-/*
 ila_1 ila_1_inst (
   .clk(clk),                 // input wire clk
-  .probe0(report),           // input wire [0:0]  probe3
-  .probe1(validate),         // input wire [0:0]  probe3
-  .probe2(sin_0),            // input wire [15:0]  probe3
-  .probe3(sin_1),            // input wire [15:0]  probe3
-  .probe4(sin_2),            // input wire [15:0]  probe3
-  .probe5(sin_3),            // input wire [15:0]  probe3
-  .probe6(cos_0),            // input wire [15:0]  probe3
-  .probe7(cos_1),            // input wire [15:0]  probe3
-  .probe8(cos_2),            // input wire [15:0]  probe3
-  .probe9(cos_3),            // input wire [15:0]  probe3
-  .probe10(out_sin_A),       // input wire [43:0]  probe3
-  .probe11(out_sin_B),       // input wire [43:0]  probe3
-  .probe12(out_cos_A),       // input wire [43:0]  probe3
-  .probe13(out_cos_B),       // input wire [43:0]  probe3
-  .probe14(amp_A),           // input wire [15:0]  probe3
-  .probe15(amp_B),           // input wire [15:0]  probe3
-  .probe16(phase_A),         // input wire [15:0]  probe3
-  .probe17(phase_B)          // input wire [15:0]  probe3
+  .probe0(coeff_en),         // input wire ena
+  .probe1(coeff_wr),         // input wire [0 : 0] wea
+  .probe2(coeff_adr),        // input wire [10 : 0] addra
+  .probe3(validate),         // input wire [0 : 0] wea
+  .probe4(wnd_adr),          // input wire [10 : 0] addra
+  .probe5(sin_0),            // input wire [15:0]  probe3
+  .probe6(sin_1),            // input wire [15:0]  probe3
+  .probe7(sin_2),            // input wire [15:0]  probe3
+  .probe8(sin_3),            // input wire [15:0]  probe3
+  .probe9(cos_0),            // input wire [15:0]  probe3
+  .probe10(cos_1),           // input wire [15:0]  probe3
+  .probe11(cos_2),           // input wire [15:0]  probe3
+  .probe12(cos_3),           // input wire [15:0]  probe3
+  .probe13(wnd_0),           // input wire [11:0]  probe3
+  .probe14(wnd_1),           // input wire [11:0]  probe3
+  .probe15(wnd_2),           // input wire [11:0]  probe3
+  .probe16(wnd_3),           // input wire [11:0]  probe3
+  .probe17(in_A0),           // input wire [13:0]  probe3
+  .probe18(in_A1),           // input wire [13:0]  probe3
+  .probe19(in_A2),           // input wire [13:0]  probe3
+  .probe20(in_A3),           // input wire [13:0]  probe3
+  .probe21(out_A0),          // input wire [25:0]  probe3
+  .probe22(out_A1),          // input wire [25:0]  probe3
+  .probe23(out_A2),          // input wire [25:0]  probe3
+  .probe24(out_A3)          // input wire [25:0]  probe3
 );
-*/
 
 generate
 begin : ana_freq_gen
@@ -515,7 +517,6 @@ begin : ana_freq_gen
   begin
     if (reset)
     begin
-      wnd_en <= 0;
       wnd_adr <= 0;
       w_1 <= 0;
       s_1 <= 0;
@@ -525,7 +526,6 @@ begin : ana_freq_gen
       if (start)
       begin
         wnd_adr <= 0;
-        wnd_en <= 1;
         s_1 <= 0;
         w_1 <= 0;
       end
@@ -535,8 +535,6 @@ begin : ana_freq_gen
 
         if (run)
         begin
-          wnd_en <= 1;
-
           if (wnd_adr == last)
           begin
             wnd_adr <= 0;
@@ -553,15 +551,9 @@ begin : ana_freq_gen
           w_1 <= 0;
 
           if (conf)
-          begin
-            wnd_en <= 1;
             wnd_adr <= wr_adr;
-          end
           else
-          begin
             wnd_adr <= 0;
-            wnd_en <= 0;
-          end
         end
       end
     end
