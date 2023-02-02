@@ -680,7 +680,7 @@ begin : adc_ana_gen
     begin
       if (w5)
       begin
-        config_wnd <= wnd_2[30:19];
+        config_wnd <= wnd_2[27:16];
         config_pend_wnd <= 1;
       end
       else
