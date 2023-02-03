@@ -168,15 +168,15 @@ module ana_freq (
   assign wnd_3[11:0] = wnd_coeff_out[47:36];
   assign wnd_3[12] = 0;
 
-  wire [26:0]            out_A0;
-  wire [26:0]            out_A1;
-  wire [26:0]            out_A2;
-  wire [26:0]            out_A3;
+  wire [26:0]            p_A0;
+  wire [26:0]            p_A1;
+  wire [26:0]            p_A2;
+  wire [26:0]            p_A3;
 
-  wire [26:0]            out_B0;
-  wire [26:0]            out_B1;
-  wire [26:0]            out_B2;
-  wire [26:0]            out_B3;
+  wire [26:0]            p_B0;
+  wire [26:0]            p_B1;
+  wire [26:0]            p_B2;
+  wire [26:0]            p_B3;
 
   reg  [63:0]            wnd_A;
   wire [15:0]            wnd_A0;
@@ -231,56 +231,56 @@ mult_14_13 mul_A0 (
   .CLK(clk),            // input wire CLK
   .A(in_A0),            // input wire [13 : 0] A
   .B(wnd_0),            // input wire [12 : 0] B
-  .P(out_A0)            // output wire [26 : 0] P
+  .P(p_A0)              // output wire [26 : 0] P
 );
 
 mult_14_13 mul_A1 (
   .CLK(clk),            // input wire CLK
   .A(in_A1),            // input wire [13 : 0] A
   .B(wnd_1),            // input wire [12 : 0] B
-  .P(out_A1)            // output wire [26 : 0] P
+  .P(p_A1)              // output wire [26 : 0] P
 );
 
 mult_14_13 mul_A2 (
   .CLK(clk),            // input wire CLK
   .A(in_A2),            // input wire [13 : 0] A
   .B(wnd_2),            // input wire [12 : 0] B
-  .P(out_A2)            // output wire [26 : 0] P
+  .P(p_A2)              // output wire [26 : 0] P
 );
 
 mult_14_13 mul_A3 (
   .CLK(clk),            // input wire CLK
   .A(in_A3),            // input wire [13 : 0] A
   .B(wnd_3),            // input wire [12 : 0] B
-  .P(out_A3)            // output wire [26 : 0] P
+  .P(p_A3)              // output wire [26 : 0] P
 );
 
 mult_14_13 mul_B0 (
   .CLK(clk),            // input wire CLK
   .A(in_B0),            // input wire [13 : 0] A
   .B(wnd_0),            // input wire [12 : 0] B
-  .P(out_B0)            // output wire [26 : 0] P
+  .P(p_B0)              // output wire [26 : 0] P
 );
 
 mult_14_13 mul_B1 (
   .CLK(clk),            // input wire CLK
   .A(in_B1),            // input wire [13 : 0] A
   .B(wnd_1),            // input wire [12 : 0] B
-  .P(out_B1)            // output wire [26 : 0] P
+  .P(p_B1)              // output wire [26 : 0] P
 );
 
 mult_14_13 mul_B2 (
   .CLK(clk),            // input wire CLK
   .A(in_B2),            // input wire [13 : 0] A
   .B(wnd_2),            // input wire [12 : 0] B
-  .P(out_B2)            // output wire [26 : 0] P
+  .P(p_B2)              // output wire [26 : 0] P
 );
 
 mult_14_13 mul_B3 (
   .CLK(clk),            // input wire CLK
   .A(in_B3),            // input wire [13 : 0] A
   .B(wnd_3),            // input wire [12 : 0] B
-  .P(out_B3)            // output wire [26 : 0] P
+  .P(p_B3)              // output wire [26 : 0] P
 );
 
 adc_slice sin_A (
@@ -408,10 +408,10 @@ ila_1 ila_1_inst (
   .probe26(in_A1),           // input wire [13:0]  probe3
   .probe27(in_A2),           // input wire [13:0]  probe3
   .probe28(in_A3),           // input wire [13:0]  probe3
-  .probe29(out_A0),          // input wire [26:0]  probe3
-  .probe30(out_A1),          // input wire [26:0]  probe3
-  .probe31(out_A2),          // input wire [26:0]  probe3
-  .probe32(out_A3),          // input wire [26:0]  probe3
+  .probe29(p_A0),            // input wire [26:0]  probe3
+  .probe30(p_A1),            // input wire [26:0]  probe3
+  .probe31(p_A2),            // input wire [26:0]  probe3
+  .probe32(p_A3),            // input wire [26:0]  probe3
   .probe33(wnd_A0),          // input wire [15:0]  probe3
   .probe34(wnd_A1),          // input wire [15:0]  probe3
   .probe35(wnd_A2),          // input wire [15:0]  probe3
@@ -673,45 +673,45 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    if (out_A0[9])
-      wnd_A[15:0] <= out_A0[25:10] + 1;
+    if (p_A0[9])
+      wnd_A[15:0] <= p_A0[25:10] + 1;
     else
-      wnd_A[15:0] <= out_A0[25:10];
+      wnd_A[15:0] <= p_A0[25:10];
 
-    if (out_A1[9])
-      wnd_A[31:16] <= out_A1[25:10] + 1;
+    if (p_A1[9])
+      wnd_A[31:16] <= p_A1[25:10] + 1;
     else
-      wnd_A[31:16] <= out_A1[25:10];
+      wnd_A[31:16] <= p_A1[25:10];
 
-    if (out_A2[9])
-      wnd_A[47:32] <= out_A2[25:10] + 1;
+    if (p_A2[9])
+      wnd_A[47:32] <= p_A2[25:10] + 1;
     else
-      wnd_A[47:32] <= out_A2[25:10];
+      wnd_A[47:32] <= p_A2[25:10];
 
-    if (out_A3[9])
-      wnd_A[63:48] <= out_A3[25:10] + 1;
+    if (p_A3[9])
+      wnd_A[63:48] <= p_A3[25:10] + 1;
     else
-      wnd_A[63:48] <= out_A3[25:10];
+      wnd_A[63:48] <= p_A3[25:10];
 
-    if (out_B0[9])
-      wnd_B[15:0] <= out_B0[25:10] + 1;
+    if (p_B0[9])
+      wnd_B[15:0] <= p_B0[25:10] + 1;
     else
-      wnd_B[15:0] <= out_B0[25:10];
+      wnd_B[15:0] <= p_B0[25:10];
 
-    if (out_B1[9])
-      wnd_B[31:16] <= out_B1[25:10] + 1;
+    if (p_B1[9])
+      wnd_B[31:16] <= p_B1[25:10] + 1;
     else
-      wnd_B[31:16] <= out_B1[25:10];
+      wnd_B[31:16] <= p_B1[25:10];
 
-    if (out_B2[9])
-      wnd_B[47:32] <= out_B2[25:10] + 1;
+    if (p_B2[9])
+      wnd_B[47:32] <= p_B2[25:10] + 1;
     else
-      wnd_B[47:32] <= out_B2[25:10];
+      wnd_B[47:32] <= p_B2[25:10];
 
-    if (out_B3[9])
-      wnd_B[63:48] <= out_B3[25:10] + 1;
+    if (p_B3[9])
+      wnd_B[63:48] <= p_B3[25:10] + 1;
     else
-      wnd_B[63:48] <= out_B3[25:10];
+      wnd_B[63:48] <= p_B3[25:10];
   end
 
   always @ ( posedge clk ) 
