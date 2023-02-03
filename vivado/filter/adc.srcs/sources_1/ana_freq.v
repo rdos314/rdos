@@ -73,7 +73,7 @@ module ana_freq (
   wire                   notify_sin_A;
   wire                   notify_cos_A;
   wire                   notify_sin_B;
-  wire                   notify_cos_B;
+  wire                   notifycos_B;
 
   wire [43:0]            out_sin_A;
   wire [43:0]            out_cos_A;
@@ -108,12 +108,14 @@ module ana_freq (
   reg                    s3;
   reg                    s4;
   reg                    s5;
+  reg                    s6;
 
   reg                    w1;
   reg                    w2;
   reg                    w3;
   reg                    w4;
   reg                    w5;
+  reg                    w6;
 
   reg                    start_1;
   reg                    start_2;
@@ -384,16 +386,16 @@ ila_1 ila_1_inst (
   .probe2(coeff_adr),        // input wire [10:0]  probe
   .probe3(wnd_adr),          // input wire [10:0]  probe
   .probe4(validate),         // input wire [0:0]   probe
-  .probe5(s1),               // input wire [0:0]   probe
-  .probe6(s2),               // input wire [0:0]   probe
-  .probe7(s3),               // input wire [0:0]   probe
-  .probe8(s4),               // input wire [0:0]   probe
-  .probe9(s5),               // input wire [0:0]   probe
-  .probe10(w1),               // input wire [0:0]   probe
-  .probe11(w2),              // input wire [0:0]   probe
-  .probe12(w3),              // input wire [0:0]   probe
-  .probe13(w4),              // input wire [0:0]   probe
-  .probe14(w5),              // input wire [0:0]   probe
+  .probe5(s2),               // input wire [0:0]   probe
+  .probe6(s3),               // input wire [0:0]   probe
+  .probe7(s4),               // input wire [0:0]   probe
+  .probe8(s5),               // input wire [0:0]   probe
+  .probe9(s6),               // input wire [0:0]   probe
+  .probe10(w2),              // input wire [0:0]   probe
+  .probe11(w3),              // input wire [0:0]   probe
+  .probe12(w4),              // input wire [0:0]   probe
+  .probe13(w5),              // input wire [0:0]   probe
+  .probe14(w6),              // input wire [0:0]   probe
   .probe15(start_1),         // input wire [0:0]   probe
   .probe16(start_2),         // input wire [0:0]   probe
   .probe17(start_3),         // input wire [0:0]   probe
@@ -402,20 +404,16 @@ ila_1 ila_1_inst (
   .probe20(next_3),          // input wire [0:0]   probe
   .probe21(wnd_0),           // input wire [12:0]  probe3
   .probe22(wnd_1),           // input wire [12:0]  probe3
-  .probe23(wnd_2),           // input wire [12:0]  probe3
-  .probe24(wnd_3),           // input wire [12:0]  probe3
-  .probe25(in_A0),           // input wire [13:0]  probe3
-  .probe26(in_A1),           // input wire [13:0]  probe3
-  .probe27(in_A2),           // input wire [13:0]  probe3
-  .probe28(in_A3),           // input wire [13:0]  probe3
-  .probe29(p_A0),            // input wire [26:0]  probe3
-  .probe30(p_A1),            // input wire [26:0]  probe3
-  .probe31(p_A2),            // input wire [26:0]  probe3
-  .probe32(p_A3),            // input wire [26:0]  probe3
-  .probe33(wnd_A0),          // input wire [15:0]  probe3
-  .probe34(wnd_A1),          // input wire [15:0]  probe3
-  .probe35(wnd_A2),          // input wire [15:0]  probe3
-  .probe36(wnd_A3)           // input wire [15:0]  probe3
+  .probe23(in_A0),           // input wire [13:0]  probe3
+  .probe24(in_A1),           // input wire [13:0]  probe3
+  .probe25(p_A0),            // input wire [26:0]  probe3
+  .probe26(p_A1),            // input wire [26:0]  probe3
+  .probe27(sin_0),           // input wire [15:0]  probe3
+  .probe28(sin_1),           // input wire [15:0]  probe3
+  .probe29(cos_0),           // input wire [15:0]  probe3
+  .probe30(cos_1),           // input wire [15:0]  probe3
+  .probe31(wnd_A0),          // input wire [15:0]  probe3
+  .probe32(wnd_A1)          // input wire [15:0]  probe3
 );
 
 generate
@@ -567,8 +565,8 @@ begin : ana_freq_gen
       if (start)
       begin
         wnd_adr <= 0;
-        s1 <= 0;
-        w1 <= 0;
+        s1 <= 1;
+        w1 <= 1;
       end
       else
       begin
@@ -643,6 +641,7 @@ begin : ana_freq_gen
       s3 <= 0;
       s4 <= 0;
       s5 <= 0;
+      s6 <= 0;
     end
     else
     begin
@@ -650,6 +649,7 @@ begin : ana_freq_gen
       s3 <= s2;
       s4 <= s3;
       s5 <= s4;
+      s6 <= s5;
     end
   end
 
@@ -716,14 +716,14 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    start_1 <= s5;
+    start_1 <= s6;
     start_2 <= start_1;
     start_3 <= start_2;
   end
 
   always @ ( posedge clk ) 
   begin
-    next_1 <= w5;
+    next_1 <= w6;
     next_2 <= next_1;
     next_3 <= next_2;
   end
