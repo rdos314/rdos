@@ -739,10 +739,23 @@ begin : adc_ana_gen
         case (config_adr[1:0])
           2'b00 :
             begin
-              sample_in_0 <= config_sin[15:2];
-              coeff_sin_0 <= config_sin;
-              coeff_cos_0 <= config_cos;
-              coeff_wnd_0 <= config_wnd;
+              if (config_adr[13:2])
+              begin
+                sample_in_0 <= config_sin[15:2];
+                coeff_sin_0 <= config_sin;
+                coeff_cos_0 <= config_cos;
+                coeff_wnd_0 <= config_wnd;
+              end
+              else
+              begin
+
+// test only!!
+
+                sample_in_0 <= 14'h111;
+                coeff_sin_0 <= 16'h2222;
+                coeff_cos_0 <= 16'h3333;
+                coeff_wnd_0 <= 12'h444;
+              end                
               sample_req <= 0;
             end
           2'b01 : 
