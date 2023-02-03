@@ -40,11 +40,6 @@ module adc_slice (
   output reg [43:0]       sum
 );
 
-  reg                    p1;
-  reg                    p2;
-  reg                    p3;
-  reg                    p4;
-
   reg                    s1;
   reg                    s2;
   reg                    s3;
@@ -211,22 +206,6 @@ begin : ana_slice_gen
   begin
     if (reset)
     begin
-      p2 <= 0;
-      p3 <= 0;
-      p4 <= 0;
-    end
-    else
-    begin
-      p2 <= p1;
-      p3 <= p2;
-      p4 <= p3;
-    end
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (reset)
-    begin
       s2 <= 0;
       s3 <= 0;
       s4 <= 0;
@@ -246,7 +225,6 @@ begin : ana_slice_gen
     if (reset)
     begin
       run <= 0;
-      p1 <= 0;
       s1 <= 0;
     end
     else
@@ -254,15 +232,13 @@ begin : ana_slice_gen
       if (start)
       begin
         run <= 1;
-        p1 <= 1;
-        s1 <= 0;
+        s1 <= 1;
       end
       else
       begin
         if (stop)
         begin
           run <= 0;
-          p1 <= 0;
           s1 <= 0;
         end
         else
@@ -270,21 +246,12 @@ begin : ana_slice_gen
           if (run)
           begin
             if (next)
-            begin
-              p1 <= 1;
               s1 <= 1;
-            end
             else
-            begin
-              p1 <= 0;
               s1 <= 0;
-            end          
           end
           else
-          begin
-            p1 <= 0;
             s1 <= 0;
-          end
         end
       end
     end
@@ -292,7 +259,7 @@ begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
-    if (p4)
+    if (s4)
       sum_0 <= p_0;
     else
       sum_0 <= sum_0 + p_0;      
@@ -300,7 +267,7 @@ begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
-    if (p4)
+    if (s4)
       sum_1 <= p_1;
     else
       sum_1 <= sum_1 + p_1;      
@@ -308,7 +275,7 @@ begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
-    if (p4)
+    if (s4)
       sum_2 <= p_2;
     else
       sum_2 <= sum_2 + p_2;      
@@ -316,7 +283,7 @@ begin : ana_slice_gen
 
   always @ ( posedge clk ) 
   begin
-    if (p4)
+    if (s4)
       sum_3 <= p_3;
     else
       sum_3 <= sum_3 + p_3;      
