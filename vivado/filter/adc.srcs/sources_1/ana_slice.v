@@ -161,6 +161,7 @@ mult_16_16 m_3 (
   .P(p_3[31:0])         // output wire [31 : 0] P
 );
 
+/*
 ila_2 ila_2_inst (
   .clk(clk),            // input wire clk
   .probe0(start),       // input wire [0:0]  probe0
@@ -174,6 +175,7 @@ ila_2 ila_2_inst (
   .probe8(sum_0),       // input wire [43:0]  probe6
   .probe9(sum_1)        // input wire [43:0]  probe6
 );
+*/
 
 generate
 begin : ana_slice_gen

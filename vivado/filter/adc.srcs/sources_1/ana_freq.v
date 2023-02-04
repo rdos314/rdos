@@ -325,7 +325,7 @@ adc_slice cos_B (
   .start(start_3),         // input wire [0 : 0] start
   .stop(stop),             // input wire [0 : 0] stop
   .next(next_3),           // input wire [0 : 0] next
-  .in(in_B),               // input wire [63 : 0] in
+  .in(wnd_B),              // input wire [63 : 0] in
   .coeff(cos_coeff_out),   // input wire [63 : 0] coeff
   .report(notify_cos_B),   // output wire [0 : 0] report
   .sum(out_cos_B)          // output wire [43 : 0] sum
@@ -384,34 +384,18 @@ ila_1 ila_1_inst (
   .probe2(coeff_adr),        // input wire [10:0]  probe
   .probe3(wnd_adr),          // input wire [10:0]  probe
   .probe4(validate),         // input wire [0:0]   probe
-  .probe5(s1),               // input wire [0:0]   probe
-  .probe6(s2),               // input wire [0:0]   probe
-  .probe7(s3),               // input wire [0:0]   probe
-  .probe8(s4),               // input wire [0:0]   probe
-  .probe9(s5),               // input wire [0:0]   probe
-  .probe10(w1),              // input wire [0:0]   probe
-  .probe11(w2),              // input wire [0:0]   probe
-  .probe12(w3),              // input wire [0:0]   probe
-  .probe13(w4),              // input wire [0:0]   probe
-  .probe14(w5),              // input wire [0:0]   probe
-  .probe15(start_1),         // input wire [0:0]   probe
-  .probe16(start_2),         // input wire [0:0]   probe
-  .probe17(start_3),         // input wire [0:0]   probe
-  .probe18(next_1),          // input wire [0:0]   probe
-  .probe19(next_2),          // input wire [0:0]   probe
-  .probe20(next_3),          // input wire [0:0]   probe
-  .probe21(wnd_0),           // input wire [12:0]  probe3
-  .probe22(wnd_1),           // input wire [12:0]  probe3
-  .probe23(in_A0),           // input wire [13:0]  probe3
-  .probe24(in_A1),           // input wire [13:0]  probe3
-  .probe25(p_A0),            // input wire [26:0]  probe3
-  .probe26(p_A1),            // input wire [26:0]  probe3
-  .probe27(sin_0),           // input wire [15:0]  probe3
-  .probe28(sin_1),           // input wire [15:0]  probe3
-  .probe29(cos_0),           // input wire [15:0]  probe3
-  .probe30(cos_1),           // input wire [15:0]  probe3
-  .probe31(wnd_A0),          // input wire [15:0]  probe3
-  .probe32(wnd_A1)          // input wire [15:0]  probe3
+  .probe5(amp_notify_A),     // input wire [0:0]   probe
+  .probe6(amp_notify_B),     // input wire [0:0]   probe
+  .probe7(phase_notify_A),   // input wire [0:0]   probe
+  .probe8(phase_notify_B),   // input wire [0:0]   probe
+  .probe9(amp_sin_A),        // input wire [15:0]   probe
+  .probe10(amp_cos_A),       // input wire [15:0]   probe
+  .probe11(amp_A),           // input wire [15:0]   probe
+  .probe12(amp_sin_B),       // input wire [15:0]   probe
+  .probe13(amp_cos_B),       // input wire [15:0]   probe
+  .probe14(amp_B),           // input wire [15:0]   probe
+  .probe15(phase_A),         // input wire [15:0]   probe
+  .probe16(phase_B)          // input wire [15:0]   probe
 );
 
 generate
