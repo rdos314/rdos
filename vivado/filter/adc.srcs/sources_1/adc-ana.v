@@ -259,6 +259,15 @@ module adc_ana (
   reg                     adc_run;
   reg                     adc_active;
 
+  reg  [13:0]             temp_A0;
+  reg  [13:0]             temp_A1;
+  reg  [13:0]             temp_A2;
+  reg  [13:0]             temp_A3;
+  reg  [13:0]             temp_B0;
+  reg  [13:0]             temp_B1;
+  reg  [13:0]             temp_B2;
+  reg  [13:0]             temp_B3;
+
   reg  [13:0]             out_A0;
   reg  [13:0]             out_A1;
   reg  [13:0]             out_A2;
@@ -1119,26 +1128,38 @@ begin : adc_ana_gen
   begin
     if (config_validate)
     begin
-      out_A0 <= sample_out[13:0];      
-      out_A1 <= sample_out[27:14];      
-      out_A2 <= sample_out[41:28];      
-      out_A3 <= sample_out[55:42];      
-      out_B0 <= ~sample_out[13:0];      
-      out_B1 <= ~sample_out[27:14];      
-      out_B2 <= ~sample_out[41:28];      
-      out_B3 <= ~sample_out[55:42];      
+      temp_A0 <= sample_out[13:0];      
+      temp_A1 <= sample_out[27:14];      
+      temp_A2 <= sample_out[41:28];      
+      temp_A3 <= sample_out[55:42];      
+      temp_B0 <= ~sample_out[13:0];      
+      temp_B1 <= ~sample_out[27:14];      
+      temp_B2 <= ~sample_out[41:28];      
+      temp_B3 <= ~sample_out[55:42];      
     end
     else
     begin
-      out_A0 <= in_A0;
-      out_A1 <= in_A1;
-      out_A2 <= in_A2;
-      out_A3 <= in_A3;
-      out_B0 <= in_B0;
-      out_B1 <= in_B1;
-      out_B2 <= in_B2;
-      out_B3 <= in_B3;
+      temp_A0 <= in_A0;
+      temp_A1 <= in_A1;
+      temp_A2 <= in_A2;
+      temp_A3 <= in_A3;
+      temp_B0 <= in_B0;
+      temp_B1 <= in_B1;
+      temp_B2 <= in_B2;
+      temp_B3 <= in_B3;
     end
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    out_A0 <= temp_A0;
+    out_A1 <= temp_A1;
+    out_A2 <= temp_A2;
+    out_A3 <= temp_A3;
+    out_B0 <= temp_B0;
+    out_B1 <= temp_B1;
+    out_B2 <= temp_B2;
+    out_B3 <= temp_B3;
   end
 
   always @ ( posedge clk ) 

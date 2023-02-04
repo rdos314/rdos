@@ -108,14 +108,12 @@ module ana_freq (
   reg                    s3;
   reg                    s4;
   reg                    s5;
-  reg                    s6;
 
   reg                    w1;
   reg                    w2;
   reg                    w3;
   reg                    w4;
   reg                    w5;
-  reg                    w6;
 
   reg                    start_1;
   reg                    start_2;
@@ -386,16 +384,16 @@ ila_1 ila_1_inst (
   .probe2(coeff_adr),        // input wire [10:0]  probe
   .probe3(wnd_adr),          // input wire [10:0]  probe
   .probe4(validate),         // input wire [0:0]   probe
-  .probe5(s2),               // input wire [0:0]   probe
-  .probe6(s3),               // input wire [0:0]   probe
-  .probe7(s4),               // input wire [0:0]   probe
-  .probe8(s5),               // input wire [0:0]   probe
-  .probe9(s6),               // input wire [0:0]   probe
-  .probe10(w2),              // input wire [0:0]   probe
-  .probe11(w3),              // input wire [0:0]   probe
-  .probe12(w4),              // input wire [0:0]   probe
-  .probe13(w5),              // input wire [0:0]   probe
-  .probe14(w6),              // input wire [0:0]   probe
+  .probe5(s1),               // input wire [0:0]   probe
+  .probe6(s2),               // input wire [0:0]   probe
+  .probe7(s3),               // input wire [0:0]   probe
+  .probe8(s4),               // input wire [0:0]   probe
+  .probe9(s5),               // input wire [0:0]   probe
+  .probe10(w1),              // input wire [0:0]   probe
+  .probe11(w2),              // input wire [0:0]   probe
+  .probe12(w3),              // input wire [0:0]   probe
+  .probe13(w4),              // input wire [0:0]   probe
+  .probe14(w5),              // input wire [0:0]   probe
   .probe15(start_1),         // input wire [0:0]   probe
   .probe16(start_2),         // input wire [0:0]   probe
   .probe17(start_3),         // input wire [0:0]   probe
@@ -607,7 +605,7 @@ begin : ana_freq_gen
     end
     else
     begin
-      if (w4)
+      if (w5)
       begin
         coeff_adr <= 0;
         coeff_en <= 1;
@@ -641,7 +639,6 @@ begin : ana_freq_gen
       s3 <= 0;
       s4 <= 0;
       s5 <= 0;
-      s6 <= 0;
     end
     else
     begin
@@ -649,7 +646,6 @@ begin : ana_freq_gen
       s3 <= s2;
       s4 <= s3;
       s5 <= s4;
-      s6 <= s5;
     end
   end
 
@@ -716,14 +712,14 @@ begin : ana_freq_gen
 
   always @ ( posedge clk ) 
   begin
-    start_1 <= s6;
+    start_1 <= s5;
     start_2 <= start_1;
     start_3 <= start_2;
   end
 
   always @ ( posedge clk ) 
   begin
-    next_1 <= w6;
+    next_1 <= w5;
     next_2 <= next_1;
     next_3 <= next_2;
   end

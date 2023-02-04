@@ -161,43 +161,19 @@ mult_16_16 m_3 (
   .P(p_3[31:0])         // output wire [31 : 0] P
 );
 
-/*
-ila_1 ila_1_inst (
+ila_2 ila_2_inst (
   .clk(clk),            // input wire clk
   .probe0(start),       // input wire [0:0]  probe0
   .probe1(stop),        // input wire [0:0]  probe0
-  .probe2(p1),          // input wire [0:0]  probe0
-  .probe3(p2),          // input wire [0:0]  probe0
-  .probe4(p3),          // input wire [0:0]  probe0
-  .probe5(p4),          // input wire [0:0]  probe0
-  .probe6(s1),          // input wire [0:0]  probe0
-  .probe7(s2),          // input wire [0:0]  probe0
-  .probe8(s3),          // input wire [0:0]  probe0
-  .probe9(s4),          // input wire [0:0]  probe0
-  .probe10(s5),          // input wire [0:0]  probe0
-  .probe11(next),        // input wire [0:0]  probe0
-  .probe12(in_0),        // input wire [13:0]  probe7
-  .probe13(in_1),       // input wire [13:0]  probe2
-  .probe14(in_2),       // input wire [13:0]  probe3
-  .probe15(in_3),       // input wire [13:0]  probe4
-  .probe16(coeff_0),    // input wire [15:0]  probe5
-  .probe17(coeff_1),    // input wire [15:0]  probe6
-  .probe18(coeff_2),    // input wire [15:0]  probe6
-  .probe19(coeff_3),    // input wire [15:0]  probe6
-  .probe20(p_0),        // input wire [29:0]  probe6
-  .probe21(p_1),        // input wire [29:0]  probe6
-  .probe22(p_2),        // input wire [29:0]  probe6
-  .probe23(p_3),        // input wire [29:0]  probe6
-  .probe24(sum_0),      // input wire [43:0]  probe6
-  .probe25(sum_1),      // input wire [43:0]  probe6
-  .probe26(sum_2),      // input wire [43:0]  probe6
-  .probe27(sum_3),      // input wire [43:0]  probe6
-  .probe28(sum_01),     // input wire [43:0]  probe6
-  .probe29(sum_23),     // input wire [43:0]  probe6
-  .probe30(report),     // input wire [0:0]   probe6
-  .probe31(sum)         // input wire [43:0]  probe6
+  .probe2(in_0),        // input wire [15:0]  probe7
+  .probe3(in_1),        // input wire [15:0]  probe2
+  .probe4(coeff_0),     // input wire [15:0]  probe5
+  .probe5(coeff_1),     // input wire [15:0]  probe6
+  .probe6(p_0),         // input wire [31:0]  probe6
+  .probe7(p_1),         // input wire [31:0]  probe6
+  .probe8(sum_0),       // input wire [43:0]  probe6
+  .probe9(sum_1)        // input wire [43:0]  probe6
 );
-*/
 
 generate
 begin : ana_slice_gen
