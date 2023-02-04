@@ -123,6 +123,8 @@ module ana_freq (
   reg                    next_2;
   reg                    next_3;
 
+  reg                    en_report;
+
   reg  [63:0]            sin_coeff_in;
   reg  [63:0]            cos_coeff_in;
   reg  [47:0]            wnd_coeff_in;
@@ -384,18 +386,15 @@ ila_1 ila_1_inst (
   .probe2(coeff_adr),        // input wire [10:0]  probe
   .probe3(wnd_adr),          // input wire [10:0]  probe
   .probe4(validate),         // input wire [0:0]   probe
-  .probe5(amp_notify_A),     // input wire [0:0]   probe
-  .probe6(amp_notify_B),     // input wire [0:0]   probe
-  .probe7(phase_notify_A),   // input wire [0:0]   probe
-  .probe8(phase_notify_B),   // input wire [0:0]   probe
-  .probe9(amp_sin_A),        // input wire [15:0]   probe
-  .probe10(amp_cos_A),       // input wire [15:0]   probe
-  .probe11(amp_A),           // input wire [15:0]   probe
-  .probe12(amp_sin_B),       // input wire [15:0]   probe
-  .probe13(amp_cos_B),       // input wire [15:0]   probe
-  .probe14(amp_B),           // input wire [15:0]   probe
-  .probe15(phase_A),         // input wire [15:0]   probe
-  .probe16(phase_B)          // input wire [15:0]   probe
+  .probe5(report),           // input wire [0:0]   probe
+  .probe6(amp_sin_A),        // input wire [15:0]   probe
+  .probe7(amp_cos_A),        // input wire [15:0]   probe
+  .probe8(amp_A),            // input wire [15:0]   probe
+  .probe9(amp_sin_B),        // input wire [15:0]   probe
+  .probe10(amp_cos_B),       // input wire [15:0]   probe
+  .probe11(amp_B),           // input wire [15:0]   probe
+  .probe12(phase_A),         // input wire [15:0]   probe
+  .probe13(phase_B)          // input wire [15:0]   probe
 );
 
 generate
@@ -407,8 +406,13 @@ begin : ana_freq_gen
       sum_notify_A <= 0;
     else
     begin
-      if (notify_sin_A | notify_cos_A)
-        sum_notify_A <= 1;
+      if (en_report)
+      begin
+        if (notify_sin_A | notify_cos_A)
+          sum_notify_A <= 1;
+        else
+          sum_notify_A <= 0;
+      end
       else
         sum_notify_A <= 0;
     end
@@ -420,8 +424,13 @@ begin : ana_freq_gen
       sum_notify_B <= 0;
     else
     begin
-      if (notify_sin_B | notify_cos_B)
-        sum_notify_B <= 1;
+      if (en_report)
+      begin
+        if (notify_sin_B | notify_cos_B)
+          sum_notify_B <= 1;
+        else
+          sum_notify_B <= 0;
+      end
       else
         sum_notify_B <= 0;
     end
@@ -468,11 +477,18 @@ begin : ana_freq_gen
     if (reset | start_3 | next_3)
       amp_done_A <= 0;
     else
-      if (amp_notify_A)
-        amp_done_A <= 1;
+    begin
+      if (en_report)
+      begin
+        if (amp_notify_A)
+          amp_done_A <= 1;
+        else
+          if (report)
+            amp_done_A <= 0;
+      end
       else
-        if (report)
-          amp_done_A <= 0;
+        amp_done_A <= 0;
+    end
   end 
 
   always @ ( posedge clk ) 
@@ -480,11 +496,18 @@ begin : ana_freq_gen
     if (reset | start_3 | next_3)
       amp_done_B <= 0;
     else
-      if (amp_notify_B)
-        amp_done_B <= 1;
+    begin
+      if (en_report)
+      begin
+        if (amp_notify_B)
+          amp_done_B <= 1;
+        else
+          if (report)
+            amp_done_B <= 0;
+      end
       else
-        if (report)
-          amp_done_B <= 0;
+        amp_done_B <= 0;
+    end
   end 
 
   always @ ( posedge clk ) 
@@ -492,11 +515,18 @@ begin : ana_freq_gen
     if (reset | start_3 | next_3)
       phase_done_A <= 0;
     else
-      if (phase_notify_A)
-        phase_done_A <= 1;
+    begin
+      if (en_report)
+      begin
+        if (phase_notify_A)
+          phase_done_A <= 1;
+        else
+          if (report)
+            phase_done_A <= 0;
+      end
       else
-        if (report)
-          phase_done_A <= 0;
+        phase_done_A <= 0;
+    end    
   end 
 
   always @ ( posedge clk ) 
@@ -504,11 +534,18 @@ begin : ana_freq_gen
     if (reset | start_3 | next_3)
       phase_done_B <= 0;
     else
-      if (phase_notify_B)
-        phase_done_B <= 1;
+    begin
+      if (en_report)
+      begin
+        if (phase_notify_B)
+          phase_done_B <= 1;
+        else
+          if (report)
+            phase_done_B <= 0;
+      end
       else
-        if (report)
-          phase_done_B <= 0;
+        phase_done_B <= 0;
+    end
   end 
 
   always @ ( posedge clk ) 
@@ -541,6 +578,7 @@ begin : ana_freq_gen
       wnd_adr <= 0;
       w1 <= 0;
       s1 <= 0;
+      en_report <= 0;
     end
     else
     begin
@@ -548,7 +586,8 @@ begin : ana_freq_gen
       begin
         wnd_adr <= 0;
         s1 <= 1;
-        w1 <= 1;
+        w1 <= 0;
+        en_report <= 0;
       end
       else
       begin
@@ -560,6 +599,7 @@ begin : ana_freq_gen
           begin
             wnd_adr <= 0;
             w1 <= 1;
+            en_report <= 1;
           end
           else
           begin
@@ -589,7 +629,7 @@ begin : ana_freq_gen
     end
     else
     begin
-      if (w5)
+      if (w5 | s5)
       begin
         coeff_adr <= 0;
         coeff_en <= 1;
