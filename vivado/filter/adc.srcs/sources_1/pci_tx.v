@@ -100,7 +100,7 @@ module pci_tx (
 
   reg [127:0]               adc_data;
   wire [127:0]              adc_pkt_data;
-  reg [0:0]                 adc_count;
+  reg [1:0]                 adc_count;
   reg                       adc_pend;
 
   wire [31:0]               msix_pkt_data;

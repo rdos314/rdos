@@ -336,8 +336,8 @@ adc_ana ana_1 (
     .msix_clear(msix_ack[1])
 );
 
-/*
-ila_1 ila_1_inst (
+
+ila_2 ila_2_inst (
   .clk(pci_clk),                 // input wire clk
   .probe0(pci_ana_req),          // input wire [0:0]
   .probe1(pci_ana_chan),         // input wire [3:0]
@@ -352,25 +352,19 @@ ila_1 ila_1_inst (
   .probe10(chan1_ack_pos),       // input wire [20:0]
   .probe11(pci_req),             // input wire [15:0]
   .probe12(pci_clear),           // input wire [15:0]
-  .probe13(msix_mask),           // input wire [15:0]
-  .probe14(chan0_msix_adr),      // input wire [31:0]
-  .probe15(chan0_msix_data),     // input wire [31:0]
-  .probe16(chan1_msix_adr),      // input wire [31:0]
-  .probe17(chan1_msix_data),     // input wire [31:0]
-  .probe18(msix_enabled),        // input wire [0:0]
-  .probe19(msix_req),            // input wire [15:0]
-  .probe20(msix_ack),            // input wire [15:0]
-  .probe21(msix_issue),          // input wire [0:0]
-  .probe22(msix_clear),          // input wire [0:0]
-  .probe23(pci_adc_en),          // input wire [15:0]
-  .probe24(pci_on),              // input wire [15:0]
-  .probe25(pci_stop),            // input wire [15:0]
-  .probe26(pci_active),          // input wire [15:0]
-  .probe27(pci_adc_on),          // input wire [0:0]
-  .probe28(report),              // input wire [0:0]
-  .probe29(adr)                  // input wire [47:0]
+  .probe13(pci_adc_en),          // input wire [15:0]
+  .probe14(pci_on),              // input wire [15:0]
+  .probe15(pci_stop),            // input wire [15:0]
+  .probe16(pci_active),          // input wire [15:0]
+  .probe17(pci_adc_on),          // input wire [0:0]
+  .probe18(report),              // input wire [0:0]
+  .probe19(adr),                 // input wire [47:0]
+  .probe20(d_0),                 // input wire [127:0]
+  .probe21(d_1),                 // input wire [127:0]
+  .probe22(d_2),                 // input wire [127:0]
+  .probe23(d_3)                  // input wire [127:0]
  );
-*/
+
 
 /*
 ila_2 ila_2_inst (
