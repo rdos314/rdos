@@ -178,6 +178,51 @@ module adc_app (
   reg  [13:0]             chan1_count;
   reg  [29:0]             chan1_incr;
 
+// channel 2
+
+  reg  [13:0]             chan2_count;
+  reg  [29:0]             chan2_incr;
+
+// channel 3
+
+  reg  [13:0]             chan3_count;
+  reg  [29:0]             chan3_incr;
+
+// channel 4
+
+  reg  [13:0]             chan4_count;
+  reg  [29:0]             chan4_incr;
+
+// channel 5
+
+  reg  [13:0]             chan5_count;
+  reg  [29:0]             chan5_incr;
+
+// channel 6
+
+  reg  [13:0]             chan6_count;
+  reg  [29:0]             chan6_incr;
+
+// channel 7
+
+  reg  [13:0]             chan7_count;
+  reg  [29:0]             chan7_incr;
+
+// channel 8
+
+  reg  [13:0]             chan8_count;
+  reg  [29:0]             chan8_incr;
+
+// channel 9
+
+  reg  [13:0]             chan9_count;
+  reg  [29:0]             chan9_incr;
+
+// channel 10
+
+  reg  [13:0]             chan10_count;
+  reg  [29:0]             chan10_incr;
+
 // pci domain
 
   reg  [15:0]             pci_clear;
@@ -216,6 +261,114 @@ module adc_app (
   wire [127:0]            chan1_d3;
   reg  [31:0]             chan1_msix_adr;
   reg  [31:0]             chan1_msix_data;
+
+// channel 2
+
+  reg  [47:0]             chan2_phys;
+  wire [47:0]             chan2_adr;
+  reg  [20:0]             chan2_ack_pos;
+  wire [127:0]            chan2_d0;
+  wire [127:0]            chan2_d1;
+  wire [127:0]            chan2_d2;
+  wire [127:0]            chan2_d3;
+  reg  [31:0]             chan2_msix_adr;
+  reg  [31:0]             chan2_msix_data;
+
+// channel 3
+
+  reg  [47:0]             chan3_phys;
+  wire [47:0]             chan3_adr;
+  reg  [20:0]             chan3_ack_pos;
+  wire [127:0]            chan3_d0;
+  wire [127:0]            chan3_d1;
+  wire [127:0]            chan3_d2;
+  wire [127:0]            chan3_d3;
+  reg  [31:0]             chan3_msix_adr;
+  reg  [31:0]             chan3_msix_data;
+
+// channel 4
+
+  reg  [47:0]             chan4_phys;
+  wire [47:0]             chan4_adr;
+  reg  [20:0]             chan4_ack_pos;
+  wire [127:0]            chan4_d0;
+  wire [127:0]            chan4_d1;
+  wire [127:0]            chan4_d2;
+  wire [127:0]            chan4_d3;
+  reg  [31:0]             chan4_msix_adr;
+  reg  [31:0]             chan4_msix_data;
+
+// channel 5
+
+  reg  [47:0]             chan5_phys;
+  wire [47:0]             chan5_adr;
+  reg  [20:0]             chan5_ack_pos;
+  wire [127:0]            chan5_d0;
+  wire [127:0]            chan5_d1;
+  wire [127:0]            chan5_d2;
+  wire [127:0]            chan5_d3;
+  reg  [31:0]             chan5_msix_adr;
+  reg  [31:0]             chan5_msix_data;
+
+// channel 6
+
+  reg  [47:0]             chan6_phys;
+  wire [47:0]             chan6_adr;
+  reg  [20:0]             chan6_ack_pos;
+  wire [127:0]            chan6_d0;
+  wire [127:0]            chan6_d1;
+  wire [127:0]            chan6_d2;
+  wire [127:0]            chan6_d3;
+  reg  [31:0]             chan6_msix_adr;
+  reg  [31:0]             chan6_msix_data;
+
+// channel 7
+
+  reg  [47:0]             chan7_phys;
+  wire [47:0]             chan7_adr;
+  reg  [20:0]             chan7_ack_pos;
+  wire [127:0]            chan7_d0;
+  wire [127:0]            chan7_d1;
+  wire [127:0]            chan7_d2;
+  wire [127:0]            chan7_d3;
+  reg  [31:0]             chan7_msix_adr;
+  reg  [31:0]             chan7_msix_data;
+
+// channel 8
+
+  reg  [47:0]             chan8_phys;
+  wire [47:0]             chan8_adr;
+  reg  [20:0]             chan8_ack_pos;
+  wire [127:0]            chan8_d0;
+  wire [127:0]            chan8_d1;
+  wire [127:0]            chan8_d2;
+  wire [127:0]            chan8_d3;
+  reg  [31:0]             chan8_msix_adr;
+  reg  [31:0]             chan8_msix_data;
+
+// channel 9
+
+  reg  [47:0]             chan9_phys;
+  wire [47:0]             chan9_adr;
+  reg  [20:0]             chan9_ack_pos;
+  wire [127:0]            chan9_d0;
+  wire [127:0]            chan9_d1;
+  wire [127:0]            chan9_d2;
+  wire [127:0]            chan9_d3;
+  reg  [31:0]             chan9_msix_adr;
+  reg  [31:0]             chan9_msix_data;
+
+// channel 10
+
+  reg  [47:0]             chan10_phys;
+  wire [47:0]             chan10_adr;
+  reg  [20:0]             chan10_ack_pos;
+  wire [127:0]            chan10_d0;
+  wire [127:0]            chan10_d1;
+  wire [127:0]            chan10_d2;
+  wire [127:0]            chan10_d3;
+  reg  [31:0]             chan10_msix_adr;
+  reg  [31:0]             chan10_msix_data;
 
 // clock domain crossings
 
@@ -336,7 +489,358 @@ adc_ana ana_1 (
     .msix_clear(msix_ack[1])
 );
 
+adc_ana ana_2 (
+    .clk (rx_clk),
+    .reset (rx_reset),
 
+    .conf(rx_conf[2]),
+    .incr(chan2_incr),
+    .count(chan2_count),
+    .stop(rx_stop[2]),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+    
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .pci_init(pci_init[2]),
+    .phys_adr(chan2_phys),
+    .ack_pos(chan2_ack_pos),
+    .pci_on(pci_on[2]),
+    .pci_stop(pci_stop[2]),
+    
+    .report(pci_req[2]),
+    .clear(pci_clear[2]),
+    .adr(chan2_adr),
+    .d_0(chan2_d0),
+    .d_1(chan2_d1),
+    .d_2(chan2_d2),
+    .d_3(chan2_d3),
+
+    .msix_mask(msix_mask[2]),
+    .msix_issue(msix_req[2]),
+    .msix_clear(msix_ack[2])
+);
+
+adc_ana ana_3 (
+    .clk (rx_clk),
+    .reset (rx_reset),
+
+    .conf(rx_conf[3]),
+    .incr(chan3_incr),
+    .count(chan3_count),
+    .stop(rx_stop[3]),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+    
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .pci_init(pci_init[3]),
+    .phys_adr(chan3_phys),
+    .ack_pos(chan3_ack_pos),
+    .pci_on(pci_on[3]),
+    .pci_stop(pci_stop[3]),
+    
+    .report(pci_req[3]),
+    .clear(pci_clear[3]),
+    .adr(chan3_adr),
+    .d_0(chan3_d0),
+    .d_1(chan3_d1),
+    .d_2(chan3_d2),
+    .d_3(chan3_d3),
+
+    .msix_mask(msix_mask[3]),
+    .msix_issue(msix_req[3]),
+    .msix_clear(msix_ack[3])
+);
+
+adc_ana ana_4 (
+    .clk (rx_clk),
+    .reset (rx_reset),
+
+    .conf(rx_conf[4]),
+    .incr(chan4_incr),
+    .count(chan4_count),
+    .stop(rx_stop[4]),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+    
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .pci_init(pci_init[4]),
+    .phys_adr(chan4_phys),
+    .ack_pos(chan4_ack_pos),
+    .pci_on(pci_on[4]),
+    .pci_stop(pci_stop[4]),
+    
+    .report(pci_req[4]),
+    .clear(pci_clear[4]),
+    .adr(chan4_adr),
+    .d_0(chan4_d0),
+    .d_1(chan4_d1),
+    .d_2(chan4_d2),
+    .d_3(chan4_d3),
+
+    .msix_mask(msix_mask[4]),
+    .msix_issue(msix_req[4]),
+    .msix_clear(msix_ack[4])
+);
+
+adc_ana ana_5 (
+    .clk (rx_clk),
+    .reset (rx_reset),
+
+    .conf(rx_conf[5]),
+    .incr(chan5_incr),
+    .count(chan5_count),
+    .stop(rx_stop[5]),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+    
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .pci_init(pci_init[5]),
+    .phys_adr(chan5_phys),
+    .ack_pos(chan5_ack_pos),
+    .pci_on(pci_on[5]),
+    .pci_stop(pci_stop[5]),
+    
+    .report(pci_req[5]),
+    .clear(pci_clear[5]),
+    .adr(chan5_adr),
+    .d_0(chan5_d0),
+    .d_1(chan5_d1),
+    .d_2(chan5_d2),
+    .d_3(chan5_d3),
+
+    .msix_mask(msix_mask[5]),
+    .msix_issue(msix_req[5]),
+    .msix_clear(msix_ack[5])
+);
+
+adc_ana ana_6 (
+    .clk (rx_clk),
+    .reset (rx_reset),
+
+    .conf(rx_conf[6]),
+    .incr(chan6_incr),
+    .count(chan6_count),
+    .stop(rx_stop[6]),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+    
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .pci_init(pci_init[6]),
+    .phys_adr(chan6_phys),
+    .ack_pos(chan6_ack_pos),
+    .pci_on(pci_on[6]),
+    .pci_stop(pci_stop[6]),
+    
+    .report(pci_req[6]),
+    .clear(pci_clear[6]),
+    .adr(chan6_adr),
+    .d_0(chan6_d0),
+    .d_1(chan6_d1),
+    .d_2(chan6_d2),
+    .d_3(chan6_d3),
+
+    .msix_mask(msix_mask[6]),
+    .msix_issue(msix_req[6]),
+    .msix_clear(msix_ack[6])
+);
+
+adc_ana ana_7 (
+    .clk (rx_clk),
+    .reset (rx_reset),
+
+    .conf(rx_conf[7]),
+    .incr(chan7_incr),
+    .count(chan7_count),
+    .stop(rx_stop[7]),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+    
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .pci_init(pci_init[7]),
+    .phys_adr(chan7_phys),
+    .ack_pos(chan7_ack_pos),
+    .pci_on(pci_on[7]),
+    .pci_stop(pci_stop[7]),
+    
+    .report(pci_req[7]),
+    .clear(pci_clear[7]),
+    .adr(chan7_adr),
+    .d_0(chan7_d0),
+    .d_1(chan7_d1),
+    .d_2(chan7_d2),
+    .d_3(chan7_d3),
+
+    .msix_mask(msix_mask[7]),
+    .msix_issue(msix_req[7]),
+    .msix_clear(msix_ack[7])
+);
+
+adc_ana ana_8 (
+    .clk (rx_clk),
+    .reset (rx_reset),
+
+    .conf(rx_conf[8]),
+    .incr(chan8_incr),
+    .count(chan8_count),
+    .stop(rx_stop[8]),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+    
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .pci_init(pci_init[8]),
+    .phys_adr(chan8_phys),
+    .ack_pos(chan8_ack_pos),
+    .pci_on(pci_on[8]),
+    .pci_stop(pci_stop[8]),
+    
+    .report(pci_req[8]),
+    .clear(pci_clear[8]),
+    .adr(chan8_adr),
+    .d_0(chan8_d0),
+    .d_1(chan8_d1),
+    .d_2(chan8_d2),
+    .d_3(chan8_d3),
+
+    .msix_mask(msix_mask[8]),
+    .msix_issue(msix_req[8]),
+    .msix_clear(msix_ack[8])
+);
+
+adc_ana ana_9 (
+    .clk (rx_clk),
+    .reset (rx_reset),
+
+    .conf(rx_conf[9]),
+    .incr(chan9_incr),
+    .count(chan9_count),
+    .stop(rx_stop[9]),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+    
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .pci_init(pci_init[9]),
+    .phys_adr(chan9_phys),
+    .ack_pos(chan9_ack_pos),
+    .pci_on(pci_on[9]),
+    .pci_stop(pci_stop[9]),
+    
+    .report(pci_req[9]),
+    .clear(pci_clear[9]),
+    .adr(chan9_adr),
+    .d_0(chan9_d0),
+    .d_1(chan9_d1),
+    .d_2(chan9_d2),
+    .d_3(chan9_d3),
+
+    .msix_mask(msix_mask[9]),
+    .msix_issue(msix_req[9]),
+    .msix_clear(msix_ack[9])
+);
+
+adc_ana ana_10 (
+    .clk (rx_clk),
+    .reset (rx_reset),
+
+    .conf(rx_conf[10]),
+    .incr(chan10_incr),
+    .count(chan10_count),
+    .stop(rx_stop[10]),
+
+    .in_A0(adc_A0),
+    .in_A1(adc_A1),
+    .in_A2(adc_A2),
+    .in_A3(adc_A3),
+    .in_B0(adc_B0),
+    .in_B1(adc_B1),
+    .in_B2(adc_B2),
+    .in_B3(adc_B3),
+    
+    .pci_clk(pci_clk),
+    .pci_reset(pci_reset),
+    .pci_init(pci_init[10]),
+    .phys_adr(chan10_phys),
+    .ack_pos(chan10_ack_pos),
+    .pci_on(pci_on[10]),
+    .pci_stop(pci_stop[10]),
+    
+    .report(pci_req[10]),
+    .clear(pci_clear[10]),
+    .adr(chan10_adr),
+    .d_0(chan10_d0),
+    .d_1(chan10_d1),
+    .d_2(chan10_d2),
+    .d_3(chan10_d3),
+
+    .msix_mask(msix_mask[10]),
+    .msix_issue(msix_req[10]),
+    .msix_clear(msix_ack[10])
+);
+
+/*
 ila_2 ila_2_inst (
   .clk(pci_clk),                 // input wire clk
   .probe0(pci_ana_req),          // input wire [0:0]
@@ -364,6 +868,7 @@ ila_2 ila_2_inst (
   .probe22(d_2),                 // input wire [127:0]
   .probe23(d_3)                  // input wire [127:0]
  );
+ */
 
 
 /*
@@ -681,6 +1186,15 @@ begin : adc_app
               case (pci_adr[6:3])
                 0 : bar1_rp_data[20:0] <= chan0_adr[20:0];
                 1 : bar1_rp_data[20:0] <= chan1_adr[20:0];
+                2 : bar1_rp_data[20:0] <= chan2_adr[20:0];
+                3 : bar1_rp_data[20:0] <= chan3_adr[20:0];
+                4 : bar1_rp_data[20:0] <= chan4_adr[20:0];
+                5 : bar1_rp_data[20:0] <= chan5_adr[20:0];
+                6 : bar1_rp_data[20:0] <= chan6_adr[20:0];
+                7 : bar1_rp_data[20:0] <= chan7_adr[20:0];
+                8 : bar1_rp_data[20:0] <= chan8_adr[20:0];
+                9 : bar1_rp_data[20:0] <= chan9_adr[20:0];
+                10 : bar1_rp_data[20:0] <= chan10_adr[20:0];
               endcase
             end 
           default : bar1_rp_data <= pci_out;
@@ -786,6 +1300,24 @@ begin : adc_app
       chan0_msix_data <= 0;
       chan1_msix_adr <= 0;
       chan1_msix_data <= 0;
+      chan2_msix_adr <= 0;
+      chan2_msix_data <= 0;
+      chan3_msix_adr <= 0;
+      chan3_msix_data <= 0;
+      chan4_msix_adr <= 0;
+      chan4_msix_data <= 0;
+      chan5_msix_adr <= 0;
+      chan5_msix_data <= 0;
+      chan6_msix_adr <= 0;
+      chan6_msix_data <= 0;
+      chan7_msix_adr <= 0;
+      chan7_msix_data <= 0;
+      chan8_msix_adr <= 0;
+      chan8_msix_data <= 0;
+      chan9_msix_adr <= 0;
+      chan9_msix_data <= 0;
+      chan10_msix_adr <= 0;
+      chan10_msix_data <= 0;
     end
     else
     begin
@@ -801,6 +1333,15 @@ begin : adc_app
                 case (pci_adr[6:3])
                   0 : chan0_ack_pos <= pci_in[20:0];
                   1 : chan1_ack_pos <= pci_in[20:0];
+                  2 : chan2_ack_pos <= pci_in[20:0];
+                  3 : chan3_ack_pos <= pci_in[20:0];
+                  4 : chan4_ack_pos <= pci_in[20:0];
+                  5 : chan5_ack_pos <= pci_in[20:0];
+                  6 : chan6_ack_pos <= pci_in[20:0];
+                  7 : chan7_ack_pos <= pci_in[20:0];
+                  8 : chan8_ack_pos <= pci_in[20:0];
+                  9 : chan9_ack_pos <= pci_in[20:0];
+                  10 : chan10_ack_pos <= pci_in[20:0];
                 endcase
               end
 
@@ -811,6 +1352,15 @@ begin : adc_app
                 case (pci_adr[6:3])
                   0 : chan0_phys[31:0] <= pci_in;
                   1 : chan1_phys[31:0] <= pci_in;
+                  2 : chan2_phys[31:0] <= pci_in;
+                  3 : chan3_phys[31:0] <= pci_in;
+                  4 : chan4_phys[31:0] <= pci_in;
+                  5 : chan5_phys[31:0] <= pci_in;
+                  6 : chan6_phys[31:0] <= pci_in;
+                  7 : chan7_phys[31:0] <= pci_in;
+                  8 : chan8_phys[31:0] <= pci_in;
+                  9 : chan9_phys[31:0] <= pci_in;
+                  10 : chan10_phys[31:0] <= pci_in;
                 endcase
               end
 
@@ -821,6 +1371,15 @@ begin : adc_app
                 case (pci_adr[6:3])
                   0 : chan0_phys[47:32] <= pci_in[15:0];
                   1 : chan1_phys[47:32] <= pci_in[15:0];
+                  2 : chan2_phys[47:32] <= pci_in[15:0];
+                  3 : chan3_phys[47:32] <= pci_in[15:0];
+                  4 : chan4_phys[47:32] <= pci_in[15:0];
+                  5 : chan5_phys[47:32] <= pci_in[15:0];
+                  6 : chan6_phys[47:32] <= pci_in[15:0];
+                  7 : chan7_phys[47:32] <= pci_in[15:0];
+                  8 : chan8_phys[47:32] <= pci_in[15:0];
+                  9 : chan9_phys[47:32] <= pci_in[15:0];
+                  10 : chan10_phys[47:32] <= pci_in[15:0];
                 endcase
               end
               
@@ -867,6 +1426,33 @@ begin : adc_app
             4 : chan1_msix_adr <= pci_in;
             6 : chan1_msix_data <= pci_in;
             7 : msix_mask[1] <= pci_in[0];
+            8 : chan2_msix_adr <= pci_in;
+            10 : chan2_msix_data <= pci_in;
+            11 : msix_mask[2] <= pci_in[0];
+            12 : chan3_msix_adr <= pci_in;
+            14 : chan3_msix_data <= pci_in;
+            15 : msix_mask[3] <= pci_in[0];
+            16 : chan4_msix_adr <= pci_in;
+            18 : chan4_msix_data <= pci_in;
+            19 : msix_mask[4] <= pci_in[0];
+            20 : chan5_msix_adr <= pci_in;
+            22 : chan5_msix_data <= pci_in;
+            23 : msix_mask[5] <= pci_in[0];
+            24 : chan6_msix_adr <= pci_in;
+            26 : chan6_msix_data <= pci_in;
+            27 : msix_mask[6] <= pci_in[0];
+            28 : chan7_msix_adr <= pci_in;
+            30 : chan7_msix_data <= pci_in;
+            31 : msix_mask[7] <= pci_in[0];
+            32 : chan8_msix_adr <= pci_in;
+            34 : chan8_msix_data <= pci_in;
+            35 : msix_mask[8] <= pci_in[0];
+            36 : chan9_msix_adr <= pci_in;
+            38 : chan9_msix_data <= pci_in;
+            39 : msix_mask[9] <= pci_in[0];
+            40 : chan10_msix_adr <= pci_in;
+            42 : chan10_msix_data <= pci_in;
+            43 : msix_mask[10] <= pci_in[0];
           endcase          
         end
       end
@@ -1067,6 +1653,96 @@ begin : adc_app
               report <= 1;
             end          
 
+          16'b0000000000000100 :
+            begin
+              adr <= chan2_adr;
+              d_0 <= chan2_d0; 
+              d_1 <= chan2_d1; 
+              d_2 <= chan2_d2; 
+              d_3 <= chan2_d3;  
+              report <= 1;
+            end          
+
+          16'b0000000000001000 :
+            begin
+              adr <= chan3_adr;
+              d_0 <= chan3_d0; 
+              d_1 <= chan3_d1; 
+              d_2 <= chan3_d2; 
+              d_3 <= chan3_d3;  
+              report <= 1;
+            end          
+
+          16'b0000000000010000 :
+            begin
+              adr <= chan4_adr;
+              d_0 <= chan4_d0; 
+              d_1 <= chan4_d1; 
+              d_2 <= chan4_d2; 
+              d_3 <= chan4_d3;  
+              report <= 1;
+            end          
+
+          16'b0000000000100000 :
+            begin
+              adr <= chan5_adr;
+              d_0 <= chan5_d0; 
+              d_1 <= chan5_d1; 
+              d_2 <= chan5_d2; 
+              d_3 <= chan5_d3;  
+              report <= 1;
+            end          
+
+          16'b0000000001000000 :
+            begin
+              adr <= chan6_adr;
+              d_0 <= chan6_d0; 
+              d_1 <= chan6_d1; 
+              d_2 <= chan6_d2; 
+              d_3 <= chan6_d3;  
+              report <= 1;
+            end          
+
+          16'b0000000010000000 :
+            begin
+              adr <= chan7_adr;
+              d_0 <= chan7_d0; 
+              d_1 <= chan7_d1; 
+              d_2 <= chan7_d2; 
+              d_3 <= chan7_d3;  
+              report <= 1;
+            end          
+
+          16'b0000000100000000 :
+            begin
+              adr <= chan8_adr;
+              d_0 <= chan8_d0; 
+              d_1 <= chan8_d1; 
+              d_2 <= chan8_d2; 
+              d_3 <= chan8_d3;  
+              report <= 1;
+            end          
+
+          16'b0000001000000000 :
+            begin
+              adr <= chan9_adr;
+              d_0 <= chan9_d0; 
+              d_1 <= chan9_d1; 
+              d_2 <= chan9_d2; 
+              d_3 <= chan9_d3;  
+              report <= 1;
+            end          
+
+          16'b0000010000000000 :
+            begin
+              adr <= chan10_adr;
+              d_0 <= chan10_d0; 
+              d_1 <= chan10_d1; 
+              d_2 <= chan10_d2; 
+              d_3 <= chan10_d3;  
+              report <= 1;
+            end          
+
           default : ;
         endcase
       end
@@ -1102,6 +1778,69 @@ begin : adc_app
               begin
                 msix_adr <= chan1_msix_adr;
                 msix_data <= chan1_msix_data;
+                msix_issue <= 1;
+              end          
+          
+            16'b0000000000000100 :
+              begin
+                msix_adr <= chan2_msix_adr;
+                msix_data <= chan2_msix_data;
+                msix_issue <= 1;
+              end          
+          
+            16'b0000000000001000 :
+              begin
+                msix_adr <= chan3_msix_adr;
+                msix_data <= chan3_msix_data;
+                msix_issue <= 1;
+              end          
+          
+            16'b0000000000010000 :
+              begin
+                msix_adr <= chan4_msix_adr;
+                msix_data <= chan4_msix_data;
+                msix_issue <= 1;
+              end          
+          
+            16'b0000000000100000 :
+              begin
+                msix_adr <= chan5_msix_adr;
+                msix_data <= chan5_msix_data;
+                msix_issue <= 1;
+              end          
+          
+            16'b0000000001000000 :
+              begin
+                msix_adr <= chan6_msix_adr;
+                msix_data <= chan6_msix_data;
+                msix_issue <= 1;
+              end          
+          
+            16'b0000000010000000 :
+              begin
+                msix_adr <= chan7_msix_adr;
+                msix_data <= chan7_msix_data;
+                msix_issue <= 1;
+              end          
+          
+            16'b0000000100000000 :
+              begin
+                msix_adr <= chan8_msix_adr;
+                msix_data <= chan8_msix_data;
+                msix_issue <= 1;
+              end          
+          
+            16'b0000001000000000 :
+              begin
+                msix_adr <= chan9_msix_adr;
+                msix_data <= chan9_msix_data;
+                msix_issue <= 1;
+              end          
+          
+            16'b0000010000000000 :
+              begin
+                msix_adr <= chan10_msix_adr;
+                msix_data <= chan10_msix_data;
                 msix_issue <= 1;
               end          
 
@@ -1358,6 +2097,186 @@ begin : adc_app
       end
       else
         rx_conf[1] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[2] <= 0;
+    else
+    begin
+      if (rx_init[2])
+      begin
+        case (rx_adr[2:0])
+          1 : chan2_count <= rx_out[15:0];
+          2 : chan2_incr <= rx_out[31:2];
+          3 : rx_conf[2] <= 1;
+          default: rx_conf[2] <= 0;
+        endcase
+      end
+      else
+        rx_conf[2] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[3] <= 0;
+    else
+    begin
+      if (rx_init[3])
+      begin
+        case (rx_adr[2:0])
+          1 : chan3_count <= rx_out[15:0];
+          2 : chan3_incr <= rx_out[31:2];
+          3 : rx_conf[3] <= 1;
+          default: rx_conf[3] <= 0;
+        endcase
+      end
+      else
+        rx_conf[3] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[4] <= 0;
+    else
+    begin
+      if (rx_init[4])
+      begin
+        case (rx_adr[2:0])
+          1 : chan4_count <= rx_out[15:0];
+          2 : chan4_incr <= rx_out[31:2];
+          3 : rx_conf[4] <= 1;
+          default: rx_conf[4] <= 0;
+        endcase
+      end
+      else
+        rx_conf[4] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[5] <= 0;
+    else
+    begin
+      if (rx_init[5])
+      begin
+        case (rx_adr[2:0])
+          1 : chan5_count <= rx_out[15:0];
+          2 : chan5_incr <= rx_out[31:2];
+          3 : rx_conf[5] <= 1;
+          default: rx_conf[5] <= 0;
+        endcase
+      end
+      else
+        rx_conf[5] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[6] <= 0;
+    else
+    begin
+      if (rx_init[6])
+      begin
+        case (rx_adr[2:0])
+          1 : chan6_count <= rx_out[15:0];
+          2 : chan6_incr <= rx_out[31:2];
+          3 : rx_conf[6] <= 1;
+          default: rx_conf[6] <= 0;
+        endcase
+      end
+      else
+        rx_conf[6] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[7] <= 0;
+    else
+    begin
+      if (rx_init[7])
+      begin
+        case (rx_adr[2:0])
+          1 : chan7_count <= rx_out[15:0];
+          2 : chan7_incr <= rx_out[31:2];
+          3 : rx_conf[7] <= 1;
+          default: rx_conf[7] <= 0;
+        endcase
+      end
+      else
+        rx_conf[7] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[8] <= 0;
+    else
+    begin
+      if (rx_init[8])
+      begin
+        case (rx_adr[2:0])
+          1 : chan8_count <= rx_out[15:0];
+          2 : chan8_incr <= rx_out[31:2];
+          3 : rx_conf[8] <= 1;
+          default: rx_conf[8] <= 0;
+        endcase
+      end
+      else
+        rx_conf[8] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[9] <= 0;
+    else
+    begin
+      if (rx_init[9])
+      begin
+        case (rx_adr[2:0])
+          1 : chan9_count <= rx_out[15:0];
+          2 : chan9_incr <= rx_out[31:2];
+          3 : rx_conf[9] <= 1;
+          default: rx_conf[9] <= 0;
+        endcase
+      end
+      else
+        rx_conf[9] <= 0;
+    end
+  end
+
+  always @ ( posedge rx_clk ) 
+  begin
+    if (rx_reset)
+      rx_conf[10] <= 0;
+    else
+    begin
+      if (rx_init[10])
+      begin
+        case (rx_adr[2:0])
+          1 : chan10_count <= rx_out[15:0];
+          2 : chan10_incr <= rx_out[31:2];
+          3 : rx_conf[10] <= 1;
+          default: rx_conf[10] <= 0;
+        endcase
+      end
+      else
+        rx_conf[10] <= 0;
     end
   end
 

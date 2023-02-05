@@ -450,7 +450,7 @@ ana_freq delayed (
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
 
-
+/*
 ila_1 ila_1_inst (
   .clk(clk),               // input wire clk
   .probe0(has_data),       // input wire [0:0]  probe3
@@ -459,6 +459,7 @@ ila_1 ila_1_inst (
   .probe3(phase_A),        // input wire [15:0]  probe3
   .probe4(phase_B)         // input wire [15:0]  probe3
 );
+*/
 
 generate
 begin : adc_ana_gen

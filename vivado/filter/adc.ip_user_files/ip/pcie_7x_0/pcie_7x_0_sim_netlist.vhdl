@@ -1,7 +1,7 @@
 -- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 -- --------------------------------------------------------------------------------
 -- Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
--- Date        : Sat Jan 28 21:04:08 2023
+-- Date        : Sun Feb  5 20:33:20 2023
 -- Host        : Leif-I7 running 64-bit major release  (build 9200)
 -- Command     : write_vhdl -force -mode funcsim
 --               C:/rdos/vivado/filter/adc.runs/pcie_7x_0_synth_1/pcie_7x_0_sim_netlist.vhdl
@@ -134040,7 +134040,7 @@ pcie_block_i: unisim.vcomponents.PCIE_2_1
       MSIX_CAP_PBA_OFFSET => X"00000060",
       MSIX_CAP_TABLE_BIR => 1,
       MSIX_CAP_TABLE_OFFSET => X"00000040",
-      MSIX_CAP_TABLE_SIZE => X"001",
+      MSIX_CAP_TABLE_SIZE => X"00A",
       MSI_BASE_PTR => X"48",
       MSI_CAP_64_BIT_ADDR_CAPABLE => "TRUE",
       MSI_CAP_ID => X"05",
@@ -138011,7 +138011,7 @@ entity pcie_7x_0_pcie_7x_0_pcie2_top is
   attribute c_msix_table_offset : string;
   attribute c_msix_table_offset of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "200";
   attribute c_msix_table_size : string;
-  attribute c_msix_table_size of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "001";
+  attribute c_msix_table_size of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "00A";
   attribute c_pci_cfg_space_addr : string;
   attribute c_pci_cfg_space_addr of pcie_7x_0_pcie_7x_0_pcie2_top : entity is "3F";
   attribute c_pcie_blk_locn : string;
@@ -139621,7 +139621,7 @@ architecture STRUCTURE of pcie_7x_0 is
   attribute c_msix_table_offset : string;
   attribute c_msix_table_offset of inst : label is "200";
   attribute c_msix_table_size : string;
-  attribute c_msix_table_size of inst : label is "001";
+  attribute c_msix_table_size of inst : label is "00A";
   attribute c_pci_cfg_space_addr : string;
   attribute c_pci_cfg_space_addr of inst : label is "3F";
   attribute c_pcie_blk_locn : string;

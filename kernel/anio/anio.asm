@@ -1058,7 +1058,7 @@ InitPciFreq:
 InitPciMsiXLoop:
     push cx
     mov cx,1
-    mov al,6
+    mov al,10h
     AllocateInts
     pop cx
     jc InitPciMsiXNext

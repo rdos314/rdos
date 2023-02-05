@@ -154,7 +154,6 @@ set_false_path -from [get_pins adc.rx_reset_ack_reg/C] -to [get_pins adc.pci_rx_
 set_false_path -from [get_pins adc_app_inst/adc_app.pci_on_reg[*]/C] -to [get_pins adc_app_inst/ana_*/adc_ana_gen.adc_on_1_reg/D]
 
 set_false_path -from [get_pins adc_app_inst/adc_app.pci_pend_reg[*]/C] -to [get_pins adc_app_inst/adc_app.rx_pend_1_reg[*]/D]
-set_false_path -from [get_pins adc_app_inst/adc_app.pci_pend_reg[*]_replica/C] -to [get_pins adc_app_inst/adc_app.rx_pend_1_reg[*]/D]
 
 set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_en_reg/C] -to [get_pins adc_app_inst/adc_app.up_adc_en_1_reg/D]
 set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_en_reg/C] -to [get_pins adc_app_inst/adc_app.pci_adc_en_1_reg/D]

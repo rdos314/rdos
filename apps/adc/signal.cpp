@@ -47,9 +47,18 @@ int main(int argc, char **argv)
 {
     int ok;
 
+    ok = RdosSetupAdcChannel(0, 92000000, 50);
+    ok = RdosSetupAdcChannel(1, 92100000, 50);
+    ok = RdosSetupAdcChannel(2, 92200000, 50);
+    ok = RdosSetupAdcChannel(3, 92300000, 50);
+    ok = RdosSetupAdcChannel(4, 92400000, 50);
+    ok = RdosSetupAdcChannel(5, 92500000, 50);
+    ok = RdosSetupAdcChannel(6, 92600000, 50);
+    ok = RdosSetupAdcChannel(7, 92700000, 50);
+    ok = RdosSetupAdcChannel(8, 92800000, 50);
+    ok = RdosSetupAdcChannel(9, 92900000, 50);
+    ok = RdosSetupAdcChannel(10, 93000000, 50);
 
-    ok = RdosSetupAdcChannel(0, 44700000, 25);
-    ok = RdosSetupAdcChannel(1, 92500000, 50);
 
     RdosClearAdcChannel(0);
 }
