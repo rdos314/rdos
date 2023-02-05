@@ -105,7 +105,7 @@ module pci_tx (
 
   wire [31:0]               msix_pkt_data;
 
-
+/*
 ila_0 ila_0_inst (
     .clk(clk),                           // input wire clk
     .probe0(adc_report),                // input wire [0:0]
@@ -125,6 +125,7 @@ ila_0 ila_0_inst (
     .probe14(msix_adr),                   // input wire [31:0]  probe0  
     .probe15(msix_data)                   // input wire [31:0]  probe0  
  );
+*/
 
 generate
   begin : gen_pci_tx

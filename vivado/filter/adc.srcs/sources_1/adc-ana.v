@@ -297,6 +297,12 @@ module adc_ana (
   wire [15:0]             d_phase_A;
   wire [15:0]             d_phase_B;
 
+  reg                     has_data;  
+  reg  [15:0]             amp_A;
+  reg  [15:0]             amp_B;
+  reg  [15:0]             phase_A;
+  reg  [15:0]             phase_B;
+
   reg                     base_start;
   reg  [9:0]              curr_count;
   reg                     delay_start;
@@ -444,21 +450,14 @@ ana_freq delayed (
   .phase_B(d_phase_B)     // output wire [15:0] phase_B
 );
 
+
 ila_1 ila_1_inst (
-  .clk(pci_clk),             // input wire clk
-  .probe0(fifo_empty),       // input wire [0:0]  probe3
-  .probe1(fifo_rd),          // input wire [0:0]  probe3
-  .probe2(d_pend),           // input wire [0:0]  probe3
-  .probe3(d_adr),            // input wire [1:0]  probe3
-  .probe4(d_0),              // input wire [127:0]  probe3
-  .probe5(d_1),              // input wire [127:0]  probe3
-  .probe6(d_2),              // input wire [127:0]  probe3
-  .probe7(d_3),              // input wire [127:0]  probe3
-  .probe8(update_adr),       // input wire [0:0]  probe3
-  .probe9(msix_start),       // input wire [0:0]  probe3
-  .probe10(msix_sig),        // input wire [0:0]  probe3
-  .probe11(report),          // input wire [0:0]  probe3
-  .probe12(clear)            // input wire [0:0]  probe3
+  .clk(clk),               // input wire clk
+  .probe0(has_data),       // input wire [0:0]  probe3
+  .probe1(amp_A),          // input wire [15:0]  probe3
+  .probe2(amp_B),          // input wire [15:0]  probe3
+  .probe3(phase_A),        // input wire [15:0]  probe3
+  .probe4(phase_B)         // input wire [15:0]  probe3
 );
 
 generate
@@ -1198,6 +1197,7 @@ begin : adc_ana_gen
       base_update <= 0;
       delay_update <= 0;
       adc_active <= 0;
+      has_data <= 0;
     end
     else
     begin
@@ -1205,6 +1205,7 @@ begin : adc_ana_gen
       begin
         adc_active <= 0;
         adc_delay <= 0;
+        has_data <= 0;
       end
       else
       begin
@@ -1227,6 +1228,12 @@ begin : adc_ana_gen
           end
           else
           begin
+            has_data <= 1;
+            amp_A <= b_amp_A;
+            amp_B <= b_amp_B;
+            phase_A <= b_phase_A - base_curr_phase;
+            phase_B <= b_phase_B - base_curr_phase;
+
             if (adc_run)
             begin
               if (adc_delay == 3)
@@ -1262,6 +1269,12 @@ begin : adc_ana_gen
             end
             else
             begin
+              has_data <= 1;
+              amp_A <= d_amp_A;
+              amp_B <= d_amp_B;
+              phase_A <= d_phase_A - delay_curr_phase;
+              phase_B <= d_phase_B - delay_curr_phase;
+
               if (adc_run)
               begin
                 if (adc_delay == 3)
@@ -1278,6 +1291,7 @@ begin : adc_ana_gen
           end
           else
           begin
+            has_data <= 0;
             fifo_wr <= 0;
             base_update <= 0;
             delay_update <= 0;
