@@ -151,9 +151,13 @@ set_false_path -from [get_pins adc.q_user_reset_reg/C] -to [get_pins adc.up_rese
 set_false_path -from [get_pins adc.rx_reset_req_reg/C] -to [get_pins adc.rx_reset_1_reg/D]
 set_false_path -from [get_pins adc.rx_reset_ack_reg/C] -to [get_pins adc.pci_rx_ack_1_reg/D]
 
-set_false_path -from [get_pins adc_app_inst/adc_app.pci_pend_reg[*]/C] -to [get_pins adc_app_inst/adc_app.temp_pend_reg[*]/D]
+set_false_path -from [get_pins adc_app_inst/adc_app.pci_on_reg[*]/C] -to [get_pins adc_app_inst/ana_*/adc_ana_gen.adc_on_1_reg/D]
+
+set_false_path -from [get_pins adc_app_inst/adc_app.pci_pend_reg[*]/C] -to [get_pins adc_app_inst/adc_app.rx_pend_1_reg[*]/D]
+set_false_path -from [get_pins adc_app_inst/adc_app.pci_pend_reg[*]_replica/C] -to [get_pins adc_app_inst/adc_app.rx_pend_1_reg[*]/D]
 
 set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_en_reg/C] -to [get_pins adc_app_inst/adc_app.up_adc_en_1_reg/D]
+set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_en_reg/C] -to [get_pins adc_app_inst/adc_app.pci_adc_en_1_reg/D]
 set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_sync_fail_cnt_reg[1]/C] -to [get_pins adc_app_inst/adc_app.adc_sync_fail_1_reg/D]
 set_false_path -from [get_pins daq2_app_inst/daq2_app.adc_sync_ok_cnt_reg[15]/C] -to [get_pins adc_app_inst/adc_app.adc_sync_ok_1_reg/D]
 

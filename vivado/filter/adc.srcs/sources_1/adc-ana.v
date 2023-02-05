@@ -1211,23 +1211,6 @@ begin : adc_ana_gen
   always @ ( posedge clk ) 
   begin
     if (reset)
-      msix_start <= 0;
-    else
-    begin
-      if (msix_clear)
-        msix_start <= 0;
-      else
-      begin    
-        if (adc_on & pend_run)
-          if (!adc_run)
-            msix_start <= 1;
-      end
-    end
-  end
-
-  always @ ( posedge clk ) 
-  begin
-    if (reset)
     begin
       fifo_wr <= 0;
       base_update <= 0;
@@ -1390,6 +1373,23 @@ begin : adc_ana_gen
       d_pend <= 1;
     else
       d_pend <= 0;
+  end
+
+  always @ ( posedge clk ) 
+  begin
+    if (reset)
+      msix_start <= 0;
+    else
+    begin
+      if (msix_clear)
+        msix_start <= 0;
+      else
+      begin    
+//        if (pci_on & pend_run)
+//          if (!adc_run)
+//            msix_start <= 1;
+      end
+    end
   end
 
   always @ ( posedge pci_clk ) 
