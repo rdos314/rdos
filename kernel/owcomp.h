@@ -1218,10 +1218,6 @@
     CallGate_add_wait_for_syslog  \
     __parm [__ebx] [__eax] [__ecx]
 
-#pragma aux RdosAddWaitForAdc = \
-    CallGate_add_wait_for_adc  \
-    __parm [__ebx] [__eax] [__ecx]
-
 #pragma aux RdosCreateSignal = \
     CallGate_create_signal  \
     ValidateHandle  \
@@ -1767,25 +1763,6 @@
     "mov al,ah" \
     "xor ah,ah" \
     __parm [__ebx] [__fs __esi] [__gs __edx] [__gs __eax] [__es __edi] [__ecx] \
-    __value [__eax]
-
-#pragma aux RdosOpenAdc = \
-    CallGate_open_adc  \
-    ValidateHandle \
-    __parm [__eax] \
-    __value [__ebx]
-
-#pragma aux RdosCloseAdc = \
-    CallGate_close_adc  \
-    __parm [__ebx]
-
-#pragma aux RdosDefineAdcTime = \
-    CallGate_define_adc_time  \
-    __parm [__ebx] [__edx] [__eax]
-
-#pragma aux RdosReadAdc = \
-    CallGate_read_adc  \
-    __parm [__ebx] \
     __value [__eax]
 
 #pragma aux RdosReadSerialLines = \
