@@ -922,7 +922,7 @@ int RDOSAPI RdosOpenSyslog();
 void RDOSAPI RdosCloseSyslog(int handle);
 int RDOSAPI RdosGetSyslog(int handle, int *severity, unsigned long *msb, unsigned long *lsb, char *buf, int size);
 
-int RDOSAPI RdosOpenAdcChannel(int channel);
+int RDOSAPI RdosOpenAdcChannel(int Channel, int Freq, int Periods);
 void RDOSAPI RdosCloseAdcChannel(int handle);
 
 void RDOSAPI RdosSetupAdc(char TestMode, char Speed, int BufCount);

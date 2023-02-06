@@ -3586,13 +3586,12 @@
 #pragma aux RdosOpenAdcChannel = \
     CallGate_open_adc_chan  \
     ValidateHandle \
-    __parm [__eax] \
+    __parm [__ebx] [__eax] [__ecx] \
     __value [__ebx]
 
 #pragma aux RdosCloseAdcChannel = \
     CallGate_close_adc_chan  \
     __parm [__ebx]
-
 #pragma aux RdosSetupAdc = \
     CallGate_setup_adc  \
     __parm [__al] [__ah] [__ecx]
