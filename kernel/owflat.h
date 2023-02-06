@@ -2615,8 +2615,8 @@
     CallGate_add_wait_for_syslog  \
     __parm [__ebx] [__eax] [__ecx]
 
-#pragma aux RdosAddWaitForAdc = \
-    CallGate_add_wait_for_adc  \
+#pragma aux RdosAddWaitForAdcChannel = \
+    CallGate_add_wait_for_adc_chan  \
     __parm [__ebx] [__eax] [__ecx]
 
 #pragma aux RdosCreateSignal = \
@@ -3583,25 +3583,15 @@
     __parm [__ebx] [__esi] [__edx] [__eax] [__edi] [__ecx] \
     __value [__eax]
 
-#pragma aux RdosOpenAdc = \
-    CallGate_open_adc  \
+#pragma aux RdosOpenAdcChannel = \
+    CallGate_open_adc_chan  \
     ValidateHandle \
     __parm [__eax] \
     __value [__ebx]
 
-#pragma aux RdosCloseAdc = \
-    CallGate_close_adc  \
+#pragma aux RdosCloseAdcChannel = \
+    CallGate_close_adc_chan  \
     __parm [__ebx]
-
-#pragma aux RdosDefineAdcTime = \
-    CallGate_define_adc_time  \
-    __parm [__ebx] [__edx] [__eax]
-
-#pragma aux RdosReadAdc = \
-    CallGate_read_adc  \
-    __parm [__ebx] \
-    __value [__eax]
-
 
 #pragma aux RdosSetupAdc = \
     CallGate_setup_adc  \
@@ -3624,17 +3614,6 @@
 #pragma aux RdosSetAdcTrigger = \
     CallGate_set_adc_trigger  \
     __parm [__eax] [__cl]
-
-
-#pragma aux RdosSetupAdcChannel = \
-    CallGate_setup_adc_chan  \
-    CarryToBool \
-    __parm [__ebx] [__eax] [__ecx] \
-    __value [__eax]
-
-#pragma aux RdosClearAdcChannel = \
-    CallGate_clear_adc_chan  \
-    __parm [__ebx]
 
 #pragma aux RdosReadSerialLines = \
     "mov dh,cl" \

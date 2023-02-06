@@ -263,9 +263,10 @@ read_key_event_nr           = 241
 add_wait_for_mouse_nr           = 242
 remove_wait_nr              = 243
 
-add_wait_for_adc_nr                     = 244
-open_adc_nr                                     = 245
-close_adc_nr                            = 246
+add_wait_for_adc_chan_nr    = 244
+open_adc_chan_nr            = 245
+close_adc_chan_nr           = 246
+
 define_adc_time_nr                      = 247
 read_adc_nr                                     = 248
 
@@ -977,8 +978,5 @@ get_pci_interface_nr              = 798
 get_pci_msi_nr                    = 799
 get_pci_msix_nr                   = 800
 is_pci_function_used_nr           = 801
-
-setup_adc_chan_nr                 = 802
-clear_adc_chan_nr                 = 803
 
 usergate_entries                  = 820

@@ -897,4 +897,6 @@ link_usergate_nr            = 815
 set_pci_device_name_nr      = 816
 get_msi_vector_nr           = 817
 
+add_wait_for_adc_chan_nr    = 818
+
 osgate_entries              = 850

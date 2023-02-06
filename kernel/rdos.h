@@ -725,7 +725,7 @@ void RDOSAPI RdosRemoveWait(int Handle, int ID);
 void RDOSAPI RdosAddWaitForKeyboard(int Handle, int ID);
 void RDOSAPI RdosAddWaitForMouse(int Handle, int ID);
 void RDOSAPI RdosAddWaitForCom(int Handle, int ComHandle, int ID);
-void RDOSAPI RdosAddWaitForAdc(int Handle, int AdcHandle, int ID);
+void RDOSAPI RdosAddWaitForAdcChannel(int Handle, int AdcHandle, int ID);
 void RDOSAPI RdosAddWaitForSysLog(int Handle, int SyslogHandle, int ID);
 
 int RDOSAPI RdosCreateSignal(void);
@@ -922,20 +922,14 @@ int RDOSAPI RdosOpenSyslog();
 void RDOSAPI RdosCloseSyslog(int handle);
 int RDOSAPI RdosGetSyslog(int handle, int *severity, unsigned long *msb, unsigned long *lsb, char *buf, int size);
 
-int RDOSAPI RdosOpenAdc(int channel);
-void RDOSAPI RdosCloseAdc(int handle);
-void RDOSAPI RdosDefineAdcTime(int handle, unsigned long msg, unsigned long lsb);
-long RDOSAPI RdosReadAdc(int handle);
+int RDOSAPI RdosOpenAdcChannel(int channel);
+void RDOSAPI RdosCloseAdcChannel(int handle);
 
 void RDOSAPI RdosSetupAdc(char TestMode, char Speed, int BufCount);
 int RDOSAPI RdosStartAdc();
 void RDOSAPI RdosStopAdc();
 int RDOSAPI RdosMapAdcBlock(int Index, void *Buf);
 void RDOSAPI RdosSetAdcTrigger(int PhaseIncr, char WindowBits);
-
-int RDOSAPI RdosSetupAdcChannel(int Chan, int Freq, int Periods);
-void RDOSAPI RdosClearAdcChannel(int Chan);
-
 
 int RDOSAPI RdosReadSerialLines(int device, int *val);
 int RDOSAPI RdosToggleSerialLine(int device, int line);
