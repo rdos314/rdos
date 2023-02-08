@@ -47,7 +47,6 @@ include vfsuser.inc
 
 MAX_FILE_REQ_ENTRIES = 8
 MAX_FILE_REQ_COUNT   = 64
-MAX_FILE_USERS       = 256
 MAX_FILE_WAITS       = 16
 
 file_handle_seg  STRUC
@@ -72,6 +71,10 @@ frh_pad            DW ?
 
 file_req_header    ENDS
 
+;
+; entries into fse_phys_data
+;
+
 file_req_entry    STRUC
 
 fre_pos            DD ?,?
@@ -82,6 +85,10 @@ fre_arr            DD ?,?
 
 file_req_entry    ENDS
 
+;
+; entries into fse_req_arr
+;
+
 file_req_link  STRUC
 
 frl_pos            DD ?,?
@@ -91,6 +98,10 @@ frl_link           DW ?
 frl_wait_list      DW ?
 
 file_req_link  ENDS
+
+;
+; entries into fse_wait_arr
+;
 
 file_wait  STRUC
 
@@ -104,7 +115,7 @@ file_struc    STRUC
 fse_info          DB 1000h DUP(?)  ; aliased file info
 
 fse_info_phys     DD ?,?
-fse_insert        DD ?
+fse_phys_insert   DD ?
 fse_sector_size   DW ?
 fse_req_count     DW ?
 fse_req_list      DW ?
@@ -113,9 +124,10 @@ fse_section       section_typ <>
 fse_pad           DW ?
 
 fse_wait_arr      DD MAX_FILE_WAITS DUP(?)
-fse_user_arr      DD MAX_FILE_USERS DUP(?)
 fse_req_arr       DD MAX_FILE_REQ_COUNT DUP(?,?,?,?,?)
 fse_sorted_arr    DD MAX_FILE_REQ_COUNT DUP(?)
+
+fse_phys_data     DB ?
 
 file_struc    ENDS
 
@@ -186,13 +198,8 @@ CreateFileSel    Proc near
 ;
     mov es:fse_sector_size,cx
     mov es:fse_req_count,0
-    mov es:fse_insert,SIZE file_struc
+    mov es:fse_phys_insert,OFFSET fse_phys_data
     InitSection es:fse_section
-;
-    mov edi,OFFSET fse_user_arr
-    xor eax,eax
-    mov ecx,MAX_FILE_USERS
-    rep stosd
 ;
     mov ecx,MAX_FILE_WAITS - 1
     mov edi,OFFSET fse_wait_arr
@@ -698,9 +705,6 @@ nosAddFirst:
     jmp nosDone
 
 nosCheck:
-    cmp ecx,6Eh  ; test only. Remove later!!
-    je nosNew
-;
     cmp edx,[ebp].nfe_curr+4
     jne nosNew
 ;
@@ -931,7 +935,7 @@ nfdFound:
     mov edi,gs:vfs_rd_chain_ptr
     mov ecx,gs:vfs_rd_sectors
 ;
-    mov esi,ds:fse_insert
+    mov esi,ds:fse_phys_insert
     mov ds:[ebx].frl_ptr,esi
     mov [ebp].nfe_entry,esi
     mov eax,gs:vfs_rd_req_handle
@@ -976,7 +980,7 @@ nfdTerm:
 
 nfdOk:
     mov esi,[ebp].nfe_ptr
-    mov ds:fse_insert,esi
+    mov ds:fse_phys_insert,esi
 ;
     mov eax,[ebp].nfe_pos
     sub eax,gs:vfs_rd_start
