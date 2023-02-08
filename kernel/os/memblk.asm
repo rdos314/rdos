@@ -1095,16 +1095,16 @@ abLoop1:
     cmp eax,-1
     je abNext1
 ;
+    push ecx
     not eax
     bsf ecx,eax
 ;
     add cx,dx
     mov bx,es:[si].mblk_bitmap_offset
     lock bts es:[bx],cx
-    jc abLoop1
-;
     mov bx,cx
-    clc
+    pop ecx
+    jc abLoop1
     jmp abDone1
 
 abNext1:
@@ -1429,16 +1429,16 @@ aebLoop1:
     cmp eax,-1
     je aebNext1
 ;
+    push ecx
     not eax
     bsf ecx,eax
 ;    
     add cx,dx
     mov bx,es:mblke_bitmap_offset
     lock bts es:[bx],cx
-    jc aebLoop1
-;
     mov bx,cx
-    clc
+    pop ecx
+    jc aebLoop1
     jmp aebDone1
 
 aebNext1:
