@@ -54,6 +54,7 @@ kernel_map_buf    ENDS
 kernel_file_map   STRUC
 
 kfm_section       section_typ <>
+kfm_sector_size   DW ?
 kfm_flat_base     DD ?
 kfm_block_arr     DW 16 DUP(?)
 kfm_buf_arr       DD 4 * 256 DUP(?)
@@ -72,7 +73,7 @@ code    SEGMENT byte public 'CODE'
 ;   DESCRIPTION:    Allocate new memory block
 ;
 ;   RETURNS:        ES      User mode block selector
-;                   FS      Kernel mode selector
+;                   DS      Kernel mode selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -88,21 +89,21 @@ AllocateBlock     Proc near
     rep stos byte ptr es:[edi]
 ;
     mov eax,es
-    mov fs,eax
+    mov ds,eax
 ;
     mov ax,system_data_sel
     mov es,ax
     mov eax,es:flat_base
-    mov fs:kfm_flat_base,eax
+    mov ds:kfm_flat_base,eax
 ;
     mov eax,1000h
     AllocateLocalLinear
 ;
-    sub edx,fs:kfm_flat_base    
+    sub edx,ds:kfm_flat_base    
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector32
-    add edx,fs:kfm_flat_base    
+    add edx,ds:kfm_flat_base    
     mov es,bx
 ;
     xor edi,edi
@@ -124,12 +125,11 @@ AllocateBlock     Endp
 ;   DESCRIPTION:    Init memory block
 ;
 ;   PARAMETERS:     ES      User mode block selector
-;                   FS      Kernel mode selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitBlock     Proc near
-    pusha
+    pushad
 ;
     mov es:fmh_sign,FILE_MAP_BASE_SIGN
 ;
@@ -192,7 +192,7 @@ ibDone:
     shr ax,2
     mov es:fmh_bitmap_dd_count,ax
 ;
-    popa
+    popad
     ret
 InitBlock     Endp    
 
@@ -203,7 +203,7 @@ InitBlock     Endp
 ;
 ;   DESCRIPTION:    Allocate new extended memory block
 ;
-;   PARAMETERS:     FS      Kernel mode selector
+;   PARAMETERS:     DS      Kernel mode selector
 ;
 ;   RETURNS:        ES      User mode extend selector
 ;
@@ -215,11 +215,11 @@ AllocateExtend     Proc near
     mov eax,1000h
     AllocateLocalLinear
 ;
-    sub edx,fs:kfm_flat_base    
+    sub edx,ds:kfm_flat_base    
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector32
-    add edx,fs:kfm_flat_base    
+    add edx,ds:kfm_flat_base    
     mov es,bx
 ;
     xor edi,edi
@@ -241,7 +241,6 @@ AllocateExtend     Endp
 ;   DESCRIPTION:    Init extended memory block
 ;
 ;   PARAMETERS:     ES      User mode extend selector
-;                   FS      Kernel mode selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -738,7 +737,7 @@ AllocateBase    Endp
 ;   DESCRIPTION:    Allocate memory block
 ;
 ;   PARAMETERS:     ES      User mode file selector
-;                   FS      Kernel mode selector
+;                   DS      Kernel mode selector
 ;                   CX      Size
 ;
 ;   RETURNS:        DX      Block #
@@ -772,7 +771,7 @@ ambExtend:
     mov edi,2
 
 ambExtendLoop:
-    mov ax,fs:[edi].kfm_block_arr
+    mov ax,ds:[edi].kfm_block_arr
     cmp ax,-1
     stc
     je ambExtendNext
@@ -781,7 +780,7 @@ ambExtendLoop:
     jne ambCheck
 ;
     mov ax,-1
-    xchg ax,fs:[edi].kfm_block_arr
+    xchg ax,ds:[edi].kfm_block_arr
     cmp ax,-1
     stc
     je ambExtendNext
@@ -789,14 +788,14 @@ ambExtendLoop:
     or ax,ax
     jz ambAllocate
 ;
-    mov fs:[edi].kfm_block_arr,ax
+    mov ds:[edi].kfm_block_arr,ax
     jmp ambCheck
 
 ambAllocate:
     push es
 ;
     call AllocateExtend
-    mov fs:[edi].kfm_block_arr,es
+    mov ds:[edi].kfm_block_arr,es
 ;
     call InitExtend
     call AllocateBase
@@ -981,7 +980,7 @@ FreeBase    Endp
 ;   DESCRIPTION:    Free memory block
 ;
 ;   PARAMETERS:     ES      User mode file selector
-;                   FS      Kernel mode selector
+;                   DS      Kernel mode selector
 ;                   DX      Block #
 ;                   BX      Offset
 ;                   CX      Size
@@ -996,7 +995,7 @@ FreeBlk     Proc near
 ;    
     movzx edi,dx
     shl edi,1
-    mov ax,fs:[edi].kfm_block_arr
+    mov ax,ds:[edi].kfm_block_arr
     or ax,ax
     jz fpDone
 ;
@@ -1012,6 +1011,40 @@ fpDone:
     popad
     ret
 FreeBlk     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateFileSel
+;
+;       DESCRIPTION:    Create file selector
+;
+;       PARAMETERS:     CX             Sector size
+;                       EDX            File info linear
+;
+;       RETURNS:        NC
+;                         AX           File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateFileSel
+
+CreateFileSel	Proc near
+    push ds
+    push es
+;
+    int 3
+    call AllocateBlock
+    call InitBlock
+;
+    InitSection ds:kfm_section
+    mov ds:kfm_sector_size,cx
+    mov ax,ds
+;
+    pop es
+    pop ds
+    ret
+CreateFileSel   Endp
 
 code    ENDS
 

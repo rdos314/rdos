@@ -161,8 +161,6 @@ code    SEGMENT byte public 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public CreateFileSel
-
 CreateFileSel    Proc near
     push es
     push ebx
