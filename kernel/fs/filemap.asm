@@ -33,6 +33,8 @@ INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
 include ..\handle.inc
 INCLUDE ..\filemap.inc
+include vfs.inc
+include vfsmsg.inc
 
     .386p
 
@@ -65,6 +67,15 @@ kernel_file_map   ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+
+    extern AllocateMsg:near
+    extern RunMsg:near
+    extern PostMsg:near
+    extern BlockToBuf:near
+    extern GetDrivePart:near
+    extern GetPathDrive:near
+    extern GetRelDir:near
+    extern HandleHighToPartFs:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1085,7 +1096,78 @@ open_file_name       DB 'Open VFS File',0
 org_open DD ?,?
 
 open_vfs_file    Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov gs,eax
+;
+    call GetPathDrive
+    jc ovfFail
+;
+    call GetDrivePart
+    or bx,bx
+    jz ovfFail
+;
+    mov ah,es:[edi]
+    cmp ah,'/'
+    je ovfRoot
+;
+    cmp ah,'\'
+    je ovfRoot
+
+ovfRel:
+    call GetRelDir
+    jmp ovfHasStart
+
+ovfRoot:
+    inc edi
+    xor ax,ax
+
+ovfHasStart:
+    mov esi,edi
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    movzx eax,ax
+    call AllocateMsg
+
+ovfCopyPath:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz ovfCopyPath
+;
+    mov eax,VFS_OPEN_FILE
+    call RunMsg
+    jc ovfFail
+;
+    int 3
+    clc
+    jmp ovfDone
+
+ovfFail:
     stc
+
+ovfDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
 open_vfs_file    Endp
 
