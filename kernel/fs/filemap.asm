@@ -31,6 +31,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
+include ..\handle.inc
 INCLUDE ..\filemap.inc
 
     .386p
@@ -1045,6 +1046,190 @@ CreateFileSel	Proc near
     pop ds
     ret
 CreateFileSel   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           NotifyFileData
+;
+;       DESCRIPTION:    Notify file data
+;
+;       PARAMETERS:     GS                 File req
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public NotifyFileData
+
+NotifyFileData	Proc near
+    int 3
+    ret
+NotifyFileData  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenFile
+;
+;       DESCRIPTION:    Open file
+;
+;       PARAMETERS:     ES:(E)DI       Pathname
+;
+;       RETURNS:        NC
+;                         BX           Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_file_name       DB 'Open VFS File',0
+
+org_open DD ?,?
+
+open_vfs_file    Proc near
+    stc
+    ret
+open_vfs_file    Endp
+
+open_file16  Proc far
+    push edi
+    movzx edi,di
+    call open_vfs_file
+    jnc ovf16Done
+;
+    call fword ptr cs:org_open
+
+ovf16Done:
+    pop edi
+    ret
+open_file16  Endp
+
+open_file32  Proc far
+    call open_vfs_file
+    jnc ovf32Done
+;
+    call fword ptr cs:org_open
+
+ovf32Done:
+    ret
+open_file32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadFile
+;
+;       DESCRIPTION:    Read file
+;
+;       PARAMETERS:     BX             Handle
+;                       ES:(E)DI       Buffer
+;                       (E)CX          Size
+;
+;       RETURNS:        NC
+;                         EAX          Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_file_name       DB 'Read VFS File',0
+
+org_read DD ?,?
+
+read_file16  Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call fword ptr cs:org_read
+;
+    pop edi
+    pop ecx
+    ret
+read_file16  Endp
+
+read_file32  Proc far
+    call fword ptr cs:org_read
+    ret
+read_file32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Delete handle
+;
+;           DESCRIPTION:    Delete a handle (called from handle module)
+;
+;           PARAMETERS:     BX              HANDLE TO FILE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle   Proc far
+    push ds
+    push ax
+    push ebx
+    push edx
+;
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    jc dhDone
+;
+    FreeHandle
+    clc
+
+dhDone:
+    pop edx
+    pop ebx
+    pop ax
+    pop ds
+    ret
+delete_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           init_client_file
+;
+;       description:    Init file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public init_client_file
+
+init_client_file    Proc near
+    mov ebx,cs
+    mov ds,ebx
+    mov es,ebx
+    GetSelectorBaseSize
+    AllocateGdt
+    CreateDataSelector32
+    mov fs,bx
+;
+    mov edi,OFFSET delete_handle
+    mov ax,VFS_FILE_HANDLE
+    RegisterHandle
+;
+    mov ebx,OFFSET open_file16
+    mov esi,OFFSET open_file32
+    mov edi,OFFSET open_file_name
+    mov dx,virt_es_in
+    mov ax,open_file_nr
+    LinkUserGate
+    mov dword ptr fs:org_open,eax
+    mov word ptr fs:org_open+4,dx
+;
+    mov ebx,OFFSET read_file16
+    mov esi,OFFSET read_file32
+    mov edi,OFFSET read_file_name
+    mov dx,virt_es_in
+    mov ax,read_file_nr
+    LinkUserGate
+    mov dword ptr fs:org_read,eax
+    mov word ptr fs:org_read+4,dx
+;
+    mov ebx,fs
+    xor eax,eax
+    mov fs,eax
+    FreeGdt    
+    ret
+init_client_file    Endp
 
 code    ENDS
 

@@ -863,8 +863,6 @@ NotifyShrinkReq    Endp
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public NotifyFileData
-
 NotifyFileData	Proc near
     push ds
     push es
@@ -1544,8 +1542,6 @@ test_pr    Endp
 ;       description:    Init file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public init_client_file
 
 init_client_file    Proc near
     mov ebx,cs
