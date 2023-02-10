@@ -25,27 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-VFS_FILE_SIGN            = 'F'
-
-file_info_struc  STRUC
-
-fi_fs_size           DD ?,?
-fi_req_size          DD ?,?
-fi_access            DD ?,?
-fi_modify            DD ?,?
-fi_attrib            DD ?
-fi_flags             DD ?
-fi_uid               DD ?
-fi_gid               DD ?
-fi_kernel_handle     DD ?
-fi_serv_handle       DD ?
-fi_disc              DB ?
-fi_drive             DB ?
-fi_part              DB ?
-fi_name              DB ?
-
-file_info_struc  ENDS
-
 user_file_share    STRUC
 
 ufs_info              DB 1000h DUP(?)  ; aliased file info

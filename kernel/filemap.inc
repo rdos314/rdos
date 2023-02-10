@@ -25,38 +25,38 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FILE_MAP_BASE_SIGN     = 0FA67h
-FILE_MAP_EXTEND_SIGN   = 045A8h
+VFS_FILE_SIGN            = 'F'
 
-file_map_header	STRUC
+file_info_struc  STRUC
 
-fmh_adr             DD ?
-fmh_bitmap_offset   DW ?
-fmh_data_offset     DW ?
-fmh_bitmap_dd_count DW ?
-fmh_free_bits       DW ?
-fmh_sign            DW ?
-fmh_size_shift      DB ?
-fmh_pad             DB ?
+fi_fs_size           DD ?,?
+fi_req_size          DD ?,?
+fi_access            DD ?,?
+fi_modify            DD ?,?
+fi_attrib            DD ?
+fi_flags             DD ?
+fi_uid               DD ?
+fi_gid               DD ?
+fi_kernel_handle     DD ?
+fi_serv_handle       DD ?
+fi_disc              DB ?
+fi_drive             DB ?
+fi_part              DB ?
+fi_name              DB ?
 
-file_map_header	ENDS
-
-file_map_buf  STRUC
-
-fmb_pos             DD ?,?
-fmb_size            DD ?
-fmb_wr_bitmap       DD ?
-fmb_ptr             DD ?
-
-file_map_buf  ENDS
+file_info_struc  ENDS
 
 file_map_entry  STRUC
 
-fme_header          file_map_header <>
-fme_info            DD ?
-fme_user_handle     DW ?
-fme_kernel_handle   DW ?
-fme_pos             DD ?,?
-fme_buf_arr         DD 256 DUP(?)
+fmb_pos             DD ?,?
+fmb_size            DD ?
+fmb_base            DD ?
 
 file_map_entry  ENDS
+
+file_map  STRUC
+
+fm_sorted_arr       DW 256 DUP(?)
+fm_entry_arr        DB 224 * 16 DUP(?)
+
+file_map  ENDS

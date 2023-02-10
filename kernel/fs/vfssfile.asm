@@ -38,6 +38,7 @@ include ..\wait.inc
 include ..\os\protseg.def
 include ..\fs.inc
 include ..\os\exec.def
+include ..\filemap.inc
 include vfs.inc
 include vfsmsg.inc
 include vfsfile.inc
