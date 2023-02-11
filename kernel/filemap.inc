@@ -56,7 +56,8 @@ file_map_entry  ENDS
 
 file_map  STRUC
 
-fm_sorted_arr       DW 256 DUP(?)
+fm_sorted_arr       DW 255 DUP(?)
+fm_lock             DW ?
 fm_entry_arr        DB 224 * 16 DUP(?)
 
 file_map  ENDS
