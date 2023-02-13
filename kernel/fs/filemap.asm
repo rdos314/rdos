@@ -41,6 +41,17 @@ include vfsfile.inc
 
     .386p
 
+
+file_handle_seg     STRUC
+
+fh_base       handle_header <>
+
+fh_sel        DW ?
+fh_handle     DW ?
+
+file_handle_seg     ENDS
+
+
 kernel_file       STRUC
 
 kf_memblk         mem_blk_header <>
@@ -505,7 +516,6 @@ ovfCopyPath:
     call GetFileSel
     jc ovfFail
 ;
-    int 3
     mov ds,eax
     call GetProgSel
     jnc ovfHasProc
@@ -515,6 +525,16 @@ ovfCopyPath:
 ovfHasProc:
     mov ds,eax
     call AllocateUserHandle
+    jc ovfFail
+;
+    mov ax,bx
+    mov dx,ds
+    mov cx,SIZE file_handle_seg
+    AllocateHandle
+    mov [ebx].fh_sel,dx
+    mov [ebx].fh_handle,ax
+    mov [ebx].hh_sign,VFS_FILE_HANDLE
+    movzx ebx,[ebx].hh_handle
     clc
     jmp ovfDone
 
@@ -578,21 +598,56 @@ read_file_name       DB 'Read VFS File',0
 
 org_read DD ?,?
 
+read_vfs_file  Proc near
+    ret
+read_vfs_file  Endp
+
 read_file16  Proc far
+    push ds
+    push ebx
     push ecx
     push edi
 ;
     movzx ecx,cx
     movzx edi,di
-    call fword ptr cs:org_read
 ;
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    jc rfOrg16
+;
+    int 3
+    call read_vfs_file
+    jmp rfDone16
+
+rfOrg16:
+    call fword ptr cs:org_read
+
+rfDone16:
     pop edi
     pop ecx
+    pop ebx
+    pop ds
     ret
 read_file16  Endp
 
 read_file32  Proc far
+    push ds
+    push ebx
+;
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    jc rfOrg32
+;
+    int 3
+    call read_vfs_file
+    jmp rfDone32
+
+rfOrg32:
     call fword ptr cs:org_read
+
+rfDone32:
+    pop ebx
+    pop ds
     ret
 read_file32  Endp
 
