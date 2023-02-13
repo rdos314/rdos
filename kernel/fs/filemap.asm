@@ -56,9 +56,10 @@ kernel_file_map   STRUC
 
 kfm_wait_arr      DW 224 DUP(?)
 kfm_flat_base     DD ?
-kfm_map_base      DD ?
+kfm_user_base     DD ?
 kfm_prog_sel      DW ?
 kfm_file_sel      DW ?
+kfm_kernel_sel    DW ?
 kfm_next_map      DW ?
 kfm_section       section_typ <>
 
@@ -245,6 +246,7 @@ CreateProgSel	Proc near
     push edx
     push esi
     push edi
+    push ebp
 ;
     mov ax,system_data_sel
     mov es,ax
@@ -257,6 +259,10 @@ CreateProgSel	Proc near
     mov ax,flat_data_sel
     mov es,eax
 ;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ebp,edx
+;
     mov eax,3000h
     AllocateLocalLinear
 ;
@@ -265,20 +271,32 @@ CreateProgSel	Proc near
     xor eax,eax
     mov ecx,800h
     rep stosd
-    int 3
+;
+    mov eax,edx
+    add eax,1000h
+    mov es:[edx].fm_handle_ptr,eax
+    add eax,1000h
+    mov es:[edx].fm_info_ptr,eax
 ;
     push ebx
     push edx
 ;
     add edx,ebx
-    GetPageEntry
-    mov al,65h
-    SetPageEntry
-;
     add edx,2000h
     mov eax,ds:kf_info_phys
     mov ebx,ds:kf_info_phys+4
     or ax,865h
+    SetPageEntry
+;
+    sub edx,2000h
+    GetPageEntry
+    and ax,0F000h
+    or ax,865h
+    SetPageEntry
+;
+    mov edx,ebp
+    and ax,0F000h
+    or ax,67h
     SetPageEntry
 ;
     pop edx
@@ -294,9 +312,15 @@ CreateProgSel	Proc near
     rep stosd
 ;
     mov es:kfm_flat_base,ebx
-    mov es:kfm_map_base,edx
+    mov es:kfm_user_base,edx
     mov es:kfm_prog_sel,si
     mov es:kfm_file_sel,ds
+;
+    AllocateGdt
+    mov ecx,1000h
+    mov edx,ebp
+    CreateDataSelector32
+    mov es:kfm_kernel_sel,bx
 ;
     EnterSection ds:kf_section
     mov bx,ds:kf_prog_list
@@ -305,6 +329,7 @@ CreateProgSel	Proc near
     LeaveSection ds:kf_section
     mov ax,es
 ;
+    pop ebp
     pop edi
     pop esi
     pop edx
@@ -313,6 +338,78 @@ CreateProgSel	Proc near
     pop es
     ret
 CreateProgSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateUserHandle
+;
+;       DESCRIPTION:    Allocate user handle
+;
+;       PARAMETERS:     DS		Prog sel
+;
+;       RETURNS:        NC
+;                         BX            User handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateUserHandle	Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+    push esi
+;
+    mov bx,flat_data_sel
+    mov es,ebx
+    mov edx,ds:kfm_user_base
+    mov edx,es:[edx].fm_handle_ptr
+    add edx,OFFSET fh_bitmap
+    mov ecx,15
+    xor esi,esi
+
+auhLoop:
+    mov eax,es:[edx]
+    cmp eax,-1
+    je auhNext
+;
+    not eax
+    bsf ebx,eax
+;
+    lock bts es:[edx],ebx
+    jc auhLoop
+;
+    add ebx,esi
+;
+    mov esi,ebx
+    mov edx,ds:kfm_user_base
+    mov edx,es:[edx].fm_handle_ptr
+    shl esi,3
+    add edx,esi
+    xor eax,eax
+    mov es:[edx],eax
+    add edx,4
+    mov es:[edx],eax
+;
+    inc ebx
+    clc
+    jmp auhDone
+
+auhNext:
+    add esi,32
+    add edx,4
+    loop auhLoop
+;
+    stc
+
+auhDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+AllocateUserHandle      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -417,6 +514,7 @@ ovfCopyPath:
 
 ovfHasProc:
     mov ds,eax
+    call AllocateUserHandle
     clc
     jmp ovfDone
 
