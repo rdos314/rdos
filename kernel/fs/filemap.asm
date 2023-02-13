@@ -34,6 +34,7 @@ INCLUDE ..\os\system.def
 include ..\handle.inc
 INCLUDE ..\filemap.inc
 INCLUDE ..\os\memblk.inc
+INCLUDE ..\os\exec.def
 include vfs.inc
 include vfsmsg.inc
 include vfsfile.inc
@@ -56,6 +57,7 @@ kernel_file_map   STRUC
 kfm_wait_arr      DW 224 DUP(?)
 kfm_flat_base     DD ?
 kfm_map_base      DD ?
+kfm_handle_base   DD ?
 kfm_prog_sel      DW ?
 kfm_file_sel      DW ?
 kfm_next_map      DW ?
@@ -66,6 +68,12 @@ kfm_section       section_typ <>
 ;
 
 kernel_file_map   ENDS
+
+data    SEGMENT byte public 'DATA'
+
+sys_section       section_typ <>
+
+data    ENDS
 
 code    SEGMENT byte public 'CODE'
 
@@ -242,6 +250,7 @@ CreateProgSel	Proc near
     push edx
     push esi
     push edi
+    push ebp
 ;
     mov ax,system_data_sel
     mov es,ax
@@ -250,6 +259,8 @@ CreateProgSel	Proc near
     GetThread
     mov es,ax
     mov si,es:p_prog_sel
+    mov es,si
+    mov ebp,es:pr_file_linear
 ;
     mov ax,flat_data_sel
     mov es,eax
@@ -284,6 +295,7 @@ CreateProgSel	Proc near
 ;
     mov es:kfm_flat_base,ebx
     mov es:kfm_map_base,edx
+    mov es:kfm_handle_base,ebp
     mov es:kfm_prog_sel,si
     mov es:kfm_file_sel,ds
 ;
@@ -294,6 +306,7 @@ CreateProgSel	Proc near
     LeaveSection ds:kf_section
     mov ax,es
 ;
+    pop ebp
     pop edi
     pop esi
     pop edx
@@ -531,6 +544,10 @@ delete_handle   Endp
     public init_client_file
 
 init_client_file    Proc near
+    mov bx,SEG data
+    mov ds,ebx
+    InitSection ds:sys_section
+;
     mov ebx,cs
     mov ds,ebx
     mov es,ebx

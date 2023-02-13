@@ -60,4 +60,15 @@ fm_sorted_arr       DW 255 DUP(?)
 fm_lock             DW ?
 fm_entry_arr        DB 224 * 16 DUP(?)
 
+fm_info             file_info_struc <>
+
 file_map  ENDS
+
+file_handle_entry   STRUC
+
+fhe_pos             DD ?,?
+fhe_map             DD ?
+fhe_handle          DW ?
+fhe_resv            DW ?
+
+file_handle_entry   ENDS
