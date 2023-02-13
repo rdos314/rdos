@@ -443,9 +443,9 @@ NotifyFileData  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           OpenFile
+;       NAME:           open_vfs_file
 ;
-;       DESCRIPTION:    Open file
+;       DESCRIPTION:    Open VFS file
 ;
 ;       PARAMETERS:     ES:(E)DI       Pathname
 ;
@@ -453,10 +453,6 @@ NotifyFileData  Endp
 ;                         BX           Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_file_name       DB 'Open VFS File',0
-
-org_open DD ?,?
 
 open_vfs_file    Proc near
     push ds
@@ -555,6 +551,24 @@ ovfDone:
     ret
 open_vfs_file    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenFile
+;
+;       DESCRIPTION:    Open file
+;
+;       PARAMETERS:     ES:(E)DI       Pathname
+;
+;       RETURNS:        NC
+;                         BX           Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_file_name       DB 'Open VFS File',0
+
+org_open DD ?,?
+
 open_file16  Proc far
     push edi
     movzx edi,di
@@ -581,6 +595,28 @@ open_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           read_vfs_file
+;
+;       DESCRIPTION:    Read VFS file
+;
+;       PARAMETERS:     DS             Prog sel
+;                       BX             Map Handle
+;                       ES:(E)DI       Buffer
+;                       (E)CX          Size
+;
+;       RETURNS:        NC
+;                         EAX          Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_vfs_file  Proc near
+    int 3
+    ret
+read_vfs_file  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReadFile
 ;
 ;       DESCRIPTION:    Read file
@@ -598,10 +634,6 @@ read_file_name       DB 'Read VFS File',0
 
 org_read DD ?,?
 
-read_vfs_file  Proc near
-    ret
-read_vfs_file  Endp
-
 read_file16  Proc far
     push ds
     push ebx
@@ -615,7 +647,9 @@ read_file16  Proc far
     DerefHandle
     jc rfOrg16
 ;
-    int 3
+    mov ax,ds:[ebx].fh_sel
+    mov bx,ds:[ebx].fh_handle
+    mov ds,eax
     call read_vfs_file
     jmp rfDone16
 
@@ -638,7 +672,9 @@ read_file32  Proc far
     DerefHandle
     jc rfOrg32
 ;
-    int 3
+    mov ax,ds:[ebx].fh_sel
+    mov bx,ds:[ebx].fh_handle
+    mov ds,eax
     call read_vfs_file
     jmp rfDone32
 
