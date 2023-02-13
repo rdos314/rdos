@@ -68,9 +68,11 @@ kernel_file_map   STRUC
 kfm_wait_arr      DW 224 DUP(?)
 kfm_flat_base     DD ?
 kfm_user_base     DD ?
+kfm_serv_handle   DD ?
 kfm_prog_sel      DW ?
 kfm_file_sel      DW ?
 kfm_kernel_sel    DW ?
+kfm_part_sel      DW ?
 kfm_next_map      DW ?
 kfm_section       section_typ <>
 
@@ -244,6 +246,7 @@ GetProgSel      Endp
 ;       DESCRIPTION:    Create program selector
 ;
 ;       PARAMETERS:     DS		File sel
+;                       FS              Part sel
 ;
 ;       RETURNS:        NC
 ;                         AX            Prog sel
@@ -326,6 +329,15 @@ CreateProgSel	Proc near
     mov es:kfm_user_base,edx
     mov es:kfm_prog_sel,si
     mov es:kfm_file_sel,ds
+    mov es:kfm_part_sel,fs
+;
+    push es
+    mov ax,flat_data_sel
+    mov es,eax
+    mov edx,es:[edx].fm_info_ptr
+    mov ebx,es:[edx].fi_serv_handle
+    pop es
+    mov es:kfm_serv_handle,ebx
 ;
     AllocateGdt
     mov ecx,1000h
@@ -601,8 +613,8 @@ open_file32  Endp
 ;
 ;       PARAMETERS:     DS             Prog sel
 ;                       BX             Map Handle
-;                       ES:(E)DI       Buffer
-;                       (E)CX          Size
+;                       ES:EDI         Buffer
+;                       ECX            Size
 ;
 ;       RETURNS:        NC
 ;                         EAX          Size
@@ -610,7 +622,21 @@ open_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_vfs_file  Proc near
+    push fs
+;
     int 3
+    push ds
+    xor edx,edx
+    xor eax,eax
+    mov ebx,ds:kfm_serv_handle    
+    mov ds,ds:kfm_part_sel
+    call AllocateMsg
+;
+    mov eax,VFS_REQ_FILE
+    call PostMsg
+    pop ds
+;
+    pop fs
     ret
 read_vfs_file  Endp
 
