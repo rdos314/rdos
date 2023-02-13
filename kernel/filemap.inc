@@ -46,6 +46,14 @@ fi_name              DB ?
 
 file_info_struc  ENDS
 
+file_handle_struc  STRUC
+
+fh_pos_arr          DD 15*8*8 DUP(?)
+fh_bitmap           DD 15 DUP(?)
+fh_spinlock         DW ?
+
+file_handle_struc  ENDS
+
 file_map_entry  STRUC
 
 fmb_pos             DD ?,?
@@ -56,19 +64,9 @@ file_map_entry  ENDS
 
 file_map  STRUC
 
-fm_sorted_arr       DW 255 DUP(?)
-fm_lock             DW ?
+fm_sorted_arr       DW 252 DUP(?)
+fm_handle_ptr       DD ?
+fm_info_ptr         DD ?
 fm_entry_arr        DB 224 * 16 DUP(?)
 
-fm_info             file_info_struc <>
-
 file_map  ENDS
-
-file_handle_entry   STRUC
-
-fhe_pos             DD ?,?
-fhe_map             DD ?
-fhe_handle          DW ?
-fhe_resv            DW ?
-
-file_handle_entry   ENDS

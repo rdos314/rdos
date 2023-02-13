@@ -57,15 +57,10 @@ kernel_file_map   STRUC
 kfm_wait_arr      DW 224 DUP(?)
 kfm_flat_base     DD ?
 kfm_map_base      DD ?
-kfm_handle_base   DD ?
 kfm_prog_sel      DW ?
 kfm_file_sel      DW ?
 kfm_next_map      DW ?
 kfm_section       section_typ <>
-
-;
-; copy of file entries starts at position 512 (same as in file_map structure)
-;
 
 kernel_file_map   ENDS
 
@@ -250,7 +245,6 @@ CreateProgSel	Proc near
     push edx
     push esi
     push edi
-    push ebp
 ;
     mov ax,system_data_sel
     mov es,ax
@@ -259,18 +253,29 @@ CreateProgSel	Proc near
     GetThread
     mov es,ax
     mov si,es:p_prog_sel
-    mov es,si
-    mov ebp,es:pr_file_linear
 ;
     mov ax,flat_data_sel
     mov es,eax
 ;
-    mov eax,2000h
+    mov eax,3000h
     AllocateLocalLinear
+;
+    sub edx,ebx
+    mov edi,edx
+    xor eax,eax
+    mov ecx,800h
+    rep stosd
+    int 3
+;
     push ebx
     push edx
 ;
-    add edx,1000h
+    add edx,ebx
+    GetPageEntry
+    mov al,65h
+    SetPageEntry
+;
+    add edx,2000h
     mov eax,ds:kf_info_phys
     mov ebx,ds:kf_info_phys+4
     or ax,865h
@@ -279,23 +284,17 @@ CreateProgSel	Proc near
     pop edx
     pop ebx
 ;
-    sub edx,ebx
-    mov edi,edx
-    xor eax,eax
-    mov ecx,400h
-    rep stosd
-;
-    mov eax,1000h
-    AllocateGlobalMem
+    mov eax,SIZE kernel_file_map
+    AllocateSmallGlobalMem
 ;
     xor edi,edi
     xor eax,eax
-    mov ecx,400h
+    mov ecx,SIZE kernel_file_map
+    shr ecx,2
     rep stosd
 ;
     mov es:kfm_flat_base,ebx
     mov es:kfm_map_base,edx
-    mov es:kfm_handle_base,ebp
     mov es:kfm_prog_sel,si
     mov es:kfm_file_sel,ds
 ;
@@ -306,7 +305,6 @@ CreateProgSel	Proc near
     LeaveSection ds:kf_section
     mov ax,es
 ;
-    pop ebp
     pop edi
     pop esi
     pop edx
