@@ -254,8 +254,20 @@ CreateProgSel	Proc near
     mov ax,flat_data_sel
     mov es,eax
 ;
-    mov eax,1000h
+    mov eax,2000h
     AllocateLocalLinear
+    push ebx
+    push edx
+;
+    add edx,1000h
+    mov eax,ds:kf_info_phys
+    mov ebx,ds:kf_info_phys+4
+    or ax,865h
+    SetPageEntry
+;
+    pop edx
+    pop ebx
+;
     sub edx,ebx
     mov edi,edx
     xor eax,eax
