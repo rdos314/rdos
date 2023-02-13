@@ -47,17 +47,25 @@ kf_memblk         mem_blk_header <>
 kf_info_phys      DD ?,?
 kf_sector_size    DW ?
 kf_section        section_typ <>
-kf_user_arr       DW 16 DUP(?)
+kf_prog_list      DW ?
 
 kernel_file       ENDS
 
-user_file_map   STRUC
+kernel_file_map   STRUC
 
-kfm_section       section_typ <>
-kfm_flat_base     DD ?
 kfm_wait_arr      DW 224 DUP(?)
+kfm_flat_base     DD ?
+kfm_map_base      DD ?
+kfm_prog_sel      DW ?
+kfm_file_sel      DW ?
+kfm_next_map      DW ?
+kfm_section       section_typ <>
 
-user_file_map   ENDS
+;
+; copy of file entries starts at position 512 (same as in file_map structure)
+;
+
+kernel_file_map   ENDS
 
 code    SEGMENT byte public 'CODE'
 
@@ -146,11 +154,7 @@ CreateFileSel	Proc near
 ;
     InitSection es:kf_section
     mov es:kf_sector_size,cx
-;
-    xor ax,ax
-    mov edi,OFFSET kf_user_arr
-    mov ecx,16
-    rep stosw
+    mov es:kf_prog_list,0
 ;
     GetPageEntry
     or ax,800h
@@ -170,6 +174,122 @@ CreateFileSel	Proc near
     pop es
     ret
 CreateFileSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetProgSel
+;
+;       DESCRIPTION:    Get program selector
+;
+;       PARAMETERS:     DS		File sel
+;
+;       RETURNS:        NC
+;                         AX            Prog sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetProgSel	Proc near
+    push es
+    push ebx
+;
+    GetThread
+    mov es,ax
+    mov bx,es:p_prog_sel
+;
+    EnterSection ds:kf_section
+    mov ax,ds:kf_prog_list
+
+gpsLoop:
+    or ax,ax
+    stc
+    jz gpsDone
+;
+    mov es,eax
+    cmp bx,es:kfm_prog_sel
+    clc
+    je gpsDone
+;
+    mov ax,es:kfm_next_map
+    jmp gpsLoop
+
+gpsDone:
+    LeaveSection ds:kf_section
+;
+    pop ebx
+    pop es
+    ret
+GetProgSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateProgSel
+;
+;       DESCRIPTION:    Create program selector
+;
+;       PARAMETERS:     DS		File sel
+;
+;       RETURNS:        NC
+;                         AX            Prog sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateProgSel	Proc near
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,system_data_sel
+    mov es,ax
+    mov ebx,es:flat_base
+;
+    GetThread
+    mov es,ax
+    mov si,es:p_prog_sel
+;
+    mov ax,flat_data_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateLocalLinear
+    sub edx,ebx
+    mov edi,edx
+    xor eax,eax
+    mov ecx,400h
+    rep stosd
+;
+    mov eax,1000h
+    AllocateGlobalMem
+;
+    xor edi,edi
+    xor eax,eax
+    mov ecx,400h
+    rep stosd
+;
+    mov es:kfm_flat_base,ebx
+    mov es:kfm_map_base,edx
+    mov es:kfm_prog_sel,si
+    mov es:kfm_file_sel,ds
+;
+    EnterSection ds:kf_section
+    mov bx,ds:kf_prog_list
+    mov es:kfm_next_map,bx
+    mov ds:kf_prog_list,es
+    LeaveSection ds:kf_section
+    mov ax,es
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+CreateProgSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -266,7 +386,14 @@ ovfCopyPath:
     jc ovfFail
 ;
     int 3
-    mov es,ax
+    mov ds,eax
+    call GetProgSel
+    jnc ovfHasProc
+;
+    call CreateProgSel
+
+ovfHasProc:
+    mov ds,eax
     clc
     jmp ovfDone
 
