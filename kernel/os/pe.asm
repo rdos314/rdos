@@ -828,24 +828,6 @@ gfDone:
     pop eax
     ret
 get_file  Endp
-    
-read_file    Proc near
-    mov eax,ebx
-    shr eax,16
-    cmp al,VFS_FILE_SIGN
-    je rfVfs
-;
-    UserGateApp read_file_legacy_nr
-    ret
-
-rfVfs:
-    push edx
-;
-    call get_file
-;
-    pop edx
-    ret
-read_file    Endp
 
 ufunc_end:        
 
@@ -902,10 +884,6 @@ CreateUserFunc  Proc near
     mov edi,edx
     add edi,OFFSET get_used_sections
     mov gs:ppr_used_sections_proc,edi
-;    
-    mov edi,edx
-    add edi,OFFSET read_file
-    mov gs:ppr_read_file_proc,edi
 ;
     mov esi,edx
 ;
@@ -1102,9 +1080,6 @@ spOk:
 ;    
     cmp ax,used_user_sections_nr
     je spUsed
-;    
-    cmp ax,read_file_nr
-    je spReadFile
 ;
     jmp spFail    
 
@@ -1431,49 +1406,6 @@ spUsed:
     mov cr0,ecx
 ;
     mov eax,gs:ppr_used_sections_proc    
-    sub eax,esi
-    sub eax,6
-    xchg eax,ds:[ebx+2]
-;
-    mov ax,9090h
-    xchg ax,ds:[ebx+6]
-;
-    mov ax,0E890h    
-    xchg ax,ds:[ebx]
-;
-    pop ecx
-    mov cr0,ecx
-    sti
-    clc
-;
-    pop esi
-    pop ecx
-    pop edx
-    pop es
-    ret
-
-spReadFile:
-    push es
-    push edx
-    push ecx
-    push esi
-;
-    mov esi,ebx
-    push ebx
-    mov bx,ds
-    GetSelectorBaseSize
-    pop ebx
-    add ebx,edx
-    mov ax,flat_sel
-    mov ds,ax    
-;
-    mov ecx,cr0
-    push ecx
-    and ecx,NOT 10000h
-    cli
-    mov cr0,ecx
-;
-    mov eax,gs:ppr_read_file_proc    
     sub eax,esi
     sub eax,6
     xchg eax,ds:[ebx+2]

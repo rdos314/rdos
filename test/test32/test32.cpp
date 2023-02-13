@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "serial.h"
+#include "file.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -23,33 +24,10 @@
 ##########################################################################*/
 void main()
 {
-    bool On = true;
-    RdosWaitMilli(1000);
+    TFile file("x:/filemap.asm");
+    char *buf = new char[1024];
+    int count;
 
-    TSerialDevice Port2(2, 9600, 'N', 8, 1);
-    TSerialDevice Port3(3, 9600, 'N', 8, 1);
+    count = file.Read(buf, 1024);
 
-    Port2.Open();
-    Port3.Open();
-
-    for (;;)
-    {
-        RdosWaitMilli(100);
-
-        if (On)
-        {
-            On = false;
-            Port2.SetDtr();
-            Port3.SetDtr();
-        }
-        else
-        {
-            On = true;
-            Port2.ResetDtr();
-            Port3.ResetDtr();
-        }
-
-        Port2.Write("h2");
-        Port3.Write("h3");
-    }
 }
