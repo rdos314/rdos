@@ -979,6 +979,8 @@
 #define usergate_get_pci_msix 0x00000320
 #define usergate_is_pci_function_used 0x00000321
 
+#define usergate_read_adc_chan 0x00000322
+
 
 
 #ifdef __FLAT__
@@ -1963,6 +1965,8 @@
 #define CallGate_get_pci_msix 0x55 0x67 0x9a 32 3 0 0 3 0 0x5d
 #define CallGate_is_pci_function_used 0x55 0x67 0x9a 33 3 0 0 3 0 0x5d
 
+#define CallGate_read_adc_chan 0x55 0x67 0x9a 34 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2944,5 +2948,7 @@
 #define CallGate_get_pci_msi 0x3e 0x67 0x9a 31 3 0 0 3 0
 #define CallGate_get_pci_msix 0x3e 0x67 0x9a 32 3 0 0 3 0
 #define CallGate_is_pci_function_used 0x3e 0x67 0x9a 33 3 0 0 3 0
+
+#define CallGate_read_adc_chan 0x3e 0x67 0x9a 34 3 0 0 3 0
 
 #endif

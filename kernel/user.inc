@@ -3576,14 +3576,20 @@ SetAdcTrigger     MACRO
 ;   IN  BX      Channel
 ;   IN  EAX     Frequency i Hz
 ;   IN  ECX     Periods
-SetupAdcChannel      MACRO
-        UserGate setup_adc_chan_nr
+OpenAdcChannel      MACRO
+        UserGate open_adc_chan_nr
                                                 ENDM
 
 
 ;   IN  BX      Channel
-ClearAdcChannel      MACRO
-        UserGate setup_adc_chan_nr
+CloseAdcChannel      MACRO
+        UserGate close_adc_chan_nr
+                                                ENDM
+
+;   IN  BX      Channel
+;   IN  ES:EDI  4k buffer
+ReadAdcChannel      MACRO
+        UserGate read_adc_chan_nr
                                                 ENDM
 
 
