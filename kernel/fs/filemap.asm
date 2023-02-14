@@ -60,6 +60,8 @@ kf_info_phys      DD ?,?
 kf_sector_size    DW ?
 kf_section        section_typ <>
 kf_prog_list      DW ?
+kf_part_sel       DW ?
+kf_serv_handle    DD ?
 
 kernel_file       ENDS
 
@@ -68,11 +70,9 @@ kernel_file_map   STRUC
 kfm_wait_arr      DW 224 DUP(?)
 kfm_flat_base     DD ?
 kfm_user_base     DD ?
-kfm_serv_handle   DD ?
 kfm_prog_sel      DW ?
 kfm_file_sel      DW ?
 kfm_kernel_sel    DW ?
-kfm_part_sel      DW ?
 kfm_next_map      DW ?
 kfm_section       section_typ <>
 
@@ -144,7 +144,9 @@ GetFileSel     Endp
 ;
 ;       DESCRIPTION:    Create file selector
 ;
-;       PARAMETERS:     CX             Sector size
+;       PARAMETERS:     FS             Part sel
+;                       EBX            VFS handle
+;                       CX             Sector size
 ;                       EDX            File info linear
 ;
 ;       RETURNS:        NC
@@ -172,6 +174,8 @@ CreateFileSel	Proc near
     InitSection es:kf_section
     mov es:kf_sector_size,cx
     mov es:kf_prog_list,0
+    mov es:kf_part_sel,fs
+    mov es:kf_serv_handle,ebx
 ;
     GetPageEntry
     or ax,800h
@@ -246,7 +250,6 @@ GetProgSel      Endp
 ;       DESCRIPTION:    Create program selector
 ;
 ;       PARAMETERS:     DS		File sel
-;                       FS              Part sel
 ;
 ;       RETURNS:        NC
 ;                         AX            Prog sel
@@ -329,15 +332,6 @@ CreateProgSel	Proc near
     mov es:kfm_user_base,edx
     mov es:kfm_prog_sel,si
     mov es:kfm_file_sel,ds
-    mov es:kfm_part_sel,fs
-;
-    push es
-    mov ax,flat_data_sel
-    mov es,eax
-    mov edx,es:[edx].fm_info_ptr
-    mov ebx,es:[edx].fi_serv_handle
-    pop es
-    mov es:kfm_serv_handle,ebx
 ;
     AllocateGdt
     mov ecx,1000h
@@ -622,21 +616,7 @@ open_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_vfs_file  Proc near
-    push fs
-;
     int 3
-    push ds
-    xor edx,edx
-    xor eax,eax
-    mov ebx,ds:kfm_serv_handle    
-    mov ds,ds:kfm_part_sel
-    call AllocateMsg
-;
-    mov eax,VFS_REQ_FILE
-    call PostMsg
-    pop ds
-;
-    pop fs
     ret
 read_vfs_file  Endp
 

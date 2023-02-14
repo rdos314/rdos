@@ -45,9 +45,6 @@ struct TFileInfo
     int Gid;
     int KernelHandle;
     int ServHandle;
-    char Disc;
-    char Drive;
-    char Part;
     char Name[1];
 };
 

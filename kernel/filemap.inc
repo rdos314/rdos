@@ -39,9 +39,6 @@ fi_uid               DD ?
 fi_gid               DD ?
 fi_kernel_handle     DD ?
 fi_serv_handle       DD ?
-fi_disc              DB ?
-fi_drive             DB ?
-fi_part              DB ?
 fi_name              DB ?
 
 file_info_struc  ENDS

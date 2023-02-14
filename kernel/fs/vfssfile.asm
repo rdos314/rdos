@@ -167,6 +167,7 @@ GetFileReq   Endp
 ;       DESCRIPTION:    Allocate file handle
 ;
 ;       PARAMETERS:     FS          Part sel
+;                       EBX         VFS handle
 ;                       CX          Sector size
 ;                       EDX         File info linear
 ;
@@ -177,13 +178,14 @@ GetFileReq   Endp
 AllocateFileHandle	Proc near
     push ds
     push eax
+    push esi
 ;
     mov eax,fs
     mov ds,eax
     EnterSection ds:vfsp_req_section
 ;
-    movzx ebx,ds:vfsp_file_list
-    or ebx,ebx
+    movzx esi,ds:vfsp_file_list
+    or esi,esi
     jnz afhOk
 ;
     int 3
@@ -192,14 +194,7 @@ AllocateFileHandle	Proc near
     jmp afhDone
 
 afhOk:
-    call CreateFileSel
-    mov ds:[ebx].ff_sel,ax
-;
-    xor ax,ax
-    xchg ax,ds:[ebx].ff_link
-    mov ds:vfsp_file_list,ax
-    LeaveSection ds:vfsp_req_section
-;
+    mov ebx,esi
     movzx eax,ds:vfsp_part_nr
     inc eax
     shl eax,8
@@ -209,9 +204,19 @@ afhOk:
     shr ebx,2
     inc ebx
     or ebx,eax
+;
+    call CreateFileSel
+    mov ds:[esi].ff_sel,ax
+;
+    xor ax,ax
+    xchg ax,ds:[esi].ff_link
+    mov ds:vfsp_file_list,ax
+    LeaveSection ds:vfsp_req_section
+;
     clc
 
 afhDone:
+    pop esi
     pop eax
     pop ds
     ret
@@ -247,19 +252,6 @@ serv_open_file    Proc far
     mov ax,system_data_sel
     mov ds,ax
     add edx,ds:flat_base
-;
-    mov bx,flat_sel
-    mov ds,bx
-;
-    mov al,fs:vfsp_disc_nr
-    mov ds:[edx].fi_disc,al
-;
-    mov al,fs:vfsp_drive_nr
-    mov ds:[edx].fi_drive,al
-;
-    mov al,fs:vfsp_part_nr
-    mov ds:[edx].fi_part,al
-;
     call AllocateFileHandle
 ;
     pop ecx
