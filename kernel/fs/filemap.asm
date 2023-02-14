@@ -563,6 +563,54 @@ SetPos  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CalcPageCount
+;
+;       DESCRIPTION:    Calculate page count
+;
+;       PARAMETERS:     FS                 Part sel
+;                       ECX                Buffered sectors
+;                       GS:ESI             Sector array
+;
+;       RETURNS:        ECX                Page count
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcPageCount  Proc near
+    push ds
+    push es
+    push esi
+    push edi
+;
+    mov eax,serv_flat_sel
+    mov es,eax
+;
+    mov ds,fs:vfsp_disc_sel
+    mov eax,gs:[esi]
+    mov edx,gs:[esi+4]
+    call BlockToBuf
+    jc cpcDone
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz cpcDone
+;
+    and eax,7
+    shl eax,9
+    mov edx,es:[esi]
+    and dx,0F000h
+    or eax,edx
+    movzx edx,word ptr es:[esi+4]
+
+cpcDone:
+    pop edi
+    pop esi
+    pop es
+    pop ds
+    ret
+CalcPageCount  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyFileData
 ;
 ;       DESCRIPTION:    Notify file data
@@ -574,7 +622,46 @@ SetPos  Endp
     public NotifyFileData
 
 NotifyFileData	Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ebx,gs:vfs_rd_file_handle
+    mov al,VFS_FILE_SIGN
+    call HandleHighToPartFs
+    jc nfdDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc nfdDone
+;
+    movzx ebx,bx
+    dec ebx
+    shl ebx,2
+    mov bx,fs:[ebx].vfsp_file_arr.ff_sel
+    or bx,bx
+    stc
+    je nfdDone
+;
     int 3
+    mov ecx,gs:vfs_rd_sectors
+    or ecx,ecx
+    jz nfdOk
+;
+    mov esi,gs:vfs_rd_chain_ptr
+    call CalcPageCount
+;
+    mov ds,ebx
+
+nfdOk:
+    clc
+
+nfdDone:
+    popad
+    pop fs
+    pop es
+    pop ds
     ret
 NotifyFileData  Endp
 
