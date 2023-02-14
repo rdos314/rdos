@@ -67,7 +67,6 @@ kernel_file       ENDS
 
 kernel_file_map   STRUC
 
-kfm_wait_arr      DW 224 DUP(?)
 kfm_flat_base     DD ?
 kfm_user_base     DD ?
 kfm_prog_sel      DW ?
@@ -431,6 +430,102 @@ AllocateUserHandle      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetPos
+;
+;       DESCRIPTION:    Get file position
+;
+;       PARAMETERS:     DS             Prog sel
+;                       BX             Map Handle
+;
+;       RETURNS:        NC
+;                         EDX:EAX      Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPos  Proc near
+    push es
+;
+    mov ax,flat_data_sel
+    mov es,eax
+;
+    or bx,bx
+    jz gpFail
+;
+    cmp bx,15*32
+    jb gpConv
+
+gpFail:
+    stc
+    jmp gpDone
+
+gpConv:
+    movzx eax,bx
+    dec eax
+    shl eax,3
+    mov edx,ds:kfm_user_base
+    mov edx,es:[edx].fm_handle_ptr
+    add edx,eax
+    mov eax,es:[edx]
+    mov edx,es:[edx+4]
+    clc
+
+gpDone:
+    pop es
+    ret
+GetPos  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetPos
+;
+;       DESCRIPTION:    Get file position
+;
+;       PARAMETERS:     DS             Prog sel
+;                       BX             Map Handle
+;                       EDX:EAX        Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPos  Proc near
+    push es
+    push ecx
+    push esi
+;
+    mov cx,flat_data_sel
+    mov es,ecx
+;
+    or bx,bx
+    jz spFail
+;
+    cmp bx,15*32
+    jb spSave
+
+spFail:
+    stc
+    jmp spDone
+
+spSave:
+    movzx ecx,bx
+    dec ecx
+    shl ecx,3
+    mov esi,ds:kfm_user_base
+    mov esi,es:[esi].fm_handle_ptr
+    add esi,ecx
+    mov es:[esi],eax
+    mov es:[esi+4],edx
+    clc
+
+spDone:
+    pop esi
+    pop ecx
+    pop es
+    ret
+SetPos  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyFileData
 ;
 ;       DESCRIPTION:    Notify file data
@@ -616,7 +711,12 @@ open_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_vfs_file  Proc near
+    push edx
+;    
     int 3
+    call GetPos
+;
+    pop edx
     ret
 read_vfs_file  Endp
 
