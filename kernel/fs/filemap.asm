@@ -198,6 +198,43 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SendReadReq
+;
+;       DESCRIPTION:    Send read req
+;
+;       PARAMETERS:     DS             File sel
+;                       EDX:EAX        Position
+;                       ECX            Size                        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendReadReq	Proc near
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+;
+    mov ebx,ds:kf_serv_handle
+    dec ebx
+    mov fs,ds:kf_part_sel
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+;
+    mov eax,VFS_REQ_FILE
+    call PostMsg
+;
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+SendReadReq     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetProgSel
 ;
 ;       DESCRIPTION:    Get program selector
@@ -715,6 +752,9 @@ read_vfs_file  Proc near
 ;    
     int 3
     call GetPos
+;
+    mov ds,ds:kfm_file_sel
+    call SendReadReq
 ;
     pop edx
     ret
