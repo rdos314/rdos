@@ -109,6 +109,48 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           BlockToPhys
+;
+;       DESCRIPTION:    Convert block to phys
+;
+;       PARAMETERS:     ES                 Serv flat sel
+;                       EDX:EAX            Sector
+;
+;       RETURNS:        EDX:EAX            Physical address
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BlockToPhys  Proc near
+    push es
+    push esi
+;
+    mov si,serv_flat_sel
+    mov es,esi
+;
+    call BlockToBuf
+    jc btpDone
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    stc
+    jz btpDone
+;
+    and eax,7
+    shl eax,9
+    mov edx,es:[esi]
+    and dx,0F000h
+    or eax,edx
+    movzx edx,word ptr es:[esi+4]
+    clc
+
+btpDone:
+    pop esi
+    pop es
+    ret
+BlockToPhys  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetFileSel
 ;
 ;       DESCRIPTION:    Get file selector
@@ -268,12 +310,13 @@ FindReadReq  Endp
 ;                       EDX:EAX        Position
 ;                       ECX            Size                        
 ;
+;       RETURNS:        EBX            Req linear
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddReadReq	Proc near
     push ds
     push es
-    push ebx
     push esi
 ;
     mov bx,ds
@@ -304,12 +347,52 @@ AddReadReq	Proc near
     mov ds:[esi].kre_next,ebx
     mov es:kf_req_list,esi
 ;
+    mov ebx,esi
+;
     pop esi
-    pop ebx
     pop es
     pop ds
     ret
 AddReadReq      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WaitReadReq
+;
+;       DESCRIPTION:    Wait read req. Section must be taken!
+;
+;       PARAMETERS:     DS             File sel
+;                       EBX            Req linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitReadReq	Proc near
+    push es
+    push fs
+    push eax
+    push esi
+;
+    mov ax,flat_sel
+    mov es,eax
+    ClearSignal
+;
+    GetThread
+    mov fs,eax
+    mov ax,es:[ebx].kre_wait
+    mov fs:p_link,ax
+    mov es:[ebx].kre_wait,es
+;
+    LeaveSection ds:kf_section
+    WaitForSignal
+    EnterSection ds:kf_section
+;
+    pop esi
+    pop eax
+    pop fs
+    pop es
+    ret
+WaitReadReq      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -347,6 +430,76 @@ SendReadReq	Proc near
     pop ds
     ret
 SendReadReq     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ProcessReadReq
+;
+;       DESCRIPTION:    Process read req
+;
+;       PARAMETERS:     DS                 File sel
+;                       FS                 Part sel
+;                       AX                 Pages needed
+;                       EBX                Req linear
+;                       ECX                Buffered blocks
+;                       GS:ESI             Sector array
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessReadReq  Proc near
+    push ds
+    push es
+    pushad
+;
+    push ecx
+;
+    mov cx,ds
+    mov es,cx
+    mov cx,ax
+    shl cx,3
+    AllocateMemBlk
+    mov edi,edx
+;
+    mov cx,flat_sel
+    mov es,ecx
+;
+    pop ecx
+;
+    mov ds,fs:vfsp_disc_sel
+    mov eax,gs:[esi]
+    mov edx,gs:[esi+4]
+    call BlockToPhys
+    jc prrDone
+;
+    mov es:[edi],eax
+    mov es:[edi+4],edx
+    add edi,8
+
+prrLoop:
+    sub ecx,1
+    jz prrDone
+;
+    add esi,8
+    mov eax,gs:[esi]
+    mov edx,gs:[esi+4]
+    call BlockToPhys
+    jc prrDone
+;
+    test eax,0FFFh
+    jnz prrLoop
+;
+    mov es:[edi],eax
+    mov es:[edi+4],edx
+    add edi,8
+    jmp prrLoop
+
+prrDone:
+    popad
+    pop es
+    pop ds
+    ret
+ProcessReadReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -679,67 +832,29 @@ SetPos  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           BlockToPhys
-;
-;       DESCRIPTION:    Convert block to phys
-;
-;       PARAMETERS:     ES                 Serv flat sel
-;                       EDX:EAX            Sector
-;
-;       RETURNS:        EDX:EAX            Physical address
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BlockToPhys  Proc near
-    push esi
-;
-    call BlockToBuf
-    jc btpDone
-;
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    stc
-    jz btpDone
-;
-    and eax,7
-    shl eax,9
-    mov edx,es:[esi]
-    and dx,0F000h
-    or eax,edx
-    movzx edx,word ptr es:[esi+4]
-    clc
-
-btpDone:
-    pop esi
-    ret
-BlockToPhys  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           CalcPageCount
 ;
 ;       DESCRIPTION:    Calculate page count
 ;
 ;       PARAMETERS:     FS                 Part sel
-;                       ECX                Buffered sectors
+;                       ECX                Buffered blocks
 ;                       GS:ESI             Sector array
 ;
-;       RETURNS:        ECX                Page count
+;       RETURNS:        AX                 Page count
+;                       ECX                Used blocks
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CalcPageCount  Proc near
     push ds
-    push es
-    push eax
     push ebx
     push edx
     push esi
     push edi
     push ebp
 ;
-    mov eax,serv_flat_sel
-    mov es,eax
+    push ecx
+;
     xor ebx,ebx
     or ecx,ecx
     clc
@@ -787,20 +902,23 @@ cpcFirst:
 ;
     mov edi,eax
     inc ebx
+    cmp ebx,1FFFh
+    je cpcDone
 
 cpcNext:
-    loop cpcLoop
+    jmp cpcLoop
 
 cpcDone:
-    mov ecx,ebx
+    mov eax,ecx
+    pop ecx
+    sub ecx,eax
+    mov eax,ebx
 ;
     pop ebp
     pop edi
     pop esi
     pop edx
     pop ebx
-    pop eax
-    pop es
     pop ds
     ret
 CalcPageCount  Endp
@@ -841,7 +959,6 @@ NotifyFileData	Proc near
     stc
     je nfdDone
 ;
-    int 3
     mov ecx,gs:vfs_rd_sectors
     or ecx,ecx
     jz nfdOk
@@ -853,8 +970,10 @@ NotifyFileData	Proc near
     call FindReadReq
     jc nfdOk
 ;
+    int 3
     mov esi,gs:vfs_rd_chain_ptr
     call CalcPageCount
+    call ProcessReadReq
 ;
     LeaveSection ds:kf_section
 
@@ -1041,15 +1160,20 @@ open_file32  Endp
 read_vfs_file  Proc near
     push edx
 ;    
-    int 3
     call GetPos
 ;
     mov ds,ds:kfm_file_sel
     EnterSection ds:kf_section
-    call AddReadReq
-    LeaveSection ds:kf_section
+    call FindReadReq
+    jnc rvfCheck
 ;
+    call AddReadReq
     call SendReadReq
+
+rvfCheck:
+    call WaitReadReq
+    int 3
+    LeaveSection ds:kf_section
 ;
     pop edx
     ret
