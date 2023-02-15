@@ -41,7 +41,6 @@ include vfsfile.inc
 
     .386p
 
-
 file_handle_seg     STRUC
 
 fh_base       handle_header <>
@@ -51,6 +50,16 @@ fh_handle     DW ?
 
 file_handle_seg     ENDS
 
+kernel_req_entry  STRUC
+
+kre_pos           DD ?,?
+kre_size          DD ?
+kre_pages         DW ?
+kre_wait          DW ?
+kre_phys_arr      DD ?
+kre_next          DD ?
+
+kernel_req_entry  ENDS
 
 kernel_file       STRUC
 
@@ -61,6 +70,7 @@ kf_sector_size    DW ?
 kf_section        section_typ <>
 kf_prog_list      DW ?
 kf_part_sel       DW ?
+kf_req_list       DD ?
 kf_serv_handle    DD ?
 
 kernel_file       ENDS
@@ -164,9 +174,9 @@ CreateFileSel	Proc near
     push edi
 ;
     push ecx
-    mov ax,8
+    mov ax,32
     mov cx,16
-    mov si,SIZE kernel_file - SIZE mem_blk_header
+    mov si,SIZE kernel_file
     CreateMemBlk64
     pop ecx
 ;
@@ -175,6 +185,7 @@ CreateFileSel	Proc near
     mov es:kf_prog_list,0
     mov es:kf_part_sel,fs
     mov es:kf_serv_handle,ebx
+    mov es:kf_req_list,0
 ;
     GetPageEntry
     or ax,800h
@@ -194,6 +205,111 @@ CreateFileSel	Proc near
     pop es
     ret
 CreateFileSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindReadReq
+;
+;       DESCRIPTION:    Find a read req. Section must be taken!
+;
+;       PARAMETERS:     DS             File sel
+;                       EDX:EAX        Position
+;
+;       RETURNS:        EBX            Req ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindReadReq	Proc near
+    push ds
+    push esi
+    push edi
+;
+    mov ebx,ds:kf_req_list
+    mov si,flat_sel
+    mov ds,esi
+ 
+frrLoop:
+    or ebx,ebx
+    stc
+    jz frrDone
+;
+    mov esi,ds:[ebx].kre_pos
+    mov edi,ds:[ebx].kre_pos+4
+    sub esi,eax
+    sbb edi,edx
+    jnz frrNext
+;
+    cmp esi,ds:[ebx].kre_size
+    jae frrNext
+;
+    clc
+    jmp frrDone
+
+frrNext:
+    mov ebx,ds:[ebx].kre_next
+    jmp frrLoop
+
+frrDone:
+    pop edi
+    pop esi
+    pop ds
+    ret
+FindReadReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddReadReq
+;
+;       DESCRIPTION:    Add read req. Section must be taken!
+;
+;       PARAMETERS:     DS             File sel
+;                       EDX:EAX        Position
+;                       ECX            Size                        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddReadReq	Proc near
+    push ds
+    push es
+    push ebx
+    push esi
+;
+    mov bx,ds
+    mov es,ebx
+    mov bx,flat_sel
+    mov ds,bx
+;
+    push eax
+    push ecx
+    push edx
+;
+    mov cx,SIZE kernel_req_entry
+    AllocateMemBlk
+    mov esi,edx
+;
+    pop edx
+    pop ecx
+    pop eax
+;
+    mov ds:[esi].kre_pos,eax
+    mov ds:[esi].kre_pos+4,edx
+    mov ds:[esi].kre_size,ecx
+    mov ds:[esi].kre_pages,0
+    mov ds:[esi].kre_wait,0
+    mov ds:[esi].kre_phys_arr,0
+;
+    mov ebx,es:kf_req_list
+    mov ds:[esi].kre_next,ebx
+    mov es:kf_req_list,esi
+;
+    pop esi
+    pop ebx
+    pop es
+    pop ds
+    ret
+AddReadReq      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -730,10 +846,17 @@ NotifyFileData	Proc near
     or ecx,ecx
     jz nfdOk
 ;
+    mov ds,ebx
+    EnterSection ds:kf_section
+    mov eax,gs:vfs_rd_start
+    mov edx,gs:vfs_rd_start+4
+    call FindReadReq
+    jc nfdOk
+;
     mov esi,gs:vfs_rd_chain_ptr
     call CalcPageCount
 ;
-    mov ds,ebx
+    LeaveSection ds:kf_section
 
 nfdOk:
     clc
@@ -922,6 +1045,10 @@ read_vfs_file  Proc near
     call GetPos
 ;
     mov ds,ds:kfm_file_sel
+    EnterSection ds:kf_section
+    call AddReadReq
+    LeaveSection ds:kf_section
+;
     call SendReadReq
 ;
     pop edx
