@@ -355,7 +355,7 @@ NotifyReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetMinMaxMsb
+;       NAME:           GetMinMax
 ;
 ;       DESCRIPTION:    Get min & max MSB sector values
 ;
@@ -414,6 +414,19 @@ GetMinMax Endp
 copy512  Proc near
     mov eax,ds:[esi]
     mov edx,ds:[esi+4]
+;
+    mov ebx,fs:vfsp_sector_count
+    mov ebp,fs:vfsp_sector_count+4
+    sub ebx,eax
+    sbb ebp,edx
+    jnc cn512
+;
+    int 3
+
+cn512:
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+;
     mov es:[edi],eax
     mov es:[edi+4],edx
     add esi,8
@@ -425,6 +438,19 @@ copy512  Endp
 copy1k  Proc near
     mov eax,ds:[esi]
     mov edx,ds:[esi+4]
+;
+    mov ebx,fs:vfsp_sector_count
+    mov ebp,fs:vfsp_sector_count+4
+    sub ebx,eax
+    sbb ebp,edx
+    jnc cn1k
+;
+    int 3
+
+cn1k:
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+;
     add eax,eax
     adc edx,edx
     mov es:[edi],eax
@@ -438,6 +464,19 @@ copy1k  Endp
 copy2k  Proc near
     mov eax,ds:[esi]
     mov edx,ds:[esi+4]
+;
+    mov ebx,fs:vfsp_sector_count
+    mov ebp,fs:vfsp_sector_count+4
+    sub ebx,eax
+    sbb ebp,edx
+    jnc cn2k
+;
+    int 3
+
+cn2k:
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+;
     add eax,eax
     adc edx,edx
     add eax,eax
@@ -453,6 +492,19 @@ copy2k  Endp
 copy4k  Proc near
     mov eax,ds:[esi]
     mov edx,ds:[esi+4]
+;
+    mov ebx,fs:vfsp_sector_count
+    mov ebp,fs:vfsp_sector_count+4
+    sub ebx,eax
+    sbb ebp,edx
+    jnc cn4k
+;
+    int 3
+
+cn4k:
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+;
     add eax,eax
     adc edx,edx
     add eax,eax
@@ -481,6 +533,7 @@ CopySectors    Proc near
     push edx
     push esi
     push edi
+    push ebp
 ;
     or ecx,ecx
     jz csDone
@@ -491,6 +544,7 @@ CopySectors    Proc near
     call dword ptr cs:[ebx].copy_tab
 
 csDone:
+    pop ebp
     pop edi
     pop esi
     pop edx
@@ -1161,6 +1215,7 @@ serv_add_file_req    Proc far
     mov eax,es
     mov ds,eax
     mov edx,edi
+;
     call GetMinMax
     call CreateReqSel
 ;
