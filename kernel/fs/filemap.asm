@@ -563,6 +563,43 @@ SetPos  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           BlockToPhys
+;
+;       DESCRIPTION:    Convert block to phys
+;
+;       PARAMETERS:     ES                 Serv flat sel
+;                       EDX:EAX            Sector
+;
+;       RETURNS:        EDX:EAX            Physical address
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BlockToPhys  Proc near
+    push esi
+;
+    call BlockToBuf
+    jc btpDone
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    stc
+    jz btpDone
+;
+    and eax,7
+    shl eax,9
+    mov edx,es:[esi]
+    and dx,0F000h
+    or eax,edx
+    movzx edx,word ptr es:[esi+4]
+    clc
+
+btpDone:
+    pop esi
+    ret
+BlockToPhys  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CalcPageCount
 ;
 ;       DESCRIPTION:    Calculate page count
@@ -578,31 +615,75 @@ SetPos  Endp
 CalcPageCount  Proc near
     push ds
     push es
+    push eax
+    push ebx
+    push edx
     push esi
     push edi
+    push ebp
 ;
     mov eax,serv_flat_sel
     mov es,eax
+    xor ebx,ebx
+    or ecx,ecx
+    clc
+    jz cpcDone
+;
+    inc ebx
 ;
     mov ds,fs:vfsp_disc_sel
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
-    call BlockToBuf
+    call BlockToPhys
     jc cpcDone
 ;
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    mov edi,eax
+    mov ebp,edx
+
+cpcLoop:
+    sub ecx,1
     jz cpcDone
 ;
-    and eax,7
-    shl eax,9
-    mov edx,es:[esi]
-    and dx,0F000h
-    or eax,edx
-    movzx edx,word ptr es:[esi+4]
+    add esi,8
+    mov eax,gs:[esi]
+    mov edx,gs:[esi+4]
+    call BlockToPhys
+    jc cpcDone
+;
+    test eax,0FFFh
+    jz cpcFirst
+
+cpcMid:
+    add edi,200h
+    cmp edi,eax
+    jne cpcNext
+;
+    cmp ebp,edx
+    je cpcLoop
+    jmp cpcNext
+
+cpcFirst:
+    mov ebp,edx
+    mov dx,di
+    and dx,0FFFh
+    cmp dx,0E00h
+    jne cpcDone
+;
+    mov edi,eax
+    inc ebx
+
+cpcNext:
+    loop cpcLoop
 
 cpcDone:
+    mov ecx,ebx
+;
+    pop ebp
     pop edi
     pop esi
+    pop edx
+    pop ebx
+    pop eax
     pop es
     pop ds
     ret
