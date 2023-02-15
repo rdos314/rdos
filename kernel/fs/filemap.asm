@@ -453,6 +453,7 @@ ProcessReadReq  Proc near
     pushad
 ;
     push ecx
+    push ebx
 ;
     mov cx,ds
     mov es,cx
@@ -461,10 +462,16 @@ ProcessReadReq  Proc near
     AllocateMemBlk
     mov edi,edx
 ;
-    mov cx,flat_sel
-    mov es,ecx
-;
+    pop ebx
     pop ecx
+;
+    mov ax,flat_sel
+    mov es,eax
+    mov es:[ebx].kre_phys_arr,edi
+;
+    mov eax,ecx
+    shl eax,9
+    mov es:[ebx].kre_size,eax
 ;
     mov ds,fs:vfsp_disc_sel
     mov eax,gs:[esi]
@@ -1024,7 +1031,6 @@ NotifyFileData	Proc near
     EnterSection ds:kf_section
     mov eax,gs:vfs_rd_start
     mov edx,gs:vfs_rd_start+4
-    int 3
     call FindReadReq
     jnc nfdProc
 ;
@@ -1038,6 +1044,7 @@ nfdProc:
 
 nfdUnlock:
     call UnlockSectors
+    int 3
 ;
     LeaveSection ds:kf_section
     clc
