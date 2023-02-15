@@ -926,6 +926,63 @@ CalcPageCount  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UnlockSectors
+;
+;       DESCRIPTION:    Unlock non-used sectors
+;
+;       PARAMETERS:     FS                 Part sel
+;                       ECX                Used blocks
+;                       GS                 File req
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockSectors  Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,serv_flat_sel
+    mov es,eax
+;
+    mov eax,gs:vfs_rd_sectors
+    sub eax,ecx
+    jz usDone
+;
+    shl ecx,3   
+    mov ebx,gs:vfs_rd_chain_ptr
+    add ebx,ecx
+    mov ecx,eax
+;
+    mov ds,fs:vfsp_disc_sel
+
+usLoop:
+    mov eax,gs:[ebx] 
+    mov edx,gs:[ebx+4] 
+    call BlockToBuf
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz usNext
+;
+    sub es:[esi].vfsp_ref_bitmap,1
+    jnz usNext
+;
+    dec ds:vfs_locked_pages
+
+usNext:
+    add ebx,8
+;
+    loop usLoop
+
+usDone:
+    popad
+    pop es
+    pop ds
+    ret
+UnlockSectors  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyFileData
 ;
 ;       DESCRIPTION:    Notify file data
@@ -961,23 +1018,28 @@ NotifyFileData	Proc near
 ;
     mov ecx,gs:vfs_rd_sectors
     or ecx,ecx
-    jz nfdOk
+    jz nfdDone
 ;
     mov ds,ebx
     EnterSection ds:kf_section
     mov eax,gs:vfs_rd_start
     mov edx,gs:vfs_rd_start+4
-    call FindReadReq
-    jc nfdOk
-;
     int 3
+    call FindReadReq
+    jnc nfdProc
+;
+    xor ecx,ecx
+    jmp nfdUnlock
+
+nfdProc:
     mov esi,gs:vfs_rd_chain_ptr
     call CalcPageCount
     call ProcessReadReq
+
+nfdUnlock:
+    call UnlockSectors
 ;
     LeaveSection ds:kf_section
-
-nfdOk:
     clc
 
 nfdDone:
