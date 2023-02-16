@@ -48,6 +48,7 @@ INCLUDE ..\os.inc
     extrn init_ser_io:near
     extrn init_log:near
     extrn init_mem_blk:near
+    extrn init_blk:near
     extrn init_app_mem:near
 
 code    SEGMENT byte public use16 'CODE'
@@ -79,6 +80,7 @@ init    PROC far
     call init_ser_io
     call init_log
     call init_mem_blk
+    call init_blk
     call init_app_mem
     clc
         ret

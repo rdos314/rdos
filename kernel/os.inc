@@ -1048,6 +1048,33 @@ MapServEntry    MACRO
 
 ;;;;;;;;;;;;; MEMORY BLOCK MANAGEMENT ;;;;;;;;;;
 
+
+;  IN  AX      Base allocation size
+;  IN  SI      Total header size
+;  OUT ES      Memory block selector
+CreateBlk         MACRO
+    OsGate create_blk_nr
+                    ENDM
+
+;  IN  ES      Memory block selector
+DeleteBlk    MACRO
+    OsGate delete_blk_nr
+                    ENDM
+
+;  IN  ES      Memory block selector
+;  IN  CX      Allocation size
+;  OUT EDX     Offset
+AllocateBlk    MACRO
+    OsGate allocate_blk_nr
+                    ENDM
+
+;  IN  ES      Memory block selector
+;  IN  EDX     Offset
+;  IN  CX      Allocation size
+FreeBlk    MACRO
+    OsGate free_blk_nr
+                    ENDM
+
 ;  IN  AX      Base allocation size
 ;  IN  CX      Minimum additional blocks
 ;  IN  SI      Reserved size

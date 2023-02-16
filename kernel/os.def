@@ -899,4 +899,9 @@ get_msi_vector_nr           = 817
 
 add_wait_for_adc_chan_nr    = 818
 
+create_blk_nr               = 819
+delete_blk_nr               = 820
+allocate_blk_nr             = 821
+free_blk_nr                 = 822
+
 osgate_entries              = 850
