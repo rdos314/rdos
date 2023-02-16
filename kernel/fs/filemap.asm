@@ -33,7 +33,7 @@ INCLUDE ..\driver.def
 INCLUDE ..\os\system.def
 include ..\handle.inc
 INCLUDE ..\filemap.inc
-INCLUDE ..\os\memblk.inc
+INCLUDE ..\os\blk.inc
 INCLUDE ..\os\exec.def
 include vfs.inc
 include vfsmsg.inc
@@ -63,7 +63,7 @@ kernel_req_entry  ENDS
 
 kernel_file       STRUC
 
-kf_memblk         mem_blk_header <>
+kf_blk            blk_header <>
 
 kf_info_phys      DD ?,?
 kf_sector_size    DW ?
@@ -215,12 +215,10 @@ CreateFileSel	Proc near
     push esi
     push edi
 ;
-    push ecx
+    int 3
     mov ax,32
-    mov cx,16
     mov si,SIZE kernel_file
-    CreateMemBlk64
-    pop ecx
+    CreateBlk
 ;
     InitSection es:kf_section
     mov es:kf_sector_size,cx
@@ -321,20 +319,13 @@ AddReadReq	Proc near
 ;
     mov bx,ds
     mov es,ebx
-    mov bx,flat_sel
-    mov ds,bx
 ;
-    push eax
-    push ecx
+    int 3
     push edx
-;
     mov cx,SIZE kernel_req_entry
-    AllocateMemBlk
+    AllocateBlk
     mov esi,edx
-;
     pop edx
-    pop ecx
-    pop eax
 ;
     mov ds:[esi].kre_pos,eax
     mov ds:[esi].kre_pos+4,edx
@@ -345,7 +336,7 @@ AddReadReq	Proc near
 ;
     mov ebx,es:kf_req_list
     mov ds:[esi].kre_next,ebx
-    mov es:kf_req_list,esi
+    mov ds:kf_req_list,esi
 ;
     mov ebx,esi
 ;

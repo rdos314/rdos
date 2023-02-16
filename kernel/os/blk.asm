@@ -37,12 +37,13 @@ BLK_EXTEND_SIGN   = 06FA6h
 
 blk_info	STRUC
 
+blk_prev_linear     DD ?
 blk_bitmap_offset   DW ?
 blk_data_offset     DW ?
 blk_bitmap_dd_count DW ?
 blk_free_bits       DW ?
 blk_size_shift      DB ?
-blk_pad             DB ?
+blk_spinlock        DB ?
 
 blk_info	ENDS
 
@@ -72,11 +73,12 @@ code    SEGMENT byte public use16 'CODE'
 ;
 ;   DESCRIPTION:    Create new block
 ;
-;   RETURNS:        ES      Block selector
+;   RETURNS:        DS      Block selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBlock     Proc near
+    push es
     pushad
 ;
     mov eax,1000h
@@ -85,6 +87,7 @@ CreateBlock     Proc near
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector32
+    mov ds,bx
     mov es,bx
 ;
     xor edi,edi
@@ -92,10 +95,11 @@ CreateBlock     Proc near
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
-    mov es:blk_linear,edx
-    mov es:blk_size,1000h
+    mov ds:blk_linear,edx
+    mov ds:blk_size,1000h
 ;
     popad
+    pop es
     ret
 CreateBlock     Endp
 
@@ -106,7 +110,7 @@ CreateBlock     Endp
 ;
 ;   DESCRIPTION:    Init memory block
 ;
-;   PARAMETERS:     ES      Memory block selector
+;   PARAMETERS:     DS      Memory block selector
 ;                   AX      Base allocation size
 ;                   SI      Header size
 ;
@@ -115,7 +119,7 @@ CreateBlock     Endp
 InitBlock     Proc near
     pusha
 ;
-    mov es:blk_sign,BLK_BASE_SIGN
+    mov ds:blk_sign,BLK_BASE_SIGN
 ;
     test si,1
     jz ibStartOk
@@ -123,7 +127,7 @@ InitBlock     Proc near
     inc si
 
 ibStartOk:
-    mov es:blk_info_offset,si
+    mov ds:blk_info_offset,si
 ;
     xor cl,cl
     dec ax
@@ -137,66 +141,69 @@ ibShiftLoop:
     jmp ibShiftLoop
 
 ibShiftOk:
-    mov es:[si].blk_size_shift,cl
+    mov ds:[si].blk_size_shift,cl
 ;
     mov bx,si
     add bx,SIZE blk_info
     mov ax,1000h
     sub ax,bx
     shr ax,cl
-    mov es:[si].blk_free_bits,ax
+    mov ds:[si].blk_free_bits,ax
     dec ax
     shr ax,3
     inc ax
-    mov es:[si].blk_bitmap_dd_count,ax
+    mov ds:[si].blk_bitmap_dd_count,ax
 ;
-    mov ax,es:[si].blk_bitmap_dd_count
+    mov ax,ds:[si].blk_bitmap_dd_count
     add ax,SIZE blk_info
     add ax,si
     dec ax
-    mov cl,es:[si].blk_size_shift
+    mov cl,ds:[si].blk_size_shift
     add cl,3
     shr ax,cl
     inc ax
     shl ax,cl
-    mov es:[si].blk_data_offset,ax
+    mov ds:[si].blk_data_offset,ax
 ;
     mov bx,ax
     mov ax,1000h
     sub ax,bx
-    mov cl,es:[si].blk_size_shift
+    mov cl,ds:[si].blk_size_shift
     shr ax,cl    
-    mov es:[si].blk_free_bits,ax
+    mov ds:[si].blk_free_bits,ax
     dec ax
     shr ax,5
     inc ax
     shl ax,2
-    mov es:[si].blk_bitmap_dd_count,ax
+    mov ds:[si].blk_bitmap_dd_count,ax
 ;
-    mov bx,es:[si].blk_data_offset
+    mov bx,ds:[si].blk_data_offset
     sub bx,ax
-    mov es:[si].blk_bitmap_offset,bx
+    mov ds:[si].blk_bitmap_offset,bx
 ;
-    mov bx,es:[si].blk_free_bits
+    mov bx,ds:[si].blk_free_bits
     mov cl,3
     shr bx,cl
-    mov ax,es:[si].blk_bitmap_dd_count
+    mov ax,ds:[si].blk_bitmap_dd_count
     sub ax,bx
     jz ibDone
 ;
     mov dl,-1
-    mov bx,es:[si].blk_data_offset
+    mov bx,ds:[si].blk_data_offset
 
 ibPadLoop:
     dec bx
-    mov es:[bx],dl
+    mov ds:[bx],dl
     sub ax,1
     jnz ibPadLoop
     
 ibDone:
-    mov ax,es:[si].blk_bitmap_dd_count
+    mov ax,ds:[si].blk_bitmap_dd_count
     shr ax,2
-    mov es:[si].blk_bitmap_dd_count,ax
+    mov ds:[si].blk_bitmap_dd_count,ax
+;
+    mov ds:[si].blk_prev_linear,0
+    mov ds:[si].blk_spinlock,0
 ;
     popa
     ret
@@ -209,7 +216,7 @@ InitBlock     Endp
 ;
 ;   DESCRIPTION:    Init extended memory block
 ;
-;   PARAMETERS:     ES      Memory block selector
+;   PARAMETERS:     DS      Memory block selector
 ;                   EDX     Block offset
 ;                   CL      Size shift
 ;
@@ -218,64 +225,64 @@ InitBlock     Endp
 InitExtend     Proc near
     pusha
 ;
-    mov es:[edx].blk_sign,BLK_EXTEND_SIGN
-    mov es:[edx].blke_size_shift,cl
+    mov ds:[edx].blk_sign,BLK_EXTEND_SIGN
+    mov ds:[edx].blke_size_shift,cl
 ;
     mov bx,SIZE blk_extend
     mov ax,1000h
     sub ax,bx
     shr ax,cl
-    mov es:[edx].blke_free_bits,ax
+    mov ds:[edx].blke_free_bits,ax
     dec ax
     shr ax,3
     inc ax
-    mov es:[edx].blke_bitmap_dd_count,ax
+    mov ds:[edx].blke_bitmap_dd_count,ax
 ;
     add ax,SIZE blk_extend
     dec ax
-    mov cl,es:[edx].blke_size_shift
+    mov cl,ds:[edx].blke_size_shift
     add cl,3
     shr ax,cl
     inc ax
     shl ax,cl
-    mov es:[edx].blke_data_offset,ax
+    mov ds:[edx].blke_data_offset,ax
 ;
     mov bx,ax
     mov ax,1000h
     sub ax,bx
-    mov cl,es:[edx].blke_size_shift
+    mov cl,ds:[edx].blke_size_shift
     shr ax,cl    
-    mov es:[edx].blke_free_bits,ax
+    mov ds:[edx].blke_free_bits,ax
     dec ax
     shr ax,5
     inc ax
     shl ax,2
-    mov es:[edx].blke_bitmap_dd_count,ax
+    mov ds:[edx].blke_bitmap_dd_count,ax
 ;
-    mov bx,es:[edx].blke_data_offset
+    mov bx,ds:[edx].blke_data_offset
     sub bx,ax
-    mov es:[edx].blke_bitmap_offset,bx
+    mov ds:[edx].blke_bitmap_offset,bx
 ;
-    mov bx,es:[edx].blke_free_bits
+    mov bx,ds:[edx].blke_free_bits
     mov cl,3
     shr bx,cl
-    mov ax,es:[edx].blke_bitmap_dd_count
+    mov ax,ds:[edx].blke_bitmap_dd_count
     sub ax,bx
     jz ieDone
 ;
     mov dl,-1
-    movzx ebx,es:[edx].blke_data_offset
+    movzx ebx,ds:[edx].blke_data_offset
 
 iePadLoop:
     dec ebx
-    mov es:[edx+ebx],dl
+    mov ds:[edx+ebx],dl
     sub ax,1
     jnz iePadLoop
     
 ieDone:
-    mov ax,es:[edx].blke_bitmap_dd_count
+    mov ax,ds:[edx].blke_bitmap_dd_count
     shr ax,2
-    mov es:[edx].blke_bitmap_dd_count,ax
+    mov ds:[edx].blke_bitmap_dd_count,ax
 ;
     popa
     ret
@@ -291,7 +298,7 @@ InitExtend     Endp
 ;   PARAMETERS:     AX      Base allocation size
 ;                   SI      Reserved size
 ;
-;   RETURNS:        ES      Block selector
+;   RETURNS:        DS      Block selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -310,14 +317,20 @@ create_blk     Endp
 ;
 ;   DESCRIPTION:    Delete block
 ;
-;   PARAMETERS:     ES      Block selector
+;   PARAMETERS:     DS      Block selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_blk_name    DB 'Delete Blk', 0
 
 delete_blk     Proc far
+    push es
     push eax
+;
+    mov ax,ds
+    mov es,ax
+    xor ax,ax
+    mov ds,ax
 ;
     mov ax,es:blk_sign
     cmp ax,BLK_BASE_SIGN
@@ -333,8 +346,57 @@ fmbSignOk:
 
 fmbDone:
     pop eax    
+    pop es
     retf32
 delete_blk     Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;   NAME:           FreePrev
+;
+;   DESCRIPTION:    Free prev linear
+;
+;   PARAMETERS:     DS      Block selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePrev     Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    xor edx,edx
+    xchg edx,ds:blk_prev_linear
+    or edx,edx
+    jz fpDone
+;
+    push edx
+    mov ecx,ds:blk_size
+    shr ecx,12
+    dec ecx
+
+fpPageClear:
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    add edx,1000h
+    loop fpPageClear
+;
+    pop edx
+
+    mov ecx,ds:blk_size
+    FreeLinear
+
+fpDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+FreePrev  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -343,20 +405,27 @@ delete_blk     Endp
 ;
 ;   DESCRIPTION:    Extend block size
 ;
-;   PARAMETERS:     ES      Block selector
+;   PARAMETERS:     DS      Block selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Extend     Proc near
     pushad
 ;
-    mov eax,es:blk_size
+    mov eax,ds:blk_prev_linear
+    or eax,eax
+    jz ePrevOk
+;
+    call FreePrev
+
+ePrevOk:
+    mov eax,ds:blk_size
     add eax,1000h
     AllocateBigLinear
 ;
-    mov esi,es:blk_linear
+    mov esi,ds:blk_linear
     mov edi,edx
-    mov ecx,es:blk_size
+    mov ecx,ds:blk_size
     shr ecx,12
 
 ePageCopy:
@@ -370,36 +439,18 @@ ePageCopy:
     add edi,1000h
     loop ePageCopy
 ;
-    mov bx,es
-    mov ecx,es:blk_size
+    mov bx,ds
+    mov ecx,ds:blk_size
     add ecx,1000h
     CreateDataSelector32
-    mov es,bx
-    xchg edx,es:blk_linear
+    mov ds,bx
+    xchg edx,ds:blk_linear
+    mov ds:blk_prev_linear,edx
 ;
-    mov ax,1
-    WaitMilliSec
-;
-    push edx
-    mov ecx,es:blk_size
-    shr ecx,12
-
-ePageClear:
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-;
-    add edx,1000h
-    loop ePageClear
-;
-    pop edx
-    mov ecx,es:blk_size
-    FreeLinear
-;
-    mov edx,es:blk_size
-    add es:blk_size,1000h
-    mov si,es:blk_info_offset
-    mov cl,es:[si].blk_size_shift
+    mov edx,ds:blk_size
+    add ds:blk_size,1000h
+    mov si,ds:blk_info_offset
+    mov cl,ds:[si].blk_size_shift
     call InitExtend
 ;
     popad
@@ -413,7 +464,7 @@ Extend     Endp
 ;
 ;   DESCRIPTION:    Allocate single bit block
 ;
-;   PARAMETERS:     ES      Memory block selector
+;   PARAMETERS:     DS          Block selector
 ;
 ;   RETURNS:        NC
 ;                       BX      Memory bit
@@ -425,12 +476,12 @@ AllocateBit1    Proc near
     push ecx
     push edx
 ;
-    mov bx,es:[si].blk_bitmap_offset
-    mov cx,es:[si].blk_bitmap_dd_count
+    mov bx,ds:[si].blk_bitmap_offset
+    mov cx,ds:[si].blk_bitmap_dd_count
     xor dx,dx
 
 abLoop1:
-    mov eax,es:[bx]
+    mov eax,ds:[bx]
     cmp eax,-1
     je abNext1
 ;
@@ -439,8 +490,8 @@ abLoop1:
     bsf ecx,eax
 ;
     add cx,dx
-    mov bx,es:[si].blk_bitmap_offset
-    lock bts es:[bx],cx
+    mov bx,ds:[si].blk_bitmap_offset
+    lock bts ds:[bx],cx
     mov bx,cx
     pop ecx
     jc abLoop1
@@ -467,7 +518,7 @@ AllocateBit1    Endp
 ;
 ;   DESCRIPTION:    Allocate a two bit block
 ;
-;   PARAMETERS:     ES      Memory block selector
+;   PARAMETERS:     DS          Block selector
 ;
 ;   RETURNS:        NC
 ;                       BX      Memory bit
@@ -480,12 +531,12 @@ AllocateBit2    Proc near
     push edx
     push ebp
 ;
-    mov bx,es:[si].blk_bitmap_offset
-    mov cx,es:[si].blk_bitmap_dd_count
+    mov bx,ds:[si].blk_bitmap_offset
+    mov cx,ds:[si].blk_bitmap_dd_count
     xor dx,dx
 
 abLoop2:
-    mov eax,es:[bx]
+    mov eax,ds:[bx]
     cmp eax,-1
     je abNext2
 ;
@@ -500,12 +551,12 @@ abBitLoop2:
 ;
     add bp,dx
     mov ax,bp
-    mov bx,es:[si].blk_bitmap_offset
-    lock bts es:[bx],ax
+    mov bx,ds:[si].blk_bitmap_offset
+    lock bts ds:[bx],ax
     jc abLoop2
 ;
     inc ax
-    lock bts es:[bx],ax
+    lock bts ds:[bx],ax
     jc abBitRevert2
 ;
     mov bx,bp
@@ -514,7 +565,7 @@ abBitLoop2:
 
 abBitRevert2:
     dec ax
-    lock btr es:[bx],ax
+    lock btr ds:[bx],ax
     jmp abLoop2
 
 abSkip2:
@@ -547,7 +598,7 @@ AllocateBit2    Endp
 ;
 ;   DESCRIPTION:    Allocate a four bit block
 ;
-;   PARAMETERS:     ES      Memory block selector
+;   PARAMETERS:     DS          Block selector
 ;
 ;   RETURNS:        NC
 ;                       BX      Memory bit
@@ -560,12 +611,12 @@ AllocateBit4    Proc near
     push edx
     push ebp
 ;
-    mov bx,es:[si].blk_bitmap_offset
-    mov cx,es:[si].blk_bitmap_dd_count
+    mov bx,ds:[si].blk_bitmap_offset
+    mov cx,ds:[si].blk_bitmap_dd_count
     xor dx,dx
 
 abLoop4:
-    mov eax,es:[bx]
+    mov eax,ds:[bx]
     cmp eax,-1
     je abNext4
 ;
@@ -586,20 +637,20 @@ abBitLoop4:
 ;
     add bp,dx
     mov ax,bp
-    mov bx,es:[si].blk_bitmap_offset
-    lock bts es:[bx],ax
+    mov bx,ds:[si].blk_bitmap_offset
+    lock bts ds:[bx],ax
     jc abLoop4
 ;
     inc ax
-    lock bts es:[bx],ax
+    lock bts ds:[bx],ax
     jc abBitRevert41
 ;
     inc ax
-    lock bts es:[bx],ax
+    lock bts ds:[bx],ax
     jc abBitRevert42
 ;
     inc ax
-    lock bts es:[bx],ax
+    lock bts ds:[bx],ax
     jc abBitRevert43
 ;
     mov bx,bp
@@ -608,15 +659,15 @@ abBitLoop4:
 
 abBitRevert43:
     dec ax
-    lock btr es:[bx],ax
+    lock btr ds:[bx],ax
 
 abBitRevert42:
     dec ax
-    lock btr es:[bx],ax
+    lock btr ds:[bx],ax
 
 abBitRevert41:
     dec ax
-    lock btr es:[bx],ax
+    lock btr ds:[bx],ax
     jmp abLoop4
 
 abSkip43:
@@ -655,8 +706,8 @@ AllocateBit4    Endp
 ;
 ;   DESCRIPTION:    Allocate byte block
 ;
-;   PARAMETERS:     ES      Memory block selector
-;                   AX      Byte count
+;   PARAMETERS:     DS          Block selector
+;                   AX          Byte count
 ;
 ;   RETURNS:        NC
 ;                       BX      Memory bit
@@ -670,13 +721,13 @@ AllocateByte    Proc near
     push ebp    
 ;
     mov bp,ax
-    mov bx,es:[si].blk_bitmap_offset
-    mov cx,es:[si].blk_bitmap_dd_count
+    mov bx,ds:[si].blk_bitmap_offset
+    mov cx,ds:[si].blk_bitmap_dd_count
     shl cx,2
     mov dx,bp
 
 abtCheck:
-    mov al,es:[bx]
+    mov al,ds:[bx]
     or al,al
     jnz abtNext
 ;
@@ -691,7 +742,7 @@ abtCheck:
 
 abtTake:
     mov al,-1
-    xchg al,es:[bx]
+    xchg al,ds:[bx]
     cmp al,-1
     je abtRevert
 ;
@@ -706,13 +757,13 @@ abtTake:
     jmp abtTake
 
 abtTaken:
-    sub bx,es:[si].blk_bitmap_offset
+    sub bx,ds:[si].blk_bitmap_offset
     shl bx,3
     clc
     jmp abtDone
 
 abtRestore:
-    mov es:[bx],al
+    mov ds:[bx],al
 
 abtRevert:
     or dx,dx
@@ -721,7 +772,7 @@ abtRevert:
     inc bx
     dec dx
     xor al,al
-    mov es:[bx],al
+    mov ds:[bx],al
     jmp abtRevert
 
 abtNext:
@@ -747,7 +798,7 @@ AllocateByte    Endp
 ;
 ;   DESCRIPTION:    Allocate single bit block
 ;
-;   PARAMETERS:     ES:EDX      Extended offset
+;   PARAMETERS:     DS:EDX      Extended offset
 ;
 ;   RETURNS:        NC
 ;                       BX      Memory bit
@@ -759,12 +810,12 @@ AllocateExtendBit1      Proc near
     push ecx
     push edx
 ;
-    movzx ebx,es:[edx].blke_bitmap_offset
-    mov cx,es:[edx].blke_bitmap_dd_count
+    movzx ebx,ds:[edx].blke_bitmap_offset
+    mov cx,ds:[edx].blke_bitmap_dd_count
     xor dx,dx
 
 aebLoop1:
-    mov eax,es:[ebx+edx]
+    mov eax,ds:[ebx+edx]
     cmp eax,-1
     je aebNext1
 ;
@@ -773,8 +824,8 @@ aebLoop1:
     bsf ecx,eax
 ;    
     add cx,dx
-    mov bx,es:[edx].blke_bitmap_offset
-    lock bts es:[ebx+edx],cx
+    mov bx,ds:[edx].blke_bitmap_offset
+    lock bts ds:[ebx+edx],cx
     mov bx,cx
     pop ecx
     jc aebLoop1
@@ -801,7 +852,7 @@ AllocateExtendBit1      Endp
 ;
 ;   DESCRIPTION:    Allocate a two bit block
 ;
-;   PARAMETERS:     ES:EDX      Extended offset
+;   PARAMETERS:     DS:EDX      Extended offset
 ;
 ;   RETURNS:        NC
 ;                       BX      Memory bit
@@ -814,12 +865,12 @@ AllocateExtendBit2      Proc near
     push edx
     push ebp
 ;
-    movzx ebx,es:[edx].blke_bitmap_offset
-    mov cx,es:[edx].blke_bitmap_dd_count
+    movzx ebx,ds:[edx].blke_bitmap_offset
+    mov cx,ds:[edx].blke_bitmap_dd_count
     xor dx,dx
 
 aebLoop2:
-    mov eax,es:[ebx+edx]
+    mov eax,ds:[ebx+edx]
     cmp eax,-1
     je aebNext2
 ;
@@ -834,13 +885,13 @@ aebBitLoop2:
 ;
     add bp,dx
     mov ax,bp
-    movzx ebx,es:[edx].blke_bitmap_offset
+    movzx ebx,ds:[edx].blke_bitmap_offset
     add ebx,edx
-    lock bts es:[ebx],ax
+    lock bts ds:[ebx],ax
     jc aebLoop2
 ;
     inc ax
-    lock bts es:[ebx],ax
+    lock bts ds:[ebx],ax
     jc aebRevert2
 ;
     mov bx,bp
@@ -849,7 +900,7 @@ aebBitLoop2:
 
 aebRevert2:
     dec ax
-    lock btr es:[ebx],ax
+    lock btr ds:[ebx],ax
     jmp aebLoop2
 
 aebSkip2:
@@ -882,7 +933,7 @@ AllocateExtendBit2      Endp
 ;
 ;   DESCRIPTION:    Allocate a four bit block
 ;
-;   PARAMETERS:     ES:EDX      Extended offset
+;   PARAMETERS:     DS:EDX      Extended offset
 ;
 ;   RETURNS:        NC
 ;                       BX      Memory bit
@@ -895,12 +946,12 @@ AllocateExtendBit4    Proc near
     push edx
     push ebp
 ;
-    movzx ebx,es:[edx].blke_bitmap_offset
-    mov cx,es:[edx].blke_bitmap_dd_count
+    movzx ebx,ds:[edx].blke_bitmap_offset
+    mov cx,ds:[edx].blke_bitmap_dd_count
     xor dx,dx
 
 aebLoop4:
-    mov eax,es:[ebx+edx]
+    mov eax,ds:[ebx+edx]
     cmp eax,-1
     je aebNext4
 ;
@@ -921,21 +972,21 @@ aebBitLoop4:
 ;
     add bp,dx
     mov ax,bp
-    movzx ebx,es:[edx].blke_bitmap_offset
+    movzx ebx,ds:[edx].blke_bitmap_offset
     add ebx,edx
-    lock bts es:[ebx],ax
+    lock bts ds:[ebx],ax
     jc aebLoop4
 ;
     inc ax
-    lock bts es:[ebx],ax
+    lock bts ds:[ebx],ax
     jc aebBitRevert41
 ;
     inc ax
-    lock bts es:[ebx],ax
+    lock bts ds:[ebx],ax
     jc aebBitRevert42
 ;
     inc ax
-    lock bts es:[ebx],ax
+    lock bts ds:[ebx],ax
     jc aebBitRevert43
 ;
     mov bx,bp
@@ -944,15 +995,15 @@ aebBitLoop4:
 
 aebBitRevert43:
     dec ax
-    lock btr es:[ebx],ax
+    lock btr ds:[ebx],ax
 
 aebBitRevert42:
     dec ax
-    lock btr es:[ebx],ax
+    lock btr ds:[ebx],ax
 
 aebBitRevert41:
     dec ax
-    lock btr es:[ebx],ax
+    lock btr ds:[ebx],ax
     jmp abLoop4
 
 aebSkip43:
@@ -992,7 +1043,7 @@ AllocateExtendBit4    Endp
 ;
 ;   DESCRIPTION:    Allocate byte block
 ;
-;   PARAMETERS:     ES:EDX      Extended offset
+;   PARAMETERS:     DS:EDX      Extended offset
 ;                   AX          Byte count
 ;
 ;   RETURNS:        NC
@@ -1007,13 +1058,13 @@ AllocateExtendByte    Proc near
     push ebp    
 ;
     mov bp,ax
-    movzx ebx,es:[edx].blke_bitmap_offset
-    mov cx,es:[edx].blke_bitmap_dd_count
+    movzx ebx,ds:[edx].blke_bitmap_offset
+    mov cx,ds:[edx].blke_bitmap_dd_count
     shl cx,2
     mov dx,bp
 
 aebtCheck:
-    mov al,es:[ebx+edx]
+    mov al,ds:[ebx+edx]
     or al,al
     jnz aebtNext
 ;
@@ -1028,7 +1079,7 @@ aebtCheck:
 
 aebtTake:
     mov al,-1
-    xchg al,es:[ebx+edx]
+    xchg al,ds:[ebx+edx]
     cmp al,-1
     je aebtRevert
 ;
@@ -1043,13 +1094,13 @@ aebtTake:
     jmp aebtTake
 
 aebtTaken:
-    sub bx,es:[edx].blke_bitmap_offset
+    sub bx,ds:[edx].blke_bitmap_offset
     shl bx,3
     clc
     jmp aebtDone
 
 aebtRestore:
-    mov es:[ebx+edx],al
+    mov ds:[ebx+edx],al
 
 aebtRevert:
     or dx,dx
@@ -1058,7 +1109,7 @@ aebtRevert:
     inc ebx
     dec dx
     xor al,al
-    mov es:[ebx+edx],al
+    mov ds:[ebx+edx],al
     jmp aebtRevert
 
 aebtNext:
@@ -1084,10 +1135,10 @@ AllocateExtendByte    Endp
 ;
 ;   DESCRIPTION:    Allocate in base block
 ;
-;   PARAMETERS:     ES      Memory block selector
-;                   CX      Size
+;   PARAMETERS:     DS          Block selector
+;                   CX          Size
 ;
-;   RETURNS:        EDX     Offset
+;   RETURNS:        EDX         Offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1097,15 +1148,15 @@ AllocateBase    Proc near
     push ecx
     push esi
 ;
-    mov si,es:blk_info_offset
+    mov si,ds:blk_info_offset
 ;
-    mov bx,es:[si].blk_free_bits
+    mov bx,ds:[si].blk_free_bits
     or bx,bx
     stc
     jz abDone
 ;
     mov ax,cx
-    mov cl,es:[si].blk_size_shift
+    mov cl,ds:[si].blk_size_shift
     dec ax
     shr ax,cl
     jz ab1
@@ -1122,33 +1173,33 @@ AllocateBase    Proc near
     jc abDone
 ;
     shl ax,3
-    lock sub es:[si].blk_free_bits,ax
+    lock sub ds:[si].blk_free_bits,ax
     jmp abOk
 
 ab1:
     call AllocateBit1
     jc abDone
 ;
-    lock sub es:[si].blk_free_bits,1
+    lock sub ds:[si].blk_free_bits,1
     jmp abOk
 
 ab2:
     call AllocateBit2
     jc abDone
 ;
-    lock sub es:[si].blk_free_bits,2
+    lock sub ds:[si].blk_free_bits,2
     jmp abOk
 
 ab4:
     call AllocateBit4
     jc abDone
 ;
-    lock sub es:[si].blk_free_bits,4
+    lock sub ds:[si].blk_free_bits,4
     jmp abOk
 
 abOk:
     shl bx,cl
-    add bx,es:[si].blk_data_offset
+    add bx,ds:[si].blk_data_offset
     movzx edx,bx
     clc
 
@@ -1167,7 +1218,7 @@ AllocateBase    Endp
 ;
 ;   DESCRIPTION:    Allocate from extended block
 ;
-;   PARAMETERS:     ES:EDX      Extended offset
+;   PARAMETERS:     DS:EDX      Extended offset
 ;                   CX          Size
 ;
 ;   RETURNS:        EDX         Offset
@@ -1180,7 +1231,7 @@ AllocateExtend  Proc near
     push ecx
     push esi
 ;
-    mov ax,es:[edx].blk_sign
+    mov ax,ds:[edx].blk_sign
     cmp ax,BLK_EXTEND_SIGN
     je aeSignOk
 ;
@@ -1189,13 +1240,13 @@ AllocateExtend  Proc near
     jmp aeDone
 
 aeSignOk:
-    mov ax,es:[edx].blke_free_bits
+    mov ax,ds:[edx].blke_free_bits
     or ax,ax
     stc
     jz aeDone
 ;
     mov ax,cx
-    mov cl,es:[edx].blke_size_shift
+    mov cl,ds:[edx].blke_size_shift
     dec ax
     shr ax,cl
     je ae1
@@ -1212,33 +1263,33 @@ aeSignOk:
     jc aeDone
 ;
     shl ax,3
-    lock sub es:[edx].blke_free_bits,ax
+    lock sub ds:[edx].blke_free_bits,ax
     jmp aeOk
 
 ae1:
     call AllocateExtendBit1
     jc aeDone
 ;
-    lock sub es:[edx].blke_free_bits,1
+    lock sub ds:[edx].blke_free_bits,1
     jmp aeOk
 
 ae2:
     call AllocateExtendBit2
     jc aeDone
 ;
-    lock sub es:[edx].blke_free_bits,2
+    lock sub ds:[edx].blke_free_bits,2
     jmp aeOk
 
 ae4:
     call AllocateExtendBit4
     jc aeDone
 ;
-    lock sub es:[edx].blke_free_bits,4
+    lock sub ds:[edx].blke_free_bits,4
     jmp aeOk
 
 aeOk:
     shl bx,cl
-    add bx,es:[edx].blke_data_offset
+    add bx,ds:[edx].blke_data_offset
     movzx ebx,bx
     add edx,ebx
     clc
@@ -1258,7 +1309,7 @@ AllocateExtend  Endp
 ;
 ;   DESCRIPTION:    Allocate block
 ;
-;   PARAMETERS:     ES      Block selector
+;   PARAMETERS:     DS      Block selector
 ;                   CX      Size
 ;
 ;   RETURNS:        EDX     Offset
@@ -1270,7 +1321,7 @@ allocate_blk_name    DB 'Allocate Blk', 0
 allocate_blk     Proc far
     push eax
 ;
-    mov ax,es:blk_sign
+    mov ax,ds:blk_sign
     cmp ax,BLK_BASE_SIGN
     je ambSignOk
 ;
@@ -1279,6 +1330,27 @@ allocate_blk     Proc far
     jmp ambDone
 
 ambSignOk:
+    mov ax,ds
+    lsl eax,ax
+    inc eax
+    cmp eax,ds:blk_size
+    je ambLimitOk
+;
+    test ax,0FFFh
+    jz ambSelOk
+;
+    int 3
+    stc
+    jmp ambDone
+
+ambSelOk:
+    mov ds,ax
+
+
+
+
+
+ambLimitOk:
     call AllocateBase
     jnc ambDone
 
@@ -1286,7 +1358,7 @@ ambExtend:
     mov edx,1000h
 
 ambExtendLoop:
-    cmp edx,es:blk_size
+    cmp edx,ds:blk_size
     jne ambCheck
 ;
     call Extend
@@ -1314,17 +1386,17 @@ allocate_blk     Endp
 ;
 ;   DESCRIPTION:    Free in base block
 ;
-;   PARAMETERS:     ES      Memory block selector
+;   PARAMETERS:     DS      Block selector
 ;                   DX      Offset
 ;                   CX      Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeBase    Proc near
-    mov si,es:blk_info_offset
-    mov di,es:[si].blk_bitmap_offset
+    mov si,ds:blk_info_offset
+    mov di,ds:[si].blk_bitmap_offset
     mov bx,dx
-    sub bx,es:[si].blk_data_offset
+    sub bx,ds:[si].blk_data_offset
     jnc fbBaseOk
 ;
     int 3
@@ -1333,7 +1405,7 @@ FreeBase    Proc near
 
 fbBaseOk:
     mov ax,cx
-    mov cl,es:[si].blk_size_shift
+    mov cl,ds:[si].blk_size_shift
     shr bx,cl
 ;
     dec ax
@@ -1355,7 +1427,7 @@ fbBaseOk:
 
 fbByteLoop:
     xor dl,dl
-    xchg dl,es:[di]
+    xchg dl,ds:[di]
     cmp dl,-1
     je fbByteNext
 ;
@@ -1368,12 +1440,12 @@ fbByteNext:
     loop fbByteLoop
 ;
     shl ax,3    
-    lock add es:[si].blk_free_bits,ax
+    lock add ds:[si].blk_free_bits,ax
     clc
     jmp fbDone
 
 fb1:
-    lock btr es:[di],bx
+    lock btr ds:[di],bx
     jc fb1Ok1
 ;
     int 3
@@ -1381,11 +1453,11 @@ fb1:
     jmp fbDone
 
 fb1Ok1:
-    lock add es:[si].blk_free_bits,1
+    lock add ds:[si].blk_free_bits,1
     jmp fbDone
 
 fb2:
-    lock btr es:[di],bx
+    lock btr ds:[di],bx
     jc fb2Ok1
 ;
     int 3
@@ -1394,7 +1466,7 @@ fb2:
 
 fb2Ok1:
     inc bx
-    lock btr es:[di],bx
+    lock btr ds:[di],bx
     jc fb2Ok2
 ;
     int 3
@@ -1402,11 +1474,11 @@ fb2Ok1:
     jmp fbDone
 
 fb2Ok2:
-    lock add es:[si].blk_free_bits,2
+    lock add ds:[si].blk_free_bits,2
     jmp fbDone
 
 fb4:
-    lock btr es:[di],bx
+    lock btr ds:[di],bx
     jc fb4Ok1
 ;
     int 3
@@ -1415,7 +1487,7 @@ fb4:
 
 fb4Ok1:
     inc bx
-    lock btr es:[di],bx
+    lock btr ds:[di],bx
     jc fb4Ok2
 ;
     int 3
@@ -1424,7 +1496,7 @@ fb4Ok1:
 
 fb4Ok2:
     inc bx
-    lock btr es:[di],bx
+    lock btr ds:[di],bx
     jc fb4Ok3
 ;
     int 3
@@ -1433,7 +1505,7 @@ fb4Ok2:
 
 fb4Ok3:
     inc bx
-    lock btr es:[di],bx
+    lock btr ds:[di],bx
     jc fb4Ok4
 ;
     int 3
@@ -1441,7 +1513,7 @@ fb4Ok3:
     jmp fbDone
 
 fb4Ok4:
-    lock add es:[si].blk_free_bits,4
+    lock add ds:[si].blk_free_bits,4
     clc
 
 fbDone:
@@ -1455,7 +1527,7 @@ FreeBase    Endp
 ;
 ;   DESCRIPTION:    Free in extended block
 ;
-;   PARAMETERS:     ES:EDX      Extended offset
+;   PARAMETERS:     DS:EDX      Extended offset
 ;                   CX          Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1464,9 +1536,9 @@ FreeExt    Proc near
     mov bx,dx
     and bx,0FFFh
     and dx,0F000h
-    movzx edi,es:[edx].blke_bitmap_offset
+    movzx edi,ds:[edx].blke_bitmap_offset
     add edi,edx
-    sub bx,es:[edx].blke_data_offset
+    sub bx,ds:[edx].blke_data_offset
     jnc feBaseOk
 ;
     int 3
@@ -1475,7 +1547,7 @@ FreeExt    Proc near
 
 feBaseOk:
     mov ax,cx
-    mov cl,es:[edx].blke_size_shift
+    mov cl,ds:[edx].blke_size_shift
     shr ebx,cl
 ;
     dec ax
@@ -1498,7 +1570,7 @@ feBaseOk:
 
 feByteLoop:
     xor dl,dl
-    xchg dl,es:[edi]
+    xchg dl,ds:[edi]
     cmp dl,-1
     je feByteNext
 ;
@@ -1511,12 +1583,12 @@ feByteNext:
     loop feByteLoop
 ;
     shl ax,3    
-    lock add es:[edx].blke_free_bits,ax
+    lock add ds:[edx].blke_free_bits,ax
     clc
     jmp feDone
 
 fe1:
-    lock btr es:[edi],bx
+    lock btr ds:[edi],bx
     jc fe1Ok1
 ;
     int 3
@@ -1524,11 +1596,11 @@ fe1:
     jmp feDone
 
 fe1Ok1:
-    lock add es:[edx].blke_free_bits,1
+    lock add ds:[edx].blke_free_bits,1
     jmp feDone
 
 fe2:
-    lock btr es:[edi],bx
+    lock btr ds:[edi],bx
     jc fe2Ok1
 ;
     int 3
@@ -1537,7 +1609,7 @@ fe2:
 
 fe2Ok1:
     inc bx
-    lock btr es:[edi],bx
+    lock btr ds:[edi],bx
     jc fe2Ok2
 ;
     int 3
@@ -1545,11 +1617,11 @@ fe2Ok1:
     jmp feDone
 
 fe2Ok2:
-    lock add es:[edx].blke_free_bits,2
+    lock add ds:[edx].blke_free_bits,2
     jmp feDone
 
 fe4:
-    lock btr es:[edi],bx
+    lock btr ds:[edi],bx
     jc fe4Ok1
 ;
     int 3
@@ -1558,7 +1630,7 @@ fe4:
 
 fe4Ok1:
     inc bx
-    lock btr es:[edi],bx
+    lock btr ds:[edi],bx
     jc fe4Ok2
 ;
     int 3
@@ -1567,7 +1639,7 @@ fe4Ok1:
 
 fe4Ok2:
     inc bx
-    lock btr es:[edi],bx
+    lock btr ds:[edi],bx
     jc fe4Ok3
 ;
     int 3
@@ -1576,7 +1648,7 @@ fe4Ok2:
 
 fe4Ok3:
     inc bx
-    lock btr es:[edi],bx
+    lock btr ds:[edi],bx
     jc fe4Ok4
 ;
     int 3
@@ -1584,7 +1656,7 @@ fe4Ok3:
     jmp feDone
 
 fe4Ok4:
-    lock add es:[edx].blke_free_bits,4
+    lock add ds:[edx].blke_free_bits,4
     clc
 
 feDone:
@@ -1598,7 +1670,7 @@ FreeExt    Endp
 ;
 ;   DESCRIPTION:    Free block based on linear address
 ;
-;   PARAMETERS:     ES      Memory block selector
+;   PARAMETERS:     DS      Block selector
 ;                   EDX     Offset
 ;                   CX      Size
 ;
@@ -1607,8 +1679,6 @@ FreeExt    Endp
 free_blk_name    DB 'Free Blk', 0
 
 free_blk     Proc far
-    push ds
-    push es
     pushad
 ;
     cmp edx,1000h
@@ -1622,8 +1692,6 @@ flCheckExt:
 
 flDone:
     popad
-    pop es
-    pop ds
     retf32
 free_blk     Endp
 
