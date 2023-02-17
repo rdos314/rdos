@@ -2684,6 +2684,7 @@ force_schedule_int:
     push ds
     push es
     push fs
+    push gs
 ;
     mov al,-1
     EnterInt
@@ -2692,6 +2693,15 @@ force_schedule_int:
     xor eax,eax
     mov ds:APIC_EOI,eax
     LeaveInt
+;
+    pop ax
+    verr ax
+    jz FsExitGs
+;    
+    xor ax,ax
+
+FsExitGs:
+    mov gs,ax
 ;
     pop ax
     verr ax

@@ -1953,6 +1953,8 @@ UpdatePstate  MACRO
     OsGate update_pstate_nr
                         ENDM
 
+; IN CX    Number of entries
+; IN EDX   Linear base
 FlushTlb    MACRO
     OsGate flush_tlb_nr
                         ENDM

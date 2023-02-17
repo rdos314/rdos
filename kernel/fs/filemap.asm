@@ -321,6 +321,74 @@ AddReadReq	Proc near
     mov es,ebx
 ;
     int 3
+    mov cx,16
+    AllocateBlk
+    push edx
+;
+    mov cx,32
+    AllocateBlk
+    push edx
+;
+    mov cx,64
+    AllocateBlk
+    push edx
+;
+    mov cx,128
+    AllocateBlk
+    push edx
+;
+    mov cx,256
+    AllocateBlk
+    push edx
+;
+    mov cx,512
+    AllocateBlk
+    push edx
+;
+    mov cx,1024
+    AllocateBlk
+    push edx
+;
+    mov cx,2048
+    AllocateBlk
+    push edx
+;
+    mov cx,2048
+    AllocateBlk
+    push edx
+;
+    mov cx,2048
+    AllocateBlk
+    FreeBlk
+;
+    pop edx
+    FreeBlk
+;
+    pop edx
+    FreeBlk
+;
+    pop edx
+    FreeBlk
+;
+    pop edx
+    FreeBlk
+;
+    pop edx
+    FreeBlk
+;
+    pop edx
+    FreeBlk
+;
+    pop edx
+    FreeBlk
+;
+    pop edx
+    FreeBlk
+;
+    pop edx
+    FreeBlk
+
+
     push edx
     mov cx,SIZE kernel_req_entry
     AllocateBlk
@@ -446,6 +514,7 @@ ProcessReadReq  Proc near
     push ecx
     push ebx
 ;
+    int 3
     mov cx,ds
     mov es,cx
     mov cx,ax

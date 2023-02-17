@@ -37,7 +37,6 @@ BLK_EXTEND_SIGN   = 06FA6h
 
 blk_info	STRUC
 
-blk_prev_linear     DD ?
 blk_bitmap_offset   DW ?
 blk_data_offset     DW ?
 blk_bitmap_dd_count DW ?
@@ -202,7 +201,6 @@ ibDone:
     shr ax,2
     mov ds:[si].blk_bitmap_dd_count,ax
 ;
-    mov ds:[si].blk_prev_linear,0
     mov ds:[si].blk_spinlock,0
 ;
     popa
@@ -353,54 +351,6 @@ delete_blk     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;   NAME:           FreePrev
-;
-;   DESCRIPTION:    Free prev linear
-;
-;   PARAMETERS:     DS      Block selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreePrev     Proc near
-    push eax
-    push ebx
-    push ecx
-    push edx
-;
-    xor edx,edx
-    xchg edx,ds:blk_prev_linear
-    or edx,edx
-    jz fpDone
-;
-    push edx
-    mov ecx,ds:blk_size
-    shr ecx,12
-    dec ecx
-
-fpPageClear:
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-;
-    add edx,1000h
-    loop fpPageClear
-;
-    pop edx
-
-    mov ecx,ds:blk_size
-    FreeLinear
-
-fpDone:
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    ret
-FreePrev  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;   NAME:           Extend
 ;
 ;   DESCRIPTION:    Extend block size
@@ -412,13 +362,13 @@ FreePrev  Endp
 Extend     Proc near
     pushad
 ;
-    mov eax,ds:blk_prev_linear
-    or eax,eax
-    jz ePrevOk
+    mov si,ds:blk_info_offset
+    mov al,1
+    xchg al,ds:[si].blk_spinlock
+    or al,al
+    stc
+    jnz eDone
 ;
-    call FreePrev
-
-ePrevOk:
     mov eax,ds:blk_size
     add eax,1000h
     AllocateBigLinear
@@ -444,15 +394,47 @@ ePageCopy:
     add ecx,1000h
     CreateDataSelector32
     mov ds,bx
-    xchg edx,ds:blk_linear
-    mov ds:blk_prev_linear,edx
 ;
-    mov edx,ds:blk_size
-    add ds:blk_size,1000h
+    xchg edx,ds:blk_linear
+    mov ecx,ds:blk_size
+;
+    push ecx
+    push edx
+;
+    mov edx,ecx
     mov si,ds:blk_info_offset
     mov cl,ds:[si].blk_size_shift
     call InitExtend
 ;
+    pop edx
+    pop ecx
+;
+    shr ecx,12
+    FlushTlb
+;
+    mov ecx,ds:blk_size
+    add ds:blk_size,1000h
+    mov ds:[si].blk_spinlock,0
+;
+    push ecx
+    push edx
+;
+    shr ecx,12
+
+ePageClear:
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    add edx,1000h
+    loop ePageClear
+;
+    pop edx
+    pop ecx
+    FreeLinear
+    clc
+
+eDone:
     popad
     ret
 Extend     Endp    
@@ -1330,27 +1312,6 @@ allocate_blk     Proc far
     jmp ambDone
 
 ambSignOk:
-    mov ax,ds
-    lsl eax,ax
-    inc eax
-    cmp eax,ds:blk_size
-    je ambLimitOk
-;
-    test ax,0FFFh
-    jz ambSelOk
-;
-    int 3
-    stc
-    jmp ambDone
-
-ambSelOk:
-    mov ds,ax
-
-
-
-
-
-ambLimitOk:
     call AllocateBase
     jnc ambDone
 
@@ -1362,6 +1323,7 @@ ambExtendLoop:
     jne ambCheck
 ;
     call Extend
+    jc ambSignOk
 
 ambCheck:
     call AllocateExtend
