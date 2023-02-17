@@ -802,11 +802,11 @@ AllocateByte    Endp
 AllocateExtendBit1      Proc near
     push eax
     push ecx
-    push edx
+    push edi
 ;
     movzx ebx,ds:[edx].blke_bitmap_offset
     mov cx,ds:[edx].blke_bitmap_dd_count
-    xor dx,dx
+    xor di,di
 
 aebLoop1:
     mov eax,ds:[ebx+edx]
@@ -817,7 +817,7 @@ aebLoop1:
     not eax
     bsf ecx,eax
 ;    
-    add cx,dx
+    add cx,di
     mov bx,ds:[edx].blke_bitmap_offset
     lock bts ds:[ebx+edx],cx
     mov bx,cx
@@ -826,14 +826,14 @@ aebLoop1:
     jmp aebDone1
 
 aebNext1:
-    add dx,32
+    add di,32
     add ebx,4
     loop aebLoop1
 ;
     stc
 
 aebDone1:
-    pop edx
+    pop edi
     pop ecx
     pop eax
     ret
@@ -856,19 +856,20 @@ AllocateExtendBit1      Endp
 AllocateExtendBit2      Proc near
     push eax
     push ecx
-    push edx
-    push ebp
+    push esi
+    push edi
 ;
     movzx ebx,ds:[edx].blke_bitmap_offset
+    add ebx,edx
     mov cx,ds:[edx].blke_bitmap_dd_count
-    xor dx,dx
+    xor di,di
 
 aebLoop2:
-    mov eax,ds:[ebx+edx]
+    mov eax,ds:[ebx]
     cmp eax,-1
     je aebNext2
 ;
-    xor bp,bp
+    xor si,si
 
 aebBitLoop2:
     rcr eax,1
@@ -877,8 +878,8 @@ aebBitLoop2:
     rcr eax,1
     jc aebBitNext2
 ;
-    add bp,dx
-    mov ax,bp
+    add si,di
+    mov ax,si
     movzx ebx,ds:[edx].blke_bitmap_offset
     add ebx,edx
     lock bts ds:[ebx],ax
@@ -888,7 +889,7 @@ aebBitLoop2:
     lock bts ds:[ebx],ax
     jc aebRevert2
 ;
-    mov bx,bp
+    mov bx,si
     clc
     jmp aebDone2
 
@@ -901,20 +902,20 @@ aebSkip2:
     rcr eax,1
 
 aebBitNext2:
-    add bp,2
-    cmp bp,32
+    add si,2
+    cmp si,32
     jne aebBitLoop2
 
 aebNext2:
-    add dx,32
-    add bx,4
+    add di,32
+    add ebx,4
     loop aebLoop2
 ;
     stc
 
 aebDone2:
-    pop ebp
-    pop edx
+    pop edi
+    pop esi
     pop ecx
     pop eax
     ret
@@ -937,19 +938,20 @@ AllocateExtendBit2      Endp
 AllocateExtendBit4    Proc near
     push eax
     push ecx
-    push edx
-    push ebp
+    push esi
+    push edi
 ;
     movzx ebx,ds:[edx].blke_bitmap_offset
+    add ebx,edx
     mov cx,ds:[edx].blke_bitmap_dd_count
-    xor dx,dx
+    xor di,di
 
 aebLoop4:
-    mov eax,ds:[ebx+edx]
+    mov eax,ds:[ebx]
     cmp eax,-1
     je aebNext4
 ;
-    xor bp,bp
+    xor si,si
 
 aebBitLoop4:
     rcr eax,1
@@ -964,8 +966,8 @@ aebBitLoop4:
     rcr eax,1
     jc aebBitNext4
 ;
-    add bp,dx
-    mov ax,bp
+    add si,di
+    mov ax,si
     movzx ebx,ds:[edx].blke_bitmap_offset
     add ebx,edx
     lock bts ds:[ebx],ax
@@ -983,7 +985,7 @@ aebBitLoop4:
     lock bts ds:[ebx],ax
     jc aebBitRevert43
 ;
-    mov bx,bp
+    mov bx,si
     clc
     jmp aebDone4
 
@@ -1010,21 +1012,21 @@ aebSkip41:
     rcr eax,1
 
 aebBitNext4:
-    add bp,4
-    cmp bp,32
+    add si,4
+    cmp si,32
     jne aebBitLoop4
 
 aebNext4:
-    add dx,32
-    add bx,4
+    add di,32
+    add ebx,4
     sub cx,1
     jnz aebLoop4
 ;
     stc
 
 aebDone4:
-    pop ebp
-    pop edx
+    pop edi
+    pop esi
     pop ecx
     pop eax
     ret
@@ -1342,7 +1344,6 @@ ambExtendLoop:
     jc ambSignOk
 
 ambCheck:
-    int 3
     call AllocateExtend
     jnc ambDone
 ;
