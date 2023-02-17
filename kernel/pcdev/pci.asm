@@ -1080,6 +1080,7 @@ find_pci_class      Proc far
     push ds
     push es
     push fs
+    push edx
     push esi
     push edi
     push ebp
@@ -1144,6 +1145,7 @@ fpcoDone:
     pop ebp
     pop edi
     pop esi
+    pop edx
     pop fs
     pop es
     pop ds
