@@ -208,41 +208,40 @@ GetFileSel     Endp
     public CreateFileSel
 
 CreateFileSel	Proc near
-    push es
+    push ds
     push ebx
     push ecx
     push edx
     push esi
     push edi
 ;
-    int 3
     mov ax,32
     mov si,SIZE kernel_file
     CreateBlk
 ;
-    InitSection es:kf_section
-    mov es:kf_sector_size,cx
-    mov es:kf_prog_list,0
-    mov es:kf_part_sel,fs
-    mov es:kf_serv_handle,ebx
-    mov es:kf_req_list,0
+    InitSection ds:kf_section
+    mov ds:kf_sector_size,cx
+    mov ds:kf_prog_list,0
+    mov ds:kf_part_sel,fs
+    mov ds:kf_serv_handle,ebx
+    mov ds:kf_req_list,0
 ;
     GetPageEntry
     or ax,800h
     SetPageEntry
 ;
     and ax,0F000h
-    mov es:kf_info_phys,eax
-    mov es:kf_info_phys+4,ebx
+    mov ds:kf_info_phys,eax
+    mov ds:kf_info_phys+4,ebx
 ;
-    mov ax,es
+    mov ax,ds
 ;
     pop edi
     pop esi
     pop edx
     pop ecx
     pop ebx
-    pop es
+    pop ds
     ret
 CreateFileSel   Endp
 

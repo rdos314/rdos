@@ -48,8 +48,7 @@ blk_info	ENDS
 
 blk_extend	STRUC
 
-blke_header          blk_header <>
-
+blke_sign            DW ?
 blke_bitmap_offset   DW ?
 blke_data_offset     DW ?
 blke_bitmap_dd_count DW ?
@@ -221,9 +220,19 @@ InitBlock     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitExtend     Proc near
-    pusha
+    push es
+    pushad
 ;
-    mov ds:[edx].blk_sign,BLK_EXTEND_SIGN
+    push ecx
+    mov ax,ds
+    mov es,eax
+    mov edi,edx
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop ecx
+;
+    mov ds:[edx].blke_sign,BLK_EXTEND_SIGN
     mov ds:[edx].blke_size_shift,cl
 ;
     mov bx,SIZE blk_extend
@@ -268,12 +277,12 @@ InitExtend     Proc near
     sub ax,bx
     jz ieDone
 ;
-    mov dl,-1
+    mov cl,-1
     movzx ebx,ds:[edx].blke_data_offset
 
 iePadLoop:
     dec ebx
-    mov ds:[edx+ebx],dl
+    mov ds:[edx+ebx],cl
     sub ax,1
     jnz iePadLoop
     
@@ -282,7 +291,8 @@ ieDone:
     shr ax,2
     mov ds:[edx].blke_bitmap_dd_count,ax
 ;
-    popa
+    popad
+    pop es
     ret
 InitExtend     Endp    
 
@@ -377,6 +387,7 @@ Extend     Proc near
     mov edi,edx
     mov ecx,ds:blk_size
     shr ecx,12
+    push edx
 
 ePageCopy:
     mov edx,esi
@@ -389,6 +400,7 @@ ePageCopy:
     add edi,1000h
     loop ePageCopy
 ;
+    pop edx
     mov bx,ds
     mov ecx,ds:blk_size
     add ecx,1000h
@@ -1037,20 +1049,22 @@ AllocateExtendByte    Proc near
     push eax
     push ecx
     push edx
-    push ebp    
+    push esi
+    push edi
 ;
-    mov bp,ax
+    mov si,ax
     movzx ebx,ds:[edx].blke_bitmap_offset
+    add ebx,edx
     mov cx,ds:[edx].blke_bitmap_dd_count
     shl cx,2
-    mov dx,bp
+    mov di,si
 
 aebtCheck:
-    mov al,ds:[ebx+edx]
+    mov al,ds:[ebx]
     or al,al
     jnz aebtNext
 ;
-    sub dx,1
+    sub di,1
     jz aebtTake
 ;
     inc ebx
@@ -1061,49 +1075,51 @@ aebtCheck:
 
 aebtTake:
     mov al,-1
-    xchg al,ds:[ebx+edx]
+    xchg al,ds:[ebx]
     cmp al,-1
     je aebtRevert
 ;
     or al,al
     jne aebtRestore
 ;
-    inc dx
-    cmp dx,bp
+    inc di
+    cmp di,si
     je aebtTaken
 ;
     dec ebx
     jmp aebtTake
 
 aebtTaken:
+    sub ebx,edx
     sub bx,ds:[edx].blke_bitmap_offset
     shl bx,3
     clc
     jmp aebtDone
 
 aebtRestore:
-    mov ds:[ebx+edx],al
+    mov ds:[ebx],al
 
 aebtRevert:
-    or dx,dx
+    or di,di
     jz aebtNext
 ;
     inc ebx
-    dec dx
+    dec di
     xor al,al
-    mov ds:[ebx+edx],al
+    mov ds:[ebx],al
     jmp aebtRevert
 
 aebtNext:
     inc ebx    
-    mov dx,bp
+    mov di,si
     sub cx,1
     jnz aebtCheck
 ;
     stc
 
 aebtDone:
-    pop ebp
+    pop edi
+    pop esi
     pop edx
     pop ecx
     pop eax
@@ -1213,7 +1229,7 @@ AllocateExtend  Proc near
     push ecx
     push esi
 ;
-    mov ax,ds:[edx].blk_sign
+    mov ax,ds:[edx].blke_sign
     cmp ax,BLK_EXTEND_SIGN
     je aeSignOk
 ;
@@ -1326,6 +1342,7 @@ ambExtendLoop:
     jc ambSignOk
 
 ambCheck:
+    int 3
     call AllocateExtend
     jnc ambDone
 ;
@@ -1544,6 +1561,7 @@ feByteNext:
     inc edi
     loop feByteLoop
 ;
+    xor dl,dl
     shl ax,3    
     lock add ds:[edx].blke_free_bits,ax
     clc
