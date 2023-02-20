@@ -68,10 +68,11 @@ kf_blk            blk_header <>
 kf_info_phys      DD ?,?
 kf_sector_size    DW ?
 kf_section        section_typ <>
-kf_prog_list      DW ?
+kf_map_list       DW ?
 kf_part_sel       DW ?
-kf_req_list       DD ?
+kf_count          DD ?
 kf_serv_handle    DD ?
+kf_sorted_arr     DD 256 DUP(?)
 
 kernel_file       ENDS
 
@@ -215,16 +216,25 @@ CreateFileSel	Proc near
     push esi
     push edi
 ;
-    mov ax,32
+    mov ax,8
     mov si,SIZE kernel_file
     CreateBlk
 ;
     InitSection ds:kf_section
     mov ds:kf_sector_size,cx
-    mov ds:kf_prog_list,0
+    mov ds:kf_map_list,0
     mov ds:kf_part_sel,fs
+    mov ds:kf_count,0
     mov ds:kf_serv_handle,ebx
-    mov ds:kf_req_list,0
+;
+    mov ecx,256
+    mov edi,OFFSET kf_sorted_arr
+    xor eax,eax
+
+cfInit:
+    mov ds:[edi],eax
+    add edi,4
+    loop cfInit
 ;
     GetPageEntry
     or ax,800h
@@ -255,43 +265,58 @@ CreateFileSel   Endp
 ;       PARAMETERS:     DS             File sel
 ;                       EDX:EAX        Position
 ;
-;       RETURNS:        EBX            Req ptr
+;       RETURNS:        EBX            Req offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindReadReq	Proc near
     push ds
+    push ecx
     push esi
     push edi
+    push ebp
 ;
-    mov ebx,ds:kf_req_list
-    mov si,flat_sel
-    mov ds,esi
+    mov ebp,80h
+    mov ebx,OFFSET kf_sorted_arr
  
 frrLoop:
-    or ebx,ebx
-    stc
-    jz frrDone
+    lea ebx,[ebx+4*ebp]
 ;
-    mov esi,ds:[ebx].kre_pos
-    mov edi,ds:[ebx].kre_pos+4
+    mov ecx,ds:[ebx]
+    or ecx,ecx
+    jz frrLower
+;
+    mov esi,ds:[ecx].kre_pos
+    mov edi,ds:[ecx].kre_pos+4
     sub esi,eax
     sbb edi,edx
-    jnz frrNext
+    ja frrLower
+    jb frrHigher
 ;
-    cmp esi,ds:[ebx].kre_size
-    jae frrNext
+    cmp esi,ds:[ecx].kre_size
+    jae frrLower
 ;
+    mov ebx,ecx
     clc
     jmp frrDone
 
-frrNext:
-    mov ebx,ds:[ebx].kre_next
+frrLower:
+    lea ecx,[4*ebp]
+    sub ebx,ecx
+
+frrHigher:
+    or ebp,ebp
+    stc
+    jz frrDone
+;
+    shr ebp,1
     jmp frrLoop
 
 frrDone:
+    pop ebp
     pop edi
     pop esi
+    pop ecx
     pop ds
     ret
 FindReadReq  Endp
@@ -307,24 +332,34 @@ FindReadReq  Endp
 ;                       EDX:EAX        Position
 ;                       ECX            Size                        
 ;
-;       RETURNS:        EBX            Req linear
+;       RETURNS:        EBX            Req offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddReadReq	Proc near
     push ds
-    push es
-    push esi
-;
-    mov bx,ds
-    mov es,ebx
-;
-    int 3
+    push eax
+    push ecx
     push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov esi,ds:kf_count
+    cmp esi,100h
+    stc
+    je arrDone
+;
+    push ecx
+    push edx
+;
     mov cx,SIZE kernel_req_entry
     AllocateBlk
     mov esi,edx
+;
     pop edx
+    pop ecx
+
 ;
     mov ds:[esi].kre_pos,eax
     mov ds:[esi].kre_pos+4,edx
@@ -333,14 +368,106 @@ AddReadReq	Proc near
     mov ds:[esi].kre_wait,0
     mov ds:[esi].kre_phys_arr,0
 ;
-    mov ebx,es:kf_req_list
-    mov ds:[esi].kre_next,ebx
-    mov ds:kf_req_list,esi
+    mov ebp,128
+    mov ebx,OFFSET kf_sorted_arr
+ 
+arrFind:
+    lea ebx,[ebx+4*ebp]
 ;
+    mov ecx,ds:[ebx]
+    or ecx,ecx
+    jz arrLower
+;
+    mov eax,ds:[ecx].kre_pos
+    mov edx,ds:[ecx].kre_pos+4
+    sub eax,ds:[esi].kre_pos
+    sbb edx,ds:[esi].kre_pos+4
+    jc arrHigher
+
+arrLower:
+    lea ecx,[4*ebp]
+    sub ebx,ecx
+
+arrHigher:
+    shr ebp,1
+    jnz arrFind
+
+arrInsert:
+    sub ebx,OFFSET kf_sorted_arr
+;
+    mov ecx,ds:[ebx].kf_sorted_arr
+    or ecx,ecx
+    jz arrFound
+;
+    mov eax,ds:[ecx].kre_pos
+    mov edx,ds:[ecx].kre_pos+4
+    sub eax,ds:[esi].kre_pos
+    sbb edx,ds:[esi].kre_pos+4
+    jnc arrCheckDown
+;
+    add ebx,4
+    mov ecx,ds:[ebx].kf_sorted_arr
+    or ecx,ecx
+    jz arrFound
+;
+    mov eax,ds:[ecx].kre_pos
+    mov edx,ds:[ecx].kre_pos+4
+    sub eax,ds:[esi].kre_pos
+    sbb edx,ds:[esi].kre_pos+4
+    jnc arrFound
+;
+    sub ebx,4
+    jmp arrFound
+
+arrCheckDown:
+    or ebx,ebx
+    jz arrFound
+;
+    sub ebx,4
+    mov ecx,ds:[ebx].kf_sorted_arr
+    or ecx,ecx
+    jz arrFound
+;
+    mov eax,ds:[ecx].kre_pos
+    mov edx,ds:[ecx].kre_pos+4
+    sub eax,ds:[esi].kre_pos
+    sbb edx,ds:[esi].kre_pos+4
+    jc arrFound
+;
+    add ebx,4
+
+arrFound:
+    mov eax,ebx
+    shr eax,2
+    mov ecx,ds:kf_count
+    sub ecx,eax
     mov ebx,esi
-;
+    add eax,ecx
+    lea esi,[4*eax].kf_sorted_arr
+    mov edi,esi
+    sub esi,4
+    or ecx,ecx
+    jz arrSave
+
+arrMove:
+    mov eax,ds:[esi]
+    mov ds:[edi],eax
+    sub esi,4
+    sub edi,4
+    loop arrMove
+
+arrSave:
+    mov ds:[edi],ebx
+    inc ds:kf_count
+    clc
+
+arrDone:
+    pop ebp
+    pop edi
     pop esi
-    pop es
+    pop edx
+    pop ecx
+    pop eax
     pop ds
     ret
 AddReadReq      Endp
@@ -522,7 +649,7 @@ GetProgSel	Proc near
     mov bx,es:p_prog_sel
 ;
     EnterSection ds:kf_section
-    mov ax,ds:kf_prog_list
+    mov ax,ds:kf_map_list
 
 gpsLoop:
     or ax,ax
@@ -643,9 +770,9 @@ CreateProgSel	Proc near
     mov es:kfm_kernel_sel,bx
 ;
     EnterSection ds:kf_section
-    mov bx,ds:kf_prog_list
+    mov bx,ds:kf_map_list
     mov es:kfm_next_map,bx
-    mov ds:kf_prog_list,es
+    mov ds:kf_map_list,es
     LeaveSection ds:kf_section
     mov ax,es
 ;
@@ -1222,12 +1349,36 @@ read_vfs_file  Proc near
 ;    
     call GetPos
 ;
+    int 3
     mov ds,ds:kfm_file_sel
     EnterSection ds:kf_section
     call FindReadReq
     jnc rvfCheck
 ;
+;    call AddReadReq
+;
+    mov eax,8000h
+    mov edx,0
     call AddReadReq
+;
+    mov eax,8000h
+    mov edx,12
+    call AddReadReq
+;
+    mov eax,8000h
+    mov edx,6
+    call AddReadReq
+;
+    mov eax,1000h
+    mov edx,6
+    call AddReadReq
+;
+    xor eax,eax
+    xor edx,edx
+    call AddReadReq
+
+
+
     call SendReadReq
 
 rvfCheck:
