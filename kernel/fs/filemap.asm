@@ -258,52 +258,6 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CheckSorted
-;
-;       DESCRIPTION:    Check so list is sorted
-;
-;       PARAMETERS:     DS             File sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckSorted     Proc near
-    push ds
-    pushad
-;
-    mov ecx,ds:kf_count
-    cmp ecx,2
-    jb csDone
-;
-    dec ecx
-    mov esi,OFFSET kf_sorted_arr
-    mov edi,esi
-    add edi,4
-
-csLoop:
-    mov ebx,ds:[esi]
-    mov eax,ds:[ebx].kre_pos
-    mov edx,ds:[ebx].kre_pos+4
-    mov ebx,ds:[edi]
-    sub eax,ds:[ebx].kre_pos
-    sbb edx,ds:[ebx].kre_pos+4
-    jc csNext
-;
-    int 3
-
-csNext:
-    add esi,4
-    add edi,4
-    loop csLoop
-
-csDone:
-    popad
-    pop ds
-    ret
-CheckSorted  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           FindReadReq
 ;
 ;       DESCRIPTION:    Find a read req. Section must be taken!
@@ -1390,19 +1344,7 @@ read_vfs_file  Proc near
     call FindReadReq
     jnc rvfCheck
 ;
-;    call AddReadReq
-;
-    mov ecx,250
-
-rvfLoop:
-    GetRandom
-    xor edx,edx
     call AddReadReq
-    call FindReadReq
-    call CheckSorted
-    loop rvfLoop
-;
-
     call SendReadReq
 
 rvfCheck:
