@@ -406,17 +406,6 @@ arrInsert:
     jnc arrCheckDown
 ;
     add ebx,4
-    mov ecx,ds:[ebx].kf_sorted_arr
-    or ecx,ecx
-    jz arrFound
-;
-    mov eax,ds:[ecx].kre_pos
-    mov edx,ds:[ecx].kre_pos+4
-    sub eax,ds:[esi].kre_pos
-    sbb edx,ds:[esi].kre_pos+4
-    jnc arrFound
-;
-    sub ebx,4
     jmp arrFound
 
 arrCheckDown:
