@@ -163,7 +163,7 @@ BlockToPhys  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetFileSel	Proc near
+GetFileSel      Proc near
     push fs
 ;
     mov al,VFS_FILE_SIGN
@@ -208,7 +208,7 @@ GetFileSel     Endp
 
     public CreateFileSel
 
-CreateFileSel	Proc near
+CreateFileSel   Proc near
     push ds
     push ebx
     push ecx
@@ -258,6 +258,52 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CheckSorted
+;
+;       DESCRIPTION:    Check so list is sorted
+;
+;       PARAMETERS:     DS             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckSorted     Proc near
+    push ds
+    pushad
+;
+    mov ecx,ds:kf_count
+    cmp ecx,2
+    jb csDone
+;
+    dec ecx
+    mov esi,OFFSET kf_sorted_arr
+    mov edi,esi
+    add edi,4
+
+csLoop:
+    mov ebx,ds:[esi]
+    mov eax,ds:[ebx].kre_pos
+    mov edx,ds:[ebx].kre_pos+4
+    mov ebx,ds:[edi]
+    sub eax,ds:[ebx].kre_pos
+    sbb edx,ds:[ebx].kre_pos+4
+    jc csNext
+;
+    int 3
+
+csNext:
+    add esi,4
+    add edi,4
+    loop csLoop
+
+csDone:
+    popad
+    pop ds
+    ret
+CheckSorted  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           FindReadReq
 ;
 ;       DESCRIPTION:    Find a read req. Section must be taken!
@@ -269,7 +315,7 @@ CreateFileSel   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindReadReq	Proc near
+FindReadReq     Proc near
     push ds
     push ecx
     push esi
@@ -336,7 +382,7 @@ FindReadReq  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddReadReq	Proc near
+AddReadReq      Proc near
     push ds
     push eax
     push ecx
@@ -473,7 +519,7 @@ AddReadReq      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WaitReadReq	Proc near
+WaitReadReq     Proc near
     push es
     push fs
     push eax
@@ -513,7 +559,7 @@ WaitReadReq      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SendReadReq	Proc near
+SendReadReq     Proc near
     push ds
     push es
     push fs
@@ -622,14 +668,14 @@ ProcessReadReq  Endp
 ;
 ;       DESCRIPTION:    Get program selector
 ;
-;       PARAMETERS:     DS		File sel
+;       PARAMETERS:     DS              File sel
 ;
 ;       RETURNS:        NC
 ;                         AX            Prog sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetProgSel	Proc near
+GetProgSel      Proc near
     push es
     push ebx
 ;
@@ -668,14 +714,14 @@ GetProgSel      Endp
 ;
 ;       DESCRIPTION:    Create program selector
 ;
-;       PARAMETERS:     DS		File sel
+;       PARAMETERS:     DS              File sel
 ;
 ;       RETURNS:        NC
 ;                         AX            Prog sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateProgSel	Proc near
+CreateProgSel   Proc near
     push es
     push ebx
     push ecx
@@ -782,14 +828,14 @@ CreateProgSel      Endp
 ;
 ;       DESCRIPTION:    Allocate user handle
 ;
-;       PARAMETERS:     DS		Prog sel
+;       PARAMETERS:     DS              Prog sel
 ;
 ;       RETURNS:        NC
 ;                         BX            User handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateUserHandle	Proc near
+AllocateUserHandle      Proc near
     push es
     push eax
     push ecx
@@ -1107,7 +1153,7 @@ UnlockSectors  Endp
 
     public NotifyFileData
 
-NotifyFileData	Proc near
+NotifyFileData  Proc near
     push ds
     push es
     push fs
@@ -1346,27 +1392,16 @@ read_vfs_file  Proc near
 ;
 ;    call AddReadReq
 ;
-    mov eax,8000h
-    mov edx,0
-    call AddReadReq
-;
-    mov eax,8000h
-    mov edx,12
-    call AddReadReq
-;
-    mov eax,8000h
-    mov edx,6
-    call AddReadReq
-;
-    mov eax,1000h
-    mov edx,6
-    call AddReadReq
-;
-    xor eax,eax
+    mov ecx,250
+
+rvfLoop:
+    GetRandom
     xor edx,edx
     call AddReadReq
-
-
+    call FindReadReq
+    call CheckSorted
+    loop rvfLoop
+;
 
     call SendReadReq
 
