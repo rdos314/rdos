@@ -266,12 +266,12 @@ CreateFileSel   Endp
 ;                       EDX:EAX        Position
 ;
 ;       RETURNS:        EBX            Req offset
+;                       ECX            Sort index
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindReadReq     Proc near
     push ds
-    push ecx
     push esi
     push edi
     push ebp
@@ -296,7 +296,9 @@ frrLoop:
     cmp esi,ds:[ecx].kre_size
     jae frrLower
 ;
-    mov ebx,ecx
+    xchg ebx,ecx
+    sub ecx,OFFSET kf_sorted_arr
+    shr ecx,2
     clc
     jmp frrDone
 
@@ -316,7 +318,6 @@ frrDone:
     pop ebp
     pop edi
     pop esi
-    pop ecx
     pop ds
     ret
 FindReadReq  Endp
@@ -1341,7 +1342,9 @@ read_vfs_file  Proc near
     int 3
     mov ds,ds:kfm_file_sel
     EnterSection ds:kf_section
+    push ecx
     call FindReadReq
+    pop ecx
     jnc rvfCheck
 ;
     call AddReadReq
