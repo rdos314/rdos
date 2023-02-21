@@ -54,12 +54,18 @@ kernel_req_entry  STRUC
 
 kre_pos           DD ?,?
 kre_size          DD ?
-kre_pages         DW ?
-kre_wait          DW ?
 kre_phys_arr      DD ?
 kre_next          DD ?
+kre_pages         DW ?
 
 kernel_req_entry  ENDS
+
+kernel_wait_entry  STRUC
+
+kwe_next          DD ?
+kwe_thread        DW ?
+
+kernel_wait_entry  ENDS
 
 kernel_file       STRUC
 
@@ -72,6 +78,7 @@ kf_map_list       DW ?
 kf_part_sel       DW ?
 kf_count          DD ?
 kf_serv_handle    DD ?
+kf_wait_list      DD ?
 kf_sorted_arr     DD 256 DUP(?)
 
 kernel_file       ENDS
@@ -226,6 +233,7 @@ CreateFileSel   Proc near
     mov ds:kf_part_sel,fs
     mov ds:kf_count,0
     mov ds:kf_serv_handle,ebx
+    mov ds:kf_wait_list,0
 ;
     mov ecx,256
     mov edi,OFFSET kf_sorted_arr
@@ -271,7 +279,6 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindReadReq     Proc near
-    push ds
     push esi
     push edi
     push ebp
@@ -318,7 +325,6 @@ frrDone:
     pop ebp
     pop edi
     pop esi
-    pop ds
     ret
 FindReadReq  Endp
 
@@ -338,7 +344,6 @@ FindReadReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddReadReq      Proc near
-    push ds
     push eax
     push ecx
     push edx
@@ -360,13 +365,11 @@ AddReadReq      Proc near
 ;
     pop edx
     pop ecx
-
 ;
     mov ds:[esi].kre_pos,eax
     mov ds:[esi].kre_pos+4,edx
     mov ds:[esi].kre_size,ecx
     mov ds:[esi].kre_pages,0
-    mov ds:[esi].kre_wait,0
     mov ds:[esi].kre_phys_arr,0
 ;
     mov ebp,128
@@ -458,48 +461,40 @@ arrDone:
     pop edx
     pop ecx
     pop eax
-    pop ds
     ret
 AddReadReq      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           WaitReadReq
+;       NAME:           AddWaitReq
 ;
-;       DESCRIPTION:    Wait read req. Section must be taken!
+;       DESCRIPTION:    Add wait req. Section must be taken!
 ;
 ;       PARAMETERS:     DS             File sel
-;                       EBX            Req linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WaitReadReq     Proc near
-    push es
-    push fs
+AddWaitReq      Proc near
     push eax
-    push esi
+    push ecx
+    push edx
 ;
-    mov ax,flat_sel
-    mov es,eax
     ClearSignal
+    mov cx,SIZE kernel_wait_entry
+    AllocateBlk
 ;
     GetThread
-    mov fs,eax
-    mov ax,es:[ebx].kre_wait
-    mov fs:p_link,ax
-    mov es:[ebx].kre_wait,es
+    mov ds:[edx].kwe_thread,ax
+    mov eax,ds:kf_wait_list
+    mov ds:[edx].kwe_next,eax
+    mov ds:kf_wait_list,edx
 ;
-    LeaveSection ds:kf_section
-    WaitForSignal
-    EnterSection ds:kf_section
-;
-    pop esi
+    pop edx
+    pop ecx
     pop eax
-    pop fs
-    pop es
     ret
-WaitReadReq      Endp
+AddWaitReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1348,10 +1343,14 @@ read_vfs_file  Proc near
     jnc rvfCheck
 ;
     call AddReadReq
+    call AddWaitReq
     call SendReadReq
+;
+    LeaveSection ds:kf_section
+    WaitForSignal
+    EnterSection ds:kf_section
 
 rvfCheck:
-    call WaitReadReq
     int 3
     LeaveSection ds:kf_section
 ;
