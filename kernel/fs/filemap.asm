@@ -1130,6 +1130,7 @@ NotifyFileData  Proc near
     or ecx,ecx
     jz nfdDone
 ;
+    int 3
     mov ds,ebx
     EnterSection ds:kf_section
     mov eax,gs:vfs_rd_start
@@ -1334,7 +1335,6 @@ read_vfs_file  Proc near
 ;    
     call GetPos
 ;
-    int 3
     mov ds,ds:kfm_file_sel
     EnterSection ds:kf_section
     push ecx
@@ -1348,6 +1348,7 @@ read_vfs_file  Proc near
 ;
     LeaveSection ds:kf_section
     WaitForSignal
+    int 3
     EnterSection ds:kf_section
 
 rvfCheck:
