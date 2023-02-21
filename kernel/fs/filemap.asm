@@ -1216,12 +1216,10 @@ nfdProc:
     call CalcPageCount
     call SetupReadReq
     call ProcessReadReq
-    int 3
     call SignalReadReq
 
 nfdUnlock:
     call UnlockSectors
-    int 3
 ;
     LeaveSection ds:kf_section
     clc
