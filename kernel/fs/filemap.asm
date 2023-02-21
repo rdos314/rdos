@@ -593,37 +593,17 @@ ProcessReadReq  Proc near
     push es
     pushad
 ;
-    push ecx
-    push ebx
-;
-    int 3
-    mov cx,ds
-    mov es,cx
-    mov cx,ax
-    shl cx,3
-    AllocateMemBlk
-    mov edi,edx
-;
-    pop ebx
-    pop ecx
-;
-    mov ax,flat_sel
+    mov ax,ds
     mov es,eax
-    mov es:[ebx].kre_phys_arr,edi
-;
-    mov eax,ecx
-    shl eax,9
-    mov es:[ebx].kre_size,eax
+    mov edi,ds:[ebx].kre_sector_arr
+    mov ebp,ds:[ebx].kre_phys_arr
 ;
     mov ds,fs:vfsp_disc_sel
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
     call BlockToPhys
-    jc prrDone
-;
-    mov es:[edi],eax
-    mov es:[edi+4],edx
-    add edi,8
+    jnc prrSave
+    jmp prrDone
 
 prrLoop:
     sub ecx,1
@@ -637,7 +617,14 @@ prrLoop:
 ;
     test eax,0FFFh
     jnz prrLoop
+
+prrSave:
+    mov es:[ebp],eax
+    mov es:[ebp+4],edx
+    add ebp,8
 ;
+    mov eax,gs:[esi]
+    mov edx,gs:[esi+4]
     mov es:[edi],eax
     mov es:[edi+4],edx
     add edi,8
@@ -1185,8 +1172,9 @@ NotifyFileData  Proc near
 nfdProc:
     mov esi,gs:vfs_rd_chain_ptr
     call CalcPageCount
-    int 3
     call SetupReadReq
+    int 3
+    call ProcessReadReq
 
 nfdUnlock:
     call UnlockSectors
