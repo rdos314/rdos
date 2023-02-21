@@ -538,6 +538,100 @@ SendReadReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CalcPageCount
+;
+;       DESCRIPTION:    Calculate page count
+;
+;       PARAMETERS:     FS                 Part sel
+;                       ECX                Buffered blocks
+;                       GS:ESI             Sector array
+;
+;       RETURNS:        AX                 Page count
+;                       ECX                Used blocks
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcPageCount  Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    push ecx
+;
+    xor ebx,ebx
+    or ecx,ecx
+    clc
+    jz cpcDone
+;
+    inc ebx
+;
+    mov ds,fs:vfsp_disc_sel
+    mov eax,gs:[esi]
+    mov edx,gs:[esi+4]
+    call BlockToPhys
+    jc cpcDone
+;
+    mov edi,eax
+    mov ebp,edx
+
+cpcLoop:
+    sub ecx,1
+    jz cpcDone
+;
+    add esi,8
+    mov eax,gs:[esi]
+    mov edx,gs:[esi+4]
+    call BlockToPhys
+    jc cpcDone
+;
+    test eax,0FFFh
+    jz cpcFirst
+
+cpcMid:
+    add edi,200h
+    cmp edi,eax
+    jne cpcNext
+;
+    cmp ebp,edx
+    je cpcLoop
+    jmp cpcNext
+
+cpcFirst:
+    mov ebp,edx
+    mov dx,di
+    and dx,0FFFh
+    cmp dx,0E00h
+    jne cpcDone
+;
+    mov edi,eax
+    inc ebx
+    cmp ebx,1FFFh
+    je cpcDone
+
+cpcNext:
+    jmp cpcLoop
+
+cpcDone:
+    mov eax,ecx
+    pop ecx
+    sub ecx,eax
+    mov eax,ebx
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+CalcPageCount  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SetupReadReq
 ;
 ;       DESCRIPTION:    Setup read req
@@ -636,6 +730,105 @@ prrDone:
     pop ds
     ret
 ProcessReadReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SignalReadReq
+;
+;       DESCRIPTION:    Signal read req done
+;
+;       PARAMETERS:     DS                 File sel
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalReadReq  Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    xor edx,edx
+    xchg edx,ds:kf_wait_list
+    
+srrLoop:
+    or edx,edx
+    jz srrDone
+;
+    mov eax,ds:[edx].kwe_next
+    mov bx,ds:[edx].kwe_thread
+    Signal
+;
+    mov cx,SIZE kernel_wait_entry
+    FreeBlk
+;
+    mov edx,eax
+    jmp srrLoop
+
+srrDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+SignalReadReq  Endp
+   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlockSectors
+;
+;       DESCRIPTION:    Unlock non-used sectors
+;
+;       PARAMETERS:     FS                 Part sel
+;                       ECX                Used blocks
+;                       GS                 File req
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockSectors  Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,serv_flat_sel
+    mov es,eax
+;
+    mov eax,gs:vfs_rd_sectors
+    sub eax,ecx
+    jz usDone
+;
+    shl ecx,3   
+    mov ebx,gs:vfs_rd_chain_ptr
+    add ebx,ecx
+    mov ecx,eax
+;
+    mov ds,fs:vfsp_disc_sel
+
+usLoop:
+    mov eax,gs:[ebx] 
+    mov edx,gs:[ebx+4] 
+    call BlockToBuf
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz usNext
+;
+    sub es:[esi].vfsp_ref_bitmap,1
+    jnz usNext
+;
+    dec ds:vfs_locked_pages
+
+usNext:
+    add ebx,8
+;
+    loop usLoop
+
+usDone:
+    popad
+    pop es
+    pop ds
+    ret
+UnlockSectors  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -968,157 +1161,6 @@ SetPos  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CalcPageCount
-;
-;       DESCRIPTION:    Calculate page count
-;
-;       PARAMETERS:     FS                 Part sel
-;                       ECX                Buffered blocks
-;                       GS:ESI             Sector array
-;
-;       RETURNS:        AX                 Page count
-;                       ECX                Used blocks
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CalcPageCount  Proc near
-    push ds
-    push ebx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    push ecx
-;
-    xor ebx,ebx
-    or ecx,ecx
-    clc
-    jz cpcDone
-;
-    inc ebx
-;
-    mov ds,fs:vfsp_disc_sel
-    mov eax,gs:[esi]
-    mov edx,gs:[esi+4]
-    call BlockToPhys
-    jc cpcDone
-;
-    mov edi,eax
-    mov ebp,edx
-
-cpcLoop:
-    sub ecx,1
-    jz cpcDone
-;
-    add esi,8
-    mov eax,gs:[esi]
-    mov edx,gs:[esi+4]
-    call BlockToPhys
-    jc cpcDone
-;
-    test eax,0FFFh
-    jz cpcFirst
-
-cpcMid:
-    add edi,200h
-    cmp edi,eax
-    jne cpcNext
-;
-    cmp ebp,edx
-    je cpcLoop
-    jmp cpcNext
-
-cpcFirst:
-    mov ebp,edx
-    mov dx,di
-    and dx,0FFFh
-    cmp dx,0E00h
-    jne cpcDone
-;
-    mov edi,eax
-    inc ebx
-    cmp ebx,1FFFh
-    je cpcDone
-
-cpcNext:
-    jmp cpcLoop
-
-cpcDone:
-    mov eax,ecx
-    pop ecx
-    sub ecx,eax
-    mov eax,ebx
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ebx
-    pop ds
-    ret
-CalcPageCount  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           UnlockSectors
-;
-;       DESCRIPTION:    Unlock non-used sectors
-;
-;       PARAMETERS:     FS                 Part sel
-;                       ECX                Used blocks
-;                       GS                 File req
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockSectors  Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,serv_flat_sel
-    mov es,eax
-;
-    mov eax,gs:vfs_rd_sectors
-    sub eax,ecx
-    jz usDone
-;
-    shl ecx,3   
-    mov ebx,gs:vfs_rd_chain_ptr
-    add ebx,ecx
-    mov ecx,eax
-;
-    mov ds,fs:vfsp_disc_sel
-
-usLoop:
-    mov eax,gs:[ebx] 
-    mov edx,gs:[ebx+4] 
-    call BlockToBuf
-;
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz usNext
-;
-    sub es:[esi].vfsp_ref_bitmap,1
-    jnz usNext
-;
-    dec ds:vfs_locked_pages
-
-usNext:
-    add ebx,8
-;
-    loop usLoop
-
-usDone:
-    popad
-    pop es
-    pop ds
-    ret
-UnlockSectors  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           NotifyFileData
 ;
 ;       DESCRIPTION:    Notify file data
@@ -1173,8 +1215,9 @@ nfdProc:
     mov esi,gs:vfs_rd_chain_ptr
     call CalcPageCount
     call SetupReadReq
-    int 3
     call ProcessReadReq
+    int 3
+    call SignalReadReq
 
 nfdUnlock:
     call UnlockSectors
