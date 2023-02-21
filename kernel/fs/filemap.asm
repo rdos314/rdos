@@ -1409,6 +1409,8 @@ read_vfs_file  Proc near
     call GetPos
 ;
     mov ds,ds:kfm_file_sel
+
+rvfRetry:
     EnterSection ds:kf_section
     push ecx
     call FindReadReq
@@ -1421,11 +1423,20 @@ read_vfs_file  Proc near
 ;
     LeaveSection ds:kf_section
     WaitForSignal
-    int 3
-    EnterSection ds:kf_section
+    jmp rvfRetry
 
 rvfCheck:
     int 3
+    mov esi,ds:[ebx].kre_phys_arr
+    or esi,esi
+    jnz rvfCopy
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+    WaitForSignal
+    jmp rvfRetry
+
+rvfCopy:
     LeaveSection ds:kf_section
 ;
     pop edx
