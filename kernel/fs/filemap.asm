@@ -54,6 +54,7 @@ kernel_req_entry  STRUC
 
 kre_pos           DD ?,?
 kre_size          DD ?
+kre_sector_arr    DD ?
 kre_phys_arr      DD ?
 kre_next          DD ?
 kre_pages         DW ?
@@ -370,6 +371,7 @@ AddReadReq      Proc near
     mov ds:[esi].kre_pos+4,edx
     mov ds:[esi].kre_size,ecx
     mov ds:[esi].kre_pages,0
+    mov ds:[esi].kre_sector_arr,0
     mov ds:[esi].kre_phys_arr,0
 ;
     mov ebp,128
@@ -532,6 +534,43 @@ SendReadReq     Proc near
     pop ds
     ret
 SendReadReq     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetupReadReq
+;
+;       DESCRIPTION:    Setup read req
+;
+;       PARAMETERS:     DS                 File sel
+;                       EBX                Req offset
+;                       AX                 Pages
+;                       ECX                Blocks
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupReadReq   Proc near
+    push eax
+    push ecx
+    push edx
+;
+    mov ds:[ebx].kre_pages,ax
+    shl ecx,9
+    mov ds:[ebx].kre_size,ecx
+;
+    mov cx,ax
+    shl cx,3
+    AllocateBlk
+    mov ds:[ebx].kre_sector_arr,edx
+;
+    AllocateBlk
+    mov ds:[ebx].kre_phys_arr,edx
+;
+    pop edx
+    pop ecx
+    pop eax
+    ret
+SetupReadReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1130,12 +1169,14 @@ NotifyFileData  Proc near
     or ecx,ecx
     jz nfdDone
 ;
-    int 3
     mov ds,ebx
     EnterSection ds:kf_section
     mov eax,gs:vfs_rd_start
     mov edx,gs:vfs_rd_start+4
+    push ecx
     call FindReadReq
+    mov ebp,ecx
+    pop ecx
     jnc nfdProc
 ;
     xor ecx,ecx
@@ -1144,7 +1185,8 @@ NotifyFileData  Proc near
 nfdProc:
     mov esi,gs:vfs_rd_chain_ptr
     call CalcPageCount
-    call ProcessReadReq
+    int 3
+    call SetupReadReq
 
 nfdUnlock:
     call UnlockSectors
