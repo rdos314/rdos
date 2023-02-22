@@ -837,7 +837,8 @@ UnlockSectors  Endp
 ;
 ;       DESCRIPTION:    Find a read map
 ;
-;       PARAMETERS:     DS             Kernel mapping sel
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
 ;                       EDX:EAX        Position
 ;
 ;       RETURNS:        EBX            Req offset
@@ -846,20 +847,18 @@ UnlockSectors  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindReadMap     Proc near
-    push es
     push esi
     push edi
     push ebp
 ;
-    mov es,ds:kfm_kernel_sel
     mov ebp,80h
     mov ebx,OFFSET fm_sorted_arr
  
 frmLoop:
-    lea ebx,[ebx+4*ebp]
+    lea ebx,[ebx+2*ebp]
 ;
-    mov ecx,es:[ebx]
-    or ecx,ecx
+    movzx ecx,word ptr es:[ebx]
+    or cx,cx
     jz frmLower
 ;
     mov esi,es:[ecx].fmb_pos
@@ -874,12 +873,12 @@ frmLoop:
 ;
     xchg ebx,ecx
     sub ecx,OFFSET fm_sorted_arr
-    shr ecx,2
+    shr ecx,1
     clc
     jmp frmDone
 
 frmLower:
-    lea ecx,[4*ebp]
+    lea ecx,[2*ebp]
     sub ebx,ecx
 
 frmHigher:
@@ -894,9 +893,70 @@ frmDone:
     pop ebp
     pop edi
     pop esi
-    pop es
     ret
 FindReadMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateMapEntry
+;
+;       DESCRIPTION:    Add read map entry
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;       RETURNS:        BX             Entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateMapEntry      Proc near
+    push ecx
+    push esi
+    push edi
+;
+    mov si,es:fm_count
+    cmp si,100h
+    stc
+    je ameDone
+;
+    mov edi,ecx
+    mov esi,OFFSET fm_entry_arr
+    mov ecx,100h
+
+ameLoop:
+    mov ebx,es:[esi].fmb_base
+    or ebx,ebx
+    jnz ameNext
+;
+    mov ebx,-1
+    xchg ebx,es:[esi].fmb_base
+    or ebx,ebx
+    jz ameFound
+
+ameNext:
+    add esi,16
+    loop ameLoop
+;
+    stc
+    jmp ameDone
+
+ameFound:
+    lock inc es:fm_count
+    mov es:[esi].fmb_pos,eax
+    mov es:[esi].fmb_pos+4,edx
+    mov es:[esi].fmb_size,edi
+    mov ebx,esi
+    clc
+
+ameDone:
+    pop edi
+    pop esi
+    pop ecx
+    ret
+AllocateMapEntry      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1476,6 +1536,7 @@ read_vfs_file  Proc near
 ;
     int 3
     push ecx
+    mov es,ds:kfm_kernel_sel
     call FindReadMap
     pop ecx
 ;
@@ -1498,7 +1559,6 @@ rvfRetry:
     jmp rvfRetry
 
 rvfCheck:
-    int 3
     mov esi,ds:[ebx].kre_phys_arr
     or esi,esi
     jnz rvfCopy
@@ -1509,8 +1569,16 @@ rvfCheck:
     jmp rvfRetry
 
 rvfCopy:
+    int 3
+    mov ax,ds
+    mov gs,eax
+    mov eax,ds:[ebx].kre_pos
+    mov edx,ds:[ebx].kre_pos+4
+    mov ecx,ds:[ebx].kre_size
+;
     LeaveSection ds:kf_section
     pop ds
+    call AllocateMapEntry
 ;
     pop edx
     ret
