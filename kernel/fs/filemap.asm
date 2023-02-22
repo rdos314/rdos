@@ -833,6 +833,74 @@ UnlockSectors  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           FindReadMap
+;
+;       DESCRIPTION:    Find a read map
+;
+;       PARAMETERS:     DS             Kernel mapping sel
+;                       EDX:EAX        Position
+;
+;       RETURNS:        EBX            Req offset
+;                       ECX            Sort index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindReadMap     Proc near
+    push es
+    push esi
+    push edi
+    push ebp
+;
+    mov es,ds:kfm_kernel_sel
+    mov ebp,80h
+    mov ebx,OFFSET fm_sorted_arr
+ 
+frmLoop:
+    lea ebx,[ebx+4*ebp]
+;
+    mov ecx,es:[ebx]
+    or ecx,ecx
+    jz frmLower
+;
+    mov esi,es:[ecx].fmb_pos
+    mov edi,es:[ecx].fmb_pos+4
+    sub esi,eax
+    sbb edi,edx
+    ja frmLower
+    jb frmHigher
+;
+    cmp esi,es:[ecx].fmb_size
+    jae frmLower
+;
+    xchg ebx,ecx
+    sub ecx,OFFSET fm_sorted_arr
+    shr ecx,2
+    clc
+    jmp frmDone
+
+frmLower:
+    lea ecx,[4*ebp]
+    sub ebx,ecx
+
+frmHigher:
+    or ebp,ebp
+    stc
+    jz frmDone
+;
+    shr ebp,1
+    jmp frmLoop
+
+frmDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop es
+    ret
+FindReadMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetProgSel
 ;
 ;       DESCRIPTION:    Get program selector
@@ -1406,6 +1474,12 @@ read_vfs_file  Proc near
 ;    
     call GetPos
 ;
+    int 3
+    push ecx
+    call FindReadMap
+    pop ecx
+;
+    push ds
     mov ds,ds:kfm_file_sel
 
 rvfRetry:
@@ -1436,6 +1510,7 @@ rvfCheck:
 
 rvfCopy:
     LeaveSection ds:kf_section
+    pop ds
 ;
     pop edx
     ret
