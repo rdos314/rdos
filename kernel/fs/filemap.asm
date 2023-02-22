@@ -961,6 +961,61 @@ AllocateMapEntry      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           MapEntry
+;
+;       DESCRIPTION:    Map entry
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;                       GS:ESI         Physical address buffer
+;                       BX             Entry offset
+;                       ECX            Pages
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapEntry      Proc near
+    push eax
+    push ecx
+    push edx
+;
+    mov eax,ecx
+    shl eax,12
+    AllocateLocalLinear
+;
+    push ebx
+    push edx
+    push esi
+
+meLoop:
+    mov eax,gs:[esi]
+    mov ebx,gs:[esi+4]
+    and ax,0F000h
+    or ax,807h
+    SetPageEntry
+;
+    add edx,1000h
+    add esi,8
+    loop meLoop
+;
+    pop esi
+    pop edx
+    pop ebx
+;
+    sub edx,ds:kfm_flat_base
+    mov eax,gs:[esi]
+    and ax,0FFFh
+    or dx,ax
+    mov es:[ebx].fmb_base,edx
+;
+    pop edx
+    pop ecx
+    pop eax
+    ret
+MapEntry      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetProgSel
 ;
 ;       DESCRIPTION:    Get program selector
@@ -1572,13 +1627,18 @@ rvfCopy:
     int 3
     mov ax,ds
     mov gs,eax
+    mov esi,ds:[ebx].kre_phys_arr
     mov eax,ds:[ebx].kre_pos
     mov edx,ds:[ebx].kre_pos+4
     mov ecx,ds:[ebx].kre_size
+    movzx ebp,ds:[ebx].kre_pages
 ;
     LeaveSection ds:kf_section
     pop ds
     call AllocateMapEntry
+;
+    mov ecx,ebp
+    call MapEntry
 ;
     pop edx
     ret
