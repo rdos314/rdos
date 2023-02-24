@@ -1522,6 +1522,95 @@ NotifyFileData  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           map_vfs_file
+;
+;       DESCRIPTION:    Map VFS file
+;
+;       PARAMETERS:     BX             Handle
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_vfs_file_name       DB 'Map VFS File',0
+ 
+map_vfs_file   Proc far
+    push ds
+    push es
+    push gs
+    pushad
+;
+    push eax
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    pop eax
+    jc mvfDone
+;
+    mov si,ds:[ebx].fh_sel
+    mov bx,ds:[ebx].fh_handle
+    mov ds,esi
+    mov es,ds:kfm_kernel_sel
+    push ds
+;
+    mov ds,ds:kfm_file_sel
+
+mvfRetry:
+    EnterSection ds:kf_section
+    push ecx
+    call FindReadReq
+    pop ecx
+    jnc mvfCheck
+;
+    call AddReadReq
+    call AddWaitReq
+    call SendReadReq
+;
+    LeaveSection ds:kf_section
+    WaitForSignal
+    jmp mvfRetry
+
+mvfCheck:
+    mov esi,ds:[ebx].kre_phys_arr
+    or esi,esi
+    jnz mvfCopy
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+    WaitForSignal
+    jmp mvfRetry
+
+mvfCopy:
+    mov ax,ds
+    mov gs,eax
+    mov esi,ds:[ebx].kre_phys_arr
+    mov eax,ds:[ebx].kre_pos
+    mov edx,ds:[ebx].kre_pos+4
+    mov ecx,ds:[ebx].kre_size
+    movzx ebp,ds:[ebx].kre_pages
+;
+    LeaveSection ds:kf_section
+    pop ds
+;
+    EnterSection ds:kfm_section
+    call AllocateMapEntry
+;
+    mov ecx,ebp
+    call MapEntry
+    call AddReadMap
+    LeaveSection ds:kfm_section
+    clc
+
+mvfDone:
+    popad
+    pop gs
+    pop es
+    pop ds
+    ret
+map_vfs_file	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           open_vfs_file
 ;
 ;       DESCRIPTION:    Open VFS file
@@ -1682,6 +1771,7 @@ open_file32  Endp
 ;                       BX             Map Handle
 ;                       ES:EDI         Buffer
 ;                       ECX            Size
+;                       BP             File handle
 ;
 ;       RETURNS:        NC
 ;                         EAX          Size
@@ -1691,58 +1781,23 @@ open_file32  Endp
 read_vfs_file  Proc near
     push edx
 ;    
+    int 3
     call GetPos
-;
+
+rvfRetry:
     push ecx
     mov es,ds:kfm_kernel_sel
     call FindReadMap
     pop ecx
+    jnc rvfDo
 ;
-    push ds
-    mov ds,ds:kfm_file_sel
+    push ebx
+    mov bx,bp
+    MapVfsFile
+    pop ebx
+    jnc rvfRetry
 
-rvfRetry:
-    EnterSection ds:kf_section
-    push ecx
-    call FindReadReq
-    pop ecx
-    jnc rvfCheck
-;
-    call AddReadReq
-    call AddWaitReq
-    call SendReadReq
-;
-    LeaveSection ds:kf_section
-    WaitForSignal
-    jmp rvfRetry
-
-rvfCheck:
-    mov esi,ds:[ebx].kre_phys_arr
-    or esi,esi
-    jnz rvfCopy
-;
-    call AddWaitReq
-    LeaveSection ds:kf_section
-    WaitForSignal
-    jmp rvfRetry
-
-rvfCopy:
-    int 3
-    mov ax,ds
-    mov gs,eax
-    mov esi,ds:[ebx].kre_phys_arr
-    mov eax,ds:[ebx].kre_pos
-    mov edx,ds:[ebx].kre_pos+4
-    mov ecx,ds:[ebx].kre_size
-    movzx ebp,ds:[ebx].kre_pages
-;
-    LeaveSection ds:kf_section
-    pop ds
-    call AllocateMapEntry
-;
-    mov ecx,ebp
-    call MapEntry
-    call AddReadMap
+rvfDo:
 ;
     pop edx
     ret
@@ -1773,9 +1828,11 @@ read_file16  Proc far
     push ebx
     push ecx
     push edi
+    push ebp
 ;
     movzx ecx,cx
     movzx edi,di
+    mov bp,bx
 ;
     mov ax,VFS_FILE_HANDLE
     DerefHandle
@@ -1791,6 +1848,7 @@ rfOrg16:
     call fword ptr cs:org_read
 
 rfDone16:
+    pop ebp
     pop edi
     pop ecx
     pop ebx
@@ -1801,6 +1859,9 @@ read_file16  Endp
 read_file32  Proc far
     push ds
     push ebx
+    push ebp
+;
+    mov bp,bx
 ;
     mov ax,VFS_FILE_HANDLE
     DerefHandle
@@ -1816,6 +1877,7 @@ rfOrg32:
     call fword ptr cs:org_read
 
 rfDone32:
+    pop ebp
     pop ebx
     pop ds
     ret
@@ -1898,6 +1960,12 @@ init_client_file    Proc near
     LinkUserGate
     mov dword ptr fs:org_read,eax
     mov word ptr fs:org_read+4,dx
+;
+    mov esi,OFFSET map_vfs_file
+    mov edi,OFFSET map_vfs_file_name
+    xor dx,dx
+    mov ax,map_vfs_file_nr
+    RegisterBimodalUserGate
 ;
     mov ebx,fs
     xor eax,eax
