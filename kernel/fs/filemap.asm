@@ -1016,6 +1016,110 @@ MapEntry      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AddReadMap
+;
+;       DESCRIPTION:    Add read map
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;                       BX             Entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddReadMap      Proc near
+    pushad
+;
+    movzx esi,bx
+    mov ebp,128
+    mov ebx,OFFSET fm_sorted_arr
+ 
+armFind:
+    lea ebx,[ebx+2*ebp]
+;
+    movzx ecx,word ptr es:[ebx]
+    or ecx,ecx
+    jz armLower
+;
+    mov eax,es:[ecx].fmb_pos
+    mov edx,es:[ecx].fmb_pos+4
+    sub eax,es:[esi].fmb_pos
+    sbb edx,es:[esi].fmb_pos+4
+    jc armHigher
+
+armLower:
+    lea ecx,[2*ebp]
+    sub ebx,ecx
+
+armHigher:
+    shr ebp,1
+    jnz armFind
+
+armInsert:
+    sub ebx,OFFSET fm_sorted_arr
+;
+    movzx ecx,word ptr es:[ebx].fm_sorted_arr
+    or ecx,ecx
+    jz armFound
+;
+    mov eax,es:[ecx].fmb_pos
+    mov edx,es:[ecx].fmb_pos+4
+    sub eax,es:[esi].fmb_pos
+    sbb edx,es:[esi].fmb_pos+4
+    jnc armCheckDown
+;
+    add ebx,2
+    jmp armFound
+
+armCheckDown:
+    or ebx,ebx
+    jz armFound
+;
+    sub ebx,2
+    movzx ecx,word ptr es:[ebx].fm_sorted_arr
+    or ecx,ecx
+    jz armFound
+;
+    mov eax,es:[ecx].kre_pos
+    mov edx,es:[ecx].kre_pos+4
+    sub eax,es:[esi].kre_pos
+    sbb edx,es:[esi].kre_pos+4
+    jc armFound
+;
+    add ebx,2
+
+armFound:
+    mov eax,ebx
+    shr eax,1
+    movzx ecx,es:fm_count
+    dec ecx
+    sub ecx,eax
+    mov ebx,esi
+    add eax,ecx
+    lea esi,[2*eax].fm_sorted_arr
+    mov edi,esi
+    sub esi,2
+    or ecx,ecx
+    jz armSave
+
+armMove:
+    mov ax,es:[esi]
+    mov es:[edi],ax
+    sub esi,2
+    sub edi,2
+    loop armMove
+
+armSave:
+    mov es:[edi],bx
+    clc
+
+armDone:
+    popad
+    ret
+AddReadMap      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetProgSel
 ;
 ;       DESCRIPTION:    Get program selector
@@ -1589,7 +1693,6 @@ read_vfs_file  Proc near
 ;    
     call GetPos
 ;
-    int 3
     push ecx
     mov es,ds:kfm_kernel_sel
     call FindReadMap
@@ -1639,6 +1742,7 @@ rvfCopy:
 ;
     mov ecx,ebp
     call MapEntry
+    call AddReadMap
 ;
     pop edx
     ret
