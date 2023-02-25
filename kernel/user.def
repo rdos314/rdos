@@ -982,5 +982,6 @@ is_pci_function_used_nr           = 801
 read_adc_chan_nr                  = 802
 
 map_vfs_file_nr                   = 803
+vfs_file_info_nr                  = 804
 
 usergate_entries                  = 820

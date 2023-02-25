@@ -1522,6 +1522,41 @@ NotifyFileData  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           vfs_file_info
+;
+;       DESCRIPTION:    VFS file info
+;
+;       PARAMETERS:     BX             Handle
+;
+;       RETURNS:        EAX            Handle #
+;                       EDI            File info base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+vfs_file_info_name       DB 'VFS File Info',0
+ 
+vfs_file_info   Proc far
+    push ds
+    push ebx
+;
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    jc vfiDone
+;
+    movzx eax,ds:[ebx].fh_handle
+    mov ds,ds:[ebx].fh_sel
+    mov edi,ds:kfm_user_base
+    clc
+
+vfiDone:
+    pop ebx
+    pop ds
+    ret
+vfs_file_info   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           map_vfs_file
 ;
 ;       DESCRIPTION:    Map VFS file
@@ -1960,6 +1995,12 @@ init_client_file    Proc near
     LinkUserGate
     mov dword ptr fs:org_read,eax
     mov word ptr fs:org_read+4,dx
+;
+    mov esi,OFFSET vfs_file_info
+    mov edi,OFFSET vfs_file_info_name
+    xor dx,dx
+    mov ax,vfs_file_info_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET map_vfs_file
     mov edi,OFFSET map_vfs_file_name

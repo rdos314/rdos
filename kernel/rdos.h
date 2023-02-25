@@ -152,6 +152,44 @@ typedef struct DirInfo
     int Count;
 } DirInfo;
 
+typedef struct FileInfo
+{
+    long long ActSize;
+    long long ReqSize;
+    long long Access;
+    long long Modify;
+    int Attrib;
+    int Flags;
+    int Uid;
+    int Gid;
+    int KernelHandle;
+    int ServHandle;
+    char Name[1];
+} FileInfo;
+
+typedef struct FileMapEntry
+{
+    long long Pos;
+    int Size;
+    char *Base;
+} FileMapEntry;
+
+typedef struct FileHandleInfo
+{
+    long long HandlePosArr[120];
+    int Bitmap[15];
+    short int SpinLock;
+} FileHandleInfo;
+
+typedef struct FileMap
+{
+    short int SortedArr[251];
+    short int Count;
+    struct FileHandleInfo *Handle;
+    struct FileInfo *Info;
+    struct FileMapEntry MapArr[224];
+} FileMap;
+
 #define USB_EVENT_ATTACH                1
 #define USB_EVENT_DETACH                2
 #define USB_EVENT_CONTROLLER_ERROR      3
@@ -881,6 +919,8 @@ int RDOSAPI RdosOpenVfsDir(const char *PathName, struct DirInfo *Info);
 void RDOSAPI RdosCloseVfsDir(int Handle);
 int RDOSAPI RdosOpenVfsFile(const char *PathName);
 int RDOSAPI RdosReadVfsFile(int Handle, void *Buf, int Size);
+struct FileMap *RDOSAPI RdosVfsFileInfo(int Handle, int *HandleId);
+int RDOSAPI RdosMapVfsFile(int Handle, long long Pos, int Size);
 
 int RDOSAPI RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
 int RDOSAPI RdosOpenFileDrive(int Drive, const char *FileName);

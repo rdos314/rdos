@@ -3439,6 +3439,19 @@
     __parm [__ebx] [__edi] [__ecx]  \
     __value [__eax]
 
+#pragma aux RdosVfsFileInfo = \
+    CallGate_vfs_file_info  \
+    "mov [esi],eax" \
+    CarryToBool \
+    __parm [__ebx] [__esi] \
+    __value [__edi]
+
+#pragma aux RdosMapVfsFile = \
+    CallGate_map_vfs_file  \
+    CarryToBool \
+    __parm [__ebx] [__edx __eax] [__ecx] \
+    __value [__edi]
+
 #pragma aux RdosCreateFileDrive = \
     CallGate_create_file_drive  \
     CarryToBool \
