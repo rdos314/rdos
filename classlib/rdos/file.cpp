@@ -348,6 +348,46 @@ void TFile::SetTime(const TDateTime &time)
 
 /*##########################################################################
 #
+#   Name       : TFile::VfsFind
+#
+#   Purpose....: VFS find
+#
+#   In params..: pos, size
+#   Out params.: *
+#   Returns....: Buffer index
+#
+##########################################################################*/
+int TFile::VfsFind(long long Pos, int Size)
+{
+    int Step = 0x80;
+    int Curr = 0;
+    unsigned char index;
+    long long Diff;
+
+    for (;;)
+    {
+        index = FMap->SortedArr[Curr + Step];
+        if (index != 0xFF)
+        {
+            Diff = Pos - FMap->MapArr[index].Pos;
+            if (Diff >= 0)
+            {
+                Curr += Step;
+
+                if (Diff < Size)
+                    return Curr;
+            }
+        }
+        if (Step)
+            Step = Step >> 1;
+        else
+            break;
+    }
+    return -1;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::VfsRead
 #
 #   Purpose....: VFS read
@@ -360,6 +400,12 @@ void TFile::SetTime(const TDateTime &time)
 int TFile::VfsRead(void *Buf, int Size)
 {
     long long Pos = GetPos();
+    int index = VfsFind(Pos, Size);
+
+    if (index < 0)
+        RdosMapVfsFile(FHandle, Pos, Size);
+
+    index = VfsFind(Pos, Size);
 
     return 0;
 }
@@ -377,9 +423,9 @@ int TFile::VfsRead(void *Buf, int Size)
 ##########################################################################*/
 int TFile::Read(void *Buf, int Size)
 {
-//    if (FMap)
-//        return VfsRead(Buf, Size);
-//    else
+    if (FMap)
+        return VfsRead(Buf, Size);
+    else
     {
         if (FHandle)
             return RdosReadFile(FHandle, Buf, Size);
