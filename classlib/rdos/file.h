@@ -28,37 +28,40 @@
 #ifndef _FILE_H
 #define _FILE_H
 
+#include "rdos.h"
 #include "datetime.h"
 
 class TFile
 {
 public:
-	TFile(const char *FileName);
-	TFile(const char *FileName, int Attrib);
-	TFile(const TFile &file);
-	~TFile();
+    TFile(const char *FileName);
+    TFile(const char *FileName, int Attrib);
+    TFile(const TFile &file);
+    ~TFile();
 
-	int IsOpen();
-	int IsDevice();
-	int IsFile();
-	const char *GetFileName();
+    int IsOpen();
+    int IsDevice();
+    int IsFile();
+    const char *GetFileName();
 
-	long GetSize();
-	void SetSize(long Size);
-	long GetPos();
-	void SetPos(long Pos);
-	TDateTime GetTime();
-	void SetTime(const TDateTime &time);
+    long long GetSize();
+    void SetSize(long long Size);
+    long long GetPos();
+    void SetPos(long long Pos);
+    TDateTime GetTime();
+    void SetTime(const TDateTime &time);
 
-	int Read(void *Buf, int Size);
-	int Write(const void *Buf, int Size);
-	int Write(const char *str);
+    int Read(void *Buf, int Size);
+    int Write(const void *Buf, int Size);
+    int Write(const char *str);
 
 protected:
 
 private:
-	long FHandle;
-	char *FFileName;
+    long FHandle;
+    char *FFileName;
+    struct FileMap *FMap;
+    int FMapIndex;
 };
 
 #endif

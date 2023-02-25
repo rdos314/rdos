@@ -27,7 +27,6 @@
 
 #include <string.h>
 #include "file.h"
-#include "rdos.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -51,7 +50,9 @@ TFile::TFile(const char *FileName)
     FFileName = new char[len + 1];
     strcpy(FFileName, FileName);
 
-	FHandle = RdosOpenFile(FileName, 0);
+    FHandle = RdosOpenFile(FileName, 0);
+    if (FHandle)
+        FMap = RdosVfsFileInfo(FHandle, &FMapIndex);
 }
 
 /*##########################################################################
@@ -61,7 +62,7 @@ TFile::TFile(const char *FileName)
 #   Purpose....: Constructor for TFile
 #
 #   In params..: Filename to create
-#				 File attribute
+#                                File attribute
 #   Out params.: *
 #   Returns....: *
 #
@@ -74,7 +75,9 @@ TFile::TFile(const char *FileName, int Attrib)
     FFileName = new char[len + 1];
     strcpy(FFileName, FileName);
 
-	FHandle = RdosCreateFile(FileName, Attrib);
+    FHandle = RdosCreateFile(FileName, Attrib);
+    if (FHandle)
+        FMap = RdosVfsFileInfo(FHandle, &FMapIndex);
 }
 
 /*##########################################################################
@@ -96,10 +99,12 @@ TFile::TFile(const TFile &file)
     FFileName = new char[len + 1];
     strcpy(FFileName, file.FFileName);
 
-	if (file.FHandle)
-		FHandle = RdosDuplFile(file.FHandle);
-	else
-		FHandle = 0;
+    if (file.FHandle)
+        FHandle = RdosDuplFile(file.FHandle);
+    else
+        FHandle = 0;
+
+    FMap = 0;
 }
 
 /*##########################################################################
@@ -115,8 +120,8 @@ TFile::TFile(const TFile &file)
 ##########################################################################*/
 TFile::~TFile()
 {
-	if (FHandle)
-		RdosCloseFile(FHandle);
+    if (FHandle)
+        RdosCloseFile(FHandle);
 
     if (FFileName)
         delete FFileName;
@@ -135,10 +140,10 @@ TFile::~TFile()
 ##########################################################################*/
 int TFile::IsOpen()
 {
-	if (FHandle)
-		return TRUE;
-	else
-		return FALSE;
+    if (FHandle)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -154,10 +159,10 @@ int TFile::IsOpen()
 ##########################################################################*/
 int TFile::IsDevice()
 {
-	if (FHandle)
-		return RdosIsDevice(FHandle);
-	else
-		return FALSE;
+    if (FHandle)
+        return RdosIsDevice(FHandle);
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -173,10 +178,10 @@ int TFile::IsDevice()
 ##########################################################################*/
 int TFile::IsFile()
 {
-	if (FHandle)
-		return !RdosIsDevice(FHandle);
-	else
-		return FALSE;
+    if (FHandle)
+        return !RdosIsDevice(FHandle);
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -206,12 +211,12 @@ const char *TFile::GetFileName()
 #   Returns....: File size
 #
 ##########################################################################*/
-long TFile::GetSize()
+long long TFile::GetSize()
 {
-	if (FHandle)
-		return RdosGetFileSize(FHandle);
-	else
-		return 0;
+    if (FHandle)
+        return RdosGetFileSize(FHandle);
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -225,10 +230,10 @@ long TFile::GetSize()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::SetSize(long Size)
+void TFile::SetSize(long long Size)
 {
-	if (FHandle)
-		RdosSetFileSize(FHandle, Size);
+    if (FHandle)
+        RdosSetFileSize(FHandle, Size);
 }
 
 /*##########################################################################
@@ -242,12 +247,12 @@ void TFile::SetSize(long Size)
 #   Returns....: File position
 #
 ##########################################################################*/
-long TFile::GetPos()
+long long TFile::GetPos()
 {
-	if (FHandle)
-		return RdosGetFilePos(FHandle);
-	else
-		return 0;
+    if (FHandle)
+        return RdosGetFilePos(FHandle);
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -261,10 +266,10 @@ long TFile::GetPos()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::SetPos(long Pos)
+void TFile::SetPos(long long Pos)
 {
-	if (FHandle)
-		RdosSetFilePos(FHandle, Pos);
+    if (FHandle)
+        RdosSetFilePos(FHandle, Pos);
 }
 
 /*##########################################################################
@@ -280,15 +285,15 @@ void TFile::SetPos(long Pos)
 ##########################################################################*/
 TDateTime TFile::GetTime()
 {
-	unsigned long msb, lsb;
+    unsigned long msb, lsb;
 
-	if (FHandle)
-	{
-		RdosGetFileTime(FHandle, &msb, &lsb);
-		return TDateTime(msb, lsb);
-	}
+    if (FHandle)
+    {
+        RdosGetFileTime(FHandle, &msb, &lsb);
+        return TDateTime(msb, lsb);
+    }
 
-	return TDateTime();
+    return TDateTime();
 }
 
 /*##########################################################################
@@ -304,14 +309,14 @@ TDateTime TFile::GetTime()
 ##########################################################################*/
 void TFile::SetTime(const TDateTime &time)
 {
-	long msb, lsb;
+    long msb, lsb;
 
-	if (FHandle)
-	{
-		msb = time.GetMsb();
-		lsb = time.GetLsb();
-		RdosSetFileTime(FHandle, msb, lsb);
-	}
+    if (FHandle)
+    {
+        msb = time.GetMsb();
+        lsb = time.GetLsb();
+        RdosSetFileTime(FHandle, msb, lsb);
+    }
 }
 
 /*##########################################################################
@@ -327,10 +332,10 @@ void TFile::SetTime(const TDateTime &time)
 ##########################################################################*/
 int TFile::Read(void *Buf, int Size)
 {
-	if (FHandle)
-		return RdosReadFile(FHandle, Buf, Size);
-	else
-		return 0;
+    if (FHandle)
+        return RdosReadFile(FHandle, Buf, Size);
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -346,10 +351,10 @@ int TFile::Read(void *Buf, int Size)
 ##########################################################################*/
 int TFile::Write(const void *Buf, int Size)
 {
-	if (FHandle)
-		return RdosWriteFile(FHandle, Buf, Size);
-	else
-		return 0;
+    if (FHandle)
+        return RdosWriteFile(FHandle, Buf, Size);
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -365,8 +370,8 @@ int TFile::Write(const void *Buf, int Size)
 ##########################################################################*/
 int TFile::Write(const char *str)
 {
-	if (FHandle)
-		return RdosWriteFile(FHandle, str, strlen(str));
-	else
-		return 0;
+    if (FHandle)
+        return RdosWriteFile(FHandle, str, strlen(str));
+    else
+        return 0;
 }
