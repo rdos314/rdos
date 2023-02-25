@@ -56,6 +56,7 @@ public:
     int Write(const char *str);
 
 protected:
+    int VfsRead(void *Buf, int Size);
 
 private:
     long FHandle;

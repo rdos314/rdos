@@ -154,10 +154,10 @@ typedef struct DirInfo
 
 typedef struct FileInfo
 {
-    long long ActSize;
-    long long ReqSize;
-    long long Access;
-    long long Modify;
+    long long DiscSize;
+    long long CurrSize;
+    long long AccessTime;
+    long long ModifyTime;
     int Attrib;
     int Flags;
     int Uid;
@@ -176,7 +176,7 @@ typedef struct FileMapEntry
 
 typedef struct FileHandleInfo
 {
-    long long HandlePosArr[120];
+    long long PosArr[120];
     int Bitmap[15];
     short int SpinLock;
 } FileHandleInfo;

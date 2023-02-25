@@ -46,13 +46,20 @@ TFile::TFile(const char *FileName)
 {
     int len;
 
-    len = strlen(FileName);
-    FFileName = new char[len + 1];
-    strcpy(FFileName, FileName);
-
     FHandle = RdosOpenFile(FileName, 0);
     if (FHandle)
         FMap = RdosVfsFileInfo(FHandle, &FMapIndex);
+    else
+        FMap = 0;
+
+    if (FMap)
+        FFileName = 0;
+    else
+    {
+        len = strlen(FileName);
+        FFileName = new char[len + 1];
+        strcpy(FFileName, FileName);
+    }
 }
 
 /*##########################################################################
@@ -71,13 +78,20 @@ TFile::TFile(const char *FileName, int Attrib)
 {
     int len;
 
-    len = strlen(FileName);
-    FFileName = new char[len + 1];
-    strcpy(FFileName, FileName);
-
     FHandle = RdosCreateFile(FileName, Attrib);
     if (FHandle)
         FMap = RdosVfsFileInfo(FHandle, &FMapIndex);
+    else
+        FMap = 0;
+
+    if (FMap)
+        FFileName = 0;
+    else
+    {
+        len = strlen(FileName);
+        FFileName = new char[len + 1];
+        strcpy(FFileName, FileName);
+    }
 }
 
 /*##########################################################################
@@ -197,7 +211,10 @@ int TFile::IsFile()
 ##########################################################################*/
 const char *TFile::GetFileName()
 {
-    return FFileName;
+    if (FMap)
+        return FMap->Info->Name;
+    else
+        return FFileName;
 }
 
 /*##########################################################################
@@ -249,10 +266,15 @@ void TFile::SetSize(long long Size)
 ##########################################################################*/
 long long TFile::GetPos()
 {
-    if (FHandle)
-        return RdosGetFilePos(FHandle);
+    if (FMap)
+        return FMap->Handle->PosArr[FMapIndex - 1];
     else
-        return 0;
+    {
+        if (FHandle)
+            return RdosGetFilePos(FHandle);
+        else
+            return 0;
+    }
 }
 
 /*##########################################################################
@@ -268,8 +290,13 @@ long long TFile::GetPos()
 ##########################################################################*/
 void TFile::SetPos(long long Pos)
 {
-    if (FHandle)
-        RdosSetFilePos(FHandle, Pos);
+    if (FMap)
+        FMap->Handle->PosArr[FMapIndex - 1] = Pos;
+    else
+    {
+        if (FHandle)
+            RdosSetFilePos(FHandle, Pos);
+    }
 }
 
 /*##########################################################################
@@ -321,6 +348,24 @@ void TFile::SetTime(const TDateTime &time)
 
 /*##########################################################################
 #
+#   Name       : TFile::VfsRead
+#
+#   Purpose....: VFS read
+#
+#   In params..: buf, size
+#   Out params.: *
+#   Returns....: Bytes read
+#
+##########################################################################*/
+int TFile::VfsRead(void *Buf, int Size)
+{
+    long long Pos = GetPos();
+
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::Read
 #
 #   Purpose....: Read data from file
@@ -332,10 +377,15 @@ void TFile::SetTime(const TDateTime &time)
 ##########################################################################*/
 int TFile::Read(void *Buf, int Size)
 {
-    if (FHandle)
-        return RdosReadFile(FHandle, Buf, Size);
+    if (FMap)
+        return VfsRead(Buf, Size);
     else
-        return 0;
+    {
+        if (FHandle)
+            return RdosReadFile(FHandle, Buf, Size);
+        else
+            return 0;
+    }
 }
 
 /*##########################################################################
