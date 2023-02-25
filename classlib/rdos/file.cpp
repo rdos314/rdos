@@ -377,9 +377,9 @@ int TFile::VfsRead(void *Buf, int Size)
 ##########################################################################*/
 int TFile::Read(void *Buf, int Size)
 {
-    if (FMap)
-        return VfsRead(Buf, Size);
-    else
+//    if (FMap)
+//        return VfsRead(Buf, Size);
+//    else
     {
         if (FHandle)
             return RdosReadFile(FHandle, Buf, Size);

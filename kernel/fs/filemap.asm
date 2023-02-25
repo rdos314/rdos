@@ -851,18 +851,17 @@ FindReadMap     Proc near
     push edi
     push ebp
 ;
+    xor ebx,ebx
     mov ebp,80h
-    mov ebx,OFFSET fm_sorted_arr
  
 frmLoop:
-    lea ebx,[ebx+2*ebp]
-;
-    movzx ecx,word ptr es:[ebx]
-    or cx,cx
+    movzx ecx,byte ptr es:[ebx+ebp].fm_sorted_arr
+    cmp cl,0FFh
     jz frmLower
 ;
-    mov esi,es:[ecx].fmb_pos
-    mov edi,es:[ecx].fmb_pos+4
+    shl ecx,4
+    mov esi,es:[ecx].fm_entry_arr.fmb_pos
+    mov edi,es:[ecx].fm_entry_arr.fmb_pos+4
     sub esi,eax
     sbb edi,edx
     ja frmLower
@@ -871,17 +870,15 @@ frmLoop:
     cmp esi,es:[ecx].fmb_size
     jae frmLower
 ;
+    add ebx,ebp
     xchg ebx,ecx
-    sub ecx,OFFSET fm_sorted_arr
-    shr ecx,1
     clc
     jmp frmDone
 
-frmLower:
-    lea ecx,[2*ebp]
-    sub ebx,ecx
-
 frmHigher:
+    add ebx,ebp
+
+frmLower:
     or ebp,ebp
     stc
     jz frmDone
@@ -917,8 +914,8 @@ AllocateMapEntry      Proc near
     push esi
     push edi
 ;
-    mov si,es:fm_count
-    cmp si,100h
+    mov esi,es:fm_count
+    cmp esi,100h
     stc
     je ameDone
 ;
@@ -1030,86 +1027,83 @@ AddReadMap      Proc near
     pushad
 ;
     movzx esi,bx
-    mov ebp,128
-    mov ebx,OFFSET fm_sorted_arr
+    mov ebp,80h
+    xor ebx,ebx
  
 armFind:
-    lea ebx,[ebx+2*ebp]
-;
-    movzx ecx,word ptr es:[ebx]
-    or ecx,ecx
+    movzx ecx,byte ptr es:[ebx+ebp].fm_sorted_arr
+    cmp cl,0FFh
     jz armLower
 ;
-    mov eax,es:[ecx].fmb_pos
-    mov edx,es:[ecx].fmb_pos+4
+    shl ecx,4
+    mov eax,es:[ecx].fm_entry_arr.fmb_pos
+    mov edx,es:[ecx].fm_entry_arr.fmb_pos+4
     sub eax,es:[esi].fmb_pos
     sbb edx,es:[esi].fmb_pos+4
-    jc armHigher
-
-armLower:
-    lea ecx,[2*ebp]
-    sub ebx,ecx
+    jnc armHigher
 
 armHigher:
+    add ebx,ebp
+
+armLower:
     shr ebp,1
     jnz armFind
 
 armInsert:
-    sub ebx,OFFSET fm_sorted_arr
-;
-    movzx ecx,word ptr es:[ebx].fm_sorted_arr
-    or ecx,ecx
+    movzx ecx,byte ptr es:[ebx].fm_sorted_arr
+    cmp cl,0FFh
     jz armFound
 ;
-    mov eax,es:[ecx].fmb_pos
-    mov edx,es:[ecx].fmb_pos+4
+    shl ecx,4
+    mov eax,es:[ecx].fm_entry_arr.fmb_pos
+    mov edx,es:[ecx].fm_entry_arr.fmb_pos+4
     sub eax,es:[esi].fmb_pos
     sbb edx,es:[esi].fmb_pos+4
     jnc armCheckDown
 ;
-    add ebx,2
+    inc ebx
     jmp armFound
 
 armCheckDown:
     or ebx,ebx
     jz armFound
 ;
-    sub ebx,2
-    movzx ecx,word ptr es:[ebx].fm_sorted_arr
-    or ecx,ecx
+    dec ebx
+    movzx ecx,byte ptr es:[ebx].fm_sorted_arr
+    cmp cl,0FFh
     jz armFound
 ;
-    mov eax,es:[ecx].kre_pos
-    mov edx,es:[ecx].kre_pos+4
-    sub eax,es:[esi].kre_pos
-    sbb edx,es:[esi].kre_pos+4
+    shl ecx,4
+    mov eax,es:[ecx].fm_entry_arr.fmb_pos
+    mov edx,es:[ecx].fm_entry_arr.fmb_pos+4
+    sub eax,es:[esi].fmb_pos
+    sbb edx,es:[esi].fmb_pos+4
     jc armFound
 ;
-    add ebx,2
+    inc ebx
 
 armFound:
     mov eax,ebx
-    shr eax,1
-    movzx ecx,es:fm_count
+    mov ecx,es:fm_count
     dec ecx
     sub ecx,eax
     mov ebx,esi
     add eax,ecx
-    lea esi,[2*eax].fm_sorted_arr
+    lea esi,[eax].fm_sorted_arr
     mov edi,esi
-    sub esi,2
+    dec esi
     or ecx,ecx
     jz armSave
 
 armMove:
-    mov ax,es:[esi]
-    mov es:[edi],ax
-    sub esi,2
-    sub edi,2
+    mov al,es:[esi]
+    mov es:[edi],al
+    dec esi
+    dec edi
     loop armMove
 
 armSave:
-    mov es:[edi],bx
+    mov es:[edi],bl
     clc
 
 armDone:
@@ -1206,8 +1200,13 @@ CreateProgSel   Proc near
 ;
     sub edx,ebx
     mov edi,edx
+;
+    mov eax,-1
+    mov ecx,3Dh
+    rep stosd
+;
     xor eax,eax
-    mov ecx,800h
+    mov ecx,7C3h
     rep stosd
 ;
     mov eax,edx
@@ -1641,7 +1640,7 @@ mvfDone:
     pop es
     pop ds
     ret
-map_vfs_file	Endp
+map_vfs_file    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

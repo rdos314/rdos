@@ -183,11 +183,12 @@ typedef struct FileHandleInfo
 
 typedef struct FileMap
 {
-    short int SortedArr[251];
-    short int Count;
+    unsigned char SortedArr[241];
+    char Resv[3];
+    int Count;
     struct FileHandleInfo *Handle;
     struct FileInfo *Info;
-    struct FileMapEntry MapArr[224];
+    struct FileMapEntry MapArr[240];
 } FileMap;
 
 #define USB_EVENT_ATTACH                1

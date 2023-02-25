@@ -61,10 +61,11 @@ file_map_entry  ENDS
 
 file_map  STRUC
 
-fm_sorted_arr       DW 251 DUP(?)
-fm_count            DW ?
+fm_sorted_arr       DB 241 DUP(?)
+fm_resv             DB ?,?,?
+fm_count            DD ?
 fm_handle_ptr       DD ?
 fm_info_ptr         DD ?
-fm_entry_arr        DB 224 * 16 DUP(?)
+fm_entry_arr        DB 240 * 16 DUP(?)
 
 file_map  ENDS
