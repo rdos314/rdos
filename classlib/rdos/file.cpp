@@ -400,14 +400,40 @@ int TFile::VfsFind(long long Pos, int Size)
 int TFile::VfsRead(void *Buf, int Size)
 {
     long long Pos = GetPos();
-    int index = VfsFind(Pos, Size);
+    int index;
+    int count;
+    int diff;
+    int ret = 0;
+    char *src;
+    char *dst = (char *)Buf;
 
-    if (index < 0)
-        RdosMapVfsFile(FHandle, Pos, Size);
+    while (Size)
+    {
+        index = VfsFind(Pos, Size);
 
-    index = VfsFind(Pos, Size);
+        if (index < 0)
+            RdosMapVfsFile(FHandle, Pos, Size);
 
-    return 0;
+        index = VfsFind(Pos, Size);
+        if (index >= 0)
+        {
+            src = FMap->MapArr[index].Base;
+            count = FMap->MapArr[index].Size;
+            diff = Pos - FMap->MapArr[index].Pos;
+            src += diff;
+            count -= diff;
+            memcpy(dst, src, count);
+            dst += count;
+            Size -= count;
+            ret += count;
+            Pos += count;
+        }
+        else
+            break;
+    }
+
+    SetPos(Pos);
+    return ret;
 }
 
 /*##########################################################################
