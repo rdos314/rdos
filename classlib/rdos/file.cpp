@@ -230,10 +230,15 @@ const char *TFile::GetFileName()
 ##########################################################################*/
 long long TFile::GetSize()
 {
-    if (FHandle)
-        return RdosGetFileSize(FHandle);
+    if (FMap)
+        return FMap->Info->CurrSize;
     else
-        return 0;
+    {
+        if (FHandle)
+            return RdosGetFileSize(FHandle);
+        else
+            return 0;
+    }
 }
 
 /*##########################################################################
@@ -357,7 +362,7 @@ void TFile::SetTime(const TDateTime &time)
 #   Returns....: Buffer index
 #
 ##########################################################################*/
-int TFile::VfsFind(long long Pos, int Size)
+int TFile::VfsFind(long long Pos)
 {
     int Step = 0x80;
     int Curr = 0;
@@ -374,7 +379,7 @@ int TFile::VfsFind(long long Pos, int Size)
             {
                 Curr += Step;
 
-                if (Diff < Size)
+                if (Diff < FMap->MapArr[index].Size)
                     return Curr;
             }
         }
@@ -400,6 +405,7 @@ int TFile::VfsFind(long long Pos, int Size)
 int TFile::VfsRead(void *Buf, int Size)
 {
     long long Pos = GetPos();
+    long long TotalSize = GetSize();
     int index;
     int count;
     int diff;
@@ -407,21 +413,32 @@ int TFile::VfsRead(void *Buf, int Size)
     char *src;
     char *dst = (char *)Buf;
 
+    if (Pos > TotalSize)
+        Pos = TotalSize;
+
+    if (Pos + Size > TotalSize)
+        Size = TotalSize - Pos;
+
     while (Size)
     {
-        index = VfsFind(Pos, Size);
+        index = VfsFind(Pos);
 
         if (index < 0)
+        {
             RdosMapVfsFile(FHandle, Pos, Size);
+            index = VfsFind(Pos);
+        }
 
-        index = VfsFind(Pos, Size);
         if (index >= 0)
         {
-            src = FMap->MapArr[index].Base;
             count = FMap->MapArr[index].Size;
+            src = FMap->MapArr[index].Base;
             diff = Pos - FMap->MapArr[index].Pos;
             src += diff;
             count -= diff;
+            if (count > Size)
+                count = Size;
+
             memcpy(dst, src, count);
             dst += count;
             Size -= count;

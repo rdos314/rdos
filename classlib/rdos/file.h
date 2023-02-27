@@ -56,7 +56,7 @@ public:
     int Write(const char *str);
 
 protected:
-    int VfsFind(long long Pos, int Size);
+    int VfsFind(long long Pos);
     int VfsRead(void *Buf, int Size);
 
 private:
