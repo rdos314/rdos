@@ -3441,8 +3441,11 @@
 
 #pragma aux RdosVfsFileInfo = \
     CallGate_vfs_file_info  \
+    "jnc Done" \
+    "xor eax,eax" \
+    "xor edi,edi" \
+    "Done:" \
     "mov [esi],eax" \
-    CarryToBool \
     __parm [__ebx] [__esi] \
     __value [__edi]
 
