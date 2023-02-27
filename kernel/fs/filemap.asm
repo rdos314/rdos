@@ -1088,6 +1088,7 @@ armFound:
     dec ecx
     sub ecx,eax
     mov ebx,esi
+    sub ebx,OFFSET fm_entry_arr
     shr ebx,4
     add eax,ecx
     lea esi,[eax].fm_sorted_arr
