@@ -632,6 +632,103 @@ CalcPageCount  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           MergeReadReq
+;
+;       DESCRIPTION:    Merge read req with previous req
+;
+;       PARAMETERS:     DS                 File sel
+;                       FS                 Part sel
+;                       EBX                Req offset
+;                       ECX                Buffered blocks
+;                       EBP                Req index
+;                       GS:ESI             Sector array
+;
+;       RETURNS:        ECX                Remaining blocks
+;                       GS:ESI             Sector array
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MergeReadReq  Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push edx
+    push edi
+    push ebp
+;
+    or ebp,ebp
+    jz mrrDone
+;
+    mov edi,ebp
+    dec edi
+    mov edi,ds:[4*edi].kf_sorted_arr
+;
+    mov eax,ds:[ebx].kre_pos
+    mov edx,ds:[ebx].kre_pos+4
+    sub eax,ds:[edi].kre_pos
+    sbb edx,ds:[edi].kre_pos+4
+    or edx,edx
+    jnz mrrDone
+;
+    cmp eax,ds:[edi].kre_size
+    jnz mrrDone
+;
+    mov ebx,ds:[edi].kre_phys_arr
+    mov ebx,ds:[ebx]
+    add ebx,eax
+    and ebx,0FFFh
+    jz mrrDone
+;
+    movzx edx,ds:[edi].kre_pages
+    dec edx
+    shl edx,3
+    add edx,ds:[edi].kre_phys_arr
+    mov ebp,edx
+;
+    mov eax,ds
+    mov es,eax
+    mov ds,fs:vfsp_disc_sel
+
+mrrLoop:
+    mov eax,gs:[esi]
+    mov edx,gs:[esi+4]
+    call BlockToPhys
+    jc mrrDone
+;
+    test ax,0FFFh
+    jz mrrDone
+;
+    sub eax,es:[ebp]
+    sbb edx,es:[ebp+4]
+    jnz mrrDone
+;
+    cmp eax,ebx
+    jne mrrDone
+;
+    add es:[edi].kre_size,200h
+    add esi,8
+    sub ecx,1
+    jz mrrDone
+;
+    add ebx,200h
+    test ebx,0FFFh
+    jnz mrrLoop
+
+mrrDone:
+    pop ebp
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+MergeReadReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SetupReadReq
 ;
 ;       DESCRIPTION:    Setup read req
@@ -1663,9 +1760,14 @@ NotifyFileData  Proc near
 
 nfdProc:
     mov esi,gs:vfs_rd_chain_ptr
+    call MergeReadReq
+;
+    push ecx
     call CalcPageCount
     call SetupReadReq
     call ProcessReadReq
+    pop ecx
+;
     call SignalReadReq
 
 nfdUnlock:
