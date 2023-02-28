@@ -400,9 +400,9 @@ int TFile::VfsFind(long long Pos)
 #
 #   Purpose....: Lock file
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
-#   Returns....: 
+#   Returns....:
 #
 ##########################################################################*/
 void TFile::VfsLock()
@@ -412,7 +412,7 @@ void TFile::VfsLock()
     if (FMap)
     {
         LockPtr = &FMap->Handle->LockCount;
-        __asm 
+        __asm
         {
            mov edx,LockPtr
            lock inc dword ptr [edx]
@@ -426,9 +426,9 @@ void TFile::VfsLock()
 #
 #   Purpose....: Unlock file
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
-#   Returns....: 
+#   Returns....:
 #
 ##########################################################################*/
 void TFile::VfsUnlock()
@@ -438,7 +438,7 @@ void TFile::VfsUnlock()
     if (FMap)
     {
         LockPtr = &FMap->Handle->LockCount;
-        __asm 
+        __asm
         {
            mov edx,LockPtr
            lock dec dword ptr [edx]
@@ -452,9 +452,9 @@ void TFile::VfsUnlock()
 #
 #   Purpose....: Do one read
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
-#   Returns....: 
+#   Returns....:
 #
 ##########################################################################*/
 int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
@@ -478,7 +478,7 @@ int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
                 src = entry->Base + diff;
                 if (count > size)
                     count = size;
-      
+
                 memcpy(buf, src, count);
             }
             else
@@ -506,6 +506,7 @@ int TFile::VfsRead(void *Buf, int Size)
     long long TotalSize = GetSize();
     int count;
     int diff;
+    int i;
     int ret = 0;
     char *ptr = (char *)Buf;
 
@@ -532,12 +533,14 @@ int TFile::VfsRead(void *Buf, int Size)
         {
             FLastIndex = VfsFind(Pos);
 
-            if (FLastIndex < 0)
+            for (i = 0; i < 10; i++)
             {
                 VfsUnlock();
                 RdosMapVfsFile(FHandle, Pos, Size);
                 VfsLock();
                 FLastIndex = VfsFind(Pos);
+                if (FLastIndex >= 0)
+                    break;
             }
 
             if (FLastIndex < 0)
