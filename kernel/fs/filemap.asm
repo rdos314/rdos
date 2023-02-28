@@ -909,18 +909,8 @@ LockMap     Proc near
     mov ax,flat_data_sel
     mov ds,eax
     mov ebx,es:fm_handle_ptr
-
-lmRetry:
-    mov ax,1
-    xchg ax,ds:[ebx].fh_spinlock
-    or ax,ax
-    jz lmDone
+    lock inc ds:[ebx].fh_lock_count
 ;
-    mov ax,10
-    WaitMilliSec
-    jmp lmRetry
-
-lmDone:
     pop ebx
     pop eax
     pop ds
@@ -947,7 +937,7 @@ UnlockMap     Proc near
     mov ax,flat_data_sel
     mov ds,eax
     mov ebx,es:fm_handle_ptr
-    mov ds:[ebx].fh_spinlock,0
+    lock dec ds:[ebx].fh_lock_count
 ;
     pop ebx
     pop eax
@@ -1151,8 +1141,6 @@ MapEntry      Endp
 AddReadMap      Proc near
     pushad
 ;
-    call LockMap
-;
     movzx esi,bx
     mov ebp,80h
     xor ebx,ebx
@@ -1236,10 +1224,6 @@ armSave:
     clc
 
 armDone:
-    pushf
-    call UnlockMap
-    popf
-;
     popad
     ret
 AddReadMap      Endp
@@ -1265,14 +1249,9 @@ MapReq      Proc near
 ;
     EnterSection ds:kfm_section
 ;
-    call LockMap
     push ecx
     call FindReadMap
     pop ecx
-;
-    pushf
-    call UnlockMap
-    popf
     jnc mrLeave
 ;
     push ds
@@ -1285,9 +1264,7 @@ MapReq      Proc near
     mov ecx,ebp
     call MapEntry
 ;
-    call LockMap
     call AddReadMap
-    call UnlockMap
 
 mrLeave:
     LeaveSection ds:kfm_section

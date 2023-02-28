@@ -407,26 +407,15 @@ int TFile::VfsFind(long long Pos)
 ##########################################################################*/
 void TFile::VfsLock()
 {
-    short int *SpinLock = 0;
-    short int State;
+    int *LockPtr;
 
     if (FMap)
     {
-        for (;;)
+        LockPtr = &FMap->Handle->LockCount;
+        __asm 
         {
-            SpinLock = &FMap->Handle->SpinLock;
-            __asm 
-            {
-                mov ax,1
-                mov ebx,SpinLock
-                xchg ax,[ebx]
-                mov State,ax
-            }
-
-            if (State == 0)
-                break;
-            else
-                RdosWaitMilli(10);
+           mov edx,LockPtr
+           lock inc dword ptr [edx]
         }
     }
 }
@@ -444,8 +433,17 @@ void TFile::VfsLock()
 ##########################################################################*/
 void TFile::VfsUnlock()
 {
+    int *LockPtr;
+
     if (FMap)
-        FMap->Handle->SpinLock = 0;
+    {
+        LockPtr = &FMap->Handle->LockCount;
+        __asm 
+        {
+           mov edx,LockPtr
+           lock dec dword ptr [edx]
+        }
+    }
 }
 
 /*##########################################################################

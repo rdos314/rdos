@@ -178,7 +178,7 @@ typedef struct FileHandleInfo
 {
     long long PosArr[120];
     int Bitmap[15];
-    short int SpinLock;
+    int LockCount;
 } FileHandleInfo;
 
 typedef struct FileMap

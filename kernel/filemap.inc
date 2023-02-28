@@ -47,7 +47,7 @@ file_handle_struc  STRUC
 
 fh_pos_arr          DD 15*8*8 DUP(?)
 fh_bitmap           DD 15 DUP(?)
-fh_spinlock         DW ?
+fh_lock_count       DD ?
 
 file_handle_struc  ENDS
 
