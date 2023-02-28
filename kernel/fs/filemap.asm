@@ -1034,65 +1034,6 @@ IssueReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CacheReq
-;
-;       DESCRIPTION:    Cache req
-;
-;       PARAMETERS:     DS             File sel
-;                       BX             Handle
-;                       EDX:EAX        Req position
-;                       ECX            Req size
-;
-;       RETURNS:        EDX:EAX        Cached position
-;                       ECX            Cache size
-;                       EBP            Pages
-;                       GS:ESI         Physical address ptr          
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CacheReq      Proc near
-
-crRetry:
-    EnterSection ds:kf_section
-    push ecx
-    call FindReadReq
-    pop ecx
-    jnc crCheck
-;
-    call AddReadReq
-    call AddWaitReq
-    call SendReadReq
-;
-    LeaveSection ds:kf_section
-    WaitForSignal
-    jmp crRetry
-
-crCheck:
-    mov esi,ds:[ebx].kre_phys_arr
-    or esi,esi
-    jnz crFound
-;
-    call AddWaitReq
-    LeaveSection ds:kf_section
-    WaitForSignal
-    jmp crRetry
-
-crFound:
-    mov ax,ds
-    mov gs,eax
-    mov esi,ds:[ebx].kre_phys_arr
-    mov eax,ds:[ebx].kre_pos
-    mov edx,ds:[ebx].kre_pos+4
-    mov ecx,ds:[ebx].kre_size
-    movzx ebp,ds:[ebx].kre_pages
-;
-    LeaveSection ds:kf_section
-    ret
-CacheReq    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           LockMap
 ;
 ;       DESCRIPTION:    Lock map
@@ -1459,6 +1400,7 @@ SyncMap  Proc near
     jc smAdd
 ;
     mov es:[ebx].fm_entry_arr.fmb_size,ecx
+    stc
     jmp smLeave
 
 smAdd:
@@ -1466,8 +1408,8 @@ smAdd:
 ;
     mov ecx,ebp
     call MapEntry
-;
     call AddReadMap
+    clc
 
 smLeave:
     LeaveSection ds:kfm_section
@@ -1485,17 +1427,19 @@ SyncMap  Endp
 ;
 ;       PARAMETERS:     DS             Kernel processes
 ;                       ES             Kernel mapping sel
+;                       GS             File sel
 ;                       BX             Handle
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 MapReq      Proc near
+    push es
     push gs
     pushad
 ;
+    mov es,ds:kfm_kernel_sel
     mov gs,ds:kfm_file_sel
 ;
     EnterSection ds:kfm_section
@@ -1514,6 +1458,7 @@ MapReq      Proc near
 mrIssue:
     call IssueReq
     call SyncMap
+    jnc mrDone
 ;
     mov eax,gs:[ebx].kre_pos
     mov edx,gs:[ebx].kre_pos+4
@@ -1527,6 +1472,7 @@ mrIssue:
 mrDone:
     popad
     pop gs
+    pop es
     ret
 MapReq   Endp
 
@@ -2007,7 +1953,6 @@ map_vfs_file   Proc far
     mov si,ds:[ebx].fh_sel
     mov bx,ds:[ebx].fh_handle
     mov ds,esi
-    mov es,ds:kfm_kernel_sel
     call MapReq
 
 mvfDone:
