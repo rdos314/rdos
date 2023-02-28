@@ -58,6 +58,7 @@ kre_sector_arr    DD ?
 kre_phys_arr      DD ?
 kre_next          DD ?
 kre_pages         DW ?
+kre_usage         DW ?
 
 kernel_req_entry  ENDS
 
@@ -373,6 +374,7 @@ AddReadReq      Proc near
     mov ds:[esi].kre_pages,0
     mov ds:[esi].kre_sector_arr,0
     mov ds:[esi].kre_phys_arr,0
+    mov ds:[esi].kre_usage,0
 ;
     mov ebp,128
     mov ebx,OFFSET kf_sorted_arr
@@ -965,6 +967,7 @@ LockReq      Proc near
     stc
     jz lrLeave
 ;
+    inc ds:[ebx].kre_usage
     clc
 
 lrLeave:
@@ -994,6 +997,7 @@ LockReq    Endp
 IssueReq      Proc near
     push ds
     push esi
+    push edi
 ;
     mov esi,gs
     mov ds,esi
@@ -1024,8 +1028,10 @@ irCheck:
     jmp irRetry
 
 irLeave:
+    inc ds:[ebx].kre_usage
     LeaveSection ds:kf_section
 ;
+    pop edi
     pop esi
     pop ds
     ret
@@ -1386,6 +1392,7 @@ AddReadMap      Endp
 SyncMap  Proc near
     pushad
 ;
+    mov edi,ebx
     mov eax,gs:[ebx].kre_pos
     mov edx,gs:[ebx].kre_pos+4
     mov ecx,gs:[ebx].kre_size
@@ -1399,6 +1406,7 @@ SyncMap  Proc near
     pop ecx
     jc smAdd
 ;
+    dec gs:[edi].kre_usage
     mov es:[ebx].fm_entry_arr.fmb_size,ecx
     stc
     jmp smLeave
