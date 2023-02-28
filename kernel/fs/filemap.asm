@@ -294,12 +294,12 @@ frrLoop:
     or ecx,ecx
     jz frrLower
 ;
-    mov esi,ds:[ecx].kre_pos
-    mov edi,ds:[ecx].kre_pos+4
-    sub esi,eax
-    sbb edi,edx
-    ja frrLower
-    jb frrHigher
+    mov esi,eax
+    mov edi,edx
+    sub esi,ds:[ecx].kre_pos
+    sbb edi,ds:[ecx].kre_pos+4
+    jb frrLower
+    jnz frrHigher
 ;
     cmp esi,ds:[ecx].kre_size
     jae frrLower
@@ -1077,15 +1077,15 @@ frmLoop:
     jz frmLower
 ;
     shl ecx,4
-    mov esi,es:[ecx].fm_entry_arr.fmb_pos
-    mov edi,es:[ecx].fm_entry_arr.fmb_pos+4
-    sub esi,eax
-    sbb edi,edx
-    ja frmLower
-    jb frmHigher
+    mov esi,eax
+    mov edi,edx
+    sub esi,es:[ecx].fm_entry_arr.fmb_pos
+    sbb edi,es:[ecx].fm_entry_arr.fmb_pos+4
+    jb frmLower
+    jnz frmHigher
 ;
-    cmp esi,es:[ecx].fmb_size
-    jae frmLower
+    cmp esi,es:[ecx].fm_entry_arr.fmb_size
+    jae frmHigher
 ;
     add ebx,ebp
     xchg ebx,ecx
