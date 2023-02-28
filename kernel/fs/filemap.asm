@@ -656,6 +656,7 @@ MergeReadReq  Proc near
     push edx
     push edi
     push ebp
+    sub esp,4
 ;
     or ebp,ebp
     jz mrrDone
@@ -674,10 +675,11 @@ MergeReadReq  Proc near
     cmp eax,ds:[edi].kre_size
     jnz mrrDone
 ;
-    mov ebx,ds:[edi].kre_phys_arr
-    mov ebx,ds:[ebx]
-    add ebx,eax
-    and ebx,0FFFh
+    mov edx,ds:[edi].kre_phys_arr
+    mov edx,ds:[edx]
+    add edx,eax
+    and edx,0FFFh
+    mov [esp],edx
     jz mrrDone
 ;
     movzx edx,ds:[edi].kre_pages
@@ -703,9 +705,11 @@ mrrLoop:
     sbb edx,es:[ebp+4]
     jnz mrrDone
 ;
-    cmp eax,ebx
+    cmp eax,[esp]
     jne mrrDone
 ;
+    add es:[ebx].kre_pos,200h
+    adc es:[ebx].kre_pos+4,0
     add es:[edi].kre_size,200h
     add esi,8
     sub ecx,1
@@ -716,6 +720,7 @@ mrrLoop:
     jnz mrrLoop
 
 mrrDone:
+    add esp,4
     pop ebp
     pop edi
     pop edx
