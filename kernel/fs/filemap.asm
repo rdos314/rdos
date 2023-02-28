@@ -938,6 +938,102 @@ UnlockSectors  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LockReq
+;
+;       DESCRIPTION:    Lock req
+;
+;       PARAMETERS:     GS             File sel
+;                       EDX:EAX        Req position
+;
+;       RETURNS:        EBX            Req offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockReq      Proc near
+    push ds
+    push ecx
+;
+    mov ebx,gs
+    mov ds,ebx
+;
+    EnterSection ds:kf_section
+    call FindReadReq
+    jc lrLeave
+;
+    mov ecx,ds:[ebx].kre_phys_arr
+    or ecx,ecx
+    stc
+    jz lrLeave
+;
+    clc
+
+lrLeave:
+    LeaveSection ds:kf_section
+;
+    pop ecx
+    pop ds
+    ret
+LockReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           IssueReq
+;
+;       DESCRIPTION:    Issue req
+;
+;       PARAMETERS:     GS             File sel
+;                       BX             Handle
+;                       EDX:EAX        Req position
+;                       ECX            Req size
+;
+;       RETURNS:        EBX            Req offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IssueReq      Proc near
+    push ds
+    push esi
+;
+    mov esi,gs
+    mov ds,esi
+
+irRetry:
+    EnterSection ds:kf_section
+    push ecx
+    call FindReadReq
+    pop ecx
+    jnc irCheck
+;
+    call AddReadReq
+    call AddWaitReq
+    call SendReadReq
+;
+    LeaveSection ds:kf_section
+    WaitForSignal
+    jmp irRetry
+
+irCheck:
+    mov esi,ds:[ebx].kre_phys_arr
+    or esi,esi
+    jnz irLeave
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+    WaitForSignal
+    jmp irRetry
+
+irLeave:
+    LeaveSection ds:kf_section
+;
+    pop esi
+    pop ds
+    ret
+IssueReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CacheReq
 ;
 ;       DESCRIPTION:    Cache req
@@ -1336,6 +1432,53 @@ AddReadMap      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SyncMap
+;
+;       DESCRIPTION:    Sync map from file sel
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;                       GS:EBX         File entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SyncMap  Proc near
+    pushad
+;
+    mov eax,gs:[ebx].kre_pos
+    mov edx,gs:[ebx].kre_pos+4
+    mov ecx,gs:[ebx].kre_size
+    mov esi,gs:[ebx].kre_phys_arr
+    movzx ebp,gs:[ebx].kre_pages
+;
+    EnterSection ds:kfm_section
+;
+    push ecx
+    call FindReadMap
+    pop ecx
+    jc smAdd
+;
+    mov es:[ebx].fm_entry_arr.fmb_size,ecx
+    jmp smLeave
+
+smAdd:
+    call AllocateMapEntry
+;
+    mov ecx,ebp
+    call MapEntry
+;
+    call AddReadMap
+
+smLeave:
+    LeaveSection ds:kfm_section
+;
+    popad
+    ret
+SyncMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           MapReq
 ;
 ;       DESCRIPTION:    Map req
@@ -1348,46 +1491,40 @@ AddReadMap      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 MapReq      Proc near
     push gs
     pushad
 ;
-    EnterSection ds:kfm_section
+    mov gs,ds:kfm_file_sel
 ;
+    EnterSection ds:kfm_section
     push ecx
     call FindReadMap
     pop ecx
-    jnc mrLeave
-;
     LeaveSection ds:kfm_section
+    jnc mrDone
 ;
-    push ds
-    mov ds,ds:kfm_file_sel
-    call CacheReq
-    pop ds
+    call LockReq
+    jc mrIssue
 ;
-    EnterSection ds:kfm_section
-;
-    push ecx
-    call FindReadMap
-    pop ecx
-    jc mrAdd
-;
-    mov es:[ebx].fm_entry_arr.fmb_size,ecx
-    jmp mrLeave
+    call SyncMap
+    jmp mrDone
 
-mrAdd:
-    call AllocateMapEntry
+mrIssue:
+    call IssueReq
+    call SyncMap
 ;
-    mov ecx,ebp
-    call MapEntry
+    mov eax,gs:[ebx].kre_pos
+    mov edx,gs:[ebx].kre_pos+4
+    add eax,gs:[ebx].kre_size
+    adc edx,0
+    call LockReq
+    jc mrDone
 ;
-    call AddReadMap
+    call SyncMap
 
-mrLeave:
-    LeaveSection ds:kfm_section
-    clc
-;
+mrDone:
     popad
     pop gs
     ret
