@@ -2176,11 +2176,12 @@ local_get_thread_page_entry32    Proc near
     push edx
     push si
 ;
+    and dx,0F000h
+    mov es,bp
     mov ax,system_data_sel
     mov ds,ax
     RequestSpinlock ds:page_spinlock
 ;
-    and dx,0F000h
     mov ax,es
     or ax,ax
     stc
@@ -2189,7 +2190,6 @@ local_get_thread_page_entry32    Proc near
     mov ax,process_dir_sel
     mov ds,ax
     mov si,(alias_linear SHR 20) AND 0FFFh
-    mov es,bp
     mov eax,es:p_cr3
     or ax,803h
     mov [si],eax
