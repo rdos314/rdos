@@ -302,7 +302,7 @@ frrLoop:
     jnz frrHigher
 ;
     cmp esi,ds:[ecx].kre_size
-    jae frrLower
+    jae frrHigher
 ;
     xchg ebx,ecx
     sub ecx,OFFSET kf_sorted_arr
@@ -715,9 +715,12 @@ mrrLoop:
     sub ecx,1
     jz mrrDone
 ;
-    add ebx,200h
-    test ebx,0FFFh
-    jnz mrrLoop
+    add eax,200h
+    test eax,0FFFh
+    jz mrrDone
+;
+    mov [esp],eax
+    jmp mrrLoop
 
 mrrDone:
     add esp,4
@@ -1356,11 +1359,24 @@ MapReq      Proc near
     pop ecx
     jnc mrLeave
 ;
+    LeaveSection ds:kfm_section
+;
     push ds
     mov ds,ds:kfm_file_sel
     call CacheReq
     pop ds
 ;
+    EnterSection ds:kfm_section
+;
+    push ecx
+    call FindReadMap
+    pop ecx
+    jc mrAdd
+;
+    mov es:[ebx].fm_entry_arr.fmb_size,ecx
+    jmp mrLeave
+
+mrAdd:
     call AllocateMapEntry
 ;
     mov ecx,ebp
