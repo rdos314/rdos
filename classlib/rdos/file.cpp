@@ -393,6 +393,60 @@ int TFile::VfsFind(long long Pos)
 
 /*##########################################################################
 #
+#   Name       : TFile::VfsLock
+#
+#   Purpose....: Lock file
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: 
+#
+##########################################################################*/
+void TFile::VfsLock()
+{
+    short int *SpinLock = 0;
+    short int State;
+
+    if (FMap)
+    {
+        for (;;)
+        {
+            SpinLock = &FMap->Handle->SpinLock;
+            __asm 
+            {
+                mov ax,1
+                mov ebx,SpinLock
+                xchg ax,[ebx]
+                mov State,ax
+            }
+
+            if (State == 0)
+                break;
+            else
+                RdosWaitMilli(10);
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::VfsUnlock
+#
+#   Purpose....: Unlock file
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: 
+#
+##########################################################################*/
+void TFile::VfsUnlock()
+{
+    if (FMap)
+        FMap->Handle->SpinLock = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::VfsRead
 #
 #   Purpose....: VFS read
@@ -421,7 +475,9 @@ int TFile::VfsRead(void *Buf, int Size)
 
     while (Size)
     {
+        VfsLock();
         index = VfsFind(Pos);
+        VfsUnlock();
 
         if (index < 0)
         {
