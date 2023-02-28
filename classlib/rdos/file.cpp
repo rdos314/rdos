@@ -60,6 +60,7 @@ TFile::TFile(const char *FileName)
         FFileName = new char[len + 1];
         strcpy(FFileName, FileName);
     }
+    FLastIndex = -1;
 }
 
 /*##########################################################################
@@ -92,6 +93,7 @@ TFile::TFile(const char *FileName, int Attrib)
         FFileName = new char[len + 1];
         strcpy(FFileName, FileName);
     }
+    FLastIndex = -1;
 }
 
 /*##########################################################################
@@ -119,6 +121,7 @@ TFile::TFile(const TFile &file)
         FHandle = 0;
 
     FMap = 0;
+    FLastIndex = file.FLastIndex;
 }
 
 /*##########################################################################
@@ -459,26 +462,31 @@ void TFile::VfsUnlock()
 int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
 {
     int diff;
-    int count;
+    int count = 0;
     char *src;
     struct FileMapEntry *entry;
 
     if (index >= 0)
     {
         entry = &FMap->MapArr[index];
-
-        count = entry->Size;
-        src = entry->Base;
         diff = pos - entry->Pos;
-        src += diff;
-        count -= diff;
-        if (count > size)
-            count = size;
 
-        memcpy(buf, src, count);
+        if (diff >= 0)
+        {
+            count = entry->Size - diff;
+
+            if (count > 0)
+            {
+                src = entry->Base + diff;
+                if (count > size)
+                    count = size;
+      
+                memcpy(buf, src, count);
+            }
+            else
+                count = 0;
+        }
     }
-    else
-        count = 0;
 
     return count;
 }
@@ -498,7 +506,6 @@ int TFile::VfsRead(void *Buf, int Size)
 {
     long long Pos = GetPos();
     long long TotalSize = GetSize();
-    int index;
     int count;
     int diff;
     int ret = 0;
@@ -510,29 +517,37 @@ int TFile::VfsRead(void *Buf, int Size)
     if (Pos + Size > TotalSize)
         Size = TotalSize - Pos;
 
+    VfsLock();
+
     while (Size)
     {
-        VfsLock();
-        index = VfsFind(Pos);
-        VfsUnlock();
-
-        if (index < 0)
+        if (FLastIndex >= 0)
         {
-            RdosMapVfsFile(FHandle, Pos, Size);
-            index = VfsFind(Pos);
-        }
-
-        if (index >= 0)
-        {
-            count = VfsReadOne(index, ptr, Pos, Size);
+            count = VfsReadOne(FLastIndex, ptr, Pos, Size);
             ptr += count;
             Size -= count;
             ret += count;
             Pos += count;
         }
-        else
-            break;
+
+        if (Size)
+        {
+            FLastIndex = VfsFind(Pos);
+
+            if (FLastIndex < 0)
+            {
+                VfsUnlock();
+                RdosMapVfsFile(FHandle, Pos, Size);
+                VfsLock();
+                FLastIndex = VfsFind(Pos);
+            }
+
+            if (FLastIndex < 0)
+                break;
+        }
     }
+
+    VfsUnlock();
 
     SetPos(Pos);
     return ret;

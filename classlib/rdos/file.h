@@ -67,6 +67,7 @@ private:
     char *FFileName;
     struct FileMap *FMap;
     int FMapIndex;
+    int FLastIndex;
 };
 
 #endif
