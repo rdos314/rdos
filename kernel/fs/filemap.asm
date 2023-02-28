@@ -833,6 +833,131 @@ UnlockSectors  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CacheReq
+;
+;       DESCRIPTION:    Cache req
+;
+;       PARAMETERS:     DS             File sel
+;                       BX             Handle
+;                       EDX:EAX        Req position
+;                       ECX            Req size
+;
+;       RETURNS:        EDX:EAX        Cached position
+;                       ECX            Cache size
+;                       EBP            Pages
+;                       GS:ESI         Physical address ptr          
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CacheReq      Proc near
+
+crRetry:
+    EnterSection ds:kf_section
+    push ecx
+    call FindReadReq
+    pop ecx
+    jnc crCheck
+;
+    call AddReadReq
+    call AddWaitReq
+    call SendReadReq
+;
+    LeaveSection ds:kf_section
+    WaitForSignal
+    jmp crRetry
+
+crCheck:
+    mov esi,ds:[ebx].kre_phys_arr
+    or esi,esi
+    jnz crFound
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+    WaitForSignal
+    jmp crRetry
+
+crFound:
+    mov ax,ds
+    mov gs,eax
+    mov esi,ds:[ebx].kre_phys_arr
+    mov eax,ds:[ebx].kre_pos
+    mov edx,ds:[ebx].kre_pos+4
+    mov ecx,ds:[ebx].kre_size
+    movzx ebp,ds:[ebx].kre_pages
+;
+    LeaveSection ds:kf_section
+    ret
+CacheReq    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LockMap
+;
+;       DESCRIPTION:    Lock map
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockMap     Proc near
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,flat_data_sel
+    mov ds,eax
+    mov ebx,es:fm_handle_ptr
+
+lmRetry:
+    mov ax,1
+    xchg ax,ds:[ebx].fh_spinlock
+    or ax,ax
+    jz lmDone
+;
+    mov ax,10
+    WaitMilliSec
+    jmp lmRetry
+
+lmDone:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+LockMap     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlockMap
+;
+;       DESCRIPTION:    Unlock map
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockMap     Proc near
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,flat_data_sel
+    mov ds,eax
+    mov ebx,es:fm_handle_ptr
+    mov ds:[ebx].fh_spinlock,0
+;
+    pop ebx
+    pop eax
+    pop ds
+    ret
+UnlockMap     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           FindReadMap
 ;
 ;       DESCRIPTION:    Find a read map
@@ -1026,6 +1151,8 @@ MapEntry      Endp
 AddReadMap      Proc near
     pushad
 ;
+    call LockMap
+;
     movzx esi,bx
     mov ebp,80h
     xor ebx,ebx
@@ -1109,9 +1236,67 @@ armSave:
     clc
 
 armDone:
+    pushf
+    call UnlockMap
+    popf
+;
     popad
     ret
 AddReadMap      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           MapReq
+;
+;       DESCRIPTION:    Map req
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;                       BX             Handle
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapReq      Proc near
+    push gs
+    pushad
+;
+    EnterSection ds:kfm_section
+;
+    call LockMap
+    push ecx
+    call FindReadMap
+    pop ecx
+;
+    pushf
+    call UnlockMap
+    popf
+    jnc mrLeave
+;
+    push ds
+    mov ds,ds:kfm_file_sel
+    call CacheReq
+    pop ds
+;
+    call AllocateMapEntry
+;
+    mov ecx,ebp
+    call MapEntry
+;
+    call LockMap
+    call AddReadMap
+    call UnlockMap
+
+mrLeave:
+    LeaveSection ds:kfm_section
+    clc
+;
+    popad
+    pop gs
+    ret
+MapReq   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1586,55 +1771,7 @@ map_vfs_file   Proc far
     mov bx,ds:[ebx].fh_handle
     mov ds,esi
     mov es,ds:kfm_kernel_sel
-    push ds
-;
-    mov ds,ds:kfm_file_sel
-
-mvfRetry:
-    EnterSection ds:kf_section
-    push ecx
-    call FindReadReq
-    pop ecx
-    jnc mvfCheck
-;
-    call AddReadReq
-    call AddWaitReq
-    call SendReadReq
-;
-    LeaveSection ds:kf_section
-    WaitForSignal
-    jmp mvfRetry
-
-mvfCheck:
-    mov esi,ds:[ebx].kre_phys_arr
-    or esi,esi
-    jnz mvfCopy
-;
-    call AddWaitReq
-    LeaveSection ds:kf_section
-    WaitForSignal
-    jmp mvfRetry
-
-mvfCopy:
-    mov ax,ds
-    mov gs,eax
-    mov esi,ds:[ebx].kre_phys_arr
-    mov eax,ds:[ebx].kre_pos
-    mov edx,ds:[ebx].kre_pos+4
-    mov ecx,ds:[ebx].kre_size
-    movzx ebp,ds:[ebx].kre_pages
-;
-    LeaveSection ds:kf_section
-    pop ds
-;
-    EnterSection ds:kfm_section
-    call AllocateMapEntry
-;
-    mov ecx,ebp
-    call MapEntry
-    call AddReadMap
-    LeaveSection ds:kfm_section
-    clc
+    call MapReq
 
 mvfDone:
     popad
