@@ -447,6 +447,44 @@ void TFile::VfsUnlock()
 
 /*##########################################################################
 #
+#   Name       : TFile::VfsReadOne
+#
+#   Purpose....: Do one read
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: 
+#
+##########################################################################*/
+int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
+{
+    int diff;
+    int count;
+    char *src;
+    struct FileMapEntry *entry;
+
+    if (index >= 0)
+    {
+        entry = &FMap->MapArr[index];
+
+        count = entry->Size;
+        src = entry->Base;
+        diff = pos - entry->Pos;
+        src += diff;
+        count -= diff;
+        if (count > size)
+            count = size;
+
+        memcpy(buf, src, count);
+    }
+    else
+        count = 0;
+
+    return count;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::VfsRead
 #
 #   Purpose....: VFS read
@@ -464,8 +502,7 @@ int TFile::VfsRead(void *Buf, int Size)
     int count;
     int diff;
     int ret = 0;
-    char *src;
-    char *dst = (char *)Buf;
+    char *ptr = (char *)Buf;
 
     if (Pos > TotalSize)
         Pos = TotalSize;
@@ -487,16 +524,8 @@ int TFile::VfsRead(void *Buf, int Size)
 
         if (index >= 0)
         {
-            count = FMap->MapArr[index].Size;
-            src = FMap->MapArr[index].Base;
-            diff = Pos - FMap->MapArr[index].Pos;
-            src += diff;
-            count -= diff;
-            if (count > Size)
-                count = Size;
-
-            memcpy(dst, src, count);
-            dst += count;
+            count = VfsReadOne(index, ptr, Pos, Size);
+            ptr += count;
             Size -= count;
             ret += count;
             Pos += count;
