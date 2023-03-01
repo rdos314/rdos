@@ -94,6 +94,7 @@ kfm_file_sel      DW ?
 kfm_kernel_sel    DW ?
 kfm_next_map      DW ?
 kfm_section       section_typ <>
+kfm_ref_arr       DW 240 DUP(?)
 
 kernel_file_map   ENDS
 
@@ -985,7 +986,8 @@ LockReq    Endp
 ;
 ;       DESCRIPTION:    Issue req
 ;
-;       PARAMETERS:     GS             File sel
+;       PARAMETERS:     FS             Kernel process sel
+;                       GS             File sel
 ;                       BX             Handle
 ;                       EDX:EAX        Req position
 ;                       ECX            Req size
@@ -1014,6 +1016,8 @@ irRetry:
     call SendReadReq
 ;
     LeaveSection ds:kf_section
+;
+    call UpdateReq
     WaitForSignal
     jmp irRetry
 
@@ -1209,6 +1213,10 @@ ameFound:
     mov es:[esi].fmb_pos+4,edx
     mov es:[esi].fmb_size,edi
     mov ebx,esi
+;
+    sub esi,OFFSET fm_entry_arr
+    shr esi,3
+    mov ds:[esi].kfm_ref_arr,1
     clc
 
 ameDone:
@@ -1379,6 +1387,123 @@ AddReadMap      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CheckReq
+;
+;       DESCRIPTION:    Check req	
+;
+;       PARAMETERS:     DS:ESI         Reference
+;                       ES:EDI         Req entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckReq  Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push ebp
+;
+    xor bp,bp
+    mov ecx,es:[edi].fmb_size
+    mov edx,es:[edi].fmb_base
+    add ecx,edx
+    and dx,0F000h
+    sub ecx,edx
+    dec ecx
+    shr ecx,12
+    inc ecx
+    add edx,ds:kfm_flat_base
+
+crLoop:
+    GetPageEntry
+    test ax,60h
+    jz crNext
+;
+    or bp,ax
+    and ax,NOT 60h
+    SetPageEntry
+
+crNext:
+    add edx,1000h
+    loop crLoop
+;
+    int 3
+    mov ax,bp
+    and ax,60h
+;
+    test ax,20h
+    jz crNone
+;
+    inc word ptr ds:[esi]
+    jmp crDone
+
+crNone:
+    mov ax,ds:[esi]
+    or ax,ax
+    jz crFree
+;
+    sub word ptr ds:[esi],1
+    jnz crDone
+
+crFree:
+    int 3
+
+crDone:
+    pop ebp
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+CheckReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UpdateReq
+;
+;       DESCRIPTION:    Update requests
+;
+;       PARAMETERS:     FS             Kernel processes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateReq  Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,fs
+    mov ds,eax
+    mov es,ds:kfm_kernel_sel
+    mov esi,OFFSET kfm_ref_arr
+    mov edi,OFFSET fm_entry_arr
+    mov ecx,240
+    EnterSection ds:kfm_section
+
+urLoop:
+    mov ax,ds:[esi]
+    cmp ax,-1
+    je urNext
+;
+    call CheckReq
+
+urNext:
+    add esi,2
+    add edi,16
+    loop urLoop
+;
+    LeaveSection ds:kfm_section
+;
+    popad
+    pop es
+    pop ds
+    ret
+UpdateReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SyncMap
 ;
 ;       DESCRIPTION:    Sync map from file sel
@@ -1444,9 +1569,12 @@ SyncMap  Endp
 
 MapReq      Proc near
     push es
+    push fs
     push gs
     pushad
 ;
+    mov esi,ds
+    mov fs,esi
     mov es,ds:kfm_kernel_sel
     mov gs,ds:kfm_file_sel
 ;
@@ -1480,6 +1608,7 @@ mrIssue:
 mrDone:
     popad
     pop gs
+    pop fs
     pop es
     ret
 MapReq   Endp
@@ -1617,9 +1746,13 @@ CreateProgSel   Proc near
 ;
     xor edi,edi
     xor eax,eax
-    mov ecx,SIZE kernel_file_map
-    shr ecx,2
-    rep stosd
+    mov ecx,OFFSET kfm_ref_arr
+    shr ecx,1
+    rep stosw
+;
+    mov ax,-1
+    mov ecx,240
+    rep stosw
 ;
     mov es:kfm_flat_base,ebx
     mov es:kfm_user_base,edx
