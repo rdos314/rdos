@@ -337,6 +337,14 @@ nrqScanLoop:
     jz nrqDone
 ;
     call NotifyFileData
+;
+    push es
+    mov bx,gs
+    mov es,bx
+    xor bx,bx
+    mov gs,bx
+    FreeBigServSel
+    pop es
     jmp nrqDone
     
 nrqScanNext:

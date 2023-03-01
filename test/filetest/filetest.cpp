@@ -3,156 +3,34 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "file.h"
 
-#define FALSE   0
-#define TRUE    !FALSE
-
-void CreateFile()
+char CalcSign(long long pos)
 {
-    char FileName[40];
-    char *str;
-    int handle;
-    int size;
-    int i;
-    int id = RdosGetRandom(10);
+    char ch;
+    int temp = (int)pos;
 
-    sprintf(FileName, "%d.txt", id);
-    handle = RdosCreateFile(FileName, 0);
-    if (handle)
-    {
-        size = RdosGetRandom(256);
-        str = new char[size + 1];
+    ch = pos & 0xFF;
+    pos = pos >> 8;
+    ch = ch ^ (pos & 0xFF);
+    pos = pos >> 8;
+    ch = ch ^ (pos & 0xFF);
+    pos = pos >> 8;
+    ch = ch ^ (pos & 0xFF);
 
-        for (i = 0; i < size; i++)
-            str[i] = 'F';
-
-        RdosWriteFile(handle, str, size);
-        delete str;
-
-        printf("Created file <%s>, %d bytes\r\n", FileName, size);                
-    }
-    RdosCloseFile(handle);        
-}
-
-void OpenFile()
-{
-    char FileName[40];
-    char *str;
-    int handle;
-    int size;
-    int i;
-    int id = RdosGetRandom(10);
-
-    sprintf(FileName, "%d.txt", id);
-    handle = RdosOpenFile(FileName, 0);
-    if (handle)
-    {
-        size = RdosGetFileSize(handle);
-        str = new char[size + 1];
-
-        RdosReadFile(handle, str, size);
-        delete str;
-
-        printf("File exists <%s>, %d bytes\r\n", FileName, size);                
-    }
-    else
-        printf("File doesn't exist <%s>\r\n", FileName);                
-        
-    RdosCloseFile(handle);        
-}
-
-void AppendFile()
-{
-    char FileName[40];
-    char *str;
-    int handle;
-    int size;
-    int pos;
-    int i;
-    int id = RdosGetRandom(10);
-
-    sprintf(FileName, "%d.txt", id);
-    handle = RdosOpenFile(FileName, 0);
-    if (handle)
-    {
-        pos = RdosGetFileSize(handle);
-        RdosSetFilePos(handle, pos);
-
-        size = RdosGetRandom(256);
-
-        str = new char[size + 1];
-
-        for (i = 0; i < size; i++)
-            str[i] = 'F';
-
-        RdosWriteFile(handle, str, size);
-        delete str;
-
-        printf("File append <%s>, %d bytes\r\n", FileName, size);                
-    }
-    else
-        printf("File doesn't exist <%s>\r\n", FileName);                
-        
-    RdosCloseFile(handle);        
-}
-
-void DeleteFile()
-{
-    char FileName[40];
-    int id = RdosGetRandom(10);
-
-    sprintf(FileName, "%d.txt", id);
-    if (RdosDeleteFile(FileName))
-        printf("File deleted <%s>\r\n", FileName);
-    else
-        printf("File not deleted <%s>\r\n", FileName);                
-}
-
-void FileThread(void *Param)
-{
-    for (;;)
-    {
-        RdosWaitMilli(RdosGetRandom(500) + 5);
-
-        switch (RdosGetRandom(10))
-        {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-                OpenFile();
-                break;
-
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-                AppendFile();
-                break;
-
-            case 8:
-                CreateFile();
-                break;
-
-            case 9:
-                DeleteFile();
-                break;
-        }
-    }
+    return ch;
 }
 
 void cdecl main()
 {
-    int j;
-    char ThreadName[40];
+    long long pos;
+    char ch;
+    TFile file("test.dat", 0);
 
-    for (j = 0; j < 15; j++)
+    for (pos = 0; pos < 0x1000000; pos++)
     {
-        sprintf(ThreadName, "File %d", j);
-        RdosCreateThread(FileThread, ThreadName, 0, 0x10000);
-    }
-
-    for (;;)
-        RdosWaitMilli(250);
+        ch = CalcSign(pos);
+        file.Write(&ch, 1);
+    }    
 }
 
