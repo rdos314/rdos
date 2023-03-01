@@ -1017,7 +1017,7 @@ irRetry:
 ;
     LeaveSection ds:kf_section
 ;
-    call UpdateReq
+    call UpdateMap
     WaitForSignal
     jmp irRetry
 
@@ -1387,16 +1387,33 @@ AddReadMap      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CheckReq
+;       NAME:           FreeMap
 ;
-;       DESCRIPTION:    Check req	
+;       DESCRIPTION:    Free map
 ;
 ;       PARAMETERS:     DS:ESI         Reference
 ;                       ES:EDI         Req entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckReq  Proc near
+FreeMap  Proc near
+    int 3
+    ret
+FreeMap Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CheckMap
+;
+;       DESCRIPTION:    Check map
+;
+;       PARAMETERS:     DS:ESI         Reference
+;                       ES:EDI         Req entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckMap  Proc near
     push eax
     push ebx
     push ecx
@@ -1414,61 +1431,60 @@ CheckReq  Proc near
     inc ecx
     add edx,ds:kfm_flat_base
 
-crLoop:
+cmLoop:
     GetPageEntry
     test ax,60h
-    jz crNext
+    jz cmNext
 ;
     or bp,ax
     and ax,NOT 60h
     SetPageEntry
 
-crNext:
+cmNext:
     add edx,1000h
-    loop crLoop
+    loop cmLoop
 ;
-    int 3
     mov ax,bp
     and ax,60h
 ;
     test ax,20h
-    jz crNone
+    jz cmNone
 ;
     inc word ptr ds:[esi]
-    jmp crDone
+    jmp cmDone
 
-crNone:
+cmNone:
     mov ax,ds:[esi]
     or ax,ax
-    jz crFree
+    jz cmFree
 ;
     sub word ptr ds:[esi],1
-    jnz crDone
+    jnz cmDone
 
-crFree:
-    int 3
+cmFree:
+    call FreeMap
 
-crDone:
+cmDone:
     pop ebp
     pop edx
     pop ecx
     pop ebx
     pop eax
     ret
-CheckReq  Endp
+CheckMap  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UpdateReq
+;       NAME:           UpdateMap
 ;
-;       DESCRIPTION:    Update requests
+;       DESCRIPTION:    Update map requests
 ;
 ;       PARAMETERS:     FS             Kernel processes
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UpdateReq  Proc near
+UpdateMap  Proc near
     push ds
     push es
     pushad
@@ -1481,17 +1497,17 @@ UpdateReq  Proc near
     mov ecx,240
     EnterSection ds:kfm_section
 
-urLoop:
+umLoop:
     mov ax,ds:[esi]
     cmp ax,-1
-    je urNext
+    je umNext
 ;
-    call CheckReq
+    call CheckMap
 
-urNext:
+umNext:
     add esi,2
     add edi,16
-    loop urLoop
+    loop umLoop
 ;
     LeaveSection ds:kfm_section
 ;
@@ -1499,7 +1515,7 @@ urNext:
     pop es
     pop ds
     ret
-UpdateReq  Endp
+UpdateMap  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
