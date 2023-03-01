@@ -59,6 +59,7 @@ code    SEGMENT byte public 'CODE'
     extern BlockToBitmap:near
     extern CreateFileSel:near
     extern NotifyFileData:near
+    extern UnlinkRequest:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -337,14 +338,7 @@ nrqScanLoop:
     jz nrqDone
 ;
     call NotifyFileData
-;
-    push es
-    mov bx,gs
-    mov es,bx
-    xor bx,bx
-    mov gs,bx
-    FreeBigServSel
-    pop es
+    call FreeReqSel
     jmp nrqDone
     
 nrqScanNext:
@@ -646,6 +640,53 @@ CreateReqSel Proc near
     popad
     ret
 CreateReqSel Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeReqSel
+;
+;       DESCRIPTION:    Free req selector
+;
+;       PARAMETERS:     GS              Req sel
+;                       FS              Part sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeReqSel Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+;
+    mov eax,gs
+    mov es,eax
+    mov eax,fs
+    mov ds,eax
+;
+    mov ebx,es:vfs_rd_req_handle
+    dec bx
+    add bx,OFFSET vfsp_file_req_arr
+;
+    EnterSection ds:vfsp_req_section
+    mov ds:[bx].fr_sel,0
+    mov ax,ds:vfsp_req_list
+    mov ds:[bx].fr_link,ax
+    mov ds:vfsp_req_list,bx
+    LeaveSection ds:vfsp_req_section
+;
+    call UnlinkRequest
+;
+    xor bx,bx
+    mov gs,bx
+    FreeBigServSel
+;
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+FreeReqSel Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

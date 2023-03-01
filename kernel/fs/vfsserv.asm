@@ -295,6 +295,49 @@ AddPartition   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UnlinkRequest
+;
+;       DESCRIPTION:    Unlink request
+;
+;       PARAMETERS:     FS          Part sel
+;                       GS          Req sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UnlinkRequest
+
+UnlinkRequest    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov edx,gs
+    mov ebx,OFFSET vfsp_req_arr
+    mov ecx,MAX_VFS_REQ_COUNT
+
+urLoop:
+    mov ax,fs:[ebx]
+    cmp ax,dx
+    jne urNext
+;
+    xor ax,ax
+    mov fs:[ebx],ax
+    
+urNext:
+    add ebx,2
+    loop urLoop
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+UnlinkRequest    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           StopPartRequests
 ;
 ;       DESCRIPTION:    Stop part requests
