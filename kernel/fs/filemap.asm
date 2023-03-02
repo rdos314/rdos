@@ -1477,6 +1477,98 @@ CheckMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UnlinkedMapEntry
+;
+;       DESCRIPTION:    Unlink entry
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;                       FS             User flat sel
+;                       AL             Entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkMapEntry  Proc near
+    ret
+UnlinkMapEntry  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlinkedMap
+;
+;       DESCRIPTION:    Unlink entries
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;                       FS             User flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkMap  Proc near
+    push ebx
+    push ecx
+;
+    int 3
+    movzx ecx,ds:kfm_unlink_count
+    mov ebx,OFFSET kfm_unlink_arr
+
+urmLoop:
+    mov al,ds:[ebx]
+    call UnlinkMapEntry
+    inc ebx
+    loop urmLoop
+;
+    mov ds:kfm_unlink_count,0
+;
+    pop ecx
+    pop ebx
+    ret
+UnlinkMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UpdateUnlinked
+;
+;       DESCRIPTION:    Update unlinked entries
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateUnlinked  Proc near
+    push eax
+;
+    movzx eax,ds:kfm_unlink_count
+    or eax,eax
+    jz uuDone
+;
+    push fs
+    push ebx
+;
+    mov ax,flat_data_sel
+    mov fs,eax
+    mov ebx,es:fm_handle_ptr
+    mov eax,fs:[ebx].fh_lock_count
+    or eax,eax
+    jnz uuPop
+;
+    call UnlinkMap
+
+uuPop:
+    pop ebx
+    pop fs
+    
+uuDone:
+    pop eax
+    ret
+UpdateUnlinked Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UpdateMap
 ;
 ;       DESCRIPTION:    Update map requests
@@ -1514,6 +1606,8 @@ umNext:
     loop umLoop
 
 umLeave:
+    call UpdateUnlinked
+;
     LeaveSection ds:kfm_section
 ;
     popad
