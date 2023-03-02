@@ -94,7 +94,11 @@ kfm_file_sel      DW ?
 kfm_kernel_sel    DW ?
 kfm_next_map      DW ?
 kfm_section       section_typ <>
-kfm_ref_arr       DW 240 DUP(?)
+kfm_free_count    DB ?
+kfm_unlink_count  DB ?
+kfm_free_arr      DB 240 DUP(?)
+kfm_unlink_arr    DB 240 DUP(?)
+kfm_ref_arr       DB 240 DUP(?)
 
 kernel_file_map   ENDS
 
@@ -1168,63 +1172,58 @@ FindReadMap  Endp
 ;       DESCRIPTION:    Add read map entry
 ;
 ;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
-;                       EDX:EAX        Position
-;                       ECX            Size
 ;
 ;       RETURNS:        BX             Entry offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateMapEntry      Proc near
-    push ecx
-    push esi
-    push edi
-;
-    mov esi,es:fm_count
-    cmp esi,100h
+    movzx ebx,ds:kfm_free_count
+    or bx,bx
     stc
     je ameDone
 ;
-    mov edi,ecx
-    mov esi,OFFSET fm_entry_arr
-    mov ecx,100h
-
-ameLoop:
-    mov ebx,es:[esi].fmb_base
-    or ebx,ebx
-    jnz ameNext
-;
-    mov ebx,-1
-    xchg ebx,es:[esi].fmb_base
-    or ebx,ebx
-    jz ameFound
-
-ameNext:
-    add esi,16
-    loop ameLoop
-;
-    stc
-    jmp ameDone
-
-ameFound:
-    lock inc es:fm_count
-    mov es:[esi].fmb_pos,eax
-    mov es:[esi].fmb_pos+4,edx
-    mov es:[esi].fmb_size,edi
-    mov ebx,esi
-;
-    sub esi,OFFSET fm_entry_arr
-    shr esi,3
-    mov ds:[esi].kfm_ref_arr,1
+    inc es:fm_count
+    dec bx
+    mov ds:kfm_free_count,bl
+    mov bl,ds:[bx].kfm_free_arr
+    mov ds:[bx].kfm_ref_arr,1
+    shl bx,4
+    add bx,OFFSET fm_entry_arr
     clc
 
 ameDone:
-    pop edi
-    pop esi
-    pop ecx
     ret
 AllocateMapEntry      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlinkMapEntry
+;
+;       DESCRIPTION:    Unlink read map entry
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       BX             Entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkMapEntry      Proc near
+    push eax
+    push ebx
+;
+    sub bx,OFFSET fm_entry_arr
+    shr bx,4
+    mov al,bl
+    movzx bx,ds:kfm_unlink_count
+    mov ds:[bx].kfm_unlink_arr,al
+    inc bl
+    mov ds:kfm_unlink_count,bl
+;
+    pop ebx
+    pop eax
+    ret
+UnlinkMapEntry      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1391,8 +1390,9 @@ AddReadMap      Endp
 ;
 ;       DESCRIPTION:    Free map
 ;
-;       PARAMETERS:     DS:ESI         Reference
-;                       ES:EDI         Req entry
+;       PARAMETERS:     DS             Kernel processes
+;                       ES             Kernel mapping sel
+;                       BX             Sorted index
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1410,15 +1410,17 @@ FreeMap Endp
 ;
 ;       PARAMETERS:     DS:ESI         Reference
 ;                       ES:EDI         Req entry
+;                       BX             Sorted index
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckMap  Proc near
     push eax
-    push ebx
     push ecx
     push edx
     push ebp
+;
+    push ebx
 ;
     xor bp,bp
     mov ecx,es:[edi].fmb_size
@@ -1444,21 +1446,26 @@ cmNext:
     add edx,1000h
     loop cmLoop
 ;
+    pop ebx
+;
     mov ax,bp
     and ax,60h
 ;
     test ax,20h
     jz cmNone
 ;
-    inc word ptr ds:[esi]
+    add byte ptr ds:[esi],1
+    jnc cmDone
+;
+    dec byte ptr ds:[esi]
     jmp cmDone
 
 cmNone:
-    mov ax,ds:[esi]
-    or ax,ax
+    mov al,ds:[esi]
+    or al,al
     jz cmFree
 ;
-    sub word ptr ds:[esi],1
+    sub byte ptr ds:[esi],1
     jnz cmDone
 
 cmFree:
@@ -1468,7 +1475,6 @@ cmDone:
     pop ebp
     pop edx
     pop ecx
-    pop ebx
     pop eax
     ret
 CheckMap  Endp
@@ -1492,23 +1498,27 @@ UpdateMap  Proc near
     mov eax,fs
     mov ds,eax
     mov es,ds:kfm_kernel_sel
-    mov esi,OFFSET kfm_ref_arr
-    mov edi,OFFSET fm_entry_arr
+    mov ebx,OFFSET fm_sorted_arr
     mov ecx,240
     EnterSection ds:kfm_section
 
 umLoop:
-    mov ax,ds:[esi]
-    cmp ax,-1
-    je umNext
+    mov al,es:[ebx]
+    cmp al,-1
+    je umLeave
 ;
+    movzx esi,al
+    add esi,OFFSET kfm_ref_arr
+    movzx edi,al
+    shl edi,4
+    add edi,OFFSET fm_entry_arr
     call CheckMap
 
 umNext:
-    add esi,2
-    add edi,16
+    inc ebx
     loop umLoop
-;
+
+umLeave:
     LeaveSection ds:kfm_section
 ;
     popad
@@ -1554,6 +1564,9 @@ SyncMap  Proc near
 
 smAdd:
     call AllocateMapEntry
+    mov es:[bx].fmb_pos,eax
+    mov es:[bx].fmb_pos+4,edx
+    mov es:[bx].fmb_size,ecx
 ;
     mov ecx,ebp
     call MapEntry
@@ -1762,13 +1775,21 @@ CreateProgSel   Proc near
 ;
     xor edi,edi
     xor eax,eax
-    mov ecx,OFFSET kfm_ref_arr
+    mov ecx,SIZE kernel_file_map
     shr ecx,1
     rep stosw
 ;
-    mov ax,-1
     mov ecx,240
-    rep stosw
+    mov es:kfm_free_count,cl
+;
+    mov edi,OFFSET kfm_free_arr
+    mov al,cl
+    dec al
+
+cpsLoop:
+    stosb
+    dec al
+    loop cpsLoop
 ;
     mov es:kfm_flat_base,ebx
     mov es:kfm_user_base,edx
