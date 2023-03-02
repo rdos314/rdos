@@ -1489,6 +1489,30 @@ CheckMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlinkMapEntry  Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    int 3
+    movzx esi,al
+    shl esi,4
+    add esi,OFFSET fm_entry_arr 
+    mov ecx,es:[esi].fmb_size
+    mov edx,es:[esi].fmb_base
+    add ecx,edx
+    and dx,0F000h
+    sub ecx,edx
+    dec ecx
+    shr ecx,12
+    inc ecx
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
     ret
 UnlinkMapEntry  Endp
 
@@ -1508,6 +1532,7 @@ UnlinkMapEntry  Endp
 UnlinkMap  Proc near
     push ebx
     push ecx
+    push edx
 ;
     int 3
     movzx ecx,ds:kfm_unlink_count
@@ -1516,11 +1541,18 @@ UnlinkMap  Proc near
 urmLoop:
     mov al,ds:[ebx]
     call UnlinkMapEntry
+;
+    movzx edx,ds:kfm_free_count
+    mov ds:[edx].kfm_free_arr,al
+    inc dl
+    mov ds:kfm_free_count,dl
+
     inc ebx
     loop urmLoop
 ;
     mov ds:kfm_unlink_count,0
 ;
+    pop edx
     pop ecx
     pop ebx
     ret
