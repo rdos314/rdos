@@ -1058,7 +1058,83 @@ IssueReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockReqEntry      Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
     int 3
+    mov eax,ds
+    mov gs,eax
+    mov eax,serv_flat_sel
+    mov es,eax
+    mov fs,ds:kf_part_sel
+    mov ds,fs:vfsp_disc_sel
+;
+    mov esi,gs:[ebx].kre_sector_arr
+    mov edi,gs:[ebx].kre_phys_arr
+    mov ecx,gs:[ebx].kre_size
+
+urePageLoop:
+    mov eax,gs:[esi]
+    mov edx,gs:[esi+4]
+    mov ebp,gs:[edi]
+    and ebp,0FFFh
+;
+    push esi
+
+ureBlockLoop:
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz ureBlockNext
+;
+    sub es:[esi].vfsp_ref_bitmap,1
+    jnz ureBlockNext
+;
+    dec ds:vfs_locked_pages
+
+ureBlockNext:
+    add eax,200h
+    adc edx,0
+    add ebp,200h
+    sub ecx,200h
+    jz ureDone
+;
+    cmp ebp,1000h
+    jne ureBlockLoop
+
+urePageNext:
+    pop esi
+;
+    add esi,8
+    add edi,8
+    jmp urePageLoop
+    
+ureDone:
+    pop esi
+;
+    mov eax,gs
+    mov ds,eax
+;
+    mov ecx,ds:[ebx].kre_size
+    shr ecx,9
+    shl ecx,3
+    mov edx,ds:[ebx].kre_sector_arr
+    FreeBlk
+;
+    mov edx,ds:[ebx].kre_phys_arr
+    FreeBlk
+;
+    mov ds:[ebx].kre_size,0
+    mov ds:[ebx].kre_sector_arr,0
+    mov ds:[ebx].kre_phys_arr,0
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
 UnlockReqEntry      Endp
 
