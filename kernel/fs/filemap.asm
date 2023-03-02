@@ -1372,7 +1372,6 @@ FreeMap  Proc near
     push ebx
     push ecx
 ;
-    int 3
     mov ecx,es:fm_count
     movzx ebx,bx
     sub ecx,ebx
