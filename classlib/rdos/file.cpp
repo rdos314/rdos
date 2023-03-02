@@ -464,6 +464,8 @@ int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
     char *src;
     struct FileMapEntry *entry;
 
+    index = FMap->SortedArr[index];
+
     if (index >= 0)
     {
         entry = &FMap->MapArr[index];

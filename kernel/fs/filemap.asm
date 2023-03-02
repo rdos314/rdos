@@ -1199,35 +1199,6 @@ AllocateMapEntry      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UnlinkMapEntry
-;
-;       DESCRIPTION:    Unlink read map entry
-;
-;       PARAMETERS:     DS             Kernel processes
-;                       BX             Entry offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlinkMapEntry      Proc near
-    push eax
-    push ebx
-;
-    sub bx,OFFSET fm_entry_arr
-    shr bx,4
-    mov al,bl
-    movzx bx,ds:kfm_unlink_count
-    mov ds:[bx].kfm_unlink_arr,al
-    inc bl
-    mov ds:kfm_unlink_count,bl
-;
-    pop ebx
-    pop eax
-    ret
-UnlinkMapEntry      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           MapEntry
 ;
 ;       DESCRIPTION:    Map entry
@@ -1397,7 +1368,32 @@ AddReadMap      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeMap  Proc near
+    push eax
+    push ebx
+    push ecx
+;
     int 3
+    mov ecx,es:fm_count
+    movzx ebx,bx
+    sub ecx,ebx
+    inc ecx
+    mov al,es:[ebx]
+
+fmLoop:
+    mov ah,es:[ebx+1]
+    mov es:[ebx],ah
+    inc ebx
+    loop fmLoop
+;
+    dec es:fm_count
+    movzx bx,ds:kfm_unlink_count
+    mov ds:[bx].kfm_unlink_arr,al
+    inc bl
+    mov ds:kfm_unlink_count,bl
+;
+    pop ecx
+    pop ebx
+    pop eax
     ret
 FreeMap Endp
 
@@ -1439,7 +1435,7 @@ cmLoop:
     jz cmNext
 ;
     or bp,ax
-    and ax,NOT 60h
+    and al,NOT 60h
     SetPageEntry
 
 cmNext:
@@ -1449,9 +1445,9 @@ cmNext:
     pop ebx
 ;
     mov ax,bp
-    and ax,60h
+    and al,60h
 ;
-    test ax,20h
+    test al,20h
     jz cmNone
 ;
     add byte ptr ds:[esi],1
