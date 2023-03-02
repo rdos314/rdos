@@ -1048,6 +1048,39 @@ IssueReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           FreeReq
+;
+;       DESCRIPTION:    Issue req
+;
+;       PARAMETERS:     GS             File sel
+;                       EDX:EAX        Req position
+;                       ECX            Req size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeReq      Proc near
+    push ds
+    push esi
+;
+    int 3
+    mov esi,gs
+    mov ds,esi
+    EnterSection ds:kf_section
+    call FindReadReq
+    jc frLeave
+;
+
+frLeave:
+    LeaveSection ds:kf_section
+;
+    pop esi
+    pop ds
+    ret
+FreeReq      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LockMap
 ;
 ;       DESCRIPTION:    Lock map
@@ -1484,6 +1517,7 @@ CheckMap  Endp
 ;       PARAMETERS:     DS             Kernel processes
 ;                       ES             Kernel mapping sel
 ;                       FS             User flat sel
+;                       GS             File sel
 ;                       AL             Entry #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1495,7 +1529,6 @@ UnlinkMapEntry  Proc near
     push edx
     push esi
 ;
-    int 3
     movzx esi,al
     shl esi,4
     add esi,OFFSET fm_entry_arr 
@@ -1507,6 +1540,16 @@ UnlinkMapEntry  Proc near
     dec ecx
     shr ecx,12
     inc ecx
+    shl ecx,12
+    FreeLinear
+;
+    mov eax,es:[esi].fmb_pos
+    mov edx,es:[esi].fmb_pos+4
+    mov ecx,es:[esi].fmb_size
+    call FreeReq
+;
+    mov es:[esi].fmb_size,0
+    mov es:[esi].fmb_base,0
 ;
     pop esi
     pop edx
@@ -1526,6 +1569,7 @@ UnlinkMapEntry  Endp
 ;       PARAMETERS:     DS             Kernel processes
 ;                       ES             Kernel mapping sel
 ;                       FS             User flat sel
+;                       GS             File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1534,7 +1578,6 @@ UnlinkMap  Proc near
     push ecx
     push edx
 ;
-    int 3
     movzx ecx,ds:kfm_unlink_count
     mov ebx,OFFSET kfm_unlink_arr
 
@@ -1567,6 +1610,7 @@ UnlinkMap  Endp
 ;
 ;       PARAMETERS:     DS             Kernel processes
 ;                       ES             Kernel mapping sel
+;                       GS             File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1606,6 +1650,7 @@ UpdateUnlinked Endp
 ;       DESCRIPTION:    Update map requests
 ;
 ;       PARAMETERS:     FS             Kernel processes
+;                       GS             File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
