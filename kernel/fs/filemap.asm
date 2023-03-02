@@ -1048,6 +1048,23 @@ IssueReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UnlockReqEntry
+;
+;       DESCRIPTION:    Unlock req entry
+;
+;       PARAMETERS:     DS             File sel
+;                       EBX            Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockReqEntry      Proc near
+    int 3
+    ret
+UnlockReqEntry      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           FreeReq
 ;
 ;       DESCRIPTION:    Issue req
@@ -1060,20 +1077,49 @@ IssueReq    Endp
 
 FreeReq      Proc near
     push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
     push esi
 ;
-    int 3
     mov esi,gs
     mov ds,esi
     EnterSection ds:kf_section
     call FindReadReq
     jc frLeave
 ;
+    sub ds:[ebx].kre_usage,1
+    jnz frLeave
+;
+    push ecx
+;
+    mov eax,ecx
+    mov ecx,ds:kf_count
+    sub ecx,eax
+    mov esi,eax
+    shl esi,2
+    add esi,OFFSET kf_sorted_arr
+
+frsLoop:
+    mov eax,ds:[esi+4]
+    mov ds:[esi],eax
+    add esi,4
+    loop frsLoop
+;
+    dec ds:kf_count
+    pop ecx
+;
+    call UnlockReqEntry
 
 frLeave:
     LeaveSection ds:kf_section
 ;
     pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
     pop ds
     ret
 FreeReq      Endp
