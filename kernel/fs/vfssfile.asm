@@ -42,7 +42,6 @@ include ..\filemap.inc
 include vfs.inc
 include vfsmsg.inc
 include vfsfile.inc
-include vfsuser.inc
 
     .386p
 
