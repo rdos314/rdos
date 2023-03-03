@@ -41,7 +41,6 @@ INCLUDE ..\debevent.inc
 INCLUDE ..\handle.inc
 INCLUDE chandle.inc
 INCLUDE servdev.def
-INCLUDE ..\fs\vfsuser.inc
 
 SYS_BASE EQU 0DE000000h
 
