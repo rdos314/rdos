@@ -93,6 +93,7 @@ code    SEGMENT byte public 'CODE'
     extern InitFilePart:near
     extern GetFileReq:near
     extern NotifyFileData:near
+    extern UpdateFiles:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2112,6 +2113,7 @@ wfcRetry:
     stc
     jnz wfcDone
 ;
+    call UpdateFiles
     WaitForSignal
 ;
     test ds:vfsp_flag,VFSP_FLAG_STOPPED

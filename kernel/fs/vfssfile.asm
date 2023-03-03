@@ -162,6 +162,34 @@ GetFileReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateFiles
+;
+;       DESCRIPTION:    Update files
+;
+;       PARAMETERS:     DS                 Part sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UpdateFiles
+
+UpdateFiles	Proc near
+    push eax
+;
+    xor al,al
+    xchg al,ds:vfsp_update_req
+    or al,al
+    jz ufDone
+;
+    int 3
+
+ufDone:
+    pop eax
+    ret
+UpdateFiles     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AllocateFileHandle
 ;
 ;       DESCRIPTION:    Allocate file handle

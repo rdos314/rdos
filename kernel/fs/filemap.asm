@@ -332,6 +332,11 @@ auIns:
 ;
     mov al,1
     xchg al,fs:vfsp_update_req
+    or al,al
+    jnz auDone
+;
+    mov bx,fs:vfsp_cmd_thread
+    Signal
 
 auDone:
     pop esi
