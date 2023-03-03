@@ -124,7 +124,6 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern HandleHighToPartFs:near
-    extern UpdateFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -290,9 +289,12 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddUpdate     Proc near
+    push fs
+    push ebx
     push ecx
     push esi
 ;
+    int 3
     mov esi,OFFSET kf_update_arr
     movzx ecx,ds:kf_update_count
     cmp ecx,32
@@ -319,19 +321,24 @@ auIns:
     or esi,esi
     jnz auDone
 ;
-    push fs
-    push ebx
-;
     mov fs,ds:kf_part_sel
     mov ebx,ds:kf_serv_handle
-    call UpdateFile
+    dec ebx
+    cmp ebx,MAX_VFS_FILE_COUNT
+    jae auDone
 ;
-    pop ebx
-    pop fs
+    mov esi,OFFSET vfsp_file_update_map
+    bts fs:[esi],ebx
+    jc auDone
+;
+    mov al,1
+    xchg al,fs:vfsp_update_req
 
 auDone:
     pop esi
     pop ecx
+    pop ebx
+    pop fs
     ret
 AddUpdate   Endp
 
