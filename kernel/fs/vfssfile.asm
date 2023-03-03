@@ -58,6 +58,7 @@ code    SEGMENT byte public 'CODE'
     extern BlockToBitmap:near
     extern CreateFileSel:near
     extern NotifyFileData:near
+    extern NotifyFileUpdate:near
     extern UnlinkRequest:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -162,23 +163,6 @@ GetFileReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UpdateFile
-;
-;       DESCRIPTION:    Update file
-;
-;       PARAMETERS:     DS                 Part sel
-;                       BX                 File #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateFile	Proc near
-    int 3
-    ret
-UpdateFile      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           UpdateFiles
 ;
 ;       DESCRIPTION:    Update files
@@ -190,6 +174,8 @@ UpdateFile      Endp
     public UpdateFiles
 
 UpdateFiles	Proc near
+    push fs
+    push gs
     push eax
     push ebx
     push ecx
@@ -201,9 +187,13 @@ UpdateFiles	Proc near
     or al,al
     jz ufDone
 ;
+    mov eax,ds
+    mov fs,eax
+;
     mov ecx,MAX_VFS_FILE_COUNT SHR 3
     mov esi,OFFSET vfsp_file_update_map
     xor di,di
+    xor ebx,ebx
 
 ufLoop:
     xor ax,ax
@@ -214,7 +204,10 @@ ufLoop:
 ufScan:
     bsf bx,ax
     add bx,di
-    call UpdateFile
+;
+    mov gs,ds:[4*ebx].vfsp_file_arr.ff_sel
+    call NotifyFileUpdate
+;
     btc ax,bx
     jnz ufScan
 
@@ -229,6 +222,8 @@ ufDone:
     pop ecx
     pop ebx
     pop eax
+    pop gs
+    pop fs
     ret
 UpdateFiles     Endp
 

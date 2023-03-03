@@ -2293,6 +2293,25 @@ NotifyFileData  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyFileUpdate
+;
+;       DESCRIPTION:    Notify file data
+;
+;       PARAMETERS:     FS                 Part sel
+;                       GS                 File req
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public NotifyFileUpdate
+
+NotifyFileUpdate  Proc near
+    int 3
+    ret
+NotifyFileUpdate  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           vfs_file_info
 ;
 ;       DESCRIPTION:    VFS file info
