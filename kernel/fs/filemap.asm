@@ -54,7 +54,7 @@ kernel_req_entry  STRUC
 
 kre_pos           DD ?,?
 kre_size          DD ?
-kre_sector_arr    DD ?
+kre_block_arr     DD ?
 kre_phys_arr      DD ?
 kre_next          DD ?
 kre_pages         DW ?
@@ -446,7 +446,7 @@ AddReadReq      Proc near
     mov ds:[esi].kre_pos+4,edx
     mov ds:[esi].kre_size,ecx
     mov ds:[esi].kre_pages,0
-    mov ds:[esi].kre_sector_arr,0
+    mov ds:[esi].kre_block_arr,0
     mov ds:[esi].kre_phys_arr,0
     mov ds:[esi].kre_usage,0
 ;
@@ -854,9 +854,9 @@ SetupReadReq   Proc near
     mov ds:[ebx].kre_size,ecx
 ;
     mov cx,ax
-    shl cx,3
+    shl cx,2
     AllocateBlk
-    mov ds:[ebx].kre_sector_arr,edx
+    mov ds:[ebx].kre_block_arr,edx
 ;
     AllocateBlk
     mov ds:[ebx].kre_phys_arr,edx
@@ -897,7 +897,7 @@ ProcessReadReq  Proc near
     mov es,eax
     pop fs
 ;
-    mov edi,fs:[ebx].kre_sector_arr
+    mov edi,fs:[ebx].kre_block_arr
     mov ebp,fs:[ebx].kre_phys_arr
 ;
     mov esi,[esp]
@@ -927,12 +927,8 @@ prrSave:
     mov fs:[ebp+4],edx
     add ebp,8
 ;
-    mov esi,[esp]
-    mov eax,gs:[esi]
-    mov edx,gs:[esi+4]
-    mov fs:[edi],eax
-    mov fs:[edi+4],edx
-    add edi,8
+    mov fs:[edi],esi
+    add edi,4
     jmp prrLoop
 
 prrDone:
