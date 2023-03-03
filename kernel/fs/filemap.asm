@@ -680,11 +680,12 @@ CalcPageCount  Proc near
     push edi
     push ebp
 ;
+    push esi
+    push ecx
+;
     mov ds,fs:vfsp_disc_sel
     mov bx,serv_flat_sel
     mov es,ebx
-;
-    push ecx
 ;
     xor ebx,ebx
     or ecx,ecx
@@ -693,6 +694,7 @@ CalcPageCount  Proc near
 ;
     inc ebx
 ;
+    mov esi,[esp+4]
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
     call BlockToPhys
@@ -705,7 +707,9 @@ cpcLoop:
     sub ecx,1
     jz cpcDone
 ;
+    mov esi,[esp+4]
     add esi,8
+    mov [esp+4],esi
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
     call BlockToPhys
@@ -743,6 +747,8 @@ cpcDone:
     pop ecx
     sub ecx,eax
     mov eax,ebx
+;
+    pop esi
 ;
     pop ebp
     pop edi
