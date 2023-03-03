@@ -294,7 +294,6 @@ AddUpdate     Proc near
     push ecx
     push esi
 ;
-    int 3
     mov esi,OFFSET kf_update_arr
     movzx ecx,ds:kf_update_count
     cmp ecx,32
