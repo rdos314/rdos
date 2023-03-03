@@ -178,12 +178,11 @@ BlockToPhysOld  Endp
 ;                       EDX:EAX            Sector
 ;
 ;       RETURNS:        EDX:EAX            Physical address
+;                       ESI                Block ptr
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BlockToPhys  Proc near
-    push esi
-;
     call BlockToBuf
     jc btpDone
 ;
@@ -200,7 +199,6 @@ BlockToPhys  Proc near
     clc
 
 btpDone:
-    pop esi
     ret
 BlockToPhys  Endp
 
