@@ -128,6 +128,48 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           BlockToPhysOld
+;
+;       DESCRIPTION:    Convert block to phys
+;
+;       PARAMETERS:     ES                 Serv flat sel
+;                       EDX:EAX            Sector
+;
+;       RETURNS:        EDX:EAX            Physical address
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BlockToPhysOld  Proc near
+    push es
+    push esi
+;
+    mov si,serv_flat_sel
+    mov es,esi
+;
+    call BlockToBuf
+    jc btpoDone
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    stc
+    jz btpoDone
+;
+    and eax,7
+    shl eax,9
+    mov edx,es:[esi]
+    and dx,0F000h
+    or eax,edx
+    movzx edx,word ptr es:[esi+4]
+    clc
+
+btpoDone:
+    pop esi
+    pop es
+    ret
+BlockToPhysOld  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           BlockToPhys
 ;
 ;       DESCRIPTION:    Convert block to phys
@@ -140,11 +182,7 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BlockToPhys  Proc near
-    push es
     push esi
-;
-    mov si,serv_flat_sel
-    mov es,esi
 ;
     call BlockToBuf
     jc btpDone
@@ -163,7 +201,6 @@ BlockToPhys  Proc near
 
 btpDone:
     pop esi
-    pop es
     ret
 BlockToPhys  Endp
 
@@ -636,11 +673,16 @@ SendReadReq     Endp
 
 CalcPageCount  Proc near
     push ds
+    push es
     push ebx
     push edx
     push esi
     push edi
     push ebp
+;
+    mov ds,fs:vfsp_disc_sel
+    mov bx,serv_flat_sel
+    mov es,ebx
 ;
     push ecx
 ;
@@ -651,7 +693,6 @@ CalcPageCount  Proc near
 ;
     inc ebx
 ;
-    mov ds,fs:vfsp_disc_sel
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
     call BlockToPhys
@@ -708,6 +749,7 @@ cpcDone:
     pop esi
     pop edx
     pop ebx
+    pop es
     pop ds
     ret
 CalcPageCount  Endp
@@ -778,7 +820,7 @@ MergeReadReq  Proc near
 mrrLoop:
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
-    call BlockToPhys
+    call BlockToPhysOld
     jc mrrDone
 ;
     test ax,0FFFh
@@ -883,7 +925,7 @@ ProcessReadReq  Proc near
     mov ds,fs:vfsp_disc_sel
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
-    call BlockToPhys
+    call BlockToPhysOld
     jnc prrSave
     jmp prrDone
 
@@ -894,7 +936,7 @@ prrLoop:
     add esi,8
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
-    call BlockToPhys
+    call BlockToPhysOld
     jc prrDone
 ;
     test eax,0FFFh
