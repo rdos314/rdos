@@ -776,11 +776,14 @@ CalcPageCount  Endp
 MergeReadReq  Proc near
     push ds
     push es
+    push fs
     push eax
     push ebx
     push edx
     push edi
     push ebp
+;
+    push esi
     sub esp,4
 ;
     or ebp,ebp
@@ -813,30 +816,33 @@ MergeReadReq  Proc near
     add edx,ds:[edi].kre_phys_arr
     mov ebp,edx
 ;
-    mov eax,ds
-    mov es,eax
+    push ds
     mov ds,fs:vfsp_disc_sel
+    mov ax,serv_flat_sel
+    mov es,eax
+    pop fs
 
 mrrLoop:
+    mov esi,[esp+4]
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
-    call BlockToPhysOld
+    call BlockToPhys
     jc mrrDone
 ;
     test ax,0FFFh
     jz mrrDone
 ;
-    sub eax,es:[ebp]
-    sbb edx,es:[ebp+4]
+    sub eax,fs:[ebp]
+    sbb edx,fs:[ebp+4]
     jnz mrrDone
 ;
     cmp eax,[esp]
     jne mrrDone
 ;
-    add es:[ebx].kre_pos,200h
-    adc es:[ebx].kre_pos+4,0
-    add es:[edi].kre_size,200h
-    add esi,8
+    add fs:[ebx].kre_pos,200h
+    adc fs:[ebx].kre_pos+4,0
+    add fs:[edi].kre_size,200h
+    add dword ptr [esp+4],8
     sub ecx,1
     jz mrrDone
 ;
@@ -849,11 +855,14 @@ mrrLoop:
 
 mrrDone:
     add esp,4
+    pop esi
+;
     pop ebp
     pop edi
     pop edx
     pop ebx
     pop eax
+    pop fs
     pop es
     pop ds
     ret
