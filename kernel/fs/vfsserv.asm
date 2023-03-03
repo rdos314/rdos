@@ -2107,6 +2107,7 @@ wait_for_vfs_cmd   Proc far
 ;
     GetThread
     mov ds:vfsp_cmd_thread,ax
+    jmp wfcCheck
 
 wfcRetry:
     test ds:vfsp_flag,VFSP_FLAG_STOPPED
@@ -2115,7 +2116,8 @@ wfcRetry:
 ;
     call UpdateFiles
     WaitForSignal
-;
+
+wfcCheck:
     test ds:vfsp_flag,VFSP_FLAG_STOPPED
     stc
     jnz wfcDone

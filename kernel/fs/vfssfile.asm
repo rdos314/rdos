@@ -162,6 +162,23 @@ GetFileReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateFile
+;
+;       DESCRIPTION:    Update file
+;
+;       PARAMETERS:     DS                 Part sel
+;                       BX                 File #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateFile	Proc near
+    int 3
+    ret
+UpdateFile      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UpdateFiles
 ;
 ;       DESCRIPTION:    Update files
@@ -174,15 +191,43 @@ GetFileReq   Endp
 
 UpdateFiles	Proc near
     push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
 ;
     xor al,al
     xchg al,ds:vfsp_update_req
     or al,al
     jz ufDone
 ;
-    int 3
+    mov ecx,MAX_VFS_FILE_COUNT SHR 3
+    mov esi,OFFSET vfsp_file_update_map
+    xor di,di
 
+ufLoop:
+    xor ax,ax
+    xchg al,ds:[esi]
+    or al,al
+    jz ufNext
+
+ufScan:
+    bsf bx,ax
+    add bx,di
+    call UpdateFile
+    btc ax,bx
+    jnz ufScan
+
+ufNext:
+    add edi,8
+    inc esi
+    loop ufLoop
+    
 ufDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
     pop eax
     ret
 UpdateFiles     Endp
