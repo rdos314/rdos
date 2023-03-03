@@ -163,6 +163,26 @@ GetFileReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateFile
+;
+;       DESCRIPTION:    Update file
+;
+;       PARAMETERS:     FS          Part sel
+;                       EBX         VFS handle
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UpdateFile
+
+UpdateFile	Proc near
+    int 3
+    ret
+UpdateFile      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AllocateFileHandle
 ;
 ;       DESCRIPTION:    Allocate file handle

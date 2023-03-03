@@ -78,10 +78,13 @@ kf_sector_size    DW ?
 kf_section        section_typ <>
 kf_map_list       DW ?
 kf_part_sel       DW ?
+kf_update_count   DW ?
+kf_req_sync       DW ?
 kf_count          DD ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 kf_sorted_arr     DD 256 DUP(?)
+kf_update_arr     DD 32 DUP(?)
 
 kernel_file       ENDS
 
@@ -121,6 +124,7 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern HandleHighToPartFs:near
+    extern UpdateFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -242,6 +246,8 @@ CreateFileSel   Proc near
     mov ds:kf_count,0
     mov ds:kf_serv_handle,ebx
     mov ds:kf_wait_list,0
+    mov ds:kf_update_count,0
+    mov ds:kf_req_sync,0
 ;
     mov ecx,256
     mov edi,OFFSET kf_sorted_arr
@@ -270,6 +276,64 @@ cfInit:
     pop ds
     ret
 CreateFileSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddUpdate
+;
+;       DESCRIPTION:    Add to update
+;
+;       PARAMETERS:     DS             File sel
+;                       EBX            Req offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddUpdate     Proc near
+    push ecx
+    push esi
+;
+    mov esi,OFFSET kf_update_arr
+    movzx ecx,ds:kf_update_count
+    cmp ecx,32
+    jb auNoOv
+;
+    int 3
+
+auNoOv:
+    or ecx,ecx
+    jz auIns
+
+auCheck:
+    cmp ebx,ds:[esi]
+    je auDone
+;
+    add esi,4
+    loop auCheck
+
+auIns:
+    movzx esi,ds:kf_update_count
+    mov ds:[4*esi].kf_update_arr,ebx
+    inc ds:kf_update_count
+;
+    or esi,esi
+    jnz auDone
+;
+    push fs
+    push ebx
+;
+    mov fs,ds:kf_part_sel
+    mov ebx,ds:kf_serv_handle
+    call UpdateFile
+;
+    pop ebx
+    pop fs
+
+auDone:
+    pop esi
+    pop ecx
+    ret
+AddUpdate   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1066,7 +1130,6 @@ FreeReq      Proc near
     push edx
     push esi
 ;
-    int 3
     mov esi,gs
     mov ds,esi
     EnterSection ds:kf_section
@@ -1093,6 +1156,8 @@ frMove:
     loop frMove
 ;
     dec ds:kf_count
+;
+    call AddUpdate
 
 frLeave:
     LeaveSection ds:kf_section
@@ -1556,7 +1621,6 @@ UnlinkMap  Proc near
     push ecx
     push edx
 ;
-    int 3
     movzx ecx,ds:kfm_unlink_count
     mov ebx,OFFSET kfm_unlink_arr
 
