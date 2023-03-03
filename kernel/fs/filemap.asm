@@ -128,48 +128,6 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           BlockToPhysOld
-;
-;       DESCRIPTION:    Convert block to phys
-;
-;       PARAMETERS:     ES                 Serv flat sel
-;                       EDX:EAX            Sector
-;
-;       RETURNS:        EDX:EAX            Physical address
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BlockToPhysOld  Proc near
-    push es
-    push esi
-;
-    mov si,serv_flat_sel
-    mov es,esi
-;
-    call BlockToBuf
-    jc btpoDone
-;
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    stc
-    jz btpoDone
-;
-    and eax,7
-    shl eax,9
-    mov edx,es:[esi]
-    and dx,0F000h
-    or eax,edx
-    movzx edx,word ptr es:[esi+4]
-    clc
-
-btpoDone:
-    pop esi
-    pop es
-    ret
-BlockToPhysOld  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           BlockToPhys
 ;
 ;       DESCRIPTION:    Convert block to phys
@@ -928,17 +886,24 @@ SetupReadReq  Endp
 ProcessReadReq  Proc near
     push ds
     push es
+    push fs
     pushad
 ;
-    mov ax,ds
-    mov es,eax
-    mov edi,ds:[ebx].kre_sector_arr
-    mov ebp,ds:[ebx].kre_phys_arr
+    push esi
 ;
+    push ds
     mov ds,fs:vfsp_disc_sel
+    mov ax,serv_flat_sel
+    mov es,eax
+    pop fs
+;
+    mov edi,fs:[ebx].kre_sector_arr
+    mov ebp,fs:[ebx].kre_phys_arr
+;
+    mov esi,[esp]
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
-    call BlockToPhysOld
+    call BlockToPhys
     jnc prrSave
     jmp prrDone
 
@@ -946,29 +911,35 @@ prrLoop:
     sub ecx,1
     jz prrDone
 ;
+    mov esi,[esp]
     add esi,8
+    mov [esp],esi
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
-    call BlockToPhysOld
+    call BlockToPhys
     jc prrDone
 ;
     test eax,0FFFh
     jnz prrLoop
 
 prrSave:
-    mov es:[ebp],eax
-    mov es:[ebp+4],edx
+    mov fs:[ebp],eax
+    mov fs:[ebp+4],edx
     add ebp,8
 ;
+    mov esi,[esp]
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
-    mov es:[edi],eax
-    mov es:[edi+4],edx
+    mov fs:[edi],eax
+    mov fs:[edi+4],edx
     add edi,8
     jmp prrLoop
 
 prrDone:
+    pop esi
+;
     popad
+    pop fs
     pop es
     pop ds
     ret
