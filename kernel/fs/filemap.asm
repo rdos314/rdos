@@ -96,9 +96,10 @@ kfm_next_map      DW ?
 kfm_section       section_typ <>
 kfm_free_count    DB ?
 kfm_unlink_count  DB ?
+kfm_src_arr       DD 240 DUP(?)
+kfm_ref_arr       DB 240 DUP(?)
 kfm_free_arr      DB 240 DUP(?)
 kfm_unlink_arr    DB 240 DUP(?)
-kfm_ref_arr       DB 240 DUP(?)
 
 kernel_file_map   ENDS
 
@@ -1048,106 +1049,12 @@ IssueReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UnlockReqEntry
-;
-;       DESCRIPTION:    Unlock req entry
-;
-;       PARAMETERS:     DS             File sel
-;                       EBX            Entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockReqEntry      Proc near
-    push ds
-    push es
-    push fs
-    push gs
-    pushad
-;
-    int 3
-    mov eax,ds
-    mov gs,eax
-    mov eax,serv_flat_sel
-    mov es,eax
-    mov fs,ds:kf_part_sel
-    mov ds,fs:vfsp_disc_sel
-;
-    mov esi,gs:[ebx].kre_sector_arr
-    mov edi,gs:[ebx].kre_phys_arr
-    mov ecx,gs:[ebx].kre_size
-
-urePageLoop:
-    mov eax,gs:[esi]
-    mov edx,gs:[esi+4]
-    mov ebp,gs:[edi]
-    and ebp,0FFFh
-;
-    push esi
-
-ureBlockLoop:
-    call BlockToBuf
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz ureBlockNext
-;
-    sub es:[esi].vfsp_ref_bitmap,1
-    jnz ureBlockNext
-;
-    dec ds:vfs_locked_pages
-
-ureBlockNext:
-    add eax,200h
-    adc edx,0
-    add ebp,200h
-    sub ecx,200h
-    jz ureDone
-;
-    cmp ebp,1000h
-    jne ureBlockLoop
-
-urePageNext:
-    pop esi
-;
-    add esi,8
-    add edi,8
-    jmp urePageLoop
-    
-ureDone:
-    pop esi
-;
-    mov eax,gs
-    mov ds,eax
-;
-    mov ecx,ds:[ebx].kre_size
-    shr ecx,9
-    shl ecx,3
-    mov edx,ds:[ebx].kre_sector_arr
-    FreeBlk
-;
-    mov edx,ds:[ebx].kre_phys_arr
-    FreeBlk
-;
-    mov ds:[ebx].kre_size,0
-    mov ds:[ebx].kre_sector_arr,0
-    mov ds:[ebx].kre_phys_arr,0
-;
-    popad
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    ret
-UnlockReqEntry      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           FreeReq
 ;
 ;       DESCRIPTION:    Issue req
 ;
 ;       PARAMETERS:     GS             File sel
-;                       EDX:EAX        Req position
-;                       ECX            Req size
+;                       EBX            Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1159,34 +1066,33 @@ FreeReq      Proc near
     push edx
     push esi
 ;
+    int 3
     mov esi,gs
     mov ds,esi
     EnterSection ds:kf_section
-    call FindReadReq
-    jc frLeave
 ;
     sub ds:[ebx].kre_usage,1
     jnz frLeave
 ;
-    push ecx
-;
-    mov eax,ecx
+    mov esi,OFFSET kf_sorted_arr
     mov ecx,ds:kf_count
-    sub ecx,eax
-    mov esi,eax
-    shl esi,2
-    add esi,OFFSET kf_sorted_arr
 
-frsLoop:
+frFind:
+    cmp ebx,ds:[esi]
+    je frMove
+;
+    add esi,4
+    loop frFind
+;
+    jmp frLeave
+
+frMove:
     mov eax,ds:[esi+4]
     mov ds:[esi],eax
     add esi,4
-    loop frsLoop
+    loop frMove
 ;
     dec ds:kf_count
-    pop ecx
-;
-    call UnlockReqEntry
 
 frLeave:
     LeaveSection ds:kf_section
@@ -1327,6 +1233,7 @@ FindReadMap  Endp
 ;       DESCRIPTION:    Add read map entry
 ;
 ;       PARAMETERS:     DS             Kernel processes
+;                       EDI            Src pointer            
 ;
 ;       RETURNS:        BX             Entry offset
 ;
@@ -1342,7 +1249,8 @@ AllocateMapEntry      Proc near
     dec bx
     mov ds:kfm_free_count,bl
     mov bl,ds:[bx].kfm_free_arr
-    mov ds:[bx].kfm_ref_arr,1
+    mov ds:[ebx].kfm_ref_arr,1
+    mov ds:[4*ebx].kfm_src_arr,edi
     shl bx,4
     add bx,OFFSET fm_entry_arr
     clc
@@ -1632,58 +1540,6 @@ CheckMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UnlinkedMapEntry
-;
-;       DESCRIPTION:    Unlink entry
-;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
-;                       FS             User flat sel
-;                       GS             File sel
-;                       AL             Entry #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlinkMapEntry  Proc near
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-;
-    movzx esi,al
-    shl esi,4
-    add esi,OFFSET fm_entry_arr 
-    mov ecx,es:[esi].fmb_size
-    mov edx,es:[esi].fmb_base
-    add ecx,edx
-    and dx,0F000h
-    sub ecx,edx
-    dec ecx
-    shr ecx,12
-    inc ecx
-    shl ecx,12
-    FreeLinear
-;
-    mov eax,es:[esi].fmb_pos
-    mov edx,es:[esi].fmb_pos+4
-    mov ecx,es:[esi].fmb_size
-    call FreeReq
-;
-    mov es:[esi].fmb_size,0
-    mov es:[esi].fmb_base,0
-;
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    ret
-UnlinkMapEntry  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           UnlinkedMap
 ;
 ;       DESCRIPTION:    Unlink entries
@@ -1700,12 +1556,17 @@ UnlinkMap  Proc near
     push ecx
     push edx
 ;
+    int 3
     movzx ecx,ds:kfm_unlink_count
     mov ebx,OFFSET kfm_unlink_arr
 
 urmLoop:
     mov al,ds:[ebx]
-    call UnlinkMapEntry
+    push ebx
+    movzx ebx,al
+    mov ebx,ds:[4*ebx].kfm_src_arr
+    call FreeReq
+    pop ebx
 ;
     movzx edx,ds:kfm_free_count
     mov ds:[edx].kfm_free_arr,al
