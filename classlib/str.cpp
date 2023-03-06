@@ -168,7 +168,7 @@ void TString::AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen)
     int NewLen = CopyLen + ExtraLen;
 
     dest.FSection.Enter();
-    
+
     dest.AllocBuffer(NewLen + 1);
     memcpy(dest.FBuf, FBuf+CopyIndex, CopyLen);
     *(dest.FBuf+CopyLen) = 0;
@@ -195,7 +195,7 @@ void TString::ConcatCopy(const char *str1, int len1, const char *str2, int len2)
     int NewLen = len1 + len2;
 
     FSection.Enter();
-    
+
     AllocBuffer(NewLen + 1);
     memcpy(FBuf, str1, len1);
     memcpy(FBuf+len1, str2, len2);
@@ -222,8 +222,8 @@ void TString::ConcatInPlace(const char *str, int size)
 
     if (FData == 0)
         AssignCopy(str, size + 1);
-    else 
-    {           
+    else
+    {
         if (size)
         {
                 if (FData->FRefs > 1 || FData->FDataSize + size > FData->FAllocSize)
@@ -444,7 +444,7 @@ char TString::operator[](int n) const
     char ch = 0;
 
     FSection.Enter();
-    
+
     if (FData && FData->FDataSize > n)
         ch = FBuf[n];
 
@@ -617,7 +617,7 @@ int TString::GetSize() const
     int size = 0;
 
     FSection.Enter();
-        
+
     if (FData)
         size = FData->FDataSize - 1;
 
@@ -697,7 +697,7 @@ void TString::Upper()
     char *ptr;
 
     FSection.Enter();
-    
+
     CopyBeforeWrite();
 
     if (FData)
@@ -746,7 +746,7 @@ void TString::Lower()
     char *ptr;
 
     FSection.Enter();
-    
+
     CopyBeforeWrite();
 
     if (FData)
@@ -778,7 +778,7 @@ void TString::RemoveCrLf()
     char *ptr;
 
     FSection.Enter();
-    
+
     if (FData)
     {
         ptr = FBuf + FData->FDataSize - 2;
@@ -864,7 +864,7 @@ void TString::Append(const char *str, int size)
         ConcatInPlace(str, size);
         FBuf[FData->FDataSize - 1] = 0;
     }
-    
+
 }
 
 /*##########################################################################
@@ -901,7 +901,7 @@ void TString::ReplaceOne(char *ptr, const char *src, const char *dest)
         {
             for (i = 0; i < destlen; i++)
                 ptr[i] = dest[i];
-                    
+
             srcptr = ptr + srclen;
             destptr = ptr + destlen;
 
@@ -929,7 +929,7 @@ void TString::ReplaceOne(char *ptr, const char *src, const char *dest)
                 Release(OldData);
 
                 ptr = FBuf + pos;
-            } 
+            }
 
             srcptr = FBuf + FData->FDataSize - 1;
             destptr = srcptr + destlen - srclen;
@@ -944,7 +944,7 @@ void TString::ReplaceOne(char *ptr, const char *src, const char *dest)
                 srcptr--;
                 destptr--;
             }
-                
+
             for (i = 0; i < destlen; i++)
                 ptr[i] = dest[i];
 
@@ -1041,7 +1041,7 @@ int TString::Number(long num, int base, int size, int precision, int type)
                         num = -num;
                         size--;
                 }
-                else 
+                else
                         if (type & PLUS)
                         {
                                 sign = '+';
@@ -1067,7 +1067,7 @@ int TString::Number(long num, int base, int size, int precision, int type)
         i = 0;
         if (num == 0)
                 tmp[i++]='0';
-        else 
+        else
                 while (num != 0)
                 {
                         ind = ((unsigned long)num) % (unsigned)base;
@@ -1107,7 +1107,7 @@ int TString::Number(long num, int base, int size, int precision, int type)
                                 n += 2;
                         }
                 }
-        
+
         if (!(type & LEFT))
                 while (size-- > 0)
                 {
@@ -1137,275 +1137,6 @@ int TString::Number(long num, int base, int size, int precision, int type)
 }
 
 #endif
-
-/*##########################################################################
-#
-#   Name       : TString::printf
-#
-#   Purpose....: printf
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TString::printf(const char *fmt, va_list args)
-{
-    int len, n;
-
-    FSection.Enter();
-
-    Release();
-
-#ifdef __RDOS__
-    n = RdosPrintf(&PrintfCallback, this, fmt, args);
-#else
-
-    unsigned long num;
-    int i, base;
-    const char *s;
-
-    int flags;              /* flags to number() */
-
-    int field_width;        /* width of output field */
-    int precision;          /* min. # of digits for integers; max
-                                   number of chars for from string */
-    int qualifier;          /* 'h', 'l', or 'L' for integer fields */
-                                /* 'z' support added 23/7/1999 S.H.    */
-                                /* 'z' changed to 'Z' --davidm 1/25/99 */
-
-        
-    for (n = 0 ; *fmt ; ++fmt) {
-        if (*fmt != '%')
-        {
-            Append(*fmt);
-            n++;
-            continue;
-        }
-                        
-        /* process flags */
-        flags = 0;
-        repeat:
-        ++fmt;          /* this also skips first '%' */
-        switch (*fmt)
-        {
-            case '-': flags |= LEFT; goto repeat;
-            case '+': flags |= PLUS; goto repeat;
-            case ' ': flags |= SPACE; goto repeat;
-            case '#': flags |= SPECIAL; goto repeat;
-            case '0': flags |= ZEROPAD; goto repeat;
-        }
-                
-        /* get field width */
-        field_width = -1;
-        if (isdigit(*fmt))
-            field_width = skip_atoi(&fmt);
-
-        else
-            if (*fmt == '*')
-            {
-                ++fmt;
-                /* it's the next argument */
-                field_width = va_arg(args, int);
-                if (field_width < 0)
-                {
-                    field_width = -field_width;
-                    flags |= LEFT;
-                }
-            }
-
-            /* get the precision */
-            precision = -1;
-            if (*fmt == '.')
-            {
-                ++fmt;  
-                if (isdigit(*fmt))
-                    precision = skip_atoi(&fmt);
-                else if (*fmt == '*')
-                {
-                    ++fmt;
-                    /* it's the next argument */
-                    precision = va_arg(args, int);
-                }
-
-                if (precision < 0)
-                    precision = 0;
-            }
-
-            /* get the conversion qualifier */
-            qualifier = -1;
-            if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt =='Z')
-            {
-                qualifier = *fmt;
-                ++fmt;
-            }
-
-            /* default base */
-            base = 10;
-
-            switch (*fmt)
-            {
-                case 'c':
-                    if (!(flags & LEFT))
-                        while (--field_width > 0)
-                        {
-                            Append(' ');
-                            n++;
-                        }
-                
-                        Append((unsigned char) va_arg(args, int));
-                        n++;
-                        while (--field_width > 0)
-                        {
-                            Append(' ');
-                            n++;
-                        }
-                        continue;
-
-                case 's':
-                    s = va_arg(args, char *);
-                    if (!s)
-                        s = "<NULL>";
-
-                    len = strlen(s);
-                    if (precision != -1 && len > precision)
-                        len = precision;
-
-                    if (!(flags & LEFT))
-                        while (len < field_width--)
-                        {
-                            Append(' ');
-                            n++;
-                        }
-                
-                    for (i = 0; i < len; ++i)
-                    {
-                        Append(*s++);
-                        n++;
-                    }
-
-                    while (len < field_width--)
-                    {
-                        Append(' ');
-                        n++;
-                    }
-                    continue;
-
-                case 'p':
-                    if (field_width == -1)
-                    {
-                        field_width = 2*sizeof(void *);
-                        flags |= ZEROPAD;
-                    }
-                    n += Number((unsigned long) va_arg(args, void *), 16,
-                    field_width, precision, flags);
-                    continue;
-
-                case 'n':
-                    if (qualifier == 'l')
-                    {
-                        long * ip = va_arg(args, long *);
-                        *ip = n;
-                    }
-                    else
-                        if (qualifier == 'Z')
-                        {
-                            size_t * ip = va_arg(args, size_t *);
-                            *ip = n;
-                        }
-                        else 
-                        {
-                            int * ip = va_arg(args, int *);
-                            *ip = n;
-                        }
-                    continue;
-
-                    case '%':
-                        Append('%');
-                        n++;
-                        continue;
-
-                    case 'I':
-                        {
-                            union
-                            {
-                                long            l;
-                                unsigned char   c[4];
-                            } u;
-
-                            u.l = va_arg(args, long);
-                            printf("%d.%d.%d.%d", u.c[0], u.c[1], u.c[2], u.c[3]);
-                        }
-                        continue;
-
-                    /* integer number formats - set up the flags and "break" */
-                    case 'o':
-                    base = 8;
-                        break;
-
-                    case 'X':
-                        flags |= LARGE;
-
-                    case 'x':
-                        base = 16;
-                        break;
-
-                    case 'd':
-                    case 'i':
-                        flags |= SIGN;
-
-                    case 'u':
-                        break;
-
-                    default:
-                        Append('%');
-                        n++;
-                        if (*fmt)
-                        {
-                            Append(*fmt);
-                            n++;
-                        }
-                        else
-                            --fmt;
-                            continue;
-            }
-
-            if (qualifier == 'L')
-                num = va_arg(args, long);
-            else
-                if (qualifier == 'l')
-                {
-                    num = va_arg(args, unsigned long);
-                    if (flags & SIGN)
-                        num = (signed long) num;
-                }
-                else
-                    if (qualifier == 'Z')
-                    {
-                        num = va_arg(args, size_t);
-                    }
-                    else
-                        if (qualifier == 'h')
-                        {
-                            num = (unsigned short) va_arg(args, int);
-                            if (flags & SIGN)
-                                num = (signed short) num;
-                        }
-                        else
-                        {
-                            num = va_arg(args, unsigned int);
-                            if (flags & SIGN)
-                                num = (signed int) num;
-                        }
-
-        n += Number(num, base, field_width, precision, flags);
-    }
-#endif
-
-    FSection.Leave();
-        
-    return n;
-}
 
 /*##########################################################################
 #

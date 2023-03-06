@@ -54,10 +54,9 @@ public:
     int operator<=(const TString &dest) const;
     char operator[](int n) const;
 
-    int printf(const char *frm, va_list args);
     int printf(const char *fmt, ...);
 
-    void Reset();    
+    void Reset();
     const char *GetData() const;
     int GetSize() const;
 
@@ -76,13 +75,13 @@ public:
     virtual int Compare(const TShareObject &str) const;
 
 protected:
-    virtual char Upper(char ch); 
-    virtual char Lower(char ch); 
+    virtual char Upper(char ch);
+    virtual char Lower(char ch);
 
     void Pad(int count, const char *str);
 
 #ifndef __RDOS__
-	int Number(long num, int base, int size, int precision, int type);
+        int Number(long num, int base, int size, int precision, int type);
 #endif
 
     void ReplaceOne(char *ptr, const char *src, const char *dest);

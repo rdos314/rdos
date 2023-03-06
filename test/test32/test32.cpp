@@ -5,11 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "serial.h"
-#include "file.h"
-
-#define FALSE 0
-#define TRUE !FALSE
+#include "str.h"
 
 /*##########################################################################
 #
@@ -24,10 +20,13 @@
 ##########################################################################*/
 void main()
 {
-    TFile file("x:/filemap.asm");
-    char *buf = new char[1024];
-    int count;
+    int probe = 3;
+    char temp[20];
+    char str[80];
+    TString dummyMsg;
 
-    count = file.Read(buf, 1024);
+    sprintf(temp, "$B%02d", probe);
+    sprintf(str, "%s", temp);
 
+    dummyMsg.printf("%s", temp);
 }
