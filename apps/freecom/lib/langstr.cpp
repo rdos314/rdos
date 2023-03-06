@@ -202,7 +202,7 @@ void TLangString::printf(int ID, ...)
 	TLangString temp(ID);
 
 	va_start(ap, ID);
-	TString::printf(temp.GetData(), ap);
+	TString::prot_printf(temp.GetData(), ap);
 	va_end(ap);
 }
 
@@ -268,7 +268,7 @@ char TLangString::UserPrompt(int ID,...)
 	str = temp.GetPromptString();
 
 	va_start(ap, ID);
-	TString::printf(fmt, ap);
+	TString::prot_printf(fmt, ap);
 	va_end(ap);
 
 	RdosWriteString(GetData());

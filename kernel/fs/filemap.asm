@@ -2622,10 +2622,11 @@ read_file_name       DB 'Read VFS File',0
 org_read DD ?,?
 
 read_file16  Proc far
-    push ds
-    push ebx
     push ecx
     push edi
+;
+    push ds
+    push ebx
     push ebp
 ;
     movzx ecx,cx
@@ -2634,23 +2635,30 @@ read_file16  Proc far
 ;
     mov ax,VFS_FILE_HANDLE
     DerefHandle
-    jc rfOrg16
+    jnc rVfs16
 ;
+    pop ebp
+    pop ebx
+    pop ds
+;
+    call fword ptr cs:org_read
+;
+    pop edi
+    pop ecx
+    ret
+
+rVfs16:
     mov ax,ds:[ebx].fh_sel
     mov bx,ds:[ebx].fh_handle
     mov ds,eax
     call read_vfs_file
-    jmp rfDone16
-
-rfOrg16:
-    call fword ptr cs:org_read
-
-rfDone16:
+;
     pop ebp
-    pop edi
-    pop ecx
     pop ebx
     pop ds
+;
+    pop edi
+    pop ecx
     ret
 read_file16  Endp
 
@@ -2663,18 +2671,19 @@ read_file32  Proc far
 ;
     mov ax,VFS_FILE_HANDLE
     DerefHandle
-    jc rfOrg32
+    jnc rVfs32
 ;
+    pop ebp
+    pop ebx
+    pop ds
+    jmp fword ptr cs:org_read
+
+rVfs32:
     mov ax,ds:[ebx].fh_sel
     mov bx,ds:[ebx].fh_handle
     mov ds,eax
     call read_vfs_file
-    jmp rfDone32
-
-rfOrg32:
-    call fword ptr cs:org_read
-
-rfDone32:
+;
     pop ebp
     pop ebx
     pop ds
