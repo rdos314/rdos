@@ -2330,14 +2330,26 @@ open_kernel_file   Endp
 get_drive_info_name     DB 'Get Drive Info',0
 
 get_drive_info:
+    push ds
+;
     CheckDrive
     jc get_drive_info_done
+;
+    mov bx,fs_sys_data_sel
+    mov ds,bx
+    movzx bx,al
+    add bx,bx
+    mov bx,ds:[bx]
+    or bx,bx
+    stc
+    jz get_drive_info_done
 ;
     CallFileSystem fs_info_proc
     jc get_drive_info_done
 ;
 
 get_drive_info_done:
+    pop ds
     retf32
 
 
