@@ -1,32 +1,35 @@
-#include <rdos.h>
-#include <serv.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include "str.h"
+#include <ctype.h>
+#include <stdarg.h>
+#include <stdio.h>
 
-/*##########################################################################
-#
-#   Name       : main
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
+class TMyClass
+{
+public:
+    TMyClass();
+    ~TMyClass();
+    void printf(const char *frm, va_list args);
+};
+
+TMyClass::TMyClass()
+{
+}
+
+TMyClass::~TMyClass()
+{
+}
+
+void TMyClass::printf(const char *frm, va_list args)
+{
+    printf(frm, args);
+}
+
 void main()
 {
     int probe = 3;
     char temp[20];
-    char str[80];
-    TString dummyMsg;
+    TMyClass my;
 
     sprintf(temp, "$B%02d", probe);
-    sprintf(str, "%s", temp);
-
-    dummyMsg.printf("%s", temp);
+    my.printf("%s", temp);
 }
