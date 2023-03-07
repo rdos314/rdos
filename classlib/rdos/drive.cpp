@@ -56,12 +56,22 @@ TDrive *TDrive::AllocateFixed(int DriveNr)
 TDrive::TDrive(int Drive)
 {
     long FreeUnits;
+    long StartSector;
+    long TotalSectors;
+    long long DiscSectors;
+    int SectorsPerCyl;
+    int Heads;
+    int DiscNr = -1;
 
     FDrive = Drive;
+    FBytesPerSector = 512;
 
     FSectors = RdosGetVfsDriveSize(FDrive);
     if (FSectors > 0)
+    {
+        DiscNr = RdosGetVfsDriveDisc(Drive);
         FValid = TRUE;
+    }
     else
     {
         FValid = RdosGetDriveInfo(FDrive, &FreeUnits, &FBytesPerUnit, &FUnits);
@@ -76,6 +86,9 @@ TDrive::TDrive(int Drive)
             FSectors = 0;
         }
     }
+
+    if (DiscNr >= 0)
+        RdosGetDiscInfo(DiscNr, &FBytesPerSector, &DiscSectors, &SectorsPerCyl, &Heads);
 }
 
 /*##################  TDrive::~TDrive  #############
@@ -116,6 +129,18 @@ int TDrive::GetDriveNr()
         return 0;
 }
 
+/*##################  TDrive::GetBytesPerSector  #############
+*   Purpose....: Get bytes per sector                                                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+int TDrive::GetBytesPerSector()
+{
+    return FBytesPerSector;
+}
+
 /*##################  TDrive::GetFreeSectors  #############
 *   Purpose....: Get free sectors on drive                                                                  #
 *   In params..: *                                                          #
@@ -127,7 +152,7 @@ long long TDrive::GetFreeSectors()
 {
     long FreeUnits;
     int BytesPerUnit;
-        long Units;
+    long Units;
 
     if (FValid)
     {
