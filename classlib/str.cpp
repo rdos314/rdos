@@ -1140,7 +1140,7 @@ int TString::Number(long num, int base, int size, int precision, int type)
 
 /*##########################################################################
 #
-#   Name       : TString::prot_printf
+#   Name       : TString::prtf
 #
 #   Purpose....: printf
 #
@@ -1149,7 +1149,7 @@ int TString::Number(long num, int base, int size, int precision, int type)
 #   Returns....: *
 #
 ##########################################################################*/
-int TString::prot_printf(const char *fmt, va_list args)
+int TString::prtf(const char *fmt, va_list args)
 {
     int len, n;
 

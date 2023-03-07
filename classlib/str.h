@@ -79,7 +79,7 @@ protected:
     virtual char Lower(char ch);
 
     void Pad(int count, const char *str);
-    int prot_printf(const char *frm, va_list args);
+    int prtf(const char *frm, va_list args);
 
 #ifndef __RDOS__
         int Number(long num, int base, int size, int precision, int type);

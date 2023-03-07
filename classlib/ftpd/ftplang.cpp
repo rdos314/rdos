@@ -168,7 +168,7 @@ void TFtpLangString::printf(int ID, ...)
     TFtpLangString temp(ID);
 
     va_start(ap, ID);
-    TString::prot_printf(temp.GetData(), ap);
+    TString::prtf(temp.GetData(), ap);
     va_end(ap);
     FID = temp.FID;
 }

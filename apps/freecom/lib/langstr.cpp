@@ -9,7 +9,6 @@
 # is for commercial usage in embedded systems. For information on
 # usage in commercial embedded systems, contact embedded@rdos.net
 #
-# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -202,7 +201,7 @@ void TLangString::printf(int ID, ...)
 	TLangString temp(ID);
 
 	va_start(ap, ID);
-	TString::prot_printf(temp.GetData(), ap);
+	TString::prtf(temp.GetData(), ap);
 	va_end(ap);
 }
 
@@ -268,7 +267,7 @@ char TLangString::UserPrompt(int ID,...)
 	str = temp.GetPromptString();
 
 	va_start(ap, ID);
-	TString::prot_printf(fmt, ap);
+	TString::prtf(fmt, ap);
 	va_end(ap);
 
 	RdosWriteString(GetData());
