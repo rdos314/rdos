@@ -4832,6 +4832,9 @@ get_disc_cache_size   PROC far
     or bx,bx
     jz get_disc_cache_size_fail
 ;
+    cmp bx,-1
+    je get_disc_cache_size_fail
+;
     mov ds,bx
     mov eax,ds:disc_cached_sectors
     clc

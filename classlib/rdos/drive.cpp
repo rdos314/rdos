@@ -55,7 +55,6 @@ TDrive *TDrive::AllocateFixed(int DriveNr)
 *##########################################################################*/
 TDrive::TDrive(int Drive)
 {
-    long FreeUnits;
     long StartSector;
     long TotalSectors;
     long long DiscSectors;
@@ -70,25 +69,24 @@ TDrive::TDrive(int Drive)
     if (FSectors > 0)
     {
         DiscNr = RdosGetVfsDriveDisc(Drive);
+        RdosGetDiscInfo(DiscNr, &FBytesPerSector, &DiscSectors, &SectorsPerCyl, &Heads);
         FValid = TRUE;
     }
     else
     {
-        FValid = RdosGetDriveInfo(FDrive, &FreeUnits, &FBytesPerUnit, &FUnits);
+        FValid = RdosGetDriveInfo(FDrive, &FFreeUnits, &FBytesPerSector, &FUnits);
 
-        if (FValid && FBytesPerUnit == 0)
+        if (FValid && FBytesPerSector == 0)
                 FValid = FALSE;
 
         if (!FValid)
         {
-            FBytesPerUnit = 0;
+            FBytesPerSector = 0;
+            FFreeUnits = 0;
             FUnits = 0;
             FSectors = 0;
         }
     }
-
-    if (DiscNr >= 0)
-        RdosGetDiscInfo(DiscNr, &FBytesPerSector, &DiscSectors, &SectorsPerCyl, &Heads);
 }
 
 /*##################  TDrive::~TDrive  #############
@@ -150,23 +148,12 @@ int TDrive::GetBytesPerSector()
 *##########################################################################*/
 long long TDrive::GetFreeSectors()
 {
-    long FreeUnits;
-    int BytesPerUnit;
-    long Units;
-
     if (FValid)
     {
         if (FSectors > 0)
             return RdosGetVfsDriveFree(FDrive);
         else
-        {
-            RdosGetDriveInfo(FDrive, &FreeUnits, &BytesPerUnit, &Units);
-
-            if (BytesPerUnit >= 512)
-                return BytesPerUnit / 512 * FreeUnits;
-            else
-                return BytesPerUnit * FreeUnits / 512;
-        }
+            return FFreeUnits;
     }
     else
         return 0;
@@ -184,7 +171,7 @@ long long TDrive::GetTotalSectors()
     if (FSectors > 0)
         return FSectors;
     else
-        return FBytesPerUnit * FUnits / 512;
+        return FUnits;
 }
 
 /*##################  TDrive::CreateFileDrive  #############

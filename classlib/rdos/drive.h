@@ -37,7 +37,6 @@ public:
     ~TDrive();
 
     int IsValid();
-    int GetDiscNr();
     int GetDriveNr();
 
     int GetBytesPerSector();
@@ -54,12 +53,11 @@ public:
     static TDrive *AllocateFixed(int DriveNr);
 
 protected:
-    int FDiscNr;
     int FDrive;
 
     int FValid;
+    long FFreeUnits;
     long FUnits;
-    int FBytesPerUnit;
     int FBytesPerSector;
     long long FSectors;
 };

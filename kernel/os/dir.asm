@@ -2331,6 +2331,7 @@ get_drive_info_name     DB 'Get Drive Info',0
 
 get_drive_info:
     push ds
+    push ebx
 ;
     CheckDrive
     jc get_drive_info_done
@@ -2349,6 +2350,7 @@ get_drive_info:
 ;
 
 get_drive_info_done:
+    pop ebx
     pop ds
     retf32
 
