@@ -781,7 +781,7 @@ void TRdosLog::printf(int level, const char *label, const char *msg, ...)
     TString str;
 
     va_start(args, msg);
-    str.printf(msg, args);
+    str.prtf(msg, args);
     va_end(args);
 
     Log(level, label, str.GetData());
