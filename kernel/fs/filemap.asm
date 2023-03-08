@@ -2319,15 +2319,22 @@ NotifyFileData  Endp
 ;
 ;       DESCRIPTION:    Notify file data
 ;
-;       PARAMETERS:     FS                 Part sel
-;                       GS                 File req
+;       PARAMETERS:     DS                 File sel
+;                       FS                 Part sel                       
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public NotifyFileUpdate
 
 NotifyFileUpdate  Proc near
+    push ecx
+;
     int 3
+    EnterSection ds:kf_section
+    movzx ecx,ds:kf_update_count
+    LeaveSection ds:kf_section
+;
+    pop ecx
     ret
 NotifyFileUpdate  Endp
 

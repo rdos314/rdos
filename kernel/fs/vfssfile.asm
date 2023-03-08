@@ -205,8 +205,10 @@ ufScan:
     bsf bx,ax
     add bx,di
 ;
-    mov gs,ds:[4*ebx].vfsp_file_arr.ff_sel
+    push ds
+    mov ds,ds:[4*ebx].vfsp_file_arr.ff_sel
     call NotifyFileUpdate
+    pop ds
 ;
     btc ax,bx
     jnz ufScan
