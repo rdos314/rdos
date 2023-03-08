@@ -858,6 +858,7 @@ SetupReadReq   Proc near
     AllocateBlk
     mov ds:[ebx].kre_block_arr,edx
 ;
+    shl cx,1
     AllocateBlk
     mov ds:[ebx].kre_phys_arr,edx
 ;
@@ -1050,6 +1051,16 @@ urFreeNext:
     jmp urFreeLoop
 
 urFreeEntry:
+    mov ebx,ebp
+    mov cx,ds:[ebx].kre_pages
+    shl cx,2
+    mov edx,ds:[ebx].kre_block_arr
+    FreeBlk
+;
+    shl cx,1
+    mov edx,ds:[ebx].kre_phys_arr
+    FreeBlk
+;
     mov edx,ebp
     mov cx,SIZE kernel_req_entry
     FreeBlk
@@ -2346,7 +2357,6 @@ NotifyFileUpdate  Proc near
     push gs
     pushad
 ;
-    int 3
     mov ax,serv_flat_sel
     mov es,eax
     mov gs,fs:vfsp_disc_sel
@@ -2364,6 +2374,7 @@ nfuLoop:
     loop nfuLoop
 
 nfuLeave:
+    mov ds:kf_update_count,0
     LeaveSection ds:kf_section
 ;
     popad
