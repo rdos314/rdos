@@ -2572,6 +2572,42 @@ open_vfs_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           close_vfs_file
+;
+;       DESCRIPTION:    Close file
+;
+;       PARAMETERS:     BX             Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_file_name       DB 'Close VFS File',0
+
+org_close DD ?,?
+
+close_file  Proc far
+    push ds
+    push ebx
+;
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    jnc cVfs
+;
+    pop ebx
+    pop ds
+;
+    jmp fword ptr cs:org_close
+
+cVfs:
+    int 3
+;
+    pop ebx
+    pop ds
+    ret
+close_file  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           OpenFile
 ;
 ;       DESCRIPTION:    Open file
@@ -2819,6 +2855,15 @@ init_client_file    Proc near
     LinkUserGate
     mov dword ptr fs:org_read,eax
     mov word ptr fs:org_read+4,dx
+;
+    mov ebx,OFFSET close_file
+    mov esi,OFFSET close_file
+    mov edi,OFFSET close_file_name
+    xor dx,dx
+    mov ax,close_file_nr
+    LinkUserGate
+    mov dword ptr fs:org_close,eax
+    mov word ptr fs:org_close+4,dx
 ;
     mov esi,OFFSET vfs_file_info
     mov edi,OFFSET vfs_file_info_name
