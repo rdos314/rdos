@@ -1178,7 +1178,7 @@ IssueReq    Endp
 ;
 ;       NAME:           FreeReq
 ;
-;       DESCRIPTION:    Issue req
+;       DESCRIPTION:    Free req
 ;
 ;       PARAMETERS:     GS             File sel
 ;                       EBX            Entry
@@ -1855,6 +1855,57 @@ smLeave:
     popad
     ret
 SyncMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteMap
+;
+;       DESCRIPTION:    Delete all mapped requests
+;
+;       PARAMETERS:     DS             Kernel processes
+;                       GS             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteMap  Proc near
+    push es
+    push gs
+    pushad
+;
+    mov es,ds:kfm_kernel_sel
+    mov gs,ds:kfm_file_sel
+    mov ebx,OFFSET fm_sorted_arr
+    mov ecx,240
+    EnterSection ds:kfm_section
+
+dmLoop:
+    mov al,es:[ebx]
+    cmp al,-1
+    je dmLeave
+;
+    movzx esi,al
+    add esi,OFFSET kfm_ref_arr
+    movzx edi,al
+    shl edi,4
+    add edi,OFFSET fm_entry_arr
+    call FreeMap
+    jmp dmLoop
+
+dmNext:
+    inc ebx
+    loop dmLoop
+
+dmLeave:
+    call UpdateUnlinked
+;
+    LeaveSection ds:kfm_section
+;
+    popad
+    pop gs
+    pop es
+    ret
+DeleteMap  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2574,6 +2625,24 @@ open_vfs_file    Endp
 ;
 ;       NAME:           close_vfs_file
 ;
+;       DESCRIPTION:    Close VFS file
+;
+;       PARAMETERS:     DS             Prog sel
+;                       BX             Map Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_vfs_file  Proc near
+    int 3
+    call DeleteMap
+    ret
+close_vfs_file  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           close_vfs_file
+;
 ;       DESCRIPTION:    Close file
 ;
 ;       PARAMETERS:     BX             Handle
@@ -2586,6 +2655,7 @@ org_close DD ?,?
 
 close_file  Proc far
     push ds
+    push eax
     push ebx
 ;
     mov ax,VFS_FILE_HANDLE
@@ -2593,14 +2663,18 @@ close_file  Proc far
     jnc cVfs
 ;
     pop ebx
+    pop eax
     pop ds
-;
     jmp fword ptr cs:org_close
 
 cVfs:
-    int 3
+    mov ax,ds:[ebx].fh_sel
+    mov bx,ds:[ebx].fh_handle
+    mov ds,eax
+    call close_vfs_file
 ;
     pop ebx
+    pop eax
     pop ds
     ret
 close_file  Endp
