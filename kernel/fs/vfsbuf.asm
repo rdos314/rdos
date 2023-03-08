@@ -1099,6 +1099,11 @@ ulmsLoop:
     jz ulmsNext
 ;
     sub es:[esi].vfsp_ref_bitmap,1
+    jnc ulmsOk
+;
+    int 3
+
+ulmsOk:
     jnz ulmsNext
 ;
     dec ds:vfs_locked_pages

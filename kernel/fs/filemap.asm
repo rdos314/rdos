@@ -982,63 +982,6 @@ srrDone:
     pop eax
     ret
 SignalReadReq  Endp
-   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           UnlockSectors
-;
-;       DESCRIPTION:    Unlock non-used sectors
-;
-;       PARAMETERS:     FS                 Part sel
-;                       ECX                Used blocks
-;                       GS                 File req
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockSectors  Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,serv_flat_sel
-    mov es,eax
-;
-    mov eax,gs:vfs_rd_sectors
-    sub eax,ecx
-    jz usDone
-;
-    shl ecx,3   
-    mov ebx,gs:vfs_rd_chain_ptr
-    add ebx,ecx
-    mov ecx,eax
-;
-    mov ds,fs:vfsp_disc_sel
-
-usLoop:
-    mov eax,gs:[ebx] 
-    mov edx,gs:[ebx+4] 
-    call BlockToBuf
-;
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz usNext
-;
-    sub es:[esi].vfsp_ref_bitmap,1
-    jnz usNext
-;
-    dec ds:vfs_locked_pages
-
-usNext:
-    add ebx,8
-;
-    loop usLoop
-
-usDone:
-    popad
-    pop es
-    pop ds
-    ret
-UnlockSectors  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1089,6 +1032,11 @@ urFreeAll:
     jz urFreeNext
 ;
     sub es:[esi].vfsp_ref_bitmap,ax
+    jnc urOk
+;
+    int 3
+
+urOk:
     jnz urFreeNext
 ;
     dec gs:vfs_locked_pages
@@ -2354,24 +2302,20 @@ NotifyFileData  Proc near
     pop ecx
     jnc nfdProc
 ;
-    xor ecx,ecx
-    jmp nfdUnlock
+    int 3
+    jmp nfdLeave
 
 nfdProc:
     mov esi,gs:vfs_rd_chain_ptr
     call MergeReadReq
 ;
-    push ecx
     call CalcPageCount
     call SetupReadReq
     call ProcessReadReq
-    pop ecx
 ;
     call SignalReadReq
 
-nfdUnlock:
-    call UnlockSectors
-;
+nfdLeave:
     LeaveSection ds:kf_section
     clc
 
