@@ -1048,22 +1048,66 @@ UnlockSectors  Endp
 ;       DESCRIPTION:    Update req
 ;
 ;       PARAMETERS:     DS                 File sel
+;                       ES                 Serv flat sel
 ;                       FS                 Part sel                       
+;                       GS                 Disc sel
 ;                       EBX                Req offset
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateReq  Proc near
-    push eax
+    pushad
 ;
     mov ax,ds:[ebx].kre_usage
     or ax,ax
     jnz urDone
 
 urFree:
+    mov ebp,ebx
+    mov ecx,ds:[ebx].kre_size
+    mov edi,ds:[ebx].kre_block_arr
+    mov edx,ds:[ebx].kre_phys_arr
+    mov edx,ds:[edx]
+    and edx,0FFFh
+    shr edx,9
+    mov eax,8
+    sub eax,edx
+
+urFreeLoop:
+    shl eax,9
+    cmp ecx,eax
+    jae urFreeAll
+;
+    mov eax,ecx
+
+urFreeAll:
+    sub ecx,eax
+    shr eax,9
+;    
+    mov esi,ds:[edi]
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz urFreeNext
+;
+    sub es:[esi].vfsp_ref_bitmap,ax
+    jnz urFreeNext
+;
+    dec gs:vfs_locked_pages
+
+urFreeNext:
+    or ecx,ecx
+    jz urFreeEntry
+;
+    add edi,4
+    mov eax,8
+    jmp urFreeLoop
+
+urFreeEntry:
+    mov edx,ebp
+    mov cx,SIZE kernel_req_entry
+    FreeBlk
 
 urDone:
-    pop eax
+    popad
     ret
 UpdateReq  Endp
 
@@ -2354,9 +2398,14 @@ NotifyFileData  Endp
     public NotifyFileUpdate
 
 NotifyFileUpdate  Proc near
+    push es
+    push gs
     pushad
 ;
     int 3
+    mov ax,serv_flat_sel
+    mov es,eax
+    mov gs,fs:vfsp_disc_sel
     EnterSection ds:kf_section
 ;
     mov esi,OFFSET kf_update_arr
@@ -2374,6 +2423,8 @@ nfuLeave:
     LeaveSection ds:kf_section
 ;
     popad
+    pop gs
+    pop es
     ret
 NotifyFileUpdate  Endp
 
