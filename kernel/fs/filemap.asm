@@ -1043,6 +1043,33 @@ UnlockSectors  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateReq
+;
+;       DESCRIPTION:    Update req
+;
+;       PARAMETERS:     DS                 File sel
+;                       FS                 Part sel                       
+;                       EBX                Req offset
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateReq  Proc near
+    push eax
+;
+    mov ax,ds:[ebx].kre_usage
+    or ax,ax
+    jnz urDone
+
+urFree:
+
+urDone:
+    pop eax
+    ret
+UpdateReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LockReq
 ;
 ;       DESCRIPTION:    Lock req
@@ -2327,14 +2354,26 @@ NotifyFileData  Endp
     public NotifyFileUpdate
 
 NotifyFileUpdate  Proc near
-    push ecx
+    pushad
 ;
     int 3
     EnterSection ds:kf_section
+;
+    mov esi,OFFSET kf_update_arr
     movzx ecx,ds:kf_update_count
+    or ecx,ecx
+    jz nfuLeave
+
+nfuLoop:
+    mov ebx,ds:[esi]
+    call UpdateReq
+    add esi,4
+    loop nfuLoop
+
+nfuLeave:
     LeaveSection ds:kf_section
 ;
-    pop ecx
+    popad
     ret
 NotifyFileUpdate  Endp
 
