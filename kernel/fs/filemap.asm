@@ -2018,6 +2018,68 @@ GetProgSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UnlinkProgSel
+;
+;       DESCRIPTION:    Unlink program selector
+;
+;       PARAMETERS:     DS              File sel
+;                       AX              Prog sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkProgSel      Proc near
+    push es
+    push ebx
+    push edx
+;
+    mov dx,ax
+;
+    GetThread
+    mov es,ax
+    mov bx,es:p_prog_sel
+    xor ax,ax
+    mov es,eax
+    mov ax,ds:kf_map_list
+
+upsLoop:
+    or ax,ax
+    stc
+    jz upsDone
+;
+    cmp dx,ax
+    je upsUnlink
+;
+    mov es,eax
+    mov ax,es:kfm_next_map
+    jmp upsLoop
+
+upsUnlink:
+    mov ax,es
+    or ax,ax
+    jz upsRoot
+;
+    push es
+    mov es,edx
+    mov ax,es:kfm_next_map
+    pop es
+    mov es:kfm_next_map,ax
+    jmp upsDone
+
+upsRoot:
+    mov es,edx
+    mov ax,es:kfm_next_map
+    mov ds:kf_map_list,ax
+
+upsDone:
+    pop edx
+    pop ebx
+    pop es
+    ret
+UnlinkProgSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateProgSel
 ;
 ;       DESCRIPTION:    Create program selector
@@ -2689,10 +2751,28 @@ open_vfs_file    Endp
 
 close_vfs_file  Proc near
     int 3
+    push ds
+    mov ds,ds:kfm_file_sel
+    EnterSection ds:kf_section
+    pop ds
+;
     call FreeUserHandle
-    jnc cvfDone
+    jnc cvfLeaveFile
+;
+    push ds
+    mov ax,ds
+    mov ds,ds:kfm_file_sel
+    call UnlinkProgSel
+    LeaveSection ds:kf_section
+    pop ds
 ;
     call DeleteMap
+
+cvfLeaveFile:
+    push ds
+    mov ds,ds:kfm_file_sel
+    LeaveSection ds:kf_section
+    pop ds
 
 cvfDone:
     ret
