@@ -479,10 +479,12 @@ LocalReqFile Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern LowCloseFile:near
+
 LocalCloseFile Proc near
     push edi
     mov esi,[edi].fc_handle
-;    call LowReqFile
+    call LowCloseFile
     pop edi
 ;
     mov ebx,[edi].fc_handle

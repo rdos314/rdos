@@ -1010,3 +1010,18 @@ int TFs::ReqFile(int handle, long long pos, int size, int src)
 
     return res;
 }
+
+/*##########################################################################
+#
+#   Name       : TFs::CloseFile
+#
+#   Purpose....: Close file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::CloseFile(int handle)
+{
+}
