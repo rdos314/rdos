@@ -48,6 +48,10 @@
     __parm [__ebx] [__edx] \
     __value [__ebx]
 
+#pragma aux ServCloseVfsFile = \
+    ServGate_serv_close_file  \
+    __parm [__ebx]
+
 #pragma aux ServAddVfsFileReq = \
     ServGate_serv_add_file_req  \
     __parm [__ebx] [__edx __eax] [__edi] [__ecx] [__esi] \

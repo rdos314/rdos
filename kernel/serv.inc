@@ -171,6 +171,11 @@ ServOpenVfsFile  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
+ServCloseVfsFile  MACRO
+    ServGate serv_close_file_nr
+                    ENDM
+
+; IN  BX               Kernel handle
 ; IN  EDX:EAX          Start pos
 ; IN  ECX              Sector count
 ; IN  ESI              Src of request

@@ -1038,6 +1038,8 @@ void TFs::CloseFile(int handle)
 
             FileArr[CurrFileCount] = 0;
 
+            ServCloseVfsFile(file->GetKernelHandle());
+
             delete file;
         }
     }
