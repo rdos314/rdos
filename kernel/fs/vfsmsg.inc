@@ -67,3 +67,5 @@ VFS_OPEN_FILE             = 7
 ; IN  ESI       Kernel req index
 VFS_REQ_FILE              = 8
 
+; IN  BX        File handle
+VFS_CLOSE_FILE            = 9

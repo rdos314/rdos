@@ -614,6 +614,41 @@ SendReadReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SendCloseReq
+;
+;       DESCRIPTION:    Send close req
+;
+;       PARAMETERS:     DS             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendCloseReq     Proc near
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+;
+    mov ebx,ds:kf_serv_handle
+    dec ebx
+    mov fs,ds:kf_part_sel
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+;
+    mov eax,VFS_CLOSE_FILE
+    call PostMsg
+;
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+SendCloseReq     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CalcPageCount
 ;
 ;       DESCRIPTION:    Calculate page count
@@ -2570,7 +2605,7 @@ NotifyFileUpdate  Proc near
     mov esi,OFFSET kf_update_arr
     movzx ecx,ds:kf_update_count
     or ecx,ecx
-    jz nfuLeave
+    jz nfuReset
 
 nfuLoop:
     mov ebx,ds:[esi]
@@ -2578,10 +2613,20 @@ nfuLoop:
     add esi,4
     loop nfuLoop
 
-nfuLeave:
+nfuReset:
     mov ds:kf_update_count,0
-    LeaveSection ds:kf_section
 ;
+    mov ax,ds:kf_map_list
+    or ax,ax
+    jnz nfuLeave
+;
+    call SendCloseReq
+    jmp nfuDone
+
+nfuLeave:
+    LeaveSection ds:kf_section
+
+nfuDone:
     popad
     pop gs
     pop es

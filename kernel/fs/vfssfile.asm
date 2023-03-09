@@ -211,6 +211,7 @@ ufScan:
     pop ds
 ;
     btc ax,bx
+    or ax,ax
     jnz ufScan
 
 ufNext:

@@ -471,6 +471,28 @@ LocalReqFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalCloseFile
+;
+;       DESCRIPTION:    Close file
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalCloseFile Proc near
+    push edi
+    mov esi,[edi].fc_handle
+;    call LowReqFile
+    pop edi
+;
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalCloseFile Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -491,6 +513,7 @@ m05 DD OFFSET UnlockRelDir
 m06 DD OFFSET GetRelDir
 m07 DD OFFSET LocalOpenFile
 m08 DD OFFSET LocalReqFile
+m09 DD OFFSET LocalCloseFile
 
 WaitForMsg_    Proc near
     pushad
