@@ -350,24 +350,42 @@ serv_close_file    Proc far
     push eax
     push ecx
 ;
-    push eax
     mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
-    pop eax
-    jc scfLeave
+    jc scfDone
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
     cmc
-    jc scfLeave
+    jc scfDone
 ;
+    mov eax,fs
+    mov ds,eax
+    EnterSection ds:vfsp_req_section
+;
+    xor ax,ax
+    dec bx
+    shl bx,2
+    add bx,OFFSET vfsp_file_arr
+    xchg ax,ds:[bx].ff_sel
+;
+    push ds
+    mov ds,ax
+    DeleteBlk
+    pop ds
+;
+    mov ax,ds:vfsp_file_list
+    mov ds:[bx].ff_link,ax
+    mov ds:vfsp_file_list,bx
+    LeaveSection ds:vfsp_req_section
 
-scfLeave:
+scfDone:
     pop ecx
     pop eax
     pop fs
     pop ds
     ret
 serv_close_file    Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
