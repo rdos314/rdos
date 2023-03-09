@@ -334,6 +334,44 @@ serv_open_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ServCloseFile
+;
+;       DESCRIPTION:    Serv close VFS file req
+;
+;       PARAMETERS:     EBX            kernel handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_close_file_name       DB 'Serv Close File',0
+
+serv_close_file    Proc far
+    push ds
+    push fs
+    push eax
+    push ecx
+;
+    push eax
+    mov al,VFS_FILE_SIGN
+    call HandleHighToPartFs
+    pop eax
+    jc scfLeave
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc scfLeave
+;
+
+scfLeave:
+    pop ecx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_close_file    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyReq
 ;
 ;       DESCRIPTION:    Notify req
@@ -1409,6 +1447,12 @@ init_server_file    Proc near
     mov edi,OFFSET serv_open_file_name
     xor cl,cl
     mov ax,serv_open_file_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_close_file
+    mov edi,OFFSET serv_close_file_name
+    xor cl,cl
+    mov ax,serv_close_file_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_add_file_req
