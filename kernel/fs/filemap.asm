@@ -2029,14 +2029,11 @@ GetProgSel      Endp
 
 UnlinkProgSel      Proc near
     push es
-    push ebx
+    push eax
     push edx
 ;
     mov dx,ax
 ;
-    GetThread
-    mov es,ax
-    mov bx,es:p_prog_sel
     xor ax,ax
     mov es,eax
     mov ax,ds:kf_map_list
@@ -2072,7 +2069,7 @@ upsRoot:
 
 upsDone:
     pop edx
-    pop ebx
+    pop eax
     pop es
     ret
 UnlinkProgSel      Endp
@@ -2153,7 +2150,7 @@ CreateProgSel   Proc near
 ;
     mov edx,ebp
     and ax,0F000h
-    or ax,67h
+    or ax,867h
     SetPageEntry
 ;
     pop edx
@@ -2207,6 +2204,46 @@ cpsLoop:
     pop es
     ret
 CreateProgSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteProgSel
+;
+;       DESCRIPTION:    Delete program selector
+;
+;       PARAMETERS:     DS              File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteProgSel   Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+;
+    mov es,ds:kfm_kernel_sel
+    FreeMem
+;
+    mov eax,ds
+    mov es,eax
+;
+    xor eax,eax
+    mov ds,eax
+;
+    mov edx,es:kfm_user_base
+    add edx,es:kfm_flat_base
+    mov ecx,3000h
+    FreeLinear
+;
+    FreeMem
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+DeleteProgSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2750,7 +2787,6 @@ open_vfs_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_vfs_file  Proc near
-    int 3
     push ds
     mov ds,ds:kfm_file_sel
     EnterSection ds:kf_section
@@ -2767,6 +2803,8 @@ close_vfs_file  Proc near
     pop ds
 ;
     call DeleteMap
+    call DeleteProgSel
+    jmp cvfDone
 
 cvfLeaveFile:
     push ds
@@ -3012,6 +3050,11 @@ delete_handle   Proc far
     mov ax,VFS_FILE_HANDLE
     DerefHandle
     jc dhDone
+;
+    mov ax,ds:[ebx].fh_sel
+    mov bx,ds:[ebx].fh_handle
+    mov ds,eax
+    call close_vfs_file
 ;
     FreeHandle
     clc
