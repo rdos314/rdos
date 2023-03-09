@@ -1024,4 +1024,21 @@ int TFs::ReqFile(int handle, long long pos, int size, int src)
 ##########################################################################*/
 void TFs::CloseFile(int handle)
 {
+    TFile *file;
+    int i;
+
+    if (handle >= 0 && handle < MaxFileCount)
+    {
+        file = FileArr[handle];
+        if (file)
+        {
+            CurrFileCount--;
+            for (i = handle; i < CurrFileCount; i++)
+                FileArr[i] = FileArr[i+1];
+
+            FileArr[CurrFileCount] = 0;
+
+            delete file;
+        }
+    }
 }
