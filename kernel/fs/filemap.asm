@@ -359,25 +359,28 @@ FindReadReq     Proc near
     push edi
     push ebp
 ;
-    mov ebp,80h
+    mov ebp,ds:kf_count
+    or ebp,ebp
+    stc
+    jz frrDone
+;
     mov ebx,OFFSET kf_sorted_arr
  
 frrLoop:
-    lea ebx,[ebx+4*ebp]
-;
     mov ecx,ds:[ebx]
     or ecx,ecx
-    jz frrLower
+    stc
+    jz frrDone
 ;
     mov esi,eax
     mov edi,edx
     sub esi,ds:[ecx].kre_pos
     sbb edi,ds:[ecx].kre_pos+4
-    jb frrLower
-    jnz frrHigher
+    jb frrDone
+    jnz frrNext
 ;
     cmp esi,ds:[ecx].kre_size
-    jae frrHigher
+    jae frrNext
 ;
     xchg ebx,ecx
     sub ecx,OFFSET kf_sorted_arr
@@ -385,17 +388,12 @@ frrLoop:
     clc
     jmp frrDone
 
-frrLower:
-    lea ecx,[4*ebp]
-    sub ebx,ecx
-
-frrHigher:
-    or ebp,ebp
-    stc
-    jz frrDone
-;
+frrNext:
+    add ebx,4
     shr ebp,1
-    jmp frrLoop
+    jnz frrLoop
+;
+    stc
 
 frrDone:
     pop ebp
