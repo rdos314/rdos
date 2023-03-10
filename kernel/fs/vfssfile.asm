@@ -779,6 +779,8 @@ CreateReqSel Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public FreeReqSel
+
 FreeReqSel Proc near
     push ds
     push es

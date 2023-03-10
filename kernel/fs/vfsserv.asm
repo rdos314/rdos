@@ -94,6 +94,7 @@ code    SEGMENT byte public 'CODE'
     extern GetFileReq:near
     extern NotifyFileData:near
     extern UpdateFiles:near
+    extern FreeReqSel:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2419,10 +2420,13 @@ reply_vfs_file    Proc far
     or bx,bx
     jz rffDone
 ;
+    push ds
     mov ds,fs:vfsp_disc_sel
     EnterSection ds:vfs_section
     call NotifyFileData
+    call FreeReqSel
     LeaveSection ds:vfs_section
+    pop ds
 
 rffDone:
     pop esi

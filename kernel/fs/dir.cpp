@@ -575,3 +575,26 @@ void TDir::SetFileLink(int index, TFile *file)
 
     EntryArr[index].Link = file;
 }
+
+/*##########################################################################
+#
+#   Name       : TDir::ClearFileLink
+#
+#   Purpose....: Clear file link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::ClearFileLink(int index)
+{
+    if (index < 0)
+        return;
+
+    if (index >= EntryCount)
+        return;
+
+    EntryArr[index].Link = 0;
+    EntryArr[index].RefCount = 0;
+}

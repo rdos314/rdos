@@ -81,7 +81,7 @@ TFile::TFile(TDir *pd, int pi)
 TFile::~TFile()
 {
     RdosFreeMem(Info);
-    Parent->SetFileLink(ParentIndex, 0);
+    Parent->ClearFileLink(ParentIndex);
 }
 
 /*##########################################################################
