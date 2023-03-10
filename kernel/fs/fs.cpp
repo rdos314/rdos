@@ -900,7 +900,10 @@ int TFs::OpenFile(int rel, char *path)
     file = Parser.GetFile();
 
     if (file)
+    {
+        printf("Open %d <%s>\r\n", file->GetServHandle(), path);
         return file->GetServHandle();
+    }
     else
         return -1;
 }
@@ -998,6 +1001,8 @@ int TFs::ReqFile(int handle, long long pos, int size, int src)
 
         size = end - start + 1;
 
+        printf("Read %d, start %lld size %d\r\n", handle, start, size);
+
         SectorCount = size / GetBytesPerSector();
         SectorArr = new long long[SectorCount];
         file->GetSectors(start, SectorArr, SectorCount);
@@ -1029,6 +1034,8 @@ void TFs::CloseFile(int handle)
 
     if (handle >= 0 && handle < MaxFileCount)
     {
+        printf("Close %d\r\n", handle);
+
         file = FileArr[handle];
         if (file)
         {
