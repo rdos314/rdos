@@ -32,10 +32,15 @@ void cdecl main()
     TFile file("y:/test.dat");
     char *buf = new char[0x10000];
 
+    file.SetPos(0x1000);
     size = 0x2000;
     ret = file.Read(buf, size);
 
-    file.SetPos(0x567788);
+    file.SetPos(0x4000);
+    size = 0x2000;
+    ret = file.Read(buf, size);
+
+    file.SetPos(0x3000);
     size = 0x2000;
     ret = file.Read(buf, size);
 
