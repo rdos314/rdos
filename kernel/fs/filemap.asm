@@ -414,12 +414,12 @@ FindReadReq  Endp
 ;                       ECX            Size                        
 ;
 ;       RETURNS:        EBX            Req offset
+;                       ECX            Update size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddReadReq      Proc near
     push eax
-    push ecx
     push edx
     push esi
     push edi
@@ -448,64 +448,50 @@ AddReadReq      Proc near
     mov ds:[esi].kre_phys_arr,0
     mov ds:[esi].kre_usage,0
 ;
-    mov ebp,128
     mov ebx,OFFSET kf_sorted_arr
+    mov ebp,ds:kf_count
+    or ebp,ebp
+    jz arrInsert
  
 arrFind:
-    lea ebx,[ebx+4*ebp]
-;
     mov ecx,ds:[ebx]
     or ecx,ecx
-    jz arrLower
+    stc
+    jz arrInsert
 ;
-    mov eax,ds:[ecx].kre_pos
-    mov edx,ds:[ecx].kre_pos+4
-    sub eax,ds:[esi].kre_pos
-    sbb edx,ds:[esi].kre_pos+4
-    jc arrHigher
+    mov eax,ds:[esi].kre_pos
+    mov edx,ds:[esi].kre_pos+4
+    sub eax,ds:[ecx].kre_pos
+    sbb edx,ds:[ecx].kre_pos+4
+    jb arrInsert
+    jnz arrNext
+;
+    cmp eax,ds:[ecx].kre_size
+    jb arrInsert
 
-arrLower:
-    lea ecx,[4*ebp]
-    sub ebx,ecx
-
-arrHigher:
+arrNext:
+    add ebx,4
     shr ebp,1
     jnz arrFind
 
 arrInsert:
+    mov ecx,ds:[ebx]
+    or ecx,ecx
+    jz arrSizeOk
+;
+    mov eax,ds:[ecx].kre_pos
+    mov edx,ds:[ecx].kre_pos+4
+    sub eax,ds:[esi].kre_pos
+    sbb edx,ds:[esi].kre_pos+4
+    jnz arrSizeOk
+;
+    cmp eax,ds:[esi].kre_size
+    jae arrSizeOk
+;
+    mov ds:[esi].kre_size,eax
+
+arrSizeOk:
     sub ebx,OFFSET kf_sorted_arr
-;
-    mov ecx,ds:[ebx].kf_sorted_arr
-    or ecx,ecx
-    jz arrFound
-;
-    mov eax,ds:[ecx].kre_pos
-    mov edx,ds:[ecx].kre_pos+4
-    sub eax,ds:[esi].kre_pos
-    sbb edx,ds:[esi].kre_pos+4
-    jnc arrCheckDown
-;
-    add ebx,4
-    jmp arrFound
-
-arrCheckDown:
-    or ebx,ebx
-    jz arrFound
-;
-    sub ebx,4
-    mov ecx,ds:[ebx].kf_sorted_arr
-    or ecx,ecx
-    jz arrFound
-;
-    mov eax,ds:[ecx].kre_pos
-    mov edx,ds:[ecx].kre_pos+4
-    sub eax,ds:[esi].kre_pos
-    sbb edx,ds:[esi].kre_pos+4
-    jc arrFound
-;
-    add ebx,4
-
-arrFound:
     mov eax,ebx
     shr eax,2
     mov ecx,ds:kf_count
@@ -528,6 +514,7 @@ arrMove:
 arrSave:
     mov ds:[edi],ebx
     inc ds:kf_count
+    mov ecx,ds:[ebx].kre_size
     clc
 
 arrDone:
@@ -535,7 +522,6 @@ arrDone:
     pop edi
     pop esi
     pop edx
-    pop ecx
     pop eax
     ret
 AddReadReq      Endp
