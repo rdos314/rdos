@@ -28,11 +28,16 @@ void cdecl main()
     long long pos;
     int size;
     int ret;
-    char *buf;
     char ch;
     TFile file("y:/test.dat");
+    char *buf = new char[0x10000];
 
-    buf = new char[0x10000];
+    size = 0x2000;
+    ret = file.Read(buf, size);
+
+    file.SetPos(0x567788);
+    size = 0x2000;
+    ret = file.Read(buf, size);
 
     for (i = 0; i < 1000000; i++)
     {
