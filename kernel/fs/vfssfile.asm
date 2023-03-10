@@ -1254,7 +1254,7 @@ srLoop:
     push ecx
     push edi
 ;
-    mov ecx,gs:[edi].vfsm_rd_size
+    mov ecx,gs:[edi].vfsm_rd_count
     mov edi,gs:[edi].vfsm_rd_ptr
     call StartOneReq
 

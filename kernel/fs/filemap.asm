@@ -1964,6 +1964,14 @@ MapReq      Proc near
     push gs
     pushad
 ;
+    mov esi,eax
+    and ax,0F000h
+    and esi,0FFFh
+    add ecx,esi
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
     mov esi,ds
     mov fs,esi
     mov es,ds:kfm_kernel_sel
