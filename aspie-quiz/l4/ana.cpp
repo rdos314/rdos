@@ -53,7 +53,7 @@ static int ScoreArr[] =
    78,  80,  82,  83,  85,  86,  88,  89,  90,  91,
    92,  93,  94,  94,  95,  96,  96,  96,  97,  97,
    98,  98,  98,  98,  98,  99,  99,  99,  99,  99,
-   99,  99,  99, 100, 100, 100, 100, 100, 100, 100,
+  99,  99,  99, 100, 100, 100, 100, 100, 100, 100,
   100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
   100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
   100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
@@ -62,85 +62,14 @@ static int ScoreArr[] =
   100
 };
 
-static int NdMaleMean[] =
-{
-  171, 156, 158, 163, 130, 165, 106, 176, 124,  92,
-  123, 133, 166, 161,  60, 163, 110, 160,  48, 160,
-  138, 151, 130, 153, 136, 113, 120, 117, 137, 112,
-   72, 132,  65, 145,  54,  88, 121, 103,  88, 140,
-   89, 104, 108, 173, 106, 127, 177, 101, 106,  75,
-   92, 143, 150, 119, 157, 116, 157, 144, 167, 161,
-  133, 115, 129, 144, 140, 151, 112, 149,  89, 160,
-  157, 116, 103, 107, 152, 126, 107, 157, 150,  98,
-   94, 150,  95, 159,  84, 128,  50,  49,  32, 118,
-  110,  84, 114, 154, 160,  93, 101, 123, 104,  56,
-   85, 170, 149, 139, 155,  73, 175,  41, 147, 107,
-  168,  39, 152, 166,  88, 149, 105
-};
-
-static int NdFemaleMean[] =
-{
-  164, 152, 153, 157, 121, 176, 115, 181, 140,  93,
-  147, 126, 177, 170,  48, 172, 140, 164,  82, 175,
-  151, 171, 138, 179, 153, 141, 149, 136, 159, 135,
-  110, 160,  57, 152,  64,  98, 114, 119, 139, 155,
-  105, 127, 120, 178, 117, 135, 184, 121, 118,  89,
-   91, 168, 137, 132, 163, 152, 153, 141, 165, 148,
-  126, 115, 134, 127, 138, 152, 104, 129,  59, 169,
-  166, 130, 123, 120, 164, 150, 100, 168, 142, 112,
-  121, 152,  85, 162,  72, 120,  45,  46,  52,  78,
-  120,  97, 100, 168, 158, 105, 100, 145, 105,  54,
-  107, 164, 142, 149, 161,  70, 179,  39, 146, 111,
-  170,  45, 168, 159,  89, 143, 108
-};
-
-static int NtMaleMean[] =
-{
-   95,  94,  88, 105,  73,  84,  32, 122,  53,  29,
-   51,  69, 100, 109, 122, 111,  51, 108,  14,  84,
-   73,  77,  62,  69,  57,  45,  42,  48,  64,  47,
-   18,  73, 141,  58,  19, 144, 163,  45,  32,  60,
-   23,  30,  36, 114,  36,  49, 128,  32,  41,  25,
-   38,  74,  88,  57, 104,  51,  75,  58,  87, 100,
-   49,  40,  41,  72,  71,  89,  42,  94,  45,  80,
-   94,  52,  40,  39,  89,  64,  55, 115,  91,  40,
-   37,  88,  39, 115,  56,  92,  99,  96,  13, 147,
-  144, 107,  66,  88, 116,  37,  36,  67,  52,  18,
-   43, 125,  86,  53,  78, 130, 125,  90,  75,  46,
-  119,  93,  92, 116, 136, 103,  54
-};
-
-static int NtFemaleMean[] =
-{
-   81,  78,  85,  97,  59, 104,  37, 137,  71,  30,
-   78,  62, 126, 124, 107, 123,  81, 115,  31, 111,
-   97, 112,  75, 119,  74,  80,  75,  70,  99,  73,
-   45, 121, 135,  71,  28, 157, 164,  61,  77,  67,
-   26,  41,  41, 117,  38,  55, 138,  43,  47,  27,
-   28, 109,  70,  61, 117,  91,  66,  52,  85,  71,
-   43,  36,  44,  55,  70,  99,  32,  64,  22,  91,
-   96,  56,  52,  46, 101,  90,  37, 129,  81,  44,
-   59,  88,  27, 117,  48,  81,  90,  91,  26, 112,
-  157, 121,  51, 111, 113,  53,  37,  99,  57,  16,
-   63, 121,  84,  69,  93, 126, 138,  80,  76,  53,
-  126, 105, 125, 117, 142, 108,  64
-};
-
-static int Mean[] =
-{
-  131, 122, 124, 135,  98, 136,  76, 156, 100,  63,
-  105,  98, 147, 143,  79, 144, 101, 139,  48, 138,
-  122, 135, 108, 137, 112, 104, 104, 101, 123, 100,
-   70, 130,  94, 112,  46, 121, 137,  87,  93, 111,
-   65,  82,  82, 148,  79,  97, 160,  81,  84,  58,
-   65, 130, 112,  98, 138, 111, 117, 104, 129, 122,
-   92,  81,  93, 101, 109, 126,  75, 109,  52, 130,
-  133,  94,  87,  82, 132, 116,  77, 146, 118,  79,
-   84, 123,  63, 141,  64, 106,  67,  70,  34, 107,
-  132, 104,  85, 135, 138,  77,  71, 115,  84,  38,
-   81, 145, 117, 107, 127,  97, 156,  59, 114,  82,
-  149,  71, 140, 139, 112, 125,  88
-};
+static bool HasMean = false;
+static double NdMaleMean[117];
+static double NdFemaleMean[117];
+static double NtMaleMean[117];
+static double NtFemaleMean[117];
+static double MaleMean[117];
+static double FemaleMean[117];
+static double Mean[117];
 
 struct TQuizRow
 {
@@ -539,6 +468,145 @@ static void WriteArr()
     WriteArr("female.csv", FemaleArr, FemaleNdArr, FemaleNtArr);
 }
 
+/*##################  ProcessItem ##########################
+*   Purpose....: Process item                                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+static bool ProcessItem(char *str)
+{
+    char *valstr;
+    char *ptr;
+    int fieldno;
+    int i, j;
+    int val;
+    int count = 0;
+    int score = 0;
+    int ndmss, ndmsc;
+    int ndfss, ndfsc;
+    int ntmss, ntmsc;
+    int ntfss, ntfsc;
+
+    str++;
+
+    ptr = str;
+    for (fieldno = 0; ptr; fieldno++)
+    {
+        valstr = str;
+        ptr = strstr(str, ";");
+        if (ptr)
+            *ptr = 0;
+
+        str = ptr + 1;
+
+        if (*valstr == '"')
+            valstr++;
+
+        switch (fieldno)
+        {
+            case 0:
+                i = atol(valstr);
+                break;
+
+            case 1:
+                ndmss = atoi(valstr);
+                break;
+
+            case 2:
+                ndmsc = atoi(valstr);
+                break;
+
+            case 3:
+                ndfss = atoi(valstr);
+                break;
+
+            case 4:
+                ndfsc = atoi(valstr);
+                break;
+
+            case 5:
+                ntmss = atoi(valstr);
+                break;
+
+            case 6:
+                ntmsc = atoi(valstr);
+                break;
+
+            case 7:
+                ntfss = atoi(valstr);
+                break;
+
+            case 8:
+                ntfsc = atoi(valstr);
+                break;
+        }
+    }
+
+    if (fieldno == 9)
+    {
+        NdMaleMean[i] = (double)ndmss / (double)ndmsc;
+        NdFemaleMean[i] = (double)ndfss / (double)ndfsc;
+        NtMaleMean[i] = (double)ntmss / (double)ntmsc;
+        NtFemaleMean[i] = (double)ntfss / (double)ntfsc;
+        MaleMean[i] = (double)(ndmss + ntmss) / (double)(ndmsc + ntmsc);
+        FemaleMean[i] = (double)(ndfss + ntfss) / (double)(ndfsc + ntfsc);
+        Mean[i] = (double)(ndmss + ntmss + ndfss + ntfss) / (double)(ndmsc + ntmsc + ndfsc + ntfsc);
+        return true;
+    }
+    else
+        return false;
+}
+
+/*##################  ReadItems ##########################
+*   Purpose....: Read items                                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+static void ReadItems()
+{
+    int i = 0;
+    char *buf;
+    int size;
+    long pos = 0;
+    TFile infile("item.csv");
+    char *ptr;
+
+    buf = new char[MAX_IN_ROW];
+
+    if (infile.IsOpen())
+    {
+        while (size = infile.Read(buf, MAX_IN_ROW))
+        {
+            buf[size] = 0;
+            ptr = strchr(buf, 0xd);
+            if (ptr)
+                *ptr = 0;
+
+            pos += strlen(buf) + 1;
+            infile.SetPos(pos);
+
+            if (ptr)
+            {
+                if (ProcessItem(buf))
+                     i++;
+                else
+                     break;
+            }
+        }
+    }
+
+    delete buf;
+
+    if (i == 117)
+        HasMean = true;
+    else
+        HasMean = false;
+}
+
 /*##################  WriteItems ##########################
 *   Purpose....: Write items                                                                   #
 *   In params..: *                                                          #
@@ -554,7 +622,7 @@ static void WriteItems()
 
     for (i = 0; i < 117; i++)
     {
-        sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d\r\n", i,
+        sprintf(str, "%d;%d;%d;%d;%d;%d;%d;%d;%d\r\n", i,
           NdMaleScore[i], NdMaleCount[i],
           NdFemaleScore[i], NdFemaleCount[i],
           NtMaleScore[i], NtMaleCount[i],
@@ -954,10 +1022,12 @@ void main()
     char buf[MAX_IN_ROW];
     int size;
     long pos = 0;
-    TFile infile("l4.csv");
+    TFile infile("balanced.csv");
     char *ptr;
 
     InitArr();
+
+    ReadItems();
 
     size = infile.Read(buf, MAX_IN_ROW);
     buf[size] = 0;
