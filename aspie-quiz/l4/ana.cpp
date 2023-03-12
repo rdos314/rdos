@@ -157,9 +157,9 @@ static void SubNorm(double *arr, double u, double sd, double scale)
     double x;
     double val;
 
-    for (i = 0; i < 301; i++)
+    for (i = 0; i < 201; i++)
     {
-        x = (double)(i - 50);
+        x = (double)i;
         val = CalcNorm(x, u, sd, scale);
         arr[i] -= val;
     }
@@ -175,18 +175,12 @@ static void SubNorm(double *arr, double u, double sd, double scale)
 static double CalcDiff(double u, double sd, double mndscale, double fndscale, double mntscale, double fntscale)
 {
     int i;
-    double DiffArr[301];
+    double DiffArr[201];
     double diff = 0;
     double scale = 1.0;
 
-    for (i = 0; i < 50; i++)
-        DiffArr[i] = 0.0;
-
     for (i = 0; i < 201; i++)
-        DiffArr[i+50] = (double)MaleArr[i];
-
-    for (i = 251; i < 301; i++)
-        DiffArr[i] = 0.0;
+        DiffArr[i] = (double)MaleArr[i];
 
     SubNorm(DiffArr, 100 + u, sd, mndscale);
     SubNorm(DiffArr, 100 - u, sd, mntscale);
@@ -196,21 +190,15 @@ static double CalcDiff(double u, double sd, double mndscale, double fndscale, do
     for (i = 0; i < 201; i++)
         diff = diff + DiffArr[i] * DiffArr[i] / scale;
 
-    for (i = 0; i < 50; i++)
-        DiffArr[i] = 0.0;
-
     for (i = 0; i < 201; i++)
-        DiffArr[i+50] = (double)FemaleArr[i];
-
-    for (i = 251; i < 301; i++)
-        DiffArr[i] = 0.0;
+        DiffArr[i] = (double)FemaleArr[i];
 
     SubNorm(DiffArr, 100 + u, sd, fndscale);
     SubNorm(DiffArr, 100 - u, sd, fntscale);
 
 //    scale = fndscale + fntscale;
 
-    for (i = 0; i < 301; i++)
+    for (i = 0; i < 201; i++)
         diff = diff + DiffArr[i] * DiffArr[i] / scale;
 
     return diff;
@@ -383,8 +371,8 @@ static void CalcDist()
             }
         }
 
-        changed = false;
-//        changed = true;
+//        changed = false;
+        changed = true;
         while (changed)
         {
             changed = false;
@@ -409,8 +397,8 @@ static void CalcDist()
 
         }
 
-        changed = false;
-//        changed = true;
+//        changed = false;
+        changed = true;
         while (changed)
         {
             changed = false;
