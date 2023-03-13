@@ -45,6 +45,14 @@ void cdecl main()
     size = 0x2000;
     ret = file.Read(buf, size);
 
+    file.SetPos(0x3A000);
+    size = 0x1000;
+    ret = file.Read(buf, size);
+
+    file.SetPos(0xB3C000);
+    size = 0x1000;
+    ret = file.Read(buf, size);
+
     for (i = 0; i < 1000000; i++)
     {
         alt = RdosGetRandom(5);

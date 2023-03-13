@@ -463,7 +463,7 @@ arrFind:
 
 arrNext:
     add ebx,4
-    shr ebp,1
+    sub ebp,1
     jnz arrFind
 
 arrInsert:
@@ -1494,7 +1494,7 @@ armFind:
 
 armNext:
     inc ebx
-    shr ebp,1
+    sub ebp,1
     jnz armFind
 
 armInsert:
