@@ -2492,6 +2492,7 @@ NotifyFileData  Proc near
     or ecx,ecx
     jz nfdDone
 ;
+    int 3
     mov ds,ebx
     EnterSection ds:kf_section
     mov eax,gs:vfs_rd_start
