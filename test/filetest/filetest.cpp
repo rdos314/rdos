@@ -29,6 +29,7 @@ void cdecl main()
     int size;
     int ret;
     char ch;
+    int alt;
     TFile file("y:/test.dat");
     char *buf = new char[0x10000];
 
@@ -46,9 +47,49 @@ void cdecl main()
 
     for (i = 0; i < 1000000; i++)
     {
-        pos = RdosGetRandom(0x1000000);
-        file.SetPos(pos);
-        size = RdosGetRandom(0x10000);
+        alt = RdosGetRandom(5);
+        switch (alt)
+        {
+            case 0:
+                break;
+
+            case 1:
+                pos = RdosGetRandom(0x1000000);
+                file.SetPos(pos);
+                break;
+
+            case 2:
+                pos = RdosGetRandom(0x100000);
+                file.SetPos(pos);
+                break;
+
+            case 3:
+                pos = RdosGetRandom(0x10000);
+                file.SetPos(pos);
+                break;
+
+            case 4:
+                pos = RdosGetRandom(0x1000);
+                file.SetPos(pos);
+                break;
+        }
+
+        alt = RdosGetRandom(3);
+        switch (alt)
+        {
+            case 0:
+                size = RdosGetRandom(0x10000);
+                break;
+                 
+            case 1:
+                size = RdosGetRandom(0x1000);
+                break;
+        
+            case 2:
+                size = RdosGetRandom(0x100);
+                break;
+        }
+
         ret = file.Read(buf, size);   
         if (size == ret)
         {

@@ -368,10 +368,6 @@ FindReadReq     Proc near
  
 frrLoop:
     mov ecx,ds:[ebx]
-    or ecx,ecx
-    stc
-    jz frrDone
-;
     mov esi,eax
     mov edi,edx
     sub esi,ds:[ecx].kre_pos
@@ -455,10 +451,6 @@ AddReadReq      Proc near
  
 arrFind:
     mov ecx,ds:[ebx]
-    or ecx,ecx
-    stc
-    jz arrInsert
-;
     mov eax,ds:[esi].kre_pos
     mov edx,ds:[esi].kre_pos+4
     sub eax,ds:[ecx].kre_pos
@@ -1330,40 +1322,37 @@ FindReadMap     Proc near
     push edi
     push ebp
 ;
-    xor ebx,ebx
-    mov ebp,80h
+    int 3
+    mov ebp,es:fm_count
+    or ebp,ebp
+    stc
+    jz frmDone
+;
+    mov ebx,OFFSET fm_sorted_arr
  
 frmLoop:
-    movzx ecx,byte ptr es:[ebx+ebp].fm_sorted_arr
-    cmp cl,0FFh
-    jz frmLower
-;
+    movzx ecx,byte ptr es:[ebx]
     shl ecx,4
     mov esi,eax
     mov edi,edx
     sub esi,es:[ecx].fm_entry_arr.fmb_pos
     sbb edi,es:[ecx].fm_entry_arr.fmb_pos+4
-    jb frmLower
-    jnz frmHigher
+    jb frmDone
+    jnz frmNext
 ;
     cmp esi,es:[ecx].fm_entry_arr.fmb_size
-    jae frmHigher
+    jae frmNext
 ;
-    add ebx,ebp
     xchg ebx,ecx
     clc
     jmp frmDone
 
-frmHigher:
-    add ebx,ebp
-
-frmLower:
-    or ebp,ebp
-    stc
-    jz frmDone
-;
+frmNext:
+    inc ebx
     shr ebp,1
-    jmp frmLoop
+    jnz frmLoop
+;
+    stc
 
 frmDone:
     pop ebp
