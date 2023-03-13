@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include "file.h"
 
+static char buf[0x10000];
+static TFile file("y:/test.dat");
+
+
 char CalcSign(long long pos)
 {
     char ch;
@@ -21,37 +25,46 @@ char CalcSign(long long pos)
     return ch;
 }
 
+void Check(long long pos, int size)
+{
+    int j;
+    char ch;
+    int ret;
+    bool logged = true;
+
+    printf("Pos %lld, size %d\r\n", pos, size);
+
+    file.SetPos(pos);
+    ret = file.Read(buf, size);   
+
+    if (size == ret)
+    {
+        for (j = 0; j < size; j++)
+        {
+            ch = CalcSign(pos+j);
+            if (ch != buf[j])
+            {
+                if (!logged)
+                    printf("Error at pos %lld, expect: %c, found %c\r\n", pos+j, ch, buf[j]);
+                logged = true;
+            }
+        }
+    }
+    else
+        printf("Wrong size at pos %lld, expect: %d, found %d\r\n", pos+j, size, ret);
+}
+
 void cdecl main()
 {
     int i;
-    int j;
     long long pos;
     int size;
-    int ret;
-    char ch;
     int alt;
-    TFile file("y:/test.dat");
-    char *buf = new char[0x10000];
 
-    file.SetPos(0x1000);
-    size = 0x2000;
-    ret = file.Read(buf, size);
-
-    file.SetPos(0x4000);
-    size = 0x2000;
-    ret = file.Read(buf, size);
-
-    file.SetPos(0x3000);
-    size = 0x2000;
-    ret = file.Read(buf, size);
-
-    file.SetPos(0x3A000);
-    size = 0x1000;
-    ret = file.Read(buf, size);
-
-    file.SetPos(0xB3C000);
-    size = 0x1000;
-    ret = file.Read(buf, size);
+    Check(978, 1091);
+    Check(2069, 2464);
+    Check(700994, 92);
+    Check(2753, 31522);
 
     for (i = 0; i < 1000000; i++)
     {
@@ -59,26 +72,23 @@ void cdecl main()
         switch (alt)
         {
             case 0:
+                pos = file.GetPos();
                 break;
 
             case 1:
                 pos = RdosGetRandom(0x1000000);
-                file.SetPos(pos);
                 break;
 
             case 2:
                 pos = RdosGetRandom(0x100000);
-                file.SetPos(pos);
                 break;
 
             case 3:
                 pos = RdosGetRandom(0x10000);
-                file.SetPos(pos);
                 break;
 
             case 4:
                 pos = RdosGetRandom(0x1000);
-                file.SetPos(pos);
                 break;
         }
 
@@ -98,18 +108,6 @@ void cdecl main()
                 break;
         }
 
-        ret = file.Read(buf, size);   
-        if (size == ret)
-        {
-            for (j = 0; j < size; j++)
-            {
-                ch = CalcSign(pos+j);
-                if (ch != buf[j])
-                    printf("Error at pos %lld, expect: %c, found %c\r\n", pos+j, ch, buf[j]);
-            }
-        }
-        else
-            printf("Wrong size at pos %lld, expect: %d, found %d\r\n", pos+j, size, ret);
+        Check(pos, size);
     }
-    delete buf;
 }
