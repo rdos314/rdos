@@ -415,6 +415,8 @@ FindReadReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddReadReq      Proc near
+    push eax
+    push edx
     push esi
     push edi
     push ebp
@@ -457,14 +459,7 @@ arrFind:
     jnz arrNext
 ;
     cmp eax,ds:[ecx].kre_size
-    jae arrNext
-;
-    int 3
-    mov ecx,ds:[ecx].kre_size
-    sub ecx,eax
-    add ds:[esi].kre_pos,ecx
-    adc ds:[esi].kre_pos+4,0
-    sub ds:[esi].kre_size,ecx
+    jb arrInsert
 
 arrNext:
     add ebx,4
@@ -512,14 +507,14 @@ arrSave:
     mov ds:[edi],ebx
     inc ds:kf_count
     mov ecx,ds:[ebx].kre_size
-    mov eax,ds:[ebx].kre_pos
-    mov edx,ds:[ebx].kre_pos+4
     clc
 
 arrDone:
     pop ebp
     pop edi
     pop esi
+    pop edx
+    pop eax
     ret
 AddReadReq      Endp
 
