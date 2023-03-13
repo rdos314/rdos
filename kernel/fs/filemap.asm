@@ -386,7 +386,7 @@ frrLoop:
 
 frrNext:
     add ebx,4
-    shr ebp,1
+    sub ebp,1
     jnz frrLoop
 ;
     stc
@@ -1154,6 +1154,14 @@ irRetry:
     pop ecx
     jnc irCheck
 ;
+    mov esi,eax
+    and ax,0F000h
+    and esi,0FFFh
+    add ecx,esi
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
     call AddReadReq
     call AddWaitReq
     call SendReadReq
@@ -1322,7 +1330,6 @@ FindReadMap     Proc near
     push edi
     push ebp
 ;
-    int 3
     mov ebp,es:fm_count
     or ebp,ebp
     stc
@@ -1349,7 +1356,7 @@ frmLoop:
 
 frmNext:
     inc ebx
-    shr ebp,1
+    sub ebp,1
     jnz frmLoop
 ;
     stc
@@ -1467,71 +1474,40 @@ AddReadMap      Proc near
     pushad
 ;
     movzx esi,bx
-    mov ebp,80h
-    xor ebx,ebx
+    mov ebx,OFFSET fm_sorted_arr
+    mov ebp,es:fm_count
+    sub ebp,1
+    jbe armInsert
  
 armFind:
-    movzx ecx,byte ptr es:[ebx+ebp].fm_sorted_arr
-    cmp cl,0FFh
-    jz armLower
-;
+    movzx ecx,byte ptr es:[ebx]
     shl ecx,4
-    mov eax,es:[ecx].fm_entry_arr.fmb_pos
-    mov edx,es:[ecx].fm_entry_arr.fmb_pos+4
-    sub eax,es:[esi].fmb_pos
-    sbb edx,es:[esi].fmb_pos+4
-    jnc armHigher
+    mov eax,es:[esi].fmb_pos
+    mov edx,es:[esi].fmb_pos+4
+    sub eax,es:[ecx].fm_entry_arr.fmb_pos
+    sbb edx,es:[ecx].fm_entry_arr.fmb_pos+4
+    jb armInsert
+    jnz armNext
+;
+    cmp eax,ds:[ecx].fm_entry_arr.fmb_size
+    jb armInsert
 
-armHigher:
-    add ebx,ebp
-
-armLower:
+armNext:
+    inc ebx
     shr ebp,1
     jnz armFind
 
 armInsert:
-    movzx ecx,byte ptr es:[ebx].fm_sorted_arr
-    cmp cl,0FFh
-    jz armFound
-;
-    shl ecx,4
-    mov eax,es:[ecx].fm_entry_arr.fmb_pos
-    mov edx,es:[ecx].fm_entry_arr.fmb_pos+4
-    sub eax,es:[esi].fmb_pos
-    sbb edx,es:[esi].fmb_pos+4
-    jnc armCheckDown
-;
-    inc ebx
-    jmp armFound
-
-armCheckDown:
-    or ebx,ebx
-    jz armFound
-;
-    dec ebx
-    movzx ecx,byte ptr es:[ebx].fm_sorted_arr
-    cmp cl,0FFh
-    jz armFound
-;
-    shl ecx,4
-    mov eax,es:[ecx].fm_entry_arr.fmb_pos
-    mov edx,es:[ecx].fm_entry_arr.fmb_pos+4
-    sub eax,es:[esi].fmb_pos
-    sbb edx,es:[esi].fmb_pos+4
-    jc armFound
-;
-    inc ebx
-
-armFound:
+    sub ebx,OFFSET fm_sorted_arr
     mov eax,ebx
     mov ecx,es:fm_count
     dec ecx
     sub ecx,eax
+;
     mov ebx,esi
     sub ebx,OFFSET fm_entry_arr
     shr ebx,4
-    add eax,ecx
-    lea esi,[eax].fm_sorted_arr
+    lea esi,[eax+ecx].fm_sorted_arr
     mov edi,esi
     dec esi
     or ecx,ecx
@@ -1936,14 +1912,6 @@ MapReq      Proc near
     push fs
     push gs
     pushad
-;
-    mov esi,eax
-    and ax,0F000h
-    and esi,0FFFh
-    add ecx,esi
-    dec ecx
-    and cx,0F000h
-    add ecx,1000h
 ;
     mov esi,ds
     mov fs,esi
