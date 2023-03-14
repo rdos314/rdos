@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
 #include <string.h>
 #include <rdos.h>
 #include "file.h"
@@ -195,4 +196,138 @@ int TFile::GetKernelHandle()
 int TFile::GetAttrib()
 {
     return Info->Attrib;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::AllocateEntry
+#
+#   Purpose....: Allocate new entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFile::AllocateEntry()
+{
+    int i;
+
+    for (i = 0; i < 240; i++)
+        if (Req->ReqArr[i].Handle == 0)
+            return i;
+
+    return -1;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::AddReq
+#
+#   Purpose....: Add req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFile::AddReq(long long pos, int size)
+{
+    long long start;
+    long long end;
+    long long temp;
+    int diff;
+    int i;
+    int link;
+    int index;
+
+    start = AdjustStart(pos);
+    diff = start - pos;
+    size += diff;
+
+    end = start + size - 1;
+    end = AdjustEnd(end);
+
+    size = end - start + 1;
+
+    for (i = 0; i < Req->Count; i++)
+    {
+        link = Req->SortedArr[i];
+
+        temp = Req->ReqArr[link].Pos - start;
+        if (temp >= 0)
+        {
+            if (temp < size)
+                size = (int)temp;
+            break;
+        }
+        else
+        {
+            temp = Req->ReqArr[link].Pos + Req->ReqArr[link].Size;
+            if (temp > start)
+            {
+                size -= (int)(temp - start);
+                start = temp;
+            }
+        }
+    }
+
+    if (size > 0)
+    {
+        index = AllocateEntry();
+
+        if (index >= 0)
+        {
+            Req->ReqArr[index].Pos = start;
+            Req->ReqArr[index].Size = size;
+            Req->ReqArr[index].Handle = -1;
+            printf("Read %d.%d start %lld size %d\r\n", GetServHandle(), index, start, size);
+
+            return index + 1;
+        }
+        else
+            printf("No entry\r\n");
+    }
+    else
+        printf("No size\r\n");
+
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::GetReqPos
+#
+#   Purpose....: Get req position
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TFile::GetReqPos(int index)
+{
+    if (index)
+        return Req->ReqArr[index - 1].Pos;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::GetReqSize
+#
+#   Purpose....: Get req size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFile::GetReqSize(int index)
+{
+    if (index)
+        return Req->ReqArr[index - 1].Size;
+    else
+        return 0;
 }

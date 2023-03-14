@@ -132,8 +132,9 @@ long long TFatFile::AdjustEnd(long long pos)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatFile::GetSectors(long long pos, long long *SectorArr, int SectorCount)
+void TFatFile::GetSectors(int index, long long *SectorArr, int SectorCount)
 {
+    long long pos = GetReqPos(index);
     unsigned int c = pos / FBytesPerCluster;
     int sc = FFat->SectorsPerCluster;
     int count = SectorCount / sc;

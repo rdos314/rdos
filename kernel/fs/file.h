@@ -71,7 +71,7 @@ public:
 
     virtual long long AdjustStart(long long pos) = 0;
     virtual long long AdjustEnd(long long pos) = 0;
-    virtual void GetSectors(long long pos, long long *SectorArr, int SectorCount) = 0;
+    virtual void GetSectors(int index, long long *SectorArr, int SectorCount) = 0;
 
     void Setup(int VfsHandle, int ServFileHandle);
 
@@ -82,10 +82,16 @@ public:
     int GetKernelHandle();
     int GetAttrib();
 
+    int AddReq(long long pos, int size);
+    long long GetReqPos(int index);
+    int GetReqSize(int index);
+
     struct TFileInfo *Info;
     struct TFileReq *Req;
 
 protected:
+    int AllocateEntry();
+
     TDir *Parent;
     int ParentIndex;
     TSection Section;
