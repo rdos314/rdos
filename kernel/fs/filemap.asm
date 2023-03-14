@@ -734,7 +734,6 @@ MergeReadReq  Proc near
     push edi
     push ebp
 ;
-    int 3
     push esi
     sub esp,4
 ;
@@ -743,7 +742,7 @@ MergeReadReq  Proc near
 ;
     mov edi,ebp
     dec edi
-;    mov edi,ds:[4*edi].kf_sorted_arr
+    mov edi,ds:[4*edi].kf_handle_arr
 ;
     mov eax,ds:[ebx].kre_pos
     mov edx,ds:[ebx].kre_pos+4
@@ -2417,30 +2416,33 @@ NotifyFileData  Proc near
 ;
     mov ecx,gs:vfs_rd_sectors
     or ecx,ecx
+    stc
     jz nfdDone
 ;
-    int 3
     mov ds,ebx
-    EnterSection ds:kf_section
     mov es,ds:kf_serv_sel
     mov eax,gs:vfs_rd_index
-    push ecx
-    call FindReadReq
-    mov ebp,ecx
-    pop ecx
-    jnc nfdProc
+    or eax,eax
+    stc
+    je nfdDone
 ;
-    int 3
-    jmp nfdLeave
-
-nfdProc:
+    EnterSection ds:kf_section
+;
+    mov ebp,eax
+    dec ebp
+    mov ebx,ebp
+    shl ebx,2
+    xchg eax,es:[ebx].frs_arr.fre_handle
+    cmp eax,-1
+    jne nfdLeave
+;
+    add ebx,OFFSET kf_handle_arr
     mov esi,gs:vfs_rd_chain_ptr
     call MergeReadReq
 ;
     call CalcPageCount
     call SetupReadReq
     call ProcessReadReq
-;
     call SignalReadReq
 
 nfdLeave:
