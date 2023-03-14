@@ -2478,7 +2478,7 @@ NotifyFileData  Proc near
     cmp eax,-1
     jne nfdLeave
 ;
-    add ebx,OFFSET kf_handle_arr
+    mov ebx,ds:[ebx].kf_handle_arr
     mov esi,gs:vfs_rd_chain_ptr
     call MergeReadReq
 ;
