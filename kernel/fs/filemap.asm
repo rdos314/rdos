@@ -303,7 +303,88 @@ CreateFileSel   Endp
     public AddFileReq
 
 AddFileReq   Proc near
+    push ds
+    push es
+    pushad
+;
+    movzx eax,bx
+    dec eax
+    shl eax,2
+    mov ax,fs:[eax].vfsp_file_arr.ff_sel
+    or ax,ax
+    stc
+    je afrDone
+;
+    or edx,edx
+    stc
+    jz afrDone
+;
+    mov ds,eax
+    mov es,ds:kf_serv_sel
+    EnterSection ds:kf_section
+;
+    mov esi,edx
+    dec esi
+    shl esi,4
+    add esi,OFFSET frs_arr
+    mov es:[esi].fre_handle,edx
+;
+    mov ebx,OFFSET frs_sorted
+    inc es:frs_count
+    mov ebp,es:frs_count
+    sub ebp,1
+    jbe afrInsert
+ 
+afrFind:
+    movzx ecx,byte ptr es:[ebx]
+    shl ecx,4
+    mov eax,es:[esi].fre_pos
+    mov edx,es:[esi].fre_pos+4
+    sub eax,es:[ecx].frs_arr.fre_pos
+    sbb edx,es:[ecx].frs_arr.fre_pos+4
+    jb afrInsert
+    jnz afrNext
+;
+    cmp eax,ds:[ecx].frs_arr.fre_size
+    jb afrInsert
+
+afrNext:
+    inc ebx
+    sub ebp,1
+    jnz afrFind
+
+afrInsert:
+    sub ebx,OFFSET frs_sorted
+    mov eax,ebx
+    mov ecx,es:frs_count
+    dec ecx
+    sub ecx,eax
+;
+    mov ebx,esi
+    sub ebx,OFFSET frs_arr
+    shr ebx,4
+    lea esi,[eax+ecx].frs_sorted
+    mov edi,esi
+    dec esi
+    or ecx,ecx
+    jz afrSave
+
+afrMove:
+    mov al,es:[esi]
+    mov es:[edi],al
+    dec esi
+    dec edi
+    loop afrMove
+
+afrSave:
+    mov es:[edi],bl
+    LeaveSection ds:kf_section
     clc
+
+afrDone:
+    popad
+    pop es
+    pop ds
     ret
 AddFileReq   Endp
 

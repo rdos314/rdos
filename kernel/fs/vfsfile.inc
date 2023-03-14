@@ -55,6 +55,6 @@ file_req_struc   STRUC
 frs_sorted       DB 241 DUP(?)
 frs_resv         DB 11 DUP(?)
 frs_count        DD ?
-fts_arr          DB 16 * 240 DUP(?)
+frs_arr          DB 16 * 240 DUP(?)
 
 file_req_struc   ENDS
