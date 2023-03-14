@@ -41,3 +41,20 @@ ff_sel           DW ?
 ff_link          DW ?
 
 file_part_struc  ENDS
+
+file_req_entry   STRUC
+
+fre_pos          DD ?,?
+fre_size         DD ?
+fre_handle       DD ?
+
+file_req_entry   ENDS
+
+file_req_struc   STRUC
+
+frs_sorted       DB 241 DUP(?)
+frs_resv         DB 11 DUP(?)
+frs_count        DD ?
+fts_arr          DB 16 * 240 DUP(?)
+
+file_req_struc   ENDS

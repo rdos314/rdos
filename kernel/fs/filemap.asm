@@ -82,10 +82,9 @@ kf_serv_sel       DW ?
 kf_update_count   DW ?
 kf_req_sync       DW ?
 kf_resv           DW ?
-kf_count          DD ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
-kf_sorted_arr     DD 256 DUP(?)
+kf_handle_arr     DD 240 DUP(?)
 kf_update_arr     DD 32 DUP(?)
 
 kernel_file       ENDS
@@ -238,7 +237,6 @@ CreateFileSel   Proc near
     mov ds:kf_sector_size,di
     mov ds:kf_map_list,0
     mov ds:kf_part_sel,fs
-    mov ds:kf_count,0
     mov ds:kf_serv_handle,ebx
     mov ds:kf_wait_list,0
     mov ds:kf_update_count,0
@@ -247,8 +245,8 @@ CreateFileSel   Proc near
     push ecx
 ;
     mov ecx,256
-    mov edi,OFFSET kf_sorted_arr
-    xor eax,eax
+    mov edi,OFFSET kf_handle_arr
+    mov eax,-1
 
 cfInit:
     mov ds:[edi],eax
@@ -288,6 +286,26 @@ cfInit:
     pop ds
     ret
 CreateFileSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddFileReq
+;
+;       DESCRIPTION:    Serv add VFS file req
+;
+;       PARAMETERS:     FS             Part sel
+;                       EBX            File handle
+;                       EDX            Req index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AddFileReq
+
+AddFileReq   Proc near
+    clc
+    ret
+AddFileReq   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -375,168 +393,9 @@ AddUpdate   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindReadReq     Proc near
-    push esi
-    push edi
-    push ebp
-;
-    mov ebp,ds:kf_count
-    or ebp,ebp
     stc
-    jz frrDone
-;
-    mov ebx,OFFSET kf_sorted_arr
- 
-frrLoop:
-    mov ecx,ds:[ebx]
-    mov esi,eax
-    mov edi,edx
-    sub esi,ds:[ecx].kre_pos
-    sbb edi,ds:[ecx].kre_pos+4
-    jb frrDone
-    jnz frrNext
-;
-    cmp esi,ds:[ecx].kre_size
-    jae frrNext
-;
-    xchg ebx,ecx
-    sub ecx,OFFSET kf_sorted_arr
-    shr ecx,2
-    clc
-    jmp frrDone
-
-frrNext:
-    add ebx,4
-    sub ebp,1
-    jnz frrLoop
-;
-    stc
-
-frrDone:
-    pop ebp
-    pop edi
-    pop esi
     ret
 FindReadReq  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddReadReq
-;
-;       DESCRIPTION:    Add read req. Section must be taken!
-;
-;       PARAMETERS:     DS             File sel
-;                       EDX:EAX        Position
-;                       ECX            Size                        
-;
-;       RETURNS:        EBX            Req offset
-;                       ECX            Update size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddReadReq      Proc near
-    push eax
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov esi,ds:kf_count
-    cmp esi,100h
-    stc
-    je arrDone
-;
-    push ecx
-    push edx
-;
-    mov cx,SIZE kernel_req_entry
-    AllocateBlk
-    mov esi,edx
-;
-    pop edx
-    pop ecx
-;
-    mov ds:[esi].kre_pos,eax
-    mov ds:[esi].kre_pos+4,edx
-    mov ds:[esi].kre_size,ecx
-    mov ds:[esi].kre_pages,0
-    mov ds:[esi].kre_block_arr,0
-    mov ds:[esi].kre_phys_arr,0
-    mov ds:[esi].kre_usage,0
-;
-    mov ebx,OFFSET kf_sorted_arr
-    mov ebp,ds:kf_count
-    or ebp,ebp
-    jz arrInsert
- 
-arrFind:
-    mov ecx,ds:[ebx]
-    mov eax,ds:[esi].kre_pos
-    mov edx,ds:[esi].kre_pos+4
-    sub eax,ds:[ecx].kre_pos
-    sbb edx,ds:[ecx].kre_pos+4
-    jb arrInsert
-    jnz arrNext
-;
-    cmp eax,ds:[ecx].kre_size
-    jb arrInsert
-
-arrNext:
-    add ebx,4
-    sub ebp,1
-    jnz arrFind
-
-arrInsert:
-    mov ecx,ds:[ebx]
-    or ecx,ecx
-    jz arrSizeOk
-;
-    mov eax,ds:[ecx].kre_pos
-    mov edx,ds:[ecx].kre_pos+4
-    sub eax,ds:[esi].kre_pos
-    sbb edx,ds:[esi].kre_pos+4
-    jnz arrSizeOk
-;
-    cmp eax,ds:[esi].kre_size
-    jae arrSizeOk
-;
-    mov ds:[esi].kre_size,eax
-
-arrSizeOk:
-    sub ebx,OFFSET kf_sorted_arr
-    mov eax,ebx
-    shr eax,2
-    mov ecx,ds:kf_count
-    sub ecx,eax
-    mov ebx,esi
-    add eax,ecx
-    lea esi,[4*eax].kf_sorted_arr
-    mov edi,esi
-    sub esi,4
-    or ecx,ecx
-    jz arrSave
-
-arrMove:
-    mov eax,ds:[esi]
-    mov ds:[edi],eax
-    sub esi,4
-    sub edi,4
-    loop arrMove
-
-arrSave:
-    mov ds:[edi],ebx
-    inc ds:kf_count
-    mov ecx,ds:[ebx].kre_size
-    clc
-
-arrDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop eax
-    ret
-AddReadReq      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -776,6 +635,7 @@ MergeReadReq  Proc near
     push edi
     push ebp
 ;
+    int 3
     push esi
     sub esp,4
 ;
@@ -784,7 +644,7 @@ MergeReadReq  Proc near
 ;
     mov edi,ebp
     dec edi
-    mov edi,ds:[4*edi].kf_sorted_arr
+;    mov edi,ds:[4*edi].kf_sorted_arr
 ;
     mov eax,ds:[ebx].kre_pos
     mov edx,ds:[ebx].kre_pos+4
@@ -1174,7 +1034,6 @@ irRetry:
     pop ecx
     jnc irCheck
 ;
-;    call AddReadReq
     call AddWaitReq
     call SendReadReq
 ;
@@ -1217,51 +1076,7 @@ IssueReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeReq      Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-;
-    mov esi,gs
-    mov ds,esi
-    EnterSection ds:kf_section
-;
-    sub ds:[ebx].kre_usage,1
-    jnz frLeave
-;
-    mov esi,OFFSET kf_sorted_arr
-    mov ecx,ds:kf_count
-
-frFind:
-    cmp ebx,ds:[esi]
-    je frMove
-;
-    add esi,4
-    loop frFind
-;
-    jmp frLeave
-
-frMove:
-    mov eax,ds:[esi+4]
-    mov ds:[esi],eax
-    add esi,4
-    loop frMove
-;
-    dec ds:kf_count
-;
-    call AddUpdate
-
-frLeave:
-    LeaveSection ds:kf_section
-;
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
+    int 3
     ret
 FreeReq      Endp
 
@@ -2507,8 +2322,8 @@ NotifyFileData  Proc near
     int 3
     mov ds,ebx
     EnterSection ds:kf_section
-;    mov eax,gs:vfs_rd_start
-;    mov edx,gs:vfs_rd_start+4
+    mov es,ds:kf_serv_sel
+    mov eax,gs:vfs_rd_index
     push ecx
     call FindReadReq
     mov ebp,ecx

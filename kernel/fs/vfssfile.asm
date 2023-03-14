@@ -60,6 +60,7 @@ code    SEGMENT byte public 'CODE'
     extern NotifyFileData:near
     extern NotifyFileUpdate:near
     extern UnlinkRequest:near
+    extern AddFileReq:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1385,6 +1386,9 @@ serv_add_file_req    Proc far
     mov esi,ebx
     movzx ebx,bx
     call AllocateFileReq
+    jc safLeave
+;
+    call AddFileReq
     jc safLeave
 ;
     push edx
