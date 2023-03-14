@@ -479,22 +479,66 @@ AddUpdate   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           FindReadReq
+;       NAME:           FindReq
 ;
-;       DESCRIPTION:    Find a read req. Section must be taken!
+;       DESCRIPTION:    Find a req. Section must be taken!
 ;
 ;       PARAMETERS:     DS             File sel
 ;                       EDX:EAX        Position
 ;
 ;       RETURNS:        EBX            Req offset
-;                       ECX            Sort index
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindReadReq     Proc near
+FindReq     Proc near
+    push es
+    push ecx
+    push esi
+    push edi
+    push ebp
+;
+    mov es,ds:kf_serv_sel
+    mov ebp,es:frs_count
+    or ebp,ebp
     stc
+    jz frDone
+;
+    int 3
+    mov ebx,OFFSET frs_sorted
+ 
+frLoop:
+    movzx ecx,byte ptr es:[ebx]
+    shl ecx,4
+    mov esi,eax
+    mov edi,edx
+    sub esi,es:[ecx].frs_arr.fre_pos
+    sbb edi,es:[ecx].frs_arr.fre_pos+4
+    jb frDone
+    jnz frNext
+;
+    cmp esi,es:[ecx].frs_arr.fre_size
+    jae frNext
+;
+    movzx ebx,byte ptr es:[ebx]
+    mov ebx,ds:[4*ebx].kf_handle_arr
+    clc
+    jmp frDone
+
+frNext:
+    inc ebx
+    sub ebp,1
+    jnz frLoop
+;
+    stc
+
+frDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop es
     ret
-FindReadReq  Endp
+FindReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1082,7 +1126,7 @@ LockReq      Proc near
     mov ds,ebx
 ;
     EnterSection ds:kf_section
-    call FindReadReq
+    call FindReq
     jc lrLeave
 ;
     mov ecx,ds:[ebx].kre_phys_arr
@@ -1128,9 +1172,7 @@ IssueReq      Proc near
 
 irRetry:
     EnterSection ds:kf_section
-    push ecx
-    call FindReadReq
-    pop ecx
+    call FindReq
     jnc irCheck
 ;
     call AddWaitReq
