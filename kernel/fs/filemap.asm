@@ -325,9 +325,27 @@ AddFileReq   Proc near
 ;
     mov esi,edx
     dec esi
+    mov edi,esi
+    shl edi,2
     shl esi,4
     add esi,OFFSET frs_arr
-    mov es:[esi].fre_handle,edx
+;
+    mov cx,SIZE kernel_req_entry
+    AllocateBlk
+    mov ds:[edi].kf_handle_arr,edx
+;
+    mov eax,es:[esi].fre_pos
+    mov ds:[edx].kre_pos,eax
+    mov eax,es:[esi].fre_pos+4
+    mov ds:[edx].kre_pos+4,eax
+;
+    mov eax,es:[esi].fre_size
+    mov ds:[edx].kre_size,eax
+;
+    mov ds:[edx].kre_pages,0
+    mov ds:[edx].kre_block_arr,0
+    mov ds:[edx].kre_phys_arr,0
+    mov ds:[edx].kre_usage,0
 ;
     mov ebx,OFFSET frs_sorted
     inc es:frs_count
@@ -736,6 +754,7 @@ MergeReadReq  Proc near
 ;
     cmp eax,ds:[edi].kre_size
     jnz mrrDone
+
 ;
     mov edx,ds:[edi].kre_phys_arr
     mov edx,ds:[edx]
