@@ -239,8 +239,9 @@ UpdateFiles     Endp
 ;
 ;       PARAMETERS:     FS          Part sel
 ;                       EBX         VFS handle
-;                       CX          Sector size
+;                       ECX         Req block linear
 ;                       EDX         File info linear
+;                       DI          Sector size
 ;
 ;       RETURNS:        EBX         File handle
 ;
@@ -300,6 +301,7 @@ AllocateFileHandle Endp
 ;       DESCRIPTION:    Serv open VFS file req
 ;
 ;       PARAMETERS:     EBX            VFS handle
+;                       ECX            Req block
 ;                       EDX            File info
 ;
 ;       RETURNS:        EBX            Handle
@@ -312,19 +314,20 @@ serv_open_file    Proc far
     push ds
     push fs
     push eax
-    push ecx
+    push edi
 ;
     call HandleToPartFs
 ;
     mov ds,fs:vfsp_disc_sel
-    mov cx,ds:vfs_bytes_per_sector
+    mov di,ds:vfs_bytes_per_sector
 ;
     mov ax,system_data_sel
     mov ds,ax
+    add ecx,ds:flat_base
     add edx,ds:flat_base
     call AllocateFileHandle
 ;
-    pop ecx
+    pop edi
     pop eax
     pop fs
     pop ds

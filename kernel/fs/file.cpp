@@ -101,7 +101,20 @@ TFile::~TFile()
 ##########################################################################*/
 void TFile::Setup(int VfsHandle, int ServFileHandle)
 {
+    int i;
+
     Req = (struct TFileReq *)RdosAllocateMem(0x1000);
+    Req->Count = 0;
+    for (i = 0; i < 240; i++)
+    {
+        Req->ReqArr[i].Pos = 0;
+        Req->ReqArr[i].Size = 0;
+        Req->ReqArr[i].Handle = 0;
+    }
+
+    for (i = 0; i < 241; i++)
+        Req->SortedArr[i] = 0xFF;
+
     Info->ServHandle = ServFileHandle;
     Info->KernelHandle = ServOpenVfsFile(VfsHandle, Info, Req);
 }

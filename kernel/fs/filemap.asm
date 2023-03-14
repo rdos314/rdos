@@ -78,8 +78,10 @@ kf_sector_size    DW ?
 kf_section        section_typ <>
 kf_map_list       DW ?
 kf_part_sel       DW ?
+kf_serv_sel       DW ?
 kf_update_count   DW ?
 kf_req_sync       DW ?
+kf_resv           DW ?
 kf_count          DD ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
@@ -209,8 +211,9 @@ GetFileSel     Endp
 ;
 ;       PARAMETERS:     FS             Part sel
 ;                       EBX            VFS handle
-;                       CX             Sector size
+;                       ECX            Req block linear
 ;                       EDX            File info linear
+;                       DI             Sector size
 ;
 ;       RETURNS:        NC
 ;                         AX           File sel
@@ -232,7 +235,7 @@ CreateFileSel   Proc near
     CreateBlk
 ;
     InitSection ds:kf_section
-    mov ds:kf_sector_size,cx
+    mov ds:kf_sector_size,di
     mov ds:kf_map_list,0
     mov ds:kf_part_sel,fs
     mov ds:kf_count,0
@@ -240,6 +243,8 @@ CreateFileSel   Proc near
     mov ds:kf_wait_list,0
     mov ds:kf_update_count,0
     mov ds:kf_req_sync,0
+;
+    push ecx
 ;
     mov ecx,256
     mov edi,OFFSET kf_sorted_arr
@@ -257,6 +262,22 @@ cfInit:
     and ax,0F000h
     mov ds:kf_info_phys,eax
     mov ds:kf_info_phys+4,ebx
+;
+    pop edx
+    GetPageEntry
+    or ax,800h
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector32
+    int 3
+    mov ds:kf_serv_sel,bx
 ;
     mov ax,ds
 ;
