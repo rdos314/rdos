@@ -177,7 +177,7 @@ ServCloseVfsFile  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
-; IN  EDX:EAX          Start pos
+; IN  EDX              Req index
 ; IN  ECX              Sector count
 ; IN  ESI              Src of request
 ; IN  ES:EDI           Sector buffer

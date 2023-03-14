@@ -1354,7 +1354,7 @@ AllocateFileReq Endp
 ;       DESCRIPTION:    Serv add VFS file req
 ;
 ;       PARAMETERS:     EBX            File handle
-;                       EDX:EAX        File pos
+;                       EDX            Req index
 ;                       ECX            Sector count
 ;                       ESI            Src of req
 ;                       ES:EDI         Sector buf
@@ -1374,10 +1374,8 @@ serv_add_file_req    Proc far
     push esi
     push ebp
 ;
-    push eax
     mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
-    pop eax
     jc safLeave
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
@@ -1389,7 +1387,6 @@ serv_add_file_req    Proc far
     call AllocateFileReq
     jc safLeave
 ;
-    push eax
     push edx
 ;
     mov eax,es
@@ -1400,11 +1397,9 @@ serv_add_file_req    Proc far
     call CreateReqSel
 ;
     pop edx
-    pop eax
     jc safFail
 ;
-    mov es:vfs_rd_start,eax
-    mov es:vfs_rd_start+4,edx
+    mov es:vfs_rd_index,edx
     mov es:vfs_rd_req_handle,0
     mov es:vfs_rd_req_sel,0
 ;

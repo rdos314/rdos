@@ -2507,8 +2507,8 @@ NotifyFileData  Proc near
     int 3
     mov ds,ebx
     EnterSection ds:kf_section
-    mov eax,gs:vfs_rd_start
-    mov edx,gs:vfs_rd_start+4
+;    mov eax,gs:vfs_rd_start
+;    mov edx,gs:vfs_rd_start+4
     push ecx
     call FindReadReq
     mov ebp,ecx

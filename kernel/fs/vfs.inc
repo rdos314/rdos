@@ -266,7 +266,7 @@ vfs_read_entry  STRUC
 
 vfs_rd_header         vfs_req_base <>
 
-vfs_rd_start          DD ?,?
+vfs_rd_index          DD ?
 vfs_rd_file_handle    DD ?
 vfs_rd_req_handle     DD ?
 vfs_rd_req_sel        DW ?
