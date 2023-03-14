@@ -752,15 +752,14 @@ CalcPageCount  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           MergeReadReq
+;       NAME:           MergeReq
 ;
-;       DESCRIPTION:    Merge read req with previous req
+;       DESCRIPTION:    Merge req with previous req
 ;
 ;       PARAMETERS:     DS                 File sel
 ;                       FS                 Part sel
-;                       EBX                Req offset
+;                       EBX                Req index
 ;                       ECX                Buffered blocks
-;                       EBP                Req index
 ;                       GS:ESI             Sector array
 ;
 ;       RETURNS:        ECX                Remaining blocks
@@ -768,7 +767,7 @@ CalcPageCount  Endp
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MergeReadReq  Proc near
+MergeReq  Proc near
     push ds
     push es
     push fs
@@ -781,23 +780,29 @@ MergeReadReq  Proc near
     push esi
     sub esp,4
 ;
-    or ebp,ebp
+    or ebx,ebx
     jz mrrDone
 ;
-    mov edi,ebp
-    dec edi
-    mov edi,ds:[4*edi].kf_handle_arr
+    int 3
+    mov es,ds:kf_serv_sel
+    shl ebx,4
+    add ebx,OFFSET frs_arr
+    mov edi,ebx
+    sub edi,10h
 ;
-    mov eax,ds:[ebx].kre_pos
-    mov edx,ds:[ebx].kre_pos+4
-    sub eax,ds:[edi].kre_pos
-    sbb edx,ds:[edi].kre_pos+4
+    mov eax,es:[ebx].fre_pos
+    mov edx,es:[ebx].fre_pos+4
+    sub eax,es:[edi].fre_pos
+    sbb edx,es:[edi].fre_pos+4
     or edx,edx
     jnz mrrDone
 ;
-    cmp eax,ds:[edi].kre_size
+    cmp eax,es:[edi].fre_size
     jnz mrrDone
-
+;
+    sub edi,OFFSET frs_arr
+    shr edi,2
+    mov edi,ds:[edi].kf_handle_arr
 ;
     mov edx,ds:[edi].kre_phys_arr
     mov edx,ds:[edx]
@@ -805,6 +810,10 @@ MergeReadReq  Proc near
     and edx,0FFFh
     mov [esp],edx
     jz mrrDone
+;
+    xor eax,eax
+    push eax
+    push ebx
 ;
     movzx edx,ds:[edi].kre_pages
     dec edx
@@ -819,35 +828,45 @@ MergeReadReq  Proc near
     pop fs
 
 mrrLoop:
-    mov esi,[esp+4]
+    mov esi,[esp+12]
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
     call BlockToPhys
-    jc mrrDone
+    jc mrrUpdate
 ;
     test ax,0FFFh
-    jz mrrDone
+    jz mrrUpdate
 ;
     sub eax,fs:[ebp]
     sbb edx,fs:[ebp+4]
-    jnz mrrDone
+    jnz mrrUpdate
 ;
-    cmp eax,[esp]
-    jne mrrDone
+    cmp eax,[esp+8]
+    jne mrrUpdate
 ;
-    add fs:[ebx].kre_pos,200h
-    adc fs:[ebx].kre_pos+4,0
-    add fs:[edi].kre_size,200h
-    add dword ptr [esp+4],8
+    add dword ptr [esp+4],200h
+    add dword ptr [esp+12],8
     sub ecx,1
-    jz mrrDone
+    jz mrrUpdate
 ;
     add eax,200h
     test eax,0FFFh
+    jz mrrUpdate
+;
+    mov [esp+8],eax
+    jmp mrrLoop
+
+mrrUpdate:
+    pop ebx
+    pop eax
+    or eax,eax
     jz mrrDone
 ;
-    mov [esp],eax
-    jmp mrrLoop
+    mov es,fs:kf_serv_sel
+    add es:[ebx].fre_pos,eax
+    adc es:[ebx].fre_pos+4,0
+    sub ebx,10h
+    add es:[ebx].fre_size,eax
 
 mrrDone:
     add esp,4
@@ -862,7 +881,7 @@ mrrDone:
     pop es
     pop ds
     ret
-MergeReadReq  Endp
+MergeReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2463,25 +2482,20 @@ NotifyFileData  Proc near
 ;
     mov ds,ebx
     mov es,ds:kf_serv_sel
-    mov eax,gs:vfs_rd_index
-    or eax,eax
+    mov ebx,gs:vfs_rd_index
+    or ebx,ebx
     stc
     je nfdDone
 ;
     EnterSection ds:kf_section
 ;
-    mov ebp,eax
-    dec ebp
-    mov ebx,ebp
-    shl ebx,2
-    xchg eax,es:[ebx].frs_arr.fre_handle
+    dec ebx
+    xchg eax,es:[4*ebx].frs_arr.fre_handle
     cmp eax,-1
     jne nfdLeave
 ;
-    mov ebx,ds:[ebx].kf_handle_arr
     mov esi,gs:vfs_rd_chain_ptr
-    call MergeReadReq
-;
+    call MergeReq
     call CalcPageCount
     call SetupReadReq
     call ProcessReadReq
