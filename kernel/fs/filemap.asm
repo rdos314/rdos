@@ -276,7 +276,6 @@ cfInit:
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector32
-    int 3
     mov ds:kf_serv_sel,bx
 ;
     mov ax,ds
@@ -1175,15 +1174,7 @@ irRetry:
     pop ecx
     jnc irCheck
 ;
-    mov esi,eax
-    and ax,0F000h
-    and esi,0FFFh
-    add ecx,esi
-    dec ecx
-    and cx,0F000h
-    add ecx,1000h
-;
-    call AddReadReq
+;    call AddReadReq
     call AddWaitReq
     call SendReadReq
 ;
