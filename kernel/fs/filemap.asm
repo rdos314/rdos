@@ -503,7 +503,6 @@ FindReq     Proc near
     stc
     jz frDone
 ;
-    int 3
     mov ebx,OFFSET frs_sorted
  
 frLoop:
@@ -767,6 +766,18 @@ CalcPageCount  Endp
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+mr_struc   STRUC
+
+mrs_prev_index    DB ?
+mrs_curr_index    DB ?
+mrs_count         DW ?
+mrs_pos           DD ?
+mrs_blocks        DD ?
+mrs_offset        DD ?
+mrs_ptr           DD ?
+
+mr_struc   ENDS
+
 MergeReq  Proc near
     push ds
     push es
@@ -777,18 +788,48 @@ MergeReq  Proc near
     push edi
     push ebp
 ;
-    push esi
-    sub esp,4
+    sub esp,SIZE mr_struc
+    mov ebp,esp
 ;
-    or ebx,ebx
+    mov es,ds:kf_serv_sel
+    mov [ebp].mrs_blocks,ecx
+    mov [ebp].mrs_pos,esi
+    mov [ebp].mrs_count,0
+;
+    mov ecx,es:frs_count
+    or ecx,ecx
     jz mrrDone
 ;
+    mov edi,OFFSET frs_sorted
+    cmp bl,es:[edi]
+    je mrrDone
+;
+    inc edi
+    sub ecx,1
+    jz mrrDone
+
+mrrFind:
+    cmp bl,es:[edi]
+    je mrrFound
+;
+    inc edi
+    loop mrrFind
+;
     int 3
-    mov es,ds:kf_serv_sel
+    jmp mrrDone
+
+mrrFound:
+    mov [ebp].mrs_curr_index,bl
+    mov al,es:[edi-1]
+    mov [ebp].mrs_prev_index,al
+;
+    movzx edi,al
+    shl edi,4
+    add edi,OFFSET frs_arr
+;
+    movzx ebx,bl
     shl ebx,4
     add ebx,OFFSET frs_arr
-    mov edi,ebx
-    sub edi,10h
 ;
     mov eax,es:[ebx].fre_pos
     mov edx,es:[ebx].fre_pos+4
@@ -800,26 +841,20 @@ MergeReq  Proc near
     cmp eax,es:[edi].fre_size
     jnz mrrDone
 ;
-    sub edi,OFFSET frs_arr
-    shr edi,2
-    mov edi,ds:[edi].kf_handle_arr
-;
+    movzx edi,[ebp].mrs_prev_index
+    mov edi,ds:[4*edi].kf_handle_arr
     mov edx,ds:[edi].kre_phys_arr
     mov edx,ds:[edx]
     add edx,eax
     and edx,0FFFh
-    mov [esp],edx
+    mov [ebp].mrs_offset,edx
     jz mrrDone
-;
-    xor eax,eax
-    push eax
-    push ebx
 ;
     movzx edx,ds:[edi].kre_pages
     dec edx
     shl edx,3
     add edx,ds:[edi].kre_phys_arr
-    mov ebp,edx
+    mov [ebp].mrs_ptr,edx
 ;
     push ds
     mov ds,fs:vfsp_disc_sel
@@ -828,7 +863,7 @@ MergeReq  Proc near
     pop fs
 
 mrrLoop:
-    mov esi,[esp+12]
+    mov esi,[ebp].mrs_pos
     mov eax,gs:[esi]
     mov edx,gs:[esi+4]
     call BlockToPhys
@@ -837,40 +872,47 @@ mrrLoop:
     test ax,0FFFh
     jz mrrUpdate
 ;
-    sub eax,fs:[ebp]
-    sbb edx,fs:[ebp+4]
+    mov esi,[ebp].mrs_ptr
+    sub eax,fs:[esi]
+    sbb edx,fs:[esi+4]
     jnz mrrUpdate
 ;
-    cmp eax,[esp+8]
+    cmp eax,[ebp].mrs_offset
     jne mrrUpdate
 ;
-    add dword ptr [esp+4],200h
-    add dword ptr [esp+12],8
-    sub ecx,1
+    add [ebp].mrs_count,200h
+    add [ebp].mrs_pos,8
+    sub [ebp].mrs_blocks,1
     jz mrrUpdate
 ;
     add eax,200h
     test eax,0FFFh
     jz mrrUpdate
 ;
-    mov [esp+8],eax
+    mov [ebp].mrs_offset,eax
     jmp mrrLoop
 
 mrrUpdate:
-    pop ebx
-    pop eax
+    movzx eax,[ebp].mrs_count
     or eax,eax
     jz mrrDone
 ;
-    mov es,fs:kf_serv_sel
-    add es:[ebx].fre_pos,eax
-    adc es:[ebx].fre_pos+4,0
-    sub ebx,10h
-    add es:[ebx].fre_size,eax
+    mov ds,fs:kf_serv_sel
+    movzx ebx,[ebp].mrs_curr_index
+    shl ebx,4
+    add ebx,OFFSET frs_arr
+    add ds:[ebx].fre_pos,eax
+    adc ds:[ebx].fre_pos+4,0
+;
+    movzx ebx,[ebp].mrs_prev_index
+    shl ebx,4
+    add ebx,OFFSET frs_arr
+    add ds:[ebx].fre_size,eax
 
 mrrDone:
-    add esp,4
-    pop esi
+    mov ecx,[ebp].mrs_blocks
+    mov esi,[ebp].mrs_pos
+    add esp,SIZE mr_struc
 ;
     pop ebp
     pop edi
@@ -931,7 +973,7 @@ SetupReadReq  Endp
 ;       PARAMETERS:     DS                 File sel
 ;                       FS                 Part sel
 ;                       AX                 Pages needed
-;                       EBX                Req linear
+;                       EBX                Req offset
 ;                       ECX                Buffered blocks
 ;                       GS:ESI             Sector array
 ;                       
@@ -2489,13 +2531,18 @@ NotifyFileData  Proc near
 ;
     EnterSection ds:kf_section
 ;
+    int 3
     dec ebx
-    xchg eax,es:[4*ebx].frs_arr.fre_handle
+    mov esi,ebx
+    shl esi,4
+    xchg eax,es:[esi].frs_arr.fre_handle
     cmp eax,-1
     jne nfdLeave
 ;
     mov esi,gs:vfs_rd_chain_ptr
     call MergeReq
+;
+    mov ebx,ds:[4*ebx].kf_handle_arr
     call CalcPageCount
     call SetupReadReq
     call ProcessReadReq
