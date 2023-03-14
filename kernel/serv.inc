@@ -164,6 +164,7 @@ ServToSystemShareBlock  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
+; IN  ECX              Req block
 ; IN  EDX              File info
 ; OUT BX               Kernel handle
 ServOpenVfsFile  MACRO

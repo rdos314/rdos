@@ -64,6 +64,8 @@ TFile::TFile(TDir *pd, int pi)
     Info->ServHandle = 0;
     strcpy(Info->Name, entry->PathName);
 
+    Req = 0;
+
     Parent->UnlockEntry(entry);
 }
 
@@ -81,6 +83,8 @@ TFile::TFile(TDir *pd, int pi)
 TFile::~TFile()
 {
     RdosFreeMem(Info);
+    if (Req)
+        RdosFreeMem(Req);
     Parent->ClearFileLink(ParentIndex);
 }
 
@@ -97,8 +101,9 @@ TFile::~TFile()
 ##########################################################################*/
 void TFile::Setup(int VfsHandle, int ServFileHandle)
 {
+    Req = (struct TFileReq *)RdosAllocateMem(0x1000);
     Info->ServHandle = ServFileHandle;
-    Info->KernelHandle = ServOpenVfsFile(VfsHandle, Info);
+    Info->KernelHandle = ServOpenVfsFile(VfsHandle, Info, Req);
 }
 
 /*##########################################################################

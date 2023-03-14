@@ -48,6 +48,20 @@ struct TFileInfo
     char Name[1];
 };
 
+struct TFileReqEntry
+{
+    long long Pos;
+    int Size;
+    int Handle;
+};
+
+struct TFileReq
+{
+    unsigned char SortedArr[241];
+    char Resv[11];
+    int Count;
+    struct TFileReqEntry ReqArr[240];
+};
 
 class TFile
 {
@@ -69,6 +83,7 @@ public:
     int GetAttrib();
 
     struct TFileInfo *Info;
+    struct TFileReq *Req;
 
 protected:
     TDir *Parent;
