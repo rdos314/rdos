@@ -77,13 +77,11 @@ kf_section        section_typ <>
 kf_map_list       DW ?
 kf_part_sel       DW ?
 kf_serv_sel       DW ?
-kf_update_count   DW ?
 kf_req_sync       DW ?
 kf_resv           DW ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 kf_handle_arr     DD 240 DUP(?)
-kf_update_arr     DB 32 DUP(?)
 
 kernel_file       ENDS
 
@@ -237,7 +235,6 @@ CreateFileSel   Proc near
     mov ds:kf_part_sel,fs
     mov ds:kf_serv_handle,ebx
     mov ds:kf_wait_list,0
-    mov ds:kf_update_count,0
     mov ds:kf_req_sync,0
 ;
     push ecx
@@ -394,76 +391,6 @@ afrDone:
     pop ds
     ret
 AddFileReq   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddUpdate
-;
-;       DESCRIPTION:    Add to update
-;
-;       PARAMETERS:     DS             File sel
-;                       EBX            Req id
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddUpdate     Proc near
-    push fs
-    push ebx
-    push ecx
-    push esi
-;
-    mov esi,OFFSET kf_update_arr
-    movzx ecx,ds:kf_update_count
-    cmp ecx,32
-    jb auNoOv
-;
-    int 3
-
-auNoOv:
-    or ecx,ecx
-    jz auIns
-
-auCheck:
-    cmp bl,ds:[esi]
-    je auDone
-;
-    inc esi
-    loop auCheck
-
-auIns:
-    movzx esi,ds:kf_update_count
-    mov ds:[esi].kf_update_arr,bl
-    inc ds:kf_update_count
-;
-    or esi,esi
-    jnz auDone
-;
-    mov fs,ds:kf_part_sel
-    mov ebx,ds:kf_serv_handle
-    dec ebx
-    cmp ebx,MAX_VFS_FILE_COUNT
-    jae auDone
-;
-    mov esi,OFFSET vfsp_file_update_map
-    bts fs:[esi],ebx
-    jc auDone
-;
-    mov al,1
-    xchg al,fs:vfsp_update_req
-    or al,al
-    jnz auDone
-;
-    mov bx,fs:vfsp_cmd_thread
-    Signal
-
-auDone:
-    pop esi
-    pop ecx
-    pop ebx
-    pop fs
-    ret
-AddUpdate   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1331,6 +1258,10 @@ FreeReq      Proc near
     sub ds:[esi].kre_usage,1
     jnz frLeave
 ;
+    int 3
+    shl ebx,4
+    or es:[ebx].frs_arr.fre_handle,80000000h
+;
     mov esi,OFFSET frs_sorted
     mov ecx,es:frs_count
 
@@ -1351,11 +1282,19 @@ frMove:
 ;
     dec es:frs_count
 ;
-    call AddUpdate
+    mov al,1
+    xchg al,es:frs_update
+    or al,al
+    jnz frLeave
+;
+    LeaveSection ds:kf_section
+    call SendUpdateReq
+    jmp frEnd
 
 frLeave:
     LeaveSection ds:kf_section
-;
+
+frEnd:
     pop esi
     pop edx
     pop ecx
@@ -2666,55 +2605,6 @@ nfdDone:
     pop ds
     ret
 NotifyFileData  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           NotifyFileUpdate
-;
-;       DESCRIPTION:    Notify file data
-;
-;       PARAMETERS:     DS                 File sel
-;                       FS                 Part sel                       
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public NotifyFileUpdate
-
-NotifyFileUpdate  Proc near
-    push es
-    push gs
-    pushad
-;
-    mov ax,serv_flat_sel
-    mov es,eax
-    mov gs,fs:vfsp_disc_sel
-    EnterSection ds:kf_section
-;
-    mov esi,OFFSET kf_update_arr
-    movzx ecx,ds:kf_update_count
-    or ecx,ecx
-    jz nfuUpdateOk
-;
-    call SendUpdateReq
-
-nfuUpdateOk:
-    mov ax,ds:kf_map_list
-    or ax,ax
-    jnz nfuLeave
-;
-    call SendCloseReq
-    jmp nfuDone
-
-nfuLeave:
-    LeaveSection ds:kf_section
-
-nfuDone:
-    popad
-    pop gs
-    pop es
-    ret
-NotifyFileUpdate  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -93,7 +93,6 @@ code    SEGMENT byte public 'CODE'
     extern InitFilePart:near
     extern GetFileReq:near
     extern NotifyFileData:near
-    extern UpdateFiles:near
     extern FreeReqSel:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2115,7 +2114,6 @@ wfcRetry:
     stc
     jnz wfcDone
 ;
-    call UpdateFiles
     WaitForSignal
 
 wfcCheck:

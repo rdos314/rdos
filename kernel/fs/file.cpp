@@ -106,6 +106,7 @@ void TFile::Setup(int VfsHandle, int ServFileHandle)
 
     Req = (struct TFileReq *)RdosAllocateMem(0x1000);
     Req->Count = 0;
+    Req->Update = 0;
     for (i = 0; i < 240; i++)
     {
         Req->ReqArr[i].Pos = 0;

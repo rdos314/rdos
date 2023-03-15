@@ -58,7 +58,8 @@ struct TFileReqEntry
 struct TFileReq
 {
     unsigned char SortedArr[241];
-    char Resv[11];
+    char Resv[10];
+    char Update;
     int Count;
     struct TFileReqEntry ReqArr[240];
 };

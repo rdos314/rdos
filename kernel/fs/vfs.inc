@@ -202,7 +202,6 @@ vfsp_req_list             DW ?
 vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
 vfsp_file_arr             DW MAX_VFS_FILE_COUNT DUP(?,?,?,?)
 vfsp_file_req_arr         DW MAX_VFS_FILE_REQ_COUNT DUP(?,?)
-vfsp_file_update_map      DB MAX_VFS_FILE_COUNT SHR 3 DUP(?)
 
 vfsp_app_sel              DW ?
 vfsp_disc_sel             DW ?
@@ -210,7 +209,6 @@ vfsp_flag                 DW ?
 vfsp_disc_nr              DB ?
 vfsp_part_nr              DB ?
 vfsp_drive_nr             DB ?
-vfsp_update_req           DB ?
 
 vfs_part  ENDS
 

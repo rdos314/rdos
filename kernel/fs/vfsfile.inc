@@ -53,7 +53,8 @@ file_req_entry   ENDS
 file_req_struc   STRUC
 
 frs_sorted       DB 241 DUP(?)
-frs_resv         DB 11 DUP(?)
+frs_resv         DB 10 DUP(?)
+frs_update       DB ?
 frs_count        DD ?
 frs_arr          DB 16 * 240 DUP(?)
 
