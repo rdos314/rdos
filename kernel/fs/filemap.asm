@@ -403,7 +403,7 @@ AddFileReq   Endp
 ;       DESCRIPTION:    Add to update
 ;
 ;       PARAMETERS:     DS             File sel
-;                       EBX            Req offset
+;                       EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1272,12 +1272,61 @@ IssueReq    Endp
 ;       DESCRIPTION:    Free req
 ;
 ;       PARAMETERS:     GS             File sel
-;                       EBX            Entry
+;                       EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeReq      Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
     int 3
+    mov esi,gs
+    mov ds,esi
+    mov es,ds:kf_serv_sel
+    EnterSection ds:kf_section
+;
+    mov esi,ds:[4*ebx].kf_handle_arr
+    sub ds:[esi].kre_usage,1
+    jnz frLeave
+;
+    mov esi,OFFSET frs_sorted
+    mov ecx,es:frs_count
+
+frFind:
+    cmp ebx,es:[esi]
+    je frMove
+;
+    add esi,4
+    loop frFind
+;
+    jmp frLeave
+
+frMove:
+    mov eax,es:[esi+4]
+    mov es:[esi],eax
+    add esi,4
+    loop frMove
+;
+    dec es:frs_count
+;
+    call AddUpdate
+
+frLeave:
+    LeaveSection ds:kf_section
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
     ret
 FreeReq      Endp
 
@@ -1404,7 +1453,7 @@ FindReadMap  Endp
 ;       DESCRIPTION:    Add read map entry
 ;
 ;       PARAMETERS:     DS             Kernel processes
-;                       EDI            Src pointer            
+;                       EDI            Req id            
 ;
 ;       RETURNS:        BX             Entry offset
 ;
@@ -1743,6 +1792,7 @@ UpdateUnlinked  Proc near
     or eax,eax
     jz uuDone
 ;
+    int 3
     push fs
     push ebx
 ;
@@ -1785,8 +1835,10 @@ UpdateMap  Proc near
     mov ds,eax
     mov es,ds:kfm_kernel_sel
     mov ebx,OFFSET fm_sorted_arr
-    mov ecx,240
+    mov ecx,es:fm_count
     EnterSection ds:kfm_section
+    or ecx,ecx
+    jz umLeave
 
 umLoop:
     mov al,es:[ebx]
@@ -1841,8 +1893,8 @@ SyncMap  Proc near
     mov edx,fs:[edi].fre_pos+4
     mov ecx,fs:[edi].fre_size
 ;
-    mov ebx,gs:[4*ebx].kf_handle_arr
     mov edi,ebx
+    mov ebx,gs:[4*ebx].kf_handle_arr
 ;
     mov esi,gs:[ebx].kre_phys_arr
     movzx ebp,gs:[ebx].kre_pages
@@ -1854,8 +1906,13 @@ SyncMap  Proc near
     pop ecx
     jc smAdd
 ;
-    dec gs:[edi].kre_usage
+    cmp ecx,es:[ebx].fm_entry_arr.fmb_size
+    stc
+    je smLeave
+;
     mov es:[ebx].fm_entry_arr.fmb_size,ecx
+    mov edi,gs:[4*edi].kf_handle_arr
+    dec gs:[edi].kre_usage
     stc
     jmp smLeave
 
