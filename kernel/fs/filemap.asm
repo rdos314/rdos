@@ -83,7 +83,7 @@ kf_resv           DW ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 kf_handle_arr     DD 240 DUP(?)
-kf_update_arr     DD 32 DUP(?)
+kf_update_arr     DB 32 DUP(?)
 
 kernel_file       ENDS
 
@@ -242,7 +242,7 @@ CreateFileSel   Proc near
 ;
     push ecx
 ;
-    mov ecx,256
+    mov ecx,240
     mov edi,OFFSET kf_handle_arr
     mov eax,-1
 
@@ -425,15 +425,15 @@ auNoOv:
     jz auIns
 
 auCheck:
-    cmp ebx,ds:[esi]
+    cmp bl,ds:[esi]
     je auDone
 ;
-    add esi,4
+    inc esi
     loop auCheck
 
 auIns:
     movzx esi,ds:kf_update_count
-    mov ds:[4*esi].kf_update_arr,ebx
+    mov ds:[esi].kf_update_arr,bl
     inc ds:kf_update_count
 ;
     or esi,esi
@@ -1084,7 +1084,7 @@ SignalReadReq  Endp
 ;                       ES                 Serv flat sel
 ;                       FS                 Part sel                       
 ;                       GS                 Disc sel
-;                       EBX                Req offset
+;                       EBX                Req id
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1286,7 +1286,6 @@ FreeReq      Proc near
     push edx
     push esi
 ;
-    int 3
     mov esi,gs
     mov ds,esi
     mov es,ds:kf_serv_sel
@@ -2651,6 +2650,7 @@ NotifyFileUpdate  Proc near
     push gs
     pushad
 ;
+    int 3
     mov ax,serv_flat_sel
     mov es,eax
     mov gs,fs:vfsp_disc_sel
@@ -2662,9 +2662,9 @@ NotifyFileUpdate  Proc near
     jz nfuReset
 
 nfuLoop:
-    mov ebx,ds:[esi]
+    movzx ebx,byte ptr ds:[esi]
     call UpdateReq
-    add esi,4
+    inc esi
     loop nfuLoop
 
 nfuReset:
