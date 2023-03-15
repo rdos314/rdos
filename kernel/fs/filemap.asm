@@ -52,8 +52,6 @@ file_handle_seg     ENDS
 
 kernel_req_entry  STRUC
 
-kre_pos           DD ?,?
-kre_size          DD ?
 kre_block_arr     DD ?
 kre_phys_arr      DD ?
 kre_next          DD ?
@@ -333,15 +331,6 @@ AddFileReq   Proc near
     mov cx,SIZE kernel_req_entry
     AllocateBlk
     mov ds:[edi].kf_handle_arr,edx
-;
-    mov eax,es:[esi].fre_pos
-    mov ds:[edx].kre_pos,eax
-    mov eax,es:[esi].fre_pos+4
-    mov ds:[edx].kre_pos+4,eax
-;
-    mov eax,es:[esi].fre_size
-    mov ds:[edx].kre_size,eax
-;
     mov ds:[edx].kre_pages,0
     mov ds:[edx].kre_block_arr,0
     mov ds:[edx].kre_phys_arr,0
@@ -486,7 +475,7 @@ AddUpdate   Endp
 ;       PARAMETERS:     DS             File sel
 ;                       EDX:EAX        Position
 ;
-;       RETURNS:        EBX            Req offset
+;       RETURNS:        EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -518,8 +507,6 @@ frLoop:
     cmp esi,es:[ecx].frs_arr.fre_size
     jae frNext
 ;
-    movzx ebx,byte ptr es:[ebx]
-    mov ebx,ds:[4*ebx].kf_handle_arr
     clc
     jmp frDone
 
@@ -903,18 +890,9 @@ mrrUpdate:
     add ds:[ebx].frs_arr.fre_pos,eax
     adc ds:[ebx].frs_arr.fre_pos+4,0
 ;
-    movzx ebx,[ebp].mrs_curr_index
-    mov ebx,fs:[4*ebx].kf_handle_arr
-    add fs:[ebx].kre_pos,eax
-    adc fs:[ebx].kre_pos+4,0
-;
     movzx ebx,[ebp].mrs_prev_index
     shl ebx,4
     add ds:[ebx].frs_arr.fre_size,eax
-;
-    movzx ebx,[ebp].mrs_prev_index
-    mov ebx,fs:[4*ebx].kf_handle_arr
-    add fs:[ebx].kre_size,eax
 
 mrrDone:
     mov ecx,[ebp].mrs_blocks
@@ -940,21 +918,27 @@ MergeReq  Endp
 ;       DESCRIPTION:    Setup read req
 ;
 ;       PARAMETERS:     DS                 File sel
-;                       EBX                Req offset
+;                       EBX                Req id
 ;                       AX                 Pages
 ;                       ECX                Blocks
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupReadReq   Proc near
+    push es
     push eax
+    push ebx
     push ecx
     push edx
 ;
-    mov ds:[ebx].kre_pages,ax
     shl ecx,9
-    mov ds:[ebx].kre_size,ecx
+    mov es,ds:kf_serv_sel
+    mov edx,ebx
+    shl edx,4
+    mov es:[edx].frs_arr.fre_size,ecx
 ;
+    mov ebx,ds:[4*ebx].kf_handle_arr
+    mov ds:[ebx].kre_pages,ax
     mov cx,ax
     shl cx,2
     AllocateBlk
@@ -966,7 +950,9 @@ SetupReadReq   Proc near
 ;
     pop edx
     pop ecx
+    pop ebx
     pop eax
+    pop es
     ret
 SetupReadReq  Endp
 
@@ -980,7 +966,7 @@ SetupReadReq  Endp
 ;       PARAMETERS:     DS                 File sel
 ;                       FS                 Part sel
 ;                       AX                 Pages needed
-;                       EBX                Req offset
+;                       EBX                Req id
 ;                       ECX                Buffered blocks
 ;                       GS:ESI             Sector array
 ;                       
@@ -1000,6 +986,7 @@ ProcessReadReq  Proc near
     mov es,eax
     pop fs
 ;
+    mov ebx,fs:[4*ebx].kf_handle_arr
     mov edi,fs:[ebx].kre_block_arr
     mov ebp,fs:[ebx].kre_phys_arr
 ;
@@ -1110,7 +1097,8 @@ UpdateReq  Proc near
 
 urFree:
     mov ebp,ebx
-    mov ecx,ds:[ebx].kre_size
+    int 3
+;    mov ecx,ds:[ebx].kre_size
     mov edi,ds:[ebx].kre_block_arr
     mov edx,ds:[ebx].kre_phys_arr
     mov edx,ds:[edx]
@@ -1182,12 +1170,13 @@ UpdateReq  Endp
 ;       PARAMETERS:     GS             File sel
 ;                       EDX:EAX        Req position
 ;
-;       RETURNS:        EBX            Req offset
+;       RETURNS:        EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockReq      Proc near
     push ds
+    push eax
     push ecx
 ;
     mov ebx,gs
@@ -1197,18 +1186,20 @@ LockReq      Proc near
     call FindReq
     jc lrLeave
 ;
-    mov ecx,ds:[ebx].kre_phys_arr
+    mov eax,ds:[4*ebx].kf_handle_arr
+    mov ecx,ds:[eax].kre_phys_arr
     or ecx,ecx
     stc
     jz lrLeave
 ;
-    inc ds:[ebx].kre_usage
+    inc ds:[eax].kre_usage
     clc
 
 lrLeave:
     LeaveSection ds:kf_section
 ;
     pop ecx
+    pop eax
     pop ds
     ret
 LockReq    Endp
@@ -1226,7 +1217,7 @@ LockReq    Endp
 ;                       EDX:EAX        Req position
 ;                       ECX            Req size
 ;
-;       RETURNS:        EBX            Req offset
+;       RETURNS:        EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1253,7 +1244,8 @@ irRetry:
     jmp irRetry
 
 irCheck:
-    mov esi,ds:[ebx].kre_phys_arr
+    mov esi,ds:[4*ebx].kf_handle_arr
+    mov esi,ds:[esi].kre_phys_arr
     or esi,esi
     jnz irLeave
 ;
@@ -1832,17 +1824,26 @@ UpdateMap  Endp
 ;
 ;       PARAMETERS:     DS             Kernel processes
 ;                       ES             Kernel mapping sel
-;                       GS:EBX         File entry
+;                       GS             File sel
+;                       EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SyncMap  Proc near
+    push fs
     pushad
 ;
+    mov fs,gs:kf_serv_sel
     mov edi,ebx
-    mov eax,gs:[ebx].kre_pos
-    mov edx,gs:[ebx].kre_pos+4
-    mov ecx,gs:[ebx].kre_size
+    shl edi,4
+    add edi,OFFSET frs_arr
+    mov eax,fs:[edi].fre_pos
+    mov edx,fs:[edi].fre_pos+4
+    mov ecx,fs:[edi].fre_size
+;
+    mov ebx,gs:[4*ebx].kf_handle_arr
+    mov edi,ebx
+;
     mov esi,gs:[ebx].kre_phys_arr
     movzx ebp,gs:[ebx].kre_pages
 ;
@@ -1873,6 +1874,7 @@ smLeave:
     LeaveSection ds:kfm_section
 ;
     popad
+    pop fs
     ret
 SyncMap  Endp
 
@@ -1972,10 +1974,17 @@ mrIssue:
     call SyncMap
     jnc mrDone
 ;
-    mov eax,gs:[ebx].kre_pos
-    mov edx,gs:[ebx].kre_pos+4
-    add eax,gs:[ebx].kre_size
+    push ds
+    mov ds,gs:kf_serv_sel
+    mov esi,ebx
+    shl esi,4
+    add esi,OFFSET frs_arr
+    mov eax,ds:[esi].fre_pos
+    mov edx,ds:[esi].fre_pos+4
+    add eax,ds:[esi].fre_size
     adc edx,0
+    pop ds
+;
     call LockReq
     jc mrDone
 ;
@@ -2549,7 +2558,6 @@ NotifyFileData  Proc near
     mov esi,gs:vfs_rd_chain_ptr
     call MergeReq
 ;
-    mov ebx,ds:[4*ebx].kf_handle_arr
     call CalcPageCount
     call SetupReadReq
     call ProcessReadReq
