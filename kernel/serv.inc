@@ -172,6 +172,12 @@ ServOpenVfsFile  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
+; IN  EDX              Req #
+ServFreeVfsFileReq  MACRO
+    ServGate serv_free_file_req_nr
+                    ENDM
+
+; IN  BX               Kernel handle
 ServCloseVfsFile  MACRO
     ServGate serv_close_file_nr
                     ENDM

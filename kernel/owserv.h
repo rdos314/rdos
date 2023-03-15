@@ -57,6 +57,10 @@
     __parm [__ebx] [__edx] [__edi] [__ecx] [__esi] \
     __value [__eax]
 
+#pragma aux ServFreeVfsFileReq = \
+    ServGate_serv_free_file_req  \
+    __parm [__ebx] [__edx]
+
 #pragma aux ServTest = \
     ServGate_test_serv
 

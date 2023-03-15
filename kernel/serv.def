@@ -25,5 +25,6 @@ serv_to_system_share_block_nr = 23
 serv_add_file_req_nr       = 24
 reply_vfs_file_nr          = 25
 serv_close_file_nr         = 26
+serv_free_file_req_nr      = 27
 
 serv_gate_entries          = 30

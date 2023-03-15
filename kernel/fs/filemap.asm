@@ -1039,93 +1039,6 @@ SignalReadReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UpdateReq
-;
-;       DESCRIPTION:    Update req
-;
-;       PARAMETERS:     DS                 File sel
-;                       ES                 Serv flat sel
-;                       FS                 Part sel                       
-;                       GS                 Disc sel
-;                       EBX                Req id
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateReq  Proc near
-    pushad
-;
-    mov ax,ds:[ebx].kre_usage
-    or ax,ax
-    jnz urDone
-
-urFree:
-    mov ebp,ebx
-    int 3
-;    mov ecx,ds:[ebx].kre_size
-    mov edi,ds:[ebx].kre_block_arr
-    mov edx,ds:[ebx].kre_phys_arr
-    mov edx,ds:[edx]
-    and edx,0FFFh
-    shr edx,9
-    mov eax,8
-    sub eax,edx
-
-urFreeLoop:
-    shl eax,9
-    cmp ecx,eax
-    jae urFreeAll
-;
-    mov eax,ecx
-
-urFreeAll:
-    sub ecx,eax
-    shr eax,9
-;    
-    mov esi,ds:[edi]
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz urFreeNext
-;
-    sub es:[esi].vfsp_ref_bitmap,ax
-    jnc urOk
-;
-    int 3
-
-urOk:
-    jnz urFreeNext
-;
-    dec gs:vfs_locked_pages
-
-urFreeNext:
-    or ecx,ecx
-    jz urFreeEntry
-;
-    add edi,4
-    mov eax,8
-    jmp urFreeLoop
-
-urFreeEntry:
-    mov ebx,ebp
-    mov cx,ds:[ebx].kre_pages
-    shl cx,2
-    mov edx,ds:[ebx].kre_block_arr
-    FreeBlk
-;
-    shl cx,1
-    mov edx,ds:[ebx].kre_phys_arr
-    FreeBlk
-;
-    mov edx,ebp
-    mov cx,SIZE kernel_req_entry
-    FreeBlk
-
-urDone:
-    popad
-    ret
-UpdateReq  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           LockReq
 ;
 ;       DESCRIPTION:    Lock req
@@ -2604,6 +2517,100 @@ nfdDone:
     pop ds
     ret
 NotifyFileData  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeFileReq
+;
+;       DESCRIPTION:    Free file req
+;
+;       PARAMETERS:     DS                 File sel
+;                       FS                 Part sel                       
+;                       EDX                Req id
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeFileReq
+
+FreeFileReq  Proc near
+    push es
+    push gs
+    pushad
+;
+    mov es,ds:kf_serv_sel
+    mov ebx,edx
+    shr ebx,4
+    mov ecx,es:[ebx].frs_arr.fre_size
+;    
+    mov ax,serv_flat_sel
+    mov es,eax
+    mov gs,fs:vfsp_disc_sel
+;
+    mov ebx,ds:[4*edx].kf_handle_arr
+    mov ebp,ebx
+    mov edi,ds:[ebx].kre_block_arr
+    mov edx,ds:[ebx].kre_phys_arr
+    mov edx,ds:[edx]
+    and edx,0FFFh
+    shr edx,9
+    mov eax,8
+    sub eax,edx
+
+ffrFreeLoop:
+    shl eax,9
+    cmp ecx,eax
+    jae ffrFreeAll
+;
+    mov eax,ecx
+
+ffrFreeAll:
+    sub ecx,eax
+    shr eax,9
+;    
+    mov esi,ds:[edi]
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz ffrFreeNext
+;
+    sub es:[esi].vfsp_ref_bitmap,ax
+    jnc ffrOk
+;
+    int 3
+
+ffrOk:
+    jnz ffrFreeNext
+;
+    dec gs:vfs_locked_pages
+
+ffrFreeNext:
+    or ecx,ecx
+    jz ffrFreeEntry
+;
+    add edi,4
+    mov eax,8
+    jmp ffrFreeLoop
+
+ffrFreeEntry:
+    mov ebx,ebp
+    mov cx,ds:[ebx].kre_pages
+    shl cx,2
+    mov edx,ds:[ebx].kre_block_arr
+    FreeBlk
+;
+    shl cx,1
+    mov edx,ds:[ebx].kre_phys_arr
+    FreeBlk
+;
+    mov edx,ebp
+    mov cx,SIZE kernel_req_entry
+    FreeBlk
+
+ffrDone:
+    popad
+    pop gs
+    pop es
+    ret
+FreeFileReq  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

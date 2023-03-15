@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <rdos.h>
+#include <serv.h>
 #include "file.h"
 #include "serv.h"
 
@@ -346,6 +347,7 @@ int TFile::GetReqSize(int index)
 ##########################################################################*/
 void TFile::FreeReq(int index)
 {
+    ServFreeVfsFileReq(GetKernelHandle(), index);
     Req->ReqArr[index].Handle = 0;
 }
 

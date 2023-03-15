@@ -60,6 +60,7 @@ code    SEGMENT byte public 'CODE'
     extern NotifyFileData:near
     extern UnlinkRequest:near
     extern AddFileReq:near
+    extern FreeFileReq:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -263,6 +264,48 @@ serv_open_file    Proc far
     pop ds
     ret
 serv_open_file    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServFreeFileReq
+;
+;       DESCRIPTION:    Serv free VFS file req
+;
+;       PARAMETERS:     EBX            kernel handle
+;                       EDX            req #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_free_file_req_name       DB 'Serv Free File Req',0
+
+serv_free_file_req    Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+;
+    mov al,VFS_FILE_SIGN
+    call HandleHighToPartFs
+    jc sffrDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc sffrDone
+;
+    dec bx
+    shl bx,2
+    add bx,OFFSET vfsp_file_arr
+    mov ds,fs:[bx].ff_sel
+    call FreeFileReq
+
+sffrDone:
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_free_file_req   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1398,6 +1441,12 @@ init_server_file    Proc near
     mov edi,OFFSET serv_open_file_name
     xor cl,cl
     mov ax,serv_open_file_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_free_file_req
+    mov edi,OFFSET serv_free_file_req_name
+    xor cl,cl
+    mov ax,serv_free_file_req_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_close_file
