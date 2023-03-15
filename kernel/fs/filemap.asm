@@ -900,14 +900,21 @@ mrrUpdate:
     mov ds,fs:kf_serv_sel
     movzx ebx,[ebp].mrs_curr_index
     shl ebx,4
-    add ebx,OFFSET frs_arr
-    add ds:[ebx].fre_pos,eax
-    adc ds:[ebx].fre_pos+4,0
+    add ds:[ebx].frs_arr.fre_pos,eax
+    adc ds:[ebx].frs_arr.fre_pos+4,0
+;
+    movzx ebx,[ebp].mrs_curr_index
+    mov ebx,fs:[4*ebx].kf_handle_arr
+    add fs:[ebx].kre_pos,eax
+    adc fs:[ebx].kre_pos+4,0
 ;
     movzx ebx,[ebp].mrs_prev_index
     shl ebx,4
-    add ebx,OFFSET frs_arr
-    add ds:[ebx].fre_size,eax
+    add ds:[ebx].frs_arr.fre_size,eax
+;
+    movzx ebx,[ebp].mrs_prev_index
+    mov ebx,fs:[4*ebx].kf_handle_arr
+    add fs:[ebx].kre_size,eax
 
 mrrDone:
     mov ecx,[ebp].mrs_blocks
