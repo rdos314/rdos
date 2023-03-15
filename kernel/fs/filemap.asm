@@ -1255,7 +1255,8 @@ irCheck:
     jmp irRetry
 
 irLeave:
-    inc ds:[ebx].kre_usage
+    mov esi,ds:[4*ebx].kf_handle_arr
+    inc ds:[esi].kre_usage
     LeaveSection ds:kf_section
 ;
     pop edi
@@ -1299,18 +1300,18 @@ FreeReq      Proc near
     mov ecx,es:frs_count
 
 frFind:
-    cmp ebx,es:[esi]
+    cmp bl,es:[esi]
     je frMove
 ;
-    add esi,4
+    inc esi
     loop frFind
 ;
     jmp frLeave
 
 frMove:
-    mov eax,es:[esi+4]
-    mov es:[esi],eax
-    add esi,4
+    mov al,es:[esi+1]
+    mov es:[esi],al
+    inc esi
     loop frMove
 ;
     dec es:frs_count
@@ -1792,7 +1793,6 @@ UpdateUnlinked  Proc near
     or eax,eax
     jz uuDone
 ;
-    int 3
     push fs
     push ebx
 ;
