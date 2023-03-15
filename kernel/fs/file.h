@@ -86,12 +86,14 @@ public:
     int AddReq(long long pos, int size);
     long long GetReqPos(int index);
     int GetReqSize(int index);
+    void UpdateReq();
 
     struct TFileInfo *Info;
     struct TFileReq *Req;
 
 protected:
     int AllocateEntry();
+    virtual void FreeReq(int index);
 
     TDir *Parent;
     int ParentIndex;

@@ -990,6 +990,7 @@ int TFs::ReqFile(int handle, long long pos, int size, int src)
 
     if (file)
     {
+        file->UpdateReq();
         index = file->AddReq(pos, size);
 
         if (index)
@@ -1001,6 +1002,7 @@ int TFs::ReqFile(int handle, long long pos, int size, int src)
             res = ServAddVfsFileReq(file->GetKernelHandle(), index, SectorArr, SectorCount, src);
 
             delete SectorArr;
+            file->UpdateReq();
         }
     }
 
@@ -1020,6 +1022,11 @@ int TFs::ReqFile(int handle, long long pos, int size, int src)
 ##########################################################################*/
 void TFs::UpdateFile(int handle)
 {
+    TFile *file = GetFile(handle);
+    int i;
+
+    if (file)
+        file->UpdateReq();
 }
 
 /*##########################################################################

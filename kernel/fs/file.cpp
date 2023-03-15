@@ -332,3 +332,46 @@ int TFile::GetReqSize(int index)
     else
         return 0;
 }
+
+/*##########################################################################
+#
+#   Name       : TFile::FreeReq
+#
+#   Purpose....: Free req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::FreeReq(int index)
+{
+    Req->ReqArr[index].Handle = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::UpdateReq
+#
+#   Purpose....: Update req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::UpdateReq()
+{
+    int i;
+
+    while (Req->Update)
+    {
+        Req->Update = 0;
+
+        for (i = 0; i < 240; i++)
+        {
+            if (Req->ReqArr[i].Handle & 0x80000000)
+                FreeReq(i);
+        }
+    }
+}

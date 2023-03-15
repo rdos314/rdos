@@ -1258,7 +1258,6 @@ FreeReq      Proc near
     sub ds:[esi].kre_usage,1
     jnz frLeave
 ;
-    int 3
     shl ebx,4
     or es:[ebx].frs_arr.fre_handle,80000000h
 ;
