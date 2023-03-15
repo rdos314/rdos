@@ -507,6 +507,7 @@ frLoop:
     cmp esi,es:[ecx].frs_arr.fre_size
     jae frNext
 ;
+    movzx ebx,byte ptr es:[ebx]
     clc
     jmp frDone
 
