@@ -365,6 +365,7 @@ void TFile::FreeReq(int index)
 void TFile::UpdateReq()
 {
     int i;
+    int handle;
 
     while (Req->Update)
     {
@@ -372,8 +373,10 @@ void TFile::UpdateReq()
 
         for (i = 0; i < 240; i++)
         {
-            if (Req->ReqArr[i].Handle & 0x80000000)
-                FreeReq(i);
+            handle = Req->ReqArr[i].Handle;
+            if (handle & 0x80000000)
+                if (handle != -1)
+                    FreeReq(i);
         }
     }
 }
