@@ -69,3 +69,6 @@ VFS_REQ_FILE              = 8
 
 ; IN  BX        File handle
 VFS_CLOSE_FILE            = 9
+
+; IN  BX        File handle
+VFS_UPDATE_FILE           = 10

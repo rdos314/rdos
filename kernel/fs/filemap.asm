@@ -598,6 +598,41 @@ SendReadReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SendUpdateReq
+;
+;       DESCRIPTION:    Send update req
+;
+;       PARAMETERS:     DS             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendUpdateReq     Proc near
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+;
+    mov ebx,ds:kf_serv_handle
+    dec ebx
+    mov fs,ds:kf_part_sel
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+;
+    mov eax,VFS_UPDATE_FILE
+    call PostMsg
+;
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+SendUpdateReq     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SendCloseReq
 ;
 ;       DESCRIPTION:    Send close req
@@ -2650,7 +2685,6 @@ NotifyFileUpdate  Proc near
     push gs
     pushad
 ;
-    int 3
     mov ax,serv_flat_sel
     mov es,eax
     mov gs,fs:vfsp_disc_sel
@@ -2659,17 +2693,11 @@ NotifyFileUpdate  Proc near
     mov esi,OFFSET kf_update_arr
     movzx ecx,ds:kf_update_count
     or ecx,ecx
-    jz nfuReset
-
-nfuLoop:
-    movzx ebx,byte ptr ds:[esi]
-    call UpdateReq
-    inc esi
-    loop nfuLoop
-
-nfuReset:
-    mov ds:kf_update_count,0
+    jz nfuUpdateOk
 ;
+    call SendUpdateReq
+
+nfuUpdateOk:
     mov ax,ds:kf_map_list
     or ax,ax
     jnz nfuLeave

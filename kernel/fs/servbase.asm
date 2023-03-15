@@ -471,6 +471,30 @@ LocalReqFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalUpdateFile
+;
+;       DESCRIPTION:    Update file
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowUpdateFile:near
+
+LocalUpdateFile Proc near
+    push edi
+    mov esi,[edi].fc_handle
+    call LowUpdateFile
+    pop edi
+;
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalUpdateFile Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LocalCloseFile
 ;
 ;       DESCRIPTION:    Close file
@@ -516,6 +540,7 @@ m06 DD OFFSET GetRelDir
 m07 DD OFFSET LocalOpenFile
 m08 DD OFFSET LocalReqFile
 m09 DD OFFSET LocalCloseFile
+m0A DD OFFSET LocalUpdateFile
 
 WaitForMsg_    Proc near
     pushad

@@ -106,6 +106,11 @@ int ReqFile(int handle, long long pos, int size, int src)
     return Server->ReqFile(handle, pos, size, src);
 }
 
+void UpdateFile(int handle)
+{
+    Server->UpdateFile(handle);
+}
+
 void CloseFile(int handle)
 {
     Server->CloseFile(handle);
