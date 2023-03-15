@@ -363,7 +363,7 @@ afrFind:
     jb afrInsert
     jnz afrNext
 ;
-    cmp eax,ds:[ecx].frs_arr.fre_size
+    cmp eax,es:[ecx].frs_arr.fre_size
     jb afrInsert
 
 afrNext:
@@ -2531,7 +2531,7 @@ NotifyFileData  Proc near
 ;
     EnterSection ds:kf_section
 ;
-    int 3
+    mov eax,ebx
     dec ebx
     mov esi,ebx
     shl esi,4
