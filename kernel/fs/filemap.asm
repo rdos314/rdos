@@ -526,41 +526,6 @@ SendReadReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SendUpdateReq
-;
-;       DESCRIPTION:    Send update req
-;
-;       PARAMETERS:     DS             File sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendUpdateReq     Proc near
-    push ds
-    push es
-    push fs
-    push eax
-    push ebx
-;
-    mov ebx,ds:kf_serv_handle
-    dec ebx
-    mov fs,ds:kf_part_sel
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-;
-    mov eax,VFS_UPDATE_FILE
-    call PostMsg
-;
-    pop ebx
-    pop eax
-    pop fs
-    pop es
-    pop ds
-    ret
-SendUpdateReq     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           SendCloseReq
 ;
 ;       DESCRIPTION:    Send close req
@@ -1171,6 +1136,7 @@ FreeReq      Proc near
     sub ds:[esi].kre_usage,1
     jnz frLeave
 ;
+    mov al,bl
     shl ebx,4
     or es:[ebx].frs_arr.fre_handle,80000000h
 ;
@@ -1178,7 +1144,7 @@ FreeReq      Proc near
     mov ecx,es:frs_count
 
 frFind:
-    cmp bl,es:[esi]
+    cmp al,es:[esi]
     je frMove
 ;
     inc esi
@@ -1193,15 +1159,7 @@ frMove:
     loop frMove
 ;
     dec es:frs_count
-;
-    mov al,1
-    xchg al,es:frs_update
-    or al,al
-    jnz frLeave
-;
-    LeaveSection ds:kf_section
-    call SendUpdateReq
-    jmp frEnd
+    mov es:frs_update,1
 
 frLeave:
     LeaveSection ds:kf_section
@@ -2537,7 +2495,7 @@ FreeFileReq  Proc near
     push es
     push gs
     pushad
-;
+;    
     mov es,ds:kf_serv_sel
     mov ebx,edx
     shr ebx,4

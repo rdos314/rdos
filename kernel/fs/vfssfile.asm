@@ -273,7 +273,7 @@ serv_open_file    Endp
 ;       DESCRIPTION:    Serv free VFS file req
 ;
 ;       PARAMETERS:     EBX            kernel handle
-;                       EDX            req #
+;                       EDX            req # (1-based)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -297,6 +297,15 @@ serv_free_file_req    Proc far
     shl bx,2
     add bx,OFFSET vfsp_file_arr
     mov ds,fs:[bx].ff_sel
+    or edx,edx
+    stc
+    jz sffrDone
+;
+    dec edx
+    cmp edx,240
+    cmc
+    jc sffrDone
+;
     call FreeFileReq
 
 sffrDone:

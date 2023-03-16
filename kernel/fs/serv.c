@@ -38,7 +38,6 @@ int OpenFile(int rel, char *path);
 int GetFileAttrib(int handle);
 int GetFileHandle(int handle);
 int ReqFile(int handle, long long pos, int size, int src);
-void UpdateFile(int handle);
 void CloseFile(int handle);
 
 /*##########################################################################
@@ -160,17 +159,6 @@ int LowOpenFile(int rel, char *path)
 int LowReqFile(int handle, long long pos, int size, int src)
 {
     return ReqFile(handle, pos, size, src);
-}
-
-/*##########################################################################
-#
-#   Name       : LowUpdateFile
-#
-##########################################################################*/
-#pragma aux LowUpdateFile "*" parm routine [ebx]
-void LowUpdateFile(int handle)
-{
-    UpdateFile(handle);
 }
 
 /*##########################################################################

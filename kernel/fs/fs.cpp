@@ -1011,26 +1011,6 @@ int TFs::ReqFile(int handle, long long pos, int size, int src)
 
 /*##########################################################################
 #
-#   Name       : TFs::UpdateFile
-#
-#   Purpose....: Update file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFs::UpdateFile(int handle)
-{
-    TFile *file = GetFile(handle);
-    int i;
-
-    if (file)
-        file->UpdateReq();
-}
-
-/*##########################################################################
-#
 #   Name       : TFs::CloseFile
 #
 #   Purpose....: Close file
