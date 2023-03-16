@@ -2498,7 +2498,7 @@ FreeFileReq  Proc near
 ;    
     mov es,ds:kf_serv_sel
     mov ebx,edx
-    shr ebx,4
+    shl ebx,4
     mov ecx,es:[ebx].frs_arr.fre_size
 ;    
     mov ax,serv_flat_sel
