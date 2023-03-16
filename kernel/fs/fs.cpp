@@ -376,6 +376,10 @@ TFs::TFs(TDiscServer *server)
 
     Server = server;
 
+    BytesPerSector = Server->GetBytesPerSector();
+    StartSector = Server->GetPartStartSector();
+    SectorCount = Server->GetPartSectors();
+
     CurrDirCount = 0;
     MaxDirCount = 4;
     DirArr = new TDir*[MaxDirCount];
@@ -985,7 +989,7 @@ int TFs::ReqFile(int handle, long long pos, int size, int src)
     TFile *file = GetFile(handle);
 
     if (file)
-        return file->ReqFile(pos, size, src, GetBytesPerSector());
+        return file->ReqFile(pos, size, src, BytesPerSector);
     else
         return 0;
 }

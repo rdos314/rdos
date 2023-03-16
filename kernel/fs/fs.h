@@ -69,7 +69,6 @@ public:
     TFs(TDiscServer *server);
     virtual ~TFs();
 
-    virtual int GetBytesPerSector() = 0;
     virtual long long GetFreeSectors() = 0;
     virtual TDir *CacheRootDir() = 0;
     virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode) = 0;
@@ -101,6 +100,10 @@ protected:
 
     TDir *GetStartDir(int rel);
     TFile *GetFile(int handle);
+
+    int BytesPerSector;
+    long long StartSector;
+    long long SectorCount;
 
     TDir **DirArr;
     int CurrDirCount;
