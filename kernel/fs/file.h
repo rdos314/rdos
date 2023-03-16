@@ -70,11 +70,8 @@ public:
     TFile(TDir *ParentDir, int ParentIndex);
     virtual ~TFile();
 
-    virtual long long AdjustStart(long long pos) = 0;
-    virtual long long AdjustEnd(long long pos) = 0;
-    virtual void GetSectors(int index, long long *SectorArr, int SectorCount) = 0;
-
     void Setup(int VfsHandle, int ServFileHandle);
+    virtual int ReqFile(long long pos, int size, int src, int sectorsize);
 
     void LockFile();
     void UnlockFile();
@@ -83,17 +80,20 @@ public:
     int GetKernelHandle();
     int GetAttrib();
 
+protected:
+    virtual void FreeReq(int index);
+    virtual long long AdjustStart(long long pos) = 0;
+    virtual long long AdjustEnd(long long pos) = 0;
+    virtual void GetSectors(int index, long long *SectorArr, int SectorCount) = 0;
+
+    int AllocateEntry();
+    void UpdateReq();
     int AddReq(long long pos, int size);
     long long GetReqPos(int index);
     int GetReqSize(int index);
-    void UpdateReq();
 
     struct TFileInfo *Info;
     struct TFileReq *Req;
-
-protected:
-    int AllocateEntry();
-    virtual void FreeReq(int index);
 
     TDir *Parent;
     int ParentIndex;

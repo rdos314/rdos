@@ -84,9 +84,15 @@ TFile::TFile(TDir *pd, int pi)
 ##########################################################################*/
 TFile::~TFile()
 {
+    UpdateReq();
+    printf("Close %d\r\n", GetServHandle());
+
+    ServCloseVfsFile(GetKernelHandle());
+
     RdosFreeMem(Info);
     if (Req)
         RdosFreeMem(Req);
+
     Parent->ClearFileLink(ParentIndex);
 }
 
@@ -332,6 +338,42 @@ int TFile::GetReqSize(int index)
         return Req->ReqArr[index - 1].Size;
     else
         return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::ReqFile
+#
+#   Purpose....: Req file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFile::ReqFile(long long pos, int size, int src, int sectorsize)
+{
+    int SectorCount;
+    long long *SectorArr;
+    int res = 0;
+    int index;
+
+    UpdateReq();
+    index = AddReq(pos, size);
+
+    if (index)
+    {
+        SectorCount = GetReqSize(index) / sectorsize;
+        SectorArr = new long long[SectorCount];
+        GetSectors(index, SectorArr, SectorCount);
+
+        res = ServAddVfsFileReq(GetKernelHandle(), index, SectorArr, SectorCount, src);
+
+        delete SectorArr;
+        UpdateReq();
+    }
+
+    return res;
 }
 
 /*##########################################################################

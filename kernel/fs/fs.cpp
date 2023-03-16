@@ -983,30 +983,11 @@ int TFs::GetFileHandle(int handle)
 int TFs::ReqFile(int handle, long long pos, int size, int src)
 {
     TFile *file = GetFile(handle);
-    int SectorCount;
-    long long *SectorArr;
-    int res = 0;
-    int index;
 
     if (file)
-    {
-        file->UpdateReq();
-        index = file->AddReq(pos, size);
-
-        if (index)
-        {
-            SectorCount = file->GetReqSize(index) / GetBytesPerSector();
-            SectorArr = new long long[SectorCount];
-            file->GetSectors(index, SectorArr, SectorCount);
-
-            res = ServAddVfsFileReq(file->GetKernelHandle(), index, SectorArr, SectorCount, src);
-
-            delete SectorArr;
-            file->UpdateReq();
-        }
-    }
-
-    return res;
+        return file->ReqFile(pos, size, src, GetBytesPerSector());
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -1030,18 +1011,11 @@ void TFs::CloseFile(int handle)
         file = FileArr[handle];
         if (file)
         {
-            file->UpdateReq();
-
             CurrFileCount--;
             for (i = handle; i < CurrFileCount; i++)
                 FileArr[i] = FileArr[i+1];
 
             FileArr[CurrFileCount] = 0;
-
-            printf("Close %d\r\n", handle);
-
-            ServCloseVfsFile(file->GetKernelHandle());
-
             delete file;
         }
     }
