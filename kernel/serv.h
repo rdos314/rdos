@@ -36,7 +36,9 @@ void RDOSAPI ServCloseVfsFile(int FileHandle);
 
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();
+long long RDOSAPI ServGetVfsStartSector(int handle);
 long long RDOSAPI ServGetVfsSectors(int handle);
+int long RDOSAPI ServGetVfsBytesPerSector(int handle);
 int RDOSAPI ServIsVfsActive(int handle);
 int RDOSAPI ServCreateVfsReq(int handle);
 void RDOSAPI ServCloseVfsReq(int handle);

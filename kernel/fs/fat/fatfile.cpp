@@ -123,35 +123,20 @@ long long TFatFile::AdjustEnd(long long pos)
 
 /*##########################################################################
 #
-#   Name       : TFatFile::GetSectors
+#   Name       : TFatFile::GetSector
 #
-#   Purpose....: Get sector data
+#   Purpose....: Get sector base on position
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatFile::GetSectors(int index, long long *SectorArr, int SectorCount)
+long long TFatFile::GetSector(long long pos)
 {
-    long long pos = GetReqPos(index);
     unsigned int c = pos / FBytesPerCluster;
     int sc = FFat->SectorsPerCluster;
-    int count = SectorCount / sc;
-    int i;
-    int j;
-    long long sector;
-    long long *sp = SectorArr;
+    int diff = (pos % FBytesPerCluster) / 512;
 
-    for (i = 0; i < count; i++)
-    {
-        sector = FFat->StartSector + (FClusterArr[i + c] - 2) *sc;
-
-        for (j = 0; j < sc; j++)
-        {
-            *sp = sector;
-            sp++;
-            sector++;
-        }
-    }
+    return FFat->StartSector + (FClusterArr[c] - 2) * sc + diff;
 }

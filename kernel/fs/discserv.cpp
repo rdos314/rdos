@@ -551,6 +551,22 @@ bool TDiscServer::IsActive()
 
 /*##########################################################################
 #
+#   Name       : TDiscServer::GetPartStartSector
+#
+#   Purpose....: Get partition start sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TDiscServer::GetPartStartSector()
+{
+    return ServGetVfsStartSector(handle);
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscServer::GetPartSectors
 #
 #   Purpose....: Get partition sectors
@@ -563,6 +579,22 @@ bool TDiscServer::IsActive()
 long long TDiscServer::GetPartSectors()
 {
     return ServGetVfsSectors(handle);
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscServer::GetBytesPerSector
+#
+#   Purpose....: Get bytes per sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscServer::GetBytesPerSector()
+{
+    return ServGetVfsBytesPerSector(handle);
 }
 
 /*##########################################################################

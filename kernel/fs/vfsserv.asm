@@ -958,6 +958,36 @@ HandleHighToPartFs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetVfsStartSector
+;
+;       DESCRIPTION:    Get VFS start sector
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        EDX:EAX     Start sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_start_sector_name       DB 'Get VFS Start Sector',0
+
+get_vfs_start_sector    Proc far
+    push es
+;
+    call HandleToPartEs
+    jc gvssDone
+;
+    mov eax,es:vfsp_start_sector
+    mov edx,es:vfsp_start_sector+4
+    clc
+
+gvssDone:
+    pop es
+    ret
+get_vfs_start_sector    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetVfsSectors
 ;
 ;       DESCRIPTION:    Get VFS sectors
@@ -984,6 +1014,35 @@ gvsDone:
     pop es
     ret
 get_vfs_sectors    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsBytesPerSector
+;
+;       DESCRIPTION:    Get VFS bytes per sector
+;
+;       PARAMETERS:     EBX            VFS handle
+;
+;       RETURNS:        AX             Bytes per sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_bytes_per_sector_name       DB 'Get VFS Bytes/Sector',0
+
+get_vfs_bytes_per_sector    Proc far
+    push es
+;
+    call HandleToPartEs
+    jc gvbpsDone
+;
+    mov es,es:vfsp_disc_sel
+    mov ax,es:vfs_bytes_per_sector
+    clc
+
+gvbpsDone:
+    pop es
+get_vfs_bytes_per_sector   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3257,10 +3316,22 @@ init_server    Proc near
     mov ax,is_vfs_active_nr
     RegisterServGate
 ;
+    mov esi,OFFSET get_vfs_start_sector
+    mov edi,OFFSET get_vfs_start_sector_name
+    xor cl,cl
+    mov ax,get_vfs_start_sector_nr
+    RegisterServGate
+;
     mov esi,OFFSET get_vfs_sectors
     mov edi,OFFSET get_vfs_sectors_name
     xor cl,cl
     mov ax,get_vfs_sectors_nr
+    RegisterServGate
+;
+    mov esi,OFFSET get_vfs_bytes_per_sector
+    mov edi,OFFSET get_vfs_bytes_per_sector_name
+    xor cl,cl
+    mov ax,get_vfs_bytes_per_sector_nr
     RegisterServGate
 ;
     mov esi,OFFSET create_vfs_req

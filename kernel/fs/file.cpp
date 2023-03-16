@@ -359,6 +359,8 @@ int TFile::ReqFile(long long pos, int size, int src, int sectorsize)
     long long *SectorArr;
     int res = 0;
     int index;
+    int sector;
+    long long start;
 
     UpdateReq();
     index = AddReq(pos, size);
@@ -367,7 +369,11 @@ int TFile::ReqFile(long long pos, int size, int src, int sectorsize)
     {
         SectorCount = GetReqSize(index) / sectorsize;
         SectorArr = new long long[SectorCount];
-        GetSectors(index, SectorArr, SectorCount);
+
+        start = GetReqPos(index) / sectorsize;
+
+        for (sector = 0; sector < SectorCount; sector++)
+            SectorArr[sector] = GetSector((long long)sectorsize * (start + sector));
 
         res = ServAddVfsFileReq(GetKernelHandle(), index, SectorArr, SectorCount, src);
 

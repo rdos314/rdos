@@ -42,7 +42,7 @@ public:
 
     virtual long long AdjustStart(long long pos);
     virtual long long AdjustEnd(long long pos);
-    virtual void GetSectors(int index, long long *SectorArr, int SectorCount);
+    virtual long long GetSector(long long pos);
 
 protected:
     int FBytesPerCluster;

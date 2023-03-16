@@ -95,7 +95,9 @@ public:
 
     int GetHandle();
 
+    long long GetPartStartSector();
     long long GetPartSectors();
+    int GetBytesPerSector();
     void WaitForMsg(TFs *fs);
     bool IsActive();
 

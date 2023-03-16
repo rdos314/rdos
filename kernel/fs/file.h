@@ -84,7 +84,7 @@ protected:
     virtual void FreeReq(int index);
     virtual long long AdjustStart(long long pos) = 0;
     virtual long long AdjustEnd(long long pos) = 0;
-    virtual void GetSectors(int index, long long *SectorArr, int SectorCount) = 0;
+    virtual long long GetSector(long long pos) = 0;
 
     int AllocateEntry();
     void UpdateReq();

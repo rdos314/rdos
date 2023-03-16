@@ -68,10 +68,21 @@
     ServGate_get_vfs_handle  \
     __value [__ebx]
 
+#pragma aux ServGetVfsStartSector = \
+    ServGate_get_vfs_start_sector  \
+    __parm [__ebx] \
+    __value [__edx __eax]
+
 #pragma aux ServGetVfsSectors = \
     ServGate_get_vfs_sectors  \
     __parm [__ebx] \
     __value [__edx __eax]
+
+#pragma aux ServGetVfsBytesPerSector = \
+    ServGate_get_vfs_bytes_per_sector  \
+    "movzx eax,ax" \
+    __parm [__ebx] \
+    __value [__eax]
 
 #pragma aux ServIsVfsActive = \
     ServGate_is_vfs_active  \

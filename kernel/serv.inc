@@ -59,6 +59,18 @@ GetVfsSectors  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
+; OUT EDX:EAX          Start sector
+GetVfsStartSector  MACRO
+    ServGate get_vfs_start_sector_nr
+                    ENDM
+
+; IN  EBX              VFS handle
+; OUT AX               Bytes per sector
+GetVfsBytesPerSector  MACRO
+    ServGate get_vfs_bytes_per_sector_nr
+                    ENDM
+
+; IN  EBX              VFS handle
 ; OUT EBX              Req handle
 CreateVfsReq  MACRO
     ServGate create_vfs_req_nr
