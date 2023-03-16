@@ -105,6 +105,9 @@ protected:
     long long StartSector;
     long long SectorCount;
 
+    int SectorsPerPage;
+    int OffsetSector;
+
     TDir **DirArr;
     int CurrDirCount;
     int MaxDirCount;

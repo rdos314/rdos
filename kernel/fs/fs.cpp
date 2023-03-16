@@ -380,6 +380,9 @@ TFs::TFs(TDiscServer *server)
     StartSector = Server->GetPartStartSector();
     SectorCount = Server->GetPartSectors();
 
+    SectorsPerPage = 0x1000 / BytesPerSector;
+    OffsetSector = StartSector % SectorsPerPage;
+
     CurrDirCount = 0;
     MaxDirCount = 4;
     DirArr = new TDir*[MaxDirCount];
