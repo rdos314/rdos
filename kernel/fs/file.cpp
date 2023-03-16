@@ -252,6 +252,8 @@ int TFile::AddReq(long long pos, int size)
     start = AdjustStart(pos);
     diff = start - pos;
     size += diff;
+    if (size <= 0)
+        size = 1;
 
     end = start + size - 1;
     end = AdjustEnd(end);
