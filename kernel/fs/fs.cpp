@@ -1027,16 +1027,18 @@ void TFs::CloseFile(int handle)
 
     if (handle >= 0 && handle < MaxFileCount)
     {
-        printf("Close %d\r\n", handle);
-
         file = FileArr[handle];
         if (file)
         {
+            file->UpdateReq();
+
             CurrFileCount--;
             for (i = handle; i < CurrFileCount; i++)
                 FileArr[i] = FileArr[i+1];
 
             FileArr[CurrFileCount] = 0;
+
+            printf("Close %d\r\n", handle);
 
             ServCloseVfsFile(file->GetKernelHandle());
 

@@ -2782,6 +2782,14 @@ close_vfs_file  Proc near
     mov ds,ds:kfm_file_sel
     call UnlinkProgSel
     LeaveSection ds:kf_section
+;
+    mov ax,ds:kf_map_list
+    or ax,ax
+    jnz cvfMore
+;
+    call SendCloseReq
+
+cvfMore:
     pop ds
 ;
     call DeleteMap

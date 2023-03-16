@@ -347,7 +347,7 @@ int TFile::GetReqSize(int index)
 ##########################################################################*/
 void TFile::FreeReq(int index)
 {
-    printf("Free %d.%d\r\n", GetServHandle(), index);
+    printf(" Free %d.%d ", GetServHandle(), index);
     ServFreeVfsFileReq(GetKernelHandle(), index + 1);
     Req->ReqArr[index].Handle = 0;
 }
