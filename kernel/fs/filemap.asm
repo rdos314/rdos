@@ -285,6 +285,34 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CloseFileSel
+;
+;       DESCRIPTION:    Close file selector
+;
+;       PARAMETERS:     FS             Part sel
+                        AX             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CloseFileSel
+
+CloseFileSel   Proc near
+    push ds
+    push es
+;
+    mov ds,ax
+    mov es,ds:kf_serv_sel
+    FreeMem
+    DeleteBlk
+;
+    pop es
+    pop ds
+    ret
+CloseFileSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddFileReq
 ;
 ;       DESCRIPTION:    Serv add VFS file req

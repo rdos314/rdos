@@ -57,6 +57,7 @@ code    SEGMENT byte public 'CODE'
     extern BlockToBuf:near
     extern BlockToBitmap:near
     extern CreateFileSel:near
+    extern CloseFileSel:near
     extern NotifyFileData:near
     extern UnlinkRequest:near
     extern AddFileReq:near
@@ -353,14 +354,16 @@ serv_close_file    Proc far
     add bx,OFFSET vfsp_file_arr
     xchg ax,ds:[bx].ff_sel
 ;
-    push ds
-    mov ds,ax
-    DeleteBlk
-    pop ds
+    or ax,ax
+    jz scfLeave
+;
+    call CloseFileSel
 ;
     mov ax,ds:vfsp_file_list
     mov ds:[bx].ff_link,ax
     mov ds:vfsp_file_list,bx
+
+scfLeave:
     LeaveSection ds:vfsp_req_section
 
 scfDone:
