@@ -1539,9 +1539,32 @@ FreeMap  Proc near
     push eax
     push ebx
     push ecx
+    push edx
+    push esi
 ;
-    mov ecx,es:fm_count
     movzx ebx,bx
+    mov esi,ebx
+    shl esi,4
+    add esi,OFFSET fm_entry_arr
+    xor edx,edx
+    xchg edx,es:[esi].fmb_base
+    or edx,edx
+    jz fmUnlink
+;
+    add edx,ds:kfm_flat_base
+    mov ecx,edx
+    add ecx,es:[esi].fmb_size
+    dec ecx
+    shr ecx,12
+    inc ecx
+    shl ecx,12
+    shr edx,12
+    shl edx,12
+    sub ecx,edx
+    FreeLinear
+
+fmUnlink:
+    mov ecx,es:fm_count
     sub ecx,ebx
     inc ecx
     mov al,es:[ebx]
@@ -1558,6 +1581,8 @@ fmLoop:
     inc bl
     mov ds:kfm_unlink_count,bl
 ;
+    pop esi
+    pop edx
     pop ecx
     pop ebx
     pop eax
