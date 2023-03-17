@@ -234,43 +234,6 @@ int TFile::AllocateReq()
 
 /*##########################################################################
 #
-#   Name       : TFile::AddReq
-#
-#   Purpose....: Add req
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFile::AddReq()
-{
-    int index;
-
-    if (FCurrSize > 0)
-    {
-        index = AllocateReq();
-
-        if (index >= 0)
-        {
-            Req->ReqArr[index].Pos = FCurrStart;
-            Req->ReqArr[index].Size = FCurrSize;
-            Req->ReqArr[index].Handle = -1;
-            printf("Read %d.%d start %lld size %d\r\n", GetServHandle(), index, FCurrStart, FCurrSize);
-
-            return index + 1;
-        }
-        else
-            printf("No entry\r\n");
-    }
-    else
-        printf("No size\r\n");
-
-    return 0;
-}
-
-/*##########################################################################
-#
 #   Name       : TFile::GetSector
 #
 #   Purpose....: Default get sector
@@ -296,59 +259,59 @@ long long TFile::GetSector(long long pos)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::SetReq(long long pos, int size)
+void TFile::SetReq(long long StartSector, int Sectors)
 {
+    long long count;
     long long start;
     long long end;
     long long temp;
     int i;
     int link;
 
-    if (pos < 0)
-        pos = 0;
+    if (StartSector < 0)
+        StartSector = 0;
 
-    if (pos >= Info->ReqSize)
-        pos = Info->ReqSize - 1;
+    if (StartSector >= Info->FsSize / FBytesPerSector)
+        StartSector = Info->FsSize / FBytesPerSector - 1;
 
-    if (size < 0x1000)
-        size = 0x1000;
+    if (Sectors < FSectorsPerPage)
+        Sectors = FSectorsPerPage;
 
-    start = pos;
-    end = start + size - 1;
+    start = StartSector;
+    end = StartSector + Sectors - 1;
 
     if (end < start)
         end = start;
 
-    if (end > Info->ReqSize)
-        end = Info->ReqSize - 1;
+    if (end > Info->FsSize / FBytesPerSector)
+        end = Info->FsSize / FBytesPerSector - 1;
 
-    size = end - start + 1;
+    count = end - start + 1;
 
     for (i = 0; i < Req->Count; i++)
     {
         link = Req->SortedArr[i];
 
-        temp = Req->ReqArr[link].Pos - start;
+        temp = Req->ReqArr[link].Pos / FBytesPerSector - start;
         if (temp >= 0)
         {
-            if (temp < size)
-                size = (int)temp;
+            if (temp < Sectors)
+                count = (int)temp;
             break;
         }
         else
         {
-            temp = Req->ReqArr[link].Pos + Req->ReqArr[link].Size;
+            temp = (Req->ReqArr[link].Pos + Req->ReqArr[link].Size) / FBytesPerSector;
             if (temp > start)
             {
-                size -= (int)(temp - start);
+                count -= (int)(temp - start);
                 start = temp;
             }
         }
     }
 
-    FCurrPos = pos;
     FCurrStart = start;
-    FCurrSize = size;
+    FCurrSectors = count;
 }
 
 /*##########################################################################
@@ -364,33 +327,84 @@ void TFile::SetReq(long long pos, int size)
 ##########################################################################*/
 int TFile::ReqFile(long long pos, int size, int src)
 {
-    int SectorCount;
     long long *SectorArr;
     int res = 0;
     int index;
     int sector;
-    long long start;
+    long long prev;
+    long long curr;
+    int offset;
+    int SectorCount;
+    bool HasPos = false;
 
     UpdateReq();
 
-    SetReq(pos, size);
-    index = AddReq();
+    FCurrPos = pos / FBytesPerSector;
 
-    if (index)
+    SetReq(FCurrPos, size / FBytesPerSector);
+
+    if (FCurrSectors > 0)
+        index = AllocateReq();
+    else
+        index = -1;
+
+    if (index >= 0)
     {
-        SectorCount = FCurrSize / FBytesPerSector;
-        SectorArr = new long long[SectorCount];
+        SectorCount = 0;
+        SectorArr = new long long[FCurrSectors];
 
-        start = FCurrStart / FBytesPerSector;
+        for (sector = 0; sector < FCurrSectors; sector++)
+        {
+            if (FCurrStart + sector == FCurrPos)
+                HasPos = true;
 
-        for (sector = 0; sector < SectorCount; sector++)
-            SectorArr[sector] = GetSector((long long)FBytesPerSector * (start + sector));
+            curr = GetSector(FCurrStart + sector);
 
-        res = ServAddVfsFileReq(GetKernelHandle(), index, SectorArr, SectorCount, src);
+            if (sector)
+            {
+                prev++;
+                offset = curr % FSectorsPerPage;
+
+                if (offset)
+                {
+                    if (prev != curr)
+                    {
+                        if (HasPos)
+                            break;
+                        else
+                        {
+                            FCurrStart += sector;
+                            FCurrSectors -= sector;
+                            sector = 0;
+                            SectorCount = 0;
+                        }
+                    }
+                }
+            }
+            prev = curr;
+            SectorArr[SectorCount] = curr;
+            SectorCount++;
+        }    
+
+        FCurrSectors = SectorCount;
+
+        if (SectorCount)
+        {
+            Req->ReqArr[index].Pos = FCurrStart * FBytesPerSector;
+            Req->ReqArr[index].Size = SectorCount * FBytesPerSector;
+            Req->ReqArr[index].Handle = -1;
+            printf("Read %d.%d start %lld size %d\r\n", GetServHandle(), index, FCurrStart, SectorCount);
+
+            res = ServAddVfsFileReq(GetKernelHandle(), index + 1, SectorArr, SectorCount, src);
+        }
+        else
+            printf("Read %d No size\r\n", GetServHandle());
 
         delete SectorArr;
         UpdateReq();
     }
+    else
+        printf("Read %d No req available\r\n", GetServHandle());
 
     return res;
 }

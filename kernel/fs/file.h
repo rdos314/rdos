@@ -82,19 +82,18 @@ public:
 
 protected:
     virtual void FreeReq(int index);
-    virtual void SetReq(long long pos, int size);
+    virtual void SetReq(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
 
     int AllocateReq();
     void UpdateReq();
-    int AddReq();
 
     struct TFileInfo *Info;
     struct TFileReq *Req;
 
     long long FCurrPos;
     long long FCurrStart;
-    int FCurrSize;
+    int FCurrSectors;
 
     int FBytesPerSector;
     int FSectorsPerPage;

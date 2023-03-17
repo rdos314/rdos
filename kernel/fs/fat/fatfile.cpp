@@ -84,13 +84,14 @@ TFatFile::~TFatFile()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatFile::SetReq(long long pos, int size)
+void TFatFile::SetReq(long long StartSector, int Sectors)
 {
     long long start;
     long long end;
+    int count;
     long long c;
 
-    c = pos / FSectorsPerCluster / FBytesPerSector;
+    c = StartSector / FSectorsPerCluster;
 
     if (c >= FClusterCount)
         c = FClusterCount - 1;
@@ -98,9 +99,9 @@ void TFatFile::SetReq(long long pos, int size)
     if (c < 0)
         c = 0;
 
-    start =  c * FSectorsPerCluster * FBytesPerSector;
+    start =  c * FSectorsPerCluster;
 
-    c = (start + size) / FSectorsPerCluster / FBytesPerSector;
+    c = (StartSector + Sectors) / FSectorsPerCluster;
 
     if (c >= FClusterCount)
         c = FClusterCount - 1;
@@ -108,10 +109,10 @@ void TFatFile::SetReq(long long pos, int size)
     if (c < 0)
         c = 0;
 
-    end = (c + 1) * FSectorsPerCluster * FBytesPerSector - 1;
-    size = end - start + 1;
+    end = (c + 1) * FSectorsPerCluster - 1;
+    count = end - start + 1;
 
-    TFile::SetReq(start, size);
+    TFile::SetReq(start, count);
 }
 
 /*##########################################################################
@@ -125,11 +126,11 @@ void TFatFile::SetReq(long long pos, int size)
 #   Returns....: *
 #
 ##########################################################################*/
-long long TFatFile::GetSector(long long pos)
+long long TFatFile::GetSector(long long RelSector)
 {
-    unsigned int c = pos / FSectorsPerCluster / FBytesPerSector;
+    unsigned int c = RelSector / FSectorsPerCluster;
     int sc = FFat->SectorsPerCluster;
-    int diff = pos % FSectorsPerCluster;
+    int diff = RelSector % FSectorsPerCluster;
 
     return FFat->StartSector + (FClusterArr[c] - 2) * sc + diff;
 }

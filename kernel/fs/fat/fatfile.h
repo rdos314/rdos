@@ -40,8 +40,8 @@ public:
     TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster, int BytesPerSector, int OffsetSector);
     virtual ~TFatFile();
 
-    virtual void SetReq(long long pos, int size);
-    virtual long long GetSector(long long pos);
+    virtual void SetReq(long long StartSector, int Sectors);
+    virtual long long GetSector(long long RelSector);
 
 protected:
     int FSectorsPerCluster;
