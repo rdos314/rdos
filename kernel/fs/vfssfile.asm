@@ -119,53 +119,6 @@ InitFilePart    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetFileReq
-;
-;       DESCRIPTION:    Get file req
-;
-;       PARAMETERS:     EBX                File req handle
-;                       DS:EDI             Req
-;
-;       RETURNS:        FS                 Part sel
-;                       GS                 File req
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public GetFileReq
-
-GetFileReq	Proc near
-    push ds
-    push eax
-    push ebx
-;
-    mov al,REQ_SIGN
-    call HandleHighToPartFs
-    jc gfrFail
-;
-    movzx ebx,bx
-    dec ebx
-    cmp ebx,MAX_VFS_FILE_REQ_COUNT
-    jae gfrFail
-;
-    shl ebx,2
-    add ebx,OFFSET vfsp_file_req_arr
-    mov gs,fs:[ebx].fr_sel
-    clc
-    jmp gfrDone
-
-gfrFail:
-    stc
-
-gfrDone:
-    pop ebx
-    pop eax
-    pop ds
-    ret
-GetFileReq   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AllocateFileHandle
 ;
 ;       DESCRIPTION:    Allocate file handle
@@ -421,6 +374,57 @@ serv_file_info    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateFileReq
+;
+;       DESCRIPTION:    Update file req
+;
+;       PARAMETERS:     FS                 Part sel
+;                       EBX                File req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UpdateFileReq
+
+UpdateFileReq	Proc near
+    push ds
+    push gs
+    pushad
+;
+    movzx ebx,bx
+    dec ebx
+    cmp ebx,MAX_VFS_FILE_REQ_COUNT
+    jae ufrDone
+;
+    mov ds,fs:vfsp_disc_sel
+    EnterSection ds:vfs_section
+;
+    shl ebx,2
+    add ebx,OFFSET vfsp_file_req_arr
+    mov bx,fs:[ebx].fr_sel
+    or bx,bx
+    jz ufrLeave
+;
+    mov gs,bx
+    mov ecx,gs:vfs_rd_remain_count
+    or ecx,ecx
+    jnz ufrLeave
+;
+    call NotifyFileData
+    call FreeReqSel
+
+ufrLeave:
+    LeaveSection ds:vfs_section
+
+ufrDone:
+    popad
+    pop gs
+    pop ds
+    ret
+UpdateFileReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyReq
 ;
 ;       DESCRIPTION:    Notify req
@@ -488,11 +492,6 @@ nrqScanLoop:
     inc cx
     sub gs:vfs_rd_remain_count,1
     jnz nrqScanNext
-;
-    xor ax,ax
-    xchg ax,gs:vfs_rd_req_sel
-    or ax,ax
-    jz nrqDone
 ;
     call NotifyFileData
     call FreeReqSel

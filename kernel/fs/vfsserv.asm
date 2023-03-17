@@ -40,6 +40,7 @@ include ..\fs.inc
 include ..\os\exec.def
 include vfs.inc
 include vfsmsg.inc
+include vfsfile.inc
 
     .386p
 
@@ -91,9 +92,7 @@ code    SEGMENT byte public 'CODE'
     extern SectorToBlock:near
     extern SectorCountToBlock:near
     extern InitFilePart:near
-    extern GetFileReq:near
-    extern NotifyFileData:near
-    extern FreeReqSel:near
+    extern UpdateFileReq:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2430,7 +2429,6 @@ reply_vfs_data_cmd  Endp
 ;       DESCRIPTION:    Serv reply VFS file data
 ;
 ;       PARAMETERS:     EBX            VFS req handle
-;                       DS:EDI         Req buf
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2439,16 +2437,13 @@ reply_vfs_file_name       DB 'Reply VFS File',0
 reply_vfs_file    Proc far
     push es
     push fs
-    push gs
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
+    pushad
 ;
-    call GetFileReq
-    jc rffDone
+    mov al,REQ_SIGN
+    call HandleHighToPartFs
+    jc rvfDone
 ;
+    mov ebp,ebx
     mov esi,fs:vfsp_cmd_curr
     dec esi
     mov ebx,esi
@@ -2466,32 +2461,11 @@ reply_vfs_file    Proc far
 ;
     lock bts fs:vfsp_cmd_free_mask,esi
 ;
-    mov gs:vfs_rd_req_sel,-1
-;
-    mov ecx,gs:vfs_rd_remain_count
-    or ecx,ecx
-    jnz rffDone
-;
-    xor bx,bx
-    xchg bx,gs:vfs_rd_req_sel
-    or bx,bx
-    jz rffDone
-;
-    push ds
-    mov ds,fs:vfsp_disc_sel
-    EnterSection ds:vfs_section
-    call NotifyFileData
-    call FreeReqSel
-    LeaveSection ds:vfs_section
-    pop ds
+    mov ebx,ebp
+    call UpdateFileReq
 
-rffDone:
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop gs
+rvfDone:
+    popad
     pop fs
     pop es
     ret
