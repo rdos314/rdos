@@ -61,6 +61,10 @@ void cdecl main()
     int size;
     int alt;
 
+    unsigned long Linear;
+    unsigned long mb;
+    unsigned long kb;
+
     Check(185, 799);
     Check(984, 24);
     Check(769133, 17030);
@@ -75,6 +79,13 @@ void cdecl main()
 
     for (i = 0; i < 1000000; i++)
     {
+        Linear = (unsigned long)RdosGetFreeBigLocalLinear();
+        mb = Linear / 1024 / 1024;
+        kb = Linear - mb * 1024 * 1024;
+        kb = kb * 1000 / 1024;
+        kb = kb * 100 / 1024;
+        printf("Gdt: %d Mem: %d.%05d MB\r\n", RdosGetFreeGdt(), mb, kb); 
+
         alt = RdosGetRandom(5);
         switch (alt)
         {
