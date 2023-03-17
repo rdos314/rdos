@@ -2486,10 +2486,43 @@ NotifyFileData  Proc near
 ;
     mov esi,gs:vfs_rd_chain_ptr
     call MergeReq
+    or ecx,ecx
+    jnz nfdData
+
+nfdFree:
+    mov al,bl
+    shl ebx,4
+    mov es:[ebx].frs_arr.fre_size,0
+    or es:[ebx].frs_arr.fre_handle,80000000h
 ;
+    mov esi,OFFSET frs_sorted
+    mov ecx,es:frs_count
+
+nfdFind:
+    cmp al,es:[esi]
+    je nfdMove
+;
+    inc esi
+    loop nfdFind
+;
+    jmp nfdSignal
+
+nfdMove:
+    mov al,es:[esi+1]
+    mov es:[esi],al
+    inc esi
+    loop nfdMove
+;
+    dec es:frs_count
+    mov es:frs_update,1
+    jmp nfdSignal
+
+nfdData:
     call CalcPageCount
     call SetupReadReq
     call ProcessReadReq
+
+nfdSignal:
     call SignalReadReq
 
 nfdLeave:
@@ -2528,6 +2561,8 @@ FreeFileReq  Proc near
     mov ebx,edx
     shl ebx,4
     mov ecx,es:[ebx].frs_arr.fre_size
+    or ecx,ecx
+    jz ffrDone
 ;    
     mov ax,serv_flat_sel
     mov es,eax
