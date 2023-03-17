@@ -471,7 +471,7 @@ int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
         entry = &FMap->MapArr[index];
         diff = pos - entry->Pos;
 
-        if (diff >= 0)
+        if (entry->Base && diff >= 0)
         {
             count = entry->Size - diff;
 

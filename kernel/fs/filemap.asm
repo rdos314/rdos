@@ -1543,7 +1543,7 @@ FreeMap  Proc near
     push esi
 ;
     movzx ebx,bx
-    mov esi,ebx
+    movzx esi,byte ptr es:[ebx]
     shl esi,4
     add esi,OFFSET fm_entry_arr
     xor edx,edx
