@@ -101,7 +101,7 @@ void TFatFile::SetReq(long long StartSector, int Sectors)
 
     start =  c * FSectorsPerCluster;
 
-    c = (StartSector + Sectors) / FSectorsPerCluster;
+    c = (StartSector + Sectors - 1) / FSectorsPerCluster;
 
     if (c >= FClusterCount)
         c = FClusterCount - 1;
