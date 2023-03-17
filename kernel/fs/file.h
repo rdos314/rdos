@@ -67,11 +67,11 @@ struct TFileReq
 class TFile
 {
 public:
-    TFile(TDir *ParentDir, int ParentIndex);
+    TFile(TDir *ParentDir, int ParentIndex, int BytesPerSector, int OffsetSector);
     virtual ~TFile();
 
     void Setup(int VfsHandle, int ServFileHandle);
-    virtual int ReqFile(long long pos, int size, int src, int sectorsize);
+    virtual int ReqFile(long long pos, int size, int src);
 
     void LockFile();
     void UnlockFile();
@@ -82,22 +82,27 @@ public:
 
 protected:
     virtual void FreeReq(int index);
-    virtual long long AdjustStart(long long pos) = 0;
-    virtual long long AdjustEnd(long long pos) = 0;
-    virtual long long GetSector(long long pos) = 0;
+    virtual void SetReq(long long pos, int size);
+    virtual long long GetSector(long long pos);
 
-    int AllocateEntry();
+    int AllocateReq();
     void UpdateReq();
-    int AddReq(long long pos, int size);
-    long long GetReqPos(int index);
-    int GetReqSize(int index);
+    int AddReq();
 
     struct TFileInfo *Info;
     struct TFileReq *Req;
 
-    TDir *Parent;
-    int ParentIndex;
-    TSection Section;
+    long long FCurrPos;
+    long long FCurrStart;
+    int FCurrSize;
+
+    int FBytesPerSector;
+    int FSectorsPerPage;
+    int FOffsetSector;
+
+    TDir *FParent;
+    int FParentIndex;
+    TSection FSection;
 };
 
 #endif

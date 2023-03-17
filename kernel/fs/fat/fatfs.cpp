@@ -107,7 +107,7 @@ bool TFat::Validate()
 {
     long long TotalSectors;
 
-    TotalSectors = Server->GetPartSectors();
+    TotalSectors = FServer->GetPartSectors();
 
     if (TotalSectors < PartSectors)
         return false;
@@ -154,7 +154,7 @@ long long TFat::GetFreeSectors()
 TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 {
     int Sectors = RootDirEntries / 16;
-    TDiscReq Req(Server);
+    TDiscReq Req(FServer);
     TDiscReqEntry ReqEntry(&Req, RootSector, Sectors);
     long long Sector;
     int Offset;
@@ -209,7 +209,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 {
     unsigned int Cluster = Inode;
-    TDiscReq Req(Server);
+    TDiscReq Req(FServer);
     TCluster Chain;
     unsigned int NextCluster1;
     unsigned int NextCluster2;
@@ -308,7 +308,7 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 ##########################################################################*/
 TCluster *TFat::GetClusterChain(unsigned int Cluster)
 {
-    TDiscReq Req(Server);
+    TDiscReq Req(FServer);
     TCluster *Chain;
     unsigned int NextCluster1;
     unsigned int NextCluster2;
@@ -356,7 +356,7 @@ TCluster *TFat::GetClusterChain(unsigned int Cluster)
 TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 {
     unsigned int Cluster = Inode;
-    TFile *File = new TFatFile(this, ParentDir, ParentIndex, Cluster);
+    TFile *File = new TFatFile(this, ParentDir, ParentIndex, Cluster, FBytesPerSector, FOffsetSector);
     return File;
 }
 
@@ -451,12 +451,12 @@ void TFat::GetSectors(TDiscReq *Req, long long Sector, int Count)
 ##########################################################################*/
 void TFat::Test()
 {
-    TDiscReq Req(Server);
+    TDiscReq Req(FServer);
     int count;
     long long sector;
     int delay;
 
-    while (Server->IsActive())
+    while (FServer->IsActive())
     {
         count = 1 + RdosGetRandom(127);
         sector = 400000 - 0x10 + RdosGetRandom(600000 - count);
@@ -489,6 +489,6 @@ void TFat::Run()
 
 //    ServTest();
 
-    Server->WaitForMsg(this);
+    FServer->WaitForMsg(this);
 
 }

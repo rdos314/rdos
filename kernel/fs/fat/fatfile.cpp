@@ -43,8 +43,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatFile::TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster)
-  : TFile(ParentDir, ParentIndex)
+TFatFile::TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster, int BytesPerSector, int OffsetSector)
+  : TFile(ParentDir, ParentIndex, BytesPerSector, OffsetSector)
 {
     FFat = Fat;
     FClusterChain = Fat->GetClusterChain(Cluster);
@@ -52,9 +52,9 @@ TFatFile::TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Clu
     FClusterCount = FClusterChain->GetSize();
     FClusterArr = FClusterChain->GetChain();
 
-    FBytesPerCluster = 512 * Fat->SectorsPerCluster;
+    FSectorsPerCluster = Fat->SectorsPerCluster;
 
-    Info->FsSize = (long long)FClusterCount * (long long)FBytesPerCluster;
+    Info->FsSize = (long long)FClusterCount * (long long)FSectorsPerCluster * (long long)BytesPerSector;
 }
 
 /*##########################################################################
@@ -84,9 +84,13 @@ TFatFile::~TFatFile()
 #   Returns....: *
 #
 ##########################################################################*/
-long long TFatFile::AdjustStart(long long pos)
+void TFatFile::SetReq(long long pos, int size)
 {
-    long long c = pos / FBytesPerCluster;
+    long long start;
+    long long end;
+    long long c;
+
+    c = pos / FSectorsPerCluster / FBytesPerSector;
 
     if (c >= FClusterCount)
         c = FClusterCount - 1;
@@ -94,23 +98,9 @@ long long TFatFile::AdjustStart(long long pos)
     if (c < 0)
         c = 0;
 
-    return c * FBytesPerCluster;
-}
+    start =  c * FSectorsPerCluster * FBytesPerSector;
 
-/*##########################################################################
-#
-#   Name       : TFatFile::AdjustEnd
-#
-#   Purpose....: Adjust end position
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long long TFatFile::AdjustEnd(long long pos)
-{
-    long long c = pos / FBytesPerCluster;
+    c = (start + size) / FSectorsPerCluster / FBytesPerSector;
 
     if (c >= FClusterCount)
         c = FClusterCount - 1;
@@ -118,7 +108,10 @@ long long TFatFile::AdjustEnd(long long pos)
     if (c < 0)
         c = 0;
 
-    return (c + 1) * FBytesPerCluster - 1;
+    end = (c + 1) * FSectorsPerCluster * FBytesPerSector - 1;
+    size = end - start + 1;
+
+    TFile::SetReq(start, size);
 }
 
 /*##########################################################################
@@ -134,9 +127,9 @@ long long TFatFile::AdjustEnd(long long pos)
 ##########################################################################*/
 long long TFatFile::GetSector(long long pos)
 {
-    unsigned int c = pos / FBytesPerCluster;
+    unsigned int c = pos / FSectorsPerCluster / FBytesPerSector;
     int sc = FFat->SectorsPerCluster;
-    int diff = (pos % FBytesPerCluster) / 512;
+    int diff = pos % FSectorsPerCluster;
 
     return FFat->StartSector + (FClusterArr[c] - 2) * sc + diff;
 }

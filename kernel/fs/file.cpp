@@ -43,15 +43,19 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFile::TFile(TDir *pd, int pi)
-  : Section("file")
+TFile::TFile(TDir *pd, int pi, int bps, int os)
+  : FSection("file")
 {
     struct DirEntry *entry;
 
-    Parent = pd;
-    ParentIndex = pi;
+    FBytesPerSector = bps;
+    FSectorsPerPage = 0x1000 / bps;
+    FOffsetSector = os;
 
-    entry = Parent->LockEntry(ParentIndex);
+    FParent = pd;
+    FParentIndex = pi;
+
+    entry = FParent->LockEntry(FParentIndex);
     Info = (struct TFileInfo *)RdosAllocateMem(0x1000);
 
     Info->FsSize = entry->Size;
@@ -68,7 +72,7 @@ TFile::TFile(TDir *pd, int pi)
 
     Req = 0;
 
-    Parent->UnlockEntry(entry);
+    FParent->UnlockEntry(entry);
 }
 
 /*##########################################################################
@@ -93,7 +97,7 @@ TFile::~TFile()
     if (Req)
         RdosFreeMem(Req);
 
-    Parent->ClearFileLink(ParentIndex);
+    FParent->ClearFileLink(FParentIndex);
 }
 
 /*##########################################################################
@@ -217,7 +221,7 @@ int TFile::GetAttrib()
 #   Returns....: *
 #
 ##########################################################################*/
-int TFile::AllocateEntry()
+int TFile::AllocateReq()
 {
     int i;
 
@@ -239,24 +243,84 @@ int TFile::AllocateEntry()
 #   Returns....: *
 #
 ##########################################################################*/
-int TFile::AddReq(long long pos, int size)
+int TFile::AddReq()
+{
+    int index;
+
+    if (FCurrSize > 0)
+    {
+        index = AllocateReq();
+
+        if (index >= 0)
+        {
+            Req->ReqArr[index].Pos = FCurrStart;
+            Req->ReqArr[index].Size = FCurrSize;
+            Req->ReqArr[index].Handle = -1;
+            printf("Read %d.%d start %lld size %d\r\n", GetServHandle(), index, FCurrStart, FCurrSize);
+
+            return index + 1;
+        }
+        else
+            printf("No entry\r\n");
+    }
+    else
+        printf("No size\r\n");
+
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::GetSector
+#
+#   Purpose....: Default get sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TFile::GetSector(long long pos)
+{
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::SetReq
+#
+#   Purpose....: Set req params
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::SetReq(long long pos, int size)
 {
     long long start;
     long long end;
     long long temp;
-    int diff;
     int i;
     int link;
-    int index;
 
-    start = AdjustStart(pos);
-    diff = start - pos;
-    size += diff;
-    if (size <= 0)
-        size = 1;
+    if (pos < 0)
+        pos = 0;
 
+    if (pos >= Info->ReqSize)
+        pos = Info->ReqSize - 1;
+
+    if (size < 0x1000)
+        size = 0x1000;
+
+    start = pos;
     end = start + size - 1;
-    end = AdjustEnd(end);
+
+    if (end < start)
+        end = start;
+
+    if (end > Info->ReqSize)
+        end = Info->ReqSize - 1;
 
     size = end - start + 1;
 
@@ -282,64 +346,9 @@ int TFile::AddReq(long long pos, int size)
         }
     }
 
-    if (size > 0)
-    {
-        index = AllocateEntry();
-
-        if (index >= 0)
-        {
-            Req->ReqArr[index].Pos = start;
-            Req->ReqArr[index].Size = size;
-            Req->ReqArr[index].Handle = -1;
-            printf("Read %d.%d start %lld size %d\r\n", GetServHandle(), index, start, size);
-
-            return index + 1;
-        }
-        else
-            printf("No entry\r\n");
-    }
-    else
-        printf("No size\r\n");
-
-    return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::GetReqPos
-#
-#   Purpose....: Get req position
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long long TFile::GetReqPos(int index)
-{
-    if (index)
-        return Req->ReqArr[index - 1].Pos;
-    else
-        return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::GetReqSize
-#
-#   Purpose....: Get req size
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFile::GetReqSize(int index)
-{
-    if (index)
-        return Req->ReqArr[index - 1].Size;
-    else
-        return 0;
+    FCurrPos = pos;
+    FCurrStart = start;
+    FCurrSize = size;
 }
 
 /*##########################################################################
@@ -353,7 +362,7 @@ int TFile::GetReqSize(int index)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFile::ReqFile(long long pos, int size, int src, int sectorsize)
+int TFile::ReqFile(long long pos, int size, int src)
 {
     int SectorCount;
     long long *SectorArr;
@@ -363,17 +372,19 @@ int TFile::ReqFile(long long pos, int size, int src, int sectorsize)
     long long start;
 
     UpdateReq();
-    index = AddReq(pos, size);
+
+    SetReq(pos, size);
+    index = AddReq();
 
     if (index)
     {
-        SectorCount = GetReqSize(index) / sectorsize;
+        SectorCount = FCurrSize / FBytesPerSector;
         SectorArr = new long long[SectorCount];
 
-        start = GetReqPos(index) / sectorsize;
+        start = FCurrStart / FBytesPerSector;
 
         for (sector = 0; sector < SectorCount; sector++)
-            SectorArr[sector] = GetSector((long long)sectorsize * (start + sector));
+            SectorArr[sector] = GetSector((long long)FBytesPerSector * (start + sector));
 
         res = ServAddVfsFileReq(GetKernelHandle(), index, SectorArr, SectorCount, src);
 

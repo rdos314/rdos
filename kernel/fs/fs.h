@@ -101,22 +101,22 @@ protected:
     TDir *GetStartDir(int rel);
     TFile *GetFile(int handle);
 
-    int BytesPerSector;
-    long long StartSector;
-    long long SectorCount;
+    int FBytesPerSector;
+    long long FStartSector;
+    long long FSectorCount;
 
-    int SectorsPerPage;
-    int OffsetSector;
+    int FSectorsPerPage;
+    int FOffsetSector;
 
-    TDir **DirArr;
-    int CurrDirCount;
-    int MaxDirCount;
+    TDir **FDirArr;
+    int FCurrDirCount;
+    int FMaxDirCount;
 
-    TFile **FileArr;
-    int CurrFileCount;
-    int MaxFileCount;
+    TFile **FFileArr;
+    int FCurrFileCount;
+    int FMaxFileCount;
 
-    TDiscServer *Server;
+    TDiscServer *FServer;
 };
 
 #endif

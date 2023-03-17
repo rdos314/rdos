@@ -134,7 +134,7 @@ TFat32::~TFat32()
 ##########################################################################*/
 bool TFat32::ProcessInfoSector()
 {
-    TDiscReq req(Server);
+    TDiscReq req(FServer);
     TDiscReqEntry e1(&req, InfoSector, 1);
     struct TFatInfo *info;
 

@@ -37,15 +37,14 @@ class TFat;
 class TFatFile : public TFile
 {
 public:
-    TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster);
+    TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster, int BytesPerSector, int OffsetSector);
     virtual ~TFatFile();
 
-    virtual long long AdjustStart(long long pos);
-    virtual long long AdjustEnd(long long pos);
+    virtual void SetReq(long long pos, int size);
     virtual long long GetSector(long long pos);
 
 protected:
-    int FBytesPerCluster;
+    int FSectorsPerCluster;
     int FClusterCount;
     unsigned int *FClusterArr;
 
