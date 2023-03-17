@@ -62,6 +62,7 @@ code    SEGMENT byte public 'CODE'
     extern UnlinkRequest:near
     extern AddFileReq:near
     extern FreeFileReq:near
+    extern GetFileDebugInfo:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -374,6 +375,48 @@ scfDone:
     ret
 serv_close_file    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServFileInfo
+;
+;       DESCRIPTION:    Serv file info
+;
+;       PARAMETERS:     EBX            kernel handle
+;
+;       RETURNS:        EAX            Req count
+;                       EBX            Wait count
+;                       ECX            Block count
+;                       EDX            Phys count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_file_info_name       DB 'Serv File Info',0
+
+serv_file_info    Proc far
+    push ds
+    push fs
+;
+    mov al,VFS_FILE_SIGN
+    call HandleHighToPartFs
+    jc sfiDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc sfiDone
+;
+    dec bx
+    shl bx,2
+    add bx,OFFSET vfsp_file_arr
+    mov ds,fs:[bx].ff_sel
+    call GetFileDebugInfo
+    clc
+
+sfiDone:
+    pop fs
+    pop ds
+    ret
+serv_file_info    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1471,6 +1514,12 @@ init_server_file    Proc near
     mov edi,OFFSET serv_add_file_req_name
     xor cl,cl
     mov ax,serv_add_file_req_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_file_info
+    mov edi,OFFSET serv_file_info_name
+    xor cl,cl
+    mov ax,serv_file_info_nr
     RegisterServGate
     ret
 init_server_file    Endp

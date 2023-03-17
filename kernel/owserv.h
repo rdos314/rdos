@@ -61,6 +61,30 @@
     ServGate_serv_free_file_req  \
     __parm [__ebx] [__edx]
 
+#pragma aux ServVfsFileReqCount = \
+    ServGate_serv_file_info  \
+    __parm [__ebx] \
+    __modify [__ebx __ecx __edx] \
+    __value [__eax]
+
+#pragma aux ServVfsFileWaitCount = \
+    ServGate_serv_file_info  \
+    __parm [__ebx] \
+    __modify [__eax __ecx __edx] \
+    __value [__ebx]
+
+#pragma aux ServVfsFileBlockCount = \
+    ServGate_serv_file_info  \
+    __parm [__ebx] \
+    __modify [__eax __ebx __edx] \
+    __value [__ecx]
+
+#pragma aux ServVfsFilePhysCount = \
+    ServGate_serv_file_info  \
+    __parm [__ebx] \
+    __modify [__eax __ebx __ecx] \
+    __value [__edx]
+
 #pragma aux ServTest = \
     ServGate_test_serv
 

@@ -81,6 +81,12 @@ kf_req_sync       DW ?
 kf_resv           DW ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
+
+kf_req_count      DD ?
+kf_wait_count     DD ?
+kf_block_count    DD ?
+kf_phys_count     DD ?
+
 kf_handle_arr     DD 240 DUP(?)
 
 kernel_file       ENDS
@@ -156,6 +162,32 @@ BlockToPhys  Proc near
 btpDone:
     ret
 BlockToPhys  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetFileDebugInfo
+;
+;       DESCRIPTION:    Get file info
+;
+;       PARAMETERS:     DS             File sel
+;
+;       RETURNS:        EAX            Req count
+;                       EBX            Wait count
+;                       ECX            Block count
+;                       EDX            Phys count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetFileDebugInfo
+
+GetFileDebugInfo    Proc near
+    mov eax,ds:kf_req_count
+    mov ebx,ds:kf_wait_count
+    mov ecx,ds:kf_block_count
+    mov edx,ds:kf_phys_count
+    ret
+GetFileDebugInfo   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -236,6 +268,12 @@ CreateFileSel   Proc near
     mov ds:kf_serv_handle,ebx
     mov ds:kf_wait_list,0
     mov ds:kf_req_sync,0
+
+    mov ds:kf_req_count,0
+    mov ds:kf_wait_count,0
+    mov ds:kf_block_count,0
+    mov ds:kf_phys_count,0
+
 ;
     push ecx
 ;
@@ -353,6 +391,7 @@ AddFileReq   Proc near
     shl esi,4
     add esi,OFFSET frs_arr
 ;
+    inc ds:kf_req_count
     mov cx,SIZE kernel_req_entry
     AllocateBlk
     mov ds:[edi].kf_handle_arr,edx
@@ -498,6 +537,7 @@ AddWaitReq      Proc near
     push ecx
     push edx
 ;
+    inc ds:kf_wait_count
     ClearSignal
     mov cx,SIZE kernel_wait_entry
     AllocateBlk
@@ -895,11 +935,13 @@ SetupReadReq   Proc near
 ;
     mov ebx,ds:[4*ebx].kf_handle_arr
     mov ds:[ebx].kre_pages,ax
+    inc ds:kf_block_count
     mov cx,ax
     shl cx,2
     AllocateBlk
     mov ds:[ebx].kre_block_arr,edx
 ;
+    inc ds:kf_phys_count
     shl cx,1
     AllocateBlk
     mov ds:[ebx].kre_phys_arr,edx
@@ -1015,6 +1057,7 @@ srrLoop:
     mov bx,ds:[edx].kwe_thread
     Signal
 ;
+    dec ds:kf_wait_count
     mov cx,SIZE kernel_wait_entry
     FreeBlk
 ;
@@ -2561,8 +2604,6 @@ FreeFileReq  Proc near
     mov ebx,edx
     shl ebx,4
     mov ecx,es:[ebx].frs_arr.fre_size
-    or ecx,ecx
-    jz ffrDone
 ;    
     mov ax,serv_flat_sel
     mov es,eax
@@ -2570,6 +2611,9 @@ FreeFileReq  Proc near
 ;
     mov ebx,ds:[4*edx].kf_handle_arr
     mov ebp,ebx
+    or ecx,ecx
+    jz ffrReq
+;
     mov edi,ds:[ebx].kre_block_arr
     mov edx,ds:[ebx].kre_phys_arr
     mov edx,ds:[edx]
@@ -2614,14 +2658,18 @@ ffrFreeNext:
 ffrFreeEntry:
     mov ebx,ebp
     mov cx,ds:[ebx].kre_pages
+    dec ds:kf_block_count
     shl cx,2
     mov edx,ds:[ebx].kre_block_arr
     FreeBlk
 ;
+    dec ds:kf_phys_count
     shl cx,1
     mov edx,ds:[ebx].kre_phys_arr
     FreeBlk
-;
+
+ffrReq:
+    dec ds:kf_req_count
     mov edx,ebp
     mov cx,SIZE kernel_req_entry
     FreeBlk

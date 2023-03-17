@@ -34,6 +34,11 @@ int RDOSAPI ServAddVfsFileReq(int FileHandle, int ReqIndex, long long *SectorBuf
 void RDOSAPI ServFreeVfsFileReq(int FileHandle, int ReqIndex);
 void RDOSAPI ServCloseVfsFile(int FileHandle);
 
+int RDOSAPI ServVfsFileReqCount(int handle);
+int RDOSAPI ServVfsFileWaitCount(int handle);
+int RDOSAPI ServVfsFileBlockCount(int handle);
+int RDOSAPI ServVfsFilePhysCount(int handle);
+
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();
 long long RDOSAPI ServGetVfsStartSector(int handle);

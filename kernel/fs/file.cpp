@@ -337,6 +337,10 @@ int TFile::ReqFile(long long pos, int size, int src)
     int SectorCount;
     bool HasPos = false;
 
+    unsigned long Linear;
+    unsigned long mb;
+    unsigned long kb;
+
     UpdateReq();
 
     FCurrPos = pos / FBytesPerSector;
@@ -393,7 +397,19 @@ int TFile::ReqFile(long long pos, int size, int src)
             Req->ReqArr[index].Pos = FCurrStart * FBytesPerSector;
             Req->ReqArr[index].Size = SectorCount * FBytesPerSector;
             Req->ReqArr[index].Handle = -1;
-            printf("Read %d.%d start %lld size %d\r\n", GetServHandle(), index, FCurrStart, SectorCount);
+            printf("Read %d.%d start %lld size %d ", GetServHandle(), index, FCurrStart, SectorCount);
+            printf("Req: %d Wait: %d Block: %d Phys: %d ", 
+                                      ServVfsFileReqCount(GetKernelHandle()), 
+                                      ServVfsFileWaitCount(GetKernelHandle()),
+                                      ServVfsFileBlockCount(GetKernelHandle()),
+                                      ServVfsFilePhysCount(GetKernelHandle()));
+
+            Linear = (unsigned long)RdosGetFreeBigLocalLinear();
+            mb = Linear / 1024 / 1024;
+            kb = Linear - mb * 1024 * 1024;
+            kb = kb * 1000 / 1024;
+            kb = kb * 100 / 1024;
+            printf("Gdt: %d Mem: %d.%05d MB\r\n", RdosGetFreeGdt(), mb, kb); 
 
             res = ServAddVfsFileReq(GetKernelHandle(), index + 1, SectorArr, SectorCount, src);
         }

@@ -194,6 +194,15 @@ ServCloseVfsFile  MACRO
     ServGate serv_close_file_nr
                     ENDM
 
+; IN  EBX              VFS handle
+; OUT EAX              Req count
+; OUT EBX              Wait count
+; OUT ECX              Block count
+; OUT EDX              Phys count
+ServVfsFileInfo  MACRO
+    ServGate serv_file_info_nr
+                    ENDM
+
 ; IN  BX               Kernel handle
 ; IN  EDX              Req index
 ; IN  ECX              Sector count

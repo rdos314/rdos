@@ -61,10 +61,17 @@ void cdecl main()
     int size;
     int alt;
 
-    Check(978, 1091);
-    Check(2069, 2464);
-    Check(700994, 92);
-    Check(2753, 31522);
+    Check(185, 799);
+    Check(984, 24);
+    Check(769133, 17030);
+    Check(786163, 1789);
+    Check(62896, 65);
+    Check(54631, 18658);
+    Check(7877701, 189);
+    Check(2703, 117);
+    Check(14566288, 14841);
+    Check(620055, 83);
+    Check(620138, 2777);
 
     for (i = 0; i < 1000000; i++)
     {
