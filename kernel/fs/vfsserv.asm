@@ -92,7 +92,6 @@ code    SEGMENT byte public 'CODE'
     extern SectorToBlock:near
     extern SectorCountToBlock:near
     extern InitFilePart:near
-    extern UpdateFileReq:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2239,7 +2238,7 @@ wait_for_vfs_cmd  Endp
 ;
 ;       NAME:           ReplyVfsCmd
 ;
-;       DESCRIPTION:    Reply on VFS cmd
+;       DESCRIPTION:    Reply on VFS run cmd
 ;
 ;       PARAMETERS:     EBX        VFS handle
 ;
@@ -2286,6 +2285,61 @@ rfcDone:
     pop es
     ret
 reply_vfs_cmd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReplyVfsPost
+;
+;       DESCRIPTION:    Serv reply VFS post cmd
+;
+;       PARAMETERS:     EBX            VFS req handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reply_vfs_post_name       DB 'Reply VFS Post',0
+
+reply_vfs_post    Proc far
+    push es
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    mov al,REQ_SIGN
+    call HandleHighToPartFs
+    jc rvfpDone
+;
+    mov ebp,ebx
+    mov esi,fs:vfsp_cmd_curr
+    dec esi
+    mov ebx,esi
+    shl ebx,4
+    add ebx,OFFSET vfsp_cmd_arr
+;
+    mov edx,fs:[ebx].vfss_server_linear
+    mov eax,fs:[ebx].vfss_phys
+    mov ebx,fs:[ebx].vfss_phys+4
+    or ax,863h
+    mov cx,system_data_sel
+    mov es,cx
+    add edx,es:flat_base
+    SetPageEntry
+;
+    lock bts fs:vfsp_cmd_free_mask,esi
+
+rvfpDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    ret
+reply_vfs_post    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2420,56 +2474,6 @@ rvdcDone:
     pop es
     ret
 reply_vfs_data_cmd  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           reply_vfs_file
-;
-;       DESCRIPTION:    Serv reply VFS file data
-;
-;       PARAMETERS:     EBX            VFS req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-reply_vfs_file_name       DB 'Reply VFS File',0
-
-reply_vfs_file    Proc far
-    push es
-    push fs
-    pushad
-;
-    mov al,REQ_SIGN
-    call HandleHighToPartFs
-    jc rvfDone
-;
-    mov ebp,ebx
-    mov esi,fs:vfsp_cmd_curr
-    dec esi
-    mov ebx,esi
-    shl ebx,4
-    add ebx,OFFSET vfsp_cmd_arr
-;
-    mov edx,fs:[ebx].vfss_server_linear
-    mov eax,fs:[ebx].vfss_phys
-    mov ebx,fs:[ebx].vfss_phys+4
-    or ax,863h
-    mov cx,system_data_sel
-    mov es,cx
-    add edx,es:flat_base
-    SetPageEntry
-;
-    lock bts fs:vfsp_cmd_free_mask,esi
-;
-    mov ebx,ebp
-    call UpdateFileReq
-
-rvfDone:
-    popad
-    pop fs
-    pop es
-    ret
-reply_vfs_file    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3350,6 +3354,12 @@ init_server    Proc near
     mov ax,reply_vfs_cmd_nr
     RegisterServGate
 ;
+    mov esi,OFFSET reply_vfs_post
+    mov edi,OFFSET reply_vfs_post_name
+    xor cl,cl
+    mov ax,reply_vfs_post_nr
+    RegisterServGate
+;
     mov esi,OFFSET reply_vfs_block_cmd
     mov edi,OFFSET reply_vfs_block_cmd_name
     xor cl,cl
@@ -3360,12 +3370,6 @@ init_server    Proc near
     mov edi,OFFSET reply_vfs_data_cmd_name
     xor cl,cl
     mov ax,reply_vfs_data_cmd_nr
-    RegisterServGate
-;
-    mov esi,OFFSET reply_vfs_file
-    mov edi,OFFSET reply_vfs_file_name
-    xor cl,cl
-    mov ax,reply_vfs_file_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv

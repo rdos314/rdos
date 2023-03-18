@@ -462,8 +462,8 @@ LocalReqFile Proc near
     call LowReqFile
     pop edi
 ;
-    mov ebx,eax
-    ReplyVfsFile
+    mov ebx,[edi].fc_handle
+    ReplyVfsPost
 ;
     ret
 LocalReqFile Endp
@@ -488,7 +488,7 @@ LocalCloseFile Proc near
     pop edi
 ;
     mov ebx,[edi].fc_handle
-    ReplyVfsCmd
+    ReplyVfsPost
     ret
 LocalCloseFile Endp
 

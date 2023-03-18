@@ -325,10 +325,9 @@ void TFile::SetReq(long long StartSector, int Sectors)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFile::ReqFile(long long pos, int size, int src)
+void TFile::ReqFile(long long pos, int size, int src)
 {
     long long *SectorArr;
-    int res = 0;
     int index;
     int sector;
     long long prev;
@@ -384,7 +383,7 @@ int TFile::ReqFile(long long pos, int size, int src)
             prev = curr;
             SectorArr[SectorCount] = curr;
             SectorCount++;
-        }    
+        }
 
         FCurrSectors = SectorCount;
 
@@ -394,18 +393,22 @@ int TFile::ReqFile(long long pos, int size, int src)
             Req->ReqArr[index].Size = SectorCount * FBytesPerSector;
             Req->ReqArr[index].Handle = -1;
             printf("Read %d.%d start %lld size %d\r\n", GetServHandle(), index, FCurrStart, SectorCount);
-            res = ServAddVfsFileReq(GetKernelHandle(), index + 1, SectorArr, SectorCount, src);
+            ServAddVfsFileReq(GetKernelHandle(), index + 1, SectorArr, SectorCount, src);
         }
         else
+        {
             printf("Read %d No size\r\n", GetServHandle());
+            ServAddVfsFileReq(GetKernelHandle(), 0, 0, 0, src);
+        }
 
         delete SectorArr;
         UpdateReq();
     }
     else
+    {
         printf("Read %d No req available\r\n", GetServHandle());
-
-    return res;
+        ServAddVfsFileReq(GetKernelHandle(), 0, 0, 0, src);
+    }
 }
 
 /*##########################################################################

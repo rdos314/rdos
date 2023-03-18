@@ -71,7 +71,7 @@ public:
     virtual ~TFile();
 
     void Setup(int VfsHandle, int ServFileHandle);
-    virtual int ReqFile(long long pos, int size, int src);
+    virtual void ReqFile(long long pos, int size, int src);
 
     void LockFile();
     void UnlockFile();
