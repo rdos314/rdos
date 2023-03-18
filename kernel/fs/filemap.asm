@@ -2608,6 +2608,56 @@ NotifyFileData  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           NotifyFileSignal
+;
+;       DESCRIPTION:    Notify file signal
+;
+;       PARAMETERS:     EBX            File handle
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public NotifyFileSignal
+
+NotifyFileSignal  Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov al,VFS_FILE_SIGN
+    call HandleHighToPartFs
+    jc nfsDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc nfsDone
+;
+    movzx ebx,bx
+    dec ebx
+    shl ebx,2
+    mov bx,fs:[ebx].vfsp_file_arr.ff_sel
+    or bx,bx
+    stc
+    je nfdDone
+;
+    mov ds,ebx
+    mov es,ds:kf_serv_sel
+;
+    EnterSection ds:kf_section
+    call SignalReadReq
+    LeaveSection ds:kf_section
+
+nfsDone:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+NotifyFileSignal  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           FreeFileReq
 ;
 ;       DESCRIPTION:    Free file req

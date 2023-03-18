@@ -59,6 +59,7 @@ code    SEGMENT byte public 'CODE'
     extern CreateFileSel:near
     extern CloseFileSel:near
     extern NotifyFileData:near
+    extern NotifyFileSignal:near
     extern UnlinkRequest:near
     extern AddFileReq:near
     extern FreeFileReq:near
@@ -374,57 +375,6 @@ serv_file_info    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UpdateFileReq
-;
-;       DESCRIPTION:    Update file req
-;
-;       PARAMETERS:     FS                 Part sel
-;                       EBX                File req handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public UpdateFileReq
-
-UpdateFileReq	Proc near
-    push ds
-    push gs
-    pushad
-;
-    movzx ebx,bx
-    dec ebx
-    cmp ebx,MAX_VFS_FILE_REQ_COUNT
-    jae ufrDone
-;
-    mov ds,fs:vfsp_disc_sel
-    EnterSection ds:vfs_section
-;
-    shl ebx,2
-    add ebx,OFFSET vfsp_file_req_arr
-    mov bx,fs:[ebx].fr_sel
-    or bx,bx
-    jz ufrLeave
-;
-    mov gs,bx
-    mov ecx,gs:vfs_rd_remain_count
-    or ecx,ecx
-    jnz ufrLeave
-;
-    call NotifyFileData
-    call FreeReqSel
-
-ufrLeave:
-    LeaveSection ds:vfs_section
-
-ufrDone:
-    popad
-    pop gs
-    pop ds
-    ret
-UpdateFileReq   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           NotifyReq
 ;
 ;       DESCRIPTION:    Notify req
@@ -518,7 +468,7 @@ NotifyReq    Endp
 ;       DESCRIPTION:    Get min & max MSB sector values
 ;
 ;       PARAMETERS:     ECX             Size
-;                       EDX             Data
+;                       DS:EDI          Data
 ;
 ;       RETURNS:        EAX             Min
 ;                       EBX             Max
@@ -529,7 +479,7 @@ GetMinMax Proc near
     push ecx
     push esi
 ;
-    mov esi,edx
+    mov esi,edi
     add esi,4
     mov eax,ds:[esi]
     mov ebx,eax
@@ -722,7 +672,7 @@ CopySectors    Endp
 ;
 ;       PARAMETERS:     FS              Part sel
 ;                       ECX             Size
-;                       EDX             Data
+;                       DS:EDI          Data
 ;                       EAX             Min MSB
 ;                       EBX             Max MSB
 ;                       ESI             File handle
@@ -733,6 +683,8 @@ CopySectors    Endp
 
 CreateReqSel Proc near
     pushad
+;
+    mov esi,edi
 ;
     push eax
     push ebx
@@ -766,7 +718,6 @@ CreateReqSel Proc near
     mov edi,SIZE vfs_read_entry
     mov es:vfs_rd_chain_ptr,edi
 ;
-    mov esi,edx
     call CopySectors
 ;
     mov ecx,es:vfs_rd_sectors
@@ -1297,15 +1248,6 @@ srNext:
     loop srLoop
 ;
     LeaveSection ds:vfs_section
-    mov eax,gs:vfs_rd_remain_count
-    or eax,eax
-    clc
-    jz srDone
-;
-    mov ds,fs:vfsp_disc_sel
-    mov bx,ds:vfs_server
-    Signal
-    clc
 
 srDone:
     pop ebp
@@ -1403,43 +1345,42 @@ serv_add_file_req    Proc far
 ;
     mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
-    jc safLeave
+    jc safDone
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
     cmc
-    jc safLeave
+    jc safDone
 ;
-    mov esi,ebx
-    movzx ebx,bx
-    call AllocateFileReq
-    jc safLeave
+    or ecx,ecx
+    jz safWakeup
 ;
     call AddFileReq
-    jc safLeave
-;
-    push edx
+    jc safWakeup
 ;
     mov eax,es
     mov ds,eax
-    mov edx,edi
 ;
     call GetMinMax
     call CreateReqSel
 ;
-    pop edx
-    jc safFail
-;
-    mov es:vfs_rd_index,edx
-    mov es:vfs_rd_req_handle,0
-    mov es:vfs_rd_req_sel,0
-;
     mov eax,es
     mov ds,eax
+    mov ds:vfs_rd_index,edx
+    mov ds:vfs_rd_req_handle,0
+    mov ds:vfs_rd_req_sel,0
+;
     call SortMsbReq
     call SortLsbReq
     call CreateReq
     call StartReq
-    jc safFail
+;
+    mov eax,ds:vfs_rd_remain_count
+    or eax,eax
+    clc
+    jz safProcess
+;
+    call AllocateFileReq
+    jc safFreeFileReq
 ;
     mov eax,ds
     mov fs:[ebp].fr_sel,ax
@@ -1453,16 +1394,44 @@ serv_add_file_req    Proc far
     inc ebp
     or eax,ebp
     mov es:vfs_rd_req_handle,eax
-    clc
-    jmp safLeave
-
-safFail:
-    mov word ptr fs:[ebp],0
-
-safLeave:
-    jnc safDone
 ;
-    xor eax,eax
+    mov ds,fs:vfsp_disc_sel
+    mov bx,ds:vfs_server
+    Signal
+    jmp safDone
+
+safProcess:
+    mov eax,ds
+    mov gs,eax
+    call UnlinkRequest
+;
+    mov ds,fs:vfsp_disc_sel
+    EnterSection ds:vfs_section
+    call NotifyFileData
+    LeaveSection ds:vfs_section
+;
+    xor bx,bx
+    mov gs,bx
+    mov eax,gs
+    mov es,eax
+    FreeBigServSel
+    jmp safDone
+
+safFreeFileReq:
+    mov word ptr fs:[ebp],0
+;
+    mov eax,ds
+    mov gs,eax
+    call UnlinkRequest
+;
+    xor bx,bx
+    mov gs,bx
+    mov eax,gs
+    mov es,eax
+    FreeBigServSel
+
+safWakeup:
+   call NotifyFileSignal
 
 safDone:
     pop ebp
