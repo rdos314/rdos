@@ -78,7 +78,7 @@ code    SEGMENT byte public 'CODE'
 
     public InitFilePart
 
-InitFilePart	Proc near
+InitFilePart    Proc near
     push eax
     push ecx
     push edi
@@ -96,20 +96,6 @@ ifpFileLoop:
     loop ifpFileLoop
 ;
     mov es:[edi].ff_link,cx
-;
-    mov ecx,MAX_VFS_FILE_REQ_COUNT - 1
-    mov edi,OFFSET vfsp_file_req_arr
-    mov es:vfsp_req_list,di
-    mov eax,edi
-
-ifpReqLoop:
-    add eax,4
-    mov es:[edi].fr_link,ax
-    mov es:[edi].fr_sel,0
-    mov edi,eax
-    loop ifpReqLoop
-;
-    mov es:[edi].fr_link,cx
 ;
     pop edi
     pop ecx    
@@ -134,7 +120,7 @@ InitFilePart    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateFileHandle	Proc near
+AllocateFileHandle      Proc near
     push ds
     push eax
     push esi
@@ -763,37 +749,19 @@ CreateReqSel Endp
     public FreeReqSel
 
 FreeReqSel Proc near
-    push ds
     push es
     push eax
-    push ebx
-;
-    mov eax,gs
-    mov es,eax
-    mov eax,fs
-    mov ds,eax
-;
-    mov ebx,es:vfs_rd_req_handle
-    dec bx
-    add bx,OFFSET vfsp_file_req_arr
-;
-    EnterSection ds:vfsp_req_section
-    mov ds:[bx].fr_sel,0
-    mov ax,ds:vfsp_req_list
-    mov ds:[bx].fr_link,ax
-    mov ds:vfsp_req_list,bx
-    LeaveSection ds:vfsp_req_section
 ;
     call UnlinkRequest
 ;
-    xor bx,bx
-    mov gs,bx
+    mov eax,gs
+    mov es,eax
+    xor eax,eax
+    mov gs,eax
     FreeBigServSel
 ;
-    pop ebx
     pop eax
     pop es
-    pop ds
     ret
 FreeReqSel Endp
 
@@ -1200,7 +1168,7 @@ StartOneReq    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartReq	Proc near
+StartReq        Proc near
     push ds
     push es
     push gs
@@ -1260,60 +1228,6 @@ srDone:
     pop ds
     ret
 StartReq     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AllocateFileReq
-;
-;       DESCRIPTION:    Allocate file req entry
-;
-;       PARAMETERS:     FS          Part sel
-;
-;       RETURNS:        EBP         File req entry offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateFileReq	Proc near
-    push ds
-    push eax
-;
-    mov eax,fs
-    mov ds,eax
-    EnterSection ds:vfsp_req_section
-;
-    movzx ebp,ds:vfsp_req_list
-    or ebp,ebp
-    jnz afrOk
-;
-    int 3
-    LeaveSection ds:vfsp_req_section
-    stc
-    jmp afrDone
-
-afrOk:
-    mov ax,ds:[ebp].fr_sel
-    or ax,ax
-    jz afrEmpty
-;
-    int 3
-    LeaveSection ds:vfsp_req_section
-    stc
-    jmp afrDone
-
-afrEmpty:
-    mov ds:[ebp].fr_sel,-1
-    mov ax,ds:[ebp].fr_link
-    mov ds:vfsp_req_list,ax
-    clc
-    LeaveSection ds:vfsp_req_section
-    clc
-
-afrDone:
-    pop eax
-    pop ds
-    ret
-AllocateFileReq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1378,22 +1292,6 @@ serv_add_file_req    Proc far
     clc
     jz safProcess
 ;
-    call AllocateFileReq
-    jc safFreeFileReq
-;
-    mov eax,ds
-    mov fs:[ebp].fr_sel,ax
-    movzx eax,fs:vfsp_part_nr
-    inc eax
-    shl eax,8
-    mov al,REQ_SIGN
-    shl eax,16
-    sub ebp,OFFSET vfsp_file_req_arr
-    shr ebp,2
-    inc ebp
-    or eax,ebp
-    mov es:vfs_rd_req_handle,eax
-;
     mov ds,fs:vfsp_disc_sel
     mov bx,ds:vfs_server
     Signal
@@ -1415,19 +1313,6 @@ safProcess:
     mov es,eax
     FreeBigServSel
     jmp safDone
-
-safFreeFileReq:
-    mov word ptr fs:[ebp],0
-;
-    mov eax,ds
-    mov gs,eax
-    call UnlinkRequest
-;
-    xor bx,bx
-    mov gs,bx
-    mov eax,gs
-    mov es,eax
-    FreeBigServSel
 
 safWakeup:
    call NotifyFileSignal

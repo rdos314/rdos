@@ -25,16 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-REQ_SIGN             = 'R'
-
-
-file_part_req_struc  STRUC
-
-fr_sel           DW ?
-fr_link          DW ?
-
-file_part_req_struc  ENDS
-
 file_part_struc  STRUC
 
 ff_sel           DW ?

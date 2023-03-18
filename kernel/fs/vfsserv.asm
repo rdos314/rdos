@@ -2308,8 +2308,7 @@ reply_vfs_post    Proc far
     push edx
     push esi
 ;
-    mov al,REQ_SIGN
-    call HandleHighToPartFs
+    call HandleToPartFs
     jc rvfpDone
 ;
     mov ebp,ebx

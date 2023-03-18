@@ -197,7 +197,6 @@ vfsp_cmd_head             DB ?
 vfsp_cmd_tail             DB ?
 
 vfsp_file_list            DW ?
-vfsp_req_list             DW ?
 
 vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
 vfsp_file_arr             DW MAX_VFS_FILE_COUNT DUP(?,?,?,?)
