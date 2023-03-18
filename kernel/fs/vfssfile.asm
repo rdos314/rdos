@@ -1367,7 +1367,6 @@ serv_add_file_req    Proc far
     mov ds,eax
     mov ds:vfs_rd_index,edx
     mov ds:vfs_rd_req_handle,0
-    mov ds:vfs_rd_req_sel,0
 ;
     call SortMsbReq
     call SortLsbReq
