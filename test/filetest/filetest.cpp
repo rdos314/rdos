@@ -65,27 +65,22 @@ void cdecl main()
     unsigned long mb;
     unsigned long kb;
 
-    Check(185, 799);
-    Check(984, 24);
-    Check(769133, 17030);
-    Check(786163, 1789);
-    Check(62896, 65);
-    Check(54631, 18658);
-    Check(7877701, 189);
-    Check(2703, 117);
-    Check(14566288, 14841);
-    Check(620055, 83);
-    Check(620138, 2777);
+    Check(3048, 430);
+    Check(3478, 1605);
+    Check(389986, 3504);
+    Check(24169, 3230);
+    Check(12277, 2618);
+    Check(14895, 56777);
+    Check(222340, 12661);
 
     for (i = 0; i < 1000000; i++)
     {
-/*        Linear = (unsigned long)RdosGetFreeBigLocalLinear();
+        Linear = (unsigned long)RdosGetFreeBigLocalLinear();
         mb = Linear / 1024 / 1024;
         kb = Linear - mb * 1024 * 1024;
         kb = kb * 1000 / 1024;
         kb = kb * 100 / 1024;
         printf("Gdt: %d Mem: %d.%05d MB\r\n", RdosGetFreeGdt(), mb, kb); 
-*/
 
         alt = RdosGetRandom(5);
         switch (alt)

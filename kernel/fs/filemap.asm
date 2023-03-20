@@ -2511,6 +2511,7 @@ NotifyFileData  Proc near
     push ds
     push es
     push fs
+    push gs
     pushad
 ;
     mov ebx,gs:vfs_rd_file_handle
@@ -2599,6 +2600,7 @@ nfdLeave:
 
 nfdDone:
     popad
+    pop gs
     pop fs
     pop es
     pop ds

@@ -378,8 +378,11 @@ serv_file_info    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyReq    Proc near
+    push es
+    push eax
     push ebx
     push edx
+    push esi
     push edi
     push ebp
 ;
@@ -430,7 +433,13 @@ nrqScanLoop:
     jnz nrqScanNext
 ;
     call NotifyFileData
-    call FreeReqSel
+    call UnlinkRequest
+;
+    mov eax,gs
+    mov es,eax
+    xor eax,eax
+    mov gs,eax
+    FreeBigServSel
     jmp nrqDone
     
 nrqScanNext:
@@ -441,8 +450,11 @@ nrqScanNext:
 nrqDone:
     pop ebp
     pop edi
+    pop esi
     pop edx
     pop ebx
+    pop eax
+    pop es
     ret
 NotifyReq    Endp
 
@@ -730,37 +742,6 @@ CreateReqSel Proc near
     popad
     ret
 CreateReqSel Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FreeReqSel
-;
-;       DESCRIPTION:    Free req selector
-;
-;       PARAMETERS:     GS              Req sel
-;                       FS              Part sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public FreeReqSel
-
-FreeReqSel Proc near
-    push es
-    push eax
-;
-    call UnlinkRequest
-;
-    mov eax,gs
-    mov es,eax
-    xor eax,eax
-    mov gs,eax
-    FreeBigServSel
-;
-    pop eax
-    pop es
-    ret
-FreeReqSel Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
