@@ -454,7 +454,7 @@ NotifyReq    Endp
 ;       DESCRIPTION:    Get min & max MSB sector values
 ;
 ;       PARAMETERS:     ECX             Size
-;                       DS:EDI          Data
+;                       DS:ESI          Data
 ;
 ;       RETURNS:        EAX             Min
 ;                       EBX             Max
@@ -465,7 +465,6 @@ GetMinMax Proc near
     push ecx
     push esi
 ;
-    mov esi,edi
     add esi,4
     mov eax,ds:[esi]
     mov ebx,eax
@@ -658,10 +657,9 @@ CopySectors    Endp
 ;
 ;       PARAMETERS:     FS              Part sel
 ;                       ECX             Size
-;                       DS:EDI          Data
+;                       DS:ESI          Data
 ;                       EAX             Min MSB
 ;                       EBX             Max MSB
-;                       ESI             File handle
 ;
 ;       RETURNS:        ES              Req sel
 ;
@@ -670,7 +668,7 @@ CopySectors    Endp
 CreateReqSel Proc near
     pushad
 ;
-    mov esi,edi
+    mov ebp,esi
 ;
     push eax
     push ebx
@@ -694,7 +692,6 @@ CreateReqSel Proc near
     pop ebx
     pop eax
 ;
-    mov es:vfs_rd_file_handle,esi
     mov es:vfs_rd_start_msb,eax
     sub ebx,eax
     inc ebx
@@ -1257,6 +1254,7 @@ serv_add_file_req    Proc far
     push esi
     push ebp
 ;
+    mov ebp,ebx
     mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
     jc safDone
@@ -1273,12 +1271,14 @@ serv_add_file_req    Proc far
 ;
     mov eax,es
     mov ds,eax
+    mov esi,edi
 ;
     call GetMinMax
     call CreateReqSel
 ;
     mov eax,es
     mov ds,eax
+    mov ds:vfs_rd_file_handle,ebp
     mov ds:vfs_rd_index,edx
     mov ds:vfs_rd_req_handle,0
 ;
