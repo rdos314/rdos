@@ -1543,27 +1543,6 @@ FreeMap  Proc near
     push esi
 ;
     movzx ebx,bx
-    movzx esi,byte ptr es:[ebx]
-    shl esi,4
-    add esi,OFFSET fm_entry_arr
-    xor edx,edx
-    xchg edx,es:[esi].fmb_base
-    or edx,edx
-    jz fmUnlink
-;
-    add edx,ds:kfm_flat_base
-    mov ecx,edx
-    add ecx,es:[esi].fmb_size
-    dec ecx
-    shr ecx,12
-    inc ecx
-    shl ecx,12
-    shr edx,12
-    shl edx,12
-    sub ecx,edx
-    FreeLinear
-
-fmUnlink:
     mov ecx,es:fm_count
     sub ecx,ebx
     inc ecx
@@ -1670,6 +1649,50 @@ CheckMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UnlinkLinear
+;
+;       DESCRIPTION:    Unlink linear address
+;
+;       PARAMETERS:     ES             Kernel mapping sel
+;                       AL             Entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkLinear  Proc near
+    push ecx
+    push edx
+    push esi
+;
+    movzx esi,al
+    shl esi,4
+    add esi,OFFSET fm_entry_arr
+    xor edx,edx
+    xchg edx,es:[esi].fmb_base
+    or edx,edx
+    jz ulDone
+;
+    add edx,ds:kfm_flat_base
+    mov ecx,edx
+    add ecx,es:[esi].fmb_size
+    dec ecx
+    shr ecx,12
+    inc ecx
+    shl ecx,12
+    shr edx,12
+    shl edx,12
+    sub ecx,edx
+    FreeLinear
+
+ulDone:
+    pop esi
+    pop edx
+    pop ecx
+    ret
+UnlinkLinear   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UnlinkedMap
 ;
 ;       DESCRIPTION:    Unlink entries
@@ -1691,6 +1714,8 @@ UnlinkMap  Proc near
 
 urmLoop:
     mov al,ds:[ebx]
+    call UnlinkLinear
+;
     push ebx
     movzx ebx,al
     mov ebx,ds:[4*ebx].kfm_src_arr
