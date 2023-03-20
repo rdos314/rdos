@@ -137,7 +137,7 @@ CreateDiscSel  Proc near
 ;
 ; test only
 ;
-    mov es:vfs_max_cached_pages,38000
+    mov es:vfs_max_cached_pages,1500
 ;
     mov eax,ebp
     sub eax,OFFSET disc_arr
