@@ -10310,7 +10310,7 @@ create_serv_proc  PROC far
     xor dx,dx
     mov dl,al       
     mov [ebp].cr_prio,dx
-    mov [ebp].cr_stack,stack0_size
+    mov dword ptr [ebp].cr_stack,stack0_size
     mov [ebp].cr_name,edi
     mov [ebp+4].cr_name,es
     xor ax,ax
@@ -11192,7 +11192,7 @@ create_serv_app  PROC far
     mov [ebp].cr_seg,cs
     mov dword ptr [ebp].cr_offs,0
     mov word ptr [ebp].cr_prio,2
-    mov word ptr [ebp].cr_stack,stack0_size
+    mov dword ptr [ebp].cr_stack,stack0_size
     mov word ptr [ebp].cr_mode,0
     mov dword ptr [ebp].cr_name,edi
     mov [ebp+4].cr_name,es

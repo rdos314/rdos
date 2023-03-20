@@ -5263,7 +5263,7 @@ gtpBaseOk:
 ;
     and ebp,01FF000h
     or eax,ebp
-    and al,NOT 80h
+    and al,7Fh
     jmp get_thread_page_done64
     
 get_thread_page_not_2m_64:
