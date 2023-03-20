@@ -640,7 +640,7 @@ free_ldt    PROC far
     mov ds,ax
     mov ds,ds:p_ldt_obj
     and bl,NOT 7
-;       
+;
     EnterSection ds:ldt_section
     mov es,ds:ldt_data_sel
     mov byte ptr es:[bx+5],0

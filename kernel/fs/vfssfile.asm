@@ -1278,8 +1278,7 @@ serv_add_file_req    Proc far
     Signal
     jmp safDone
 
-safProcess:
-    mov eax,ds
+safProcess:    mov eax,ds
     mov gs,eax
     call UnlinkRequest
 ;
@@ -1288,10 +1287,10 @@ safProcess:
     call NotifyFileData
     LeaveSection ds:vfs_section
 ;
-    xor bx,bx
-    mov gs,bx
     mov eax,gs
     mov es,eax
+    xor eax,eax
+    mov gs,eax
     FreeBigServSel
     jmp safDone
 
