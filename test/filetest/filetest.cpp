@@ -5,10 +5,6 @@
 #include <stdlib.h>
 #include "file.h"
 
-static char buf[0x10000];
-static TFile file("y:/test.dat");
-
-
 char CalcSign(long long pos)
 {
     char ch;
@@ -25,17 +21,17 @@ char CalcSign(long long pos)
     return ch;
 }
 
-void Check(long long pos, int size)
+void Check(TFile &file, char *buf, long long pos, int size)
 {
     int j;
     char ch;
     int ret;
-    bool logged = true;
+    bool logged = false;
 
-    printf("Pos %lld, size %d\r\n", pos, size);
+//    printf("Pos %lld, size %d\r\n", pos, size);
 
     file.SetPos(pos);
-    ret = file.Read(buf, size);   
+    ret = file.Read(buf, size);
 
     if (size == ret)
     {
@@ -51,28 +47,37 @@ void Check(long long pos, int size)
         }
     }
     else
-        printf("Wrong size at pos %lld, expect: %d, found %d\r\n", pos+j, size, ret);
+    {
+        if (pos + ret != 0x1000000)
+            printf("Wrong size at pos %lld, expect: %d, found %d\r\n", pos+j, size, ret);
+    }
 }
 
-void cdecl main()
+
+void DoTest(int count)
 {
     int i;
     long long pos;
     int size;
     int alt;
+    TFile file("y:/test.dat");
+    char *buf = new char[0x10000];
 
     unsigned long Linear;
     unsigned long mb;
     unsigned long kb;
 
-    for (i = 0; i < 1000000; i++)
+    for (i = 0; i < count; i++)
     {
-        Linear = (unsigned long)RdosGetFreeBigLocalLinear();
-        mb = Linear / 1024 / 1024;
-        kb = Linear - mb * 1024 * 1024;
-        kb = kb * 1000 / 1024;
-        kb = kb * 100 / 1024;
-        printf("Id: %d Gdt: %d Mem: %d.%05d MB ", i, RdosGetFreeGdt(), mb, kb); 
+        if ((i % 25) == 0)
+        {
+            Linear = (unsigned long)RdosGetFreeBigLocalLinear();
+            mb = Linear / 1024 / 1024;
+            kb = Linear - mb * 1024 * 1024;
+            kb = kb * 1000 / 1024;
+            kb = kb * 100 / 1024;
+            printf("Id: %d Gdt: %d Mem: %d.%05d MB\r\n", i, RdosGetFreeGdt(), mb, kb);
+        }
 
         alt = RdosGetRandom(5);
         switch (alt)
@@ -104,16 +109,23 @@ void cdecl main()
             case 0:
                 size = RdosGetRandom(0x10000);
                 break;
-                 
+
             case 1:
                 size = RdosGetRandom(0x1000);
                 break;
-        
+
             case 2:
                 size = RdosGetRandom(0x100);
                 break;
         }
 
-        Check(pos, size);
+        Check(file, buf, pos, size);
     }
+
+    delete buf;
+}
+
+void cdecl main()
+{
+    DoTest(1000000);
 }
