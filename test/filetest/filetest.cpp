@@ -5,6 +5,56 @@
 #include <stdlib.h>
 #include "file.h"
 
+struct TPosEntry
+{
+    long long pos;
+    int size;
+};
+
+static TPosEntry PosArr[] =
+{
+  {176122, 53160}, 
+  {10640399, 100}, 
+  {11615698, 75}, 
+  {3022, 237}, 
+  {39610, 60234}, 
+  {2674, 29451}, 
+  {32125, 75}, 
+  {5065808, 181}, 
+  {5065989, 2039}, 
+  {5068028, 45020}, 
+  {60263, 3880}, 
+  {1061, 56855}, 
+  {60306, 17255}, 
+  {2019, 33537}, 
+  {1175918, 32569}, 
+  {33769, 3616}, 
+  {2256, 2252}, 
+  {14261960, 1791}, 
+  {12368641, 1181}, 
+  {10295, 20}, 
+  {1823, 161}, 
+  {1984, 3484}, 
+  {1782, 133}, 
+  {940000, 39065}, 
+  {979065, 11460}, 
+  {661189, 74}, 
+  {14474, 91}, 
+  {52004, 37584}, 
+  {603780, 25703}, 
+  {555671, 2820}, 
+  {1805, 1184}, 
+  {3488, 45989}, 
+  {2125, 942}, 
+  {3067, 3980}, 
+  {10222437, 14901}, 
+  {10237338, 13618}, 
+  {10250956, 5407}, 
+  {67406, 15992}, 
+  {0, -1}
+};
+
+
 char CalcSign(long long pos)
 {
     char ch;
@@ -63,9 +113,23 @@ void DoTest(int count)
     TFile file("y:/test.dat");
     char *buf = new char[0x10000];
 
+    TFile logfile("log.txt", 0);
+    char str[80];
+
     unsigned long Linear;
     unsigned long mb;
     unsigned long kb;
+
+    for (i = 0; i < 1000; i++)
+    {
+        pos = PosArr[i].pos;
+        size = PosArr[i].size;
+
+        if (size > 0)
+            Check(file, buf, pos, size);
+        else
+            break;
+    }
 
     for (i = 0; i < count; i++)
     {
@@ -119,6 +183,9 @@ void DoTest(int count)
                 size = RdosGetRandom(0x100);
                 break;
         }
+
+        sprintf(str, "  {%lld, %d}, \r\n", pos, size);
+        logfile.Write(str);
 
         Check(file, buf, pos, size);
     }
