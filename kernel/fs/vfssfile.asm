@@ -139,14 +139,6 @@ AllocateFileHandle      Proc near
     jmp afhDone
 
 afhOk:
-    call CreateFileSel
-    mov ds:[esi].ff_sel,ax
-;
-    xor ax,ax
-    xchg ax,ds:[esi].ff_link
-    mov ds:vfsp_file_list,ax
-    LeaveSection ds:vfsp_req_section
-;
     mov ebx,esi
     movzx eax,ds:vfsp_part_nr
     inc eax
@@ -157,6 +149,15 @@ afhOk:
     shr ebx,2
     inc ebx
     or ebx,eax
+;
+    call CreateFileSel
+    mov ds:[esi].ff_sel,ax
+;
+    xor ax,ax
+    xchg ax,ds:[esi].ff_link
+    mov ds:vfsp_file_list,ax
+    LeaveSection ds:vfsp_req_section
+;
     clc
 
 afhDone:

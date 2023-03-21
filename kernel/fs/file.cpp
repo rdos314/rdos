@@ -66,7 +66,6 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     Info->Flags = entry->Flags;
     Info->Uid = entry->Uid;
     Info->Gid = entry->Gid;
-    Info->KernelHandle = 0;
     Info->ServHandle = 0;
     strcpy(Info->Name, entry->PathName);
 
@@ -89,9 +88,9 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
 TFile::~TFile()
 {
     UpdateReq();
-    printf("Close %d\r\n", GetServHandle());
+    printf("Close %hX\r\n", GetServHandle());
 
-    ServCloseVfsFile(GetKernelHandle());
+    ServCloseVfsFile(GetServHandle());
 
     RdosFreeMem(Info);
     if (Req)
@@ -111,7 +110,7 @@ TFile::~TFile()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::Setup(int VfsHandle, int ServFileHandle)
+int TFile::Setup(int VfsHandle)
 {
     int i;
 
@@ -128,8 +127,9 @@ void TFile::Setup(int VfsHandle, int ServFileHandle)
     for (i = 0; i < 241; i++)
         Req->SortedArr[i] = 0xFF;
 
-    Info->ServHandle = ServFileHandle;
-    Info->KernelHandle = ServOpenVfsFile(VfsHandle, Info, Req);
+    Info->ServHandle = ServOpenVfsFile(VfsHandle, Info, Req);
+
+    return Info->ServHandle;
 }
 
 /*##########################################################################
@@ -176,22 +176,6 @@ void TFile::UnlockFile()
 int TFile::GetServHandle()
 {
     return Info->ServHandle;
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::GetKernelHandle
-#
-#   Purpose....: Get kernel handle
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFile::GetKernelHandle()
-{
-    return Info->KernelHandle;
 }
 
 /*##########################################################################
@@ -392,13 +376,13 @@ void TFile::ReqFile(long long pos, int size, int src)
             Req->ReqArr[index].Pos = FCurrStart * FBytesPerSector;
             Req->ReqArr[index].Size = SectorCount * FBytesPerSector;
             Req->ReqArr[index].Handle = -1;
-            printf("Read %d.%d start %lld size %d\r\n", GetServHandle(), index, FCurrStart, SectorCount);
-            ServAddVfsFileReq(GetKernelHandle(), index + 1, SectorArr, SectorCount, src);
+            printf("Read %hX.%d start %lld size %d\r\n", GetServHandle(), index, FCurrStart, SectorCount);
+            ServAddVfsFileReq(GetServHandle(), index + 1, SectorArr, SectorCount, src);
         }
         else
         {
-            printf("Read %d No size\r\n", GetServHandle());
-            ServAddVfsFileReq(GetKernelHandle(), 0, 0, 0, src);
+            printf("Read %hX No size\r\n", GetServHandle());
+            ServAddVfsFileReq(GetServHandle(), 0, 0, 0, src);
         }
 
         delete SectorArr;
@@ -406,8 +390,8 @@ void TFile::ReqFile(long long pos, int size, int src)
     }
     else
     {
-        printf("Read %d No req available\r\n", GetServHandle());
-        ServAddVfsFileReq(GetKernelHandle(), 0, 0, 0, src);
+        printf("Read %hX No req available\r\n", GetServHandle());
+        ServAddVfsFileReq(GetServHandle(), 0, 0, 0, src);
     }
 }
 
@@ -424,8 +408,8 @@ void TFile::ReqFile(long long pos, int size, int src)
 ##########################################################################*/
 void TFile::FreeReq(int index)
 {
-    printf(" Free %d.%d ", GetServHandle(), index);
-    ServFreeVfsFileReq(GetKernelHandle(), index + 1);
+    printf(" Free %hX.%d ", GetServHandle(), index);
+    ServFreeVfsFileReq(GetServHandle(), index + 1);
     Req->ReqArr[index].Handle = 0;
 }
 

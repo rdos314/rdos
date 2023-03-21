@@ -236,8 +236,7 @@ GetFileSel     Endp
 ;
 ;       DESCRIPTION:    Create file selector
 ;
-;       PARAMETERS:     FS             Part sel
-;                       EBX            VFS handle
+;       PARAMETERS:     EBX            Serv handle
 ;                       ECX            Req block linear
 ;                       EDX            File info linear
 ;                       DI             Sector size
@@ -251,6 +250,7 @@ GetFileSel     Endp
 
 CreateFileSel   Proc near
     push ds
+    push es
     push ebx
     push ecx
     push edx
@@ -273,7 +273,6 @@ CreateFileSel   Proc near
     mov ds:kf_wait_count,0
     mov ds:kf_block_count,0
     mov ds:kf_phys_count,0
-
 ;
     push ecx
 ;
@@ -316,6 +315,7 @@ cfInit:
     pop edx
     pop ecx
     pop ebx
+    pop es
     pop ds
     ret
 CreateFileSel   Endp

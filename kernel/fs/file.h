@@ -43,7 +43,6 @@ struct TFileInfo
     int Flags;
     int Uid;
     int Gid;
-    int KernelHandle;
     int ServHandle;
     char Name[1];
 };
@@ -70,14 +69,13 @@ public:
     TFile(TDir *ParentDir, int ParentIndex, int BytesPerSector, int OffsetSector);
     virtual ~TFile();
 
-    void Setup(int VfsHandle, int ServFileHandle);
+    int Setup(int VfsHandle);
     virtual void ReqFile(long long pos, int size, int src);
 
     void LockFile();
     void UnlockFile();
 
     int GetServHandle();
-    int GetKernelHandle();
     int GetAttrib();
 
 protected:

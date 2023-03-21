@@ -563,38 +563,21 @@ void TFs::GrowFile()
 ##########################################################################*/
 void TFs::Add(TFile *file)
 {
-    int i;
     int handle;
-    bool found = false;
+    int index;
 
-    if (FCurrFileCount == FMaxFileCount)
-        GrowFile();
+    handle = file->Setup(FServer->GetHandle());
+    index = handle & 0xFFFF;
 
-    for (i = FCurrFileCount; i < FMaxFileCount && !found; i++)
+    if (index > 0)
     {
-        if (FFileArr[i] == 0)
-        {
-            FFileArr[i] = file;
-            handle = i;
-            found = true;
-        }
-    }
+        if (index >= FCurrFileCount)
+            FCurrFileCount = index;
 
+        while (FCurrFileCount > FMaxFileCount)
+            GrowFile();
 
-    for (i = 0; i < FCurrFileCount && !found; i++)
-    {
-        if (FFileArr[i] == 0)
-        {
-            FFileArr[i] = file;
-            handle = i;
-            found = true;
-        }
-    }
-
-    if (found)
-    {
-        file->Setup(FServer->GetHandle(), handle);
-        FCurrFileCount++;
+        FFileArr[index - 1] = file;
     }
 }
 
@@ -908,7 +891,7 @@ int TFs::OpenFile(int rel, char *path)
 
     if (file)
     {
-        printf("Open %d <%s>\r\n", file->GetServHandle(), path);
+        printf("Open %hX <%s>\r\n", file->GetServHandle(), path);
         return file->GetServHandle();
     }
     else
@@ -928,8 +911,10 @@ int TFs::OpenFile(int rel, char *path)
 ##########################################################################*/
 TFile *TFs::GetFile(int handle)
 {
-    if (handle >= 0 && handle < FMaxFileCount)
-        return FFileArr[handle];
+    int index = handle & 0xFFFF;
+
+    if (index > 0 && index <= FMaxFileCount)
+        return FFileArr[index - 1];
     else
         return 0;
 }
@@ -971,7 +956,7 @@ int TFs::GetFileHandle(int handle)
     TFile *file = GetFile(handle);
 
     if (file)
-        return file->GetKernelHandle();
+        return file->GetServHandle();
     else
         return 0;
 }

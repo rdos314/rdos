@@ -37,7 +37,6 @@ fi_attrib            DD ?
 fi_flags             DD ?
 fi_uid               DD ?
 fi_gid               DD ?
-fi_kernel_handle     DD ?
 fi_serv_handle       DD ?
 fi_name              DB ?
 
