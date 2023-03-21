@@ -62,7 +62,7 @@ void Check(TFile &file, char *buf, long long pos, int size)
 }
 
 extern "C" void TestThread(void *Data)
-{    
+{
     int count = *(int *)Data;
     int i;
     long long pos;
@@ -160,7 +160,7 @@ void cdecl main()
     int count;
     TFile file("y:/rdos.bin");
 
-    count = 1000000;
+    count = 25000000;
     RdosCreateThread(TestThread, "Test 1", &count, 0x2000);
 //    RdosCreateThread(TestThread, "Test 2", &count, 0x2000);
 
