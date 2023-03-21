@@ -71,6 +71,9 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
 
     Req = 0;
 
+    Handle = 0;
+    Index = -1;
+
     FParent->UnlockEntry(entry);
 }
 
@@ -88,9 +91,9 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
 TFile::~TFile()
 {
     UpdateReq();
-    printf("Close %hX\r\n", GetServHandle());
+    printf("Close %d\r\n", Index);
 
-    ServCloseVfsFile(GetServHandle());
+    ServCloseVfsFile(Handle);
 
     RdosFreeMem(Info);
     if (Req)
@@ -127,9 +130,18 @@ int TFile::Setup(int VfsHandle)
     for (i = 0; i < 241; i++)
         Req->SortedArr[i] = 0xFF;
 
-    Info->ServHandle = ServOpenVfsFile(VfsHandle, Info, Req);
+    Handle = ServOpenVfsFile(VfsHandle, Info, Req);
+    Index = Handle & 0xFFFF;
+    if (Index > 0)
+        Index--;
+    else
+    {
+        Handle = 0;
+        Index = -1;
+    }
 
-    return Info->ServHandle;
+    Info->ServHandle = Handle;
+    return Handle;
 }
 
 /*##########################################################################
@@ -160,22 +172,6 @@ void TFile::LockFile()
 ##########################################################################*/
 void TFile::UnlockFile()
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::GetServHandle
-#
-#   Purpose....: Get server handle
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFile::GetServHandle()
-{
-    return Info->ServHandle;
 }
 
 /*##########################################################################
@@ -312,7 +308,7 @@ void TFile::SetReq(long long StartSector, int Sectors)
 void TFile::ReqFile(long long pos, int size, int src)
 {
     long long *SectorArr;
-    int index;
+    int req;
     int sector;
     long long prev;
     long long curr;
@@ -327,11 +323,11 @@ void TFile::ReqFile(long long pos, int size, int src)
     SetReq(FCurrPos, size / FBytesPerSector);
 
     if (FCurrSectors > 0)
-        index = AllocateReq();
+        req = AllocateReq();
     else
-        index = -1;
+        req = -1;
 
-    if (index >= 0)
+    if (req >= 0)
     {
         SectorCount = 0;
         SectorArr = new long long[FCurrSectors];
@@ -373,16 +369,16 @@ void TFile::ReqFile(long long pos, int size, int src)
 
         if (SectorCount)
         {
-            Req->ReqArr[index].Pos = FCurrStart * FBytesPerSector;
-            Req->ReqArr[index].Size = SectorCount * FBytesPerSector;
-            Req->ReqArr[index].Handle = -1;
-            printf("Read %hX.%d start %lld size %d\r\n", GetServHandle(), index, FCurrStart, SectorCount);
-            ServAddVfsFileReq(GetServHandle(), index + 1, SectorArr, SectorCount, src);
+            Req->ReqArr[req].Pos = FCurrStart * FBytesPerSector;
+            Req->ReqArr[req].Size = SectorCount * FBytesPerSector;
+            Req->ReqArr[req].Handle = -1;
+            printf("Read %d.%d start %lld size %d\r\n", Index, req, FCurrStart, SectorCount);
+            ServAddVfsFileReq(Handle, req + 1, SectorArr, SectorCount, src);
         }
         else
         {
-            printf("Read %hX No size\r\n", GetServHandle());
-            ServAddVfsFileReq(GetServHandle(), 0, 0, 0, src);
+            printf("Read %d No size\r\n", Index);
+            ServAddVfsFileReq(Handle, 0, 0, 0, src);
         }
 
         delete SectorArr;
@@ -390,8 +386,8 @@ void TFile::ReqFile(long long pos, int size, int src)
     }
     else
     {
-        printf("Read %hX No req available\r\n", GetServHandle());
-        ServAddVfsFileReq(GetServHandle(), 0, 0, 0, src);
+        printf("Read %d No req available\r\n", Index);
+        ServAddVfsFileReq(Handle, 0, 0, 0, src);
     }
 }
 
@@ -406,11 +402,11 @@ void TFile::ReqFile(long long pos, int size, int src)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::FreeReq(int index)
+void TFile::FreeReq(int req)
 {
-    printf(" Free %hX.%d ", GetServHandle(), index);
-    ServFreeVfsFileReq(GetServHandle(), index + 1);
-    Req->ReqArr[index].Handle = 0;
+    printf(" Free %d.%d ", Index, req);
+    ServFreeVfsFileReq(Handle, req + 1);
+    Req->ReqArr[req].Handle = 0;
 }
 
 /*##########################################################################

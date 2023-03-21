@@ -75,8 +75,10 @@ public:
     void LockFile();
     void UnlockFile();
 
-    int GetServHandle();
     int GetAttrib();
+
+    int Handle;
+    int Index;
 
 protected:
     virtual void FreeReq(int index);

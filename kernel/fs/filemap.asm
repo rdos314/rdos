@@ -575,7 +575,6 @@ SendReadReq     Proc near
     push ebx
 ;
     mov ebx,ds:kf_serv_handle
-    dec ebx
     mov fs,ds:kf_part_sel
     mov ds,fs:vfsp_disc_sel
     call AllocateMsg
@@ -610,7 +609,6 @@ SendCloseReq     Proc near
     push ebx
 ;
     mov ebx,ds:kf_serv_handle
-    dec ebx
     mov fs,ds:kf_part_sel
     mov ds,fs:vfsp_disc_sel
     call AllocateMsg

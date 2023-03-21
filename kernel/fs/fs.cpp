@@ -564,20 +564,18 @@ void TFs::GrowFile()
 void TFs::Add(TFile *file)
 {
     int handle;
-    int index;
 
     handle = file->Setup(FServer->GetHandle());
-    index = handle & 0xFFFF;
 
-    if (index > 0)
+    if (handle)
     {
-        if (index >= FCurrFileCount)
-            FCurrFileCount = index;
+        if (file->Index >= FCurrFileCount)
+            FCurrFileCount = file->Index + 1;
 
-        while (FCurrFileCount > FMaxFileCount)
+        if (FCurrFileCount > FMaxFileCount)
             GrowFile();
 
-        FFileArr[index - 1] = file;
+        FFileArr[file->Index] = file;
     }
 }
 
@@ -594,7 +592,7 @@ void TFs::Add(TFile *file)
 ##########################################################################*/
 void TFs::Remove(TFile *file)
 {
-    int handle = file->GetServHandle();
+    int handle = file->Handle;
 
     if (FFileArr[handle] == file)
     {
@@ -891,11 +889,30 @@ int TFs::OpenFile(int rel, char *path)
 
     if (file)
     {
-        printf("Open %hX <%s>\r\n", file->GetServHandle(), path);
-        return file->GetServHandle();
+        printf("Open %d <%s>\r\n", file->Index, path);
+        return file->Handle;
     }
     else
         return -1;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::FileHandleToIndex
+#
+#   Purpose....: Convert file handle to index in file arr
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::FileHandleToIndex(int handle)
+{
+    int index = handle & 0xFFFF;
+    int vfs = FServer->GetHandle();
+
+    return index - 1;
 }
 
 /*##########################################################################
@@ -911,10 +928,10 @@ int TFs::OpenFile(int rel, char *path)
 ##########################################################################*/
 TFile *TFs::GetFile(int handle)
 {
-    int index = handle & 0xFFFF;
+    int index = FileHandleToIndex(handle);
 
-    if (index > 0 && index <= FMaxFileCount)
-        return FFileArr[index - 1];
+    if (index >= 0 && index < FMaxFileCount)
+        return FFileArr[index];
     else
         return 0;
 }
@@ -956,7 +973,7 @@ int TFs::GetFileHandle(int handle)
     TFile *file = GetFile(handle);
 
     if (file)
-        return file->GetServHandle();
+        return file->Handle;
     else
         return 0;
 }
@@ -994,18 +1011,14 @@ void TFs::ReqFile(int handle, long long pos, int size, int src)
 void TFs::CloseFile(int handle)
 {
     TFile *file;
-    int i;
+    int index = FileHandleToIndex(handle);
 
-    if (handle >= 0 && handle < FMaxFileCount)
+    if (index >= 0 && handle < FMaxFileCount)
     {
-        file = FFileArr[handle];
+        file = FFileArr[index];
         if (file)
         {
-            FCurrFileCount--;
-            for (i = handle; i < FCurrFileCount; i++)
-                FFileArr[i] = FFileArr[i+1];
-
-            FFileArr[FCurrFileCount] = 0;
+            FFileArr[index] = 0;
             delete file;
         }
     }

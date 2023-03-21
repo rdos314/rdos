@@ -90,6 +90,8 @@ public:
     void ReadDirLink(TDir *dir, int index);
 
 protected:
+    int FileHandleToIndex(int handle);
+
     void GrowDir();
     void Add(TDir *dir);
     void Remove(TDir *dir);
