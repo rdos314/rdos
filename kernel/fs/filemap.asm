@@ -1117,63 +1117,66 @@ LockReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           IssueReq
+;       NAME:           WaitForReq
 ;
-;       DESCRIPTION:    Issue req
+;       DESCRIPTION:    Wait for req
 ;
 ;       PARAMETERS:     FS             Kernel process sel
 ;                       GS             File sel
-;                       BX             Handle
 ;                       EDX:EAX        Req position
-;                       ECX            Req size
 ;
 ;       RETURNS:        EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IssueReq      Proc near
+WaitForReq      Proc near
     push ds
     push esi
     push edi
 ;
     mov esi,gs
     mov ds,esi
-
-irRetry:
+;
     EnterSection ds:kf_section
     call FindReq
-    jnc irCheck
+    jnc wfrCheck
 ;
     call AddWaitReq
     call SendReadReq
-;
     LeaveSection ds:kf_section
 ;
     call UpdateMap
-    WaitForSignal
-    jmp irRetry
 
-irCheck:
+wfrWait:
+    WaitForSignal
+;
+    EnterSection ds:kf_section
+    call FindReq
+    jc wfrLeave
+
+wfrCheck:
     mov esi,ds:[4*ebx].kf_handle_arr
     mov esi,ds:[esi].kre_phys_arr
     or esi,esi
-    jnz irLeave
+    jnz wfrLock
 ;
     call AddWaitReq
     LeaveSection ds:kf_section
-    WaitForSignal
-    jmp irRetry
+    jmp wfrWait
 
-irLeave:
+wfrLock:
     mov esi,ds:[4*ebx].kf_handle_arr
     inc ds:[esi].kre_usage
+    clc
+
+wfrLeave:
     LeaveSection ds:kf_section
 ;
     pop edi
     pop esi
     pop ds
     ret
-IssueReq    Endp
+WaitForReq    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1979,21 +1982,9 @@ MapReq      Proc near
     mov es,ds:kfm_kernel_sel
     mov gs,ds:kfm_file_sel
 ;
-    EnterSection ds:kfm_section
-    push ecx
-    call FindReadMap
-    pop ecx
-    LeaveSection ds:kfm_section
-    jnc mrDone
+    call WaitForReq
+    jc mrDone
 ;
-    call LockReq
-    jc mrIssue
-;
-    call SyncMap
-    jmp mrDone
-
-mrIssue:
-    call IssueReq
     call SyncMap
     jnc mrDone
 ;
