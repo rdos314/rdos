@@ -2512,7 +2512,8 @@ gmeTryUnused:
     jmp gmeRetry
 
 gmeBlock:
-    CrashGate
+    int 3
+    jmp gmeRetry
 
 gmeAlloc:
     mov ebx,ecx
