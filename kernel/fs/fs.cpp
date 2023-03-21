@@ -995,12 +995,12 @@ int TFs::GetFileHandle(int handle)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::ReqFile(int handle, long long pos, int size, int src)
+void TFs::ReqFile(int handle, long long pos, int size)
 {
     TFile *file = GetFile(handle);
 
     if (file)
-        file->ReqFile(pos, size, src);
+        file->ReqFile(pos, size);
 }
 
 /*##########################################################################

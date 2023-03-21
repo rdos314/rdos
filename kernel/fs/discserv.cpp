@@ -101,9 +101,9 @@ int GetFileHandle(int handle)
     return Server->GetFileHandle(handle);
 }
 
-void ReqFile(int handle, long long pos, int size, int src)
+void ReqFile(int handle, long long pos, int size)
 {
-    Server->ReqFile(handle, pos, size, src);
+    Server->ReqFile(handle, pos, size);
 }
 
 void CloseFile(int handle)

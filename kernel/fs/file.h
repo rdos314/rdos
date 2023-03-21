@@ -70,7 +70,7 @@ public:
     virtual ~TFile();
 
     int Setup(int VfsHandle);
-    virtual void ReqFile(long long pos, int size, int src);
+    virtual void ReqFile(long long pos, int size);
 
     void LockFile();
     void UnlockFile();

@@ -1218,7 +1218,6 @@ StartReq     Endp
 ;       PARAMETERS:     EBX            File handle
 ;                       EDX            Req index
 ;                       ECX            Sector count
-;                       ESI            Src of req
 ;                       ES:EDI         Sector buf
 ;
 ;       RETURNS:        EAX            File req handle

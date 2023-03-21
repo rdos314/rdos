@@ -206,7 +206,6 @@ ServVfsFileInfo  MACRO
 ; IN  BX               Kernel handle
 ; IN  EDX              Req index
 ; IN  ECX              Sector count
-; IN  ESI              Src of request
 ; IN  ES:EDI           Sector buffer
 ; OUT EAX              File req handle
 ServAddVfsFileReq  MACRO

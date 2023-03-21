@@ -37,7 +37,7 @@ void ReadDirLink(void *dir, int index);
 int OpenFile(int rel, char *path);
 int GetFileAttrib(int handle);
 int GetFileHandle(int handle);
-void ReqFile(int handle, long long pos, int size, int src);
+void ReqFile(int handle, long long pos, int size);
 void CloseFile(int handle);
 
 /*##########################################################################
@@ -155,10 +155,10 @@ int LowOpenFile(int rel, char *path)
 #   Name       : LowReqFile
 #
 ##########################################################################*/
-#pragma aux LowReqFile "*" parm routine [ebx] [edx eax] [ecx] [esi]
-void LowReqFile(int handle, long long pos, int size, int src)
+#pragma aux LowReqFile "*" parm routine [ebx] [edx eax] [ecx]
+void LowReqFile(int handle, long long pos, int size)
 {
-    ReqFile(handle, pos, size, src);
+    ReqFile(handle, pos, size);
 }
 
 /*##########################################################################
