@@ -28,7 +28,7 @@ void Check(TFile &file, char *buf, long long pos, int size)
     int ret;
     bool logged = false;
 
-//    printf("Pos %lld, size %d\r\n", pos, size);
+    printf("Pos %lld, size %d\r\n", pos, size);
 
     file.SetPos(pos);
     ret = file.Read(buf, size);
@@ -69,7 +69,7 @@ void DoTest(int count)
 
     for (i = 0; i < count; i++)
     {
-        if ((i % 25) == 0)
+/*
         {
             Linear = (unsigned long)RdosGetFreeBigLocalLinear();
             mb = Linear / 1024 / 1024;
@@ -78,6 +78,7 @@ void DoTest(int count)
             kb = kb * 100 / 1024;
             printf("Id: %d Gdt: %d Mem: %d.%05d MB\r\n", i, RdosGetFreeGdt(), mb, kb);
         }
+*/
 
         alt = RdosGetRandom(5);
         switch (alt)

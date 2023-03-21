@@ -3038,22 +3038,29 @@ close_file  Proc far
     push ds
     push eax
     push ebx
+    push esi
 ;
     mov ax,VFS_FILE_HANDLE
     DerefHandle
     jnc cVfs
 ;
+    pop esi
     pop ebx
     pop eax
     pop ds
     jmp fword ptr cs:org_close
 
 cVfs:
+    mov esi,ebx
     mov ax,ds:[ebx].fh_sel
     mov bx,ds:[ebx].fh_handle
     mov ds,eax
     call close_vfs_file
 ;
+    mov ebx,esi
+    FreeHandle
+;
+    pop esi
     pop ebx
     pop eax
     pop ds
@@ -3249,20 +3256,24 @@ delete_handle   Proc far
     push ax
     push ebx
     push edx
+    push esi
 ;
     mov ax,VFS_FILE_HANDLE
     DerefHandle
     jc dhDone
 ;
+    mov esi,ebx
     mov ax,ds:[ebx].fh_sel
     mov bx,ds:[ebx].fh_handle
     mov ds,eax
     call close_vfs_file
 ;
+    mov ebx,esi
     FreeHandle
     clc
 
 dhDone:
+    pop esi
     pop edx
     pop ebx
     pop ax
