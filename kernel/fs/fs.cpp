@@ -32,6 +32,8 @@
 #include "str.h"
 #include "fs.h"
 
+#define VFS_FILE_SIGN 0x460000;
+
 /*##########################################################################
 #
 #   Name       : TParser::TParser
@@ -910,9 +912,13 @@ int TFs::OpenFile(int rel, char *path)
 int TFs::FileHandleToIndex(int handle)
 {
     int index = handle & 0xFFFF;
-    int vfs = FServer->GetHandle();
+    int vfs = VFS_FILE_SIGN;
+    vfs |= FServer->GetHandle() << 24;
 
-    return index - 1;
+    if (vfs == (handle & 0xFFFF0000))
+        return index - 1;
+    else
+        return -1;
 }
 
 /*##########################################################################
@@ -1013,7 +1019,7 @@ void TFs::CloseFile(int handle)
     TFile *file;
     int index = FileHandleToIndex(handle);
 
-    if (index >= 0 && handle < FMaxFileCount)
+    if (index >= 0 && index < FMaxFileCount)
     {
         file = FFileArr[index];
         if (file)
