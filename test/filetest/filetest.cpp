@@ -113,13 +113,11 @@ void DoTest(int count)
     TFile file("y:/test.dat");
     char *buf = new char[0x10000];
 
-    TFile logfile("log.txt", 0);
-    char str[80];
-
     unsigned long Linear;
     unsigned long mb;
     unsigned long kb;
 
+/*
     for (i = 0; i < 1000; i++)
     {
         pos = PosArr[i].pos;
@@ -130,6 +128,8 @@ void DoTest(int count)
         else
             break;
     }
+
+*/
 
     for (i = 0; i < count; i++)
     {
@@ -184,8 +184,8 @@ void DoTest(int count)
                 break;
         }
 
-        sprintf(str, "  {%lld, %d}, \r\n", pos, size);
-        logfile.Write(str);
+//        sprintf(str, "  {%lld, %d}, \r\n", pos, size);
+//        logfile.Write(str);
 
         Check(file, buf, pos, size);
     }
@@ -195,5 +195,7 @@ void DoTest(int count)
 
 void cdecl main()
 {
+    TFile file("y:/rdos.bin");
+
     DoTest(1000000);
 }
