@@ -340,7 +340,8 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice()
- : FSection("Serial")
+ : FSection("Serial"),
+   FEventSection("EvSerial")
 {
     Init();
 }
@@ -356,7 +357,8 @@ TSerialDevice::TSerialDevice()
 #
 ##########################################################################*/
 TSerialDevice::TSerialDevice(int Handle)
- : FSection("Serial")
+ : FSection("Serial"),
+   FEventSection("EvSerial")
 {
     Init();
 

@@ -31,15 +31,15 @@
 class TSection
 {
 public:
-	TSection();
-	TSection(const char *Name);
+    TSection(const char *Name);
     ~TSection();
-	void Enter() const;
-	void Leave() const;
+
+    void Enter() const;
+    void Leave() const;
 
 private:
     char FName[33];
-	int FHandle;
+    int FHandle;
 };
 
 #endif
