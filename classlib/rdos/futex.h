@@ -20,27 +20,47 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# section.h
-# Critical section class
+# futex.h
+# futex interface
 #
 ########################################################################*/
 
-#ifndef _SECTION_H
-#define _SECTION_H
+#ifndef _FUTEX_H
+#define _FUTEX_H
 
-#include "futex.h"
+#pragma pack( __push, 1 )
 
-class TSection
+// do not changes this as it depends on OS defines!
+
+struct TFutex
 {
-public:
-    TSection(const char *Name);
-    ~TSection();
-
-    void Enter() const;
-    void Leave() const;
-
-private:
-    struct TFutex Futex;
+    int Handle;
+    int Counter;
+    short int Val;
+    short int Owner;
+    char *Name;
 };
 
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+void InitFutex(struct TFutex *f, const char *n);
+#pragma aux InitFutex "*" parm routine [ebx] [edi]
+
+void EnterFutex(const struct TFutex *f);
+#pragma aux EnterFutex "*" parm routine [ebx]
+
+void LeaveFutex(const struct TFutex *f);
+#pragma aux LeaveFutex "*" parm routine [ebx]
+
+void ResetFutex(struct TFutex *f);
+#pragma aux ResetFutex "*" parm routine [ebx]
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif
+

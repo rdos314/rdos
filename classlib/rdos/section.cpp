@@ -45,10 +45,7 @@
 ##########################################################################*/
 TSection::TSection(const char *Name)
 {
-    strncpy(FName, Name, 32);
-    FName[32] = 0;
-    
-    FHandle = RdosCreateSection(FName);
+    InitFutex(&Futex, Name);
 }
 
 /*##########################################################################
@@ -64,7 +61,7 @@ TSection::TSection(const char *Name)
 ##########################################################################*/
 TSection::~TSection()
 {
-    RdosDeleteSection(FHandle);
+    ResetFutex(&Futex);
 }
 
 /*##########################################################################
@@ -80,7 +77,7 @@ TSection::~TSection()
 ##########################################################################*/
 void TSection::Enter() const
 {
-    RdosEnterSection(FHandle);
+    EnterFutex(&Futex);
 }
 
 /*##########################################################################
@@ -96,5 +93,5 @@ void TSection::Enter() const
 ##########################################################################*/
 void TSection::Leave() const
 {
-    RdosLeaveSection(FHandle);
+    LeaveFutex(&Futex);
 }
