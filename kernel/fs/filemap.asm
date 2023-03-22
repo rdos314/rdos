@@ -80,7 +80,7 @@ kf_map_list       DW ?
 kf_part_sel       DW ?
 kf_serv_sel       DW ?
 kf_req_sync       DW ?
-kf_resv           DW ?
+kf_wr_ptr         DW ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 
@@ -275,6 +275,7 @@ CreateFileSel   Proc near
     mov ds:kf_wait_count,0
     mov ds:kf_block_count,0
     mov ds:kf_phys_count,0
+    mov ds:kf_wr_ptr,0
 ;
     push ecx
 ;
@@ -619,7 +620,28 @@ SendProcessReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddBufReq     Proc near
+    push es
+    push ebx
+;
+    int 3
+    mov es,ds:kf_serv_sel
+    mov bx,ds:kf_wr_ptr
+    mov es:[bx].fre_p64,eax
+    mov es:[bx].fre_p64+4,edx
+    mov es:[bx].fre_p32,ecx
+    mov es:[bx].fre_op,REQ_READ
+    add bx,SIZE file_req_entry
+    mov ds:kf_wr_ptr,bx
+;
+    mov bl,es:frs_run
+    or bl,bl
+    jnz abrDone
+;
     call SendProcessReq
+
+abrDone:
+    pop ebx
+    pop es
     ret
 AddBufReq     Endp
 

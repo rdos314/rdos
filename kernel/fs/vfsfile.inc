@@ -40,6 +40,15 @@ fbe_handle       DD ?
 
 file_buf_entry   ENDS
 
+file_req_entry   STRUC
+
+fre_p64          DD ?,?
+fre_p32          DD ?
+fre_p16          DW ?
+fre_op           DW ?
+
+file_req_entry   ENDS
+
 file_req_struc   STRUC
 
 frs_queue        DB 16 * 256 DUP(?)
