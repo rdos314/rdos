@@ -169,7 +169,6 @@ struct RdosFileInfo
     int Flags;
     int Uid;
     int Gid;
-    int KernelHandle;
     int ServHandle;
     char Name[1];
 };
@@ -183,7 +182,7 @@ struct RdosFileMapEntry
 
 struct RdosFileHandleInfo
 {
-    long long PosArr[120];
+    long long PosArr[480];
     int Bitmap[15];
     struct RdosFutex Futex;
 };

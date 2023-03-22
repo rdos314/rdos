@@ -2219,6 +2219,20 @@ CreateProgSel   Proc near
     add eax,1000h
     mov es:[edx].fm_info_ptr,eax
 ;
+    mov ax,flat_data_sel
+    mov es,eax
+    mov eax,edx
+    add eax,1000h
+    mov ecx,eax
+    add eax,OFFSET fh_futex
+    mov es:[eax].fs_handle,0
+    mov es:[eax].fs_val,-1
+    mov es:[eax].fs_counter,0
+    mov es:[eax].fs_owner,0
+    add ecx,1000h
+    add ecx,OFFSET fi_name
+    mov es:[eax].fs_sect_name,ecx
+;
     push ebx
     push edx
 ;
