@@ -55,9 +55,11 @@ struct TFileReq
 {
     struct TFileQueueEntry QueueArr[256];
     unsigned char SortedArr[241];
-    char Resv[10];
+    char Resv;
+    char Run;
     char Update;
     int Count;
+    long long LastActive;
     struct TFileBufEntry ReqArr[240];
 };
 

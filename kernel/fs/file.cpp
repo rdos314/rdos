@@ -127,8 +127,11 @@ int TFile::Setup(int VfsHandle)
         Req->QueueArr[i].Op = 0;
     }
 
+    Req->Run = 0;
     Req->Count = 0;
     Req->Update = 0;
+    Req->LastActive = 0;
+
     for (i = 0; i < 240; i++)
     {
         Req->ReqArr[i].Pos = 0;
@@ -166,7 +169,11 @@ int TFile::Setup(int VfsHandle)
 ##########################################################################*/
 void TFile::ProcessFile()
 {
-    Start(Info->Name, 0x2000);
+    if (Req->Run == 0)
+    {
+        Req->Run = 1;
+        Start(Info->Name, 0x2000);
+    }
 }
 
 /*##########################################################################
@@ -477,6 +484,8 @@ void TFile::UpdateReq()
 ##########################################################################*/
 void TFile::Execute()
 {
+     Req->Run = 2;
+
     for (;;)
         RdosWaitMilli(50);
 }
