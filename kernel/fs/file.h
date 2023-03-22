@@ -29,6 +29,7 @@
 #define _FILE_H
 
 #include "section.h"
+#include "thread.h"
 #include "rdos.h"
 #include "block.h"
 #include "dir.h"
@@ -58,7 +59,7 @@ struct TFileReq
     struct TFileBufEntry ReqArr[240];
 };
 
-class TFile
+class TFile : public TThread
 {
 public:
     TFile(TDir *ParentDir, int ParentIndex, int BytesPerSector, int OffsetSector);
@@ -76,6 +77,7 @@ public:
     int Index;
 
 protected:
+    virtual void Execute();
     virtual void FreeReq(int index);
     virtual void SetReq(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
