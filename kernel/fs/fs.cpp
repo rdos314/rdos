@@ -986,21 +986,21 @@ int TFs::GetFileHandle(int handle)
 
 /*##########################################################################
 #
-#   Name       : TFs::ReqFile
+#   Name       : TFs::ProcessFile
 #
-#   Purpose....: Req file
+#   Purpose....: Process file
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::ReqFile(int handle, long long pos, int size)
+void TFs::ProcessFile(int handle)
 {
     TFile *file = GetFile(handle);
 
     if (file)
-        file->ReqFile(pos, size);
+        file->ProcessFile();
 }
 
 /*##########################################################################

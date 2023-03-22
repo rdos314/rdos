@@ -149,10 +149,24 @@ int TFile::Setup(int VfsHandle)
         Index = -1;
     }
 
-    Start(Info->Name, 0x2000);
-
     Info->ServHandle = Handle;
     return Handle;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::ProcessFile
+#
+#   Purpose....: Start file processing
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::ProcessFile()
+{
+    Start(Info->Name, 0x2000);
 }
 
 /*##########################################################################

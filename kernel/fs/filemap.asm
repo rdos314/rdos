@@ -39,6 +39,8 @@ include vfs.inc
 include vfsmsg.inc
 include vfsfile.inc
 
+  REQ_READ = 1
+
     .386p
 
 file_handle_seg     STRUC
@@ -572,17 +574,15 @@ AddWaitReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SendReadReq
+;       NAME:           SendProcessReq
 ;
-;       DESCRIPTION:    Send read req
+;       DESCRIPTION:    Send process req
 ;
 ;       PARAMETERS:     DS             File sel
-;                       EDX:EAX        Position
-;                       ECX            Size                        
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SendReadReq     Proc near
+SendProcessReq     Proc near
     push ds
     push es
     push fs
@@ -594,8 +594,8 @@ SendReadReq     Proc near
     mov ds,fs:vfsp_disc_sel
     call AllocateMsg
 ;
-    mov eax,VFS_REQ_FILE
-    call PostMsg
+    mov eax,VFS_PROCESS_FILE
+    call RunMsg
 ;
     pop ebx
     pop eax
@@ -603,7 +603,25 @@ SendReadReq     Proc near
     pop es
     pop ds
     ret
-SendReadReq     Endp
+SendProcessReq     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddBufReq
+;
+;       DESCRIPTION:    Add buffer req
+;
+;       PARAMETERS:     DS             File sel
+;                       EDX:EAX        Pos
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddBufReq     Proc near
+    call SendProcessReq
+    ret
+AddBufReq     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -629,7 +647,7 @@ SendCloseReq     Proc near
     call AllocateMsg
 ;
     mov eax,VFS_CLOSE_FILE
-    call PostMsg
+    call RunMsg
 ;
     pop ebx
     pop eax
@@ -1157,7 +1175,7 @@ WaitForReq      Proc near
     jnc wfrCheck
 ;
     call AddWaitReq
-    call SendReadReq
+    call AddBufReq
     LeaveSection ds:kf_section
 ;
     call UpdateMap

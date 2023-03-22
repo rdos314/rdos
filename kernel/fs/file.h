@@ -34,6 +34,8 @@
 #include "block.h"
 #include "dir.h"
 
+#define REQ_READ   1
+
 struct TFileQueueEntry
 {
     long long Par64;
@@ -66,7 +68,7 @@ public:
     virtual ~TFile();
 
     int Setup(int VfsHandle);
-    virtual void ReqFile(long long pos, int size);
+    void ProcessFile();
 
     void LockFile();
     void UnlockFile();
@@ -81,6 +83,7 @@ protected:
     virtual void FreeReq(int index);
     virtual void SetReq(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
+    virtual void ReqFile(long long pos, int size);
 
     int AllocateReq();
     void UpdateReq();
