@@ -33,7 +33,15 @@
 #include "block.h"
 #include "dir.h"
 
-struct TFileReqEntry
+struct TFileQueueEntry
+{
+    long long Par64;
+    int Par32;
+    short int Par16;
+    short int Op;
+};
+
+struct TFileBufEntry
 {
     long long Pos;
     int Size;
@@ -42,11 +50,12 @@ struct TFileReqEntry
 
 struct TFileReq
 {
+    struct TFileQueueEntry QueueArr[256];
     unsigned char SortedArr[241];
     char Resv[10];
     char Update;
     int Count;
-    struct TFileReqEntry ReqArr[240];
+    struct TFileBufEntry ReqArr[240];
 };
 
 class TFile

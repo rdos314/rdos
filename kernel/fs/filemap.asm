@@ -296,15 +296,30 @@ cfInit:
     pop edx
     GetPageEntry
     or ax,800h
-;
     push eax
-    mov eax,1000h
+    push ebx
+;
+    add edx,1000h
+    GetPageEntry
+    or ax,800h
+    push eax
+    push ebx
+;
+    mov eax,2000h
     AllocateBigLinear
+;
+    pop ebx
     pop eax
+    add edx,1000h
+    SetPageEntry
+;
+    pop ebx
+    pop eax
+    sub edx,1000h
     SetPageEntry
 ;
     AllocateGdt
-    mov ecx,1000h
+    mov ecx,2000h
     CreateDataSelector32
     mov ds:kf_serv_sel,bx
 ;
@@ -409,14 +424,14 @@ AddFileReq   Proc near
 afrFind:
     movzx ecx,byte ptr es:[ebx]
     shl ecx,4
-    mov eax,es:[esi].fre_pos
-    mov edx,es:[esi].fre_pos+4
-    sub eax,es:[ecx].frs_arr.fre_pos
-    sbb edx,es:[ecx].frs_arr.fre_pos+4
+    mov eax,es:[esi].fbe_pos
+    mov edx,es:[esi].fbe_pos+4
+    sub eax,es:[ecx].frs_arr.fbe_pos
+    sbb edx,es:[ecx].frs_arr.fbe_pos+4
     jb afrInsert
     jnz afrNext
 ;
-    cmp eax,es:[ecx].frs_arr.fre_size
+    cmp eax,es:[ecx].frs_arr.fbe_size
     jb afrInsert
 
 afrNext:
@@ -493,12 +508,12 @@ frLoop:
     shl ecx,4
     mov esi,eax
     mov edi,edx
-    sub esi,es:[ecx].frs_arr.fre_pos
-    sbb edi,es:[ecx].frs_arr.fre_pos+4
+    sub esi,es:[ecx].frs_arr.fbe_pos
+    sbb edi,es:[ecx].frs_arr.fbe_pos+4
     jb frDone
     jnz frNext
 ;
-    cmp esi,es:[ecx].frs_arr.fre_size
+    cmp esi,es:[ecx].frs_arr.fbe_size
     jae frNext
 ;
     movzx ebx,byte ptr es:[ebx]
@@ -812,14 +827,14 @@ mrrFound:
     shl ebx,4
     add ebx,OFFSET frs_arr
 ;
-    mov eax,es:[ebx].fre_pos
-    mov edx,es:[ebx].fre_pos+4
-    sub eax,es:[edi].fre_pos
-    sbb edx,es:[edi].fre_pos+4
+    mov eax,es:[ebx].fbe_pos
+    mov edx,es:[ebx].fbe_pos+4
+    sub eax,es:[edi].fbe_pos
+    sbb edx,es:[edi].fbe_pos+4
     or edx,edx
     jnz mrrDone
 ;
-    cmp eax,es:[edi].fre_size
+    cmp eax,es:[edi].fbe_size
     jnz mrrDone
 ;
     movzx edi,[ebp].mrs_prev_index
@@ -881,12 +896,12 @@ mrrUpdate:
     mov ds,fs:kf_serv_sel
     movzx ebx,[ebp].mrs_curr_index
     shl ebx,4
-    add ds:[ebx].frs_arr.fre_pos,eax
-    adc ds:[ebx].frs_arr.fre_pos+4,0
+    add ds:[ebx].frs_arr.fbe_pos,eax
+    adc ds:[ebx].frs_arr.fbe_pos+4,0
 ;
     movzx ebx,[ebp].mrs_prev_index
     shl ebx,4
-    add ds:[ebx].frs_arr.fre_size,eax
+    add ds:[ebx].frs_arr.fbe_size,eax
 
 mrrDone:
     mov ecx,[ebp].mrs_blocks
@@ -929,7 +944,7 @@ SetupReadReq   Proc near
     mov es,ds:kf_serv_sel
     mov edx,ebx
     shl edx,4
-    mov es:[edx].frs_arr.fre_size,ecx
+    mov es:[edx].frs_arr.fbe_size,ecx
 ;
     mov ebx,ds:[4*ebx].kf_handle_arr
     mov ds:[ebx].kre_pages,ax
@@ -1210,7 +1225,7 @@ FreeReq      Proc near
 ;
     mov al,bl
     shl ebx,4
-    or es:[ebx].frs_arr.fre_handle,80000000h
+    or es:[ebx].frs_arr.fbe_handle,80000000h
 ;
     mov esi,OFFSET frs_sorted
     mov ecx,es:frs_count
@@ -1899,9 +1914,9 @@ SyncMap  Proc near
     mov edi,ebx
     shl edi,4
     add edi,OFFSET frs_arr
-    mov eax,fs:[edi].fre_pos
-    mov edx,fs:[edi].fre_pos+4
-    mov ecx,fs:[edi].fre_size
+    mov eax,fs:[edi].fbe_pos
+    mov edx,fs:[edi].fbe_pos+4
+    mov ecx,fs:[edi].fbe_size
 ;
     mov edi,ebx
     mov ebx,gs:[4*ebx].kf_handle_arr
@@ -2037,9 +2052,9 @@ MapReq      Proc near
     mov esi,ebx
     shl esi,4
     add esi,OFFSET frs_arr
-    mov eax,ds:[esi].fre_pos
-    mov edx,ds:[esi].fre_pos+4
-    add eax,ds:[esi].fre_size
+    mov eax,ds:[esi].fbe_pos
+    mov edx,ds:[esi].fbe_pos+4
+    add eax,ds:[esi].fbe_size
     adc edx,0
     pop ds
 ;
@@ -2624,7 +2639,7 @@ NotifyFileData  Proc near
     dec ebx
     mov esi,ebx
     shl esi,4
-    xchg eax,es:[esi].frs_arr.fre_handle
+    xchg eax,es:[esi].frs_arr.fbe_handle
     cmp eax,-1
     jne nfdLeave
 ;
@@ -2636,8 +2651,8 @@ NotifyFileData  Proc near
 nfdFree:
     mov al,bl
     shl ebx,4
-    mov es:[ebx].frs_arr.fre_size,0
-    or es:[ebx].frs_arr.fre_handle,80000000h
+    mov es:[ebx].frs_arr.fbe_size,0
+    or es:[ebx].frs_arr.fbe_handle,80000000h
 ;
     mov esi,OFFSET frs_sorted
     mov ecx,es:frs_count
@@ -2755,7 +2770,7 @@ FreeFileReq  Proc near
     mov es,ds:kf_serv_sel
     mov ebx,edx
     shl ebx,4
-    mov ecx,es:[ebx].frs_arr.fre_size
+    mov ecx,es:[ebx].frs_arr.fbe_size
 ;    
     mov ax,serv_flat_sel
     mov es,eax

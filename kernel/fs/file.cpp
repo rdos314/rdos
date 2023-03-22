@@ -117,7 +117,16 @@ int TFile::Setup(int VfsHandle)
 {
     int i;
 
-    Req = (struct TFileReq *)RdosAllocateMem(0x1000);
+    Req = (struct TFileReq *)RdosAllocateMem(0x2000);
+
+    for (i = 0; i < 256; i++)
+    {
+        Req->QueueArr[i].Par64 = 0;
+        Req->QueueArr[i].Par32 = 0;
+        Req->QueueArr[i].Par16 = 0;
+        Req->QueueArr[i].Op = 0;
+    }
+
     Req->Count = 0;
     Req->Update = 0;
     for (i = 0; i < 240; i++)

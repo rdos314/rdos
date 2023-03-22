@@ -32,16 +32,17 @@ ff_link          DW ?
 
 file_part_struc  ENDS
 
-file_req_entry   STRUC
+file_buf_entry   STRUC
 
-fre_pos          DD ?,?
-fre_size         DD ?
-fre_handle       DD ?
+fbe_pos          DD ?,?
+fbe_size         DD ?
+fbe_handle       DD ?
 
-file_req_entry   ENDS
+file_buf_entry   ENDS
 
 file_req_struc   STRUC
 
+frs_queue        DB 16 * 256 DUP(?)
 frs_sorted       DB 241 DUP(?)
 frs_resv         DB 10 DUP(?)
 frs_update       DB ?
