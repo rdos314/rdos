@@ -75,7 +75,7 @@ void WriteEmpty(int Row)
 #   Returns....: *
 #
 ##########################################################################*/
-void WriteOne(int Row, ThreadActionState *State)
+void WriteOne(int Row, struct RdosThreadActionState *State)
 {
     char str[40];
     int len;
@@ -256,7 +256,7 @@ void WriteOne(int Row, ThreadActionState *State)
 void ProcessHandler()
 {
     int i;
-    ThreadActionState state;
+    struct RdosThreadActionState state;
     int row;
     int absrow;
     int lastrow;

@@ -1267,7 +1267,37 @@ LockMap     Proc near
     mov ax,flat_data_sel
     mov ds,eax
     mov ebx,es:fm_handle_ptr
-    lock inc ds:[ebx].fh_lock_count
+;    
+    str ax
+    cmp ax,[ebx].fs_owner
+    jne lmLock
+;
+    inc [ebx].fs_counter
+    jmp lmDone
+
+lmLock:
+    lock add [ebx].fs_val,1
+    jc lmTake
+;
+    mov eax,1
+    xchg ax,[ebx].fs_val
+    cmp ax,-1
+    jne lmBlock
+
+lmTake:
+    str ax
+    mov [ebx].fs_owner,ax
+    mov [ebx].fs_counter,1
+    jmp lmDone
+
+lmBlock:
+    push edi
+    mov edi,[ebx].fs_sect_name
+    AcquireNamedFutex
+    pop edi
+
+lmDone:
+    pop eax    
 ;
     pop ebx
     pop eax
@@ -1295,8 +1325,22 @@ UnlockMap     Proc near
     mov ax,flat_data_sel
     mov ds,eax
     mov ebx,es:fm_handle_ptr
-    lock dec ds:[ebx].fh_lock_count
 ;
+    str ax
+    cmp ax,[ebx].fs_owner
+    jne umDone
+;
+    sub [ebx].fs_counter,1
+    jnz umDone
+;
+    mov [ebx].fs_owner,0
+    lock sub [ebx].fs_val,1
+    jc umDone
+;
+    mov [ebx].fs_val,-1
+    ReleaseFutex
+
+umDone:
     pop ebx
     pop eax
     pop ds
@@ -1765,8 +1809,8 @@ UpdateUnlinked  Proc near
     mov ax,flat_data_sel
     mov fs,eax
     mov ebx,es:fm_handle_ptr
-    mov eax,fs:[ebx].fh_lock_count
-    or eax,eax
+    mov ax,fs:[ebx].fh_futex.fs_owner
+    or ax,ax
     jnz uuPop
 ;
     call UnlinkMap

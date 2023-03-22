@@ -51,7 +51,7 @@ struct TShareHeader *GetDir(int rel, char *path, int *count)
 
 int GetDirHeaderSize()
 {
-    return sizeof(struct DirEntry);
+    return sizeof(struct RdosDirEntry);
 }
 
 int GetDirEntryAttrib(int rel, char *path)

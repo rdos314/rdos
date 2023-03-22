@@ -151,7 +151,7 @@ void TStateCommand::InitOptions()
 #   Returns....: *
 #
 ##########################################################################*/
-void TStateCommand::WriteOne(ThreadActionState *State)
+void TStateCommand::WriteOne(struct RdosThreadActionState *State)
 {
     char str[40];
     int len;
@@ -329,7 +329,7 @@ void TStateCommand::WriteThreads()
 {
     int i;
     int ThreadCount = RdosGetThreadCount();
-    ThreadActionState state;
+    struct RdosThreadActionState state;
 
     for (i = 0; i < ThreadCount; i++)
         if (RdosGetThreadActionState(i, &state))
@@ -673,7 +673,7 @@ void TStateCommand::WriteThreadById(int tid)
     char str[40];
     int ok = FALSE;
     int i;
-    ThreadActionState state;
+    struct RdosThreadActionState state;
     int ThreadCount = RdosGetThreadCount();
 
     for (i = 0; i < ThreadCount && !ok; i++)
@@ -745,7 +745,7 @@ void TStateCommand::WritePrograms()
 int TStateCommand::Execute(char *param)
 {
     int i;
-    ThreadActionState state;
+    struct RdosThreadActionState state;
     short int ID;
     TArg *arg;
 

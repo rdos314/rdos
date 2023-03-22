@@ -65,7 +65,7 @@ protected:
 private:
     long FHandle;
     char *FFileName;
-    struct FileMap *FMap;
+    struct RdosFileMap *FMap;
     int FMapIndex;
     int FLastIndex;
 };

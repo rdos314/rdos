@@ -28,33 +28,24 @@
 #ifndef _FUTEX_H
 #define _FUTEX_H
 
+#include "rdos.h"
+
 #pragma pack( __push, 1 )
-
-// do not changes this as it depends on OS defines!
-
-struct TFutex
-{
-    int Handle;
-    int Counter;
-    short int Val;
-    short int Owner;
-    char *Name;
-};
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void InitFutex(struct TFutex *f, const char *n);
+void InitFutex(struct RdosFutex *f, const char *n);
 #pragma aux InitFutex "*" parm routine [ebx] [edi]
 
-void EnterFutex(const struct TFutex *f);
+void EnterFutex(const struct RdosFutex *f);
 #pragma aux EnterFutex "*" parm routine [ebx]
 
-void LeaveFutex(const struct TFutex *f);
+void LeaveFutex(const struct RdosFutex *f);
 #pragma aux LeaveFutex "*" parm routine [ebx]
 
-void ResetFutex(struct TFutex *f);
+void ResetFutex(struct RdosFutex *f);
 #pragma aux ResetFutex "*" parm routine [ebx]
 
 #ifdef __cplusplus

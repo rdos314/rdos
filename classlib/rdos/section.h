@@ -40,7 +40,7 @@ public:
     void Leave() const;
 
 private:
-    struct TFutex Futex;
+    struct RdosFutex Futex;
 };
 
 #endif

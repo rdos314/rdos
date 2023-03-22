@@ -46,7 +46,7 @@ file_handle_struc  STRUC
 
 fh_pos_arr          DD 15*8*8 DUP(?)
 fh_bitmap           DD 15 DUP(?)
-fh_lock_count       DD ?
+fh_futex            futex_struc <>
 
 file_handle_struc  ENDS
 

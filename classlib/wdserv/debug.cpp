@@ -241,7 +241,7 @@ int TDebugThread::GetMemoryModel()
 void TDebugThread::SetupGo(TDebugBreak *bp)
 {
     int update = FALSE;
-    Tss tss;
+    RdosTss tss;
 
     FDebug = FALSE;
 
@@ -285,7 +285,7 @@ void TDebugThread::SetupGo(TDebugBreak *bp)
 void TDebugThread::SetupTrace(TDebugBreak *bp)
 {
     int update = FALSE;
-    Tss tss;
+    RdosTss tss;
     unsigned char ch = 0;
 
     FWasTrace = TRUE;
@@ -372,7 +372,7 @@ void TDebugThread::ActivateBreaks(TDebugBreak *HwBreakList, TDebugWatch *WatchLi
 ##########################################################################*/
 void TDebugThread::SetException(TExceptionEvent *event)
 {
-    Tss tss;
+    RdosTss tss;
     int i;
     unsigned char ch = 0;
     int bnum;
@@ -547,7 +547,7 @@ void TDebugThread::SetException(TExceptionEvent *event)
 ##########################################################################*/
 void TDebugThread::SetException(TKernelExceptionEvent *event)
 {
-    Tss tss;
+    RdosTss tss;
     int i;
     int bnum;
 
@@ -672,7 +672,7 @@ void TDebugThread::SetException(TKernelExceptionEvent *event)
 ##########################################################################*/
 void TDebugThread::WriteRegs()
 {
-    Tss tss;
+    RdosTss tss;
     int i;
 
     RdosGetThreadTss(ThreadID, &tss);
@@ -715,7 +715,7 @@ void TDebugThread::WriteRegs()
 ##########################################################################*/
 void TDebugThread::ReadState()
 {
-    ThreadState state;
+    RdosThreadState state;
     int i;
     int ok;
     int ThreadCount = RdosGetThreadCount();
@@ -2314,7 +2314,7 @@ void TDebug::ClearWatch(int Sel, long Offset, int Size)
 ##########################################################################*/
 TDebugBreak *TDebug::PrepareToRun()
 {
-    Tss tss;
+    RdosTss tss;
     TDebugBreak *bp;
     unsigned char ch = 0;
 

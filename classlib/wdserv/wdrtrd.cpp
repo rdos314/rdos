@@ -248,7 +248,7 @@ void TWdRunThreadService::ReqGetRuntime()
     char list = THD_BLOCKED;
     int ok;
     int i;
-    ThreadState State;
+    RdosThreadState State;
     char fullstr[50];
     char tempstr[10];
     int day;
@@ -387,7 +387,7 @@ void TWdRunThreadService::ReqGetRuntime()
 ##########################################################################*/
 void TWdRunThreadService::ReqPoll()
 {
-        short int CondFlags = 0;
+    short int CondFlags = 0;
     TDebug *Debug = GetDebug();
     TDebugThread *curr = 0;
 

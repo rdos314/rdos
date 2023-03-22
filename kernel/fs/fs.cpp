@@ -207,7 +207,7 @@ bool TParser::IsParentDir()
 #   Returns....: *
 #
 ##########################################################################*/
-struct DirEntry *TParser::GetEntry()
+struct RdosDirEntry *TParser::GetEntry()
 {
     return CurrEntry;
 }
@@ -616,7 +616,7 @@ void TFs::Remove(TFile *file)
 ##########################################################################*/
 void TFs::ReadDirLink(TDir *dir, int index)
 {
-    struct DirEntry *entry;
+    struct RdosDirEntry *entry;
     TDir *newdir;
     TFile *file;
     long long inode;
@@ -722,7 +722,7 @@ struct TShareHeader *TFs::GetDir(int rel, char *path, int *count)
 int TFs::GetDirEntryAttrib(int rel, char *path)
 {
     TParser Parser(GetStartDir(rel), path);
-    struct DirEntry *entry;
+    struct RdosDirEntry *entry;
 
     while (!Parser.IsLast())
     {
@@ -834,7 +834,7 @@ int TFs::GetRelDir(int rel, char *path)
     TString str;
     long long inode;
     int index;
-    struct DirEntry *entry;
+    struct RdosDirEntry *entry;
     TDir *dir = GetStartDir(rel);
 
     while (dir)

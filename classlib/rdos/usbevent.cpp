@@ -530,7 +530,7 @@ void TUsbEvent::NotifyOverCurrent(int Controller, int Port)
 ##########################################################################*/
 void TUsbEvent::SignalNewData()
 {
-    UsbEvent event;
+    RdosUsbEvent event;
     int ok;
 
     ok = RdosGetUsbEvent(FHandle, &event);

@@ -54,7 +54,7 @@ TFatFile::TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Clu
 
     FSectorsPerCluster = Fat->SectorsPerCluster;
 
-    Info->FsSize = (long long)FClusterCount * (long long)FSectorsPerCluster * (long long)BytesPerSector;
+    Info->DiscSize = (long long)FClusterCount * (long long)FSectorsPerCluster * (long long)BytesPerSector;
 }
 
 /*##########################################################################

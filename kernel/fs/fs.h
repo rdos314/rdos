@@ -47,7 +47,7 @@ public:
 
     TDir *GetDir();
     TFile *GetFile();
-    struct DirEntry *GetEntry();
+    struct RdosDirEntry *GetEntry();
 
     void Advance();
 
@@ -55,7 +55,7 @@ protected:
     void Process();
 
     int CurrIndex;
-    struct DirEntry *CurrEntry;
+    struct RdosDirEntry *CurrEntry;
     bool IsCurr;
     bool IsParent;
     char *Head;

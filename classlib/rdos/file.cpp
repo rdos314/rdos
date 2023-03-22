@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include "file.h"
+#include "futex.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -407,17 +408,8 @@ int TFile::VfsFind(long long Pos)
 ##########################################################################*/
 void TFile::VfsLock()
 {
-    int *LockPtr;
-
     if (FMap)
-    {
-        LockPtr = &FMap->Handle->LockCount;
-        __asm
-        {
-           mov edx,LockPtr
-           lock inc dword ptr [edx]
-        }
-    }
+        EnterFutex(&FMap->Handle->Futex);
 }
 
 /*##########################################################################
@@ -433,17 +425,8 @@ void TFile::VfsLock()
 ##########################################################################*/
 void TFile::VfsUnlock()
 {
-    int *LockPtr;
-
     if (FMap)
-    {
-        LockPtr = &FMap->Handle->LockCount;
-        __asm
-        {
-           mov edx,LockPtr
-           lock dec dword ptr [edx]
-        }
-    }
+        LeaveFutex(&FMap->Handle->Futex);
 }
 
 /*##########################################################################
@@ -462,7 +445,7 @@ int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
     int diff;
     int count = 0;
     char *src;
-    struct FileMapEntry *entry;
+    struct RdosFileMapEntry *entry;
 
     index = FMap->SortedArr[index];
 

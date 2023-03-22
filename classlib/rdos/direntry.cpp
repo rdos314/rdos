@@ -1325,8 +1325,8 @@ void TDirList::DoSearch()
     int ok;
     int DirHandle;
     int Index;
-    struct DirInfo info;
-    struct DirEntry *entry;
+    struct RdosDirInfo info;
+    struct RdosDirEntry *entry;
     char *ptr;
     int i;
     long long time;
@@ -1356,7 +1356,7 @@ void TDirList::DoSearch()
 
         for (i = 0; i < info.Count; i++)
         {
-            entry = (struct DirEntry *)ptr;
+            entry = (struct RdosDirEntry *)ptr;
 
             if (CheckAttrib(entry->Attrib) && IsMatch(entry->PathName))
             {

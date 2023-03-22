@@ -33,20 +33,6 @@
 #include "block.h"
 #include "dir.h"
 
-struct TFileInfo
-{
-    long long FsSize;
-    long long ReqSize;
-    long long AccessTime;
-    long long ModifyTime;
-    int Attrib;
-    int Flags;
-    int Uid;
-    int Gid;
-    int ServHandle;
-    char Name[1];
-};
-
 struct TFileReqEntry
 {
     long long Pos;
@@ -88,7 +74,7 @@ protected:
     int AllocateReq();
     void UpdateReq();
 
-    struct TFileInfo *Info;
+    struct RdosFileInfo *Info;
     struct TFileReq *Req;
 
     long long FCurrPos;

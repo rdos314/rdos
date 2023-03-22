@@ -55,7 +55,7 @@ TDir::TDir(TDir *pd, int pi)
   : Section("dir")
 {
     int i;
-    struct DirEntry *ParentEntry;
+    struct RdosDirEntry *ParentEntry;
 
     Entry = 0;
     Parent = pd;
@@ -187,12 +187,12 @@ void TDir::Grow()
 #   Returns....: *
 #
 ##########################################################################*/
-struct DirEntry *TDir::Add(const char *path, long long inode)
+struct RdosDirEntry *TDir::Add(const char *path, long long inode)
 {
     int pos;
     short int len = strlen(path);
     char *ptr;
-    struct DirEntry *entry;
+    struct RdosDirEntry *entry;
 
     len = len & 0xFFFC;
     len += 4;
@@ -203,7 +203,7 @@ struct DirEntry *TDir::Add(const char *path, long long inode)
     if (obj->UsageCount > 1)
         CopyOnUsed();
 
-    pos = TBlock::Add(len + sizeof(struct DirEntry));
+    pos = TBlock::Add(len + sizeof(struct RdosDirEntry));
 
     EntryArr[EntryCount].Offset = pos;
     EntryArr[EntryCount].Link = 0;
@@ -211,7 +211,7 @@ struct DirEntry *TDir::Add(const char *path, long long inode)
 
     ptr = (char *)obj;
     ptr += pos;
-    entry = (struct DirEntry *)ptr;
+    entry = (struct RdosDirEntry *)ptr;
     entry->Inode = inode;
     entry->Size = 0;
     entry->CreateTime = 0;
@@ -292,7 +292,7 @@ int TDir::Find(long long inode)
 {
     int i;
     char *ptr;
-    struct DirEntry *entry;
+    struct RdosDirEntry *entry;
 
     Section.Enter();
 
@@ -300,7 +300,7 @@ int TDir::Find(long long inode)
     {
         ptr = (char *)obj;
         ptr += EntryArr[i].Offset;
-        entry = (struct DirEntry *)ptr;
+        entry = (struct RdosDirEntry *)ptr;
         if (inode == entry->Inode)
         {
             Section.Leave();
@@ -328,7 +328,7 @@ int TDir::Find(const char *path)
 {
     int i;
     char *ptr;
-    struct DirEntry *entry;
+    struct RdosDirEntry *entry;
 
     Section.Enter();
 
@@ -336,7 +336,7 @@ int TDir::Find(const char *path)
     {
         ptr = (char *)obj;
         ptr += EntryArr[i].Offset;
-        entry = (struct DirEntry *)ptr;
+        entry = (struct RdosDirEntry *)ptr;
         if (!strcmp(path, entry->PathName))
         {
             Section.Leave();
@@ -360,11 +360,11 @@ int TDir::Find(const char *path)
 #   Returns....: *
 #
 ##########################################################################*/
-struct DirEntry *TDir::LockEntry(int index)
+struct RdosDirEntry *TDir::LockEntry(int index)
 {
     int i;
     char *ptr;
-    struct DirEntry *entry;
+    struct RdosDirEntry *entry;
 
     if (index < 0)
         return 0;
@@ -376,7 +376,7 @@ struct DirEntry *TDir::LockEntry(int index)
 
     ptr = (char *)obj;
     ptr += EntryArr[index].Offset;
-    return (struct DirEntry *)ptr;
+    return (struct RdosDirEntry *)ptr;
 }
 
 /*##########################################################################
@@ -390,16 +390,16 @@ struct DirEntry *TDir::LockEntry(int index)
 #   Returns....: *
 #
 ##########################################################################*/
-struct DirEntry *TDir::LockEntry(struct TDirLink *link)
+struct RdosDirEntry *TDir::LockEntry(struct TDirLink *link)
 {
     char *ptr;
-    struct DirEntry *entry;
+    struct RdosDirEntry *entry;
 
     Section.Enter();
 
     ptr = (char *)obj;
     ptr += link->Offset;
-    return (struct DirEntry *)ptr;
+    return (struct RdosDirEntry *)ptr;
 }
 
 /*##########################################################################
@@ -413,7 +413,7 @@ struct DirEntry *TDir::LockEntry(struct TDirLink *link)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDir::UnlockEntry(struct DirEntry *entry)
+void TDir::UnlockEntry(struct RdosDirEntry *entry)
 {
     if (entry)
         Section.Leave();

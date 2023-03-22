@@ -46,7 +46,7 @@
 TFile::TFile(TDir *pd, int pi, int bps, int os)
   : FSection("file")
 {
-    struct DirEntry *entry;
+    struct RdosDirEntry *entry;
 
     FBytesPerSector = bps;
     FSectorsPerPage = 0x1000 / bps;
@@ -56,10 +56,10 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     FParentIndex = pi;
 
     entry = FParent->LockEntry(FParentIndex);
-    Info = (struct TFileInfo *)RdosAllocateMem(0x1000);
+    Info = (struct RdosFileInfo *)RdosAllocateMem(0x1000);
 
-    Info->FsSize = entry->Size;
-    Info->ReqSize = entry->Size;
+    Info->DiscSize = entry->Size;
+    Info->CurrSize = entry->Size;
     Info->AccessTime = entry->AccessTime;
     Info->ModifyTime = entry->ModifyTime;
     Info->Attrib = entry->Attrib;
@@ -251,8 +251,8 @@ void TFile::SetReq(long long StartSector, int Sectors)
     if (StartSector < 0)
         StartSector = 0;
 
-    if (StartSector >= Info->FsSize / FBytesPerSector)
-        StartSector = Info->FsSize / FBytesPerSector - 1;
+    if (StartSector >= Info->DiscSize / FBytesPerSector)
+        StartSector = Info->DiscSize / FBytesPerSector - 1;
 
     if (Sectors < FSectorsPerPage)
         Sectors = FSectorsPerPage;
@@ -263,8 +263,8 @@ void TFile::SetReq(long long StartSector, int Sectors)
     if (end < start)
         end = start;
 
-    if (end > Info->FsSize / FBytesPerSector)
-        end = Info->FsSize / FBytesPerSector - 1;
+    if (end > Info->DiscSize / FBytesPerSector)
+        end = Info->DiscSize / FBytesPerSector - 1;
 
     count = end - start + 1;
 

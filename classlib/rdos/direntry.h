@@ -55,20 +55,20 @@ public:
     TDirEntry(const TDirEntry &src);
     virtual ~TDirEntry();
 
-	const TDirEntry &operator=(const TDirEntry &src);
+    const TDirEntry &operator=(const TDirEntry &src);
 
-	const TDirEntryData &Get() const;
+    const TDirEntryData &Get() const;
 
-	const TPathName &GetPathName() const;
-	const TString &GetEntryName() const;
-	long GetFileSize() const;
-	int GetAttribute() const;
-	const TDateTime &GetTime() const;
+    const TPathName &GetPathName() const;
+    const TString &GetEntryName() const;
+    long GetFileSize() const;
+    int GetAttribute() const;
+    const TDateTime &GetTime() const;
 
 protected:
     virtual int Compare(const TDirEntry &str) const;
 
-	virtual void Destroy(TShareObjectData *obj);
+    virtual void Destroy(TShareObjectData *obj);
 
     TDirEntryData *FEntry;
 };
@@ -76,40 +76,40 @@ protected:
 class TDirListNode : public TListBaseNode
 {
 public:
-	TDirListNode();
-	TDirListNode(const TDirEntry &src);
-	TDirListNode(const TDirListNode &source);
-	virtual ~TDirListNode();
+    TDirListNode();
+    TDirListNode(const TDirEntry &src);
+    TDirListNode(const TDirListNode &source);
+    virtual ~TDirListNode();
 
-	const TDirListNode &operator=(const TDirListNode &src);
-	int operator==(const TDirListNode &dest) const;
-	int operator!=(const TDirListNode &dest) const;
-	int operator>(const TDirListNode &dest) const;
-	int operator>=(const TDirListNode &dest) const;
-	int operator<(const TDirListNode &dest) const;
-	int operator<=(const TDirListNode &dest) const;
+    const TDirListNode &operator=(const TDirListNode &src);
+    int operator==(const TDirListNode &dest) const;
+    int operator!=(const TDirListNode &dest) const;
+    int operator>(const TDirListNode &dest) const;
+    int operator>=(const TDirListNode &dest) const;
+    int operator<(const TDirListNode &dest) const;
+    int operator<=(const TDirListNode &dest) const;
 
-	TDirEntry &Get() const;
-	void Set(TDirEntry &entry);
+    TDirEntry &Get() const;
+    void Set(TDirEntry &entry);
 
 protected:
-	virtual int Compare(const TDirListNode &n2) const;
-	virtual int Compare(const TListBaseNode &n2) const;
-	virtual void Load(const TDirListNode &src);
-	virtual void Load(const TListBaseNode &src);
+    virtual int Compare(const TDirListNode &n2) const;
+    virtual int Compare(const TListBaseNode &n2) const;
+    virtual void Load(const TDirListNode &src);
+    virtual void Load(const TListBaseNode &src);
 	
-	TDirEntry *FEntry;
+    TDirEntry *FEntry;
 };
     
 class TDirList : public TListBase
 {
 public:
     TDirList();
-	TDirList(const char *PathName);
-	TDirList(const TString &PathName);
-	TDirList(const TPathName &PathName);
+    TDirList(const char *PathName);
+    TDirList(const TString &PathName);
+    TDirList(const TPathName &PathName);
     TDirList(const TDirList &source);
-	~TDirList();
+    ~TDirList();
 
     void SetDefaultAttributes();
     void SetRequiredAttributes(int attrib);
@@ -126,35 +126,35 @@ public:
     void AddReverseSortByExt();    
     void Sort();
     
-	int operator==(const TDirList &dest) const;
-	int operator!=(const TDirList &dest) const;
-	int operator>(const TDirList &dest) const;
-	int operator>=(const TDirList &dest) const;
-	int operator<(const TDirList &dest) const;
-	int operator<=(const TDirList &dest) const;
-	TDirList &operator=(const TDirList &l);
-	TDirList &operator+=(const TDirList &l);
-	TDirList &operator&=(const TDirList &l);
-	TDirList &operator|=(const TDirList &l);
-	TDirList &operator^=(const TDirList &l);
-	TDirEntry &operator[] (int pos);
+    int operator==(const TDirList &dest) const;
+    int operator!=(const TDirList &dest) const;
+    int operator>(const TDirList &dest) const;
+    int operator>=(const TDirList &dest) const;
+    int operator<(const TDirList &dest) const;
+    int operator<=(const TDirList &dest) const;
+    TDirList &operator=(const TDirList &l);
+    TDirList &operator+=(const TDirList &l);
+    TDirList &operator&=(const TDirList &l);
+    TDirList &operator|=(const TDirList &l);
+    TDirList &operator^=(const TDirList &l);
+    TDirEntry &operator[] (int pos);
 
-	TDirEntry &Get() const;
+    TDirEntry &Get() const;
 
-	void Add(const char *PathName);
+    void Add(const char *PathName);
     void Add(const TString &PathName);
     void Add(const TPathName &PathName);
 
-	TPathName FPathName;
-	TString FBaseString;
-	TString FSearchString;
+    TPathName FPathName;
+    TString FBaseString;
+    TString FSearchString;
 
 protected:
-	virtual TDirListNode *Clone(const TDirListNode *ln) const;
-	virtual TListBaseNode *Clone(const TListBaseNode *ln) const;
+    virtual TDirListNode *Clone(const TDirListNode *ln) const;
+    virtual TListBaseNode *Clone(const TListBaseNode *ln) const;
 
     int CheckAttrib(int attrib);
-	int IsMatch(const char *FileName);
+    int IsMatch(const char *FileName);
     void Add(const char *Name, unsigned long msb, unsigned long lsb, long FileSize, int Attrib);
     void DoSearch();
 

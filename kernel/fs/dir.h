@@ -58,9 +58,9 @@ public:
     int GetCount();
     int Find(long long inode);
     int Find(const char *path);
-    struct DirEntry *LockEntry(int index);
-    struct DirEntry *LockEntry(struct TDirLink *link);
-    void UnlockEntry(struct DirEntry *entry);
+    struct RdosDirEntry *LockEntry(int index);
+    struct RdosDirEntry *LockEntry(struct TDirLink *link);
+    void UnlockEntry(struct RdosDirEntry *entry);
 
     long long GetInode();
     TDir *GetParentDir();
@@ -74,7 +74,7 @@ public:
     void SetFileLink(int index, TFile *file);
     void ClearFileLink(int index);
 
-    struct DirEntry *Add(const char *path, long long inode);
+    struct RdosDirEntry *Add(const char *path, long long inode);
 
     int Entry;
 
