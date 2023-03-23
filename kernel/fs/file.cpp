@@ -55,8 +55,6 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     FParent = pd;
     FParentIndex = pi;
 
-    FQueueIndex = 0;
-
     entry = FParent->LockEntry(FParentIndex);
     Info = (struct RdosFileInfo *)RdosAllocateMem(0x1000);
 
@@ -129,6 +127,7 @@ int TFile::Setup(int VfsHandle)
         Req->QueueArr[i].Op = 0;
     }
 
+    Req->RdIndex = 0;
     Req->Run = 0;
     Req->Count = 0;
     Req->Update = 0;
@@ -330,16 +329,16 @@ void TFile::SetReq(long long StartSector, int Sectors)
 
 /*##########################################################################
 #
-#   Name       : TFile::ReqFile
+#   Name       : TFile::HandleRead
 #
-#   Purpose....: Req file
+#   Purpose....: Handle read file
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::ReqFile(long long pos, int size)
+void TFile::HandleRead(long long pos, int size)
 {
     long long *SectorArr;
     int req;
@@ -475,6 +474,29 @@ void TFile::UpdateReq()
 
 /*##########################################################################
 #
+#   Name       : TFile::HandleQueue
+#
+#   Purpose....: Handle queue entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFile::HandleQueue(struct TFileQueueEntry *entry)
+{
+    switch (entry->Op)
+    {
+        case REQ_READ:
+            HandleRead(entry->Par64, entry->Par32);
+            break;
+    }
+
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::Execute
 #
 #   Purpose....: Execute
@@ -486,11 +508,28 @@ void TFile::UpdateReq()
 ##########################################################################*/
 void TFile::Execute()
 {
+    int index;
+    struct TFileQueueEntry *entry;
+
     Req->Run = 2;
 
     for (;;)
     {
-        ServWaitVfsFileQueue(Handle);
-        RdosWaitMilli(50);
+        index = Req->RdIndex;
+        if (Req->QueueArr[index].Op)
+        {
+            entry = &Req->QueueArr[index];
+            if (HandleQueue(entry))
+            {
+                entry->Op = 0;
+                Req->RdIndex++;
+            }
+            else
+                break;
+        }
+        else
+            ServWaitVfsFileQueue(Handle);
     }
+
+    Req->Run = 0;
 }

@@ -80,6 +80,7 @@ kf_map_list       DW ?
 kf_part_sel       DW ?
 kf_serv_sel       DW ?
 kf_req_sync       DW ?
+kf_wait_thread    DW ?
 kf_wr_ptr         DW ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
@@ -381,15 +382,33 @@ CloseFileSel   Endp
     public WaitFileQueue
 
 WaitFileQueue   Proc near
-    push ds
     push es
+    push eax
+    push ebx
 ;
     int 3
-    mov ds,ax
+    ClearSignal
     mov es,ds:kf_serv_sel
+    movzx ebx,es:frs_read_ptr
+    shl ebx,4
+    mov ax,es:[ebx].frs_queue.fre_op
+    or ax,ax
+    jnz wfqDone
 ;
+    GetThread
+    mov ds:kf_wait_thread,ax
+    mov ax,es:[ebx].frs_queue.fre_op
+    or ax,ax
+    jnz wfqDone
+;
+    WaitForSignal
+
+wfqDone:
+    mov ds:kf_wait_thread,0
+;
+    pop ebx
+    pop eax
     pop es
-    pop ds
     ret
 WaitFileQueue   Endp
 

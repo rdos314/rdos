@@ -55,7 +55,7 @@ struct TFileReq
 {
     struct TFileQueueEntry QueueArr[256];
     unsigned char SortedArr[241];
-    char Resv;
+    unsigned char RdIndex;
     char Run;
     char Update;
     int Count;
@@ -81,19 +81,19 @@ public:
     int Index;
 
 protected:
+    virtual void HandleRead(long long pos, int size);
+    bool HandleQueue(struct TFileQueueEntry *entry);
+
     virtual void Execute();
     virtual void FreeReq(int index);
     virtual void SetReq(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
-    virtual void ReqFile(long long pos, int size);
 
     int AllocateReq();
     void UpdateReq();
 
     struct RdosFileInfo *Info;
     struct TFileReq *Req;
-
-    int FQueueIndex;
 
     long long FCurrPos;
     long long FCurrStart;

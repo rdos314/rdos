@@ -53,7 +53,7 @@ file_req_struc   STRUC
 
 frs_queue        DB 16 * 256 DUP(?)
 frs_sorted       DB 241 DUP(?)
-frs_resv         DB ?
+frs_read_ptr     DB ?
 frs_run          DB ?
 frs_update       DB ?
 frs_count        DD ?

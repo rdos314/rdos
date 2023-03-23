@@ -1345,6 +1345,7 @@ serv_wait_file_queue    Proc far
 
 swfqDone:
     pop ecx
+    pop ebx
     pop eax
     pop fs
     pop ds
