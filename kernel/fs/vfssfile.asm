@@ -62,6 +62,7 @@ code    SEGMENT byte public 'CODE'
     extern NotifyFileSignal:near
     extern UnlinkRequest:near
     extern AddFileReq:near
+    extern WaitFileQueue:near
     extern FreeFileReq:near
     extern GetFileDebugInfo:near
 
@@ -1309,6 +1310,48 @@ safDone:
 serv_add_file_req    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServWaitFileQueue
+;
+;       DESCRIPTION:    Serv wait VFS file queue
+;
+;       PARAMETERS:     EBX            File handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_wait_file_queue_name       DB 'Serv Wait File Queue',0
+
+serv_wait_file_queue    Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push ecx
+;
+    mov al,VFS_FILE_SIGN
+    call HandleHighToPartFs
+    jc swfqDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc swfqDone
+;
+    dec bx
+    shl bx,2
+    add bx,OFFSET vfsp_file_arr
+    mov ds,fs:[bx].ff_sel
+    call WaitFileQueue
+
+swfqDone:
+    pop ecx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_wait_file_queue    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server_file
@@ -1346,6 +1389,12 @@ init_server_file    Proc near
     mov edi,OFFSET serv_add_file_req_name
     xor cl,cl
     mov ax,serv_add_file_req_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_wait_file_queue
+    mov edi,OFFSET serv_wait_file_queue_name
+    xor cl,cl
+    mov ax,serv_wait_file_queue_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_file_info

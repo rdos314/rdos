@@ -55,6 +55,8 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     FParent = pd;
     FParentIndex = pi;
 
+    FQueueIndex = 0;
+
     entry = FParent->LockEntry(FParentIndex);
     Info = (struct RdosFileInfo *)RdosAllocateMem(0x1000);
 
@@ -484,8 +486,11 @@ void TFile::UpdateReq()
 ##########################################################################*/
 void TFile::Execute()
 {
-     Req->Run = 2;
+    Req->Run = 2;
 
     for (;;)
+    {
+        ServWaitVfsFileQueue(Handle);
         RdosWaitMilli(50);
+    }
 }

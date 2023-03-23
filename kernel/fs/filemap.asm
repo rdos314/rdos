@@ -369,6 +369,33 @@ CloseFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           WaitFileQueue
+;
+;       DESCRIPTION:    Wait file queue
+;
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WaitFileQueue
+
+WaitFileQueue   Proc near
+    push ds
+    push es
+;
+    int 3
+    mov ds,ax
+    mov es,ds:kf_serv_sel
+;
+    pop es
+    pop ds
+    ret
+WaitFileQueue   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddFileReq
 ;
 ;       DESCRIPTION:    Serv add VFS file req
@@ -1213,7 +1240,6 @@ WaitForReq      Proc near
 ;
     call AddWaitReq
 ;
-    int 3
     mov ebx,REQ_READ
     call AddReq
     LeaveSection ds:kf_section

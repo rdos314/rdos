@@ -61,6 +61,10 @@
     ServGate_serv_free_file_req  \
     __parm [__ebx] [__edx]
 
+#pragma aux ServWaitVfsFileQueue = \
+    ServGate_serv_wait_file_queue  \
+    __parm [__ebx]
+
 #pragma aux ServVfsFileReqCount = \
     ServGate_serv_file_info  \
     __parm [__ebx] \

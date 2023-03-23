@@ -28,6 +28,7 @@ serv_close_file_nr         = 26
 serv_free_file_req_nr      = 27
 get_vfs_start_sector_nr    = 28
 get_vfs_bytes_per_sector_nr = 29
-serv_file_info_nr           = 30
+serv_file_info_nr          = 30
+serv_wait_file_queue_nr    = 31
 
 serv_gate_entries          = 40

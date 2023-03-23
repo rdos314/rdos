@@ -184,6 +184,11 @@ ServOpenVfsFile  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
+ServWaitVfsFileQueue  MACRO
+    ServGate serv_wait_file_queue_nr
+                    ENDM
+
+; IN  BX               Kernel handle
 ; IN  EDX              Req #
 ServFreeVfsFileReq  MACRO
     ServGate serv_free_file_req_nr

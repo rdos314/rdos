@@ -93,6 +93,8 @@ protected:
     struct RdosFileInfo *Info;
     struct TFileReq *Req;
 
+    int FQueueIndex;
+
     long long FCurrPos;
     long long FCurrStart;
     int FCurrSectors;
