@@ -36,6 +36,7 @@
 
 #define REQ_READ   1
 #define REQ_FREE   2
+#define REQ_CLOSE  3
 
 struct TFileQueueEntry
 {

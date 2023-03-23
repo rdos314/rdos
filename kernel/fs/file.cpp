@@ -459,6 +459,9 @@ bool TFile::HandleQueue(struct TFileQueueEntry *entry)
         case REQ_FREE:
             HandleFreeReq(entry->Par16);
             break;
+
+        case REQ_CLOSE:
+            return false;
     }
 
     return true;

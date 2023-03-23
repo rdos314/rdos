@@ -41,6 +41,7 @@ include vfsfile.inc
 
   REQ_READ = 1
   REQ_FREE = 2
+  REQ_CLOSE = 3
 
     .386p
 
@@ -713,40 +714,6 @@ arDone:
     pop es
     ret
 AddReq     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           SendCloseReq
-;
-;       DESCRIPTION:    Send close req
-;
-;       PARAMETERS:     DS             File sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendCloseReq     Proc near
-    push ds
-    push es
-    push fs
-    push eax
-    push ebx
-;
-    mov ebx,ds:kf_serv_handle
-    mov fs,ds:kf_part_sel
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-;
-    mov eax,VFS_CLOSE_FILE
-    call RunMsg
-;
-    pop ebx
-    pop eax
-    pop fs
-    pop es
-    pop ds
-    ret
-SendCloseReq     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3189,15 +3156,16 @@ close_vfs_file  Proc near
     mov ax,ds
     mov ds,ds:kfm_file_sel
     call UnlinkProgSel
-    LeaveSection ds:kf_section
 ;
     mov ax,ds:kf_map_list
     or ax,ax
     jnz cvfMore
 ;
-    call SendCloseReq
+    mov ebx,REQ_CLOSE
+    call AddReq
 
 cvfMore:
+    LeaveSection ds:kf_section
     pop ds
 ;
     call DeleteMap
