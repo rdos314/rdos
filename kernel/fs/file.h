@@ -35,6 +35,7 @@
 #include "dir.h"
 
 #define REQ_READ   1
+#define REQ_FREE   2
 
 struct TFileQueueEntry
 {
@@ -57,7 +58,7 @@ struct TFileReq
     unsigned char SortedArr[241];
     unsigned char RdIndex;
     char Run;
-    char Update;
+    char Resv;
     int Count;
     long long LastActive;
     struct TFileBufEntry ReqArr[240];
@@ -82,10 +83,10 @@ public:
 
 protected:
     virtual void HandleRead(long long pos, int size);
+    virtual void HandleFreeReq(int index);
     bool HandleQueue(struct TFileQueueEntry *entry);
 
     virtual void Execute();
-    virtual void FreeReq(int index);
     virtual void SetReq(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
 

@@ -90,7 +90,6 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
 ##########################################################################*/
 TFile::~TFile()
 {
-    UpdateReq();
     printf("Close %d\r\n", Index);
 
     ServCloseVfsFile(Handle);
@@ -130,7 +129,6 @@ int TFile::Setup(int VfsHandle)
     Req->RdIndex = 0;
     Req->Run = 0;
     Req->Count = 0;
-    Req->Update = 0;
     Req->LastActive = 0;
 
     for (i = 0; i < 240; i++)
@@ -349,8 +347,6 @@ void TFile::HandleRead(long long pos, int size)
     int SectorCount;
     bool HasPos = false;
 
-    UpdateReq();
-
     FCurrPos = pos / FBytesPerSector;
 
     SetReq(FCurrPos, size / FBytesPerSector);
@@ -415,7 +411,6 @@ void TFile::HandleRead(long long pos, int size)
         }
 
         delete SectorArr;
-        UpdateReq();
     }
     else
     {
@@ -426,50 +421,20 @@ void TFile::HandleRead(long long pos, int size)
 
 /*##########################################################################
 #
-#   Name       : TFile::FreeReq
+#   Name       : TFile::HandleFreeReq
 #
-#   Purpose....: Free req
+#   Purpose....: Handle free req
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::FreeReq(int req)
+void TFile::HandleFreeReq(int req)
 {
     printf(" Free %d.%d ", Index, req);
     ServFreeVfsFileReq(Handle, req + 1);
     Req->ReqArr[req].Handle = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::UpdateReq
-#
-#   Purpose....: Update req
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFile::UpdateReq()
-{
-    int i;
-    int handle;
-
-    while (Req->Update)
-    {
-        Req->Update = 0;
-
-        for (i = 0; i < 240; i++)
-        {
-            handle = Req->ReqArr[i].Handle;
-            if (handle & 0x80000000)
-                if (handle != -1)
-                    FreeReq(i);
-        }
-    }
 }
 
 /*##########################################################################
@@ -489,6 +454,10 @@ bool TFile::HandleQueue(struct TFileQueueEntry *entry)
     {
         case REQ_READ:
             HandleRead(entry->Par64, entry->Par32);
+            break;
+
+        case REQ_FREE:
+            HandleFreeReq(entry->Par16);
             break;
     }
 

@@ -40,6 +40,7 @@ include vfsmsg.inc
 include vfsfile.inc
 
   REQ_READ = 1
+  REQ_FREE = 2
 
     .386p
 
@@ -1334,9 +1335,6 @@ FreeReq      Proc near
     jnz frLeave
 ;
     mov al,bl
-    shl ebx,4
-    or es:[ebx].frs_arr.fbe_handle,80000000h
-;
     mov esi,OFFSET frs_sorted
     mov ecx,es:frs_count
 
@@ -1356,9 +1354,12 @@ frMove:
     loop frMove
 ;
     dec es:frs_count
-    mov es:frs_update,1
 
 frLeave:
+    shl ebx,16
+    mov bx,REQ_FREE
+    call AddReq
+;
     LeaveSection ds:kf_section
 
 frEnd:
@@ -2779,7 +2780,6 @@ nfdFree:
     mov al,bl
     shl ebx,4
     mov es:[ebx].frs_arr.fbe_size,0
-    or es:[ebx].frs_arr.fbe_handle,80000000h
 ;
     mov esi,OFFSET frs_sorted
     mov ecx,es:frs_count
@@ -2800,7 +2800,10 @@ nfdMove:
     loop nfdMove
 ;
     dec es:frs_count
-    mov es:frs_update,1
+;
+    shl ebx,12
+    mov bx,REQ_FREE
+    call AddReq
     jmp nfdSignal
 
 nfdData:
