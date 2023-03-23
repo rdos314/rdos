@@ -34,6 +34,22 @@
 
 /*##########################################################################
 #
+#   Name       : ThreadStartup
+#
+#   Purpose....: Startup procedure for thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ThreadStartup(void *ptr)
+{
+    ((TFile *)ptr)->Execute();
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::TFile
 #
 #   Purpose....: Dir constructor
@@ -90,6 +106,9 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
 ##########################################################################*/
 TFile::~TFile()
 {
+    while (Req->Run)
+        RdosWaitMilli(10);
+
     printf("Close %d\r\n", Index);
 
     ServCloseVfsFile(Handle);
@@ -171,7 +190,7 @@ void TFile::ProcessFile()
     if (Req->Run == 0)
     {
         Req->Run = 1;
-        Start(Info->Name, 0x2000);
+        RdosCreateThread(ThreadStartup, Info->Name, this, 0x2000);
     }
 }
 
