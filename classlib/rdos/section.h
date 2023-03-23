@@ -41,6 +41,7 @@ public:
 
 private:
     struct RdosFutex Futex;
+    char FName[33];
 };
 
 #endif
