@@ -420,8 +420,11 @@ void TFile::HandleRead(long long pos, int size)
             Req->ReqArr[req].Pos = FCurrStart * FBytesPerSector;
             Req->ReqArr[req].Size = SectorCount * FBytesPerSector;
             Req->ReqArr[req].Handle = -1;
-            printf("Read %d.%d start %lld size %d\r\n", Index, req, FCurrStart, SectorCount);
-            ServAddVfsFileReq(Handle, req + 1, SectorArr, SectorCount);
+            printf("Read %d.%d start %lld size %d", Index, req, FCurrStart, SectorCount);
+            if (ServAddVfsFileReq(Handle, req + 1, SectorArr, SectorCount))
+                printf(" done\r\n");
+            else
+                printf(" pending\r\n");
         }
         else
         {
@@ -451,7 +454,7 @@ void TFile::HandleRead(long long pos, int size)
 ##########################################################################*/
 void TFile::HandleFreeReq(int req)
 {
-    printf(" Free %d.%d ", Index, req);
+    printf("Free %d.%d\r\n", Index, req);
     ServFreeVfsFileReq(Handle, req + 1);
     Req->ReqArr[req].Handle = 0;
 }

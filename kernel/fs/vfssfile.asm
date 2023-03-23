@@ -1221,7 +1221,8 @@ StartReq     Endp
 ;                       ECX            Sector count
 ;                       ES:EDI         Sector buf
 ;
-;       RETURNS:        EAX            File req handle
+;       RETURNS:        NC             Processed
+;                       CY             Pending
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1239,11 +1240,11 @@ serv_add_file_req    Proc far
     mov ebp,ebx
     mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
-    jc safDone
+    cmc
+    jnc safDone
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
-    cmc
-    jc safDone
+    jnc safDone
 ;
     or ecx,ecx
     jz safWakeup
@@ -1271,15 +1272,16 @@ serv_add_file_req    Proc far
 ;
     mov eax,ds:vfs_rd_remain_count
     or eax,eax
-    clc
     jz safProcess
 ;
     mov ds,fs:vfsp_disc_sel
     mov bx,ds:vfs_server
     Signal
+    stc
     jmp safDone
 
-safProcess:    mov eax,ds
+safProcess:    
+    mov eax,ds
     mov gs,eax
     call UnlinkRequest
 ;
@@ -1293,10 +1295,12 @@ safProcess:    mov eax,ds
     xor eax,eax
     mov gs,eax
     FreeBigServSel
+    clc
     jmp safDone
 
 safWakeup:
-   call NotifyFileSignal
+    call NotifyFileSignal
+    clc
 
 safDone:
     pop ebp
