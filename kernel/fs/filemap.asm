@@ -2374,11 +2374,27 @@ CreateProgSel      Endp
 
 DeleteProgSel   Proc near
     push es
+    push fs
     push eax
     push ecx
     push edx
 ;
-    mov es,ds:kfm_kernel_sel
+    push ds
+;
+    mov ds,ds:kfm_kernel_sel
+    mov ax,flat_data_sel
+    mov es,eax
+    mov ebx,ds:fm_handle_ptr
+    add ebx,OFFSET fh_futex
+    mov eax,es:[ebx].fs_handle
+    or eax,eax
+    jz dpsPop
+;
+    CleanupFutex
+
+dpsPop:
+    pop ds
+;
     FreeMem
 ;
     mov eax,ds
@@ -2397,6 +2413,7 @@ DeleteProgSel   Proc near
     pop edx
     pop ecx
     pop eax
+    pop fs
     pop es
     ret
 DeleteProgSel      Endp
