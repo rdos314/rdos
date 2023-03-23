@@ -609,41 +609,56 @@ SendProcessReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AddBufReq
+;       NAME:           AddReq
 ;
-;       DESCRIPTION:    Add buffer req
+;       DESCRIPTION:    Add req
 ;
 ;       PARAMETERS:     DS             File sel
-;                       EDX:EAX        Pos
-;                       ECX            Size
+;                       EBX            OP & par16
+;                       EDX:EAX        Par64
+;                       ECX            Par32
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddBufReq     Proc near
+AddReq     Proc near
     push es
     push ebx
+    push esi
+    push edi
+;
+    mov es,ds:kf_serv_sel
+    movzx esi,ds:kf_wr_ptr
+    mov di,es:[esi].fre_op
+    or di,di
+    jz arRoom
 ;
     int 3
-    mov es,ds:kf_serv_sel
-    mov bx,ds:kf_wr_ptr
-    mov es:[bx].fre_p64,eax
-    mov es:[bx].fre_p64+4,edx
-    mov es:[bx].fre_p32,ecx
-    mov es:[bx].fre_op,REQ_READ
-    add bx,SIZE file_req_entry
-    mov ds:kf_wr_ptr,bx
+
+arRoom:
+    mov es:[esi].fre_p64,eax
+    mov es:[esi].fre_p64+4,edx
+    mov es:[esi].fre_p32,ecx
+    mov edi,ebx
+    shr edi,16
+    mov es:[esi].fre_p16,di
+    mov es:[esi].fre_op,bx
+    add si,SIZE file_req_entry
+    and si,0FFFh
+    mov ds:kf_wr_ptr,si
 ;
     mov bl,es:frs_run
     or bl,bl
-    jnz abrDone
+    jnz arDone
 ;
     call SendProcessReq
 
-abrDone:
+arDone:
+    pop edi
+    pop esi
     pop ebx
     pop es
     ret
-AddBufReq     Endp
+AddReq     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1197,7 +1212,10 @@ WaitForReq      Proc near
     jnc wfrCheck
 ;
     call AddWaitReq
-    call AddBufReq
+;
+    int 3
+    mov ebx,REQ_READ
+    call AddReq
     LeaveSection ds:kf_section
 ;
     call UpdateMap
