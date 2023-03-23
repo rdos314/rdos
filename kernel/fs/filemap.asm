@@ -386,7 +386,6 @@ WaitFileQueue   Proc near
     push eax
     push ebx
 ;
-    int 3
     ClearSignal
     mov es,ds:kf_serv_sel
     movzx ebx,es:frs_read_ptr
@@ -692,6 +691,14 @@ arRoom:
     and si,0FFFh
     mov ds:kf_wr_ptr,si
 ;
+    mov bx,ds:kf_wait_thread
+    or bx,bx
+    jz arCheckRun
+;
+    Signal
+    jmp arDone
+
+arCheckRun:
     mov bl,es:frs_run
     or bl,bl
     jnz arDone
