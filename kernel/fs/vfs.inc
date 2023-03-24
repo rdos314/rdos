@@ -288,3 +288,12 @@ sb_usage    DW ?
 sb_pages    DW ?
 
 share_block_struc       ENDS
+
+fs_queue_entry   STRUC
+
+fqe_p64          DD ?,?
+fqe_p32          DD ?
+fqe_handle       DW ?
+fqe_op           DW ?
+
+fs_queue_entry   ENDS

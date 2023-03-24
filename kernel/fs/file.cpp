@@ -69,7 +69,7 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     Info->ServHandle = 0;
     strcpy(Info->Name, entry->PathName);
 
-    Req = 0;
+    Buf = 0;
 
     Handle = 0;
     Index = -1;
@@ -90,16 +90,13 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
 ##########################################################################*/
 TFile::~TFile()
 {
-    while (Req->Run)
-        RdosWaitMilli(10);
-
     printf("Close %d\r\n", Index);
 
     ServCloseVfsFile(Handle);
 
     RdosFreeMem(Info);
-    if (Req)
-        RdosFreeMem(Req);
+    if (Buf)
+        RdosFreeMem(Buf);
 
     FParent->ClearFileLink(FParentIndex);
 }
@@ -119,23 +116,22 @@ int TFile::Setup(int VfsHandle)
 {
     int i;
 
-    Req = (struct TFileReq *)RdosAllocateMem(0x1000);
+    Buf = (struct TFileBuf *)RdosAllocateMem(0x1000);
 
-    Req->Run = 0;
-    Req->Count = 0;
-    Req->LastActive = 0;
+    Buf->Count = 0;
+    Buf->LastActive = 0;
 
     for (i = 0; i < 240; i++)
     {
-        Req->ReqArr[i].Pos = 0;
-        Req->ReqArr[i].Size = 0;
-        Req->ReqArr[i].Handle = 0;
+        Buf->BufArr[i].Pos = 0;
+        Buf->BufArr[i].Size = 0;
+        Buf->BufArr[i].Handle = 0;
     }
 
     for (i = 0; i < 241; i++)
-        Req->SortedArr[i] = 0xFF;
+        Buf->SortedArr[i] = 0xFF;
 
-    Handle = ServOpenVfsFile(VfsHandle, Info, Req);
+    Handle = ServOpenVfsFile(VfsHandle, Info, Buf);
     Index = Handle & 0xFFFF;
     if (Index > 0)
         Index--;
@@ -211,7 +207,7 @@ int TFile::AllocateReq()
     int i;
 
     for (i = 0; i < 240; i++)
-        if (Req->ReqArr[i].Handle == 0)
+        if (Buf->BufArr[i].Handle == 0)
             return i;
 
     return -1;
@@ -273,11 +269,11 @@ void TFile::SetReq(long long StartSector, int Sectors)
 
     count = end - start + 1;
 
-    for (i = 0; i < Req->Count; i++)
+    for (i = 0; i < Buf->Count; i++)
     {
-        link = Req->SortedArr[i];
+        link = Buf->SortedArr[i];
 
-        temp = Req->ReqArr[link].Pos / FBytesPerSector - start;
+        temp = Buf->BufArr[link].Pos / FBytesPerSector - start;
         if (temp >= 0)
         {
             if (temp < Sectors)
@@ -286,7 +282,7 @@ void TFile::SetReq(long long StartSector, int Sectors)
         }
         else
         {
-            temp = (Req->ReqArr[link].Pos + Req->ReqArr[link].Size) / FBytesPerSector;
+            temp = (Buf->BufArr[link].Pos + Buf->BufArr[link].Size) / FBytesPerSector;
             if (temp > start)
             {
                 count -= (int)(temp - start);
@@ -372,9 +368,9 @@ void TFile::HandleRead(long long pos, int size)
 
         if (SectorCount)
         {
-            Req->ReqArr[req].Pos = FCurrStart * FBytesPerSector;
-            Req->ReqArr[req].Size = SectorCount * FBytesPerSector;
-            Req->ReqArr[req].Handle = -1;
+            Buf->BufArr[req].Pos = FCurrStart * FBytesPerSector;
+            Buf->BufArr[req].Size = SectorCount * FBytesPerSector;
+            Buf->BufArr[req].Handle = -1;
             printf("Read %d.%d start %lld size %d", Index, req, FCurrStart, SectorCount);
             if (ServAddVfsFileReq(Handle, req + 1, SectorArr, SectorCount))
                 printf(" done\r\n");
@@ -409,11 +405,11 @@ void TFile::HandleRead(long long pos, int size)
 ##########################################################################*/
 void TFile::HandleFreeReq(int req)
 {
-    if (Req->ReqArr[req].Handle > 0)
+    if (Buf->BufArr[req].Handle > 0)
     {
         printf("Free %d.%d\r\n", Index, req);
         ServFreeVfsFileReq(Handle, req + 1);
-        Req->ReqArr[req].Handle = 0;
+        Buf->BufArr[req].Handle = 0;
     }
     else
         printf("Cannot free %d.%d\r\n", Index, req);

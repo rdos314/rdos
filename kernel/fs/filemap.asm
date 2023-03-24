@@ -412,7 +412,7 @@ AddFileReq   Proc near
     mov edi,esi
     shl edi,2
     shl esi,4
-    add esi,OFFSET frs_arr
+    add esi,OFFSET fbs_arr
 ;
     inc ds:kf_req_count
     mov cx,SIZE kernel_req_entry
@@ -423,9 +423,9 @@ AddFileReq   Proc near
     mov ds:[edx].kre_phys_arr,0
     mov ds:[edx].kre_usage,0
 ;
-    mov ebx,OFFSET frs_sorted
-    inc es:frs_count
-    mov ebp,es:frs_count
+    mov ebx,OFFSET fbs_sorted
+    inc es:fbs_count
+    mov ebp,es:fbs_count
     sub ebp,1
     jbe afrInsert
  
@@ -434,12 +434,12 @@ afrFind:
     shl ecx,4
     mov eax,es:[esi].fbe_pos
     mov edx,es:[esi].fbe_pos+4
-    sub eax,es:[ecx].frs_arr.fbe_pos
-    sbb edx,es:[ecx].frs_arr.fbe_pos+4
+    sub eax,es:[ecx].fbs_arr.fbe_pos
+    sbb edx,es:[ecx].fbs_arr.fbe_pos+4
     jb afrInsert
     jnz afrNext
 ;
-    cmp eax,es:[ecx].frs_arr.fbe_size
+    cmp eax,es:[ecx].fbs_arr.fbe_size
     jb afrInsert
 
 afrNext:
@@ -448,16 +448,16 @@ afrNext:
     jnz afrFind
 
 afrInsert:
-    sub ebx,OFFSET frs_sorted
+    sub ebx,OFFSET fbs_sorted
     mov eax,ebx
-    mov ecx,es:frs_count
+    mov ecx,es:fbs_count
     dec ecx
     sub ecx,eax
 ;
     mov ebx,esi
-    sub ebx,OFFSET frs_arr
+    sub ebx,OFFSET fbs_arr
     shr ebx,4
-    lea esi,[eax+ecx].frs_sorted
+    lea esi,[eax+ecx].fbs_sorted
     mov edi,esi
     dec esi
     or ecx,ecx
@@ -504,24 +504,24 @@ FindReq     Proc near
     push ebp
 ;
     mov es,ds:kf_serv_sel
-    mov ebp,es:frs_count
+    mov ebp,es:fbs_count
     or ebp,ebp
     stc
     jz frDone
 ;
-    mov ebx,OFFSET frs_sorted
+    mov ebx,OFFSET fbs_sorted
  
 frLoop:
     movzx ecx,byte ptr es:[ebx]
     shl ecx,4
     mov esi,eax
     mov edi,edx
-    sub esi,es:[ecx].frs_arr.fbe_pos
-    sbb edi,es:[ecx].frs_arr.fbe_pos+4
+    sub esi,es:[ecx].fbs_arr.fbe_pos
+    sbb edi,es:[ecx].fbs_arr.fbe_pos+4
     jb frDone
     jnz frNext
 ;
-    cmp esi,es:[ecx].frs_arr.fbe_size
+    cmp esi,es:[ecx].fbs_arr.fbe_size
     jae frNext
 ;
     movzx ebx,byte ptr es:[ebx]
@@ -605,7 +605,7 @@ AddReq     Proc near
     push eax
     mov es,ds:vfsp_io_sel
     movzx esi,ds:vfsp_io_wr_ptr
-    mov ax,es:[esi].fre_op
+    mov ax,es:[esi].fqe_op
     or ax,ax
     pop eax
     jz arRoom
@@ -613,12 +613,12 @@ AddReq     Proc near
     int 3
 
 arRoom:
-    mov es:[esi].fre_p64,eax
-    mov es:[esi].fre_p64+4,edx
-    mov es:[esi].fre_p32,ecx
-    mov es:[esi].fre_handle,di
-    mov es:[esi].fre_op,bx
-    add si,SIZE file_req_entry
+    mov es:[esi].fqe_p64,eax
+    mov es:[esi].fqe_p64+4,edx
+    mov es:[esi].fqe_p32,ecx
+    mov es:[esi].fqe_handle,di
+    mov es:[esi].fqe_op,bx
+    add si,10h
     and si,0FFFh
     mov ds:vfsp_io_wr_ptr,si
 ;
@@ -826,11 +826,11 @@ MergeReq  Proc near
     mov [ebp].mrs_pos,esi
     mov [ebp].mrs_count,0
 ;
-    mov ecx,es:frs_count
+    mov ecx,es:fbs_count
     or ecx,ecx
     jz mrrDone
 ;
-    mov edi,OFFSET frs_sorted
+    mov edi,OFFSET fbs_sorted
     cmp bl,es:[edi]
     je mrrDone
 ;
@@ -855,11 +855,11 @@ mrrFound:
 ;
     movzx edi,al
     shl edi,4
-    add edi,OFFSET frs_arr
+    add edi,OFFSET fbs_arr
 ;
     movzx ebx,bl
     shl ebx,4
-    add ebx,OFFSET frs_arr
+    add ebx,OFFSET fbs_arr
 ;
     mov eax,es:[ebx].fbe_pos
     mov edx,es:[ebx].fbe_pos+4
@@ -930,12 +930,12 @@ mrrUpdate:
     mov ds,fs:kf_serv_sel
     movzx ebx,[ebp].mrs_curr_index
     shl ebx,4
-    add ds:[ebx].frs_arr.fbe_pos,eax
-    adc ds:[ebx].frs_arr.fbe_pos+4,0
+    add ds:[ebx].fbs_arr.fbe_pos,eax
+    adc ds:[ebx].fbs_arr.fbe_pos+4,0
 ;
     movzx ebx,[ebp].mrs_prev_index
     shl ebx,4
-    add ds:[ebx].frs_arr.fbe_size,eax
+    add ds:[ebx].fbs_arr.fbe_size,eax
 
 mrrDone:
     mov ecx,[ebp].mrs_blocks
@@ -978,7 +978,7 @@ SetupReadReq   Proc near
     mov es,ds:kf_serv_sel
     mov edx,ebx
     shl edx,4
-    mov es:[edx].frs_arr.fbe_size,ecx
+    mov es:[edx].fbs_arr.fbe_size,ecx
 ;
     mov ebx,ds:[4*ebx].kf_handle_arr
     mov ds:[ebx].kre_pages,ax
@@ -1291,8 +1291,8 @@ FreeReq      Proc near
     jnz frLeave
 ;
     mov al,bl
-    mov esi,OFFSET frs_sorted
-    mov ecx,es:frs_count
+    mov esi,OFFSET fbs_sorted
+    mov ecx,es:fbs_count
 
 frFind:
     cmp al,es:[esi]
@@ -1309,7 +1309,7 @@ frMove:
     inc esi
     loop frMove
 ;
-    dec es:frs_count
+    dec es:fbs_count
 
 frLeave:
     LeaveSection ds:kf_section
@@ -1982,7 +1982,7 @@ SyncMap  Proc near
     mov fs,gs:kf_serv_sel
     mov edi,ebx
     shl edi,4
-    add edi,OFFSET frs_arr
+    add edi,OFFSET fbs_arr
     mov eax,fs:[edi].fbe_pos
     mov edx,fs:[edi].fbe_pos+4
     mov ecx,fs:[edi].fbe_size
@@ -2124,7 +2124,7 @@ MapReq      Proc near
     mov ds,gs:kf_serv_sel
     mov esi,ebx
     shl esi,4
-    add esi,OFFSET frs_arr
+    add esi,OFFSET fbs_arr
     mov eax,ds:[esi].fbe_pos
     mov edx,ds:[esi].fbe_pos+4
     add eax,ds:[esi].fbe_size
@@ -2732,7 +2732,7 @@ NotifyFileData  Proc near
     dec ebx
     mov esi,ebx
     shl esi,4
-    xchg eax,es:[esi].frs_arr.fbe_handle
+    xchg eax,es:[esi].fbs_arr.fbe_handle
     cmp eax,-1
     jne nfdLeave
 ;
@@ -2744,10 +2744,10 @@ NotifyFileData  Proc near
 nfdFree:
     mov al,bl
     shl ebx,4
-    mov es:[ebx].frs_arr.fbe_size,0
+    mov es:[ebx].fbs_arr.fbe_size,0
 ;
-    mov esi,OFFSET frs_sorted
-    mov ecx,es:frs_count
+    mov esi,OFFSET fbs_sorted
+    mov ecx,es:fbs_count
 
 nfdFind:
     cmp al,es:[esi]
@@ -2764,7 +2764,7 @@ nfdMove:
     inc esi
     loop nfdMove
 ;
-    dec es:frs_count
+    dec es:fbs_count
 ;
     push ebx
     shr ebx,4
@@ -2874,7 +2874,7 @@ FreeFileReq  Proc near
     mov es,ds:kf_serv_sel
     mov ebx,edx
     shl ebx,4
-    mov ecx,es:[ebx].frs_arr.fbe_size
+    mov ecx,es:[ebx].fbs_arr.fbe_size
 ;    
     mov ax,serv_flat_sel
     mov es,eax

@@ -40,14 +40,13 @@ struct TFileBufEntry
     int Handle;
 };
 
-struct TFileReq
+struct TFileBuf
 {
     unsigned char SortedArr[241];
-    char Resv[2];
-    char Run;
+    char Resv[3];
     int Count;
     long long LastActive;
-    struct TFileBufEntry ReqArr[240];
+    struct TFileBufEntry BufArr[240];
 };
 
 class TFile
@@ -80,7 +79,7 @@ protected:
     void UpdateReq();
 
     struct RdosFileInfo *Info;
-    struct TFileReq *Req;
+    struct TFileBuf *Buf;
 
     long long FCurrPos;
     long long FCurrStart;

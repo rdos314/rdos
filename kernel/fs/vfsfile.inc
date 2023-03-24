@@ -40,22 +40,12 @@ fbe_handle       DD ?
 
 file_buf_entry   ENDS
 
-file_req_entry   STRUC
+file_buf_struc   STRUC
 
-fre_p64          DD ?,?
-fre_p32          DD ?
-fre_handle       DW ?
-fre_op           DW ?
+fbs_sorted       DB 241 DUP(?)
+fbs_resv         DB ?,?,?
+fbs_count        DD ?
+fbs_last_active  DD ?,?
+fbs_arr          DB 16 * 240 DUP(?)
 
-file_req_entry   ENDS
-
-file_req_struc   STRUC
-
-frs_sorted       DB 241 DUP(?)
-frs_resv         DB ?,?
-frs_run          DB ?
-frs_count        DD ?
-frs_last_active  DD ?,?
-frs_arr          DB 16 * 240 DUP(?)
-
-file_req_struc   ENDS
+file_buf_struc   ENDS
