@@ -31,9 +31,30 @@
 #include <serv.h>
 #include "str.h"
 #include "fs.h"
-#include "fileio.h"
 
 #define VFS_FILE_SIGN 0x460000;
+
+#define REQ_READ       1
+#define REQ_FREE       2
+#define REQ_CLOSE      3
+#define REQ_COMPLETED  4
+#define REQ_MAP        5
+
+/*##########################################################################
+#
+#   Name       : ThreadStartup
+#
+#   Purpose....: Startup procedure for thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ThreadStartup(void *ptr)
+{
+    ((TFs *)ptr)->Execute();
+}
 
 /*##########################################################################
 #
@@ -393,6 +414,7 @@ TFs::TFs(TDiscServer *server)
     for (i = 0; i < FMaxDirCount; i++)
         FDirArr[i] = 0;
 
+    FServerActive = false;
     FCurrFileCount = 0;
     FMaxFileCount = 4;
     FFileArr = new TFile*[FMaxFileCount];
@@ -892,30 +914,14 @@ int TFs::OpenFile(int rel, char *path)
 
     if (file)
     {
-        if (!FileIo.IsRunning())
-            FileIo.Start(this);
+        if (!FServerActive)
+            StartServer();
 
         printf("Open %d <%s>\r\n", file->Index, path);
         return file->Handle;
     }
     else
         return -1;
-}
-
-/*##########################################################################
-#
-#   Name       : TFs::GetVfsHandle
-#
-#   Purpose....: Get VFS handle
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFs::GetVfsHandle()
-{
-    return FServer->GetHandle();
 }
 
 /*##########################################################################
@@ -1048,4 +1054,168 @@ void TFs::CloseFile(int handle)
             delete file;
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileIo::StartFileServer
+#
+#   Purpose....: Start file server
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::StartServer()
+{
+    char ThreadName[40];
+    int Handle = FServer->GetHandle();
+    int Disc = ServGetVfsDisc(Handle);
+    int Part = ServGetVfsPart(Handle);
+
+    sprintf(ThreadName, "File IO %02hX.%02hX", Disc, Part);
+    RdosCreateThread(ThreadStartup, ThreadName, this, 0x2000);
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::HandleRead
+#
+#   Purpose....: Handle read file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::HandleRead(long long pos, int size)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::HandleFreeReq
+#
+#   Purpose....: Handle free req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::HandleFreeReq(int req)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::HandleCompletedReq
+#
+#   Purpose....: Handle completed req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::HandleCompletedReq(int req)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::HandleMapReq
+#
+#   Purpose....: Handle map req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::HandleMapReq(int req)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::HandleQueue
+#
+#   Purpose....: Handle queue entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFs::HandleQueue(struct TFileIoEntry *entry)
+{
+    switch (entry->Op)
+    {
+        case REQ_READ:
+            HandleRead(entry->Par64, entry->Par32);
+            break;
+
+        case REQ_COMPLETED:
+            HandleCompletedReq(entry->Par32);
+            break;
+
+        case REQ_MAP:
+            HandleMapReq(entry->Par32);
+            break;
+
+        case REQ_FREE:
+            HandleFreeReq(entry->Par32);
+            break;
+
+        case REQ_CLOSE:
+            return false;
+    }
+
+    return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Execute
+#
+#   Purpose....: Execute
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Execute()
+{
+    int index = 0;
+    struct TFileIoEntry *entry;
+
+    FServerActive = true;
+
+    for (;;)
+        RdosWaitMilli(50);
+
+/*
+    for (;;)
+    {
+        if (Req->QueueArr[index].Op)
+        {
+            entry = &Req->QueueArr[index];
+            if (HandleQueue(entry))
+            {
+                entry->Op = 0;
+                index = (index + 1) % 256;
+            }
+            else
+                break;
+        }
+        else
+            ServWaitVfsFileQueue(FHandle);
+    }
+*/
+
+    FServerActive = false;
+
 }

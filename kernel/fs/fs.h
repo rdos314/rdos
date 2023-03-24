@@ -31,7 +31,14 @@
 #include "discserv.h"
 #include "dir.h"
 #include "file.h"
-#include "fileio.h"
+
+struct TFileIoEntry
+{
+    long long Par64;
+    int Par32;
+    short int File;
+    short int Op;
+};
 
 class TParser
 {
@@ -91,8 +98,16 @@ public:
 
     void ReadDirLink(TDir *dir, int index);
 
+    void Execute();
+
 protected:
-    int GetVfsHandle();
+    virtual void HandleRead(long long pos, int size);
+    virtual void HandleCompletedReq(int index);
+    virtual void HandleMapReq(int index);
+    virtual void HandleFreeReq(int index);
+    bool HandleQueue(struct TFileIoEntry *entry);
+    void StartServer();
+
     int FileHandleToIndex(int handle);
 
     void GrowDir();
@@ -121,8 +136,8 @@ protected:
     int FCurrFileCount;
     int FMaxFileCount;
 
+    bool FServerActive;
     TDiscServer *FServer;
-    TFileIo FileIo;
 };
 
 #endif
