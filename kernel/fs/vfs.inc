@@ -202,7 +202,6 @@ vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
 vfsp_file_arr             DW MAX_VFS_FILE_COUNT DUP(?,?,?,?)
 vfsp_file_req_arr         DW MAX_VFS_FILE_REQ_COUNT DUP(?,?)
 
-vfsp_io_linear            DD ?
 vfsp_io_sel               DW ?
 vfsp_app_sel              DW ?
 vfsp_disc_sel             DW ?

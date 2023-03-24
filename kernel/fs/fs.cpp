@@ -1189,10 +1189,17 @@ bool TFs::HandleQueue(struct TFileIoEntry *entry)
 ##########################################################################*/
 void TFs::Execute()
 {
-    int index = 0;
+    int index;
     struct TFileIoEntry *entry;
 
-    FQueueArr = (struct TFileIoEntry *)ServStartVfsIoServer(FServer->GetHandle());
+    FQueueArr = (struct TFileIoEntry *)RdosAllocateMem(0x1000);
+
+    for (index = 0; index < 256; index++)
+        FQueueArr[index].Op = 0;
+        
+    ServStartVfsIoServer(FServer->GetHandle(), FQueueArr);
+
+    index = 0;
 
     for (;;)
     {

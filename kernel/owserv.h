@@ -133,8 +133,7 @@
 
 #pragma aux ServStartVfsIoServer = \
     ServGate_start_vfs_io_serv  \
-    __parm [__ebx] \
-    __value [__edx]
+    __parm [__ebx] [__edx]
 
 #pragma aux ServCreateVfsReq = \
     ServGate_create_vfs_req  \

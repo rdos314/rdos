@@ -158,7 +158,6 @@ cpsFound:
     mov al,ds:vfs_disc_nr
     mov es:vfsp_disc_nr,al
 ;
-    mov es:vfsp_io_linear,0
     mov es:vfsp_io_sel,0
 ;
     mov ax,SEG data
@@ -3085,8 +3084,7 @@ FreeBlock  Endp
 ;       DESCRIPTION:    Start VFS IO server
 ;
 ;       PARAMETERS:     EBX         VFS Handle
-;
-;       RETURNS:        EDX         Buffer
+;                       EDX         Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3103,25 +3101,11 @@ start_vfs_io_server    Proc far
     call HandleToPartFs
     jc svioDone
 ;
-    mov ax,system_data_sel
-    mov es,eax
-    mov ebx,es:flat_base
-;
-    mov eax,1000h
-    AllocateLocalLinear
-;
-    sub edx,ebx
-    mov edi,edx
-;
-    xor eax,eax
-    mov ecx,400h
-    rep stosd
-    mov fs:vfsp_io_linear,edx
     GetPageEntry
-    and ax,0F000h
     push eax
     push ebx
 ;
+    and ax,0F000h
     or ax,867h
     SetPageEntry
 ;
