@@ -454,9 +454,15 @@ void TFile::HandleRead(long long pos, int size)
 ##########################################################################*/
 void TFile::HandleFreeReq(int req)
 {
-    printf("Free %d.%d\r\n", Index, req);
-    ServFreeVfsFileReq(Handle, req + 1);
-    Req->ReqArr[req].Handle = 0;
+    if (Req->ReqArr[req].Handle > 0)
+    {
+        printf("Free %d.%d\r\n", Index, req);
+        ServFreeVfsFileReq(Handle, req + 1);
+        Req->ReqArr[req].Handle = 0;
+    }
+    else
+        printf("Cannot free %d.%d\r\n", Index, req);
+
 }
 
 /*##########################################################################
