@@ -584,8 +584,7 @@ AddWaitReq  Endp
 ;
 ;       DESCRIPTION:    Add req
 ;
-;       PARAMETERS:     FS             Part sel
-;                       DS             File sel
+;       PARAMETERS:     DS             File sel
 ;                       EBX            OP
 ;                       EDX:EAX        Par64
 ;                       ECX            Par32
@@ -594,10 +593,12 @@ AddWaitReq  Endp
 
 AddReq     Proc near
     push es
+    push fs
     push ebx
     push esi
     push edi
 ;
+    mov fs,ds:kf_part_sel
     mov es,fs:vfsp_io_sel
     movzx esi,fs:vfsp_io_wr_ptr
     mov di,es:[esi].fre_op
@@ -607,7 +608,7 @@ AddReq     Proc near
     int 3
 
 arRoom:
-    mov edi,kf_serv_handle
+    mov edi,ds:kf_serv_handle
     mov es:[esi].fre_p64,eax
     mov es:[esi].fre_p64+4,edx
     mov es:[esi].fre_p32,ecx
@@ -627,6 +628,7 @@ arDone:
     pop edi
     pop esi
     pop ebx
+    pop fs
     pop es
     ret
 AddReq     Endp
