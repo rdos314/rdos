@@ -397,40 +397,6 @@ int TFile::VfsFind(long long Pos)
 
 /*##########################################################################
 #
-#   Name       : TFile::VfsLock
-#
-#   Purpose....: Lock file
-#
-#   In params..:
-#   Out params.: *
-#   Returns....:
-#
-##########################################################################*/
-void TFile::VfsLock()
-{
-    if (FMap)
-        EnterFutex(&FMap->Handle->Futex);
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::VfsUnlock
-#
-#   Purpose....: Unlock file
-#
-#   In params..:
-#   Out params.: *
-#   Returns....:
-#
-##########################################################################*/
-void TFile::VfsUnlock()
-{
-    if (FMap)
-        LeaveFutex(&FMap->Handle->Futex);
-}
-
-/*##########################################################################
-#
 #   Name       : TFile::VfsReadOne
 #
 #   Purpose....: Do one read
@@ -501,7 +467,7 @@ int TFile::VfsRead(void *Buf, int Size)
     if (Pos + Size > TotalSize)
         Size = TotalSize - Pos;
 
-    VfsLock();
+    EnterFutex(&FMap->Handle->Futex);
 
     while (Size)
     {
@@ -520,9 +486,11 @@ int TFile::VfsRead(void *Buf, int Size)
 
             for (i = 0; i < 10; i++)
             {
-                VfsUnlock();
+                LeaveFutex(&FMap->Handle->Futex);
+
                 RdosMapVfsFile(FHandle, Pos, Size);
-                VfsLock();
+
+                EnterFutex(&FMap->Handle->Futex);
                 FLastIndex = VfsFind(Pos);
                 if (FLastIndex >= 0)
                     break;
@@ -533,7 +501,7 @@ int TFile::VfsRead(void *Buf, int Size)
         }
     }
 
-    VfsUnlock();
+    LeaveFutex(&FMap->Handle->Futex);
 
     SetPos(Pos);
     return ret;
