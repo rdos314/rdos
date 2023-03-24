@@ -414,7 +414,7 @@ TFs::TFs(TDiscServer *server)
     for (i = 0; i < FMaxDirCount; i++)
         FDirArr[i] = 0;
 
-    FServerActive = false;
+    FQueueArr = 0;
     FCurrFileCount = 0;
     FMaxFileCount = 4;
     FFileArr = new TFile*[FMaxFileCount];
@@ -914,7 +914,7 @@ int TFs::OpenFile(int rel, char *path)
 
     if (file)
     {
-        if (!FServerActive)
+        if (!FQueueArr)
             StartServer();
 
         printf("Open %d <%s>\r\n", file->Index, path);
@@ -1192,17 +1192,13 @@ void TFs::Execute()
     int index = 0;
     struct TFileIoEntry *entry;
 
-    FServerActive = true;
+    FQueueArr = (struct TFileIoEntry *)ServStartVfsIoServer(FServer->GetHandle());
 
-    for (;;)
-        RdosWaitMilli(50);
-
-/*
     for (;;)
     {
-        if (Req->QueueArr[index].Op)
+        if (FQueueArr[index].Op)
         {
-            entry = &Req->QueueArr[index];
+            entry = &FQueueArr[index];
             if (HandleQueue(entry))
             {
                 entry->Op = 0;
@@ -1211,11 +1207,10 @@ void TFs::Execute()
             else
                 break;
         }
-        else
-            ServWaitVfsFileQueue(FHandle);
+//        else
+//            ServWaitVfsFileQueue(FHandle);
     }
-*/
 
-    FServerActive = false;
+    FQueueArr = 0;
 
 }

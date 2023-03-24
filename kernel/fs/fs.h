@@ -136,7 +136,8 @@ protected:
     int FCurrFileCount;
     int FMaxFileCount;
 
-    bool FServerActive;
+    struct TFileIoEntry *FQueueArr;
+
     TDiscServer *FServer;
 };
 
