@@ -158,6 +158,9 @@ cpsFound:
     mov al,ds:vfs_disc_nr
     mov es:vfsp_disc_nr,al
 ;
+    mov es:vfsp_io_linear,0
+    mov es:vfsp_io_sel,0
+;
     mov ax,SEG data
     mov ds,ax
     mov ecx,MAX_PART_COUNT
@@ -3348,6 +3351,12 @@ init_server    Proc near
     xor cl,cl
     mov ax,get_vfs_bytes_per_sector_nr
     RegisterServGate
+;
+;    mov esi,OFFSET start_vfs_io_server
+;    mov edi,OFFSET start_vfs_io_server_name
+;    xor cl,cl
+;    mov ax,start_vfs_io_serv_nr
+;    RegisterServGate
 ;
     mov esi,OFFSET create_vfs_req
     mov edi,OFFSET create_vfs_req_name
