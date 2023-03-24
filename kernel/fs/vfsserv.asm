@@ -3076,6 +3076,79 @@ fbDone:
     ret
 FreeBlock  Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartVfsIoServer
+;
+;       DESCRIPTION:    Start VFS IO server
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        EDX         Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_vfs_io_server_name       DB 'Start VFS IO Server',0
+
+start_vfs_io_server    Proc far
+    push es
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    call HandleToPartFs
+    jc svioDone
+;
+    mov ax,system_data_sel
+    mov es,eax
+    mov ebx,es:flat_base
+;
+    mov eax,1000h
+    AllocateLocalLinear
+;
+    sub edx,ebx
+    mov edi,edx
+;
+    xor eax,eax
+    mov ecx,400h
+    rep stosd
+    mov fs:vfsp_io_linear,edx
+    GetPageEntry
+    and ax,0F000h
+    push eax
+    push ebx
+;
+    or ax,867h
+    SetPageEntry
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    pop ebx
+    pop eax
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector32
+    mov fs:vfsp_io_sel,bx
+;
+    clc
+
+svioDone:
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    ret
+start_vfs_io_server    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -3352,11 +3425,11 @@ init_server    Proc near
     mov ax,get_vfs_bytes_per_sector_nr
     RegisterServGate
 ;
-;    mov esi,OFFSET start_vfs_io_server
-;    mov edi,OFFSET start_vfs_io_server_name
-;    xor cl,cl
-;    mov ax,start_vfs_io_serv_nr
-;    RegisterServGate
+    mov esi,OFFSET start_vfs_io_server
+    mov edi,OFFSET start_vfs_io_server_name
+    xor cl,cl
+    mov ax,start_vfs_io_serv_nr
+    RegisterServGate
 ;
     mov esi,OFFSET create_vfs_req
     mov edi,OFFSET create_vfs_req_name
