@@ -1958,14 +1958,19 @@ UpdateUnlinked  Proc near
     jz uuDone
 ;
     push fs
+    push ebx
 ;
     mov ax,flat_data_sel
     mov fs,eax
+    mov ebx,es:fm_handle_ptr
+    mov ax,fs:[ebx].fh_futex.fs_owner
+    or ax,ax
+    jnz uuPop
 ;
-    call LockMap
     call UnlinkMap
-    call UnlockMap
 
+uuPop:
+    pop ebx
     pop fs
     
 uuDone:
