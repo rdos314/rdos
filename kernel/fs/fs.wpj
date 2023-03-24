@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-736
-0
+896
+290
 8320
 9216
 2
@@ -71,7 +71,7 @@ WRect
 0
 0
 5680
-4189
+4181
 0
 0
 17
@@ -80,4 +80,4 @@ WFileName
 fslib.tgt
 0
 9
-9
+12

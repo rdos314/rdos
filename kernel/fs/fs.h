@@ -31,6 +31,7 @@
 #include "discserv.h"
 #include "dir.h"
 #include "file.h"
+#include "fileio.h"
 
 class TParser
 {
@@ -65,6 +66,7 @@ protected:
 
 class TFs
 {
+    friend class TFileIo;
 public:
     TFs(TDiscServer *server);
     virtual ~TFs();
@@ -90,6 +92,7 @@ public:
     void ReadDirLink(TDir *dir, int index);
 
 protected:
+    int GetVfsHandle();
     int FileHandleToIndex(int handle);
 
     void GrowDir();
@@ -119,6 +122,7 @@ protected:
     int FMaxFileCount;
 
     TDiscServer *FServer;
+    TFileIo FileIo;
 };
 
 #endif

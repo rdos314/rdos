@@ -31,6 +31,7 @@
 #include <serv.h>
 #include "str.h"
 #include "fs.h"
+#include "fileio.h"
 
 #define VFS_FILE_SIGN 0x460000;
 
@@ -891,11 +892,30 @@ int TFs::OpenFile(int rel, char *path)
 
     if (file)
     {
+        if (!FileIo.IsRunning())
+            FileIo.Start(this);
+
         printf("Open %d <%s>\r\n", file->Index, path);
         return file->Handle;
     }
     else
         return -1;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::GetVfsHandle
+#
+#   Purpose....: Get VFS handle
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::GetVfsHandle()
+{
+    return FServer->GetHandle();
 }
 
 /*##########################################################################
@@ -998,13 +1018,6 @@ int TFs::GetFileHandle(int handle)
 void TFs::ProcessFile(int handle)
 {
     TFile *file = GetFile(handle);
-
-    char ThreadName[40];
-    int Handle = FServer->GetHandle();
-    int Disc = ServGetVfsDisc(Handle);
-    int Part = ServGetVfsPart(Handle);
-
-    sprintf(ThreadName, "File IO %02hX.%02hX", Disc, Part);
 
     if (file)
         file->ProcessFile();
