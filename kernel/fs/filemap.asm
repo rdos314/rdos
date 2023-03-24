@@ -1414,48 +1414,47 @@ FreeReq      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockMap     Proc near
-    push ds
+    push es
     push eax
     push ebx
 ;
-    mov ax,flat_data_sel
-    mov ds,eax
     mov ebx,es:fm_handle_ptr
+    add ebx,OFFSET fh_futex
+    mov ax,flat_data_sel
+    mov es,eax
 ;    
     str ax
-    cmp ax,[ebx].fs_owner
+    cmp ax,es:[ebx].fs_owner
     jne lmLock
 ;
-    inc [ebx].fs_counter
+    inc es:[ebx].fs_counter
     jmp lmDone
 
 lmLock:
-    lock add [ebx].fs_val,1
+    lock add es:[ebx].fs_val,1
     jc lmTake
 ;
     mov eax,1
-    xchg ax,[ebx].fs_val
+    xchg ax,es:[ebx].fs_val
     cmp ax,-1
     jne lmBlock
 
 lmTake:
     str ax
-    mov [ebx].fs_owner,ax
-    mov [ebx].fs_counter,1
+    mov es:[ebx].fs_owner,ax
+    mov es:[ebx].fs_counter,1
     jmp lmDone
 
 lmBlock:
     push edi
-    mov edi,[ebx].fs_sect_name
+    mov edi,es:[ebx].fs_sect_name
     AcquireNamedFutex
     pop edi
 
 lmDone:
-    pop eax    
-;
     pop ebx
     pop eax
-    pop ds
+    pop es
     ret
 LockMap     Endp
 
@@ -1472,32 +1471,33 @@ LockMap     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UnlockMap     Proc near
-    push ds
+    push es
     push eax
     push ebx
 ;
-    mov ax,flat_data_sel
-    mov ds,eax
     mov ebx,es:fm_handle_ptr
+    add ebx,OFFSET fh_futex
+    mov ax,flat_data_sel
+    mov es,eax
 ;
     str ax
-    cmp ax,[ebx].fs_owner
+    cmp ax,es:[ebx].fs_owner
     jne umDone
 ;
-    sub [ebx].fs_counter,1
+    sub es:[ebx].fs_counter,1
     jnz umDone
 ;
-    mov [ebx].fs_owner,0
-    lock sub [ebx].fs_val,1
+    mov es:[ebx].fs_owner,0
+    lock sub es:[ebx].fs_val,1
     jc umDone
 ;
-    mov [ebx].fs_val,-1
+    mov es:[ebx].fs_val,-1
     ReleaseFutex
 
 umDone:
     pop ebx
     pop eax
-    pop ds
+    pop es
     ret
 UnlockMap     Endp
 
@@ -1958,19 +1958,14 @@ UpdateUnlinked  Proc near
     jz uuDone
 ;
     push fs
-    push ebx
 ;
     mov ax,flat_data_sel
     mov fs,eax
-    mov ebx,es:fm_handle_ptr
-    mov ax,fs:[ebx].fh_futex.fs_owner
-    or ax,ax
-    jnz uuPop
 ;
+    call LockMap
     call UnlinkMap
+    call UnlockMap
 
-uuPop:
-    pop ebx
     pop fs
     
 uuDone:
