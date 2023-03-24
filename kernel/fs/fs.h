@@ -40,6 +40,18 @@ struct TFsQueueEntry
     short int Op;
 };
 
+class TFileReq
+{
+public:
+    TFileReq(long long pos, int size, int sectors);
+    ~TFileReq();
+
+    long long Pos;
+    int Size;
+    int SectorCount;
+    long long *SectorArr;
+};
+
 class TParser
 {
 public:
