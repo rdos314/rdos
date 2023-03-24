@@ -48,6 +48,7 @@ long long RDOSAPI ServGetVfsStartSector(int handle);
 long long RDOSAPI ServGetVfsSectors(int handle);
 int long RDOSAPI ServGetVfsBytesPerSector(int handle);
 int RDOSAPI ServIsVfsActive(int handle);
+void *RDOSAPI ServStartVfsIoServer(int handle);
 int RDOSAPI ServCreateVfsReq(int handle);
 void RDOSAPI ServCloseVfsReq(int handle);
 int RDOSAPI ServAddVfsSectors(int handle, long long sector, int count);

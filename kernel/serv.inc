@@ -78,6 +78,12 @@ GetVfsBytesPerSector  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
+; OUT EDX              IO buffer
+StartVfsIoServer  MACRO
+    ServGate start_vfs_io_serv_nr
+                    ENDM
+
+; IN  EBX              VFS handle
 ; OUT EBX              Req handle
 CreateVfsReq  MACRO
     ServGate create_vfs_req_nr
