@@ -461,6 +461,22 @@ void TFile::HandleFreeReq(int req)
 
 /*##########################################################################
 #
+#   Name       : TFile::HandleCompletedReq
+#
+#   Purpose....: Handle completed req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::HandleCompletedReq(int req)
+{
+    printf("Completed %d.%d\r\n", Index, req);
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::HandleQueue
 #
 #   Purpose....: Handle queue entry
@@ -484,6 +500,10 @@ bool TFile::HandleQueue(struct TFileQueueEntry *entry)
 
         case REQ_CLOSE:
             return false;
+
+        case REQ_COMPLETED:
+            HandleCompletedReq(entry->Par16);
+            break;
     }
 
     return true;

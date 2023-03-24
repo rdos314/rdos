@@ -42,6 +42,7 @@ include vfsfile.inc
   REQ_READ = 1
   REQ_FREE = 2
   REQ_CLOSE = 3
+  REQ_COMPLETED = 4
 
     .386p
 
@@ -2812,6 +2813,10 @@ nfdData:
     call CalcPageCount
     call SetupReadReq
     call ProcessReadReq
+;
+    shl ebx,16
+    mov bx,REQ_COMPLETED
+    call AddReq
 
 nfdSignal:
     call SignalReadReq

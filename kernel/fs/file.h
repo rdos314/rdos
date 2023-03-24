@@ -33,9 +33,10 @@
 #include "block.h"
 #include "dir.h"
 
-#define REQ_READ   1
-#define REQ_FREE   2
-#define REQ_CLOSE  3
+#define REQ_READ       1
+#define REQ_FREE       2
+#define REQ_CLOSE      3
+#define REQ_COMPLETED  4
 
 struct TFileQueueEntry
 {
@@ -84,6 +85,7 @@ public:
 
 protected:
     virtual void HandleRead(long long pos, int size);
+    virtual void HandleCompletedReq(int index);
     virtual void HandleFreeReq(int index);
     bool HandleQueue(struct TFileQueueEntry *entry);
 
