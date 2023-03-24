@@ -477,6 +477,22 @@ void TFile::HandleCompletedReq(int req)
 
 /*##########################################################################
 #
+#   Name       : TFile::HandleMapReq
+#
+#   Purpose....: Handle map req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::HandleMapReq(int req)
+{
+    printf("Map %d.%d\r\n", Index, req);
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::HandleQueue
 #
 #   Purpose....: Handle queue entry
@@ -503,6 +519,10 @@ bool TFile::HandleQueue(struct TFileQueueEntry *entry)
 
         case REQ_COMPLETED:
             HandleCompletedReq(entry->Par16);
+            break;
+
+        case REQ_MAP:
+            HandleMapReq(entry->Par16);
             break;
     }
 

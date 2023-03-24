@@ -37,6 +37,7 @@
 #define REQ_FREE       2
 #define REQ_CLOSE      3
 #define REQ_COMPLETED  4
+#define REQ_MAP        5
 
 struct TFileQueueEntry
 {
@@ -86,6 +87,7 @@ public:
 protected:
     virtual void HandleRead(long long pos, int size);
     virtual void HandleCompletedReq(int index);
+    virtual void HandleMapReq(int index);
     virtual void HandleFreeReq(int index);
     bool HandleQueue(struct TFileQueueEntry *entry);
 
