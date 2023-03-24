@@ -1227,7 +1227,20 @@ LockReq      Proc near
     stc
     jz lrLeave
 ;
-    inc ds:[eax].kre_usage
+    push ebx
+    mov bx,ds:[eax].kre_usage
+    inc bx
+    mov ds:[eax].kre_usage,bx
+    sub bx,1
+    pop ebx
+    clc
+    jnz lrLeave
+;
+    push ebx
+    shl ebx,16
+    mov bx,REQ_MAP
+    call AddReq
+    pop ebx
     clc
 
 lrLeave:
