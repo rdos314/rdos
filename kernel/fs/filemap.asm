@@ -2178,7 +2178,11 @@ MapReq      Proc near
     call WaitForReq
     jc mrDone
 ;
+    call LockMap
     call SyncMap
+    pushf
+    call UnlockMap
+    popf
     jnc mrDone
 ;
     push ds
@@ -2195,7 +2199,9 @@ MapReq      Proc near
     call LockReq
     jc mrDone
 ;
+    call LockMap
     call SyncMap
+    call UnlockMap
 
 mrDone:
     popad
