@@ -135,7 +135,8 @@ protected:
     TFile **FFileArr;
     int FCurrFileCount;
     int FMaxFileCount;
-
+ 
+    bool FServerActive;
     struct TFileIoEntry *FQueueArr;
 
     TDiscServer *FServer;
