@@ -29,7 +29,7 @@
 #define serv_gate_get_vfs_start_sector 0x0000001C
 #define serv_gate_get_vfs_bytes_per_sector 0x0000001D
 #define serv_gate_serv_file_info 0x0000001E
-#define serv_gate_serv_wait_file_queue 0x0000001F
+#define serv_gate_serv_wait_io_serv 0x0000001F
 #define serv_gate_get_vfs_disc_part 0x00000020
 #define serv_gate_start_vfs_io_serv 0x00000021
 
@@ -64,7 +64,7 @@
 #define ServGate_get_vfs_start_sector 0x55 0x67 0x9a 28 0 0 0 4 0 0x5d
 #define ServGate_get_vfs_bytes_per_sector 0x55 0x67 0x9a 29 0 0 0 4 0 0x5d
 #define ServGate_serv_file_info 0x55 0x67 0x9a 30 0 0 0 4 0 0x5d
-#define ServGate_serv_wait_file_queue 0x55 0x67 0x9a 31 0 0 0 4 0 0x5d
+#define ServGate_serv_wait_io_serv 0x55 0x67 0x9a 31 0 0 0 4 0 0x5d
 #define ServGate_get_vfs_disc_part 0x55 0x67 0x9a 32 0 0 0 4 0 0x5d
 #define ServGate_start_vfs_io_serv 0x55 0x67 0x9a 33 0 0 0 4 0 0x5d
 

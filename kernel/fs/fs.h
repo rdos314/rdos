@@ -92,7 +92,6 @@ public:
     int OpenFile(int rel, char *path);
     int GetFileHandle(int handle);
     int GetFileAttrib(int handle);
-    void ProcessFile(int handle);
     void CloseFile(int handle);
 
     void ReadDirLink(TDir *dir, int index);

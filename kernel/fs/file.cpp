@@ -34,22 +34,6 @@
 
 /*##########################################################################
 #
-#   Name       : ThreadStartup
-#
-#   Purpose....: Startup procedure for thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void ThreadStartup(void *ptr)
-{
-    ((TFile *)ptr)->Execute();
-}
-
-/*##########################################################################
-#
 #   Name       : TFile::TFile
 #
 #   Purpose....: Dir constructor
@@ -135,17 +119,8 @@ int TFile::Setup(int VfsHandle)
 {
     int i;
 
-    Req = (struct TFileReq *)RdosAllocateMem(0x2000);
+    Req = (struct TFileReq *)RdosAllocateMem(0x1000);
 
-    for (i = 0; i < 256; i++)
-    {
-        Req->QueueArr[i].Par64 = 0;
-        Req->QueueArr[i].Par32 = 0;
-        Req->QueueArr[i].Par16 = 0;
-        Req->QueueArr[i].Op = 0;
-    }
-
-    Req->RdIndex = 0;
     Req->Run = 0;
     Req->Count = 0;
     Req->LastActive = 0;
@@ -172,26 +147,6 @@ int TFile::Setup(int VfsHandle)
 
     Info->ServHandle = Handle;
     return Handle;
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::ProcessFile
-#
-#   Purpose....: Start file processing
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFile::ProcessFile()
-{
-    if (Req->Run == 0)
-    {
-        Req->Run = 1;
-        RdosCreateThread(ThreadStartup, Info->Name, this, 0x2000);
-    }
 }
 
 /*##########################################################################
@@ -495,81 +450,4 @@ void TFile::HandleCompletedReq(int req)
 void TFile::HandleMapReq(int req)
 {
     printf("Map %d.%d\r\n", Index, req);
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::HandleQueue
-#
-#   Purpose....: Handle queue entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TFile::HandleQueue(struct TFileQueueEntry *entry)
-{
-    switch (entry->Op)
-    {
-        case REQ_READ:
-            HandleRead(entry->Par64, entry->Par32);
-            break;
-
-        case REQ_FREE:
-            HandleFreeReq(entry->Par16);
-            break;
-
-        case REQ_CLOSE:
-            return false;
-
-        case REQ_COMPLETED:
-            HandleCompletedReq(entry->Par16);
-            break;
-
-        case REQ_MAP:
-            HandleMapReq(entry->Par16);
-            break;
-    }
-
-    return true;
-}
-
-/*##########################################################################
-#
-#   Name       : TFile::Execute
-#
-#   Purpose....: Execute
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFile::Execute()
-{
-    int index;
-    struct TFileQueueEntry *entry;
-
-    Req->Run = 2;
-
-    for (;;)
-    {
-        index = Req->RdIndex;
-        if (Req->QueueArr[index].Op)
-        {
-            entry = &Req->QueueArr[index];
-            if (HandleQueue(entry))
-            {
-                entry->Op = 0;
-                Req->RdIndex++;
-            }
-            else
-                break;
-        }
-        else
-            ServWaitVfsFileQueue(Handle);
-    }
-
-    Req->Run = 0;
 }

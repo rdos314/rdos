@@ -3121,6 +3121,9 @@ start_vfs_io_server    Proc far
     CreateDataSelector32
     mov fs:vfsp_io_sel,bx
 ;
+    mov fs:vfsp_io_wr_ptr,0
+    mov fs:vfsp_io_thread,0
+;
     clc
 
 svioDone:
@@ -3132,6 +3135,54 @@ svioDone:
     pop es
     ret
 start_vfs_io_server    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServWaitIoServer
+;
+;       DESCRIPTION:    Serv wait VFS IO queue
+;
+;       PARAMETERS:     EBX            VFS handle
+;                       EDX            Current position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_wait_io_server_name       DB 'Serv Wait Io Server',0
+
+serv_wait_io_server    Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push edx
+;
+    call HandleToPartFs
+    jc swfqDone
+;
+    GetThread
+    mov fs:vfsp_io_thread,ax
+;
+    ClearSignal
+;
+    shl edx,4
+    movzx ebx,fs:vfsp_io_wr_ptr
+    cmp ebx,edx
+    jne swfqDone
+;
+    WaitForSignal
+
+swfqClear:
+    mov fs:vfsp_io_thread,0
+
+swfqDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_wait_io_server    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3413,6 +3464,12 @@ init_server    Proc near
     mov edi,OFFSET start_vfs_io_server_name
     xor cl,cl
     mov ax,start_vfs_io_serv_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_wait_io_server
+    mov edi,OFFSET serv_wait_io_server_name
+    xor cl,cl
+    mov ax,serv_wait_io_serv_nr
     RegisterServGate
 ;
     mov esi,OFFSET create_vfs_req

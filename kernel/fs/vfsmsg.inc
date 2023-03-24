@@ -62,7 +62,4 @@ VFS_GET_REL_DIR           = 6
 VFS_OPEN_FILE             = 7
 
 ; IN  BX        File handle
-VFS_PROCESS_FILE          = 8
-
-; IN  BX        File handle
-VFS_CLOSE_FILE            = 9
+VFS_CLOSE_FILE            = 8

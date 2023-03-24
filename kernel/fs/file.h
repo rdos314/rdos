@@ -33,20 +33,6 @@
 #include "block.h"
 #include "dir.h"
 
-#define REQ_READ       1
-#define REQ_FREE       2
-#define REQ_CLOSE      3
-#define REQ_COMPLETED  4
-#define REQ_MAP        5
-
-struct TFileQueueEntry
-{
-    long long Par64;
-    int Par32;
-    short int Par16;
-    short int Op;
-};
-
 struct TFileBufEntry
 {
     long long Pos;
@@ -56,11 +42,9 @@ struct TFileBufEntry
 
 struct TFileReq
 {
-    struct TFileQueueEntry QueueArr[256];
     unsigned char SortedArr[241];
-    unsigned char RdIndex;
+    char Resv[2];
     char Run;
-    char Resv;
     int Count;
     long long LastActive;
     struct TFileBufEntry ReqArr[240];
@@ -74,8 +58,6 @@ public:
     virtual ~TFile();
 
     int Setup(int VfsHandle);
-    void ProcessFile();
-    void Execute();
 
     void LockFile();
     void UnlockFile();
@@ -90,7 +72,6 @@ protected:
     virtual void HandleCompletedReq(int index);
     virtual void HandleMapReq(int index);
     virtual void HandleFreeReq(int index);
-    bool HandleQueue(struct TFileQueueEntry *entry);
 
     virtual void SetReq(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);

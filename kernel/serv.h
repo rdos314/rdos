@@ -31,7 +31,6 @@ void RDOSAPI ServFreeShareBlock(struct TShareHeader *b);
 
 int RDOSAPI ServOpenVfsFile(int handle, void *b, void *r);
 int RDOSAPI ServAddVfsFileReq(int FileHandle, int ReqIndex, long long *SectorBuf, int SectorCount);
-void RDOSAPI ServWaitFileQueue(int FileHandle);
 void RDOSAPI ServFreeVfsFileReq(int FileHandle, int ReqIndex);
 void RDOSAPI ServCloseVfsFile(int FileHandle);
 
@@ -39,6 +38,9 @@ int RDOSAPI ServVfsFileReqCount(int handle);
 int RDOSAPI ServVfsFileWaitCount(int handle);
 int RDOSAPI ServVfsFileBlockCount(int handle);
 int RDOSAPI ServVfsFilePhysCount(int handle);
+
+void RDOSAPI ServStartVfsIoServer(int handle, void *buf);
+void RDOSAPI ServWaitIoServer(int FileHandle, int CurrPos);
 
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();
@@ -48,7 +50,6 @@ long long RDOSAPI ServGetVfsStartSector(int handle);
 long long RDOSAPI ServGetVfsSectors(int handle);
 int long RDOSAPI ServGetVfsBytesPerSector(int handle);
 int RDOSAPI ServIsVfsActive(int handle);
-void RDOSAPI ServStartVfsIoServer(int handle, void *buf);
 int RDOSAPI ServCreateVfsReq(int handle);
 void RDOSAPI ServCloseVfsReq(int handle);
 int RDOSAPI ServAddVfsSectors(int handle, long long sector, int count);

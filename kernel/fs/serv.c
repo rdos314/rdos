@@ -37,7 +37,6 @@ void ReadDirLink(void *dir, int index);
 int OpenFile(int rel, char *path);
 int GetFileAttrib(int handle);
 int GetFileHandle(int handle);
-void ProcessFile(int handle);
 void CloseFile(int handle);
 
 /*##########################################################################
@@ -148,17 +147,6 @@ void LowReadDirLink(void *dir, int index)
 int LowOpenFile(int rel, char *path)
 {
     return OpenFile(rel, path);
-}
-
-/*##########################################################################
-#
-#   Name       : LowProcessFile
-#
-##########################################################################*/
-#pragma aux LowProcessFile "*" parm routine [ebx]
-void LowProcessFile(int handle)
-{
-    ProcessFile(handle);
 }
 
 /*##########################################################################

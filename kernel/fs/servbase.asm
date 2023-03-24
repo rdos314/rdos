@@ -446,31 +446,6 @@ LocalOpenFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           LocalProcessFile
-;
-;       DESCRIPTION:    Process file
-;
-;       PARAMETERS:     EDI         Msg data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    extern LowProcessFile:near
-
-LocalProcessFile Proc near
-    push edi
-    mov esi,[edi].fc_handle
-    call LowProcessFile
-    pop edi
-;
-    mov ebx,[edi].fc_handle
-    ReplyVfsCmd
-;
-    ret
-LocalProcessFile Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           LocalCloseFile
 ;
 ;       DESCRIPTION:    Close file
@@ -514,8 +489,7 @@ m04 DD OFFSET CloneRelDir
 m05 DD OFFSET UnlockRelDir
 m06 DD OFFSET GetRelDir
 m07 DD OFFSET LocalOpenFile
-m08 DD OFFSET LocalProcessFile
-m09 DD OFFSET LocalCloseFile
+m08 DD OFFSET LocalCloseFile
 
 WaitForMsg_    Proc near
     pushad

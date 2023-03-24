@@ -374,50 +374,6 @@ CloseFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           WaitFileQueue
-;
-;       DESCRIPTION:    Wait file queue
-;
-;       PARAMETERS:     FS             Part sel
-;                       DS             File sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public WaitFileQueue
-
-WaitFileQueue   Proc near
-    push es
-    push eax
-    push ebx
-;
-    ClearSignal
-    mov es,ds:kf_serv_sel
-    movzx ebx,es:frs_read_ptr
-    shl ebx,4
-    mov ax,es:[ebx].frs_queue.fre_op
-    or ax,ax
-    jnz wfqDone
-;
-    GetThread
-    mov ds:kf_wait_thread,ax
-    mov ax,es:[ebx].frs_queue.fre_op
-    or ax,ax
-    jnz wfqDone
-;
-    WaitForSignal
-
-wfqDone:
-    mov ds:kf_wait_thread,0
-;
-    pop ebx
-    pop eax
-    pop es
-    ret
-WaitFileQueue   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddFileReq
 ;
 ;       DESCRIPTION:    Serv add VFS file req
@@ -624,44 +580,13 @@ AddWaitReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SendProcessReq
-;
-;       DESCRIPTION:    Send process req
-;
-;       PARAMETERS:     DS             File sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendProcessReq     Proc near
-    push ds
-    push fs
-    push eax
-    push ebx
-;
-    mov ebx,ds:kf_serv_handle
-    mov fs,ds:kf_part_sel
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-;
-    mov eax,VFS_PROCESS_FILE
-    call RunMsg
-;
-    pop ebx
-    pop eax
-    pop fs
-    pop ds
-    ret
-SendProcessReq     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddReq
 ;
 ;       DESCRIPTION:    Add req
 ;
-;       PARAMETERS:     DS             File sel
-;                       EBX            OP & par16
+;       PARAMETERS:     FS             Part sel
+;                       DS             File sel
+;                       EBX            OP
 ;                       EDX:EAX        Par64
 ;                       ECX            Par32
 ;
@@ -673,8 +598,8 @@ AddReq     Proc near
     push esi
     push edi
 ;
-    mov es,ds:kf_serv_sel
-    movzx esi,ds:kf_wr_ptr
+    mov es,fs:vfsp_io_sel
+    movzx esi,fs:vfsp_io_wr_ptr
     mov di,es:[esi].fre_op
     or di,di
     jz arRoom
@@ -682,30 +607,21 @@ AddReq     Proc near
     int 3
 
 arRoom:
+    mov edi,kf_serv_handle
     mov es:[esi].fre_p64,eax
     mov es:[esi].fre_p64+4,edx
     mov es:[esi].fre_p32,ecx
-    mov edi,ebx
-    shr edi,16
-    mov es:[esi].fre_p16,di
+    mov es:[esi].fre_handle,di
     mov es:[esi].fre_op,bx
     add si,SIZE file_req_entry
     and si,0FFFh
-    mov ds:kf_wr_ptr,si
+    mov fs:vfsp_io_wr_ptr,si
 ;
-    mov bx,ds:kf_wait_thread
+    mov bx,fs:vfsp_io_thread
     or bx,bx
-    jz arCheckRun
+    jz arDone
 ;
     Signal
-    jmp arDone
-
-arCheckRun:
-    mov bl,es:frs_run
-    or bl,bl
-    jnz arDone
-;
-    call SendProcessReq
 
 arDone:
     pop edi
@@ -1237,7 +1153,7 @@ LockReq      Proc near
     jnz lrLeave
 ;
     push ebx
-    shl ebx,16
+    mov cx,bx
     mov bx,REQ_MAP
     call AddReq
     pop ebx
@@ -1315,7 +1231,7 @@ wfrLock:
     jnz wfrLeave
 ;
     push ebx
-    shl ebx,16
+    mov cx,bx
     mov bx,REQ_MAP
     call AddReq
     pop ebx
@@ -1383,7 +1299,7 @@ frMove:
 
 frLeave:
     push ebx
-    shl ebx,16
+    mov cx,bx
     mov bx,REQ_FREE
     call AddReq
     pop ebx
@@ -2837,7 +2753,8 @@ nfdMove:
     dec es:frs_count
 ;
     push ebx
-    shl ebx,12
+    shr ebx,4
+    mov ecx,ebx
     mov bx,REQ_FREE
     call AddReq
     pop ebx
@@ -2849,7 +2766,7 @@ nfdData:
     call ProcessReadReq
 ;
     push ebx
-    shl ebx,16
+    mov cx,bx
     mov bx,REQ_COMPLETED
     call AddReq
     pop ebx
@@ -3234,8 +3151,6 @@ close_vfs_file  Proc near
     or ax,ax
     jnz cvfCleanup
 ;
-    mov ebx,REQ_CLOSE
-    call AddReq
     call SendCloseReq
 
 cvfCleanup:

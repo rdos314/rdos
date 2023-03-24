@@ -101,11 +101,6 @@ int GetFileHandle(int handle)
     return Server->GetFileHandle(handle);
 }
 
-void ProcessFile(int handle)
-{
-    Server->ProcessFile(handle);
-}
-
 void CloseFile(int handle)
 {
     Server->CloseFile(handle);

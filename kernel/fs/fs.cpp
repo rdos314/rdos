@@ -1013,25 +1013,6 @@ int TFs::GetFileHandle(int handle)
 
 /*##########################################################################
 #
-#   Name       : TFs::ProcessFile
-#
-#   Purpose....: Process file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFs::ProcessFile(int handle)
-{
-    TFile *file = GetFile(handle);
-
-    if (file)
-        file->ProcessFile();
-}
-
-/*##########################################################################
-#
 #   Name       : TFs::CloseFile
 #
 #   Purpose....: Close file
@@ -1233,8 +1214,8 @@ void TFs::Execute()
             else
                 break;
         }
-//        else
-//            ServWaitVfsFileQueue(FHandle);
+        else
+            ServWaitVfsIoServer(FServer->GetHandle(), index);
     }
 
     FServerActive = false;
