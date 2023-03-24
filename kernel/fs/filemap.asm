@@ -592,23 +592,27 @@ AddWaitReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddReq     Proc near
+    push ds
     push es
-    push fs
     push ebx
     push esi
     push edi
 ;
-    mov fs,ds:kf_part_sel
-    mov es,fs:vfsp_io_sel
-    movzx esi,fs:vfsp_io_wr_ptr
-    mov di,es:[esi].fre_op
-    or di,di
+    mov edi,ds:kf_serv_handle
+    mov ds,ds:kf_part_sel
+    EnterSection ds:vfsp_io_section
+;
+    push eax
+    mov es,ds:vfsp_io_sel
+    movzx esi,ds:vfsp_io_wr_ptr
+    mov ax,es:[esi].fre_op
+    or ax,ax
+    pop eax
     jz arRoom
 ;
     int 3
 
 arRoom:
-    mov edi,ds:kf_serv_handle
     mov es:[esi].fre_p64,eax
     mov es:[esi].fre_p64+4,edx
     mov es:[esi].fre_p32,ecx
@@ -616,20 +620,22 @@ arRoom:
     mov es:[esi].fre_op,bx
     add si,SIZE file_req_entry
     and si,0FFFh
-    mov fs:vfsp_io_wr_ptr,si
+    mov ds:vfsp_io_wr_ptr,si
 ;
-    mov bx,fs:vfsp_io_thread
+    mov bx,ds:vfsp_io_thread
     or bx,bx
     jz arDone
 ;
     Signal
 
 arDone:
+    LeaveSection ds:vfsp_io_section
+;
     pop edi
     pop esi
     pop ebx
-    pop fs
     pop es
+    pop ds
     ret
 AddReq     Endp
 
@@ -1151,8 +1157,9 @@ LockReq      Proc near
     mov ds:[eax].kre_usage,bx
     sub bx,1
     pop ebx
+    LeaveSection ds:kf_section
     clc
-    jnz lrLeave
+    jnz lrDone
 ;
     push ebx
     mov cx,bx
@@ -1160,10 +1167,12 @@ LockReq      Proc near
     call AddReq
     pop ebx
     clc
+    jmp lrDone
 
 lrLeave:
     LeaveSection ds:kf_section
-;
+
+lrDone:
     pop ecx
     pop eax
     pop ds
@@ -1198,11 +1207,10 @@ WaitForReq      Proc near
     jnc wfrCheck
 ;
     call AddWaitReq
+    LeaveSection ds:kf_section
 ;
     mov ebx,REQ_READ
     call AddReq
-    LeaveSection ds:kf_section
-;
     call UpdateMap
 
 wfrWait:
@@ -1229,8 +1237,9 @@ wfrLock:
     inc di
     mov ds:[esi].kre_usage,di
     sub di,1
+    LeaveSection ds:kf_section
     clc
-    jnz wfrLeave
+    jnz wfrDone
 ;
     push ebx
     mov cx,bx
@@ -1238,10 +1247,13 @@ wfrLock:
     call AddReq
     pop ebx
     clc
+    jmp wfrDone
 
 wfrLeave:
     LeaveSection ds:kf_section
-;
+
+
+wfrDone:
     pop edi
     pop esi
     pop ds
@@ -1300,13 +1312,13 @@ frMove:
     dec es:frs_count
 
 frLeave:
+    LeaveSection ds:kf_section
+;
     push ebx
     mov cx,bx
     mov bx,REQ_FREE
     call AddReq
     pop ebx
-;
-    LeaveSection ds:kf_section
 
 frEnd:
     pop esi

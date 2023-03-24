@@ -158,6 +158,8 @@ cpsFound:
     mov al,ds:vfs_disc_nr
     mov es:vfsp_disc_nr,al
 ;
+    InitSection es:vfsp_req_section
+    InitSection es:vfsp_io_section
     mov es:vfsp_io_sel,0
 ;
     mov ax,SEG data
