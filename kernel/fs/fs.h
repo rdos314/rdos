@@ -73,7 +73,6 @@ protected:
 
 class TFs
 {
-    friend class TFileIo;
 public:
     TFs(TDiscServer *server);
     virtual ~TFs();
@@ -101,10 +100,10 @@ public:
     void Execute();
 
 protected:
-    virtual void HandleRead(long long pos, int size);
-    virtual void HandleCompletedReq(int index);
-    virtual void HandleMapReq(int index);
-    virtual void HandleFreeReq(int index);
+    virtual void HandleRead(TFile *file, long long pos, int size);
+    virtual void HandleCompletedReq(TFile *file, int index);
+    virtual void HandleMapReq(TFile *file, int index);
+    virtual void HandleFreeReq(TFile *file, int index);
     bool HandleQueue(struct TFileIoEntry *entry);
     void StartServer();
 

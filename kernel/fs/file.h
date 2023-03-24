@@ -68,6 +68,7 @@ struct TFileReq
 
 class TFile
 {
+    friend class TFs;
 public:
     TFile(TDir *ParentDir, int ParentIndex, int BytesPerSector, int OffsetSector);
     virtual ~TFile();

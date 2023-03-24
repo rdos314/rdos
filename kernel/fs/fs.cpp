@@ -1090,8 +1090,9 @@ void TFs::StartServer()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::HandleRead(long long pos, int size)
+void TFs::HandleRead(TFile *file, long long pos, int size)
 {
+    file->HandleRead(pos, size);
 }
 
 /*##########################################################################
@@ -1105,8 +1106,9 @@ void TFs::HandleRead(long long pos, int size)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::HandleFreeReq(int req)
+void TFs::HandleFreeReq(TFile *file, int req)
 {
+    file->HandleFreeReq(req);
 }
 
 /*##########################################################################
@@ -1120,8 +1122,9 @@ void TFs::HandleFreeReq(int req)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::HandleCompletedReq(int req)
+void TFs::HandleCompletedReq(TFile *file, int req)
 {
+    file->HandleCompletedReq(req);
 }
 
 /*##########################################################################
@@ -1135,8 +1138,9 @@ void TFs::HandleCompletedReq(int req)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::HandleMapReq(int req)
+void TFs::HandleMapReq(TFile *file, int req)
 {
+    file->HandleMapReq(req);
 }
 
 /*##########################################################################
@@ -1152,26 +1156,35 @@ void TFs::HandleMapReq(int req)
 ##########################################################################*/
 bool TFs::HandleQueue(struct TFileIoEntry *entry)
 {
-    switch (entry->Op)
+    int handle = entry->File;
+    TFile *file = 0;
+
+    if (entry->Op == REQ_CLOSE)
+        return false;
+
+    if (handle > 0 && handle <= FMaxFileCount)
+        file = FFileArr[handle - 1];
+
+    if (file)
     {
-        case REQ_READ:
-            HandleRead(entry->Par64, entry->Par32);
-            break;
+        switch (entry->Op)
+        {
+            case REQ_READ:
+                HandleRead(file, entry->Par64, entry->Par32);
+                break;
 
-        case REQ_COMPLETED:
-            HandleCompletedReq(entry->Par32);
-            break;
+            case REQ_COMPLETED:
+                HandleCompletedReq(file, entry->Par32);
+                break;
 
-        case REQ_MAP:
-            HandleMapReq(entry->Par32);
-            break;
+            case REQ_MAP:
+                HandleMapReq(file, entry->Par32);
+                break;
 
-        case REQ_FREE:
-            HandleFreeReq(entry->Par32);
-            break;
-
-        case REQ_CLOSE:
-            return false;
+            case REQ_FREE:
+                HandleFreeReq(file, entry->Par32);
+                break;
+        }
     }
 
     return true;
