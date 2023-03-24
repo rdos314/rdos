@@ -1135,7 +1135,7 @@ void TFs::HandleMapReq(TFile *file, int req)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFs::HandleQueue(struct TFileIoEntry *entry)
+bool TFs::HandleQueue(struct TFsQueueEntry *entry)
 {
     int handle = entry->File;
     TFile *file = 0;
@@ -1185,15 +1185,15 @@ bool TFs::HandleQueue(struct TFileIoEntry *entry)
 void TFs::Execute()
 {
     int index;
-    struct TFileIoEntry *entry;
+    struct TFsQueueEntry *entry;
 
     if (!FQueueArr)
     {
-        FQueueArr = (struct TFileIoEntry *)RdosAllocateMem(0x1000);
+        FQueueArr = (struct TFsQueueEntry *)RdosAllocateMem(0x1000);
 
         for (index = 0; index < 256; index++)
             FQueueArr[index].Op = 0;
-        
+
         ServStartVfsIoServer(FServer->GetHandle(), FQueueArr);
     }
 

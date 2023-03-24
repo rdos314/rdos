@@ -32,7 +32,7 @@
 #include "dir.h"
 #include "file.h"
 
-struct TFileIoEntry
+struct TFsQueueEntry
 {
     long long Par64;
     int Par32;
@@ -103,7 +103,7 @@ protected:
     virtual void HandleCompletedReq(TFile *file, int index);
     virtual void HandleMapReq(TFile *file, int index);
     virtual void HandleFreeReq(TFile *file, int index);
-    bool HandleQueue(struct TFileIoEntry *entry);
+    bool HandleQueue(struct TFsQueueEntry *entry);
     void StartServer();
 
     int FileHandleToIndex(int handle);
@@ -133,9 +133,9 @@ protected:
     TFile **FFileArr;
     int FCurrFileCount;
     int FMaxFileCount;
- 
+
     bool FServerActive;
-    struct TFileIoEntry *FQueueArr;
+    struct TFsQueueEntry *FQueueArr;
 
     TDiscServer *FServer;
 };
