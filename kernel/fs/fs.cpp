@@ -385,41 +385,6 @@ void TParser::Advance()
 
 /*##########################################################################
 #
-#   Name       : TFileReq::TFileReq
-#
-#   Purpose....: File req contructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFileReq::TFileReq(long long pos, int size, int sectors)
-{
-    Pos = pos;
-    Size = size;
-    SectorCount = sectors;
-    SectorArr = new long long[sectors];
-}
-
-/*##########################################################################
-#
-#   Name       : TFileReq::~TFileReq
-#
-#   Purpose....: File req destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFileReq::~TFileReq()
-{
-    delete SectorArr;
-}
-
-/*##########################################################################
-#
 #   Name       : TFs::TFs
 #
 #   Purpose....: FS contructor

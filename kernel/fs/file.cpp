@@ -34,9 +34,85 @@
 
 /*##########################################################################
 #
+#   Name       : TFileReq::TFileReq
+#
+#   Purpose....: File req contructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFileReq::TFileReq(int sectors)
+{
+    MaxSectors = sectors;
+    SectorCount = 0;
+    SectorArr = new long long[sectors];
+}
+
+/*##########################################################################
+#
+#   Name       : TFileReq::~TFileReq
+#
+#   Purpose....: File req destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFileReq::~TFileReq()
+{
+    delete SectorArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TFileReq::AddSector
+#
+#   Purpose....: Add sector to buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileReq::AddSector(long long sector)
+{
+    if (SectorCount < MaxSectors)
+    {
+        SectorArr[SectorCount] = sector;
+        SectorCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFileReq::Start
+#
+#   Purpose....: Start
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileReq::Start(int file, int req)
+{
+    File = file;
+    Req = req;
+
+    if (ServAddVfsFileReq(File, Req + 1, SectorArr, SectorCount))
+        printf(" done\r\n");
+    else
+        printf(" pending\r\n");
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::TFile
 #
-#   Purpose....: Dir constructor
+#   Purpose....: File constructor
 #
 #   In params..: *
 #   Out params.: *
@@ -308,16 +384,15 @@ void TFile::SetReq(long long StartSector, int Sectors)
 ##########################################################################*/
 void TFile::HandleRead(long long pos, int size)
 {
-    long long *SectorArr;
     int req;
     int sector;
     long long prev;
     long long curr;
     int offset;
-    int SectorCount;
     bool HasPos = false;
 
     FCurrPos = pos / FBytesPerSector;
+
 
     SetReq(FCurrPos, size / FBytesPerSector);
 
@@ -328,9 +403,7 @@ void TFile::HandleRead(long long pos, int size)
 
     if (req >= 0)
     {
-        SectorCount = 0;
-        SectorArr = new long long[FCurrSectors];
-
+        FileReq = new TFileReq(FCurrSectors);
         for (sector = 0; sector < FCurrSectors; sector++)
         {
             if (FCurrStart + sector == FCurrPos)
@@ -354,28 +427,24 @@ void TFile::HandleRead(long long pos, int size)
                             FCurrStart += sector;
                             FCurrSectors -= sector;
                             sector = 0;
-                            SectorCount = 0;
+                            FileReq->SectorCount = 0;
                         }
                     }
                 }
             }
             prev = curr;
-            SectorArr[SectorCount] = curr;
-            SectorCount++;
+            FileReq->AddSector(curr);
         }
 
-        FCurrSectors = SectorCount;
+        FCurrSectors = FileReq->SectorCount;
 
-        if (SectorCount)
+        if (FileReq->SectorCount)
         {
             Buf->BufArr[req].Pos = FCurrStart * FBytesPerSector;
-            Buf->BufArr[req].Size = SectorCount * FBytesPerSector;
+            Buf->BufArr[req].Size = FileReq->SectorCount * FBytesPerSector;
             Buf->BufArr[req].Handle = -1;
-            printf("Read %d.%d start %lld size %d", Index, req, FCurrStart, SectorCount);
-            if (ServAddVfsFileReq(Handle, req + 1, SectorArr, SectorCount))
-                printf(" done\r\n");
-            else
-                printf(" pending\r\n");
+            printf("Read %d.%d start %lld size %d", Index, req, FCurrStart, FileReq->SectorCount);
+            FileReq->Start(Handle, req);
         }
         else
         {
@@ -383,7 +452,7 @@ void TFile::HandleRead(long long pos, int size)
             ServAddVfsFileReq(Handle, 0, 0, 0);
         }
 
-        delete SectorArr;
+        delete FileReq;
     }
     else
     {

@@ -49,6 +49,23 @@ struct TFileBuf
     struct TFileBufEntry BufArr[240];
 };
 
+class TFileReq
+{
+public:
+    TFileReq(int sectors);
+    ~TFileReq();
+
+    void AddSector(long long sector);
+    void Start(int handle, int req);
+
+    int File;
+    int Req;
+
+    int MaxSectors;
+    int SectorCount;
+    long long *SectorArr;
+};
+
 class TFile
 {
     friend class TFs;
@@ -65,6 +82,8 @@ public:
 
     int Handle;
     int Index;
+
+    TFileReq *FileReq;
 
 protected:
     virtual void HandleRead(long long pos, int size);
