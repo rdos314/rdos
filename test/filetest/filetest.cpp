@@ -162,7 +162,7 @@ void cdecl main()
 
     count = 25000000;
     RdosCreateThread(TestThread, "Test 1", &count, 0x2000);
-    RdosCreateThread(TestThread, "Test 2", &count, 0x2000);
+//    RdosCreateThread(TestThread, "Test 2", &count, 0x2000);
 
     RdosWaitMilli(50);
 
