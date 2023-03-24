@@ -43,6 +43,7 @@ include vfsfile.inc
   REQ_FREE = 2
   REQ_CLOSE = 3
   REQ_COMPLETED = 4
+  REQ_MAP = 5
 
     .386p
 
@@ -633,7 +634,6 @@ AddWaitReq  Endp
 
 SendProcessReq     Proc near
     push ds
-    push es
     push fs
     push eax
     push ebx
@@ -649,7 +649,6 @@ SendProcessReq     Proc near
     pop ebx
     pop eax
     pop fs
-    pop es
     pop ds
     ret
 SendProcessReq     Endp
@@ -1294,7 +1293,19 @@ wfrCheck:
 
 wfrLock:
     mov esi,ds:[4*ebx].kf_handle_arr
-    inc ds:[esi].kre_usage
+;
+    mov di,ds:[esi].kre_usage
+    inc di
+    mov ds:[esi].kre_usage,di
+    sub di,1
+    clc
+    jnz wfrLeave
+;
+    push ebx
+    shl ebx,16
+    mov bx,REQ_MAP
+    call AddReq
+    pop ebx
     clc
 
 wfrLeave:
@@ -1358,9 +1369,11 @@ frMove:
     dec es:frs_count
 
 frLeave:
+    push ebx
     shl ebx,16
     mov bx,REQ_FREE
     call AddReq
+    pop ebx
 ;
     LeaveSection ds:kf_section
 
@@ -2804,9 +2817,11 @@ nfdMove:
 ;
     dec es:frs_count
 ;
+    push ebx
     shl ebx,12
     mov bx,REQ_FREE
     call AddReq
+    pop ebx
     jmp nfdSignal
 
 nfdData:
@@ -2814,9 +2829,11 @@ nfdData:
     call SetupReadReq
     call ProcessReadReq
 ;
+    push ebx
     shl ebx,16
     mov bx,REQ_COMPLETED
     call AddReq
+    pop ebx
 
 nfdSignal:
     call SignalReadReq
