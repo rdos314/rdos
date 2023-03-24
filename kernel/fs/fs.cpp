@@ -999,6 +999,13 @@ void TFs::ProcessFile(int handle)
 {
     TFile *file = GetFile(handle);
 
+    char ThreadName[40];
+    int Handle = FServer->GetHandle();
+    int Disc = ServGetVfsDisc(Handle);
+    int Part = ServGetVfsPart(Handle);
+
+    sprintf(ThreadName, "File IO %02hX.%02hX", Disc, Part);
+
     if (file)
         file->ProcessFile();
 }

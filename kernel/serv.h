@@ -42,6 +42,8 @@ int RDOSAPI ServVfsFilePhysCount(int handle);
 
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();
+int RDOSAPI ServGetVfsDisc(int handle);
+int RDOSAPI ServGetVfsPart(int handle);
 long long RDOSAPI ServGetVfsStartSector(int handle);
 long long RDOSAPI ServGetVfsSectors(int handle);
 int long RDOSAPI ServGetVfsBytesPerSector(int handle);

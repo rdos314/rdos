@@ -53,6 +53,13 @@ IsVfsActive  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
+; OUT AH               Disc #
+; OUT AL               Part #
+GetVfsDiscPart  MACRO
+    ServGate get_vfs_disc_part_nr
+                    ENDM
+
+; IN  EBX              VFS handle
 ; OUT EDX:EAX          Sectors
 GetVfsSectors  MACRO
     ServGate get_vfs_sectors_nr

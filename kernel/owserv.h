@@ -97,6 +97,18 @@
     ServGate_get_vfs_handle  \
     __value [__ebx]
 
+#pragma aux ServGetVfsDisc = \
+    ServGate_get_vfs_disc_part  \
+    "movzx eax,ah" \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux ServGetVfsPart = \
+    ServGate_get_vfs_disc_part  \
+    "movzx eax,al" \
+    __parm [__ebx] \
+    __value [__eax]
+
 #pragma aux ServGetVfsStartSector = \
     ServGate_get_vfs_start_sector  \
     __parm [__ebx] \

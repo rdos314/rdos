@@ -956,6 +956,37 @@ HandleHighToPartFs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetVfsDiscPart
+;
+;       DESCRIPTION:    Get VFS disc & part #
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        AH          Disc nr
+;                       AL          Part nr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_disc_part_name       DB 'Get VFS Disc & Part',0
+
+get_vfs_disc_part    Proc far
+    push es
+;
+    call HandleToPartEs
+    jc gvdpDone
+;
+    mov ah,es:vfsp_disc_nr
+    mov al,es:vfsp_part_nr
+    clc
+
+gvdpDone:
+    pop es
+    ret
+get_vfs_disc_part    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetVfsStartSector
 ;
 ;       DESCRIPTION:    Get VFS start sector
@@ -3292,6 +3323,12 @@ init_server    Proc near
     mov edi,OFFSET is_vfs_active_name
     xor cl,cl
     mov ax,is_vfs_active_nr
+    RegisterServGate
+;
+    mov esi,OFFSET get_vfs_disc_part
+    mov edi,OFFSET get_vfs_disc_part_name
+    xor cl,cl
+    mov ax,get_vfs_disc_part_nr
     RegisterServGate
 ;
     mov esi,OFFSET get_vfs_start_sector
