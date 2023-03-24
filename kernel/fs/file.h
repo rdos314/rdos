@@ -83,10 +83,8 @@ public:
     int Handle;
     int Index;
 
-    TFileReq *FileReq;
-
 protected:
-    virtual void HandleRead(long long pos, int size);
+    virtual TFileReq *HandleRead(long long pos, int size);
     virtual void HandleCompletedReq(int index);
     virtual void HandleMapReq(int index);
     virtual void HandleFreeReq(int index);

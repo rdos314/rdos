@@ -1073,7 +1073,12 @@ void TFs::StartServer()
 ##########################################################################*/
 void TFs::HandleRead(TFile *file, long long pos, int size)
 {
-    file->HandleRead(pos, size);
+    TFileReq *req;
+
+    req = file->HandleRead(pos, size);
+
+    if (req)
+        delete req;
 }
 
 /*##########################################################################

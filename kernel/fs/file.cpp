@@ -382,7 +382,7 @@ void TFile::SetReq(long long StartSector, int Sectors)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::HandleRead(long long pos, int size)
+TFileReq *TFile::HandleRead(long long pos, int size)
 {
     int req;
     int sector;
@@ -390,9 +390,9 @@ void TFile::HandleRead(long long pos, int size)
     long long curr;
     int offset;
     bool HasPos = false;
+    TFileReq *FileReq = 0;
 
     FCurrPos = pos / FBytesPerSector;
-
 
     SetReq(FCurrPos, size / FBytesPerSector);
 
@@ -451,14 +451,14 @@ void TFile::HandleRead(long long pos, int size)
             printf("Read %d No size\r\n", Index);
             ServAddVfsFileReq(Handle, 0, 0, 0);
         }
-
-        delete FileReq;
     }
     else
     {
         printf("Read %d No req available\r\n", Index);
         ServAddVfsFileReq(Handle, 0, 0, 0);
     }
+
+    return FileReq;
 }
 
 /*##########################################################################
