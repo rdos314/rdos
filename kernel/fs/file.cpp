@@ -345,14 +345,14 @@ void TFile::SetReq(long long StartSector, int Sectors)
 
     count = end - start + 1;
 
-    for (i = 0; i < Buf->Count; i++)
+    for (i = 0; i < Buf->Count && count > 0; i++)
     {
         link = Buf->SortedArr[i];
 
         temp = Buf->BufArr[link].Pos / FBytesPerSector - start;
         if (temp >= 0)
         {
-            if (temp < Sectors)
+            if (temp < count)
                 count = (int)temp;
             break;
         }
@@ -361,11 +361,14 @@ void TFile::SetReq(long long StartSector, int Sectors)
             temp = (Buf->BufArr[link].Pos + Buf->BufArr[link].Size) / FBytesPerSector;
             if (temp > start)
             {
-                count -= (int)(temp - start);
+                count = (int)(start + count - temp);
                 start = temp;
             }
         }
     }
+
+    if (count < 0)
+        count = 0;
 
     FCurrStart = start;
     FCurrSectors = count;
