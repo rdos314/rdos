@@ -305,29 +305,15 @@ cfInit:
     GetPageEntry
     or ax,800h
     push eax
-    push ebx
 ;
-    add edx,1000h
-    GetPageEntry
-    or ax,800h
-    push eax
-    push ebx
-;
-    mov eax,2000h
+    mov eax,1000h
     AllocateBigLinear
 ;
-    pop ebx
     pop eax
-    add edx,1000h
-    SetPageEntry
-;
-    pop ebx
-    pop eax
-    sub edx,1000h
     SetPageEntry
 ;
     AllocateGdt
-    mov ecx,2000h
+    mov ecx,1000h
     CreateDataSelector32
     mov ds:kf_serv_sel,bx
 ;
