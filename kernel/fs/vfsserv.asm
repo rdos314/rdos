@@ -3162,14 +3162,19 @@ serv_wait_io_server    Proc far
     call HandleToPartFs
     jc swfqDone
 ;
-    GetThread
-    mov fs:vfsp_io_thread,ax
-;
     ClearSignal
 ;
+    mov eax,fs
+    mov ds,eax
+    EnterSection ds:vfsp_io_section
+;
+    GetThread
+    mov ds:vfsp_io_thread,ax
+;
     shl edx,4
-    movzx ebx,fs:vfsp_io_wr_ptr
+    movzx ebx,ds:vfsp_io_wr_ptr
     cmp ebx,edx
+    LeaveSection ds:vfsp_io_section
     jne swfqDone
 ;
     WaitForSignal
