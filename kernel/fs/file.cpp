@@ -322,6 +322,8 @@ void TFile::SetReq(long long StartSector, int Sectors)
     long long start;
     long long end;
     long long temp;
+    long long sect;
+    long long exp;
     int i;
     int link;
 
@@ -335,6 +337,28 @@ void TFile::SetReq(long long StartSector, int Sectors)
         Sectors = FSectorsPerPage;
 
     start = StartSector;
+
+    sect = FOffsetSector + GetSector(start);
+    exp = sect - 1;
+    while (sect % FSectorsPerPage)
+    {
+        if (start)
+        {
+            sect = FOffsetSector + GetSector(start - 1);
+
+            if (sect == exp)
+            {
+                exp = sect - 1;
+                start--;
+                Sectors++;
+            }
+            else
+                break;
+        }
+        else
+            break;
+    }
+
     end = StartSector + Sectors - 1;
 
     if (end < start)
@@ -342,6 +366,26 @@ void TFile::SetReq(long long StartSector, int Sectors)
 
     if (end > Info->DiscSize / FBytesPerSector)
         end = Info->DiscSize / FBytesPerSector - 1;
+
+    sect = FOffsetSector + GetSector(end + 1);
+    exp = sect + 1;
+    while (sect % FSectorsPerPage)
+    {
+        if (end < Info->DiscSize / FBytesPerSector)
+        {
+            sect = FOffsetSector + GetSector(end + 2);
+
+            if (sect == exp)
+            {
+                exp = sect + 1;
+                end++;
+            }
+            else
+                break;
+        }
+        else
+            break;
+    }
 
     count = end - start + 1;
 
