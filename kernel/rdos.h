@@ -721,6 +721,7 @@ int RDOSAPI RdosShowExceptionText();
 void RDOSAPI RdosWaitMilli(int ms);
 void RDOSAPI RdosWaitMicro(int us);
 void RDOSAPI RdosWaitUntil(unsigned long msb, unsigned long lsb);
+void RDOSAPI RdosWaitRealUntil(unsigned long msb, unsigned long lsb);
 
 void RDOSAPI RdosGetSysTime(unsigned long *msb, unsigned long *lsb);
 long long RDOSAPI RdosGetLongSysTime(void);

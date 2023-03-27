@@ -2252,6 +2252,11 @@
     CallGate_wait_until  \
     __parm [__edx] [__eax]
 
+#pragma aux RdosWaitRealUntil = \
+    CallGate_time_to_system_time  \    
+    CallGate_wait_until  \
+    __parm [__edx] [__eax]
+
 #pragma aux RdosGetSysTime = \
     CallGate_get_system_time  \
     "mov [esi],edx" \

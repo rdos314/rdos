@@ -422,7 +422,7 @@ int TDateTime::HasExpired() const
 ##########################################################################*/
 void TDateTime::WaitUntilExpired() const
 {
-    RdosWaitUntil(FMsb, FLsb);
+    RdosWaitRealUntil(FMsb, FLsb);
 }
 
 /*##########################################################################
