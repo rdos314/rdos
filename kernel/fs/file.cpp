@@ -394,7 +394,7 @@ void TFile::SetReq(long long StartSector, int Sectors)
         link = Buf->SortedArr[i];
 
         temp = Buf->BufArr[link].Pos / FBytesPerSector - start;
-        if (temp >= 0)
+        if (temp > 0)
         {
             if (temp < count)
                 count = (int)temp;

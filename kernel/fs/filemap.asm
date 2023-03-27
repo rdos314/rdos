@@ -1811,18 +1811,8 @@ SyncMap  Proc near
     pop ecx
     jc smAdd
 ;
-    sub eax,es:[ebx].fm_entry_arr.fmb_pos
-    sbb edx,es:[ebx].fm_entry_arr.fmb_pos+4
-    jnz smRemAdd
-;
-    mov es:[ebx].fm_entry_arr.fmb_size,ecx
-    mov edi,gs:[4*edi].kf_handle_arr
-    dec gs:[edi].kre_usage
-    stc
+    clc
     jmp smLeave
-
-smRemAdd:
-    int 3
 
 smAdd:
     call AllocateMapEntry
