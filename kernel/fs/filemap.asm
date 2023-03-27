@@ -1811,7 +1811,9 @@ SyncMap  Proc near
     pop ecx
     jc smAdd
 ;
-    clc
+    mov edi,gs:[4*edi].kf_handle_arr
+    dec gs:[edi].kre_usage
+    stc
     jmp smLeave
 
 smAdd:

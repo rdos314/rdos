@@ -3180,7 +3180,7 @@ serv_wait_io_server    Proc far
     WaitForSignal
 
 swfqClear:
-    mov fs:vfsp_io_thread,0
+    mov ds:vfsp_io_thread,0
 
 swfqDone:
     pop edx
