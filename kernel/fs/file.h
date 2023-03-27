@@ -56,12 +56,13 @@ public:
     ~TFileReq();
 
     void AddSector(long long sector);
-    void Setup(int handle, int index, int req);
+    void Setup(int handle, int index, int req, long long pos);
     void Start();
 
     int File;
     int Index;
     int Req;
+    long long Pos;
 
     int MaxSectors;
     int SectorCount;

@@ -98,11 +98,12 @@ void TFileReq::AddSector(long long sector)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileReq::Setup(int handle, int index, int req)
+void TFileReq::Setup(int handle, int index, int req, long long pos)
 {
     File = handle;
     Index = index;
     Req = req;
+    Pos = pos;
 }
 
 /*##########################################################################
@@ -118,7 +119,7 @@ void TFileReq::Setup(int handle, int index, int req)
 ##########################################################################*/
 void TFileReq::Start()
 {
-    printf("Req %d.%d start %lld size %d", Index, Req, SectorArr[0], SectorCount);
+    printf("Req %d.%d start %lld size %d", Index, Req, Pos, SectorCount);
 
     if (ServAddVfsFileReq(File, Req + 1, SectorArr, SectorCount))
         printf(" done\r\n");
@@ -431,7 +432,7 @@ void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
 
     for (i = 0; i < Fs->FPendCount && count > 0; i++)
     {
-        temp = Fs->FPendArr[i]->SectorArr[0] - start;
+        temp = Fs->FPendArr[i]->Pos - start;
         if (temp > 0)
         {
             if (temp < count)
@@ -440,7 +441,7 @@ void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
         }
         else
         {
-            temp = Fs->FPendArr[i]->SectorArr[Fs->FPendArr[i]->SectorCount-1] + 1;
+            temp = Fs->FPendArr[i]->Pos + Fs->FPendArr[i]->SectorCount;
             if (temp > start)
             {
                 count = (int)(start + count - temp);
@@ -451,7 +452,7 @@ void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
 
     for (i = 0; i < Fs->FWaitCount && count > 0; i++)
     {
-        temp = Fs->FWaitArr[i]->SectorArr[0] - start;
+        temp = Fs->FWaitArr[i]->Pos - start;
         if (temp > 0)
         {
             if (temp < count)
@@ -460,7 +461,7 @@ void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
         }
         else
         {
-            temp = Fs->FWaitArr[i]->SectorArr[Fs->FWaitArr[i]->SectorCount-1] + 1;
+            temp = Fs->FWaitArr[i]->Pos + Fs->FWaitArr[i]->SectorCount;
             if (temp > start)
             {
                 count = (int)(start + count - temp);
@@ -548,7 +549,7 @@ TFileReq *TFile::HandleRead(TFs *fs, long long pos, int size)
             Buf->BufArr[req].Pos = FCurrStart * FBytesPerSector;
             Buf->BufArr[req].Size = FileReq->SectorCount * FBytesPerSector;
             Buf->BufArr[req].Handle = -1;
-            FileReq->Setup(Handle, Index, req);
+            FileReq->Setup(Handle, Index, req, FCurrStart);
         }
         else
         {
