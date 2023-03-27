@@ -56,7 +56,8 @@ public:
     ~TFileReq();
 
     void AddSector(long long sector);
-    void Start(int handle, int req);
+    void Setup(int handle, int req);
+    void Start();
 
     int File;
     int Req;

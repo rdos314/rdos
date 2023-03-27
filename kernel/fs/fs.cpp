@@ -1078,7 +1078,10 @@ void TFs::HandleRead(TFile *file, long long pos, int size)
     req = file->HandleRead(pos, size);
 
     if (req)
+    {
+        req->Start();
         delete req;
+    }
 }
 
 /*##########################################################################
