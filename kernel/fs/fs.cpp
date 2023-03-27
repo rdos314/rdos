@@ -414,10 +414,14 @@ TFs::TFs(TDiscServer *server)
     for (i = 0; i < FMaxDirCount; i++)
         FDirArr[i] = 0;
 
+    FPendCount = 0;
     for (i = 0; i < MAX_PEND_REQ; i++)
         FPendArr[i] = 0;
 
-    FPendCount = 0;
+    FWaitCount = 0;
+    for (i = 0; i < MAX_WAIT_REQ; i++)
+        FWaitArr[i] = 0;
+
     FQueueArr = 0;
     FServerActive = false;
     FCurrFileCount = 0;
@@ -1077,20 +1081,48 @@ void TFs::StartServer()
 ##########################################################################*/
 void TFs::HandleRead(TFile *file, long long pos, int size)
 {
+    int i;
+    bool delay = false;
+    long long check;
     TFileReq *req;
 
-    req = file->HandleRead(pos, size);
+    req = file->HandleRead(this, pos, size);
 
     if (req)
     {
-        if (FPendCount < MAX_PEND_REQ)
+        check = req->SectorArr[req->SectorCount-1] + 1;
+
+        if (check % FSectorsPerPage)
         {
-            FPendArr[FPendCount] = req;
-            FPendCount++;
-            req->Start();
+            for (i = 0; i < FPendCount; i++)
+            {
+                if (FPendArr[i]->SectorArr[0] == check)
+                {
+                    delay = true;
+                    break;
+                }
+            }
+        }
+
+        if (delay)
+        {
+            if (FWaitCount < MAX_WAIT_REQ)
+            {
+                FWaitArr[FWaitCount] = req;
+                FWaitCount++;
+            }
         }
         else
-            delete req;
+        {
+            if (FPendCount < MAX_PEND_REQ)
+            {
+                FPendArr[FPendCount] = req;
+                FPendCount++;
+                req->Start();
+            }
+            else
+                delete req;
+        }
     }
 }
 
@@ -1125,13 +1157,17 @@ void TFs::HandleCompletedReq(TFile *file, int req)
 {
     int i;
     int j;
+    int k;
+    long long check;
     int index = file->Index;
+    TFileReq *fr;
 
     for (i = 0; i < FPendCount; i++)
     {
         if (index == FPendArr[i]->Index && req == FPendArr[i]->Req)
         {
-            delete FPendArr[i];
+            fr = FPendArr[i];
+            FPendArr[i] = 0;
             FPendCount--;
 
             for (j = i; j < FPendCount; j++)
@@ -1139,6 +1175,27 @@ void TFs::HandleCompletedReq(TFile *file, int req)
 
             FPendArr[FPendCount] = 0;
 
+            check = fr->SectorArr[fr->SectorCount-1] + 1;
+            delete fr;
+
+            for (j = 0; j < FWaitCount; j++)
+            {
+                if (FWaitArr[j]->SectorArr[0] == check)
+                {
+                    fr = FWaitArr[j];
+                    fr->Start();
+                    FPendArr[FPendCount] = fr;
+                    FPendCount++;
+ 
+                    FWaitCount--;
+
+                    for (k = j; k < FWaitCount; k++)
+                        FWaitArr[k] = FWaitArr[k+1];
+
+                    FWaitArr[FWaitCount] = 0;
+                    break;
+                }
+            }
             break;
         }
     }   

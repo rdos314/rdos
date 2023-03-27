@@ -33,6 +33,7 @@
 #include "file.h"
 
 #define MAX_PEND_REQ    128
+#define MAX_WAIT_REQ    128
 
 struct TFsQueueEntry
 {
@@ -75,6 +76,7 @@ protected:
 
 class TFs
 {
+    friend class TFile;
 public:
     TFs(TDiscServer *server);
     virtual ~TFs();
@@ -141,6 +143,9 @@ protected:
 
     int FPendCount;
     TFileReq *FPendArr[MAX_PEND_REQ];
+
+    int FWaitCount;
+    TFileReq *FWaitArr[MAX_WAIT_REQ];
 
     TDiscServer *FServer;
 };

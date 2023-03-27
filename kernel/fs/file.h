@@ -86,12 +86,12 @@ public:
     int Index;
 
 protected:
-    virtual TFileReq *HandleRead(long long pos, int size);
+    virtual TFileReq *HandleRead(TFs *fs, long long pos, int size);
     virtual void HandleCompletedReq(int index);
     virtual void HandleMapReq(int index);
     virtual void HandleFreeReq(int index);
 
-    virtual void SetReq(long long RelSector, int Sectors);
+    virtual void SetReq(TFs *Fs, long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
 
     int AllocateReq();

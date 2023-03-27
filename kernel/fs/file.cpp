@@ -31,6 +31,7 @@
 #include <serv.h>
 #include "file.h"
 #include "serv.h"
+#include "fs.h"
 
 /*##########################################################################
 #
@@ -333,7 +334,7 @@ long long TFile::GetSector(long long pos)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::SetReq(long long StartSector, int Sectors)
+void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
 {
     long long count;
     long long start;
@@ -428,6 +429,46 @@ void TFile::SetReq(long long StartSector, int Sectors)
         }
     }
 
+    for (i = 0; i < Fs->FPendCount && count > 0; i++)
+    {
+        temp = Fs->FPendArr[i]->SectorArr[0] - start;
+        if (temp > 0)
+        {
+            if (temp < count)
+                count = (int)temp;
+            break;
+        }
+        else
+        {
+            temp = Fs->FPendArr[i]->SectorArr[Fs->FPendArr[i]->SectorCount-1] + 1;
+            if (temp > start)
+            {
+                count = (int)(start + count - temp);
+                start = temp;
+            }
+        }
+    }
+
+    for (i = 0; i < Fs->FWaitCount && count > 0; i++)
+    {
+        temp = Fs->FWaitArr[i]->SectorArr[0] - start;
+        if (temp > 0)
+        {
+            if (temp < count)
+                count = (int)temp;
+            break;
+        }
+        else
+        {
+            temp = Fs->FWaitArr[i]->SectorArr[Fs->FWaitArr[i]->SectorCount-1] + 1;
+            if (temp > start)
+            {
+                count = (int)(start + count - temp);
+                start = temp;
+            }
+        }
+    }
+
     if (count < 0)
         count = 0;
 
@@ -446,7 +487,7 @@ void TFile::SetReq(long long StartSector, int Sectors)
 #   Returns....: *
 #
 ##########################################################################*/
-TFileReq *TFile::HandleRead(long long pos, int size)
+TFileReq *TFile::HandleRead(TFs *fs, long long pos, int size)
 {
     int req;
     int sector;
@@ -458,7 +499,7 @@ TFileReq *TFile::HandleRead(long long pos, int size)
 
     FCurrPos = pos / FBytesPerSector;
 
-    SetReq(FCurrPos, size / FBytesPerSector);
+    SetReq(fs, FCurrPos, size / FBytesPerSector);
 
     if (FCurrSectors > 0)
         req = AllocateReq();
