@@ -97,9 +97,10 @@ void TFileReq::AddSector(long long sector)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileReq::Setup(int file, int req)
+void TFileReq::Setup(int handle, int index, int req)
 {
-    File = file;
+    File = handle;
+    Index = index;
     Req = req;
 }
 
@@ -116,9 +117,7 @@ void TFileReq::Setup(int file, int req)
 ##########################################################################*/
 void TFileReq::Start()
 {
-    int Handle = (File & 0xFFFF) - 1;
-
-    printf("Req %d.%d start %lld size %d", Handle, Req, SectorArr[0], SectorCount);
+    printf("Req %d.%d start %lld size %d", Index, Req, SectorArr[0], SectorCount);
 
     if (ServAddVfsFileReq(File, Req + 1, SectorArr, SectorCount))
         printf(" done\r\n");
@@ -508,7 +507,7 @@ TFileReq *TFile::HandleRead(long long pos, int size)
             Buf->BufArr[req].Pos = FCurrStart * FBytesPerSector;
             Buf->BufArr[req].Size = FileReq->SectorCount * FBytesPerSector;
             Buf->BufArr[req].Handle = -1;
-            FileReq->Setup(Handle, req);
+            FileReq->Setup(Handle, Index, req);
         }
         else
         {

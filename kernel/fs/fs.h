@@ -32,6 +32,8 @@
 #include "dir.h"
 #include "file.h"
 
+#define MAX_PEND_REQ    128
+
 struct TFsQueueEntry
 {
     long long Par64;
@@ -136,6 +138,9 @@ protected:
 
     bool FServerActive;
     struct TFsQueueEntry *FQueueArr;
+
+    int FPendCount;
+    TFileReq *FPendArr[MAX_PEND_REQ];
 
     TDiscServer *FServer;
 };

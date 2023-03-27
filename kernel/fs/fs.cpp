@@ -414,6 +414,10 @@ TFs::TFs(TDiscServer *server)
     for (i = 0; i < FMaxDirCount; i++)
         FDirArr[i] = 0;
 
+    for (i = 0; i < MAX_PEND_REQ; i++)
+        FPendArr[i] = 0;
+
+    FPendCount = 0;
     FQueueArr = 0;
     FServerActive = false;
     FCurrFileCount = 0;
@@ -1079,8 +1083,14 @@ void TFs::HandleRead(TFile *file, long long pos, int size)
 
     if (req)
     {
-        req->Start();
-        delete req;
+        if (FPendCount < MAX_PEND_REQ)
+        {
+            FPendArr[FPendCount] = req;
+            FPendCount++;
+            req->Start();
+        }
+        else
+            delete req;
     }
 }
 
@@ -1113,6 +1123,26 @@ void TFs::HandleFreeReq(TFile *file, int req)
 ##########################################################################*/
 void TFs::HandleCompletedReq(TFile *file, int req)
 {
+    int i;
+    int j;
+    int index = file->Index;
+
+    for (i = 0; i < FPendCount; i++)
+    {
+        if (index == FPendArr[i]->Index && req == FPendArr[i]->Req)
+        {
+            delete FPendArr[i];
+            FPendCount--;
+
+            for (j = i; j < FPendCount; j++)
+                FPendArr[j] = FPendArr[j+1];
+
+            FPendArr[FPendCount] = 0;
+
+            break;
+        }
+    }   
+ 
     file->HandleCompletedReq(req);
 }
 
