@@ -138,6 +138,61 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CheckServ
+;
+;       DESCRIPTION:    Check server block consistency
+;
+;       PARAMETERS:     BX             Kernel file sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckServ   Proc near
+    push ds
+    push es
+    pushad
+;
+    xor eax,eax
+    xor edx,edx
+;
+    mov ds,bx
+    mov es,ds:kf_serv_sel
+    mov ecx,es:fbs_count
+    or ecx,ecx
+    jz csDone
+;
+    mov esi,OFFSET fbs_sorted
+
+csLoop:
+    movzx ebx,es:[esi]
+    shl ebx,4
+    lea ebx,[ebx].fbs_arr
+    mov edi,es:[ebx].fbe_pos
+    mov ebp,es:[ebx].fbe_pos+4
+    sub edi,eax
+    mov ebp,edx
+    jnc csNext
+;
+    int 3
+
+csNext:
+    mov eax,es:[ebx].fbe_pos
+    mov edx,es:[ebx].fbe_pos+4
+    add eax,es:[ebx].fbe_size
+    adc edx,0
+;
+    inc esi
+    loop csLoop
+
+csDone:
+    popad
+    pop es
+    pop ds
+    ret
+CheckServ   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           BlockToPhys
 ;
 ;       DESCRIPTION:    Convert block to phys
@@ -488,6 +543,9 @@ FindReq     Proc near
     push esi
     push edi
     push ebp
+;
+    mov bx,ds
+    call CheckServ
 ;
     mov es,ds:kf_serv_sel
     mov ebp,es:fbs_count
