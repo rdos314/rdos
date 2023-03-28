@@ -417,12 +417,13 @@ void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
     {
         link = Buf->SortedArr[i];
 
+        printf("Check %d %lld (%d), Start %lld (%d)\r\n", link, Buf->BufArr[link].Pos, Buf->BufArr[link].Size, start, count);
+
         temp = Buf->BufArr[link].Pos / FBytesPerSector - start;
         if (temp > 0)
         {
             if (temp < count)
                 count = (int)temp;
-            break;
         }
         else
         {
@@ -434,6 +435,8 @@ void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
             }
         }
     }
+
+    printf("Checked %lld (%d)\r\n", start, count);
 
     for (i = 0; i < Fs->FPendCount && count > 0; i++)
     {
