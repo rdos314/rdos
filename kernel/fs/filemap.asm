@@ -164,6 +164,13 @@ CheckServ   Proc near
 
 csLoop:
     movzx ebx,es:[esi]
+    cmp bl,-1
+    jne csCheck
+;
+    int 3
+    jmp csDone
+
+csCheck:
     shl ebx,4
     lea ebx,[ebx].fbs_arr
     mov edi,es:[ebx].fbe_pos
@@ -173,6 +180,7 @@ csLoop:
     jnc csNext
 ;
     int 3
+    jmp csDone
 
 csNext:
     mov eax,es:[ebx].fbe_pos
@@ -432,6 +440,7 @@ AddFileReq   Proc near
     push es
     pushad
 ;
+
     movzx eax,bx
     dec eax
     shl eax,2
@@ -443,6 +452,11 @@ AddFileReq   Proc near
     or edx,edx
     stc
     jz afrDone
+;
+    push ebx
+    mov ebx,eax
+    call CheckServ
+    pop ebx
 ;
     mov ds,eax
     mov es,ds:kf_serv_sel
@@ -478,12 +492,7 @@ afrFind:
     sub eax,es:[ecx].fbs_arr.fbe_pos
     sbb edx,es:[ecx].fbs_arr.fbe_pos+4
     jb afrInsert
-    jnz afrNext
 ;
-    cmp eax,es:[ecx].fbs_arr.fbe_size
-    jb afrInsert
-
-afrNext:
     inc ebx
     sub ebp,1
     jnz afrFind
@@ -514,6 +523,9 @@ afrMove:
 afrSave:
     mov es:[edi],bl
     LeaveSection ds:kf_section
+;
+    mov bx,ds
+    call CheckServ
     clc
 
 afrDone:
@@ -1150,6 +1162,11 @@ FreeReq      Proc near
     push edx
     push esi
 ;
+    push ebx
+    mov ebx,gs
+    call CheckServ
+    pop ebx
+;
     mov esi,gs
     mov ds,esi
     mov es,ds:kf_serv_sel
@@ -1179,15 +1196,20 @@ frMove:
     loop frMove
 ;
     dec es:fbs_count
-
-frLeave:
     LeaveSection ds:kf_section
 ;
     push ebx
     mov cx,bx
     mov bx,REQ_FREE
     call AddReq
+;
+    mov bx,ds
+    call CheckServ
     pop ebx
+    jmp frEnd
+
+frLeave:
+    LeaveSection ds:kf_section
 
 frEnd:
     pop esi

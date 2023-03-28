@@ -302,8 +302,13 @@ int TFile::AllocateReq()
     int i;
 
     for (i = 0; i < 240; i++)
+    {
         if (Buf->BufArr[i].Handle == 0)
+        {
+            Buf->BufArr[i].Handle = -1;
             return i;
+        }
+    }
 
     return -1;
 }
@@ -509,6 +514,8 @@ TFileReq *TFile::HandleRead(TFs *fs, long long pos, int size)
 
     if (req >= 0)
     {
+        printf("Allocated %d.%d pos %lld size %d \r\n", Index, req, pos, size);
+
         FileReq = new TFileReq(FCurrSectors);
         for (sector = 0; sector < FCurrSectors; sector++)
         {
