@@ -44,11 +44,17 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFileReq::TFileReq(int sectors)
+TFileReq::TFileReq(int handle, int index, int req)
 {
-    MaxSectors = sectors;
+    MaxSectors = 0;
     SectorCount = 0;
-    SectorArr = new long long[sectors];
+    SectorArr = 0;
+
+    File = handle;
+    Index = index;
+    Req = req;
+
+    Link = 0;
 }
 
 /*##########################################################################
@@ -64,7 +70,48 @@ TFileReq::TFileReq(int sectors)
 ##########################################################################*/
 TFileReq::~TFileReq()
 {
-    delete SectorArr;
+    if (SectorArr)
+        delete SectorArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TFileReq::InitArray
+#
+#   Purpose....: Init array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileReq::InitArray(int sectors)
+{
+    if (SectorArr)
+        delete SectorArr;
+
+    MaxSectors = sectors;
+    SectorCount = 0;
+    SectorArr = new long long[sectors];
+}
+
+/*##########################################################################
+#
+#   Name       : TFileReq::FreeArray
+#
+#   Purpose....: Free array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileReq::FreeArray()
+{
+    if (SectorArr)
+        delete SectorArr;
+
+    SectorArr = 0;
 }
 
 /*##########################################################################
@@ -89,20 +136,17 @@ void TFileReq::AddSector(long long sector)
 
 /*##########################################################################
 #
-#   Name       : TFileReq::Setup
+#   Name       : TFileReq::SetPos
 #
-#   Purpose....: Setup
+#   Purpose....: Set pos
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileReq::Setup(int handle, int index, int req, long long pos)
+void TFileReq::SetPos(long long pos)
 {
-    File = handle;
-    Index = index;
-    Req = req;
     Pos = pos;
 }
 
@@ -365,29 +409,74 @@ int TFile::GetAttrib()
 
 /*##########################################################################
 #
-#   Name       : TFile::AllocateEntry
+#   Name       : TFile::AllocateReq
 #
-#   Purpose....: Allocate new entry
+#   Purpose....: Allocate new req
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TFile::AllocateReq()
+TFileReq *TFile::AllocateReq()
 {
-    int i;
+    TFileReq *req = 0;
 
-    for (i = 0; i < 240; i++)
+    if (FFreeList)
     {
-        if (Buf->BufArr[i].Handle == 0)
+        req = FFreeList;
+        FFreeList = req->Link;
+    }
+    else
+    {
+        if (FCurrAllocatedCount < 256)
         {
-            Buf->BufArr[i].Handle = -1;
-            return i;
+            if (FCurrAllocatedCount == FMaxAllocatedCount)
+                GrowAllocated();
+
+            req = new TFileReq(Handle, Index, FCurrAllocatedCount);
+            FAllocatedArr[FCurrAllocatedCount] = req;
+            FCurrAllocatedCount++;
         }
     }
+    return req;
+}
 
-    return -1;
+/*##########################################################################
+#
+#   Name       : TFile::FreeReq
+#
+#   Purpose....: Free req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::FreeReq(TFileReq *req)
+{
+    req->Link = FFreeList;
+    FFreeList = req;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::AddActive
+#
+#   Purpose....: Add request as active
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::AddActive(TFileReq *req)
+{
+    if (FCurrActiveCount == FMaxActiveCount)
+        GrowActive();
+
+    FActiveArr[FCurrActiveCount] = req;
+    FCurrActiveCount++;
 }
 
 /*##########################################################################
@@ -417,7 +506,7 @@ long long TFile::GetSector(long long pos)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
+void TFile::SetReq(long long StartSector, int Sectors)
 {
     long long count;
     long long start;
@@ -490,34 +579,9 @@ void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
 
     count = end - start + 1;
 
-    for (i = 0; i < Buf->Count && count > 0; i++)
+    for (i = 0; i < FCurrActiveCount && count > 0; i++)
     {
-        link = Buf->SortedArr[i];
-
-        printf("Check %d %lld (%d), Start %lld (%d)\r\n", link, Buf->BufArr[link].Pos, Buf->BufArr[link].Size, start, count);
-
-        temp = Buf->BufArr[link].Pos / FBytesPerSector - start;
-        if (temp > 0)
-        {
-            if (temp < count)
-                count = (int)temp;
-        }
-        else
-        {
-            temp = (Buf->BufArr[link].Pos + Buf->BufArr[link].Size) / FBytesPerSector;
-            if (temp > start)
-            {
-                count = (int)(start + count - temp);
-                start = temp;
-            }
-        }
-    }
-
-    printf("Checked %lld (%d)\r\n", start, count);
-
-    for (i = 0; i < Fs->FPendCount && count > 0; i++)
-    {
-        temp = Fs->FPendArr[i]->Pos - start;
+        temp = FActiveArr[i]->Pos - start;
         if (temp > 0)
         {
             if (temp < count)
@@ -526,27 +590,7 @@ void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
         }
         else
         {
-            temp = Fs->FPendArr[i]->Pos + Fs->FPendArr[i]->SectorCount;
-            if (temp > start)
-            {
-                count = (int)(start + count - temp);
-                start = temp;
-            }
-        }
-    }
-
-    for (i = 0; i < Fs->FWaitCount && count > 0; i++)
-    {
-        temp = Fs->FWaitArr[i]->Pos - start;
-        if (temp > 0)
-        {
-            if (temp < count)
-                count = (int)temp;
-            break;
-        }
-        else
-        {
-            temp = Fs->FWaitArr[i]->Pos + Fs->FWaitArr[i]->SectorCount;
+            temp = FActiveArr[i]->Pos + FActiveArr[i]->SectorCount;
             if (temp > start)
             {
                 count = (int)(start + count - temp);
@@ -573,9 +617,8 @@ void TFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
 #   Returns....: *
 #
 ##########################################################################*/
-TFileReq *TFile::HandleRead(TFs *fs, long long pos, int size)
+TFileReq *TFile::HandleRead(long long pos, int size)
 {
-    int req;
     int sector;
     long long prev;
     long long curr;
@@ -585,18 +628,19 @@ TFileReq *TFile::HandleRead(TFs *fs, long long pos, int size)
 
     FCurrPos = pos / FBytesPerSector;
 
-    SetReq(fs, FCurrPos, size / FBytesPerSector);
+    SetReq(FCurrPos, size / FBytesPerSector);
 
     if (FCurrSectors > 0)
-        req = AllocateReq();
+        FileReq = AllocateReq();
     else
-        req = -1;
+        FileReq = 0;
 
-    if (req >= 0)
+    if (FileReq)
     {
-        printf("Allocated %d.%d pos %lld size %d \r\n", Index, req, pos, size);
+        printf("Allocated %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
 
-        FileReq = new TFileReq(FCurrSectors);
+        FileReq->InitArray(FCurrSectors);
+
         for (sector = 0; sector < FCurrSectors; sector++)
         {
             if (FCurrStart + sector == FCurrPos)
@@ -633,10 +677,10 @@ TFileReq *TFile::HandleRead(TFs *fs, long long pos, int size)
 
         if (FileReq->SectorCount)
         {
-            Buf->BufArr[req].Pos = FCurrStart * FBytesPerSector;
-            Buf->BufArr[req].Size = FileReq->SectorCount * FBytesPerSector;
-            Buf->BufArr[req].Handle = -1;
-            FileReq->Setup(Handle, Index, req, FCurrStart);
+            Buf->BufArr[FileReq->Req].Pos = FCurrStart * FBytesPerSector;
+            Buf->BufArr[FileReq->Req].Size = FileReq->SectorCount * FBytesPerSector;
+            Buf->BufArr[FileReq->Req].Handle = -1;
+            FileReq->SetPos(FCurrStart);
         }
         else
         {
@@ -648,6 +692,17 @@ TFileReq *TFile::HandleRead(TFs *fs, long long pos, int size)
     {
         printf("Read %d No req available\r\n", Index);
         ServAddVfsFileReq(Handle, 0, 0, 0);
+    }
+
+    if (FileReq)
+    {
+        if (FileReq->SectorCount)
+            AddActive(FileReq);
+        else
+        {
+            FreeReq(FileReq);
+            FileReq = 0;
+        }
     }
 
     return FileReq;
@@ -666,15 +721,33 @@ TFileReq *TFile::HandleRead(TFs *fs, long long pos, int size)
 ##########################################################################*/
 void TFile::HandleFreeReq(int req)
 {
-    if (Buf->BufArr[req].Handle > 0)
-    {
-        printf("Free %d.%d\r\n", Index, req);
-        ServFreeVfsFileReq(Handle, req + 1);
-        Buf->BufArr[req].Handle = 0;
-    }
-    else
-        printf("Cannot free %d.%d\r\n", Index, req);
+    int i;
+    bool found = false;
+    TFileReq *FileReq;
 
+
+    for (i = 0; i < FCurrActiveCount; i++)
+    {
+        if (found)
+            FActiveArr[i] = FActiveArr[i+1];
+        else
+        {
+            FileReq = FActiveArr[i];
+            if (FileReq && FileReq->Req == req)
+            {
+                FreeReq(FileReq);
+                found = true;
+                FCurrActiveCount--;
+
+                printf("Free %d.%d\r\n", Index, req);
+                ServFreeVfsFileReq(Handle, req + 1);
+                Buf->BufArr[req].Handle = 0;
+            }
+        }
+    }
+
+    if (!found)
+        printf("Cannot free %d.%d\r\n", Index, req);
 }
 
 /*##########################################################################
@@ -690,7 +763,20 @@ void TFile::HandleFreeReq(int req)
 ##########################################################################*/
 void TFile::HandleCompletedReq(int req)
 {
+    int i;
+    TFileReq *FileReq;
+
     printf("Completed %d.%d\r\n", Index, req);
+
+    for (i = 0; i < FCurrActiveCount; i++)
+    {
+        FileReq = FActiveArr[i];
+        if (FileReq && FileReq->Req == req)
+        {
+            FileReq->FreeArray();
+            break;
+        }
+    }
 }
 
 /*##########################################################################

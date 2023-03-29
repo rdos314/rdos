@@ -1086,7 +1086,7 @@ void TFs::HandleRead(TFile *file, long long pos, int size)
     long long check;
     TFileReq *req;
 
-    req = file->HandleRead(this, pos, size);
+    req = file->HandleRead(pos, size);
 
     if (req)
     {
@@ -1160,7 +1160,7 @@ void TFs::HandleCompletedReq(TFile *file, int req)
     int k;
     long long check;
     int index = file->Index;
-    TFileReq *fr;
+    TFileReq *fr = 0;
 
     for (i = 0; i < FPendCount; i++)
     {
@@ -1176,7 +1176,6 @@ void TFs::HandleCompletedReq(TFile *file, int req)
             FPendArr[FPendCount] = 0;
 
             check = fr->SectorArr[fr->SectorCount-1] + 1;
-            delete fr;
 
             for (j = 0; j < FWaitCount; j++)
             {

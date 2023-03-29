@@ -52,11 +52,14 @@ struct TFileBuf
 class TFileReq
 {
 public:
-    TFileReq(int sectors);
+    TFileReq(int handle, int index, int req);
     ~TFileReq();
 
+    void InitArray(int sectors);
+    void FreeArray();
     void AddSector(long long sector);
-    void Setup(int handle, int index, int req, long long pos);
+
+    void SetPos(long long pos);
     void Start();
 
     int File;
@@ -89,19 +92,22 @@ public:
     int Index;
 
 protected:
-    virtual TFileReq *HandleRead(TFs *fs, long long pos, int size);
+    virtual TFileReq *HandleRead(long long pos, int size);
     virtual void HandleCompletedReq(int index);
     virtual void HandleMapReq(int index);
     virtual void HandleFreeReq(int index);
 
-    virtual void SetReq(TFs *Fs, long long RelSector, int Sectors);
+    virtual void SetReq(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
 
-    int AllocateReq();
+    TFileReq *AllocateReq();
+    void FreeReq(TFileReq *req);
     void UpdateReq();
 
     void GrowAllocated();
     void GrowActive();
+
+    void AddActive(TFileReq *req);
 
     struct RdosFileInfo *Info;
     struct TFileBuf *Buf;

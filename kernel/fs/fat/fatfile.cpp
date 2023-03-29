@@ -84,7 +84,7 @@ TFatFile::~TFatFile()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
+void TFatFile::SetReq(long long StartSector, int Sectors)
 {
     long long start;
     long long end;
@@ -112,7 +112,7 @@ void TFatFile::SetReq(TFs *Fs, long long StartSector, int Sectors)
     end = (c + 1) * FSectorsPerCluster - 1;
     count = end - start + 1;
 
-    TFile::SetReq(Fs, start, count);
+    TFile::SetReq(start, count);
 }
 
 /*##########################################################################
