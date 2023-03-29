@@ -472,10 +472,31 @@ void TFile::FreeReq(TFileReq *req)
 ##########################################################################*/
 void TFile::AddActive(TFileReq *req)
 {
+    int i;
+    int j;
+    TFileReq *temp;
+    TFileReq *curr = req;
+
     if (FCurrActiveCount == FMaxActiveCount)
         GrowActive();
 
-    FActiveArr[FCurrActiveCount] = req;
+    for (i = 0; i < FCurrActiveCount; i++)
+    {
+        if (FActiveArr[i]->Pos > req->Pos)
+        {
+            curr = req;
+
+            for (j = i; j < FCurrActiveCount; j++)
+            {
+                temp = FActiveArr[j];
+                FActiveArr[j] = curr;
+                curr = temp;
+            }
+            break;
+        }                
+    }
+
+    FActiveArr[FCurrActiveCount] = curr;
     FCurrActiveCount++;
 }
 
@@ -722,27 +743,31 @@ TFileReq *TFile::HandleRead(long long pos, int size)
 void TFile::HandleFreeReq(int req)
 {
     int i;
+    int j;
     bool found = false;
     TFileReq *FileReq;
 
-
     for (i = 0; i < FCurrActiveCount; i++)
     {
-        if (found)
-            FActiveArr[i] = FActiveArr[i+1];
-        else
+        FileReq = FActiveArr[i];
+        if (FileReq && FileReq->Req == req)
         {
-            FileReq = FActiveArr[i];
-            if (FileReq && FileReq->Req == req)
-            {
-                FreeReq(FileReq);
-                found = true;
-                FCurrActiveCount--;
+            found = true;
 
-                printf("Free %d.%d\r\n", Index, req);
-                ServFreeVfsFileReq(Handle, req + 1);
-                Buf->BufArr[req].Handle = 0;
-            }
+            FActiveArr[i] = 0;
+            FCurrActiveCount--;
+
+            for (j = i; j < FCurrActiveCount; j++)
+                FActiveArr[j] = FActiveArr[j+1];
+
+            FActiveArr[FCurrActiveCount] = 0;
+
+            FreeReq(FileReq);
+
+            printf("Free %d.%d\r\n", Index, req);
+            ServFreeVfsFileReq(Handle, req + 1);
+            Buf->BufArr[req].Handle = 0;
+            break;
         }
     }
 
