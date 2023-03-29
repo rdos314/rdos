@@ -1216,7 +1216,8 @@ StartReq     Endp
 ;       DESCRIPTION:    Serv add VFS file req
 ;
 ;       PARAMETERS:     EBX            File handle
-;                       EDX            Req index
+;                       ESI            Req index
+;                       EDX:EAX        Position
 ;                       ECX            Sector count
 ;                       ES:EDI         Sector buf
 ;
@@ -1236,9 +1237,11 @@ serv_add_file_req    Proc far
     push esi
     push ebp
 ;
+    push eax
     mov ebp,ebx
     mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
+    pop eax
     cmc
     jnc safDone
 ;
@@ -1251,6 +1254,7 @@ serv_add_file_req    Proc far
     call AddFileReq
     jc safWakeup
 ;
+    mov edx,esi
     mov eax,es
     mov ds,eax
     mov esi,edi

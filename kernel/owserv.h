@@ -55,7 +55,7 @@
 #pragma aux ServAddVfsFileReq = \
     ServGate_serv_add_file_req  \
     CarryToBool \
-    __parm [__ebx] [__edx] [__edi] [__ecx] \
+    __parm [__ebx] [__esi] [__edx __eax] [__edi] [__ecx] \
     __value [__eax]
 
 #pragma aux ServFreeVfsFileReq = \

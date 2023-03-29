@@ -59,13 +59,14 @@ public:
     void FreeArray();
     void AddSector(long long sector);
 
-    void SetPos(long long pos);
+    void SetPos(int BytesPerSector, long long pos);
     void Start();
 
     int File;
     int Index;
     int Req;
-    long long Pos;
+    long long BytePos;
+    long long SectPos;
 
     int MaxSectors;
     int SectorCount;

@@ -223,7 +223,8 @@ ServVfsFileInfo  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
-; IN  EDX              Req index
+; IN  ESI              Req index
+; IN  EDX:EAX          Position
 ; IN  ECX              Sector count
 ; IN  ES:EDI           Sector buffer
 ; OUT EAX              File req handle

@@ -54,6 +54,9 @@ TFileReq::TFileReq(int handle, int index, int req)
     Index = index;
     Req = req;
 
+    BytePos = 0;
+    SectPos = 0;
+
     Link = 0;
 }
 
@@ -145,9 +148,10 @@ void TFileReq::AddSector(long long sector)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileReq::SetPos(long long pos)
+void TFileReq::SetPos(int BytesPerSector, long long spos)
 {
-    Pos = pos;
+    BytePos = spos * BytesPerSector;
+    SectPos = spos;
 }
 
 /*##########################################################################
@@ -163,9 +167,9 @@ void TFileReq::SetPos(long long pos)
 ##########################################################################*/
 void TFileReq::Start()
 {
-    printf("Req %d.%d start %lld size %d", Index, Req, Pos, SectorCount);
+    printf("Req %d.%d start %lld size %d", Index, Req, SectPos, SectorCount);
 
-    if (ServAddVfsFileReq(File, Req + 1, SectorArr, SectorCount))
+    if (ServAddVfsFileReq(File, Req + 1, BytePos, SectorArr, SectorCount))
         printf(" done\r\n");
     else
         printf(" pending\r\n");
@@ -482,7 +486,7 @@ void TFile::AddActive(TFileReq *req)
 
     for (i = 0; i < FCurrActiveCount; i++)
     {
-        if (FActiveArr[i]->Pos > req->Pos)
+        if (FActiveArr[i]->SectPos > req->SectPos)
         {
             curr = req;
 
@@ -602,7 +606,7 @@ void TFile::SetReq(long long StartSector, int Sectors)
 
     for (i = 0; i < FCurrActiveCount && count > 0; i++)
     {
-        temp = FActiveArr[i]->Pos - start;
+        temp = FActiveArr[i]->SectPos - start;
         if (temp > 0)
         {
             if (temp < count)
@@ -611,7 +615,7 @@ void TFile::SetReq(long long StartSector, int Sectors)
         }
         else
         {
-            temp = FActiveArr[i]->Pos + FActiveArr[i]->SectorCount;
+            temp = FActiveArr[i]->SectPos + FActiveArr[i]->SectorCount;
             if (temp > start)
             {
                 count = (int)(start + count - temp);
@@ -697,22 +701,17 @@ TFileReq *TFile::HandleRead(long long pos, int size)
         FCurrSectors = FileReq->SectorCount;
 
         if (FileReq->SectorCount)
-        {
-            Buf->BufArr[FileReq->Req].Pos = FCurrStart * FBytesPerSector;
-            Buf->BufArr[FileReq->Req].Size = FileReq->SectorCount * FBytesPerSector;
-            Buf->BufArr[FileReq->Req].Handle = -1;
-            FileReq->SetPos(FCurrStart);
-        }
+            FileReq->SetPos(FBytesPerSector, FCurrStart);
         else
         {
             printf("Read %d No size\r\n", Index);
-            ServAddVfsFileReq(Handle, 0, 0, 0);
+            ServAddVfsFileReq(Handle, 0, 0, 0, 0);
         }
     }
     else
     {
         printf("Read %d No req available\r\n", Index);
-        ServAddVfsFileReq(Handle, 0, 0, 0);
+        ServAddVfsFileReq(Handle, 0, 0, 0, 0);
     }
 
     if (FileReq)
@@ -766,7 +765,6 @@ void TFile::HandleFreeReq(int req)
 
             printf("Free %d.%d\r\n", Index, req);
             ServFreeVfsFileReq(Handle, req + 1);
-            Buf->BufArr[req].Handle = 0;
             break;
         }
     }

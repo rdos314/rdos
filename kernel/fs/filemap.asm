@@ -429,7 +429,9 @@ CloseFileSel   Endp
 ;
 ;       PARAMETERS:     FS             Part sel
 ;                       EBX            File handle
-;                       EDX            Req index
+;                       ESI            Req index
+;                       EDX:EAX        Position
+;                       ECX            Sector count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -440,35 +442,34 @@ AddFileReq   Proc near
     push es
     pushad
 ;
-
-    movzx eax,bx
-    dec eax
-    shl eax,2
-    mov ax,fs:[eax].vfsp_file_arr.ff_sel
-    or ax,ax
+    movzx edi,bx
+    dec edi
+    shl edi,2
+    mov di,fs:[edi].vfsp_file_arr.ff_sel
+    or di,di
     stc
     je afrDone
 ;
-    or edx,edx
+    or esi,esi
     stc
     jz afrDone
 ;
     push ebx
-    mov ebx,eax
+    mov ebx,edi
     call CheckServ
     pop ebx
 ;
-    mov ds,eax
+    mov ds,edi
     mov es,ds:kf_serv_sel
     EnterSection ds:kf_section
 ;
-    mov esi,edx
     dec esi
     mov edi,esi
     shl edi,2
     shl esi,4
     add esi,OFFSET fbs_arr
 ;
+    push edx
     inc ds:kf_req_count
     mov cx,SIZE kernel_req_entry
     AllocateBlk
@@ -477,6 +478,18 @@ AddFileReq   Proc near
     mov ds:[edx].kre_block_arr,0
     mov ds:[edx].kre_phys_arr,0
     mov ds:[edx].kre_usage,0
+    pop edx
+;
+    mov es:[esi].fbe_pos,eax
+    mov es:[esi].fbe_pos+4,edx
+;
+    push ds
+    mov ds,fs:vfsp_disc_sel
+    movzx eax,ds:vfs_bytes_per_sector
+    pop ds
+    mul ecx
+    mov es:[esi].fbe_size,eax
+    mov es:[esi].fbe_handle,-1
 ;
     mov ebx,OFFSET fbs_sorted
     inc es:fbs_count
