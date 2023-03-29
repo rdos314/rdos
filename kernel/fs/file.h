@@ -67,6 +67,8 @@ public:
     int MaxSectors;
     int SectorCount;
     long long *SectorArr;
+
+    TFileReq *Link;
 };
 
 class TFile
@@ -98,8 +100,21 @@ protected:
     int AllocateReq();
     void UpdateReq();
 
+    void GrowAllocated();
+    void GrowActive();
+
     struct RdosFileInfo *Info;
     struct TFileBuf *Buf;
+
+    TFileReq **FAllocatedArr;
+    int FCurrAllocatedCount;
+    int FMaxAllocatedCount;
+
+    TFileReq **FActiveArr;
+    int FCurrActiveCount;
+    int FMaxActiveCount;
+
+    TFileReq *FFreeList;
 
     long long FCurrPos;
     long long FCurrStart;

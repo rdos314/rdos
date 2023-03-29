@@ -141,6 +141,7 @@ void TFileReq::Start()
 TFile::TFile(TDir *pd, int pi, int bps, int os)
   : FSection("file")
 {
+    int i;
     struct RdosDirEntry *entry;
 
     FBytesPerSector = bps;
@@ -169,6 +170,22 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     Handle = 0;
     Index = -1;
 
+    FCurrAllocatedCount = 0;
+    FMaxAllocatedCount = 4;
+    FAllocatedArr = new TFileReq*[FMaxAllocatedCount];
+
+    for (i = 0; i < FMaxAllocatedCount; i++)
+        FAllocatedArr[i] = 0;
+
+    FCurrActiveCount = 0;
+    FMaxActiveCount = 4;
+    FActiveArr = new TFileReq*[FMaxActiveCount];
+
+    for (i = 0; i < FMaxActiveCount; i++)
+        FActiveArr[i] = 0;
+
+    FFreeList = 0;
+
     FParent->UnlockEntry(entry);
 }
 
@@ -194,6 +211,66 @@ TFile::~TFile()
         RdosFreeMem(Buf);
 
     FParent->ClearFileLink(FParentIndex);
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::GrowAllocated
+#
+#   Purpose....: Grow allocated array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::GrowAllocated()
+{
+    int i;
+    int Size = 2 * FMaxAllocatedCount;
+    TFileReq **NewArr;
+
+    NewArr = new TFileReq*[Size];
+
+    for (i = 0; i < FMaxAllocatedCount; i++)
+        NewArr[i] = FAllocatedArr[i];
+
+    for (i = FMaxAllocatedCount; i < Size; i++)
+        NewArr[i] = 0;
+
+    delete FAllocatedArr;
+    FAllocatedArr = NewArr;
+    FMaxAllocatedCount = Size;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::GrowActive
+#
+#   Purpose....: Grow active array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::GrowActive()
+{
+    int i;
+    int Size = 2 * FMaxActiveCount;
+    TFileReq **NewArr;
+
+    NewArr = new TFileReq*[Size];
+
+    for (i = 0; i < FMaxActiveCount; i++)
+        NewArr[i] = FActiveArr[i];
+
+    for (i = FMaxActiveCount; i < Size; i++)
+        NewArr[i] = 0;
+
+    delete FActiveArr;
+    FActiveArr = NewArr;
+    FMaxActiveCount = Size;
 }
 
 /*##########################################################################
