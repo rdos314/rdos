@@ -213,8 +213,6 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     Info->ServHandle = 0;
     strcpy(Info->Name, entry->PathName);
 
-    Buf = 0;
-
     Handle = 0;
     Index = -1;
 
@@ -255,8 +253,6 @@ TFile::~TFile()
     ServCloseVfsFile(Handle);
 
     RdosFreeMem(Info);
-    if (Buf)
-        RdosFreeMem(Buf);
 
     FParent->ClearFileLink(FParentIndex);
 }
@@ -336,22 +332,7 @@ int TFile::Setup(int VfsHandle)
 {
     int i;
 
-    Buf = (struct TFileBuf *)RdosAllocateMem(0x1000);
-
-    Buf->Count = 0;
-    Buf->LastActive = 0;
-
-    for (i = 0; i < 240; i++)
-    {
-        Buf->BufArr[i].Pos = 0;
-        Buf->BufArr[i].Size = 0;
-        Buf->BufArr[i].Handle = 0;
-    }
-
-    for (i = 0; i < 241; i++)
-        Buf->SortedArr[i] = 0xFF;
-
-    Handle = ServOpenVfsFile(VfsHandle, Info, Buf);
+    Handle = ServOpenVfsFile(VfsHandle, Info);
     Index = Handle & 0xFFFF;
     if (Index > 0)
         Index--;

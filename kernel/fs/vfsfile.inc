@@ -31,21 +31,3 @@ ff_sel           DW ?
 ff_link          DW ?
 
 file_part_struc  ENDS
-
-file_buf_entry   STRUC
-
-fbe_pos          DD ?,?
-fbe_size         DD ?
-fbe_handle       DD ?
-
-file_buf_entry   ENDS
-
-file_buf_struc   STRUC
-
-fbs_sorted       DB 241 DUP(?)
-fbs_resv         DB ?,?,?
-fbs_count        DD ?
-fbs_last_active  DD ?,?
-fbs_arr          DB 16 * 240 DUP(?)
-
-file_buf_struc   ENDS

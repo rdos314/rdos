@@ -33,22 +33,6 @@
 #include "block.h"
 #include "dir.h"
 
-struct TFileBufEntry
-{
-    long long Pos;
-    int Size;
-    int Handle;
-};
-
-struct TFileBuf
-{
-    unsigned char SortedArr[241];
-    char Resv[3];
-    int Count;
-    long long LastActive;
-    struct TFileBufEntry BufArr[240];
-};
-
 class TFileReq
 {
 public:
@@ -111,7 +95,6 @@ protected:
     void AddActive(TFileReq *req);
 
     struct RdosFileInfo *Info;
-    struct TFileBuf *Buf;
 
     TFileReq **FAllocatedArr;
     int FCurrAllocatedCount;
