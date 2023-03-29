@@ -32,9 +32,6 @@
 #include "dir.h"
 #include "file.h"
 
-#define MAX_PEND_REQ    128
-#define MAX_WAIT_REQ    128
-
 struct TFsQueueEntry
 {
     long long Par64;
@@ -120,6 +117,9 @@ protected:
     void Add(TFile *file);
     void Remove(TFile *file);
 
+    void GrowPend();
+    void GrowWait();
+
     TDir *GetStartDir(int rel);
     TFile *GetFile(int handle);
 
@@ -141,11 +141,13 @@ protected:
     bool FServerActive;
     struct TFsQueueEntry *FQueueArr;
 
-    int FPendCount;
-    TFileReq *FPendArr[MAX_PEND_REQ];
+    TFileReq **FPendArr;
+    int FCurrPendCount;
+    int FMaxPendCount;
 
-    int FWaitCount;
-    TFileReq *FWaitArr[MAX_WAIT_REQ];
+    TFileReq **FWaitArr;
+    int FCurrWaitCount;
+    int FMaxWaitCount;
 
     TDiscServer *FServer;
 };
