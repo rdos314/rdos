@@ -73,7 +73,7 @@ void Check(TFile &file, char *buf, long long pos, int size)
     int ret;
     bool logged = false;
 
-    printf("Pos %lld, size %d\r\n", pos, size);
+//    printf("Pos %lld, size %d\r\n", pos, size);
 
     file.SetPos(pos);
     ret = file.Read(buf, size);
@@ -196,7 +196,7 @@ void cdecl main()
 
     count = 25000000;
     RdosCreateThread(TestThread, "Test 1", &count, 0x2000);
-    RdosCreateThread(TestThread, "Test 2", &count, 0x2000);
+//    RdosCreateThread(TestThread, "Test 2", &count, 0x2000);
 
     RdosWaitMilli(50);
 
