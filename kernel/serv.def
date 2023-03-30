@@ -32,5 +32,6 @@ serv_file_info_nr          = 30
 serv_wait_io_serv_nr       = 31
 get_vfs_disc_part_nr       = 32
 start_vfs_io_serv_nr       = 33
+serv_notify_file_req_nr    = 34
 
 serv_gate_entries          = 40

@@ -222,6 +222,13 @@ ServVfsFileInfo  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
+; IN  EDX:EAX          Position
+; IN  ECX              Size
+ServNotifyVfsFileReq  MACRO
+    ServGate serv_notify_file_req_nr
+                    ENDM
+
+; IN  BX               Kernel handle
 ; IN  ESI              Req index
 ; IN  EDX:EAX          Position
 ; IN  ECX              Sector count

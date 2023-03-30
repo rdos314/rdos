@@ -72,6 +72,7 @@ kernel_req_entry  ENDS
 kernel_wait_entry  STRUC
 
 kwe_next          DD ?
+kwe_pos           DD ?,?
 kwe_thread        DW ?
 
 kernel_wait_entry  ENDS
@@ -438,10 +439,10 @@ AddFileReq   Proc near
     stc
     jz afrDone
 ;
-    push ebx
-    mov ebx,edi
-    call CheckServ
-    pop ebx
+;    push ebx
+;    mov ebx,edi
+;    call CheckServ
+;    pop ebx
 ;
     mov ds,edi
     EnterSection ds:kf_section
@@ -518,8 +519,8 @@ afrSave:
     mov ds:[edi],bl
     LeaveSection ds:kf_section
 ;
-    mov bx,ds
-    call CheckServ
+;    mov bx,ds
+;    call CheckServ
     clc
 
 afrDone:
@@ -548,8 +549,8 @@ FindReq     Proc near
     push edi
     push ebp
 ;
-    mov bx,ds
-    call CheckServ
+;    mov bx,ds
+;    call CheckServ
 ;
     mov ebp,ds:kf_req_count
     or ebp,ebp
@@ -598,28 +599,38 @@ FindReq  Endp
 ;       DESCRIPTION:    Add wait req. Section must be taken!
 ;
 ;       PARAMETERS:     DS             File sel
+;                       EDX:EAX        Position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddWaitReq      Proc near
-    push eax
     push ecx
+    push esi
+;
+    push eax
     push edx
 ;
     inc ds:kf_wait_count
     ClearSignal
     mov cx,SIZE kernel_wait_entry
     AllocateBlk
+    mov esi,edx
 ;
     GetThread
-    mov ds:[edx].kwe_thread,ax
-    mov eax,ds:kf_wait_list
-    mov ds:[edx].kwe_next,eax
-    mov ds:kf_wait_list,edx
+    mov ds:[esi].kwe_thread,ax
 ;
     pop edx
-    pop ecx
     pop eax
+;
+    mov ds:[esi].kwe_pos,eax
+    mov ds:[esi].kwe_pos+4,edx
+;
+    mov ecx,ds:kf_wait_list
+    mov ds:[esi].kwe_next,ecx
+    mov ds:kf_wait_list,esi
+;
+    pop esi
+    pop ecx
     ret
 AddWaitReq  Endp
 
@@ -647,7 +658,8 @@ AddReq     Proc near
     mov edi,ds:kf_serv_handle
     mov ds,ds:kf_part_sel
     EnterSection ds:vfsp_io_section
-;
+
+arRetry:
     push eax
     mov es,ds:vfsp_io_sel
     movzx esi,ds:vfsp_io_wr_ptr
@@ -656,8 +668,13 @@ AddReq     Proc near
     pop eax
     jz arRoom
 ;
-    int 3
-
+    LeaveSection ds:vfsp_io_section
+;
+    mov ax,25
+    WaitMilliSec
+;
+    EnterSection ds:vfsp_io_section
+ 
 arRoom:
     mov es:[esi].fqe_p64,eax
     mov es:[esi].fqe_p64+4,edx
@@ -949,38 +966,65 @@ ProcessReadReq  Endp
 ;       DESCRIPTION:    Signal read req done
 ;
 ;       PARAMETERS:     DS                 File sel
+;                       EDX:EAX            Position
+;                       ECX                Size
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SignalReadReq  Proc near
-    push eax
     push ebx
     push ecx
-    push edx
+    push esi
+    push edi
+    push ebp
 ;
-    xor edx,edx
-    xchg edx,ds:kf_wait_list
+    int 3
+    xor esi,esi
+    xchg esi,ds:kf_wait_list
     
 srrLoop:
-    or edx,edx
+    or esi,esi
     jz srrDone
 ;
-    mov eax,ds:[edx].kwe_next
-    mov bx,ds:[edx].kwe_thread
+    mov edi,ds:[esi].kwe_pos
+    mov ebp,ds:[esi].kwe_pos+4
+    jc srrNext
+;
+    or ebp,ebp
+    jnz srrSkip
+;
+    cmp edi,ecx
+    jae srrSkip
+;
+    mov bx,ds:[esi].kwe_thread
     Signal
 ;
+    push edx
+    mov edx,esi
     dec ds:kf_wait_count
     mov cx,SIZE kernel_wait_entry
     FreeBlk
-;
-    mov edx,eax
+    pop edx
+    jmp srrNext
+
+srrSkip:
+    mov ebp,ds:[esi].kwe_next
+    mov edi,ds:kf_wait_list
+    mov ds:[esi].kwe_next,edi
+    mov ds:kf_wait_list,esi
+    mov esi,ebp
+    jmp srrLoop
+
+srrNext:
+    mov esi,ds:[esi].kwe_next
     jmp srrLoop
 
 srrDone:
-    pop edx
+    pop ebp
+    pop edi
+    pop esi
     pop ecx
     pop ebx
-    pop eax
     ret
 SignalReadReq  Endp
 
@@ -1023,7 +1067,15 @@ wfrWait:
 ;
     EnterSection ds:kf_section
     call FindReq
-    jc wfrLeave
+    jnc wfrCheck
+;
+    LeaveSection ds:kf_section
+;
+    push eax
+    mov ax,20
+    WaitMilliSec
+    pop eax
+    jmp wfrDone
 
 wfrCheck:
     mov esi,ds:[4*ebx].kf_handle_arr
@@ -1057,7 +1109,6 @@ wfrLock:
 wfrLeave:
     LeaveSection ds:kf_section
 
-
 wfrDone:
     pop edi
     pop esi
@@ -1085,10 +1136,10 @@ FreeReq      Proc near
     push edx
     push esi
 ;
-    push ebx
-    mov ebx,gs
-    call CheckServ
-    pop ebx
+;    push ebx
+;    mov ebx,gs
+;    call CheckServ
+;    pop ebx
 ;
     mov esi,gs
     mov ds,esi
@@ -1125,8 +1176,8 @@ frMove:
     mov bx,REQ_FREE
     call AddReq
 ;
-    mov bx,ds
-    call CheckServ
+;    mov bx,ds
+;    call CheckServ
     pop ebx
     jmp frEnd
 
@@ -2523,6 +2574,10 @@ NotifyFileData  Proc near
     pop ebx
 
 nfdSignal:
+    mov esi,ds:[4*ebx].kf_handle_arr
+    mov eax,ds:[esi].kre_pos
+    mov edx,ds:[esi].kre_pos+4
+    mov ecx,ds:[esi].kre_size
     call SignalReadReq
 
 nfdLeave:
@@ -2544,7 +2599,10 @@ NotifyFileData  Endp
 ;
 ;       DESCRIPTION:    Notify file signal
 ;
-;       PARAMETERS:     EBX            File handle
+;       PARAMETERS:     FS             Partition
+;                       EBX            File handle
+;                       EDX:EAX        Position
+;                       ECX            Size
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2552,17 +2610,7 @@ NotifyFileData  Endp
 
 NotifyFileSignal  Proc near
     push ds
-    push es
-    push fs
-    pushad
-;
-    mov al,VFS_FILE_SIGN
-    call HandleHighToPartFs
-    jc nfsDone
-;
-    cmp bx,MAX_VFS_FILE_COUNT    
-    cmc
-    jc nfsDone
+    push ebx
 ;
     movzx ebx,bx
     dec ebx
@@ -2578,9 +2626,7 @@ NotifyFileSignal  Proc near
     LeaveSection ds:kf_section
 
 nfsDone:
-    popad
-    pop fs
-    pop es
+    pop ebx
     pop ds
     ret
 NotifyFileSignal  Endp

@@ -686,13 +686,13 @@ TFileReq *TFile::HandleRead(long long pos, int size)
         else
         {
             printf("Read %d No size\r\n", Index);
-            ServAddVfsFileReq(Handle, 0, 0, 0, 0);
+            ServNotifyVfsFileReq(Handle, pos, size);
         }
     }
     else
     {
         printf("Read %d No req available\r\n", Index);
-        ServAddVfsFileReq(Handle, 0, 0, 0, 0);
+        ServNotifyVfsFileReq(Handle, pos, size);
     }
 
     if (FileReq)

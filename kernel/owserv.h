@@ -52,6 +52,10 @@
     ServGate_serv_close_file  \
     __parm [__ebx]
 
+#pragma aux ServNotifyVfsFileReq = \
+    ServGate_serv_notify_file_req  \
+    __parm [__ebx] [__edx __eax] [__ecx]
+
 #pragma aux ServAddVfsFileReq = \
     ServGate_serv_add_file_req  \
     CarryToBool \

@@ -1249,10 +1249,10 @@ serv_add_file_req    Proc far
     jnc safDone
 ;
     or ecx,ecx
-    jz safWakeup
+    jz safDone
 ;
     call AddFileReq
-    jc safWakeup
+    jc safDone
 ;
     mov edx,esi
     mov eax,es
@@ -1299,11 +1299,6 @@ safProcess:
     mov gs,eax
     FreeBigServSel
     clc
-    jmp safDone
-
-safWakeup:
-    call NotifyFileSignal
-    clc
 
 safDone:
     pop ebp
@@ -1315,6 +1310,42 @@ safDone:
     pop ds
     ret
 serv_add_file_req    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServNotifyFileReq
+;
+;       DESCRIPTION:    Serv notify VFS file req
+;
+;       PARAMETERS:     EBX            File handle
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_notify_file_req_name       DB 'Serv Notify File Req',0
+
+serv_notify_file_req    Proc far
+    push ebx
+;
+    push eax
+    mov al,VFS_FILE_SIGN
+    call HandleHighToPartFs
+    pop eax
+    cmc
+    jnc snfDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    jnc snfDone
+;
+    call NotifyFileSignal
+    clc
+
+snfDone:
+    pop fs
+    ret
+serv_notify_file_req    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1348,6 +1379,12 @@ init_server_file    Proc near
     mov edi,OFFSET serv_close_file_name
     xor cl,cl
     mov ax,serv_close_file_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_notify_file_req
+    mov edi,OFFSET serv_notify_file_req_name
+    xor cl,cl
+    mov ax,serv_notify_file_req_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_add_file_req
