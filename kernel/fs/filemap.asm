@@ -987,66 +987,6 @@ SignalReadReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           LockReq
-;
-;       DESCRIPTION:    Lock req
-;
-;       PARAMETERS:     GS             File sel
-;                       EDX:EAX        Req position
-;
-;       RETURNS:        EBX            Req id
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockReq      Proc near
-    push ds
-    push eax
-    push ecx
-;
-    mov ebx,gs
-    mov ds,ebx
-;
-    EnterSection ds:kf_section
-    call FindReq
-    jc lrLeave
-;
-    mov eax,ds:[4*ebx].kf_handle_arr
-    mov ecx,ds:[eax].kre_phys_arr
-    or ecx,ecx
-    stc
-    jz lrLeave
-;
-    push ebx
-    mov bx,ds:[eax].kre_usage
-    inc bx
-    mov ds:[eax].kre_usage,bx
-    sub bx,1
-    pop ebx
-    LeaveSection ds:kf_section
-    clc
-    jnz lrDone
-;
-    push ebx
-    mov cx,bx
-    mov bx,REQ_MAP
-    call AddReq
-    pop ebx
-    clc
-    jmp lrDone
-
-lrLeave:
-    LeaveSection ds:kf_section
-
-lrDone:
-    pop ecx
-    pop eax
-    pop ds
-    ret
-LockReq    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           WaitForReq
 ;
 ;       DESCRIPTION:    Wait for req
