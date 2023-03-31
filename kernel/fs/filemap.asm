@@ -60,12 +60,11 @@ kernel_req_entry  STRUC
 
 kre_pos           DD ?,?
 kre_size          DD ?
-kre_handle        DD ?
 kre_block_arr     DD ?
 kre_phys_arr      DD ?
-kre_next          DD ?
 kre_pages         DW ?
 kre_usage         DW ?
+kre_done          DW ?
 
 kernel_req_entry  ENDS
 
@@ -474,7 +473,7 @@ AddFileReq   Proc near
     pop ds
     mul ecx
     mov ds:[edi].kre_size,eax
-    mov ds:[edi].kre_handle,-1
+    mov ds:[edi].kre_done,0
 ;
     mov ebx,OFFSET kf_sorted_arr
     mov ebp,ds:kf_req_count
@@ -2555,11 +2554,11 @@ NotifyFileData  Proc near
 ;
     EnterSection ds:kf_section
 ;
-    mov eax,ebx
     dec ebx
     mov esi,ds:[4*ebx].kf_handle_arr
-    xchg eax,ds:[esi].kre_handle
-    cmp eax,-1
+    mov ax,1
+    xchg ax,ds:[esi].kre_done
+    or ax,ax
     jne nfdLeave
 ;
     mov esi,gs:vfs_rd_chain_ptr
