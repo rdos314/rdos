@@ -1070,8 +1070,13 @@ void TFs::CloseFile(int handle)
         file = FFileArr[index];
         if (file)
         {
-            FFileArr[index] = 0;
-            delete file;
+            file->Close();
+
+            if (file->IsClosing())
+            {
+                FFileArr[index] = 0;
+                delete file;
+            }
         }
     }
 }
@@ -1143,6 +1148,12 @@ void TFs::HandleRead(TFile *file, long long pos, int size)
 void TFs::HandleFreeReq(TFile *file, int req)
 {
     file->HandleFreeReq(req);
+
+    if (file->IsClosing())
+    {
+        FFileArr[file->Index] = 0;
+        delete file;
+    }
 }
 
 /*##########################################################################

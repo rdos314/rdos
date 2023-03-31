@@ -67,6 +67,8 @@ public:
     virtual ~TFile();
 
     int Setup(int VfsHandle);
+    void Close();
+    bool IsClosing();
 
     void LockFile();
     void UnlockFile();
@@ -95,6 +97,8 @@ protected:
     void AddActive(TFileReq *req);
 
     struct RdosFileInfo *Info;
+
+    bool FClosing;
 
     TFileReq **FAllocatedArr;
     int FCurrAllocatedCount;

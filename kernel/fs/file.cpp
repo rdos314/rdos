@@ -206,6 +206,8 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
         FileHandle = RdosCreateFile("d:/test/log.txt", 0);
 #endif
 
+    FClosing = false;
+
     FBytesPerSector = bps;
     FSectorsPerPage = 0x1000 / bps;
     FOffsetSector = os;
@@ -366,6 +368,41 @@ int TFile::Setup(int VfsHandle)
 
     Info->ServHandle = Handle;
     return Handle;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::Close
+#
+#   Purpose....: Req to close
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::Close()
+{
+    FClosing = true;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::IsClosing
+#
+#   Purpose....: Check if ready to close
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFile::IsClosing()
+{
+    if (FClosing && FCurrActiveCount == 0)
+        return true;
+    else
+        return false;
 }
 
 /*##########################################################################
