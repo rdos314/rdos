@@ -1074,6 +1074,11 @@ wfrWait:
     jnc wfrCheck
 ;
     LeaveSection ds:kf_section
+;
+    push eax
+    mov ax,20
+    WaitMilliSec
+    pop eax
     jmp wfrDone
 
 wfrCheck:
