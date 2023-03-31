@@ -978,7 +978,6 @@ SignalReadReq  Proc near
     push edi
     push ebp
 ;
-    int 3
     xor esi,esi
     xchg esi,ds:kf_wait_list
     
@@ -988,7 +987,9 @@ srrLoop:
 ;
     mov edi,ds:[esi].kwe_pos
     mov ebp,ds:[esi].kwe_pos+4
-    jc srrNext
+    sub edi,eax
+    sbb ebp,edx
+    jc srrSkip
 ;
     or ebp,ebp
     jnz srrSkip

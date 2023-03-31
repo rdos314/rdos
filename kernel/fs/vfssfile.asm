@@ -1327,7 +1327,7 @@ serv_add_file_req    Endp
 serv_notify_file_req_name       DB 'Serv Notify File Req',0
 
 serv_notify_file_req    Proc far
-    push ebx
+    push fs
 ;
     push eax
     mov al,VFS_FILE_SIGN
