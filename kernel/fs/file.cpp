@@ -262,7 +262,15 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
 ##########################################################################*/
 TFile::~TFile()
 {
+    int i;
+
     printf("Close %d\r\n", Index);
+
+    for (i = 0; i < FCurrAllocatedCount; i++)
+        delete FAllocatedArr[i];
+
+    delete FActiveArr;
+    delete FAllocatedArr;
 
     ServCloseVfsFile(Handle);
 
