@@ -33,6 +33,10 @@
 #include "serv.h"
 #include "fs.h"
 
+// define DEBUG   1
+
+static int FileHandle = 0;
+
 /*##########################################################################
 #
 #   Name       : TFileReq::TFileReq
@@ -167,12 +171,17 @@ void TFileReq::SetPos(int BytesPerSector, long long spos)
 ##########################################################################*/
 void TFileReq::Start()
 {
-    printf("Req %d.%d start %lld size %d", Index, Req, SectPos, SectorCount);
+    char str[80];
+
+    sprintf(str, "Req %d.%d start %lld size %d", Index, Req, SectPos, SectorCount);
 
     if (ServAddVfsFileReq(File, Req + 1, BytePos, SectorArr, SectorCount))
-        printf(" done\r\n");
+        strcat(str, " done\r\n");
     else
-        printf(" pending\r\n");
+        strcat(str, " pending\r\n");
+
+    RdosWriteFile(FileHandle, str, strlen(str));
+    printf(str);
 }
 
 /*##########################################################################
@@ -191,6 +200,11 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
 {
     int i;
     struct RdosDirEntry *entry;
+
+#ifdef DEBUG
+    if (!FileHandle)
+        FileHandle = RdosCreateFile("d:/test/log.txt", 0);
+#endif
 
     FBytesPerSector = bps;
     FSectorsPerPage = 0x1000 / bps;
@@ -631,6 +645,7 @@ TFileReq *TFile::HandleRead(long long pos, int size)
     int offset;
     bool HasPos = false;
     TFileReq *FileReq = 0;
+    char str[80];
 
     FCurrPos = pos / FBytesPerSector;
 
@@ -643,7 +658,9 @@ TFileReq *TFile::HandleRead(long long pos, int size)
 
     if (FileReq)
     {
-        printf("Allocated %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
+        sprintf(str, "Allocated %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
+        RdosWriteFile(FileHandle, str, strlen(str));
+        printf(str);
 
         FileReq->InitArray(FCurrSectors);
 
@@ -685,13 +702,17 @@ TFileReq *TFile::HandleRead(long long pos, int size)
             FileReq->SetPos(FBytesPerSector, FCurrStart);
         else
         {
-            printf("Read %d No size\r\n", Index);
+            sprintf(str, "Read %d No size, pos %lld size %d\r\n", Index, pos, size);
+            RdosWriteFile(FileHandle, str, strlen(str));
+            printf(str);
             ServNotifyVfsFileReq(Handle, pos, size);
         }
     }
     else
     {
-        printf("Read %d No req available\r\n", Index);
+        sprintf(str,"Read %d No req available, pos %lld size %d\r\n", Index, pos, size);
+        RdosWriteFile(FileHandle, str, strlen(str));
+        printf(str);
         ServNotifyVfsFileReq(Handle, pos, size);
     }
 
@@ -726,6 +747,7 @@ void TFile::HandleFreeReq(int req)
     int j;
     bool found = false;
     TFileReq *FileReq;
+    char str[40];
 
     for (i = 0; i < FCurrActiveCount; i++)
     {
@@ -744,7 +766,10 @@ void TFile::HandleFreeReq(int req)
 
             FreeReq(FileReq);
 
-            printf("Free %d.%d\r\n", Index, req);
+            sprintf(str, "Free %d.%d\r\n", Index, req);
+            RdosWriteFile(FileHandle, str, strlen(str));
+            printf(str);
+
             ServFreeVfsFileReq(Handle, req + 1);
             break;
         }
@@ -769,8 +794,11 @@ void TFile::HandleCompletedReq(int req)
 {
     int i;
     TFileReq *FileReq;
+    char str[80];
 
-    printf("Completed %d.%d\r\n", Index, req);
+    sprintf(str, "Completed %d.%d\r\n", Index, req);
+    RdosWriteFile(FileHandle, str, strlen(str));
+    printf(str);
 
     for (i = 0; i < FCurrActiveCount; i++)
     {
@@ -796,5 +824,9 @@ void TFile::HandleCompletedReq(int req)
 ##########################################################################*/
 void TFile::HandleMapReq(int req)
 {
-    printf("Map %d.%d\r\n", Index, req);
+    char str[80];
+
+    sprintf(str, "Map %d.%d\r\n", Index, req);
+    RdosWriteFile(FileHandle, str, strlen(str));
+    printf(str);
 }

@@ -1000,12 +1000,16 @@ srrLoop:
     mov bx,ds:[esi].kwe_thread
     Signal
 ;
+    push ecx
     push edx
+;
     mov edx,esi
     dec ds:kf_wait_count
     mov cx,SIZE kernel_wait_entry
     FreeBlk
+;
     pop edx
+    pop ecx
     jmp srrNext
 
 srrSkip:
