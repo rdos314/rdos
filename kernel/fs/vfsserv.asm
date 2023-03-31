@@ -545,8 +545,12 @@ npLoop:
     add esi,esi
     mov si,fs:[esi].vfsp_req_arr
     or si,si
-    jz npLoop
+    jnz npHandle
 ;
+    int 3
+    jmp npLoop
+
+npHandle:
     mov gs,si
     call dword ptr gs:vfsr_callback
     jmp npLoop
