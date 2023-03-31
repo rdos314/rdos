@@ -41,7 +41,7 @@ void Check(TFile &file, char *buf, long long pos, int size)
     int ret;
     bool logged = false;
 
-    printf("Pos %lld, size %d\r\n", pos, size);
+//    printf("Pos %lld, size %d\r\n", pos, size);
 
     file.SetPos(pos);
     ret = file.Read(buf, size);

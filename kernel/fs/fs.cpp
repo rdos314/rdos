@@ -430,13 +430,6 @@ TFs::TFs(TDiscServer *server)
 
     for (i = 0; i < FMaxPendCount; i++)
         FPendArr[i] = 0;
-
-    FCurrWaitCount = 0;
-    FMaxWaitCount = 4;
-    FWaitArr = new TFileReq*[FMaxWaitCount];
-
-    for (i = 0; i < FMaxWaitCount; i++)
-        FWaitArr[i] = 0;
 }
 
 /*##########################################################################
@@ -934,36 +927,6 @@ void TFs::GrowPend()
 
 /*##########################################################################
 #
-#   Name       : TFs::GrowWait
-#
-#   Purpose....: Grow wait array
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFs::GrowWait()
-{
-    int i;
-    int Size = 2 * FMaxWaitCount;
-    TFileReq **NewArr;
-
-    NewArr = new TFileReq*[Size];
-
-    for (i = 0; i < FMaxWaitCount; i++)
-        NewArr[i] = FWaitArr[i];
-
-    for (i = FMaxWaitCount; i < Size; i++)
-        NewArr[i] = 0;
-
-    delete FWaitArr;
-    FWaitArr = NewArr;
-    FMaxWaitCount = Size;
-}
-
-/*##########################################################################
-#
 #   Name       : TFs::OpenFile
 #
 #   Purpose....: Open file
@@ -1157,37 +1120,12 @@ void TFs::HandleRead(TFile *file, long long pos, int size)
 
     if (req)
     {
-        check = req->SectorArr[req->SectorCount-1] + 1;
+        if (FCurrPendCount == FMaxPendCount)
+            GrowPend();
 
-        if (check % FSectorsPerPage)
-        {
-            for (i = 0; i < FCurrPendCount; i++)
-            {
-                if (FPendArr[i]->SectorArr[0] == check)
-                {
-                    delay = true;
-                    break;
-                }
-            }
-        }
-
-        if (delay)
-        {
-            if (FCurrWaitCount == FMaxWaitCount)
-                GrowWait();
-
-            FWaitArr[FCurrWaitCount] = req;
-            FCurrWaitCount++;
-        }
-        else
-        {
-            if (FCurrPendCount == FMaxPendCount)
-                GrowPend();
-
-            FPendArr[FCurrPendCount] = req;
-            FCurrPendCount++;
-            req->Start();
-        }
+        FPendArr[FCurrPendCount] = req;
+        FCurrPendCount++;
+        req->Start();
     }
 }
 
@@ -1222,8 +1160,6 @@ void TFs::HandleCompletedReq(TFile *file, int req)
 {
     int i;
     int j;
-    int k;
-    long long check;
     int index = file->Index;
     TFileReq *fr = 0;
 
@@ -1239,27 +1175,6 @@ void TFs::HandleCompletedReq(TFile *file, int req)
                 FPendArr[j] = FPendArr[j+1];
 
             FPendArr[FCurrPendCount] = 0;
-
-            check = fr->SectorArr[fr->SectorCount-1] + 1;
-
-            for (j = 0; j < FCurrWaitCount; j++)
-            {
-                if (FWaitArr[j]->SectorArr[0] == check)
-                {
-                    fr = FWaitArr[j];
-                    fr->Start();
-                    FPendArr[FCurrPendCount] = fr;
-                    FCurrPendCount++;
- 
-                    FCurrWaitCount--;
-
-                    for (k = j; k < FCurrWaitCount; k++)
-                        FWaitArr[k] = FWaitArr[k+1];
-
-                    FWaitArr[FCurrWaitCount] = 0;
-                    break;
-                }
-            }
             break;
         }
     }   

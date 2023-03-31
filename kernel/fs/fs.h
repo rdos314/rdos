@@ -118,7 +118,6 @@ protected:
     void Remove(TFile *file);
 
     void GrowPend();
-    void GrowWait();
 
     TDir *GetStartDir(int rel);
     TFile *GetFile(int handle);
@@ -144,10 +143,6 @@ protected:
     TFileReq **FPendArr;
     int FCurrPendCount;
     int FMaxPendCount;
-
-    TFileReq **FWaitArr;
-    int FCurrWaitCount;
-    int FMaxWaitCount;
 
     TDiscServer *FServer;
 };
