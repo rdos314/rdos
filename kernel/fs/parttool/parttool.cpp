@@ -8,23 +8,7 @@
 
 #include "discpart.h"
 #include "mbrdisc.h"
-
-
-/*##########################################################################
-#
-#   Name       : CreateMbr
-#
-#   Purpose....: Create MBR object
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TMbrDisc *CreateMbr(TDiscServer *Server)
-{
-    return new TMbrDisc(Server);
-}
+#include "gptdisc.h"
 
 /*##########################################################################
 #
@@ -42,7 +26,6 @@ int main(int argc, char **argv)
     int dev;
     char *ptr;
     TDiscServer *Server;
-    TMbrDisc *Mbr;
     bool cont = false;
 
     while (!cont)
@@ -54,9 +37,9 @@ int main(int argc, char **argv)
         dev = atoi(ptr);
 
         Server = new TDiscServer;
-        Mbr = CreateMbr(Server);
+//        Mbr = CreateMbr(Server);
 
-        if (Mbr)
-            Mbr->Run();
+//        if (Mbr)
+//            Mbr->Run();
     }
 }
