@@ -92,6 +92,7 @@ code    SEGMENT byte public 'CODE'
     extern SectorToBlock:near
     extern SectorCountToBlock:near
     extern InitFilePart:near
+    extern GetDiscHandle:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -211,10 +212,11 @@ mbr_cmd        DB 0
 AddMbrDisc   Proc near
     push ds
     push es
+    push fs
     pushad
 ;
-    mov bh,ds:vfs_disc_nr
-    mov bl,-1
+    mov ax,ds
+    mov fs,ax
 ;
     mov ax,cs
     mov ds,ax
@@ -222,9 +224,13 @@ AddMbrDisc   Proc near
     mov esi,OFFSET mbr_cmd
     mov edi,OFFSET mbr_serv_name
     mov al,4
+    mov bh,fs:vfs_disc_nr
+    mov bl,-1
     LoadServer
+    mov fs:vfs_app_sel,bx
 ;
     popad
+    pop fs
     pop es
     pop ds
     ret
@@ -249,10 +255,11 @@ gpt_cmd        DB 0
 AddGptDisc   Proc near
     push ds
     push es
+    push fs
     pushad
 ;
-    mov bh,ds:vfs_disc_nr
-    mov bl,-1
+    mov ax,ds
+    mov fs,ax
 ;
     mov ax,cs
     mov ds,ax
@@ -260,9 +267,13 @@ AddGptDisc   Proc near
     mov esi,OFFSET gpt_cmd
     mov edi,OFFSET gpt_serv_name
     mov al,4
+    mov bh,fs:vfs_disc_nr
+    mov bl,-1
     LoadServer
+    mov fs:vfs_app_sel,bx
 ;
     popad
+    pop fs
     pop es
     pop ds
     ret
@@ -792,6 +803,9 @@ gvfshNext:
     add esi,2
     loop gvfshLoop
 ;
+    call GetDiscHandle
+    jnc gvfshDone
+;
     mov ax,10
     WaitMilliSec
     jmp gvfshRetry
@@ -801,7 +815,8 @@ gvfshFound:
     shr esi,1
     inc esi
     mov ebx,esi
-;
+
+gvfshDone:
     pop esi
     pop eax
     pop es

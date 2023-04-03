@@ -160,6 +160,59 @@ CreateDiscSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           GetDiscHandle
+;
+;       DESCRIPTION:    Get disc handle
+;
+;       PARAMETERS:     DS          Data sel
+;                       BX          App sel
+;
+;       RETURNS:        EBX         VFS handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetDiscHandle
+
+GetDiscHandle   Proc near
+    push es
+    push eax
+    push ecx
+    push esi
+;
+    mov ecx,MAX_DISC_COUNT
+    mov esi,OFFSET disc_arr
+
+gdhLoop:
+    mov ax,[esi]
+    or ax,ax
+    jz gdhNext
+;
+    mov es,eax
+    cmp bx,es:vfs_app_sel
+    je gdhFound
+
+gdhNext:
+    add esi,2
+    loop gdhLoop
+;
+    stc
+    jmp gdhDone
+
+gdhFound:
+    xor ebx,ebx
+    clc
+
+gdhDone:
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    ret
+GetDiscHandle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           ServLockDiscSectors
 ;
 ;       DESCRIPTION:    Lock disc sectors

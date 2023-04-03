@@ -93,6 +93,7 @@ vfs_section              section_typ <>
 
 vfs_disc_nr              DB ?
 vfs_byte_pad             DB ?
+vfs_app_sel              DW ?
 vfs_req_list             DW ?
 
 vfs_map_entry            DD ?
