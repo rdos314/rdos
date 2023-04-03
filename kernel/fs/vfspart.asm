@@ -971,7 +971,6 @@ ipInst:
     mov ds:vfs_curr_sector_count,eax
     mov ds:vfs_curr_sector_count+4,0
 ;
-    int 3
     call AddMbrDisc
     jmp ipDone
 
@@ -989,7 +988,6 @@ ipLink:
     jmp ipNextPart
 
 ipGpt:
-    int 3
     call AddGptDisc
     jmp ipDone
 

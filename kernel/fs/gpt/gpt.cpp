@@ -40,7 +40,6 @@ TGptDisc *CreateGpt(TDiscServer *Server)
 int main(int argc, char **argv)
 {
     int dev;
-    int unit;
     char *ptr;
     TDiscServer *Server;
     TGptDisc *Gpt;
@@ -53,9 +52,6 @@ int main(int argc, char **argv)
     {
         ptr = argv[1];
         dev = atoi(ptr);
-
-        ptr = argv[2];
-        unit = atoi(ptr);
 
         Server = new TDiscServer;
         Gpt = CreateGpt(Server);
