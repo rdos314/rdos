@@ -91,8 +91,7 @@ code    SEGMENT byte public 'CODE'
     extern LocalLockSector:near
     extern LocalUnlockSector:near
     extern AddPartition:near
-    extern AddMbrDisc:near
-    extern AddGptDisc:near
+    extern AddDisc:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -927,6 +926,9 @@ init_part   Proc near
     AllocateBigServ
     mov ds:vfs_map_entry,edx
 ;
+    call AddDisc
+    jmp ipDone
+;
     xor eax,eax
     xor edx,edx
     call LocalLockSector
@@ -971,9 +973,6 @@ ipInst:
     mov ds:vfs_curr_sector_count,eax
     mov ds:vfs_curr_sector_count+4,0
 ;
-    call AddMbrDisc
-    jmp ipDone
-
     cmp cl,5
     je ipLink
 ;
@@ -988,9 +987,6 @@ ipLink:
     jmp ipNextPart
 
 ipGpt:
-    call AddGptDisc
-    jmp ipDone
-
     call InstallGpt
 
 ipNextPart:

@@ -31,7 +31,7 @@
 #include "discint.h"
 #include "discpart.h"
 
-static int handle = 0;
+static int handle = -1;
 static TDisc *Server = 0;
 
 extern "C" {
@@ -396,7 +396,7 @@ TDiscServer::TDiscServer()
 
     FActive = true;
 
-    if (!handle)
+    if (handle == -1)
         handle = ServGetVfsHandle();
 
     for (i = 0; i < MAX_DISC_REQ_COUNT; i++)

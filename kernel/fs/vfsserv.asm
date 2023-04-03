@@ -196,20 +196,20 @@ CreatePartSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddMbrDisc
+;       NAME:           AddDisc
 ;
-;       DESCRIPTION:    Add MBR disc
+;       DESCRIPTION:    Add disc
 ;
 ;       PARAMETERS:     DS      VFS sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-mbr_serv_name  DB 'mbr', 0
-mbr_cmd        DB 0
+disc_serv_name  DB 'parttool', 0
+disc_cmd        DB 0
 
-    public AddMbrDisc
+    public AddDisc
 
-AddMbrDisc   Proc near
+AddDisc   Proc near
     push ds
     push es
     push fs
@@ -221,8 +221,8 @@ AddMbrDisc   Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET mbr_cmd
-    mov edi,OFFSET mbr_serv_name
+    mov esi,OFFSET disc_cmd
+    mov edi,OFFSET disc_serv_name
     mov al,4
     mov bh,fs:vfs_disc_nr
     mov bl,-1
@@ -234,50 +234,7 @@ AddMbrDisc   Proc near
     pop es
     pop ds
     ret
-AddMbrDisc   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AddGptDisc
-;
-;       DESCRIPTION:    Add GPT disc
-;
-;       PARAMETERS:     DS      VFS sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-gpt_serv_name  DB 'gpt', 0
-gpt_cmd        DB 0
-
-    public AddGptDisc
-
-AddGptDisc   Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ax,ds
-    mov fs,ax
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET gpt_cmd
-    mov edi,OFFSET gpt_serv_name
-    mov al,4
-    mov bh,fs:vfs_disc_nr
-    mov bl,-1
-    LoadServer
-    mov fs:vfs_app_sel,bx
-;
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-AddGptDisc   Endp
+AddDisc   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
