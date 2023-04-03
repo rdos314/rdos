@@ -57,7 +57,7 @@ VComponent
 14
 WRect
 2176
-665
+657
 5680
 4096
 0
@@ -73,9 +73,9 @@ VComponent
 17
 WRect
 1088
-3080
+3072
 5680
-4130
+4121
 0
 0
 18
@@ -83,15 +83,15 @@ WFileName
 9
 fslib.tgt
 0
-7
+9
 19
 VComponent
 20
 WRect
-336
-1988
-5685
-4317
+1856
+2048
+5680
+4309
 0
 0
 21
@@ -100,4 +100,4 @@ WFileName
 disclib.tgt
 0
 0
-19
+16

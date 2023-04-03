@@ -28,7 +28,7 @@
 #ifndef _FAT_TAB_H
 #define _FAT_TAB_H
 
-#include "part.h"
+#include "partint.h"
 
 class TFatTable
 {

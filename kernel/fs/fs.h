@@ -28,7 +28,7 @@
 #ifndef _FS_H
 #define _FS_H
 
-#include "part.h"
+#include "partint.h"
 #include "dir.h"
 #include "file.h"
 

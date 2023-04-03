@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <rdos.h>
 #include <serv.h>
-#include "part.h"
+#include "partint.h"
 #include "fs.h"
 
 static int handle = 0;

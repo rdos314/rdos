@@ -25,8 +25,8 @@
 #
 ########################################################################*/
 
-#ifndef _PART_H
-#define _PART_H
+#ifndef _PARTINT_H
+#define _PARTINT_H
 
 #include "thread.h"
 #include "datetime.h"
