@@ -29,9 +29,10 @@
 #include <rdos.h>
 #include <serv.h>
 #include "discint.h"
+#include "discpart.h"
 
 static int handle = 0;
-// static TFs *Server = 0;
+static TDisc *Server = 0;
 
 extern "C" {
 
@@ -40,12 +41,12 @@ extern void WaitForMsg(int handle);
 
 void OpenPart(int handle)
 {
-//    Server->OpenPart(handle);
+    Server->OpenPart(handle);
 }
 
 void ClosePart(int handle)
 {
-//    Server->ClosePart(handle);
+    Server->ClosePart(handle);
 }
 
 }
@@ -528,7 +529,9 @@ int TDiscServer::GetBytesPerSector()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscServer::WaitForMsg()
+void TDiscServer::WaitForMsg(TDisc *disc)
 {
+    Server = disc;
+
     return ::WaitForMsg(handle);
 }

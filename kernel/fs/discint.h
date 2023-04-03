@@ -36,6 +36,7 @@
 
 class TDiscServer;
 class TDiscReq;
+class TDisc;
 
 class TDiscReqEntry
 {
@@ -96,7 +97,7 @@ public:
 
     long long GetDiscSectors();
     int GetBytesPerSector();
-    void WaitForMsg();
+    void WaitForMsg(TDisc *disc);
     bool IsActive();
 
 protected:
