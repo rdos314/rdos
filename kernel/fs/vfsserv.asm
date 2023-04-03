@@ -195,6 +195,43 @@ CreatePartSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddGptDisc
+;
+;       DESCRIPTION:    Add GPT disc
+;
+;       PARAMETERS:     DS      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+gpt_serv_name  DB 'gpt', 0
+gpt_cmd        DB 0
+
+    public AddGptDisc
+
+AddGptDisc   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET gpt_cmd
+    mov edi,OFFSET gpt_serv_name
+    mov al,4
+    mov bh,ds:vfs_disc_nr
+    xor bl,bl
+    LoadServer
+;
+    popad
+    pop es
+    pop ds
+    ret
+AddGptDisc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddFatPartition
 ;
 ;       DESCRIPTION:    Add FAT partition

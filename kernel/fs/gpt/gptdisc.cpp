@@ -20,78 +20,62 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# discpart.cpp
-# Discpart base class
+# gptdisc.cpp
+# GPT disc class
 #
 ########################################################################*/
 
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 #include <rdos.h>
 #include <serv.h>
-#include "str.h"
-#include "discpart.h"
+#include "gptdisc.h"
 
 /*##########################################################################
 #
-#   Name       : TDisc::TDisc
+#   Name       : TGptDisc::TGptDisc
 #
-#   Purpose....: Disc contructor
+#   Purpose....: Gpt disc constructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TDisc::TDisc(TDiscServer *server)
-{
-    FServer = server;
-
-    FBytesPerSector = FServer->GetBytesPerSector();
-    FSectorCount = FServer->GetDiscSectors();
-}
-
-/*##########################################################################
-#
-#   Name       : TDisc::~TDisc
-#
-#   Purpose....: Disc destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TDisc::~TDisc()
+TGptDisc::TGptDisc(TDiscServer *server)
+  : TDisc(server)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TDisc::OpenPart
+#   Name       : TGptDisc::~TGptDisc
 #
-#   Purpose....: Open partition
+#   Purpose....: Gpt disc destructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDisc::OpenPart(int handle)
+TGptDisc::~TGptDisc()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TDisc::ClosePart
+#   Name       : TGptDisc::Run
 #
-#   Purpose....: Close partition
+#   Purpose....: Run
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDisc::ClosePart(int handle)
+void TGptDisc::Run()
 {
+    FServer->WaitForMsg(this);
+
 }

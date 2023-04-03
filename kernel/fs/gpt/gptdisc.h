@@ -20,30 +20,23 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# discpart.h
-# Dispart base class
+# fs.h
+# Fat class
 #
 ########################################################################*/
 
-#ifndef _DISCPART_H
-#define _DISCPART_H
+#ifndef _GPT_DISC_H
+#define _GPT_DISC_H
 
-#include "discint.h"
+#include "discpart.h"
 
-class TDisc
+class TGptDisc : public TDisc
 {
 public:
-    TDisc(TDiscServer *server);
-    virtual ~TDisc();
+    TGptDisc(TDiscServer *server);
+    ~TGptDisc();
 
-    virtual void OpenPart(int handle);
-    virtual void ClosePart(int handle);
-
-protected:
-    int FBytesPerSector;
-    long long FSectorCount;
-
-    TDiscServer *FServer;
+    void Run();
 };
 
 #endif

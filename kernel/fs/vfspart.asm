@@ -91,6 +91,7 @@ code    SEGMENT byte public 'CODE'
     extern LocalLockSector:near
     extern LocalUnlockSector:near
     extern AddPartition:near
+    extern AddGptDisc:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -983,6 +984,8 @@ ipLink:
     jmp ipNextPart
 
 ipGpt:
+    int 3
+    call AddGptDisc
     call InstallGpt
 
 ipNextPart:

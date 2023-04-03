@@ -30,7 +30,6 @@
 
 #include "fs.h"
 #include "tab.h"
-#include "thread.h"
 #include "cluster.h"
 #include "fatdir.h"
 
@@ -60,7 +59,7 @@ struct TBootSector
     char FsName[8];
 };
 
-class TFat : public TFs, public TThread
+class TFat : public TFs
 {
 friend class TFatFile;
 public:
