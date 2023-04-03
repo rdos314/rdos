@@ -51,7 +51,7 @@ struct TFatInfo
 #   Returns....: *
 #
 ##########################################################################*/
-TFat32::TFat32(TDiscServer *server, struct TBootSector *boot)
+TFat32::TFat32(TPartServer *server, struct TBootSector *boot)
   : TFat(server, boot),
     Tab1(server),
     Tab2(server)
@@ -134,8 +134,8 @@ TFat32::~TFat32()
 ##########################################################################*/
 bool TFat32::ProcessInfoSector()
 {
-    TDiscReq req(FServer);
-    TDiscReqEntry e1(&req, InfoSector, 1);
+    TPartReq req(FServer);
+    TPartReqEntry e1(&req, InfoSector, 1);
     struct TFatInfo *info;
 
     req.WaitForever();

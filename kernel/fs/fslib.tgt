@@ -64,7 +64,7 @@ WVList
 15
 MItem
 12
-servbase.asm
+partbase.asm
 16
 WString
 6
@@ -99,8 +99,8 @@ WVList
 0
 23
 MItem
-6
-serv.c
+10
+partserv.c
 24
 WString
 4
@@ -187,8 +187,8 @@ WVList
 0
 43
 MItem
-12
-discserv.cpp
+8
+file.cpp
 44
 WString
 6
@@ -205,8 +205,8 @@ WVList
 0
 47
 MItem
-8
-file.cpp
+6
+fs.cpp
 48
 WString
 6
@@ -223,8 +223,8 @@ WVList
 0
 51
 MItem
-6
-fs.cpp
+8
+part.cpp
 52
 WString
 6

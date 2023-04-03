@@ -64,7 +64,7 @@ class TFat : public TFs, public TThread
 {
 friend class TFatFile;
 public:
-    TFat(TDiscServer *server, struct TBootSector *boot);
+    TFat(TPartServer *server, struct TBootSector *boot);
     ~TFat();
 
     bool Validate();
@@ -95,7 +95,7 @@ protected:
     TDir *CacheFixedDir(long long RootSector, int RootDirEntries);
 
     bool VerifySector(int id, char *buf);
-    void GetSectors(TDiscReq *Req, long long sector, int count);
+    void GetSectors(TPartReq *Req, long long sector, int count);
 
     TCluster *GetClusterChain(unsigned int Cluster);
 

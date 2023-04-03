@@ -6,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "discserv.h"
+#include "part.h"
 #include "fat12.h"
 #include "fat16.h"
 #include "fat32.h"
@@ -22,13 +22,13 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFat *CreateFat(TDiscServer *Server, const char *FsName)
+TFat *CreateFat(TPartServer *Server, const char *FsName)
 {
     char Name[6];
     long long TotalSectors;
     struct TBootSector *boot;
-    TDiscReq req(Server);
-    TDiscReqEntry e1(&req, 0, 1);
+    TPartReq req(Server);
+    TPartReqEntry e1(&req, 0, 1);
     int FatSize;
 
     req.WaitForever();
@@ -115,7 +115,7 @@ TFat *CreateFat(TDiscServer *Server, const char *FsName)
 #   Returns....: *
 #
 ##########################################################################*/
-void LogError(TDiscServer *Server, TFat *Fat)
+void LogError(TPartServer *Server, TFat *Fat)
 {
     long long TotalSectors;
 
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
     int dev;
     int unit;
     char *ptr;
-    TDiscServer *Server;
+    TPartServer *Server;
     TFat *Fat;
 
     if (argc >= 4)
@@ -163,7 +163,7 @@ int main(int argc, char **argv)
 
         ptr = argv[3];
 
-        Server = new TDiscServer;
+        Server = new TPartServer;
         Fat = CreateFat(Server, ptr);
 
         if (!Fat->Validate())

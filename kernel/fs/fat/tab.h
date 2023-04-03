@@ -28,12 +28,12 @@
 #ifndef _FAT_TAB_H
 #define _FAT_TAB_H
 
-#include "discserv.h"
+#include "part.h"
 
 class TFatTable
 {
 public:
-    TFatTable(TDiscServer *Server);
+    TFatTable(TPartServer *Server);
     virtual ~TFatTable();
 
     virtual unsigned int GetClusterLink(unsigned int Cluster) = 0;
@@ -42,7 +42,7 @@ public:
 protected:
     long long FStartSector;
     int FSectorsPerCluster;
-    TDiscReq FReq;
+    TPartReq FReq;
 };
 
 #endif

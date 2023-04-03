@@ -42,7 +42,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFat16::TFat16(TDiscServer *server, struct TBootSector *boot)
+TFat16::TFat16(TPartServer *server, struct TBootSector *boot)
   : TFat(server, boot),
     Tab1(server),
     Tab2(server)

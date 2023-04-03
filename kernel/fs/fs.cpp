@@ -394,7 +394,7 @@ void TParser::Advance()
 #   Returns....: *
 #
 ##########################################################################*/
-TFs::TFs(TDiscServer *server)
+TFs::TFs(TPartServer *server)
 {
     int i;
 

@@ -38,7 +38,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatTable::TFatTable(TDiscServer *Server)
+TFatTable::TFatTable(TPartServer *Server)
  :  FReq(Server)
 {
     FSectorsPerCluster = 0;

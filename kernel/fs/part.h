@@ -20,13 +20,13 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# discserv.h
-# Disc server class
+# part.h
+# Partition server class
 #
 ########################################################################*/
 
-#ifndef _DISCSERV_H
-#define _DISCSERV_H
+#ifndef _PART_H
+#define _PART_H
 
 #include "thread.h"
 #include "datetime.h"
@@ -34,15 +34,15 @@
 #define MAX_DISC_REQ_COUNT 15
 #define MAX_DISC_REQ_ENTRIES 255
 
-class TDiscServer;
-class TDiscReq;
+class TPartServer;
+class TPartReq;
 class TFs;
 
-class TDiscReqEntry
+class TPartReqEntry
 {
 public:
-    TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCount);
-    ~TDiscReqEntry();
+    TPartReqEntry(TPartReq *Req, long long StartSector, int SectorCount);
+    ~TPartReqEntry();
 
     int GetId();
     long long GetStartSector();
@@ -57,16 +57,16 @@ protected:
     char *FData;
     bool FMapped;
 
-    TDiscReq *FReq;
+    TPartReq *FReq;
     int FId;
 };
 
-class TDiscReq
+class TPartReq
 {
-friend class TDiscReqEntry;
+friend class TPartReqEntry;
 public:
-    TDiscReq(TDiscServer *server);
-    ~TDiscReq();
+    TPartReq(TPartServer *server);
+    ~TPartReq();
 
     int Add(long long StartSector, int SectorCount);
     void Start();
@@ -77,21 +77,21 @@ public:
     bool IsDone();
 
 protected:
-    void Add(TDiscReqEntry *entry);
-    void Remove(TDiscReqEntry *entry);
+    void Add(TPartReqEntry *entry);
+    void Remove(TPartReqEntry *entry);
 
-    TDiscServer *FServer;
-    TDiscReqEntry *FEntryArr[MAX_DISC_REQ_ENTRIES];
+    TPartServer *FServer;
+    TPartReqEntry *FEntryArr[MAX_DISC_REQ_ENTRIES];
     int FReq;
     int FWaitHandle;
 };
 
-class TDiscServer
+class TPartServer
 {
-friend class TDiscReq;
+friend class TPartReq;
 public:
-    TDiscServer();
-    ~TDiscServer();
+    TPartServer();
+    ~TPartServer();
 
     int GetHandle();
 
@@ -102,11 +102,11 @@ public:
     bool IsActive();
 
 protected:
-    void Add(int id, TDiscReq *req);
+    void Add(int id, TPartReq *req);
     void Remove(int id);
 
     bool FActive;
-    TDiscReq *FReqArr[MAX_DISC_REQ_COUNT];
+    TPartReq *FReqArr[MAX_DISC_REQ_COUNT];
 };
 
 #endif

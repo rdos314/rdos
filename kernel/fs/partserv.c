@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# serv.c
-# server interface
+# partserv.c
+# Partition server interface
 #
 ########################################################################*/
 

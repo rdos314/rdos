@@ -20,15 +20,15 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# discserv.cpp
-# Disc server class
+# part.cpp
+# Part server class
 #
 ########################################################################*/
 
 #include <stdio.h>
 #include <rdos.h>
 #include <serv.h>
-#include "discserv.h"
+#include "part.h"
 #include "fs.h"
 
 static int handle = 0;
@@ -110,7 +110,7 @@ void CloseFile(int handle)
 
 /*##########################################################################
 #
-#   Name       : TDiscReqEntry::TDisReqEntry
+#   Name       : TPartReqEntry::TDisReqEntry
 #
 #   Purpose....: Disc req entry contructor
 #
@@ -119,7 +119,7 @@ void CloseFile(int handle)
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCount)
+TPartReqEntry::TPartReqEntry(TPartReq *Req, long long StartSector, int SectorCount)
 {
     FStartSector = StartSector;
     FSectorCount = SectorCount;
@@ -134,7 +134,7 @@ TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCou
 
 /*##########################################################################
 #
-#   Name       : TDiscReqEntry::~TDiscReqEntry
+#   Name       : TPartReqEntry::~TPartReqEntry
 #
 #   Purpose....: Disc req entry destructor
 #
@@ -143,7 +143,7 @@ TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCou
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscReqEntry::~TDiscReqEntry()
+TPartReqEntry::~TPartReqEntry()
 {
     FReq->Remove(this);
 
@@ -155,7 +155,7 @@ TDiscReqEntry::~TDiscReqEntry()
 
 /*##########################################################################
 #
-#   Name       : TDiscReqEntry::GetId
+#   Name       : TPartReqEntry::GetId
 #
 #   Purpose....: Get ID
 #
@@ -164,14 +164,14 @@ TDiscReqEntry::~TDiscReqEntry()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscReqEntry::GetId()
+int TPartReqEntry::GetId()
 {
     return FId;
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscReqEntry::GetStartSector
+#   Name       : TPartReqEntry::GetStartSector
 #
 #   Purpose....: Get start sector
 #
@@ -180,14 +180,14 @@ int TDiscReqEntry::GetId()
 #   Returns....: *
 #
 ##########################################################################*/
-long long TDiscReqEntry::GetStartSector()
+long long TPartReqEntry::GetStartSector()
 {
     return FStartSector;
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscReqEntry::GetSectorCount
+#   Name       : TPartReqEntry::GetSectorCount
 #
 #   Purpose....: Get sector count
 #
@@ -196,14 +196,14 @@ long long TDiscReqEntry::GetStartSector()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscReqEntry::GetSectorCount()
+int TPartReqEntry::GetSectorCount()
 {
     return FSectorCount;
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscReqEntry::GetData
+#   Name       : TPartReqEntry::GetData
 #
 #   Purpose....: Get data
 #
@@ -212,14 +212,14 @@ int TDiscReqEntry::GetSectorCount()
 #   Returns....: *
 #
 ##########################################################################*/
-char *TDiscReqEntry::GetData()
+char *TPartReqEntry::GetData()
 {
     return FData;
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscReqEntry::Map
+#   Name       : TPartReqEntry::Map
 #
 #   Purpose....: Map sectors
 #
@@ -228,7 +228,7 @@ char *TDiscReqEntry::GetData()
 #   Returns....: *
 #
 ##########################################################################*/
-char *TDiscReqEntry::Map()
+char *TPartReqEntry::Map()
 {
     FData = ServMapVfsReq(FReq->FReq, FId);
     return FData;
@@ -236,7 +236,7 @@ char *TDiscReqEntry::Map()
 
 /*##########################################################################
 #
-#   Name       : TDiscReqEntry::Unmap
+#   Name       : TPartReqEntry::Unmap
 #
 #   Purpose....: Unmap sectors
 #
@@ -245,7 +245,7 @@ char *TDiscReqEntry::Map()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscReqEntry::Unmap()
+void TPartReqEntry::Unmap()
 {
     ServUnmapVfsReq(FReq->FReq, FId);
     FData = 0;
@@ -253,7 +253,7 @@ void TDiscReqEntry::Unmap()
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::TDisReq
+#   Name       : TPartReq::TDisReq
 #
 #   Purpose....: Disc req contructor
 #
@@ -262,7 +262,7 @@ void TDiscReqEntry::Unmap()
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscReq::TDiscReq(TDiscServer *server)
+TPartReq::TPartReq(TPartServer *server)
 {
     int i;
 
@@ -280,7 +280,7 @@ TDiscReq::TDiscReq(TDiscServer *server)
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::~TDiscReq
+#   Name       : TPartReq::~TPartReq
 #
 #   Purpose....: Disc req destructor
 #
@@ -289,7 +289,7 @@ TDiscReq::TDiscReq(TDiscServer *server)
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscReq::~TDiscReq()
+TPartReq::~TPartReq()
 {
     int i;
 
@@ -306,7 +306,7 @@ TDiscReq::~TDiscReq()
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::WaitForever
+#   Name       : TPartReq::WaitForever
 #
 #   Purpose....: Wait forever
 #   In params..: *
@@ -314,14 +314,14 @@ TDiscReq::~TDiscReq()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscReq::WaitForever()
+int TPartReq::WaitForever()
 {
     return RdosWaitForever(FWaitHandle);
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::WaitTimeout
+#   Name       : TPartReq::WaitTimeout
 #
 #   Purpose....: Wait timeout
 #   In params..: *
@@ -329,14 +329,14 @@ int TDiscReq::WaitForever()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscReq::WaitTimeout(int MilliSec)
+int TPartReq::WaitTimeout(int MilliSec)
 {
     return RdosWaitTimeout(FWaitHandle, MilliSec);
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::WaitUntil
+#   Name       : TPartReq::WaitUntil
 #
 #   Purpose....: Wait until
 #   In params..: *
@@ -344,14 +344,14 @@ int TDiscReq::WaitTimeout(int MilliSec)
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscReq::WaitUntil(TDateTime &time)
+int TPartReq::WaitUntil(TDateTime &time)
 {
     return RdosWaitUntilTimeout(FWaitHandle, time.GetMsb(), time.GetLsb());
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::IsDone
+#   Name       : TPartReq::IsDone
 #
 #   Purpose....: Check if done
 #   In params..: *
@@ -359,14 +359,14 @@ int TDiscReq::WaitUntil(TDateTime &time)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TDiscReq::IsDone()
+bool TPartReq::IsDone()
 {
     return ServIsVfsReqDone(FReq);
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::Add
+#   Name       : TPartReq::Add
 #
 #   Purpose....: Add request
 #
@@ -375,7 +375,7 @@ bool TDiscReq::IsDone()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscReq::Add(TDiscReqEntry *entry)
+void TPartReq::Add(TPartReqEntry *entry)
 {
     int id = entry->GetId();
 
@@ -385,7 +385,7 @@ void TDiscReq::Add(TDiscReqEntry *entry)
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::Remove
+#   Name       : TPartReq::Remove
 #
 #   Purpose....: Remove request
 #
@@ -394,7 +394,7 @@ void TDiscReq::Add(TDiscReqEntry *entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscReq::Remove(TDiscReqEntry *entry)
+void TPartReq::Remove(TPartReqEntry *entry)
 {
     int id = entry->GetId();
 
@@ -404,7 +404,7 @@ void TDiscReq::Remove(TDiscReqEntry *entry)
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::Add
+#   Name       : TPartReq::Add
 #
 #   Purpose....: Add request
 #
@@ -413,15 +413,15 @@ void TDiscReq::Remove(TDiscReqEntry *entry)
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscReq::Add(long long StartSector, int SectorCount)
+int TPartReq::Add(long long StartSector, int SectorCount)
 {
-    TDiscReqEntry *entry = new TDiscReqEntry(this, StartSector, SectorCount);
+    TPartReqEntry *entry = new TPartReqEntry(this, StartSector, SectorCount);
     return entry->GetId();
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscReq::Start
+#   Name       : TPartReq::Start
 #
 #   Purpose....: Start request
 #
@@ -430,14 +430,14 @@ int TDiscReq::Add(long long StartSector, int SectorCount)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscReq::Start()
+void TPartReq::Start()
 {
     ServStartVfsReq(FReq);
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::TDiscServer
+#   Name       : TPartServer::TPartServer
 #
 #   Purpose....: Disc server contructor
 #
@@ -446,7 +446,7 @@ void TDiscReq::Start()
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscServer::TDiscServer()
+TPartServer::TPartServer()
 {
     char str[40];
     int i;
@@ -462,7 +462,7 @@ TDiscServer::TDiscServer()
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::~TDiscServer
+#   Name       : TPartServer::~TPartServer
 #
 #   Purpose....: Disc server destructor
 #
@@ -471,13 +471,13 @@ TDiscServer::TDiscServer()
 #   Returns....: *
 #
 ##########################################################################*/
-TDiscServer::~TDiscServer()
+TPartServer::~TPartServer()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::GetHandle
+#   Name       : TPartServer::GetHandle
 #
 #   Purpose....: Get VFS handle
 #
@@ -486,14 +486,14 @@ TDiscServer::~TDiscServer()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscServer::GetHandle()
+int TPartServer::GetHandle()
 {
     return handle;
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::Add
+#   Name       : TPartServer::Add
 #
 #   Purpose....: Add disc req
 #
@@ -502,7 +502,7 @@ int TDiscServer::GetHandle()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscServer::Add(int id, TDiscReq *req)
+void TPartServer::Add(int id, TPartReq *req)
 {
     if (id > 0 && id <= MAX_DISC_REQ_COUNT)
         FReqArr[id - 1] = req;
@@ -510,7 +510,7 @@ void TDiscServer::Add(int id, TDiscReq *req)
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::Remove
+#   Name       : TPartServer::Remove
 #
 #   Purpose....: Remove disc req
 #
@@ -519,7 +519,7 @@ void TDiscServer::Add(int id, TDiscReq *req)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscServer::Remove(int id)
+void TPartServer::Remove(int id)
 {
     if (id > 0 && id <= MAX_DISC_REQ_COUNT)
         FReqArr[id - 1] = 0;
@@ -527,7 +527,7 @@ void TDiscServer::Remove(int id)
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::IsActive
+#   Name       : TPartServer::IsActive
 #
 #   Purpose....: Check if active
 #
@@ -536,7 +536,7 @@ void TDiscServer::Remove(int id)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TDiscServer::IsActive()
+bool TPartServer::IsActive()
 {
     if (FActive)
         FActive = ServIsVfsActive(handle);
@@ -546,7 +546,7 @@ bool TDiscServer::IsActive()
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::GetPartStartSector
+#   Name       : TPartServer::GetPartStartSector
 #
 #   Purpose....: Get partition start sector
 #
@@ -555,14 +555,14 @@ bool TDiscServer::IsActive()
 #   Returns....: *
 #
 ##########################################################################*/
-long long TDiscServer::GetPartStartSector()
+long long TPartServer::GetPartStartSector()
 {
     return ServGetVfsStartSector(handle);
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::GetPartSectors
+#   Name       : TPartServer::GetPartSectors
 #
 #   Purpose....: Get partition sectors
 #
@@ -571,14 +571,14 @@ long long TDiscServer::GetPartStartSector()
 #   Returns....: *
 #
 ##########################################################################*/
-long long TDiscServer::GetPartSectors()
+long long TPartServer::GetPartSectors()
 {
     return ServGetVfsSectors(handle);
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::GetBytesPerSector
+#   Name       : TPartServer::GetBytesPerSector
 #
 #   Purpose....: Get bytes per sector
 #
@@ -587,14 +587,14 @@ long long TDiscServer::GetPartSectors()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscServer::GetBytesPerSector()
+int TPartServer::GetBytesPerSector()
 {
     return ServGetVfsBytesPerSector(handle);
 }
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::WaitForMsg
+#   Name       : TPartServer::WaitForMsg
 #
 #   Purpose....: Wait for msg
 #
@@ -603,7 +603,7 @@ int TDiscServer::GetBytesPerSector()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscServer::WaitForMsg(TFs *fs)
+void TPartServer::WaitForMsg(TFs *fs)
 {
     Server = fs;
     return ::WaitForMsg(handle);

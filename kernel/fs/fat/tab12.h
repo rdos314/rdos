@@ -33,7 +33,7 @@
 class TFatTable12 : public TFatTable
 {
 public:
-    TFatTable12(TDiscServer *Server);
+    TFatTable12(TPartServer *Server);
     virtual ~TFatTable12();
 
     virtual unsigned int GetClusterLink(unsigned int Cluster);
@@ -50,7 +50,7 @@ protected:
     int FCachedSectors;
     int FCachedClusters;
     unsigned int FStartCluster;
-    TDiscReqEntry *FReqEntry;
+    TPartReqEntry *FReqEntry;
     char *FTab;
 };
 

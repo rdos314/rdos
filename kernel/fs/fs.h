@@ -28,7 +28,7 @@
 #ifndef _FS_H
 #define _FS_H
 
-#include "discserv.h"
+#include "part.h"
 #include "dir.h"
 #include "file.h"
 
@@ -75,7 +75,7 @@ class TFs
 {
     friend class TFile;
 public:
-    TFs(TDiscServer *server);
+    TFs(TPartServer *server);
     virtual ~TFs();
 
     virtual long long GetFreeSectors() = 0;
@@ -144,7 +144,7 @@ protected:
     int FCurrPendCount;
     int FMaxPendCount;
 
-    TDiscServer *FServer;
+    TPartServer *FServer;
 };
 
 #endif

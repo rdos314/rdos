@@ -66,7 +66,7 @@ static void ThreadStartup(void *ptr)
 #   Returns....: *
 #
 ##########################################################################*/
-TFat::TFat(TDiscServer *server, struct TBootSector *boot)
+TFat::TFat(TPartServer *server, struct TBootSector *boot)
   : TFs(server)
 {
     FatCount = boot->FatCount;
@@ -154,8 +154,8 @@ long long TFat::GetFreeSectors()
 TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 {
     int Sectors = RootDirEntries / 16;
-    TDiscReq Req(FServer);
-    TDiscReqEntry ReqEntry(&Req, RootSector, Sectors);
+    TPartReq Req(FServer);
+    TPartReqEntry ReqEntry(&Req, RootSector, Sectors);
     long long Sector;
     int Offset;
     int i, j;
@@ -209,12 +209,12 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 {
     unsigned int Cluster = Inode;
-    TDiscReq Req(FServer);
+    TPartReq Req(FServer);
     TCluster Chain;
     unsigned int NextCluster1;
     unsigned int NextCluster2;
     unsigned int *ClusterArr;
-    TDiscReqEntry **ReqArr;
+    TPartReqEntry **ReqArr;
     int size;
     int i, j, k;
     long long Sector;
@@ -253,12 +253,12 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 
     if (size && Cluster)
     {
-        ReqArr = new TDiscReqEntry *[size];
+        ReqArr = new TPartReqEntry *[size];
 
         for (i = 0; i < size; i++)
         {
             Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster;
-            ReqArr[i] = new TDiscReqEntry(&Req, Sector, SectorsPerCluster);
+            ReqArr[i] = new TPartReqEntry(&Req, Sector, SectorsPerCluster);
         }
 
         Req.WaitForever();
@@ -308,7 +308,7 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 ##########################################################################*/
 TCluster *TFat::GetClusterChain(unsigned int Cluster)
 {
-    TDiscReq Req(FServer);
+    TPartReq Req(FServer);
     TCluster *Chain;
     unsigned int NextCluster1;
     unsigned int NextCluster2;
@@ -411,10 +411,10 @@ bool TFat::VerifySector(int id, char *buf)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFat::GetSectors(TDiscReq *Req, long long Sector, int Count)
+void TFat::GetSectors(TPartReq *Req, long long Sector, int Count)
 {
     int i;
-    TDiscReqEntry e1(Req, Sector, Count);
+    TPartReqEntry e1(Req, Sector, Count);
     char *ptr;
     bool ok;
     int id = (int)(Sector + 0x10 - 100000);
@@ -451,7 +451,7 @@ void TFat::GetSectors(TDiscReq *Req, long long Sector, int Count)
 ##########################################################################*/
 void TFat::Test()
 {
-    TDiscReq Req(FServer);
+    TPartReq Req(FServer);
     int count;
     long long sector;
     int delay;

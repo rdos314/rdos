@@ -38,7 +38,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatTable16::TFatTable16(TDiscServer *Server)
+TFatTable16::TFatTable16(TPartServer *Server)
  :  TFatTable(Server)
 {
     FClusters = 0;
@@ -117,7 +117,7 @@ unsigned int TFatTable16::GetFreeInBlock(long long Sector, unsigned int Clusters
 {
     unsigned int i;
     unsigned int FreeClusters = 0;
-    TDiscReqEntry e1(&FReq, Sector, 8);
+    TPartReqEntry e1(&FReq, Sector, 8);
     short int *tab;
 
     FReq.WaitForever();
@@ -195,7 +195,7 @@ unsigned int TFatTable16::GetClusterLink(unsigned int Cluster)
         RelSector = Cluster / 512 * 2;
         FStartCluster = RelSector * 512 / 2;
         Sector = FStartSector + RelSector;
-        FReqEntry = new TDiscReqEntry(&FReq, Sector, FCachedSectors);
+        FReqEntry = new TPartReqEntry(&FReq, Sector, FCachedSectors);
         FReq.WaitForever();
         FTab = (unsigned short int *)FReqEntry->Map();
     }

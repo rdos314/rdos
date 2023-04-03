@@ -1083,7 +1083,7 @@ CreateReq    Endp
 ;                       EDX         MSB sector
 ;                       GS:EDI      LSB sector array
 ;                       ECX         Sector count
-;                       BP          Ref bitmap
+;                       BP          Req bitmap
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

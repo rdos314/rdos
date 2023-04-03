@@ -35,7 +35,7 @@
 class TFat12 : public TFat
 {
 public:
-    TFat12(TDiscServer *server, struct TBootSector *boot);
+    TFat12(TPartServer *server, struct TBootSector *boot);
     ~TFat12();
 
     virtual TDir *CacheRootDir();
