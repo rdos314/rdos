@@ -1350,13 +1350,17 @@ cspaSizeOk:
     mov al,' '
     stosb
 ;
+    cmp bl,-1
+    je cspaRest
+;
     mov al,bl
     call HexToAscii
     stosw
 ;
     mov al,' '
     stosb
-;
+
+cspaRest:
     rep movs byte ptr es:[edi],ds:[esi]     
 ;
     xor al,al
@@ -6279,13 +6283,18 @@ lsCopyDone:
     mov al,bh
     call HexToAscii
     stosw
+;
+    cmp bl,-1
+    je lcTerm
+;
     mov al,'.'
     stosb
 ;
     mov al,bl
     call HexToAscii
     stosw
-;
+
+lcTerm:
     xor al,al
     stosb
 ;

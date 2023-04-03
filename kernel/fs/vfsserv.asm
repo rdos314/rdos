@@ -195,6 +195,44 @@ CreatePartSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddMbrDisc
+;
+;       DESCRIPTION:    Add MBR disc
+;
+;       PARAMETERS:     DS      VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mbr_serv_name  DB 'mbr', 0
+mbr_cmd        DB 0
+
+    public AddMbrDisc
+
+AddMbrDisc   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bh,ds:vfs_disc_nr
+    mov bl,-1
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov esi,OFFSET mbr_cmd
+    mov edi,OFFSET mbr_serv_name
+    mov al,4
+    LoadServer
+;
+    popad
+    pop es
+    pop ds
+    ret
+AddMbrDisc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           AddGptDisc
 ;
 ;       DESCRIPTION:    Add GPT disc
@@ -213,14 +251,15 @@ AddGptDisc   Proc near
     push es
     pushad
 ;
+    mov bh,ds:vfs_disc_nr
+    mov bl,-1
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
     mov esi,OFFSET gpt_cmd
     mov edi,OFFSET gpt_serv_name
     mov al,4
-    mov bh,ds:vfs_disc_nr
-    xor bl,bl
     LoadServer
 ;
     popad
