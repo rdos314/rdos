@@ -53,7 +53,7 @@ MAX_PART_COUNT   = 255
 req_wait_header      STRUC
 
 rw_obj              wait_obj_header <>
-rw_handle           DW ?
+rw_handle           DD ?
 
 req_wait_header      ENDS
 
@@ -661,6 +661,7 @@ NotifyVfs    Proc near
     push edi
     push ebp
 ;
+    int 3
     push ebx
 ;
     mov ebx,OFFSET vfs_part_arr
@@ -692,12 +693,21 @@ nvfHandle:
     pop esi
     call NotifyPart
     push esi
+    jmp nvfDone
 
 nvfNext:
     add ebx,2
     sub ebp,1
     jnz nvfLoop
 ;
+    mov si,ds:vfs_my_part
+    or si,si
+    jz nvfDone
+;
+    mov fs,si
+    jmp nvfHandle
+
+nvfDone:
     pop ebx
 ;
     pop ebp
@@ -1363,7 +1373,7 @@ start_wait_for_req      PROC far
     push eax
     push ebx
 ;
-    mov bx,es:rw_handle
+    mov ebx,es:rw_handle
     call ReqHandleToSel
     jc stwrDone
 ;
@@ -1412,7 +1422,7 @@ stop_wait_for_req       PROC far
     push eax
     push ebx
 ;
-    mov bx,es:rw_handle
+    mov ebx,es:rw_handle
     call ReqHandleToSel
     jc spwrDone
 ;
@@ -1458,7 +1468,7 @@ is_req_idle     PROC far
     push eax
     push ebx
 ;
-    mov bx,es:rw_handle
+    mov ebx,es:rw_handle
     call ReqHandleToSel
     jc iriDone
 ;
@@ -1508,16 +1518,16 @@ add_wait_for_vfs_req    Proc far
     push eax
     push edi
 ;
-    push ax
+    push eax
     mov eax,cs
     mov es,eax
     mov ax,SIZE req_wait_header - SIZE wait_obj_header
     mov edi,OFFSET add_wait_tab
     AddWait
-    pop ax
+    pop eax
     jc awrqDone
 ;
-    mov es:rw_handle,ax
+    mov es:rw_handle,eax
 
 awrqDone:
     pop edi
