@@ -158,57 +158,94 @@ cdsDone:
 CreateDiscSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
 ;
+;       NAME:           FindVfsHandle
 ;
-;       NAME:           GetDiscHandle
+;       DESCRIPTION:    Find VFS handle
 ;
-;       DESCRIPTION:    Get disc handle
+;       PARAMETERS:     BX          Prog id
 ;
-;       PARAMETERS:     DS          Data sel
-;                       BX          App sel
-;
-;       RETURNS:        EBX         VFS handle
+;       RETURNS:        EBX         Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public GetDiscHandle
+    public FindVfsHandle
 
-GetDiscHandle   Proc near
+FindVfsHandle    Proc near
+    push ds
     push es
+    push fs
     push eax
-    push ecx
     push esi
 ;
-    mov ecx,MAX_DISC_COUNT
+    mov ax,SEG data
+    mov fs,ax
+
+fvhRetry:
     mov esi,OFFSET disc_arr
+    mov ecx,MAX_DISC_COUNT
 
-gdhLoop:
-    mov ax,[esi]
+fvhDiscLoop:
+    mov ax,fs:[esi]
     or ax,ax
-    jz gdhNext
+    jz fvhDiscNext
 ;
-    mov es,eax
-    cmp bx,es:vfs_app_sel
-    je gdhFound
-
-gdhNext:
-    add esi,2
-    loop gdhLoop
+    mov ds,ax
+    cmp bx,ds:vfs_app_sel
+    jne fvhCheckPart
 ;
-    stc
-    jmp gdhDone
-
-gdhFound:
     xor ebx,ebx
-    clc
+    jmp fvhFound
 
-gdhDone:
-    pop esi
+fvhCheckPart:
+    push esi
+    push ecx
+;
+    xor esi,esi
+    mov ecx,MAX_VFS_PARTITIONS
+
+fvhPartLoop:
+    mov ax,ds:[2*esi].vfs_part_arr
+    or ax,ax
+    jz fvhPartNext
+;
+    mov es,ax
+    cmp bx,es:vfsp_app_sel
+    jne fvhPartNext
+;
+    inc esi
+    mov ebx,esi
+;
     pop ecx
+    pop esi
+    jmp fvhFound
+    
+fvhPartNext:
+    add esi,2
+    loop fvhPartLoop
+;
+    pop ecx
+    pop esi
+
+fvhDiscNext:
+    add esi,2
+    loop fvhDiscLoop
+;
+    mov ax,10
+    WaitMilliSec
+    jmp fvhRetry
+
+fvhFound:
+    mov bh,ds:vfs_disc_nr
+;
+    pop esi
     pop eax
+    pop fs
     pop es
+    pop ds
     ret
-GetDiscHandle   Endp
+FindVfsHandle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

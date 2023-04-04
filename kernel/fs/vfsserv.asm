@@ -92,7 +92,7 @@ code    SEGMENT byte public 'CODE'
     extern SectorToBlock:near
     extern SectorCountToBlock:near
     extern InitFilePart:near
-    extern GetDiscHandle:near
+    extern FindVfsHandle:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -759,51 +759,15 @@ get_vfs_handle_name       DB 'Get VFS Handle',0
 
 get_vfs_handle    Proc far
     push ds
-    push es
     push eax
-    push esi
 ;
+    int 3
     GetThread
     mov ds,ax
     mov bx,ds:p_prog_id
+    call FindVfsHandle
 ;
-    mov ax,SEG data
-    mov ds,ax
-
-gvfshRetry:
-    mov esi,OFFSET part_arr
-    mov ecx,MAX_PART_COUNT
-
-gvfshLoop:
-    mov ax,ds:[esi]
-    or ax,ax
-    jz gvfshNext
-;
-    mov es,ax
-    cmp bx,es:vfsp_app_sel
-    je gvfshFound
-
-gvfshNext:
-    add esi,2
-    loop gvfshLoop
-;
-    call GetDiscHandle
-    jnc gvfshDone
-;
-    mov ax,10
-    WaitMilliSec
-    jmp gvfshRetry
-
-gvfshFound:
-    sub esi,OFFSET part_arr
-    shr esi,1
-    inc esi
-    mov ebx,esi
-
-gvfshDone:
-    pop esi
     pop eax
-    pop es
     pop ds
     ret
 get_vfs_handle    Endp
