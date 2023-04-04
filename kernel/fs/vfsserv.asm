@@ -661,7 +661,6 @@ NotifyVfs    Proc near
     push edi
     push ebp
 ;
-    int 3
     push ebx
 ;
     mov ebx,OFFSET vfs_part_arr
@@ -1960,21 +1959,40 @@ map_vfs_req    Proc far
     push edi
     push ebp
 ;
-    mov si,SEG data
-    mov ds,si
-    or bh,bh
-    jz mvrFail
+    mov ecx,ebx
+    shr ecx,16
+    cmp ch,VFS_REQ_SIG
+    jne mvrFail
 ;
-    cmp bh,MAX_PART_COUNT
+    push eax
+    mov al,cl
+    call HandleToDisc
+    mov cx,ax
+    pop eax
+    jc mvrFail
+;
+    mov ds,ecx
+    cmp bh,MAX_VFS_PARTITIONS
     ja mvrFail
 ;
     movzx esi,bh
+    or esi,esi
+    jz mvrDisc
+
+mvrPart:
     dec esi
-    add esi,esi
-    mov si,ds:[esi].part_arr
+    mov si,ds:[2*esi].vfs_part_arr
     or si,si
-    jz mvrFail
-;
+    jnz mvrReq
+
+mvrFail:
+    stc
+    jmp mvrDone
+
+mvrDisc:
+    mov si,ds:vfs_my_part
+
+mvrReq:
     mov fs,si
     or bl,bl
     jz mvrFail
@@ -2062,10 +2080,6 @@ mvrNext:
 
 mvrLeave:
     LeaveSection ds:vfs_section
-    jmp mvrDone
-
-mvrFail:
-    stc
 
 mvrDone:
     pop ebp
