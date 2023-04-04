@@ -52,7 +52,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern HandleToPartFs:near
-    extern HandleHighToPartEs:near
     extern HandleHighToPartFs:near
     extern BlockToBuf:near
     extern BlockToBitmap:near
@@ -228,7 +227,6 @@ serv_free_file_req    Proc far
     push eax
     push ebx
 ;
-    mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
     jc sffrDone
 ;
@@ -278,7 +276,6 @@ serv_close_file    Proc far
     push eax
     push ecx
 ;
-    mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
     jc scfDone
 ;
@@ -338,7 +335,6 @@ serv_file_info    Proc far
     push ds
     push fs
 ;
-    mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
     jc sfiDone
 ;
@@ -1237,11 +1233,8 @@ serv_add_file_req    Proc far
     push esi
     push ebp
 ;
-    push eax
     mov ebp,ebx
-    mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
-    pop eax
     cmc
     jnc safDone
 ;
@@ -1329,10 +1322,7 @@ serv_notify_file_req_name       DB 'Serv Notify File Req',0
 serv_notify_file_req    Proc far
     push fs
 ;
-    push eax
-    mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
-    pop eax
     cmc
     jnc snfDone
 ;

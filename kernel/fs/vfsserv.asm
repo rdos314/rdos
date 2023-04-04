@@ -76,7 +76,6 @@ fs_cmd      ENDS
 data    SEGMENT byte public 'DATA'
 
 drive_arr       DW MAX_PART_COUNT DUP (?)
-part_arr        DW MAX_PART_COUNT DUP (?)
 
 data    ENDS
 
@@ -191,24 +190,6 @@ tcpsFound:
     sub eax,OFFSET vfs_part_arr
     shr eax,1
     mov es:vfsp_part_nr,al
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ecx,MAX_PART_COUNT
-    mov esi,OFFSET part_arr
-
-tcpsPartLoop:
-    mov ax,ds:[esi]
-    or ax,ax
-    jz tcpsPartFound
-;
-    add esi,2
-    loop tcpsPartLoop
-;
-    CrashGate
-
-tcpsPartFound:
-    mov ds:[esi],es
     mov bx,es
     clc
 
@@ -786,76 +767,11 @@ get_vfs_handle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           HandleHighToPartEs
-;
-;       DESCRIPTION:    Convert upper 8-bits from handle to partition selector
-;
-;       PARAMETERS:     AL          Signature
-;                       EBX         VFS Handle
-;
-;       RETURNS:        ES          VFS part
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public HandleHighToPartEs
-
-HandleHighToPartEs    Proc near
-    push eax
-    push ebx
-;
-    or bx,bx
-    jz hhtpeFail
-;
-    shr ebx,16
-    or bx,bx
-    jz hhtpeFail
-;
-    cmp al,bl
-    jne hhtpeFail
-;
-    movzx ebx,bh
-    or ebx,ebx
-    jz hhtpeFail
-;
-    cmp ebx,MAX_PART_COUNT
-    jbe hhtpeInRange
-
-hhtpeFail:
-    xor ax,ax
-    mov es,eax
-    stc
-    jmp hhtpeDone
-
-hhtpeInRange:
-    mov ax,SEG data
-    mov es,ax
-    dec ebx
-    add ebx,ebx
-    mov ax,es:[ebx].part_arr
-    or ax,ax
-    jz hhtpeFail
-;
-    mov es,ax
-    test es:vfsp_flag,VFSP_FLAG_STOPPED
-    jnz hhtpeFail
-;
-    clc
-
-hhtpeDone:
-    pop ebx
-    pop eax
-    ret
-HandleHighToPartEs    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           HandleHighToPartFs
 ;
 ;       DESCRIPTION:    Convert upper 8-bits from handle to partition selector
 ;
-;       PARAMETERS:     AL          Signature
-;                       EBX         VFS Handle
+;       PARAMETERS:     EBX         VFS Handle
 ;
 ;       RETURNS:        FS          VFS part
 ;
@@ -874,32 +790,33 @@ HandleHighToPartFs    Proc near
     or bx,bx
     jz hhtpfFail
 ;
-    cmp al,bl
-    jne hhtpfFail
+    mov al,bh
+    call HandleToDisc
+    jc hhtpfFail
 ;
-    movzx ebx,bh
-    or ebx,ebx
-    jz hhtpfFail
+    mov fs,eax
+    cmp bl,MAX_VFS_PARTITIONS
+    ja hhtpfFail
 ;
-    cmp ebx,MAX_PART_COUNT
-    jbe hhtpfInRange
+    movzx esi,bl
+    or esi,esi
+    jz hhtpfDisc
+
+hhtpfPart:
+    dec esi
+    mov ax,fs:[2*esi].vfs_part_arr
+    or ax,ax
+    jnz hhtpfReq
 
 hhtpfFail:
-    xor ax,ax
-    mov fs,eax
     stc
     jmp hhtpfDone
 
-hhtpfInRange:
-    mov ax,SEG data
-    mov fs,ax
-    dec ebx
-    add ebx,ebx
-    mov ax,fs:[ebx].part_arr
-    or ax,ax
-    jz hhtpfFail
-;
-    mov fs,ax
+hhtpfDisc:
+    mov ax,ds:vfs_my_part
+
+hhtpfReq:
+    mov fs,eax
     test fs:vfsp_flag,VFSP_FLAG_STOPPED
     jnz hhtpfFail
 ;
@@ -1847,7 +1764,7 @@ rrsDisc:
     mov ax,ds:vfs_my_part
 
 rrsReq:
-    mov ds,ax
+    mov fs,ax
     or bl,bl
     jz rrsDone
 ;
@@ -2116,21 +2033,38 @@ unmap_vfs_req    Proc far
     push gs
     pushad
 ;
-    mov si,SEG data
-    mov ds,si
-    or bh,bh
-    jz umvrDone
 ;
-    cmp bh,MAX_PART_COUNT
+    mov ecx,ebx
+    shr ecx,16
+    cmp ch,VFS_REQ_SIG
+    jne umvrDone
+;
+    push eax
+    mov al,cl
+    call HandleToDisc
+    mov cx,ax
+    pop eax
+    jc umvrDone
+;
+    mov ds,ecx
+    cmp bh,MAX_VFS_PARTITIONS
     ja umvrDone
 ;
     movzx esi,bh
+    or esi,esi
+    jz umvrDisc
+
+umvrPart:
     dec esi
-    add esi,esi
-    mov si,ds:[esi].part_arr
+    mov si,ds:[2*esi].vfs_part_arr
     or si,si
-    jz umvrDone
-;
+    jnz umvrReq
+    jmp umvrDone
+
+umvrDisc:
+    mov si,ds:vfs_my_part
+
+umvrReq:
     mov fs,si
     or bl,bl
     jz umvrDone
@@ -3439,11 +3373,6 @@ get_vfs_drive_free   Endp
 init_server    Proc near
     mov ax,SEG data
     mov es,ax
-    mov edi,OFFSET part_arr
-    mov ecx,MAX_PART_COUNT
-    xor ax,ax
-    rep stos word ptr es:[edi]
-;
     mov edi,OFFSET drive_arr
     mov ecx,MAX_PART_COUNT
     xor ax,ax

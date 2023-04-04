@@ -275,7 +275,6 @@ GetFileDebugInfo   Endp
 GetFileSel      Proc near
     push fs
 ;
-    mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
     jc gfsDone
 ;
@@ -2530,7 +2529,6 @@ NotifyFileData  Proc near
     pushad
 ;
     mov ebx,gs:vfs_rd_file_handle
-    mov al,VFS_FILE_SIGN
     call HandleHighToPartFs
     jc nfdDone
 ;
