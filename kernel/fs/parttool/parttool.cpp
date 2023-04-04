@@ -10,6 +10,31 @@
 #include "mbrdisc.h"
 #include "gptdisc.h"
 
+
+/*##########################################################################
+#
+#   Name       : CreateDisc
+#
+#   Purpose....: Create disc object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDisc *CreateDisc(TDiscServer *Server)
+{
+    struct TBootSector *boot;
+    TDiscReq req(Server);
+    TDiscReqEntry e1(&req, 0, 1);
+
+    req.WaitForever();
+
+    boot = (struct TBootSector *)e1.Map();
+
+    return 0;
+}
+
 /*##########################################################################
 #
 #   Name       : main
@@ -26,6 +51,7 @@ int main(int argc, char **argv)
     int dev;
     char *ptr;
     TDiscServer *Server;
+    TDisc *Disc;
     bool cont = false;
 
     while (!cont)
@@ -37,7 +63,7 @@ int main(int argc, char **argv)
         dev = atoi(ptr);
 
         Server = new TDiscServer;
-//        Mbr = CreateMbr(Server);
+        Disc = CreateDisc(Server);
 
 //        if (Mbr)
 //            Mbr->Run();

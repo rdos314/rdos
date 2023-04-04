@@ -761,7 +761,6 @@ get_vfs_handle    Proc far
     push ds
     push eax
 ;
-    int 3
     GetThread
     mov ds,ax
     mov bx,ds:p_prog_id
