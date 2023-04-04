@@ -24,15 +24,24 @@
 ##########################################################################*/
 TDisc *CreateDisc(TDiscServer *Server)
 {
-    struct TBootSector *boot;
+    char *Buf;
+    unsigned char Type;
     TDiscReq req(Server);
     TDiscReqEntry e1(&req, 0, 1);
+    TDisc *Disc = 0;
 
     req.WaitForever();
 
-    boot = (struct TBootSector *)e1.Map();
-
-    return 0;
+    Buf = (char *)e1.Map();
+    if (Buf)
+    {
+        Type = Buf[0x1BE + 4];
+        if (Type == 0xEE)
+            Disc = new TGptDisc(Server);
+        else
+            Disc = new TMbrDisc(Server);
+    }
+    return Disc;
 }
 
 /*##########################################################################
