@@ -119,6 +119,7 @@ vfs_cmd_thread           DW ?
 
 vfs_vendor_str           DB 256 DUP(?)
 
+vfs_my_part              DW ?
 vfs_part_arr             DW MAX_VFS_PARTITIONS DUP(?)
 
 vfs_buf_count            DD ?
@@ -197,11 +198,7 @@ vfsp_cmd_ring             DB 34 DUP(?)
 vfsp_cmd_head             DB ?
 vfsp_cmd_tail             DB ?
 
-vfsp_file_list            DW ?
-
 vfsp_req_arr              DW MAX_VFS_REQ_COUNT DUP(?)
-vfsp_file_arr             DW MAX_VFS_FILE_COUNT DUP(?,?,?,?)
-vfsp_file_req_arr         DW MAX_VFS_FILE_REQ_COUNT DUP(?,?)
 
 vfsp_io_section           section_typ <>
 vfsp_io_sel               DW ?
@@ -213,8 +210,21 @@ vfsp_flag                 DW ?
 vfsp_disc_nr              DB ?
 vfsp_part_nr              DB ?
 vfsp_drive_nr             DB ?
+vfsp_resv                 DB ?
 
 vfs_part  ENDS
+
+vfs_file_part    STRUC
+
+vfsp_base                 vfs_part <>
+
+vfsp_file_list            DW ?
+
+vfsp_file_arr             DW MAX_VFS_FILE_COUNT DUP(?,?,?,?)
+vfsp_file_req_arr         DW MAX_VFS_FILE_REQ_COUNT DUP(?,?)
+
+vfs_file_part    ENDS
+
 
 ; should be 4 bytes!!
 

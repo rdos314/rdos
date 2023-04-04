@@ -97,7 +97,45 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           CreatePartSel
+;       NAME:           InitPartSel
+;
+;       DESCRIPTION:    Init partition selector
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Part sel
+;                       EDX:EAX     Start sector
+;                       EDI:ESI     Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitPartSel
+
+InitPartSel  Proc near
+    push ecx
+;
+    mov es:vfsp_start_sector,eax
+    mov es:vfsp_start_sector+4,edx
+    mov es:vfsp_sector_count,esi
+    mov es:vfsp_sector_count+4,edi
+    mov es:vfsp_disc_sel,ds
+;
+    mov es:vfsp_cmd_unused_mask,-1
+;
+    mov cl,ds:vfs_disc_nr
+    mov es:vfsp_disc_nr,cl
+;
+    InitSection es:vfsp_req_section
+    InitSection es:vfsp_io_section
+    mov es:vfsp_io_sel,0
+;
+    pop ecx
+    ret
+InitPartSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           TempCreatePartSel
 ;
 ;       DESCRIPTION:    Create partition selector
 ;
@@ -107,48 +145,43 @@ code    SEGMENT byte public 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreatePartSel  Proc near
+TempCreatePartSel  Proc near
     push ds
     push es
     push eax
     push ecx
+    push edx
     push esi
     push edi
 ;
     mov ecx,MAX_VFS_PARTITIONS
     mov esi,OFFSET vfs_part_arr
 
-cpsLoop:
+tcpsLoop:
     mov ax,ds:[esi]
     or ax,ax
-    jz cpsFound
+    jz tcpsFound
 ;
     add esi,2
-    loop cpsLoop
+    loop tcpsLoop
 ;
     stc
-    jmp cpsDone
+    jmp tcpsDone
 
-cpsFound:
-    mov eax,SIZE vfs_part
+tcpsFound:
+    mov eax,SIZE vfs_file_part
     AllocateSmallGlobalMem
     mov ecx,eax
     xor edi,edi
     xor al,al
     rep stos byte ptr es:[edi]
-    call InitFilePart
 ;
     mov eax,ds:vfs_curr_start_sector
-    mov es:vfsp_start_sector,eax
-    mov eax,ds:vfs_curr_start_sector+4
-    mov es:vfsp_start_sector+4,eax
-    mov eax,ds:vfs_curr_sector_count
-    mov es:vfsp_sector_count,eax
-    mov eax,ds:vfs_curr_sector_count+4
-    mov es:vfsp_sector_count+4,eax
-    mov es:vfsp_disc_sel,ds
-;
-    mov es:vfsp_cmd_unused_mask,-1
+    mov edx,ds:vfs_curr_start_sector+4
+    mov esi,ds:vfs_curr_sector_count
+    mov edi,ds:vfs_curr_sector_count+4
+    call InitPartSel
+    call InitFilePart
 ;
     mov ds:[esi],es
     mov eax,esi
@@ -156,42 +189,36 @@ cpsFound:
     shr eax,1
     mov es:vfsp_part_nr,al
 ;
-    mov al,ds:vfs_disc_nr
-    mov es:vfsp_disc_nr,al
-;
-    InitSection es:vfsp_req_section
-    InitSection es:vfsp_io_section
-    mov es:vfsp_io_sel,0
-;
     mov ax,SEG data
     mov ds,ax
     mov ecx,MAX_PART_COUNT
     mov esi,OFFSET part_arr
 
-cpsPartLoop:
+tcpsPartLoop:
     mov ax,ds:[esi]
     or ax,ax
-    jz cpsPartFound
+    jz tcpsPartFound
 ;
     add esi,2
-    loop cpsPartLoop
+    loop tcpsPartLoop
 ;
     CrashGate
 
-cpsPartFound:
+tcpsPartFound:
     mov ds:[esi],es
     mov bx,es
     clc
 
-cpsDone:
+tcpsDone:
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop eax
     pop es
     pop ds
     ret
-CreatePartSel   Endp
+TempCreatePartSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -256,7 +283,7 @@ AddFatPartition   Proc near
     push fs
     pushad
 ;
-    call CreatePartSel
+    call TempCreatePartSel
     jc afpDone
 ;
     mov fs,bx

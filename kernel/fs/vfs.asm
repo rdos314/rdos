@@ -58,6 +58,7 @@ code    SEGMENT byte public 'CODE'
     extern HandleDiscMsg:near
     extern CreateBuffer:near
     extern CreateDiscSel:near
+    extern InitPartSel:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -248,6 +249,21 @@ VfsServer:
     mov ds:vfs_sectors,eax
     mov ds:vfs_sectors+4,edx
     mov ds:vfs_bytes_per_sector,cx
+;
+    mov eax,SIZE vfs_part
+    AllocateSmallGlobalMem
+    mov ecx,eax
+    xor edi,edi
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    mov esi,ds:vfs_sectors
+    mov edi,ds:vfs_sectors+4
+    xor eax,eax
+    xor edx,edx
+;
+    call InitPartSel
+    mov ds:vfs_my_part,es
 ;
     and bl,0F8h    
     mov ds:vfs_max_req,bx
