@@ -34,6 +34,9 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+VFS_HANDLE_SIG     = 'H'
+VFS_REQ_SIG        = 'R'
+
 VFS_FLAG_STOPPED   = 1
 MAX_VFS_PARTITIONS = 15
 MAX_VFS_REQ_COUNT  = 15

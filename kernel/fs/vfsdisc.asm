@@ -183,11 +183,11 @@ FindVfsHandle    Proc near
     mov fs,ax
 
 fvhRetry:
-    mov esi,OFFSET disc_arr
+    xor esi,esi
     mov ecx,MAX_DISC_COUNT
 
 fvhDiscLoop:
-    mov ax,fs:[esi]
+    mov ax,fs:[2*esi].disc_arr
     or ax,ax
     jz fvhDiscNext
 ;
@@ -229,7 +229,7 @@ fvhPartNext:
     pop esi
 
 fvhDiscNext:
-    add esi,2
+    inc esi
     loop fvhDiscLoop
 ;
     mov ax,10
@@ -237,7 +237,10 @@ fvhDiscNext:
     jmp fvhRetry
 
 fvhFound:
-    mov bh,ds:vfs_disc_nr
+    mov ax,si
+    inc ax
+    mov bh,al
+    or ebx,VFS_HANDLE_SIG SHL 24
 ;
     pop esi
     pop eax
@@ -246,6 +249,198 @@ fvhFound:
     pop ds
     ret
 FindVfsHandle    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HandleToDisc
+;
+;       DESCRIPTION:    Convert from handle to disc sel
+;
+;       PARAMETERS:     AL          Disc part of handle
+;
+;       RETURNS:        AX          Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HandleToDisc
+
+HandleToDisc    Proc near
+    push ds
+    push ebx
+;
+    or al,al
+    jz htdFail
+;
+    mov bx,SEG data
+    mov ds,ebx
+;
+    movzx ebx,al
+    dec ebx
+    cmp ebx,MAX_DISC_COUNT
+    jae htdFail
+;
+    mov ax,ds:[2*ebx].disc_arr
+    or ax,ax
+    jz htdFail
+;
+    clc
+    jmp htdDone
+
+htdFail:
+    stc
+    
+htdDone:
+    pop ebx
+    pop ds
+    ret
+HandleToDisc    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HandleToPartEs
+;
+;       DESCRIPTION:    Convert from handle to partition selector
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        ES          VFS part
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HandleToPartEs
+
+HandleToPartEs    Proc near
+    push eax
+    push esi
+;
+    or bh,bh
+    jz htpeFail
+;
+    mov eax,ebx
+    shr eax,24
+    cmp al,VFS_HANDLE_SIG
+    jne htpeFail
+;
+    mov ax,SEG data
+    mov es,ax
+    movzx eax,bh
+    dec ax
+    cmp ax,MAX_DISC_COUNT
+    jb htpeInRange
+
+htpeFail:
+    stc
+    jmp htpeDone
+
+htpeInRange:
+    movzx esi,bh
+    dec esi
+    mov ax,es:[2*esi].disc_arr
+    or ax,ax
+    jz htpeFail
+;
+    mov es,eax
+    movzx esi,bl
+    or esi,esi
+    jz htpeDisc
+;
+    dec esi
+    mov ax,es:[2*esi].vfs_part_arr
+    jmp htpeValidate
+
+htpeDisc:
+    mov ax,es:vfs_my_part
+
+htpeValidate:
+    or ax,ax
+    jz htpeFail
+;
+    mov es,ax
+    test es:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz htpeFail
+;
+    clc
+
+htpeDone:
+    pop esi
+    pop eax
+    ret
+HandleToPartEs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HandleToPartFs
+;
+;       DESCRIPTION:    Convert from handle to partition selector
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        FS          VFS part
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public HandleToPartFs
+
+HandleToPartFs    Proc near
+    push eax
+    push esi
+;
+    or bh,bh
+    jz htpfFail
+;
+    mov eax,ebx
+    shr eax,24
+    cmp al,VFS_HANDLE_SIG
+    jne htpfFail
+;
+    mov ax,SEG data
+    mov fs,ax
+    movzx eax,bh
+    dec ax
+    cmp ax,MAX_DISC_COUNT
+    jb htpfInRange
+
+htpfFail:
+    stc
+    jmp htpfDone
+
+htpfInRange:
+    movzx esi,bh
+    dec esi
+    mov ax,fs:[2*esi].disc_arr
+    or ax,ax
+    jz htpfFail
+;
+    mov fs,eax
+    movzx esi,bl
+    or esi,esi
+    jz htpfDisc
+;
+    dec esi
+    mov ax,fs:[2*esi].vfs_part_arr
+    jmp htpfValidate
+
+htpfDisc:
+    mov ax,fs:vfs_my_part
+
+htpfValidate:
+    or ax,ax
+    jz htpfFail
+;
+    mov fs,ax
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz htpfFail
+;
+    clc
+
+htpfDone:
+    pop esi
+    pop eax
+    ret
+HandleToPartFs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

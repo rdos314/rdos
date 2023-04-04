@@ -93,6 +93,9 @@ code    SEGMENT byte public 'CODE'
     extern SectorCountToBlock:near
     extern InitFilePart:near
     extern FindVfsHandle:near
+    extern HandleToPartEs:near
+    extern HandleToPartFs:near
+    extern HandleToDisc:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -774,106 +777,6 @@ get_vfs_handle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           HandleToPartEs
-;
-;       DESCRIPTION:    Convert from handle to partition selector
-;
-;       PARAMETERS:     EBX         VFS Handle
-;
-;       RETURNS:        ES          VFS part
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public HandleToPartEs
-
-HandleToPartEs    Proc near
-    push eax
-    push ebx
-;
-    mov ax,SEG data
-    mov es,ax
-    or bx,bx
-    jz htpeFail
-;
-    cmp ebx,MAX_PART_COUNT
-    jbe htpeInRange
-
-htpeFail:
-    stc
-    jmp htpeDone
-
-htpeInRange:
-    dec ebx
-    add ebx,ebx
-    mov ax,es:[ebx].part_arr
-    or ax,ax
-    jz htpeFail
-;
-    mov es,ax
-    test es:vfsp_flag,VFSP_FLAG_STOPPED
-    jnz htpeFail
-;
-    clc
-
-htpeDone:
-    pop ebx
-    pop eax
-    ret
-HandleToPartEs    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           HandleToPartFs
-;
-;       DESCRIPTION:    Convert from handle to partition selector
-;
-;       PARAMETERS:     EBX         VFS Handle
-;
-;       RETURNS:        FS          VFS part
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public HandleToPartFs
-
-HandleToPartFs    Proc near
-    push eax
-    push ebx
-;
-    mov ax,SEG data
-    mov fs,ax
-    or bx,bx
-    jz htpfFail
-;
-    cmp ebx,MAX_PART_COUNT
-    jbe htpfInRange
-
-htpfFail:
-    stc
-    jmp htpfDone
-
-htpfInRange:
-    dec ebx
-    add ebx,ebx
-    mov ax,fs:[ebx].part_arr
-    or ax,ax
-    jz htpfFail
-;
-    mov fs,ax
-    test fs:vfsp_flag,VFSP_FLAG_STOPPED
-    jnz htpfFail
-;
-    clc
-
-htpfDone:
-    pop ebx
-    pop eax
-    ret
-HandleToPartFs    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           HandleHighToPartEs
 ;
 ;       DESCRIPTION:    Convert upper 8-bits from handle to partition selector
@@ -1164,7 +1067,7 @@ create_vfs_req    Proc far
     push edx
     push edi
 ;
-    mov dh,bl
+    mov edx,ebx
 ;
     call HandleToPartEs
     jc crvrDone
@@ -1188,7 +1091,10 @@ crvrFound:
     mov bx,di
     sub bx,OFFSET vfsp_req_arr
     shr bx,1
-    mov bh,dh
+    shl edx,8
+    or edx,VFS_REQ_SIG SHL 24
+    mov dl,bl
+    mov ebx,edx
     sub edi,2
 ;
     mov eax,SIZE vfs_part_req
@@ -1238,21 +1144,33 @@ close_vfs_req    Proc far
     push edx
     push esi
 ;
-    mov ax,SEG data
-    mov ds,ax
-    or bh,bh
-    jz clvrDone
+    mov eax,ebx
+    shr eax,16
+    cmp ah,VFS_REQ_SIG
+    jne clvrDone
 ;
-    cmp bh,MAX_PART_COUNT
+    call HandleToDisc
+    jc clvrDone
+;
+    mov ds,eax
+    cmp bh,MAX_VFS_PARTITIONS
     ja clvrDone
 ;
     movzx esi,bh
+    or esi,esi
+    jz clvrDisc
+
+clvrPart:
     dec esi
-    add esi,esi
-    mov ax,ds:[esi].part_arr
+    mov ax,ds:[2*esi].vfs_part_arr
     or ax,ax
-    jz clvrDone
-;
+    jnz clvrReq
+    jmp clvrDone
+
+clvrDisc:
+    mov ax,ds:vfs_my_part
+
+clvrReq:
     mov ds,ax
     or bl,bl
     jz clvrDone
@@ -1262,10 +1180,9 @@ close_vfs_req    Proc far
 ;
     movzx esi,bl
     dec esi
-    shl esi,1
     xor bx,bx
     EnterSection ds:vfsp_req_section
-    xchg bx,ds:[esi].vfsp_req_arr
+    xchg bx,ds:[2*esi].vfsp_req_arr
     LeaveSection ds:vfsp_req_section
     or bx,bx
     jz clvrDone
@@ -1301,34 +1218,40 @@ close_vfs_req    Endp
 
 ReqHandleToSel  Proc near
     push ds
+    push eax
     push esi
 ;
-    mov si,SEG data
-    mov ds,si
-    or bh,bh
-    jz rqhsFail
+    mov eax,ebx
+    shr eax,16
+    cmp ah,VFS_REQ_SIG
+    jne rqhsFail
 ;
-    cmp bh,MAX_PART_COUNT
+    call HandleToDisc
+    jc rqhsFail
+;
+    mov ds,eax
+    cmp bh,MAX_VFS_PARTITIONS
     ja rqhsFail
 ;
     movzx esi,bh
+    or esi,esi
+    jz rqhsDisc
+
+rqhsPart:
     dec esi
-    add esi,esi
-    mov si,ds:[esi].part_arr
-    or si,si
-    jz rqhsFail
-;
-    mov fs,si
-    or bl,bl
-    jz rqhsFail
-;
-    cmp bl,MAX_VFS_REQ_COUNT
-    ja rqhsFail
-;
+    mov ax,ds:[2*esi].vfs_part_arr
+    or ax,ax
+    jnz rqhsReq
+    jmp rqhsFail
+
+rqhsDisc:
+    mov ax,ds:vfs_my_part
+
+rqhsReq:
+    mov fs,eax
     movzx esi,bl
     dec esi
-    shl esi,1
-    mov si,fs:[esi].vfsp_req_arr
+    mov si,fs:[2*esi].vfsp_req_arr
     or si,si
     jz rqhsFail
 ;
@@ -1341,6 +1264,7 @@ rqhsFail:
 
 rqhsDone:
     pop esi
+    pop eax
     pop ds
     ret
 ReqHandleToSel  Endp
@@ -1659,21 +1583,40 @@ add_vfs_sectors    Proc far
     push edi
     push ebp
 ;
-    mov si,SEG data
-    mov ds,si
-    or bh,bh
-    jz arsFail
+    push eax
+    mov eax,ebx
+    shr eax,24
+    cmp al,VFS_REQ_SIG
+    pop eax
+    jne arsFail
 ;
-    cmp bh,MAX_PART_COUNT
+    push eax
+    mov eax,ebx
+    shr eax,16
+    call HandleToDisc
+    mov ebp,eax
+    pop eax
+    jc arsFail
+;
+    mov ds,ebp
+    cmp bh,MAX_VFS_PARTITIONS
     ja arsFail
 ;
     movzx esi,bh
+    or esi,esi
+    jz arsDisc
+
+arsPart:
     dec esi
-    add esi,esi
-    mov si,ds:[esi].part_arr
+    mov si,ds:[2*esi].vfs_part_arr
     or si,si
-    jz arsFail
-;
+    jnz arsPartOk
+    jmp arsFail
+
+arsDisc:
+    mov si,ds:vfs_my_part
+
+arsPartOk:
     mov fs,si
     or bl,bl
     jz arsFail
@@ -1702,7 +1645,6 @@ add_vfs_sectors    Proc far
     sbb edi,0
     jc arsFail
 ;
-    mov ds,fs:vfsp_disc_sel
     mov si,serv_flat_sel
     mov es,si
 ;
@@ -1867,22 +1809,36 @@ remove_vfs_sectors    Proc far
     push gs
     pushad
 ;
-    mov si,SEG data
-    mov ds,si
-    or bh,bh
-    jz rrsDone
+    mov ebp,eax
 ;
-    cmp bh,MAX_PART_COUNT
+    mov eax,ebx
+    shr eax,16
+    cmp ah,VFS_REQ_SIG
+    jne rrsDone
+;
+    call HandleToDisc
+    jc rrsDone
+;
+    mov ds,eax
+    cmp bh,MAX_VFS_PARTITIONS
     ja rrsDone
 ;
     movzx esi,bh
+    or esi,esi
+    jz rrsDisc
+
+rrsPart:
     dec esi
-    add esi,esi
-    mov si,ds:[esi].part_arr
-    or si,si
-    jz rrsDone
-;
-    mov fs,si
+    mov ax,ds:[2*esi].vfs_part_arr
+    or ax,ax
+    jnz rrsReq
+    jmp rrsDone
+
+rrsDisc:
+    mov ax,ds:vfs_my_part
+
+rrsReq:
+    mov ds,ax
     or bl,bl
     jz rrsDone
 ;
@@ -1903,7 +1859,7 @@ remove_vfs_sectors    Proc far
     mov ds,fs:vfsp_disc_sel
     mov si,serv_flat_sel
     mov es,si
-    mov edi,eax
+    mov edi,ebp
     shl edi,4
 ;
     EnterSection ds:vfs_section
