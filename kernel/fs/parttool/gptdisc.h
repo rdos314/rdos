@@ -36,6 +36,8 @@ public:
     TGptDisc(TDiscServer *server);
     ~TGptDisc();
 
+    virtual void LoadPart();
+
     void Run();
 };
 

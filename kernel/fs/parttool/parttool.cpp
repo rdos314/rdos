@@ -73,6 +73,7 @@ int main(int argc, char **argv)
 
         Server = new TDiscServer;
         Disc = CreateDisc(Server);
+        Disc->LoadPart();
 
 //        if (Mbr)
 //            Mbr->Run();

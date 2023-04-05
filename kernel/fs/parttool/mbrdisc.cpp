@@ -96,6 +96,28 @@ TMbrDisc::~TMbrDisc()
 
 /*##########################################################################
 #
+#   Name       : TMbrDisc::LoadPart
+#
+#   Purpose....: Load partitions
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMbrDisc::LoadPart()
+{
+    char *Buf;
+    TDiscReq req(FServer);
+    TDiscReqEntry e1(&req, 0, 1);
+
+    req.WaitForever();
+
+    Buf = (char *)e1.Map();
+}
+
+/*##########################################################################
+#
 #   Name       : TMbrDisc::Run
 #
 #   Purpose....: Run

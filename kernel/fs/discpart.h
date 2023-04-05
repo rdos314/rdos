@@ -63,6 +63,8 @@ public:
     TDisc(TDiscServer *server);
     virtual ~TDisc();
 
+    virtual void LoadPart() = 0;
+
     void Add(TPartition *part);
     void Remove(TPartition *part);
     void Clear();

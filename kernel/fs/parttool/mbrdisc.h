@@ -43,6 +43,8 @@ public:
     TMbrDisc(TDiscServer *server);
     ~TMbrDisc();
 
+    virtual void LoadPart();
+
     void Run();
 };
 
