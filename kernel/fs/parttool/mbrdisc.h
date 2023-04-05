@@ -30,6 +30,13 @@
 
 #include "discpart.h"
 
+class TMbrPartition : public TPartition
+{
+public:
+    TMbrPartition(TDisc *Disc, long long StartSector, long long SectorCount);
+    virtual ~TMbrPartition();
+};
+
 class TMbrDisc : public TDisc
 {
 public:

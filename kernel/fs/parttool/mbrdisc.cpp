@@ -34,6 +34,37 @@
 
 /*##########################################################################
 #
+#   Name       : TMbrPartition::TMbrPartition
+#
+#   Purpose....: Mbr partition constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TMbrPartition::TMbrPartition(TDisc *Disc, long long StartSector, long long SectorCount)
+  : TPartition(Disc, StartSector, SectorCount)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TMbrPartition::~TMbrPartition
+#
+#   Purpose....: Mbr partition destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TMbrPartition::~TMbrPartition()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TMbrDisc::TMbrDisc
 #
 #   Purpose....: Mbr disc constructor
