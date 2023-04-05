@@ -43,9 +43,13 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TMbrPartition::TMbrPartition(TDisc *Disc, long long StartSector, long long SectorCount)
-  : TPartition(Disc, StartSector, SectorCount)
+TMbrPartition::TMbrPartition(const char *Data, unsigned int StartSector, unsigned int SectorCount)
+  : TPartition((long long)StartSector, (long long)SectorCount)
 {
+    if (Data)
+        memcpy(FPartData, Data, 16);
+    else
+        memset(FPartData, 0, 16);
 }
 
 /*##########################################################################
@@ -65,6 +69,128 @@ TMbrPartition::~TMbrPartition()
 
 /*##########################################################################
 #
+#   Name       : TMbrPartition::IsTable
+#
+#   Purpose....: Check for table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TMbrPartition::IsTable()
+{
+    return false;
+}
+
+/*##################  TMbrPartitionTable::TMbrPartitionTable  #############
+*   Purpose....: Partition table constructor                                                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TMbrPartitionTable::TMbrPartitionTable(const char *Data, unsigned int Start, unsigned int Size)
+ : TMbrPartition(Data, Start, Size)
+{
+    int i;
+
+    for (i = 0; i < 4; i++)
+        PartArr[i] = 0;
+}
+
+/*##################  TMbrPartitionTable::~TMbrPartitionTable  #############
+*   Purpose....: Partition table destructor                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TMbrPartitionTable::~TMbrPartitionTable()
+{
+}
+
+/*##################  TMbrPartitionTable::IsTable  #############
+*   Purpose....: Check if entry is table                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+bool TMbrPartitionTable::IsTable()
+{
+    return true;
+}
+
+/*##################  TMbrPartitionTable::ProcessOne  #############
+*   Purpose....: Process one entry
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TMbrPartitionTable::ProcessOne(TDiscServer *Server, int Entry, const char *Data)
+{
+    unsigned char Type;
+    TMbrPartition *Part = 0;
+    TMbrPartitionTable *TablePart = 0;
+    unsigned int PStart;
+    unsigned PSize;
+
+    PStart = (unsigned int)FStartSector + *(unsigned int *)(Data + 8);
+    PSize = *(unsigned int *)(Data + 0xC);
+
+    Type = *(Data + 4);
+    switch (Type)
+    {
+        case 0:
+            break;
+
+        case 5:
+        case 0xF:
+            TablePart = new TMbrPartitionTable(Data, PStart, PSize);
+            Part = TablePart;
+            break;
+
+        default:
+            Part = new TMbrPartition(Data, PStart, PSize);
+            break;
+    }
+
+    if (TablePart)
+        TablePart->Process(Server);
+
+    PartArr[Entry] = Part;
+}
+
+/*##################  TMbrPartitionTable::Process  #############
+*   Purpose....: Process partition table
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TMbrPartitionTable::Process(TDiscServer *server)
+{
+    char *Buf;
+    TDiscReq req(server);
+    TDiscReqEntry e1(&req, FStartSector, 1);
+
+    req.WaitForever();
+
+    Buf = (char *)e1.Map();
+
+    if (Buf[0x1FE] == 0x55 && Buf[0x1FF] == 0xAA)
+    {
+        ProcessOne(server, 0, &Buf[0x1BE]);
+        ProcessOne(server, 1, &Buf[0x1CE]);
+        ProcessOne(server, 2, &Buf[0x1DE]);
+        ProcessOne(server, 3, &Buf[0x1EE]);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TMbrDisc::TMbrDisc
 #
 #   Purpose....: Mbr disc constructor
@@ -75,7 +201,8 @@ TMbrPartition::~TMbrPartition()
 #
 ##########################################################################*/
 TMbrDisc::TMbrDisc(TDiscServer *server)
-  : TDisc(server)
+  : TDisc(server),
+    PartRoot(0, 0, 0)
 {
 }
 
@@ -107,13 +234,7 @@ TMbrDisc::~TMbrDisc()
 ##########################################################################*/
 void TMbrDisc::LoadPart()
 {
-    char *Buf;
-    TDiscReq req(FServer);
-    TDiscReqEntry e1(&req, 0, 1);
-
-    req.WaitForever();
-
-    Buf = (char *)e1.Map();
+    PartRoot.Process(FServer);
 }
 
 /*##########################################################################

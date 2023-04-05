@@ -43,9 +43,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TPartition::TPartition(TDisc *Disc, long long StartSector, long long SectorCount)
+TPartition::TPartition(long long StartSector, long long SectorCount)
 {
-    FDisc = Disc;
     FStartSector = StartSector;
     FSectorCount = SectorCount;
     FPartType = PART_TYPE_UNKNOWN;   

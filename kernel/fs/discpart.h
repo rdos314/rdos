@@ -40,7 +40,7 @@ class TDisc;
 class TPartition
 {
 public:
-    TPartition(TDisc *Disc, long long StartSector, long long SectorCount);
+    TPartition(long long StartSector, long long SectorCount);
     virtual ~TPartition();
 
     void SetType(int PartType);
@@ -53,8 +53,6 @@ protected:
 
     long long FStartSector;
     long long FSectorCount;
-
-    TDisc *FDisc;
 };
 
 class TDisc

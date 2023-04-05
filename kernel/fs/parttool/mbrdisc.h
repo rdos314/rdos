@@ -33,8 +33,28 @@
 class TMbrPartition : public TPartition
 {
 public:
-    TMbrPartition(TDisc *Disc, long long StartSector, long long SectorCount);
+    TMbrPartition(const char *Data, unsigned int StartSector, unsigned int SectorCount);
     virtual ~TMbrPartition();
+
+    virtual bool IsTable();
+
+    char FPartData[16];
+};
+
+class TMbrPartitionTable : public TMbrPartition
+{
+public:
+    TMbrPartitionTable(const char *Data, unsigned int StartSector, unsigned int SectorCount);
+    virtual ~TMbrPartitionTable();
+
+    virtual bool IsTable();
+
+    void Process(TDiscServer *server);
+
+    TMbrPartition *PartArr[4];
+
+protected:
+    void ProcessOne(TDiscServer *server, int entry, const char *data);
 };
 
 class TMbrDisc : public TDisc
@@ -46,6 +66,8 @@ public:
     virtual void LoadPart();
 
     void Run();
+
+    TMbrPartitionTable PartRoot;
 };
 
 #endif
