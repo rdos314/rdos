@@ -28,7 +28,34 @@
 #ifndef _DISCPART_H
 #define _DISCPART_H
 
+#define PART_TYPE_UNKNOWN	0
+#define PART_TYPE_FAT12		1
+#define PART_TYPE_FAT16		2
+#define PART_TYPE_FAT32		3
+
 #include "discint.h"
+
+class TDisc;
+
+class TPartition
+{
+public:
+    TPartition(TDisc *Disc, long long StartSector, long long SectorCount);
+    virtual ~TPartition();
+
+    void SetType(int PartType);
+
+    long long GetStartSector();
+    long long GetSectorCount();
+
+protected:
+    int FPartType;
+
+    long long FStartSector;
+    long long FSectorCount;
+
+    TDisc *FDisc;
+};
 
 class TDisc
 {
@@ -36,12 +63,22 @@ public:
     TDisc(TDiscServer *server);
     virtual ~TDisc();
 
+    void Add(TPartition *part);
+    void Remove(TPartition *part);
+    void Clear();
+
     virtual void OpenPart(int handle);
     virtual void ClosePart(int handle);
 
-protected:
     int FBytesPerSector;
     long long FSectorCount;
+
+    TPartition **FPartArr;
+    int FCurrPartCount;
+    int FMaxPartCount;
+
+protected:
+    void GrowPart();
 
     TDiscServer *FServer;
 };

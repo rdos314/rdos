@@ -34,6 +34,88 @@
 
 /*##########################################################################
 #
+#   Name       : TPartition::TPartition
+#
+#   Purpose....: Partition constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPartition::TPartition(TDisc *Disc, long long StartSector, long long SectorCount)
+{
+    FDisc = Disc;
+    FStartSector = StartSector;
+    FSectorCount = SectorCount;
+    FPartType = PART_TYPE_UNKNOWN;   
+}
+
+/*##########################################################################
+#
+#   Name       : TPartition::~TPartition
+#
+#   Purpose....: Partition destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPartition::~TPartition()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPartition::SetType
+#
+#   Purpose....: Set partition type
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartition::SetType(int PartType)
+{
+    FPartType = PartType;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartition::GetStartSector
+#
+#   Purpose....: Get start sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TPartition::GetStartSector()
+{
+    return FStartSector;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartition::GetSectorCount
+#
+#   Purpose....: Get sector count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TPartition::GetSectorCount()
+{
+    return FSectorCount;
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::TDisc
 #
 #   Purpose....: Disc contructor
@@ -45,10 +127,19 @@
 ##########################################################################*/
 TDisc::TDisc(TDiscServer *server)
 {
+    int i;
+
     FServer = server;
 
     FBytesPerSector = FServer->GetBytesPerSector();
     FSectorCount = FServer->GetDiscSectors();
+
+    FCurrPartCount = 0;
+    FMaxPartCount = 4;
+    FPartArr = new TPartition*[FMaxPartCount];
+
+    for (i = 0; i < FMaxPartCount; i++)
+        FPartArr[i] = 0;
 }
 
 /*##########################################################################
@@ -64,6 +155,13 @@ TDisc::TDisc(TDiscServer *server)
 ##########################################################################*/
 TDisc::~TDisc()
 {
+    int i;
+
+    for (i = 0; i < FMaxPartCount; i++)
+        if (FPartArr[i])
+            delete FPartArr[i];
+
+    delete FPartArr;
 }
 
 /*##########################################################################
@@ -94,4 +192,113 @@ void TDisc::OpenPart(int handle)
 ##########################################################################*/
 void TDisc::ClosePart(int handle)
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::GrowPart
+#
+#   Purpose....: Grow part array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisc::GrowPart()
+{
+    int i;
+    int Size = 2 * FMaxPartCount;
+    TPartition **NewArr;
+
+    NewArr = new TPartition*[Size];
+
+    for (i = 0; i < FMaxPartCount; i++)
+        NewArr[i] = FPartArr[i];
+
+    for (i = FMaxPartCount; i < Size; i++)
+        NewArr[i] = 0;
+
+    delete FPartArr;
+    FPartArr = NewArr;
+    FMaxPartCount = Size;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::Clear
+#
+#   Purpose....: Clear part array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisc::Clear()
+{
+    int i;
+
+    for (i = 0; i < FCurrPartCount; i++)
+    {
+        if (FPartArr[i])
+        {
+            delete FPartArr[i];
+            FPartArr[i] = 0;
+        }
+    }
+
+    FCurrPartCount = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::Add
+#
+#   Purpose....: Add partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisc::Add(TPartition *part)
+{
+    if (FCurrPartCount == FMaxPartCount)
+        GrowPart();
+
+    FPartArr[FCurrPartCount] = part;
+    FCurrPartCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::Remove
+#
+#   Purpose....: Remove partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisc::Remove(TPartition *part)
+{
+    int i;
+    int j;
+
+    for (i = 0; i < FCurrPartCount; i++)
+    {
+        if (FPartArr[i] == part)
+        {
+            FPartArr[i] = 0;
+            FCurrPartCount--;
+
+            for (j = i; j < FCurrPartCount; j++)
+                FPartArr[j] = FPartArr[j+1];
+
+            FPartArr[FCurrPartCount] = 0;
+            break;
+        }
+    }
 }
