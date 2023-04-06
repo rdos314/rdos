@@ -344,6 +344,31 @@ void TMbrDisc::LbaToChs(unsigned int Sector, struct TMbrChs *Entry)
 ##########################################################################*/
 void TMbrDisc::AddPossibleFs(struct TMbrPartition *part)
 {
+    bool AddIt = false;
+
+    switch (part->FPartEntry.Type)
+    {
+        case 1:
+            part->SetType(PART_TYPE_FAT12);
+            AddIt = true;
+            break;
+
+        case 4:
+        case 6:
+            part->SetType(PART_TYPE_FAT16);
+            AddIt = true;
+            break;
+
+        case 0xB:
+        case 0xC:
+            part->SetType(PART_TYPE_FAT32);
+            AddIt = true;
+            break;
+
+    }
+
+    if (AddIt)
+        Add(part);
 }
 
 /*##########################################################################
