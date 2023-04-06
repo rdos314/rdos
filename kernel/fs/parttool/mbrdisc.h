@@ -74,19 +74,21 @@ class TMbrPartitionTable;
 class TMbrPartition : public TPartition
 {
 public:
-    TMbrPartition(struct TMbrPartitionTable *Parent, struct TMbrPartitionEntry *Entry, unsigned int StartSector, unsigned int SectorCount);
+    TMbrPartition(struct TMbrPartitionTable *Parent, int Index, struct TMbrPartitionEntry *Entry, unsigned int StartSector, unsigned int SectorCount);
     virtual ~TMbrPartition();
 
     virtual bool IsTable();
 
     struct TMbrPartitionTable *FParent;
+    int FIndex;
+
     struct TMbrPartitionEntry FPartEntry;
 };
 
 class TMbrPartitionTable : public TMbrPartition
 {
 public:
-    TMbrPartitionTable(struct TMbrPartitionTable *Parent, struct TMbrPartitionEntry *Entry, unsigned int Start, unsigned int Size);
+    TMbrPartitionTable(struct TMbrPartitionTable *Parent, int Index, struct TMbrPartitionEntry *Entry, unsigned int Start, unsigned int Size);
     virtual ~TMbrPartitionTable();
 
     virtual bool IsTable();

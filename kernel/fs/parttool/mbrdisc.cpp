@@ -43,10 +43,11 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TMbrPartition::TMbrPartition(struct TMbrPartitionTable *Parent, struct TMbrPartitionEntry *Entry, unsigned int StartSector, unsigned int SectorCount)
+TMbrPartition::TMbrPartition(struct TMbrPartitionTable *Parent, int Index, struct TMbrPartitionEntry *Entry, unsigned int StartSector, unsigned int SectorCount)
   : TPartition((long long)StartSector, (long long)SectorCount)
 {
     FParent = Parent;
+    FIndex = Index;
 
     if (Entry)
         memcpy(&FPartEntry, Entry, sizeof(TMbrPartitionEntry));
@@ -92,8 +93,8 @@ bool TMbrPartition::IsTable()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TMbrPartitionTable::TMbrPartitionTable(struct TMbrPartitionTable *Parent, struct TMbrPartitionEntry *Entry, unsigned int Start, unsigned int Size)
- : TMbrPartition(Parent, Entry, Start, Size)
+TMbrPartitionTable::TMbrPartitionTable(struct TMbrPartitionTable *Parent, int Index, struct TMbrPartitionEntry *Entry, unsigned int Start, unsigned int Size)
+ : TMbrPartition(Parent, Index, Entry, Start, Size)
 {
     int i;
 
@@ -200,12 +201,12 @@ void TMbrPartitionTable::ProcessOne(TMbrDisc *Disc, int Index, struct TMbrPartit
 
         case 5:
         case 0xF:
-            TablePart = new TMbrPartitionTable(this, Entry, Start, Size);
+            TablePart = new TMbrPartitionTable(this, Index, Entry, Start, Size);
             Part = TablePart;
             break;
 
         default:
-            Part = new TMbrPartition(this, Entry, Start, Size);
+            Part = new TMbrPartition(this, Index, Entry, Start, Size);
             break;
     }
 
@@ -243,7 +244,7 @@ void TMbrPartitionTable::Process(TMbrDisc *Disc, char *Data)
 ##########################################################################*/
 TMbrDisc::TMbrDisc(TDiscServer *server)
   : TDisc(server),
-    PartRoot(0, 0, 0, 0)
+    PartRoot(0, 0, 0, 0, 0)
 {
     FSectorsPerCyl = 0;
     FHeads = 0;
