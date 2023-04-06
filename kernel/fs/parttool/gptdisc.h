@@ -58,6 +58,16 @@ struct TGptPartEntry
     short int Name[36];
 };
 
+class TGptPartition : public TPartition
+{
+public:
+    TGptPartition(int Index, struct TGptPartEntry *Entry);
+    ~TGptPartition();
+
+    int FIndex;
+    struct TGptPartEntry FEntry;
+};
+
 class TGptTable
 {
 public:
@@ -68,8 +78,13 @@ public:
 
     struct TGptPartHeader Header;
 
+    TGptPartition **FPartArr;
+    int FCurrPartCount;
+    int FMaxPartCount;
+
 protected:
     bool ReadEntryArr(TDisc *Disc);
+    void GrowPart();
 };
 
 class TGptDisc : public TDisc

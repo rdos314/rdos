@@ -81,6 +81,39 @@ static void UuidToStr(const char *uuid, char *str)
 
 /*##########################################################################
 #
+#   Name       : TGptPartition::TGptPartition
+#
+#   Purpose....: Constructor for GPT partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TGptPartition::TGptPartition(int Index, struct TGptPartEntry *Entry)
+  : TPartition(Entry->FirstLba, Entry->LastLba - Entry->FirstLba + 1)
+{
+    FIndex = Index;
+    memcpy(&FEntry, Entry, sizeof(struct TGptPartEntry));
+}
+
+/*##########################################################################
+#
+#   Name       : TGptPartition::~TGptPartition
+#
+#   Purpose....: Destructor for GPT partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TGptPartition::~TGptPartition()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TGptTable::TGptTable
 #
 #   Purpose....: Constructor for GPT table
@@ -92,6 +125,14 @@ static void UuidToStr(const char *uuid, char *str)
 ##########################################################################*/
 TGptTable::TGptTable()
 {
+    int i;
+
+    FCurrPartCount = 0;
+    FMaxPartCount = 4;
+    FPartArr = new TGptPartition*[FMaxPartCount];
+
+    for (i = 0; i < FMaxPartCount; i++)
+        FPartArr[i] = 0;
 }
 
 /*##########################################################################
@@ -107,6 +148,43 @@ TGptTable::TGptTable()
 ##########################################################################*/
 TGptTable::~TGptTable()
 {
+    int i;
+
+    for (i = 0; i < FCurrPartCount; i++)
+        if (FPartArr[i])
+            delete FPartArr[i];
+
+    delete FPartArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TGptTable::GrowPart
+#
+#   Purpose....: Grow part array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TGptTable::GrowPart()
+{
+    int i;
+    int Size = 2 * FMaxPartCount;
+    TGptPartition **NewArr;
+
+    NewArr = new TGptPartition*[Size];
+
+    for (i = 0; i < FMaxPartCount; i++)
+        NewArr[i] = FPartArr[i];
+
+    for (i = FMaxPartCount; i < Size; i++)
+        NewArr[i] = 0;
+
+    delete FPartArr;
+    FPartArr = NewArr;
+    FMaxPartCount = Size;
 }
 
 /*##########################################################################
