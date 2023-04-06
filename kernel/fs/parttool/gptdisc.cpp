@@ -235,7 +235,11 @@ TGptDisc::~TGptDisc()
 ##########################################################################*/
 void TGptDisc::LoadPart()
 {
-    PrimaryTable.ReadTable(this, 1);
+    bool ok;
+
+    ok = PrimaryTable.ReadTable(this, 1);
+    if (ok)
+        SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
 }
 
 /*##########################################################################
