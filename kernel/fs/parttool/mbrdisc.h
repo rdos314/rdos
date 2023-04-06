@@ -36,7 +36,7 @@ struct TMbrChs
     unsigned short int CylSector;
 };
 
-struct TMbrPartEntry
+struct TMbrPartitionEntry
 {
     char Status;
     struct TMbrChs ChsStart;
@@ -69,22 +69,24 @@ struct TBootParamBlock
 };
 
 class TMbrDisc;
+class TMbrPartitionTable;
 
 class TMbrPartition : public TPartition
 {
 public:
-    TMbrPartition(struct TMbrPartEntry *Entry, unsigned int StartSector, unsigned int SectorCount);
+    TMbrPartition(struct TMbrPartitionTable *Parent, struct TMbrPartitionEntry *Entry, unsigned int StartSector, unsigned int SectorCount);
     virtual ~TMbrPartition();
 
     virtual bool IsTable();
 
-    struct TMbrPartEntry FPartEntry;
+    struct TMbrPartitionTable *FParent;
+    struct TMbrPartitionEntry FPartEntry;
 };
 
 class TMbrPartitionTable : public TMbrPartition
 {
 public:
-    TMbrPartitionTable(struct TMbrPartEntry *Entry, unsigned int StartSector, unsigned int SectorCount);
+    TMbrPartitionTable(struct TMbrPartitionTable *Parent, struct TMbrPartitionEntry *Entry, unsigned int Start, unsigned int Size);
     virtual ~TMbrPartitionTable();
 
     virtual bool IsTable();
@@ -94,7 +96,7 @@ public:
     TMbrPartition *PartArr[4];
 
 protected:
-    void ProcessOne(TMbrDisc *disc, int index, struct TMbrPartEntry *entry);
+    void ProcessOne(TMbrDisc *disc, int index, struct TMbrPartitionEntry *entry);
     void ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TablePart);
 };
 

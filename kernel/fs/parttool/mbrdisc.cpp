@@ -43,13 +43,15 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TMbrPartition::TMbrPartition(struct TMbrPartEntry *Entry, unsigned int StartSector, unsigned int SectorCount)
+TMbrPartition::TMbrPartition(struct TMbrPartitionTable *Parent, struct TMbrPartitionEntry *Entry, unsigned int StartSector, unsigned int SectorCount)
   : TPartition((long long)StartSector, (long long)SectorCount)
 {
+    FParent = Parent;
+
     if (Entry)
-        memcpy(&FPartEntry, Entry, sizeof(TMbrPartEntry));
+        memcpy(&FPartEntry, Entry, sizeof(TMbrPartitionEntry));
     else
-        memset(&FPartEntry, 0, sizeof(TMbrPartEntry));
+        memset(&FPartEntry, 0, sizeof(TMbrPartitionEntry));
 }
 
 /*##########################################################################
@@ -90,8 +92,8 @@ bool TMbrPartition::IsTable()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TMbrPartitionTable::TMbrPartitionTable(struct TMbrPartEntry *Entry, unsigned int Start, unsigned int Size)
- : TMbrPartition(Entry, Start, Size)
+TMbrPartitionTable::TMbrPartitionTable(struct TMbrPartitionTable *Parent, struct TMbrPartitionEntry *Entry, unsigned int Start, unsigned int Size)
+ : TMbrPartition(Parent, Entry, Start, Size)
 {
     int i;
 
@@ -108,6 +110,11 @@ TMbrPartitionTable::TMbrPartitionTable(struct TMbrPartEntry *Entry, unsigned int
 *##########################################################################*/
 TMbrPartitionTable::~TMbrPartitionTable()
 {
+    int i;
+
+    for (i = 0; i < 4; i++)
+        if (PartArr[i])
+            delete PartArr[i];
 }
 
 /*##################  TMbrPartitionTable::IsTable  #############
@@ -151,44 +158,54 @@ void TMbrPartitionTable::ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TableP
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TMbrPartitionTable::ProcessOne(TMbrDisc *Disc, int Index, struct TMbrPartEntry *Entry)
+void TMbrPartitionTable::ProcessOne(TMbrDisc *Disc, int Index, struct TMbrPartitionEntry *Entry)
 {
     TMbrPartition *Part = 0;
     TMbrPartitionTable *TablePart = 0;
     unsigned int LbaStart;
     unsigned int LbaSize;
     unsigned int Start;
-    unsigned int End;
+    unsigned int ChsEnd;
     unsigned int Size;
+    long long LastSector;
+    char Type = Entry->Type;
 
-    LbaStart = Entry->LbaStart;
-    LbaSize = Entry->LbaCount;    
+    if (Type)
+    {
+        LbaStart = Entry->LbaStart;
+        LbaSize = Entry->LbaCount;    
 
-    if (LbaSize == 0)
-    {
-        Start = Disc->ChsToLba(&Entry->ChsStart);
-        End = Disc->ChsToLba(&Entry->ChsEnd);
-        Size = End - Start + 1;
-    }        
-    else
-    {
-        Start = (unsigned int)FStartSector + LbaStart;
-        Size = LbaSize;
+        if (LbaSize == 0)
+        {
+            Start = Disc->ChsToLba(&Entry->ChsStart);
+            ChsEnd = Disc->ChsToLba(&Entry->ChsEnd);
+            Size = ChsEnd - Start + 1;
+        }        
+        else
+        {
+            Start = (unsigned int)FStartSector + LbaStart;
+            Size = LbaSize;
+        }
+
+        LastSector = (long long)Start + (long long)Size - 1;
+
+        if (LastSector > Disc->FSectorCount)
+            Type = 0;
     }
 
-    switch (Entry->Type)
+    switch (Type)
     {
         case 0:
             break;
 
         case 5:
         case 0xF:
-            TablePart = new TMbrPartitionTable(Entry, Start, Size);
+            TablePart = new TMbrPartitionTable(this, Entry, Start, Size);
             Part = TablePart;
             break;
 
         default:
-            Part = new TMbrPartition(Entry, Start, Size);
+            Part = new TMbrPartition(this, Entry, Start, Size);
             break;
     }
 
@@ -207,10 +224,10 @@ void TMbrPartitionTable::ProcessOne(TMbrDisc *Disc, int Index, struct TMbrPartEn
 *##########################################################################*/
 void TMbrPartitionTable::Process(TMbrDisc *Disc, char *Data)
 {
-    ProcessOne(Disc, 0, (struct TMbrPartEntry *)(Data + 0x1BE));
-    ProcessOne(Disc, 1, (struct TMbrPartEntry *)(Data + 0x1CE));
-    ProcessOne(Disc, 2, (struct TMbrPartEntry *)(Data + 0x1DE));
-    ProcessOne(Disc, 3, (struct TMbrPartEntry *)(Data + 0x1EE));
+    ProcessOne(Disc, 0, (struct TMbrPartitionEntry *)(Data + 0x1BE));
+    ProcessOne(Disc, 1, (struct TMbrPartitionEntry *)(Data + 0x1CE));
+    ProcessOne(Disc, 2, (struct TMbrPartitionEntry *)(Data + 0x1DE));
+    ProcessOne(Disc, 3, (struct TMbrPartitionEntry *)(Data + 0x1EE));
 }
 
 /*##########################################################################
@@ -226,7 +243,7 @@ void TMbrPartitionTable::Process(TMbrDisc *Disc, char *Data)
 ##########################################################################*/
 TMbrDisc::TMbrDisc(TDiscServer *server)
   : TDisc(server),
-    PartRoot(0, 0, 0)
+    PartRoot(0, 0, 0, 0)
 {
     FSectorsPerCyl = 0;
     FHeads = 0;
