@@ -67,7 +67,7 @@ public:
     bool ReadTable(TDisc *Disc, long long StartSector);
 
 protected:
-    bool ReadEntryArr(TDisc *Disc, long long StartSector, long long SectorCount, unsigned int Crc32);
+    bool ReadEntryArr(TDisc *Disc, long long StartSector, int EntryCount, unsigned int Crc32);
 
     int FEntryCount;
 };

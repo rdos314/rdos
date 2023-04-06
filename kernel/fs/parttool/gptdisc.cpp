@@ -121,14 +121,15 @@ TGptTable::~TGptTable()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TGptTable::ReadEntryArr(TDisc *Disc, long long StartSector, long long SectorCount, unsigned int Crc32)
+bool TGptTable::ReadEntryArr(TDisc *Disc, long long StartSector, int EntryCount, unsigned int Crc32)
 {
     char *Buf;
+    int SectorCount = EntryCount * sizeof(struct TGptPartEntry) / Disc->FBytesPerSector;
     TDiscServer *Server = Disc->GetServer();
     TDiscReq req(Server);
     TDiscReqEntry e1(&req, StartSector, SectorCount);
     struct TPartEntry *EntryData;
-    int size;
+    int size = SectorCount * Disc->FBytesPerSector;
     unsigned int ThisCrc32;
 
     req.WaitForever();
@@ -137,8 +138,6 @@ bool TGptTable::ReadEntryArr(TDisc *Disc, long long StartSector, long long Secto
 
     EntryData = (struct TPartEntry *)Buf;
 
-    size = SectorCount * Disc->FBytesPerSector;
-                                
     ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, Buf, size);
 
     if (ThisCrc32 == Crc32)
@@ -167,6 +166,7 @@ bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
     struct TGptPartHeader *PartHeader;
     unsigned int Crc32;
     unsigned int ThisCrc32;
+    int TableSectors;
     bool ok = false;
 
     req.WaitForever();
@@ -184,7 +184,9 @@ bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
         if (Crc32 == ThisCrc32)
         {
             if (PartHeader->EntrySize == sizeof(struct TGptPartEntry))
+            {
                 ok = ReadEntryArr(Disc, PartHeader->EntryLba, PartHeader->EntryCount, PartHeader->EntryCrc32);
+            }
         }        
     }
 
@@ -235,7 +237,7 @@ TGptDisc::~TGptDisc()
 ##########################################################################*/
 void TGptDisc::LoadPart()
 {
-    PrimaryTable.ReadTable(this, 0);
+    PrimaryTable.ReadTable(this, 1);
 }
 
 /*##########################################################################
