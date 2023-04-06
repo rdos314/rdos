@@ -195,6 +195,22 @@ void TDisc::ClosePart(int handle)
 
 /*##########################################################################
 #
+#   Name       : TDisc::GetServer
+#
+#   Purpose....: Get disc server
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDiscServer *TDisc::GetServer()
+{
+    return FServer;
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::GrowPart
 #
 #   Purpose....: Grow part array

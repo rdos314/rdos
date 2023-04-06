@@ -30,31 +30,72 @@
 
 #include "discpart.h"
 
+struct TMbrChs
+{
+    unsigned char Head;
+    unsigned short int CylSector;
+};
+
+struct TMbrPartEntry
+{
+    char Status;
+    struct TMbrChs ChsStart;
+    char Type;
+    struct TMbrChs ChsEnd;
+    unsigned int LbaStart;
+    unsigned int LbaCount;
+};
+
+struct TBootParamBlock
+{
+    short int BytesPerSector;
+    char Resv1;
+    short int MappingSectors;
+    char Resv3;
+    short int Resv4;
+    short int SmallSectors;
+    char Media;
+    short int Resv6;
+    unsigned short int SectorsPerCyl;
+    unsigned short int Heads;
+    int HiddenSectors;
+    int Sectors;
+    char Drive;
+    char Resv7;
+    char Signature;
+    int Serial;
+    char Volume[11];
+    char Fs[8];
+};
+
+class TMbrDisc;
+
 class TMbrPartition : public TPartition
 {
 public:
-    TMbrPartition(const char *Data, unsigned int StartSector, unsigned int SectorCount);
+    TMbrPartition(struct TMbrPartEntry *Entry, unsigned int StartSector, unsigned int SectorCount);
     virtual ~TMbrPartition();
 
     virtual bool IsTable();
 
-    char FPartData[16];
+    struct TMbrPartEntry FPartEntry;
 };
 
 class TMbrPartitionTable : public TMbrPartition
 {
 public:
-    TMbrPartitionTable(const char *Data, unsigned int StartSector, unsigned int SectorCount);
+    TMbrPartitionTable(struct TMbrPartEntry *Entry, unsigned int StartSector, unsigned int SectorCount);
     virtual ~TMbrPartitionTable();
 
     virtual bool IsTable();
 
-    void Process(TDiscServer *server);
+    void Process(TMbrDisc *disc, char *data);
 
     TMbrPartition *PartArr[4];
 
 protected:
-    void ProcessOne(TDiscServer *server, int entry, const char *data);
+    void ProcessOne(TMbrDisc *disc, int index, struct TMbrPartEntry *entry);
+    void ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TablePart);
 };
 
 class TMbrDisc : public TDisc
@@ -63,11 +104,17 @@ public:
     TMbrDisc(TDiscServer *server);
     ~TMbrDisc();
 
+    unsigned int ChsToLba(struct TMbrChs *entry);
+    void LbaToChs(unsigned int Sector, struct TMbrChs *Entry);
+
     virtual void LoadPart();
 
     void Run();
 
     TMbrPartitionTable PartRoot;
+
+    int FSectorsPerCyl;
+    int FHeads;
 };
 
 #endif

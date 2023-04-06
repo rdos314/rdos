@@ -43,13 +43,13 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TMbrPartition::TMbrPartition(const char *Data, unsigned int StartSector, unsigned int SectorCount)
+TMbrPartition::TMbrPartition(struct TMbrPartEntry *Entry, unsigned int StartSector, unsigned int SectorCount)
   : TPartition((long long)StartSector, (long long)SectorCount)
 {
-    if (Data)
-        memcpy(FPartData, Data, 16);
+    if (Entry)
+        memcpy(&FPartEntry, Entry, sizeof(TMbrPartEntry));
     else
-        memset(FPartData, 0, 16);
+        memset(&FPartEntry, 0, sizeof(TMbrPartEntry));
 }
 
 /*##########################################################################
@@ -90,8 +90,8 @@ bool TMbrPartition::IsTable()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TMbrPartitionTable::TMbrPartitionTable(const char *Data, unsigned int Start, unsigned int Size)
- : TMbrPartition(Data, Start, Size)
+TMbrPartitionTable::TMbrPartitionTable(struct TMbrPartEntry *Entry, unsigned int Start, unsigned int Size)
+ : TMbrPartition(Entry, Start, Size)
 {
     int i;
 
@@ -122,6 +122,24 @@ bool TMbrPartitionTable::IsTable()
     return true;
 }
 
+/*##################  TMbrPartitionTable::ProcessTable  #############
+*   Purpose....: Process table
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TMbrPartitionTable::ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TablePart)
+{
+    TDiscServer *server = Disc->GetServer();
+    TDiscReq req(server);
+    TDiscReqEntry e1(&req, TablePart->FStartSector, 1);
+
+    req.WaitForever();
+
+    TablePart->Process(Disc, (char *)e1.Map());
+}
+
 /*##################  TMbrPartitionTable::ProcessOne  #############
 *   Purpose....: Process one entry
 *   In params..: *                                                        #
@@ -129,38 +147,51 @@ bool TMbrPartitionTable::IsTable()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TMbrPartitionTable::ProcessOne(TDiscServer *Server, int Entry, const char *Data)
+void TMbrPartitionTable::ProcessOne(TMbrDisc *Disc, int Index, struct TMbrPartEntry *Entry)
 {
-    unsigned char Type;
     TMbrPartition *Part = 0;
     TMbrPartitionTable *TablePart = 0;
-    unsigned int PStart;
-    unsigned PSize;
+    unsigned int LbaStart;
+    unsigned int LbaSize;
+    unsigned int Start;
+    unsigned int End;
+    unsigned int Size;
 
-    PStart = (unsigned int)FStartSector + *(unsigned int *)(Data + 8);
-    PSize = *(unsigned int *)(Data + 0xC);
+    LbaStart = Entry->LbaStart;
+    LbaSize = Entry->LbaCount;    
 
-    Type = *(Data + 4);
-    switch (Type)
+    if (LbaSize == 0)
+    {
+        Start = Disc->ChsToLba(&Entry->ChsStart);
+        End = Disc->ChsToLba(&Entry->ChsEnd);
+        Size = End - Start + 1;
+    }        
+    else
+    {
+        Start = (unsigned int)FStartSector + LbaStart;
+        Size = LbaSize;
+    }
+
+    switch (Entry->Type)
     {
         case 0:
             break;
 
         case 5:
         case 0xF:
-            TablePart = new TMbrPartitionTable(Data, PStart, PSize);
+            TablePart = new TMbrPartitionTable(Entry, Start, Size);
             Part = TablePart;
             break;
 
         default:
-            Part = new TMbrPartition(Data, PStart, PSize);
+            Part = new TMbrPartition(Entry, Start, Size);
             break;
     }
 
     if (TablePart)
-        TablePart->Process(Server);
+        ProcessTable(Disc, TablePart);
 
-    PartArr[Entry] = Part;
+    PartArr[Index] = Part;
 }
 
 /*##################  TMbrPartitionTable::Process  #############
@@ -170,22 +201,14 @@ void TMbrPartitionTable::ProcessOne(TDiscServer *Server, int Entry, const char *
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TMbrPartitionTable::Process(TDiscServer *server)
+void TMbrPartitionTable::Process(TMbrDisc *Disc, char *Data)
 {
-    char *Buf;
-    TDiscReq req(server);
-    TDiscReqEntry e1(&req, FStartSector, 1);
-
-    req.WaitForever();
-
-    Buf = (char *)e1.Map();
-
-    if (Buf[0x1FE] == 0x55 && Buf[0x1FF] == 0xAA)
+    if (Data[0x1FE] == 0x55 && Data[0x1FF] == 0xAA)
     {
-        ProcessOne(server, 0, &Buf[0x1BE]);
-        ProcessOne(server, 1, &Buf[0x1CE]);
-        ProcessOne(server, 2, &Buf[0x1DE]);
-        ProcessOne(server, 3, &Buf[0x1EE]);
+        ProcessOne(Disc, 0, (struct TMbrPartEntry *)(Data + 0x1BE));
+        ProcessOne(Disc, 1, (struct TMbrPartEntry *)(Data + 0x1CE));
+        ProcessOne(Disc, 2, (struct TMbrPartEntry *)(Data + 0x1DE));
+        ProcessOne(Disc, 3, (struct TMbrPartEntry *)(Data + 0x1EE));
     }
 }
 
@@ -204,6 +227,8 @@ TMbrDisc::TMbrDisc(TDiscServer *server)
   : TDisc(server),
     PartRoot(0, 0, 0)
 {
+    FSectorsPerCyl = 0;
+    FHeads = 0;
 }
 
 /*##########################################################################
@@ -221,6 +246,73 @@ TMbrDisc::~TMbrDisc()
 {
 }
 
+/*##################  TMbrDisc::ChsToLba  #############
+*   Purpose....: Convert CHS to LBA                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+unsigned int TMbrDisc::ChsToLba(struct TMbrChs *Entry)
+{
+    unsigned char cs[2];
+    int BiosHead;
+    int BiosSector;
+    int BiosCyl;
+
+    memcpy(cs, &Entry->CylSector, 2);
+
+    BiosCyl = cs[1];
+    BiosCyl += (cs[0] & 0xC0) << 2;
+    BiosSector = cs[0] & 0x3F;
+    BiosHead = Entry->Head;
+
+    if (BiosCyl == 1023)
+        return 0;
+
+    if (BiosSector == 0)
+        return 0;
+
+    return BiosSector + FSectorsPerCyl * (BiosHead + FHeads * BiosCyl) - 1;
+}
+
+/*##################  TMbrDisc::LbaToChs  #############
+*   Purpose....: Convert LBA to CHS                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TMbrDisc::LbaToChs(unsigned int Sector, struct TMbrChs *Entry)
+{
+    int BiosHead;
+    int BiosSector;
+    int BiosCyl;
+    unsigned char cs[2];
+
+    BiosCyl = Sector / FSectorsPerCyl / FHeads;
+    if (BiosCyl >= 1024)
+    {
+        BiosCyl = 1023;
+        BiosHead = FHeads - 1;
+        BiosSector = FSectorsPerCyl;
+    }
+    else
+    {
+        Sector = Sector - BiosCyl * FSectorsPerCyl * FHeads;
+        BiosHead = Sector / FSectorsPerCyl;
+        BiosSector = Sector - BiosHead * FSectorsPerCyl + 1;
+    }
+
+    Entry->Head = BiosHead;
+
+    cs[0] = (unsigned char)BiosSector;
+    cs[1] = (unsigned char)BiosCyl;
+    cs[0] |= (unsigned char)((BiosCyl >> 2) & 0xC0);
+
+    memcpy(&Entry->CylSector, cs, 2);
+}
+
 /*##########################################################################
 #
 #   Name       : TMbrDisc::LoadPart
@@ -234,7 +326,22 @@ TMbrDisc::~TMbrDisc()
 ##########################################################################*/
 void TMbrDisc::LoadPart()
 {
-    PartRoot.Process(FServer);
+    struct TBootParamBlock *bpb;
+    char *Buf;
+    TDiscReq req(FServer);
+    TDiscReqEntry e1(&req, 0, 1);
+
+    req.WaitForever();
+
+    Buf = (char *)e1.Map();
+
+    if (Buf[0x1FE] == 0x55 && Buf[0x1FF] == 0xAA)
+    {
+        bpb = (struct TBootParamBlock *)(Buf + 11);
+        FSectorsPerCyl = bpb->SectorsPerCyl;
+        FHeads = bpb->Heads;
+        PartRoot.Process(this, Buf);
+    }
 }
 
 /*##########################################################################
