@@ -115,6 +115,10 @@ public:
 
     TMbrPartitionTable PartRoot;
 
+protected:
+    void AddPossibleFs(struct TMbrPartition *part);
+    void AddFsParts(struct TMbrPartitionTable *table);
+
     int FSectorsPerCyl;
     int FHeads;
 };

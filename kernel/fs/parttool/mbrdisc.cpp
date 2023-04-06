@@ -333,6 +333,50 @@ void TMbrDisc::LbaToChs(unsigned int Sector, struct TMbrChs *Entry)
 
 /*##########################################################################
 #
+#   Name       : TMbrDisc::AddPossibleFs
+#
+#   Purpose....: Add possible FS part
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMbrDisc::AddPossibleFs(struct TMbrPartition *part)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TMbrDisc::AddFsParts
+#
+#   Purpose....: Add usable FS parts
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMbrDisc::AddFsParts(struct TMbrPartitionTable *table)
+{
+    int i;
+    struct TMbrPartition *part;
+
+    for (i = 0; i < 4; i++)
+    {
+        part = table->PartArr[i];
+        if (part)
+        {
+            if (part->IsTable())
+                AddFsParts((struct TMbrPartitionTable *)part);
+            else
+                AddPossibleFs(part);
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TMbrDisc::LoadPart
 #
 #   Purpose....: Load partitions
@@ -359,6 +403,8 @@ void TMbrDisc::LoadPart()
         FSectorsPerCyl = bpb->SectorsPerCyl;
         FHeads = bpb->Heads;
         PartRoot.Process(this, Buf);
+
+        AddFsParts(&PartRoot);
     }
 }
 
