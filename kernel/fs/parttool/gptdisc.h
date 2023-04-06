@@ -30,6 +30,48 @@
 
 #include "discpart.h"
 
+struct TGptPartHeader
+{
+    char Sign[8];
+    char Revision[4];
+    int HeaderSize;
+    unsigned int Crc32;
+    int Resv;
+    long long CurrLba;
+    long long OtherLba;
+    long long FirstLba;
+    long long LastLba;
+    char Guid[16];
+    long long EntryLba;
+    int EntryCount;
+    int EntrySize;
+    int EntryCrc32;
+};
+
+struct TGptPartEntry
+{
+    char PartGuid[16];
+    char UniqueGuid[16];
+    long long FirstLba;
+    long long LastLba;
+    long long Attrib;
+    short int Name[36];
+};
+
+class TGptTable
+{
+public:
+    TGptTable();
+    ~TGptTable();
+
+    bool ReadTable(TDisc *Disc, long long StartSector);
+
+protected:
+    bool ReadEntryArr(TDisc *Disc, long long StartSector, long long SectorCount, unsigned int Crc32);
+
+    int FEntryCount;
+};
+
 class TGptDisc : public TDisc
 {
 public:
@@ -39,6 +81,9 @@ public:
     virtual void LoadPart();
 
     void Run();
+
+    TGptTable PrimaryTable;
+    TGptTable SecondaryTable;
 };
 
 #endif

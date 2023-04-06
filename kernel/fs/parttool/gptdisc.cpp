@@ -32,6 +32,165 @@
 #include <serv.h>
 #include "gptdisc.h"
 
+
+/*##########################################################################
+#
+#   Name       : UuidToStr
+#
+#   Purpose....: Convert UUID to string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void UuidToStr(const char *uuid, char *str)
+{
+    int ival;
+    int *ip;
+    short int sval;
+    short int *sp;
+
+    ip = (int *)uuid;
+    ival = *ip;
+    sprintf(str, "%08lX-", ival);
+
+    sp = (short int *)(uuid + 4); 
+    sval = *sp;
+    sprintf(str+9, "%04hX-", sval);
+    
+    sp = (short int *)(uuid + 6); 
+    sval = *sp;
+    sprintf(str+14, "%04hX-", sval);
+
+    sp = (short int *)(uuid + 8); 
+    sval = RdosSwapShort(*sp);
+    sprintf(str+19, "%04hX-", sval);
+
+    sp = (short int *)(uuid + 10); 
+    sval = RdosSwapShort(*sp);
+    sprintf(str+24, "%04hX", sval);
+
+    sp = (short int *)(uuid + 12); 
+    sval = RdosSwapShort(*sp);
+    sprintf(str+28, "%04hX", sval);
+
+    sp = (short int *)(uuid + 14); 
+    sval = RdosSwapShort(*sp);
+    sprintf(str+32, "%04hX", sval);
+}
+
+/*##########################################################################
+#
+#   Name       : TGptTable::TGptTable
+#
+#   Purpose....: Constructor for GPT table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TGptTable::TGptTable()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TGptTable::~TGptTable
+#
+#   Purpose....: Destructor for GPT table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TGptTable::~TGptTable()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TGptTable::ReadEntryArr
+#
+#   Purpose....: Read entry array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TGptTable::ReadEntryArr(TDisc *Disc, long long StartSector, long long SectorCount, unsigned int Crc32)
+{
+    char *Buf;
+    TDiscServer *Server = Disc->GetServer();
+    TDiscReq req(Server);
+    TDiscReqEntry e1(&req, StartSector, SectorCount);
+    struct TPartEntry *EntryData;
+    int size;
+    unsigned int ThisCrc32;
+
+    req.WaitForever();
+
+    Buf = (char *)e1.Map();
+
+    EntryData = (struct TPartEntry *)Buf;
+
+    size = SectorCount * Disc->FBytesPerSector;
+                                
+    ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, Buf, size);
+
+    if (ThisCrc32 == Crc32)
+        return true;
+    else
+        return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TGptTable::ReadTable
+#
+#   Purpose....: Read table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
+{
+    char *Buf;
+    TDiscServer *Server = Disc->GetServer();
+    TDiscReq req(Server);
+    TDiscReqEntry e1(&req, StartSector, 1);
+    struct TGptPartHeader *PartHeader;
+    unsigned int Crc32;
+    unsigned int ThisCrc32;
+    bool ok = false;
+
+    req.WaitForever();
+
+    Buf = (char *)e1.Map();
+
+    PartHeader = (struct TGptPartHeader *)Buf;
+
+    if (!strcmp(PartHeader->Sign, "EFI PART"))
+    {
+        Crc32 = PartHeader->Crc32;
+        PartHeader->Crc32 = 0;
+        ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, Buf, PartHeader->HeaderSize);
+
+        if (Crc32 == ThisCrc32)
+        {
+            if (PartHeader->EntrySize == sizeof(struct TGptPartEntry))
+                ok = ReadEntryArr(Disc, PartHeader->EntryLba, PartHeader->EntryCount, PartHeader->EntryCrc32);
+        }        
+    }
+
+    return ok;
+}
+
 /*##########################################################################
 #
 #   Name       : TGptDisc::TGptDisc
@@ -76,6 +235,7 @@ TGptDisc::~TGptDisc()
 ##########################################################################*/
 void TGptDisc::LoadPart()
 {
+    PrimaryTable.ReadTable(this, 0);
 }
 
 /*##########################################################################
