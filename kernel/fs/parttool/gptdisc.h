@@ -66,10 +66,10 @@ public:
 
     bool ReadTable(TDisc *Disc, long long StartSector);
 
-protected:
-    bool ReadEntryArr(TDisc *Disc, long long StartSector, int EntryCount, unsigned int Crc32);
+    struct TGptPartHeader Header;
 
-    int FEntryCount;
+protected:
+    bool ReadEntryArr(TDisc *Disc);
 };
 
 class TGptDisc : public TDisc

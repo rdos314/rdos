@@ -32,7 +32,6 @@
 #include <serv.h>
 #include "gptdisc.h"
 
-
 /*##########################################################################
 #
 #   Name       : UuidToStr
@@ -121,13 +120,13 @@ TGptTable::~TGptTable()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TGptTable::ReadEntryArr(TDisc *Disc, long long StartSector, int EntryCount, unsigned int Crc32)
+bool TGptTable::ReadEntryArr(TDisc *Disc)
 {
     char *Buf;
-    int SectorCount = EntryCount * sizeof(struct TGptPartEntry) / Disc->FBytesPerSector;
+    int SectorCount = Header.EntryCount * sizeof(struct TGptPartEntry) / Disc->FBytesPerSector;
     TDiscServer *Server = Disc->GetServer();
     TDiscReq req(Server);
-    TDiscReqEntry e1(&req, StartSector, SectorCount);
+    TDiscReqEntry e1(&req, Header.EntryLba, SectorCount);
     struct TPartEntry *EntryData;
     int size = SectorCount * Disc->FBytesPerSector;
     unsigned int ThisCrc32;
@@ -140,7 +139,7 @@ bool TGptTable::ReadEntryArr(TDisc *Disc, long long StartSector, int EntryCount,
 
     ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, Buf, size);
 
-    if (ThisCrc32 == Crc32)
+    if (ThisCrc32 == Header.EntryCrc32)
         return true;
     else
         return false;
@@ -163,7 +162,6 @@ bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
     TDiscServer *Server = Disc->GetServer();
     TDiscReq req(Server);
     TDiscReqEntry e1(&req, StartSector, 1);
-    struct TGptPartHeader *PartHeader;
     unsigned int Crc32;
     unsigned int ThisCrc32;
     int TableSectors;
@@ -172,20 +170,20 @@ bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
     req.WaitForever();
 
     Buf = (char *)e1.Map();
+    memcpy(&Header, Buf, sizeof(struct TGptPartHeader));
 
-    PartHeader = (struct TGptPartHeader *)Buf;
-
-    if (!strcmp(PartHeader->Sign, "EFI PART"))
+    if (!strcmp(Header.Sign, "EFI PART"))
     {
-        Crc32 = PartHeader->Crc32;
-        PartHeader->Crc32 = 0;
-        ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, Buf, PartHeader->HeaderSize);
+        Crc32 = Header.Crc32;
+        Header.Crc32 = 0;
+        ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, (const char *)&Header, Header.HeaderSize);
+        Header.Crc32 = Crc32;
 
         if (Crc32 == ThisCrc32)
         {
-            if (PartHeader->EntrySize == sizeof(struct TGptPartEntry))
+            if (Header.EntrySize == sizeof(struct TGptPartEntry))
             {
-                ok = ReadEntryArr(Disc, PartHeader->EntryLba, PartHeader->EntryCount, PartHeader->EntryCrc32);
+                ok = ReadEntryArr(Disc);
             }
         }        
     }
