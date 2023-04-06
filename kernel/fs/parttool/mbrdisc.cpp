@@ -131,13 +131,17 @@ bool TMbrPartitionTable::IsTable()
 *##########################################################################*/
 void TMbrPartitionTable::ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TablePart)
 {
+    char *Data;
     TDiscServer *server = Disc->GetServer();
     TDiscReq req(server);
     TDiscReqEntry e1(&req, TablePart->FStartSector, 1);
 
     req.WaitForever();
 
-    TablePart->Process(Disc, (char *)e1.Map());
+    Data = (char *)e1.Map();
+
+    if (Data[0x1FE] == 0x55 && Data[0x1FF] == 0xAA)
+        TablePart->Process(Disc, Data);
 }
 
 /*##################  TMbrPartitionTable::ProcessOne  #############
@@ -203,13 +207,10 @@ void TMbrPartitionTable::ProcessOne(TMbrDisc *Disc, int Index, struct TMbrPartEn
 *##########################################################################*/
 void TMbrPartitionTable::Process(TMbrDisc *Disc, char *Data)
 {
-    if (Data[0x1FE] == 0x55 && Data[0x1FF] == 0xAA)
-    {
-        ProcessOne(Disc, 0, (struct TMbrPartEntry *)(Data + 0x1BE));
-        ProcessOne(Disc, 1, (struct TMbrPartEntry *)(Data + 0x1CE));
-        ProcessOne(Disc, 2, (struct TMbrPartEntry *)(Data + 0x1DE));
-        ProcessOne(Disc, 3, (struct TMbrPartEntry *)(Data + 0x1EE));
-    }
+    ProcessOne(Disc, 0, (struct TMbrPartEntry *)(Data + 0x1BE));
+    ProcessOne(Disc, 1, (struct TMbrPartEntry *)(Data + 0x1CE));
+    ProcessOne(Disc, 2, (struct TMbrPartEntry *)(Data + 0x1DE));
+    ProcessOne(Disc, 3, (struct TMbrPartEntry *)(Data + 0x1EE));
 }
 
 /*##########################################################################
