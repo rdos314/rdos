@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-608
-341
+1104
+0
 8320
 9216
 2
@@ -55,13 +55,13 @@ WFileName
 7
 vfs.tgt
 0
-4
+6
 14
 VComponent
 15
 WRect
 2176
-640
+635
 5680
 4096
 0
@@ -95,7 +95,7 @@ WRect
 1856
 2048
 5680
-4266
+4257
 0
 0
 22
@@ -108,10 +108,10 @@ disclib.tgt
 VComponent
 24
 WRect
-933
-930
-5690
-4326
+928
+929
+5685
+4323
 0
 0
 25
@@ -120,4 +120,4 @@ WFileName
 parttool.tgt
 0
 0
-23
+11
