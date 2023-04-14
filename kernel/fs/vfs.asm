@@ -48,7 +48,6 @@ code    SEGMENT byte public 'CODE'
 
     extern init_buf:near
     extern init_server:near
-    extern init_part:near
     extern init_disc:near
     extern init_dir:near
     extern init_client_file:near
@@ -59,6 +58,7 @@ code    SEGMENT byte public 'CODE'
     extern CreateBuffer:near
     extern CreateDiscSel:near
     extern InitPartSel:near
+    extern AddDisc:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -126,7 +126,11 @@ CalcParam    Endp
 
 disc_thread:
     mov ds,bx
-    call init_part
+    mov eax,1000h
+    AllocateBigServ
+    mov ds:vfs_map_entry,edx
+;
+    call AddDisc
     call HandleDiscMsg
     TerminateThread
                
