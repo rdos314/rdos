@@ -971,7 +971,6 @@ is_vfs_active    Proc far
     ret
 is_vfs_active    Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1043,6 +1042,54 @@ cpsDone:
 CreatePartSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LoadPartServer
+;
+;       DESCRIPTION:    Load part server
+;
+;       PARAMETERS:     DS         VFS sel
+;                       BX         Part sel
+;                       CS:ESI     Partition name
+;                       CS:EDI     Server name
+;
+;       RETURNS:        BX         Part handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadPartServer  Proc near
+    push ds
+    push es
+    push fs
+    push eax
+;
+    mov fs,bx
+    AllocateVfsDrive
+    mov fs:vfsp_drive_nr,al
+    movzx ebx,al
+    shl ebx,1
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:[ebx].drive_arr,fs
+;
+    mov ax,cs
+    mov ds,eax
+    mov es,eax
+    mov al,4
+    mov bh,fs:vfsp_disc_nr
+    mov bl,fs:vfsp_part_nr
+    LoadServer
+;
+    mov fs:vfsp_app_sel,bx
+;
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+LoadPartServer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           LoadVfsPart
@@ -1060,17 +1107,40 @@ CreatePartSel   Endp
 
 serv_load_part_name       DB 'Load VFS Part',0
 
+fat_server  DB 'fat', 0
+
+fat12_fs    DB 'FAT12', 0
+fat16_fs    DB 'FAT16', 0
+fat32_fs    DB 'FAT32', 0
+
+sl_tab:
+slt00   DD 0, 0
+slt01   DD OFFSET fat_server,  OFFSET fat12_fs
+slt02   DD OFFSET fat_server,  OFFSET fat16_fs
+slt03   DD OFFSET fat_server,  OFFSET fat32_fs
+
 serv_load_part    Proc far
     push ds
     push fs
+    push ecx
+    push esi
+    push edi
 ;
     call HandleToPartFs
     jc lpDone
 ;
     mov ds,fs:vfsp_disc_sel
     call CreatePartSel   
+;
+    shl ecx,3
+    mov esi,cs:[ecx].sl_tab
+    mov edi,cs:[ecx].sl_tab+4
+    call LoadPartServer
 
 lpDone:
+    pop edi
+    pop esi
+    pop ecx
     pop fs
     pop ds
     ret
