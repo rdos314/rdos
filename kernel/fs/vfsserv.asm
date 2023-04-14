@@ -137,76 +137,6 @@ InitPartSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           TempCreatePartSel
-;
-;       DESCRIPTION:    Create partition selector
-;
-;       PARAMETERS:     DS      VFS sel
-;
-;       RETURNS:        BX      Part sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TempCreatePartSel  Proc near
-    push ds
-    push es
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov ecx,MAX_VFS_PARTITIONS
-    mov esi,OFFSET vfs_part_arr
-
-tcpsLoop:
-    mov ax,ds:[esi]
-    or ax,ax
-    jz tcpsFound
-;
-    add esi,2
-    loop tcpsLoop
-;
-    stc
-    jmp tcpsDone
-
-tcpsFound:
-    mov eax,SIZE vfs_file_part
-    AllocateSmallGlobalMem
-    mov ecx,eax
-    xor edi,edi
-    xor al,al
-    rep stos byte ptr es:[edi]
-;
-    mov eax,ds:vfs_curr_start_sector
-    mov edx,ds:vfs_curr_start_sector+4
-    mov esi,ds:vfs_curr_sector_count
-    mov edi,ds:vfs_curr_sector_count+4
-    call InitPartSel
-    call InitFilePart
-;
-    mov ds:[esi],es
-    mov eax,esi
-    sub eax,OFFSET vfs_part_arr
-    shr eax,1
-    mov es:vfsp_part_nr,al
-    mov bx,es
-    clc
-
-tcpsDone:
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop eax
-    pop es
-    pop ds
-    ret
-TempCreatePartSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           AddDisc
 ;
 ;       DESCRIPTION:    Add disc
@@ -250,25 +180,94 @@ AddDisc   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           AddFatPartition
+;       NAME:           CreatePartSel
 ;
-;       DESCRIPTION:    Add FAT partition
+;       DESCRIPTION:    Create partition selector
 ;
-;       PARAMETERS:     DS      VFS sel
-;                       ES:EDI  Partition name
+;       PARAMETERS:     DS         VFS sel
+;                       EDX:EAX    Start sector
+;                       EDI:ESI    Sector count
+;
+;       RETURNS:        BX      Part sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-fat_serv_name  DB 'fat', 0
+CreatePartSel  Proc near
+    push es
+    push ecx
+;
+    push eax
+    push esi
+    push edi
+;
+    mov ecx,MAX_VFS_PARTITIONS
+    mov esi,OFFSET vfs_part_arr
 
-AddFatPartition   Proc near
+cpsLoop:
+    mov ax,ds:[esi]
+    or ax,ax
+    jz cpsFound
+;
+    add esi,2
+    loop cpsLoop
+;
+    pop edi
+    pop esi
+    pop eax
+    stc
+
+    jmp cpsDone
+
+cpsFound:
+    mov ebx,esi
+    mov eax,SIZE vfs_file_part
+    AllocateSmallGlobalMem
+    mov ecx,eax
+    xor edi,edi
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    pop edi
+    pop esi
+    pop eax
+;
+    call InitPartSel
+    call InitFilePart
+;
+    mov ds:[ebx],es
+    sub ebx,OFFSET vfs_part_arr
+    shr ebx,1
+    mov es:vfsp_part_nr,bl
+    mov bx,es
+    clc
+
+cpsDone:
+    pop ecx
+    pop es
+    ret
+CreatePartSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           LoadPartServer
+;
+;       DESCRIPTION:    Load part server
+;
+;       PARAMETERS:     DS         VFS sel
+;                       BX         Part sel
+;                       CS:ESI     Partition name
+;                       CS:EDI     Server name
+;
+;       RETURNS:        BX         Part handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadPartServer  Proc near
     push ds
     push es
     push fs
-    pushad
-;
-    call TempCreatePartSel
-    jc afpDone
+    push eax
 ;
     mov fs,bx
     AllocateVfsDrive
@@ -279,24 +278,9 @@ AddFatPartition   Proc near
     mov ds,ax
     mov ds:[ebx].drive_arr,fs
 ;
-    mov ax,es
-    mov ds,ax
-    mov esi,edi
-    mov eax,6
-    AllocateSmallGlobalMem
-    xor edi,edi
-    movs dword ptr es:[edi],ds:[esi]
-    movs byte ptr es:[edi],ds:[esi]
-    xor al,al
-    stos byte ptr es:[edi]
-;
-    mov ax,es
-    mov ds,ax
-    xor esi,esi
-;
     mov ax,cs
-    mov es,ax
-    mov edi,OFFSET fat_serv_name
+    mov ds,eax
+    mov es,eax
     mov al,4
     mov bh,fs:vfsp_disc_nr
     mov bl,fs:vfsp_part_nr
@@ -304,51 +288,12 @@ AddFatPartition   Proc near
 ;
     mov fs:vfsp_app_sel,bx
 ;
-    mov ax,ds
-    mov es,ax
-    xor ax,ax
-    mov ds,ax
-    FreeMem
-
-afpDone:
-    popad
+    pop eax
     pop fs
     pop es
     pop ds
     ret
-AddFatPartition   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           AddPartition
-;
-;       DESCRIPTION:    Add partition
-;
-;       PARAMETERS:     DS      VFS sel
-;                       ES:EDI  Partition name
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public AddPartition
-
-AddPartition   Proc near
-    push eax
-;
-    mov ax,es:[edi]
-    cmp ax,'AF'
-    jne apNotFat
-;
-    mov al,es:[edi+2]
-    cmp al,'T'
-    jne apNotFat
-;
-    call AddFatPartition
-
-apNotFat:
-    pop eax
-    ret
-AddPartition   Endp
+LoadPartServer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -906,124 +851,6 @@ is_vfs_active    Proc far
     pop es
     ret
 is_vfs_active    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreatePartSel
-;
-;       DESCRIPTION:    Create partition selector
-;
-;       PARAMETERS:     DS         VFS sel
-;                       EDX:EAX    Start sector
-;                       EDI:ESI    Sector count
-;
-;       RETURNS:        BX      Part sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreatePartSel  Proc near
-    push es
-    push ecx
-;
-    push eax
-    push esi
-    push edi
-;
-    mov ecx,MAX_VFS_PARTITIONS
-    mov esi,OFFSET vfs_part_arr
-
-cpsLoop:
-    mov ax,ds:[esi]
-    or ax,ax
-    jz cpsFound
-;
-    add esi,2
-    loop cpsLoop
-;
-    pop edi
-    pop esi
-    pop eax
-    stc
-
-    jmp cpsDone
-
-cpsFound:
-    mov ebx,esi
-    mov eax,SIZE vfs_file_part
-    AllocateSmallGlobalMem
-    mov ecx,eax
-    xor edi,edi
-    xor al,al
-    rep stos byte ptr es:[edi]
-;
-    pop edi
-    pop esi
-    pop eax
-;
-    call InitPartSel
-    call InitFilePart
-;
-    mov ds:[ebx],es
-    sub ebx,OFFSET vfs_part_arr
-    shr ebx,1
-    mov es:vfsp_part_nr,bl
-    mov bx,es
-    clc
-
-cpsDone:
-    pop ecx
-    pop es
-    ret
-CreatePartSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           LoadPartServer
-;
-;       DESCRIPTION:    Load part server
-;
-;       PARAMETERS:     DS         VFS sel
-;                       BX         Part sel
-;                       CS:ESI     Partition name
-;                       CS:EDI     Server name
-;
-;       RETURNS:        BX         Part handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadPartServer  Proc near
-    push ds
-    push es
-    push fs
-    push eax
-;
-    mov fs,bx
-    AllocateVfsDrive
-    mov fs:vfsp_drive_nr,al
-    movzx ebx,al
-    shl ebx,1
-    mov ax,SEG data
-    mov ds,ax
-    mov ds:[ebx].drive_arr,fs
-;
-    mov ax,cs
-    mov ds,eax
-    mov es,eax
-    mov al,4
-    mov bh,fs:vfsp_disc_nr
-    mov bl,fs:vfsp_part_nr
-    LoadServer
-;
-    mov fs:vfsp_app_sel,bx
-;
-    pop eax
-    pop fs
-    pop es
-    pop ds
-    ret
-LoadPartServer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
