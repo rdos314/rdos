@@ -83,6 +83,26 @@ StartVfsIoServer  MACRO
     ServGate start_vfs_io_serv_nr
                     ENDM
 
+
+; IN  EBX              VFS handle
+; IN  EDX:EAX          Start sector
+; IN  ESI:ECX          Sector count
+; IN  ES:EDI           FS type
+; OUT BX               Partition handle
+ServAddPart  MACRO
+    ServGate serv_add_part_nr
+                    ENDM
+
+; IN  EBX              VFS handle
+ServStartPart  MACRO
+    ServGate serv_start_part_nr
+                    ENDM
+
+; IN  EBX              VFS handle
+ServStopPart  MACRO
+    ServGate serv_stop_part_nr
+                    ENDM
+
 ; IN  EBX              VFS handle
 ; OUT EBX              Req handle
 CreateVfsReq  MACRO
