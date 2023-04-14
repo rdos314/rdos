@@ -138,15 +138,11 @@ AllocateFileHandle      Proc near
     jmp afhDone
 
 afhOk:
-    mov ebx,esi
-    movzx eax,ds:vfsp_part_nr
+    mov eax,esi
+    shl ebx,16
+    sub eax,OFFSET vfsp_file_arr
+    shr eax,2
     inc eax
-    shl eax,8
-    mov al,VFS_FILE_SIGN
-    shl eax,16
-    sub ebx,OFFSET vfsp_file_arr
-    shr ebx,2
-    inc ebx
     or ebx,eax
 ;
     call CreateFileSel
