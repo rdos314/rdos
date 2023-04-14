@@ -433,20 +433,3 @@ void TMbrDisc::LoadPart()
         AddFsParts(&PartRoot);
     }
 }
-
-/*##########################################################################
-#
-#   Name       : TMbrDisc::Run
-#
-#   Purpose....: Run
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TMbrDisc::Run()
-{
-    FServer->WaitForMsg(this);
-
-}

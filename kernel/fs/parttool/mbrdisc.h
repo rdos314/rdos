@@ -113,8 +113,6 @@ public:
 
     virtual void LoadPart();
 
-    void Run();
-
     TMbrPartitionTable PartRoot;
 
 protected:

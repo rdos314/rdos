@@ -317,3 +317,19 @@ void TDisc::Remove(TPartition *part)
         }
     }
 }
+
+/*##########################################################################
+#
+#   Name       : TDisc::Run
+#
+#   Purpose....: Run
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisc::Run()
+{
+    FServer->WaitForMsg(this);
+}

@@ -95,8 +95,6 @@ public:
 
     virtual void LoadPart();
 
-    void Run();
-
     TGptTable PrimaryTable;
     TGptTable SecondaryTable;
 };

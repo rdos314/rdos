@@ -62,6 +62,7 @@ public:
     virtual ~TDisc();
 
     virtual void LoadPart() = 0;
+    void Run();
 
     TDiscServer *GetServer();
 

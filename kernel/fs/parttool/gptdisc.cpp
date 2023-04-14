@@ -319,20 +319,3 @@ void TGptDisc::LoadPart()
     if (ok)
         SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
 }
-
-/*##########################################################################
-#
-#   Name       : TGptDisc::Run
-#
-#   Purpose....: Run
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TGptDisc::Run()
-{
-    FServer->WaitForMsg(this);
-
-}
