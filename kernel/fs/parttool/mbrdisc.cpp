@@ -432,4 +432,6 @@ void TMbrDisc::LoadPart()
 
         AddFsParts(&PartRoot);
     }
+
+    TDisc::LoadPart();
 }

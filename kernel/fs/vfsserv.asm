@@ -946,6 +946,7 @@ get_vfs_bytes_per_sector    Proc far
 
 gvbpsDone:
     pop es
+    ret
 get_vfs_bytes_per_sector   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -969,6 +970,36 @@ is_vfs_active    Proc far
     pop es
     ret
 is_vfs_active    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LoadVfsPart
+;
+;       DESCRIPTION:    Load partition
+;
+;       PARAMETERS:     EBX         VFS Handle
+;                       EDX:EAX     Start sector
+;                       ESI:ECX     Sector count
+;                       ES:EDI      FS name
+;
+;       RETURNS:        EBX         Partition handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_load_part_name       DB 'Load VFS Part',0
+
+serv_load_part    Proc far
+    push fs
+;
+    call HandleToPartFs
+    jc lpDone
+;
+
+lpDone:
+    pop fs
+    ret
+serv_load_part   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3428,6 +3459,12 @@ init_server    Proc near
     mov edi,OFFSET serv_wait_io_server_name
     xor cl,cl
     mov ax,serv_wait_io_serv_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_load_part
+    mov edi,OFFSET serv_load_part_name
+    xor cl,cl
+    mov ax,serv_load_part_nr
     RegisterServGate
 ;
     mov esi,OFFSET create_vfs_req

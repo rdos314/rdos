@@ -85,12 +85,12 @@ StartVfsIoServer  MACRO
 
 
 ; IN  EBX              VFS handle
+; IN  ESI              FS type
 ; IN  EDX:EAX          Start sector
-; IN  ESI:ECX          Sector count
-; IN  ES:EDI           FS type
-; OUT BX               Partition handle
-ServAddPart  MACRO
-    ServGate serv_add_part_nr
+; IN  EDI:ESI          Sector count
+; OUT EBX              Partition handle
+ServLoadPart  MACRO
+    ServGate serv_load_part_nr
                     ENDM
 
 ; IN  EBX              VFS handle

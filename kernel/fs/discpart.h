@@ -44,9 +44,12 @@ public:
     virtual ~TPartition();
 
     void SetType(int PartType);
+    int GetType();
 
     long long GetStartSector();
     long long GetSectorCount();
+
+    int Handle;
 
 protected:
     int FPartType;
@@ -61,7 +64,7 @@ public:
     TDisc(TDiscServer *server);
     virtual ~TDisc();
 
-    virtual void LoadPart() = 0;
+    virtual void LoadPart();
     void Run();
 
     TDiscServer *GetServer();

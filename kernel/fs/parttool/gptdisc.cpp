@@ -318,4 +318,6 @@ void TGptDisc::LoadPart()
     ok = PrimaryTable.ReadTable(this, 1);
     if (ok)
         SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
+
+    TDisc::LoadPart();
 }

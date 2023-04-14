@@ -43,7 +43,7 @@ int RDOSAPI ServVfsFilePhysCount(int handle);
 void RDOSAPI ServStartVfsIoServer(int handle, void *buf);
 void RDOSAPI ServWaitIoServer(int FileHandle, int CurrPos);
 
-int RDOSAPI ServAddVfsPartition(int disc, long long StartSector, long long SectorCount, const char *FsName);
+int RDOSAPI ServLoadVfsPartition(int handle, int FsType, long long StartSector, long long SectorCount);
 void RDOSAPI ServStartVfsPartition(int handle);
 void RDOSAPI ServStopVfsPartition(int handle);
 

@@ -33,7 +33,7 @@ serv_wait_io_serv_nr       = 31
 get_vfs_disc_part_nr       = 32
 start_vfs_io_serv_nr       = 33
 serv_notify_file_req_nr    = 34
-serv_add_part_nr           = 35
+serv_load_part_nr          = 35
 serv_start_part_nr         = 36
 serv_stop_part_nr          = 37
 

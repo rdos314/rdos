@@ -48,6 +48,8 @@ TPartition::TPartition(long long StartSector, long long SectorCount)
     FStartSector = StartSector;
     FSectorCount = SectorCount;
     FPartType = PART_TYPE_UNKNOWN;   
+
+    Handle = 0;
 }
 
 /*##########################################################################
@@ -79,6 +81,22 @@ TPartition::~TPartition()
 void TPartition::SetType(int PartType)
 {
     FPartType = PartType;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartition::GetType
+#
+#   Purpose....: Get partition type
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPartition::GetType()
+{
+    return FPartType;
 }
 
 /*##########################################################################
@@ -314,6 +332,39 @@ void TDisc::Remove(TPartition *part)
 
             FPartArr[FCurrPartCount] = 0;
             break;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::LoadPart
+#
+#   Purpose....: Load partitions
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisc::LoadPart()
+{
+    int PartNr;
+    TPartition *Part;
+    int Handle = FServer->GetHandle();
+    long long Start;
+    long long Size;
+    int Type;
+
+    for (PartNr = 0; PartNr < FCurrPartCount; PartNr)
+    {
+        Part = FPartArr[PartNr];
+        if (Part)
+        {
+            Start = Part->GetStartSector();
+            Size = Part->GetSectorCount();
+            Type = Part->GetType();
+            Part->Handle = ServLoadVfsPartition(Handle, Type, Start, Size);
         }
     }
 }
