@@ -971,6 +971,77 @@ is_vfs_active    Proc far
     ret
 is_vfs_active    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreatePartSel
+;
+;       DESCRIPTION:    Create partition selector
+;
+;       PARAMETERS:     DS         VFS sel
+;                       EDX:EAX    Start sector
+;                       EDI:ESI    Sector count
+;
+;       RETURNS:        BX      Part sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreatePartSel  Proc near
+    push es
+    push ecx
+;
+    push eax
+    push esi
+    push edi
+;
+    mov ecx,MAX_VFS_PARTITIONS
+    mov esi,OFFSET vfs_part_arr
+
+cpsLoop:
+    mov ax,ds:[esi]
+    or ax,ax
+    jz cpsFound
+;
+    add esi,2
+    loop cpsLoop
+;
+    pop edi
+    pop esi
+    pop eax
+    stc
+
+    jmp cpsDone
+
+cpsFound:
+    mov ebx,esi
+    mov eax,SIZE vfs_file_part
+    AllocateSmallGlobalMem
+    mov ecx,eax
+    xor edi,edi
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    pop edi
+    pop esi
+    pop eax
+;
+    call InitPartSel
+    call InitFilePart
+;
+    mov ds:[ebx],es
+    sub ebx,OFFSET vfs_part_arr
+    shr ebx,1
+    mov es:vfsp_part_nr,bl
+    mov bx,es
+    clc
+
+cpsDone:
+    pop ecx
+    pop es
+    ret
+CreatePartSel   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -979,9 +1050,9 @@ is_vfs_active    Endp
 ;       DESCRIPTION:    Load partition
 ;
 ;       PARAMETERS:     EBX         VFS Handle
+;                       ECX         Fs type
 ;                       EDX:EAX     Start sector
-;                       ESI:ECX     Sector count
-;                       ES:EDI      FS name
+;                       EDI:ESI     Sector count
 ;
 ;       RETURNS:        EBX         Partition handle
 ;
@@ -990,14 +1061,18 @@ is_vfs_active    Endp
 serv_load_part_name       DB 'Load VFS Part',0
 
 serv_load_part    Proc far
+    push ds
     push fs
 ;
     call HandleToPartFs
     jc lpDone
 ;
+    mov ds,fs:vfsp_disc_sel
+    call CreatePartSel   
 
 lpDone:
     pop fs
+    pop ds
     ret
 serv_load_part   Endp
 
