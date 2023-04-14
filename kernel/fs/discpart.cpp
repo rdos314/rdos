@@ -47,7 +47,7 @@ TPartition::TPartition(long long StartSector, long long SectorCount)
 {
     FStartSector = StartSector;
     FSectorCount = SectorCount;
-    FPartType = PART_TYPE_UNKNOWN;   
+    FPartType = PART_TYPE_UNKNOWN;
 
     Handle = 0;
 }
@@ -356,7 +356,7 @@ void TDisc::LoadPart()
     long long Size;
     int Type;
 
-    for (PartNr = 0; PartNr < FCurrPartCount; PartNr)
+    for (PartNr = 0; PartNr < FCurrPartCount; PartNr++)
     {
         Part = FPartArr[PartNr];
         if (Part)

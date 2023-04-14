@@ -1133,8 +1133,8 @@ serv_load_part    Proc far
     call CreatePartSel   
 ;
     shl ecx,3
-    mov esi,cs:[ecx].sl_tab
-    mov edi,cs:[ecx].sl_tab+4
+    mov edi,cs:[ecx].sl_tab
+    mov esi,cs:[ecx].sl_tab+4
     call LoadPartServer
 
 lpDone:

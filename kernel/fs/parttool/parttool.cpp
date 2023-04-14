@@ -61,10 +61,6 @@ int main(int argc, char **argv)
     char *ptr;
     TDiscServer *Server;
     TDisc *Disc;
-    bool cont = false;
-
-    while (!cont)
-        RdosWaitMilli(50);
 
     if (argc >= 2)
     {
@@ -74,6 +70,9 @@ int main(int argc, char **argv)
         Server = new TDiscServer;
         Disc = CreateDisc(Server);
         Disc->LoadPart();
+
+        for (;;)
+            RdosWaitMilli(50);
 
 //        if (Mbr)
 //            Mbr->Run();
