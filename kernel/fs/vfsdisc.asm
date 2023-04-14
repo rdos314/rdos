@@ -443,6 +443,68 @@ htpfDone:
 HandleToPartFs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FileHandleToPartFs
+;
+;       DESCRIPTION:    Convert from file handle to partition selector
+;
+;       PARAMETERS:     EBX         File handle
+;
+;       RETURNS:        FS          VFS part
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FileHandleToPartFs
+
+FileHandleToPartFs    Proc near
+    push eax
+    push ebx
+    push esi
+;
+    mov ax,SEG data
+    mov fs,ax
+    shr ebx,16
+    movzx eax,bh
+    dec ax
+    cmp ax,MAX_DISC_COUNT
+    jb fhtpfInRange
+
+fhtpfFail:
+    stc
+    jmp fhtpfDone
+
+fhtpfInRange:
+    movzx esi,bh
+    dec esi
+    mov ax,fs:[2*esi].disc_arr
+    or ax,ax
+    jz fhtpfFail
+;
+    mov fs,eax
+    movzx esi,bl
+    or esi,esi
+    jz fhtpfFail
+;
+    dec esi
+    mov ax,fs:[2*esi].vfs_part_arr
+    or ax,ax
+    jz fhtpfFail
+;
+    mov fs,ax
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz fhtpfFail
+;
+    clc
+
+fhtpfDone:
+    pop esi
+    pop ebx
+    pop eax
+    ret
+FileHandleToPartFs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           ServLockDiscSectors

@@ -977,8 +977,7 @@ int TFs::OpenFile(int rel, char *path)
 int TFs::FileHandleToIndex(int handle)
 {
     int index = handle & 0xFFFF;
-    int vfs = VFS_FILE_SIGN;
-    vfs |= FServer->GetHandle() << 24;
+    int vfs = FServer->GetHandle() << 16;
 
     if (vfs == (handle & 0xFFFF0000))
         return index - 1;
@@ -1188,8 +1187,8 @@ void TFs::HandleCompletedReq(TFile *file, int req)
             FPendArr[FCurrPendCount] = 0;
             break;
         }
-    }   
- 
+    }
+
     file->HandleCompletedReq(req);
 }
 

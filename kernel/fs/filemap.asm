@@ -137,6 +137,7 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern HandleHighToPartFs:near
+    extern FileHandleToPartFs:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -273,9 +274,10 @@ GetFileDebugInfo   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetFileSel      Proc near
+    int 3
     push fs
 ;
-    call HandleHighToPartFs
+    call FileHandleToPartFs
     jc gfsDone
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
