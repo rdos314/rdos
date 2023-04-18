@@ -3310,6 +3310,66 @@ get_vfs_drive_free   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           StartCmd
+;
+;       DESCRIPTION:    Start cmd session
+;
+;       PARAMETERS:     EBX       Part handle
+;                       ES:E(DI)  Command
+;
+;       RETURNS:        BX        Command handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartCmd   Proc near
+    push ds
+    push fs
+    push gs
+    push ecx
+    push esi
+;
+    mov esi,es
+    mov gs,esi
+    mov esi,ebx
+    call HandleToPartFs
+    jc scDone
+;
+    mov ds,fs:vfsp_disc_sel
+    push edi
+    call AllocateMsg
+    pop edi
+;
+    xor ecx,ecx
+    push edi
+
+scSizeLoop:
+    mov al,gs:[edi]
+    or al,al
+    jz scSizeOk
+;
+    inc edi
+    inc ecx
+    jmp scSizeLoop
+
+scSizeOk:
+    inc ecx
+    call AddMsgBuffer
+;
+    mov eax,VFS_CMD
+    call RunMsg
+
+scDone:
+    pop esi
+    pop ecx
+    pop gs
+    pop fs
+    pop ds
+    ret
+StartCmd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateVfsDiscCmd
 ;
 ;       DESCRIPTION:    Create VFS disc cmd
@@ -3329,7 +3389,7 @@ create_vfs_disc_cmd   Proc near
     mov ebx,VFS_HANDLE_SIG SHL 24
     mov bh,al
     inc bh
-    call HandleToPartFs
+    call StartCmd
 ;
     pop fs
     ret

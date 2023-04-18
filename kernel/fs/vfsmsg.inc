@@ -63,3 +63,6 @@ VFS_OPEN_FILE             = 7
 
 ; IN  BX        File handle
 VFS_CLOSE_FILE            = 8
+
+; IN            Cmd
+VFS_CMD                   = 9
