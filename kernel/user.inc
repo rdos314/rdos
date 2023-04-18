@@ -2311,8 +2311,8 @@ CloseVfsCmd     MACRO
         UserGate close_vfs_cmd_nr
                                                 ENDM
 
-;   IN  AX          Command handle
-;   IN  BX          Wait handle
+;   IN  AX          Wait handle
+;   IN  BX          Command handle
 ;   IN  ECX         Object ID
 AddWaitForVfsCmd       MACRO
         UserGate add_wait_for_vfs_cmd_nr
