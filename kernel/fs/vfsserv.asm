@@ -2414,6 +2414,53 @@ rvdcDone:
 reply_vfs_data_cmd  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           NotifyVfsMsg
+;
+;       DESCRIPTION:    Serv notify msg
+;
+;       PARAMETERS:     EBX            VFS message block
+;                       EDX            Flat message address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_vfs_msg_name       DB 'Notify VFS Msg',0
+
+notify_vfs_msg    Proc far
+    push es
+    pushad
+;
+    mov edi,ebx
+    mov esi,edx
+    xor ecx,ecx
+
+nvmCopy:
+    inc ecx
+    lods ds:[esi]
+    stos es:[edi]
+    or al,al
+    jnz nvmCopy
+;
+    mov ds:[ebx].fc_ecx,ecx
+    mov ebx,ds:[ebx].fc_handle
+    call HandleToPartEs
+    jc nvmDone
+;
+    mov esi,es:vfsp_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    mov bx,es:[esi].vfss_thread
+    Signal
+
+nvmDone:
+    popad
+    pop es
+    ret
+notify_vfs_msg    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           GetMsgEntry
@@ -3347,8 +3394,10 @@ scCopy:
 ;
     pop edi
 ;
+    mov es:fc_ecx,-1
     mov eax,VFS_CMD
-    call RunMsg
+    call PostMsg
+    int 3
 
 scDone:
     pop esi
@@ -3705,6 +3754,12 @@ init_server    Proc near
     mov edi,OFFSET reply_vfs_data_cmd_name
     xor cl,cl
     mov ax,reply_vfs_data_cmd_nr
+    RegisterServGate
+;
+    mov esi,OFFSET notify_vfs_msg
+    mov edi,OFFSET notify_vfs_msg_name
+    xor cl,cl
+    mov ax,notify_vfs_msg_nr
     RegisterServGate
 ;
     mov esi,OFFSET test_serv

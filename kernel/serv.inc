@@ -181,7 +181,7 @@ ReplyVfsDataCmd  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
-; IN  EDX              Message
+; IN  EDX              Flat address
 ServNotifyVfsMsg  MACRO    
     ServGate notify_vfs_msg_nr
                     ENDM
