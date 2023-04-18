@@ -984,6 +984,13 @@
 #define usergate_map_vfs_file 0x00000323
 #define usergate_vfs_file_info 0x00000324
 
+#define usergate_create_vfs_disc_cmd 0x00000325
+#define usergate_close_vfs_cmd 0x00000326
+#define usergate_add_wait_for_vfs_cmd 0x00000327
+#define usergate_is_vfs_cmd_done 0x00000328
+#define usergate_get_vfs_resp_size 0x00000329
+#define usergate_get_vfs_resp_data 0x0000032A
+
 
 
 #ifdef __FLAT__
@@ -1973,6 +1980,13 @@
 #define CallGate_map_vfs_file 0x55 0x67 0x9a 35 3 0 0 3 0 0x5d
 #define CallGate_vfs_file_info 0x55 0x67 0x9a 36 3 0 0 3 0 0x5d
 
+#define CallGate_create_vfs_disc_cmd 0x55 0x67 0x9a 37 3 0 0 3 0 0x5d
+#define CallGate_close_vfs_cmd 0x55 0x67 0x9a 38 3 0 0 3 0 0x5d
+#define CallGate_add_wait_for_vfs_cmd 0x55 0x67 0x9a 39 3 0 0 3 0 0x5d
+#define CallGate_is_vfs_cmd_done 0x55 0x67 0x9a 40 3 0 0 3 0 0x5d
+#define CallGate_get_vfs_resp_size 0x55 0x67 0x9a 41 3 0 0 3 0 0x5d
+#define CallGate_get_vfs_resp_data 0x55 0x67 0x9a 42 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2959,5 +2973,12 @@
 
 #define CallGate_map_vfs_file 0x3e 0x67 0x9a 35 3 0 0 3 0
 #define CallGate_vfs_file_info 0x3e 0x67 0x9a 36 3 0 0 3 0
+
+#define CallGate_create_vfs_disc_cmd 0x3e 0x67 0x9a 37 3 0 0 3 0
+#define CallGate_close_vfs_cmd 0x3e 0x67 0x9a 38 3 0 0 3 0
+#define CallGate_add_wait_for_vfs_cmd 0x3e 0x67 0x9a 39 3 0 0 3 0
+#define CallGate_is_vfs_cmd_done 0x3e 0x67 0x9a 40 3 0 0 3 0
+#define CallGate_get_vfs_resp_size 0x3e 0x67 0x9a 41 3 0 0 3 0
+#define CallGate_get_vfs_resp_data 0x3e 0x67 0x9a 42 3 0 0 3 0
 
 #endif

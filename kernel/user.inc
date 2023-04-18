@@ -2299,6 +2299,45 @@ GetDriveDiscParam     MACRO
         UserGate get_drive_disc_param_nr
                                                 ENDM
 
+;   IN  AL          Disc #
+;   IN  ES:E(DI)    Command
+;   OUT BX          Command handle
+CreateVfsDiscCmd     MACRO
+        UserGate create_vfs_disc_cmd_nr
+                                                ENDM
+
+;   IN  BX          Command handle
+CloseVfsCmd     MACRO
+        UserGate close_vfs_cmd_nr
+                                                ENDM
+
+;   IN  AX          Command handle
+;   IN  BX          Wait handle
+;   IN  ECX         Object ID
+AddWaitForVfsCmd       MACRO
+        UserGate add_wait_for_vfs_cmd_nr
+                                                ENDM
+
+;   IN  BX          Command handle
+IsVfsCmdDone     MACRO
+        UserGate is_vfs_cmd_done_nr
+                                                ENDM
+
+;   IN  BX          Command handle
+;   OUT EAX         Message size
+GetVfsRespSize     MACRO
+        UserGate get_vfs_resp_size_nr
+                                                ENDM
+
+;   IN  BX          Command handle
+;   IN  ES:E(DI)    Response buffer
+;   IN  ECX         Buffer size
+;   OUT EAX         Actual size
+GetVfsRespData     MACRO
+        UserGate get_vfs_resp_data_nr
+                                                ENDM
+
+
 ; IN  AL              Drive #
 ; OUT AL              Disc #
 GetVfsDriveDisc     MACRO

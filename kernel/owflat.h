@@ -1873,6 +1873,41 @@
     "done:" \
     __parm [__ebx] [__edx] [__ecx] [__edi] [__esi] [__eax]
 
+#pragma aux RdosCreateVfsDiscCmd = \
+    CallGate_create_vfs_disc_cmd  \
+   "jc fail" \
+   "movzx ebx,bx" \
+   "jmp done" \
+   "fail:" \
+   "xor ebx,ebx" \
+   "done:" \
+    __parm [__eax] [__edi]  \
+    __value [__ebx]
+
+#pragma aux RdosCloseVfsCmd = \
+    CallGate_close_vfs_cmd  \
+    __parm [__ebx]
+
+#pragma aux RdosAddWaitForVfsCmd = \
+    CallGate_add_wait_for_vfs_cmd  \
+    __parm [__eax] [__ebx] [__ecx]
+
+#pragma aux RdosIsVfsCmdDone = \
+    CallGate_is_vfs_cmd_done  \
+    CarryToBool \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux RdosGetVfsResponseSize = \
+    CallGate_get_vfs_resp_size  \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux RdosGetVfsResponseData = \
+    CallGate_get_vfs_resp_data  \
+    __parm [__ebx] [__edi] [__ecx] \
+    __value [__eax]
+
 #pragma aux RdosDefineFaultSave = \
     CallGate_define_fault_save  \
     __parm [__eax] [__edx] [__ecx]

@@ -638,6 +638,13 @@ void RDOSAPI RdosCloseDir(int Handle);
 int RDOSAPI RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
 long long RDOSAPI RdosReadLongDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute);
 
+int RDOSAPI RdosCreateVfsDiscCmd(int DiscNr, const char *Cmd);
+void RDOSAPI RdosCloseVfsCmd(int Handle);
+void RDOSAPI RdosAddWaitForVfsCmd(int WaitHandle, int CmdHandle, int ID);
+int RDOSAPI RdosIsVfsCmdDone(int Handle);
+int RDOSAPI RdosGetVfsResponseSize(int Handle);
+int RDOSAPI RdosGetVfsResponseData(int Handle, char *Buf, int MaxSize);
+
 void RDOSAPI RdosDefineFaultSave(int DiscNr, long StartSector, long Sectors);
 void RDOSAPI RdosClearFaultSave();
 int RDOSAPI RdosGetFaultThreadState(int ThreadNr, struct RdosThreadActionState *State);
