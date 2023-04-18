@@ -192,8 +192,11 @@ TDisc::~TDisc()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDisc::RunCmd(char *msg)
+int TDisc::RunCmd(int handle, char *msg)
 {
+    ServNotifyVfsMsg(handle, "testing\r\n");
+    ServNotifyVfsMsg(handle, "new row\r\n");
+
     return true;
 }
 

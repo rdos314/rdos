@@ -39,9 +39,9 @@ extern "C" {
 extern void WaitForMsg(int handle);
 #pragma aux WaitForMsg parm routine [ebx]
 
-int RunCmd(char *cmd)
+int RunCmd(int handle, char *cmd)
 {
-    return Server->RunCmd(cmd);
+    return Server->RunCmd(handle, cmd);
 }
 
 }

@@ -197,3 +197,8 @@
 #pragma aux ServAddWaitForVfsReq = \
     ServGate_add_wait_for_vfs_req  \
     __parm [__ebx] [__eax] [__ecx]
+
+
+#pragma aux ServNotifyVfsMsg = \
+    ServGate_notify_vfs_msg  \
+    __parm [__ebx] [__edx]

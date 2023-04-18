@@ -36,5 +36,6 @@ serv_notify_file_req_nr    = 34
 serv_load_part_nr          = 35
 serv_start_part_nr         = 36
 serv_stop_part_nr          = 37
+notify_vfs_msg_nr          = 38
 
 serv_gate_entries          = 40

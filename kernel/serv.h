@@ -65,6 +65,8 @@ void RDOSAPI ServStartVfsReq(int handle);
 int RDOSAPI ServIsVfsReqDone(int handle);
 void RDOSAPI ServAddWaitForVfsReq(int waithandle, int handle, int id);
 
+void RDOSAPI ServNotifyVfsMsg(int Handle, const char *Msg);
+
 #ifdef __cplusplus
 }
 #endif

@@ -25,15 +25,15 @@
 #
 ########################################################################*/
 
-int RunCmd(char *msg);
+int RunCmd(int handle, char *msg);
 
 /*##########################################################################
 #
 #   Name       : LowCmd
 #
 ##########################################################################*/
-#pragma aux LowCmd "*" parm routine [edi] value [eax]
-int LowCmd(char *msg)
+#pragma aux LowCmd "*" parm routine [ebx] [edi] value [eax]
+int LowCmd(int handle, char *msg)
 {
-    return RunCmd(msg);
+    return RunCmd(handle, msg);
 }

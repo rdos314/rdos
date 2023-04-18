@@ -69,6 +69,7 @@ _TEXT   segment use32 word public 'CODE'
 
 LocalCmd Proc near
     push edi
+    mov ebx,[edi].fc_handle
     add edi,SIZE vfs_cmd_struc
     push ecx
     mov esi,esp
