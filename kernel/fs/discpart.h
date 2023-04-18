@@ -73,8 +73,7 @@ public:
     void Remove(TPartition *part);
     void Clear();
 
-    virtual void OpenPart(int handle);
-    virtual void ClosePart(int handle);
+    virtual int RunCmd(char *msg);
 
     int FBytesPerSector;
     long long FSectorCount;

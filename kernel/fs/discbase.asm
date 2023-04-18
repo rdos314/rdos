@@ -57,50 +57,30 @@ _TEXT   segment use32 word public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           LocalOpenPart
+;       NAME:           LocalCmd
 ;
-;       DESCRIPTION:    Open partition
-;
-;       PARAMETERS:     EDI         Msg data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    extern LowOpenPart:near
-
-LocalOpenPart Proc near
-    push edi
-    mov esi,[edi].fc_handle
-    call LowOpenPart
-    pop edi
-;
-    mov ebx,[edi].fc_handle
-    ReplyVfsCmd
-    ret
-LocalOpenPart Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           LocalClosePart
-;
-;       DESCRIPTION:    Close partition
+;       DESCRIPTION:    Run command
 ;
 ;       PARAMETERS:     EDI         Msg data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extern LowClosePart:near
+    extern LowCmd:near
 
-LocalClosePart Proc near
+LocalCmd Proc near
     push edi
-    mov esi,[edi].fc_handle
-    call LowClosePart
+    add edi,SIZE vfs_cmd_struc
+    push ecx
+    mov esi,esp
+    call LowCmd
+    pop ecx
     pop edi
 ;
+    and [edi].fc_eflags,NOT 1
     mov ebx,[edi].fc_handle
     ReplyVfsCmd
     ret
-LocalClosePart Endp
+LocalCmd Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -115,9 +95,22 @@ LocalClosePart Endp
 
     public WaitForMsg_
 
+
+Unused   Proc near
+    ret
+Unused   Endp
+
 msgtab:
-m00 DD OFFSET LocalOpenPart
-m01 DD OFFSET LocalClosePart
+m00 DD OFFSET Unused
+m01 DD OFFSET Unused
+m02 DD OFFSET Unused
+m03 DD OFFSET Unused
+m04 DD OFFSET Unused
+m05 DD OFFSET Unused
+m06 DD OFFSET Unused
+m07 DD OFFSET Unused
+m08 DD OFFSET Unused
+m09 DD OFFSET LocalCmd
 
 WaitForMsg_    Proc near
     pushad

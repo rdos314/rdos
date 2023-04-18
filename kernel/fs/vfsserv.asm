@@ -3330,30 +3330,22 @@ StartCmd   Proc near
 ;
     mov esi,es
     mov gs,esi
-    mov esi,ebx
+    mov esi,edi
+;
     call HandleToPartFs
     jc scDone
 ;
     mov ds,fs:vfsp_disc_sel
     push edi
     call AllocateMsg
-    pop edi
-;
-    xor ecx,ecx
-    push edi
 
-scSizeLoop:
-    mov al,gs:[edi]
+scCopy:
+    lods byte ptr gs:[esi]
+    stosb
     or al,al
-    jz scSizeOk
+    jnz scCopy
 ;
-    inc edi
-    inc ecx
-    jmp scSizeLoop
-
-scSizeOk:
-    inc ecx
-    call AddMsgBuffer
+    pop edi
 ;
     mov eax,VFS_CMD
     call RunMsg

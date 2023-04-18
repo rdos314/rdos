@@ -25,27 +25,15 @@
 #
 ########################################################################*/
 
-void OpenPart(int handle);
-void ClosePart(int handle);
+int RunCmd(char *msg);
 
 /*##########################################################################
 #
-#   Name       : LowOpenPart
+#   Name       : LowCmd
 #
 ##########################################################################*/
-#pragma aux LowOpenPart "*" parm routine [ebx]
-void LowOpenPart(int handle)
+#pragma aux LowCmd "*" parm routine [edi] value [eax]
+int LowCmd(char *msg)
 {
-    OpenPart(handle);
-}
-
-/*##########################################################################
-#
-#   Name       : LowClosePart
-#
-##########################################################################*/
-#pragma aux LowClosePart "*" parm routine [ebx]
-void LowClosePart(int handle)
-{
-    ClosePart(handle);
+    return RunCmd(msg);
 }

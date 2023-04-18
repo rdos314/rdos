@@ -183,32 +183,18 @@ TDisc::~TDisc()
 
 /*##########################################################################
 #
-#   Name       : TDisc::OpenPart
+#   Name       : TDisc::RunCmd
 #
-#   Purpose....: Open partition
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDisc::OpenPart(int handle)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TDisc::ClosePart
-#
-#   Purpose....: Close partition
+#   Purpose....: Run cmd
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDisc::ClosePart(int handle)
+int TDisc::RunCmd(char *msg)
 {
+    return true;
 }
 
 /*##########################################################################

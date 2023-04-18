@@ -39,14 +39,9 @@ extern "C" {
 extern void WaitForMsg(int handle);
 #pragma aux WaitForMsg parm routine [ebx]
 
-void OpenPart(int handle)
+int RunCmd(char *cmd)
 {
-    Server->OpenPart(handle);
-}
-
-void ClosePart(int handle)
-{
-    Server->ClosePart(handle);
+    return Server->RunCmd(cmd);
 }
 
 }

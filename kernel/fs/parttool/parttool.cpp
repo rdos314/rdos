@@ -70,11 +70,6 @@ int main(int argc, char **argv)
         Server = new TDiscServer;
         Disc = CreateDisc(Server);
         Disc->LoadPart();
-
-        for (;;)
-            RdosWaitMilli(50);
-
-//        if (Mbr)
-//            Mbr->Run();
+        Disc->Run();
     }
 }
