@@ -73,6 +73,15 @@ fc_edi             DD ?
 
 fs_cmd      ENDS
 
+
+cmd_handle_seg     STRUC
+
+ch_base       handle_header <>
+
+ch_sel        DW ?
+
+cmd_handle_seg     ENDS
+
 data    SEGMENT byte public 'DATA'
 
 drive_arr       DW MAX_PART_COUNT DUP (?)
@@ -3315,6 +3324,14 @@ get_vfs_drive_free   Endp
 create_vfs_disc_cmd_name DB 'Create VFS Disc Cmd', 0
 
 create_vfs_disc_cmd   Proc near
+    push fs
+;
+    mov ebx,VFS_HANDLE_SIG SHL 24
+    mov bh,al
+    inc bh
+    call HandleToPartFs
+;
+    pop fs
     ret
 create_vfs_disc_cmd   Endp
 
@@ -3330,6 +3347,21 @@ create_vfs_disc_cmd32	Proc far
     call create_vfs_disc_cmd
     ret
 create_vfs_disc_cmd32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseVCmd
+;
+;       DESCRIPTION:    Close cmd
+;
+;       PARAMETERS:     BX        Command handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseCmd   Proc near
+    ret
+CloseCmd   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3424,7 +3456,7 @@ get_vfs_resp_size   Endp
 
 get_vfs_resp_data_name DB 'Get VFS Resp Data', 0
 
-get_vfs_resp_data   Proc far
+get_vfs_resp_data   Proc near
     xor eax,eax
     ret
 get_vfs_resp_data   Endp
@@ -3441,6 +3473,46 @@ get_vfs_resp_data32   Proc far
     call get_vfs_resp_data
     ret
 get_vfs_resp_data32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Delete cmd handle
+;
+;           DESCRIPTION:    Delete a cmd handle (called from handle module)
+;
+;           PARAMETERS:     BX              HANDLE TO CMD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_cmd_handle   Proc far
+    push ds
+    push ax
+    push ebx
+    push edx
+    push esi
+;
+    mov ax,VFS_CMD_HANDLE
+    DerefHandle
+    jc dchDone
+;
+    mov esi,ebx
+    mov ax,ds:[ebx].ch_sel
+    mov ds,eax
+    call CloseCmd
+;
+    mov ebx,esi
+    FreeHandle
+    clc
+
+dchDone:
+    pop esi
+    pop edx
+    pop ebx
+    pop ax
+    pop ds
+    ret
+delete_cmd_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3464,6 +3536,10 @@ init_server    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET delete_cmd_handle
+    mov ax,VFS_CMD_HANDLE
+    RegisterHandle
 ;
     mov esi,OFFSET get_vfs_handle
     mov edi,OFFSET get_vfs_handle_name
