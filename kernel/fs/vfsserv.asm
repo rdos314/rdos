@@ -3299,6 +3299,150 @@ gvdfDone:
 get_vfs_drive_free   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateVfsDiscCmd
+;
+;       DESCRIPTION:    Create VFS disc cmd
+;
+;       PARAMETERS:     AL        Disc #
+;                       ES:E(DI)  Command
+;
+;       RETURNS:        BX        Command handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_vfs_disc_cmd_name DB 'Create VFS Disc Cmd', 0
+
+create_vfs_disc_cmd   Proc near
+    ret
+create_vfs_disc_cmd   Endp
+
+create_vfs_disc_cmd16	Proc far
+    push edi
+    movzx edi,di
+    call create_vfs_disc_cmd
+    pop edi
+    ret
+create_vfs_disc_cmd16   Endp
+
+create_vfs_disc_cmd32	Proc far
+    call create_vfs_disc_cmd
+    ret
+create_vfs_disc_cmd32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseVfsCmd
+;
+;       DESCRIPTION:    Close VFS cmd
+;
+;       PARAMETERS:     BX        Command handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_vfs_cmd_name DB 'Close VFS Cmd', 0
+
+close_vfs_cmd   Proc far
+    ret
+close_vfs_cmd   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddWaitForVfsCmd
+;
+;       DESCRIPTION:    Add wait for VFS cmd
+;
+;       PARAMETERS:     AX        Wait handle
+;                       BX        Command handle
+;                       ECX       Object ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_vfs_cmd_name DB 'Add Wait For VFS Cmd', 0
+
+add_wait_for_vfs_cmd   Proc far
+    ret
+add_wait_for_vfs_cmd   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           IsVfsCmdDone
+;
+;       DESCRIPTION:    Check if VFS cmd is done
+;
+;       PARAMETERS:     BX        Command handle
+;
+;       RETURNS:        NC        Done
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_vfs_cmd_done_name DB 'Is VFS Cmd Done', 0
+
+is_vfs_cmd_done   Proc far
+    clc
+    ret
+is_vfs_cmd_done   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsRespSize
+;
+;       DESCRIPTION:    Get VFS resp size
+;
+;       PARAMETERS:     BX        Command handle
+;
+;       RETURNS:        EAX       Message size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_resp_size_name DB 'Get VFS Resp Size', 0
+
+get_vfs_resp_size   Proc far
+    xor eax,eax
+    ret
+get_vfs_resp_size   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetVfsRespData
+;
+;       DESCRIPTION:    Get VFS resp data
+;
+;       PARAMETERS:     BX        Command handle
+;                       ES:E(DI)  Buffer
+;                       ECX       Size
+;
+;       RETURNS:        EAX       Actual size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_vfs_resp_data_name DB 'Get VFS Resp Data', 0
+
+get_vfs_resp_data   Proc far
+    xor eax,eax
+    ret
+get_vfs_resp_data   Endp
+
+get_vfs_resp_data16   Proc far
+    push edi
+    movzx edi,di
+    call get_vfs_resp_data
+    pop edi
+    ret
+get_vfs_resp_data16   Endp
+
+get_vfs_resp_data32   Proc far
+    call get_vfs_resp_data
+    ret
+get_vfs_resp_data32   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -3487,6 +3631,44 @@ init_server    Proc near
     xor dx,dx
     mov ax,get_vfs_drive_free_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET create_vfs_disc_cmd16
+    mov esi,OFFSET create_vfs_disc_cmd32
+    mov edi,OFFSET create_vfs_disc_cmd_name
+    mov dx,virt_es_in
+    mov ax,create_vfs_disc_cmd_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET close_vfs_cmd
+    mov edi,OFFSET close_vfs_cmd_name
+    xor dx,dx
+    mov ax,close_vfs_cmd_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_vfs_cmd
+    mov edi,OFFSET add_wait_for_vfs_cmd_name
+    xor dx,dx
+    mov ax,add_wait_for_vfs_cmd_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_vfs_cmd_done
+    mov edi,OFFSET is_vfs_cmd_done_name
+    xor dx,dx
+    mov ax,is_vfs_cmd_done_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_vfs_resp_size
+    mov edi,OFFSET get_vfs_resp_size_name
+    xor dx,dx
+    mov ax,get_vfs_resp_size_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET get_vfs_resp_data16
+    mov esi,OFFSET get_vfs_resp_data32
+    mov edi,OFFSET get_vfs_resp_data_name
+    mov dx,virt_es_in
+    mov ax,get_vfs_resp_data_nr
+    RegisterUserGate
     ret
 init_server    Endp
 
