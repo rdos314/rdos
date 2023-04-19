@@ -77,12 +77,15 @@ cmd_handle_seg     STRUC
 
 ch_base            handle_header <>
 ch_msg_sel         DW ?
+ch_part_sel        DW ?
+ch_id              DD ?
 
 cmd_handle_seg     ENDS
 
 cmd_wait_header      STRUC
 
 cw_obj              wait_obj_header <>
+cw_part_sel         DW ?
 cw_msg_sel          DW ?
 cw_msg_id           DD ?
 
@@ -3404,6 +3407,7 @@ StartCmd   Proc near
     push fs
     push gs
     push ecx
+    push edx
     push esi
     push edi
 ;
@@ -3416,6 +3420,11 @@ StartCmd   Proc near
 ;
     mov ds,fs:vfsp_disc_sel
     call AllocateMsg
+;
+    mov edx,ebx
+    sub edx,OFFSET vfsp_cmd_arr
+    shr edx,4
+    inc edx
 
 scCopy:
     lods byte ptr gs:[esi]
@@ -3431,12 +3440,15 @@ scCopy:
     mov cx,SIZE cmd_handle_seg
     AllocateHandle
     mov [ebx].ch_msg_sel,es
+    mov [ebx].ch_part_sel,fs
+    mov [ebx].ch_id,edx
     mov [ebx].hh_sign,VFS_CMD_HANDLE
     movzx ebx,[ebx].hh_handle
 
 scDone:
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop gs
     pop fs
@@ -3537,25 +3549,9 @@ start_wait_for_cmd      PROC far
     push esi
 ;
     mov ds,es:cw_msg_sel
-    mov ebx,ds:fc_handle
-    or ebx,ebx
-    jnz stwcCheck
+    mov fs,es:cw_part_sel
 ;
     mov esi,es:cw_msg_id
-    dec esi
-    shl esi,4
-    add esi,OFFSET vfsp_cmd_arr
-    mov fs:[esi].vfss_thread,es
-    jmp stwcDone
-
-stwcCheck:
-    call HandleToPartFs
-    jc stwcDone
-;
-    mov esi,es:cw_msg_id
-    cmp esi,fs:vfsp_cmd_curr
-    jne stwcDone
-;
     dec esi
     shl esi,4
     add esi,OFFSET vfsp_cmd_arr
@@ -3595,21 +3591,12 @@ start_wait_for_cmd Endp
 stop_wait_for_cmd       PROC far
     push ds
     push fs
-    push ebx
     push esi
 ;
     mov ds,es:cw_msg_sel
-    mov ebx,ds:fc_handle
-    or ebx,ebx
-    jz spwcDone
-;
-    call HandleToPartFs
-    jc spwcDone
+    mov fs,es:cw_part_sel
 ;
     mov esi,es:cw_msg_id
-    cmp esi,fs:vfsp_cmd_curr
-    jne spwcDone
-;
     dec esi
     shl esi,4
     add esi,OFFSET vfsp_cmd_arr
@@ -3617,7 +3604,6 @@ stop_wait_for_cmd       PROC far
 
 spwcDone:
     pop esi
-    pop ebx
     pop fs
     pop ds
     ret
@@ -3653,16 +3639,9 @@ is_cmd_idle     PROC far
     push ds
     push fs
     push eax
-    push ebx
 ;
     mov ds,es:cw_msg_sel
-    mov ebx,ds:fc_handle
-    or ebx,ebx
-    stc
-    jz iciDone
-;
-    call HandleToPartFs
-    jc iciDone
+    mov fs,es:cw_part_sel
 ;
     test fs:vfsp_flag,VFSP_FLAG_STOPPED
     stc
@@ -3676,7 +3655,6 @@ is_cmd_idle     PROC far
     stc
 
 iciDone:
-    pop ebx
     pop eax    
     pop fs
     pop ds
@@ -3710,6 +3688,7 @@ add_wait_for_vfs_cmd   Proc far
     push fs
     push eax
     push ebx
+    push edx
     push edi
 ;
     push eax
@@ -3718,10 +3697,9 @@ add_wait_for_vfs_cmd   Proc far
     pop eax
     jc awfcDone
 ;
+    mov edx,ds:[ebx].ch_id
+    mov fs,ds:[ebx].ch_part_sel
     mov ds,ds:[ebx].ch_msg_sel
-    mov ebx,ds:fc_handle
-    call HandleToPartFs
-    jc awfcDone
 ;
     mov ebx,eax
     mov eax,cs
@@ -3732,11 +3710,12 @@ add_wait_for_vfs_cmd   Proc far
     jc awfcDone
 ;
     mov es:cw_msg_sel,ds
-    mov eax,fs:vfsp_cmd_curr
-    mov es:cw_msg_id,eax
+    mov es:cw_part_sel,fs
+    mov es:cw_msg_id,edx
 
 awfcDone:
     pop edi
+    pop edx
     pop ebx
     pop eax
     pop fs
@@ -3771,15 +3750,8 @@ is_vfs_cmd_done   Proc far
     cmc
     jnc icdDone
 ;
+    mov es,ds:[ebx].ch_part_sel
     mov ds,ds:[ebx].ch_msg_sel
-    mov ebx,ds:fc_handle
-    or ebx,ebx
-    stc
-    jz icdDone
-;
-    call HandleToPartEs
-    cmc
-    jnc icdDone
 ;
     test es:vfsp_flag,VFSP_FLAG_STOPPED
     stc
