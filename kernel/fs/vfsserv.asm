@@ -2430,8 +2430,19 @@ notify_vfs_msg_name       DB 'Notify VFS Msg',0
 notify_vfs_msg    Proc far
     push es
     pushad
+
+nvmRetry:
+    mov ecx,ds:[ebx].fc_ecx
+    cmp ecx,-1
+    je nvmDo
 ;
+    mov ax,10
+    WaitMilliSec
+    jmp nvmRetry
+
+nvmDo:
     mov edi,ebx
+    add edi,SIZE fs_cmd
     mov esi,edx
     xor ecx,ecx
 
