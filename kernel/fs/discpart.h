@@ -28,10 +28,10 @@
 #ifndef _DISCPART_H
 #define _DISCPART_H
 
-#define PART_TYPE_UNKNOWN	0
-#define PART_TYPE_FAT12		1
-#define PART_TYPE_FAT16		2
-#define PART_TYPE_FAT32		3
+#define PART_TYPE_UNKNOWN       0
+#define PART_TYPE_FAT12         1
+#define PART_TYPE_FAT16         2
+#define PART_TYPE_FAT32         3
 
 #include "discint.h"
 

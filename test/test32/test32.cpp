@@ -38,12 +38,12 @@ TVfsCmd::TVfsCmd()
 TVfsCmd::~TVfsCmd()
 {
     if (FHandle)
-        RdosCloseVfsCmd(FHandle);        
+        RdosCloseVfsCmd(FHandle);
 }
 
 bool TVfsCmd::IsDone()
 {
-    return RdosIsVfsCmdDone(FHandle);        
+    return RdosIsVfsCmdDone(FHandle);
 }
 
 void TVfsCmd::SignalNewData()
@@ -101,13 +101,15 @@ void main()
     TVfsDiscCmd *cmd;
     TWait Wait;
 
-    cmd = new TVfsDiscCmd(1, "?");
+    cmd = new TVfsDiscCmd(2, "?");
     cmd->OnDone = ::Done;
     cmd->OnMsg = ::Msg;
     Wait.Add(cmd);
-    
+
     while (!cmd->IsDone())
         Wait.WaitForever();
+
+    printf("\r\n");
 
     delete cmd;
 }

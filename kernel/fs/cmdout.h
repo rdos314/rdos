@@ -31,10 +31,13 @@
 class TCommandOutput
 {
 public:
-    TCommandOutput();
-    virtual ~TCommandOutput();
+    TCommandOutput(int handle);
+    ~TCommandOutput();
 
-    virtual void Write(const char *str);
+    void Write(const char *str);
+
+protected:
+    int FHandle;
 };
 
 #endif

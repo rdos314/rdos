@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <serv.h>
 #include "cmdout.h"
 
 /*##########################################################################
@@ -38,8 +39,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TCommandOutput::TCommandOutput()
-{       
+TCommandOutput::TCommandOutput(int handle)
+{
+    FHandle = handle;
 }
 
 /*##########################################################################
@@ -54,7 +56,8 @@ TCommandOutput::TCommandOutput()
 #
 ##########################################################################*/
 TCommandOutput::~TCommandOutput()
-{       
+{
+    ServNotifyVfsMsg(FHandle, 0);
 }
 
 /*##################  TCommandOutput::Write  ##########################
@@ -66,4 +69,6 @@ TCommandOutput::~TCommandOutput()
 *##########################################################################*/
 void TCommandOutput::Write(const char *str)
 {
+    if (str[0])
+        ServNotifyVfsMsg(FHandle, str);
 }
