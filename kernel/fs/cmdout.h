@@ -20,45 +20,21 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdfact.h
-# Command factory base class
+# cmdout.h
+# Command output base class
 #
 ########################################################################*/
 
-#ifndef _CMDFACT_H
-#define _CMDFACT_H
+#ifndef _CMDOUT_H
+#define _CMDOUT_H
 
-#include "cmd.h"
-#include "cmdout.h"
-
-class TCommand;
-
-class TCommandFactory
+class TCommandOutput
 {
-friend class THelpCommand;
 public:
-    TCommandFactory(const char *name);
-    virtual ~TCommandFactory();
+    TCommandOutput();
+    virtual ~TCommandOutput();
 
-    static void SetOut(TCommandOutput *out);
-    static TCommand *Parse(const char *line);
-
-protected:
-    static const char *FindArg(int no);
-    static char *SkipWord(char *p);
-
-    virtual TCommand *Create(const char *param) = 0;
-    virtual int PassAll();
-    virtual int PassDir();
-	
-    void InsertCommand();
-    void RemoveCommand();
-
-    static TCommandFactory *FCmdList;
-    static TCommandOutput *FOut;
-
-    TCommandFactory *FList;
-    TString FName;
+    virtual void Write(const char *str);
 };
 
 #endif

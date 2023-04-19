@@ -39,6 +39,7 @@
 #define TRUE !FALSE
 
 TCommandFactory *TCommandFactory::FCmdList = 0;
+TCommandOutput *TCommandFactory::FOut = 0;
 
 /*##########################################################################
 #
@@ -199,6 +200,18 @@ char *TCommandFactory::SkipWord(char *p)
         p++;
     }
     return p;
+}
+
+/*##################  TCommandFactory::SetOut  ##########################
+*   Purpose....: Set output object                           #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+void TCommandFactory::SetOut(TCommandOutput *out)
+{
+    FOut = out;
 }
 
 /*##################  TCommandFactory::Parse  ##########################
