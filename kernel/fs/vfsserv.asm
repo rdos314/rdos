@@ -2449,8 +2449,7 @@ nvmRetry:
     cmp ecx,-1
     je nvmDo
 ;
-    mov ax,10
-    WaitMilliSec
+    WaitForSignal
     jmp nvmRetry
 
 nvmDo:
@@ -3828,6 +3827,7 @@ get_vfs_resp_data_name DB 'Get VFS Resp Data', 0
 
 get_vfs_resp_data   Proc near
     push ds
+    push fs
     push ebx
     push ecx
     push esi
@@ -3837,6 +3837,7 @@ get_vfs_resp_data   Proc near
     DerefHandle
     jc grdDone
 ;
+    mov fs,ds:[ebx].ch_part_sel
     mov ds,ds:[ebx].ch_msg_sel
     cmp ecx,ds:fc_ecx
     jae grdCopy
@@ -3847,12 +3848,17 @@ grdCopy:
     mov eax,ecx
     mov esi,SIZE fs_cmd
     rep movsb
+;
+    mov ds:fc_ecx,-1
+    mov bx,fs:vfsp_cmd_thread
+    Signal
 
 grdDone:
     pop edi
     pop esi
     pop ecx
     pop ebx
+    pop fs
     pop ds
     ret
 get_vfs_resp_data   Endp
