@@ -3827,7 +3827,33 @@ get_vfs_resp_size   Endp
 get_vfs_resp_data_name DB 'Get VFS Resp Data', 0
 
 get_vfs_resp_data   Proc near
-    xor eax,eax
+    push ds
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,VFS_CMD_HANDLE
+    DerefHandle
+    jc grdDone
+;
+    mov ds,ds:[ebx].ch_msg_sel
+    cmp ecx,ds:fc_ecx
+    jae grdCopy
+;
+    mov ecx,ds:fc_ecx
+
+grdCopy:
+    mov eax,ecx
+    mov esi,SIZE fs_cmd
+    rep movsb
+
+grdDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop ds
     ret
 get_vfs_resp_data   Endp
 
