@@ -3603,8 +3603,7 @@ stop_wait_for_cmd       PROC far
     shl esi,4
     add esi,OFFSET vfsp_cmd_arr
     mov fs:[esi].vfss_thread,0
-
-spwcDone:
+;
     pop esi
     pop fs
     pop ds
@@ -3623,6 +3622,22 @@ stop_wait_for_cmd Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_cmd       PROC far
+    push ds
+    push fs
+    push esi
+;
+    mov ds,es:cw_msg_sel
+    mov fs,es:cw_part_sel
+;
+    mov esi,es:cw_msg_id
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    mov fs:[esi].vfss_thread,0
+;
+    pop esi
+    pop fs
+    pop ds
     ret
 clear_cmd       Endp
     
