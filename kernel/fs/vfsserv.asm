@@ -79,6 +79,7 @@ ch_base            handle_header <>
 ch_msg_sel         DW ?
 ch_part_sel        DW ?
 ch_id              DD ?
+ch_done            DB ?
 
 cmd_handle_seg     ENDS
 
@@ -88,6 +89,7 @@ cw_obj              wait_obj_header <>
 cw_part_sel         DW ?
 cw_msg_sel          DW ?
 cw_msg_id           DD ?
+cw_done             DB ?
 
 cmd_wait_header      ENDS
 
@@ -3444,6 +3446,7 @@ scCopy:
     mov [ebx].ch_msg_sel,es
     mov [ebx].ch_part_sel,fs
     mov [ebx].ch_id,edx
+    mov [ebx].ch_done,0
     mov [ebx].hh_sign,VFS_CMD_HANDLE
     movzx ebx,[ebx].hh_handle
 
@@ -3552,6 +3555,9 @@ start_wait_for_cmd      PROC far
 ;
     mov ds,es:cw_msg_sel
     mov fs,es:cw_part_sel
+    mov al,es:cw_done
+    or al,al
+    jnz swtcSignal
 ;
     mov esi,es:cw_msg_id
     dec esi
@@ -3559,11 +3565,20 @@ start_wait_for_cmd      PROC far
     add esi,OFFSET vfsp_cmd_arr
 ;
     mov eax,ds:fc_ecx
+    or eax,eax
+    jnz stwcCheck
+;
+    mov es:cw_done,1
+    jmp swtcStop
+
+stwcCheck:
     cmp eax,-1
     je stwcStart
 
 swtcStop:
     mov fs:[esi].vfss_thread,0
+
+swtcSignal:
     SignalWait
     jmp stwcDone
 
@@ -3597,13 +3612,17 @@ stop_wait_for_cmd       PROC far
 ;
     mov ds,es:cw_msg_sel
     mov fs,es:cw_part_sel
+    mov al,es:cw_done
+    or al,al
+    jnz swcDone
 ;
     mov esi,es:cw_msg_id
     dec esi
     shl esi,4
     add esi,OFFSET vfsp_cmd_arr
     mov fs:[esi].vfss_thread,0
-;
+
+swcDone:
     pop esi
     pop fs
     pop ds
@@ -3628,13 +3647,17 @@ clear_cmd       PROC far
 ;
     mov ds,es:cw_msg_sel
     mov fs,es:cw_part_sel
+    mov al,es:cw_done
+    or al,al
+    jnz cwcDone
 ;
     mov esi,es:cw_msg_id
     dec esi
     shl esi,4
     add esi,OFFSET vfsp_cmd_arr
     mov fs:[esi].vfss_thread,0
-;
+
+cwcDone:
     pop esi
     pop fs
     pop ds
@@ -3659,12 +3682,24 @@ is_cmd_idle     PROC far
 ;
     mov ds,es:cw_msg_sel
     mov fs,es:cw_part_sel
+    mov al,es:cw_done
+    or al,al
+    stc
+    jnz iciDone
 ;
     test fs:vfsp_flag,VFSP_FLAG_STOPPED
     stc
     jnz iciDone
 ;
     mov eax,ds:fc_ecx
+    or eax,eax
+    jnz iciCheck
+;
+    mov es:cw_done,1
+    stc
+    jmp iciDone
+
+iciCheck:
     cmp eax,-1
     clc
     je iciDone
@@ -3714,9 +3749,14 @@ add_wait_for_vfs_cmd   Proc far
     pop eax
     jc awfcDone
 ;
+    mov dl,ds:[ebx].ch_done
+    or dl,dl
+    stc
+    jnz awfcDone
+;
     mov edx,ds:[ebx].ch_id
     mov fs,ds:[ebx].ch_part_sel
-    mov ds,ds:[ebx].ch_msg_sel
+    mov ds,ds:[ebx].ch_msg_sel    
 ;
     mov ebx,eax
     mov eax,cs
@@ -3729,6 +3769,7 @@ add_wait_for_vfs_cmd   Proc far
     mov es:cw_msg_sel,ds
     mov es:cw_part_sel,fs
     mov es:cw_msg_id,edx
+    mov es:cw_done,0
 
 awfcDone:
     pop edi
@@ -3759,6 +3800,7 @@ is_vfs_cmd_done_name DB 'Is VFS Cmd Done', 0
 is_vfs_cmd_done   Proc far
     push ds
     push es
+    push fs
     push eax
     push ebx
 ;
@@ -3768,22 +3810,28 @@ is_vfs_cmd_done   Proc far
     jnc icdDone
 ;
     mov es,ds:[ebx].ch_part_sel
-    mov ds,ds:[ebx].ch_msg_sel
+    mov fs,ds:[ebx].ch_msg_sel
+    mov al,ds:[ebx].ch_done
+    or al,al
+    clc
+    jnz icdDone
 ;
     test es:vfsp_flag,VFSP_FLAG_STOPPED
     stc
     jnz icdDone
 ;
-    mov eax,ds:fc_ecx
+    mov eax,fs:fc_ecx
     or eax,eax
     stc
     jnz icdDone
 ;
+    mov ds:[ebx].ch_done,1
     clc
 
 icdDone:
     pop ebx
     pop eax
+    pop fs
     pop es
     pop ds
     ret
@@ -3813,11 +3861,16 @@ get_vfs_resp_size   Proc far
     cmc
     jnc grsDone
 ;
+    mov al,ds:[ebx].ch_done
+    or al,al
+    jnz grsFail
+;
     mov ds,ds:[ebx].ch_msg_sel
     mov eax,ds:fc_ecx
     cmp eax,-1
     jne grsDone
-;
+
+grsFail:
     xor eax,eax
 
 grsDone:

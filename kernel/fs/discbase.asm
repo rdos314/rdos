@@ -77,9 +77,8 @@ LocalCmd Proc near
     pop ecx
     pop edi
 ;
-    and [edi].fc_eflags,NOT 1
     mov ebx,[edi].fc_handle
-    ReplyVfsCmd
+    ReplyVfsPost
     ret
 LocalCmd Endp
 
