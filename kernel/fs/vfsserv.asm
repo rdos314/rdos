@@ -73,14 +73,21 @@ fc_edi             DD ?
 
 fs_cmd      ENDS
 
-
 cmd_handle_seg     STRUC
 
 ch_base            handle_header <>
-
 ch_msg_sel         DW ?
 
 cmd_handle_seg     ENDS
+
+cmd_wait_header      STRUC
+
+cw_obj              wait_obj_header <>
+cw_msg_sel          DW ?
+cw_msg_id           DD ?
+
+cmd_wait_header      ENDS
+
 
 data    SEGMENT byte public 'DATA'
 
@@ -2470,8 +2477,12 @@ nvmSave:
     dec esi
     shl esi,4
     add esi,OFFSET vfsp_cmd_arr
-    mov bx,es:[esi].vfss_thread
-    Signal
+    mov ax,es:[esi].vfss_thread
+    or ax,ax
+    jz nvmDone
+;
+    mov es,ax
+    SignalWait
 
 nvmDone:
     popad
@@ -3505,6 +3516,153 @@ close_vfs_cmd_name DB 'Close VFS Cmd', 0
 close_vfs_cmd   Proc far
     ret
 close_vfs_cmd   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForCmd
+;
+;           DESCRIPTION:    Start a wait for cmd
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_cmd      PROC far
+    push ds
+    push fs
+    push eax
+    push ebx
+    push esi
+;
+    mov ds,es:cw_msg_sel
+    mov ebx,ds:fc_handle
+    call HandleToPartFs
+    jc stwcDone
+;
+    mov esi,es:cw_msg_id
+    cmp esi,fs:vfsp_cmd_curr
+    jne stwcDone
+;
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+;
+    mov eax,ds:fc_ecx
+    cmp eax,-1
+    je stwcStart
+
+swtcStop:
+    mov fs:[esi].vfss_thread,0
+    SignalWait
+    jmp stwcDone
+
+stwcStart:
+    mov fs:[esi].vfss_thread,es
+
+stwcDone:
+    pop esi
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+start_wait_for_cmd Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForCmd
+;
+;           DESCRIPTION:    Stop a wait for cmd
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_cmd       PROC far
+    push ds
+    push fs
+    push ebx
+    push esi
+;
+    mov ds,es:cw_msg_sel
+    mov ebx,ds:fc_handle
+    call HandleToPartFs
+    jc spwcDone
+;
+    mov esi,es:cw_msg_id
+    cmp esi,fs:vfsp_cmd_curr
+    jne spwcDone
+;
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    mov fs:[esi].vfss_thread,es
+
+spwcDone:
+    pop esi
+    pop ebx
+    pop fs
+    pop ds
+    ret
+stop_wait_for_cmd Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearCmd
+;
+;           DESCRIPTION:    Clear cmd
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_cmd       PROC far
+    ret
+clear_cmd       Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsCmdIdle
+;
+;           DESCRIPTION:    Check if cmd is idle
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_cmd_idle     PROC far
+    push ds
+    push fs
+    push eax
+    push ebx
+;
+    mov ds,es:cw_msg_sel
+    mov ebx,ds:fc_handle
+    call HandleToPartFs
+    jc iciDone
+;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    stc
+    jnz iciDone
+;
+    mov eax,ds:fc_ecx
+    cmp eax,-1
+    clc
+    je iciDone
+;
+    stc
+
+iciDone:
+    pop ebx
+    pop eax    
+    pop fs
+    pop ds
+    ret
+is_cmd_idle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3521,7 +3679,50 @@ close_vfs_cmd   Endp
 
 add_wait_for_vfs_cmd_name DB 'Add Wait For VFS Cmd', 0
 
+add_wait_cmd_tab:
+awc0 DD OFFSET start_wait_for_cmd,   SEG code
+awc1 DD OFFSET stop_wait_for_cmd,    SEG code
+awc2 DD OFFSET clear_cmd,            SEG code
+awc3 DD OFFSET is_cmd_idle,          SEG code
+
 add_wait_for_vfs_cmd   Proc far
+    push ds
+    push es
+    push fs
+    push eax
+    push ebx
+    push edi
+;
+    push eax
+    mov ax,VFS_CMD_HANDLE
+    DerefHandle
+    pop eax
+    jc awfcDone
+;
+    mov ds,ds:[ebx].ch_msg_sel
+    mov ebx,ds:fc_handle
+    call HandleToPartFs
+    jc awfcDone
+;
+    mov ebx,eax
+    mov eax,cs
+    mov es,eax
+    mov ax,SIZE cmd_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_cmd_tab
+    AddWait
+    jc awfcDone
+;
+    mov es:cw_msg_sel,ds
+    mov eax,fs:vfsp_cmd_curr
+    mov es:cw_msg_id,eax
+
+awfcDone:
+    pop edi
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    pop ds
     ret
 add_wait_for_vfs_cmd   Endp
 
@@ -3541,7 +3742,38 @@ add_wait_for_vfs_cmd   Endp
 is_vfs_cmd_done_name DB 'Is VFS Cmd Done', 0
 
 is_vfs_cmd_done   Proc far
+    push ds
+    push es
+    push eax
+    push ebx
+;
+    mov ax,VFS_CMD_HANDLE
+    DerefHandle
+    cmc
+    jnc icdDone
+;
+    mov ds,ds:[ebx].ch_msg_sel
+    mov ebx,ds:fc_handle
+    call HandleToPartEs
+    cmc
+    jnc icdDone
+;
+    test es:vfsp_flag,VFSP_FLAG_STOPPED
+    stc
+    jnz icdDone
+;
+    mov eax,ds:fc_ecx
+    or eax,eax
+    stc
+    jnz icdDone
+;
     clc
+
+icdDone:
+    pop ebx
+    pop eax
+    pop es
+    pop ds
     ret
 is_vfs_cmd_done   Endp
 
