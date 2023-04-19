@@ -40,12 +40,12 @@ public:
     TCommandFactory(const char *name);
     virtual ~TCommandFactory();
 
-    static void SetOut(TCommandOutput *out);
-    static TCommand *Parse(const char *line);
+    static void Run(TCommandOutput *out, const char *line);
 
 protected:
     static const char *FindArg(int no);
     static char *SkipWord(char *p);
+    static TCommand *Parse(TCommandOutput *out, const char *line);
 
     virtual TCommand *Create(TCommandOutput *out, const char *param) = 0;
     virtual int PassAll();
@@ -55,7 +55,6 @@ protected:
     void RemoveCommand();
 
     static TCommandFactory *FCmdList;
-    static TCommandOutput *FOut;
 
     TCommandFactory *FList;
     TString FName;

@@ -39,7 +39,6 @@
 #define TRUE !FALSE
 
 TCommandFactory *TCommandFactory::FCmdList = 0;
-TCommandOutput *TCommandFactory::FOut = 0;
 
 /*##########################################################################
 #
@@ -202,18 +201,6 @@ char *TCommandFactory::SkipWord(char *p)
     return p;
 }
 
-/*##################  TCommandFactory::SetOut  ##########################
-*   Purpose....: Set output object                           #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-09-02 le                                                #
-*##########################################################################*/
-void TCommandFactory::SetOut(TCommandOutput *out)
-{
-    FOut = out;
-}
-
 /*##################  TCommandFactory::Parse  ##########################
 *   Purpose....: Parse a command line and return a command class                #
 *   In params..: *                                                          #
@@ -221,7 +208,7 @@ void TCommandFactory::SetOut(TCommandOutput *out)
 *   Returns....: *                                                          #
 *   Created....: 96-09-02 le                                                #
 *##########################################################################*/
-TCommand *TCommandFactory::Parse(const char *line)
+TCommand *TCommandFactory::Parse(TCommandOutput *out, const char *line)
 {
     const char *rest;
     int size;
@@ -294,7 +281,7 @@ TCommand *TCommandFactory::Parse(const char *line)
             if (IsArgDelim(*rest))
                 rest = LTrim(rest);
 
-        return factory->Create(FOut, rest);
+        return factory->Create(out, rest);
     }
     else
     {
@@ -302,8 +289,25 @@ TCommand *TCommandFactory::Parse(const char *line)
         cp = Unquote(Line.GetData(), rest);
         name = cp;
 
-        cmd = new TErrorCommand(FOut, name);
+        cmd = new TErrorCommand(out, name);
         delete cp;
         return cmd;
     }
+}
+
+/*##################  TCommandFactory::Run  ##########################
+*   Purpose....: Run command                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+void TCommandFactory::Run(TCommandOutput *out, const char *line)
+{
+    TCommand *cmd = Parse(out, line);
+    if (cmd)
+    {
+        cmd->Run();
+        delete cmd;
+    }        
 }
