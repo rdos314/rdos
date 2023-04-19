@@ -3510,11 +3510,29 @@ create_vfs_disc_cmd32   Endp
 ;
 ;       DESCRIPTION:    Close cmd
 ;
-;       PARAMETERS:     BX        Command handle
+;       PARAMETERS:     DS:EBX           Handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseCmd   Proc near
+    push ds
+    push fs
+    push eax
+;
+    mov al,ds:[ebx].ch_done
+    or al,al
+    jnz ccDone
+;
+    mov fs,ds:[ebx].ch_part_sel
+    mov ds,ds:[ebx].ch_msg_sel
+    mov ds:fc_ecx,0
+    mov bx,fs:vfsp_cmd_thread
+    Signal
+
+ccDone:
+    pop eax
+    pop fs
+    pop ds
     ret
 CloseCmd   Endp
 
@@ -3532,6 +3550,22 @@ CloseCmd   Endp
 close_vfs_cmd_name DB 'Close VFS Cmd', 0
 
 close_vfs_cmd   Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,VFS_CMD_HANDLE
+    DerefHandle
+    jc cchDone
+;
+    call CloseCmd
+    FreeHandle
+    clc
+
+cchDone:
+    pop ebx
+    pop eax
+    pop ds
     ret
 close_vfs_cmd   Endp
     
@@ -3969,12 +4003,8 @@ delete_cmd_handle   Proc far
     DerefHandle
     jc dchDone
 ;
-    mov esi,ebx
-    mov ax,ds:[ebx].ch_msg_sel
-    mov ds,eax
     call CloseCmd
 ;
-    mov ebx,esi
     FreeHandle
     clc
 
