@@ -78,6 +78,7 @@ protected:
         
     int OptScanBool(const char *optstr, int bool, const char *arg, int *value);
 
+    TString FMsg;
     TString FCmdLine;
     TString FHelpScreen;
     TCommand *FList;
