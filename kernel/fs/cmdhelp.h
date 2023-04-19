@@ -29,7 +29,6 @@
 #define _CMDHELP_H
 
 #include "file.h"
-#include "langstr.h"
 
 enum InternalErrorCodes
 {
