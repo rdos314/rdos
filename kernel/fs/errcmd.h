@@ -33,7 +33,7 @@
 class TErrorCommand : public TCommand
 {
 public:
-    TErrorCommand(const char *name);
+    TErrorCommand(TCommandOutput *out, const char *name);
 
     virtual int Execute(char *param);	
 };

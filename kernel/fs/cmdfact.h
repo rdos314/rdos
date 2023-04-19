@@ -47,7 +47,7 @@ protected:
     static const char *FindArg(int no);
     static char *SkipWord(char *p);
 
-    virtual TCommand *Create(const char *param) = 0;
+    virtual TCommand *Create(TCommandOutput *out, const char *param) = 0;
     virtual int PassAll();
     virtual int PassDir();
 	

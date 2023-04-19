@@ -294,7 +294,7 @@ TCommand *TCommandFactory::Parse(const char *line)
             if (IsArgDelim(*rest))
                 rest = LTrim(rest);
 
-        return factory->Create(rest);
+        return factory->Create(FOut, rest);
     }
     else
     {
@@ -302,7 +302,7 @@ TCommand *TCommandFactory::Parse(const char *line)
         cp = Unquote(Line.GetData(), rest);
         name = cp;
 
-        cmd = new TErrorCommand(name);
+        cmd = new TErrorCommand(FOut, name);
         delete cp;
         return cmd;
     }

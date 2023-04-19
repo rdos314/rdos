@@ -45,8 +45,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TErrorCommand::TErrorCommand(const char *name)
-  : TCommand("")
+TErrorCommand::TErrorCommand(TCommandOutput *out, const char *name)
+  : TCommand(out, "")
 {
     FMsg.printf("Bad command or filename - \"%s\".", name);
 }

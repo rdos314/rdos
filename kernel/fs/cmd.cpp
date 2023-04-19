@@ -83,10 +83,11 @@ TArg::~TArg()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand::TCommand(const char *param)
+TCommand::TCommand(TCommandOutput *out, const char *param)
   : FCmdLine(param)
 {
     FArgList = 0;
+    FOut = out;
 }
 
 /*##########################################################################
@@ -133,15 +134,17 @@ int TCommand::IsExit()
 #
 #   Name       : TCommand::Write
 #
-#   Purpose....: Write to std output
+#   Purpose....: Write
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TCommand::Write(char ch)
+void TCommand::Write(const char *str)
 {
+    if (FOut)
+        FOut->Write(str);
 }
 
 /*##########################################################################
@@ -155,8 +158,13 @@ void TCommand::Write(char ch)
 #   Returns....: *
 #
 ##########################################################################*/
-void TCommand::Write(const char *str)
+void TCommand::Write(char ch)
 {
+    char str[2];
+
+    str[0] = ch;
+    str[1] = 0;
+    Write(str);
 }
 
 /*##########################################################################
@@ -172,6 +180,7 @@ void TCommand::Write(const char *str)
 ##########################################################################*/
 void TCommand::Write(TString &str)
 {
+    Write(str.GetData());
 }
 
 /*##########################################################################

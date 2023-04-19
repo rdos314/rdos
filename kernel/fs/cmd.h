@@ -30,6 +30,7 @@
 
 #include "str.h"
 #include "parser.h"
+#include "cmdout.h"
 
 class TArg
 {
@@ -45,9 +46,8 @@ public:
 
 class TCommand : public TParser
 {
-    friend class TCommandLine;
 public:
-    TCommand(const char *param);
+    TCommand(TCommandOutput *out, const char *param);
     virtual ~TCommand();
 
     virtual int IsExit();
@@ -82,6 +82,7 @@ protected:
     TString FCmdLine;
     TString FHelpScreen;
     TCommand *FList;
+    TCommandOutput *FOut;
         
     TArg *FArgList;
     int FArgCount;
