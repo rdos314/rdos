@@ -3424,6 +3424,7 @@ scCopy:
     jnz scCopy
 ;
     mov es:fc_ecx,-1
+    mov es:fc_handle,0
     mov eax,VFS_CMD
     call PostMsg
 ;
@@ -3537,6 +3538,17 @@ start_wait_for_cmd      PROC far
 ;
     mov ds,es:cw_msg_sel
     mov ebx,ds:fc_handle
+    or ebx,ebx
+    jnz stwcCheck
+;
+    mov esi,es:cw_msg_id
+    dec esi
+    shl esi,4
+    add esi,OFFSET vfsp_cmd_arr
+    mov fs:[esi].vfss_thread,es
+    jmp stwcDone
+
+stwcCheck:
     call HandleToPartFs
     jc stwcDone
 ;
@@ -3588,6 +3600,9 @@ stop_wait_for_cmd       PROC far
 ;
     mov ds,es:cw_msg_sel
     mov ebx,ds:fc_handle
+    or ebx,ebx
+    jz spwcDone
+;
     call HandleToPartFs
     jc spwcDone
 ;
@@ -3598,7 +3613,7 @@ stop_wait_for_cmd       PROC far
     dec esi
     shl esi,4
     add esi,OFFSET vfsp_cmd_arr
-    mov fs:[esi].vfss_thread,es
+    mov fs:[esi].vfss_thread,0
 
 spwcDone:
     pop esi
@@ -3642,6 +3657,10 @@ is_cmd_idle     PROC far
 ;
     mov ds,es:cw_msg_sel
     mov ebx,ds:fc_handle
+    or ebx,ebx
+    stc
+    jz iciDone
+;
     call HandleToPartFs
     jc iciDone
 ;
@@ -3754,6 +3773,10 @@ is_vfs_cmd_done   Proc far
 ;
     mov ds,ds:[ebx].ch_msg_sel
     mov ebx,ds:fc_handle
+    or ebx,ebx
+    stc
+    jz icdDone
+;
     call HandleToPartEs
     cmc
     jnc icdDone
@@ -3793,7 +3816,24 @@ is_vfs_cmd_done   Endp
 get_vfs_resp_size_name DB 'Get VFS Resp Size', 0
 
 get_vfs_resp_size   Proc far
+    push ds
+    push ebx
+;
+    mov ax,VFS_CMD_HANDLE
+    DerefHandle
+    cmc
+    jnc grsDone
+;
+    mov ds,ds:[ebx].ch_msg_sel
+    mov eax,ds:fc_ecx
+    cmp eax,-1
+    jne grsDone
+;
     xor eax,eax
+
+grsDone:
+    pop ebx
+    pop ds
     ret
 get_vfs_resp_size   Endp
 
