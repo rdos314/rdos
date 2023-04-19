@@ -197,6 +197,7 @@ int TDisc::RunCmd(int handle, char *msg)
     ServNotifyVfsMsg(handle, "testing\r\n");
     ServNotifyVfsMsg(handle, "new row\r\n");
 
+    ServNotifyVfsMsg(handle, 0);
     return true;
 }
 

@@ -2457,6 +2457,9 @@ nvmDo:
     add edi,SIZE fs_cmd
     mov esi,edx
     xor ecx,ecx
+;
+    or esi,esi
+    jz nvmSave
 
 nvmCopy:
     inc ecx
