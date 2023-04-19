@@ -76,18 +76,7 @@ LocalCmd Proc near
     call LowCmd
     pop ecx
     pop edi
-
-lcWait:
-    mov eax,[edi].fc_ecx
-    cmp eax,-1
-    je lcComplete
 ;
-    mov ax,10
-    WaitMilliSec
-    jmp lcWait
-
-lcComplete:
-    mov [edi].fc_ecx,0
     and [edi].fc_eflags,NOT 1
     mov ebx,[edi].fc_handle
     ReplyVfsCmd
