@@ -76,9 +76,9 @@ fs_cmd      ENDS
 
 cmd_handle_seg     STRUC
 
-ch_base       handle_header <>
+ch_base            handle_header <>
 
-ch_sel        DW ?
+ch_msg_sel         DW ?
 
 cmd_handle_seg     ENDS
 
@@ -2433,6 +2433,9 @@ notify_vfs_msg    Proc far
 
 nvmRetry:
     mov ecx,ds:[ebx].fc_ecx
+    or ecx,ecx
+    jz nvmDone
+;
     cmp ecx,-1
     je nvmDo
 ;
@@ -2450,9 +2453,14 @@ nvmCopy:
     inc ecx
     lods ds:[esi]
     stos es:[edi]
+;
+    test di,0FFFh
+    jz nvmSave
+;
     or al,al
     jnz nvmCopy
-;
+
+nvmSave:
     mov ds:[ebx].fc_ecx,ecx
     mov ebx,ds:[ebx].fc_handle
     call HandleToPartEs
@@ -3381,10 +3389,12 @@ get_vfs_drive_free   Endp
 
 StartCmd   Proc near
     push ds
+    push es
     push fs
     push gs
     push ecx
     push esi
+    push edi
 ;
     mov esi,es
     mov gs,esi
@@ -3394,7 +3404,6 @@ StartCmd   Proc near
     jc scDone
 ;
     mov ds,fs:vfsp_disc_sel
-    push edi
     call AllocateMsg
 
 scCopy:
@@ -3403,18 +3412,23 @@ scCopy:
     or al,al
     jnz scCopy
 ;
-    pop edi
-;
     mov es:fc_ecx,-1
     mov eax,VFS_CMD
     call PostMsg
-    int 3
+;
+    mov cx,SIZE cmd_handle_seg
+    AllocateHandle
+    mov [ebx].ch_msg_sel,es
+    mov [ebx].hh_sign,VFS_CMD_HANDLE
+    movzx ebx,[ebx].hh_handle
 
 scDone:
+    pop edi
     pop esi
     pop ecx
     pop gs
     pop fs
+    pop es
     pop ds
     ret
 StartCmd  Endp
@@ -3609,7 +3623,7 @@ delete_cmd_handle   Proc far
     jc dchDone
 ;
     mov esi,ebx
-    mov ax,ds:[ebx].ch_sel
+    mov ax,ds:[ebx].ch_msg_sel
     mov ds,eax
     call CloseCmd
 ;
