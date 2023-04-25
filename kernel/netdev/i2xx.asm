@@ -966,8 +966,9 @@ MemDispTable2:
     DD OFFSET GetMac2,          SEG code
 
 PciVendorTab:
-pci00   DW 8086h, 1539h,    0
-pci01   DW 8086h, 157Bh,    0
+pci00   DW 8086h, 1533h,    0
+pci01   DW 8086h, 1539h,    0
+pci02   DW 8086h, 157Bh,    0
 pci07   DW 0,     0
 
 DevName1 DB 'i2xx-1', 0
