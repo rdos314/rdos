@@ -65,11 +65,15 @@ tx_tag          DW ?
 
 tx_descr         ENDS
 
+RX_DESCR_COUNT = 256
+
 CTRL_SC     = 1 SHL 26
 RCTL_RXEN   = 1 SHL 1
+RCTL_BAM    = 1 SHL 15
 RXDCTL_EN   = 1 SHL 25
 TCTL_TXEN   = 1 SHL 1
 TXDCTL_EN   = 1 SHL 25
+ICR_RXDW    = 1 SHL 7
 
 REG_CTRL    = 0
 REG_STATUS  = 8
@@ -102,6 +106,7 @@ FuncSel      DW ?
 
 RxRingSel    DW ?
 RxRingPhys   DD ?,?
+RxTail       DD ?
 
 TxRingPhys   DD ?,?
 TxRingSel    DW ?
@@ -113,6 +118,8 @@ SuperThread  DW ?
 PendInt      DD ?
 
 Mac          DB 6 DUP(?)
+
+RxLinearArr  DD RX_DESCR_COUNT DUP(?)
 
 data    ENDS
 
@@ -135,11 +142,30 @@ code    SEGMENT byte public 'CODE'
 
 NetInt  Proc far
     mov es,ds:FuncSel
+
+niLoop:
     mov eax,es:REG_ICR
-    lock or ds:PendInt,eax
+    or eax,eax
+    jz niDone
 ;
+    lock or ds:PendInt,eax
+    NotifyIrqActivity
+;
+    test eax,ICR_RXDW
+    jz niNotRx
+;
+    mov bx,ds:Handle
+    or bx,bx
+    jz niNotRx
+;
+    NetReceived
+    jmp niLoop
+
+niNotRx:
     mov bx,ds:SuperThread
     Signal
+
+niDone:
     ret
 NetInt  Endp
 
@@ -264,7 +290,7 @@ CreateRxRing    Proc near
 ;    
     mov ax,flat_sel
     mov es,ax
-    mov eax,1000h
+    mov eax,10h * RX_DESCR_COUNT
     AllocateBigLinear
     AllocatePhysical64
     mov ds:RxRingPhys,eax
@@ -278,7 +304,8 @@ CreateRxRing    Proc near
     mov ds:RxRingSel,bx
 ;
     mov es,bx
-    mov ecx,100h
+    mov ecx,RX_DESCR_COUNT
+    mov esi,OFFSET RxLinearArr
     xor edi,edi
 
 crLoop:
@@ -288,10 +315,20 @@ crLoop:
     mov es:[edi].rx_errors,0
     mov es:[edi].rx_tag,0
 ;
+    push ecx
+    mov eax,1000h    
+    AllocateBigLinear
+    mov ds:[esi],edx
+    pop ecx
+;
     AllocatePhysical64
     mov es:[edi].rx_phys,eax
     mov es:[edi].rx_phys+4,ebx
 ;
+    mov al,13h
+    SetPageEntry
+;
+    add esi,4
     add edi,16
     loop crLoop
 ;
@@ -370,6 +407,7 @@ InitRx  Proc near
 ;
     mov eax,es:REG_RCTL
     and eax,NOT RCTL_RXEN
+    or eax,RCTL_BAM
     mov es:REG_RCTL,eax
 ;
     mov eax,ds:RxRingPhys
@@ -393,11 +431,12 @@ irWaitEn:
     loop irWaitEn
 
 irDoneEn:
-    mov eax,0FF0h
+    mov eax,(RX_DESCR_COUNT - 1) SHL 4
     mov es:REG_RDT,eax
+    mov ds:RxTail,0
 ;
     mov eax,es:REG_RCTL
-    or eax,RCTL_RXEN
+    or eax,RCTL_RXEN OR RCTL_BAM
     mov es:REG_RCTL,eax
     ret
 InitRx  Endp
@@ -507,6 +546,7 @@ mem_super_thread:
     mov ds,bx
     GetThread
     mov ds:SuperThread,ax
+    mov es,ds:FuncSel
     
 mstLoop:
     WaitForSignal
@@ -528,13 +568,53 @@ mstLoop:
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MemPreview1  Proc far
+MemPreview  Proc near
+    push es
+    push ebx
+;
+    int 3
+    mov es,ds:RxRingSel
+    mov ebx,ds:RxTail
+    shl ebx,4
+    mov al,es:[ebx].rx_status
+    test al,1
     stc
+    jz mpDone
+;
+    mov ecx,flat_sel
+    mov es,ecx
+    mov ebx,ds:RxTail
+    mov ebx,ds:[4*ebx].RxLinearArr
+    mov dx,es:[ebx+12]
+    xchg dl,dh
+    xor ecx,ecx
+    clc
+    
+mpDone:
+    pop ebx
+    pop es
+    ret
+MemPreview  Endp
+
+MemPreview1  Proc far
+    push ds
+;
+    mov ecx,ether_data_sel
+    mov ds,ecx
+    call MemPreview
+;
+    pop ds
     ret
 MemPreview1  Endp
 
 MemPreview2  Proc far
-    stc
+    push ds
+;
+    mov ecx,ether_data2_sel
+    mov ds,ecx
+    call MemPreview
+;
+    pop ds
     ret
 MemPreview2  Endp
 
@@ -632,7 +712,6 @@ GetBuffer Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MemSend1  Proc far
-    int 3
     push ds
     push fs
     pushad
