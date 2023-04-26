@@ -42,6 +42,9 @@ ELSE
     .386p
 ENDIF
 
+RX_DESCR_COUNT = 256
+TX_DESCR_COUNT = 128
+
 rx_descr        STRUC
 
 rx_phys         DD ?,?
@@ -64,8 +67,6 @@ tx_resv         DB ?
 tx_tag          DW ?
 
 tx_descr         ENDS
-
-RX_DESCR_COUNT = 256
 
 CTRL_SC     = 1 SHL 26
 RCTL_RXEN   = 1 SHL 1
@@ -108,9 +109,11 @@ RxRingSel    DW ?
 RxRingPhys   DD ?,?
 RxTail       DD ?
 
-TxRingPhys   DD ?,?
 TxRingSel    DW ?
-TxTail       DW ?
+TxRingPhys   DD ?,?
+TxTail       DD ?
+TxAlloc      DD ?
+TxSection    section_typ <>
 
 Handle       DW ?
 SuperThread  DW ?
@@ -120,6 +123,7 @@ PendInt      DD ?
 Mac          DB 6 DUP(?)
 
 RxLinearArr  DD RX_DESCR_COUNT DUP(?)
+TxLinearArr  DD TX_DESCR_COUNT DUP(?)
 
 data    ENDS
 
@@ -299,7 +303,7 @@ CreateRxRing    Proc near
     SetPageEntry
 ;
     AllocateGdt
-    mov ecx,1000h
+    mov ecx,10h * RX_DESCR_COUNT
     CreateDataSelector16
     mov ds:RxRingSel,bx
 ;
@@ -354,34 +358,49 @@ CreateTxRing    Proc near
 ;    
     mov ax,flat_sel
     mov es,ax
-    mov eax,1000h
+    mov eax,10h * TX_DESCR_COUNT
     AllocateBigLinear
     AllocatePhysical64
+    InitSection ds:TxSection
     mov ds:TxRingPhys,eax
     mov ds:TxRingPhys+4,ebx
     or al,13h
     SetPageEntry
 ;
     AllocateGdt
-    mov ecx,1000h
+    mov ecx,10h * TX_DESCR_COUNT
     CreateDataSelector16
     mov ds:TxRingSel,bx
     mov ds:TxTail,0
+    mov ds:TxAlloc,0
 ;
     mov es,bx
-    mov ecx,100h
+    mov ecx,TX_DESCR_COUNT
+    mov esi,OFFSET TxLinearArr
     xor edi,edi
 
 ctLoop:
-    mov es:[edi].tx_phys,0
-    mov es:[edi].tx_phys+4,0
     mov es:[edi].tx_len,0
     mov es:[edi].tx_cso,0
     mov es:[edi].tx_cmd,0Bh
-    mov es:[edi].tx_sta,0
+    mov es:[edi].tx_sta,1
     mov es:[edi].tx_resv,0
     mov es:[edi].tx_tag,0
 ;
+    push ecx
+    mov eax,1000h    
+    AllocateBigLinear
+    mov ds:[esi],edx
+    pop ecx
+;
+    AllocatePhysical64
+    mov es:[edi].tx_phys,eax
+    mov es:[edi].tx_phys+4,ebx
+;
+    mov al,13h
+    SetPageEntry
+;
+    add esi,4
     add edi,16
     loop ctLoop
 ;
@@ -753,34 +772,83 @@ Remove2  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetBuffer Proc far
-    push eax
+GetBuffer Proc near
     push ebx
     push edx
+    push esi
 ;
-    push ecx
-    mov eax,1000h
-    AllocateBigLinear
-    pop ecx
+    mov es,ds:TxRingSel
+    EnterSection ds:TxSection
+;
+    mov ebx,ds:TxAlloc
+    mov edx,ebx
+    mov esi,ebx
+    shl ebx,4
+
+gbRetry:
+    mov al,es:[ebx].tx_sta
+    test al,1
+    jnz gbOk
+;
+    int 3
+    jmp gbRetry
+
+gbOk:
+    inc edx
+    cmp edx,TX_DESCR_COUNT
+    jne gbUpd
+;
+    xor edx,edx
+
+gbUpd:
+    mov ds:TxAlloc,edx
+    LeaveSection ds:TxSection
 ;
     add ecx,14
+    mov edx,ds:[4*esi].TxLinearArr
     AllocateGdt
-    CreateDataSelector32
-;
-    mov es,ebx
+    CreateAliasSelector16
+    mov es,bx
     mov edi,14
+    mov es:[edi-2],si
     sub ecx,14
 ;
+    pop esi
     pop edx
     pop ebx
-    pop eax
     ret
 GetBuffer Endp
+
+GetBuffer1  Proc far
+    push ds
+    push eax
+;
+    mov eax,ether_data_sel
+    mov ds,eax
+    call GetBuffer
+;
+    pop eax
+    pop ds
+    ret
+GetBuffer1  Endp
+
+GetBuffer2  Proc far
+    push ds
+    push eax
+;
+    mov eax,ether_data2_sel
+    mov ds,eax
+    call GetBuffer
+;
+    pop eax
+    pop ds
+    ret
+GetBuffer2  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           MemSend
+;           NAME:           Send
 ;
 ;           DESCRIPTION:    Send data
 ;
@@ -791,22 +859,7 @@ GetBuffer Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MemSend1  Proc far
-    push ds
-    push fs
-    pushad
-;
-    xor edi,edi
-    mov ax,ds:[esi]
-    stos word ptr es:[edi]
-    mov ax,[esi+2]
-    stos word ptr es:[edi]
-    mov ax,[esi+4]
-    stos word ptr es:[edi]
-;
-    mov eax,ether_data_sel
-    mov ds,eax
-;
+Send  Proc near
     mov ax,word ptr ds:Mac
     stos word ptr es:[edi]
     mov ax,word ptr ds:Mac+2
@@ -816,46 +869,23 @@ MemSend1  Proc far
 ;    
     mov ax,dx
     xchg al,ah
-    mov es:[edi],ax
+    xchg ax,es:[di]
+    add di,2
+    movzx esi,ax
 ;
     add ecx,14
     xor edi,edi
     NotifyEthernetPacket
 ;
-    mov ebx,es
-    GetSelectorBaseSize
-    test dx,0FFFh
-    jz ms1SelOk
-;
-    int 3
-
-ms1SelOk:
-    GetPageEntry
-    and ax,0F000h
-;
-    push eax
-    push ebx
-;
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-;
-    pop ebx
-    pop eax
-    FreeMem
-;    
     cmp ecx,60
-    jae ms1PadOk
+    jae sPadOk
 ;
     mov ecx,60
 
-ms1PadOk: 
+sPadOk: 
     mov es,ds:FuncSel
     mov fs,ds:TxRingSel
-    movzx esi,ds:TxTail
     shl esi,4
-    mov fs:[esi].tx_phys,eax
-    mov fs:[esi].tx_phys+4,ebx
     mov fs:[esi].tx_len,cx
     mov fs:[esi].tx_cso,0
     mov fs:[esi].tx_cmd,0Bh
@@ -863,105 +893,72 @@ ms1PadOk:
     mov fs:[esi].tx_resv,0
     mov fs:[esi].tx_tag,0
 ;
-    movzx esi,ds:TxTail
+    mov esi,ds:TxTail
+
+sMore:
+    mov edi,esi
+    shl edi,4
+    mov al,fs:[edi].tx_sta
+    or al,al
+    jnz sSetTail
+;
     inc esi
-    mov ds:TxTail,si
+    cmp esi,TX_DESCR_COUNT
+    jne sUpd
+;
+    xor esi,esi
+
+sUpd:
+    cmp esi,ds:TxAlloc
+    jne sMore
+
+sSetTail:
+    mov ds:TxTail,esi
     mov es:REG_TDT,esi
 ;
     xor eax,eax
     mov es,eax
 ;
-    popad
-    pop fs
-    pop ds
     ret
-MemSend1  Endp
+Send  Endp
 
-MemSend2  Proc far
+Send1  Proc far
     push ds
     push fs
     pushad
 ;
     xor edi,edi
-    mov ax,ds:[esi]
-    stos word ptr es:[edi]
-    mov ax,[esi+2]
-    stos word ptr es:[edi]
-    mov ax,[esi+4]
-    stos word ptr es:[edi]
+    movsd
+    movsw
+
+    mov eax,ether_data_sel
+    mov ds,eax
+    call Send
+;
+    popad
+    pop fs
+    pop ds
+    ret
+Send1  Endp
+
+Send2  Proc far
+    push ds
+    push fs
+    pushad
+;
+    xor edi,edi
+    movsd
+    movsw
 ;
     mov eax,ether_data2_sel
     mov ds,eax
-;
-    mov ax,word ptr ds:Mac
-    stos word ptr es:[edi]
-    mov ax,word ptr ds:Mac+2
-    stos word ptr es:[edi]
-    mov ax,word ptr ds:Mac+4
-    stos word ptr es:[edi]
-;    
-    mov ax,dx
-    xchg al,ah
-    mov es:[edi],ax
-;
-    add ecx,14
-    xor edi,edi
-    NotifyEthernetPacket
-;
-    mov ebx,es
-    GetSelectorBaseSize
-    test dx,0FFFh
-    jz ms2SelOk
-;
-    int 3
-
-ms2SelOk:
-    GetPageEntry
-    and ax,0F000h
-;
-    push eax
-    push ebx
-;
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-;
-    pop ebx
-    pop eax
-    FreeMem
-;    
-    cmp ecx,60
-    jae ms2PadOk
-;
-    mov ecx,60
-
-ms2PadOk: 
-    mov es,ds:FuncSel
-    mov fs,ds:TxRingSel
-    movzx esi,ds:TxTail
-    shl esi,4
-    mov fs:[esi].tx_phys,eax
-    mov fs:[esi].tx_phys+4,ebx
-    mov fs:[esi].tx_len,cx
-    mov fs:[esi].tx_cso,0
-    mov fs:[esi].tx_cmd,0Bh
-    mov fs:[esi].tx_sta,0
-    mov fs:[esi].tx_resv,0
-    mov fs:[esi].tx_tag,0
-;
-    movzx esi,ds:TxTail
-    inc esi
-    mov ds:TxTail,si
-    mov es:REG_TDT,esi
-;
-    xor eax,eax
-    mov es,eax
+    call Send
 ;
     popad
     pop fs
     pop ds
     ret
-MemSend2  Endp
+Send2  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1104,22 +1101,22 @@ SupervisorName1 DB 'Super i2xx-1',0
 SupervisorName2 DB 'Super i2xx-2',0
 
 MemDispTable1:
-    DD OFFSET Preview1,      SEG code
+    DD OFFSET Preview1,         SEG code
     DD OFFSET Receive1,         SEG code
     DD OFFSET Remove1,          SEG code
-    DD OFFSET GetBuffer,        SEG code
-    DD OFFSET MemSend1,         SEG code
+    DD OFFSET GetBuffer1,       SEG code
+    DD OFFSET Send1,            SEG code
     DD OFFSET GetAddress1,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET MemGetLinkState1, SEG code
     DD OFFSET GetMac1,          SEG code
 
 MemDispTable2:
-    DD OFFSET Preview2,      SEG code
+    DD OFFSET Preview2,         SEG code
     DD OFFSET Receive2,         SEG code
     DD OFFSET Remove2,          SEG code
-    DD OFFSET GetBuffer,        SEG code
-    DD OFFSET MemSend2,         SEG code
+    DD OFFSET GetBuffer2,       SEG code
+    DD OFFSET Send2,            SEG code
     DD OFFSET GetAddress2,      SEG code
     DD OFFSET GetPktAddress,    SEG code
     DD OFFSET MemGetLinkState2, SEG code
