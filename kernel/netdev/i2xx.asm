@@ -568,18 +568,17 @@ mstLoop:
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MemPreview  Proc near
+Preview  Proc near
     push es
     push ebx
 ;
-    int 3
     mov es,ds:RxRingSel
     mov ebx,ds:RxTail
     shl ebx,4
     mov al,es:[ebx].rx_status
     test al,1
     stc
-    jz mpDone
+    jz pDone
 ;
     mov ecx,flat_sel
     mov es,ecx
@@ -590,33 +589,29 @@ MemPreview  Proc near
     xor ecx,ecx
     clc
     
-mpDone:
+pDone:
     pop ebx
     pop es
     ret
-MemPreview  Endp
+Preview  Endp
 
-MemPreview1  Proc far
+Preview1  Proc far
     push ds
-;
     mov ecx,ether_data_sel
     mov ds,ecx
-    call MemPreview
-;
+    call Preview
     pop ds
     ret
-MemPreview1  Endp
+Preview1  Endp
 
-MemPreview2  Proc far
+Preview2  Proc far
     push ds
-;
     mov ecx,ether_data2_sel
     mov ds,ecx
-    call MemPreview
-;
+    call Preview
     pop ds
     ret
-MemPreview2  Endp
+Preview2  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -631,13 +626,52 @@ MemPreview2  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+Receive  Proc near
+    push ebx
+    push edx
+;
+    mov es,ds:RxRingSel
+    mov ebx,ds:RxTail
+    mov edx,ds:[4*ebx].RxLinearArr
+    shl ebx,4
+    movzx ecx,es:[ebx].rx_len
+;
+    AllocateGdt
+    CreateAliasSelector16
+    xor edi,edi
+    mov es,bx
+    NotifyEthernetPacket
+    mov edi,14
+    sub ecx,14
+;
+    pop edx
+    pop ebx
+    ret
+Receive   Endp
+
 Receive1  Proc far
-    int 3
+    push ds
+    push eax
+;
+    mov eax,ether_data_sel
+    mov ds,eax
+    call Receive
+;
+    pop eax
+    pop ds
     ret
 Receive1  Endp
 
 Receive2  Proc far
-    int 3
+    push ds
+    push eax
+;
+    mov eax,ether_data2_sel
+    mov ds,eax
+    call Receive
+;
+    pop eax
+    pop ds
     ret
 Receive2  Endp
 
@@ -650,13 +684,59 @@ Receive2  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+Remove  Proc near
+    push es
+    push ebx
+    push edx
+;
+    mov es,ds:RxRingSel
+    mov ebx,ds:RxTail
+    shl ebx,4
+    mov es:[ebx].rx_status,0
+    mov es:[ebx].rx_errors,0
+;
+    mov es,ds:FuncSel
+    mov ebx,ds:RxTail
+    mov es:REG_RDT,ebx
+;
+    inc ebx
+    cmp ebx,RX_DESCR_COUNT
+    jne rUpd
+;
+    xor ebx,ebx
+
+rUpd:
+    mov ds:RxTail,ebx
+;
+    pop edx
+    pop ebx
+    pop es
+    ret
+Remove   Endp
+
 Remove1  Proc far
-    int 3
+    push ds
+    push eax
+;
+    mov eax,ether_data_sel
+    mov ds,eax
+    call Remove
+;
+    pop eax
+    pop ds
     ret
 Remove1  Endp
 
 Remove2  Proc far
-    int 3
+    push ds
+    push eax
+;
+    mov eax,ether_data2_sel
+    mov ds,eax
+    call Remove
+;
+    pop eax
+    pop ds
     ret
 Remove2  Endp
 
@@ -923,7 +1003,8 @@ GetAddress2     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetPktAddress   Proc far
-    int 3
+    mov esi,6
+    xor edi,edi
     ret
 GetPktAddress   Endp
 
@@ -1023,7 +1104,7 @@ SupervisorName1 DB 'Super i2xx-1',0
 SupervisorName2 DB 'Super i2xx-2',0
 
 MemDispTable1:
-    DD OFFSET MemPreview1,      SEG code
+    DD OFFSET Preview1,      SEG code
     DD OFFSET Receive1,         SEG code
     DD OFFSET Remove1,          SEG code
     DD OFFSET GetBuffer,        SEG code
@@ -1034,7 +1115,7 @@ MemDispTable1:
     DD OFFSET GetMac1,          SEG code
 
 MemDispTable2:
-    DD OFFSET MemPreview2,      SEG code
+    DD OFFSET Preview2,      SEG code
     DD OFFSET Receive2,         SEG code
     DD OFFSET Remove2,          SEG code
     DD OFFSET GetBuffer,        SEG code
