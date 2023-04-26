@@ -116,7 +116,6 @@ TxAlloc      DD ?
 TxSection    section_typ <>
 
 Handle       DW ?
-SuperThread  DW ?
 
 PendInt      DD ?
 
@@ -166,8 +165,8 @@ niLoop:
     jmp niLoop
 
 niNotRx:
-    mov bx,ds:SuperThread
-    Signal
+;    mov bx,ds:SuperThread
+;    Signal
 
 niDone:
     ret
@@ -294,7 +293,7 @@ CreateRxRing    Proc near
 ;    
     mov ax,flat_sel
     mov es,ax
-    mov eax,10h * RX_DESCR_COUNT
+    mov eax,RX_DESCR_COUNT SHL 4
     AllocateBigLinear
     AllocatePhysical64
     mov ds:RxRingPhys,eax
@@ -303,7 +302,7 @@ CreateRxRing    Proc near
     SetPageEntry
 ;
     AllocateGdt
-    mov ecx,10h * RX_DESCR_COUNT
+    mov ecx,RX_DESCR_COUNT SHL 4
     CreateDataSelector16
     mov ds:RxRingSel,bx
 ;
@@ -358,7 +357,7 @@ CreateTxRing    Proc near
 ;    
     mov ax,flat_sel
     mov es,ax
-    mov eax,10h * TX_DESCR_COUNT
+    mov eax,TX_DESCR_COUNT SHL 4
     AllocateBigLinear
     AllocatePhysical64
     InitSection ds:TxSection
@@ -368,7 +367,7 @@ CreateTxRing    Proc near
     SetPageEntry
 ;
     AllocateGdt
-    mov ecx,10h * TX_DESCR_COUNT
+    mov ecx,TX_DESCR_COUNT SHL 4
     CreateDataSelector16
     mov ds:TxRingSel,bx
     mov ds:TxTail,0
@@ -434,7 +433,7 @@ InitRx  Proc near
     mov eax,ds:RxRingPhys+4
     mov es:REG_RDBA+4,eax
 ;
-    mov dword ptr es:REG_RDLEN,1000h
+    mov dword ptr es:REG_RDLEN,RX_DESCR_COUNT SHL 4
 ;
     mov eax,es:REG_RXDCTL
     or eax,RXDCTL_EN
@@ -484,7 +483,7 @@ InitTx  Proc near
     mov eax,ds:TxRingPhys+4
     mov es:REG_TDBA+4,eax
 ;
-    mov dword ptr es:REG_TDLEN,1000h
+    mov dword ptr es:REG_TDLEN,TX_DESCR_COUNT SHL 4
 ;
     mov eax,es:REG_TXDCTL
     or eax,TXDCTL_EN
@@ -553,26 +552,6 @@ ifDoneReset:
     pop es
     ret
 InitFunc        Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           mem_supervisor_thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-mem_super_thread:
-    mov ds,bx
-    GetThread
-    mov ds:SuperThread,ax
-    mov es,ds:FuncSel
-    
-mstLoop:
-    WaitForSignal
-    int 3
-    xor eax,eax
-    xchg eax,ds:PendInt
-    jmp mstLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1197,18 +1176,6 @@ init_pci1_found:
     pop ds
     mov ds:Handle,bx
 ;
-    push ds
-    mov bx,ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET mem_super_thread
-    mov edi,OFFSET SupervisorName1
-    mov ax,2
-    mov cx,1000h
-    CreateThread
-    pop ds
-;    
     mov ax,bp   
     clc
     jmp init_pci1_done
@@ -1288,18 +1255,6 @@ init_pci2_found:
     pop ds
     mov ds:Handle,bx
 ;
-    push ds
-    mov bx,ds
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov esi,OFFSET mem_super_thread
-    mov edi,OFFSET SupervisorName2
-    mov ax,2
-    mov cx,1000h
-    CreateThread
-    pop ds
-;    
     mov ax,bp   
     clc
     jmp init_pci2_done
