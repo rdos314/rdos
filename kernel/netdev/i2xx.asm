@@ -1247,7 +1247,7 @@ init_pci2_found:
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov esi,OFFSET MemDispTable1
+    mov esi,OFFSET MemDispTable2
     mov edi,OFFSET DriverName2
     mov al,1
     mov dx,0
