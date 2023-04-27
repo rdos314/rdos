@@ -855,6 +855,7 @@ Send  Proc near
     add ecx,14
     xor edi,edi
     NotifyEthernetPacket
+    FreeMem
 ;
     cmp ecx,60
     jae sPadOk
