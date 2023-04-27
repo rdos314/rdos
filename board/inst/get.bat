@@ -68,6 +68,7 @@ copy ..\..\kernel\audiodev\cs5536a.rdv files
 copy ..\..\kernel\audiodev\hda.rdv files
 copy ..\..\kernel\netdev\rtl8139.rdv files
 copy ..\..\kernel\netdev\rtl8169.rdv files
+copy ..\..\kernel\netdev\i2xx.rdv files
 copy \rdosdev\src\power.rdv files
 copy \rdosdev\src\nopower.rdv files
 copy \rdosdev\src\preem.rdv files
