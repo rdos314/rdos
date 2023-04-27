@@ -1265,6 +1265,7 @@ void SetReport(struct TTagCache *cache, struct THidReportIdEntry *report)
 void SetUsagePage(struct TTagCache *cache, int val)
 {
     cache->UsagePage = val;
+    cache->UsageCount = 0;
 }
 
 /*##########################################################################
