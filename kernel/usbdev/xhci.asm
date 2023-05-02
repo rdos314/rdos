@@ -3828,7 +3828,18 @@ HandleRaw   Proc near
     cmp edx,eax
     je hrHandle
 ;
-    int 3
+    mov dl,gs:ued_address
+    movzx ebx,dl
+    shl ebx,4
+    add ebx,ds:xhc_port_offset
+;    
+    mov eax,ds:[ebx]
+    test al,1
+    jz hrDone
+;
+    and eax,0EE03E1h
+    or al,10h
+    mov ds:[ebx],eax
     jmp hrDone
 
 hrHandle:
