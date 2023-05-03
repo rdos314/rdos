@@ -116,6 +116,32 @@ void TInfoCommand::ShowHeader()
 
 /*##########################################################################
 #
+#   Name       : TShowPartitionCommand::ShowDisc
+#
+#   Purpose....: Show disc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInfoCommand::ShowDisc()
+{
+    long long TotalSectors = FDisc->FSectorCount;
+    const char *parttype;
+
+    if (FDisc->IsGpt())
+        parttype = "GPT";
+    else
+        parttype = "MBR";
+
+    FMsg.printf("%s: %04lX_%08lX sectors\r\n", parttype, (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF));
+    Write(FMsg);
+    Write("  DRV           SECTORS            FILESYS        SIZE GUID\r\n");
+}
+
+/*##########################################################################
+#
 #   Name       : TInfoCommand::Execute
 #
 #   Purpose....: Run command
@@ -128,6 +154,7 @@ void TInfoCommand::ShowHeader()
 int TInfoCommand::Execute(char *param)
 {
     ShowHeader();
+    ShowDisc();
 
     return 0;
 }

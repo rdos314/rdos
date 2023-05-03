@@ -51,6 +51,7 @@ public:
 
 protected:
     void ShowHeader();
+    void ShowDisc();
 
     TDisc *FDisc;
 };
