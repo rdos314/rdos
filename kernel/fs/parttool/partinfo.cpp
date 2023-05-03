@@ -98,7 +98,11 @@ TInfoCommand::TInfoCommand(TDisc *disc, TCommandOutput *out, const char *param)
 ##########################################################################*/
 int TInfoCommand::Execute(char *param)
 {
-    Write("Info test\r\n");
+    TString str;
+
+    str.printf("Disc %d\r\n", FDisc->GetDiscNr());
+
+    Write(str);
 
     return 0;
 }

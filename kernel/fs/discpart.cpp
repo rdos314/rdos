@@ -218,6 +218,25 @@ TDiscServer *TDisc::GetServer()
 
 /*##########################################################################
 #
+#   Name       : TDisc::GetDiscNr
+#
+#   Purpose....: Get disc #
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDisc::GetDiscNr()
+{
+    int handle = FServer->GetHandle();
+
+    handle = (handle >> 8) & 0xFF;
+    return handle - 1;    
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::GrowPart
 #
 #   Purpose....: Grow part array

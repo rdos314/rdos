@@ -68,6 +68,7 @@ public:
     void Run();
 
     TDiscServer *GetServer();
+    int GetDiscNr();
 
     void Add(TPartition *part);
     void Remove(TPartition *part);
