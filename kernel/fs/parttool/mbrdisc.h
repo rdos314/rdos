@@ -111,7 +111,8 @@ public:
     unsigned int ChsToLba(struct TMbrChs *entry);
     void LbaToChs(unsigned int Sector, struct TMbrChs *Entry);
 
-    virtual void LoadPart();
+    virtual bool IsGpt();
+    virtual void LoadPart();    
 
     TMbrPartitionTable PartRoot;
 

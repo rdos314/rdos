@@ -302,6 +302,22 @@ TGptDisc::~TGptDisc()
 
 /*##########################################################################
 #
+#   Name       : TGptDisc::IsGpt
+#
+#   Purpose....: Is GPT partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TGptDisc::IsGpt()
+{
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TGptDisc::LoadPart
 #
 #   Purpose....: Load partitions

@@ -73,6 +73,7 @@ public:
     void Remove(TPartition *part);
     void Clear();
 
+    virtual bool IsGpt() = 0;
     virtual int RunCmd(int handle, char *msg);
 
     int FBytesPerSector;

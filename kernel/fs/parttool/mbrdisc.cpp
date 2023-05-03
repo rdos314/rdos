@@ -403,6 +403,22 @@ void TMbrDisc::AddFsParts(struct TMbrPartitionTable *table)
 
 /*##########################################################################
 #
+#   Name       : TMbrDisc::IsGpt
+#
+#   Purpose....: Is GPT partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TMbrDisc::IsGpt()
+{
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TMbrDisc::LoadPart
 #
 #   Purpose....: Load partitions

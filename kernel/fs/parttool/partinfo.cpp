@@ -45,9 +45,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TInfoFactory::TInfoFactory()
+TInfoFactory::TInfoFactory(TDisc *Disc)
   : TCommandFactory("INFO")
 {
+    FDisc = Disc;
 }
 
 /*##########################################################################
@@ -63,7 +64,7 @@ TInfoFactory::TInfoFactory()
 ##########################################################################*/
 TCommand *TInfoFactory::Create(TCommandOutput *out, const char *param)
 {
-    return new TInfoCommand(out, param);
+    return new TInfoCommand(FDisc, out, param);
 }
 
 /*##########################################################################
@@ -77,10 +78,11 @@ TCommand *TInfoFactory::Create(TCommandOutput *out, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TInfoCommand::TInfoCommand(TCommandOutput *out, const char *param)
+TInfoCommand::TInfoCommand(TDisc *disc, TCommandOutput *out, const char *param)
   : TCommand(out, param)
 {
     FHelpScreen = "Show parttool info";
+    FDisc = disc;
 }
 
 /*##########################################################################

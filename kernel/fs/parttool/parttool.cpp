@@ -68,14 +68,15 @@ int main(int argc, char **argv)
 
     if (argc >= 2)
     {
-        info = new TInfoFactory;
-
         ptr = argv[1];
         dev = atoi(ptr);
 
         Server = new TDiscServer;
         Disc = CreateDisc(Server);
         Disc->LoadPart();
+
+        info = new TInfoFactory(Disc);
+
         Disc->Run();
     }
 }

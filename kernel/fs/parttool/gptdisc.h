@@ -93,6 +93,7 @@ public:
     TGptDisc(TDiscServer *server);
     ~TGptDisc();
 
+    virtual bool IsGpt();
     virtual void LoadPart();
 
     TGptTable PrimaryTable;

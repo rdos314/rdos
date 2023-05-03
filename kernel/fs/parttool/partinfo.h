@@ -30,24 +30,27 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
+#include "discpart.h"
 
 class TInfoFactory : public TCommandFactory
 {
 public:
-    TInfoFactory();
+    TInfoFactory(TDisc *Disc);
     virtual TCommand *Create(TCommandOutput *out, const char *param);
 
 protected:
+    TDisc *FDisc;
 };
 
 class TInfoCommand : public TCommand
 {
 public:
-    TInfoCommand(TCommandOutput *out, const char *param);
+    TInfoCommand(TDisc *disc, TCommandOutput *out, const char *param);
 
     virtual int Execute(char *param);
 
 protected:
+    TDisc *FDisc;
 };
 
 #endif
