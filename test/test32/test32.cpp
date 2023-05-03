@@ -98,31 +98,10 @@ static void Msg(TVfsCmd *cmd, const char *msg)
 
 void main()
 {
-    long amount;
-    long discount;
-    long long lvat;
-    int pvat;
-    int vat;
-    int val;
-    double dval;
-   
-    amount = 10072;
-//    discount = 32;
-//    amount -= discount;
-
-    pvat = 2500;
-
-    lvat = (100000000LL * (long long)amount) / (10000LL + (long long)pvat);
-    lvat = 10000L * (long long)amount - lvat;
-    lvat += 5000;
-    lvat = lvat / 10000L;
-    vat = (int)val;
-
-
     TVfsDiscCmd *cmd;
     TWait Wait;
 
-    cmd = new TVfsDiscCmd(2, "?");
+    cmd = new TVfsDiscCmd(1, "info");
     cmd->OnDone = ::Done;
     cmd->OnMsg = ::Msg;
     Wait.Add(cmd);

@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-944
-256
+1072
+512
 8320
 9216
 2
@@ -65,7 +65,7 @@ VComponent
 16
 WRect
 2176
-605
+597
 5680
 4096
 0
@@ -115,7 +115,7 @@ WRect
 928
 896
 5680
-4292
+4283
 0
 0
 26
@@ -123,15 +123,15 @@ WFileName
 12
 parttool.tgt
 0
-4
+0
 27
 VComponent
 28
 WRect
 368
-341
+332
 5680
-4300
+4292
 0
 0
 29
@@ -140,4 +140,4 @@ WFileName
 cmdlib.tgt
 0
 0
-27
+24

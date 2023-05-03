@@ -10,6 +10,10 @@
 #include "mbrdisc.h"
 #include "gptdisc.h"
 
+#include "partinfo.h"
+
+static TCommandFactory *info;
+
 
 /*##########################################################################
 #
@@ -64,6 +68,8 @@ int main(int argc, char **argv)
 
     if (argc >= 2)
     {
+        info = new TInfoFactory;
+
         ptr = argv[1];
         dev = atoi(ptr);
 
