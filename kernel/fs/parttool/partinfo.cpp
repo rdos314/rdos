@@ -116,6 +116,51 @@ void TInfoCommand::ShowHeader()
 
 /*##########################################################################
 #
+#   Name       : TShowPartitionCommand::ShowPart
+#
+#   Purpose....: Show part
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInfoCommand::ShowPart(TPartition *part)
+{
+    long long start = part->GetStartSector();
+    long long end = start + part->GetSectorCount() - 1;
+    int handle = part->Handle;
+    const char *fstype;
+
+    switch (part->GetType())
+    {
+        case PART_TYPE_FAT12:
+            fstype = "FAT12";
+            break;
+
+        case PART_TYPE_FAT16:
+            fstype = "FAT16";
+            break;
+
+        case PART_TYPE_FAT32:
+            fstype = "FAT32";
+            break;
+
+        default:
+            fstype = "UNKNOWN";
+            break;
+    }
+
+    FMsg.printf("%6d %04lX_%08lX-%04lX_%08lX %s \r\n",
+                    handle,
+                    (int)(start >> 32), (int)(start & 0xFFFFFFFF),
+                    (int)(end >> 32), (int)(end & 0xFFFFFFFF),
+                    fstype);
+    Write(FMsg);
+}
+
+/*##########################################################################
+#
 #   Name       : TShowPartitionCommand::ShowDisc
 #
 #   Purpose....: Show disc
@@ -129,6 +174,7 @@ void TInfoCommand::ShowDisc()
 {
     long long TotalSectors = FDisc->FSectorCount;
     const char *parttype;
+    int i;
 
     if (FDisc->IsGpt())
         parttype = "GPT";
@@ -137,7 +183,10 @@ void TInfoCommand::ShowDisc()
 
     FMsg.printf("%s: %04lX_%08lX sectors\r\n", parttype, (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF));
     Write(FMsg);
-    Write("  DRV           SECTORS            FILESYS        SIZE GUID\r\n");
+    Write("HANDLE SECTORS                     FILESYS\r\n");
+
+    for (i = 0; i < FDisc->FCurrPartCount; i++)
+        ShowPart(FDisc->FPartArr[i]);
 }
 
 /*##########################################################################
