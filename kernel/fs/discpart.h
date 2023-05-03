@@ -70,6 +70,9 @@ public:
     TDiscServer *GetServer();
     int GetDiscNr();
 
+    long long GetCached();
+    long long GetLocked();
+
     void Add(TPartition *part);
     void Remove(TPartition *part);
     void Clear();

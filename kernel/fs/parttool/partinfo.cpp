@@ -87,7 +87,36 @@ TInfoCommand::TInfoCommand(TDisc *disc, TCommandOutput *out, const char *param)
 
 /*##########################################################################
 #
-#   Name       : TPciCommand::Execute
+#   Name       : TInfoCommand::ShowHeader
+#
+#   Purpose....: Show disc header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInfoCommand::ShowHeader()
+{
+    char str[256];
+    long long CacheSize = FDisc->GetCached();
+    long long LockSize = FDisc->GetLocked();
+    long double cached;
+    long double locked;
+
+    RdosGetDiscVendorInfo(FDisc->GetDiscNr(), str, 256);
+    FMsg.printf("Disc %d, %s\r\n", FDisc->GetDiscNr(), str);
+    Write(FMsg);
+
+    cached = (long double)CacheSize / 1024.0 / 1024.0;
+    locked = (long double)LockSize / 1024.0 / 1024.0;
+    FMsg.printf("Cached %5.3f MB, locked %5.3f MB\r\n", cached, locked);
+    Write(FMsg);
+}
+
+/*##########################################################################
+#
+#   Name       : TInfoCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -98,11 +127,7 @@ TInfoCommand::TInfoCommand(TDisc *disc, TCommandOutput *out, const char *param)
 ##########################################################################*/
 int TInfoCommand::Execute(char *param)
 {
-    TString str;
-
-    str.printf("Disc %d\r\n", FDisc->GetDiscNr());
-
-    Write(str);
+    ShowHeader();
 
     return 0;
 }

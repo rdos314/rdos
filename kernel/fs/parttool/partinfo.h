@@ -50,6 +50,8 @@ public:
     virtual int Execute(char *param);
 
 protected:
+    void ShowHeader();
+
     TDisc *FDisc;
 };
 

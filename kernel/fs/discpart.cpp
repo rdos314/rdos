@@ -235,6 +235,30 @@ int TDisc::GetDiscNr()
     return handle - 1;    
 }
 
+/*##################  TDisc::GetCached  #############
+*   Purpose....: Get current cache size                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+long long TDisc::GetCached()
+{
+    return RdosGetDiscCache(GetDiscNr());
+}
+
+/*##################  TDisc::GetLocked  #############
+*   Purpose....: Get current locked size                                  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+long long TDisc::GetLocked()
+{
+    return RdosGetDiscLocked(GetDiscNr());
+}
+
 /*##########################################################################
 #
 #   Name       : TDisc::GrowPart
