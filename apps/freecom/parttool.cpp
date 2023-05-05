@@ -135,6 +135,28 @@ void TPartToolInteract::DisplayPrompt()
 
 /*##########################################################################
 #
+#   Name       : TPartToolInteract::RunDisc
+#
+#   Purpose....: Run disc command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartToolInteract::RunDisc(const char *param)
+{
+    TWait Wait;
+    TPartToolDisc cmd(this, FDiscNr, param);
+
+    Wait.Add(&cmd);
+
+    while (!cmd.IsDone())
+        Wait.WaitForever();
+}
+
+/*##########################################################################
+#
 #   Name       : TPartToolInteract::Run
 #
 #   Purpose....: Run interaction
@@ -160,9 +182,73 @@ void TPartToolInteract::Run()
             if (!strcmp(param, "exit"))
                 break;
             else
-                Write(param);
+                RunDisc(param);
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolDisc::TPartToolDisc
+#
+#   Purpose....: Constructor for TPartToolDisc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPartToolDisc::TPartToolDisc(TPartToolInteract *interact, int disc, const char *cmd)
+ : TVfsDiscCmd(disc, cmd)
+{
+    FInteract = interact;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolDisc::~TPartToolDisc
+#
+#   Purpose....: Destructor for TPartToolDisc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPartToolDisc::~TPartToolDisc()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolDisc::NotifyDone
+#
+#   Purpose....: Notify done
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartToolDisc::NotifyDone()
+{
+    FInteract->Write("\r\n\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolDisc::NotifyMsg
+#
+#   Purpose....: Notify msg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartToolDisc::NotifyMsg(const char *msg)
+{
+    FInteract->Write(msg);
 }
 
 /*##########################################################################

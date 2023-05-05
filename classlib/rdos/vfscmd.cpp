@@ -82,6 +82,40 @@ bool TVfsCmd::IsDone()
 
 /*##########################################################################
 #
+#   Name       : TVfsCmd::NotifyDone
+#
+#   Purpose....: Notify done
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVfsCmd::NotifyDone()
+{
+    if (OnDone)
+        (*OnDone)(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TVfsCmd::NotifyMsg
+#
+#   Purpose....: Notify msg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVfsCmd::NotifyMsg(const char *msg)
+{
+    if (OnMsg)
+        (*OnMsg)(this, msg);
+}
+
+/*##########################################################################
+#
 #   Name       : TVfsCmd::SignalNewData
 #
 #   Purpose....: Signal new data
@@ -97,10 +131,7 @@ void TVfsCmd::SignalNewData()
     char *msg;
 
     if (IsDone())
-    {
-        if (OnDone)
-            (*OnDone)(this);
-    }
+        NotifyDone();
     else
     {
         size = RdosGetVfsResponseSize(FHandle);
@@ -109,9 +140,7 @@ void TVfsCmd::SignalNewData()
             msg = new char[size + 1];
             RdosGetVfsResponseData(FHandle, msg, size);
             msg[size] = 0;
-            if (OnMsg)
-                (*OnMsg)(this, msg);
-
+            NotifyMsg(msg);
             delete msg;
         }
     }

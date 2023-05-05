@@ -30,6 +30,7 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
+#include "disccmd.h"
 
 class TPartToolFactory : public TCommandFactory
 {
@@ -52,7 +53,22 @@ public:
     virtual void Run();
 
 protected:
+    void RunDisc(const char *param);
+
     int FDiscNr;
+};
+
+class TPartToolDisc : public TVfsDiscCmd
+{
+public:
+    TPartToolDisc(TPartToolInteract *interact, int disc, const char *cmd);
+    virtual ~TPartToolDisc();
+
+    virtual void NotifyDone();
+    virtual void NotifyMsg(const char *msg);
+
+protected:
+    TPartToolInteract *FInteract;
 };
 
 class TPartToolCommand : public TCommand

@@ -37,6 +37,8 @@ public:
     virtual ~TVfsCmd();
 
     bool IsDone();
+    virtual void NotifyDone();
+    virtual void NotifyMsg(const char *msg);
 
     void (*OnDone)(TVfsCmd *VfsCmd);
     void (*OnMsg)(TVfsCmd *VfsCmd, const char *msg);
