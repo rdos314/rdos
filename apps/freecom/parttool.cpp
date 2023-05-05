@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 
 #include "cmdhelp.h"
 #include "lang.h"
@@ -68,6 +69,104 @@ TCommand *TPartToolFactory::Create(TSession *session, const char *param)
 
 /*##########################################################################
 #
+#   Name       : TPartToolInteract::TPartToolInteract
+#
+#   Purpose....: Constructor for TPartToolInteract
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPartToolInteract::TPartToolInteract(TKeyboardDevice *Keyboard)
+ : TInteract(Keyboard)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolInteract::~TPartToolInteract
+#
+#   Purpose....: Destructor for TPartToolInteract
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPartToolInteract::~TPartToolInteract()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolInteract::Setup
+#
+#   Purpose....: Setup disc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartToolInteract::Setup(int DiscNr)
+{
+    FDiscNr = DiscNr;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolInteract::DisplayPrompt
+#
+#   Purpose....: Display prompt
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartToolInteract::DisplayPrompt()
+{
+    TString str;
+
+    str.printf("parttool.%d>", FDiscNr);
+    Write(str.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolInteract::Run
+#
+#   Purpose....: Run interaction
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartToolInteract::Run()
+{
+    int ok;
+    char param[256];
+
+    for (;;)
+    {
+        if (FEcho)
+            DisplayPrompt();
+
+        ok = ReadCmd(param, 256);
+        if (ok)
+        {
+            if (!strcmp(param, "exit"))
+                break;
+            else
+                Write(param);
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TPartToolCommand::TPartToolCommand
 #
 #   Purpose....: Constructor for TPartToolCommand
@@ -79,7 +178,22 @@ TCommand *TPartToolFactory::Create(TSession *session, const char *param)
 ##########################################################################*/
 TPartToolCommand::TPartToolCommand(TSession *session, const char *param)
   : TCommand(session, param),
-    TInteract(session->GetKeyboard())
+    FInteract(session->GetKeyboard())
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolCommand::~TPartToolCommand
+#
+#   Purpose....: Destructor for TPartToolCommand
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPartToolCommand::~TPartToolCommand()
 {
 }
 
@@ -96,37 +210,27 @@ TPartToolCommand::TPartToolCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TPartToolCommand::Execute(char *param)
 {
-    Run();
+    int DiscNr;
 
-    return 1;
-}
+    if (!ScanCmdLine(param, 0))
+         return 1;
 
-/*##########################################################################
-#
-#   Name       : TPartToolCommand::DisplayPrompt
-#
-#   Purpose....: Display prompt
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPartToolCommand::DisplayPrompt()
-{
-}
+    if (FArgCount < 1)
+    {
+        FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+        Write(FMsg.GetData());
+        return E_Useage;
+    }
 
-/*##########################################################################
-#
-#   Name       : TPartToolCommand::Run
-#
-#   Purpose....: Run interaction
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPartToolCommand::Run()
-{
+    if (sscanf(FArgList->FName.GetData(), "%d", &DiscNr) != 1)
+    {
+        ErrorSyntax(0);
+        return 1;
+    }
+
+    FInteract.Setup(DiscNr);
+
+    FInteract.Run();
+
+    return 0;
 }

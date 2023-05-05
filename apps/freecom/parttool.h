@@ -40,14 +40,31 @@ public:
 protected:
 };
 
-class TPartToolCommand : public TCommand, TInteract
+class TPartToolInteract : public TInteract
+{
+public:
+    TPartToolInteract(TKeyboardDevice *Keyboard);
+    ~TPartToolInteract();
+
+    void Setup(int DiscNr);
+
+    virtual void DisplayPrompt();
+    virtual void Run();
+
+protected:
+    int FDiscNr;
+};
+
+class TPartToolCommand : public TCommand
 {
 public:
     TPartToolCommand(TSession *session, const char *param);
+    ~TPartToolCommand();
 
     virtual int Execute(char *param);
-    virtual void DisplayPrompt();
-    virtual void Run();
+
+protected:
+    TPartToolInteract FInteract;
 };
 
 #endif
