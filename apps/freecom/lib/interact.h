@@ -40,12 +40,13 @@ public:
     ~TInteract();
 
     virtual void DisplayPrompt() = 0;
-
     virtual void Run() = 0;
 
     void SetEchoOn();
     void SetEchoOff();
     bool IsEchoOn();
+
+    TKeyboardDevice *GetKeyboard();
     
     void Write(char ch);
     void Write(const char *str);

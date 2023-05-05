@@ -101,6 +101,22 @@ TInteract::~TInteract()
 
 /*##########################################################################
 #
+#   Name       : TInteract::GetKeyboard
+#
+#   Purpose....: Get keyboard
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TKeyboardDevice *TInteract::GetKeyboard()
+{
+    return FKeyboard;
+}
+
+/*##########################################################################
+#
 #   Name       : TInteract::SetEchoOn
 #
 #   Purpose....: Set Echo state to on

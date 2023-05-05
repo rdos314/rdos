@@ -40,12 +40,14 @@ public:
 protected:
 };
 
-class TPartToolCommand : public TCommand
+class TPartToolCommand : public TCommand, TInteract
 {
 public:
     TPartToolCommand(TSession *session, const char *param);
 
     virtual int Execute(char *param);
+    virtual void DisplayPrompt();
+    virtual void Run();
 };
 
 #endif

@@ -78,7 +78,8 @@ TCommand *TPartToolFactory::Create(TSession *session, const char *param)
 #
 ##########################################################################*/
 TPartToolCommand::TPartToolCommand(TSession *session, const char *param)
-  : TCommand(session, param)
+  : TCommand(session, param),
+    TInteract(session->GetKeyboard())
 {
 }
 
@@ -95,5 +96,37 @@ TPartToolCommand::TPartToolCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TPartToolCommand::Execute(char *param)
 {
+    Run();
+
     return 1;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolCommand::DisplayPrompt
+#
+#   Purpose....: Display prompt
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartToolCommand::DisplayPrompt()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPartToolCommand::Run
+#
+#   Purpose....: Run interaction
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartToolCommand::Run()
+{
 }
