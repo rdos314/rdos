@@ -95,6 +95,7 @@
 #include "switch.h"
 #include "temp.h"
 #include "net.h"
+#include "parttool.h"
 
 #include "file.h"
 #include "path.h"
@@ -151,6 +152,7 @@ static TCommandFactory *pci;
 static TCommandFactory *ping;
 static TCommandFactory *prompt;
 static TCommandFactory *showpart;
+static TCommandFactory *parttool;
 static TCommandFactory *synctime;
 static TCommandFactory *sysinfo;
 static TCommandFactory *pause;
@@ -223,6 +225,7 @@ TSession::TSession(TKeyboardDevice *Keyboard)
         pci = new TPciFactory;
         pause = new TPauseFactory;
         path = new TPathFactory;
+        parttool = new TPartToolFactory;
         showpart = new TShowPartitionFactory;
         net = new TNetFactory;
         move = new TMoveFactory;
@@ -334,6 +337,7 @@ TSession::~TSession()
         delete ping;
         delete path;
         delete pause;
+        delete parttool;
         delete showpart;
         delete net;
         delete move;
