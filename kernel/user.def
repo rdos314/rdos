@@ -990,5 +990,6 @@ add_wait_for_vfs_cmd_nr           = 807
 is_vfs_cmd_done_nr                = 808
 get_vfs_resp_size_nr              = 809
 get_vfs_resp_data_nr              = 810
+is_vfs_disc_nr                    = 811
 
 usergate_entries                  = 820

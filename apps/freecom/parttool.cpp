@@ -28,6 +28,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <rdos.h>
+
 #include "cmdhelp.h"
 #include "lang.h"
 #include "parttool.h"
@@ -314,9 +316,16 @@ int TPartToolCommand::Execute(char *param)
         return 1;
     }
 
-    FInteract.Setup(DiscNr);
+    if (RdosIsVfsDisc(DiscNr))
+    {
+        FInteract.Setup(DiscNr);
+        FInteract.Run();
+        return 0;
+    }
+    else
+    {
+        ErrorSyntax(0);
+        return 1;
+    }
 
-    FInteract.Run();
-
-    return 0;
 }

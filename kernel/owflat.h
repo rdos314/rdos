@@ -3313,6 +3313,12 @@
     __parm [__eax] \
     __value [__eax]
 
+#pragma aux RdosIsVfsDisc = \
+    CallGate_is_vfs_disc  \
+    CarryToBool \
+    __parm [__eax] \
+    __value [__eax]
+
 #pragma aux RdosGetDiscCache = \
     CallGate_get_disc_cache  \
     "jnc Ok"\

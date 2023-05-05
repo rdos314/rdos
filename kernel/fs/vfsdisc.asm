@@ -1129,6 +1129,42 @@ read_vfs_disc   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           IsVfsDisc
+;
+;       DESCRIPTION:    Check if VFS disc
+;
+;       PARAMETERS:     AL              Disc #
+;
+;       RETURNS:        NC              VFS disc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_vfs_disc_name       DB 'Is Vfs Disc',0
+
+is_vfs_disc    Proc far
+    push ds
+    push ebx
+;
+    mov bx,SEG data
+    mov ds,bx
+    movzx ebx,al
+    shl ebx,1
+    mov bx,ds:[ebx].disc_arr
+    or bx,bx
+    stc
+    jz ivdDone
+;
+    clc
+
+ivdDone:
+    pop ebx
+    pop ds
+    ret
+is_vfs_disc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetDiscCache
 ;
 ;       DESCRIPTION:    Get current size of disc cache
@@ -1250,6 +1286,12 @@ init_disc    Proc near
     xor cl,cl
     mov ax,read_vfs_disc_nr
     RegisterOsGate
+;
+    mov esi,OFFSET is_vfs_disc
+    mov edi,OFFSET is_vfs_disc_name
+    xor dx,dx
+    mov ax,is_vfs_disc_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_disc_cache
     mov edi,OFFSET get_disc_cache_name

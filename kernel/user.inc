@@ -2185,6 +2185,11 @@ GetDiscVendorInfo     MACRO
                                                 ENDM
 
 ; IN   AL              Disc #
+IsVfsDisc     MACRO
+        UserGate is_vfs_disc_nr
+                                               ENDM
+
+; IN   AL              Disc #
 ; OUT EDX:EAX          Cached bytes
 GetDiscCache     MACRO
         UserGate get_disc_cache_nr

@@ -908,6 +908,8 @@ void RDOSAPI RdosSyncDiscPart(int DiscNr);
 int RDOSAPI RdosSetDiscInfo(int DiscNr, int SectorSize, long Sectors, int BiosSectorsPerCyl, int BiosHeads);
 int RDOSAPI RdosGetDiscInfo(int DiscNr, int *SectorSize, long long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
 void RDOSAPI RdosGetDiscVendorInfo(int DiscNr, char *Buf, int Size);
+
+int RDOSAPI RdosIsVfsDisc(int DiscNr);
 int RDOSAPI RdosGetDiscCacheSize(int DiscNr);
 long long RDOSAPI RdosGetDiscCache(int DiscNr);
 long long RDOSAPI RdosGetDiscLocked(int DiscNr);
