@@ -102,7 +102,6 @@
 
 #define MAX_X   79
 #define MAX_Y   24
-#define MAX_HISTORY 100
 
 #define STACK_SIZE      0x2000
 
@@ -175,9 +174,6 @@ static TCommandFactory *volume;
 static TCommandFactory *wait;
 static TCommandFactory *wipedir;
 
-static TStringList *History;
-static TKeyboardDevice *Keyboard;
-
 int TSession::Count = 0;
 
 /*##########################################################################
@@ -191,12 +187,10 @@ int TSession::Count = 0;
 #   Returns....: *
 #
 ##########################################################################*/
-TSession::TSession()
+TSession::TSession(TKeyboardDevice *Keyboard)
+ : TInteract(Keyboard)
 {
     FArgList = 0;
-    FEcho = TRUE;
-
-    FBatHandle = 0;
 
     if (Count == 0)
     {
@@ -270,10 +264,6 @@ TSession::TSession()
         audio = new TAudioFactory;
         acpi = new TAcpiFactory;
         help = new THelpFactory;
-
-        History = new TStringList;
-        Keyboard = new TKeyboardDevice;
-
     }
 
     Count++;
@@ -293,13 +283,10 @@ TSession::TSession()
 #
 ##########################################################################*/
 TSession::TSession(const TSession &src)
+ : TInteract(src)
 {
-    Count++;
-
     FArgList = 0;
-    FEcho = TRUE;
-
-    FBatHandle = src.FBatHandle;
+    Count++;
 }
 
 /*##########################################################################
@@ -379,58 +366,7 @@ TSession::~TSession()
 
         if (crash)
             delete crash;
-
-        delete History;
-        delete Keyboard;
     }
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::SetEchoOn
-#
-#   Purpose....: Set Echo state to on
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::SetEchoOn()
-{
-    FEcho = TRUE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::SetEchoOff
-#
-#   Purpose....: Set Echo state to off
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::SetEchoOff()
-{
-    FEcho = FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::IsEchoOn
-#
-#   Purpose....: Check if echo is on
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSession::IsEchoOn()
-{
-    return FEcho;
 }
 
 /*##########################################################################
@@ -465,32 +401,6 @@ void TSession::WriteWelcome()
         cmd->Run();
 
     Write("\r\n");
-}
-
-/*################## TSession::FormatTime ##########################
- *   Purpose....: Format time                                                                            #
- *   In params..: *                                                          #
- *   Out params.: *                                                          #
- *   Returns....: *                                                          #
- *##########################################################################*/
-TString TSession::FormatTime(TDateTime &time)
-{
-    char str[40];
-    sprintf(str, "%02d.%02d.%02d,%03d", time.GetHour(), time.GetMin(), time.GetSec(), time.GetMilliSec());
-    return TString(str);
-}
-
-/*################## TSession::FormatLongDate ##########################
- *   Purpose....: Format long date                                                                       #
- *   In params..: *                                                          #
- *   Out params.: *                                                          #
- *   Returns....: *                                                          #
- *##########################################################################*/
-TString TSession::FormatLongDate(TDateTime &date)
-{
-    char str[40];
-    sprintf(str, "%04d-%02d-%02d", date.GetYear(), date.GetMonth(), date.GetDay());
-    return TString(str);
 }
 
 /*################## TSession::DisplayPrompt ##########################
@@ -586,495 +496,6 @@ void TSession::DisplayPrompt()
 
 /*##########################################################################
 #
-#   Name       : TSession::ReadCon
-#
-#   Purpose....: Read a string from console
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSession::ReadCon(char *str, int maxsize)
-{
-    int OrgX;
-    int OrgY;
-    int CurrX;
-    int CurrY;
-    int ExtKey;
-    int State;
-    int VirtKey;
-    int ScanCode;
-    int Count = 0;
-    int CurrPos = 0;
-    int i;
-    int Insert = TRUE;
-    TString prev;
-    const char *prevstr;
-    int ok;
-    int GetNext = FALSE;
-
-    if (History->GotoFirst())
-        prev = History->Get();
-
-    prevstr = prev.GetData();
-
-    RdosGetConsoleCursorPosition(&OrgY, &OrgX);
-    CurrX = OrgX;
-    CurrY = OrgY;
-
-    memset(str, 0, maxsize);
-
-    for (;;)
-    {
-        Keyboard->WaitForever();
-
-        ok = Keyboard->ReadEvent(&ExtKey, &State, &VirtKey, &ScanCode);
-        if (ok)
-            ok = Keyboard->IsStdKey(ExtKey, VirtKey);
-
-        if (ok)
-        {
-            switch (VirtKey)
-            {
-                case VK_BACK:
-                    if (Count && CurrPos)
-                    {
-                        if (Count == CurrPos)
-                        {
-                            str[CurrPos - 1] = 0;
-
-                            if (CurrX)
-                                CurrX--;
-                            else
-                            {
-                                CurrX = MAX_X;
-                                CurrY--;
-                            }
-                            RdosSetConsoleCursorPosition(CurrY, CurrX);
-                            Write(' ');
-                            RdosSetConsoleCursorPosition(CurrY, CurrX);
-                        }
-                        else
-                        {
-                            for (i = CurrPos - 1; i < Count; i++)
-                                str[i] = str[i + 1];
-
-                            if (CurrX)
-                                CurrX--;
-                            else
-                            {
-                                CurrX = MAX_X;
-                                CurrY--;
-                            }
-                            RdosSetConsoleCursorPosition(CurrY, CurrX);
-                            Write(&str[CurrPos - 1]);
-                            Write(' ');
-                            RdosSetConsoleCursorPosition(CurrY, CurrX);
-                        }
-                        CurrPos--;
-                        Count--;
-                        str[Count] = 0;
-                    }
-                    break;
-
-
-                case VK_INSERT:
-                    Insert = !Insert;
-                    break;
-
-                case VK_DELETE:
-                    if (Count && CurrPos != Count)
-                    {
-                        for (i = CurrPos; i < Count; i++)
-                            str[i] = str[i + 1];
-                        Count--;
-                        str[Count] = 0;
-                        Write(&str[CurrPos]);
-                        Write(' ');
-                        RdosSetConsoleCursorPosition(CurrY, CurrX);
-                    }
-                    break;
-
-                case VK_HOME:
-                    if (CurrPos)
-                    {
-                        CurrX = OrgX;
-                        CurrY = OrgY;
-                        RdosSetConsoleCursorPosition(CurrY, CurrX);
-                        CurrPos = 0;
-                    }
-                    break;
-
-                case VK_END:
-                    if (CurrPos != Count)
-                    {
-                        RdosSetConsoleCursorPosition(OrgY, OrgX);
-                        Write(str);
-                        RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                    }
-                    break;
-
-                case VK_RETURN:
-                    if (Count)
-                    {
-                        TString s(str);
-
-                        if (History->Find(s))
-                            History->RemoveCurrent();
-
-                        History->AddFirst(s);
-                        if (History->GetSize() >= MAX_HISTORY)
-                            History->RemoveLast();
-                    }
-                    Write("\r\n");
-                    return TRUE;
-
-                case VK_ESCAPE:
-                    return FALSE;
-
-
-                case VK_RIGHT:
-                    if (CurrPos != Count)
-                    {
-                        CurrPos++;
-                        if (CurrX == MAX_X)
-                        {
-                            CurrX = 1;
-                            CurrY++;
-                        }
-                        else
-                            CurrX++;
-                        RdosSetConsoleCursorPosition(CurrY, CurrX);
-                        break;
-                    }
-
-                case VK_F1:
-                    if (CurrPos < strlen(prevstr))
-                    {
-                        str[CurrPos] = prevstr[CurrPos];
-                        Write(str[CurrPos]);
-                        RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                        CurrPos++;
-                        Count = CurrPos;
-                        str[Count] = 0;
-                    }
-                    break;
-
-                case VK_F3:
-                    memset(str, ' ', Count);
-                    RdosSetConsoleCursorPosition(OrgY, OrgX);
-                    Write(str);
-
-                    strcpy(str, prevstr);
-                    RdosSetConsoleCursorPosition(OrgY, OrgX);
-                    Write(str);
-                    RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                    Count = strlen(str);
-                    CurrPos = Count;
-                    break;
-
-                case VK_UP:
-                    if (GetNext)
-                        ok = History->GotoNext();
-                    else
-                    {
-                        ok = History->GotoFirst();
-                        GetNext = TRUE;
-                    }
-
-                    if (ok)
-                    {
-                        memset(str, ' ', Count);
-                        RdosSetConsoleCursorPosition(OrgY, OrgX);
-                        Write(str);
-
-                        prev = History->Get();
-                        prevstr = prev.GetData();
-                        strcpy(str, prevstr);
-                        RdosSetConsoleCursorPosition(OrgY, OrgX);
-                        Write(str);
-                        RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                        Count = strlen(str);
-                        CurrPos = Count;
-                    }
-                    break;
-
-                case VK_DOWN:
-                    if (History->GotoPrev())
-                    {
-                        memset(str, ' ', Count);
-                        RdosSetConsoleCursorPosition(OrgY, OrgX);
-                        Write(str);
-
-                        prev = History->Get();
-                        prevstr = prev.GetData();
-                        strcpy(str, prevstr);
-                        RdosSetConsoleCursorPosition(OrgY, OrgX);
-                        Write(str);
-                        RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                        Count = strlen(str);
-                        CurrPos = Count;
-                    }
-                    break;
-
-                case VK_LEFT:
-                    if (CurrPos)
-                    {
-                        CurrPos--;
-                        if (CurrX)
-                            CurrX--;
-                        else
-                        {
-                            CurrX = MAX_X;
-                            CurrY--;
-                        }
-                        RdosSetConsoleCursorPosition(CurrY, CurrX);
-                    }
-                    break;
-
-                default:
-                    ExtKey = ExtKey & 0xFF;
-                    if (ExtKey >= ' ' && Count < maxsize - 1)
-                    {
-                        if (Insert && CurrPos != Count)
-                        {
-                            for (i = Count; i > CurrPos; i--)
-                                str[i] = str[i - 1];
-                            Count++;
-                            str[CurrPos] = (char)ExtKey;
-                            Write(str[CurrPos]);
-                            RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                            str[Count] = 0;
-                            Write(&str[CurrPos + 1]);
-                            RdosSetConsoleCursorPosition(CurrY, CurrX);
-                        }
-                        else
-                        {
-                            if (CurrPos == Count)
-                                Count++;
-                            str[CurrPos] = (char)ExtKey;
-                            Write(str[CurrPos]);
-                            RdosGetConsoleCursorPosition(&CurrY, &CurrX);
-                            str[Count] = 0;
-                        }
-                        if (CurrX == 0)
-                            OrgY--;
-                        CurrPos++;
-                    }
-                    break;
-            }
-        }
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::Write
-#
-#   Purpose....: Write character to standard output
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::Write(char ch)
-{
-    write(1, &ch, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::Write
-#
-#   Purpose....: Write string to standard output
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::Write(const char *str)
-{
-    write(1, str, strlen(str));
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::WriteError
-#
-#   Purpose....: Write character to standard error
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::WriteError(char ch)
-{
-    write(2, &ch, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::WriteError
-#
-#   Purpose....: Write string to standard error
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSession::WriteError(const char *str)
-{
-    write(2, str, strlen(str));
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::ReadCmd
-#
-#   Purpose....: Read a string from cmd input
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSession::ReadCmd(char *str, int maxsize)
-{
-    char ch;
-    int i;
-
-    if (FBatHandle)
-    {
-        for (i = 0; i < maxsize; i++)
-        {
-            ch = 0;
-            read(FBatHandle, &ch, 1);
-
-            if (ch == 0 || ch == 0xa)
-            {
-                *str = 0;
-                break;
-            }
-            else
-            {
-                *str = ch;
-                str++;
-            }
-        }
-        *str = 0;
-        return TRUE;
-    }
-    else
-        return ReadCon(str, maxsize);
-
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::Read
-#
-#   Purpose....: Read a string from standard input
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSession::Read(char *str, int maxsize)
-{
-    return read(0, str, maxsize);
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::GetArg
-#
-#   Purpose....: Get an argument # (1-based)
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-const char *TSession::GetArg(int ArgNr)
-{
-    int i;
-    TArg *arg;
-
-    i = 1;
-    arg = FArgList;
-
-    while(i != ArgNr && arg)
-        arg = arg->FList;
-
-    if (arg)
-        return arg->FName.GetData();
-    else
-        return "";
-}
-
-/*##########################################################################
-#
-#   Name       : TSession::ExpandParam
-#
-#   Purpose....: Expand parameters
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TString TSession::ExpandParam(const char *param)
-{
-    TString str;
-
-    while (*param)
-    {
-        if (*param == '%')
-        {
-            param++;
-            switch (*param)
-            {
-                case '0':
-                    str += FName;
-                    break;
-
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    str += GetArg(*param - '0');
-                    break;
-
-                default:
-                    str += '%';
-                    str += *param;
-            }
-            param++;
-
-        }
-        else
-        {
-            str += *param;
-            param++;
-        }
-    }
-    return str;
-}
-
-/*##########################################################################
-#
 #   Name       : TSession::Run
 #
 #   Purpose....: Run session
@@ -1116,8 +537,7 @@ void TSession::Run()
             if (cmd->IsExit())
             {
                 delete cmd;
-                if (FThreadExit)
-                    break;
+                break;
             }
             else
             {
@@ -1226,4 +646,86 @@ int TSession::Run(const char *name, TArg *ArgList)
         FBatHandle = 0;
         return 1;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::GetArg
+#
+#   Purpose....: Get an argument # (1-based)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TSession::GetArg(int ArgNr)
+{
+    int i;
+    TArg *arg;
+
+    i = 1;
+    arg = FArgList;
+
+    while(i != ArgNr && arg)
+        arg = arg->FList;
+
+    if (arg)
+        return arg->FName.GetData();
+    else
+        return "";
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::ExpandParam
+#
+#   Purpose....: Expand parameters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TSession::ExpandParam(const char *param)
+{
+    TString str;
+
+    while (*param)
+    {
+        if (*param == '%')
+        {
+            param++;
+            switch (*param)
+            {
+                case '0':
+                    str += FName;
+                    break;
+
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    str += GetArg(*param - '0');
+                    break;
+
+                default:
+                    str += '%';
+                    str += *param;
+            }
+            param++;
+
+        }
+        else
+        {
+            str += *param;
+            param++;
+        }
+    }
+    return str;
 }

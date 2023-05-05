@@ -30,11 +30,10 @@
 
 int main(int argc, char **argv)
 {
-    TSession *session;
+    TKeyboardDevice keyboard;
+    TSession session(&keyboard);
 
-    session = new TSession;
-    session->Run();
+    session.Run();
 
     return 0;
 }
-

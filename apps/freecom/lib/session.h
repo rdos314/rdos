@@ -34,52 +34,32 @@
 #include "strlist.h"
 #include "keyboard.h"
 #include "sigdev.h"
+#include "interact.h"
 
 class TArg;
 
-class TSession
+class TSession : public TInteract
 {
 public:
-    TSession();
+    TSession(TKeyboardDevice *Keyboard);
     TSession(const TSession &source);
     ~TSession();
 
-    void Run();
+    virtual void DisplayPrompt();
+    virtual void Run();
+
     void Run(const char *param);
     int Run(const char *name, TArg *ArgList);
-
-    void SetEchoOn();
-    void SetEchoOff();
-    int IsEchoOn();
-    
-    void Write(char ch);
-    void Write(const char *str);
-
-    void WriteError(char ch);
-    void WriteError(const char *str);
-
-    int Read(char *str, int maxsize);
-    int ReadCmd(char *str, int maxsize);
-
-    void DisplayPrompt();
-    int ReadCon(char *str, int maxsize);
  
 protected:
     void WriteWelcome();
-    TString FormatTime(TDateTime &time);
-    TString FormatLongDate(TDateTime &date);
 
     const char *GetArg(int ArgNr);
     TString ExpandParam(const char *param);
 
-    int FThreadExit;
-
-    int FBatHandle;
-
     TString FName;
     TArg *FArgList;
-    int FEcho;
-    
+
     static int Count;
 
 };
