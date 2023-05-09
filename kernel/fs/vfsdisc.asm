@@ -75,8 +75,6 @@ code    SEGMENT byte public 'CODE'
 
     assume cs:code
 
-    extern SectorCountToBlock:near
-    extern SectorToBlock:near
     extern InvalidateCache:near
     extern StopPartitions:near
     extern StopRequests:near
