@@ -957,9 +957,6 @@ init_disc    Proc near
     xor ax,ax
     rep stos word ptr es:[edi]
 ;
-    InitSection ds:vfs_cmd_section
-    mov ds:vfs_cmd_list,0
-;
     mov ax,cs
     mov ds,ax
     mov es,ax

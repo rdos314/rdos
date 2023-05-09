@@ -116,10 +116,7 @@ vfs_gpt_start_sector     DD ?,?
 
 vfs_cache_discard_pos    DD ?,?
 
-vfs_cmd_section          section_typ <>
-vfs_cmd_list             DW ?
 vfs_cmd_thread           DW ?
-
 vfs_vendor_str           DB 256 DUP(?)
 
 vfs_my_part              DW ?
