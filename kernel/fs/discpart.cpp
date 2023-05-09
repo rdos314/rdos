@@ -202,6 +202,38 @@ int TDisc::RunCmd(int handle, char *msg)
 
 /*##########################################################################
 #
+#   Name       : TDisc::ReadSector
+#
+#   Purpose....: Read sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDisc::ReadSector(long long sector, char *buf)
+{
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::WriteSector
+#
+#   Purpose....: Write sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDisc::WriteSector(long long sector, char *buf)
+{
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::GetServer
 #
 #   Purpose....: Get disc server

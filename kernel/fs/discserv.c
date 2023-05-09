@@ -26,6 +26,8 @@
 ########################################################################*/
 
 int RunCmd(int handle, char *msg);
+int ReadSector(long long sector, char *buf);
+int WriteSector(long long sector, char *buf);
 
 /*##########################################################################
 #
@@ -36,4 +38,26 @@ int RunCmd(int handle, char *msg);
 int LowCmd(int handle, char *msg)
 {
     return RunCmd(handle, msg);
+}
+
+/*##########################################################################
+#
+#   Name       : LowReadSector
+#
+##########################################################################*/
+#pragma aux LowReadSector "*" parm routine [edx eax] [ebx] value [eax]
+int LowReadSector(long long sector, char *buf)
+{
+    return ReadSector(sector, buf);
+}
+
+/*##########################################################################
+#
+#   Name       : LowWriteSector
+#
+##########################################################################*/
+#pragma aux LowWriteSector "*" parm routine [edx eax] [ebx] value [eax]
+int LowWriteSector(long long sector, char *buf)
+{
+    return WriteSector(sector, buf);
 }

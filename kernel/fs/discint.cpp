@@ -44,6 +44,16 @@ int RunCmd(int handle, char *cmd)
     return Server->RunCmd(handle, cmd);
 }
 
+int ReadSector(long long sector, char *buf)
+{
+    return Server->ReadSector(sector, buf);
+}
+
+int WriteSector(long long sector, char *buf)
+{
+    return Server->WriteSector(sector, buf);
+}
+
 }
 
 /*##########################################################################

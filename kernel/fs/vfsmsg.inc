@@ -66,3 +66,11 @@ VFS_CLOSE_FILE            = 8
 
 ; IN            Cmd
 VFS_CMD                   = 9
+
+; IN EBX       Buffer
+; IN EDX:EAX   Sector
+VFS_READ_SECTOR           = 10
+
+; IN EBX       Buffer
+; IN EDX:EAX   Sector
+VFS_WRITE_SECTOR          = 11

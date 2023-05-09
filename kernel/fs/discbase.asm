@@ -85,6 +85,50 @@ LocalCmd Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalReadSector
+;
+;       DESCRIPTION:    Read sector
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowReadSector:near
+
+LocalRead Proc near
+    call LowReadSector
+    mov [edi].fc_eax,eax
+;
+    mov ebx,[edi].fc_handle
+    ReplyVfsPost
+    ret
+LocalRead Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LocalWriteSector
+;
+;       DESCRIPTION:    Write sector
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowWriteSector:near
+
+LocalWrite Proc near
+    call LowWriteSector
+    mov [edi].fc_eax,eax
+;
+    mov ebx,[edi].fc_handle
+    ReplyVfsPost
+    ret
+LocalWrite Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -111,6 +155,8 @@ m06 DD OFFSET Unused
 m07 DD OFFSET Unused
 m08 DD OFFSET Unused
 m09 DD OFFSET LocalCmd
+m10 DD OFFSET LocalRead
+m11 DD OFFSET LocalWrite
 
 WaitForMsg_    Proc near
     pushad
