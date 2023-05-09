@@ -904,4 +904,6 @@ delete_blk_nr               = 820
 allocate_blk_nr             = 821
 free_blk_nr                 = 822
 
+write_vfs_disc_nr           = 823
+
 osgate_entries              = 850

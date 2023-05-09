@@ -3457,6 +3457,14 @@ ReadVfsDisc     MACRO
         OsGate read_vfs_disc_nr
                     ENDM
 
+;  IN  BL              Disc #
+;  IN  EDX:EAX         Sector
+;  IN  ES:EDI          Buffer
+;  IN  ECX             Size
+WriteVfsDisc     MACRO
+        OsGate write_vfs_disc_nr
+                    ENDM
+
 ;  IN  ES:EDI          Pathname
 ;  OUT EAX             Attrib
 GetVfsDirEntryAttrib     MACRO

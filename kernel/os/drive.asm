@@ -5394,17 +5394,22 @@ write_long_disc      PROC near
     cmp bl,MAX_DRIVES
     jae write_long_disc_fail
 ;
-    push bx
-    mov bx,SEG data
-    mov ds,bx
-    pop bx
-    movzx bx,bl
-    add bx,bx
-    mov bx,ds:[bx].disc_def_arr
-    or bx,bx
+    mov si,SEG data
+    mov ds,si
+    movzx si,bl
+    add si,si
+    mov si,ds:[si].disc_def_arr
+    or si,si
     jz write_long_disc_fail
 ;
-    mov ds,bx
+    cmp si,-1
+    jne write_long_disc_norm
+;
+    WriteVfsDisc
+    jmp write_long_disc_done
+
+write_long_disc_norm:
+    mov ds,si
     push ds
     push es
     push ecx

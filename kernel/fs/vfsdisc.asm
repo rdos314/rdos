@@ -42,9 +42,6 @@ include vfs.inc
 
 MAX_DISC_COUNT   =  16
 
-LOCK_DISC_SECTORS   = 0
-UNLOCK_DISC_SECTORS = 1
-
 vfs_cmd      STRUC
 
 vc_prev            DW ?
@@ -587,63 +584,6 @@ hdCheckCmd:
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz hdExit
 ;
-    EnterSection ds:vfs_cmd_section
-    mov ax,ds:vfs_cmd_list
-    or ax,ax
-    jz hdLeave
-;
-    mov es,ax
-;
-    push ds
-    push edi
-;
-    mov di,es:vc_next
-    cmp di,ds:vfs_cmd_list
-    mov ds:vfs_cmd_list,di
-    mov si,es:vc_prev
-    mov ds,di
-    mov ds:vc_prev,si
-    mov ds,si
-    mov ds:vc_next,di
-;
-    pop edi
-    pop ds
-    jne hdProcess
-;    
-    mov ds:vfs_cmd_list,0
-    
-hdProcess:
-    LeaveSection ds:vfs_cmd_section
-;
-    mov eax,es:vc_eax
-    mov ebx,es:vc_ebx
-    mov ecx,es:vc_ecx
-    mov edx,es:vc_edx
-    mov esi,es:vc_esi
-    mov edi,es:vc_edi
-;
-    movzx ebp,es:vc_op
-    shl ebp,2
-    call dword ptr cs:[ebp].disc_msg_tab
-;
-    mov es:vc_eax,eax
-    mov es:vc_ebx,ebx
-    mov es:vc_ecx,ecx
-    mov es:vc_edx,edx
-    mov es:vc_esi,esi
-    mov es:vc_edi,edi
-;    
-    pushfd
-    pop es:vc_eflags
-;
-    xor bx,bx
-    xchg bx,es:vc_thread
-    Signal
-    jmp hdRetry
-
-hdLeave:
-    LeaveSection ds:vfs_cmd_section
-;
     mov eax,ds:vfs_cached_pages
     cmp eax,ds:vfs_max_cached_pages
     jb hdLoop
@@ -663,122 +603,6 @@ hdExit:
     int 3
     ret
 HandleDiscMsg  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           CreateMsg
-;
-;       DESCRIPTION:    Create disc msg
-;
-;       PARAMETERS:     DS      Disc sel
-;                       ECX     Extra space
-;
-;       RETURNS:        ES      Req msg
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateMsg  Proc near
-    push eax
-    mov eax,ecx
-    add eax,SIZE vfs_cmd
-    AllocateSmallGlobalMem
-    pop eax
-;
-    stc
-    pushfd
-    pop es:vc_eflags
-;
-    mov es:vc_eax,eax
-    mov es:vc_ebx,ebx
-    mov es:vc_ecx,ecx
-    mov es:vc_edx,edx
-    mov es:vc_esi,esi
-    mov es:vc_edi,edi
-    mov es:vc_fs,0
-    mov es:vc_gs,0
-    ret
-CreateMsg  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           RunMsg
-;
-;       DESCRIPTION:    Run disc msg
-;
-;       PARAMETERS:     DS      Disc sel
-;                       ES      Req msg
-;                       AX      Op
-;
-;       RETURNS:        ES      Reply msg
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RunMsg  Proc near
-    mov es:vc_op,ax
-;
-    GetThread
-    mov es:vc_thread,ax
-;
-    EnterSection ds:vfs_cmd_section
-;
-    mov ax,ds:vfs_cmd_list
-    or ax,ax
-    je rmEmpty
-;    
-    push ds
-    push esi
-;
-    mov ds,ax
-    mov si,ds:vc_prev
-    mov ds:vc_prev,es
-    mov ds,si
-    mov ds:vc_next,es
-    mov es:vc_next,ax
-    mov es:vc_prev,si
-;
-    pop esi
-    pop ds
-    jmp rmLeave
-    
-rmEmpty:
-    mov es:vc_next,es
-    mov es:vc_prev,es
-    mov ds:vfs_cmd_list,es
-
-rmLeave:
-    LeaveSection ds:vfs_cmd_section
-;
-    mov bx,ds:vfs_cmd_thread
-    Signal
-
-rmWait:
-    WaitForSignal
-    test ds:vfs_flags,VFS_FLAG_STOPPED
-    jz rmCheck
-;
-    stc
-    jmp rmDone
-
-rmCheck:
-    mov ax,es:vc_thread
-    or ax,ax
-    jnz rmWait
-;
-    mov eax,es:vc_eax
-    mov ebx,es:vc_ebx
-    mov ecx,es:vc_ecx
-    mov edx,es:vc_edx
-    mov esi,es:vc_esi
-    mov edi,es:vc_edi
-;
-    push es:vc_eflags
-    popfd
-
-rmDone:
-    ret
-RunMsg  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -902,166 +726,6 @@ get_vfs_disc_vendor_info   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReqBlockBuf
-;
-;       DESCRIPTION:    Req block buffer
-;
-;       PARAMETERS:     DS              Disc sel
-;                       EDX:EAX         Sector
-;                       ECX             Size
-;
-;       RETURNS:        ECX             Block count
-;                       ESI             Linear buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReqBlockBuf   Proc near
-    push es
-    push eax
-    push ebx
-    push edx
-    push edi
-;
-    mov ebx,ecx
-    dec ebx
-    mov cl,9
-    sub cl,ds:vfs_sector_shift
-    shr ebx,cl
-    mov ecx,ebx
-    inc ecx
-    call SectorCountToBlock
-    jc rsbDone
-;
-    push ecx
-    shl ecx,3
-    call CreateMsg
-    pop ecx
-    mov es:vc_ecx,ecx
-;
-    mov ax,LOCK_DISC_SECTORS
-    call RunMsg
-    jc rsbDone
-;
-    mov eax,ecx
-    shl eax,12
-    AllocateBigLinear
-    mov esi,edx
-    mov edi,SIZE vfs_cmd
-;
-    push ecx
-
-rsbMap:
-    mov eax,es:[edi]
-    mov ebx,es:[edi+4]
-    or ax,863h
-    SetPageEntry
-;
-    add edx,1000h
-    add edi,8
-    sub ecx,1
-    jnz rsbMap
-;
-    pop ecx
-    FreeMem
-    clc
-
-rsbDone:
-    pop edi
-    pop edx
-    pop ebx
-    pop eax
-    pop es
-    ret
-ReqBlockBuf  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FreeBlockBuf
-;
-;       DESCRIPTION:    Free block buffer
-;
-;       PARAMETERS:     DS              Disc sel
-;                       EDX:EAX         Sector
-;                       ECX             Block count
-;                       ESI             Linear buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeBlockBuf   Proc near
-    push es
-    push eax
-;
-    push ecx
-    push edx
-;
-    mov edx,esi
-    shl ecx,12
-    FreeLinear
-;
-    pop edx
-    pop ecx
-;
-    call SectorToBlock
-    jc fbbDone
-;
-    push ecx
-    xor ecx,ecx
-    call CreateMsg
-    pop ecx
-    mov es:vc_ecx,ecx
-;
-    mov ax,UNLOCK_DISC_SECTORS
-    call RunMsg
-;
-    FreeMem
-    clc
-
-fbbDone:
-    pop eax
-    pop es
-    ret
-FreeBlockBuf  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FixupBuf
-;
-;       DESCRIPTION:    Fixup buffer
-;
-;       PARAMETERS:     DS              Disc sel
-;                       EDX:EAX         Sector
-;                       ESI             Linear buffer
-;
-;       RETURNS:        ESI             Fixed buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FixupBuf   Proc near
-    push ebx
-    push ecx
-    push edx
-;
-    mov cl,3
-    sub cl,ds:vfs_sector_shift
-    mov bx,1
-    shl bx,cl
-    dec bx
-    movzx edx,ax
-    and dx,bx
-    shl dx,9
-    or si,dx
-;
-    pop edx
-    pop ecx
-    pop ebx
-    ret
-FixupBuf  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           ReadVfsDisc
 ;
 ;       DESCRIPTION:    Read VFS disc
@@ -1077,12 +741,10 @@ read_vfs_disc_name       DB 'Read VFS Disc',0
 
 read_vfs_disc    Proc far
     push ds
-    push fs
     push ebx
     push ecx
     push esi
     push edi
-    push ebp
 ;
     push bx
     mov bx,SEG data
@@ -1098,33 +760,66 @@ read_vfs_disc    Proc far
     jz rvdDone
 ;
     mov ds,bx
-    mov ebp,ecx
-;
-    call ReqBlockBuf
-    jc rvdDone
-;
-    push esi
-    call FixupBuf
-    push ecx
-    mov ecx,ebp
-    shr ecx,2
-    rep movs dword ptr es:[edi],fs:[esi]    
-    pop ecx
-    pop esi
-;
-    call FreeBlockBuf
+    int 3
     clc
 
 rvdDone:
-    pop ebp
     pop edi
     pop esi
     pop ecx
     pop ebx
-    pop fs
     pop ds
     ret
 read_vfs_disc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WriteVfsDisc
+;
+;       DESCRIPTION:    Write VFS disc
+;
+;       PARAMETERS:     BL              Disc #
+;                       EDX:EAX         Sector
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_vfs_disc_name       DB 'Write VFS Disc',0
+
+write_vfs_disc    Proc far
+    push ds
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    push bx
+    mov bx,SEG data
+    mov ds,bx
+    mov bx,flat_sel
+    mov fs,bx
+    pop bx
+    movzx ebx,bx
+    shl ebx,1
+    mov bx,ds:[ebx].disc_arr
+    or bx,bx
+    stc
+    jz wvdDone
+;
+    mov ds,bx
+    int 3
+    clc
+
+wvdDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+write_vfs_disc   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1285,6 +980,12 @@ init_disc    Proc near
     mov edi,OFFSET read_vfs_disc_name
     xor cl,cl
     mov ax,read_vfs_disc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_vfs_disc
+    mov edi,OFFSET write_vfs_disc_name
+    xor cl,cl
+    mov ax,write_vfs_disc_nr
     RegisterOsGate
 ;
     mov esi,OFFSET is_vfs_disc
