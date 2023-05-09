@@ -77,8 +77,6 @@ code    SEGMENT byte public 'CODE'
 
     extern SectorCountToBlock:near
     extern SectorToBlock:near
-    extern LockMultiSectors:near
-    extern UnlockMultiSectors:near
     extern InvalidateCache:near
     extern StopPartitions:near
     extern StopRequests:near
@@ -504,49 +502,6 @@ FileHandleToPartFs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ServLockDiscSectors
-;
-;       DESCRIPTION:    Lock disc sectors
-;
-;       PARAMETERS:     DS          Disc sel
-;                       EDX:EAX     Block #
-;                       ECX         Count
-;                       ES          Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ServLockDiscSectors   Proc near
-    push edi
-;
-    mov edi,SIZE vfs_cmd
-    call LockMultiSectors
-;
-    pop edi
-    ret
-ServLockDiscSectors   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           ServUnlockDiscSectors
-;
-;       DESCRIPTION:    Unlock disc sectors
-;
-;       PARAMETERS:     DS          Disc sel
-;                       EDX:EAX     Block #
-;                       ECX         Count
-;                       ES          Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ServUnlockDiscSectors   Proc near
-    call UnlockMultiSectors
-    ret
-ServUnlockDiscSectors   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           HandleDiscMsg
 ;
 ;       DESCRIPTION:    Handle disc msg
@@ -554,10 +509,6 @@ ServUnlockDiscSectors   Endp
 ;       PARAMETERS:     DS      Disc sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-disc_msg_tab:
-dm00 DD OFFSET ServLockDiscSectors
-dm01 DD OFFSET ServUnlockDiscSectors
 
     public HandleDiscMsg
 
