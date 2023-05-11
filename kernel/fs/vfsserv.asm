@@ -2625,7 +2625,6 @@ AllocateMsg  Proc near
     ret
 AllocateMsg  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3305,42 +3304,63 @@ GetDiscIoBase     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetDiscIoPageCount
+;       NAME:           AddDiscIoPages
 ;
-;       DESCRIPTION:    Get direct disc IO page count
+;       DESCRIPTION:    Add direct disc IO pages
 ;
-;       PARAMETERS:     EDX             Linear base
+;       PARAMETERS:     ESI             Linear base
 ;                       ECX             Size
-;
-;       RETURNS:        EAX             Page count
+;                       ES              Msg buffer
+;                       EDI             FS msg data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetDiscIoPageCount	Proc near
-    push ecx
-    push edx
+AddDiscIoPages	Proc near
+    push ds
+    pushad
 ;
-    xor eax,eax
+    mov ax,flat_sel
+    mov ds,eax
+    mov es:fc_size,0
 ;
-    and edx,0FFFh
-    jz gdipcCount
+    mov edx,esi
+    and dx,0F000h
+    and esi,0FFFh
+    jz adipLoop
 ;
-    neg edx
+    inc es:fc_size
+    mov al,ds:[edx]
+    GetPageEntry
+    and ax,0F000h
+    or ax,si
+    stosd
+    mov eax,ebx
+    stosd
+;
     add edx,1000h
+    neg esi
+    add esi,1000h
     inc eax
     sub ecx,edx
-    jbe gdipcDone
+    jbe adipDone
 
-gdipcCount:
-    inc eax
+adipLoop:
+    inc es:fc_size
+    mov al,ds:[edx]
+    GetPageEntry
+    and ax,0F000h
+    stosd
+    mov eax,ebx
+    stosd
+;
     sub ecx,1000h
-    ja gdipcCount
+    ja adipLoop
 
-gdipcDone:
-    pop edx
-    pop ecx
+adipDone:
+    popad
+    pop ds
     ret
-GetDiscIoPageCount      Endp
+AddDiscIoPages      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3360,17 +3380,19 @@ GetDiscIoPageCount      Endp
     public SetupDiscIo
 
 SetupDiscIo	Proc near
-    push eax
-    push edx
+    push esi
 ;
+    push edx
     call GetDiscIoBase
+    mov esi,edx
+    pop edx
     jc sdiDone
 ;
-    call GetDiscIoPageCount
+    call AllocateMsg
+    call AddDiscIoPages
 
 sdiDone:
-    pop edx
-    pop eax
+    pop esi
     ret
 SetupDiscIo     Endp
 
