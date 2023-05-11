@@ -3264,6 +3264,49 @@ get_vfs_drive_disc   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetDiscIoBase
+;
+;       DESCRIPTION:    Get direct disc IO buffer
+;
+;       PARAMETERS:     DS              Disc sel
+;                       FS              Part sel
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        EDX             Base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDiscIoBase	Proc near
+    push eax
+    push ebx
+    push ecx
+    push esi
+;
+    mov esi,ecx
+    mov ebx,es
+    GetSelectorBaseSize
+    jc sdiDone
+;
+    mov eax,edi
+    add eax,esi
+    cmp ecx,eax
+    jb sdiDone
+;
+    add edx,edi
+    clc
+    
+gdibDone:
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+GetDiscIoBase     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SetupDiscIo
 ;
 ;       DESCRIPTION:    Setup direct disc IO
@@ -3279,6 +3322,13 @@ get_vfs_drive_disc   Endp
     public SetupDiscIo
 
 SetupDiscIo	Proc near
+    push edx
+;
+    call GetDiscIoBase
+    jc sdiDone
+
+sdiDone:
+    pop edx
     ret
 SetupDiscIo     Endp
 

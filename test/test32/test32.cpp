@@ -1,32 +1,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "disccmd.h"
 
-static void Done(TVfsCmd *cmd)
-{
-    printf("\r\ndone\r\n");
-}
-
-static void Msg(TVfsCmd *cmd, const char *msg)
-{
-    printf(msg);
-}
+#include "disc.h"
 
 void main()
 {
-    TVfsDiscCmd *cmd;
-    TWait Wait;
+    char *buf;
+    TDisc disc(1);
 
-    cmd = new TVfsDiscCmd(1, "info");
-    cmd->OnDone = ::Done;
-    cmd->OnMsg = ::Msg;
-    Wait.Add(cmd);
-
-    while (!cmd->IsDone())
-        Wait.WaitForever();
-
-    printf("\r\n");
-
-    delete cmd;
+    buf = new char[1024];
+    disc.Read(0xE00000, buf, 1024);
+    delete buf;
 }
