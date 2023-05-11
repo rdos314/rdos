@@ -3264,6 +3264,27 @@ get_vfs_drive_disc   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SetupDiscIo
+;
+;       DESCRIPTION:    Setup direct disc IO
+;
+;       PARAMETERS:     DS              Disc sel
+;                       FS              Part sel
+;                       EDX:EAX         Sector
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetupDiscIo
+
+SetupDiscIo	Proc near
+    ret
+SetupDiscIo     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetVfsDriveStart
 ;
 ;       DESCRIPTION:    Get VFS drive start
