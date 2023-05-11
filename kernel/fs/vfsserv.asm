@@ -3268,9 +3268,7 @@ get_vfs_drive_disc   Endp
 ;
 ;       DESCRIPTION:    Get direct disc IO buffer
 ;
-;       PARAMETERS:     DS              Disc sel
-;                       FS              Part sel
-;                       ES:EDI          Buffer
+;       PARAMETERS:     ES:EDI          Buffer
 ;                       ECX             Size
 ;
 ;       RETURNS:        EDX             Base
@@ -3307,6 +3305,46 @@ GetDiscIoBase     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetDiscIoPageCount
+;
+;       DESCRIPTION:    Get direct disc IO page count
+;
+;       PARAMETERS:     EDX             Linear base
+;                       ECX             Size
+;
+;       RETURNS:        EAX             Page count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDiscIoPageCount	Proc near
+    push ecx
+    push edx
+;
+    xor eax,eax
+;
+    and edx,0FFFh
+    jz gdipcCount
+;
+    neg edx
+    add edx,1000h
+    inc eax
+    sub ecx,edx
+    jbe gdipcDone
+
+gdipcCount:
+    inc eax
+    sub ecx,1000h
+    ja gdipcCount
+
+gdipcDone:
+    pop edx
+    pop ecx
+    ret
+GetDiscIoPageCount      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SetupDiscIo
 ;
 ;       DESCRIPTION:    Setup direct disc IO
@@ -3322,13 +3360,17 @@ GetDiscIoBase     Endp
     public SetupDiscIo
 
 SetupDiscIo	Proc near
+    push eax
     push edx
 ;
     call GetDiscIoBase
     jc sdiDone
+;
+    call GetDiscIoPageCount
 
 sdiDone:
     pop edx
+    pop eax
     ret
 SetupDiscIo     Endp
 
