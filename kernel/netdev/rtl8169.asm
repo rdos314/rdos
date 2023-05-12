@@ -4363,6 +4363,10 @@ iostHandle:
     test ax,IR_FOVW
     jz iostOvOk
 ;
+    mov ax,5000
+    WaitMilliSec
+    int 3
+;
     push ax
     EnterSection ds:TxSection
     call IoResetHardware    
@@ -4430,6 +4434,10 @@ mstHandle:
 ;
     test ax,IR_FOVW
     jz mstOvOk
+;
+    mov ax,5000
+    WaitMilliSec
+    int 3
 ;
     push ax
     EnterSection ds:TxSection
