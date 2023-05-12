@@ -37,5 +37,7 @@ serv_load_part_nr          = 35
 serv_start_part_nr         = 36
 serv_stop_part_nr          = 37
 notify_vfs_msg_nr          = 38
+map_vfs_cmd_buf_nr         = 39
+unmap_vfs_cmd_buf_nr       = 40
 
-serv_gate_entries          = 40
+serv_gate_entries          = 45

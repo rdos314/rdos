@@ -96,8 +96,19 @@ LocalCmd Endp
     extern LowReadSector:near
 
 LocalRead Proc near
+    push edx
+    mov ebx,[edi].fc_handle
+    MapVfsCmdBuf
+    mov ebx,edx
+    pop edx
+;
+    push ebx
     call LowReadSector
     mov [edi].fc_eax,eax
+    pop edx
+;
+    mov ebx,[edi].fc_handle
+    UnmapVfsCmdBuf
 ;
     mov ebx,[edi].fc_handle
     ReplyVfsCmd
@@ -118,8 +129,19 @@ LocalRead Endp
     extern LowWriteSector:near
 
 LocalWrite Proc near
+    push edx
+    mov ebx,[edi].fc_handle
+    MapVfsCmdBuf
+    mov ebx,edx
+    pop edx
+;    
+    push ebx
     call LowWriteSector
     mov [edi].fc_eax,eax
+    pop edx
+;
+    mov ebx,[edi].fc_handle
+    UnmapVfsCmdBuf
 ;
     mov ebx,[edi].fc_handle
     ReplyVfsCmd

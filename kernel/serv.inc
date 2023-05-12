@@ -181,6 +181,18 @@ ReplyVfsDataCmd  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
+; OUT EDX              Flat buf address
+MapVfsCmdBuf  MACRO    
+    ServGate map_vfs_cmd_buf_nr
+                    ENDM
+
+; IN  EBX              VFS handle
+; IN  EDX              Flat buf address
+UnmapVfsCmdBuf  MACRO    
+    ServGate unmap_vfs_cmd_buf_nr
+                    ENDM
+
+; IN  EBX              VFS handle
 ; IN  EDX              Flat address
 ServNotifyVfsMsg  MACRO    
     ServGate notify_vfs_msg_nr
