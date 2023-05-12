@@ -44,14 +44,14 @@ int RunCmd(int handle, char *cmd)
     return Server->RunCmd(handle, cmd);
 }
 
-int ReadSector(long long sector, char *buf)
+int ReadSector(long long sector, char *buf, int size)
 {
-    return Server->ReadSector(sector, buf);
+    return Server->ReadSector(sector, buf, size);
 }
 
-int WriteSector(long long sector, char *buf)
+int WriteSector(long long sector, char *buf, int size)
 {
-    return Server->WriteSector(sector, buf);
+    return Server->WriteSector(sector, buf, size);
 }
 
 }

@@ -80,8 +80,8 @@ public:
     virtual bool IsGpt() = 0;
     virtual int RunCmd(int handle, char *msg);
 
-    int ReadSector(long long, char *buf);
-    int WriteSector(long long, char *buf);
+    int ReadSector(long long, char *buf, int size);
+    int WriteSector(long long, char *buf, int size);
 
     int FBytesPerSector;
     long long FSectorCount;

@@ -211,8 +211,16 @@ int TDisc::RunCmd(int handle, char *msg)
 #   Returns....: *
 #
 ##########################################################################*/
-int TDisc::ReadSector(long long sector, char *buf)
+int TDisc::ReadSector(long long sector, char *buf, int size)
 {
+    char *Data;
+    TDiscReq req(FServer);
+    TDiscReqEntry e1(&req, sector, 1);
+
+    req.WaitForever();
+
+    Data = (char *)e1.Map();
+
     return false;
 }
 
@@ -227,7 +235,7 @@ int TDisc::ReadSector(long long sector, char *buf)
 #   Returns....: *
 #
 ##########################################################################*/
-int TDisc::WriteSector(long long sector, char *buf)
+int TDisc::WriteSector(long long sector, char *buf, int size)
 {
     return false;
 }
