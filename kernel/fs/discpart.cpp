@@ -134,6 +134,35 @@ long long TPartition::GetSectorCount()
 
 /*##########################################################################
 #
+#   Name       : TPartition::CheckInside
+#
+#   Purpose....: Check if sector is inside partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPartition::CheckInside(long long sector, int count)
+{
+    if (sector >= FStartSector)
+    {
+        if (sector >= FStartSector + FSectorCount)
+            return false;
+        else
+            return true;
+    }
+    else
+    {
+        if (sector + count >= FStartSector)
+            return true;
+        else
+            return false;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::TDisc
 #
 #   Purpose....: Disc contructor
@@ -202,6 +231,49 @@ int TDisc::RunCmd(int handle, char *msg)
 
 /*##########################################################################
 #
+#   Name       : TDisc::SizeToCount
+#
+#   Purpose....: Size in bytes to sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDisc::SizeToCount(int size)
+{
+    int count = size / FBytesPerSector;
+
+    if (count * FBytesPerSector != size)
+        count++;
+
+    return count;
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::IsInsidePartition
+#
+#   Purpose....: Check if sector is inside a partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TDisc::IsInsidePartition(long long sector, int count)
+{
+    int i;
+
+    for (i = 0; i < FCurrPartCount; i++)
+        if (FPartArr[i]->CheckInside(sector, count))
+            return true;
+
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::ReadSector
 #
 #   Purpose....: Read sector
@@ -214,14 +286,20 @@ int TDisc::RunCmd(int handle, char *msg)
 int TDisc::ReadSector(long long sector, char *buf, int size)
 {
     char *Data;
+    int count = SizeToCount(size);
+
+    if (IsInsidePartition(sector, count))
+        return false;
+
     TDiscReq req(FServer);
-    TDiscReqEntry e1(&req, sector, 1);
+    TDiscReqEntry e1(&req, sector, count);
 
     req.WaitForever();
 
     Data = (char *)e1.Map();
+    memcpy(buf, Data, size);
 
-    return false;
+    return true;
 }
 
 /*##########################################################################

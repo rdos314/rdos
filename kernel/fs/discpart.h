@@ -49,6 +49,8 @@ public:
     long long GetStartSector();
     long long GetSectorCount();
 
+    bool CheckInside(long long sector, int count);
+
     int Handle;
 
 protected:
@@ -92,6 +94,8 @@ public:
 
 protected:
     void GrowPart();
+    int SizeToCount(int size);
+    bool IsInsidePartition(long long sector, int count);
 
     TDiscServer *FServer;
 };
