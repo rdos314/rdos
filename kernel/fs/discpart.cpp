@@ -154,7 +154,7 @@ bool TPartition::CheckInside(long long sector, int count)
     }
     else
     {
-        if (sector + count >= FStartSector)
+        if (sector + count > FStartSector)
             return true;
         else
             return false;

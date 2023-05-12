@@ -10,6 +10,6 @@ void main()
     TDisc disc(1);
 
     buf = new char[1024];
-    disc.Read(0xE00000, buf, 1024);
+    disc.Read(0xE, buf, 1024);
     delete buf;
 }
