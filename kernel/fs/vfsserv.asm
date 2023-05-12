@@ -2487,9 +2487,6 @@ mvcbDone:
     ret
 map_vfs_cmd_buf  Endp
 
-    inc es:fc_size
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2510,16 +2507,17 @@ unmap_vfs_cmd_buf   Proc far
     push eax
     push ebx
     push ecx
-    push esi
-;
-    mov eax,es:[edi].fc_op
+    push edx
 ;
     call HandleToPartFs
     jc umvcbDone
 ;
+    mov ecx,es:[edi].fc_size
+    shl ecx,12
+    FreeLinear
 
 umvcbDone:
-    pop esi
+    pop edx
     pop ecx
     pop ebx
     pop eax
