@@ -100,7 +100,7 @@ LocalRead Proc near
     mov [edi].fc_eax,eax
 ;
     mov ebx,[edi].fc_handle
-    ReplyVfsPost
+    ReplyVfsCmd
     ret
 LocalRead Endp
 
@@ -122,7 +122,7 @@ LocalWrite Proc near
     mov [edi].fc_eax,eax
 ;
     mov ebx,[edi].fc_handle
-    ReplyVfsPost
+    ReplyVfsCmd
     ret
 LocalWrite Endp
 

@@ -697,6 +697,7 @@ read_vfs_disc    Proc far
     push ecx
     push esi
     push edi
+    push ebp
 ;
     push bx
     mov bx,SEG data
@@ -712,9 +713,9 @@ read_vfs_disc    Proc far
     jz rvdDone
 ;
     call DiscReadIo
-    int 3
 
 rvdDone:
+    pop ebp
     pop edi
     pop esi
     pop ecx
@@ -747,6 +748,7 @@ write_vfs_disc    Proc far
     push ecx
     push esi
     push edi
+    push ebp
 ;
     push bx
     mov bx,SEG data
@@ -762,9 +764,9 @@ write_vfs_disc    Proc far
     jz wvdDone
 ;
     call DiscWriteIo
-    int 3
 
 wvdDone:
+    pop ebp
     pop edi
     pop esi
     pop ecx
