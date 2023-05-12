@@ -2448,11 +2448,35 @@ map_vfs_cmd_buf   Proc far
     push ecx
     push esi
 ;
-    mov eax,es:[edi].fc_op
-;
     call HandleToPartFs
     jc mvcbDone
 ;
+    mov eax,es:[edi].fc_size
+    shl eax,12
+    AllocateLocalLinear
+    push edx
+;
+    mov ecx,es:[edi].fc_size
+    mov esi,SIZE fs_cmd
+
+mvcbLoop:
+    mov eax,es:[esi+edi]
+    mov ebx,es:[esi+edi+4]
+    and ax,0F000h
+    or ax,867h
+    SetPageEntry
+;
+    add esi,8
+    add edx,1000h
+;
+    loop mvcbLoop
+;
+    pop edx
+;
+    mov esi,SIZE fs_cmd
+    mov ax,es:[esi+edi]
+    and ax,0FFFh
+    or dx,ax
 
 mvcbDone:
     pop esi
@@ -2462,6 +2486,9 @@ mvcbDone:
     pop fs
     ret
 map_vfs_cmd_buf  Endp
+
+    inc es:fc_size
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
