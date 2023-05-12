@@ -2428,6 +2428,81 @@ reply_vfs_data_cmd  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           MapVfsCmdBuf
+;
+;       DESCRIPTION:    Map vfs cmd buf
+;
+;       PARAMETERS:     EBX        VFS handle
+;                       EDI        Data block
+;
+;       RETURNS:        EDX        Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_vfs_cmd_buf_name DB 'Map VFS Cmd Buf', 0
+
+map_vfs_cmd_buf   Proc far
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push esi
+;
+    mov eax,es:[edi].fc_op
+;
+    call HandleToPartFs
+    jc mvcbDone
+;
+
+mvcbDone:
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    ret
+map_vfs_cmd_buf  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnapVfsCmdBuf
+;
+;       DESCRIPTION:    Unmap vfs cmd buf
+;
+;       PARAMETERS:     EBX        VFS handle
+;                       EDI        Data block
+;                       EDX        Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unmap_vfs_cmd_buf_name DB 'Unmap VFS Cmd Buf', 0
+
+unmap_vfs_cmd_buf   Proc far
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push esi
+;
+    mov eax,es:[edi].fc_op
+;
+    call HandleToPartFs
+    jc umvcbDone
+;
+
+umvcbDone:
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    ret
+unmap_vfs_cmd_buf  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           NotifyVfsMsg
 ;
 ;       DESCRIPTION:    Serv notify msg
@@ -4359,6 +4434,18 @@ init_server    Proc near
     mov edi,OFFSET reply_vfs_data_cmd_name
     xor cl,cl
     mov ax,reply_vfs_data_cmd_nr
+    RegisterServGate
+;
+    mov esi,OFFSET map_vfs_cmd_buf
+    mov edi,OFFSET map_vfs_cmd_buf_name
+    xor cl,cl
+    mov ax,map_vfs_cmd_buf_nr
+    RegisterServGate
+;
+    mov esi,OFFSET unmap_vfs_cmd_buf
+    mov edi,OFFSET unmap_vfs_cmd_buf_name
+    xor cl,cl
+    mov ax,unmap_vfs_cmd_buf_nr
     RegisterServGate
 ;
     mov esi,OFFSET notify_vfs_msg
