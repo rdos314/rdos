@@ -3340,7 +3340,6 @@ AddDiscIoPages	Proc near
     add edx,1000h
     neg esi
     add esi,1000h
-    inc eax
     sub ecx,edx
     jbe adipDone
 
@@ -3375,12 +3374,14 @@ AddDiscIoPages      Endp
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
 ;
+;       RETURNS:        ES      Msg buf
+;                       EBX     Msg entry
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public SetupDiscIo
 
 SetupDiscIo	Proc near
     push esi
+    push edi
 ;
     push edx
     call GetDiscIoBase
@@ -3392,9 +3393,76 @@ SetupDiscIo	Proc near
     call AddDiscIoPages
 
 sdiDone:
+    pop edi
     pop esi
     ret
 SetupDiscIo     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DiscReadIo
+;
+;       DESCRIPTION:    Direct disc read IO
+;
+;       PARAMETERS:     DS              Disc sel
+;                       FS              Part sel
+;                       EDX:EAX         Sector
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DiscReadIo
+
+DiscReadIo	Proc near
+    push es
+    push eax
+;
+    mov ds,bx
+    mov fs,ds:vfs_my_part
+    call SetupDiscIo
+;
+    mov eax,VFS_READ_SECTOR
+    call RunMsg
+;
+    pop eax
+    pop es
+    ret
+DiscReadIo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DiscWriteIo
+;
+;       DESCRIPTION:    Direct disc write IO
+;
+;       PARAMETERS:     DS              Disc sel
+;                       FS              Part sel
+;                       EDX:EAX         Sector
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DiscWriteIo
+
+DiscWriteIo	Proc near
+    push es
+    push eax
+;
+    mov ds,bx
+    mov fs,ds:vfs_my_part
+    call SetupDiscIo
+;
+    mov eax,VFS_WRITE_SECTOR
+    call RunMsg
+;
+    pop eax
+    pop es
+    ret
+DiscWriteIo	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

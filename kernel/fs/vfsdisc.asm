@@ -78,7 +78,8 @@ code    SEGMENT byte public 'CODE'
     extern InvalidateCache:near
     extern StopPartitions:near
     extern StopRequests:near
-    extern SetupDiscIo:near
+    extern DiscReadIo:near
+    extern DiscWriteIo:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -710,11 +711,8 @@ read_vfs_disc    Proc far
     stc
     jz rvdDone
 ;
+    call DiscReadIo
     int 3
-    mov ds,bx
-    mov fs,ds:vfs_my_part
-    call SetupDiscIo
-    clc
 
 rvdDone:
     pop edi
@@ -763,11 +761,8 @@ write_vfs_disc    Proc far
     stc
     jz wvdDone
 ;
-    mov ds,bx
-    mov fs,ds:vfs_my_part
-    call SetupDiscIo
+    call DiscWriteIo
     int 3
-    clc
 
 wvdDone:
     pop edi
