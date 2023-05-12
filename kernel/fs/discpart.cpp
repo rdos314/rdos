@@ -315,6 +315,20 @@ int TDisc::ReadSector(long long sector, char *buf, int size)
 ##########################################################################*/
 int TDisc::WriteSector(long long sector, char *buf, int size)
 {
+    char *Data;
+    int count = SizeToCount(size);
+
+    if (IsInsidePartition(sector, count))
+        return false;
+
+    TDiscReq req(FServer);
+    TDiscReqEntry e1(&req, sector, count);
+
+    req.WaitForever();
+
+    Data = (char *)e1.Map();
+    memcpy(Data, buf, size);
+
     return false;
 }
 
