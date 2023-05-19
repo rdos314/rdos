@@ -3816,7 +3816,9 @@ HandleRaw   Proc near
     push ebx
     push ecx
     push edx
+    push ebp
 ;
+    mov ebp,ds
     mov ds,bx
     mov bx,ds:usbr_wait_dev
 ;
@@ -3828,6 +3830,7 @@ HandleRaw   Proc near
     cmp edx,eax
     je hrHandle
 ;
+    mov ds,ebp
     mov dl,gs:ued_address
     movzx ebx,dl
     shl ebx,4
@@ -3862,6 +3865,7 @@ hrNotError:
     SignalWaitDev
 
 hrDone:
+    pop ebp
     pop edx
     pop ecx
     pop ebx
