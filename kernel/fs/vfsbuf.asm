@@ -493,6 +493,64 @@ SectorCountToBlock   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           IsSectorCountAligned
+;
+;       DESCRIPTION:    Check if sector & count is aligned
+;
+;       PARAMETERS:     DS          VFS sel
+;                       EDX:EAX     Sector #
+;                       ECX         Sector count
+;
+;       RETURNS:        NC          Aligned
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public IsSectorCountAligned
+
+IsSectorCountAligned    Proc near
+    push eax
+    push ebx
+    push ebp
+;
+    mov ebp,ecx
+;
+    cmp edx,ds:vfs_sectors+4
+    jb iscaInRange
+    ja iscaFail
+;
+    cmp eax,ds:vfs_sectors
+    jae iscaFail
+
+iscaInRange:
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    mov bx,1
+    shl bx,cl
+    dec bx
+    mov bh,bl
+    and bl,al
+    jnz iscaFail
+;
+    mov eax,ebp
+    and bh,al
+    jnz iscaFail
+;
+    clc
+    jmp iscaDone
+
+iscaFail:
+    stc
+
+iscaDone:
+    pop ebp
+    pop ebx
+    pop eax
+    ret
+IsSectorCountAligned   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SectorToBlock
 ;
 ;       DESCRIPTION:    Converts between sector # and block #

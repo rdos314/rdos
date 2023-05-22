@@ -110,6 +110,7 @@ code    SEGMENT byte public 'CODE'
     extern BlockToBuf:near
     extern BlockToBitmap:near
     extern SectorToBlock:near
+    extern IsSectorCountAligned:near
     extern SectorCountToBlock:near
     extern InitFilePart:near
     extern FindVfsHandle:near
@@ -1796,6 +1797,16 @@ lock_vfs_sectors    Proc far
     mov es,ebx
 ;
     EnterSection ds:vfs_section
+    call IsSectorCountAligned
+    jc lrsRead
+;
+    call SetupReq
+    jc lrsLeave
+;
+    int 3
+    jmp lrsLeave
+
+lrsRead:
     call SetupReq
     jc lrsLeave
 ;
