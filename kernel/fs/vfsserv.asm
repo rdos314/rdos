@@ -1701,158 +1701,10 @@ srrNext:
     jnz srrLoop
 ;
     clc
-    jmp srrDone
-
-srrFail:
-    stc
-
-srrDone:
+;
     popad
     ret
 StartReadReq   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           ReqSectors
-;
-;       DESCRIPTION:    Req sectors
-;
-;       PARAMETERS:     DS          VFS sel
-;                       ES          Server flat sel
-;                       FS          Part sel
-;                       GS          Req sel
-;                       EDX:EAX     Start sector
-;                       ECX         Sector count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReqSectors    Proc near
-    push ebp
-;
-    mov di,gs:vfsrh_deleted_count
-    or di,di
-    jz rsAppend
-;
-    dec di
-    mov gs:vfsrh_deleted_count,di
-;
-    mov edi,SIZE vfs_req_header
-
-rsScanLoop:
-    mov esi,gs:[edi].vfsre_sector_count
-    or esi,esi
-    jz rsTake
-;
-    add edi,SIZE vfs_req_entry
-    jmp rsScanLoop
-
-rsAppend:
-    movzx edi,gs:vfsrh_entry_count
-    cmp di,MAX_VFS_ENTRY_COUNT
-    je rsFail
-;
-    inc di
-    mov gs:vfsrh_entry_count,di
-    shl edi,4
-
-rsTake:
-    add eax,fs:vfsp_start_sector
-    adc edx,fs:vfsp_start_sector+4
-;
-    push eax
-    push ebx
-    push ecx
-;
-    mov cl,3
-    sub cl,ds:vfs_sector_shift
-    mov bx,1
-    shl bx,cl
-    dec bx
-    movzx esi,ax
-    and si,bx
-    shl si,9
-    mov gs:[edi].vfsre_linear,esi
-    not bx
-    and ax,bx
-    mov gs:[edi].vfsre_start_sector,eax
-    mov gs:[edi].vfsre_start_sector+4,edx
-;
-    pop ecx
-    pop ebx
-    pop eax
-;
-    call SectorCountToBlock
-    jc rsFail
-;
-    push ebx
-    push ecx
-;
-    mov ebx,ecx
-    mov cl,3
-    sub cl,ds:vfs_sector_shift
-    shl ebx,cl
-    mov gs:[edi].vfsre_sector_count,ebx
-;
-    pop ecx
-    pop ebx
-;
-    call GetReqMask
-
-rsLoop:
-    call BlockToBuf
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz rsReq
-;
-    cmp es:[esi].vfsp_ref_bitmap,0
-    jnz rsLockOk
-;
-    inc ds:vfs_locked_pages
-
-rsLockOk:
-    inc es:[esi].vfsp_ref_bitmap
-    jmp rsNext
-
-rsReq:
-    inc gs:vfsrh_remain_count
-    or es:[esi].vfsp_ref_bitmap,bp
-;
-    push edi
-;
-    call BlockToBitmap
-    mov ebx,eax
-    shr ebx,3
-    and ebx,1FFFFh
-    bts es:[edi],ebx
-;
-    pop edi
-;
-    mov ebx,ds:vfs_scan_pos
-    and ebx,ds:vfs_scan_pos+4
-    add ebx,1
-    jnc rsNext
-;
-    mov ds:vfs_scan_pos,eax
-    mov ds:vfs_scan_pos+4,edx
-
-rsNext:
-    add eax,8
-    adc edx,0
-    sub ecx,1
-    jnz rsLoop
-;
-    mov ebx,edi
-    shr ebx,4
-    clc
-    jmp rsDone
-
-rsFail:
-    stc
-
-rsDone:
-    pop ebp
-    ret
-ReqSectors   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1879,26 +1731,26 @@ add_vfs_sectors    Proc far
     push eax
     push ecx
     push edx
-    push esi
-    push edi
+    push ebp
 ;
     call ValidateReq
-    jc arsFail
+    jc arsDone
 ;
-    mov si,serv_flat_sel
-    mov es,si
+    call GetReqMask
+    mov ebx,serv_flat_sel
+    mov es,ebx
 ;
     EnterSection ds:vfs_section
-    call ReqSectors
-    LeaveSection ds:vfs_section
-    jmp arsDone
+    call SetupReq
+    jc arsLeave
+;
+    call StartReadReq
 
-arsFail:
-    stc
+arsLeave:
+    LeaveSection ds:vfs_section
 
 arsDone:
-    pop edi
-    pop esi
+    pop ebp
     pop edx
     pop ecx
     pop eax
