@@ -1554,8 +1554,6 @@ ValidateReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReqSectors    Proc near
-    EnterSection ds:vfs_section
-;
     mov di,gs:vfsrh_deleted_count
     or di,di
     jz rsAppend
@@ -1576,7 +1574,7 @@ rsScanLoop:
 rsAppend:
     movzx edi,gs:vfsrh_entry_count
     cmp di,MAX_VFS_ENTRY_COUNT
-    je rsLeaveFail
+    je rsFail
 ;
     inc di
     mov gs:vfsrh_entry_count,di
@@ -1609,7 +1607,7 @@ rsTake:
     pop eax
 ;
     call SectorCountToBlock
-    jc rsLeaveFail
+    jc rsFail
 ;
     push ebx
     push ecx
@@ -1667,15 +1665,13 @@ rsNext:
     sub ecx,1
     jnz rsLoop
 ;
-    LeaveSection ds:vfs_section
-;
     mov ebx,edi
     shr ebx,4
     clc
     jmp rsDone
 
-rsLeaveFail:
-    LeaveSection ds:vfs_section
+rsFail:
+    stc
 
 rsDone:
     ret
@@ -1708,80 +1704,22 @@ add_vfs_sectors    Proc far
     push edx
     push esi
     push edi
-    push ebp
 ;
-    push eax
-    mov eax,ebx
-    shr eax,24
-    cmp al,VFS_REQ_SIG
-    pop eax
-    jne arsFail
-;
-    push eax
-    mov eax,ebx
-    shr eax,16
-    call HandleToDisc
-    mov ebp,eax
-    pop eax
-    jc arsFail
-;
-    mov ds,ebp
-    cmp bh,MAX_VFS_PARTITIONS
-    ja arsFail
-;
-    movzx esi,bh
-    or esi,esi
-    jz arsDisc
-
-arsPart:
-    dec esi
-    mov si,ds:[2*esi].vfs_part_arr
-    or si,si
-    jnz arsPartOk
-    jmp arsFail
-
-arsDisc:
-    mov si,ds:vfs_my_part
-
-arsPartOk:
-    mov fs,si
-    or bl,bl
-    jz arsFail
-;
-    cmp bl,MAX_VFS_REQ_COUNT
-    ja arsFail
-;
-    test fs:vfsp_flag,VFSP_FLAG_STOPPED
-    jnz arsFail
-;
-    movzx esi,bl
-    dec esi
-    shl esi,1
-    mov si,fs:[esi].vfsp_req_arr
-    or si,si
-    jz arsFail
-;
-    mov gs,si
-    mov esi,fs:vfsp_sector_count
-    mov edi,fs:vfsp_sector_count+4
-    sub esi,eax
-    sbb edi,edx
-    jc arsFail
-;
-    sub esi,ecx
-    sbb edi,0
+    call ValidateReq
     jc arsFail
 ;
     mov si,serv_flat_sel
     mov es,si
+;
+    EnterSection ds:vfs_section
     call ReqSectors
+    LeaveSection ds:vfs_section
     jmp arsDone
 
 arsFail:
     stc
 
 arsDone:
-    pop ebp
     pop edi
     pop esi
     pop edx
@@ -1827,7 +1765,10 @@ lock_vfs_sectors    Proc far
 ;
     mov si,serv_flat_sel
     mov es,si
+;
+    EnterSection ds:vfs_section
     call ReqSectors
+    LeaveSection ds:vfs_section
     jmp lrsDone
 
 lrsFail:
@@ -1879,7 +1820,10 @@ zero_vfs_sectors    Proc far
 ;
     mov si,serv_flat_sel
     mov es,si
+;
+    EnterSection ds:vfs_section
     call ReqSectors
+    LeaveSection ds:vfs_section
     jmp zrsDone
 
 zrsFail:
