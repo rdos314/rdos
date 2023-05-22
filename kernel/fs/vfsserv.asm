@@ -1443,6 +1443,103 @@ GetReqMask   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ValidateReq
+;
+;       DESCRIPTION:    Validate req
+
+;       PARAMETERS:     EBX         Req handle
+;                       EDX:EAX     Start sector
+;                       ECX         Sector count
+;
+;       RETURNS:        DS          VFS sel
+;                       FS          Part sel
+;                       GS          Req sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ValidateReq    Proc near
+    push esi
+    push edi
+    push ebp
+;
+    push eax
+    mov eax,ebx
+    shr eax,24
+    cmp al,VFS_REQ_SIG
+    pop eax
+    jne vrsFail
+;
+    push eax
+    mov eax,ebx
+    shr eax,16
+    call HandleToDisc
+    mov ebp,eax
+    pop eax
+    jc vrsFail
+;
+    mov ds,ebp
+    cmp bh,MAX_VFS_PARTITIONS
+    ja vrsFail
+;
+    movzx esi,bh
+    or esi,esi
+    jz vrsDisc
+
+vrsPart:
+    dec esi
+    mov si,ds:[2*esi].vfs_part_arr
+    or si,si
+    jnz vrsPartOk
+    jmp vrsFail
+
+vrsDisc:
+    mov si,ds:vfs_my_part
+
+vrsPartOk:
+    mov fs,si
+    or bl,bl
+    jz vrsFail
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja vrsFail
+;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz vrsFail
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz vrsFail
+;
+    mov gs,si
+    mov esi,fs:vfsp_sector_count
+    mov edi,fs:vfsp_sector_count+4
+    sub esi,eax
+    sbb edi,edx
+    jc vrsFail
+;
+    sub esi,ecx
+    sbb edi,0
+    jc vrsFail
+;
+    clc
+    jmp vrsDone
+
+vrsFail:
+    stc
+
+vrsDone:
+    pop ebp
+    pop edi
+    pop esi
+    ret
+ValidateReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReqSectors
 ;
 ;       DESCRIPTION:    Req sectors
@@ -1724,68 +1821,8 @@ lock_vfs_sectors    Proc far
     push edx
     push esi
     push edi
-    push ebp
 ;
-    push eax
-    mov eax,ebx
-    shr eax,24
-    cmp al,VFS_REQ_SIG
-    pop eax
-    jne lrsFail
-;
-    push eax
-    mov eax,ebx
-    shr eax,16
-    call HandleToDisc
-    mov ebp,eax
-    pop eax
-    jc lrsFail
-;
-    mov ds,ebp
-    cmp bh,MAX_VFS_PARTITIONS
-    ja lrsFail
-;
-    movzx esi,bh
-    or esi,esi
-    jz lrsDisc
-
-lrsPart:
-    dec esi
-    mov si,ds:[2*esi].vfs_part_arr
-    or si,si
-    jnz lrsPartOk
-    jmp lrsFail
-
-lrsDisc:
-    mov si,ds:vfs_my_part
-
-lrsPartOk:
-    mov fs,si
-    or bl,bl
-    jz lrsFail
-;
-    cmp bl,MAX_VFS_REQ_COUNT
-    ja lrsFail
-;
-    test fs:vfsp_flag,VFSP_FLAG_STOPPED
-    jnz lrsFail
-;
-    movzx esi,bl
-    dec esi
-    shl esi,1
-    mov si,fs:[esi].vfsp_req_arr
-    or si,si
-    jz lrsFail
-;
-    mov gs,si
-    mov esi,fs:vfsp_sector_count
-    mov edi,fs:vfsp_sector_count+4
-    sub esi,eax
-    sbb edi,edx
-    jc lrsFail
-;
-    sub esi,ecx
-    sbb edi,0
+    call ValidateReq
     jc lrsFail
 ;
     mov si,serv_flat_sel
@@ -1797,7 +1834,6 @@ lrsFail:
     stc
 
 lrsDone:
-    pop ebp
     pop edi
     pop esi
     pop edx
@@ -1837,68 +1873,8 @@ zero_vfs_sectors    Proc far
     push edx
     push esi
     push edi
-    push ebp
 ;
-    push eax
-    mov eax,ebx
-    shr eax,24
-    cmp al,VFS_REQ_SIG
-    pop eax
-    jne zrsFail
-;
-    push eax
-    mov eax,ebx
-    shr eax,16
-    call HandleToDisc
-    mov ebp,eax
-    pop eax
-    jc zrsFail
-;
-    mov ds,ebp
-    cmp bh,MAX_VFS_PARTITIONS
-    ja zrsFail
-;
-    movzx esi,bh
-    or esi,esi
-    jz zrsDisc
-
-zrsPart:
-    dec esi
-    mov si,ds:[2*esi].vfs_part_arr
-    or si,si
-    jnz zrsPartOk
-    jmp zrsFail
-
-zrsDisc:
-    mov si,ds:vfs_my_part
-
-zrsPartOk:
-    mov fs,si
-    or bl,bl
-    jz zrsFail
-;
-    cmp bl,MAX_VFS_REQ_COUNT
-    ja zrsFail
-;
-    test fs:vfsp_flag,VFSP_FLAG_STOPPED
-    jnz zrsFail
-;
-    movzx esi,bl
-    dec esi
-    shl esi,1
-    mov si,fs:[esi].vfsp_req_arr
-    or si,si
-    jz zrsFail
-;
-    mov gs,si
-    mov esi,fs:vfsp_sector_count
-    mov edi,fs:vfsp_sector_count+4
-    sub esi,eax
-    sbb edi,edx
-    jc zrsFail
-;
-    sub esi,ecx
-    sbb edi,0
+    call ValidateReq
     jc zrsFail
 ;
     mov si,serv_flat_sel
@@ -1910,7 +1886,6 @@ zrsFail:
     stc
 
 zrsDone:
-    pop ebp
     pop edi
     pop esi
     pop edx
