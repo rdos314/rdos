@@ -123,6 +123,22 @@ AddVfsSectors  MACRO
                     ENDM
 
 ; IN  EBX              Req handle
+; IN  EDX:EAX          Start sector
+; IN  ECX              Sector count
+; OUT EBX              Req #
+LockVfsSectors  MACRO
+    ServGate lock_vfs_sectors_nr
+                    ENDM
+
+; IN  EBX              Req handle
+; IN  EDX:EAX          Start sector
+; IN  ECX              Sector count
+; OUT EBX              Req #
+ZeroVfsSectors  MACRO
+    ServGate zero_vfs_sectors_nr
+                    ENDM
+
+; IN  EBX              Req handle
 ; IN  EAX              Req #
 RemoveVfsSectors  MACRO
     ServGate remove_vfs_sectors_nr

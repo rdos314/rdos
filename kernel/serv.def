@@ -39,5 +39,7 @@ serv_stop_part_nr          = 37
 notify_vfs_msg_nr          = 38
 map_vfs_cmd_buf_nr         = 39
 unmap_vfs_cmd_buf_nr       = 40
+lock_vfs_sectors_nr        = 41
+zero_vfs_sectors_nr        = 42
 
 serv_gate_entries          = 45

@@ -42,6 +42,7 @@ class TPartReqEntry
 {
 public:
     TPartReqEntry(TPartReq *Req, long long StartSector, int SectorCount);
+    TPartReqEntry(TPartReq *Req, long long StartSector, int SectorCount, bool Zero);
     ~TPartReqEntry();
 
     int GetId();

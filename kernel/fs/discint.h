@@ -42,6 +42,7 @@ class TDiscReqEntry
 {
 public:
     TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCount);
+    TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCount, bool Zero);
     ~TDiscReqEntry();
 
     int GetId();

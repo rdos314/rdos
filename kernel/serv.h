@@ -58,6 +58,8 @@ int RDOSAPI ServIsVfsActive(int handle);
 int RDOSAPI ServCreateVfsReq(int handle);
 void RDOSAPI ServCloseVfsReq(int handle);
 int RDOSAPI ServAddVfsSectors(int handle, long long sector, int count);
+int RDOSAPI ServLockVfsSectors(int handle, long long sector, int count);
+int RDOSAPI ServZeroVfsSectors(int handle, long long sector, int count);
 void RDOSAPI ServRemoveVfsSectors(int handle, int reqid);
 char *RDOSAPI ServMapVfsReq(int handle, int reqid);
 void RDOSAPI ServUnmapVfsReq(int handle, int reqid);

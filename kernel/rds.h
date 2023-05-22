@@ -37,6 +37,10 @@
 #define serv_gate_serv_start_part 0x00000024
 #define serv_gate_serv_stop_part 0x00000025
 #define serv_gate_notify_vfs_msg 0x00000026
+#define serv_gate_map_vfs_cmd_buf 0x00000027
+#define serv_gate_unmap_vfs_cmd_buf 0x00000028
+#define serv_gate_lock_vfs_sectors 0x00000029
+#define serv_gate_zero_vfs_sectors 0x0000002A
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -77,4 +81,8 @@
 #define ServGate_serv_start_part 0x55 0x67 0x9a 36 0 0 0 4 0 0x5d
 #define ServGate_serv_stop_part 0x55 0x67 0x9a 37 0 0 0 4 0 0x5d
 #define ServGate_notify_vfs_msg 0x55 0x67 0x9a 38 0 0 0 4 0 0x5d
+#define ServGate_map_vfs_cmd_buf 0x55 0x67 0x9a 39 0 0 0 4 0 0x5d
+#define ServGate_unmap_vfs_cmd_buf 0x55 0x67 0x9a 40 0 0 0 4 0 0x5d
+#define ServGate_lock_vfs_sectors 0x55 0x67 0x9a 41 0 0 0 4 0 0x5d
+#define ServGate_zero_vfs_sectors 0x55 0x67 0x9a 42 0 0 0 4 0 0x5d
 

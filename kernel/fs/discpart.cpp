@@ -322,7 +322,7 @@ int TDisc::WriteSector(long long sector, char *buf, int size)
         return false;
 
     TDiscReq req(FServer);
-    TDiscReqEntry e1(&req, sector, count);
+    TDiscReqEntry e1(&req, sector, count, false);
 
     req.WaitForever();
 

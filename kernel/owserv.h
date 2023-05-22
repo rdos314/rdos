@@ -172,6 +172,28 @@
     __parm [__ebx] [__edx __eax] [__ecx] \
     __value [__eax]
 
+#pragma aux ServLockVfsSectors = \
+    ServGate_lock_vfs_sectors  \
+    "jc fail" \
+    "mov eax,ebx" \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \
+    __parm [__ebx] [__edx __eax] [__ecx] \
+    __value [__eax]
+
+#pragma aux ServZeroVfsSectors = \
+    ServGate_zero_vfs_sectors  \
+    "jc fail" \
+    "mov eax,ebx" \
+    "jmp done" \
+    "fail:" \
+    "xor eax,eax" \
+    "done:" \
+    __parm [__ebx] [__edx __eax] [__ecx] \
+    __value [__eax]
+
 #pragma aux ServRemoveVfsSectors = \
     ServGate_remove_vfs_sectors  \
     __parm [__ebx] [__eax]

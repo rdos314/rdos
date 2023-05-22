@@ -82,6 +82,33 @@ TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCou
 
 /*##########################################################################
 #
+#   Name       : TDiscReqEntry::TDisReqEntry
+#
+#   Purpose....: Disc req entry contructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDiscReqEntry::TDiscReqEntry(TDiscReq *Req, long long StartSector, int SectorCount, bool Zero)
+{
+    FStartSector = StartSector;
+    FSectorCount = SectorCount;
+    FData = 0;
+
+    FReq = Req;
+
+    if (Zero)
+        FId = ServZeroVfsSectors(Req->FReq, StartSector, SectorCount);
+    else
+        FId = ServLockVfsSectors(Req->FReq, StartSector, SectorCount);
+
+    Req->Add(this);
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscReqEntry::~TDiscReqEntry
 #
 #   Purpose....: Disc req entry destructor
