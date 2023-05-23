@@ -1829,13 +1829,40 @@ StartZeroReq   Endp
 
 StartWriteReq    Proc near
     pushad
+;
+    push ecx
+    mov bl,1
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    shl bl,cl
+    mov cl,bl
+    mov bl,1
+    shl bl,cl
+    dec bl
+    pop ecx
 
 swrLoop:
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz swrNext
 ;
-    jmp swrNext
+    or es:[esi].vfsp_wr_bitmap,bl
+;
+    push ebx
+    call BlockToBitmap
+    mov ebx,eax
+    shr ebx,3
+    and ebx,1FFFFh
+    bts es:[edi],ebx
+;
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+    pop ebx
+    jnc swrNext
+;
+    mov ds:vfs_scan_pos,eax
+    mov ds:vfs_scan_pos+4,edx
 
 swrNext:
     add eax,8
