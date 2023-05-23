@@ -1814,6 +1814,44 @@ StartZeroReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           StartWriteReq
+;
+;       DESCRIPTION:    Start write req
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       FS          Part sel
+;                       GS          Req sel
+;                       EDX:EAX     Block #
+;                       ECX         Block count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartWriteReq    Proc near
+    pushad
+
+swrLoop:
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz swrNext
+;
+    jmp swrNext
+
+swrNext:
+    add eax,8
+    adc edx,0
+    sub ecx,1
+    jnz swrLoop
+;
+    clc
+;
+    popad
+    ret
+StartWriteReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddVfsSectors
 ;
 ;       DESCRIPTION:    Add VFS sectors
@@ -2077,15 +2115,13 @@ wvrReq:
 ;
     EnterSection ds:vfs_section
 ;
-    mov eax,gs:[edi].vfsre_sector_count
-    or eax,eax
-    stc
-    jz wvrLeave
+    mov eax,gs:[edi].vfsre_start_sector
+    mov edx,gs:[edi].vfsre_start_sector+4
+    mov ecx,gs:[edi].vfsre_sector_count
+    call SectorCountToBlock
+    jc wvrLeave
 ;
-    mov cl,3
-    sub cl,ds:vfs_sector_shift
-    shr eax,cl
-    clc
+    call StartWriteReq
 
 wvrLeave:
     LeaveSection ds:vfs_section
