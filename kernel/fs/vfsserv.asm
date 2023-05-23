@@ -1999,6 +1999,109 @@ zero_vfs_sectors    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           WriteVfsReq
+;
+;       DESCRIPTION:    Write VFS req
+;
+;       PARAMETERS:     EBX         Req handle
+;                       EAX         Req #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_vfs_req_name       DB 'Write VFS Req',0
+
+write_vfs_req    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ecx,ebx
+    shr ecx,16
+    cmp ch,VFS_REQ_SIG
+    jne wvrFail
+;
+    push eax
+    mov al,cl
+    call HandleToDisc
+    mov cx,ax
+    pop eax
+    jc wvrFail
+;
+    mov ds,ecx
+    cmp bh,MAX_VFS_PARTITIONS
+    ja wvrFail
+;
+    movzx esi,bh
+    or esi,esi
+    jz wvrDisc
+
+wvrPart:
+    dec esi
+    mov si,ds:[2*esi].vfs_part_arr
+    or si,si
+    jnz wvrReq
+
+wvrFail:
+    stc
+    jmp wvrDone
+
+wvrDisc:
+    mov si,ds:vfs_my_part
+
+wvrReq:
+    mov fs,si
+    or bl,bl
+    jz wvrFail
+;
+    cmp bl,MAX_VFS_REQ_COUNT
+    ja wvrFail
+;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz wvrFail
+;
+    movzx esi,bl
+    dec esi
+    shl esi,1
+    mov si,fs:[esi].vfsp_req_arr
+    or si,si
+    jz wvrFail
+;
+    mov gs,si
+    mov ds,fs:vfsp_disc_sel
+    mov si,serv_flat_sel
+    mov es,si
+    mov edi,eax
+    shl edi,4
+;
+    EnterSection ds:vfs_section
+;
+    mov eax,gs:[edi].vfsre_sector_count
+    or eax,eax
+    stc
+    jz wvrLeave
+;
+    mov cl,3
+    sub cl,ds:vfs_sector_shift
+    shr eax,cl
+    clc
+
+wvrLeave:
+    LeaveSection ds:vfs_section
+
+wvrDone:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+write_vfs_req Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           RemoveVfsSectors
 ;
 ;       DESCRIPTION:    Remove VFS sectors
@@ -4822,6 +4925,12 @@ init_server    Proc near
     mov edi,OFFSET zero_vfs_sectors_name
     xor cl,cl
     mov ax,zero_vfs_sectors_nr
+    RegisterServGate
+;
+    mov esi,OFFSET write_vfs_req
+    mov edi,OFFSET write_vfs_req_name
+    xor cl,cl
+    mov ax,write_vfs_req_nr
     RegisterServGate
 ;
     mov esi,OFFSET remove_vfs_sectors
