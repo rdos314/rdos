@@ -1710,6 +1710,57 @@ StartReadReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           StartLockReq
+;
+;       DESCRIPTION:    Start lock req
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       FS          Part sel
+;                       GS          Req sel
+;                       EDX:EAX     Block #
+;                       ECX         Block count
+;                       BP          Req mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartLockReq    Proc near
+    pushad
+
+slrLoop:
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz slrDo
+;
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jnz slrLockOk
+;
+    inc ds:vfs_locked_pages
+
+slrLockOk:
+    inc es:[esi].vfsp_ref_bitmap
+    jmp slrNext
+
+slrDo:
+    or es:[esi].vfsp_flags,VFS_PHYS_VALID
+    mov es:[esi].vfsp_ref_bitmap,1
+    inc ds:vfs_locked_pages
+
+slrNext:
+    add eax,8
+    adc edx,0
+    sub ecx,1
+    jnz slrLoop
+;
+    clc
+;
+    popad
+    ret
+StartLockReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddVfsSectors
 ;
 ;       DESCRIPTION:    Add VFS sectors
@@ -1803,7 +1854,7 @@ lock_vfs_sectors    Proc far
     call SetupReq
     jc lrsLeave
 ;
-    int 3
+    call StartLockReq
     jmp lrsLeave
 
 lrsRead:
