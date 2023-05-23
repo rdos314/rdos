@@ -742,6 +742,48 @@ BlockToBuf   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ZeroPhysBuf
+;
+;       DESCRIPTION:    Zero physical buffer
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       ESI         Physical entry buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ZeroPhysBuf
+
+ZeroPhysBuf    Proc near
+    push es
+    pushad
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov eax,es:[esi]
+    mov ebx,es:[esi+4]
+    and ax,0F000h
+    or ax,813h
+    SetPageEntry
+;
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+    mov ecx,400h
+    xor eax,eax
+    rep stosd
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    popad
+    pop es
+    ret
+ZeroPhysBuf   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           BlockToBitmap
 ;
 ;       DESCRIPTION:    Converts between block and bitmap

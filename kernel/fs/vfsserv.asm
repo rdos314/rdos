@@ -111,6 +111,7 @@ code    SEGMENT byte public 'CODE'
     extern BlockToBitmap:near
     extern SectorToBlock:near
     extern IsSectorCountAligned:near
+    extern ZeroPhysBuf:near
     extern SectorCountToBlock:near
     extern InitFilePart:near
     extern FindVfsHandle:near
@@ -1761,6 +1762,58 @@ StartLockReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           StartZeroReq
+;
+;       DESCRIPTION:    Start zero req
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       FS          Part sel
+;                       GS          Req sel
+;                       EDX:EAX     Block #
+;                       ECX         Block count
+;                       BP          Req mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartZeroReq    Proc near
+    pushad
+
+szrLoop:
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz szrDo
+;
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jnz szrLockOk
+;
+    inc ds:vfs_locked_pages
+
+szrLockOk:
+    inc es:[esi].vfsp_ref_bitmap
+    jmp szrNext
+
+szrDo:
+    or es:[esi].vfsp_flags,VFS_PHYS_VALID
+    call ZeroPhysBuf
+    mov es:[esi].vfsp_ref_bitmap,1
+    inc ds:vfs_locked_pages
+
+szrNext:
+    add eax,8
+    adc edx,0
+    sub ecx,1
+    jnz szrLoop
+;
+    clc
+;
+    popad
+    ret
+StartZeroReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddVfsSectors
 ;
 ;       DESCRIPTION:    Add VFS sectors
@@ -1913,6 +1966,16 @@ zero_vfs_sectors    Proc far
     mov es,ebx
 ;
     EnterSection ds:vfs_section
+    call IsSectorCountAligned
+    jc zrsRead
+;
+    call SetupReq
+    jc zrsLeave
+;
+    call StartZeroReq
+    jmp zrsLeave
+
+zrsRead:
     call SetupReq
     jc zrsLeave
 ;
