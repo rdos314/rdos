@@ -207,6 +207,10 @@
     ServGate_unmap_vfs_req  \
    __parm [__ebx] [__eax]
 
+#pragma aux ServWriteVfsReq = \
+    ServGate_write_vfs_req  \
+   __parm [__ebx] [__eax]
+
 #pragma aux ServStartVfsReq = \
     ServGate_start_vfs_req  \
     __parm [__ebx]

@@ -158,6 +158,12 @@ UnmapVfsReq  MACRO
                     ENDM
 
 ; IN  EBX              Req handle
+; IN  EAX              Req #
+WriteVfsReq  MACRO
+    ServGate write_vfs_req_nr
+                    ENDM
+
+; IN  EBX              Req handle
 StartVfsReq  MACRO
     ServGate start_vfs_req_nr
                     ENDM

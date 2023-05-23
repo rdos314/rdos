@@ -41,6 +41,7 @@
 #define serv_gate_unmap_vfs_cmd_buf 0x00000028
 #define serv_gate_lock_vfs_sectors 0x00000029
 #define serv_gate_zero_vfs_sectors 0x0000002A
+#define serv_gate_write_vfs_req 0x0000002B
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -85,4 +86,5 @@
 #define ServGate_unmap_vfs_cmd_buf 0x55 0x67 0x9a 40 0 0 0 4 0 0x5d
 #define ServGate_lock_vfs_sectors 0x55 0x67 0x9a 41 0 0 0 4 0 0x5d
 #define ServGate_zero_vfs_sectors 0x55 0x67 0x9a 42 0 0 0 4 0 0x5d
+#define ServGate_write_vfs_req 0x55 0x67 0x9a 43 0 0 0 4 0 0x5d
 

@@ -228,6 +228,22 @@ void TDiscReqEntry::Unmap()
 
 /*##########################################################################
 #
+#   Name       : TDiscReqEntry::Write
+#
+#   Purpose....: Write sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDiscReqEntry::Write()
+{
+    ServWriteVfsReq(FReq->FReq, FId);
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscReq::TDisReq
 #
 #   Purpose....: Disc req contructor

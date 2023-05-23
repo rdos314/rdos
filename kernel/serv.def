@@ -41,5 +41,6 @@ map_vfs_cmd_buf_nr         = 39
 unmap_vfs_cmd_buf_nr       = 40
 lock_vfs_sectors_nr        = 41
 zero_vfs_sectors_nr        = 42
+write_vfs_req_nr           = 43
 
 serv_gate_entries          = 45
