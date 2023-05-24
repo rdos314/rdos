@@ -807,78 +807,151 @@ ReadVfs  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteVfs      Proc far
-    push fs
-    pushad
-;
-    mov fs,bx
-
-    push ebp
-    push esi
-
-wrBufLoop:  
-    cmp ebp,8
-    ja wrBufWhole
-;
-    mov eax,200h
-    mul ebp
-    mov ecx,eax
-    jmp wrBufDo
-
-wrBufWhole:
-    mov ecx,1000h
-
-wrBufDo:
-    push ecx
-    xor edx,edx
-
-wrBufCopy:
     push ds
     push es
-    push ecx
+    push fs
+    push gs
+    push ebx
     push esi
+    push edi
+    push ebp
 ;
-;    mov esi,es:[esi]
-;    mov esi,es:[esi].dh_data
-;    mov ax,es
-;    mov ds,ax
-;    mov ecx,80h
-;    mov es,fs:disc_bulk_out_buf
-;    mov edi,edx
-;    rep movs dword ptr es:[edi],ds:[esi]
-;    mov edx,edi
-;
-    pop esi
-    pop ecx
-    pop es
-    pop ds
-;
-    add esi,4
-    sub ebp,1
-    jz wrBufWrite
-;
-    sub ecx,200h
-    jnz wrBufCopy
+    mov ebp,es
+    mov gs,ebp
+    mov fs,bx
 
-wrBufWrite:
+wvfsRetry:
+    push eax
+    push ecx
+    push edx
+;
+    mov ebp,ecx
+    shl ebp,9
+;
+    mov es,fs:disc_bulk_out_buf    
+    mov es:disc_cbw_tag,eax
+    mov es:disc_cbw_transfer_len,ebp
+    mov es:disc_cbw_flags,0
+    mov es:disc_cbw_cmd_len,10
+    mov es:disc_cbw_cmd_data,2Ah
+    mov es:disc_cbw_cmd_data+1,0
+;    
+    mov ebx,eax
+    xchg bl,bh
+    rol ebx,16
+    xchg bl,bh
+    mov dword ptr es:disc_cbw_cmd_data+2,ebx
+;
+    mov es:disc_cbw_cmd_data+6,0
+;
+    mov bx,cx
+    xchg bl,bh    
+    mov word ptr es:disc_cbw_cmd_data+7,bx
+    mov es:disc_cbw_cmd_data+9,0
+;
+    mov bx,fs:disc_dev_handle
+    IsUsbDeviceConnected
+    jc wvfsDetached
+;
+    call SendCbw
+    jc wvfsFail
+;
+    mov ebp,edi
+
+wvfsLoop:
+    push ecx
+    cmp ecx,8
+    jb wvfsSizeOk
+;
+    mov ecx,8
+
+wvfsSizeOk:
+    mov es,fs:disc_bulk_out_buf    
+    xor edi,edi
+    mov ax,serv_flat_sel
+    mov ds,ax
+
+wvfsCopyLoop:
+    mov edx,fs:disc_serv_buf
+    mov eax,gs:[ebp]
+    mov ebx,gs:[ebp+4]
+    MapServEntry
+;
+    push ecx
+    mov esi,edx
+    mov ecx,80h
+    rep movs dword ptr es:[edi],ds:[esi]
     pop ecx
 ;
+    add ebp,8
+    loop wvfsCopyLoop
+;
+    pop ecx
+;
+    push ecx
+    cmp ecx,8
+    ja rvfsBufWhole
+;
+    mov eax,200h
+    mul ecx
+    mov ecx,eax
+    jmp wvfsBufDo
+
+wvfsBufWhole:
+    mov ecx,1000h
+
+wvfsBufDo:
+    mov bx,fs:disc_dev_handle
+    IsUsbDeviceConnected
+    jnc wvfsWrite
+;
+    pop ecx
+    jmp wvfsDetached
+
+wvfsWrite:
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_out_pipe
     PostUsbRawPipe
-    jc wrBufWriteDone
+    jc wvfsFail
 ;
-    or ebp,ebp
-    jnz wrBufLoop
+    pop ecx
+    sub ecx,8
+    ja wvfsLoop
+;    
+    call ReceiveCsw
+    jc wvfsFail
 ;
-    clc
+    pop edx
+    pop ecx
+    pop eax
+    jmp wvfsDone
 
-wrBufWriteDone:
-    pop esi
+wvfsFail:
+    mov bx,fs:disc_dev_handle
+    IsUsbDeviceConnected
+    jc wvfsDetached
+;
+    call ResetDevice
+;
+    pop edx
+    pop ecx
+    pop eax
+    jmp wvfsRetry
+
+wvfsDetached:
+    pop edx
+    pop ecx
+    pop eax
+
+wvfsDone:
     pop ebp
-
-;
-    popad
+    pop edi
+    pop esi
+    pop ebx
+    pop gs
     pop fs
+    pop es
+    pop ds
     retf32
 WriteVfs  Endp
                
