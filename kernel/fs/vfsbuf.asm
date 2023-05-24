@@ -1282,6 +1282,67 @@ GetReadIo   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetWriteIo
+;
+;       DESCRIPTION:    Get number of write sectors
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       ESI         Physical entry buf
+;
+;       RETURNS:        ECX         Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetWriteIo    Proc near
+    push eax
+    push edx
+    push esi
+;
+    mov fs,ds:vfs_req_buf
+    xor ecx,ecx
+    xor edx,edx
+  
+gwiBlockLoop:
+    mov bp,ds:vfs_sectors_per_block
+    movzx ebx,word ptr es:[esi+4]
+    mov eax,es:[esi]
+    and ax,0F000h
+
+gwiSave:    
+    mov fs:[edx],eax
+    mov fs:[edx+4],ebx
+    add ax,ds:vfs_bytes_per_sector
+    add edx,8
+    inc cx
+    sub bp,1
+    jnz gwiSave
+;
+    cmp cx,ds:vfs_max_req
+    jae gwiDone
+;
+    add esi,8
+    test si,0FFFh
+    jz gwiDone
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz gwiDone
+;
+    xor al,al
+    xchg al,es:[esi].vfsp_wr_bitmap
+    or al,al
+    jnz gwiBlockLoop
+
+gwiDone:
+    pop esi
+    pop edx
+    pop eax
+    ret
+GetWriteIo   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ClearIoBitmap
 ;
 ;       DESCRIPTION:    Clear IO bitmap
@@ -1480,11 +1541,29 @@ hdRetry:
     jz hdRead
 
 hdWrite:
-    mov al,es:[esi].vfsp_wr_bitmap
-    or al,al
+    xor bl,bl
+    xchg bl,es:[esi].vfsp_wr_bitmap
+    or bl,bl
     jz hdWriteDone
 ;
     int 3
+    call GetWriteIo
+    call ClearIoBitmap
+    call BlockToSector
+    LeaveSection ds:vfs_section
+;
+    push es
+    push edi
+    mov es,ds:vfs_req_buf
+    xor edi,edi
+    mov bx,ds:vfs_param
+    call fword ptr ds:vfs_write
+    pop edi
+    pop es
+    jc hdFail
+;
+    EnterSection ds:vfs_section
+    jmp hdCheckMore
 
 hdWriteDone:
     call ClearIoBitmap
@@ -1513,7 +1592,8 @@ hdRead:
 ;
     EnterSection ds:vfs_section
     call NotifyReadBuf
-;
+
+hdCheckMore:
     mov ebx,ds:vfs_active_count
     or ebx,ebx
     jnz hdMore
