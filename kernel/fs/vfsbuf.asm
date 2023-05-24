@@ -1546,7 +1546,6 @@ hdWrite:
     or bl,bl
     jz hdWriteDone
 ;
-    int 3
     call GetWriteIo
     call ClearIoBitmap
     call BlockToSector
