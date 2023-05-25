@@ -1821,7 +1821,6 @@ StartZeroReq   Endp
 ;       PARAMETERS:     DS          VFS sel
 ;                       ES          Server flat sel
 ;                       FS          Part sel
-;                       GS          Req sel
 ;                       EDX:EAX     Block #
 ;                       ECX         Block count
 ;
@@ -2067,87 +2066,31 @@ zero_vfs_sectors    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           WriteVfsReq
+;       NAME:           WriteVfsSectors
 ;
-;       DESCRIPTION:    Write VFS req
+;       DESCRIPTION:    Write VFS sectors
 ;
 ;       PARAMETERS:     EBX         Req handle
-;                       EAX         Req #
+;                       EDX:EAX     Start sector
+;                       ECX         Sector count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_vfs_req_name       DB 'Write VFS Req',0
+write_vfs_sectors_name       DB 'Write VFS Sectors',0
 
-write_vfs_req    Proc far
+write_vfs_sectors    Proc far
     push ds
     push es
     push fs
-    push gs
-    pushad
-;
-    mov ecx,ebx
-    shr ecx,16
-    cmp ch,VFS_REQ_SIG
-    jne wvrFail
-;
     push eax
-    mov al,cl
-    call HandleToDisc
-    mov cx,ax
-    pop eax
-    jc wvrFail
+    push ecx
+    push edx
 ;
-    mov ds,ecx
-    cmp bh,MAX_VFS_PARTITIONS
-    ja wvrFail
-;
-    movzx esi,bh
-    or esi,esi
-    jz wvrDisc
-
-wvrPart:
-    dec esi
-    mov si,ds:[2*esi].vfs_part_arr
-    or si,si
-    jnz wvrReq
-
-wvrFail:
-    stc
-    jmp wvrDone
-
-wvrDisc:
-    mov si,ds:vfs_my_part
-
-wvrReq:
-    mov fs,si
-    or bl,bl
-    jz wvrFail
-;
-    cmp bl,MAX_VFS_REQ_COUNT
-    ja wvrFail
-;
-    test fs:vfsp_flag,VFSP_FLAG_STOPPED
-    jnz wvrFail
-;
-    movzx esi,bl
-    dec esi
-    shl esi,1
-    mov si,fs:[esi].vfsp_req_arr
-    or si,si
-    jz wvrFail
-;
-    mov gs,si
-    mov ds,fs:vfsp_disc_sel
-    mov si,serv_flat_sel
-    mov es,si
-    mov edi,eax
-    shl edi,4
+    call HandleToPartFs
+    jc crvrDone
 ;
     EnterSection ds:vfs_section
 ;
-    mov eax,gs:[edi].vfsre_start_sector
-    mov edx,gs:[edi].vfsre_start_sector+4
-    mov ecx,gs:[edi].vfsre_sector_count
     call SectorCountToBlock
     jc wvrLeave
 ;
@@ -2157,13 +2100,14 @@ wvrLeave:
     LeaveSection ds:vfs_section
 
 wvrDone:
-    popad
-    pop gs
+    pop edx
+    pop ecx
+    pop eax
     pop fs
     pop es
     pop ds
     ret
-write_vfs_req Endp
+write_vfs_sectors Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4993,10 +4937,10 @@ init_server    Proc near
     mov ax,zero_vfs_sectors_nr
     RegisterServGate
 ;
-    mov esi,OFFSET write_vfs_req
-    mov edi,OFFSET write_vfs_req_name
+    mov esi,OFFSET write_vfs_sectors
+    mov edi,OFFSET write_vfs_sectors_name
     xor cl,cl
-    mov ax,write_vfs_req_nr
+    mov ax,write_vfs_sectors_nr
     RegisterServGate
 ;
     mov esi,OFFSET remove_vfs_sectors

@@ -158,9 +158,10 @@ UnmapVfsReq  MACRO
                     ENDM
 
 ; IN  EBX              Req handle
-; IN  EAX              Req #
-WriteVfsReq  MACRO
-    ServGate write_vfs_req_nr
+; IN  EDX:EAX          Start sector
+; IN  ECX              Sector count
+WriteVfsSectors  MACRO
+    ServGate write_vfs_sectors_nr
                     ENDM
 
 ; IN  EBX              Req handle

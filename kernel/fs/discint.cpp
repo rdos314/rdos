@@ -239,7 +239,7 @@ void TDiscReqEntry::Unmap()
 ##########################################################################*/
 void TDiscReqEntry::Write()
 {
-    ServWriteVfsReq(FReq->FReq, FId);
+    ServWriteVfsSectors(FReq->FServer->GetHandle(), FStartSector, FSectorCount);
 }
 
 /*##########################################################################
