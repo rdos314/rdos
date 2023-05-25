@@ -1288,6 +1288,8 @@ GetReadIo   Endp
 ;
 ;       PARAMETERS:     DS          VFS sel
 ;                       ES          Server flat sel
+;                       BL          Sector count in first block
+;                       BH          Start sector in first block
 ;                       ESI         Physical entry buf
 ;
 ;       RETURNS:        ECX         Sector count
@@ -1554,22 +1556,41 @@ t11111111 DB 08h
 
 GetWriteIo    Proc near
     push eax
+    push ebx
     push edx
     push esi
+    push edi
 ;
     mov fs,ds:vfs_req_buf
     xor ecx,ecx
     xor edx,edx
-  
+
 gwiBlockLoop:
-    mov bp,ds:vfs_sectors_per_block
-    movzx ebx,word ptr es:[esi+4]
+    movzx edi,word ptr es:[esi+4]
     mov eax,es:[esi]
     and ax,0F000h
+;
+    push ecx
+;
+    push eax
+    push edx
+;
+    movzx bp,bl
+    and bp,0Fh
+    mov ax,ds:vfs_bytes_per_sector
+    movzx dx,bh
+    mul dx
+    mov cx,ax
+;
+    pop edx
+    pop eax
+;
+    add ax,cx
+    pop ecx
 
 gwiSave:    
     mov fs:[edx],eax
-    mov fs:[edx+4],ebx
+    mov fs:[edx+4],edi
     add ax,ds:vfs_bytes_per_sector
     add edx,8
     inc cx
@@ -1579,6 +1600,11 @@ gwiSave:
     cmp cx,ds:vfs_max_req
     jae gwiDone
 ;
+    add bl,bh
+    movzx bx,bl
+    cmp bx,ds:vfs_sectors_per_block
+    jne gwiDone
+;
     add esi,8
     test si,0FFFh
     jz gwiDone
@@ -1586,14 +1612,30 @@ gwiSave:
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz gwiDone
 ;
-    xor al,al
-    xchg al,es:[esi].vfsp_wr_bitmap
-    or al,al
-    jnz gwiBlockLoop
+    xor bl,bl
+    xchg bl,es:[esi].vfsp_wr_bitmap
+    or bl,bl
+    jz gwiDone
+;
+    movzx ebx,bl
+    mov bl,byte ptr cs:[ebx].SizeBaseTab
+    mov bh,bl
+    and bh,0F0h
+    shl bh,4
+    or bh,bh
+    jnz gwiDone
+;
+    and bl,0Fh
+    mov cl,ds:vfs_sector_shift
+    shr bl,cl
+    shr bh,cl
+    jmp gwiBlockLoop
 
 gwiDone:
+    pop edi
     pop esi
     pop edx
+    pop ebx
     pop eax
     ret
 GetWriteIo   Endp
@@ -1803,6 +1845,18 @@ hdWrite:
     xchg bl,es:[esi].vfsp_wr_bitmap
     or bl,bl
     jz hdWriteDone
+;
+    int 3
+    movzx ebx,bl
+    mov bl,byte ptr cs:[ebx].SizeBaseTab
+    mov bh,bl
+    and bh,0F0h
+    shl bh,4
+    and bl,0Fh
+    mov cl,ds:vfs_sector_shift
+    shr bl,cl
+    shr bh,cl
+    or al,bh
 ;
     call GetWriteIo
     call ClearIoBitmap
