@@ -1814,75 +1814,6 @@ StartZeroReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           StartWriteReq
-;
-;       DESCRIPTION:    Start write req
-;
-;       PARAMETERS:     DS          VFS sel
-;                       ES          Server flat sel
-;                       FS          Part sel
-;                       EDX:EAX     Block #
-;                       EBP         Sector count
-;                       BL          Initial wr mask
-;                       CL          Mask shift
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartWriteReq    Proc near
-    pushad
-;
-    push ecx
-    mov bl,1
-    mov cl,3
-    sub cl,ds:vfs_sector_shift
-    shl bl,cl
-    mov cl,bl
-    mov bl,1
-    shl bl,cl
-    dec bl
-    pop ecx
-
-swrLoop:
-    call BlockToBuf
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz swrNext
-;
-    or es:[esi].vfsp_wr_bitmap,bl
-;
-    push ebx
-    call BlockToBitmap
-    mov ebx,eax
-    shr ebx,3
-    and ebx,1FFFFh
-    bts es:[edi],ebx
-;
-    mov ebx,ds:vfs_scan_pos
-    and ebx,ds:vfs_scan_pos+4
-    add ebx,1
-    pop ebx
-    jnc swrNext
-;
-    mov ds:vfs_scan_pos,eax
-    mov ds:vfs_scan_pos+4,edx
-;
-    mov bx,ds:vfs_server
-    Signal
-
-swrNext:
-    add eax,8
-    adc edx,0
-    sub ecx,1
-    jnz swrLoop
-;
-    clc
-;
-    popad
-    ret
-StartWriteReq   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddVfsSectors
 ;
 ;       DESCRIPTION:    Add VFS sectors
@@ -2090,14 +2021,10 @@ write_vfs_sectors    Proc far
     push ds
     push es
     push fs
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push ebp
+    pushad
 ;
     call HandleToPartFs
-    jc crvrDone
+    jc wvrDone
 ;
     mov ebp,ecx
 ;
@@ -2131,21 +2058,60 @@ write_vfs_sectors    Proc far
     pop edx
     pop eax
 ;
-    EnterSection ds:vfs_section
     call SectorToBlock
-    jc wvrLeave
+    jc wvrDone
 ;
-    call StartWriteReq
+    EnterSection ds:vfs_section
+
+wvrBlockLoop:
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz wvrLeave
+
+wvrSectorLoop:
+    or es:[esi].vfsp_wr_bitmap,bl
+    rol bl,cl
+;
+    sub ebp,1
+    jz wvrUpdateBlock
+;
+    test bl,1
+    jz wvrSectorLoop
+
+wvrUpdateBlock:
+    push ebx
+    call BlockToBitmap
+    mov ebx,eax
+    shr ebx,3
+    and ebx,1FFFFh
+    bts es:[edi],ebx
+;
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+    pop ebx
+    jnc wvrNext
+;
+    mov ds:vfs_scan_pos,eax
+    mov ds:vfs_scan_pos+4,edx
+;
+    push ebx
+    mov bx,ds:vfs_server
+    Signal
+    pop ebx
+
+wvrNext:
+    add eax,8
+    adc edx,0
+;
+    or ebp,ebp
+    jnz wvrBlockLoop
 
 wvrLeave:
     LeaveSection ds:vfs_section
 
 wvrDone:
-    pop ebp
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
+    popad
     pop fs
     pop es
     pop ds
