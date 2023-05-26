@@ -510,6 +510,7 @@ SectorCountToBlock   Endp
 IsSectorCountAligned    Proc near
     push eax
     push ebx
+    push ecx
     push ebp
 ;
     mov ebp,ecx
@@ -543,6 +544,7 @@ iscaFail:
 
 iscaDone:
     pop ebp
+    pop ecx
     pop ebx
     pop eax
     ret
@@ -1624,14 +1626,13 @@ gwiSave:
     mov bl,byte ptr cs:[ebx].SizeBaseTab
     mov bh,bl
     and bh,0F0h
-    shl bh,4
-    or bh,bh
     jnz gwiDone
 ;
+    push ecx
     and bl,0Fh
     mov cl,ds:vfs_sector_shift
     shr bl,cl
-    shr bh,cl
+    pop ecx
     jmp gwiBlockLoop
 
 gwiDone:
@@ -1854,7 +1855,7 @@ hdWrite:
     mov bl,byte ptr cs:[ebx].SizeBaseTab
     mov bh,bl
     and bh,0F0h
-    shl bh,4
+    shr bh,4
     and bl,0Fh
     mov cl,ds:vfs_sector_shift
     shr bl,cl
