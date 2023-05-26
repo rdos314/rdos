@@ -1850,7 +1850,6 @@ hdWrite:
     or bl,bl
     jz hdWriteDone
 ;
-    int 3
     movzx ebx,bl
     mov bl,byte ptr cs:[ebx].SizeBaseTab
     mov bh,bl
