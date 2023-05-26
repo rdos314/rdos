@@ -959,6 +959,9 @@ icLoop:
     cmp es:[esi].vfsp_ref_bitmap,0
     jne icNext
 ;
+    cmp es:[esi].vfsp_wr_bitmap,0
+    jne icNext
+;
     btc es:[esi].vfsp_flags,VFS_PHYS_USED_BIT
     jc icNext
 ;

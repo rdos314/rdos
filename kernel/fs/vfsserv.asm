@@ -1822,8 +1822,9 @@ StartZeroReq   Endp
 ;                       ES          Server flat sel
 ;                       FS          Part sel
 ;                       EDX:EAX     Block #
-;                       ECX         Sector count
+;                       EBP         Sector count
 ;                       BL          Initial wr mask
+;                       CL          Mask shift
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2079,6 +2080,12 @@ zero_vfs_sectors    Endp
 
 write_vfs_sectors_name       DB 'Write VFS Sectors',0
 
+WriteMaskTab:
+wm00 DB 001h, 1
+wm01 DB 003h, 2
+wm02 DB 00Fh, 4
+wm03 DB 0FFh, 8
+
 write_vfs_sectors    Proc far
     push ds
     push es
@@ -2087,16 +2094,16 @@ write_vfs_sectors    Proc far
     push ebx
     push ecx
     push edx
+    push ebp
 ;
     call HandleToPartFs
     jc crvrDone
 ;
+    mov ebp,ecx
+;
     mov ebx,serv_flat_sel
     mov es,ebx
     mov ds,fs:vfsp_disc_sel
-    EnterSection ds:vfs_section
-;
-    push ecx
 ;
     mov bl,1
     mov cl,3
@@ -2108,12 +2115,23 @@ write_vfs_sectors    Proc far
     and bl,cl
     not cl
     and al,cl
-    mov cl,bl
-    mov bl,1
+;
+    push eax
+    push edx
+;
+    movzx eax,ds:vfs_sector_shift
+    mov dx,cs:[2*eax].WriteMaskTab
+    mov al,dh
+    mul bl
+    mov cl,al
+    mov bl,dl
     shl bl,cl
+    mov cl,dh
 ;
-    pop ecx
+    pop edx
+    pop eax
 ;
+    EnterSection ds:vfs_section
     call SectorToBlock
     jc wvrLeave
 ;
@@ -2123,6 +2141,7 @@ wvrLeave:
     LeaveSection ds:vfs_section
 
 wvrDone:
+    pop ebp
     pop edx
     pop ecx
     pop ebx
