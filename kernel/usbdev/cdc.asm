@@ -272,6 +272,7 @@ function_union_descr	Proc near
     push esi
     push edi
 ;
+    int 3
     mov al,es:[edi+3]
     or al,al
     stc
@@ -371,6 +372,9 @@ usb_attach  Proc far
     jne uaFail
 ;
     mov cl,es:udd_class
+    or cl,cl
+    jz uaCdc
+;
     cmp cl,2
     jne uaFail
 
