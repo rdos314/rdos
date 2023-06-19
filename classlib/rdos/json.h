@@ -160,12 +160,18 @@ public:
 
     TJsonArrayObject *Clone(TJsonAlloc *Alloc);
 
+    int Count();
+
     virtual bool IsArrayObject();
 
     virtual bool IsBooleanArray();
     virtual bool IsIntArray();
     virtual bool IsDoubleArray();
     virtual bool IsStringArray();
+
+protected:
+    int FArraySize;
+    int FArrayCount;
 };
 
 class TJsonBooleanArray : public TJsonArrayObject
@@ -176,6 +182,7 @@ public:
     virtual ~TJsonBooleanArray();
 
     virtual bool IsBooleanArray();
+    bool Get(int Pos);
     void Add(bool val);
     TJsonBooleanArray *Clone(TJsonAlloc *Alloc);
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
@@ -186,9 +193,6 @@ protected:
     bool *AllocateArr(int count);
     void FreeArr(bool *arr);
     void Grow();
-
-    int FArraySize;
-    int FArrayCount;
 
     bool *FArr;
 };
@@ -201,6 +205,7 @@ public:
     virtual ~TJsonIntArray();
 
     virtual bool IsIntArray();
+    long long Get(int Pos);
     void Add(long long val);
     TJsonIntArray *Clone(TJsonAlloc *Alloc);
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
@@ -211,9 +216,6 @@ protected:
     long long *AllocateArr(int count);
     void FreeArr(long long *arr);
     void Grow();
-
-    int FArraySize;
-    int FArrayCount;
 
     long long *FArr;
 };
@@ -226,6 +228,7 @@ public:
     virtual ~TJsonDoubleArray();
 
     virtual bool IsDoubleArray();
+    double Get(int Pos);
     void Add(double val);
     void AddNone();
     TJsonDoubleArray *Clone(TJsonAlloc *Alloc);
@@ -240,9 +243,6 @@ protected:
 
     int FDecimals;
 
-    int FArraySize;
-    int FArrayCount;
-
     double *FArr;
 };
 
@@ -254,6 +254,7 @@ public:
     virtual ~TJsonStringArray();
 
     virtual bool IsStringArray();
+    const char *Get(int Pos);
     void Add(const char *str);
     TJsonStringArray *Clone(TJsonAlloc *Alloc);
     virtual void Write(TJsonDocument *doc, int indent, TString &str); 
@@ -264,9 +265,6 @@ protected:
     char **AllocateArr(int count);
     void FreeArr(char **arr);
     void Grow();
-
-    int FArraySize;
-    int FArrayCount;
 
     char **FArr;
 };

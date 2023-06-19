@@ -1279,6 +1279,8 @@ void TJsonObject::Write(TJsonDocument *doc, int indent, TString &str)
 TJsonArrayObject::TJsonArrayObject(const char *FieldName, TJsonAlloc *Alloc)
  : TJsonObject(FieldName, Alloc)
 {
+    FArraySize = 0;
+    FArrayCount = 0;
 }
 
 /*##########################################################################
@@ -1326,6 +1328,22 @@ TJsonArrayObject::~TJsonArrayObject()
 TJsonArrayObject *TJsonArrayObject::Clone(TJsonAlloc *Alloc)
 {
     return (TJsonArrayObject *)CloneObj(Alloc);
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonArrayObject::Count
+#
+#   Purpose....: Elements 
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TJsonArrayObject::Count()
+{
+    return FArrayCount;
 }
 
 /*##########################################################################
@@ -1422,8 +1440,6 @@ bool TJsonArrayObject::IsStringArray()
 TJsonBooleanArray::TJsonBooleanArray(const char *FieldName, TJsonAlloc *Alloc)
  : TJsonArrayObject(FieldName, Alloc)
 {
-    FArraySize = 0;
-    FArrayCount = 0;
     FArr = 0;
 }
 
@@ -1599,6 +1615,25 @@ void TJsonBooleanArray::Grow()
 
     FArr = NewArr;
     FArraySize = NewSize;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonBooleanArray::Get
+#
+#   Purpose....: Get value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TJsonBooleanArray::Get(int Pos)
+{
+    if (Pos < FArrayCount)
+        return FArr[Pos];
+    else
+        return false;
 }
 
 /*##########################################################################
@@ -1850,6 +1885,25 @@ void TJsonIntArray::Grow()
 
 /*##########################################################################
 #
+#   Name       : TJsonIntArray::Get
+#
+#   Purpose....: Get value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TJsonIntArray::Get(int Pos)
+{
+    if (Pos < FArrayCount)
+        return FArr[Pos];
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TJsonIntArray::Add
 #
 #   Purpose....: Add value
@@ -2097,6 +2151,25 @@ void TJsonDoubleArray::Grow()
 
     FArr = NewArr;
     FArraySize = NewSize;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonDoubleArray::Get
+#
+#   Purpose....: Get value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TJsonDoubleArray::Get(int Pos)
+{
+    if (Pos < FArrayCount)
+        return FArr[Pos];
+    else
+        return 0.0;
 }
 
 /*##########################################################################
@@ -2404,6 +2477,25 @@ void TJsonStringArray::Grow()
 
     FArr = NewArr;
     FArraySize = NewSize;
+}
+
+/*##########################################################################
+#
+#   Name       : TJsonStringArray::Get
+#
+#   Purpose....: Get value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TJsonStringArray::Get(int Pos)
+{
+    if (Pos < FArrayCount)
+        return FArr[Pos];
+    else
+        return "";
 }
 
 /*##########################################################################
