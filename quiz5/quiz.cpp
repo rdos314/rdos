@@ -49,6 +49,8 @@ static double r2pi = sqrt(2.0 * 3.14159265358979323846);
 ##########################################################################*/
 TQuizItem::TQuizItem(int number)
 {
+    int i;
+
     Text = "NO TEXT";
     MyGroup = 0;
     Reverse = false;
@@ -56,7 +58,13 @@ TQuizItem::TQuizItem(int number)
 
     NoAnswer = 0;
     Count = 0;
-    Sd = 0;
+    Sd = 0.0;
+
+    for (i = 0; i < MAX_QUESTIONS; i++)
+    {
+        Cov[i] = 0.0;
+        CountArr[i] = 0;
+    }
 
     NaMaleCount = 0.0;
     NtMaleCount = 0.0;
@@ -206,7 +214,7 @@ void TQuizItem::Update(int gender, double p, char value)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Update(int gender, double p, char value, TQuizItem *item)
+void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *item)
 {
 }
 
@@ -223,7 +231,12 @@ void TQuizItem::Update(int gender, double p, char value, TQuizItem *item)
 ##########################################################################*/
 void TQuizItem::Update(int gender, double p, char *value, TQuizItem **item, int count)
 {
+    int i;
+
     Update(gender, p, value[Nr]);
+
+    for (i = 0; i < count; i++)
+        Update(gender, p, value[Nr], value[i], item[i]);
 }
 
 /*##########################################################################

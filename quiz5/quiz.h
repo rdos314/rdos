@@ -136,10 +136,11 @@ public:
 
 protected:
     void Update(int gender, double p, char value);
-    void Update(int gender, double p, char value, TQuizItem *item);
+    void Update(int gender, double p, char myval, char value, TQuizItem *item);
 
     int NoAnswer;
     int Count;
+    int CountArr[MAX_QUESTIONS];
     int Nr;
 
     double NaMaleCount;
