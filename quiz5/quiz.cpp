@@ -52,6 +52,19 @@ TQuizItem::TQuizItem()
     Text = "NO TEXT";
     MyGroup = 0;
     Reverse = false;
+
+    NoAnswer = 0;
+    Count = 0;
+
+    NaMaleCount = 0.0;
+    NtMaleCount = 0.0;
+    NaFemaleCount = 0.0;
+    NtFemaleCount = 0.0;
+
+    NaMaleSum = 0.0;
+    NtMaleSum = 0.0;
+    NaFemaleSum = 0.0;
+    NtFemaleSum = 0.0;
 }
 
 /*##########################################################################
@@ -67,6 +80,112 @@ TQuizItem::TQuizItem()
 ##########################################################################*/
 TQuizItem::~TQuizItem()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::Add
+#
+#   Purpose....: Add data point
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizItem::Add(int gender, double p, int value)
+{
+    double dval;
+    double p1 = 1.0 - p;
+
+    if (value)
+    {
+        Count++;
+        dval = (double)(value - 1);
+        
+        switch (gender)
+        {
+            case 1:
+                NaMaleCount += p;
+                NtMaleCount += p1;
+                NaMaleSum += p * dval;
+                NtMaleSum += p1 * dval;
+                break;
+
+            case 2:
+                NaFemaleCount += p;
+                NtFemaleCount += p1;
+                NaFemaleSum += p * dval;
+                NtFemaleSum += p1 * dval;
+                break;
+        }
+    }
+    else
+        NoAnswer++;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::GetMaleAtypicalMean
+#
+#   Purpose....: Get male atypical mean
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TQuizItem::GetMaleAtypicalMean()
+{
+    return NaMaleSum / NaMaleCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::GetFemaleAtypicalMean
+#
+#   Purpose....: Get female atypical mean
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TQuizItem::GetFemaleAtypicalMean()
+{
+    return NaFemaleSum / NaFemaleCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::GetMaleTypicalMean
+#
+#   Purpose....: Get male typical mean
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TQuizItem::GetMaleTypicalMean()
+{
+    return NtMaleSum / NtMaleCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::GetFemaleTypicalMean
+#
+#   Purpose....: Get female typical mean
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TQuizItem::GetFemaleTypicalMean()
+{
+    return NtFemaleSum / NtFemaleCount;
 }
 
 /*##########################################################################
@@ -481,6 +600,9 @@ void TQuiz::AddRow(TQuizRow *Row)
     }
 
     Row->P = ProbArr[Row->Score];
+
+    for (i = 0; i < N; i++)
+        ItemArr[i]->Add(Row->Gender, Row->P, Row->Quiz[i]);
 
     ValueArr[ValueCount] = Row;
     ValueCount++;

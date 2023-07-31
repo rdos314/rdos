@@ -114,12 +114,30 @@ public:
     TQuizItem();
     ~TQuizItem();
 
+    void Add(int gender, double p, int value);
+    double GetMaleAtypicalMean();
+    double GetFemaleAtypicalMean();
+    double GetMaleTypicalMean();
+    double GetFemaleTypicalMean();
+
     const char *Text;
     int MyGroup;
     bool Reverse;
 
 protected:
     int NoAnswer;
+    int Count;
+
+    double NaMaleCount;
+    double NtMaleCount;
+    double NaFemaleCount;
+    double NtFemaleCount;
+
+    double NaMaleSum;
+    double NtMaleSum;
+    double NaFemaleSum;
+    double NtFemaleSum;
+
 };
 
 class TQuiz
