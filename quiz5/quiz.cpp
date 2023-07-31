@@ -126,6 +126,25 @@ void TQuizItem::Add(int gender, double p, int value)
 
 /*##########################################################################
 #
+#   Name       : TQuizItem::InitDone1
+#
+#   Purpose....: Init stage 1 done
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizItem::InitDone1()
+{
+    MaleAtypicalMean = NaMaleSum / NaMaleCount;
+    FemaleAtypicalMean = NaFemaleSum / NaFemaleCount;
+    MaleTypicalMean = NtMaleSum / NtMaleCount;
+    FemaleTypicalMean = NtFemaleSum / NtFemaleCount;
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizItem::GetNoAnswer
 #
 #   Purpose....: Get no answer proportion
@@ -138,70 +157,6 @@ void TQuizItem::Add(int gender, double p, int value)
 double TQuizItem::GetNoAnswer()
 {
     return (double)NoAnswer / (double)(NoAnswer + Count);
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizItem::GetMaleAtypicalMean
-#
-#   Purpose....: Get male atypical mean
-#
-#   In params..: 
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-double TQuizItem::GetMaleAtypicalMean()
-{
-    return NaMaleSum / NaMaleCount;
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizItem::GetFemaleAtypicalMean
-#
-#   Purpose....: Get female atypical mean
-#
-#   In params..: 
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-double TQuizItem::GetFemaleAtypicalMean()
-{
-    return NaFemaleSum / NaFemaleCount;
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizItem::GetMaleTypicalMean
-#
-#   Purpose....: Get male typical mean
-#
-#   In params..: 
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-double TQuizItem::GetMaleTypicalMean()
-{
-    return NtMaleSum / NtMaleCount;
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizItem::GetFemaleTypicalMean
-#
-#   Purpose....: Get female typical mean
-#
-#   In params..: 
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-double TQuizItem::GetFemaleTypicalMean()
-{
-    return NtFemaleSum / NtFemaleCount;
 }
 
 /*##########################################################################
@@ -588,32 +543,32 @@ void TQuiz::WriteSumaryTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 5);
-        sprintf(str, "%5.3Lf", ItemArr[i]->GetMaleAtypicalMean());
+        sprintf(str, "%5.3Lf", ItemArr[i]->MaleAtypicalMean);
         file.Write(str);
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 5);
-        sprintf(str, "%5.3Lf", ItemArr[i]->GetFemaleAtypicalMean());
+        sprintf(str, "%5.3Lf", ItemArr[i]->FemaleAtypicalMean);
         file.Write(str);
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 5);
-        sprintf(str, "%5.3Lf", ItemArr[i]->GetMaleTypicalMean());
+        sprintf(str, "%5.3Lf", ItemArr[i]->MaleTypicalMean);
         file.Write(str);
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 5);
-        sprintf(str, "%5.3Lf", ItemArr[i]->GetFemaleTypicalMean());
+        sprintf(str, "%5.3Lf", ItemArr[i]->FemaleTypicalMean);
         file.Write(str);
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 5);
-        sprintf(str, "%5.3Lf", ItemArr[i]->GetMaleAtypicalMean() - ItemArr[i]->GetMaleTypicalMean());
+        sprintf(str, "%5.3Lf", ItemArr[i]->MaleAtypicalMean - ItemArr[i]->MaleTypicalMean);
         file.Write(str);
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 5);
-        sprintf(str, "%5.3Lf", ItemArr[i]->GetFemaleAtypicalMean() - ItemArr[i]->GetFemaleTypicalMean());
+        sprintf(str, "%5.3Lf", ItemArr[i]->FemaleAtypicalMean - ItemArr[i]->FemaleTypicalMean);
         file.Write(str);
         WriteFieldFooter(file);
 
@@ -685,4 +640,19 @@ void TQuiz::AddRow(TQuizRow *Row)
 
     ValueArr[ValueCount] = Row;
     ValueCount++;
+}
+
+/*##################  LoadDone ##########################
+*   Purpose....: Add a row                                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::LoadDone()
+{
+    int i;
+
+    for (i = 0; i < N; i++)
+        ItemArr[i]->InitDone1();
 }

@@ -115,16 +115,18 @@ public:
     ~TQuizItem();
 
     void Add(int gender, double p, int value);
+    void InitDone1();
 
     double GetNoAnswer();
-    double GetMaleAtypicalMean();
-    double GetFemaleAtypicalMean();
-    double GetMaleTypicalMean();
-    double GetFemaleTypicalMean();
 
     const char *Text;
     int MyGroup;
     bool Reverse;
+
+    double MaleAtypicalMean;
+    double MaleTypicalMean;
+    double FemaleAtypicalMean;
+    double FemaleTypicalMean;
 
 protected:
     int NoAnswer;
@@ -148,6 +150,8 @@ public:
     ~TQuiz();
 
     virtual void Load() = 0;
+
+    void LoadDone();
 
     void WriteNoAnswerStats(const char *filename);
     void WriteSumaryTable(const char *filename);

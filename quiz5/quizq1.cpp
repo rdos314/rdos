@@ -729,4 +729,6 @@ void TQuizQ1::Load()
         if (ptr)
             ProcessRow(buf);
     }
+
+    LoadDone();
 }
