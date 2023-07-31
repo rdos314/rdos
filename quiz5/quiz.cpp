@@ -38,6 +38,39 @@ static double r2pi = sqrt(2.0 * 3.14159265358979323846);
 
 /*##########################################################################
 #
+#   Name       : TQuizItem::TQuizItem
+#
+#   Purpose....: Constructor for TQuizItem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TQuizItem::TQuizItem()
+{
+    Text = "NO TEXT";
+    MyGroup = 0;
+    Reverse = false;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::~TQuizItem
+#
+#   Purpose....: Destructor for TQuizItem
+#
+#   In params..: Filename to load quiz from
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TQuizItem::~TQuizItem()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TQuiz::TQuiz
 #
 #   Purpose....: Constructor for TQuiz
@@ -49,7 +82,14 @@ static double r2pi = sqrt(2.0 * 3.14159265358979323846);
 ##########################################################################*/
 TQuiz::TQuiz(int Questions)
 {
+    int i;
+
     N = Questions;
+
+    ItemArr = new TQuizItem*[N];
+
+    for (i = 0; i < N; i++)
+        ItemArr[i] = new TQuizItem;
 
     ValueCount = 0;
     ValueSize = 0;
@@ -78,6 +118,11 @@ TQuiz::~TQuiz()
 {
     int i;
 
+    for (i = 0; i < N; i++)
+        delete ItemArr[i];
+
+    delete ItemArr;
+
     for (i = 0; i < ValueCount; i++)
         delete ValueArr[i];
 
@@ -104,20 +149,6 @@ void TQuiz::Init()
     int i;
     int g;
     int g1, g2;
-
-    for (i = 0; i < N; i++)
-    {
-        Quiz[i].Text = "NO TEXT";
-        Quiz[i].AsCount = 0;
-        Quiz[i].AsMean = 0;
-        Quiz[i].AsSd = 0;
-        Quiz[i].NtCount = 0;
-        Quiz[i].NtMean = 0;
-        Quiz[i].NtSd = 0;
-        Quiz[i].Used = FALSE;
-        Quiz[i].MyGroup = 0;
-        Quiz[i].Reverse = false;
-    }
 
     for (g = 0; g < MAX_GROUP_COUNT; g++)
     {
@@ -157,12 +188,6 @@ void TQuiz::Init()
 
     Group[GROUP_MIXED].PosName = "Aspie mixed";
     Group[GROUP_MIXED].NegName = "NT mixed";
-
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-    {
-        Quiz[i].Group[g].Corr = 0;
-        Quiz[i].Group[g].Count = 0;
-    }
 
     for (g1 = 0; g1 < MAX_GROUP_COUNT; g1++)
     {
@@ -263,22 +288,6 @@ int TQuiz::GetCatCount(int Question)
 int TQuiz::GetQuizN()
 {
     return N;
-}
-
-/*##################  TQuiz::DefineText ##########################
-*   Purpose....: Define text for question                                               #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuiz::DefineText(int Question, const char *Text, int Group)
-{
-    if (Question > 0 && Question <= MAX_QUESTIONS)
-    {
-        Quiz[Question - 1].Text = Text;
-        Quiz[Question - 1].MyGroup = Group;
-     }
 }
 
 /*##################  TQuiz::WriteNoAnswerStats ##########################
@@ -382,38 +391,35 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
     
     for (i = 0; i < N; i++)
     {
-        if (Quiz[i].MyGroup == GROUP_MIXED)
+        if (j % 10 == 0)
         {
-            if (j % 10 == 0)
-            {
-                file.Write("<tr style='height:24.75pt'>");
-
-                WriteCenteredFieldHeader(file, 5);
-                file.Write("#");
-                WriteFieldFooter(file);
-
-                WriteCenteredFieldHeader(file, 40);
-                file.Write(" ");
-                WriteFieldFooter(file);
-
-                file.Write("</tr>");
-            }
-
-            j++;
-            
             file.Write("<tr style='height:24.75pt'>");
 
             WriteCenteredFieldHeader(file, 5);
-            sprintf(str, "%d", i + 1);
-            file.Write(str);
+            file.Write("#");
             WriteFieldFooter(file);
 
             WriteCenteredFieldHeader(file, 40);
-            file.Write(Quiz[i].Text);
+            file.Write(" ");
             WriteFieldFooter(file);
 
             file.Write("</tr>");
         }
+
+        j++;
+            
+        file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 5);
+        sprintf(str, "%d", i + 1);
+        file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 40);
+        file.Write(ItemArr[i]->Text);
+        WriteFieldFooter(file);
+
+        file.Write("</tr>");
     }
 
     file.Write("</table>");    

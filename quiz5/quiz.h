@@ -79,26 +79,6 @@ struct TQuizRow
     char Quiz[MAX_QUESTIONS];
 };
 
-struct TQuizQuestion
-{
-    const char *Text;
-    int AsCount;
-    long double AsMean;
-    long double AsSd;
-    int NtCount;
-    long double NtMean;
-    long double NtSd;
-
-    int Count;
-    long double Sum;
-    int Used;
-    int NoAnswer;
-    int MyGroup;
-    bool Reverse;
-
-    TQuizGroup Group[MAX_GROUP_COUNT];
-};
-
 struct TGroupCorr
 {
     long double Corr;
@@ -128,6 +108,20 @@ struct TGroup
     int Questions;
 };
 
+class TQuizItem
+{
+public:
+    TQuizItem();
+    ~TQuizItem();
+
+    const char *Text;
+    int MyGroup;
+    bool Reverse;
+
+protected:
+    int NoAnswer;
+};
+
 class TQuiz
 {
 public:
@@ -144,7 +138,6 @@ public:
 protected:
     double CalcNorm(double x, double u, double sd, double scale);
     void CalcProbArr(double u, double sd);
-    void DefineText(int Question, const char *Text, int Group);
     void AddRow(TQuizRow *Row);
 
     void Init();
@@ -163,7 +156,8 @@ protected:
     TGroupValArr *GroupValArr;
     TGroup Group[MAX_GROUP_COUNT];
     TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
-    TQuizQuestion Quiz[MAX_QUESTIONS];
+
+    TQuizItem **ItemArr;
 
     double ProbArr[201];
 
