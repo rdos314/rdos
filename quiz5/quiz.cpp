@@ -34,10 +34,7 @@
 #include "quiz.h"
 #include "file.h"
 
-// const double M_PI = 4.0 * atan(1.0);
-
-#define FALSE 0
-#define TRUE !FALSE
+static double r2pi = sqrt(2.0 * 3.14159265358979323846);
 
 /*##########################################################################
 #
@@ -62,6 +59,8 @@ TQuiz::TQuiz(int Questions)
     GroupValCount = 0;
 
     Init();
+
+    CalcProbArr(28.4, 28.0);
 }
 
 /*##########################################################################
@@ -178,6 +177,67 @@ void TQuiz::Init()
     {
         Group[g].Mean = 0;
         Group[g].Sd = 0;
+    }
+}
+
+/*##################  TQuiz::CalcNorm ##########################
+*   Purpose....: Calculate normal distribution                                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+double TQuiz::CalcNorm(double x, double u, double sd, double scale)
+{
+    double temp;
+
+    temp = (x - u) / sd;
+    temp = -0.5 * temp * temp;
+    temp = exp(temp);
+    temp = temp * scale;
+
+    return temp;
+}
+
+/*##################  TQuiz::CalcProbArr ##########################
+*   Purpose....: Calculate ND & NT probability                                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::CalcProbArr(double u, double sd)
+{
+    int i;
+    double ndp[201];
+    double ntp[201];
+    double sum;
+    double val;
+    double x;
+    double scale = 1.0 / sd / r2pi;
+
+    sum = 0.0;
+    for (i = 0; i < 201; i++)
+    {
+        x = (double)i;
+        val = CalcNorm(x, 100 + u, sd, scale);
+        sum += val;
+        ndp[i] = sum;
+    }
+
+    sum = 0.0;
+    for (i = 200; i >= 0; i--)
+    {
+        x = (double)i;
+        val = CalcNorm(x, 100 - u, sd, scale);
+        sum += val;
+        ntp[i] = sum;
+    }
+
+    for (i = 0; i < 201; i++)
+    {
+        sum = ndp[i] + ntp[i];
+        ProbArr[i] = ndp[i] / sum;
     }
 }
 
@@ -400,20 +460,22 @@ void TQuiz::AddRow(TQuizRow *Row)
     {
         ValueSize = 8;
         ValueArr = new TQuizRow*[ValueSize];
-     }
+    }
 
-     if (ValueCount >= ValueSize)
-     {
-          ValueSize = 3 * ValueSize / 2;
-          NewArr = new TQuizRow*[ValueSize];
+    if (ValueCount >= ValueSize)
+    {
+        ValueSize = 3 * ValueSize / 2;
+        NewArr = new TQuizRow*[ValueSize];
 
-          for (i = 0; i < ValueCount; i++)
-              NewArr[i] = ValueArr[i];
+        for (i = 0; i < ValueCount; i++)
+            NewArr[i] = ValueArr[i];
 
-          delete ValueArr;
-          ValueArr = NewArr;
-     }
+        delete ValueArr;
+        ValueArr = NewArr;
+    }
 
-     ValueArr[ValueCount] = Row;
-     ValueCount++;
+    Row->P = ProbArr[Row->Score];
+
+    ValueArr[ValueCount] = Row;
+    ValueCount++;
 }

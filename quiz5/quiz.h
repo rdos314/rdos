@@ -142,6 +142,8 @@ public:
     void WriteGroupCorrTable(const char *filename);
 
 protected:
+    double CalcNorm(double x, double u, double sd, double scale);
+    void CalcProbArr(double u, double sd);
     void DefineText(int Question, const char *Text, int Group);
     void AddRow(TQuizRow *Row);
 
@@ -162,6 +164,8 @@ protected:
     TGroup Group[MAX_GROUP_COUNT];
     TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
     TQuizQuestion Quiz[MAX_QUESTIONS];
+
+    double ProbArr[201];
 
     int ValueCount;
     int ValueSize;
