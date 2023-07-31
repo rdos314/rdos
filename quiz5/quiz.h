@@ -150,7 +150,7 @@ public:
     virtual void Load() = 0;
 
     void WriteNoAnswerStats(const char *filename);
-    void WriteSumaryTable(const char *filename, int OnlyMixed);
+    void WriteSumaryTable(const char *filename);
     void WriteIntercorr(const char *filename);
     void WriteGroupCorrTable(const char *filename);
 

@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     Quiz.WriteNoAnswerStats("res\\noans.txt");
 
     printf("details\r\n");
-    Quiz.WriteSumaryTable("res\\quizq1.htm", FALSE);
+    Quiz.WriteSumaryTable("res\\quizq1.htm");
 
     printf("rel\r\n");
     Quiz.WriteIntercorr("res\\relq1.htm");

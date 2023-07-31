@@ -512,7 +512,7 @@ void TQuiz::WriteFieldFooter(TFile &File)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
+void TQuiz::WriteSumaryTable(const char *filename)
 {
     int i;
     int j;
