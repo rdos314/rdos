@@ -144,6 +144,8 @@ public:
 protected:
     void DefineText(int Question, const char *Text, int Group);
 
+    void AddRow(TQuizRow *Row);
+
     void Init();
     virtual void WriteName(TFile &File) = 0;
     virtual void WriteLongName(TFile &File) = 0;

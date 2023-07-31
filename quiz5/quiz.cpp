@@ -368,3 +368,15 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 void TQuiz::WriteIntercorr(const char *filename)
 {
 }
+
+/*##################  AddRow ##########################
+*   Purpose....: Add a row                                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::AddRow(TQuizRow *Row)
+{
+    printf("%d Score: %d\r\n", Row->ID, Row->Score);
+}
