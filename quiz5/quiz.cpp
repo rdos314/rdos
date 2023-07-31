@@ -55,6 +55,7 @@ TQuizItem::TQuizItem()
 
     NoAnswer = 0;
     Count = 0;
+    Sd = 0;
 
     NaMaleCount = 0.0;
     NtMaleCount = 0.0;
@@ -141,6 +142,72 @@ void TQuizItem::InitDone1()
     FemaleAtypicalMean = NaFemaleSum / NaFemaleCount;
     MaleTypicalMean = NtMaleSum / NtMaleCount;
     FemaleTypicalMean = NtFemaleSum / NtFemaleCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::Update
+#
+#   Purpose....: Update data point
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizItem::Update(int gender, double p, int value)
+{
+    double dval;
+    double diff;
+
+    if (value)
+    {
+        dval = (double)(value - 1);
+
+        switch (gender)
+        {
+            case 1:
+                diff = dval - MaleAtypicalMean;
+                break;
+
+            case 2:
+                diff = dval - FemaleAtypicalMean;
+                break;
+        }
+
+        diff = diff * diff * p;
+        Sd += diff;
+
+        switch (gender)
+        {
+            case 1:
+                diff = dval - MaleTypicalMean;
+                break;
+
+            case 2:
+                diff = dval - FemaleTypicalMean;
+                break;
+        }
+
+        diff = diff * diff * (1.0 - p);
+        Sd += diff;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::InitDone2
+#
+#   Purpose....: Init stage 2 done
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizItem::InitDone2()
+{
+    Sd = sqrt(Sd / (double)(Count - 1));
 }
 
 /*##########################################################################
@@ -652,7 +719,20 @@ void TQuiz::AddRow(TQuizRow *Row)
 void TQuiz::LoadDone()
 {
     int i;
+    int j;
+    TQuizRow *row;
 
     for (i = 0; i < N; i++)
         ItemArr[i]->InitDone1();
+
+    for (j = 0; j < ValueCount; j++)
+    {
+        row = ValueArr[j];
+
+        for (i = 0; i < N; i++)
+            ItemArr[i]->Update(row->Gender, row->P, row->Quiz[i]);
+    }
+
+    for (i = 0; i < N; i++)
+        ItemArr[i]->InitDone2();
 }

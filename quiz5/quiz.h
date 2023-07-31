@@ -117,6 +117,9 @@ public:
     void Add(int gender, double p, int value);
     void InitDone1();
 
+    void Update(int gender, double p, int value);
+    void InitDone2();
+
     double GetNoAnswer();
 
     const char *Text;
@@ -127,6 +130,8 @@ public:
     double MaleTypicalMean;
     double FemaleAtypicalMean;
     double FemaleTypicalMean;
+
+    double Sd;
 
 protected:
     int NoAnswer;
