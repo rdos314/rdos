@@ -111,13 +111,13 @@ struct TGroup
 class TQuizItem
 {
 public:
-    TQuizItem();
+    TQuizItem(int number);
     ~TQuizItem();
 
     void Add(int gender, double p, int value);
     void InitDone1();
 
-    void Update(int gender, double p, int value);
+    void Update(int gender, double p, char *value, TQuizItem **item, int count);
     void InitDone2();
 
     double GetNoAnswer();
@@ -132,10 +132,15 @@ public:
     double FemaleTypicalMean;
 
     double Sd;
+    double Cov[MAX_QUESTIONS];
 
 protected:
+    void Update(int gender, double p, char value);
+    void Update(int gender, double p, char value, TQuizItem *item);
+
     int NoAnswer;
     int Count;
+    int Nr;
 
     double NaMaleCount;
     double NtMaleCount;

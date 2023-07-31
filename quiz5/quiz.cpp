@@ -47,11 +47,12 @@ static double r2pi = sqrt(2.0 * 3.14159265358979323846);
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizItem::TQuizItem()
+TQuizItem::TQuizItem(int number)
 {
     Text = "NO TEXT";
     MyGroup = 0;
     Reverse = false;
+    Nr = number;
 
     NoAnswer = 0;
     Count = 0;
@@ -155,7 +156,7 @@ void TQuizItem::InitDone1()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Update(int gender, double p, int value)
+void TQuizItem::Update(int gender, double p, char value)
 {
     double dval;
     double diff;
@@ -192,6 +193,37 @@ void TQuizItem::Update(int gender, double p, int value)
         diff = diff * diff * (1.0 - p);
         Sd += diff;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::Update
+#
+#   Purpose....: Update data point
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizItem::Update(int gender, double p, char value, TQuizItem *item)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::Update
+#
+#   Purpose....: Update data point
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizItem::Update(int gender, double p, char *value, TQuizItem **item, int count)
+{
+    Update(gender, p, value[Nr]);
 }
 
 /*##########################################################################
@@ -246,7 +278,7 @@ TQuiz::TQuiz(int Questions)
     ItemArr = new TQuizItem*[N];
 
     for (i = 0; i < N; i++)
-        ItemArr[i] = new TQuizItem;
+        ItemArr[i] = new TQuizItem(i);
 
     ValueCount = 0;
     ValueSize = 0;
@@ -728,9 +760,8 @@ void TQuiz::LoadDone()
     for (j = 0; j < ValueCount; j++)
     {
         row = ValueArr[j];
-
         for (i = 0; i < N; i++)
-            ItemArr[i]->Update(row->Gender, row->P, row->Quiz[i]);
+            ItemArr[i]->Update(row->Gender, row->P, row->Quiz, ItemArr, N);
     }
 
     for (i = 0; i < N; i++)
