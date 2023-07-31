@@ -143,7 +143,6 @@ public:
 
 protected:
     void DefineText(int Question, const char *Text, int Group);
-
     void AddRow(TQuizRow *Row);
 
     void Init();
@@ -163,6 +162,10 @@ protected:
     TGroup Group[MAX_GROUP_COUNT];
     TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
     TQuizQuestion Quiz[MAX_QUESTIONS];
+
+    int ValueCount;
+    int ValueSize;
+    TQuizRow **ValueArr;
 };
 
 #endif

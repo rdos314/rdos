@@ -54,6 +54,10 @@ TQuiz::TQuiz(int Questions)
 {
     N = Questions;
 
+    ValueCount = 0;
+    ValueSize = 0;
+    ValueArr = 0;
+
     GroupValArr = 0;
     GroupValCount = 0;
 
@@ -73,6 +77,14 @@ TQuiz::TQuiz(int Questions)
 ##########################################################################*/
 TQuiz::~TQuiz()
 {
+    int i;
+
+    for (i = 0; i < ValueCount; i++)
+        delete ValueArr[i];
+
+    if (ValueArr)
+        delete ValueArr;
+
     if (GroupValArr)
         delete GroupValArr;
 }
@@ -270,8 +282,8 @@ void TQuiz::WriteRightFieldHeader(TFile &File, int RelWidth)
     sprintf(str, "\n<td width=\"%d%%\" colspan=2 valign=top>\n", RelWidth);
     File.Write(str);
 
-        File.Write("<p align=\"right\">\n");
-        File.Write("<b>\n");
+    File.Write("<p align=\"right\">\n");
+    File.Write("<b>\n");
 }
 
 /*##################  TQuiz::WriteFieldFooter ##########################
@@ -378,5 +390,30 @@ void TQuiz::WriteIntercorr(const char *filename)
 *##########################################################################*/
 void TQuiz::AddRow(TQuizRow *Row)
 {
+    int val;
+    int i;
+    TQuizRow **NewArr;
+
     printf("%d Score: %d\r\n", Row->ID, Row->Score);
+
+    if (ValueArr == 0)
+    {
+        ValueSize = 8;
+        ValueArr = new TQuizRow*[ValueSize];
+     }
+
+     if (ValueCount >= ValueSize)
+     {
+          ValueSize = 3 * ValueSize / 2;
+          NewArr = new TQuizRow*[ValueSize];
+
+          for (i = 0; i < ValueCount; i++)
+              NewArr[i] = ValueArr[i];
+
+          delete ValueArr;
+          ValueArr = NewArr;
+     }
+
+     ValueArr[ValueCount] = Row;
+     ValueCount++;
 }

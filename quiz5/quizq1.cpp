@@ -582,11 +582,13 @@ void TQuizQ1::ProcessRow(char *str)
     int year, month, day;
     int hour, min, sec;
     TDateTime *time;
-    TQuizRow Row;
+    TQuizRow *Row;
     int score = 0;
     int corr_count = 0;
 
     str++;
+
+    Row = new TQuizRow;
 
     ptr = str;
     for (fieldno = 0; ptr; fieldno++)
@@ -603,11 +605,11 @@ void TQuizQ1::ProcessRow(char *str)
         switch (fieldno)
         {
             case 0:
-                Row.ID = atol(valstr);
+                Row->ID = atol(valstr);
                 break;
 
             case 1:
-                Row.UserID = atol(valstr);
+                Row->UserID = atol(valstr);
                 break;
 
             case 2:
@@ -619,8 +621,8 @@ void TQuizQ1::ProcessRow(char *str)
                         &hour, &min, &sec);
 
                 time = new TDateTime(year, month, day, hour, min, sec);
-                Row.LsbTime = time->GetLsb();
-                Row.MsbTime = time->GetMsb();
+                Row->LsbTime = time->GetLsb();
+                Row->MsbTime = time->GetMsb();
                 delete time;
                 break;
 
@@ -630,60 +632,60 @@ void TQuizQ1::ProcessRow(char *str)
                         &hour, &min, &sec);
 
                 time = new TDateTime(year, month, day, hour, min, sec);
-                Row.FilloutTime = time->GetLsb() - Row.LsbTime;
+                Row->FilloutTime = time->GetLsb() - Row->LsbTime;
                 delete time;
                 break;
 
             case 5:
-                Row.BirthYear = atoi(valstr);
+                Row->BirthYear = atoi(valstr);
                 break;
 
             case 6:
-                Row.BirthMonth = atoi(valstr);
+                Row->BirthMonth = atoi(valstr);
                 break;
 
             case 7:
-                Row.Gender = atoi(valstr);
+                Row->Gender = atoi(valstr);
                 break;
 
             case 8:
-                Row.Country = atoi(valstr);
+                Row->Country = atoi(valstr);
                 break;
 
             case 9:
-                 Row.Ancestry = atoi(valstr);
+                 Row->Ancestry = atoi(valstr);
                  break;
 
             case 10:
-                 Row.Aspie = atoi(valstr);
+                 Row->Aspie = atoi(valstr);
                  break;
 
             case 11:
-                 Row.ADHD = atoi(valstr);
+                 Row->ADHD = atoi(valstr);
                  break;
 
             case 12:
-                 Row.OCD = atoi(valstr);
+                 Row->OCD = atoi(valstr);
                  break;
 
             case 13:
-                 Row.Social = atoi(valstr);
+                 Row->Social = atoi(valstr);
                  break;
 
             case 14:
                  break;
 
             case 15:
-                 Row.Score = atoi(valstr);
+                 Row->Score = atoi(valstr);
                  break;
 
             default:
                  i = fieldno - 16;
-                 Row.Quiz[i] = atoi(valstr);
+                 Row->Quiz[i] = atoi(valstr);
                  break;
         }
     }
-    AddRow(&Row);
+    AddRow(Row);
 }
 
 /*##########################################################################
