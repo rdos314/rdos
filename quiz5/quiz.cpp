@@ -126,6 +126,22 @@ void TQuizItem::Add(int gender, double p, int value)
 
 /*##########################################################################
 #
+#   Name       : TQuizItem::GetNoAnswer
+#
+#   Purpose....: Get no answer proportion
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TQuizItem::GetNoAnswer()
+{
+    return (double)NoAnswer / (double)(NoAnswer + Count);
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizItem::GetMaleAtypicalMean
 #
 #   Purpose....: Get male atypical mean
@@ -518,8 +534,36 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
             file.Write("#");
             WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 40);
+            WriteCenteredFieldHeader(file, 60);
             file.Write(" ");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 5);
+            file.Write("?");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 5);
+            file.Write("Atypical male");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 5);
+            file.Write("Atypical female");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 5);
+            file.Write("Typical male");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 5);
+            file.Write("Typical female");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 5);
+            file.Write("Male");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 5);
+            file.Write("Female");
             WriteFieldFooter(file);
 
             file.Write("</tr>");
@@ -534,8 +578,43 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
         file.Write(str);
         WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 40);
+        WriteCenteredFieldHeader(file, 60);
         file.Write(ItemArr[i]->Text);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        sprintf(str, "%5.1Lf%%", 100.0 * ItemArr[i]->GetNoAnswer());
+        file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        sprintf(str, "%5.3Lf", ItemArr[i]->GetMaleAtypicalMean());
+        file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        sprintf(str, "%5.3Lf", ItemArr[i]->GetFemaleAtypicalMean());
+        file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        sprintf(str, "%5.3Lf", ItemArr[i]->GetMaleTypicalMean());
+        file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        sprintf(str, "%5.3Lf", ItemArr[i]->GetFemaleTypicalMean());
+        file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        sprintf(str, "%5.3Lf", ItemArr[i]->GetMaleAtypicalMean() - ItemArr[i]->GetMaleTypicalMean());
+        file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        sprintf(str, "%5.3Lf", ItemArr[i]->GetFemaleAtypicalMean() - ItemArr[i]->GetFemaleTypicalMean());
+        file.Write(str);
         WriteFieldFooter(file);
 
         file.Write("</tr>");

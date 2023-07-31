@@ -115,6 +115,8 @@ public:
     ~TQuizItem();
 
     void Add(int gender, double p, int value);
+
+    double GetNoAnswer();
     double GetMaleAtypicalMean();
     double GetFemaleAtypicalMean();
     double GetMaleTypicalMean();
@@ -137,7 +139,6 @@ protected:
     double NtMaleSum;
     double NaFemaleSum;
     double NtFemaleSum;
-
 };
 
 class TQuiz
