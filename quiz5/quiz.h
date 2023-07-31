@@ -58,6 +58,27 @@ struct TQuizGroup
     int Count;
 };
 
+struct TQuizRow
+{
+    long ID;
+    long UserID;
+    long LsbTime;
+    long MsbTime;
+    long FilloutTime;
+    int  BirthYear;
+    int  BirthMonth;
+    char Gender;
+    int Country;
+    int Ancestry;
+    char Aspie;
+    char ADHD;
+    char OCD;
+    char Social;
+    long Score;
+    long double P;
+    char Quiz[MAX_QUESTIONS];
+};
+
 struct TQuizQuestion
 {
     const char *Text;
@@ -113,6 +134,8 @@ public:
     TQuiz(int questions);
     ~TQuiz();
 
+    virtual void Load() = 0;
+
     void WriteNoAnswerStats(const char *filename);
     void WriteSumaryTable(const char *filename, int OnlyMixed);
     void WriteIntercorr(const char *filename);
@@ -120,7 +143,6 @@ public:
 
 protected:
     void DefineText(int Question, const char *Text, int Group);
-
 
     void Init();
     virtual void WriteName(TFile &File) = 0;

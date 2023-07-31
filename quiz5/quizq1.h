@@ -34,8 +34,10 @@
 class TQuizQ1 : public TQuiz
 {
 public:
-    TQuizQ1(const char *FileName);
+    TQuizQ1();
     ~TQuizQ1();
+
+    virtual void Load();
 
 protected:
     virtual void WriteName(TFile &File);
@@ -44,7 +46,7 @@ protected:
     virtual int GetQuizN();
 
     void SetupTexts();
-    void LoadPopulations();
+    void ProcessRow(char *str);
 };
 
 #endif

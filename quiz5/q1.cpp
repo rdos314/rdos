@@ -42,7 +42,10 @@
 *##########################################################################*/
 int main(int argc, char **argv)
 {
-    TQuizQ1 Quiz("raw\\aspie-quiz-q1.csv");
+    TQuizQ1 Quiz;
+
+    printf("load\r\n");
+    Quiz.Load();
 
     printf("write no answer\r\n");
     Quiz.WriteNoAnswerStats("res\\noans.txt");

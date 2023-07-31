@@ -46,7 +46,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizQ1::TQuizQ1(const char *FileName)
+TQuizQ1::TQuizQ1()
   : TQuiz(201)
 {
     SetupTexts();
@@ -560,4 +560,170 @@ void TQuizQ1::SetupTexts()
   Quiz[199].Text = "Do you worry your friend doesn't really like you?";
   Quiz[200].Text = "Do you dislike being hugged when you haven’t asked for it?";
 
+}
+
+/*##################  TQuizQ1::ProcessRow ##########################
+*   Purpose....: Process row                                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizQ1::ProcessRow(char *str)
+{
+    char *valstr;
+    char *ptr;
+    int fieldno;
+    int i, j;
+    int val;
+    int minval, maxval;
+    int range;
+    int count = 0;
+    int year, month, day;
+    int hour, min, sec;
+    TDateTime *time;
+    TQuizRow Row;
+    int score = 0;
+    int corr_count = 0;
+
+    str++;
+
+    ptr = str;
+    for (fieldno = 0; ptr; fieldno++)
+    {
+        valstr = str;
+        ptr = strstr(str, ";");
+        if (ptr)
+            *ptr = 0;
+
+        str = ptr + 1;
+
+        valstr++;
+
+        switch (fieldno)
+        {
+            case 0:
+                Row.ID = atol(valstr);
+                break;
+
+            case 1:
+                Row.UserID = atol(valstr);
+                break;
+
+            case 2:
+                break;
+
+            case 3:
+                sscanf(valstr+1, "%04d-%02d-%02d %02d:%02d:%02d",
+                        &year, &month, &day,
+                        &hour, &min, &sec);
+
+                time = new TDateTime(year, month, day, hour, min, sec);
+                Row.LsbTime = time->GetLsb();
+                Row.MsbTime = time->GetMsb();
+                delete time;
+                break;
+
+            case 4:
+                sscanf(valstr+1, "%04d-%02d-%02d %02d:%02d:%02d",
+                        &year, &month, &day,
+                        &hour, &min, &sec);
+
+                time = new TDateTime(year, month, day, hour, min, sec);
+                Row.FilloutTime = time->GetLsb() - Row.LsbTime;
+                delete time;
+                break;
+
+            case 5:
+                Row.BirthYear = atoi(valstr);
+                break;
+
+            case 6:
+                Row.BirthMonth = atoi(valstr);
+                break;
+
+            case 7:
+                Row.Gender = atoi(valstr);
+                break;
+
+            case 8:
+                Row.Country = atoi(valstr);
+                break;
+
+            case 9:
+                 Row.Ancestry = atoi(valstr);
+                 break;
+
+            case 10:
+                 Row.Aspie = atoi(valstr);
+                 break;
+
+            case 11:
+                 Row.ADHD = atoi(valstr);
+                 break;
+
+            case 12:
+                 Row.OCD = atoi(valstr);
+                 break;
+
+            case 13:
+                 Row.Social = atoi(valstr);
+                 break;
+
+            case 14:
+                 break;
+
+            case 15:
+                 Row.Score = atoi(valstr);
+                 break;
+
+            default:
+                 i = fieldno - 16;
+                 Row.Quiz[i] = atoi(valstr);
+                 break;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizQ1::Load
+#
+#   Purpose....: Load data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizQ1::Load()
+{
+    char buf[MAX_IN_ROW];
+    int size;
+    long pos = 0;
+    TFile file("raw\\aspie-quiz-q1.csv");
+    char *ptr;
+
+    size = file.Read(buf, MAX_IN_ROW);
+    buf[size] = 0;
+    ptr = strchr(buf, 0xd);
+    if (ptr)
+        *ptr = 0;
+
+    pos += strlen(buf) + 1;
+    file.SetPos(pos);
+
+    while (size = file.Read(buf, MAX_IN_ROW))
+    {
+        buf[size] = 0;
+        ptr = strchr(buf, 0xd);
+        if (ptr)
+            *ptr = 0;
+
+        pos += strlen(buf) + 1;
+        file.SetPos(pos);
+
+        if (ptr)
+            ProcessRow(buf);
+    }
 }
