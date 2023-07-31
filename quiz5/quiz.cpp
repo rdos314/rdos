@@ -216,6 +216,49 @@ void TQuizItem::Update(int gender, double p, char value)
 ##########################################################################*/
 void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *item)
 {
+    int other = item->Nr;
+    double mval;
+    double oval;
+    double mdiff;
+    double odiff;
+
+    if (myval && value)
+    {
+        CountArr[other]++;
+
+        mval = (double)(myval - 1);
+        oval = (double)(value - 1);
+
+        switch (gender)
+        {
+            case 1:
+                mdiff = mval - MaleAtypicalMean;
+                odiff = oval - item->MaleAtypicalMean;
+                break;
+
+            case 2:
+                mdiff = mval - FemaleAtypicalMean;
+                odiff = oval - item->FemaleAtypicalMean;
+                break;
+        }
+
+        Cov[other] += mdiff * odiff * p;
+
+        switch (gender)
+        {
+            case 1:
+                mdiff = mval - MaleTypicalMean;
+                odiff = oval - item->MaleTypicalMean;
+                break;
+
+            case 2:
+                mdiff = mval - FemaleTypicalMean;
+                odiff = oval - item->FemaleTypicalMean;
+                break;
+        }
+
+        Cov[other] += mdiff * odiff * (1.0 - p);
+    }
 }
 
 /*##########################################################################
@@ -253,6 +296,28 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizItem **item, int 
 void TQuizItem::InitDone2()
 {
     Sd = sqrt(Sd / (double)(Count - 1));
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::InitDone3
+#
+#   Purpose....: Init stage 3 done
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizItem::InitDone3(TQuizItem **item, int count)
+{
+    int i;
+
+    for (i = 0; i < count; i++)
+    {
+        Cov[i] = Cov[i] / (double)(CountArr[i] - 1);
+        Corr[i] = Cov[i] / Sd / item[i]->Sd;
+    }
 }
 
 /*##########################################################################
@@ -779,4 +844,7 @@ void TQuiz::LoadDone()
 
     for (i = 0; i < N; i++)
         ItemArr[i]->InitDone2();
+
+    for (i = 0; i < N; i++)
+        ItemArr[i]->InitDone3(ItemArr, N);
 }

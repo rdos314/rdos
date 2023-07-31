@@ -119,6 +119,7 @@ public:
 
     void Update(int gender, double p, char *value, TQuizItem **item, int count);
     void InitDone2();
+    void InitDone3(TQuizItem **item, int count);
 
     double GetNoAnswer();
 
@@ -132,7 +133,7 @@ public:
     double FemaleTypicalMean;
 
     double Sd;
-    double Cov[MAX_QUESTIONS];
+    double Corr[MAX_QUESTIONS];
 
 protected:
     void Update(int gender, double p, char value);
@@ -141,6 +142,7 @@ protected:
     int NoAnswer;
     int Count;
     int CountArr[MAX_QUESTIONS];
+    double Cov[MAX_QUESTIONS];
     int Nr;
 
     double NaMaleCount;
