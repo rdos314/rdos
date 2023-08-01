@@ -905,6 +905,12 @@ void TQuiz::Analyse()
     int j;
     TQuizRow *row;
 
+    for (i = 0; i < N; i++)
+    {
+        j = ItemArr[i]->MyGroup;
+        GroupArr[j]->Questions++;
+    }
+
     Stage = 1;
     Load();
 
