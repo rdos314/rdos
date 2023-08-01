@@ -771,31 +771,33 @@ void TQuiz::WriteIntercorr(const char *filename)
     double MaxCorr;
     double Val;
     int MaxInd;
+    int count;
+    int missing;
     bool Used[MAX_QUESTIONS];
+    char str[80];
     TFile file(filename, 0);
-
-        long double sum;
-        int count;
-        int k;
-        int l;
-        TQuiz *quiz;
-        int q;
-        int gid1;
-        int gid2;
-        int cnt;
-        char str[80];
-        int ival;
-        int more;
-        long double val;
-    long double corrlev;
-        long double corrval;
-        long double CurrCorr;
-        int GlobalIdArr[MAX_QUESTIONS];
 
     file.Write("<h2>Between question correlations</h2>\n");
 
     for (i = 0; i < N; i++)
     {
+        count = 0;
+        missing = 0;
+
+        file.Write("<b>");
+        sprintf(str, "%d. ", i + 1);
+        file.Write(str);
+        file.Write(ItemArr[i]->Text);
+
+        file.Write(" (Diff: ");
+
+        sprintf(str, "%5.3Lf/", ItemArr[i]->MaleAtypicalMean - ItemArr[i]->MaleTypicalMean);
+        file.Write(str);
+        sprintf(str, "%5.3Lf)", ItemArr[i]->FemaleAtypicalMean - ItemArr[i]->FemaleTypicalMean);
+        file.Write(str);
+
+        file.Write("</b><ul>\r\n");
+
         CorrArr = ItemArr[i]->Corr;
 
         MaxCorr = 0.0;
@@ -815,8 +817,33 @@ void TQuiz::WriteIntercorr(const char *filename)
             Used[j] = false;
         }
 
-        while (MaxCorr >= 0.2)
+        while (MaxCorr >= 0.25)
         {
+            if (count < 15)
+            {
+                count++;
+
+                file.Write("<li>");
+                sprintf(str, "%d. ", MaxInd + 1);
+                file.Write(str);
+                file.Write(ItemArr[MaxInd]->Text);
+                        
+                file.Write(" (Diff: ");
+
+                sprintf(str, "%5.3Lf/", ItemArr[MaxInd]->MaleAtypicalMean - ItemArr[MaxInd]->MaleTypicalMean);
+                file.Write(str);
+                sprintf(str, "%5.3Lf)", ItemArr[MaxInd]->FemaleAtypicalMean - ItemArr[MaxInd]->FemaleTypicalMean);
+                file.Write(str);
+
+                file.Write(" correlation: ");
+
+                sprintf(str, "%5.2Lf", CorrArr[MaxInd]);
+                file.Write(str);
+                file.Write("</li>\r\n");
+            }
+            else
+                missing++;
+
             Used[MaxInd] = true;
 
             MaxCorr = 0.0;
@@ -838,6 +865,14 @@ void TQuiz::WriteIntercorr(const char *filename)
                 }
             }
         }
+
+        if (missing)
+        {
+            sprintf(str, "<br><b>%d questions not listed</b>", missing);
+            file.Write(str);
+        }
+
+        file.Write("</ul><br>\r\n\r\n");
     }
 }
 
