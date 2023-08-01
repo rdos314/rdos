@@ -571,14 +571,53 @@ void TQuizItem::Update(int gender, double p, char myval, int gvalue, TQuizGroup 
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Update(int gender, double p, char *value, TQuizItem **item, int count)
+void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQuizItem **item, int count, int n)
 {
     int i;
+    int g;
+    char val;
+    bool ok;
+    char mval;
+    int gval;
 
     Update(gender, p, value[Nr]);
 
     for (i = 0; i < count; i++)
         Update(gender, p, value[Nr], value[i], item[i]);
+
+    if (value[Nr])
+    {
+        mval = value[Nr] - 1;
+
+        for (g = 0; g < GROUP_COUNT; g++)
+        {
+            ok = true;
+            gval = 0;
+
+            for (i = 0; i < n && ok; i++)
+            {
+                if (item[i]->MyGroup == g && i != Nr)
+                {
+                    val = value[i];
+
+                    if (val)
+                    {   
+                        if (item[i]->Reverse)
+                            val = 3 - val;
+                        else
+                            val--;
+
+                        gval += val;
+                    }
+                    else
+                        ok = false;
+                }
+            }
+
+            if (ok)
+                Update(gender, p, mval, gval, group[g]);
+        }
+    }
 }
 
 /*##########################################################################
@@ -1154,7 +1193,7 @@ void TQuiz::AddRow(TQuizRow *Row)
 
         case 2:
             for (i = 0; i < N; i++)
-                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, i);
+                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, GroupArr, ItemArr, i, N);
 
             for (i = 0; i < GROUP_COUNT; i++)
                 GroupArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
