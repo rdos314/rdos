@@ -38,6 +38,42 @@ static double r2pi = sqrt(2.0 * 3.14159265358979323846);
 
 /*##########################################################################
 #
+#   Name       : TQuizGroup::TQuizGroup
+#
+#   Purpose....: Constructor for TQuizGroup
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TQuizGroup::TQuizGroup(int number, const char *pos, const char *neg)
+{
+    Nr = number;
+    PosName = pos;
+    NegName = neg;
+
+    Mean = 0;
+    Sd = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizGroup::~TQuizGroup
+#
+#   Purpose....: Destructor for TQuizGroup
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TQuizGroup::~TQuizGroup()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizItem::TQuizItem
 #
 #   Purpose....: Constructor for TQuizItem
@@ -358,7 +394,24 @@ TQuiz::TQuiz(int Questions)
     for (i = 0; i < N; i++)
         ItemArr[i] = new TQuizItem(i);
 
-    Init();
+    GroupArr = new TQuizGroup*[GROUP_COUNT];
+
+    GroupArr[GROUP_ASPIE_TALENT] = new TQuizGroup(GROUP_ASPIE_TALENT,  "Atypical ability", "Atypical ability problem");
+    GroupArr[GROUP_NT_TALENT] = new TQuizGroup(GROUP_NT_TALENT,  "Typical ability problem", "Typical ability");
+
+    GroupArr[GROUP_ASPIE_SENSORY] = new TQuizGroup(GROUP_ASPIE_SENSORY,  "Atypical sensory", "Atypical sensory problem");
+    GroupArr[GROUP_NT_SENSORY] = new TQuizGroup(GROUP_NT_SENSORY,  "Typical sensory problem", "Typical sensory");
+
+    GroupArr[GROUP_ASPIE_NVC] = new TQuizGroup(GROUP_ASPIE_NVC,  "Atypical communication", "Atypical communication problem");
+    GroupArr[GROUP_NT_NVC] = new TQuizGroup(GROUP_NT_NVC,  "Typical communication problem", "Typical communication");
+
+    GroupArr[GROUP_ASPIE_RELATION] = new TQuizGroup(GROUP_ASPIE_RELATION,  "Atypical relationship", "Atypical relationship problem");
+    GroupArr[GROUP_NT_RELATION] = new TQuizGroup(GROUP_NT_RELATION,  "Typical relationship problem", "Typical relationship");
+
+    GroupArr[GROUP_ASPIE_SOCIAL] = new TQuizGroup(GROUP_ASPIE_SOCIAL,  "Atypical social", "Atypical social problem");
+    GroupArr[GROUP_NT_SOCIAL] = new TQuizGroup(GROUP_NT_SOCIAL,  "Typical social problem", "Typical social");
+
+    GroupArr[GROUP_MIXED] = new TQuizGroup(GROUP_MIXED,  "Atypical mixed", "Typical mixed");
 
     CalcProbArr(28.4, 28.0);
 }
@@ -382,69 +435,11 @@ TQuiz::~TQuiz()
         delete ItemArr[i];
 
     delete ItemArr;
-}
 
-/*##########################################################################
-#
-#   Name       : TQuiz::Init
-#
-#   Purpose....: Init
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuiz::Init()
-{
-    int i;
-    int g;
-    int g1, g2;
+    for (i = 0; i < GROUP_COUNT; i++)
+        delete GroupArr[i];
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-    {
-        Group[g].PosName = "NO NAME";
-        Group[g].NegName = "NO NAME";
-    }
-
-    Group[GROUP_ASPIE_TALENT].PosName = "Aspie ability";
-    Group[GROUP_ASPIE_TALENT].NegName = "Aspie ability problem";
-
-    Group[GROUP_NT_TALENT].PosName = "NT ability problem";
-    Group[GROUP_NT_TALENT].NegName = "NT ability";
-
-    Group[GROUP_ASPIE_RELATION].PosName = "Aspie relationship";
-    Group[GROUP_ASPIE_RELATION].NegName = "Aspie relationship problem";
-
-    Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
-    Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
-
-    Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
-    Group[GROUP_NT_SOCIAL].NegName = "NT social";
-
-    Group[GROUP_ASPIE_NVC].PosName = "Aspie communication";
-    Group[GROUP_ASPIE_NVC].NegName = "Aspie communication problem";
-
-    Group[GROUP_NT_NVC].PosName = "NT communication problem";
-    Group[GROUP_NT_NVC].NegName = "NT communication";
-
-    Group[GROUP_NT_RELATION].PosName = "NT relationship problem";
-    Group[GROUP_NT_RELATION].NegName = "NT relationship";
-
-    Group[GROUP_ASPIE_SENSORY].PosName = "Aspie sensory";
-    Group[GROUP_ASPIE_SENSORY].NegName = "Aspie sensory problem";
-
-    Group[GROUP_NT_SENSORY].PosName = "NT sensory problem";
-    Group[GROUP_NT_SENSORY].NegName = "NT sensory";
-
-    Group[GROUP_MIXED].PosName = "Aspie mixed";
-    Group[GROUP_MIXED].NegName = "NT mixed";
-
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-    {
-        Group[g].Mean = 0;
-        Group[g].Sd = 0;
-    }
+    delete GroupArr;
 }
 
 /*##################  TQuiz::CalcNorm ##########################

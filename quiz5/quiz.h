@@ -73,8 +73,12 @@ struct TQuizRow
     char Quiz[MAX_QUESTIONS];
 };
 
-struct TGroup
+class TQuizGroup
 {
+public:
+    TQuizGroup(int number, const char *pos, const char *neg);
+    ~TQuizGroup();
+
     const char *PosName;
     const char *NegName;
     long double Mean;
@@ -83,6 +87,9 @@ struct TGroup
     int Count;
     int Sum;
     int Questions;
+
+protected:
+    int Nr;
 };
 
 class TQuizItem
@@ -151,7 +158,6 @@ protected:
     void CalcProbArr(double u, double sd);
     void AddRow(TQuizRow *Row);
 
-    void Init();
     virtual void Load() = 0;
     virtual void WriteName(TFile &File) = 0;
     virtual void WriteLongName(TFile &File) = 0;
@@ -165,7 +171,7 @@ protected:
 
     int N;
 
-    TGroup Group[MAX_GROUP_COUNT];
+    TQuizGroup **GroupArr;
     TQuizItem **ItemArr;
 
     double ProbArr[201];
