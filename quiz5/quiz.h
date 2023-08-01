@@ -52,12 +52,6 @@
 
 class TQuiz;
 
-struct TQuizGroup
-{
-    long double Corr;
-    int Count;
-};
-
 struct TQuizRow
 {
     long ID;
@@ -77,23 +71,6 @@ struct TQuizRow
     long Score;
     long double P;
     char Quiz[MAX_QUESTIONS];
-};
-
-struct TGroupCorr
-{
-    long double Corr;
-    int Count;
-};
-
-struct TGroupVal
-{
-    int Count;
-    int Sum;
-};
-
-struct TGroupValArr
-{
-    TGroupVal Group[MAX_GROUP_COUNT];
 };
 
 struct TGroup
@@ -187,11 +164,8 @@ protected:
     void WriteFieldFooter(TFile &File);
 
     int N;
-    int GroupValCount;
-    TGroupValArr *GroupValArr;
-    TGroup Group[MAX_GROUP_COUNT];
-    TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
 
+    TGroup Group[MAX_GROUP_COUNT];
     TQuizItem **ItemArr;
 
     double ProbArr[201];

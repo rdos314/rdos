@@ -358,9 +358,6 @@ TQuiz::TQuiz(int Questions)
     for (i = 0; i < N; i++)
         ItemArr[i] = new TQuizItem(i);
 
-    GroupValArr = 0;
-    GroupValCount = 0;
-
     Init();
 
     CalcProbArr(28.4, 28.0);
@@ -385,9 +382,6 @@ TQuiz::~TQuiz()
         delete ItemArr[i];
 
     delete ItemArr;
-
-    if (GroupValArr)
-        delete GroupValArr;
 }
 
 /*##########################################################################
@@ -445,15 +439,6 @@ void TQuiz::Init()
 
     Group[GROUP_MIXED].PosName = "Aspie mixed";
     Group[GROUP_MIXED].NegName = "NT mixed";
-
-    for (g1 = 0; g1 < MAX_GROUP_COUNT; g1++)
-    {
-        for (g2 = 0; g2 < MAX_GROUP_COUNT; g2++)
-        {
-            GroupCorr[g1][g2].Corr = 0;
-            GroupCorr[g1][g2].Count = 0;
-        }
-    }
 
     for (g = 0; g < MAX_GROUP_COUNT; g++)
     {
