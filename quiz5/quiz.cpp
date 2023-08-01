@@ -4,9 +4,9 @@
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or                  
+# the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version. The only exception to this rule
-# is for commercial usage in embedded systems. For information on            
+# is for commercial usage in embedded systems. For information on
 # usage in commercial embedded systems, contact embedded@rdos.net
 #
 # This program is distributed in the hope that it will be useful,
@@ -73,7 +73,7 @@ TQuizGroup::TQuizGroup(int number, const char *pos, const char *neg)
 #
 #   Purpose....: Destructor for TQuizGroup
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -88,7 +88,7 @@ TQuizGroup::~TQuizGroup()
 #
 #   Purpose....: Add data point
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -122,7 +122,7 @@ void TQuizGroup::Add(int gender, double p, char value)
 #
 #   Purpose....: Add data point
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -139,13 +139,13 @@ void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int co
             val = value[i];
 
             if (val)
-            {   
+            {
                 if (item[i]->Reverse)
                     val = 3 - val;
                 else
                     val--;
 
-                Add(gender, p, val);          
+                Add(gender, p, val);
             }
         }
     }
@@ -157,7 +157,7 @@ void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int co
 #
 #   Purpose....: Init stage 1 done
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -176,7 +176,7 @@ void TQuizGroup::InitDone1()
 #
 #   Purpose....: Update data point
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -195,7 +195,7 @@ void TQuizGroup::Update(int gender, double p, char *value, TQuizItem **item, int
             val = value[i];
 
             if (val)
-            {   
+            {
                 if (item[i]->Reverse)
                     val = 3 - val;
                 else
@@ -245,7 +245,7 @@ void TQuizGroup::Update(int gender, double p, char *value, TQuizItem **item, int
 #
 #   Purpose....: Init stage 2 done
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -323,7 +323,7 @@ TQuizItem::~TQuizItem()
 #
 #   Purpose....: Add data point
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -337,7 +337,7 @@ void TQuizItem::Add(int gender, double p, int value)
     {
         Count++;
         dval = (double)(value - 1);
-        
+
         switch (gender)
         {
             case 1:
@@ -365,7 +365,7 @@ void TQuizItem::Add(int gender, double p, int value)
 #
 #   Purpose....: Init stage 1 done
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -384,7 +384,7 @@ void TQuizItem::InitDone1()
 #
 #   Purpose....: Update data point
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -434,7 +434,7 @@ void TQuizItem::Update(int gender, double p, char value)
 #
 #   Purpose....: Update data point
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -492,7 +492,7 @@ void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *
 #
 #   Purpose....: Convert group mean
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -511,7 +511,7 @@ double TQuizItem::ConvGroupMean(TQuizGroup *group, double gmean, double imean)
 #
 #   Purpose....: Update data point
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -566,7 +566,7 @@ void TQuizItem::Update(int gender, double p, char myval, int gvalue, TQuizGroup 
 #
 #   Purpose....: Update data point
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -601,7 +601,7 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQ
                     val = value[i];
 
                     if (val)
-                    {   
+                    {
                         if (item[i]->Reverse)
                             val = 3 - val;
                         else
@@ -626,7 +626,7 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQ
 #
 #   Purpose....: Init stage 2 done
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -642,19 +642,26 @@ void TQuizItem::InitDone2()
 #
 #   Purpose....: Init stage 3 done
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::InitDone3(TQuizItem **item, int count)
+void TQuizItem::InitDone3(TQuizGroup **group, TQuizItem **item, int count)
 {
     int i;
+    int g;
 
     for (i = 0; i < count; i++)
     {
         Cov[i] = Cov[i] / (double)(CountArr[i] - 1);
         Corr[i] = Cov[i] / Sd / item[i]->Sd;
+    }
+
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+        GroupCov[g] = GroupCov[g] / (double)(GroupCountArr[g] - 1);
+        GroupCorr[g] = GroupCov[g] / Sd / group[g]->Sd;
     }
 }
 
@@ -664,7 +671,7 @@ void TQuizItem::InitDone3(TQuizItem **item, int count)
 #
 #   Purpose....: Get no answer proportion
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -927,7 +934,7 @@ void TQuiz::WriteSumaryTable(const char *filename)
     file.Write("<table border=3 cellspacing=0 cellpadding=0>");
 
     j = 0;
-    
+
     for (i = 0; i < N; i++)
     {
         if (j % 10 == 0)
@@ -974,7 +981,7 @@ void TQuiz::WriteSumaryTable(const char *filename)
         }
 
         j++;
-            
+
         file.Write("<tr style='height:24.75pt'>");
 
         WriteCenteredFieldHeader(file, 5);
@@ -1024,7 +1031,7 @@ void TQuiz::WriteSumaryTable(const char *filename)
         file.Write("</tr>");
     }
 
-    file.Write("</table>");    
+    file.Write("</table>");
 }
 
 /*##################  TQuiz::WriteGroupCorrTable ##########################
@@ -1112,7 +1119,7 @@ void TQuiz::WriteIntercorr(const char *filename)
                 sprintf(str, "%d. ", MaxInd + 1);
                 file.Write(str);
                 file.Write(ItemArr[MaxInd]->Text);
-                        
+
                 file.Write(" (Diff: ");
 
                 sprintf(str, "%4.2Lf/", ItemArr[MaxInd]->MaleAtypicalMean - ItemArr[MaxInd]->MaleTypicalMean);
@@ -1240,12 +1247,12 @@ void TQuiz::Analyse()
         GroupArr[i]->InitDone2();
 
     for (i = 0; i < N; i++)
-        ItemArr[i]->InitDone3(ItemArr, i);
+        ItemArr[i]->InitDone3(GroupArr, ItemArr, i);
 
     for (i = 0; i < N; i++)
     {
         ItemArr[i]->Corr[i] = 0.0;
         for (j = i + 1; j < N; j++)
            ItemArr[i]->Corr[j] = ItemArr[j]->Corr[i];
-    }       
+    }
 }

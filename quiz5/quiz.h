@@ -127,7 +127,7 @@ public:
 
     void Update(int gender, double p, char *value, TQuizGroup **group, TQuizItem **item, int count, int n);
     void InitDone2();
-    void InitDone3(TQuizItem **item, int count);
+    void InitDone3(TQuizGroup **group, TQuizItem **item, int count);
 
     double GetNoAnswer();
 
@@ -144,6 +144,7 @@ public:
 
     double Sd;
     double Corr[MAX_QUESTIONS];
+    double GroupCorr[GROUP_COUNT];
 
 protected:
     double ConvGroupMean(TQuizGroup *group, double gmean, double imean);
