@@ -82,18 +82,30 @@ public:
     ~TQuizGroup();
 
     void Add(int gender, double p, char *value, TQuizItem **item, int count);
+    void InitDone1();
 
     const char *PosName;
     const char *NegName;
-    long double Mean;
-    long double Sd;
-    int Answers;
-    int Count;
-    int Sum;
+
     int Questions;
+
+    double MaleAtypicalMean;
+    double MaleTypicalMean;
+    double FemaleAtypicalMean;
+    double FemaleTypicalMean;
 
 protected:
     void Add(int gender, double p, char value);
+
+    double NaMaleCount;
+    double NtMaleCount;
+    double NaFemaleCount;
+    double NtFemaleCount;
+
+    double NaMaleSum;
+    double NtMaleSum;
+    double NaFemaleSum;
+    double NtFemaleSum;
 
     int Nr;
 };

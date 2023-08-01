@@ -53,8 +53,15 @@ TQuizGroup::TQuizGroup(int number, const char *pos, const char *neg)
     PosName = pos;
     NegName = neg;
 
-    Mean = 0;
-    Sd = 0;
+    NaMaleCount = 0.0;
+    NtMaleCount = 0.0;
+    NaFemaleCount = 0.0;
+    NtFemaleCount = 0.0;
+
+    NaMaleSum = 0.0;
+    NtMaleSum = 0.0;
+    NaFemaleSum = 0.0;
+    NtFemaleSum = 0.0;
 }
 
 /*##########################################################################
@@ -85,6 +92,25 @@ TQuizGroup::~TQuizGroup()
 ##########################################################################*/
 void TQuizGroup::Add(int gender, double p, char value)
 {
+    double dval = (double)value;
+    double p1 = 1.0 - p;
+
+    switch (gender)
+    {
+        case 1:
+            NaMaleCount += p;
+            NtMaleCount += p1;
+            NaMaleSum += p * dval;
+            NtMaleSum += p1 * dval;
+            break;
+
+        case 2:
+            NaFemaleCount += p;
+            NtFemaleCount += p1;
+            NaFemaleSum += p * dval;
+            NtFemaleSum += p1 * dval;
+            break;
+    }
 }
 
 /*##########################################################################
@@ -101,10 +127,44 @@ void TQuizGroup::Add(int gender, double p, char value)
 void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int count)
 {
     int i;
+    char val;
 
     for (i = 0; i < count; i++)
+    {
         if (item[i]->MyGroup == Nr)
-            Add(gender, p, value[i]);          
+        {
+            val = value[i];
+
+            if (val)
+            {   
+                if (item[i]->Reverse)
+                    val = 3 - val;
+                else
+                    val--;
+
+                Add(gender, p, val);          
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizGroup::InitDone1
+#
+#   Purpose....: Init stage 1 done
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizGroup::InitDone1()
+{
+    MaleAtypicalMean = NaMaleSum / NaMaleCount;
+    FemaleAtypicalMean = NaFemaleSum / NaFemaleCount;
+    MaleTypicalMean = NtMaleSum / NtMaleCount;
+    FemaleTypicalMean = NtFemaleSum / NtFemaleCount;
 }
 
 /*##########################################################################
@@ -955,6 +1015,9 @@ void TQuiz::Analyse()
 
     for (i = 0; i < N; i++)
         ItemArr[i]->InitDone1();
+
+    for (i = 0; i < GROUP_COUNT; i++)
+        GroupArr[i]->InitDone1();
 
     Stage = 2;
     Load();
