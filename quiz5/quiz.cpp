@@ -792,7 +792,7 @@ void TQuiz::AddRow(TQuizRow *Row)
 
         case 2:
             for (i = 0; i < N; i++)
-                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
+                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, i);
             break;
     }
 }
@@ -823,5 +823,12 @@ void TQuiz::Analyse()
         ItemArr[i]->InitDone2();
 
     for (i = 0; i < N; i++)
-        ItemArr[i]->InitDone3(ItemArr, N);
+        ItemArr[i]->InitDone3(ItemArr, i);
+
+    for (i = 0; i < N; i++)
+    {
+        ItemArr[i]->Corr[i] = 0.0;
+        for (j = i + 1; j < N; j++)
+           ItemArr[i]->Corr[j] = ItemArr[j]->Corr[i];
+    }       
 }
