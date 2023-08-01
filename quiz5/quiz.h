@@ -162,9 +162,7 @@ public:
     TQuiz(int questions);
     ~TQuiz();
 
-    virtual void Load() = 0;
-
-    void LoadDone();
+    void Analyse();
 
     void WriteNoAnswerStats(const char *filename);
     void WriteSumaryTable(const char *filename);
@@ -177,6 +175,7 @@ protected:
     void AddRow(TQuizRow *Row);
 
     void Init();
+    virtual void Load() = 0;
     virtual void WriteName(TFile &File) = 0;
     virtual void WriteLongName(TFile &File) = 0;
     virtual int GetCatCount(int Question);
@@ -197,9 +196,7 @@ protected:
 
     double ProbArr[201];
 
-    int ValueCount;
-    int ValueSize;
-    TQuizRow **ValueArr;
+    int Stage;
 };
 
 #endif

@@ -358,10 +358,6 @@ TQuiz::TQuiz(int Questions)
     for (i = 0; i < N; i++)
         ItemArr[i] = new TQuizItem(i);
 
-    ValueCount = 0;
-    ValueSize = 0;
-    ValueArr = 0;
-
     GroupValArr = 0;
     GroupValCount = 0;
 
@@ -389,12 +385,6 @@ TQuiz::~TQuiz()
         delete ItemArr[i];
 
     delete ItemArr;
-
-    for (i = 0; i < ValueCount; i++)
-        delete ValueArr[i];
-
-    if (ValueArr)
-        delete ValueArr;
 
     if (GroupValArr)
         delete GroupValArr;
@@ -790,57 +780,44 @@ void TQuiz::AddRow(TQuizRow *Row)
     int i;
     TQuizRow **NewArr;
 
-    printf("%d Score: %d\r\n", Row->ID, Row->Score);
-
-    if (ValueArr == 0)
-    {
-        ValueSize = 8;
-        ValueArr = new TQuizRow*[ValueSize];
-    }
-
-    if (ValueCount >= ValueSize)
-    {
-        ValueSize = 3 * ValueSize / 2;
-        NewArr = new TQuizRow*[ValueSize];
-
-        for (i = 0; i < ValueCount; i++)
-            NewArr[i] = ValueArr[i];
-
-        delete ValueArr;
-        ValueArr = NewArr;
-    }
-
     Row->P = ProbArr[Row->Score];
+    printf("%d: ID: %d Score: %d\r\n", Stage, Row->ID, Row->Score);
 
-    for (i = 0; i < N; i++)
-        ItemArr[i]->Add(Row->Gender, Row->P, Row->Quiz[i]);
+    switch (Stage)
+    {
+        case 1:
+            for (i = 0; i < N; i++)
+                ItemArr[i]->Add(Row->Gender, Row->P, Row->Quiz[i]);
+            break;
 
-    ValueArr[ValueCount] = Row;
-    ValueCount++;
+        case 2:
+            for (i = 0; i < N; i++)
+                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
+            break;
+    }
 }
 
-/*##################  LoadDone ##########################
-*   Purpose....: Add a row                                                                   #
+/*##################  Analyse ##########################
+*   Purpose....: Analyse                                                                  #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::LoadDone()
+void TQuiz::Analyse()
 {
     int i;
     int j;
     TQuizRow *row;
 
+    Stage = 1;
+    Load();
+
     for (i = 0; i < N; i++)
         ItemArr[i]->InitDone1();
 
-    for (j = 0; j < ValueCount; j++)
-    {
-        row = ValueArr[j];
-        for (i = 0; i < N; i++)
-            ItemArr[i]->Update(row->Gender, row->P, row->Quiz, ItemArr, N);
-    }
+    Stage = 2;
+    Load();
 
     for (i = 0; i < N; i++)
         ItemArr[i]->InitDone2();

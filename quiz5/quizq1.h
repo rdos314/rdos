@@ -37,9 +37,8 @@ public:
     TQuizQ1();
     ~TQuizQ1();
 
-    virtual void Load();
-
 protected:
+    virtual void Load();
     virtual void WriteName(TFile &File);
     virtual void WriteLongName(TFile &File);
     virtual int GetCatCount(int Question);

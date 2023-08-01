@@ -44,8 +44,8 @@ int main(int argc, char **argv)
 {
     TQuizQ1 Quiz;
 
-    printf("load\r\n");
-    Quiz.Load();
+    printf("analyse\r\n");
+    Quiz.Analyse();
 
     printf("write no answer\r\n");
     Quiz.WriteNoAnswerStats("res\\noans.txt");
