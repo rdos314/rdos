@@ -765,6 +765,80 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 *##########################################################################*/
 void TQuiz::WriteIntercorr(const char *filename)
 {
+    int i;
+    int j;
+    double *CorrArr;
+    double MaxCorr;
+    double Val;
+    int MaxInd;
+    bool Used[MAX_QUESTIONS];
+    TFile file(filename, 0);
+
+        long double sum;
+        int count;
+        int k;
+        int l;
+        TQuiz *quiz;
+        int q;
+        int gid1;
+        int gid2;
+        int cnt;
+        char str[80];
+        int ival;
+        int more;
+        long double val;
+    long double corrlev;
+        long double corrval;
+        long double CurrCorr;
+        int GlobalIdArr[MAX_QUESTIONS];
+
+    file.Write("<h2>Between question correlations</h2>\n");
+
+    for (i = 0; i < N; i++)
+    {
+        CorrArr = ItemArr[i]->Corr;
+
+        MaxCorr = 0.0;
+        MaxInd = -1;
+
+        for (j = 0; j < N; j++)
+        {
+            Val = CorrArr[j];
+            if (Val < 0.0)
+                Val = -Val;
+
+            if (Val > MaxCorr)
+            {
+                MaxCorr = Val;
+                MaxInd = j;
+            }
+            Used[j] = false;
+        }
+
+        while (MaxCorr >= 0.2)
+        {
+            Used[MaxInd] = true;
+
+            MaxCorr = 0.0;
+            MaxInd = -1;
+
+            for (j = 0; j < N; j++)
+            {
+                if (!Used[j])
+                {
+                    Val = CorrArr[j];
+                    if (Val < 0.0)
+                        Val = -Val;
+
+                    if (Val > MaxCorr)
+                    {
+                        MaxCorr = Val;
+                        MaxInd = j;
+                    }
+                }
+            }
+        }
+    }
 }
 
 /*##################  AddRow ##########################
