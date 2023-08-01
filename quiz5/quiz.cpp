@@ -53,6 +53,9 @@ TQuizGroup::TQuizGroup(int number, const char *pos, const char *neg)
     PosName = pos;
     NegName = neg;
 
+    Count = 0;
+    Sd = 0.0;
+
     NaMaleCount = 0.0;
     NtMaleCount = 0.0;
     NaFemaleCount = 0.0;
@@ -161,10 +164,95 @@ void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int co
 ##########################################################################*/
 void TQuizGroup::InitDone1()
 {
-    MaleAtypicalMean = NaMaleSum / NaMaleCount;
-    FemaleAtypicalMean = NaFemaleSum / NaFemaleCount;
-    MaleTypicalMean = NtMaleSum / NtMaleCount;
-    FemaleTypicalMean = NtFemaleSum / NtFemaleCount;
+    MaleAtypicalMean = NaMaleSum / NaMaleCount * (double)Questions;
+    FemaleAtypicalMean = NaFemaleSum / NaFemaleCount * (double)Questions;
+    MaleTypicalMean = NtMaleSum / NtMaleCount * (double)Questions;
+    FemaleTypicalMean = NtFemaleSum / NtFemaleCount * (double)Questions;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizGroup::Update
+#
+#   Purpose....: Update data point
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizGroup::Update(int gender, double p, char *value, TQuizItem **item, int count)
+{
+    int i;
+    char val;
+    double dval = 0.0;
+    double diff;
+
+    for (i = 0; i < count; i++)
+    {
+        if (item[i]->MyGroup == Nr)
+        {
+            val = value[i];
+
+            if (val)
+            {   
+                if (item[i]->Reverse)
+                    val = 3 - val;
+                else
+                    val--;
+
+                dval += (double)val;
+            }
+            else
+                return;
+        }
+    }
+
+    Count++;
+
+    switch (gender)
+    {
+        case 1:
+            diff = dval - MaleAtypicalMean;
+            break;
+
+        case 2:
+            diff = dval - FemaleAtypicalMean;
+            break;
+    }
+
+    diff = diff * diff * p;
+    Sd += diff;
+
+    switch (gender)
+    {
+        case 1:
+            diff = dval - MaleTypicalMean;
+            break;
+
+        case 2:
+            diff = dval - FemaleTypicalMean;
+            break;
+    }
+
+    diff = diff * diff * (1.0 - p);
+    Sd += diff;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizGroup::InitDone2
+#
+#   Purpose....: Init stage 2 done
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizGroup::InitDone2()
+{
+    Sd = sqrt(Sd / (double)(Count - 1));
 }
 
 /*##########################################################################
@@ -987,6 +1075,10 @@ void TQuiz::AddRow(TQuizRow *Row)
         case 2:
             for (i = 0; i < N; i++)
                 ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, i);
+
+            for (i = 0; i < GROUP_COUNT; i++)
+                GroupArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
+
             break;
     }
 }
@@ -1024,6 +1116,9 @@ void TQuiz::Analyse()
 
     for (i = 0; i < N; i++)
         ItemArr[i]->InitDone2();
+
+    for (i = 0; i < GROUP_COUNT; i++)
+        GroupArr[i]->InitDone2();
 
     for (i = 0; i < N; i++)
         ItemArr[i]->InitDone3(ItemArr, i);

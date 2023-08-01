@@ -84,6 +84,9 @@ public:
     void Add(int gender, double p, char *value, TQuizItem **item, int count);
     void InitDone1();
 
+    void Update(int gender, double p, char *value, TQuizItem **item, int count);
+    void InitDone2();
+
     const char *PosName;
     const char *NegName;
 
@@ -94,8 +97,12 @@ public:
     double FemaleAtypicalMean;
     double FemaleTypicalMean;
 
+    double Sd;
+
 protected:
     void Add(int gender, double p, char value);
+
+    int Count;
 
     double NaMaleCount;
     double NtMaleCount;
