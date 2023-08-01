@@ -285,6 +285,12 @@ TQuizItem::TQuizItem(int number)
         CountArr[i] = 0;
     }
 
+    for (i = 0; i < GROUP_COUNT; i++)
+    {
+        GroupCov[i] = 0.0;
+        GroupCountArr[i] = 0;
+    }
+
     NaMaleCount = 0.0;
     NtMaleCount = 0.0;
     NaFemaleCount = 0.0;
@@ -478,6 +484,80 @@ void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *
 
         Cov[other] += mdiff * odiff * (1.0 - p);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::ConvGroupMean
+#
+#   Purpose....: Convert group mean
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TQuizItem::ConvGroupMean(TQuizGroup *group, double gmean, double imean)
+{
+    if (MyGroup == group->Nr)
+        return gmean - imean;
+    else
+        return gmean;
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizItem::Update
+#
+#   Purpose....: Update data point
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizItem::Update(int gender, double p, char myval, int gvalue, TQuizGroup *group)
+{
+    double mval;
+    double gval;
+    double mdiff;
+    double gdiff;
+    int grp = group->Nr;
+
+    GroupCountArr[grp]++;
+
+    mval = (double)myval;
+    gval = (double)gvalue;
+
+    switch (gender)
+    {
+        case 1:
+            mdiff = mval - MaleAtypicalMean;
+            gdiff = gval - ConvGroupMean(group, group->MaleAtypicalMean, MaleAtypicalMean);
+            break;
+
+        case 2:
+            mdiff = mval - FemaleAtypicalMean;
+            gdiff = gval - ConvGroupMean(group, group->FemaleAtypicalMean, FemaleAtypicalMean);
+            break;
+    }
+
+    GroupCov[grp] += mdiff * gdiff * p;
+
+    switch (gender)
+    {
+        case 1:
+            mdiff = mval - MaleTypicalMean;
+            gdiff = gval - ConvGroupMean(group, group->MaleTypicalMean, MaleTypicalMean);
+            break;
+
+        case 2:
+            mdiff = mval - FemaleTypicalMean;
+            gdiff = gval - ConvGroupMean(group, group->FemaleTypicalMean, FemaleTypicalMean);
+            break;
+    }
+
+    GroupCov[grp] += mdiff * gdiff * (1.0 - p);
 }
 
 /*##########################################################################

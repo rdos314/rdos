@@ -91,6 +91,7 @@ public:
     const char *NegName;
 
     int Questions;
+    int Nr;
 
     double MaleAtypicalMean;
     double MaleTypicalMean;
@@ -113,8 +114,6 @@ protected:
     double NtMaleSum;
     double NaFemaleSum;
     double NtFemaleSum;
-
-    int Nr;
 };
 
 class TQuizItem
@@ -136,6 +135,8 @@ public:
     int MyGroup;
     bool Reverse;
 
+    int Nr;
+
     double MaleAtypicalMean;
     double MaleTypicalMean;
     double FemaleAtypicalMean;
@@ -145,14 +146,18 @@ public:
     double Corr[MAX_QUESTIONS];
 
 protected:
+    double ConvGroupMean(TQuizGroup *group, double gmean, double imean);
     void Update(int gender, double p, char value);
     void Update(int gender, double p, char myval, char value, TQuizItem *item);
+    void Update(int gender, double p, char myval, int gval, TQuizGroup *group);
 
     int NoAnswer;
     int Count;
+
     int CountArr[MAX_QUESTIONS];
     double Cov[MAX_QUESTIONS];
-    int Nr;
+    int GroupCountArr[GROUP_COUNT];
+    double GroupCov[GROUP_COUNT];
 
     double NaMaleCount;
     double NtMaleCount;
