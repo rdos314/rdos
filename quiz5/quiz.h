@@ -51,6 +51,8 @@
 #define MAX_QUESTIONS           250
 
 class TQuiz;
+class TQuizItem;
+class TQuizGroup;
 
 struct TQuizRow
 {
@@ -79,6 +81,8 @@ public:
     TQuizGroup(int number, const char *pos, const char *neg);
     ~TQuizGroup();
 
+    void Add(int gender, double p, char *value, TQuizItem **item, int count);
+
     const char *PosName;
     const char *NegName;
     long double Mean;
@@ -89,6 +93,8 @@ public:
     int Questions;
 
 protected:
+    void Add(int gender, double p, char value);
+
     int Nr;
 };
 

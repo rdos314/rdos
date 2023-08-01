@@ -74,6 +74,41 @@ TQuizGroup::~TQuizGroup()
 
 /*##########################################################################
 #
+#   Name       : TQuizGroup::Add
+#
+#   Purpose....: Add data point
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizGroup::Add(int gender, double p, char value)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizGroup::Add
+#
+#   Purpose....: Add data point
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int count)
+{
+    int i;
+
+    for (i = 0; i < count; i++)
+        if (item[i]->MyGroup == Nr)
+            Add(gender, p, value[i]);          
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizItem::TQuizItem
 #
 #   Purpose....: Constructor for TQuizItem
@@ -883,6 +918,10 @@ void TQuiz::AddRow(TQuizRow *Row)
         case 1:
             for (i = 0; i < N; i++)
                 ItemArr[i]->Add(Row->Gender, Row->P, Row->Quiz[i]);
+
+            for (i = 0; i < GROUP_COUNT; i++)
+                GroupArr[i]->Add(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
+
             break;
 
         case 2:
