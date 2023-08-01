@@ -791,9 +791,12 @@ void TQuiz::WriteIntercorr(const char *filename)
 
         file.Write(" (Diff: ");
 
-        sprintf(str, "%5.3Lf/", ItemArr[i]->MaleAtypicalMean - ItemArr[i]->MaleTypicalMean);
+        sprintf(str, "%4.2Lf/", ItemArr[i]->MaleAtypicalMean - ItemArr[i]->MaleTypicalMean);
         file.Write(str);
-        sprintf(str, "%5.3Lf)", ItemArr[i]->FemaleAtypicalMean - ItemArr[i]->FemaleTypicalMean);
+        sprintf(str, "%4.2Lf,", ItemArr[i]->FemaleAtypicalMean - ItemArr[i]->FemaleTypicalMean);
+        file.Write(str);
+
+        sprintf(str, " Missing: %5.1Lf%%)", 100.0 * ItemArr[i]->GetNoAnswer());
         file.Write(str);
 
         file.Write("</b><ul>\r\n");
@@ -830,9 +833,12 @@ void TQuiz::WriteIntercorr(const char *filename)
                         
                 file.Write(" (Diff: ");
 
-                sprintf(str, "%5.3Lf/", ItemArr[MaxInd]->MaleAtypicalMean - ItemArr[MaxInd]->MaleTypicalMean);
+                sprintf(str, "%4.2Lf/", ItemArr[MaxInd]->MaleAtypicalMean - ItemArr[MaxInd]->MaleTypicalMean);
                 file.Write(str);
-                sprintf(str, "%5.3Lf)", ItemArr[MaxInd]->FemaleAtypicalMean - ItemArr[MaxInd]->FemaleTypicalMean);
+                sprintf(str, "%4.2Lf,", ItemArr[MaxInd]->FemaleAtypicalMean - ItemArr[MaxInd]->FemaleTypicalMean);
+                file.Write(str);
+
+                sprintf(str, " Missing: %5.1Lf%%)", 100.0 * ItemArr[MaxInd]->GetNoAnswer());
                 file.Write(str);
 
                 file.Write(" correlation: ");
