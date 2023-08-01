@@ -587,7 +587,10 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQ
 
     if (value[Nr])
     {
-        mval = value[Nr] - 1;
+        if (Reverse)
+            mval = 3 - value[Nr];
+        else
+            mval = value[Nr] - 1;
 
         for (g = 0; g < GROUP_COUNT; g++)
         {
@@ -596,18 +599,21 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQ
 
             for (i = 0; i < n && ok; i++)
             {
-                if (item[i]->MyGroup == g && i != Nr)
+                if (item[i]->MyGroup == g)
                 {
                     val = value[i];
 
                     if (val)
                     {
-                        if (item[i]->Reverse)
-                            val = 3 - val;
-                        else
-                            val--;
+                        if (i != Nr)
+                        {
+                            if (item[i]->Reverse)
+                                val = 3 - val;
+                            else
+                                val--;
 
-                        gval += val;
+                            gval += val;
+                        }
                     }
                     else
                         ok = false;
