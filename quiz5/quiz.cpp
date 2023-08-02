@@ -260,7 +260,7 @@ TQuizItem::TQuizItem(int number)
     int i;
 
     Text = "NO TEXT";
-    MyGroup = 0;
+    MyGroup = GROUP_MIXED;
     Reverse = false;
     Nr = number;
 
@@ -365,6 +365,11 @@ void TQuizItem::InitDone1()
     FemaleAtypicalMean = NaFemaleSum / NaFemaleCount;
     MaleTypicalMean = NtMaleSum / NtMaleCount;
     FemaleTypicalMean = NtFemaleSum / NtFemaleCount;
+
+    if (GetDiff() < 0.0)
+        Reverse = true;
+    else
+        Reverse = false;
 }
 
 /*##########################################################################
@@ -477,6 +482,22 @@ void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *
 
 /*##########################################################################
 #
+#   Name       : TQuizItem::GetDiff
+#
+#   Purpose....: Get average neurotype diff
+#
+#   In params..:
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TQuizItem::GetDiff()
+{
+    return (MaleAtypicalMean - MaleTypicalMean + FemaleAtypicalMean - FemaleTypicalMean) / 2.0;
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizItem::ConvGroupChoice
 #
 #   Purpose....: Convert group choice
@@ -508,12 +529,7 @@ char TQuizItem::ConvGroupChoice(char val)
 double TQuizItem::ConvGroupMean(TQuizGroup *group, double gmean, double imean)
 {
     if (MyGroup == group->Nr)
-    {
-        if (Reverse)
-            return gmean + imean;
-        else
             return gmean - imean;
-    }
     else
         return gmean;
 }
@@ -1199,15 +1215,18 @@ void TQuiz::AddRow(TQuizRow *Row)
             for (i = 0; i < N; i++)
                 ItemArr[i]->Add(Row->Gender, Row->P, Row->Quiz[i]);
 
-            for (i = 0; i < GROUP_COUNT; i++)
-                GroupArr[i]->Add(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
-
             break;
 
         case 2:
             for (i = 0; i < N; i++)
                 ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, GroupArr, ItemArr, i, N);
 
+            for (i = 0; i < GROUP_COUNT; i++)
+                GroupArr[i]->Add(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
+
+            break;
+
+        case 3:
             for (i = 0; i < GROUP_COUNT; i++)
                 GroupArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
 
@@ -1226,13 +1245,6 @@ void TQuiz::Analyse()
 {
     int i;
     int j;
-    TQuizRow *row;
-
-    for (i = 0; i < N; i++)
-    {
-        j = ItemArr[i]->MyGroup;
-        GroupArr[j]->Questions++;
-    }
 
     Stage = 1;
     Load();
@@ -1240,14 +1252,23 @@ void TQuiz::Analyse()
     for (i = 0; i < N; i++)
         ItemArr[i]->InitDone1();
 
-    for (i = 0; i < GROUP_COUNT; i++)
-        GroupArr[i]->InitDone1();
+    for (i = 0; i < N; i++)
+    {
+        j = ItemArr[i]->MyGroup;
+        GroupArr[j]->Questions++;
+    }
 
     Stage = 2;
     Load();
 
     for (i = 0; i < N; i++)
         ItemArr[i]->InitDone2();
+
+    for (i = 0; i < GROUP_COUNT; i++)
+        GroupArr[i]->InitDone1();
+
+    Stage = 3;
+    Load();
 
     for (i = 0; i < GROUP_COUNT; i++)
         GroupArr[i]->InitDone2();

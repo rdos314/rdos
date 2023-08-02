@@ -132,10 +132,10 @@ public:
     double GetNoAnswer();
 
     char ConvGroupChoice(char val);
+    double GetDiff();
 
     const char *Text;
     int MyGroup;
-    bool Reverse;
 
     int Nr;
 
@@ -157,6 +157,7 @@ protected:
 
     int NoAnswer;
     int Count;
+    bool Reverse;
 
     int CountArr[MAX_QUESTIONS];
     double Cov[MAX_QUESTIONS];
