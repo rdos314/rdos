@@ -1245,6 +1245,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
                 if (!Used[i])
                 {
                     Val = ItemArr[i]->GetDiff();
+                    Val = Val * Val;
                     if (Val > Max)
                     {
                         Max = Val;
