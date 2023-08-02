@@ -482,6 +482,27 @@ void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *
 
 /*##########################################################################
 #
+#   Name       : TQuizItem::Update
+#
+#   Purpose....: Update data point
+#
+#   In params..:
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizItem::Update(int gender, double p, char *value, TQuizItem **item, int count)
+{
+    int i;
+
+    Update(gender, p, value[Nr]);
+
+    for (i = 0; i < count; i++)
+        Update(gender, p, value[Nr], value[i], item[i]);
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizItem::GetDiff
 #
 #   Purpose....: Get average neurotype diff
@@ -600,7 +621,7 @@ void TQuizItem::Update(int gender, double p, char myval, int gvalue, TQuizGroup 
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQuizItem **item, int count, int n)
+void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQuizItem **item, int count)
 {
     int i;
     int g;
@@ -608,11 +629,6 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQ
     bool ok;
     char mval;
     int gval;
-
-    Update(gender, p, value[Nr]);
-
-    for (i = 0; i < count; i++)
-        Update(gender, p, value[Nr], value[i], item[i]);
 
     if (value[Nr])
     {
@@ -623,14 +639,17 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQ
             ok = true;
             gval = 0;
 
-            for (i = 0; i < n && ok; i++)
+            for (i = 0; i < count && ok; i++)
             {
                 if (item[i]->MyGroup == g)
                 {
                     val = value[i];
 
                     if (val)
-                        gval += item[i]->ConvGroupChoice(val);
+                    {
+                        if (i != Nr)
+                            gval += item[i]->ConvGroupChoice(val);
+                    }
                     else
                         ok = false;
                 }
@@ -1219,7 +1238,7 @@ void TQuiz::AddRow(TQuizRow *Row)
 
         case 2:
             for (i = 0; i < N; i++)
-                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, GroupArr, ItemArr, i, N);
+                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, i);
 
             for (i = 0; i < GROUP_COUNT; i++)
                 GroupArr[i]->Add(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
@@ -1227,6 +1246,9 @@ void TQuiz::AddRow(TQuizRow *Row)
             break;
 
         case 3:
+            for (i = 0; i < N; i++)
+                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, GroupArr, ItemArr, N);
+
             for (i = 0; i < GROUP_COUNT; i++)
                 GroupArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
 

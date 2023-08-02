@@ -125,8 +125,10 @@ public:
     void Add(int gender, double p, int value);
     void InitDone1();
 
-    void Update(int gender, double p, char *value, TQuizGroup **group, TQuizItem **item, int count, int n);
+    void Update(int gender, double p, char *value, TQuizItem **item, int count);
     void InitDone2();
+
+    void Update(int gender, double p, char *value, TQuizGroup **group, TQuizItem **item, int count);
     void InitDone3(TQuizGroup **group, TQuizItem **item, int count);
 
     double GetNoAnswer();
