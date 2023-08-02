@@ -131,6 +131,8 @@ public:
 
     double GetNoAnswer();
 
+    char ConvGroupChoice(char val);
+
     const char *Text;
     int MyGroup;
     bool Reverse;
@@ -148,6 +150,7 @@ public:
 
 protected:
     double ConvGroupMean(TQuizGroup *group, double gmean, double imean);
+
     void Update(int gender, double p, char value);
     void Update(int gender, double p, char myval, char value, TQuizItem *item);
     void Update(int gender, double p, char myval, int gval, TQuizGroup *group);

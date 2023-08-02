@@ -140,11 +140,7 @@ void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int co
 
             if (val)
             {
-                if (item[i]->Reverse)
-                    val = 3 - val;
-                else
-                    val--;
-
+                val = item[i]->ConvGroupChoice(val);
                 Add(gender, p, val);
             }
         }
@@ -195,14 +191,7 @@ void TQuizGroup::Update(int gender, double p, char *value, TQuizItem **item, int
             val = value[i];
 
             if (val)
-            {
-                if (item[i]->Reverse)
-                    val = 3 - val;
-                else
-                    val--;
-
-                dval += (double)val;
-            }
+                dval += (double)item[i]->ConvGroupChoice(val);
             else
                 return;
         }
@@ -488,6 +477,25 @@ void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *
 
 /*##########################################################################
 #
+#   Name       : TQuizItem::ConvGroupChoice
+#
+#   Purpose....: Convert group choice
+#
+#   In params..:
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TQuizItem::ConvGroupChoice(char val)
+{
+    if (Reverse)
+        return 3 - val;
+    else
+        return val - 1;
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizItem::ConvGroupMean
 #
 #   Purpose....: Convert group mean
@@ -500,7 +508,12 @@ void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *
 double TQuizItem::ConvGroupMean(TQuizGroup *group, double gmean, double imean)
 {
     if (MyGroup == group->Nr)
-        return gmean - imean;
+    {
+        if (Reverse)
+            return gmean + imean;
+        else
+            return gmean - imean;
+    }
     else
         return gmean;
 }
@@ -587,10 +600,7 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQ
 
     if (value[Nr])
     {
-        if (Reverse)
-            mval = 3 - value[Nr];
-        else
-            mval = value[Nr] - 1;
+        mval = ConvGroupChoice(value[Nr]);
 
         for (g = 0; g < GROUP_COUNT; g++)
         {
@@ -604,17 +614,7 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQ
                     val = value[i];
 
                     if (val)
-                    {
-                        if (i != Nr)
-                        {
-                            if (item[i]->Reverse)
-                                val = 3 - val;
-                            else
-                                val--;
-
-                            gval += val;
-                        }
-                    }
+                        gval += item[i]->ConvGroupChoice(val);
                     else
                         ok = false;
                 }
