@@ -133,6 +133,7 @@ public:
 
     double GetNoAnswer();
 
+    bool IsReversed();
     char ConvGroupChoice(char val);
     double GetDiff();
 

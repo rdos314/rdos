@@ -503,6 +503,22 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizItem **item, int 
 
 /*##########################################################################
 #
+#   Name       : TQuizItem::IsReversed
+#
+#   Purpose....: Check if reversed
+#
+#   In params..:
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TQuizItem::IsReversed()
+{
+    return Reverse;
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizItem::GetDiff
 #
 #   Purpose....: Get average neurotype diff
@@ -1084,6 +1100,162 @@ void TQuiz::WriteSumaryTable(const char *filename)
 *##########################################################################*/
 void TQuiz::WriteGroupCorrTable(const char *filename)
 {
+    int i;
+    int g;
+    int q;
+    double Max;
+    double Val;
+    bool Used[MAX_QUESTIONS];
+    double *CorrArr;
+    char str[80];
+    TFile file(filename, 0);
+
+    file.Write("<h2>Grouped results</h2>\n");
+    file.Write("<span style='color:#990099'>");
+    file.Write("Reversed score questions are showed in red color");
+    file.Write("</span><br>");
+
+    file.Write("<span style='color:#009999'>");
+    file.Write("High correlation is light blue");
+    file.Write("</span><br>");
+
+    file.Write("Correlations are calculated against other questions in the group, not including the current question<br>");
+    file.Write("Each group is sorted so the highest neurotype diff comes first<br><br>");
+
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+        file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+        
+        file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 3);
+        sprintf(str, "G:%d", g + 1);
+        file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 24);
+        file.Write(GroupArr[g]->PosName);
+        file.Write(" / ");
+        file.Write(GroupArr[g]->NegName);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+        file.Write("Male");
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+        file.Write("Female");
+        WriteFieldFooter(file);
+
+        for (i = 0; i < GROUP_COUNT - 1; i++)
+        {
+            WriteFieldHeader(file, 4);
+            sprintf(str, "G:%d", i + 1);
+            file.Write(str);
+            WriteFieldFooter(file);
+        }
+
+        file.Write("</tr>");
+
+        Max = 0.0;
+        q = -1;
+
+        for (i = 0; i < N; i++)
+        {
+            if (ItemArr[i]->MyGroup == g)
+            {
+                Val = ItemArr[i]->GetDiff();
+                Val = Val * Val;
+                if (Val > Max)
+                {
+                    Max = Val;
+                    q = i;
+                }
+                Used[i] = false;
+            }
+            else
+                Used[i] = true;
+        }
+
+        while (q >= 0)
+        {
+            Used[q] = true;
+
+            file.Write("<tr style='height:24.75pt'>");
+
+            WriteCenteredFieldHeader(file, 3);
+            sprintf(str, "%d", q + 1);
+            file.Write(str);
+
+            WriteCenteredFieldHeader(file, 24);
+            if (ItemArr[q]->IsReversed())
+                file.Write("<span style='color:#990099'>");
+            file.Write(ItemArr[q]->Text);
+            if (ItemArr[q]->IsReversed())
+                file.Write("</span>");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 3);
+            sprintf(str, "%5.3Lf", ItemArr[q]->MaleAtypicalMean - ItemArr[q]->MaleTypicalMean);
+            file.Write(str);
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 3);
+            sprintf(str, "%5.3Lf", ItemArr[q]->FemaleAtypicalMean - ItemArr[q]->FemaleTypicalMean);
+            file.Write(str);
+            WriteFieldFooter(file);
+
+            Max = 0.0;
+
+            CorrArr = ItemArr[q]->GroupCorr;
+            for (i = 0; i < GROUP_COUNT - 1; i++)
+                if (CorrArr[i] > Max)
+                    Max = CorrArr[i];
+
+            for (i = 0; i < GROUP_COUNT - 1; i++)
+            {
+                Val = CorrArr[i];
+
+                WriteCenteredFieldHeader(file, 4);
+
+                if (Val >= 0.2)
+                {
+                    if (Val > 0.9 * Max)
+                        file.Write("<span style='color:#009999'>");
+
+                    sprintf(str, "%4.2Lf", Val);
+                    file.Write(str);
+
+                    if (Val > 0.9 * Max)
+                        file.Write("</span>");
+                }
+                else
+                    file.Write(" ");
+
+                WriteFieldFooter(file);
+            }
+
+            file.Write("</tr>");
+
+            Max = 0.0;
+            q = -1;
+
+            for (i = 0; i < N; i++)
+            {
+                if (!Used[i])
+                {
+                    Val = ItemArr[i]->GetDiff();
+                    if (Val > Max)
+                    {
+                        Max = Val;
+                        q = i;
+                    }
+                }
+            }
+        }
+    }
+    file.Write("</table>");
+    file.Write("<br><br>");
 }
 
 /*##################  TQuiz::WriteIntercorr ##########################
