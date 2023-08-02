@@ -93,10 +93,26 @@ TQuizGroup::~TQuizGroup()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizGroup::Add(int gender, double p, char value)
+void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int count)
 {
-    double dval = (double)value;
+    int i;
+    char val;
+    double dval = 0.0;
     double p1 = 1.0 - p;
+    double diff;
+
+    for (i = 0; i < count; i++)
+    {
+        if (item[i]->MyGroup == Nr)
+        {
+            val = value[i];
+
+            if (val)
+                dval += (double)item[i]->ConvGroupChoice(val);
+            else
+                return;
+        }
+    }
 
     switch (gender)
     {
@@ -118,37 +134,6 @@ void TQuizGroup::Add(int gender, double p, char value)
 
 /*##########################################################################
 #
-#   Name       : TQuizGroup::Add
-#
-#   Purpose....: Add data point
-#
-#   In params..:
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int count)
-{
-    int i;
-    char val;
-
-    for (i = 0; i < count; i++)
-    {
-        if (item[i]->MyGroup == Nr)
-        {
-            val = value[i];
-
-            if (val)
-            {
-                val = item[i]->ConvGroupChoice(val);
-                Add(gender, p, val);
-            }
-        }
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : TQuizGroup::InitDone1
 #
 #   Purpose....: Init stage 1 done
@@ -160,10 +145,10 @@ void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int co
 ##########################################################################*/
 void TQuizGroup::InitDone1()
 {
-    MaleAtypicalMean = NaMaleSum / NaMaleCount * (double)Questions;
-    FemaleAtypicalMean = NaFemaleSum / NaFemaleCount * (double)Questions;
-    MaleTypicalMean = NtMaleSum / NtMaleCount * (double)Questions;
-    FemaleTypicalMean = NtFemaleSum / NtFemaleCount * (double)Questions;
+    MaleAtypicalMean = NaMaleSum / NaMaleCount;
+    FemaleAtypicalMean = NaFemaleSum / NaFemaleCount;
+    MaleTypicalMean = NtMaleSum / NtMaleCount;
+    FemaleTypicalMean = NtFemaleSum / NtFemaleCount;
 }
 
 /*##########################################################################
@@ -566,7 +551,12 @@ char TQuizItem::ConvGroupChoice(char val)
 double TQuizItem::ConvGroupMean(TQuizGroup *group, double gmean, double imean)
 {
     if (MyGroup == group->Nr)
+    {
+        if (Reverse)
+            return gmean - (2.0 - imean);
+        else
             return gmean - imean;
+    }
     else
         return gmean;
 }

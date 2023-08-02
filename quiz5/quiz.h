@@ -101,8 +101,6 @@ public:
     double Sd;
 
 protected:
-    void Add(int gender, double p, char value);
-
     int Count;
 
     double NaMaleCount;
