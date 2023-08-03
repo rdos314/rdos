@@ -36,6 +36,7 @@
 
 #define GROUP_COUNT             11
 
+#define GROUP_NOT_USED          -1
 #define GROUP_ASPIE_TALENT      0
 #define GROUP_NT_TALENT         1
 #define GROUP_ASPIE_SENSORY     2

@@ -1440,7 +1440,8 @@ void TQuiz::Analyse()
     for (i = 0; i < N; i++)
     {
         j = ItemArr[i]->MyGroup;
-        GroupArr[j]->Questions++;
+        if (j >= 0)
+            GroupArr[j]->Questions++;
     }
 
     Stage = 2;
