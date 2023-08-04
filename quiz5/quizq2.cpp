@@ -163,7 +163,7 @@ void TQuizQ2::SetupTexts()
   ItemArr[24]->MyGroup = GROUP_NOT_USED;
   ItemArr[25]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[26]->MyGroup = GROUP_NOT_USED;
-  ItemArr[27]->MyGroup = GROUP_NOT_USED;
+  ItemArr[27]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[28]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[29]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[30]->MyGroup = GROUP_ASPIE_SENSORY;
