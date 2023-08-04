@@ -33,6 +33,7 @@
 
 #include "quiz.h"
 #include "file.h"
+#include "str.h"
 
 static double r2pi = sqrt(2.0 * 3.14159265358979323846);
 
@@ -1373,6 +1374,192 @@ void TQuiz::WriteIntercorr(const char *filename)
 
         file.Write("</ul><br>\r\n\r\n");
     }
+}
+
+/*##################  TQuiz::ExportToPhp ##########################
+*   Purpose....: Export items for new version                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportToPhp(const char *filename)
+{
+    int nr = 0;
+    int i;
+    int g;
+    int q;
+    int w;
+    double Max;
+    double Val;
+    bool Used[MAX_QUESTIONS];
+    double *CorrArr;
+    char str[80];
+    TFile file(filename, 0);
+    TString itemstr;
+    TString malestr;
+    TString femalestr;
+
+    malestr += "\r\n";
+    femalestr += "\r\n";
+
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+        itemstr += "\r\n";
+
+        switch (g)
+        {
+            case GROUP_ASPIE_TALENT:
+                sprintf(str, " $h[%d] = \"Atypical talent\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 1;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_NT_TALENT:
+                sprintf(str, " $h[%d] = \"Typical talent\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 2;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_ASPIE_SENSORY:
+                sprintf(str, " $h[%d] = \"Atypical perception\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 3;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_NT_SENSORY:
+                sprintf(str, " $h[%d] = \"Typical preception\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 4;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_ASPIE_NVC:
+                sprintf(str, " $h[%d] = \"Atypical communication\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 5;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_NT_NVC:
+                sprintf(str, " $h[%d] = \"Typical communication\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 6;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_ASPIE_RELATION:
+                sprintf(str, " $h[%d] = \"Atypical relationships\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 7;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_NT_RELATION:
+                sprintf(str, " $h[%d] = \"Typical relationships\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 8;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_ASPIE_SOCIAL:
+                sprintf(str, " $h[%d] = \"Atypical social\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 9;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_NT_SOCIAL:
+                sprintf(str, " $h[%d] = \"Typical social\";\r\n", nr);
+                itemstr += str;
+
+                sprintf(str, " $hg[%d] = 10;\r\n", nr);
+                itemstr += str;
+                break;
+
+            case GROUP_MIXED:
+                sprintf(str, " $h[%d] = \"Control\";\r\n", nr);
+                itemstr += str;
+                break;
+        }
+
+        itemstr += "\r\n";
+
+        Max = 0.0;
+        q = -1;
+
+        for (i = 0; i < N; i++)
+        {
+            if (ItemArr[i]->MyGroup == g)
+            {
+                Val = ItemArr[i]->GetDiff();
+                Val = Val * Val;
+                if (Val > Max)
+                {
+                    Max = Val;
+                    q = i;
+                }
+                Used[i] = false;
+            }
+            else
+                Used[i] = true;
+        }
+
+        while (q >= 0)
+        {
+            Used[q] = true;
+
+            sprintf(str, " $m[%d] = \"", nr);
+            itemstr += str;
+            itemstr += ItemArr[q]->Text;
+            itemstr += "\";\r\n";
+
+            Val = ItemArr[q]->MaleAtypicalMean - ItemArr[q]->MaleTypicalMean;
+            w = (int)(1000.0 * Val);
+            sprintf(str, " $mw[%d] = %d;\r\n", nr, w);
+            malestr += str;
+
+            Val = ItemArr[q]->FemaleAtypicalMean - ItemArr[q]->FemaleTypicalMean;
+            w = (int)(1000.0 * Val);
+            sprintf(str, " $fw[%d] = %d;\r\n", nr, w);
+            femalestr += str;
+
+            nr++;
+
+            Max = 0.0;
+            q = -1;
+
+            for (i = 0; i < N; i++)
+            {
+                if (!Used[i])
+                {
+                    Val = ItemArr[i]->GetDiff();
+                    Val = Val * Val;
+                    if (Val > Max)
+                    {
+                        Max = Val;
+                        q = i;
+                    }
+                }
+            }
+        }
+    }
+
+    file.Write(itemstr.GetData());
+    file.Write(malestr.GetData());
+    file.Write(femalestr.GetData());
 }
 
 /*##################  AddRow ##########################

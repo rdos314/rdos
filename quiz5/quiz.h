@@ -190,6 +190,8 @@ public:
     void WriteIntercorr(const char *filename);
     void WriteGroupCorrTable(const char *filename);
 
+    void ExportToPhp(const char *filename);
+
 protected:
     double CalcNorm(double x, double u, double sd, double scale);
     void CalcProbArr(double u, double sd);

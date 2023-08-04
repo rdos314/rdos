@@ -58,6 +58,9 @@ int main(int argc, char **argv)
 
     printf("groupcorr\r\n");
     Quiz.WriteGroupCorrTable("res\\groupq2.htm");
+
+    printf("export\r\n");
+    Quiz.ExportToPhp("res\\q2.php");
 }
 
 
