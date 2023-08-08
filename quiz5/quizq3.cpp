@@ -168,7 +168,7 @@ void TQuizQ3::SetupTexts()
   ItemArr[29]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[30]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[31]->MyGroup = GROUP_NT_SENSORY;
-  ItemArr[32]->MyGroup = GROUP_NT_SENSORY;
+  ItemArr[32]->MyGroup = GROUP_NOT_USED;
   ItemArr[33]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[34]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[35]->MyGroup = GROUP_NT_SENSORY;
@@ -177,7 +177,7 @@ void TQuizQ3::SetupTexts()
   ItemArr[38]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[39]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[40]->MyGroup = GROUP_ASPIE_NVC;
-  ItemArr[41]->MyGroup = GROUP_ASPIE_NVC;
+  ItemArr[41]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[42]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[43]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[44]->MyGroup = GROUP_ASPIE_NVC;
@@ -191,10 +191,10 @@ void TQuizQ3::SetupTexts()
   ItemArr[52]->MyGroup = GROUP_NT_NVC;
   ItemArr[53]->MyGroup = GROUP_NT_NVC;
   ItemArr[54]->MyGroup = GROUP_NT_NVC;
-  ItemArr[55]->MyGroup = GROUP_NT_NVC;
+  ItemArr[55]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[56]->MyGroup = GROUP_NT_NVC;
   ItemArr[57]->MyGroup = GROUP_ASPIE_RELATION;
-  ItemArr[58]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[58]->MyGroup = GROUP_NOT_USED;
   ItemArr[59]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[60]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[61]->MyGroup = GROUP_ASPIE_RELATION;
@@ -210,7 +210,7 @@ void TQuizQ3::SetupTexts()
   ItemArr[71]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[72]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[73]->MyGroup = GROUP_ASPIE_RELATION;
-  ItemArr[74]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[74]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[75]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[76]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[77]->MyGroup = GROUP_NT_RELATION;
@@ -220,15 +220,15 @@ void TQuizQ3::SetupTexts()
   ItemArr[81]->MyGroup = GROUP_NT_RELATION;
   ItemArr[82]->MyGroup = GROUP_NT_RELATION;
   ItemArr[83]->MyGroup = GROUP_NT_RELATION;
-  ItemArr[84]->MyGroup = GROUP_NT_RELATION;
+  ItemArr[84]->MyGroup = GROUP_NOT_USED;
   ItemArr[85]->MyGroup = GROUP_ASPIE_SOCIAL;
   ItemArr[86]->MyGroup = GROUP_ASPIE_SOCIAL;
   ItemArr[87]->MyGroup = GROUP_ASPIE_SOCIAL;
   ItemArr[88]->MyGroup = GROUP_ASPIE_SOCIAL;
   ItemArr[89]->MyGroup = GROUP_ASPIE_SOCIAL;
   ItemArr[90]->MyGroup = GROUP_ASPIE_SOCIAL;
-  ItemArr[91]->MyGroup = GROUP_NT_RELATION;
-  ItemArr[92]->MyGroup = GROUP_ASPIE_SOCIAL;
+  ItemArr[91]->MyGroup = GROUP_ASPIE_SOCIAL;
+  ItemArr[92]->MyGroup = GROUP_NOT_USED;
   ItemArr[93]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[94]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[95]->MyGroup = GROUP_NT_SOCIAL;
@@ -242,9 +242,16 @@ void TQuizQ3::SetupTexts()
   ItemArr[103]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[104]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[105]->MyGroup = GROUP_NT_SOCIAL;
-  ItemArr[106]->MyGroup = GROUP_NT_SOCIAL;
+  ItemArr[106]->MyGroup = GROUP_NOT_USED;
   ItemArr[107]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[108]->MyGroup = GROUP_NT_SOCIAL;
+  ItemArr[113]->MyGroup = GROUP_NOT_USED;
+  ItemArr[114]->MyGroup = GROUP_NOT_USED;
+  ItemArr[115]->MyGroup = GROUP_NOT_USED;
+  ItemArr[116]->MyGroup = GROUP_NOT_USED;
+  ItemArr[117]->MyGroup = GROUP_ASPIE_SENSORY;
+  ItemArr[118]->MyGroup = GROUP_NT_SENSORY;
+  ItemArr[119]->MyGroup = GROUP_ASPIE_SENSORY;
 
   ItemArr[0]->Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   ItemArr[1]->Text = "When you listen to music can you get so caught up in it that you don't notice anything else?";

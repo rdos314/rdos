@@ -1209,7 +1209,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 
                 WriteCenteredFieldHeader(file, 4);
 
-                if (Val >= 0.2)
+                if (Val >= 0.15)
                 {
                     if (Val > 0.9 * Max)
                         file.Write("<span style='color:#009999'>");
