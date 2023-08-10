@@ -175,7 +175,7 @@ void TQuizQ4::SetupTexts()
   ItemArr[36]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[37]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[38]->MyGroup = GROUP_NT_SENSORY;
-  ItemArr[39]->MyGroup = GROUP_NT_SENSORY;
+  ItemArr[39]->MyGroup = GROUP_NOT_USED;
   ItemArr[40]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[41]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[42]->MyGroup = GROUP_ASPIE_NVC;
@@ -214,7 +214,7 @@ void TQuizQ4::SetupTexts()
   ItemArr[75]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[76]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[77]->MyGroup = GROUP_ASPIE_RELATION;
-  ItemArr[78]->MyGroup = GROUP_NT_RELATION;
+  ItemArr[78]->MyGroup = GROUP_NOT_USED;
   ItemArr[79]->MyGroup = GROUP_NT_RELATION;
   ItemArr[80]->MyGroup = GROUP_NT_RELATION;
   ItemArr[81]->MyGroup = GROUP_NT_RELATION;
@@ -243,6 +243,13 @@ void TQuizQ4::SetupTexts()
   ItemArr[104]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[105]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[106]->MyGroup = GROUP_NT_SOCIAL;
+  ItemArr[111]->MyGroup = GROUP_NOT_USED;
+  ItemArr[112]->MyGroup = GROUP_NOT_USED;
+  ItemArr[113]->MyGroup = GROUP_NT_SENSORY;
+  ItemArr[114]->MyGroup = GROUP_NOT_USED;
+  ItemArr[115]->MyGroup = GROUP_NT_RELATION;
+  ItemArr[116]->MyGroup = GROUP_NOT_USED;
+
 
   ItemArr[0]->Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   ItemArr[1]->Text = "Are you often delighted by small things (like the colors in soap bubbles and the five pointed star shape that appears when you cut an apple across the core)?";
