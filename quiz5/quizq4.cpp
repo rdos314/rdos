@@ -249,7 +249,10 @@ void TQuizQ4::SetupTexts()
   ItemArr[114]->MyGroup = GROUP_NOT_USED;
   ItemArr[115]->MyGroup = GROUP_NT_RELATION;
   ItemArr[116]->MyGroup = GROUP_NOT_USED;
-
+  ItemArr[117]->MyGroup = GROUP_NOT_USED;
+  ItemArr[118]->MyGroup = GROUP_NOT_USED;
+  ItemArr[119]->MyGroup = GROUP_NOT_USED;
+  ItemArr[120]->MyGroup = GROUP_NOT_USED;
 
   ItemArr[0]->Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   ItemArr[1]->Text = "Are you often delighted by small things (like the colors in soap bubbles and the five pointed star shape that appears when you cut an apple across the core)?";
