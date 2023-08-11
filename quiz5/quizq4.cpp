@@ -139,7 +139,7 @@ void TQuizQ4::SetupTexts()
   ItemArr[0]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[1]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[2]->MyGroup = GROUP_ASPIE_TALENT;
-  ItemArr[3]->MyGroup = GROUP_ASPIE_TALENT;
+  ItemArr[3]->MyGroup = GROUP_NT_NVC;
   ItemArr[4]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[5]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[6]->MyGroup = GROUP_ASPIE_TALENT;
@@ -164,7 +164,7 @@ void TQuizQ4::SetupTexts()
   ItemArr[25]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[26]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[27]->MyGroup = GROUP_ASPIE_SENSORY;
-  ItemArr[28]->MyGroup = GROUP_ASPIE_SENSORY;
+  ItemArr[28]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[29]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[30]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[31]->MyGroup = GROUP_NT_SENSORY;
