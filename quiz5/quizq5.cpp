@@ -137,8 +137,8 @@ void TQuizQ5::WriteLongName(TFile &File)
 void TQuizQ5::SetupTexts()
 {
   ItemArr[0]->MyGroup = GROUP_ASPIE_TALENT;
-  ItemArr[1]->MyGroup = GROUP_ASPIE_TALENT;
-  ItemArr[2]->MyGroup = GROUP_ASPIE_TALENT;
+  ItemArr[1]->MyGroup = GROUP_ASPIE_NVC;
+  ItemArr[2]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[3]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[4]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[5]->MyGroup = GROUP_ASPIE_TALENT;
@@ -164,7 +164,7 @@ void TQuizQ5::SetupTexts()
   ItemArr[25]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[26]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[27]->MyGroup = GROUP_ASPIE_SENSORY;
-  ItemArr[28]->MyGroup = GROUP_ASPIE_SENSORY;
+  ItemArr[28]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[29]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[30]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[31]->MyGroup = GROUP_NT_SENSORY;
@@ -188,7 +188,7 @@ void TQuizQ5::SetupTexts()
   ItemArr[49]->MyGroup = GROUP_NT_NVC;  
   ItemArr[50]->MyGroup = GROUP_NT_NVC;
   ItemArr[51]->MyGroup = GROUP_NT_NVC;
-  ItemArr[52]->MyGroup = GROUP_NT_NVC;
+  ItemArr[52]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[53]->MyGroup = GROUP_NT_NVC;
   ItemArr[54]->MyGroup = GROUP_NT_NVC;
   ItemArr[55]->MyGroup = GROUP_NT_NVC;
@@ -196,13 +196,13 @@ void TQuizQ5::SetupTexts()
   ItemArr[57]->MyGroup = GROUP_NT_NVC;
   ItemArr[58]->MyGroup = GROUP_NT_NVC;
   ItemArr[59]->MyGroup = GROUP_ASPIE_RELATION;
-  ItemArr[60]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[60]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[61]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[62]->MyGroup = GROUP_NOT_USED;
-  ItemArr[63]->MyGroup = GROUP_ASPIE_RELATION;
-  ItemArr[64]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[63]->MyGroup = GROUP_NOT_USED;
+  ItemArr[64]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[65]->MyGroup = GROUP_ASPIE_RELATION;
-  ItemArr[66]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[66]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[67]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[68]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[69]->MyGroup = GROUP_ASPIE_RELATION;
@@ -252,20 +252,19 @@ void TQuizQ5::SetupTexts()
   ItemArr[117]->MyGroup = GROUP_NOT_USED;
   ItemArr[118]->MyGroup = GROUP_NOT_USED;
   ItemArr[119]->MyGroup = GROUP_ASPIE_SENSORY;
-  ItemArr[120]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[121]->MyGroup = GROUP_NOT_USED;
   ItemArr[122]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[123]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[124]->MyGroup = GROUP_NOT_USED;
   ItemArr[125]->MyGroup = GROUP_NOT_USED;
   ItemArr[126]->MyGroup = GROUP_NOT_USED;
-  ItemArr[127]->MyGroup = GROUP_ASPIE_RELATION;
-  ItemArr[128]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[127]->MyGroup = GROUP_NOT_USED;
+  ItemArr[128]->MyGroup = GROUP_NOT_USED;
   ItemArr[129]->MyGroup = GROUP_NOT_USED;
   ItemArr[130]->MyGroup = GROUP_NOT_USED;
   ItemArr[131]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[132]->MyGroup = GROUP_NOT_USED;
-  ItemArr[133]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[133]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[134]->MyGroup = GROUP_NOT_USED;
   ItemArr[135]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[136]->MyGroup = GROUP_NOT_USED;
@@ -278,9 +277,12 @@ void TQuizQ5::SetupTexts()
   ItemArr[143]->MyGroup = GROUP_NOT_USED;
   ItemArr[144]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[145]->MyGroup = GROUP_NOT_USED;
+  ItemArr[146]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[147]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[148]->MyGroup = GROUP_NT_NVC;
-  ItemArr[151]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[149]->MyGroup = GROUP_NT_RELATION;
+  ItemArr[150]->MyGroup = GROUP_NT_NVC;
+  ItemArr[151]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[152]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[153]->MyGroup = GROUP_NT_TALENT;
   ItemArr[154]->MyGroup = GROUP_NT_SOCIAL;
