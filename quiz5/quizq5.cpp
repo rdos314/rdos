@@ -252,6 +252,7 @@ void TQuizQ5::SetupTexts()
   ItemArr[117]->MyGroup = GROUP_NOT_USED;
   ItemArr[118]->MyGroup = GROUP_NOT_USED;
   ItemArr[119]->MyGroup = GROUP_ASPIE_SENSORY;
+  ItemArr[120]->MyGroup = GROUP_NOT_USED;
   ItemArr[121]->MyGroup = GROUP_NOT_USED;
   ItemArr[122]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[123]->MyGroup = GROUP_ASPIE_NVC;
