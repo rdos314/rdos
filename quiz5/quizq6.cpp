@@ -47,7 +47,7 @@
 #
 ##########################################################################*/
 TQuizQ6::TQuizQ6()
-  : TQuiz(122)
+  : TQuiz(126)
 {
     SetupTexts();
 }
@@ -88,7 +88,7 @@ int TQuizQ6::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizQ6::GetQuizN()
 {
-    return 122;
+    return 126;
 }
 
 /*##########################################################################
@@ -137,7 +137,7 @@ void TQuizQ6::WriteLongName(TFile &File)
 void TQuizQ6::SetupTexts()
 {
   ItemArr[0]->MyGroup = GROUP_ASPIE_TALENT;
-  ItemArr[1]->MyGroup = GROUP_ASPIE_TALENT;
+  ItemArr[1]->MyGroup = GROUP_NT_NVC;
   ItemArr[2]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[3]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[4]->MyGroup = GROUP_ASPIE_TALENT;
@@ -177,19 +177,19 @@ void TQuizQ6::SetupTexts()
   ItemArr[38]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[39]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[40]->MyGroup = GROUP_ASPIE_NVC;
-  ItemArr[41]->MyGroup = GROUP_ASPIE_NVC;
+  ItemArr[41]->MyGroup = GROUP_NOT_USED;
   ItemArr[42]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[43]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[44]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[45]->MyGroup = GROUP_ASPIE_NVC;
-  ItemArr[46]->MyGroup = GROUP_ASPIE_NVC;
+  ItemArr[46]->MyGroup = GROUP_NOT_USED;
   ItemArr[47]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[48]->MyGroup = GROUP_ASPIE_NVC;  
   ItemArr[49]->MyGroup = GROUP_ASPIE_NVC;  
   ItemArr[50]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[51]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[52]->MyGroup = GROUP_ASPIE_NVC;
-  ItemArr[53]->MyGroup = GROUP_ASPIE_NVC;
+  ItemArr[53]->MyGroup = GROUP_ASPIE_TALENT;
   ItemArr[54]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[55]->MyGroup = GROUP_ASPIE_NVC;
   ItemArr[56]->MyGroup = GROUP_ASPIE_NVC;
@@ -204,7 +204,7 @@ void TQuizQ6::SetupTexts()
   ItemArr[65]->MyGroup = GROUP_NT_NVC;
   ItemArr[66]->MyGroup = GROUP_NT_NVC;
   ItemArr[67]->MyGroup = GROUP_NT_NVC;
-  ItemArr[68]->MyGroup = GROUP_NT_NVC;
+  ItemArr[68]->MyGroup = GROUP_NOT_USED;
   ItemArr[69]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[70]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[71]->MyGroup = GROUP_ASPIE_RELATION;
@@ -215,7 +215,7 @@ void TQuizQ6::SetupTexts()
   ItemArr[76]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[77]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[78]->MyGroup = GROUP_ASPIE_RELATION;
-  ItemArr[79]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[79]->MyGroup = GROUP_NOT_USED;
   ItemArr[80]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[81]->MyGroup = GROUP_ASPIE_RELATION;
   ItemArr[82]->MyGroup = GROUP_ASPIE_RELATION;
@@ -241,19 +241,23 @@ void TQuizQ6::SetupTexts()
   ItemArr[102]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[103]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[104]->MyGroup = GROUP_NT_SOCIAL;
-  ItemArr[105]->MyGroup = GROUP_NT_SOCIAL;
+  ItemArr[105]->MyGroup = GROUP_ASPIE_SENSORY;
   ItemArr[106]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[107]->MyGroup = GROUP_NT_SOCIAL;
-  ItemArr[108]->MyGroup = GROUP_NT_SOCIAL;
-  ItemArr[109]->MyGroup = GROUP_NT_SOCIAL;
-  ItemArr[110]->MyGroup = GROUP_NT_SOCIAL;
+  ItemArr[108]->MyGroup = GROUP_ASPIE_RELATION;
+  ItemArr[109]->MyGroup = GROUP_NT_RELATION;
+  ItemArr[110]->MyGroup = GROUP_NT_SENSORY;
   ItemArr[111]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[112]->MyGroup = GROUP_NT_SOCIAL;
-  ItemArr[113]->MyGroup = GROUP_NT_SOCIAL;
-  ItemArr[114]->MyGroup = GROUP_NT_SOCIAL;
+  ItemArr[113]->MyGroup = GROUP_NT_RELATION;
+  ItemArr[114]->MyGroup = GROUP_NT_RELATION;
   ItemArr[115]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[116]->MyGroup = GROUP_NT_SOCIAL;
   ItemArr[117]->MyGroup = GROUP_NT_SOCIAL;
+  ItemArr[122]->MyGroup = GROUP_NOT_USED;
+  ItemArr[123]->MyGroup = GROUP_NT_RELATION;
+  ItemArr[124]->MyGroup = GROUP_NOT_USED;
+  ItemArr[125]->MyGroup = GROUP_NOT_USED;
 
   ItemArr[0]->Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   ItemArr[1]->Text = "Do you find it easier to understand and communicate with odd & unusual people than with ordinary people?";
@@ -377,6 +381,11 @@ void TQuizQ6::SetupTexts()
   ItemArr[119]->Text = "Is your sense of humor fairly conventional?";
   ItemArr[120]->Text = "Do you accept criticism, correction and direction?";
   ItemArr[121]->Text = "Do you find it easy to estimate the age of people?";
+
+  ItemArr[122]->Text = "Do you dislike pop culture?";
+  ItemArr[123]->Text = "Do you like 'being in style'?";
+  ItemArr[124]->Text = "Do you jump onto the latest trends?";
+  ItemArr[125]->Text = "Do you wear things that are comfortable regardless if they are in style or not?";
 
 }
 
