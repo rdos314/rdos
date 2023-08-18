@@ -531,8 +531,35 @@ void TDisc::LoadPart()
             Size = Part->GetSectorCount();
             Type = Part->GetType();
             Part->Handle = ServLoadVfsPartition(Handle, Type, Start, Size);
+            ServStartVfsPartition(Part->Handle);
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::UnloadPart
+#
+#   Purpose....: Unload partitions
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisc::UnloadPart()
+{
+    int PartNr;
+    TPartition *Part;
+
+    for (PartNr = 0; PartNr < FCurrPartCount; PartNr++)
+    {
+        Part = FPartArr[PartNr];
+        if (Part)
+            ServStopVfsPartition(Part->Handle);
+    }
+
+    Clear();
 }
 
 /*##########################################################################
