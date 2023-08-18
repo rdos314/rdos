@@ -98,7 +98,10 @@ TInitCommand::TInitCommand(TDisc *disc, TCommandOutput *out, const char *param)
 ##########################################################################*/
 int TInitCommand::Execute(char *param)
 {
-    Write("Doing init\r\n");
+    TString str;
+
+    str.printf("Creating <%s> disc\r\n", param);
+    Write(str.GetData());
 
     return 0;
 }

@@ -557,9 +557,9 @@ int TInitHdCommand::Execute(char *param)
         if (RdosIsVfsDisc(DiscNr))
         {
             if (FOptG || FOptU)
-                InitVfs(DiscNr, "init GPT");
+                InitVfs(DiscNr, "init gpt");
             else
-                InitVfs(DiscNr, "init MBR");
+                InitVfs(DiscNr, "init mbr");
 
             return 0;
         }
