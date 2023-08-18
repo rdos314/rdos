@@ -66,7 +66,71 @@ TShowPartitionFactory::TShowPartitionFactory()
 ##########################################################################*/
 TCommand *TShowPartitionFactory::Create(TSession *session, const char *param)
 {
-        return new TShowPartitionCommand(session, param);
+    return new TShowPartitionCommand(session, param);
+}
+
+/*##########################################################################
+#
+#   Name       : TShowPartitionVfsCmd::TShowPartitionVfsCmd
+#
+#   Purpose....: Constructor for TShowPartitionVfsCmd
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TShowPartitionVfsCmd::TShowPartitionVfsCmd(TShowPartitionCommand *part, int disc, const char *cmd)
+ : TVfsDiscCmd(disc, cmd)
+{
+    FPart = part;
+}
+
+/*##########################################################################
+#
+#   Name       : TShowPartitionVfsCmd::~TShowPartitionVfsCmd
+#
+#   Purpose....: Destructor for TShowPartitionVfsCmd
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TShowPartitionVfsCmd::~TShowPartitionVfsCmd()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TShowPartitionVfsCmd::NotifyDone
+#
+#   Purpose....: Notify command done
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowPartitionVfsCmd::NotifyDone()
+{
+    FPart->NotifyDone();
+}
+
+/*##########################################################################
+#
+#   Name       : TShowPartitionVfsCmd::NotifyMsg
+#
+#   Purpose....: Notify message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowPartitionVfsCmd::NotifyMsg(const char *msg)
+{
+    FPart->NotifyMsg(msg);
 }
 
 /*##########################################################################
@@ -122,6 +186,37 @@ int TShowPartitionCommand::OptScan(const char *optstr, int ch, int bool, const c
 void TShowPartitionCommand::InitOptions()
 {
         FOptD = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TShowPartitionCommand::NotifyDone
+#
+#   Purpose....: Notify done
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowPartitionCommand::NotifyDone()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TShowPartitionCommand::NotifyMsg
+#
+#   Purpose....: Notify message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowPartitionCommand::NotifyMsg(const char *msg)
+{
+    Write(msg);
 }
 
 /*##########################################################################
@@ -514,6 +609,30 @@ int TShowPartitionCommand::Show(TDisc *Disc)
 
 /*##########################################################################
 #
+#   Name       : TShowPartitionCommand::ShowVfs
+#
+#   Purpose....: Show VFS disc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShowPartitionCommand::ShowVfs(int DiscNr)
+{
+    TWait Wait;
+    TShowPartitionVfsCmd cmd(this, DiscNr, "info");
+
+    Write("\r\n");
+
+    Wait.Add(&cmd);
+
+    while (!cmd.IsDone())
+        Wait.WaitForever();
+}
+
+/*##########################################################################
+#
 #   Name       : TShowPartitionCommand::Execute
 #
 #   Purpose....: Execute command
@@ -539,30 +658,40 @@ int TShowPartitionCommand::Execute(char *param)
     {
         for (DiscNr = 0; DiscNr < 16; DiscNr++)
         {
-            Disc = new TDisc(DiscNr);
-            if (Disc->IsValid())
-                Show(Disc);
-            delete Disc;
+            if (RdosIsVfsDisc(DiscNr))
+                ShowVfs(DiscNr);
+            else
+            {
+                Disc = new TDisc(DiscNr);
+                if (Disc->IsValid())
+                    Show(Disc);
+                delete Disc;
+            }
         }
         return 0;
     }
 
     if (sscanf(param, "%d", &DiscNr) == 1)
     {
-        for (d = 0; d < 16; d++)
+        if (RdosIsVfsDisc(DiscNr))
+            ShowVfs(DiscNr);
+        else
         {
-            Disc = new TDisc(d);
-            if (Disc->IsValid())
-                if (Disc->GetDiscNr() == DiscNr)
-                    break;
-            delete Disc;
-            Disc = 0;
-        }
+            for (d = 0; d < 16; d++)
+            {
+                Disc = new TDisc(d);
+                if (Disc->IsValid())
+                    if (Disc->GetDiscNr() == DiscNr)
+                        break;
+                delete Disc;
+                Disc = 0;
+            }
 
-        if (Disc == 0 || !Show(Disc))
-        {
-            FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
-            Write(FMsg.GetData());
+            if (Disc == 0 || !Show(Disc))
+            {
+                FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
+                Write(FMsg.GetData());
+            }
         }
     }
     else

@@ -32,26 +32,45 @@
 #include "cmdfact.h"
 #include "idepart.h"
 #include "gptpart.h"
+#include "disccmd.h"
+
+class TShowPartitionCommand;
 
 class TShowPartitionFactory : public TCommandFactory
 {
 public:
-        TShowPartitionFactory();
-        virtual TCommand *Create(TSession *session, const char *param);
+    TShowPartitionFactory();
+    virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
+};
+
+class TShowPartitionVfsCmd : public TVfsDiscCmd
+{
+public:
+    TShowPartitionVfsCmd(TShowPartitionCommand *part, int disc, const char *cmd);
+    virtual ~TShowPartitionVfsCmd();
+
+    virtual void NotifyDone();
+    virtual void NotifyMsg(const char *msg);
+
+protected:
+    TShowPartitionCommand *FPart;
 };
 
 class TShowPartitionCommand : public TCommand
 {
 public:
-        TShowPartitionCommand(TSession *session, const char *param);
+    TShowPartitionCommand(TSession *session, const char *param);
 
-        virtual int Execute(char *param);       
+    virtual int Execute(char *param);       
+
+    void NotifyDone();
+    void NotifyMsg(const char *msg);
 
 protected:
     void InitOptions();
-        virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+    virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
     void ShowFreeEntry(int Nr, TPartition *Entry);
     void ShowEntry(int Nr, TIdePartition *Entry);
@@ -61,8 +80,10 @@ protected:
     void ShowHeader(TDisc *Disc);
     int Show(TDisc *Disc);
     void ShowGpt(TDisc *Disc);
+
+    void ShowVfs(int DiscNr);
         
-        int FOptD;
+    int FOptD;
 
 };
 
