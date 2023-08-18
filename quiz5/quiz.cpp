@@ -1314,7 +1314,7 @@ void TQuiz::WriteIntercorr(const char *filename)
             Used[j] = false;
         }
 
-        while (MaxCorr >= 0.2)
+        while (MaxCorr >= 0.3)
         {
             if (count < 15)
             {
