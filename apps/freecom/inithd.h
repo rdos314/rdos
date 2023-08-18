@@ -35,8 +35,8 @@
 class TInitHdFactory : public TCommandFactory
 {
 public:
-	TInitHdFactory();
-	virtual TCommand *Create(TSession *session, const char *param);
+    TInitHdFactory();
+    virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,34 +44,36 @@ protected:
 class TInitHdCommand : public TCommand
 {
 public:
-	TInitHdCommand(TSession *session, const char *param);
-	virtual ~TInitHdCommand();
+    TInitHdCommand(TSession *session, const char *param);
+    virtual ~TInitHdCommand();
 
-	virtual int Execute(char *param);	
+    virtual int Execute(char *param);	
 
 protected:
     void InitOptions();
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+    virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
     void LoadBootLoader(TDisc *Disc);
-	void WriteBootSector(TDisc *Disc, int IdeDisc);
+    void WriteBootSector(TDisc *Disc, int IdeDisc);
     void UpdateBootSector(TDisc *Disc, int IdeDisc);
-	void WriteBootLoader(TDisc *Disc);
+    void WriteBootLoader(TDisc *Disc);
 
     void LoadGptLoader(TDisc *Disc);
-	void WriteGptSector(TDisc *Disc, int IdeDisc);
+    void WriteGptSector(TDisc *Disc, int IdeDisc);
     void WriteGptLoader(TDisc *Disc);
     void InitGpt(TDisc *Disc, int IdeDisc);
     void InitUefi(TDisc *Disc, int IdeDisc);
 
+    void InitVfs(int DiscNr, const char *Cmd);
+
     int FLoaderSectors;
-	int FOptR;
+    int FOptR;
     int FOptI;
     int FOptD;
     int FOptG;
     int FOptU;
-	char *FBootLoader;
-	int FLoaderSize;
+    char *FBootLoader;
+    int FLoaderSize;
 };
 
 #endif

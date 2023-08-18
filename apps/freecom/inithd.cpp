@@ -486,6 +486,28 @@ void TInitHdCommand::InitUefi(TDisc *Disc, int IdeDisc)
 
 /*##########################################################################
 #
+#   Name       : TInitHd::InitVfs
+#
+#   Purpose....: Init VFS disc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInitHdCommand::InitVfs(int DiscNr, const char *Cmd)
+{
+    TWait Wait;
+    TVfsDiscCmdWrapper cmd(this, DiscNr, Cmd);
+
+    Wait.Add(&cmd);
+
+    while (!cmd.IsDone())
+        Wait.WaitForever();
+}
+
+/*##########################################################################
+#
 #   Name       : TInitHdCommand::Execute
 #
 #   Purpose....: Execute command
@@ -532,6 +554,16 @@ int TInitHdCommand::Execute(char *param)
 
     if (sscanf(param, "%d", &DiscNr) == 1)
     {
+        if (RdosIsVfsDisc(DiscNr))
+        {
+            if (FOptG || FOptU)
+                InitVfs(DiscNr, "init GPT");
+            else
+                InitVfs(DiscNr, "init MBR");
+
+            return 0;
+        }
+
         Disc = new TDisc(DiscNr);
         ok = Disc->IsValid();
 
