@@ -11,9 +11,10 @@
 #include "gptdisc.h"
 
 #include "partinfo.h"
+#include "discinit.h"
 
 static TCommandFactory *info;
-
+static TCommandFactory *init;
 
 /*##########################################################################
 #
@@ -75,6 +76,7 @@ int main(int argc, char **argv)
         Disc = CreateDisc(Server);
         Disc->LoadPart();
 
+        init = new TInitFactory(Disc);
         info = new TInfoFactory(Disc);
 
         Disc->Run();
