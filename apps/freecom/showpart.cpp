@@ -71,70 +71,6 @@ TCommand *TShowPartitionFactory::Create(TSession *session, const char *param)
 
 /*##########################################################################
 #
-#   Name       : TShowPartitionVfsCmd::TShowPartitionVfsCmd
-#
-#   Purpose....: Constructor for TShowPartitionVfsCmd
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TShowPartitionVfsCmd::TShowPartitionVfsCmd(TShowPartitionCommand *part, int disc, const char *cmd)
- : TVfsDiscCmd(disc, cmd)
-{
-    FPart = part;
-}
-
-/*##########################################################################
-#
-#   Name       : TShowPartitionVfsCmd::~TShowPartitionVfsCmd
-#
-#   Purpose....: Destructor for TShowPartitionVfsCmd
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TShowPartitionVfsCmd::~TShowPartitionVfsCmd()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TShowPartitionVfsCmd::NotifyDone
-#
-#   Purpose....: Notify command done
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TShowPartitionVfsCmd::NotifyDone()
-{
-    FPart->NotifyDone();
-}
-
-/*##########################################################################
-#
-#   Name       : TShowPartitionVfsCmd::NotifyMsg
-#
-#   Purpose....: Notify message
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TShowPartitionVfsCmd::NotifyMsg(const char *msg)
-{
-    FPart->NotifyMsg(msg);
-}
-
-/*##########################################################################
-#
 #   Name       : TShowPartitionCommand::TShowPartitionCommand
 #
 #   Purpose....: Constructor for TShowPartitionCommand
@@ -186,37 +122,6 @@ int TShowPartitionCommand::OptScan(const char *optstr, int ch, int bool, const c
 void TShowPartitionCommand::InitOptions()
 {
         FOptD = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TShowPartitionCommand::NotifyDone
-#
-#   Purpose....: Notify done
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TShowPartitionCommand::NotifyDone()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TShowPartitionCommand::NotifyMsg
-#
-#   Purpose....: Notify message
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TShowPartitionCommand::NotifyMsg(const char *msg)
-{
-    Write(msg);
 }
 
 /*##########################################################################
@@ -621,7 +526,7 @@ int TShowPartitionCommand::Show(TDisc *Disc)
 void TShowPartitionCommand::ShowVfs(int DiscNr)
 {
     TWait Wait;
-    TShowPartitionVfsCmd cmd(this, DiscNr, "info");
+    TVfsDiscCmdWrapper cmd(this, DiscNr, "info");
 
     Write("\r\n");
 

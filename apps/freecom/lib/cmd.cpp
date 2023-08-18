@@ -75,6 +75,54 @@ TArg::~TArg()
 
 /*##########################################################################
 #
+#   Name       : TVfsDiscCmdWrapper::TVfsDiscCmdWrapper
+#
+#   Purpose....: Constructor for TVfsDiscCmdWrapper
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TVfsDiscCmdWrapper::TVfsDiscCmdWrapper(TCommand *command, int disc, const char *cmd)
+ : TVfsDiscCmd(disc, cmd)
+{
+    FCommand = command;
+}
+
+/*##########################################################################
+#
+#   Name       : TVfsDiscCmdWrapper::~TVfsDiscCmdWrapper
+#
+#   Purpose....: Destructor for TVfsDiscCmdWrapper
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TVfsDiscCmdWrapper::~TVfsDiscCmdWrapper()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TVfsDiscCmdWrapper::NotifyMsg
+#
+#   Purpose....: Notify message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVfsDiscCmdWrapper::NotifyMsg(const char *msg)
+{
+    FCommand->Write(msg);
+}
+
+/*##########################################################################
+#
 #   Name       : TCommand::TCommand
 #
 #   Purpose....: Constructor for command

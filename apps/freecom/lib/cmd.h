@@ -33,8 +33,10 @@
 #include "path.h"
 #include "parser.h"
 #include "session.h"
+#include "disccmd.h"
 
 class TSession;
+class TCommand;
 
 class TArg
 {
@@ -46,6 +48,18 @@ public:
 
     TString FName;
     TArg *FList;
+};
+
+class TVfsDiscCmdWrapper : public TVfsDiscCmd
+{
+public:
+    TVfsDiscCmdWrapper(TCommand *command, int disc, const char *cmd);
+    virtual ~TVfsDiscCmdWrapper();
+
+    virtual void NotifyMsg(const char *msg);
+
+protected:
+    TCommand *FCommand;
 };
 
 class TCommand : public TParser

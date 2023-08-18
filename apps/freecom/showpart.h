@@ -32,7 +32,6 @@
 #include "cmdfact.h"
 #include "idepart.h"
 #include "gptpart.h"
-#include "disccmd.h"
 
 class TShowPartitionCommand;
 
@@ -45,19 +44,6 @@ public:
 protected:
 };
 
-class TShowPartitionVfsCmd : public TVfsDiscCmd
-{
-public:
-    TShowPartitionVfsCmd(TShowPartitionCommand *part, int disc, const char *cmd);
-    virtual ~TShowPartitionVfsCmd();
-
-    virtual void NotifyDone();
-    virtual void NotifyMsg(const char *msg);
-
-protected:
-    TShowPartitionCommand *FPart;
-};
-
 class TShowPartitionCommand : public TCommand
 {
 public:
@@ -65,8 +51,6 @@ public:
 
     virtual int Execute(char *param);       
 
-    void NotifyDone();
-    void NotifyMsg(const char *msg);
 
 protected:
     void InitOptions();
