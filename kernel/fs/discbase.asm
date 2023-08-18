@@ -176,9 +176,11 @@ m05 DD OFFSET Unused
 m06 DD OFFSET Unused
 m07 DD OFFSET Unused
 m08 DD OFFSET Unused
-m09 DD OFFSET LocalCmd
-m10 DD OFFSET LocalRead
-m11 DD OFFSET LocalWrite
+m09 DD OFFSET Unused
+m10 DD OFFSET Unused
+m11 DD OFFSET LocalCmd
+m12 DD OFFSET LocalRead
+m13 DD OFFSET LocalWrite
 
 WaitForMsg_    Proc near
     pushad

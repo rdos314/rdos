@@ -470,6 +470,40 @@ LocalCloseFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalStart
+;
+;       DESCRIPTION:    Start partition
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalStart Proc near
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalStart Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LocalStop
+;
+;       DESCRIPTION:    Stop partition
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalStop Proc near
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalStop Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -481,15 +515,17 @@ LocalCloseFile Endp
     public WaitForMsg_
 
 msgtab:
-m00 DD OFFSET GetFreeSectors
-m01 DD OFFSET GetDir
-m02 DD OFFSET GetDirEntryAttrib
-m03 DD OFFSET LockRelDir
-m04 DD OFFSET CloneRelDir
-m05 DD OFFSET UnlockRelDir
-m06 DD OFFSET GetRelDir
-m07 DD OFFSET LocalOpenFile
-m08 DD OFFSET LocalCloseFile
+m00 DD OFFSET LocalStart
+m01 DD OFFSET LocalStop
+m02 DD OFFSET GetFreeSectors
+m03 DD OFFSET GetDir
+m04 DD OFFSET GetDirEntryAttrib
+m05 DD OFFSET LockRelDir
+m06 DD OFFSET CloneRelDir
+m07 DD OFFSET UnlockRelDir
+m08 DD OFFSET GetRelDir
+m09 DD OFFSET LocalOpenFile
+m10 DD OFFSET LocalCloseFile
 
 WaitForMsg_    Proc near
     pushad

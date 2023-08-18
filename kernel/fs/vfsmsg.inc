@@ -25,52 +25,55 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+VFS_START                 = 0
+VFS_STOP                  = 1
+
 ; OUT EDX:EAX   Free sectors
-VFS_GET_FREE_SECTORS      = 0
+VFS_GET_FREE_SECTORS      = 2
 
 ; IN  EAX       Start handle
 ; IN            Path name
 ; OUT EAX       Header size
 ; OUT ECX       Entry count
 ; OUT           Block
-VFS_GET_DIR               = 1
+VFS_GET_DIR               = 3
 
 ; IN  EAX       Start handle
 ; IN            Path name
 ; OUT EAX       Attribute
-VFS_GET_DIR_ENTRY_ATTRIB  = 2
+VFS_GET_DIR_ENTRY_ATTRIB  = 4
 
 ; IN  EAX       Start handle
 ; IN            Path name
 ; OUT EAX       Start handle
-VFS_LOCK_REL_DIR          = 3
+VFS_LOCK_REL_DIR          = 5
 
 ; IN  EAX       Start handle
-VFS_CLONE_REL_DIR         = 4
+VFS_CLONE_REL_DIR         = 6
 
 ; IN  EAX       Start handle
-VFS_UNLOCK_REL_DIR        = 5
+VFS_UNLOCK_REL_DIR        = 7
 
 ; IN  EAX       Start handle
 ; OUT           Path name
-VFS_GET_REL_DIR           = 6
+VFS_GET_REL_DIR           = 8
 
 ; IN  EAX       Start handle
 ; IN            Path name
 ; OUT BX        File handle
 ; OUT ECX       Attribute
-VFS_OPEN_FILE             = 7
+VFS_OPEN_FILE             = 9
 
 ; IN  BX        File handle
-VFS_CLOSE_FILE            = 8
+VFS_CLOSE_FILE            = 10
 
 ; IN            Cmd
-VFS_CMD                   = 9
+VFS_CMD                   = 11
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_READ_SECTOR           = 10
+VFS_READ_SECTOR           = 12
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_WRITE_SECTOR          = 11
+VFS_WRITE_SECTOR          = 13
