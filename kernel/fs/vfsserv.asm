@@ -878,6 +878,34 @@ is_vfs_active    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DisableVfsPart
+;
+;       DESCRIPTION:    Disable partition
+;
+;       PARAMETERS:     EBX         Partition handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_disable_part_name       DB 'Disable VFS Part',0
+
+serv_disable_part    Proc far
+    push es
+    pushad
+;
+    call HandleToPartEs
+    jc sdsDone
+;
+    or es:vfsp_flag,VFSP_FLAG_STOPPED
+
+sdsDone:
+    popad
+    pop es
+    ret
+serv_disable_part   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LoadVfsPart
 ;
 ;       DESCRIPTION:    Load partition
@@ -4925,6 +4953,12 @@ init_server    Proc near
     mov edi,OFFSET serv_load_part_name
     xor cl,cl
     mov ax,serv_load_part_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_disable_part
+    mov edi,OFFSET serv_disable_part_name
+    xor cl,cl
+    mov ax,serv_disable_part_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_start_part

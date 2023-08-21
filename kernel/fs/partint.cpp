@@ -596,6 +596,8 @@ void TPartServer::Start()
 void TPartServer::Stop()
 {
     (*OnStop)(this);
+
+    ServDisableVfsPartition(handle);
 }
 
 /*##########################################################################

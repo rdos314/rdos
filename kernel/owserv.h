@@ -144,6 +144,10 @@
     __parm [__ebx] [__ecx] [__edx __eax] [__edi __esi] \
     __value [__ebx]
 
+#pragma aux ServDisableVfsPartition = \
+    ServGate_serv_disable_part  \
+    __parm [__ebx]
+
 #pragma aux ServStartVfsPartition = \
     ServGate_serv_start_part  \
     __parm [__ebx]

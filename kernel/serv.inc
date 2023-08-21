@@ -104,6 +104,11 @@ ServStopPart  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
+ServDisablePart  MACRO
+    ServGate serv_disable_part_nr
+                    ENDM
+
+; IN  EBX              VFS handle
 ; OUT EBX              Req handle
 CreateVfsReq  MACRO
     ServGate create_vfs_req_nr
