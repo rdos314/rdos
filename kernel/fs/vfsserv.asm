@@ -1003,7 +1003,7 @@ serv_stop_part    Proc far
     movzx eax,ax
     call AllocateMsg
 ;
-    mov eax,VFS_START
+    mov eax,VFS_STOP
     call RunMsg
 
 stoDone:
