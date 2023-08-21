@@ -45,15 +45,8 @@ extern void WaitForSingleMsg(int handle);
 
 void Start()
 {
-    bool wait = true;
-
-    while (wait)
-        RdosWaitMilli(250);
-
-    while (!Server)
-        RdosWaitMilli(50);
-
-    Server->Start();
+    if (Server)
+        Server->Start();
 }
 
 void Stop()
@@ -586,9 +579,6 @@ int TPartServer::GetHandle()
 ##########################################################################*/
 void TPartServer::Start()
 {
-    while (!OnStart)
-        RdosWaitMilli(50);
-
     (*OnStart)(this);
 }
 

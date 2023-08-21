@@ -76,12 +76,14 @@ void StartFs(TPartServer *Server)
     if (!boot)
     {
         printf("Cannot read boot sector\r\n");
+        Stopped = true;
         return;
     }
 
     if (boot->BytesPerSector != 512)
     {
         printf("Unexpected bytes per sector: %d\r\n", boot->BytesPerSector);
+        Stopped = true;
         return;
     }
 
