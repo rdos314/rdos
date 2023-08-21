@@ -935,6 +935,88 @@ serv_load_part   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           StartVfsPart
+;
+;       DESCRIPTION:    Start partition
+;
+;       PARAMETERS:     EBX         Partition handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_start_part_name       DB 'Start VFS Part',0
+
+serv_start_part    Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    call FindVfsHandle
+    jc staDone
+;
+    call HandleToPartFs
+    jc staDone
+;
+    mov ds,fs:vfsp_disc_sel
+;
+    movzx eax,ax
+    call AllocateMsg
+;
+    mov eax,VFS_START
+    call RunMsg
+
+staDone:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+serv_start_part   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StopVfsPart
+;
+;       DESCRIPTION:    Stop partition
+;
+;       PARAMETERS:     EBX         Partition handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_stop_part_name       DB 'Stop VFS Part',0
+
+serv_stop_part    Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    call FindVfsHandle
+    jc stoDone
+;
+    call HandleToPartFs
+    jc stoDone
+;
+    mov ds,fs:vfsp_disc_sel
+;
+    movzx eax,ax
+    call AllocateMsg
+;
+    mov eax,VFS_START
+    call RunMsg
+
+stoDone:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+serv_stop_part   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateVfsReq
 ;
 ;       DESCRIPTION:    Create a VFS req
@@ -4843,6 +4925,18 @@ init_server    Proc near
     mov edi,OFFSET serv_load_part_name
     xor cl,cl
     mov ax,serv_load_part_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_start_part
+    mov edi,OFFSET serv_start_part_name
+    xor cl,cl
+    mov ax,serv_start_part_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_stop_part
+    mov edi,OFFSET serv_stop_part_name
+    xor cl,cl
+    mov ax,serv_stop_part_nr
     RegisterServGate
 ;
     mov esi,OFFSET create_vfs_req

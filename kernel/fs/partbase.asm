@@ -478,7 +478,11 @@ LocalCloseFile Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern LowStart:near
+
 LocalStart Proc near
+    call LowStart
+;
     mov ebx,[edi].fc_handle
     ReplyVfsCmd
     ret
@@ -495,7 +499,11 @@ LocalStart Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern LowStop:near
+
 LocalStop Proc near
+    call LowStop
+;
     mov ebx,[edi].fc_handle
     ReplyVfsCmd
     ret

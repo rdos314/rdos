@@ -39,6 +39,18 @@ extern "C" {
 extern void WaitForMsg(int handle);
 #pragma aux WaitForMsg parm routine [ebx]
 
+void Start()
+{
+    bool wait = true;
+
+    while (wait)
+        RdosWaitMilli(250);
+}
+
+void Stop()
+{
+}
+
 long long GetFreeSectors()
 {
     return Server->GetFreeSectors();

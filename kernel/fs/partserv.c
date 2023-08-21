@@ -25,6 +25,8 @@
 #
 ########################################################################*/
 
+void Start();
+void Stop();
 long long GetFreeSectors();
 int GetDirHeaderSize();
 int GetDir(int rel, char *path, int *count);
@@ -38,6 +40,28 @@ int OpenFile(int rel, char *path);
 int GetFileAttrib(int handle);
 int GetFileHandle(int handle);
 void CloseFile(int handle);
+
+/*##########################################################################
+#
+#   Name       : LowStart
+#
+##########################################################################*/
+#pragma aux LowStart "*"
+void LowStart()
+{
+    Start();
+}
+
+/*##########################################################################
+#
+#   Name       : LowStop
+#
+##########################################################################*/
+#pragma aux LowStop "*"
+void LowStop()
+{
+    Stop();
+}
 
 /*##########################################################################
 #
