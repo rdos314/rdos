@@ -6,23 +6,59 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "sigdev.h"
 #include "part.h"
 #include "fat12.h"
 #include "fat16.h"
 #include "fat32.h"
 
+bool Started = false;
+bool Stopped = false;
+TFat *Fs = 0;
+const char *FsName = 0;
+
 /*##########################################################################
 #
-#   Name       : CreateFat
+#   Name       : LogError
 #
-#   Purpose....: Create FAT object
+#   Purpose....: Log bad FAT contents
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFat *CreateFat(TPartServer *Server, const char *FsName)
+void LogError(TPartServer *Server, TFat *Fat)
+{
+    long long TotalSectors;
+
+    TotalSectors = Server->GetPartSectors();
+
+    if (TotalSectors < Fat->PartSectors)
+        printf("Partition size mismatch: Part: %lld, Boot: %lld\r\n", TotalSectors, Fat->PartSectors);
+
+    if (Fat->FatSectors == 0)
+        printf("No FAT sectors\r\n");
+
+    if (Fat->FatCount != 2)
+        printf("Must have 2 FAT tables\r\n");
+
+    if (Fat->SectorsPerCluster <= 0)
+        printf("Invalid sectors per cluster: %d\r\n", Fat->SectorsPerCluster);
+}
+
+/*##########################################################################
+#
+#   Name       : StartFs
+#
+#   Purpose....: Start filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void StartFs(TPartServer *Server)
 {
     char Name[6];
     long long TotalSectors;
@@ -31,6 +67,8 @@ TFat *CreateFat(TPartServer *Server, const char *FsName)
     TPartReqEntry e1(&req, 0, 1);
     int FatSize;
 
+    Fs = 0;
+
     req.WaitForever();
 
     boot = (struct TBootSector *)e1.Map();
@@ -38,13 +76,13 @@ TFat *CreateFat(TPartServer *Server, const char *FsName)
     if (!boot)
     {
         printf("Cannot read boot sector\r\n");
-        return 0;
+        return;
     }
 
     if (boot->BytesPerSector != 512)
     {
         printf("Unexpected bytes per sector: %d\r\n", boot->BytesPerSector);
-        return 0;
+        return;
     }
 
     FatSize = 0;
@@ -90,48 +128,57 @@ TFat *CreateFat(TPartServer *Server, const char *FsName)
     switch (FatSize)
     {
         case 12:
-            return new TFat12(Server, boot);
+            Fs = new TFat12(Server, boot);
+            break;
 
         case 16:
-            return new TFat16(Server, boot);
+            Fs = new TFat16(Server, boot);
+            break;
 
         case 32:
-            return new TFat32(Server, boot);
+            Fs = new TFat32(Server, boot);
+            break;
 
         default:
             printf("No FAT size specified\r\n");
-            return 0;
+            break;
     }
+
+    if (Fs)
+    {
+        if (Fs->Validate())
+            Started = true;
+        else
+        {
+            LogError(Server, Fs);
+            delete Fs;
+            Fs = 0;
+            Stopped = true;
+        }
+    }
+    else
+        Stopped = true;
 }
 
 /*##########################################################################
 #
-#   Name       : LogError
+#   Name       : StopFs
 #
-#   Purpose....: Log bad FAT contents
+#   Purpose....: Stop filesystem
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void LogError(TPartServer *Server, TFat *Fat)
+void StopFs(TPartServer *Server)
 {
-    long long TotalSectors;
+    if (Fs)
+       delete Fs;
 
-    TotalSectors = Server->GetPartSectors();
+    Fs = 0;
 
-    if (TotalSectors < Fat->PartSectors)
-        printf("Partition size mismatch: Part: %lld, Boot: %lld\r\n", TotalSectors, Fat->PartSectors);
-
-    if (Fat->FatSectors == 0)
-        printf("No FAT sectors\r\n");
-
-    if (Fat->FatCount != 2)
-        printf("Must have 2 FAT tables\r\n");
-
-    if (Fat->SectorsPerCluster <= 0)
-        printf("Invalid sectors per cluster: %d\r\n", Fat->SectorsPerCluster);
+    Stopped = true;
 }
 
 /*##########################################################################
@@ -151,7 +198,6 @@ int main(int argc, char **argv)
     int unit;
     char *ptr;
     TPartServer *Server;
-    TFat *Fat;
 
     if (argc >= 4)
     {
@@ -161,19 +207,16 @@ int main(int argc, char **argv)
         ptr = argv[2];
         unit = atoi(ptr);
 
-        ptr = argv[3];
+        FsName = argv[3];
 
         Server = new TPartServer;
-        Fat = CreateFat(Server, ptr);
+        Server->OnStart = StartFs;
+        Server->OnStop = StopFs;
 
-        if (!Fat->Validate())
-        {
-            LogError(Server, Fat);
-            delete Fat;
-            Fat = 0;
-        }
+        while (!Started && !Stopped)
+            Server->WaitForSingleMsg();
 
-        if (Fat)
-            Fat->Run();
+        if (Fs)
+            Fs->Run();
     }
 }

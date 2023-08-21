@@ -564,6 +564,29 @@ wfmDone:
     ret
 WaitForMsg_    Endp
 
+    public WaitForSingleMsg_
+
+WaitForSingleMsg_    Proc near
+    pushad
+    WaitForVfsCmd
+    jc wfsmDone
+;
+    mov edi,edx
+    mov [edi].fc_handle,ebx
+    mov eax,[edi].fc_eax
+    mov ebx,[edi].fc_ebx
+    mov ecx,[edi].fc_ecx
+    mov esi,[edi].fc_esi
+    mov ebp,[edi].fc_op
+    mov edx,[edi].fc_edx
+    shl ebp,2
+    call dword ptr [ebp].msgtab
+
+wfsmDone:
+    popad
+    ret
+WaitForSingleMsg_    Endp
+
 _TEXT   ends
 
     END

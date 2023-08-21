@@ -40,6 +40,9 @@ extern "C" {
 extern void WaitForMsg(int handle);
 #pragma aux WaitForMsg parm routine [ebx]
 
+extern void WaitForSingleMsg(int handle);
+#pragma aux WaitForSingleMsg parm routine [ebx]
+
 void Start()
 {
     bool wait = true;
@@ -717,8 +720,24 @@ int TPartServer::GetBytesPerSector()
 #   Returns....: *
 #
 ##########################################################################*/
+void TPartServer::WaitForSingleMsg()
+{
+    ::WaitForSingleMsg(handle);
+}
+
+/*##########################################################################
+#
+#   Name       : TPartServer::WaitForMsg
+#
+#   Purpose....: Wait for msg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 void TPartServer::WaitForMsg(TFs *fs)
 {
     Fs = fs;
-    return ::WaitForMsg(handle);
+    ::WaitForMsg(handle);
 }
