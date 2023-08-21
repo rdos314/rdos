@@ -94,6 +94,40 @@ TFat::~TFat()
 
 /*##########################################################################
 #
+#   Name       : TFat::Start
+#
+#   Purpose....: Start filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::Start()
+{
+    bool wait = true;
+
+    while (wait)
+        RdosWaitMilli(250);
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::Stop
+#
+#   Purpose....: Stop filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::Stop()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::Validate
 #
 #   Purpose....: Validate important parameters

@@ -41,14 +41,12 @@ extern void WaitForMsg(int handle);
 
 void Start()
 {
-    bool wait = true;
-
-    while (wait)
-        RdosWaitMilli(250);
+    Server->Start();
 }
 
 void Stop()
 {
+    Server->Stop();
 }
 
 long long GetFreeSectors()

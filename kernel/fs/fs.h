@@ -78,6 +78,9 @@ public:
     TFs(TPartServer *server);
     virtual ~TFs();
 
+    virtual void Start() = 0;
+    virtual void Stop() = 0;
+
     virtual long long GetFreeSectors() = 0;
     virtual TDir *CacheRootDir() = 0;
     virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode) = 0;
