@@ -398,6 +398,8 @@ TFs::TFs(TPartServer *server)
 {
     int i;
 
+    FStarted = false;
+
     FServer = server;
 
     FBytesPerSector = FServer->GetBytesPerSector();
@@ -458,6 +460,38 @@ TFs::~TFs()
             delete FFileArr[i];
 
     delete FFileArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Start
+#
+#   Purpose....: Start filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Start()
+{
+    FStarted = true;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Stop
+#
+#   Purpose....: Stop filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Stop()
+{
+    FStarted = false;
 }
 
 /*##########################################################################
@@ -688,6 +722,9 @@ TDir *TFs::GetStartDir(int rel)
 {
     TDir *dir;
 
+    if (!FStarted)
+        return 0;
+
     if (FCurrDirCount == 0)
     {
         FDirArr[0] = CacheRootDir();
@@ -721,6 +758,9 @@ struct TShareHeader *TFs::GetDir(int rel, char *path, int *count)
     TDir *dir;
     TParser Parser(GetStartDir(rel), path);
 
+    if (!FStarted)
+        return 0;
+
     while (!Parser.IsDone())
     {
         if (Parser.IsDir())
@@ -753,8 +793,12 @@ struct TShareHeader *TFs::GetDir(int rel, char *path, int *count)
 ##########################################################################*/
 int TFs::GetDirEntryAttrib(int rel, char *path)
 {
+
     TParser Parser(GetStartDir(rel), path);
     struct RdosDirEntry *entry;
+
+    if (!FStarted)
+        return -1;
 
     while (!Parser.IsLast())
     {
@@ -792,6 +836,9 @@ int TFs::LockRelDir(int rel, char *path)
 {
     TDir *dir;
     TParser Parser(GetStartDir(rel), path);
+
+    if (!FStarted)
+        return 0;
 
     while (!Parser.IsDone())
     {
@@ -940,6 +987,9 @@ int TFs::OpenFile(int rel, char *path)
 {
     TParser Parser(GetStartDir(rel), path);
     TFile *file;
+
+    if (!FStarted)
+        return -1;
 
     while (!Parser.IsLast())
     {
@@ -1285,7 +1335,7 @@ void TFs::Execute()
 
     index = 0;
 
-    for (;;)
+    while (true)
     {
         if (FQueueArr[index].Op)
         {

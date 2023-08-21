@@ -78,8 +78,8 @@ public:
     TFs(TPartServer *server);
     virtual ~TFs();
 
-    virtual void Start() = 0;
-    virtual void Stop() = 0;
+    virtual void Start();
+    virtual void Stop();
 
     virtual long long GetFreeSectors() = 0;
     virtual TDir *CacheRootDir() = 0;
@@ -121,6 +121,8 @@ protected:
     void Remove(TFile *file);
 
     void GrowPend();
+
+    bool FStarted;
 
     TDir *GetStartDir(int rel);
     TFile *GetFile(int handle);
