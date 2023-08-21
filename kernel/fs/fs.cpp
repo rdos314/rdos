@@ -475,6 +475,14 @@ TFs::~TFs()
 void TFs::Stop()
 {
     FStopped = true;
+
+    if (FServerActive)
+    {
+        ServStopVfsIoServer(FServer->GetHandle());
+
+        while (FServerActive)
+            RdosWaitMilli(50);
+    }
 }
 
 /*##########################################################################
@@ -1302,7 +1310,7 @@ void TFs::Execute()
 
     index = 0;
 
-    for (;;)
+    while (!FStopped)
     {
         if (FQueueArr[index].Op)
         {

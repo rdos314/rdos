@@ -139,6 +139,10 @@
     ServGate_start_vfs_io_serv  \
     __parm [__ebx] [__edx]
 
+#pragma aux ServStopVfsIoServer = \
+    ServGate_stop_vfs_io_serv  \
+    __parm [__ebx]
+
 #pragma aux ServLoadVfsPartition = \
     ServGate_serv_load_part  \
     __parm [__ebx] [__ecx] [__edx __eax] [__edi __esi] \

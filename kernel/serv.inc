@@ -83,6 +83,10 @@ StartVfsIoServer  MACRO
     ServGate start_vfs_io_serv_nr
                     ENDM
 
+; IN  EBX              VFS handle
+StopVfsIoServer  MACRO
+    ServGate stop_vfs_io_serv_nr
+                    ENDM
 
 ; IN  EBX              VFS handle
 ; IN  ESI              FS type

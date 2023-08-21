@@ -3718,7 +3718,6 @@ fbDone:
     ret
 FreeBlock  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -3831,6 +3830,56 @@ swfqDone:
     pop ds
     ret
 serv_wait_io_server    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StopVfsIoServer
+;
+;       DESCRIPTION:    Stop VFS IO server
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_vfs_io_server_name       DB 'Stop VFS IO Server',0
+
+stop_vfs_io_server    Proc far
+    push es
+    push fs
+    pushad
+;
+    call HandleToPartFs
+    jc evioDone
+;
+    xor bx,bx
+    xchg bx,fs:vfsp_io_thread
+    or bx,bx
+    jz evioFree
+;
+    Signal
+;
+    mov ax,10
+    WaitMilliSec
+
+evioFree:
+    mov bx,fs:vfsp_io_sel
+    mov es,bx
+    GetSelectorBaseSize
+;
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    FreeMem
+    clc
+
+evioDone:
+    popad
+    pop fs
+    pop es
+    ret
+stop_vfs_io_server    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4947,6 +4996,12 @@ init_server    Proc near
     mov edi,OFFSET serv_wait_io_server_name
     xor cl,cl
     mov ax,serv_wait_io_serv_nr
+    RegisterServGate
+;
+    mov esi,OFFSET stop_vfs_io_server
+    mov edi,OFFSET stop_vfs_io_server_name
+    xor cl,cl
+    mov ax,stop_vfs_io_serv_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_load_part
