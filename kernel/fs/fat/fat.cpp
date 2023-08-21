@@ -187,9 +187,15 @@ int main(int argc, char **argv)
         Server->OnStart = StartFs;
 
         while (!Started)
-            Server->WaitForMsg();
+            if (!Server->WaitForMsg())
+                break;
 
         if (Fs)
             Fs->Run();
+
+        if (Fs)
+            delete Fs;
+
+        delete Server;
     }
 }
