@@ -71,8 +71,6 @@ public:
     virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode);
     virtual TFile *OpenFile(TDir *ParentDir, int ParentIndex, long long Inode);
 
-    void Run();
-
     void Test();
 
     int FatSize;

@@ -536,10 +536,14 @@ m09 DD OFFSET LocalOpenFile
 m10 DD OFFSET LocalCloseFile
 
 WaitForMsg_    Proc near
-    pushad
-
-wfmLoop:
     push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    xor eax,eax
     WaitForVfsCmd
     jc wfmDone
 ;
@@ -553,39 +557,17 @@ wfmLoop:
     mov edx,[edi].fc_edx
     shl ebp,2
     call dword ptr [ebp].msgtab
-;
-    pop ebx
-    jmp wfmLoop
+    mov eax,1
 
 wfmDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
     pop ebx
-;
-    popad
     ret
 WaitForMsg_    Endp
-
-    public WaitForSingleMsg_
-
-WaitForSingleMsg_    Proc near
-    pushad
-    WaitForVfsCmd
-    jc wfsmDone
-;
-    mov edi,edx
-    mov [edi].fc_handle,ebx
-    mov eax,[edi].fc_eax
-    mov ebx,[edi].fc_ebx
-    mov ecx,[edi].fc_ecx
-    mov esi,[edi].fc_esi
-    mov ebp,[edi].fc_op
-    mov edx,[edi].fc_edx
-    shl ebp,2
-    call dword ptr [ebp].msgtab
-
-wfsmDone:
-    popad
-    ret
-WaitForSingleMsg_    Endp
 
 _TEXT   ends
 

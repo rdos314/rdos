@@ -216,7 +216,7 @@ int main(int argc, char **argv)
         Server->OnStop = StopFs;
 
         while (!Started && !Stopped)
-            Server->WaitForSingleMsg();
+            Server->WaitForMsg();
 
         if (Fs)
             Fs->Run();

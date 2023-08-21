@@ -103,8 +103,8 @@ public:
     long long GetPartSectors();
     int GetBytesPerSector();
 
-    void WaitForSingleMsg();
-    void WaitForMsg(TFs *fs);
+    bool WaitForMsg();
+    bool WaitForMsg(TFs *fs);
     bool IsActive();
 
     void (*OnStart)(TPartServer *Server);

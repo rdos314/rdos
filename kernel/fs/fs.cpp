@@ -399,6 +399,7 @@ TFs::TFs(TPartServer *server)
     int i;
 
     FServer = server;
+    FStopped = false;
 
     FBytesPerSector = FServer->GetBytesPerSector();
     FStartSector = FServer->GetPartStartSector();
@@ -458,6 +459,22 @@ TFs::~TFs()
             delete FFileArr[i];
 
     delete FFileArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Stop
+#
+#   Purpose....: Stop server
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Stop()
+{
+    FStopped = true;
 }
 
 /*##########################################################################
@@ -1304,4 +1321,22 @@ void TFs::Execute()
 
     FServerActive = false;
 
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::Run
+#
+#   Purpose....: Run
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::Run()
+{
+    while (!FStopped)
+        if (!FServer->WaitForMsg(this))
+            break;
 }

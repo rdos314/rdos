@@ -37,11 +37,8 @@ static TFs *Fs = 0;
 
 extern "C" {
 
-extern void WaitForMsg(int handle);
-#pragma aux WaitForMsg parm routine [ebx]
-
-extern void WaitForSingleMsg(int handle);
-#pragma aux WaitForSingleMsg parm routine [ebx]
+extern int WaitForMsg(int handle);
+#pragma aux WaitForMsg parm routine [ebx] value [eax]
 
 void Start()
 {
@@ -548,6 +545,7 @@ TPartServer::TPartServer()
 ##########################################################################*/
 TPartServer::~TPartServer()
 {
+    ServDisableVfsPartition(handle);
 }
 
 /*##########################################################################
@@ -597,7 +595,8 @@ void TPartServer::Stop()
 {
     (*OnStop)(this);
 
-    ServDisableVfsPartition(handle);
+    if (Fs)
+        Fs->Stop();
 }
 
 /*##########################################################################
@@ -712,9 +711,9 @@ int TPartServer::GetBytesPerSector()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPartServer::WaitForSingleMsg()
+bool TPartServer::WaitForMsg()
 {
-    ::WaitForSingleMsg(handle);
+    return ::WaitForMsg(handle);
 }
 
 /*##########################################################################
@@ -728,8 +727,8 @@ void TPartServer::WaitForSingleMsg()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPartServer::WaitForMsg(TFs *fs)
+bool TPartServer::WaitForMsg(TFs *fs)
 {
     Fs = fs;
-    ::WaitForMsg(handle);
+    return ::WaitForMsg(handle);
 }

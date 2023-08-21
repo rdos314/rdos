@@ -78,6 +78,9 @@ public:
     TFs(TPartServer *server);
     virtual ~TFs();
 
+    virtual void Stop();
+    virtual void Run();
+
     virtual long long GetFreeSectors() = 0;
     virtual TDir *CacheRootDir() = 0;
     virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode) = 0;
@@ -144,6 +147,7 @@ protected:
     int FCurrPendCount;
     int FMaxPendCount;
 
+    bool FStopped;
     TPartServer *FServer;
 };
 
