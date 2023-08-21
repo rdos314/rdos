@@ -96,11 +96,17 @@ public:
 
     int GetHandle();
 
+    void Start();
+    void Stop();
+
     long long GetPartStartSector();
     long long GetPartSectors();
     int GetBytesPerSector();
     void WaitForMsg(TFs *fs);
     bool IsActive();
+
+    void (*OnStart)(TPartServer *Server);
+    void (*OnStop)(TPartServer *Server);
 
 protected:
     void Add(int id, TPartReq *req);

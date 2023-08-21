@@ -32,7 +32,8 @@
 #include "fs.h"
 
 static int handle = 0;
-static TFs *Server = 0;
+static TPartServer *Server = 0;
+static TFs *Fs = 0;
 
 extern "C" {
 
@@ -41,22 +42,37 @@ extern void WaitForMsg(int handle);
 
 void Start()
 {
+    bool wait = true;
+
+    while (wait)
+        RdosWaitMilli(250);
+
+    while (!Server)
+        RdosWaitMilli(50);
+
     Server->Start();
 }
 
 void Stop()
 {
-    Server->Stop();
+    if (Server)
+        Server->Stop();
 }
 
 long long GetFreeSectors()
 {
-    return Server->GetFreeSectors();
+    if (Fs)
+        return Fs->GetFreeSectors();
+    else
+        return 0;
 }
 
 struct TShareHeader *GetDir(int rel, char *path, int *count)
 {
-    return Server->GetDir(rel, path, count);
+    if (Fs)
+        return Fs->GetDir(rel, path, count);
+    else
+        return 0;
 }
 
 int GetDirHeaderSize()
@@ -66,54 +82,75 @@ int GetDirHeaderSize()
 
 int GetDirEntryAttrib(int rel, char *path)
 {
-    return Server->GetDirEntryAttrib(rel, path);
+    if (Fs)
+        return Fs->GetDirEntryAttrib(rel, path);
+    else
+        return -1;
 }
 
 int LockRelDir(int rel, char *path)
 {
-    return Server->LockRelDir(rel, path);
+    if (Fs)
+        return Fs->LockRelDir(rel, path);
+    else
+        return 0;
 }
 
 void CloneRelDir(int rel)
 {
-    Server->CloneRelDir(rel);
+    if (Fs)
+        Fs->CloneRelDir(rel);
 }
 
 void UnlockRelDir(int rel)
 {
-    Server->UnlockRelDir(rel);
+    if (Fs)
+        Fs->UnlockRelDir(rel);
 }
 
 int GetRelDir(int rel, char *path)
 {
-    return Server->GetRelDir(rel, path);
+    if (Fs)
+        return Fs->GetRelDir(rel, path);
+    else
+        return 0;
 }
 
 void ReadDirLink(void *d, int index)
 {
     TDir *dir = (TDir *)d;
 
-    return Server->ReadDirLink(dir, index);
+    if (Fs)
+        Fs->ReadDirLink(dir, index);
 }
 
 int OpenFile(int rel, char *path)
 {
-    return Server->OpenFile(rel, path);
+    if (Fs)
+        return Fs->OpenFile(rel, path);
+    else
+        return 0;
 }
 
 int GetFileAttrib(int handle)
 {
-    return Server->GetFileAttrib(handle);
+    if (Fs)
+        return Fs->GetFileAttrib(handle);
+    else
+        return -1;
 }
 
 int GetFileHandle(int handle)
 {
-    return Server->GetFileHandle(handle);
+    if (Fs)
+        return Fs->GetFileHandle(handle);
+    return 0;
 }
 
 void CloseFile(int handle)
 {
-    Server->CloseFile(handle);
+    if (Fs)
+        Fs->CloseFile(handle);
 }
 
 }
@@ -488,7 +525,12 @@ TPartServer::TPartServer()
     char str[40];
     int i;
 
+    Server = this;
+
     FActive = true;
+
+    OnStart = 0;
+    OnStop = 0;
 
     if (!handle)
         handle = ServGetVfsHandle();
@@ -526,6 +568,41 @@ TPartServer::~TPartServer()
 int TPartServer::GetHandle()
 {
     return handle;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartServer::Start
+#
+#   Purpose....: Start filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartServer::Start()
+{
+    while (!OnStart)
+        RdosWaitMilli(50);
+
+    (*OnStart)(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TPartServer::Stop
+#
+#   Purpose....: Stop filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartServer::Stop()
+{
+    (*OnStop)(this);
 }
 
 /*##########################################################################
@@ -642,6 +719,6 @@ int TPartServer::GetBytesPerSector()
 ##########################################################################*/
 void TPartServer::WaitForMsg(TFs *fs)
 {
-    Server = fs;
+    Fs = fs;
     return ::WaitForMsg(handle);
 }
