@@ -13,7 +13,6 @@
 #include "fat32.h"
 
 bool Started = false;
-bool Stopped = false;
 TFat *Fs = 0;
 const char *FsName = 0;
 
@@ -67,6 +66,7 @@ void StartFs(TPartServer *Server)
     TPartReqEntry e1(&req, 0, 1);
     int FatSize;
 
+    Started = true;
     Fs = 0;
 
     req.WaitForever();
@@ -76,14 +76,12 @@ void StartFs(TPartServer *Server)
     if (!boot)
     {
         printf("Cannot read boot sector\r\n");
-        Stopped = true;
         return;
     }
 
     if (boot->BytesPerSector != 512)
     {
         printf("Unexpected bytes per sector: %d\r\n", boot->BytesPerSector);
-        Stopped = true;
         return;
     }
 
@@ -148,39 +146,13 @@ void StartFs(TPartServer *Server)
 
     if (Fs)
     {
-        if (Fs->Validate())
-            Started = true;
-        else
+        if (!Fs->Validate())
         {
             LogError(Server, Fs);
             delete Fs;
             Fs = 0;
-            Stopped = true;
         }
     }
-    else
-        Stopped = true;
-}
-
-/*##########################################################################
-#
-#   Name       : StopFs
-#
-#   Purpose....: Stop filesystem
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void StopFs(TPartServer *Server)
-{
-    if (Fs)
-       delete Fs;
-
-    Fs = 0;
-
-    Stopped = true;
 }
 
 /*##########################################################################
@@ -213,9 +185,8 @@ int main(int argc, char **argv)
 
         Server = new TPartServer;
         Server->OnStart = StartFs;
-        Server->OnStop = StopFs;
 
-        while (!Started && !Stopped)
+        while (!Started)
             Server->WaitForMsg();
 
         if (Fs)

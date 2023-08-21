@@ -108,7 +108,6 @@ public:
     bool IsActive();
 
     void (*OnStart)(TPartServer *Server);
-    void (*OnStop)(TPartServer *Server);
 
 protected:
     void Add(int id, TPartReq *req);

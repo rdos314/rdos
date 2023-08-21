@@ -523,7 +523,6 @@ TPartServer::TPartServer()
     FActive = true;
 
     OnStart = 0;
-    OnStop = 0;
 
     if (!handle)
         handle = ServGetVfsHandle();
@@ -593,8 +592,6 @@ void TPartServer::Start()
 ##########################################################################*/
 void TPartServer::Stop()
 {
-    (*OnStop)(this);
-
     if (Fs)
         Fs->Stop();
 }
