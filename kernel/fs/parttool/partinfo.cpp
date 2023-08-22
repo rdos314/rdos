@@ -173,21 +173,35 @@ void TInfoCommand::ShowPart(TPartition *part)
 ##########################################################################*/
 void TInfoCommand::ShowDisc(TDisc *disc)
 {
-    long long TotalSectors = disc->FSectorCount;
+    long long TotalSectors = 0;
     const char *parttype;
     int i;
 
-    if (disc->IsGpt())
-        parttype = "GPT";
+    if (disc)
+    {
+        TotalSectors = disc->FSectorCount;
+
+        if (disc->IsGpt())
+            parttype = "GPT";
+        else
+            parttype = "MBR";
+    }
     else
-        parttype = "MBR";
+    {
+        TotalSectors = FServer->GetDiscSectors();
+        parttype = "NONE";
+    }
 
     FMsg.printf("%s: %04lX_%08lX sectors\r\n", parttype, (int)(TotalSectors >> 32), (int)(TotalSectors & 0xFFFFFFFF));
     Write(FMsg);
-    Write("HANDLE SECTORS                     FILESYS\r\n");
 
-    for (i = 0; i < disc->FCurrPartCount; i++)
-        ShowPart(disc->FPartArr[i]);
+    if (disc)
+    {
+        Write("HANDLE SECTORS                     FILESYS\r\n");
+
+        for (i = 0; i < disc->FCurrPartCount; i++)
+            ShowPart(disc->FPartArr[i]);
+    }
 }
 
 /*##########################################################################
@@ -206,9 +220,7 @@ int TInfoCommand::Execute(char *param)
     TDisc *disc = FServer->GetDisc();
 
     ShowHeader();
-
-    if (disc)
-        ShowDisc(disc);
+    ShowDisc(disc);
 
     return 0;
 }
