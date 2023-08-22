@@ -73,12 +73,15 @@ int main(int argc, char **argv)
         dev = atoi(ptr);
 
         Server = new TDiscServer;
+        init = new TInitFactory(Server);
+        info = new TInfoFactory(Server);
+
         Disc = CreateDisc(Server);
-        Disc->LoadPart();
+        if (Disc)
+            Disc->LoadPart();
 
-        init = new TInitFactory(Disc);
-        info = new TInfoFactory(Disc);
 
-        Disc->Run();
+        if (Disc)
+            Disc->Run();
     }
 }

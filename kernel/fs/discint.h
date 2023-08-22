@@ -96,10 +96,12 @@ public:
     ~TDiscServer();
 
     int GetHandle();
+    TDisc *GetDisc();
 
     long long GetDiscSectors();
     int GetBytesPerSector();
-    void WaitForMsg(TDisc *disc);
+    void RunCmd(int handle, char *msg);
+    int WaitForMsg(TDisc *disc);
     bool IsActive();
 
 protected:

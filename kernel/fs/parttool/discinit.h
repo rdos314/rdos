@@ -35,22 +35,22 @@
 class TInitFactory : public TCommandFactory
 {
 public:
-    TInitFactory(TDisc *Disc);
+    TInitFactory(TDiscServer *Server);
     virtual TCommand *Create(TCommandOutput *out, const char *param);
 
 protected:
-    TDisc *FDisc;
+    TDiscServer *FServer;
 };
 
 class TInitCommand : public TCommand
 {
 public:
-    TInitCommand(TDisc *disc, TCommandOutput *out, const char *param);
+    TInitCommand(TDiscServer *server, TCommandOutput *out, const char *param);
 
     virtual int Execute(char *param);
 
 protected:
-    TDisc *FDisc;
+    TDiscServer *FServer;
 };
 
 #endif

@@ -45,10 +45,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TInfoFactory::TInfoFactory(TDisc *Disc)
+TInfoFactory::TInfoFactory(TDiscServer *Server)
   : TCommandFactory("INFO")
 {
-    FDisc = Disc;
+    FServer = Server;
 }
 
 /*##########################################################################
@@ -64,7 +64,7 @@ TInfoFactory::TInfoFactory(TDisc *Disc)
 ##########################################################################*/
 TCommand *TInfoFactory::Create(TCommandOutput *out, const char *param)
 {
-    return new TInfoCommand(FDisc, out, param);
+    return new TInfoCommand(FServer, out, param);
 }
 
 /*##########################################################################
@@ -78,11 +78,11 @@ TCommand *TInfoFactory::Create(TCommandOutput *out, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TInfoCommand::TInfoCommand(TDisc *disc, TCommandOutput *out, const char *param)
+TInfoCommand::TInfoCommand(TDiscServer *server, TCommandOutput *out, const char *param)
   : TCommand(out, param)
 {
     FHelpScreen = "Show parttool info";
-    FDisc = disc;
+    FServer = server;
 }
 
 /*##########################################################################
@@ -96,16 +96,16 @@ TInfoCommand::TInfoCommand(TDisc *disc, TCommandOutput *out, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TInfoCommand::ShowHeader()
+void TInfoCommand::ShowHeader(TDisc *disc)
 {
     char str[256];
-    long long CacheSize = FDisc->GetCached();
-    long long LockSize = FDisc->GetLocked();
+    long long CacheSize = disc->GetCached();
+    long long LockSize = disc->GetLocked();
     long double cached;
     long double locked;
 
-    RdosGetDiscVendorInfo(FDisc->GetDiscNr(), str, 256);
-    FMsg.printf("Disc %d, %s\r\n", FDisc->GetDiscNr(), str);
+    RdosGetDiscVendorInfo(disc->GetDiscNr(), str, 256);
+    FMsg.printf("Disc %d, %s\r\n", disc->GetDiscNr(), str);
     Write(FMsg);
 
     cached = (long double)CacheSize / 1024.0 / 1024.0;
@@ -170,13 +170,13 @@ void TInfoCommand::ShowPart(TPartition *part)
 #   Returns....: *
 #
 ##########################################################################*/
-void TInfoCommand::ShowDisc()
+void TInfoCommand::ShowDisc(TDisc *disc)
 {
-    long long TotalSectors = FDisc->FSectorCount;
+    long long TotalSectors = disc->FSectorCount;
     const char *parttype;
     int i;
 
-    if (FDisc->IsGpt())
+    if (disc->IsGpt())
         parttype = "GPT";
     else
         parttype = "MBR";
@@ -185,8 +185,8 @@ void TInfoCommand::ShowDisc()
     Write(FMsg);
     Write("HANDLE SECTORS                     FILESYS\r\n");
 
-    for (i = 0; i < FDisc->FCurrPartCount; i++)
-        ShowPart(FDisc->FPartArr[i]);
+    for (i = 0; i < disc->FCurrPartCount; i++)
+        ShowPart(disc->FPartArr[i]);
 }
 
 /*##########################################################################
@@ -202,8 +202,13 @@ void TInfoCommand::ShowDisc()
 ##########################################################################*/
 int TInfoCommand::Execute(char *param)
 {
-    ShowHeader();
-    ShowDisc();
+    TDisc *disc = FServer->GetDisc();
+
+    if (disc)
+    {
+        ShowHeader(disc);
+        ShowDisc(disc);
+    }
 
     return 0;
 }

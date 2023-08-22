@@ -35,26 +35,26 @@
 class TInfoFactory : public TCommandFactory
 {
 public:
-    TInfoFactory(TDisc *Disc);
+    TInfoFactory(TDiscServer *Server);
     virtual TCommand *Create(TCommandOutput *out, const char *param);
 
 protected:
-    TDisc *FDisc;
+    TDiscServer *FServer;
 };
 
 class TInfoCommand : public TCommand
 {
 public:
-    TInfoCommand(TDisc *disc, TCommandOutput *out, const char *param);
+    TInfoCommand(TDiscServer *server, TCommandOutput *out, const char *param);
 
     virtual int Execute(char *param);
 
 protected:
-    void ShowHeader();
+    void ShowHeader(TDisc *disc);
     void ShowPart(TPartition *part);
-    void ShowDisc();
+    void ShowDisc(TDisc *disc);
 
-    TDisc *FDisc;
+    TDiscServer *FServer;
 };
 
 #endif

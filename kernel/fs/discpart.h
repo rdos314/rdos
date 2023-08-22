@@ -70,6 +70,8 @@ public:
     virtual void Stop();
     void Run();
 
+    bool IsStopped();
+
     TDiscServer *GetServer();
     int GetDiscNr();
 
@@ -80,7 +82,6 @@ public:
     void Remove(TPartition *part);
 
     virtual bool IsGpt() = 0;
-    virtual int RunCmd(int handle, char *msg);
 
     int ReadSector(long long, char *buf, int size);
     int WriteSector(long long, char *buf, int size);

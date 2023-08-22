@@ -183,10 +183,14 @@ m12 DD OFFSET LocalRead
 m13 DD OFFSET LocalWrite
 
 WaitForMsg_    Proc near
-    pushad
-
-wfmLoop:
     push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    xor eax,eax
     WaitForVfsCmd
     jc wfmDone
 ;
@@ -200,14 +204,15 @@ wfmLoop:
     mov edx,[edi].fc_edx
     shl ebp,2
     call dword ptr [ebp].msgtab
-;
-    pop ebx
-    jmp wfmLoop
+    mov eax,1
 
 wfmDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
     pop ebx
-;
-    popad
     ret
 WaitForMsg_    Endp
 

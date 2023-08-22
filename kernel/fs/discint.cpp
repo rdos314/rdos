@@ -30,28 +30,30 @@
 #include <serv.h>
 #include "discint.h"
 #include "discpart.h"
+#include "cmdfact.h"
 
 static int handle = -1;
-static TDisc *Server = 0;
+static TDisc *Disc = 0;
+static TDiscServer *Server = 0;
 
 extern "C" {
 
-extern void WaitForMsg(int handle);
-#pragma aux WaitForMsg parm routine [ebx]
+extern int WaitForMsg(int handle);
+#pragma aux WaitForMsg parm routine [ebx] value [eax]
 
-int RunCmd(int handle, char *cmd)
+void RunCmd(int handle, char *cmd)
 {
-    return Server->RunCmd(handle, cmd);
+    Server->RunCmd(handle, cmd);
 }
 
 int ReadSector(long long sector, char *buf, int size)
 {
-    return Server->ReadSector(sector, buf, size);
+    return Disc->ReadSector(sector, buf, size);
 }
 
 int WriteSector(long long sector, char *buf, int size)
 {
-    return Server->WriteSector(sector, buf, size);
+    return Disc->WriteSector(sector, buf, size);
 }
 
 }
@@ -443,6 +445,7 @@ TDiscServer::TDiscServer()
     int i;
 
     FActive = true;
+    Server = this;
 
     if (handle == -1)
         handle = ServGetVfsHandle();
@@ -480,6 +483,22 @@ TDiscServer::~TDiscServer()
 int TDiscServer::GetHandle()
 {
     return handle;
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscServer::GetDisc
+#
+#   Purpose....: Get disc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDisc *TDiscServer::GetDisc()
+{
+    return Disc;
 }
 
 /*##########################################################################
@@ -568,6 +587,23 @@ int TDiscServer::GetBytesPerSector()
 
 /*##########################################################################
 #
+#   Name       : TDiscServer::RunCmd
+#
+#   Purpose....: Run command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDiscServer::RunCmd(int handle, char *msg)
+{
+    TCommandOutput out(handle);
+    TCommandFactory::Run(&out, msg);
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscServer::WaitForMsg
 #
 #   Purpose....: Wait for msg
@@ -577,9 +613,9 @@ int TDiscServer::GetBytesPerSector()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscServer::WaitForMsg(TDisc *disc)
+int TDiscServer::WaitForMsg(TDisc *disc)
 {
-    Server = disc;
+    Disc = disc;
 
     return ::WaitForMsg(handle);
 }

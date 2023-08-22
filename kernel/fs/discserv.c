@@ -25,7 +25,7 @@
 #
 ########################################################################*/
 
-int RunCmd(int handle, char *msg);
+void RunCmd(int handle, char *msg);
 int ReadSector(long long sector, char *buf, int size);
 int WriteSector(long long sector, char *buf, int size);
 
@@ -35,9 +35,9 @@ int WriteSector(long long sector, char *buf, int size);
 #
 ##########################################################################*/
 #pragma aux LowCmd "*" parm routine [ebx] [edi] value [eax]
-int LowCmd(int handle, char *msg)
+void LowCmd(int handle, char *msg)
 {
-    return RunCmd(handle, msg);
+    RunCmd(handle, msg);
 }
 
 /*##########################################################################

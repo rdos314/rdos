@@ -45,10 +45,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TInitFactory::TInitFactory(TDisc *Disc)
+TInitFactory::TInitFactory(TDiscServer *Server)
   : TCommandFactory("INIT")
 {
-    FDisc = Disc;
+    FServer = Server;
 }
 
 /*##########################################################################
@@ -64,7 +64,7 @@ TInitFactory::TInitFactory(TDisc *Disc)
 ##########################################################################*/
 TCommand *TInitFactory::Create(TCommandOutput *out, const char *param)
 {
-    return new TInitCommand(FDisc, out, param);
+    return new TInitCommand(FServer, out, param);
 }
 
 /*##########################################################################
@@ -78,11 +78,11 @@ TCommand *TInitFactory::Create(TCommandOutput *out, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TInitCommand::TInitCommand(TDisc *disc, TCommandOutput *out, const char *param)
+TInitCommand::TInitCommand(TDiscServer *server, TCommandOutput *out, const char *param)
   : TCommand(out, param)
 {
     FHelpScreen = "Init disc";
-    FDisc = disc;
+    FServer = server;
 }
 
 /*##########################################################################
@@ -102,8 +102,6 @@ int TInitCommand::Execute(char *param)
 
     str.printf("Creating %s disc\r\n", param);
     Write(str.GetData());
-
-    FDisc->Stop();
 
     return 0;
 }

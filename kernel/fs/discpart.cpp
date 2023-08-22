@@ -31,7 +31,6 @@
 #include <serv.h>
 #include "str.h"
 #include "discpart.h"
-#include "cmdfact.h"
 
 /*##########################################################################
 #
@@ -210,24 +209,6 @@ TDisc::~TDisc()
             DeletePart(FPartArr[i]);
 
     delete FPartArr;
-}
-
-/*##########################################################################
-#
-#   Name       : TDisc::RunCmd
-#
-#   Purpose....: Run cmd
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TDisc::RunCmd(int handle, char *msg)
-{
-    TCommandOutput out(handle);
-    TCommandFactory::Run(&out, msg);
-    return true;
 }
 
 /*##########################################################################
@@ -579,5 +560,7 @@ void TDisc::Stop()
 ##########################################################################*/
 void TDisc::Run()
 {
-    FServer->WaitForMsg(this);
+    while (!FStopped)
+        if (!FServer->WaitForMsg(this))
+            break;
 }
