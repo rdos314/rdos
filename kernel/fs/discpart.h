@@ -66,6 +66,7 @@ public:
     TDisc(TDiscServer *server);
     virtual ~TDisc();
 
+    virtual void InitPart() = 0;
     virtual void LoadPart();
     virtual void Stop();
 

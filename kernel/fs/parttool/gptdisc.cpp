@@ -337,3 +337,18 @@ void TGptDisc::LoadPart()
 
     TDisc::LoadPart();
 }
+
+/*##########################################################################
+#
+#   Name       : TGptDisc::InitPart
+#
+#   Purpose....: Init partitions
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TGptDisc::InitPart()
+{
+}

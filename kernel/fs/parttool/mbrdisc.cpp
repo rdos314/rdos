@@ -451,3 +451,18 @@ void TMbrDisc::LoadPart()
 
     TDisc::LoadPart();
 }
+
+/*##########################################################################
+#
+#   Name       : TMbrDisc::InitPart
+#
+#   Purpose....: Init partitions
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMbrDisc::InitPart()
+{
+}

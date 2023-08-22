@@ -94,6 +94,7 @@ public:
     ~TGptDisc();
 
     virtual bool IsGpt();
+    virtual void InitPart();
     virtual void LoadPart();
 
     TGptTable PrimaryTable;

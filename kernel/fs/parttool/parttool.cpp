@@ -32,6 +32,15 @@ static TDisc *Disc = 0;
 void InitDisc(TDiscServer *Server, const char *PartType)
 {
     Disc = 0;
+
+    if (!strcmp(PartType, "mbr"))
+        Disc = new TMbrDisc(Server);
+
+    if (!strcmp(PartType, "gpt"))
+        Disc = new TGptDisc(Server);
+
+    if (Disc)
+        Disc->InitPart();
 }
 
 /*##########################################################################

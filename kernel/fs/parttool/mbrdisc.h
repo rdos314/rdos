@@ -113,6 +113,7 @@ public:
 
     virtual bool IsGpt();
     virtual void LoadPart();    
+    virtual void InitPart();    
 
     TMbrPartitionTable PartRoot;
 
