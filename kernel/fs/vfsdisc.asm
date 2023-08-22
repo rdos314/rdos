@@ -893,6 +893,28 @@ gdlDone:
 get_disc_locked   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseVfsPart
+;
+;       DESCRIPTION:    Close partition
+;
+;       PARAMETERS:     EBX         Partition handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_close_part_name       DB 'Close VFS Part',0
+
+serv_close_part    Proc far
+    push es
+    pushad
+;
+    popad
+    pop es
+    ret
+serv_close_part   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_disc
@@ -915,6 +937,12 @@ init_disc    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET serv_close_part
+    mov edi,OFFSET serv_close_part_name
+    xor cl,cl
+    mov ax,serv_close_part_nr
+    RegisterServGate
 ;
     mov esi,OFFSET get_vfs_disc_info
     mov edi,OFFSET get_vfs_disc_info_name
