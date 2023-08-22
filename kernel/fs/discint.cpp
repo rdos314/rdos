@@ -553,6 +553,7 @@ bool TDiscServer::IsActive()
 
     return FActive;
 }
+
 /*##########################################################################
 #
 #   Name       : TDiscServer::GetDiscSectors
@@ -583,6 +584,24 @@ long long TDiscServer::GetDiscSectors()
 int TDiscServer::GetBytesPerSector()
 {
     return ServGetVfsBytesPerSector(handle);
+}
+
+/*##########################################################################
+#
+#   Name       : TDiscServer::InitDisc
+#
+#   Purpose....: Init disc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDiscServer::InitDisc(const char *parttype)
+{
+    FPartType = parttype;
+    if (Disc)
+        Disc->Stop();
 }
 
 /*##########################################################################

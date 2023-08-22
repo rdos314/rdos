@@ -103,5 +103,7 @@ int TInitCommand::Execute(char *param)
     str.printf("Creating %s disc\r\n", param);
     Write(str.GetData());
 
+    FServer->InitDisc(param);
+
     return 0;
 }

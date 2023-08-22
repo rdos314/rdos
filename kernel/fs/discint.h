@@ -28,6 +28,7 @@
 #ifndef _DISCINT_H
 #define _DISCINT_H
 
+#include "str.h"
 #include "thread.h"
 #include "datetime.h"
 
@@ -104,9 +105,13 @@ public:
     int WaitForMsg(TDisc *disc);
     bool IsActive();
 
+    void InitDisc(const char *parttype);
+
 protected:
     void Add(int id, TDiscReq *req);
     void Remove(int id);
+
+    TString FPartType;
 
     bool FActive;
     TDiscReq *FReqArr[MAX_DISC_REQ_COUNT];
