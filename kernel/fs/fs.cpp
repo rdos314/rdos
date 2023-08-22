@@ -483,6 +483,11 @@ void TFs::Stop()
         while (FServerActive)
             RdosWaitMilli(50);
     }
+
+    if (FQueueArr)
+        RdosFreeMem(FQueueArr);
+
+    FQueueArr = 0;
 }
 
 /*##########################################################################
@@ -713,6 +718,9 @@ TDir *TFs::GetStartDir(int rel)
 {
     TDir *dir;
 
+    if (FStopped)
+        return 0;
+
     if (FCurrDirCount == 0)
     {
         FDirArr[0] = CacheRootDir();
@@ -745,6 +753,9 @@ struct TShareHeader *TFs::GetDir(int rel, char *path, int *count)
 {
     TDir *dir;
     TParser Parser(GetStartDir(rel), path);
+
+    if (FStopped)
+        return 0;
 
     while (!Parser.IsDone())
     {
@@ -780,6 +791,9 @@ int TFs::GetDirEntryAttrib(int rel, char *path)
 {
     TParser Parser(GetStartDir(rel), path);
     struct RdosDirEntry *entry;
+
+    if (FStopped)
+        return -1;
 
     while (!Parser.IsLast())
     {
@@ -817,6 +831,9 @@ int TFs::LockRelDir(int rel, char *path)
 {
     TDir *dir;
     TParser Parser(GetStartDir(rel), path);
+
+    if (FStopped)
+        return -1;
 
     while (!Parser.IsDone())
     {
@@ -965,6 +982,9 @@ int TFs::OpenFile(int rel, char *path)
 {
     TParser Parser(GetStartDir(rel), path);
     TFile *file;
+
+    if (FStopped)
+        return -1;
 
     while (!Parser.IsLast())
     {
@@ -1123,8 +1143,11 @@ void TFs::StartServer()
     int Disc = ServGetVfsDisc(Handle);
     int Part = ServGetVfsPart(Handle);
 
-    sprintf(ThreadName, "File IO %02hX.%02hX", Disc, Part);
-    RdosCreateThread(ThreadStartup, ThreadName, this, 0x2000);
+    if (!FStopped)
+    {
+        sprintf(ThreadName, "File IO %02hX.%02hX", Disc, Part);
+        RdosCreateThread(ThreadStartup, ThreadName, this, 0x2000);
+    }
 }
 
 /*##########################################################################
