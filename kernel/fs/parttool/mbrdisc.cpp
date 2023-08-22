@@ -32,6 +32,8 @@
 #include <serv.h>
 #include "mbrdisc.h"
 
+#define BOOT_LOADER_SECTORS     16
+
 /*##########################################################################
 #
 #   Name       : TMbrPartition::TMbrPartition
@@ -465,4 +467,115 @@ void TMbrDisc::LoadPart()
 ##########################################################################*/
 void TMbrDisc::InitPart()
 {
+    LoadBootLoader();
+    WriteBootLoader();
+    WriteBootSector();
+   
+    delete FBootLoader;
+    FBootLoader = 0;
 }
+
+/*##########################################################################
+#
+#   Name       : TMbrDisc::LoadBootLoader
+#
+#   Purpose....: Load boot loader into memory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMbrDisc::LoadBootLoader()
+{
+    FBootLoader = new char[512 * BOOT_LOADER_SECTORS];
+
+    memset(FBootLoader, 0, 512 * BOOT_LOADER_SECTORS);
+    FLoaderSize = RdosReadBinaryResource(0, 101, FBootLoader, 512 * BOOT_LOADER_SECTORS);
+
+    FLoaderSectors = 1 + (FLoaderSize - 1) / 512;
+}
+
+/*##########################################################################
+#
+#   Name       : TMbrDisc::WriteBootSector
+#
+#   Purpose....: Write boot sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMbrDisc::WriteBootSector()
+{
+    TDiscReq req(FServer);
+    TDiscReqEntry e1(&req, 0, 1, false);
+    char *Data;
+    char *BootSector;
+    TBootParamBlock *bootp;
+
+    req.WaitForever();
+
+    Data = (char *)e1.Map();
+
+    BootSector = new char[512];
+    RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
+    memcpy(BootSector + 11, Data + 11, sizeof(TBootParamBlock));
+    
+    bootp = (TBootParamBlock *)(BootSector + 11);
+
+    bootp->BytesPerSector = FServer->GetBytesPerSector();
+    bootp->Resv1 = 1;
+    bootp->MappingSectors = FLoaderSectors;
+    bootp->Resv3 = 0;
+    bootp->Resv4 = 0;
+    bootp->SmallSectors = 0;
+    bootp->Media = 0xF1;
+    bootp->Resv6 = 0;
+//  bootp->SectorsPerCyl = Disc->GetSectorsPerCyl();
+//  bootp->Heads = Disc->GetHeads();
+    bootp->HiddenSectors = FLoaderSectors;
+    bootp->Sectors = FServer->GetDiscSectors();
+//  bootp->Drive = 0x80 + IdeDisc;
+    bootp->Resv7 = 0;
+    bootp->Signature = 0;
+    bootp->Serial = 0;
+    memset(bootp->Volume, 0, 11);
+    memcpy(bootp->Fs, "RDOS    ", 8);
+
+    BootSector[0x1FE] = 0x55;
+    BootSector[0x1FF] = 0xAA;
+
+    memcpy(Data, BootSector, 512);
+    e1.Write();
+
+    delete BootSector;
+}
+
+/*##########################################################################
+#
+#   Name       : TMbrDisc::WriteBootLoader
+#
+#   Purpose....: Write boot loader
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMbrDisc::WriteBootLoader()
+{
+    TDiscReq req(FServer);
+    TDiscReqEntry e1(&req, 1, FLoaderSectors, true);
+    char *Data;
+
+    req.WaitForever();
+
+    Data = (char *)e1.Map();
+
+    memcpy(Data, FBootLoader, FLoaderSize);
+
+    e1.Write();
+}
+

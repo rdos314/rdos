@@ -118,11 +118,19 @@ public:
     TMbrPartitionTable PartRoot;
 
 protected:
+    void LoadBootLoader();
+    void WriteBootSector();
+    void WriteBootLoader();
+
     void AddPossibleFs(struct TMbrPartition *part);
     void AddFsParts(struct TMbrPartitionTable *table);
 
     int FSectorsPerCyl;
     int FHeads;
+
+    int FLoaderSectors;
+    char *FBootLoader;
+    int FLoaderSize;
 };
 
 #endif
