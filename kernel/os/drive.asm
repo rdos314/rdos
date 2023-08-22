@@ -3105,6 +3105,40 @@ allocate_vfs_drive  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CloseVfsDrive
+;
+;           DESCRIPTION:    Close VFS drive
+;
+;           PARAMETERS:     AL          Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_vfs_drive_name    DB 'Close VFS Drive',0
+
+close_vfs_drive     Proc far
+    push ds
+    push es
+    push ax
+    push bx
+;
+    movzx bx,al
+    shl bx,1
+;
+    mov ax,SEG data
+    mov ds,ax
+    xor ax,ax
+    mov [bx].drive_def_arr,ax
+;
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    retf32
+close_vfs_drive    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IsDiscIdle
 ;
 ;           DESCRIPTION:    Check if disc is idle
@@ -7857,6 +7891,11 @@ init    PROC far
     mov esi,OFFSET allocate_vfs_drive
     mov edi,OFFSET allocate_vfs_drive_name
     mov ax,allocate_vfs_drive_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET close_vfs_drive
+    mov edi,OFFSET close_vfs_drive_name
+    mov ax,close_vfs_drive_nr
     RegisterOsGate
 ;
     mov esi,OFFSET set_disc_param

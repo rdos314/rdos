@@ -3541,6 +3541,11 @@ AllocateVfsDrive     MACRO
                     ENDM
 
 ; IN  AL          Drive #
+CloseVfsDrive     MACRO
+    OsGate close_vfs_drive_nr
+                    ENDM
+
+; IN  AL          Drive #
 CheckVfsDrive     MACRO
     OsGate check_vfs_drive_nr
                     ENDM

@@ -44,6 +44,7 @@
 #define serv_gate_write_vfs_sectors 0x0000002B
 #define serv_gate_serv_disable_part 0x0000002C
 #define serv_gate_stop_vfs_io_serv 0x0000002D
+#define serv_gate_serv_close_part 0x0000002E
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -91,4 +92,5 @@
 #define ServGate_write_vfs_sectors 0x55 0x67 0x9a 43 0 0 0 4 0 0x5d
 #define ServGate_serv_disable_part 0x55 0x67 0x9a 44 0 0 0 4 0 0x5d
 #define ServGate_stop_vfs_io_serv 0x55 0x67 0x9a 45 0 0 0 4 0 0x5d
+#define ServGate_serv_close_part 0x55 0x67 0x9a 46 0 0 0 4 0 0x5d
 

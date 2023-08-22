@@ -118,7 +118,7 @@ code    SEGMENT byte public 'CODE'
     extern HandleToPartEs:near
     extern HandleToPartFs:near
     extern HandleToDisc:near
-    extern UnlinkPartFs:near
+    extern UnlinkPartEs:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -975,15 +975,26 @@ serv_load_part   Endp
 serv_close_part_name       DB 'Close VFS Part',0
 
 serv_close_part    Proc far
+    push ds
     push es
-    push fs
     pushad
 ;
-    call UnlinkPartFs
+    call UnlinkPartEs
+;
+    mov al,es:vfsp_drive_nr
+    CloseVfsDrive
+;
+    movzx ebx,al
+    shl ebx,1
+    mov ax,SEG data
+    mov ds,eax
+    mov ds:[ebx].drive_arr,0
+;
+    FreeMem
 ;
     popad
-    pop fs
     pop es
+    pop ds
     ret
 serv_close_part   Endp
 

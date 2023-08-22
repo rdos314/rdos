@@ -440,68 +440,68 @@ HandleToPartFs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UnlinkPartFs
+;       NAME:           UnlinkPartEs
 ;
-;       DESCRIPTION:    Unlink part FS and return part sel
+;       DESCRIPTION:    Unlink part ES and return part sel
 ;
 ;       PARAMETERS:     EBX         VFS Handle
 ;
-;       RETURNS:        FS          VFS part
+;       RETURNS:        ES          VFS part
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public UnlinkPartFs
+    public UnlinkPartEs
 
-UnlinkPartFs    Proc near
+UnlinkPartEs    Proc near
     push eax
     push esi
 ;
     or bh,bh
-    jz upfFail
+    jz upeFail
 ;
     mov eax,ebx
     shr eax,24
     cmp al,VFS_HANDLE_SIG
-    jne upfFail
+    jne upeFail
 ;
     mov ax,SEG data
-    mov fs,ax
+    mov es,ax
     movzx eax,bh
     dec ax
     cmp ax,MAX_DISC_COUNT
-    jb upfInRange
+    jb upeInRange
 
-upfFail:
+upeFail:
     stc
-    jmp upfDone
+    jmp upeDone
 
-upfInRange:
+upeInRange:
     movzx esi,bh
     dec esi
-    mov ax,fs:[2*esi].disc_arr
+    mov ax,es:[2*esi].disc_arr
     or ax,ax
-    jz upfFail
+    jz upeFail
 ;
-    mov fs,eax
+    mov es,eax
     movzx esi,bl
     or esi,esi
-    jz upfFail
+    jz upeFail
 ;
     dec esi
     xor ax,ax
-    xchg ax,fs:[2*esi].vfs_part_arr
+    xchg ax,es:[2*esi].vfs_part_arr
 ;
     or ax,ax
-    jz upfFail
+    jz upeFail
 ;
-    mov fs,ax
+    mov es,ax
     clc
 
-upfDone:
+upeDone:
     pop esi
     pop eax
     ret
-UnlinkPartFs    Endp
+UnlinkPartEs    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -544,6 +544,7 @@ TPartServer::TPartServer()
 ##########################################################################*/
 TPartServer::~TPartServer()
 {
+    RdosWaitMilli(25);
     ServCloseVfsPartition(handle);
 }
 

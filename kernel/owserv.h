@@ -160,6 +160,10 @@
     ServGate_serv_stop_part  \
     __parm [__ebx]
 
+#pragma aux ServCloseVfsPartition = \
+    ServGate_serv_close_part  \
+    __parm [__ebx]
+
 #pragma aux ServCreateVfsReq = \
     ServGate_create_vfs_req  \
     __parm [__ebx] \
