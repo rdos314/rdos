@@ -98,6 +98,7 @@ public:
 
     void Start();
     void Stop();
+    void Disable();
 
     long long GetPartStartSector();
     long long GetPartSectors();

@@ -393,6 +393,7 @@ CloneRelDir    Proc near
 ;
     movzx eax,ax
     call AllocateMsg
+    jc crdFail
 ;
     mov eax,VFS_CLONE_REL_DIR
     call RunMsg
@@ -436,6 +437,7 @@ FreeRelDir    Proc near
 ;
     movzx eax,ax
     call AllocateMsg
+    jc frdFail
 ;
     mov eax,VFS_UNLOCK_REL_DIR
     call RunMsg
@@ -725,17 +727,18 @@ get_vfs_cur_dir   Proc far
     push edi
     call AllocateMsg
     pop edi
+    jc gvcdSent
 ;
     mov ecx,512
     call AddMsgBuffer
 ;
     mov eax,VFS_GET_REL_DIR
     call RunMsg
-;
+
+gvcdSent:
     pop fs
     pop es
     pop ds
-    clc
     jmp gvcdDone
 
 gvcdRoot:
@@ -803,6 +806,10 @@ svcdHasStart:
 ;
     movzx eax,ax
     call AllocateMsg
+    jnc svcdCopyPath
+;
+    pop eax
+    jmp svcdFail
 
 svcdCopyPath:
     lods byte ptr gs:[esi]
@@ -893,6 +900,7 @@ ovdHasStart:
 ;
     movzx eax,ax
     call AllocateMsg
+    jc ovdFail
 
 ovdCopyPath:
     lods byte ptr gs:[esi]
@@ -1065,6 +1073,7 @@ gvdeaHasStart:
 ;
     movzx eax,ax
     call AllocateMsg
+    jc gvdeaDone
 
 gvdeaCopyPath:
     lods byte ptr gs:[esi]

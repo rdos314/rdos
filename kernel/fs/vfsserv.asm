@@ -989,6 +989,7 @@ serv_start_part    Proc far
 ;
     movzx eax,ax
     call AllocateMsg
+    jc staDone
 ;
     mov eax,VFS_START
     call RunMsg
@@ -1030,6 +1031,7 @@ serv_stop_part    Proc far
 ;
     movzx eax,ax
     call AllocateMsg
+    jc stoDone
 ;
     mov eax,VFS_STOP
     call RunMsg
@@ -3167,11 +3169,11 @@ notify_vfs_msg    Endp
 
 GetMsgEntry  Proc near
     push ecx
-;
-    test fs:vfsp_flags,VFSP_FLAG_STOPPED
-    jnz gmeFailed
 
 gmeRetry:
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    jnz gmeFailed
+;
     mov ebx,fs:vfsp_cmd_free_mask
     or ebx,ebx
     jz gmeTryUnused
@@ -3234,11 +3236,14 @@ gmeAlloc:
     jmp gmeDone
 
 gmeFailed:
+    stc
+    jmp gmeDone
 
 gmeOk:
     mov ebx,ecx
     shl ebx,4
     add ebx,OFFSET vfsp_cmd_arr
+    clc
 
 gmeDone:
     pop ecx
@@ -3265,7 +3270,17 @@ GetMsgEntry  Endp
 
 AllocateMsg  Proc near
     push ebx
+;
     call GetMsgEntry
+    jnc amSave
+;
+    pop ebx
+    xor ebx,ebx
+    mov es,ebx
+    stc
+    jmp amDone
+
+amSave:
     mov es,fs:[ebx].vfss_sel
     mov es:fc_size,0
     pop es:fc_ebx
@@ -3281,6 +3296,9 @@ AllocateMsg  Proc near
     mov es:fc_edi,edi
 ;
     mov edi,SIZE fs_cmd
+    clc
+
+amDone:
     ret
 AllocateMsg  Endp
 
@@ -3486,7 +3504,7 @@ rmWait:
     test ds:vfs_flags,VFS_FLAG_STOPPED
     jnz rmFail
 ;
-    test fs:vfsp_flags,VFSP_FLAG_STOPPED
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
     jz rmCheck
 
 rmFail:
@@ -4117,6 +4135,8 @@ SetupDiscIo	Proc near
     jc sdiDone
 ;
     call AllocateMsg
+    jc sdiDone
+;
     call AddDiscIoPages
 
 sdiDone:
@@ -4306,6 +4326,7 @@ get_vfs_drive_free   Proc far
     mov ds,fs:vfsp_disc_sel
 ;
     call AllocateMsg
+    jc gvdfDone
 ;
     mov eax,VFS_GET_FREE_SECTORS
     call RunMsg
@@ -4354,6 +4375,7 @@ StartCmd   Proc near
 ;
     mov ds,fs:vfsp_disc_sel
     call AllocateMsg
+    jc scDone
 ;
     mov edx,ebx
     sub edx,OFFSET vfsp_cmd_arr

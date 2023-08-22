@@ -544,7 +544,6 @@ TPartServer::TPartServer()
 ##########################################################################*/
 TPartServer::~TPartServer()
 {
-    ServDisableVfsPartition(handle);
 }
 
 /*##########################################################################
@@ -594,6 +593,22 @@ void TPartServer::Stop()
 {
     if (Fs)
         Fs->Stop();
+}
+
+/*##########################################################################
+#
+#   Name       : TPartServer::Disable
+#
+#   Purpose....: Disable filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartServer::Disable()
+{
+    ServDisableVfsPartition(handle);
 }
 
 /*##########################################################################

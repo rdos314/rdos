@@ -193,6 +193,8 @@ int main(int argc, char **argv)
         if (Fs)
             Fs->Run();
 
+        Server->Disable();
+
         if (Fs)
             delete Fs;
 

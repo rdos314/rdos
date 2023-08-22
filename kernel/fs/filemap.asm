@@ -726,10 +726,12 @@ SendCloseReq     Proc near
     mov fs,ds:kf_part_sel
     mov ds,fs:vfsp_disc_sel
     call AllocateMsg
+    jc scrDone
 ;
     mov eax,VFS_CLOSE_FILE
     call RunMsg
-;
+
+scrDone:
     pop ebx
     pop eax
     pop fs
@@ -2867,6 +2869,7 @@ ovfHasStart:
 ;
     movzx eax,ax
     call AllocateMsg
+    jc ovfFail
 
 ovfCopyPath:
     lods byte ptr gs:[esi]
