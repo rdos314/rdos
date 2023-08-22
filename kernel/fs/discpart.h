@@ -68,9 +68,6 @@ public:
 
     virtual void LoadPart();
     virtual void Stop();
-    void Run();
-
-    bool IsStopped();
 
     TDiscServer *GetServer();
     int GetDiscNr();

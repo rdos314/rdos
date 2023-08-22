@@ -623,18 +623,20 @@ void TDiscServer::RunCmd(int handle, char *msg)
 
 /*##########################################################################
 #
-#   Name       : TDiscServer::WaitForMsg
+#   Name       : TDiscServer::Run
 #
-#   Purpose....: Wait for msg
+#   Purpose....: Run message loop
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscServer::WaitForMsg(TDisc *disc)
+void TDiscServer::Run(TDisc *disc)
 {
     Disc = disc;
 
-    return ::WaitForMsg(handle);
+    while (FPartType.GetSize() == 0)
+        if (!::WaitForMsg(handle))
+            break;
 }

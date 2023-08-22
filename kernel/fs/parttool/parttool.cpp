@@ -76,12 +76,16 @@ int main(int argc, char **argv)
         init = new TInitFactory(Server);
         info = new TInfoFactory(Server);
 
-        Disc = CreateDisc(Server);
-        if (Disc)
-            Disc->LoadPart();
+        while (Server->IsActive())
+        {
+            Disc = CreateDisc(Server);
+            if (Disc)
+                Disc->LoadPart();
 
+            Server->Run(Disc);
 
-        if (Disc)
-            Disc->Run();
+            if (Disc)
+                delete Disc;
+        }
     }
 }

@@ -546,21 +546,3 @@ void TDisc::Stop()
 
     FCurrPartCount = 0;
 }
-
-/*##########################################################################
-#
-#   Name       : TDisc::Run
-#
-#   Purpose....: Run
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDisc::Run()
-{
-    while (!FStopped)
-        if (!FServer->WaitForMsg(this))
-            break;
-}

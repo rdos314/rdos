@@ -102,7 +102,7 @@ public:
     long long GetDiscSectors();
     int GetBytesPerSector();
     void RunCmd(int handle, char *msg);
-    int WaitForMsg(TDisc *disc);
+    void Run(TDisc *disc);
     bool IsActive();
 
     void InitDisc(const char *parttype);
