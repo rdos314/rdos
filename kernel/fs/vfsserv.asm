@@ -3845,6 +3845,7 @@ serv_wait_io_server    Endp
 stop_vfs_io_server_name       DB 'Stop VFS IO Server',0
 
 stop_vfs_io_server    Proc far
+    push ds
     push es
     push fs
     pushad
@@ -3852,8 +3853,12 @@ stop_vfs_io_server    Proc far
     call HandleToPartFs
     jc evioDone
 ;
+    mov eax,fs
+    mov ds,eax
+    EnterSection ds:vfsp_io_section
+;
     xor bx,bx
-    xchg bx,fs:vfsp_io_thread
+    xchg bx,ds:vfsp_io_thread
     or bx,bx
     jz evioFree
 ;
@@ -3863,7 +3868,14 @@ stop_vfs_io_server    Proc far
     WaitMilliSec
 
 evioFree:
-    mov bx,fs:vfsp_io_sel
+    xor bx,bx
+    xchg bx,ds:vfsp_io_sel
+    or bx,bx
+    jz evioDone
+;
+    mov ax,10
+    WaitMilliSec
+;
     mov es,bx
     GetSelectorBaseSize
 ;
@@ -3875,9 +3887,12 @@ evioFree:
     clc
 
 evioDone:
+    LeaveSection ds:vfsp_io_section
+;
     popad
     pop fs
     pop es
+    pop ds
     ret
 stop_vfs_io_server    Endp
 

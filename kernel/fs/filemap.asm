@@ -659,7 +659,11 @@ AddReq     Proc near
 
 arRetry:
     push eax
-    mov es,ds:vfsp_io_sel
+    mov ax,ds:vfsp_io_sel
+    or ax,ax
+    jz arDone
+;
+    mov es,eax
     movzx esi,ds:vfsp_io_wr_ptr
     mov ax,es:[esi].fqe_op
     or ax,ax
