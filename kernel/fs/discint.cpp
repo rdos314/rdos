@@ -445,7 +445,9 @@ TDiscServer::TDiscServer()
     int i;
 
     FActive = true;
+    FReloadDisc = false;
     Server = this;
+    OnInit = 0;
 
     if (handle == -1)
         handle = ServGetVfsHandle();
@@ -599,9 +601,17 @@ int TDiscServer::GetBytesPerSector()
 ##########################################################################*/
 void TDiscServer::InitDisc(const char *parttype)
 {
-    FPartType = parttype;
+    FReloadDisc = true;
+
     if (Disc)
+    {
         Disc->Stop();
+        delete Disc;
+        Disc = 0;
+    }
+
+    if (OnInit)
+        (*OnInit)(this, parttype);    
 }
 
 /*##########################################################################
@@ -636,7 +646,9 @@ void TDiscServer::Run(TDisc *disc)
 {
     Disc = disc;
 
-    while (FPartType.GetSize() == 0)
+    while (!FReloadDisc)
         if (!::WaitForMsg(handle))
             break;
+
+    FReloadDisc = false;
 }

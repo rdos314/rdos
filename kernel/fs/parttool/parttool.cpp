@@ -16,6 +16,24 @@
 static TCommandFactory *info;
 static TCommandFactory *init;
 
+static TDisc *Disc = 0;
+
+/*##########################################################################
+#
+#   Name       : InitDisc
+#
+#   Purpose....: Init disc object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void InitDisc(TDiscServer *Server, const char *PartType)
+{
+    Disc = 0;
+}
+
 /*##########################################################################
 #
 #   Name       : CreateDisc
@@ -65,7 +83,6 @@ int main(int argc, char **argv)
     int dev;
     char *ptr;
     TDiscServer *Server;
-    TDisc *Disc;
 
     if (argc >= 2)
     {
@@ -73,19 +90,16 @@ int main(int argc, char **argv)
         dev = atoi(ptr);
 
         Server = new TDiscServer;
+        Server->OnInit = InitDisc;
+
         init = new TInitFactory(Server);
         info = new TInfoFactory(Server);
 
+        Disc = CreateDisc(Server);
+        if (Disc)
+            Disc->LoadPart();
+
         while (Server->IsActive())
-        {
-            Disc = CreateDisc(Server);
-            if (Disc)
-                Disc->LoadPart();
-
             Server->Run(Disc);
-
-            if (Disc)
-                delete Disc;
-        }
     }
 }

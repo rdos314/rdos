@@ -107,13 +107,14 @@ public:
 
     void InitDisc(const char *parttype);
 
+    void (*OnInit)(TDiscServer *Server, const char *PartType);
+
 protected:
     void Add(int id, TDiscReq *req);
     void Remove(int id);
 
-    TString FPartType;
-
     bool FActive;
+    bool FReloadDisc;
     TDiscReq *FReqArr[MAX_DISC_REQ_COUNT];
 };
 
