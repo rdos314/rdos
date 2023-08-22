@@ -440,6 +440,72 @@ HandleToPartFs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UnlinkPartFs
+;
+;       DESCRIPTION:    Unlink part FS and return part sel
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;       RETURNS:        FS          VFS part
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UnlinkPartFs
+
+UnlinkPartFs    Proc near
+    push eax
+    push esi
+;
+    or bh,bh
+    jz upfFail
+;
+    mov eax,ebx
+    shr eax,24
+    cmp al,VFS_HANDLE_SIG
+    jne upfFail
+;
+    mov ax,SEG data
+    mov fs,ax
+    movzx eax,bh
+    dec ax
+    cmp ax,MAX_DISC_COUNT
+    jb upfInRange
+
+upfFail:
+    stc
+    jmp upfDone
+
+upfInRange:
+    movzx esi,bh
+    dec esi
+    mov ax,fs:[2*esi].disc_arr
+    or ax,ax
+    jz upfFail
+;
+    mov fs,eax
+    movzx esi,bl
+    or esi,esi
+    jz upfFail
+;
+    dec esi
+    xor ax,ax
+    xchg ax,fs:[2*esi].vfs_part_arr
+;
+    or ax,ax
+    jz upfFail
+;
+    mov fs,ax
+    clc
+
+upfDone:
+    pop esi
+    pop eax
+    ret
+UnlinkPartFs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           FileHandleToPartFs
 ;
 ;       DESCRIPTION:    Convert from file handle to partition selector
@@ -893,28 +959,6 @@ gdlDone:
 get_disc_locked   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CloseVfsPart
-;
-;       DESCRIPTION:    Close partition
-;
-;       PARAMETERS:     EBX         Partition handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-serv_close_part_name       DB 'Close VFS Part',0
-
-serv_close_part    Proc far
-    push es
-    pushad
-;
-    popad
-    pop es
-    ret
-serv_close_part   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_disc
@@ -937,12 +981,6 @@ init_disc    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov esi,OFFSET serv_close_part
-    mov edi,OFFSET serv_close_part_name
-    xor cl,cl
-    mov ax,serv_close_part_nr
-    RegisterServGate
 ;
     mov esi,OFFSET get_vfs_disc_info
     mov edi,OFFSET get_vfs_disc_info_name

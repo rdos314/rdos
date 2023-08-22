@@ -118,6 +118,7 @@ code    SEGMENT byte public 'CODE'
     extern HandleToPartEs:near
     extern HandleToPartFs:near
     extern HandleToDisc:near
+    extern UnlinkPartFs:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -959,6 +960,32 @@ lpDone:
     pop ds
     ret
 serv_load_part   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseVfsPart
+;
+;       DESCRIPTION:    Close partition
+;
+;       PARAMETERS:     EBX         Partition handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_close_part_name       DB 'Close VFS Part',0
+
+serv_close_part    Proc far
+    push es
+    push fs
+    pushad
+;
+    call UnlinkPartFs
+;
+    popad
+    pop fs
+    pop es
+    ret
+serv_close_part   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5060,6 +5087,12 @@ init_server    Proc near
     mov edi,OFFSET serv_disable_part_name
     xor cl,cl
     mov ax,serv_disable_part_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_close_part
+    mov edi,OFFSET serv_close_part_name
+    xor cl,cl
+    mov ax,serv_close_part_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_start_part
