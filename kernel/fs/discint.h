@@ -98,6 +98,7 @@ public:
 
     int GetHandle();
     TDisc *GetDisc();
+    int GetDiscNr();
 
     long long GetDiscSectors();
     int GetBytesPerSector();

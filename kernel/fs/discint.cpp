@@ -505,6 +505,25 @@ TDisc *TDiscServer::GetDisc()
 
 /*##########################################################################
 #
+#   Name       : TDiscServer::GetDiscNr
+#
+#   Purpose....: Get disc #
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDiscServer::GetDiscNr()
+{
+    int h = handle;
+
+    h = (h >> 8) & 0xFF;
+    return h - 1;    
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscServer::Add
 #
 #   Purpose....: Add disc req

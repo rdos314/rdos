@@ -50,7 +50,7 @@ public:
     virtual int Execute(char *param);
 
 protected:
-    void ShowHeader(TDisc *disc);
+    void ShowHeader();
     void ShowPart(TPartition *part);
     void ShowDisc(TDisc *disc);
 

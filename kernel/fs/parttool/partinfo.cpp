@@ -96,16 +96,17 @@ TInfoCommand::TInfoCommand(TDiscServer *server, TCommandOutput *out, const char 
 #   Returns....: *
 #
 ##########################################################################*/
-void TInfoCommand::ShowHeader(TDisc *disc)
+void TInfoCommand::ShowHeader()
 {
+    int DiscNr = FServer->GetDiscNr();
     char str[256];
-    long long CacheSize = disc->GetCached();
-    long long LockSize = disc->GetLocked();
+    long long CacheSize = RdosGetDiscCache(DiscNr);
+    long long LockSize = RdosGetDiscLocked(DiscNr);
     long double cached;
     long double locked;
 
-    RdosGetDiscVendorInfo(disc->GetDiscNr(), str, 256);
-    FMsg.printf("Disc %d, %s\r\n", disc->GetDiscNr(), str);
+    RdosGetDiscVendorInfo(DiscNr, str, 256);
+    FMsg.printf("Disc %d, %s\r\n", DiscNr, str);
     Write(FMsg);
 
     cached = (long double)CacheSize / 1024.0 / 1024.0;
@@ -204,11 +205,10 @@ int TInfoCommand::Execute(char *param)
 {
     TDisc *disc = FServer->GetDisc();
 
+    ShowHeader();
+
     if (disc)
-    {
-        ShowHeader(disc);
         ShowDisc(disc);
-    }
 
     return 0;
 }
