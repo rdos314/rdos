@@ -890,7 +890,7 @@ wvfsCopyLoop:
 ;
     push ecx
     cmp ecx,8
-    ja rvfsBufWhole
+    ja wvfsBufWhole
 ;
     mov eax,200h
     mul ecx
