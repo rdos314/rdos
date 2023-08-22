@@ -3167,6 +3167,9 @@ notify_vfs_msg    Endp
 
 GetMsgEntry  Proc near
     push ecx
+;
+    test fs:vfsp_flags,VFSP_FLAG_STOPPED
+    jnz gmeFailed
 
 gmeRetry:
     mov ebx,fs:vfsp_cmd_free_mask
@@ -3229,6 +3232,8 @@ gmeAlloc:
 ;
     clc
     jmp gmeDone
+
+gmeFailed:
 
 gmeOk:
     mov ebx,ecx
@@ -3479,8 +3484,12 @@ rmSaveTail:
 rmWait:
     WaitForSignal
     test ds:vfs_flags,VFS_FLAG_STOPPED
-    jz rmCheck
+    jnz rmFail
 ;
+    test fs:vfsp_flags,VFSP_FLAG_STOPPED
+    jz rmCheck
+
+rmFail:
     stc
     jmp rmDone
 
