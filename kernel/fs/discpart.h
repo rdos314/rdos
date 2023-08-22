@@ -67,7 +67,7 @@ public:
     virtual ~TDisc();
 
     virtual void LoadPart();
-    virtual void UnloadPart();
+    virtual void Stop();
     void Run();
 
     TDiscServer *GetServer();
@@ -78,7 +78,6 @@ public:
 
     void Add(TPartition *part);
     void Remove(TPartition *part);
-    void Clear();
 
     virtual bool IsGpt() = 0;
     virtual int RunCmd(int handle, char *msg);
@@ -95,9 +94,12 @@ public:
 
 protected:
     void GrowPart();
+    void DeletePart(TPartition *part);
+  
     int SizeToCount(int size);
     bool IsInsidePartition(long long sector, int count);
 
+    bool FStopped;
     TDiscServer *FServer;
 };
 

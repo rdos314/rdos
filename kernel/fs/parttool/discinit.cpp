@@ -100,10 +100,10 @@ int TInitCommand::Execute(char *param)
 {
     TString str;
 
-    str.printf("Creating <%s> disc\r\n", param);
+    str.printf("Creating %s disc\r\n", param);
     Write(str.GetData());
 
-    FDisc->UnloadPart();
+    FDisc->Stop();
 
     return 0;
 }

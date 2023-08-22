@@ -177,6 +177,7 @@ TDisc::TDisc(TDiscServer *server)
     int i;
 
     FServer = server;
+    FStopped = false;
 
     FBytesPerSector = FServer->GetBytesPerSector();
     FSectorCount = FServer->GetDiscSectors();
@@ -206,7 +207,7 @@ TDisc::~TDisc()
 
     for (i = 0; i < FMaxPartCount; i++)
         if (FPartArr[i])
-            delete FPartArr[i];
+            DeletePart(FPartArr[i]);
 
     delete FPartArr;
 }
@@ -395,6 +396,26 @@ long long TDisc::GetLocked()
 
 /*##########################################################################
 #
+#   Name       : TDisc::DeletePart
+#
+#   Purpose....: Delete partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisc::DeletePart(TPartition *Part)
+{
+    if (Part)
+    {
+        ServStopVfsPartition(Part->Handle);
+        delete Part;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::GrowPart
 #
 #   Purpose....: Grow part array
@@ -425,30 +446,6 @@ void TDisc::GrowPart()
 
 /*##########################################################################
 #
-#   Name       : TDisc::Clear
-#
-#   Purpose....: Clear part array
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDisc::Clear()
-{
-    int i;
-
-    for (i = 0; i < FCurrPartCount; i++)
-    {
-        if (FPartArr[i])
-        {
-            delete FPartArr[i];
-            FPartArr[i] = 0;
-        }
-    }
-
-    FCurrPartCount = 0;
-}
 
 /*##########################################################################
 #
@@ -497,6 +494,8 @@ void TDisc::Remove(TPartition *part)
                 FPartArr[j] = FPartArr[j+1];
 
             FPartArr[FCurrPartCount] = 0;
+
+            DeletePart(part);
             break;
         }
     }
@@ -538,28 +537,33 @@ void TDisc::LoadPart()
 
 /*##########################################################################
 #
-#   Name       : TDisc::UnloadPart
+#   Name       : TDisc::Stop
 #
-#   Purpose....: Unload partitions
+#   Purpose....: Stop disc
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDisc::UnloadPart()
+void TDisc::Stop()
 {
     int PartNr;
     TPartition *Part;
+
+    FStopped = true;
 
     for (PartNr = 0; PartNr < FCurrPartCount; PartNr++)
     {
         Part = FPartArr[PartNr];
         if (Part)
-            ServStopVfsPartition(Part->Handle);
+        {
+            DeletePart(Part);
+            FPartArr[PartNr] = 0;
+        }
     }
 
-    Clear();
+    FCurrPartCount = 0;
 }
 
 /*##########################################################################
