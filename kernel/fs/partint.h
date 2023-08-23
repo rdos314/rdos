@@ -72,7 +72,7 @@ public:
     int Add(long long StartSector, int SectorCount);
     void Start();
 
-    int WaitForever();
+    void WaitForever();
     int WaitTimeout(int MilliSec);
     int WaitUntil(TDateTime &time);
     bool IsDone();

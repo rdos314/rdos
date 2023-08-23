@@ -381,9 +381,10 @@ TPartReq::~TPartReq()
 #   Returns....: *
 #
 ##########################################################################*/
-int TPartReq::WaitForever()
+void TPartReq::WaitForever()
 {
-    return RdosWaitForever(FWaitHandle);
+    while (!ServIsVfsReqDone(FReq))
+        RdosWaitForever(FWaitHandle);
 }
 
 /*##########################################################################

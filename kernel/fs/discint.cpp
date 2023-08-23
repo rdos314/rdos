@@ -307,9 +307,10 @@ TDiscReq::~TDiscReq()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDiscReq::WaitForever()
+void TDiscReq::WaitForever()
 {
-    return RdosWaitForever(FWaitHandle);
+    while (!ServIsVfsReqDone(FReq))
+        RdosWaitForever(FWaitHandle);
 }
 
 /*##########################################################################
