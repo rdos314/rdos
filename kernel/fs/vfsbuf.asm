@@ -1827,12 +1827,17 @@ HandleDiscReq    Proc near
     mov es,ax
 
 hdLoop:
-    WaitForSignal
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+    jnc hdRetry
 ;
-    test ds:vfs_flags,VFS_FLAG_STOPPED
-    jnz hdExit
+    WaitForSignal
 
 hdRetry:
+    test ds:vfs_flags,VFS_FLAG_STOPPED
+    jnz hdExit
+;
     EnterSection ds:vfs_section
 ;
     call GetIoStart
@@ -1885,6 +1890,8 @@ hdWriteDone:
     jmp hdRetry
 
 hdLeave:
+    mov ds:vfs_scan_pos,-1
+    mov ds:vfs_scan_pos+4,-1
     LeaveSection ds:vfs_section
     jmp hdLoop
 
