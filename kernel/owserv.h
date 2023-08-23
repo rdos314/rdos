@@ -157,12 +157,31 @@
     __parm [__ebx]
 
 #pragma aux ServStopVfsPartition = \
-    ServGate_serv_stop_part  \
-    __parm [__ebx]
+    ServGate_serv_add_part  \
+    __parm [__ebx] [__edx]
 
 #pragma aux ServCloseVfsPartition = \
     ServGate_serv_close_part  \
     __parm [__ebx]
+
+#pragma aux ServAddVfsPartition = \
+    "push esi" \
+    "push edi" \
+    "mov eax,[esi]" \
+    "mov edx,[esi+4]" \
+    "mov esi,[edi]" \
+    "mov edi,[edi+4]" \
+    ServGate_serv_add_part \
+    "pop ecx" \
+    "mov [ecx],esi" \
+    "mov [ecx+4],edi" \
+    "pop ecx" \
+    "mov [ecx],eax" \
+    "mov [ecx+4],edx" \    
+    CarryToBool \
+    __parm [__ebx] [__ecx] [__esi] [__edi] \
+    __modify [__ecx __edx __esi __edi] \
+    __value [__eax]
 
 #pragma aux ServCreateVfsReq = \
     ServGate_create_vfs_req  \
