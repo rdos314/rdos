@@ -148,6 +148,28 @@ int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
 
 /*##########################################################################
 #
+#   Name       : TMakePartitionCommand::AddVfs
+#
+#   Purpose....: Make partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMakePartitionCommand::AddVfs(int DiscNr, const char *Cmd)
+{
+    TWait Wait;
+    TVfsDiscCmdWrapper cmd(this, DiscNr, Cmd);
+
+    Wait.Add(&cmd);
+
+    while (!cmd.IsDone())
+        Wait.WaitForever();
+}
+
+/*##########################################################################
+#
 #   Name       : TMakePartitionCommand::Execute
 #
 #   Purpose....: Execute command
@@ -159,54 +181,64 @@ int TMakePartitionCommand::Make(TDisc *Disc, const char *FsName, int Size)
 ##########################################################################*/
 int TMakePartitionCommand::Execute(char *param)
 {
-        int DiscNr;
-        int d;
-        TDisc *Disc;
-        long Size;
-        const char *FsName;
-        int ret;
+    int DiscNr;
+    int d;
+    TDisc *Disc;
+    long Size;
+    const char *FsName;
+    int ret;
+    long long sectors;
+    TString cmd;
 
-        if (!ScanCmdLine(param, 0))
-                return 1;
+    if (!ScanCmdLine(param, 0))
+        return 1;
 
-        if (FArgCount != 3)
-        {
-                FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
-                Write(FMsg.GetData());
-                return E_Useage;
-        }
-
-        if (sscanf(FArgList->FName.GetData(), "%d", &DiscNr) != 1)
-        {
-                ErrorSyntax(0);
-                return 1;
-        }
-
-        FsName = FArgList->FList->FName.GetData();
-
-        if (sscanf(FArgList->FList->FList->FName.GetData(), "%d", &Size) != 1)
-        {
-                ErrorSyntax(0);
-                return 1;
-        }
-
-        ret = 1;
-
-
-    for (d = 0; d < 16; d++)
+    if (FArgCount != 3)
     {
-        Disc = new TDisc(d);
-        if (Disc->IsValid())
-            if (Disc->GetDiscNr() == DiscNr)
-                break; 
-        delete Disc;
-        Disc = 0;
+        FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+        Write(FMsg.GetData());
+        return E_Useage;
     }
 
+    if (sscanf(FArgList->FName.GetData(), "%d", &DiscNr) != 1)
+    {
+        ErrorSyntax(0);
+        return 1;
+    }
+
+    FsName = FArgList->FList->FName.GetData();
+
+    if (sscanf(FArgList->FList->FList->FName.GetData(), "%d", &Size) != 1)
+    {
+        ErrorSyntax(0);
+        return 1;
+    }
+
+    ret = 1;
+
+    if (RdosIsVfsDisc(DiscNr))
+    {
+        sectors = (long long)Size * 0x800;
+        cmd.printf("add %s %lld", FsName, sectors);
+        AddVfs(DiscNr, cmd.GetData());
+    }
+    else        
+    {
+        for (d = 0; d < 16; d++)
+        {
+            Disc = new TDisc(d);
+            if (Disc->IsValid())
+                if (Disc->GetDiscNr() == DiscNr)
+                    break; 
+            delete Disc;
+            Disc = 0;
+        }
 
         if (Disc && Disc->IsValid())
-                ret = Make(Disc, FsName, Size * 0x800);
+            ret = Make(Disc, FsName, Size * 0x800);
         delete Disc;
-        return ret;
+    }
+        
+    return ret;
 }
 

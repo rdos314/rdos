@@ -100,7 +100,7 @@ int TAddPartitionCommand::Execute(char *param)
 {
     TString str;
 
-    str.printf("Add partition %s\r\n", param);
+    str.printf("Add %s\r\n", param);
     Write(str.GetData());
 
 //    FServer->InitDisc(param);

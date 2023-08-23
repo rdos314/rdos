@@ -35,18 +35,19 @@
 class TMakePartitionFactory : public TCommandFactory
 {
 public:
-	TMakePartitionFactory();
-	virtual TCommand *Create(TSession *session, const char *param);
+    TMakePartitionFactory();
+    virtual TCommand *Create(TSession *session, const char *param);
 };
 
 class TMakePartitionCommand : public TCommand
 {
 public:
-	TMakePartitionCommand(TSession *session, const char *param);
+    TMakePartitionCommand(TSession *session, const char *param);
 
-	virtual int Execute(char *param);	
+    virtual int Execute(char *param);	
 
 protected:
+    void AddVfs(int DiscNr, const char *Cmd);
     int Make(TDisc *Disc, const char *FsName, int Sectors);
 };
 
