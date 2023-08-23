@@ -107,6 +107,7 @@ public:
     bool IsActive();
 
     void InitDisc(const char *parttype);
+    void AddPartition(const char *FsName, long long Sectors);
 
     void (*OnInit)(TDiscServer *Server, const char *PartType);
 

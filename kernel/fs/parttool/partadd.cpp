@@ -99,11 +99,30 @@ TAddPartitionCommand::TAddPartitionCommand(TDiscServer *server, TCommandOutput *
 int TAddPartitionCommand::Execute(char *param)
 {
     TString str;
+    const char *FsName;
+    long long Sectors;
 
-    str.printf("Add %s\r\n", param);
+    if (!ScanCmdLine(param, 0))
+        return 1;
+
+    if (FArgCount != 2)
+    {
+        Write("Usage: add type sectors\r\n");
+        return 1;
+    }
+
+    FsName = FArgList->FName.GetData();
+
+    if (sscanf(FArgList->FList->FName.GetData(), "%lld", &Sectors) != 1)
+    {
+        Write("Invalid sector value\r\n");
+        return 1;
+    }
+
+    str.printf("Add %s %lld\r\n", FsName, Sectors);
     Write(str.GetData());
 
-//    FServer->InitDisc(param);
+    FServer->AddPartition(FsName, Sectors);
 
     return 0;
 }

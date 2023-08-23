@@ -636,6 +636,21 @@ void TDiscServer::InitDisc(const char *parttype)
 
 /*##########################################################################
 #
+#   Name       : TDiscServer::AddPartition
+#
+#   Purpose....: Add partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDiscServer::AddPartition(const char *FsName, long long Sectors)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscServer::RunCmd
 #
 #   Purpose....: Run command
