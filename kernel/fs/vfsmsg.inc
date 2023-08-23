@@ -67,13 +67,19 @@ VFS_OPEN_FILE             = 9
 ; IN  BX        File handle
 VFS_CLOSE_FILE            = 10
 
+; IN  EDX:EAX   Sectors
+; IN            Fs name
+; OUT BX        Offset
+; OUT EDX:EAX   Sectors
+VFS_FORMAT                = 11
+
 ; IN            Cmd
-VFS_CMD                   = 11
+VFS_CMD                   = 12
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_READ_SECTOR           = 12
+VFS_READ_SECTOR           = 13
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_WRITE_SECTOR          = 13
+VFS_WRITE_SECTOR          = 14

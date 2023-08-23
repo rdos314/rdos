@@ -178,9 +178,10 @@ m07 DD OFFSET Unused
 m08 DD OFFSET Unused
 m09 DD OFFSET Unused
 m10 DD OFFSET Unused
-m11 DD OFFSET LocalCmd
-m12 DD OFFSET LocalRead
-m13 DD OFFSET LocalWrite
+m11 DD OFFSET Unused
+m12 DD OFFSET LocalCmd
+m13 DD OFFSET LocalRead
+m14 DD OFFSET LocalWrite
 
 WaitForMsg_    Proc near
     push ebx

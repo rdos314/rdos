@@ -512,6 +512,25 @@ LocalStop Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalFormat
+;
+;       DESCRIPTION:    Format partition
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalFormat Proc near
+;    call LowFormat
+;
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalFormat Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -534,6 +553,7 @@ m07 DD OFFSET UnlockRelDir
 m08 DD OFFSET GetRelDir
 m09 DD OFFSET LocalOpenFile
 m10 DD OFFSET LocalCloseFile
+m11 DD OFFSET LocalFormat
 
 WaitForMsg_    Proc near
     push ebx
