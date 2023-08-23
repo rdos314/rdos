@@ -158,7 +158,7 @@
 
 #pragma aux ServStopVfsPartition = \
     ServGate_serv_stop_part  \
-    __parm [__ebx] [__edx]
+    __parm [__ebx]
 
 #pragma aux ServCloseVfsPartition = \
     ServGate_serv_close_part  \
