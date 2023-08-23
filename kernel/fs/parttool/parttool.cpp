@@ -12,9 +12,11 @@
 
 #include "partinfo.h"
 #include "discinit.h"
+#include "partadd.h"
 
 static TCommandFactory *info;
 static TCommandFactory *init;
+static TCommandFactory *addp;
 
 static TDisc *Disc = 0;
 
@@ -103,6 +105,7 @@ int main(int argc, char **argv)
 
         init = new TInitFactory(Server);
         info = new TInfoFactory(Server);
+        addp = new TAddPartitionFactory(Server);
 
         Disc = CreateDisc(Server);
         if (Disc)
