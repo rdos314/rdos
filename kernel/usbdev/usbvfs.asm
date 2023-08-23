@@ -860,6 +860,8 @@ wvfsRetry:
 
 wvfsLoop:
     push ecx
+    push edi
+;
     cmp ecx,8
     jb wvfsSizeOk
 ;
@@ -886,6 +888,7 @@ wvfsCopyLoop:
     add ebp,8
     loop wvfsCopyLoop
 ;
+    pop edi
     pop ecx
 ;
     push ecx
@@ -909,12 +912,13 @@ wvfsBufDo:
     jmp wvfsDetached
 
 wvfsWrite:
+    mov esi,ecx
     mov bx,fs:disc_dev_handle
     mov dl,fs:disc_bulk_out_pipe
     PostUsbRawPipe
+    pop ecx
     jc wvfsFail
 ;
-    pop ecx
     sub ecx,8
     ja wvfsLoop
 ;    
@@ -927,6 +931,7 @@ wvfsWrite:
     jmp wvfsDone
 
 wvfsFail:
+    int 3
     mov bx,fs:disc_dev_handle
     IsUsbDeviceConnected
     jc wvfsDetached
