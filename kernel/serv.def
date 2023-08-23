@@ -45,6 +45,6 @@ write_vfs_sectors_nr       = 43
 serv_disable_part_nr       = 44
 stop_vfs_io_serv_nr        = 45
 serv_close_part_nr         = 46
-serv_add_part_nr           = 47
+serv_format_part_nr        = 47
 
 serv_gate_entries          = 50

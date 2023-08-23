@@ -1085,6 +1085,68 @@ serv_stop_part   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           FormatPart
+;
+;       DESCRIPTION:    Format partition
+;
+;       PARAMETERS:     EBX         Partition handle
+;                       ES:ECX      FS type
+;                       EDX:EAX     Req start sector
+;                       EDI:ESI     Req sector count
+;       RETURNS:        EDX:EAX     Actual start sector
+;                       EDI:ESI     Actual sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_format_part_name       DB 'Format VFS Part',0
+
+serv_format_part    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push ecx
+;
+    push eax
+    mov eax,es
+    mov gs,eax
+    pop eax
+;
+    call FindVfsHandle
+    jc fpDone
+;
+    call HandleToPartFs
+    jc fpDone
+;
+    mov ds,fs:vfsp_disc_sel
+;
+    push ecx
+    call AllocateMsg
+    pop esi
+    jc fpDone
+
+fpCopy:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz fpCopy
+;
+    mov eax,VFS_FORMAT
+    call RunMsg
+
+fpDone:
+    pop ecx
+    pop ebx
+    pop fs
+    pop es
+    pop ds
+    ret
+serv_format_part   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateVfsReq
 ;
 ;       DESCRIPTION:    Create a VFS req
@@ -5116,6 +5178,12 @@ init_server    Proc near
     mov edi,OFFSET serv_stop_part_name
     xor cl,cl
     mov ax,serv_stop_part_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_format_part
+    mov edi,OFFSET serv_format_part_name
+    xor cl,cl
+    mov ax,serv_format_part_nr
     RegisterServGate
 ;
     mov esi,OFFSET create_vfs_req

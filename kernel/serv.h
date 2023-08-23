@@ -49,7 +49,7 @@ void RDOSAPI ServDisableVfsPartition(int handle);
 void RDOSAPI ServStartVfsPartition(int handle);
 void RDOSAPI ServStopVfsPartition(int handle);
 
-int RDOSAPI ServAddVfsPartition(int handle, char *FsName, long long *StartSector, long long *SectorCount);
+int RDOSAPI ServFormatVfsPartition(int handle, char *FsName, long long *StartSector, long long *SectorCount);
 
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();

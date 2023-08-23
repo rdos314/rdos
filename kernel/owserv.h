@@ -157,21 +157,21 @@
     __parm [__ebx]
 
 #pragma aux ServStopVfsPartition = \
-    ServGate_serv_add_part  \
+    ServGate_serv_stop_part  \
     __parm [__ebx] [__edx]
 
 #pragma aux ServCloseVfsPartition = \
     ServGate_serv_close_part  \
     __parm [__ebx]
 
-#pragma aux ServAddVfsPartition = \
+#pragma aux ServFormatVfsPartition = \
     "push esi" \
     "push edi" \
     "mov eax,[esi]" \
     "mov edx,[esi+4]" \
     "mov esi,[edi]" \
     "mov edi,[edi+4]" \
-    ServGate_serv_add_part \
+    ServGate_serv_format_part \
     "pop ecx" \
     "mov [ecx],esi" \
     "mov [ecx+4],edi" \
