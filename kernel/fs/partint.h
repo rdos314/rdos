@@ -99,7 +99,7 @@ public:
     void Start();
     void Stop();
     void Disable();
-    int Format(long long *Start, long long *Size);
+    int Format(int PartType, long long *Start, long long *Size);
 
     long long GetPartStartSector();
     long long GetPartSectors();
@@ -110,7 +110,7 @@ public:
     bool IsActive();
 
     void (*OnStart)(TPartServer *Server);
-    int (*OnFormat)(TPartServer *Server, long long *Start, long long *Size);
+    int (*OnFormat)(TPartServer *Server, int PartType, long long *Start, long long *Size);
 
 protected:
     void Add(int id, TPartReq *req);

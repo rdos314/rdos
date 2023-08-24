@@ -62,8 +62,8 @@ int Format(long long *Start, long long *Count)
 
     PartType = ServGetVfsPartType(handle);
 
-    if (Server)
-        return Server->Format(Start, Count);
+    if (Server && PartType)
+        return Server->Format(PartType, Start, Count);
     else
         return 0;
 }
@@ -626,9 +626,9 @@ void TPartServer::Stop()
 #   Returns....: *
 #
 ##########################################################################*/
-int TPartServer::Format(long long *Start, long long *Size)
+int TPartServer::Format(int PartType, long long *Start, long long *Size)
 {
-    return (*OnFormat)(this, Start, Size);
+    return (*OnFormat)(this, PartType, Start, Size);
 }
 
 /*##########################################################################

@@ -166,7 +166,7 @@ void StartFs(TPartServer *Server)
 #   Returns....: *
 #
 ##########################################################################*/
-int FormatFs(TPartServer *Server, long long *Start, long long *Size)
+int FormatFs(TPartServer *Server, int PartType, long long *Start, long long *Size)
 {
 /*
 
