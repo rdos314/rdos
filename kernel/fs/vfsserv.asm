@@ -129,6 +129,7 @@ code    SEGMENT byte public 'CODE'
 ;
 ;       PARAMETERS:     DS          VFS sel
 ;                       ES          Part sel
+;                       ECX         Part type
 ;                       EDX:EAX     Start sector
 ;                       EDI:ESI     Sector count
 ;
@@ -143,6 +144,7 @@ InitPartSel  Proc near
     mov es:vfsp_start_sector+4,edx
     mov es:vfsp_sector_count,esi
     mov es:vfsp_sector_count+4,edi
+    mov es:vfsp_part_type,ecx
     mov es:vfsp_disc_sel,ds
 ;
     mov es:vfsp_cmd_unused_mask,-1
@@ -153,7 +155,6 @@ InitPartSel  Proc near
     InitSection es:vfsp_req_section
     InitSection es:vfsp_io_section
     mov es:vfsp_io_sel,0
-    mov es:vfsp_part_type,0
 ;
     pop ecx
     ret
@@ -210,6 +211,7 @@ AddDisc   Endp
 ;       DESCRIPTION:    Create partition selector
 ;
 ;       PARAMETERS:     DS         VFS sel
+;                       ECX        Part type
 ;                       EDX:EAX    Start sector
 ;                       EDI:ESI    Sector count
 ;
@@ -222,6 +224,7 @@ CreatePartSel  Proc near
     push ecx
 ;
     push eax
+    push ecx
     push esi
     push edi
 ;
@@ -238,6 +241,7 @@ cpsLoop:
 ;
     pop edi
     pop esi
+    pop ecx
     pop eax
     stc
 
@@ -254,6 +258,7 @@ cpsFound:
 ;
     pop edi
     pop esi
+    pop ecx
     pop eax
 ;
     call InitPartSel
@@ -948,7 +953,6 @@ serv_load_part    Proc far
     mov ds,fs:vfsp_disc_sel
     call CreatePartSel   
 ;
-    mov fs:vfsp_part_type,ecx
     shl ecx,3
     mov edi,cs:[ecx].sl_tab
     mov esi,cs:[ecx].sl_tab+4
@@ -1021,9 +1025,6 @@ serv_get_part_type    Proc far
     push ebx
 ;
     xor eax,eax
-;
-    call FindVfsHandle
-    jc gptDone
 ;
     call HandleToPartFs
     jc gptDone
