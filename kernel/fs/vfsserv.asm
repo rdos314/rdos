@@ -1090,7 +1090,6 @@ serv_stop_part   Endp
 ;       DESCRIPTION:    Format partition
 ;
 ;       PARAMETERS:     EBX         Partition handle
-;                       ES:ECX      FS type
 ;                       EDX:EAX     Req start sector
 ;                       EDI:ESI     Req sector count
 ;       RETURNS:        EDX:EAX     Actual start sector
@@ -1104,14 +1103,8 @@ serv_format_part    Proc far
     push ds
     push es
     push fs
-    push gs
     push ebx
     push ecx
-;
-    push eax
-    mov eax,es
-    mov gs,eax
-    pop eax
 ;
     call FindVfsHandle
     jc fpDone
@@ -1121,16 +1114,8 @@ serv_format_part    Proc far
 ;
     mov ds,fs:vfsp_disc_sel
 ;
-    push ecx
     call AllocateMsg
-    pop esi
     jc fpDone
-
-fpCopy:
-    lods byte ptr gs:[esi]
-    stosb
-    or al,al
-    jnz fpCopy
 ;
     mov eax,VFS_FORMAT
     call RunMsg
