@@ -153,6 +153,7 @@ InitPartSel  Proc near
     InitSection es:vfsp_req_section
     InitSection es:vfsp_io_section
     mov es:vfsp_io_sel,0
+    mov es:vfsp_part_type,0
 ;
     pop ecx
     ret
@@ -947,6 +948,7 @@ serv_load_part    Proc far
     mov ds,fs:vfsp_disc_sel
     call CreatePartSel   
 ;
+    mov fs:vfsp_part_type,ecx
     shl ecx,3
     mov edi,cs:[ecx].sl_tab
     mov esi,cs:[ecx].sl_tab+4
