@@ -393,6 +393,60 @@ long long TDisc::GetLocked()
 
 /*##########################################################################
 #
+#   Name       : TDisc::FsTypeToName
+#
+#   Purpose....: Convert FS type to name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TDisc::FsTypeToName(int type)
+{
+    switch (type)
+    {
+        case PART_TYPE_FAT12:
+            return "FAT12";
+
+        case PART_TYPE_FAT16:
+            return "FAT16";
+
+        case PART_TYPE_FAT32:
+            return "FAT32";
+
+        default:
+            return "UNKNOWN";
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::FsNameToType
+#
+#   Purpose....: Convert FS type to name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDisc::FsNameToType(const char *FsName)
+{
+    if (!strcmp(FsName, "FAT12"))
+        return PART_TYPE_FAT12;
+
+    if (!strcmp(FsName, "FAT16"))
+        return PART_TYPE_FAT16;
+
+    if (!strcmp(FsName, "FAT32"))
+        return PART_TYPE_FAT32;
+
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::DeletePart
 #
 #   Purpose....: Delete partition
@@ -612,8 +666,21 @@ long long TDisc::AllocateSectors(long long Start, long long Count)
 ##########################################################################*/
 TPartition *TDisc::FormatPart(const char *FsName, long long *Start, long long *Count)
 {
+    int Handle = FServer->GetHandle();
+    int FsType = FsNameToType(FsName);
+    int PartHandle;
+    int Res;
+
+    PartHandle = ServLoadVfsPartition(Handle, FsType, *Start, *Count);
+
+    if (PartHandle)
+    {
+        Res = ServFormatVfsPartition(PartHandle, Start, Count);
+    }
+
     return 0;
 }
+
 
 /*##########################################################################
 #

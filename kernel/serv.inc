@@ -118,7 +118,6 @@ ServClosePart  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
-; IN  ES:ECX           FS type
 ; IN  EDX:EAX          Start sector
 ; IN  EDI:ESI          Sector count
 ; OUT EDX:EAX          Start sector

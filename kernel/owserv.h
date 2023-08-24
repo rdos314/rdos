@@ -179,7 +179,7 @@
     "mov [ecx],eax" \
     "mov [ecx+4],edx" \    
     CarryToBool \
-    __parm [__ebx] [__ecx] [__esi] [__edi] \
+    __parm [__ebx] [__esi] [__edi] \
     __modify [__ecx __edx __esi __edi] \
     __value [__eax]
 

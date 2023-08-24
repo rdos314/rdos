@@ -67,6 +67,8 @@ public:
     virtual ~TDisc();
 
     virtual long long GetSectorCount();
+    virtual const char *FsTypeToName(int type);
+    virtual int FsNameToType(const char *FsName);
 
     virtual void InitPart() = 0;
     virtual void LoadPart();
