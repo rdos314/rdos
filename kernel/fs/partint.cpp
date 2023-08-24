@@ -59,8 +59,8 @@ int Format(long long *Start, long long *Count)
     while (wait)
         RdosWaitMilli(250);
 
-    if (Fs)
-        return Fs->Format(Start, Count);
+    if (Server)
+        return Server->Format(Start, Count);
     else
         return 0;
 }
@@ -537,6 +537,7 @@ TPartServer::TPartServer()
     FActive = true;
 
     OnStart = 0;
+    OnFormat = 0;
 
     if (!handle)
         handle = ServGetVfsHandle();
@@ -609,6 +610,22 @@ void TPartServer::Stop()
 {
     if (Fs)
         Fs->Stop();
+}
+
+/*##########################################################################
+#
+#   Name       : TPartServer::Format
+#
+#   Purpose....: Format filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPartServer::Format(long long *Start, long long *Size)
+{
+    return (*OnFormat)(this, Start, Size);
 }
 
 /*##########################################################################

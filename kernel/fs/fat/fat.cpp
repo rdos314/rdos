@@ -157,6 +157,22 @@ void StartFs(TPartServer *Server)
 
 /*##########################################################################
 #
+#   Name       : FormatFs
+#
+#   Purpose....: Format filesystem
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int FormatFs(TPartServer *Server, long long *Start, long long *Size)
+{
+    return 1;
+}
+
+/*##########################################################################
+#
 #   Name       : main
 #
 #   Purpose....:
@@ -185,6 +201,7 @@ int main(int argc, char **argv)
 
         Server = new TPartServer;
         Server->OnStart = StartFs;
+        Server->OnFormat = FormatFs;
 
         while (!Started)
             if (!Server->WaitForMsg())
