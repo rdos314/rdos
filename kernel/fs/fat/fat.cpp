@@ -168,6 +168,48 @@ void StartFs(TPartServer *Server)
 ##########################################################################*/
 int FormatFs(TPartServer *Server, long long *Start, long long *Size)
 {
+/*
+
+    TPartReq req(Server);
+    TPartReqEntry e1(&req, *Start, 1, false);
+    char *BootSector;
+    struct TBootSector *boot;
+
+    req.WaitForever();
+
+    BootSector = (char *)e1.Map();
+
+    memset(BootSector, 0, 0x1FE);
+    *(BootSector + 0x1FE) = 0x55;
+    *(BootSector + 0x1FF) = 0xAA;
+
+    RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
+    
+    boot = (struct TBootSector *)(BootSector + 11);
+
+    boot->BytesPerSector = Server->GetBytesPerSector();
+    boot->Resv1 = 0;
+    boot->MappingSectors = 0;
+    boot->Resv3 = 0;
+    boot->Resv4 = 0;
+    boot->SmallSectors = 0;
+    boot->Media = 0xF8;
+    boot->Resv6 = 0;
+    boot->SectorsPerCyl = 0xFFFF;
+    boot->Heads = 0xFF;
+    boot->HiddenSectors = 0;
+    boot->Sectors = *Size - 1;
+    boot->Drive = 0x80;
+    boot->Resv7 = 0;
+    boot->Signature = 0;
+    boot->Serial = 0;
+    memset(boot->Volume, 0, 11);
+    memcpy(boot->Fs, "RDOS    ", 8);
+
+    e1.Write();
+
+*/
+
     return 1;
 }
 

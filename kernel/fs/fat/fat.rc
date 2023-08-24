@@ -1,0 +1,1 @@
+100 RCDATA LOADONCALL MOVEABLE DISCARDABLE "../bios/loader/bootsec.bin"
