@@ -1114,11 +1114,14 @@ serv_format_part    Proc far
 ;
     mov ds,fs:vfsp_disc_sel
 ;
+    mov ecx,edi
     call AllocateMsg
     jc fpDone
 ;
     mov eax,VFS_FORMAT
     call RunMsg
+;
+    mov edi,ecx
 
 fpDone:
     pop ecx

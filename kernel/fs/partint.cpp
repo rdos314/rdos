@@ -52,6 +52,13 @@ void Stop()
         Server->Stop();
 }
 
+int Format(long long *Start, long long *Count)
+{
+    *Start += 16;
+    *Count -= 16;
+    return 1;
+}
+
 long long GetFreeSectors()
 {
     if (Fs)
