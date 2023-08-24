@@ -525,6 +525,9 @@ void TMbrDisc::WriteBootSector()
     
     bootp = (TBootParamBlock *)(BootSector + 11);
 
+    FSectorsPerCyl = bootp->SectorsPerCyl;
+    FHeads = bootp->Heads;
+
     bootp->BytesPerSector = FServer->GetBytesPerSector();
     bootp->Resv1 = 1;
     bootp->MappingSectors = FLoaderSectors;
@@ -533,11 +536,8 @@ void TMbrDisc::WriteBootSector()
     bootp->SmallSectors = 0;
     bootp->Media = 0xF1;
     bootp->Resv6 = 0;
-//  bootp->SectorsPerCyl = Disc->GetSectorsPerCyl();
-//  bootp->Heads = Disc->GetHeads();
     bootp->HiddenSectors = FLoaderSectors;
     bootp->Sectors = FServer->GetDiscSectors();
-//  bootp->Drive = 0x80 + IdeDisc;
     bootp->Resv7 = 0;
     bootp->Signature = 0;
     bootp->Serial = 0;
@@ -593,9 +593,13 @@ void TMbrDisc::WriteBootLoader()
 void TMbrDisc::AddPart(const char *FsName, long long Sectors)
 {
     long long Start;
+    long long Count = Sectors;
 
-    if (Sectors > 0xFFFFFFFF)
-        Sectors = 0xFFFFFFFF;
+    if (Count > 0xFFFFFFFF)
+        Count = 0xFFFFFFFF;
 
-    Start = AllocateSectors(BOOT_LOADER_SECTORS + 1, Sectors);
+    Start = AllocateSectors(BOOT_LOADER_SECTORS + 1, Count);
+
+    if (Start)
+        FormatPart(FsName, &Start, &Count);
 }

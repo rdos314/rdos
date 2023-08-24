@@ -601,6 +601,22 @@ long long TDisc::AllocateSectors(long long Start, long long Count)
 
 /*##########################################################################
 #
+#   Name       : TDisc::FormatPart
+#
+#   Purpose....: Format partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPartition *TDisc::FormatPart(const char *FsName, long long *Start, long long *Count)
+{
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::Stop
 #
 #   Purpose....: Stop disc
