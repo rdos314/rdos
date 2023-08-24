@@ -33,6 +33,22 @@
 
 /*##########################################################################
 #
+#   Name       : TFat16::ValidateFs
+#
+#   Purpose....: Validate before format
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat16::ValidateFs(struct TBootSector *boot, long long *Start, long long *Count)
+{
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat16::TFat16
 #
 #   Purpose....: Fat16 constructor

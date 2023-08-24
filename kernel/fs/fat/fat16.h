@@ -38,6 +38,8 @@ public:
     TFat16(TPartServer *server, struct TBootSector *boot);
     ~TFat16();
 
+    static bool ValidateFs(struct TBootSector *boot, long long *Start, long long *Count);
+
     virtual TDir *CacheRootDir();
 
 protected:

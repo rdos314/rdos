@@ -20,36 +20,18 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# fat12.h
-# Fat12 class
+# discpart.h
+# Dispart base class
 #
 ########################################################################*/
 
-#ifndef _FAT12_H
-#define _FAT12_H
+#ifndef _PARTTYPE_H
+#define _PARTTYPE_H
 
-#include "fatfs.h"
-#include "tab12.h"
-#include "dir.h"
-
-class TFat12 : public TFat
-{
-public:
-    TFat12(TPartServer *server, struct TBootSector *boot);
-    ~TFat12();
-
-    static bool ValidateFs(struct TBootSector *boot, long long *Start, long long *Count);
-
-    virtual TDir *CacheRootDir();
-
-protected:
-    int RootDirEntries;
-    long long RootSector;
-
-private:
-    TFatTable12 Tab1;
-    TFatTable12 Tab2;
-};
+#define PART_TYPE_UNKNOWN       0
+#define PART_TYPE_FAT12         1
+#define PART_TYPE_FAT16         2
+#define PART_TYPE_FAT32         3
 
 #endif
 

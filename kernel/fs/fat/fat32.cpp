@@ -42,6 +42,22 @@ struct TFatInfo
 
 /*##########################################################################
 #
+#   Name       : TFat32::ValidateFs
+#
+#   Purpose....: Validate before format
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat32::ValidateFs(struct TBootSector *boot, long long *Start, long long *Count)
+{
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TFa32::TFat32
 #
 #   Purpose....: Fat32 constructor

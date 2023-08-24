@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "sigdev.h"
+#include "parttype.h"
 #include "part.h"
 #include "fat12.h"
 #include "fat16.h"
@@ -168,6 +169,40 @@ void StartFs(TPartServer *Server)
 ##########################################################################*/
 int FormatFs(TPartServer *Server, int PartType, long long *Start, long long *Size)
 {
+    char *BootSector;
+    struct TBootSector *boot;
+    bool ok;
+
+    BootSector = new char[512];
+
+    memset(BootSector, 0, 0x1FE);
+    *(BootSector + 0x1FE) = 0x55;
+    *(BootSector + 0x1FF) = 0xAA;
+
+    RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
+
+    switch (PartType)
+    {
+        case PART_TYPE_FAT12:
+            ok = TFat12::ValidateFs(boot, Start, Size);
+            break;
+
+        case PART_TYPE_FAT16:
+            ok = TFat16::ValidateFs(boot, Start, Size);
+            break;
+
+        case PART_TYPE_FAT32:
+            ok = TFat32::ValidateFs(boot, Start, Size);
+            break;
+
+        default:
+            ok = false;
+            break;
+    }
+
+    delete BootSector;
+
+
 /*
 
     TPartReq req(Server);
