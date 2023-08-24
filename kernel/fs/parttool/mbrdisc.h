@@ -114,6 +114,7 @@ public:
     virtual bool IsGpt();
     virtual void LoadPart();    
     virtual void InitPart();    
+    virtual void AddPart(const char *FsName, long long Sectors);
 
     TMbrPartitionTable PartRoot;
 

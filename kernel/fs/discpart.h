@@ -69,6 +69,7 @@ public:
     virtual void InitPart() = 0;
     virtual void LoadPart();
     virtual void Stop();
+    virtual void AddPart(const char *FsName, long long Sectors) = 0;
 
     TDiscServer *GetServer();
     int GetDiscNr();

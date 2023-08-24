@@ -647,6 +647,8 @@ void TDiscServer::InitDisc(const char *parttype)
 ##########################################################################*/
 void TDiscServer::AddPartition(const char *FsName, long long Sectors)
 {
+    if (Disc)
+        Disc->AddPart(FsName, Sectors);
 }
 
 /*##########################################################################

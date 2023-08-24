@@ -579,3 +579,17 @@ void TMbrDisc::WriteBootLoader()
     e1.Write();
 }
 
+/*##########################################################################
+#
+#   Name       : TMbrDisc::::AddPart
+#
+#   Purpose....: Add partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMbrDisc::AddPart(const char *FsName, long long Sectors)
+{
+}
