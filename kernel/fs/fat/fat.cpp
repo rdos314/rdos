@@ -181,6 +181,8 @@ int FormatFs(TPartServer *Server, int PartType, long long *Start, long long *Siz
 
     RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
 
+    boot = (struct TBootSector *)BootSector;
+
     switch (PartType)
     {
         case PART_TYPE_FAT12:
