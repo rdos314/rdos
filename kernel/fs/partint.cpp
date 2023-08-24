@@ -54,9 +54,15 @@ void Stop()
 
 int Format(long long *Start, long long *Count)
 {
-    *Start += 16;
-    *Count -= 16;
-    return 1;
+    bool wait = true;
+
+    while (wait)
+        RdosWaitMilli(250);
+
+    if (Fs)
+        return Fs->Format(Start, Count);
+    else
+        return 0;
 }
 
 long long GetFreeSectors()

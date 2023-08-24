@@ -81,6 +81,8 @@ public:
     virtual void Stop();
     virtual void Run();
 
+    virtual int Format(long long *Start, long long *Count);
+
     virtual long long GetFreeSectors() = 0;
     virtual TDir *CacheRootDir() = 0;
     virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode) = 0;

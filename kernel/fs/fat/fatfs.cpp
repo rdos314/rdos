@@ -126,6 +126,22 @@ bool TFat::Validate()
 
 /*##########################################################################
 #
+#   Name       : TFat::Format
+#
+#   Purpose....: Format partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFat::Format(long long *Start, long long *Count)
+{
+    return 1;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::GetFreeSectors
 #
 #   Purpose....: Get free sectors

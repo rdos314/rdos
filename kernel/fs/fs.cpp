@@ -492,6 +492,22 @@ void TFs::Stop()
 
 /*##########################################################################
 #
+#   Name       : TFs::Format
+#
+#   Purpose....: Format partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::Format(long long *Start, long long *Size)
+{
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::GrowDir
 #
 #   Purpose....: Grow dir array

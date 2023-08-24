@@ -67,6 +67,7 @@ public:
     ~TFat();
 
     bool Validate();
+    virtual int Format(long long *Start, long long *Count);
     virtual long long GetFreeSectors();
     virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode);
     virtual TFile *OpenFile(TDir *ParentDir, int ParentIndex, long long Inode);
