@@ -1003,6 +1003,44 @@ serv_close_part   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetVfsPartType
+;
+;       DESCRIPTION:    Get partition type
+;
+;       PARAMETERS:     EBX         Partition handle
+;
+;       RETURNS:        EAX         Part type
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_get_part_type_name       DB 'Get VFS Part Type',0
+
+serv_get_part_type    Proc far
+    push ds
+    push fs
+    push ebx
+;
+    xor eax,eax
+;
+    call FindVfsHandle
+    jc gptDone
+;
+    call HandleToPartFs
+    jc gptDone
+;
+    mov eax,fs:vfsp_part_type
+    clc
+
+gptDone:
+    pop ebx
+    pop fs
+    pop ds
+    ret
+serv_get_part_type   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           StartVfsPart
 ;
 ;       DESCRIPTION:    Start partition
@@ -5156,6 +5194,12 @@ init_server    Proc near
     mov edi,OFFSET serv_close_part_name
     xor cl,cl
     mov ax,serv_close_part_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_get_part_type
+    mov edi,OFFSET serv_get_part_type_name
+    xor cl,cl
+    mov ax,get_vfs_part_type_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_start_part

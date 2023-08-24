@@ -55,9 +55,12 @@ void Stop()
 int Format(long long *Start, long long *Count)
 {
     bool wait = true;
+    int PartType;
 
     while (wait)
         RdosWaitMilli(250);
+
+    PartType = ServGetVfsPartType(handle);
 
     if (Server)
         return Server->Format(Start, Count);
