@@ -66,6 +66,8 @@ public:
     TDisc(TDiscServer *server);
     virtual ~TDisc();
 
+    virtual long long GetSectorCount();
+
     virtual void InitPart() = 0;
     virtual void LoadPart();
     virtual void Stop();
@@ -93,6 +95,9 @@ public:
     int FMaxPartCount;
 
 protected:
+    void Sort();
+    long long AllocateSectors(long long Start, long long Count);
+
     void GrowPart();
     void DeletePart(TPartition *part);
   

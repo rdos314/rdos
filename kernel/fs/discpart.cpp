@@ -351,6 +351,22 @@ int TDisc::GetDiscNr()
     return handle - 1;    
 }
 
+/*##########################################################################
+#
+#   Name       : TDisc::GetSectorCount
+#
+#   Purpose....: Get sector count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TDisc::GetSectorCount()
+{
+    return FSectorCount;
+}
+
 /*##################  TDisc::GetCached  #############
 *   Purpose....: Get current cache size                                  #
 *   In params..: *                                                          #
@@ -427,6 +443,42 @@ void TDisc::GrowPart()
 
 /*##########################################################################
 #
+#   Name       : TDisc::Sort
+#
+#   Purpose....: Sort partitions
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDisc::Sort()
+{
+    int i;
+    bool Changed;
+    TPartition *Temp;
+
+    Changed = true;
+
+    while (Changed)
+    {
+        Changed = false;
+
+        for (i = 1; i < FCurrPartCount; i++)
+        {
+            if (FPartArr[i-1]->GetStartSector() > FPartArr[i]->GetStartSector())
+            {
+                Temp = FPartArr[i-1];
+                FPartArr[i-1] = FPartArr[i];
+                FPartArr[i] = Temp;
+                Changed = true;
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDisc::Add
 #
 #   Purpose....: Add partition
@@ -443,6 +495,7 @@ void TDisc::Add(TPartition *part)
 
     FPartArr[FCurrPartCount] = part;
     FCurrPartCount++;
+    Sort();
 }
 
 /*##########################################################################
@@ -511,6 +564,39 @@ void TDisc::LoadPart()
             ServStartVfsPartition(Part->Handle);
         }
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TDisc::AllocateSectors
+#
+#   Purpose....: Allocate sectors from non-partitioned space
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TDisc::AllocateSectors(long long Start, long long Count)
+{
+    long long pos = Start;
+    long long size;
+    int i;
+
+    for (i = 0; i < FCurrPartCount; i++)
+    {
+        size = FPartArr[i]->GetStartSector() - pos;
+        if (size >= Count)
+            return pos;
+
+        pos = FPartArr[i]->GetStartSector() + FPartArr[i]->GetSectorCount();
+    }
+            
+    size = GetSectorCount() - pos;
+    if (size > 0)
+        return pos;
+    else
+        return 0;
 }
 
 /*##########################################################################

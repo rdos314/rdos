@@ -592,4 +592,10 @@ void TMbrDisc::WriteBootLoader()
 ##########################################################################*/
 void TMbrDisc::AddPart(const char *FsName, long long Sectors)
 {
+    long long Start;
+
+    if (Sectors > 0xFFFFFFFF)
+        Sectors = 0xFFFFFFFF;
+
+    Start = AllocateSectors(BOOT_LOADER_SECTORS + 1, Sectors);
 }
