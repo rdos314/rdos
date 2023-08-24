@@ -446,8 +446,9 @@ void TMbrDisc::LoadPart()
         bpb = (struct TBootParamBlock *)(Buf + 11);
         FSectorsPerCyl = bpb->SectorsPerCyl;
         FHeads = bpb->Heads;
+        FLoaderSectors = bpb->HiddenSectors;
+ 
         PartRoot.Process(this, Buf);
-
         AddFsParts(&PartRoot);
     }
 
@@ -598,7 +599,7 @@ void TMbrDisc::AddPart(const char *FsName, long long Sectors)
     if (Count > 0xFFFFFFFF)
         Count = 0xFFFFFFFF;
 
-    Start = AllocateSectors(BOOT_LOADER_SECTORS + 1, Count);
+    Start = AllocateSectors(FLoaderSectors + 1, Count);
 
     if (Start)
         FormatPart(FsName, &Start, &Count);
