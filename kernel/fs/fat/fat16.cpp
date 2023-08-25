@@ -111,6 +111,52 @@ unsigned int TFat16::CalcClusterSize(unsigned int size)
 
 /*##########################################################################
 #
+#   Name       : TFat16::CalcClusterCount
+#
+#   Purpose....: Calculate cluster count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned short int TFat16::CalcClusterCount(unsigned int TotalSectors, unsigned int ClusterSize)
+{
+    unsigned int Clusters;
+    unsigned int FatSectors;
+    unsigned int Used;
+    int tries;
+
+    Used = TotalSectors - ROOT_DIR_SECTORS - 1;
+    for (tries = 0; tries < 3; tries++)
+    { 
+        Clusters = Used / ClusterSize;
+        FatSectors = Clusters / 256;
+        FatSectors--;
+        FatSectors = FatSectors / 4;
+        FatSectors = 4 * (FatSectors + 1);
+        Used = TotalSectors - ROOT_DIR_SECTORS - 1 - 2 * FatSectors;
+    } 
+
+    Used = Clusters * ClusterSize + 2 * FatSectors + ROOT_DIR_SECTORS + 1;
+
+    while (Used > TotalSectors)
+    {
+        Clusters--;
+        Used -= ClusterSize;
+    }
+
+    while (Used + ClusterSize < TotalSectors)
+    {
+        Clusters++;
+        Used += ClusterSize;
+    }
+
+    return (unsigned short int)Clusters;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat16::ValidateFs
 #
 #   Purpose....: Validate before format
@@ -124,10 +170,12 @@ bool TFat16::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long lo
 {
     unsigned int Size;
     unsigned int ClusterSize;
+    unsigned short int Clusters;
     int tries;
 
     Size = Adjust(Start, Count);
     ClusterSize = CalcClusterSize(Size);
+    Clusters = CalcClusterCount(Size, ClusterSize);
 
     return false;
 }
