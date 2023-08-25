@@ -46,6 +46,7 @@ protected:
     static unsigned int Adjust(long long *Start, long long *Count);
     static unsigned int CalcClusterSize(unsigned int TotalSectors);
     static unsigned short int CalcClusterCount(unsigned int TotalSectors, unsigned int ClusterSize);
+    static unsigned short int CalcFatSectors(unsigned short int Clusters);
 
     int RootDirEntries;
     long long RootSector;

@@ -146,13 +146,36 @@ unsigned short int TFat16::CalcClusterCount(unsigned int TotalSectors, unsigned 
         Used -= ClusterSize;
     }
 
-    while (Used + ClusterSize < TotalSectors)
+    while (Clusters != 0xFFFF && Used + ClusterSize < TotalSectors)
     {
         Clusters++;
         Used += ClusterSize;
     }
 
     return (unsigned short int)Clusters;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat16::CalcFatSectors
+#
+#   Purpose....: Calculate FAT sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned short int TFat16::CalcFatSectors(unsigned short int Clusters)
+{
+    unsigned short int FatSectors;
+
+    FatSectors = Clusters / 256;
+    FatSectors--;
+    FatSectors = FatSectors / 4;
+    FatSectors = 4 * (FatSectors + 1);
+
+    return FatSectors;
 }
 
 /*##########################################################################
@@ -171,11 +194,31 @@ bool TFat16::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long lo
     unsigned int Size;
     unsigned int ClusterSize;
     unsigned short int Clusters;
+    unsigned short int FatSectors;
     int tries;
 
     Size = Adjust(Start, Count);
+
     ClusterSize = CalcClusterSize(Size);
     Clusters = CalcClusterCount(Size, ClusterSize);
+    FatSectors = CalcFatSectors(Clusters);
+
+    Size = Clusters * ClusterSize + 2 * FatSectors + ROOT_DIR_SECTORS + 1;
+
+    if (Size > 0xFFFF)
+    {
+        boot->base.Sectors = Size;
+        boot->base.SectorCount16 = 0;
+    }
+    else
+    {
+        boot->base.Sectors = 0;
+        boot->base.SectorCount16 = (unsigned short int)Size;
+    }
+
+    boot->base.SectorsPerCluster = ClusterSize;
+    boot->base.FatSectors16 = FatSectors;
+    boot->base.RootDirEntries = 512 * ROOT_DIR_SECTORS / 32;
 
     return false;
 }
