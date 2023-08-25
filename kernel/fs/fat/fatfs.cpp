@@ -66,10 +66,10 @@ static void ThreadStartup(void *ptr)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFat::WriteBootSector(TPartServer *Server, long long Sector, char *BootSector)
+void TFat::WriteBootSector(TPartServer *Server, char *BootSector)
 {
     TPartReq req(Server);
-    TPartReqEntry e1(&req, Sector, 1, false);
+    TPartReqEntry e1(&req, 0, 1, false);
     char *Data;
 
     req.WaitForever();
