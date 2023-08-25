@@ -2319,6 +2319,9 @@ write_vfs_sectors    Proc far
     call HandleToPartFs
     jc wvrDone
 ;
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+;
     mov ebp,ecx
 ;
     mov ebx,serv_flat_sel
