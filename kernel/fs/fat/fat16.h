@@ -35,10 +35,10 @@
 class TFat16 : public TFat
 {
 public:
-    TFat16(TPartServer *server, struct TBootSector *boot);
+    TFat16(TPartServer *server, struct TBootSector12_16 *boot);
     ~TFat16();
 
-    static bool ValidateFs(struct TBootSector *boot, long long *Start, long long *Count);
+    static bool ValidateFs(struct TBootSector12_16 *boot, long long *Start, long long *Count);
 
     virtual TDir *CacheRootDir();
 

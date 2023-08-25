@@ -42,7 +42,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFat12::ValidateFs(struct TBootSector *boot, long long *Start, long long *Count)
+bool TFat12::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long long *Count)
 {
     return false;
 }
@@ -58,8 +58,8 @@ bool TFat12::ValidateFs(struct TBootSector *boot, long long *Start, long long *C
 #   Returns....: *
 #
 ##########################################################################*/
-TFat12::TFat12(TPartServer *server, struct TBootSector *boot)
-  : TFat(server, boot),
+TFat12::TFat12(TPartServer *server, struct TBootSector12_16 *boot)
+  : TFat(server, (struct TBaseBootSector *)boot),
     Tab1(server),
     Tab2(server)
 {
@@ -67,15 +67,13 @@ TFat12::TFat12(TPartServer *server, struct TBootSector *boot)
     unsigned int Free2;
 
     FatSize = 12;
-    PartSectors = boot->SectorCount16;
+    PartSectors = boot->base.SectorCount16;
     if (!PartSectors)
-        PartSectors = boot->Sectors;
+        PartSectors = boot->base.Sectors;
 
-    FatSectors = boot->FatSectors16;
-    if (!FatSectors)
-        FatSectors = boot->FatSectors;
+    FatSectors = boot->base.FatSectors16;
 
-    RootDirEntries = boot->RootDirEntries;
+    RootDirEntries = boot->base.RootDirEntries;
 
     if (Validate())
     {

@@ -66,7 +66,7 @@ static void ThreadStartup(void *ptr)
 #   Returns....: *
 #
 ##########################################################################*/
-TFat::TFat(TPartServer *server, struct TBootSector *boot)
+TFat::TFat(TPartServer *server, struct TBaseBootSector *boot)
   : TFs(server)
 {
     FatCount = boot->FatCount;

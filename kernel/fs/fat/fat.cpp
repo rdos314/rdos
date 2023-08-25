@@ -62,17 +62,24 @@ void StartFs(TPartServer *Server)
 {
     char Name[6];
     long long TotalSectors;
-    struct TBootSector *boot;
+    struct TBaseBootSector *boot;
+    struct TBootSector12_16 *boot12_16 = 0;
+    struct TBootSector32 *boot32 = 0;
     TPartReq req(Server);
     TPartReqEntry e1(&req, 0, 1);
     int FatSize;
+
+    bool wait = true;
+
+    while (wait)
+        RdosWaitMilli(250);
 
     Started = true;
     Fs = 0;
 
     req.WaitForever();
 
-    boot = (struct TBootSector *)e1.Map();
+    boot = (struct TBaseBootSector *)e1.Map();
 
     if (!boot)
     {
@@ -86,58 +93,56 @@ void StartFs(TPartServer *Server)
         return;
     }
 
+    if (boot->RootDirEntries)
+    {
+        boot12_16 = (struct TBootSector12_16 *)e1.Map();
+        memcpy(Name, boot12_16->ext.FsName, 5);
+        Name[5] = 0;
+    }
+    else
+    {
+        boot32 = (struct TBootSector32 *)e1.Map();
+        memcpy(Name, boot32->ext.FsName, 5);
+        Name[5] = 0;
+    }
+
     FatSize = 0;
 
-    memcpy(Name, boot->FsName, 5);
-    Name[5] = 0;
-
-    if (!strcmp(Name, "FAT12"))
-        FatSize = 12;
-
-    if (!strcmp(Name, "FAT16"))
-        FatSize = 16;
-
-    if (!strcmp(Name, "FAT32"))
+    if (boot32)
         FatSize = 32;
-
-    if (!FatSize)
+    else
     {
-        memcpy(Name, FsName, 5);
-        Name[5] = 0;
-
         if (!strcmp(Name, "FAT12"))
             FatSize = 12;
 
         if (!strcmp(Name, "FAT16"))
             FatSize = 16;
 
-        if (!strcmp(Name, "FAT32"))
-            FatSize = 32;
-    }
+        if (!FatSize)
+        {
+            memcpy(Name, FsName, 5);
+            Name[5] = 0;
 
-    if (FatSize == 32)
-    {
-        if (!boot->RootCluster)
-            FatSize = 16;
-    }
-    else
-    {
-        if (!boot->RootDirEntries)
-            FatSize = 32;
+            if (!strcmp(Name, "FAT12"))
+                FatSize = 12;
+
+            if (!strcmp(Name, "FAT16"))
+                FatSize = 16;
+        }
     }
 
     switch (FatSize)
     {
         case 12:
-            Fs = new TFat12(Server, boot);
+            Fs = new TFat12(Server, boot12_16);
             break;
 
         case 16:
-            Fs = new TFat16(Server, boot);
+            Fs = new TFat16(Server, boot12_16);
             break;
 
         case 32:
-            Fs = new TFat32(Server, boot);
+            Fs = new TFat32(Server, boot32);
             break;
 
         default:
@@ -170,7 +175,9 @@ void StartFs(TPartServer *Server)
 int FormatFs(TPartServer *Server, int PartType, long long *Start, long long *Size)
 {
     char *BootSector;
-    struct TBootSector *boot;
+    struct TBaseBootSector *boot;
+    struct TBootSector12_16 *boot12_16 = 0;
+    struct TBootSector32 *boot32 = 0;
     bool ok;
 
     BootSector = new char[512];
@@ -181,20 +188,23 @@ int FormatFs(TPartServer *Server, int PartType, long long *Start, long long *Siz
 
     RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
 
-    boot = (struct TBootSector *)BootSector;
+    boot = (struct TBaseBootSector *)BootSector;
 
     switch (PartType)
     {
         case PART_TYPE_FAT12:
-            ok = TFat12::ValidateFs(boot, Start, Size);
+            boot12_16 = (struct TBootSector12_16 *)BootSector;
+            ok = TFat12::ValidateFs(boot12_16, Start, Size);
             break;
 
         case PART_TYPE_FAT16:
-            ok = TFat16::ValidateFs(boot, Start, Size);
+            boot12_16 = (struct TBootSector12_16 *)BootSector;
+            ok = TFat16::ValidateFs(boot12_16, Start, Size);
             break;
 
         case PART_TYPE_FAT32:
-            ok = TFat32::ValidateFs(boot, Start, Size);
+            boot32 = (struct TBootSector32 *)BootSector;
+            ok = TFat32::ValidateFs(boot32, Start, Size);
             break;
 
         default:

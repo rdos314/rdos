@@ -35,10 +35,10 @@
 class TFat32 : public TFat
 {
 public:
-    TFat32(TPartServer *server, struct TBootSector *boot);
+    TFat32(TPartServer *server, struct TBootSector32 *boot);
     ~TFat32();
 
-    static bool ValidateFs(struct TBootSector *boot, long long *Start, long long *Count);
+    static bool ValidateFs(struct TBootSector32 *boot, long long *Start, long long *Count);
 
     virtual TDir *CacheRootDir();
 

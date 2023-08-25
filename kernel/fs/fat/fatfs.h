@@ -33,7 +33,8 @@
 #include "cluster.h"
 #include "fatdir.h"
 
-struct TBootSector
+
+struct TBaseBootSector
 {
     char Jmp[3];
     char Name[8];
@@ -49,21 +50,42 @@ struct TBootSector
     short int Heads;
     int HiddenSectors;
     unsigned int Sectors;
+};
+
+struct TExtBootSector
+{
+    char DriveNr;
+    char Resv1;
+    char Sign;
+    int VolumeId;
+    char VolumeLabel[11];
+    char FsName[8];
+};
+
+struct TBootSector12_16
+{
+    struct TBaseBootSector base;
+    struct TExtBootSector ext;
+};
+
+struct TBootSector32
+{
+    struct TBaseBootSector base;
     int FatSectors;
     short int ExtFlags;
     short int FsVersion;
     int RootCluster;
     short int InfoSector;
     short int BackupSector;
-    short int Pad;
-    char FsName[8];
+    char Resv1[12];
+    struct TExtBootSector ext;
 };
 
 class TFat : public TFs
 {
 friend class TFatFile;
 public:
-    TFat(TPartServer *server, struct TBootSector *boot);
+    TFat(TPartServer *server, struct TBaseBootSector *boot);
     ~TFat();
 
     bool Validate();

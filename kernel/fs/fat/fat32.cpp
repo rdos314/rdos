@@ -51,7 +51,7 @@ struct TFatInfo
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFat32::ValidateFs(struct TBootSector *boot, long long *Start, long long *Count)
+bool TFat32::ValidateFs(struct TBootSector32 *boot, long long *Start, long long *Count)
 {
     return false;
 }
@@ -67,8 +67,8 @@ bool TFat32::ValidateFs(struct TBootSector *boot, long long *Start, long long *C
 #   Returns....: *
 #
 ##########################################################################*/
-TFat32::TFat32(TPartServer *server, struct TBootSector *boot)
-  : TFat(server, boot),
+TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot)
+  : TFat(server, (struct TBaseBootSector *)boot),
     Tab1(server),
     Tab2(server)
 {
@@ -76,13 +76,13 @@ TFat32::TFat32(TPartServer *server, struct TBootSector *boot)
     int Free2;
 
     FatSize = 32;
-    PartSectors = boot->Sectors;
+    PartSectors = boot->base.Sectors;
     if (!PartSectors)
-        PartSectors = boot->SectorCount16;
+        PartSectors = boot->base.SectorCount16;
 
     FatSectors = boot->FatSectors;
     if (!FatSectors)
-        FatSectors = boot->FatSectors16;
+        FatSectors = boot->base.FatSectors16;
 
     RootCluster = boot->RootCluster;
     InfoSector = boot->InfoSector;
