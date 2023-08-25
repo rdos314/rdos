@@ -212,6 +212,11 @@ int FormatFs(TPartServer *Server, int PartType, long long *Start, long long *Siz
             break;
     }
 
+    if (ok)
+    {
+        TFat::WriteBootSector(Server, *Start, BootSector);
+    }
+
     delete BootSector;
 
 
