@@ -195,7 +195,10 @@ bool TFat16::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long lo
     unsigned int ClusterSize;
     unsigned short int Clusters;
     unsigned short int FatSectors;
+    unsigned long lsb, msb;
     int tries;
+
+    RdosGetSysTime(&msb, &lsb);
 
     Size = Adjust(Start, Count);
 
@@ -217,8 +220,22 @@ bool TFat16::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long lo
     }
 
     boot->base.SectorsPerCluster = ClusterSize;
-    boot->base.FatSectors16 = FatSectors;
+    boot->base.ResvSectors = 1;
+    boot->base.FatCount = 2;
     boot->base.RootDirEntries = 512 * ROOT_DIR_SECTORS / 32;
+    boot->base.Media = 0xF8;
+    boot->base.FatSectors16 = FatSectors;
+    boot->base.SectorsPerCyl = -1;
+    boot->base.Heads = -1;
+    boot->base.HiddenSectors = 0;
+
+    boot->ext.DriveNr = 0x80;
+    boot->ext.Resv1 = 0;
+    boot->ext.Sign = 0x29;
+
+    boot->ext.VolumeId = lsb;
+    strcpy(boot->ext.VolumeLabel, "NO NAME    ");
+    strcpy(boot->ext.FsName, "FAT16   ");
 
     return false;
 }
