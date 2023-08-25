@@ -100,7 +100,7 @@ unsigned int TFat16::CalcClusterSize(unsigned int size)
             Used = size - ROOT_DIR_SECTORS - 1 - 2 * FatSectors;
         } 
 
-        if (Clusters <= 0XFFFF)
+        if (Clusters < 65525)
             break;
 
         ClusterSize = 2 * ClusterSize;
@@ -146,7 +146,7 @@ unsigned short int TFat16::CalcClusterCount(unsigned int TotalSectors, unsigned 
         Used -= ClusterSize;
     }
 
-    while (Clusters != 0xFFFF && Used + ClusterSize < TotalSectors)
+    while (Clusters < 65524 && Used + ClusterSize < TotalSectors)
     {
         Clusters++;
         Used += ClusterSize;
@@ -237,7 +237,12 @@ bool TFat16::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long lo
     strcpy(boot->ext.VolumeLabel, "NO NAME    ");
     strcpy(boot->ext.FsName, "FAT16   ");
 
-    return false;
+    *Count = Size;
+
+    if (Clusters < 4085)
+        return false;
+    else
+        return true;
 }
 
 /*##########################################################################
