@@ -31,6 +31,84 @@
 #include <serv.h>
 #include "fat16.h"
 
+#define ROOT_DIR_SECTORS	32
+
+/*##########################################################################
+#
+#   Name       : TFat16::Adjust
+#
+#   Purpose....: Adjust size & pos to achieve 4k alignment
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFat16::Adjust(long long *Start, long long *Count)
+{
+    long long pos = *Start;
+    unsigned int size;
+    long long diff;
+
+    pos = pos / 8;
+    pos = 8 * pos + 7;
+
+    if (*Count < 0xFFFFFFFF)
+        size = (unsigned int)*Count;
+    else
+        size = 0xFFFFFFFF;
+
+    diff = pos - *Start;
+    size -= diff;
+
+    *Start = pos;
+    *Count = size;
+
+    return size;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat16::CalcClusterSize
+#
+#   Purpose....: Calculate cluster size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFat16::CalcClusterSize(unsigned int size)
+{
+    unsigned int ClusterSize;
+    unsigned int Clusters;
+    unsigned int FatSectors;
+    unsigned int Used;
+    int tries;
+
+    ClusterSize = 8;
+    while (ClusterSize != 64)
+    {
+        Used = size - ROOT_DIR_SECTORS - 1;
+        for (tries = 0; tries < 3; tries++)
+        { 
+            Clusters = Used / ClusterSize;
+            FatSectors = Clusters / 256;
+            FatSectors--;
+            FatSectors = FatSectors / 4;
+            FatSectors = 4 * (FatSectors + 1);
+            Used = size - ROOT_DIR_SECTORS - 1 - 2 * FatSectors;
+        } 
+
+        if (Clusters <= 0XFFFF)
+            break;
+
+        ClusterSize = 2 * ClusterSize;
+    }    
+
+    return ClusterSize;
+}
+
 /*##########################################################################
 #
 #   Name       : TFat16::ValidateFs
@@ -44,6 +122,13 @@
 ##########################################################################*/
 bool TFat16::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long long *Count)
 {
+    unsigned int Size;
+    unsigned int ClusterSize;
+    int tries;
+
+    Size = Adjust(Start, Count);
+    ClusterSize = CalcClusterSize(Size);
+
     return false;
 }
 

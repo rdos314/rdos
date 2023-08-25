@@ -43,6 +43,9 @@ public:
     virtual TDir *CacheRootDir();
 
 protected:
+    static unsigned int Adjust(long long *Start, long long *Count);
+    static unsigned int CalcClusterSize(unsigned int size);
+
     int RootDirEntries;
     long long RootSector;
 
