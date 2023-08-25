@@ -51,6 +51,7 @@ public:
     char *GetData();
     char *Map();
     void Unmap();
+    void Write();
 
 protected:
     long long FStartSector;

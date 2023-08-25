@@ -336,6 +336,22 @@ void TPartReqEntry::Unmap()
 
 /*##########################################################################
 #
+#   Name       : TPartReqEntry::Write
+#
+#   Purpose....: Write sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartReqEntry::Write()
+{
+    ServWriteVfsSectors(FReq->FServer->GetHandle(), FStartSector, FSectorCount);
+}
+
+/*##########################################################################
+#
 #   Name       : TPartReq::TDisReq
 #
 #   Purpose....: Disc req contructor
