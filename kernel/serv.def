@@ -47,5 +47,7 @@ stop_vfs_io_serv_nr        = 45
 serv_close_part_nr         = 46
 serv_format_part_nr        = 47
 get_vfs_part_type_nr       = 48
+set_vfs_start_sector_nr    = 49
+set_vfs_sectors_nr         = 50
 
-serv_gate_entries          = 50
+serv_gate_entries          = 55

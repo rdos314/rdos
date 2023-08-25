@@ -44,25 +44,26 @@
 #   Returns....: *
 #
 ##########################################################################*/
-unsigned int TFat16::Adjust(long long *Start, long long *Count)
+unsigned int TFat16::Adjust(TPartServer *Server, long long Start, long long Count)
 {
-    long long pos = *Start;
+    long long pos = Start;
     unsigned int size;
     long long diff;
+    int handle = Server->GetHandle();
 
     pos = pos / 8;
     pos = 8 * pos + 7;
 
-    if (*Count < 0xFFFFFFFF)
-        size = (unsigned int)*Count;
+    if (Count < 0xFFFFFFFF)
+        size = (unsigned int)Count;
     else
         size = 0xFFFFFFFF;
 
-    diff = pos - *Start;
+    diff = pos - Start;
     size -= diff;
 
-    *Start = pos;
-    *Count = size;
+    ServSetVfsStartSector(handle, pos);
+    ServSetVfsSectors(handle, size);
 
     return size;
 }
@@ -180,7 +181,7 @@ unsigned short int TFat16::CalcFatSectors(unsigned short int Clusters)
 
 /*##########################################################################
 #
-#   Name       : TFat16::ValidateFs
+#   Name       : TFat16::InitFs
 #
 #   Purpose....: Validate before format
 #
@@ -189,7 +190,7 @@ unsigned short int TFat16::CalcFatSectors(unsigned short int Clusters)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFat16::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long long *Count)
+bool TFat16::InitFs(TPartServer *Server, struct TBootSector12_16 *boot, long long Start, long long Count)
 {
     unsigned int Size;
     unsigned int ClusterSize;
@@ -197,10 +198,11 @@ bool TFat16::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long lo
     unsigned short int FatSectors;
     unsigned long lsb, msb;
     int tries;
+    int handle = Server->GetHandle();
 
     RdosGetSysTime(&msb, &lsb);
 
-    Size = Adjust(Start, Count);
+    Size = Adjust(Server, Start, Count);
 
     ClusterSize = CalcClusterSize(Size);
     Clusters = CalcClusterCount(Size, ClusterSize);
@@ -237,7 +239,7 @@ bool TFat16::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long lo
     strcpy(boot->ext.VolumeLabel, "NO NAME    ");
     strcpy(boot->ext.FsName, "FAT16   ");
 
-    *Count = Size;
+    ServSetVfsSectors(handle, Size);
 
     if (Clusters < 4085)
         return false;

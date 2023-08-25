@@ -27,7 +27,7 @@
 
 void Start();
 void Stop();
-int Format(long long *Start, long long *Size);
+int Format(long long Start, long long Size);
 long long GetFreeSectors();
 int GetDirHeaderSize();
 int GetDir(int rel, char *path, int *count);
@@ -69,8 +69,8 @@ void LowStop()
 #   Name       : LowFormat
 #
 ##########################################################################*/
-#pragma aux LowFormat "*" parm routine [esi] [edi] value [eax]
-int LowFormat(long long *Start, long long *Count)
+#pragma aux LowFormat "*" parm routine [edx eax] [edi esi] value [eax]
+int LowFormat(long long Start, long long Count)
 {
     return Format(Start, Count);
 }

@@ -773,6 +773,64 @@ get_vfs_disc_part    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SetVfsStartSector
+;
+;       DESCRIPTION:    Set VFS start sector
+;
+;       PARAMETERS:     EBX         VFS Handle
+;                       EDX:EAX     Start sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_vfs_start_sector_name       DB 'Set VFS Start Sector',0
+
+set_vfs_start_sector    Proc far
+    push es
+;
+    call HandleToPartEs
+    jc svssDone
+;
+    mov es:vfsp_start_sector,eax
+    mov es:vfsp_start_sector+4,edx
+    clc
+
+svssDone:
+    pop es
+    ret
+set_vfs_start_sector    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetVfsSectors
+;
+;       DESCRIPTION:    Set VFS sectors
+;
+;       PARAMETERS:     EBX         VFS Handle
+;                       EDX:EAX     Sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_vfs_sectors_name       DB 'Set VFS Sectors',0
+
+set_vfs_sectors    Proc far
+    push es
+;
+    call HandleToPartEs
+    jc svsDone
+;
+    mov es:vfsp_sector_count,eax
+    mov es:vfsp_sector_count+4,edx
+    clc
+
+svsDone:
+    pop es
+    ret
+set_vfs_sectors    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetVfsStartSector
 ;
 ;       DESCRIPTION:    Get VFS start sector
@@ -1133,8 +1191,6 @@ serv_stop_part   Endp
 ;       PARAMETERS:     EBX         Partition handle
 ;                       EDX:EAX     Req start sector
 ;                       EDI:ESI     Req sector count
-;       RETURNS:        EDX:EAX     Actual start sector
-;                       EDI:ESI     Actual sector count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1144,8 +1200,7 @@ serv_format_part    Proc far
     push ds
     push es
     push fs
-    push ebx
-    push ecx
+    pushad
 ;
     call FindVfsHandle
     jc fpDone
@@ -1154,19 +1209,16 @@ serv_format_part    Proc far
     jc fpDone
 ;
     mov ds,fs:vfsp_disc_sel
-;
     mov ecx,edi
+;
     call AllocateMsg
     jc fpDone
 ;
     mov eax,VFS_FORMAT
     call RunMsg
-;
-    mov edi,ecx
 
 fpDone:
-    pop ecx
-    pop ebx
+    popad
     pop fs
     pop es
     pop ds
@@ -5141,6 +5193,18 @@ init_server    Proc near
     mov edi,OFFSET get_vfs_disc_part_name
     xor cl,cl
     mov ax,get_vfs_disc_part_nr
+    RegisterServGate
+;
+    mov esi,OFFSET set_vfs_start_sector
+    mov edi,OFFSET set_vfs_start_sector_name
+    xor cl,cl
+    mov ax,set_vfs_start_sector_nr
+    RegisterServGate
+;
+    mov esi,OFFSET set_vfs_sectors
+    mov edi,OFFSET set_vfs_sectors_name
+    xor cl,cl
+    mov ax,set_vfs_sectors_nr
     RegisterServGate
 ;
     mov esi,OFFSET get_vfs_start_sector

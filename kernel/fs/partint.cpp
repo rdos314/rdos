@@ -52,7 +52,7 @@ void Stop()
         Server->Stop();
 }
 
-int Format(long long *Start, long long *Count)
+int Format(long long Start, long long Count)
 {
     bool wait = true;
     int PartType;
@@ -642,7 +642,7 @@ void TPartServer::Stop()
 #   Returns....: *
 #
 ##########################################################################*/
-int TPartServer::Format(int PartType, long long *Start, long long *Size)
+int TPartServer::Format(int PartType, long long Start, long long Size)
 {
     return (*OnFormat)(this, PartType, Start, Size);
 }

@@ -675,7 +675,7 @@ TPartition *TDisc::FormatPart(const char *FsName, long long *Start, long long *C
 
     if (PartHandle)
     {
-        Res = ServFormatVfsPartition(PartHandle, Start, Count);
+        Res = ServFormatVfsPartition(PartHandle, *Start, *Count);
     }
 
     return 0;

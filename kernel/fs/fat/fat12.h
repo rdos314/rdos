@@ -38,7 +38,7 @@ public:
     TFat12(TPartServer *server, struct TBootSector12_16 *boot);
     ~TFat12();
 
-    static bool ValidateFs(struct TBootSector12_16 *boot, long long *Start, long long *Count);
+    static bool InitFs(TPartServer *server, struct TBootSector12_16 *boot, long long Start, long long Count);
 
     virtual TDir *CacheRootDir();
 

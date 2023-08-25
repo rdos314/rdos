@@ -42,16 +42,16 @@ struct TFatInfo
 
 /*##########################################################################
 #
-#   Name       : TFat32::ValidateFs
+#   Name       : TFat32::InitFs
 #
-#   Purpose....: Validate before format
+#   Purpose....: Init before format
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFat32::ValidateFs(struct TBootSector32 *boot, long long *Start, long long *Count)
+bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot, long long Start, long long Count)
 {
     return false;
 }

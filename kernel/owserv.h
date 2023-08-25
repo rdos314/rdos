@@ -118,6 +118,14 @@
     __parm [__ebx] \
     __value [__eax]
 
+#pragma aux ServSetVfsStartSector = \
+    ServGate_set_vfs_start_sector  \
+    __parm [__ebx] [__edx __eax]
+
+#pragma aux ServSetVfsSectors = \
+    ServGate_set_vfs_sectors  \
+    __parm [__ebx] [__edx __eax]
+
 #pragma aux ServGetVfsStartSector = \
     ServGate_get_vfs_start_sector  \
     __parm [__ebx] \
@@ -170,22 +178,9 @@
     __parm [__ebx]
 
 #pragma aux ServFormatVfsPartition = \
-    "push esi" \
-    "push edi" \
-    "mov eax,[esi]" \
-    "mov edx,[esi+4]" \
-    "mov esi,[edi]" \
-    "mov edi,[edi+4]" \
     ServGate_serv_format_part \
-    "pop ecx" \
-    "mov [ecx],esi" \
-    "mov [ecx+4],edi" \
-    "pop ecx" \
-    "mov [ecx],eax" \
-    "mov [ecx+4],edx" \    
     CarryToBool \
-    __parm [__ebx] [__esi] [__edi] \
-    __modify [__ecx __edx __esi __edi] \
+    __parm [__ebx] [__edx __eax] [__edi __esi] \
     __value [__eax]
 
 #pragma aux ServCreateVfsReq = \

@@ -33,7 +33,7 @@
 
 /*##########################################################################
 #
-#   Name       : TFat12::ValidateFs
+#   Name       : TFat12::InitFs
 #
 #   Purpose....: Validate before format
 #
@@ -42,7 +42,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFat12::ValidateFs(struct TBootSector12_16 *boot, long long *Start, long long *Count)
+bool TFat12::InitFs(TPartServer *server, struct TBootSector12_16 *boot, long long Start, long long Count)
 {
     return false;
 }
