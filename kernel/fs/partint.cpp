@@ -54,6 +54,11 @@ void Stop()
 
 int Format()
 {
+    bool wait = true;
+
+    while (wait)
+        RdosWaitMilli(250);
+
     if (Server)
         return Server->Format();
     else

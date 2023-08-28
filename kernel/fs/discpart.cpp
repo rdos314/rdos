@@ -675,12 +675,16 @@ TPartition *TDisc::FormatPart(const char *FsName, long long *Start, long long *C
     if (PartHandle)
     {
         Handle = ServFormatVfsPartition(PartHandle);
+        *Count = 0;
+
         if (Handle)
         {
             *Start = ServGetVfsStartSector(Handle);
             *Count = ServGetVfsSectors(Handle);
         }
     }
+    else
+        *Count = 0;
 
     return 0;
 }

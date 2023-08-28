@@ -216,6 +216,31 @@ int FormatFs(TPartServer *Server)
     if (ok)
     {
         TFat::WriteBootSector(Server, BootSector);
+
+        switch (PartType)
+        {
+            case PART_TYPE_FAT12:
+                Fs = new TFat12(Server, boot12_16);
+                break;
+
+            case PART_TYPE_FAT16:
+                Fs = new TFat16(Server, boot12_16);
+                break;
+
+            case PART_TYPE_FAT32:
+                Fs = new TFat32(Server, boot32);
+                break;
+        }
+    }
+
+    if (Fs)
+    {
+        if (!Fs->Validate())
+        {
+            LogError(Server, Fs);
+            delete Fs;
+            Fs = 0;
+        }
     }
 
     delete BootSector;
