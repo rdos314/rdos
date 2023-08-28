@@ -52,18 +52,15 @@ void Stop()
         Server->Stop();
 }
 
-int Format(long long Start, long long Count)
+int Format()
 {
     bool wait = true;
-    int PartType;
 
     while (wait)
         RdosWaitMilli(250);
 
-    PartType = ServGetVfsPartType(handle);
-
-    if (Server && PartType)
-        return Server->Format(PartType, Start, Count);
+    if (Server)
+        return Server->Format();
     else
         return 0;
 }
@@ -642,9 +639,22 @@ void TPartServer::Stop()
 #   Returns....: *
 #
 ##########################################################################*/
-int TPartServer::Format(int PartType, long long Start, long long Size)
+int TPartServer::Format()
 {
-    return (*OnFormat)(this, PartType, Start, Size);
+    int Type = GetPartType();
+    long long Start = GetPartStartSector();
+    long long Size = GetPartSectors();
+
+    if (Size > 0 && Type)
+    {
+        if ((*OnFormat)(this, Type, Start, Size))
+        {
+            Size = GetPartSectors();
+            if (Size > 0)
+                return 1;
+        }
+    }
+    return 0;
 }
 
 /*##########################################################################
@@ -762,6 +772,22 @@ long long TPartServer::GetPartSectors()
 int TPartServer::GetBytesPerSector()
 {
     return ServGetVfsBytesPerSector(handle);
+}
+
+/*##########################################################################
+#
+#   Name       : TPartServer::GetPartType
+#
+#   Purpose....: Get partition type
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPartServer::GetPartType()
+{
+    return ServGetVfsPartType(handle);
 }
 
 /*##########################################################################

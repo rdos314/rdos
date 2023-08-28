@@ -100,11 +100,12 @@ public:
     void Start();
     void Stop();
     void Disable();
-    int Format(int PartType, long long Start, long long Size);
+    int Format();
 
     long long GetPartStartSector();
     long long GetPartSectors();
     int GetBytesPerSector();
+    int GetPartType();
 
     bool WaitForMsg();
     bool WaitForMsg(TFs *fs);
