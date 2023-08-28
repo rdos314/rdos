@@ -124,10 +124,6 @@ ServClosePart  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
-; IN  EDX:EAX          Start sector
-; IN  EDI:ESI          Sector count
-; OUT EDX:EAX          Start sector
-; OUT EDI:ESI          Sector count
 ServFormatPart  MACRO
     ServGate serv_format_part_nr
                     ENDM

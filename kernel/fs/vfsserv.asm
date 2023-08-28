@@ -1189,8 +1189,6 @@ serv_stop_part   Endp
 ;       DESCRIPTION:    Format partition
 ;
 ;       PARAMETERS:     EBX         Partition handle
-;                       EDX:EAX     Req start sector
-;                       EDI:ESI     Req sector count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

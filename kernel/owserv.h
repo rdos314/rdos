@@ -180,7 +180,7 @@
 #pragma aux ServFormatVfsPartition = \
     ServGate_serv_format_part \
     CarryToBool \
-    __parm [__ebx] [__edx __eax] [__edi __esi] \
+    __parm [__ebx] \
     __value [__eax]
 
 #pragma aux ServCreateVfsReq = \

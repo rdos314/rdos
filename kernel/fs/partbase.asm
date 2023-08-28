@@ -523,10 +523,7 @@ LocalStop Endp
    extern LowFormat:near
 
 LocalFormat Proc near
-    push edi
-    mov edi,ecx
     call LowFormat
-    pop edi
 ;
     or eax,eax
     jz lfReply
