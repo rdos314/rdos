@@ -183,6 +183,33 @@ long long TFat::GetFreeSectors()
 
 /*##########################################################################
 #
+#   Name       : TFat::FormatFixedDir
+#
+#   Purpose....: FormatFixedDir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::FormatFixedDir(long long RootSector, int RootDirEntries)
+{
+    int Sectors = RootDirEntries / 16;
+    TPartReq Req(FServer);
+    TPartReqEntry ReqEntry(&Req, RootSector, Sectors, true);
+    char *data;
+
+    Req.WaitForever();
+
+    data = (char *)ReqEntry.Map();
+
+    memset(data, 0, 512 * Sectors);
+
+    ReqEntry.Write();
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::CacheFixedDir
 #
 #   Purpose....: CacheFixedDir

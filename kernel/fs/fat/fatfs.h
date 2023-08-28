@@ -115,6 +115,7 @@ public:
 
 protected:
     TDir *CacheFixedDir(long long RootSector, int RootDirEntries);
+    void FormatFixedDir(long long RootSector, int RootDirEntries);
 
     bool VerifySector(int id, char *buf);
     void GetSectors(TPartReq *Req, long long sector, int count);

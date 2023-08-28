@@ -305,6 +305,8 @@ TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format)
                 FreeClusters = Free2;
             else
                 FreeClusters = Free1;
+
+            FormatFixedDir(RootSector, RootDirEntries);
         }
         else
         {
