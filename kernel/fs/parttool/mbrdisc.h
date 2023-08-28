@@ -119,6 +119,8 @@ public:
     TMbrPartitionTable PartRoot;
 
 protected:
+    virtual bool CreatePart(long long Start, long long Sectors);
+
     void LoadBootLoader();
     void WriteBootSector();
     void WriteBootLoader();

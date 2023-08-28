@@ -367,3 +367,19 @@ void TGptDisc::InitPart()
 void TGptDisc::AddPart(const char *FsName, long long Sectors)
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TGptDisc::CreatePart
+#
+#   Purpose....: Create partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TGptDisc::CreatePart(long long Start, long long Sectors)
+{
+    return false;
+}

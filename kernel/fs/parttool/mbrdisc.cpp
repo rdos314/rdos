@@ -582,6 +582,22 @@ void TMbrDisc::WriteBootLoader()
 
 /*##########################################################################
 #
+#   Name       : TMbrDisc::CreatePart
+#
+#   Purpose....: Create partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TMbrDisc::CreatePart(long long Start, long long Sectors)
+{
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TMbrDisc::::AddPart
 #
 #   Purpose....: Add partition
@@ -602,5 +618,6 @@ void TMbrDisc::AddPart(const char *FsName, long long Sectors)
     Start = AllocateSectors(FLoaderSectors + 1, Count);
 
     if (Start)
-        FormatPart(FsName, &Start, &Count);
+        if (FormatPart(FsName, &Start, &Count))
+            CreatePart(Start, Count);
 }
