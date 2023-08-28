@@ -49,7 +49,6 @@ unsigned int TFat16::Adjust(TPartServer *Server, long long Start, long long Coun
     long long pos = Start;
     unsigned int size;
     long long diff;
-    int handle = Server->GetHandle();
 
     pos = pos / 8;
     pos = 8 * pos + 7;
@@ -62,10 +61,10 @@ unsigned int TFat16::Adjust(TPartServer *Server, long long Start, long long Coun
     diff = pos - Start;
     size -= diff;
 
-    ServSetVfsStartSector(handle, pos);
-    ServSetVfsSectors(handle, size);
-
-    return size;
+    if (Server->MovePartUp(diff))
+        return size;
+    else
+        return 0;
 }
 
 /*##########################################################################

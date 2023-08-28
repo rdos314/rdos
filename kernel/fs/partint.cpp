@@ -792,6 +792,39 @@ int TPartServer::GetPartType()
 
 /*##########################################################################
 #
+#   Name       : TPartServer::MovePartUp
+#
+#   Purpose....: Move start porition of partition up
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPartServer::MovePartUp(long long diff)
+{
+    long long Start = GetPartStartSector();
+    long long Size = GetPartSectors();
+
+    if (diff == 0)
+        return true;
+
+    if (diff > 0 && diff < Size)
+    {
+        Start += diff;
+        Size -= diff;
+
+        ServSetVfsStartSector(handle, Start);
+        ServSetVfsSectors(handle, Size);
+        return true;
+    }
+
+    ServSetVfsSectors(handle, 0);
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TPartServer::WaitForMsg
 #
 #   Purpose....: Wait for msg

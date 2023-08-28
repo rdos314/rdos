@@ -106,6 +106,7 @@ public:
     long long GetPartSectors();
     int GetBytesPerSector();
     int GetPartType();
+    bool MovePartUp(long long Diff);
 
     bool WaitForMsg();
     bool WaitForMsg(TFs *fs);
