@@ -44,8 +44,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-unsigned int TFat16::Adjust(TPartServer *Server, long long Start, long long Count)
+unsigned int TFat16::Adjust(TPartServer *Server)
 {
+    long long Start = Server->GetPartStartSector();
+    long long Count = Server->GetPartSectors();
     long long pos = Start;
     unsigned int size;
     long long diff;
@@ -189,8 +191,9 @@ unsigned short int TFat16::CalcFatSectors(unsigned short int Clusters)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFat16::InitFs(TPartServer *Server, struct TBootSector12_16 *boot, long long Start, long long Count)
+bool TFat16::InitFs(TPartServer *Server, struct TBootSector12_16 *boot)
 {
+    long long Diff;
     unsigned int Size;
     unsigned int ClusterSize;
     unsigned short int Clusters;
@@ -201,7 +204,7 @@ bool TFat16::InitFs(TPartServer *Server, struct TBootSector12_16 *boot, long lon
 
     RdosGetSysTime(&msb, &lsb);
 
-    Size = Adjust(Server, Start, Count);
+    Size = Adjust(Server);
 
     ClusterSize = CalcClusterSize(Size);
     Clusters = CalcClusterCount(Size, ClusterSize);
@@ -238,7 +241,8 @@ bool TFat16::InitFs(TPartServer *Server, struct TBootSector12_16 *boot, long lon
     strcpy(boot->ext.VolumeLabel, "NO NAME    ");
     strcpy(boot->ext.FsName, "FAT16   ");
 
-    ServSetVfsSectors(handle, Size);
+    Diff = Server->GetPartSectors() - (long long)Size;
+    Server->ShrinkPart(Diff);
 
     if (Clusters < 4085)
         return false;

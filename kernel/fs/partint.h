@@ -107,13 +107,14 @@ public:
     int GetBytesPerSector();
     int GetPartType();
     bool MovePartUp(long long Diff);
+    bool ShrinkPart(long long Diff);
 
     bool WaitForMsg();
     bool WaitForMsg(TFs *fs);
     bool IsActive();
 
     void (*OnStart)(TPartServer *Server);
-    int (*OnFormat)(TPartServer *Server, int PartType, long long Start, long long Size);
+    int (*OnFormat)(TPartServer *Server);
 
 protected:
     void Add(int id, TPartReq *req);

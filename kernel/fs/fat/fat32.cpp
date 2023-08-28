@@ -51,7 +51,7 @@ struct TFatInfo
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot, long long Start, long long Count)
+bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
 {
     return false;
 }

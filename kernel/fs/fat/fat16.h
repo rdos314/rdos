@@ -38,12 +38,12 @@ public:
     TFat16(TPartServer *server, struct TBootSector12_16 *boot);
     ~TFat16();
 
-    static bool InitFs(TPartServer *Server, struct TBootSector12_16 *boot, long long Start, long long Count);
+    static bool InitFs(TPartServer *Server, struct TBootSector12_16 *boot);
 
     virtual TDir *CacheRootDir();
 
 protected:
-    static unsigned int Adjust(TPartServer *Server, long long Start, long long Count);
+    static unsigned int Adjust(TPartServer *Server);
     static unsigned int CalcClusterSize(unsigned int TotalSectors);
     static unsigned short int CalcClusterCount(unsigned int TotalSectors, unsigned int ClusterSize);
     static unsigned short int CalcFatSectors(unsigned short int Clusters);

@@ -172,8 +172,9 @@ void StartFs(TPartServer *Server)
 #   Returns....: *
 #
 ##########################################################################*/
-int FormatFs(TPartServer *Server, int PartType, long long Start, long long Size)
+int FormatFs(TPartServer *Server)
 {
+    int PartType = Server->GetPartType();
     char *BootSector;
     struct TBaseBootSector *boot;
     struct TBootSector12_16 *boot12_16 = 0;
@@ -194,17 +195,17 @@ int FormatFs(TPartServer *Server, int PartType, long long Start, long long Size)
     {
         case PART_TYPE_FAT12:
             boot12_16 = (struct TBootSector12_16 *)BootSector;
-            ok = TFat12::InitFs(Server, boot12_16, Start, Size);
+            ok = TFat12::InitFs(Server, boot12_16);
             break;
 
         case PART_TYPE_FAT16:
             boot12_16 = (struct TBootSector12_16 *)BootSector;
-            ok = TFat16::InitFs(Server, boot12_16, Start, Size);
+            ok = TFat16::InitFs(Server, boot12_16);
             break;
 
         case PART_TYPE_FAT32:
             boot32 = (struct TBootSector32 *)BootSector;
-            ok = TFat32::InitFs(Server, boot32, Start, Size);
+            ok = TFat32::InitFs(Server, boot32);
             break;
 
         default:

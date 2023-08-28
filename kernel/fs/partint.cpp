@@ -642,12 +642,11 @@ void TPartServer::Stop()
 int TPartServer::Format()
 {
     int Type = GetPartType();
-    long long Start = GetPartStartSector();
     long long Size = GetPartSectors();
 
     if (Size > 0 && Type)
     {
-        if ((*OnFormat)(this, Type, Start, Size))
+        if ((*OnFormat)(this))
         {
             Size = GetPartSectors();
             if (Size > 0)
@@ -815,6 +814,35 @@ bool TPartServer::MovePartUp(long long diff)
         Size -= diff;
 
         ServSetVfsStartSector(handle, Start);
+        ServSetVfsSectors(handle, Size);
+        return true;
+    }
+
+    ServSetVfsSectors(handle, 0);
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartServer::ShrinkPart
+#
+#   Purpose....: Shrink partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPartServer::ShrinkPart(long long diff)
+{
+    long long Size = GetPartSectors();
+
+    if (diff == 0)
+        return true;
+
+    if (diff > 0 && diff < Size)
+    {
+        Size -= diff;
         ServSetVfsSectors(handle, Size);
         return true;
     }

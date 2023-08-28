@@ -42,7 +42,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFat12::InitFs(TPartServer *server, struct TBootSector12_16 *boot, long long Start, long long Count)
+bool TFat12::InitFs(TPartServer *server, struct TBootSector12_16 *boot)
 {
     return false;
 }
