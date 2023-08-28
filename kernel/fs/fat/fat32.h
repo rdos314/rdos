@@ -35,7 +35,7 @@
 class TFat32 : public TFat
 {
 public:
-    TFat32(TPartServer *server, struct TBootSector32 *boot);
+    TFat32(TPartServer *server, struct TBootSector32 *boot, bool format);
     ~TFat32();
 
     static bool InitFs(TPartServer *server, struct TBootSector32 *boot);

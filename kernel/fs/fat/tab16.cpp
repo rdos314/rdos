@@ -167,6 +167,22 @@ unsigned int TFatTable16::GetFreeClusters()
 
 /*##########################################################################
 #
+#   Name       : TFatTable16::FormatClusters
+#
+#   Purpose....: Format clusters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatTable16::FormatClusters()
+{
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatTable16::GetClusterLink
 #
 #   Purpose....: Get cluster link

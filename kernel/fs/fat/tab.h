@@ -38,6 +38,7 @@ public:
 
     virtual unsigned int GetClusterLink(unsigned int Cluster) = 0;
     virtual unsigned int GetFreeClusters() = 0;
+    virtual unsigned int FormatClusters() = 0;
 
 protected:
     long long FStartSector;

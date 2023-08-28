@@ -35,7 +35,7 @@
 class TFat16 : public TFat
 {
 public:
-    TFat16(TPartServer *server, struct TBootSector12_16 *boot);
+    TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format);
     ~TFat16();
 
     static bool InitFs(TPartServer *Server, struct TBootSector12_16 *boot);

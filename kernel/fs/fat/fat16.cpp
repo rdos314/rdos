@@ -261,7 +261,7 @@ bool TFat16::InitFs(TPartServer *Server, struct TBootSector12_16 *boot)
 #   Returns....: *
 #
 ##########################################################################*/
-TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot)
+TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format)
   : TFat(server, (struct TBaseBootSector *)boot),
     Tab1(server),
     Tab2(server)
@@ -296,13 +296,26 @@ TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot)
         Tab1.Setup(SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
         Tab2.Setup(SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
 
-        Free1 = Tab1.GetFreeClusters();
-        Free2 = Tab2.GetFreeClusters();
+        if (format)
+        {
+            Free1 = Tab1.FormatClusters();
+            Free2 = Tab2.FormatClusters();
 
-        if (Free1 > Free2)
-            FreeClusters = Free2;
+            if (Free1 > Free2)
+                FreeClusters = Free2;
+            else
+                FreeClusters = Free1;
+        }
         else
-            FreeClusters = Free1;
+        {
+            Free1 = Tab1.GetFreeClusters();
+            Free2 = Tab2.GetFreeClusters();
+
+            if (Free1 > Free2)
+                FreeClusters = Free2;
+            else
+                FreeClusters = Free1;
+        }
     }
 }
 

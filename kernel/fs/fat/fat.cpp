@@ -134,15 +134,15 @@ void StartFs(TPartServer *Server)
     switch (FatSize)
     {
         case 12:
-            Fs = new TFat12(Server, boot12_16);
+            Fs = new TFat12(Server, boot12_16, false);
             break;
 
         case 16:
-            Fs = new TFat16(Server, boot12_16);
+            Fs = new TFat16(Server, boot12_16, false);
             break;
 
         case 32:
-            Fs = new TFat32(Server, boot32);
+            Fs = new TFat32(Server, boot32, false);
             break;
 
         default:
@@ -220,15 +220,15 @@ int FormatFs(TPartServer *Server)
         switch (PartType)
         {
             case PART_TYPE_FAT12:
-                Fs = new TFat12(Server, boot12_16);
+                Fs = new TFat12(Server, boot12_16, true);
                 break;
 
             case PART_TYPE_FAT16:
-                Fs = new TFat16(Server, boot12_16);
+                Fs = new TFat16(Server, boot12_16, true);
                 break;
 
             case PART_TYPE_FAT32:
-                Fs = new TFat32(Server, boot32);
+                Fs = new TFat32(Server, boot32, true);
                 break;
         }
     }
