@@ -525,6 +525,7 @@ LocalStop Endp
 LocalFormat Proc near
     call LowFormat
 ;
+    mov [edi].fc_eax,eax
     or eax,eax
     jz lfReply
 ;

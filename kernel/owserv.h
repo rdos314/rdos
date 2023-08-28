@@ -179,7 +179,6 @@
 
 #pragma aux ServFormatVfsPartition = \
     ServGate_serv_format_part \
-    CarryToBool \
     __parm [__ebx] \
     __value [__eax]
 

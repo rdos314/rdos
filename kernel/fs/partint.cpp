@@ -54,11 +54,6 @@ void Stop()
 
 int Format()
 {
-    bool wait = true;
-
-    while (wait)
-        RdosWaitMilli(250);
-
     if (Server)
         return Server->Format();
     else
@@ -650,7 +645,7 @@ int TPartServer::Format()
         {
             Size = GetPartSectors();
             if (Size > 0)
-                return 1;
+                return handle;
         }
     }
     return 0;

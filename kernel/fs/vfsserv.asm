@@ -1198,7 +1198,9 @@ serv_format_part    Proc far
     push ds
     push es
     push fs
-    pushad
+    push ebx
+    push ecx
+    push edi
 ;
     call FindVfsHandle
     jc fpDone
@@ -1207,7 +1209,6 @@ serv_format_part    Proc far
     jc fpDone
 ;
     mov ds,fs:vfsp_disc_sel
-    mov ecx,edi
 ;
     call AllocateMsg
     jc fpDone
@@ -1216,7 +1217,9 @@ serv_format_part    Proc far
     call RunMsg
 
 fpDone:
-    popad
+    pop edi
+    pop ecx
+    pop ebx
     pop fs
     pop es
     pop ds
