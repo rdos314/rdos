@@ -94,12 +94,14 @@ public:
     virtual bool IsTable();
 
     void Process(TMbrDisc *disc, char *data);
+    struct TMbrPartition *AddEntry(TMbrDisc *Disc, char Type, unsigned int Start, unsigned int Size);
 
     TMbrPartition *PartArr[4];
 
 protected:
     void ProcessOne(TMbrDisc *disc, int index, struct TMbrPartitionEntry *entry);
     void ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TablePart);
+    void WriteEntry(TMbrDisc *Disc, int Index, struct TMbrPartitionEntry *entry);
 };
 
 class TMbrDisc : public TDisc
@@ -119,7 +121,7 @@ public:
     TMbrPartitionTable PartRoot;
 
 protected:
-    virtual bool CreatePart(long long Start, long long Sectors);
+    virtual bool CreatePart(int Type, long long Start, long long Sectors);
 
     void LoadBootLoader();
     void WriteBootSector();

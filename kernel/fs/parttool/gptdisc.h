@@ -102,7 +102,7 @@ public:
     TGptTable SecondaryTable;
 
 protected:
-    virtual bool CreatePart(long long Start, long long Sectors);
+    virtual bool CreatePart(int Type, long long Start, long long Sectors);
 
 };
 

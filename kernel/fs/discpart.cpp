@@ -664,11 +664,12 @@ long long TDisc::AllocateSectors(long long Start, long long Count)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TDisc::FormatPart(const char *FsName, long long *Start, long long *Count)
+int TDisc::FormatPart(const char *FsName, long long *Start, long long *Count)
 {
     int Handle = FServer->GetHandle();
     int FsType = FsNameToType(FsName);
     int PartHandle;
+    int PartType = 0;
 
     PartHandle = ServLoadVfsPartition(Handle, FsType, *Start, *Count);
 
@@ -681,15 +682,13 @@ bool TDisc::FormatPart(const char *FsName, long long *Start, long long *Count)
         {
             *Start = ServGetVfsStartSector(Handle);
             *Count = ServGetVfsSectors(Handle);
+            PartType = ServGetVfsPartType(Handle);
         }
     }
     else
         *Count = 0;
 
-    if (*Count)
-        return true;
-    else
-        return false;
+    return PartType;
 }
 
 /*##########################################################################

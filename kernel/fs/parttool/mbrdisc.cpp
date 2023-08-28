@@ -233,6 +233,84 @@ void TMbrPartitionTable::Process(TMbrDisc *Disc, char *Data)
     ProcessOne(Disc, 3, (struct TMbrPartitionEntry *)(Data + 0x1EE));
 }
 
+/*##################  TMbrPartitionTable::WriteEntry  #############
+*   Purpose....: Write entry
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TMbrPartitionTable::WriteEntry(TMbrDisc *Disc, int Index, struct TMbrPartitionEntry *Entry)
+{
+    char *Data;
+    TDiscServer *server = Disc->GetServer();
+    TDiscReq req(server);
+    TDiscReqEntry e1(&req, FStartSector, 1, false);
+
+    req.WaitForever();
+
+    Data = (char *)e1.Map();
+
+    switch (Index)
+    {
+        case 0:
+            memcpy(Data + 0x1BE, Entry, 0x10);
+            break;
+
+        case 1:
+            memcpy(Data + 0x1CE, Entry, 0x10);
+            break;
+
+        case 2:
+            memcpy(Data + 0x1DE, Entry, 0x10);
+            break;
+
+        case 3:
+            memcpy(Data + 0x1EE, Entry, 0x10);
+            break;
+    }
+
+    e1.Write();
+}
+
+/*##################  TMbrPartitionTable::AddEntry  #############
+*   Purpose....: Add entry
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+struct TMbrPartition *TMbrPartitionTable::AddEntry(TMbrDisc *Disc, char Type, unsigned int Start, unsigned int Size)
+{
+    int i;
+    struct TMbrPartitionEntry entry;
+    TMbrPartition *part = 0;
+
+    for (i = 0; i < 4; i++)
+        if (PartArr[i] == 0)
+            break;
+
+    if (i < 4)
+    {
+        if (i == 0 && !FParent)
+            entry.Status = 0x80;
+        else
+            entry.Status = 0;
+
+        Disc->LbaToChs(Start, &entry.ChsStart);
+        entry.Type = Type;
+        Disc->LbaToChs(Start + Size - 1, &entry.ChsEnd);
+        entry.LbaStart = Start - (unsigned int)FStartSector;
+        entry.LbaCount = Size;
+
+        WriteEntry(Disc, i, &entry);
+
+        part = new TMbrPartition(this, i, &entry, Start, Size);
+        PartArr[i] = part;
+    }
+    return part;
+}
+
 /*##########################################################################
 #
 #   Name       : TMbrDisc::TMbrDisc
@@ -591,9 +669,16 @@ void TMbrDisc::WriteBootLoader()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TMbrDisc::CreatePart(long long Start, long long Sectors)
+bool TMbrDisc::CreatePart(int Type, long long Start, long long Sectors)
 {
-    return false;
+    TMbrPartition *part;
+
+    part = PartRoot.AddEntry(this, Type, Start, Sectors);
+
+    if (part)
+        return true;
+    else
+        return false;
 }
 
 /*##########################################################################
@@ -611,6 +696,8 @@ void TMbrDisc::AddPart(const char *FsName, long long Sectors)
 {
     long long Start;
     long long Count = Sectors;
+    int PartType;
+    char Type = 0;
 
     if (Count > 0xFFFFFFFF)
         Count = 0xFFFFFFFF;
@@ -618,6 +705,28 @@ void TMbrDisc::AddPart(const char *FsName, long long Sectors)
     Start = AllocateSectors(FLoaderSectors + 1, Count);
 
     if (Start)
-        if (FormatPart(FsName, &Start, &Count))
-            CreatePart(Start, Count);
+    {
+        PartType = FormatPart(FsName, &Start, &Count);
+
+        switch (PartType)
+        {
+            case PART_TYPE_FAT12:
+                Type = 1;
+                break;
+
+            case PART_TYPE_FAT16:
+                if (Count > 0xFFFF)
+                    Type = 6;
+                else
+                    Type = 4;
+                break;
+
+            case PART_TYPE_FAT32:
+                Type = 0xC;
+                break;
+        }
+
+        if (Type)
+            CreatePart(Type, (unsigned int)Start, (unsigned int)Count);
+    }
 }

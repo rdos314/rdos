@@ -95,9 +95,9 @@ public:
 protected:
     void Sort();
     long long AllocateSectors(long long Start, long long Count);
-    bool FormatPart(const char *FsName, long long *Start, long long *Count);
+    int FormatPart(const char *FsName, long long *Start, long long *Count);
 
-    virtual bool CreatePart(long long Start, long long Sectors) = 0;
+    virtual bool CreatePart(int Type, long long Start, long long Sectors) = 0;
 
     void GrowPart();
     void DeletePart(TPartition *part);
