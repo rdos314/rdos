@@ -135,8 +135,8 @@ unsigned short int TFat16::CalcClusterCount(unsigned int TotalSectors, unsigned 
         Clusters = Used / ClusterSize;
         FatSectors = Clusters / 256;
         FatSectors--;
-        FatSectors = FatSectors / 4;
-        FatSectors = 4 * (FatSectors + 1);
+        FatSectors = FatSectors / 8;
+        FatSectors = 8 * (FatSectors + 1);
         Used = TotalSectors - ROOT_DIR_SECTORS - 1 - 2 * FatSectors;
     } 
 
@@ -174,8 +174,8 @@ unsigned short int TFat16::CalcFatSectors(unsigned short int Clusters)
 
     FatSectors = Clusters / 256;
     FatSectors--;
-    FatSectors = FatSectors / 4;
-    FatSectors = 4 * (FatSectors + 1);
+    FatSectors = FatSectors / 8;
+    FatSectors = 8 * (FatSectors + 1);
 
     return FatSectors;
 }
