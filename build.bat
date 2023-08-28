@@ -76,6 +76,10 @@ echo "Building Rdos classlib"
 ide2make -p classlib/rdos/rdos 1>nul
 wmake -f classlib/rdos/rdos.mk -h -e 1>nul
 
+echo "Building FS"
+ide2make -p kernel/fs/fs 1>nul
+wmake -f kernel/fs/fs.mk -h -e 1>nul
+
 echo "Building Win32 classlib"
 ide2make -p classlib/win32/win32 1>nul
 wmake -f classlib/win32/win32.mk -h -e 1>nul
