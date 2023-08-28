@@ -1883,9 +1883,6 @@ srAppend:
     shl edi,4
 
 srTake:
-    add eax,fs:vfsp_start_sector
-    adc edx,fs:vfsp_start_sector+4
-;
     push eax
     push ecx
 ;
@@ -2139,6 +2136,9 @@ add_vfs_sectors    Proc far
     mov ebx,serv_flat_sel
     mov es,ebx
 ;
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+;
     EnterSection ds:vfs_section
     call SetupReq
     jc arsLeave
@@ -2193,6 +2193,9 @@ lock_vfs_sectors    Proc far
     call GetReqMask
     mov ebx,serv_flat_sel
     mov es,ebx
+;
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
 ;
     EnterSection ds:vfs_section
     call IsSectorCountAligned
@@ -2258,6 +2261,9 @@ zero_vfs_sectors    Proc far
     call GetReqMask
     mov ebx,serv_flat_sel
     mov es,ebx
+;
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
 ;
     EnterSection ds:vfs_section
     call IsSectorCountAligned

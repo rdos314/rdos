@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <memory.h>
 #include "tab16.h"
 
 /*##########################################################################
@@ -167,6 +168,37 @@ unsigned int TFatTable16::GetFreeClusters()
 
 /*##########################################################################
 #
+#   Name       : TFatTable16::FormatBlock
+#
+#   Purpose....: Format block
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatTable16::FormatBlock(long long Sector, unsigned int Clusters)
+{
+    unsigned int i;
+    unsigned int FreeClusters = 0;
+    TPartReqEntry e1(&FReq, Sector, 8, true);
+    char *tab;
+
+    FReq.WaitForever();
+
+    tab = (char *)e1.Map();
+
+    memset(tab, 0, 2 * Clusters);
+    tab += 2 * Clusters;
+    memset(tab, 0xFF, 0x1000 - 2 * Clusters);
+
+    e1.Write();
+
+    return Clusters;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatTable16::FormatClusters
 #
 #   Purpose....: Format clusters
@@ -178,7 +210,25 @@ unsigned int TFatTable16::GetFreeClusters()
 ##########################################################################*/
 unsigned int TFatTable16::FormatClusters()
 {
-    return 0;
+    unsigned int FreeClusters = 0;
+    int i;
+    long long Sector = FStartSector;
+    unsigned int Cluster = 0;
+    int Count;
+    int Blocks = FClusters / 512 * 2 / 8;
+
+    for (i = 0; i <= Blocks; i++)
+    {
+        Count = FClusters - Cluster;
+        if (Count > 512 * 8 / 2)
+            Count = 512 * 8 / 2;
+
+        FreeClusters += FormatBlock(Sector, Count);
+        Sector += 8;
+        Cluster += Count;
+    }
+
+    return FreeClusters;
 }
 
 /*##########################################################################

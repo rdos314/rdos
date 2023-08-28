@@ -45,6 +45,7 @@ public:
 
 protected:
     unsigned int GetFreeInBlock(long long Sector, unsigned int Clusters);
+    unsigned int FormatBlock(long long Sector, unsigned int Clusters);
 
     unsigned int FClusters;
 
