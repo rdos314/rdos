@@ -189,6 +189,15 @@ unsigned int TFatTable16::FormatBlock(long long Sector, unsigned int Clusters)
     tab = (char *)e1.Map();
 
     memset(tab, 0, 2 * Clusters);
+
+    if (Sector == FStartSector)
+    {
+        tab[0] = 0xF8;
+        tab[1] = 0xFF;
+        tab[2] = 0xFF;
+        tab[3] = 0xFF;
+    }
+
     tab += 2 * Clusters;
     memset(tab, 0xFF, 0x1000 - 2 * Clusters);
 

@@ -69,11 +69,6 @@ void StartFs(TPartServer *Server)
     TPartReqEntry e1(&req, 0, 1);
     int FatSize;
 
-    bool wait = true;
-
-    while (wait)
-        RdosWaitMilli(250);
-
     Started = true;
     Fs = 0;
 
