@@ -94,7 +94,7 @@ unsigned int TFat16::CalcClusterSize(unsigned int size)
         Used = size - ROOT_DIR_SECTORS - 1;
         for (tries = 0; tries < 3; tries++)
         { 
-            Clusters = Used / ClusterSize;
+            Clusters = Used / ClusterSize + 2;
             FatSectors = Clusters / 256;
             FatSectors--;
             FatSectors = FatSectors / 4;
@@ -132,7 +132,7 @@ unsigned short int TFat16::CalcClusterCount(unsigned int TotalSectors, unsigned 
     Used = TotalSectors - ROOT_DIR_SECTORS - 1;
     for (tries = 0; tries < 3; tries++)
     { 
-        Clusters = Used / ClusterSize;
+        Clusters = Used / ClusterSize + 2;
         FatSectors = Clusters / 256;
         FatSectors--;
         FatSectors = FatSectors / 8;
