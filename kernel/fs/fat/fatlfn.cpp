@@ -249,7 +249,9 @@ void TFatLfn::GenerateShortName(const char *name, int index, char *buf)
     else
         len = 2;
 
-    for (i = 0; i < len; i++)
+    i = 0;
+
+    while (i < len)
     {
         if (*inptr == 0 || *inptr == '.')
             break;
@@ -259,14 +261,15 @@ void TFatLfn::GenerateShortName(const char *name, int index, char *buf)
         {
             *outptr = ch;
             outptr++;
+            i++;
         }
         inptr++;
     }
     *outstr = 0;
 
-    len = outptr - outstr;
+    len = i;
 
-    sprintf(formstr, "%%s~%%%dd", 7 - len);
+    sprintf(formstr, "%%s~%%0%dd", 7 - len);
     sprintf(buf, formstr, outstr, index);
 
     if (*inptr == '.')
@@ -277,7 +280,9 @@ void TFatLfn::GenerateShortName(const char *name, int index, char *buf)
         *outptr = '.';
         outptr++;
 
-        for (i = 0; i < 3; i++)
+        i = 0;
+
+        while (i < 3)
         {
             if (*inptr == 0)
                 break;
@@ -287,12 +292,14 @@ void TFatLfn::GenerateShortName(const char *name, int index, char *buf)
             {
                 *outptr = ch;
                 outptr++;
+                i++;
             }
             inptr++;
         }
 
-        if (*outptr == '.')
-            outptr--;
+        outptr--;
+        if (*outptr != '.')
+            outptr++;
 
         *outptr = 0;
     }
