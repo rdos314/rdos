@@ -441,6 +441,10 @@ TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 ##########################################################################*/
 bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 {
+    TFatLfn lfn;
+
+    lfn.SetName(Name);
+
     return false;
 }
 

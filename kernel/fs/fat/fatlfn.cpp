@@ -32,6 +32,37 @@
 #include "fatlfn.h"
 #include "fatdir.h"
 
+typedef struct
+{
+    unsigned char mask;
+    unsigned char value;
+} utf8_pattern;
+
+static const utf8_pattern utf8_leading_bytes[] =
+{
+    { 0x80, 0x00 }, // 0xxxxxxx
+    { 0xE0, 0xC0 }, // 110xxxxx
+    { 0xF0, 0xE0 }, // 1110xxxx
+    { 0xF8, 0xF0 }  // 11110xxx
+};
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::TFatLfn
+#
+#   Purpose....: Fat lfn constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFatLfn::TFatLfn()
+{
+    MaxSize = 0;
+    Buf = 0;
+}
+
 /*##########################################################################
 #
 #   Name       : TFatLfn::TFatLfn
@@ -248,5 +279,164 @@ void TFatLfn::GetName(char *name)
             outptr++;
         }
     }
+    *outptr = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::CalculateUtf8Len
+#
+#   Purpose....: Calculate UTF-8 len of codepoint
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFatLfn::CalculateUtf8Len(unsigned int codepoint)
+{
+    if (codepoint <= 0x7F)
+        return 1;
+
+    if (codepoint <= 0x7FF)
+        return 2;
+
+    if (codepoint <= 0xFFFF)
+        return 3;
+
+    return 4;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::DecodeUtf8
+#
+#   Purpose....: Decode UTF-8
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatLfn::DecodeUtf8(const unsigned char *utf8, int *size)
+{
+    unsigned char leading = utf8[0];
+    int len = 0;
+    utf8_pattern leading_pattern;
+    bool matches = false;
+    int i;
+    
+    do
+    {
+        leading_pattern = utf8_leading_bytes[len];
+        len++;
+
+        matches = (leading & leading_pattern.mask) == leading_pattern.value;
+
+    } while (!matches && len < 4);
+
+    if (!matches)
+        return 0;
+
+    unsigned int codepoint = leading & ~leading_pattern.mask;
+
+    for (i = 1; i < len; i++)
+    {
+        unsigned char continuation = utf8[i];
+        if (continuation == 0)
+            return 0;
+
+        if ((continuation & 0xC0) != 0x80)
+            return 0;
+
+        codepoint <<= 6;
+        codepoint |= continuation & ~0xC0;
+    }
+
+    if (CalculateUtf8Len(codepoint) != len)
+        return 0;
+
+    if (codepoint < 0xFFFF && (codepoint & 0xF800) == 0xD800)
+        return 0;
+
+    if (codepoint > 0x10FFFF)
+        return 0;
+
+    *size = len;
+
+    return codepoint;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::EncodeUtf16
+#
+#   Purpose....: Encode UTF-16
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFatLfn::EncodeUtf16(short int *utf16, short int codepoint)
+{
+    if (codepoint <= 0xFFFF)
+    {
+        utf16[0] = codepoint;
+        return 1;
+    }
+
+    codepoint -= 0x10000;
+
+    short int low = 0xDC00;
+    low |= codepoint & 0x03FF;
+
+    codepoint >>= 10;
+
+    short int high = 0xD800;
+    high |= codepoint & 0x03FF;
+
+    utf16[0] = high;
+    utf16[1] = low;
+
+    return 2;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::SetName
+#
+#   Purpose....: Set name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatLfn::SetName(const char *name)
+{
+    int Size = strlen(name);
+    const unsigned char *inptr = (const unsigned char *)name;
+    short int *outptr;
+    unsigned int codepoint;
+    int count;
+
+    MaxSize = Size + 2;
+    Buf = new short int[MaxSize];
+
+    outptr = Buf;
+
+    while (*inptr)
+    {
+        codepoint = DecodeUtf8(inptr, &count);
+        inptr += count;
+
+        if (!codepoint)
+            break;        
+
+        count = EncodeUtf16(outptr, codepoint);
+        outptr += count;        
+    }
+
     *outptr = 0;
 }

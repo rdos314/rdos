@@ -45,6 +45,7 @@ struct TFatLfnEntry
 class TFatLfn
 {
 public:
+    TFatLfn();
     TFatLfn(struct TFatLfnEntry *entry);
     virtual ~TFatLfn();
 
@@ -53,8 +54,13 @@ public:
     int GetNameSize();
     void GetName(char *buf);
 
+    void SetName(const char *buf);
+
 protected:
     void AddData(struct TFatLfnEntry *entry);
+    int CalculateUtf8Len(unsigned int codepoint);
+    unsigned int DecodeUtf8(const unsigned char *utf8, int *size);
+    int EncodeUtf16(short int *utf16, short int codepoint);
 
     char ChkSum;
     char Count;
