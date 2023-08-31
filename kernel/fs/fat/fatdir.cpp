@@ -46,6 +46,9 @@ TFatDir::TFatDir(TDir *ParentDir, int ParentIndex)
   : TDir(ParentDir, ParentIndex)
 {
     FCurrLfn = 0;
+    LfnCount = 0;
+    LfnMax = 4;
+    LfnArr = new TLfnEntry[MaxCount];
 }
 
 /*##########################################################################
@@ -61,9 +64,10 @@ TFatDir::TFatDir(TDir *ParentDir, int ParentIndex)
 ##########################################################################*/
 TFatDir::~TFatDir()
 {
+    delete LfnArr;
 }
 
-/*##########################################################################
+/*#########################################################################
 #
 #   Name       : TFatDir::GetCluster
 #
@@ -319,4 +323,34 @@ void TFatDir::Add(long long sector, int offset, struct TFatDirEntry *entry)
             }
             break;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::GrowLfn
+#
+#   Purpose....: Grow LFN array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::GrowLfn()
+{
+    int i;
+    int Size = 2 * LfnMax;
+    struct TLfnEntry *NewArr;
+
+    NewArr = new TLfnEntry[Size];
+
+    for (i = 0; i < MaxCount; i++)
+        strcpy(NewArr[i].Name, LfnArr[i].Name);
+
+    for (i = MaxCount; i < Size; i++)
+        NewArr[i].Name[0] = 0;
+
+    delete LfnArr;
+    LfnArr = NewArr;
+    LfnMax = Size;
 }

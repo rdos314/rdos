@@ -48,6 +48,11 @@ struct TFatDirEntry
     unsigned int FileSize;
 };
 
+struct TLfnEntry
+{
+    char Name[14];
+};
+
 class TFatDir : public TDir
 {
 public:
@@ -57,6 +62,8 @@ public:
     void Add(long long sector, int offset, struct TFatDirEntry *entry);
 
 protected:
+    void GrowLfn();
+
     unsigned int GetCluster(struct TFatDirEntry *entry);
     long long DecodeTime(short int Date, short int Time);
     int DecodeAttrib(char attrib);
@@ -65,6 +72,10 @@ protected:
     void AddLfn(long long sector, int offset, struct TFatDirEntry *entry);
 
     struct TFatLfn *FCurrLfn;
+
+    int LfnCount;
+    int LfnMax;
+    struct TLfnEntry *LfnArr;
 
 };
 
