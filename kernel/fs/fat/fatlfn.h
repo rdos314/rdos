@@ -49,6 +49,10 @@ public:
     TFatLfn(struct TFatLfnEntry *entry);
     virtual ~TFatLfn();
 
+    bool IsValidShortChar(char ch);
+    bool IsValidShortName(const char *buf);
+    void GenerateShortName(const char *name, int index, char *buf);
+
     bool Add(struct TFatLfnEntry *entry);
     bool Verify(struct TFatDirEntry *entry);
     int GetNameSize();

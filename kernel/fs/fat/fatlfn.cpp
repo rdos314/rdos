@@ -97,7 +97,187 @@ TFatLfn::TFatLfn(struct TFatLfnEntry *entry)
 ##########################################################################*/
 TFatLfn::~TFatLfn()
 {
-    delete Buf;
+    if (Buf)
+        delete Buf;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::IsValidShortChar
+#
+#   Purpose....: Check for valid short char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatLfn::IsValidShortChar(char ch)
+{
+    switch (ch)
+    {
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+        case 'e':
+        case 'f':
+        case 'g':
+        case 'h':
+        case 'i':
+        case 'j':
+        case 'k':
+        case 'l':
+        case 'm':
+        case 'n':
+        case 'o':
+        case 'p':
+        case 'q':
+        case 'r':
+        case 's':
+        case 't':
+        case 'u':
+        case 'v':
+        case 'w':
+        case 'x':
+        case 'y':
+        case 'z':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case '$':
+        case '%':
+        case 0x27:
+        case '-':
+        case '_':
+        case '@':
+        case '~':
+        case '!':
+        case '(':
+        case ')':
+        case '{':
+        case '}':
+        case '^':
+        case '#':
+        case '&':
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::IsValidShortName
+#
+#   Purpose....: Check for valid short name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatLfn::IsValidShortName(const char *buf)
+{
+    int i;
+    const char *ptr = buf;
+
+    for (i = 0; i < 8; i++)
+    {
+        if (*ptr == 0)
+            return true;
+
+        if (*ptr == '.')
+            break;
+
+        ptr++;
+    }
+
+    if (*ptr == '.')
+    {
+        ptr++;
+
+        for (i = 0; i < 3; i++)
+        {
+            if (*ptr == 0)
+                return true;
+
+            ptr++;
+        }
+    }
+
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::GenerateShortName
+#
+#   Purpose....: GenerateShortName
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatLfn::GenerateShortName(const char *name, int index, char *buf)
+{
+    int len;
+    int i;
+    const char *inptr = name;
+    const char *outptr = buf;
+
+    if (index < 10)
+        len = 6;
+    else if (index < 100)
+        len = 5;
+    else if (index < 1000)
+        len = 4;
+    else if (index < 10000)
+        len = 3;
+    else
+        len = 2;
+
+    for (i = 0; i < len; i++)
+    {
+        if (*inptr == 0 || *inptr == '.')
+            break;
+
+        if (IsValidShortChar(*inptr))
+        {
+            *outptr = *inptr;
+            outptr++;
+        }
+        inptr++;
+    }
+
+    len = outptr - buf;
+
+    switch (len)
+    {
+        case 0:
+            sprintf(out
+
+
+    if (index < 10)
+    {
+        len = 6;
+        sprintf(buf + 6, "~%1d.";
+    }
+    else
+    {
+        len = 5;
+        sprintf(buf + 5, "~%2d.";
+    }
+    
 }
 
 /*##########################################################################
