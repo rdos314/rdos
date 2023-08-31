@@ -48,6 +48,7 @@ class TFile;
 class TDir : public TBlock
 {
 public:
+    TDir(TDir *ParentDir);
     TDir(TDir *ParentDir, int ParentIndex);
     virtual ~TDir();
 

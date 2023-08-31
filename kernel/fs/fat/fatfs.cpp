@@ -441,16 +441,7 @@ TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 ##########################################################################*/
 bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 {
-    TFatDir *FatDir = (TFatDir *)ParentDir;
-    struct RdosDirEntry *entry;
-    int count = FatDir->GetCount();
-    int i;
-
-    for (i = 0; i < count; i++)
-    {
-        entry = FatDir->LockEntry(i);
-        FatDir->UnlockEntry(entry);
-    }
+    TFatDir *FatDir = new TFatDir(ParentDir);
 
     return false;
 }
