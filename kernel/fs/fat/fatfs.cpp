@@ -430,6 +430,22 @@ TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 
 /*##########################################################################
 #
+#   Name       : TFat::CreateDir
+#
+#   Purpose....: Create dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat::CreateDir(TDir *ParentDir, const char *Name)
+{
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : VerifySector
 #
 #   Purpose....:

@@ -1037,6 +1037,8 @@ int TFs::OpenFile(int rel, char *path)
 ##########################################################################*/
 int TFs::CreateDir(int rel, char *path)
 {
+    TDir *dir;
+    bool ok = false;
     TParser Parser(GetStartDir(rel), path);
 
     if (FStopped)
@@ -1050,7 +1052,16 @@ int TFs::CreateDir(int rel, char *path)
             return -1;
     }
 
-    return 0;
+    dir = Parser.GetDir();
+
+    if (dir)
+    {
+        dir->LockDir();
+        ok = CreateDir(dir, path);
+        dir->UnlockDir();
+    }
+
+    return ok;
 }
 
 /*##########################################################################

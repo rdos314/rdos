@@ -557,7 +557,7 @@ LocalCreateDir Proc near
     call LowCreateDir
     pop edi
 ;
-    cmp eax,-1
+    or eax,eax
     je cdDone
 ;
     mov ebx,[edi].fc_handle
