@@ -1026,6 +1026,35 @@ int TFs::OpenFile(int rel, char *path)
 
 /*##########################################################################
 #
+#   Name       : TFs::CreateDir
+#
+#   Purpose....: Create dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::CreateDir(int rel, char *path)
+{
+    TParser Parser(GetStartDir(rel), path);
+
+    if (FStopped)
+        return -1;
+
+    while (!Parser.IsLast())
+    {
+        if (Parser.IsDir())
+            Parser.Advance();
+        else
+            return -1;
+    }
+
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::FileHandleToIndex
 #
 #   Purpose....: Convert file handle to index in file arr

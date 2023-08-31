@@ -154,6 +154,14 @@ void CloseFile(int handle)
         Fs->CloseFile(handle);
 }
 
+int CreateDir(int rel, char *path)
+{
+    if (Fs)
+        return Fs->CreateDir(rel, path);
+    else
+        return 0;
+}
+
 }
 
 /*##########################################################################

@@ -41,6 +41,7 @@ int OpenFile(int rel, char *path);
 int GetFileAttrib(int handle);
 int GetFileHandle(int handle);
 void CloseFile(int handle);
+int CreateDir(int rel, char *path);
 
 /*##########################################################################
 #
@@ -216,4 +217,15 @@ int LowGetFileAttrib(int handle)
 int LowGetFileHandle(int handle)
 {
     return GetFileHandle(handle);
+}
+
+/*##########################################################################
+#
+#   Name       : LowCreateDir
+#
+##########################################################################*/
+#pragma aux LowCreateDir "*" parm routine [eax] [edi] value [eax]
+int LowCreateDir(int rel, char *path)
+{
+    return CreateDir(rel, path);
 }

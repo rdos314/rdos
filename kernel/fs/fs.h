@@ -100,6 +100,8 @@ public:
     int GetFileAttrib(int handle);
     void CloseFile(int handle);
 
+    int CreateDir(int rel, char *path);
+
     void ReadDirLink(TDir *dir, int index);
 
     void Execute();

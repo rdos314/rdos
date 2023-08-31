@@ -548,14 +548,13 @@ LocalFormat Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern LowCreateDir:near
+
 LocalCreateDir Proc near
     push edi
     mov eax,[edi].fc_eax
     add edi,SIZE vfs_cmd_struc
-    push ecx
-    mov esi,esp
-;    call LowOpenFile
-    pop ecx
+    call LowCreateDir
     pop edi
 ;
     cmp eax,-1
