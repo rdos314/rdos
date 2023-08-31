@@ -51,42 +51,6 @@ extern void UnlockDirLinkObject(struct TDirLink *link);
 #   Returns....: *
 #
 ##########################################################################*/
-TDir::TDir(TDir *pd)
-  : Section("dir")
-{
-    int i;
-    struct RdosDirEntry *ParentEntry;
-
-    Entry = 0;
-    Parent = pd;
-    ParentIndex = 0;
-    Inode = 0;
-
-    EntryCount = 0;
-    MaxCount = 4;
-    EntryArr = new TDirLink[MaxCount];
-
-    for (i = 0; i < MaxCount; i++)
-    {
-        EntryArr[i].Offset = 0;
-        EntryArr[i].Link = 0;
-        EntryArr[i].WaitHandle = 0;
-        EntryArr[i].RefCount = 0;
-        EntryArr[i].WaitCount = 0;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TDir::TDir
-#
-#   Purpose....: Dir constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 TDir::TDir(TDir *pd, int pi)
   : Section("dir")
 {

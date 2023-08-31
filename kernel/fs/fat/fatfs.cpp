@@ -441,8 +441,6 @@ TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 ##########################################################################*/
 bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 {
-    TFatDir *FatDir = new TFatDir(ParentDir);
-
     return false;
 }
 

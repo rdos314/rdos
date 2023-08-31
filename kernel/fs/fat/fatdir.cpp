@@ -46,32 +46,6 @@ TFatDir::TFatDir(TDir *ParentDir, int ParentIndex)
   : TDir(ParentDir, ParentIndex)
 {
     FCurrLfn = 0;
-    LfnCount = 0;
-    LfnMax = 0;
-    LfnArr = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFatDir::TFatDir
-#
-#   Purpose....: Fat dir constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFatDir::TFatDir(TDir *ParentDir)
-  : TDir(ParentDir)
-{
-    int i;
-
-    FCurrLfn = 0;
-
-    LfnCount = 0;
-    LfnMax = 4;
-    LfnArr = new TFatDirEntry[LfnMax];
 }
 
 /*##########################################################################
@@ -87,8 +61,6 @@ TFatDir::TFatDir(TDir *ParentDir)
 ##########################################################################*/
 TFatDir::~TFatDir()
 {
-    if (LfnArr)
-        delete LfnArr;
 }
 
 /*##########################################################################

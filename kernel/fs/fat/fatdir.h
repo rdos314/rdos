@@ -52,7 +52,6 @@ class TFatDir : public TDir
 {
 public:
     TFatDir(TDir *ParentDir, int ParentIndex);
-    TFatDir(TDir *ParentDir);
     virtual ~TFatDir();
 
     void Add(long long sector, int offset, struct TFatDirEntry *entry);
@@ -67,9 +66,6 @@ protected:
 
     struct TFatLfn *FCurrLfn;
 
-    struct TFatDirEntry *LfnArr;
-    int LfnCount;
-    int LfnMax;
 };
 
 #endif
