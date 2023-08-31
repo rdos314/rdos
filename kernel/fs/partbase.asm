@@ -540,6 +540,39 @@ LocalFormat Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalCreateDir
+;
+;       DESCRIPTION:    Create dir
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalCreateDir Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    add edi,SIZE vfs_cmd_struc
+    push ecx
+    mov esi,esp
+;    call LowOpenFile
+    pop ecx
+    pop edi
+;
+    cmp eax,-1
+    je cdDone
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+
+cdDone:
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalCreateDir Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -563,6 +596,7 @@ m08 DD OFFSET GetRelDir
 m09 DD OFFSET LocalOpenFile
 m10 DD OFFSET LocalCloseFile
 m11 DD OFFSET LocalFormat
+m12 DD OFFSET LocalCreateDir
 
 WaitForMsg_    Proc near
     push ebx

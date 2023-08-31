@@ -3183,6 +3183,119 @@ rVfs32:
 read_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           create_vfs_dir
+;
+;       DESCRIPTION:    Create VFS dir
+;
+;       PARAMETERS:     ES:(E)DI       Pathname
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_vfs_dir    Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov eax,es
+    mov gs,eax
+;
+    call GetPathDrive
+    jc cvdFail
+;
+    call GetDrivePart
+    or bx,bx
+    jz cvdFail
+;
+    mov ah,es:[edi]
+    cmp ah,'/'
+    je cvdRoot
+;
+    cmp ah,'\'
+    je cvdRoot
+
+cvdRel:
+    call GetRelDir
+    jmp cvdHasStart
+
+cvdRoot:
+    inc edi
+    xor ax,ax
+
+cvdHasStart:
+    mov esi,edi
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    movzx eax,ax
+    call AllocateMsg
+    jc cvdFail
+
+cvdCopyPath:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz cvdCopyPath
+;
+    mov eax,VFS_CREATE_DIR
+    call RunMsg
+    jmp cvdDone
+
+cvdFail:
+    stc
+
+cvdDone:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+create_vfs_dir    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           MakeDir
+;
+;       DESCRIPTION:    Create directory
+;
+;       PARAMETERS:     ES:(E)DI       Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+make_dir_name       DB 'Create VFS Dir',0
+
+org_make_dir DD ?,?
+
+make_dir16  Proc far
+    push edi
+    movzx edi,di
+    call create_vfs_dir
+    jnc mdvf16Done
+;
+    call fword ptr cs:org_make_dir
+
+mdvf16Done:
+    pop edi
+    ret
+make_dir16  Endp
+
+make_dir32  Proc far
+    call create_vfs_dir
+    jnc mdf32Done
+;
+    call fword ptr cs:org_make_dir
+
+mdf32Done:
+    ret
+make_dir32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           Delete handle
@@ -3250,6 +3363,15 @@ init_client_file    Proc near
     mov edi,OFFSET delete_handle
     mov ax,VFS_FILE_HANDLE
     RegisterHandle
+;
+    mov ebx,OFFSET make_dir16
+    mov esi,OFFSET make_dir32
+    mov edi,OFFSET make_dir_name
+    mov dx,virt_es_in
+    mov ax,make_dir_nr
+    LinkUserGate
+    mov dword ptr fs:org_make_dir,eax
+    mov word ptr fs:org_make_dir+4,dx
 ;
     mov ebx,OFFSET open_file16
     mov esi,OFFSET open_file32

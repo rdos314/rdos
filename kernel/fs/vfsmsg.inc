@@ -73,13 +73,17 @@ VFS_CLOSE_FILE            = 10
 ; OUT EDX:EAX   Sectors
 VFS_FORMAT                = 11
 
+; IN  EAX       Start handle
+; IN            Path name
+VFS_CREATE_DIR            = 12
+
 ; IN            Cmd
-VFS_CMD                   = 12
+VFS_CMD                   = 13
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_READ_SECTOR           = 13
+VFS_READ_SECTOR           = 14
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_WRITE_SECTOR          = 14
+VFS_WRITE_SECTOR          = 15
