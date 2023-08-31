@@ -232,8 +232,11 @@ void TFatLfn::GenerateShortName(const char *name, int index, char *buf)
 {
     int len;
     int i;
+    char ch;
+    char formstr[10];
+    char outstr[10];
     const char *inptr = name;
-    const char *outptr = buf;
+    char *outptr = outstr;
 
     if (index < 10)
         len = 6;
@@ -251,33 +254,48 @@ void TFatLfn::GenerateShortName(const char *name, int index, char *buf)
         if (*inptr == 0 || *inptr == '.')
             break;
 
-        if (IsValidShortChar(*inptr))
+        ch = tolower(*inptr);
+        if (IsValidShortChar(ch))
         {
-            *outptr = *inptr;
+            *outptr = ch;
             outptr++;
         }
         inptr++;
     }
+    *outstr = 0;
 
-    len = outptr - buf;
+    len = outptr - outstr;
 
-    switch (len)
+    sprintf(formstr, "%%s~%%%dd", 7 - len);
+    sprintf(buf, formstr, outstr, index);
+
+    if (*inptr == '.')
     {
-        case 0:
-            sprintf(out
+        len = strlen(buf);
+        outptr = buf + len;
 
+        *outptr = '.';
+        outptr++;
 
-    if (index < 10)
-    {
-        len = 6;
-        sprintf(buf + 6, "~%1d.";
+        for (i = 0; i < 3; i++)
+        {
+            if (*inptr == 0)
+                break;
+
+            ch = tolower(*inptr);
+            if (IsValidShortChar(ch))
+            {
+                *outptr = ch;
+                outptr++;
+            }
+            inptr++;
+        }
+
+        if (*outptr == '.')
+            outptr--;
+
+        *outptr = 0;
     }
-    else
-    {
-        len = 5;
-        sprintf(buf + 5, "~%2d.";
-    }
-    
 }
 
 /*##########################################################################
@@ -368,7 +386,7 @@ bool TFatLfn::Verify(struct TFatDirEntry *entry)
         if (sum == ChkSum)
             return true;
     }
-    return false;    
+    return false;
 }
 
 /*##########################################################################
@@ -505,7 +523,7 @@ unsigned int TFatLfn::DecodeUtf8(const unsigned char *utf8, int *size)
     utf8_pattern leading_pattern;
     bool matches = false;
     int i;
-    
+
     do
     {
         leading_pattern = utf8_leading_bytes[len];
@@ -612,10 +630,10 @@ void TFatLfn::SetName(const char *name)
         inptr += count;
 
         if (!codepoint)
-            break;        
+            break;
 
         count = EncodeUtf16(outptr, codepoint);
-        outptr += count;        
+        outptr += count;
     }
 
     *outptr = 0;
