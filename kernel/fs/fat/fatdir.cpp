@@ -272,6 +272,37 @@ void TFatDir::GetEntryName(char *name, struct TFatDirEntry *entry)
 
 /*##########################################################################
 #
+#   Name       : TFatDir::FindLfn
+#
+#   Purpose....: Find LFN name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatDir::FindLfn(const char *path)
+{
+    int i;
+
+    Section.Enter();
+
+    for (i = 0; i < LfnCount; i++)
+    {
+        if (!strcmp(path, LfnArr[i].Name))
+        {
+            Section.Leave();
+            return true;
+        }
+    }
+
+    Section.Leave();
+
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatDir::AddStd
 #
 #   Purpose....: Add std entry

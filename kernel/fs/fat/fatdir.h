@@ -62,6 +62,7 @@ public:
     virtual ~TFatDir();
 
     void Add(long long sector, int offset, struct TFatDirEntry *entry);
+    bool FindLfn(const char *path);
 
 protected:
     void GrowLfn();
