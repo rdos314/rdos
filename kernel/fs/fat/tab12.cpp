@@ -258,3 +258,80 @@ unsigned int TFatTable12::GetClusterLink(unsigned int Cluster)
         return val & 0xFFF;
     }
 }
+
+/*##########################################################################
+#
+#   Name       : TFatTable12::AllocateCluster
+#
+#   Purpose....: Allocate cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatTable12::AllocateCluster()
+{
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable12::ReserveCluster
+#
+#   Purpose....: Reserve cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatTable12::ReserveCluster(unsigned int Cluster)
+{
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable12::LinkCluster
+#
+#   Purpose....: Link cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable12::LinkCluster(unsigned int Cluster, unsigned int Link)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable12::UnlinkCluster
+#
+#   Purpose....: Unlink cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable12::UnlinkCluster(unsigned int Cluster)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable12::FreeCluster
+#
+#   Purpose....: Free cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable12::FreeCluster(unsigned int Cluster)
+{
+}

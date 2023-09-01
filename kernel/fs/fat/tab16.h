@@ -39,6 +39,11 @@ public:
     virtual unsigned int GetClusterLink(unsigned int Cluster);
     virtual unsigned int GetFreeClusters();
     virtual unsigned int FormatClusters();
+    virtual unsigned int AllocateCluster();
+    virtual bool ReserveCluster(unsigned int Cluster);
+    virtual void LinkCluster(unsigned int Cluster, unsigned int Link);
+    virtual void UnlinkCluster(unsigned int Cluster);
+    virtual void FreeCluster(unsigned int Cluster);
 
     void Setup(int SectorsPerCluster, long long StartSector, int FatSectors, unsigned int Clusters);
     void SetCacheSize(int size);
