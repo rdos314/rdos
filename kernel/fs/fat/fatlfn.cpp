@@ -237,6 +237,7 @@ void TFatLfn::GenerateShortName(const char *name, int index, char *buf)
     char outstr[10];
     const char *inptr = name;
     char *outptr = outstr;
+    const char *ptr;
 
     if (index < 10)
         len = 6;
@@ -265,15 +266,24 @@ void TFatLfn::GenerateShortName(const char *name, int index, char *buf)
         }
         inptr++;
     }
-    *outstr = 0;
+    *outptr = 0;
 
     len = i;
 
     sprintf(formstr, "%%s~%%0%dd", 7 - len);
     sprintf(buf, formstr, outstr, index);
 
-    if (*inptr == '.')
+    ptr = strchr(inptr, '.');
+
+    if (ptr)
     {
+        do
+        {
+            inptr = ptr + 1;
+            ptr = strchr(inptr, '.');
+        } 
+        while (ptr);
+
         len = strlen(buf);
         outptr = buf + len;
 
@@ -624,23 +634,25 @@ void TFatLfn::SetName(const char *name)
     const unsigned char *inptr = (const unsigned char *)name;
     short int *outptr;
     unsigned int codepoint;
-    int count;
+    int len;
 
     MaxSize = Size + 2;
     Buf = new short int[MaxSize];
+    Count = 0;
 
     outptr = Buf;
 
     while (*inptr)
     {
-        codepoint = DecodeUtf8(inptr, &count);
-        inptr += count;
+        codepoint = DecodeUtf8(inptr, &len);
+        inptr += len;
 
         if (!codepoint)
             break;
 
-        count = EncodeUtf16(outptr, codepoint);
-        outptr += count;
+        len = EncodeUtf16(outptr, codepoint);
+        outptr += len;
+        Count += len;
     }
 
     *outptr = 0;
