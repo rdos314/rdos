@@ -335,3 +335,18 @@ void TFatTable12::UnlinkCluster(unsigned int Cluster)
 void TFatTable12::FreeCluster(unsigned int Cluster)
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TFatTable12::Complete
+#
+#   Purpose....: Complete cluster updates
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable12::Complete()
+{
+}

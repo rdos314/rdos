@@ -39,11 +39,13 @@ public:
     virtual unsigned int GetClusterLink(unsigned int Cluster) = 0;
     virtual unsigned int GetFreeClusters() = 0;
     virtual unsigned int FormatClusters() = 0;
+
     virtual unsigned int AllocateCluster() = 0;
     virtual bool ReserveCluster(unsigned int Cluster) = 0;
     virtual void LinkCluster(unsigned int Cluster, unsigned int Link) = 0;
     virtual void UnlinkCluster(unsigned int Cluster) = 0;
     virtual void FreeCluster(unsigned int Cluster) = 0;
+    virtual void Complete() = 0;
 
 protected:
     long long FStartSector;
