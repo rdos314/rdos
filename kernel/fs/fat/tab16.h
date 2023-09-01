@@ -51,14 +51,22 @@ public:
 protected:
     unsigned int GetFreeInBlock(long long Sector, unsigned int Clusters);
     unsigned int FormatBlock(long long Sector, unsigned int Clusters);
+    void UpdateMod();
 
     unsigned int FClusters;
+    unsigned int FFreeClusters;
 
     int FCachedSectors;
     int FCachedClusters;
+
     unsigned int FStartCluster;
     TPartReqEntry *FReqEntry;
     unsigned short int *FTab;
+
+    unsigned int FAllocateCluster;
+    TPartReqEntry *FModReq;
+    unsigned int FModCluster;
+    unsigned short int *FModTab;
 };
 
 #endif

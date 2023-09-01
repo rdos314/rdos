@@ -45,6 +45,9 @@ TFatTable16::TFatTable16(TPartServer *Server)
     FClusters = 0;
     FReqEntry = 0;
     FTab = 0;
+    FAllocateCluster = 2;
+    FModReq = 0;
+    FModTab = 0;
 
     SetCacheSize(4);
 }
@@ -163,6 +166,8 @@ unsigned int TFatTable16::GetFreeClusters()
         Cluster += Count;
     }
 
+    FFreeClusters = FreeClusters;
+
     return FreeClusters;
 }
 
@@ -242,6 +247,27 @@ unsigned int TFatTable16::FormatClusters()
 
 /*##########################################################################
 #
+#   Name       : TFatTable16::UpdateMod
+#
+#   Purpose....: Update modify
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable16::UpdateMod()
+{
+    if (FModReq)
+    {
+        FModReq->Write();
+        delete FModReq;
+        FModReq = 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFatTable16::GetClusterLink
 #
 #   Purpose....: Get cluster link
@@ -264,6 +290,8 @@ unsigned int TFatTable16::GetClusterLink(unsigned int Cluster)
             FReqEntry = 0;
         }
     }
+
+    UpdateMod();
 
     if (!FReqEntry)
     {
@@ -291,6 +319,72 @@ unsigned int TFatTable16::GetClusterLink(unsigned int Cluster)
 ##########################################################################*/
 unsigned int TFatTable16::AllocateCluster()
 {
+    int RelSector;
+    long long Sector;
+    unsigned int Cluster = 0;
+    int offset;
+    int size;
+    int i;
+    bool Restarted = false;
+
+    if (FFreeClusters == 0)
+        return 0;
+
+    if (FReqEntry)
+    {
+        delete FReqEntry;
+        FReqEntry = 0;
+    }
+
+    for (;;)
+    {
+        RelSector = FAllocateCluster / 512 * 2;
+        FModCluster = RelSector * 512 / 2;
+        Sector = FStartSector + RelSector;
+
+        FModReq = new TPartReqEntry(&FReq, Sector, 1, false);
+        FReq.WaitForever();
+        FModTab = (unsigned short int *)FModReq->Map();
+
+        offset = FAllocateCluster % 256;
+        size = 256 - offset;
+
+        for (i = offset; i < size; i++)
+        {
+            if (FModTab[i] == 0)
+            {
+                Cluster = FModCluster + i;
+                break;
+            }
+        }
+
+        if (Cluster)
+        {
+            FModTab[Cluster - FModCluster] = 0xFFFF;
+            FAllocateCluster = Cluster + 1;
+            return Cluster;
+        }
+
+        delete FModReq;
+        FModReq = 0;
+        FModCluster = 0;
+        FModTab = 0;
+
+        FAllocateCluster = FModCluster + 256;
+        if (FAllocateCluster > FClusters)
+        {
+            FAllocateCluster = 2;
+
+            if (Restarted)
+            {
+                FFreeClusters = 0;
+                return 0;
+            }
+            else
+                Restarted = true;
+        }
+    }
+
     return 0;
 }
 

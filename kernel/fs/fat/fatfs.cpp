@@ -447,7 +447,10 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
     TFatLfn lfn;
     long long RdosTime = RdosGetLongTime();
     int i;
+    unsigned int Cluster;
     char str[14];
+
+    Cluster = FatTable1->AllocateCluster();
 
     entry.Attr = 0x10;
     entry.Resv1 = 0;
