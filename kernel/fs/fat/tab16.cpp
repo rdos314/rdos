@@ -48,6 +48,7 @@ TFatTable16::TFatTable16(TPartServer *Server)
     FAllocateCluster = 2;
     FModReq = 0;
     FModTab = 0;
+    FWrite = false;
 
     SetCacheSize(4);
 }
@@ -247,22 +248,118 @@ unsigned int TFatTable16::FormatClusters()
 
 /*##########################################################################
 #
-#   Name       : TFatTable16::UpdateMod
+#   Name       : TFatTable16::ClearMod
 #
-#   Purpose....: Update modify
+#   Purpose....: Clear modify
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatTable16::UpdateMod()
+void TFatTable16::ClearMod()
 {
     if (FModReq)
     {
-        FModReq->Write();
+        if (FWrite)
+            FModReq->Write();
+
+        FWrite = false;
         delete FModReq;
         FModReq = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable16::ClearCache
+#
+#   Purpose....: Clear cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable16::ClearCache()
+{
+    if (FReqEntry)
+    {
+        delete FReqEntry;
+        FReqEntry = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable16::SetupCache
+#
+#   Purpose....: Setup cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable16::SetupCache(unsigned int Cluster)
+{
+    int RelSector;
+    long long Sector;
+
+    if (FReqEntry)
+    {
+        if (Cluster < FStartCluster || Cluster >= FStartCluster + FCachedClusters)
+        {
+            delete FReqEntry;
+            FReqEntry = 0;
+        }
+    }
+
+    if (FModReq)
+        ClearMod();
+
+    if (!FReqEntry)
+    {
+        RelSector = Cluster / 512 * 2;
+        FStartCluster = RelSector * 512 / 2;
+        Sector = FStartSector + RelSector;
+        FReqEntry = new TPartReqEntry(&FReq, Sector, FCachedSectors);
+        FReq.WaitForever();
+        FTab = (unsigned short int *)FReqEntry->Map();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable16::SetupMod
+#
+#   Purpose....: Setup modification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable16::SetupMod(unsigned int Cluster)
+{
+    int RelSector;
+    long long Sector;
+
+    if (FReqEntry)
+        ClearCache();
+
+    if (!FModReq || Cluster < FModCluster || Cluster >= FModCluster + 256)
+    {
+        if (FModReq)
+            ClearMod();
+
+        RelSector = Cluster / 512 * 2;
+        FModCluster = RelSector * 512 / 2;
+        Sector = FStartSector + RelSector;
+
+        FModReq = new TPartReqEntry(&FReq, Sector, 1, false);
+        FReq.WaitForever();
+        FModTab = (unsigned short int *)FModReq->Map();
     }
 }
 
@@ -279,30 +376,7 @@ void TFatTable16::UpdateMod()
 ##########################################################################*/
 unsigned int TFatTable16::GetClusterLink(unsigned int Cluster)
 {
-    int RelSector;
-    long long Sector;
-
-    if (FReqEntry)
-    {
-        if (Cluster < FStartCluster || Cluster >= FStartCluster + FCachedClusters)
-        {
-            delete FReqEntry;
-            FReqEntry = 0;
-        }
-    }
-
-    UpdateMod();
-
-    if (!FReqEntry)
-    {
-        RelSector = Cluster / 512 * 2;
-        FStartCluster = RelSector * 512 / 2;
-        Sector = FStartSector + RelSector;
-        FReqEntry = new TPartReqEntry(&FReq, Sector, FCachedSectors);
-        FReq.WaitForever();
-        FTab = (unsigned short int *)FReqEntry->Map();
-    }
-
+    SetupCache(Cluster);
     return FTab[Cluster - FStartCluster];
 }
 
@@ -319,8 +393,6 @@ unsigned int TFatTable16::GetClusterLink(unsigned int Cluster)
 ##########################################################################*/
 unsigned int TFatTable16::AllocateCluster()
 {
-    int RelSector;
-    long long Sector;
     unsigned int Cluster = 0;
     int offset;
     int size;
@@ -330,23 +402,9 @@ unsigned int TFatTable16::AllocateCluster()
     if (FFreeClusters == 0)
         return 0;
 
-    if (FReqEntry)
-    {
-        delete FReqEntry;
-        FReqEntry = 0;
-    }
-
-    UpdateMod();
-
     for (;;)
     {
-        RelSector = FAllocateCluster / 512 * 2;
-        FModCluster = RelSector * 512 / 2;
-        Sector = FStartSector + RelSector;
-
-        FModReq = new TPartReqEntry(&FReq, Sector, 1, false);
-        FReq.WaitForever();
-        FModTab = (unsigned short int *)FModReq->Map();
+        SetupMod(FAllocateCluster);
 
         offset = FAllocateCluster % 256;
         size = 256 - offset;
@@ -363,14 +421,10 @@ unsigned int TFatTable16::AllocateCluster()
         if (Cluster)
         {
             FModTab[Cluster - FModCluster] = 0xFFFF;
+            FWrite = true;
             FAllocateCluster = Cluster + 1;
             return Cluster;
         }
-
-        delete FModReq;
-        FModReq = 0;
-        FModCluster = 0;
-        FModTab = 0;
 
         FAllocateCluster = FModCluster + 256;
         if (FAllocateCluster > FClusters)
@@ -403,38 +457,16 @@ unsigned int TFatTable16::AllocateCluster()
 ##########################################################################*/
 bool TFatTable16::ReserveCluster(unsigned int Cluster)
 {
-    int RelSector;
-    long long Sector;
-
-    if (FReqEntry)
-    {
-        delete FReqEntry;
-        FReqEntry = 0;
-    }
-
-    UpdateMod();
-
-    RelSector = Cluster / 512 * 2;
-    FModCluster = RelSector * 512 / 2;
-    Sector = FStartSector + RelSector;
-
-    FModReq = new TPartReqEntry(&FReq, Sector, 1, false);
-    FReq.WaitForever();
-    FModTab = (unsigned short int *)FModReq->Map();
+    SetupMod(Cluster);
 
     if (FModTab[Cluster - FModCluster] == 0)
     {
         FModTab[Cluster - FModCluster] = 0xFFFF;
+        FWrite = true;
         return true;
     }
     else
-    {
-        delete FModReq;
-        FModReq = 0;
-        FModCluster = 0;
-        FModTab = 0;
         return false;
-    }
 }
 
 /*##########################################################################
