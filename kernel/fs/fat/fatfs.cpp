@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <rdos.h>
 #include <serv.h>
+#include "fat.h"
 #include "fatfs.h"
 #include "tab12.h"
 #include "tab16.h"
@@ -449,13 +450,13 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
     char str[14];
 
     entry.Attr = 0x10;
-    dir->SetCreateTime(&entry, RdosTime);
-    dir->SetAccessTime(&entry, RdosTime);
-    dir->SetWriteTime(&entry, RdosTime);
+    SetCreateTime(&entry, RdosTime);
+    SetAccessTime(&entry, RdosTime);
+    SetWriteTime(&entry, RdosTime);
 
-    if (lfn.IsValidShortName(Name))
+    if (IsValidShortName(Name))
     {
-        dir->SetEntryName(&entry, Name);
+        SetEntryName(&entry, Name);
     }
     else
     {
@@ -463,11 +464,11 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 
         for (i = 1; i < 99999; i++)
         {
-            lfn.GenerateShortName(Name, i, str);
+            GenerateShortName(Name, i, str);
             if (!dir->FindLfn(str) && dir->Find(str) == DIR_NOT_FOUND)
                 break;
         }
-        dir->SetEntryName(&entry, str);
+        SetEntryName(&entry, str);
     }
 
     return false;

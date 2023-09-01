@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "sigdev.h"
 #include "parttype.h"
@@ -45,6 +46,545 @@ void LogError(TPartServer *Server, TFat *Fat)
 
     if (Fat->SectorsPerCluster <= 0)
         printf("Invalid sectors per cluster: %d\r\n", Fat->SectorsPerCluster);
+}
+
+/*#########################################################################
+#
+#   Name       : GetCluster
+#
+#   Purpose....: Get cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int GetCluster(struct TFatDirEntry *entry)
+{
+    unsigned int cluster;
+    char *ptr = (char *)&cluster;
+
+    memcpy(ptr, &entry->ClusterLow, 2);
+    memcpy(ptr + 2, &entry->ClusterHi, 2);
+
+    return cluster;
+}
+
+/*##########################################################################
+#
+#   Name       : DecodeTime
+#
+#   Purpose....: Decode date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long DecodeTime(short int Date, short int Time, unsigned char Ms)
+{
+    int sec = Time & 0x1F;
+    int min = (Time >> 5) & 0x3F;
+    int hour = (Time >> 11) & 0x1F;
+    int day = Date & 0x1F;
+    int month = (Date >> 5) & 0xF;
+    int year = (Date >> 9) & 0x7F;
+    int ms = 10 * (Ms % 100);
+    unsigned long lsb, msb;
+    long long res;
+
+    year += 1980;
+    sec = 2 * sec + Ms / 100;
+
+    lsb = RdosCodeLsbTics(min, sec, ms, 0);
+    msb = RdosCodeMsbTics(year, month, day, hour);
+
+    res = lsb + ((long long)msb << 32);
+    return res;
+}
+
+/*##########################################################################
+#
+#   Name       : EncodeTime
+#
+#   Purpose....: Encode date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void EncodeTime(long long RdosTime, short int *Date, short int *Time, unsigned char *Ms)
+{
+    int us;
+    int ms;
+    int sec;
+    int min;
+    int hour;
+    int day;
+    int month;
+    int year;
+    unsigned long lsb, msb;
+
+    lsb = (unsigned long)RdosTime;
+    msb = (unsigned long)(RdosTime >> 32);
+
+    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+
+    year -= 1980;
+
+    *Time = sec / 2;
+    *Time += min << 5;
+    *Time += hour << 11;
+
+    *Date = day;
+    *Date += month << 5;
+    *Date += year << 9;
+
+    *Ms = ms / 10 + 100 * (sec % 2);
+}
+
+/*##########################################################################
+#
+#   Name       : DecodeAttrib
+#
+#   Purpose....: Decode attrib
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int DecodeAttrib(char attrib)
+{
+    return attrib;
+}
+
+/*##########################################################################
+#
+#   Name       : EncodeAttrib
+#
+#   Purpose....: Encode attrib
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char EncodeAttrib(int attrib)
+{
+    return (char)attrib;
+}
+
+/*##########################################################################
+#
+#   Name       : GetEntryName
+#
+#   Purpose....: Get entry name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GetEntryName(struct TFatDirEntry *entry, char *name)
+{
+    char *src;
+    char *dst;
+    char ch;
+    int i;
+
+    src = entry->Base;
+    dst = name;
+
+    for (i = 0; i < 8; i++)
+    {
+        if (*src == ' ')
+            break;
+        else
+        {
+            ch = tolower(*src);
+            *dst = ch;
+            src++;
+            dst++;
+        }
+    }
+
+    src = entry->Ext;
+    if (*src != ' ')
+    {
+        *dst = '.';
+        dst++;
+
+        for (i = 0; i < 3; i++)
+        {
+            if (*src == ' ')
+                break;
+            else
+            {
+                ch = tolower(*src);
+                *dst = ch;
+                src++;
+                dst++;
+            }
+        }
+    }
+
+    *dst = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : SetEntryName
+#
+#   Purpose....: Set entry name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetEntryName(struct TFatDirEntry *entry, const char *name)
+{
+    const char *src;
+    char *dst;
+    char ch;
+    int i;
+
+    src = name;
+    dst = entry->Base;
+
+    for (i = 0; i < 8; i++)
+    {
+        if (*src == '.' || *src == 0)
+            ch = ' ';
+        else
+        {
+            ch = toupper(*src);
+            src++;
+        }
+
+        *dst = ch;
+        dst++;
+    }
+
+    dst = entry->Ext;
+
+    if (*src == '.')
+        src++;
+
+    for (i = 0; i < 3; i++)
+    {
+        if (*src == 0)
+            ch = ' ';
+        else
+        {
+            ch = toupper(*src);
+            src++;
+        }
+
+        *dst = ch;
+        dst++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : SetCreateTime
+#
+#   Purpose....: Set entry create name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetCreateTime(struct TFatDirEntry *entry, long long td)
+{
+    int us;
+    int ms;
+    int sec;
+    int min;
+    int hour;
+    int day;
+    int month;
+    int year;
+    unsigned long lsb, msb;
+    long long tr;
+
+    EncodeTime(td, &entry->CrDate, &entry->CrTime, &entry->CrMs);
+
+    tr = DecodeTime(entry->CrDate, entry->CrTime, entry->CrMs);
+    lsb = (unsigned long)tr;
+    msb = (unsigned long)(tr >> 32);
+    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+}
+
+/*##########################################################################
+#
+#   Name       : SetAccessTime
+#
+#   Purpose....: Set entry access name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetAccessTime(struct TFatDirEntry *entry, long long td)
+{
+    short int time;
+    unsigned char ms;
+
+    EncodeTime(td, &entry->AcDate, &time, &ms);
+}
+
+/*##########################################################################
+#
+#   Name       : SetWriteTime
+#
+#   Purpose....: Set entry write name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetWriteTime(struct TFatDirEntry *entry, long long td)
+{
+    unsigned char ms;
+
+    EncodeTime(td, &entry->WrDate, &entry->WrTime, &ms);
+}
+
+/*##########################################################################
+#
+#   Name       : IsValidShortChar
+#
+#   Purpose....: Check for valid short char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool IsValidShortChar(char ch)
+{
+    switch (ch)
+    {
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+        case 'e':
+        case 'f':
+        case 'g':
+        case 'h':
+        case 'i':
+        case 'j':
+        case 'k':
+        case 'l':
+        case 'm':
+        case 'n':
+        case 'o':
+        case 'p':
+        case 'q':
+        case 'r':
+        case 's':
+        case 't':
+        case 'u':
+        case 'v':
+        case 'w':
+        case 'x':
+        case 'y':
+        case 'z':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case '$':
+        case '%':
+        case 0x27:
+        case '-':
+        case '_':
+        case '@':
+        case '~':
+        case '!':
+        case '(':
+        case ')':
+        case '{':
+        case '}':
+        case '^':
+        case '#':
+        case '&':
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : IsValidShortName
+#
+#   Purpose....: Check for valid short name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool IsValidShortName(const char *buf)
+{
+    int i;
+    const char *ptr = buf;
+
+    for (i = 0; i < 8; i++)
+    {
+        if (*ptr == 0)
+            return true;
+
+        if (*ptr == '.')
+            break;
+
+        if (!IsValidShortChar(*ptr))
+            return false;
+
+        ptr++;
+    }
+
+    if (*ptr == '.')
+    {
+        ptr++;
+
+        for (i = 0; i < 3; i++)
+        {
+            if (*ptr == 0)
+                return true;
+
+            if (!IsValidShortChar(*ptr))
+                return false;
+
+            ptr++;
+        }
+
+        if (*ptr == 0)
+            return true;
+    }
+    else
+    {
+        if (*ptr == 0)
+            return true;
+    }
+
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : GenerateShortName
+#
+#   Purpose....: GenerateShortName
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GenerateShortName(const char *name, int index, char *buf)
+{
+    int len;
+    int i;
+    char ch;
+    char formstr[10];
+    char outstr[10];
+    const char *inptr = name;
+    char *outptr = outstr;
+    const char *ptr;
+
+    if (index < 10)
+        len = 6;
+    else if (index < 100)
+        len = 5;
+    else if (index < 1000)
+        len = 4;
+    else if (index < 10000)
+        len = 3;
+    else
+        len = 2;
+
+    i = 0;
+
+    while (i < len)
+    {
+        if (*inptr == 0 || *inptr == '.')
+            break;
+
+        ch = tolower(*inptr);
+        if (IsValidShortChar(ch))
+        {
+            *outptr = ch;
+            outptr++;
+            i++;
+        }
+        inptr++;
+    }
+    *outptr = 0;
+
+    len = i;
+
+    sprintf(formstr, "%%s~%%0%dd", 7 - len);
+    sprintf(buf, formstr, outstr, index);
+
+    ptr = strchr(inptr, '.');
+
+    if (ptr)
+    {
+        do
+        {
+            inptr = ptr + 1;
+            ptr = strchr(inptr, '.');
+        } 
+        while (ptr);
+
+        len = strlen(buf);
+        outptr = buf + len;
+
+        *outptr = '.';
+        outptr++;
+
+        i = 0;
+
+        while (i < 3)
+        {
+            if (*inptr == 0)
+                break;
+
+            ch = tolower(*inptr);
+            if (IsValidShortChar(ch))
+            {
+                *outptr = ch;
+                outptr++;
+                i++;
+            }
+            inptr++;
+        }
+
+        outptr--;
+        if (*outptr != '.')
+            outptr++;
+
+        *outptr = 0;
+    }
 }
 
 /*##########################################################################

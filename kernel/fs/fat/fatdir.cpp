@@ -67,117 +67,6 @@ TFatDir::~TFatDir()
     delete LfnArr;
 }
 
-/*#########################################################################
-#
-#   Name       : TFatDir::GetCluster
-#
-#   Purpose....: Get cluster
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-unsigned int TFatDir::GetCluster(struct TFatDirEntry *entry)
-{
-    unsigned int cluster;
-    char *ptr = (char *)&cluster;
-
-    memcpy(ptr, &entry->ClusterLow, 2);
-    memcpy(ptr + 2, &entry->ClusterHi, 2);
-
-    return cluster;
-}
-
-/*##########################################################################
-#
-#   Name       : TFatDir::DecodeTime
-#
-#   Purpose....: Decode date & time
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long long TFatDir::DecodeTime(short int Date, short int Time)
-{
-    int sec = Time & 0x1F;
-    int min = (Time >> 5) & 0x3F;
-    int hour = (Time >> 11) & 0x1F;
-    int day = Date & 0x1F;
-    int month = (Date >> 5) & 0xF;
-    int year = (Date >> 9) & 0x7F;
-    unsigned long lsb, msb;
-    long long res;
-
-    year += 1980;
-    sec = 2 * sec;
-
-    lsb = RdosCodeLsbTics(min, sec, 0, 0);
-    msb = RdosCodeMsbTics(year, month, day, hour);
-
-    res = lsb + ((long long)msb << 32);
-    return res;
-}
-
-/*##########################################################################
-#
-#   Name       : TFatDir::EncodeTime
-#
-#   Purpose....: Encode date & time
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-unsigned char TFatDir::EncodeTime(long long RdosTime, short int *Date, short int *Time)
-{
-    int us;
-    int ms;
-    int sec;
-    int min;
-    int hour;
-    int day;
-    int month;
-    int year;
-    unsigned long lsb, msb;
-
-    lsb = (unsigned long)RdosTime;
-    msb = (unsigned long)(RdosTime >> 32);
-
-    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
-
-    year -= 1980;
-
-    *Time = sec / 2;
-    *Time += min << 5;
-    *Time += hour << 11;
-
-    *Date = day;
-    *Date += month << 5;
-    *Date += year << 9;
-
-    return ms / 10 + 100 * (sec % 2);
-}
-
-/*##########################################################################
-#
-#   Name       : TFatDir::DecodeAttrib
-#
-#   Purpose....: Decode attrib
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFatDir::DecodeAttrib(char attrib)
-{
-    return attrib;
-}
 
 /*##########################################################################
 #
@@ -200,13 +89,13 @@ void TFatDir::Add(long long sector, int offset, const char *name, struct TFatDir
     entry = TDir::Add(name, cluster);
 
     if (fat->CrDate)
-        entry->CreateTime = DecodeTime(fat->CrDate, fat->CrTime);
+        entry->CreateTime = DecodeTime(fat->CrDate, fat->CrTime, fat->CrMs);
 
     if (fat->WrDate)
-        entry->ModifyTime = DecodeTime(fat->WrDate, fat->WrTime);
+        entry->ModifyTime = DecodeTime(fat->WrDate, fat->WrTime, 0);
 
     if (fat->AcDate)
-        entry->AccessTime = DecodeTime(fat->AcDate, 0);
+        entry->AccessTime = DecodeTime(fat->AcDate, 0, 0);
 
     entry->Attrib = DecodeAttrib(fat->Attr);
     entry->Size = fat->FileSize;
@@ -256,185 +145,6 @@ void TFatDir::GrowLfn()
 
 /*##########################################################################
 #
-#   Name       : TFatDir::GetEntryName
-#
-#   Purpose....: Get entry name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFatDir::GetEntryName(char *name, struct TFatDirEntry *entry)
-{
-    char *src;
-    char *dst;
-    char ch;
-    int i;
-
-    src = entry->Base;
-    dst = name;
-
-    for (i = 0; i < 8; i++)
-    {
-        if (*src == ' ')
-            break;
-        else
-        {
-            ch = tolower(*src);
-            *dst = ch;
-            src++;
-            dst++;
-        }
-    }
-
-    src = entry->Ext;
-    if (*src != ' ')
-    {
-        *dst = '.';
-        dst++;
-
-        for (i = 0; i < 3; i++)
-        {
-            if (*src == ' ')
-                break;
-            else
-            {
-                ch = tolower(*src);
-                *dst = ch;
-                src++;
-                dst++;
-            }
-        }
-    }
-
-    *dst = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFatDir::SetEntryName
-#
-#   Purpose....: Set entry name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFatDir::SetEntryName(struct TFatDirEntry *entry, const char *name)
-{
-    const char *src;
-    char *dst;
-    char ch;
-    int i;
-
-    src = name;
-    dst = entry->Base;
-
-    for (i = 0; i < 8; i++)
-    {
-        if (*src == '.' || *src == 0)
-            ch = ' ';
-        else
-        {
-            ch = toupper(*src);
-            src++;
-        }
-
-        *dst = ch;
-        dst++;
-    }
-
-    dst = entry->Ext;
-
-    if (*src == '.')
-        src++;
-
-    for (i = 0; i < 3; i++)
-    {
-        if (*src == 0)
-            ch = ' ';
-        else
-        {
-            ch = toupper(*src);
-            src++;
-        }
-
-        *dst = ch;
-        dst++;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TFatDir::SetCreateTime
-#
-#   Purpose....: Set entry create name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFatDir::SetCreateTime(struct TFatDirEntry *entry, long long td)
-{
-    int us;
-    int ms;
-    int sec;
-    int min;
-    int hour;
-    int day;
-    int month;
-    int year;
-    unsigned long lsb, msb;
-    long long tr;
-
-    entry->CrMs = EncodeTime(td, &entry->CrDate, &entry->CrTime);
-
-    tr = DecodeTime(entry->CrDate, entry->CrTime);
-    lsb = (unsigned long)tr;
-    msb = (unsigned long)(tr >> 32);
-    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
-}
-
-/*##########################################################################
-#
-#   Name       : TFatDir::SetAccessTime
-#
-#   Purpose....: Set entry access name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFatDir::SetAccessTime(struct TFatDirEntry *entry, long long td)
-{
-    short int time;
-
-    EncodeTime(td, &entry->AcDate, &time);
-}
-
-/*##########################################################################
-#
-#   Name       : TFatDir::SetWriteTime
-#
-#   Purpose....: Set entry write name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFatDir::SetWriteTime(struct TFatDirEntry *entry, long long td)
-{
-    EncodeTime(td, &entry->WrDate, &entry->WrTime);
-}
-
-/*##########################################################################
-#
 #   Name       : TFatDir::FindLfn
 #
 #   Purpose....: Find LFN name
@@ -479,7 +189,7 @@ void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
 {
     char Name[16];
 
-    GetEntryName(Name, entry);
+    GetEntryName(entry, Name);
     Add(sector, offset, Name, entry);
 }
 
@@ -502,7 +212,7 @@ void TFatDir::AddLfn(long long sector, int offset, struct TFatDirEntry *entry)
     if (LfnMax == LfnCount)
        GrowLfn();
 
-    GetEntryName(LfnArr[LfnCount].Name, entry);
+    GetEntryName(entry, LfnArr[LfnCount].Name);
     LfnArr[LfnCount].Sector = sector;
     LfnArr[LfnCount].Offset = offset;
 

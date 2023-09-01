@@ -30,23 +30,7 @@
 
 #include "dir.h"
 #include "fatlfn.h"
-
-struct TFatDirEntry
-{
-    char Base[8];
-    char Ext[3];
-    char Attr;
-    char Resv1;
-    unsigned char CrMs;
-    short int CrTime;
-    short int CrDate;
-    short int AcDate;
-    short int ClusterHi;
-    short int WrTime;
-    short int WrDate;
-    short int ClusterLow;
-    unsigned int FileSize;
-};
+#include "fat.h"
 
 struct TLfnEntry
 {
@@ -63,19 +47,10 @@ public:
 
     void Add(long long sector, int offset, struct TFatDirEntry *entry);
     bool FindLfn(const char *path);
-    void SetEntryName(struct TFatDirEntry *entry, const char *name);
-    void SetCreateTime(struct TFatDirEntry *entry, long long time);
-    void SetAccessTime(struct TFatDirEntry *entry, long long time);
-    void SetWriteTime(struct TFatDirEntry *entry, long long time);
 
 protected:
     void GrowLfn();
 
-    void GetEntryName(char *name, struct TFatDirEntry *entry);
-    unsigned int GetCluster(struct TFatDirEntry *entry);
-    long long DecodeTime(short int Date, short int Time);
-    unsigned char EncodeTime(long long RdosTime, short int *Date, short int *Time);
-    int DecodeAttrib(char attrib);
     void Add(long long sector, int offset, const char *name, struct TFatDirEntry *fat);
     void AddStd(long long sector, int offset, struct TFatDirEntry *entry);
     void AddLfn(long long sector, int offset, struct TFatDirEntry *entry);

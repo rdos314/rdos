@@ -20,53 +20,46 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# fatlfn.h
-# FAT LFN class
+# fat.h
+# Fat functions
 #
 ########################################################################*/
 
-#ifndef _FATLFN_H
-#define _FATLFN_H
+#ifndef _FAT_H
+#define _FAT_H
 
-#include "dir.h"
-
-struct TFatLfnEntry
+struct TFatDirEntry
 {
-    char Ord;
-    short int Name1[5];
+    char Base[8];
+    char Ext[3];
     char Attr;
-    char Type;
-    char ChkSum;
-    short int Name2[6];
+    char Resv1;
+    unsigned char CrMs;
+    short int CrTime;
+    short int CrDate;
+    short int AcDate;
+    short int ClusterHi;
+    short int WrTime;
+    short int WrDate;
     short int ClusterLow;
-    short int Name3[2];
+    unsigned int FileSize;
 };
 
-class TFatLfn
-{
-public:
-    TFatLfn();
-    TFatLfn(struct TFatLfnEntry *entry);
-    virtual ~TFatLfn();
+unsigned int GetCluster(struct TFatDirEntry *entry);
+long long DecodeTime(short int Date, short int Time, unsigned char Ms);
+void EncodeTime(long long RdosTime, short int *Date, short int *Time, unsigned char *Ms);
+int DecodeAttrib(char attrib);
+char EncodeAttrib(int attrib);
+void GetEntryName(struct TFatDirEntry *entry, char *name);
+void SetEntryName(struct TFatDirEntry *entry, const char *name);
+void SetCreateTime(struct TFatDirEntry *entry, long long td);
+void SetAccessTime(struct TFatDirEntry *entry, long long td);
+void SetWriteTime(struct TFatDirEntry *entry, long long td);
 
-    bool Add(struct TFatLfnEntry *entry);
-    bool Verify(struct TFatDirEntry *entry);
-    int GetNameSize();
-    void GetName(char *buf);
+bool IsValidShortChar(char ch);
+bool IsValidShortName(const char *buf);
+void GenerateShortName(const char *name, int index, char *buf);
 
-    void SetName(const char *buf);
-
-protected:
-    void AddData(struct TFatLfnEntry *entry);
-    int CalculateUtf8Len(unsigned int codepoint);
-    unsigned int DecodeUtf8(const unsigned char *utf8, int *size);
-    int EncodeUtf16(short int *utf16, short int codepoint);
-
-    char ChkSum;
-    char Count;
-    int MaxSize;
-    short int *Buf;
-};
 
 #endif
 
