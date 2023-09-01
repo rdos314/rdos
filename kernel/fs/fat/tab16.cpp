@@ -336,6 +336,8 @@ unsigned int TFatTable16::AllocateCluster()
         FReqEntry = 0;
     }
 
+    UpdateMod();
+
     for (;;)
     {
         RelSector = FAllocateCluster / 512 * 2;
@@ -401,7 +403,38 @@ unsigned int TFatTable16::AllocateCluster()
 ##########################################################################*/
 bool TFatTable16::ReserveCluster(unsigned int Cluster)
 {
-    return false;
+    int RelSector;
+    long long Sector;
+
+    if (FReqEntry)
+    {
+        delete FReqEntry;
+        FReqEntry = 0;
+    }
+
+    UpdateMod();
+
+    RelSector = Cluster / 512 * 2;
+    FModCluster = RelSector * 512 / 2;
+    Sector = FStartSector + RelSector;
+
+    FModReq = new TPartReqEntry(&FReq, Sector, 1, false);
+    FReq.WaitForever();
+    FModTab = (unsigned short int *)FModReq->Map();
+
+    if (FModTab[Cluster - FModCluster] == 0)
+    {
+        FModTab[Cluster - FModCluster] = 0xFFFF;
+        return true;
+    }
+    else
+    {
+        delete FModReq;
+        FModReq = 0;
+        FModCluster = 0;
+        FModTab = 0;
+        return false;
+    }
 }
 
 /*##########################################################################

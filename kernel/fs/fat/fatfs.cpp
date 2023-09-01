@@ -448,9 +448,24 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
     long long RdosTime = RdosGetLongTime();
     int i;
     unsigned int Cluster;
+    unsigned int Link;
     char str[14];
 
-    Cluster = FatTable1->AllocateCluster();
+    for (;;)
+    {
+        Cluster = FatTable1->AllocateCluster();
+
+        if (!Cluster)
+            return false;
+
+        if (FatTable2->ReserveCluster(Cluster))
+            break;
+        else
+        {
+            Link = FatTable2->GetClusterLink(Cluster);
+            FatTable1->LinkCluster(Cluster, Link);
+        }
+    }
 
     entry.Attr = 0x10;
     entry.Resv1 = 0;
