@@ -1057,7 +1057,12 @@ int TFs::CreateDir(int rel, char *path)
     if (dir)
     {
         dir->LockDir();
-        ok = CreateDir(dir, path);
+
+        if (dir->Find(path) == DIR_NOT_FOUND)
+            ok = CreateDir(dir, path);
+        else
+            ok = false;
+
         dir->UnlockDir();
     }
 
