@@ -3250,9 +3250,6 @@ int GetHidPort(int device)
 #pragma aux ImplTestGate "*" rdosdev parm routine [es edi]
 void __far ImplTestGate(const char *msg)
 {
-    struct THidDevice *dev = HidArr[0];
-
-    HidThread(dev);
 }
 
 /*##########################################################################
@@ -3301,7 +3298,7 @@ int main()
     RdosRegisterBimodalUserGate(usergate_get_hid_report_output_data, (__rdos_gate_callback *)&ImplGetHidReportOutputData, "Get Hid Report Output Data");
     RdosRegisterBimodalUserGate(usergate_get_hid_report_feature_data, (__rdos_gate_callback *)&ImplGetHidReportFeatureData, "Get Hid Report Feature Data");
 
-//    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
+    RdosRegisterBimodalUserGate(usergate_test_gate, (__rdos_gate_callback *)&ImplTestGate, "Test Gate");
 
     return TRUE;
 }
