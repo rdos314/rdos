@@ -43,7 +43,7 @@ public:
     virtual unsigned int AllocateCluster();
     virtual bool ReserveCluster(unsigned int Cluster);
     virtual void LinkCluster(unsigned int Cluster, unsigned int Link);
-    virtual void UnlinkCluster(unsigned int Cluster);
+    virtual void LinkCluster(unsigned int Cluster);
     virtual void FreeCluster(unsigned int Cluster);
     virtual void Complete();
 

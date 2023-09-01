@@ -268,7 +268,7 @@ void TFatTable32::LinkCluster(unsigned int Cluster, unsigned int Link)
 
 /*##########################################################################
 #
-#   Name       : TFatTable32::UnlinkCluster
+#   Name       : TFatTable32::LinkCluster
 #
 #   Purpose....: Unlink cluster
 #
@@ -277,7 +277,7 @@ void TFatTable32::LinkCluster(unsigned int Cluster, unsigned int Link)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatTable32::UnlinkCluster(unsigned int Cluster)
+void TFatTable32::LinkCluster(unsigned int Cluster)
 {
 }
 

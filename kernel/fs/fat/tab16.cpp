@@ -423,6 +423,7 @@ unsigned int TFatTable16::AllocateCluster()
             FModTab[Cluster - FModCluster] = 0xFFFF;
             FWrite = true;
             FAllocateCluster = Cluster + 1;
+            FFreeClusters--;
             return Cluster;
         }
 
@@ -463,6 +464,7 @@ bool TFatTable16::ReserveCluster(unsigned int Cluster)
     {
         FModTab[Cluster - FModCluster] = 0xFFFF;
         FWrite = true;
+        FFreeClusters--;
         return true;
     }
     else
@@ -482,6 +484,9 @@ bool TFatTable16::ReserveCluster(unsigned int Cluster)
 ##########################################################################*/
 void TFatTable16::LinkCluster(unsigned int Cluster, unsigned int Link)
 {
+    SetupMod(Cluster);
+    FModTab[Cluster - FModCluster] = Link;
+    FWrite = true;
 }
 
 /*##########################################################################
@@ -495,8 +500,11 @@ void TFatTable16::LinkCluster(unsigned int Cluster, unsigned int Link)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatTable16::UnlinkCluster(unsigned int Cluster)
+void TFatTable16::LinkCluster(unsigned int Cluster)
 {
+    SetupMod(Cluster);
+    FModTab[Cluster - FModCluster] = 0xFFFF;
+    FWrite = true;
 }
 
 /*##########################################################################
@@ -512,6 +520,10 @@ void TFatTable16::UnlinkCluster(unsigned int Cluster)
 ##########################################################################*/
 void TFatTable16::FreeCluster(unsigned int Cluster)
 {
+    SetupMod(Cluster);
+    FModTab[Cluster - FModCluster] = 0;
+    FFreeClusters++;
+    FWrite = true;
 }
 
 /*##########################################################################
@@ -527,4 +539,6 @@ void TFatTable16::FreeCluster(unsigned int Cluster)
 ##########################################################################*/
 void TFatTable16::Complete()
 {
+    if (FModReq)
+        ClearMod();
 }
