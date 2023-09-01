@@ -302,24 +302,7 @@ void SetEntryName(struct TFatDirEntry *entry, const char *name)
 ##########################################################################*/
 void SetCreateTime(struct TFatDirEntry *entry, long long td)
 {
-    int us;
-    int ms;
-    int sec;
-    int min;
-    int hour;
-    int day;
-    int month;
-    int year;
-    unsigned long lsb, msb;
-    long long tr;
-
     EncodeTime(td, &entry->CrDate, &entry->CrTime, &entry->CrMs);
-
-    tr = DecodeTime(entry->CrDate, entry->CrTime, entry->CrMs);
-    lsb = (unsigned long)tr;
-    msb = (unsigned long)(tr >> 32);
-    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
 }
 
 /*##########################################################################
