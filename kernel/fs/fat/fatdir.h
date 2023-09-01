@@ -51,6 +51,8 @@ struct TFatDirEntry
 struct TLfnEntry
 {
     char Name[14];
+    long long Sector;
+    int Offset;
 };
 
 class TFatDir : public TDir
@@ -64,6 +66,7 @@ public:
 protected:
     void GrowLfn();
 
+    void GetEntryName(char *name, struct TFatDirEntry *entry);
     unsigned int GetCluster(struct TFatDirEntry *entry);
     long long DecodeTime(short int Date, short int Time);
     int DecodeAttrib(char attrib);

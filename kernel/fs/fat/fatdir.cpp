@@ -137,7 +137,6 @@ int TFatDir::DecodeAttrib(char attrib)
     return attrib;
 }
 
-
 /*##########################################################################
 #
 #   Name       : TFatDir::Add
@@ -177,18 +176,55 @@ void TFatDir::Add(long long sector, int offset, const char *name, struct TFatDir
 
 /*##########################################################################
 #
-#   Name       : TFatDir::AddStd
+#   Name       : TFatDir::GrowLfn
 #
-#   Purpose....: Add std entry
+#   Purpose....: Grow LFN array
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
+void TFatDir::GrowLfn()
 {
-    char Name[16];
+    int i;
+    int Size = 2 * LfnMax;
+    struct TLfnEntry *NewArr;
+
+    NewArr = new TLfnEntry[Size];
+
+    for (i = 0; i < MaxCount; i++)
+    {
+        strcpy(NewArr[i].Name, LfnArr[i].Name);
+        NewArr[i].Sector = LfnArr[i].Sector;
+        NewArr[i].Offset = LfnArr[i].Offset;
+    }
+
+    for (i = MaxCount; i < Size; i++)
+    {
+        NewArr[i].Name[0] = 0;
+        NewArr[i].Sector = 0;
+        NewArr[i].Offset = 0;
+    }
+
+    delete LfnArr;
+    LfnArr = NewArr;
+    LfnMax = Size;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::GetEntryName
+#
+#   Purpose....: Get entry name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::GetEntryName(char *name, struct TFatDirEntry *entry)
+{
     char *src;
     char *dst;
     char ch;
@@ -196,7 +232,7 @@ void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
     unsigned short int cluster;
 
     src = entry->Base;
-    dst = Name;
+    dst = name;
 
     for (i = 0; i < 8; i++)
     {
@@ -232,7 +268,24 @@ void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
     }
 
     *dst = 0;
+}
 
+/*##########################################################################
+#
+#   Name       : TFatDir::AddStd
+#
+#   Purpose....: Add std entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
+{
+    char Name[16];
+
+    GetEntryName(Name, entry);
     Add(sector, offset, Name, entry);
 }
 
@@ -252,8 +305,16 @@ void TFatDir::AddLfn(long long sector, int offset, struct TFatDirEntry *entry)
     int size = FCurrLfn->GetNameSize();
     char *buf = new char[size];
 
-    FCurrLfn->GetName(buf);
+    if (LfnMax == LfnCount)
+       GrowLfn();
 
+    GetEntryName(LfnArr[LfnCount].Name, entry);
+    LfnArr[LfnCount].Sector = sector;
+    LfnArr[LfnCount].Offset = offset;
+
+    LfnCount++;
+
+    FCurrLfn->GetName(buf);
     Add(sector, offset, buf, entry);
 
     delete buf;
@@ -323,34 +384,4 @@ void TFatDir::Add(long long sector, int offset, struct TFatDirEntry *entry)
             }
             break;
     }
-}
-
-/*##########################################################################
-#
-#   Name       : TFatDir::GrowLfn
-#
-#   Purpose....: Grow LFN array
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFatDir::GrowLfn()
-{
-    int i;
-    int Size = 2 * LfnMax;
-    struct TLfnEntry *NewArr;
-
-    NewArr = new TLfnEntry[Size];
-
-    for (i = 0; i < MaxCount; i++)
-        strcpy(NewArr[i].Name, LfnArr[i].Name);
-
-    for (i = MaxCount; i < Size; i++)
-        NewArr[i].Name[0] = 0;
-
-    delete LfnArr;
-    LfnArr = NewArr;
-    LfnMax = Size;
 }
