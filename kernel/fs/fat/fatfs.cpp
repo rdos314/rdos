@@ -443,10 +443,15 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 {
     TFatDir *dir = (TFatDir *)ParentDir;
     struct TFatDirEntry entry;
-  
     TFatLfn lfn;
+    long long RdosTime = RdosGetLongTime();
     int i;
     char str[14];
+
+    entry.Attr = 0x10;
+    dir->SetCreateTime(&entry, RdosTime);
+    dir->SetAccessTime(&entry, RdosTime);
+    dir->SetWriteTime(&entry, RdosTime);
 
     if (lfn.IsValidShortName(Name))
     {

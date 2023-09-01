@@ -37,7 +37,7 @@ struct TFatDirEntry
     char Ext[3];
     char Attr;
     char Resv1;
-    char Resv2;
+    unsigned char CrMs;
     short int CrTime;
     short int CrDate;
     short int AcDate;
@@ -64,6 +64,9 @@ public:
     void Add(long long sector, int offset, struct TFatDirEntry *entry);
     bool FindLfn(const char *path);
     void SetEntryName(struct TFatDirEntry *entry, const char *name);
+    void SetCreateTime(struct TFatDirEntry *entry, long long time);
+    void SetAccessTime(struct TFatDirEntry *entry, long long time);
+    void SetWriteTime(struct TFatDirEntry *entry, long long time);
 
 protected:
     void GrowLfn();
@@ -71,6 +74,7 @@ protected:
     void GetEntryName(char *name, struct TFatDirEntry *entry);
     unsigned int GetCluster(struct TFatDirEntry *entry);
     long long DecodeTime(short int Date, short int Time);
+    unsigned char EncodeTime(long long RdosTime, short int *Date, short int *Time);
     int DecodeAttrib(char attrib);
     void Add(long long sector, int offset, const char *name, struct TFatDirEntry *fat);
     void AddStd(long long sector, int offset, struct TFatDirEntry *entry);

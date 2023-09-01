@@ -93,7 +93,7 @@ unsigned int TFatDir::GetCluster(struct TFatDirEntry *entry)
 #
 #   Name       : TFatDir::DecodeTime
 #
-#   Purpose....: Decode time
+#   Purpose....: Decode date & time
 #
 #   In params..: *
 #   Out params.: *
@@ -119,6 +119,48 @@ long long TFatDir::DecodeTime(short int Date, short int Time)
 
     res = lsb + ((long long)msb << 32);
     return res;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::EncodeTime
+#
+#   Purpose....: Encode date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned char TFatDir::EncodeTime(long long RdosTime, short int *Date, short int *Time)
+{
+    int us;
+    int ms;
+    int sec;
+    int min;
+    int hour;
+    int day;
+    int month;
+    int year;
+    unsigned long lsb, msb;
+
+    lsb = (unsigned long)RdosTime;
+    msb = (unsigned long)(RdosTime >> 32);
+
+    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+
+    year -= 1980;
+
+    *Time = sec / 2;
+    *Time += min << 5;
+    *Time += hour << 11;
+
+    *Date = day;
+    *Date += month << 5;
+    *Date += year << 9;
+
+    return ms / 10 + 100 * (sec % 2);
 }
 
 /*##########################################################################
@@ -322,6 +364,73 @@ void TFatDir::SetEntryName(struct TFatDirEntry *entry, const char *name)
         *dst = ch;
         dst++;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::SetCreateTime
+#
+#   Purpose....: Set entry create name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::SetCreateTime(struct TFatDirEntry *entry, long long td)
+{
+    int us;
+    int ms;
+    int sec;
+    int min;
+    int hour;
+    int day;
+    int month;
+    int year;
+    unsigned long lsb, msb;
+    long long tr;
+
+    entry->CrMs = EncodeTime(td, &entry->CrDate, &entry->CrTime);
+
+    tr = DecodeTime(entry->CrDate, entry->CrTime);
+    lsb = (unsigned long)tr;
+    msb = (unsigned long)(tr >> 32);
+    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+    RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::SetAccessTime
+#
+#   Purpose....: Set entry access name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::SetAccessTime(struct TFatDirEntry *entry, long long td)
+{
+    short int time;
+
+    EncodeTime(td, &entry->AcDate, &time);
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::SetWriteTime
+#
+#   Purpose....: Set entry write name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::SetWriteTime(struct TFatDirEntry *entry, long long td)
+{
+    EncodeTime(td, &entry->WrDate, &entry->WrTime);
 }
 
 /*##########################################################################
