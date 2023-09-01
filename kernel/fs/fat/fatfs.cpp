@@ -467,9 +467,14 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
         }
     }
 
+    FatTable1->Complete();
+    FatTable2->Complete();
+
     entry.Attr = 0x10;
     entry.Resv1 = 0;
     entry.FileSize = 0;
+    entry.ClusterLow = Cluster;
+    entry.ClusterHi = 0;
     SetCreateTime(&entry, RdosTime);
     SetAccessTime(&entry, RdosTime);
     SetWriteTime(&entry, RdosTime);
