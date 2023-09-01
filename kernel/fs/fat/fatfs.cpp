@@ -442,12 +442,15 @@ TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 {
     TFatDir *dir = (TFatDir *)ParentDir;
+    struct TFatDirEntry entry;
+  
     TFatLfn lfn;
     int i;
     char str[14];
 
     if (lfn.IsValidShortName(Name))
     {
+        dir->SetEntryName(&entry, Name);
     }
     else
     {
@@ -459,6 +462,7 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
             if (!dir->FindLfn(str) && dir->Find(str) == DIR_NOT_FOUND)
                 break;
         }
+        dir->SetEntryName(&entry, str);
     }
 
     return false;

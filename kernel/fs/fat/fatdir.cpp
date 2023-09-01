@@ -229,7 +229,6 @@ void TFatDir::GetEntryName(char *name, struct TFatDirEntry *entry)
     char *dst;
     char ch;
     int i;
-    unsigned short int cluster;
 
     src = entry->Base;
     dst = name;
@@ -268,6 +267,61 @@ void TFatDir::GetEntryName(char *name, struct TFatDirEntry *entry)
     }
 
     *dst = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::SetEntryName
+#
+#   Purpose....: Set entry name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::SetEntryName(struct TFatDirEntry *entry, const char *name)
+{
+    const char *src;
+    char *dst;
+    char ch;
+    int i;
+
+    src = name;
+    dst = entry->Base;
+
+    for (i = 0; i < 8; i++)
+    {
+        if (*src == '.' || *src == 0)
+            ch = ' ';
+        else
+        {
+            ch = toupper(*src);
+            src++;
+        }
+
+        *dst = ch;
+        dst++;
+    }
+
+    dst = entry->Ext;
+
+    if (*src == '.')
+        src++;
+
+    for (i = 0; i < 3; i++)
+    {
+        if (*src == 0)
+            ch = ' ';
+        else
+        {
+            ch = toupper(*src);
+            src++;
+        }
+
+        *dst = ch;
+        dst++;
+    }
 }
 
 /*##########################################################################

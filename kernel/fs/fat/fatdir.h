@@ -63,6 +63,7 @@ public:
 
     void Add(long long sector, int offset, struct TFatDirEntry *entry);
     bool FindLfn(const char *path);
+    void SetEntryName(struct TFatDirEntry *entry, const char *name);
 
 protected:
     void GrowLfn();
