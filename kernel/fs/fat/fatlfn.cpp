@@ -198,6 +198,9 @@ bool TFatLfn::IsValidShortName(const char *buf)
         if (*ptr == '.')
             break;
 
+        if (!IsValidShortChar(*ptr))
+            return false;
+
         ptr++;
     }
 
@@ -210,8 +213,19 @@ bool TFatLfn::IsValidShortName(const char *buf)
             if (*ptr == 0)
                 return true;
 
+            if (!IsValidShortChar(*ptr))
+                return false;
+
             ptr++;
         }
+
+        if (*ptr == 0)
+            return true;
+    }
+    else
+    {
+        if (*ptr == 0)
+            return true;
     }
 
     return false;
