@@ -118,6 +118,11 @@ protected:
     TDir *CacheFixedDir(long long RootSector, int RootDirEntries);
     void FormatFixedDir(long long RootSector, int RootDirEntries);
 
+    unsigned int AllocateCluster();
+    void Complete();
+
+    bool CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, char attr);
+
     bool VerifySector(int id, char *buf);
     void GetSectors(TPartReq *Req, long long sector, int count);
 

@@ -431,6 +431,104 @@ TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 
 /*##########################################################################
 #
+#   Name       : TFat::AllocateCluster
+#
+#   Purpose....: Allocate cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFat::AllocateCluster()
+{
+    unsigned int Cluster;
+    unsigned int Link;
+
+    while (!FStopped)
+    {
+        Cluster = FatTable1->AllocateCluster();
+
+        if (!Cluster)
+            return 0;
+
+        if (FatTable2->ReserveCluster(Cluster))
+            return Cluster;
+        else
+        {
+            Link = FatTable2->GetClusterLink(Cluster);
+            FatTable1->LinkCluster(Cluster, Link);
+        }
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::Complete
+#
+#   Purpose....: Complete FAT table modification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::Complete()
+{
+    FatTable1->Complete();
+    FatTable2->Complete();
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::CreateDirEntry
+#
+#   Purpose....: Create dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat::CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, char attr)
+{
+    struct TFatDirEntry entry;
+    TFatLfn lfn;
+    long long RdosTime = RdosGetLongTime();
+    int i;
+    char str[14];
+
+    entry.Attr = attr;
+    entry.Resv1 = 0;
+    entry.FileSize = 0;
+    entry.ClusterLow = cluster & 0xFFFF;
+    entry.ClusterHi = cluster >> 16;
+    SetCreateTime(&entry, RdosTime);
+    SetAccessTime(&entry, RdosTime);
+    SetWriteTime(&entry, RdosTime);
+
+    if (IsValidShortName(name))
+    {
+        SetEntryName(&entry, name);
+    }
+    else
+    {
+        lfn.SetName(name);
+
+        for (i = 1; i < 99999; i++)
+        {
+            GenerateShortName(name, i, str);
+            if (!dir->FindLfn(str) && dir->Find(str) == DIR_NOT_FOUND)
+                break;
+        }
+        SetEntryName(&entry, str);
+    }
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::CreateDir
 #
 #   Purpose....: Create dir
@@ -443,60 +541,16 @@ TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 {
     TFatDir *dir = (TFatDir *)ParentDir;
-    struct TFatDirEntry entry;
-    TFatLfn lfn;
-    long long RdosTime = RdosGetLongTime();
-    int i;
+    bool ok = false;
     unsigned int Cluster;
-    unsigned int Link;
-    char str[14];
 
-    for (;;)
-    {
-        Cluster = FatTable1->AllocateCluster();
+    Cluster = AllocateCluster();
+    Complete();
 
-        if (!Cluster)
-            return false;
+    if (Cluster)
+        ok = CreateDirEntry(dir, Name, Cluster, 0x10);
 
-        if (FatTable2->ReserveCluster(Cluster))
-            break;
-        else
-        {
-            Link = FatTable2->GetClusterLink(Cluster);
-            FatTable1->LinkCluster(Cluster, Link);
-        }
-    }
-
-    FatTable1->Complete();
-    FatTable2->Complete();
-
-    entry.Attr = 0x10;
-    entry.Resv1 = 0;
-    entry.FileSize = 0;
-    entry.ClusterLow = Cluster;
-    entry.ClusterHi = 0;
-    SetCreateTime(&entry, RdosTime);
-    SetAccessTime(&entry, RdosTime);
-    SetWriteTime(&entry, RdosTime);
-
-    if (IsValidShortName(Name))
-    {
-        SetEntryName(&entry, Name);
-    }
-    else
-    {
-        lfn.SetName(Name);
-
-        for (i = 1; i < 99999; i++)
-        {
-            GenerateShortName(Name, i, str);
-            if (!dir->FindLfn(str) && dir->Find(str) == DIR_NOT_FOUND)
-                break;
-        }
-        SetEntryName(&entry, str);
-    }
-
-    return false;
+    return ok;
 }
 
 /*##########################################################################
