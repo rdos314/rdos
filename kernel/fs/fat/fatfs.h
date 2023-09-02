@@ -122,6 +122,7 @@ protected:
     void Complete();
 
     bool CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, char attr);
+    void InitDir(TFatDir *Parent, unsigned int Cluster);
 
     bool VerifySector(int id, char *buf);
     void GetSectors(TPartReq *Req, long long sector, int count);
