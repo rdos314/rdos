@@ -119,6 +119,7 @@ code    SEGMENT byte public 'CODE'
     extern HandleToPartFs:near
     extern HandleToDisc:near
     extern UnlinkPartEs:near
+    extern UpdateWrBitmap:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2372,7 +2373,7 @@ wvrBlockLoop:
     jz wvrLeave
 
 wvrSectorLoop:
-    or es:[esi].vfsp_wr_bitmap,bl
+    call UpdateWrBitmap
     rol bl,cl
 ;
     sub ebp,1
