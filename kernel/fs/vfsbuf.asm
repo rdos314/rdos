@@ -1559,6 +1559,7 @@ c11111111 DB 8
 
 UpdateWrBitmap   Proc near
     push eax
+    push ecx
 ;
     mov al,es:[esi].vfsp_wr_bitmap
     and al,bl
@@ -1568,9 +1569,14 @@ UpdateWrBitmap   Proc near
 ;
     movzx eax,al
     mov al,byte ptr cs:[eax].CountTab
+;
+    mov cl,ds:vfs_sector_shift
+    shr al,cl
+;
     movzx eax,al
     add ds:vfs_active_count,eax
 ;
+    pop ecx
     pop eax
     ret
 UpdateWrBitmap   Endp
