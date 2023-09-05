@@ -496,6 +496,7 @@ void TFat::SetupDirEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, int 
     {
         memcpy(e, entry, sizeof(struct TFatDirEntry));
         ReqEntry->Write();
+        dir->Add(pos, entry);
     }
 
     delete ReqEntry;
