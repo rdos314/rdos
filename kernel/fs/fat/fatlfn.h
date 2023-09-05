@@ -52,6 +52,7 @@ public:
     bool Add(struct TFatLfnEntry *entry);
     bool Verify(struct TFatDirEntry *entry);
     int GetNameSize();
+    int GetEntryCount();
     void GetName(char *buf);
 
     void SetName(const char *buf);

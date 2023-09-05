@@ -357,3 +357,59 @@ void TFatDir::AddFree(int pos)
         FreeEntries++;
     }
 }
+
+/*##########################################################################
+#
+#   Name       : TFatDir::AllocateEntry
+#
+#   Purpose....: Allocate entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFatDir::AllocateEntry(int count)
+{
+    int i;
+    short int val;
+    int offset;
+    int bits;
+
+    for (i = 0; i < FreeCount; i++)
+    {
+        val = FreeArr[i];
+        offset = 0;
+
+        while (val)
+        {
+            while ((val & 1) == 0)
+            {
+                offset++;
+                val = val >> 1;
+            }
+
+            bits = 0;
+            while ((val & 1) == 1)
+            {
+                bits++;
+                val = val >> 1;
+
+                if (bits == count)
+                    return 16 * i + offset + 1;
+
+                if (offset + bits == 16)
+                {
+                    offset = 0;
+                    i++;
+                    if (i < FreeCount)
+                        val = FreeArr[i];
+                    else
+                        return 0;
+                }
+            }
+            offset += bits;
+        }
+    }
+    return 0;
+}

@@ -49,6 +49,8 @@ public:
 
     void AddFree(int pos);
 
+    int AllocateEntry(int count);
+
 protected:
     void GrowLfn();
     void GrowFree(int count);

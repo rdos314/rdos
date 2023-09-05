@@ -482,6 +482,8 @@ bool TFat::CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, 
     long long RdosTime = RdosGetLongTime();
     int i;
     char str[14];
+    int count;
+    int pos;
 
     entry.Attr = attr;
     entry.Resv1 = 0;
@@ -495,10 +497,12 @@ bool TFat::CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, 
     if (IsValidShortName(name))
     {
         SetEntryName(&entry, name);
+        count = 1;
     }
     else
     {
         lfn.SetName(name);
+        count = lfn.GetEntryCount();
 
         for (i = 1; i < 99999; i++)
         {
@@ -508,6 +512,9 @@ bool TFat::CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, 
         }
         SetEntryName(&entry, str);
     }
+
+    pos = dir->AllocateEntry(count);
+
     return true;
 }
 

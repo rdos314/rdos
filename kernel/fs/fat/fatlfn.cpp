@@ -210,6 +210,22 @@ int TFatLfn::GetNameSize()
 
 /*##########################################################################
 #
+#   Name       : TFatLfn::GetEntryCount
+#
+#   Purpose....: Get required dir entry count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFatLfn::GetEntryCount()
+{
+    return (Count - 1) / 13 + 2;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatLfn::GetName
 #
 #   Purpose....: Get name
