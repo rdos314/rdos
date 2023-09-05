@@ -217,8 +217,7 @@ struct RdosDirEntry *TDir::Add(const char *path, long long inode)
     entry->CreateTime = 0;
     entry->AccessTime = 0;
     entry->ModifyTime = 0;
-    entry->Sector = 0;
-    entry->Offset = 0;
+    entry->Pos = 0;
     entry->Attrib = 0;
     entry->Flags = 0;
     entry->Uid = 0;

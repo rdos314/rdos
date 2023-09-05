@@ -225,8 +225,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
     int Sectors = RootDirEntries / 16;
     TPartReq Req(FServer);
     TPartReqEntry ReqEntry(&Req, RootSector, Sectors);
-    long long Sector;
-    int Offset;
+    int Pos = 0;
     int i, j;
     TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
@@ -238,27 +237,17 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
     if (Req.IsDone())
     {
         FatDirEntry = (struct TFatDirEntry *)ReqEntry.Map();
-        Sector = RootSector;
 
         for (i = 0; i < Sectors; i++)
         {
-            Offset = 0;
-
-            if (FatDirEntry->Base[0] == 0)
-                break;
-
             for (j = 0; j < 16; j++)
             {
-                if (FatDirEntry->Base[0] == 0)
-                    break;
-
-                Dir->Add(Sector, Offset, FatDirEntry);
+                if (FatDirEntry->Base[0])
+                    Dir->Add(Pos, FatDirEntry);
 
                 FatDirEntry++;
-                Offset += 32;
+                Pos += 32;
             }
-
-            Sector++;
         }
     }
     return Dir;
@@ -287,7 +276,7 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
     int size;
     int i, j, k;
     long long Sector;
-    short int Offset;
+    int Pos = 0;
     TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
 
@@ -336,27 +325,18 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
         {
             for (i = 0; i < size; i++)
             {
-                Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster;
                 FatDirEntry = (struct TFatDirEntry *)ReqArr[i]->Map();
 
                 for (j = 0; j < SectorsPerCluster; j++)
                 {
-                    if (FatDirEntry->Base[0] == 0)
-                        break;
-
-                    Offset = 0;
-
                     for (k = 0; k < 16; k++)
                     {
-                        if (FatDirEntry->Base[0] == 0)
-                            break;
-
-                        Dir->Add(Sector, Offset, FatDirEntry);
+                        if (FatDirEntry->Base[0])
+                            Dir->Add(Pos, FatDirEntry);
 
                         FatDirEntry++;
-                        Offset += 32;
+                        Pos += 32;
                     }
-                    Sector++;
                 }
             }
         }

@@ -145,8 +145,7 @@ struct RdosDirEntry
     int Flags;
     int Uid;
     int Gid;
-    long long Sector;
-    short int Offset;
+    int Pos;
 
     short int PathNameSize;
     char PathName[];

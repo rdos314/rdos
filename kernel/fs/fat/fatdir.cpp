@@ -79,7 +79,7 @@ TFatDir::~TFatDir()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::Add(long long sector, int offset, const char *name, struct TFatDirEntry *fat)
+void TFatDir::Add(int pos, const char *name, struct TFatDirEntry *fat)
 {
     unsigned int cluster = GetCluster(fat);
     RdosDirEntry *entry;
@@ -99,8 +99,7 @@ void TFatDir::Add(long long sector, int offset, const char *name, struct TFatDir
 
     entry->Attrib = DecodeAttrib(fat->Attr);
     entry->Size = fat->FileSize;
-    entry->Sector = sector;
-    entry->Offset = offset;
+    entry->Pos = pos;
 
     Section.Leave();
 }
@@ -127,15 +126,13 @@ void TFatDir::GrowLfn()
     for (i = 0; i < MaxCount; i++)
     {
         strcpy(NewArr[i].Name, LfnArr[i].Name);
-        NewArr[i].Sector = LfnArr[i].Sector;
-        NewArr[i].Offset = LfnArr[i].Offset;
+        NewArr[i].Pos = LfnArr[i].Pos;
     }
 
     for (i = MaxCount; i < Size; i++)
     {
         NewArr[i].Name[0] = 0;
-        NewArr[i].Sector = 0;
-        NewArr[i].Offset = 0;
+        NewArr[i].Pos = 0;
     }
 
     delete LfnArr;
@@ -185,12 +182,12 @@ bool TFatDir::FindLfn(const char *path)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
+void TFatDir::AddStd(int pos, struct TFatDirEntry *entry)
 {
     char Name[16];
 
     GetEntryName(entry, Name);
-    Add(sector, offset, Name, entry);
+    Add(pos, Name, entry);
 }
 
 /*##########################################################################
@@ -204,7 +201,7 @@ void TFatDir::AddStd(long long sector, int offset, struct TFatDirEntry *entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::AddLfn(long long sector, int offset, struct TFatDirEntry *entry)
+void TFatDir::AddLfn(int pos, struct TFatDirEntry *entry)
 {
     int size = FCurrLfn->GetNameSize();
     char *buf = new char[size];
@@ -213,13 +210,12 @@ void TFatDir::AddLfn(long long sector, int offset, struct TFatDirEntry *entry)
        GrowLfn();
 
     GetEntryName(entry, LfnArr[LfnCount].Name);
-    LfnArr[LfnCount].Sector = sector;
-    LfnArr[LfnCount].Offset = offset;
+    LfnArr[LfnCount].Pos = pos;
 
     LfnCount++;
 
     FCurrLfn->GetName(buf);
-    Add(sector, offset, buf, entry);
+    Add(pos, buf, entry);
 
     delete buf;
 }
@@ -235,7 +231,7 @@ void TFatDir::AddLfn(long long sector, int offset, struct TFatDirEntry *entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::Add(long long sector, int offset, struct TFatDirEntry *entry)
+void TFatDir::Add(int pos, struct TFatDirEntry *entry)
 {
     struct TFatLfnEntry *lfn;
 
@@ -276,15 +272,15 @@ void TFatDir::Add(long long sector, int offset, struct TFatDirEntry *entry)
                 if (FCurrLfn)
                 {
                     if (FCurrLfn->Verify(entry))
-                        AddLfn(sector, offset, entry);
+                        AddLfn(pos, entry);
                     else
-                        AddStd(sector, offset, entry);
+                        AddStd(pos, entry);
 
                     delete FCurrLfn;
                     FCurrLfn = 0;
                 }
                 else
-                    AddStd(sector, offset, entry);
+                    AddStd(pos, entry);
             }
             break;
     }

@@ -35,8 +35,7 @@
 struct TLfnEntry
 {
     char Name[14];
-    long long Sector;
-    int Offset;
+    int Pos;
 };
 
 class TFatDir : public TDir
@@ -45,15 +44,15 @@ public:
     TFatDir(TDir *ParentDir, int ParentIndex);
     virtual ~TFatDir();
 
-    void Add(long long sector, int offset, struct TFatDirEntry *entry);
+    void Add(int pos, struct TFatDirEntry *entry);
     bool FindLfn(const char *path);
 
 protected:
     void GrowLfn();
 
-    void Add(long long sector, int offset, const char *name, struct TFatDirEntry *fat);
-    void AddStd(long long sector, int offset, struct TFatDirEntry *entry);
-    void AddLfn(long long sector, int offset, struct TFatDirEntry *entry);
+    void Add(int pos, const char *name, struct TFatDirEntry *fat);
+    void AddStd(int pos, struct TFatDirEntry *entry);
+    void AddLfn(int pos, struct TFatDirEntry *entry);
 
     struct TFatLfn *FCurrLfn;
 
