@@ -51,6 +51,7 @@ TFatDir::TFatDir(TDir *ParentDir, int ParentIndex)
     LfnArr = new TLfnEntry[MaxCount];
 
     FreeCount = 0;
+    FreeEntries = 0;
     FreeArr = 0;
 }
 
@@ -316,7 +317,9 @@ void TFatDir::GrowFree(int count)
     for (i = FreeCount; i < Size; i++)
         NewArr[i] = 0;
 
-    delete FreeArr;
+    if (FreeArr)
+        delete FreeArr;
+
     FreeArr = NewArr;
     FreeCount = Size;
 }
@@ -351,5 +354,6 @@ void TFatDir::AddFree(int pos)
             GrowFree(entry);
 
         FreeArr[entry] |= mask;            
+        FreeEntries++;
     }
 }

@@ -58,6 +58,7 @@ protected:
     void AddLfn(int pos, struct TFatDirEntry *entry);
 
     int FreeCount;
+    int FreeEntries;
     short int *FreeArr;
 
     struct TFatLfn *FCurrLfn;
