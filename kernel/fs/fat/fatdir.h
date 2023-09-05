@@ -28,6 +28,7 @@
 #ifndef _FATDIR_H
 #define _FATDIR_H
 
+#include "cluster.h"
 #include "dir.h"
 #include "fatlfn.h"
 #include "fat.h"
@@ -38,25 +39,24 @@ struct TLfnEntry
     int Pos;
 };
 
-struct TFatDirSector
-{
-    unsigned int Sector;
-    unsigned short FreeMask;
-};
-
 class TFatDir : public TDir
 {
 public:
-    TFatDir(TDir *ParentDir, int ParentIndex);
+    TFatDir(long long RootSector, int Sectors);
+    TFatDir(TDir *ParentDir, int ParentIndex, long long StartSector, int SectorsPerCluster);
     virtual ~TFatDir();
+
+    bool IsFixedDir();
+    long long GetSector(int pos);
+    int GetIndex(int pos);
 
     void Add(int pos, struct TFatDirEntry *entry);
     bool FindLfn(const char *path);
 
-    void AddSector(int pos, unsigned int sector);
-    unsigned int GetSector(int pos);
-    int GetIndex(int pos);
+    int GetClusterCount();
+    unsigned int GetCluster(int index);
 
+    void AddCluster(unsigned int cluster);
     void AddFree(int pos);
     void RemoveFree(int pos);
 
@@ -64,22 +64,29 @@ public:
 
 protected:
     void GrowLfn();
-    void GrowSector(int count);
+    void GrowFree(int count);
 
     void Add(int pos, const char *name, struct TFatDirEntry *fat);
     void AddStd(int pos, struct TFatDirEntry *entry);
     void AddLfn(int pos, struct TFatDirEntry *entry);
 
     int FreeEntries;
+    int FreeCount;
+    unsigned short int *FreeArr;
 
-    int SectorCount;
-    struct TFatDirSector *SectorArr;
+    TCluster *FClusterChain;
+    int FSectorsPerCluster;
+    long long FStartSector;
+    int FSectorCount;
 
     struct TFatLfn *FCurrLfn;
 
     int LfnCount;
     int LfnMax;
     struct TLfnEntry *LfnArr;
+
+private:
+    void Init();
 
 };
 

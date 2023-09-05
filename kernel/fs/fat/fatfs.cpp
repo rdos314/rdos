@@ -231,7 +231,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
     TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
 
-    Dir = new TFatDir(0, 0);
+    Dir = new TFatDir(RootSector, Sectors);
 
     Req.WaitForever();
 
@@ -241,8 +241,6 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 
         for (i = 0; i < Sectors; i++)
         {
-            Dir->AddSector(Pos, Sector);
-
             for (j = 0; j < 16; j++)
             {
                 if (FatDirEntry->Base[0])
@@ -273,12 +271,10 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 {
     unsigned int Cluster = Inode;
-    TPartReq Req(FServer);
-    TCluster Chain;
     unsigned int NextCluster1;
     unsigned int NextCluster2;
-    unsigned int *ClusterArr;
-    TPartReqEntry **ReqArr;
+    TPartReq *Req;
+    TPartReqEntry *ReqEntry;
     int size;
     int i, j, k;
     long long Sector;
@@ -286,11 +282,11 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
     TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
 
-    Dir = new TFatDir(ParentDir, ParentIndex);
+    Dir = new TFatDir(ParentDir, ParentIndex, StartSector, SectorsPerCluster);
 
     while (Cluster && Cluster < Clusters)
     {
-        Chain.Add(Cluster);
+        Dir->AddCluster(Cluster);
 
         NextCluster1 = FatTable1->GetClusterLink(Cluster);
         NextCluster2 = FatTable2->GetClusterLink(Cluster);
@@ -312,28 +308,22 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
         }
     }
 
-    size = Chain.GetSize();
-    ClusterArr = Chain.GetChain();
+    size = Dir->GetClusterCount();
 
-    if (size && Cluster)
+    if (size)
     {
-        ReqArr = new TPartReqEntry *[size];
-
         for (i = 0; i < size; i++)
         {
-            Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster;
-            ReqArr[i] = new TPartReqEntry(&Req, Sector, SectorsPerCluster);
-        }
+            Sector = StartSector + (Dir->GetCluster(i) - 2) * SectorsPerCluster;
 
-        Req.WaitForever();
+            Req = new TPartReq(FServer);
+            ReqEntry = new TPartReqEntry(Req, Sector, SectorsPerCluster);
 
-        if (Req.IsDone())
-        {
-            for (i = 0; i < size; i++)
+            Req->WaitForever();
+
+            if (Req->IsDone())
             {
-                Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster;
-                Dir->AddSector(Pos, (unsigned int)Sector); 
-                FatDirEntry = (struct TFatDirEntry *)ReqArr[i]->Map();
+                FatDirEntry = (struct TFatDirEntry *)ReqEntry->Map();
 
                 for (j = 0; j < SectorsPerCluster; j++)
                 {
@@ -350,6 +340,9 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
                     Sector++;
                 }
             }
+
+            delete ReqEntry;
+            delete Req;
         }
     }
     return Dir;

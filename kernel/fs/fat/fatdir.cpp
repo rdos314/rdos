@@ -42,17 +42,34 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatDir::TFatDir(TDir *ParentDir, int ParentIndex)
+TFatDir::TFatDir(long long RootSector, int Sectors)
+  : TDir(0, 0)
+{
+    Init();
+
+    FStartSector = RootSector;
+    FSectorCount = Sectors;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::TFatDir
+#
+#   Purpose....: Fat dir constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFatDir::TFatDir(TDir *ParentDir, int ParentIndex, long long StartSector, int SectorsPerCluster)
   : TDir(ParentDir, ParentIndex)
 {
-    FCurrLfn = 0;
-    LfnCount = 0;
-    LfnMax = 4;
-    LfnArr = new TLfnEntry[MaxCount];
+    Init();
 
-    SectorCount = 0;
-    FreeEntries = 0;
-    SectorArr = 0;
+    FStartSector = StartSector;
+    FSectorsPerCluster = SectorsPerCluster;
+    FClusterChain = new TCluster();
 }
 
 /*##########################################################################
@@ -70,8 +87,58 @@ TFatDir::~TFatDir()
 {
     delete LfnArr;
 
-    if (SectorArr)
-        delete SectorArr;
+    if (FreeArr)
+        delete FreeArr;
+
+    if (FClusterChain)
+        delete FClusterChain;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::Init
+#
+#   Purpose....: Init object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::Init()
+{
+    FCurrLfn = 0;
+    LfnCount = 0;
+    LfnMax = 4;
+    LfnArr = new TLfnEntry[MaxCount];
+
+    FreeCount = 0;
+    FreeEntries = 0;
+    FreeArr = 0;
+
+    FClusterChain = 0;
+    FSectorsPerCluster = 0;
+    FStartSector = 0;
+    FSectorCount = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::IsFixedDir
+#
+#   Purpose....: Check for fixed dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatDir::IsFixedDir()
+{
+    if (FClusterChain)
+        return false;
+    else
+        return true;
 }
 
 /*##########################################################################
@@ -87,7 +154,7 @@ TFatDir::~TFatDir()
 ##########################################################################*/
 void TFatDir::Add(int pos, const char *name, struct TFatDirEntry *fat)
 {
-    unsigned int cluster = GetCluster(fat);
+    unsigned int cluster = ::GetCluster(fat);
     RdosDirEntry *entry;
 
     Section.Enter();
@@ -294,67 +361,94 @@ void TFatDir::Add(int pos, struct TFatDirEntry *entry)
 
 /*##########################################################################
 #
-#   Name       : TFatDir::GrowSector
+#   Name       : TFatDir::GrowFree
 #
-#   Purpose....: Grow sector array
+#   Purpose....: Grow free array
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::GrowSector(int count)
+void TFatDir::GrowFree(int count)
 {
     int i;
     int Size = 2 * count + 4;
-    struct TFatDirSector *NewArr;
+    unsigned short int *NewArr;
 
-    NewArr = new struct TFatDirSector[Size];
+    NewArr = new unsigned short int[Size];
 
-    for (i = 0; i < SectorCount; i++)
-    {
-        NewArr[i].Sector = SectorArr[i].Sector;
-        NewArr[i].FreeMask = SectorArr[i].FreeMask;
-    }
+    for (i = 0; i < FreeCount; i++)
+        NewArr[i] = FreeArr[i];
 
-    for (i = SectorCount; i < Size; i++)
-    {
-        NewArr[i].Sector = 0;
-        NewArr[i].FreeMask = 0;
-    }
+    for (i = FreeCount; i < Size; i++)
+        NewArr[i] = 0;
 
-    if (SectorArr)
-        delete SectorArr;
+    if (FreeArr)
+        delete FreeArr;
 
-    SectorArr = NewArr;
-    SectorCount = Size;
+    FreeArr = NewArr;
+    FreeCount = Size;
 }
 
 /*##########################################################################
 #
-#   Name       : TFatDir::AddSector
+#   Name       : TFatDir::GetClusterCount
 #
-#   Purpose....: Add sector
+#   Purpose....: Get cluster count
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::AddSector(int pos, unsigned int sector)
+int TFatDir::GetClusterCount()
 {
-    int entry;
+    if (FClusterChain)
+        return FClusterChain->GetSize();
+    else
+        return 0;
+}
 
-    if (pos)
+/*##########################################################################
+#
+#   Name       : TFatDir::AddCluster
+#
+#   Purpose....: Add cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::AddCluster(unsigned int cluster)
+{
+    if (FClusterChain)
+        FClusterChain->Add(cluster);
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::GetCluster
+#
+#   Purpose....: Get cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatDir::GetCluster(int index)
+{
+    unsigned int *chain;
+
+    if (FClusterChain)
     {
-        pos--;
-        entry = pos / 16;
-
-        if (entry >= SectorCount)
-            GrowSector(entry);
-
-        SectorArr[entry].Sector = sector;            
+        chain = FClusterChain->GetChain();
+        if (index < FClusterChain->GetSize())
+            return chain[index];
     }
+    return 0;
 }
 
 /*##########################################################################
@@ -368,17 +462,33 @@ void TFatDir::AddSector(int pos, unsigned int sector)
 #   Returns....: *
 #
 ##########################################################################*/
-unsigned int TFatDir::GetSector(int pos)
+long long TFatDir::GetSector(int pos)
 {
     int entry;
+    int cluster;
+    unsigned int *chain;
 
     if (pos)
     {
         pos--;
         entry = pos / 16;
 
-        if (entry < SectorCount)
-            return SectorArr[entry].Sector;
+        if (FClusterChain)
+        {
+            cluster = entry / FSectorsPerCluster;
+            entry = entry % FSectorsPerCluster;
+            if (cluster < FClusterChain->GetSize())
+            {
+                chain = FClusterChain->GetChain();
+                chain += cluster;
+                return FStartSector + (*chain - 2) * FSectorsPerCluster + entry;            
+            }
+        }
+        else
+        {
+            if (entry < FSectorCount)
+                return FStartSector + entry;
+        }
     }
     return 0;
 }
@@ -429,7 +539,10 @@ void TFatDir::AddFree(int pos)
         offset = pos % 16;
         mask = 1 << offset;
 
-        SectorArr[entry].FreeMask |= mask;            
+        if (entry >= FreeCount)
+            GrowFree(entry);
+
+        FreeArr[entry] |= mask;            
         FreeEntries++;
     }
 }
@@ -459,9 +572,9 @@ void TFatDir::RemoveFree(int pos)
         offset = pos % 16;
         mask = 1 << offset;
 
-        if (entry < SectorCount)
+        if (entry < FreeCount)
         {
-            SectorArr[entry].FreeMask &= ~mask;            
+            FreeArr[entry] &= ~mask;            
             FreeEntries--;
         }
     }
@@ -490,9 +603,9 @@ int TFatDir::AllocateEntry(int count)
     int ai;
     int ab;
 
-    for (i = 0; i < SectorCount; i++)
+    for (i = 0; i < FreeCount; i++)
     {
-        val = SectorArr[i].FreeMask;
+        val = FreeArr[i];
         offset = 0;
 
         while (val)
@@ -529,8 +642,8 @@ int TFatDir::AllocateEntry(int count)
                     offset = 0;
                     bits = 0;
                     i++;
-                    if (i < SectorCount)
-                        val = SectorArr[i].FreeMask;
+                    if (i < FreeCount)
+                        val = FreeArr[i];
                     else
                         return 0;
                 }
