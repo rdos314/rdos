@@ -225,6 +225,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
     int Sectors = RootDirEntries / 16;
     TPartReq Req(FServer);
     TPartReqEntry ReqEntry(&Req, RootSector, Sectors);
+    unsigned int Sector = (unsigned int)RootSector;
     int Pos = 1;
     int i, j;
     TFatDir *Dir;
@@ -240,6 +241,8 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 
         for (i = 0; i < Sectors; i++)
         {
+            Dir->AddSector(Pos, Sector);
+
             for (j = 0; j < 16; j++)
             {
                 if (FatDirEntry->Base[0])
@@ -250,6 +253,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
                 FatDirEntry++;
                 Pos++;
             }
+            Sector++;
         }
     }
     return Dir;
@@ -327,6 +331,8 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
         {
             for (i = 0; i < size; i++)
             {
+                Sector = StartSector + (ClusterArr[i] - 2) * SectorsPerCluster;
+                Dir->AddSector(Pos, (unsigned int)Sector); 
                 FatDirEntry = (struct TFatDirEntry *)ReqArr[i]->Map();
 
                 for (j = 0; j < SectorsPerCluster; j++)
@@ -341,6 +347,7 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
                         FatDirEntry++;
                         Pos++;
                     }
+                    Sector++;
                 }
             }
         }

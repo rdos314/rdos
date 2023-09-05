@@ -38,6 +38,12 @@ struct TLfnEntry
     int Pos;
 };
 
+struct TFatDirSector
+{
+    unsigned int Sector;
+    unsigned short FreeMask;
+};
+
 class TFatDir : public TDir
 {
 public:
@@ -47,6 +53,8 @@ public:
     void Add(int pos, struct TFatDirEntry *entry);
     bool FindLfn(const char *path);
 
+    void AddSector(int pos, unsigned int sector);
+
     void AddFree(int pos);
     void RemoveFree(int pos);
 
@@ -54,15 +62,16 @@ public:
 
 protected:
     void GrowLfn();
-    void GrowFree(int count);
+    void GrowSector(int count);
 
     void Add(int pos, const char *name, struct TFatDirEntry *fat);
     void AddStd(int pos, struct TFatDirEntry *entry);
     void AddLfn(int pos, struct TFatDirEntry *entry);
 
-    int FreeCount;
     int FreeEntries;
-    unsigned short int *FreeArr;
+
+    int SectorCount;
+    struct TFatDirSector *SectorArr;
 
     struct TFatLfn *FCurrLfn;
 

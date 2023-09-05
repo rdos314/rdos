@@ -50,9 +50,9 @@ TFatDir::TFatDir(TDir *ParentDir, int ParentIndex)
     LfnMax = 4;
     LfnArr = new TLfnEntry[MaxCount];
 
-    FreeCount = 0;
+    SectorCount = 0;
     FreeEntries = 0;
-    FreeArr = 0;
+    SectorArr = 0;
 }
 
 /*##########################################################################
@@ -70,8 +70,8 @@ TFatDir::~TFatDir()
 {
     delete LfnArr;
 
-    if (FreeArr)
-        delete FreeArr;
+    if (SectorArr)
+        delete SectorArr;
 }
 
 /*##########################################################################
@@ -294,34 +294,67 @@ void TFatDir::Add(int pos, struct TFatDirEntry *entry)
 
 /*##########################################################################
 #
-#   Name       : TFatDir::GrowFree
+#   Name       : TFatDir::GrowSector
 #
-#   Purpose....: Grow free array
+#   Purpose....: Grow sector array
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::GrowFree(int count)
+void TFatDir::GrowSector(int count)
 {
     int i;
     int Size = 2 * count + 4;
-    unsigned short int *NewArr;
+    struct TFatDirSector *NewArr;
 
-    NewArr = new unsigned short int[Size];
+    NewArr = new struct TFatDirSector[Size];
 
-    for (i = 0; i < FreeCount; i++)
-        NewArr[i] = FreeArr[i];
+    for (i = 0; i < SectorCount; i++)
+    {
+        NewArr[i].Sector = SectorArr[i].Sector;
+        NewArr[i].FreeMask = SectorArr[i].FreeMask;
+    }
 
-    for (i = FreeCount; i < Size; i++)
-        NewArr[i] = 0;
+    for (i = SectorCount; i < Size; i++)
+    {
+        NewArr[i].Sector = 0;
+        NewArr[i].FreeMask = 0;
+    }
 
-    if (FreeArr)
-        delete FreeArr;
+    if (SectorArr)
+        delete SectorArr;
 
-    FreeArr = NewArr;
-    FreeCount = Size;
+    SectorArr = NewArr;
+    SectorCount = Size;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::AddSector
+#
+#   Purpose....: Add sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::AddSector(int pos, unsigned int sector)
+{
+    int entry;
+
+    if (pos)
+    {
+        pos--;
+        entry = pos / 16;
+
+        if (entry >= SectorCount)
+            GrowSector(entry);
+
+        SectorArr[entry].Sector = sector;            
+    }
 }
 
 /*##########################################################################
@@ -340,7 +373,6 @@ void TFatDir::AddFree(int pos)
     int entry;
     int offset;
     unsigned short int mask;
-    unsigned short int *NewArr;
 
     if (pos)
     {
@@ -349,10 +381,7 @@ void TFatDir::AddFree(int pos)
         offset = pos % 16;
         mask = 1 << offset;
 
-        if (entry >= FreeCount)
-            GrowFree(entry);
-
-        FreeArr[entry] |= mask;            
+        SectorArr[entry].FreeMask |= mask;            
         FreeEntries++;
     }
 }
@@ -382,9 +411,9 @@ void TFatDir::RemoveFree(int pos)
         offset = pos % 16;
         mask = 1 << offset;
 
-        if (entry < FreeCount)
+        if (entry < SectorCount)
         {
-            FreeArr[entry] &= ~mask;            
+            SectorArr[entry].FreeMask &= ~mask;            
             FreeEntries--;
         }
     }
@@ -413,9 +442,9 @@ int TFatDir::AllocateEntry(int count)
     int ai;
     int ab;
 
-    for (i = 0; i < FreeCount; i++)
+    for (i = 0; i < SectorCount; i++)
     {
-        val = FreeArr[i];
+        val = SectorArr[i].FreeMask;
         offset = 0;
 
         while (val)
@@ -452,8 +481,8 @@ int TFatDir::AllocateEntry(int count)
                     offset = 0;
                     bits = 0;
                     i++;
-                    if (i < FreeCount)
-                        val = FreeArr[i];
+                    if (i < SectorCount)
+                        val = SectorArr[i].FreeMask;
                     else
                         return 0;
                 }
