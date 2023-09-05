@@ -480,7 +480,10 @@ void TFat::SetupDirEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, int 
     TPartReq *Req;
     TPartReqEntry *ReqEntry;
     long long Sector;
+    long long Next;
     struct TFatDirEntry *e;
+    char chksum;
+    int i;
 
     Sector = dir->GetSector(pos);
 
@@ -497,6 +500,34 @@ void TFat::SetupDirEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, int 
         memcpy(e, entry, sizeof(struct TFatDirEntry));
         ReqEntry->Write();
         dir->Add(pos, entry);
+    }
+    else
+    {
+        chksum = ::GetChkSum(entry);
+        lfn->SetChkSum(chksum);
+
+        for (i = 0; i < count; i++)
+        {        
+            if (i == count - 1)
+                memcpy(e, entry, sizeof(struct TFatDirEntry));
+            else
+                lfn->GetEntry(e);
+
+            pos++;
+            Next = dir->GetSector(pos);
+            if (Next != Sector)
+            {
+                ReqEntry->Write();
+                delete ReqEntry;
+                delete Req;
+
+                Sector = Next;
+
+                Req = new TPartReq(FServer);
+                ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
+            }
+        }
+        ReqEntry->Write();
     }
 
     delete ReqEntry;

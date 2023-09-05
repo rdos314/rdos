@@ -54,6 +54,8 @@ public:
     int GetNameSize();
     int GetEntryCount();
     void GetName(char *buf);
+    void SetChkSum(char sum);
+    bool GetEntry(struct TFatDirEntry *entry);
 
     void SetName(const char *buf);
 
@@ -63,6 +65,7 @@ protected:
     unsigned int DecodeUtf8(const unsigned char *utf8, int *size);
     int EncodeUtf16(short int *utf16, short int codepoint);
 
+    bool First;
     char ChkSum;
     char Count;
     int MaxSize;

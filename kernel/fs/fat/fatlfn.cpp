@@ -217,6 +217,103 @@ int TFatLfn::GetEntryCount()
 
 /*##########################################################################
 #
+#   Name       : TFatLfn::SetChkSum
+#
+#   Purpose....: Set checksum
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatLfn::SetChkSum(char sum)
+{
+    ChkSum = sum;
+    First = true;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatLfn::GetEntry
+#
+#   Purpose....: Get FAT entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatLfn::GetEntry(struct TFatDirEntry *e)
+{
+    bool done = false;
+    struct TFatLfnEntry *entry = (struct TFatLfnEntry *)e;
+    short int *ptr;
+    int i;
+
+    if (Count)
+    {
+        if (First)
+            entry->Ord = Count | 0x40;
+        else
+            entry->Ord = Count;
+           
+        entry->Attr = 0xF;
+        entry->Type = 0;
+        entry->ClusterLow = 0;
+        entry->ChkSum = ChkSum;
+
+        First = false;
+        Count--;
+        ptr = Buf + 13 * Count;
+
+        for (i = 0; i < 5; i++)
+        {
+            if (done)
+                entry->Name1[i] = 0xFFFF;
+            else
+            {
+                entry->Name1[i] = ptr[i];
+                if (ptr[i] == 0)
+                    done = true;
+            }
+        }
+
+        ptr += 5;
+ 
+        for (i = 0; i < 6; i++)
+        {
+            if (done)
+                entry->Name2[i] = 0xFFFF;
+            else
+            {
+                entry->Name2[i] = ptr[i];
+                if (ptr[i] == 0)
+                    done = true;
+            }
+        }
+
+        ptr += 6;
+
+        for (i = 0; i < 2; i++)
+        {
+            if (done)
+                entry->Name3[i] = 0xFFFF;
+            else
+            {
+                entry->Name3[i] = ptr[i];
+                if (ptr[i] == 0)
+                    done = true;
+            }
+        }
+
+        return true;
+    }
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatLfn::GetName
 #
 #   Purpose....: Get name
