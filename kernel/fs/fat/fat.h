@@ -55,6 +55,7 @@ void SetEntryName(struct TFatDirEntry *entry, const char *name);
 void SetCreateTime(struct TFatDirEntry *entry, long long td);
 void SetAccessTime(struct TFatDirEntry *entry, long long td);
 void SetWriteTime(struct TFatDirEntry *entry, long long td);
+char GetChkSum(struct TFatDirEntry *entry);
 
 bool IsValidShortChar(char ch);
 bool IsValidShortName(const char *buf);

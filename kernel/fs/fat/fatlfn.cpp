@@ -31,6 +31,7 @@
 #include <rdos.h>
 #include "fatlfn.h"
 #include "fatdir.h"
+#include "fat.h"
 
 typedef struct
 {
@@ -175,20 +176,10 @@ bool TFatLfn::Add(struct TFatLfnEntry *entry)
 ##########################################################################*/
 bool TFatLfn::Verify(struct TFatDirEntry *entry)
 {
-    char sum;
-    int i;
-    char *ptr = entry->Base;
-
     if (Count == 0)
-    {
-        sum = 0;
-
-        for (i = 0; i < 11; i++)
-            sum = ((sum & 1) ? 0x80 : 0) + (sum >> 1) + ptr[i];
-
-        if (sum == ChkSum)
+        if (ChkSum == GetChkSum(entry))
             return true;
-    }
+
     return false;
 }
 

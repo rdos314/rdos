@@ -344,6 +344,29 @@ void SetWriteTime(struct TFatDirEntry *entry, long long td)
 
 /*##########################################################################
 #
+#   Name       : GetChkSum
+#
+#   Purpose....: Get checksum
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char GetChkSum(struct TFatDirEntry *entry)
+{
+    char sum = 0;
+    int i;
+    char *ptr = entry->Base;
+
+    for (i = 0; i < 11; i++)
+        sum = ((sum & 1) ? 0x80 : 0) + (sum >> 1) + ptr[i];
+
+    return sum;
+}
+
+/*##########################################################################
+#
 #   Name       : IsValidShortChar
 #
 #   Purpose....: Check for valid short char
