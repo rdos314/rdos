@@ -473,6 +473,44 @@ void TFat::Complete()
 
 /*##########################################################################
 #
+#   Name       : TFat::SetupDirEntry
+#
+#   Purpose....: Setup dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat::SetupDirEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, int count, TFatLfn *lfn)
+{
+    TPartReq *Req;
+    TPartReqEntry *ReqEntry;
+    long long Sector;
+    struct TFatDirEntry *e;
+
+    Sector = dir->GetSector(pos);
+
+    Req = new TPartReq(FServer);
+    ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
+
+    Req->WaitForever();
+
+    e = (struct TFatDirEntry *)ReqEntry->Map();
+    e += dir->GetIndex(pos);
+
+    if (count == 1)
+    {
+        memcpy(e, entry, sizeof(struct TFatDirEntry));
+        ReqEntry->Write();
+    }
+
+    delete ReqEntry;
+    delete Req;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::CreateDirEntry
 #
 #   Purpose....: Create dir entry
@@ -522,7 +560,13 @@ bool TFat::CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, 
 
     pos = dir->AllocateEntry(count);
 
-    return true;
+    if (pos)
+    {
+        SetupDirEntry(dir, &entry, pos, count, &lfn);
+        return true;
+    }
+    else
+        return false;
 }
 
 /*##########################################################################

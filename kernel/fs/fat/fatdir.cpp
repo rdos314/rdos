@@ -359,6 +359,54 @@ void TFatDir::AddSector(int pos, unsigned int sector)
 
 /*##########################################################################
 #
+#   Name       : TFatDir::GetSector
+#
+#   Purpose....: Get sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatDir::GetSector(int pos)
+{
+    int entry;
+
+    if (pos)
+    {
+        pos--;
+        entry = pos / 16;
+
+        if (entry < SectorCount)
+            return SectorArr[entry].Sector;
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::GetIndex
+#
+#   Purpose....: Convert pos to index
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFatDir::GetIndex(int pos)
+{
+    if (pos)
+    {
+        pos--;
+        return pos % 16;
+    }
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatDir::AddFree
 #
 #   Purpose....: Add free entry

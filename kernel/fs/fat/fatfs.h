@@ -122,6 +122,8 @@ protected:
     void Complete();
 
     bool CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, char attr);
+    void SetupDirEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, int count, TFatLfn *lfn);
+
     void InitDir(TFatDir *Parent, unsigned int Cluster);
 
     bool VerifySector(int id, char *buf);

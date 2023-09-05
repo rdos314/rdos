@@ -54,6 +54,8 @@ public:
     bool FindLfn(const char *path);
 
     void AddSector(int pos, unsigned int sector);
+    unsigned int GetSector(int pos);
+    int GetIndex(int pos);
 
     void AddFree(int pos);
     void RemoveFree(int pos);
