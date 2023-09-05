@@ -341,7 +341,6 @@ void TFatDir::AddFree(int pos)
     int offset;
     unsigned short int mask;
     unsigned short int *NewArr;
-    int count;
 
     if (pos)
     {
@@ -360,6 +359,39 @@ void TFatDir::AddFree(int pos)
 
 /*##########################################################################
 #
+#   Name       : TFatDir::RemoveFree
+#
+#   Purpose....: Remove free entries
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::RemoveFree(int pos)
+{
+    int entry;
+    int offset;
+    unsigned short int mask;
+    unsigned short int *NewArr;
+
+    if (pos)
+    {
+        pos--;
+        entry = pos / 16;
+        offset = pos % 16;
+        mask = 1 << offset;
+
+        if (entry < FreeCount)
+        {
+            FreeArr[entry] &= ~mask;            
+            FreeEntries--;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFatDir::AllocateEntry
 #
 #   Purpose....: Allocate entry
@@ -372,9 +404,14 @@ void TFatDir::AddFree(int pos)
 int TFatDir::AllocateEntry(int count)
 {
     int i;
+    int j;
     unsigned int val;
     int offset;
     int bits;
+    int pos;
+    int ao;
+    int ai;
+    int ab;
 
     for (i = 0; i < FreeCount; i++)
     {
@@ -389,18 +426,31 @@ int TFatDir::AllocateEntry(int count)
                 val = val >> 1;
             }
 
+            ao = offset;
+            ai = i;
+            ab = 0;
             bits = 0;
+
             while ((val & 1) == 1)
             {
                 bits++;
+                ab++;
                 val = val >> 1;
 
-                if (bits == count)
-                    return 16 * i + offset + 1;
+                if (ab == count)
+                {
+                    pos = 16 * ai + ao + 1;
+
+                    for (j = 0; j < count; j++)
+                        RemoveFree(pos + j);
+
+                    return pos;
+                }
 
                 if (offset + bits == 16)
                 {
                     offset = 0;
+                    bits = 0;
                     i++;
                     if (i < FreeCount)
                         val = FreeArr[i];

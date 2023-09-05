@@ -48,6 +48,7 @@ public:
     bool FindLfn(const char *path);
 
     void AddFree(int pos);
+    void RemoveFree(int pos);
 
     int AllocateEntry(int count);
 
