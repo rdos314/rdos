@@ -307,9 +307,9 @@ void TFatDir::GrowFree(int count)
 {
     int i;
     int Size = 2 * count + 4;
-    short int *NewArr;
+    unsigned short int *NewArr;
 
-    NewArr = new short int[Size];
+    NewArr = new unsigned short int[Size];
 
     for (i = 0; i < FreeCount; i++)
         NewArr[i] = FreeArr[i];
@@ -339,8 +339,8 @@ void TFatDir::AddFree(int pos)
 {
     int entry;
     int offset;
-    short int mask;
-    short int *NewArr;
+    unsigned short int mask;
+    unsigned short int *NewArr;
     int count;
 
     if (pos)
@@ -372,7 +372,7 @@ void TFatDir::AddFree(int pos)
 int TFatDir::AllocateEntry(int count)
 {
     int i;
-    short int val;
+    unsigned int val;
     int offset;
     int bits;
 

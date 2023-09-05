@@ -61,7 +61,7 @@ protected:
 
     int FreeCount;
     int FreeEntries;
-    short int *FreeArr;
+    unsigned short int *FreeArr;
 
     struct TFatLfn *FCurrLfn;
 
