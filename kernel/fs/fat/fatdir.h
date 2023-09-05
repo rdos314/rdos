@@ -47,12 +47,18 @@ public:
     void Add(int pos, struct TFatDirEntry *entry);
     bool FindLfn(const char *path);
 
+    void AddFree(int pos);
+
 protected:
     void GrowLfn();
+    void GrowFree(int count);
 
     void Add(int pos, const char *name, struct TFatDirEntry *fat);
     void AddStd(int pos, struct TFatDirEntry *entry);
     void AddLfn(int pos, struct TFatDirEntry *entry);
+
+    int FreeCount;
+    short int *FreeArr;
 
     struct TFatLfn *FCurrLfn;
 

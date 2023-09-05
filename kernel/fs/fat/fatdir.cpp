@@ -49,6 +49,9 @@ TFatDir::TFatDir(TDir *ParentDir, int ParentIndex)
     LfnCount = 0;
     LfnMax = 4;
     LfnArr = new TLfnEntry[MaxCount];
+
+    FreeCount = 0;
+    FreeArr = 0;
 }
 
 /*##########################################################################
@@ -65,8 +68,10 @@ TFatDir::TFatDir(TDir *ParentDir, int ParentIndex)
 TFatDir::~TFatDir()
 {
     delete LfnArr;
-}
 
+    if (FreeArr)
+        delete FreeArr;
+}
 
 /*##########################################################################
 #
@@ -283,5 +288,68 @@ void TFatDir::Add(int pos, struct TFatDirEntry *entry)
                     AddStd(pos, entry);
             }
             break;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::GrowFree
+#
+#   Purpose....: Grow free array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::GrowFree(int count)
+{
+    int i;
+    int Size = 2 * count + 4;
+    short int *NewArr;
+
+    NewArr = new short int[Size];
+
+    for (i = 0; i < FreeCount; i++)
+        NewArr[i] = FreeArr[i];
+
+    for (i = FreeCount; i < Size; i++)
+        NewArr[i] = 0;
+
+    delete FreeArr;
+    FreeArr = NewArr;
+    FreeCount = Size;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::AddFree
+#
+#   Purpose....: Add free entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::AddFree(int pos)
+{
+    int entry;
+    int offset;
+    short int mask;
+    short int *NewArr;
+    int count;
+
+    if (pos)
+    {
+        pos--;
+        entry = pos / 16;
+        offset = pos % 16;
+        mask = 1 << offset;
+
+        if (entry >= FreeCount)
+            GrowFree(entry);
+
+        FreeArr[entry] |= mask;            
     }
 }
