@@ -121,9 +121,11 @@ protected:
     unsigned int AllocateCluster();
     void Complete();
 
+    int AllocateDirEntry(TFatDir *dir, int count);
+
     bool CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, char attr);
     void SetupStdEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos);
-    void SetupLfnEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, TFatLfn *lfn, const char *name);
+    bool SetupLfnEntry(TFatDir *dir, struct TFatDirEntry *entry, TFatLfn *lfn, const char *name);
 
     void InitDir(TFatDir *Parent, unsigned int Cluster);
 

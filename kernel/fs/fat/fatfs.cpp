@@ -466,6 +466,22 @@ void TFat::Complete()
 
 /*##########################################################################
 #
+#   Name       : TFat::AllocateDirEntry
+#
+#   Purpose....: Allocate dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFat::AllocateDirEntry(TFatDir *dir, int count)
+{
+    return dir->AllocateEntry(count);
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::SetupStdEntry
 #
 #   Purpose....: Setup std entry
@@ -477,27 +493,20 @@ void TFat::Complete()
 ##########################################################################*/
 void TFat::SetupStdEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos)
 {
-    TPartReq *Req;
-    TPartReqEntry *ReqEntry;
+    long long Sector = dir->GetSector(pos);
+    TPartReq Req(FServer);
+    TPartReqEntry ReqEntry(&Req, Sector, 1, false);
     struct TFatDirEntry *e;
-    long long Sector;
 
-    Sector = dir->GetSector(pos);
+    Req.WaitForever();
 
-    Req = new TPartReq(FServer);
-    ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
-
-    Req->WaitForever();
-
-    e = (struct TFatDirEntry *)ReqEntry->Map();
+    e = (struct TFatDirEntry *)ReqEntry.Map();
     e += dir->GetIndex(pos);
 
     memcpy(e, entry, sizeof(struct TFatDirEntry));
-    ReqEntry->Write();
-    dir->AddStd(pos, entry);
+    ReqEntry.Write();
 
-    delete ReqEntry;
-    delete Req;
+    dir->AddStd(pos, entry);
 }
 
 /*##########################################################################
@@ -511,7 +520,7 @@ void TFat::SetupStdEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFat::SetupLfnEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, TFatLfn *lfn, const char *name)
+bool TFat::SetupLfnEntry(TFatDir *dir, struct TFatDirEntry *entry, TFatLfn *lfn, const char *name)
 {
     TPartReq *Req;
     TPartReqEntry *ReqEntry;
@@ -520,56 +529,68 @@ void TFat::SetupLfnEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, TFat
     struct TFatDirEntry *e;
     char chksum;
     int i;
+    int pos;
     int count = lfn->GetEntryCount();
 
-    Sector = dir->GetSector(pos);
+    pos = AllocateDirEntry(dir, count);
 
-    Req = new TPartReq(FServer);
-    ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
+    if (pos)
+    {   
+        Sector = dir->GetSector(pos);
 
-    Req->WaitForever();
+        Req = new TPartReq(FServer);
+        ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
 
-    e = (struct TFatDirEntry *)ReqEntry->Map();
-    e += dir->GetIndex(pos);
+        Req->WaitForever();
 
-    chksum = ::GetChkSum(entry);
-    lfn->SetChkSum(chksum);
+        e = (struct TFatDirEntry *)ReqEntry->Map();
+        e += dir->GetIndex(pos);
 
-    for (i = 0; i < count; i++)
-    {        
-        if (i == count - 1)
-        {
-            memcpy(e, entry, sizeof(struct TFatDirEntry));
-            break;
+        chksum = ::GetChkSum(entry);
+        lfn->SetChkSum(chksum);
+
+        for (i = 0; i < count; i++)
+        {        
+            if (i == count - 1)
+            {
+                memcpy(e, entry, sizeof(struct TFatDirEntry));
+                break;
+            }
+            else
+                lfn->GetEntry(e);
+
+            pos++;
+            e++;
+
+            Next = dir->GetSector(pos);
+            if (Next != Sector)
+            {
+                ReqEntry->Write();
+                delete ReqEntry;
+                delete Req;
+
+                Sector = Next;
+
+                Req = new TPartReq(FServer);
+                ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
+
+                Req->WaitForever();
+                e = (struct TFatDirEntry *)ReqEntry->Map();
+            }
         }
-        else
-            lfn->GetEntry(e);
-
-        pos++;
-        e++;
-
-        Next = dir->GetSector(pos);
-        if (Next != Sector)
-        {
-            ReqEntry->Write();
-            delete ReqEntry;
-            delete Req;
-
-            Sector = Next;
-
-            Req = new TPartReq(FServer);
-            ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
-
-            Req->WaitForever();
-            e = (struct TFatDirEntry *)ReqEntry->Map();
-        }
-    }
         
-    ReqEntry->Write();
-    dir->AddLfn(pos, name, entry);
+        ReqEntry->Write();
 
-    delete ReqEntry;
-    delete Req;
+        delete ReqEntry;
+        delete Req;
+
+        dir->AddLfn(pos, name, entry);
+
+        return true;
+    }
+    else
+        return false;
+    
 }
 
 /*##########################################################################
@@ -605,10 +626,14 @@ bool TFat::CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, 
     if (IsValidShortName(name))
     {
         SetEntryName(&entry, name);
-
-        pos = dir->AllocateEntry(1);
+        pos = AllocateDirEntry(dir, 1);
         if (pos)
+        {
             SetupStdEntry(dir, &entry, pos);
+            return true;
+        }
+        else
+            return false;
     }
     else
     {
@@ -622,18 +647,8 @@ bool TFat::CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, 
                 break;
         }
         SetEntryName(&entry, str);
-
-        pos = dir->AllocateEntry(count);
-
-        if (pos)
-            SetupLfnEntry(dir, &entry, pos, &lfn, name);
-
+        return SetupLfnEntry(dir, &entry, &lfn, name);
     }
-
-    if (pos)
-        return true;
-    else
-        return false;
 }
 
 /*##########################################################################
