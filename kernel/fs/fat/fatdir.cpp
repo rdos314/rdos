@@ -295,6 +295,30 @@ void TFatDir::AddLfn(int pos, struct TFatDirEntry *entry)
 
 /*##########################################################################
 #
+#   Name       : TFatDir::AddLfn
+#
+#   Purpose....: Add LFN entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::AddLfn(int pos, const char *name, struct TFatDirEntry *entry)
+{
+    if (LfnMax == LfnCount)
+       GrowLfn();
+
+    GetEntryName(entry, LfnArr[LfnCount].Name);
+    LfnArr[LfnCount].Pos = pos;
+
+    LfnCount++;
+
+    Add(pos, name, entry);
+}
+
+/*##########################################################################
+#
 #   Name       : TFatDir::Add
 #
 #   Purpose....: Add entry

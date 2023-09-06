@@ -122,7 +122,8 @@ protected:
     void Complete();
 
     bool CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, char attr);
-    void SetupDirEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, int count, TFatLfn *lfn);
+    void SetupStdEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos);
+    void SetupLfnEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, TFatLfn *lfn, const char *name);
 
     void InitDir(TFatDir *Parent, unsigned int Cluster);
 

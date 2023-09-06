@@ -51,6 +51,8 @@ public:
     int GetIndex(int pos);
 
     void Add(int pos, struct TFatDirEntry *entry);
+    void AddStd(int pos, struct TFatDirEntry *entry);
+    void AddLfn(int pos, const char *name, struct TFatDirEntry *fat);
     bool FindLfn(const char *path);
 
     int GetClusterCount();
@@ -67,7 +69,6 @@ protected:
     void GrowFree(int count);
 
     void Add(int pos, const char *name, struct TFatDirEntry *fat);
-    void AddStd(int pos, struct TFatDirEntry *entry);
     void AddLfn(int pos, struct TFatDirEntry *entry);
 
     int FreeEntries;
