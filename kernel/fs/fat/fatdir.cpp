@@ -196,13 +196,13 @@ void TFatDir::GrowLfn()
 
     NewArr = new TLfnEntry[Size];
 
-    for (i = 0; i < MaxCount; i++)
+    for (i = 0; i < LfnMax; i++)
     {
         strcpy(NewArr[i].Name, LfnArr[i].Name);
         NewArr[i].Pos = LfnArr[i].Pos;
     }
 
-    for (i = MaxCount; i < Size; i++)
+    for (i = LfnMax; i < Size; i++)
     {
         NewArr[i].Name[0] = 0;
         NewArr[i].Pos = 0;
