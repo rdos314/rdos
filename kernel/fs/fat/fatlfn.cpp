@@ -212,7 +212,7 @@ int TFatLfn::GetNameSize()
 ##########################################################################*/
 int TFatLfn::GetEntryCount()
 {
-    return (Count - 1) / 13 + 2;
+    return Count + 1;
 }
 
 /*##########################################################################
@@ -525,10 +525,11 @@ void TFatLfn::SetName(const char *name)
     short int *outptr;
     unsigned int codepoint;
     int len;
+    int tlen;
 
     MaxSize = Size + 2;
     Buf = new short int[MaxSize];
-    Count = 0;
+    tlen = 0;
 
     outptr = Buf;
 
@@ -542,8 +543,10 @@ void TFatLfn::SetName(const char *name)
 
         len = EncodeUtf16(outptr, codepoint);
         outptr += len;
-        Count += len;
+        tlen += len;
     }
 
     *outptr = 0;
+
+    Count = (tlen - 1) / 13 + 1;
 }

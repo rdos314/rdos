@@ -509,11 +509,16 @@ void TFat::SetupDirEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, int 
         for (i = 0; i < count; i++)
         {        
             if (i == count - 1)
+            {
                 memcpy(e, entry, sizeof(struct TFatDirEntry));
+                break;
+            }
             else
                 lfn->GetEntry(e);
 
             pos++;
+            e++;
+
             Next = dir->GetSector(pos);
             if (Next != Sector)
             {
@@ -525,6 +530,9 @@ void TFat::SetupDirEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos, int 
 
                 Req = new TPartReq(FServer);
                 ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
+
+                Req->WaitForever();
+                e = (struct TFatDirEntry *)ReqEntry->Map();
             }
         }
         ReqEntry->Write();
