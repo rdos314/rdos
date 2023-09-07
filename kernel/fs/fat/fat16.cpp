@@ -269,6 +269,11 @@ TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format)
     int Free1;
     int Free2;
 
+    FServer = server;
+
+    if (format)
+        WriteBootSector(boot);
+
     FatSize = 16;
     PartSectors = boot->base.SectorCount16;
     if (!PartSectors)
@@ -334,6 +339,31 @@ TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format)
 ##########################################################################*/
 TFat16::~TFat16()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TFat16::WriteBootSector
+#
+#   Purpose....: Write boot sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat16::WriteBootSector(struct TBootSector12_16 *BootSector)
+{
+    TPartReq req(FServer);
+    TPartReqEntry e1(&req, 0, 1, false);
+    char *Data;
+
+    req.WaitForever();
+
+    Data = (char *)e1.Map();
+    memcpy(Data, BootSector, 512);
+
+    e1.Write();
 }
 
 /*##########################################################################

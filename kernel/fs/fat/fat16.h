@@ -48,10 +48,14 @@ protected:
     static unsigned short int CalcClusterCount(unsigned int TotalSectors, unsigned int ClusterSize);
     static unsigned short int CalcFatSectors(unsigned short int Clusters);
 
+    void WriteBootSector(struct TBootSector12_16 *BootSector);
+
     int RootDirEntries;
     long long RootSector;
 
 private:
+    TPartServer *FServer;
+
     TFatTable16 Tab1;
     TFatTable16 Tab2;
 };

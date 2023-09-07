@@ -59,8 +59,9 @@ unsigned int TFat32::Adjust(TPartServer *Server)
     unsigned int size;
     long long diff;
 
+    pos--;
     pos = pos / 8;
-    pos = 8 * pos;
+    pos = 8 * (pos + 1);
 
     if (Count < 0xFFFFFFFF)
         size = (unsigned int)Count;
@@ -227,6 +228,16 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
 {
     int Free1;
     int Free2;
+    bool wait = true;
+
+    while (wait)
+        RdosWaitMilli(250);
+
+    if (format)
+    {
+        WriteBootSector(boot, 0);
+        WriteBootSector(boot, 6);
+    }
 
     FatSize = 32;
     PartSectors = boot->base.Sectors;
@@ -301,6 +312,31 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
 ##########################################################################*/
 TFat32::~TFat32()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TFat32::WriteBootSector
+#
+#   Purpose....: Write boot sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat32::WriteBootSector(struct TBootSector32 *BootSector, int sector)
+{
+    TPartReq req(FServer);
+    TPartReqEntry e1(&req, sector, 1, false);
+    char *Data;
+
+    req.WaitForever();
+
+    Data = (char *)e1.Map();
+    memcpy(Data, BootSector, 512);
+
+    e1.Write();
 }
 
 /*##########################################################################

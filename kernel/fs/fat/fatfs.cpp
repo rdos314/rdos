@@ -58,31 +58,6 @@ static void ThreadStartup(void *ptr)
 
 /*##########################################################################
 #
-#   Name       : TFat::WriteBootSector
-#
-#   Purpose....: Write boot sector
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFat::WriteBootSector(TPartServer *Server, char *BootSector)
-{
-    TPartReq req(Server);
-    TPartReqEntry e1(&req, 0, 1, false);
-    char *Data;
-
-    req.WaitForever();
-
-    Data = (char *)e1.Map();
-    memcpy(Data, BootSector, 512);
-
-    e1.Write();
-}
-
-/*##########################################################################
-#
 #   Name       : TFat::TFat
 #
 #   Purpose....: Fat constructor

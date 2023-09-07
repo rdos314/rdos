@@ -47,6 +47,8 @@ protected:
     static unsigned int CalcClusterCount(unsigned int TotalSectors, unsigned int ClusterSize);
     static unsigned int CalcFatSectors(unsigned int Clusters);
 
+    void WriteBootSector(struct TBootSector32 *BootSector, int sector);
+
     bool ProcessInfoSector();
 
     unsigned int RootCluster;

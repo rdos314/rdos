@@ -756,8 +756,6 @@ int FormatFs(TPartServer *Server)
 
     if (ok)
     {
-        TFat::WriteBootSector(Server, BootSector);
-
         switch (PartType)
         {
             case PART_TYPE_FAT12:

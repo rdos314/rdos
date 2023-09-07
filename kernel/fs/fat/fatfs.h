@@ -88,8 +88,6 @@ public:
     TFat(TPartServer *server, struct TBaseBootSector *boot);
     ~TFat();
 
-    static void WriteBootSector(TPartServer *Server, char *BootSector);
-
     bool Validate();
     virtual int Format(long long *Start, long long *Count);
     virtual long long GetFreeSectors();
