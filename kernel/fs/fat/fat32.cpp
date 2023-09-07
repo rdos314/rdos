@@ -34,10 +34,12 @@
 struct TFatInfo
 {
     int ExtSign;
-    char Resv[480];
+    char Resv1[480];
     int InfoSign;
     int FreeClusters;
     int NextCluster;
+    char Resv2[12];
+    int TrailSign;
 };
 
 /*##########################################################################
@@ -236,6 +238,7 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
     if (format)
     {
         WriteBootSector(boot, 0);
+        WriteInfoSector(boot->InfoSector);
         WriteBootSector(boot, 6);
     }
 
@@ -335,6 +338,40 @@ void TFat32::WriteBootSector(struct TBootSector32 *BootSector, int sector)
 
     Data = (char *)e1.Map();
     memcpy(Data, BootSector, 512);
+
+    e1.Write();
+}
+
+/*##########################################################################
+#
+#   Name       : TFat32::WriteInfoSector
+#
+#   Purpose....: Write info sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFat32::WriteInfoSector(int sector)
+{
+    TPartReq req(FServer);
+    TPartReqEntry e1(&req, sector, 1, false);
+    struct TFatInfo *info;
+
+    req.WaitForever();
+
+    info = (struct TFatInfo *)e1.Map();
+
+    info->ExtSign = 0x41615252;
+    info->InfoSign = 0x61417272;
+    info->FreeClusters = -1;
+    info->NextCluster = -1;
+
+    memset(info->Resv1, 0, 480);
+    memset(info->Resv2, 0, 12);
+
+    info->TrailSign = 0xAA550000;
 
     e1.Write();
 }

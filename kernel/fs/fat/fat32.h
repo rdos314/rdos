@@ -48,6 +48,7 @@ protected:
     static unsigned int CalcFatSectors(unsigned int Clusters);
 
     void WriteBootSector(struct TBootSector32 *BootSector, int sector);
+    void WriteInfoSector(int sector);
 
     bool ProcessInfoSector();
 
