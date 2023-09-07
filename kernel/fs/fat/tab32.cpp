@@ -195,9 +195,15 @@ unsigned int TFatTable32::FormatBlock(long long Sector, unsigned int Clusters)
         tab[0] = 0xF8;
         tab[1] = 0xFF;
         tab[2] = 0xFF;
-        tab[3] = 0xFF;
+        tab[3] = 0x0F;
         tab[4] = 0xFF;
         tab[5] = 0xFF;
+        tab[6] = 0xFF;
+        tab[7] = 0x0F;
+        tab[8] = 0xFF;
+        tab[9] = 0xFF;
+        tab[10] = 0xFF;
+        tab[11] = 0x0F;
     }
 
     tab += 4 * Clusters;
