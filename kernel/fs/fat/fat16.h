@@ -46,7 +46,7 @@ protected:
     static unsigned int Adjust(TPartServer *Server);
     static unsigned int CalcClusterSize(unsigned int TotalSectors);
     static unsigned short int CalcClusterCount(unsigned int TotalSectors, unsigned int ClusterSize);
-    static unsigned short int CalcFatSectors(unsigned short int Clusters);
+    static unsigned short int CalcFatSectors(unsigned int Clusters);
 
     void WriteBootSector(struct TBootSector12_16 *BootSector);
 

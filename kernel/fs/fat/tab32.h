@@ -51,6 +51,7 @@ public:
     void SetCacheSize(int size);
 
 protected:
+    unsigned int FormatBlock(long long Sector, unsigned int Clusters);
     unsigned int GetFreeInBlock(long long Sector, unsigned int Clusters);
 
     unsigned int FClusters;

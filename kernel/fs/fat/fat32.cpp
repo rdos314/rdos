@@ -101,7 +101,7 @@ unsigned int TFat32::CalcClusterCount(unsigned int TotalSectors, unsigned int Cl
     for (tries = 0; tries < 3; tries++)
     { 
         Clusters = Used / ClusterSize + 2;
-        FatSectors = Clusters / 128;
+        FatSectors = 4 * Clusters / 512;
         FatSectors--;
         FatSectors = FatSectors / 8;
         FatSectors = 8 * (FatSectors + 1);
@@ -134,7 +134,7 @@ unsigned int TFat32::CalcFatSectors(unsigned int Clusters)
 {
     unsigned int FatSectors;
 
-    FatSectors = Clusters / 128;
+    FatSectors = 4 * Clusters / 512;
     FatSectors--;
     FatSectors = FatSectors / 8;
     FatSectors = 8 * (FatSectors + 1);
@@ -182,12 +182,21 @@ bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
     boot->base.FatCount = 2;
     boot->base.RootDirEntries = 0;
     boot->base.Media = 0xF8;
-    boot->base.FatSectors16 = 0;
     boot->base.SectorsPerCyl = -1;
     boot->base.Heads = -1;
     boot->base.HiddenSectors = 0;
 
-    boot->FatSectors = FatSectors;
+    if (FatSectors > 0xFFFF)
+    {
+        boot->base.FatSectors16 = 0;
+        boot->FatSectors = FatSectors;
+    }
+    else
+    {
+        boot->base.FatSectors16 = (unsigned short int)FatSectors;
+        boot->FatSectors = 0;
+    }
+
     boot->ExtFlags = 0;
     boot->FsVersion = 0;
     boot->RootCluster = 2;
@@ -230,17 +239,6 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
 {
     int Free1;
     int Free2;
-    bool wait = true;
-
-    while (wait)
-        RdosWaitMilli(250);
-
-    if (format)
-    {
-        WriteBootSector(boot, 0);
-        WriteInfoSector(boot->InfoSector);
-        WriteBootSector(boot, 6);
-    }
 
     FatSize = 32;
     PartSectors = boot->base.Sectors;
@@ -256,6 +254,12 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
 
     if (Validate())
     {
+        if (format)
+        {
+            WriteBootSector(boot, 0);
+            WriteBootSector(boot, 6);
+        }
+
         FatTable1 = &Tab1;
         FatTable2 = &Tab2;
 
@@ -268,10 +272,11 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
 
         if (Clusters > 0xFFFFFFF0)
             Clusters = 0xFFFFFFF0;
-
-        if (Clusters > 0x100000)
-            if (InfoSector)
-                ProcessInfoSector();
+        
+        if (!format)
+            if (Clusters > 0x100000)
+                if (InfoSector)
+                    ProcessInfoSector();
 
         Tab1.Setup(SectorsPerCluster, Fat1Sector, FatSectors, Clusters);
         Tab2.Setup(SectorsPerCluster, Fat2Sector, FatSectors, Clusters);
@@ -285,6 +290,8 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
                 FreeClusters = Free2;
             else
                 FreeClusters = Free1;
+
+            WriteInfoSector(boot->InfoSector);
         }
         else
         {
@@ -365,8 +372,8 @@ void TFat32::WriteInfoSector(int sector)
 
     info->ExtSign = 0x41615252;
     info->InfoSign = 0x61417272;
-    info->FreeClusters = -1;
-    info->NextCluster = -1;
+    info->FreeClusters = FreeClusters;
+    info->NextCluster = 3;
 
     memset(info->Resv1, 0, 480);
     memset(info->Resv2, 0, 12);

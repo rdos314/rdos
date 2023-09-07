@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <memory.h>
 #include "tab32.h"
 
 /*##########################################################################
@@ -167,6 +168,48 @@ unsigned int TFatTable32::GetFreeClusters()
 
 /*##########################################################################
 #
+#   Name       : TFatTable32::FormatBlock
+#
+#   Purpose....: Format block
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatTable32::FormatBlock(long long Sector, unsigned int Clusters)
+{
+    unsigned int i;
+    unsigned int FreeClusters = 0;
+    TPartReqEntry e1(&FReq, Sector, 8, true);
+    char *tab;
+
+    FReq.WaitForever();
+
+    tab = (char *)e1.Map();
+
+    memset(tab, 0, 4 * Clusters);
+
+    if (Sector == FStartSector)
+    {
+        tab[0] = 0xF8;
+        tab[1] = 0xFF;
+        tab[2] = 0xFF;
+        tab[3] = 0xFF;
+        tab[4] = 0xFF;
+        tab[5] = 0xFF;
+    }
+
+    tab += 4 * Clusters;
+    memset(tab, 0xFF, 0x1000 - 4 * Clusters);
+
+    e1.Write();
+
+    return Clusters;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatTable32::FormatClusters
 #
 #   Purpose....: Format clusters
@@ -178,7 +221,25 @@ unsigned int TFatTable32::GetFreeClusters()
 ##########################################################################*/
 unsigned int TFatTable32::FormatClusters()
 {
-    return 0;
+    unsigned int FreeClusters = 0;
+    int i;
+    long long Sector = FStartSector;
+    unsigned int Cluster = 0;
+    int Count;
+    int Blocks = FClusters / 512 * 4 / 8;
+
+    for (i = 0; i <= Blocks; i++)
+    {
+        Count = FClusters - Cluster;
+        if (Count > 512 * 8 / 4)
+            Count = 512 * 8 / 4;
+
+        FreeClusters += FormatBlock(Sector, Count);
+        Sector += 8;
+        Cluster += Count;
+    }
+
+    return FreeClusters;
 }
 
 /*##########################################################################
