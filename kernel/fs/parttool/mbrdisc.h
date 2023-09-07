@@ -95,6 +95,7 @@ public:
 
     void Process(TMbrDisc *disc, char *data);
     struct TMbrPartition *AddEntry(TMbrDisc *Disc, char Type, unsigned int Start, unsigned int Size);
+    void DeletePart(TMbrPartition *part);
 
     TMbrPartition *PartArr[4];
 
@@ -122,6 +123,7 @@ public:
 
 protected:
     virtual bool CreatePart(int Type, long long Start, long long Sectors);
+    virtual void DeletePart(TPartition *part);
 
     void LoadBootLoader();
     void WriteBootSector();

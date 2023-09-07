@@ -100,7 +100,7 @@ protected:
     virtual bool CreatePart(int Type, long long Start, long long Sectors) = 0;
 
     void GrowPart();
-    void DeletePart(TPartition *part);
+    virtual void DeletePart(TPartition *part);
   
     int SizeToCount(int size);
     bool IsInsidePartition(long long sector, int count);

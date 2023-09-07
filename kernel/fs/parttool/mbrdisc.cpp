@@ -311,6 +311,34 @@ struct TMbrPartition *TMbrPartitionTable::AddEntry(TMbrDisc *Disc, char Type, un
     return part;
 }
 
+/*##################  TMbrPartitionTable::DeletePart  #############
+*   Purpose....: Delete part
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TMbrPartitionTable::DeletePart(TMbrPartition *part)
+{
+    int i;
+    TMbrPartitionTable *table;
+
+    for (i = 0; i < 4; i++)
+    {
+        if (PartArr[i])
+        {
+            if (PartArr[i]->IsTable())
+            {
+                table = (TMbrPartitionTable *)PartArr[i];
+                table->DeletePart(part);
+            }
+            else
+                if (PartArr[i] == part)
+                    PartArr[i] = 0;
+        }
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : TMbrDisc::TMbrDisc
@@ -656,6 +684,24 @@ void TMbrDisc::WriteBootLoader()
     memcpy(Data, FBootLoader, FLoaderSize);
 
     e1.Write();
+}
+
+
+/*##########################################################################
+#
+#   Name       : TMbrDisc::CreatePart
+#
+#   Purpose....: Create partition
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMbrDisc::DeletePart(TPartition *part)
+{
+    PartRoot.DeletePart((TMbrPartition *)part);
+    TDisc::DeletePart(part);
 }
 
 /*##########################################################################
