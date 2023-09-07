@@ -43,6 +43,10 @@ public:
     virtual TDir *CacheRootDir();
 
 protected:
+    static unsigned int Adjust(TPartServer *Server);
+    static unsigned int CalcClusterCount(unsigned int TotalSectors, unsigned int ClusterSize);
+    static unsigned int CalcFatSectors(unsigned int Clusters);
+
     bool ProcessInfoSector();
 
     unsigned int RootCluster;

@@ -42,6 +42,105 @@ struct TFatInfo
 
 /*##########################################################################
 #
+#   Name       : TFat32::Adjust
+#
+#   Purpose....: Adjust size & pos to achieve 4k alignment
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFat32::Adjust(TPartServer *Server)
+{
+    long long Start = Server->GetPartStartSector();
+    long long Count = Server->GetPartSectors();
+    long long pos = Start;
+    unsigned int size;
+    long long diff;
+
+    pos = pos / 8;
+    pos = 8 * pos;
+
+    if (Count < 0xFFFFFFFF)
+        size = (unsigned int)Count;
+    else
+        size = 0xFFFFFFFF;
+
+    diff = pos - Start;
+    size -= diff;
+
+    if (Server->MovePartUp(diff))
+        return size;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat32::CalcClusterCount
+#
+#   Purpose....: Calculate cluster count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFat32::CalcClusterCount(unsigned int TotalSectors, unsigned int ClusterSize)
+{
+    unsigned int Clusters;
+    unsigned int FatSectors;
+    unsigned int Used;
+    int tries;
+
+    Used = TotalSectors - 8;
+    for (tries = 0; tries < 3; tries++)
+    { 
+        Clusters = Used / ClusterSize + 2;
+        FatSectors = Clusters / 128;
+        FatSectors--;
+        FatSectors = FatSectors / 8;
+        FatSectors = 8 * (FatSectors + 1);
+        Used = TotalSectors - 8 - 4 * FatSectors;
+    } 
+
+    Used = Clusters * ClusterSize + 4 * FatSectors + 8;
+
+    while (Used > TotalSectors)
+    {
+        Clusters--;
+        Used -= ClusterSize;
+    }
+
+    return Clusters;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat32::CalcFatSectors
+#
+#   Purpose....: Calculate FAT sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFat32::CalcFatSectors(unsigned int Clusters)
+{
+    unsigned int FatSectors;
+
+    FatSectors = Clusters / 128;
+    FatSectors--;
+    FatSectors = FatSectors / 8;
+    FatSectors = 8 * (FatSectors + 1);
+
+    return FatSectors;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat32::InitFs
 #
 #   Purpose....: Init before format
@@ -53,7 +152,61 @@ struct TFatInfo
 ##########################################################################*/
 bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
 {
-    return false;
+    long long Diff;
+    unsigned int Size;
+    unsigned int ClusterSize;
+    unsigned int Clusters;
+    unsigned int FatSectors;
+    unsigned long lsb, msb;
+    int tries;
+    int handle = server->GetHandle();
+
+    RdosGetSysTime(&msb, &lsb);
+
+    Size = Adjust(server);
+
+    ClusterSize = 8;
+    Clusters = CalcClusterCount(Size, ClusterSize);
+    FatSectors = CalcFatSectors(Clusters);
+
+    Size = Clusters * ClusterSize + 2 * FatSectors + 8;
+
+    boot->base.Sectors = Size;
+    boot->base.SectorCount16 = 0;
+
+    boot->base.SectorsPerCluster = ClusterSize;
+    boot->base.ResvSectors = 8;
+    boot->base.FatCount = 2;
+    boot->base.RootDirEntries = 0;
+    boot->base.Media = 0xF8;
+    boot->base.FatSectors16 = 0;
+    boot->base.SectorsPerCyl = -1;
+    boot->base.Heads = -1;
+    boot->base.HiddenSectors = 0;
+
+    boot->FatSectors = FatSectors;
+    boot->ExtFlags = 0;
+    boot->FsVersion = 0;
+    boot->RootCluster = 2;
+    boot->InfoSector = 1;
+    boot->BackupSector = 6;
+    memset(boot->Resv1, 0, 12);
+
+    boot->ext.DriveNr = 0x80;
+    boot->ext.Resv1 = 0;
+    boot->ext.Sign = 0x29;
+
+    boot->ext.VolumeId = lsb;
+    strcpy(boot->ext.VolumeLabel, "NO NAME    ");
+    strcpy(boot->ext.FsName, "FAT32   ");
+
+    Diff = server->GetPartSectors() - (long long)Size;
+    server->ShrinkPart(Diff);
+
+    if (Clusters < 65525)
+        return false;
+    else
+        return true;
 }
 
 /*##########################################################################
