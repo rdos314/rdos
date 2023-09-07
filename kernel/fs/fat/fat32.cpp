@@ -291,6 +291,7 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
             else
                 FreeClusters = Free1;
 
+            InitDir(0, RootCluster);
             WriteInfoSector(boot->InfoSector);
         }
         else
