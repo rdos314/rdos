@@ -456,6 +456,66 @@ void TMbrDisc::LbaToChs(unsigned int Sector, struct TMbrChs *Entry)
 
 /*##########################################################################
 #
+#   Name       : TMbrDisc::PartToType
+#
+#   Purpose....: Convert partition type to MBR type
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TMbrDisc::PartToType(int Type, long long Sectors)
+{
+    switch (Type)
+    {
+        case PART_TYPE_FAT12:
+            return 1;
+
+        case PART_TYPE_FAT16:
+            if (Sectors > 0xFFFF)
+                return 6;
+            else
+                return 4;
+
+        case PART_TYPE_FAT32:
+            return 0xC;
+    }
+
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TMbrDisc::TypeToPart
+#
+#   Purpose....: Convert MBR type to partition type
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TMbrDisc::TypeToPart(char Type)
+{
+    switch (Type)
+    {
+        case 1:
+            return PART_TYPE_FAT12;
+
+        case 4:
+        case 6:
+            return PART_TYPE_FAT16;
+
+        case 0xB:
+        case 0xC:
+            return PART_TYPE_FAT32;
+    }
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TMbrDisc::AddPossibleFs
 #
 #   Purpose....: Add possible FS part
@@ -467,31 +527,13 @@ void TMbrDisc::LbaToChs(unsigned int Sector, struct TMbrChs *Entry)
 ##########################################################################*/
 void TMbrDisc::AddPossibleFs(struct TMbrPartition *part)
 {
-    bool AddIt = false;
+    int Type = TypeToPart(part->FPartEntry.Type);
 
-    switch (part->FPartEntry.Type)
+    if (Type)
     {
-        case 1:
-            part->SetType(PART_TYPE_FAT12);
-            AddIt = true;
-            break;
-
-        case 4:
-        case 6:
-            part->SetType(PART_TYPE_FAT16);
-            AddIt = true;
-            break;
-
-        case 0xB:
-        case 0xC:
-            part->SetType(PART_TYPE_FAT32);
-            AddIt = true;
-            break;
-
-    }
-
-    if (AddIt)
+        part->SetType(Type);
         Add(part);
+    }
 }
 
 /*##########################################################################
@@ -751,9 +793,11 @@ void TMbrDisc::DeletePart(TPartition *part)
 ##########################################################################*/
 bool TMbrDisc::CreatePart(int Handle, int Type, long long Start, long long Sectors)
 {
-    TMbrPartition *part;
+    TMbrPartition *part = 0;
+    char PartType = PartToType(Type, Sectors);
 
-    part = PartRoot.AddEntry(this, Type, Start, Sectors);
+    if (PartType)
+        part = PartRoot.AddEntry(this, PartType, Start, Sectors);
 
     if (part)
     {

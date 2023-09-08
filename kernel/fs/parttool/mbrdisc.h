@@ -114,6 +114,9 @@ public:
     unsigned int ChsToLba(struct TMbrChs *entry);
     void LbaToChs(unsigned int Sector, struct TMbrChs *Entry);
 
+    char PartToType(int Type, long long Sectors);
+    int TypeToPart(char Type);
+
     virtual bool IsGpt();
     virtual bool LoadPart();    
     virtual bool InitPart();    
