@@ -139,7 +139,7 @@ bool TMbrPartitionTable::IsTable()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TMbrPartitionTable::ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TablePart)
+bool TMbrPartitionTable::ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TablePart)
 {
     char *Data;
     TDiscServer *server = Disc->GetServer();
@@ -148,10 +148,17 @@ void TMbrPartitionTable::ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TableP
 
     req.WaitForever();
 
-    Data = (char *)e1.Map();
-
-    if (Data[0x1FE] == 0x55 && Data[0x1FF] == 0xAA)
-        TablePart->Process(Disc, Data);
+    if (req.IsDone())
+    {
+        Data = (char *)e1.Map();
+    
+        if (Data[0x1FE] == 0x55 && Data[0x1FF] == 0xAA)
+        {
+            TablePart->Process(Disc, Data);
+            return true;
+        }
+    }
+    return false;
 }
 
 /*##################  TMbrPartitionTable::ProcessOne  #############
@@ -240,7 +247,7 @@ void TMbrPartitionTable::Process(TMbrDisc *Disc, char *Data)
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TMbrPartitionTable::WriteEntry(TMbrDisc *Disc, int Index, struct TMbrPartitionEntry *Entry)
+bool TMbrPartitionTable::WriteEntry(TMbrDisc *Disc, int Index, struct TMbrPartitionEntry *Entry)
 {
     char *Data;
     TDiscServer *server = Disc->GetServer();
@@ -249,28 +256,34 @@ void TMbrPartitionTable::WriteEntry(TMbrDisc *Disc, int Index, struct TMbrPartit
 
     req.WaitForever();
 
-    Data = (char *)e1.Map();
-
-    switch (Index)
+    if (req.IsDone())
     {
-        case 0:
-            memcpy(Data + 0x1BE, Entry, 0x10);
-            break;
+        Data = (char *)e1.Map();
 
-        case 1:
-            memcpy(Data + 0x1CE, Entry, 0x10);
-            break;
+        switch (Index)
+        {
+            case 0:
+                memcpy(Data + 0x1BE, Entry, 0x10);
+                break;
 
-        case 2:
-            memcpy(Data + 0x1DE, Entry, 0x10);
-            break;
+            case 1:
+                memcpy(Data + 0x1CE, Entry, 0x10);
+                break;
 
-        case 3:
-            memcpy(Data + 0x1EE, Entry, 0x10);
-            break;
+            case 2:
+                memcpy(Data + 0x1DE, Entry, 0x10);
+                break;
+
+            case 3:
+                memcpy(Data + 0x1EE, Entry, 0x10);
+                break;
+        }
+  
+        e1.Write();
+
+        return true;
     }
-
-    e1.Write();
+    return false;
 }
 
 /*##################  TMbrPartitionTable::AddEntry  #############
@@ -303,10 +316,11 @@ struct TMbrPartition *TMbrPartitionTable::AddEntry(TMbrDisc *Disc, char Type, un
         entry.LbaStart = Start - (unsigned int)FStartSector;
         entry.LbaCount = Size;
 
-        WriteEntry(Disc, i, &entry);
-
-        part = new TMbrPartition(this, i, &entry, Start, Size);
-        PartArr[i] = part;
+        if (WriteEntry(Disc, i, &entry))
+        {
+            part = new TMbrPartition(this, i, &entry, Start, Size);
+            PartArr[i] = part;
+        }
     }
     return part;
 }
@@ -536,7 +550,7 @@ bool TMbrDisc::IsGpt()
 #   Returns....: *
 #
 ##########################################################################*/
-void TMbrDisc::LoadPart()
+bool TMbrDisc::LoadPart()
 {
     struct TBootParamBlock *bpb;
     char *Buf;
@@ -545,20 +559,24 @@ void TMbrDisc::LoadPart()
 
     req.WaitForever();
 
-    Buf = (char *)e1.Map();
-
-    if (Buf[0x1FE] == 0x55 && Buf[0x1FF] == 0xAA)
+    if (req.IsDone())
     {
-        bpb = (struct TBootParamBlock *)(Buf + 11);
-        FSectorsPerCyl = bpb->SectorsPerCyl;
-        FHeads = bpb->Heads;
-        FLoaderSectors = bpb->HiddenSectors;
- 
-        PartRoot.Process(this, Buf);
-        AddFsParts(&PartRoot);
-    }
+        Buf = (char *)e1.Map();
 
-    TDisc::LoadPart();
+        if (Buf[0x1FE] == 0x55 && Buf[0x1FF] == 0xAA)
+        {
+            bpb = (struct TBootParamBlock *)(Buf + 11);
+            FSectorsPerCyl = bpb->SectorsPerCyl;
+            FHeads = bpb->Heads;
+            FLoaderSectors = bpb->HiddenSectors;
+ 
+            PartRoot.Process(this, Buf);
+            AddFsParts(&PartRoot);
+        }
+
+        return TDisc::LoadPart();
+    }
+    return false;
 }
 
 /*##########################################################################

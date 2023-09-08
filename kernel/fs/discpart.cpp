@@ -597,7 +597,7 @@ void TDisc::Remove(TPartition *part)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDisc::LoadPart()
+bool TDisc::LoadPart()
 {
     int PartNr;
     TPartition *Part;
@@ -618,6 +618,7 @@ void TDisc::LoadPart()
             ServStartVfsPartition(Part->Handle);
         }
     }
+    return true;
 }
 
 /*##########################################################################

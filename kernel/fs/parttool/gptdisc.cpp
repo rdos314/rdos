@@ -211,16 +211,18 @@ bool TGptTable::ReadEntryArr(TDisc *Disc)
 
     req.WaitForever();
 
-    Buf = (char *)e1.Map();
+    if (req.IsDone())
+    {
+        Buf = (char *)e1.Map();
 
-    EntryData = (struct TPartEntry *)Buf;
+        EntryData = (struct TPartEntry *)Buf;
 
-    ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, Buf, size);
+        ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, Buf, size);
 
-    if (ThisCrc32 == Header.EntryCrc32)
-        return true;
-    else
-        return false;
+        if (ThisCrc32 == Header.EntryCrc32)
+            return true;
+    }
+    return false;
 }
 
 /*##########################################################################
@@ -247,23 +249,26 @@ bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
 
     req.WaitForever();
 
-    Buf = (char *)e1.Map();
-    memcpy(&Header, Buf, sizeof(struct TGptPartHeader));
-
-    if (!strcmp(Header.Sign, "EFI PART"))
+    if (req.IsDone())
     {
-        Crc32 = Header.Crc32;
-        Header.Crc32 = 0;
-        ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, (const char *)&Header, Header.HeaderSize);
-        Header.Crc32 = Crc32;
+        Buf = (char *)e1.Map();
+        memcpy(&Header, Buf, sizeof(struct TGptPartHeader));
 
-        if (Crc32 == ThisCrc32)
+        if (!strcmp(Header.Sign, "EFI PART"))
         {
-            if (Header.EntrySize == sizeof(struct TGptPartEntry))
+            Crc32 = Header.Crc32;
+            Header.Crc32 = 0;
+            ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, (const char *)&Header, Header.HeaderSize);
+            Header.Crc32 = Crc32;
+
+            if (Crc32 == ThisCrc32)
             {
-                ok = ReadEntryArr(Disc);
-            }
-        }        
+                if (Header.EntrySize == sizeof(struct TGptPartEntry))
+                {
+                    ok = ReadEntryArr(Disc);
+                }
+            }        
+        }
     }
 
     return ok;
@@ -327,7 +332,7 @@ bool TGptDisc::IsGpt()
 #   Returns....: *
 #
 ##########################################################################*/
-void TGptDisc::LoadPart()
+bool TGptDisc::LoadPart()
 {
     bool ok;
 
@@ -335,7 +340,10 @@ void TGptDisc::LoadPart()
     if (ok)
         SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
 
-    TDisc::LoadPart();
+    if (ok)
+        return TDisc::LoadPart();
+    else
+        return false;
 }
 
 /*##########################################################################

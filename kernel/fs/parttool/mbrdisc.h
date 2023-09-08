@@ -101,8 +101,8 @@ public:
 
 protected:
     void ProcessOne(TMbrDisc *disc, int index, struct TMbrPartitionEntry *entry);
-    void ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TablePart);
-    void WriteEntry(TMbrDisc *Disc, int Index, struct TMbrPartitionEntry *entry);
+    bool ProcessTable(TMbrDisc *Disc, TMbrPartitionTable *TablePart);
+    bool WriteEntry(TMbrDisc *Disc, int Index, struct TMbrPartitionEntry *entry);
 };
 
 class TMbrDisc : public TDisc
@@ -115,7 +115,7 @@ public:
     void LbaToChs(unsigned int Sector, struct TMbrChs *Entry);
 
     virtual bool IsGpt();
-    virtual void LoadPart();    
+    virtual bool LoadPart();    
     virtual void InitPart();    
     virtual void AddPart(const char *FsName, long long Sectors);
 

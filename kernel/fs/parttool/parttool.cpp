@@ -109,9 +109,8 @@ int main(int argc, char **argv)
 
         Disc = CreateDisc(Server);
         if (Disc)
-            Disc->LoadPart();
-
-        while (Server->IsActive())
-            Server->Run(Disc);
+            if (Disc->LoadPart())
+                while (Server->IsActive())
+                    Server->Run(Disc);
     }
 }
