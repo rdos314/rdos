@@ -777,7 +777,7 @@ bool TMbrDisc::CreatePart(int Handle, int Type, long long Start, long long Secto
 #   Returns....: *
 #
 ##########################################################################*/
-void TMbrDisc::AddPart(const char *FsName, long long Sectors)
+bool TMbrDisc::AddPart(const char *FsName, long long Sectors)
 {
     long long Start;
     long long Count = Sectors;
@@ -795,6 +795,8 @@ void TMbrDisc::AddPart(const char *FsName, long long Sectors)
         Handle = FormatPart(FsName, &Start, &Count, &Type);
 
         if (Handle)
-            CreatePart(Handle, Type, (unsigned int)Start, (unsigned int)Count);
+            if (CreatePart(Handle, Type, (unsigned int)Start, (unsigned int)Count))
+                return true;
     }
+    return false;
 }

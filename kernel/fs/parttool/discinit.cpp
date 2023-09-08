@@ -106,13 +106,5 @@ int TInitCommand::Execute(char *param)
     if (!FServer->InitDisc(param))
         Write("Init failed\r\n");
 
-    while (FServer->IsBusy())
-    {
-        Write(".");
-        RdosWaitMilli(250);
-    }
-
-    Write("\r\n");
-
     return 0;
 }

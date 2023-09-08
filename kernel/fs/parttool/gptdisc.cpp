@@ -373,8 +373,9 @@ bool TGptDisc::InitPart()
 #   Returns....: *
 #
 ##########################################################################*/
-void TGptDisc::AddPart(const char *FsName, long long Sectors)
+bool TGptDisc::AddPart(const char *FsName, long long Sectors)
 {
+    return false;
 }
 
 /*##########################################################################

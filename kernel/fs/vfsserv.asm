@@ -959,8 +959,8 @@ is_vfs_busy    Proc far
     push ebx
 ;
     call HandleToPartEs
-    mov ebx,ds:vfs_scan_pos
-    and ebx,ds:vfs_scan_pos+4
+    mov ebx,es:vfs_scan_pos
+    and ebx,es:vfs_scan_pos+4
     add ebx,1
 ;
     pop ebx

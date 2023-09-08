@@ -122,7 +122,18 @@ int TAddPartitionCommand::Execute(char *param)
     str.printf("Add %s %lld\r\n", FsName, Sectors);
     Write(str.GetData());
 
-    FServer->AddPartition(FsName, Sectors);
+    if (FServer->AddPartition(FsName, Sectors))
+    {
+        while (FServer->IsBusy())
+        {
+            Write(".");
+            RdosWaitMilli(250);
+        }
+
+        Write("\r\n");
+    }
+    else
+        Write("Failed to add partition\r\n");
 
     return 0;
 }

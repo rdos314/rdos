@@ -666,10 +666,12 @@ bool TDiscServer::InitDisc(const char *parttype)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscServer::AddPartition(const char *FsName, long long Sectors)
+bool TDiscServer::AddPartition(const char *FsName, long long Sectors)
 {
     if (Disc)
-        Disc->AddPart(FsName, Sectors);
+        return Disc->AddPart(FsName, Sectors);
+    else
+        return false;
 }
 
 /*##########################################################################

@@ -69,7 +69,7 @@ public:
     virtual bool InitPart() = 0;
     virtual bool LoadPart();
     virtual void Stop();
-    virtual void AddPart(const char *FsName, long long Sectors) = 0;
+    virtual bool AddPart(const char *FsName, long long Sectors) = 0;
 
     TDiscServer *GetServer();
     int GetDiscNr();

@@ -96,7 +96,7 @@ public:
     virtual bool IsGpt();
     virtual bool InitPart();
     virtual bool LoadPart();
-    virtual void AddPart(const char *FsName, long long Sectors);
+    virtual bool AddPart(const char *FsName, long long Sectors);
 
     TGptTable PrimaryTable;
     TGptTable SecondaryTable;

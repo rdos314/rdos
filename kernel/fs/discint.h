@@ -108,7 +108,7 @@ public:
     bool IsBusy();
 
     bool InitDisc(const char *parttype);
-    void AddPartition(const char *FsName, long long Sectors);
+    bool AddPartition(const char *FsName, long long Sectors);
 
     bool (*OnInit)(TDiscServer *Server, const char *PartType);
 
