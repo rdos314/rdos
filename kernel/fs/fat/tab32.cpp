@@ -118,7 +118,7 @@ unsigned int TFatTable32::GetFreeInBlock(long long Sector, unsigned int Clusters
 {
     unsigned int i;
     unsigned int FreeClusters = 0;
-    TPartReqEntry e1(&FReq, Sector, 8);
+    TPartReqEntry e1(&FReq, Sector, 64);
     int *tab;
 
     FReq.WaitForever();
@@ -150,16 +150,16 @@ unsigned int TFatTable32::GetFreeClusters()
     long long Sector = FStartSector;
     unsigned int Cluster = 0;
     int Count;
-    int Blocks = FClusters / 512 * 4 / 8;
+    int Blocks = FClusters / 512 * 4 / 64;
 
     for (i = 0; i <= Blocks; i++)
     {
         Count = FClusters - Cluster;
-        if (Count > 512 * 8 / 4)
-            Count = 512 * 8 / 4;
+        if (Count > 512 * 64 / 4)
+            Count = 512 * 64 / 4;
 
         FreeClusters += GetFreeInBlock(Sector, Count);
-        Sector += 8;
+        Sector += 64;
         Cluster += Count;
     }
 
