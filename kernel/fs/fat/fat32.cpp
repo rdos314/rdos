@@ -42,6 +42,8 @@ struct TFatInfo
     int TrailSign;
 };
 
+#define RESERVED_SECTORS	32
+
 /*##########################################################################
 #
 #   Name       : TFat32::Adjust
@@ -97,7 +99,7 @@ unsigned int TFat32::CalcClusterCount(unsigned int TotalSectors, unsigned int Cl
     unsigned int Used;
     int tries;
 
-    Used = TotalSectors - 8;
+    Used = TotalSectors - RESERVED_SECTORS;
     for (tries = 0; tries < 3; tries++)
     { 
         Clusters = Used / ClusterSize + 2;
@@ -105,10 +107,10 @@ unsigned int TFat32::CalcClusterCount(unsigned int TotalSectors, unsigned int Cl
         FatSectors--;
         FatSectors = FatSectors / 8;
         FatSectors = 8 * (FatSectors + 1);
-        Used = TotalSectors - 8 - 4 * FatSectors;
+        Used = TotalSectors - RESERVED_SECTORS - 4 * FatSectors;
     } 
 
-    Used = Clusters * ClusterSize + 4 * FatSectors + 8;
+    Used = Clusters * ClusterSize + 4 * FatSectors + RESERVED_SECTORS;
 
     while (Used > TotalSectors)
     {
@@ -172,13 +174,13 @@ bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
     Clusters = CalcClusterCount(Size, ClusterSize);
     FatSectors = CalcFatSectors(Clusters);
 
-    Size = Clusters * ClusterSize + 2 * FatSectors + 8;
+    Size = Clusters * ClusterSize + 2 * FatSectors + RESERVED_SECTORS;
 
     boot->base.Sectors = Size;
     boot->base.SectorCount16 = 0;
 
     boot->base.SectorsPerCluster = ClusterSize;
-    boot->base.ResvSectors = 8;
+    boot->base.ResvSectors = RESERVED_SECTORS;
     boot->base.FatCount = 2;
     boot->base.RootDirEntries = 0;
     boot->base.Media = 0xF8;
@@ -186,16 +188,8 @@ bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
     boot->base.Heads = -1;
     boot->base.HiddenSectors = 0;
 
-    if (FatSectors > 0xFFFF)
-    {
-        boot->base.FatSectors16 = 0;
-        boot->FatSectors = FatSectors;
-    }
-    else
-    {
-        boot->base.FatSectors16 = (unsigned short int)FatSectors;
-        boot->FatSectors = 0;
-    }
+    boot->base.FatSectors16 = 0;
+    boot->FatSectors = FatSectors;
 
     boot->ExtFlags = 0;
     boot->FsVersion = 0;
@@ -254,12 +248,6 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
 
     if (Validate())
     {
-        if (format)
-        {
-            WriteBootSector(boot, 0);
-            WriteBootSector(boot, 6);
-        }
-
         FatTable1 = &Tab1;
         FatTable2 = &Tab2;
 
@@ -292,7 +280,7 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
                 FreeClusters = Free1;
 
             InitDir(0, RootCluster);
-            WriteInfoSector(boot->InfoSector);
+            WriteBootSector(boot);
         }
         else
         {
@@ -336,40 +324,34 @@ TFat32::~TFat32()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFat32::WriteBootSector(struct TBootSector32 *BootSector, int sector)
+void TFat32::WriteBootSector(struct TBootSector32 *boot)
 {
     TPartReq req(FServer);
-    TPartReqEntry e1(&req, sector, 1, false);
+    TPartReqEntry e1(&req, 0, RESERVED_SECTORS, true);
     char *Data;
-
-    req.WaitForever();
-
-    Data = (char *)e1.Map();
-    memcpy(Data, BootSector, 512);
-
-    e1.Write();
-}
-
-/*##########################################################################
-#
-#   Name       : TFat32::WriteInfoSector
-#
-#   Purpose....: Write info sector
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFat32::WriteInfoSector(int sector)
-{
-    TPartReq req(FServer);
-    TPartReqEntry e1(&req, sector, 1, false);
     struct TFatInfo *info;
 
     req.WaitForever();
 
-    info = (struct TFatInfo *)e1.Map();
+    Data = (char *)e1.Map();
+    memset(Data, 0, 512 * RESERVED_SECTORS);
+
+    memcpy(Data, boot, 512);
+    memcpy(Data + boot->BackupSector * 512, boot, 512);
+
+    info = (struct TFatInfo *)(Data + boot->InfoSector * 512);
+
+    info->ExtSign = 0x41615252;
+    info->InfoSign = 0x61417272;
+    info->FreeClusters = FreeClusters;
+    info->NextCluster = 3;
+
+    memset(info->Resv1, 0, 480);
+    memset(info->Resv2, 0, 12);
+
+    info->TrailSign = 0xAA550000;
+
+    info = (struct TFatInfo *)(Data + (boot->BackupSector + boot->InfoSector) * 512);
 
     info->ExtSign = 0x41615252;
     info->InfoSign = 0x61417272;
