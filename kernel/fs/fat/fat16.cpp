@@ -270,13 +270,6 @@ TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format)
     int Free1;
     int Free2;
 
-
-    bool wait = true;
-
-    while (wait)
-        RdosWaitMilli(250);
-
-
     FServer = server;
 
     if (format)
