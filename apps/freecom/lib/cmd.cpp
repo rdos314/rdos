@@ -370,6 +370,129 @@ void TCommand::WriteLong(long value)
 
 /*##########################################################################
 #
+#   Name       : TCommand::WriteLongLong
+#
+#   Purpose....: Write long long to std output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::WriteLongLong(long long value)
+{
+    char str[4];
+    long long tmp;
+    int use = FALSE;
+
+    tmp = value / 1000000000000000000;
+    if (tmp)
+    {
+        use = TRUE;
+        sprintf(str, "%1d", tmp);
+    }
+    else
+        strcpy(str, "  ");
+
+    Write(str);
+    Write(" ");
+    value = value % 1000000000000000000;
+
+    tmp = value / 1000000000000000;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+    {
+        if (tmp)
+        {
+            use = TRUE;
+            sprintf(str, "%3d", tmp);
+        }
+        else
+            strcpy(str, "   ");
+    }
+    Write(str);
+    Write(" ");
+    value = value % 1000000000000000;
+
+    tmp = value / 1000000000000;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+    {
+        if (tmp)
+        {
+            use = TRUE;
+            sprintf(str, "%3d", tmp);
+        }
+        else
+            strcpy(str, "   ");
+    }
+    Write(str);
+    Write(" ");
+    value = value % 1000000000000;
+
+    tmp = value / 1000000000;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+    {
+        if (tmp)
+        {
+            use = TRUE;
+            sprintf(str, "%3d", tmp);
+        }
+        else
+            strcpy(str, "   ");
+    }
+    Write(str);
+    Write(" ");
+    value = value % 1000000000;
+
+    tmp = value / 1000000;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+    {
+        if (tmp)
+        {
+            use = TRUE;
+            sprintf(str, "%3d", tmp);
+        }
+        else
+            strcpy(str, "   ");
+    }
+    Write(str);
+    Write(" ");
+    value = value % 1000000;
+
+    tmp = value / 1000;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+    {
+        if (tmp)
+        {
+            use = TRUE;
+            sprintf(str, "%3d", tmp);
+        }
+        else
+            strcpy(str, "   ");
+    }
+    Write(str);
+    Write(" ");
+    value = value % 1000;
+
+    tmp = value;
+    if (use)
+        sprintf(str, "%03d", tmp);
+    else
+        sprintf(str, "%3d", tmp);
+    Write(str);
+}
+
+/*##########################################################################
+#
 #   Name       : TCommand::Read
 #
 #   Purpose....: Read a line from std input

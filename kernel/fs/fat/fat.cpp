@@ -616,6 +616,7 @@ void StartFs(TPartServer *Server)
     int FatSize;
 
     Fs = 0;
+    Started = true;
 
     req.WaitForever();
 
@@ -699,9 +700,6 @@ void StartFs(TPartServer *Server)
             Fs = 0;
         }
     }
-
-    if (Fs)
-        Started = true;
 }
 
 /*##########################################################################
@@ -723,6 +721,9 @@ int FormatFs(TPartServer *Server)
     struct TBootSector12_16 *boot12_16 = 0;
     struct TBootSector32 *boot32 = 0;
     bool ok;
+
+    Fs = 0;
+    Started = true;
 
     BootSector = new char[512];
 
@@ -784,9 +785,6 @@ int FormatFs(TPartServer *Server)
             ok = false;
         }
     }
-
-    if (ok)
-        Started = true;
 
     delete BootSector;
 

@@ -91,6 +91,7 @@ public:
     void WriteError(const char *str);
 
     void WriteLong(long Value);
+    void WriteLongLong(long long Value);
 
     int Read(char *str, int maxsize);
         

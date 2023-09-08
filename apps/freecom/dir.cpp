@@ -463,7 +463,7 @@ void TDirCommand::WriteFooter()
     FreeSpace = RdosGetVfsDriveFree(FDrive);
     if (FreeSpace > 0)
     {
-        WriteLong(512 * FreeSpace);
+        WriteLongLong(FreeSpace * 512);
         FMsg.Load(TEXT_DIR_FTR_BYTES_FREE);
         Write(FMsg.GetData());    
     }
