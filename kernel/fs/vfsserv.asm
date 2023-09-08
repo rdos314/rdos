@@ -944,6 +944,33 @@ is_vfs_active    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           IsVfsBusy
+;
+;       DESCRIPTION:    Is VFS busy
+;
+;       PARAMETERS:     EBX         VFS Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_vfs_busy_name       DB 'Is VFS Busy',0
+
+is_vfs_busy    Proc far
+    push es
+    push ebx
+;
+    call HandleToPartEs
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+;
+    pop ebx
+    pop es
+    ret
+is_vfs_busy    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DisableVfsPart
 ;
 ;       DESCRIPTION:    Disable partition
@@ -5198,6 +5225,12 @@ init_server    Proc near
     mov edi,OFFSET is_vfs_active_name
     xor cl,cl
     mov ax,is_vfs_active_nr
+    RegisterServGate
+;
+    mov esi,OFFSET is_vfs_busy
+    mov edi,OFFSET is_vfs_busy_name
+    xor cl,cl
+    mov ax,is_vfs_busy_nr
     RegisterServGate
 ;
     mov esi,OFFSET get_vfs_disc_part

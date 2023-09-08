@@ -578,6 +578,25 @@ bool TDiscServer::IsActive()
 
 /*##########################################################################
 #
+#   Name       : TDiscServer::IsBusy
+#
+#   Purpose....: Check if busy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TDiscServer::IsBusy()
+{
+    if (FActive)
+        return ServIsVfsBusy(handle);
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TDiscServer::GetDiscSectors
 #
 #   Purpose....: Get partition sectors

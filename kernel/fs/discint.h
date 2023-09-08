@@ -105,6 +105,7 @@ public:
     void RunCmd(int handle, char *msg);
     void Run(TDisc *disc);
     bool IsActive();
+    bool IsBusy();
 
     bool InitDisc(const char *parttype);
     void AddPartition(const char *FsName, long long Sectors);
