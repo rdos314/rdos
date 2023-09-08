@@ -148,6 +148,12 @@
     __parm [__ebx] \
     __value [__eax]
 
+#pragma aux ServIsVfsBusy = \
+    ServGate_is_vfs_busy  \
+    CarryToBool \
+    __parm [__ebx] \
+    __value [__eax]
+
 #pragma aux ServStartVfsIoServer = \
     ServGate_start_vfs_io_serv  \
     __parm [__ebx] [__edx]

@@ -49,5 +49,6 @@ serv_format_part_nr        = 47
 get_vfs_part_type_nr       = 48
 set_vfs_start_sector_nr    = 49
 set_vfs_sectors_nr         = 50
+is_vfs_busy_nr             = 51
 
 serv_gate_entries          = 55

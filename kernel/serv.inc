@@ -53,6 +53,11 @@ IsVfsActive  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
+IsVfsBusy  MACRO
+    ServGate is_vfs_busy_nr
+                    ENDM
+
+; IN  EBX              VFS handle
 ; OUT AH               Disc #
 ; OUT AL               Part #
 GetVfsDiscPart  MACRO

@@ -49,6 +49,7 @@
 #define serv_gate_get_vfs_part_type 0x00000030
 #define serv_gate_set_vfs_start_sector 0x00000031
 #define serv_gate_set_vfs_sectors 0x00000032
+#define serv_gate_is_vfs_busy 0x00000033
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -101,4 +102,5 @@
 #define ServGate_get_vfs_part_type 0x55 0x67 0x9a 48 0 0 0 4 0 0x5d
 #define ServGate_set_vfs_start_sector 0x55 0x67 0x9a 49 0 0 0 4 0 0x5d
 #define ServGate_set_vfs_sectors 0x55 0x67 0x9a 50 0 0 0 4 0 0x5d
+#define ServGate_is_vfs_busy 0x55 0x67 0x9a 51 0 0 0 4 0 0x5d
 
