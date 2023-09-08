@@ -83,6 +83,48 @@ unsigned int TFat32::Adjust(TPartServer *Server)
 
 /*##########################################################################
 #
+#   Name       : TFat32::CalcClusterSize
+#
+#   Purpose....: Calculate cluster size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFat32::CalcClusterSize(unsigned int size)
+{
+    unsigned int ClusterSize;
+    unsigned int Clusters;
+    unsigned int FatSectors;
+    unsigned int Used;
+    int tries;
+
+    ClusterSize = 8;
+    while (ClusterSize != 64)
+    {
+        Used = size - RESERVED_SECTORS;
+        for (tries = 0; tries < 3; tries++)
+        { 
+            Clusters = Used / ClusterSize + 2;
+            FatSectors = 4 * Clusters / 512;
+            FatSectors--;
+            FatSectors = FatSectors / 8;
+            FatSectors = 8 * FatSectors;
+            Used = size - RESERVED_SECTORS - 4 * FatSectors;
+        } 
+
+        if (Clusters < 0x200000)
+            break;
+
+        ClusterSize = 2 * ClusterSize;
+    }    
+
+    return ClusterSize;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat32::CalcClusterCount
 #
 #   Purpose....: Calculate cluster count
@@ -170,7 +212,7 @@ bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
 
     Size = Adjust(server);
 
-    ClusterSize = 8;
+    ClusterSize = CalcClusterSize(Size);
     Clusters = CalcClusterCount(Size, ClusterSize);
     FatSectors = CalcFatSectors(Clusters);
 

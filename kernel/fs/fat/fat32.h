@@ -44,6 +44,7 @@ public:
 
 protected:
     static unsigned int Adjust(TPartServer *Server);
+    static unsigned int CalcClusterSize(unsigned int size);
     static unsigned int CalcClusterCount(unsigned int TotalSectors, unsigned int ClusterSize);
     static unsigned int CalcFatSectors(unsigned int Clusters);
 
