@@ -66,7 +66,7 @@ public:
     virtual const char *FsTypeToName(int type);
     virtual int FsNameToType(const char *FsName);
 
-    virtual void InitPart() = 0;
+    virtual bool InitPart() = 0;
     virtual bool LoadPart();
     virtual void Stop();
     virtual void AddPart(const char *FsName, long long Sectors) = 0;

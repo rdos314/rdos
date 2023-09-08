@@ -590,14 +590,19 @@ bool TMbrDisc::LoadPart()
 #   Returns....: *
 #
 ##########################################################################*/
-void TMbrDisc::InitPart()
+bool TMbrDisc::InitPart()
 {
+    bool ok;
+
     LoadBootLoader();
-    WriteBootLoader();
-    WriteBootSector();
+    ok = WriteBootLoader();
+    if (ok)
+        ok = WriteBootSector();
    
     delete FBootLoader;
     FBootLoader = 0;
+
+    return ok;
 }
 
 /*##########################################################################
@@ -632,7 +637,7 @@ void TMbrDisc::LoadBootLoader()
 #   Returns....: *
 #
 ##########################################################################*/
-void TMbrDisc::WriteBootSector()
+bool TMbrDisc::WriteBootSector()
 {
     TDiscReq req(FServer);
     TDiscReqEntry e1(&req, 0, 1, false);
@@ -642,40 +647,45 @@ void TMbrDisc::WriteBootSector()
 
     req.WaitForever();
 
-    Data = (char *)e1.Map();
+    if (req.IsDone())
+    {
+        Data = (char *)e1.Map();
 
-    BootSector = new char[512];
-    RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
-    memcpy(BootSector + 11, Data + 11, sizeof(TBootParamBlock));
+        BootSector = new char[512];
+        RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
+        memcpy(BootSector + 11, Data + 11, sizeof(TBootParamBlock));
     
-    bootp = (TBootParamBlock *)(BootSector + 11);
+        bootp = (TBootParamBlock *)(BootSector + 11);
 
-    FSectorsPerCyl = bootp->SectorsPerCyl;
-    FHeads = bootp->Heads;
+        FSectorsPerCyl = bootp->SectorsPerCyl;
+        FHeads = bootp->Heads;
 
-    bootp->BytesPerSector = FServer->GetBytesPerSector();
-    bootp->Resv1 = 1;
-    bootp->MappingSectors = FLoaderSectors;
-    bootp->Resv3 = 0;
-    bootp->Resv4 = 0;
-    bootp->SmallSectors = 0;
-    bootp->Media = 0xF1;
-    bootp->Resv6 = 0;
-    bootp->HiddenSectors = FLoaderSectors;
-    bootp->Sectors = FServer->GetDiscSectors();
-    bootp->Resv7 = 0;
-    bootp->Signature = 0;
-    bootp->Serial = 0;
-    memset(bootp->Volume, 0, 11);
-    memcpy(bootp->Fs, "RDOS    ", 8);
+        bootp->BytesPerSector = FServer->GetBytesPerSector();
+        bootp->Resv1 = 1;
+        bootp->MappingSectors = FLoaderSectors;
+        bootp->Resv3 = 0;
+        bootp->Resv4 = 0;
+        bootp->SmallSectors = 0;
+        bootp->Media = 0xF1;
+        bootp->Resv6 = 0;
+        bootp->HiddenSectors = FLoaderSectors;
+        bootp->Sectors = FServer->GetDiscSectors();
+        bootp->Resv7 = 0;
+        bootp->Signature = 0;
+        bootp->Serial = 0;
+        memset(bootp->Volume, 0, 11);
+        memcpy(bootp->Fs, "RDOS    ", 8);
 
-    BootSector[0x1FE] = 0x55;
-    BootSector[0x1FF] = 0xAA;
+        BootSector[0x1FE] = 0x55;
+        BootSector[0x1FF] = 0xAA;
 
-    memcpy(Data, BootSector, 512);
-    e1.Write();
+        memcpy(Data, BootSector, 512);
+        e1.Write();
 
-    delete BootSector;
+        delete BootSector;
+        return true;
+    }
+    return false;
 }
 
 /*##########################################################################
@@ -689,7 +699,7 @@ void TMbrDisc::WriteBootSector()
 #   Returns....: *
 #
 ##########################################################################*/
-void TMbrDisc::WriteBootLoader()
+bool TMbrDisc::WriteBootLoader()
 {
     TDiscReq req(FServer);
     TDiscReqEntry e1(&req, 1, FLoaderSectors, true);
@@ -697,19 +707,25 @@ void TMbrDisc::WriteBootLoader()
 
     req.WaitForever();
 
-    Data = (char *)e1.Map();
+    if (req.IsDone())
+    {
+        Data = (char *)e1.Map();
+  
+        memcpy(Data, FBootLoader, FLoaderSize);
 
-    memcpy(Data, FBootLoader, FLoaderSize);
+        e1.Write();
 
-    e1.Write();
+        return true;
+    }
+    return false;
 }
 
 
 /*##########################################################################
 #
-#   Name       : TMbrDisc::CreatePart
+#   Name       : TMbrDisc::DeletePart
 #
-#   Purpose....: Create partition
+#   Purpose....: Delete partition
 #
 #   In params..: *
 #   Out params.: *
@@ -740,7 +756,10 @@ bool TMbrDisc::CreatePart(int Type, long long Start, long long Sectors)
     part = PartRoot.AddEntry(this, Type, Start, Sectors);
 
     if (part)
+    {
+        Add(part);
         return true;
+    }
     else
         return false;
 }

@@ -94,7 +94,7 @@ public:
     ~TGptDisc();
 
     virtual bool IsGpt();
-    virtual void InitPart();
+    virtual bool InitPart();
     virtual bool LoadPart();
     virtual void AddPart(const char *FsName, long long Sectors);
 

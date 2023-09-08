@@ -31,7 +31,7 @@ static TDisc *Disc = 0;
 #   Returns....: *
 #
 ##########################################################################*/
-void InitDisc(TDiscServer *Server, const char *PartType)
+bool InitDisc(TDiscServer *Server, const char *PartType)
 {
     Disc = 0;
 
@@ -42,7 +42,10 @@ void InitDisc(TDiscServer *Server, const char *PartType)
         Disc = new TGptDisc(Server);
 
     if (Disc)
-        Disc->InitPart();
+        if (Disc->InitPart())
+            return true;
+
+    return false;
 }
 
 /*##########################################################################

@@ -106,10 +106,10 @@ public:
     void Run(TDisc *disc);
     bool IsActive();
 
-    void InitDisc(const char *parttype);
+    bool InitDisc(const char *parttype);
     void AddPartition(const char *FsName, long long Sectors);
 
-    void (*OnInit)(TDiscServer *Server, const char *PartType);
+    bool (*OnInit)(TDiscServer *Server, const char *PartType);
 
 protected:
     void Add(int id, TDiscReq *req);

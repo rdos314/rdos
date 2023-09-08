@@ -619,7 +619,7 @@ int TDiscServer::GetBytesPerSector()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDiscServer::InitDisc(const char *parttype)
+bool TDiscServer::InitDisc(const char *parttype)
 {
     FReloadDisc = true;
 
@@ -631,7 +631,9 @@ void TDiscServer::InitDisc(const char *parttype)
     }
 
     if (OnInit)
-        (*OnInit)(this, parttype);    
+        return (*OnInit)(this, parttype);    
+    else
+        return false;
 }
 
 /*##########################################################################

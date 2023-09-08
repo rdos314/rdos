@@ -116,7 +116,7 @@ public:
 
     virtual bool IsGpt();
     virtual bool LoadPart();    
-    virtual void InitPart();    
+    virtual bool InitPart();    
     virtual void AddPart(const char *FsName, long long Sectors);
 
     TMbrPartitionTable PartRoot;
@@ -126,8 +126,8 @@ protected:
     virtual void DeletePart(TPartition *part);
 
     void LoadBootLoader();
-    void WriteBootSector();
-    void WriteBootLoader();
+    bool WriteBootSector();
+    bool WriteBootLoader();
 
     void AddPossibleFs(struct TMbrPartition *part);
     void AddFsParts(struct TMbrPartitionTable *table);
