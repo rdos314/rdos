@@ -2136,7 +2136,9 @@ hdLoop:
     add ebx,1
     jnc hdRetry
 ;
+    and ds:vfs_flags,NOT VFS_FLAG_BUSY
     WaitForSignal
+    or ds:vfs_flags,VFS_FLAG_BUSY
 
 hdRetry:
     test ds:vfs_flags,VFS_FLAG_STOPPED

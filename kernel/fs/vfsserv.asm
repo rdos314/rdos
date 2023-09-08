@@ -956,14 +956,15 @@ is_vfs_busy_name       DB 'Is VFS Busy',0
 
 is_vfs_busy    Proc far
     push es
-    push ebx
 ;
     call HandleToPartEs
-    mov ebx,es:vfs_scan_pos
-    and ebx,es:vfs_scan_pos+4
-    add ebx,1
+    test es:vfs_flags,NOT VFS_FLAG_BUSY
+    clc
+    jnz ivbDone
 ;
-    pop ebx
+    stc 
+
+ivbDone:
     pop es
     ret
 is_vfs_busy    Endp
