@@ -615,7 +615,6 @@ void StartFs(TPartServer *Server)
     TPartReqEntry e1(&req, 0, 1);
     int FatSize;
 
-    Started = true;
     Fs = 0;
 
     req.WaitForever();
@@ -700,6 +699,9 @@ void StartFs(TPartServer *Server)
             Fs = 0;
         }
     }
+
+    if (Fs)
+        Started = true;
 }
 
 /*##########################################################################
@@ -782,6 +784,9 @@ int FormatFs(TPartServer *Server)
             ok = false;
         }
     }
+
+    if (ok)
+        Started = true;
 
     delete BootSector;
 

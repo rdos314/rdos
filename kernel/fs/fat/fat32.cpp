@@ -277,11 +277,6 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
     int Free1;
     int Free2;
 
-    bool wait = true;
-
-    while (wait)
-        RdosWaitMilli(250);
-
     FatSize = 32;
     PartSectors = boot->base.Sectors;
     if (!PartSectors)
