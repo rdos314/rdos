@@ -42,7 +42,7 @@ struct TFatInfo
     int TrailSign;
 };
 
-#define RESERVED_SECTORS	32
+#define RESERVED_SECTORS	8
 
 /*##########################################################################
 #
@@ -106,7 +106,7 @@ unsigned int TFat32::CalcClusterCount(unsigned int TotalSectors, unsigned int Cl
         FatSectors = 4 * Clusters / 512;
         FatSectors--;
         FatSectors = FatSectors / 8;
-        FatSectors = 8 * (FatSectors + 1);
+        FatSectors = 8 * FatSectors;
         Used = TotalSectors - RESERVED_SECTORS - 4 * FatSectors;
     } 
 
@@ -139,7 +139,7 @@ unsigned int TFat32::CalcFatSectors(unsigned int Clusters)
     FatSectors = 4 * Clusters / 512;
     FatSectors--;
     FatSectors = FatSectors / 8;
-    FatSectors = 8 * (FatSectors + 1);
+    FatSectors = 8 * FatSectors;
 
     return FatSectors;
 }
@@ -165,6 +165,11 @@ bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
     unsigned long lsb, msb;
     int tries;
     int handle = server->GetHandle();
+
+    bool wait = true;
+
+    while (wait)
+        RdosWaitMilli(250);
 
     RdosGetSysTime(&msb, &lsb);
 
