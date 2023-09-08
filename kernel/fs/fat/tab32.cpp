@@ -180,7 +180,7 @@ unsigned int TFatTable32::GetFreeClusters()
 unsigned int TFatTable32::FormatBlock(long long Sector, unsigned int Clusters)
 {
     unsigned int i;
-    unsigned int FreeClusters = 0;
+    unsigned int FreeClusters;
     TPartReqEntry e1(&FReq, Sector, 8, true);
     char *tab;
 
@@ -204,11 +204,15 @@ unsigned int TFatTable32::FormatBlock(long long Sector, unsigned int Clusters)
         tab[9] = 0xFF;
         tab[10] = 0xFF;
         tab[11] = 0x0F;
+
+        FreeClusters = Clusters - 3;
     }
+    else
+        FreeClusters = Clusters;
 
     e1.Write();
 
-    return Clusters;
+    return FreeClusters;
 }
 
 /*##########################################################################
