@@ -388,7 +388,7 @@ void TGptDisc::AddPart(const char *FsName, long long Sectors)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TGptDisc::CreatePart(int Type, long long Start, long long Sectors)
+bool TGptDisc::CreatePart(int Handle, int Type, long long Start, long long Sectors)
 {
     return false;
 }

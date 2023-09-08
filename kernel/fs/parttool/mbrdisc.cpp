@@ -749,7 +749,7 @@ void TMbrDisc::DeletePart(TPartition *part)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TMbrDisc::CreatePart(int Type, long long Start, long long Sectors)
+bool TMbrDisc::CreatePart(int Handle, int Type, long long Start, long long Sectors)
 {
     TMbrPartition *part;
 
@@ -757,6 +757,8 @@ bool TMbrDisc::CreatePart(int Type, long long Start, long long Sectors)
 
     if (part)
     {
+        part->Handle = Handle;
+        part->SetType(Type);
         Add(part);
         return true;
     }
@@ -780,7 +782,8 @@ void TMbrDisc::AddPart(const char *FsName, long long Sectors)
     long long Start;
     long long Count = Sectors;
     int PartType;
-    char Type = 0;
+    int Type;
+    int Handle;
 
     if (Count > 0xFFFFFFFF)
         Count = 0xFFFFFFFF;
@@ -789,27 +792,9 @@ void TMbrDisc::AddPart(const char *FsName, long long Sectors)
 
     if (Start)
     {
-        PartType = FormatPart(FsName, &Start, &Count);
+        Handle = FormatPart(FsName, &Start, &Count, &Type);
 
-        switch (PartType)
-        {
-            case PART_TYPE_FAT12:
-                Type = 1;
-                break;
-
-            case PART_TYPE_FAT16:
-                if (Count > 0xFFFF)
-                    Type = 6;
-                else
-                    Type = 4;
-                break;
-
-            case PART_TYPE_FAT32:
-                Type = 0xC;
-                break;
-        }
-
-        if (Type)
-            CreatePart(Type, (unsigned int)Start, (unsigned int)Count);
+        if (Handle)
+            CreatePart(Handle, Type, (unsigned int)Start, (unsigned int)Count);
     }
 }

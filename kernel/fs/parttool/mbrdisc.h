@@ -122,7 +122,7 @@ public:
     TMbrPartitionTable PartRoot;
 
 protected:
-    virtual bool CreatePart(int Type, long long Start, long long Sectors);
+    virtual bool CreatePart(int Handle, int Type, long long Start, long long Sectors);
     virtual void DeletePart(TPartition *part);
 
     void LoadBootLoader();
