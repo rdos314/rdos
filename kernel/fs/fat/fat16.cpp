@@ -202,11 +202,6 @@ bool TFat16::InitFs(TPartServer *Server, struct TBootSector12_16 *boot)
     int tries;
     int handle = Server->GetHandle();
 
-    bool wait = true;
-
-    while (wait)
-        RdosWaitMilli(250);
-
     RdosGetSysTime(&msb, &lsb);
 
     Size = Adjust(Server);
@@ -275,6 +270,13 @@ TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format)
     int Free1;
     int Free2;
 
+
+    bool wait = true;
+
+    while (wait)
+        RdosWaitMilli(250);
+
+
     FServer = server;
 
     if (format)
@@ -299,7 +301,7 @@ TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format)
         RootSector = Fat2Sector + FatSectors;
         StartSector = RootSector + RootDirEntries / 16;
 
-        Clusters = PartSectors / SectorsPerCluster + 2;
+        Clusters = (PartSectors - StartSector) / SectorsPerCluster + 2;
 
         if (Clusters > 0xFFF0)
             Clusters = 0xFFF0;
