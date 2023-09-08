@@ -206,9 +206,6 @@ unsigned int TFatTable32::FormatBlock(long long Sector, unsigned int Clusters)
         tab[11] = 0x0F;
     }
 
-    tab += 4 * Clusters;
-    memset(tab, 0xFF, 0x1000 - 4 * Clusters);
-
     e1.Write();
 
     return Clusters;
