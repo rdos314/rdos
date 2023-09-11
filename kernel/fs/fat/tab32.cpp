@@ -45,6 +45,10 @@ TFatTable32::TFatTable32(TPartServer *Server)
     FClusters = 0;
     FReqEntry = 0;
     FTab = 0;
+    FAllocateCluster = 2;
+    FModReq = 0;
+    FModTab = 0;
+    FWrite = false;
 
     SetCacheSize(8);
 }
@@ -251,16 +255,60 @@ unsigned int TFatTable32::FormatClusters()
 
 /*##########################################################################
 #
-#   Name       : TFatTable32::GetClusterLink
+#   Name       : TFatTable32::ClearMod
 #
-#   Purpose....: Get cluster link
+#   Purpose....: Clear modify
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-unsigned int TFatTable32::GetClusterLink(unsigned int Cluster)
+void TFatTable32::ClearMod()
+{
+    if (FModReq)
+    {
+        if (FWrite)
+            FModReq->Write();
+
+        FWrite = false;
+        delete FModReq;
+        FModReq = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable32::ClearCache
+#
+#   Purpose....: Clear cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable32::ClearCache()
+{
+    if (FReqEntry)
+    {
+        delete FReqEntry;
+        FReqEntry = 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable32::SetupCache
+#
+#   Purpose....: Setup cache
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable32::SetupCache(unsigned int Cluster)
 {
     int RelSector;
     long long Sector;
@@ -283,7 +331,56 @@ unsigned int TFatTable32::GetClusterLink(unsigned int Cluster)
         FReq.WaitForever();
         FTab = (unsigned int *)FReqEntry->Map();
     }
+}
 
+/*##########################################################################
+#
+#   Name       : TFatTable32::SetupMod
+#
+#   Purpose....: Setup modification
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable32::SetupMod(unsigned int Cluster)
+{
+    int RelSector;
+    long long Sector;
+
+    if (FReqEntry)
+        ClearCache();
+
+    if (!FModReq || Cluster < FModCluster || Cluster >= FModCluster + 512 / 4)
+    {
+        if (FModReq)
+            ClearMod();
+
+        RelSector = Cluster / 512 * 4;
+        FModCluster = RelSector * 512 / 4;
+        Sector = FStartSector + RelSector;
+
+        FModReq = new TPartReqEntry(&FReq, Sector, 1, false);
+        FReq.WaitForever();
+        FModTab = (unsigned int *)FModReq->Map();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable32::GetClusterLink
+#
+#   Purpose....: Get cluster link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatTable32::GetClusterLink(unsigned int Cluster)
+{
+    SetupCache(Cluster);
     return FTab[Cluster - FStartCluster] & 0xFFFFFFF;
 }
 
@@ -300,6 +397,55 @@ unsigned int TFatTable32::GetClusterLink(unsigned int Cluster)
 ##########################################################################*/
 unsigned int TFatTable32::AllocateCluster()
 {
+    unsigned int Cluster = 0;
+    int offset;
+    int size;
+    int i;
+    bool Restarted = false;
+
+    if (FFreeClusters == 0)
+        return 0;
+
+    for (;;)
+    {
+        SetupMod(FAllocateCluster);
+
+        offset = FAllocateCluster % 128;
+        size = 128 - offset;
+
+        for (i = offset; i < size; i++)
+        {
+            if ((FModTab[i] & 0x0FFFFFFF) == 0)
+            {
+                Cluster = FModCluster + i;
+                break;
+            }
+        }
+
+        if (Cluster)
+        {
+            FModTab[Cluster - FModCluster] |= 0x0FFFFFFF;
+            FWrite = true;
+            FAllocateCluster = Cluster + 1;
+            FFreeClusters--;
+            return Cluster;
+        }
+
+        FAllocateCluster = FModCluster + 128;
+        if (FAllocateCluster > FClusters)
+        {
+            FAllocateCluster = 2;
+
+            if (Restarted)
+            {
+                FFreeClusters = 0;
+                return 0;
+            }
+            else
+                Restarted = true;
+        }
+    }
+
     return 0;
 }
 
@@ -316,7 +462,17 @@ unsigned int TFatTable32::AllocateCluster()
 ##########################################################################*/
 bool TFatTable32::ReserveCluster(unsigned int Cluster)
 {
-    return false;
+    SetupMod(Cluster);
+
+    if ((FModTab[Cluster - FModCluster] & 0x0FFFFFFF) == 0)
+    {
+        FModTab[Cluster - FModCluster] |= 0x0FFFFFFF;
+        FWrite = true;
+        FFreeClusters--;
+        return true;
+    }
+    else
+        return false;
 }
 
 /*##########################################################################
@@ -332,6 +488,15 @@ bool TFatTable32::ReserveCluster(unsigned int Cluster)
 ##########################################################################*/
 void TFatTable32::LinkCluster(unsigned int Cluster, unsigned int Link)
 {
+    unsigned int val;
+
+    SetupMod(Cluster);
+
+    val = FModTab[Cluster - FModCluster];
+    val &= 0xF0000000;
+    val |= Link & 0x0FFFFFFF;
+    FModTab[Cluster - FModCluster] = val;
+    FWrite = true;
 }
 
 /*##########################################################################
@@ -347,6 +512,9 @@ void TFatTable32::LinkCluster(unsigned int Cluster, unsigned int Link)
 ##########################################################################*/
 void TFatTable32::LinkCluster(unsigned int Cluster)
 {
+    SetupMod(Cluster);
+    FModTab[Cluster - FModCluster] |= 0x0FFFFFFF;
+    FWrite = true;
 }
 
 /*##########################################################################
@@ -362,6 +530,10 @@ void TFatTable32::LinkCluster(unsigned int Cluster)
 ##########################################################################*/
 void TFatTable32::FreeCluster(unsigned int Cluster)
 {
+    SetupMod(Cluster);
+    FModTab[Cluster - FModCluster] &= 0xF0000000;
+    FFreeClusters++;
+    FWrite = true;
 }
 
 /*##########################################################################
@@ -377,4 +549,6 @@ void TFatTable32::FreeCluster(unsigned int Cluster)
 ##########################################################################*/
 void TFatTable32::Complete()
 {
+    if (FModReq)
+        ClearMod();
 }

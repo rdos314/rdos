@@ -349,7 +349,7 @@ void TFatTable16::SetupMod(unsigned int Cluster)
     if (FReqEntry)
         ClearCache();
 
-    if (!FModReq || Cluster < FModCluster || Cluster >= FModCluster + 256)
+    if (!FModReq || Cluster < FModCluster || Cluster >= FModCluster + 512 / 2)
     {
         if (FModReq)
             ClearMod();
