@@ -217,7 +217,7 @@ bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
     FatSectors = CalcFatSectors(Clusters);
 
     Clusters = FatSectors * 512 / 4;
-    Size = Clusters * ClusterSize + 2 * FatSectors + RESERVED_SECTORS;
+    Size = (Clusters - 2) * ClusterSize + 2 * FatSectors + RESERVED_SECTORS;
 
     boot->base.Sectors = Size;
     boot->base.SectorCount16 = 0;
