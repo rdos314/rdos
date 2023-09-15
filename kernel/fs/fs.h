@@ -58,9 +58,9 @@ public:
     struct RdosDirEntry *GetEntry();
 
     void Advance();
+    void Process();
 
 protected:
-    void Process();
 
     int CurrIndex;
     struct RdosDirEntry *CurrEntry;

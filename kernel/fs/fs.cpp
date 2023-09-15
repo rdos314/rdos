@@ -1066,7 +1066,10 @@ int TFs::CreateFile(int rel, char *path, int attrib)
             dir->UnlockDir();
 
             if (ok)
+            {
+                Parser.Process();
                 file = Parser.GetFile();
+            }
         }
     }
 
