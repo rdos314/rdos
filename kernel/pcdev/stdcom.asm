@@ -3279,6 +3279,47 @@ FintekStealFdc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           FintekStealKbd
+;
+;       DESCRIPTION:    Steal KBD IRQ
+;
+;       RETURNS:        NC		Stolen
+;                           CL          IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FintekStealKbd      Proc near
+    mov al,7
+    out 2Eh,al
+    mov al,5
+    out 2Fh,al
+;
+    mov al,70h
+    out 2Eh,al
+    in al,2Fh
+    or al,al
+    jz fskFail
+;
+    mov cl,al
+    mov al,30h
+    out 2Eh,al
+    in al,2Fh
+    test al,1
+    jnz fskFail
+;
+    clc
+    jmp fskDone
+
+fskFail:
+    stc
+
+fskDone:
+    ret
+FintekStealKbd      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           FintekStealEpc
 ;
 ;       DESCRIPTION:    Steal EPC IRQ
@@ -3326,7 +3367,7 @@ FintekStealEpc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupFintekPort
+;       NAME:           SetupFintekPort866
 ;
 ;       DESCRIPTION:    Setup Fintek port
 ;
@@ -3335,7 +3376,7 @@ FintekStealEpc      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupFintekPort      Proc near
+SetupFintekPort866      Proc near
     mov al,7
     out 2Eh,al
     mov al,bl
@@ -3355,7 +3396,7 @@ SetupFintekPort      Proc near
     out 2Eh,al
     in al,2Fh
     test al,1
-    jz sfpFail
+    jz sfpFail866
 ;
     mov al,70h
     out 2Eh,al
@@ -3364,26 +3405,26 @@ SetupFintekPort      Proc near
     mov ax,1
     shl ax,cl
     test ax,si
-    jz sfpAdd
+    jz sfpAdd866
 ;
     call FintekStealFdc
-    jc sfpEpc
+    jc sfpEpc866
 ;
     mov ax,1
     shl ax,cl
     test ax,si
-    jz sfpAdd
+    jz sfpAdd866
 
-sfpEpc:
+sfpEpc866:
     call FintekStealEpc
-    jc sfpFail
+    jc sfpFail866
 ;
     mov ax,1
     shl ax,cl
     test ax,si
-    jnz sfpFail
+    jnz sfpFail866
 
-sfpAdd:
+sfpAdd866:
     push bx
     push cx
     or si,ax
@@ -3425,49 +3466,200 @@ sfpAdd:
     xor al,al
     out 2Fh,al
     clc
-    jmp sfpDone
+    jmp sfpDone866
 
-sfpFail:
+sfpFail866:
     stc
 
-sfpDone:    
+sfpDone866:    
     ret
-SetupFintekPort      Endp
+SetupFintekPort866      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           SetupFintek
+;       NAME:           SetupFintek866
 ;
 ;       DESCRIPTION:    Setup Fintek controller
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupFintek      Proc near
+SetupFintek866      Proc near
     xor si,si
 ;    
     mov bl,10h
-    call SetupFintekPort
+    call SetupFintekPort866
 ;    
     mov bl,11h
-    call SetupFintekPort
+    call SetupFintekPort866
 ;    
     mov bl,12h
-    call SetupFintekPort
+    call SetupFintekPort866
 ;    
     mov bl,13h
-    call SetupFintekPort
+    call SetupFintekPort866
 ;    
     mov bl,14h
-    call SetupFintekPort
+    call SetupFintekPort866
 ;    
     mov bl,15h
-    call SetupFintekPort
+    call SetupFintekPort866
 ;
     mov al,0AAh
     out 2Eh,al
     ret
-SetupFintek     Endp
+SetupFintek866     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupFintekPort966
+;
+;       DESCRIPTION:    Setup Fintek port
+;
+;       PARAMETERS:     BL      Index (10h..15h)
+;                       SI      Used IRQs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupFintekPort966      Proc near
+    mov al,7
+    out 2Eh,al
+    mov al,bl
+    out 2Fh,al
+;
+    mov al,60h
+    out 2Eh,al
+    in al,2Fh
+    mov dh,al
+;
+    mov al,61h
+    out 2Eh,al
+    in al,2Fh
+    mov dl,al
+;    
+    mov al,30h
+    out 2Eh,al
+    in al,2Fh
+    test al,1
+    jz sfpFail966
+;
+    mov al,70h
+    out 2Eh,al
+    in al,2Fh
+    mov cl,al
+    mov ax,1
+    shl ax,cl
+    test ax,si
+    jz sfpAdd966
+;
+    mov ax,1
+    shl ax,cl
+    test ax,si
+    jz sfpAdd966
+;
+    call FintekStealKbd
+    jc sfpEpc966
+;
+    mov ax,1
+    shl ax,cl
+    test ax,si
+    jz sfpAdd966
+
+sfpEpc966:
+    call FintekStealEpc
+    jc sfpFail966
+;
+    mov ax,1
+    shl ax,cl
+    test ax,si
+    jnz sfpFail966
+
+sfpAdd966:
+    push bx
+    push cx
+    or si,ax
+    mov al,cl
+    mov ah,FLG_FINTEK
+    mov ecx,115200   
+    call AddIoPort
+    call InitDetect
+    pop cx
+    pop bx
+;
+    mov al,7
+    out 2Eh,al
+    mov al,bl
+    out 2Fh,al
+;
+    mov al,70h
+    out 2Eh,al
+    mov al,cl
+    out 2Fh,al
+;
+    mov al,0F0h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+;
+    mov al,0F2h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+;
+    mov al,0F4h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+;
+    mov al,0F5h
+    out 2Eh,al
+    xor al,al
+    out 2Fh,al
+    clc
+    jmp sfpDone966
+
+sfpFail966:
+    stc
+
+sfpDone966:    
+    ret
+SetupFintekPort966      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           SetupFintek966
+;
+;       DESCRIPTION:    Setup Fintek controller
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupFintek966      Proc near
+    xor si,si
+;    
+    mov bl,10h
+    call SetupFintekPort966
+;    
+    mov bl,11h
+    call SetupFintekPort966
+;    
+    mov bl,12h
+    call SetupFintekPort966
+;    
+    mov bl,13h
+    call SetupFintekPort966
+;    
+    mov bl,14h
+    call SetupFintekPort966
+;    
+    mov bl,15h
+    call SetupFintekPort966
+;
+    mov al,0AAh
+    out 2Eh,al
+    ret
+SetupFintek966     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3499,7 +3691,7 @@ SetupSio      Proc near
     out 2Eh,al
     in al,2Fh
     cmp al,10h
-    jne ssFail
+    jne ssTry966
 ;
     mov al,21h
     out 2Eh,al
@@ -3507,7 +3699,21 @@ SetupSio      Proc near
     cmp al,10h
     jne ssFail
 ;
-    call SetupFintek
+    call SetupFintek866
+    clc
+    jmp ssDone
+
+ssTry966:
+    cmp al,15h
+    jne ssFail
+;
+    mov al,21h
+    out 2Eh,al
+    in al,2Fh
+    cmp al,2
+    jne ssFail
+;
+    call SetupFintek966
     clc
     jmp ssDone
 
