@@ -73,6 +73,9 @@ protected:
     void Add(int pos, const char *name, struct TFatDirEntry *fat);
     void AddLfn(int pos, struct TFatDirEntry *entry);
 
+    void ProcessCluster(unsigned int Cluster, int *pos);
+    void ProcessClusters();
+
     int FreeEntries;
     int FreeCount;
     unsigned short int *FreeArr;

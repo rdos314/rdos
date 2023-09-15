@@ -245,55 +245,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 ##########################################################################*/
 TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 {
-    TPartReq *Req;
-    TPartReqEntry *ReqEntry;
-    int size;
-    int i, j, k;
-    long long Sector;
-    int Pos = 1;
-    TFatDir *Dir;
-    struct TFatDirEntry *FatDirEntry;
-
-    Dir = new TFatDir(this, ParentDir, ParentIndex, StartSector, Inode);
-
-    size = Dir->GetClusterCount();
-
-    if (size)
-    {
-        for (i = 0; i < size; i++)
-        {
-            Sector = StartSector + (Dir->GetCluster(i) - 2) * SectorsPerCluster;
-
-            Req = new TPartReq(FServer);
-            ReqEntry = new TPartReqEntry(Req, Sector, SectorsPerCluster);
-
-            Req->WaitForever();
-
-            if (Req->IsDone())
-            {
-                FatDirEntry = (struct TFatDirEntry *)ReqEntry->Map();
-
-                for (j = 0; j < SectorsPerCluster; j++)
-                {
-                    for (k = 0; k < 16; k++)
-                    {
-                        if (FatDirEntry->Base[0])
-                            Dir->Add(Pos, FatDirEntry);
-                        else
-                            Dir->AddFree(Pos);
-
-                        FatDirEntry++;
-                        Pos++;
-                    }
-                    Sector++;
-                }
-            }
-
-            delete ReqEntry;
-            delete Req;
-        }
-    }
-    return Dir;
+    return new TFatDir(this, ParentDir, ParentIndex, StartSector, Inode);
 }
 
 /*##########################################################################

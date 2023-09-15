@@ -78,6 +78,8 @@ public:
     TFs(TPartServer *server);
     virtual ~TFs();
 
+    TPartServer *GetServer();
+
     virtual void Stop();
     virtual void Run();
 

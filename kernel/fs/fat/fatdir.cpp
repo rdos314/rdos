@@ -78,6 +78,8 @@ TFatDir::TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, long long StartSec
 
     FStartSector = StartSector;
     FSectorCount = 0;
+
+    ProcessClusters();
 }
 
 /*##########################################################################
@@ -421,6 +423,69 @@ void TFatDir::GrowFree(int count)
 
     FreeArr = NewArr;
     FreeCount = Size;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::ProcessCluster
+#
+#   Purpose....: Process cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::ProcessCluster(unsigned int Cluster, int *Pos)
+{
+    long long Sector = FFat->StartSector + (Cluster - 2) * FFat->SectorsPerCluster;
+    TPartReq Req(FFat->GetServer());
+    TPartReqEntry ReqEntry(&Req, Sector, FFat->SectorsPerCluster);
+    struct TFatDirEntry *FatDirEntry;
+    int j;
+    int k;
+
+    Req.WaitForever();
+
+    if (Req.IsDone())
+    {
+        FatDirEntry = (struct TFatDirEntry *)ReqEntry.Map();
+
+        for (j = 0; j < FFat->SectorsPerCluster; j++)
+        {
+            for (k = 0; k < 16; k++)
+            {
+                if (FatDirEntry->Base[0])
+                    Add(*Pos, FatDirEntry);
+                else
+                    AddFree(*Pos);
+
+                FatDirEntry++;
+                (*Pos)++;
+            }
+            Sector++;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::ProcessClusters
+#
+#   Purpose....: Process clusters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::ProcessClusters()
+{
+    int i;
+    int pos = 1;
+
+    for (i = 0; i < FClusterCount; i++)
+        ProcessCluster(FClusterArr[i], &pos);
 }
 
 /*##########################################################################
