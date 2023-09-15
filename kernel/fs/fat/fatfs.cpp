@@ -197,39 +197,7 @@ void TFat::FormatFixedDir(long long RootSector, int RootDirEntries)
 ##########################################################################*/
 TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 {
-    int Sectors = RootDirEntries / 16;
-    TPartReq Req(FServer);
-    TPartReqEntry ReqEntry(&Req, RootSector, Sectors);
-    unsigned int Sector = (unsigned int)RootSector;
-    int Pos = 1;
-    int i, j;
-    TFatDir *Dir;
-    struct TFatDirEntry *FatDirEntry;
-
-    Dir = new TFatDir(RootSector, Sectors);
-
-    Req.WaitForever();
-
-    if (Req.IsDone())
-    {
-        FatDirEntry = (struct TFatDirEntry *)ReqEntry.Map();
-
-        for (i = 0; i < Sectors; i++)
-        {
-            for (j = 0; j < 16; j++)
-            {
-                if (FatDirEntry->Base[0])
-                    Dir->Add(Pos, FatDirEntry);
-                else
-                    Dir->AddFree(Pos);
-
-                FatDirEntry++;
-                Pos++;
-            }
-            Sector++;
-        }
-    }
-    return Dir;
+    return new TFatDir(this, RootSector, RootDirEntries / 16);
 }
 
 /*##########################################################################

@@ -43,13 +43,16 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFatDir::TFatDir(long long RootSector, int Sectors)
+TFatDir::TFatDir(TFat *Fat, long long RootSector, int Sectors)
   : TDir(0, 0)
 {
     Init();
 
+    FFat = Fat;
     FStartSector = RootSector;
     FSectorCount = Sectors;
+
+    ProcessFixed();
 }
 
 /*##########################################################################
@@ -427,6 +430,47 @@ void TFatDir::GrowFree(int count)
 
 /*##########################################################################
 #
+#   Name       : TFatDir::ProcessFixed
+#
+#   Purpose....: Process fixed dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::ProcessFixed()
+{
+    TPartReq Req(FFat->GetServer());
+    TPartReqEntry ReqEntry(&Req, FStartSector, FSectorCount);
+    int Pos = 1;
+    int i, j;
+    struct TFatDirEntry *FatDirEntry;
+
+    Req.WaitForever();
+
+    if (Req.IsDone())
+    {
+        FatDirEntry = (struct TFatDirEntry *)ReqEntry.Map();
+
+        for (i = 0; i < FSectorCount; i++)
+        {
+            for (j = 0; j < 16; j++)
+            {
+                if (FatDirEntry->Base[0])
+                    Add(Pos, FatDirEntry);
+                else
+                    AddFree(Pos);
+
+                FatDirEntry++;
+                Pos++;
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFatDir::ProcessCluster
 #
 #   Purpose....: Process cluster
@@ -463,7 +507,6 @@ void TFatDir::ProcessCluster(unsigned int Cluster, int *Pos)
                 FatDirEntry++;
                 (*Pos)++;
             }
-            Sector++;
         }
     }
 }

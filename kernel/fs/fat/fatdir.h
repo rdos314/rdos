@@ -44,7 +44,7 @@ class TFat;
 class TFatDir : public TDir
 {
 public:
-    TFatDir(long long RootSector, int Sectors);
+    TFatDir(TFat *Fat, long long RootSector, int Sectors);
     TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, long long StartSector, unsigned int Cluster);
     virtual ~TFatDir();
 
@@ -73,6 +73,7 @@ protected:
     void Add(int pos, const char *name, struct TFatDirEntry *fat);
     void AddLfn(int pos, struct TFatDirEntry *entry);
 
+    void ProcessFixed();
     void ProcessCluster(unsigned int Cluster, int *pos);
     void ProcessClusters();
 
