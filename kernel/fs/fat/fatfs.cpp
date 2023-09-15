@@ -710,6 +710,31 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 
 /*##########################################################################
 #
+#   Name       : TFat::CreateFile
+#
+#   Purpose....: Create file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat::CreateFile(TDir *ParentDir, const char *Name, int Attrib)
+{
+    TFatDir *dir = (TFatDir *)ParentDir;
+    char fattr = EncodeAttrib(Attrib);
+    bool ok;
+
+    if (fattr & 0x10)
+        ok = false;
+    else
+        ok = CreateDirEntry(dir, Name, 0, fattr);
+
+    return ok;
+}
+
+/*##########################################################################
+#
 #   Name       : VerifySector
 #
 #   Purpose....:

@@ -94,6 +94,7 @@ public:
     virtual TDir *CacheDir(TDir *ParentDir, int ParentIndex, long long Inode);
     virtual TFile *OpenFile(TDir *ParentDir, int ParentIndex, long long Inode);
     virtual bool CreateDir(TDir *ParentDir, const char *Name);
+    virtual bool CreateFile(TDir *ParentDir, const char *Name, int Attrib);
 
     void Test();
 

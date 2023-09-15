@@ -1039,6 +1039,8 @@ int TFs::CreateFile(int rel, char *path, int attrib)
 {
     TParser Parser(GetStartDir(rel), path);
     TFile *file;
+    TDir *dir;
+    bool ok;
 
     if (FStopped)
         return -1;
@@ -1052,6 +1054,21 @@ int TFs::CreateFile(int rel, char *path, int attrib)
     }
 
     file = Parser.GetFile();
+
+    if (!file)
+    {
+        dir = Parser.GetDir();
+
+        if (dir)
+        {
+            dir->LockDir();
+            ok = CreateFile(dir, path, attrib);
+            dir->UnlockDir();
+
+            if (ok)
+                file = Parser.GetFile();
+        }
+    }
 
     if (file)
     {
