@@ -64,7 +64,7 @@ public:
     void AddFree(int pos);
     void RemoveFree(int pos);
 
-    int AllocateEntry(int count);
+    bool CreateDirEntry(const char *name, unsigned int cluster, char attr);
 
 protected:
     void GrowLfn();
@@ -76,6 +76,10 @@ protected:
     void ProcessFixed();
     void ProcessCluster(unsigned int Cluster, int *pos);
     void ProcessClusters();
+
+    int AllocateEntry(int count);
+    void SetupStdEntry(struct TFatDirEntry *entry, int pos);
+    bool SetupLfnEntry(struct TFatDirEntry *entry, TFatLfn *lfn, const char *name);
 
     int FreeEntries;
     int FreeCount;

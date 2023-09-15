@@ -334,193 +334,6 @@ void TFat::Complete()
 
 /*##########################################################################
 #
-#   Name       : TFat::AllocateDirEntry
-#
-#   Purpose....: Allocate dir entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFat::AllocateDirEntry(TFatDir *dir, int count)
-{
-    return dir->AllocateEntry(count);
-}
-
-/*##########################################################################
-#
-#   Name       : TFat::SetupStdEntry
-#
-#   Purpose....: Setup std entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFat::SetupStdEntry(TFatDir *dir, struct TFatDirEntry *entry, int pos)
-{
-    long long Sector = dir->GetSector(pos);
-    TPartReq Req(FServer);
-    TPartReqEntry ReqEntry(&Req, Sector, 1, false);
-    struct TFatDirEntry *e;
-
-    Req.WaitForever();
-
-    e = (struct TFatDirEntry *)ReqEntry.Map();
-    e += dir->GetIndex(pos);
-
-    memcpy(e, entry, sizeof(struct TFatDirEntry));
-    ReqEntry.Write();
-
-    dir->AddStd(pos, entry);
-}
-
-/*##########################################################################
-#
-#   Name       : TFat::SetupLfnEntry
-#
-#   Purpose....: Setup LFN entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TFat::SetupLfnEntry(TFatDir *dir, struct TFatDirEntry *entry, TFatLfn *lfn, const char *name)
-{
-    TPartReq *Req;
-    TPartReqEntry *ReqEntry;
-    long long Sector;
-    long long Next;
-    struct TFatDirEntry *e;
-    char chksum;
-    int i;
-    int pos;
-    int count = lfn->GetEntryCount();
-
-    pos = AllocateDirEntry(dir, count);
-
-    if (pos)
-    {   
-        Sector = dir->GetSector(pos);
-
-        Req = new TPartReq(FServer);
-        ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
-
-        Req->WaitForever();
-
-        e = (struct TFatDirEntry *)ReqEntry->Map();
-        e += dir->GetIndex(pos);
-
-        chksum = ::GetChkSum(entry);
-        lfn->SetChkSum(chksum);
-
-        for (i = 0; i < count; i++)
-        {        
-            if (i == count - 1)
-            {
-                memcpy(e, entry, sizeof(struct TFatDirEntry));
-                break;
-            }
-            else
-                lfn->GetEntry(e);
-
-            pos++;
-            e++;
-
-            Next = dir->GetSector(pos);
-            if (Next != Sector)
-            {
-                ReqEntry->Write();
-                delete ReqEntry;
-                delete Req;
-
-                Sector = Next;
-
-                Req = new TPartReq(FServer);
-                ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
-
-                Req->WaitForever();
-                e = (struct TFatDirEntry *)ReqEntry->Map();
-            }
-        }
-        
-        ReqEntry->Write();
-
-        delete ReqEntry;
-        delete Req;
-
-        dir->AddLfn(pos, name, entry);
-
-        return true;
-    }
-    else
-        return false;
-    
-}
-
-/*##########################################################################
-#
-#   Name       : TFat::CreateDirEntry
-#
-#   Purpose....: Create dir entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TFat::CreateDirEntry(TFatDir *dir, const char *name, unsigned int cluster, char attr)
-{
-    struct TFatDirEntry entry;
-    TFatLfn lfn;
-    long long RdosTime = RdosGetLongTime();
-    int i;
-    char str[14];
-    int count;
-    int pos;
-
-    entry.Attr = attr;
-    entry.Resv1 = 0;
-    entry.FileSize = 0;
-    entry.ClusterLow = cluster & 0xFFFF;
-    entry.ClusterHi = cluster >> 16;
-    SetCreateTime(&entry, RdosTime);
-    SetAccessTime(&entry, RdosTime);
-    SetWriteTime(&entry, RdosTime);
-
-    if (IsValidShortName(name))
-    {
-        SetEntryName(&entry, name);
-        pos = AllocateDirEntry(dir, 1);
-        if (pos)
-        {
-            SetupStdEntry(dir, &entry, pos);
-            return true;
-        }
-        else
-            return false;
-    }
-    else
-    {
-        lfn.SetName(name);
-        count = lfn.GetEntryCount();
-
-        for (i = 1; i < 99999; i++)
-        {
-            GenerateShortName(name, i, str);
-            if (!dir->FindLfn(str) && dir->Find(str) == DIR_NOT_FOUND)
-                break;
-        }
-        SetEntryName(&entry, str);
-        return SetupLfnEntry(dir, &entry, &lfn, name);
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : TFat::InitDir
 #
 #   Purpose....: Init directory
@@ -595,7 +408,7 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
     if (Cluster)
     {
         InitDir(dir, Cluster);
-        ok = CreateDirEntry(dir, Name, Cluster, 0x10);
+        ok = dir->CreateDirEntry(Name, Cluster, 0x10);
     }
 
     return ok;
@@ -621,7 +434,7 @@ bool TFat::CreateFile(TDir *ParentDir, const char *Name, int Attrib)
     if (fattr & 0x10)
         ok = false;
     else
-        ok = CreateDirEntry(dir, Name, 0, fattr);
+        ok = dir->CreateDirEntry(Name, 0, fattr);
 
     return ok;
 }

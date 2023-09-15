@@ -614,7 +614,7 @@ long long TFatDir::GetSector(int pos)
             cluster = entry / FSectorsPerCluster;
             entry = entry % FSectorsPerCluster;
             if (cluster < FClusterCount)
-                return FStartSector + (FClusterArr[cluster] - 2) * FSectorsPerCluster + entry;            
+                return FStartSector + (FClusterArr[cluster] - 2) * FSectorsPerCluster + entry;
         }
         else
         {
@@ -674,7 +674,7 @@ void TFatDir::AddFree(int pos)
         if (entry >= FreeCount)
             GrowFree(entry);
 
-        FreeArr[entry] |= mask;            
+        FreeArr[entry] |= mask;
         FreeEntries++;
     }
 }
@@ -706,7 +706,7 @@ void TFatDir::RemoveFree(int pos)
 
         if (entry < FreeCount)
         {
-            FreeArr[entry] &= ~mask;            
+            FreeArr[entry] &= ~mask;
             FreeEntries--;
         }
     }
@@ -784,4 +784,175 @@ int TFatDir::AllocateEntry(int count)
         }
     }
     return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::SetupStdEntry
+#
+#   Purpose....: Setup std entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::SetupStdEntry(struct TFatDirEntry *entry, int pos)
+{
+    long long Sector = GetSector(pos);
+    TPartReq Req(FFat->GetServer());
+    TPartReqEntry ReqEntry(&Req, Sector, 1, false);
+    struct TFatDirEntry *e;
+
+    Req.WaitForever();
+
+    e = (struct TFatDirEntry *)ReqEntry.Map();
+    e += GetIndex(pos);
+
+    memcpy(e, entry, sizeof(struct TFatDirEntry));
+    ReqEntry.Write();
+
+    AddStd(pos, entry);
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::SetupLfnEntry
+#
+#   Purpose....: Setup LFN entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatDir::SetupLfnEntry(struct TFatDirEntry *entry, TFatLfn *lfn, const char *name)
+{
+    TPartReq *Req;
+    TPartReqEntry *ReqEntry;
+    long long Sector;
+    long long Next;
+    struct TFatDirEntry *e;
+    char chksum;
+    int i;
+    int pos;
+    int count = lfn->GetEntryCount();
+
+    pos = AllocateEntry(count);
+
+    if (pos)
+    {
+        Sector = GetSector(pos);
+
+        Req = new TPartReq(FFat->GetServer());
+        ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
+
+        Req->WaitForever();
+
+        e = (struct TFatDirEntry *)ReqEntry->Map();
+        e += GetIndex(pos);
+
+        chksum = ::GetChkSum(entry);
+        lfn->SetChkSum(chksum);
+
+        for (i = 0; i < count; i++)
+        {
+            if (i == count - 1)
+            {
+                memcpy(e, entry, sizeof(struct TFatDirEntry));
+                break;
+            }
+            else
+                lfn->GetEntry(e);
+
+            pos++;
+            e++;
+
+            Next = GetSector(pos);
+            if (Next != Sector)
+            {
+                ReqEntry->Write();
+                delete ReqEntry;
+                delete Req;
+
+                Sector = Next;
+
+                Req = new TPartReq(FFat->GetServer());
+                ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
+
+                Req->WaitForever();
+                e = (struct TFatDirEntry *)ReqEntry->Map();
+            }
+        }
+
+        ReqEntry->Write();
+
+        delete ReqEntry;
+        delete Req;
+
+        AddLfn(pos, name, entry);
+
+        return true;
+    }
+    else
+        return false;
+
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::CreateDirEntry
+#
+#   Purpose....: Create dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatDir::CreateDirEntry(const char *name, unsigned int cluster, char attr)
+{
+    struct TFatDirEntry entry;
+    TFatLfn lfn;
+    long long RdosTime = RdosGetLongTime();
+    int i;
+    char str[14];
+    int count;
+    int pos;
+
+    entry.Attr = attr;
+    entry.Resv1 = 0;
+    entry.FileSize = 0;
+    entry.ClusterLow = cluster & 0xFFFF;
+    entry.ClusterHi = cluster >> 16;
+    SetCreateTime(&entry, RdosTime);
+    SetAccessTime(&entry, RdosTime);
+    SetWriteTime(&entry, RdosTime);
+
+    if (IsValidShortName(name))
+    {
+        SetEntryName(&entry, name);
+        pos = AllocateEntry(1);
+        if (pos)
+        {
+            SetupStdEntry(&entry, pos);
+            return true;
+        }
+        else
+            return false;
+    }
+    else
+    {
+        lfn.SetName(name);
+        count = lfn.GetEntryCount();
+
+        for (i = 1; i < 99999; i++)
+        {
+            GenerateShortName(name, i, str);
+            if (!FindLfn(str) && Find(str) == DIR_NOT_FOUND)
+                break;
+        }
+        SetEntryName(&entry, str);
+        return SetupLfnEntry(&entry, &lfn, name);
+    }
 }
