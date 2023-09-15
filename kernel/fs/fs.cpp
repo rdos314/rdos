@@ -1026,6 +1026,47 @@ int TFs::OpenFile(int rel, char *path)
 
 /*##########################################################################
 #
+#   Name       : TFs::CreateFile
+#
+#   Purpose....: Create file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::CreateFile(int rel, char *path, int attrib)
+{
+    TParser Parser(GetStartDir(rel), path);
+    TFile *file;
+
+    if (FStopped)
+        return -1;
+
+    while (!Parser.IsLast())
+    {
+        if (Parser.IsDir())
+            Parser.Advance();
+        else
+            return -1;
+    }
+
+    file = Parser.GetFile();
+
+    if (file)
+    {
+        if (!FServerActive)
+            StartServer();
+
+        printf("Create %d <%s>\r\n", file->Index, path);
+        return file->Handle;
+    }
+    else
+        return -1;
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::CreateDir
 #
 #   Purpose....: Create dir

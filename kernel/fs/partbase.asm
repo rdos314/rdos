@@ -454,7 +454,19 @@ LocalOpenFile Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern LowCreateFile:near
+
 LocalCreateFile Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    mov ecx,[edi].fc_ecx
+    add edi,SIZE vfs_cmd_struc
+    push ecx
+    mov esi,esp
+    call LowCreateFile
+    pop ecx
+    pop edi
+;
     mov ebx,[edi].fc_handle
     ReplyVfsCmd
     ret

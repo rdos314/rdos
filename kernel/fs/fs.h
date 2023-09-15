@@ -97,6 +97,7 @@ public:
     int GetRelDir(int rel, char *path);
 
     int OpenFile(int rel, char *path);
+    int CreateFile(int rel, char *path, int attrib);
     int GetFileHandle(int handle);
     int GetFileAttrib(int handle);
     void CloseFile(int handle);

@@ -38,6 +38,7 @@ void UnlockRelDir(int rel);
 int GetRelDir(int rel, char *path);
 void ReadDirLink(void *dir, int index);
 int OpenFile(int rel, char *path);
+int CreateFile(int rel, char *path, int attrib);
 int GetFileAttrib(int handle);
 int GetFileHandle(int handle);
 void CloseFile(int handle);
@@ -184,6 +185,17 @@ void LowReadDirLink(void *dir, int index)
 int LowOpenFile(int rel, char *path)
 {
     return OpenFile(rel, path);
+}
+
+/*##########################################################################
+#
+#   Name       : LowCreateFile
+#
+##########################################################################*/
+#pragma aux LowCreateFile "*" parm routine [eax] [edi] [ecx] value [eax]
+int LowCreateFile(int rel, char *path, int attrib)
+{
+    return CreateFile(rel, path, attrib);
 }
 
 /*##########################################################################

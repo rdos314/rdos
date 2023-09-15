@@ -133,6 +133,14 @@ int OpenFile(int rel, char *path)
         return 0;
 }
 
+int CreateFile(int rel, char *path, int attrib)
+{
+    if (Fs)
+        return Fs->CreateFile(rel, path, attrib);
+    else
+        return 0;
+}
+
 int GetFileAttrib(int handle)
 {
     if (Fs)
