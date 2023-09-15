@@ -64,7 +64,10 @@ public:
     void AddFree(int pos);
     void RemoveFree(int pos);
 
-    bool CreateDirEntry(const char *name, unsigned int cluster, char attr);
+    bool CreateDirEntry(const char *name, unsigned int cluster);
+    bool CreateFileEntry(const char *name, unsigned int cluster, char attr);
+
+    static void InitDir(TFat *Fat, unsigned int Cluster);
 
 protected:
     void GrowLfn();
@@ -80,6 +83,8 @@ protected:
     int AllocateEntry(int count);
     void SetupStdEntry(struct TFatDirEntry *entry, int pos);
     bool SetupLfnEntry(struct TFatDirEntry *entry, TFatLfn *lfn, const char *name);
+    bool CreateEntry(const char *name, unsigned int cluster, char attr);
+    void InitDir(unsigned int cluster);
 
     int FreeEntries;
     int FreeCount;

@@ -334,59 +334,6 @@ void TFat::Complete()
 
 /*##########################################################################
 #
-#   Name       : TFat::InitDir
-#
-#   Purpose....: Init directory
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFat::InitDir(TFatDir *Parent, unsigned int Cluster)
-{
-    long long RdosTime = RdosGetLongTime();
-    TPartReq req(FServer);
-    TPartReqEntry e1(&req, StartSector + (Cluster - 2) * SectorsPerCluster, SectorsPerCluster, true);
-    char *Data;
-    struct TFatDirEntry *entry;
-
-    req.WaitForever();
-
-    Data = (char *)e1.Map();
-    memset(Data, 0, 512 * SectorsPerCluster);
-
-    if (Parent)
-    {
-        entry = (struct TFatDirEntry *)Data;
-        strcpy(entry->Base, ".          ");
-        entry->Attr = 0x10;
-        entry->Resv1 = 0;
-        entry->FileSize = 0;
-        entry->ClusterLow = Cluster & 0xFFFF;
-        entry->ClusterHi = Cluster >> 16;
-        SetCreateTime(entry, RdosTime);
-        SetAccessTime(entry, RdosTime);
-        SetWriteTime(entry, RdosTime);
-
-        Cluster = (unsigned int)Parent->GetInode();
-        entry = (struct TFatDirEntry *)(Data + 0x20);
-        strcpy(entry->Base, "..         ");
-        entry->Attr = 0x10;
-        entry->Resv1 = 0;
-        entry->FileSize = 0;
-        entry->ClusterLow = Cluster & 0xFFFF;
-        entry->ClusterHi = Cluster >> 16;
-        SetCreateTime(entry, RdosTime);
-        SetAccessTime(entry, RdosTime);
-        SetWriteTime(entry, RdosTime);
-    }
-
-    e1.Write();
-}
-
-/*##########################################################################
-#
 #   Name       : TFat::CreateDir
 #
 #   Purpose....: Create dir
@@ -406,10 +353,7 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
     Complete();
 
     if (Cluster)
-    {
-        InitDir(dir, Cluster);
-        ok = dir->CreateDirEntry(Name, Cluster, 0x10);
-    }
+        ok = dir->CreateDirEntry(Name, Cluster);
 
     return ok;
 }
@@ -434,7 +378,7 @@ bool TFat::CreateFile(TDir *ParentDir, const char *Name, int Attrib)
     if (fattr & 0x10)
         ok = false;
     else
-        ok = dir->CreateDirEntry(Name, 0, fattr);
+        ok = dir->CreateFileEntry(Name, 0, fattr);
 
     return ok;
 }

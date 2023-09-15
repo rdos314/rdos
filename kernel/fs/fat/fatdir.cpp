@@ -49,6 +49,7 @@ TFatDir::TFatDir(TFat *Fat, long long RootSector, int Sectors)
     Init();
 
     FFat = Fat;
+    FSectorsPerCluster = Fat->SectorsPerCluster;
     FStartSector = RootSector;
     FSectorCount = Sectors;
 
@@ -78,7 +79,6 @@ TFatDir::TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, long long StartSec
     FClusterArr = FClusterChain->GetChain();
 
     FSectorsPerCluster = Fat->SectorsPerCluster;
-
     FStartSector = StartSector;
     FSectorCount = 0;
 
@@ -482,9 +482,9 @@ void TFatDir::ProcessFixed()
 ##########################################################################*/
 void TFatDir::ProcessCluster(unsigned int Cluster, int *Pos)
 {
-    long long Sector = FFat->StartSector + (Cluster - 2) * FFat->SectorsPerCluster;
+    long long Sector = FFat->StartSector + (Cluster - 2) * FSectorsPerCluster;
     TPartReq Req(FFat->GetServer());
-    TPartReqEntry ReqEntry(&Req, Sector, FFat->SectorsPerCluster);
+    TPartReqEntry ReqEntry(&Req, Sector, FSectorsPerCluster);
     struct TFatDirEntry *FatDirEntry;
     int j;
     int k;
@@ -495,7 +495,7 @@ void TFatDir::ProcessCluster(unsigned int Cluster, int *Pos)
     {
         FatDirEntry = (struct TFatDirEntry *)ReqEntry.Map();
 
-        for (j = 0; j < FFat->SectorsPerCluster; j++)
+        for (j = 0; j < FSectorsPerCluster; j++)
         {
             for (k = 0; k < 16; k++)
             {
@@ -901,16 +901,16 @@ bool TFatDir::SetupLfnEntry(struct TFatDirEntry *entry, TFatLfn *lfn, const char
 
 /*##########################################################################
 #
-#   Name       : TFatDir::CreateDirEntry
+#   Name       : TFatDir::CreateEntry
 #
-#   Purpose....: Create dir entry
+#   Purpose....: Create entry
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFatDir::CreateDirEntry(const char *name, unsigned int cluster, char attr)
+bool TFatDir::CreateEntry(const char *name, unsigned int cluster, char attr)
 {
     struct TFatDirEntry entry;
     TFatLfn lfn;
@@ -955,4 +955,114 @@ bool TFatDir::CreateDirEntry(const char *name, unsigned int cluster, char attr)
         SetEntryName(&entry, str);
         return SetupLfnEntry(&entry, &lfn, name);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::InitDir
+#
+#   Purpose....: Init directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::InitDir(TFat *Fat, unsigned int Cluster)
+{
+    long long RdosTime = RdosGetLongTime();
+    TPartReq req(Fat->GetServer());
+    TPartReqEntry e1(&req,Fat->StartSector + (Cluster - 2) * Fat->SectorsPerCluster, Fat->SectorsPerCluster, true);
+    char *Data;
+    struct TFatDirEntry *entry;
+
+    req.WaitForever();
+
+    Data = (char *)e1.Map();
+    memset(Data, 0, 512 * Fat->SectorsPerCluster);
+
+    e1.Write();
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::InitDir
+#
+#   Purpose....: Init directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::InitDir(unsigned int Cluster)
+{
+    long long RdosTime = RdosGetLongTime();
+    TPartReq req(FFat->GetServer());
+    TPartReqEntry e1(&req,FFat->StartSector + (Cluster - 2) * FSectorsPerCluster, FSectorsPerCluster, true);
+    char *Data;
+    struct TFatDirEntry *entry;
+
+    req.WaitForever();
+
+    Data = (char *)e1.Map();
+    memset(Data, 0, 512 * FSectorsPerCluster);
+
+    entry = (struct TFatDirEntry *)Data;
+    strcpy(entry->Base, ".          ");
+    entry->Attr = 0x10;
+    entry->Resv1 = 0;
+    entry->FileSize = 0;
+    entry->ClusterLow = Cluster & 0xFFFF;
+    entry->ClusterHi = Cluster >> 16;
+    SetCreateTime(entry, RdosTime);
+    SetAccessTime(entry, RdosTime);
+    SetWriteTime(entry, RdosTime);
+
+    Cluster = (unsigned int)GetInode();
+    entry = (struct TFatDirEntry *)(Data + 0x20);
+    strcpy(entry->Base, "..         ");
+    entry->Attr = 0x10;
+    entry->Resv1 = 0;
+    entry->FileSize = 0;
+    entry->ClusterLow = Cluster & 0xFFFF;
+    entry->ClusterHi = Cluster >> 16;
+    SetCreateTime(entry, RdosTime);
+    SetAccessTime(entry, RdosTime);
+    SetWriteTime(entry, RdosTime);
+
+    e1.Write();
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::CreateDirEntry
+#
+#   Purpose....: Create dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatDir::CreateDirEntry(const char *name, unsigned int cluster)
+{
+    InitDir(cluster);
+    return CreateEntry(name, cluster, 0x10);
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::CreateFileEntry
+#
+#   Purpose....: Create file entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatDir::CreateFileEntry(const char *name, unsigned int cluster, char attr)
+{
+    return CreateEntry(name, cluster, attr);
 }

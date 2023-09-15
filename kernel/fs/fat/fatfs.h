@@ -121,8 +121,6 @@ protected:
     unsigned int AllocateCluster();
     void Complete();
 
-    void InitDir(TFatDir *Parent, unsigned int Cluster);
-
     bool VerifySector(int id, char *buf);
     void GetSectors(TPartReq *Req, long long sector, int count);
 

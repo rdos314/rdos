@@ -42,7 +42,7 @@ struct TFatInfo
     int TrailSign;
 };
 
-#define RESERVED_SECTORS	8
+#define RESERVED_SECTORS        8
 
 /*##########################################################################
 #
@@ -105,20 +105,20 @@ unsigned int TFat32::CalcClusterSize(unsigned int size)
     {
         Used = size - RESERVED_SECTORS;
         for (tries = 0; tries < 3; tries++)
-        { 
+        {
             Clusters = Used / ClusterSize + 2;
             FatSectors = 4 * Clusters / 512;
             FatSectors--;
             FatSectors = FatSectors / 8;
             FatSectors = 8 * FatSectors;
             Used = size - RESERVED_SECTORS - 4 * FatSectors;
-        } 
+        }
 
         if (Clusters < 0x200000)
             break;
 
         ClusterSize = 2 * ClusterSize;
-    }    
+    }
 
     return ClusterSize;
 }
@@ -143,14 +143,14 @@ unsigned int TFat32::CalcClusterCount(unsigned int TotalSectors, unsigned int Cl
 
     Used = TotalSectors - RESERVED_SECTORS;
     for (tries = 0; tries < 3; tries++)
-    { 
+    {
         Clusters = Used / ClusterSize + 2;
         FatSectors = 4 * Clusters / 512;
         FatSectors--;
         FatSectors = FatSectors / 8;
         FatSectors = 8 * FatSectors;
         Used = TotalSectors - RESERVED_SECTORS - 4 * FatSectors;
-    } 
+    }
 
     Used = Clusters * ClusterSize + 4 * FatSectors + RESERVED_SECTORS;
 
@@ -303,7 +303,7 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
 
         if (Clusters > 0xFFFFFFF0)
             Clusters = 0xFFFFFFF0;
-        
+
         if (!format)
             if (Clusters > 0x200000)
                 if (InfoSector)
@@ -322,7 +322,7 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
             else
                 FreeClusters = Free1;
 
-            InitDir(0, RootCluster);
+            TFatDir::InitDir(this, RootCluster);
             WriteBootSector(boot);
         }
         else
