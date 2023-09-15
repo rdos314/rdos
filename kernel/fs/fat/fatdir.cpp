@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <rdos.h>
 #include "fatdir.h"
+#include "fatfs.h"
 
 /*##########################################################################
 #
@@ -62,14 +63,21 @@ TFatDir::TFatDir(long long RootSector, int Sectors)
 #   Returns....: *
 #
 ##########################################################################*/
-TFatDir::TFatDir(TDir *ParentDir, int ParentIndex, long long StartSector, int SectorsPerCluster)
+TFatDir::TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, long long StartSector, unsigned int Cluster)
   : TDir(ParentDir, ParentIndex)
 {
     Init();
 
+    FFat = Fat;
+    FClusterChain = Fat->GetClusterChain(Cluster);
+
+    FClusterCount = FClusterChain->GetSize();
+    FClusterArr = FClusterChain->GetChain();
+
+    FSectorsPerCluster = Fat->SectorsPerCluster;
+
     FStartSector = StartSector;
-    FSectorsPerCluster = SectorsPerCluster;
-    FClusterChain = new TCluster();
+    FSectorCount = 0;
 }
 
 /*##########################################################################
@@ -428,10 +436,7 @@ void TFatDir::GrowFree(int count)
 ##########################################################################*/
 int TFatDir::GetClusterCount()
 {
-    if (FClusterChain)
-        return FClusterChain->GetSize();
-    else
-        return 0;
+    return FClusterCount;
 }
 
 /*##########################################################################
@@ -448,7 +453,10 @@ int TFatDir::GetClusterCount()
 void TFatDir::AddCluster(unsigned int cluster)
 {
     if (FClusterChain)
+    {
         FClusterChain->Add(cluster);
+        FClusterCount++;
+    }
 }
 
 /*##########################################################################
@@ -464,14 +472,10 @@ void TFatDir::AddCluster(unsigned int cluster)
 ##########################################################################*/
 unsigned int TFatDir::GetCluster(int index)
 {
-    unsigned int *chain;
-
     if (FClusterChain)
-    {
-        chain = FClusterChain->GetChain();
-        if (index < FClusterChain->GetSize())
-            return chain[index];
-    }
+        if (index < FClusterCount)
+            return FClusterArr[index];
+
     return 0;
 }
 
@@ -501,12 +505,8 @@ long long TFatDir::GetSector(int pos)
         {
             cluster = entry / FSectorsPerCluster;
             entry = entry % FSectorsPerCluster;
-            if (cluster < FClusterChain->GetSize())
-            {
-                chain = FClusterChain->GetChain();
-                chain += cluster;
-                return FStartSector + (*chain - 2) * FSectorsPerCluster + entry;            
-            }
+            if (cluster < FClusterCount)
+                return FStartSector + (FClusterArr[cluster] - 2) * FSectorsPerCluster + entry;            
         }
         else
         {

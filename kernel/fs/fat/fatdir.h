@@ -39,11 +39,13 @@ struct TLfnEntry
     int Pos;
 };
 
+class TFat;
+
 class TFatDir : public TDir
 {
 public:
     TFatDir(long long RootSector, int Sectors);
-    TFatDir(TDir *ParentDir, int ParentIndex, long long StartSector, int SectorsPerCluster);
+    TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, long long StartSector, unsigned int Cluster);
     virtual ~TFatDir();
 
     bool IsFixedDir();
@@ -75,8 +77,13 @@ protected:
     int FreeCount;
     unsigned short int *FreeArr;
 
-    TCluster *FClusterChain;
     int FSectorsPerCluster;
+    int FClusterCount;
+    unsigned int *FClusterArr;
+
+    TFat *FFat;
+    TCluster *FClusterChain;
+
     long long FStartSector;
     int FSectorCount;
 

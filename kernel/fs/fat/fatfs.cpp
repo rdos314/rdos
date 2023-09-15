@@ -245,9 +245,6 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 ##########################################################################*/
 TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 {
-    unsigned int Cluster = Inode;
-    unsigned int NextCluster1;
-    unsigned int NextCluster2;
     TPartReq *Req;
     TPartReqEntry *ReqEntry;
     int size;
@@ -257,31 +254,7 @@ TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
     TFatDir *Dir;
     struct TFatDirEntry *FatDirEntry;
 
-    Dir = new TFatDir(ParentDir, ParentIndex, StartSector, SectorsPerCluster);
-
-    while (Cluster && Cluster < Clusters)
-    {
-        Dir->AddCluster(Cluster);
-
-        NextCluster1 = FatTable1->GetClusterLink(Cluster);
-        NextCluster2 = FatTable2->GetClusterLink(Cluster);
-
-        if (NextCluster1 == NextCluster2)
-            Cluster = NextCluster1;
-        else
-        {
-            if (NextCluster1 >= Clusters && NextCluster2 >= Clusters)
-                break;
-
-            if (NextCluster1 < Clusters && NextCluster2 < Clusters)
-                break;
-
-            if (NextCluster1 > NextCluster2)
-                Cluster = NextCluster2;
-            else
-                Cluster = NextCluster1;
-        }
-    }
+    Dir = new TFatDir(this, ParentDir, ParentIndex, StartSector, Inode);
 
     size = Dir->GetClusterCount();
 

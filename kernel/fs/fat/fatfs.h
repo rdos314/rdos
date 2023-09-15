@@ -84,6 +84,7 @@ struct TBootSector32
 class TFat : public TFs
 {
 friend class TFatFile;
+friend class TFatDir;
 public:
     TFat(TPartServer *server, struct TBaseBootSector *boot);
     ~TFat();
