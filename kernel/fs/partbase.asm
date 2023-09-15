@@ -467,6 +467,20 @@ LocalCreateFile Proc near
     pop ecx
     pop edi
 ;
+    cmp eax,-1
+    je cfDone
+;
+    mov [edi].fc_eax,eax
+;
+    push edi
+    call LowGetFileHandle
+    pop edi
+    mov [edi].fc_ebx,eax
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+
+cfDone:
     mov ebx,[edi].fc_handle
     ReplyVfsCmd
     ret
