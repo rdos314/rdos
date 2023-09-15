@@ -77,13 +77,19 @@ VFS_FORMAT                = 11
 ; IN            Path name
 VFS_CREATE_DIR            = 12
 
+; IN  EAX       Start handle
+; IN  ECX       Attribute
+; IN            Path name
+; OUT BX        File handle
+VFS_CREATE_FILE           = 13
+
 ; IN            Cmd
-VFS_CMD                   = 13
+VFS_CMD                   = 14
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_READ_SECTOR           = 14
+VFS_READ_SECTOR           = 15
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_WRITE_SECTOR          = 15
+VFS_WRITE_SECTOR          = 16

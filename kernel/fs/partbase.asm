@@ -446,6 +446,23 @@ LocalOpenFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalCreateFile
+;
+;       DESCRIPTION:    Create file
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LocalCreateFile Proc near
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalCreateFile Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LocalCloseFile
 ;
 ;       DESCRIPTION:    Close file
@@ -596,6 +613,7 @@ m09 DD OFFSET LocalOpenFile
 m10 DD OFFSET LocalCloseFile
 m11 DD OFFSET LocalFormat
 m12 DD OFFSET LocalCreateDir
+m13 DD OFFSET LocalCreateFile
 
 WaitForMsg_    Proc near
     push ebx
