@@ -67,7 +67,7 @@ TFatDir::TFatDir(TFat *Fat, long long RootSector, int Sectors)
 #   Returns....: *
 #
 ##########################################################################*/
-TFatDir::TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, long long StartSector, unsigned int Cluster)
+TFatDir::TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster)
   : TDir(ParentDir, ParentIndex)
 {
     Init();
@@ -79,7 +79,7 @@ TFatDir::TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, long long StartSec
     FClusterArr = FClusterChain->GetChain();
 
     FSectorsPerCluster = Fat->SectorsPerCluster;
-    FStartSector = StartSector;
+    FStartSector = Fat->StartSector;
     FSectorCount = 0;
 
     ProcessClusters();

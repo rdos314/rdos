@@ -213,7 +213,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 ##########################################################################*/
 TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 {
-    return new TFatDir(this, ParentDir, ParentIndex, StartSector, Inode);
+    return new TFatDir(this, ParentDir, ParentIndex, Inode);
 }
 
 /*##########################################################################

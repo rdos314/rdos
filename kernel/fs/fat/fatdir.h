@@ -45,7 +45,7 @@ class TFatDir : public TDir
 {
 public:
     TFatDir(TFat *Fat, long long RootSector, int Sectors);
-    TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, long long StartSector, unsigned int Cluster);
+    TFatDir(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster);
     virtual ~TFatDir();
 
     bool IsFixedDir();
