@@ -1045,10 +1045,19 @@ void TFatDir::InitDir(unsigned int Cluster)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFatDir::CreateDirEntry(const char *name, unsigned int cluster)
+bool TFatDir::CreateDirEntry(const char *name)
 {
-    InitDir(cluster);
-    return CreateEntry(name, cluster, 0x10);
+    unsigned int Cluster;
+
+    Cluster = FFat->AllocateCluster();
+
+    if (Cluster)
+    {
+        InitDir(Cluster);
+        return CreateEntry(name, Cluster, 0x10);
+    }
+    else
+        return false;
 }
 
 /*##########################################################################

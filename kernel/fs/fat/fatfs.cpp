@@ -346,14 +346,10 @@ void TFat::Complete()
 bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 {
     TFatDir *dir = (TFatDir *)ParentDir;
-    bool ok = false;
-    unsigned int Cluster;
+    bool ok;
 
-    Cluster = AllocateCluster();
+    ok = dir->CreateDirEntry(Name);
     Complete();
-
-    if (Cluster)
-        ok = dir->CreateDirEntry(Name, Cluster);
 
     return ok;
 }
@@ -379,6 +375,8 @@ bool TFat::CreateFile(TDir *ParentDir, const char *Name, int Attrib)
         ok = false;
     else
         ok = dir->CreateFileEntry(Name, 0, fattr);
+
+    Complete();
 
     return ok;
 }

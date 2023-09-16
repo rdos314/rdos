@@ -64,7 +64,7 @@ public:
     void AddFree(int pos);
     void RemoveFree(int pos);
 
-    bool CreateDirEntry(const char *name, unsigned int cluster);
+    bool CreateDirEntry(const char *name);
     bool CreateFileEntry(const char *name, unsigned int cluster, char attr);
 
     static void InitDir(TFat *Fat, unsigned int Cluster);
