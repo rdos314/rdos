@@ -1071,7 +1071,13 @@ bool TFatDir::CreateDirEntry(const char *name)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFatDir::CreateFileEntry(const char *name, unsigned int cluster, char attr)
+bool TFatDir::CreateFileEntry(const char *name, int attr)
 {
-    return CreateEntry(name, cluster, attr);
+    char fattr = EncodeAttrib(attr);
+    bool ok;
+
+    if (fattr & 0x10)
+        return false;
+    else
+        return CreateEntry(name, 0, fattr);
 }

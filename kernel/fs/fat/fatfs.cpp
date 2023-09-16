@@ -368,14 +368,9 @@ bool TFat::CreateDir(TDir *ParentDir, const char *Name)
 bool TFat::CreateFile(TDir *ParentDir, const char *Name, int Attrib)
 {
     TFatDir *dir = (TFatDir *)ParentDir;
-    char fattr = EncodeAttrib(Attrib);
     bool ok;
 
-    if (fattr & 0x10)
-        ok = false;
-    else
-        ok = dir->CreateFileEntry(Name, 0, fattr);
-
+    ok = dir->CreateFileEntry(Name, Attrib);
     Complete();
 
     return ok;
