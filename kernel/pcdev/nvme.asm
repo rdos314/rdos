@@ -70,8 +70,8 @@ DevName DB 'NVMe', 0
 
 SetupDevice  Proc near
     xor ax,ax
-    mov bh,8
-    mov bl,1
+    mov bh,1
+    mov bl,8
     FindPciClass
     jc sdDone
 ;
@@ -114,6 +114,7 @@ init_nvme    Proc far
     push es
     pusha
 ;
+    int 3
     call SetupDevice
     jc inDone
 
