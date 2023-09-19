@@ -48,6 +48,9 @@ public:
     virtual void Complete() = 0;
 
 protected:
+    unsigned int FClusters;
+    unsigned int FFreeClusters;
+
     long long FStartSector;
     int FSectorsPerCluster;
     TPartReq FReq;

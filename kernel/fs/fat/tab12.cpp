@@ -84,6 +84,8 @@ void TFatTable12::Setup(int SectorsPerCluster, long long StartSector, int FatSec
         FClusters = FatSectors * 512 * 2 / 3;
     else
         FClusters = Clusters;
+
+    FFreeClusters = 0;
 }
 
 /*##########################################################################
@@ -117,7 +119,7 @@ void TFatTable12::SetCacheSize(int size)
 unsigned int TFatTable12::GetFreeInBlock(long long Sector, unsigned int Clusters)
 {
     unsigned int i;
-    unsigned int FreeClusters = 0;
+    unsigned int fc = 0;
     TPartReqEntry e1(&FReq, Sector, 3);
     char *tab;
     unsigned int val;
@@ -136,20 +138,20 @@ unsigned int TFatTable12::GetFreeInBlock(long long Sector, unsigned int Clusters
         i += 2;
 
         if (val == 0)
-            FreeClusters += 2;
+            fc += 2;
         else
         {
             if ((val & 0xFFF) == 0)
-                FreeClusters ++;
+                fc++;
 
             val = val >> 12;
 
             if ((val & 0xFFF) == 0)
-                FreeClusters ++;
+                fc++;
         }
     }
 
-    return FreeClusters;
+    return fc;
 }
 
 /*##########################################################################
@@ -165,12 +167,13 @@ unsigned int TFatTable12::GetFreeInBlock(long long Sector, unsigned int Clusters
 ##########################################################################*/
 unsigned int TFatTable12::GetFreeClusters()
 {
-    unsigned int FreeClusters = 0;
     int i;
     long long Sector = FStartSector;
     unsigned int Cluster = 0;
     int Count;
     int Blocks = FClusters / 512 / 2;
+
+    FFreeClusters = 0;
 
     for (i = 0; i <= Blocks; i++)
     {
@@ -178,12 +181,12 @@ unsigned int TFatTable12::GetFreeClusters()
         if (Count > 512 * 2)
             Count = 512 * 2;
 
-        FreeClusters += GetFreeInBlock(Sector, Count);
+        FFreeClusters += GetFreeInBlock(Sector, Count);
         Sector += 3;
         Cluster += Count;
     }
 
-    return FreeClusters;
+    return FFreeClusters;
 }
 
 /*##########################################################################

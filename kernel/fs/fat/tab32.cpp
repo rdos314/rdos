@@ -88,6 +88,8 @@ void TFatTable32::Setup(int SectorsPerCluster, long long StartSector, int FatSec
         FClusters = FatSectors * 512 / 4;
     else
         FClusters = Clusters;
+
+    FFreeClusters = 0;
 }
 
 /*##########################################################################
@@ -121,7 +123,7 @@ void TFatTable32::SetCacheSize(int size)
 unsigned int TFatTable32::GetFreeInBlock(long long Sector, unsigned int Clusters)
 {
     unsigned int i;
-    unsigned int FreeClusters = 0;
+    unsigned int fc = 0;
     TPartReqEntry e1(&FReq, Sector, 64);
     int *tab;
 
@@ -131,9 +133,9 @@ unsigned int TFatTable32::GetFreeInBlock(long long Sector, unsigned int Clusters
 
     for (i = 0; i < Clusters; i++)
         if ((tab[i] & 0xFFFFFFF) == 0)
-            FreeClusters++;
+            fc++;
 
-    return FreeClusters;
+    return fc;
 }
 
 /*##########################################################################
@@ -149,12 +151,13 @@ unsigned int TFatTable32::GetFreeInBlock(long long Sector, unsigned int Clusters
 ##########################################################################*/
 unsigned int TFatTable32::GetFreeClusters()
 {
-    unsigned int FreeClusters = 0;
     int i;
     long long Sector = FStartSector;
     unsigned int Cluster = 0;
     int Count;
     int Blocks = FClusters / 512 * 4 / 64;
+
+    FFreeClusters = 0;
 
     for (i = 0; i <= Blocks; i++)
     {
@@ -162,12 +165,12 @@ unsigned int TFatTable32::GetFreeClusters()
         if (Count > 512 * 64 / 4)
             Count = 512 * 64 / 4;
 
-        FreeClusters += GetFreeInBlock(Sector, Count);
+        FFreeClusters += GetFreeInBlock(Sector, Count);
         Sector += 64;
         Cluster += Count;
     }
 
-    return FreeClusters;
+    return FFreeClusters;
 }
 
 /*##########################################################################
@@ -184,7 +187,7 @@ unsigned int TFatTable32::GetFreeClusters()
 unsigned int TFatTable32::FormatBlock(long long Sector, unsigned int Clusters)
 {
     unsigned int i;
-    unsigned int FreeClusters;
+    unsigned int fc;
     TPartReqEntry e1(&FReq, Sector, 8, true);
     char *tab;
 
@@ -209,14 +212,14 @@ unsigned int TFatTable32::FormatBlock(long long Sector, unsigned int Clusters)
         tab[10] = 0xFF;
         tab[11] = 0x0F;
 
-        FreeClusters = Clusters - 3;
+        fc = Clusters - 3;
     }
     else
-        FreeClusters = Clusters;
+        fc = Clusters;
 
     e1.Write();
 
-    return FreeClusters;
+    return fc;
 }
 
 /*##########################################################################
@@ -232,12 +235,13 @@ unsigned int TFatTable32::FormatBlock(long long Sector, unsigned int Clusters)
 ##########################################################################*/
 unsigned int TFatTable32::FormatClusters()
 {
-    unsigned int FreeClusters = 0;
     int i;
     long long Sector = FStartSector;
     unsigned int Cluster = 0;
     int Count;
     int Blocks = FClusters / 512 * 4 / 8;
+
+    FFreeClusters = 0;
 
     for (i = 0; i <= Blocks; i++)
     {
@@ -245,12 +249,12 @@ unsigned int TFatTable32::FormatClusters()
         if (Count > 512 * 8 / 4)
             Count = 512 * 8 / 4;
 
-        FreeClusters += FormatBlock(Sector, Count);
+        FFreeClusters += FormatBlock(Sector, Count);
         Sector += 8;
         Cluster += Count;
     }
 
-    return FreeClusters;
+    return FFreeClusters;
 }
 
 /*##########################################################################

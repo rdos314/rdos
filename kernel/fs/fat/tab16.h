@@ -60,9 +60,6 @@ protected:
     void SetupCache(unsigned int Cluster);
     void SetupMod(unsigned int Cluster);
 
-    unsigned int FClusters;
-    unsigned int FFreeClusters;
-
     int FCachedSectors;
     int FCachedClusters;
 

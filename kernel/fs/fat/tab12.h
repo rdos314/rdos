@@ -53,8 +53,6 @@ public:
 protected:
     unsigned int GetFreeInBlock(long long Sector, unsigned int Clusters);
 
-    unsigned int FClusters;
-
     int FCachedSectors;
     int FCachedClusters;
     unsigned int FStartCluster;
