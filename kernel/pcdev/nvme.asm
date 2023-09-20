@@ -69,6 +69,64 @@ pci_crto        DD ?
 
 pci_config  ENDS
 
+;
+; submission queue format
+;
+
+sub_struc	STRUC
+
+sub_opc         DB ?
+sub_flags	DB ?
+sub_cid         DW ?
+sub_nsid        DD ?
+sub_cdw2	DD ?
+sub_cdw3	DD ?
+sub_mptr	DD ?,?
+sub_prp1        DD ?,?
+sub_prp2        DD ?,?
+sub_cdw10       DD ?
+sub_cdw11       DD ?
+sub_cdw12       DD ?
+sub_cdw13       DD ?
+sub_cdw14       DD ?
+sub_cdw15       DD ?
+
+sub_struc       ENDS
+
+adm_struc	STRUC
+
+adm_opc         DB ?
+adm_flags	DB ?
+adm_cid         DW ?
+adm_nsid        DD ?
+adm_resv	DD ?,?
+adm_mptr	DD ?,?
+adm_prp1        DD ?,?
+adm_prp2        DD ?,?
+adm_ndt         DD ?
+adm_ndm         DD ?
+adm_cdw12       DD ?
+adm_cdw13       DD ?
+adm_cdw14       DD ?
+adm_cdw15       DD ?
+
+adm_struc       ENDS
+
+
+;
+; completion queue format
+;
+
+comp_struc      STRUC
+
+comp_dw0        DD ?
+comp_dw1        DD ?
+comp_sq_head    DW ?
+comp_sq_id      DW ?
+comp_cid        DW ?
+comp_status     DW ?
+
+comp_struc      ENDS
 
 ;
 ; NVME device
@@ -83,6 +141,9 @@ nd_config_sel            DW ?
 nd_door_sel              DW ?
 nd_admin_submit_sel      DW ?
 nd_admin_complete_sel    DW ?
+
+nd_admin_submit_ptr      DW ?
+nd_admin_complete_ptr    DW ?
 
 nd_queue_entries         DW ?
 
@@ -196,7 +257,7 @@ cdResetDone:
     xor eax,eax
     mov ds:pci_cc,eax
 ;
-    mov eax,003F003Fh
+    mov eax,00FF003Fh
     mov ds:pci_aqa,eax
 ;
     mov eax,es:nd_admin_submit_phys
