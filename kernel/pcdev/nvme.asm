@@ -648,6 +648,7 @@ SetupInts Endp
 DevName DB 'NVMe', 0
 
 SetupDevice  Proc near
+    int 3
     xor ax,ax
     mov bh,1
     mov bl,8
