@@ -136,11 +136,13 @@ nvme_device_struc   STRUC
 
 nd_admin_submit_phys     DD ?,?
 nd_admin_complete_phys   DD ?,?
+nd_identify_phys         DD ?,?
 
 nd_config_sel            DW ?
 nd_door_sel              DW ?
 nd_admin_submit_sel      DW ?
 nd_admin_complete_sel    DW ?
+nd_identify_sel          DW ?
 
 nd_admin_submit_ptr      DW ?
 nd_admin_complete_ptr    DW ?
@@ -190,6 +192,64 @@ NvmeInt  Proc far
     CrashGate
     ret
 NvmeInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SendIdentify
+;
+;   DESCRIPTION:    Send identify command
+;
+;   PARAMETERS:     ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendIdentify  Proc near
+    push ds
+    pushad
+;
+    mov ds,es:nd_admin_submit_sel
+    movzx ebx,es:nd_admin_submit_ptr
+    shl ebx,6
+    mov ds:[ebx].adm_opc,6
+    mov ds:[ebx].adm_flags,0
+    mov ds:[ebx].adm_cid,1
+    mov ds:[ebx].adm_nsid,0
+    mov ds:[ebx].adm_resv,0
+    mov ds:[ebx].adm_resv+4,0
+    mov ds:[ebx].adm_mptr,0
+    mov ds:[ebx].adm_mptr+4,0
+;
+    mov eax,es:nd_identify_phys
+    mov ds:[ebx].adm_prp1,eax
+    mov eax,es:nd_identify_phys+4
+    mov ds:[ebx].adm_prp1+4,eax
+;
+    mov ds:[ebx].adm_prp2,0
+    mov ds:[ebx].adm_prp2+4,0
+;
+    mov ds:[ebx].adm_ndt,1
+    mov ds:[ebx].adm_ndm,0
+;
+    mov ds:[ebx].adm_cdw12,0
+    mov ds:[ebx].adm_cdw13,0
+    mov ds:[ebx].adm_cdw14,0
+    mov ds:[ebx].adm_cdw15,0
+;
+    movzx ebx,es:nd_admin_submit_ptr
+    mov eax,ebx
+    inc ebx
+    mov es:nd_admin_submit_ptr,bx
+
+;
+    mov ds,es:nd_door_sel
+    xor ebx,ebx
+    mov ds:[ebx],eax
+;
+    popad
+    pop ds
+    ret
+SendIdentify  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -300,6 +360,8 @@ cdWaitStart:
     jmp cdWaitStart
 
 cdStartDone:
+    mov es:nd_admin_submit_ptr,0
+    mov es:nd_admin_complete_ptr,0
     clc
     jmp cdDone
 
@@ -415,50 +477,28 @@ adAlloc:
     mov ecx,1000h
     CreateDataSelector16
     mov es:nd_admin_complete_sel,bx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    xor al,al
+    mov es:nd_identify_phys,eax
+    mov es:nd_identify_phys+4,ebx
+;
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:nd_identify_sel,bx
     clc
 ;
     popad
     pop ds
     ret
 AddDevice   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           SetupDevice
-;
-;   DESCRIPTION:    Setup device
-;
-;   RETURNS:        NC      OK
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DevName DB 'NVMe', 0
-
-SetupDevice  Proc near
-    xor ax,ax
-    mov bh,1
-    mov bl,8
-    FindPciClass
-    jc sdDone
-;
-    mov eax,cs
-    mov es,eax
-    mov edi,OFFSET DevName
-    PciPowerOn
-;
-    call AddDevice
-    jc sdDone
-;
-    call ConfigDevice
-    jc sdDone
-;
-    int 3
-    call SetupInts
-
-sdDone:
-    ret
-SetupDevice Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -522,6 +562,47 @@ siOk:
     pop ds
     ret
 SetupInts Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupDevice
+;
+;   DESCRIPTION:    Setup device
+;
+;   RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DevName DB 'NVMe', 0
+
+SetupDevice  Proc near
+    xor ax,ax
+    mov bh,1
+    mov bl,8
+    FindPciClass
+    jc sdDone
+;
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET DevName
+    PciPowerOn
+;
+    call AddDevice
+    jc sdDone
+;
+    call ConfigDevice
+    jc sdDone
+;
+    int 3
+    call SetupInts
+    jc sdDone
+;
+    call SendIdentify
+
+sdDone:
+    ret
+SetupDevice Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
