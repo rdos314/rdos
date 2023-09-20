@@ -189,7 +189,7 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NvmeInt  Proc far
-    CrashGate
+    int 3
     ret
 NvmeInt  Endp
 
