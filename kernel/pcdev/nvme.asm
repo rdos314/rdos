@@ -237,14 +237,15 @@ SendIdentify  Proc near
     mov ds:[ebx].adm_cdw15,0
 ;
     movzx ebx,es:nd_admin_submit_ptr
-    mov eax,ebx
     inc ebx
     mov es:nd_admin_submit_ptr,bx
-
 ;
+    mov eax,ebx
     mov ds,es:nd_door_sel
     xor ebx,ebx
     mov ds:[ebx],eax
+;
+    mov ds,es:nd_admin_complete_sel
 ;
     popad
     pop ds
@@ -594,10 +595,10 @@ SetupDevice  Proc near
     call ConfigDevice
     jc sdDone
 ;
-    int 3
     call SetupInts
     jc sdDone
 ;
+    int 3
     call SendIdentify
 
 sdDone:
