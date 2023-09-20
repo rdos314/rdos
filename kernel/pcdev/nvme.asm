@@ -424,7 +424,6 @@ SetupInts Proc near
     cmp dl,1
     je siAllocOne
 ;
-    int 3
 
 siAllocOne:
     push cx
@@ -456,6 +455,7 @@ siIrq:
     RequestIrqHandler
 
 siOk:    
+    clc
     popad
     pop es
     pop ds
