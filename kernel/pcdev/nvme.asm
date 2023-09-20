@@ -196,6 +196,86 @@ NvmeInt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           AdminSession
+;
+;   DESCRIPTION:    Admin session
+;
+;   PARAMETERS:     ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AdminSession  Proc near
+    push ds
+    push eax
+    push ebx
+;
+    movzx ebx,es:nd_admin_submit_ptr
+    inc ebx
+    cmp bx,40h
+    jb asSubUpd
+;
+    xor bx,bx
+
+asSubUpd:
+    mov es:nd_admin_submit_ptr,bx
+;
+    mov eax,ebx
+    mov ds,es:nd_door_sel
+    xor ebx,ebx
+    mov ds:[ebx],eax
+;
+    mov ds,es:nd_admin_complete_sel
+    movzx ebx,es:nd_admin_complete_ptr
+    shl ebx,4
+
+asCompCheck:
+    mov ax,ds:[ebx].comp_status
+    int 3
+    test al,1
+    jnz asCompOk
+;
+    mov ax,10
+    WaitMilliSec
+    jmp asCompCheck
+
+asCompOk:
+    xor ax,ax
+    xchg ax,ds:[ebx].comp_status
+    push eax
+;
+    movzx ebx,es:nd_admin_complete_ptr
+    inc ebx
+    cmp bx,100h
+    jb asCompUpd
+;
+    xor bx,bx
+
+asCompUpd:
+    mov es:nd_admin_complete_ptr,bx
+;
+    mov eax,ebx
+    mov ds,es:nd_door_sel
+    mov ebx,4
+    mov ds:[ebx],eax
+;
+    pop eax
+    shr al,1
+    or al,al
+    clc
+    jz asDone
+;
+    stc
+
+asDone:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+AdminSession  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           SendIdentify
 ;
 ;   DESCRIPTION:    Send identify command
@@ -235,17 +315,7 @@ SendIdentify  Proc near
     mov ds:[ebx].adm_cdw13,0
     mov ds:[ebx].adm_cdw14,0
     mov ds:[ebx].adm_cdw15,0
-;
-    movzx ebx,es:nd_admin_submit_ptr
-    inc ebx
-    mov es:nd_admin_submit_ptr,bx
-;
-    mov eax,ebx
-    mov ds,es:nd_door_sel
-    xor ebx,ebx
-    mov ds:[ebx],eax
-;
-    mov ds,es:nd_admin_complete_sel
+    call AdminSession
 ;
     popad
     pop ds
