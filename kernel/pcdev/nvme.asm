@@ -36,10 +36,39 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
 INCLUDE pci.inc
 
+MAX_NVME_DEVICES    = 16
+
+;
+; PCI BAR 0 config
+;
+
+pci_config  STRUC
+
+pci_cap		DD ?
+
+pci_config  ENDS
+
+
+;
+; NVME device
+;
+
+nvme_device_struc   STRUC
+
+nd_config_sel    DW ?
+nd_door_sel      DW ?
+
+nd_pci_bus       DB ?
+nd_pci_device    DB ?
+nd_pci_function  DB ?
+
+nvme_device_struc   ENDS
+
 
 data    SEGMENT byte public 'DATA'
 
-dummy                 DW ?
+nvme_dev_count      DW ?
+nvme_dev_arr        DW MAX_NVME_DEVICES DUP(?)
 
 data    ENDS
 
@@ -54,6 +83,83 @@ ENDIF
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           AddDevice
+;
+;   DESCRIPTION:    Add device
+;
+;   PARAMETERS:     BH      PCI Bus
+;                   BL      PCI Device
+;                   CH      PCI Function
+;
+;   RETURNS:        ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDevice  Proc near
+    push ds
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+;
+    mov eax,SIZE nvme_device_struc
+    AllocateSmallGlobalMem
+    mov si,ds:nvme_dev_count
+    shl si,1
+    mov ds:[si].nvme_dev_arr,es
+;
+    mov es:nd_pci_bus,bh
+    mov es:nd_pci_device,bl
+    mov es:nd_pci_function,ch
+;
+    mov eax,2000h    
+    AllocateBigLinear
+;
+    mov cl,10h
+    ReadPciDword
+    test al,4
+    jz ad32
+;
+    push eax
+    mov cl,14h
+    ReadPciDword
+    mov ebx,eax
+    pop eax
+    jmp adAlloc
+
+ad32:
+    xor ebx,ebx
+
+adAlloc:
+    and ax,0F000h
+    mov al,13h
+    SetPageEntry
+;
+    add edx,1000h
+    add eax,1000h
+    adc ebx,0
+    SetPageEntry
+    sub edx,1000h
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:nd_config_sel,bx
+;
+    add edx,1000h
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:nd_door_sel,bx
+;
+    popad
+    pop ds
+    ret
+AddDevice   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -76,21 +182,12 @@ SetupDevice  Proc near
     jc sdDone
 ;
     int 3
-    push es
-    push edi
-    mov ax,cs
-    mov es,ax
+    mov eax,cs
+    mov es,eax
     mov edi,OFFSET DevName
     PciPowerOn
-    pop edi
-    pop es
-;        
-    mov cl,10h
-    ReadPciDword
 ;
-    mov cl,14h
-    ReadPciDword
-;
+    call AddDevice
 
 sdDone:
     ret
@@ -112,14 +209,14 @@ SetupDevice Endp
 init_nvme    Proc far
     push ds
     push es
-    pusha
+    pushad
 ;
     int 3
     call SetupDevice
     jc inDone
 
 inDone:
-    popa
+    popad
     pop es
     pop ds
     ret
@@ -128,7 +225,7 @@ init_nvme    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Init_net
+;           NAME:           Init
 ;
 ;           DESCRIPTION:    inits adpater
 ;
@@ -142,6 +239,7 @@ init    PROC far
     mov ax,SEG data
     mov ds,eax
     mov es,eax
+    mov ds:nvme_dev_count,0
 ;
     mov ax,cs
     mov es,ax
