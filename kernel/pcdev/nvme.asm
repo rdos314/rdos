@@ -117,6 +117,22 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           NvmeInt
+;
+;       DESCRIPTION:    IRQ handler
+;
+;       PARAMETERS:     DS      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NvmeInt  Proc far
+    CrashGate
+    ret
+NvmeInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           ConfigDevice
 ;
 ;   DESCRIPTION:    Config device
@@ -177,7 +193,6 @@ cdWaitReset:
     jmp cdWaitReset
 
 cdResetDone:
-    int 3
     xor eax,eax
     mov ds:pci_cc,eax
 ;
@@ -193,8 +208,37 @@ cdResetDone:
     mov ds:pci_acq,eax
     mov eax,es:nd_admin_complete_phys+4
     mov ds:pci_acq+4,eax
+;
+    push es
+    mov es,es:nd_admin_submit_sel
+    xor edi,edi
+    xor eax,eax
+    mov ecx,400h
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    push es
+    mov es,es:nd_admin_complete_sel
+    xor edi,edi
+    xor eax,eax
+    mov ecx,400h
+    rep stos dword ptr es:[edi]
+    pop es
+;
+    mov eax,ds:pci_cc
+    or al,1
+    mov ds:pci_cc,eax
 
+cdWaitStart:
+    mov eax,ds:pci_csts
+    test al,1
+    jnz cdStartDone
+;
+    mov ax,10
+    WaitMilliSec
+    jmp cdWaitStart
 
+cdStartDone:
     clc
     jmp cdDone
 
@@ -279,7 +323,6 @@ adAlloc:
     CreateDataSelector16
     mov es:nd_door_sel,bx
 ;
-    int 3
     mov eax,1000h
     AllocateBigLinear
 ;
@@ -347,10 +390,77 @@ SetupDevice  Proc near
     jc sdDone
 ;
     call ConfigDevice
+    jc sdDone
+;
+    int 3
+    call SetupInts
 
 sdDone:
     ret
 SetupDevice Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetupInts
+;
+;           DESCRIPTION:    Setup device ints
+;
+;           PARAMETERS:     ES     Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupInts Proc near
+    push ds
+    push es
+    pushad
+;
+    mov bh,es:nd_pci_bus
+    mov bl,es:nd_pci_device
+    mov ch,es:nd_pci_function
+    GetPciMsi
+    jc siIrq
+;
+    cmp dl,1
+    je siAllocOne
+;
+    int 3
+
+siAllocOne:
+    push cx
+    mov cx,1
+    mov al,14h
+    AllocateInts
+    pop cx
+    jc siIrq    
+
+siMsiHandlers:
+    SetupPciMsi
+;
+    mov eax,es
+    mov ds,eax
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET NvmeInt
+    RequestMsiHandler
+    jmp siOk
+
+siIrq:
+    GetPciIrqNr
+    mov ah,14h
+    mov eax,es
+    mov ds,eax
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET NvmeInt
+    RequestIrqHandler
+
+siOk:    
+    popad
+    pop es
+    pop ds
+    ret
+SetupInts Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
