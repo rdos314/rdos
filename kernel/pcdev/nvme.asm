@@ -44,7 +44,28 @@ MAX_NVME_DEVICES    = 16
 
 pci_config  STRUC
 
-pci_cap		DD ?
+pci_cap		DD ?,?
+pci_vs          DD ?
+pci_intms       DD ?
+pci_intmc       DD ?
+pci_cc          DD ?
+pci_resv        DD ?
+pci_csts        DD ?
+pci_nssr        DD ?
+pci_aqa         DD ?
+pci_asq         DD ?,?
+pci_acq         DD ?,?
+pci_cmbloc      DD ?
+pci_cmbsz       DD ?
+pci_bpinfo      DD ?
+pci_bprsel      DD ?
+pci_bpmbl       DD ?,?
+pci_cmbmsc      DD ?,?
+pci_cmbsts      DD ?
+pci_cmbebs      DD ?
+pci_cmbswtp     DD ?
+pci_nssd        DD ?
+pci_crto        DD ?
 
 pci_config  ENDS
 
@@ -55,12 +76,21 @@ pci_config  ENDS
 
 nvme_device_struc   STRUC
 
-nd_config_sel    DW ?
-nd_door_sel      DW ?
+nd_admin_submit_phys     DD ?,?
+nd_admin_complete_phys   DD ?,?
 
-nd_pci_bus       DB ?
-nd_pci_device    DB ?
-nd_pci_function  DB ?
+nd_config_sel            DW ?
+nd_door_sel              DW ?
+nd_admin_submit_sel      DW ?
+nd_admin_complete_sel    DW ?
+
+nd_queue_entries         DW ?
+
+nd_pci_bus               DB ?
+nd_pci_device            DB ?
+nd_pci_function          DB ?
+
+nd_door_shift            DB ?
 
 nvme_device_struc   ENDS
 
@@ -83,6 +113,99 @@ ENDIF
 code    SEGMENT byte public use32 'CODE'
 
     assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ConfigDevice
+;
+;   DESCRIPTION:    Config device
+;
+;   PARAMETERS:     ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConfigDevice  Proc near
+    push ds
+    pushad
+;
+    mov ds,es:nd_config_sel
+    mov eax,ds:pci_cap+4
+    shr eax,16
+    mov ah,al
+    and al,0Fh
+    or al,al
+    jnz cdFail
+;
+    mov al,ah
+    shr al,4
+    and al,0Fh
+;
+    mov eax,ds:pci_cap+4
+    and al,0Fh
+    add al,2
+    mov es:nd_door_shift,al
+;
+    mov eax,ds:pci_cap+4
+    test ax,1000h
+    jnz cdFail
+;
+    test al,20h
+    jz cdFail
+;
+    mov eax,ds:pci_cap
+    or ah,ah
+    jz cdQueueOk
+;
+    mov ax,0FFh
+
+cdQueueOk:
+    add ax,1
+    mov es:nd_queue_entries,ax
+;
+    mov eax,ds:pci_cc
+    and al,NOT 1
+    mov ds:pci_cc,eax
+
+cdWaitReset:
+    mov eax,ds:pci_csts
+    test al,1
+    jz cdResetDone
+;
+    mov ax,10
+    WaitMilliSec
+    jmp cdWaitReset
+
+cdResetDone:
+    int 3
+    xor eax,eax
+    mov ds:pci_cc,eax
+;
+    mov eax,003F003Fh
+    mov ds:pci_aqa,eax
+;
+    mov eax,es:nd_admin_submit_phys
+    mov ds:pci_asq,eax
+    mov eax,es:nd_admin_submit_phys+4
+    mov ds:pci_asq+4,eax
+;
+    mov eax,es:nd_admin_complete_phys
+    mov ds:pci_acq,eax
+    mov eax,es:nd_admin_complete_phys+4
+    mov ds:pci_acq+4,eax
+
+
+    clc
+    jmp cdDone
+
+cdFail:
+    stc
+
+cdDone:
+    popad
+    pop ds
+    ret
+ConfigDevice  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -156,6 +279,40 @@ adAlloc:
     CreateDataSelector16
     mov es:nd_door_sel,bx
 ;
+    int 3
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    xor al,al
+    mov es:nd_admin_submit_phys,eax
+    mov es:nd_admin_submit_phys+4,ebx
+;
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:nd_admin_submit_sel,bx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    xor al,al
+    mov es:nd_admin_complete_phys,eax
+    mov es:nd_admin_complete_phys+4,ebx
+;
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es:nd_admin_complete_sel,bx
+    clc
+;
     popad
     pop ds
     ret
@@ -181,13 +338,15 @@ SetupDevice  Proc near
     FindPciClass
     jc sdDone
 ;
-    int 3
     mov eax,cs
     mov es,eax
     mov edi,OFFSET DevName
     PciPowerOn
 ;
     call AddDevice
+    jc sdDone
+;
+    call ConfigDevice
 
 sdDone:
     ret
@@ -211,7 +370,6 @@ init_nvme    Proc far
     push es
     pushad
 ;
-    int 3
     call SetupDevice
     jc inDone
 
