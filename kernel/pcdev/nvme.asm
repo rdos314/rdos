@@ -189,7 +189,6 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NvmeInt  Proc far
-    int 3
     ret
 NvmeInt  Endp
 
@@ -608,10 +607,10 @@ siAllocOne:
 siMsiHandlers:
     SetupPciMsi
 ;
-    mov eax,es
-    mov ds,eax
-    mov eax,cs
-    mov es,eax
+    mov edx,es
+    mov ds,edx
+    mov edx,cs
+    mov es,edx
     mov edi,OFFSET NvmeInt
     RequestMsiHandler
     jmp siOk
