@@ -129,6 +129,42 @@ comp_status     DW ?
 comp_struc      ENDS
 
 ;
+; identify reply
+;
+
+identify_struc   STRUC
+
+id_vid          DW ?
+id_ssvid        DW ?
+id_sn           DB 20 DUP(?)
+id_mn           DB 40 DUP(?)
+id_fr           DB 8 DUP(?)
+id_rab          DB ?
+id_ieee         DB ?,?,?
+id_cmic         DB ?
+id_mdts         DB ?
+id_cntlid       DW ?
+id_ver          DD ?
+id_rtd3r        DD ?
+id_rtd3e        DD ?
+id_oaes         DD ?
+id_ctratt       DD ?
+id_rrls         DW ?
+id_resv1        DB 9 DUP(?)
+id_cntrltype    DB ?
+id_fguid        DB 16 DUP(?)
+id_crdt1        DW ?
+id_crdt2        DW ?
+id_crdt3        DW ?
+id_resv2        DB 119 DUP(?)
+id_nvmsr        DB ?
+id_vwci         DB ?
+id_mec          DB ?
+id_oacs         DW ?
+
+identify_struc   ENDS
+
+;
 ; NVME device
 ;
 
@@ -374,6 +410,7 @@ SendIdentify  Proc near
     call AdminSession
 ;
     mov ds,es:nd_identify_sel
+    mov ax,ds:id_oacs
 ;
     popad
     pop ds
