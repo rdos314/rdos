@@ -367,16 +367,18 @@ SignalCompleteDoor   Endp
 ;   DESCRIPTION:    Admin session
 ;
 ;   PARAMETERS:     ES      Device sel
+;                   DS:EBX  Submit entry
 ;
-;   RETURNS:        EDX:EAX dword 0 & 1
+;   RETURNS:        EDX:EAX Dword 0 & 1
+;                   CL      Result code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AdminSession  Proc near
     push ds
     push ebx
-    push ecx
 ;
+    mov cx,ds:[ebx].adm_cid
     movzx eax,es:nd_admin_submit_ptr
     inc eax
     cmp ax,40h
@@ -404,11 +406,14 @@ asCompCheck:
     jmp asCompCheck
 
 asCompOk:
-    mov eax,ds:[ebx].comp_dw0
-    mov edx,ds:[ebx].comp_dw1
+    cmp cx,ds:[ebx].comp_cid
+    stc
+    jne asDone
 ;
     xor cx,cx
     xchg cx,ds:[ebx].comp_status
+    mov eax,ds:[ebx].comp_dw0
+    mov edx,ds:[ebx].comp_dw1
     push eax
 ;
     movzx eax,es:nd_admin_complete_ptr
@@ -433,7 +438,6 @@ asCompUpd:
     stc
 
 asDone:
-    pop ecx
     pop ebx
     pop ds
     ret
@@ -628,7 +632,7 @@ CreateIoCompletionQueue  Proc near
 ;
     mov es,ebx
     xor edi,edi
-    mov ecx,400
+    mov ecx,400h
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
@@ -643,7 +647,7 @@ CreateIoCompletionQueue  Proc near
     shl ebx,6
     mov ds:[ebx].adm_opc,5
     mov ds:[ebx].adm_flags,0
-    mov ds:[ebx].adm_cid,2
+    mov ds:[ebx].adm_cid,3
     mov ds:[ebx].adm_nsid,0
     mov ds:[ebx].adm_resv,0
     mov ds:[ebx].adm_resv+4,0
@@ -659,6 +663,7 @@ CreateIoCompletionQueue  Proc near
     mov ds:[ebx].adm_prp2+4,0
 ;
     movzx eax,es:nd_queue_entries
+    dec ax
     shl eax,16
     mov ax,si
     shr ax,1
@@ -675,12 +680,6 @@ CreateIoCompletionQueue  Proc near
     mov ds:[ebx].adm_cdw14,0
     mov ds:[ebx].adm_cdw15,0
     call AdminSession
-;
-    inc ax
-    mov es:nd_submit_queues,ax
-    shr eax,16
-    inc ax
-    mov es:nd_complete_queues,ax
 ;
     popad
     pop ds
