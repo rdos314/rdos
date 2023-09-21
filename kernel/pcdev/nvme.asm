@@ -195,6 +195,67 @@ NvmeInt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SignalSubmitDoor
+;
+;   DESCRIPTION:    Signal submit door
+;
+;   PARAMETERS:     ES             Device sel
+;                   EBX            Door #
+;                   EAX            Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalSubmitDoor  Proc near
+    push ds
+    push ebx
+    push ecx
+;
+    mov ds,es:nd_door_sel
+    mov cl,es:nd_door_shift
+    add ebx,ebx
+    shl ebx,cl
+    mov ds:[ebx],eax
+;
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+SignalSubmitDoor   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SignalCompleteDoor
+;
+;   DESCRIPTION:    Signal complete door
+;
+;   PARAMETERS:     ES             Device sel
+;                   EBX            Door #
+;                   EAX            Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalCompleteDoor  Proc near
+    push ds
+    push ebx
+    push ecx
+;
+    mov ds,es:nd_door_sel
+    mov cl,es:nd_door_shift
+    add ebx,ebx
+    inc ebx
+    shl ebx,cl
+    mov ds:[ebx],eax
+;
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+SignalCompleteDoor   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           AdminSession
 ;
 ;   DESCRIPTION:    Admin session
@@ -208,20 +269,18 @@ AdminSession  Proc near
     push eax
     push ebx
 ;
-    movzx ebx,es:nd_admin_submit_ptr
-    inc ebx
-    cmp bx,40h
+    movzx eax,es:nd_admin_submit_ptr
+    inc eax
+    cmp ax,40h
     jb asSubUpd
 ;
-    xor bx,bx
+    xor eax,eax
 
 asSubUpd:
-    mov es:nd_admin_submit_ptr,bx
+    mov es:nd_admin_submit_ptr,ax
 ;
-    mov eax,ebx
-    mov ds,es:nd_door_sel
     xor ebx,ebx
-    mov ds:[ebx],eax
+    call SignalSubmitDoor
 ;
     mov ds,es:nd_admin_complete_sel
     movzx ebx,es:nd_admin_complete_ptr
@@ -242,20 +301,18 @@ asCompOk:
     xchg ax,ds:[ebx].comp_status
     push eax
 ;
-    movzx ebx,es:nd_admin_complete_ptr
-    inc ebx
-    cmp bx,100h
+    movzx eax,es:nd_admin_complete_ptr
+    inc eax
+    cmp ax,100h
     jb asCompUpd
 ;
-    xor bx,bx
+    xor eax,eax
 
 asCompUpd:
-    mov es:nd_admin_complete_ptr,bx
+    mov es:nd_admin_complete_ptr,ax
 ;
-    mov eax,ebx
-    mov ds,es:nd_door_sel
-    mov ebx,4
-    mov ds:[ebx],eax
+    xor ebx,ebx
+    call SignalCompleteDoor
 ;
     pop eax
     shr al,1
@@ -315,6 +372,8 @@ SendIdentify  Proc near
     mov ds:[ebx].adm_cdw14,0
     mov ds:[ebx].adm_cdw15,0
     call AdminSession
+;
+    mov ds,es:nd_identify_sel
 ;
     popad
     pop ds
@@ -647,7 +706,6 @@ SetupInts Endp
 DevName DB 'NVMe', 0
 
 SetupDevice  Proc near
-    int 3
     xor ax,ax
     mov bh,1
     mov bl,8
