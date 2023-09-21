@@ -200,6 +200,24 @@ id_megcap       DD ?,?,?,?
 id_resv4        DB 128 DUP(?)
 id_sqes         DB ?
 id_cqes         DB ?
+id_maxcmd       DW ?
+id_nn           DD ?
+id_oncs         DW ?
+id_fuses        DW ?
+id_fna          DB ?
+id_vwc          DB ?
+id_awun         DW ?
+id_awupf        DW ?
+id_icsvscc      DB ?
+id_nwpc         DB ?
+id_acwu         DW ?
+id_cdfs         DW ?
+id_sgls         DD ?
+id_mnan         DD ?
+id_maxdna       DD ?,?,?,?
+id_maxcna       DD ?
+id_resv5        DB 204 DUP(?)
+id_subnqn       DB 256 DUP(?)
 
 identify_struc   ENDS
 
@@ -223,6 +241,8 @@ nd_admin_submit_ptr      DW ?
 nd_admin_complete_ptr    DW ?
 
 nd_queue_entries         DW ?
+
+nd_nsid_count            DW ?
 
 nd_pci_bus               DB ?
 nd_pci_device            DB ?
@@ -487,6 +507,11 @@ ProcessIdentify  Proc near
     shl eax,16
     mov ax,1
     mov fs:pci_cc,eax
+;
+    mov eax,ds:id_nn
+    mov es:nd_nsid_count,ax
+;
+    mov edi,OFFSET id_subnqn
 ;
     pop fs
     pop ds
