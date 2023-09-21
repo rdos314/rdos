@@ -37,6 +37,7 @@ INCLUDE ..\os\core.inc
 INCLUDE pci.inc
 
 MAX_NVME_DEVICES    = 16
+MAX_QUEUES          = 2
 
 ;
 ; PCI BAR 0 config
@@ -231,11 +232,17 @@ nd_admin_submit_phys     DD ?,?
 nd_admin_complete_phys   DD ?,?
 nd_identify_phys         DD ?,?
 
+nd_submit_phys           DD MAX_QUEUES DUP(?,?)
+nd_complete_phys         DD MAX_QUEUES DUP(?,?)
+
 nd_config_sel            DW ?
 nd_door_sel              DW ?
 nd_admin_submit_sel      DW ?
 nd_admin_complete_sel    DW ?
 nd_identify_sel          DW ?
+
+nd_submit_sel            DW MAX_QUEUES DUP(?)
+nd_complete_sel          DW MAX_QUEUES DUP(?)
 
 nd_admin_submit_ptr      DW ?
 nd_admin_complete_ptr    DW ?
@@ -577,6 +584,108 @@ GetQueueCount  Proc near
     pop ds
     ret
 GetQueueCount  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateIoCompletionQueue
+;
+;   DESCRIPTION:    Create IO completion queue
+;
+;   PARAMETERS:     ES      Device sel
+;                   AX      Queue # (1..QN)
+;                   DL      Interrupt #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIoCompletionQueue  Proc near
+    push ds
+    pushad
+;
+    movzx edi,dl
+    movzx esi,ax
+    dec esi
+    add esi,esi
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    xor al,al
+    mov es:[4*esi].nd_complete_phys,eax
+    mov es:[4*esi].nd_complete_phys+4,ebx
+;
+    mov al,13h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+;
+    push es
+    push ecx
+    push edi
+;
+    mov es,ebx
+    xor edi,edi
+    mov ecx,400
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop edi
+    pop ecx
+    pop es
+;
+    mov es:[esi].nd_complete_sel,bx
+;
+    mov ds,es:nd_admin_submit_sel
+    movzx ebx,es:nd_admin_submit_ptr
+    shl ebx,6
+    mov ds:[ebx].adm_opc,5
+    mov ds:[ebx].adm_flags,0
+    mov ds:[ebx].adm_cid,2
+    mov ds:[ebx].adm_nsid,0
+    mov ds:[ebx].adm_resv,0
+    mov ds:[ebx].adm_resv+4,0
+    mov ds:[ebx].adm_mptr,0
+    mov ds:[ebx].adm_mptr+4,0
+;
+    mov eax,es:[4*esi].nd_complete_phys
+    mov ds:[ebx].adm_prp1,eax
+    mov eax,es:[4*esi].nd_complete_phys+4
+    mov ds:[ebx].adm_prp1+4,eax
+;
+    mov ds:[ebx].adm_prp2,0
+    mov ds:[ebx].adm_prp2+4,0
+;
+    movzx eax,es:nd_queue_entries
+    shl eax,16
+    mov ax,si
+    shr ax,1
+    inc ax
+    mov ds:[ebx].adm_ndt,eax
+;
+    mov eax,edi
+    shl eax,16
+    mov ax,3
+    mov ds:[ebx].adm_ndm,eax
+;
+    mov ds:[ebx].adm_cdw12,0
+    mov ds:[ebx].adm_cdw13,0
+    mov ds:[ebx].adm_cdw14,0
+    mov ds:[ebx].adm_cdw15,0
+    call AdminSession
+;
+    inc ax
+    mov es:nd_submit_queues,ax
+    shr eax,16
+    inc ax
+    mov es:nd_complete_queues,ax
+;
+    popad
+    pop ds
+    ret
+CreateIoCompletionQueue  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -930,6 +1039,11 @@ SetupDevice  Proc near
 ;
     call ProcessIdentify
     call GetQueueCount
+;
+    mov ax,1
+    mov dl,0
+    call CreateIoCompletionQueue
+    jc sdDone
 
 sdDone:
     ret
