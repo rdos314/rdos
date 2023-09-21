@@ -241,6 +241,8 @@ nd_admin_submit_ptr      DW ?
 nd_admin_complete_ptr    DW ?
 
 nd_queue_entries         DW ?
+nd_submit_queues         DW ?
+nd_complete_queues       DW ?
 
 nd_nsid_count            DW ?
 
@@ -359,12 +361,14 @@ SignalCompleteDoor   Endp
 ;
 ;   PARAMETERS:     ES      Device sel
 ;
+;   RETURNS:        EDX:EAX dword 0 & 1
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AdminSession  Proc near
     push ds
-    push eax
     push ebx
+    push ecx
 ;
     movzx eax,es:nd_admin_submit_ptr
     inc eax
@@ -393,8 +397,11 @@ asCompCheck:
     jmp asCompCheck
 
 asCompOk:
-    xor ax,ax
-    xchg ax,ds:[ebx].comp_status
+    mov eax,ds:[ebx].comp_dw0
+    mov edx,ds:[ebx].comp_dw1
+;
+    xor cx,cx
+    xchg cx,ds:[ebx].comp_status
     push eax
 ;
     movzx eax,es:nd_admin_complete_ptr
@@ -411,16 +418,16 @@ asCompUpd:
     call SignalCompleteDoor
 ;
     pop eax
-    shr al,1
-    or al,al
+    shr cl,1
+    or cl,cl
     clc
     jz asDone
 ;
     stc
 
 asDone:
+    pop ecx
     pop ebx
-    pop eax
     pop ds
     ret
 AdminSession  Endp
@@ -521,6 +528,59 @@ ProcessIdentify  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetQueueCount
+;
+;   DESCRIPTION:    Read number of queues
+;
+;   PARAMETERS:     ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetQueueCount  Proc near
+    push ds
+    pushad
+;
+    mov ds,es:nd_admin_submit_sel
+    movzx ebx,es:nd_admin_submit_ptr
+    shl ebx,6
+    mov ds:[ebx].adm_opc,0Ah
+    mov ds:[ebx].adm_flags,0
+    mov ds:[ebx].adm_cid,2
+    mov ds:[ebx].adm_nsid,0
+    mov ds:[ebx].adm_resv,0
+    mov ds:[ebx].adm_resv+4,0
+    mov ds:[ebx].adm_mptr,0
+    mov ds:[ebx].adm_mptr+4,0
+;
+    mov ds:[ebx].adm_prp1,0
+    mov ds:[ebx].adm_prp1+4,0
+;
+    mov ds:[ebx].adm_prp2,0
+    mov ds:[ebx].adm_prp2+4,0
+;
+    mov ds:[ebx].adm_ndt,7
+    mov ds:[ebx].adm_ndm,0
+;
+    mov ds:[ebx].adm_cdw12,0
+    mov ds:[ebx].adm_cdw13,0
+    mov ds:[ebx].adm_cdw14,0
+    mov ds:[ebx].adm_cdw15,0
+    call AdminSession
+;
+    inc ax
+    mov es:nd_submit_queues,ax
+    shr eax,16
+    inc ax
+    mov es:nd_complete_queues,ax
+;
+    popad
+    pop ds
+    ret
+GetQueueCount  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           ConfigDevice
 ;
 ;   DESCRIPTION:    Config device
@@ -558,10 +618,10 @@ ConfigDevice  Proc near
     jz cdFail
 ;
     mov eax,ds:pci_cap
-    or ah,ah
-    jz cdQueueOk
+    cmp ax,3Fh 
+    jbe cdQueueOk
 ;
-    mov ax,0FFh
+    mov ax,3Fh
 
 cdQueueOk:
     add ax,1
@@ -864,11 +924,12 @@ SetupDevice  Proc near
     call SetupInts
     jc sdDone
 ;
+    int 3
     call SendIdentify
     jc sdDone
 ;
-    int 3
     call ProcessIdentify
+    call GetQueueCount
 
 sdDone:
     ret
