@@ -161,6 +161,45 @@ id_nvmsr        DB ?
 id_vwci         DB ?
 id_mec          DB ?
 id_oacs         DW ?
+id_acl          DB ?
+id_aerl         DB ?
+id_frmw         DB ?
+id_lpa          DB ?
+id_elpe         DB ?
+id_npss         DB ?
+id_avscc        DB ?
+id_apsta        DB ?
+id_wctemp       DW ?
+id_cctemp       DW ?
+id_mtfa         DW ?
+id_hmpre        DD ?
+id_hmmin        DD ?
+id_tnvmcap      DD ?,?,?,?
+id_unvmcap      DD ?,?,?,?
+id_rpmbs        DD ?
+id_edstt        DW ?
+id_dsto         DB ?
+id_fwug         DB ?
+id_kas          DW ?
+id_htcma        DW ?
+id_mntmt        DW ?
+id_mxtmt        DW ?
+id_sanicap      DD ?
+id_hmminds      DD ?
+id_hmmaxd       DW ?
+id_nsetidmax    DW ?
+id_endgidmax    DW ?
+id_anatt        DB ?
+id_anacap       DB ?
+id_anagrpmax    DD ?
+id_nanagrpid    DD ?
+id_pels         DD ?
+id_di           DW ?
+id_resv3        DB 10 DUP(?)
+id_megcap       DD ?,?,?,?
+id_resv4        DB 128 DUP(?)
+id_sqes         DB ?
+id_cqes         DB ?
 
 identify_struc   ENDS
 
@@ -410,7 +449,7 @@ SendIdentify  Proc near
     call AdminSession
 ;
     mov ds,es:nd_identify_sel
-    mov ax,ds:id_oacs
+    mov al,ds:id_sqes
 ;
     popad
     pop ds
