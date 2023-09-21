@@ -229,6 +229,8 @@ nd_pci_device            DB ?
 nd_pci_function          DB ?
 
 nd_door_shift            DB ?
+nd_submit_shift          DB ?
+nd_complete_shift        DB ?
 
 nvme_device_struc   ENDS
 
@@ -363,7 +365,6 @@ asSubUpd:
 
 asCompCheck:
     mov ax,ds:[ebx].comp_status
-    int 3
     test al,1
     jnz asCompOk
 ;
@@ -448,13 +449,49 @@ SendIdentify  Proc near
     mov ds:[ebx].adm_cdw15,0
     call AdminSession
 ;
-    mov ds,es:nd_identify_sel
-    mov al,ds:id_sqes
-;
     popad
     pop ds
     ret
 SendIdentify  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ProcessIdentify
+;
+;   DESCRIPTION:    Process identify
+;
+;   PARAMETERS:     ES      Device sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessIdentify  Proc near
+    push ds
+    push fs
+;
+    mov ds,es:nd_identify_sel
+    mov fs,es:nd_config_sel
+;
+    mov al,ds:id_sqes
+    and al,0Fh
+    mov es:nd_submit_shift,al
+;
+    mov al,ds:id_cqes
+    and al,0Fh
+    mov es:nd_complete_shift,al
+;
+    xor ax,ax
+    mov al,es:nd_complete_shift
+    shl al,4
+    or al,es:nd_submit_shift
+    shl eax,16
+    mov ax,1
+    mov fs:pci_cc,eax
+;
+    pop fs
+    pop ds
+    ret
+ProcessIdentify  Endp    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -802,8 +839,11 @@ SetupDevice  Proc near
     call SetupInts
     jc sdDone
 ;
-    int 3
     call SendIdentify
+    jc sdDone
+;
+    int 3
+    call ProcessIdentify
 
 sdDone:
     ret
