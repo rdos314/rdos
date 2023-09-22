@@ -527,7 +527,7 @@ GetId1  Proc near
     mov esi,eax
     mov edi,ebx
 ;
-    mov al,63h
+    mov al,3
     SetPageEntry
 ;
     AllocateGdt
@@ -628,7 +628,7 @@ GetId0  Proc near
     mov esi,eax
     mov edi,ebx
 ;
-    mov al,63h
+    mov al,3
     SetPageEntry
 ;
     AllocateGdt
@@ -771,48 +771,54 @@ GetQueueCount  Endp
 ;   DESCRIPTION:    Create IO completion queue
 ;
 ;   PARAMETERS:     ES      Device sel
-;                   FS      Name space sel
-;                   AX      Queue # (1..QN)
-;                   DL      Interrupt #
+;                   AL      Interrupt #
+;                   BL      Queue # (1..QN)
+;
+;   RETURNS:        AX      Queue sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateIoCompletionQueue  Proc near
     push ds
-    pushad
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
 ;
-    mov fs:ns_queue,ax
-    mov fs:ns_int,dl
+    push ebx
+    push eax
 ;
     mov eax,1000h
     AllocateBigLinear
 ;
     AllocatePhysical64
-    xor al,al
-    mov fs:ns_complete_phys,eax
-    mov fs:ns_complete_phys+4,ebx
+    mov esi,eax
+    mov edi,ebx
 ;
-    mov al,13h
+    mov al,3
     SetPageEntry
 ;
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
-    mov fs:ns_complete_sel,bx
+    mov bp,bx
 ;
     push es
-    push ecx
     push edi
 ;
-    mov es,ebx
+    mov es,ebp
     xor edi,edi
     mov ecx,400h
     xor eax,eax
     rep stos dword ptr es:[edi]
 ;
     pop edi
-    pop ecx
     pop es
+;
+    pop edx
+    pop ecx
 ;
     mov ds,es:nd_admin_submit_sel
     movzx ebx,es:nd_admin_submit_ptr
@@ -826,10 +832,8 @@ CreateIoCompletionQueue  Proc near
     mov ds:[ebx].adm_mptr,0
     mov ds:[ebx].adm_mptr+4,0
 ;
-    mov eax,fs:ns_complete_phys
-    mov ds:[ebx].adm_prp1,eax
-    mov eax,fs:ns_complete_phys+4
-    mov ds:[ebx].adm_prp1+4,eax
+    mov ds:[ebx].adm_prp1,esi
+    mov ds:[ebx].adm_prp1+4,edi
 ;
     mov ds:[ebx].adm_prp2,0
     mov ds:[ebx].adm_prp2+4,0
@@ -837,12 +841,10 @@ CreateIoCompletionQueue  Proc near
     movzx eax,es:nd_queue_entries
     dec ax
     shl eax,16
-    mov ax,fs:ns_queue
-    shr ax,1
-    inc ax
+    movzx ax,cl
     mov ds:[ebx].adm_ndt,eax
 ;
-    movzx eax,fs:ns_int
+    movzx eax,dl
     shl eax,16
     mov ax,3
     mov ds:[ebx].adm_ndm,eax
@@ -852,8 +854,14 @@ CreateIoCompletionQueue  Proc near
     mov ds:[ebx].adm_cdw14,0
     mov ds:[ebx].adm_cdw15,0
     call AdminSession
+    mov ax,bp
 ;
-    popad
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
     pop ds
     ret
 CreateIoCompletionQueue  Endp
@@ -1057,11 +1065,10 @@ adAlloc:
     AllocateBigLinear
 ;
     AllocatePhysical64
-    xor al,al
     mov es:nd_admin_submit_phys,eax
     mov es:nd_admin_submit_phys+4,ebx
 ;
-    mov al,13h
+    mov al,3
     SetPageEntry
 ;
     AllocateGdt
@@ -1077,7 +1084,7 @@ adAlloc:
     mov es:nd_admin_complete_phys,eax
     mov es:nd_admin_complete_phys+4,ebx
 ;
-    mov al,13h
+    mov al,3
     SetPageEntry
 ;
     AllocateGdt
@@ -1198,8 +1205,8 @@ SetupDevice  Proc near
     mov eax,1
     call GetId0
 ;
-    mov ax,1
-    mov dl,0
+    mov al,0
+    mov bl,1
     call CreateIoCompletionQueue
     jc sdDone
 
