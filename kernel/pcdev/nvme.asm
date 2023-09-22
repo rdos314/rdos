@@ -274,18 +274,21 @@ id1_struc   ENDS
 
 ns_struc       STRUC
 
-ns_submit_phys           DD ?,?
-ns_complete_phys         DD ?,?
-
 ns_sectors               DD ?,?
 ns_bytes_per_sector      DW ?
 ns_nvmsetid              DW ?
 
-ns_submit_sel            DW ?
 ns_complete_sel          DW ?
+ns_rd_sel                DW ?
+ns_wr_sel                DW ?
 
-ns_queue                 DW ?
-ns_int                   DB ?
+ns_complete_ptr          DW ?
+ns_rd_ptr                DW ?
+ns_wr_ptr                DW ?
+
+ns_complete_queue        DB ?
+ns_rd_queue              DB ?
+ns_wr_queue              DB ?
 
 ns_struc       ENDS
 
@@ -974,6 +977,68 @@ CreateIoSubmissionQueue  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CreateNameSpace
+;
+;   DESCRIPTION:    Create namespace
+;
+;   PARAMETERS:     ES      Device sel
+;                   AL      Int #
+;                   BL      Completion queue
+;                   BH      Submission queue
+;                   DX      NSID
+;
+;    RETURNS:       AX      Namespace sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateNameSpace  Proc near
+    push fs
+;
+    push eax
+    mov ax,dx
+    call GetId0
+    pop eax
+    jc cnsDone
+;
+    call CreateIoCompletionQueue
+    jc cnsDone
+;
+    mov fs:ns_complete_queue,bl
+    mov fs:ns_complete_sel,ax
+    mov fs:ns_complete_ptr,ax
+;
+    xchg bl,bh
+    mov ax,fs:ns_nvmsetid
+    call CreateIoSubmissionQueue
+    jc cnsDone
+;
+    mov fs:ns_rd_queue,bl
+    mov fs:ns_rd_sel,ax
+    mov fs:ns_rd_ptr,0
+    mov ax,fs
+;
+    inc bl
+    mov ax,fs:ns_nvmsetid
+    call CreateIoSubmissionQueue
+    jc cnsXchg
+;
+    mov fs:ns_wr_queue,bl
+    mov fs:ns_wr_sel,ax
+    mov fs:ns_wr_ptr,0
+    mov ax,fs
+    clc
+
+cnsXchg:
+    xchg bl,bh
+
+cnsDone:
+    pop fs
+    ret
+CreateNameSpace  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           ConfigDevice
 ;
 ;   DESCRIPTION:    Config device
@@ -1307,18 +1372,11 @@ SetupDevice  Proc near
     call GetQueueCount
     jc sdDone
 ;
-    mov eax,1
-    call GetId0
-;
     mov al,0
     mov bl,1
-    call CreateIoCompletionQueue
-    jc sdDone
-;
-    mov ax,fs:ns_nvmsetid
-    mov bh,bl
-    mov bl,1
-    call CreateIoSubmissionQueue
+    mov bh,1
+    mov dx,1
+    call CreateNameSpace
     jc sdDone
 
 sdDone:
