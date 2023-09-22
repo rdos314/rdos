@@ -37,7 +37,7 @@ INCLUDE ..\os\core.inc
 INCLUDE pci.inc
 
 MAX_NVME_DEVICES    = 16
-MAX_QUEUES          = 2
+MAX_NSID            = 8
 
 ;
 ; PCI BAR 0 config
@@ -278,13 +278,17 @@ ns_sectors               DD ?,?
 ns_bytes_per_sector      DW ?
 ns_nvmsetid              DW ?
 
+ns_dev_sel               DW ?
+
 ns_complete_sel          DW ?
 ns_rd_sel                DW ?
 ns_wr_sel                DW ?
 
 ns_complete_ptr          DW ?
-ns_rd_ptr                DW ?
-ns_wr_ptr                DW ?
+ns_rd_head               DW ?
+ns_rd_tail               DW ?
+ns_wr_head               DW ?
+ns_wr_tail               DW ?
 
 ns_complete_queue        DB ?
 ns_rd_queue              DB ?
@@ -314,6 +318,7 @@ nd_submit_queues         DW ?
 nd_complete_queues       DW ?
 
 nd_nsid_count            DW ?
+nd_nsid_arr              DW MAX_NSID DUP(?)
 
 nd_pci_bus               DB ?
 nd_pci_device            DB ?
@@ -324,7 +329,6 @@ nd_submit_shift          DB ?
 nd_complete_shift        DB ?
 
 nvme_device_struc   ENDS
-
 
 data    SEGMENT byte public 'DATA'
 
@@ -1014,7 +1018,8 @@ CreateNameSpace  Proc near
 ;
     mov fs:ns_rd_queue,bl
     mov fs:ns_rd_sel,ax
-    mov fs:ns_rd_ptr,0
+    mov fs:ns_rd_head,0
+    mov fs:ns_rd_tail,0
     mov ax,fs
 ;
     inc bl
@@ -1024,7 +1029,8 @@ CreateNameSpace  Proc near
 ;
     mov fs:ns_wr_queue,bl
     mov fs:ns_wr_sel,ax
-    mov fs:ns_wr_ptr,0
+    mov fs:ns_wr_head,0
+    mov fs:ns_wr_tail,0
     mov ax,fs
     clc
 
@@ -1372,12 +1378,23 @@ SetupDevice  Proc near
     call GetQueueCount
     jc sdDone
 ;
+    mov edi,OFFSET nd_nsid_arr
     mov al,0
     mov bl,1
     mov bh,1
     mov dx,1
+
+sdMore:
     call CreateNameSpace
-    jc sdDone
+    jnc sdSave
+;
+    xor ax,ax
+
+sdSave:
+    stos word ptr es:[edi]
+    inc dx
+    cmp dx,es:nd_nsid_count
+    jbe sdMore
 
 sdDone:
     ret
