@@ -1460,30 +1460,25 @@ rsCompCheck:
     jmp rsCompCheck
 
 rsCompDone:
-    int 3
-    xor ax,ax
-    xchg ax,ds:[ebx].comp_status
-    shr ax,1
-    or ax,ax
-    stc
-    jnz rsDone
-;
     mov ax,ds:[ebx].comp_sq_id
     cmp al,fs:ns_rd_queue
     jne rsCheckWr
 ;
     mov ax,ds:[ebx].comp_sq_head
     mov fs:ns_rd_head,ax
-    jmp rsDone
+    jmp rsHandled
 
 rsCheckWr:
     cmp al,fs:ns_wr_queue
-    jne rsDone
+    jne rsHandled
 ;
     mov ax,ds:[ebx].comp_sq_head
     mov fs:ns_wr_head,ax
 
-rsDone:
+rsHandled:
+    xor dx,dx
+    xchg dx,ds:[ebx].comp_status
+;
     movzx eax,fs:ns_complete_ptr
     inc eax
     cmp ax,fs:ns_queue_entries
@@ -1502,6 +1497,14 @@ rsComUpd:
     shl ebx,cl
     mov ds:[ebx],eax
 ;
+    shr dx,1
+    or dx,dx
+    stc
+    jnz rsDone
+;
+    clc
+
+rsDone:
     popad
     pop es
     pop ds
