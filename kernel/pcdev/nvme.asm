@@ -133,6 +133,40 @@ comp_struc      ENDS
 ; identify reply
 ;
 
+id0_struc   STRUC
+
+id0_nsze         DD ?,?
+id0_ncap         DD ?,?
+id0_nuse         DD ?,?
+id0_nsfeat       DB ?
+id0_nlbaf        DB ?
+id0_flbas        DB ?
+id0_mc           DB ?
+id0_dpc          DB ?
+id0_dps          DB ?
+id0_nmic         DB ?
+id0_rescap       DB ?
+id0_fpi          DB ?
+id0_dlfeat       DB ?
+id0_nawun        DW ?
+id0_nawupf       DW ?
+id0_nacwu        DW ?
+id0_nabsn        DW ?
+id0_nabo         DW ?
+id0_nabspf       DW ?
+id0_noiob        DW ?
+id0_nvmcap       DD ?,?,?,?
+id0_npwg         DW ?
+id0_npwa         DW ?
+id0_npdg         DW ?
+id0_npda         DW ?
+id0_nows         DW ?
+id0_mssrl        DW ?
+id0_mcl          DD ?
+id0_msrc         DB ?
+
+id0_struc   ENDS
+
 id1_struc   STRUC
 
 id1_vid          DW ?
@@ -602,6 +636,7 @@ GetId0  Proc near
     call AdminSession
     jc gid0Done
 ;
+    mov al,gs:id0_msrc
 
 gid0Done:
     mov eax,gs
