@@ -678,8 +678,8 @@ GetId0  Proc near
     call AdminSession
     jc gid0Done
 ;
-    mov eax,gs:id0_nuse
-    or eax,gs:id0_nuse+4
+    mov eax,gs:id0_ncap
+    or eax,gs:id0_ncap+4
     stc
     jz gid0Done
 ;
@@ -693,9 +693,9 @@ GetId0  Proc near
     rep stos byte ptr es:[edi]
 ;
     mov es:ns_nsid,ebp
-    mov eax,gs:id0_nuse
+    mov eax,gs:id0_ncap
     mov es:ns_sectors,eax
-    mov eax,gs:id0_nuse+4
+    mov eax,gs:id0_ncap+4
     mov es:ns_sectors+4,eax
 ;
     mov ax,1
