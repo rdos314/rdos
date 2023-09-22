@@ -133,94 +133,94 @@ comp_struc      ENDS
 ; identify reply
 ;
 
-identify_struc   STRUC
+id1_struc   STRUC
 
-id_vid          DW ?
-id_ssvid        DW ?
-id_sn           DB 20 DUP(?)
-id_mn           DB 40 DUP(?)
-id_fr           DB 8 DUP(?)
-id_rab          DB ?
-id_ieee         DB ?,?,?
-id_cmic         DB ?
-id_mdts         DB ?
-id_cntlid       DW ?
-id_ver          DD ?
-id_rtd3r        DD ?
-id_rtd3e        DD ?
-id_oaes         DD ?
-id_ctratt       DD ?
-id_rrls         DW ?
-id_resv1        DB 9 DUP(?)
-id_cntrltype    DB ?
-id_fguid        DB 16 DUP(?)
-id_crdt1        DW ?
-id_crdt2        DW ?
-id_crdt3        DW ?
-id_resv2        DB 119 DUP(?)
-id_nvmsr        DB ?
-id_vwci         DB ?
-id_mec          DB ?
-id_oacs         DW ?
-id_acl          DB ?
-id_aerl         DB ?
-id_frmw         DB ?
-id_lpa          DB ?
-id_elpe         DB ?
-id_npss         DB ?
-id_avscc        DB ?
-id_apsta        DB ?
-id_wctemp       DW ?
-id_cctemp       DW ?
-id_mtfa         DW ?
-id_hmpre        DD ?
-id_hmmin        DD ?
-id_tnvmcap      DD ?,?,?,?
-id_unvmcap      DD ?,?,?,?
-id_rpmbs        DD ?
-id_edstt        DW ?
-id_dsto         DB ?
-id_fwug         DB ?
-id_kas          DW ?
-id_htcma        DW ?
-id_mntmt        DW ?
-id_mxtmt        DW ?
-id_sanicap      DD ?
-id_hmminds      DD ?
-id_hmmaxd       DW ?
-id_nsetidmax    DW ?
-id_endgidmax    DW ?
-id_anatt        DB ?
-id_anacap       DB ?
-id_anagrpmax    DD ?
-id_nanagrpid    DD ?
-id_pels         DD ?
-id_di           DW ?
-id_resv3        DB 10 DUP(?)
-id_megcap       DD ?,?,?,?
-id_resv4        DB 128 DUP(?)
-id_sqes         DB ?
-id_cqes         DB ?
-id_maxcmd       DW ?
-id_nn           DD ?
-id_oncs         DW ?
-id_fuses        DW ?
-id_fna          DB ?
-id_vwc          DB ?
-id_awun         DW ?
-id_awupf        DW ?
-id_icsvscc      DB ?
-id_nwpc         DB ?
-id_acwu         DW ?
-id_cdfs         DW ?
-id_sgls         DD ?
-id_mnan         DD ?
-id_maxdna       DD ?,?,?,?
-id_maxcna       DD ?
-id_resv5        DB 204 DUP(?)
-id_subnqn       DB 256 DUP(?)
+id1_vid          DW ?
+id1_ssvid        DW ?
+id1_sn           DB 20 DUP(?)
+id1_mn           DB 40 DUP(?)
+id1_fr           DB 8 DUP(?)
+id1_rab          DB ?
+id1_ieee         DB ?,?,?
+id1_cmic         DB ?
+id1_mdts         DB ?
+id1_cntlid       DW ?
+id1_ver          DD ?
+id1_rtd3r        DD ?
+id1_rtd3e        DD ?
+id1_oaes         DD ?
+id1_ctratt       DD ?
+id1_rrls         DW ?
+id1_resv1        DB 9 DUP(?)
+id1_cntrltype    DB ?
+id1_fguid        DB 16 DUP(?)
+id1_crdt1        DW ?
+id1_crdt2        DW ?
+id1_crdt3        DW ?
+id1_resv2        DB 119 DUP(?)
+id1_nvmsr        DB ?
+id1_vwci         DB ?
+id1_mec          DB ?
+id1_oacs         DW ?
+id1_acl          DB ?
+id1_aerl         DB ?
+id1_frmw         DB ?
+id1_lpa          DB ?
+id1_elpe         DB ?
+id1_npss         DB ?
+id1_avscc        DB ?
+id1_apsta        DB ?
+id1_wctemp       DW ?
+id1_cctemp       DW ?
+id1_mtfa         DW ?
+id1_hmpre        DD ?
+id1_hmmin        DD ?
+id1_tnvmcap      DD ?,?,?,?
+id1_unvmcap      DD ?,?,?,?
+id1_rpmbs        DD ?
+id1_edstt        DW ?
+id1_dsto         DB ?
+id1_fwug         DB ?
+id1_kas          DW ?
+id1_htcma        DW ?
+id1_mntmt        DW ?
+id1_mxtmt        DW ?
+id1_sanicap      DD ?
+id1_hmminds      DD ?
+id1_hmmaxd       DW ?
+id1_nsetidmax    DW ?
+id1_endgidmax    DW ?
+id1_anatt        DB ?
+id1_anacap       DB ?
+id1_anagrpmax    DD ?
+id1_nanagrpid    DD ?
+id1_pels         DD ?
+id1_di           DW ?
+id1_resv3        DB 10 DUP(?)
+id1_megcap       DD ?,?,?,?
+id1_resv4        DB 128 DUP(?)
+id1_sqes         DB ?
+id1_cqes         DB ?
+id1_maxcmd       DW ?
+id1_nn           DD ?
+id1_oncs         DW ?
+id1_fuses        DW ?
+id1_fna          DB ?
+id1_vwc          DB ?
+id1_awun         DW ?
+id1_awupf        DW ?
+id1_icsvscc      DB ?
+id1_nwpc         DB ?
+id1_acwu         DW ?
+id1_cdfs         DW ?
+id1_sgls         DD ?
+id1_mnan         DD ?
+id1_maxdna       DD ?,?,?,?
+id1_maxcna       DD ?
+id1_resv5        DB 204 DUP(?)
+id1_subnqn       DB 256 DUP(?)
 
-identify_struc   ENDS
+id1_struc   ENDS
 
 ;
 ; NVME device
@@ -230,7 +230,6 @@ nvme_device_struc   STRUC
 
 nd_admin_submit_phys     DD ?,?
 nd_admin_complete_phys   DD ?,?
-nd_identify_phys         DD ?,?
 
 nd_submit_phys           DD MAX_QUEUES DUP(?,?)
 nd_complete_phys         DD MAX_QUEUES DUP(?,?)
@@ -239,7 +238,6 @@ nd_config_sel            DW ?
 nd_door_sel              DW ?
 nd_admin_submit_sel      DW ?
 nd_admin_complete_sel    DW ?
-nd_identify_sel          DW ?
 
 nd_submit_sel            DW MAX_QUEUES DUP(?)
 nd_complete_sel          DW MAX_QUEUES DUP(?)
@@ -446,19 +444,38 @@ AdminSession  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           SendIdentify
+;   NAME:           GetId1
 ;
-;   DESCRIPTION:    Send identify command
+;   DESCRIPTION:    Get ID 1 info
 ;
 ;   PARAMETERS:     ES      Device sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SendIdentify  Proc near
+GetId1  Proc near
     push ds
+    push es
+    push fs
+    push gs
     pushad
 ;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    mov esi,eax
+    mov edi,ebx
+;
+    mov al,63h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov gs,bx
+;
     mov ds,es:nd_admin_submit_sel
+    mov fs,es:nd_config_sel
     movzx ebx,es:nd_admin_submit_ptr
     shl ebx,6
     mov ds:[ebx].adm_opc,6
@@ -470,10 +487,8 @@ SendIdentify  Proc near
     mov ds:[ebx].adm_mptr,0
     mov ds:[ebx].adm_mptr+4,0
 ;
-    mov eax,es:nd_identify_phys
-    mov ds:[ebx].adm_prp1,eax
-    mov eax,es:nd_identify_phys+4
-    mov ds:[ebx].adm_prp1+4,eax
+    mov ds:[ebx].adm_prp1,esi
+    mov ds:[ebx].adm_prp1+4,edi
 ;
     mov ds:[ebx].adm_prp2,0
     mov ds:[ebx].adm_prp2+4,0
@@ -486,35 +501,13 @@ SendIdentify  Proc near
     mov ds:[ebx].adm_cdw14,0
     mov ds:[ebx].adm_cdw15,0
     call AdminSession
+    jc gid1Done
 ;
-    popad
-    pop ds
-    ret
-SendIdentify  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ProcessIdentify
-;
-;   DESCRIPTION:    Process identify
-;
-;   PARAMETERS:     ES      Device sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ProcessIdentify  Proc near
-    push ds
-    push fs
-;
-    mov ds,es:nd_identify_sel
-    mov fs,es:nd_config_sel
-;
-    mov al,ds:id_sqes
+    mov al,gs:id1_sqes
     and al,0Fh
     mov es:nd_submit_shift,al
 ;
-    mov al,ds:id_cqes
+    mov al,gs:id1_cqes
     and al,0Fh
     mov es:nd_complete_shift,al
 ;
@@ -526,15 +519,23 @@ ProcessIdentify  Proc near
     mov ax,1
     mov fs:pci_cc,eax
 ;
-    mov eax,ds:id_nn
+    mov eax,gs:id1_nn
     mov es:nd_nsid_count,ax
+
+gid1Done:
+    mov eax,gs
+    mov es,eax
+    xor eax,eax
+    mov gs,eax
+    FreeMem
 ;
-    mov edi,OFFSET id_subnqn
-;
+    popad
+    pop gs
     pop fs
+    pop es
     pop ds
     ret
-ProcessIdentify  Endp    
+GetId1  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -912,22 +913,6 @@ adAlloc:
     mov ecx,1000h
     CreateDataSelector16
     mov es:nd_admin_complete_sel,bx
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    AllocatePhysical64
-    xor al,al
-    mov es:nd_identify_phys,eax
-    mov es:nd_identify_phys+4,ebx
-;
-    mov al,13h
-    SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov es:nd_identify_sel,bx
     clc
 ;
     popad
@@ -1033,11 +1018,11 @@ SetupDevice  Proc near
     jc sdDone
 ;
     int 3
-    call SendIdentify
+    call GetId1
     jc sdDone
 ;
-    call ProcessIdentify
     call GetQueueCount
+    jc sdDone
 ;
     mov ax,1
     mov dl,0
