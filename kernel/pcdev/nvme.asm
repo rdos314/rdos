@@ -1036,7 +1036,7 @@ CreateNameSpace  Proc near
 ;
     mov fs:ns_complete_queue,bl
     mov fs:ns_complete_sel,ax
-    mov fs:ns_complete_ptr,ax
+    mov fs:ns_complete_ptr,0
 ;
     xchg bl,bh
     mov ax,fs:ns_nvmsetid
@@ -1403,7 +1403,7 @@ ReadSector   Proc near
     pop eax
 ;
     mov ds,fs:ns_rd_sel
-    movzx ebx,fs:ns_rd_head
+    movzx ebx,fs:ns_rd_tail
     mov cl,fs:ns_submit_shift
     shl ebx,cl
     mov ds:[ebx].sub_opc,2
@@ -1428,7 +1428,7 @@ ReadSector   Proc near
     mov ds:[ebx].sub_cdw14,0
     mov ds:[ebx].sub_cdw15,0
 ;
-    movzx eax,fs:ns_rd_head
+    movzx eax,fs:ns_rd_tail
     inc eax
     cmp ax,fs:ns_queue_entries
     jb rsSubUpd
@@ -1436,7 +1436,7 @@ ReadSector   Proc near
     xor eax,eax
 
 rsSubUpd:
-    mov fs:ns_rd_head,ax
+    mov fs:ns_rd_tail,ax
 ;
     mov ds,fs:ns_door_sel
     mov cl,fs:ns_door_shift
@@ -1447,7 +1447,7 @@ rsSubUpd:
 ;
     mov ds,fs:ns_complete_sel
     movzx ebx,fs:ns_complete_ptr
-    mov cl,ds:ns_complete_shift
+    mov cl,fs:ns_complete_shift
     shl ebx,cl
 
 rsCompCheck:
