@@ -869,6 +869,111 @@ CreateIoCompletionQueue  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           CreateIoSubmissionQueue
+;
+;   DESCRIPTION:    Create IO submission queue
+;
+;   PARAMETERS:     ES      Device sel
+;                   AX      Set id
+;                   BL      Queue # (1..QN)
+;                   BH      Completion queue (1..QN)
+;
+;   RETURNS:        AX      Queue sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIoSubmissionQueue  Proc near
+    push ds
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    push ebx
+    push eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    mov esi,eax
+    mov edi,ebx
+;
+    mov al,3
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov bp,bx
+;
+    push es
+    push edi
+;
+    mov es,ebp
+    xor edi,edi
+    mov ecx,400h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+;
+    pop edi
+    pop es
+;
+    pop edx
+    pop ecx
+;
+    mov ds,es:nd_admin_submit_sel
+    movzx ebx,es:nd_admin_submit_ptr
+    shl ebx,6
+    mov ds:[ebx].adm_opc,1
+    mov ds:[ebx].adm_flags,0
+    mov ds:[ebx].adm_cid,4
+    mov ds:[ebx].adm_nsid,0
+    mov ds:[ebx].adm_resv,0
+    mov ds:[ebx].adm_resv+4,0
+    mov ds:[ebx].adm_mptr,0
+    mov ds:[ebx].adm_mptr+4,0
+;
+    mov ds:[ebx].adm_prp1,esi
+    mov ds:[ebx].adm_prp1+4,edi
+;
+    mov ds:[ebx].adm_prp2,0
+    mov ds:[ebx].adm_prp2+4,0
+;
+    movzx eax,es:nd_queue_entries
+    dec ax
+    shl eax,16
+    movzx ax,cl
+    mov ds:[ebx].adm_ndt,eax
+;
+    movzx eax,ch
+    shl eax,16
+    mov ax,1
+    mov ds:[ebx].adm_ndm,eax
+;
+    movzx eax,dx
+    mov ds:[ebx].adm_cdw12,eax
+    mov ds:[ebx].adm_cdw13,0
+    mov ds:[ebx].adm_cdw14,0
+    mov ds:[ebx].adm_cdw15,0
+    call AdminSession
+    mov ax,bp
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+CreateIoSubmissionQueue  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           ConfigDevice
 ;
 ;   DESCRIPTION:    Config device
@@ -1208,6 +1313,12 @@ SetupDevice  Proc near
     mov al,0
     mov bl,1
     call CreateIoCompletionQueue
+    jc sdDone
+;
+    mov ax,fs:ns_nvmsetid
+    mov bh,bl
+    mov bl,1
+    call CreateIoSubmissionQueue
     jc sdDone
 
 sdDone:
