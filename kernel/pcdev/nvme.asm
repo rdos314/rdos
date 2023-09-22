@@ -129,10 +129,6 @@ comp_status     DW ?
 
 comp_struc      ENDS
 
-lba_format_struc      STRUC
-
-
-lba_format_struc      ENDS
 
 ;
 ; identify reply
@@ -271,6 +267,18 @@ id1_resv5        DB 204 DUP(?)
 id1_subnqn       DB 256 DUP(?)
 
 id1_struc   ENDS
+
+;
+; Name space struc
+;
+
+ns_struc       STRUC
+
+ns_sectors             DD ?,?
+ns_bytes_per_sector    DW ?
+ns_nvmsetid            DW ?
+
+ns_struc       ENDS
 
 ;
 ; NVME device
@@ -597,12 +605,14 @@ GetId1  Endp
 ;   PARAMETERS:     ES      Device sel
 ;                   EAX     NSID
 ;
+;   RETURNS:        NC
+;                       FS  Name space sel
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetId0  Proc near
     push ds
     push es
-    push fs
     push gs
     pushad
 ;
@@ -624,7 +634,6 @@ GetId0  Proc near
     mov gs,bx
 ;
     mov ds,es:nd_admin_submit_sel
-    mov fs,es:nd_config_sel
     movzx ebx,es:nd_admin_submit_ptr
     shl ebx,6
     mov ds:[ebx].adm_opc,6
@@ -652,18 +661,42 @@ GetId0  Proc near
     call AdminSession
     jc gid0Done
 ;
-    mov al,gs:id0_lbads
+    mov eax,gs:id0_nuse
+    or eax,gs:id0_nuse+4
+    stc
+    jz gid0Done
+;
+    mov eax,SIZE ns_struc
+    AllocateSmallGlobalMem
+;
+    mov eax,gs:id0_nuse
+    mov es:ns_sectors,eax
+    mov eax,gs:id0_nuse+4
+    mov es:ns_sectors+4,eax
+;
+    mov ax,1
+    mov cl,gs:id0_lbads
+    shl ax,cl
+    mov es:ns_bytes_per_sector,ax
+;
+    mov ax,gs:id0_nvmsetid
+    mov es:ns_nvmsetid,ax
+;
+    mov eax,es
+    mov fs,eax
+    clc
 
 gid0Done:
+    pushf
     mov eax,gs
     mov es,eax
     xor eax,eax
     mov gs,eax
     FreeMem
+    popf
 ;
     popad
     pop gs
-    pop fs
     pop es
     pop ds
     ret
