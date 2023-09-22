@@ -274,9 +274,18 @@ id1_struc   ENDS
 
 ns_struc       STRUC
 
-ns_sectors             DD ?,?
-ns_bytes_per_sector    DW ?
-ns_nvmsetid            DW ?
+ns_submit_phys           DD ?,?
+ns_complete_phys         DD ?,?
+
+ns_sectors               DD ?,?
+ns_bytes_per_sector      DW ?
+ns_nvmsetid              DW ?
+
+ns_submit_sel            DW ?
+ns_complete_sel          DW ?
+
+ns_queue                 DW ?
+ns_int                   DB ?
 
 ns_struc       ENDS
 
@@ -289,16 +298,10 @@ nvme_device_struc   STRUC
 nd_admin_submit_phys     DD ?,?
 nd_admin_complete_phys   DD ?,?
 
-nd_submit_phys           DD MAX_QUEUES DUP(?,?)
-nd_complete_phys         DD MAX_QUEUES DUP(?,?)
-
 nd_config_sel            DW ?
 nd_door_sel              DW ?
 nd_admin_submit_sel      DW ?
 nd_admin_complete_sel    DW ?
-
-nd_submit_sel            DW MAX_QUEUES DUP(?)
-nd_complete_sel          DW MAX_QUEUES DUP(?)
 
 nd_admin_submit_ptr      DW ?
 nd_admin_complete_ptr    DW ?
@@ -669,6 +672,11 @@ GetId0  Proc near
     mov eax,SIZE ns_struc
     AllocateSmallGlobalMem
 ;
+    xor edi,edi
+    mov ecx,SIZE ns_struc
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
     mov eax,gs:id0_nuse
     mov es:ns_sectors,eax
     mov eax,gs:id0_nuse+4
@@ -763,6 +771,7 @@ GetQueueCount  Endp
 ;   DESCRIPTION:    Create IO completion queue
 ;
 ;   PARAMETERS:     ES      Device sel
+;                   FS      Name space sel
 ;                   AX      Queue # (1..QN)
 ;                   DL      Interrupt #
 ;
@@ -772,18 +781,16 @@ CreateIoCompletionQueue  Proc near
     push ds
     pushad
 ;
-    movzx edi,dl
-    movzx esi,ax
-    dec esi
-    add esi,esi
+    mov fs:ns_queue,ax
+    mov fs:ns_int,dl
 ;
     mov eax,1000h
     AllocateBigLinear
 ;
     AllocatePhysical64
     xor al,al
-    mov es:[4*esi].nd_complete_phys,eax
-    mov es:[4*esi].nd_complete_phys+4,ebx
+    mov fs:ns_complete_phys,eax
+    mov fs:ns_complete_phys+4,ebx
 ;
     mov al,13h
     SetPageEntry
@@ -791,6 +798,7 @@ CreateIoCompletionQueue  Proc near
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
+    mov fs:ns_complete_sel,bx
 ;
     push es
     push ecx
@@ -806,8 +814,6 @@ CreateIoCompletionQueue  Proc near
     pop ecx
     pop es
 ;
-    mov es:[esi].nd_complete_sel,bx
-;
     mov ds,es:nd_admin_submit_sel
     movzx ebx,es:nd_admin_submit_ptr
     shl ebx,6
@@ -820,9 +826,9 @@ CreateIoCompletionQueue  Proc near
     mov ds:[ebx].adm_mptr,0
     mov ds:[ebx].adm_mptr+4,0
 ;
-    mov eax,es:[4*esi].nd_complete_phys
+    mov eax,fs:ns_complete_phys
     mov ds:[ebx].adm_prp1,eax
-    mov eax,es:[4*esi].nd_complete_phys+4
+    mov eax,fs:ns_complete_phys+4
     mov ds:[ebx].adm_prp1+4,eax
 ;
     mov ds:[ebx].adm_prp2,0
@@ -831,12 +837,12 @@ CreateIoCompletionQueue  Proc near
     movzx eax,es:nd_queue_entries
     dec ax
     shl eax,16
-    mov ax,si
+    mov ax,fs:ns_queue
     shr ax,1
     inc ax
     mov ds:[ebx].adm_ndt,eax
 ;
-    mov eax,edi
+    movzx eax,fs:ns_int
     shl eax,16
     mov ax,3
     mov ds:[ebx].adm_ndm,eax
@@ -1186,11 +1192,11 @@ SetupDevice  Proc near
     call GetId1
     jc sdDone
 ;
-    mov eax,1
-    call GetId0
-;
     call GetQueueCount
     jc sdDone
+;
+    mov eax,1
+    call GetId0
 ;
     mov ax,1
     mov dl,0
