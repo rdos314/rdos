@@ -540,6 +540,87 @@ GetId1  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           GetId0
+;
+;   DESCRIPTION:    Get ID 0 info
+;
+;   PARAMETERS:     ES      Device sel
+;                   EAX     NSID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetId0  Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ebp,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    mov esi,eax
+    mov edi,ebx
+;
+    mov al,63h
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov gs,bx
+;
+    mov ds,es:nd_admin_submit_sel
+    mov fs,es:nd_config_sel
+    movzx ebx,es:nd_admin_submit_ptr
+    shl ebx,6
+    mov ds:[ebx].adm_opc,6
+    mov ds:[ebx].adm_flags,0
+    mov ds:[ebx].adm_cid,1
+    mov ds:[ebx].adm_nsid,ebp
+    mov ds:[ebx].adm_resv,0
+    mov ds:[ebx].adm_resv+4,0
+    mov ds:[ebx].adm_mptr,0
+    mov ds:[ebx].adm_mptr+4,0
+;
+    mov ds:[ebx].adm_prp1,esi
+    mov ds:[ebx].adm_prp1+4,edi
+;
+    mov ds:[ebx].adm_prp2,0
+    mov ds:[ebx].adm_prp2+4,0
+;
+    mov ds:[ebx].adm_ndt,0
+    mov ds:[ebx].adm_ndm,0
+;
+    mov ds:[ebx].adm_cdw12,0
+    mov ds:[ebx].adm_cdw13,0
+    mov ds:[ebx].adm_cdw14,0
+    mov ds:[ebx].adm_cdw15,0
+    call AdminSession
+    jc gid0Done
+;
+
+gid0Done:
+    mov eax,gs
+    mov es,eax
+    xor eax,eax
+    mov gs,eax
+    FreeMem
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+GetId0  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           GetQueueCount
 ;
 ;   DESCRIPTION:    Read number of queues
@@ -1020,6 +1101,9 @@ SetupDevice  Proc near
     int 3
     call GetId1
     jc sdDone
+;
+    mov eax,1
+    call GetId0
 ;
     call GetQueueCount
     jc sdDone
