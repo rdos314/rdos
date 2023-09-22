@@ -279,6 +279,8 @@ ns_bytes_per_sector      DW ?
 ns_nvmsetid              DW ?
 
 ns_dev_sel               DW ?
+ns_door_sel              DW ?
+ns_queue_entries         DW ?
 
 ns_complete_sel          DW ?
 ns_rd_sel                DW ?
@@ -293,6 +295,10 @@ ns_wr_tail               DW ?
 ns_complete_queue        DB ?
 ns_rd_queue              DB ?
 ns_wr_queue              DB ?
+
+ns_door_shift            DB ?
+ns_submit_shift          DB ?
+ns_complete_shift        DB ?
 
 ns_struc       ENDS
 
@@ -676,6 +682,7 @@ GetId0  Proc near
     stc
     jz gid0Done
 ;
+    push es
     mov eax,SIZE ns_struc
     AllocateSmallGlobalMem
 ;
@@ -699,6 +706,24 @@ GetId0  Proc near
 ;
     mov eax,es
     mov fs,eax
+    pop es
+;
+    mov al,es:nd_submit_shift
+    mov fs:ns_submit_shift,al
+;
+    mov al,es:nd_complete_shift
+    mov fs:ns_complete_shift,al
+;
+    mov al,es:nd_door_shift
+    mov fs:ns_door_shift,al
+;
+    mov ax,es:nd_door_sel
+    mov fs:ns_door_sel,ax
+;
+    mov ax,es:nd_queue_entries
+    mov fs:ns_queue_entries,ax
+;
+    mov fs:ns_dev_sel,es
     clc
 
 gid0Done:
@@ -1340,6 +1365,101 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           ReadSector
+;
+;   DESCRIPTION:    Read a sector
+;
+;   PARAMETERS:     FS        Namespace sel
+;                   EDX:EAX   Sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSector   Proc near
+    push ds
+    push es
+    pushad
+;
+    push eax
+    push edx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    mov esi,eax
+    mov edi,ebx
+;
+    mov al,3
+    SetPageEntry
+;
+    AllocateGdt
+    mov ecx,1000h
+    CreateDataSelector16
+    mov es,bx
+;
+    pop edx
+    pop eax
+;
+    mov ds,fs:ns_rd_sel
+    movzx ebx,fs:ns_rd_head
+    mov cl,fs:ns_submit_shift
+    shl ebx,cl
+    mov ds:[ebx].sub_opc,2
+    mov ds:[ebx].sub_flags,0
+    mov ds:[ebx].sub_cid,1
+    mov ds:[ebx].sub_nsid,0
+    mov ds:[ebx].sub_cdw2,0
+    mov ds:[ebx].sub_cdw2+4,0
+    mov ds:[ebx].sub_mptr,0
+    mov ds:[ebx].sub_mptr+4,0
+;
+    mov ds:[ebx].sub_prp1,esi
+    mov ds:[ebx].sub_prp1+4,edi
+;
+    mov ds:[ebx].sub_prp2,0
+    mov ds:[ebx].sub_prp2+4,0
+    mov ds:[ebx].sub_cdw10,eax
+    mov ds:[ebx].sub_cdw11,edx
+    mov ds:[ebx].sub_cdw12,8
+    mov ds:[ebx].sub_cdw13,0
+    mov ds:[ebx].sub_cdw14,0
+    mov ds:[ebx].sub_cdw15,0
+;
+    movzx eax,fs:ns_rd_head
+    inc eax
+    cmp ax,fs:ns_queue_entries
+    jb rsSubUpd
+;
+    xor eax,eax
+
+rsSubUpd:
+    mov fs:ns_rd_head,ax
+;
+    mov ds,fs:ns_door_sel
+    mov cl,fs:ns_door_shift
+    movzx ebx,fs:ns_rd_queue
+    add ebx,ebx
+    shl ebx,cl
+    mov ds:[ebx],eax
+;
+    mov ds,fs:ns_complete_sel
+    movzx ebx,fs:ns_complete_ptr
+    mov cl,ds:ns_complete_shift
+    shl ebx,cl
+
+rsCompCheck:
+    mov ax,ds:[ebx].comp_status
+
+;
+    popad
+    pop es
+    pop ds
+    ret
+ReadSector   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           SetupDevice
 ;
 ;   DESCRIPTION:    Setup device
@@ -1395,6 +1515,11 @@ sdSave:
     inc dx
     cmp dx,es:nd_nsid_count
     jbe sdMore
+;
+    mov fs,es:nd_nsid_arr
+    xor eax,eax
+    xor edx,edx
+    call ReadSector
 
 sdDone:
     ret
