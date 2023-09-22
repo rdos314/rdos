@@ -1452,7 +1452,55 @@ rsSubUpd:
 
 rsCompCheck:
     mov ax,ds:[ebx].comp_status
+    test al,1
+    jnz rsCompDone
+;
+    mov ax,10
+    WaitMilliSec
+    jmp rsCompCheck
 
+rsCompDone:
+    int 3
+    xor ax,ax
+    xchg ax,ds:[ebx].comp_status
+    shr ax,1
+    or ax,ax
+    stc
+    jnz rsDone
+;
+    mov ax,ds:[ebx].comp_sq_id
+    cmp al,fs:ns_rd_queue
+    jne rsCheckWr
+;
+    mov ax,ds:[ebx].comp_sq_head
+    mov fs:ns_rd_head,ax
+    jmp rsDone
+
+rsCheckWr:
+    cmp al,fs:ns_wr_queue
+    jne rsDone
+;
+    mov ax,ds:[ebx].comp_sq_head
+    mov fs:ns_wr_head,ax
+
+rsDone:
+    movzx eax,fs:ns_complete_ptr
+    inc eax
+    cmp ax,fs:ns_queue_entries
+    jb rsComUpd
+;
+    xor eax,eax
+
+rsComUpd:
+    mov fs:ns_complete_ptr,ax
+;
+    mov ds,fs:ns_door_sel
+    mov cl,fs:ns_door_shift
+    movzx ebx,fs:ns_rd_queue
+    add ebx,ebx
+    inc ebx
+    shl ebx,cl
+    mov ds:[ebx],eax
 ;
     popad
     pop es
