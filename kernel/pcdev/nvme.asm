@@ -129,6 +129,11 @@ comp_status     DW ?
 
 comp_struc      ENDS
 
+lba_format_struc      STRUC
+
+
+lba_format_struc      ENDS
+
 ;
 ; identify reply
 ;
@@ -164,6 +169,17 @@ id0_nows         DW ?
 id0_mssrl        DW ?
 id0_mcl          DD ?
 id0_msrc         DB ?
+id0_resv1        DB 11 DUP(?)
+id0_anagrpid     DD ?
+id0_resv2        DB 3 DUP(?)
+id0_nsattr       DB ?
+id0_nvmsetid     DW ?
+id0_endgid       DW ?
+id0_nguid        DD ?,?,?,?
+id0_eui64        DD ?,?
+id0_ms           DW ?
+id0_lbads        DB ?
+id0_flags        DB ?
 
 id0_struc   ENDS
 
@@ -636,7 +652,7 @@ GetId0  Proc near
     call AdminSession
     jc gid0Done
 ;
-    mov al,gs:id0_msrc
+    mov al,gs:id0_lbads
 
 gid0Done:
     mov eax,gs
