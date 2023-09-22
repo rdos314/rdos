@@ -275,6 +275,7 @@ id1_struc   ENDS
 ns_struc       STRUC
 
 ns_sectors               DD ?,?
+ns_nsid                  DD ?
 ns_bytes_per_sector      DW ?
 ns_nvmsetid              DW ?
 
@@ -691,6 +692,7 @@ GetId0  Proc near
     xor al,al
     rep stos byte ptr es:[edi]
 ;
+    mov es:ns_nsid,ebp
     mov eax,gs:id0_nuse
     mov es:ns_sectors,eax
     mov eax,gs:id0_nuse+4
@@ -1406,8 +1408,9 @@ ReadSector   Proc near
     shl ebx,cl
     mov ds:[ebx].sub_opc,2
     mov ds:[ebx].sub_flags,0
-    mov ds:[ebx].sub_cid,1
-    mov ds:[ebx].sub_nsid,0
+    mov ds:[ebx].sub_cid,15
+    mov ecx,fs:ns_nsid
+    mov ds:[ebx].sub_nsid,ecx
     mov ds:[ebx].sub_cdw2,0
     mov ds:[ebx].sub_cdw2+4,0
     mov ds:[ebx].sub_mptr,0
