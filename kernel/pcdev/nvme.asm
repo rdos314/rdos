@@ -604,7 +604,6 @@ GetId1  Proc near
     mov eax,gs:id1_nn
     mov es:nd_nsid_count,ax
 ;
-    int 3
     mov esi,OFFSET id1_mn
     mov edi,OFFSET nd_vendor
     mov ecx,10
