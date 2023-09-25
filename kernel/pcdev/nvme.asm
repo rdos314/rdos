@@ -1272,6 +1272,9 @@ cdWaitStart:
     jmp cdWaitStart
 
 cdStartDone:
+    mov eax,-1
+    mov ds:pci_intmc,eax
+;
     mov es:nd_admin_submit_ptr,0
     mov es:nd_admin_complete_ptr,0
     clc
