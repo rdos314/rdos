@@ -1413,152 +1413,6 @@ siOk:
     pop ds
     ret
 SetupInts Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           ReadSector
-;
-;   DESCRIPTION:    Read a sector
-;
-;   PARAMETERS:     FS        Namespace sel
-;                   EDX:EAX   Sector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadSector   Proc near
-    push es
-    pushad
-;
-    push eax
-    push edx
-;
-    mov eax,1000h
-    AllocateBigLinear
-;
-    AllocatePhysical64
-    mov esi,eax
-    mov edi,ebx
-;
-    mov al,3
-    SetPageEntry
-;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov es,bx
-;
-    pop edx
-    pop eax
-;
-    movzx ebx,fs:ns_rd_tail
-    mov cl,fs:ns_submit_shift
-    shl ebx,cl
-    add ebx,NVME_DISC_RD
-;
-    mov fs:[ebx].sub_opc,2
-    mov fs:[ebx].sub_flags,0
-    mov fs:[ebx].sub_cid,15
-    mov ecx,fs:ns_nsid
-    mov fs:[ebx].sub_nsid,ecx
-    mov fs:[ebx].sub_cdw2,0
-    mov fs:[ebx].sub_cdw2+4,0
-    mov fs:[ebx].sub_mptr,0
-    mov fs:[ebx].sub_mptr+4,0
-;
-    mov fs:[ebx].sub_prp1,esi
-    mov fs:[ebx].sub_prp1+4,edi
-;
-    mov fs:[ebx].sub_prp2,0
-    mov fs:[ebx].sub_prp2+4,0
-    mov fs:[ebx].sub_cdw10,eax
-    mov fs:[ebx].sub_cdw11,edx
-    mov fs:[ebx].sub_cdw12,8
-    mov fs:[ebx].sub_cdw13,0
-    mov fs:[ebx].sub_cdw14,0
-    mov fs:[ebx].sub_cdw15,0
-;
-    movzx eax,fs:ns_rd_tail
-    inc eax
-    cmp ax,fs:ns_queue_entries
-    jb rsSubUpd
-;
-    xor eax,eax
-
-rsSubUpd:
-    mov fs:ns_rd_tail,ax
-;
-    mov cl,fs:ns_door_shift
-    movzx ebx,fs:ns_rd_queue
-    add ebx,ebx
-    shl ebx,cl
-    add ebx,NVME_DISC_DOOR
-    mov fs:[ebx],eax
-;
-    movzx ebx,fs:ns_complete_ptr
-    mov cl,fs:ns_complete_shift
-    shl ebx,cl
-    add ebx,NVME_DISC_COMPL
-
-rsCompCheck:
-    mov ax,fs:[ebx].comp_status
-    test al,1
-    jnz rsCompDone
-;
-    mov ax,10
-    WaitMilliSec
-    jmp rsCompCheck
-
-rsCompDone:
-    mov ax,fs:[ebx].comp_sq_id
-    cmp al,fs:ns_rd_queue
-    jne rsCheckWr
-;
-    mov ax,fs:[ebx].comp_sq_head
-    mov fs:ns_rd_head,ax
-    jmp rsHandled
-
-rsCheckWr:
-    cmp al,fs:ns_wr_queue
-    jne rsHandled
-;
-    mov ax,fs:[ebx].comp_sq_head
-    mov fs:ns_wr_head,ax
-
-rsHandled:
-    xor dx,dx
-    xchg dx,fs:[ebx].comp_status
-;
-    movzx eax,fs:ns_complete_ptr
-    inc eax
-    cmp ax,fs:ns_queue_entries
-    jb rsComUpd
-;
-    xor eax,eax
-
-rsComUpd:
-    mov fs:ns_complete_ptr,ax
-;
-    mov cl,fs:ns_door_shift
-    movzx ebx,fs:ns_rd_queue
-    add ebx,ebx
-    inc ebx
-    shl ebx,cl
-    add ebx,NVME_DISC_DOOR
-    mov fs:[ebx],eax
-;
-    shr dx,1
-    or dx,dx
-    stc
-    jnz rsDone
-;
-    clc
-
-rsDone:
-    popad
-    pop es
-    ret
-ReadSector   Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1672,7 +1526,122 @@ GetBiosVfs  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadVfs      Proc far
+    push ds
+    pushad
+;
     int 3
+    push ecx
+    mov ds,ebx
+    movzx ebx,ds:ns_rd_tail
+    mov cl,ds:ns_submit_shift
+    shl ebx,cl
+    add ebx,NVME_DISC_RD
+    pop ecx
+;
+    mov ds:[ebx].sub_opc,2
+    mov ds:[ebx].sub_flags,0
+    mov ds:[ebx].sub_cid,15
+    mov ebp,ds:ns_nsid
+    mov ds:[ebx].sub_nsid,ebp
+    mov ds:[ebx].sub_cdw2,0
+    mov ds:[ebx].sub_cdw2+4,0
+    mov ds:[ebx].sub_mptr,0
+    mov ds:[ebx].sub_mptr+4,0
+    mov ds:[ebx].sub_cdw10,eax
+    mov ds:[ebx].sub_cdw11,edx
+    mov ds:[ebx].sub_cdw12,ecx
+    mov ds:[ebx].sub_cdw13,0
+    mov ds:[ebx].sub_cdw14,0
+    mov ds:[ebx].sub_cdw15,0
+;
+    mov eax,es:[edi]
+    mov ds:[ebx].sub_prp1,eax
+    mov eax,es:[edi+4]
+    mov ds:[ebx].sub_prp1+4,eax
+    add edi,8
+;
+    mov ds:[ebx].sub_prp2,0
+    mov ds:[ebx].sub_prp2+4,0
+;
+    movzx eax,ds:ns_rd_tail
+    inc eax
+    cmp ax,ds:ns_queue_entries
+    jb rsSubUpd
+;
+    xor eax,eax
+
+rsSubUpd:
+    mov ds:ns_rd_tail,ax
+;
+    mov cl,ds:ns_door_shift
+    movzx ebx,ds:ns_rd_queue
+    add ebx,ebx
+    shl ebx,cl
+    add ebx,NVME_DISC_DOOR
+    mov ds:[ebx],eax
+;
+    movzx ebx,ds:ns_complete_ptr
+    mov cl,ds:ns_complete_shift
+    shl ebx,cl
+    add ebx,NVME_DISC_COMPL
+
+rsCompCheck:
+    mov ax,ds:[ebx].comp_status
+    test al,1
+    jnz rsCompDone
+;
+    mov ax,10
+    WaitMilliSec
+    jmp rsCompCheck
+
+rsCompDone:
+    mov ax,ds:[ebx].comp_sq_id
+    cmp al,ds:ns_rd_queue
+    jne rsCheckWr
+;
+    mov ax,ds:[ebx].comp_sq_head
+    mov ds:ns_rd_head,ax
+    jmp rsHandled
+
+rsCheckWr:
+    cmp al,ds:ns_wr_queue
+    jne rsHandled
+;
+    mov ax,ds:[ebx].comp_sq_head
+    mov ds:ns_wr_head,ax
+
+rsHandled:
+    xor dx,dx
+    xchg dx,ds:[ebx].comp_status
+;
+    movzx eax,ds:ns_complete_ptr
+    inc eax
+    cmp ax,ds:ns_queue_entries
+    jb rsComUpd
+;
+    xor eax,eax
+
+rsComUpd:
+    mov ds:ns_complete_ptr,ax
+;
+    mov cl,ds:ns_door_shift
+    movzx ebx,ds:ns_rd_queue
+    add ebx,ebx
+    inc ebx
+    shl ebx,cl
+    add ebx,NVME_DISC_DOOR
+    mov ds:[ebx],eax
+;
+    shr dx,1
+    or dx,dx
+    stc
+    jnz rsDone
+;
+    clc
+
+rsDone:
+    popad
+    pop ds
     ret
 ReadVfs  Endp
     
