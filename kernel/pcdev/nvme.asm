@@ -1673,6 +1673,44 @@ WriteVfs  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           HexToAscii
+;
+;   DESCRIPTION:    
+;
+;   PARAMETERS:     AL      Number to convert
+;
+;   RETURNS:        AX      Ascii result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HexToAscii      PROC near
+    mov ah,al
+    and al,0F0h
+    rol al,1
+    rol al,1
+    rol al,1
+    rol al,1
+    cmp al,0Ah
+    jb ok_low1
+;
+    add al,7
+
+ok_low1:
+    add al,30h
+    and ah,0Fh
+    cmp ah,0Ah
+    jb ok_high1
+;
+    add ah,7
+
+ok_high1:
+    add ah,30h
+    ret
+HexToAscii      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           SetupDevice
 ;
 ;   DESCRIPTION:    Setup device
@@ -1712,7 +1750,6 @@ SetupDevice  Proc near
     call SetupInts
     jc sdDone
 ;
-    int 3
     call GetId1
     jc sdDone
 ;
@@ -1737,10 +1774,76 @@ sdSave:
     cmp dx,es:nd_nsid_count
     jbe sdMore
 ;
-    mov fs,es:nd_nsid_arr
-    xor eax,eax
-    xor edx,edx
-    call ReadSector
+    mov eax,es
+    mov ds,eax
+    movzx ecx,ds:nd_nsid_count
+    mov ebx,OFFSET nd_nsid_arr
+    xor dx,dx
+
+sdNameLoop:
+    mov ax,ds:[ebx]
+    or ax,ax
+    jz sdNameNext
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    mov esi,OFFSET DevName
+
+sdCopyDev:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz sdCopyDone
+;
+    stos byte ptr es:[edi]
+    jmp sdCopyDev
+
+sdCopyDone:
+    mov al,' '
+    stos byte ptr es:[edi]
+;
+    push ds
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,ds:nvme_dev_count
+    pop ds
+    call HexToAscii
+    stos word ptr es:[edi]
+;
+    mov al,'.'
+    stos byte ptr es:[edi]
+;
+    mov ax,dx
+    call HexToAscii
+    stos word ptr es:[edi]
+;
+    xor al,al
+    stos byte ptr es:[edi]
+;
+    push ds    
+    push ebx
+    push edx
+;
+    xor edi,edi
+    mov bx,ds:[ebx]
+    mov edx,cs
+    mov ds,edx
+    mov esi,OFFSET vfs_tab
+    StartVfs
+;
+    pop edx
+    pop ebx
+    pop ds
+;
+    FreeMem
+
+sdNameNext:
+    add ebx,2
+    inc dx
+    sub ecx,1
+    jnz sdNameLoop
 
 sdDone:
     ret
