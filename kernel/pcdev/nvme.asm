@@ -283,12 +283,7 @@ ns_bytes_per_sector      DW ?
 ns_nvmsetid              DW ?
 
 ns_dev_sel               DW ?
-ns_door_sel              DW ?
 ns_queue_entries         DW ?
-
-ns_complete_sel          DW ?
-ns_rd_sel                DW ?
-ns_wr_sel                DW ?
 
 ns_complete_ptr          DW ?
 ns_rd_head               DW ?
@@ -695,7 +690,6 @@ GetId0  Proc near
 ;
     push es
 ;
-    int 3
     mov ax,64
     mov si,SIZE ns_struc
     mov cx,16
@@ -766,9 +760,6 @@ GetId0  Proc near
 ;
     mov al,es:nd_door_shift
     mov fs:ns_door_shift,al
-;
-    mov ax,es:nd_door_sel
-    mov fs:ns_door_sel,ax
 ;
     mov ax,es:nd_queue_entries
     mov fs:ns_queue_entries,ax
@@ -853,10 +844,9 @@ GetQueueCount  Endp
 ;   DESCRIPTION:    Create IO completion queue
 ;
 ;   PARAMETERS:     ES      Device sel
+;                   FS      Disc sel
 ;                   AL      Interrupt #
 ;                   BL      Queue # (1..QN)
-;
-;   RETURNS:        AX      Queue sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -867,13 +857,12 @@ CreateIoCompletionQueue  Proc near
     push edx
     push esi
     push edi
-    push ebp
 ;
     push ebx
     push eax
 ;
-    mov eax,1000h
-    AllocateBigLinear
+    mov edx,fs:mblk_linear_base
+    add edx,NVME_DISC_COMPL
 ;
     AllocatePhysical64
     mov esi,eax
@@ -882,16 +871,12 @@ CreateIoCompletionQueue  Proc near
     mov al,3
     SetPageEntry
 ;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov bp,bx
-;
     push es
     push edi
 ;
-    mov es,ebp
-    xor edi,edi
+    mov eax,fs
+    mov es,eax
+    mov edi,NVME_DISC_COMPL
     mov ecx,400h
     xor eax,eax
     rep stos dword ptr es:[edi]
@@ -936,9 +921,7 @@ CreateIoCompletionQueue  Proc near
     mov ds:[ebx].adm_cdw14,0
     mov ds:[ebx].adm_cdw15,0
     call AdminSession
-    mov ax,bp
 ;
-    pop ebp
     pop edi
     pop esi
     pop edx
@@ -956,11 +939,11 @@ CreateIoCompletionQueue  Endp
 ;   DESCRIPTION:    Create IO submission queue
 ;
 ;   PARAMETERS:     ES      Device sel
+;                   FS      Disc sel
 ;                   AX      Set id
 ;                   BL      Queue # (1..QN)
 ;                   BH      Completion queue (1..QN)
-;
-;   RETURNS:        AX      Queue sel
+;                   EDX     Queue offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -971,13 +954,13 @@ CreateIoSubmissionQueue  Proc near
     push edx
     push esi
     push edi
-    push ebp
 ;
     push ebx
     push eax
 ;
-    mov eax,1000h
-    AllocateBigLinear
+    push edx
+;
+    add edx,fs:mblk_linear_base
 ;
     AllocatePhysical64
     mov esi,eax
@@ -986,16 +969,14 @@ CreateIoSubmissionQueue  Proc near
     mov al,3
     SetPageEntry
 ;
-    AllocateGdt
-    mov ecx,1000h
-    CreateDataSelector16
-    mov bp,bx
+    pop edx
 ;
     push es
     push edi
 ;
-    mov es,ebp
-    xor edi,edi
+    mov eax,fs
+    mov es,eax
+    mov edi,edx
     mov ecx,400h
     xor eax,eax
     rep stos dword ptr es:[edi]
@@ -1041,9 +1022,7 @@ CreateIoSubmissionQueue  Proc near
     mov ds:[ebx].adm_cdw14,0
     mov ds:[ebx].adm_cdw15,0
     call AdminSession
-    mov ax,bp
 ;
-    pop ebp
     pop edi
     pop esi
     pop edx
@@ -1083,27 +1062,25 @@ CreateNameSpace  Proc near
     jc cnsDone
 ;
     mov fs:ns_complete_queue,bl
-    mov fs:ns_complete_sel,ax
     mov fs:ns_complete_ptr,0
 ;
     xchg bl,bh
     mov ax,fs:ns_nvmsetid
+    mov edx,NVME_DISC_RD
     call CreateIoSubmissionQueue
     jc cnsDone
 ;
     mov fs:ns_rd_queue,bl
-    mov fs:ns_rd_sel,ax
     mov fs:ns_rd_head,0
     mov fs:ns_rd_tail,0
-    mov ax,fs
 ;
     inc bl
     mov ax,fs:ns_nvmsetid
+    mov edx,NVME_DISC_WR
     call CreateIoSubmissionQueue
     jc cnsXchg
 ;
     mov fs:ns_wr_queue,bl
-    mov fs:ns_wr_sel,ax
     mov fs:ns_wr_head,0
     mov fs:ns_wr_tail,0
     mov ax,fs
@@ -1427,7 +1404,6 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadSector   Proc near
-    push ds
     push es
     pushad
 ;
@@ -1452,31 +1428,32 @@ ReadSector   Proc near
     pop edx
     pop eax
 ;
-    mov ds,fs:ns_rd_sel
     movzx ebx,fs:ns_rd_tail
     mov cl,fs:ns_submit_shift
     shl ebx,cl
-    mov ds:[ebx].sub_opc,2
-    mov ds:[ebx].sub_flags,0
-    mov ds:[ebx].sub_cid,15
+    add ebx,NVME_DISC_RD
+;
+    mov fs:[ebx].sub_opc,2
+    mov fs:[ebx].sub_flags,0
+    mov fs:[ebx].sub_cid,15
     mov ecx,fs:ns_nsid
-    mov ds:[ebx].sub_nsid,ecx
-    mov ds:[ebx].sub_cdw2,0
-    mov ds:[ebx].sub_cdw2+4,0
-    mov ds:[ebx].sub_mptr,0
-    mov ds:[ebx].sub_mptr+4,0
+    mov fs:[ebx].sub_nsid,ecx
+    mov fs:[ebx].sub_cdw2,0
+    mov fs:[ebx].sub_cdw2+4,0
+    mov fs:[ebx].sub_mptr,0
+    mov fs:[ebx].sub_mptr+4,0
 ;
-    mov ds:[ebx].sub_prp1,esi
-    mov ds:[ebx].sub_prp1+4,edi
+    mov fs:[ebx].sub_prp1,esi
+    mov fs:[ebx].sub_prp1+4,edi
 ;
-    mov ds:[ebx].sub_prp2,0
-    mov ds:[ebx].sub_prp2+4,0
-    mov ds:[ebx].sub_cdw10,eax
-    mov ds:[ebx].sub_cdw11,edx
-    mov ds:[ebx].sub_cdw12,8
-    mov ds:[ebx].sub_cdw13,0
-    mov ds:[ebx].sub_cdw14,0
-    mov ds:[ebx].sub_cdw15,0
+    mov fs:[ebx].sub_prp2,0
+    mov fs:[ebx].sub_prp2+4,0
+    mov fs:[ebx].sub_cdw10,eax
+    mov fs:[ebx].sub_cdw11,edx
+    mov fs:[ebx].sub_cdw12,8
+    mov fs:[ebx].sub_cdw13,0
+    mov fs:[ebx].sub_cdw14,0
+    mov fs:[ebx].sub_cdw15,0
 ;
     movzx eax,fs:ns_rd_tail
     inc eax
@@ -1488,20 +1465,20 @@ ReadSector   Proc near
 rsSubUpd:
     mov fs:ns_rd_tail,ax
 ;
-    mov ds,fs:ns_door_sel
     mov cl,fs:ns_door_shift
     movzx ebx,fs:ns_rd_queue
     add ebx,ebx
+    add ebx,NVME_DISC_DOOR
     shl ebx,cl
-    mov ds:[ebx],eax
+    mov fs:[ebx],eax
 ;
-    mov ds,fs:ns_complete_sel
     movzx ebx,fs:ns_complete_ptr
+    add ebx,NVME_DISC_COMPL
     mov cl,fs:ns_complete_shift
     shl ebx,cl
 
 rsCompCheck:
-    mov ax,ds:[ebx].comp_status
+    mov ax,fs:[ebx].comp_status
     test al,1
     jnz rsCompDone
 ;
@@ -1510,11 +1487,11 @@ rsCompCheck:
     jmp rsCompCheck
 
 rsCompDone:
-    mov ax,ds:[ebx].comp_sq_id
+    mov ax,fs:[ebx].comp_sq_id
     cmp al,fs:ns_rd_queue
     jne rsCheckWr
 ;
-    mov ax,ds:[ebx].comp_sq_head
+    mov ax,fs:[ebx].comp_sq_head
     mov fs:ns_rd_head,ax
     jmp rsHandled
 
@@ -1522,12 +1499,12 @@ rsCheckWr:
     cmp al,fs:ns_wr_queue
     jne rsHandled
 ;
-    mov ax,ds:[ebx].comp_sq_head
+    mov ax,fs:[ebx].comp_sq_head
     mov fs:ns_wr_head,ax
 
 rsHandled:
     xor dx,dx
-    xchg dx,ds:[ebx].comp_status
+    xchg dx,fs:[ebx].comp_status
 ;
     movzx eax,fs:ns_complete_ptr
     inc eax
@@ -1539,13 +1516,13 @@ rsHandled:
 rsComUpd:
     mov fs:ns_complete_ptr,ax
 ;
-    mov ds,fs:ns_door_sel
     mov cl,fs:ns_door_shift
     movzx ebx,fs:ns_rd_queue
     add ebx,ebx
+    add ebx,NVME_DISC_DOOR
     inc ebx
     shl ebx,cl
-    mov ds:[ebx],eax
+    mov fs:[ebx],eax
 ;
     shr dx,1
     or dx,dx
@@ -1557,7 +1534,6 @@ rsComUpd:
 rsDone:
     popad
     pop es
-    pop ds
     ret
 ReadSector   Endp
     
