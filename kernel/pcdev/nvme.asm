@@ -1417,6 +1417,77 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SetupPrp
+;
+;       DESCRIPTION:    Setup PRP field
+;
+;       PARAMETERS:     DS:EBX           Submit descriptor
+;                       ES:EDI           Physical sector array
+;                       ECX              Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupPrp   Proc near
+    push eax
+    push ecx
+    push edx
+    push esi
+;
+    mov ds:[ebx].sub_prp2,0
+    mov ds:[ebx].sub_prp2+4,0
+;
+    movzx esi,ds:ns_bytes_per_sector
+    mov eax,es:[edi]
+    mov edx,es:[edi+4]
+    mov ds:[ebx].sub_prp1,eax
+    mov ds:[ebx].sub_prp1+4,edx
+
+PrpLoop1:
+    add edi,8
+    sub ecx,1
+    jz PrpDone
+;
+    add eax,esi
+    adc edx,0
+    cmp eax,es:[edi]
+    jne Prp2
+;
+    cmp edx,es:[edi+4]
+    je PrpLoop1
+
+Prp2:
+    mov eax,es:[edi]
+    mov edx,es:[edi+4]
+    mov ds:[ebx].sub_prp2,eax
+    mov ds:[ebx].sub_prp2+4,edx
+
+PrpLoop2:
+    add edi,8
+    sub ecx,1
+    jz PrpDone
+;
+    add eax,esi
+    adc edx,0
+    cmp eax,es:[edi]
+    jne PrpList
+;
+    cmp edx,es:[edi+4]
+    je PrpLoop2
+
+PrpList:
+    int 3
+
+PrpDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    ret
+SetupPrp   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           InitVfs
 ;
 ;       DESCRIPTION:    Init disc
@@ -1546,51 +1617,8 @@ ReadVfs      Proc far
     mov eax,ds:ns_nsid
     mov ds:[ebx].sub_nsid,eax
 ;
-    mov ds:[ebx].sub_prp2,0
-    mov ds:[ebx].sub_prp2+4,0
+    call SetupPrp
 ;
-    movzx ebp,ds:ns_bytes_per_sector
-    mov eax,es:[edi]
-    mov edx,es:[edi+4]
-    mov ds:[ebx].sub_prp1,eax
-    mov ds:[ebx].sub_prp1+4,edx
-
-rsPrpLoop1:
-    add edi,8
-    sub ecx,1
-    jz rsPrpDone
-;
-    add eax,ebp
-    adc edx,0
-    cmp eax,es:[edi]
-    jne rsPrp2
-;
-    cmp edx,es:[edi+4]
-    je rsPrpLoop1
-
-rsPrp2:
-    mov eax,es:[edi]
-    mov edx,es:[edi+4]
-    mov ds:[ebx].sub_prp2,eax
-    mov ds:[ebx].sub_prp2+4,edx
-
-rsPrpLoop2:
-    add edi,8
-    sub ecx,1
-    jz rsPrpDone
-;
-    add eax,ebp
-    adc edx,0
-    cmp eax,es:[edi]
-    jne rsPrpList
-;
-    cmp edx,es:[edi+4]
-    je rsPrpLoop2
-
-rsPrpList:
-    int 3
-
-rsPrpDone:
     movzx eax,ds:ns_rd_tail
     inc eax
     cmp ax,ds:ns_queue_entries
