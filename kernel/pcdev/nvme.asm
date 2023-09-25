@@ -1687,22 +1687,22 @@ ReadVfs      Proc far
 ;
     call SetupPrp
 ;
-    movzx eax,fs:ns_rd_tail
+    movzx eax,ds:ns_rd_tail
     inc eax
-    cmp ax,fs:ns_queue_entries
+    cmp ax,ds:ns_queue_entries
     jb rsSubUpd
 ;
     xor eax,eax
 
 rsSubUpd:
-    mov fs:ns_rd_tail,ax
+    mov ds:ns_rd_tail,ax
 ;
-    mov cl,fs:ns_door_shift
-    movzx ebx,fs:ns_rd_queue
+    mov cl,ds:ns_door_shift
+    movzx ebx,ds:ns_rd_queue
     add ebx,ebx
     shl ebx,cl
     add ebx,NVME_DISC_DOOR
-    mov fs:[ebx],eax
+    mov ds:[ebx],eax
 
 rsWait:
     movzx ebx,ds:ns_complete_ptr
