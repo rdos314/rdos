@@ -1103,14 +1103,20 @@ CreateNameSpace  Proc near
     jc cnsDone
 ;
     mov al,es:nd_curr_int
+    push ds
     push es
+    push edi
+;
     mov edx,fs
     mov ds,edx
     mov edx,cs
     mov es,edx
     mov edi,OFFSET NvmeInt
     RequestMsiHandler
+;
+    pop edi
     pop es
+    pop ds
 ;
     sub al,es:nd_base_int
     call CreateIoCompletionQueue
@@ -1879,7 +1885,6 @@ SetupDevice  Proc near
     call GetQueueCount
     jc sdDone
 ;
-    int 3
     mov edi,OFFSET nd_nsid_arr
     mov bl,1
     mov bh,1
@@ -1902,7 +1907,6 @@ sdSave:
     movzx ecx,ds:nd_nsid_count
     mov ebx,OFFSET nd_nsid_arr
     xor dx,dx
-    int 3
 
 sdNameLoop:
     mov ax,ds:[ebx]
