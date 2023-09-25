@@ -340,6 +340,8 @@ nd_door_shift            DB ?
 nd_submit_shift          DB ?
 nd_complete_shift        DB ?
 
+nd_vendor                DB 41 DUP(?)
+
 nvme_device_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
@@ -601,6 +603,28 @@ GetId1  Proc near
 ;
     mov eax,gs:id1_nn
     mov es:nd_nsid_count,ax
+;
+    int 3
+    mov esi,OFFSET id1_mn
+    mov edi,OFFSET nd_vendor
+    mov ecx,10
+    rep movs dword ptr es:[edi],gs:[esi]
+    jmp gid1NameEnd
+
+gid1NameLoop:
+    mov al,es:[edi]
+    cmp al,' '
+    jne gid1NameOk
+
+gid1NameEnd:
+    xor al,al
+    mov es:[edi],al
+    dec edi
+    cmp edi,OFFSET nd_vendor
+    jne gid1NameLoop
+
+gid1Nameok:
+    clc
 
 gid1Done:
     mov eax,gs
