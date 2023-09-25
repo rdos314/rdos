@@ -1554,15 +1554,51 @@ ReadVfs      Proc far
     mov ds:[ebx].sub_cdw14,0
     mov ds:[ebx].sub_cdw15,0
 ;
-    mov eax,es:[edi]
-    mov ds:[ebx].sub_prp1,eax
-    mov eax,es:[edi+4]
-    mov ds:[ebx].sub_prp1+4,eax
-    add edi,8
-;
     mov ds:[ebx].sub_prp2,0
     mov ds:[ebx].sub_prp2+4,0
 ;
+    movzx ebp,ds:ns_bytes_per_sector
+    mov eax,es:[edi]
+    mov edx,es:[edi+4]
+    mov ds:[ebx].sub_prp1,eax
+    mov ds:[ebx].sub_prp1+4,edx
+
+rsPrpLoop1:
+    add edi,8
+    sub ecx,1
+    jz rsPrpDone
+;
+    add eax,ebp
+    adc edx,0
+    cmp eax,es:[edi]
+    jne rsPrp2
+;
+    cmp edx,es:[edi+4]
+    je rsPrpLoop1
+
+rsPrp2:
+    mov eax,es:[edi]
+    mov edx,es:[edi+4]
+    mov ds:[ebx].sub_prp2,eax
+    mov ds:[ebx].sub_prp2+4,edx
+
+rsPrpLoop2:
+    add edi,8
+    sub ecx,1
+    jz rsPrpDone
+;
+    add eax,ebp
+    adc edx,0
+    cmp eax,es:[edi]
+    jne rsPrpList
+;
+    cmp edx,es:[edi+4]
+    je rsPrpLoop2
+
+rsPrpList:
+    int 3
+
+rsPrpDone:
     movzx eax,ds:ns_rd_tail
     inc eax
     cmp ax,ds:ns_queue_entries
