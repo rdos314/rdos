@@ -1572,11 +1572,20 @@ ReadSector   Endp
 ;       RETURNS:        NC
 ;                         EDX:EAX    Sectors
 ;                         CX         Bytes per sector
+;                         BX         Max sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitVfs   Proc far
-    int 3
+    push ds
+;
+    mov ds,ebx
+    mov eax,ds:ns_sectors
+    mov edx,ds:ns_sectors+4
+    mov cx,ds:ns_bytes_per_sector
+    mov bx,100h
+;
+    pop ds
     ret
 InitVfs    Endp
     
@@ -1611,7 +1620,23 @@ ExitVfs  Endp
 
 
 GetVfsVendor   Proc far
-    int 3
+    push ds
+    push esi
+    push edi
+;
+    mov ds,ebx
+    mov ds,ds:ns_dev_sel
+    mov esi,OFFSET nd_vendor
+
+gvvLoop:
+    lods byte ptr ds:[esi]
+    stos byte ptr es:[edi]
+    or al,al
+    jnz gvvLoop
+;
+    pop edi
+    pop esi
+    pop ds
     ret
 GetVfsVendor  Endp
     

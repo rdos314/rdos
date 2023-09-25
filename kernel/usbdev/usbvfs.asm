@@ -444,6 +444,7 @@ ReadCapacity Endp
 ;       RETURNS:        NC
 ;                         EDX:EAX    Sectors
 ;                         CX         Bytes per sector
+;                         BX         Max sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
