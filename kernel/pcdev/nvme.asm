@@ -282,6 +282,8 @@ ns_nsid                  DD ?
 ns_bytes_per_sector      DW ?
 ns_nvmsetid              DW ?
 
+ns_thread                DW ?
+
 ns_dev_sel               DW ?
 ns_queue_entries         DW ?
 
@@ -317,6 +319,7 @@ nd_admin_submit_phys     DD ?,?
 nd_admin_complete_phys   DD ?,?
 nd_door_phys             DD ?,?
 
+nd_thread                DW ?
 nd_config_sel            DW ?
 nd_door_sel              DW ?
 nd_admin_submit_sel      DW ?
@@ -394,6 +397,8 @@ NvmeAdminInt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NvmeInt  Proc far
+    mov bx,ds:ns_thread
+    Signal
     ret
 NvmeInt  Endp
 
@@ -1618,6 +1623,9 @@ InitVfs   Proc far
     push ds
 ;
     mov ds,ebx
+    GetThread
+    mov ds:ns_thread,ax
+;
     mov eax,ds:ns_sectors
     mov edx,ds:ns_sectors+4
     mov cx,ds:ns_bytes_per_sector
@@ -1760,8 +1768,7 @@ rsCheck:
     test al,1
     jnz rsValidate
 ;
-    mov ax,10
-    WaitMilliSec
+    WaitForSignal
     jmp rsCheck
 
 rsValidate:
