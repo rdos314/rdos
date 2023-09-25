@@ -1529,7 +1529,6 @@ ReadVfs      Proc far
     push ds
     pushad
 ;
-    int 3
     push ecx
     mov ds,ebx
     movzx ebx,ds:ns_rd_tail
@@ -1539,20 +1538,13 @@ ReadVfs      Proc far
     pop ecx
 ;
     mov ds:[ebx].sub_opc,2
-    mov ds:[ebx].sub_flags,0
     mov ds:[ebx].sub_cid,15
-    mov ebp,ds:ns_nsid
-    mov ds:[ebx].sub_nsid,ebp
-    mov ds:[ebx].sub_cdw2,0
-    mov ds:[ebx].sub_cdw2+4,0
-    mov ds:[ebx].sub_mptr,0
-    mov ds:[ebx].sub_mptr+4,0
     mov ds:[ebx].sub_cdw10,eax
     mov ds:[ebx].sub_cdw11,edx
     mov ds:[ebx].sub_cdw12,ecx
-    mov ds:[ebx].sub_cdw13,0
-    mov ds:[ebx].sub_cdw14,0
-    mov ds:[ebx].sub_cdw15,0
+;
+    mov eax,ds:ns_nsid
+    mov ds:[ebx].sub_nsid,eax
 ;
     mov ds:[ebx].sub_prp2,0
     mov ds:[ebx].sub_prp2+4,0
