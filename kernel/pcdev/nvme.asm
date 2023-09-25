@@ -35,6 +35,7 @@ INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
 INCLUDE pci.inc
+INCLUDE ..\os\memblk.inc
 
 MAX_NVME_DEVICES    = 16
 MAX_NSID            = 8
@@ -274,6 +275,8 @@ id1_struc   ENDS
 
 ns_struc       STRUC
 
+ns_mem_blk               mem_blk_header <>
+
 ns_sectors               DD ?,?
 ns_nsid                  DD ?
 ns_bytes_per_sector      DW ?
@@ -303,6 +306,12 @@ ns_complete_shift        DB ?
 
 ns_struc       ENDS
 
+NVME_DISC_DOOR   = 1000h
+NVME_DISC_RD     = 2000h
+NVME_DISC_WR     = 3000h
+NVME_DISC_COMPL  = 4000h
+NVME_DISC_SIZE   = 5000h
+
 ;
 ; NVME device
 ;
@@ -311,6 +320,7 @@ nvme_device_struc   STRUC
 
 nd_admin_submit_phys     DD ?,?
 nd_admin_complete_phys   DD ?,?
+nd_door_phys             DD ?,?
 
 nd_config_sel            DW ?
 nd_door_sel              DW ?
@@ -684,13 +694,21 @@ GetId0  Proc near
     jz gid0Done
 ;
     push es
-    mov eax,SIZE ns_struc
-    AllocateSmallGlobalMem
 ;
-    xor edi,edi
-    mov ecx,SIZE ns_struc
-    xor al,al
-    rep stos byte ptr es:[edi]
+    int 3
+    mov ax,64
+    mov si,SIZE ns_struc
+    mov cx,16
+    CreateMemBlk64
+;
+    mov es:ns_complete_ptr,0
+    mov es:ns_rd_head,0
+    mov es:ns_rd_tail,0
+    mov es:ns_wr_head,0
+    mov es:ns_wr_tail,0
+    mov es:ns_complete_queue,0
+    mov es:ns_rd_queue,0
+    mov es:ns_wr_queue,0
 ;
     mov es:ns_nsid,ebp
     mov eax,gs:id0_ncap
@@ -706,9 +724,39 @@ GetId0  Proc near
     mov ax,gs:id0_nvmsetid
     mov es:ns_nvmsetid,ax
 ;
-    mov eax,es
-    mov fs,eax
+    mov esi,es:mblk_linear_base
+;
+    mov eax,NVME_DISC_SIZE
+    AllocateBigLinear
+    mov edi,edx
+;
+    mov edx,esi
+    GetPageEntry
+    mov edx,edi
+    SetPageEntry
+;
+    mov edx,esi
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    mov ebx,es
+    mov edx,edi
+    mov ecx,NVME_DISC_SIZE
+    CreateDataSelector16
+    mov fs,ebx
+    mov fs:mblk_linear_base,edx
+;
     pop es
+;
+    mov eax,es:nd_door_phys
+    mov ebx,es:nd_door_phys+4
+    add edx,NVME_DISC_DOOR
+    mov al,13h
+    SetPageEntry
 ;
     mov al,es:nd_submit_shift
     mov fs:ns_submit_shift,al
@@ -1252,6 +1300,8 @@ adAlloc:
     adc ebx,0
     SetPageEntry
     sub edx,1000h
+    mov es:nd_door_phys,eax
+    mov es:nd_door_phys+4,ebx
 ;
     AllocateGdt
     mov ecx,1000h
@@ -1510,6 +1560,116 @@ rsDone:
     pop ds
     ret
 ReadSector   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           InitVfs
+;
+;       DESCRIPTION:    Init disc
+;
+;       PARAMETERS:     BX           Disc selector
+;
+;       RETURNS:        NC
+;                         EDX:EAX    Sectors
+;                         CX         Bytes per sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitVfs   Proc far
+    int 3
+    ret
+InitVfs    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ExitVfs
+;
+;       DESCRIPTION:    Exit VFS
+;
+;       PARAMETERS:     BX           Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+ExitVfs   Proc far
+    int 3
+    ret
+ExitVfs  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetVfsVendor
+;
+;       DESCRIPTION:    Get vendor
+;
+;       PARAMETERS:     BX           Disc selector
+;                       ES:EDI       Vendor buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+GetVfsVendor   Proc far
+    int 3
+    ret
+GetVfsVendor  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetBiosVfs
+;
+;       DESCRIPTION:    Get BIOS VFS parameters
+;
+;       PARAMETERS:     BX           Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+GetBiosVfs   Proc far
+    stc
+    ret
+GetBiosVfs  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ReadVfs
+;
+;       DESCRIPTION:    Read sectors
+;
+;       PARAMETERS:     BX          Disc selector
+;                       ECX         Sector count
+;                       EDX:EAX     Start sector
+;                       ES:EDI      Physical entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadVfs      Proc far
+    int 3
+    ret
+ReadVfs  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           WriteVfs
+;
+;       DESCRIPTION:    Write sectors
+;
+;       PARAMETERS:     BX          Disc selector
+;                       CX          Sector count
+;                       EDX:EAX     Start sector
+;                       ES:EDI      Physical entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteVfs      Proc far
+    int 3
+    ret
+WriteVfs  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1523,6 +1683,14 @@ ReadSector   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DevName DB 'NVMe', 0
+
+vfs_tab:
+vfs00   DD OFFSET InitVfs,        DD SEG code
+vfs01   DD OFFSET GetVfsVendor,   DD SEG code
+vfs02   DD OFFSET ExitVfs,        DD SEG code
+vfs03   DD OFFSET GetBiosVfs,     DD SEG code
+vfs04   DD OFFSET ReadVfs,        DD SEG code
+vfs05   DD OFFSET WriteVfs,       DD SEG code
 
 SetupDevice  Proc near
     xor ax,ax
