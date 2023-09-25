@@ -1468,14 +1468,14 @@ rsSubUpd:
     mov cl,fs:ns_door_shift
     movzx ebx,fs:ns_rd_queue
     add ebx,ebx
-    add ebx,NVME_DISC_DOOR
     shl ebx,cl
+    add ebx,NVME_DISC_DOOR
     mov fs:[ebx],eax
 ;
     movzx ebx,fs:ns_complete_ptr
-    add ebx,NVME_DISC_COMPL
     mov cl,fs:ns_complete_shift
     shl ebx,cl
+    add ebx,NVME_DISC_COMPL
 
 rsCompCheck:
     mov ax,fs:[ebx].comp_status
@@ -1519,9 +1519,9 @@ rsComUpd:
     mov cl,fs:ns_door_shift
     movzx ebx,fs:ns_rd_queue
     add ebx,ebx
-    add ebx,NVME_DISC_DOOR
     inc ebx
     shl ebx,cl
+    add ebx,NVME_DISC_DOOR
     mov fs:[ebx],eax
 ;
     shr dx,1
