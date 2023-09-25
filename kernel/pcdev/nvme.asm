@@ -340,6 +340,10 @@ nd_door_shift            DB ?
 nd_submit_shift          DB ?
 nd_complete_shift        DB ?
 
+nd_int_count             DB ?
+nd_base_int              DB ?
+nd_curr_int              DB ?
+
 nd_vendor                DB 41 DUP(?)
 
 nvme_device_struc   ENDS
@@ -366,11 +370,26 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           NvmeAdminInt
+;
+;       DESCRIPTION:    Admin IRQ handler
+;
+;       PARAMETERS:     DS      Device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NvmeAdminInt  Proc far
+    ret
+NvmeAdminInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           NvmeInt
 ;
 ;       DESCRIPTION:    IRQ handler
 ;
-;       PARAMETERS:     DS      Device selector
+;       PARAMETERS:     DS      Disc selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1063,7 +1082,6 @@ CreateIoSubmissionQueue  Endp
 ;   DESCRIPTION:    Create namespace
 ;
 ;   PARAMETERS:     ES      Device sel
-;                   AL      Int #
 ;                   BL      Completion queue
 ;                   BH      Submission queue
 ;                   DX      NSID
@@ -1075,14 +1093,31 @@ CreateIoSubmissionQueue  Endp
 CreateNameSpace  Proc near
     push fs
 ;
-    push eax
+    mov al,es:nd_int_count
+    or al,al
+    stc
+    jz cnsDone
+;
     mov ax,dx
     call GetId0
-    pop eax
     jc cnsDone
 ;
+    mov al,es:nd_curr_int
+    push es
+    mov edx,fs
+    mov ds,edx
+    mov edx,cs
+    mov es,edx
+    mov edi,OFFSET NvmeInt
+    RequestMsiHandler
+    pop es
+;
+    sub al,es:nd_base_int
     call CreateIoCompletionQueue
     jc cnsDone
+;
+    dec es:nd_int_count
+    inc es:nd_curr_int
 ;
     mov fs:ns_complete_queue,bl
     mov fs:ns_complete_ptr,0
@@ -1373,30 +1408,34 @@ SetupInts Proc near
     GetPciMsi
     jc siIrq
 ;
-    cmp dl,1
-    je siAllocOne
-;
-
-siAllocOne:
     push cx
-    mov cx,1
+    movzx cx,dl
     mov al,14h
     AllocateInts
     pop cx
-    jc siIrq    
+    jnc siMsiHandlers
 
 siMsiHandlers:
     SetupPciMsi
+    dec dl
+    mov es:nd_int_count,dl
+    mov es:nd_base_int,al
 ;
+    push es
     mov edx,es
     mov ds,edx
     mov edx,cs
     mov es,edx
-    mov edi,OFFSET NvmeInt
+    mov edi,OFFSET NvmeAdminInt
     RequestMsiHandler
+    pop es
+;
+    inc al
+    mov es:nd_curr_int,al
     jmp siOk
 
 siIrq:
+    int 3
     GetPciIrqNr
     mov ah,14h
     mov eax,es
@@ -1840,8 +1879,8 @@ SetupDevice  Proc near
     call GetQueueCount
     jc sdDone
 ;
+    int 3
     mov edi,OFFSET nd_nsid_arr
-    mov al,0
     mov bl,1
     mov bh,1
     mov dx,1
@@ -1863,6 +1902,7 @@ sdSave:
     movzx ecx,ds:nd_nsid_count
     mov ebx,OFFSET nd_nsid_arr
     xor dx,dx
+    int 3
 
 sdNameLoop:
     mov ax,ds:[ebx]
