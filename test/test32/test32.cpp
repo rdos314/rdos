@@ -4,13 +4,24 @@
 
 #include "disc.h"
 #include "serial.h"
+#include "rdos.h"
 
 void main()
 {
-    int handle;
+    unsigned long msb;
+    int year, month, day, hour;
 
-    handle = RdosCreateFile("y:/1.txt", 0);
-    RdosCloseFile(handle);
+    msb = 0x010EACFF;
+    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+
+    printf("%04d-%02d-%02d %02d\r\n", year, month, day, hour);
+
+    msb = 0x010EAD00;
+    RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+
+    printf("%04d-%02d-%02d %02d\r\n", year, month, day, hour);
+    
+
 
 //    RdosTestGate("");
 }

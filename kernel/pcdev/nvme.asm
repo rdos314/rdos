@@ -1428,11 +1428,6 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupPrp   Proc near
-    push eax
-    push ecx
-    push edx
-    push esi
-;
     mov ds:[ebx].sub_prp2,0
     mov ds:[ebx].sub_prp2+4,0
 ;
@@ -1478,13 +1473,86 @@ PrpList:
     int 3
 
 PrpDone:
-    pop esi
-    pop edx
-    pop ecx
-    pop eax
     ret
 SetupPrp   Endp
     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           ValidateCompletion
+;
+;       DESCRIPTION:    Validate completion
+;
+;       PARAMETERS:     DS:EBX      Completion descriptor
+;
+;       RETURNS:        AX          Status code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ValidateCompletion   Proc near
+    mov ax,ds:[ebx].comp_sq_id
+    cmp al,ds:ns_rd_queue
+    jne vcCheckWr
+;
+    mov ax,ds:[ebx].comp_sq_head
+    mov ds:ns_rd_head,ax
+    jmp vcHandled
+
+vcCheckWr:
+    cmp al,ds:ns_wr_queue
+    jne vcHandled
+;
+    mov ax,ds:[ebx].comp_sq_head
+    mov ds:ns_wr_head,ax
+
+vcHandled:
+    xor dx,dx
+    xchg dx,ds:[ebx].comp_status
+;
+    movzx eax,ds:ns_complete_ptr
+    inc eax
+    cmp ax,ds:ns_queue_entries
+    jb vcComUpd
+;
+    xor eax,eax
+
+vcComUpd:
+    mov ds:ns_complete_ptr,ax
+;
+    shr ax,1
+    or ax,ax
+    stc
+    jnz vcDone
+;
+    clc
+
+vcDone:
+    ret
+ValidateCompletion  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           UpdateCompletion
+;
+;       DESCRIPTION:    Update completion
+;
+;       PARAMETERS:     DS          Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateCompletion   Proc near
+    mov cl,ds:ns_door_shift
+    movzx ebx,ds:ns_complete_queue
+    add ebx,ebx
+    inc ebx
+    shl ebx,cl
+    add ebx,NVME_DISC_DOOR
+    mov ax,ds:ns_complete_ptr
+    mov ds:[ebx],eax
+    ret
+UpdateCompletion   Endp   
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1619,81 +1687,47 @@ ReadVfs      Proc far
 ;
     call SetupPrp
 ;
-    movzx eax,ds:ns_rd_tail
+    movzx eax,fs:ns_rd_tail
     inc eax
-    cmp ax,ds:ns_queue_entries
+    cmp ax,fs:ns_queue_entries
     jb rsSubUpd
 ;
     xor eax,eax
 
 rsSubUpd:
-    mov ds:ns_rd_tail,ax
+    mov fs:ns_rd_tail,ax
 ;
-    mov cl,ds:ns_door_shift
-    movzx ebx,ds:ns_rd_queue
+    mov cl,fs:ns_door_shift
+    movzx ebx,fs:ns_rd_queue
     add ebx,ebx
     shl ebx,cl
     add ebx,NVME_DISC_DOOR
-    mov ds:[ebx],eax
-;
+    mov fs:[ebx],eax
+
+rsWait:
     movzx ebx,ds:ns_complete_ptr
     mov cl,ds:ns_complete_shift
     shl ebx,cl
     add ebx,NVME_DISC_COMPL
 
-rsCompCheck:
+rsCheck:
     mov ax,ds:[ebx].comp_status
     test al,1
-    jnz rsCompDone
+    jnz rsValidate
 ;
     mov ax,10
     WaitMilliSec
-    jmp rsCompCheck
+    jmp rsCheck
 
-rsCompDone:
+rsValidate:
     mov ax,ds:[ebx].comp_sq_id
     cmp al,ds:ns_rd_queue
-    jne rsCheckWr
+    pushf
+    call ValidateCompletion
+    popf
+    jne rsWait
 ;
-    mov ax,ds:[ebx].comp_sq_head
-    mov ds:ns_rd_head,ax
-    jmp rsHandled
-
-rsCheckWr:
-    cmp al,ds:ns_wr_queue
-    jne rsHandled
-;
-    mov ax,ds:[ebx].comp_sq_head
-    mov ds:ns_wr_head,ax
-
-rsHandled:
-    xor dx,dx
-    xchg dx,ds:[ebx].comp_status
-;
-    movzx eax,ds:ns_complete_ptr
-    inc eax
-    cmp ax,ds:ns_queue_entries
-    jb rsComUpd
-;
-    xor eax,eax
-
-rsComUpd:
-    mov ds:ns_complete_ptr,ax
-;
-    mov cl,ds:ns_door_shift
-    movzx ebx,ds:ns_rd_queue
-    add ebx,ebx
-    inc ebx
-    shl ebx,cl
-    add ebx,NVME_DISC_DOOR
-    mov ds:[ebx],eax
-;
-    shr dx,1
-    or dx,dx
-    stc
-    jnz rsDone
-;
-    clc
+    call UpdateCompletion
 
 rsDone:
     popad
