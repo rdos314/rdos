@@ -7647,6 +7647,9 @@ udLoop1:
     or ax,ax
     jz udNext1
 ;
+    cmp ax,-1
+    je udNext1
+;
     mov gs,ax
     test gs:disc_flags,DISC_FLAG_INSTALLED
     jnz udNext1
@@ -7672,6 +7675,9 @@ udLoop2:
     mov ax,ds:[si]
     or ax,ax
     jz udNext2
+;
+    cmp ax,-1
+    je udNext2
 ;
     mov gs,ax
     test gs:disc_flags,DISC_FLAG_INSTALLED
