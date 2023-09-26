@@ -295,6 +295,7 @@ ns_queue                 DB ?
 ns_door_shift            DB ?
 ns_submit_shift          DB ?
 ns_complete_shift        DB ?
+ns_complete_bit          DB ?
 
 ns_struc       ENDS
 
@@ -741,6 +742,7 @@ GetId0  Proc near
     mov es:ns_submit_head,0
     mov es:ns_submit_tail,0
     mov es:ns_queue,0
+    mov es:ns_complete_bit,0
 ;
     mov es:ns_nsid,ebp
     mov eax,gs:id0_nsze
@@ -1543,6 +1545,7 @@ wfcWait:
 
 wfcCheck:
     mov ax,ds:[ebx].comp_status
+    xor al,ds:ns_complete_bit
     test al,1
     jnz wfcValidate
 ;
@@ -1563,8 +1566,7 @@ wfcFatal:
     stc
 
 wfcHandled:
-    xor dx,dx
-    xchg dx,ds:[ebx].comp_status
+    mov dx,ds:[ebx].comp_status
 ;
     movzx eax,ds:ns_complete_ptr
     inc eax
@@ -1572,6 +1574,7 @@ wfcHandled:
     jb wfcComUpd
 ;
     xor eax,eax
+    xor ds:ns_complete_bit,1
 
 wfcComUpd:
     mov ds:ns_complete_ptr,ax
