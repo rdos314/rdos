@@ -1164,20 +1164,20 @@ ConfigDevice  Proc near
     jz cdFail
 ;
     mov eax,ds:pci_cap
-    cmp ax,3Fh 
+    cmp ax,1Fh 
     jbe cdSubQueueOk
 ;
-    mov ax,3Fh
+    mov ax,1Fh
 
 cdSubQueueOk:
     add ax,1
     mov es:nd_submit_entries,ax
 ;
     mov eax,ds:pci_cap
-    cmp ax,5Fh 
+    cmp ax,2Fh 
     jbe cdCompQueueOk
 ;
-    mov ax,5Fh
+    mov ax,2Fh
 
 cdCompQueueOk:
     add ax,1
