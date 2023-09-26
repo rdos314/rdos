@@ -275,6 +275,7 @@ id1_struc   ENDS
 ns_struc       STRUC
 
 ns_sectors               DD ?,?
+ns_prp_phys              DD ?,?
 ns_nsid                  DD ?
 ns_bytes_per_sector      DW ?
 ns_nvmsetid              DW ?
@@ -768,6 +769,9 @@ GetId0  Proc near
     sub edx,NVME_DISC_DOOR
     add edx,NVME_DISC_PRPLIST
     AllocatePhysical64
+    mov fs:ns_prp_phys,eax
+    mov fs:ns_prp_phys+4,ebx
+;
     mov al,3
     SetPageEntry
 ;
@@ -1432,49 +1436,57 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupPrp   Proc near
-    mov ds:[ebx].sub_prp2,0
-    mov ds:[ebx].sub_prp2+4,0
+    mov esi,NVME_DISC_PRPLIST
+    movzx ebp,ds:ns_bytes_per_sector
 ;
-    movzx esi,ds:ns_bytes_per_sector
     mov eax,es:[edi]
     mov edx,es:[edi+4]
-    mov ds:[ebx].sub_prp1,eax
-    mov ds:[ebx].sub_prp1+4,edx
+    jmp PrpSave
 
-PrpLoop1:
+PrpNext:
     add edi,8
     sub ecx,1
-    jz PrpDone
+    jz PrpSetup
 ;
-    add eax,esi
-    adc edx,0
-    cmp eax,es:[edi]
-    jne Prp2
-;
-    cmp edx,es:[edi+4]
-    je PrpLoop1
-
-Prp2:
     mov eax,es:[edi]
     mov edx,es:[edi+4]
-    mov ds:[ebx].sub_prp2,eax
-    mov ds:[ebx].sub_prp2+4,edx
+    test ax,0FFFh
+    jnz PrpNext
 
-PrpLoop2:
-    add edi,8
-    sub ecx,1
-    jz PrpDone
+PrpSave:
+    mov ds:[esi],eax
+    mov ds:[esi+4],edx
+    add esi,8
+    jmp PrpNext
+
+PrpSetup:
+    sub esi,NVME_DISC_PRPLIST
+    mov eax,esi
+    mov esi,NVME_DISC_PRPLIST
+    cmp eax,8
+    je PrpOne
 ;
-    add eax,esi
-    adc edx,0
-    cmp eax,es:[edi]
-    jne PrpList
-;
-    cmp edx,es:[edi+4]
-    je PrpLoop2
+    cmp eax,10h
+    je PrpTwo
 
 PrpList:
-    int 3
+    mov eax,ds:ns_prp_phys
+    mov ds:[ebx].sub_prp1,eax
+    mov eax,ds:ns_prp_phys+4
+    mov ds:[ebx].sub_prp1+4,edx
+    jmp PrpDone
+
+PrpTwo:
+    mov eax,ds:[esi+8]
+    mov ds:[ebx].sub_prp2,eax
+    mov eax,ds:[esi+12]
+    mov ds:[ebx].sub_prp2+4,eax
+
+PrpOne:
+    mov eax,ds:[esi]
+    mov ds:[ebx].sub_prp1,eax
+    mov eax,ds:[esi+4]
+    mov ds:[ebx].sub_prp1+4,eax
 
 PrpDone:
     ret
