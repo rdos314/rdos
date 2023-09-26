@@ -288,8 +288,7 @@ ns_complete_ptr          DW ?
 ns_submit_head           DW ?
 ns_submit_tail           DW ?
 
-ns_complete_queue        DB ?
-ns_submit_queue          DB ?
+ns_queue                 DB ?
 
 ns_door_shift            DB ?
 ns_submit_shift          DB ?
@@ -736,9 +735,7 @@ GetId0  Proc near
     mov es:ns_complete_ptr,0
     mov es:ns_submit_head,0
     mov es:ns_submit_tail,0
-    mov es:ns_complete_queue,0
-    mov es:ns_submit_queue,0
-    mov es:ns_submit_queue,0
+    mov es:ns_queue,0
 ;
     mov es:ns_nsid,ebp
     mov eax,gs:id0_nsze
@@ -759,9 +756,11 @@ GetId0  Proc near
 ;
     pop es
 ;
+    mov ebx,fs
+    GetSelectorBaseSize
+    add edx,NVME_DISC_DOOR
     mov eax,es:nd_door_phys
     mov ebx,es:nd_door_phys+4
-    add edx,NVME_DISC_DOOR
     mov al,13h
     SetPageEntry
 ;
@@ -955,7 +954,6 @@ CreateIoCompletionQueue  Endp
 ;   PARAMETERS:     ES      Device sel
 ;                   FS      Disc sel
 ;                   BL      Queue # (1..QN)
-;                   BH      Completion queue (1..QN)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1019,7 +1017,7 @@ CreateIoSubmissionQueue  Proc near
     movzx ax,cl
     mov ds:[ebx].adm_ndt,eax
 ;
-    movzx eax,ch
+    movzx eax,cl
     shl eax,16
     mov ax,1
     mov ds:[ebx].adm_ndm,eax
@@ -1048,8 +1046,7 @@ CreateIoSubmissionQueue  Endp
 ;   DESCRIPTION:    Create namespace
 ;
 ;   PARAMETERS:     ES      Device sel
-;                   BL      Completion queue
-;                   BH      Submission queue
+;                   BL      Queue #
 ;                   DX      NSID
 ;
 ;    RETURNS:       AX      Namespace sel
@@ -1084,7 +1081,6 @@ CreateNameSpace  Proc near
     pop es
     pop ds
 ;
-    int 3
     sub al,es:nd_base_int
     call CreateIoCompletionQueue
     jc cnsDone
@@ -1092,25 +1088,19 @@ CreateNameSpace  Proc near
     dec es:nd_int_count
     inc es:nd_curr_int
 ;
-    mov fs:ns_complete_queue,bl
+    mov fs:ns_queue,bl
     mov fs:ns_complete_ptr,0
 ;
-    xchg bl,bh
     mov ax,fs:ns_nvmsetid
     call CreateIoSubmissionQueue
     jc cnsDone
 ;
-    mov fs:ns_submit_queue,bl
     mov fs:ns_submit_head,0
     mov fs:ns_submit_tail,0
 ;
     inc bl
-    inc bh
     mov ax,fs
     clc
-
-cnsXchg:
-    xchg bl,bh
 
 cnsDone:
     pop fs
@@ -1509,7 +1499,7 @@ wfcSubUpd:
     mov ds:ns_submit_tail,ax
 ;
     mov cl,ds:ns_door_shift
-    movzx ebx,ds:ns_submit_queue
+    movzx ebx,ds:ns_queue
     add ebx,ebx
     shl ebx,cl
     add ebx,NVME_DISC_DOOR
@@ -1531,7 +1521,7 @@ wfcCheck:
 
 wfcValidate:
     mov ax,ds:[ebx].comp_sq_id
-    cmp al,ds:ns_submit_queue
+    cmp al,ds:ns_queue
     jne wfcFatal
 ;
     mov ax,ds:[ebx].comp_sq_head
@@ -1558,7 +1548,7 @@ wfcComUpd:
 
 wfcUpdate:
     mov cl,ds:ns_door_shift
-    movzx ebx,ds:ns_complete_queue
+    movzx ebx,ds:ns_queue
     add ebx,ebx
     inc ebx
     shl ebx,cl
@@ -1828,7 +1818,6 @@ SetupDevice  Proc near
 ;
     mov edi,OFFSET nd_nsid_arr
     mov bl,1
-    mov bh,1
     mov dx,1
 
 sdMore:
