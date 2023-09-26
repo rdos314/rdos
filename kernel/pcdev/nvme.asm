@@ -296,10 +296,11 @@ ns_complete_shift        DB ?
 
 ns_struc       ENDS
 
-NVME_DISC_DOOR   = 1000h
-NVME_DISC_SUB    = 2000h
-NVME_DISC_COMPL  = 3000h
-NVME_DISC_SIZE   = 4000h
+NVME_DISC_DOOR    = 1000h
+NVME_DISC_SUB     = 2000h
+NVME_DISC_COMPL   = 3000h
+NVME_DISC_PRPLIST = 4000h
+NVME_DISC_SIZE    = 5000h
 
 ;
 ; NVME device
@@ -762,6 +763,12 @@ GetId0  Proc near
     mov eax,es:nd_door_phys
     mov ebx,es:nd_door_phys+4
     mov al,13h
+    SetPageEntry
+;
+    sub edx,NVME_DISC_DOOR
+    add edx,NVME_DISC_PRPLIST
+    AllocatePhysical64
+    mov al,3
     SetPageEntry
 ;
     mov al,es:nd_submit_shift
@@ -1590,10 +1597,17 @@ InitVfs   Proc far
     GetThread
     mov ds:ns_thread,ax
 ;
+    int 3
+    mov eax,200000h
+    xor edx,edx
+    movzx ecx,ds:ns_bytes_per_sector
+    div ecx
+    dec ax
+    mov bx,ax
+;
     mov eax,ds:ns_sectors
     mov edx,ds:ns_sectors+4
     mov cx,ds:ns_bytes_per_sector
-    mov bx,100h
 ;
     pop ds
     ret
