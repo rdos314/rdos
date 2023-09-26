@@ -1577,10 +1577,11 @@ wfcUpdate:
     mov ax,dx
     shr ax,1
     or ax,ax
-    stc
-    jnz wfcDone
-;
     clc
+    jz wfcDone
+;
+    int 3
+    stc
 
 wfcDone:
     ret
@@ -1609,7 +1610,6 @@ InitVfs   Proc far
     GetThread
     mov ds:ns_thread,ax
 ;
-    int 3
     mov eax,200000h
     xor edx,edx
     movzx ecx,ds:ns_bytes_per_sector
@@ -1711,7 +1711,6 @@ ReadVfs      Proc far
     push ds
     pushad
 ;
-    int 3
     push ecx
     mov ds,ebx
     movzx ebx,ds:ns_submit_tail
@@ -1724,6 +1723,7 @@ ReadVfs      Proc far
     mov ds:[ebx].sub_cid,15
     mov ds:[ebx].sub_cdw10,eax
     mov ds:[ebx].sub_cdw11,edx
+    dec ecx
     mov ds:[ebx].sub_cdw12,ecx
 ;
     mov eax,ds:ns_nsid
@@ -1752,7 +1752,32 @@ ReadVfs  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteVfs      Proc far
-    int 3
+    push ds
+    pushad
+;
+    push ecx
+    mov ds,ebx
+    movzx ebx,ds:ns_submit_tail
+    mov cl,ds:ns_submit_shift
+    shl ebx,cl
+    add ebx,NVME_DISC_SUB
+    pop ecx
+;
+    mov ds:[ebx].sub_opc,1
+    mov ds:[ebx].sub_cid,16
+    mov ds:[ebx].sub_cdw10,eax
+    mov ds:[ebx].sub_cdw11,edx
+    dec ecx
+    mov ds:[ebx].sub_cdw12,ecx
+;
+    mov eax,ds:ns_nsid
+    mov ds:[ebx].sub_nsid,eax
+;
+    call SetupPrp
+    call WaitForCompletion
+;
+    popad
+    pop ds
     ret
 WriteVfs  Endp
 
