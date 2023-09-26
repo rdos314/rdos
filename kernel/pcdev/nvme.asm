@@ -283,7 +283,8 @@ ns_nvmsetid              DW ?
 ns_thread                DW ?
 
 ns_dev_sel               DW ?
-ns_queue_entries         DW ?
+ns_submit_entries        DW ?
+ns_complete_entries      DW ?
 
 ns_complete_ptr          DW ?
 ns_submit_head           DW ?
@@ -322,7 +323,9 @@ nd_admin_complete_sel    DW ?
 nd_admin_submit_ptr      DW ?
 nd_admin_complete_ptr    DW ?
 
-nd_queue_entries         DW ?
+nd_submit_entries        DW ?
+nd_complete_entries      DW ?
+
 nd_submit_queues         DW ?
 nd_complete_queues       DW ?
 
@@ -784,8 +787,11 @@ GetId0  Proc near
     mov al,es:nd_door_shift
     mov fs:ns_door_shift,al
 ;
-    mov ax,es:nd_queue_entries
-    mov fs:ns_queue_entries,ax
+    mov ax,es:nd_submit_entries
+    mov fs:ns_submit_entries,ax
+;
+    mov ax,es:nd_complete_entries
+    mov fs:ns_complete_entries,ax
 ;
     mov fs:ns_dev_sel,es
     clc
@@ -929,7 +935,7 @@ CreateIoCompletionQueue  Proc near
     mov ds:[ebx].adm_prp2,0
     mov ds:[ebx].adm_prp2+4,0
 ;
-    movzx eax,es:nd_queue_entries
+    movzx eax,es:nd_complete_entries
     dec ax
     shl eax,16
     movzx ax,cl
@@ -1022,7 +1028,7 @@ CreateIoSubmissionQueue  Proc near
     mov ds:[ebx].adm_prp2,0
     mov ds:[ebx].adm_prp2+4,0
 ;
-    movzx eax,es:nd_queue_entries
+    movzx eax,es:nd_submit_entries
     dec ax
     shl eax,16
     movzx ax,cl
@@ -1159,13 +1165,23 @@ ConfigDevice  Proc near
 ;
     mov eax,ds:pci_cap
     cmp ax,3Fh 
-    jbe cdQueueOk
+    jbe cdSubQueueOk
 ;
     mov ax,3Fh
 
-cdQueueOk:
+cdSubQueueOk:
     add ax,1
-    mov es:nd_queue_entries,ax
+    mov es:nd_submit_entries,ax
+;
+    mov eax,ds:pci_cap
+    cmp ax,5Fh 
+    jbe cdCompQueueOk
+;
+    mov ax,5Fh
+
+cdCompQueueOk:
+    add ax,1
+    mov es:nd_complete_entries,ax
 ;
     mov eax,ds:pci_cc
     and al,NOT 1
@@ -1504,7 +1520,7 @@ SetupPrp   Endp
 WaitForCompletion   Proc near
     movzx eax,ds:ns_submit_tail
     inc eax
-    cmp ax,ds:ns_queue_entries
+    cmp ax,ds:ns_submit_entries
     jb wfcSubUpd
 ;
     xor eax,eax
@@ -1552,7 +1568,7 @@ wfcHandled:
 ;
     movzx eax,ds:ns_complete_ptr
     inc eax
-    cmp ax,ds:ns_queue_entries
+    cmp ax,ds:ns_complete_entries
     jb wfcComUpd
 ;
     xor eax,eax
