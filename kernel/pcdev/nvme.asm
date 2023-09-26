@@ -1436,6 +1436,12 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupPrp   Proc near
+    cmp ecx,49h
+    jne prpcont
+;
+    int 3
+
+prpcont:
     mov esi,NVME_DISC_PRPLIST
     movzx ebp,ds:ns_bytes_per_sector
 ;
@@ -1723,8 +1729,9 @@ ReadVfs      Proc far
     mov ds:[ebx].sub_cid,15
     mov ds:[ebx].sub_cdw10,eax
     mov ds:[ebx].sub_cdw11,edx
-    dec ecx
-    mov ds:[ebx].sub_cdw12,ecx
+    mov eax,ecx
+    dec eax
+    mov ds:[ebx].sub_cdw12,eax
 ;
     mov eax,ds:ns_nsid
     mov ds:[ebx].sub_nsid,eax
@@ -1767,8 +1774,9 @@ WriteVfs      Proc far
     mov ds:[ebx].sub_cid,16
     mov ds:[ebx].sub_cdw10,eax
     mov ds:[ebx].sub_cdw11,edx
-    dec ecx
-    mov ds:[ebx].sub_cdw12,ecx
+    mov eax,ecx
+    dec eax
+    mov ds:[ebx].sub_cdw12,eax
 ;
     mov eax,ds:ns_nsid
     mov ds:[ebx].sub_nsid,eax
