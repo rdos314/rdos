@@ -35,7 +35,6 @@ INCLUDE ..\drive.inc
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
 INCLUDE pci.inc
-INCLUDE ..\os\memblk.inc
 
 MAX_NVME_DEVICES    = 16
 MAX_NSID            = 8
@@ -275,8 +274,6 @@ id1_struc   ENDS
 
 ns_struc       STRUC
 
-ns_mem_blk               mem_blk_header <>
-
 ns_sectors               DD ?,?
 ns_nsid                  DD ?
 ns_bytes_per_sector      DW ?
@@ -288,14 +285,11 @@ ns_dev_sel               DW ?
 ns_queue_entries         DW ?
 
 ns_complete_ptr          DW ?
-ns_rd_head               DW ?
-ns_rd_tail               DW ?
-ns_wr_head               DW ?
-ns_wr_tail               DW ?
+ns_submit_head           DW ?
+ns_submit_tail           DW ?
 
 ns_complete_queue        DB ?
-ns_rd_queue              DB ?
-ns_wr_queue              DB ?
+ns_submit_queue          DB ?
 
 ns_door_shift            DB ?
 ns_submit_shift          DB ?
@@ -304,10 +298,9 @@ ns_complete_shift        DB ?
 ns_struc       ENDS
 
 NVME_DISC_DOOR   = 1000h
-NVME_DISC_RD     = 2000h
-NVME_DISC_WR     = 3000h
-NVME_DISC_COMPL  = 4000h
-NVME_DISC_SIZE   = 5000h
+NVME_DISC_SUB    = 2000h
+NVME_DISC_COMPL  = 3000h
+NVME_DISC_SIZE   = 4000h
 
 ;
 ; NVME device
@@ -737,19 +730,15 @@ GetId0  Proc near
 ;
     push es
 ;
-    mov ax,64
-    mov si,SIZE ns_struc
-    mov cx,16
-    CreateMemBlk64
+    mov eax,NVME_DISC_SIZE
+    AllocateGlobalMem
 ;
     mov es:ns_complete_ptr,0
-    mov es:ns_rd_head,0
-    mov es:ns_rd_tail,0
-    mov es:ns_wr_head,0
-    mov es:ns_wr_tail,0
+    mov es:ns_submit_head,0
+    mov es:ns_submit_tail,0
     mov es:ns_complete_queue,0
-    mov es:ns_rd_queue,0
-    mov es:ns_wr_queue,0
+    mov es:ns_submit_queue,0
+    mov es:ns_submit_queue,0
 ;
     mov es:ns_nsid,ebp
     mov eax,gs:id0_nsze
@@ -765,31 +754,8 @@ GetId0  Proc near
     mov ax,gs:id0_nvmsetid
     mov es:ns_nvmsetid,ax
 ;
-    mov esi,es:mblk_linear_base
-;
-    mov eax,NVME_DISC_SIZE
-    AllocateBigLinear
-    mov edi,edx
-;
-    mov edx,esi
-    GetPageEntry
-    mov edx,edi
-    SetPageEntry
-;
-    mov edx,esi
-    xor eax,eax
-    xor ebx,ebx
-    SetPageEntry
-;
-    mov ecx,1000h
-    FreeLinear
-;
-    mov ebx,es
-    mov edx,edi
-    mov ecx,NVME_DISC_SIZE
-    CreateDataSelector16
-    mov fs,ebx
-    mov fs:mblk_linear_base,edx
+    mov eax,es
+    mov fs,eax
 ;
     pop es
 ;
@@ -908,7 +874,8 @@ CreateIoCompletionQueue  Proc near
     push ebx
     push eax
 ;
-    mov edx,fs:mblk_linear_base
+    mov ebx,fs
+    GetSelectorBaseSize
     add edx,NVME_DISC_COMPL
 ;
     AllocatePhysical64
@@ -987,10 +954,8 @@ CreateIoCompletionQueue  Endp
 ;
 ;   PARAMETERS:     ES      Device sel
 ;                   FS      Disc sel
-;                   AX      Set id
 ;                   BL      Queue # (1..QN)
 ;                   BH      Completion queue (1..QN)
-;                   EDX     Queue offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1003,11 +968,10 @@ CreateIoSubmissionQueue  Proc near
     push edi
 ;
     push ebx
-    push eax
 ;
-    push edx
-;
-    add edx,fs:mblk_linear_base
+    mov ebx,fs
+    GetSelectorBaseSize
+    add edx,NVME_DISC_SUB
 ;
     AllocatePhysical64
     mov esi,eax
@@ -1016,14 +980,12 @@ CreateIoSubmissionQueue  Proc near
     mov al,3
     SetPageEntry
 ;
-    pop edx
-;
     push es
     push edi
 ;
     mov eax,fs
     mov es,eax
-    mov edi,edx
+    mov edi,NVME_DISC_SUB
     mov ecx,400h
     xor eax,eax
     rep stos dword ptr es:[edi]
@@ -1031,7 +993,6 @@ CreateIoSubmissionQueue  Proc near
     pop edi
     pop es
 ;
-    pop edx
     pop ecx
 ;
     mov ds,es:nd_admin_submit_sel
@@ -1063,7 +1024,7 @@ CreateIoSubmissionQueue  Proc near
     mov ax,1
     mov ds:[ebx].adm_ndm,eax
 ;
-    movzx eax,dx
+    movzx eax,fs:ns_nvmsetid
     mov ds:[ebx].adm_cdw12,eax
     mov ds:[ebx].adm_cdw13,0
     mov ds:[ebx].adm_cdw14,0
@@ -1123,6 +1084,7 @@ CreateNameSpace  Proc near
     pop es
     pop ds
 ;
+    int 3
     sub al,es:nd_base_int
     call CreateIoCompletionQueue
     jc cnsDone
@@ -1135,23 +1097,15 @@ CreateNameSpace  Proc near
 ;
     xchg bl,bh
     mov ax,fs:ns_nvmsetid
-    mov edx,NVME_DISC_RD
     call CreateIoSubmissionQueue
     jc cnsDone
 ;
-    mov fs:ns_rd_queue,bl
-    mov fs:ns_rd_head,0
-    mov fs:ns_rd_tail,0
+    mov fs:ns_submit_queue,bl
+    mov fs:ns_submit_head,0
+    mov fs:ns_submit_tail,0
 ;
     inc bl
-    mov ax,fs:ns_nvmsetid
-    mov edx,NVME_DISC_WR
-    call CreateIoSubmissionQueue
-    jc cnsXchg
-;
-    mov fs:ns_wr_queue,bl
-    mov fs:ns_wr_head,0
-    mov fs:ns_wr_tail,0
+    inc bh
     mov ax,fs
     clc
 
@@ -1528,83 +1482,100 @@ PrpList:
 PrpDone:
     ret
 SetupPrp   Endp
-    
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           ValidateCompletion
+;       NAME:           WaitForCompletion
 ;
-;       DESCRIPTION:    Validate completion
+;       DESCRIPTION:    Wait for completion
 ;
-;       PARAMETERS:     DS:EBX      Completion descriptor
+;       PARAMETERS:     DS          Disc sel
 ;
-;       RETURNS:        AX          Status code
+;       RETURNS:        CY
+;                         AX        Error code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ValidateCompletion   Proc near
+WaitForCompletion   Proc near
+    movzx eax,ds:ns_submit_tail
+    inc eax
+    cmp ax,ds:ns_queue_entries
+    jb wfcSubUpd
+;
+    xor eax,eax
+
+wfcSubUpd:
+    mov ds:ns_submit_tail,ax
+;
+    mov cl,ds:ns_door_shift
+    movzx ebx,ds:ns_submit_queue
+    add ebx,ebx
+    shl ebx,cl
+    add ebx,NVME_DISC_DOOR
+    mov ds:[ebx],eax
+
+wfcWait:
+    movzx ebx,ds:ns_complete_ptr
+    mov cl,ds:ns_complete_shift
+    shl ebx,cl
+    add ebx,NVME_DISC_COMPL
+
+wfcCheck:
+    mov ax,ds:[ebx].comp_status
+    test al,1
+    jnz wfcValidate
+;
+    WaitForSignal
+    jmp wfcCheck
+
+wfcValidate:
     mov ax,ds:[ebx].comp_sq_id
-    cmp al,ds:ns_rd_queue
-    jne vcCheckWr
+    cmp al,ds:ns_submit_queue
+    jne wfcFatal
 ;
     mov ax,ds:[ebx].comp_sq_head
-    mov ds:ns_rd_head,ax
-    jmp vcHandled
+    mov ds:ns_submit_head,ax
+    jmp wfcHandled
 
-vcCheckWr:
-    cmp al,ds:ns_wr_queue
-    jne vcHandled
-;
-    mov ax,ds:[ebx].comp_sq_head
-    mov ds:ns_wr_head,ax
+wfcFatal:
+    int 3
+    stc
 
-vcHandled:
+wfcHandled:
     xor dx,dx
     xchg dx,ds:[ebx].comp_status
 ;
     movzx eax,ds:ns_complete_ptr
     inc eax
     cmp ax,ds:ns_queue_entries
-    jb vcComUpd
+    jb wfcComUpd
 ;
     xor eax,eax
 
-vcComUpd:
+wfcComUpd:
     mov ds:ns_complete_ptr,ax
-;
-    shr ax,1
-    or ax,ax
-    stc
-    jnz vcDone
-;
-    clc
 
-vcDone:
-    ret
-ValidateCompletion  Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;       NAME:           UpdateCompletion
-;
-;       DESCRIPTION:    Update completion
-;
-;       PARAMETERS:     DS          Disc sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateCompletion   Proc near
+wfcUpdate:
     mov cl,ds:ns_door_shift
     movzx ebx,ds:ns_complete_queue
     add ebx,ebx
     inc ebx
     shl ebx,cl
     add ebx,NVME_DISC_DOOR
-    mov ax,ds:ns_complete_ptr
     mov ds:[ebx],eax
+;
+    mov ax,dx
+    shr ax,1
+    or ax,ax
+    stc
+    jnz wfcDone
+;
+    clc
+
+wfcDone:
     ret
-UpdateCompletion   Endp   
+WaitForCompletion   Endp
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1724,12 +1695,13 @@ ReadVfs      Proc far
     push ds
     pushad
 ;
+    int 3
     push ecx
     mov ds,ebx
-    movzx ebx,ds:ns_rd_tail
+    movzx ebx,ds:ns_submit_tail
     mov cl,ds:ns_submit_shift
     shl ebx,cl
-    add ebx,NVME_DISC_RD
+    add ebx,NVME_DISC_SUB
     pop ecx
 ;
     mov ds:[ebx].sub_opc,2
@@ -1742,49 +1714,8 @@ ReadVfs      Proc far
     mov ds:[ebx].sub_nsid,eax
 ;
     call SetupPrp
+    call WaitForCompletion
 ;
-    movzx eax,ds:ns_rd_tail
-    inc eax
-    cmp ax,ds:ns_queue_entries
-    jb rsSubUpd
-;
-    xor eax,eax
-
-rsSubUpd:
-    mov ds:ns_rd_tail,ax
-;
-    mov cl,ds:ns_door_shift
-    movzx ebx,ds:ns_rd_queue
-    add ebx,ebx
-    shl ebx,cl
-    add ebx,NVME_DISC_DOOR
-    mov ds:[ebx],eax
-
-rsWait:
-    movzx ebx,ds:ns_complete_ptr
-    mov cl,ds:ns_complete_shift
-    shl ebx,cl
-    add ebx,NVME_DISC_COMPL
-
-rsCheck:
-    mov ax,ds:[ebx].comp_status
-    test al,1
-    jnz rsValidate
-;
-    WaitForSignal
-    jmp rsCheck
-
-rsValidate:
-    mov ax,ds:[ebx].comp_sq_id
-    cmp al,ds:ns_rd_queue
-    pushf
-    call ValidateCompletion
-    popf
-    jne rsWait
-;
-    call UpdateCompletion
-
-rsDone:
     popad
     pop ds
     ret
