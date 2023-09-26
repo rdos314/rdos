@@ -337,6 +337,8 @@ nd_pci_bus               DB ?
 nd_pci_device            DB ?
 nd_pci_function          DB ?
 
+nd_complete_bit          DB ?
+
 nd_door_shift            DB ?
 nd_submit_shift          DB ?
 nd_complete_shift        DB ?
@@ -380,6 +382,8 @@ code    SEGMENT byte public use32 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NvmeAdminInt  Proc far
+    mov bx,ds:nd_thread
+    Signal
     ret
 NvmeAdminInt  Endp
 
@@ -399,67 +403,6 @@ NvmeInt  Proc far
     Signal
     ret
 NvmeInt  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           SignalSubmitDoor
-;
-;   DESCRIPTION:    Signal submit door
-;
-;   PARAMETERS:     ES             Device sel
-;                   EBX            Door #
-;                   EAX            Position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SignalSubmitDoor  Proc near
-    push ds
-    push ebx
-    push ecx
-;
-    mov ds,es:nd_door_sel
-    mov cl,es:nd_door_shift
-    add ebx,ebx
-    shl ebx,cl
-    mov ds:[ebx],eax
-;
-    pop ecx
-    pop ebx
-    pop ds
-    ret
-SignalSubmitDoor   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           SignalCompleteDoor
-;
-;   DESCRIPTION:    Signal complete door
-;
-;   PARAMETERS:     ES             Device sel
-;                   EBX            Door #
-;                   EAX            Position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SignalCompleteDoor  Proc near
-    push ds
-    push ebx
-    push ecx
-;
-    mov ds,es:nd_door_sel
-    mov cl,es:nd_door_shift
-    add ebx,ebx
-    inc ebx
-    shl ebx,cl
-    mov ds:[ebx],eax
-;
-    pop ecx
-    pop ebx
-    pop ds
-    ret
-SignalCompleteDoor   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -491,8 +434,9 @@ AdminSession  Proc near
 asSubUpd:
     mov es:nd_admin_submit_ptr,ax
 ;
+    mov ds,es:nd_door_sel
     xor ebx,ebx
-    call SignalSubmitDoor
+    mov ds:[ebx],eax
 ;
     mov ds,es:nd_admin_complete_sel
     movzx ebx,es:nd_admin_complete_ptr
@@ -500,11 +444,11 @@ asSubUpd:
 
 asCompCheck:
     mov ax,ds:[ebx].comp_status
+    xor al,es:nd_complete_bit
     test al,1
     jnz asCompOk
 ;
-    mov ax,10
-    WaitMilliSec
+    WaitForSignal
     jmp asCompCheck
 
 asCompOk:
@@ -512,8 +456,7 @@ asCompOk:
     stc
     jne asDone
 ;
-    xor cx,cx
-    xchg cx,ds:[ebx].comp_status
+    mov cx,ds:[ebx].comp_status
     mov eax,ds:[ebx].comp_dw0
     mov edx,ds:[ebx].comp_dw1
     push eax
@@ -524,12 +467,18 @@ asCompOk:
     jb asCompUpd
 ;
     xor eax,eax
+    xor es:nd_complete_bit,1
 
 asCompUpd:
     mov es:nd_admin_complete_ptr,ax
 ;
-    xor ebx,ebx
-    call SignalCompleteDoor
+    push ecx
+    mov ds,es:nd_door_sel
+    mov ebx,1
+    mov cl,es:nd_door_shift
+    shl ebx,cl
+    mov ds:[ebx],eax
+    pop ecx
 ;
     pop eax
     shr cl,1
@@ -1293,6 +1242,10 @@ AddDevice  Proc near
     mov es:nd_pci_bus,bh
     mov es:nd_pci_device,bl
     mov es:nd_pci_function,ch
+    mov es:nd_complete_bit,0
+;
+    GetThread
+    mov es:nd_thread,ax
 ;
     mov eax,2000h    
     AllocateBigLinear
