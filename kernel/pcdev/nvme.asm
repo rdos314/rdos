@@ -1036,6 +1036,7 @@ CreateNameSpace  Proc near
     mov al,es:nd_curr_int
     push ds
     push es
+    push edx
     push edi
 ;
     mov edx,fs
@@ -1046,6 +1047,7 @@ CreateNameSpace  Proc near
     RequestMsiHandler
 ;
     pop edi
+    pop edx
     pop es
     pop ds
 ;
@@ -1214,9 +1216,9 @@ ConfigDevice  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           AddDevice
+;   NAME:           CreateDevice
 ;
-;   DESCRIPTION:    Add device
+;   DESCRIPTION:    Create device
 ;
 ;   PARAMETERS:     BH      PCI Bus
 ;                   BL      PCI Device
@@ -1226,7 +1228,7 @@ ConfigDevice  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddDevice  Proc near
+CreateDevice  Proc near
     push ds
     pushad
 ;
@@ -1235,17 +1237,11 @@ AddDevice  Proc near
 ;
     mov eax,SIZE nvme_device_struc
     AllocateSmallGlobalMem
-    mov si,ds:nvme_dev_count
-    shl si,1
-    mov ds:[si].nvme_dev_arr,es
 ;
     mov es:nd_pci_bus,bh
     mov es:nd_pci_device,bl
     mov es:nd_pci_function,ch
     mov es:nd_complete_bit,0
-;
-    GetThread
-    mov es:nd_thread,ax
 ;
     mov eax,2000h    
     AllocateBigLinear
@@ -1253,19 +1249,19 @@ AddDevice  Proc near
     mov cl,10h
     ReadPciDword
     test al,4
-    jz ad32
+    jz cd32
 ;
     push eax
     mov cl,14h
     ReadPciDword
     mov ebx,eax
     pop eax
-    jmp adAlloc
+    jmp cdAlloc
 
-ad32:
+cd32:
     xor ebx,ebx
 
-adAlloc:
+cdAlloc:
     and ax,0F000h
     mov al,13h
     SetPageEntry
@@ -1324,7 +1320,7 @@ adAlloc:
     popad
     pop ds
     ret
-AddDevice   Endp
+CreateDevice   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1791,66 +1787,39 @@ HexToAscii      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           SetupDevice
+;   NAME:           NVMe thread
 ;
-;   DESCRIPTION:    Setup device
-;
-;   RETURNS:        NC      OK
+;   DESCRIPTION:    NVMe config thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DevName DB 'NVMe', 0
-
-vfs_tab:
-vfs00   DD OFFSET InitVfs,        DD SEG code
-vfs01   DD OFFSET GetVfsVendor,   DD SEG code
-vfs02   DD OFFSET ExitVfs,        DD SEG code
-vfs03   DD OFFSET GetBiosVfs,     DD SEG code
-vfs04   DD OFFSET ReadVfs,        DD SEG code
-vfs05   DD OFFSET WriteVfs,       DD SEG code
-
-SetupDevice  Proc near
-    xor ax,ax
-    mov bh,1
-    mov bl,8
-    FindPciClass
-    jc sdDone
+nvme_thread:
+    mov es,ebx
 ;
-    mov eax,cs
-    mov es,eax
-    mov edi,OFFSET DevName
-    PciPowerOn
-;
-    call AddDevice
-    jc sdDone
-;
-    call ConfigDevice
-    jc sdDone
-;
-    call SetupInts
-    jc sdDone
+    GetThread
+    mov es:nd_thread,ax
 ;
     call GetId1
-    jc sdDone
+    jc ntDone
 ;
     call GetQueueCount
-    jc sdDone
+    jc ntDone
 ;
     mov edi,OFFSET nd_nsid_arr
     mov bl,1
     mov dx,1
 
-sdMore:
+ntMore:
     call CreateNameSpace
-    jnc sdSave
+    jnc ntSave
 ;
     xor ax,ax
 
-sdSave:
+ntSave:
     stos word ptr es:[edi]
     inc dx
     cmp dx,es:nd_nsid_count
-    jbe sdMore
+    jbe ntMore
 ;
     mov eax,es
     mov ds,eax
@@ -1858,10 +1827,10 @@ sdSave:
     mov ebx,OFFSET nd_nsid_arr
     xor dx,dx
 
-sdNameLoop:
+ntNameLoop:
     mov ax,ds:[ebx]
     or ax,ax
-    jz sdNameNext
+    jz ntNameNext
 ;
     mov eax,100h
     AllocateSmallGlobalMem
@@ -1869,16 +1838,16 @@ sdNameLoop:
     xor edi,edi
     mov esi,OFFSET DevName
 
-sdCopyDev:
+ntCopyDev:
     mov al,cs:[esi]
     inc esi
     or al,al
-    jz sdCopyDone
+    jz ntCopyDone
 ;
     stos byte ptr es:[edi]
-    jmp sdCopyDev
+    jmp ntCopyDev
 
-sdCopyDone:
+ntCopyDone:
     mov al,' '
     stos byte ptr es:[edi]
 ;
@@ -1917,11 +1886,111 @@ sdCopyDone:
 ;
     FreeMem
 
-sdNameNext:
+ntNameNext:
     add ebx,2
     inc dx
     sub ecx,1
-    jnz sdNameLoop
+    jnz ntNameLoop
+;
+    WaitForSignal
+
+ntDone:
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupDevice
+;
+;   DESCRIPTION:    Setup device
+;
+;   RETURNS:        NC      OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DevName DB 'NVMe', 0
+
+vfs_tab:
+vfs00   DD OFFSET InitVfs,        DD SEG code
+vfs01   DD OFFSET GetVfsVendor,   DD SEG code
+vfs02   DD OFFSET ExitVfs,        DD SEG code
+vfs03   DD OFFSET GetBiosVfs,     DD SEG code
+vfs04   DD OFFSET ReadVfs,        DD SEG code
+vfs05   DD OFFSET WriteVfs,       DD SEG code
+
+SetupDevice  Proc near
+    mov ax,SEG data
+    mov fs,ax
+    mov fs:nvme_dev_count,0
+    xor ebp,ebp
+
+sdLoop:
+    mov eax,ebp
+    mov bh,1
+    mov bl,8
+    FindPciClass
+    jc sdDone
+;
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET DevName
+    PciPowerOn
+;
+    call CreateDevice
+    jc sdNext
+;
+    call ConfigDevice
+    jc sdNext
+;
+    call SetupInts
+    jc sdNext
+;
+    movzx ebx,fs:nvme_dev_count
+    add ebx,ebx
+    mov fs:[ebx].nvme_dev_arr,es
+    inc fs:nvme_dev_count
+;
+    mov ebx,es
+;
+    mov eax,100h
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    mov esi,OFFSET DevName
+
+sdCopyDev:
+    mov al,cs:[esi]
+    inc esi
+    or al,al
+    jz sdCopyDone
+;
+    stos byte ptr es:[edi]
+    jmp sdCopyDev
+
+sdCopyDone:
+    mov al,' '
+    stos byte ptr es:[edi]
+;
+    mov ax,fs:nvme_dev_count
+    call HexToAscii
+    stos word ptr es:[edi]
+;
+    xor al,al
+    stos byte ptr es:[edi]
+;
+    mov eax,cs
+    mov ds,eax
+    mov esi,OFFSET nvme_thread
+    xor edi,edi
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+;
+    FreeMem
+
+sdNext:
+    inc ebp
+    jmp sdLoop
 
 sdDone:
     ret
