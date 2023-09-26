@@ -431,8 +431,7 @@ void TMbrDisc::LbaToChs(unsigned int Sector, struct TMbrChs *Entry)
     int BiosCyl;
     unsigned char cs[2];
 
-    BiosCyl = Sector / FSectorsPerCyl / FHeads;
-    if (BiosCyl >= 1024)
+    if (FHeads == 0 || FSectorsPerCyl == 0)
     {
         BiosCyl = 1023;
         BiosHead = FHeads - 1;
@@ -440,9 +439,19 @@ void TMbrDisc::LbaToChs(unsigned int Sector, struct TMbrChs *Entry)
     }
     else
     {
-        Sector = Sector - BiosCyl * FSectorsPerCyl * FHeads;
-        BiosHead = Sector / FSectorsPerCyl;
-        BiosSector = Sector - BiosHead * FSectorsPerCyl + 1;
+        BiosCyl = Sector / FSectorsPerCyl / FHeads;
+        if (BiosCyl >= 1024)
+        {
+            BiosCyl = 1023;
+            BiosHead = FHeads - 1;
+            BiosSector = FSectorsPerCyl;
+        }
+        else
+        {
+            Sector = Sector - BiosCyl * FSectorsPerCyl * FHeads;
+            BiosHead = Sector / FSectorsPerCyl;
+            BiosSector = Sector - BiosHead * FSectorsPerCyl + 1;
+        }
     }
 
     Entry->Head = BiosHead;

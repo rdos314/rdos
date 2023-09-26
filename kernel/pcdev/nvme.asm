@@ -1436,18 +1436,13 @@ SetupInts Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetupPrp   Proc near
-    cmp ecx,49h
-    jne prpcont
-;
-    int 3
-
-prpcont:
     mov esi,NVME_DISC_PRPLIST
     movzx ebp,ds:ns_bytes_per_sector
 ;
     mov eax,es:[edi]
     mov edx,es:[edi+4]
-    jmp PrpSave
+    mov ds:[ebx].sub_prp1,eax
+    mov ds:[ebx].sub_prp1+4,edx
 
 PrpNext:
     add edi,8
@@ -1469,30 +1464,24 @@ PrpSetup:
     sub esi,NVME_DISC_PRPLIST
     mov eax,esi
     mov esi,NVME_DISC_PRPLIST
-    cmp eax,8
-    je PrpOne
+    or eax,eax
+    je PrpDone
 ;
-    cmp eax,10h
+    cmp eax,8
     je PrpTwo
 
 PrpList:
     mov eax,ds:ns_prp_phys
-    mov ds:[ebx].sub_prp1,eax
-    mov eax,ds:ns_prp_phys+4
-    mov ds:[ebx].sub_prp1+4,edx
+    mov edx,ds:ns_prp_phys+4
+    mov ds:[ebx].sub_prp2,eax
+    mov ds:[ebx].sub_prp2+4,edx
     jmp PrpDone
 
 PrpTwo:
-    mov eax,ds:[esi+8]
-    mov ds:[ebx].sub_prp2,eax
-    mov eax,ds:[esi+12]
-    mov ds:[ebx].sub_prp2+4,eax
-
-PrpOne:
     mov eax,ds:[esi]
-    mov ds:[ebx].sub_prp1,eax
-    mov eax,ds:[esi+4]
-    mov ds:[ebx].sub_prp1+4,eax
+    mov edx,ds:[esi+4]
+    mov ds:[ebx].sub_prp2,eax
+    mov ds:[ebx].sub_prp2+4,edx
 
 PrpDone:
     ret
