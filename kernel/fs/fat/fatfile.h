@@ -43,6 +43,8 @@ public:
     virtual void SetReq(long long StartSector, int Sectors);
     virtual long long GetSector(long long RelSector);
 
+    virtual bool SetSize(long long Size);
+
 protected:
     int FSectorsPerCluster;
     int FClusterCount;

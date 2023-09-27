@@ -126,6 +126,7 @@ protected:
     void GetSectors(TPartReq *Req, long long sector, int count);
 
     TCluster *GetClusterChain(unsigned int Cluster);
+    bool SetClusterCount(TCluster *Chain, unsigned int Clusters);
 
     TFatTable *FatTable1;
     TFatTable *FatTable2;

@@ -265,6 +265,29 @@ TCluster *TFat::GetClusterChain(unsigned int Cluster)
 
 /*##########################################################################
 #
+#   Name       : TFat::SetClusterCount
+#
+#   Purpose....: Set cluster count
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat::SetClusterCount(TCluster *Chain, unsigned int Clusters)
+{
+    int size = Chain->GetSize();
+
+    if (size != Clusters)
+    {
+        return false;
+    }
+    else
+        return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::OpenFile
 #
 #   Purpose....: Open file
@@ -390,7 +413,8 @@ bool TFat::CreateFile(TDir *ParentDir, const char *Name, int Attrib)
 bool TFat::DeleteFile(TDir *ParentDir, TFile *File)
 {
     TFatDir *dir = (TFatDir *)ParentDir;
-    TFatFile *file = (TFatFile *)File;
+
+    File->SetSize(0);
 
     return false;
 }

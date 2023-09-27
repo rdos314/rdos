@@ -134,3 +134,49 @@ long long TFatFile::GetSector(long long RelSector)
 
     return FFat->StartSector + (FClusterArr[c] - 2) * sc + diff;
 }
+
+/*##########################################################################
+#
+#   Name       : TFatFile::SetSize
+#
+#   Purpose....: Set file size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatFile::SetSize(long long Size)
+{
+    unsigned int Clusters;
+    bool ok;
+
+    if (Size > 0xFFFFFFFF)
+        ok = false;    
+    else
+    {    
+        ok = true;
+
+        if (Size)
+        {
+            Clusters = (Size - 1) / FSectorsPerCluster / FBytesPerSector;
+            Clusters++;
+        }
+        else
+            Clusters = 0;
+    }
+
+    LockFile();
+
+    if (ok)
+    {
+        TFile::SetSize(Size);
+
+        Info->DiscSize = Clusters * FSectorsPerCluster * FBytesPerSector;
+        ok = FFat->SetClusterCount(FClusterChain, Clusters);
+    }
+
+    UnlockFile();
+
+    return ok;
+}

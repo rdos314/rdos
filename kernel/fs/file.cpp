@@ -437,6 +437,23 @@ void TFile::UnlockFile()
 
 /*##########################################################################
 #
+#   Name       : TFile::SetSize
+#
+#   Purpose....: Set file size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFile::SetSize(long long size)
+{
+    Info->CurrSize = 0;
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::GetAttrib
 #
 #   Purpose....: Get attrib
