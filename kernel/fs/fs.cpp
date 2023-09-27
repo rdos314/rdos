@@ -1130,7 +1130,18 @@ int TFs::DeleteFile(int rel, char *path)
             return -1;
     }
 
-    return 0;
+    file = Parser.GetFile();
+
+    if (file)
+    {
+        printf("Delete %d <%s>\r\n", file->Index, path);
+        if (DeleteFile(file))
+            return 0;
+        else
+            return -1;
+    }
+    else
+        return -1;
 }
 
 /*##########################################################################
