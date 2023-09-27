@@ -3039,6 +3039,22 @@ create_vfs_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           delete_vfs_file
+;
+;       DESCRIPTION:    Delete VFS file
+;
+;       PARAMETERS:     ES:EDI         Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_vfs_file    Proc near
+    stc
+    ret
+delete_vfs_file    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           close_vfs_file
 ;
 ;       DESCRIPTION:    Close VFS file
@@ -3211,6 +3227,46 @@ cvf32Done:
     pop ecx
     ret
 create_file32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteFile
+;
+;       DESCRIPTION:    Delete file
+;
+;       PARAMETERS:     ES:(E)DI       Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_file_name       DB 'Delete VFS File',0
+
+org_delete DD ?,?
+
+delete_file16  Proc far
+    push ecx
+    push edi
+    movzx edi,di
+    call delete_vfs_file
+    jnc dvf16Done
+;
+    call fword ptr cs:org_delete
+
+dvf16Done:
+    pop edi
+    pop ecx
+    ret
+delete_file16  Endp
+
+delete_file32  Proc far
+    call delete_vfs_file
+    jnc dvf32Done
+;
+    call fword ptr cs:org_delete
+
+dvf32Done:
+    ret
+delete_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3552,6 +3608,15 @@ init_client_file    Proc near
     LinkUserGate
     mov dword ptr fs:org_create,eax
     mov word ptr fs:org_create+4,dx
+;
+    mov ebx,OFFSET delete_file16
+    mov esi,OFFSET delete_file32
+    mov edi,OFFSET delete_file_name
+    mov dx,virt_es_in
+    mov ax,delete_file_nr
+    LinkUserGate
+    mov dword ptr fs:org_delete,eax
+    mov word ptr fs:org_delete+4,dx
 ;
     mov ebx,OFFSET read_file16
     mov esi,OFFSET read_file32
