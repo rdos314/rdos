@@ -378,6 +378,29 @@ bool TFat::CreateFile(TDir *ParentDir, const char *Name, int Attrib)
 
 /*##########################################################################
 #
+#   Name       : TFat::DeleteFile
+#
+#   Purpose....: Delete file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat::DeleteFile(TDir *ParentDir, const char *Name)
+{
+    TFatDir *dir = (TFatDir *)ParentDir;
+    bool ok;
+
+//    ok = dir->CreateFileEntry(Name, Attrib);
+//    Complete();
+    ok = false;
+
+    return ok;
+}
+
+/*##########################################################################
+#
 #   Name       : VerifySector
 #
 #   Purpose....:

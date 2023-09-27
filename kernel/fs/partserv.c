@@ -39,6 +39,7 @@ int GetRelDir(int rel, char *path);
 void ReadDirLink(void *dir, int index);
 int OpenFile(int rel, char *path);
 int CreateFile(int rel, char *path, int attrib);
+int DeleteFile(int rel, char *path);
 int GetFileAttrib(int handle);
 int GetFileHandle(int handle);
 void CloseFile(int handle);
@@ -196,6 +197,17 @@ int LowOpenFile(int rel, char *path)
 int LowCreateFile(int rel, char *path, int attrib)
 {
     return CreateFile(rel, path, attrib);
+}
+
+/*##########################################################################
+#
+#   Name       : LowDeleteFile
+#
+##########################################################################*/
+#pragma aux LowDeleteFile "*" parm routine [eax] [edi] value [eax]
+int LowDeleteFile(int rel, char *path)
+{
+    return DeleteFile(rel, path);
 }
 
 /*##########################################################################

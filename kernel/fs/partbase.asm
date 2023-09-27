@@ -489,6 +489,42 @@ LocalCreateFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalDeleteFile
+;
+;       DESCRIPTION:    Delete file
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowDeleteFile:near
+
+LocalDeleteFile Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    mov ecx,[edi].fc_ecx
+    add edi,SIZE vfs_cmd_struc
+    push ecx
+    mov esi,esp
+    call LowDeleteFile
+    pop ecx
+    pop edi
+;
+    cmp eax,-1
+    je dfDone
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+
+dfDone:
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalDeleteFile Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LocalCloseFile
 ;
 ;       DESCRIPTION:    Close file
@@ -640,6 +676,7 @@ m10 DD OFFSET LocalCloseFile
 m11 DD OFFSET LocalFormat
 m12 DD OFFSET LocalCreateDir
 m13 DD OFFSET LocalCreateFile
+m14 DD OFFSET LocalDeleteFile
 
 WaitForMsg_    Proc near
     push ebx

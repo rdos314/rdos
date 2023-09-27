@@ -91,6 +91,7 @@ public:
     virtual TFile *OpenFile(TDir *ParentDir, int ParentIndex, long long Inode) = 0;
     virtual bool CreateDir(TDir *ParentDir, const char *Name) = 0;
     virtual bool CreateFile(TDir *ParentDir, const char *Name, int Attrib) = 0;
+    virtual bool DeleteFile(TDir *ParentDir, const char *Name) = 0;
 
     struct TShareHeader *GetDir(int rel, char *path, int *count);
     int GetDirEntryAttrib(int rel, char *path);
@@ -101,6 +102,7 @@ public:
 
     int OpenFile(int rel, char *path);
     int CreateFile(int rel, char *path, int attrib);
+    int DeleteFile(int rel, char *path);
     int GetFileHandle(int handle);
     int GetFileAttrib(int handle);
     void CloseFile(int handle);

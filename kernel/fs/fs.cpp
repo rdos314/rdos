@@ -1103,6 +1103,38 @@ int TFs::CreateFile(int rel, char *path, int attrib)
 
 /*##########################################################################
 #
+#   Name       : TFs::DeleteFile
+#
+#   Purpose....: Delete file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::DeleteFile(int rel, char *path)
+{
+    TParser Parser(GetStartDir(rel), path);
+    TFile *file;
+    TDir *dir;
+    bool ok;
+
+    if (FStopped)
+        return -1;
+
+    while (!Parser.IsLast())
+    {
+        if (Parser.IsDir())
+            Parser.Advance();
+        else
+            return -1;
+    }
+
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::CreateDir
 #
 #   Purpose....: Create dir
