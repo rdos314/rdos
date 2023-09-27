@@ -992,4 +992,6 @@ get_vfs_resp_size_nr              = 809
 get_vfs_resp_data_nr              = 810
 is_vfs_disc_nr                    = 811
 
+set_file_size64_nr                = 812
+
 usergate_entries                  = 820

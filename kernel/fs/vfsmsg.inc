@@ -87,13 +87,17 @@ VFS_CREATE_FILE           = 13
 ; IN            Path name
 VFS_DELETE_FILE           = 14
 
+; IN  BX        File handle
+; IN  EDX:EAX   Size
+VFS_SET_FILE_SIZE         = 15
+
 ; IN            Cmd
-VFS_CMD                   = 15
+VFS_CMD                   = 16
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_READ_SECTOR           = 16
+VFS_READ_SECTOR           = 17
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_WRITE_SECTOR          = 17
+VFS_WRITE_SECTOR          = 18

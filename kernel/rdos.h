@@ -606,6 +606,7 @@ int RDOSAPI RdosIsDevice(long Handle);
 long RDOSAPI RdosDuplFile(long Handle);
 long RDOSAPI RdosGetFileSize(long Handle);
 void RDOSAPI RdosSetFileSize(long Handle, long Size);
+void RDOSAPI RdosSetFileSize64(long Handle, long long Size);
 long RDOSAPI RdosGetFilePos(long Handle);
 void RDOSAPI RdosSetFilePos(long Handle, long Pos);
 int RDOSAPI RdosReadFile(long Handle, void *Buf, int Size);

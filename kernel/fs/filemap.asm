@@ -3329,6 +3329,138 @@ delete_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           set_vfs_file_size
+;
+;       DESCRIPTION:    Set VFS file size
+;
+;       PARAMETERS:     DS             Prog sel
+;                       EDX:EAX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_vfs_file_size  Proc near
+    push ds
+    push fs
+    push ebx
+;    
+    mov bx,ds:kfm_file_sel
+    or bx,bx
+    stc
+    jz svfsDone
+;
+    mov ds,ebx
+    mov ebx,ds:kf_serv_handle
+    mov fs,ds:kf_part_sel
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+    jc svfsDone
+;
+    mov eax,VFS_SET_FILE_SIZE
+    call RunMsg
+
+svfsDone:
+    pop ebx
+    pop fs
+    pop ds
+    ret
+set_vfs_file_size  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetFileSize
+;
+;           DESCRIPTION:    Set file size
+;
+;           PARAMETERS:     BX              File handle
+;                           (EDX):EAX       Size of file
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_file_size_name      DB 'Set File Size',0
+set_file_size64_name    DB 'Set 64-bit File Size',0
+
+org_set_size DD ?,?
+
+set_file_size16  Proc far
+    push ds
+    push ebx
+    push edx
+;
+    push eax
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    pop eax
+    jnc sVfss16
+;
+    pop edx
+    pop ebx
+    pop ds
+;
+    jmp fword ptr cs:org_set_size
+
+sVfss16:
+    mov ds,ds:[ebx].fh_sel
+    xor edx,edx
+    call set_vfs_file_size
+;
+    pop edx
+    pop ebx
+    pop ds
+    ret
+set_file_size16  Endp
+
+set_file_size32  Proc far
+    push ds
+    push ebx
+    push edx
+;
+    push eax
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    pop eax
+    jnc sVfss32
+;
+    pop edx
+    pop ebx
+    pop ds
+    jmp fword ptr cs:org_set_size
+
+sVfss32:
+    mov ds,ds:[ebx].fh_sel
+    xor edx,edx
+    call set_vfs_file_size
+;
+    pop edx
+    pop ebx
+    pop ds
+    ret
+set_file_size32  Endp
+
+set_file_size64  Proc far
+    push ds
+    push ebx
+    push edx
+;
+    push eax
+    mov ax,VFS_FILE_HANDLE
+    DerefHandle
+    pop eax
+    jc sVfsDone64
+;
+    mov ds,ds:[ebx].fh_sel
+    call set_vfs_file_size
+
+svfsDone64:
+    pop edx
+    pop ebx
+    pop ds
+    ret
+set_file_size64  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           read_vfs_file
 ;
 ;       DESCRIPTION:    Read VFS file
@@ -3676,6 +3808,15 @@ init_client_file    Proc near
     mov dword ptr fs:org_delete,eax
     mov word ptr fs:org_delete+4,dx
 ;
+    mov ebx,OFFSET set_file_size16
+    mov esi,OFFSET set_file_size32
+    mov edi,OFFSET set_file_size_name
+    mov dx,virt_es_in
+    mov ax,set_file_size_nr
+    LinkUserGate
+    mov dword ptr fs:org_set_size,eax
+    mov word ptr fs:org_set_size+4,dx
+;
     mov ebx,OFFSET read_file16
     mov esi,OFFSET read_file32
     mov edi,OFFSET read_file_name
@@ -3693,6 +3834,12 @@ init_client_file    Proc near
     LinkUserGate
     mov dword ptr fs:org_close,eax
     mov word ptr fs:org_close+4,dx
+;
+    mov esi,OFFSET set_file_size64
+    mov edi,OFFSET set_file_size64_name
+    xor dx,dx
+    mov ax,set_file_size64_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET vfs_file_info
     mov edi,OFFSET vfs_file_info_name

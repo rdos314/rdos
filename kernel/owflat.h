@@ -1711,6 +1711,10 @@
     CallGate_set_file_size  \
     __parm [__ebx] [__eax]
 
+#pragma aux RdosSetFileSize64 = \
+    CallGate_set_file_size64  \
+    __parm [__ebx] [__edx __eax]
+
 #pragma aux RdosGetFilePos = \
     CallGate_get_file_pos  \
     ValidateEax \

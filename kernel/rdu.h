@@ -992,6 +992,8 @@
 #define usergate_get_vfs_resp_data 0x0000032A
 #define usergate_is_vfs_disc 0x0000032B
 
+#define usergate_set_file_size64 0x0000032C
+
 
 
 #ifdef __FLAT__
@@ -1989,6 +1991,8 @@
 #define CallGate_get_vfs_resp_data 0x55 0x67 0x9a 42 3 0 0 3 0 0x5d
 #define CallGate_is_vfs_disc 0x55 0x67 0x9a 43 3 0 0 3 0 0x5d
 
+#define CallGate_set_file_size64 0x55 0x67 0x9a 44 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -2983,5 +2987,7 @@
 #define CallGate_get_vfs_resp_size 0x3e 0x67 0x9a 41 3 0 0 3 0
 #define CallGate_get_vfs_resp_data 0x3e 0x67 0x9a 42 3 0 0 3 0
 #define CallGate_is_vfs_disc 0x3e 0x67 0x9a 43 3 0 0 3 0
+
+#define CallGate_set_file_size64 0x3e 0x67 0x9a 44 3 0 0 3 0
 
 #endif

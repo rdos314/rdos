@@ -2548,6 +2548,13 @@ SetFileSize     MACRO
                                                 ENDM
 
 
+; IN      EBX                     Handle
+; IN      EDX:EAX                 Filesize
+SetFileSize64     MACRO
+        UserGate set_file_size64_nr
+                                                ENDM
+
+
 ;       IN      EBX                     Handle
 ;       IN      EAX                     File position
 GetFilePos      MACRO
