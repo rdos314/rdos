@@ -1135,7 +1135,9 @@ int TFs::DeleteFile(int rel, char *path)
     if (file)
     {
         printf("Delete %d <%s>\r\n", file->Index, path);
-        if (DeleteFile(file))
+
+        dir = file->FParent;
+        if (DeleteFile(dir, file))
             return 0;
         else
             return -1;

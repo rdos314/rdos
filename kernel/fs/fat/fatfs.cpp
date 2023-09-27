@@ -387,8 +387,11 @@ bool TFat::CreateFile(TDir *ParentDir, const char *Name, int Attrib)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFat::DeleteFile(TFile *File)
+bool TFat::DeleteFile(TDir *ParentDir, TFile *File)
 {
+    TFatDir *dir = (TFatDir *)ParentDir;
+    TFatFile *file = (TFatFile *)File;
+
     return false;
 }
 
