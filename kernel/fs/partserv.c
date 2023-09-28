@@ -42,6 +42,7 @@ int CreateFile(int rel, char *path, int attrib);
 int DeleteFile(int rel, char *path);
 int GetFileAttrib(int handle);
 int GetFileHandle(int handle);
+int SetFileSize(int handle, long long size);
 void CloseFile(int handle);
 int CreateDir(int rel, char *path);
 
@@ -208,6 +209,17 @@ int LowCreateFile(int rel, char *path, int attrib)
 int LowDeleteFile(int rel, char *path)
 {
     return DeleteFile(rel, path);
+}
+
+/*##########################################################################
+#
+#   Name       : LowSetFileSize
+#
+##########################################################################*/
+#pragma aux LowSetFileSize "*" parm routine [ebx] [edx eax] value [eax]
+int LowSetFileSize(int handle, long long size)
+{
+    return SetFileSize(handle, size);
 }
 
 /*##########################################################################

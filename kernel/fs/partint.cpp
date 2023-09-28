@@ -157,6 +157,14 @@ int GetFileAttrib(int handle)
         return -1;
 }
 
+int SetFileSize(int handle, long long size)
+{
+    if (Fs)
+        return Fs->SetFileSize(handle, size);
+    else
+        return -1;
+}
+
 int GetFileHandle(int handle)
 {
     if (Fs)

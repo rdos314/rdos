@@ -1278,6 +1278,27 @@ int TFs::GetFileHandle(int handle)
 
 /*##########################################################################
 #
+#   Name       : TFs::SetFileSize
+#
+#   Purpose....: Set file size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFs::SetFileSize(int handle, long long size)
+{
+    TFile *file = GetFile(handle);
+
+    if (file)
+        return 0;
+    else
+        return -1;
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::CloseFile
 #
 #   Purpose....: Close file

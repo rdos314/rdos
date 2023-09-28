@@ -533,7 +533,20 @@ LocalDeleteFile Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern LowSetFileSize:near
+
 LocalSetFileSize Proc near
+    push edi
+    call LowSetFileSize
+    pop edi
+;
+    cmp eax,-1
+    je sfsDone
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+
+sfsDone:
     mov ebx,[edi].fc_handle
     ReplyVfsCmd
     ret
