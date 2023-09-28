@@ -10,13 +10,8 @@ void main()
 {
     int handle;
 
-    RdosDeleteFile("y:/1.txt");
-
-    RdosSetCurDrive('y' - 'a');
-    RdosMakeDir("y:/test");
-    RdosSetCurDir("y:/test");
-
-    handle = RdosCreateFile("1.txt", 0);
+    handle = RdosOpenFile("y:/1.txt", 0);
+    RdosSetFileSize64(handle, 1);
     RdosCloseFile(handle);
 
 
