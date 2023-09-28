@@ -1287,14 +1287,14 @@ int TFs::GetFileHandle(int handle)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFs::SetFileSize(int handle, long long size)
+bool TFs::SetFileSize(int handle, long long size)
 {
     TFile *file = GetFile(handle);
 
     if (file)
-        return 0;
+        return file->SetSize(size);
     else
-        return -1;
+        return false;
 }
 
 /*##########################################################################

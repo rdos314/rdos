@@ -105,7 +105,7 @@ public:
     int DeleteFile(int rel, char *path);
     int GetFileHandle(int handle);
     int GetFileAttrib(int handle);
-    int SetFileSize(int handle, long long size);
+    bool SetFileSize(int handle, long long size);
     void CloseFile(int handle);
 
     int CreateDir(int rel, char *path);
