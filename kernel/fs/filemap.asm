@@ -3340,8 +3340,9 @@ delete_file32  Endp
 
 set_vfs_file_size  Proc near
     push ds
+    push es
     push fs
-    push ebx
+    pushad
 ;    
     mov bx,ds:kfm_file_sel
     or bx,bx
@@ -3359,8 +3360,9 @@ set_vfs_file_size  Proc near
     call RunMsg
 
 svfsDone:
-    pop ebx
+    popad
     pop fs
+    pop es
     pop ds
     ret
 set_vfs_file_size  Endp
