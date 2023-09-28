@@ -170,8 +170,7 @@ bool TFatFile::SetSize(long long Size)
 
     if (ok)
     {
-        TFile::SetSize(Size);
-
+        Info->CurrSize = Size;
         Info->DiscSize = Clusters * FSectorsPerCluster * FBytesPerSector;
         ok = FFat->SetClusterCount(FClusterChain, Clusters);
     }

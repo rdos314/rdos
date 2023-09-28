@@ -75,7 +75,7 @@ public:
 
     int GetAttrib();
 
-    virtual bool SetSize(long long Size);
+    virtual bool SetSize(long long Size) = 0;
 
     int Handle;
     int Index;
