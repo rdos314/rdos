@@ -719,8 +719,7 @@ SendCloseReq     Proc near
     push ds
     push es
     push fs
-    push eax
-    push ebx
+    pushad
 ;
     mov ebx,ds:kf_serv_handle
     mov fs,ds:kf_part_sel
@@ -732,8 +731,7 @@ SendCloseReq     Proc near
     call RunMsg
 
 scrDone:
-    pop ebx
-    pop eax
+    popad
     pop fs
     pop es
     pop ds
