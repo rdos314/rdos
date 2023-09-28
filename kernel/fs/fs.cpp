@@ -39,6 +39,7 @@
 #define REQ_CLOSE      3
 #define REQ_COMPLETED  4
 #define REQ_MAP        5
+#define REQ_SIZE       6
 
 /*##########################################################################
 #
@@ -1462,6 +1463,22 @@ void TFs::HandleMapReq(TFile *file, int req)
 
 /*##########################################################################
 #
+#   Name       : TFs::HandleSizeReq
+#
+#   Purpose....: Handle size req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::HandleSizeReq(TFile *file, long long req)
+{
+    file->HandleSizeReq(req);
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::HandleQueue
 #
 #   Purpose....: Handle queue entry
@@ -1500,6 +1517,10 @@ bool TFs::HandleQueue(struct TFsQueueEntry *entry)
 
             case REQ_FREE:
                 HandleFreeReq(file, entry->Par32);
+                break;
+
+            case REQ_SIZE:
+                HandleSizeReq(file, entry->Par64);
                 break;
         }
     }

@@ -875,3 +875,25 @@ void TFile::HandleMapReq(int req)
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
 }
+
+/*##########################################################################
+#
+#   Name       : TFile::HandleSizeReq
+#
+#   Purpose....: Handle size req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::HandleSizeReq(long long req)
+{
+    char str[80];
+
+    sprintf(str, "Size %lld\r\n", req);
+    RdosWriteFile(FileHandle, str, strlen(str));
+    printf(str);
+
+    SetSize(req);
+}

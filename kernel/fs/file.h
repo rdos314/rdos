@@ -85,6 +85,7 @@ protected:
     virtual void HandleCompletedReq(int index);
     virtual void HandleMapReq(int index);
     virtual void HandleFreeReq(int index);
+    virtual void HandleSizeReq(long long size);
 
     virtual void SetReq(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);

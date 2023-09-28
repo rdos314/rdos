@@ -44,6 +44,7 @@ include vfsfile.inc
   REQ_CLOSE = 3
   REQ_COMPLETED = 4
   REQ_MAP = 5
+  REQ_SIZE = 6
 
     .386p
 
@@ -3348,14 +3349,8 @@ set_vfs_file_size  Proc near
     jz svfsDone
 ;
     mov ds,ebx
-    mov ebx,ds:kf_serv_handle
-    mov fs,ds:kf_part_sel
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-    jc svfsDone
-;
-    mov eax,VFS_SET_FILE_SIZE
-    call RunMsg
+    mov ebx,REQ_SIZE
+    call AddReq
 
 svfsDone:
     popad

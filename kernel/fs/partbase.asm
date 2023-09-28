@@ -525,36 +525,6 @@ LocalDeleteFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           LocalSetFileSize
-;
-;       DESCRIPTION:    Set file size
-;
-;       PARAMETERS:     EDI         Msg data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    extern LowSetFileSize:near
-
-LocalSetFileSize Proc near
-    push edi
-    call LowSetFileSize
-    pop edi
-;
-    cmp eax,-1
-    je sfsDone
-;
-    mov ebx,[edi].fc_handle
-    and [edi].fc_eflags,NOT 1
-
-sfsDone:
-    mov ebx,[edi].fc_handle
-    ReplyVfsCmd
-    ret
-LocalSetFileSize Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           LocalCloseFile
 ;
 ;       DESCRIPTION:    Close file
@@ -707,7 +677,6 @@ m11 DD OFFSET LocalFormat
 m12 DD OFFSET LocalCreateDir
 m13 DD OFFSET LocalCreateFile
 m14 DD OFFSET LocalDeleteFile
-m15 DD OFFSET LocalSetFileSize
 
 WaitForMsg_    Proc near
     push ebx
