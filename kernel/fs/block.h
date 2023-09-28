@@ -38,6 +38,7 @@ public:
 
 protected:
     int Add(int Size);
+    void Sub(int Size);
     void CopyOnUsed();
 
     struct TShareHeader *obj;

@@ -87,6 +87,22 @@ int TBlock::Add(int size)
     
 /*##########################################################################
 #
+#   Name       : TBlock::Sub
+#
+#   Purpose....: Sub data entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TBlock::Sub(int size)
+{
+    pos -= size;
+}
+    
+/*##########################################################################
+#
 #   Name       : TBlock::CopyOnUsed
 #
 #   Purpose....: Copy if block is used
