@@ -248,6 +248,38 @@ TCluster *TFat::GetClusterChain(unsigned int Cluster)
 
 /*##########################################################################
 #
+#   Name       : TFat::GrowClusterChain
+#
+#   Purpose....: Grow cluster chain
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat::GrowClusterChain(TCluster *Chain, unsigned int Count)
+{
+    return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TFat::ShrinkClusterChain
+#
+#   Purpose....: Shrink cluster chain
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat::ShrinkClusterChain(TCluster *Chain, unsigned int Count)
+{
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::SetClusterCount
 #
 #   Purpose....: Set cluster count
@@ -261,12 +293,13 @@ bool TFat::SetClusterCount(TCluster *Chain, unsigned int Clusters)
 {
     int size = Chain->GetSize();
 
-    if (size != Clusters)
-    {
-        return false;
-    }
+    if (Clusters > size)
+        return GrowClusterChain(Chain, Clusters - size);
     else
-        return true;
+        if (Clusters < size)
+            return ShrinkClusterChain(Chain, size - Clusters);
+
+    return true;
 }
 
 /*##########################################################################

@@ -120,6 +120,9 @@ protected:
     unsigned int AllocateCluster();
     void Complete();
 
+    bool GrowClusterChain(TCluster *Chain, unsigned int Count);
+    bool ShrinkClusterChain(TCluster *Chain, unsigned int Count);
+
     TCluster *GetClusterChain(unsigned int Cluster);
     bool SetClusterCount(TCluster *Chain, unsigned int Clusters);
 
