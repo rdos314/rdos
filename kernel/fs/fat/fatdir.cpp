@@ -968,8 +968,9 @@ bool TFatDir::CreateEntry(const char *name, unsigned int cluster, char attr)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFatDir::UpdateEntry(int pos, struct RdosDirEntry *direntry, struct RdosFileInfo *fileinfo)
+bool TFatDir::UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fileinfo)
 {
+    int pos = direntry->Pos;
     long long Sector = GetSector(pos);
     TPartReq Req(FFat->GetServer());
     TPartReqEntry ReqEntry(&Req, Sector, 1, false);

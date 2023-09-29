@@ -168,7 +168,7 @@ bool TFatFile::Grow(unsigned int count)
         if (entry)
         {
             entry->Inode = Arr[0];
-            FParent->UpdateEntry(FParentIndex, entry, Info);
+            FParent->UpdateEntry(entry, Info);
             FParent->UnlockEntry(entry);
         }
     }
@@ -206,7 +206,7 @@ bool TFatFile::Shrink(unsigned int count)
         if (entry)
         {
             entry->Inode = 0;
-            FParent->UpdateEntry(FParentIndex, entry, Info);
+            FParent->UpdateEntry(entry, Info);
             FParent->UnlockEntry(entry);
         }
     }
