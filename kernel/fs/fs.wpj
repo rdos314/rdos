@@ -5,7 +5,7 @@ VpeMain
 1
 WRect
 1344
-25
+17
 8320
 9216
 2
@@ -59,13 +59,13 @@ WFileName
 7
 vfs.tgt
 0
-6
+8
 15
 VComponent
 16
 WRect
 2176
-529
+520
 5680
 4096
 0
@@ -129,7 +129,7 @@ VComponent
 28
 WRect
 368
-264
+256
 5680
 4224
 0
@@ -140,4 +140,4 @@ WFileName
 cmdlib.tgt
 0
 6
-18
+12
