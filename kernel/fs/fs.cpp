@@ -1319,13 +1319,10 @@ void TFs::CloseFile(int handle)
         file = FFileArr[index];
         if (file)
         {
-            file->Close();
-
-            if (file->IsClosing())
-            {
-                FFileArr[index] = 0;
-                delete file;
-            }
+            file->WaitForClosing();
+ 
+            FFileArr[index] = 0;
+            delete file;
         }
     }
 }
@@ -1400,12 +1397,6 @@ void TFs::HandleRead(TFile *file, long long pos, int size)
 void TFs::HandleFreeReq(TFile *file, int req)
 {
     file->HandleFreeReq(req);
-
-    if (file->IsClosing())
-    {
-        FFileArr[file->Index] = 0;
-        delete file;
-    }
 }
 
 /*##########################################################################
@@ -1493,9 +1484,6 @@ bool TFs::HandleQueue(struct TFsQueueEntry *entry)
     int handle = entry->File;
     TFile *file = 0;
 
-    if (entry->Op == REQ_CLOSE)
-        return false;
-
     if (handle > 0 && handle <= FMaxFileCount)
         file = FFileArr[handle - 1];
 
@@ -1522,6 +1510,11 @@ bool TFs::HandleQueue(struct TFsQueueEntry *entry)
             case REQ_SIZE:
                 HandleSizeReq(file, entry->Par64);
                 break;
+
+            case REQ_CLOSE:
+                file->Close();
+                break;
+
         }
     }
 
@@ -1576,7 +1569,6 @@ void TFs::Execute()
     }
 
     FServerActive = false;
-
 }
 
 /*##########################################################################

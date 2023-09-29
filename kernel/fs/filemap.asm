@@ -722,6 +722,9 @@ SendCloseReq     Proc near
     push fs
     pushad
 ;
+    mov ebx,REQ_CLOSE
+    call AddReq
+;
     mov ebx,ds:kf_serv_handle
     mov fs,ds:kf_part_sel
     mov ds,fs:vfsp_disc_sel

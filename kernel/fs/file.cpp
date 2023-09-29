@@ -384,11 +384,12 @@ int TFile::Setup(int VfsHandle)
 void TFile::Close()
 {
     FClosing = true;
+    FCloseSignal.Signal();
 }
 
 /*##########################################################################
 #
-#   Name       : TFile::IsClosing
+#   Name       : TFile::WaitForClosing
 #
 #   Purpose....: Check if ready to close
 #
@@ -397,12 +398,10 @@ void TFile::Close()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFile::IsClosing()
+void TFile::WaitForClosing()
 {
-    if (FClosing && FCurrActiveCount == 0)
-        return true;
-    else
-        return false;
+    while (!FClosing)
+        FCloseSignal.WaitForever();
 }
 
 /*##########################################################################

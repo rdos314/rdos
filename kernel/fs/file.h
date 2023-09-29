@@ -32,6 +32,7 @@
 #include "rdos.h"
 #include "block.h"
 #include "dir.h"
+#include "sigdev.h"
 
 class TFileReq
 {
@@ -68,7 +69,7 @@ public:
 
     int Setup(int VfsHandle);
     void Close();
-    bool IsClosing();
+    void WaitForClosing();
 
     void LockFile();
     void UnlockFile();
@@ -102,6 +103,7 @@ protected:
     struct RdosFileInfo *Info;
 
     bool FClosing;
+    TSignalDevice FCloseSignal;
 
     TFileReq **FAllocatedArr;
     int FCurrAllocatedCount;
