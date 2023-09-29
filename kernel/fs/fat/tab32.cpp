@@ -361,7 +361,7 @@ void TFatTable32::SetupMod(unsigned int Cluster)
         if (FModReq)
             ClearMod();
 
-        RelSector = Cluster / 512 * 4;
+        RelSector = Cluster / (512 / 4);
         FModCluster = RelSector * 512 / 4;
         Sector = FStartSector + RelSector;
 
@@ -414,8 +414,8 @@ unsigned int TFatTable32::AllocateCluster()
     {
         SetupMod(FAllocateCluster);
 
-        offset = FAllocateCluster % 128;
-        size = 128 - offset;
+        offset = FAllocateCluster % (512 / 4);
+        size = (512 / 4) - offset;
 
         for (i = offset; i < size; i++)
         {
@@ -435,7 +435,7 @@ unsigned int TFatTable32::AllocateCluster()
             return Cluster;
         }
 
-        FAllocateCluster = FModCluster + 128;
+        FAllocateCluster = FModCluster + 512 / 4;
         if (FAllocateCluster > FClusters)
         {
             FAllocateCluster = 2;
