@@ -168,7 +168,7 @@ bool TFatFile::Grow(unsigned int count)
         if (entry)
         {
             entry->Inode = Arr[0];
-            FParent->UpdateEntry(FParentIndex);
+            FParent->UpdateEntry(FParentIndex, entry, Info);
             FParent->UnlockEntry(entry);
         }
     }
@@ -206,7 +206,7 @@ bool TFatFile::Shrink(unsigned int count)
         if (entry)
         {
             entry->Inode = 0;
-            FParent->UpdateEntry(FParentIndex);
+            FParent->UpdateEntry(FParentIndex, entry, Info);
             FParent->UnlockEntry(entry);
         }
     }
@@ -232,9 +232,9 @@ bool TFatFile::SetSize(long long Size)
     bool ok;
 
     if (Size > 0xFFFFFFFF)
-        ok = false;    
+        ok = false;
     else
-    {    
+    {
         ok = true;
 
         CurrClusters = FClusterChain->GetSize();
@@ -258,7 +258,7 @@ bool TFatFile::SetSize(long long Size)
         {
             if (NewClusters < CurrClusters)
                 ok = Shrink(CurrClusters - NewClusters);
-        }    
+        }
 
         if (ok)
             Info->CurrSize = Size;

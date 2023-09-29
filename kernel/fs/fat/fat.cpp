@@ -299,9 +299,24 @@ void SetEntryName(struct TFatDirEntry *entry, const char *name)
 #   Returns....: *
 #
 ##########################################################################*/
-void SetCreateTime(struct TFatDirEntry *entry, long long td)
+bool SetCreateTime(struct TFatDirEntry *entry, long long td)
 {
+    short int date = entry->CrDate;
+    short int time = entry->CrTime;
+    unsigned char ms = entry->CrMs;
+
     EncodeTime(td, &entry->CrDate, &entry->CrTime, &entry->CrMs);
+
+    if (date != entry->CrDate)
+        return true;
+
+    if (time != entry->CrTime)
+        return true;
+
+    if (ms != entry->CrMs)
+        return true;
+
+    return false;
 }
 
 /*##########################################################################
@@ -315,12 +330,18 @@ void SetCreateTime(struct TFatDirEntry *entry, long long td)
 #   Returns....: *
 #
 ##########################################################################*/
-void SetAccessTime(struct TFatDirEntry *entry, long long td)
+bool SetAccessTime(struct TFatDirEntry *entry, long long td)
 {
+    short int date = entry->AcDate;
     short int time;
     unsigned char ms;
 
     EncodeTime(td, &entry->AcDate, &time, &ms);
+
+    if (date != entry->AcDate)
+        return true;
+    else
+        return false;
 }
 
 /*##########################################################################
@@ -334,11 +355,21 @@ void SetAccessTime(struct TFatDirEntry *entry, long long td)
 #   Returns....: *
 #
 ##########################################################################*/
-void SetWriteTime(struct TFatDirEntry *entry, long long td)
+bool SetWriteTime(struct TFatDirEntry *entry, long long td)
 {
+    short int date = entry->WrDate;
+    short int time = entry->WrTime;
     unsigned char ms;
 
     EncodeTime(td, &entry->WrDate, &entry->WrTime, &ms);
+
+    if (date != entry->WrDate)
+        return true;
+
+    if (time != entry->WrTime)
+        return true;
+
+    return false;
 }
 
 /*##########################################################################
@@ -558,7 +589,7 @@ void GenerateShortName(const char *name, int index, char *buf)
         {
             inptr = ptr + 1;
             ptr = strchr(inptr, '.');
-        } 
+        }
         while (ptr);
 
         len = strlen(buf);

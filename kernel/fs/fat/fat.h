@@ -52,9 +52,9 @@ int DecodeAttrib(char attrib);
 char EncodeAttrib(int attrib);
 void GetEntryName(struct TFatDirEntry *entry, char *name);
 void SetEntryName(struct TFatDirEntry *entry, const char *name);
-void SetCreateTime(struct TFatDirEntry *entry, long long td);
-void SetAccessTime(struct TFatDirEntry *entry, long long td);
-void SetWriteTime(struct TFatDirEntry *entry, long long td);
+bool SetCreateTime(struct TFatDirEntry *entry, long long td);
+bool SetAccessTime(struct TFatDirEntry *entry, long long td);
+bool SetWriteTime(struct TFatDirEntry *entry, long long td);
 char GetChkSum(struct TFatDirEntry *entry);
 
 bool IsValidShortChar(char ch);

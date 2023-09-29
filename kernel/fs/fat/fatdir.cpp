@@ -968,9 +968,51 @@ bool TFatDir::CreateEntry(const char *name, unsigned int cluster, char attr)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFatDir::UpdateEntry(int index)
+bool TFatDir::UpdateEntry(int pos, struct RdosDirEntry *direntry, struct RdosFileInfo *fileinfo)
 {
-    return false;
+    long long Sector = GetSector(pos);
+    TPartReq Req(FFat->GetServer());
+    TPartReqEntry ReqEntry(&Req, Sector, 1, false);
+    struct TFatDirEntry *e;
+    bool change = false;
+    unsigned int cluster;
+
+    Req.WaitForever();
+
+    e = (struct TFatDirEntry *)ReqEntry.Map();
+    e += GetIndex(pos);
+
+    if (e->FileSize != fileinfo->CurrSize)
+    {
+        change = true;
+        e->FileSize = fileinfo->CurrSize;
+        direntry->Size = fileinfo->CurrSize;
+    }
+
+    cluster = (e->ClusterHi << 16) | e->ClusterLow;
+    if (cluster != direntry->Inode)
+    {
+        change = true;
+        cluster = (unsigned int)direntry->Inode;
+        e->ClusterLow = cluster & 0xFFFF;
+        e->ClusterHi = cluster >> 16;
+    }
+
+    if (SetCreateTime(e, direntry->CreateTime))
+        change = true;
+
+    direntry->AccessTime = fileinfo->AccessTime;
+    if (SetAccessTime(e, direntry->AccessTime))
+        change = true;
+
+    direntry->ModifyTime = fileinfo->ModifyTime;
+    if (SetWriteTime(e, direntry->ModifyTime))
+        change = true;
+
+    if (change)
+        ReqEntry.Write();
+
+    return true;
 }
 
 /*##########################################################################

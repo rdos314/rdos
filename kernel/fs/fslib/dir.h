@@ -62,7 +62,7 @@ public:
     struct RdosDirEntry *LockEntry(struct TDirLink *link);
     void UnlockEntry(struct RdosDirEntry *entry);
 
-    virtual bool UpdateEntry(int index) = 0;
+    virtual bool UpdateEntry(int index, struct RdosDirEntry *direntry, struct RdosFileInfo *fileinfo) = 0;
 
     long long GetInode();
     TDir *GetParentDir();

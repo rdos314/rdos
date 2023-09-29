@@ -57,7 +57,7 @@ public:
     void AddLfn(int pos, const char *name, struct TFatDirEntry *fat);
     bool FindLfn(const char *path);
 
-    virtual bool UpdateEntry(int index);
+    virtual bool UpdateEntry(int index, struct RdosDirEntry *direntry, struct RdosFileInfo *fileinfo);
 
     int GetClusterCount();
     unsigned int GetCluster(int index);
