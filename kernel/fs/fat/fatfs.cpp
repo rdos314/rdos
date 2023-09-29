@@ -263,23 +263,23 @@ bool TFat::GrowClusterChain(TCluster *Chain, unsigned int Count)
     bool ok = true;
     unsigned int cluster;
     unsigned int link;
-    int size = Chain->GetSize();
-    unsigned int *Arr = Chain->GetChain();
+    int size;
+    unsigned int *arr;
 
     for (i = 0; i < Count && ok; i++)
     {
         cluster = AllocateCluster();
         if (cluster)
         {
+            size = Chain->GetSize();
             if (size)
             {
-                link = Arr[size - 1];
+                arr = Chain->GetChain();
+                link = arr[size - 1];
                 FatTable1->LinkCluster(link, cluster);
                 FatTable2->LinkCluster(link, cluster);
             }
 
-            size++;
-                
             Chain->Add(cluster);
         }
         else
