@@ -9,7 +9,6 @@
 
 #include "sig.h"
 #include "parttype.h"
-#include "part.h"
 #include "fat12.h"
 #include "fat16.h"
 #include "fat32.h"

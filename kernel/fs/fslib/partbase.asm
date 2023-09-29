@@ -25,10 +25,10 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-include ..\serv.def
-include ..\serv.inc
-include ..\user.def
-include ..\user.inc
+include \rdos\kernel\serv.def
+include \rdos\kernel\serv.inc
+include \rdos\kernel\user.def
+include \rdos\kernel\user.inc
 
 .386p
 

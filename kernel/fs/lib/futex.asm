@@ -25,9 +25,9 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-include ..\..\kernel\user.def
-include ..\..\kernel\user.inc
-include ..\..\kernel\os\system.def
+include \rdos\kernel\user.def
+include \rdos\kernel\user.inc
+include \rdos\kernel\os\system.def
 
 .386p
 
