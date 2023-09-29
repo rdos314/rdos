@@ -63,8 +63,8 @@ WVList
 0
 15
 MItem
-9
-futex.asm
+15
+fslib\futex.asm
 16
 WString
 6
@@ -81,8 +81,8 @@ WVList
 0
 19
 MItem
-12
-partbase.asm
+18
+fslib\partbase.asm
 20
 WString
 6
@@ -117,8 +117,8 @@ WVList
 0
 27
 MItem
-10
-partserv.c
+16
+fslib\partserv.c
 28
 WString
 4
@@ -170,7 +170,7 @@ WVList
 39
 MItem
 9
-block.cpp
+drive.cpp
 40
 WString
 6
@@ -187,8 +187,8 @@ WVList
 0
 43
 MItem
-12
-datetime.cpp
+8
+file.cpp
 44
 WString
 6
@@ -205,8 +205,8 @@ WVList
 0
 47
 MItem
-7
-dir.cpp
+6
+fs.cpp
 48
 WString
 6
@@ -223,8 +223,8 @@ WVList
 0
 51
 MItem
-8
-disc.cpp
+15
+fslib\block.cpp
 52
 WString
 6
@@ -241,8 +241,8 @@ WVList
 0
 55
 MItem
-9
-drive.cpp
+18
+fslib\datetime.cpp
 56
 WString
 6
@@ -259,8 +259,8 @@ WVList
 0
 59
 MItem
-8
-file.cpp
+13
+fslib\dir.cpp
 60
 WString
 6
@@ -277,8 +277,8 @@ WVList
 0
 63
 MItem
-6
-fs.cpp
+14
+fslib\disc.cpp
 64
 WString
 6
