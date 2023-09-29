@@ -98,8 +98,6 @@ public:
     virtual bool CreateFile(TDir *ParentDir, const char *Name, int Attrib);
     virtual bool DeleteFile(TDir *ParentDir, TFile *File);
 
-    void Test();
-
     int FatSize;
     unsigned int PartSectors;
     int SectorsPerCluster;
@@ -121,9 +119,6 @@ protected:
 
     unsigned int AllocateCluster();
     void Complete();
-
-    bool VerifySector(int id, char *buf);
-    void GetSectors(TPartReq *Req, long long sector, int count);
 
     TCluster *GetClusterChain(unsigned int Cluster);
     bool SetClusterCount(TCluster *Chain, unsigned int Clusters);

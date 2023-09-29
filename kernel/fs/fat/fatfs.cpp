@@ -35,26 +35,9 @@
 #include "tab12.h"
 #include "tab16.h"
 #include "tab32.h"
-#include "md5.h"
 #include "dir.h"
 #include "cluster.h"
 #include "fatfile.h"
-
-/*##########################################################################
-#
-#   Name       : ThreadStartup
-#
-#   Purpose....: Startup procedure for thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void ThreadStartup(void *ptr)
-{
-    ((TFat *)ptr)->Test();
-}
 
 /*##########################################################################
 #
@@ -417,114 +400,4 @@ bool TFat::DeleteFile(TDir *ParentDir, TFile *File)
     File->SetSize(0);
 
     return false;
-}
-
-/*##########################################################################
-#
-#   Name       : VerifySector
-#
-#   Purpose....:
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TFat::VerifySector(int id, char *buf)
-{
-    TMd5Hash hash;
-    char hbuf[16];
-    int cid;
-    int year, month, day, hour;
-    int min, sec, ms, us;
-    unsigned long lsb, msb;
-
-    hash.Add(buf + 16, 512 - 16);
-    hash.GetHashData(hbuf);
-
-    if (memcmp(hbuf, buf, 16))
-        printf("Wrong hash\r\n");
-    else
-    {
-        memcpy(&cid, buf + 16, 4);
-        if (id != cid)
-        {
-            RdosGetTime(&msb, &lsb);
-            RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
-            RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
-            printf("%04d-%02d-%02d %02d.%02d.%02d,%03d.%03d Wrong sector, expected: %d, found: %d", year, month, day, hour, min, sec, ms, us, id, cid);
-            return false;
-        }
-    }
-    return true;
-}
-
-/*##########################################################################
-#
-#   Name       : TFat::GetSectors
-#
-#   Purpose....: Get sectors
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFat::GetSectors(TPartReq *Req, long long Sector, int Count)
-{
-    int i;
-    TPartReqEntry e1(Req, Sector, Count);
-    char *ptr;
-    bool ok;
-    int id = (int)(Sector + 0x10 - 100000);
-
-    Req->WaitForever();
-
-    if (Req->IsDone())
-    {
-        ptr = e1.Map();
-
-        for (i = 0; i < Count; i++)
-        {
-            ok = VerifySector(id + i, ptr);
-            if (!ok)
-                printf(" Start: %lld, %d (%d)\r\n", Sector, i, Count);
-            ptr += 512;
-        }
-    }
-    else
-        printf("Not done, sector: %lld\r\n");
-
-}
-
-/*##########################################################################
-#
-#   Name       : TFat::Test
-#
-#   Purpose....: Test read interface
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFat::Test()
-{
-    TPartReq Req(FServer);
-    int count;
-    long long sector;
-    int delay;
-
-    while (FServer->IsActive())
-    {
-        count = 1 + RdosGetRandom(127);
-        sector = 400000 - 0x10 + RdosGetRandom(600000 - count);
-        delay = RdosGetRandom(30);
-
-//        printf("Start: %lld, Count: %d\r\n", sector, count);
-
-        GetSectors(&Req, sector, count);
-
-        RdosWaitMilli(delay);
-    }
 }

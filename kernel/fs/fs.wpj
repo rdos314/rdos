@@ -5,7 +5,7 @@ VpeMain
 1
 WRect
 1344
-34
+25
 8320
 9216
 2
@@ -65,7 +65,7 @@ VComponent
 16
 WRect
 2176
-537
+529
 5680
 4096
 0
@@ -75,7 +75,7 @@ WFileName
 7
 fat.tgt
 0
-13
+0
 18
 VComponent
 19
@@ -91,7 +91,7 @@ WFileName
 9
 fslib.tgt
 0
-11
+5
 21
 VComponent
 22
@@ -129,9 +129,9 @@ VComponent
 28
 WRect
 368
-273
+264
 5680
-4232
+4224
 0
 0
 29
