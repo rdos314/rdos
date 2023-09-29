@@ -959,6 +959,22 @@ bool TFatDir::CreateEntry(const char *name, unsigned int cluster, char attr)
 
 /*##########################################################################
 #
+#   Name       : TFatDir::UpdateEntry
+#
+#   Purpose....: Update entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatDir::UpdateEntry(int index)
+{
+    return false;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatDir::InitDir
 #
 #   Purpose....: Init directory

@@ -46,6 +46,9 @@ public:
     virtual bool SetSize(long long Size);
 
 protected:
+    bool Grow(unsigned int count);
+    bool Shrink(unsigned int count);
+
     int FSectorsPerCluster;
     int FClusterCount;
     unsigned int *FClusterArr;

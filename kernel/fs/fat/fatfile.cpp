@@ -137,6 +137,85 @@ long long TFatFile::GetSector(long long RelSector)
 
 /*##########################################################################
 #
+#   Name       : TFatFile::Grow
+#
+#   Purpose....: Grow file with new clusters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatFile::Grow(unsigned int count)
+{
+    struct RdosDirEntry *entry;
+    bool ok;
+    bool update;
+    unsigned int *Arr;
+
+    if (FClusterChain->GetSize())
+        update = false;
+    else
+        update = true;
+
+    ok = FFat->GrowClusterChain(FClusterChain, count);
+
+    if (update && FClusterChain->GetSize())
+    {
+        Arr = FClusterChain->GetChain();
+
+        entry = FParent->LockEntry(FParentIndex);
+        if (entry)
+        {
+            entry->Inode = Arr[0];
+            FParent->UpdateEntry(FParentIndex);
+            FParent->UnlockEntry(entry);
+        }
+    }
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatFile::Shrink
+#
+#   Purpose....: Shrink file by removing clusters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatFile::Shrink(unsigned int count)
+{
+    struct RdosDirEntry *entry;
+    bool ok;
+    bool update;
+
+    if (FClusterChain->GetSize())
+        update = true;
+    else
+        update = false;
+
+    ok = FFat->ShrinkClusterChain(FClusterChain, count);
+
+    if (update && FClusterChain->GetSize() == 0)
+    {
+        entry = FParent->LockEntry(FParentIndex);
+        if (entry)
+        {
+            entry->Inode = 0;
+            FParent->UpdateEntry(FParentIndex);
+            FParent->UnlockEntry(entry);
+        }
+    }
+
+    return ok;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatFile::SetSize
 #
 #   Purpose....: Set file size
@@ -148,7 +227,8 @@ long long TFatFile::GetSector(long long RelSector)
 ##########################################################################*/
 bool TFatFile::SetSize(long long Size)
 {
-    unsigned int Clusters;
+    unsigned int CurrClusters;
+    unsigned int NewClusters;
     bool ok;
 
     if (Size > 0xFFFFFFFF)
@@ -157,22 +237,35 @@ bool TFatFile::SetSize(long long Size)
     {    
         ok = true;
 
+        CurrClusters = FClusterChain->GetSize();
+
         if (Size)
         {
-            Clusters = (Size - 1) / FSectorsPerCluster / FBytesPerSector;
-            Clusters++;
+            NewClusters = (Size - 1) / FSectorsPerCluster / FBytesPerSector;
+            NewClusters++;
         }
         else
-            Clusters = 0;
+            NewClusters = 0;
     }
 
     LockFile();
 
     if (ok)
     {
-        Info->CurrSize = Size;
-        Info->DiscSize = Clusters * FSectorsPerCluster * FBytesPerSector;
-        ok = FFat->SetClusterCount(FClusterChain, Clusters);
+        if (NewClusters > CurrClusters)
+            ok = Grow(NewClusters - CurrClusters);
+        else
+        {
+            if (NewClusters < CurrClusters)
+                ok = Shrink(CurrClusters - NewClusters);
+        }    
+
+        if (ok)
+            Info->CurrSize = Size;
+
+        FClusterCount = FClusterChain->GetSize();
+        FClusterArr = FClusterChain->GetChain();
+        Info->DiscSize = FClusterCount * FSectorsPerCluster * FBytesPerSector;
     }
 
     UnlockFile();
