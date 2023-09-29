@@ -25,24 +25,24 @@
 #
 ########################################################################*/
 
-#ifndef _WAIT_DEV_H
-#define _WAIT_DEV_H
+#ifndef _MWAIT_H
+#define _MWAIT_H
 
 #include "datetime.h"
 #include "section.h"
 
 class TWait;
 
-class TWaitDevice
+class TWaitObj
 {
 friend class TWait;
 public:
-    TWaitDevice();
-    virtual ~TWaitDevice();
+    TWaitObj();
+    virtual ~TWaitObj();
 
-    TWaitDevice *WaitForever();
-    TWaitDevice *WaitTimeout(int MilliSec);
-    TWaitDevice *WaitUntil(TDateTime &time);
+    TWaitObj *WaitForever();
+    TWaitObj *WaitTimeout(int MilliSec);
+    TWaitObj *WaitUntil(TDateTime &time);
 
     int ID;
 
@@ -53,8 +53,6 @@ protected:
     virtual void SignalNewData() = 0;
     virtual void Add(TWait *Wait) = 0;
 
-    virtual void Execute();
-
     TWait *FWait;
 
 private:
@@ -64,7 +62,7 @@ private:
 class TWaitList
 {
 public:
-    TWaitDevice *WaitDev;
+    TWaitObj *WaitDev;
     TWaitList *List;
 };
 
@@ -75,14 +73,14 @@ public:
     TWait();
     virtual ~TWait();
 
-    TWaitDevice *Check();
-    TWaitDevice *WaitForever();
-    TWaitDevice *WaitTimeout(int MilliSec);
-    TWaitDevice *WaitUntil(TDateTime &time);
+    TWaitObj *Check();
+    TWaitObj *WaitForever();
+    TWaitObj *WaitTimeout(int MilliSec);
+    TWaitObj *WaitUntil(TDateTime &time);
     void Abort();
 
-    void Add(TWaitDevice *dev);
-    void Remove(TWaitDevice *dev);
+    void Add(TWaitObj *obj);
+    void Remove(TWaitObj *obj);
 
     int GetHandle();
 

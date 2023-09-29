@@ -32,7 +32,7 @@
 #include "rdos.h"
 #include "block.h"
 #include "dir.h"
-#include "sigdev.h"
+#include "sig.h"
 
 class TFileReq
 {
@@ -103,7 +103,7 @@ protected:
     struct RdosFileInfo *Info;
 
     bool FClosing;
-    TSignalDevice FCloseSignal;
+    TSignal FCloseSignal;
 
     TFileReq **FAllocatedArr;
     int FCurrAllocatedCount;

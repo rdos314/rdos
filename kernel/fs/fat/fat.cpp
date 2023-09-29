@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#include "sigdev.h"
+#include "sig.h"
 #include "parttype.h"
 #include "part.h"
 #include "fat12.h"

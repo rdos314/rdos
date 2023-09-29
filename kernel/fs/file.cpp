@@ -890,7 +890,7 @@ void TFile::HandleSizeReq(long long req)
 {
     char str[80];
 
-    sprintf(str, "Size %lld\r\n", req);
+    sprintf(str, "Size %d.%lld\r\n", Index, req);
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
 

@@ -25,29 +25,29 @@
 #
 ########################################################################*/
 
-#include "waitdev.h"
+#include "mwait.h"
 
 #include <rdos.h>
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::TWaitDevice
+#   Name       : TWaitObj::TWaitObj
 #
-#   Purpose....: Constructor for TWaitDevice                                      
+#   Purpose....: Constructor for TWaitObj                                      
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice::TWaitDevice()
+TWaitObj::TWaitObj()
 {
     Init();
 }
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::~TWaitDevice
+#   Name       : TWaitObj::~TWaitObj
 #
 #   Purpose....: Destructor for TDevice                                   
 #
@@ -56,7 +56,7 @@ TWaitDevice::TWaitDevice()
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice::~TWaitDevice()
+TWaitObj::~TWaitObj()
 {
     if (FWait)
         delete FWait;
@@ -64,7 +64,7 @@ TWaitDevice::~TWaitDevice()
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::Init
+#   Name       : TWaitObj::Init
 #
 #   Purpose....: Init method for class
 #   In params..: *
@@ -72,14 +72,14 @@ TWaitDevice::~TWaitDevice()
 #   Returns....: *
 #
 ##########################################################################*/
-void TWaitDevice::Init()
+void TWaitObj::Init()
 {
     FWait = 0;
 }
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::CreateWait
+#   Name       : TWaitObj::CreateWait
 #
 #   Purpose....: Create a local wait object
 #   In params..: *
@@ -87,7 +87,7 @@ void TWaitDevice::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TWaitDevice::CreateWait()
+void TWaitObj::CreateWait()
 {       
     if (!FWait)
     {
@@ -98,7 +98,7 @@ void TWaitDevice::CreateWait()
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::Remove
+#   Name       : TWaitObj::Remove
 #
 #   Purpose....: Remove wait
 #   In params..: *
@@ -106,14 +106,14 @@ void TWaitDevice::CreateWait()
 #   Returns....: *
 #
 ##########################################################################*/
-void TWaitDevice::Remove(TWait *Wait)
+void TWaitObj::Remove(TWait *Wait)
 {
     RdosRemoveWait(Wait->GetHandle(), (int)this);
 }
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::WaitForever
+#   Name       : TWaitObj::WaitForever
 #
 #   Purpose....: Wait forever
 #   In params..: *
@@ -121,7 +121,7 @@ void TWaitDevice::Remove(TWait *Wait)
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice *TWaitDevice::WaitForever()
+TWaitObj *TWaitObj::WaitForever()
 {       
     if (!FWait)
         CreateWait();
@@ -134,7 +134,7 @@ TWaitDevice *TWaitDevice::WaitForever()
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::WaitTimeout
+#   Name       : TWaitObj::WaitTimeout
 #
 #   Purpose....: Wait timeout
 #   In params..: *
@@ -142,7 +142,7 @@ TWaitDevice *TWaitDevice::WaitForever()
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice *TWaitDevice::WaitTimeout(int MilliSec)
+TWaitObj *TWaitObj::WaitTimeout(int MilliSec)
 {       
     if (!FWait)
         CreateWait();
@@ -155,7 +155,7 @@ TWaitDevice *TWaitDevice::WaitTimeout(int MilliSec)
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::WaitUntil
+#   Name       : TWaitObj::WaitUntil
 #
 #   Purpose....: Wait until
 #   In params..: *
@@ -163,7 +163,7 @@ TWaitDevice *TWaitDevice::WaitTimeout(int MilliSec)
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice *TWaitDevice::WaitUntil(TDateTime &time)
+TWaitObj *TWaitObj::WaitUntil(TDateTime &time)
 {       
     if (!FWait)
         CreateWait();
@@ -245,7 +245,7 @@ int TWait::GetHandle()
 #   Returns....: *
 #
 ##########################################################################*/
-void TWait::Add(TWaitDevice *dev)
+void TWait::Add(TWaitObj *dev)
 {
     TWaitList *entry = new TWaitList;
     
@@ -269,7 +269,7 @@ void TWait::Add(TWaitDevice *dev)
 #   Returns....: *
 #
 ##########################################################################*/
-void TWait::Remove(TWaitDevice *dev)
+void TWait::Remove(TWaitObj *dev)
 {
     TWaitList *ptr;
     TWaitList *prev;
@@ -310,9 +310,9 @@ void TWait::Remove(TWaitDevice *dev)
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice *TWait::Check()
+TWaitObj *TWait::Check()
 {
-    return (TWaitDevice *)RdosCheckWait(FHandle);
+    return (TWaitObj *)RdosCheckWait(FHandle);
 }
 
 /*##########################################################################
@@ -326,11 +326,11 @@ TWaitDevice *TWait::Check()
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice *TWait::WaitForever()
+TWaitObj *TWait::WaitForever()
 {
-    TWaitDevice *Wait;
+    TWaitObj *Wait;
 
-    Wait = (TWaitDevice *)RdosWaitForever(FHandle);
+    Wait = (TWaitObj *)RdosWaitForever(FHandle);
     if (Wait)
         Wait->SignalNewData();
 
@@ -348,11 +348,11 @@ TWaitDevice *TWait::WaitForever()
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice *TWait::WaitTimeout(int MilliSec)
+TWaitObj *TWait::WaitTimeout(int MilliSec)
 {
-    TWaitDevice *Wait;
+    TWaitObj *Wait;
 
-    Wait = (TWaitDevice *)RdosWaitTimeout(FHandle, MilliSec);
+    Wait = (TWaitObj *)RdosWaitTimeout(FHandle, MilliSec);
     if (Wait)
         Wait->SignalNewData();
 
@@ -370,11 +370,11 @@ TWaitDevice *TWait::WaitTimeout(int MilliSec)
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice *TWait::WaitUntil(TDateTime &time)
+TWaitObj *TWait::WaitUntil(TDateTime &time)
 {
-    TWaitDevice *Wait;
+    TWaitObj *Wait;
 
-    Wait = (TWaitDevice *)RdosWaitUntilTimeout(FHandle, time.GetMsb(), time.GetLsb());
+    Wait = (TWaitObj *)RdosWaitUntilTimeout(FHandle, time.GetMsb(), time.GetLsb());
     if (Wait)
         Wait->SignalNewData();
 

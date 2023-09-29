@@ -27,45 +27,45 @@
 
 #include <string.h>
 #include "device.h"
-#include "sigdev.h"
+#include "sig.h"
 
 #include <rdos.h>
 
 /*##########################################################################
 #
-#   Name       : TSignalDevice::TSignalDevice
+#   Name       : TSignal::TSignal
 #
-#   Purpose....: Constructor for TSignalDevice                                    
+#   Purpose....: Constructor for TSignal                                    
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TSignalDevice::TSignalDevice()
+TSignal::TSignal()
 {
     Init();
 }
 
 /*##########################################################################
 #
-#   Name       : TSignalDevice::~TSignalDevice
+#   Name       : TSignal::~TSignal
 #
-#   Purpose....: Destructor for TSignalDevice                                     
+#   Purpose....: Destructor for TSignal                                     
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TSignalDevice::~TSignalDevice()
+TSignal::~TSignal()
 {
     RdosFreeSignal(FHandle);
 }
 
 /*##########################################################################
 #
-#   Name       : TSignalDevice::Init
+#   Name       : TSignal::Init
 #
 #   Purpose....: Init method for class
 #   In params..: *
@@ -73,14 +73,14 @@ TSignalDevice::~TSignalDevice()
 #   Returns....: *
 #
 ##########################################################################*/
-void TSignalDevice::Init()
+void TSignal::Init()
 {
     FHandle = RdosCreateSignal();
 }
 
 /*##########################################################################
 #
-#   Name       : TSignalDevice::Add
+#   Name       : TSignal::Add
 #
 #   Purpose....: Add object to wait
 #   In params..: *
@@ -88,7 +88,7 @@ void TSignalDevice::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void TSignalDevice::Add(TWait *Wait)
+void TSignal::Add(TWait *Wait)
 {
     if (FHandle)
         RdosAddWaitForSignal(Wait->GetHandle(), FHandle, (int)this);
@@ -96,7 +96,7 @@ void TSignalDevice::Add(TWait *Wait)
 
 /*##########################################################################
 #
-#   Name       : TSignalDevice::Clear
+#   Name       : TSignal::Clear
 #
 #   Purpose....: Clear
 #
@@ -105,14 +105,14 @@ void TSignalDevice::Add(TWait *Wait)
 #   Returns....: *
 #
 ##########################################################################*/
-void TSignalDevice::Clear()
+void TSignal::Clear()
 {
     RdosResetSignal(FHandle);
 }
 
 /*##########################################################################
 #
-#   Name       : TSignalDevice::IsSignalled
+#   Name       : TSignal::IsSignalled
 #
 #   Purpose....: Check if signalled
 #
@@ -121,14 +121,14 @@ void TSignalDevice::Clear()
 #   Returns....: *
 #
 ##########################################################################*/
-int TSignalDevice::IsSignalled()
+int TSignal::IsSignalled()
 {
     return RdosIsSignalled(FHandle);
 }
 
 /*##########################################################################
 #
-#   Name       : TSignalDevice::Signal
+#   Name       : TSignal::Signal
 #
 #   Purpose....: Signal
 #
@@ -137,14 +137,14 @@ int TSignalDevice::IsSignalled()
 #   Returns....: *
 #
 ##########################################################################*/
-void TSignalDevice::Signal()
+void TSignal::Signal()
 {
     RdosSetSignal(FHandle);
 }
 
 /*##########################################################################
 #
-#   Name       : TSignalDevice::SignalNewData
+#   Name       : TSignal::SignalNewData
 #
 #   Purpose....: Signal new data is available
 #
@@ -153,6 +153,6 @@ void TSignalDevice::Signal()
 #   Returns....: *
 #
 ##########################################################################*/
-void TSignalDevice::SignalNewData()
+void TSignal::SignalNewData()
 {
 }

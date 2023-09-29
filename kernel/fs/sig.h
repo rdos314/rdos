@@ -25,22 +25,22 @@
 #
 ########################################################################*/
 
-#ifndef _SIGDEV_H
-#define _SIGDEV_H
+#ifndef _SIG_H
+#define _SIG_H
 
-#include "waitdev.h"
+#include "mwait.h"
 
-class TSignalDevice : public TWaitDevice
+class TSignal : public TWaitObj
 {
 public:
-    TSignalDevice();
-    virtual ~TSignalDevice();
+    TSignal();
+    virtual ~TSignal();
 
     void Clear();
     void Signal();
     int IsSignalled();
 
-    TSignalDevice *List;
+    TSignal *List;
 
 protected:
     virtual void SignalNewData();
