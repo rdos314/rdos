@@ -412,11 +412,11 @@ unsigned int TFatTable16::AllocateCluster()
         offset = FAllocateCluster % (512 / 2);
         size = (256 / 2) - offset;
 
-        for (i = offset; i < size; i++)
+        for (i = 0; i < size; i++)
         {
-            if (FModTab[i] == 0)
+            if (FModTab[i + offset] == 0)
             {
-                Cluster = FModCluster + i;
+                Cluster = FModCluster + i + offset;
                 break;
             }
         }

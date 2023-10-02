@@ -87,6 +87,22 @@ void TCluster::Add(unsigned int Cluster)
 
 /*##########################################################################
 #
+#   Name       : TCluster::Sub
+#
+#   Purpose....: Sub cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCluster::Sub()
+{
+    TBlock::Sub(sizeof(unsigned int));
+}
+
+/*##########################################################################
+#
 #   Name       : TCluster::GetSize
 #
 #   Purpose....: Get size

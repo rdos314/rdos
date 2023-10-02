@@ -305,7 +305,32 @@ bool TFat::GrowClusterChain(TCluster *Chain, unsigned int Count)
 ##########################################################################*/
 bool TFat::ShrinkClusterChain(TCluster *Chain, unsigned int Count)
 {
-    return true;
+    int i;
+    bool ok = true;
+    unsigned int cluster;
+    int pos;
+    unsigned int *arr;
+
+    for (i = 0; i < Count && ok; i++)
+    {
+        pos = Chain->GetSize();
+        if (pos)
+        {
+            arr = Chain->GetChain();
+            cluster = arr[pos - 1];
+            FatTable1->FreeCluster(cluster);
+            FatTable2->FreeCluster(cluster);
+
+            Chain->Sub();
+        }
+        else
+            ok = false;
+    }
+
+    FatTable1->Complete();
+    FatTable2->Complete();
+
+    return ok;
 }
 
 /*##########################################################################

@@ -38,6 +38,7 @@ public:
     virtual ~TCluster();
 
     void Add(unsigned int Cluster);
+    void Sub();
     int GetSize();
     unsigned int *GetChain();
 
