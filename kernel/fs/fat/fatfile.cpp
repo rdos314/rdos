@@ -46,15 +46,39 @@
 TFatFile::TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster, int BytesPerSector, int OffsetSector)
   : TFile(ParentDir, ParentIndex, BytesPerSector, OffsetSector)
 {
+    unsigned int NeededClusters;
     FFat = Fat;
+    struct RdosDirEntry *entry;
     FClusterChain = Fat->GetClusterChain(Cluster);
+
+    FSectorsPerCluster = Fat->SectorsPerCluster;
+    FClusterCount = FClusterChain->GetSize();
+    FClusterArr = FClusterChain->GetChain();
+
+    NeededClusters = SizeToClusters(Info->CurrSize);
+
+    if (NeededClusters > FClusterCount)
+    {
+        Info->CurrSize = ClustersToSize(FClusterCount);
+
+        entry = FParent->LockEntry(FParentIndex);
+        if (entry)
+        {
+            entry->Inode = FClusterArr[0];
+            FParent->UpdateEntry(entry, Info);
+            FParent->UnlockEntry(entry);
+        }
+    }
+    else
+    {
+        if (NeededClusters < FClusterCount)
+            Shrink(FClusterCount - NeededClusters);
+    }
 
     FClusterCount = FClusterChain->GetSize();
     FClusterArr = FClusterChain->GetChain();
 
-    FSectorsPerCluster = Fat->SectorsPerCluster;
-
-    Info->DiscSize = (long long)FClusterCount * (long long)FSectorsPerCluster * (long long)BytesPerSector;
+    Info->DiscSize = ClustersToSize(FClusterCount);
 }
 
 /*##########################################################################
@@ -133,6 +157,48 @@ long long TFatFile::GetSector(long long RelSector)
     int diff = RelSector % FSectorsPerCluster;
 
     return FFat->StartSector + (FClusterArr[c] - 2) * sc + diff;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatFile::SizeToClusters
+#
+#   Purpose....: Size to clusters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+unsigned int TFatFile::SizeToClusters(long long Size)
+{
+    unsigned clusters;
+
+    if (Size)
+    {
+        clusters = (Size - 1) / FSectorsPerCluster / FBytesPerSector;
+        clusters++;
+    }
+    else
+        clusters = 0;
+
+    return clusters;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatFile::ClustersToSize
+#
+#   Purpose....: Clusters to size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TFatFile::ClustersToSize(unsigned int clusters)
+{
+    return (long long)clusters * (long long)FSectorsPerCluster * (long long)FBytesPerSector;
 }
 
 /*##########################################################################
@@ -235,17 +301,9 @@ bool TFatFile::SetSize(long long Size)
         ok = false;
     else
     {
-        ok = true;
-
         CurrClusters = FClusterChain->GetSize();
-
-        if (Size)
-        {
-            NewClusters = (Size - 1) / FSectorsPerCluster / FBytesPerSector;
-            NewClusters++;
-        }
-        else
-            NewClusters = 0;
+        NewClusters = SizeToClusters(Size);
+        ok = true;
     }
 
     LockFile();
@@ -265,7 +323,7 @@ bool TFatFile::SetSize(long long Size)
 
         FClusterCount = FClusterChain->GetSize();
         FClusterArr = FClusterChain->GetChain();
-        Info->DiscSize = FClusterCount * FSectorsPerCluster * FBytesPerSector;
+        Info->DiscSize = ClustersToSize(FClusterCount);
     }
 
     UnlockFile();

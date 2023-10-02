@@ -46,6 +46,9 @@ public:
     virtual bool SetSize(long long Size);
 
 protected:
+    unsigned int SizeToClusters(long long size);
+    long long ClustersToSize(unsigned int clusters);
+
     bool Grow(unsigned int count);
     bool Shrink(unsigned int count);
 
