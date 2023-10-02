@@ -42,7 +42,6 @@
 TFatTable12::TFatTable12(TPartServer *Server)
  :  TFatTable(Server)
 {
-    FClusters = 0;
     FReqEntry = 0;
     FTab = 0;
 

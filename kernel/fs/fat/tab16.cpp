@@ -42,13 +42,11 @@
 TFatTable16::TFatTable16(TPartServer *Server)
  :  TFatTable(Server)
 {
-    FClusters = 0;
     FReqEntry = 0;
     FTab = 0;
     FAllocateCluster = 2;
     FModReq = 0;
     FModTab = 0;
-    FWrite = false;
 
     SetCacheSize(4);
 }

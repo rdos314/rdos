@@ -42,13 +42,11 @@
 TFatTable32::TFatTable32(TPartServer *Server)
  :  TFatTable(Server)
 {
-    FClusters = 0;
     FReqEntry = 0;
     FTab = 0;
     FAllocateCluster = 2;
     FModReq = 0;
     FModTab = 0;
-    FWrite = false;
 
     SetCacheSize(8);
 }
@@ -534,6 +532,8 @@ void TFatTable32::LinkCluster(unsigned int Cluster)
 ##########################################################################*/
 void TFatTable32::FreeCluster(unsigned int Cluster)
 {
+    FAllocateCluster = Cluster;
+
     SetupMod(Cluster);
     FModTab[Cluster - FModCluster] &= 0xF0000000;
     FFreeClusters++;

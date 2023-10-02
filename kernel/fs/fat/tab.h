@@ -36,6 +36,8 @@ public:
     TFatTable(TPartServer *Server);
     virtual ~TFatTable();
 
+    void SetAllocateCluster(unsigned int Cluster);
+
     virtual unsigned int GetClusterLink(unsigned int Cluster) = 0;
     virtual unsigned int GetFreeClusters() = 0;
     virtual unsigned int FormatClusters() = 0;
@@ -48,12 +50,18 @@ public:
     virtual void Complete() = 0;
 
 protected:
-    unsigned int FClusters;
-    unsigned int FFreeClusters;
-
     long long FStartSector;
     int FSectorsPerCluster;
     TPartReq FReq;
+
+    unsigned int FStartCluster;
+    unsigned int FAllocateCluster;
+
+    unsigned int FClusters;
+    unsigned int FFreeClusters;
+    int FCachedSectors;
+    int FCachedClusters;
+    bool FWrite;
 };
 
 #endif

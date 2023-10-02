@@ -350,7 +350,7 @@ WVList
 79
 MItem
 11
-lib\lib.lib
+servlib.lib
 80
 WString
 3

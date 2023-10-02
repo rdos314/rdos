@@ -41,8 +41,11 @@
 TFatTable::TFatTable(TPartServer *Server)
  :  FReq(Server)
 {
+    FAllocateCluster = 2;
     FSectorsPerCluster = 0;
     FStartSector = 0;
+    FClusters = 0;
+    FWrite = false;
 }
 
 /*##########################################################################
@@ -58,4 +61,20 @@ TFatTable::TFatTable(TPartServer *Server)
 ##########################################################################*/
 TFatTable::~TFatTable()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TFatTable::SetAllocateCluster
+#
+#   Purpose....: Set start of allocation cluster
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatTable::SetAllocateCluster(unsigned int Cluster)
+{
+    FAllocateCluster = Cluster;
 }

@@ -53,9 +53,6 @@ public:
 protected:
     unsigned int GetFreeInBlock(long long Sector, unsigned int Clusters);
 
-    int FCachedSectors;
-    int FCachedClusters;
-    unsigned int FStartCluster;
     TPartReqEntry *FReqEntry;
     char *FTab;
 };

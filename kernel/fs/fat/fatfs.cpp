@@ -266,6 +266,15 @@ bool TFat::GrowClusterChain(TCluster *Chain, unsigned int Count)
     int size;
     unsigned int *arr;
 
+    size = Chain->GetSize();
+    if (size)
+    {
+        arr = Chain->GetChain();
+        cluster = arr[size - 1];
+        FatTable1->SetAllocateCluster(cluster);
+        FatTable2->SetAllocateCluster(cluster);
+    }
+
     for (i = 0; i < Count && ok; i++)
     {
         cluster = AllocateCluster();

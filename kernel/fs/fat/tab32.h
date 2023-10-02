@@ -60,18 +60,12 @@ protected:
     void SetupCache(unsigned int Cluster);
     void SetupMod(unsigned int Cluster);
 
-    int FCachedSectors;
-    int FCachedClusters;
-
-    unsigned int FStartCluster;
     TPartReqEntry *FReqEntry;
     unsigned int *FTab;
 
-    unsigned int FAllocateCluster;
     TPartReqEntry *FModReq;
     unsigned int FModCluster;
     unsigned int *FModTab;
-    bool FWrite;
 };
 
 #endif

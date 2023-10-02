@@ -422,7 +422,7 @@ WVList
 95
 MItem
 11
-lib\lib.lib
+servlib.lib
 96
 WString
 3
