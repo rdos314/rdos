@@ -11,7 +11,7 @@ void main()
     int handle;
 
     handle = RdosOpenFile("y:/1.txt", 0);
-    RdosSetFileSize64(handle, 1);
+    RdosSetFileSize64(handle, 18000);
     RdosCloseFile(handle);
 
 
