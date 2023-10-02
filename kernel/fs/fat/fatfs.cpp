@@ -327,6 +327,15 @@ bool TFat::ShrinkClusterChain(TCluster *Chain, unsigned int Count)
             ok = false;
     }
 
+    pos = Chain->GetSize();
+    if (pos)
+    {
+        arr = Chain->GetChain();
+        cluster = arr[pos - 1];
+        FatTable1->LinkCluster(cluster);
+        FatTable2->LinkCluster(cluster);
+    }
+
     FatTable1->Complete();
     FatTable2->Complete();
 
