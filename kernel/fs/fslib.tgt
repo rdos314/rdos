@@ -63,8 +63,8 @@ WVList
 0
 15
 MItem
-12
-partbase.asm
+18
+fslib\partbase.asm
 16
 WString
 6
@@ -99,8 +99,8 @@ WVList
 0
 23
 MItem
-10
-partserv.c
+16
+fslib\partserv.c
 24
 WString
 4
@@ -139,8 +139,8 @@ r????Include directories:
 1
 33
 WString
-35
-"..\lib;\rdos\kernel;$(%watcom)/rh"
+32
+"lib;\rdos\kernel;$(%watcom)/rh"
 0
 34
 WVList
@@ -151,8 +151,8 @@ WVList
 0
 35
 MItem
-7
-dir.cpp
+13
+fslib\dir.cpp
 36
 WString
 6
@@ -169,8 +169,8 @@ WVList
 0
 39
 MItem
-8
-file.cpp
+14
+fslib\file.cpp
 40
 WString
 6
@@ -187,8 +187,8 @@ WVList
 0
 43
 MItem
-6
-fs.cpp
+12
+fslib\fs.cpp
 44
 WString
 6
@@ -205,8 +205,8 @@ WVList
 0
 47
 MItem
-11
-partint.cpp
+17
+fslib\partint.cpp
 48
 WString
 6
