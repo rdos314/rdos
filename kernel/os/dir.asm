@@ -37,7 +37,6 @@ INCLUDE ..\fs.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 INCLUDE gate.def
-INCLUDE chandle.inc
 INCLUDE exec.def
 
 dir_handle_seg  STRUC

@@ -24,6 +24,18 @@
 ; OS gate macros
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;
+; handle types
+;
+
+C_HANDLE_FILE         = 1
+C_HANDLE_STDIN        = 2
+C_HANDLE_STDOUT       = 3
+C_HANDLE_TCP_SOCKET   = 4
+C_HANDLE_UDP_SOCKET   = 5
+
 ;
 ; offsets in 16-bit trapgates, vmode
 ;
