@@ -3810,7 +3810,7 @@ init_client_file    Proc near
     mov esi,OFFSET set_file_size32
     mov edi,OFFSET set_file_size_name
     mov dx,virt_es_in
-    mov ax,set_file_size_nr
+    mov ax,set_file_size32_nr
     LinkUserGate
     mov dword ptr fs:org_set_size,eax
     mov word ptr fs:org_set_size+4,dx

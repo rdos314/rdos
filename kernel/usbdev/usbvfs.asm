@@ -33,7 +33,7 @@ include ..\user.inc
 include ..\driver.def
 INCLUDE ..\os\protseg.def
 include ..\usbdev\usb.inc
-include ..\fs\vfs.inc
+include ..\fs\dev\vfs.inc
 
 MAX_DISCS   = 16
 

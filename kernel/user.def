@@ -140,10 +140,10 @@ create_file_nr                          = 124
 close_file_nr                           = 125
 dupl_file_nr                            = 126
 get_ioctl_data_nr                       = 127
-get_file_size_nr                        = 128
-set_file_size_nr                        = 129
-get_file_pos_nr                         = 130
-set_file_pos_nr                         = 131
+get_file_size32_nr                      = 128
+set_file_size32_nr                      = 129
+get_file_pos32_nr                       = 130
+set_file_pos32_nr                       = 131
 get_file_time_nr                        = 132
 set_file_time_nr                        = 133
 read_file_nr                            = 134
@@ -746,16 +746,16 @@ read_handle_nr                  = 613
 write_handle_nr                 = 614
 dup_handle_nr                   = 615
 dup2_handle_nr                  = 616
-get_handle_size_nr              = 617
-set_handle_size_nr              = 618
+get_handle_size32_nr            = 617
+set_handle_size32_nr            = 618
 get_handle_mode_nr              = 619
 set_handle_mode_nr              = 620
-get_handle_pos_nr               = 621
-set_handle_pos_nr               = 622
+get_handle_pos32_nr             = 621
+set_handle_pos32_nr             = 622
 eof_handle_nr                   = 623
 is_handle_device_nr             = 624
-get_handle_time_nr              = 625
-set_handle_time_nr              = 626
+get_handle_modify_time_nr       = 625
+set_handle_modify_time_nr       = 626
 
 dup_ini_nr                      = 627
 
@@ -992,6 +992,16 @@ get_vfs_resp_size_nr              = 809
 get_vfs_resp_data_nr              = 810
 is_vfs_disc_nr                    = 811
 
-set_file_size64_nr                = 812
+get_file_size64_nr                = 812
+set_file_size64_nr                = 813
+get_file_pos64_nr                 = 814
+set_file_pos64_nr                 = 815
 
-usergate_entries                  = 820
+get_handle_size64_nr              = 816
+set_handle_size64_nr              = 817
+get_handle_pos64_nr               = 818
+set_handle_pos64_nr               = 819
+get_handle_create_time_nr         = 820
+get_handle_access_time_nr         = 821
+
+usergate_entries                  = 830

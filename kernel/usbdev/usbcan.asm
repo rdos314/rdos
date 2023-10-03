@@ -555,8 +555,8 @@ capture_thread_pr:
 ;    
     mov bx,ds:capture_handle
     xor eax,eax
-    SetFilePos
-    SetFileSize
+    SetFilePos32
+    SetFileSize32
 
 ctpLoop:
     WaitForSignal
@@ -1607,7 +1607,7 @@ program_can_bridge Proc near
     UserGateForce32 open_file_nr
     jc pcbFail
 ;
-    GetFileSize
+    GetFileSize32
     mov ds:can_prog_size,eax
     mov ecx,eax
     add eax,8

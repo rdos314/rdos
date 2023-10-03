@@ -4,7 +4,7 @@ projectIdent
 VpeMain
 1
 WRect
-1414
+1344
 0
 8192
 9216
@@ -28,10 +28,10 @@ WVList
 VComponent
 8
 WRect
-188
-185
+186
+179
 5680
-4300
+4292
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 9
 win32.tgt
 0
-22
+4
 7

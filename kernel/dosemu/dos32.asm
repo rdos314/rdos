@@ -585,8 +585,8 @@ write_handle_write:
     jmp write_handle_done
 set_file_size:
     int 3
-    GetFilePos
-    SetFileSize
+    GetFilePos32
+    SetFileSize32
     mov eax,[bp].vm_eax
 write_handle_ok:
     and byte ptr [bp].vm_eflags,NOT 1

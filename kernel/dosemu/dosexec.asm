@@ -251,7 +251,7 @@ load_com    PROC near
     mov al,16
     SetBitness
 ;
-    GetFileSize
+    GetFileSize32
     mov ecx,eax
     add ecx,100h
     AvailableDosLinear
@@ -264,7 +264,7 @@ load_com    PROC near
 ;
     mov edi,edx
     xor eax,eax
-    SetFilePos
+    SetFilePos32
     mov ax,flat_sel
     mov es,ax
     add edi,100h
@@ -344,7 +344,7 @@ load_exe    PROC near
     AllocateSmallGlobalMem
     mov ecx,eax
     xor eax,eax
-    SetFilePos
+    SetFilePos32
     xor di,di
     ReadFile
 ;
@@ -383,7 +383,7 @@ load_exe_whole_size:
     movzx eax,ds:exeh_size_header
     shl eax,4
 ;       mov edx,eax
-    SetFilePos
+    SetFilePos32
     movzx ecx,ds:exeh_size_msb
     dec cx
     shl ecx,9
@@ -403,7 +403,7 @@ load_exe_whole_size:
     jz load_exe_noreloc1
     AllocateLocalMem
     movzx eax,ds:exeh_reloc_offs
-    SetFilePos
+    SetFilePos32
     UserGateForce32 read_file_nr
 load_exe_noreloc1:
     CloseFile
@@ -538,7 +538,7 @@ load_dos_try_exe:
 ;
     mov cx,ax
     xor eax,eax
-    SetFilePos
+    SetFilePos32
     xor di,di
     ReadFile
     jc load_dos_exe_free_pop_fail
@@ -686,7 +686,7 @@ load_dos_ext_exe    PROC far
     AllocateSmallGlobalMem
     mov ecx,eax
     xor eax,eax
-    SetFilePos
+    SetFilePos32
     xor di,di
     ReadFile
 ;
@@ -725,7 +725,7 @@ load_ext_exe_whole_size:
     movzx eax,ds:exeh_size_header
     shl eax,4
 ;       mov edx,eax
-    SetFilePos
+    SetFilePos32
     movzx ecx,ds:exeh_size_msb
     dec cx
     shl ecx,9
@@ -746,7 +746,7 @@ load_ext_exe_whole_size:
 ;
     AllocateLocalMem
     movzx eax,ds:exeh_reloc_offs
-    SetFilePos
+    SetFilePos32
     UserGateForce32 read_file_nr
 
 load_ext_exe_noreloc1:

@@ -410,8 +410,6 @@
 
 #define osgate_hook_init_pci 408
 
-#define osgate_register_msi 409
-
 #define osgate_allocate_ints 410
 #define osgate_free_int 411
 
@@ -897,6 +895,17 @@
 #define osgate_link_usergate 815
 
 #define osgate_set_pci_device_name 816
+#define osgate_get_msi_vector 817
+
+#define osgate_add_wait_for_adc_chan 818
+
+#define osgate_create_blk 819
+#define osgate_delete_blk 820
+#define osgate_allocate_blk 821
+#define osgate_free_blk 822
+
+#define osgate_write_vfs_disc 823
+#define osgate_close_vfs_drive 824
 
 
 
@@ -1311,8 +1320,6 @@
 #define OsGate_end_disc_handler 0x3E 0x67 0x9a 151 1 0 0 2 0
 
 #define OsGate_hook_init_pci 0x3E 0x67 0x9a 152 1 0 0 2 0
-
-#define OsGate_register_msi 0x3E 0x67 0x9a 153 1 0 0 2 0
 
 #define OsGate_allocate_ints 0x3E 0x67 0x9a 154 1 0 0 2 0
 #define OsGate_free_int 0x3E 0x67 0x9a 155 1 0 0 2 0
@@ -1799,4 +1806,15 @@
 #define OsGate_link_usergate 0x3E 0x67 0x9a 47 3 0 0 2 0
 
 #define OsGate_set_pci_device_name 0x3E 0x67 0x9a 48 3 0 0 2 0
+#define OsGate_get_msi_vector 0x3E 0x67 0x9a 49 3 0 0 2 0
+
+#define OsGate_add_wait_for_adc_chan 0x3E 0x67 0x9a 50 3 0 0 2 0
+
+#define OsGate_create_blk 0x3E 0x67 0x9a 51 3 0 0 2 0
+#define OsGate_delete_blk 0x3E 0x67 0x9a 52 3 0 0 2 0
+#define OsGate_allocate_blk 0x3E 0x67 0x9a 53 3 0 0 2 0
+#define OsGate_free_blk 0x3E 0x67 0x9a 54 3 0 0 2 0
+
+#define OsGate_write_vfs_disc 0x3E 0x67 0x9a 55 3 0 0 2 0
+#define OsGate_close_vfs_drive 0x3E 0x67 0x9a 56 3 0 0 2 0
 

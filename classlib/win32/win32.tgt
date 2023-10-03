@@ -139,8 +139,8 @@ n????Include directories:
 1
 33
 WString
-34
-"..\;$(%watcom)/h;$(%watcom)/h/nt"
+47
+"\rdos\kernel;..\;$(%watcom)/h;$(%watcom)/h/nt"
 0
 34
 WVList

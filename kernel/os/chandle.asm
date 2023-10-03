@@ -1645,11 +1645,12 @@ dup2_handle    Endp
 ;
 ;           PARAMETERS:     BX          Handle
 ;
-;           RETURNS:        EAX         Size
+;           RETURNS:        (EDX:)EAX   Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_handle_size_name  DB 'Get C Handle Size', 0
+get_handle_size32_name  DB 'Get C Handle Size 32', 0
+get_handle_size64_name  DB 'Get C Handle Size 64', 0
 
 get_size_dummy      Proc near
     stc
@@ -1673,7 +1674,7 @@ gst07  DW OFFSET get_size_dummy
 gst08  DW OFFSET get_size_dummy
 gst09  DW OFFSET get_size_dummy
 
-get_handle_size     Proc far
+get_handle_size32     Proc far
     push ds
     push bx
     push bp
@@ -1684,17 +1685,17 @@ get_handle_size     Proc far
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
-    jae ghsFail
+    jae ghsFail32
 ;   
     shl bx,3
     add bx,OFFSET h_arr
     mov ax,ds:[bx].hp_handle
 ;
     cmp ax,SYS_HANDLE_COUNT
-    jae ghsFail
+    jae ghsFail32
 ;    
     or ax,ax
-    jz ghsFail
+    jz ghsFail32
 ;
     push dx
     dec ax
@@ -1710,17 +1711,73 @@ get_handle_size     Proc far
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].get_size_tab
-    jnc ghsDone  
+    jnc ghsDone32  
 
-ghsFail:
+ghsFail32:
     mov eax,-1
+    stc
 
-ghsDone:
+ghsDone32:
     pop bp
     pop bx
     pop ds    
     retf32
-get_handle_size     Endp        
+get_handle_size32     Endp        
+
+get_handle_size64     Proc far
+    push ds
+    push bx
+    push bp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ghsFail64
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ghsFail64
+;    
+    or ax,ax
+    jz ghsFail64
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].get_size_tab
+    jc ghsFail64
+;
+    xor edx,edx
+    clc
+    jmp ghsDone64
+
+ghsFail64:
+    mov eax,-1
+    mov edx,-1
+    stc
+
+ghsDone64:
+    pop bp
+    pop bx
+    pop ds    
+    retf32
+get_handle_size64     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1730,13 +1787,14 @@ get_handle_size     Endp
 ;           DESCRIPTION:    Set C handle size
 ;
 ;           PARAMETERS:     BX          Handle
-;                           EAX         Size
+;                           (EDX:)EAX   Size
 ;
-;           RETURNS:        EAX         Result
+;           RETURNS:        (EDX:)EAX   Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_handle_size_name  DB 'Set C Handle Size', 0
+set_handle_size32_name  DB 'Set C Handle Size 32', 0
+set_handle_size64_name  DB 'Set C Handle Size 64', 0
 
 set_size_dummy      Proc near
     stc
@@ -1760,7 +1818,7 @@ sst07  DW OFFSET set_size_dummy
 sst08  DW OFFSET set_size_dummy
 sst09  DW OFFSET set_size_dummy
 
-set_handle_size     Proc far
+set_handle_size32     Proc far
     push ds
     push bx
     push edx
@@ -1773,17 +1831,17 @@ set_handle_size     Proc far
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
-    jae shsFail
+    jae shsFail32
 ;   
     shl bx,3
     add bx,OFFSET h_arr
     mov ax,ds:[bx].hp_handle
 ;
     cmp ax,SYS_HANDLE_COUNT
-    jae shsFail
+    jae shsFail32
 ;    
     or ax,ax
-    jz shsFail
+    jz shsFail32
 ;
     push dx
     dec ax
@@ -1800,23 +1858,83 @@ set_handle_size     Proc far
     mov bx,ds:[bx].he_sel
     shl bp,1
     call word ptr cs:[bp].set_size_tab
-    jnc shsDone
+    jnc shsDone32
 
-shsFail:
+shsFail32:
     mov eax,-1
+    stc
 
-shsDone:
+shsDone32:
     pop bp
     pop edx
     pop bx
     pop ds    
     retf32
-set_handle_size     Endp        
+set_handle_size32     Endp        
+
+set_handle_size64     Proc far
+    push ds
+    push bx
+    push esi
+    push bp
+;
+    mov esi,edx
+    mov edx,eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae shsFail64
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ax,ds:[bx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae shsFail64
+;    
+    or ax,ax
+    jz shsFail64
+;
+    push dx
+    dec ax
+    mov dx,SIZE handle_entry_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET hd_data
+    mov ax,chandle_data_sel
+    mov ds,ax
+;
+    mov eax,edx
+    mov edx,esi
+    mov bp,ds:[bx].he_type
+    mov bx,ds:[bx].he_sel
+    shl bp,1
+    call word ptr cs:[bp].set_size_tab
+    jnc shsDone64
+
+shsFail64:
+    mov eax,-1
+    mov edx,-1
+    stc
+
+shsDone64:
+    pop bp
+    pop esi
+    pop bx
+    pop ds    
+    retf32
+set_handle_size64     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetHandleTime
+;           NAME:           GetHandleCreateTime
+;                           GetHandleModifyTime
+;                           GetHandleAccessTime
 ;
 ;           DESCRIPTION:    Get C handle time
 ;
@@ -1826,7 +1944,9 @@ set_handle_size     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_handle_time_name  DB 'Get C Handle Time', 0
+get_handle_create_time_name  DB 'Get C Handle Create Time', 0
+get_handle_modify_time_name  DB 'Get C Handle Modify Time', 0
+get_handle_access_time_name  DB 'Get C Handle Access Time', 0
 
 get_time_dummy      Proc near
     stc
@@ -1903,9 +2023,9 @@ get_handle_time     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetHandleTime
+;           NAME:           SetHandleModifyTime
 ;
-;           DESCRIPTION:    Set C handle time
+;           DESCRIPTION:    Set C handle modify time
 ;
 ;           PARAMETERS:     BX          Handle
 ;                           EDX:EAX     Time
@@ -1914,7 +2034,7 @@ get_handle_time     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_handle_time_name  DB 'Set C Handle Time', 0
+set_handle_modify_time_name  DB 'Set C Handle Modify Time', 0
 
 set_time_dummy      Proc near
     stc
@@ -2090,13 +2210,14 @@ set_handle_mode     Endp
 ;
 ;           PARAMETERS:     BX          Handle
 ;
-;           RETURNS:        EAX         Position
+;           RETURNS:        (EDX:)EAX   Position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_handle_pos_name  DB 'Get C Handle Pos', 0
+get_handle_pos32_name  DB 'Get C Handle Pos 32', 0
+get_handle_pos64_name  DB 'Get C Handle Pos 64', 0
 
-get_handle_pos     Proc far
+get_handle_pos32     Proc far
     push ds
     push bx
 ;
@@ -2106,21 +2227,49 @@ get_handle_pos     Proc far
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
-    jae ghpFail
+    jae ghpFail32
 ;   
     shl bx,3
     add bx,OFFSET h_arr
     mov eax,ds:[bx].hp_pos
-    jmp ghpDone
+    jmp ghpDone32
 
-ghpFail:
+ghpFail32:
     mov eax,-1
 
-ghpDone:
+ghpDone32:
     pop bx
     pop ds    
     retf32
-get_handle_pos     Endp        
+get_handle_pos32     Endp        
+
+get_handle_pos64     Proc far
+    push ds
+    push bx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ghpFail64
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov eax,ds:[bx].hp_pos
+    xor edx,edx
+    jmp ghpDone64
+
+ghpFail64:
+    mov eax,-1
+    mov edx,-1
+
+ghpDone64:
+    pop bx
+    pop ds    
+    retf32
+get_handle_pos64     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2130,15 +2279,16 @@ get_handle_pos     Endp
 ;           DESCRIPTION:    Set C handle pos
 ;
 ;           PARAMETERS:     BX          Handle
-;                           EAX         Position
+;                           (EDX:)EAX   Position
 ;
-;           RETURNS:        EAX         Result
+;           RETURNS:        (EDX:)EAX   Result
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_handle_pos_name  DB 'Set C Handle Pos', 0
+set_handle_pos32_name  DB 'Set C Handle Pos 32', 0
+set_handle_pos64_name  DB 'Set C Handle Pos 64', 0
 
-set_handle_pos     Proc far
+set_handle_pos32     Proc far
     push ds
     push bx
     push edx
@@ -2150,23 +2300,53 @@ set_handle_pos     Proc far
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
-    jae shpFail
+    jae shpFail32
 ;   
     shl bx,3
     add bx,OFFSET h_arr
     mov ds:[bx].hp_pos,edx
     mov eax,edx
-    jmp shpDone
+    jmp shpDone32
 
-shpFail:
+shpFail32:
     mov eax,-1
 
-shpDone:
+shpDone32:
     pop edx
     pop bx
     pop ds    
     retf32
-set_handle_pos     Endp        
+set_handle_pos32     Endp        
+
+set_handle_pos64     Proc far
+    push ds
+    push bx
+;
+    mov edx,eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae shpFail64
+;   
+    shl bx,3
+    add bx,OFFSET h_arr
+    mov ds:[bx].hp_pos,edx
+    mov eax,edx
+    xor edx,edx
+    jmp shpDone64
+
+shpFail64:
+    mov eax,-1
+    mov edx,-1
+
+shpDone64:
+    pop bx
+    pop ds    
+    retf32
+set_handle_pos64     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4918,16 +5098,28 @@ init_chandle     PROC near
     mov ax,dup2_handle_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_handle_size
-    mov edi,OFFSET get_handle_size_name
+    mov esi,OFFSET get_handle_size32
+    mov edi,OFFSET get_handle_size32_name
     xor cl,cl
-    mov ax,get_handle_size_nr
+    mov ax,get_handle_size32_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET set_handle_size
-    mov edi,OFFSET set_handle_size_name
+    mov esi,OFFSET get_handle_size64
+    mov edi,OFFSET get_handle_size64_name
     xor cl,cl
-    mov ax,set_handle_size_nr
+    mov ax,get_handle_size64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_size32
+    mov edi,OFFSET set_handle_size32_name
+    xor cl,cl
+    mov ax,set_handle_size32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_size64
+    mov edi,OFFSET set_handle_size64_name
+    xor cl,cl
+    mov ax,set_handle_size64_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_handle_mode
@@ -4942,16 +5134,28 @@ init_chandle     PROC near
     mov ax,set_handle_mode_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_handle_pos
-    mov edi,OFFSET get_handle_pos_name
+    mov esi,OFFSET get_handle_pos32
+    mov edi,OFFSET get_handle_pos32_name
     xor cl,cl
-    mov ax,get_handle_pos_nr
+    mov ax,get_handle_pos32_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET set_handle_pos
-    mov edi,OFFSET set_handle_pos_name
+    mov esi,OFFSET get_handle_pos64
+    mov edi,OFFSET get_handle_pos64_name
     xor cl,cl
-    mov ax,set_handle_pos_nr
+    mov ax,get_handle_pos64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_pos32
+    mov edi,OFFSET set_handle_pos32_name
+    xor cl,cl
+    mov ax,set_handle_pos32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_pos64
+    mov edi,OFFSET set_handle_pos64_name
+    xor cl,cl
+    mov ax,set_handle_pos64_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET eof_handle
@@ -4967,15 +5171,27 @@ init_chandle     PROC near
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_handle_time
-    mov edi,OFFSET get_handle_time_name
+    mov edi,OFFSET get_handle_create_time_name
     xor cl,cl
-    mov ax,get_handle_time_nr
+    mov ax,get_handle_create_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_time
+    mov edi,OFFSET get_handle_modify_time_name
+    xor cl,cl
+    mov ax,get_handle_modify_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_time
+    mov edi,OFFSET get_handle_access_time_name
+    xor cl,cl
+    mov ax,get_handle_access_time_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET set_handle_time
-    mov edi,OFFSET set_handle_time_name
+    mov edi,OFFSET set_handle_modify_time_name
     xor cl,cl
-    mov ax,set_handle_time_nr
+    mov ax,set_handle_modify_time_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET is_ipv4_socket

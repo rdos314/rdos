@@ -67,8 +67,8 @@ n????Include directories:
 1
 17
 WString
-72
-"../../../classlib;../../../classlib/win32;$(%watcom)/h;$(%watcom)/h/nt"
+88
+"../../../kernel;../../../classlib;../../../classlib/win32;$(%watcom)/h;$(%watcom)/h/nt"
 0
 18
 MRState

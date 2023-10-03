@@ -110,7 +110,7 @@ read_drive      Proc near
     movzx edx,es:[edi].dh_sector
     add eax,edx
     shl eax,9
-    SetFilePos
+    SetFilePos32
 
 read_drive_loop:
     push ecx
@@ -165,7 +165,7 @@ write_drive     Proc near
     movzx edx,es:[edi].dh_sector
     add eax,edx
     shl eax,9
-    SetFilePos
+    SetFilePos32
 
 write_drive_loop:
     push ecx
@@ -358,7 +358,7 @@ cfdSave:
 ;
     mov eax,es:fd_size
     add eax,200h
-    SetFileSize
+    SetFileSize32
 ;
     GetFileInfo
     mov es:fd_access_drive,cx
@@ -496,7 +496,7 @@ open_file_drive Proc near
     mov es:fd_access_drive,cx
     mov es:fd_selector,ax
 ;
-    GetFileSize
+    GetFileSize32
     sub eax,200h
     mov es:fd_size,eax
 ;    

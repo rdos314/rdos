@@ -2225,36 +2225,32 @@ get_ioctl_data_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GET_FILE_SIZE
+;           NAME:           GetFileSize
 ;
 ;           DESCRIPTION:    Get file size
 ;
-;           PARAMETERS:         BX              FILE HANDLE
+;           PARAMETERS:     BX              FILE HANDLE
 ;                   
-;           RETURNS:        EAX             SIZE OF FILE
+;           RETURNS:        (EDX:)EAX       SIZE OF FILE
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_file_size_name      DB 'Get File Size',0
+get_file_size32_name      DB 'Get File Size 32',0
+get_file_size64_name      DB 'Get File Size 64',0
 
-get_file_size:
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
+get_file_size32:
     push ds
     push ebx
     push edx
 ;
     mov ax,FILE_HANDLE
     DerefHandle
-    jc get_file_size_done
+    jc get_file_size_done32
 ;
     mov bx,[ebx].file_handle_sel
     or bx,bx
     stc
-    jz get_file_size_done
+    jz get_file_size_done32
 ;
     mov ds,bx
     EnterReadSection ds:file_size_section
@@ -2262,15 +2258,35 @@ get_file_size:
     LeaveReadSection ds:file_size_section
     clc
 
-get_file_size_done:
+get_file_size_done32:
     pop edx
     pop ebx
     pop ds
+    retf32
 
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
+get_file_size64:
+    push ds
+    push ebx
+;
+    mov ax,FILE_HANDLE
+    DerefHandle
+    jc get_file_size_done64
+;
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz get_file_size_done64
+;
+    mov ds,bx
+    EnterReadSection ds:file_size_section
+    mov eax,ds:file_size
+    xor edx,edx
+    LeaveReadSection ds:file_size_section
+    clc
+
+get_file_size_done64:
+    pop ebx
+    pop ds
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2309,24 +2325,19 @@ get_c_file_size Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SET_FILE_SIZE
+;           NAME:           SetFileSize
 ;
 ;           DESCRIPTION:    Set file size
 ;
-;           PARAMETERS:         BX              FILE HANDLE
-;                           EAX             SIZE OF FILE
+;           PARAMETERS:     BX              FILE HANDLE
+;                           (EDX:)EAX       SIZE OF FILE
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_file_size_name      DB 'Set File Size',0
+set_file_size32_name      DB 'Set File Size 32',0
+set_file_size64_name      DB 'Set File Size 64',0
 
-set_file_size:
-    ApiSaveEax
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
+set_file_size32:
     push ds
     push eax
     push ebx
@@ -2335,30 +2346,57 @@ set_file_size:
     mov edx,eax
     mov ax,FILE_HANDLE
     DerefHandle
-    jc set_file_size_done
+    jc set_file_size_done32
 ;
     mov al,[ebx].file_handle_drive
     mov bx,[ebx].file_handle_sel
     or bx,bx
     stc
-    jz set_file_size_done
+    jz set_file_size_done32
 ;
     mov ds,bx
     EnterWriteSection ds:file_size_section
     CallFileSystem fs_set_file_size_proc
     LeaveWriteSection ds:file_size_section
 
-set_file_size_done:
+set_file_size_done32:
     pop edx
     pop ebx
     pop eax
     pop ds
+    retf32
 
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEax
+set_file_size64:
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    or edx,edx
+    stc
+    jnz set_file_size_done64
+;    
+    mov edx,eax
+    mov ax,FILE_HANDLE
+    DerefHandle
+    jc set_file_size_done64
+;
+    mov al,[ebx].file_handle_drive
+    mov bx,[ebx].file_handle_sel
+    or bx,bx
+    stc
+    jz set_file_size_done64
+;
+    mov ds,bx
+    EnterWriteSection ds:file_size_section
+    CallFileSystem fs_set_file_size_proc
+    LeaveWriteSection ds:file_size_section
+
+set_file_size_done64:
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2401,70 +2439,78 @@ set_c_file_size Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GET_FILE_POS
+;           NAME:           GetFilePos
 ;
 ;           DESCRIPTION:    Get file position
 ;
-;           PARAMETERS:         BX              FILE HANDLE
+;           PARAMETERS:     BX              FILE HANDLE
 ;               
-;           RETURNS:        EAX             FILE POSITION
+;           RETURNS:        (EDX:)EAX       FILE POSITION
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_file_pos_name       DB 'Get File Position',0
+get_file_pos32_name       DB 'Get File Position 32',0
+get_file_pos64_name       DB 'Get File Position 64',0
 
-get_file_pos:
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
+get_file_pos32:
     push ds
     push ebx
 ;
     mov ax,FILE_HANDLE
     DerefHandle
-    jc get_file_pos_done
+    jc get_file_pos_done32
 ;
     mov ax,[ebx].file_handle_sel
     or ax,ax
     stc
-    jz get_file_pos_done
+    jz get_file_pos_done32
 ;
     mov eax,[ebx].file_handle_pos
     clc
 
-get_file_pos_done:
+get_file_pos_done32:
     pop ebx
     pop ds
+    retf32
 
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
+get_file_pos64:
+    push ds
+    push ebx
+;
+    mov ax,FILE_HANDLE
+    DerefHandle
+    jc get_file_pos_done64
+;
+    mov ax,[ebx].file_handle_sel
+    or ax,ax
+    stc
+    jz get_file_pos_done64
+;
+    mov eax,[ebx].file_handle_pos
+    xor edx,edx
+    clc
+
+get_file_pos_done64:
+    pop ebx
+    pop ds
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SET_FILE_POS
+;           NAME:           SetFilePos
 ;
 ;           DESCRIPTION:    Set file position
 ;
-;           PARAMETERS:         BX              FILE HANDLE
-;                           EAX             FILE POSITION
+;           PARAMETERS:     BX              FILE HANDLE
+;                           (EDX:)EAX       FILE POSITION
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_file_pos_name       DB 'Set File Position',0
+set_file_pos32_name       DB 'Set File Position 32',0
+set_file_pos64_name       DB 'Set File Position 64',0
 
-set_file_pos:
-    ApiSaveEax
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
+set_file_pos32:
     push ds
     push ebx
     push eax
@@ -2473,22 +2519,41 @@ set_file_pos:
     mov edx,eax
     mov ax,FILE_HANDLE
     DerefHandle
-    jc set_file_pos_done
+    jc set_file_pos_done32
 ;
     mov [ebx].file_handle_pos,edx
     clc
 
-set_file_pos_done:
+set_file_pos_done32:
     pop edx
     pop eax
     pop ebx
     pop ds
+    retf32
 
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEax
+set_file_pos64:
+    push ds
+    push ebx
+    push eax
+    push edx
+;
+    or edx,edx
+    stc
+    jnz set_file_pos_done64
+;
+    mov edx,eax
+    mov ax,FILE_HANDLE
+    DerefHandle
+    jc set_file_pos_done64
+;
+    mov [ebx].file_handle_pos,edx
+    clc
+
+set_file_pos_done64:
+    pop edx
+    pop eax
+    pop ebx
+    pop ds
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3546,32 +3611,60 @@ init_file       PROC near
     mov ax,get_ioctl_data_nr
     RegisterBimodalSyscall
 ;
-    mov esi,OFFSET get_file_size
-    mov edi,OFFSET get_file_size_name
+    mov esi,OFFSET get_file_size32
+    mov edi,OFFSET get_file_size32_name
     xor dx,dx
     xor ecx,ecx
-    mov ax,get_file_size_nr
+    mov ax,get_file_size32_nr
     RegisterBimodalSyscall
 ;
-    mov esi,OFFSET set_file_size
-    mov edi,OFFSET set_file_size_name
+    mov esi,OFFSET get_file_size64
+    mov edi,OFFSET get_file_size64_name
     xor dx,dx
     xor ecx,ecx
-    mov ax,set_file_size_nr
+    mov ax,get_file_size64_nr
     RegisterBimodalSyscall
 ;
-    mov esi,OFFSET get_file_pos
-    mov edi,OFFSET get_file_pos_name
+    mov esi,OFFSET set_file_size32
+    mov edi,OFFSET set_file_size32_name
     xor dx,dx
     xor ecx,ecx
-    mov ax,get_file_pos_nr
+    mov ax,set_file_size32_nr
     RegisterBimodalSyscall
 ;
-    mov esi,OFFSET set_file_pos
-    mov edi,OFFSET set_file_pos_name
+    mov esi,OFFSET set_file_size64
+    mov edi,OFFSET set_file_size64_name
     xor dx,dx
     xor ecx,ecx
-    mov ax,set_file_pos_nr
+    mov ax,set_file_size64_nr
+    RegisterBimodalSyscall
+;
+    mov esi,OFFSET get_file_pos32
+    mov edi,OFFSET get_file_pos32_name
+    xor dx,dx
+    xor ecx,ecx
+    mov ax,get_file_pos32_nr
+    RegisterBimodalSyscall
+;
+    mov esi,OFFSET get_file_pos64
+    mov edi,OFFSET get_file_pos64_name
+    xor dx,dx
+    xor ecx,ecx
+    mov ax,get_file_pos64_nr
+    RegisterBimodalSyscall
+;
+    mov esi,OFFSET set_file_pos32
+    mov edi,OFFSET set_file_pos32_name
+    xor dx,dx
+    xor ecx,ecx
+    mov ax,set_file_pos32_nr
+    RegisterBimodalSyscall
+;
+    mov esi,OFFSET set_file_pos64
+    mov edi,OFFSET set_file_pos64_name
+    xor dx,dx
+    xor ecx,ecx
+    mov ax,set_file_pos64_nr
     RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_file_time

@@ -612,23 +612,23 @@ move_pointer_inrange:
     or al,al
     jnz move_not_begin
     mov eax,edx
-    SetFilePos
+    SetFilePos32
     jnc move_pointer_ok
     jmp move_pointer_fail
 move_not_begin:
     sub al,1
     jnz move_not_current
-    GetFilePos
+    GetFilePos32
     add eax,edx
-    SetFilePos
+    SetFilePos32
     jnc move_pointer_ok
     jmp move_pointer_fail
 move_not_current:
     sub al,1
     jnz move_not_end
-    GetFileSize
+    GetFileSize32
     add eax,edx
-    SetFilePos
+    SetFilePos32
     jnc move_pointer_ok
     jmp move_pointer_fail
 move_not_end:

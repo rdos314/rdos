@@ -2743,7 +2743,7 @@ capture_thread_pr:
     mov edi,edx
 ;    
     mov bx,ds:capture_handle
-    GetFileSize
+    GetFileSize32
     cmp eax,24
     jc ctpRewrite
 ;
@@ -2756,8 +2756,8 @@ capture_thread_pr:
     cmp eax,0A1B2C3D4h
     jne ctpRewrite
 ;
-    GetFileSize
-    SetFilePos
+    GetFileSize32
+    SetFilePos32
 ;
     mov ecx,24
     mov edx,edi
@@ -2766,8 +2766,8 @@ capture_thread_pr:
 
 ctpRewrite:
     xor eax,eax
-    SetFilePos
-    SetFileSize
+    SetFilePos32
+    SetFileSize32
 ;
     mov edx,edi
 ;    

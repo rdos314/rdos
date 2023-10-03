@@ -532,10 +532,10 @@ laLoop:
 ;
     add esi,1000h
 ;
-    GetFileSize
+    GetFileSize32
     mov ecx,eax
 ;
-    GetFilePos
+    GetFilePos32
     cmp eax,ecx
     jnz laLoop
 ;

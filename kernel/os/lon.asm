@@ -1043,8 +1043,8 @@ capture_thread_pr:
     LeaveSection ds:capture_section
 ;    
     mov bx,ds:capture_handle
-    GetFileSize
-    SetFilePos
+    GetFileSize32
+    SetFilePos32
 
 ctpLoop:
     WaitForSignal

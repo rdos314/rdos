@@ -1274,8 +1274,8 @@ write_handle_nobreak:
     or byte ptr [bp].vm_eflags, 1
     jmp write_handle_done
 set_file_size:
-    GetFilePos
-    SetFileSize
+    GetFilePos32
+    SetFileSize32
     mov eax,[bp].vm_eax
     xor ax,ax
 write_handle_ok:

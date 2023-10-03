@@ -1579,14 +1579,26 @@
     __value [__ebx]
 
 #pragma aux RdosGetHandleSize = \
-    CallGate_get_handle_size  \
+    CallGate_get_handle_size64  \
+    "jnc ghsDone" \
+    CallGate_get_handle_size32  \
+    "ghsDone:" \
     __parm [__ebx]  \
-    __value [__eax]
+    __value [__edx __eax]
 
 #pragma aux RdosSetHandleSize = \
-    CallGate_set_handle_size  \
-    __parm [__ebx] [__eax] \
-    __value [__eax]
+    CallGate_set_handle_size64  \
+    "jnc shsDone" \
+    CallGate_set_handle_size32  \
+    "jc shsFail" \
+    "xor edx,edx" \
+    "jmp shsDone" \
+    "shsFail:" \
+    "mov eax,-1" \
+    "mov edx,-1" \
+    "shsDone:" \
+    __parm [__ebx] [_edx __eax] \
+    __value [__edx __eax]
 
 #pragma aux RdosGetHandleMode = \
     CallGate_get_handle_mode  \
@@ -1599,14 +1611,26 @@
     __value [__eax]
 
 #pragma aux RdosGetHandlePos = \
-    CallGate_get_handle_pos  \
+    CallGate_get_handle_pos64  \
+    "jnc ghpDone" \
+    CallGate_get_handle_pos32  \
+    "ghpDone:" \
     __parm [__ebx]  \
-    __value [__eax]
+    __value [__edx __eax]
 
 #pragma aux RdosSetHandlePos = \
-    CallGate_set_handle_pos  \
-    __parm [__ebx] [__eax] \
-    __value [__eax]
+    CallGate_set_handle_pos64  \
+    "jnc shpDone" \
+    CallGate_set_handle_pos32  \
+    "jc shpFail" \
+    "xor edx,edx" \
+    "jmp shpDone" \
+    "shpFail:" \
+    "mov eax,-1" \
+    "mov edx,-1" \
+    "shpDone:" \
+    __parm [__ebx] [__edx __eax] \
+    __value [__edx __eax]
 
 #pragma aux RdosEofHandle = \
     CallGate_eof_handle  \
@@ -1619,8 +1643,8 @@
     __parm [__ebx] \
     __value [__eax]
 
-#pragma aux RdosGetHandleTime = \
-    CallGate_get_handle_time  \
+#pragma aux RdosGetHandleCreateTime = \
+    CallGate_get_handle_create_time  \
     "mov [esi],edx" \
     "mov [edi],eax" \
     "and eax,edx" \
@@ -1628,8 +1652,26 @@
     __modify [__edx] \
     __value [__eax]
 
-#pragma aux RdosSetHandleTime = \
-    CallGate_set_handle_time  \
+#pragma aux RdosGetHandleModifyTime = \
+    CallGate_get_handle_modify_time  \
+    "mov [esi],edx" \
+    "mov [edi],eax" \
+    "and eax,edx" \
+    __parm [__ebx] [__esi] [__edi]  \
+    __modify [__edx] \
+    __value [__eax]
+
+#pragma aux RdosGetHandleAccessTime = \
+    CallGate_get_handle_access_time  \
+    "mov [esi],edx" \
+    "mov [edi],eax" \
+    "and eax,edx" \
+    __parm [__ebx] [__esi] [__edi]  \
+    __modify [__edx] \
+    __value [__eax]
+
+#pragma aux RdosSetModifyHandleTime = \
+    CallGate_set_handle_modify_time  \
     __parm [__ebx] [__edx] [__eax] \
     __value [__eax]
 
@@ -1702,27 +1744,38 @@
     __value [__ebx]
 
 #pragma aux RdosGetFileSize = \
-    CallGate_get_file_size  \
+    CallGate_get_file_size64  \
+    "jnc gfsDone" \
+    CallGate_get_file_size32 \
+    "xor edx,edx" \
     ValidateEax \
+    "gfsDone:" \
     __parm [__ebx]  \
-    __value [__eax]
+    __value [__edx __eax]
 
 #pragma aux RdosSetFileSize = \
-    CallGate_set_file_size  \
-    __parm [__ebx] [__eax]
-
-#pragma aux RdosSetFileSize64 = \
     CallGate_set_file_size64  \
+    "jnc sfsDone" \
+    CallGate_set_file_size32 \
+    "sfsDone:" \
     __parm [__ebx] [__edx __eax]
 
 #pragma aux RdosGetFilePos = \
-    CallGate_get_file_pos  \
+    CallGate_get_file_pos64 \
+    "jnc gfpDone" \
+    CallGate_get_file_pos32 \
+    "xor edx,edx" \
     ValidateEax \
+    "gfpDone:" \
     __parm [__ebx]  \
-    __value [__eax]
+    __modify [__ecx] \
+    __value [__edx __eax]
 
 #pragma aux RdosSetFilePos = \
-    CallGate_set_file_pos  \
+    CallGate_set_file_pos64  \
+    "jnc sfpDone" \
+    CallGate_set_file_pos32 \
+    "sfpDone:" \
     __parm [__ebx] [__eax]
 
 #pragma aux RdosReadFile = \

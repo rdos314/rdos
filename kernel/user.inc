@@ -1294,18 +1294,31 @@ Dup2Handle       MACRO
 
 ; IN    BX      Handle
 ; OUT   EAX     Filesize
-GetHandleSize     MACRO
-        UserGate get_handle_size_nr
+GetHandleSize32     MACRO
+        UserGate get_handle_size32_nr
                                                 ENDM
 
 
-; IN    BX      Handle
-; IN    EAX     Filesize
-; OUT   EAX     Result
-SetHandleSize     MACRO
-        UserGate set_handle_size_nr
+; IN    BX          Handle
+; IN    EAX         Filesize
+; OUT   EAX         Result
+SetHandleSize32     MACRO
+        UserGate set_handle_size32_nr
                                                 ENDM
 
+; IN    BX          Handle
+; OUT   EDX:EAX     Filesize
+GetHandleSize64     MACRO
+        UserGate get_handle_size64_nr
+                                                ENDM
+
+
+; IN    BX          Handle
+; IN    EDX:EAX     Filesize
+; OUT   EDX:EAX     Result
+SetHandleSize64     MACRO
+        UserGate set_handle_size64_nr
+                                                ENDM
 
 ; IN    BX      Handle
 ; OUT   EAX     Mode
@@ -1324,16 +1337,30 @@ SetHandleMode     MACRO
 
 ; IN    BX      Handle
 ; OUT   EAX     Position
-GetHandlePos     MACRO
-        UserGate get_handle_pos_nr
+GetHandlePos32     MACRO
+        UserGate get_handle_pos32_nr
                                                 ENDM
 
 
 ; IN    BX      Handle
 ; IN    EAX     Position
 ; OUT   EAX     Result
-SetHandlePos     MACRO
-        UserGate set_handle_pos_nr
+SetHandlePos32     MACRO
+        UserGate set_handle_pos32_nr
+                                                ENDM
+
+; IN    BX          Handle
+; OUT   EDX:EAX     Position
+GetHandlePos64     MACRO
+        UserGate get_handle_pos32_nr
+                                                ENDM
+
+
+; IN    BX          Handle
+; IN    EDX:EAX     Position
+; OUT   EDX:EAX     Result
+SetHandlePos64     MACRO
+        UserGate set_handle_pos64_nr
                                                 ENDM
 
 
@@ -1351,15 +1378,27 @@ IsHandleDevice       MACRO
 
 ; IN    BX              Handle
 ; OUT   EDX:EAX         Time
-GetHandleTime     MACRO
-        UserGate get_handle_time_nr
+GetHandleCreateTime     MACRO
+        UserGate get_handle_create_time_nr
+                                                ENDM
+
+; IN    BX              Handle
+; OUT   EDX:EAX         Time
+GetHandleModifyTime     MACRO
+        UserGate get_handle_modify_time_nr
+                                                ENDM
+
+; IN    BX              Handle
+; OUT   EDX:EAX         Time
+GetHandleAccessTime     MACRO
+        UserGate get_handle_access_time_nr
                                                 ENDM
 
 ; IN    BX              Handle
 ; IN    EDX:EAX         Time
 ; OUT   EAX             Result
-SetHandleTime      MACRO
-        UserGate set_handle_time_nr
+SetHandleModifyTime      MACRO
+        UserGate set_handle_modify_time_nr
                                                 ENDM
 
 ; IN    BX              Handle
@@ -2536,17 +2575,23 @@ GetIoctlData    MACRO
 
 ;       IN      EBX             Handle
 ;       OUT     EAX             Filesize
-GetFileSize     MACRO
-        UserGate get_file_size_nr
+GetFileSize32     MACRO
+        UserGate get_file_size32_nr
                                                 ENDM
 
 
 ;       IN      EBX                     Handle
 ;       IN      EAX                     Filesize
-SetFileSize     MACRO
-        UserGate set_file_size_nr
+SetFileSize32     MACRO
+        UserGate set_file_size32_nr
                                                 ENDM
 
+
+;       IN      EBX             Handle
+;       OUT     EDX:EAX         Filesize
+GetFileSize64     MACRO
+        UserGate get_file_size64_nr
+                                                ENDM
 
 ; IN      EBX                     Handle
 ; IN      EDX:EAX                 Filesize
@@ -2557,16 +2602,30 @@ SetFileSize64     MACRO
 
 ;       IN      EBX                     Handle
 ;       IN      EAX                     File position
-GetFilePos      MACRO
-        UserGate get_file_pos_nr
+GetFilePos32      MACRO
+        UserGate get_file_pos32_nr
                                                 ENDM
 
 
 ;       IN      EBX                     Handle
 ;       IN      EAX                     File position
-SetFilePos      MACRO
-        UserGate set_file_pos_nr
+SetFilePos32      MACRO
+        UserGate set_file_pos32_nr
                                                 ENDM
+
+;       IN      EBX                     Handle
+;       IN      EDX:EAX                 File position
+GetFilePos64      MACRO
+        UserGate get_file_pos64_nr
+                                                ENDM
+
+
+;       IN      EBX                     Handle
+;       IN      EDX:EAX                 File position
+SetFilePos64      MACRO
+        UserGate set_file_pos64_nr
+                                                ENDM
+
 
 ;       IN      EBX                     Handle
 ;       OUT     EDX:EAX         File system time

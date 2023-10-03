@@ -1437,8 +1437,8 @@ capture_thread_pr:
 ;    
     mov bx,ds:capture_handle
     xor eax,eax
-    SetFilePos
-    SetFileSize
+    SetFilePos32
+    SetFileSize32
 
 ctpLoop:
     WaitForSignal

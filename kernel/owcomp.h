@@ -558,23 +558,38 @@
     __value [__ebx]
 
 #pragma aux RdosGetFileSize = \
-    CallGate_get_file_size  \
+    CallGate_get_file_size64  \
+    "jnc gfsDone" \
+    CallGate_get_file_size32 \
+    "xor edx,edx" \
     ValidateEax \
+    "gfsDone:" \
     __parm [__ebx]  \
-    __value [__eax]
+    __value [__edx __eax]
 
 #pragma aux RdosSetFileSize = \
-    CallGate_set_file_size  \
-    __parm [__ebx] [__eax]
+    CallGate_set_file_size64  \
+    "jnc sfsDone" \
+    CallGate_set_file_size32 \
+    "sfsDone:" \
+    __parm [__ebx] [__edx __eax]
 
 #pragma aux RdosGetFilePos = \
-    CallGate_get_file_pos  \
+    CallGate_get_file_pos64 \
+    "jnc gfpDone" \
+    CallGate_get_file_pos32 \
+    "xor edx,edx" \
     ValidateEax \
+    "gfpDone:" \
     __parm [__ebx]  \
-    __value [__eax]
+    __modify [__ecx] \
+    __value [__edx __eax]
 
 #pragma aux RdosSetFilePos = \
-    CallGate_set_file_pos  \
+    CallGate_set_file_pos64  \
+    "jnc sfpDone" \
+    CallGate_set_file_pos32 \
+    "sfpDone:" \
     __parm [__ebx] [__eax]
 
 #pragma aux RdosReadFile = \

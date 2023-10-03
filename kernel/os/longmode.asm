@@ -1355,7 +1355,7 @@ create_tls_next:
     mov bx,ds:[edi].ep_file_handle
 ;
     mov eax,[esi].elft_paddr
-    SetFilePos
+    SetFilePos32
 ;
     mov eax,[esi].elft_vsize
     mov ecx,eax
@@ -1404,7 +1404,7 @@ start_long_exe:
     mov bx,ds:[esi].ep_file_handle
 ;
     xor eax,eax
-    SetFilePos
+    SetFilePos32
 ;
     mov edi,long_process_linear
     mov ecx,SIZE elf_header
@@ -1424,7 +1424,7 @@ start_long_exe:
     mov edi,edx
 ;
     mov eax,dword ptr ds:[esi].elf_phoff
-    SetFilePos    
+    SetFilePos32    
     ReadFile
 ;
     cmp eax,ecx
@@ -1446,7 +1446,7 @@ start_long_exe:
     mov edi,edx
 ;
     mov eax,dword ptr ds:[esi].elf_shoff
-    SetFilePos    
+    SetFilePos32    
     ReadFile
 ;
     cmp eax,ecx
@@ -1488,7 +1488,7 @@ handle_code_fault   Proc far
 ;   
     mov bx,es:[esi].ep_file_handle
     mov eax,edx
-    SetFilePos    
+    SetFilePos32    
 ;   
     mov eax,ecx
     AllocateLongBuf
