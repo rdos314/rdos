@@ -37,7 +37,6 @@ INCLUDE core.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
 INCLUDE exec.def
-INCLUDE chandle.inc
 
     .686p
 

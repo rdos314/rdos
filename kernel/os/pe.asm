@@ -39,7 +39,6 @@ INCLUDE pe.def
 INCLUDE system.inc
 INCLUDE ..\debevent.inc
 INCLUDE ..\handle.inc
-INCLUDE chandle.inc
 INCLUDE servdev.def
 
 SYS_BASE EQU 0DE000000h

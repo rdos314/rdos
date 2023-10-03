@@ -38,7 +38,6 @@ INCLUDE ..\wait.inc
 INCLUDE usb.inc
 INCLUDE ..\os\memblk.inc
 INCLUDE usbdev.inc
-INCLUDE ..\os\chandle.inc
 INCLUDE hub.inc
 
 MAX_ATTACH_HOOKS = 32
