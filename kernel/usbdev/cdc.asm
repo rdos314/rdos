@@ -371,9 +371,6 @@ usb_attach  Proc far
     jne uaFail
 ;
     mov cl,es:udd_class
-    or cl,cl
-    jz uaCdc
-;
     cmp cl,2
     jne uaFail
 
