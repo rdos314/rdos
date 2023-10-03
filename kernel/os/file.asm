@@ -1529,11 +1529,11 @@ read_file       Endp
 ;
 ;           PARAMETERS:     BX              File selector
 ;                           ECX             Size
-;                           EDX             Position
-;                           ES:EDI      Data buffer
+;                           EDX:EAX         Position
+;                           ES:EDI          Data buffer
 ;
-;           RETURNS:        EAX             Bytes read
-;                           EDX             Update position
+;           RETURNS:        ECX             Bytes read
+;                           EDX:EAX         Update position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1543,6 +1543,11 @@ read_c_file       Proc far
     push ds
     push bx
 ;
+    or edx,edx
+    stc
+    jnz rcfDone
+;
+    mov edx,eax
     mov ds,bx
     mov al,ds:file_drive
     test ds:file_attrib, FILE_ATTRIB_NOBUFFER
@@ -1557,7 +1562,10 @@ rcfBuf:
 rcfCheck:    
     jc rcfDone
 ;
-    add edx,eax
+    mov ecx,eax
+    add eax,edx
+    xor edx,edx
+    clc
 
 rcfDone:
     pop bx
@@ -1800,7 +1808,6 @@ write_file_done:
     ret
 write_file      Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1810,11 +1817,11 @@ write_file      Endp
 ;
 ;           PARAMETERS:     BX              File selector
 ;                           ECX             Size
-;                           EDX             Position
+;                           EDX:EAX         Position
 ;                           ES:EDI          Data buffer
 ;
-;           RETURNS:        EAX             Bytes read
-;                           EDX             Update position
+;           RETURNS:        ECX             Bytes read
+;                           EDX:EAX         Update position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1824,6 +1831,11 @@ write_c_file       Proc far
     push ds
     push bx
 ;
+    or edx,edx
+    stc
+    jz wcfDone
+;
+    mov edx,eax
     mov ds,bx
     cmp edx,ds:file_size
     jbe wcfDo
@@ -1894,7 +1906,10 @@ wcfDoBuf:
 wcfDoCheck:
     jc wcfDone
 ;
-    add edx,eax
+    mov ecx,eax
+    add eax,edx
+    xor edx,edx
+    clc
 
 wcfDone:
     pop bx

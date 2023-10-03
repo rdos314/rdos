@@ -932,7 +932,10 @@ poll_dummy      Endp
 
 poll_file       Proc near
     push edx
+    mov eax,edx
+    xor edx,edx
     ReadCFile
+    mov eax,ecx
     pop edx
     ret
 poll_file       Endp
@@ -1071,7 +1074,12 @@ read_stdin       Proc near
 read_stdin       Endp
 
 read_file       Proc near
+    push edx
+    mov eax,edx
+    xor edx,edx
     ReadCFile
+    mov eax,ecx
+    pop edx
     ret
 read_file       Endp
 

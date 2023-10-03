@@ -2450,11 +2450,12 @@ load_page_app:
     push edx
     push edi
     mov edi,edx
-    mov edx,eax
-    mov ax,ds
-    mov es,ax
-    add edx,[esi].o_phys_offset
+    mov edx,ds
+    mov es,edx
+    add eax,[esi].o_phys_offset
+    xor edx,edx
     ReadCFile
+    mov eax,ecx
     jnc load_page_app_pad
 ;
     xor eax,eax
@@ -2670,6 +2671,8 @@ ciInitApp:
     AllocateLocalMem
     mov ecx,eax
     xor edi,edi
+    mov eax,edx
+    xor edx,edx
     ReadCFile   
     mov ecx,es:peh_image_size
     mov edx,es:peh_image_base
@@ -2743,6 +2746,7 @@ ciObjApp:
     mov ax,ds
     mov es,ax
     mov edi,edx
+    xor eax,eax
     xor edx,edx
     ReadCFile
     pop edx
@@ -2843,9 +2847,10 @@ FixupImage      Proc near
     jz fixup_server
 
 fixup_app:
-    mov edx,[esi].o_phys_offset
-    mov ax,ds
-    mov es,ax
+    mov eax,[esi].o_phys_offset
+    mov edx,ds
+    mov es,edx
+    xor edx,edx
     ReadCFile
     jmp fixup_done
 
@@ -3139,12 +3144,14 @@ is_valid_exe Proc far
     push esi
     push edi
 ;
-    xor edx,edx
     mov eax,SIZE pe_program_struc
     AllocateSmallGlobalMem
     mov ecx,40h
     xor edi,edi
+    xor eax,eax
+    xor edx,edx
     ReadCFile
+    mov ax,cx
     jc iseFail
 ;
     cmp ax,40h
@@ -3159,9 +3166,11 @@ is_valid_exe Proc far
     jne iseFail
 ;
     mov ax,es:[3Ch]
-    movzx edx,ax
+    movzx eax,ax
+    xor edx,edx
     mov ecx,40h
     ReadCFile   
+    mov ax,cx
     jc iseFail
 ;
     mov ax,es:[0]
@@ -3286,15 +3295,16 @@ init_module Proc far
     mov ax,flat_data_sel
     mov ds,ax
 ;
-    xor edx,edx
     mov eax,40h
     AllocateSmallGlobalMem
     mov ecx,eax
     xor edi,edi
+    xor eax,eax
+    xor edx,edx
     ReadCFile
     jc imFail
 ;
-    cmp ax,40h
+    cmp cx,40h
     jne imFail
 ;
     mov ax,es:exeh_signature
@@ -3305,12 +3315,13 @@ init_module Proc far
     cmp ax,40h
     jne imFail
 ;
-    mov ax,es:[3Ch]
-    movzx edx,ax
+    movzx eax,word ptr es:[3Ch]
+    xor edx,edx
     mov ecx,40h
     ReadCFile   
     jc imFail
 ;
+    mov edx,eax
     mov ax,es:[0]
     cmp ax,'EP'
     jne imFail
