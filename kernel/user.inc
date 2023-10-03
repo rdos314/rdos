@@ -48,6 +48,35 @@ LGOP_STIPPLE = 12
 LGOP_ALPHA = 13
 
 ;
+; iomode constants
+;
+
+IO_READ         = 1
+IO_WRITE        = 2
+IO_EOF          = 10h
+IO_BINARY       = 40h
+IO_APPEND       = 80h
+IO_FBF          = 100h
+IO_LBF          = 200h
+IO_NBF          = 400h
+IO_ISTTY        = 1000h
+
+;
+; open constants
+;
+
+O_RDONLY        = 0
+O_WRONLY        = 1
+O_RDWR          = 2
+O_APPEND        = 10h
+O_CREAT         = 20h
+O_TRUNC         = 40h
+O_NOINHERIT     = 80h
+O_TEXT          = 100h
+O_BINARY        = 200h
+O_EXCL          = 400h
+
+;
 ; Segment transfer flags bits
 ;
 

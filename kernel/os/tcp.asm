@@ -38,7 +38,6 @@ INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE tcp.inc
 INCLUDE ..\apicheck.inc
-INCLUDE chandle.inc
 
 Reverse MACRO
     xchg al,ah

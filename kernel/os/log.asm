@@ -35,7 +35,6 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
-INCLUDE ..\os\chandle.inc
 
 data    SEGMENT byte public 'DATA'
 

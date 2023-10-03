@@ -39,7 +39,6 @@ include ..\wait.inc
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE udp.inc
-INCLUDE chandle.inc
 
 BROADCAST_QUERY_PORT    EQU 4094
 

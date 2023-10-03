@@ -37,7 +37,6 @@ INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ..\fs.inc
 INCLUDE ..\wait.inc
-INCLUDE chandle.inc
 INCLUDE ..\debevent.inc
 INCLUDE ..\serv.def
 INCLUDE servdev.def
