@@ -108,7 +108,7 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
-    extern open_vfs_file:near
+    extern OpenVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -809,7 +809,7 @@ open_handle     Proc near
     push ecx
     push edx
 ;  
-    call open_vfs_file
+    call OpenVfsFile
     jnc ohrOpen
 ;  
     OpenCFile
@@ -853,11 +853,26 @@ ohAccessOk:
     or ax,IO_APPEND 
 
 ohAppendOk:
+    push ecx
     mov cx,ax
     mov ax,bx
     call allocate_proc_handle
-    jnc ohDone
+    pop ecx
+    jc ohClose
 ;
+    test cx,O_CREAT OR O_TRUNC
+    jz ohSizeOk
+;
+    int 3
+    xor eax,eax
+    xor edx,edx
+    SetHandleSize64
+
+ohSizeOk:
+    clc
+    jmp ohDone
+
+ohClose:
     movzx ebx,ax
     dec ebx
     shl ebx,4

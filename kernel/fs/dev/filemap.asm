@@ -2820,7 +2820,7 @@ map_vfs_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           open_vfs_file
+;           NAME:           OpenVfsFile
 ;
 ;           DESCRIPTION:    Open VFS file
 ;
@@ -2832,9 +2832,9 @@ map_vfs_file    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public open_vfs_file
+    public OpenVfsFile
 
-open_vfs_file    Proc near
+OpenVfsFile    Proc near
     push ds
     push es
     push fs
@@ -2937,13 +2937,6 @@ ovfSaveHandle:
     mov ds:kfm_handle,bx
 
 ovfOk:
-    test cx,O_CREAT OR O_TRUNC
-    jz ovfSizeOk
-;
-    int 3
-
-ovfSizeOk:
-
     clc
     jmp ovfDone
 
@@ -2962,7 +2955,7 @@ ovfDone:
     pop es
     pop ds
     ret
-open_vfs_file   Endp
+OpenVfsFile   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
