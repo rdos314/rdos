@@ -109,6 +109,7 @@ kfm_user_base     DD ?
 kfm_prog_sel      DW ?
 kfm_file_sel      DW ?
 kfm_kernel_sel    DW ?
+kfm_handle        DW ?
 kfm_next_map      DW ?
 kfm_section       section_typ <>
 kfm_free_count    DB ?
@@ -138,6 +139,8 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern FileHandleToPartFs:near
+    extern AllocateVfsHandle:near
+    extern RefVfsHandle:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2212,6 +2215,7 @@ cpsLoop:
     mov es:kfm_user_base,edx
     mov es:kfm_prog_sel,si
     mov es:kfm_file_sel,ds
+    mov es:kfm_handle,0
 ;
     AllocateGdt
     mov ecx,1000h
@@ -2814,18 +2818,21 @@ mvfDone:
 map_vfs_file    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;       NAME:           open_vfs_file
 ;
-;       DESCRIPTION:    Open VFS file
+;           NAME:           open_vfs_file
 ;
-;       PARAMETERS:     ES:EDI         Pathname
+;           DESCRIPTION:    Open VFS file
 ;
-;       RETURNS:        NC
-;                         BX           Handle
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        BX          File handle entry
+;                           NC          Success
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public open_vfs_file
 
 open_vfs_file    Proc near
     push ds
@@ -2879,10 +2886,21 @@ ovfCopyPath:
     or al,al
     jnz ovfCopyPath
 ;
+    test cx,O_CREAT
+    jz ovfOpen
+
+ovfCreate:
+    mov eax,VFS_CREATE_FILE
+    call RunMsg
+    jnc ovfFound
+    jmp ovfFail
+
+ovfOpen:
     mov eax,VFS_OPEN_FILE
     call RunMsg
     jc ovfFail
-;
+
+ovfFound:
     call GetFileSel
     jc ovfFail
 ;
@@ -2897,14 +2915,35 @@ ovfHasProc:
     call AllocateUserHandle
     jc ovfFail
 ;
-    mov ax,bx
-    mov dx,ds
-    mov cx,SIZE file_handle_seg
-    AllocateHandle
-    mov [ebx].fh_sel,dx
-    mov [ebx].fh_handle,ax
-    mov [ebx].hh_sign,VFS_FILE_HANDLE
-    movzx ebx,[ebx].hh_handle
+    mov ax,ds:kfm_handle
+    or ax,ax
+    jnz ovfRef
+
+ovfAlloc:
+    call AllocateVfsHandle
+    jnc ovfSaveHandle
+;
+    int 3
+    jmp ovfFail
+
+ovfRef:
+    call RefVfsHandle
+    jnc ovfOk
+;
+    int 3
+    jmp ovfAlloc
+
+ovfSaveHandle:
+    mov ds:kfm_handle,bx
+
+ovfOk:
+    test cx,O_CREAT OR O_TRUNC
+    jz ovfSizeOk
+;
+    int 3
+
+ovfSizeOk:
+
     clc
     jmp ovfDone
 
@@ -2923,120 +2962,7 @@ ovfDone:
     pop es
     pop ds
     ret
-open_vfs_file    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           create_vfs_file
-;
-;       DESCRIPTION:    Create VFS file
-;
-;       PARAMETERS:     ES:EDI         Pathname
-;                       ECX            Attribute
-;
-;       RETURNS:        NC
-;                         BX           Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_vfs_file    Proc near
-    push ds
-    push es
-    push fs
-    push gs
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov eax,es
-    mov gs,eax
-;
-    call GetPathDrive
-    jc cvfFail
-;
-    call GetDrivePart
-    or bx,bx
-    jz cvfFail
-;
-    mov ah,es:[edi]
-    cmp ah,'/'
-    je cvfRoot
-;
-    cmp ah,'\'
-    je cvfRoot
-
-cvfRel:
-    call GetRelDir
-    jmp cvfHasStart
-
-cvfRoot:
-    inc edi
-    xor ax,ax
-
-cvfHasStart:
-    mov esi,edi
-    mov fs,bx
-    mov ds,fs:vfsp_disc_sel
-;
-    movzx eax,ax
-    call AllocateMsg
-    jc cvfFail
-
-cvfCopyPath:
-    lods byte ptr gs:[esi]
-    stosb
-    or al,al
-    jnz cvfCopyPath
-;
-    mov eax,VFS_CREATE_FILE
-    call RunMsg
-    jc cvfFail
-;
-    call GetFileSel
-    jc cvfFail
-;
-    mov ds,eax
-    call GetProgSel
-    jnc cvfHasProc
-;
-    call CreateProgSel
-
-cvfHasProc:
-    mov ds,eax
-    call AllocateUserHandle
-    jc cvfFail
-;
-    mov ax,bx
-    mov dx,ds
-    mov cx,SIZE file_handle_seg
-    AllocateHandle
-    mov [ebx].fh_sel,dx
-    mov [ebx].fh_handle,ax
-    mov [ebx].hh_sign,VFS_FILE_HANDLE
-    movzx ebx,[ebx].hh_handle
-    clc
-    jmp cvfDone
-
-cvfFail:
-    stc
-
-cvfDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop eax
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    ret
-create_vfs_file    Endp
+open_vfs_file   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3197,96 +3123,6 @@ cVfs:
     pop ds
     ret
 close_file  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           OpenFile
-;
-;       DESCRIPTION:    Open file
-;
-;       PARAMETERS:     ES:(E)DI       Pathname
-;
-;       RETURNS:        NC
-;                         BX           Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_file_name       DB 'Open VFS File',0
-
-org_open DD ?,?
-
-open_file16  Proc far
-    push edi
-    movzx edi,di
-    call open_vfs_file
-    jnc ovf16Done
-;
-    call fword ptr cs:org_open
-
-ovf16Done:
-    pop edi
-    ret
-open_file16  Endp
-
-open_file32  Proc far
-    call open_vfs_file
-    jnc ovf32Done
-;
-    call fword ptr cs:org_open
-
-ovf32Done:
-    ret
-open_file32  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreateFile
-;
-;       DESCRIPTION:    Create file
-;
-;       PARAMETERS:     ES:(E)DI       Pathname
-;                       CX             Attribute
-;
-;
-;       RETURNS:        NC
-;                         BX           Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_file_name       DB 'Create VFS File',0
-
-org_create DD ?,?
-
-create_file16  Proc far
-    push ecx
-    push edi
-    movzx ecx,cx
-    movzx edi,di
-    call create_vfs_file
-    jnc cvf16Done
-;
-    call fword ptr cs:org_create
-
-cvf16Done:
-    pop edi
-    pop ecx
-    ret
-create_file16  Endp
-
-create_file32  Proc far
-    push ecx
-    movzx ecx,cx
-    call create_vfs_file
-    jnc cvf32Done
-;
-    call fword ptr cs:org_create
-
-cvf32Done:
-    pop ecx
-    ret
-create_file32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3778,24 +3614,6 @@ init_client_file    Proc near
     LinkUserGate
     mov dword ptr fs:org_make_dir,eax
     mov word ptr fs:org_make_dir+4,dx
-;
-    mov ebx,OFFSET open_file16
-    mov esi,OFFSET open_file32
-    mov edi,OFFSET open_file_name
-    mov dx,virt_es_in
-    mov ax,open_file_nr
-    LinkUserGate
-    mov dword ptr fs:org_open,eax
-    mov word ptr fs:org_open+4,dx
-;
-    mov ebx,OFFSET create_file16
-    mov esi,OFFSET create_file32
-    mov edi,OFFSET create_file_name
-    mov dx,virt_es_in
-    mov ax,create_file_nr
-    LinkUserGate
-    mov dword ptr fs:org_create,eax
-    mov word ptr fs:org_create+4,dx
 ;
     mov ebx,OFFSET delete_file16
     mov esi,OFFSET delete_file32

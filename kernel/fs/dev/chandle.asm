@@ -54,7 +54,7 @@ he_ref_count         DW ?
 he_read_wait_sel     DW ?
 he_write_wait_sel    DW ?
 he_exc_wait_sel      DW ?
-he_map_sel           DW ?
+he_handle            DW ?
 he_resv              DW ?
 
 handle_entry_struc    ENDS
@@ -107,6 +107,8 @@ data       ENDS
 code    SEGMENT byte public 'CODE'
     
     assume cs:code
+
+    extern open_vfs_file:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -583,7 +585,6 @@ allocate_proc_handle  Endp
 
 allocate_c_proc_handle_name DB 'Allocate C Proc Handle', 0
 
-
 allocate_c_proc_handle     Proc far
     push ds
     push eax
@@ -638,6 +639,157 @@ allocate_c_proc_handle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateVfsHandle
+;
+;           DESCRIPTION:    Allocate VFS file handle
+;
+;           PARAMETERS:     DS          File sel
+;                           BX          Handle
+;
+;           RETURNS:        BX          Entry handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateVfsHandle
+
+AllocateVfsHandle     Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    push ebx
+    push ds
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:hd_section
+;
+    mov ecx,SYS_BITMAP_COUNT  
+    xor edi,edi
+    mov bx,OFFSET hd_bitmap
+
+avhLoop:
+    mov eax,ds:[bx]
+    not eax
+    bsf edx,eax
+    jnz avhOk
+;
+    add bx,4
+    add edi,32
+;
+    loop avhLoop
+;
+    stc
+    pop edx
+    pop eax
+    jmp avhLeave
+
+avhOk:
+    add edx,edi
+    bts ds:hd_bitmap,edx
+;    
+    mov edi,edx
+    shl edi,4
+    add edi,OFFSET hd_data
+;
+    mov ds:[edi].he_type,C_HANDLE_VFS
+;
+    pop eax
+    mov ds:[edi].he_sel,ax
+;
+    pop eax
+    mov ds:[edi].he_handle,ax
+;
+    mov ds:[edi].he_ref_count,1
+    mov ds:[edi].he_read_wait_sel,0
+    mov ds:[edi].he_write_wait_sel,0
+    mov ds:[edi].he_exc_wait_sel,0
+;
+    mov ebx,edi
+    sub ebx,OFFSET hd_data
+    shr ebx,4
+    inc bx
+    clc
+
+avhLeave:
+    LeaveSection ds:hd_section
+; 
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+AllocateVfsHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RefVfsHandle
+;
+;           DESCRIPTION:    Reference VFS handle
+;
+;           PARAMETERS:     BX          Entry handle
+;                           DS          File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public RefVfsHandle
+
+RefVfsHandle     Proc near
+    push ds
+    push eax
+    push edx
+    push edi
+;
+    mov dx,ds
+    mov ax,SEG data
+    mov ds,eax
+    EnterSection ds:hd_section
+;
+    cmp bx,SYS_BITMAP_COUNT
+    jae rvhLeaveFail
+;
+    or bx,bx
+    jz rvhLeaveFail
+;
+    movzx edi,bx
+    shl edi,4
+    add edi,OFFSET hd_data
+;
+    movzx eax,bx
+    dec eax
+    bt ds:hd_bitmap,eax
+    jnc rvhLeaveFail
+;
+    cmp ds:[edi].he_type,C_HANDLE_VFS
+    jne rvhLeaveFail
+;
+    cmp dx,ds:[edi].he_sel
+    jne rvhLeaveFail
+;
+    add ds:[edi].he_ref_count,1
+    clc
+    jmp rvhLeave
+
+rvhLeaveFail:
+    stc
+
+rvhLeave: 
+    LeaveSection ds:hd_section
+;
+    pop edi
+    pop edx
+    pop eax
+    pop ds
+    ret
+RefVfsHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -656,10 +808,14 @@ open_handle     Proc near
     push eax
     push ecx
     push edx
-;    
+;  
+    call open_vfs_file
+    jnc ohrOpen
+;  
     OpenCFile
     jc ohFail
-;
+
+ohrOpen:
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel

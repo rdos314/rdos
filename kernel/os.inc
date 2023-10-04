@@ -35,6 +35,7 @@ C_HANDLE_STDIN        = 2
 C_HANDLE_STDOUT       = 3
 C_HANDLE_TCP_SOCKET   = 4
 C_HANDLE_UDP_SOCKET   = 5
+C_HANDLE_VFS          = 6
 
 ;
 ; offsets in 16-bit trapgates, vmode
