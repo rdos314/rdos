@@ -3034,7 +3034,7 @@ delete_vfs_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           close_vfs_file
+;       NAME:           CloseVfsFile
 ;
 ;       DESCRIPTION:    Close VFS file
 ;
@@ -3043,7 +3043,9 @@ delete_vfs_file    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_vfs_file  Proc near
+    public CloseVfsFile
+
+CloseVfsFile  Proc near
     call FreeUserHandle
     jnc clvfDone
 ;
@@ -3067,55 +3069,7 @@ clvfCleanup:
 
 clvfDone:
     ret
-close_vfs_file  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           close_vfs_file
-;
-;       DESCRIPTION:    Close file
-;
-;       PARAMETERS:     BX             Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_file_name       DB 'Close VFS File',0
-
-org_close DD ?,?
-
-close_file  Proc far
-    push ds
-    push eax
-    push ebx
-    push esi
-;
-    mov ax,VFS_FILE_HANDLE
-    DerefHandle
-    jnc cVfs
-;
-    pop esi
-    pop ebx
-    pop eax
-    pop ds
-    jmp fword ptr cs:org_close
-
-cVfs:
-    mov esi,ebx
-    mov ax,ds:[ebx].fh_sel
-    mov bx,ds:[ebx].fh_handle
-    mov ds,eax
-    call close_vfs_file
-;
-    mov ebx,esi
-    FreeHandle
-;
-    pop esi
-    pop ebx
-    pop eax
-    pop ds
-    ret
-close_file  Endp
+CloseVfsFile  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3533,47 +3487,6 @@ make_dir32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           Delete handle
-;
-;           DESCRIPTION:    Delete a handle (called from handle module)
-;
-;           PARAMETERS:     BX              HANDLE TO FILE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_handle   Proc far
-    push ds
-    push ax
-    push ebx
-    push edx
-    push esi
-;
-    mov ax,VFS_FILE_HANDLE
-    DerefHandle
-    jc dhDone
-;
-    mov esi,ebx
-    mov ax,ds:[ebx].fh_sel
-    mov bx,ds:[ebx].fh_handle
-    mov ds,eax
-    call close_vfs_file
-;
-    mov ebx,esi
-    FreeHandle
-    clc
-
-dhDone:
-    pop esi
-    pop edx
-    pop ebx
-    pop ax
-    pop ds
-    ret
-delete_handle   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           init_client_file
 ;
 ;       description:    Init file
@@ -3594,10 +3507,6 @@ init_client_file    Proc near
     AllocateGdt
     CreateDataSelector32
     mov fs,bx
-;
-    mov edi,OFFSET delete_handle
-    mov ax,VFS_FILE_HANDLE
-    RegisterHandle
 ;
     mov ebx,OFFSET make_dir16
     mov esi,OFFSET make_dir32
@@ -3634,15 +3543,6 @@ init_client_file    Proc near
     LinkUserGate
     mov dword ptr fs:org_read,eax
     mov word ptr fs:org_read+4,dx
-;
-    mov ebx,OFFSET close_file
-    mov esi,OFFSET close_file
-    mov edi,OFFSET close_file_name
-    xor dx,dx
-    mov ax,close_file_nr
-    LinkUserGate
-    mov dword ptr fs:org_close,eax
-    mov word ptr fs:org_close+4,dx
 ;
     mov esi,OFFSET set_file_size64
     mov edi,OFFSET set_file_size64_name

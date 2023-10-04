@@ -109,6 +109,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern OpenVfsFile:near
+    extern CloseVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -333,13 +334,14 @@ ntLoop:
 ;
     xor ax,ax
     xchg ax,ds:[ebx].he_sel
-    mov bx,ds:[ebx].he_type
+    movzx ebp,ds:[ebx].he_type
+    mov bx,ds:[ebx].he_handle
     btc ds:hd_bitmap,ecx
 ;
-    cmp ebx,10
+    cmp ebp,10
     jae ntLeave
 ;
-    call dword ptr cs:[4*ebx].close_tab
+    call dword ptr cs:[4*ebp].close_tab
 
 ntLeave:
     LeaveSection ds:hd_section
@@ -808,6 +810,7 @@ open_handle     Proc near
     push eax
     push ecx
     push edx
+    push ebp
 ;  
     call OpenVfsFile
     jnc ohrOpen
@@ -886,13 +889,14 @@ ohClose:
 ;
     xor ax,ax
     xchg ax,ds:[ebx].he_sel
-    mov bx,ds:[ebx].he_type
+    movzx ebp,ds:[ebx].he_type
+    mov bx,ds:[ebx].he_handle
     btc ds:hd_bitmap,ecx
 ;
-    cmp ebx,10
+    cmp ebp,10
     jae ohLeaveFail
 ;
-    call dword ptr cs:[4*ebx].close_tab
+    call dword ptr cs:[4*ebp].close_tab
 
 ohLeaveFail:
     LeaveSection ds:hd_section
@@ -902,6 +906,7 @@ ohFail:
     jmp ohDone
 
 ohDone:
+    pop ebp
     pop edx
     pop ecx
     pop eax
@@ -959,6 +964,14 @@ close_udp_socket	Proc near
     ret
 close_udp_socket	Endp
 
+close_vfs      Proc near
+    push ds
+    mov ds,eax
+    call CloseVfsFile
+    pop ds
+    ret
+close_vfs      Endp
+
 close_tab:
 ct00  DD OFFSET close_dummy
 ct01  DD OFFSET close_file
@@ -966,7 +979,7 @@ ct02  DD OFFSET close_dummy
 ct03  DD OFFSET close_dummy
 ct04  DD OFFSET close_tcp_socket
 ct05  DD OFFSET close_udp_socket
-ct06  DD OFFSET close_dummy
+ct06  DD OFFSET close_vfs
 ct07  DD OFFSET close_dummy
 ct08  DD OFFSET close_dummy
 ct09  DD OFFSET close_dummy
@@ -977,6 +990,7 @@ close_handle     Proc far
     push eax
     push ecx
     push edx
+    push ebp
 ;
     GetThread
     mov ds,eax
@@ -1016,13 +1030,14 @@ close_handle     Proc far
 ;
     xor ax,ax
     xchg ax,ds:[ebx].he_sel
-    mov bx,ds:[ebx].he_type
+    movzx ebp,ds:[ebx].he_type
+    mov bx,ds:[ebx].he_handle
     btc ds:hd_bitmap,ecx
 ;
-    cmp ebx,10
+    cmp ebp,10
     jae chLeave
 ;
-    call dword ptr cs:[4*ebx].close_tab
+    call dword ptr cs:[4*ebp].close_tab
 
 chLeave:
     LeaveSection ds:hd_section
@@ -1033,6 +1048,7 @@ chFail:
     mov ebx,-1
 
 chDone:
+    pop ebp
     pop edx
     pop ecx
     pop eax
@@ -1697,14 +1713,14 @@ dup2_handle     Proc far
 ;
     xor ax,ax
     xchg ax,ds:[ebx].he_sel
-    mov bx,ds:[ebx].he_type
+    mov bx,ds:[ebx].he_handle
+    movzx ebp,ds:[ebx].he_type
     btc ds:hd_bitmap,ecx
 ;
-    cmp bx,10
+    cmp ebp,10
     jae d2hOkLeave
 ;
-    movzx ebx,bx
-    call dword ptr cs:[4*ebx].close_tab
+    call dword ptr cs:[4*ebp].close_tab
 
 d2hOkLeave:
     LeaveSection ds:hd_section
