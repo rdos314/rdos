@@ -26,6 +26,16 @@
 #define FILE_ATTRIBUTE_ARCHIVE          0x20
 #define FILE_ATTRIBUTE_NORMAL           0x80
 
+#define O_RDONLY        0
+#define O_WRONLY        0x1
+#define O_RDWR          0x2
+#define O_APPEND        0x10
+#define O_CREAT         0x20
+#define O_TRUNC         0x40
+#define O_NOINHERIT     0x80
+#define O_EXCL          0x400
+
+
 #define LGOP_NULL  0
 #define LGOP_NONE  1
 #define LGOP_OR  2

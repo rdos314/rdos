@@ -13,20 +13,8 @@ void main()
     int delay;
     long long size;
 
-    handle = RdosOpenFile("y:/ABcd-long-name.txt", 0);
-
-    for (i = 0; i < 1000; i++)
-    {
-        size = RdosGetRandom(1000000);
-        delay = RdosGetRandom(500);
-
-        printf("Delay: %d, Size: %lld\r\n", delay, size);
-
-        RdosWaitMilli(delay);
-        RdosSetFileSize64(handle, size);
-    }        
-
-    RdosCloseFile(handle);
+    handle = RdosOpenHandle("y:/ABcd-long-name.txt", O_RDWR);
+    RdosCloseHandle(handle);
 
 
 //    RdosTestGate("");
