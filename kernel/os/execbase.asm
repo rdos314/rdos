@@ -982,7 +982,7 @@ OpenModuleFile Proc near
     mov es,eax
     mov edi,esi
 ;
-    mov cx,O_RDONLY OR O_BINARY
+    mov cx,O_RDONLY
     OpenKernelFile
     jnc omfDone
 ;
@@ -1069,7 +1069,7 @@ omfNameLoop:
 ;
     push bx
     xor edi,edi
-    mov cx,O_RDONLY OR O_BINARY
+    mov cx,O_RDONLY
     OpenKernelFile
     jnc omfFileOk
 ;

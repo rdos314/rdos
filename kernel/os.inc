@@ -2599,7 +2599,6 @@ OpenCFile MACRO
 
 ; IN  BX        C handle
 ; IN  CX        Mode
-; IN  EDX       Position
 ; OUT BX        Process handle
 AllocateCProcHandle MACRO
     OsGate allocate_c_proc_handle_nr

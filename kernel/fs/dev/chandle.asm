@@ -25,19 +25,19 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-INCLUDE protseg.def
-INCLUDE system.def
+INCLUDE ..\os\protseg.def
+INCLUDE ..\os\system.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 include ..\wait.inc
 INCLUDE ..\driver.def
-INCLUDE exec.def
+INCLUDE ..\os\exec.def
 
     .386p
 
-MAX_HANDLES           = 256
+MAX_HANDLES           = 512
 SYS_HANDLE_COUNT      = 1024
 SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
 HANDLE_WAIT_OBJ_COUNT = 8
@@ -59,6 +59,18 @@ he_resv              DW ?
 
 handle_entry_struc    ENDS
 
+;
+; this should always be 16 bytes!
+
+handle_proc_struc       STRUC
+
+hp_pos          DD ?,?
+hp_handle       DW ?
+hp_access       DW ?
+hp_resv         DW ?,?
+
+handle_proc_struc       ENDS
+
 
 handle_wait_struc     STRUC
 
@@ -68,22 +80,10 @@ hw_arr               DW HANDLE_WAIT_OBJ_COUNT DUP(?)
 
 handle_wait_struc     ENDS
 
-;
-; this should always be 8 bytes!
-
-handle_proc_struc       STRUC
-
-hp_handle       DW ?
-hp_access       DW ?
-hp_pos          DD ?
-
-handle_proc_struc       ENDS
-
 handle_struc    STRUC
 
 h_section       section_typ <>
-
-h_arr           DB MAX_HANDLES * size handle_proc_struc DUP(?)
+h_arr           DD 4 * MAX_HANDLES DUP(?)
 
 handle_struc    ENDS
 
@@ -148,24 +148,28 @@ create_c_handle Proc far
     mov ds:[edi].hp_handle,1
     mov ds:[edi].hp_access,IO_READ OR IO_ISTTY
     mov ds:[edi].hp_pos,0
+    mov ds:[edi].hp_pos+4,0
 ;
-    add edi,SIZE handle_proc_struc
+    add edi,16
     mov ds:[edi].hp_handle,2
     mov ds:[edi].hp_access,IO_WRITE OR IO_ISTTY
     mov ds:[edi].hp_pos,0
+    mov ds:[edi].hp_pos+4,0
 ;
-    add edi,SIZE handle_proc_struc
+    add edi,16
     mov ds:[edi].hp_handle,2
     mov ds:[edi].hp_access,IO_WRITE OR IO_ISTTY
     mov ds:[edi].hp_pos,0
+    mov ds:[edi].hp_pos+4,0
 ;    
     mov ecx,MAX_HANDLES - 3
 
 nsLoop:
-    add edi,SIZE handle_proc_struc
+    add edi,16
     mov ds:[edi].hp_handle,0
     mov ds:[edi].hp_access,0
     mov ds:[edi].hp_pos,0
+    mov ds:[edi].hp_pos+4,0
     loop nsLoop
 ;    
     InitSection ds:h_section
@@ -215,12 +219,13 @@ ncLoop:
     push ebx
     push ecx
 ;
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
 ;
     mov es:[ebx].hp_handle,0
     mov es:[ebx].hp_access,0
     mov es:[ebx].hp_pos,0
+    mov es:[ebx].hp_pos+4,0
 ;
     EnterSection ds:h_section
     mov ax,ds:[ebx].hp_handle
@@ -296,13 +301,14 @@ ntLoop:
     push ebx
     push ecx
 ;
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     EnterSection ds:h_section
     xor ax,ax
     xchg ax,ds:[ebx].hp_handle
     mov ds:[ebx].hp_access,0
     mov ds:[ebx].hp_pos,0
+    mov ds:[ebx].hp_pos+4,0
     LeaveSection ds:h_section
 ;
     cmp ax,SYS_HANDLE_COUNT
@@ -331,8 +337,7 @@ ntLoop:
     cmp ebx,10
     jae ntLeave
 ;
-    shl ebx,2
-    call dword ptr cs:[ebx].close_tab
+    call dword ptr cs:[4*ebx].close_tab
 
 ntLeave:
     LeaveSection ds:hd_section
@@ -388,7 +393,7 @@ allocate_c_handle     Proc far
     mov ds,ax
     EnterSection ds:hd_section
 ;
-    mov cx,SYS_BITMAP_COUNT  
+    mov ecx,SYS_BITMAP_COUNT  
     xor edi,edi
     mov bx,OFFSET hd_bitmap
 
@@ -440,7 +445,7 @@ achLeave:
     pop ecx
     pop eax
     pop ds
-    retf32
+    ret
 allocate_c_handle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -463,7 +468,7 @@ ref_c_handle     Proc far
     push edi
 ;
     mov di,SEG data
-    mov ds,di
+    mov ds,edi
     EnterSection ds:hd_section
 ;
     cmp bx,SYS_BITMAP_COUNT
@@ -518,47 +523,47 @@ ref_c_handle  Endp
 ;           PARAMETERS:     DS          C handle sel
 ;                           AX          C Handle
 ;                           CX          Mode
-;                           EDX         Position
 ;
 ;           RETURNS:        BX          Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_proc_handle     Proc near
-    push dx
+    push edx
 ;    
-    push cx
-    mov cx,MAX_HANDLES
-    mov bx,OFFSET h_arr
+    push ecx
+    mov ecx,MAX_HANDLES
+    mov ebx,OFFSET h_arr
     EnterSection ds:h_section
 
 aphLoop:    
-    mov dx,ds:[bx].hp_handle
+    mov dx,ds:[ebx].hp_handle
     or dx,dx
     jz aphFound
 ;
-    add bx,SIZE handle_proc_struc
+    add ebx,16
     loop aphLoop
 ;
-    pop cx
+    pop ecx
     LeaveSection ds:h_section
     stc
     jmp aphDone
 
 aphFound:    
-    pop cx
-    mov ds:[bx].hp_handle,ax
-    mov ds:[bx].hp_access,cx
-    mov ds:[bx].hp_pos,edx
+    pop ecx
+    mov ds:[ebx].hp_handle,ax
+    mov ds:[ebx].hp_access,cx
+    mov ds:[ebx].hp_pos,0
+    mov ds:[ebx].hp_pos+4,0
     LeaveSection ds:h_section
 ;
-    sub bx,OFFSET h_arr
-    shr bx,3
+    sub ebx,OFFSET h_arr
+    shr ebx,4
     clc
     movzx ebx,bx
 
 aphDone:   
-    pop dx
+    pop edx
     ret
 allocate_proc_handle  Endp   
         
@@ -571,7 +576,6 @@ allocate_proc_handle  Endp
 ;
 ;           PARAMETERS:     BX          C Handle
 ;                           CX          Mode
-;                           EDX         Position
 ;
 ;           RETURNS:        BX          Handle
 ;
@@ -582,9 +586,9 @@ allocate_c_proc_handle_name DB 'Allocate C Proc Handle', 0
 
 allocate_c_proc_handle     Proc far
     push ds
-    push ax
-    push cx
-    push dx
+    push eax
+    push ecx
+    push edx
 ;
     GetThread
     mov ds,ax
@@ -592,42 +596,43 @@ allocate_c_proc_handle     Proc far
     mov ds,ds:pf_c_handle_sel
 ;    
     mov ax,bx
-    push cx
-    mov cx,MAX_HANDLES
-    mov bx,OFFSET h_arr
+    push ecx
+    mov ecx,MAX_HANDLES
+    mov ebx,OFFSET h_arr
     EnterSection ds:h_section
 
 acphLoop:    
-    mov dx,ds:[bx].hp_handle
+    mov dx,ds:[ebx].hp_handle
     or dx,dx
     jz acphFound
 ;
-    add bx,SIZE handle_proc_struc
+    add bx,16
     loop acphLoop
 ;
-    pop cx
+    pop ecx
     LeaveSection ds:h_section
     stc
     jmp acphDone
 
 acphFound:    
-    pop cx
-    mov ds:[bx].hp_handle,ax
-    mov ds:[bx].hp_access,cx
-    mov ds:[bx].hp_pos,edx
+    pop ecx
+    mov ds:[ebx].hp_handle,ax
+    mov ds:[ebx].hp_access,cx
+    mov ds:[ebx].hp_pos,0
+    mov ds:[ebx].hp_pos+4,0
     LeaveSection ds:h_section
 ;
-    sub bx,OFFSET h_arr
-    shr bx,3
+    sub ebx,OFFSET h_arr
+    shr ebx,4
     clc
     movzx ebx,bx
 
 acphDone:   
-    pop dx
-    pop cx
-    pop ax
+    pop edx
+    pop ecx
+    pop eax
     pop ds
-    retf32
+    ret
 allocate_c_proc_handle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -686,12 +691,6 @@ ohWrOnly:
     mov ax,IO_WRITE
 
 ohAccessOk:
-    test cx,O_BINARY
-    jz ohTextOk
-;
-    or ax,IO_BINARY
-
-ohTextOk:
     test cx,O_APPEND
     jz ohAppendOk
 ;
@@ -700,7 +699,6 @@ ohTextOk:
 ohAppendOk:
     mov cx,ax
     mov ax,bx
-    xor edx,edx
     call allocate_proc_handle
     jnc ohDone
 ;
@@ -723,8 +721,7 @@ ohAppendOk:
     cmp ebx,10
     jae ohLeaveFail
 ;
-    shl ebx,2
-    call dword ptr cs:[ebx].close_tab
+    call dword ptr cs:[4*ebx].close_tab
 
 ohLeaveFail:
     LeaveSection ds:hd_section
@@ -754,7 +751,6 @@ open_handle32    PROC far
     ret
 open_handle32    ENDP
         
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -820,7 +816,7 @@ close_handle     Proc near
     jae chFail
 ;
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     EnterSection ds:h_section
     xor ax,ax
@@ -837,6 +833,7 @@ close_handle     Proc near
 ;
     movzx ebx,ax
     dec ebx
+    mov ecx,ebx
     shl ebx,4
     add ebx,OFFSET hd_data
     mov eax,SEG data
@@ -854,8 +851,7 @@ close_handle     Proc near
     cmp ebx,10
     jae chLeave
 ;
-    shl ebx,2
-    call dword ptr cs:[ebx].close_tab
+    call dword ptr cs:[4*ebx].close_tab
 
 chLeave:
     LeaveSection ds:hd_section
@@ -902,7 +898,7 @@ c_handle_to_file_sel     Proc near
     jae chfsFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
 ;
     mov ax,ds:[ebx].hp_handle
@@ -1002,9 +998,10 @@ poll_handle     Proc near
     cmp bx,MAX_HANDLES
     jae phFail
 ;   
-    shl bx,3
-    add bx,OFFSET h_arr
-    mov si,ds:[bx].hp_access
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov si,ds:[ebx].hp_access
     test si,IO_READ
     jz phFail
 ;
@@ -1028,8 +1025,7 @@ poll_handle     Proc near
 ;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].poll_tab
+    call dword ptr cs:[4*ebp].poll_tab
 ;
     pop ebx
     pop ds
@@ -1096,12 +1092,7 @@ read_stdin       Proc near
 read_stdin       Endp
 
 read_file       Proc near
-    push edx
-    mov eax,edx
-    xor edx,edx
     ReadCFile
-    mov eax,ecx
-    pop edx
     ret
 read_file       Endp
 
@@ -1143,46 +1134,42 @@ read_handle     Proc near
     jae rhFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov si,ds:[ebx].hp_access
     test si,IO_READ
     jz rhFail
 ;
-    mov edx,ds:[ebx].hp_pos
-    mov ax,ds:[ebx].hp_handle
+    mov eax,ds:[ebx].hp_pos
+    mov edx,ds:[ebx].hp_pos+4
+    mov bp,ds:[ebx].hp_handle
 ;
-    cmp ax,SYS_HANDLE_COUNT
+    cmp bp,SYS_HANDLE_COUNT
     jae rhFail
 ;    
-    or ax,ax
+    or bp,bp
     jz rhFail
 ;
     push ds
     push ebx
 ;
-    movzx ebx,ax
+    movzx ebx,bp
     dec ebx
     shl ebx,4
     add ebx,OFFSET hd_data
     mov eax,SEG data
     mov ds,eax
 ;
-    test si,IO_BINARY
-    jnz rhBinary
-;
-
-rhBinary:
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].read_tab
+    call dword ptr cs:[4*ebp].read_tab
 ;
     pop ebx
     pop ds
     jc rhFail
 ;
-    mov ds:[bx].hp_pos,edx
+    mov ds:[ebx].hp_pos,eax
+    mov ds:[ebx].hp_pos+4,edx
     jmp rhDone
 
 rhFail:
@@ -1270,8 +1257,6 @@ wt07  DD OFFSET write_dummy
 wt08  DD OFFSET write_dummy
 wt09  DD OFFSET write_dummy
 
-txt_cr_lf  DB 0dh, 0ah
-
 write_handle     Proc near
     push ds
     push ebx
@@ -1289,25 +1274,27 @@ write_handle     Proc near
     cmp bx,MAX_HANDLES
     jae whFail
 ;   
-    shl bx,3
-    add bx,OFFSET h_arr
-    mov si,ds:[bx].hp_access
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov si,ds:[ebx].hp_access
     test si,IO_WRITE
     jz whFail
 ;
-    mov edx,ds:[bx].hp_pos
-    mov ax,ds:[bx].hp_handle
+    mov eax,ds:[ebx].hp_pos
+    mov edx,ds:[ebx].hp_pos+4
+    mov bp,ds:[bx].hp_handle
 ;
-    cmp ax,SYS_HANDLE_COUNT
+    cmp bp,SYS_HANDLE_COUNT
     jae whFail
 ;    
-    or ax,ax
+    or bp,bp
     jz whFail
 ;
     push ds
     push ebx
 ;
-    movzx ebx,ax
+    movzx ebx,bp
     dec ebx
     shl ebx,4
     add ebx,OFFSET hd_data
@@ -1320,117 +1307,22 @@ write_handle     Proc near
     push ebx
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].get_size_tab
+    call dword ptr cs:[4*ebp].get_size_tab
     pop ebx
-    jc whPosOk
-;
-    mov edx,eax
 
 whPosOk:
-    test si,IO_BINARY
-    jnz whBinary
-;
-    push ecx
-    push edi
-;
-    or ecx,ecx
-    clc
-    jz whTextOk
-;
-    mov esi,edi
-
-whTextLoop:
-    mov al,es:[esi]
-    cmp al,0ah
-    jne whTextNext
-;
-    cmp esi,edi
-    jz whTextAddCrLf
-;
-    mov al,es:[esi-1]
-    cmp al,0dh
-    je whTextNext
-
-whTextAddCrLf:
-    mov eax,esi
-    sub eax,edi
-    or eax,eax
-;
-    push eax
-    push ebx
-    push ecx
-    push edi
-    push ebp
-    jz whTextBeforeOk
-;
-    push ebx
-    mov ecx,eax
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].write_tab
-    pop ebx
-
-whTextBeforeOk:
-    push es
-    mov ecx,cs
-    mov es,ecx
-    mov edi,OFFSET txt_cr_lf
-    mov ecx,2
-    mov ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].write_tab
-    pop es
-;
-    pop ebp
-    pop edi
-    pop ecx
-    pop ebx
-    pop eax
-;
-    add edi,eax
-    sub ecx,1
-    clc
-    jz whTextOk
-;
-    inc edi
-    mov esi,edi
-    jmp whTextLoop
-    
-whTextNext:
-    inc esi
-    sub ecx,1
-    jnz whTextLoop
-;
-    mov ecx,esi
-    sub ecx,edi
-    clc
-    jz whTextOk
-;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].write_tab
-    
-whTextOk:
-    pop edi
-    pop eax
-    jmp whWriteOk
-
-whBinary:
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].write_tab
+    call dword ptr cs:[4*ebp].write_tab
 
 whWriteOk:
     pop ebx
     pop ds
     jc whFail
 ;
-    mov ds:[ebx].hp_pos,edx
+    mov ds:[ebx].hp_pos,eax
+    mov ds:[ebx].hp_pos+4,edx
+    mov eax,ecx
     jmp whDone
 
 whFail:
@@ -1498,7 +1390,7 @@ dup_handle     Proc near
     jae dhFail
 ;   
     movzx esi,bx
-    shl esi,3
+    shl esi,4
     add esi,OFFSET h_arr
     mov ax,ds:[esi].hp_handle
 ;
@@ -1516,10 +1408,19 @@ dup_handle     Proc near
     add edi,OFFSET hd_data
 ;
     mov cx,ds:[esi].hp_access
-    mov edx,ds:[esi].hp_pos
+    push ds:[esi].hp_pos
+    push ds:[esi].hp_pos+4
     call allocate_proc_handle
+    pop edx
+    pop eax
     jc dhFail
 ;
+    movzx esi,bx
+    shl esi,4
+    add esi,OFFSET h_arr
+    mov ds:[esi].hp_pos,eax
+    mov ds:[esi].hp_pos+4,edx
+;    
     inc es:[edi].he_ref_count
     jmp dhDone
 
@@ -1573,7 +1474,7 @@ dup2_handle     Proc near
     jae d2hFail
 ;   
     movzx esi,bx
-    shl esi,3
+    shl esi,4
     add esi,OFFSET h_arr
     mov ax,ds:[esi].hp_handle
     or ax,ax
@@ -1595,13 +1496,15 @@ dup2_handle     Proc near
     pop eax
 ;
     mov ebp,edi
-    shl edi,3
+    shl edi,4
     add edi,OFFSET h_arr
     EnterSection ds:h_section
     mov dx,ds:[esi].hp_access
     mov ds:[edi].hp_access,dx
     mov edx,ds:[esi].hp_pos
     mov ds:[edi].hp_pos,edx
+    mov edx,ds:[esi].hp_pos+4
+    mov ds:[edi].hp_pos+4,edx
     xchg ax,ds:[edi].hp_handle
     LeaveSection ds:h_section
 ;
@@ -1630,8 +1533,7 @@ dup2_handle     Proc near
     jae d2hOkLeave
 ;
     movzx ebx,bx
-    shl ebx,2
-    call dword ptr cs:[ebx].close_tab
+    call dword ptr cs:[4*ebx].close_tab
 
 d2hOkLeave:
     LeaveSection ds:hd_section
@@ -1707,7 +1609,7 @@ get_handle_size32     Proc far
     jae ghsFail32
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
 ;
@@ -1726,8 +1628,7 @@ get_handle_size32     Proc far
 ;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].get_size_tab
+    call dword ptr cs:[4*ebp].get_size_tab
     jnc ghsDone32  
 
 ghsFail32:
@@ -1743,11 +1644,11 @@ get_handle_size32     Endp
 
 get_handle_size64     Proc far
     push ds
-    push bx
-    push bp
+    push ebx
+    push ebp
 ;
     GetThread
-    mov ds,ax
+    mov ds,eax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
 ;    
@@ -1755,7 +1656,7 @@ get_handle_size64     Proc far
     jae ghsFail64
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
 ;
@@ -1774,11 +1675,9 @@ get_handle_size64     Proc far
 ;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].get_size_tab
+    call dword ptr cs:[4*ebp].get_size_tab
     jc ghsFail64
 ;
-    xor edx,edx
     clc
     jmp ghsDone64
 
@@ -1839,7 +1738,8 @@ set_handle_size32     Proc far
     push edx
     push ebp
 ;
-    mov edx,eax
+    push eax
+;
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
@@ -1849,7 +1749,7 @@ set_handle_size32     Proc far
     jae shsFail32
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
 ;
@@ -1866,14 +1766,16 @@ set_handle_size32     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    mov eax,edx
+    pop eax
+    xor edx,edx
+;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].set_size_tab
+    call dword ptr cs:[4*ebp].set_size_tab
     jnc shsDone32
 
 shsFail32:
+    pop eax
     mov eax,-1
     stc
 
@@ -1888,11 +1790,11 @@ set_handle_size32     Endp
 set_handle_size64     Proc far
     push ds
     push ebx
-    push esi
     push ebp
 ;
-    mov esi,edx
-    mov edx,eax
+    push eax
+    push edx
+;
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
@@ -1902,7 +1804,7 @@ set_handle_size64     Proc far
     jae shsFail64
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
 ;
@@ -1919,15 +1821,17 @@ set_handle_size64     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    mov eax,edx
-    mov edx,esi
+    pop edx
+    pop eax
+;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
-    shl ebp,2
-    call dword ptr cs:[ebp].set_size_tab
+    call dword ptr cs:[4*ebp].set_size_tab
     jnc shsDone64
 
 shsFail64:
+    pop edx
+    pop eax
     mov eax,-1
     mov edx,-1
     stc
@@ -1955,10 +1859,6 @@ set_handle_size64     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_handle_create_time_name  DB 'Get C Handle Create Time', 0
-get_handle_modify_time_name  DB 'Get C Handle Modify Time', 0
-get_handle_access_time_name  DB 'Get C Handle Access Time', 0
-
 get_time_dummy      Proc near
     stc
     ret
@@ -1969,19 +1869,21 @@ get_time_file       Proc near
     ret
 get_time_file       Endp
 
-get_time_tab:
-gtt00  DD OFFSET get_time_dummy
-gtt01  DD OFFSET get_time_file
-gtt02  DD OFFSET get_time_dummy
-gtt03  DD OFFSET get_time_dummy
-gtt04  DD OFFSET get_time_dummy
-gtt05  DD OFFSET get_time_dummy
-gtt06  DD OFFSET get_time_dummy
-gtt07  DD OFFSET get_time_dummy
-gtt08  DD OFFSET get_time_dummy
-gtt09  DD OFFSET get_time_dummy
+get_handle_create_time_name  DB 'Get C Handle Create Time', 0
 
-get_handle_time     Proc far
+get_create_time_tab:
+gctt00  DD OFFSET get_time_dummy
+gctt01  DD OFFSET get_time_file
+gctt02  DD OFFSET get_time_dummy
+gctt03  DD OFFSET get_time_dummy
+gctt04  DD OFFSET get_time_dummy
+gctt05  DD OFFSET get_time_dummy
+gctt06  DD OFFSET get_time_dummy
+gctt07  DD OFFSET get_time_dummy
+gctt08  DD OFFSET get_time_dummy
+gctt09  DD OFFSET get_time_dummy
+
+get_handle_create_time     Proc far
     push ds
     push ebx
     push ebp
@@ -1992,18 +1894,18 @@ get_handle_time     Proc far
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
-    jae ghtFail
+    jae ghctFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
 ;
     cmp ax,SYS_HANDLE_COUNT
-    jae ghtFail
+    jae ghctFail
 ;    
     or ax,ax
-    jz ghtFail
+    jz ghctFail
 ;
     movzx ebx,ax
     dec ebx
@@ -2014,19 +1916,141 @@ get_handle_time     Proc far
 ;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
-    call dword ptr cs:[4*ebp].get_time_tab
-    jnc ghtDone
+    call dword ptr cs:[4*ebp].get_create_time_tab
+    jnc ghctDone
 
-ghtFail:
+ghctFail:
     mov eax,-1
     mov edx,-1
 
-ghtDone:
+ghctDone:
     pop ebp
     pop ebx
     pop ds    
     ret
-get_handle_time     Endp        
+get_handle_create_time     Endp        
+
+get_handle_modify_time_name  DB 'Get C Handle Modify Time', 0
+
+get_modify_time_tab:
+gmtt00  DD OFFSET get_time_dummy
+gmtt01  DD OFFSET get_time_file
+gmtt02  DD OFFSET get_time_dummy
+gmtt03  DD OFFSET get_time_dummy
+gmtt04  DD OFFSET get_time_dummy
+gmtt05  DD OFFSET get_time_dummy
+gmtt06  DD OFFSET get_time_dummy
+gmtt07  DD OFFSET get_time_dummy
+gmtt08  DD OFFSET get_time_dummy
+gmtt09  DD OFFSET get_time_dummy
+
+get_handle_modify_time     Proc far
+    push ds
+    push ebx
+    push ebp
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ghmtFail
+;   
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov ax,ds:[ebx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ghmtFail
+;    
+    or ax,ax
+    jz ghmtFail
+;
+    movzx ebx,ax
+    dec ebx
+    shl ebx,4
+    add ebx,OFFSET hd_data
+    mov eax,SEG data
+    mov ds,eax
+;
+    movzx ebp,ds:[ebx].he_type
+    mov bx,ds:[ebx].he_sel
+    call dword ptr cs:[4*ebp].get_modify_time_tab
+    jnc ghmtDone
+
+ghmtFail:
+    mov eax,-1
+    mov edx,-1
+
+ghmtDone:
+    pop ebp
+    pop ebx
+    pop ds    
+    ret
+get_handle_modify_time     Endp        
+
+get_handle_access_time_name  DB 'Get C Handle Access Time', 0
+
+get_access_time_tab:
+gatt00  DD OFFSET get_time_dummy
+gatt01  DD OFFSET get_time_file
+gatt02  DD OFFSET get_time_dummy
+gatt03  DD OFFSET get_time_dummy
+gatt04  DD OFFSET get_time_dummy
+gatt05  DD OFFSET get_time_dummy
+gatt06  DD OFFSET get_time_dummy
+gatt07  DD OFFSET get_time_dummy
+gatt08  DD OFFSET get_time_dummy
+gatt09  DD OFFSET get_time_dummy
+
+get_handle_access_time     Proc far
+    push ds
+    push ebx
+    push ebp
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ghatFail
+;   
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov ax,ds:[ebx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ghatFail
+;    
+    or ax,ax
+    jz ghatFail
+;
+    movzx ebx,ax
+    dec ebx
+    shl ebx,4
+    add ebx,OFFSET hd_data
+    mov eax,SEG data
+    mov ds,eax
+;
+    movzx ebp,ds:[ebx].he_type
+    mov bx,ds:[ebx].he_sel
+    call dword ptr cs:[4*ebp].get_access_time_tab
+    jnc ghatDone
+
+ghatFail:
+    mov eax,-1
+    mov edx,-1
+
+ghatDone:
+    pop ebp
+    pop ebx
+    pop ds    
+    ret
+get_handle_access_time     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2069,9 +2093,10 @@ stt09  DD OFFSET set_time_dummy
 set_handle_time     Proc far
     push ds
     push ebx
-    push edx
-    push esi
     push ebp
+;
+    push eax
+    push edx
 ;
     mov esi,eax
     GetThread
@@ -2083,7 +2108,7 @@ set_handle_time     Proc far
     jae shtFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
 ;
@@ -2100,7 +2125,9 @@ set_handle_time     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    mov eax,esi
+    pop edx
+    pop eax
+;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
     call dword ptr cs:[4*ebp].set_time_tab
@@ -2108,12 +2135,12 @@ set_handle_time     Proc far
     jnc shtDone
 
 shtFail:
+    pop edx
+    pop eax
     mov eax,-1
 
 shtDone:
     pop ebp
-    pop esi
-    pop edx
     pop ebx
     pop ds    
     ret
@@ -2136,28 +2163,29 @@ get_handle_mode_name  DB 'Get C Handle Mode', 0
 
 get_handle_mode     Proc far
     push ds
-    push bx
+    push ebx
 ;
     GetThread
-    mov ds,ax
+    mov ds,eax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae ghmFail
 ;   
-    shl bx,3
-    add bx,OFFSET h_arr
-    movzx eax,ds:[bx].hp_access
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    movzx eax,ds:[ebx].hp_access
     jmp ghmDone
 
 ghmFail:
     mov eax,-1
 
 ghmDone:
-    pop bx
+    pop ebx
     pop ds    
-    retf32
+    ret
 get_handle_mode     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2178,21 +2206,22 @@ set_handle_mode_name  DB 'Set C Handle Mode', 0
 
 set_handle_mode     Proc far
     push ds
-    push bx
-    push dx
+    push ebx
+    push edx
 ;
-    mov dx,ax
+    mov edx,eax
     GetThread
-    mov ds,ax
+    mov ds,eax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae shmFail
 ;   
-    shl bx,3
-    add bx,OFFSET h_arr
-    mov ds:[bx].hp_access,dx
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov ds:[ebx].hp_access,dx
     xor eax,eax
     jmp shmDone
 
@@ -2200,10 +2229,10 @@ shmFail:
     mov eax,-1
 
 shmDone:
-    pop dx
-    pop bx
+    pop edx
+    pop ebx
     pop ds    
-    retf32
+    ret
 set_handle_mode     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2224,33 +2253,34 @@ get_handle_pos64_name  DB 'Get C Handle Pos 64', 0
 
 get_handle_pos32     Proc far
     push ds
-    push bx
+    push ebx
 ;
     GetThread
-    mov ds,ax
+    mov ds,eax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae ghpFail32
 ;   
-    shl bx,3
-    add bx,OFFSET h_arr
-    mov eax,ds:[bx].hp_pos
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov eax,ds:[ebx].hp_pos
     jmp ghpDone32
 
 ghpFail32:
     mov eax,-1
 
 ghpDone32:
-    pop bx
+    pop ebx
     pop ds    
-    retf32
+    ret
 get_handle_pos32     Endp        
 
 get_handle_pos64     Proc far
     push ds
-    push bx
+    push ebx
 ;
     GetThread
     mov ds,ax
@@ -2260,10 +2290,11 @@ get_handle_pos64     Proc far
     cmp bx,MAX_HANDLES
     jae ghpFail64
 ;   
-    shl bx,3
-    add bx,OFFSET h_arr
-    mov eax,ds:[bx].hp_pos
-    xor edx,edx
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov eax,ds:[ebx].hp_pos
+    mov edx,ds:[ebx].hp_pos+4
     jmp ghpDone64
 
 ghpFail64:
@@ -2271,9 +2302,9 @@ ghpFail64:
     mov edx,-1
 
 ghpDone64:
-    pop bx
+    pop ebx
     pop ds    
-    retf32
+    ret
 get_handle_pos64     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2295,62 +2326,75 @@ set_handle_pos64_name  DB 'Set C Handle Pos 64', 0
 
 set_handle_pos32     Proc far
     push ds
-    push bx
+    push ebx
     push edx
 ;
-    mov edx,eax
+    push eax
+;
     GetThread
-    mov ds,ax
+    mov ds,eax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae shpFail32
 ;   
-    shl bx,3
-    add bx,OFFSET h_arr
-    mov ds:[bx].hp_pos,edx
-    mov eax,edx
+    pop eax
+;
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov ds:[ebx].hp_pos,eax
+    mov ds:[ebx].hp_pos+4,edx
     jmp shpDone32
 
 shpFail32:
+    pop eax
     mov eax,-1
 
 shpDone32:
     pop edx
-    pop bx
+    pop ebx
     pop ds    
-    retf32
+    ret
 set_handle_pos32     Endp        
 
 set_handle_pos64     Proc far
     push ds
-    push bx
+    push ebx
 ;
-    mov edx,eax
+    push eax
+    push edx
+;
     GetThread
-    mov ds,ax
+    mov ds,eax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
     jae shpFail64
 ;   
-    shl bx,3
-    add bx,OFFSET h_arr
-    mov ds:[bx].hp_pos,edx
-    mov eax,edx
-    xor edx,edx
+    pop edx
+    pop eax
+;
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov ds:[ebx].hp_pos,eax
+    mov ds:[ebx].hp_pos+4,edx
     jmp shpDone64
 
 shpFail64:
+    pop edx
+    pop eax
+;
     mov eax,-1
     mov edx,-1
 
 shpDone64:
-    pop bx
+    pop ebx
     pop ds    
-    retf32
+    ret
 set_handle_pos64     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2430,7 +2474,7 @@ eof_handle     Proc far
     jae ehFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
     mov edx,ds:[ebx].hp_pos
@@ -2515,7 +2559,7 @@ is_handle_device     Proc far
     jae ihdFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
 ;
@@ -2576,7 +2620,7 @@ is_ipv4_socket	Proc far
     jae iisFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
 ;
@@ -2611,7 +2655,7 @@ iisDone:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 is_ipv4_socket	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2643,7 +2687,7 @@ connect_ipv4_socket	Proc far
     jae cisFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov ax,ds:[ebx].hp_handle
 ;
@@ -2684,7 +2728,7 @@ cisDone:
     pop ebx
     pop eax
     pop ds
-    retf32
+    ret
 connect_ipv4_socket	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2723,9 +2767,10 @@ rbstdin1:
 read_buf_stdin       Endp
 
 read_buf_file       Proc near
-    GetCFileSize
     mov ecx,eax
-    sub ecx,edx
+    GetCFileSize
+    sub ecx,eax
+    neg ecx
     clc
     ret
 read_buf_file       Endp
@@ -2758,31 +2803,33 @@ GetReadBufCount	Proc near
     push edx
     push esi
     push ebp
-;    
+;
     cmp bx,MAX_HANDLES
     jae grbcFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
-    mov edx,ds:[ebx].hp_pos
-    mov ax,ds:[ebx].hp_handle
+    mov eax,ds:[ebx].hp_pos
+    mov edx,ds:[ebx].hp_pos+4
+    mov bp,ds:[ebx].hp_handle
 ;
-    cmp ax,SYS_HANDLE_COUNT
+    cmp bp,SYS_HANDLE_COUNT
     jae grbcFail
 ;    
-    or ax,ax
+    or bp,bp
     jz grbcFail
 ;
     push ds
     push ebx
 ;
-    movzx ebx,ax
+    mov ebx,SEG data
+    mov ds,ebx
+;
+    movzx ebx,bp
     dec ebx
     shl ebx,4
     add ebx,OFFSET hd_data
-    mov eax,SEG data
-    mov ds,eax
 ;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
@@ -2891,9 +2938,8 @@ GetWriteBufSpace	Proc near
     jae gwbsFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
-    mov edx,ds:[ebx].hp_pos
     mov ax,ds:[ebx].hp_handle
 ;
     cmp ax,SYS_HANDLE_COUNT
@@ -2994,17 +3040,14 @@ eht09  DD OFFSET exc_dummy
 HasException	Proc near
     push eax
     push ebx
-    push edx
-    push esi
     push ebp
 ;
     cmp bx,MAX_HANDLES
     jae heFail
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
-    mov edx,ds:[ebx].hp_pos
     mov ax,ds:[ebx].hp_handle
 ;
     cmp ax,SYS_HANDLE_COUNT
@@ -3036,8 +3079,6 @@ heFail:
 
 heDone:
     pop ebp
-    pop esi
-    pop edx
     pop ebx
     pop eax
     ret
@@ -3172,13 +3213,20 @@ swrt09  DD OFFSET start_read_dummy
 
 start_wait_for_read       PROC far
     push ds
-    push eax
-    push ebx
-    push edx
-    push esi
-    push ebp
+    pushad
 ;
     mov bx,es:sw_handle
+    GetHandleReadBufferCount
+    jc swfrSignal
+;
+    or ecx,ecx
+    jz swfrCheck
+
+swfrSignal:
+    SignalWait
+    jmp swfrDone
+
+swfrCheck:
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
@@ -3188,9 +3236,8 @@ start_wait_for_read       PROC far
     jae swfrDone
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
-    mov edx,ds:[ebx].hp_pos
     mov ax,ds:[ebx].hp_handle
 ;
     cmp ax,SYS_HANDLE_COUNT
@@ -3212,21 +3259,6 @@ start_wait_for_read       PROC far
     mov eax,SEG data
     mov ds,eax
 ;
-    mov ax,ds:[ebx].he_type
-    cmp ax,C_HANDLE_FILE
-    jne swfrNotFile
-;
-    push ebx
-    mov bx,ds:[ebx].he_sel
-    GetCFileSize
-    pop ebx
-    cmp eax,edx
-    jbe swfrNotFile
-;
-    SignalWait
-    jmp swfrLinked
-
-swfrNotFile:
     EnterSection ds:hd_section
 ;
     mov bp,es
@@ -3268,11 +3300,7 @@ swfrLinked:
     pop ds
 
 swfrDone:
-    pop ebp
-    pop esi
-    pop edx
-    pop ebx
-    pop eax
+    popad
     pop ds    
     ret
 start_wait_for_read Endp
@@ -3342,7 +3370,7 @@ stop_wait_for_read    PROC far
     jae ewfrDone
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov edx,ds:[ebx].hp_pos
     mov ax,ds:[ebx].hp_handle
@@ -3455,7 +3483,7 @@ stop_wait_for_read Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clear_read    PROC far
-    retf32
+    ret
 clear_read Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3648,7 +3676,7 @@ start_wait_for_write       PROC far
     jae swfwDone
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov edx,ds:[ebx].hp_pos
     mov ax,ds:[ebx].hp_handle
@@ -3772,7 +3800,7 @@ stop_wait_for_write    PROC far
     jae ewfwDone
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov edx,ds:[ebx].hp_pos
     mov ax,ds:[ebx].hp_handle
@@ -4078,7 +4106,7 @@ start_wait_for_exc       PROC far
     jae swfeDone
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
     mov edx,ds:[ebx].hp_pos
     mov ax,ds:[ebx].hp_handle
@@ -4202,9 +4230,8 @@ stop_wait_for_exc    PROC far
     jae ewfeDone
 ;   
     movzx ebx,bx
-    shl ebx,3
+    shl ebx,4
     add ebx,OFFSET h_arr
-    mov edx,ds:[ebx].hp_pos
     mov ax,ds:[ebx].hp_handle
 ;
     cmp ax,SYS_HANDLE_COUNT
@@ -4408,8 +4435,7 @@ create_tcp_socket    Proc far
     mov ax,C_HANDLE_TCP_SOCKET
     AllocateCHandle
 ;
-    mov cx,IO_READ OR IO_WRITE OR IO_BINARY
-    xor edx,edx
+    mov cx,IO_READ OR IO_WRITE
     AllocateCProcHandle
 ;
     pop edx
@@ -4440,8 +4466,7 @@ create_udp_socket    Proc far
     mov ax,C_HANDLE_UDP_SOCKET
     AllocateCHandle
 ;
-    mov cx,IO_READ OR IO_WRITE OR IO_BINARY
-    xor edx,edx
+    mov cx,IO_READ OR IO_WRITE
     AllocateCProcHandle
 ;
     pop edx
@@ -4924,12 +4949,15 @@ init_handle     PROC near
     mov bx,SEG data
     mov es,bx
 ;
-; fix init!
+    mov edi,OFFSET hd_bitmap
+    xor eax,eax
+    mov ecx,SYS_BITMAP_COUNT
+    rep stosd
 ;
-;    xor di,di
-;    mov cx,SIZE handle_data_struc
-;    xor al,al
-;    rep stosb
+    mov edi,OFFSET hd_data
+    xor eax,eax
+    mov ecx,4 * SYS_HANDLE_COUNT
+    rep stosd
 ;
     InitSection es:hd_section
     mov es:hd_bitmap,3
@@ -5132,19 +5160,19 @@ init_handle     PROC near
     mov ax,is_handle_device_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_handle_time
+    mov esi,OFFSET get_handle_create_time
     mov edi,OFFSET get_handle_create_time_name
     xor cl,cl
     mov ax,get_handle_create_time_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_handle_time
+    mov esi,OFFSET get_handle_modify_time
     mov edi,OFFSET get_handle_modify_time_name
     xor cl,cl
     mov ax,get_handle_modify_time_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET get_handle_time
+    mov esi,OFFSET get_handle_access_time
     mov edi,OFFSET get_handle_access_time_name
     xor cl,cl
     mov ax,get_handle_access_time_nr
