@@ -801,7 +801,7 @@ ct08  DD OFFSET close_dummy
 ct09  DD OFFSET close_dummy
 
 
-close_handle     Proc near
+close_handle     Proc far
     push ds
     push eax
     push ecx
@@ -1372,7 +1372,7 @@ write_handle32    ENDP
 
 dup_handle_name  DB 'Dup C Handle', 0
 
-dup_handle     Proc near
+dup_handle     Proc far
     push ds
     push es
     push eax
@@ -1454,7 +1454,7 @@ dup_handle    Endp
 
 dup2_handle_name  DB 'Dup2 C Handle', 0
 
-dup2_handle     Proc near
+dup2_handle     Proc far
     push ds
     push es
     push eax
