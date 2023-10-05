@@ -84,7 +84,6 @@ kf_blk            blk_header <>
 kf_info_phys      DD ?,?
 kf_sector_size    DW ?
 kf_section        section_typ <>
-kf_map_list       DW ?
 kf_part_sel       DW ?
 kf_req_sync       DW ?
 kf_wait_thread    DW ?
@@ -99,7 +98,7 @@ kf_wait_count     DD ?
 kf_block_count    DD ?
 kf_phys_count     DD ?
 
-kf_mod_arr        DW MAX_MODULES DUP(?)
+kf_mod_arr        DW 64 DUP(?)
 kf_sorted_arr     DB 256 DUP(?)
 kf_handle_arr     DD 256 DUP(?)
 
@@ -337,7 +336,6 @@ CreateFileSel   Proc near
 ;
     InitSection ds:kf_section
     mov ds:kf_sector_size,di
-    mov ds:kf_map_list,0
     mov ds:kf_part_sel,fs
     mov ds:kf_serv_handle,ebx
     mov ds:kf_wait_list,0
@@ -2015,7 +2013,7 @@ UnlinkProgSel      Proc near
 ;
     xor ax,ax
     mov es,eax
-    mov ax,ds:kf_map_list
+;    mov ax,ds:kf_map_list
 
 upsLoop:
     or ax,ax
@@ -2044,7 +2042,7 @@ upsUnlink:
 upsRoot:
     mov es,edx
     mov ax,es:kfm_next_map
-    mov ds:kf_map_list,ax
+;    mov ds:kf_map_list,ax
 
 upsDone:
     pop edx
@@ -2182,11 +2180,11 @@ cpsLoop:
     CreateDataSelector32
     mov es:kfm_kernel_sel,bx
 ;
-    EnterSection ds:kf_section
-    mov bx,ds:kf_map_list
-    mov es:kfm_next_map,bx
-    mov ds:kf_map_list,es
-    LeaveSection ds:kf_section
+;    EnterSection ds:kf_section
+;    mov bx,ds:kf_map_list
+;    mov es:kfm_next_map,bx
+;    mov ds:kf_map_list,es
+;    LeaveSection ds:kf_section
     mov ax,es
 ;
     pop ebp
@@ -2990,7 +2988,7 @@ CloseVfsFile  Proc near
     mov ds,ds:kfm_file_sel
     call UnlinkProgSel
 ;
-    mov ax,ds:kf_map_list
+;    mov ax,ds:kf_map_list
     or ax,ax
     jnz clvfCleanup
 ;
