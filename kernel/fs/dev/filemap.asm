@@ -2065,152 +2065,6 @@ UnlinkProgSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateProgSel
-;
-;       DESCRIPTION:    Create program selector
-;
-;       PARAMETERS:     DS              File sel
-;
-;       RETURNS:        NC
-;                         AX            Prog sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateProgSel   Proc near
-    push es
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov ax,system_data_sel
-    mov es,ax
-    mov ebx,es:flat_base
-;
-    GetThread
-    mov es,ax
-    mov si,es:p_prog_sel
-;
-    mov ax,flat_data_sel
-    mov es,eax
-;
-    mov eax,1000h
-    AllocateBigLinear
-    mov ebp,edx
-;
-    mov eax,3000h
-    AllocateLocalLinear
-;
-    sub edx,ebx
-    mov edi,edx
-;
-    mov eax,-1
-    mov ecx,3Dh
-    rep stosd
-;
-    xor eax,eax
-    mov ecx,7C3h
-    rep stosd
-;
-    mov eax,edx
-    add eax,1000h
-    mov es:[edx].fm_handle_ptr,eax
-    add eax,1000h
-    mov es:[edx].fm_info_ptr,eax
-;
-    mov ax,flat_data_sel
-    mov es,eax
-    mov eax,edx
-    add eax,1000h
-    mov ecx,eax
-    add eax,OFFSET fh_futex
-    mov es:[eax].fs_handle,0
-    mov es:[eax].fs_val,-1
-    mov es:[eax].fs_counter,0
-    mov es:[eax].fs_owner,0
-    add ecx,1000h
-    add ecx,OFFSET fi_name
-    mov es:[eax].fs_sect_name,ecx
-;
-    push ebx
-    push edx
-;
-    add edx,ebx
-    add edx,2000h
-    mov eax,ds:kf_info_phys
-    mov ebx,ds:kf_info_phys+4
-    or ax,865h
-    SetPageEntry
-;
-    sub edx,2000h
-    GetPageEntry
-    and ax,0F000h
-    or ax,865h
-    SetPageEntry
-;
-    mov edx,ebp
-    and ax,0F000h
-    or ax,867h
-    SetPageEntry
-;
-    pop edx
-    pop ebx
-;
-    mov eax,SIZE kernel_file_map
-    AllocateSmallGlobalMem
-;
-    xor edi,edi
-    xor eax,eax
-    mov ecx,SIZE kernel_file_map
-    shr ecx,1
-    rep stosw
-;
-    mov ecx,240
-    mov es:kfm_free_count,cl
-;
-    mov edi,OFFSET kfm_free_arr
-    mov al,cl
-    dec al
-
-cpsLoop:
-    stosb
-    dec al
-    loop cpsLoop
-;
-    mov es:kfm_flat_base,ebx
-    mov es:kfm_user_base,edx
-    mov es:kfm_prog_sel,si
-    mov es:kfm_file_sel,ds
-    mov es:kfm_handle,0
-;
-    AllocateGdt
-    mov ecx,1000h
-    mov edx,ebp
-    CreateDataSelector32
-    mov es:kfm_kernel_sel,bx
-;
-;    EnterSection ds:kf_section
-;    mov bx,ds:kf_map_list
-;    mov es:kfm_next_map,bx
-;    mov ds:kf_map_list,es
-;    LeaveSection ds:kf_section
-    mov ax,es
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop es
-    ret
-CreateProgSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           DeleteProgSel
 ;
 ;       DESCRIPTION:    Delete program selector
@@ -2795,13 +2649,13 @@ map_vfs_file    Endp
 ;       PARAMETERS:     DS              File sel
 ;
 ;       RETURNS:        NC
-;                         BX            Map sel
+;                         AX            Map sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindVfsMod      Proc near
     push es
-    push eax
+    push ebx
     push ecx
 ;
     GetThread
@@ -2826,15 +2680,189 @@ fvmLoop:
     jmp fvmDone
 
 fvmFound:
-    mov bx,ds:[ebx].km_map_sel
+    mov ax,ds:[ebx].km_map_sel
     clc
 
 fvmDone:
     pop ecx
-    pop eax
+    pop ebx
     pop es
     ret
 FindVfsMod    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddVfsMod
+;
+;       DESCRIPTION:    Add VFS module
+;
+;       PARAMETERS:     DS              File sel
+;                       AX              Map sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddVfsMod      Proc near
+    push ebx
+;
+    mov ebx,ds:kf_mod_count
+    shl ebx,2
+    add ebx,OFFSET kf_mod_arr
+    mov ds:[ebx].km_map_sel,ax
+;
+    push ds
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ax,ds:pf_c_handle_sel
+    pop ds
+;
+    mov ds:[ebx].km_c_sel,ax
+    inc ds:kf_mod_count
+;
+    pop ebx
+    ret
+AddVfsMod    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateVfsMod
+;
+;       DESCRIPTION:    Create VFS module sel
+;
+;       PARAMETERS:     DS              File sel
+;
+;       RETURNS:        NC
+;                         AX            Prog sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateVfsMod   Proc near
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,system_data_sel
+    mov es,ax
+    mov ebx,es:flat_base
+;
+    GetThread
+    mov es,ax
+    mov si,es:p_prog_sel
+;
+    mov ax,flat_data_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ebp,edx
+;
+    mov eax,3000h
+    AllocateLocalLinear
+;
+    sub edx,ebx
+    mov edi,edx
+;
+    mov eax,-1
+    mov ecx,3Dh
+    rep stosd
+;
+    xor eax,eax
+    mov ecx,7C3h
+    rep stosd
+;
+    mov eax,edx
+    add eax,1000h
+    mov es:[edx].fm_handle_ptr,eax
+    add eax,1000h
+    mov es:[edx].fm_info_ptr,eax
+;
+    mov ax,flat_data_sel
+    mov es,eax
+    mov eax,edx
+    add eax,1000h
+    mov ecx,eax
+    add eax,OFFSET fh_futex
+    mov es:[eax].fs_handle,0
+    mov es:[eax].fs_val,-1
+    mov es:[eax].fs_counter,0
+    mov es:[eax].fs_owner,0
+    add ecx,1000h
+    add ecx,OFFSET fi_name
+    mov es:[eax].fs_sect_name,ecx
+;
+    push ebx
+    push edx
+;
+    add edx,ebx
+    add edx,2000h
+    mov eax,ds:kf_info_phys
+    mov ebx,ds:kf_info_phys+4
+    or ax,865h
+    SetPageEntry
+;
+    sub edx,2000h
+    GetPageEntry
+    and ax,0F000h
+    or ax,865h
+    SetPageEntry
+;
+    mov edx,ebp
+    and ax,0F000h
+    or ax,867h
+    SetPageEntry
+;
+    pop edx
+    pop ebx
+;
+    mov eax,SIZE kernel_file_map
+    AllocateSmallGlobalMem
+;
+    xor edi,edi
+    xor eax,eax
+    mov ecx,SIZE kernel_file_map
+    shr ecx,1
+    rep stosw
+;
+    mov ecx,240
+    mov es:kfm_free_count,cl
+;
+    mov edi,OFFSET kfm_free_arr
+    mov al,cl
+    dec al
+
+cvmsLoop:
+    stosb
+    dec al
+    loop cvmsLoop
+;
+    mov es:kfm_flat_base,ebx
+    mov es:kfm_user_base,edx
+    mov es:kfm_prog_sel,si
+    mov es:kfm_file_sel,ds
+    mov es:kfm_handle,0
+;
+    AllocateGdt
+    mov ecx,1000h
+    mov edx,ebp
+    CreateDataSelector32
+    mov es:kfm_kernel_sel,bx
+    mov eax,es
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+CreateVfsMod      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2938,6 +2966,8 @@ ovfHandleOk:
     call FindVfsMod
     jnc ovfModOk
 ;
+    call CreateVfsMod
+    call AddVfsMod
 
 ovfModOk:
     LeaveSection ds:kf_section
