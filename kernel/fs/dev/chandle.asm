@@ -844,6 +844,77 @@ rvhLeave:
 RefVfsHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateModHandle
+;
+;           DESCRIPTION:    Allocate module handle
+;
+;           PARAMETERS:     AX          Map sel
+;                           BX          C Handle
+;                           CX          Mode
+;
+;           RETURNS:        BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateModHandle
+
+AllocateModHandle     Proc near
+    push ds
+    push edx
+;
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    mov ecx,MAX_HANDLES
+    mov ebx,OFFSET h_arr
+    EnterSection ds:h_section
+
+amhLoop:    
+    mov dx,ds:[ebx].hp_handle
+    or dx,dx
+    jz amhFound
+;
+    add ebx,16
+    loop amhLoop
+;
+    pop ecx
+    pop edx
+    LeaveSection ds:h_section
+    stc
+    jmp amhDone
+
+amhFound:    
+    pop ecx
+    pop edx
+    pop eax
+;
+    mov ds:[ebx].hp_handle,dx
+    mov ds:[ebx].hp_access,cx
+    mov ds:[ebx].hp_vfs_sel,ax
+    mov ds:[ebx].hp_pos,0
+    mov ds:[ebx].hp_pos+4,0
+    LeaveSection ds:h_section
+;
+    sub ebx,OFFSET h_arr
+    shr ebx,4
+    clc
+    movzx ebx,bx
+
+amhDone:   
+    pop edx
+    pop ds
+    ret
+AllocateModHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           OpenToIo
@@ -918,13 +989,8 @@ open_handle     Proc near
     call OpenVfsFile
     jc ovfLegacy
 ;
-    GetThread
-    mov ds,eax
-    mov ds,ds:p_proc_sel
-    mov ds,ds:pf_c_handle_sel
     call OpenToIo
-;
-
+    jmp ohrCom
 
 ovfLegacy:  
     OpenCFile
@@ -943,7 +1009,8 @@ ohrOpen:
     call allocate_proc_handle
     pop ecx
     jc ohClose
-;
+
+ohrCom:
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
 ;

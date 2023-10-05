@@ -124,6 +124,7 @@ kfm_file_sel      DW ?
 kfm_kernel_sel    DW ?
 kfm_handle        DW ?
 kfm_next_map      DW ?
+kfm_ref_count     DW ?
 kfm_section       section_typ <>
 kfm_free_count    DB ?
 kfm_unlink_count  DB ?
@@ -154,6 +155,7 @@ code    SEGMENT byte public 'CODE'
     extern FileHandleToPartFs:near
     extern AllocateVfsHandle:near
     extern RefVfsHandle:near
+    extern AllocateModHandle:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2846,6 +2848,7 @@ cvmsLoop:
     mov es:kfm_prog_sel,si
     mov es:kfm_file_sel,ds
     mov es:kfm_handle,0
+    mov es:kfm_ref_count,0
 ;
     AllocateGdt
     mov ecx,1000h
@@ -2937,14 +2940,18 @@ ovfCopyPath:
     jz ovfOpen
 
 ovfCreate:
+    push ecx
     mov eax,VFS_CREATE_FILE
     call RunMsg
+    pop ecx
     jnc ovfFound
     jmp ovfFail
 
 ovfOpen:
+    push ecx
     mov eax,VFS_OPEN_FILE
     call RunMsg
+    pop ecx
     jc ovfFail
 
 ovfFound:
@@ -2956,9 +2963,12 @@ ovfFound:
 ;
     mov bx,ds:kf_c_handle
     or bx,bx
-    clc
-    jnz ovfHandleOk
+    jz ovfNew
 ;
+    call RefVfsHandle
+    jmp ovfHandleOk
+
+ovfNew:
     call AllocateVfsHandle
     mov ds:kf_c_handle,bx
 
@@ -2971,6 +2981,17 @@ ovfHandleOk:
 
 ovfModOk:
     LeaveSection ds:kf_section
+;
+    call AllocateModHandle
+    jnc ovfModHOk
+;
+    int 3
+    jmp ovfFail
+
+ovfModHOk:
+    mov ds,eax
+    inc ds:kfm_ref_count
+    clc
     jmp ovfDone
 
 ovfFail:
