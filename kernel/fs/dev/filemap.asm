@@ -89,6 +89,7 @@ kf_part_sel       DW ?
 kf_req_sync       DW ?
 kf_wait_thread    DW ?
 kf_wr_ptr         DW ?
+kf_c_handle       DW ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 
@@ -345,6 +346,7 @@ CreateFileSel   Proc near
     mov ds:kf_block_count,0
     mov ds:kf_phys_count,0
     mov ds:kf_wr_ptr,0
+    mov ds:kf_c_handle,0
 ;
     mov ecx,256
     mov edi,OFFSET kf_handle_arr
@@ -1992,52 +1994,6 @@ MapReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetProgSel
-;
-;       DESCRIPTION:    Get program selector
-;
-;       PARAMETERS:     DS              File sel
-;
-;       RETURNS:        NC
-;                         AX            Prog sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetProgSel      Proc near
-    push es
-    push ebx
-;
-    GetThread
-    mov es,ax
-    mov bx,es:p_prog_sel
-;
-    EnterSection ds:kf_section
-    mov ax,ds:kf_map_list
-
-gpsLoop:
-    or ax,ax
-    stc
-    jz gpsDone
-;
-    mov es,eax
-    cmp bx,es:kfm_prog_sel
-    clc
-    je gpsDone
-;
-    mov ax,es:kfm_next_map
-    jmp gpsLoop
-
-gpsDone:
-    LeaveSection ds:kf_section
-;
-    pop ebx
-    pop es
-    ret
-GetProgSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           UnlinkProgSel
 ;
 ;       DESCRIPTION:    Unlink program selector
@@ -2905,38 +2861,13 @@ ovfFound:
     jc ovfFail
 ;
     mov ds,eax
-    call GetProgSel
-    jnc ovfHasProc
+    mov bx,ds:kf_c_handle
+    or bx,bx
+    clc
+    jnz ovfDone
 ;
-    call CreateProgSel
-
-ovfHasProc:
-    mov ds,eax
-    call AllocateUserHandle
-    jc ovfFail
-;
-    mov ax,ds:kfm_handle
-    or ax,ax
-    jnz ovfRef
-
-ovfAlloc:
     call AllocateVfsHandle
-    jnc ovfSaveHandle
-;
-    int 3
-    jmp ovfFail
-
-ovfRef:
-    call RefVfsHandle
-    jnc ovfOk
-;
-    int 3
-    jmp ovfAlloc
-
-ovfSaveHandle:
-    mov ds:kfm_handle,bx
-
-ovfOk:
+    mov ds:kf_c_handle,bx
     clc
     jmp ovfDone
 

@@ -55,8 +55,7 @@ he_ref_count         DW ?
 he_read_wait_sel     DW ?
 he_write_wait_sel    DW ?
 he_exc_wait_sel      DW ?
-he_handle            DW ?
-he_resv              DW ?
+he_resv              DW ?,?
 
 handle_entry_struc    ENDS
 
@@ -68,7 +67,8 @@ handle_proc_struc       STRUC
 hp_pos          DD ?,?
 hp_handle       DW ?
 hp_access       DW ?
-hp_resv         DW ?,?
+hp_vfs_sel      DW ?
+hp_resv         DW ?
 
 handle_proc_struc       ENDS
 
@@ -151,18 +151,21 @@ create_c_handle Proc far
     mov edi,OFFSET h_arr
     mov es:[edi].hp_handle,1
     mov es:[edi].hp_access,IO_READ OR IO_ISTTY
+    mov es:[edi].hp_vfs_sel,0
     mov es:[edi].hp_pos,0
     mov es:[edi].hp_pos+4,0
 ;
     add edi,16
     mov es:[edi].hp_handle,2
     mov es:[edi].hp_access,IO_WRITE OR IO_ISTTY
+    mov es:[edi].hp_vfs_sel,0
     mov es:[edi].hp_pos,0
     mov es:[edi].hp_pos+4,0
 ;
     add edi,16
     mov es:[edi].hp_handle,2
     mov es:[edi].hp_access,IO_WRITE OR IO_ISTTY
+    mov es:[edi].hp_vfs_sel,0
     mov es:[edi].hp_pos,0
     mov es:[edi].hp_pos+4,0
 ;    
@@ -172,6 +175,7 @@ nsLoop:
     add edi,16
     mov es:[edi].hp_handle,0
     mov es:[edi].hp_access,0
+    mov es:[edi].hp_vfs_sel,0
     mov es:[edi].hp_pos,0
     mov es:[edi].hp_pos+4,0
     loop nsLoop
@@ -236,6 +240,7 @@ ncLoop:
 ;
     mov es:[ebx].hp_handle,0
     mov es:[ebx].hp_access,0
+    mov es:[ebx].hp_vfs_sel,0
     mov es:[ebx].hp_pos,0
     mov es:[ebx].hp_pos+4,0
 ;
@@ -263,8 +268,13 @@ ncLoop:
     mov ax,ds:[ebx].hp_access
     mov es:[ebx].hp_access,ax
 ;
+    mov ax,ds:[ebx].hp_vfs_sel
+    mov es:[ebx].hp_vfs_sel,ax
+;
     mov eax,ds:[ebx].hp_pos
     mov es:[ebx].hp_pos,eax
+    mov eax,ds:[ebx].hp_pos+4
+    mov es:[ebx].hp_pos+4,eax
 
 ncNextLeave:
     LeaveSection ds:h_section
@@ -383,7 +393,7 @@ ntLoop:
     xor ax,ax
     xchg ax,ds:[ebx].he_sel
     movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_handle
+;    mov bx,ds:[ebx].he_handle
     btc ds:hd_bitmap,ecx
 ;
     cmp ebp,10
@@ -605,6 +615,7 @@ aphFound:
     pop ecx
     mov ds:[ebx].hp_handle,ax
     mov ds:[ebx].hp_access,cx
+    mov ds:[ebx].hp_vfs_sel,0
     mov ds:[ebx].hp_pos,0
     mov ds:[ebx].hp_pos+4,0
     LeaveSection ds:h_section
@@ -669,6 +680,7 @@ acphFound:
     pop ecx
     mov ds:[ebx].hp_handle,ax
     mov ds:[ebx].hp_access,cx
+    mov ds:[ebx].hp_vfs_sel,0
     mov ds:[ebx].hp_pos,0
     mov ds:[ebx].hp_pos+4,0
     LeaveSection ds:h_section
@@ -694,7 +706,6 @@ allocate_c_proc_handle  Endp
 ;           DESCRIPTION:    Allocate VFS file handle
 ;
 ;           PARAMETERS:     DS          File sel
-;                           BX          Handle
 ;
 ;           RETURNS:        BX          Entry handle
 ;
@@ -709,7 +720,6 @@ AllocateVfsHandle     Proc near
     push edx
     push edi
 ;
-    push ebx
     push ds
 ;
     mov ax,SEG data
@@ -733,7 +743,6 @@ avhLoop:
 ;
     stc
     pop edx
-    pop eax
     jmp avhLeave
 
 avhOk:
@@ -748,9 +757,6 @@ avhOk:
 ;
     pop eax
     mov ds:[edi].he_sel,ax
-;
-    pop eax
-    mov ds:[edi].he_handle,ax
 ;
     mov ds:[edi].he_ref_count,1
     mov ds:[edi].he_read_wait_sel,0
@@ -838,6 +844,55 @@ rvhLeave:
 RefVfsHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenToIo
+;
+;       DESCRIPTION:    Convert open flags to IO flags
+;
+;       PARAMETERS:     CX              Open flags
+;
+;       RETURNS:        AX              IO flags
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenToIo      Proc near
+    mov al,cl
+    and al,3
+    cmp al,O_RDWR
+    je otiRdWr
+;
+    cmp al,O_RDONLY
+    je otiRdOnly
+;
+    cmp al,O_WRONLY
+    je otiWrOnly
+;
+    xor ax,ax
+    jmp otiAccessOk
+
+otiRdWr:
+    mov ax,IO_READ OR IO_WRITE
+    jmp otiAccessOk
+
+otiRdOnly:
+    mov ax,IO_READ
+    jmp otiAccessOk
+
+otiWrOnly:
+    mov ax,IO_WRITE
+
+otiAccessOk:
+    test cx,O_APPEND
+    jz otiAppendOk
+;
+    or ax,IO_APPEND 
+
+otiAppendOk:
+    ret
+OpenToIo  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           OpenHandle
@@ -861,8 +916,17 @@ open_handle     Proc near
     push ebp
 ;  
     call OpenVfsFile
-    jnc ohrOpen
-;  
+    jc ovfLegacy
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+    call OpenToIo
+;
+
+
+ovfLegacy:  
     OpenCFile
     jc ohFail
 
@@ -871,39 +935,8 @@ ohrOpen:
     mov ds,ax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
+    call OpenToIo
 ;
-    mov al,cl
-    and al,3
-    cmp al,O_RDWR
-    je ohRdWr
-;
-    cmp al,O_RDONLY
-    je ohRdOnly
-;
-    cmp al,O_WRONLY
-    je ohWrOnly
-;
-    xor ax,ax
-    jmp ohAccessOk
-
-ohRdWr:
-    mov ax,IO_READ OR IO_WRITE
-    jmp ohAccessOk
-
-ohRdOnly:
-    mov ax,IO_READ
-    jmp ohAccessOk
-
-ohWrOnly:
-    mov ax,IO_WRITE
-
-ohAccessOk:
-    test cx,O_APPEND
-    jz ohAppendOk
-;
-    or ax,IO_APPEND 
-
-ohAppendOk:
     push ecx
     mov cx,ax
     mov ax,bx
@@ -937,7 +970,7 @@ ohClose:
     xor ax,ax
     xchg ax,ds:[ebx].he_sel
     movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_handle
+;    mov bx,ds:[ebx].he_handle
     btc ds:hd_bitmap,ecx
 ;
     cmp ebp,10
@@ -1078,7 +1111,7 @@ close_handle     Proc far
     xor ax,ax
     xchg ax,ds:[ebx].he_sel
     movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_handle
+;    mov bx,ds:[ebx].he_handle
     btc ds:hd_bitmap,ecx
 ;
     cmp ebp,10
@@ -1760,7 +1793,7 @@ dup2_handle     Proc far
 ;
     xor ax,ax
     xchg ax,ds:[ebx].he_sel
-    mov bx,ds:[ebx].he_handle
+;    mov bx,ds:[ebx].he_handle
     movzx ebp,ds:[ebx].he_type
     btc ds:hd_bitmap,ecx
 ;
