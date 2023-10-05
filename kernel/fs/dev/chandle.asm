@@ -359,55 +359,22 @@ ntUnlinked:
     xor ebx,ebx
 
 ntLoop:
-    push ebx
     push ecx
+    push ebx
 ;
     shl ebx,4
     add ebx,OFFSET h_arr
-    EnterSection ds:h_section
-    xor ax,ax
-    xchg ax,ds:[ebx].hp_handle
-    mov ds:[ebx].hp_access,0
-    mov ds:[ebx].hp_pos,0
-    mov ds:[ebx].hp_pos+4,0
-    LeaveSection ds:h_section
-;
-    cmp ax,SYS_HANDLE_COUNT
-    jae ntNext
-;    
+    mov ax,ds:[ebx].hp_handle
     or ax,ax
     jz ntNext
 ;
-    push ds
-    movzx ebx,ax
-    dec ebx
-    shl ebx,4
-    add ebx,OFFSET hd_data
-    mov eax,SEG data
-    mov ds,eax
-    EnterSection ds:hd_section
-;
-    sub ds:[ebx].he_ref_count,1
-    jnz ntLeave
-;
-    xor ax,ax
-    xchg ax,ds:[ebx].he_sel
-    movzx ebp,ds:[ebx].he_type
-;    mov bx,ds:[ebx].he_handle
-    btc ds:hd_bitmap,ecx
-;
-    cmp ebp,10
-    jae ntLeave
-;
-    call dword ptr cs:[4*ebp].close_tab
-
-ntLeave:
-    LeaveSection ds:hd_section
-    pop ds
+    pop ebx
+    CloseHandle
+    push ebx
 
 ntNext:
-    pop ecx
     pop ebx
+    pop ecx
 ;
     inc ebx
     sub ecx,1
@@ -990,7 +957,7 @@ open_handle     Proc near
     jc ovfLegacy
 ;
     call OpenToIo
-    jmp ohrCom
+    jmp ohCom
 
 ovfLegacy:  
     OpenCFile
@@ -1008,9 +975,11 @@ ohrOpen:
     mov ax,bx
     call allocate_proc_handle
     pop ecx
-    jc ohClose
+    jnc ohCom
+;
+    int 3
 
-ohrCom:
+ohCom:
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
 ;
@@ -1021,32 +990,6 @@ ohrCom:
 ohSizeOk:
     clc
     jmp ohDone
-
-ohClose:
-    movzx ebx,ax
-    dec ebx
-    shl ebx,4
-    add ebx,OFFSET hd_data
-    mov eax,SEG data
-    mov ds,eax
-    EnterSection ds:hd_section
-;
-    sub ds:[ebx].he_ref_count,1
-    jnz ohLeaveFail
-;
-    xor ax,ax
-    xchg ax,ds:[ebx].he_sel
-    movzx ebp,ds:[ebx].he_type
-;    mov bx,ds:[ebx].he_handle
-    btc ds:hd_bitmap,ecx
-;
-    cmp ebp,10
-    jae ohLeaveFail
-;
-    call dword ptr cs:[4*ebp].close_tab
-
-ohLeaveFail:
-    LeaveSection ds:hd_section
 
 ohFail:
     mov ebx,-1
@@ -1816,9 +1759,13 @@ dup2_handle     Proc far
 ;
     cmp di,MAX_HANDLES
     jae d2hFail
-;   
+;
     push eax
     push ebx
+;
+    mov ebx,edi
+    CloseHandle
+;
     movzx ebx,ax
     dec ebx
     shl ebx,4
@@ -1826,6 +1773,7 @@ dup2_handle     Proc far
     mov ax,SEG data
     mov es,ax
     inc es:[ebx].he_ref_count
+;
     pop ebx
     pop eax
 ;
@@ -1839,40 +1787,9 @@ dup2_handle     Proc far
     mov ds:[edi].hp_pos,edx
     mov edx,ds:[esi].hp_pos+4
     mov ds:[edi].hp_pos+4,edx
-    xchg ax,ds:[edi].hp_handle
+    mov ds:[edi].hp_handle,ax
     LeaveSection ds:h_section
 ;
-    cmp ax,SYS_HANDLE_COUNT
-    jae d2hOk
-;    
-    or ax,ax
-    jz d2hOk
-;
-    movzx ebx,ax
-    dec ebx
-    add ebx,OFFSET hd_data
-    mov eax,SEG data
-    mov ds,eax
-    EnterSection ds:hd_section
-;
-    sub ds:[ebx].he_ref_count,1
-    jnz d2hOkLeave
-;
-    xor ax,ax
-    xchg ax,ds:[ebx].he_sel
-;    mov bx,ds:[ebx].he_handle
-    movzx ebp,ds:[ebx].he_type
-    btc ds:hd_bitmap,ecx
-;
-    cmp ebp,10
-    jae d2hOkLeave
-;
-    call dword ptr cs:[4*ebp].close_tab
-
-d2hOkLeave:
-    LeaveSection ds:hd_section
-
-d2hOk:
     movzx ebx,bp
     jmp d2hDone
 
