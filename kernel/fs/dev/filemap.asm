@@ -77,6 +77,17 @@ kwe_thread        DW ?
 
 kernel_wait_entry  ENDS
 
+;
+; must be 4 bytes!
+;
+
+kernel_mod_struc  STRUC
+
+km_c_sel          DW ?
+km_map_sel        DW ?
+
+kernel_mod_struc  ENDS
+
 kernel_file       STRUC
 
 kf_blk            blk_header <>
@@ -98,7 +109,7 @@ kf_wait_count     DD ?
 kf_block_count    DD ?
 kf_phys_count     DD ?
 
-kf_mod_arr        DW 64 DUP(?)
+kf_mod_arr        DD 64 DUP(?)
 kf_sorted_arr     DB 256 DUP(?)
 kf_handle_arr     DD 256 DUP(?)
 
@@ -2775,6 +2786,57 @@ mvfDone:
 map_vfs_file    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindVfsMod
+;
+;       DESCRIPTION:    Find VFS module
+;
+;       PARAMETERS:     DS              File sel
+;
+;       RETURNS:        NC
+;                         BX            Map sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindVfsMod      Proc near
+    push es
+    push eax
+    push ecx
+;
+    GetThread
+    mov es,ax
+    mov es,es:p_proc_sel
+    mov ax,es:pf_c_handle_sel
+;
+    mov ebx,OFFSET kf_mod_arr
+    mov ecx,ds:kf_mod_count
+    or ecx,ecx
+    stc
+    jz fvmDone
+
+fvmLoop:
+    cmp ax,ds:[ebx].km_c_sel
+    je fvmFound
+;
+    add ebx,4
+    loop fvmLoop
+;
+    stc
+    jmp fvmDone
+
+fvmFound:
+    mov bx,ds:[ebx].km_map_sel
+    clc
+
+fvmDone:
+    pop ecx
+    pop eax
+    pop es
+    ret
+FindVfsMod    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           OpenVfsFile
@@ -2862,14 +2924,23 @@ ovfFound:
     jc ovfFail
 ;
     mov ds,eax
+    EnterSection ds:kf_section
+;
     mov bx,ds:kf_c_handle
     or bx,bx
     clc
-    jnz ovfDone
+    jnz ovfHandleOk
 ;
     call AllocateVfsHandle
     mov ds:kf_c_handle,bx
-    clc
+
+ovfHandleOk:
+    call FindVfsMod
+    jnc ovfModOk
+;
+
+ovfModOk:
+    LeaveSection ds:kf_section
     jmp ovfDone
 
 ovfFail:
