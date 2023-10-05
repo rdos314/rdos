@@ -2736,7 +2736,7 @@ AddVfsMod    Endp
 ;       PARAMETERS:     DS              File sel
 ;
 ;       RETURNS:        NC
-;                         AX            Prog sel
+;                         AX            mod sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2866,6 +2866,33 @@ cvmsLoop:
     pop es
     ret
 CreateVfsMod      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseVfsMod
+;
+;       DESCRIPTION:    Close VFS module sel
+;
+;       PARAMETERS:     AX            Mod sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CloseVfsMod
+
+CloseVfsMod   Proc near
+    push ds
+;
+    mov ds,eax
+    sub ds:kfm_ref_count,1
+    jnz cvmDone
+;
+    int 3
+
+cvmDone:
+    pop ds
+    ret
+CloseVfsMod   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

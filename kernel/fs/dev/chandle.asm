@@ -113,6 +113,7 @@ code    SEGMENT byte public 'CODE'
 
     extern OpenVfsFile:near
     extern CloseVfsFile:near
+    extern CloseVfsMod:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1094,12 +1095,28 @@ close_handle     Proc far
     shl ebx,4
     add ebx,OFFSET h_arr
     EnterSection ds:h_section
-    xor ax,ax
-    xchg ax,ds:[ebx].hp_handle
+;
     mov ds:[ebx].hp_access,0
     mov ds:[ebx].hp_pos,0
+    mov ds:[ebx].hp_pos+4,0
+;
+    xor ax,ax
+    xchg ax,ds:[ebx].hp_handle
+;
+    xor dx,dx
+    xchg dx,ds:[ebx].hp_vfs_sel
     LeaveSection ds:h_section
 ;
+    or dx,dx
+    jz chVfsOk
+;
+    int 3
+    push eax
+    mov eax,edx
+    call CloseVfsMod
+    pop eax
+
+chVfsOk:
     cmp ax,SYS_HANDLE_COUNT
     jae chFail
 ;    
