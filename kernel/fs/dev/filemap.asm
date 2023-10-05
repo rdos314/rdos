@@ -2125,78 +2125,6 @@ DeleteProgSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AllocateUserHandle
-;
-;       DESCRIPTION:    Allocate user handle
-;
-;       PARAMETERS:     DS              Prog sel
-;
-;       RETURNS:        NC
-;                         BX            User handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateUserHandle      Proc near
-    push es
-    push eax
-    push ecx
-    push edx
-    push esi
-;
-    mov bx,flat_data_sel
-    mov es,ebx
-    mov edx,ds:kfm_user_base
-    mov edx,es:[edx].fm_handle_ptr
-    add edx,OFFSET fh_bitmap
-    mov ecx,15
-    xor esi,esi
-
-auhLoop:
-    mov eax,es:[edx]
-    cmp eax,-1
-    je auhNext
-;
-    not eax
-    bsf ebx,eax
-;
-    lock bts es:[edx],ebx
-    jc auhLoop
-;
-    add ebx,esi
-;
-    mov esi,ebx
-    mov edx,ds:kfm_user_base
-    mov edx,es:[edx].fm_handle_ptr
-    shl esi,3
-    add edx,esi
-    xor eax,eax
-    mov es:[edx],eax
-    add edx,4
-    mov es:[edx],eax
-;
-    inc ebx
-    clc
-    jmp auhDone
-
-auhNext:
-    add esi,32
-    add edx,4
-    loop auhLoop
-;
-    stc
-
-auhDone:
-    pop esi
-    pop edx
-    pop ecx
-    pop eax
-    pop es
-    ret
-AllocateUserHandle      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           FreeUserHandle
 ;
 ;       DESCRIPTION:    Free user handle
@@ -2713,10 +2641,14 @@ AddVfsMod      Proc near
     mov ds:[ebx].km_map_sel,ax
 ;
     push ds
+    push eax
+;
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
     mov ax,ds:pf_c_handle_sel
+;
+    pop eax
     pop ds
 ;
     mov ds:[ebx].km_c_sel,ax
@@ -2870,6 +2802,82 @@ CreateVfsMod      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AllocateUserHandle
+;
+;       DESCRIPTION:    Allocate user handle
+;
+;       PARAMETERS:     AX              Mod sel
+;
+;       RETURNS:        NC
+;                         DX            User handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateUserHandle      Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+    push esi
+;
+    mov ds,eax
+    mov bx,flat_data_sel
+    mov es,ebx
+    mov edx,ds:kfm_user_base
+    mov edx,es:[edx].fm_handle_ptr
+    add edx,OFFSET fh_bitmap
+    mov ecx,15
+    xor esi,esi
+
+auhLoop:
+    mov eax,es:[edx]
+    cmp eax,-1
+    je auhNext
+;
+    not eax
+    bsf ebx,eax
+;
+    lock bts es:[edx],ebx
+    jc auhLoop
+;
+    add ebx,esi
+;
+    mov esi,ebx
+    mov edx,ds:kfm_user_base
+    mov edx,es:[edx].fm_handle_ptr
+    shl esi,3
+    add edx,esi
+    xor eax,eax
+    mov es:[edx],eax
+    add edx,4
+    mov es:[edx],eax
+;
+    inc ebx
+    mov edx,ebx
+    clc
+    jmp auhDone
+
+auhNext:
+    add esi,32
+    add edx,4
+    loop auhLoop
+;
+    stc
+
+auhDone:
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+AllocateUserHandle      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CloseVfsMod
 ;
 ;       DESCRIPTION:    Close VFS module sel
@@ -3009,6 +3017,7 @@ ovfHandleOk:
 ovfModOk:
     LeaveSection ds:kf_section
 ;
+    call AllocateUserHandle
     call AllocateModHandle
     jnc ovfModHOk
 ;

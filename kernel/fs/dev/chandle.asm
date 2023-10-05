@@ -68,7 +68,7 @@ hp_pos          DD ?,?
 hp_handle       DW ?
 hp_access       DW ?
 hp_vfs_sel      DW ?
-hp_resv         DW ?
+hp_vfs_handle   DW ?
 
 handle_proc_struc       ENDS
 
@@ -153,6 +153,7 @@ create_c_handle Proc far
     mov es:[edi].hp_handle,1
     mov es:[edi].hp_access,IO_READ OR IO_ISTTY
     mov es:[edi].hp_vfs_sel,0
+    mov es:[edi].hp_vfs_handle,0
     mov es:[edi].hp_pos,0
     mov es:[edi].hp_pos+4,0
 ;
@@ -160,6 +161,7 @@ create_c_handle Proc far
     mov es:[edi].hp_handle,2
     mov es:[edi].hp_access,IO_WRITE OR IO_ISTTY
     mov es:[edi].hp_vfs_sel,0
+    mov es:[edi].hp_vfs_handle,0
     mov es:[edi].hp_pos,0
     mov es:[edi].hp_pos+4,0
 ;
@@ -167,6 +169,7 @@ create_c_handle Proc far
     mov es:[edi].hp_handle,2
     mov es:[edi].hp_access,IO_WRITE OR IO_ISTTY
     mov es:[edi].hp_vfs_sel,0
+    mov es:[edi].hp_vfs_handle,0
     mov es:[edi].hp_pos,0
     mov es:[edi].hp_pos+4,0
 ;    
@@ -177,6 +180,7 @@ nsLoop:
     mov es:[edi].hp_handle,0
     mov es:[edi].hp_access,0
     mov es:[edi].hp_vfs_sel,0
+    mov es:[edi].hp_vfs_handle,0
     mov es:[edi].hp_pos,0
     mov es:[edi].hp_pos+4,0
     loop nsLoop
@@ -242,6 +246,7 @@ ncLoop:
     mov es:[ebx].hp_handle,0
     mov es:[ebx].hp_access,0
     mov es:[ebx].hp_vfs_sel,0
+    mov es:[ebx].hp_vfs_handle,0
     mov es:[ebx].hp_pos,0
     mov es:[ebx].hp_pos+4,0
 ;
@@ -584,6 +589,7 @@ aphFound:
     mov ds:[ebx].hp_handle,ax
     mov ds:[ebx].hp_access,cx
     mov ds:[ebx].hp_vfs_sel,0
+    mov ds:[ebx].hp_vfs_handle,0
     mov ds:[ebx].hp_pos,0
     mov ds:[ebx].hp_pos+4,0
     LeaveSection ds:h_section
@@ -649,6 +655,7 @@ acphFound:
     mov ds:[ebx].hp_handle,ax
     mov ds:[ebx].hp_access,cx
     mov ds:[ebx].hp_vfs_sel,0
+    mov ds:[ebx].hp_vfs_handle,0
     mov ds:[ebx].hp_pos,0
     mov ds:[ebx].hp_pos+4,0
     LeaveSection ds:h_section
@@ -821,6 +828,7 @@ RefVfsHandle  Endp
 ;           PARAMETERS:     AX          Map sel
 ;                           BX          C Handle
 ;                           CX          Mode
+;                           DX          Mod handle
 ;
 ;           RETURNS:        BX          Handle
 ;
@@ -831,6 +839,9 @@ RefVfsHandle  Endp
 AllocateModHandle     Proc near
     push ds
     push edx
+    push esi
+;
+    mov esi,edx
 ;
     push eax
     push ebx
@@ -855,11 +866,12 @@ amhLoop:
 ;
     pop ecx
     pop edx
+    pop eax
     LeaveSection ds:h_section
     stc
     jmp amhDone
 
-amhFound:    
+amhFound:        
     pop ecx
     pop edx
     pop eax
@@ -867,6 +879,7 @@ amhFound:
     mov ds:[ebx].hp_handle,dx
     mov ds:[ebx].hp_access,cx
     mov ds:[ebx].hp_vfs_sel,ax
+    mov ds:[ebx].hp_vfs_handle,si
     mov ds:[ebx].hp_pos,0
     mov ds:[ebx].hp_pos+4,0
     LeaveSection ds:h_section
@@ -877,6 +890,7 @@ amhFound:
     movzx ebx,bx
 
 amhDone:   
+    pop esi
     pop edx
     pop ds
     ret
@@ -1105,6 +1119,9 @@ close_handle     Proc far
 ;
     xor dx,dx
     xchg dx,ds:[ebx].hp_vfs_sel
+;
+    xor bp,bp
+    xchg bp,ds:[ebx].hp_vfs_handle
     LeaveSection ds:h_section
 ;
     or dx,dx
