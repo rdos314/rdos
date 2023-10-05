@@ -313,8 +313,6 @@ delete_c_handle Proc far
     push es
     pushad
 ;
-    int 3
-;
     mov edx,SEG data
     mov ds,edx
 ;
@@ -916,7 +914,6 @@ ohAppendOk:
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
 ;
-    int 3
     xor eax,eax
     xor edx,edx
     SetHandleSize64
