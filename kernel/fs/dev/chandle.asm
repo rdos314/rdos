@@ -37,6 +37,7 @@ INCLUDE ..\os\exec.def
 
     .386p
 
+MAX_MODULES           = 256
 MAX_HANDLES           = 512
 SYS_HANDLE_COUNT      = 1024
 SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
@@ -97,7 +98,9 @@ socket_wait_header ENDS
 data    SEGMENT byte public 'DATA'
 
 hd_section       section_typ <>
+hd_mod_count     DW ?
 
+hd_mod_arr       DW MAX_MODULES DUP(?)
 hd_bitmap        DD SYS_BITMAP_COUNT DUP(?)
 hd_data          DD 4 * SYS_HANDLE_COUNT DUP(?)
 
@@ -144,39 +147,45 @@ create_c_handle Proc far
 ;
     mov eax,SIZE handle_struc
     AllocateSmallGlobalMem
-    mov eax,es
-    mov ds,eax
 ;    
     mov edi,OFFSET h_arr
-    mov ds:[edi].hp_handle,1
-    mov ds:[edi].hp_access,IO_READ OR IO_ISTTY
-    mov ds:[edi].hp_pos,0
-    mov ds:[edi].hp_pos+4,0
+    mov es:[edi].hp_handle,1
+    mov es:[edi].hp_access,IO_READ OR IO_ISTTY
+    mov es:[edi].hp_pos,0
+    mov es:[edi].hp_pos+4,0
 ;
     add edi,16
-    mov ds:[edi].hp_handle,2
-    mov ds:[edi].hp_access,IO_WRITE OR IO_ISTTY
-    mov ds:[edi].hp_pos,0
-    mov ds:[edi].hp_pos+4,0
+    mov es:[edi].hp_handle,2
+    mov es:[edi].hp_access,IO_WRITE OR IO_ISTTY
+    mov es:[edi].hp_pos,0
+    mov es:[edi].hp_pos+4,0
 ;
     add edi,16
-    mov ds:[edi].hp_handle,2
-    mov ds:[edi].hp_access,IO_WRITE OR IO_ISTTY
-    mov ds:[edi].hp_pos,0
-    mov ds:[edi].hp_pos+4,0
+    mov es:[edi].hp_handle,2
+    mov es:[edi].hp_access,IO_WRITE OR IO_ISTTY
+    mov es:[edi].hp_pos,0
+    mov es:[edi].hp_pos+4,0
 ;    
     mov ecx,MAX_HANDLES - 3
 
 nsLoop:
     add edi,16
-    mov ds:[edi].hp_handle,0
-    mov ds:[edi].hp_access,0
-    mov ds:[edi].hp_pos,0
-    mov ds:[edi].hp_pos+4,0
+    mov es:[edi].hp_handle,0
+    mov es:[edi].hp_access,0
+    mov es:[edi].hp_pos,0
+    mov es:[edi].hp_pos+4,0
     loop nsLoop
 ;    
-    InitSection ds:h_section
-    mov eax,ds
+    InitSection es:h_section
+;
+    EnterSection ds:hd_section
+    movzx ebx,ds:hd_mod_count
+    shl ebx,1
+    mov ds:[ebx].hd_mod_arr,es
+    inc ds:hd_mod_count
+    LeaveSection ds:hd_section
+;
+    mov eax,es
 ;
     pop edi
     pop esi
@@ -268,6 +277,15 @@ ncNext:
     sub ecx,1
     jnz ncLoop
 ;
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:hd_section
+    movzx ebx,ds:hd_mod_count
+    shl ebx,1
+    mov ds:[ebx].hd_mod_arr,es
+    inc ds:hd_mod_count
+    LeaveSection ds:hd_section
+;
     mov eax,es
 ;
     pop ecx
@@ -294,6 +312,38 @@ delete_c_handle Proc far
     push ds
     push es
     pushad
+;
+    int 3
+;
+    mov edx,SEG data
+    mov ds,edx
+;
+    EnterSection ds:hd_section
+    movzx ecx,ds:hd_mod_count
+    mov ebx,OFFSET hd_mod_arr
+
+ntUnlinkLoop:
+    cmp ax,ds:[ebx]
+    je ntUnlinkFound
+;
+    add ebx,2
+    loop ntUnlinkLoop
+;
+    int 3
+
+ntUnlinkFound:
+    sub ecx,1
+    jz ntUnlinked
+;
+    mov dx,ds:[ebx+2]
+    mov ds:[ebx],dx
+    add ebx,2
+    sub ecx,1
+    jna ntUnlinkFound
+
+ntUnlinked:
+    dec ds:hd_mod_count
+    LeaveSection ds:hd_section
 ;
     mov ds,eax
 ;    
@@ -2025,7 +2075,6 @@ shsFail64:
 
 shsDone64:
     pop ebp
-    pop esi
     pop ebx
     pop ds    
     ret
@@ -5136,6 +5185,11 @@ init_handle     PROC near
     mov bx,SEG data
     mov es,bx
 ;
+    mov edi,OFFSET hd_mod_arr
+    xor eax,eax
+    mov ecx,MAX_MODULES
+    rep stosw
+;
     mov edi,OFFSET hd_bitmap
     xor eax,eax
     mov ecx,SYS_BITMAP_COUNT
@@ -5148,6 +5202,7 @@ init_handle     PROC near
 ;
     InitSection es:hd_section
     mov es:hd_bitmap,3
+    mov es:hd_mod_count,0
 ;
     mov edi,OFFSET hd_data
     mov es:[edi].he_type,C_HANDLE_STDIN
