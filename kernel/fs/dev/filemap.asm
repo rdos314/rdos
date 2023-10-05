@@ -93,11 +93,13 @@ kf_c_handle       DW ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 
+kf_mod_count      DD ?
 kf_req_count      DD ?
 kf_wait_count     DD ?
 kf_block_count    DD ?
 kf_phys_count     DD ?
 
+kf_mod_arr        DW MAX_MODULES DUP(?)
 kf_sorted_arr     DB 256 DUP(?)
 kf_handle_arr     DD 256 DUP(?)
 
@@ -347,6 +349,7 @@ CreateFileSel   Proc near
     mov ds:kf_phys_count,0
     mov ds:kf_wr_ptr,0
     mov ds:kf_c_handle,0
+    mov ds:kf_mod_count,0
 ;
     mov ecx,256
     mov edi,OFFSET kf_handle_arr

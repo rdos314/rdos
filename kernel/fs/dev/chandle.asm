@@ -34,10 +34,10 @@ INCLUDE ..\os.inc
 include ..\wait.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\exec.def
+INCLUDE vfs.inc
 
     .386p
 
-MAX_MODULES           = 256
 MAX_HANDLES           = 512
 SYS_HANDLE_COUNT      = 1024
 SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5

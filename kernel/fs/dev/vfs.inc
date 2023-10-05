@@ -46,6 +46,8 @@ MAX_VFS_ENTRY_COUNT = 255
 MAX_VFS_FILE_COUNT  = 1024
 MAX_VFS_FILE_REQ_COUNT  = 4096
 
+MAX_MODULES           = 256
+
 vfs_table_struc    STRUC
 
 ; IN  BX        Param
