@@ -2125,61 +2125,6 @@ DeleteProgSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           FreeUserHandle
-;
-;       DESCRIPTION:    Free user handle
-;
-;       PARAMETERS:     DS              Prog sel
-;                       BX              Handle    
-;
-;       RETURNS:        CY              No more open handles
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeUserHandle      Proc near
-    push es
-    push eax
-    push ecx
-    push edx
-;
-    or bx,bx
-    clc
-    jz fuhDone
-;
-    mov dx,flat_data_sel
-    mov es,edx
-    mov edx,ds:kfm_user_base
-    mov edx,es:[edx].fm_handle_ptr
-    add edx,OFFSET fh_bitmap
-;
-    dec bx
-    movzx ebx,bx
-    lock btc es:[edx],ebx
-;
-    mov ecx,15
-
-fuhLoop:
-    mov eax,es:[edx]
-    or eax,eax
-    clc
-    jnz fuhDone
-;
-    add edx,4
-    loop fuhLoop
-;
-    stc
-
-fuhDone:
-    pop edx
-    pop ecx
-    pop eax
-    pop es
-    ret
-FreeUserHandle      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           GetPos
 ;
 ;       DESCRIPTION:    Get file position
@@ -2878,6 +2823,46 @@ AllocateUserHandle      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           FreeUserHandle
+;
+;       DESCRIPTION:    Free user handle
+;
+;       PARAMETERS:     AX              Mod sel
+;                       BX              Handle    
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeUserHandle
+
+FreeUserHandle      Proc near
+    push ds
+    push es
+    push edx
+;
+    or bx,bx
+    jz fuhDone
+;
+    mov ds,eax
+    mov dx,flat_data_sel
+    mov es,edx
+    mov edx,ds:kfm_user_base
+    mov edx,es:[edx].fm_handle_ptr
+    add edx,OFFSET fh_bitmap
+;
+    dec bx
+    movzx ebx,bx
+    lock btc es:[edx],ebx
+
+fuhDone:
+    pop edx
+    pop es
+    pop ds
+    ret
+FreeUserHandle      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CloseVfsMod
 ;
 ;       DESCRIPTION:    Close VFS module sel
@@ -3136,9 +3121,6 @@ delete_vfs_file    Endp
     public CloseVfsFile
 
 CloseVfsFile  Proc near
-    call FreeUserHandle
-    jnc clvfDone
-;
     call DeleteMap
 ;
     push ds

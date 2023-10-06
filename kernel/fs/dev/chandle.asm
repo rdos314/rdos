@@ -114,6 +114,7 @@ code    SEGMENT byte public 'CODE'
     extern OpenVfsFile:near
     extern CloseVfsFile:near
     extern CloseVfsMod:near
+    extern FreeUserHandle:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1129,8 +1130,12 @@ close_handle     Proc far
 ;
     int 3
     push eax
+;
     mov eax,edx
+    mov ebx,ebp
+    call FreeUserHandle
     call CloseVfsMod
+;
     pop eax
 
 chVfsOk:
