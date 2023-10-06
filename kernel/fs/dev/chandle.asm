@@ -1101,7 +1101,11 @@ close_handle     Proc far
     GetThread
     mov ds,eax
     mov ds,ds:p_proc_sel
-    mov ds,ds:pf_c_handle_sel
+    mov ax,ds:pf_c_handle_sel
+    or ax,ax
+    jz chFail
+;
+    mov ds,eax
 ;    
     cmp bx,MAX_HANDLES
     jae chFail

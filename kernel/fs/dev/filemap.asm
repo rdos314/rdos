@@ -2690,11 +2690,13 @@ DeleteVfsMod   Proc near
     push es
     push fs
     push eax
+    push ebx
     push ecx
     push edx
 ;
     push eax
 ;
+    mov ds,eax
     mov ds,ds:kfm_kernel_sel
     mov ax,flat_data_sel
     mov es,eax
@@ -2727,6 +2729,7 @@ dpsPop:
 ;
     pop edx
     pop ecx
+    pop ebx
     pop eax
     pop fs
     pop es
