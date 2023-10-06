@@ -156,6 +156,7 @@ code    SEGMENT byte public 'CODE'
     extern AllocateVfsHandle:near
     extern RefVfsHandle:near
     extern AllocateModHandle:near
+    extern VfsRead:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3034,6 +3035,41 @@ ovfDone:
     pop ds
     ret
 OpenVfsFile   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadCVfsFile
+;
+;       DESCRIPTION:    Read VFS file
+;
+;       PARAMETERS:     BX		Module sel
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        EAX             Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadCVfsFile
+
+ReadCVfsFile    Proc near
+    push fs
+    push ebx
+    push esi
+;
+    mov fs,bx
+    mov esi,fs:kfm_user_base
+    mov ebx,flat_data_sel
+    mov fs,ebx
+    call VfsRead
+;
+    pop esi
+    pop ebx
+    pop fs
+    ret
+ReadCVfsFile    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -115,6 +115,7 @@ code    SEGMENT byte public 'CODE'
     extern CloseVfsFile:near
     extern CloseVfsMod:near
     extern FreeUserHandle:near
+    extern ReadCVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1425,6 +1426,11 @@ read_udp_socket       Proc near
     ret
 read_udp_socket       Endp
 
+read_vfs_file        Proc near
+    call ReadCVfsFile
+    ret
+read_vfs_file        Endp
+
 read_tab:
 rt00  DD OFFSET read_dummy
 rt01  DD OFFSET read_file
@@ -1432,7 +1438,7 @@ rt02  DD OFFSET read_stdin
 rt03  DD OFFSET read_dummy
 rt04  DD OFFSET read_tcp_socket
 rt05  DD OFFSET read_udp_socket
-rt06  DD OFFSET read_dummy
+rt06  DD OFFSET read_vfs_file
 rt07  DD OFFSET read_dummy
 rt08  DD OFFSET read_dummy
 rt09  DD OFFSET read_dummy
