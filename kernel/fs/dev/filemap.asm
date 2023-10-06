@@ -2500,6 +2500,7 @@ AddVfsMod    Endp
 RemoveVfsMod      Proc near
     push eax
     push ebx
+    push ecx
 ;
     mov ebx,OFFSET kf_mod_arr
     mov ecx,ds:kf_mod_count
@@ -2528,6 +2529,7 @@ rvmFound:
     dec ds:kf_mod_count
 
 rvmDone:
+    pop ecx
     pop ebx
     pop eax
     ret
