@@ -823,84 +823,6 @@ rvhLeave:
 RefVfsHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateModHandle
-;
-;           DESCRIPTION:    Allocate module handle
-;
-;           PARAMETERS:     AX          Map sel
-;                           BX          C Handle
-;                           CX          Mode
-;                           DX          Mod handle
-;
-;           RETURNS:        BX          Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public AllocateModHandle
-
-AllocateModHandle     Proc near
-    push ds
-    push edx
-    push esi
-;
-    mov esi,edx
-;
-    push eax
-    push ebx
-    push ecx
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ds,ds:pf_c_handle_sel
-;    
-    mov ecx,MAX_HANDLES
-    mov ebx,OFFSET h_arr
-    EnterSection ds:h_section
-
-amhLoop:    
-    mov dx,ds:[ebx].hp_handle
-    or dx,dx
-    jz amhFound
-;
-    add ebx,16
-    loop amhLoop
-;
-    pop ecx
-    pop edx
-    pop eax
-    LeaveSection ds:h_section
-    stc
-    jmp amhDone
-
-amhFound:        
-    pop ecx
-    pop edx
-    pop eax
-;
-    mov ds:[ebx].hp_handle,dx
-    mov ds:[ebx].hp_access,cx
-    mov ds:[ebx].hp_vfs_sel,ax
-    mov ds:[ebx].hp_vfs_handle,si
-    mov ds:[ebx].hp_pos,0
-    mov ds:[ebx].hp_pos+4,0
-    LeaveSection ds:h_section
-;
-    sub ebx,OFFSET h_arr
-    shr ebx,4
-    clc
-    movzx ebx,bx
-
-amhDone:   
-    pop esi
-    pop edx
-    pop ds
-    ret
-AllocateModHandle  Endp   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           OpenToIo
@@ -952,6 +874,89 @@ OpenToIo  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateModHandle
+;
+;           DESCRIPTION:    Allocate module handle
+;
+;           PARAMETERS:     AX          Map sel
+;                           BX          C Handle
+;                           CX          Mode
+;                           DX          Mod handle
+;
+;           RETURNS:        BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateModHandle
+
+AllocateModHandle     Proc near
+    push ds
+    push eax
+    push edx
+    push esi
+;
+    mov esi,edx
+;
+    push eax
+    push ebx
+    push ecx
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    mov ecx,MAX_HANDLES
+    mov ebx,OFFSET h_arr
+    EnterSection ds:h_section
+
+amhLoop:    
+    mov dx,ds:[ebx].hp_handle
+    or dx,dx
+    jz amhFound
+;
+    add ebx,16
+    loop amhLoop
+;
+    pop ecx
+    pop edx
+    pop eax
+    LeaveSection ds:h_section
+    stc
+    jmp amhDone
+
+amhFound:        
+    pop ecx
+    pop edx
+    pop eax
+;
+    mov ds:[ebx].hp_handle,dx
+    mov ds:[ebx].hp_vfs_sel,ax
+    mov ds:[ebx].hp_vfs_handle,si
+    mov ds:[ebx].hp_pos,0
+    mov ds:[ebx].hp_pos+4,0
+;
+    call OpenToIo
+    mov ds:[ebx].hp_access,ax
+;
+    LeaveSection ds:h_section
+;
+    sub ebx,OFFSET h_arr
+    shr ebx,4
+    clc
+    movzx ebx,bx
+
+amhDone:   
+    pop esi
+    pop edx
+    pop eax
+    pop ds
+    ret
+AllocateModHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -973,16 +978,11 @@ open_handle     Proc near
     push ebp
 ;  
     call OpenVfsFile
-    jc ovfLegacy
+    jnc ohCom
 ;
-    call OpenToIo
-    jmp ohCom
-
-ovfLegacy:  
     OpenCFile
     jc ohFail
-
-ohrOpen:
+;
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
