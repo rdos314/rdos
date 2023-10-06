@@ -116,6 +116,7 @@ code    SEGMENT byte public 'CODE'
     extern CloseVfsMod:near
     extern FreeUserHandle:near
     extern ReadCVfsFile:near
+    extern MapCVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1190,6 +1191,80 @@ chDone:
 close_handle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           VfsMapHandle_
+;
+;       DESCRIPTION:    Map VFS handle
+;
+;       PARAMETERS:     BX             Handle
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public VfsMapHandle_
+
+VfsMapHandle_     Proc near
+    push ds
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae vmhDone
+;   
+    mov si,bx
+    shl esi,16
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov si,ds:[ebx].hp_access
+    test si,IO_READ
+    jz vmhDone
+;
+    mov si,ds:[ebx].hp_vfs_sel
+    mov bp,ds:[ebx].hp_handle
+;
+    cmp bp,SYS_HANDLE_COUNT
+    jae vmhDone
+;    
+    or bp,bp
+    jz vmhDone
+;
+    movzx ebx,bp
+    dec ebx
+    shl ebx,4
+    add ebx,OFFSET hd_data
+    mov ebp,SEG data
+    mov ds,ebp
+;
+    movzx ebp,ds:[ebx].he_type
+    cmp ebp,C_HANDLE_VFS
+    stc
+    jne vmhDone
+;    
+    mov ds,si
+    shr esi,16
+    mov bx,si
+    call MapCVfsFile
+
+vmhDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop ds    
+    ret
+VfsMapHandle_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           CHandleToFileSel
@@ -1458,17 +1533,17 @@ read_handle     Proc near
     cmp bx,MAX_HANDLES
     jae rhFail
 ;   
+    mov si,bx
+    shl esi,16
     movzx ebx,bx
     shl ebx,4
     add ebx,OFFSET h_arr
-    mov si,ds:[ebx].hp_access
-    test si,IO_READ
+    mov ax,ds:[ebx].hp_access
+    test ax,IO_READ
     jz rhFail
 ;
     mov eax,ds:[ebx].hp_pos
     mov edx,ds:[ebx].hp_pos+4
-    mov si,ds:[ebx].hp_vfs_handle
-    shl esi,16
     mov si,ds:[ebx].hp_vfs_sel
     mov bp,ds:[ebx].hp_handle
 ;

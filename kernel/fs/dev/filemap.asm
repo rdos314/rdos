@@ -1964,50 +1964,6 @@ DeleteMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           MapReq
-;
-;       DESCRIPTION:    Map req
-;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
-;                       GS             File sel
-;                       BX             Handle
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MapReq      Proc near
-    push es
-    push fs
-    push gs
-    pushad
-;
-    mov esi,ds
-    mov fs,esi
-    mov es,ds:kfm_kernel_sel
-    mov gs,ds:kfm_file_sel
-;
-    call WaitForReq
-    jc mrDone
-;
-    call LockMap
-    call SyncMap
-    pushf
-    call UnlockMap
-    popf
-
-mrDone:
-    popad
-    pop gs
-    pop fs
-    pop es
-    ret
-MapReq   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           GetPos
 ;
 ;       DESCRIPTION:    Get file position
@@ -2387,7 +2343,7 @@ map_vfs_file   Proc far
     mov si,ds:[ebx].fh_sel
     mov bx,ds:[ebx].fh_handle
     mov ds,esi
-    call MapReq
+    call MapCVfsFile
 
 mvfDone:
     popad
@@ -2960,6 +2916,50 @@ ummDone:
     pop es
     ret
 UnlockMod_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           MapCVfsFile
+;
+;       DESCRIPTION:    Map VFS file
+;
+;       PARAMETERS:     DS             Mod sel
+;                       BX             Handle
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public MapCVfsFile
+
+MapCVfsFile      Proc near
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov esi,ds
+    mov fs,esi
+    mov es,ds:kfm_kernel_sel
+    mov gs,ds:kfm_file_sel
+;
+    call WaitForReq
+    jc mcvfDone
+;
+    call LockMap
+    call SyncMap
+    pushf
+    call UnlockMap
+    popf
+
+mcvfDone:
+    popad
+    pop gs
+    pop fs
+    pop es
+    ret
+MapCVfsFile   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

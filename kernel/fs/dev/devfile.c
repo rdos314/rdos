@@ -77,6 +77,9 @@ extern void LockMod(struct RdosFileMap *Map);
 extern void UnlockMod(struct RdosFileMap *Map);
 #pragma aux UnlockMod parm routine [fs esi]
 
+extern void VfsMapHandle(int handle, long long pos, int size);
+#pragma aux VfsMapHandle parm routine [__ebx] [__edx __eax] [__ecx]
+
 /*##########################################################################
 #
 #   Name       : VfsFind
@@ -205,7 +208,7 @@ int VfsRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int S
             {
                 UnlockMod(Map);
 
-//                RdosMapVfsFile(FHandle, Pos, Size);
+                VfsMapHandle(Handle, Pos, Size);
 
                 LockMod(Map);
                 LastIndex = VfsFind(Map, Pos);
