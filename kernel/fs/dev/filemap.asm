@@ -2847,6 +2847,9 @@ FreeUserHandle      Proc near
     dec bx
     movzx ebx,bx
     lock btc es:[edx],ebx
+    jc fuhDone
+;
+    int 3
 
 fuhDone:
     pop edx
