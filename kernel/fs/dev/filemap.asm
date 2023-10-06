@@ -123,7 +123,6 @@ kfm_prog_sel      DW ?
 kfm_file_sel      DW ?
 kfm_kernel_sel    DW ?
 kfm_handle        DW ?
-kfm_next_map      DW ?
 kfm_ref_count     DW ?
 kfm_section       section_typ <>
 kfm_free_count    DB ?
@@ -134,6 +133,7 @@ kfm_free_arr      DB 240 DUP(?)
 kfm_unlink_arr    DB 240 DUP(?)
 
 kernel_file_map   ENDS
+
 
 data    SEGMENT byte public 'DATA'
 
@@ -2007,65 +2007,6 @@ MapReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UnlinkProgSel
-;
-;       DESCRIPTION:    Unlink program selector
-;
-;       PARAMETERS:     DS              File sel
-;                       AX              Prog sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlinkProgSel      Proc near
-    push es
-    push eax
-    push edx
-;
-    mov dx,ax
-;
-    xor ax,ax
-    mov es,eax
-;    mov ax,ds:kf_map_list
-
-upsLoop:
-    or ax,ax
-    stc
-    jz upsDone
-;
-    cmp dx,ax
-    je upsUnlink
-;
-    mov es,eax
-    mov ax,es:kfm_next_map
-    jmp upsLoop
-
-upsUnlink:
-    mov ax,es
-    or ax,ax
-    jz upsRoot
-;
-    push es
-    mov es,edx
-    mov ax,es:kfm_next_map
-    pop es
-    mov es:kfm_next_map,ax
-    jmp upsDone
-
-upsRoot:
-    mov es,edx
-    mov ax,es:kfm_next_map
-;    mov ds:kf_map_list,ax
-
-upsDone:
-    pop edx
-    pop eax
-    pop es
-    ret
-UnlinkProgSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           DeleteProgSel
 ;
 ;       DESCRIPTION:    Delete program selector
@@ -2605,6 +2546,54 @@ AddVfsMod    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           RemoveVfsMod
+;
+;       DESCRIPTION:    Remove VFS module
+;
+;       PARAMETERS:     DS              File sel
+;                       AX              Map sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveVfsMod      Proc near
+    push eax
+    push ebx
+;
+    mov ebx,OFFSET kf_mod_arr
+    mov ecx,ds:kf_mod_count
+    or ecx,ecx
+    jnz rvmLoop
+;
+    int 3
+    jmp rvmDone
+
+rvmLoop:
+    cmp ax,ds:[ebx].km_map_sel
+    je rvmFound
+;
+    add ebx,4
+    loop rvmLoop
+;
+    int 3
+    jmp rvmDone
+
+rvmFound:
+    mov eax,ds:[ebx+4]
+    mov ds:[ebx],eax
+    add ebx,4
+    loop rvmFound
+;
+    dec ds:kf_mod_count
+
+rvmDone:
+    pop ebx
+    pop eax
+    ret
+RemoveVfsMod      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateVfsMod
 ;
 ;       DESCRIPTION:    Create VFS module sel
@@ -2881,6 +2870,10 @@ CloseVfsMod   Proc near
 ;
     int 3
     call DeleteMap
+;
+    mov eax,ds
+    mov ds,ds:kfm_file_sel
+    call RemoveVfsMod
 
 cvmDone:
     pop ds
@@ -3125,7 +3118,6 @@ CloseVfsFile  Proc near
     push ds
     mov ax,ds
     mov ds,ds:kfm_file_sel
-    call UnlinkProgSel
 ;
 ;    mov ax,ds:kf_map_list
     or ax,ax
