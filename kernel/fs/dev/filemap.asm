@@ -1917,8 +1917,7 @@ SyncMap  Endp
 ;
 ;       DESCRIPTION:    Delete all mapped requests
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       GS             File sel
+;       PARAMETERS:     DS             Mod sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2881,6 +2880,7 @@ CloseVfsMod   Proc near
     jnz cvmDone
 ;
     int 3
+    call DeleteMap
 
 cvmDone:
     pop ds
@@ -3121,7 +3121,6 @@ delete_vfs_file    Endp
     public CloseVfsFile
 
 CloseVfsFile  Proc near
-    call DeleteMap
 ;
     push ds
     mov ax,ds
