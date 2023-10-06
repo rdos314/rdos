@@ -1073,10 +1073,8 @@ close_udp_socket	Proc near
 close_udp_socket	Endp
 
 close_vfs      Proc near
-    push ds
-    mov ds,eax
+    mov bx,ax
     call CloseVfsFile
-    pop ds
     ret
 close_vfs      Endp
 
@@ -1130,7 +1128,6 @@ close_handle     Proc far
     or dx,dx
     jz chVfsOk
 ;
-    int 3
     push eax
 ;
     mov eax,edx

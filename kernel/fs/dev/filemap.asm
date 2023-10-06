@@ -2007,64 +2007,6 @@ MapReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteProgSel
-;
-;       DESCRIPTION:    Delete program selector
-;
-;       PARAMETERS:     DS              File sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteProgSel   Proc near
-    push es
-    push fs
-    push eax
-    push ecx
-    push edx
-;
-    push ds
-;
-    mov ds,ds:kfm_kernel_sel
-    mov ax,flat_data_sel
-    mov es,eax
-    mov ebx,ds:fm_handle_ptr
-    add ebx,OFFSET fh_futex
-    mov eax,es:[ebx].fs_handle
-    or eax,eax
-    jz dpsPop
-;
-    CleanupFutex
-
-dpsPop:
-    pop ds
-;
-    mov es,ds:kfm_kernel_sel
-    FreeMem
-;
-    mov eax,ds
-    mov es,eax
-;
-    xor eax,eax
-    mov ds,eax
-;
-    mov edx,es:kfm_user_base
-    add edx,es:kfm_flat_base
-    mov ecx,3000h
-    FreeLinear
-;
-    FreeMem
-;
-    pop edx
-    pop ecx
-    pop eax
-    pop fs
-    pop es
-    ret
-DeleteProgSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           GetPos
 ;
 ;       DESCRIPTION:    Get file position
@@ -2735,6 +2677,66 @@ CreateVfsMod      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DeleteVfsMod
+;
+;       DESCRIPTION:    Delete VFS module sel
+;
+;       PARAMETERS:     AX              Mod sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteVfsMod   Proc near
+    push ds
+    push es
+    push fs
+    push eax
+    push ecx
+    push edx
+;
+    push eax
+;
+    mov ds,ds:kfm_kernel_sel
+    mov ax,flat_data_sel
+    mov es,eax
+    mov ebx,ds:fm_handle_ptr
+    add ebx,OFFSET fh_futex
+    mov eax,es:[ebx].fs_handle
+    or eax,eax
+    jz dpsPop
+;
+    CleanupFutex
+
+dpsPop:
+    pop ds
+;
+    mov es,ds:kfm_kernel_sel
+    FreeMem
+;
+    mov eax,ds
+    mov es,eax
+;
+    xor eax,eax
+    mov ds,eax
+;
+    mov edx,es:kfm_user_base
+    add edx,es:kfm_flat_base
+    mov ecx,3000h
+    FreeLinear
+;
+    FreeMem
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+    ret
+DeleteVfsMod      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AllocateUserHandle
 ;
 ;       DESCRIPTION:    Allocate user handle
@@ -2868,12 +2870,12 @@ CloseVfsMod   Proc near
     sub ds:kfm_ref_count,1
     jnz cvmDone
 ;
-    int 3
     call DeleteMap
 ;
-    mov eax,ds
     mov ds,ds:kfm_file_sel
     call RemoveVfsMod
+;
+    call DeleteVfsMod
 
 cvmDone:
     pop ds
@@ -3106,31 +3108,17 @@ delete_vfs_file    Endp
 ;
 ;       DESCRIPTION:    Close VFS file
 ;
-;       PARAMETERS:     DS             Prog sel
-;                       BX             Map Handle
+;       PARAMETERS:     BX             File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public CloseVfsFile
 
 CloseVfsFile  Proc near
-;
     push ds
-    mov ax,ds
-    mov ds,ds:kfm_file_sel
-;
-;    mov ax,ds:kf_map_list
-    or ax,ax
-    jnz clvfCleanup
-;
+    mov ds,ebx
     call SendCloseReq
-
-clvfCleanup:
     pop ds
-;
-    call DeleteProgSel
-
-clvfDone:
     ret
 CloseVfsFile  Endp
 
