@@ -2578,6 +2578,7 @@ FindVfsMod    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddVfsMod      Proc near
+    push eax
     push ebx
 ;
     mov ebx,ds:kf_mod_count
@@ -2586,20 +2587,19 @@ AddVfsMod      Proc near
     mov ds:[ebx].km_map_sel,ax
 ;
     push ds
-    push eax
 ;
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
     mov ax,ds:pf_c_handle_sel
 ;
-    pop eax
     pop ds
 ;
     mov ds:[ebx].km_c_sel,ax
     inc ds:kf_mod_count
 ;
     pop ebx
+    pop eax
     ret
 AddVfsMod    Endp
 

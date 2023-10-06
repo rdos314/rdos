@@ -517,6 +517,7 @@ ref_c_handle     Proc far
     push edx
 ;
     movzx edi,bx
+    dec edi
     shl edi,4
     add edi,OFFSET hd_data
 ;
@@ -788,6 +789,7 @@ RefVfsHandle     Proc near
     jz rvhLeaveFail
 ;
     movzx edi,bx
+    dec edi
     shl edi,4
     add edi,OFFSET hd_data
 ;
