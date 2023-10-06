@@ -2862,6 +2862,108 @@ FreeUserHandle      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LockMod
+;
+;       DESCRIPTION:    Lock mod
+;
+;       PARAMETERS:     FS:ESI          User map
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public LockMod_
+
+LockMod_      Proc near
+    push es
+    push eax
+    push ebx
+;
+    mov ebx,fs:[esi].fm_handle_ptr
+    add ebx,OFFSET fh_futex
+    mov ax,flat_data_sel
+    mov es,eax
+;    
+    str ax
+    cmp ax,es:[ebx].fs_owner
+    jne lmmLock
+;
+    inc es:[ebx].fs_counter
+    jmp lmmDone
+
+lmmLock:
+    lock add es:[ebx].fs_val,1
+    jc lmmTake
+;
+    mov eax,1
+    xchg ax,es:[ebx].fs_val
+    cmp ax,-1
+    jne lmmBlock
+
+lmmTake:
+    str ax
+    mov es:[ebx].fs_owner,ax
+    mov es:[ebx].fs_counter,1
+    jmp lmmDone
+
+lmmBlock:
+    push edi
+    mov edi,es:[ebx].fs_sect_name
+    AcquireNamedFutex
+    pop edi
+
+lmmDone:
+    pop ebx
+    pop eax
+    pop es
+    ret
+LockMod_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlockMod
+;
+;       DESCRIPTION:    Inlock mod
+;
+;       PARAMETERS:     FS:ESI          User map
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UnlockMod_
+
+UnlockMod_      Proc near
+    push es
+    push eax
+    push ebx
+;
+    mov ebx,fs:[esi].fm_handle_ptr
+    add ebx,OFFSET fh_futex
+    mov ax,flat_data_sel
+    mov es,eax
+;
+    str ax
+    cmp ax,es:[ebx].fs_owner
+    jne ummDone
+;
+    sub es:[ebx].fs_counter,1
+    jnz ummDone
+;
+    mov es:[ebx].fs_owner,0
+    lock sub es:[ebx].fs_val,1
+    jc ummDone
+;
+    mov es:[ebx].fs_val,-1
+    ReleaseFutex
+
+ummDone:
+    pop ebx
+    pop eax
+    pop es
+    ret
+UnlockMod_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CloseVfsMod
 ;
 ;       DESCRIPTION:    Close VFS module sel

@@ -56,16 +56,26 @@ struct RdosFileMap
     struct RdosFileMapEntry MapArr[240];
 };
 
-char *OffsetToPtr(int offset);
+short int GetSel(void *ptr);
+#pragma aux GetSel = \
+    __parm [__dx __eax]  \
+    __value [__dx]
+
+char *OffsetToPtr(short int sel, int offset);
 #pragma aux OffsetToPtr = \
-    "mov dx,1BBh"    \
-    __parm [__eax]  \
+    __parm [__dx] [__eax]  \
     __value [__dx __eax]
 
 void memcpy(void *dst, void *src, int count);
 #pragma aux memcpy = \
     "rep movs byte ptr es:[edi],fs:[esi]" \
-    __parm [es edi] [fs esi] [ecx] 
+    __parm [es edi] [fs esi] [ecx]
+
+extern void LockMod(struct RdosFileMap *Map);
+#pragma aux LockMod parm routine [fs esi]
+
+extern void UnlockMod(struct RdosFileMap *Map);
+#pragma aux UnlockMod parm routine [fs esi]
 
 /*##########################################################################
 #
@@ -123,6 +133,7 @@ static int VfsReadOne(struct RdosFileMap *Map, int index, char *buf, long long p
     int diff;
     int count = 0;
     char *src;
+    short int sel = GetSel(Map);
     struct RdosFileMapEntry *entry;
 
     index = Map->SortedArr[index];
@@ -138,7 +149,7 @@ static int VfsReadOne(struct RdosFileMap *Map, int index, char *buf, long long p
 
             if (count > 0)
             {
-                src = OffsetToPtr(entry->BaseOffset);
+                src = OffsetToPtr(sel, entry->BaseOffset);
                 src += diff;
                 if (count > size)
                     count = size;
@@ -168,13 +179,12 @@ static int VfsReadOne(struct RdosFileMap *Map, int index, char *buf, long long p
 int VfsRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int Size)
 {
     int count;
-    int diff;
     int i;
     int ret = 0;
     char *ptr = (char *)Buf;
     int LastIndex = 0;
 
-//    EnterFutex(&Map->Handle->Futex);
+    LockMod(Map);
 
     while (Size)
     {
@@ -193,11 +203,11 @@ int VfsRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int S
 
             for (i = 0; i < 10; i++)
             {
-//                LeaveFutex(&Map->Handle->Futex);
+                UnlockMod(Map);
 
 //                RdosMapVfsFile(FHandle, Pos, Size);
 
-//                EnterFutex(&Map->Handle->Futex);
+                LockMod(Map);
                 LastIndex = VfsFind(Map, Pos);
                 if (LastIndex >= 0)
                     break;
@@ -208,7 +218,7 @@ int VfsRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int S
         }
     }
 
-//    LeaveFutex(&Map->Handle->Futex);
+    UnlockMod(Map);
 
     return ret;
 }
