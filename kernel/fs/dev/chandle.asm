@@ -1476,8 +1476,8 @@ read_handle     Proc near
     dec ebx
     shl ebx,4
     add ebx,OFFSET hd_data
-    mov eax,SEG data
-    mov ds,eax
+    mov ebp,SEG data
+    mov ds,ebp
 ;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
@@ -1617,8 +1617,8 @@ write_handle     Proc near
     dec ebx
     shl ebx,4
     add ebx,OFFSET hd_data
-    mov eax,SEG data
-    mov ds,eax
+    mov ebp,SEG data
+    mov ds,ebp
 ;
     test si,IO_APPEND
     jz whPosOk

@@ -1833,7 +1833,7 @@ write_c_file       Proc far
 ;
     or edx,edx
     stc
-    jz wcfDone
+    jnz wcfDone
 ;
     mov edx,eax
     mov ds,bx
