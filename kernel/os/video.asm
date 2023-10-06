@@ -5287,7 +5287,7 @@ con_end_key     ENDP
 ;           PARAMETERS:     ES:EDI        BUFFER
 ;                           ECX           MAX NUMBER OF CHARS
 ;                           
-;           RETURNS:        EAX           NUMBER OF READ CHARS
+;           RETURNS:        ECX           NUMBER OF READ CHARS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5474,8 +5474,6 @@ read_c_console  PROC far
     push ds
     push fs
     push ebx
-    push ecx
-    push edx
     push esi
 ;
     push edi
@@ -5515,12 +5513,13 @@ con_io_in_tab:
     pop edi
     mov eax,esi
     sub eax,edi
+    mov ecx,eax
+    xor eax,eax
+    xor edx,edx
     clc
 
 con_io_done:
     pop esi
-    pop edx
-    pop ecx
     pop ebx
     pop fs
     pop ds

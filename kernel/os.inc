@@ -2630,11 +2630,11 @@ CloseCFile MACRO
                     ENDM
 
 ; IN  BX        File selector
-; IN  EDX       Position
+; IN  EDX:EAX   Position
 ; IN  ES:EDI    Buffer
 ; IN  ECX       Size
-; OUT EAX       Read size
-; OUT EDX       New position
+; OUT ECX       Read size
+; OUT EDX:EAX   New position
 ReadCFile MACRO
     OsGate read_c_file_nr
                     ENDM
@@ -2687,7 +2687,7 @@ StopReadCFile               MACRO
 
 ; IN  ES:EDI    Buffer
 ; IN  ECX       Size
-; OUT EAX       Read size
+; OUT ECX       Read size
 ReadCConsole MACRO
     OsGate read_c_console_nr
                     ENDM
@@ -3305,11 +3305,11 @@ PollTcpSocket MACRO
                     ENDM
 
 ; IN  BX        Tcp selector
-; IN  EDX       Position
+; IN  EDX:EAX   Position
 ; IN  ES:EDI    Buffer
 ; IN  ECX       Size
-; OUT EAX       Read size
-; OUT EDX       New position
+; OUT ECX       Read size
+; OUT EDX:EAX   New position
 ReadTcpSocket MACRO
     OsGate read_tcp_socket_nr
                     ENDM
@@ -3395,11 +3395,11 @@ PollUdpSocket MACRO
                     ENDM
 
 ; IN  BX        Udp selector
-; IN  EDX       Position
+; IN  EDX:EAX   Position
 ; IN  ES:EDI    Buffer
 ; IN  ECX       Size
-; OUT EAX       Read size
-; OUT EDX       New position
+; OUT ECX       Read size
+; OUT EDX:EAX   New position
 ReadUdpSocket MACRO
     OsGate read_udp_socket_nr
                     ENDM

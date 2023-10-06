@@ -3151,7 +3151,8 @@ OpenVfsFile   Endp
 ;                       ECX             Size
 ;                       ESI             Mod sel (low) & handle (high)
 ;
-;       RETURNS:        EAX             Count
+;       RETURNS:        ECX             Count
+;                       EDX:EAX         New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3173,6 +3174,9 @@ ReadCVfsFile    Proc near
     mov ebx,ebp
     xor ebp,ebp
     call VfsRead
+;
+    add eax,ecx
+    adc edx,0
 ;
     pop ebp
     pop esi

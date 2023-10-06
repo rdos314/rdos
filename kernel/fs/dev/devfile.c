@@ -51,8 +51,8 @@ struct RdosFileMap
     unsigned char SortedArr[241];
     char Resv[3];
     int Count;
-    int HandlePtr;
-    int InfoPtr;
+    int HandleOffset;
+    int InfoOffset;
     struct RdosFileMapEntry MapArr[240];
 };
 
@@ -178,7 +178,7 @@ static int VfsReadOne(struct RdosFileMap *Map, int index, char *buf, long long p
 #   Returns....: Bytes read
 #
 ##########################################################################*/
-#pragma aux VfsRead "*" parm routine [ebx] [fs esi] [edx eax] [es edi] [ecx] value [eax]
+#pragma aux VfsRead "*" parm routine [ebx] [fs esi] [edx eax] [es edi] [ecx] value [ecx]
 int VfsRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int Size)
 {
     int count;
@@ -186,6 +186,15 @@ int VfsRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int S
     int ret = 0;
     char *ptr = (char *)Buf;
     int LastIndex = 0;
+    short int sel = GetSel(Map);
+    struct RdosFileInfo *info = (struct RdosFileInfo *)OffsetToPtr(sel, Map->InfoOffset);
+    long long TotalSize = info->CurrSize;
+
+    if (Pos > TotalSize)
+        Pos = TotalSize;
+
+    if (Pos + Size > TotalSize)
+        Size = TotalSize - Pos;
 
     LockMod(Map);
 

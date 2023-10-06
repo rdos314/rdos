@@ -1521,6 +1521,7 @@ rt09  DD OFFSET read_dummy
 read_handle     Proc near
     push ds
     push ebx
+    push ecx
     push edx
     push esi
     push ebp
@@ -1573,6 +1574,8 @@ read_handle     Proc near
 ;
     mov ds:[ebx].hp_pos,eax
     mov ds:[ebx].hp_pos+4,edx
+;
+    mov eax,ecx
     jmp rhDone
 
 rhFail:
@@ -1582,6 +1585,7 @@ rhDone:
     pop ebp
     pop esi
     pop edx
+    pop ecx
     pop ebx
     pop ds    
     ret

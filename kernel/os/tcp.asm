@@ -6297,11 +6297,11 @@ poll_tcp_socket	   Endp
 ;       DESCRIPTION:    Read TCP socket
 ;
 ;       PARAMETERS;     IN  BX        Tcp selector
-;                       IN  EDX       Position
+;                       IN  EDX:EAX   Position
 ;                       IN  ES:EDI    Buffer
 ;                       IN  ECX       Size
-;                       OUT EAX       Read size
-;                       OUT EDX       New position
+;                       OUT ECX       Read size
+;                       OUT EDX:EAX   New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6357,6 +6357,10 @@ rtsLeave:
     LeaveSection ds:tcp_section
 
 rtsDone:
+    mov ecx,eax
+    xor edx,edx
+    xor eax,eax
+;
     pop ds
     retf32
 read_tcp_socket    Endp

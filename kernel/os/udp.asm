@@ -2973,11 +2973,11 @@ close_udp_socket    Endp
 ;       DESCRIPTION:    Read UDP socket
 ;
 ;       PARAMETERS;     IN  BX        Udp selector
-;                       IN  EDX       Position
+;                       IN  EDX:EAX   Position
 ;                       IN  ES:EDI    Buffer
 ;                       IN  ECX       Size
-;                       OUT EAX       Read size
-;                       OUT EDX       New position
+;                       OUT ECX       Read size
+;                       OUT EDX:EAX   New position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
