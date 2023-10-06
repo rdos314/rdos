@@ -164,8 +164,8 @@ static int VfsReadOne(struct RdosFileMap *Map, int index, char *buf, long long p
 #   Returns....: Bytes read
 #
 ##########################################################################*/
-#pragma aux VfsRead "*" parm routine [fs esi] [edx eax] [es edi] [ecx] value [eax]
-int VfsRead(struct RdosFileMap *Map, long long Pos, void *Buf, int Size)
+#pragma aux VfsRead "*" parm routine [ebx] [fs esi] [edx eax] [es edi] [ecx] value [eax]
+int VfsRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int Size)
 {
     int count;
     int diff;

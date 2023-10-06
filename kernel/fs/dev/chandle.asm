@@ -1467,6 +1467,9 @@ read_handle     Proc near
 ;
     mov eax,ds:[ebx].hp_pos
     mov edx,ds:[ebx].hp_pos+4
+    mov si,ds:[ebx].hp_vfs_handle
+    shl esi,16
+    mov si,ds:[ebx].hp_vfs_sel
     mov bp,ds:[ebx].hp_handle
 ;
     cmp bp,SYS_HANDLE_COUNT

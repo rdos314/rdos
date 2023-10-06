@@ -3043,10 +3043,11 @@ OpenVfsFile   Endp
 ;
 ;       DESCRIPTION:    Read VFS file
 ;
-;       PARAMETERS:     BX		Module sel
+;       PARAMETERS:     BX		File sel
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
+;                       ESI             Mod sel (low) & handle (high)
 ;
 ;       RETURNS:        EAX             Count
 ;
@@ -3058,13 +3059,20 @@ ReadCVfsFile    Proc near
     push fs
     push ebx
     push esi
+    push ebp
 ;
-    mov fs,bx
+    mov ebp,esi
+    shr ebp,16
+;
+    mov fs,si
     mov esi,fs:kfm_user_base
     mov ebx,flat_data_sel
     mov fs,ebx
+    mov ebx,ebp
+    xor ebp,ebp
     call VfsRead
 ;
+    pop ebp
     pop esi
     pop ebx
     pop fs
