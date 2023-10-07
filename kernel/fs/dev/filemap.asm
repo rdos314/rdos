@@ -3306,12 +3306,95 @@ CloseVfsFile  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetVfsFilePos
+;
+;       DESCRIPTION:    Get VFS file pos
+;
+;       PARAMETERS:     BX             Mod sel
+;                       CX             User handle
+;
+;       RETURNS:        EDX:EAX        Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetVfsFilePos
+
+GetVfsFilePos  Proc near
+    push ds
+    push es
+;
+    mov ds,ebx
+    mov ax,flat_data_sel
+    mov es,eax
+;
+    movzx edx,cx
+    shl edx,3
+;
+    mov eax,ds:kfm_user_base
+    mov eax,es:[eax].fm_handle_ptr
+    add eax,OFFSET fh_pos_arr
+    add edx,eax
+    mov eax,es:[edx]
+    mov edx,es:[edx+2]
+    clc
+;
+    pop es
+    pop ds
+    ret
+GetVfsFilePos  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetVfsFilePos
+;
+;       DESCRIPTION:    Set VFS file pos
+;
+;       PARAMETERS:     BX             Mod sel
+;                       CX             User handle
+;                       EDX:EAX        Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetVfsFilePos
+
+SetVfsFilePos  Proc near
+    push ds
+    push es
+    push ecx
+    push edi
+;
+    mov ds,ebx
+    mov ax,flat_data_sel
+    mov es,eax
+;
+    movzx ecx,cx
+    shl ecx,3
+;
+    mov edi,ds:kfm_user_base
+    mov edi,es:[edi].fm_handle_ptr
+    add edi,OFFSET fh_pos_arr
+    add edi,ecx
+    mov es:[edi],eax
+    mov es:[edi+4],edx
+    clc
+;
+    pop edi
+    pop ecx
+    pop es
+    pop ds
+    ret
+SetVfsFilePos  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DupVfsFile
 ;
 ;       DESCRIPTION:    Dup VFS file
 ;
-;       PARAMETERS:     AX             Mod sel
-;                       DX             Source user handle
+;       PARAMETERS:     BX             Mod sel
+;                       EDX:EAX        Position
 ;
 ;       RETURNS:        DX             Dest user handle
 ;
@@ -3323,12 +3406,13 @@ DupVfsFile  Proc near
     push ds
     push es
     push eax
-    push esi
     push edi
 ;
+    push edx
+    push eax
+;
+    mov eax,ebx
     mov ds,eax
-    movzx esi,dx
-    shl esi,3
 ;
     inc ds:kfm_ref_count
     call AllocateUserHandle
@@ -3340,14 +3424,16 @@ DupVfsFile  Proc near
     mov eax,ds:kfm_user_base
     mov eax,es:[eax].fm_handle_ptr
     add eax,OFFSET fh_pos_arr
-    add esi,eax
     add edi,eax
-    movs dword ptr es:[edi],es:[esi]
-    movs dword ptr es:[edi],es:[esi]
+;
+    pop eax
+    stos dword ptr es:[edi]
+;
+    pop eax
+    stos dword ptr es:[edi]
     clc
 ;
     pop edi
-    pop esi
     pop eax
     pop es
     pop ds

@@ -118,6 +118,8 @@ code    SEGMENT byte public 'CODE'
     extern ReadCVfsFile:near
     extern MapCVfsFile:near
     extern GetVfsFileInfo:near
+    extern GetVfsFilePos:near
+    extern SetVfsFilePos:near
     extern DupVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1912,12 +1914,13 @@ dup_handle     Proc far
     or bp,bp
     jz dhVfsOk
 ;
-    mov eax,ebp
+    mov ebx,ebp
     shr ebp,16
-    mov edx,ebp
+    mov cx,bp
+    call GetVfsFilePos
     call DupVfsFile
 ;
-    mov ds:[esi].hp_vfs_sel,ax
+    mov ds:[esi].hp_vfs_sel,bx
     mov ds:[esi].hp_vfs_handle,dx
 
 dhVfsOk:    
