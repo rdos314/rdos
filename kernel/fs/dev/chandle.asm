@@ -1209,8 +1209,7 @@ get_handle_map_name  DB 'Get C Handle Map', 0
 
 get_handle_map     Proc far
     push ds
-    push edx
-    push esi
+    push ebx
 ;
     GetThread
     mov ds,eax
@@ -1242,8 +1241,7 @@ ghmmFail:
     stc
 
 ghmmDone:
-    pop esi
-    pop edx
+    pop ebx
     pop ds    
     ret
 get_handle_map     Endp
