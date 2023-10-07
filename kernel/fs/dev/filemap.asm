@@ -3758,42 +3758,6 @@ init_client_file    Proc near
     mov dword ptr fs:org_delete,eax
     mov word ptr fs:org_delete+4,dx
 ;
-    mov ebx,OFFSET set_file_size16
-    mov esi,OFFSET set_file_size32
-    mov edi,OFFSET set_file_size_name
-    mov dx,virt_es_in
-    mov ax,set_file_size32_nr
-    LinkUserGate
-    mov dword ptr fs:org_set_size,eax
-    mov word ptr fs:org_set_size+4,dx
-;
-    mov ebx,OFFSET read_file16
-    mov esi,OFFSET read_file32
-    mov edi,OFFSET read_file_name
-    mov dx,virt_es_in
-    mov ax,read_file_nr
-    LinkUserGate
-    mov dword ptr fs:org_read,eax
-    mov word ptr fs:org_read+4,dx
-;
-    mov esi,OFFSET set_file_size64
-    mov edi,OFFSET set_file_size64_name
-    xor dx,dx
-    mov ax,set_file_size64_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET vfs_file_info
-    mov edi,OFFSET vfs_file_info_name
-    xor dx,dx
-    mov ax,vfs_file_info_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET map_vfs_file
-    mov edi,OFFSET map_vfs_file_name
-    xor dx,dx
-    mov ax,map_vfs_file_nr
-    RegisterBimodalUserGate
-;
     mov ebx,fs
     xor eax,eax
     mov fs,eax
