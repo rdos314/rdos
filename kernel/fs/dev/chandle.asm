@@ -118,6 +118,7 @@ code    SEGMENT byte public 'CODE'
     extern ReadCVfsFile:near
     extern MapCVfsFile:near
     extern GetVfsFileInfo:near
+    extern DupVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1863,6 +1864,7 @@ dup_handle     Proc far
     push edx
     push esi
     push edi
+    push ebp
 ;
     GetThread
     mov ds,ax
@@ -1893,6 +1895,7 @@ dup_handle     Proc far
     mov cx,ds:[esi].hp_access
     push ds:[esi].hp_pos
     push ds:[esi].hp_pos+4
+    movzx ebp,ds:[esi].hp_vfs_sel
     call allocate_proc_handle
     pop edx
     pop eax
@@ -1903,7 +1906,17 @@ dup_handle     Proc far
     add esi,OFFSET h_arr
     mov ds:[esi].hp_pos,eax
     mov ds:[esi].hp_pos+4,edx
-;    
+;
+    or ebp,ebp
+    jz dhVfsOk
+;
+    mov eax,ebp
+    call DupVfsFile
+;
+    mov ds:[esi].hp_vfs_sel,ax
+    mov ds:[esi].hp_vfs_handle,dx
+
+dhVfsOk:    
     inc es:[edi].he_ref_count
     jmp dhDone
 
@@ -1911,6 +1924,7 @@ dhFail:
     mov ebx,-1
 
 dhDone:
+    pop ebp
     pop edi
     pop esi
     pop edx

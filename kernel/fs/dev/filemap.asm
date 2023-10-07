@@ -3306,6 +3306,34 @@ CloseVfsFile  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DupVfsFile
+;
+;       DESCRIPTION:    Dup VFS file
+;
+;       PARAMETERS:     AX             Mod sel
+;
+;       RETURNS:        DX             User handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DupVfsFile
+
+DupVfsFile  Proc near
+    push ds
+;
+    mov ds,eax
+    inc ds:kfm_ref_count
+;
+    call AllocateUserHandle
+    clc
+;
+    pop ds
+    ret
+DupVfsFile  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DeleteFile
 ;
 ;       DESCRIPTION:    Delete file
