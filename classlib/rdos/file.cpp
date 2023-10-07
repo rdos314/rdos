@@ -132,12 +132,23 @@ TFile::TFile(const TFile &file)
     FFileName = new char[len + 1];
     strcpy(FFileName, file.FFileName);
 
+    FLegacy = file.FLegacy;
+    FMap = 0;
+
     if (file.FHandle)
-        FHandle = RdosDuplFile(file.FHandle);
+    {
+        if (FLegacy)
+            FHandle = RdosDuplFile(file.FHandle);
+        else
+        {
+            FHandle = RdosDupHandle(file.FHandle);
+            if (FHandle)
+                FMap = RdosGetHandleMap(FHandle, &FMapIndex);
+        }
+    }
     else
         FHandle = 0;
 
-    FMap = 0;
     FLastIndex = file.FLastIndex;
 }
 
@@ -198,8 +209,13 @@ int TFile::IsOpen()
 ##########################################################################*/
 int TFile::IsDevice()
 {
-    if (FHandle && FLegacy)
-        return RdosIsDevice(FHandle);
+    if (FHandle)
+    {
+        if (FLegacy)
+            return RdosIsDevice(FHandle);
+        else
+            return RdosIsHandleDevice(FHandle);
+    }
     else
         return FALSE;
 }
@@ -222,7 +238,7 @@ int TFile::IsFile()
         if (FLegacy)
             return !RdosIsDevice(FHandle);
         else
-            return TRUE;
+            return !RdosIsHandleDevice(FHandle);
     }
     else
         return FALSE;
