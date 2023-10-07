@@ -117,6 +117,7 @@ code    SEGMENT byte public 'CODE'
     extern FreeUserHandle:near
     extern ReadCVfsFile:near
     extern MapCVfsFile:near
+    extern GetVfsFileInfo:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1191,6 +1192,63 @@ chDone:
 close_handle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHandleMap
+;
+;           DESCRIPTION:    Get mapping info for VFS file
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EAX         Index
+;                           EDI         Flat address of file info
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_map_name  DB 'Get C Handle Map', 0
+
+get_handle_map     Proc far
+    push ds
+    push edx
+    push esi
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;    
+    cmp bx,MAX_HANDLES
+    jae ghmmFail
+;   
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+;
+    movzx eax,ds:[ebx].hp_vfs_handle
+    or eax,eax
+    jz ghmmFail
+;
+    mov bx,ds:[ebx].hp_vfs_sel
+    or bx,bx
+    jz ghmmFail
+;
+    call GetVfsFileInfo
+    clc
+    jmp ghmmDone
+
+ghmmFail:
+    xor eax,eax
+    xor edi,edi
+    stc
+
+ghmmDone:
+    pop esi
+    pop edx
+    pop ds    
+    ret
+get_handle_map     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           VfsMapHandle_
@@ -1267,6 +1325,26 @@ VfsMapHandle_    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           MapHandle
+;
+;           DESCRIPTION:    Map handle
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     File position
+;;                          ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_handle_name  DB 'Map Handle', 0
+
+map_handle     Proc far
+    call VfsMapHandle_
+    ret
+map_handle     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CHandleToFileSel
 ;
 ;           DESCRIPTION:    Convert C handle to file selector
@@ -1314,8 +1392,8 @@ c_handle_to_file_sel     Proc near
     jmp chfsDone
 
 chfsFail:
-    stc
     xor bx,bx
+    stc
 
 chfsDone:
     pop edx
@@ -5439,6 +5517,18 @@ init_handle     PROC near
     mov edi,OFFSET close_handle_name
     xor cl,cl
     mov ax,close_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_map
+    mov edi,OFFSET get_handle_map_name
+    xor cl,cl
+    mov ax,get_handle_map_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET map_handle
+    mov edi,OFFSET map_handle_name
+    xor cl,cl
+    mov ax,map_handle_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET poll_handle16

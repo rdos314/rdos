@@ -2920,6 +2920,29 @@ UnlockMod_   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetVfsFileInfo
+;
+;       DESCRIPTION:    Get VFS file info
+;
+;       PARAMETERS:     BX             Mod sel
+;
+;       RETURNS:        EDI            File info
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetVfsFileInfo
+
+GetVfsFileInfo     Proc near
+    push ds
+    mov ds,ebx
+    mov edi,ds:kfm_user_base
+    pop ds
+    ret
+GetVfsFileInfo    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           MapCVfsFile
 ;
 ;       DESCRIPTION:    Map VFS file

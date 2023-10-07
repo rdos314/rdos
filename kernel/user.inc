@@ -1280,7 +1280,6 @@ CloseHandle     MACRO
         UserGate close_handle_nr
                                         ENDM
 
-
 ; IN  BX            C handle
 ; OUT EAX           Handle #
 ; OUT EDI           Flat address of file info
