@@ -14,6 +14,9 @@ void main()
     int count;
     char *buf = new char[512];
     TFile file("y:/1.txt");
+
+    file.SetPos(0x123456789);
+
     TFile dup(file);
 
     count = file.Read(buf, 512);
