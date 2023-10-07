@@ -1895,7 +1895,9 @@ dup_handle     Proc far
     mov cx,ds:[esi].hp_access
     push ds:[esi].hp_pos
     push ds:[esi].hp_pos+4
-    movzx ebp,ds:[esi].hp_vfs_sel
+    mov bp,ds:[esi].hp_vfs_handle
+    shl ebp,16
+    mov bp,ds:[esi].hp_vfs_sel
     call allocate_proc_handle
     pop edx
     pop eax
@@ -1907,10 +1909,12 @@ dup_handle     Proc far
     mov ds:[esi].hp_pos,eax
     mov ds:[esi].hp_pos+4,edx
 ;
-    or ebp,ebp
+    or bp,bp
     jz dhVfsOk
 ;
     mov eax,ebp
+    shr ebp,16
+    mov edx,ebp
     call DupVfsFile
 ;
     mov ds:[esi].hp_vfs_sel,ax

@@ -3311,8 +3311,9 @@ CloseVfsFile  Endp
 ;       DESCRIPTION:    Dup VFS file
 ;
 ;       PARAMETERS:     AX             Mod sel
+;                       DX             Source user handle
 ;
-;       RETURNS:        DX             User handle
+;       RETURNS:        DX             Dest user handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3320,13 +3321,35 @@ CloseVfsFile  Endp
 
 DupVfsFile  Proc near
     push ds
+    push es
+    push eax
+    push esi
+    push edi
 ;
     mov ds,eax
-    inc ds:kfm_ref_count
+    movzx esi,dx
+    shl esi,3
 ;
+    inc ds:kfm_ref_count
     call AllocateUserHandle
+    movzx edi,dx
+    shl edi,3
+;
+    mov ax,flat_data_sel
+    mov es,eax
+    mov eax,ds:kfm_user_base
+    mov eax,es:[eax].fm_handle_ptr
+    add eax,OFFSET fh_pos_arr
+    add esi,eax
+    add edi,eax
+    movs dword ptr es:[edi],es:[esi]
+    movs dword ptr es:[edi],es:[esi]
     clc
 ;
+    pop edi
+    pop esi
+    pop eax
+    pop es
     pop ds
     ret
 DupVfsFile  Endp
