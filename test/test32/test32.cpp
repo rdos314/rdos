@@ -5,6 +5,7 @@
 #include "disc.h"
 #include "serial.h"
 #include "rdos.h"
+#include "file.h"
 
 void main()
 {
@@ -12,12 +13,9 @@ void main()
     int h2;
     int count;
     char *buf = new char[512];
+    TFile file("y:/1.txt");
 
-    h1 = RdosOpenHandle("y:/1.txt", O_RDWR);
-
-    count = RdosReadHandle(h1, buf, 512);
-
-    RdosCloseHandle(h1);
+    count = file.Read(buf, 512);
 
 
 //    RdosTestGate("");
