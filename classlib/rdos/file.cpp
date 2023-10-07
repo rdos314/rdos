@@ -47,11 +47,19 @@ TFile::TFile(const char *FileName)
 {
     int len;
 
+    FMap = 0;
     FHandle = RdosOpenFile(FileName, 0);
+
     if (FHandle)
-        FMap = RdosVfsFileInfo(FHandle, &FMapIndex);
+        FLegacy = true;
     else
-        FMap = 0;
+    {
+        FLegacy = false;
+        FHandle = RdosOpenHandle(FileName, O_RDWR);
+
+        if (FHandle)
+            FMap = RdosGetHandleMap(FHandle, &FMapIndex);
+    }
 
     if (FMap)
         FFileName = 0;
@@ -80,11 +88,19 @@ TFile::TFile(const char *FileName, int Attrib)
 {
     int len;
 
+    FMap = 0;
     FHandle = RdosCreateFile(FileName, Attrib);
+
     if (FHandle)
-        FMap = RdosVfsFileInfo(FHandle, &FMapIndex);
+        FLegacy = true;
     else
-        FMap = 0;
+    {
+        FLegacy = false;
+        FHandle = RdosOpenHandle(FileName, O_CREAT | O_RDWR);
+
+        if (FHandle)
+            FMap = RdosGetHandleMap(FHandle, &FMapIndex);
+    }
 
     if (FMap)
         FFileName = 0;
@@ -139,7 +155,12 @@ TFile::TFile(const TFile &file)
 TFile::~TFile()
 {
     if (FHandle)
-        RdosCloseFile(FHandle);
+    {
+        if (FLegacy)
+            RdosCloseFile(FHandle);
+        else
+            RdosCloseHandle(FHandle);
+    }
 
     if (FFileName)
         delete FFileName;
@@ -177,7 +198,7 @@ int TFile::IsOpen()
 ##########################################################################*/
 int TFile::IsDevice()
 {
-    if (FHandle)
+    if (FHandle && FLegacy)
         return RdosIsDevice(FHandle);
     else
         return FALSE;
@@ -197,7 +218,12 @@ int TFile::IsDevice()
 int TFile::IsFile()
 {
     if (FHandle)
-        return !RdosIsDevice(FHandle);
+    {
+        if (FLegacy)
+            return !RdosIsDevice(FHandle);
+        else
+            return TRUE;
+    }
     else
         return FALSE;
 }
