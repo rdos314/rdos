@@ -13,13 +13,11 @@ void main()
     int count;
     char *buf = new char[512];
 
-    h1 = RdosOpenHandle("y:/ABcd-long-name.txt", O_RDWR);
-    h2 = RdosOpenHandle("y:/1.txt", O_RDWR);
+    h1 = RdosOpenHandle("y:/1.txt", O_RDWR);
 
-    count = RdosReadHandle(h2, buf, 512);
+    count = RdosReadHandle(h1, buf, 512);
 
     RdosCloseHandle(h1);
-    RdosCloseHandle(h2);
 
 
 //    RdosTestGate("");
