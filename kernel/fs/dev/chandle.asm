@@ -1914,14 +1914,18 @@ dup_handle     Proc far
     or bp,bp
     jz dhVfsOk
 ;
+    push ebx
+;
     mov ebx,ebp
     shr ebp,16
-    mov cx,bp
+    mov ecx,ebp
     call GetVfsFilePos
-    call DupVfsFile
+    call DupVfsFile   
 ;
     mov ds:[esi].hp_vfs_sel,bx
     mov ds:[esi].hp_vfs_handle,dx
+;
+    pop ebx
 
 dhVfsOk:    
     inc es:[edi].he_ref_count

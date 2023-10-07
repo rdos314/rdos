@@ -3328,6 +3328,7 @@ GetVfsFilePos  Proc near
     mov es,eax
 ;
     movzx edx,cx
+    dec edx
     shl edx,3
 ;
     mov eax,ds:kfm_user_base
@@ -3369,6 +3370,7 @@ SetVfsFilePos  Proc near
     mov es,eax
 ;
     movzx ecx,cx
+    dec ecx
     shl ecx,3
 ;
     mov edi,ds:kfm_user_base
@@ -3417,6 +3419,7 @@ DupVfsFile  Proc near
     inc ds:kfm_ref_count
     call AllocateUserHandle
     movzx edi,dx
+    dec edi
     shl edi,3
 ;
     mov ax,flat_data_sel
