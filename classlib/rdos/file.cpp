@@ -128,9 +128,14 @@ TFile::TFile(const TFile &file)
 {
     int len;
 
-    len = strlen(file.FFileName);
-    FFileName = new char[len + 1];
-    strcpy(FFileName, file.FFileName);
+    if (file.FFileName)
+    {
+        len = strlen(file.FFileName);
+        FFileName = new char[len + 1];
+        strcpy(FFileName, file.FFileName);
+    }
+    else
+        FFileName = 0;
 
     FLegacy = file.FLegacy;
     FMap = 0;

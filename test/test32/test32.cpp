@@ -14,8 +14,10 @@ void main()
     int count;
     char *buf = new char[512];
     TFile file("y:/1.txt");
+    TFile dup(file);
 
     count = file.Read(buf, 512);
+    count = dup.Read(buf, 512);
 
 
 //    RdosTestGate("");
