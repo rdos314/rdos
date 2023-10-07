@@ -3336,7 +3336,7 @@ GetVfsFilePos  Proc near
     add eax,OFFSET fh_pos_arr
     add edx,eax
     mov eax,es:[edx]
-    mov edx,es:[edx+2]
+    mov edx,es:[edx+4]
     clc
 ;
     pop es
