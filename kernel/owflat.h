@@ -1553,6 +1553,22 @@
     __parm [__ebx] \
     __value [__ebx]
 
+#pragma aux RdosGetHandleMap = \
+    CallGate_get_handle_map  \
+    "jnc Done" \
+    "xor eax,eax" \
+    "xor edi,edi" \
+    "Done:" \
+    "mov [esi],eax" \
+    __parm [__ebx] [__esi] \
+    __value [__edi]
+
+#pragma aux RdosMapHandle = \
+    CallGate_map_handle  \
+    CarryToBool \
+    __parm [__ebx] [__edx __eax] [__ecx] \
+    __value [__edi]
+
 #pragma aux RdosPollHandle = \
     CallGate_poll_handle  \
     __parm [__ebx] [__edi] [__ecx]  \
@@ -2345,7 +2361,7 @@
     __parm [__edx] [__eax]
 
 #pragma aux RdosWaitRealUntil = \
-    CallGate_time_to_system_time  \    
+    CallGate_time_to_system_time  \
     CallGate_wait_until  \
     __parm [__edx] [__eax]
 

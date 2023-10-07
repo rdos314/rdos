@@ -1004,4 +1004,7 @@ set_handle_pos64_nr               = 819
 get_handle_create_time_nr         = 820
 get_handle_access_time_nr         = 821
 
+get_handle_map_nr                 = 822
+map_handle_nr                     = 823
+
 usergate_entries                  = 830

@@ -1281,6 +1281,20 @@ CloseHandle     MACRO
                                         ENDM
 
 
+; IN  BX            C handle
+; OUT EAX           Handle #
+; OUT EDI           Flat address of file info
+GetHandleMap        MACRO
+        UserGate get_handle_map_nr
+                                                ENDM
+
+; IN  BX            C handle
+; IN  EDX:EAX       File position
+; IN  ECX           Size
+MapHandle        MACRO
+        UserGate map_handle_nr
+                                                ENDM
+
 ; IN  BX        Handle
 ; IN  ES:(E)DI  Buffer
 ; IN  (E)CX     Number of bytes to read

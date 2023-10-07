@@ -1004,6 +1004,9 @@
 #define usergate_get_handle_create_time 0x00000334
 #define usergate_get_handle_access_time 0x00000335
 
+#define usergate_get_handle_map 0x00000336
+#define usergate_map_handle 0x00000337
+
 
 
 #ifdef __FLAT__
@@ -2013,6 +2016,9 @@
 #define CallGate_get_handle_create_time 0x55 0x67 0x9a 52 3 0 0 3 0 0x5d
 #define CallGate_get_handle_access_time 0x55 0x67 0x9a 53 3 0 0 3 0 0x5d
 
+#define CallGate_get_handle_map 0x55 0x67 0x9a 54 3 0 0 3 0 0x5d
+#define CallGate_map_handle 0x55 0x67 0x9a 55 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -3019,5 +3025,8 @@
 #define CallGate_set_handle_pos64 0x3e 0x67 0x9a 51 3 0 0 3 0
 #define CallGate_get_handle_create_time 0x3e 0x67 0x9a 52 3 0 0 3 0
 #define CallGate_get_handle_access_time 0x3e 0x67 0x9a 53 3 0 0 3 0
+
+#define CallGate_get_handle_map 0x3e 0x67 0x9a 54 3 0 0 3 0
+#define CallGate_map_handle 0x3e 0x67 0x9a 55 3 0 0 3 0
 
 #endif
