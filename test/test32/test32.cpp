@@ -15,7 +15,7 @@ void main()
     char *buf = new char[512];
     TFile file("y:/1.txt");
 
-    file.SetPos(0x123456789);
+//    file.SetPos(0x123456789);
 
     TFile dup(file);
 
