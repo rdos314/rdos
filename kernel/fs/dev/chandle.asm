@@ -564,51 +564,58 @@ ref_c_handle  Endp
 ;           DESCRIPTION:    Allocate process handle
 ;
 ;           PARAMETERS:     DS          C handle sel
-;                           AX          C Handle
+;                           BX          C Handle
 ;                           CX          Mode
+;                           EDX:EAX     Position
 ;
 ;           RETURNS:        BX          Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_proc_handle     Proc near
-    push edx
-;    
+    push esi
+;
     push ecx
+    push edx
+;
     mov ecx,MAX_HANDLES
-    mov ebx,OFFSET h_arr
+    mov esi,OFFSET h_arr
     EnterSection ds:h_section
 
 aphLoop:    
-    mov dx,ds:[ebx].hp_handle
+    mov dx,ds:[esi].hp_handle
     or dx,dx
     jz aphFound
 ;
-    add ebx,16
+    add esi,16
     loop aphLoop
 ;
+    pop edx
     pop ecx
     LeaveSection ds:h_section
     stc
     jmp aphDone
 
 aphFound:    
+    pop edx
     pop ecx
-    mov ds:[ebx].hp_handle,ax
-    mov ds:[ebx].hp_access,cx
-    mov ds:[ebx].hp_vfs_sel,0
-    mov ds:[ebx].hp_vfs_handle,0
-    mov ds:[ebx].hp_pos,0
-    mov ds:[ebx].hp_pos+4,0
+;
+    mov ds:[esi].hp_handle,bx
+    mov ds:[esi].hp_access,cx
+    mov ds:[esi].hp_vfs_sel,0
+    mov ds:[esi].hp_vfs_handle,0
+    mov ds:[esi].hp_pos,eax
+    mov ds:[esi].hp_pos+4,edx
     LeaveSection ds:h_section
 ;
+    mov ebx,esi
     sub ebx,OFFSET h_arr
     shr ebx,4
-    clc
     movzx ebx,bx
+    clc
 
 aphDone:   
-    pop edx
+    pop esi
     ret
 allocate_proc_handle  Endp   
         
@@ -996,7 +1003,8 @@ open_handle     Proc near
 ;
     push ecx
     mov cx,ax
-    mov ax,bx
+    xor eax,eax
+    xor edx,edx
     call allocate_proc_handle
     pop ecx
     jnc ohCom
@@ -1879,12 +1887,12 @@ dup_handle     Proc far
     movzx esi,bx
     shl esi,4
     add esi,OFFSET h_arr
-    mov ax,ds:[esi].hp_handle
+    mov bx,ds:[esi].hp_handle
 ;
-    cmp ax,SYS_HANDLE_COUNT
+    cmp bx,SYS_HANDLE_COUNT
     jae dhFail
 ;    
-    or ax,ax
+    or bx,bx
     jz dhFail
 ;
     mov edi,SEG data
@@ -1893,46 +1901,51 @@ dup_handle     Proc far
     dec edi
     shl edi,4
     add edi,OFFSET hd_data
+    inc es:[edi].he_ref_count
 ;
-    mov cx,ds:[esi].hp_access
-    push ds:[esi].hp_pos
-    push ds:[esi].hp_pos+4
-    mov bp,ds:[esi].hp_vfs_handle
-    shl ebp,16
     mov bp,ds:[esi].hp_vfs_sel
-    call allocate_proc_handle
-    pop edx
-    pop eax
-    jc dhFail
+    or bp,bp
+    jnz dhVfs
 ;
+    mov eax,ds:[esi].hp_pos
+    mov edx,ds:[esi].hp_pos+4
+    jmp dhAlloc
+
+dhVfs:
+    push ebx
+    mov bx,ds:[esi].hp_vfs_sel
+    mov cx,ds:[esi].hp_vfs_handle
+    call GetVfsFilePos
+    pop ebx
+
+dhAlloc:
+    mov cx,ds:[esi].hp_access
+    call allocate_proc_handle
+    jc dhFailDec
+;
+    or bp,bp
+    jz dhDone
+;
+    push ebx
+    mov bx,ds:[esi].hp_vfs_sel
+    call DupVfsFile   
+    pop ebx
+;
+    mov ax,ds:[esi].hp_vfs_sel
     movzx esi,bx
     shl esi,4
     add esi,OFFSET h_arr
-    mov ds:[esi].hp_pos,eax
-    mov ds:[esi].hp_pos+4,edx
-;
-    or bp,bp
-    jz dhVfsOk
-;
-    push ebx
-;
-    mov ebx,ebp
-    shr ebp,16
-    mov ecx,ebp
-    call GetVfsFilePos
-    call DupVfsFile   
-;
-    mov ds:[esi].hp_vfs_sel,bx
+    mov ds:[esi].hp_vfs_sel,ax
     mov ds:[esi].hp_vfs_handle,dx
-;
-    pop ebx
-
-dhVfsOk:    
-    inc es:[edi].he_ref_count
+    clc
     jmp dhDone
+
+dhFailDec:
+    dec es:[edi].he_ref_count
 
 dhFail:
     mov ebx,-1
+    stc
 
 dhDone:
     pop ebp
