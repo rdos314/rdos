@@ -1,4 +1,4 @@
-opy rdos.cfg files
+copy rdos.cfg files
 copy ..\..\kernel\os\kernel.exe files
 copy ..\..\kernel\os\longmode.bin files
 copy ..\..\kernel\os\sched.rdv files
@@ -44,6 +44,7 @@ copy ..\..\kernel\pcdev\ac97.rdv files
 copy ..\..\kernel\pcdev\ide.rdv files
 copy ..\..\kernel\pcdev\floppy.rdv files
 copy ..\..\kernel\pcdev\ahci.rdv files
+copy ..\..\kernel\pcdev\nvme.rdv files
 copy ..\..\kernel\pcdev\sdcard.rdv files
 copy ..\..\kernel\pcdev\stdcom.rdv files
 copy ..\..\kernel\pcdev\can.rdv files
@@ -60,6 +61,7 @@ copy ..\..\kernel\usbdev\usbcdc.rdv files
 copy ..\..\kernel\usbdev\usbcom.rdv files
 copy ..\..\kernel\usbdev\usbcan.rdv files
 copy ..\..\kernel\usbdev\usbdisc.rdv files
+copy ..\..\kernel\usbdev\usbvfs.rdv files
 copy ..\..\kernel\printdev\kr203.rdv files
 copy ..\..\kernel\printdev\pmu.rdv files
 copy ..\..\kernel\printdev\ttp.rdv files
@@ -70,11 +72,14 @@ copy ..\..\kernel\audiodev\hda.rdv files
 copy ..\..\kernel\netdev\rtl8139.rdv files
 copy ..\..\kernel\netdev\rtl8169.rdv files
 copy ..\..\kernel\netdev\i2xx.rdv files
+copy ..\..\kernel\fs\parttool.exe files
+copy ..\..\kernel\fs\fat.exe files
 copy \rdosdev\src\power.rdv files
 copy \rdosdev\src\nopower.rdv files
 copy \rdosdev\src\preem.rdv files
 copy \rdosdev\src\ioe.rdv files
 copy \rdosdev\src\itc.rdv files
+copy \rdosdev\src\ehl5.rdv files
 copy \rdosdev\src\pem.rdv files
 copy \rdosdev\src\cancom.rdv files
 copy \rdosdev\src\ioe2.rdv files
