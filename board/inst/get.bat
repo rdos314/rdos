@@ -47,6 +47,7 @@ copy ..\..\kernel\pcdev\ahci.rdv files
 copy ..\..\kernel\pcdev\sdcard.rdv files
 copy ..\..\kernel\pcdev\stdcom.rdv files
 copy ..\..\kernel\pcdev\can.rdv files
+copy ..\..\kernel\fs\vfs.rdv files
 copy ..\..\kernel\usbdev\usb.rdv files
 copy ..\..\kernel\usbdev\ohci.rdv files
 copy ..\..\kernel\usbdev\uhci.rdv files
