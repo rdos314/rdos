@@ -1632,9 +1632,22 @@ read_handle     Proc near
     test ax,IO_READ
     jz rhFail
 ;
+    mov si,ds:[ebx].hp_vfs_sel
+    or si,si
+    jnz rhGetVfs
+;
     mov eax,ds:[ebx].hp_pos
     mov edx,ds:[ebx].hp_pos+4
-    mov si,ds:[ebx].hp_vfs_sel
+    jmp rhGetOk
+
+rhGetVfs:
+    push ebx
+    mov cx,ds:[ebx].hp_vfs_handle
+    mov bx,ds:[ebx].hp_vfs_sel
+    call GetVfsFilePos
+    pop ebx
+
+rhGetOk:
     mov bp,ds:[ebx].hp_handle
 ;
     cmp bp,SYS_HANDLE_COUNT
@@ -1661,9 +1674,25 @@ read_handle     Proc near
     pop ds
     jc rhFail
 ;
+    or si,si
+    jnz rhSetVfs
+;
     mov ds:[ebx].hp_pos,eax
     mov ds:[ebx].hp_pos+4,edx
+    jmp rhSetOk
+
+rhSetVfs:
+    push ebx
+    push ecx
 ;
+    mov cx,ds:[ebx].hp_vfs_handle
+    mov bx,ds:[ebx].hp_vfs_sel
+    call SetVfsFilePos
+;
+    pop ecx
+    pop ebx
+
+rhSetOk:
     mov eax,ecx
     jmp rhDone
 
