@@ -1897,7 +1897,7 @@ dup_handle     Proc far
 ;
     mov edi,SEG data
     mov es,edi
-    movzx edi,ax
+    movzx edi,bx
     dec edi
     shl edi,4
     add edi,OFFSET hd_data
