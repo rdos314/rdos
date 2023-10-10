@@ -2281,81 +2281,6 @@ FreeFileReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           vfs_file_info
-;
-;       DESCRIPTION:    VFS file info
-;
-;       PARAMETERS:     BX             Handle
-;
-;       RETURNS:        EAX            Handle #
-;                       EDI            File info base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-vfs_file_info_name       DB 'VFS File Info',0
- 
-vfs_file_info   Proc far
-    push ds
-    push ebx
-;
-    mov ax,VFS_FILE_HANDLE
-    DerefHandle
-    jc vfiDone
-;
-    movzx eax,ds:[ebx].fh_handle
-    mov ds,ds:[ebx].fh_sel
-    mov edi,ds:kfm_user_base
-    clc
-
-vfiDone:
-    pop ebx
-    pop ds
-    ret
-vfs_file_info   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           map_vfs_file
-;
-;       DESCRIPTION:    Map VFS file
-;
-;       PARAMETERS:     BX             Handle
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-map_vfs_file_name       DB 'Map VFS File',0
- 
-map_vfs_file   Proc far
-    push ds
-    push es
-    push gs
-    pushad
-;
-    push eax
-    mov ax,VFS_FILE_HANDLE
-    DerefHandle
-    pop eax
-    jc mvfDone
-;
-    mov si,ds:[ebx].fh_sel
-    mov bx,ds:[ebx].fh_handle
-    mov ds,esi
-    call MapCVfsFile
-
-mvfDone:
-    popad
-    pop gs
-    pop es
-    pop ds
-    ret
-map_vfs_file    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           FindVfsMod
 ;
 ;       DESCRIPTION:    Find VFS module
@@ -2943,7 +2868,7 @@ GetVfsFileInfo    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           MapCVfsFile
+;       NAME:           MapVfsFile
 ;
 ;       DESCRIPTION:    Map VFS file
 ;
@@ -2954,9 +2879,9 @@ GetVfsFileInfo    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public MapCVfsFile
+    public MapVfsFile
 
-MapCVfsFile      Proc near
+MapVfsFile      Proc near
     push es
     push fs
     push gs
@@ -2982,7 +2907,7 @@ mcvfDone:
     pop fs
     pop es
     ret
-MapCVfsFile   Endp
+MapVfsFile   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

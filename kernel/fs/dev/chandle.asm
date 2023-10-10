@@ -116,7 +116,7 @@ code    SEGMENT byte public 'CODE'
     extern CloseVfsMod:near
     extern FreeUserHandle:near
     extern ReadCVfsFile:near
-    extern MapCVfsFile:near
+    extern MapVfsFile:near
     extern GetVfsFileInfo:near
     extern GetVfsFilePos:near
     extern SetVfsFilePos:near
@@ -1322,7 +1322,7 @@ VfsMapHandle_     Proc near
     mov ds,si
     shr esi,16
     mov bx,si
-    call MapCVfsFile
+    call MapVfsFile
 
 vmhDone:
     pop ebp
