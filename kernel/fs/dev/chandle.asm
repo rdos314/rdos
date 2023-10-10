@@ -1279,10 +1279,12 @@ VfsMapHandle_     Proc near
     push esi
     push ebp
 ;
+    push eax
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
+    pop eax
 ;    
     cmp bx,MAX_HANDLES
     jae vmhDone

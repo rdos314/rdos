@@ -2470,20 +2470,6 @@ ReadVfsFile        MACRO
         UserGate read_vfs_file_nr
                                                 ENDM
 
-; IN  BX              Handle
-; OUT EAX             Handle #
-; OUT EDI             Flat address of file info
-VfsFileInfo        MACRO
-        UserGate vfs_file_info_nr
-                                                ENDM
-
-; IN  BX              Handle
-; IN  EDX:EAX         File position
-; IN  ECX             Size
-MapVfsFile        MACRO
-        UserGate map_vfs_file_nr
-                                                ENDM
-
 ;   IN  AL          Drive #   
 ;   IN  ECX         Size of filesystem
 ;       IN      DS:(E)SI        File system name

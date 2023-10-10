@@ -981,9 +981,6 @@ is_pci_function_used_nr           = 801
 
 read_adc_chan_nr                  = 802
 
-map_vfs_file_nr                   = 803
-vfs_file_info_nr                  = 804
-
 create_vfs_disc_cmd_nr            = 805
 close_vfs_cmd_nr                  = 806
 add_wait_for_vfs_cmd_nr           = 807

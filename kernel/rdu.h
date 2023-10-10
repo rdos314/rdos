@@ -981,9 +981,6 @@
 
 #define usergate_read_adc_chan 0x00000322
 
-#define usergate_map_vfs_file 0x00000323
-#define usergate_vfs_file_info 0x00000324
-
 #define usergate_create_vfs_disc_cmd 0x00000325
 #define usergate_close_vfs_cmd 0x00000326
 #define usergate_add_wait_for_vfs_cmd 0x00000327
@@ -1993,9 +1990,6 @@
 
 #define CallGate_read_adc_chan 0x55 0x67 0x9a 34 3 0 0 3 0 0x5d
 
-#define CallGate_map_vfs_file 0x55 0x67 0x9a 35 3 0 0 3 0 0x5d
-#define CallGate_vfs_file_info 0x55 0x67 0x9a 36 3 0 0 3 0 0x5d
-
 #define CallGate_create_vfs_disc_cmd 0x55 0x67 0x9a 37 3 0 0 3 0 0x5d
 #define CallGate_close_vfs_cmd 0x55 0x67 0x9a 38 3 0 0 3 0 0x5d
 #define CallGate_add_wait_for_vfs_cmd 0x55 0x67 0x9a 39 3 0 0 3 0 0x5d
@@ -3002,9 +2996,6 @@
 #define CallGate_is_pci_function_used 0x3e 0x67 0x9a 33 3 0 0 3 0
 
 #define CallGate_read_adc_chan 0x3e 0x67 0x9a 34 3 0 0 3 0
-
-#define CallGate_map_vfs_file 0x3e 0x67 0x9a 35 3 0 0 3 0
-#define CallGate_vfs_file_info 0x3e 0x67 0x9a 36 3 0 0 3 0
 
 #define CallGate_create_vfs_disc_cmd 0x3e 0x67 0x9a 37 3 0 0 3 0
 #define CallGate_close_vfs_cmd 0x3e 0x67 0x9a 38 3 0 0 3 0

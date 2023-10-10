@@ -535,7 +535,7 @@ int TFile::VfsRead(void *Buf, int Size)
             {
                 LeaveFutex(&FMap->Handle->Futex);
 
-                RdosMapVfsFile(FHandle, Pos, Size);
+                RdosMapHandle(FHandle, Pos, Size);
 
                 EnterFutex(&FMap->Handle->Futex);
                 FLastIndex = VfsFind(Pos);
