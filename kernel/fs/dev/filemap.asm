@@ -3089,7 +3089,7 @@ OpenVfsFile   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadCVfsFile
+;       NAME:           ReadVfsFile
 ;
 ;       DESCRIPTION:    Read VFS file
 ;
@@ -3104,9 +3104,9 @@ OpenVfsFile   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public ReadCVfsFile
+    public ReadVfsFile
 
-ReadCVfsFile    Proc near
+ReadVfsFile    Proc near
     push fs
     push ebx
     push esi
@@ -3131,7 +3131,7 @@ ReadCVfsFile    Proc near
     pop ebx
     pop fs
     ret
-ReadCVfsFile    Endp
+ReadVfsFile    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

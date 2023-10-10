@@ -2462,14 +2462,6 @@ CloseVfsDir   MACRO
         UserGate close_vfs_dir_nr
                                                 ENDM
 
-; IN  BX              Handle
-; IN  ES:(E)DI        Buffer
-; IN  (E)CX           Size
-; OUT EAX             Actual size
-ReadVfsFile        MACRO
-        UserGate read_vfs_file_nr
-                                                ENDM
-
 ;   IN  AL          Drive #   
 ;   IN  ECX         Size of filesystem
 ;       IN      DS:(E)SI        File system name

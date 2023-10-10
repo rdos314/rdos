@@ -115,7 +115,7 @@ code    SEGMENT byte public 'CODE'
     extern CloseVfsFile:near
     extern CloseVfsMod:near
     extern FreeUserHandle:near
-    extern ReadCVfsFile:near
+    extern ReadVfsFile:near
     extern MapVfsFile:near
     extern GetVfsFileInfo:near
     extern GetVfsFilePos:near
@@ -1591,7 +1591,7 @@ read_udp_socket       Proc near
 read_udp_socket       Endp
 
 read_vfs_file        Proc near
-    call ReadCVfsFile
+    call ReadVfsFile
     ret
 read_vfs_file        Endp
 
