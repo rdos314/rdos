@@ -52,6 +52,7 @@ md_x        DW ?
 md_y        DW ?
 md_mouse_thread DW ?
 
+md_swap_xy      DB ?
 md_swap_x       DB ?
 md_swap_y       DB ?
 md_area_x       DW ?
@@ -576,6 +577,20 @@ set_mouse_y_ok:
     jmp set_mouse_saved
 
 set_mouse_not_cal:
+    cmp ds:md_swap_xy,0
+    je set_mouse_not_xy_swap
+
+set_mouse_xy_swap:
+    mov ax,dx
+    call RecalcX
+    mov ds:md_x,ax
+;
+    mov ax,cx
+    call RecalcY
+    mov ds:md_y,ax
+    jmp set_mouse_saved
+
+set_mouse_not_xy_swap:
     mov ax,cx
     call RecalcX
     mov ds:md_x,ax
@@ -1569,6 +1584,7 @@ InitMouseConsole     ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+swap_xy_name      DB 'TOUCH.SWAP.XY', 0
 swap_x_name       DB 'TOUCH.SWAP.X', 0
 swap_y_name       DB 'TOUCH.SWAP.Y', 0
 area_x_name       DB 'TOUCH.AREA.X', 0
@@ -1597,6 +1613,14 @@ init_mouse_thread       PROC far
 ;
     mov ax,SEG code
     mov es,ax
+    mov di,OFFSET swap_xy_name
+    mov ds:md_swap_xy,0
+    call GetValue       
+    jc itSwapXYOk
+;
+    mov ds:md_swap_xy,al
+
+itSwapXYOk:
     mov di,OFFSET swap_x_name
     mov ds:md_swap_x,0
     call GetValue       
