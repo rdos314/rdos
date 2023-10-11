@@ -13,15 +13,14 @@ void main()
     int h2;
     int count;
     char *buf = new char[512];
-    TFile file("y:/1.txt");
+    
+    h1 = RdosOpenHandle("y:/1.txt", O_RDWR);
+    count = RdosPollHandle(h1, buf, 512);
+    count = RdosReadHandle(h1, buf, 512);
+    count = RdosPollHandle(h1, buf, 512);
+    count = RdosReadHandle(h1, buf, 512);
 
-//    file.SetPos(0x123456789);
-
-    TFile dup(file);
-
-    count = file.Read(buf, 512);
-    count = dup.Read(buf, 512);
-
+    RdosCloseHandle(h1);
 
 //    RdosTestGate("");
 }
