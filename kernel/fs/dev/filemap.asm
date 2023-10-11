@@ -1437,6 +1437,7 @@ MapEntry      Proc near
     push eax
     push ecx
     push edx
+    push edi
 ;
     mov eax,ecx
     shl eax,12
@@ -1445,12 +1446,23 @@ MapEntry      Proc near
     push ebx
     push edx
     push esi
+;
+    mov eax,gs:[esi]
+    test eax,0FFFh
+    jz meUser
+
+meKernel:
+    mov di,803h
+    jmp meLoop
+
+meUser:
+    mov di,807h
 
 meLoop:
     mov eax,gs:[esi]
     mov ebx,gs:[esi+4]
     and ax,0F000h
-    or ax,807h
+    or ax,di
     SetPageEntry
 ;
     add edx,1000h
@@ -1467,6 +1479,7 @@ meLoop:
     or dx,ax
     mov es:[ebx].fmb_base,edx
 ;
+    pop edi
     pop edx
     pop ecx
     pop eax
