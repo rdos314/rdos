@@ -3115,6 +3115,9 @@ ReadVfsFile    Proc near
     mov ebp,esi
     shr ebp,16
 ;
+    push eax
+    push edx
+;
     mov fs,si
     mov esi,fs:kfm_user_base
     mov ebx,flat_data_sel
@@ -3122,6 +3125,9 @@ ReadVfsFile    Proc near
     mov ebx,ebp
     xor ebp,ebp
     call VfsRead
+;
+    pop edx
+    pop eax
 ;
     add eax,ecx
     adc edx,0
@@ -3291,8 +3297,8 @@ SetVfsFilePos  Proc near
     push edi
 ;
     mov ds,ebx
-    mov ax,flat_data_sel
-    mov es,eax
+    mov di,flat_data_sel
+    mov es,edi
 ;
     movzx ecx,cx
     dec ecx

@@ -1642,9 +1642,13 @@ read_handle     Proc near
 
 rhGetVfs:
     push ebx
+    push ecx
+;
     mov cx,ds:[ebx].hp_vfs_handle
     mov bx,ds:[ebx].hp_vfs_sel
     call GetVfsFilePos
+;
+    pop ecx
     pop ebx
 
 rhGetOk:
