@@ -198,6 +198,11 @@ rSwapXOk:
     jz rAreaX
 ;
     sub ax,dx
+    jnc rSpaceXOk
+;
+    xor ax,ax
+
+rSpaceXOk:
     shl edx,1
     mov ecx,7FFFh
     sub ecx,edx
@@ -206,6 +211,10 @@ rSwapXOk:
     xor edx,edx
     div ecx
     shr eax,1
+    cmp ax,7FFFh
+    jbe rAreaX
+;
+    mov ax,7FFFh
 
 rAreaX:
     movzx edx,ds:md_area_x
@@ -286,6 +295,11 @@ rSwapYOk:
     jz rAreaY
 ;
     sub ax,dx
+    jnc rSpaceYOk
+;
+    xor ax,ax
+
+rSpaceYOk:
     shl edx,1
     mov ecx,7FFFh
     sub ecx,edx
@@ -294,6 +308,10 @@ rSwapYOk:
     xor edx,edx
     div ecx
     shr eax,1
+    cmp ax,7FFFh
+    jbe rAreaY
+;
+    mov ax,7FFFh
 
 rAreaY:
     movzx edx,ds:md_area_y
