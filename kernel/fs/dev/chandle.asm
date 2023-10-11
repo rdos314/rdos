@@ -1436,12 +1436,7 @@ poll_dummy      Proc near
 poll_dummy      Endp
 
 poll_file       Proc near
-    push edx
-    mov eax,edx
-    xor edx,edx
     ReadCFile
-    mov eax,ecx
-    pop edx
     ret
 poll_file       Endp
 
@@ -1455,6 +1450,11 @@ poll_udp_socket       Proc near
     ret
 poll_udp_socket       Endp
 
+poll_vfs_file        Proc near
+    call ReadVfsFile
+    ret
+poll_vfs_file        Endp
+
 poll_tab:
 pt00  DD OFFSET poll_dummy
 pt01  DD OFFSET poll_file
@@ -1462,7 +1462,7 @@ pt02  DD OFFSET poll_dummy
 pt03  DD OFFSET poll_dummy
 pt04  DD OFFSET poll_tcp_socket
 pt05  DD OFFSET poll_udp_socket
-pt06  DD OFFSET poll_dummy
+pt06  DD OFFSET poll_vfs_file
 pt07  DD OFFSET poll_dummy
 pt08  DD OFFSET poll_dummy
 pt09  DD OFFSET poll_dummy
@@ -1470,6 +1470,7 @@ pt09  DD OFFSET poll_dummy
 poll_handle     Proc near
     push ds
     push ebx
+    push ecx
     push edx
     push esi
     push ebp
@@ -1482,30 +1483,52 @@ poll_handle     Proc near
     cmp bx,MAX_HANDLES
     jae phFail
 ;   
+    mov si,bx
+    shl esi,16
     movzx ebx,bx
     shl ebx,4
     add ebx,OFFSET h_arr
-    mov si,ds:[ebx].hp_access
-    test si,IO_READ
+    mov ax,ds:[ebx].hp_access
+    test ax,IO_READ
     jz phFail
 ;
-    mov ax,ds:[bx].hp_handle
+    mov si,ds:[ebx].hp_vfs_sel
+    or si,si
+    jnz phGetVfs
 ;
-    cmp ax,SYS_HANDLE_COUNT
+    mov eax,ds:[ebx].hp_pos
+    mov edx,ds:[ebx].hp_pos+4
+    jmp phGetOk
+
+phGetVfs:
+    push ebx
+    push ecx
+;
+    mov cx,ds:[ebx].hp_vfs_handle
+    mov bx,ds:[ebx].hp_vfs_sel
+    call GetVfsFilePos
+;
+    pop ecx
+    pop ebx
+
+phGetOk:
+    mov bp,ds:[ebx].hp_handle
+;
+    cmp bp,SYS_HANDLE_COUNT
     jae phFail
 ;    
-    or ax,ax
+    or bp,bp
     jz phFail
 ;
     push ds
     push ebx
 ;
-    movzx ebx,ax
+    movzx ebx,bp
     dec ebx
     shl ebx,4
     add ebx,OFFSET hd_data
-    mov eax,SEG data
-    mov ds,eax
+    mov ebp,SEG data
+    mov ds,ebp
 ;
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
@@ -1513,8 +1536,8 @@ poll_handle     Proc near
 ;
     pop ebx
     pop ds
-    jc phFail
 ;
+    mov eax,ecx
     jmp phDone
 
 phFail:
@@ -1524,6 +1547,7 @@ phDone:
     pop ebp
     pop esi
     pop edx
+    pop ecx
     pop ebx
     pop ds    
     ret
