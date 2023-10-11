@@ -464,26 +464,31 @@ int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
 
     if (index >= 0)
     {
-        SetPos(pos);
-        RdosReadHandle(FHandle, buf, size);
-
         entry = &FMap->MapArr[index];
         diff = pos - entry->Pos;
 
-        if (entry->Base && diff >= 0)
+        if (((long)entry->Base & 0xFFF) != 0 || (entry->Size & 0xFFF) != 0)
         {
-            count = entry->Size - diff;
-
-            if (count > 0)
+            SetPos(pos);
+            count = RdosReadHandle(FHandle, buf, size);
+        }
+        else
+        {
+            if (entry->Base && diff >= 0)
             {
-                src = entry->Base + diff;
-                if (count > size)
-                    count = size;
+                count = entry->Size - diff;
 
-                memcpy(buf, src, count);
+                if (count > 0)
+                {
+                    src = entry->Base + diff;
+                    if (count > size)
+                        count = size;
+
+                    memcpy(buf, src, count);
+                }
+                else
+                    count = 0;
             }
-            else
-                count = 0;
         }
     }
 
@@ -516,6 +521,8 @@ int TFile::VfsRead(void *Buf, int Size)
 
     if (Pos + Size > TotalSize)
         Size = TotalSize - Pos;
+
+    count = RdosReadHandle(FHandle, Buf, Size);
 
     EnterFutex(&FMap->Handle->Futex);
 
