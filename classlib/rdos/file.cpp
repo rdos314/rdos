@@ -522,8 +522,6 @@ int TFile::VfsRead(void *Buf, int Size)
     if (Pos + Size > TotalSize)
         Size = TotalSize - Pos;
 
-    count = RdosReadHandle(FHandle, Buf, Size);
-
     EnterFutex(&FMap->Handle->Futex);
 
     while (Size)
