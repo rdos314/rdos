@@ -464,6 +464,9 @@ int TFile::VfsReadOne(int index, char *buf, long long pos, int size)
 
     if (index >= 0)
     {
+        SetPos(pos);
+        RdosReadHandle(FHandle, buf, size);
+
         entry = &FMap->MapArr[index];
         diff = pos - entry->Pos;
 
