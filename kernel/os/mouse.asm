@@ -57,6 +57,8 @@ md_swap_x       DB ?
 md_swap_y       DB ?
 md_area_x       DW ?
 md_area_y       DW ?
+md_space_x       DW ?
+md_space_y       DW ?
 
 md_div          DD ?
 md_xx           DD ?
@@ -191,6 +193,21 @@ RecalcX   Proc near
     sub eax,edx
 
 rSwapXOk:
+    movzx edx,ds:md_space_x
+    or edx,edx
+    jz rAreaX
+;
+    sub ax,dx
+    shl edx,1
+    mov ecx,7FFFh
+    sub ecx,edx
+    movzx eax,ax
+    shl eax,16
+    xor edx,edx
+    div ecx
+    shr eax,1
+
+rAreaX:
     movzx edx,ds:md_area_x
     or edx,edx
     jz rDoneX
@@ -264,6 +281,21 @@ RecalcY   Proc near
     sub eax,edx
 
 rSwapYOk:
+    movzx edx,ds:md_space_y
+    or edx,edx
+    jz rAreaY
+;
+    sub ax,dx
+    shl edx,1
+    mov ecx,7FFFh
+    sub ecx,edx
+    movzx eax,ax
+    shl eax,16
+    xor edx,edx
+    div ecx
+    shr eax,1
+
+rAreaY:
     movzx edx,ds:md_area_y
     or edx,edx
     jz rDoneY
@@ -1589,6 +1621,8 @@ swap_x_name       DB 'TOUCH.SWAP.X', 0
 swap_y_name       DB 'TOUCH.SWAP.Y', 0
 area_x_name       DB 'TOUCH.AREA.X', 0
 area_y_name       DB 'TOUCH.AREA.Y', 0
+space_x_name      DB 'TOUCH.SPACE.X', 0
+space_y_name      DB 'TOUCH.SPACE.Y', 0
 
 init_mouse_thread       PROC far
     push ds
@@ -1653,6 +1687,22 @@ itAreaXOk:
     mov ds:md_area_y,ax
 
 itAreaYOk:
+    mov di,OFFSET space_x_name
+    mov ds:md_space_x,0
+    call GetValue       
+    jc itSpaceXOk
+;
+    mov ds:md_space_x,ax
+
+itSpaceXOk:
+    mov di,OFFSET space_y_name
+    mov ds:md_space_y,0
+    call GetValue       
+    jc itSpaceYOk
+;
+    mov ds:md_space_y,ax
+
+itSpaceYOk:
     mov ax,cs
     mov ds,ax
     mov es,ax
