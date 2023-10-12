@@ -2416,6 +2416,10 @@ set_handle_size32     Proc far
     mov bx,ds:[ebx].he_sel
     call dword ptr cs:[4*ebp].set_size_tab
     jnc shsDone32
+;
+    mov eax,-1
+    stc
+    jmp shsDone32
 
 shsFail32:
     pop eax
@@ -2471,6 +2475,11 @@ set_handle_size64     Proc far
     mov bx,ds:[ebx].he_sel
     call dword ptr cs:[4*ebp].set_size_tab
     jnc shsDone64
+;
+    mov eax,-1
+    mov edx,-1
+    stc
+    jmp shsDone64
 
 shsFail64:
     pop edx

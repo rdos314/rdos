@@ -16,18 +16,13 @@ void main()
     char *buf = new char[512];
     
     h1 = RdosOpenHandle("y:/1.txt", O_RDWR);
+    h2 = RdosOpenHandle("y:/2.txt", O_CREAT | O_RDWR);
+
     count = RdosReadHandle(h1, buf, 512);
     pos = RdosGetHandlePos(h1);
-    h2 = 11;
-    pos = RdosGetHandlePos(h2);
-    count = RdosReadHandle(h2, buf, 512);
-    RdosDup2Handle(h1, h2);
+
+    count = RdosWriteHandle(h2, buf, count);
     pos = RdosGetHandlePos(h1);
-    count = RdosReadHandle(h1, buf, 512);
-    pos = RdosGetHandlePos(h1);
-    RdosSetHandlePos(h2, 2000);
-    count = RdosReadHandle(h2, buf, 512);
-    pos = RdosGetHandlePos(h2);
 
     RdosCloseHandle(h1);
     RdosCloseHandle(h2);
