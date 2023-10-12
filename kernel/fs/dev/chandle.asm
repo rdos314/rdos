@@ -1343,7 +1343,8 @@ VfsMapHandle_    Endp
 ;       DESCRIPTION:    Grow VFS handle
 ;
 ;       PARAMETERS:     BX             Handle
-;                       EDX:EAX        New size
+;                       EDX:EAX        Current size
+;                       ECX            Increase
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

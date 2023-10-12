@@ -1152,6 +1152,105 @@ WaitForReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           WaitForGrow
+;
+;       DESCRIPTION:    Wait for grow
+;
+;       PARAMETERS:     FS             Kernel process sel
+;                       GS             File sel
+;                       EDX:EAX        Req position
+;                       ECX            Increase
+;
+;       RETURNS:        EBX            Req id
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForGrow      Proc near
+    push ds
+    push esi
+    push edi
+;
+    mov esi,gs
+    mov ds,esi
+;
+    EnterSection ds:kf_section
+    call FindReq
+    jnc wfgCheck
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+;
+    push eax
+    push edx
+;
+    add eax,ecx
+    adc edx,0
+;
+    mov ebx,REQ_GROW
+    call AddReq
+;
+    pop edx
+    pop eax
+;
+    call UpdateMap
+
+wfgWait:
+    WaitForSignal
+;
+    EnterSection ds:kf_section
+    call FindReq
+    jnc wfgCheck
+;
+    LeaveSection ds:kf_section
+;
+    push eax
+    mov ax,20
+    WaitMilliSec
+    pop eax
+    jmp wfgDone
+
+wfgCheck:
+    mov esi,ds:[4*ebx].kf_handle_arr
+    mov esi,ds:[esi].kre_phys_arr
+    or esi,esi
+    jnz wfgLock
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+    jmp wfgWait
+
+wfgLock:
+    mov esi,ds:[4*ebx].kf_handle_arr
+;
+    mov di,ds:[esi].kre_usage
+    inc di
+    mov ds:[esi].kre_usage,di
+    sub di,1
+    LeaveSection ds:kf_section
+    clc
+    jnz wfgDone
+;
+    push ebx
+    mov cx,bx
+    mov bx,REQ_MAP
+    call AddReq
+    pop ebx
+    clc
+    jmp wfgDone
+
+wfgLeave:
+    LeaveSection ds:kf_section
+
+wfgDone:
+    pop edi
+    pop esi
+    pop ds
+    ret
+WaitForGrow    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           FreeReq
 ;
 ;       DESCRIPTION:    Free req
@@ -2838,92 +2937,39 @@ MapVfsFile   Endp
 ;       DESCRIPTION:    Grow VFS file
 ;
 ;       PARAMETERS:     DS             Mod sel
-;                       EDX:EAX        New size
-;
-;       RETURNS:        EBX            Req id
+;                       BX             Handle
+;                       EDX:EAX        Current size
+;                       ECX            Increase
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public GrowVfsFile
 
 GrowVfsFile      Proc near
-    push ds
     push es
     push fs
+    push gs
     pushad
-;    
-    mov bx,ds
-    mov fs,ebx
 ;
-    mov bx,ds:kfm_file_sel
-    or bx,bx
-    stc
-    jz gvfsDone
+    mov esi,ds
+    mov fs,esi
+    mov es,ds:kfm_kernel_sel
+    mov gs,ds:kfm_file_sel
 ;
-    mov ds,ebx
-    EnterSection ds:kf_section
-    call FindReq
-    jnc gvfsCheck
+    call WaitForGrow
+    jc gvfsDone
 ;
-    call AddWaitReq
-    LeaveSection ds:kf_section
-;
-    mov ebx,REQ_GROW
-    call AddReq
-    call UpdateMap
-
-gvfsWait:
-    WaitForSignal
-;
-    EnterSection ds:kf_section
-    call FindReq
-    jnc gvfsCheck
-;
-    LeaveSection ds:kf_section
-;
-    push eax
-    mov ax,20
-    WaitMilliSec
-    pop eax
-    jmp gvfsDone
-
-gvfsCheck:
-    mov esi,ds:[4*ebx].kf_handle_arr
-    mov esi,ds:[esi].kre_phys_arr
-    or esi,esi
-    jnz gvfsLock
-;
-    call AddWaitReq
-    LeaveSection ds:kf_section
-    jmp gvfsWait
-
-gvfsLock:
-    mov esi,ds:[4*ebx].kf_handle_arr
-;
-    mov di,ds:[esi].kre_usage
-    inc di
-    mov ds:[esi].kre_usage,di
-    sub di,1
-    LeaveSection ds:kf_section
-    clc
-    jnz gvfsDone
-;
-    push ebx
-    mov cx,bx
-    mov bx,REQ_MAP
-    call AddReq
-    pop ebx
-    clc
-    jmp gvfsDone
-
-gvfsLeave:
-    LeaveSection ds:kf_section
+    call LockMap
+    call SyncMap
+    pushf
+    call UnlockMap
+    popf
 
 gvfsDone:
     popad
+    pop gs
     pop fs
     pop es
-    pop ds
     ret
 GrowVfsFile      Endp
 

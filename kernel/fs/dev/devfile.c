@@ -87,8 +87,8 @@ extern void UnlockMod(struct RdosFileMap *Map);
 extern void VfsMapHandle(int handle, long long pos, int size);
 #pragma aux VfsMapHandle parm routine [__ebx] [__edx __eax] [__ecx]
 
-extern void VfsGrowHandle(int handle, long long size);
-#pragma aux VfsGrowHandle parm routine [__ebx] [__edx __eax]
+extern void VfsGrowHandle(int handle, long long csize, int incr);
+#pragma aux VfsGrowHandle parm routine [__ebx] [__edx __eax] [__ecx]
 
 /*##########################################################################
 #
@@ -274,16 +274,15 @@ int VfsWrite(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int 
     long long TotalSize = info->CurrSize;
     long long Grow;
 
-    if (hinfo->ReqSize > TotalSize)
-        TotalSize = hinfo->ReqSize;
+    Grow = Pos + Size - info->DiscSize;
 
-    Grow = Pos + Size - TotalSize;
-
-    if (Grow)
+    if (Grow > 0)
     {
         if (TotalSize + Grow > info->DiscSize)
-            VfsGrowHandle(Handle, TotalSize + Grow);
+            VfsGrowHandle(Handle, info->DiscSize, Grow);
     }
+
+    LastIndex = VfsFind(Map, Pos);
 
     return 0;
 }
