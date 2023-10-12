@@ -25,6 +25,7 @@ void main()
     pos = RdosGetHandlePos(h1);
     count = RdosReadHandle(h1, buf, 512);
     pos = RdosGetHandlePos(h1);
+    RdosSetHandlePos(h2, 2000);
     count = RdosReadHandle(h2, buf, 512);
     pos = RdosGetHandlePos(h2);
 

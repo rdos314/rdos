@@ -2962,33 +2962,51 @@ set_handle_pos64_name  DB 'Set C Handle Pos 64', 0
 set_handle_pos32     Proc far
     push ds
     push ebx
+    push ecx
     push edx
 ;
+    xor edx,edx
     push eax
-;
     GetThread
     mov ds,eax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
+    pop eax
 ;    
     cmp bx,MAX_HANDLES
     jae shpFail32
 ;   
-    pop eax
-;
     movzx ebx,bx
     shl ebx,4
     add ebx,OFFSET h_arr
+    mov cx,ds:[ebx].hp_handle
+;
+    cmp cx,SYS_HANDLE_COUNT
+    jae shpFail32
+;    
+    or cx,cx
+    jz shpFail32
+;
+    mov cx,ds:[ebx].hp_vfs_sel
+    or cx,cx
+    jnz shpVfs32
+;
     mov ds:[ebx].hp_pos,eax
     mov ds:[ebx].hp_pos+4,edx
     jmp shpDone32
 
+shpVfs32:
+    mov cx,ds:[ebx].hp_vfs_handle
+    mov bx,ds:[ebx].hp_vfs_sel
+    call SetVfsFilePos
+    jmp shpDone32
+
 shpFail32:
-    pop eax
     mov eax,-1
 
 shpDone32:
     pop edx
+    pop ecx
     pop ebx
     pop ds    
     ret
@@ -2997,36 +3015,49 @@ set_handle_pos32     Endp
 set_handle_pos64     Proc far
     push ds
     push ebx
+    push ecx
 ;
     push eax
-    push edx
-;
     GetThread
     mov ds,eax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
+    pop eax
 ;    
     cmp bx,MAX_HANDLES
     jae shpFail64
 ;   
-    pop edx
-    pop eax
-;
     movzx ebx,bx
     shl ebx,4
     add ebx,OFFSET h_arr
+    mov cx,ds:[ebx].hp_handle
+;
+    cmp cx,SYS_HANDLE_COUNT
+    jae shpFail64
+;    
+    or cx,cx
+    jz shpFail64
+;
+    mov cx,ds:[ebx].hp_vfs_sel
+    or cx,cx
+    jnz shpVfs64
+;
     mov ds:[ebx].hp_pos,eax
     mov ds:[ebx].hp_pos+4,edx
     jmp shpDone64
 
+shpVfs64:
+    mov cx,ds:[ebx].hp_vfs_handle
+    mov bx,ds:[ebx].hp_vfs_sel
+    call SetVfsFilePos
+    jmp shpDone64
+
 shpFail64:
-    pop edx
-    pop eax
-;
     mov eax,-1
     mov edx,-1
 
 shpDone64:
+    pop ecx
     pop ebx
     pop ds    
     ret
