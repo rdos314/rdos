@@ -327,7 +327,12 @@ long long TFile::GetPos()
     else
     {
         if (FHandle)
-            return RdosGetFilePos(FHandle);
+        {
+            if (FLegacy)
+                return RdosGetFilePos(FHandle);
+            else
+                return RdosGetHandlePos(FHandle);
+        }
         else
             return 0;
     }
@@ -351,7 +356,12 @@ void TFile::SetPos(long long Pos)
     else
     {
         if (FHandle)
-            RdosSetFilePos(FHandle, Pos);
+        {
+            if (FLegacy)
+                RdosSetFilePos(FHandle, Pos);
+            else
+                RdosSetHandlePos(FHandle, Pos);
+        }
     }
 }
 
@@ -580,10 +590,31 @@ int TFile::Read(void *Buf, int Size)
     else
     {
         if (FHandle)
-            return RdosReadFile(FHandle, Buf, Size);
+        {
+            if (FLegacy)
+                return RdosReadFile(FHandle, Buf, Size);
+            else
+                return RdosReadHandle(FHandle, Buf, Size);
+        }
         else
             return 0;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::VfsWrite
+#
+#   Purpose....: VFS write
+#
+#   In params..: buf, size
+#   Out params.: *
+#   Returns....: Bytes read
+#
+##########################################################################*/
+int TFile::VfsWrite(const void *Buf, int Size)
+{
+    return RdosWriteHandle(FHandle, Buf, Size);
 }
 
 /*##########################################################################
@@ -599,10 +630,20 @@ int TFile::Read(void *Buf, int Size)
 ##########################################################################*/
 int TFile::Write(const void *Buf, int Size)
 {
-    if (FHandle)
-        return RdosWriteFile(FHandle, Buf, Size);
+    if (FMap)
+        return VfsWrite(Buf, Size);
     else
-        return 0;
+    {
+        if (FHandle)
+        {
+            if (FLegacy)
+                return RdosWriteFile(FHandle, Buf, Size);
+            else
+                return RdosWriteHandle(FHandle, Buf, Size);
+        }
+        else
+            return 0;
+    }
 }
 
 /*##########################################################################
@@ -618,8 +659,5 @@ int TFile::Write(const void *Buf, int Size)
 ##########################################################################*/
 int TFile::Write(const char *str)
 {
-    if (FHandle)
-        return RdosWriteFile(FHandle, str, strlen(str));
-    else
-        return 0;
+    return Write(str, strlen(str));
 }

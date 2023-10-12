@@ -59,6 +59,7 @@ protected:
     int VfsReadOne(int index, char *Buf, long long Pos, int Size);
     int VfsFind(long long Pos);
     int VfsRead(void *Buf, int Size);
+    int VfsWrite(const void *Buf, int Size);
 
 private:
     bool FLegacy;
