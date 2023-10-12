@@ -245,3 +245,30 @@ int VfsRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int S
 
     return ret;
 }
+
+/*##########################################################################
+#
+#   Name       : VfsWrite
+#
+#   Purpose....: VFS write
+#
+#   In params..: buf, size
+#   Out params.: *
+#   Returns....: Bytes written
+#
+##########################################################################*/
+#pragma aux VfsWrite "*" parm routine [ebx] [fs esi] [edx eax] [es edi] [ecx] value [ecx]
+int VfsWrite(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int Size)
+{
+    int count;
+    int i;
+    int ret = 0;
+    char *ptr = (char *)Buf;
+    int LastIndex = 0;
+    short int sel = GetSel(Map);
+    struct RdosFileInfo *info = (struct RdosFileInfo *)OffsetToPtr(sel, Map->InfoOffset);
+    struct RdosFileHandleInfo *hinfo = (struct RdosFileHandleInfo *)OffsetToPtr(sel, Map->HandleOffset);
+    long long TotalSize = info->CurrSize;
+
+    return 0;
+}

@@ -116,6 +116,7 @@ code    SEGMENT byte public 'CODE'
     extern CloseVfsMod:near
     extern FreeUserHandle:near
     extern ReadVfsFile:near
+    extern WriteVfsFile:near
     extern MapVfsFile:near
     extern GetVfsFileInfo:near
     extern GetVfsFilePos:near
@@ -1637,6 +1638,7 @@ read_handle     Proc near
     push ecx
     push edx
     push esi
+    push edi
     push ebp
 ;
     GetThread
@@ -1729,6 +1731,7 @@ rhFail:
 
 rhDone:
     pop ebp
+    pop edi
     pop esi
     pop edx
     pop ecx
@@ -1798,6 +1801,11 @@ write_udp_socket      Proc near
     ret
 write_udp_socket      Endp
 
+write_vfs_file        Proc near
+    call WriteVfsFile
+    ret
+write_vfs_file        Endp
+
 write_tab:
 wt00  DD OFFSET write_dummy
 wt01  DD OFFSET write_file
@@ -1805,7 +1813,7 @@ wt02  DD OFFSET write_dummy
 wt03  DD OFFSET write_stdout
 wt04  DD OFFSET write_tcp_socket
 wt05  DD OFFSET write_udp_socket
-wt06  DD OFFSET write_dummy
+wt06  DD OFFSET write_vfs_file
 wt07  DD OFFSET write_dummy
 wt08  DD OFFSET write_dummy
 wt09  DD OFFSET write_dummy
@@ -1827,16 +1835,50 @@ write_handle     Proc near
     cmp bx,MAX_HANDLES
     jae whFail
 ;   
+    mov si,bx
+    shl esi,16
     movzx ebx,bx
     shl ebx,4
     add ebx,OFFSET h_arr
-    mov si,ds:[ebx].hp_access
-    test si,IO_WRITE
+    mov ax,ds:[ebx].hp_access
+    test ax,IO_WRITE
     jz whFail
+;
+    mov si,ds:[ebx].hp_vfs_sel
+;
+    test ax,IO_APPEND
+    jnz whGetAppend
+;
+    or si,si
+    jnz whGetVfs
 ;
     mov eax,ds:[ebx].hp_pos
     mov edx,ds:[ebx].hp_pos+4
-    mov bp,ds:[bx].hp_handle
+    jmp whGetOk
+
+whGetVfs:
+    push ebx
+    push ecx
+;
+    mov cx,ds:[ebx].hp_vfs_handle
+    mov bx,ds:[ebx].hp_vfs_sel
+    call GetVfsFilePos
+;
+    pop ecx
+    pop ebx
+    jmp whGetOk
+
+whGetAppend:
+    push ebx
+;
+    mov ebx,esi
+    shr ebx,16
+    GetHandleSize64
+;
+    pop ebx
+
+whGetOk:
+    mov bp,ds:[ebx].hp_handle
 ;
     cmp bp,SYS_HANDLE_COUNT
     jae whFail
@@ -1854,16 +1896,6 @@ write_handle     Proc near
     mov ebp,SEG data
     mov ds,ebp
 ;
-    test si,IO_APPEND
-    jz whPosOk
-;
-    push ebx
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
-    call dword ptr cs:[4*ebp].get_size_tab
-    pop ebx
-
-whPosOk:
     movzx ebp,ds:[ebx].he_type
     mov bx,ds:[ebx].he_sel
     call dword ptr cs:[4*ebp].write_tab
@@ -1873,8 +1905,25 @@ whWriteOk:
     pop ds
     jc whFail
 ;
+    or si,si
+    jnz whSetVfs
+;
     mov ds:[ebx].hp_pos,eax
     mov ds:[ebx].hp_pos+4,edx
+    jmp whSetOk
+
+whSetVfs:
+    push ebx
+    push ecx
+;
+    mov cx,ds:[ebx].hp_vfs_handle
+    mov bx,ds:[ebx].hp_vfs_sel
+    call SetVfsFilePos
+;
+    pop ecx
+    pop ebx
+
+whSetOk:
     mov eax,ecx
     jmp whDone
 

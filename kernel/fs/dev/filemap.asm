@@ -157,6 +157,7 @@ code    SEGMENT byte public 'CODE'
     extern RefVfsHandle:near
     extern AllocateModHandle:near
     extern VfsRead:near
+    extern VfsWrite:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3057,6 +3058,59 @@ ReadVfsFile    Proc near
     pop fs
     ret
 ReadVfsFile    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WriteVfsFile
+;
+;       DESCRIPTION:    Write VFS file
+;
+;       PARAMETERS:     BX		File sel
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;                       ESI             Mod sel (low) & handle (high)
+;
+;       RETURNS:        ECX             Count
+;                       EDX:EAX         New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WriteVfsFile
+
+WriteVfsFile    Proc near
+    push fs
+    push ebx
+    push esi
+    push ebp
+;
+    mov ebp,esi
+    shr ebp,16
+;
+    push eax
+    push edx
+;
+    mov fs,si
+    mov esi,fs:kfm_user_base
+    mov ebx,flat_data_sel
+    mov fs,ebx
+    mov ebx,ebp
+    xor ebp,ebp
+    call VfsWrite
+;
+    pop edx
+    pop eax
+;
+    add eax,ecx
+    adc edx,0
+;
+    pop ebp
+    pop esi
+    pop ebx
+    pop fs
+    ret
+WriteVfsFile    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
