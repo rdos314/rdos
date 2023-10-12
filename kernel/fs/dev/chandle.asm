@@ -2044,62 +2044,99 @@ dup2_handle     Proc far
     push edi
     push ebp
 ;
-    movzx edi,ax
+    mov bp,ax
+;
     GetThread
     mov ds,ax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
 ;    
     cmp bx,MAX_HANDLES
-    jae d2hFail
+    jae dh2Fail
 ;   
     movzx esi,bx
     shl esi,4
     add esi,OFFSET h_arr
     mov ax,ds:[esi].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae dh2Fail
+;    
     or ax,ax
-    jz d2hFail
-;
-    cmp di,MAX_HANDLES
-    jae d2hFail
-;
-    push eax
-    push ebx
-;
-    mov ebx,edi
-    CloseHandle
-;
-    movzx ebx,ax
-    dec ebx
-    shl ebx,4
-    add ebx,OFFSET hd_data
-    mov ax,SEG data
-    mov es,ax
-    inc es:[ebx].he_ref_count
-;
-    pop ebx
-    pop eax
-;
-    mov ebp,edi
+    jz dh2Fail
+;   
+    movzx edi,bp
     shl edi,4
     add edi,OFFSET h_arr
-    EnterSection ds:h_section
-    mov dx,ds:[esi].hp_access
-    mov ds:[edi].hp_access,dx
-    mov edx,ds:[esi].hp_pos
-    mov ds:[edi].hp_pos,edx
+    mov ax,ds:[edi].hp_handle
+    or ax,ax
+    jz dh2Dup
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae dh2Fail
+;    
+    or ax,ax
+    jz dh2Fail
+;
+    mov bx,bp
+    CloseHandle
+
+dh2Dup:
+    mov bx,bp
+;
+    mov eax,SEG data
+    mov es,eax
+    movzx eax,ds:[esi].hp_handle
+    dec eax
+    shl eax,4
+    add eax,OFFSET hd_data
+    inc es:[eax].he_ref_count
+;
+    mov bp,ds:[esi].hp_vfs_sel
+    or bp,bp
+    jnz dh2Vfs
+;
+    mov eax,ds:[esi].hp_pos
     mov edx,ds:[esi].hp_pos+4
+    jmp dh2Copy
+
+dh2Vfs:
+    push ebx
+    mov bx,bp
+    mov cx,ds:[esi].hp_vfs_handle
+    call GetVfsFilePos
+    pop ebx
+
+dh2Copy:
+    EnterSection ds:h_section
+    mov ds:[edi].hp_pos,eax
     mov ds:[edi].hp_pos+4,edx
+;
+    mov ax,ds:[esi].hp_access
+    mov ds:[edi].hp_access,ax
+;
+    mov ax,ds:[esi].hp_handle
     mov ds:[edi].hp_handle,ax
     LeaveSection ds:h_section
 ;
-    movzx ebx,bp
-    jmp d2hDone
+    or bp,bp
+    jz dh2Done
+;
+    push ebx
+    mov bx,bp
+    call DupVfsFile   
+    pop ebx
+;
+    mov ds:[edi].hp_vfs_sel,bp
+    mov ds:[edi].hp_vfs_handle,dx
+    clc
+    jmp dh2Done
 
-d2hFail:
+dh2Fail:
     mov ebx,-1
+    stc
 
-d2hDone:
+dh2Done:
     pop ebp
     pop edi
     pop esi
