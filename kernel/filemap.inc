@@ -30,7 +30,7 @@ VFS_FILE_SIGN            = 'F'
 file_info_struc  STRUC
 
 fi_fs_size           DD ?,?
-fi_req_size          DD ?,?
+fi_size              DD ?,?
 fi_access            DD ?,?
 fi_modify            DD ?,?
 fi_attrib            DD ?
@@ -44,6 +44,7 @@ file_info_struc  ENDS
 
 file_handle_struc  STRUC
 
+fh_req_size         DD ?,?
 fh_pos_arr          DD 15*8*8 DUP(?)
 fh_bitmap           DD 15 DUP(?)
 fh_futex            futex_struc <>

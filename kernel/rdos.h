@@ -191,6 +191,7 @@ struct RdosFileMapEntry
 
 struct RdosFileHandleInfo
 {
+    long long ReqSize;
     long long PosArr[480];
     int Bitmap[15];
     struct RdosFutex Futex;
