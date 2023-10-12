@@ -2847,6 +2847,8 @@ get_handle_pos64_name  DB 'Get C Handle Pos 64', 0
 get_handle_pos32     Proc far
     push ds
     push ebx
+    push ecx
+    push edx
 ;
     GetThread
     mov ds,eax
@@ -2859,13 +2861,33 @@ get_handle_pos32     Proc far
     movzx ebx,bx
     shl ebx,4
     add ebx,OFFSET h_arr
+    mov ax,ds:[ebx].hp_vfs_sel
+    or ax,ax
+    jnz ghpVfs32
+;
+    mov ax,ds:[ebx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ghpFail32
+;    
+    or ax,ax
+    jz ghpFail32
+;
     mov eax,ds:[ebx].hp_pos
+    jmp ghpDone32
+
+ghpVfs32:
+    mov cx,ds:[ebx].hp_vfs_handle
+    mov bx,ds:[ebx].hp_vfs_sel
+    call GetVfsFilePos
     jmp ghpDone32
 
 ghpFail32:
     mov eax,-1
 
 ghpDone32:
+    pop edx
+    pop ecx
     pop ebx
     pop ds    
     ret
@@ -2874,6 +2896,7 @@ get_handle_pos32     Endp
 get_handle_pos64     Proc far
     push ds
     push ebx
+    push ecx
 ;
     GetThread
     mov ds,ax
@@ -2886,8 +2909,26 @@ get_handle_pos64     Proc far
     movzx ebx,bx
     shl ebx,4
     add ebx,OFFSET h_arr
+    mov ax,ds:[ebx].hp_vfs_sel
+    or ax,ax
+    jnz ghpVfs64
+;
+    mov ax,ds:[ebx].hp_handle
+;
+    cmp ax,SYS_HANDLE_COUNT
+    jae ghpFail64
+;    
+    or ax,ax
+    jz ghpFail64
+;
     mov eax,ds:[ebx].hp_pos
     mov edx,ds:[ebx].hp_pos+4
+    jmp ghpDone64
+
+ghpVfs64:
+    mov cx,ds:[ebx].hp_vfs_handle
+    mov bx,ds:[ebx].hp_vfs_sel
+    call GetVfsFilePos
     jmp ghpDone64
 
 ghpFail64:
@@ -2895,6 +2936,7 @@ ghpFail64:
     mov edx,-1
 
 ghpDone64:
+    pop ecx
     pop ebx
     pop ds    
     ret
