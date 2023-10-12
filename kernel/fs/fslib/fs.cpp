@@ -40,6 +40,7 @@
 #define REQ_COMPLETED  4
 #define REQ_MAP        5
 #define REQ_SIZE       6
+#define REQ_GROW       7
 
 /*##########################################################################
 #
@@ -1454,6 +1455,22 @@ void TFs::HandleMapReq(TFile *file, int req)
 
 /*##########################################################################
 #
+#   Name       : TFs::HandleGrowReq
+#
+#   Purpose....: Handle grow req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::HandleGrowReq(TFile *file, long long size)
+{
+    file->HandleGrowReq(size);
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::HandleSizeReq
 #
 #   Purpose....: Handle size req
@@ -1501,6 +1518,10 @@ bool TFs::HandleQueue(struct TFsQueueEntry *entry)
 
             case REQ_MAP:
                 HandleMapReq(file, entry->Par32);
+                break;
+
+            case REQ_GROW:
+                HandleGrowReq(file, entry->Par64);
                 break;
 
             case REQ_FREE:

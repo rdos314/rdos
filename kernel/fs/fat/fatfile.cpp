@@ -282,6 +282,49 @@ bool TFatFile::Shrink(unsigned int count)
 
 /*##########################################################################
 #
+#   Name       : TFatFile::GrowDisc
+#
+#   Purpose....: Grow file and request sectors
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatFile::GrowDisc(long long Size)
+{
+    unsigned int CurrClusters;
+    unsigned int NewClusters;
+    bool ok;
+
+    if (Size > 0xFFFFFFFF)
+        ok = false;
+    else
+    {
+        CurrClusters = FClusterChain->GetSize();
+        NewClusters = SizeToClusters(Size);
+        ok = true;
+    }
+
+    LockFile();
+
+    if (ok)
+    {
+        if (NewClusters > CurrClusters)
+            ok = Grow(NewClusters - CurrClusters);        
+
+        FClusterCount = FClusterChain->GetSize();
+        FClusterArr = FClusterChain->GetChain();
+        Info->DiscSize = ClustersToSize(FClusterCount);
+    }
+
+    UnlockFile();
+
+    return ok;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatFile::SetSize
 #
 #   Purpose....: Set file size

@@ -119,6 +119,7 @@ protected:
     virtual void HandleCompletedReq(TFile *file, int index);
     virtual void HandleMapReq(TFile *file, int index);
     virtual void HandleFreeReq(TFile *file, int index);
+    virtual void HandleGrowReq(TFile *file, long long size);
     virtual void HandleSizeReq(TFile *file, long long size);
     bool HandleQueue(struct TFsQueueEntry *entry);
     void StartServer();

@@ -43,6 +43,7 @@ public:
     virtual void SetReq(long long StartSector, int Sectors);
     virtual long long GetSector(long long RelSector);
 
+    virtual bool GrowDisc(long long Size);
     virtual bool SetSize(long long Size);
 
 protected:

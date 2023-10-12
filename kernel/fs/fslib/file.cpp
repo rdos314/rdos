@@ -877,6 +877,28 @@ void TFile::HandleMapReq(int req)
 
 /*##########################################################################
 #
+#   Name       : TFile::HandleGrowReq
+#
+#   Purpose....: Handle grow req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::HandleGrowReq(long long req)
+{
+    char str[80];
+
+    sprintf(str, "Grow %d.%lld\r\n", Index, req);
+    RdosWriteFile(FileHandle, str, strlen(str));
+    printf(str);
+
+    GrowDisc(req);
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::HandleSizeReq
 #
 #   Purpose....: Handle size req

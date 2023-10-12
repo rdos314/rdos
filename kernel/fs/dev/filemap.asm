@@ -2,7 +2,7 @@
 ; RDOS operating system
 ; Copyright (C) 1988-2000, Leif Ekblad
 ;
-; This program is free software; you can redistribute it and/or modify
+; This program is free software; you can redistribute it and/or modifyg
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version. The only exception to this rule
@@ -45,6 +45,7 @@ include vfsfile.inc
   REQ_COMPLETED = 4
   REQ_MAP = 5
   REQ_SIZE = 6
+  REQ_GROW = 7
 
     .386p
 
@@ -2828,6 +2829,51 @@ mcvfDone:
     pop es
     ret
 MapVfsFile   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GrowVfsFile
+;
+;       DESCRIPTION:    Grow VFS file
+;
+;       PARAMETERS:     DS             Mod sel
+;                       BX             Handle
+;                       EDX:EAX        New size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GrowVfsFile
+
+GrowVfsFile      Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;    
+    mov bx,ds:kfm_file_sel
+    or bx,bx
+    stc
+    jz gvfsDone
+;
+    push eax
+    GetThread
+    mov ecx,eax
+    pop eax
+;    
+    mov ds,ebx
+    mov ebx,REQ_GROW
+    call AddReq
+;
+    WaitForSignal
+
+gvfsDone:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+GrowVfsFile      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -87,6 +87,9 @@ extern void UnlockMod(struct RdosFileMap *Map);
 extern void VfsMapHandle(int handle, long long pos, int size);
 #pragma aux VfsMapHandle parm routine [__ebx] [__edx __eax] [__ecx]
 
+extern void VfsGrowHandle(int handle, long long size);
+#pragma aux VfsGrowHandle parm routine [__ebx] [__edx __eax]
+
 /*##########################################################################
 #
 #   Name       : VfsFind
@@ -269,6 +272,18 @@ int VfsWrite(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int 
     struct RdosFileInfo *info = (struct RdosFileInfo *)OffsetToPtr(sel, Map->InfoOffset);
     struct RdosFileHandleInfo *hinfo = (struct RdosFileHandleInfo *)OffsetToPtr(sel, Map->HandleOffset);
     long long TotalSize = info->CurrSize;
+    long long Grow;
+
+    if (hinfo->ReqSize > TotalSize)
+        TotalSize = hinfo->ReqSize;
+
+    Grow = Pos + Size - TotalSize;
+
+    if (Grow)
+    {
+        if (TotalSize + Grow > info->DiscSize)
+            VfsGrowHandle(Handle, TotalSize + Grow);
+    }
 
     return 0;
 }

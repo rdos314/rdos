@@ -76,6 +76,7 @@ public:
 
     int GetAttrib();
 
+    virtual bool GrowDisc(long long Size) = 0;
     virtual bool SetSize(long long Size) = 0;
 
     int Handle;
@@ -86,6 +87,7 @@ protected:
     virtual void HandleCompletedReq(int index);
     virtual void HandleMapReq(int index);
     virtual void HandleFreeReq(int index);
+    virtual void HandleGrowReq(long long size);
     virtual void HandleSizeReq(long long size);
 
     virtual void SetReq(long long RelSector, int Sectors);
