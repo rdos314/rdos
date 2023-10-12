@@ -2838,8 +2838,9 @@ MapVfsFile   Endp
 ;       DESCRIPTION:    Grow VFS file
 ;
 ;       PARAMETERS:     DS             Mod sel
-;                       BX             Handle
 ;                       EDX:EAX        New size
+;
+;       RETURNS:        EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2851,21 +2852,72 @@ GrowVfsFile      Proc near
     push fs
     pushad
 ;    
+    mov bx,ds
+    mov fs,ebx
+;
     mov bx,ds:kfm_file_sel
     or bx,bx
     stc
     jz gvfsDone
 ;
-    push eax
-    GetThread
-    mov ecx,eax
-    pop eax
-;    
     mov ds,ebx
+    EnterSection ds:kf_section
+    call FindReq
+    jnc gvfsCheck
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+;
     mov ebx,REQ_GROW
     call AddReq
-;
+    call UpdateMap
+
+gvfsWait:
     WaitForSignal
+;
+    EnterSection ds:kf_section
+    call FindReq
+    jnc gvfsCheck
+;
+    LeaveSection ds:kf_section
+;
+    push eax
+    mov ax,20
+    WaitMilliSec
+    pop eax
+    jmp gvfsDone
+
+gvfsCheck:
+    mov esi,ds:[4*ebx].kf_handle_arr
+    mov esi,ds:[esi].kre_phys_arr
+    or esi,esi
+    jnz gvfsLock
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+    jmp gvfsWait
+
+gvfsLock:
+    mov esi,ds:[4*ebx].kf_handle_arr
+;
+    mov di,ds:[esi].kre_usage
+    inc di
+    mov ds:[esi].kre_usage,di
+    sub di,1
+    LeaveSection ds:kf_section
+    clc
+    jnz gvfsDone
+;
+    push ebx
+    mov cx,bx
+    mov bx,REQ_MAP
+    call AddReq
+    pop ebx
+    clc
+    jmp gvfsDone
+
+gvfsLeave:
+    LeaveSection ds:kf_section
 
 gvfsDone:
     popad
