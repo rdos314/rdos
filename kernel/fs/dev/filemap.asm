@@ -1977,102 +1977,6 @@ DeleteMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetPos
-;
-;       DESCRIPTION:    Get file position
-;
-;       PARAMETERS:     DS             Prog sel
-;                       BX             Map Handle
-;
-;       RETURNS:        NC
-;                         EDX:EAX      Position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetPos  Proc near
-    push es
-;
-    mov ax,flat_data_sel
-    mov es,eax
-;
-    or bx,bx
-    jz gpFail
-;
-    cmp bx,15*32
-    jb gpConv
-
-gpFail:
-    stc
-    jmp gpDone
-
-gpConv:
-    movzx eax,bx
-    dec eax
-    shl eax,3
-    mov edx,ds:kfm_user_base
-    mov edx,es:[edx].fm_handle_ptr
-    add edx,eax
-    mov eax,es:[edx]
-    mov edx,es:[edx+4]
-    clc
-
-gpDone:
-    pop es
-    ret
-GetPos  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           SetPos
-;
-;       DESCRIPTION:    Get file position
-;
-;       PARAMETERS:     DS             Prog sel
-;                       BX             Map Handle
-;                       EDX:EAX        Position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetPos  Proc near
-    push es
-    push ecx
-    push esi
-;
-    mov cx,flat_data_sel
-    mov es,ecx
-;
-    or bx,bx
-    jz spFail
-;
-    cmp bx,15*32
-    jb spSave
-
-spFail:
-    stc
-    jmp spDone
-
-spSave:
-    movzx ecx,bx
-    dec ecx
-    shl ecx,3
-    mov esi,ds:kfm_user_base
-    mov esi,es:[esi].fm_handle_ptr
-    add esi,ecx
-    mov es:[esi],eax
-    mov es:[esi+4],edx
-    clc
-
-spDone:
-    pop esi
-    pop ecx
-    pop es
-    ret
-SetPos  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           NotifyFileData
 ;
 ;       DESCRIPTION:    Notify file data
@@ -2682,7 +2586,9 @@ auhLoop:
     mov edx,ds:kfm_user_base
     mov edx,es:[edx].fm_handle_ptr
     shl esi,3
+
     add edx,esi
+    add edx,OFFSET fh_pos_arr
     xor eax,eax
     mov es:[edx],eax
     add edx,4

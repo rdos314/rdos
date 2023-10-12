@@ -56,6 +56,13 @@ struct RdosFileMap
     struct RdosFileMapEntry MapArr[240];
 };
 
+struct RdosFileHandleInfo
+{
+    long long ReqSize;
+    long long PosArr[480];
+    int Bitmap[15];
+};
+
 short int GetSel(void *ptr);
 #pragma aux GetSel = \
     __parm [__dx __eax]  \
@@ -188,7 +195,11 @@ int VfsRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int S
     int LastIndex = 0;
     short int sel = GetSel(Map);
     struct RdosFileInfo *info = (struct RdosFileInfo *)OffsetToPtr(sel, Map->InfoOffset);
+    struct RdosFileHandleInfo *hinfo = (struct RdosFileHandleInfo *)OffsetToPtr(sel, Map->HandleOffset);
     long long TotalSize = info->CurrSize;
+
+    if (hinfo->ReqSize > TotalSize)
+        TotalSize = hinfo->ReqSize;
 
     if (Pos > TotalSize)
         Pos = TotalSize;
