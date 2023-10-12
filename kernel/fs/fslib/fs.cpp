@@ -1380,7 +1380,7 @@ void TFs::HandleRead(TFile *file, long long pos, int size)
 
         FPendArr[FCurrPendCount] = req;
         FCurrPendCount++;
-        req->Start();
+        req->StartRead();
     }
 }
 
@@ -1466,7 +1466,22 @@ void TFs::HandleMapReq(TFile *file, int req)
 ##########################################################################*/
 void TFs::HandleGrowReq(TFile *file, long long size)
 {
-    file->HandleGrowReq(size);
+    int i;
+    bool delay = false;
+    long long check;
+    TFileReq *req;
+
+    req = file->HandleGrowReq(size);
+
+    if (req)
+    {
+        if (FCurrPendCount == FMaxPendCount)
+            GrowPend();
+
+        FPendArr[FCurrPendCount] = req;
+        FCurrPendCount++;
+        req->StartWrite();
+    }
 }
 
 /*##########################################################################

@@ -45,7 +45,8 @@ public:
     void AddSector(long long sector);
 
     void SetPos(int BytesPerSector, long long pos);
-    void Start();
+    void StartRead();
+    void StartWrite();
 
     int File;
     int Index;
@@ -87,7 +88,7 @@ protected:
     virtual void HandleCompletedReq(int index);
     virtual void HandleMapReq(int index);
     virtual void HandleFreeReq(int index);
-    virtual void HandleGrowReq(long long size);
+    virtual TFileReq *HandleGrowReq(long long size);
     virtual void HandleSizeReq(long long size);
 
     virtual void SetReq(long long RelSector, int Sectors);

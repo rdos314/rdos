@@ -160,16 +160,42 @@ void TFileReq::SetPos(int BytesPerSector, long long spos)
 
 /*##########################################################################
 #
-#   Name       : TFileReq::Start
+#   Name       : TFileReq::StartRead
 #
-#   Purpose....: Setup
+#   Purpose....: Start read
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFileReq::Start()
+void TFileReq::StartRead()
+{
+    char str[80];
+
+    sprintf(str, "Req %d.%d start %lld size %d", Index, Req, SectPos, SectorCount);
+
+    if (ServAddVfsFileReq(File, Req + 1, BytePos, SectorArr, SectorCount))
+        strcat(str, " done\r\n");
+    else
+        strcat(str, " pending\r\n");
+
+    RdosWriteFile(FileHandle, str, strlen(str));
+    printf(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TFileReq::StartWrite
+#
+#   Purpose....: Start write
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileReq::StartWrite()
 {
     char str[80];
 
@@ -886,15 +912,109 @@ void TFile::HandleMapReq(int req)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::HandleGrowReq(long long req)
+TFileReq *TFile::HandleGrowReq(long long req)
 {
+    int sector;
+    long long prev;
+    long long curr;
+    int offset;
+    bool HasPos = false;
+    TFileReq *FileReq = 0;
     char str[80];
+    long long pos;
+    int size;
+
+    pos = Info->DiscSize;
 
     sprintf(str, "Grow %d.%lld\r\n", Index, req);
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
 
     GrowDisc(req);
+
+    size = (int)(Info->DiscSize - pos);
+
+    FCurrPos = pos / FBytesPerSector;
+
+    SetReq(FCurrPos, size / FBytesPerSector);
+
+    if (FCurrSectors > 0)
+        FileReq = AllocateReq();
+    else
+        FileReq = 0;
+
+    if (FileReq)
+    {
+        sprintf(str, "Allocated %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
+        RdosWriteFile(FileHandle, str, strlen(str));
+        printf(str);
+
+        FileReq->InitArray(FCurrSectors);
+
+        for (sector = 0; sector < FCurrSectors; sector++)
+        {
+            if (FCurrStart + sector == FCurrPos)
+                HasPos = true;
+
+            curr = GetSector(FCurrStart + sector);
+
+            if (sector)
+            {
+                prev++;
+                offset = curr % FSectorsPerPage;
+
+                if (offset)
+                {
+                    if (prev != curr)
+                    {
+                        if (HasPos)
+                            break;
+                        else
+                        {
+                            FCurrStart += sector;
+                            FCurrSectors -= sector;
+                            sector = 0;
+                            FileReq->SectorCount = 0;
+                        }
+                    }
+                }
+            }
+            prev = curr;
+            FileReq->AddSector(curr);
+        }
+
+        FCurrSectors = FileReq->SectorCount;
+
+        if (FileReq->SectorCount)
+            FileReq->SetPos(FBytesPerSector, FCurrStart);
+        else
+        {
+            sprintf(str, "Read %d No size, pos %lld size %d\r\n", Index, pos, size);
+            RdosWriteFile(FileHandle, str, strlen(str));
+            printf(str);
+            ServNotifyVfsFileReq(Handle, pos, size);
+        }
+    }
+    else
+    {
+        sprintf(str,"Read %d No req available, pos %lld size %d\r\n", Index, pos, size);
+        RdosWriteFile(FileHandle, str, strlen(str));
+        printf(str);
+        ServNotifyVfsFileReq(Handle, pos, size);
+    }
+
+    if (FileReq)
+    {
+        if (FileReq->SectorCount)
+            AddActive(FileReq);
+        else
+        {
+            FreeReq(FileReq);
+            FileReq = 0;
+        }
+    }
+
+    return FileReq;
 }
 
 /*##########################################################################
