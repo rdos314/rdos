@@ -15,12 +15,15 @@ void main()
     char *buf = new char[512];
     
     h1 = RdosOpenHandle("y:/1.txt", O_RDWR);
-    count = RdosPollHandle(h1, buf, 512);
     count = RdosReadHandle(h1, buf, 512);
-    count = RdosPollHandle(h1, buf, 512);
+    h2 = RdosDupHandle(h1);
+    count = RdosReadHandle(h2, buf, 512);
+    RdosDup2Handle(h2, h1);
     count = RdosReadHandle(h1, buf, 512);
+    count = RdosReadHandle(h2, buf, 512);
 
     RdosCloseHandle(h1);
+    RdosCloseHandle(h2);
 
 //    RdosTestGate("");
 }

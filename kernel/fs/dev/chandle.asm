@@ -2109,18 +2109,15 @@ dh2Vfs:
 
 dh2Copy:
     EnterSection ds:h_section
-    mov ds:[edi].hp_pos,eax
-    mov ds:[edi].hp_pos+4,edx
+    mov cx,ds:[esi].hp_access
+    mov ds:[edi].hp_access,cx
 ;
-    mov ax,ds:[esi].hp_access
-    mov ds:[edi].hp_access,ax
-;
-    mov ax,ds:[esi].hp_handle
-    mov ds:[edi].hp_handle,ax
+    mov cx,ds:[esi].hp_handle
+    mov ds:[edi].hp_handle,cx
     LeaveSection ds:h_section
 ;
     or bp,bp
-    jz dh2Done
+    jz dh2Dev
 ;
     push ebx
     mov bx,bp
@@ -2129,6 +2126,12 @@ dh2Copy:
 ;
     mov ds:[edi].hp_vfs_sel,bp
     mov ds:[edi].hp_vfs_handle,dx
+    clc
+    jmp dh2Done
+
+dh2Dev:
+    mov ds:[edi].hp_pos,eax
+    mov ds:[edi].hp_pos+4,edx
     clc
     jmp dh2Done
 
