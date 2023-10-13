@@ -179,6 +179,53 @@ static int VfsReadOne(struct RdosFileMap *Map, int index, char *buf, long long p
 
 /*##########################################################################
 #
+#   Name       : VfsWriteOne
+#
+#   Purpose....: Do one write
+#
+#   In params..:
+#   Out params.: *
+#   Returns....:
+#
+##########################################################################*/
+static int VfsWriteOne(struct RdosFileMap *Map, int index, char *buf, long long pos, int size)
+{
+    int diff;
+    int count = 0;
+    char *dst;
+    short int sel = GetSel(Map);
+    struct RdosFileMapEntry *entry;
+
+    index = Map->SortedArr[index];
+
+    if (index >= 0)
+    {
+        entry = &Map->MapArr[index];
+        diff = pos - entry->Pos;
+
+        if (entry->BaseOffset && diff >= 0)
+        {
+            count = entry->Size - diff;
+
+            if (count > 0)
+            {
+                dst = OffsetToPtr(sel, entry->BaseOffset);
+                dst += diff;
+                if (count > size)
+                    count = size;
+
+                memcpy(dst, buf, count);
+            }
+            else
+                count = 0;
+        }
+    }
+
+    return count;
+}
+
+/*##########################################################################
+#
 #   Name       : VfsRead
 #
 #   Purpose....: VFS read
@@ -271,18 +318,53 @@ int VfsWrite(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int 
     short int sel = GetSel(Map);
     struct RdosFileInfo *info = (struct RdosFileInfo *)OffsetToPtr(sel, Map->InfoOffset);
     struct RdosFileHandleInfo *hinfo = (struct RdosFileHandleInfo *)OffsetToPtr(sel, Map->HandleOffset);
-    long long TotalSize = info->CurrSize;
     long long Grow;
 
     Grow = Pos + Size - info->DiscSize;
 
     if (Grow > 0)
+        VfsGrowHandle(Handle, info->DiscSize, Grow);
+
+    LockMod(Map);
+
+    while (Size)
     {
-        if (TotalSize + Grow > info->DiscSize)
-            VfsGrowHandle(Handle, info->DiscSize, Grow);
+        if (LastIndex >= 0)
+        {
+            count = VfsWriteOne(Map, LastIndex, ptr, Pos, Size);
+            ptr += count;
+            Size -= count;
+            ret += count;
+            Pos += count;
+        }
+
+        if (Size)
+        {
+            LastIndex = VfsFind(Map, Pos);
+
+            for (i = 0; i < 10; i++)
+            {
+                UnlockMod(Map);
+
+                Grow = Pos + Size - info->DiscSize;
+
+                if (Grow > 0)
+                    VfsGrowHandle(Handle, info->DiscSize, Grow);
+                else
+                    VfsMapHandle(Handle, Pos, Size);
+
+                LockMod(Map);
+                LastIndex = VfsFind(Map, Pos);
+                if (LastIndex >= 0)
+                    break;
+            }
+
+            if (LastIndex < 0)
+                break;
+        }
     }
 
-    LastIndex = VfsFind(Map, Pos);
+    UnlockMod(Map);
 
-    return 0;
+    return ret;
 }
