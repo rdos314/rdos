@@ -3064,8 +3064,11 @@ ovfHasStart:
     mov fs,bx
     mov ds,fs:vfsp_disc_sel
 ;
+    push ecx
+    xor ecx,ecx
     movzx eax,ax
     call AllocateMsg
+    pop ecx
     jc ovfFail
 
 ovfCopyPath:
