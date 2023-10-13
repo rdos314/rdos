@@ -159,18 +159,6 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
 
     if (FOffsetSector)
     {
-        c = StartSector / FSectorsPerCluster;
-
-        if (c >= FClusterCount)
-            c = FClusterCount - 1;
-
-        if (c < 0)
-            c = 0;
-
-        if (c)
-            if (FFat->IsFree(c - 1))
-                start =  (c - 1) * FSectorsPerCluster + 8 - FOffsetSector;
-
         c = (StartSector + Sectors - 1) / FSectorsPerCluster;
 
         if (c >= FClusterCount)
@@ -179,8 +167,8 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
         if (c < 0)
             c = 0;
 
-        if (c < FClusterCount - 1)
-            if (FFat->IsFree(c + 1))
+        if (c == FClusterCount - 1)
+            if (FFat->IsFree(FClusterArr[c] + 1))
                 end =  (c + 1) * FSectorsPerCluster + FOffsetSector - 1;
 
         count = end - start + 1;
@@ -205,8 +193,31 @@ long long TFatFile::GetSector(long long RelSector)
     unsigned int c = RelSector / FSectorsPerCluster;
     int sc = FFat->SectorsPerCluster;
     int diff = RelSector % FSectorsPerCluster;
+    int i;
+    int count;
+    unsigned int cluster;
+    long long sector;
 
-    return FFat->StartSector + (FClusterArr[c] - 2) * sc + diff;
+    if (c < FClusterCount)
+        return FFat->StartSector + (FClusterArr[c] - 2) * sc + diff;
+    else
+    {
+        count = c - FClusterCount + 1;
+        cluster = FClusterArr[FClusterCount - 1];
+        sector = FFat->StartSector + (cluster - 2) * sc + diff;
+
+        for (i = 0; i < count; i++)
+        {
+           if (FFat->IsFree(cluster + 1))
+           {
+               cluster++;
+               sector += sc;
+           }
+           else
+               return 0;
+        }
+        return sector;
+    }
 }
 
 /*##########################################################################

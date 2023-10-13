@@ -270,6 +270,8 @@ TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format)
     int Free1;
     int Free2;
 
+    FOffsetSector = (FOffsetSector + 7) % 8;
+
     FServer = server;
 
     if (format)

@@ -730,9 +730,6 @@ void TFile::SetWrite(long long StartSector, int Sectors)
     if (end < start)
         end = start;
 
-    if (end > Info->DiscSize / FBytesPerSector)
-        end = Info->DiscSize / FBytesPerSector - 1;
-
     count = end - start + 1;
 
     for (i = 0; i < FCurrActiveCount && count > 0; i++)
