@@ -40,7 +40,7 @@ public:
     TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Cluster, int BytesPerSector, int OffsetSector);
     virtual ~TFatFile();
 
-    virtual void SetReq(long long StartSector, int Sectors);
+    virtual void SetRead(long long StartSector, int Sectors);
     virtual long long GetSector(long long RelSector);
 
     virtual bool GrowDisc(long long Size);

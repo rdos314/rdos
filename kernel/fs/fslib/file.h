@@ -91,7 +91,8 @@ protected:
     virtual TFileReq *HandleGrowReq(long long size);
     virtual void HandleSizeReq(long long size);
 
-    virtual void SetReq(long long RelSector, int Sectors);
+    virtual void SetRead(long long RelSector, int Sectors);
+    virtual void SetWrite(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
 
     TFileReq *AllocateReq();

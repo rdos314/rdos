@@ -99,16 +99,16 @@ TFatFile::~TFatFile()
 
 /*##########################################################################
 #
-#   Name       : TFatFile::AdjustStart
+#   Name       : TFatFile::SetRead
 #
-#   Purpose....: Adjust start position
+#   Purpose....: Set read req
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatFile::SetReq(long long StartSector, int Sectors)
+void TFatFile::SetRead(long long StartSector, int Sectors)
 {
     long long start;
     long long end;
@@ -136,7 +136,7 @@ void TFatFile::SetReq(long long StartSector, int Sectors)
     end = (c + 1) * FSectorsPerCluster - 1;
     count = end - start + 1;
 
-    TFile::SetReq(start, count);
+    TFile::SetRead(start, count);
 }
 
 /*##########################################################################

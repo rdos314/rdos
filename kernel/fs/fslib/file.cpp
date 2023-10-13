@@ -587,16 +587,16 @@ long long TFile::GetSector(long long pos)
 
 /*##########################################################################
 #
-#   Name       : TFile::SetReq
+#   Name       : TFile::SetRead
 #
-#   Purpose....: Set req params
+#   Purpose....: Set read params
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::SetReq(long long StartSector, int Sectors)
+void TFile::SetRead(long long StartSector, int Sectors)
 {
     long long count;
     long long start;
@@ -698,6 +698,72 @@ void TFile::SetReq(long long StartSector, int Sectors)
 
 /*##########################################################################
 #
+#   Name       : TFile::SetWrite
+#
+#   Purpose....: Set write params
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::SetWrite(long long StartSector, int Sectors)
+{
+    long long count;
+    long long start;
+    long long end;
+    long long temp;
+    long long sect;
+    long long exp;
+    int i;
+    int link;
+
+    if (StartSector < 0)
+        StartSector = 0;
+
+    if (StartSector >= Info->DiscSize / FBytesPerSector)
+        StartSector = Info->DiscSize / FBytesPerSector - 1;
+
+    start = StartSector;
+    end = StartSector + Sectors - 1;
+
+    if (end < start)
+        end = start;
+
+    if (end > Info->DiscSize / FBytesPerSector)
+        end = Info->DiscSize / FBytesPerSector - 1;
+
+    count = end - start + 1;
+
+    for (i = 0; i < FCurrActiveCount && count > 0; i++)
+    {
+        temp = FActiveArr[i]->SectPos - start;
+        if (temp > 0)
+        {
+            if (temp < count)
+                count = (int)temp;
+            break;
+        }
+        else
+        {
+            temp = FActiveArr[i]->SectPos + FActiveArr[i]->SectorCount;
+            if (temp > start)
+            {
+                count = (int)(start + count - temp);
+                start = temp;
+            }
+        }
+    }
+
+    if (count < 0)
+        count = 0;
+
+    FCurrStart = start;
+    FCurrSectors = count;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::HandleRead
 #
 #   Purpose....: Handle read file
@@ -719,7 +785,7 @@ TFileReq *TFile::HandleRead(long long pos, int size)
 
     FCurrPos = pos / FBytesPerSector;
 
-    SetReq(FCurrPos, size / FBytesPerSector);
+    SetRead(FCurrPos, size / FBytesPerSector);
 
     if (FCurrSectors > 0)
         FileReq = AllocateReq();
@@ -936,7 +1002,7 @@ TFileReq *TFile::HandleGrowReq(long long req)
 
     FCurrPos = pos / FBytesPerSector;
 
-    SetReq(FCurrPos, size / FBytesPerSector);
+    SetWrite(FCurrPos, size / FBytesPerSector);
 
     if (FCurrSectors > 0)
         FileReq = AllocateReq();
