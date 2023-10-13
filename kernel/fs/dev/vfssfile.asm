@@ -1067,9 +1067,9 @@ CreateReq    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           StartOneReq
+;       NAME:           StartOneRead
 ;
-;       DESCRIPTION:    Start one req
+;       DESCRIPTION:    Start one read
 ;
 ;       PARAMETERS:     FS          Part sel
 ;                       EDX         MSB sector
@@ -1079,24 +1079,24 @@ CreateReq    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartOneReq  Proc near
+StartOneRead  Proc near
 
-sroLoop:
+srorLoop:
     mov eax,gs:[edi]
     call BlockToBuf
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz sroReq
+    jz srorReq
 ;
     cmp es:[esi].vfsp_ref_bitmap,0
-    jnz sroLockOk
+    jnz srorLockOk
 ;
     inc ds:vfs_locked_pages
 
-sroLockOk:
+srorLockOk:
     inc es:[esi].vfsp_ref_bitmap
-    jmp sroNext
+    jmp srorNext
 
-sroReq:
+srorReq:
     inc gs:vfs_rd_remain_count
     or es:[esi].vfsp_ref_bitmap,bp
 ;
@@ -1113,25 +1113,25 @@ sroReq:
     mov ebx,ds:vfs_scan_pos
     and ebx,ds:vfs_scan_pos+4
     add ebx,1
-    jnc sroNext
+    jnc srorNext
 ;
     mov ds:vfs_scan_pos,eax
     mov ds:vfs_scan_pos+4,edx
 
-sroNext:
+srorNext:
     add edi,4
     sub ecx,1
-    jnz sroLoop
+    jnz srorLoop
 ;
     ret
-StartOneReq    Endp
+StartOneRead    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           StartReq
+;       NAME:           StartRead
 ;
-;       DESCRIPTION:    Start req
+;       DESCRIPTION:    Start read req
 ;
 ;       PARAMETERS:     DS          Req sel
 ;                       FS          Part sel
@@ -1139,7 +1139,7 @@ StartOneReq    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-StartReq        Proc near
+StartRead        Proc near
     push ds
     push es
     push gs
@@ -1159,7 +1159,7 @@ StartReq        Proc near
 ;
     test fs:vfsp_flag,VFSP_FLAG_STOPPED
     stc
-    jnz srDone
+    jnz srrDone
 ;
     mov ds,fs:vfsp_disc_sel
     mov eax,serv_flat_sel
@@ -1170,25 +1170,25 @@ StartReq        Proc near
     mov ecx,gs:vfs_rd_msb_count
     mov edx,gs:vfs_rd_start_msb
 
-srLoop:
+srrLoop:
     push ecx
     push edi
 ;
     mov ecx,gs:[edi].vfsm_rd_count
     mov edi,gs:[edi].vfsm_rd_ptr
-    call StartOneReq
+    call StartOneRead
 
-srNext:
+srrNext:
     pop edi
     pop ecx
 ;
     inc edx
     add edi,16
-    loop srLoop
+    loop srrLoop
 ;
     LeaveSection ds:vfs_section
 
-srDone:
+srrDone:
     pop ebp
     pop edi
     pop edx
@@ -1198,7 +1198,143 @@ srDone:
     pop es
     pop ds
     ret
-StartReq     Endp
+StartRead     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartOneWrite
+;
+;       DESCRIPTION:    Start one write req
+;
+;       PARAMETERS:     FS          Part sel
+;                       EDX         MSB sector
+;                       GS:EDI      LSB sector array
+;                       ECX         Sector count
+;                       BP          Req bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartOneWrite  Proc near
+
+srowLoop:
+    mov eax,gs:[edi]
+    call BlockToBuf
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz srowReq
+;
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jnz srowLockOk
+;
+    inc ds:vfs_locked_pages
+
+srowLockOk:
+    inc es:[esi].vfsp_ref_bitmap
+    jmp srowNext
+
+srowReq:
+    inc gs:vfs_rd_remain_count
+    or es:[esi].vfsp_ref_bitmap,bp
+;
+    push edi
+;
+    call BlockToBitmap
+    mov ebx,eax
+    shr ebx,3
+    and ebx,1FFFFh
+    bts es:[edi],ebx
+;
+    pop edi
+;
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+    jnc srowNext
+;
+    mov ds:vfs_scan_pos,eax
+    mov ds:vfs_scan_pos+4,edx
+
+srowNext:
+    add edi,4
+    sub ecx,1
+    jnz srowLoop
+;
+    ret
+StartOneWrite    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartWrite
+;
+;       DESCRIPTION:    Start write req
+;
+;       PARAMETERS:     DS          Req sel
+;                       FS          Part sel
+;                       BX          Req #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartWrite        Proc near
+    push ds
+    push es
+    push gs
+    push eax
+    push ecx
+    push edx
+    push edi
+    push ebp
+;
+    mov eax,ds
+    mov gs,eax
+    mov gs:vfs_rd_remain_count,0
+;
+    mov cl,bl
+    mov bp,1
+    shl bp,cl
+;
+    test fs:vfsp_flag,VFSP_FLAG_STOPPED
+    stc
+    jnz srwDone
+;
+    mov ds,fs:vfsp_disc_sel
+    mov eax,serv_flat_sel
+    mov es,eax
+    EnterSection ds:vfs_section
+;
+    mov edi,gs:vfs_rd_msb_ptr
+    mov ecx,gs:vfs_rd_msb_count
+    mov edx,gs:vfs_rd_start_msb
+
+srwLoop:
+    push ecx
+    push edi
+;
+    mov ecx,gs:[edi].vfsm_rd_count
+    mov edi,gs:[edi].vfsm_rd_ptr
+    call StartOneWrite
+
+srwNext:
+    pop edi
+    pop ecx
+;
+    inc edx
+    add edi,16
+    loop srwLoop
+;
+    LeaveSection ds:vfs_section
+
+srwDone:
+    pop ebp
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop es
+    pop ds
+    ret
+StartWrite     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1260,7 +1396,7 @@ serv_file_read_req    Proc far
     call SortMsbReq
     call SortLsbReq
     call CreateReq
-    call StartReq
+    call StartRead
 ;
     mov eax,ds:vfs_rd_remain_count
     or eax,eax
@@ -1360,7 +1496,7 @@ serv_file_write_req    Proc far
     call SortMsbReq
     call SortLsbReq
     call CreateReq
-    call StartReq
+    call StartWrite
 ;
     mov eax,ds:vfs_rd_remain_count
     or eax,eax
