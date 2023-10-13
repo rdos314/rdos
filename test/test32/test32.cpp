@@ -21,8 +21,13 @@ void main()
     count = RdosReadHandle(h1, buf, 512);
     pos = RdosGetHandlePos(h1);
 
-    count = RdosWriteHandle(h2, buf, count);
-    pos = RdosGetHandlePos(h1);
+    while (count)
+    {
+        count = RdosWriteHandle(h2, buf, count);
+        pos = RdosGetHandlePos(h1);
+        pos = RdosGetHandlePos(h2);
+        count = RdosReadHandle(h1, buf, 512);
+    }
 
     RdosCloseHandle(h1);
     RdosCloseHandle(h2);
