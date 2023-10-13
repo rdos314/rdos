@@ -117,6 +117,7 @@ protected:
     TDir *CacheFixedDir(long long RootSector, int RootDirEntries);
     void FormatFixedDir(long long RootSector, int RootDirEntries);
 
+    bool IsFree(unsigned int Cluster);
     unsigned int AllocateCluster();
     void Complete();
 

@@ -78,3 +78,22 @@ void TFatTable::SetAllocateCluster(unsigned int Cluster)
 {
     FAllocateCluster = Cluster;
 }
+
+/*##########################################################################
+#
+#   Name       : TFatTable::IsFree
+#
+#   Purpose....: Check if cluster is free
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFatTable::IsFree(unsigned int Cluster)
+{
+    if (GetClusterLink(Cluster))
+        return false;
+    else
+        return true;
+}

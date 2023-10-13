@@ -41,6 +41,7 @@ public:
     virtual ~TFatFile();
 
     virtual void SetRead(long long StartSector, int Sectors);
+    virtual void SetWrite(long long StartSector, int Sectors);
     virtual long long GetSector(long long RelSector);
 
     virtual bool GrowDisc(long long Size);

@@ -37,6 +37,7 @@ public:
     virtual ~TFatTable();
 
     void SetAllocateCluster(unsigned int Cluster);
+    bool IsFree(unsigned int Cluster);
 
     virtual unsigned int GetClusterLink(unsigned int Cluster) = 0;
     virtual unsigned int GetFreeClusters() = 0;

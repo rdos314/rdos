@@ -141,6 +141,56 @@ void TFatFile::SetRead(long long StartSector, int Sectors)
 
 /*##########################################################################
 #
+#   Name       : TFatFile::SetWrite
+#
+#   Purpose....: Set write req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatFile::SetWrite(long long StartSector, int Sectors)
+{
+    long long start = StartSector;
+    long long end;
+    int count = Sectors;
+    long long c;
+
+    if (FOffsetSector)
+    {
+        c = StartSector / FSectorsPerCluster;
+
+        if (c >= FClusterCount)
+            c = FClusterCount - 1;
+
+        if (c < 0)
+            c = 0;
+
+        if (c)
+            if (FFat->IsFree(c - 1))
+                start =  (c - 1) * FSectorsPerCluster + 8 - FOffsetSector;
+
+        c = (StartSector + Sectors - 1) / FSectorsPerCluster;
+
+        if (c >= FClusterCount)
+            c = FClusterCount - 1;
+
+        if (c < 0)
+            c = 0;
+
+        if (c < FClusterCount - 1)
+            if (FFat->IsFree(c + 1))
+                end =  (c + 1) * FSectorsPerCluster + FOffsetSector - 1;
+
+        count = end - start + 1;
+    }
+
+    TFile::SetWrite(start, count);
+}
+
+/*##########################################################################
+#
 #   Name       : TFatFile::GetSector
 #
 #   Purpose....: Get sector base on position

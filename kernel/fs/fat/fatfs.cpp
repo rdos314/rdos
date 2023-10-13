@@ -395,6 +395,28 @@ TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 
 /*##########################################################################
 #
+#   Name       : TFat::IsFree
+#
+#   Purpose....: Check if cluster is free
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFat::IsFree(unsigned int Cluster)
+{
+    if (!FatTable1->IsFree(Cluster))
+        return false;
+
+    if (!FatTable2->IsFree(Cluster))
+        return false;
+
+    return true;
+}
+
+/*##########################################################################
+#
 #   Name       : TFat::AllocateCluster
 #
 #   Purpose....: Allocate cluster
