@@ -56,8 +56,14 @@
     ServGate_serv_notify_file_req  \
     __parm [__ebx] [__edx __eax] [__ecx]
 
-#pragma aux ServAddVfsFileReq = \
-    ServGate_serv_add_file_req  \
+#pragma aux ServVfsFileReadReq = \
+    ServGate_serv_file_read_req  \
+    CarryToBool \
+    __parm [__ebx] [__esi] [__edx __eax] [__edi] [__ecx] \
+    __value [__eax]
+
+#pragma aux ServVfsFileWriteReq = \
+    ServGate_serv_file_write_req  \
     CarryToBool \
     __parm [__ebx] [__esi] [__edx __eax] [__edi] [__ecx] \
     __value [__eax]

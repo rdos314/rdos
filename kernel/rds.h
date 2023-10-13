@@ -22,7 +22,7 @@
 #define serv_gate_reply_vfs_data_cmd 0x00000015
 #define serv_gate_serv_open_file 0x00000016
 #define serv_gate_serv_to_system_share_block 0x00000017
-#define serv_gate_serv_add_file_req 0x00000018
+#define serv_gate_serv_file_read_req 0x00000018
 #define serv_gate_reply_vfs_post 0x00000019
 #define serv_gate_serv_close_file 0x0000001A
 #define serv_gate_serv_free_file_req 0x0000001B
@@ -50,6 +50,7 @@
 #define serv_gate_set_vfs_start_sector 0x00000031
 #define serv_gate_set_vfs_sectors 0x00000032
 #define serv_gate_is_vfs_busy 0x00000033
+#define serv_gate_serv_file_write_req 0x00000034
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -75,7 +76,7 @@
 #define ServGate_reply_vfs_data_cmd 0x55 0x67 0x9a 21 0 0 0 4 0 0x5d
 #define ServGate_serv_open_file 0x55 0x67 0x9a 22 0 0 0 4 0 0x5d
 #define ServGate_serv_to_system_share_block 0x55 0x67 0x9a 23 0 0 0 4 0 0x5d
-#define ServGate_serv_add_file_req 0x55 0x67 0x9a 24 0 0 0 4 0 0x5d
+#define ServGate_serv_file_read_req 0x55 0x67 0x9a 24 0 0 0 4 0 0x5d
 #define ServGate_reply_vfs_post 0x55 0x67 0x9a 25 0 0 0 4 0 0x5d
 #define ServGate_serv_close_file 0x55 0x67 0x9a 26 0 0 0 4 0 0x5d
 #define ServGate_serv_free_file_req 0x55 0x67 0x9a 27 0 0 0 4 0 0x5d
@@ -103,4 +104,5 @@
 #define ServGate_set_vfs_start_sector 0x55 0x67 0x9a 49 0 0 0 4 0 0x5d
 #define ServGate_set_vfs_sectors 0x55 0x67 0x9a 50 0 0 0 4 0 0x5d
 #define ServGate_is_vfs_busy 0x55 0x67 0x9a 51 0 0 0 4 0 0x5d
+#define ServGate_serv_file_write_req 0x55 0x67 0x9a 52 0 0 0 4 0 0x5d
 

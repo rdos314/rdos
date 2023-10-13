@@ -1203,9 +1203,9 @@ StartReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ServAddFileReq
+;       NAME:           ServFileReadReq
 ;
-;       DESCRIPTION:    Serv add VFS file req
+;       DESCRIPTION:    Serv add VFS file read req
 ;
 ;       PARAMETERS:     EBX            File handle
 ;                       ESI            Req index
@@ -1218,9 +1218,9 @@ StartReq     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-serv_add_file_req_name       DB 'Serv Add File Req',0
+serv_file_read_req_name       DB 'Serv Add File Read Req',0
 
-serv_add_file_req    Proc far
+serv_file_read_req    Proc far
     push ds
     push es
     push fs
@@ -1232,16 +1232,16 @@ serv_add_file_req    Proc far
     mov ebp,ebx
     call FileHandleToPartFs
     cmc
-    jnc safDone
+    jnc safrDone
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
-    jnc safDone
+    jnc safrDone
 ;
     or ecx,ecx
-    jz safDone
+    jz safrDone
 ;
     call AddFileReq
-    jc safDone
+    jc safrDone
 ;
     mov edx,esi
     mov eax,es
@@ -1264,15 +1264,15 @@ serv_add_file_req    Proc far
 ;
     mov eax,ds:vfs_rd_remain_count
     or eax,eax
-    jz safProcess
+    jz safrProcess
 ;
     mov ds,fs:vfsp_disc_sel
     mov bx,ds:vfs_server
     Signal
     stc
-    jmp safDone
+    jmp safrDone
 
-safProcess:    
+safrProcess:    
     mov eax,ds
     mov gs,eax
     call UnlinkRequest
@@ -1289,7 +1289,7 @@ safProcess:
     FreeBigServSel
     clc
 
-safDone:
+safrDone:
     pop ebp
     pop esi
     pop ebx
@@ -1298,7 +1298,107 @@ safDone:
     pop es
     pop ds
     ret
-serv_add_file_req    Endp
+serv_file_read_req    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServFileWriteReq
+;
+;       DESCRIPTION:    Serv add VFS file write req
+;
+;       PARAMETERS:     EBX            File handle
+;                       ESI            Req index
+;                       EDX:EAX        Position
+;                       ECX            Sector count
+;                       ES:EDI         Sector buf
+;
+;       RETURNS:        NC             Processed
+;                       CY             Pending
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_file_write_req_name       DB 'Serv Add File Write Req',0
+
+serv_file_write_req    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    push ebx
+    push esi
+    push ebp
+;
+    mov ebp,ebx
+    call FileHandleToPartFs
+    cmc
+    jnc safwDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    jnc safwDone
+;
+    or ecx,ecx
+    jz safwDone
+;
+    call AddFileReq
+    jc safwDone
+;
+    mov edx,esi
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
+;
+    call GetMinMax
+    call CreateReqSel
+;
+    mov eax,es
+    mov ds,eax
+    mov ds:vfs_rd_file_handle,ebp
+    mov ds:vfs_rd_index,edx
+    mov ds:vfs_rd_req_handle,0
+;
+    call SortMsbReq
+    call SortLsbReq
+    call CreateReq
+    call StartReq
+;
+    mov eax,ds:vfs_rd_remain_count
+    or eax,eax
+    jz safwProcess
+;
+    mov ds,fs:vfsp_disc_sel
+    mov bx,ds:vfs_server
+    Signal
+    stc
+    jmp safwDone
+
+safwProcess:    
+    mov eax,ds
+    mov gs,eax
+    call UnlinkRequest
+;
+    mov ds,fs:vfsp_disc_sel
+    EnterSection ds:vfs_section
+    call NotifyFileData
+    LeaveSection ds:vfs_section
+;
+    mov eax,gs
+    mov es,eax
+    xor eax,eax
+    mov gs,eax
+    FreeBigServSel
+    clc
+
+safwDone:
+    pop ebp
+    pop esi
+    pop ebx
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+serv_file_write_req    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1373,10 +1473,16 @@ init_server_file    Proc near
     mov ax,serv_notify_file_req_nr
     RegisterServGate
 ;
-    mov esi,OFFSET serv_add_file_req
-    mov edi,OFFSET serv_add_file_req_name
+    mov esi,OFFSET serv_file_read_req
+    mov edi,OFFSET serv_file_read_req_name
     xor cl,cl
-    mov ax,serv_add_file_req_nr
+    mov ax,serv_file_read_req_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_file_write_req
+    mov edi,OFFSET serv_file_write_req_name
+    xor cl,cl
+    mov ax,serv_file_write_req_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_file_info

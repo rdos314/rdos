@@ -175,7 +175,7 @@ void TFileReq::StartRead()
 
     sprintf(str, "Req %d.%d start %lld size %d", Index, Req, SectPos, SectorCount);
 
-    if (ServAddVfsFileReq(File, Req + 1, BytePos, SectorArr, SectorCount))
+    if (ServVfsFileReadReq(File, Req + 1, BytePos, SectorArr, SectorCount))
         strcat(str, " done\r\n");
     else
         strcat(str, " pending\r\n");
@@ -201,7 +201,7 @@ void TFileReq::StartWrite()
 
     sprintf(str, "Req %d.%d start %lld size %d", Index, Req, SectPos, SectorCount);
 
-    if (ServAddVfsFileReq(File, Req + 1, BytePos, SectorArr, SectorCount))
+    if (ServVfsFileWriteReq(File, Req + 1, BytePos, SectorArr, SectorCount))
         strcat(str, " done\r\n");
     else
         strcat(str, " pending\r\n");

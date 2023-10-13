@@ -22,7 +22,7 @@ reply_vfs_block_cmd_nr     = 20
 reply_vfs_data_cmd_nr      = 21
 serv_open_file_nr          = 22
 serv_to_system_share_block_nr = 23
-serv_add_file_req_nr       = 24
+serv_file_read_req_nr      = 24
 reply_vfs_post_nr          = 25
 serv_close_file_nr         = 26
 serv_free_file_req_nr      = 27
@@ -50,5 +50,6 @@ get_vfs_part_type_nr       = 48
 set_vfs_start_sector_nr    = 49
 set_vfs_sectors_nr         = 50
 is_vfs_busy_nr             = 51
+serv_file_write_req_nr     = 52
 
 serv_gate_entries          = 55
