@@ -1173,13 +1173,6 @@ WaitForGrow      Proc near
     mov esi,gs
     mov ds,esi
 ;
-    EnterSection ds:kf_section
-    call FindReq
-    jnc wfgCheck
-;
-    call AddWaitReq
-    LeaveSection ds:kf_section
-;
     push eax
     push edx
 ;
@@ -1191,6 +1184,13 @@ WaitForGrow      Proc near
 ;
     pop edx
     pop eax
+;
+    EnterSection ds:kf_section
+    call FindReq
+    jnc wfgCheck
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
 ;
     call UpdateMap
 

@@ -986,8 +986,16 @@ TFileReq *TFile::HandleGrowReq(long long req)
     char str[80];
     long long pos;
     int size;
+    long long pages;
 
     pos = Info->DiscSize;
+
+    pages = req >> 12;
+
+    if (req & 0xFFF)
+        pages++;
+
+    req = pages << 12;
 
     sprintf(str, "Grow %d.%lld\r\n", Index, req);
     RdosWriteFile(FileHandle, str, strlen(str));
