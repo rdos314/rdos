@@ -94,6 +94,7 @@ kernel_file       STRUC
 kf_blk            blk_header <>
 
 kf_info_phys      DD ?,?
+kf_info_linear    DD ?
 kf_sector_size    DW ?
 kf_section        section_typ <>
 kf_part_sel       DW ?
@@ -387,9 +388,18 @@ cfSortedInit:
     or ax,800h
     SetPageEntry
 ;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    and ax,NOT 800h
+    SetPageEntry
+;
     and ax,0F000h
     mov ds:kf_info_phys,eax
     mov ds:kf_info_phys+4,ebx
+    mov ds:kf_info_linear,edx
 ;
     mov ax,ds
 ;
@@ -419,10 +429,18 @@ CreateFileSel   Endp
 
 CloseFileSel   Proc near
     push ds
+    push ecx
+    push edx
 ;
     mov ds,ax
+    mov edx,ds:kf_info_linear
+    mov ecx,1000h
+    FreeLinear
+;
     DeleteBlk
 ;
+    pop edx
+    pop ecx
     pop ds
     ret
 CloseFileSel   Endp
