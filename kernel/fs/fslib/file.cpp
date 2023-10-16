@@ -199,12 +199,9 @@ void TFileReq::StartWrite()
 {
     char str[80];
 
-    sprintf(str, "Req %d.%d start %lld size %d", Index, Req, SectPos, SectorCount);
+    sprintf(str, "Req %d.%d start %lld size %d\r\n", Index, Req, SectPos, SectorCount);
 
-    if (ServVfsFileWriteReq(File, Req + 1, BytePos, SectorArr, SectorCount))
-        strcat(str, " done\r\n");
-    else
-        strcat(str, " pending\r\n");
+    SectorCount = ServVfsFileWriteReq(File, Req + 1, BytePos, SectorArr, SectorCount);
 
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);

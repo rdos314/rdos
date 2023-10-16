@@ -159,7 +159,7 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
     long long c;
     int i;
 
-    if (FOffsetSector)
+    if (FOffsetSector && Sectors)
     {
         c = (StartSector + Sectors - 1) / FSectorsPerCluster;
 
