@@ -1554,16 +1554,21 @@ serv_file_write_req    Proc far
     mov ebp,ebx
     call FileHandleToPartFs
     cmc
-    jnc safwDone
+    jnc safwFail
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
-    jnc safwDone
+    jnc safwFail
 ;
     or ecx,ecx
-    jz safwDone
+    jz safwFail
 ;
+    push ecx
     call AddFileReq
-    jc safwDone
+    pop eax
+    jc safwFail
+;
+    push ecx
+    mov ecx,eax
 ;
     mov edx,esi
     mov eax,es
@@ -1591,8 +1596,7 @@ serv_file_write_req    Proc far
     mov ds,fs:vfsp_disc_sel
     mov bx,ds:vfs_server
     Signal
-    stc
-    jmp safwDone
+    jmp safwComplete
 
 safwProcess:    
     mov eax,ds
@@ -1609,7 +1613,14 @@ safwProcess:
     xor eax,eax
     mov gs,eax
     FreeBigServSel
-    clc
+
+safwComplete:
+    pop ecx
+    jmp safwDone
+
+safwFail:
+    xor ecx,ecx
+    stc
 
 safwDone:
     pop ebp

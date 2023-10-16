@@ -326,9 +326,18 @@ ServNotifyVfsFileReq  MACRO
 ; IN  EDX:EAX          Position
 ; IN  ECX              Sector count
 ; IN  ES:EDI           Sector buffer
-; OUT EAX              File req handle
-ServAddVfsFileReq  MACRO
-    ServGate serv_add_file_req_nr
+ServVfsFileReadReq  MACRO
+    ServGate serv_file_read_req_nr
+                    ENDM
+
+; IN  BX               Kernel handle
+; IN  ESI              Req index
+; IN  EDX:EAX          Position
+; IN  ECX              Sector count
+; IN  ES:EDI           Sector buffer
+; OUT ECX              Sector count
+ServVfsFileWriteReq  MACRO
+    ServGate serv_file_write_req_nr
                     ENDM
 
 ; IN  EBX              Kernel handle
