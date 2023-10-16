@@ -27,6 +27,7 @@
 
 struct RdosFileInfo
 {
+    long long SectorCount;
     long long DiscSize;
     long long CurrSize;
     long long AccessTime;

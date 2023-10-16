@@ -29,6 +29,7 @@ VFS_FILE_SIGN            = 'F'
 
 file_info_struc  STRUC
 
+fi_sector_count      DD ?,?
 fi_fs_size           DD ?,?
 fi_size              DD ?,?
 fi_access            DD ?,?

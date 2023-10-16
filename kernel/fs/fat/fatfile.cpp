@@ -78,6 +78,7 @@ TFatFile::TFatFile(TFat *Fat, TDir *ParentDir, int ParentIndex, unsigned int Clu
     FClusterCount = FClusterChain->GetSize();
     FClusterArr = FClusterChain->GetChain();
 
+    Info->SectorCount = (long long)(FClusterCount * FSectorsPerCluster);
     Info->DiscSize = ClustersToSize(FClusterCount);
 }
 
@@ -389,6 +390,7 @@ bool TFatFile::GrowDisc(long long Size)
 
         FClusterCount = FClusterChain->GetSize();
         FClusterArr = FClusterChain->GetChain();
+        Info->SectorCount = (long long)(FClusterCount * FSectorsPerCluster);
         Info->DiscSize = ClustersToSize(FClusterCount);
     }
 
@@ -440,6 +442,7 @@ bool TFatFile::SetSize(long long Size)
 
         FClusterCount = FClusterChain->GetSize();
         FClusterArr = FClusterChain->GetChain();
+        Info->SectorCount = (long long)(FClusterCount * FSectorsPerCluster);
         Info->DiscSize = ClustersToSize(FClusterCount);
     }
 

@@ -244,7 +244,12 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     entry = FParent->LockEntry(FParentIndex);
     Info = (struct RdosFileInfo *)RdosAllocateMem(0x1000);
 
-    Info->DiscSize = entry->Size;
+    if (entry->Size)
+        Info->SectorCount = (entry->Size - 1) / FBytesPerSector + 1;
+    else
+        Info->SectorCount = 0;
+
+    Info->DiscSize = Info->SectorCount * FBytesPerSector;
     Info->CurrSize = entry->Size;
     Info->AccessTime = entry->AccessTime;
     Info->ModifyTime = entry->ModifyTime;
@@ -610,8 +615,8 @@ void TFile::SetRead(long long StartSector, int Sectors)
     if (StartSector < 0)
         StartSector = 0;
 
-    if (StartSector >= Info->DiscSize / FBytesPerSector)
-        StartSector = Info->DiscSize / FBytesPerSector - 1;
+    if (StartSector >= Info->SectorCount)
+        StartSector = Info->SectorCount - 1;
 
     if (Sectors < FSectorsPerPage)
         Sectors = FSectorsPerPage;
@@ -644,14 +649,14 @@ void TFile::SetRead(long long StartSector, int Sectors)
     if (end < start)
         end = start;
 
-    if (end > Info->DiscSize / FBytesPerSector)
-        end = Info->DiscSize / FBytesPerSector - 1;
+    if (end > Info->SectorCount)
+        end = Info->SectorCount - 1;
 
     sect = FOffsetSector + GetSector(end + 1);
     exp = sect + 1;
     while (sect % FSectorsPerPage)
     {
-        if (end < Info->DiscSize / FBytesPerSector)
+        if (end < Info->SectorCount)
         {
             sect = FOffsetSector + GetSector(end + 2);
 
@@ -721,8 +726,8 @@ void TFile::SetWrite(long long StartSector, int Sectors)
     if (StartSector < 0)
         StartSector = 0;
 
-    if (StartSector >= Info->DiscSize / FBytesPerSector)
-        StartSector = Info->DiscSize / FBytesPerSector - 1;
+    if (StartSector >= Info->SectorCount)
+        StartSector = Info->SectorCount - 1;
 
     start = StartSector;
     end = StartSector + Sectors - 1;
