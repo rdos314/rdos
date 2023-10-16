@@ -249,6 +249,7 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     else
         Info->SectorCount = 0;
 
+    Info->BytesPerSector = FBytesPerSector;
     Info->DiscSize = Info->SectorCount * FBytesPerSector;
     Info->CurrSize = entry->Size;
     Info->AccessTime = entry->AccessTime;

@@ -39,6 +39,7 @@ fi_flags             DD ?
 fi_uid               DD ?
 fi_gid               DD ?
 fi_serv_handle       DD ?
+fi_bytes_per_sector  DD ?
 fi_name              DB ?
 
 file_info_struc  ENDS

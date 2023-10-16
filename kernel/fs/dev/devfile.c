@@ -37,6 +37,7 @@ struct RdosFileInfo
     int Uid;
     int Gid;
     int ServHandle;
+    int BytesPerSector;
     char Name[1];
 };
 
