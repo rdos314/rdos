@@ -458,13 +458,24 @@ CloseFileSel   Endp
 ;                       EDX:EAX        Position
 ;                       ECX            Sector count
 ;
+;       RETURNS:        ECX            Mapped sector count
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public AddFileReq
 
 AddFileReq   Proc near
     push ds
-    pushad
+    push es
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov di,flat_sel
+    mov es,edi
 ;
     movzx edi,bx
     dec edi
@@ -478,13 +489,62 @@ AddFileReq   Proc near
     stc
     jz afrDone
 ;
-;    push ebx
-;    mov ebx,edi
-;    call CheckServ
-;    pop ebx
-;
     mov ds,edi
     EnterSection ds:kf_section
+;
+    push eax
+    push edx
+;
+    mov edi,ds:kf_info_linear
+    mov eax,es:[edi].fi_bytes_per_sector       
+    mul ecx
+    mov ecx,eax
+;
+    pop edx
+    pop eax
+;
+    push eax
+    push ebx
+    push edx
+    push esi
+;
+    mov ebx,eax
+    mov esi,edx
+    mov eax,es:[edi].fi_fs_size
+    mov edx,es:[edi].fi_fs_size+4
+    sub eax,ebx
+    sbb edx,esi
+    jnc afrLower
+;
+    int 3
+    xor ecx,ecx
+    jmp afrRecalc
+
+afrLower:
+    or edx,edx
+    jnz afrRecalc
+;
+    cmp eax,ecx
+    jae afrRecalc
+;
+    mov ecx,eax
+
+afrRecalc:
+    mov eax,ecx
+    xor edx,edx
+    div es:[edi].fi_bytes_per_sector
+    mov ecx,eax
+;
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+;
+    push ecx
+;
+    or ecx,ecx
+    stc
+    jz afrLeave
 ;
     dec esi
 ;
@@ -556,14 +616,20 @@ afrMove:
 
 afrSave:
     mov ds:[edi],bl
-    LeaveSection ds:kf_section
-;
-;    mov bx,ds
-;    call CheckServ
     clc
 
+afrLeave:
+    pop ecx
+    LeaveSection ds:kf_section
+
 afrDone:
-    popad
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop es
     pop ds
     ret
 AddFileReq   Endp
