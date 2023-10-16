@@ -975,7 +975,7 @@ SetupReadReq   Proc near
 ;
     shl ecx,9
     mov ebx,ds:[4*ebx].kf_handle_arr
-    mov ds:[ebx].kre_size,ecx
+;    mov ds:[ebx].kre_size,ecx
     mov ds:[ebx].kre_pages,ax
     inc ds:kf_block_count
     mov cx,ax
