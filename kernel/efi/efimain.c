@@ -866,7 +866,7 @@ static void ShowUsedMode()
             break;
     }
 
-    printf("Base: %08lX, Size: %08lX\n\r", LfbBase, LfbSize);
+    printf("Base: %08lX, Size: %08lX Scan: %08lX\n\r", LfbBase, LfbSize, ScanLine);
 }
 
 static void ShowAvailableModes()
