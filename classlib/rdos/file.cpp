@@ -547,8 +547,6 @@ int TFile::VfsRead(void *Buf, int Size)
 
         if (Size)
         {
-            FLastIndex = VfsFind(Pos);
-
             for (i = 0; i < 10; i++)
             {
                 LeaveFutex(&FMap->Handle->Futex);
