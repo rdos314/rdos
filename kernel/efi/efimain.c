@@ -905,6 +905,9 @@ static void InitGop()
 
     LfbBase = Gop->Mode->FrameBufferBase;
     LfbSize = Gop->Mode->FrameBufferSize;
+
+    ShowAvailableModes();
+    ShowUsedMode();
 }
 
 static void GetFileInfo(EFI_FILE_HANDLE DirHandle)
@@ -1449,8 +1452,6 @@ static int ConvertMemoryMap()
     MemMapCount = 0;
     MemMapArr = (struct MemMapEntry *)RdosMemBase;
 
-    MemDescrSize = sizeof(EFI_MEMORY_DESCRIPTOR);
-
     if (BS->GetMemoryMap(&MemMapSize, MemMap, &MapKey, &MemDescrSize, &MemDescrVersion) == EFI_SUCCESS)
     {
         ptr = (char *)MemMap;
@@ -1614,17 +1615,10 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         {
             if (LoadBootLoader())
             {
-                ShowAvailableModes();
-                ShowUsedMode();
-
                 GetAcpiTable();
-
-                printf("ACPI done\n\r");
 
                 if (ConvertMemoryMap())
                 {
-                    printf("Memmap done\n\r");
-
                     BS->SetWatchdogTimer(0, 0, 0, NULL);
                     if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
                         StartLoader();
