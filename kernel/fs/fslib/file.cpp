@@ -810,7 +810,7 @@ TFileReq *TFile::HandleRead(long long pos, int size)
             if (sector)
             {
                 prev++;
-                offset = curr % FSectorsPerPage;
+                offset = (curr + FOffsetSector) % FSectorsPerPage;
 
                 if (offset)
                 {
@@ -1035,7 +1035,7 @@ TFileReq *TFile::HandleGrowReq(long long req)
             if (sector)
             {
                 prev++;
-                offset = curr % FSectorsPerPage;
+                offset = (curr + FOffsetSector) % FSectorsPerPage;
 
                 if (offset)
                 {
