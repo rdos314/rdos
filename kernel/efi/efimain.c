@@ -816,8 +816,6 @@ static int ShowMode(int Mode)
 {
     unsigned int Size;
 
-    Gop->SetMode(Gop, 0);
-
     if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
     {
         printf("Mode %d: %dx%d, ", Mode, Info->HorizontalResolution, Info->VerticalResolution);
@@ -896,6 +894,8 @@ static void InitGop()
     }
 
     Gop = (EFI_GRAPHICS_OUTPUT_PROTOCOL *)Interface;
+
+    Gop->SetMode(Gop, 0);
 
     Info = Gop->Mode->Info;
     Width = Info->HorizontalResolution;
@@ -1619,8 +1619,12 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
                 GetAcpiTable();
 
+                printf("ACPI done\n\r");
+
                 if (ConvertMemoryMap())
                 {
+                    printf("Memmap done\n\r");
+
                     BS->SetWatchdogTimer(0, 0, 0, NULL);
                     if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
                         StartLoader();
