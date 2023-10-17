@@ -58,9 +58,8 @@
 
 #pragma aux ServVfsFileReadReq = \
     ServGate_serv_file_read_req  \
-    CarryToBool \
     __parm [__ebx] [__esi] [__edx __eax] [__edi] [__ecx] \
-    __value [__eax]
+    __value [__ecx]
 
 #pragma aux ServVfsFileWriteReq = \
     ServGate_serv_file_write_req  \

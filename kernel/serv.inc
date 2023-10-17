@@ -326,6 +326,7 @@ ServNotifyVfsFileReq  MACRO
 ; IN  EDX:EAX          Position
 ; IN  ECX              Sector count
 ; IN  ES:EDI           Sector buffer
+; OUT ECX              Sector count
 ServVfsFileReadReq  MACRO
     ServGate serv_file_read_req_nr
                     ENDM

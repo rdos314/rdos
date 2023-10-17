@@ -1435,8 +1435,7 @@ StartWrite     Endp
 ;                       ECX            Sector count
 ;                       ES:EDI         Sector buf
 ;
-;       RETURNS:        NC             Processed
-;                       CY             Pending
+;       RETURNS:        ECX            Cached count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1454,16 +1453,16 @@ serv_file_read_req    Proc far
     mov ebp,ebx
     call FileHandleToPartFs
     cmc
-    jnc safrDone
+    jnc safrFail
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
-    jnc safrDone
+    jnc safrFail
 ;
     or ecx,ecx
-    jz safrDone
+    jz safrFail
 ;
     call AddFileReq
-    jc safrDone
+    jc safrFail
 ;
     mov edx,esi
     mov eax,es
@@ -1491,7 +1490,6 @@ serv_file_read_req    Proc far
     mov ds,fs:vfsp_disc_sel
     mov bx,ds:vfs_server
     Signal
-    stc
     jmp safrDone
 
 safrProcess:    
@@ -1509,7 +1507,10 @@ safrProcess:
     xor eax,eax
     mov gs,eax
     FreeBigServSel
-    clc
+    jmp safrDone
+
+safrFail:
+    xor ecx,ecx
 
 safrDone:
     pop ebp
@@ -1535,8 +1536,7 @@ serv_file_read_req    Endp
 ;                       ECX            Sector count
 ;                       ES:EDI         Sector buf
 ;
-;       RETURNS:        NC             Processed
-;                       CY             Pending
+;       RETURNS:        ECX            Cached count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

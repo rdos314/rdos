@@ -172,13 +172,14 @@ void TFileReq::SetPos(int BytesPerSector, long long spos)
 void TFileReq::StartRead()
 {
     char str[80];
+    int ReqCount = SectorCount;
 
-    sprintf(str, "Req %d.%d start %lld size %d", Index, Req, SectPos, SectorCount);
+    SectorCount = ServVfsFileReadReq(File, Req + 1, BytePos, SectorArr, SectorCount);
 
-    if (ServVfsFileReadReq(File, Req + 1, BytePos, SectorArr, SectorCount))
-        strcat(str, " done\r\n");
+    if (ReqCount == SectorCount)
+        sprintf(str, "Read %d.%d start %lld size %d\r\n", Index, Req, SectPos, SectorCount);
     else
-        strcat(str, " pending\r\n");
+        sprintf(str, "Read %d.%d start %lld size %d (%d)\r\n", Index, Req, SectPos, SectorCount, ReqCount);
 
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
@@ -198,10 +199,14 @@ void TFileReq::StartRead()
 void TFileReq::StartWrite()
 {
     char str[80];
-
-    sprintf(str, "Req %d.%d start %lld size %d\r\n", Index, Req, SectPos, SectorCount);
+    int ReqCount = SectorCount;
 
     SectorCount = ServVfsFileWriteReq(File, Req + 1, BytePos, SectorArr, SectorCount);
+
+    if (ReqCount == SectorCount)
+        sprintf(str, "Write %d.%d start %lld size %d\r\n", Index, Req, SectPos, SectorCount);
+    else
+        sprintf(str, "Write %d.%d start %lld size %d (%d)\r\n", Index, Req, SectPos, SectorCount, ReqCount);
 
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
@@ -654,7 +659,7 @@ void TFile::SetRead(long long StartSector, int Sectors)
     exp = sect + 1;
     while (sect % FSectorsPerPage)
     {
-        if (end < Info->SectorCount)
+        if (end < Info->SectorCount - 1)
         {
             sect = FOffsetSector + GetSector(end + 2);
 
