@@ -280,6 +280,10 @@ private:
     int FPressed;
     int FKeepDown;
     int FActive;
+	
+	int FFontAliased;
+	int FLowerFontAliased;
+	int FUpperFontAliased;
 };        
 
 #endif

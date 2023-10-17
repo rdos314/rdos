@@ -1490,6 +1490,10 @@ void TButtonControl::Init(char ch)
     FFont = 0;
     FLowerFont = 0;
     FUpperFont = 0;
+	
+	FFontAliased = 1;
+	FLowerFontAliased = 1;
+	FUpperFontAliased = 1;
 
     FDown.ShiftX = 2;
     FDown.ShiftY = 2;
@@ -1773,7 +1777,7 @@ void TButtonControl::Set(TAppIniFile *Ini, const char *IniSection)
             if (FLowerFont)
                 delete FLowerFont;
 
-            FUpperFont = new TFont(size);
+            FLowerFont = new TFont(size);
         }
     }
 
@@ -1790,6 +1794,14 @@ void TButtonControl::Set(TAppIniFile *Ini, const char *IniSection)
         }
     }
 
+    if (Ini->ReadVar("Font.Aliased", str, 255))
+        FFontAliased = atoi(str);
+	
+	if (Ini->ReadVar("LowerFont.Aliased", str, 255))
+        FLowerFontAliased = atoi(str);
+	
+	if (Ini->ReadVar("UpperFont.Aliased", str, 255))
+        FUpperFontAliased = atoi(str);
 
     if (Ini->ReadVar("Key", str, 255))
         FKey = DecodeKey(str);
@@ -3036,7 +3048,9 @@ void TButtonControl::DrawText(TGraphicDevice *dev, TButtonFactoryParam &Param, i
             FUpperFont->GetStringMetrics(text, &x, &y);
             if (x < xsize && y < ysize)
             {
-                if (y > 25)
+				if(FUpperFontAliased == 0)
+					DrawNonAliasedText(dev, Param, xstart, ystart, xsize, y, text, FUpperFont);
+                else if (y > 25)
                     DrawAliasedText(dev, Param, xstart, ystart, xsize, y, text, FUpperFont);
                 else                    
                     DrawNonAliasedText(dev, Param, xstart, ystart, xsize, y, text, FUpperFont);
@@ -3055,7 +3069,9 @@ void TButtonControl::DrawText(TGraphicDevice *dev, TButtonFactoryParam &Param, i
             FLowerFont->GetStringMetrics(text, &x, &y);
             if (x < xsize && y < ysize)
             {
-                if (y > 25)
+				if(FLowerFontAliased == 0)
+					DrawNonAliasedText(dev, Param, xstart, ystart + ysize - y, xsize, y, text, FLowerFont);
+                else if (y > 25)
                     DrawAliasedText(dev, Param, xstart, ystart + ysize - y, xsize, y, text, FLowerFont);
                 else
                     DrawNonAliasedText(dev, Param, xstart, ystart + ysize - y, xsize, y, text, FLowerFont);
@@ -3073,7 +3089,10 @@ void TButtonControl::DrawText(TGraphicDevice *dev, TButtonFactoryParam &Param, i
             if (FFont == 0)
                 CreateFont(xsize, ysize);
 
-            DrawAliasedText(dev, Param, xstart, ystart, xsize, ysize, text, FFont);
+			if(FFontAliased == 0)
+				DrawNonAliasedText(dev, Param, xstart, ystart, xsize, ysize, text, FFont);
+			else
+				DrawAliasedText(dev, Param, xstart, ystart, xsize, ysize, text, FFont);
         }
     }            
 }
