@@ -905,9 +905,6 @@ static void InitGop()
 
     LfbBase = Gop->Mode->FrameBufferBase;
     LfbSize = Gop->Mode->FrameBufferSize;
-
-    ShowAvailableModes();
-    ShowUsedMode();
 }
 
 static void GetFileInfo(EFI_FILE_HANDLE DirHandle)
@@ -1431,6 +1428,8 @@ static void DumpMem()
 
 static void AddMem(unsigned long long Base, unsigned long long Size)
 {
+    ShowMem(Base, Size);
+
     MemMapArr[MemMapCount].Len = 0x14;
     MemMapArr[MemMapCount].Base = Base;
     MemMapArr[MemMapCount].Size = Size;
@@ -1452,10 +1451,14 @@ static int ConvertMemoryMap()
     MemMapCount = 0;
     MemMapArr = (struct MemMapEntry *)RdosMemBase;
 
+    MemDescrSize = sizeof(EFI_MEMORY_DESCRIPTOR);
+
     if (BS->GetMemoryMap(&MemMapSize, MemMap, &MapKey, &MemDescrSize, &MemDescrVersion) == EFI_SUCCESS)
     {
         ptr = (char *)MemMap;
         count = MemMapSize / MemDescrSize;
+
+        printf("Memory Areas: %d\n\r", count);
 
         AddMem(0, 0x90000);
 
@@ -1615,6 +1618,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         {
             if (LoadBootLoader())
             {
+                ShowAvailableModes();
+                ShowUsedMode();
+
                 GetAcpiTable();
 
                 if (ConvertMemoryMap())
