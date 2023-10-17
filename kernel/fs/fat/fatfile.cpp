@@ -158,8 +158,11 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
     int count = Sectors;
     long long c;
     int i;
+    int offset = (FOffsetSector - FFat->StartSector) % FSectorsPerPage;
 
-    if (FOffsetSector && Sectors)
+    offset = (FSectorsPerPage + offset) % FSectorsPerPage;
+
+    if (offset && Sectors)
     {
         c = (StartSector + Sectors - 1) / FSectorsPerCluster;
 
@@ -169,7 +172,7 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
         if (c < 0)
             c = 0;
 
-        end =  c * FSectorsPerCluster + FOffsetSector - 1;
+        end =  c * FSectorsPerCluster + offset - 1;
         count = FSectorsPerPage / FSectorsPerCluster;
         if (!count)
             count = 1;
@@ -179,7 +182,7 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
             for (i = 1; i <= count; i++)
             {
                 if (FFat->IsFree(FClusterArr[c] + i))
-                    end =  (c + i) * FSectorsPerCluster + FOffsetSector - 1 - FSectorsPerPage;
+                    end =  (c + i) * FSectorsPerCluster + offset - 1 - FSectorsPerPage;
                 else
                     break;
             }
