@@ -158,9 +158,9 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
     int count = Sectors;
     long long c;
     int i;
-    int offset = (FOffsetSector - FFat->StartSector) % FSectorsPerPage;
+    int offset = (FOffsetSector + FFat->StartSector) % FSectorsPerPage;
 
-    offset = (FSectorsPerPage + offset) % FSectorsPerPage;
+    offset = (FSectorsPerPage - offset) % FSectorsPerPage;
 
     if (offset && Sectors)
     {
