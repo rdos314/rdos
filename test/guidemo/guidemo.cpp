@@ -441,6 +441,18 @@ void cdecl main()
 //      vbe = new TVideoGraphicDevice(1, 240, 128);
         vbe = new TVideoGraphicDevice(32, 1920, 1080);
 
+        vbe->SetLgopNone();
+        vbe->SetFilledStyle();
+        vbe->SetDrawColor(0, 255, 255);
+        vbe->DrawRect(0, 0, 799, 9);
+
+        vbe->SetDrawColor(255, 255, 0);
+        vbe->DrawRect(0, 10, 799, 19);
+
+        vbe->SetDrawColor(255, 0, 255);
+        vbe->DrawRect(0, 20, 799, 29);
+        RdosWaitMilli(5000);
+
         ControlThread = new TDisplayControlThread("Control thread", vbe);
 
         Mouse->SetWindow(20, 20, vbe->GetWidth() - 20, vbe->GetHeight() - 20);
