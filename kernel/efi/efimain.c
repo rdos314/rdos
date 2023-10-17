@@ -816,6 +816,8 @@ static int ShowMode(int Mode)
 {
     unsigned int Size;
 
+    Gop->SetMode(Gop, 0);
+
     if (Gop->QueryMode(Gop, Mode, &Size, &Info) == EFI_SUCCESS)
     {
         printf("Mode %d: %dx%d, ", Mode, Info->HorizontalResolution, Info->VerticalResolution);
