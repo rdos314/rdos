@@ -835,6 +835,16 @@ SendCloseReq     Proc near
     push fs
     pushad
 ;
+    mov ecx,ds:kf_wr_size
+    or ecx,ecx
+    jz scrWrDone
+;
+    mov eax,ds:kf_wr_base
+    mov edx,ds:kf_wr_base+4
+    mov ebx,REQ_UPDATE
+    call AddReq
+
+scrWrDone:
     mov ebx,REQ_CLOSE
     call AddReq
 ;
@@ -1859,7 +1869,6 @@ ufLeave:
     ret
 UpdateFile      Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -1909,23 +1918,23 @@ AddDirtyMap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CheckMap
+;       NAME:           CheckDirtyMap
 ;
-;       DESCRIPTION:    Check map
+;       DESCRIPTION:    Check map for written pages
 ;
 ;       PARAMETERS:     DS:ESI         Reference
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;
+;       RETURNS:        AX             Page bits
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CheckMap  Proc near
-    push eax
+CheckDirtyMap  Proc near
+    push ebx
     push ecx
     push edx
     push ebp
-;
-    push ebx
 ;
     xor bp,bp
     mov ecx,es:[edi].fmb_size
@@ -1938,29 +1947,52 @@ CheckMap  Proc near
     inc ecx
     add edx,ds:kfm_flat_base
 
-cmLoop:
+cdmLoop:
     GetPageEntry
     test ax,60h
-    jz cmNext
+    jz cdmNext
 ;
     test al,40h
-    jz cmClear
+    jz cdmClear
 ;
     call AddDirtyMap
 
-cmClear:
+cdmClear:
     or bp,ax
     and al,NOT 60h
     SetPageEntry
 
-cmNext:
+cdmNext:
     add edx,1000h
-    loop cmLoop
-;
-    pop ebx
+    loop cdmLoop
 ;
     mov ax,bp
     and al,60h
+;
+    pop ebp
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+CheckDirtyMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CheckMap
+;
+;       DESCRIPTION:    Check map
+;
+;       PARAMETERS:     DS:ESI         Reference
+;                       ES:EDI         Req entry
+;                       BX             Sorted index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckMap  Proc near
+    push eax
+;
+    call CheckDirtyMap
 ;
     test al,20h
     jz cmNone
@@ -1983,9 +2015,6 @@ cmFree:
     call FreeMap
 
 cmDone:
-    pop ebp
-    pop edx
-    pop ecx
     pop eax
     ret
 CheckMap  Endp
@@ -2309,7 +2338,8 @@ dmLoop:
     add esi,OFFSET kfm_ref_arr
     movzx edi,al
     shl edi,4
-    add edi,OFFSET fm_entry_arr
+    add edi,OFFSET fm_entry_arr    
+    call CheckDirtyMap
     call FreeMap
     jmp dmLoop
 
