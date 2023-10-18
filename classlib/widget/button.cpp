@@ -343,7 +343,6 @@ void TButtonFactory::Set(TAppIniFile *Ini, const char *IniSection)
         }
     }
 
-
     if (Ini->ReadVar("Up.Shift.X", str, 255))
         FUp.ShiftX = atoi(str);
 
@@ -1211,6 +1210,15 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
         if (size)
             button->SetUpperFont(size);
     }
+	
+	if (Ini->ReadVar("Font.Aliased", str, 255))
+        button->SetFontAliased(atoi(str));
+	
+	if (Ini->ReadVar("LowerFont.Aliased", str, 255))
+        button->SetLowerFontAliased(atoi(str));
+	
+	if (Ini->ReadVar("UpperFont.Aliased", str, 255))
+        button->SetUpperFontAliased(atoi(str));
 
     return button;
 }
@@ -1280,6 +1288,15 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
         if (size)
             button->SetUpperFont(size);
     }
+	
+	if (Ini->ReadVar("Font.Aliased", str, 255))
+        button->SetFontAliased(atoi(str));
+	
+	if (Ini->ReadVar("LowerFont.Aliased", str, 255))
+        button->SetLowerFontAliased(atoi(str));
+	
+	if (Ini->ReadVar("UpperFont.Aliased", str, 255))
+        button->SetUpperFontAliased(atoi(str));
 
     return button;
 }
@@ -2248,6 +2265,24 @@ void TButtonControl::SetFont(TFont *Font)
 
 /*##########################################################################
 #
+#   Name       : TButtonControl::SetFontAliased
+#
+#   Purpose....: Set font aliased
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetFontAliased(int aliased)
+{
+    FFontAliased = aliased;
+
+    Redraw();
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonControl::GetFont
 #
 #   Purpose....: Get font
@@ -2306,6 +2341,24 @@ void TButtonControl::SetLowerFont(TFont *Font)
 
 /*##########################################################################
 #
+#   Name       : TButtonControl::SetLowerFontAliased
+#
+#   Purpose....: Set lower font aliased
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetLowerFontAliased(int aliased)
+{
+    FLowerFontAliased = aliased;
+
+    Redraw();
+}
+
+/*##########################################################################
+#
 #   Name       : TButtonControl::GetLowerFont
 #
 #   Purpose....: Get lower font
@@ -2358,6 +2411,24 @@ void TButtonControl::SetUpperFont(TFont *Font)
         delete FUpperFont;
 
     FUpperFont = new TFont(*Font);
+
+    Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonControl::SetUpperFontAliased
+#
+#   Purpose....: Set upper font aliased
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonControl::SetUpperFontAliased(int aliased)
+{
+    FUpperFontAliased = aliased;
 
     Redraw();
 }

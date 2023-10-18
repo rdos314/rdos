@@ -199,14 +199,17 @@ public:
 
     void SetFont(int height);
     void SetFont(TFont *Font);
+	void SetFontAliased(int aliased);
     TFont *GetFont();
 
     void SetUpperFont(int height);
     void SetUpperFont(TFont *Font);
+	void SetUpperFontAliased(int aliased);
     TFont *GetUpperFont();
 
     void SetLowerFont(int height);
     void SetLowerFont(TFont *Font);
+	void SetLowerFontAliased(int aliased);
     TFont *GetLowerFont();
     
     void SetUpButtonColor(int r, int g, int b);
