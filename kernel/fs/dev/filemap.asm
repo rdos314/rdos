@@ -1824,6 +1824,8 @@ UpdateFile      Proc near
     push ebx
     push esi
 ;
+    call SyncFileSize
+;
     mov ds,ds:kfm_file_sel
     EnterSection ds:kf_update_section
 ;
@@ -3357,6 +3359,8 @@ CloseVfsMod   Proc near
     push ds
 ;
     mov ds,eax
+    call SyncFileSize
+;
     sub ds:kfm_ref_count,1
     jnz cvmDone
 ;
