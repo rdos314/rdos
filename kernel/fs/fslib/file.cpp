@@ -886,7 +886,14 @@ void TFile::HandleUpdateReq(long long pos, int size)
 {
     char str[80];
 
-    sprintf(str, "Update %d pos %lld size %d \r\n", Index, pos, size);
+    if (pos + size > Info->CurrSize)
+        size = Info->CurrSize - pos;
+
+    if (size > 0)
+        sprintf(str, "Update %d pos %lld size %d \r\n", Index, pos, size);
+    else
+        sprintf(str, "Update %d pos %lld invalid \r\n", Index, pos);
+
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
 }
