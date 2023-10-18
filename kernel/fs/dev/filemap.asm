@@ -105,6 +105,9 @@ kf_c_handle       DW ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 
+kf_wr_base        DD ?,?
+kf_wr_size        DD ?
+
 kf_mod_count      DD ?
 kf_req_count      DD ?
 kf_wait_count     DD ?
@@ -357,6 +360,7 @@ CreateFileSel   Proc near
     mov ds:kf_serv_handle,ebx
     mov ds:kf_wait_list,0
     mov ds:kf_req_sync,0
+    mov ds:kf_wr_size,0
 
     mov ds:kf_req_count,0
     mov ds:kf_wait_count,0
@@ -3068,6 +3072,24 @@ GrowVfsFile_      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SendUpdate
+;
+;       DESCRIPTION:    Send update message
+;
+;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
+;                       DS             File sel
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendUpdate      Proc near
+    ret
+SendUpdate      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UpdateVfsFile
 ;
 ;       DESCRIPTION:    Update VFS file
@@ -3086,8 +3108,43 @@ UpdateVfsFile_      Proc near
     push esi
 ;
     mov ds,si
-    shr esi,16
-    mov bx,si
+    mov ds,ds:kfm_file_sel
+    EnterSection ds:kf_section
+;
+    mov ebx,ds:kf_wr_size
+    or ebx,ebx
+    jz uvfNew
+
+uvfAdd:
+    push eax
+    push edx
+;
+    sub eax,ebx
+    sbb edx,0
+    cmp eax,ds:kf_wr_base
+    jne uvfSend
+;
+    cmp edx,ds:kf_wr_base+4
+    jne uvfSend
+;
+    pop edx
+    pop eax
+    add ds:kf_wr_size,ecx    
+    jmp uvfLeave
+
+uvfSend:
+    call SendUpdate
+;
+    pop edx
+    pop eax
+
+uvfNew:
+    mov ds:kf_wr_base,eax
+    mov ds:kf_wr_base+4,edx
+    mov ds:kf_wr_size,ecx
+
+uvfLeave:
+    LeaveSection ds:kf_section
 ;
     pop esi
     pop ebx
