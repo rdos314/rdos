@@ -534,6 +534,9 @@ int TFile::VfsRead(void *Buf, int Size)
 
     EnterFutex(&FMap->Handle->Futex);
 
+    if (FLastIndex < 0)
+        FLastIndex = VfsFind(Pos);
+
     while (Size)
     {
         if (FLastIndex >= 0)
@@ -681,6 +684,9 @@ int TFile::VfsWrite(const void *Buf, int Size)
         RdosGrowHandle(FHandle, info->DiscSize, Grow);
 
     EnterFutex(&FMap->Handle->Futex);
+
+    if (FLastIndex < 0 || Grow > 0)
+        FLastIndex = VfsFind(Pos);
 
     while (Size)
     {
