@@ -117,8 +117,7 @@ code    SEGMENT byte public 'CODE'
     extern FreeUserHandle:near
     extern ReadVfsFile:near
     extern WriteVfsFile:near
-    extern MapVfsFile:near
-    extern GrowVfsFile:near
+    extern MapVfsFile_:near
     extern GetVfsFileInfo:near
     extern GetVfsFilePos:near
     extern SetVfsFilePos:near
@@ -1321,10 +1320,7 @@ VfsMapHandle_     Proc near
     stc
     jne vmhDone
 ;    
-    mov ds,si
-    shr esi,16
-    mov bx,si
-    call MapVfsFile
+    call MapVfsFile_
 
 vmhDone:
     pop ebp
@@ -1334,82 +1330,6 @@ vmhDone:
     pop ds    
     ret
 VfsMapHandle_    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           VfsGrowHandle_
-;
-;       DESCRIPTION:    Grow VFS handle
-;
-;       PARAMETERS:     BX             Handle
-;                       EDX:EAX        Current size
-;                       ECX            Increase
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public VfsGrowHandle_
-
-VfsGrowHandle_     Proc near
-    push ds
-    push ebx
-    push edx
-    push esi
-    push ebp
-;
-    push eax
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ds,ds:pf_c_handle_sel
-    pop eax
-;    
-    cmp bx,MAX_HANDLES
-    jae vghDone
-;   
-    mov si,bx
-    shl esi,16
-    movzx ebx,bx
-    shl ebx,4
-    add ebx,OFFSET h_arr
-    mov si,ds:[ebx].hp_access
-    test si,IO_WRITE
-    jz vghDone
-;
-    mov si,ds:[ebx].hp_vfs_sel
-    mov bp,ds:[ebx].hp_handle
-;
-    cmp bp,SYS_HANDLE_COUNT
-    jae vghDone
-;    
-    or bp,bp
-    jz vghDone
-;
-    movzx ebx,bp
-    dec ebx
-    shl ebx,4
-    add ebx,OFFSET hd_data
-    mov ebp,SEG data
-    mov ds,ebp
-;
-    movzx ebp,ds:[ebx].he_type
-    cmp ebp,C_HANDLE_VFS
-    stc
-    jne vghDone
-;    
-    mov ds,si
-    shr esi,16
-    mov bx,si
-    call GrowVfsFile
-
-vghDone:
-    pop ebp
-    pop esi
-    pop edx
-    pop ebx
-    pop ds    
-    ret
-VfsGrowHandle_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

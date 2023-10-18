@@ -2976,23 +2976,26 @@ GetVfsFileInfo    Endp
 ;
 ;       DESCRIPTION:    Map VFS file
 ;
-;       PARAMETERS:     DS             Mod sel
-;                       BX             Handle
+;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public MapVfsFile
+    public MapVfsFile_
 
-MapVfsFile      Proc near
+MapVfsFile_      Proc near
+    push ds
     push es
     push fs
     push gs
     pushad
 ;
-    mov esi,ds
+    mov ds,esi
     mov fs,esi
+    shr esi,16
+    mov bx,si
+;
     mov es,ds:kfm_kernel_sel
     mov gs,ds:kfm_file_sel
 ;
@@ -3010,8 +3013,9 @@ mcvfDone:
     pop gs
     pop fs
     pop es
+    pop ds
     ret
-MapVfsFile   Endp
+MapVfsFile_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3020,23 +3024,26 @@ MapVfsFile   Endp
 ;
 ;       DESCRIPTION:    Grow VFS file
 ;
-;       PARAMETERS:     DS             Mod sel
-;                       BX             Handle
+;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
 ;                       EDX:EAX        Current size
 ;                       ECX            Increase
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public GrowVfsFile
+    public GrowVfsFile_
 
-GrowVfsFile      Proc near
+GrowVfsFile_      Proc near
+    push ds
     push es
     push fs
     push gs
     pushad
 ;
-    mov esi,ds
+    mov ds,esi
     mov fs,esi
+    shr esi,16
+    mov bx,si
+;
     mov es,ds:kfm_kernel_sel
     mov gs,ds:kfm_file_sel
 ;
@@ -3054,8 +3061,39 @@ gvfsDone:
     pop gs
     pop fs
     pop es
+    pop ds
     ret
-GrowVfsFile      Endp
+GrowVfsFile_      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UpdateVfsFile
+;
+;       DESCRIPTION:    Update VFS file
+;
+;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UpdateVfsFile_
+
+UpdateVfsFile_      Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov ds,si
+    shr esi,16
+    mov bx,si
+;
+    pop esi
+    pop ebx
+    pop ds
+    ret
+UpdateVfsFile_      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3264,7 +3302,6 @@ ReadVfsFile    Proc near
     push ebp
 ;
     mov ebp,esi
-    shr ebp,16
 ;
     push eax
     push edx
@@ -3317,7 +3354,6 @@ WriteVfsFile    Proc near
     push ebp
 ;
     mov ebp,esi
-    shr ebp,16
 ;
     push eax
     push edx
