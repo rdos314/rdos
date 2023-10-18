@@ -200,6 +200,8 @@ static int VfsWriteOne(struct RdosFileMap *Map, int index, char *buf, long long 
     char *dst;
     short int sel = GetSel(Map);
     struct RdosFileMapEntry *entry;
+    struct RdosFileHandleInfo *hinfo = (struct RdosFileHandleInfo *)OffsetToPtr(sel, Map->HandleOffset);
+    long long FileSize;
 
     index = Map->SortedArr[index];
 
@@ -220,6 +222,10 @@ static int VfsWriteOne(struct RdosFileMap *Map, int index, char *buf, long long 
                     count = size;
 
                 memcpy(dst, buf, count);
+   
+                FileSize = pos + count;
+                if (FileSize > hinfo->ReqSize)
+                    hinfo->ReqSize = FileSize;
             }
             else
                 count = 0;

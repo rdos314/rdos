@@ -619,6 +619,7 @@ int TFile::VfsWriteOne(int index, char *buf, long long pos, int size)
     int count = 0;
     char *dst;
     struct RdosFileMapEntry *entry;
+    long long FileSize;
 
     index = FMap->SortedArr[index];
 
@@ -645,6 +646,10 @@ int TFile::VfsWriteOne(int index, char *buf, long long pos, int size)
                         count = size;
 
                     memcpy(dst, buf, count);
+
+                    FileSize = pos + count;
+                    if (FileSize > FMap->Handle->ReqSize)
+                        FMap->Handle->ReqSize = FileSize;
                 }
                 else
                     count = 0;
