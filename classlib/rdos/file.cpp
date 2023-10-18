@@ -601,6 +601,59 @@ int TFile::Read(void *Buf, int Size)
 
 /*##########################################################################
 #
+#   Name       : TFile::VfsWriteOne
+#
+#   Purpose....: Do one write
+#
+#   In params..:
+#   Out params.: *
+#   Returns....:
+#
+##########################################################################*/
+int TFile::VfsWriteOne(int index, char *buf, long long pos, int size)
+{
+    int diff;
+    int count = 0;
+    char *dst;
+    struct RdosFileMapEntry *entry;
+
+    index = FMap->SortedArr[index];
+
+    if (index >= 0)
+    {
+        entry = &FMap->MapArr[index];
+        diff = pos - entry->Pos;
+
+        if (((long)entry->Base & 0xFFF) != 0 || (entry->Size & 0xFFF) != 0)
+        {
+            SetPos(pos);
+            count = RdosWriteHandle(FHandle, buf, size);
+        }
+        else
+        {
+            if (entry->Base && diff >= 0)
+            {
+                count = entry->Size - diff;
+
+                if (count > 0)
+                {
+                    dst = entry->Base + diff;
+                    if (count > size)
+                        count = size;
+
+                    memcpy(dst, buf, count);
+                }
+                else
+                    count = 0;
+            }
+        }
+    }
+
+    return count;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::VfsWrite
 #
 #   Purpose....: VFS write
@@ -612,7 +665,62 @@ int TFile::Read(void *Buf, int Size)
 ##########################################################################*/
 int TFile::VfsWrite(const void *Buf, int Size)
 {
-    return RdosWriteHandle(FHandle, Buf, Size);
+    long long Pos = GetPos();
+    long long TotalSize = GetSize();
+    int count;
+    int diff;
+    int i;
+    int ret = 0;
+    char *ptr = (char *)Buf;
+    struct RdosFileInfo *info = FMap->Info;
+    long long Grow;
+
+    Grow = Pos + Size - info->DiscSize;
+
+    if (Grow > 0)
+        RdosGrowHandle(FHandle, info->DiscSize, Grow);
+
+    EnterFutex(&FMap->Handle->Futex);
+
+    while (Size)
+    {
+        if (FLastIndex >= 0)
+        {
+            count = VfsWriteOne(FLastIndex, ptr, Pos, Size);
+            ptr += count;
+            Size -= count;
+            ret += count;
+            Pos += count;
+        }
+
+        if (Size)
+        {
+            for (i = 0; i < 10; i++)
+            {
+                LeaveFutex(&FMap->Handle->Futex);
+
+                Grow = Pos + Size - info->DiscSize;
+
+                if (Grow > 0)
+                    RdosGrowHandle(FHandle, info->DiscSize, Grow);
+                else
+                    RdosMapHandle(FHandle, Pos, Size);
+
+                EnterFutex(&FMap->Handle->Futex);
+                FLastIndex = VfsFind(Pos);
+                if (FLastIndex >= 0)
+                    break;
+            }
+
+            if (FLastIndex < 0)
+                break;
+        }
+    }
+
+    LeaveFutex(&FMap->Handle->Futex);
+
+    SetPos(Pos);
+    return ret;
 }
 
 /*##########################################################################

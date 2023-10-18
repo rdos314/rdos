@@ -1569,6 +1569,12 @@
     __parm [__ebx] [__edx __eax] [__ecx] \
     __value [__edi]
 
+#pragma aux RdosGrowHandle = \
+    CallGate_grow_handle  \
+    CarryToBool \
+    __parm [__ebx] [__edx __eax] [__ecx] \
+    __value [__edi]
+
 #pragma aux RdosPollHandle = \
     CallGate_poll_handle  \
     __parm [__ebx] [__edi] [__ecx]  \

@@ -118,6 +118,7 @@ code    SEGMENT byte public 'CODE'
     extern ReadVfsFile:near
     extern WriteVfsFile:near
     extern MapVfsFile_:near
+    extern GrowVfsFile_:near
     extern GetVfsFileInfo:near
     extern GetVfsFilePos:near
     extern SetVfsFilePos:near
@@ -1259,21 +1260,21 @@ ghmmDone:
 get_handle_map     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
 ;
-;       NAME:           VfsMapHandle_
 ;
-;       DESCRIPTION:    Map VFS handle
+;           NAME:           MapHandle
 ;
-;       PARAMETERS:     BX             Handle
-;                       EDX:EAX        Position
-;                       ECX            Size
+;           DESCRIPTION:    Map handle
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     File position
+;;                          ECX         Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public VfsMapHandle_
+map_handle_name  DB 'Map Handle', 0
 
-VfsMapHandle_     Proc near
+map_handle     Proc far
     push ds
     push ebx
     push edx
@@ -1329,14 +1330,14 @@ vmhDone:
     pop ebx
     pop ds    
     ret
-VfsMapHandle_    Endp
+map_handle     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           MapHandle
+;           NAME:           GrowHandle
 ;
-;           DESCRIPTION:    Map handle
+;           DESCRIPTION:    Grow handle
 ;
 ;           PARAMETERS:     BX          Handle
 ;                           EDX:EAX     File position
@@ -1344,12 +1345,65 @@ VfsMapHandle_    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-map_handle_name  DB 'Map Handle', 0
+grow_handle_name  DB 'Grow Handle', 0
 
-map_handle     Proc far
-    call VfsMapHandle_
+grow_handle     Proc far
+    push ds
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+    pop eax
+;    
+    cmp bx,MAX_HANDLES
+    jae vghDone
+;   
+    mov si,bx
+    shl esi,16
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov si,ds:[ebx].hp_access
+    test si,IO_READ
+    jz vghDone
+;
+    mov si,ds:[ebx].hp_vfs_sel
+    mov bp,ds:[ebx].hp_handle
+;
+    cmp bp,SYS_HANDLE_COUNT
+    jae vghDone
+;    
+    or bp,bp
+    jz vghDone
+;
+    movzx ebx,bp
+    dec ebx
+    shl ebx,4
+    add ebx,OFFSET hd_data
+    mov ebp,SEG data
+    mov ds,ebp
+;
+    movzx ebp,ds:[ebx].he_type
+    cmp ebp,C_HANDLE_VFS
+    stc
+    jne vghDone
+;    
+    call GrowVfsFile_
+
+vghDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop ds    
     ret
-map_handle     Endp
+grow_handle     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5792,6 +5846,12 @@ init_handle     PROC near
     mov edi,OFFSET map_handle_name
     xor cl,cl
     mov ax,map_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET grow_handle
+    mov edi,OFFSET grow_handle_name
+    xor cl,cl
+    mov ax,grow_handle_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET poll_handle16

@@ -1001,6 +1001,7 @@
 
 #define usergate_get_handle_map 0x00000336
 #define usergate_map_handle 0x00000337
+#define usergate_grow_handle 0x00000338
 
 
 
@@ -2008,6 +2009,7 @@
 
 #define CallGate_get_handle_map 0x55 0x67 0x9a 54 3 0 0 3 0 0x5d
 #define CallGate_map_handle 0x55 0x67 0x9a 55 3 0 0 3 0 0x5d
+#define CallGate_grow_handle 0x55 0x67 0x9a 56 3 0 0 3 0 0x5d
 
 #else
 
@@ -3013,5 +3015,6 @@
 
 #define CallGate_get_handle_map 0x3e 0x67 0x9a 54 3 0 0 3 0
 #define CallGate_map_handle 0x3e 0x67 0x9a 55 3 0 0 3 0
+#define CallGate_grow_handle 0x3e 0x67 0x9a 56 3 0 0 3 0
 
 #endif

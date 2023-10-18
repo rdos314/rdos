@@ -98,6 +98,7 @@ kf_info_phys      DD ?,?
 kf_info_linear    DD ?
 kf_sector_size    DW ?
 kf_section        section_typ <>
+kf_update_section section_typ <>
 kf_part_sel       DW ?
 kf_req_sync       DW ?
 kf_wait_thread    DW ?
@@ -356,6 +357,7 @@ CreateFileSel   Proc near
     CreateBlk
 ;
     InitSection ds:kf_section
+    InitSection ds:kf_update_section
     mov ds:kf_sector_size,di
     mov ds:kf_part_sel,fs
     mov ds:kf_serv_handle,ebx
@@ -1797,6 +1799,117 @@ FreeMap Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateFile
+;
+;       DESCRIPTION:    Update file
+;
+;       PARAMETERS:     DS             File req
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateFile      Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov ds,ds:kfm_file_sel
+    EnterSection ds:kf_update_section
+;
+    mov ebx,ds:kf_wr_size
+    or ebx,ebx
+    jz ufNew
+
+ufAdd:
+    push eax
+    push edx
+;
+    sub eax,ebx
+    sbb edx,0
+    cmp eax,ds:kf_wr_base
+    jne ufSend
+;
+    cmp edx,ds:kf_wr_base+4
+    jne ufSend
+;
+    pop edx
+    pop eax
+    add ds:kf_wr_size,ecx    
+    jmp ufLeave
+
+ufSend:
+    mov ebx,REQ_UPDATE
+    call AddReq
+;
+    pop edx
+    pop eax
+
+ufNew:
+    mov ds:kf_wr_base,eax
+    mov ds:kf_wr_base+4,edx
+    mov ds:kf_wr_size,ecx
+
+ufLeave:
+    LeaveSection ds:kf_update_section
+;
+    pop esi
+    pop ebx
+    pop ds
+    ret
+UpdateFile      Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddDirtyMap
+;
+;       DESCRIPTION:    Signal written page
+;
+;       PARAMETERS:     DS             File sel
+;                       ES:EDI         Req entry
+;                       BX             Sorted index
+;                       EDX            Linea address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDirtyMap  Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ecx,es:[edi].fmb_size
+    test cx,0FFFh
+    jnz admDone
+;
+    mov eax,es:[edi].fmb_base
+    test ax,0FFFh
+    jnz admDone
+;
+    int 3
+    sub edx,es:[edi].fmb_base
+    mov eax,es:[edi].fmb_pos
+    add eax,edx
+    mov edx,es:[edi].fmb_pos+4
+    adc edx,0
+    mov ecx,1000h
+    call UpdateFile
+
+admDone:
+    pop edx
+    pop ecx
+    pop eax
+    pop ebx
+    pop ds
+    ret
+AddDirtyMap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CheckMap
 ;
 ;       DESCRIPTION:    Check map
@@ -1831,6 +1944,12 @@ cmLoop:
     test ax,60h
     jz cmNext
 ;
+    test al,40h
+    jz cmClear
+;
+    call AddDirtyMap
+
+cmClear:
     or bp,ax
     and al,NOT 60h
     SetPageEntry
@@ -3087,51 +3206,8 @@ GrowVfsFile_      Endp
 
 UpdateVfsFile_      Proc near
     push ds
-    push ebx
-    push esi
-;
     mov ds,si
-    mov ds,ds:kfm_file_sel
-    EnterSection ds:kf_section
-;
-    mov ebx,ds:kf_wr_size
-    or ebx,ebx
-    jz uvfNew
-
-uvfAdd:
-    push eax
-    push edx
-;
-    sub eax,ebx
-    sbb edx,0
-    cmp eax,ds:kf_wr_base
-    jne uvfSend
-;
-    cmp edx,ds:kf_wr_base+4
-    jne uvfSend
-;
-    pop edx
-    pop eax
-    add ds:kf_wr_size,ecx    
-    jmp uvfLeave
-
-uvfSend:
-    mov ebx,REQ_UPDATE
-    call AddReq
-;
-    pop edx
-    pop eax
-
-uvfNew:
-    mov ds:kf_wr_base,eax
-    mov ds:kf_wr_base+4,edx
-    mov ds:kf_wr_size,ecx
-
-uvfLeave:
-    LeaveSection ds:kf_section
-;
-    pop esi
-    pop ebx
+    call UpdateFile
     pop ds
     ret
 UpdateVfsFile_      Endp

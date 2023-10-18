@@ -1294,6 +1294,13 @@ MapHandle        MACRO
         UserGate map_handle_nr
                                                 ENDM
 
+; IN  BX            C handle
+; IN  EDX:EAX       File position
+; IN  ECX           Size
+GrowHandle        MACRO
+        UserGate grow_handle_nr
+                                                ENDM
+
 ; IN  BX        Handle
 ; IN  ES:(E)DI  Buffer
 ; IN  (E)CX     Number of bytes to read
