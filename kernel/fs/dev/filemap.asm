@@ -46,6 +46,7 @@ include vfsfile.inc
   REQ_MAP = 5
   REQ_SIZE = 6
   REQ_GROW = 7
+  REQ_UPDATE = 8
 
     .386p
 
@@ -3072,24 +3073,6 @@ GrowVfsFile_      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SendUpdate
-;
-;       DESCRIPTION:    Send update message
-;
-;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
-;                       DS             File sel
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendUpdate      Proc near
-    ret
-SendUpdate      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           UpdateVfsFile
 ;
 ;       DESCRIPTION:    Update VFS file
@@ -3133,7 +3116,8 @@ uvfAdd:
     jmp uvfLeave
 
 uvfSend:
-    call SendUpdate
+    mov ebx,REQ_UPDATE
+    call AddReq
 ;
     pop edx
     pop eax
