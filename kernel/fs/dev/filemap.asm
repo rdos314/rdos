@@ -2155,6 +2155,57 @@ UpdateUnlinked Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SyncFileSize
+;
+;       DESCRIPTION:    Sync file size from userspace
+;
+;       PARAMETERS:     DS              Mod sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SyncFileSize      Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    mov bx,flat_data_sel
+    mov es,ebx
+    mov edx,ds:kfm_user_base
+    mov edx,es:[edx].fm_handle_ptr
+    mov eax,es:[edx].fh_req_size    
+    mov edx,es:[edx].fh_req_size+4
+;
+    mov bx,flat_sel
+    mov es,ebx
+    mov ds,ds:kfm_file_sel
+    mov esi,ds:kf_info_linear
+    mov ebx,es:[esi].fi_size
+    sub ebx,eax
+    mov ebx,es:[esi].fi_size+4
+    sbb ebx,edx
+    jnc sfsDone
+;
+    mov es:[esi].fi_size,eax
+    mov es:[esi].fi_size+4,edx
+
+sfsDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+SyncFileSize      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SendUpdate
 ;
 ;       DESCRIPTION:    Send update
@@ -2166,6 +2217,8 @@ UpdateUnlinked Endp
 SendUpdate  Proc near
     push ds
     push ecx
+;
+    call SyncFileSize
 ;
     mov ds,ds:kfm_file_sel
     EnterSection ds:kf_update_section
