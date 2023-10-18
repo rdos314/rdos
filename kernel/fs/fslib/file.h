@@ -85,6 +85,7 @@ public:
 
 protected:
     virtual TFileReq *HandleRead(long long pos, int size);
+    virtual void HandleUpdateReq(long long pos, int size);
     virtual void HandleCompletedReq(int index);
     virtual void HandleMapReq(int index);
     virtual void HandleFreeReq(int index);

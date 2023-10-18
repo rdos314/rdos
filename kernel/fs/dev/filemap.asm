@@ -1889,7 +1889,6 @@ AddDirtyMap  Proc near
     test ax,0FFFh
     jnz admDone
 ;
-    int 3
     sub edx,es:[edi].fmb_base
     mov eax,es:[edi].fmb_pos
     add eax,edx
@@ -1901,8 +1900,8 @@ AddDirtyMap  Proc near
 admDone:
     pop edx
     pop ecx
-    pop eax
     pop ebx
+    pop eax
     pop ds
     ret
 AddDirtyMap   Endp
@@ -2127,6 +2126,50 @@ UpdateUnlinked Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SendUpdate
+;
+;       DESCRIPTION:    Send update
+;
+;       PARAMETERS:     DS             Module sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendUpdate  Proc near
+    push ds
+    push ecx
+;
+    mov ds,ds:kfm_file_sel
+    EnterSection ds:kf_update_section
+;
+    xor ecx,ecx
+    xchg ecx,ds:kf_wr_size
+    or ecx,ecx
+    jz suLeave
+;
+    push eax
+    push ebx
+    push edx
+;
+    mov eax,ds:kf_wr_base
+    mov edx,ds:kf_wr_base+4
+    mov ebx,REQ_UPDATE
+    call AddReq
+;
+    pop edx
+    pop ebx
+    pop eax
+    
+suLeave:
+    LeaveSection ds:kf_update_section
+;
+    pop ecx
+    pop ds
+    ret
+SendUpdate  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UpdateMap
 ;
 ;       DESCRIPTION:    Update map requests
@@ -2170,6 +2213,8 @@ umLeave:
     call UpdateUnlinked
 ;
     LeaveSection ds:kfm_section
+;
+    call SendUpdate
 ;
     popad
     pop es

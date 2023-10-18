@@ -873,6 +873,26 @@ TFileReq *TFile::HandleRead(long long pos, int size)
 
 /*##########################################################################
 #
+#   Name       : TFile::HandleUpdateReq
+#
+#   Purpose....: Handle update
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::HandleUpdateReq(long long pos, int size)
+{
+    char str[80];
+
+    sprintf(str, "Update %d pos %lld size %d \r\n", Index, pos, size);
+    RdosWriteFile(FileHandle, str, strlen(str));
+    printf(str);
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::HandleFreeReq
 #
 #   Purpose....: Handle free req
