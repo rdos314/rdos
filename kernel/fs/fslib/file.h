@@ -41,7 +41,6 @@ public:
     ~TFileReq();
 
     void InitArray(int sectors);
-    void FreeArray();
     void AddSector(long long sector);
 
     void SetPos(int BytesPerSector, long long pos);
@@ -55,6 +54,7 @@ public:
     long long SectPos;
 
     int MaxSectors;
+    int ReqCount;
     int SectorCount;
     long long *SectorArr;
 
