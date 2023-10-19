@@ -59,19 +59,11 @@ fh_handle     DW ?
 
 file_handle_seg     ENDS
 
-entry_struc       STRUC
-
-es_buf            DD ?
-es_offset         DW ?
-es_flags          DW ?
-
-entry_struc       ENDS
-
 kernel_req_entry  STRUC
 
 kre_pos           DD ?,?
 kre_size          DD ?
-kre_entry_arr     DD ?
+kre_block_arr     DD ?
 kre_phys_arr      DD ?
 kre_req_size      DD ?
 kre_pages         DW ?
@@ -579,7 +571,7 @@ afrRecalc:
     mov ds:[edi].kre_pos,eax
     mov ds:[edi].kre_pos+4,edx
     mov ds:[edi].kre_pages,0
-    mov ds:[edi].kre_entry_arr,0
+    mov ds:[edi].kre_block_arr,0
     mov ds:[edi].kre_phys_arr,0
     mov ds:[edi].kre_usage,0
 ;
@@ -1005,11 +997,12 @@ SetupReadReq   Proc near
     mov ds:[ebx].kre_pages,ax
     inc ds:kf_block_count
     mov cx,ax
-    shl cx,3
+    shl cx,2
     AllocateBlk
-    mov ds:[ebx].kre_entry_arr,edx
+    mov ds:[ebx].kre_block_arr,edx
 ;
     inc ds:kf_phys_count
+    shl cx,1
     AllocateBlk
     mov ds:[ebx].kre_phys_arr,edx
 ;
@@ -1051,7 +1044,7 @@ ProcessReadReq  Proc near
     pop fs
 ;
     mov ebx,fs:[4*ebx].kf_handle_arr
-    mov edi,fs:[ebx].kre_entry_arr
+    mov edi,fs:[ebx].kre_block_arr
     mov ebp,fs:[ebx].kre_phys_arr
 ;
     mov esi,[esp]
@@ -1081,11 +1074,8 @@ prrSave:
     mov fs:[ebp+4],edx
     add ebp,8
 ;
-    mov fs:[edi].es_buf,esi
-    and ax,0FFFh
-    mov fs:[edi].es_offset,ax
-    mov fs:[edi].es_flags,0
-    add edi,8
+    mov fs:[edi],esi
+    add edi,4
     jmp prrLoop
 
 prrDone:
@@ -2579,8 +2569,7 @@ FreeFileReq  Proc near
     or ecx,ecx
     jz ffrReq
 ;
-    mov edi,ds:[ebx].kre_entry_arr
-    mov dx,ds:[edi].es_offset
+    mov edi,ds:[ebx].kre_block_arr
     mov edx,ds:[ebx].kre_phys_arr
     mov edx,ds:[edx]
     and edx,0FFFh
@@ -2599,7 +2588,7 @@ ffrFreeAll:
     sub ecx,eax
     shr eax,9
 ;    
-    mov esi,ds:[edi].es_buf
+    mov esi,ds:[edi]
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz ffrFreeNext
 ;
@@ -2617,7 +2606,7 @@ ffrFreeNext:
     or ecx,ecx
     jz ffrFreeEntry
 ;
-    add edi,8
+    add edi,4
     mov eax,8
     jmp ffrFreeLoop
 
@@ -2625,11 +2614,12 @@ ffrFreeEntry:
     mov ebx,ebp
     mov cx,ds:[ebx].kre_pages
     dec ds:kf_block_count
-    shl cx,3
-    mov edx,ds:[ebx].kre_entry_arr
+    shl cx,2
+    mov edx,ds:[ebx].kre_block_arr
     FreeBlk
 ;
     dec ds:kf_phys_count
+    shl cx,1
     mov edx,ds:[ebx].kre_phys_arr
     FreeBlk
 
