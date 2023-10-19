@@ -73,6 +73,7 @@ kre_pos           DD ?,?
 kre_size          DD ?
 kre_entry_arr     DD ?
 kre_phys_arr      DD ?
+kre_req_size      DD ?
 kre_pages         DW ?
 kre_usage         DW ?
 kre_done          DW ?
@@ -998,7 +999,9 @@ SetupReadReq   Proc near
     push ecx
     push edx
 ;
+    shl ecx,9
     mov ebx,ds:[4*ebx].kf_handle_arr
+    mov ds:[ebx].kre_req_size,ecx
     mov ds:[ebx].kre_pages,ax
     inc ds:kf_block_count
     mov cx,ax
@@ -2566,7 +2569,7 @@ FreeFileReq  Proc near
     pushad
 ;    
     mov ebx,ds:[4*edx].kf_handle_arr
-    mov ecx,ds:[ebx].kre_size
+    mov ecx,ds:[ebx].kre_req_size
 ;    
     mov ax,serv_flat_sel
     mov es,eax
