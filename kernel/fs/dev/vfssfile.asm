@@ -211,9 +211,7 @@ serv_open_file    Endp
 ;       DESCRIPTION:    Serv free VFS file req
 ;
 ;       PARAMETERS:     EBX            kernel handle
-;                       ECX            sector count
 ;                       EDX            req # (1-based)
-;                       ES:EDI         Sector buf
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

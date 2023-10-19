@@ -33,7 +33,7 @@ int RDOSAPI ServOpenVfsFile(int handle, void *info);
 void RDOSAPI ServNotifyVfsFileReq(int FileHandle, long long Pos, int Size);
 int RDOSAPI ServVfsFileReadReq(int FileHandle, int ReqIndex, long long Pos, long long *SectorBuf, int SectorCount);
 int RDOSAPI ServVfsFileWriteReq(int FileHandle, int ReqIndex, long long Pos, long long *SectorBuf, int SectorCount);
-void RDOSAPI ServFreeVfsFileReq(int FileHandle, int ReqIndex, long long *SectorBuf, int SectorCount);
+void RDOSAPI ServFreeVfsFileReq(int FileHandle, int ReqIndex);
 void RDOSAPI ServCloseVfsFile(int FileHandle);
 
 int RDOSAPI ServVfsFileReqCount(int handle);

@@ -68,7 +68,7 @@
 
 #pragma aux ServFreeVfsFileReq = \
     ServGate_serv_free_file_req  \
-    __parm [__ebx] [__edx] [__edi] [__ecx]
+    __parm [__ebx] [__edx]
 
 #pragma aux ServWaitVfsIoServer = \
     ServGate_serv_wait_io_serv  \
