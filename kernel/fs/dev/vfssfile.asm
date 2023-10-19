@@ -1526,6 +1526,141 @@ serv_file_read_req    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           PrepareWrite
+;
+;       DESCRIPTION:    Prepare to write
+;
+;       PARAMETERS:     FS          Part sel
+;                       DS:EDI      Sector array
+;                       ECX         Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrepareWrite  Proc near
+    push ds
+    push es
+    push gs
+    pushad
+;
+    mov eax,ds
+    mov gs,eax
+    mov ds,fs:vfsp_disc_sel
+    mov eax,serv_flat_sel
+    mov es,eax
+;
+    EnterSection ds:vfs_section
+;
+    mov eax,gs:[edi]
+    test al,7
+    jz pwCheckMid
+
+pwStartLoop:
+    add edi,8
+    sub ecx,1
+    jz pwDone
+;
+    mov eax,gs:[edi]
+    test al,7
+    jnz pwStartLoop
+
+pwCheckMid:
+    cmp ecx,8
+    jb pwDone
+
+pwMidLoop:
+    mov eax,gs:[edi]
+    mov edx,gs:[edi+4]
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+    call BlockToBuf
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jnz pwMidNext
+;
+    or es:[esi].vfsp_flags,VFS_PHYS_VALID
+    mov es:[esi].vfsp_ref_bitmap,1
+    inc ds:vfs_locked_pages
+    or byte ptr gs:[edi+7],80h
+
+pwMidNext:
+    add edi,8
+    sub ecx,1
+    jz pwDone
+;
+    mov eax,gs:[edi]
+    test al,7
+    jnz pwMidLoop
+;
+    cmp ecx,8
+    jae pwMidLoop
+
+pwDone:
+    LeaveSection ds:vfs_section
+;
+    popad
+    pop gs
+    pop es
+    pop ds
+    ret
+PrepareWrite    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CleanupWrite
+;
+;       DESCRIPTION:    Clean up locks after write
+;
+;       PARAMETERS:     FS          Part sel
+;                       DS:EDI      Sector array
+;                       ECX         Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CleanupWrite  Proc near
+    push ds
+    push es
+    push gs
+    pushad
+;
+    mov eax,ds
+    mov gs,eax
+    mov ds,fs:vfsp_disc_sel
+    mov eax,serv_flat_sel
+    mov es,eax
+;
+    EnterSection ds:vfs_section
+
+cwLoop:
+    mov edx,gs:[edi+4]
+    test edx,80000000h
+    jz cwNext
+;
+    and byte ptr gs:[edi+7],7Fh
+    mov edx,gs:[edi+4]
+    mov eax,gs:[edi]    
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+    call BlockToBuf
+;
+    dec es:[esi].vfsp_ref_bitmap
+
+cwNext:
+    add edi,8
+    loop cwLoop
+;
+    LeaveSection ds:vfs_section
+;
+    popad
+    pop gs
+    pop es
+    pop ds
+    ret
+CleanupWrite    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServFileWriteReq
 ;
 ;       DESCRIPTION:    Serv add VFS file write req
@@ -1577,6 +1712,10 @@ serv_file_write_req    Proc far
 ;
     call GetMinMax
     call CreateReqSel
+    call PrepareWrite
+;
+    push ds
+    push edi
 ;
     mov eax,es
     mov ds,eax
@@ -1587,7 +1726,15 @@ serv_file_write_req    Proc far
     call SortMsbReq
     call SortLsbReq
     call CreateReq
-    call StartWrite
+    call StartRead
+;
+    mov eax,ds
+    pop edi
+    pop ds
+;
+    push eax
+    call CleanupWrite
+    pop ds
 ;
     mov eax,ds:vfs_rd_remain_count
     or eax,eax
