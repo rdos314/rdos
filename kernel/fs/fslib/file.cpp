@@ -913,13 +913,13 @@ void TFile::HandleFreeReq(int req)
 
             FActiveArr[FCurrActiveCount] = 0;
 
-            FreeReq(FileReq);
-
             sprintf(str, "Free %d.%d\r\n", Index, req);
             RdosWriteFile(FileHandle, str, strlen(str));
             printf(str);
 
-            ServFreeVfsFileReq(Handle, req + 1);
+            ServFreeVfsFileReq(Handle, req + 1, FileReq->SectorArr, FileReq->ReqCount);
+
+            FreeReq(FileReq);
             break;
         }
     }

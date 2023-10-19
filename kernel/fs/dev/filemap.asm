@@ -2545,7 +2545,9 @@ NotifyFileSignal  Endp
 ;       DESCRIPTION:    Free file req
 ;
 ;       PARAMETERS:     DS                 File sel
+;                       ES:EDI             Sector array
 ;                       FS                 Part sel                       
+;                       ECX                Sector count
 ;                       EDX                Req id
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

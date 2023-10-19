@@ -295,7 +295,9 @@ ServWaitVfsIoServer  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
+; IN  ECX              Sector count
 ; IN  EDX              Req #
+; IN  ES:EDI           Sector array
 ServFreeVfsFileReq  MACRO
     ServGate serv_free_file_req_nr
                     ENDM
