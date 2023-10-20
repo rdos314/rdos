@@ -221,8 +221,8 @@ serv_open_file    Endp
 serv_update_file_req_name       DB 'Serv Update File Req',0
 
 serv_update_file_req    Proc far
-    push ds
     push fs
+    push gs
     push eax
     push ebx
 ;
@@ -236,7 +236,7 @@ serv_update_file_req    Proc far
     dec bx
     shl bx,2
     add bx,OFFSET vfsp_file_arr
-    mov ds,fs:[bx].ff_sel
+    mov gs,fs:[bx].ff_sel
     or edx,edx
     stc
     jz sufrDone
@@ -251,8 +251,8 @@ serv_update_file_req    Proc far
 sufrDone:
     pop ebx
     pop eax
+    pop gs
     pop fs
-    pop ds
     ret
 serv_update_file_req   Endp
 

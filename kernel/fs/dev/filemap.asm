@@ -166,6 +166,7 @@ code    SEGMENT byte public 'CODE'
     extern AllocateModHandle:near
     extern VfsRead:near
     extern VfsWrite:near
+    extern UpdateWrBitmap:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2543,8 +2544,8 @@ NotifyFileSignal  Endp
 ;
 ;       DESCRIPTION:    Update file req
 ;
-;       PARAMETERS:     DS                 File sel
-;                       FS                 Part sel                       
+;       PARAMETERS:     FS                 Part sel                       
+;                       GS                 File sel
 ;                       EDX                Req id
 ;                       ESI                Offset
 ;                       ECX                Count
@@ -2553,21 +2554,120 @@ NotifyFileSignal  Endp
 
     public UpdateFileReq
 
+WriteMaskTab:
+wm00 DB 001h, 1
+wm01 DB 003h, 2
+wm02 DB 00Fh, 4
+wm03 DB 0FFh, 8
+
 UpdateFileReq  Proc near
+    push ds
     push es
     push gs
     pushad
+;
+    mov ds,fs:vfsp_disc_sel
+    EnterSection ds:vfs_section
 ;    
-    mov ebx,ds:[4*edx].kf_handle_arr
-    mov ecx,ds:[ebx].kre_req_size
+    mov ebx,gs:[4*edx].kf_handle_arr
+    mov ebp,gs:[ebx].kre_req_size
 ;    
     mov ax,serv_flat_sel
     mov es,eax
-    mov gs,fs:vfsp_disc_sel
+;
+    or ebp,ebp
+    jz ufrDone
+;
+    push ebx
+;
+    mov edi,gs:[ebx].kre_block_arr
+    mov edx,gs:[ebx].kre_phys_arr
+    mov edx,gs:[edx]
+    and edx,0FFFh
+;
+    or esi,esi
+    jz ufrOffsetDone
+;
+    movzx eax,ds:vfs_bytes_per_sector
+
+ufrOffsetLoop:
+    add dx,ax
+    test dx,0FFFh
+    jnz ufrOffsetNext
+;
+    add edi,4
+    xor edx,edx    
+
+ufrOffsetNext:
+    sub ebp,eax
+    jz ufrSignalDone
+;
+    sub esi,1
+    jnz ufrOffsetLoop
+
+ufrOffsetDone:
+    xor bh,bh
+    and dx,0FFFh
+    jz ufrPosOk
+
+ufrPosLoop:
+    inc bh
+    sub dx,ds:vfs_bytes_per_sector
+    jnz ufrPosLoop
+
+ufrPosOk:
+    push ecx
+    movzx eax,ds:vfs_sector_shift
+    mov dx,cs:[2*eax].WriteMaskTab
+    mov al,dh
+    mul bh
+    mov cl,al
+    mov bh,dl
+    shl bh,cl
+    mov cl,dh
+    pop edx
+;
+    or edx,edx
+    jz ufrSignalDone
+;
+    xor bl,bl
+    mov esi,gs:[edi]
+    movzx eax,ds:vfs_bytes_per_sector
+
+ufrSectorLoop:
+    or bl,bh
+    rol bh,cl
+    sub ebp,eax
+    jz ufrWrLast
+;
+    test bh,1
+    jz ufrSectorNext
+;
+    call UpdateWrBitmap
+    xor bl,bl
+    add edi,4        
+    mov esi,gs:[edi]
+
+ufrSectorNext:
+    sub edx,1
+    jnz ufrSectorLoop
+
+ufrWrLast:
+    or bl,bl
+    jz ufrSignalDone
+;
+    call UpdateWrBitmap
+
+ufrSignalDone:
+    pop ebx
+
+ufrDone:
+    LeaveSection ds:vfs_section
 ;
     popad
     pop gs
     pop es
+    pop ds
     ret
 UpdateFileReq  Endp
 
