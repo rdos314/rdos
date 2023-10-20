@@ -2539,6 +2539,41 @@ NotifyFileSignal  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateFileReq
+;
+;       DESCRIPTION:    Update file req
+;
+;       PARAMETERS:     DS                 File sel
+;                       FS                 Part sel                       
+;                       EDX                Req id
+;                       ESI                Offset
+;                       ECX                Count
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UpdateFileReq
+
+UpdateFileReq  Proc near
+    push es
+    push gs
+    pushad
+;    
+    mov ebx,ds:[4*edx].kf_handle_arr
+    mov ecx,ds:[ebx].kre_req_size
+;    
+    mov ax,serv_flat_sel
+    mov es,eax
+    mov gs,fs:vfsp_disc_sel
+;
+    popad
+    pop gs
+    pop es
+    ret
+UpdateFileReq  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           FreeFileReq
 ;
 ;       DESCRIPTION:    Free file req

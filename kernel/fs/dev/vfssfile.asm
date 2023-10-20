@@ -61,6 +61,7 @@ code    SEGMENT byte public 'CODE'
     extern NotifyFileSignal:near
     extern UnlinkRequest:near
     extern AddFileReq:near
+    extern UpdateFileReq:near
     extern FreeFileReq:near
     extern GetFileDebugInfo:near
 
@@ -202,6 +203,58 @@ serv_open_file    Proc far
     pop ds
     ret
 serv_open_file    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServUpdateFileReq
+;
+;       DESCRIPTION:    Serv update VFS file req
+;
+;       PARAMETERS:     EBX            kernel handle
+;                       EDX            req # (1-based)
+;                       ESI            offset
+;                       ECX            count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_update_file_req_name       DB 'Serv Update File Req',0
+
+serv_update_file_req    Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+;
+    call FileHandleToPartFs
+    jc sufrDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc sufrDone
+;
+    dec bx
+    shl bx,2
+    add bx,OFFSET vfsp_file_arr
+    mov ds,fs:[bx].ff_sel
+    or edx,edx
+    stc
+    jz sufrDone
+;
+    dec edx
+    cmp edx,240
+    cmc
+    jc sufrDone
+;
+    call UpdateFileReq
+
+sufrDone:
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_update_file_req   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1833,6 +1886,12 @@ init_server_file    Proc near
     mov edi,OFFSET serv_open_file_name
     xor cl,cl
     mov ax,serv_open_file_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_update_file_req
+    mov edi,OFFSET serv_update_file_req_name
+    xor cl,cl
+    mov ax,serv_update_file_req_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_free_file_req
