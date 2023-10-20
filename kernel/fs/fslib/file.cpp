@@ -577,6 +577,29 @@ void TFile::AddActive(TFileReq *req)
 
 /*##########################################################################
 #
+#   Name       : TFile::FindReq
+#
+#   Purpose....: Find active req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFileReq *TFile::FindReq(long long start)
+{
+    int i;
+
+    for (i = 0; i < FCurrActiveCount; i++)
+        if (FActiveArr[i]->SectPos <= start)
+            if (FActiveArr[i]->SectPos + FActiveArr[i]->SectorCount > start)
+                return FActiveArr[i];
+
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::GetSector
 #
 #   Purpose....: Default get sector
@@ -879,17 +902,49 @@ TFileReq *TFile::HandleRead(long long pos, int size)
 void TFile::HandleUpdateReq(long long pos, int size)
 {
     char str[80];
+    TFileReq *FileReq;
+    long long start;
+    long long end;
+    int count;
+    int offset;
+    int curr;
 
     if (pos + size > Info->CurrSize)
         size = (int)(Info->CurrSize - pos);
 
     if (size > 0)
+    {
+        start = pos / FBytesPerSector;
+        end = (pos + size - 1) / FBytesPerSector;
+        count = (int)(end - start + 1);
+
+        while (count)
+        {
+            FileReq = FindReq(start);
+            if (FileReq)
+            {
+                offset = (int)(FileReq->SectPos - start);
+
+                if (FileReq->SectorCount >= count)
+                    curr = count;
+                else
+                    curr = FileReq->SectorCount;
+
+                start += curr;
+                count -= curr;
+            }            
+            else
+                break;
+        }
+
         sprintf(str, "Update %d pos %lld size %d \r\n", Index, pos, size);
+    }
     else
         sprintf(str, "Update %d pos %lld invalid \r\n", Index, pos);
 
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
+
 }
 
 /*##########################################################################

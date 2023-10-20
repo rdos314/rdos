@@ -99,6 +99,7 @@ protected:
     TFileReq *AllocateReq();
     void FreeReq(TFileReq *req);
     void UpdateReq();
+    TFileReq *FindReq(long long pos);
 
     void GrowAllocated();
     void GrowActive();
