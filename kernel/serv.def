@@ -51,5 +51,6 @@ set_vfs_start_sector_nr    = 49
 set_vfs_sectors_nr         = 50
 is_vfs_busy_nr             = 51
 serv_file_write_req_nr     = 52
+serv_update_file_req_nr    = 53
 
 serv_gate_entries          = 55

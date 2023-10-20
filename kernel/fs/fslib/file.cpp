@@ -938,6 +938,8 @@ void TFile::HandleUpdateReq(long long pos, int size)
                 RdosWriteFile(FileHandle, str, strlen(str));
                 printf(str);
 
+                ServUpdateVfsFileReq(Handle, FileReq->Req + 1, offset, curr);
+
                 start += curr;
                 count -= curr;
             }            

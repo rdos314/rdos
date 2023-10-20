@@ -295,12 +295,6 @@ ServWaitVfsIoServer  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
-; IN  EDX              Req #
-ServFreeVfsFileReq  MACRO
-    ServGate serv_free_file_req_nr
-                    ENDM
-
-; IN  BX               Kernel handle
 ServCloseVfsFile  MACRO
     ServGate serv_close_file_nr
                     ENDM
@@ -323,7 +317,7 @@ ServNotifyVfsFileReq  MACRO
 
 ; IN  BX               Kernel handle
 ; IN  ESI              Req index
-; IN  EDX:EAX          Position
+; IN  EDX:EAX          Sector position
 ; IN  ECX              Sector count
 ; IN  ES:EDI           Sector buffer
 ; OUT ECX              Sector count
@@ -333,12 +327,26 @@ ServVfsFileReadReq  MACRO
 
 ; IN  BX               Kernel handle
 ; IN  ESI              Req index
-; IN  EDX:EAX          Position
+; IN  EDX:EAX          Sector position
 ; IN  ECX              Sector count
 ; IN  ES:EDI           Sector buffer
 ; OUT ECX              Sector count
 ServVfsFileWriteReq  MACRO
     ServGate serv_file_write_req_nr
+                    ENDM
+
+; IN  BX               Kernel handle
+; IN  EDX              Req #
+; IN  ESI              Offset sector
+; IN  ECX              Sector count
+ServUpdateVfsFileReq  MACRO
+    ServGate serv_update_file_req_nr
+                    ENDM
+
+; IN  BX               Kernel handle
+; IN  EDX              Req #
+ServFreeVfsFileReq  MACRO
+    ServGate serv_free_file_req_nr
                     ENDM
 
 ; IN  EBX              Kernel handle

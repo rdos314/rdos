@@ -51,6 +51,7 @@
 #define serv_gate_set_vfs_sectors 0x00000032
 #define serv_gate_is_vfs_busy 0x00000033
 #define serv_gate_serv_file_write_req 0x00000034
+#define serv_gate_serv_update_file_req 0x00000035
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -105,4 +106,5 @@
 #define ServGate_set_vfs_sectors 0x55 0x67 0x9a 50 0 0 0 4 0 0x5d
 #define ServGate_is_vfs_busy 0x55 0x67 0x9a 51 0 0 0 4 0 0x5d
 #define ServGate_serv_file_write_req 0x55 0x67 0x9a 52 0 0 0 4 0 0x5d
+#define ServGate_serv_update_file_req 0x55 0x67 0x9a 53 0 0 0 4 0 0x5d
 
