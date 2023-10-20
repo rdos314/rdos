@@ -62,6 +62,7 @@ file_handle_seg     ENDS
 kernel_req_entry  STRUC
 
 kre_pos           DD ?,?
+kre_sector        DD ?,?
 kre_size          DD ?
 kre_block_arr     DD ?
 kre_phys_arr      DD ?
@@ -167,6 +168,7 @@ code    SEGMENT byte public 'CODE'
     extern VfsRead:near
     extern VfsWrite:near
     extern UpdateWrBitmap:near
+    extern SectorToBlock:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -464,6 +466,7 @@ CloseFileSel   Endp
 ;       PARAMETERS:     FS             Part sel
 ;                       EBX            File handle
 ;                       ESI            Req index
+;                       ES:EDI         Sector buf
 ;                       EDX:EAX        Position
 ;                       ECX            Sector count
 ;
@@ -482,6 +485,9 @@ AddFileReq   Proc near
     push esi
     push edi
     push ebp
+;
+    push dword ptr es:[edi+4]
+    push dword ptr es:[edi]
 ;
     mov di,flat_sel
     mov es,edi
@@ -576,6 +582,13 @@ afrRecalc:
     mov ds:[edi].kre_phys_arr,0
     mov ds:[edi].kre_usage,0
 ;
+    mov eax,ss:[esp+4]
+    mov edx,ss:[esp+8]
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+    mov ds:[edi].kre_sector,eax
+    mov ds:[edi].kre_sector+4,edx    
+;
     push ds
     mov ds,fs:vfsp_disc_sel
     movzx eax,ds:vfs_bytes_per_sector
@@ -632,6 +645,8 @@ afrLeave:
     LeaveSection ds:kf_section
 
 afrDone:
+    add esp,8
+;
     pop ebp
     pop edi
     pop esi
@@ -2660,6 +2675,21 @@ ufrWrLast:
 
 ufrSignalDone:
     pop ebx
+;
+    mov eax,ds:vfs_scan_pos
+    and eax,ds:vfs_scan_pos+4
+    add eax,1
+    jnc ufrDoSignal
+;
+    mov eax,gs:[ebx].kre_sector
+    mov edx,gs:[ebx].kre_sector+4
+    call SectorToBlock
+    mov ds:vfs_scan_pos,eax
+    mov ds:vfs_scan_pos+4,edx
+
+ufrDoSignal:
+    mov bx,ds:vfs_server
+    Signal
 
 ufrDone:
     LeaveSection ds:vfs_section
