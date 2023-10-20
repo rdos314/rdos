@@ -930,21 +930,32 @@ void TFile::HandleUpdateReq(long long pos, int size)
                 else
                     curr = FileReq->SectorCount;
 
+                if (offset || count != FileReq->SectorCount)
+                    sprintf(str, "Update %d.%d offset %ld size %d \r\n", Index, FileReq->Req, offset, curr);
+                else
+                    sprintf(str, "Update %d.%d\r\n", Index, FileReq->Req);
+
+                RdosWriteFile(FileHandle, str, strlen(str));
+                printf(str);
+
                 start += curr;
                 count -= curr;
             }            
             else
+            {
+                sprintf(str, "Update with no req %d pos %lld\r\n", Index, pos);
+                RdosWriteFile(FileHandle, str, strlen(str));
+                printf(str);
                 break;
+            }
         }
-
-        sprintf(str, "Update %d pos %lld size %d \r\n", Index, pos, size);
     }
     else
-        sprintf(str, "Update %d pos %lld invalid \r\n", Index, pos);
-
-    RdosWriteFile(FileHandle, str, strlen(str));
-    printf(str);
-
+    {
+        sprintf(str, "Update with no size %d pos %lld\r\n", Index, pos);
+        RdosWriteFile(FileHandle, str, strlen(str));
+        printf(str);
+    }
 }
 
 /*##########################################################################
