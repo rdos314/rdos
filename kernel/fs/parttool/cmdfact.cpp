@@ -221,7 +221,6 @@ TCommand *TCommandFactory::Parse(TCommandOutput *out, const char *line)
     TString Line;
     TCommandFactory *factory = 0;
     TCommand *cmd;
-    int ok;
 
     Line = TString(LTrim(line));
 

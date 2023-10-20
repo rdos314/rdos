@@ -43,7 +43,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-static void UuidToStr(const char *uuid, char *str)
+/* static void UuidToStr(const char *uuid, char *str)
 {
     int ival;
     int *ip;
@@ -78,6 +78,7 @@ static void UuidToStr(const char *uuid, char *str)
     sval = RdosSwapShort(*sp);
     sprintf(str+32, "%04hX", sval);
 }
+*/
 
 /*##########################################################################
 #
@@ -244,7 +245,6 @@ bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
     TDiscReqEntry e1(&req, StartSector, 1);
     unsigned int Crc32;
     unsigned int ThisCrc32;
-    int TableSectors;
     bool ok = false;
 
     req.WaitForever();

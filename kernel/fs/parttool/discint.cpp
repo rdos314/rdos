@@ -442,7 +442,6 @@ void TDiscReq::Start()
 ##########################################################################*/
 TDiscServer::TDiscServer()
 {
-    char str[40];
     int i;
 
     FActive = true;

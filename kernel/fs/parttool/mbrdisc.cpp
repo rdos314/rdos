@@ -720,7 +720,7 @@ bool TMbrDisc::WriteBootSector()
         bootp->Media = 0xF1;
         bootp->Resv6 = 0;
         bootp->HiddenSectors = FLoaderSectors;
-        bootp->Sectors = FServer->GetDiscSectors();
+        bootp->Sectors = (int)FServer->GetDiscSectors();
         bootp->Resv7 = 0;
         bootp->Signature = 0;
         bootp->Serial = 0;
@@ -806,7 +806,7 @@ bool TMbrDisc::CreatePart(int Handle, int Type, long long Start, long long Secto
     char PartType = PartToType(Type, Sectors);
 
     if (PartType)
-        part = PartRoot.AddEntry(this, PartType, Start, Sectors);
+        part = PartRoot.AddEntry(this, PartType, (int)Start, (int)Sectors);
 
     if (part)
     {
@@ -834,7 +834,6 @@ bool TMbrDisc::AddPart(const char *FsName, long long Sectors)
 {
     long long Start;
     long long Count = Sectors;
-    int PartType;
     int Type;
     int Handle;
 
