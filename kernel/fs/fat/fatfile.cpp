@@ -135,7 +135,7 @@ void TFatFile::SetRead(long long StartSector, int Sectors)
         c = 0;
 
     end = (c + 1) * FSectorsPerCluster - 1;
-    count = end - start + 1;
+    count = (int)(end - start + 1);
 
     TFile::SetRead(start, count);
 }
@@ -158,7 +158,7 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
     int count = Sectors;
     long long c;
     int i;
-    int offset = (FOffsetSector + FFat->StartSector) % FSectorsPerPage;
+    int offset = (int)((FOffsetSector + FFat->StartSector) % FSectorsPerPage);
 
     offset = (FSectorsPerPage - offset) % FSectorsPerPage;
 
@@ -188,7 +188,7 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
             }
         }
 
-        count = end - start + 1;
+        count = (int)(end - start + 1);
     }
 
     TFile::SetWrite(start, count);
@@ -207,9 +207,9 @@ void TFatFile::SetWrite(long long StartSector, int Sectors)
 ##########################################################################*/
 long long TFatFile::GetSector(long long RelSector)
 {
-    unsigned int c = RelSector / FSectorsPerCluster;
+    unsigned int c = (unsigned int)(RelSector / FSectorsPerCluster);
     int sc = FFat->SectorsPerCluster;
-    int diff = RelSector % FSectorsPerCluster;
+    int diff = (int)(RelSector % FSectorsPerCluster);
     int i;
     int count;
     unsigned int cluster;
@@ -250,11 +250,11 @@ long long TFatFile::GetSector(long long RelSector)
 ##########################################################################*/
 unsigned int TFatFile::SizeToClusters(long long Size)
 {
-    unsigned clusters;
+    unsigned int clusters;
 
     if (Size)
     {
-        clusters = (Size - 1) / FSectorsPerCluster / FBytesPerSector;
+        clusters = (unsigned int)((Size - 1) / FSectorsPerCluster / FBytesPerSector);
         clusters++;
     }
     else

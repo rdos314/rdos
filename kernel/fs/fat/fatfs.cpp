@@ -196,7 +196,7 @@ TDir *TFat::CacheFixedDir(long long RootSector, int RootDirEntries)
 ##########################################################################*/
 TDir *TFat::CacheDir(TDir *ParentDir, int ParentIndex, long long Inode)
 {
-    return new TFatDir(this, ParentDir, ParentIndex, Inode);
+    return new TFatDir(this, ParentDir, ParentIndex, (unsigned int)Inode);
 }
 
 /*##########################################################################
@@ -388,7 +388,7 @@ bool TFat::SetClusterCount(TCluster *Chain, unsigned int Clusters)
 ##########################################################################*/
 TFile *TFat::OpenFile(TDir *ParentDir, int ParentIndex, long long Inode)
 {
-    unsigned int Cluster = Inode;
+    unsigned int Cluster = (unsigned int)Inode;
     TFile *File = new TFatFile(this, ParentDir, ParentIndex, Cluster, FBytesPerSector, FOffsetSector);
     return File;
 }

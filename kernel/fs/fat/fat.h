@@ -38,10 +38,10 @@ struct TFatDirEntry
     short int CrTime;
     short int CrDate;
     short int AcDate;
-    short int ClusterHi;
+    unsigned short int ClusterHi;
     short int WrTime;
     short int WrDate;
-    short int ClusterLow;
+    unsigned short int ClusterLow;
     unsigned int FileSize;
 };
 

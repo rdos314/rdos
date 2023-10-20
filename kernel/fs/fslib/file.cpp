@@ -388,8 +388,6 @@ void TFile::GrowActive()
 ##########################################################################*/
 int TFile::Setup(int VfsHandle)
 {
-    int i;
-
     Handle = ServOpenVfsFile(VfsHandle, Info);
     Index = Handle & 0xFFFF;
     if (Index > 0)
@@ -613,7 +611,6 @@ void TFile::SetRead(long long StartSector, int Sectors)
     long long sect;
     long long exp;
     int i;
-    int link;
 
     if (StartSector < 0)
         StartSector = 0;
@@ -701,7 +698,7 @@ void TFile::SetRead(long long StartSector, int Sectors)
         count = 0;
 
     FCurrStart = start;
-    FCurrSectors = count;
+    FCurrSectors = (int)count;
 }
 
 /*##########################################################################
@@ -721,10 +718,7 @@ void TFile::SetWrite(long long StartSector, int Sectors)
     long long start;
     long long end;
     long long temp;
-    long long sect;
-    long long exp;
     int i;
-    int link;
 
     if (StartSector < 0)
         StartSector = 0;
@@ -764,7 +758,7 @@ void TFile::SetWrite(long long StartSector, int Sectors)
         count = 0;
 
     FCurrStart = start;
-    FCurrSectors = count;
+    FCurrSectors = (int)count;
 }
 
 /*##########################################################################
@@ -815,7 +809,7 @@ TFileReq *TFile::HandleRead(long long pos, int size)
             if (sector)
             {
                 prev++;
-                offset = (curr + FOffsetSector) % FSectorsPerPage;
+                offset = (int)((curr + FOffsetSector) % FSectorsPerPage);
 
                 if (offset)
                 {
@@ -887,7 +881,7 @@ void TFile::HandleUpdateReq(long long pos, int size)
     char str[80];
 
     if (pos + size > Info->CurrSize)
-        size = Info->CurrSize - pos;
+        size = (int)(Info->CurrSize - pos);
 
     if (size > 0)
         sprintf(str, "Update %d pos %lld size %d \r\n", Index, pos, size);
@@ -1067,7 +1061,7 @@ TFileReq *TFile::HandleGrowReq(long long req)
             if (sector)
             {
                 prev++;
-                offset = (curr + FOffsetSector) % FSectorsPerPage;
+                offset = (int)((curr + FOffsetSector) % FSectorsPerPage);
 
                 if (offset)
                 {

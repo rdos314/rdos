@@ -63,7 +63,7 @@ protected:
     void AddData(struct TFatLfnEntry *entry);
     int CalculateUtf8Len(unsigned int codepoint);
     unsigned int DecodeUtf8(const unsigned char *utf8, int *size);
-    int EncodeUtf16(short int *utf16, short int codepoint);
+    int EncodeUtf16(short int *utf16, unsigned int codepoint);
 
     bool First;
     char ChkSum;

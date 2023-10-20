@@ -30,7 +30,7 @@ void Stop();
 int Format();
 long long GetFreeSectors();
 int GetDirHeaderSize();
-int GetDir(int rel, char *path, int *count);
+struct TShareHeader *GetDir(int rel, char *path, int *count);
 int GetDirEntryAttrib(int rel, char *path);
 int LockRelDir(int rel, char *path);
 void CloneRelDir(int rel);
@@ -117,7 +117,7 @@ struct TShareHeader *LowGetDir(int rel, char *path, int *count)
 #
 ##########################################################################*/
 #pragma aux LowGetDirEntryAttrib "*" parm routine [eax] [edi] value [eax]
-struct TShareHeader *LowGetDirEntryAttrib(int rel, char *path)
+int LowGetDirEntryAttrib(int rel, char *path)
 {
     return GetDirEntryAttrib(rel, path);
 }

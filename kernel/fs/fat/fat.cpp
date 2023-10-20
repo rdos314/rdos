@@ -1,6 +1,5 @@
 #include <rdos.h>
 #include <serv.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -637,7 +636,6 @@ void GenerateShortName(const char *name, int index, char *buf)
 void StartFs(TPartServer *Server)
 {
     char Name[6];
-    long long TotalSectors;
     struct TBaseBootSector *boot;
     struct TBootSector12_16 *boot12_16 = 0;
     struct TBootSector32 *boot32 = 0;

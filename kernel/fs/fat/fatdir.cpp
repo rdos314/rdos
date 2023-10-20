@@ -602,7 +602,6 @@ long long TFatDir::GetSector(int pos)
 {
     int entry;
     int cluster;
-    unsigned int *chain;
 
     if (pos)
     {
@@ -695,7 +694,6 @@ void TFatDir::RemoveFree(int pos)
     int entry;
     int offset;
     unsigned short int mask;
-    unsigned short int *NewArr;
 
     if (pos)
     {
@@ -923,8 +921,8 @@ bool TFatDir::CreateEntry(const char *name, unsigned int cluster, char attr)
     entry.Attr = attr;
     entry.Resv1 = 0;
     entry.FileSize = 0;
-    entry.ClusterLow = cluster & 0xFFFF;
-    entry.ClusterHi = cluster >> 16;
+    entry.ClusterLow = (unsigned short int)(cluster & 0xFFFF);
+    entry.ClusterHi = (unsigned short int)(cluster >> 16);
     SetCreateTime(&entry, RdosTime);
     SetAccessTime(&entry, RdosTime);
     SetWriteTime(&entry, RdosTime);
@@ -986,7 +984,7 @@ bool TFatDir::UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fi
     if (e->FileSize != fileinfo->CurrSize)
     {
         change = true;
-        e->FileSize = fileinfo->CurrSize;
+        e->FileSize = (unsigned int)fileinfo->CurrSize;
         direntry->Size = fileinfo->CurrSize;
     }
 
@@ -995,8 +993,8 @@ bool TFatDir::UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fi
     {
         change = true;
         cluster = (unsigned int)direntry->Inode;
-        e->ClusterLow = cluster & 0xFFFF;
-        e->ClusterHi = cluster >> 16;
+        e->ClusterLow = (unsigned short int)(cluster & 0xFFFF);
+        e->ClusterHi = (unsigned short int)(cluster >> 16);
     }
 
     if (SetCreateTime(e, direntry->CreateTime))
@@ -1033,7 +1031,6 @@ void TFatDir::InitDir(TFat *Fat, unsigned int Cluster)
     TPartReq req(Fat->GetServer());
     TPartReqEntry e1(&req,Fat->StartSector + (Cluster - 2) * Fat->SectorsPerCluster, Fat->SectorsPerCluster, true);
     char *Data;
-    struct TFatDirEntry *entry;
 
     req.WaitForever();
 
@@ -1072,8 +1069,8 @@ void TFatDir::InitDir(unsigned int Cluster)
     entry->Attr = 0x10;
     entry->Resv1 = 0;
     entry->FileSize = 0;
-    entry->ClusterLow = Cluster & 0xFFFF;
-    entry->ClusterHi = Cluster >> 16;
+    entry->ClusterLow = (unsigned short int)(Cluster & 0xFFFF);
+    entry->ClusterHi = (unsigned short int)(Cluster >> 16);
     SetCreateTime(entry, RdosTime);
     SetAccessTime(entry, RdosTime);
     SetWriteTime(entry, RdosTime);
@@ -1084,8 +1081,8 @@ void TFatDir::InitDir(unsigned int Cluster)
     entry->Attr = 0x10;
     entry->Resv1 = 0;
     entry->FileSize = 0;
-    entry->ClusterLow = Cluster & 0xFFFF;
-    entry->ClusterHi = Cluster >> 16;
+    entry->ClusterLow = (unsigned short int)(Cluster & 0xFFFF);
+    entry->ClusterHi = (unsigned short int)(Cluster >> 16);
     SetCreateTime(entry, RdosTime);
     SetAccessTime(entry, RdosTime);
     SetWriteTime(entry, RdosTime);
@@ -1133,7 +1130,6 @@ bool TFatDir::CreateDirEntry(const char *name)
 bool TFatDir::CreateFileEntry(const char *name, int attr)
 {
     char fattr = EncodeAttrib(attr);
-    bool ok;
 
     if (fattr & 0x10)
         return false;

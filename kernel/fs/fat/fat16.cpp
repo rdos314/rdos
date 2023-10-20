@@ -61,7 +61,7 @@ unsigned int TFat16::Adjust(TPartServer *Server)
         size = 0xFFFFFFFF;
 
     diff = pos - Start;
-    size -= diff;
+    size -= (int)diff;
 
     if (Server->MovePartUp(diff))
         return size;
@@ -172,7 +172,7 @@ unsigned short int TFat16::CalcFatSectors(unsigned int Clusters)
 {
     unsigned short int FatSectors;
 
-    FatSectors = 2 * Clusters / 512;
+    FatSectors = (unsigned short int)(2 * Clusters / 512);
     FatSectors--;
     FatSectors = FatSectors / 8;
     FatSectors = 8 * FatSectors;
@@ -199,7 +199,6 @@ bool TFat16::InitFs(TPartServer *Server, struct TBootSector12_16 *boot)
     unsigned short int Clusters;
     unsigned short int FatSectors;
     unsigned long lsb, msb;
-    int tries;
     int handle = Server->GetHandle();
 
     RdosGetSysTime(&msb, &lsb);
@@ -224,7 +223,7 @@ bool TFat16::InitFs(TPartServer *Server, struct TBootSector12_16 *boot)
         boot->base.SectorCount16 = (unsigned short int)Size;
     }
 
-    boot->base.SectorsPerCluster = ClusterSize;
+    boot->base.SectorsPerCluster = (char)ClusterSize;
     boot->base.ResvSectors = 1;
     boot->base.FatCount = 2;
     boot->base.RootDirEntries = 512 * ROOT_DIR_SECTORS / 32;
@@ -294,7 +293,7 @@ TFat16::TFat16(TPartServer *server, struct TBootSector12_16 *boot, bool format)
         RootSector = Fat2Sector + FatSectors;
         StartSector = RootSector + RootDirEntries / 16;
 
-        Clusters = (PartSectors - StartSector) / SectorsPerCluster + 2;
+        Clusters = (unsigned int)((PartSectors - StartSector) / SectorsPerCluster + 2);
 
         if (Clusters > 0xFFF0)
             Clusters = 0xFFF0;

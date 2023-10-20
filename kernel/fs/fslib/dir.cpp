@@ -190,7 +190,7 @@ void TDir::Grow()
 struct RdosDirEntry *TDir::Add(const char *path, long long inode)
 {
     int pos;
-    short int len = strlen(path);
+    short int len = (short int)strlen(path);
     char *ptr;
     struct RdosDirEntry *entry;
 
@@ -361,9 +361,7 @@ int TDir::Find(const char *path)
 ##########################################################################*/
 struct RdosDirEntry *TDir::LockEntry(int index)
 {
-    int i;
     char *ptr;
-    struct RdosDirEntry *entry;
 
     if (index < 0)
         return 0;
@@ -392,7 +390,6 @@ struct RdosDirEntry *TDir::LockEntry(int index)
 struct RdosDirEntry *TDir::LockEntry(struct TDirLink *link)
 {
     char *ptr;
-    struct RdosDirEntry *entry;
 
     Section.Enter();
 

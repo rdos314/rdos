@@ -564,7 +564,6 @@ void TPartReq::Start()
 ##########################################################################*/
 TPartServer::TPartServer()
 {
-    char str[40];
     int i;
 
     Server = this;

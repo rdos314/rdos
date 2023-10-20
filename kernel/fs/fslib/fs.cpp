@@ -409,7 +409,7 @@ TFs::TFs(TPartServer *server)
     FSectorCount = FServer->GetPartSectors();
 
     FSectorsPerPage = 0x1000 / FBytesPerSector;
-    FOffsetSector = FStartSector % FSectorsPerPage;
+    FOffsetSector = (int)(FStartSector % FSectorsPerPage);
 
     FQueueArr = 0;
     FServerActive = false;
@@ -1120,7 +1120,6 @@ int TFs::DeleteFile(int rel, char *path)
     TParser Parser(GetStartDir(rel), path);
     TFile *file;
     TDir *dir;
-    bool ok;
 
     if (FStopped)
         return -1;
@@ -1367,9 +1366,7 @@ void TFs::StartServer()
 ##########################################################################*/
 void TFs::HandleRead(TFile *file, long long pos, int size)
 {
-    int i;
     bool delay = false;
-    long long check;
     TFileReq *req;
 
     req = file->HandleRead(pos, size);
@@ -1467,9 +1464,7 @@ void TFs::HandleMapReq(TFile *file, int req)
 ##########################################################################*/
 void TFs::HandleGrowReq(TFile *file, long long size)
 {
-    int i;
     bool delay = false;
-    long long check;
     TFileReq *req;
 
     req = file->HandleGrowReq(size);

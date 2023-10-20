@@ -184,7 +184,6 @@ unsigned int TFatTable16::GetFreeClusters()
 ##########################################################################*/
 unsigned int TFatTable16::FormatBlock(long long Sector, unsigned int Clusters)
 {
-    unsigned int i;
     unsigned int fc;
     TPartReqEntry e1(&FReq, Sector, 8, true);
     char *tab;
@@ -442,8 +441,6 @@ unsigned int TFatTable16::AllocateCluster()
                 Restarted = true;
         }
     }
-
-    return 0;
 }
 
 /*##########################################################################
@@ -486,7 +483,7 @@ bool TFatTable16::ReserveCluster(unsigned int Cluster)
 void TFatTable16::LinkCluster(unsigned int Cluster, unsigned int Link)
 {
     SetupMod(Cluster);
-    FModTab[Cluster - FModCluster] = Link;
+    FModTab[Cluster - FModCluster] = (unsigned short int)Link;
     FWrite = true;
 }
 

@@ -73,7 +73,7 @@ unsigned int TFat32::Adjust(TPartServer *Server)
         size = 0xFFFFFFFF;
 
     diff = pos - Start;
-    size -= diff;
+    size -= (unsigned int)diff;
 
     if (Server->MovePartUp(diff))
         return size;
@@ -205,7 +205,6 @@ bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
     unsigned int Clusters;
     unsigned int FatSectors;
     unsigned long lsb, msb;
-    int tries;
     int handle = server->GetHandle();
 
     RdosGetSysTime(&msb, &lsb);
@@ -222,7 +221,7 @@ bool TFat32::InitFs(TPartServer *server, struct TBootSector32 *boot)
     boot->base.Sectors = Size;
     boot->base.SectorCount16 = 0;
 
-    boot->base.SectorsPerCluster = ClusterSize;
+    boot->base.SectorsPerCluster = (char)ClusterSize;
     boot->base.ResvSectors = RESERVED_SECTORS;
     boot->base.FatCount = 2;
     boot->base.RootDirEntries = 0;
@@ -298,7 +297,7 @@ TFat32::TFat32(TPartServer *server, struct TBootSector32 *boot, bool format)
         Fat2Sector = Fat1Sector + FatSectors;
         StartSector = Fat2Sector + FatSectors;
 
-        Clusters = (PartSectors - StartSector) / SectorsPerCluster + 2;
+        Clusters = (unsigned int)((PartSectors - StartSector) / SectorsPerCluster + 2);
         FreeClusters = 0;
 
         if (Clusters > 0xFFFFFFF0)

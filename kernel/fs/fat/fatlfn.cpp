@@ -325,7 +325,6 @@ bool TFatLfn::GetEntry(struct TFatDirEntry *e)
 ##########################################################################*/
 void TFatLfn::GetName(char *name)
 {
-    int i;
     unsigned short int *inptr = (unsigned short int *)Buf;
     char *outptr = name;
     int pos = 0;
@@ -358,29 +357,29 @@ void TFatLfn::GetName(char *name)
 
         if (c < 0x80)
         {
-            *outptr = c;
+            *outptr = (char)c;
             bits = -6;
         }
         else if (c < 0x800)
         {
-            *outptr = ((c >> 6) & 0x1F) | 0xC0;
+            *outptr = (char)(((c >> 6) & 0x1F) | 0xC0);
             bits = 0;
         }
         else if (c < 0x10000)
         {
-           *outptr = ((c >> 12) & 0xF) | 0xE0;
+           *outptr = (char)(((c >> 12) & 0xF) | 0xE0);
            bits = 6;
         }
         else
         {
-           *outptr = ((c >> 18) & 0x7) | 0xF0;
+           *outptr = (char)(((c >> 18) & 0x7) | 0xF0);
            bits = 12;
         }
         outptr++;
 
         for ( ; bits >= 0; bits-= 6)
         {
-            *outptr = ((c >> bits) & 0x3F) | 0x80;
+            *outptr = (char)(((c >> bits) & 0x3F) | 0x80);
             outptr++;
         }
     }
@@ -483,23 +482,23 @@ unsigned int TFatLfn::DecodeUtf8(const unsigned char *utf8, int *size)
 #   Returns....: *
 #
 ##########################################################################*/
-int TFatLfn::EncodeUtf16(short int *utf16, short int codepoint)
+int TFatLfn::EncodeUtf16(short int *utf16, unsigned int codepoint)
 {
     if (codepoint <= 0xFFFF)
     {
-        utf16[0] = codepoint;
+        utf16[0] = (short int)codepoint;
         return 1;
     }
 
     codepoint -= 0x10000;
 
     short int low = 0xDC00;
-    low |= codepoint & 0x03FF;
+    low |= (short int)(codepoint & 0x03FF);
 
     codepoint >>= 10;
 
     short int high = 0xD800;
-    high |= codepoint & 0x03FF;
+    high |= (short int)(codepoint & 0x03FF);
 
     utf16[0] = high;
     utf16[1] = low;

@@ -184,7 +184,6 @@ unsigned int TFatTable32::GetFreeClusters()
 ##########################################################################*/
 unsigned int TFatTable32::FormatBlock(long long Sector, unsigned int Clusters)
 {
-    unsigned int i;
     unsigned int fc;
     TPartReqEntry e1(&FReq, Sector, 8, true);
     char *tab;
@@ -447,8 +446,6 @@ unsigned int TFatTable32::AllocateCluster()
                 Restarted = true;
         }
     }
-
-    return 0;
 }
 
 /*##########################################################################
