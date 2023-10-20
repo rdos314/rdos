@@ -836,16 +836,6 @@ SendCloseReq     Proc near
     push fs
     pushad
 ;
-    mov ecx,ds:kf_wr_size
-    or ecx,ecx
-    jz scrWrDone
-;
-    mov eax,ds:kf_wr_base
-    mov edx,ds:kf_wr_base+4
-    mov ebx,REQ_UPDATE
-    call AddReq
-
-scrWrDone:
     mov ebx,REQ_CLOSE
     call AddReq
 ;
@@ -1370,11 +1360,6 @@ FreeReq      Proc near
     push edx
     push esi
 ;
-;    push ebx
-;    mov ebx,gs
-;    call CheckServ
-;    pop ebx
-;
     mov esi,gs
     mov ds,esi
     EnterSection ds:kf_section
@@ -1405,13 +1390,26 @@ frMove:
     dec ds:kf_req_count
     LeaveSection ds:kf_section
 ;
+    EnterSection ds:kf_update_section
+    xor ecx,ecx
+    xchg ecx,ds:kf_wr_size
+    or ecx,ecx
+    jz frWrDone
+;
+    push ebx
+    mov eax,ds:kf_wr_base
+    mov edx,ds:kf_wr_base+4
+    mov ebx,REQ_UPDATE
+    call AddReq
+    pop ebx
+
+frWrDone:
+    LeaveSection ds:kf_update_section
+;
     push ebx
     mov cx,bx
-    mov bx,REQ_FREE
+    mov ebx,REQ_FREE
     call AddReq
-;
-;    mov bx,ds
-;    call CheckServ
     pop ebx
     jmp frEnd
 
