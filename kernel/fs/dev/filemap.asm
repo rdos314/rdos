@@ -1031,7 +1031,6 @@ ProcessReadReq  Proc near
     push fs
     pushad
 ;
-    int 3
     sub esp,8
 ;
     push ds
