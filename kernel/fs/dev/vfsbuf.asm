@@ -1562,6 +1562,7 @@ c11111111 DB 8
 UpdateWrBitmap   Proc near
     push ebx
     push ecx
+    push edi
 ;
     push eax
     mov al,es:[esi].vfsp_wr_bitmap
@@ -1630,6 +1631,7 @@ uwbBufPtr:
     Signal
 
 uwbDone:
+    pop edi
     pop ecx
     pop ebx
     ret
