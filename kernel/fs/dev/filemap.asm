@@ -65,6 +65,7 @@ kre_pos           DD ?,?
 kre_size          DD ?
 kre_entry_arr     DD ?
 kre_phys_arr      DD ?
+kre_block_arr     DD ?
 kre_req_size      DD ?
 kre_pages         DW ?
 kre_usage         DW ?
@@ -574,6 +575,7 @@ afrRecalc:
     mov ds:[edi].kre_pages,0
     mov ds:[edi].kre_entry_arr,0
     mov ds:[edi].kre_phys_arr,0
+    mov ds:[edi].kre_block_arr,0
     mov ds:[edi].kre_usage,0
 ;
     push ds
@@ -997,6 +999,9 @@ SetupReadReq   Proc near
     AllocateBlk
     mov ds:[ebx].kre_phys_arr,edx
 ;
+    AllocateBlk
+    mov ds:[ebx].kre_block_arr,edx
+;
     pop edx
     pop ecx
     pop ebx
@@ -1026,7 +1031,8 @@ ProcessReadReq  Proc near
     push fs
     pushad
 ;
-    push esi
+    int 3
+    sub esp,8
 ;
     push ds
     mov ds,fs:vfsp_disc_sel
@@ -1036,11 +1042,14 @@ ProcessReadReq  Proc near
 ;
     mov ebx,fs:[4*ebx].kf_handle_arr
     mov edi,fs:[ebx].kre_entry_arr
-    mov ebp,fs:[ebx].kre_phys_arr
+    mov eax,fs:[ebx].kre_phys_arr
+    mov [esp+4],eax
+    mov eax,fs:[ebx].kre_block_arr
+    mov [esp+8],eax
+    mov ebx,esi
 ;
-    mov esi,[esp]
-    mov eax,gs:[esi]
-    mov edx,gs:[esi+4]
+    mov eax,gs:[ebx]
+    mov edx,gs:[ebx+4]
     call BlockToPhys
     jnc prrSave
     jmp prrDone
@@ -1049,11 +1058,9 @@ prrLoop:
     sub ecx,1
     jz prrDone
 ;
-    mov esi,[esp]
-    add esi,8
-    mov [esp],esi
-    mov eax,gs:[esi]
-    mov edx,gs:[esi+4]
+    add ebx,8
+    mov eax,gs:[ebx]
+    mov edx,gs:[ebx+4]
     call BlockToPhys
     jc prrDone
 ;
@@ -1061,24 +1068,26 @@ prrLoop:
     jnz prrLoop
 
 prrSave:
+    mov ebp,[esp+4]
     mov fs:[ebp],eax
     mov fs:[ebp+4],edx
     add ebp,8
+    mov [esp+4],ebp
+;
+    mov eax,gs:[ebx]
+    mov edx,gs:[ebx+4]
+    mov ebp,[esp+8]
+    mov fs:[ebp],eax
+    mov fs:[ebp+4],edx
+    add ebp,8
+    mov [esp+8],ebp
 ;
     mov fs:[edi],esi
-;    mov esi,[esp]
-;    mov eax,gs:[esi]
-;    mov edx,gs:[esi+4]
-;    rol eax,8
-;    rol edx,8
-;    mov dl,al    
-;    ror edx,8
-;    mov fs:[edi].bs_lbahm,edx
     add edi,4
     jmp prrLoop
 
 prrDone:
-    pop esi
+    add esp,8
 ;
     popad
     pop fs
@@ -2762,6 +2771,9 @@ ffrFreeEntry:
     dec ds:kf_phys_count
     shl cx,1
     mov edx,ds:[ebx].kre_phys_arr
+    FreeBlk
+;
+    mov edx,ds:[ebx].kre_block_arr
     FreeBlk
 
 ffrReq:
