@@ -108,7 +108,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern BlockToBuf:near
-    extern BlockToBitmap:near
     extern SectorToBlock:near
     extern IsSectorCountAligned:near
     extern ZeroPhysBuf:near
@@ -119,6 +118,7 @@ code    SEGMENT byte public 'CODE'
     extern HandleToPartFs:near
     extern HandleToDisc:near
     extern UnlinkPartEs:near
+    extern AddToBitmap:near
     extern UpdateWrBitmap:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1997,24 +1997,7 @@ srrLockOk:
 srrDo:
     inc gs:vfsrh_remain_count
     or es:[esi].vfsp_ref_bitmap,bp
-;
-    push edi
-;
-    call BlockToBitmap
-    mov ebx,eax
-    shr ebx,3
-    and ebx,1FFFFh
-    bts es:[edi],ebx
-;
-    pop edi
-;
-    mov ebx,ds:vfs_scan_pos
-    and ebx,ds:vfs_scan_pos+4
-    add ebx,1
-    jnc srrNext
-;
-    mov ds:vfs_scan_pos,eax
-    mov ds:vfs_scan_pos+4,edx
+    call AddToBitmap
 
 srrNext:
     add eax,8

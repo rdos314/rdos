@@ -1287,6 +1287,77 @@ GetReadIo   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AddToBitmap
+;
+;       DESCRIPTION:    Add req to bitmap
+;
+;       PARAMETERS:     DS          VFS sel
+;                       EDX:EAX     Block #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AddToBitmap
+
+AddToBitmap   Proc near
+    push ebx
+    push ecx
+    push edi
+;
+    push eax
+    mov ecx,eax
+    mov ebx,edx
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    jnz atbEntryOk
+;
+    call CreateEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx].vfs_buf_arr,eax
+
+atbEntryOk:
+    mov ebx,ecx
+    shr ebx,18
+    and ebx,3FFCh
+    and ax,0F000h
+    add ebx,eax
+    add ebx,1000h
+    mov eax,es:[ebx]
+    or eax,eax
+    jnz atbBufPtr
+;
+    call CreateBitmapEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx],eax
+
+atbBufPtr:
+    and ax,0F000h
+    mov edi,eax
+    pop eax
+;
+    mov ebx,eax
+    shr ebx,3
+    and ebx,1FFFFh
+    bts es:[edi],ebx
+;
+    mov ebx,ds:vfs_scan_pos
+    and ebx,ds:vfs_scan_pos+4
+    add ebx,1
+    jnc srrDone
+;
+    mov ds:vfs_scan_pos,eax
+    mov ds:vfs_scan_pos+4,edx
+
+srrDone:
+    pop edi
+    pop ecx
+    pop ebx
+    ret
+AddToBitmap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UpdateWrBitmap
 ;
 ;       DESCRIPTION:    Update write bitmap

@@ -54,7 +54,7 @@ code    SEGMENT byte public 'CODE'
     extern HandleToPartFs:near
     extern FileHandleToPartFs:near
     extern BlockToBuf:near
-    extern BlockToBitmap:near
+    extern AddToBitmap:near
     extern CreateFileSel:near
     extern CloseFileSel:near
     extern NotifyFileData:near
@@ -1152,24 +1152,7 @@ srorLockOk:
 srorReq:
     inc gs:vfs_rd_remain_count
     or es:[esi].vfsp_ref_bitmap,bp
-;
-    push edi
-;
-    call BlockToBitmap
-    mov ebx,eax
-    shr ebx,3
-    and ebx,1FFFFh
-    bts es:[edi],ebx
-;
-    pop edi
-;
-    mov ebx,ds:vfs_scan_pos
-    and ebx,ds:vfs_scan_pos+4
-    add ebx,1
-    jnc srorNext
-;
-    mov ds:vfs_scan_pos,eax
-    mov ds:vfs_scan_pos+4,edx
+    call AddToBitmap
 
 srorNext:
     add edi,4
@@ -1291,24 +1274,7 @@ srowStartLockOk:
 srowStartReq:
     inc gs:vfs_rd_remain_count
     or es:[esi].vfsp_ref_bitmap,bp
-;
-    push edi
-;
-    call BlockToBitmap
-    mov ebx,eax
-    shr ebx,3
-    and ebx,1FFFFh
-    bts es:[edi],ebx
-;
-    pop edi
-;
-    mov ebx,ds:vfs_scan_pos
-    and ebx,ds:vfs_scan_pos+4
-    add ebx,1
-    jnc srowStartNext
-;
-    mov ds:vfs_scan_pos,eax
-    mov ds:vfs_scan_pos+4,edx
+    call AddToBitmap
 
 srowStartNext:
     add edi,4
@@ -1373,24 +1339,7 @@ srowEndLockOk:
 srowEndReq:
     inc gs:vfs_rd_remain_count
     or es:[esi].vfsp_ref_bitmap,bp
-;
-    push edi
-;
-    call BlockToBitmap
-    mov ebx,eax
-    shr ebx,3
-    and ebx,1FFFFh
-    bts es:[edi],ebx
-;
-    pop edi
-;
-    mov ebx,ds:vfs_scan_pos
-    and ebx,ds:vfs_scan_pos+4
-    add ebx,1
-    jnc srowEndNext
-;
-    mov ds:vfs_scan_pos,eax
-    mov ds:vfs_scan_pos+4,edx
+    call AddToBitmap
 
 srowEndNext:
     add edi,4
