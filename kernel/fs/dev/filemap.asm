@@ -59,18 +59,11 @@ fh_handle     DW ?
 
 file_handle_seg     ENDS
 
-block_struc       STRUC
-
-bs_entry          DD ?
-bs_lbahm          DD ?
-
-block_struc       ENDS
-
 kernel_req_entry  STRUC
 
 kre_pos           DD ?,?
 kre_size          DD ?
-kre_block_arr     DD ?
+kre_entry_arr     DD ?
 kre_phys_arr      DD ?
 kre_req_size      DD ?
 kre_pages         DW ?
@@ -579,7 +572,7 @@ afrRecalc:
     mov ds:[edi].kre_pos,eax
     mov ds:[edi].kre_pos+4,edx
     mov ds:[edi].kre_pages,0
-    mov ds:[edi].kre_block_arr,0
+    mov ds:[edi].kre_entry_arr,0
     mov ds:[edi].kre_phys_arr,0
     mov ds:[edi].kre_usage,0
 ;
@@ -995,11 +988,12 @@ SetupReadReq   Proc near
     mov ds:[ebx].kre_pages,ax
     inc ds:kf_block_count
     mov cx,ax
-    shl cx,3
+    shl cx,2
     AllocateBlk
-    mov ds:[ebx].kre_block_arr,edx
+    mov ds:[ebx].kre_entry_arr,edx
 ;
     inc ds:kf_phys_count
+    shl cx,1
     AllocateBlk
     mov ds:[ebx].kre_phys_arr,edx
 ;
@@ -1041,7 +1035,7 @@ ProcessReadReq  Proc near
     pop fs
 ;
     mov ebx,fs:[4*ebx].kf_handle_arr
-    mov edi,fs:[ebx].kre_block_arr
+    mov edi,fs:[ebx].kre_entry_arr
     mov ebp,fs:[ebx].kre_phys_arr
 ;
     mov esi,[esp]
@@ -1071,16 +1065,16 @@ prrSave:
     mov fs:[ebp+4],edx
     add ebp,8
 ;
-    mov fs:[edi].bs_entry,esi
-    mov esi,[esp]
-    mov eax,gs:[esi]
-    mov edx,gs:[esi+4]
-    rol eax,8
-    rol edx,8
-    mov dl,al    
-    ror edx,8
-    mov fs:[edi].bs_lbahm,edx
-    add edi,8
+    mov fs:[edi],esi
+;    mov esi,[esp]
+;    mov eax,gs:[esi]
+;    mov edx,gs:[esi+4]
+;    rol eax,8
+;    rol edx,8
+;    mov dl,al    
+;    ror edx,8
+;    mov fs:[edi].bs_lbahm,edx
+    add edi,4
     jmp prrLoop
 
 prrDone:
@@ -2594,7 +2588,7 @@ UpdateFileReq  Proc near
 ;
     push ebx
 ;
-    mov edi,gs:[ebx].kre_block_arr
+    mov edi,gs:[ebx].kre_entry_arr
     mov edx,gs:[ebx].kre_phys_arr
     mov edx,gs:[edx]
     and edx,0FFFh
@@ -2609,7 +2603,7 @@ ufrOffsetLoop:
     test dx,0FFFh
     jnz ufrOffsetNext
 ;
-    add edi,8
+    add edi,4
     xor edx,edx    
 
 ufrOffsetNext:
@@ -2645,7 +2639,7 @@ ufrPosOk:
     jz ufrSignalDone
 ;
     xor bl,bl
-    mov esi,gs:[edi].bs_entry
+    mov esi,gs:[edi]
     movzx eax,ds:vfs_bytes_per_sector
 
 ufrSectorLoop:
@@ -2659,7 +2653,7 @@ ufrSectorLoop:
 ;
     call UpdateWrBitmap
     xor bl,bl
-    add edi,8        
+    add edi,4
     mov esi,gs:[edi]
 
 ufrSectorNext:
@@ -2716,7 +2710,7 @@ FreeFileReq  Proc near
     or ecx,ecx
     jz ffrReq
 ;
-    mov edi,ds:[ebx].kre_block_arr
+    mov edi,ds:[ebx].kre_entry_arr
     mov edx,ds:[ebx].kre_phys_arr
     mov edx,ds:[edx]
     and edx,0FFFh
@@ -2735,7 +2729,7 @@ ffrFreeAll:
     sub ecx,eax
     shr eax,9
 ;    
-    mov esi,ds:[edi].bs_entry
+    mov esi,ds:[edi]
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz ffrFreeNext
 ;
@@ -2753,7 +2747,7 @@ ffrFreeNext:
     or ecx,ecx
     jz ffrFreeEntry
 ;
-    add edi,8
+    add edi,4
     mov eax,8
     jmp ffrFreeLoop
 
@@ -2761,11 +2755,12 @@ ffrFreeEntry:
     mov ebx,ebp
     mov cx,ds:[ebx].kre_pages
     dec ds:kf_block_count
-    shl cx,3
-    mov edx,ds:[ebx].kre_block_arr
+    shl cx,2
+    mov edx,ds:[ebx].kre_entry_arr
     FreeBlk
 ;
     dec ds:kf_phys_count
+    shl cx,1
     mov edx,ds:[ebx].kre_phys_arr
     FreeBlk
 

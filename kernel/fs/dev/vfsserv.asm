@@ -2394,6 +2394,8 @@ write_vfs_sectors    Proc far
     jc wvrDone
 ;
     EnterSection ds:vfs_section
+    mov bh,bl
+    xor bl,bl
 
 wvrBlockLoop:
     call BlockToBuf
@@ -2401,36 +2403,18 @@ wvrBlockLoop:
     jz wvrLeave
 
 wvrSectorLoop:
-    call UpdateWrBitmap
+    or bl,bh
     rol bl,cl
 ;
     sub ebp,1
     jz wvrUpdateBlock
 ;
-    test bl,1
+    test bh,1
     jz wvrSectorLoop
 
 wvrUpdateBlock:
-    push ebx
-    call BlockToBitmap
-    mov ebx,eax
-    shr ebx,3
-    and ebx,1FFFFh
-    bts es:[edi],ebx
-;
-    mov ebx,ds:vfs_scan_pos
-    and ebx,ds:vfs_scan_pos+4
-    add ebx,1
-    pop ebx
-    jnc wvrNext
-;
-    mov ds:vfs_scan_pos,eax
-    mov ds:vfs_scan_pos+4,edx
-;
-    push ebx
-    mov bx,ds:vfs_server
-    Signal
-    pop ebx
+    call UpdateWrBitmap
+    xor bl,bl
 
 wvrNext:
     add eax,8
