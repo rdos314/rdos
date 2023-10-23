@@ -2687,6 +2687,9 @@ ufrDone:
     pop ebp
     LeaveSection ds:vfs_section
 ;
+    mov bx,ds:vfs_server
+    Signal
+;
     popad
     pop gs
     pop es

@@ -1697,9 +1697,6 @@ uwbBufPtr:
 ;
     mov ds:vfs_scan_pos,eax
     mov ds:vfs_scan_pos+4,edx
-;
-    mov bx,ds:vfs_server
-    Signal
 
 uwbDone:
     pop edi

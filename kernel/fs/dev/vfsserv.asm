@@ -2408,6 +2408,9 @@ wvrNext:
 
 wvrLeave:
     LeaveSection ds:vfs_section
+;
+    mov bx,ds:vfs_server
+    Signal
 
 wvrDone:
     popad

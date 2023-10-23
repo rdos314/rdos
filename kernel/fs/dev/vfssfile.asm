@@ -1553,6 +1553,7 @@ PrepareWrite  Proc near
     EnterSection ds:vfs_section
 ;
     mov eax,gs:[edi]
+    add eax,fs:vfsp_start_sector
     test al,7
     jz pwCheckMid
 
@@ -1562,6 +1563,7 @@ pwStartLoop:
     jz pwDone
 ;
     mov eax,gs:[edi]
+    add eax,fs:vfsp_start_sector
     test al,7
     jnz pwStartLoop
 
@@ -1590,6 +1592,7 @@ pwMidNext:
     jz pwDone
 ;
     mov eax,gs:[edi]
+    add eax,fs:vfsp_start_sector
     test al,7
     jnz pwMidLoop
 ;
