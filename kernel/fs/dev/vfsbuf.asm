@@ -1581,29 +1581,37 @@ UpdateWrBitmap   Proc near
 ;
     pop eax
 ;
+    push eax
     mov ecx,eax
     mov ebx,edx
-    mov edi,ds:[4*ebx].vfs_buf_arr
-    or edi,edi
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
     jnz uwbEntryOk
 ;
-    int 3
+    call CreateEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx].vfs_buf_arr,eax
 
 uwbEntryOk:
     mov ebx,ecx
     shr ebx,18
     and ebx,3FFCh
-    and di,0F000h
-    add ebx,edi
+    and ax,0F000h
+    add ebx,eax
     add ebx,1000h
-    mov edi,es:[ebx]
-    or edi,edi
+    mov eax,es:[ebx]
+    or eax,eax
     jnz uwbBufPtr
 ;
-    int 3
+    call CreateBitmapEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx],eax
 
 uwbBufPtr:
-    and di,0F000h
+    and ax,0F000h
+    mov edi,eax
+    pop eax
 ;
     mov ebx,eax
     shr ebx,3

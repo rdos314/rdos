@@ -2587,6 +2587,7 @@ UpdateFileReq  Proc near
 ;    
     mov ebx,gs:[4*edx].kf_handle_arr
     mov ebp,gs:[ebx].kre_req_size
+    push ebp
 ;    
     mov ax,serv_flat_sel
     mov es,eax
@@ -2597,6 +2598,7 @@ UpdateFileReq  Proc near
     push ebx
 ;
     mov edi,gs:[ebx].kre_entry_arr
+    mov ebp,gs:[ebx].kre_block_arr
     mov edx,gs:[ebx].kre_phys_arr
     mov edx,gs:[edx]
     and edx,0FFFh
@@ -2612,10 +2614,11 @@ ufrOffsetLoop:
     jnz ufrOffsetNext
 ;
     add edi,4
+    add ebp,8
     xor edx,edx    
 
 ufrOffsetNext:
-    sub ebp,eax
+    sub [esp],eax
     jz ufrSignalDone
 ;
     sub esi,1
@@ -2653,15 +2656,18 @@ ufrPosOk:
 ufrSectorLoop:
     or bl,bh
     rol bh,cl
-    sub ebp,eax
+    sub [esp],eax
     jz ufrWrLast
 ;
     test bh,1
     jz ufrSectorNext
 ;
+    mov eax,gs:[ebp]
+    mov edx,gs:[ebp+4]
     call UpdateWrBitmap
     xor bl,bl
     add edi,4
+    add ebp,8
     mov esi,gs:[edi]
 
 ufrSectorNext:
@@ -2672,12 +2678,15 @@ ufrWrLast:
     or bl,bl
     jz ufrSignalDone
 ;
+    mov eax,gs:[ebp]
+    mov edx,gs:[ebp+4]
     call UpdateWrBitmap
 
 ufrSignalDone:
     pop ebx
 
 ufrDone:
+    pop ebp
     LeaveSection ds:vfs_section
 ;
     popad
