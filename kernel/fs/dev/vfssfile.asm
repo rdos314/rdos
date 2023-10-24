@@ -64,7 +64,7 @@ code    SEGMENT byte public 'CODE'
     extern UpdateFileReq:near
     extern FreeFileReq:near
     extern GetFileDebugInfo:near
-    extern RelSectorToBlockSel:near
+    extern RelSectorToBlock:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1308,11 +1308,10 @@ serv_file_read_req    Proc far
     or ecx,ecx
     jz safrFail
 ;
-    push eax
-    call RelSectorToBlockSel
-    mov es,eax
-    xor edi,edi
-    pop eax
+    call RelSectorToBlock
+;
+    or ecx,ecx
+    jz safrFail
 ;
     call AddFileReq
     jc safrFail
@@ -1320,16 +1319,13 @@ serv_file_read_req    Proc far
     mov edx,esi
     mov eax,es
     mov ds,eax
-    xor esi,esi
+    mov esi,edi
 ;
     call GetMinMax
     call CreateReqSel
 ;
-    push es
-    mov eax,ds
-    mov es,eax
-    FreeBigServSel
-    pop ds
+    mov eax,es
+    mov ds,eax
 ;
     mov ds:vfs_rd_file_handle,ebp
     mov ds:vfs_rd_index,edx
@@ -1554,6 +1550,11 @@ serv_file_write_req    Proc far
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
     jnc safwFail
+;
+    or ecx,ecx
+    jz safwFail
+;
+    call RelSectorToBlock
 ;
     or ecx,ecx
     jz safwFail

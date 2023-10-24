@@ -168,7 +168,6 @@ code    SEGMENT byte public 'CODE'
     extern VfsRead:near
     extern VfsWrite:near
     extern UpdateWrBitmap:near
-    extern RelSectorToBlockSel:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

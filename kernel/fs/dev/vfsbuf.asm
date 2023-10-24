@@ -644,7 +644,7 @@ BlockToSector   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           RelSectorToBlockSel
+;       NAME:           RelSectorToBlock
 ;
 ;       DESCRIPTION:    Convert from relative sectors to block selector
 ;
@@ -652,21 +652,19 @@ BlockToSector   Endp
 ;                       ES:EDI             Relative sector data
 ;                       ECX                Entries
 ;
-;       RETURNS:        AX                 Selector
-;                       ECX                Entries
+;       RETURNS:        ECX                Entries
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public RelSectorToBlockSel
+    public RelSectorToBlock
 
-RelSectorToBlockSel  Proc near
+RelSectorToBlock  Proc near
     push ds
-    push es
     push gs
+    push eax
     push ebx
     push edx
     push esi
-    push edi
 ;
     push ecx
 ;
@@ -677,11 +675,6 @@ RelSectorToBlockSel  Proc near
     mov eax,es
     mov ds,eax
     mov esi,edi
-;
-    mov eax,ebx
-    shl eax,3
-    AllocateBigServSel
-    xor edi,edi
 ;
     mov eax,ds:[esi]
     mov edx,ds:[esi+4]
@@ -708,10 +701,9 @@ rstbInitShift:
     jnz rstbInitShift
 
 rstbInitOk:
-    mov es:[edi],eax
-    mov es:[edi+4],edx
+    mov ds:[esi],eax
+    mov ds:[esi+4],edx
     add esi,8
-    add edi,8
     sub ebx,1
     jz rstbDone
 ;
@@ -742,14 +734,14 @@ rstbBlockShift:
     jnz rstbBlockShift
 
 rstbBlockOk:
-    mov es:[edi],eax
-    mov es:[edi+4],edx
+    mov ds:[esi],eax
+    mov ds:[esi+4],edx
 ;
     test al,7
     jz rstbNext
 ;
-    sub eax,es:[edi-8]
-    sbb edx,es:[edi-4]
+    sub eax,es:[esi-8]
+    sbb edx,es:[esi-4]
     jnz rstbDone
 ;
     shr eax,cl
@@ -758,24 +750,21 @@ rstbBlockOk:
 
 rstbNext:
     add esi,8
-    add edi,8
     sub ebx,1
     jnz rstbLoop
 
 rstbDone:
     pop ecx
     sub ecx,ebx
-    mov eax,es
 ;
-    pop edi
     pop esi
     pop edx
     pop ebx
+    pop eax
     pop gs
-    pop es
     pop ds
     ret
-RelSectorToBlockSel  Endp
+RelSectorToBlock  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
