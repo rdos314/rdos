@@ -1277,6 +1277,7 @@ StartWrite     Endp
 ;
 ;       PARAMETERS:     EBX            File handle
 ;                       ESI            Req index
+;                       EDX:EAX        Position
 ;                       ECX            Sector count
 ;                       ES:EDI         Sector buf
 ;
@@ -1307,9 +1308,11 @@ serv_file_read_req    Proc far
     or ecx,ecx
     jz safrFail
 ;
+    push eax
     call RelSectorToBlockSel
     mov es,eax
     xor edi,edi
+    pop eax
 ;
     call AddFileReq
     jc safrFail
