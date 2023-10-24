@@ -1488,7 +1488,6 @@ AddToBitmap  Endp
 ;       DESCRIPTION:    Update write bitmap
 ;
 ;       PARAMETERS:     DS          VFS sel
-;                       ES:ESI      Buffer entry
 ;                       BL          Sector mask
 ;                       EDX:EAX     Block #
 ;
@@ -1754,13 +1753,66 @@ c11111101 DB 7
 c11111110 DB 7
 c11111111 DB 8
 
-
 UpdateWrBitmap   Proc near
     push ebx
     push ecx
+    push esi
     push edi
 ;
+    push ebx
+;
     push eax
+    mov ecx,eax
+    mov ebx,edx
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    jnz uwbEntryOk
+;
+    call CreateEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx].vfs_buf_arr,eax
+
+uwbEntryOk:
+    and ax,0F000h
+;
+    mov ebx,ecx
+    shr ebx,20
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    jnz uwbBufPtr
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx],eax
+
+uwbBufPtr:
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,10
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    jnz uwbBufDir
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx],eax
+
+uwbBufDir:
+    and ax,0F000h
+    and esi,0FF8h
+    add esi,eax
+;
+    pop ebx
+;
+    push eax
+    push ecx
+;
     mov al,es:[esi].vfsp_wr_bitmap
     and al,bl
     xor al,bl
@@ -1776,21 +1828,9 @@ UpdateWrBitmap   Proc near
     movzx eax,al
     add ds:vfs_active_count,eax
 ;
+    pop ecx
     pop eax
 ;
-    push eax
-    mov ecx,eax
-    mov ebx,edx
-    shl ebx,2
-    mov eax,ds:[ebx].vfs_buf_arr
-    or eax,eax
-    jnz uwbEntryOk
-;
-    call CreateEntry
-    or ax,VFS_BUF_PRESENT
-    mov ds:[ebx].vfs_buf_arr,eax
-
-uwbEntryOk:
     mov ebx,ecx
     shr ebx,18
     and ebx,3FFCh
@@ -1825,6 +1865,7 @@ uwbBufPtr:
 
 uwbDone:
     pop edi
+    pop esi
     pop ecx
     pop ebx
     ret
