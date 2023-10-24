@@ -466,7 +466,6 @@ CloseFileSel   Endp
 ;       PARAMETERS:     FS             Part sel
 ;                       EBX            File handle
 ;                       ESI            Req index
-;                       EDX:EAX        Position
 ;                       ECX            Sector count
 ;
 ;       RETURNS:        ECX            Mapped sector count

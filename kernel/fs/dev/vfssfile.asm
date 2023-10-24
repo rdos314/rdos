@@ -552,164 +552,6 @@ GetMinMax Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CopySectors
-;
-;       DESCRIPTION:    Copy sectors & convert to blocks
-;
-;       PARAMETERS:     FS          Part sel
-;                       ECX         Size
-;                       DS:ESI      Sector buf
-;                       ES:EDI      Block buf
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-copy512  Proc near
-    mov eax,ds:[esi]
-    mov edx,ds:[esi+4]
-;
-    mov ebx,fs:vfsp_sector_count
-    mov ebp,fs:vfsp_sector_count+4
-    sub ebx,eax
-    sbb ebp,edx
-    jnc cn512
-;
-    int 3
-
-cn512:
-    add eax,fs:vfsp_start_sector
-    adc edx,fs:vfsp_start_sector+4
-;
-    mov es:[edi],eax
-    mov es:[edi+4],edx
-    add esi,8
-    add edi,8
-    loop copy512
-    ret
-copy512  Endp
-
-copy1k  Proc near
-    mov eax,ds:[esi]
-    mov edx,ds:[esi+4]
-;
-    mov ebx,fs:vfsp_sector_count
-    mov ebp,fs:vfsp_sector_count+4
-    sub ebx,eax
-    sbb ebp,edx
-    jnc cn1k
-;
-    int 3
-
-cn1k:
-    add eax,fs:vfsp_start_sector
-    adc edx,fs:vfsp_start_sector+4
-;
-    add eax,eax
-    adc edx,edx
-    mov es:[edi],eax
-    mov es:[edi+4],edx
-    add esi,8
-    add edi,8
-    loop copy1k
-    ret
-copy1k  Endp
-
-copy2k  Proc near
-    mov eax,ds:[esi]
-    mov edx,ds:[esi+4]
-;
-    mov ebx,fs:vfsp_sector_count
-    mov ebp,fs:vfsp_sector_count+4
-    sub ebx,eax
-    sbb ebp,edx
-    jnc cn2k
-;
-    int 3
-
-cn2k:
-    add eax,fs:vfsp_start_sector
-    adc edx,fs:vfsp_start_sector+4
-;
-    add eax,eax
-    adc edx,edx
-    add eax,eax
-    adc edx,edx
-    mov es:[edi],eax
-    mov es:[edi+4],edx
-    add esi,8
-    add edi,8
-    loop copy2k
-    ret
-copy2k  Endp
-
-copy4k  Proc near
-    mov eax,ds:[esi]
-    mov edx,ds:[esi+4]
-;
-    mov ebx,fs:vfsp_sector_count
-    mov ebp,fs:vfsp_sector_count+4
-    sub ebx,eax
-    sbb ebp,edx
-    jnc cn4k
-;
-    int 3
-
-cn4k:
-    add eax,fs:vfsp_start_sector
-    adc edx,fs:vfsp_start_sector+4
-;
-    add eax,eax
-    adc edx,edx
-    add eax,eax
-    adc edx,edx
-    add eax,eax
-    adc edx,edx
-    mov es:[edi],eax
-    mov es:[edi+4],edx
-    add esi,8
-    add edi,8
-    loop copy4k
-    ret
-copy4k  Endp
-
-copy_tab:
-ct00 dd OFFSET copy512
-ct01 dd OFFSET copy1k
-ct02 dd OFFSET copy2k
-ct03 dd OFFSET copy4k
-
-CopySectors    Proc near
-    push gs
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    or ecx,ecx
-    jz csDone
-;
-    mov gs,fs:vfsp_disc_sel
-    movzx ebx,gs:vfs_sector_shift
-    shl ebx,3
-    call dword ptr cs:[ebx].copy_tab
-
-csDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop gs
-    ret
-CopySectors    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           CreateReqSel
 ;
 ;       DESCRIPTION:    Create req selector
@@ -760,7 +602,8 @@ CreateReqSel Proc near
     mov edi,SIZE vfs_read_entry
     mov es:vfs_rd_chain_ptr,edi
 ;
-    call CopySectors
+    shl ecx,1
+    rep movs dword ptr es:[edi],ds:[esi]
 ;
     mov ecx,es:vfs_rd_sectors
     shl ecx,3
@@ -1450,6 +1293,7 @@ serv_file_read_req    Proc far
     push gs
     push ebx
     push esi
+    push edi
     push ebp
 ;
     mov ebp,ebx
@@ -1463,9 +1307,9 @@ serv_file_read_req    Proc far
     or ecx,ecx
     jz safrFail
 ;
-    push eax
     call RelSectorToBlockSel
-    pop eax
+    mov es,eax
+    xor edi,edi
 ;
     call AddFileReq
     jc safrFail
@@ -1473,13 +1317,17 @@ serv_file_read_req    Proc far
     mov edx,esi
     mov eax,es
     mov ds,eax
-    mov esi,edi
+    xor esi,esi
 ;
     call GetMinMax
     call CreateReqSel
 ;
-    mov eax,es
-    mov ds,eax
+    push es
+    mov eax,ds
+    mov es,eax
+    FreeBigServSel
+    pop ds
+;
     mov ds:vfs_rd_file_handle,ebp
     mov ds:vfs_rd_index,edx
     mov ds:vfs_rd_req_handle,0
@@ -1520,6 +1368,7 @@ safrFail:
 
 safrDone:
     pop ebp
+    pop edi
     pop esi
     pop ebx
     pop gs
