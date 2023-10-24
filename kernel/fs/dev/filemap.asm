@@ -2719,22 +2719,25 @@ FreeFileReq  Proc near
 ;    
     mov ebx,ds:[4*edx].kf_handle_arr
     mov ecx,ds:[ebx].kre_req_size
+;
+    mov eax,ds
+    mov gs,eax
 ;    
     mov ax,serv_flat_sel
     mov es,eax
-    mov gs,fs:vfsp_disc_sel
 ;
     mov ebp,ebx
     or ecx,ecx
     jz ffrReq
 ;
-    mov edi,ds:[ebx].kre_entry_arr
+    mov edi,ds:[ebx].kre_block_arr
     mov edx,ds:[ebx].kre_phys_arr
     mov edx,ds:[edx]
     and edx,0FFFh
     shr edx,9
     mov eax,8
     sub eax,edx
+    mov ds,fs:vfsp_disc_sel
 
 ffrFreeLoop:
     shl eax,9
@@ -2747,7 +2750,12 @@ ffrFreeAll:
     sub ecx,eax
     shr eax,9
 ;    
-    mov esi,ds:[edi]
+    push eax
+    mov eax,gs:[edi]
+    mov edx,gs:[edi+4]
+    call BlockToPhys
+    pop eax
+;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz ffrFreeNext
 ;
@@ -2759,17 +2767,19 @@ ffrFreeAll:
 ffrOk:
     jnz ffrFreeNext
 ;
-    dec gs:vfs_locked_pages
+    dec ds:vfs_locked_pages
 
 ffrFreeNext:
     or ecx,ecx
     jz ffrFreeEntry
 ;
-    add edi,4
+    add edi,8
     mov eax,8
     jmp ffrFreeLoop
 
 ffrFreeEntry:
+    mov eax,gs
+    mov ds,eax
     mov ebx,ebp
     mov cx,ds:[ebx].kre_pages
     dec ds:kf_block_count
