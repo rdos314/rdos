@@ -183,6 +183,8 @@ void TFileReq::StartRead()
 
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
+
+    FreeArray();
 }
 
 /*##########################################################################
@@ -210,6 +212,8 @@ void TFileReq::StartWrite()
 
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
+
+    FreeArray();
 }
 
 /*##########################################################################
@@ -1029,16 +1033,6 @@ void TFile::HandleCompletedReq(int req)
     sprintf(str, "Completed %d.%d\r\n", Index, req);
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
-
-    for (i = 0; i < FCurrActiveCount; i++)
-    {
-        FileReq = FActiveArr[i];
-        if (FileReq && FileReq->Req == req)
-        {
-            FileReq->FreeArray();
-            break;
-        }
-    }
 }
 
 /*##########################################################################
