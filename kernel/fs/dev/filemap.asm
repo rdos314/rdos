@@ -63,7 +63,6 @@ kernel_req_entry  STRUC
 
 kre_pos           DD ?,?
 kre_size          DD ?
-kre_entry_arr     DD ?
 kre_phys_arr      DD ?
 kre_block_arr     DD ?
 kre_req_size      DD ?
@@ -573,7 +572,6 @@ afrRecalc:
     mov ds:[edi].kre_pos,eax
     mov ds:[edi].kre_pos+4,edx
     mov ds:[edi].kre_pages,0
-    mov ds:[edi].kre_entry_arr,0
     mov ds:[edi].kre_phys_arr,0
     mov ds:[edi].kre_block_arr,0
     mov ds:[edi].kre_usage,0
@@ -988,17 +986,14 @@ SetupReadReq   Proc near
     mov ebx,ds:[4*ebx].kf_handle_arr
     mov ds:[ebx].kre_req_size,ecx
     mov ds:[ebx].kre_pages,ax
-    inc ds:kf_block_count
     mov cx,ax
-    shl cx,2
-    AllocateBlk
-    mov ds:[ebx].kre_entry_arr,edx
 ;
     inc ds:kf_phys_count
-    shl cx,1
+    shl cx,3
     AllocateBlk
     mov ds:[ebx].kre_phys_arr,edx
 ;
+    inc ds:kf_block_count
     AllocateBlk
     mov ds:[ebx].kre_block_arr,edx
 ;
@@ -1040,7 +1035,6 @@ ProcessReadReq  Proc near
     pop fs
 ;
     mov ebx,fs:[4*ebx].kf_handle_arr
-    mov edi,fs:[ebx].kre_entry_arr
     mov eax,fs:[ebx].kre_phys_arr
     mov [esp+4],eax
     mov eax,fs:[ebx].kre_block_arr
@@ -1080,9 +1074,6 @@ prrSave:
     mov fs:[ebp+4],edx
     add ebp,8
     mov [esp+8],ebp
-;
-    mov fs:[edi],esi
-    add edi,4
     jmp prrLoop
 
 prrDone:
@@ -2595,7 +2586,6 @@ UpdateFileReq  Proc near
     or ebp,ebp
     jz ufrDone
 ;
-    mov edi,gs:[ebx].kre_entry_arr
     mov ebp,gs:[ebx].kre_block_arr
     mov edx,gs:[ebx].kre_phys_arr
     mov edx,gs:[edx]
@@ -2611,7 +2601,6 @@ ufrOffsetLoop:
     test dx,0FFFh
     jnz ufrOffsetNext
 ;
-    add edi,4
     add ebp,8
     xor edx,edx    
 
@@ -2648,7 +2637,6 @@ ufrPosOk:
     jz ufrDone
 ;
     xor bl,bl
-    mov esi,gs:[edi]
     movzx eax,ds:vfs_bytes_per_sector
 
 ufrSectorLoop:
@@ -2667,9 +2655,7 @@ ufrSectorLoop:
     pop edx
 ;
     xor bl,bl
-    add edi,4
     add ebp,8
-    mov esi,gs:[edi]
 
 ufrSectorNext:
     sub edx,1
@@ -2782,16 +2768,12 @@ ffrFreeEntry:
     mov ds,eax
     mov ebx,ebp
     mov cx,ds:[ebx].kre_pages
-    dec ds:kf_block_count
-    shl cx,2
-    mov edx,ds:[ebx].kre_entry_arr
-    FreeBlk
-;
     dec ds:kf_phys_count
-    shl cx,1
+    shl cx,3
     mov edx,ds:[ebx].kre_phys_arr
     FreeBlk
 ;
+    dec ds:kf_block_count
     mov edx,ds:[ebx].kre_block_arr
     FreeBlk
 

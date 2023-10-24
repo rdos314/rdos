@@ -1839,13 +1839,13 @@ uwbBufDir:
     add ebx,1000h
     mov eax,es:[ebx]
     or eax,eax
-    jnz uwbBufPtr
+    jnz uwbBitmapPtr
 ;
     call CreateBitmapEntry
     or ax,VFS_BUF_PRESENT
     mov es:[ebx],eax
 
-uwbBufPtr:
+uwbBitmapPtr:
     and ax,0F000h
     mov edi,eax
     pop eax
