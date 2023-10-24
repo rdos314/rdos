@@ -644,6 +644,142 @@ BlockToSector   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           RelSectorToBlockSel
+;
+;       DESCRIPTION:    Convert from relative sectors to block selector
+;
+;       PARAMETERS:     FS                 Part sel
+;                       ES:EDI             Relative sector data
+;                       ECX                Entries
+;
+;       RETURNS:        AX                 Selector
+;                       ECX                Entries
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public RelSectorToBlockSel
+
+RelSectorToBlockSel  Proc near
+    push ds
+    push es
+    push gs
+    push ebx
+    push edx
+    push esi
+    push edi
+;
+    push ecx
+;
+    mov ebx,ecx
+    mov gs,fs:vfsp_disc_sel
+    mov cl,gs:vfs_sector_shift
+;
+    mov eax,es
+    mov ds,eax
+    mov esi,edi
+;
+    mov eax,ebx
+    shl eax,3
+    AllocateBigServSel
+    xor edi,edi
+;
+    mov eax,ds:[esi]
+    mov edx,ds:[esi+4]
+    sub eax,fs:vfsp_sector_count
+    sbb edx,fs:vfsp_sector_count+4
+    jb rstbInit
+;
+    int 3
+
+rstbInit:
+    mov eax,ds:[esi]
+    mov edx,ds:[esi+4]
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+;
+    or cl,cl
+    jz rstbInitOk
+
+rstbInitShift:
+    add eax,eax
+    adc edx,edx
+;
+    sub ebp,1
+    jnz rstbInitShift
+
+rstbInitOk:
+    mov es:[edi],eax
+    mov es:[edi+4],edx
+    add esi,8
+    add edi,8
+    sub ebx,1
+    jz rstbDone
+;
+
+rstbLoop:
+    mov eax,ds:[esi]
+    mov edx,ds:[esi+4]
+    sub eax,fs:vfsp_sector_count
+    sbb edx,fs:vfsp_sector_count+4
+    jb rstbConv
+;
+    int 3
+
+rstbConv:
+    mov eax,ds:[esi]
+    mov edx,ds:[esi+4]
+    add eax,fs:vfsp_start_sector
+    adc edx,fs:vfsp_start_sector+4
+;
+    or cl,cl
+    jz rstbBlockOk
+
+rstbBlockShift:
+    add eax,eax
+    adc edx,edx
+;
+    sub cl,1
+    jnz rstbBlockShift
+
+rstbBlockOk:
+    mov es:[edi],eax
+    mov es:[edi+4],edx
+;
+    test al,7
+    jz rstbNext
+;
+    sub eax,es:[edi-8]
+    sbb edx,es:[edi-4]
+    jnz rstbDone
+;
+    shr eax,cl
+    cmp eax,1
+    jne rstbDone
+
+rstbNext:
+    add esi,8
+    add edi,8
+    sub ebx,1
+    jnz rstbLoop
+
+rstbDone:
+    pop ecx
+    sub ecx,ebx
+    mov eax,es
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop gs
+    pop es
+    pop ds
+    ret
+RelSectorToBlockSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           BlockToBuf
 ;
 ;       DESCRIPTION:    Converts between block # and physical address

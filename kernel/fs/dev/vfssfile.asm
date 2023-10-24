@@ -64,6 +64,7 @@ code    SEGMENT byte public 'CODE'
     extern UpdateFileReq:near
     extern FreeFileReq:near
     extern GetFileDebugInfo:near
+    extern RelSectorToBlockSel:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1433,7 +1434,6 @@ StartWrite     Endp
 ;
 ;       PARAMETERS:     EBX            File handle
 ;                       ESI            Req index
-;                       EDX:EAX        Position
 ;                       ECX            Sector count
 ;                       ES:EDI         Sector buf
 ;
@@ -1462,6 +1462,10 @@ serv_file_read_req    Proc far
 ;
     or ecx,ecx
     jz safrFail
+;
+    push eax
+    call RelSectorToBlockSel
+    pop eax
 ;
     call AddFileReq
     jc safrFail
