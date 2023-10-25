@@ -973,445 +973,6 @@ BlockToBitmap   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           InvalidateCache
-;
-;       DESCRIPTION:    Invalidate cache entries
-;
-;       PARAMETERS:     DS          VFS sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public InvalidateCache
-
-InvalidateCache    Proc near
-    push es
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov cx,serv_flat_sel
-    mov es,cx
-;
-    EnterSection ds:vfs_section
-
-icSearch:
-    mov ebx,ds:vfs_cache_discard_pos+4
-    shl ebx,2
-    mov eax,ds:[ebx].vfs_buf_arr
-    or eax,eax
-    jnz icEntryOk
-;
-    shr ebx,2
-    inc ebx
-    cmp ebx,ds:vfs_buf_count
-    jb icBufOk
-;
-    xor ebx,ebx
-
-icBufOk:
-    mov ds:vfs_cache_discard_pos,0
-    mov ds:vfs_cache_discard_pos+4,ebx
-    jmp icSearch
-
-icEntryOk:
-    and ax,0F000h
-;
-    mov ebx,ds:vfs_cache_discard_pos
-    shr ebx,20
-    and ebx,0FFCh
-    mov esi,ebx
-    add esi,eax
-    mov eax,es:[esi]
-    or eax,eax
-    jnz icBufPtr
-
-icEntryLoop:
-    add ebx,4
-    add esi,4
-    test esi,0FFFh
-    jz icEntryRetry
-;
-    mov eax,es:[esi]
-    or eax,eax
-    jz icEntryLoop
-
-icEntryRetry:
-    shl ebx,20
-    mov ds:vfs_cache_discard_pos,ebx
-    jmp icSearch
-
-icBufPtr:
-    and ax,0F000h
-;
-    mov ebx,ds:vfs_cache_discard_pos
-    shr ebx,10
-    and ebx,0FFCh
-    mov esi,ebx
-    add esi,eax
-    mov eax,es:[esi]
-    or eax,eax
-    jnz icBufDir
-
-icBufPtrLoop:
-    add ebx,4
-    add esi,4
-    test esi,0FFFh
-    jz icBufPtrRetry
-;
-    mov eax,es:[esi]
-    or eax,eax
-    jz icBufPtrLoop
-
-icBufPtrRetry:
-    shl ebx,10
-    mov ds:vfs_cache_discard_pos,ebx
-    jmp icSearch
-
-icBufDir:
-    and ax,0F000h
-    mov esi,eax
-;
-    mov ecx,512
-
-icLoop:
-    test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
-    jz icNext
-;
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz icNext
-;
-    cmp es:[esi].vfsp_ref_bitmap,0
-    jne icNext
-;
-    cmp es:[esi].vfsp_wr_bitmap,0
-    jne icNext
-;
-    btc es:[esi].vfsp_flags,VFS_PHYS_USED_BIT
-    jc icNext
-;
-    xor eax,eax
-    xchg eax,es:[esi]
-    xor ebx,ebx
-    xchg ebx,es:[esi+4]
-    and ax,0F000h
-    FreePhysical
-    dec ds:vfs_cached_pages
-
-icNext:
-    add esi,8
-    loop icLoop
-;
-    add ds:vfs_cache_discard_pos,1000h
-    adc ds:vfs_cache_discard_pos+4,0
-;        
-    LeaveSection ds:vfs_section
-
-icDone:
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-    ret
-InvalidateCache    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetIoStart
-;
-;       DESCRIPTION:    Get IO start position
-;
-;       PARAMETERS:     DS          VFS sel
-;                       ES          Server flat sel
-;
-;       RETURNS:        NC
-;                         EDX:EAX   Block #
-;                         EDI       Bitmap buf
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetIoStart    Proc near
-    xor ebp,ebp
-
-gisEntryLoop:
-    mov ebx,ds:vfs_scan_pos+4
-    cmp ebx,ds:vfs_buf_count
-    jb gisEntryRangeOk
-;
-    mov ds:vfs_scan_pos,0
-    mov ds:vfs_scan_pos+4,0
-    mov ebx,ds:vfs_scan_pos+4
-
-gisEntryRangeOk:
-    shl ebx,2
-    mov eax,ds:[ebx].vfs_buf_arr
-    or eax,eax
-    jz gisNextEntry
-;
-    mov ebx,ds:vfs_scan_pos
-    shr ebx,18
-    and ebx,3FFCh
-    mov esi,ebx
-    shl esi,18
-    mov ecx,4000h
-    sub ecx,ebx
-    shr ecx,2
-;
-    and ax,0F000h
-    add ebx,eax
-    add ebx,1000h
-
-gisPtrLoop:
-    mov eax,es:[ebx]
-    or eax,eax
-    jnz gisPtrScan
-;
-    add esi,1 SHL 20
-    jmp gisPtrNext
-
-gisPtrScan:
-    push ecx
-;
-    and ax,0F000h
-    mov edi,eax
-;
-    mov eax,ds:vfs_scan_pos
-    shr eax,6
-    and eax,3FFCh
-    mov ecx,4000h
-    sub ecx,eax
-    shr ecx,2
-    add edi,eax
-    shl eax,6
-    add esi,eax
-    mov eax,es:[edi]
-    or eax,eax
-    jz gisScan
-;
-    push ecx
-    mov ecx,ds:vfs_scan_pos
-    shr ecx,3
-    and ecx,1Fh
-    shr eax,cl
-    or eax,eax
-    jz gisScanAdv
-;
-    shl ecx,3
-    add esi,ecx
-    bsf ecx,eax
-    shl ecx,3
-    add esi,ecx
-;
-    mov eax,esi
-    mov edx,ds:vfs_scan_pos+4
-;
-    pop ecx
-    pop ecx
-    clc
-    jmp gisDone
-
-gisScanAdv:
-    pop ecx
-
-gisScan:
-    add esi,1 SHL 8
-    add edi,4
-    sub ecx,1
-    jz gisScanDone
-;
-    mov edx,ecx
-    xor eax,eax
-    repz scas dword ptr es:[edi]
-    jz gisScanFixup
-;
-    sub edx,ecx
-    dec edx
-    shl edx,8
-    add esi,edx
-;
-    sub edi,4
-    mov eax,es:[edi]
-    bsf ecx,eax
-    shl ecx,3
-    add esi,ecx
-;
-    mov eax,esi
-    mov edx,ds:vfs_scan_pos+4
-;
-    pop ecx
-    clc
-    jmp gisDone
-
-gisScanFixup:
-    shl edx,8
-    add esi,edx
-;
-    mov eax,ds:vfs_scan_pos
-    and eax,0FFFFFh
-    jnz gisScanDone
-;
-    xor eax,eax
-    xchg eax,es:[ebx]
-    call FreeBitmapEntry
-
-gisScanDone:
-    pop ecx
-
-gisPtrNext:
-    mov ds:vfs_scan_pos,esi
-    add ebx,4
-    sub ecx,1
-    jnz gisPtrLoop
-
-gisNextEntry:
-    mov ds:vfs_scan_pos,0
-    mov ecx,ds:vfs_scan_pos+4
-    inc ecx
-    mov ds:vfs_scan_pos+4,ecx
-    cmp ecx,ds:vfs_buf_count
-    jb gisEntryLoop
-;
-    or ebp,ebp
-    stc
-    jnz gisDone
-;
-    inc ebp
-    mov ds:vfs_scan_pos+4,0
-    jmp gisEntryLoop
-    
-gisDone:
-    ret
-GetIoStart   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetIoBuf
-;
-;       DESCRIPTION:    Get start IO buf
-;
-;       PARAMETERS:     DS          VFS sel
-;                       ES          Server flat sel
-;                       EDX:EAX     Block #
-;
-;       RETURNS:        NC
-;                         ESI       Physical entry buf
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetIoBuf    Proc near
-    push eax
-    push edx
-;
-    mov esi,eax
-    mov ebx,edx
-    shl ebx,2
-    mov eax,ds:[ebx].vfs_buf_arr
-    or eax,eax
-    stc
-    jz gibDone
-;
-    and ax,0F000h
-;
-    mov ebx,esi
-    shr ebx,20
-    and ebx,0FFCh
-    add ebx,eax
-    mov eax,es:[ebx]
-    or eax,eax
-    stc
-    jz gibDone
-;
-    and ax,0F000h
-;
-    mov ebx,esi
-    shr ebx,10
-    and ebx,0FFCh
-    add ebx,eax
-    mov eax,es:[ebx]
-    or eax,eax
-    stc
-    jz gibDone
-;
-    and ax,0F000h
-    and esi,0FF8h
-    add esi,eax
-    clc
-
-gibDone:
-    pop edx
-    pop eax
-    ret
-GetIoBuf   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetReadIo
-;
-;       DESCRIPTION:    Get number of read sectors
-;
-;       PARAMETERS:     DS          VFS sel
-;                       ES          Server flat sel
-;                       ESI         Physical entry buf
-;
-;       RETURNS:        ECX         Sector count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetReadIo    Proc near
-    push eax
-    push edx
-    push esi
-;
-    mov fs,ds:vfs_req_buf
-    xor ecx,ecx
-    xor edx,edx
-  
-griBlockLoop:
-    mov bp,ds:vfs_sectors_per_block
-    movzx ebx,word ptr es:[esi+4]
-    mov eax,es:[esi]
-    and ax,0F000h
-
-griSave:    
-    mov fs:[edx],eax
-    mov fs:[edx+4],ebx
-    add ax,ds:vfs_bytes_per_sector
-    add edx,8
-    inc cx
-    sub bp,1
-    jnz griSave
-;
-    cmp cx,ds:vfs_max_req
-    jae griDone
-;
-    add esi,8
-    test si,0FFFh
-    jz griDone
-;
-    test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
-    jz griDone
-;
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz griBlockLoop
-
-griDone:
-    pop esi
-    pop edx
-    pop eax
-    ret
-GetReadIo   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddToBitmap
 ;
 ;       DESCRIPTION:    Add req to bitmap
@@ -1882,6 +1443,445 @@ uwbDone:
     pop ebx
     ret
 UpdateWrBitmap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           InvalidateCache
+;
+;       DESCRIPTION:    Invalidate cache entries
+;
+;       PARAMETERS:     DS          VFS sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InvalidateCache
+
+InvalidateCache    Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov cx,serv_flat_sel
+    mov es,cx
+;
+    EnterSection ds:vfs_section
+
+icSearch:
+    mov ebx,ds:vfs_cache_discard_pos+4
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    jnz icEntryOk
+;
+    shr ebx,2
+    inc ebx
+    cmp ebx,ds:vfs_buf_count
+    jb icBufOk
+;
+    xor ebx,ebx
+
+icBufOk:
+    mov ds:vfs_cache_discard_pos,0
+    mov ds:vfs_cache_discard_pos+4,ebx
+    jmp icSearch
+
+icEntryOk:
+    and ax,0F000h
+;
+    mov ebx,ds:vfs_cache_discard_pos
+    shr ebx,20
+    and ebx,0FFCh
+    mov esi,ebx
+    add esi,eax
+    mov eax,es:[esi]
+    or eax,eax
+    jnz icBufPtr
+
+icEntryLoop:
+    add ebx,4
+    add esi,4
+    test esi,0FFFh
+    jz icEntryRetry
+;
+    mov eax,es:[esi]
+    or eax,eax
+    jz icEntryLoop
+
+icEntryRetry:
+    shl ebx,20
+    mov ds:vfs_cache_discard_pos,ebx
+    jmp icSearch
+
+icBufPtr:
+    and ax,0F000h
+;
+    mov ebx,ds:vfs_cache_discard_pos
+    shr ebx,10
+    and ebx,0FFCh
+    mov esi,ebx
+    add esi,eax
+    mov eax,es:[esi]
+    or eax,eax
+    jnz icBufDir
+
+icBufPtrLoop:
+    add ebx,4
+    add esi,4
+    test esi,0FFFh
+    jz icBufPtrRetry
+;
+    mov eax,es:[esi]
+    or eax,eax
+    jz icBufPtrLoop
+
+icBufPtrRetry:
+    shl ebx,10
+    mov ds:vfs_cache_discard_pos,ebx
+    jmp icSearch
+
+icBufDir:
+    and ax,0F000h
+    mov esi,eax
+;
+    mov ecx,512
+
+icLoop:
+    test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+    jz icNext
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz icNext
+;
+    cmp es:[esi].vfsp_ref_bitmap,0
+    jne icNext
+;
+    cmp es:[esi].vfsp_wr_bitmap,0
+    jne icNext
+;
+    btc es:[esi].vfsp_flags,VFS_PHYS_USED_BIT
+    jc icNext
+;
+    xor eax,eax
+    xchg eax,es:[esi]
+    xor ebx,ebx
+    xchg ebx,es:[esi+4]
+    and ax,0F000h
+    FreePhysical
+    dec ds:vfs_cached_pages
+
+icNext:
+    add esi,8
+    loop icLoop
+;
+    add ds:vfs_cache_discard_pos,1000h
+    adc ds:vfs_cache_discard_pos+4,0
+;        
+    LeaveSection ds:vfs_section
+
+icDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+InvalidateCache    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetIoStart
+;
+;       DESCRIPTION:    Get IO start position
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;
+;       RETURNS:        NC
+;                         EDX:EAX   Block #
+;                         EDI       Bitmap buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIoStart    Proc near
+    xor ebp,ebp
+
+gisEntryLoop:
+    mov ebx,ds:vfs_scan_pos+4
+    cmp ebx,ds:vfs_buf_count
+    jb gisEntryRangeOk
+;
+    mov ds:vfs_scan_pos,0
+    mov ds:vfs_scan_pos+4,0
+    mov ebx,ds:vfs_scan_pos+4
+
+gisEntryRangeOk:
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    jz gisNextEntry
+;
+    mov ebx,ds:vfs_scan_pos
+    shr ebx,18
+    and ebx,3FFCh
+    mov esi,ebx
+    shl esi,18
+    mov ecx,4000h
+    sub ecx,ebx
+    shr ecx,2
+;
+    and ax,0F000h
+    add ebx,eax
+    add ebx,1000h
+
+gisPtrLoop:
+    mov eax,es:[ebx]
+    or eax,eax
+    jnz gisPtrScan
+;
+    add esi,1 SHL 20
+    jmp gisPtrNext
+
+gisPtrScan:
+    push ecx
+;
+    and ax,0F000h
+    mov edi,eax
+;
+    mov eax,ds:vfs_scan_pos
+    shr eax,6
+    and eax,3FFCh
+    mov ecx,4000h
+    sub ecx,eax
+    shr ecx,2
+    add edi,eax
+    shl eax,6
+    add esi,eax
+    mov eax,es:[edi]
+    or eax,eax
+    jz gisScan
+;
+    push ecx
+    mov ecx,ds:vfs_scan_pos
+    shr ecx,3
+    and ecx,1Fh
+    shr eax,cl
+    or eax,eax
+    jz gisScanAdv
+;
+    shl ecx,3
+    add esi,ecx
+    bsf ecx,eax
+    shl ecx,3
+    add esi,ecx
+;
+    mov eax,esi
+    mov edx,ds:vfs_scan_pos+4
+;
+    pop ecx
+    pop ecx
+    clc
+    jmp gisDone
+
+gisScanAdv:
+    pop ecx
+
+gisScan:
+    add esi,1 SHL 8
+    add edi,4
+    sub ecx,1
+    jz gisScanDone
+;
+    mov edx,ecx
+    xor eax,eax
+    repz scas dword ptr es:[edi]
+    jz gisScanFixup
+;
+    sub edx,ecx
+    dec edx
+    shl edx,8
+    add esi,edx
+;
+    sub edi,4
+    mov eax,es:[edi]
+    bsf ecx,eax
+    shl ecx,3
+    add esi,ecx
+;
+    mov eax,esi
+    mov edx,ds:vfs_scan_pos+4
+;
+    pop ecx
+    clc
+    jmp gisDone
+
+gisScanFixup:
+    shl edx,8
+    add esi,edx
+;
+    mov eax,ds:vfs_scan_pos
+    and eax,0FFFFFh
+    jnz gisScanDone
+;
+    xor eax,eax
+    xchg eax,es:[ebx]
+    call FreeBitmapEntry
+
+gisScanDone:
+    pop ecx
+
+gisPtrNext:
+    mov ds:vfs_scan_pos,esi
+    add ebx,4
+    sub ecx,1
+    jnz gisPtrLoop
+
+gisNextEntry:
+    mov ds:vfs_scan_pos,0
+    mov ecx,ds:vfs_scan_pos+4
+    inc ecx
+    mov ds:vfs_scan_pos+4,ecx
+    cmp ecx,ds:vfs_buf_count
+    jb gisEntryLoop
+;
+    or ebp,ebp
+    stc
+    jnz gisDone
+;
+    inc ebp
+    mov ds:vfs_scan_pos+4,0
+    jmp gisEntryLoop
+    
+gisDone:
+    ret
+GetIoStart   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetIoBuf
+;
+;       DESCRIPTION:    Get start IO buf
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Block #
+;
+;       RETURNS:        NC
+;                         ESI       Physical entry buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIoBuf    Proc near
+    push eax
+    push edx
+;
+    mov esi,eax
+    mov ebx,edx
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    stc
+    jz gibDone
+;
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,20
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    stc
+    jz gibDone
+;
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,10
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    stc
+    jz gibDone
+;
+    and ax,0F000h
+    and esi,0FF8h
+    add esi,eax
+    clc
+
+gibDone:
+    pop edx
+    pop eax
+    ret
+GetIoBuf   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetReadIo
+;
+;       DESCRIPTION:    Get number of read sectors
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       ESI         Physical entry buf
+;
+;       RETURNS:        ECX         Sector count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetReadIo    Proc near
+    push eax
+    push edx
+    push esi
+;
+    mov fs,ds:vfs_req_buf
+    xor ecx,ecx
+    xor edx,edx
+  
+griBlockLoop:
+    mov bp,ds:vfs_sectors_per_block
+    movzx ebx,word ptr es:[esi+4]
+    mov eax,es:[esi]
+    and ax,0F000h
+
+griSave:    
+    mov fs:[edx],eax
+    mov fs:[edx+4],ebx
+    add ax,ds:vfs_bytes_per_sector
+    add edx,8
+    inc cx
+    sub bp,1
+    jnz griSave
+;
+    cmp cx,ds:vfs_max_req
+    jae griDone
+;
+    add esi,8
+    test si,0FFFh
+    jz griDone
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+    jz griDone
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz griBlockLoop
+
+griDone:
+    pop esi
+    pop edx
+    pop eax
+    ret
+GetReadIo   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
