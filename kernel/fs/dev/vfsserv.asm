@@ -1996,6 +1996,9 @@ srrLockOk:
 
 srrDo:
     inc gs:vfsrh_remain_count
+    test bp,es:[esi].vfsp_ref_bitmap
+    jnz srrNext
+;
     or es:[esi].vfsp_ref_bitmap,bp
     call AddToBitmap
 

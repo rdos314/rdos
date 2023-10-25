@@ -995,6 +995,9 @@ srorLockOk:
 
 srorReq:
     inc gs:vfs_rd_remain_count
+    test bp,es:[esi].vfsp_ref_bitmap
+    jnz srorNext
+;
     or es:[esi].vfsp_ref_bitmap,bp
     call AddToBitmap
 
@@ -1083,120 +1086,6 @@ StartRead     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           StartOneWrite
-;
-;       DESCRIPTION:    Start one write req
-;
-;       PARAMETERS:     FS          Part sel
-;                       EDX         MSB sector
-;                       GS:EDI      LSB sector array
-;                       ECX         Sector count
-;                       BP          Req bitmap
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartOneWrite  Proc near
-    mov eax,gs:[edi]
-    test al,7
-    jz srowCheckMid
-
-srowStartLoop:
-    mov eax,gs:[edi]
-    call BlockToBuf
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz srowStartReq
-;
-    cmp es:[esi].vfsp_ref_bitmap,0
-    jnz srowStartLockOk
-;
-    inc ds:vfs_locked_pages
-
-srowStartLockOk:
-    inc es:[esi].vfsp_ref_bitmap
-    jmp srowStartNext
-
-srowStartReq:
-    inc gs:vfs_rd_remain_count
-    or es:[esi].vfsp_ref_bitmap,bp
-    call AddToBitmap
-
-srowStartNext:
-    add edi,4
-    sub ecx,1
-    jz srowDone
-;
-    mov eax,gs:[edi]
-    test al,7
-    jnz srowStartLoop
-
-srowCheckMid:
-    cmp ecx,8
-    jb srowEndLoop
-
-srowMidLoop:
-    mov eax,gs:[edi]
-    call BlockToBuf
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz srowMidReq
-;
-    cmp es:[esi].vfsp_ref_bitmap,0
-    jnz srowMidLockOk
-;
-    inc ds:vfs_locked_pages
-
-srowMidLockOk:
-    inc es:[esi].vfsp_ref_bitmap
-    jmp srowMidNext
-
-srowMidReq:
-    or es:[esi].vfsp_flags,VFS_PHYS_VALID
-    mov es:[esi].vfsp_ref_bitmap,1
-    inc ds:vfs_locked_pages
-
-srowMidNext:
-    add edi,4
-    sub ecx,1
-    jz srowDone
-;
-    mov eax,gs:[edi]
-    test al,7
-    jnz srowMidLoop
-;
-    cmp ecx,8
-    jae srowMidLoop
-
-srowEndLoop:
-    mov eax,gs:[edi]
-    call BlockToBuf
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz srowEndReq
-;
-    cmp es:[esi].vfsp_ref_bitmap,0
-    jnz srowEndLockOk
-;
-    inc ds:vfs_locked_pages
-
-srowEndLockOk:
-    inc es:[esi].vfsp_ref_bitmap
-    jmp srowEndNext
-
-srowEndReq:
-    inc gs:vfs_rd_remain_count
-    or es:[esi].vfsp_ref_bitmap,bp
-    call AddToBitmap
-
-srowEndNext:
-    add edi,4
-    sub ecx,1
-    jnz srowEndLoop
-
-srowDone:
-    ret
-StartOneWrite    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           StartWrite
 ;
 ;       DESCRIPTION:    Start write req
@@ -1244,7 +1133,7 @@ srwLoop:
 ;
     mov ecx,gs:[edi].vfsm_rd_count
     mov edi,gs:[edi].vfsm_rd_ptr
-    call StartOneWrite
+    call StartOneRead
 
 srwNext:
     pop edi
