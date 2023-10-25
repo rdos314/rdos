@@ -975,8 +975,6 @@ ProcessReadReq  Proc near
     push fs
     pushad
 ;
-    sub esp,8
-;
     push ds
     mov ds,fs:vfsp_disc_sel
     mov ax,serv_flat_sel
@@ -984,10 +982,8 @@ ProcessReadReq  Proc near
     pop fs
 ;
     mov ebx,fs:[4*ebx].kf_handle_arr
-    mov eax,fs:[ebx].kre_phys_arr
-    mov [esp+4],eax
-    mov eax,fs:[ebx].kre_block_arr
-    mov [esp+8],eax
+    mov edi,fs:[ebx].kre_phys_arr
+    mov ebp,fs:[ebx].kre_block_arr
     mov ebx,esi
 ;
     mov eax,gs:[ebx]
@@ -1010,24 +1006,18 @@ prrLoop:
     jnz prrLoop
 
 prrSave:
-    mov ebp,[esp+4]
-    mov fs:[ebp],eax
-    mov fs:[ebp+4],edx
-    add ebp,8
-    mov [esp+4],ebp
+    mov fs:[edi],eax
+    mov fs:[edi+4],edx
+    add edi,8
 ;
     mov eax,gs:[ebx]
     mov edx,gs:[ebx+4]
-    mov ebp,[esp+8]
     mov es:[ebp],eax
     mov es:[ebp+4],edx
     add ebp,8
-    mov [esp+8],ebp
     jmp prrLoop
 
 prrDone:
-    add esp,8
-;
     popad
     pop fs
     pop es
