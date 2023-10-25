@@ -994,7 +994,8 @@ SetupReadReq   Proc near
     mov ds:[ebx].kre_phys_arr,edx
 ;
     inc ds:kf_block_count
-    AllocateBlk
+    movzx eax,cx
+    AllocateBigServ
     mov ds:[ebx].kre_block_arr,edx
 ;
     pop edx
@@ -1070,8 +1071,8 @@ prrSave:
     mov eax,gs:[ebx]
     mov edx,gs:[ebx+4]
     mov ebp,[esp+8]
-    mov fs:[ebp],eax
-    mov fs:[ebp+4],edx
+    mov es:[ebp],eax
+    mov es:[ebp+4],edx
     add ebp,8
     mov [esp+8],ebp
     jmp prrLoop
@@ -2649,8 +2650,8 @@ ufrSectorLoop:
     jz ufrSectorNext
 ;
     push edx
-    mov eax,gs:[ebp]
-    mov edx,gs:[ebp+4]
+    mov eax,es:[ebp]
+    mov edx,es:[ebp+4]
     call UpdateWrBitmap
     pop edx
 ;
@@ -2665,8 +2666,8 @@ ufrWrLast:
     or bl,bl
     jz ufrDone
 ;
-    mov eax,gs:[ebp]
-    mov edx,gs:[ebp+4]
+    mov eax,es:[ebp]
+    mov edx,es:[ebp+4]
     call UpdateWrBitmap
 
 ufrDone:
@@ -2737,8 +2738,8 @@ ffrFreeAll:
     shr eax,9
 ;    
     push eax
-    mov eax,gs:[edi]
-    mov edx,gs:[edi+4]
+    mov eax,es:[edi]
+    mov edx,es:[edi+4]
     call BlockToPhys
     pop eax
 ;
@@ -2775,7 +2776,8 @@ ffrFreeEntry:
 ;
     dec ds:kf_block_count
     mov edx,ds:[ebx].kre_block_arr
-    FreeBlk
+    movzx ecx,cx
+    FreeBigServ
 
 ffrReq:
     mov edx,ebp
