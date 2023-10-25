@@ -2663,6 +2663,7 @@ FreeFileReq  Proc near
     mov eax,8
     sub eax,edx
     mov ds,fs:vfsp_disc_sel
+    EnterSection ds:vfs_section
 
 ffrFreeLoop:
     shl eax,9
@@ -2703,6 +2704,8 @@ ffrFreeNext:
     jmp ffrFreeLoop
 
 ffrFreeEntry:
+    LeaveSection ds:vfs_section
+;
     mov eax,gs
     mov ds,eax
     mov ebx,ebp
