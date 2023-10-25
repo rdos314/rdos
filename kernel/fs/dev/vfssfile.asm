@@ -1389,7 +1389,10 @@ cwLoop:
     adc edx,fs:vfsp_start_sector+4
     call BlockToBuf
 ;
-    dec es:[esi].vfsp_ref_bitmap
+    sub es:[esi].vfsp_ref_bitmap,1
+    jnz cwNext
+;
+    dec ds:vfs_locked_pages
 
 cwNext:
     add edi,8
