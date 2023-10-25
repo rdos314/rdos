@@ -2493,6 +2493,7 @@ hdWrite:
     jmp hdCheckMore
 
 hdWriteDone:
+    mov ecx,8
     call ClearIoBitmap
     LeaveSection ds:vfs_section
     jmp hdRetry
