@@ -998,12 +998,12 @@ prrLoop:
 ;
     add ebx,8
     mov eax,gs:[ebx]
+    test al,7
+    jnz prrLoop
+;
     mov edx,gs:[ebx+4]
     call BlockToPhys
     jc prrDone
-;
-    test eax,0FFFh
-    jnz prrLoop
 
 prrSave:
     mov fs:[edi],eax
