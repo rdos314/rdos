@@ -2381,9 +2381,6 @@ write_vfs_sectors    Proc far
     xor bl,bl
 
 wvrBlockLoop:
-    call BlockToBuf
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz wvrLeave
 
 wvrSectorLoop:
     or bl,bh

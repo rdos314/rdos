@@ -1758,11 +1758,12 @@ UpdateWrBitmap   Proc near
     push ecx
     push esi
     push edi
-;
-    push ebx
+    push ebp
 ;
     push eax
-    mov ecx,eax
+    push ebx
+;
+    mov esi,eax
     mov ebx,edx
     shl ebx,2
     mov eax,ds:[ebx].vfs_buf_arr
@@ -1774,9 +1775,10 @@ UpdateWrBitmap   Proc near
     mov ds:[ebx].vfs_buf_arr,eax
 
 uwbEntryOk:
+    mov ebp,eax
     and ax,0F000h
 ;
-    mov ebx,ecx
+    mov ebx,esi
     shr ebx,20
     and ebx,0FFCh
     add ebx,eax
@@ -1809,10 +1811,17 @@ uwbBufDir:
     add esi,eax
 ;
     pop ebx
+    pop eax
 ;
     push eax
     push ecx
 ;
+    test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+    jnz uwbValid
+;
+    int 3
+
+uwbValid:
     mov al,es:[esi].vfsp_wr_bitmap
     and al,bl
     xor al,bl
@@ -1831,6 +1840,8 @@ uwbBufDir:
     pop ecx
     pop eax
 ;
+    push eax
+    mov eax,ebp
     mov ebx,ecx
     shr ebx,18
     and ebx,3FFCh
@@ -1864,6 +1875,7 @@ uwbBitmapPtr:
     mov ds:vfs_scan_pos+4,edx
 
 uwbDone:
+    pop ebp
     pop edi
     pop esi
     pop ecx
