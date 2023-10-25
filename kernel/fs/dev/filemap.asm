@@ -866,7 +866,7 @@ SendCloseReq     Endp
 ;
 ;       PARAMETERS:     FS                 Part sel
 ;                       ECX                Buffered blocks
-;                       GS:ESI             Sector array
+;                       GS:ESI             Block array
 ;
 ;       RETURNS:        AX                 Page count
 ;                       ECX                Used blocks
@@ -874,20 +874,10 @@ SendCloseReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CalcPageCount  Proc near
-    push ds
-    push es
     push ebx
-    push edx
     push esi
-    push edi
-    push ebp
 ;
-    push esi
     push ecx
-;
-    mov ds,fs:vfsp_disc_sel
-    mov bx,serv_flat_sel
-    mov es,ebx
 ;
     xor ebx,ebx
     or ecx,ecx
@@ -895,54 +885,19 @@ CalcPageCount  Proc near
     jz cpcDone
 ;
     inc ebx
-;
-    mov esi,[esp+4]
-    mov eax,gs:[esi]
-    mov edx,gs:[esi+4]
-    call BlockToPhys
-    jc cpcDone
-;
-    mov edi,eax
-    mov ebp,edx
 
 cpcLoop:
     sub ecx,1
     jz cpcDone
 ;
-    mov esi,[esp+4]
     add esi,8
-    mov [esp+4],esi
     mov eax,gs:[esi]
-    mov edx,gs:[esi+4]
-    call BlockToPhys
-    jc cpcDone
+    test al,7
+    jnz cpcLoop
 ;
-    test eax,0FFFh
-    jz cpcFirst
-
-cpcMid:
-    add edi,200h
-    cmp edi,eax
-    jne cpcNext
-;
-    cmp ebp,edx
-    je cpcLoop
-    jmp cpcNext
-
-cpcFirst:
-    mov ebp,edx
-    mov dx,di
-    and dx,0FFFh
-    cmp dx,0E00h
-    jne cpcDone
-;
-    mov edi,eax
     inc ebx
     cmp ebx,1FFFh
-    je cpcDone
-
-cpcNext:
-    jmp cpcLoop
+    jne cpcLoop
 
 cpcDone:
     mov eax,ecx
@@ -951,14 +906,7 @@ cpcDone:
     mov eax,ebx
 ;
     pop esi
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
     pop ebx
-    pop es
-    pop ds
     ret
 CalcPageCount  Endp
 
