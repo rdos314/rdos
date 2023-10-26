@@ -32,6 +32,8 @@
 #include "fatdir.h"
 #include "fatfs.h"
 
+#include "datetime.h"
+
 /*##########################################################################
 #
 #   Name       : TFatDir::TFatDir
@@ -975,6 +977,10 @@ bool TFatDir::UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fi
     struct TFatDirEntry *e;
     bool change = false;
     unsigned int cluster;
+
+    TDateTime from((unsigned long long)direntry->AccessTime);
+    TDateTime to((unsigned long long)fileinfo->AccessTime);
+
 
     Req.WaitForever();
 

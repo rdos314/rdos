@@ -32,6 +32,7 @@
 #include "file.h"
 #include "serv.h"
 #include "fs.h"
+#include "datetime.h"
 
 // define DEBUG   1
 
@@ -1245,6 +1246,9 @@ void TFile::SyncDirEntry()
 ##########################################################################*/
 void TFile::SetAccessTime(long long time)
 {
+    TDateTime to((unsigned long long)time);
+    TDateTime from((unsigned long long)Info->AccessTime);
+
     Info->AccessTime = time;
     SyncDirEntry();
 }

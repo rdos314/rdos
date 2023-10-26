@@ -2387,7 +2387,7 @@ wvrBlockLoop:
 
 wvrSectorLoop:
     or bl,bh
-    rol bl,cl
+    rol bh,cl
 ;
     sub ebp,1
     jz wvrUpdateBlock
