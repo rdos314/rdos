@@ -288,6 +288,8 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     FFreeList = 0;
 
     FParent->UnlockEntry(entry);
+
+    SetAccessTime(RdosGetLongTime());
 }
 
 /*##########################################################################
@@ -870,8 +872,6 @@ TFileReq *TFile::HandleRead(long long pos, int size)
             printf(str);
             ServNotifyVfsFileReq(Handle, pos, size);
         }
-
-        SetAccessTime(RdosGetLongTime());
     }
     else
     {
@@ -1246,9 +1246,6 @@ void TFile::SyncDirEntry()
 ##########################################################################*/
 void TFile::SetAccessTime(long long time)
 {
-    TDateTime to((unsigned long long)time);
-    TDateTime from((unsigned long long)Info->AccessTime);
-
     Info->AccessTime = time;
     SyncDirEntry();
 }
