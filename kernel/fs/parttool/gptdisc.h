@@ -75,6 +75,7 @@ public:
     ~TGptTable();
 
     void ReadTable(TDisc *Disc, long long StartSector);
+    void Recreate(TDisc *Disc, struct TGptPartHeader *OtherHeader, struct TGptPartEntry *OtherPart);
 
     bool HeaderOk;
 
@@ -88,6 +89,8 @@ public:
 protected:
     void ReadEntryArr(TDisc *Disc);
     void Sort();
+    void InitHeader(long long MyLba, long long OtherLba);
+
     void GrowPart();
 };
 
@@ -108,6 +111,7 @@ public:
 protected:
     virtual bool CreatePart(int Handle, int Type, long long Start, long long Sectors);
 
+    void MergeTables();
 };
 
 #endif

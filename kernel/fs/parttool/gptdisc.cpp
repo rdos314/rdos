@@ -346,6 +346,60 @@ void TGptTable::ReadTable(TDisc *Disc, long long StartSector)
     }
 }
 
+/*##################  TGptTable::InitHeader  #############
+*   Purpose....: Init header
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TGptTable::InitHeader(long long MyLba, long long OtherLba)
+{
+    Header.EntryCount = 128;
+
+    strcpy(Header.Sign, "EFI PART");
+    Header.Revision[0] = 0;
+    Header.Revision[1] = 0;
+    Header.Revision[2] = 1;
+    Header.Revision[3] = 0;
+
+    Header.HeaderSize = sizeof(struct TGptPartHeader);
+    Header.Crc32 = 0;    
+    Header.Resv = 0;
+
+    Header.CurrLba = MyLba;
+    Header.OtherLba = OtherLba;
+
+    Header.FirstLba = 34;
+
+    if (MyLba == 1)
+        Header.LastLba = OtherLba - 1;
+    else
+        Header.LastLba = MyLba - 1;
+
+    RdosCreateUuid(Header.Guid);
+
+    Header.EntryLba = MyLba + 1;    
+    Header.EntrySize = 128;
+};
+
+/*##########################################################################
+#
+#   Name       : TGptTable::Recreate
+#
+#   Purpose....: Recreate table
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TGptTable::Recreate(TDisc *Disc, struct TGptPartHeader *OtherHeader, struct TGptPartEntry *OtherPart)
+{
+    if (!HeaderOk)
+        InitHeader(OtherHeader->OtherLba, OtherHeader->CurrLba);
+}
+
 /*##########################################################################
 #
 #   Name       : TGptDisc::TGptDisc
@@ -395,6 +449,21 @@ bool TGptDisc::IsGpt()
 
 /*##########################################################################
 #
+#   Name       : TGptDisc::MergeTables
+#
+#   Purpose....: Merge tables
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TGptDisc::MergeTables()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TGptDisc::LoadPart
 #
 #   Purpose....: Load partitions
@@ -410,6 +479,19 @@ bool TGptDisc::LoadPart()
 
     if (PrimaryTable.HeaderOk)
         SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
+
+    if (PrimaryTable.PartEntryArr && SecondaryTable.PartEntryArr)
+        MergeTables();
+    else
+    {
+        if (PrimaryTable.PartEntryArr)
+            SecondaryTable.Recreate(this, &PrimaryTable.Header, PrimaryTable.PartEntryArr);
+        else
+        {
+            if (SecondaryTable.PartEntryArr)
+                PrimaryTable.Recreate(this, &SecondaryTable.Header, SecondaryTable.PartEntryArr);
+        }
+    }
 
     return true;
 }
