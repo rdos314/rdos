@@ -195,6 +195,65 @@ void TGptTable::GrowPart()
     FMaxPartCount = Size;
 }
 
+/*##################  TGptTable::Sort  #############
+*   Purpose....: Sort partition array
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TGptTable::Sort()
+{
+    int i;
+    bool Exchange;
+    bool Changed;
+    struct TGptPartEntry *PrevEntry;
+    struct TGptPartEntry *CurrEntry;
+    struct TGptPartEntry Temp;
+
+    Changed = true;
+
+    while (Changed)
+    {
+        Changed = false;
+
+        PrevEntry = PartEntryArr;
+
+        if (PrevEntry)
+        {            
+            CurrEntry = PrevEntry;
+            CurrEntry++;
+        
+            for (i = 1; i < Header.EntryCount; i++)
+            {
+                Exchange = false;
+                
+                if (CurrEntry->FirstLba)
+                {
+                    if (PrevEntry->FirstLba == 0)
+                        Exchange = true;
+                    else
+                    {
+                        if (CurrEntry->FirstLba < PrevEntry->FirstLba)
+                            Exchange = true;
+                    }
+                }
+
+                if (Exchange)
+                {
+                    Temp = *CurrEntry;
+                    *CurrEntry = *PrevEntry;
+                    *PrevEntry = Temp;
+                    Changed = true;
+                }
+
+                CurrEntry++;
+                PrevEntry++;
+            }
+        }
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : TGptTable::ReadEntryArr
@@ -228,6 +287,7 @@ void TGptTable::ReadEntryArr(TDisc *Disc)
         {
             PartEntryArr = new struct TGptPartEntry[Header.EntryCount];
             memcpy(PartEntryArr, Buf, Header.EntryCount * sizeof(struct TGptPartEntry));
+            Sort();
         }
     }
 }

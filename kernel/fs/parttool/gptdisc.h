@@ -87,6 +87,7 @@ public:
 
 protected:
     void ReadEntryArr(TDisc *Disc);
+    void Sort();
     void GrowPart();
 };
 
