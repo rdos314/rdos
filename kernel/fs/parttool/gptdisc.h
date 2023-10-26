@@ -74,16 +74,19 @@ public:
     TGptTable();
     ~TGptTable();
 
-    bool ReadTable(TDisc *Disc, long long StartSector);
+    void ReadTable(TDisc *Disc, long long StartSector);
+
+    bool HeaderOk;
 
     struct TGptPartHeader Header;
+    struct TGptPartEntry *PartEntryArr;
 
     TGptPartition **FPartArr;
     int FCurrPartCount;
     int FMaxPartCount;
 
 protected:
-    bool ReadEntryArr(TDisc *Disc);
+    void ReadEntryArr(TDisc *Disc);
     void GrowPart();
 };
 

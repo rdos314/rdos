@@ -132,6 +132,10 @@ TGptTable::TGptTable()
     FMaxPartCount = 4;
     FPartArr = new TGptPartition*[FMaxPartCount];
 
+    PartEntryArr = 0;
+
+    HeaderOk = false;
+
     for (i = 0; i < FMaxPartCount; i++)
         FPartArr[i] = 0;
 }
@@ -156,6 +160,9 @@ TGptTable::~TGptTable()
             delete FPartArr[i];
 
     delete FPartArr;
+
+    if (PartEntryArr)
+        delete PartEntryArr;
 }
 
 /*##########################################################################
@@ -199,14 +206,13 @@ void TGptTable::GrowPart()
 #   Returns....: *
 #
 ##########################################################################*/
-bool TGptTable::ReadEntryArr(TDisc *Disc)
+void TGptTable::ReadEntryArr(TDisc *Disc)
 {
     char *Buf;
     int SectorCount = Header.EntryCount * sizeof(struct TGptPartEntry) / Disc->FBytesPerSector;
     TDiscServer *Server = Disc->GetServer();
     TDiscReq req(Server);
     TDiscReqEntry e1(&req, Header.EntryLba, SectorCount);
-    struct TPartEntry *EntryData;
     int size = SectorCount * Disc->FBytesPerSector;
     unsigned int ThisCrc32;
 
@@ -216,14 +222,14 @@ bool TGptTable::ReadEntryArr(TDisc *Disc)
     {
         Buf = (char *)e1.Map();
 
-        EntryData = (struct TPartEntry *)Buf;
-
         ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, Buf, size);
 
         if (ThisCrc32 == Header.EntryCrc32)
-            return true;
+        {
+            PartEntryArr = new struct TGptPartEntry[Header.EntryCount];
+            memcpy(PartEntryArr, Buf, Header.EntryCount * sizeof(struct TGptPartEntry));
+        }
     }
-    return false;
 }
 
 /*##########################################################################
@@ -237,7 +243,7 @@ bool TGptTable::ReadEntryArr(TDisc *Disc)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
+void TGptTable::ReadTable(TDisc *Disc, long long StartSector)
 {
     char *Buf;
     TDiscServer *Server = Disc->GetServer();
@@ -245,7 +251,14 @@ bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
     TDiscReqEntry e1(&req, StartSector, 1);
     unsigned int Crc32;
     unsigned int ThisCrc32;
-    bool ok = false;
+
+    HeaderOk = false;
+
+    if (PartEntryArr)
+    {
+        delete PartEntryArr;
+        PartEntryArr = 0;
+    }
 
     req.WaitForever();
 
@@ -261,17 +274,16 @@ bool TGptTable::ReadTable(TDisc *Disc, long long StartSector)
             ThisCrc32 = RdosCalcCrc32(0xFFFFFFFF, (const char *)&Header, Header.HeaderSize);
             Header.Crc32 = Crc32;
 
-            if (Crc32 == ThisCrc32)
-            {
+            if (Crc32 == ThisCrc32) 
+            {           
                 if (Header.EntrySize == sizeof(struct TGptPartEntry))
                 {
-                    ok = ReadEntryArr(Disc);
+                    HeaderOk = true;
+                    ReadEntryArr(Disc);
                 }
-            }        
+            }
         }
     }
-
-    return ok;
 }
 
 /*##########################################################################
@@ -334,16 +346,12 @@ bool TGptDisc::IsGpt()
 ##########################################################################*/
 bool TGptDisc::LoadPart()
 {
-    bool ok;
+    PrimaryTable.ReadTable(this, 1);
 
-    ok = PrimaryTable.ReadTable(this, 1);
-    if (ok)
+    if (PrimaryTable.HeaderOk)
         SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
 
-    if (ok)
-        return TDisc::LoadPart();
-    else
-        return false;
+    return true;
 }
 
 /*##########################################################################
