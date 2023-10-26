@@ -869,6 +869,8 @@ TFileReq *TFile::HandleRead(long long pos, int size)
             printf(str);
             ServNotifyVfsFileReq(Handle, pos, size);
         }
+
+        SetAccessTime(RdosGetLongTime());
     }
     else
     {
@@ -912,6 +914,7 @@ void TFile::HandleUpdateReq(long long pos, int size)
     int count;
     int offset;
     int curr;
+    bool update = false;
 
     if (pos + size > Info->CurrSize)
         size = (int)(Info->CurrSize - pos);
@@ -944,6 +947,8 @@ void TFile::HandleUpdateReq(long long pos, int size)
 
                 ServUpdateVfsFileReq(Handle, FileReq->Req + 1, offset, curr);
 
+                update = true;
+
                 start += curr;
                 count -= curr;
             }            
@@ -962,6 +967,9 @@ void TFile::HandleUpdateReq(long long pos, int size)
         RdosWriteFile(FileHandle, str, strlen(str));
         printf(str);
     }
+
+    if (update)
+        SetModifyTime(RdosGetLongTime());
 }
 
 /*##########################################################################
@@ -1199,4 +1207,61 @@ void TFile::HandleSizeReq(long long req)
     printf(str);
 
     SetSize(req);
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::SyncDirEntry
+#
+#   Purpose....: Sync dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::SyncDirEntry()
+{
+    struct RdosDirEntry *entry;
+
+    entry = FParent->LockEntry(FParentIndex);
+    if (entry)
+    {
+        FParent->UpdateEntry(entry, Info);
+        FParent->UnlockEntry(entry);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::SetAccessTime
+#
+#   Purpose....: Set access time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::SetAccessTime(long long time)
+{
+    Info->AccessTime = time;
+    SyncDirEntry();
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::SetModifyTime
+#
+#   Purpose....: Set modify time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::SetModifyTime(long long time)
+{
+    Info->ModifyTime = time;
+    SyncDirEntry();
 }

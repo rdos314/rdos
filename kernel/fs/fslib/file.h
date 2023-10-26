@@ -79,6 +79,9 @@ public:
 
     int GetAttrib();
 
+    void SetAccessTime(long long time);
+    void SetModifyTime(long long time);
+
     virtual bool GrowDisc(long long Size) = 0;
     virtual bool SetSize(long long Size) = 0;
 
@@ -97,6 +100,8 @@ protected:
     virtual void SetRead(long long RelSector, int Sectors);
     virtual void SetWrite(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
+
+    void SyncDirEntry();
 
     TFileReq *AllocateReq();
     void FreeReq(TFileReq *req);
