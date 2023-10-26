@@ -54,11 +54,13 @@ public:
     long long BytePos;
     long long SectPos;
 
-    int MaxSectors;
-    int SectorCount;
-    long long *SectorArr;
-
     TFileReq *Link;
+
+    int SectorCount;
+
+protected:
+    int MaxSectors;
+    long long *SectorArr;
 };
 
 class TFile
