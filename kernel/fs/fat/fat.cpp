@@ -312,9 +312,6 @@ bool SetCreateTime(struct TFatDirEntry *entry, long long td)
     if (time != entry->CrTime)
         return true;
 
-    if (ms != entry->CrMs)
-        return true;
-
     return false;
 }
 

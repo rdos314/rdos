@@ -175,13 +175,13 @@ void TFatDir::Add(int pos, const char *name, struct TFatDirEntry *fat)
     entry = TDir::Add(name, cluster);
 
     if (fat->CrDate)
-        entry->CreateTime = DecodeTime(fat->CrDate, fat->CrTime, fat->CrMs);
+        entry->CreateTime = DecodeTime(fat->CrDate, fat->CrTime, fat->CrMs) + 1193 / 2;
 
     if (fat->WrDate)
-        entry->ModifyTime = DecodeTime(fat->WrDate, fat->WrTime, 0);
+        entry->ModifyTime = DecodeTime(fat->WrDate, fat->WrTime, 0) + 1193 / 2;
 
     if (fat->AcDate)
-        entry->AccessTime = DecodeTime(fat->AcDate, 0, 0);
+        entry->AccessTime = DecodeTime(fat->AcDate, 0, 0) + 1193 / 2;
 
     entry->Attrib = DecodeAttrib(fat->Attr);
     entry->Size = fat->FileSize;
