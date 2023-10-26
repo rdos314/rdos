@@ -122,7 +122,7 @@ protected:
     virtual void HandleGrowReq(TFile *file, long long size);
     virtual void HandleUpdateReq(TFile *file, long long pos, int size);
     virtual void HandleSizeReq(TFile *file, long long size);
-    bool HandleQueue(struct TFsQueueEntry *entry);
+    void HandleQueue(TFile *file, struct TFsQueueEntry *entry);
     void StartServer();
 
     int FileHandleToIndex(int handle);

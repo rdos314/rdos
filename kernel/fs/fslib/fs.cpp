@@ -1523,54 +1523,43 @@ void TFs::HandleSizeReq(TFile *file, long long req)
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFs::HandleQueue(struct TFsQueueEntry *entry)
+void TFs::HandleQueue(TFile *file, struct TFsQueueEntry *entry)
 {
-    int handle = entry->File;
-    TFile *file = 0;
-
-    if (handle > 0 && handle <= FMaxFileCount)
-        file = FFileArr[handle - 1];
-
-    if (file)
+    switch (entry->Op)
     {
-        switch (entry->Op)
-        {
-            case REQ_READ:
-                HandleRead(file, entry->Par64, entry->Par32);
-                break;
+        case REQ_READ:
+            HandleRead(file, entry->Par64, entry->Par32);
+            break;
 
-            case REQ_COMPLETED:
-                HandleCompletedReq(file, entry->Par32);
-                break;
+        case REQ_COMPLETED:
+            HandleCompletedReq(file, entry->Par32);
+            break;
 
-            case REQ_MAP:
-                HandleMapReq(file, entry->Par32);
-                break;
+        case REQ_MAP:
+            HandleMapReq(file, entry->Par32);
+            break;
 
-            case REQ_GROW:
-                HandleGrowReq(file, entry->Par64);
-                break;
+        case REQ_GROW:
+            HandleGrowReq(file, entry->Par64);
+            break;
 
-            case REQ_UPDATE:
-                HandleUpdateReq(file, entry->Par64, entry->Par32);
-                break;
+        case REQ_UPDATE:
+            HandleUpdateReq(file, entry->Par64, entry->Par32);
+            break;
 
-            case REQ_FREE:
-                HandleFreeReq(file, entry->Par32);
-                break;
+        case REQ_FREE:
+            HandleFreeReq(file, entry->Par32);
+            break;
 
-            case REQ_SIZE:
-                HandleSizeReq(file, entry->Par64);
-                break;
+        case REQ_SIZE:
+            HandleSizeReq(file, entry->Par64);
+            break;
 
-            case REQ_CLOSE:
-                file->Close();
-                break;
+        case REQ_CLOSE:
+            file->Close();
+            break;
 
-        }
     }
-
-    return true;
 }
 
 /*##########################################################################
@@ -1588,6 +1577,8 @@ void TFs::Execute()
 {
     int index;
     struct TFsQueueEntry *entry;
+    int handle;
+    TFile *file;
 
     if (!FQueueArr)
     {
@@ -1608,8 +1599,16 @@ void TFs::Execute()
         if (FQueueArr[index].Op)
         {
             entry = &FQueueArr[index];
-            if (HandleQueue(entry))
+            handle = entry->File;
+
+            if (handle > 0 && handle <= FMaxFileCount)
+                file = FFileArr[handle - 1];
+            else
+                file = 0;
+
+            if (file)
             {
+                HandleQueue(file, entry);
                 entry->Op = 0;
                 index = (index + 1) % 256;
             }
