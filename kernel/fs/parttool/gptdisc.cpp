@@ -128,16 +128,14 @@ TGptTable::TGptTable()
 {
     int i;
 
-    FCurrPartCount = 0;
-    FMaxPartCount = 4;
-    FPartArr = new TGptPartition*[FMaxPartCount];
-
-    PartEntryArr = 0;
+    PartCount = 0;
+    MaxPartCount = 4;
+    PartArr = new TGptPartEntry*[MaxPartCount];
 
     HeaderOk = false;
 
-    for (i = 0; i < FMaxPartCount; i++)
-        FPartArr[i] = 0;
+    for (i = 0; i < MaxPartCount; i++)
+        PartArr[i] = 0;
 }
 
 /*##########################################################################
@@ -155,14 +153,11 @@ TGptTable::~TGptTable()
 {
     int i;
 
-    for (i = 0; i < FCurrPartCount; i++)
-        if (FPartArr[i])
-            delete FPartArr[i];
+    for (i = 0; i < PartCount; i++)
+        if (PartArr[i])
+            delete PartArr[i];
 
-    delete FPartArr;
-
-    if (PartEntryArr)
-        delete PartEntryArr;
+    delete PartArr;
 }
 
 /*##########################################################################
@@ -179,79 +174,64 @@ TGptTable::~TGptTable()
 void TGptTable::GrowPart()
 {
     int i;
-    int Size = 2 * FMaxPartCount;
-    TGptPartition **NewArr;
+    int Size = 2 * MaxPartCount;
+    TGptPartEntry **NewArr;
 
-    NewArr = new TGptPartition*[Size];
+    NewArr = new TGptPartEntry*[Size];
 
-    for (i = 0; i < FMaxPartCount; i++)
-        NewArr[i] = FPartArr[i];
+    for (i = 0; i < MaxPartCount; i++)
+        NewArr[i] = PartArr[i];
 
-    for (i = FMaxPartCount; i < Size; i++)
+    for (i = MaxPartCount; i < Size; i++)
         NewArr[i] = 0;
 
-    delete FPartArr;
-    FPartArr = NewArr;
-    FMaxPartCount = Size;
+    delete PartArr;
+    PartArr = NewArr;
+    MaxPartCount = Size;
 }
 
-/*##################  TGptTable::Sort  #############
-*   Purpose....: Sort partition array
+/*##################  TGptTable::Add  #############
+*   Purpose....: Add entry
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TGptTable::Sort()
+bool TGptTable::Add(struct TGptPartEntry *entry)
 {
+    int pos;
     int i;
-    bool Exchange;
-    bool Changed;
-    struct TGptPartEntry *PrevEntry;
-    struct TGptPartEntry *CurrEntry;
-    struct TGptPartEntry Temp;
+    struct TGptPartEntry *e;  
 
-    Changed = true;
+    if (entry->FirstLba == 0)
+        return false;
 
-    while (Changed)
-    {
-        Changed = false;
+    for (pos = 0; pos < PartCount; pos++)
+        if (entry->FirstLba < PartArr[pos]->FirstLba)
+            break;
 
-        PrevEntry = PartEntryArr;
+    if (pos)
+        if (entry->FirstLba <= PartArr[pos-1]->LastLba)
+            return false;
 
-        if (PrevEntry)
-        {            
-            CurrEntry = PrevEntry;
-            CurrEntry++;
-        
-            for (i = 1; i < Header.EntryCount; i++)
-            {
-                Exchange = false;
-                
-                if (CurrEntry->FirstLba)
-                {
-                    if (PrevEntry->FirstLba == 0)
-                        Exchange = true;
-                    else
-                    {
-                        if (CurrEntry->FirstLba < PrevEntry->FirstLba)
-                            Exchange = true;
-                    }
-                }
+    if (PartCount > pos)
+        if (entry->LastLba >= PartArr[pos]->FirstLba)
+            return false;
 
-                if (Exchange)
-                {
-                    Temp = *CurrEntry;
-                    *CurrEntry = *PrevEntry;
-                    *PrevEntry = Temp;
-                    Changed = true;
-                }
+    if (PartCount == MaxPartCount)
+        GrowPart();
 
-                CurrEntry++;
-                PrevEntry++;
-            }
-        }
-    }
+    e = new TGptPartEntry;
+    *e = *entry;
+
+    for (i = PartCount - 1; i > pos; i--)
+        PartArr[i] = PartArr[i - 1];
+
+    PartArr[pos] = e;    
+
+    PartCount++;
+
+    return true;
 }
 
 /*##########################################################################
@@ -268,12 +248,14 @@ void TGptTable::Sort()
 void TGptTable::ReadEntryArr(TDisc *Disc)
 {
     char *Buf;
+    struct TGptPartEntry *PartEntryArr;
     int SectorCount = Header.EntryCount * sizeof(struct TGptPartEntry) / Disc->FBytesPerSector;
     TDiscServer *Server = Disc->GetServer();
     TDiscReq req(Server);
     TDiscReqEntry e1(&req, Header.EntryLba, SectorCount);
     int size = SectorCount * Disc->FBytesPerSector;
     unsigned int ThisCrc32;
+    int i;
 
     req.WaitForever();
 
@@ -285,9 +267,10 @@ void TGptTable::ReadEntryArr(TDisc *Disc)
 
         if (ThisCrc32 == Header.EntryCrc32)
         {
-            PartEntryArr = new struct TGptPartEntry[Header.EntryCount];
-            memcpy(PartEntryArr, Buf, Header.EntryCount * sizeof(struct TGptPartEntry));
-            Sort();
+            PartEntryArr = (struct TGptPartEntry *)Buf;
+
+            for (i = 0; i < Header.EntryCount; i++)
+                Add(PartEntryArr + i);
         }
     }
 }
@@ -313,12 +296,6 @@ void TGptTable::ReadTable(TDisc *Disc, long long StartSector)
     unsigned int ThisCrc32;
 
     HeaderOk = false;
-
-    if (PartEntryArr)
-    {
-        delete PartEntryArr;
-        PartEntryArr = 0;
-    }
 
     req.WaitForever();
 
@@ -460,6 +437,26 @@ bool TGptDisc::IsGpt()
 ##########################################################################*/
 void TGptDisc::MergeTables()
 {
+/*
+    int i;
+    int size;
+    bool primary = false;
+
+    size = PrimaryTable.Header.EntryCount;
+    if (SecondaryTable.Header.EntryCount < size);
+        size = SecondaryTable.Header.EntryCount;
+
+    for (i = 0; i < size && !primary; i++)
+    {
+        if (PrimaryTable->PartEntryArr[i].FirstLba != SecondaryTable->PartEntryArr[i].FirstLba)
+        {
+            if (PrimaryTable->PartEntryArr[i].FirstLba > SecondaryTable->PartEntryArr[i].FirstLba)
+                primary = !SecondaryTable->Insert(PrimaryTable->PartEntryArr[i]);
+            else
+                primary = !PrimaryTable->Insert(SecondaryTable->PartEntryArr[i]);
+        }
+    }
+*/
 }
 
 /*##########################################################################
@@ -480,18 +477,21 @@ bool TGptDisc::LoadPart()
     if (PrimaryTable.HeaderOk)
         SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
 
-    if (PrimaryTable.PartEntryArr && SecondaryTable.PartEntryArr)
+/*
+
+    if (PrimaryTable.PartCount && SecondaryTable.PartCount)
         MergeTables();
     else
     {
-        if (PrimaryTable.PartEntryArr)
+        if (PrimaryTable.PartCount)
             SecondaryTable.Recreate(this, &PrimaryTable.Header, PrimaryTable.PartEntryArr);
         else
         {
-            if (SecondaryTable.PartEntryArr)
+            if (SecondaryTable.PartCount)
                 PrimaryTable.Recreate(this, &SecondaryTable.Header, SecondaryTable.PartEntryArr);
         }
     }
+*/
 
     return true;
 }

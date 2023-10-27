@@ -30,6 +30,8 @@
 
 #include "discpart.h"
 
+#define MAX_GPT_PART_COUNT  64
+
 struct TGptPartHeader
 {
     char Sign[8];
@@ -76,19 +78,18 @@ public:
 
     void ReadTable(TDisc *Disc, long long StartSector);
     void Recreate(TDisc *Disc, struct TGptPartHeader *OtherHeader, struct TGptPartEntry *OtherPart);
+    bool Add(struct TGptPartEntry *PartEntry);
 
     bool HeaderOk;
 
     struct TGptPartHeader Header;
-    struct TGptPartEntry *PartEntryArr;
 
-    TGptPartition **FPartArr;
-    int FCurrPartCount;
-    int FMaxPartCount;
+    TGptPartEntry **PartArr;
+    int PartCount;
+    int MaxPartCount;
 
 protected:
     void ReadEntryArr(TDisc *Disc);
-    void Sort();
     void InitHeader(long long MyLba, long long OtherLba);
 
     void GrowPart();
