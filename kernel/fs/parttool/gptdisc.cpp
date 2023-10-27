@@ -32,6 +32,28 @@
 #include <serv.h>
 #include "gptdisc.h"
 
+struct TBootParamBlock
+{
+    short int BytesPerSector;
+    char Resv1;
+    short int MappingSectors;
+    char Resv3;
+    short int Resv4;
+    short int SmallSectors;
+    char Media;
+    short int Resv6;
+    unsigned short int SectorsPerCyl;
+    unsigned short int Heads;
+    int HiddenSectors;
+    int Sectors;
+    char Drive;
+    char Resv7;
+    char Signature;
+    int Serial;
+    char Volume[11];
+    char Fs[8];
+};
+
 /*##########################################################################
 #
 #   Name       : UuidToStr
@@ -508,6 +530,79 @@ bool TGptDisc::LoadPart()
 
 /*##########################################################################
 #
+#   Name       : TIGptDisc::WriteGptSector
+#
+#   Purpose....: Write GPT boot sector
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TGptDisc::WriteGptBoot()
+{
+    TDiscReq req(FServer);
+    TDiscReqEntry e1(&req, 0, 1, false);
+    char *Data;
+    char *BootSector;
+    TBootParamBlock *bootp;
+    long long Total;
+
+    req.WaitForever();
+
+    if (req.IsDone())
+    {
+        Data = (char *)e1.Map();
+
+        BootSector = new char[512];
+        RdosReadBinaryResource(0, 103, BootSector, 0x1BE);
+        memcpy(BootSector + 11, Data + 11, sizeof(TBootParamBlock));
+        memset(BootSector + 0x1BE, 0, 0x200 - 0x1BE);
+    
+        bootp = (TBootParamBlock *)(BootSector + 11);
+
+        Total = GetSectorCount();
+        if (Total > 0xFFFFFFFF)
+            Total = 0xFFFFFFFF;
+
+        bootp->BytesPerSector = FBytesPerSector;
+
+        bootp->BytesPerSector = FBytesPerSector;
+        bootp->Resv1 = 0;
+        bootp->MappingSectors = 0;
+        bootp->Resv3 = 0;
+        bootp->Resv4 = 0;
+        bootp->SmallSectors = 0;
+        bootp->Media = 0xF1;
+        bootp->Resv6 = 0;
+        bootp->HiddenSectors = 0;
+        bootp->Sectors = (int)Total;
+        bootp->Drive = 0x80;
+        bootp->Resv7 = 0;
+        bootp->Signature = 0;
+        bootp->Serial = 0;
+        memset(bootp->Volume, 0, 11);
+        memcpy(bootp->Fs, "RDOS    ", 8);
+
+        BootSector[0x1FE] = 0x55;
+        BootSector[0x1FF] = 0xAA;
+
+        BootSector[0x1BE + 4] = 0xEE;
+        *(long *)(BootSector + 0x1BE + 8) = 1;
+        if (Total > 0xFFFFFFFF)
+            *(long *)(BootSector + 0x1BE + 0xC) = 0xFFFFFFFF;
+        else
+            *(long *)(BootSector + 0x1BE + 0xC) = (int)Total - 1;
+
+        memcpy(Data, BootSector, 512);
+        e1.Write();
+
+        delete BootSector;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TGptDisc::InitPart
 #
 #   Purpose....: Init partitions
@@ -519,7 +614,9 @@ bool TGptDisc::LoadPart()
 ##########################################################################*/
 bool TGptDisc::InitPart()
 {
-    return false;
+    WriteGptBoot();            
+//    Part.Write(FLoaderSectors);    
+    return true;
 }
 
 /*##########################################################################

@@ -111,8 +111,13 @@ public:
 
 protected:
     void AddPossibleFs(struct TGptPartEntry *entry);
+    void WriteGptBoot();
 
     virtual bool CreatePart(int Handle, int Type, long long Start, long long Sectors);
+
+    int FLoaderSectors;
+    char *FBootLoader;
+    int FLoaderSize;
 };
 
 #endif
