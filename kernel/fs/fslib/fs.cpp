@@ -830,6 +830,9 @@ int TFs::GetDirEntryAttrib(int rel, char *path)
     if (FStopped)
         return -1;
 
+    if (path[0] == 0)
+        return FILE_ATTRIBUTE_DIRECTORY;
+
     while (!Parser.IsLast())
     {
         if (Parser.IsDir())
@@ -1321,7 +1324,7 @@ void TFs::CloseFile(int handle)
         if (file)
         {
             file->WaitForClosing();
- 
+
             FFileArr[index] = 0;
             delete file;
         }
