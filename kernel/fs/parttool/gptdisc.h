@@ -63,11 +63,11 @@ struct TGptPartEntry
 class TGptPartition : public TPartition
 {
 public:
-    TGptPartition(int Index, struct TGptPartEntry *Entry);
+    TGptPartition(struct TGptPartEntry *entry, const char *guid);
     ~TGptPartition();
 
-    int FIndex;
-    struct TGptPartEntry FEntry;
+    struct TGptPartEntry Entry;
+    char Guid[40];
 };
 
 class TGptTable
@@ -110,9 +110,9 @@ public:
     TGptTable SecondaryTable;
 
 protected:
-    virtual bool CreatePart(int Handle, int Type, long long Start, long long Sectors);
+    void AddPossibleFs(struct TGptPartEntry *entry);
 
-    void MergeTables();
+    virtual bool CreatePart(int Handle, int Type, long long Start, long long Sectors);
 };
 
 #endif

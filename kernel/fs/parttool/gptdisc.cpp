@@ -43,7 +43,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-/* static void UuidToStr(const char *uuid, char *str)
+static void UuidToStr(const char *uuid, char *str)
 {
     int ival;
     int *ip;
@@ -78,7 +78,6 @@
     sval = RdosSwapShort(*sp);
     sprintf(str+32, "%04hX", sval);
 }
-*/
 
 /*##########################################################################
 #
@@ -91,11 +90,11 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TGptPartition::TGptPartition(int Index, struct TGptPartEntry *Entry)
-  : TPartition(Entry->FirstLba, Entry->LastLba - Entry->FirstLba + 1)
+TGptPartition::TGptPartition(struct TGptPartEntry *entry, const char *guid)
+  : TPartition(entry->FirstLba, entry->LastLba - entry->FirstLba + 1)
 {
-    FIndex = Index;
-    memcpy(&FEntry, Entry, sizeof(struct TGptPartEntry));
+    memcpy(&Entry, entry, sizeof(struct TGptPartEntry));
+    memcpy(&Guid, guid, 40);
 }
 
 /*##########################################################################
@@ -424,6 +423,45 @@ bool TGptDisc::IsGpt()
 
 /*##########################################################################
 #
+#   Name       : TGptDisc::AddPossibleFs
+#
+#   Purpose....: Add possible Fs
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TGptDisc::AddPossibleFs(struct TGptPartEntry *entry)
+{
+    char GuidStr[40];
+    int Type = 0;
+    TGptPartition *part;
+
+    UuidToStr(entry->PartGuid, GuidStr);
+
+    if (!strcmp(GuidStr, "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7"))
+    {
+        strcpy(GuidStr, "Basic Data");
+        Type = PART_TYPE_FAT32;
+    }
+
+    if (!strcmp(GuidStr, "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"))
+    {
+        strcpy(GuidStr, "EFI System");
+        Type = PART_TYPE_FAT32;
+    }
+
+    if (Type)
+    {
+        part = new TGptPartition(entry, GuidStr);
+        part->SetType(Type);
+        Add(part);        
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TGptDisc::LoadPart
 #
 #   Purpose....: Load partitions
@@ -435,6 +473,9 @@ bool TGptDisc::IsGpt()
 ##########################################################################*/
 bool TGptDisc::LoadPart()
 {
+    int i;
+    bool ok = true;
+
     PrimaryTable.ReadTable(this, 1);
 
     if (PrimaryTable.HeaderOk)
@@ -443,21 +484,26 @@ bool TGptDisc::LoadPart()
 
         if (!SecondaryTable.HeaderOk || (PrimaryTable.Header.EntryCrc32 != SecondaryTable.Header.EntryCrc32))
             SecondaryTable.Recreate(this, &PrimaryTable);
-
-        return true;
     }
     else
     {
         SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
 
         if (SecondaryTable.HeaderOk)
-        {
             PrimaryTable.Recreate(this, &SecondaryTable);
-            return true;
-        }
         else
-            return false;
+            ok = false;
     }
+
+    if (ok)
+    {
+        for (i = 0; i < PrimaryTable.PartCount; i++)
+            AddPossibleFs(PrimaryTable.PartArr[i]);
+
+        return TDisc::LoadPart();
+    }
+    else
+        return false;
 }
 
 /*##########################################################################
