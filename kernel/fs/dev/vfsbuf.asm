@@ -1402,8 +1402,8 @@ uwbValid:
     pop eax
 ;
     push eax
+    mov ebx,eax
     mov eax,ebp
-    mov ebx,ecx
     shr ebx,18
     and ebx,3FFCh
     and ax,0F000h
