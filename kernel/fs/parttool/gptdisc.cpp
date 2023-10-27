@@ -702,6 +702,24 @@ bool TGptDisc::InitPart()
 ##########################################################################*/
 bool TGptDisc::AddPart(const char *FsName, long long Sectors)
 {
+    long long Start;
+    long long Count = Sectors;
+    int Type;
+    int Handle;
+
+    Start = AllocateSectors(PrimaryTable.Header.FirstLba, Count);
+
+    if (Start)
+    {
+        if (Start + Count > PrimaryTable.Header.LastLba)
+            Count = PrimaryTable.Header.LastLba - Start + 1;
+
+        Handle = FormatPart(FsName, &Start, &Count, &Type);
+
+        if (Handle)
+            if (CreatePart(Handle, Type, (unsigned int)Start, (unsigned int)Count))
+                return true;
+    }
     return false;
 }
 
