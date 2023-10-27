@@ -96,7 +96,10 @@ int main(int argc, char **argv)
     int dev;
     char *ptr;
     TDiscServer *Server;
+    bool wait = true;
 
+    while (wait)
+        RdosWaitMilli(100);
 
     if (argc >= 2)
     {

@@ -387,6 +387,40 @@ void TGptTable::InitHeader(TDisc *disc, bool primary)
 
 /*##########################################################################
 #
+#   Name       : TGptTable::WriteHeader
+#
+#   Purpose....: Write header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TGptTable::WriteHeader(TDisc *Disc)
+{
+    TDiscServer *Server = Disc->GetServer();
+    TDiscReq req(Server);
+    TDiscReqEntry e1(&req, Header.CurrLba, 1, true);
+    char *Buf;
+
+    req.WaitForever();
+
+    if (req.IsDone())
+    {
+        Buf = (char *)e1.Map();
+        memset(Buf, 0, Disc->FBytesPerSector);
+
+        Header.Crc32 = 0;
+        Header.Crc32 = RdosCalcCrc32(0xFFFFFFFF, (const char *)&Header, Header.HeaderSize);
+
+        memcpy(Buf, &Header, sizeof(TGptPartHeader));
+
+        e1.Write();
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TGptTable::Recreate
 #
 #   Purpose....: Recreate table
@@ -398,6 +432,36 @@ void TGptTable::InitHeader(TDisc *disc, bool primary)
 ##########################################################################*/
 void TGptTable::Recreate(TDisc *Disc, TGptTable *Src)
 {
+    int Sectors = Header.EntrySize * Header.EntryCount / Disc->FBytesPerSector;
+    TDiscServer *Server = Disc->GetServer();
+    TDiscReq req(Server);
+    TDiscReqEntry e1(&req, Header.EntryLba, Sectors, true);
+    char *Buf;
+    struct TGptPartEntry *CurrEntry;
+    int i;
+    int size = Sectors * Disc->FBytesPerSector;
+
+    req.WaitForever();
+
+    if (req.IsDone())
+    {
+        Buf = (char *)e1.Map();
+        memset(Buf, 0, size);
+
+        CurrEntry = (struct TGptPartEntry *)Buf;
+
+        for (i = 0; i < Src->PartCount; i++)
+        {
+            memcpy(CurrEntry, Src->PartArr[i], sizeof(struct TGptPartEntry));
+            CurrEntry++;
+        }
+
+        Header.EntryCrc32 = RdosCalcCrc32(0xFFFFFFFF, Buf, size);
+
+        e1.Write();
+
+        WriteHeader(Disc);
+    }
 }
 
 /*##########################################################################
@@ -619,6 +683,9 @@ bool TGptDisc::InitPart()
     WriteGptBoot();            
     PrimaryTable.InitHeader(this, true);
     SecondaryTable.InitHeader(this, false);
+
+    PrimaryTable.Recreate(this, &PrimaryTable);
+    SecondaryTable.Recreate(this, &SecondaryTable);
     return true;
 }
 

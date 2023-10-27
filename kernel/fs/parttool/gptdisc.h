@@ -76,8 +76,8 @@ public:
     TGptTable();
     ~TGptTable();
 
-    void InitHeader(TDisc *disc, bool primary);
     void ReadTable(TDisc *Disc, long long StartSector);
+    void InitHeader(TDisc *disc, bool primary);
     void Recreate(TDisc *Disc, TGptTable *Src);
     bool Add(struct TGptPartEntry *PartEntry);
 
@@ -91,7 +91,7 @@ public:
 
 protected:
     void ReadEntryArr(TDisc *Disc);
-    void InitHeader(long long MyLba, long long OtherLba);
+    void WriteHeader(TDisc *Disc);
 
     void GrowPart();
 };
