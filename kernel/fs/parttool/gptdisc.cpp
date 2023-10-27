@@ -344,14 +344,14 @@ void TGptTable::ReadTable(TDisc *Disc, long long StartSector)
     }
 }
 
-/*##################  TGptTable::InitHeader  #############
-*   Purpose....: Init header
+/*##################  TGptTable::InitGpt  #############
+*   Purpose....: Init GPT
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TGptTable::InitHeader(long long MyLba, long long OtherLba)
+void TGptTable::InitHeader(TDisc *disc, bool primary)
 {
     Header.EntryCount = 128;
 
@@ -365,19 +365,23 @@ void TGptTable::InitHeader(long long MyLba, long long OtherLba)
     Header.Crc32 = 0;    
     Header.Resv = 0;
 
-    Header.CurrLba = MyLba;
-    Header.OtherLba = OtherLba;
+    if (primary)
+    {
+        Header.CurrLba = 1;
+        Header.OtherLba = disc->GetSectorCount() - 1;
+        Header.EntryLba = 2;
+    }
+    else
+    {
+        Header.CurrLba = disc->GetSectorCount() - 1;
+        Header.OtherLba = 1;
+        Header.EntryLba = disc->GetSectorCount() - 33;
+    }
 
     Header.FirstLba = 34;
-
-    if (MyLba == 1)
-        Header.LastLba = OtherLba - 1;
-    else
-        Header.LastLba = MyLba - 1;
-
+    Header.LastLba = disc->GetSectorCount() - 34;
     RdosCreateUuid(Header.Guid);
 
-    Header.EntryLba = MyLba + 1;    
     Header.EntrySize = 128;
 };
 
@@ -566,8 +570,6 @@ void TGptDisc::WriteGptBoot()
             Total = 0xFFFFFFFF;
 
         bootp->BytesPerSector = FBytesPerSector;
-
-        bootp->BytesPerSector = FBytesPerSector;
         bootp->Resv1 = 0;
         bootp->MappingSectors = 0;
         bootp->Resv3 = 0;
@@ -615,7 +617,8 @@ void TGptDisc::WriteGptBoot()
 bool TGptDisc::InitPart()
 {
     WriteGptBoot();            
-//    Part.Write(FLoaderSectors);    
+    PrimaryTable.InitHeader(this, true);
+    SecondaryTable.InitHeader(this, false);
     return true;
 }
 
