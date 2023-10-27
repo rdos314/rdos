@@ -415,6 +415,12 @@ const char *TDisc::FsTypeToName(int type)
         case PART_TYPE_FAT32:
             return "FAT32";
 
+        case PART_TYPE_FAT:
+            return "FAT";
+
+        case PART_TYPE_EFI:
+            return "EFI";
+
         default:
             return "UNKNOWN";
     }
@@ -441,6 +447,12 @@ int TDisc::FsNameToType(const char *FsName)
 
     if (!strcmp(FsName, "FAT32"))
         return PART_TYPE_FAT32;
+
+    if (!strcmp(FsName, "FAT"))
+        return PART_TYPE_FAT;
+
+    if (!strcmp(FsName, "EFI"))
+        return PART_TYPE_EFI;
 
     return 0;
 }

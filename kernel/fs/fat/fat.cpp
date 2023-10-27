@@ -773,8 +773,23 @@ int FormatFs(TPartServer *Server)
             break;
 
         case PART_TYPE_FAT32:
+        case PART_TYPE_EFI:
             boot32 = (struct TBootSector32 *)BootSector;
             ok = TFat32::InitFs(Server, boot32);
+            break;
+
+        case PART_TYPE_FAT:
+            boot32 = (struct TBootSector32 *)BootSector;
+            ok = TFat32::InitFs(Server, boot32);
+            if (ok)
+                PartType = PART_TYPE_FAT32;
+            else
+            {
+                boot12_16 = (struct TBootSector12_16 *)BootSector;
+                ok = TFat16::InitFs(Server, boot12_16);
+                if (ok)
+                    PartType = PART_TYPE_FAT16;
+            }
             break;
 
         default:
@@ -795,6 +810,7 @@ int FormatFs(TPartServer *Server)
                 break;
 
             case PART_TYPE_FAT32:
+            case PART_TYPE_EFI:
                 Fs = new TFat32(Server, boot32, true);
                 break;
         }

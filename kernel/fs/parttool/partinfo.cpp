@@ -147,6 +147,14 @@ void TInfoCommand::ShowPart(TPartition *part)
             fstype = "FAT32";
             break;
 
+        case PART_TYPE_FAT:
+            fstype = "FAT";
+            break;
+
+        case PART_TYPE_EFI:
+            fstype = "EFI";
+            break;
+
         default:
             fstype = "UNKNOWN";
             break;

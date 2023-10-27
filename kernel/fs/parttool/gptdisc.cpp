@@ -443,13 +443,13 @@ void TGptDisc::AddPossibleFs(struct TGptPartEntry *entry)
     if (!strcmp(GuidStr, "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7"))
     {
         strcpy(GuidStr, "Basic Data");
-        Type = PART_TYPE_FAT32;
+        Type = PART_TYPE_FAT;
     }
 
     if (!strcmp(GuidStr, "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"))
     {
         strcpy(GuidStr, "EFI System");
-        Type = PART_TYPE_FAT32;
+        Type = PART_TYPE_EFI;
     }
 
     if (Type)

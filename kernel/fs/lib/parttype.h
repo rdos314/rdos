@@ -32,6 +32,8 @@
 #define PART_TYPE_FAT12         1
 #define PART_TYPE_FAT16         2
 #define PART_TYPE_FAT32         3
+#define PART_TYPE_FAT           4
+#define PART_TYPE_EFI           5
 
 #endif
 

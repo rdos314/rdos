@@ -1020,12 +1020,16 @@ fat_server  DB 'fat', 0
 fat12_fs    DB 'FAT12', 0
 fat16_fs    DB 'FAT16', 0
 fat32_fs    DB 'FAT32', 0
+fat_fs      DB 'FAT', 0
+efi_fs      DB 'EFI', 0
 
 sl_tab:
 slt00   DD 0, 0
 slt01   DD OFFSET fat_server,  OFFSET fat12_fs
 slt02   DD OFFSET fat_server,  OFFSET fat16_fs
 slt03   DD OFFSET fat_server,  OFFSET fat32_fs
+slt04   DD OFFSET fat_server,  OFFSET fat_fs
+slt05   DD OFFSET fat_server,  OFFSET efi_fs
 
 serv_load_part    Proc far
     push ds
