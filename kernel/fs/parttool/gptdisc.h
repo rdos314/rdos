@@ -112,6 +112,7 @@ public:
 
 protected:
     void AddPossibleFs(struct TGptPartEntry *entry);
+    const char *GetGuid(const char *FsName);
     void WriteGptBoot();
 
     virtual bool CreatePart(int Handle, int Type, long long Start, long long Sectors);

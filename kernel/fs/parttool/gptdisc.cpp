@@ -717,10 +717,31 @@ bool TGptDisc::AddPart(const char *FsName, long long Sectors)
         Handle = FormatPart(FsName, &Start, &Count, &Type);
 
         if (Handle)
-            if (CreatePart(Handle, Type, (unsigned int)Start, (unsigned int)Count))
+            if (CreatePart(Handle, Type, Start, Count))
                 return true;
     }
     return false;
+}
+
+/*##################  TGptDisc::GetGuid  #############
+*   Purpose....: Get GUID
+*   In params..: *                                                        #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+const char *TGptDisc::GetGuid(const char *FsName)
+{
+    static char EfiGuid[] =  {0x28, 0x73, 0x2A, 0xC1, 0x1F, 0xF8, 0xD2, 0x11, 0xBA, 0x4B, 0x00, 0xA0, 0xC9, 0x3E, 0xC9, 0x3B};
+    static char DataGuid[] = {0xA2, 0xA0, 0xD0, 0xEB, 0xE5, 0xB9, 0x33, 0x44, 0x87, 0xC0, 0x68, 0xB6, 0xB7, 0x26, 0x99, 0xC7};
+    static char Ext4Guid[] = {0xAF, 0x3D, 0xC6, 0x0F, 0x83, 0x84, 0x72, 0x47, 0x8E, 0x79, 0x3D, 0x69, 0xD8, 0x47, 0x7D, 0xE4};    
+
+    if (!strcmp(FsName, "EFI"))
+        return EfiGuid;
+    else if (!strcmp(FsName, "EXT4"))
+        return Ext4Guid;
+    else
+        return DataGuid;
 }
 
 /*##########################################################################
@@ -736,5 +757,31 @@ bool TGptDisc::AddPart(const char *FsName, long long Sectors)
 ##########################################################################*/
 bool TGptDisc::CreatePart(int Handle, int Type, long long Start, long long Sectors)
 {
-    return false;
+    TGptPartEntry entry;
+    TGptPartition *part;
+    const char *Name = FsTypeToName(Type);
+    const char *Guid = GetGuid(Name);
+
+    if (Guid)
+    {
+        memcpy(entry.PartGuid, Guid, 16);
+        RdosCreateUuid(entry.UniqueGuid);
+        entry.FirstLba = Start;
+        entry.LastLba = Start + Sectors - 1;
+        entry.Attrib = 0;
+        memset(entry.Name, 0, 2 * 36);
+
+        PrimaryTable.Add(&entry);
+        PrimaryTable.Recreate(this, &PrimaryTable);
+
+        SecondaryTable.Add(&entry);
+        SecondaryTable.Recreate(this, &SecondaryTable);
+
+        part = new TGptPartition(&entry, Name);
+        part->SetType(Type);
+        Add(part);        
+        return true;
+    }
+    else
+        return false;
 }
