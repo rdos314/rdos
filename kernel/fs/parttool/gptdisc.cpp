@@ -371,10 +371,8 @@ void TGptTable::InitHeader(long long MyLba, long long OtherLba)
 #   Returns....: *
 #
 ##########################################################################*/
-void TGptTable::Recreate(TDisc *Disc, struct TGptPartHeader *OtherHeader, struct TGptPartEntry *OtherPart)
+void TGptTable::Recreate(TDisc *Disc, TGptTable *Src)
 {
-    if (!HeaderOk)
-        InitHeader(OtherHeader->OtherLba, OtherHeader->CurrLba);
 }
 
 /*##########################################################################
@@ -426,41 +424,6 @@ bool TGptDisc::IsGpt()
 
 /*##########################################################################
 #
-#   Name       : TGptDisc::MergeTables
-#
-#   Purpose....: Merge tables
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TGptDisc::MergeTables()
-{
-/*
-    int i;
-    int size;
-    bool primary = false;
-
-    size = PrimaryTable.Header.EntryCount;
-    if (SecondaryTable.Header.EntryCount < size);
-        size = SecondaryTable.Header.EntryCount;
-
-    for (i = 0; i < size && !primary; i++)
-    {
-        if (PrimaryTable->PartEntryArr[i].FirstLba != SecondaryTable->PartEntryArr[i].FirstLba)
-        {
-            if (PrimaryTable->PartEntryArr[i].FirstLba > SecondaryTable->PartEntryArr[i].FirstLba)
-                primary = !SecondaryTable->Insert(PrimaryTable->PartEntryArr[i]);
-            else
-                primary = !PrimaryTable->Insert(SecondaryTable->PartEntryArr[i]);
-        }
-    }
-*/
-}
-
-/*##########################################################################
-#
 #   Name       : TGptDisc::LoadPart
 #
 #   Purpose....: Load partitions
@@ -475,25 +438,26 @@ bool TGptDisc::LoadPart()
     PrimaryTable.ReadTable(this, 1);
 
     if (PrimaryTable.HeaderOk)
+    {
         SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
 
-/*
+        if (!SecondaryTable.HeaderOk || (PrimaryTable.Header.EntryCrc32 != SecondaryTable.Header.EntryCrc32))
+            SecondaryTable.Recreate(this, &PrimaryTable);
 
-    if (PrimaryTable.PartCount && SecondaryTable.PartCount)
-        MergeTables();
+        return true;
+    }
     else
     {
-        if (PrimaryTable.PartCount)
-            SecondaryTable.Recreate(this, &PrimaryTable.Header, PrimaryTable.PartEntryArr);
-        else
-        {
-            if (SecondaryTable.PartCount)
-                PrimaryTable.Recreate(this, &SecondaryTable.Header, SecondaryTable.PartEntryArr);
-        }
-    }
-*/
+        SecondaryTable.ReadTable(this, PrimaryTable.Header.OtherLba);
 
-    return true;
+        if (SecondaryTable.HeaderOk)
+        {
+            PrimaryTable.Recreate(this, &SecondaryTable);
+            return true;
+        }
+        else
+            return false;
+    }
 }
 
 /*##########################################################################

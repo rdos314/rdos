@@ -77,7 +77,7 @@ public:
     ~TGptTable();
 
     void ReadTable(TDisc *Disc, long long StartSector);
-    void Recreate(TDisc *Disc, struct TGptPartHeader *OtherHeader, struct TGptPartEntry *OtherPart);
+    void Recreate(TDisc *Disc, TGptTable *Src);
     bool Add(struct TGptPartEntry *PartEntry);
 
     bool HeaderOk;
