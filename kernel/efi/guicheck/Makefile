@@ -12,7 +12,7 @@ all: $(OUTPUT)
 	$(EFI_CC) -c -o $@ $< $(CFLAGS)
 	
 $(OUTPUT): $(OBJS)
-	$(EFI_CC) -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e guicheck -o $(OUTPUT) $(OBJS) -lgcc
+	$(EFI_CC) -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $(OUTPUT) $(OBJS) -lgcc
 
 .PHONY: clean
 
