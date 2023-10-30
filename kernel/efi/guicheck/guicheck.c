@@ -928,7 +928,7 @@ static void DrawBox()
     int i;
     char *LfbPtr = (char *)LfbBase;
 
-    for (i = 0; i < ScanLine; i++)
+    for (i = 0; i < 4 * ScanLine; i++)
         LfbPtr[i] = 0xFF;
 
     for (;;)
