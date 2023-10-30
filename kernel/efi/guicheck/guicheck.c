@@ -926,20 +926,20 @@ int CompareGUIDs( EFI_GUID left, EFI_GUID right )
 static void DrawBox()
 {
     int i;
+    int j;
     char *LfbPtr = (char *)LfbBase;
 
-    for (i = 0; i < 4 * ScanLine; i++)
-        LfbPtr[i] = 0xFF;
+    for (i = 0; i < ScanLine; i++)
+        for (j = 0; j < 4; j++)
+            LfbPtr[4 * i + j] = 0xFF;
+
+    for (i = 0; i < Height; i++)
+        for (j = 0; j < 4; j++)
+            LfbPtr[4 * i * ScanLine + j] = 0xFF;
 
     for (;;)
         ;
 }
-
-unsigned int ScanLine;
-EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
-EFI_PHYSICAL_ADDRESS LfbBase;
-unsigned int LfbSize;
-
 
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
