@@ -923,6 +923,24 @@ int CompareGUIDs( EFI_GUID left, EFI_GUID right )
            left.Data4[7] == right.Data4[7];
 }
 
+static void DrawBox()
+{
+    int i;
+    char *LfbPtr = (char *)LfbBase;
+
+    for (i = 0; i < ScanLine; i++)
+        LfbPtr[i] = 0xFF;
+
+    for (;;)
+        ;
+}
+
+unsigned int ScanLine;
+EFI_GRAPHICS_PIXEL_FORMAT PixelFormat;
+EFI_PHYSICAL_ADDRESS LfbBase;
+unsigned int LfbSize;
+
+
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
     /* Store the system table for future use in other functions */
@@ -963,8 +981,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     {
         BS->SetWatchdogTimer(0, 0, 0, NULL);
         if (BS->ExitBootServices(ImageHandle, MapKey) == EFI_SUCCESS)
-            for (;;)
-                ;
+            DrawBox();
         else
             printf("Exit boot services failed\n\r");
     }
