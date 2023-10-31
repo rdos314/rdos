@@ -846,6 +846,7 @@ static int ShowMode(int Mode)
 static void ShowUsedMode()
 {
     printf("GOP: %dx%d, ", Width, Height);
+    unsigned int lsb, msb;
 
     switch (PixelFormat)
     {
@@ -866,7 +867,11 @@ static void ShowUsedMode()
             break;
     }
 
-    printf("Base: %08lX, Size: %08lX Scan: %08lX\n\r", LfbBase, LfbSize, ScanLine);
+    lsb = (unsigned int)LfbBase;
+    msb = (unsigned int)(LfbBase >> 32);
+    printf("%08lX_%08lX\n\r", msb, lsb);
+
+    printf("Base: %08lX_%08lX, Size: %08lX Scan: %08lX\n\r", msb, lsb, LfbSize, ScanLine);
 }
 
 static void ShowAvailableModes()
@@ -1208,7 +1213,7 @@ static void SetupMenu()
         TextRows = 25;
     }
 
-    printf("Mode: %d, %dx%d\n\r", TextMode, TextRows, TextCols);
+//    printf("Mode: %d, %dx%d\n\r", TextMode, TextRows, TextCols);
 
     ST->ConOut->ClearScreen(ST->ConOut);
 
@@ -1609,6 +1614,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         SetupMenu();
         HandleMenu();
         ST->ConOut->ClearScreen(ST->ConOut);
+
+        InitGop();
 
         if (LoadRdosBinary())
         {
