@@ -444,6 +444,10 @@ void cdecl main()
         vbe->SetLgopNone();
         vbe->SetFilledStyle();
         vbe->SetDrawColor(0, 255, 255);
+
+	vbe->DrawLine(0, 0, 1023, 0);
+	vbe->DrawLine(0, 0, 0, 599);
+
         vbe->DrawRect(0, 0, 799, 9);
 
         vbe->SetDrawColor(255, 255, 0);
