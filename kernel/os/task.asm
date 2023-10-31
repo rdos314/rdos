@@ -49,6 +49,8 @@ MSR_SYSENTER_CS  = 174h
 MSR_SYSENTER_ESP = 175h
 MSR_SYSENTER_EIP = 176h
 
+IA32_PAT      = 277h
+
 MAX_CORES   = 64
 WAIT_DEV_COUNT = 256
 
@@ -2097,6 +2099,19 @@ run_ap_core:
     or eax,10008h
     mov cr0,eax    
 ;
+    mov ax,system_data_sel
+    mov es,ax
+    mov eax,es:cpu_feature_flags
+    test eax,10000h
+    jz run_ap_pat_done
+;
+    mov ecx,IA32_PAT
+    rdmsr
+    and ah,NOT 7
+    or ah,1
+    wrmsr
+
+run_ap_pat_done:
     mov ax,core_data_sel
     mov fs,ax
     mov fs,fs:cs_sel
