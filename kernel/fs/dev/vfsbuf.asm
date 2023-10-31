@@ -1465,6 +1465,9 @@ InvalidateCache    Proc near
     push edx
     push esi
     push edi
+    push ebp
+;
+    xor ebp,ebp
 ;
     mov cx,serv_flat_sel
     mov es,cx
@@ -1515,7 +1518,11 @@ icEntryLoop:
 icEntryRetry:
     shl ebx,20
     mov ds:vfs_cache_discard_pos,ebx
-    jmp icSearch
+    inc ebp
+    cmp ebp,10
+    jb icSearch
+;
+    jmp icLeave
 
 icBufPtr:
     and ax,0F000h
@@ -1580,10 +1587,12 @@ icNext:
 ;
     add ds:vfs_cache_discard_pos,1000h
     adc ds:vfs_cache_discard_pos+4,0
-;        
+
+icLeave:        
     LeaveSection ds:vfs_section
 
 icDone:
+    pop ebp
     pop edi
     pop esi
     pop edx
