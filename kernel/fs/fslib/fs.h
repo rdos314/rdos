@@ -56,6 +56,7 @@ public:
     TDir *GetDir();
     TFile *GetFile();
     struct RdosDirEntry *GetEntry();
+    const char *GetEntryName();
 
     void Advance();
     void Process();

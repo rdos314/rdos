@@ -255,6 +255,22 @@ TDir *TParser::GetDir()
 
 /*##########################################################################
 #
+#   Name       : TParser::GetEntryName
+#
+#   Purpose....: Get entry name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TParser::GetEntryName()
+{
+    return Head;
+}
+
+/*##########################################################################
+#
 #   Name       : TParser::GetFile
 #
 #   Purpose....: Get current file
@@ -1084,7 +1100,7 @@ int TFs::CreateFile(int rel, char *path, int attrib)
         if (dir)
         {
             dir->LockDir();
-            ok = CreateFile(dir, path, attrib);
+            ok = CreateFile(dir, Parser.GetEntryName(), attrib);
             dir->UnlockDir();
 
             if (ok)
@@ -1186,7 +1202,7 @@ int TFs::CreateDir(int rel, char *path)
         dir->LockDir();
 
         if (dir->Find(path) == DIR_NOT_FOUND)
-            ok = CreateDir(dir, path);
+            ok = CreateDir(dir, Parser.GetEntryName());
         else
             ok = false;
 
