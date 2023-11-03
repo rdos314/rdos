@@ -1465,9 +1465,6 @@ InvalidateCache    Proc near
     push edx
     push esi
     push edi
-    push ebp
-;
-    xor ebp,ebp
 ;
     mov cx,serv_flat_sel
     mov es,cx
@@ -1476,21 +1473,21 @@ InvalidateCache    Proc near
 
 icSearch:
     mov ebx,ds:vfs_cache_discard_pos+4
+    cmp ebx,ds:vfs_buf_count
+    jae icBufRestart
+;
     shl ebx,2
     mov eax,ds:[ebx].vfs_buf_arr
     or eax,eax
     jnz icEntryOk
-;
-    shr ebx,2
-    inc ebx
-    cmp ebx,ds:vfs_buf_count
-    jb icBufOk
-;
-    xor ebx,ebx
 
-icBufOk:
+icNextMsb:
+    inc ds:vfs_cache_discard_pos+4
+    jmp icSearch
+
+icBufRestart:
     mov ds:vfs_cache_discard_pos,0
-    mov ds:vfs_cache_discard_pos+4,ebx
+    mov ds:vfs_cache_discard_pos+4,0
     jmp icSearch
 
 icEntryOk:
@@ -1509,20 +1506,11 @@ icEntryLoop:
     add ebx,4
     add esi,4
     test esi,0FFFh
-    jz icEntryRetry
+    jz icNextMsb
 ;
     mov eax,es:[esi]
     or eax,eax
     jz icEntryLoop
-
-icEntryRetry:
-    shl ebx,20
-    mov ds:vfs_cache_discard_pos,ebx
-    inc ebp
-    cmp ebp,10
-    jb icSearch
-;
-    jmp icLeave
 
 icBufPtr:
     and ax,0F000h
@@ -1548,7 +1536,11 @@ icBufPtrLoop:
 
 icBufPtrRetry:
     shl ebx,10
+    mov eax,ds:vfs_cache_discard_pos
+    and eax,0FFC00000h
+    add ebx,eax
     mov ds:vfs_cache_discard_pos,ebx
+    adc ds:vfs_cache_discard_pos+4,0
     jmp icSearch
 
 icBufDir:
@@ -1587,12 +1579,10 @@ icNext:
 ;
     add ds:vfs_cache_discard_pos,1000h
     adc ds:vfs_cache_discard_pos+4,0
-
-icLeave:        
+;        
     LeaveSection ds:vfs_section
 
 icDone:
-    pop ebp
     pop edi
     pop esi
     pop edx
