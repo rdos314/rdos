@@ -41,13 +41,17 @@ include vfs.inc
     .386p
 
 MAX_BITMAP_COUNT =  16
+MAX_PAGE_COUNT =  32
 
 data    SEGMENT byte public 'DATA'
 
-bitmap_count    DW ?
-bitmap_section  section_typ <>
+bitmap_count        DW ?
+bitmap_section      section_typ <>
+bitmap_arr          DD MAX_BITMAP_COUNT DUP (?)
 
-bitmap_arr      DD MAX_BITMAP_COUNT DUP (?)
+zero_page_count     DW ?
+zero_page_section   section_typ <>
+zero_page_arr       DD MAX_PAGE_COUNT DUP (?)
 
 data    ENDS
 
@@ -294,9 +298,28 @@ CreateEntry    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateBufEntry    Proc near
+    push ds
     push ecx
     push edx
     push edi
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:zero_page_section
+    mov cx,ds:zero_page_count
+    or cx,cx
+    jz cbfeAlloc
+;
+    mov di,cx
+    dec di
+    shl di,2
+    mov eax,ds:[di].zero_page_arr
+    dec ds:zero_page_count
+    LeaveSection ds:zero_page_section
+    jmp cbfeDone
+
+cbfeAlloc:
+    LeaveSection ds:zero_page_section
 ;
     mov eax,1000h
     AllocateBigServ
@@ -306,12 +329,62 @@ CreateBufEntry    Proc near
     xor eax,eax
     rep stos dword ptr es:[edi]
     mov eax,edx
-;
+
+cbfeDone:
     pop edi
     pop edx
     pop ecx
+    pop ds
     ret
 CreateBufEntry    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeBufEntry
+;
+;       DESCRIPTION:    Free
+;
+;       PARAMETERS:     ES        Serv flat sel
+;                       EAX       Entry linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBufEntry    Proc near
+    push ds
+    push ecx
+    push edx
+    push edi
+;
+    and ax,0F000h
+    mov cx,SEG data
+    mov ds,cx
+    EnterSection ds:zero_page_section
+    mov cx,ds:zero_page_count
+    cmp cx,MAX_PAGE_COUNT
+    je fbfeFree
+;
+    mov di,cx
+    shl di,2
+    mov ds:[di].zero_page_arr,eax
+    inc ds:zero_page_count
+    LeaveSection ds:zero_page_section
+    jmp fbfeDone
+
+fbfeFree:
+    LeaveSection ds:zero_page_section
+;
+    mov edx,eax
+    mov ecx,1000h
+    FreeBigServ
+
+fbfeDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop ds
+    ret
+FreeBufEntry    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -401,8 +474,11 @@ FreeBitmapEntry    Proc near
     jmp fbeDone
 
 fbeFree:
-    int 3
     LeaveSection ds:bitmap_section
+;
+    mov edx,eax
+    mov ecx,1000h
+    FreeBigServ
 
 fbeDone:
     pop edi
@@ -1497,7 +1573,6 @@ icEntryOk:
     mov ebx,ds:vfs_cache_discard_pos
     shr ebx,20
     and ebx,0FFCh
-    mov ebp,ebx
     mov esi,ebx
     add esi,eax
     mov eax,es:[esi]
@@ -1508,13 +1583,7 @@ icEntryLoop:
     add ebx,4
     add esi,4
     test esi,0FFFh
-    jnz icEntryNext
-;
-    or ebp,ebp
-    jnc icNextMsb
-;
-    int 3
-    jmp icNextMsb
+    jz icNextMsb
 
 icEntryNext:
     mov eax,es:[esi]
@@ -1547,12 +1616,30 @@ icBufPtrLoop:
     and eax,0FFC00000h
     add ebx,eax
     mov ds:vfs_cache_discard_pos,ebx
-    adc ds:vfs_cache_discard_pos+4,0
+    pushf
 ;
     or ebp,ebp
-    jnz icSearch
+    jnz icBufPtrMsb
 ;
-    int 3
+    mov ebx,ds:vfs_cache_discard_pos+4
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    and ax,0F000h
+;
+    mov ebx,ds:vfs_cache_discard_pos
+    shr ebx,20
+    and ebx,0FFCh
+    sub ebx,4
+    mov esi,ebx
+    add esi,eax
+    xor eax,eax
+    xchg eax,es:[esi]
+    and ax,0F000h
+    call FreeBufEntry
+
+icBufPtrMsb:
+    popf
+    adc ds:vfs_cache_discard_pos+4,0
     jmp icSearch
 
 icBufPtrNext:
@@ -1605,7 +1692,28 @@ icNext:
     or ebp,ebp
     jnz icLeave
 ;
-    int 3
+    mov ebx,ds:vfs_cache_discard_pos+4
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    and ax,0F000h
+;
+    mov ebx,ds:vfs_cache_discard_pos
+    shr ebx,20
+    and ebx,0FFCh
+    mov esi,ebx
+    add esi,eax
+    mov eax,es:[esi]
+    and ax,0F000h
+;
+    mov ebx,ds:vfs_cache_discard_pos
+    shr ebx,10
+    and ebx,0FFCh
+    mov esi,ebx
+    add esi,eax
+    xor eax,eax
+    xchg eax,es:[esi]
+    and ax,0F000h
+    call FreeBufEntry
 
 icLeave:
     add ds:vfs_cache_discard_pos,1000h
@@ -2592,6 +2700,9 @@ init_buf    Proc near
     mov ds,ax
     mov ds:bitmap_count,0
     InitSection ds:bitmap_section
+;
+    mov ds:zero_page_count,0
+    InitSection ds:zero_page_section
 ;
     ret
 init_buf    Endp
