@@ -1465,6 +1465,7 @@ InvalidateCache    Proc near
     push edx
     push esi
     push edi
+    push ebp
 ;
     mov cx,serv_flat_sel
     mov es,cx
@@ -1496,54 +1497,77 @@ icEntryOk:
     mov ebx,ds:vfs_cache_discard_pos
     shr ebx,20
     and ebx,0FFCh
+    mov ebp,ebx
     mov esi,ebx
     add esi,eax
     mov eax,es:[esi]
     or eax,eax
-    jnz icBufPtr
+    jnz icBufPtrCont
 
 icEntryLoop:
     add ebx,4
     add esi,4
     test esi,0FFFh
-    jz icNextMsb
+    jnz icEntryNext
 ;
+    or ebp,ebp
+    jnc icNextMsb
+;
+    int 3
+    jmp icNextMsb
+
+icEntryNext:
     mov eax,es:[esi]
     or eax,eax
     jz icEntryLoop
-
-icBufPtr:
-    and ax,0F000h
 ;
+    shl ebx,20
+    mov ds:vfs_cache_discard_pos,ebx
+
+icBufPtrCont:
+    and ax,0F000h
     mov ebx,ds:vfs_cache_discard_pos
     shr ebx,10
     and ebx,0FFCh
+    mov ebp,ebx
     mov esi,ebx
     add esi,eax
     mov eax,es:[esi]
     or eax,eax
-    jnz icBufDir
+    jnz icBufDirCont
 
 icBufPtrLoop:
     add ebx,4
     add esi,4
     test esi,0FFFh
-    jz icBufPtrRetry
+    jnz icBufPtrNext
 ;
-    mov eax,es:[esi]
-    or eax,eax
-    jz icBufPtrLoop
-
-icBufPtrRetry:
     shl ebx,10
     mov eax,ds:vfs_cache_discard_pos
     and eax,0FFC00000h
     add ebx,eax
     mov ds:vfs_cache_discard_pos,ebx
     adc ds:vfs_cache_discard_pos+4,0
+;
+    or ebp,ebp
+    jnz icSearch
+;
+    int 3
     jmp icSearch
 
-icBufDir:
+icBufPtrNext:
+    mov eax,es:[esi]
+    or eax,eax
+    jz icBufPtrLoop
+;
+    shl ebx,10
+    mov ecx,ds:vfs_cache_discard_pos
+    and ecx,0FFC00000h
+    add ebx,ecx
+    mov ds:vfs_cache_discard_pos,ebx
+
+icBufDirCont:
+    xor ebp,ebp
     and ax,0F000h
     mov esi,eax
 ;
@@ -1553,6 +1577,7 @@ icLoop:
     test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
     jz icNext
 ;
+    inc ebp
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz icNext
 ;
@@ -1577,12 +1602,19 @@ icNext:
     add esi,8
     loop icLoop
 ;
+    or ebp,ebp
+    jnz icLeave
+;
+    int 3
+
+icLeave:
     add ds:vfs_cache_discard_pos,1000h
     adc ds:vfs_cache_discard_pos+4,0
 ;        
     LeaveSection ds:vfs_section
 
 icDone:
+    pop ebp
     pop edi
     pop esi
     pop edx
