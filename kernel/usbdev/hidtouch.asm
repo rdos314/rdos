@@ -71,6 +71,7 @@ hid_touch   ENDS
 data    SEGMENT byte public 'DATA'
 
 ht_installed    DW ?
+ht_disable      DB ?
 
 data    ENDS  
 
@@ -365,8 +366,13 @@ heLoop:
 ;
     mov eax,SEG data
     mov es,eax
-    mov es:ht_installed,1 
+    mov al,es:ht_disable
+    or al,al
+    jnz heDisabled
 ;
+    mov es:ht_installed,1 
+
+heDisabled:
     pop edi  
     pop ecx
     pop ebx
@@ -575,6 +581,94 @@ htDone:
     pop ds
     ret
 has_touch  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetValue
+;
+;       Purpose:        Get value from environment
+;
+;       Parameters:     ES:EDI   Name
+;
+;       Returns:        NC      Found
+;                       AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+GetValue    Proc near
+    push ds
+    push ebx
+    push ecx
+    push esi
+;
+    LockSysEnv
+    mov ds,bx
+    xor esi,esi
+    
+find_val:
+    push edi
+
+find_val_loop:
+    cmpsb
+    jnz find_val_next
+;       
+    mov al,es:[edi]
+    or al,al
+    jnz find_val_loop
+    mov al,[esi]
+    cmp al,'='
+    je find_val_found
+
+find_val_next:
+    pop edi
+
+find_val_next_bp:
+    lodsb
+    or al,al
+    jnz find_val_next_bp
+;
+    mov al,[esi]
+    or al,al
+    jne find_val
+;
+    xor ax,ax
+    stc
+    jmp find_val_done
+
+find_val_found:
+    pop edi
+    inc esi  
+    xor ax,ax
+
+find_val_digit:
+    mov bl,[esi]
+    inc esi
+    sub bl,'0'
+    jc find_val_save
+;
+    cmp bl,10
+    jnc find_val_save
+;       
+    mov ecx,10
+    mul ecx
+    add al,bl
+    adc ah,0
+    jmp find_val_digit
+
+find_val_save:
+    clc
+
+find_val_done:
+    pushf
+    UnlockSysEnv
+    popf
+;
+    pop esi
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+GetValue    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -584,6 +678,8 @@ has_touch  Endp
 ;           DESCRIPTION:    Init touch
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_touch_name       DB 'DISABLE.TOUCH', 0
 
 hid_tab:
 h00 DD OFFSET hid_begin,        SEG code
@@ -604,6 +700,16 @@ InitTouch_   Proc near
     mov ds,eax
     mov ds:ht_installed,0
 ;
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET disable_touch_name
+    mov ds:ht_disable,0
+    call GetValue       
+    jc itDisOk
+;
+    mov ds:ht_disable,al
+
+itDisOk:
     mov eax,cs
     mov ds,eax
     mov es,eax
