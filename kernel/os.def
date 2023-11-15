@@ -619,7 +619,7 @@ open_legacy_file_nr         = 585
 close_c_file_nr             = 586
 ref_c_handle_nr             = 587
 read_legacy_file_nr         = 588
-write_c_file_nr             = 589
+write_legacy_file_nr        = 589
 get_c_file_size_nr          = 590
 set_c_file_size_nr          = 591
 get_c_file_time_nr          = 592
@@ -908,5 +908,6 @@ write_vfs_disc_nr           = 823
 close_vfs_drive_nr          = 824
 
 read_kernel_handle_nr       = 825
+write_kernel_handle_nr      = 826
 
 osgate_entries              = 850

@@ -160,7 +160,7 @@ LogTime     Proc near
     mov ax,ss
     mov es,ax
     mov edi,esp
-    WriteCFile
+    WriteKernelHandle
 ;
     add esp,12
     popad

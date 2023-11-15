@@ -1811,9 +1811,9 @@ write_file      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           write_c_file
+;           NAME:           write_legacy_file
 ;
-;           DESCRIPTION:    Writes to C file
+;           DESCRIPTION:    Writes to legacy file
 ;
 ;           PARAMETERS:     BX              File selector
 ;                           ECX             Size
@@ -1825,9 +1825,9 @@ write_file      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_c_file_name       DB 'Write C File', 0
+write_legacy_file_name       DB 'Write Legacy File', 0
 
-write_c_file       Proc far
+write_legacy_file       Proc far
     push ds
     push bx
 ;
@@ -1915,7 +1915,7 @@ wcfDone:
     pop bx
     pop ds
     retf32
-write_c_file    Endp
+write_legacy_file    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3564,10 +3564,10 @@ init_file       PROC near
     mov ax,read_legacy_file_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET write_c_file
-    mov edi,OFFSET write_c_file_name
+    mov esi,OFFSET write_legacy_file
+    mov edi,OFFSET write_legacy_file_name
     xor cl,cl
-    mov ax,write_c_file_nr
+    mov ax,write_legacy_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_c_file_size

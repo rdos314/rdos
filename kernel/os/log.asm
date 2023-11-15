@@ -102,7 +102,7 @@ logger_loop:
     xor edi,edi
     mov ecx,ds:buf_size   
     mov es,ds:buf_sel
-    WriteCFile
+    WriteKernelHandle
     mov ds:buf_size,0
     jmp logger_loop
 

@@ -2608,6 +2608,16 @@ ReadLegacyFile MACRO
     OsGate read_legacy_file_nr
                     ENDM
 
+; IN  BX        File selector
+; IN  EDX       Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT EAX       Written size
+; OUT EDX       New position
+WriteLegacyFile MACRO
+    OsGate write_legacy_file_nr
+                    ENDM
+
 ; IN  BX        C handle
 ; IN  CX        Mode
 ; OUT BX        Process handle
@@ -2655,8 +2665,8 @@ ReadKernelHandle MACRO
 ; IN  ECX       Size
 ; OUT EAX       Written size
 ; OUT EDX       New position
-WriteCFile MACRO
-    OsGate write_c_file_nr
+WriteKernelHandle MACRO
+    OsGate write_kernel_handle_nr
                     ENDM
 
 ; IN  BX        File selector

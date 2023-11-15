@@ -1836,6 +1836,30 @@ read_handle32    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteKernelHandle
+;
+;           DESCRIPTION:    Write with kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Position
+;                           ES:EDI    Buffer
+;                           ECX       Size
+;
+;           RETURNS:        ECX       Read size
+;                           EDX:EAX   New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_kernel_handle_name DB 'Write Kernel Handle', 0
+
+write_kernel_handle Proc far
+    WriteLegacyFile
+    ret
+write_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           WriteHandle
 ;
 ;           DESCRIPTION:    Write C handle
@@ -1861,7 +1885,7 @@ write_stdout      Proc near
 write_stdout      Endp
 
 write_file      Proc near
-    WriteCFile
+    WriteLegacyFile
     clc
     ret
 write_file      Endp
@@ -5803,6 +5827,12 @@ init_handle     PROC near
     mov edi,OFFSET read_kernel_handle_name
     xor cl,cl
     mov ax,read_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_kernel_handle
+    mov edi,OFFSET write_kernel_handle_name
+    xor cl,cl
+    mov ax,write_kernel_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET delete_c_handle

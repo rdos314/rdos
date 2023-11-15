@@ -753,8 +753,6 @@ int RdosOpenKernelFile(const char *FileName, int Mode);
 void RdosCloseCFile(int Handle);
 long RdosGetCFileSize(int Handle);
 void RdosSetCFileSize(int Handle, long Size);
-int RdosReadCFile(int Handle, void *Buf, int Size, long Pos);
-int RdosWriteCFile(int Handle, const void *Buf, int Size, long Pos);
 void RdosGetCFileTime(int Handle, unsigned long *MsbTime, unsigned long *LsbTime);
 void RdosSetCFileTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
 
@@ -1955,13 +1953,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 #pragma aux RdosSetCFileSize = \
     OsGate_set_c_file_size  \
     __parm [__ebx] [__eax]
-
-#pragma aux RdosWriteCFile = \
-    OsGate_write_c_file  \
-    ValidateEax \
-    __parm [__ebx] [__es __edi] [__ecx] [__edx]  \
-    __value [__eax] \
-    __modify [__edx]
 
 #pragma aux RdosGetCFileTime = \
     OsGate_get_c_file_time  \

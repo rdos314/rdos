@@ -619,7 +619,7 @@
 #define osgate_close_c_file 586
 #define osgate_ref_c_handle 587
 #define osgate_read_legacy_file 588
-#define osgate_write_c_file 589
+#define osgate_write_legacy_file 589
 #define osgate_get_c_file_size 590
 #define osgate_set_c_file_size 591
 #define osgate_get_c_file_time 592
@@ -908,6 +908,7 @@
 #define osgate_close_vfs_drive 824
 
 #define osgate_read_kernel_handle 825
+#define osgate_write_kernel_handle 826
 
 
 
@@ -1532,7 +1533,7 @@
 #define OsGate_close_c_file 0x3E 0x67 0x9a 74 2 0 0 2 0
 #define OsGate_ref_c_handle 0x3E 0x67 0x9a 75 2 0 0 2 0
 #define OsGate_read_legacy_file 0x3E 0x67 0x9a 76 2 0 0 2 0
-#define OsGate_write_c_file 0x3E 0x67 0x9a 77 2 0 0 2 0
+#define OsGate_write_legacy_file 0x3E 0x67 0x9a 77 2 0 0 2 0
 #define OsGate_get_c_file_size 0x3E 0x67 0x9a 78 2 0 0 2 0
 #define OsGate_set_c_file_size 0x3E 0x67 0x9a 79 2 0 0 2 0
 #define OsGate_get_c_file_time 0x3E 0x67 0x9a 80 2 0 0 2 0
@@ -1821,4 +1822,5 @@
 #define OsGate_close_vfs_drive 0x3E 0x67 0x9a 56 3 0 0 2 0
 
 #define OsGate_read_kernel_handle 0x3E 0x67 0x9a 57 3 0 0 2 0
+#define OsGate_write_kernel_handle 0x3E 0x67 0x9a 58 3 0 0 2 0
 
