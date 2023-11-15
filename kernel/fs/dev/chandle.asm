@@ -994,7 +994,7 @@ open_handle     Proc near
     call OpenVfsFile
     jnc ohCom
 ;
-    OpenCFile
+    OpenLegacyFile
     jc ohFail
 ;
     GetThread

@@ -2029,9 +2029,9 @@ CreateFileBase  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           open_c_file
+;           NAME:           open_legacy_file
 ;
-;           DESCRIPTION:    Open C file
+;           DESCRIPTION:    Open legacy file
 ;
 ;           PARAMETERS:     ES:EDI      Filename
 ;                           CX          Mode
@@ -2041,9 +2041,9 @@ CreateFileBase  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_c_file_name  DB 'Open C File',0
+open_legacy_file_name  DB 'Open Legacy File',0
 
-open_c_file    Proc far
+open_legacy_file    Proc far
     push ds
     push es
     push fs
@@ -2163,7 +2163,7 @@ ocfDone:
     pop es
     pop ds
     retf32
-open_c_file   Endp
+open_legacy_file   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3306,10 +3306,10 @@ init_dir    PROC near
     mov ax,insert_file_entry_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET open_c_file
-    mov edi,OFFSET open_c_file_name
+    mov esi,OFFSET open_legacy_file
+    mov edi,OFFSET open_legacy_file_name
     xor cl,cl
-    mov ax,open_c_file_nr
+    mov ax,open_legacy_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_kernel_file

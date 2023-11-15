@@ -2594,8 +2594,8 @@ RefCHandle MACRO
 ; IN  ES:EDI    Filename
 ; IN  CX        Mode
 ; OUT BX        Entry handle
-OpenCFile MACRO
-    OsGate open_c_file_nr
+OpenLegacyFile MACRO
+    OsGate open_legacy_file_nr
                     ENDM
 
 ; IN  BX        C handle

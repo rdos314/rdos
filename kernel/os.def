@@ -615,7 +615,7 @@ notify_core_dump_nr         = 580
 setup_nmi_core_dump_nr      = 581
 
 allocate_c_handle_nr        = 584
-open_c_file_nr              = 585
+open_legacy_file_nr         = 585
 close_c_file_nr             = 586
 ref_c_handle_nr             = 587
 read_c_file_nr              = 588

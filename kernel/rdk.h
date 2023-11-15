@@ -615,7 +615,7 @@
 #define osgate_setup_nmi_core_dump 581
 
 #define osgate_allocate_c_handle 584
-#define osgate_open_c_file 585
+#define osgate_open_legacy_file 585
 #define osgate_close_c_file 586
 #define osgate_ref_c_handle 587
 #define osgate_read_c_file 588
@@ -1526,7 +1526,7 @@
 #define OsGate_setup_nmi_core_dump 0x3E 0x67 0x9a 69 2 0 0 2 0
 
 #define OsGate_allocate_c_handle 0x3E 0x67 0x9a 72 2 0 0 2 0
-#define OsGate_open_c_file 0x3E 0x67 0x9a 73 2 0 0 2 0
+#define OsGate_open_legacy_file 0x3E 0x67 0x9a 73 2 0 0 2 0
 #define OsGate_close_c_file 0x3E 0x67 0x9a 74 2 0 0 2 0
 #define OsGate_ref_c_handle 0x3E 0x67 0x9a 75 2 0 0 2 0
 #define OsGate_read_c_file 0x3E 0x67 0x9a 76 2 0 0 2 0
