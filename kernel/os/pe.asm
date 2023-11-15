@@ -2454,7 +2454,7 @@ load_page_app:
     mov es,edx
     add eax,[esi].o_phys_offset
     xor edx,edx
-    ReadCFile
+    ReadKernelHandle
     mov eax,ecx
     jnc load_page_app_pad
 ;
@@ -2673,7 +2673,7 @@ ciInitApp:
     xor edi,edi
     mov eax,edx
     xor edx,edx
-    ReadCFile   
+    ReadKernelHandle   
     mov ecx,es:peh_image_size
     mov edx,es:peh_image_base
     mov si,es:peh_nthdr_size
@@ -2748,7 +2748,7 @@ ciObjApp:
     mov edi,edx
     xor eax,eax
     xor edx,edx
-    ReadCFile
+    ReadKernelHandle
     pop edx
     pop es
     jmp ciObjCom
@@ -2851,7 +2851,7 @@ fixup_app:
     mov edx,ds
     mov es,edx
     xor edx,edx
-    ReadCFile
+    ReadKernelHandle
     jmp fixup_done
 
 fixup_server:
@@ -3150,7 +3150,7 @@ is_valid_exe Proc far
     xor edi,edi
     xor eax,eax
     xor edx,edx
-    ReadCFile
+    ReadKernelHandle
     mov ax,cx
     jc iseFail
 ;
@@ -3169,7 +3169,7 @@ is_valid_exe Proc far
     movzx eax,ax
     xor edx,edx
     mov ecx,40h
-    ReadCFile   
+    ReadKernelHandle   
     mov ax,cx
     jc iseFail
 ;
@@ -3301,7 +3301,7 @@ init_module Proc far
     xor edi,edi
     xor eax,eax
     xor edx,edx
-    ReadCFile
+    ReadKernelHandle
     jc imFail
 ;
     cmp cx,40h
@@ -3318,7 +3318,7 @@ init_module Proc far
     movzx eax,word ptr es:[3Ch]
     xor edx,edx
     mov ecx,40h
-    ReadCFile   
+    ReadKernelHandle   
     jc imFail
 ;
     mov edx,eax

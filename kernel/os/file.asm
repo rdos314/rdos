@@ -1523,9 +1523,9 @@ read_file       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;           NAME:           read_c_file
+;           NAME:           read_legacy_file
 ;
-;           DESCRIPTION:    Reads from C file
+;           DESCRIPTION:    Reads from legacy file
 ;
 ;           PARAMETERS:     BX              File selector
 ;                           ECX             Size
@@ -1537,9 +1537,9 @@ read_file       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_c_file_name        DB 'Read C File', 0
+read_legacy_file_name        DB 'Read Legacy File', 0
 
-read_c_file       Proc far
+read_legacy_file       Proc far
     push ds
     push bx
 ;
@@ -1571,7 +1571,7 @@ rcfDone:
     pop bx
     pop ds
     retf32
-read_c_file     Endp
+read_legacy_file     Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3558,10 +3558,10 @@ init_file       PROC near
     mov ax,close_c_file_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET read_c_file
-    mov edi,OFFSET read_c_file_name
+    mov esi,OFFSET read_legacy_file
+    mov edi,OFFSET read_legacy_file_name
     xor cl,cl
-    mov ax,read_c_file_nr
+    mov ax,read_legacy_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET write_c_file

@@ -1488,7 +1488,7 @@ poll_dummy      Proc near
 poll_dummy      Endp
 
 poll_file       Proc near
-    ReadCFile
+    ReadLegacyFile
     ret
 poll_file       Endp
 
@@ -1622,6 +1622,30 @@ poll_handle32    PROC far
     call poll_handle
     ret
 poll_handle32    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadKernelHandle
+;
+;           DESCRIPTION:    Read with kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Position
+;                           ES:EDI    Buffer
+;                           ECX       Size
+;
+;           RETURNS:        ECX       Read size
+;                           EDX:EAX   New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_kernel_handle_name DB 'Read Kernel Handle', 0
+
+read_kernel_handle Proc far
+    ReadLegacyFile
+    ret
+read_kernel_handle Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1652,7 +1676,7 @@ read_stdin       Proc near
 read_stdin       Endp
 
 read_file       Proc near
-    ReadCFile
+    ReadLegacyFile
     ret
 read_file       Endp
 
@@ -5773,6 +5797,12 @@ init_handle     PROC near
     mov edi,OFFSET clone_c_handle_name
     xor cl,cl
     mov ax,clone_c_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_kernel_handle
+    mov edi,OFFSET read_kernel_handle_name
+    xor cl,cl
+    mov ax,read_kernel_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET delete_c_handle
