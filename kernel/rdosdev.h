@@ -750,7 +750,6 @@ int RdosGetFileInfo(int handle, char *access, char *drive, int *file_sel);
 int RdosDuplFileInfo(char access, char drive, int file_sel);
 
 int RdosOpenKernelFile(const char *FileName, int Mode);
-void RdosCloseCFile(int Handle);
 long RdosGetCFileSize(int Handle);
 void RdosSetCFileSize(int Handle, long Size);
 void RdosGetCFileTime(int Handle, unsigned long *MsbTime, unsigned long *LsbTime);
@@ -1939,10 +1938,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     ValidateHandle  \
     __parm [__es __edi] [__cx] \
     __value [__ebx]
-
-#pragma aux RdosCloseCFile = \
-    OsGate_close_c_file  \
-    __parm [__ebx]
 
 #pragma aux RdosGetCFileSize = \
     OsGate_get_c_file_size  \

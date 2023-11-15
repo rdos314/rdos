@@ -1794,7 +1794,7 @@ spVm16:
     iretd
 
 spCloseFail:
-    CloseCFile
+    CloseKernelHandle
 
 spFail:
     int 3
@@ -1855,7 +1855,7 @@ spawn_program   Proc near
     call GetProgramLoader
     jnc spLoaderOk
 ;
-    CloseCFile
+    CloseKernelHandle
     stc
     jmp spDone
 
@@ -2084,7 +2084,7 @@ fsVm16:
     iretd
 
 fsCloseFail:
-    CloseCFile
+    CloseKernelHandle
 
 fsFail:
     int 3
@@ -2123,7 +2123,7 @@ load_program   Proc near
     call GetProgramLoader
     jnc lpLoaderOk
 ;
-    CloseCFile
+    CloseKernelHandle
     jmp lpFail
 
 lpLoaderOk:    
@@ -2322,7 +2322,7 @@ run_program     PROC near
     call GetProgramLoader
     jnc rpLoaderOk
 ;
-    CloseCFile
+    CloseKernelHandle
     stc
     jmp rpFail
 
@@ -2623,7 +2623,7 @@ ukDone:
 ;
     mov es,ebx
     mov bx,es:mod_c_file_handle
-    CloseCFile
+    CloseKernelHandle
 ;
     FreeMem
 ;
@@ -3645,7 +3645,7 @@ unload_dll_free:
 ;
     mov es,ebx
     mov bx,es:mod_c_file_handle
-    CloseCFile
+    CloseKernelHandle
 ;
     FreeMem
 

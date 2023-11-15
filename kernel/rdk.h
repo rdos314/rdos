@@ -616,7 +616,7 @@
 
 #define osgate_allocate_c_handle 584
 #define osgate_open_legacy_file 585
-#define osgate_close_c_file 586
+#define osgate_close_legacy_file 586
 #define osgate_ref_c_handle 587
 #define osgate_read_legacy_file 588
 #define osgate_write_legacy_file 589
@@ -909,6 +909,7 @@
 
 #define osgate_read_kernel_handle 825
 #define osgate_write_kernel_handle 826
+#define osgate_close_kernel_handle 827
 
 
 
@@ -1530,7 +1531,7 @@
 
 #define OsGate_allocate_c_handle 0x3E 0x67 0x9a 72 2 0 0 2 0
 #define OsGate_open_legacy_file 0x3E 0x67 0x9a 73 2 0 0 2 0
-#define OsGate_close_c_file 0x3E 0x67 0x9a 74 2 0 0 2 0
+#define OsGate_close_legacy_file 0x3E 0x67 0x9a 74 2 0 0 2 0
 #define OsGate_ref_c_handle 0x3E 0x67 0x9a 75 2 0 0 2 0
 #define OsGate_read_legacy_file 0x3E 0x67 0x9a 76 2 0 0 2 0
 #define OsGate_write_legacy_file 0x3E 0x67 0x9a 77 2 0 0 2 0
@@ -1823,4 +1824,5 @@
 
 #define OsGate_read_kernel_handle 0x3E 0x67 0x9a 57 3 0 0 2 0
 #define OsGate_write_kernel_handle 0x3E 0x67 0x9a 58 3 0 0 2 0
+#define OsGate_close_kernel_handle 0x3E 0x67 0x9a 59 3 0 0 2 0
 

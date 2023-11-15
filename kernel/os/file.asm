@@ -2091,18 +2091,18 @@ close_file_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           close_c_file
+;           NAME:           close_legacy_file
 ;
-;           DESCRIPTION:    Close C file
+;           DESCRIPTION:    Close legacy file
 ;
 ;           PARAMETERS:     BX              File selector
 ;                           NC              Success
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_c_file_name DB 'Close C File',0
+close_legacy_file_name DB 'Close Legacy File',0
 
-close_c_file    Proc far
+close_legacy_file    Proc far
     push ds
 ;
     or bx,bx
@@ -2118,7 +2118,7 @@ close_c_file    Proc far
 ccfDone:
     pop ds
     retf32
-close_c_file    Endp
+close_legacy_file    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3552,10 +3552,10 @@ init_file       PROC near
     mov ax,unlock_file_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET close_c_file
-    mov edi,OFFSET close_c_file_name
+    mov esi,OFFSET close_legacy_file
+    mov edi,OFFSET close_legacy_file_name
     xor cl,cl
-    mov ax,close_c_file_nr
+    mov ax,close_legacy_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET read_legacy_file

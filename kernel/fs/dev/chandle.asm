@@ -1050,6 +1050,24 @@ open_handle32    PROC far
     call open_handle
     ret
 open_handle32    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseKernelHandle
+;
+;           DESCRIPTION:    Close kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_kernel_handle_name DB 'Close Kernel Handle', 0
+
+close_kernel_handle Proc far
+    CloseLegacyFile
+    ret
+close_kernel_handle Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1072,7 +1090,7 @@ close_dummy     Endp
 
 close_file      Proc near
     mov bx,ax
-    CloseCFile
+    CloseLegacyFile
     ret
 close_file      Endp
 
@@ -5833,6 +5851,12 @@ init_handle     PROC near
     mov edi,OFFSET write_kernel_handle_name
     xor cl,cl
     mov ax,write_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET close_kernel_handle
+    mov edi,OFFSET close_kernel_handle_name
+    xor cl,cl
+    mov ax,close_kernel_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET delete_c_handle

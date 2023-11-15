@@ -616,7 +616,7 @@ setup_nmi_core_dump_nr      = 581
 
 allocate_c_handle_nr        = 584
 open_legacy_file_nr         = 585
-close_c_file_nr             = 586
+close_legacy_file_nr        = 586
 ref_c_handle_nr             = 587
 read_legacy_file_nr         = 588
 write_legacy_file_nr        = 589
@@ -909,5 +909,6 @@ close_vfs_drive_nr          = 824
 
 read_kernel_handle_nr       = 825
 write_kernel_handle_nr      = 826
+close_kernel_handle_nr      = 827
 
 osgate_entries              = 850
