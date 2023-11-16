@@ -24,21 +24,33 @@ compatibility_level = 2
 
 
 # TLS parameters
-smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
-smtpd_tls_security_level=may
-
-smtp_tls_CApath=/etc/ssl/certs
-smtp_tls_security_level=may
+smtp_use_tls = yes
+smtp_tls_security_level = may
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 
+smtpd_use_tls = yes
+smtpd_tls_security_level = may
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtpd_tls_cert_file = /etc/letsencrypt/live/rdos.se/fullchain.pem
+smtpd_tls_key_file = /etc/letsencrypt/live/rdos.se/privkey.pem
+smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated,  reject_unauth_destination
 
-smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
-myhostname = rdos-temp
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/auth
+
+virtual_transport = lmtp:unix:private/dovecot-lmtp
+virtual_mailbox_domains = /etc/postfix/virtual_mailbox_domains
+
+smtp_tls_CApath=/etc/letsencrypt/live/rdos.se
+
+myhostname = mail.rdos.se
+
+
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 myorigin = /etc/mailname
-mydestination = $myhostname, rdos@rdos.se, rdos-temp, localhost.localdomain, localhost
+mydestination = $myhostname, leif@rdos.se, rdos, localhost.localdomain, localhost
 relayhost = 
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 mailbox_size_limit = 0
