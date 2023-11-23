@@ -59,6 +59,9 @@ TFile::TFile(const char *FileName)
 
         if (FHandle)
             FMap = RdosGetHandleMap(FHandle, &FMapIndex);
+
+        if (FMap == 0)
+            FHandle = 0;
     }
 
     if (FMap)
@@ -100,6 +103,9 @@ TFile::TFile(const char *FileName, int Attrib)
 
         if (FHandle)
             FMap = RdosGetHandleMap(FHandle, &FMapIndex);
+
+        if (FMap == 0)
+            FHandle = 0;
     }
 
     if (FMap)
