@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     int key_count = 0;
     int wait = RdosCreateWait();
 
-    int hs = RdosCreateSecureConnection(15);
+//    int hs = RdosCreateSecureConnection(15);
 
     cctx = SSL_CONF_CTX_new();
 
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 
     connectstr = OPENSSL_strdup(argv[1]);
 
-    BIO_parse_hostserv(connectstr, &host, &port, BIO_PARSE_PRIO_HOST);
+//    BIO_parse_hostserv(connectstr, &host, &port, BIO_PARSE_PRIO_HOST);
 
     ctx = SSL_CTX_new(TLS_client_method());
 
