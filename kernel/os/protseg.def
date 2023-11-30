@@ -86,8 +86,11 @@ process_page_linear     EQU 0BF800000h
 
 sys_page_linear         EQU 0C0000000h
 
-global_byte_linear      EQU 0C1000000h
-global_byte_size        EQU 007000000h
+ssl_linear              EQU 0C1000000h
+ssl_size                EQU 000100000h
+
+global_byte_linear      EQU 0C1100000h
+global_byte_size        EQU 006F00000h
 
 global_page_linear      EQU 0C8000000h
 global_page_size        EQU 032000000h

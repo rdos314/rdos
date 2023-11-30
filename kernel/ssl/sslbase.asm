@@ -303,6 +303,11 @@ InitSecure_    Proc near
     mov ds,ax
     mov es,ax
 ;
+    mov edx,ssl_linear
+    mov ecx,ssl_size
+    mov bx,ssl_alloc_sel
+    CreateDataSelector32
+;
     mov edi,OFFSET delete_secure_connection
     mov ax,SECURE_HANDLE
     RegisterHandle

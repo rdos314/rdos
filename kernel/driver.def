@@ -459,7 +459,8 @@ acpi_code_sel       EQU 0B00h
 carddev_code_sel    EQU 0B10h
 carddev_data_sel    EQU 0B18h
 
-long_dev_code_sel       EQU 0B20h
+long_dev_code_sel   EQU 0B20h
+ssl_alloc_sel       EQU 0B28h
 
 tlist_code_sel      EQU 0B30h
 tlist_data_sel      EQU 0B38h
