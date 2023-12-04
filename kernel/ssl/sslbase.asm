@@ -42,6 +42,26 @@ ELSE
     .386p
 ENDIF
 
+mem_struc   STRUC
+
+mem_file       DB ?,?,?
+mem_line       DB ?,?
+mem_size       DB ?,?,?
+
+mem_struc   ENDS
+
+
+mem_lsb        = 0
+mem_msb        = 4
+
+ssl_mem_struc  STRUC
+
+ssl_section section_typ <>
+ssl_start   DD ?
+
+ssl_mem_struc  ENDS
+
+
 secure_handle_seg      STRUC
 
 secure_handle_base     handle_header <>
@@ -55,6 +75,121 @@ _TEXT    SEGMENT byte public 'CODE'
     assume cs:_TEXT
 
     extrn CreateConnection:near
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateSsl
+;
+;       DESCRIPTION:    Allocate SSL memory
+;
+;       PARAMETERS:     ECX         Size
+;                       ES:EDI      File
+;                       BX          Line
+;
+;       RETURNS:        EDX         Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateSsl    PROC near
+    push ds
+    push eax
+    push esi
+;
+    dec ecx
+    shr ecx,3
+    inc ecx
+    shl ecx,3
+;
+    mov esi,ssl_alloc_sel
+    mov ds,si
+    EnterSection ds:ssl_section
+;
+    mov esi,ds:ssl_start
+
+asLoop:
+    mov eax,ds:[esi]
+    or eax,eax
+    jnz asNext
+;
+    mov eax,ds:[esi+4]
+    or eax,eax
+    jz asLast
+;
+    shr eax,8
+    test eax,0FFF00000h
+    jnz asCorrupt
+;
+    cmp eax,ecx
+    jae asTake
+    jmp asNext
+
+asLast:
+    mov eax,ssl_size - 8
+    sub eax,esi
+    cmp eax,ecx
+    jae asTake
+;
+    stc
+    jmp asDone
+
+asNext:
+    mov eax,ds:[esi+4]
+    shr eax,8
+    test eax,0FFF00000h
+    jnz asCorrupt
+;
+    add esi,eax
+    add esi,SIZE mem_struc
+    jmp asLoop
+
+asCorrupt:
+    int 3
+    stc
+    jmp asDone
+
+asTake:    
+    add eax,16
+    cmp eax,ecx
+    jbe asSetup
+;
+    mov ecx,eax
+    sub ecx,8
+
+asSetup:
+    mov ds:[esi],edi
+    mov word ptr ds:[esi].mem_line,bx
+    mov dword ptr ds:[esi].mem_size,ecx
+    mov edx,esi
+    add edx,8
+;
+    sub eax,8
+    sub eax,ecx
+    jz asOk
+;
+    add esi,ecx
+    add esi,8
+;
+    xor ecx,ecx
+    mov ds:[esi],ecx
+    mov ds:[esi+4],ecx
+;
+    add esi,eax
+    cmp esi,ssl_size
+    je asOk
+;
+    sub eax,8
+    mov dword ptr ds:[esi].mem_size,eax
+
+asOk:
+
+asDone:
+    pop esi
+    pop eax
+    pop ds
+    ret
+AllocateSsl    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -114,7 +249,7 @@ delete_secure_connection    Endp
 ;
 ;           DESCRIPTION:    Allocate TLS
 ;
-;           RETURNS:        EAX		Entry
+;           RETURNS:        EAX         Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -176,7 +311,7 @@ AllocateTls_   Endp
 ;
 ;           DESCRIPTION:    Free TLS
 ;
-;           PARAMETERS:     ECX		Entry
+;           PARAMETERS:     ECX         Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -215,7 +350,7 @@ FreeTls_   Endp
 ;
 ;           DESCRIPTION:    Get TLS data
 ;
-;           PARAMETERS:     ECX		Entry
+;           PARAMETERS:     ECX         Entry
 ;
 ;           RETURNS:        EDX:EAX     Data
 ;
@@ -252,7 +387,7 @@ GetTls_  Endp
 ;
 ;           DESCRIPTION:    Set TLS data
 ;
-;           PARAMETERS:     ECX		Entry
+;           PARAMETERS:     ECX         Entry
 ;                           EDX:EAX     Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -299,14 +434,24 @@ SetTls_   Endp
     public InitSecure_
 
 InitSecure_    Proc near
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-;
     mov edx,ssl_linear
     mov ecx,ssl_size
     mov bx,ssl_alloc_sel
     CreateDataSelector32
+    mov ds,ebx
+    mov ebx,SIZE ssl_mem_struc
+    add ebx,8
+    and bl,0F8h
+    mov ds:ssl_start,ebx
+    InitSection ds:ssl_section
+;
+    xor eax,eax
+    mov ds:[ebx],eax
+    mov ds:[ebx+4],eax
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
 ;
     mov edi,OFFSET delete_secure_connection
     mov ax,SECURE_HANDLE
