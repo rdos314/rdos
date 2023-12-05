@@ -104,7 +104,7 @@ AllocateSsl    PROC near
     shl ecx,3
 ;
     mov esi,ssl_alloc_sel
-    mov ds,si
+    mov ds,esi
     EnterSection ds:ssl_section
 ;
     mov esi,ds:ssl_start
@@ -142,7 +142,7 @@ asNext:
     jnz asCorrupt
 ;
     add esi,eax
-    add esi,SIZE mem_struc
+    add esi,8
     jmp asLoop
 
 asCorrupt:
@@ -192,6 +192,100 @@ asDone:
     pop ds
     ret
 AllocateSsl    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindBlock
+;
+;       DESCRIPTION:    Find memory block
+;
+;       PARAMETERS:     DS:EDX      Offset
+;
+;       RETURNS:        NC
+;                           DS:ESI  Memory block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindBlock    PROC near
+    push eax
+    push edx
+;
+    sub edx,8
+    mov esi,ds:ssl_start
+
+fbLoop:
+    mov eax,ds:[esi]
+    or eax,eax
+    jnz fbCheck
+;
+    mov eax,ds:[esi+4]
+    or eax,eax
+    jnz fbNext
+    jmp fbFail
+
+fbCheck:
+    cmp edx,esi
+    clc
+    je fbDone
+
+fbNext:
+    mov eax,ds:[esi+4]
+    shr eax,8
+    test eax,0FFF00000h
+    jnz fbCorrupt
+;
+    add esi,eax
+    add esi,8
+    jmp fbLoop
+
+fbCorrupt:
+    int 3
+
+fbFail:
+    stc
+    jmp fbDone
+
+fbDone:
+    pop edx
+    pop eax
+    ret
+FindBlock    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeSsl
+;
+;       DESCRIPTION:    Free ssl memory block
+;
+;       PARAMETERS:     EDX         Offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeSsl    PROC near
+    push ds
+    push esi
+;
+    mov esi,ssl_alloc_sel
+    mov ds,esi
+    EnterSection ds:ssl_section
+;
+    call FindBlock
+    jnc fsDo
+;
+    int 3
+    jmp fsLeave
+
+fsDo:
+
+fsLeave:
+    LeaveSection ds:ssl_section
+;
+    pop esi
+    pop ds
+    ret
+FreeSsl    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -231,6 +325,9 @@ create_secure_connection     Proc far
     mov ebx,1234
     call AllocateSsl
     mov [esp+8],edx
+;
+    mov edx,[esp+4]
+    call FreeSsl
 
 
     call CreateConnection
