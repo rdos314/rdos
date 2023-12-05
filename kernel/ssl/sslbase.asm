@@ -212,12 +212,26 @@ create_secure_connection     Proc far
     push ecx
     push edx
 ;
+    sub esp,16
+;
     mov ecx,100h
     mov eax,cs
     mov es,eax
     mov edi,OFFSET create_secure_connection_name
     mov ebx,1234
     call AllocateSsl
+    mov [esp],edx
+;
+    mov ecx,123h
+    mov ebx,1234
+    call AllocateSsl
+    mov [esp+4],edx
+;
+    mov ecx,230h
+    mov ebx,1234
+    call AllocateSsl
+    mov [esp+8],edx
+
 
     call CreateConnection
 ;
