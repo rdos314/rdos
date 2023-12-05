@@ -95,6 +95,7 @@ _TEXT    SEGMENT byte public 'CODE'
 AllocateSsl    PROC near
     push ds
     push eax
+    push ecx
     push esi
 ;
     dec ecx
@@ -152,7 +153,7 @@ asCorrupt:
 asTake:    
     add eax,16
     cmp eax,ecx
-    jbe asSetup
+    jae asSetup
 ;
     mov ecx,eax
     sub ecx,8
@@ -164,7 +165,7 @@ asSetup:
     mov edx,esi
     add edx,8
 ;
-    sub eax,8
+    sub eax,16
     sub eax,ecx
     jz asOk
 ;
@@ -179,13 +180,14 @@ asSetup:
     cmp esi,ssl_size
     je asOk
 ;
-    sub eax,8
     mov dword ptr ds:[esi].mem_size,eax
 
 asOk:
+    LeaveSection ds:ssl_section
 
 asDone:
     pop esi
+    pop ecx
     pop eax
     pop ds
     ret
@@ -210,6 +212,13 @@ create_secure_connection     Proc far
     push ecx
     push edx
 ;
+    mov ecx,100h
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET create_secure_connection_name
+    mov ebx,1234
+    call AllocateSsl
+
     call CreateConnection
 ;
     mov ax,SECURE_HANDLE
