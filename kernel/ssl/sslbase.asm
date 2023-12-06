@@ -204,6 +204,7 @@ AllocateSsl    Endp
 ;
 ;       RETURNS:        NC
 ;                           DS:ESI  Memory block
+;                           DS:EDI  Previous block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -213,6 +214,7 @@ FindBlock    PROC near
 ;
     sub edx,8
     mov esi,ds:ssl_start
+    xor edi,edi
 
 fbLoop:
     mov eax,ds:[esi]
@@ -235,6 +237,7 @@ fbNext:
     test eax,0FFF00000h
     jnz fbCorrupt
 ;
+    mov edi,esi
     add esi,eax
     add esi,8
     jmp fbLoop
@@ -266,6 +269,7 @@ FindBlock    Endp
 FreeSsl    PROC near
     push ds
     push esi
+    push edi
 ;
     mov esi,ssl_alloc_sel
     mov ds,esi
@@ -282,6 +286,7 @@ fsDo:
 fsLeave:
     LeaveSection ds:ssl_section
 ;
+    pop edi
     pop esi
     pop ds
     ret
