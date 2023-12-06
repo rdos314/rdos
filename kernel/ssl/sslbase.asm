@@ -99,6 +99,14 @@ AllocateMem_    PROC near
     push ecx
     push esi
 ;
+    or ecx,ecx
+    jnz asSome
+;
+    xor eax,eax
+    xor edx,edx
+    jz asDone
+
+asSome: 
     dec ecx
     shr ecx,3
     inc ecx
@@ -283,6 +291,9 @@ FreeMem_   PROC near
     push esi
     push edi
 ;
+    or dx,dx
+    jz fsDone
+;
     cmp dx,ssl_alloc_sel
     je fsMine
 ;
@@ -446,7 +457,18 @@ rsFail:
     LeaveSection ds:ssl_section
     jmp rsDone
 
-rsShrink:    
+rsShrink:
+    shl ecx,8
+    mov cl,ds:[esi+4]
+    mov ds:[esi+4],ecx
+    shr ecx,8
+;
+    add esi,ecx
+    add esi,8
+    sub eax,8
+    mov dword ptr ds:[esi].mem_size,eax
+    xor eax,eax
+    mov ds:[esi],eax
 
 rsOk:
     mov eax,edx
