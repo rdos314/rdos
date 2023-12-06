@@ -80,7 +80,7 @@ _TEXT    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AllocateSsl
+;       NAME:           AllocateMem
 ;
 ;       DESCRIPTION:    Allocate SSL memory
 ;
@@ -88,13 +88,14 @@ _TEXT    SEGMENT byte public 'CODE'
 ;                       ES:EDI      File
 ;                       BX          Line
 ;
-;       RETURNS:        EDX         Offset
+;       RETURNS:        DX:EAX      Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateSsl    PROC near
+    public AllocateMem_
+
+AllocateMem_    PROC near
     push ds
-    push eax
     push ecx
     push esi
 ;
@@ -188,15 +189,16 @@ asSetupLast:
     mov ds:[esi+4],ecx
 
 asOk:
+    mov eax,edx
+    mov edx,ds
     LeaveSection ds:ssl_section
 
 asDone:
     pop esi
     pop ecx
-    pop eax
     pop ds
     ret
-AllocateSsl    Endp
+AllocateMem_    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -263,25 +265,35 @@ FindBlock    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           FreeSsl
+;       NAME:           FreeMem
 ;
 ;       DESCRIPTION:    Free ssl memory block
 ;
-;       PARAMETERS:     EDX         Offset
+;       PARAMETERS:     DX:EAX         Address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeSsl    PROC near
+    public FreeMem_
+
+FreeMem_   PROC near
     push ds
     push eax
+    push edx
     push ecx
     push esi
     push edi
 ;
-    mov esi,ssl_alloc_sel
-    mov ds,esi
+    cmp dx,ssl_alloc_sel
+    je fsMine
+;
+    int 3
+    jmp fsDone
+
+fsMine:
+    mov ds,edx
     EnterSection ds:ssl_section
 ;
+    mov edx,eax
     call FindBlock
     jnc fsDo
 ;
@@ -336,14 +348,38 @@ fsMergeUpOk:
 
 fsLeave:
     LeaveSection ds:ssl_section
-;
+
+fsDone:
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop eax
     pop ds
     ret
-FreeSsl    Endp
+FreeMem_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReallocateMem
+;
+;       DESCRIPTION:    Reallocate mem
+;
+;       PARAMETERS:     DX:EAX         Address
+;                       ECX            New size
+;                       ES:EDI      File
+;                       BX          Line
+;
+;       RETURNS:        DX:EAX      Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReallocateMem_
+
+ReallocateMem_    PROC near
+    ret
+ReallocateMem_    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -364,68 +400,6 @@ create_secure_connection     Proc far
     push ecx
     push edx
 ;
-    sub esp,16
-;
-    mov ecx,100h
-    mov eax,cs
-    mov es,eax
-    mov edi,OFFSET create_secure_connection_name
-    mov ebx,1234
-    call AllocateSsl
-    mov [esp],edx
-;
-    mov ecx,128h
-    mov ebx,1234
-    call AllocateSsl
-    mov [esp+4],edx
-;
-    mov ecx,230h
-    mov ebx,1234
-    call AllocateSsl
-    mov [esp+8],edx
-;
-    mov edx,[esp+4]
-    call FreeSsl
-;
-    mov ecx,128h
-    mov ebx,3456
-    call AllocateSsl
-    mov [esp+4],edx
-;
-    mov edx,[esp+4]
-    call FreeSsl
-;
-    mov ecx,120h
-    mov ebx,3456
-    call AllocateSsl
-    mov [esp+4],edx
-;
-    mov edx,[esp+4]
-    call FreeSsl
-;
-    mov ecx,118h
-    mov ebx,3456
-    call AllocateSsl
-    mov [esp+4],edx
-;
-    mov edx,[esp+4]
-    call FreeSsl
-;
-    mov ecx,130h
-    mov ebx,3456
-    call AllocateSsl
-    mov [esp+4],edx
-;
-    mov edx,[esp]
-    call FreeSsl
-;
-    mov edx,[esp+4]
-    call FreeSsl
-;
-    mov edx,[esp+8]
-    call FreeSsl
-
-
     call CreateConnection
 ;
     mov ax,SECURE_HANDLE

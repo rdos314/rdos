@@ -432,9 +432,15 @@ typedef struct CRYPTO_ONCE {
 } CRYPTO_ONCE;
 #define RDOS_ONCE_INIT {0, 0, {0}}
 
+
 void *AllocateMem(size_t num, const char *file, int line);
-void *ReallocateMem(void *str, size_t num, const char *file, int line);
+#pragma aux AllocateMem parm routine [ecx] [es edi] [ebx] value [dx eax]
+
 void FreeMem(void *str, const char *file, int line);
+#pragma aux AllocateMem parm routine [dx eax] [es edi] [ebx]
+
+void *ReallocateMem(void *str, size_t num, const char *file, int line);
+#pragma aux ReallocateMem parm routine [dx eax] [ecx] [es edi] [ebx] value [dx eax]
 
 #endif
 
