@@ -287,6 +287,9 @@ fsDo:
     mov ecx,ds:[esi+4]
     shr ecx,8
 ;
+    or edi,edi
+    jz fsMergeDownOk
+;
     mov eax,ds:[edi]
     or eax,eax
     jnz fsMergeDownOk
@@ -307,6 +310,15 @@ fsMergeDownOk:
     jnz fsMergeUpOk
 ;
     mov eax,ds:[edi+4]
+    or eax,eax
+    jnz fsMergeNotLast
+;
+    mov ds:[esi],eax
+    mov ds:[esi+4],eax
+    clc
+    jmp fsLeave
+
+fsMergeNotLast:
     shr eax,8
     add eax,8
     add ecx,eax
@@ -367,9 +379,14 @@ create_secure_connection     Proc far
     call AllocateSsl
     mov [esp+8],edx
 ;
+    mov edx,[esp]
+    call FreeSsl
+;
+    mov edx,[esp+8]
+    call FreeSsl
+;
     mov edx,[esp+4]
     call FreeSsl
-
 
     call CreateConnection
 ;
