@@ -151,36 +151,41 @@ asCorrupt:
     jmp asDone
 
 asTake:    
-    add eax,16
-    cmp eax,ecx
-    jae asSetup
-;
-    mov ecx,eax
-    sub ecx,8
-
-asSetup:
-    mov ds:[esi],edi
-    mov word ptr ds:[esi].mem_line,bx
-    mov dword ptr ds:[esi].mem_size,ecx
     mov edx,esi
     add edx,8
 ;
-    sub eax,16
     sub eax,ecx
-    jz asOk
+    cmp eax,8
+    ja asSplit
+;
+    add ecx,eax
+    mov ds:[esi],edi
+    mov word ptr ds:[esi].mem_line,bx
+    mov dword ptr ds:[esi].mem_size,ecx
+    jmp asOk
+
+asSplit:
+    mov ds:[esi],edi
+    mov word ptr ds:[esi].mem_line,bx
+    mov dword ptr ds:[esi].mem_size,ecx
 ;
     add esi,ecx
     add esi,8
+    mov ecx,esi
+    add ecx,eax
+    cmp ecx,ssl_size
+    je asSetupLast
 ;
+    sub eax,8
+    xor ecx,ecx
+    mov ds:[esi],ecx
+    mov dword ptr ds:[esi].mem_size,eax
+    jmp asOk
+
+asSetupLast:
     xor ecx,ecx
     mov ds:[esi],ecx
     mov ds:[esi+4],ecx
-;
-    add esi,eax
-    cmp esi,ssl_size
-    je asOk
-;
-    mov dword ptr ds:[esi].mem_size,eax
 
 asOk:
     LeaveSection ds:ssl_section
@@ -369,7 +374,7 @@ create_secure_connection     Proc far
     call AllocateSsl
     mov [esp],edx
 ;
-    mov ecx,123h
+    mov ecx,128h
     mov ebx,1234
     call AllocateSsl
     mov [esp+4],edx
@@ -379,14 +384,47 @@ create_secure_connection     Proc far
     call AllocateSsl
     mov [esp+8],edx
 ;
-    mov edx,[esp]
+    mov edx,[esp+4]
     call FreeSsl
 ;
-    mov edx,[esp+8]
+    mov ecx,128h
+    mov ebx,3456
+    call AllocateSsl
+    mov [esp+4],edx
+;
+    mov edx,[esp+4]
+    call FreeSsl
+;
+    mov ecx,120h
+    mov ebx,3456
+    call AllocateSsl
+    mov [esp+4],edx
+;
+    mov edx,[esp+4]
+    call FreeSsl
+;
+    mov ecx,118h
+    mov ebx,3456
+    call AllocateSsl
+    mov [esp+4],edx
+;
+    mov edx,[esp+4]
+    call FreeSsl
+;
+    mov ecx,130h
+    mov ebx,3456
+    call AllocateSsl
+    mov [esp+4],edx
+;
+    mov edx,[esp]
     call FreeSsl
 ;
     mov edx,[esp+4]
     call FreeSsl
+;
+    mov edx,[esp+8]
+    call FreeSsl
+
 
     call CreateConnection
 ;
