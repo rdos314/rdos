@@ -268,6 +268,8 @@ FindBlock    Endp
 
 FreeSsl    PROC near
     push ds
+    push eax
+    push ecx
     push esi
     push edi
 ;
@@ -282,12 +284,46 @@ FreeSsl    PROC near
     jmp fsLeave
 
 fsDo:
+    mov ecx,ds:[esi+4]
+    shr ecx,8
+;
+    mov eax,ds:[edi]
+    or eax,eax
+    jnz fsMergeDownOk
+;
+    mov esi,edi
+    add ecx,8
+    mov eax,ds:[esi+4]
+    shr eax,8
+    add ecx,eax
+
+fsMergeDownOk:
+    mov edi,esi
+    add edi,ecx
+    add edi,8
+;
+    mov eax,ds:[edi]
+    or eax,eax
+    jnz fsMergeUpOk
+;
+    mov eax,ds:[edi+4]
+    shr eax,8
+    add eax,8
+    add ecx,eax
+
+fsMergeUpOk:
+    mov dword ptr ds:[esi].mem_size,ecx
+    xor eax,eax
+    mov ds:[esi],eax
+    clc
 
 fsLeave:
     LeaveSection ds:ssl_section
 ;
     pop edi
     pop esi
+    pop ecx
+    pop eax
     pop ds
     ret
 FreeSsl    Endp
