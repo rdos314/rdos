@@ -278,8 +278,8 @@ FindBlock    Endp
 FreeMem_   PROC near
     push ds
     push eax
-    push edx
     push ecx
+    push edx
     push esi
     push edi
 ;
@@ -366,8 +366,8 @@ FreeMem_    Endp
 ;
 ;       DESCRIPTION:    Reallocate mem
 ;
-;       PARAMETERS:     DX:EAX         Address
-;                       ECX            New size
+;       PARAMETERS:     DX:EAX      Address
+;                       ECX         New size
 ;                       ES:EDI      File
 ;                       BX          Line
 ;
@@ -378,8 +378,143 @@ FreeMem_    Endp
     public ReallocateMem_
 
 ReallocateMem_    PROC near
+    push ds
+    push ecx
+    push esi
+    push edi
+; 
+    dec ecx
+    shr ecx,3
+    inc ecx
+    shl ecx,3
+;
+    cmp dx,ssl_alloc_sel
+    je rsMine
+;
+    int 3
+    jmp rsDone
+
+rsMine:
+    mov ds,edx
+    EnterSection ds:ssl_section
+;
+    mov edx,eax
+    call FindBlock
+    jnc rsDo
+;
+    int 3
+    jmp rsFail
+
+rsDo:
+    mov eax,ds:[esi+4]
+    shr eax,8
+    sub eax,ecx
+    or eax,eax
+    jz rsOk
+;
+    cmp eax,8
+    je rsOk
+;
+    test eax,80000000h
+    jz rsShrink
+
+rsGrow:
+    add eax,ecx
+    mov edi,esi
+    add edi,eax
+    add edi,8
+    mov eax,ds:[edi]
+    or eax,eax
+    jnz rsFail
+;
+    push ecx
+    mov eax,ds:[esi+4]
+    shr eax,8
+    mov ecx,ds:[edi+4]
+    shr ecx,8
+    add ecx,eax
+    add ecx,8
+    shl ecx,8
+    mov cl,ds:[esi+4]
+    mov ds:[esi+4],ecx
+    pop ecx
+    jmp rsDo
+
+rsFail:    
+    xor eax,eax
+    xor edx,edx
+    LeaveSection ds:ssl_section
+    jmp rsDone
+
+rsShrink:    
+
+rsOk:
+    mov eax,edx
+    mov edx,ds
+    LeaveSection ds:ssl_section
+
+rsDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ds
     ret
 ReallocateMem_    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetMemSize
+;
+;       DESCRIPTION:    Get size of ssl memory block
+;
+;       PARAMETERS:     DX:EAX         Address
+;
+;       RETURNS:        ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetMemSize_
+
+GetMemSize_   PROC near
+    push ds
+    push eax
+    push edx
+    push esi
+    push edi
+;
+    cmp dx,ssl_alloc_sel
+    je gmsMine
+;
+    int 3
+    jmp gmsDone
+
+gmsMine:
+    mov ds,edx
+    EnterSection ds:ssl_section
+;
+    mov edx,eax
+    call FindBlock
+    jnc gmsGet
+;
+    int 3
+    jmp gmsLeave
+
+gmsGet:
+    mov ecx,ds:[esi+4]
+    shr ecx,8
+
+gmsLeave:
+    LeaveSection ds:ssl_section
+
+gmsDone:
+    pop edi
+    pop esi
+    pop edx
+    pop eax
+    pop ds
+    ret
+GetMemSize_   ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

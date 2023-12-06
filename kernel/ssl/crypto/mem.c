@@ -249,6 +249,22 @@ void *CRYPTO_zalloc(size_t num, const char *file, int line)
     return ret;
 }
 
+static void *RdosReallocate(void *str, size_t num, const char *file, int line)
+{
+    void *newptr = ReallocateMem(str, num, file, line);
+    int oldsize;
+
+    if (!newptr)
+    {
+        oldsize = GetMemSize(str);
+        newptr = AllocateMem(num, file, line);
+        if (newptr)
+            memcpy(newptr, str, oldsize);
+        FreeMem(str, file, line);
+    }
+    return newptr;
+}
+
 void *CRYPTO_realloc(void *str, size_t num, const char *file, int line)
 {
     INCREMENT(realloc_count);
@@ -270,7 +286,7 @@ void *CRYPTO_realloc(void *str, size_t num, const char *file, int line)
         CRYPTO_mem_debug_realloc(str, NULL, num, 0, file, line);
 
 #ifdef __RDOSDEV__
-        ret = ReallocateMem(str, num, file, line);
+        ret = RdosReallocate(str, num, file, line);
 #else
         ret = realloc(str, num);
 #endif
@@ -283,7 +299,7 @@ void *CRYPTO_realloc(void *str, size_t num, const char *file, int line)
 #endif
 
 #ifdef __RDOSDEV__
-    return  ReallocateMem(str, num, file, line);
+    return  RdosReallocate(str, num, file, line);
 #else
     return realloc(str, num);
 #endif

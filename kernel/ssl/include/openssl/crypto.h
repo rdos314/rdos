@@ -433,6 +433,9 @@ typedef struct CRYPTO_ONCE {
 #define RDOS_ONCE_INIT {0, 0, {0}}
 
 
+int GetMemSize(void *str);
+#pragma aux GetMemSize parm routine [dx eax] value [ecx]
+
 void *AllocateMem(size_t num, const char *file, int line);
 #pragma aux AllocateMem parm routine [ecx] [es edi] [ebx] value [dx eax]
 
