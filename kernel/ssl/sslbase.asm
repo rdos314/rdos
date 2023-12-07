@@ -558,7 +558,7 @@ create_secure_session     Proc far
     push esi
     push edi
 ;
-    mov eax,SEG data
+    mov eax,ssl_data_sel
     mov ds,eax
     call CreateClientSession
 ;
@@ -587,7 +587,7 @@ free_secure_session     Proc far
     push ds
     pushad
 ;
-    mov eax,SEG data
+    mov eax,ssl_data_sel
     mov ds,eax
     call FreeClientSession
 ;

@@ -74,7 +74,7 @@ void AssertBreak(char *func, char *fn, int line_num);
 #
 ##########################################################################*/
 #pragma aux CreateClientSession "*" rdosdev parm routine value [ebx]
-void *CreateClientSession()
+int CreateClientSession()
 {
     void *p;
     SSL_CTX *ctx = NULL;
