@@ -1013,6 +1013,11 @@
     __parm [__edx] [__eax] [__fs __esi] [__es __edi] \
     __modify [__eax __ebx __ecx __edx]
 
+#pragma aux RdosDecodeTicsBase = \
+    CallGate_binary_to_time  \
+    __parm [__edx] [__eax] \
+    __modify [__eax __ebx __ecx __edx]
+
 #pragma aux RdosDecodeMsbTics = \
     "push ds" \
     "mov ds,eax" \

@@ -26,15 +26,18 @@
 #define FILE_ATTRIBUTE_ARCHIVE          0x20
 #define FILE_ATTRIBUTE_NORMAL           0x80
 
-#define O_RDONLY        0
-#define O_WRONLY        0x1
-#define O_RDWR          0x2
-#define O_APPEND        0x10
-#define O_CREAT         0x20
-#define O_TRUNC         0x40
-#define O_NOINHERIT     0x80
-#define O_EXCL          0x400
+#ifndef O_RDONLY
 
+  #define O_RDONLY        0
+  #define O_WRONLY        0x1
+  #define O_RDWR          0x2
+  #define O_APPEND        0x10
+  #define O_CREAT         0x20
+  #define O_TRUNC         0x40
+  #define O_NOINHERIT     0x80
+  #define O_EXCL          0x400
+
+#endif
 
 #define LGOP_NULL  0
 #define LGOP_NONE  1
@@ -763,6 +766,7 @@ int RDOSAPI RdosDayOfWeek(int year, int month, int day);
 void RDOSAPI RdosDosTimeDateToTics(unsigned short date, unsigned short time, unsigned long *msb, unsigned long *lsb);
 void RDOSAPI RdosTicsToDosTimeDate(unsigned long msb, unsigned long lsb, unsigned short *date, unsigned short *time);
 
+void RDOSAPI RdosDecodeTicsBase(unsigned long msb, unsigned long lsb);
 void RDOSAPI RdosDecodeMsbTics(unsigned long msb, int *year, int *month, int *day, int *hour);
 void RDOSAPI RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro);
 

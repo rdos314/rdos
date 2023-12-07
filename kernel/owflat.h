@@ -1619,7 +1619,7 @@
     "mov eax,-1" \
     "mov edx,-1" \
     "shsDone:" \
-    __parm [__ebx] [_edx __eax] \
+    __parm [__ebx] [__edx __eax] \
     __value [__edx __eax]
 
 #pragma aux RdosGetHandleMode = \
@@ -2509,6 +2509,11 @@
     "mov [esi],dx" \
     "mov [edi],bx" \
     __parm [__edx] [__eax] [__esi] [__edi] \
+    __modify [__eax __ebx __ecx __edx]
+
+#pragma aux RdosDecodeTicsBase = \
+    CallGate_binary_to_time  \
+    __parm [__edx] [__eax] \
     __modify [__eax __ebx __ecx __edx]
 
 #pragma aux RdosDecodeMsbTics = \
