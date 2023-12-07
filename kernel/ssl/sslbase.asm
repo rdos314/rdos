@@ -74,8 +74,8 @@ _TEXT    SEGMENT byte public 'CODE'
 
     assume cs:_TEXT
 
-    extrn CreateConnection:near
-
+    extrn CreateClientSession:near
+    extrn FreeClientSession:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -540,9 +540,69 @@ GetMemSize_   ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           CreateSecureSession
+;
+;       Purpose:        Create a secure session
+;
+;       Returns:        EBX         Session handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_secure_session_name    DB 'Create Secure Session',0
+
+create_secure_session     Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov eax,SEG data
+    mov ds,eax
+    call CreateClientSession
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+create_secure_session     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           FreeSecureSession
+;
+;       Purpose:        Free a secure session
+;
+;       Parameters:     EBX         Session handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_secure_session_name    DB 'Free Secure Session',0
+
+free_secure_session     Proc far
+    push ds
+    pushad
+;
+    mov eax,SEG data
+    mov ds,eax
+    call FreeClientSession
+;
+    popad
+    pop ds
+    ret
+free_secure_session     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           CreateSecureConnection
 ;
 ;       Purpose:        Create a secure connection
+;
+;       Parameters:     EBX         Session handle
 ;
 ;       Returns:        NC          ok
 ;                       BX          connection handle
@@ -557,7 +617,7 @@ create_secure_connection     Proc far
     push ecx
     push edx
 ;
-    call CreateConnection
+;    call CreateConnection
 ;
     mov ax,SECURE_HANDLE
     mov cx,SIZE secure_handle_seg
@@ -804,10 +864,16 @@ InitSecure_    Proc near
     mov ax,SECURE_HANDLE
     RegisterHandle
 ;
-    mov esi,OFFSET create_secure_connection
-    mov edi,OFFSET create_secure_connection_name
+    mov esi,OFFSET create_secure_session
+    mov edi,OFFSET create_secure_session_name
     xor dx,dx
-    mov ax,create_secure_connection_nr
+    mov ax,create_secure_session_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET free_secure_session
+    mov edi,OFFSET free_secure_session_name
+    xor dx,dx
+    mov ax,free_secure_session_nr
     RegisterBimodalUserGate
 ;
     ret

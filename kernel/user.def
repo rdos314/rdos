@@ -1003,4 +1003,7 @@ get_handle_map_nr                 = 822
 map_handle_nr                     = 823
 grow_handle_nr                    = 824
 
+create_secure_session_nr          = 825
+free_secure_session_nr            = 826
+
 usergate_entries                  = 830

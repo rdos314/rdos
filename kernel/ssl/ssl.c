@@ -51,6 +51,11 @@
 #include "rdosdev.h"
 
 #define BUFSIZZ 1024*8
+#define MAX_SESSION_COUNT 16
+
+int ClientCount = 0;
+SSL_CONF_CTX *ClientConf = NULL;
+SSL_CTX *SessionArr[MAX_SESSION_COUNT];
 
 void InitSecure();
 
@@ -59,34 +64,78 @@ void AssertBreak(char *func, char *fn, int line_num);
 
 /*##########################################################################
 #
-#   Name       : CreateConnection
+#   Name       : CreateClientSession
 #
-#   Purpose....: Create connection
+#   Purpose....: Create client session
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux CreateConnection "*" rdosdev parm routine value [dx eax]
-void *CreateConnection()
+#pragma aux CreateClientSession "*" rdosdev parm routine value [ebx]
+void *CreateClientSession()
 {
     void *p;
-    SSL_CONF_CTX *cctx = NULL;
     SSL_CTX *ctx = NULL;
-    char *cbuf = NULL;
-    char *sbuf = NULL;
+    int i;
 
-    cctx = SSL_CONF_CTX_new();
+    for (i = 0; i < MAX_SESSION_COUNT; i++)
+        if (SessionArr[i] == 0)
+            break;
 
-    cbuf = (char *)OPENSSL_malloc(BUFSIZZ);
-    sbuf = (char *)OPENSSL_malloc(BUFSIZZ);
+    if (i < MAX_SESSION_COUNT)
+    {
+        if (ClientCount == 0)
+        {
+            ClientConf = SSL_CONF_CTX_new();
+            SSL_CONF_CTX_set_flags(ClientConf, SSL_CONF_FLAG_CLIENT | SSL_CONF_FLAG_CMDLINE);
+        }
 
-    SSL_CONF_CTX_set_flags(cctx, SSL_CONF_FLAG_CLIENT | SSL_CONF_FLAG_CMDLINE);
+        ClientCount++;
 
-    ctx = SSL_CTX_new(TLS_client_method());
+        ctx = SSL_CTX_new(TLS_client_method());
 
-    return 0;
+        SessionArr[i] = ctx;
+        return i + 1;
+    }
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : FreeClientSession
+#
+#   Purpose....: Free client session
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux FreeClientSession "*" rdosdev parm routine [ebx]
+void FreeClientSession(int Handle)
+{
+    SSL_CTX *ctx;
+
+    if (Handle > 0 && Handle <= MAX_SESSION_COUNT)
+    {
+        ctx = SessionArr[Handle - 1];
+        if (ctx)
+        {
+            SessionArr[Handle - 1] = 0;
+            SSL_CTX_free(ctx);
+
+            ClientCount--;
+
+            if (ClientCount == 0)
+            {
+                SSL_CONF_CTX_free(ClientConf);
+                ClientConf = 0;
+            }
+        }
+    }
 }
 
 /*##########################################################################
@@ -103,6 +152,11 @@ void *CreateConnection()
 #pragma aux InitTasking "*" rdosdev parm routine
 void __far InitTasking()
 {
+    int i;
+
+    for (i = 0; i < MAX_SESSION_COUNT; i++)
+        SessionArr[i] = 0;
+
     InitSecure();
 }
 

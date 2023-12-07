@@ -3081,6 +3081,14 @@
     __parm [__edi] [__ecx] [__edx] \
     __value [__ecx]
 
+#pragma aux RdosCreateSecureSession = \
+    CallGate_create_secure_session  \
+    __value [__ebx]
+
+#pragma aux RdosFreeSecureSession = \
+    CallGate_free_secure_session  \
+    __parm [__ebx]
+
 #pragma aux RdosCreateSecureConnection = \
     CallGate_create_secure_connection  \
     ValidateHandle \

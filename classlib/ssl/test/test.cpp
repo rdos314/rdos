@@ -111,7 +111,8 @@ int main(int argc, char **argv)
     int key_count = 0;
     int wait = RdosCreateWait();
 
-    int hs = RdosCreateSecureConnection(15);
+    int sess = RdosCreateSecureSession();
+    RdosFreeSecureSession(sess);
 
     cctx = SSL_CONF_CTX_new();
 

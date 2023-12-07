@@ -2211,6 +2211,15 @@ AcceptIpv4Socket               MACRO
     UserGate accept_ipv4_socket_nr
                         ENDM
 
+; OUT EBX                session handle
+CreateSecureSession       MACRO
+        UserGate create_secure_session_nr
+                        ENDM
+
+; IN  EBX                session handle
+FreeSecureSession       MACRO
+        UserGate free_secure_session_nr
+                        ENDM
 
 ; IN  BX                socket handle
 ; OUT BX                connection handle
