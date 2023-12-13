@@ -101,6 +101,7 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn CreateClientSession:near
     extrn FreeClientSession:near
     extrn CreateClientConnection:near
+    extrn FreeClientConnection:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -641,7 +642,6 @@ close_secure_session     Proc far
     pop ds
     ret
 close_secure_session     Endp
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1088,23 +1088,36 @@ close_secure_connection_name    DB 'Close Secure Connection',0
 
 close_secure_connection     Proc far
     push ds
-    push eax
-    push ecx
-    push edx
+    push es
+    pushad
 ;
-;    call CreateConnection
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc fscDone
 ;
-;    mov ax,SECURE_HANDLE
-;    mov cx,SIZE secure_handle_seg
-;    AllocateHandle
-;    mov [ebx].secure_handle_sel,dx
-;    mov [ebx].hh_sign,SECURE_HANDLE
-;    mov bx,[ebx].hh_handle
-    clc
+    push ds
+    push ebx
+    les edi,fword ptr [ebx].sc_con
+    call FreeClientConnection
 ;
-    pop edx
-    pop ecx
-    pop eax
+    pop ebx
+    pop ds
+;
+    push ds
+    push ebx
+;
+    mov ds,[ebx].sc_conn_sel
+    mov bx,ds:sc_socket_handle
+    CloseTcpConnection
+;    
+    call DeleteConnection
+;
+    pop ebx
+    pop ds
+
+fscDone:
+    popad
+    pop es
     pop ds
     ret
 close_secure_connection     Endp

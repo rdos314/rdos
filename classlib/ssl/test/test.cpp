@@ -127,6 +127,7 @@ int main(int argc, char **argv)
     sess = RdosCreateSecureSession();
 
     sockh = RdosCreateSecureConnection(sess, ip, 0, portnr, 5000, 0x1000);
+    RdosCloseSecureConnection(sockh);
 
     RdosCloseSecureSession(sess);
 

@@ -153,6 +153,27 @@ SSL *CreateClientConnection(SSL_CTX *ctx)
 
 /*##########################################################################
 #
+#   Name       : FreeClientConnection
+#
+#   Purpose....: Free client connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux FreeClientConnection "*" rdosdev parm routine [es edi]
+void FreeClientConnection(SSL *con)
+{
+    if (con)
+    {
+        SSL_shutdown(con);
+        SSL_free(con);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : InitTasking
 #
 #   Purpose....: Init tasking callback
