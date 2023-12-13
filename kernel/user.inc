@@ -2217,14 +2217,24 @@ CreateSecureSession       MACRO
                         ENDM
 
 ; IN  EBX                session handle
-FreeSecureSession       MACRO
-        UserGate free_secure_session_nr
+CloseSecureSession       MACRO
+        UserGate close_secure_session_nr
                         ENDM
 
-; IN  BX                socket handle
+; IN  EAX               Timeout in milliseconds for connection
+; IN  EBX               Session handle
+; IN  ECX               buffer size
+; IN  EDX               ip address
+; IN  SI                local port (0 for dynamic port)
+; IN  DI                remote port
 ; OUT BX                connection handle
 CreateSecureConnection       MACRO
         UserGate create_secure_connection_nr
+                        ENDM
+
+; IN  EBX               connection handle
+CloseSecureConnection       MACRO
+        UserGate close_secure_connection_nr
                         ENDM
 
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;

@@ -1004,7 +1004,8 @@
 #define usergate_grow_handle 0x00000338
 
 #define usergate_create_secure_session 0x00000339
-#define usergate_free_secure_session 0x0000033A
+#define usergate_close_secure_session 0x0000033A
+#define usergate_close_secure_connection 0x0000033B
 
 
 
@@ -2015,7 +2016,8 @@
 #define CallGate_grow_handle 0x55 0x67 0x9a 56 3 0 0 3 0 0x5d
 
 #define CallGate_create_secure_session 0x55 0x67 0x9a 57 3 0 0 3 0 0x5d
-#define CallGate_free_secure_session 0x55 0x67 0x9a 58 3 0 0 3 0 0x5d
+#define CallGate_close_secure_session 0x55 0x67 0x9a 58 3 0 0 3 0 0x5d
+#define CallGate_close_secure_connection 0x55 0x67 0x9a 59 3 0 0 3 0 0x5d
 
 #else
 
@@ -3024,6 +3026,7 @@
 #define CallGate_grow_handle 0x3e 0x67 0x9a 56 3 0 0 3 0
 
 #define CallGate_create_secure_session 0x3e 0x67 0x9a 57 3 0 0 3 0
-#define CallGate_free_secure_session 0x3e 0x67 0x9a 58 3 0 0 3 0
+#define CallGate_close_secure_session 0x3e 0x67 0x9a 58 3 0 0 3 0
+#define CallGate_close_secure_connection 0x3e 0x67 0x9a 59 3 0 0 3 0
 
 #endif

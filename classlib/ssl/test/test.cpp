@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     int wait = RdosCreateWait();
 
     int sess = RdosCreateSecureSession();
-    RdosFreeSecureSession(sess);
+    RdosCloseSecureSession(sess);
 
     cctx = SSL_CONF_CTX_new();
 

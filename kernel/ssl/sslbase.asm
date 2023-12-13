@@ -573,17 +573,17 @@ create_secure_session     Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:           FreeSecureSession
+;       Name:           CloseSecureSession
 ;
-;       Purpose:        Free a secure session
+;       Purpose:        Close a secure session
 ;
 ;       Parameters:     EBX         Session handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_secure_session_name    DB 'Free Secure Session',0
+close_secure_session_name    DB 'Close Secure Session',0
 
-free_secure_session     Proc far
+close_secure_session     Proc far
     push ds
     pushad
 ;
@@ -594,7 +594,7 @@ free_secure_session     Proc far
     popad
     pop ds
     ret
-free_secure_session     Endp
+close_secure_session     Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -602,7 +602,12 @@ free_secure_session     Endp
 ;
 ;       Purpose:        Create a secure connection
 ;
-;       Parameters:     EBX         Session handle
+;       Parameters:     EAX         Timeout in milliseconds for connection
+;                       EBX         Session handle
+;                       ECX         buffer size
+;                       EDX         ip address
+;                       SI          local port (0 for dynamic port)
+;                       DI          remote port
 ;
 ;       Returns:        NC          ok
 ;                       BX          connection handle
@@ -619,12 +624,12 @@ create_secure_connection     Proc far
 ;
 ;    call CreateConnection
 ;
-    mov ax,SECURE_HANDLE
-    mov cx,SIZE secure_handle_seg
-    AllocateHandle
-    mov [ebx].secure_handle_sel,dx
-    mov [ebx].hh_sign,SECURE_HANDLE
-    mov bx,[ebx].hh_handle
+;    mov ax,SECURE_HANDLE
+;    mov cx,SIZE secure_handle_seg
+;    AllocateHandle
+;    mov [ebx].secure_handle_sel,dx
+;    mov [ebx].hh_sign,SECURE_HANDLE
+;    mov bx,[ebx].hh_handle
     clc
 ;
     pop edx
@@ -633,6 +638,56 @@ create_secure_connection     Proc far
     pop ds
     ret
 create_secure_connection     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CloseSecureConnection
+;
+;       Purpose:        Close a secure connection
+;
+;       Parameters:     BX          connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_secure_connection_name    DB 'Close Secure Connection',0
+
+close_secure_connection     Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+;
+;    call CreateConnection
+;
+;    mov ax,SECURE_HANDLE
+;    mov cx,SIZE secure_handle_seg
+;    AllocateHandle
+;    mov [ebx].secure_handle_sel,dx
+;    mov [ebx].hh_sign,SECURE_HANDLE
+;    mov bx,[ebx].hh_handle
+    clc
+;
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+close_secure_connection     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Delete_secure_session
+;
+;           DESCRIPTION:    Delete secure session (called from handle module)
+;
+;           PARAMETERS:     BX              SECURE SESSION HANDLE
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_secure_session    Proc far
+    ret
+delete_secure_session    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -860,8 +915,12 @@ InitSecure_    Proc near
     mov ds,ax
     mov es,ax
 ;
+    mov edi,OFFSET delete_secure_session
+    mov ax,SSL_SESS_HANDLE
+    RegisterHandle
+;
     mov edi,OFFSET delete_secure_connection
-    mov ax,SECURE_HANDLE
+    mov ax,SSL_CONN_HANDLE
     RegisterHandle
 ;
     mov esi,OFFSET create_secure_session
@@ -870,10 +929,22 @@ InitSecure_    Proc near
     mov ax,create_secure_session_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET free_secure_session
-    mov edi,OFFSET free_secure_session_name
+    mov esi,OFFSET close_secure_session
+    mov edi,OFFSET close_secure_session_name
     xor dx,dx
-    mov ax,free_secure_session_nr
+    mov ax,close_secure_session_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET create_secure_connection
+    mov edi,OFFSET create_secure_connection_name
+    xor dx,dx
+    mov ax,create_secure_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_secure_connection
+    mov edi,OFFSET close_secure_connection_name
+    xor dx,dx
+    mov ax,close_secure_connection_nr
     RegisterBimodalUserGate
 ;
     ret

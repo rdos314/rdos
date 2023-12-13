@@ -3085,15 +3085,19 @@
     CallGate_create_secure_session  \
     __value [__ebx]
 
-#pragma aux RdosFreeSecureSession = \
-    CallGate_free_secure_session  \
+#pragma aux RdosCloseSecureSession = \
+    CallGate_close_secure_session  \
     __parm [__ebx]
 
 #pragma aux RdosCreateSecureConnection = \
     CallGate_create_secure_connection  \
     ValidateHandle \
-    __parm [__ebx] \
+    __parm [__ebx] [__edx] [__esi] [__edi] [__eax] [__ecx] \
     __value [__ebx]
+
+#pragma aux RdosCloseSecureConnection = \
+    CallGate_close_secure_connection  \
+    __parm [__ebx]
 
 #pragma aux RdosGetLocalMailslot = \
     CallGate_get_local_mailslot  \
