@@ -84,6 +84,15 @@ sc_send_tail		DW ?
 
 ssl_connection	ENDS
 
+ssl_connection_handle_seg      STRUC
+
+sc_base     handle_header <>
+sc_conn_sel DW ?
+sc_ctx      DD ?,?
+sc_con      DD ?,?
+
+ssl_connection_handle_seg      ENDS
+
 
 _TEXT    SEGMENT byte public 'CODE'
 
@@ -998,6 +1007,7 @@ create_secure_connection_name    DB 'Create Secure Connection',0
 
 create_secure_connection     Proc far
     push ds
+    push es
     push eax
     push ecx
     push edx
@@ -1032,14 +1042,26 @@ cscOk:
 
 cscCreate:
     les edi,fword ptr [ebx].ss_ctx
+    push es
+    push edi
+;
     call CreateClientConnection
 ;
-;    mov ax,SECURE_HANDLE
-;    mov cx,SIZE secure_handle_seg
-;    AllocateHandle
-;    mov [ebx].secure_handle_sel,dx
-;    mov [ebx].hh_sign,SECURE_HANDLE
-;    mov bx,[ebx].hh_handle
+    mov ax,SSL_CONN_HANDLE
+    mov cx,SIZE ssl_connection_handle_seg
+    AllocateHandle
+    mov [ebx].sc_conn_sel,bp
+;
+    mov dword ptr [ebx].sc_con,edi
+    mov word ptr [ebx].sc_con+4,dx
+;
+    pop edi
+    pop es
+    mov dword ptr [ebx].sc_ctx,edi
+    mov word ptr [ebx].sc_ctx+4,es
+;
+    mov [ebx].hh_sign,SSL_CONN_HANDLE
+    mov bx,[ebx].hh_handle
     clc
 
 cscDone:
@@ -1047,6 +1069,7 @@ cscDone:
     pop edx
     pop ecx
     pop eax
+    pop es
     pop ds
     ret
 create_secure_connection     Endp
