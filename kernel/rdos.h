@@ -874,7 +874,7 @@ int RDOSAPI RdosGetTcpConnectionWriteSpace(int Handle);
 int RDOSAPI RdosCreateSecureSession();
 int RDOSAPI RdosCloseSecureSession(int Handle);
 
-int RDOSAPI RdosOpenSecureConnection(int Session, int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
+int RDOSAPI RdosCreateSecureConnection(int Session, int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
 void RDOSAPI RdosCloseSecureConnection(int Handle);
 
 int RDOSAPI RdosGetLocalMailslot(const char *Name);

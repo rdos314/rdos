@@ -68,6 +68,23 @@ ss_ctx      DD ?,?
 
 ssl_session_handle_seg      ENDS
 
+ssl_connection	STRUC
+
+sc_section		section_typ <>
+sc_socket_handle        DW ?
+sc_timeout		DD ?
+sc_buffer_size		DW ?
+sc_receive_buffer	DW ?
+sc_receive_count	DW ?
+sc_receive_head		DW ?
+sc_receive_tail		DW ?
+sc_send_buffer		DW ?
+sc_send_count		DW ?
+sc_send_head		DW ?
+sc_send_tail		DW ?
+
+ssl_connection	ENDS
+
 
 _TEXT    SEGMENT byte public 'CODE'
 
@@ -75,6 +92,7 @@ _TEXT    SEGMENT byte public 'CODE'
 
     extrn CreateClientSession:near
     extrn FreeClientSession:near
+    extrn CreateClientConnection:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -615,6 +633,351 @@ close_secure_session     Proc far
     pop ds
     ret
 close_secure_session     Endp
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CreateBuffer
+;
+;       Purpose:        Create a buffer
+;
+;       Parameters:     ECX     Buffer size
+;
+;       Returns:        AX      Buffer selector     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBuffer    Proc near
+    push es
+    push bx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov edi,ecx
+    add ecx,ecx
+    mov eax,ecx
+    AllocateBigLinear
+    mov ebp,edx
+    AllocateGdt
+    mov ecx,eax
+    CreateDataSelector16    
+;
+    mov ecx,edi
+    push ecx
+    mov es,bx   
+    xor edi,edi
+    shr ecx,2
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop ecx
+;
+    shr ecx,12
+    xor esi,esi
+;
+    push ebx    
+
+cbAlias:
+    lea edx,[esi+ebp]
+    GetPageEntry
+;
+    lea edx,[edi+ebp]
+    SetPageEntry
+;
+    add esi,1000h
+    add edi,1000h
+    loop cbAlias    
+;
+    pop ebx    
+;
+    mov ax,bx    
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop bx
+    pop es
+    ret
+CreateBuffer    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           FreeBuffer
+;
+;       Purpose:        Free buffer
+;
+;       Parameters:         AX      Buffer selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBuffer    Proc near
+    push es
+    push eax
+    push bx
+    push ecx
+    push edx
+;
+    mov bx,ax
+    GetSelectorBaseSize
+;
+    shr ecx,1
+    add edx,ecx
+    shr ecx,12
+;
+    push ebx
+    
+fbAlias:
+    xor eax,eax
+    xor ebx,ebx
+    SetPageEntry
+    add edx,1000h
+    loop fbAlias    
+;
+    pop ebx
+;    
+    mov es,bx
+    FreeMem
+;    
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop es
+    ret
+FreeBuffer    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CopyFromBuffer
+;
+;       Purpose:        Copy from buffer
+;
+;       Parameters:     CX      Number of bytes
+;           		FS:BX   Buffer pointer
+;           		ES:EDI  Destination address
+;
+;       Returns:    	BX      New buffer pointer
+;           		EDI     New destination
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyFromBuffer    Proc near
+    push cx
+;
+    cmp cx,10h
+    jb cfbSmall
+;
+    push esi
+    movzx ecx,cx
+    movzx esi,bx
+    push cx
+    shr cx,2
+    rep movs dword ptr es:[edi],fs:[esi]
+    pop cx
+    and cx,3
+    rep movs byte ptr es:[edi],fs:[esi]
+    mov bx,si
+    pop esi
+    cmp bx,ds:sc_buffer_size
+    jb cfbDone
+;
+    sub bx,ds:sc_buffer_size
+    jmp cfbDone
+
+cfbSmall:
+    or cx,cx
+    jz cfbDone
+;    
+    push eax
+
+cfbLoop:
+    mov al,fs:[bx]
+    mov es:[edi],al
+    inc bx
+    inc edi
+    cmp bx,ds:sc_buffer_size
+    jnz cfbWrapDone
+    
+    xor bx,bx
+    
+cfbWrapDone:
+    loop cfbLoop
+;       
+    pop eax
+
+cfbDone:
+    pop cx
+    ret
+CopyFromBuffer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CopyToBuffer
+;
+;       Purpose:        Copy to buffer
+;
+;       Parameters:     CX      Number of bytes
+;           		FS:BX       Buffer pointer
+;           		ES:ESI      Source address
+;
+;       Returns:    	BX      New buffer pointer
+;           		ESI     New source
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyToBuffer    Proc near
+    push eax
+    push cx
+;
+    cmp cx,10h
+    jb ctbSmall
+;
+    push ds
+    push es
+    push edi
+;    
+    movzx edi,bx
+    movzx ecx,cx
+    mov ax,es
+    mov ds,ax
+    mov ax,fs
+    mov es,ax
+;
+    push cx
+    shr cx,2
+    rep movs dword ptr es:[edi],ds:[esi]
+    pop cx
+    and cx,3
+    rep movs byte ptr es:[edi],ds:[esi]
+    mov bx,di
+;
+    pop edi
+    pop es
+    pop ds
+;    
+    cmp bx,ds:sc_buffer_size
+    jb ctbDone
+;
+    sub bx,ds:sc_buffer_size
+    jmp ctbDone
+
+ctbSmall:
+    or cx,cx
+    jz ctbDone    
+
+ctbLoop:
+    mov al,es:[esi]
+    mov fs:[bx],al
+    inc bx
+    inc esi
+    cmp bx,ds:sc_buffer_size
+    jnz ctbWrapDone
+;
+    xor bx,bx
+    
+ctbWrapDone:
+    loop ctbLoop
+
+ctbDone:
+    pop cx
+    pop eax
+    ret
+CopyToBuffer    Endp    
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CreateConnection
+;
+;       Purpose:        Create a connection and link it
+;
+;       Parameters:     EAX         Timeout in seconds for connection
+;                       CX          buffer size
+;
+;       Returns:        DS          connection selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateConnection    Proc near
+    push es
+    push ax
+    push ecx
+    push edx
+
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
+    push eax
+    mov eax,SIZE ssl_connection
+    AllocateSmallGlobalMem
+    pop eax
+;
+    mov es:sc_timeout,eax
+    mov es:sc_buffer_size,cx
+;
+    call CreateBuffer
+    mov es:sc_receive_buffer,ax
+    mov es:sc_receive_count,0
+    mov es:sc_receive_head,0
+    mov es:sc_receive_tail,0
+;
+    call CreateBuffer
+    mov es:sc_send_buffer,ax
+    mov es:sc_send_count,0
+    mov es:sc_send_head,0
+    mov es:sc_send_tail,0
+;       
+    mov ax,es
+    mov ds,ax
+    InitSection ds:sc_section
+;
+    pop edx
+    pop ecx
+    pop ax
+    pop es
+    ret
+CreateConnection    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           DeleteConnection
+;
+;       Purpose:        Delete a connection. ListSection & connection section
+;                       must be taken prior to call
+;
+;       Parameters:         DS          connection selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteConnection    Proc near
+    push es
+    push ax
+    push bx
+    push ecx
+    push edx
+    push esi
+;
+    mov ax,ds:sc_receive_buffer
+    call FreeBuffer
+;
+    mov ax,ds:sc_send_buffer
+    call FreeBuffer
+;
+    mov bx,ds
+    mov es,bx
+    FreeMem
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop bx
+    pop ax
+    pop es
+    ret
+DeleteConnection    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -642,7 +1005,7 @@ create_secure_connection     Proc far
     push ecx
     push edx
 ;
-;    call CreateConnection
+    call CreateClientConnection
 ;
 ;    mov ax,SECURE_HANDLE
 ;    mov cx,SIZE secure_handle_seg

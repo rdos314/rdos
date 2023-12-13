@@ -133,6 +133,25 @@ void FreeClientSession(SSL_CTX *ctx)
 
 /*##########################################################################
 #
+#   Name       : CreateClientConnection
+#
+#   Purpose....: Create client connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux CreateClientConnection "*" rdosdev parm routine [es edi] [edx] [esi] value [ebx]
+int CreateClientConnection(SSL_CTX *ctx, long Ip, int Port)
+{
+    int s = -1;
+
+    s = BIO_open_socket(Ip, Port);
+}
+
+/*##########################################################################
+#
 #   Name       : InitTasking
 #
 #   Purpose....: Init tasking callback
