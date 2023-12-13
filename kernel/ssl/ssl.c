@@ -142,9 +142,13 @@ void FreeClientSession(SSL_CTX *ctx)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux CreateClientConnection "*" rdosdev parm routine [es edi] [ebx] value [ebx]
-int CreateClientConnection(SSL_CTX *ctx, int handle)
+#pragma aux CreateClientConnection "*" rdosdev parm routine [es edi] value [dx edi]
+SSL *CreateClientConnection(SSL_CTX *ctx)
 {
+    SSL *con = NULL;
+
+    con = SSL_new(ctx);
+    return con;
 }
 
 /*##########################################################################

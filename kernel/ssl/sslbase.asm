@@ -1003,19 +1003,35 @@ create_secure_connection     Proc far
     push edx
     push ebp
 ;
+    mov ebp,ebx
+;
     OpenTcpConnection
     jc cscDone
 ;
     mov eax,6000
     WaitForTcpConnection
     jnc cscOk
-;
+
+cscFree:
     CloseTcpConnection
     stc
     jmp cscDone
 
 cscOk:
     call CreateConnection
+;
+    mov ebx,ebp
+    mov ebp,ds
+    mov ax,SSL_SESS_HANDLE
+    DerefHandle
+    jnc cscCreate
+;
+    mov ds,ebp
+    call DeleteConnection
+    jmp cscFree
+
+cscCreate:
+    les edi,fword ptr [ebx].ss_ctx
     call CreateClientConnection
 ;
 ;    mov ax,SECURE_HANDLE
