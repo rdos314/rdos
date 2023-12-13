@@ -87,6 +87,19 @@ SSL_CTX *CreateClientSession()
     ClientCount++;
 
     ctx = SSL_CTX_new(TLS_client_method());
+
+    if (ctx)
+    {
+        SSL_CTX_clear_mode(ctx, SSL_MODE_AUTO_RETRY);
+        SSL_CONF_CTX_set_ssl_ctx(ClientConf, ctx);
+
+        SSL_CTX_set_default_ctlog_list_file(ctx);
+        SSL_CTX_set_default_verify_file(ctx);
+        SSL_CTX_set_default_verify_dir(ctx);
+
+        SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_CLIENT | SSL_SESS_CACHE_NO_INTERNAL_STORE);
+    }
+
     return ctx;
 }
 
