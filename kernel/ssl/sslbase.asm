@@ -61,13 +61,12 @@ ssl_start   DD ?
 
 ssl_mem_struc  ENDS
 
+ssl_session_handle_seg      STRUC
 
-secure_handle_seg      STRUC
+ss_base     handle_header <>
+ss_ctx      DD ?,?
 
-secure_handle_base     handle_header <>
-secure_handle_sel      DW ?
-
-secure_handle_seg      ENDS
+ssl_session_handle_seg      ENDS
 
 
 _TEXT    SEGMENT byte public 'CODE'
@@ -562,6 +561,20 @@ create_secure_session     Proc far
     mov ds,eax
     call CreateClientSession
 ;
+    or dx,dx
+    stc
+    jz cssDone
+;
+    mov ax,SSL_SESS_HANDLE
+    mov cx,SIZE ssl_session_handle_seg
+    AllocateHandle
+    mov dword ptr [ebx].ss_ctx,edi
+    mov word ptr [ebx].ss_ctx+4,dx
+    mov [ebx].hh_sign,SSL_SESS_HANDLE
+    mov bx,[ebx].hh_handle
+    clc
+
+cssDone:
     pop edi
     pop esi
     pop edx
@@ -585,13 +598,20 @@ close_secure_session_name    DB 'Close Secure Session',0
 
 close_secure_session     Proc far
     push ds
+    push es
     pushad
 ;
+    mov ax,SSL_SESS_HANDLE
+    DerefHandle
+    jc cssDone
+;
+    les edi,fword ptr [ebx].ss_ctx
     mov eax,ssl_data_sel
     mov ds,eax
     call FreeClientSession
 ;
     popad
+    pop es
     pop ds
     ret
 close_secure_session     Endp
