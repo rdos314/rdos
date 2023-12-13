@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 
     portnr = 443;
 
-    s = BIO_open_socket(ip, portnr);
+//    s = BIO_open_socket(ip, portnr);
 
     sess = RdosCreateSecureSession();
 

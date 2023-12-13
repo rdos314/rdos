@@ -72,7 +72,6 @@ ssl_connection	STRUC
 
 sc_section		section_typ <>
 sc_socket_handle        DW ?
-sc_timeout		DD ?
 sc_buffer_size		DW ?
 sc_receive_buffer	DW ?
 sc_receive_count	DW ?
@@ -893,8 +892,8 @@ CopyToBuffer    Endp
 ;
 ;       Purpose:        Create a connection and link it
 ;
-;       Parameters:     EAX         Timeout in seconds for connection
-;                       CX          buffer size
+;       Parameters:     BX          socket handle
+;			CX          buffer size
 ;
 ;       Returns:        DS          connection selector
 ;
@@ -910,13 +909,11 @@ CreateConnection    Proc near
     and cx,0F000h
     add ecx,1000h
 ;
-    push eax
     mov eax,SIZE ssl_connection
     AllocateSmallGlobalMem
-    pop eax
 ;
-    mov es:sc_timeout,eax
     mov es:sc_buffer_size,cx
+    mov es:sc_socket_handle,bx
 ;
     call CreateBuffer
     mov es:sc_receive_buffer,ax
@@ -1004,7 +1001,21 @@ create_secure_connection     Proc far
     push eax
     push ecx
     push edx
+    push ebp
 ;
+    OpenTcpConnection
+    jc cscDone
+;
+    mov eax,6000
+    WaitForTcpConnection
+    jnc cscOk
+;
+    CloseTcpConnection
+    stc
+    jmp cscDone
+
+cscOk:
+    call CreateConnection
     call CreateClientConnection
 ;
 ;    mov ax,SECURE_HANDLE
@@ -1014,7 +1025,9 @@ create_secure_connection     Proc far
 ;    mov [ebx].hh_sign,SECURE_HANDLE
 ;    mov bx,[ebx].hh_handle
     clc
-;
+
+cscDone:
+    pop ebp
     pop edx
     pop ecx
     pop eax

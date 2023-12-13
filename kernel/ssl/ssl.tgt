@@ -1,4 +1,4 @@
-40
+42
 targetIdent
 0
 MProject
@@ -41,14 +41,14 @@ WString
 RDEVLINK
 11
 WString
-19
-rk???Code selector:
+21
+rk???WLINK_op_codesel
 1
+0
 12
 WString
 5
 0xBD0
-0
 13
 MVState
 14
@@ -57,14 +57,14 @@ WString
 RDEVLINK
 15
 WString
-19
-rk???Data selector:
+21
+rk???WLINK_op_datasel
 1
+0
 16
 WString
 5
 0xBD8
-0
 17
 MCState
 18
@@ -73,8 +73,8 @@ WString
 RDEVLINK
 19
 WString
-29
-?????Line numbers in map file
+22
+?????WLINK_op_maplines
 1
 1
 20
@@ -85,14 +85,14 @@ WString
 RDEVLINK
 22
 WString
-17
-?????Error count:
+18
+?????WLINK_op_maxe
 1
+0
 23
 WString
 3
 150
-0
 24
 MCState
 25
@@ -101,8 +101,8 @@ WString
 RDEVLINK
 26
 WString
-10
-?????Quiet
+15
+?????WLINK_op_q
 1
 0
 27
@@ -170,14 +170,14 @@ WString
 WCC
 42
 WString
-25
-r????Include directories:
+12
+r????WLANG_i
 1
+0
 43
 WString
 126
 ";crypto/include;include;crypto/ec/curve448;crypto/ec/curve448/arch_32;crypto/modes;\rdos\kernel;\rdos\classlib;$(%watcom)/rh"
-0
 44
 MVState
 45
@@ -186,14 +186,14 @@ WString
 WCC
 46
 WString
-29
-?????Disable warning messages
+14
+?????WLANG_wcd
 1
+0
 47
 WString
 11
 202 303 201
-0
 48
 MRState
 49
@@ -202,8 +202,8 @@ WString
 WCC
 50
 WString
-21
-?????No optimizations
+11
+?????WCG_od
 1
 0
 51
@@ -214,8 +214,8 @@ WString
 WCC
 53
 WString
-26
-?????Fastest possible code
+15
+?????WCG_otexan
 1
 1
 54
@@ -226,8 +226,8 @@ WString
 WCC
 56
 WString
-33
-?????Do not generate stack frames
+23
+?????WCG_no_stack_frame
 1
 0
 57
@@ -238,8 +238,8 @@ WString
 WCC
 59
 WString
-23
-?????Generate as needed
+11
+?????WCG_of
 1
 1
 60
@@ -250,8 +250,8 @@ WString
 WCC
 62
 WString
-21
-?????Compiler default
+17
+?????WLANG_zp_def
 1
 0
 63
@@ -262,8 +262,8 @@ WString
 WCC
 65
 WString
-19
-?????GS can be used
+12
+?????WCG_zgf
 1
 1
 66

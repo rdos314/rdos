@@ -142,12 +142,9 @@ void FreeClientSession(SSL_CTX *ctx)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux CreateClientConnection "*" rdosdev parm routine [es edi] [edx] [esi] value [ebx]
-int CreateClientConnection(SSL_CTX *ctx, long Ip, int Port)
+#pragma aux CreateClientConnection "*" rdosdev parm routine [es edi] [ebx] value [ebx]
+int CreateClientConnection(SSL_CTX *ctx, int handle)
 {
-    int s = -1;
-
-    s = BIO_open_socket(Ip, Port);
 }
 
 /*##########################################################################
