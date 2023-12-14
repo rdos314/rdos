@@ -88,7 +88,8 @@ int main(int argc, char **argv)
     char *cbuf = NULL;
     char *sbuf = NULL;
     char *connectstr = NULL;
-    char host[80];
+    char *host = NULL;
+    char *port = NULL;
     int ret = 1; 
     int in_init = 1;
     int i;
@@ -110,27 +111,6 @@ int main(int argc, char **argv)
     int key_count = 0;
     int wait = RdosCreateWait();
 
-    int sess;
-    int sockh;
-
-    strcpy(host, "185.20.15.60");
-
-    if (sscanf(host, "%d.%d.%d.%d", &n3, &n2, &n1, &n0) == 4)
-        ip = n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
-    else
-        ip = 0;
-
-    portnr = 443;
-
-//    s = BIO_open_socket(ip, portnr);
-
-    sess = RdosCreateSecureSession();
-
-    sockh = RdosCreateSecureConnection(sess, ip, 0, portnr, 5000, 0x1000);
-    RdosCloseSecureConnection(sockh);
-
-    RdosCloseSecureSession(sess);
-
     cctx = SSL_CONF_CTX_new();
 
     cbuf = (char *)OPENSSL_malloc(BUFSIZZ);
@@ -140,7 +120,7 @@ int main(int argc, char **argv)
 
     connectstr = OPENSSL_strdup(argv[1]);
 
-//    BIO_parse_hostserv(connectstr, &host, &port, BIO_PARSE_PRIO_HOST);
+    BIO_parse_hostserv(connectstr, &host, &port, BIO_PARSE_PRIO_HOST);
 
     ctx = SSL_CTX_new(TLS_client_method());
 
@@ -154,6 +134,13 @@ int main(int argc, char **argv)
     SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_CLIENT | SSL_SESS_CACHE_NO_INTERNAL_STORE);
 
     con = SSL_new(ctx);
+
+    if (sscanf(host, "%d.%d.%d.%d", &n3, &n2, &n1, &n0) == 4)
+        ip = n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
+    else
+        ip = 0;
+
+    portnr = atoi(port);
 
     s = BIO_open_socket(ip, portnr);
 
@@ -395,8 +382,8 @@ int main(int argc, char **argv)
 
     SSL_CTX_free(ctx);
     OPENSSL_free(connectstr);
-//    OPENSSL_free(host);
-//    OPENSSL_free(port);
+    OPENSSL_free(host);
+    OPENSSL_free(port);
     SSL_CONF_CTX_free(cctx);
     OPENSSL_clear_free(cbuf, BUFSIZZ);
     OPENSSL_clear_free(sbuf, BUFSIZZ);
