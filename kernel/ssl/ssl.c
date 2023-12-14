@@ -147,15 +147,12 @@ SSL *CreateClientConnection(SSL_CTX *ctx, int sock)
 {
     SSL *con = NULL;
     BIO *sbio;
-    int h;
 
     sbio = BIO_new_socket(sock, BIO_NOCLOSE);
     con = SSL_new(ctx);
 
     SSL_set_bio(con, sbio, sbio);
     SSL_set_connect_state(con);
-
-    h = SSL_get_handle(con);
 
     return con;
 }
@@ -178,6 +175,264 @@ void FreeClientConnection(SSL *con)
     {
         SSL_shutdown(con);
         SSL_free(con);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : HandleClientConnection
+#
+#   Purpose....: Handle client connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux HandleClientConnection "*" rdosdev parm routine [es edi]
+void HandleClientConnection(SSL *con)
+{
+    char *cbuf = NULL;
+    char *sbuf = NULL;
+    char *connectstr = NULL;
+    char *host = NULL;
+    char *port = NULL;
+    int ret = 1; 
+    int in_init = 1;
+    int i;
+    int s = -1;
+    int k;
+    int write_tty;
+    int read_tty;
+    int write_ssl;
+    int read_ssl;
+    int tty_on;
+    int ssl_pending;
+    int cbuf_len;
+    int cbuf_off;
+    int sbuf_len;
+    int sbuf_off;
+    int key_count = 0;
+    int wait = RdosCreateWait();
+
+    cbuf = (char *)OPENSSL_malloc(BUFSIZZ);
+    sbuf = (char *)OPENSSL_malloc(BUFSIZZ);
+
+    RdosAddWaitForTcpConnection(wait, SSL_get_handle(con), 2);
+    RdosAddWaitForKeyboard(wait, 1);
+
+    read_tty = 1;
+    write_tty = 0;
+    tty_on = 0;
+    read_ssl = 1;
+    write_ssl = 1;
+
+    cbuf_len = 0;
+    cbuf_off = 0;
+    sbuf_len = 0;
+    sbuf_off = 0;
+
+    for (;;) 
+    {
+        if (!SSL_is_init_finished(con) && SSL_total_renegotiations(con) == 0
+                && SSL_get_key_update_type(con) == SSL_KEY_UPDATE_NONE) 
+        {
+            in_init = 1;
+            tty_on = 0;
+        } 
+        else 
+        {
+            tty_on = 1;
+
+            if (in_init)
+                in_init = 0;
+
+        }
+
+        ssl_pending = read_ssl && SSL_has_pending(con);
+
+        if (!ssl_pending) 
+        {
+            if (write_ssl)
+            {
+                if (RdosGetTcpConnectionWriteSpace(SSL_get_handle(con)) == 0)
+                    RdosWaitMilli(25);
+            }
+            else
+                RdosWaitForever(wait);
+        }
+
+        if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(SSL_get_handle(con))) 
+        {
+            k = SSL_write(con, &(cbuf[cbuf_off]), (unsigned int)cbuf_len);
+            switch (SSL_get_error(con, k)) 
+            {
+            case SSL_ERROR_NONE:
+                cbuf_off += k;
+                cbuf_len -= k;
+                if (k <= 0)
+                    return;
+                /* we have done a  write(con,NULL,0); */
+                if (cbuf_len <= 0) 
+                {
+                    read_tty = 1;
+                    write_ssl = 0;
+                } 
+                else 
+                {        /* if (cbuf_len > 0) */
+
+                    read_tty = 0;
+                    write_ssl = 1;
+                }
+                break;
+
+            case SSL_ERROR_WANT_WRITE:
+                RdosWriteString("write W BLOCK\n");
+                write_ssl = 1;
+                read_tty = 0;
+                break;
+
+            case SSL_ERROR_WANT_ASYNC:
+                RdosWriteString("write A BLOCK\n");
+                write_ssl = 1;
+                read_tty = 0;
+                break;
+
+            case SSL_ERROR_WANT_READ:
+                RdosWriteString("write R BLOCK\n");
+                write_tty = 0;
+                read_ssl = 1;
+                write_ssl = 0;
+                break;
+
+            case SSL_ERROR_WANT_X509_LOOKUP:
+                RdosWriteString("write X BLOCK\n");
+                break;
+
+            case SSL_ERROR_ZERO_RETURN:
+                if (cbuf_len != 0) 
+                {
+                    RdosWriteString("shutdown\n");
+                    ret = 0;
+                    return;
+                } 
+                else 
+                {
+                    read_tty = 1;
+                    write_ssl = 0;
+                    break;
+                }
+
+            case SSL_ERROR_SYSCALL:
+                if ((k != 0) || (cbuf_len != 0)) 
+                {
+                    RdosWriteString("Socket error\n");
+                    return;
+                } 
+                else 
+                {
+                    read_tty = 1;
+                    write_ssl = 0;
+                }
+                break;
+
+            case SSL_ERROR_WANT_ASYNC_JOB:
+                /* This shouldn't ever happen in s_client - treat as an error */
+
+            case SSL_ERROR_SSL:
+                RdosWriteString("SSL error\r\n");
+                return;
+            }
+        }
+        else if (!ssl_pending && write_tty)
+        {
+            RdosWriteString(sbuf + sbuf_off);
+            sbuf_len = 0;
+            sbuf_off = 0;
+            read_ssl = 1;
+            write_tty = 0;
+        } 
+        else if (ssl_pending || RdosPollTcpConnection(SSL_get_handle(con)))
+        {
+            k = SSL_read(con, sbuf, 1024 /* BUFSIZZ */ );
+
+            switch (SSL_get_error(con, k)) 
+            {
+            case SSL_ERROR_NONE:
+                if (k <= 0)
+                    return;
+                sbuf_off = 0;
+                sbuf_len = k;
+
+                read_ssl = 0;
+                write_tty = 1;
+                break;
+
+            case SSL_ERROR_WANT_ASYNC:
+                RdosWriteString("read A BLOCK\n");
+                write_tty = 0;
+                read_ssl = 1;
+                if ((read_tty == 0) && (write_ssl == 0))
+                    write_ssl = 1;
+                break;
+
+            case SSL_ERROR_WANT_WRITE:
+                RdosWriteString("read W BLOCK\n");
+                write_ssl = 1;
+                read_tty = 0;
+                break;
+
+            case SSL_ERROR_WANT_READ:
+                RdosWriteString("read R BLOCK\n");
+                write_tty = 0;
+                read_ssl = 1;
+                if ((read_tty == 0) && (write_ssl == 0))
+                    write_ssl = 1;
+                break;
+
+            case SSL_ERROR_WANT_X509_LOOKUP:
+                RdosWriteString("read X BLOCK\n");
+                break;
+
+            case SSL_ERROR_SYSCALL:
+                RdosWriteString("CONNECTION CLOSED BY SERVER\n");
+                return;
+
+            case SSL_ERROR_ZERO_RETURN:
+                RdosWriteString("closed\n");
+                ret = 0;
+                return;
+
+            case SSL_ERROR_WANT_ASYNC_JOB:
+                /* This shouldn't ever happen in s_client. Treat as an error */
+
+            case SSL_ERROR_SSL:
+                RdosWriteString("SSL error\n");
+                return;
+
+            }
+        }
+        else if (read_tty && RdosPollKeyboard())
+        {
+            char ch = (char)RdosReadKeyboard();
+            RdosWriteChar(ch);
+
+            if (ch == 0xd)
+            {
+                cbuf[key_count] = 0xd;
+                cbuf[key_count+1] = 0xa;
+                cbuf_len = key_count + 2;
+                key_count = 0;
+                cbuf_off = 0;
+                write_ssl = 1;
+                read_tty = 0;
+            }
+            else
+            {
+                cbuf[key_count] = ch;
+                key_count++;
+            }
+        }
     }
 }
 

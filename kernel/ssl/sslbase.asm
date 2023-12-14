@@ -102,6 +102,7 @@ _TEXT    SEGMENT byte public 'CODE'
     extrn FreeClientSession:near
     extrn CreateClientConnection:near
     extrn FreeClientConnection:near
+    extrn HandleClientConnection:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1123,6 +1124,37 @@ fscDone:
     pop ds
     ret
 close_secure_connection     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           PollSecureConnection
+;
+;       Purpose:        Poll a secure connection
+;
+;       Parameters:     BX          connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_secure_connection_name    DB 'Poll Secure Connection',0
+
+poll_secure_connection     Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc pscDone
+;
+    les edi,fword ptr [ebx].sc_con
+    call HandleClientConnection
+
+pscDone:
+    popad
+    pop es
+    pop ds
+    ret
+poll_secure_connection     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1395,6 +1427,12 @@ InitSecure_    Proc near
     mov edi,OFFSET close_secure_connection_name
     xor dx,dx
     mov ax,close_secure_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET poll_secure_connection
+    mov edi,OFFSET poll_secure_connection_name
+    xor dx,dx
+    mov ax,poll_secure_connection_nr
     RegisterBimodalUserGate
 ;
     ret

@@ -25,6 +25,7 @@ void main()
     sess = RdosCreateSecureSession();
 
     sock = RdosCreateSecureConnection(sess, ip, 0, port, 5000, 0x1000);
+    RdosPollSecureConnection(sock);
     RdosCloseSecureConnection(sock);
 
     RdosCloseSecureSession(sess);

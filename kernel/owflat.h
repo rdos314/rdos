@@ -3099,6 +3099,10 @@
     CallGate_close_secure_connection  \
     __parm [__ebx]
 
+#pragma aux RdosPollSecureConnection = \
+    CallGate_poll_secure_connection  \
+    __parm [__ebx]
+
 #pragma aux RdosGetLocalMailslot = \
     CallGate_get_local_mailslot  \
     ValidateHandle \
