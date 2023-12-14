@@ -147,10 +147,16 @@ SSL *CreateClientConnection(SSL_CTX *ctx, int sock)
 {
     SSL *con = NULL;
     BIO *sbio;
+    int h;
 
     sbio = BIO_new_socket(sock, BIO_NOCLOSE);
-
     con = SSL_new(ctx);
+
+    SSL_set_bio(con, sbio, sbio);
+    SSL_set_connect_state(con);
+
+    h = SSL_get_handle(con);
+
     return con;
 }
 
