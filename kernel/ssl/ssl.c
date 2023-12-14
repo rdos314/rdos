@@ -142,10 +142,13 @@ void FreeClientSession(SSL_CTX *ctx)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux CreateClientConnection "*" rdosdev parm routine [es edi] value [dx edi]
-SSL *CreateClientConnection(SSL_CTX *ctx)
+#pragma aux CreateClientConnection "*" rdosdev parm routine [es edi] [ebx] value [dx edi]
+SSL *CreateClientConnection(SSL_CTX *ctx, int sock)
 {
     SSL *con = NULL;
+    BIO *sbio;
+
+    sbio = BIO_new_socket(sock, BIO_NOCLOSE);
 
     con = SSL_new(ctx);
     return con;
@@ -170,6 +173,23 @@ void FreeClientConnection(SSL *con)
         SSL_shutdown(con);
         SSL_free(con);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : BIO_closesocket
+#
+#   Purpose....: Close socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int BIO_closesocket(int sock)
+{
+    RdosCloseTcpConnection(sock);
+    return 1;
 }
 
 /*##########################################################################

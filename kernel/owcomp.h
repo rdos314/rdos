@@ -1389,6 +1389,14 @@
     __parm [__ebx] \
     __value [__eax]
 
+#pragma aux RdosGetTcpConnectionWriteSpace = \
+    CallGate_get_tcp_connection_write_space  \
+    "jnc ok" \
+    "mov eax,07FFFFFFFh" \
+    "ok:" \
+    __parm [__ebx] \
+    __value [__eax]
+
 #pragma aux RdosGetLocalMailslot = \
     CallGate_get_local_mailslot  \
     ValidateHandle \

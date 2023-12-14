@@ -1045,6 +1045,8 @@ cscCreate:
     push es
     push edi
 ;
+    mov ds,ebp
+    movzx ebx,ds:sc_socket_handle
     call CreateClientConnection
 ;
     mov ax,SSL_CONN_HANDLE
