@@ -1146,8 +1146,46 @@ poll_secure_connection     Proc far
     DerefHandle
     jc pscDone
 ;
+    mov ebp,esp
+    mov edi,ss
+;
+    push ebx
+    mov eax,8000h
+    AllocateBigLinear
+    AllocateGdt
+    mov ecx,eax
+    CreateDataSelector32
+    mov eax,ebx
+    pop ebx
+;
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov es,eax
+    xor edi,edi
+    xor al,al
+    rep stosb
+;
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+;
+    mov ss,eax
+    mov esp,ecx
+;
+    mov dword ptr [esp-4],0
+    push edi
+    push ebp
     les edi,fword ptr [ebx].sc_con
     call HandleClientConnection
+    pop ebp
+    pop edi
+;
+    mov ss,edi
+    mov esp,ebp
 
 pscDone:
     popad
