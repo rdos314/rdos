@@ -287,32 +287,32 @@ void HandleClientConnection(SSL *con)
                 break;
 
             case SSL_ERROR_WANT_WRITE:
-                RdosWriteString("write W BLOCK\n");
+                RdosWriteString("write W BLOCK\r\n");
                 write_ssl = 1;
                 read_tty = 0;
                 break;
 
             case SSL_ERROR_WANT_ASYNC:
-                RdosWriteString("write A BLOCK\n");
+                RdosWriteString("write A BLOCK\r\n");
                 write_ssl = 1;
                 read_tty = 0;
                 break;
 
             case SSL_ERROR_WANT_READ:
-                RdosWriteString("write R BLOCK\n");
+                RdosWriteString("write R BLOCK\r\n");
                 write_tty = 0;
                 read_ssl = 1;
                 write_ssl = 0;
                 break;
 
             case SSL_ERROR_WANT_X509_LOOKUP:
-                RdosWriteString("write X BLOCK\n");
+                RdosWriteString("write X BLOCK\r\n");
                 break;
 
             case SSL_ERROR_ZERO_RETURN:
                 if (cbuf_len != 0) 
                 {
-                    RdosWriteString("shutdown\n");
+                    RdosWriteString("shutdown\r\n");
                     ret = 0;
                     return;
                 } 
@@ -326,7 +326,7 @@ void HandleClientConnection(SSL *con)
             case SSL_ERROR_SYSCALL:
                 if ((k != 0) || (cbuf_len != 0)) 
                 {
-                    RdosWriteString("Socket error\n");
+                    RdosWriteString("Socket error\r\n");
                     return;
                 } 
                 else 
@@ -369,7 +369,7 @@ void HandleClientConnection(SSL *con)
                 break;
 
             case SSL_ERROR_WANT_ASYNC:
-                RdosWriteString("read A BLOCK\n");
+                RdosWriteString("read A BLOCK\r\n");
                 write_tty = 0;
                 read_ssl = 1;
                 if ((read_tty == 0) && (write_ssl == 0))
@@ -377,13 +377,13 @@ void HandleClientConnection(SSL *con)
                 break;
 
             case SSL_ERROR_WANT_WRITE:
-                RdosWriteString("read W BLOCK\n");
+                RdosWriteString("read W BLOCK\r\n");
                 write_ssl = 1;
                 read_tty = 0;
                 break;
 
             case SSL_ERROR_WANT_READ:
-                RdosWriteString("read R BLOCK\n");
+                RdosWriteString("read R BLOCK\r\n");
                 write_tty = 0;
                 read_ssl = 1;
                 if ((read_tty == 0) && (write_ssl == 0))
@@ -391,15 +391,15 @@ void HandleClientConnection(SSL *con)
                 break;
 
             case SSL_ERROR_WANT_X509_LOOKUP:
-                RdosWriteString("read X BLOCK\n");
+                RdosWriteString("read X BLOCK\r\n");
                 break;
 
             case SSL_ERROR_SYSCALL:
-                RdosWriteString("CONNECTION CLOSED BY SERVER\n");
+                RdosWriteString("CONNECTION CLOSED BY SERVER\r\n");
                 return;
 
             case SSL_ERROR_ZERO_RETURN:
-                RdosWriteString("closed\n");
+                RdosWriteString("closed\r\n");
                 ret = 0;
                 return;
 
@@ -407,7 +407,7 @@ void HandleClientConnection(SSL *con)
                 /* This shouldn't ever happen in s_client. Treat as an error */
 
             case SSL_ERROR_SSL:
-                RdosWriteString("SSL error\n");
+                RdosWriteString("SSL error\r\n");
                 return;
 
             }
