@@ -14,7 +14,7 @@ void main()
     char host[80];
 
 //    strcpy(host, "185.20.15.60");
-    strcpy(host, "10.8.8.244");
+    strcpy(host, "10.8.8.240");
 
     if (sscanf(host, "%d.%d.%d.%d", &n3, &n2, &n1, &n0) == 4)
         ip = n3 + (n2 + (n1 + n0 * 256) * 256) * 256;
