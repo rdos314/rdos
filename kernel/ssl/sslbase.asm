@@ -93,6 +93,12 @@ sc_con      DD ?,?
 
 ssl_connection_handle_seg      ENDS
 
+_DATA    SEGMENT byte public 'DATA'
+
+db_test   DD 4096 DUP(?,?,?,?)
+
+_DATA    ENDS
+
 
 _TEXT    SEGMENT byte public 'CODE'
 

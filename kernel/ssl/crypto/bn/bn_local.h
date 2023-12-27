@@ -351,6 +351,8 @@ struct bn_gencb_st {
 #  else                         /* __INITIAL_POINTER_SIZE == 64 */
 #   define PTR_SIZE_INT int
 #  endif                        /* __INITIAL_POINTER_SIZE == 64 [else] */
+# elif defined(__RDOSDEV__)
+#  define PTR_SIZE_INT long long
 # elif !defined(PTR_SIZE_INT)   /* defined(OPENSSL_SYS_VMS) */
 #  define PTR_SIZE_INT size_t
 # endif                         /* defined(OPENSSL_SYS_VMS) [else] */

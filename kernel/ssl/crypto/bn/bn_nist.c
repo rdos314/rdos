@@ -249,7 +249,7 @@ const BIGNUM *BN_get0_nist_prime_521(void)
     return &_bignum_nist_p_521;
 }
 
-static void nist_cp_bn_0(BN_ULONG *dst, const BN_ULONG *src, int top, int max)
+void nist_cp_bn_0(BN_ULONG *dst, const BN_ULONG *src, int top, int max)
 {
     int i;
 
@@ -262,7 +262,7 @@ static void nist_cp_bn_0(BN_ULONG *dst, const BN_ULONG *src, int top, int max)
         dst[i] = 0;
 }
 
-static void nist_cp_bn(BN_ULONG *dst, const BN_ULONG *src, int top)
+void nist_cp_bn(BN_ULONG *dst, const BN_ULONG *src, int top)
 {
     int i;
 
