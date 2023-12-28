@@ -36,6 +36,8 @@ void main()
 
     RdosCreateThread(SocketHandler, "SSL 6666", &sock, 0x1000);
 
+    RdosWaitForSecureConnection(sock, 7000);
+
     RdosCloseSecureConnection(sock);
 
     RdosCloseSecureSession(sess);

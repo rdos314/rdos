@@ -1007,6 +1007,7 @@
 #define usergate_close_secure_session 0x0000033A
 #define usergate_close_secure_connection 0x0000033B
 #define usergate_handle_secure_connection 0x0000033C
+#define usergate_wait_for_secure_connection 0x0000033D
 
 
 
@@ -2020,6 +2021,7 @@
 #define CallGate_close_secure_session 0x55 0x67 0x9a 58 3 0 0 3 0 0x5d
 #define CallGate_close_secure_connection 0x55 0x67 0x9a 59 3 0 0 3 0 0x5d
 #define CallGate_handle_secure_connection 0x55 0x67 0x9a 60 3 0 0 3 0 0x5d
+#define CallGate_wait_for_secure_connection 0x55 0x67 0x9a 61 3 0 0 3 0 0x5d
 
 #else
 
@@ -3031,5 +3033,6 @@
 #define CallGate_close_secure_session 0x3e 0x67 0x9a 58 3 0 0 3 0
 #define CallGate_close_secure_connection 0x3e 0x67 0x9a 59 3 0 0 3 0
 #define CallGate_handle_secure_connection 0x3e 0x67 0x9a 60 3 0 0 3 0
+#define CallGate_wait_for_secure_connection 0x3e 0x67 0x9a 61 3 0 0 3 0
 
 #endif

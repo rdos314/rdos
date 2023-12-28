@@ -3103,6 +3103,12 @@
     CallGate_handle_secure_connection  \
     __parm [__ebx]
 
+#pragma aux RdosWaitForSecureConnection = \
+    CallGate_wait_for_secure_connection  \
+    CarryToBool \
+    __parm [__ebx] [__eax] \
+    __value [__eax]
+
 #pragma aux RdosGetLocalMailslot = \
     CallGate_get_local_mailslot  \
     ValidateHandle \

@@ -82,6 +82,10 @@ sc_send_count		DW ?
 sc_send_head		DW ?
 sc_send_tail		DW ?
 
+sc_server               DW ?
+sc_wait                 DW ?
+sc_active               DB ?
+
 ssl_connection	ENDS
 
 ssl_connection_handle_seg      STRUC
@@ -967,6 +971,10 @@ CreateConnection    Proc near
     mov es:sc_send_count,0
     mov es:sc_send_head,0
     mov es:sc_send_tail,0
+;
+    mov es:sc_server,0
+    mov es:sc_wait,0
+    mov es:sc_active,0
 ;       
     mov ax,es
     mov ds,ax
@@ -1248,6 +1256,7 @@ InitStart_   PROC near
     push ds
 ;
     mov ds,ebx
+    mov ds:sc_active,0
 ;
     pop ds
     ret
@@ -1268,12 +1277,67 @@ InitStart_   Endp
 
 InitDone_   PROC near
     push ds
+    push ebx
 ;
     mov ds,ebx
+    mov ds:sc_active,1
+    mov bx,ds:sc_wait
+    or bx,bx
+    jz idDone
 ;
+    Signal
+
+idDone:
+    pop ebx
     pop ds
     ret
 InitDone_   Endp
+                
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           WaitForSecureConnection
+;
+;       Purpose:        Wait for a connection
+;
+;       Parameters:     EAX         timeout
+;                       BX          connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_secure_connection_name    DB 'Wait For Secure Connection',0
+
+wait_for_secure_connection Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+    push ebp
+;
+    mov ebp,eax
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc wscDone
+;    
+    GetThread
+    mov ds,[ebx].sc_conn_sel
+    mov ds:sc_wait,ax
+    mov al,ds:sc_active
+    or al,al
+    jnz wscDone
+;
+    GetSystemTime
+    add eax,ebp
+    adc edx,0
+    WaitForSignalWithTimeout    
+
+wscDone:
+    pop ebp
+    pop edx
+    pop ebx
+    pop eax
+    pop ds  
+    ret
+wait_for_secure_connection Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1552,6 +1616,12 @@ InitSecure_    Proc near
     mov edi,OFFSET handle_secure_connection_name
     xor dx,dx
     mov ax,handle_secure_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET wait_for_secure_connection
+    mov edi,OFFSET wait_for_secure_connection_name
+    xor dx,dx
+    mov ax,wait_for_secure_connection_nr
     RegisterBimodalUserGate
 ;
     ret

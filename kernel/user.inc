@@ -2242,6 +2242,12 @@ HandleSecureConnection       MACRO
         UserGate handle_secure_connection_nr
                         ENDM
 
+; IN  BX                connection handle
+; IN  EAX               timeout in milliseconds
+WaitForSecureConnection    MACRO
+        UserGate wait_for_secure_connection_nr
+                        ENDM
+
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
 
