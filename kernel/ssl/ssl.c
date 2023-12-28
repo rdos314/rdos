@@ -50,6 +50,10 @@
 #include "rdos.h"
 #include "rdosdev.h"
 
+#define bool int
+#define false 0
+#define true 1
+
 #define BUFSIZZ 1024*8
 #define MAX_SESSION_COUNT 16
 
@@ -60,6 +64,12 @@ void InitSecure();
 
 void AssertBreak(char *func, char *fn, int line_num);
 #pragma aux AssertBreak parm routine [fs esi] [es edi] [ecx]
+
+void InitStart(int consel);
+#pragma aux InitStart parm routine [ebx]
+
+void InitDone(int consel);
+#pragma aux InitDone parm routine [ebx]
 
 /*##########################################################################
 #
@@ -189,16 +199,18 @@ void FreeClientConnection(SSL *con)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux HandleClientConnection "*" rdosdev parm routine [es edi]
-void HandleClientConnection(SSL *con)
+#pragma aux HandleClientConnection "*" rdosdev parm routine [eax] [es edi]
+void HandleClientConnection(int consel, SSL *con)
 {
+    bool in_init = true;
+
+
     char *cbuf = NULL;
     char *sbuf = NULL;
     char *connectstr = NULL;
     char *host = NULL;
     char *port = NULL;
     int ret = 1; 
-    int in_init = 1;
     int i;
     int s = -1;
     int k;
@@ -238,7 +250,10 @@ void HandleClientConnection(SSL *con)
         if (!SSL_is_init_finished(con) && SSL_total_renegotiations(con) == 0
                 && SSL_get_key_update_type(con) == SSL_KEY_UPDATE_NONE) 
         {
-            in_init = 1;
+            if (!in_init)
+                InitStart(consel);
+
+            in_init = true;
             tty_on = 0;
         } 
         else 
@@ -246,8 +261,10 @@ void HandleClientConnection(SSL *con)
             tty_on = 1;
 
             if (in_init)
-                in_init = 0;
-
+            {
+                in_init = false;
+                InitDone(consel);
+            }
         }
 
         ssl_pending = read_ssl && SSL_has_pending(con);

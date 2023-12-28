@@ -1210,6 +1210,7 @@ handle_secure_connection     Proc far
     mov dword ptr [esp-4],0
     push edi
     push ebp
+    movzx eax,[ebx].sc_conn_sel
     les edi,fword ptr [ebx].sc_con
     call HandleClientConnection
     pop ebp
@@ -1229,6 +1230,50 @@ hscDone:
     pop ds
     ret
 handle_secure_connection     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           InitStart
+;
+;       DESCRIPTION:    Start initialization process
+;
+;       PARAMETERS:     EBX            Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitStart_
+
+InitStart_   PROC near
+    push ds
+;
+    mov ds,ebx
+;
+    pop ds
+    ret
+InitStart_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           InitDone
+;
+;       DESCRIPTION:    Initialization process done
+;
+;       PARAMETERS:     EBX            Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public InitDone_
+
+InitDone_   PROC near
+    push ds
+;
+    mov ds,ebx
+;
+    pop ds
+    ret
+InitDone_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
