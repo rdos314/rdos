@@ -1126,24 +1126,24 @@ close_secure_connection     Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;       Name:           PollSecureConnection
+;       Name:           HandleSecureConnection
 ;
-;       Purpose:        Poll a secure connection
+;       Purpose:        Handle a secure connection
 ;
 ;       Parameters:     BX          connection handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-poll_secure_connection_name    DB 'Poll Secure Connection',0
+handle_secure_connection_name    DB 'Handle Secure Connection',0
 
-poll_secure_connection     Proc far
+handle_secure_connection     Proc far
     push ds
     push es
     pushad
 ;
     mov ax,SSL_CONN_HANDLE
     DerefHandle
-    jc pscDone
+    jc hscDone
 ;
     mov ebp,esp
     mov edi,ss
@@ -1183,15 +1183,20 @@ poll_secure_connection     Proc far
     pop ebp
     pop edi
 ;
+    mov eax,ss
+    mov es,eax
+;
     mov ss,edi
     mov esp,ebp
+;
+    FreeMem
 
-pscDone:
+hscDone:
     popad
     pop es
     pop ds
     ret
-poll_secure_connection     Endp
+handle_secure_connection     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1466,10 +1471,10 @@ InitSecure_    Proc near
     mov ax,close_secure_connection_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET poll_secure_connection
-    mov edi,OFFSET poll_secure_connection_name
+    mov esi,OFFSET handle_secure_connection
+    mov edi,OFFSET handle_secure_connection_name
     xor dx,dx
-    mov ax,poll_secure_connection_nr
+    mov ax,handle_secure_connection_nr
     RegisterBimodalUserGate
 ;
     ret

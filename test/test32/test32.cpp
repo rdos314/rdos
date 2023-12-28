@@ -4,6 +4,12 @@
 
 #include "rdos.h"
 
+static void SocketHandler(void *Param)
+{
+    int *handle = (int *)Param;
+    RdosHandleSecureConnection(*handle);
+}
+
 void main()
 {
     int sess;
@@ -27,7 +33,9 @@ void main()
     sess = RdosCreateSecureSession();
 
     sock = RdosCreateSecureConnection(sess, ip, 0, port, 5000, 0x1000);
-    RdosPollSecureConnection(sock);
+
+    RdosCreateThread(SocketHandler, "SSL 6666", &sock, 0x1000);
+
     RdosCloseSecureConnection(sock);
 
     RdosCloseSecureSession(sess);

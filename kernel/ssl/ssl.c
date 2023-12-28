@@ -214,11 +214,12 @@ void HandleClientConnection(SSL *con)
     int sbuf_off;
     int key_count = 0;
     int wait = RdosCreateWait();
+    int handle = SSL_get_handle(con);
 
     cbuf = (char *)OPENSSL_malloc(BUFSIZZ);
     sbuf = (char *)OPENSSL_malloc(BUFSIZZ);
 
-    RdosAddWaitForTcpConnection(wait, SSL_get_handle(con), 2);
+    RdosAddWaitForTcpConnection(wait, handle, 2);
     RdosAddWaitForKeyboard(wait, 1);
 
     read_tty = 1;
@@ -232,7 +233,7 @@ void HandleClientConnection(SSL *con)
     sbuf_len = 0;
     sbuf_off = 0;
 
-    for (;;) 
+    while (!RdosIsTcpConnectionClosed(handle)) 
     {
         if (!SSL_is_init_finished(con) && SSL_total_renegotiations(con) == 0
                 && SSL_get_key_update_type(con) == SSL_KEY_UPDATE_NONE) 
@@ -255,14 +256,14 @@ void HandleClientConnection(SSL *con)
         {
             if (write_ssl)
             {
-                if (RdosGetTcpConnectionWriteSpace(SSL_get_handle(con)) == 0)
+                if (RdosGetTcpConnectionWriteSpace(handle) == 0)
                     RdosWaitMilli(25);
             }
             else
                 RdosWaitForever(wait);
         }
 
-        if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(SSL_get_handle(con))) 
+        if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(handle)) 
         {
             k = SSL_write(con, &(cbuf[cbuf_off]), (unsigned int)cbuf_len);
             switch (SSL_get_error(con, k)) 
@@ -271,7 +272,8 @@ void HandleClientConnection(SSL *con)
                 cbuf_off += k;
                 cbuf_len -= k;
                 if (k <= 0)
-                    return;
+                    RdosCloseTcpConnection(handle);
+
                 /* we have done a  write(con,NULL,0); */
                 if (cbuf_len <= 0) 
                 {
@@ -314,20 +316,20 @@ void HandleClientConnection(SSL *con)
                 {
                     RdosWriteString("shutdown\r\n");
                     ret = 0;
-                    return;
+                    RdosCloseTcpConnection(handle);
                 } 
                 else 
                 {
                     read_tty = 1;
                     write_ssl = 0;
-                    break;
                 }
+                break;
 
             case SSL_ERROR_SYSCALL:
                 if ((k != 0) || (cbuf_len != 0)) 
                 {
                     RdosWriteString("Socket error\r\n");
-                    return;
+                    RdosCloseTcpConnection(handle);
                 } 
                 else 
                 {
@@ -341,7 +343,8 @@ void HandleClientConnection(SSL *con)
 
             case SSL_ERROR_SSL:
                 RdosWriteString("SSL error\r\n");
-                return;
+                RdosCloseTcpConnection(handle);
+                break;
             }
         }
         else if (!ssl_pending && write_tty)
@@ -360,7 +363,7 @@ void HandleClientConnection(SSL *con)
             {
             case SSL_ERROR_NONE:
                 if (k <= 0)
-                    return;
+                    RdosCloseTcpConnection(handle);
                 sbuf_off = 0;
                 sbuf_len = k;
 
@@ -396,19 +399,22 @@ void HandleClientConnection(SSL *con)
 
             case SSL_ERROR_SYSCALL:
                 RdosWriteString("CONNECTION CLOSED BY SERVER\r\n");
-                return;
+                RdosCloseTcpConnection(handle);
+                break;
 
             case SSL_ERROR_ZERO_RETURN:
                 RdosWriteString("closed\r\n");
                 ret = 0;
-                return;
+                RdosCloseTcpConnection(handle);
+                break;
 
             case SSL_ERROR_WANT_ASYNC_JOB:
                 /* This shouldn't ever happen in s_client. Treat as an error */
 
             case SSL_ERROR_SSL:
                 RdosWriteString("SSL error\r\n");
-                return;
+                RdosCloseTcpConnection(handle);
+                break;
 
             }
         }

@@ -2221,11 +2221,6 @@ CloseSecureSession       MACRO
         UserGate close_secure_session_nr
                         ENDM
 
-; IN  EBX                session handle
-PollSecureSession       MACRO
-        UserGate poll_secure_session_nr
-                        ENDM
-
 ; IN  EAX               Timeout in milliseconds for connection
 ; IN  EBX               Session handle
 ; IN  ECX               buffer size
@@ -2240,6 +2235,11 @@ CreateSecureConnection       MACRO
 ; IN  EBX               connection handle
 CloseSecureConnection       MACRO
         UserGate close_secure_connection_nr
+                        ENDM
+
+; IN  EBX               connection handle
+HandleSecureConnection       MACRO
+        UserGate handle_secure_connection_nr
                         ENDM
 
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
