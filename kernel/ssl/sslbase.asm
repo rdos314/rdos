@@ -121,6 +121,14 @@ _TEXT    SEGMENT byte public 'CODE'
     public AllocateMem_
 
 AllocateMem_    PROC near
+    push es
+    mov eax,eax
+    AllocateSmallGlobalMem
+    mov dx,es
+    xor eax,eax
+    pop es
+    ret
+
     push ds
     push ecx
     push esi
@@ -310,6 +318,13 @@ FindBlock    Endp
     public FreeMem_
 
 FreeMem_   PROC near
+    push es
+    mov es,dx
+    FreeMem
+    pop es
+    ret
+
+
     push ds
     push eax
     push ecx
@@ -415,6 +430,11 @@ FreeMem_    Endp
     public ReallocateMem_
 
 ReallocateMem_    PROC near
+    xor eax,eax
+    xor edx,edx
+    ret
+
+
     push ds
     push ecx
     push esi
@@ -525,6 +545,18 @@ ReallocateMem_    Endp
     public GetMemSize_
 
 GetMemSize_   PROC near
+    push ebx
+    push edx
+;
+    mov bx,dx
+    GetSelectorBaseSize
+;
+    pop edx
+    pop ebx
+    ret
+
+
+
     push ds
     push eax
     push edx
