@@ -1237,6 +1237,7 @@ handle_secure_connection     Proc far
     FreeMem
 ;
     mov ds,eax
+    mov ds:sc_active,0
     mov ds:sc_closed,1
     
 hscDone:
@@ -1381,6 +1382,104 @@ isccDone:
     pop ds  
     ret
 is_secure_connection_closed Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           WriteSecureConnection
+;
+;       Purpose:        Write secure connection
+;
+;       Parameters:     BX              connection handle
+;                       (E)CX           number of bytes to write
+;                       ES:(E)DI        data buffer
+;
+;       Returns:        NC              ok
+;                       CY              connection closed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_secure_connection_name       DB 'Write Secure Connection',0
+
+WriteConnection   Proc near
+    push ds
+    push fs
+    pushad
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc wcDone
+;
+    mov ds,[ebx].sc_conn_sel
+    EnterSection ds:sc_section
+
+    mov fs,ds:sc_send_buffer
+    mov esi,edi
+
+wcRetry:
+    mov al,ds:sc_active
+    or al,al
+    stc
+    jz wcLeave
+;
+    or ecx,ecx
+    jz wcOk
+;       
+    mov dx,ds:sc_buffer_size
+    sub dx,ds:sc_send_count
+    movzx edx,dx
+;
+    mov eax,ecx
+    cmp ecx,edx
+    jc wcSizeOk
+;       
+    mov ecx,edx
+
+wcSizeOk:      
+    or ecx,ecx
+    jz wcFull
+;
+    add ds:sc_send_count,cx
+    mov bx,ds:sc_send_tail
+    call CopyToBuffer
+    mov ds:sc_send_tail,bx
+;
+    xchg eax,ecx
+    sub ecx,eax
+    jmp wcRetry
+
+wcFull:
+    int 3
+
+wcOk:
+    clc
+
+wcLeave:
+    LeaveSection ds:sc_section
+
+wcDone:
+    popad
+    pop fs
+    pop ds
+    ret
+WriteConnection   Endp
+
+write_secure_connection16  Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call WriteConnection
+;
+    pop edi
+    pop ecx
+    ret
+write_secure_connection16  Endp
+
+write_secure_connection32  Proc far
+    call WriteConnection
+    ret
+write_secure_connection32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1672,6 +1771,13 @@ InitSecure_    Proc near
     xor dx,dx
     mov ax,is_secure_connection_closed_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET write_secure_connection16
+    mov esi,OFFSET write_secure_connection32
+    mov edi,OFFSET write_secure_connection_name
+    mov dx,virt_es_in
+    mov ax,write_secure_connection_nr
+    RegisterUserGate
 ;
     ret
 InitSecure_  ENDP

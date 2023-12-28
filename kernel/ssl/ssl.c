@@ -232,7 +232,6 @@ void HandleClientConnection(int consel, SSL *con)
     sbuf = (char *)OPENSSL_malloc(BUFSIZZ);
 
     RdosAddWaitForTcpConnection(wait, handle, 2);
-    RdosAddWaitForKeyboard(wait, 1);
 
     read_tty = 1;
     write_tty = 0;
@@ -435,27 +434,27 @@ void HandleClientConnection(int consel, SSL *con)
 
             }
         }
-        else if (read_tty && RdosPollKeyboard())
-        {
-            char ch = (char)RdosReadKeyboard();
-            RdosWriteChar(ch);
-
-            if (ch == 0xd)
-            {
-                cbuf[key_count] = 0xd;
-                cbuf[key_count+1] = 0xa;
-                cbuf_len = key_count + 2;
-                key_count = 0;
-                cbuf_off = 0;
-                write_ssl = 1;
-                read_tty = 0;
-            }
-            else
-            {
-                cbuf[key_count] = ch;
-                key_count++;
-            }
-        }
+//        else if (read_tty && RdosPollKeyboard())
+//        {
+//            char ch = (char)RdosReadKeyboard();
+//            RdosWriteChar(ch);
+//
+//            if (ch == 0xd)
+//            {
+//                cbuf[key_count] = 0xd;
+//                cbuf[key_count+1] = 0xa;
+//                cbuf_len = key_count + 2;
+//                key_count = 0;
+//                cbuf_off = 0;
+//                write_ssl = 1;
+//                read_tty = 0;
+//            }
+//            else
+//            {
+//                cbuf[key_count] = ch;
+//                key_count++;
+//            }
+//        }
     }
 }
 
