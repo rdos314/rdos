@@ -756,6 +756,13 @@ AddWaitForUdpListen       MACRO
         UserGate add_wait_for_udp_listen_nr
                                                 ENDM
 
+; IN  AX        Secure connection handle
+; IN  BX        Wait handle
+; IN  ECX       Object ID
+AddWaitForSecureConnection       MACRO
+        UserGate add_wait_for_secure_connection_nr
+                                                ENDM
+
 ; IN  AX        USB dev handle
 ; IN  BX        Wait handle
 ; IN  DL        Pipe #
@@ -2246,6 +2253,33 @@ HandleSecureConnection       MACRO
 ; IN  EAX               timeout in milliseconds
 WaitForSecureConnection    MACRO
         UserGate wait_for_secure_connection_nr
+                        ENDM
+
+; IN  BX                connection handle
+IsSecureConnectionClosed   MACRO
+        UserGate is_secure_connection_closed_nr
+                        ENDM
+
+; IN  EAX               timeout in ms for receive
+; IN  BX                connection handle
+; IN  (E)CX             wanted number of bytes
+; IN  ES:E(DI)          data buffer
+; OUT (E)AX             size of received data
+ReadSecureConnection       MACRO
+        UserGate read_secure_connection_nr
+                        ENDM
+
+; IN  BX                connection handle
+; IN  (E)CX             buffer size
+; IN  ES:(E)DI  data buffer
+WriteSecureConnection              MACRO
+        UserGate write_secure_connection_nr
+                        ENDM
+
+; IN  BX                connection handle
+; OUT (E)AX             number of available bytes in buffer
+PollSecureConnection               MACRO
+        UserGate poll_secure_connection_nr
                         ENDM
 
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;

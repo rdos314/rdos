@@ -3109,6 +3109,35 @@
     __parm [__ebx] [__eax] \
     __value [__eax]
 
+#pragma aux RdosAddWaitForSecureConnection = \
+    CallGate_add_wait_for_secure_connection  \
+    __parm [__ebx] [__eax] [__ecx]
+
+#pragma aux RdosIsSecureConnectionClosed = \
+    CallGate_is_secure_connection_closed  \
+    "cmc"   \
+    CarryToBool \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux RdosReadSecureConnection = \
+    CallGate_read_secure_connection  \
+    ValidateEax \
+    __parm [__ebx] [__edi] [__ecx] \
+    __value [__eax]
+
+#pragma aux RdosWriteSecureConnection = \
+    CallGate_write_secure_connection  \
+    ValidateEax \
+    __parm [__ebx] [__edi] [__ecx] \
+    __value [__eax]
+
+#pragma aux RdosPollSecureConnection = \
+    CallGate_poll_secure_connection  \
+    ValidateEax \
+    __parm [__ebx] \
+    __value [__eax]
+
 #pragma aux RdosGetLocalMailslot = \
     CallGate_get_local_mailslot  \
     ValidateHandle \

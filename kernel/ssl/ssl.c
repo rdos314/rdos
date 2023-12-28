@@ -372,7 +372,7 @@ void HandleClientConnection(int consel, SSL *con)
             read_ssl = 1;
             write_tty = 0;
         } 
-        else if (ssl_pending || RdosPollTcpConnection(SSL_get_handle(con)))
+        else if (ssl_pending || RdosPollTcpConnection(handle))
         {
             k = SSL_read(con, sbuf, 1024 /* BUFSIZZ */ );
 

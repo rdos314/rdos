@@ -18,6 +18,11 @@ void main()
     int ip;
     int n0,n1,n2,n3;
     char host[80];
+    int wait = RdosCreateWait();
+    int keys = 0;
+    char *kbuf = new char[256];
+    int count;
+    char *rbuf = new char[1025];
 
 //    strcpy(host, "185.20.15.60");
     strcpy(host, "10.8.8.240");
@@ -38,9 +43,48 @@ void main()
 
     RdosWaitForSecureConnection(sock, 7000);
 
+    RdosAddWaitForSecureConnection(wait, sock, 2);
+    RdosAddWaitForKeyboard(wait, 1);
+
+    while (!RdosIsSecureConnectionClosed(sock))
+    {
+        RdosWaitForever(wait);
+
+        count = RdosPollSecureConnection(sock);
+        if (count)
+        {
+            count = RdosReadSecureConnection(sock, rbuf, 1024);
+            rbuf[count] = 0;
+            RdosWriteString(rbuf);
+        }
+
+        if (RdosPollKeyboard())
+        {
+            char ch = (char)RdosReadKeyboard();
+            RdosWriteChar(ch);
+
+            if (ch == 0xd)
+            {
+                kbuf[keys] = 0xd;
+                kbuf[keys+1] = 0xa;
+                RdosWriteSecureConnection(sock, kbuf, keys+2);
+
+                keys = 0;
+            }
+            else
+            {
+                kbuf[keys] = ch;
+                keys++;
+            }
+        }
+    }
+
     RdosCloseSecureConnection(sock);
 
     RdosCloseSecureSession(sess);
 
 //    RdosTestGate("");
 }
+
+
+
