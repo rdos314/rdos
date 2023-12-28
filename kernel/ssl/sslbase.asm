@@ -85,6 +85,7 @@ sc_send_tail		DW ?
 sc_server               DW ?
 sc_wait                 DW ?
 sc_active               DB ?
+sc_closed               DB ?
 
 ssl_connection	ENDS
 
@@ -975,6 +976,7 @@ CreateConnection    Proc near
     mov es:sc_server,0
     mov es:sc_wait,0
     mov es:sc_active,0
+    mov es:sc_closed,0
 ;       
     mov ax,es
     mov ds,ax
@@ -1216,22 +1218,27 @@ handle_secure_connection     Proc far
     mov esp,ecx
 ;
     mov dword ptr [esp-4],0
+    movzx eax,[ebx].sc_conn_sel
+    push eax
     push edi
     push ebp
-    movzx eax,[ebx].sc_conn_sel
     les edi,fword ptr [ebx].sc_con
     call HandleClientConnection
     pop ebp
     pop edi
+    pop eax
 ;
-    mov eax,ss
-    mov es,eax
+    mov ebx,ss
+    mov es,ebx
 ;
     mov ss,edi
     mov esp,ebp
 ;
     FreeMem
-
+;
+    mov ds,eax
+    mov ds:sc_closed,1
+    
 hscDone:
     popad
     pop es
@@ -1338,6 +1345,42 @@ wscDone:
     pop ds  
     ret
 wait_for_secure_connection Endp
+                
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           IsSecureConnectionClose
+;
+;       Purpose:        Is connection closed?
+;
+;       Parameters:     BX          connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_secure_connection_closed_name    DB 'Is Secure Connection Closed',0
+
+is_secure_connection_closed Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc isccDone
+;    
+    mov ds,[ebx].sc_conn_sel
+    mov al,ds:sc_closed
+    or al,al
+    clc
+    jz isccDone
+;
+    stc
+
+isccDone:
+    pop ebx
+    pop eax
+    pop ds  
+    ret
+is_secure_connection_closed Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1622,6 +1665,12 @@ InitSecure_    Proc near
     mov edi,OFFSET wait_for_secure_connection_name
     xor dx,dx
     mov ax,wait_for_secure_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_secure_connection_closed
+    mov edi,OFFSET is_secure_connection_closed_name
+    xor dx,dx
+    mov ax,is_secure_connection_closed_nr
     RegisterBimodalUserGate
 ;
     ret
