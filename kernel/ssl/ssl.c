@@ -78,13 +78,13 @@ void FreeBuf(int consel, char *buf);
 #pragma aux FreeBuf parm routine [ebx] [dx eax]
 
 int GetSendCount(int consel);
-#pragma aux InitDone parm routine [ebx] value [ecx]
+#pragma aux GetSendCount parm routine [ebx] value [ecx]
 
 int GetSendBuf(int consel, char *buf);
 #pragma aux GetSendBuf parm routine [ebx] [es edi] value [ecx]
 
 void ClearSendCount(int consel, int count);
-#pragma aux GetSendBuf parm routine [ebx] [ecx]
+#pragma aux ClearSendCount parm routine [ebx] [ecx]
 
 /*##########################################################################
 #
@@ -281,7 +281,7 @@ void HandleClientConnection(int consel, SSL *con)
 
         if (!ssl_pending) 
         {
-            if (write_ssl)
+            if (write_ssl || GetSendCount(consel))
             {
                 if (RdosGetTcpConnectionWriteSpace(handle) == 0)
                     RdosWaitMilli(25);
@@ -436,11 +436,14 @@ void HandleClientConnection(int consel, SSL *con)
 
             }
         }
-        else if (read_tty && GetSendCount(consel))
+        else if (read_tty)
         {
-            send_count = GetSendBuf(consel, buf);
-            write_ssl = 1;
-            read_tty = 0;
+            if (GetSendCount(consel))
+            {
+                send_count = GetSendBuf(consel, buf);
+                write_ssl = 1;
+                read_tty = 0;
+            }
         }
     }
     FreeBuf(consel, buf);

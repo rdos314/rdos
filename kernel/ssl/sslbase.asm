@@ -1384,7 +1384,6 @@ GetSendCount_   PROC near
     push ds
     push ebx
 ;
-    int 3
     mov ds,ebx
     movzx ecx,ds:sc_send_count
 ;
