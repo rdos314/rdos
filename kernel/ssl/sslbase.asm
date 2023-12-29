@@ -1219,6 +1219,15 @@ handle_secure_connection     Proc far
 ;
     mov dword ptr [esp-4],0
     movzx eax,[ebx].sc_conn_sel
+;
+    push ds
+    push eax
+    mov ds,eax
+    GetThread
+    mov ds:sc_server,ax
+    pop eax
+    pop ds
+;
     push eax
     push edi
     push ebp
@@ -1237,6 +1246,7 @@ handle_secure_connection     Proc far
     FreeMem
 ;
     mov ds,eax
+    mov ds:sc_server,0
     mov ds:sc_active,0
     mov ds:sc_closed,1
     
@@ -1300,6 +1310,169 @@ idDone:
     pop ds
     ret
 InitDone_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateBuf
+;
+;       DESCRIPTION:    Allocate connection buffer
+;
+;       PARAMETERS:     EBX            Connection
+;
+;       RETURNS:        DX:EAX         Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateBuf_
+
+AllocateBuf_   PROC near
+    push ds
+    push es
+    push ebx    
+;
+    mov ds,ebx
+    movzx eax,ds:sc_buffer_size
+    AllocateSmallGlobalMem
+    mov edx,es
+    xor eax,eax
+;
+    pop ebx
+    pop es
+    pop ds
+    ret
+AllocateBuf_  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeBuf
+;
+;       DESCRIPTION:    Free connection buffer
+;
+;       PARAMETERS:     EBX            Connection
+;                       DX:EAX         Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FreeBuf_
+
+FreeBuf_   PROC near
+    push es
+    mov es,edx
+    FreeMem
+    pop es
+    ret
+FreeBuf_  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetSendCount
+;
+;       DESCRIPTION:    Get bytes in send buffer
+;
+;       PARAMETERS:     EBX            Connection
+;
+;       RETURNS:        ECX            Bytes in send buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetSendCount_
+
+GetSendCount_   PROC near
+    push ds
+    push ebx
+;
+    int 3
+    mov ds,ebx
+    movzx ecx,ds:sc_send_count
+;
+    pop ebx
+    pop ds
+    ret
+GetSendCount_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetSendBuf
+;
+;       DESCRIPTION:    Get send buffer size
+;
+;       PARAMETERS:     EBX            Connection
+;                       ES:EDI         Buffer
+;
+;       RETURNS:        ECX            Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetSendBuf_
+
+GetSendBuf_   PROC near
+    push ds
+    push fs
+    push ecx
+    push ebx
+    push edi
+;
+    mov ds,ebx
+    movzx ecx,ds:sc_send_count
+    or ecx,ecx
+    jz gsbDone
+;
+    EnterSection ds:sc_section
+    mov fs,ds:sc_send_buffer
+    mov bx,ds:sc_send_head
+    call CopyFromBuffer
+    LeaveSection ds:sc_section
+
+gsbDone:
+    pop edi
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+GetSendBuf_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ClearSendCount
+;
+;       DESCRIPTION:    Remove bytes in send buffer
+;
+;       PARAMETERS:     EBX            Connection
+;                       ECX            Bytes to remove from send buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ClearSendCount_
+
+ClearSendCount_   PROC near
+    push ds
+    push ebx
+;
+    mov ds,ebx
+    EnterSection ds:sc_section
+    sub ds:sc_send_count,cx
+    mov bx,ds:sc_send_head
+    add bx,cx
+;
+    cmp bx,ds:sc_buffer_size
+    jb cscSave
+;
+    sub bx,ds:sc_buffer_size
+
+cscSave:
+    mov ds:sc_send_head,bx
+    LeaveSection ds:sc_section
+;
+    pop ebx
+    pop ds
+    ret
+ClearSendCount_   Endp
                 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1455,6 +1628,12 @@ wcOk:
 
 wcLeave:
     LeaveSection ds:sc_section
+;
+    mov bx,ds:sc_server
+    or bx,bx
+    jz wcDone
+;
+    Signal
 
 wcDone:
     popad

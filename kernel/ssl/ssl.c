@@ -71,6 +71,21 @@ void InitStart(int consel);
 void InitDone(int consel);
 #pragma aux InitDone parm routine [ebx]
 
+char *AllocateBuf(int consel);
+#pragma aux AllocateBuf parm routine [ebx] value [dx eax]
+
+void FreeBuf(int consel, char *buf);
+#pragma aux FreeBuf parm routine [ebx] [dx eax]
+
+int GetSendCount(int consel);
+#pragma aux InitDone parm routine [ebx] value [ecx]
+
+int GetSendBuf(int consel, char *buf);
+#pragma aux GetSendBuf parm routine [ebx] [es edi] value [ecx]
+
+void ClearSendCount(int consel, int count);
+#pragma aux GetSendBuf parm routine [ebx] [ecx]
+
 /*##########################################################################
 #
 #   Name       : CreateClientSession
@@ -203,9 +218,10 @@ void FreeClientConnection(SSL *con)
 void HandleClientConnection(int consel, SSL *con)
 {
     bool in_init = true;
+    char *buf = AllocateBuf(consel);
+    int send_count = 0;
 
 
-    char *cbuf = NULL;
     char *sbuf = NULL;
     char *connectstr = NULL;
     char *host = NULL;
@@ -220,15 +236,12 @@ void HandleClientConnection(int consel, SSL *con)
     int read_ssl;
     int tty_on;
     int ssl_pending;
-    int cbuf_len;
-    int cbuf_off;
     int sbuf_len;
     int sbuf_off;
     int key_count = 0;
     int wait = RdosCreateWait();
     int handle = SSL_get_handle(con);
 
-    cbuf = (char *)OPENSSL_malloc(BUFSIZZ);
     sbuf = (char *)OPENSSL_malloc(BUFSIZZ);
 
     RdosAddWaitForTcpConnection(wait, handle, 2);
@@ -239,8 +252,6 @@ void HandleClientConnection(int consel, SSL *con)
     read_ssl = 1;
     write_ssl = 1;
 
-    cbuf_len = 0;
-    cbuf_off = 0;
     sbuf_len = 0;
     sbuf_off = 0;
 
@@ -281,27 +292,17 @@ void HandleClientConnection(int consel, SSL *con)
 
         if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(handle)) 
         {
-            k = SSL_write(con, &(cbuf[cbuf_off]), (unsigned int)cbuf_len);
+            k = SSL_write(con, buf, (unsigned int)send_count);
             switch (SSL_get_error(con, k)) 
             {
             case SSL_ERROR_NONE:
-                cbuf_off += k;
-                cbuf_len -= k;
                 if (k <= 0)
                     RdosCloseTcpConnection(handle);
+                else
+                    ClearSendCount(consel, k);
 
-                /* we have done a  write(con,NULL,0); */
-                if (cbuf_len <= 0) 
-                {
-                    read_tty = 1;
-                    write_ssl = 0;
-                } 
-                else 
-                {        /* if (cbuf_len > 0) */
-
-                    read_tty = 0;
-                    write_ssl = 1;
-                }
+                read_tty = 1;
+                write_ssl = 0;
                 break;
 
             case SSL_ERROR_WANT_WRITE:
@@ -328,7 +329,7 @@ void HandleClientConnection(int consel, SSL *con)
                 break;
 
             case SSL_ERROR_ZERO_RETURN:
-                if (cbuf_len != 0) 
+                if (send_count != 0) 
                 {
                     RdosWriteString("shutdown\r\n");
                     ret = 0;
@@ -342,7 +343,7 @@ void HandleClientConnection(int consel, SSL *con)
                 break;
 
             case SSL_ERROR_SYSCALL:
-                if ((k != 0) || (cbuf_len != 0)) 
+                if ((k != 0) || (send_count != 0)) 
                 {
                     RdosWriteString("Socket error\r\n");
                     RdosCloseTcpConnection(handle);
@@ -362,6 +363,7 @@ void HandleClientConnection(int consel, SSL *con)
                 RdosCloseTcpConnection(handle);
                 break;
             }
+            send_count = 0;
         }
         else if (!ssl_pending && write_tty)
         {
@@ -434,28 +436,14 @@ void HandleClientConnection(int consel, SSL *con)
 
             }
         }
-//        else if (read_tty && RdosPollKeyboard())
-//        {
-//            char ch = (char)RdosReadKeyboard();
-//            RdosWriteChar(ch);
-//
-//            if (ch == 0xd)
-//            {
-//                cbuf[key_count] = 0xd;
-//                cbuf[key_count+1] = 0xa;
-//                cbuf_len = key_count + 2;
-//                key_count = 0;
-//                cbuf_off = 0;
-//                write_ssl = 1;
-//                read_tty = 0;
-//            }
-//            else
-//            {
-//                cbuf[key_count] = ch;
-//                key_count++;
-//            }
-//        }
+        else if (read_tty && GetSendCount(consel))
+        {
+            send_count = GetSendBuf(consel, buf);
+            write_ssl = 1;
+            read_tty = 0;
+        }
     }
+    FreeBuf(consel, buf);
 }
 
 /*##########################################################################
