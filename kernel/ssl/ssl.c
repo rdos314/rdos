@@ -235,14 +235,10 @@ void HandleClientConnection(int consel, SSL *con)
     int k;
 
     int write_ssl;
-    int read_ssl;
-    int tty_on;
     int ssl_pending;
 
     RdosStartTcpConnectionNotify(handle);
 
-    tty_on = 0;
-    read_ssl = 1;
     write_ssl = 1;
 
     while (!RdosIsTcpConnectionClosed(handle)) 
@@ -254,12 +250,9 @@ void HandleClientConnection(int consel, SSL *con)
                 InitStart(consel);
 
             in_init = true;
-            tty_on = 0;
         } 
         else 
         {
-            tty_on = 1;
-
             if (in_init)
             {
                 in_init = false;
@@ -271,7 +264,7 @@ void HandleClientConnection(int consel, SSL *con)
 
         rspace = GetReceiveSpace(consel);
 
-        if (rspace == 0)
+        if (!rspace)
             ssl_pending = 0;
 
         if (!in_init && !ssl_pending)
@@ -322,7 +315,6 @@ void HandleClientConnection(int consel, SSL *con)
 #ifdef _DEBUG
                 RdosWriteString("write R BLOCK\r\n");
 #endif
-                read_ssl = 1;
                 write_ssl = 0;
                 break;
 
@@ -340,8 +332,6 @@ void HandleClientConnection(int consel, SSL *con)
 #endif
                     RdosCloseTcpConnection(handle);
                 } 
-                else 
-                    write_ssl = 0;
                 break;
 
             case SSL_ERROR_SYSCALL:
@@ -352,8 +342,6 @@ void HandleClientConnection(int consel, SSL *con)
 #endif
                     RdosCloseTcpConnection(handle);
                 } 
-                else 
-                    write_ssl = 0;
                 break;
 
             case SSL_ERROR_WANT_ASYNC_JOB:
@@ -381,14 +369,12 @@ void HandleClientConnection(int consel, SSL *con)
                 else
                     AddReceiveBuf(consel, rbuf, k);
 
-                read_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_ASYNC:
 #ifdef _DEBUG
                 RdosWriteString("read A BLOCK\r\n");
 #endif
-                read_ssl = 1;
                 write_ssl = 1;
                 break;
 
@@ -403,7 +389,6 @@ void HandleClientConnection(int consel, SSL *con)
 #ifdef _DEBUG
                 RdosWriteString("read R BLOCK\r\n");
 #endif
-                read_ssl = 1;
                 write_ssl = 1;
                 break;
 
