@@ -123,6 +123,41 @@ protected:
     int FRemotePort;
 };
 
+class TSslSocket : public TSocket
+{
+public:
+    TSslSocket(long IP, int Port, int Timeout, int BufferSize, const char *ThreadName);
+    TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize, const char *ThreadName);
+    ~TSslSocket();
+
+    virtual void DeviceName(char *Name, int MaxLen) const;
+    virtual int IsOpen();
+    virtual void NotifyClose();
+        
+    virtual long GetRemoteIP() const;
+    virtual int GetRemotePort() const;
+    virtual int GetLocalPort() const;
+
+    void Push();
+    void Write(char ch);
+    char Read();
+    int WaitForConnection(int Timeout);
+
+    virtual int IsIdle();
+    virtual int GetSize();
+    virtual int GetWriteSpace();
+    virtual void Write(const char *buf, int count);
+    virtual void Write(const char *str);
+    virtual int Read(char *buf, int size);
+
+protected:
+    int CreateSession();
+    virtual void Add(TWait *Wait);
+
+    int FSession;
+    int FHandle;
+};
+
 
 class TSocketServer : public TThread
 {

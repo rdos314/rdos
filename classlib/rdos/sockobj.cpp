@@ -35,6 +35,23 @@
 
 /*##########################################################################
 #
+#   Name       : SslSocketHandler
+#
+#   Purpose....: SSL socket handler
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void SslSocketHandler(void *Param)
+{
+    int *handle = (int *)Param;
+    RdosHandleSecureConnection(*handle);
+}
+
+/*##########################################################################
+#
 #   Name       : IpToString
 #
 #   Purpose....: returns a string with the ip in the format "x.x.x.x"
@@ -481,6 +498,361 @@ int TTcpSocket::Read(char *buf, int size)
 {
     if (FHandle)
         return RdosReadTcpConnection(FHandle, buf, size);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::TSslSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: IP         Remote IP address
+#                Port       remote port to connect to
+#                Timeout        establish timeout in ms
+#                BufferSize     socket buffer size
+#                ThreadName socket handler thread name
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSslSocket::TSslSocket(long IP, int Port, int Timeout, int BufferSize, const char *ThreadName)
+{
+    FSession = CreateSession();
+    FHandle = RdosCreateSecureConnection(FSession, IP, 0, Port, Timeout, BufferSize);
+    RdosCreateThread(SslSocketHandler, ThreadName, &FHandle, 0x1000);
+    Open();
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::TSslSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: IP         Remote IP address
+#                LocalPort      Local port
+#                RemotePort     Remot port to connect to
+#                Timeout        establish timeout in ms
+#                BufferSize     socket buffer size
+#                ThreadName socket handler thread name
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSslSocket::TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize, const char *ThreadName)
+{
+    FSession = CreateSession();
+    FHandle = RdosCreateSecureConnection(FSession, IP, LocalPort, RemotePort, Timeout, BufferSize);
+    RdosCreateThread(SslSocketHandler, ThreadName, &FHandle, 0x1000);
+    Open();
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::~TSslSocket
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSslSocket::~TSslSocket()
+{
+    if (FHandle)
+        RdosCloseSecureConnection(FHandle);
+
+    if (FSession)
+        RdosCloseSecureSession(FSession);
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::DeviceName
+#
+#   Purpose....: Returns device-name
+#
+#   In params..: MaxLen max size of name
+#   Out params.: Name   device name
+#   Returns....: *
+#
+##########################################################################*/
+void TSslSocket::DeviceName(char *Name, int MaxLen) const
+{
+    strncpy(Name,"SSL Socket",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::CreateSession
+#
+#   Purpose....: Create session
+#
+#   In params..: 
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSslSocket::CreateSession()
+{
+    return RdosCreateSecureSession();
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::Add
+#
+#   Purpose....: Add object to wait
+#
+#   In params..: Wait       Wait device
+#                Handle     Socket handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSslSocket::Add(TWait *Wait)
+{
+    if (FHandle)
+        RdosAddWaitForSecureConnection(Wait->GetHandle(), FHandle, (int)this);
+}
+
+/*##################  TSslSocket::IsOpen  ############################
+*   Purpose....: Check if socket is open                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSslSocket::IsOpen()
+{
+    if (TDevice::IsOpen() && FHandle)
+        return !RdosIsSecureConnectionClosed(FHandle);
+    else    
+        return FALSE;
+}
+
+/*##################  TSslSocket::NotifyClose  ############################
+*   Purpose....: Notify socket closed                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSslSocket::NotifyClose()
+{
+//    if (FHandle)
+//        RdosCloseTcpConnection(FHandle);
+}
+
+/*##################  TSslSocket::GetRemoteIP  ############################
+*   Purpose....: Get remote IP                                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long TSslSocket::GetRemoteIP() const
+{
+//    if (FHandle)
+//        return RdosGetRemoteTcpConnectionIP(FHandle);
+//    else
+        return -1;
+}
+
+/*##################  TSslSocket::GetRemotePort  ############################
+*   Purpose....: Get remote port                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSslSocket::GetRemotePort() const
+{
+//    if (FHandle)
+//        return RdosGetRemoteTcpConnectionPort(FHandle);
+//    else
+        return 0;
+}
+
+/*##################  TSslSocket::GetLocalPort  ############################
+*   Purpose....: Get local port                                                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSslSocket::GetLocalPort() const
+{
+//    if (FHandle)
+//        return RdosGetLocalTcpConnectionPort(FHandle);
+//    else
+        return 0;
+}
+
+/*##################  TSslSocket::Push  ############################
+*   Purpose....: Push connection                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSslSocket::Push()
+{
+//    if (FHandle)
+//        RdosPushTcpConnection(FHandle);
+}
+
+/*##################  TSslSocket::IsIdle  ############################
+*   Purpose....: Check if connection is idle (no unsent data & no received data)                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSslSocket::IsIdle()
+{
+//    if (FHandle)
+//        return RdosIsTcpConnectionIdle(FHandle);
+//    else
+        return TRUE;
+}
+
+/*##################  TSslSocket::WaitForConnection  ############################
+*   Purpose....: Wait for a connection                                      #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSslSocket::WaitForConnection(int Timeout)
+{
+    if (FHandle)
+        return RdosWaitForSecureConnection(FHandle, Timeout);
+    else
+        return FALSE;
+}
+
+/*##################  TSslSocket::GetSize  ############################
+*   Purpose....: Check available bytes in receive buffer                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSslSocket::GetSize()
+{
+    if (FHandle)
+        return RdosPollSecureConnection(FHandle);
+    else
+        return 0;
+}
+
+/*##################  TSslSocket::GetWriteSpace  ############################
+*   Purpose....: Check free bytes in send buffer                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSslSocket::GetWriteSpace()
+{
+//    if (FHandle)
+//        return RdosGetTcpConnectionWriteSpace(FHandle);
+//    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::Write
+#
+#   Purpose....: Write a char
+#
+#   In params..: ch     char to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSslSocket::Write(char ch)
+{
+    if (FHandle)
+        RdosWriteSecureConnection(FHandle, &ch, 1);
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::Write
+#
+#   Purpose....: Write a buffer
+#
+#   In params..: buf     buffer to write
+#                count   count to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSslSocket::Write(const char *buf, int count)
+{
+    if (FHandle)
+        RdosWriteSecureConnection(FHandle, buf, count);
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::Write
+#
+#   Purpose....: Write a string
+#
+#   In params..: str    string to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSslSocket::Write(const char *str)
+{
+    if (FHandle)
+        RdosWriteSecureConnection(FHandle, str, strlen(str));
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::Read
+#
+#   Purpose....: Read a single character
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: character
+#
+##########################################################################*/
+char TSslSocket::Read()
+{
+    char ch = 0;
+
+    if (FHandle)
+        RdosReadSecureConnection(FHandle, &ch, 1);
+
+    return ch;    
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::Read
+#
+#   Purpose....: Read to buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: read chars
+#
+##########################################################################*/
+int TSslSocket::Read(char *buf, int size)
+{
+    if (FHandle)
+        return RdosReadSecureConnection(FHandle, buf, size);
     else
         return 0;
 }
