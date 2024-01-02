@@ -818,7 +818,7 @@ FreeBuffer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CopyFromBuffer    Proc near
-    push cx
+    push ecx
 ;
     cmp cx,10h
     jb cfbSmall
@@ -862,7 +862,7 @@ cfbWrapDone:
     pop eax
 
 cfbDone:
-    pop cx
+    pop ecx
     ret
 CopyFromBuffer  Endp
 
@@ -883,7 +883,7 @@ CopyFromBuffer  Endp
 
 CopyToBuffer    Proc near
     push eax
-    push cx
+    push ecx
 ;
     cmp cx,10h
     jb ctbSmall
@@ -935,7 +935,7 @@ ctbWrapDone:
     loop ctbLoop
 
 ctbDone:
-    pop cx
+    pop ecx
     pop eax
     ret
 CopyToBuffer    Endp    
@@ -1828,6 +1828,112 @@ add_wait_for_secure_connection     ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           PollSecureConnection
+;
+;       Purpose:        Poll secure connection
+;
+;       Parameters:     BX              connection handle
+;
+;       Returns:        NC              ok
+;                           EAX         bytes available
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_secure_connection_name       DB 'Poll Secure Connection',0
+
+poll_secure_connection  Proc far
+    push ds
+    push fs
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc pcDone
+;
+    mov ds,[ebx].sc_conn_sel
+    movzx eax,ds:sc_receive_count
+    clc
+
+pcDone:
+    pop fs
+    pop ds
+    ret
+poll_secure_connection  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           ReadSecureConnection
+;
+;       Purpose:        Read secure connection
+;
+;       Parameters:     BX              connection handle
+;                       (E)CX           max number of bytes to read
+;                       ES:(E)DI        data buffer
+;
+;       Returns:        NC              ok
+;                           EAX         bytes read
+;                       CY              connection closed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_secure_connection_name       DB 'Read Secure Connection',0
+
+ReadConnection   Proc near
+    push ds
+    push fs
+    push ecx
+    push edi
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc rcDone
+;
+    mov ds,[ebx].sc_conn_sel
+    EnterSection ds:sc_section
+;
+    movzx eax,ds:sc_receive_count
+    cmp ecx,eax
+    jbe rcSizeOk
+;
+    mov ecx,eax
+
+rcSizeOk:
+    movzx eax,cx
+    sub ds:sc_receive_count,cx
+    mov fs,ds:sc_receive_buffer
+    mov bx,ds:sc_receive_head
+    call CopyFromBuffer
+    mov ds:sc_receive_head,bx
+    LeaveSection ds:sc_section
+    clc
+
+rcDone:
+    pop edi
+    pop ecx
+    pop fs
+    pop ds
+    ret
+ReadConnection   Endp
+
+read_secure_connection16  Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call ReadConnection
+;
+    pop edi
+    pop ecx
+    ret
+read_secure_connection16  Endp
+
+read_secure_connection32  Proc far
+    call ReadConnection
+    ret
+read_secure_connection32  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           WriteSecureConnection
 ;
 ;       Purpose:        Write secure connection
@@ -2226,6 +2332,19 @@ InitSecure_    Proc near
     xor dx,dx
     mov ax,add_wait_for_secure_connection_nr
     RegisterBimodalUserGate
+;
+    mov esi,OFFSET poll_secure_connection
+    mov edi,OFFSET poll_secure_connection_name
+    xor dx,dx
+    mov ax,poll_secure_connection_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET read_secure_connection16
+    mov esi,OFFSET read_secure_connection32
+    mov edi,OFFSET read_secure_connection_name
+    mov dx,virt_es_in
+    mov ax,read_secure_connection_nr
+    RegisterUserGate
 ;
     mov ebx,OFFSET write_secure_connection16
     mov esi,OFFSET write_secure_connection32
