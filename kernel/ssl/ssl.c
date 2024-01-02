@@ -231,22 +231,14 @@ void HandleClientConnection(int consel, SSL *con)
     char *sbuf = AllocateBuf(consel);
     int scount = 0;
     int rspace = 0;
-
-
-    char *connectstr = NULL;
-    char *host = NULL;
-    char *port = NULL;
-    int ret = 1; 
-    int i;
-    int s = -1;
+    int handle = SSL_get_handle(con);
     int k;
+
     int read_tty;
     int write_ssl;
     int read_ssl;
     int tty_on;
     int ssl_pending;
-    int key_count = 0;
-    int handle = SSL_get_handle(con);
 
     RdosStartTcpConnectionNotify(handle);
 
@@ -356,7 +348,6 @@ void HandleClientConnection(int consel, SSL *con)
 #ifdef _DEBUG
                     RdosWriteString("shutdown\r\n");
 #endif
-                    ret = 0;
                     RdosCloseTcpConnection(handle);
                 } 
                 else 
@@ -452,7 +443,6 @@ void HandleClientConnection(int consel, SSL *con)
 #ifdef _DEBUG
                 RdosWriteString("closed\r\n");
 #endif
-                ret = 0;
                 RdosCloseTcpConnection(handle);
                 break;
 
