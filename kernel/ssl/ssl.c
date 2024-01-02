@@ -277,7 +277,7 @@ void HandleClientConnection(int consel, SSL *con)
             }
         }
 
-        ssl_pending = read_ssl && SSL_has_pending(con);
+        ssl_pending = SSL_has_pending(con) || RdosPollTcpConnection(handle);
 
         if (!ssl_pending) 
         {
