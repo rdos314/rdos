@@ -83,7 +83,8 @@ sc_send_head		DW ?
 sc_send_tail		DW ?
 
 sc_server               DW ?
-sc_wait                 DW ?
+sc_wait_conn            DW ?
+sc_wait_rec             DW ?
 sc_active               DB ?
 sc_closed               DB ?
 
@@ -97,6 +98,13 @@ sc_ctx      DD ?,?
 sc_con      DD ?,?
 
 ssl_connection_handle_seg      ENDS
+
+ssl_wait_header STRUC
+
+sw_obj          wait_obj_header <>
+sw_handle       DW ?
+
+ssl_wait_header ENDS
 
 _TEXT    SEGMENT byte public 'CODE'
 
@@ -974,7 +982,8 @@ CreateConnection    Proc near
     mov es:sc_send_tail,0
 ;
     mov es:sc_server,0
-    mov es:sc_wait,0
+    mov es:sc_wait_conn,0
+    mov es:sc_wait_rec,0
     mov es:sc_active,0
     mov es:sc_closed,0
 ;       
@@ -1299,7 +1308,7 @@ InitDone_   PROC near
 ;
     mov ds,ebx
     mov ds:sc_active,1
-    mov bx,ds:sc_wait
+    mov bx,ds:sc_wait_conn
     or bx,bx
     jz idDone
 ;
@@ -1423,6 +1432,16 @@ AddReceiveBuf_   Proc near
     mov ds:sc_receive_tail,bx
     LeaveSection ds:sc_section
 ;
+    mov bx,ds:sc_wait_rec
+    or bx,bx
+    jz arbDone
+;
+    push es
+    mov es,ebx
+    SignalWait
+    pop es
+
+arbDone:
     pop ebx
     pop fs
     pop ds
@@ -1564,7 +1583,7 @@ wait_for_secure_connection Proc far
 ;    
     GetThread
     mov ds,[ebx].sc_conn_sel
-    mov ds:sc_wait,ax
+    mov ds:sc_wait_conn,ax
     mov al,ds:sc_active
     or al,al
     jnz wscDone
@@ -1618,6 +1637,194 @@ isccDone:
     pop ds  
     ret
 is_secure_connection_closed Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForConnection
+;
+;           DESCRIPTION:    Start a wait for connection
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_connection       PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov bx,es:sw_handle
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc swfcDone
+;    
+    mov ax,[ebx].sc_conn_sel
+    or ax,ax
+    jz swfcDone
+;
+    mov ds,ax
+    mov ds:sc_wait_rec,es
+    mov ax,ds:sc_receive_count
+    or ax,ax
+    jnz swfcSignal
+;
+    mov al,ds:sc_closed
+    or al,al
+    jz swfcDone
+
+swfcSignal:
+    mov ds:sc_wait_rec,0
+    SignalWait
+
+swfcDone:
+    pop ebx
+    pop ax
+    pop ds
+    ret
+start_wait_for_connection Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForConnection
+;
+;           DESCRIPTION:    Stop a wait for connection
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_connection    PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov bx,es:sw_handle
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc swDone
+;    
+    mov ax,[ebx].sc_conn_sel
+    or ax,ax
+    jz swDone
+;
+    mov ds,ax
+    mov ds:sc_wait_rec,0
+
+swDone:
+    pop ebx
+    pop ax
+    pop ds
+    ret
+stop_wait_for_connection Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearConnection
+;
+;           DESCRIPTION:    Clear tcp connection
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_connection    PROC far
+    ret
+clear_connection Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsConnectionIdle
+;
+;           DESCRIPTION:    Check if connection is idle
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_connection_idle      PROC far
+    push ds
+    push ax
+    push ebx
+;
+    mov bx,es:sw_handle
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc iiDone
+;    
+    mov ax,[ebx].sc_conn_sel
+    or ax,ax
+    stc
+    jz iiDone
+;
+    mov ds,ax
+    mov al,ds:sc_closed
+    or al,al
+    stc
+    jnz iiDone
+;
+    mov ax,ds:sc_receive_count
+    or ax,ax
+    clc
+    je iiDone
+;
+    stc
+
+iiDone:
+    pop ebx
+    pop ax
+    pop ds
+    ret
+is_connection_idle Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddWaitForSecureConnection
+;
+;           DESCRIPTION:    Add a wait for secure connection
+;
+;           PARAMETERS:     AX      Connection handle
+;                           BX      Wait handle
+;                           ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_secure_connection_name    DB 'Add Wait For Secure Connection',0
+
+add_wait_tab:
+aw0 DD OFFSET start_wait_for_connection,    SEG _TEXT
+aw1 DD OFFSET stop_wait_for_connection,     SEG _TEXT
+aw2 DD OFFSET clear_connection,             SEG _TEXT
+aw3 DD OFFSET is_connection_idle,           SEG _TEXT
+
+add_wait_for_secure_connection     PROC far
+    push ds
+    push es
+    push eax
+    push edi
+;
+    push eax
+    mov eax,cs
+    mov es,eax
+    mov eax,SIZE ssl_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_wait_tab
+    AddWait
+    pop eax
+    jc awDone
+;
+    mov es:sw_handle,ax
+
+awDone:
+    pop edi
+    pop eax
+    pop es
+    pop ds
+    ret
+add_wait_for_secure_connection     ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2012,6 +2219,12 @@ InitSecure_    Proc near
     mov edi,OFFSET is_secure_connection_closed_name
     xor dx,dx
     mov ax,is_secure_connection_closed_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_secure_connection
+    mov edi,OFFSET add_wait_for_secure_connection_name
+    xor dx,dx
+    mov ax,add_wait_for_secure_connection_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET write_secure_connection16
