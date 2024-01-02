@@ -246,10 +246,9 @@ void HandleClientConnection(int consel, SSL *con)
     int tty_on;
     int ssl_pending;
     int key_count = 0;
-    int wait = RdosCreateWait();
     int handle = SSL_get_handle(con);
 
-    RdosAddWaitForTcpConnection(wait, handle, 2);
+    RdosStartTcpConnectionNotify(handle);
 
     read_tty = 1;
     tty_on = 0;
@@ -293,7 +292,7 @@ void HandleClientConnection(int consel, SSL *con)
                     RdosWaitMilli(25);
             }
             else
-                RdosWaitForever(wait);
+                RdosWaitForSignal();
         }
 
         if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(handle)) 
@@ -481,6 +480,8 @@ void HandleClientConnection(int consel, SSL *con)
     }
     FreeBuf(consel, rbuf);
     FreeBuf(consel, sbuf);
+
+    RdosStopTcpConnectionNotify(handle);
 }
 
 /*##########################################################################

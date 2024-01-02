@@ -911,4 +911,7 @@ read_kernel_handle_nr       = 825
 write_kernel_handle_nr      = 826
 close_kernel_handle_nr      = 827
 
+start_tcp_conn_notify_nr    = 828
+stop_tcp_conn_notify_nr     = 829
+
 osgate_entries              = 850

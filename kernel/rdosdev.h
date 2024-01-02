@@ -690,6 +690,9 @@ int RdosQueryUdp(long timeout_ms, short int dest_port, long ip, char *buf, int s
 void RdosBroadcastDriverUdp(short int source, short int dest, int driver_sel, char *buf, int size);
 void RdosSendDriverUdp(short int source, short int dest, long ip, int driver_sel, void *driver_dest, char *buf, int size);
 
+void RdosStartTcpConnectionNotify(int handle);
+void RdosStopTcpConnectionNotify(int handle);
+
 void RdosRegisterDiscChange(__rdos_disc_change_callback *callb_proc);
 void RdosStartDisc(int disc_sel);
 void RdosStopDisc(int disc_sel);
@@ -1704,6 +1707,13 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     __value [__ecx] \
     __modify [__es __esi]
 
+#pragma aux RdosStartTcpConnectionNotify = \
+    OsGate_start_tcp_conn_notify  \
+    __parm [__ebx]
+
+#pragma aux RdosStopTcpConnectionNotify = \
+    OsGate_stop_tcp_conn_notify  \
+    __parm [__ebx]
 
 #pragma aux RdosRegisterDiscChange = \
     OsGate_register_disc_change \

@@ -5822,6 +5822,83 @@ get_tcp_connection_write_space    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           StartTcpConnectionNotify
+;
+;       DESCRIPTION:    Start TCP notify
+;
+;       PARAMETERS;     IN  BX        Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_tcp_connection_notify_name DB 'Start Tcp connection Notify', 0
+
+start_tcp_connection_notify    Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc startNotifyDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz startNotifyDone
+;
+    mov ds,ax
+    GetThread
+    mov ds:tcp_signal_change,ax
+    clc
+
+startNotifyDone:
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+start_tcp_connection_notify    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           StopTcpConnectionNotify
+;
+;       DESCRIPTION:    Stop TCP notify
+;
+;       PARAMETERS;     IN  BX        Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_tcp_connection_notify_name DB 'Stop Tcp connection Notify', 0
+
+stop_tcp_connection_notify    Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc stopNotifyDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz startNotifyDone
+;
+    mov ds,ax
+    mov ds:tcp_signal_change,0
+    clc
+
+stopNotifyDone:
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+stop_tcp_connection_notify    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           UpdateConnection
 ;
 ;           DESCRIPTION:    Update a connection
@@ -6965,6 +7042,18 @@ init_task_tcp    PROC near
     mov edi,OFFSET stop_exception_tcp_socket_name
     xor cl,cl
     mov ax,stop_exc_tcp_socket_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET start_tcp_connection_notify
+    mov edi,OFFSET start_tcp_connection_notify_name
+    xor cl,cl
+    mov ax,start_tcp_conn_notify_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET stop_tcp_connection_notify
+    mov edi,OFFSET stop_tcp_connection_notify_name
+    xor cl,cl
+    mov ax,stop_tcp_conn_notify_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection

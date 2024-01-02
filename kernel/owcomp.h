@@ -1979,7 +1979,6 @@
 #pragma aux RdosStopNetCapture = \
     CallGate_stop_net_capture
 
-
 #pragma aux RdosGetUsbConfig = \
     CallGate_get_usb_config \
     __parm [__ebx] [__eax] [__edx] [__es __edi] [__ecx] \
