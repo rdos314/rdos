@@ -1368,6 +1368,70 @@ FreeBuf_  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetReceiveSpace
+;
+;       DESCRIPTION:    Get space in receive buffer
+;
+;       PARAMETERS:     EBX            Connection
+;
+;       RETURNS:        ECX            Space in receive buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetReceiveSpace_
+
+GetReceiveSpace_   PROC near
+    push ds
+    push ebx
+;
+    mov ds,ebx
+    mov cx,ds:sc_buffer_size
+    sub cx,ds:sc_receive_count
+    movzx ecx,cx
+;
+    pop ebx
+    pop ds
+    ret
+GetReceiveSpace_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddReceiveBuf
+;
+;       DESCRIPTION:    Add data to receive buffer
+;
+;       PARAMETERS:     EBX            Connection
+;                       ES:EDI         Buffer
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AddReceiveBuf_
+
+AddReceiveBuf_   Proc near
+    push ds
+    push fs
+    push ebx
+;
+    mov ds,ebx
+    EnterSection ds:sc_section
+    mov fs,ds:sc_receive_buffer
+    add ds:sc_receive_count,cx
+    mov bx,ds:sc_receive_tail
+    call CopyToBuffer
+    mov ds:sc_receive_tail,bx
+    LeaveSection ds:sc_section
+;
+    pop ebx
+    pop fs
+    pop ds
+    ret
+AddReceiveBuf_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetSendCount
 ;
 ;       DESCRIPTION:    Get bytes in send buffer

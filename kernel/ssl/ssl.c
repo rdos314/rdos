@@ -77,6 +77,12 @@ char *AllocateBuf(int consel);
 void FreeBuf(int consel, char *buf);
 #pragma aux FreeBuf parm routine [ebx] [dx eax]
 
+int GetReceiveSpace(int consel);
+#pragma aux GetReceiveSpace parm routine [ebx] value [ecx]
+
+void AddReceiveBuf(int consel, const char *buf, int size);
+#pragma aux AddReceiveBuf parm routine [ebx] [es edi] [ecx]
+
 int GetSendCount(int consel);
 #pragma aux GetSendCount parm routine [ebx] value [ecx]
 
@@ -218,11 +224,12 @@ void FreeClientConnection(SSL *con)
 void HandleClientConnection(int consel, SSL *con)
 {
     bool in_init = true;
-    char *buf = AllocateBuf(consel);
-    int send_count = 0;
+    char *rbuf = AllocateBuf(consel);
+    char *sbuf = AllocateBuf(consel);
+    int scount = 0;
+    int rspace = 0;
 
 
-    char *sbuf = NULL;
     char *connectstr = NULL;
     char *host = NULL;
     char *port = NULL;
@@ -230,30 +237,21 @@ void HandleClientConnection(int consel, SSL *con)
     int i;
     int s = -1;
     int k;
-    int write_tty;
     int read_tty;
     int write_ssl;
     int read_ssl;
     int tty_on;
     int ssl_pending;
-    int sbuf_len;
-    int sbuf_off;
     int key_count = 0;
     int wait = RdosCreateWait();
     int handle = SSL_get_handle(con);
 
-    sbuf = (char *)OPENSSL_malloc(BUFSIZZ);
-
     RdosAddWaitForTcpConnection(wait, handle, 2);
 
     read_tty = 1;
-    write_tty = 0;
     tty_on = 0;
     read_ssl = 1;
     write_ssl = 1;
-
-    sbuf_len = 0;
-    sbuf_off = 0;
 
     while (!RdosIsTcpConnectionClosed(handle)) 
     {
@@ -279,6 +277,11 @@ void HandleClientConnection(int consel, SSL *con)
 
         ssl_pending = SSL_has_pending(con) || RdosPollTcpConnection(handle);
 
+        rspace = GetReceiveSpace(consel);
+
+        if (rspace == 0)
+            ssl_pending = 0;
+
         if (!ssl_pending) 
         {
             if (write_ssl || GetSendCount(consel))
@@ -292,7 +295,7 @@ void HandleClientConnection(int consel, SSL *con)
 
         if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(handle)) 
         {
-            k = SSL_write(con, buf, (unsigned int)send_count);
+            k = SSL_write(con, sbuf, (unsigned int)scount);
             switch (SSL_get_error(con, k)) 
             {
             case SSL_ERROR_NONE:
@@ -302,7 +305,7 @@ void HandleClientConnection(int consel, SSL *con)
                     ClearSendCount(consel, k);
 
                 /* we have done a  write(con,NULL,0); */
-                if (send_count <= 0) 
+                if (scount <= 0) 
                 {
                     read_tty = 1;
                     write_ssl = 0;
@@ -329,7 +332,6 @@ void HandleClientConnection(int consel, SSL *con)
 
             case SSL_ERROR_WANT_READ:
                 RdosWriteString("write R BLOCK\r\n");
-                write_tty = 0;
                 read_ssl = 1;
                 write_ssl = 0;
                 break;
@@ -339,7 +341,7 @@ void HandleClientConnection(int consel, SSL *con)
                 break;
 
             case SSL_ERROR_ZERO_RETURN:
-                if (send_count != 0) 
+                if (scount != 0) 
                 {
                     RdosWriteString("shutdown\r\n");
                     ret = 0;
@@ -353,7 +355,7 @@ void HandleClientConnection(int consel, SSL *con)
                 break;
 
             case SSL_ERROR_SYSCALL:
-                if ((k != 0) || (send_count != 0)) 
+                if ((k != 0) || (scount != 0)) 
                 {
                     RdosWriteString("Socket error\r\n");
                     RdosCloseTcpConnection(handle);
@@ -373,35 +375,29 @@ void HandleClientConnection(int consel, SSL *con)
                 RdosCloseTcpConnection(handle);
                 break;
             }
-            send_count = 0;
+            scount = 0;
         }
-        else if (!ssl_pending && write_tty)
-        {
-            RdosWriteString(sbuf + sbuf_off);
-            sbuf_len = 0;
-            sbuf_off = 0;
-            read_ssl = 1;
-            write_tty = 0;
-        } 
         else if (ssl_pending || RdosPollTcpConnection(handle))
         {
-            k = SSL_read(con, sbuf, 1024 /* BUFSIZZ */ );
+            rspace = GetReceiveSpace(consel);
+            k = SSL_read(con, rbuf, rspace);
 
             switch (SSL_get_error(con, k)) 
             {
             case SSL_ERROR_NONE:
                 if (k <= 0)
                     RdosCloseTcpConnection(handle);
-                sbuf_off = 0;
-                sbuf_len = k;
+                else
+                    AddReceiveBuf(consel, rbuf, k);
 
-                read_ssl = 0;
-                write_tty = 1;
+                rbuf[k] = 0;
+                RdosWriteString(rbuf);
+
+                read_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_ASYNC:
                 RdosWriteString("read A BLOCK\r\n");
-                write_tty = 0;
                 read_ssl = 1;
                 if ((read_tty == 0) && (write_ssl == 0))
                     write_ssl = 1;
@@ -415,7 +411,6 @@ void HandleClientConnection(int consel, SSL *con)
 
             case SSL_ERROR_WANT_READ:
                 RdosWriteString("read R BLOCK\r\n");
-                write_tty = 0;
                 read_ssl = 1;
                 if ((read_tty == 0) && (write_ssl == 0))
                     write_ssl = 1;
@@ -450,13 +445,14 @@ void HandleClientConnection(int consel, SSL *con)
         {
             if (GetSendCount(consel))
             {
-                send_count = GetSendBuf(consel, buf);
+                scount = GetSendBuf(consel, sbuf);
                 write_ssl = 1;
                 read_tty = 0;
             }
         }
     }
-    FreeBuf(consel, buf);
+    FreeBuf(consel, rbuf);
+    FreeBuf(consel, sbuf);
 }
 
 /*##########################################################################
