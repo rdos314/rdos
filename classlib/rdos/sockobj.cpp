@@ -521,6 +521,7 @@ TSslSocket::TSslSocket(long IP, int Port, int Timeout, int BufferSize, const cha
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, 0, Port, Timeout, BufferSize);
+    FTcpHandle = RdosGetSecureTcpHandle(FHandle);
     RdosCreateThread(SslSocketHandler, ThreadName, &FHandle, 0x1000);
     Open();
 }
@@ -545,6 +546,7 @@ TSslSocket::TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int 
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, LocalPort, RemotePort, Timeout, BufferSize);
+    FTcpHandle = RdosGetSecureTcpHandle(FHandle);
     RdosCreateThread(SslSocketHandler, ThreadName, &FHandle, 0x1000);
     Open();
 }
@@ -643,8 +645,8 @@ int TSslSocket::IsOpen()
 *##########################################################################*/
 void TSslSocket::NotifyClose()
 {
-//    if (FHandle)
-//        RdosCloseTcpConnection(FHandle);
+    if (FHandle)
+        RdosCloseSecureConnection(FHandle);
 }
 
 /*##################  TSslSocket::GetRemoteIP  ############################
@@ -656,9 +658,9 @@ void TSslSocket::NotifyClose()
 *##########################################################################*/
 long TSslSocket::GetRemoteIP() const
 {
-//    if (FHandle)
-//        return RdosGetRemoteTcpConnectionIP(FHandle);
-//    else
+    if (FTcpHandle)
+        return RdosGetRemoteTcpConnectionIP(FTcpHandle);
+    else
         return -1;
 }
 
@@ -671,9 +673,9 @@ long TSslSocket::GetRemoteIP() const
 *##########################################################################*/
 int TSslSocket::GetRemotePort() const
 {
-//    if (FHandle)
-//        return RdosGetRemoteTcpConnectionPort(FHandle);
-//    else
+    if (FTcpHandle)
+        return RdosGetRemoteTcpConnectionPort(FTcpHandle);
+    else
         return 0;
 }
 
@@ -686,9 +688,9 @@ int TSslSocket::GetRemotePort() const
 *##########################################################################*/
 int TSslSocket::GetLocalPort() const
 {
-//    if (FHandle)
-//        return RdosGetLocalTcpConnectionPort(FHandle);
-//    else
+    if (FTcpHandle)
+        return RdosGetLocalTcpConnectionPort(FTcpHandle);
+    else
         return 0;
 }
 
@@ -701,8 +703,8 @@ int TSslSocket::GetLocalPort() const
 *##########################################################################*/
 void TSslSocket::Push()
 {
-//    if (FHandle)
-//        RdosPushTcpConnection(FHandle);
+    if (FTcpHandle)
+        RdosPushTcpConnection(FTcpHandle);
 }
 
 /*##################  TSslSocket::IsIdle  ############################
@@ -714,8 +716,8 @@ void TSslSocket::Push()
 *##########################################################################*/
 int TSslSocket::IsIdle()
 {
-//    if (FHandle)
-//        return RdosIsTcpConnectionIdle(FHandle);
+//    if (FTcpHandle)
+//        return RdosIsTcpConnectionIdle(FTcpHandle);
 //    else
         return TRUE;
 }

@@ -156,6 +156,7 @@ protected:
 
     int FSession;
     int FHandle;
+    int FTcpHandle;
 };
 
 
