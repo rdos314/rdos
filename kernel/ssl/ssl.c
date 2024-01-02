@@ -293,32 +293,8 @@ void HandleClientConnection(int consel, SSL *con)
                     ClearSendCount(consel, k);
                 break;
 
-            case SSL_ERROR_WANT_WRITE:
-#ifdef _DEBUG
-                RdosWriteString("write W BLOCK\r\n");
-#endif
-                break;
-
-            case SSL_ERROR_WANT_ASYNC:
-#ifdef _DEBUG
-                RdosWriteString("write A BLOCK\r\n");
-#endif
-                break;
-
-            case SSL_ERROR_WANT_READ:
-#ifdef _DEBUG
-                RdosWriteString("write R BLOCK\r\n");
-#endif
-                break;
-
-            case SSL_ERROR_WANT_X509_LOOKUP:
-#ifdef _DEBUG
-                RdosWriteString("write X BLOCK\r\n");
-#endif
-                break;
-
             case SSL_ERROR_ZERO_RETURN:
-                if (scount != 0) 
+                if (scount) 
                 {
 #ifdef _DEBUG
                     RdosWriteString("shutdown\r\n");
@@ -328,7 +304,7 @@ void HandleClientConnection(int consel, SSL *con)
                 break;
 
             case SSL_ERROR_SYSCALL:
-                if ((k != 0) || (scount != 0)) 
+                if (k || scount) 
                 {
 #ifdef _DEBUG
                     RdosWriteString("Socket error\r\n");
@@ -362,30 +338,6 @@ void HandleClientConnection(int consel, SSL *con)
                 else
                     AddReceiveBuf(consel, rbuf, k);
 
-                break;
-
-            case SSL_ERROR_WANT_ASYNC:
-#ifdef _DEBUG
-                RdosWriteString("read A BLOCK\r\n");
-#endif
-                break;
-
-            case SSL_ERROR_WANT_WRITE:
-#ifdef _DEBUG
-                RdosWriteString("read W BLOCK\r\n");
-#endif
-                break;
-
-            case SSL_ERROR_WANT_READ:
-#ifdef _DEBUG
-                RdosWriteString("read R BLOCK\r\n");
-#endif
-                break;
-
-            case SSL_ERROR_WANT_X509_LOOKUP:
-#ifdef _DEBUG
-                RdosWriteString("read X BLOCK\r\n");
-#endif
                 break;
 
             case SSL_ERROR_SYSCALL:
