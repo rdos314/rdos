@@ -43,8 +43,13 @@ void main()
 
     RdosWaitForSecureConnection(sock, 7000);
 
-    RdosAddWaitForSecureConnection(wait, sock, 2);
-    RdosAddWaitForKeyboard(wait, 1);
+    if (!RdosIsSecureConnectionClosed(sock))
+    {
+        RdosWriteString("connected\r\n");
+
+        RdosAddWaitForSecureConnection(wait, sock, 2);
+        RdosAddWaitForKeyboard(wait, 1);
+    }
 
     while (!RdosIsSecureConnectionClosed(sock))
     {
@@ -80,6 +85,8 @@ void main()
             }
         }
     }
+
+    RdosWriteString("closed\r\n");
 
     RdosCloseSecureConnection(sock);
 
