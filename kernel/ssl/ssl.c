@@ -233,8 +233,7 @@ void HandleClientConnection(int consel, SSL *con)
     int len;
     int scount = 0;
     int rspace = 0;
-    char *rbuf = AllocateBuf(consel);
-    char *sbuf = AllocateBuf(consel);
+    char *buf = AllocateBuf(consel);
 
     RdosStartTcpConnectionNotify(handle);
 
@@ -280,8 +279,8 @@ void HandleClientConnection(int consel, SSL *con)
 
         if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(handle)) 
         {
-            scount = GetSendBuf(consel, sbuf);
-            len = SSL_write(con, sbuf, (unsigned int)scount);
+            scount = GetSendBuf(consel, buf);
+            len = SSL_write(con, buf, (unsigned int)scount);
             switch (SSL_get_error(con, len)) 
             {
             case SSL_ERROR_NONE:
@@ -326,7 +325,7 @@ void HandleClientConnection(int consel, SSL *con)
         else if (ssl_pending || RdosPollTcpConnection(handle))
         {
             rspace = GetReceiveSpace(consel);
-            len = SSL_read(con, rbuf, rspace);
+            len = SSL_read(con, buf, rspace);
 
             switch (SSL_get_error(con, len)) 
             {
@@ -334,7 +333,7 @@ void HandleClientConnection(int consel, SSL *con)
                 if (len <= 0)
                     RdosCloseTcpConnection(handle);
                 else
-                    AddReceiveBuf(consel, rbuf, len);
+                    AddReceiveBuf(consel, buf, len);
 
                 break;
 
@@ -365,8 +364,7 @@ void HandleClientConnection(int consel, SSL *con)
             }
         }
     }
-    FreeBuf(consel, rbuf);
-    FreeBuf(consel, sbuf);
+    FreeBuf(consel, buf);
 
     RdosStopTcpConnectionNotify(handle);
 }
