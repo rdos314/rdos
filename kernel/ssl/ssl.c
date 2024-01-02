@@ -227,8 +227,8 @@ void FreeClientConnection(SSL *con)
 void HandleClientConnection(int consel, SSL *con)
 {
     int handle = SSL_get_handle(con);
-    bool in_init;
-    bool write_ssl;
+    bool in_init = true;
+    bool write_ssl = true;
     bool ssl_pending;
     int len;
     int scount = 0;
@@ -236,9 +236,6 @@ void HandleClientConnection(int consel, SSL *con)
     char *buf = AllocateBuf(consel);
 
     RdosStartTcpConnectionNotify(handle);
-
-    write_ssl = true;
-    in_init = true;
 
     while (!RdosIsTcpConnectionClosed(handle)) 
     {
@@ -259,25 +256,63 @@ void HandleClientConnection(int consel, SSL *con)
             }
         }
 
-        ssl_pending = SSL_has_pending(con) || RdosPollTcpConnection(handle);
-
         rspace = GetReceiveSpace(consel);
 
-        if (!rspace)
+        if (rspace)
+            ssl_pending = SSL_has_pending(con) || RdosPollTcpConnection(handle);
+        else
             ssl_pending = false;
 
         if (!in_init && !ssl_pending)
         {
-            if (GetSendCount(consel))
+            if (GetSendCount(consel) && RdosGetTcpConnectionWriteSpace(handle))
                 write_ssl = true;
             else
                 write_ssl = false;
         }
 
-        if (!ssl_pending && !write_ssl)
-            RdosWaitForSignal();
+        if (ssl_pending)
+        {
+            rspace = GetReceiveSpace(consel);
+            len = SSL_read(con, buf, rspace);
 
-        if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(handle)) 
+            switch (SSL_get_error(con, len)) 
+            {
+            case SSL_ERROR_NONE:
+                if (len <= 0)
+                    RdosCloseTcpConnection(handle);
+                else
+                    AddReceiveBuf(consel, buf, len);
+
+                break;
+
+            case SSL_ERROR_SYSCALL:
+#ifdef _DEBUG
+                RdosWriteString("CONNECTION CLOSED BY SERVER\r\n");
+#endif
+                RdosCloseTcpConnection(handle);
+                break;
+
+            case SSL_ERROR_ZERO_RETURN:
+#ifdef _DEBUG
+                RdosWriteString("closed\r\n");
+#endif
+                RdosCloseTcpConnection(handle);
+                break;
+
+            case SSL_ERROR_WANT_ASYNC_JOB:
+                /* This shouldn't ever happen in s_client. Treat as an error */
+
+            case SSL_ERROR_SSL:
+#ifdef _DEBUG
+                RdosWriteString("SSL error\r\n");
+#endif
+                RdosCloseTcpConnection(handle);
+                break;
+
+            }
+        }
+        else if (write_ssl) 
         {
             scount = GetSendBuf(consel, buf);
             len = SSL_write(con, buf, (unsigned int)scount);
@@ -322,47 +357,8 @@ void HandleClientConnection(int consel, SSL *con)
             }
             scount = 0;
         }
-        else if (ssl_pending || RdosPollTcpConnection(handle))
-        {
-            rspace = GetReceiveSpace(consel);
-            len = SSL_read(con, buf, rspace);
-
-            switch (SSL_get_error(con, len)) 
-            {
-            case SSL_ERROR_NONE:
-                if (len <= 0)
-                    RdosCloseTcpConnection(handle);
-                else
-                    AddReceiveBuf(consel, buf, len);
-
-                break;
-
-            case SSL_ERROR_SYSCALL:
-#ifdef _DEBUG
-                RdosWriteString("CONNECTION CLOSED BY SERVER\r\n");
-#endif
-                RdosCloseTcpConnection(handle);
-                break;
-
-            case SSL_ERROR_ZERO_RETURN:
-#ifdef _DEBUG
-                RdosWriteString("closed\r\n");
-#endif
-                RdosCloseTcpConnection(handle);
-                break;
-
-            case SSL_ERROR_WANT_ASYNC_JOB:
-                /* This shouldn't ever happen in s_client. Treat as an error */
-
-            case SSL_ERROR_SSL:
-#ifdef _DEBUG
-                RdosWriteString("SSL error\r\n");
-#endif
-                RdosCloseTcpConnection(handle);
-                break;
-
-            }
-        }
+        else
+            RdosWaitForSignal();
     }
     FreeBuf(consel, buf);
 
