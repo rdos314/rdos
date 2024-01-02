@@ -256,9 +256,7 @@ void HandleClientConnection(int consel, SSL *con)
             }
         }
 
-        rspace = GetReceiveSpace(consel);
-
-        if (rspace)
+        if (GetReceiveSpace(consel))
             ssl_pending = SSL_has_pending(con) || RdosPollTcpConnection(handle);
         else
             ssl_pending = false;
