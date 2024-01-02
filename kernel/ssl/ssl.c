@@ -301,8 +301,18 @@ void HandleClientConnection(int consel, SSL *con)
                 else
                     ClearSendCount(consel, k);
 
-                read_tty = 1;
-                write_ssl = 0;
+                /* we have done a  write(con,NULL,0); */
+                if (send_count <= 0) 
+                {
+                    read_tty = 1;
+                    write_ssl = 0;
+                } 
+                else 
+                {        /* if (cbuf_len > 0) */
+
+                    read_tty = 0;
+                    write_ssl = 1;
+                }
                 break;
 
             case SSL_ERROR_WANT_WRITE:
