@@ -301,21 +301,18 @@ void HandleClientConnection(int consel, SSL *con)
 #ifdef _DEBUG
                 RdosWriteString("write W BLOCK\r\n");
 #endif
-                write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_ASYNC:
 #ifdef _DEBUG
                 RdosWriteString("write A BLOCK\r\n");
 #endif
-                write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_READ:
 #ifdef _DEBUG
                 RdosWriteString("write R BLOCK\r\n");
 #endif
-                write_ssl = 0;
                 break;
 
             case SSL_ERROR_WANT_X509_LOOKUP:
@@ -375,21 +372,18 @@ void HandleClientConnection(int consel, SSL *con)
 #ifdef _DEBUG
                 RdosWriteString("read A BLOCK\r\n");
 #endif
-                write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_WRITE:
 #ifdef _DEBUG
                 RdosWriteString("read W BLOCK\r\n");
 #endif
-                write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_READ:
 #ifdef _DEBUG
                 RdosWriteString("read R BLOCK\r\n");
 #endif
-                write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_X509_LOOKUP:
