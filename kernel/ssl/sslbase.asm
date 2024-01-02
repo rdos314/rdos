@@ -1899,6 +1899,9 @@ ReadConnection   Proc near
     EnterSection ds:sc_section
 ;
     movzx eax,ds:sc_receive_count
+    cmp ax,ds:sc_buffer_size
+    pushfd
+;
     cmp ecx,eax
     jbe rcSizeOk
 ;
@@ -1912,6 +1915,16 @@ rcSizeOk:
     call CopyFromBuffer
     mov ds:sc_receive_head,bx
     LeaveSection ds:sc_section
+;
+    popfd
+    jne rcServerOk
+;
+    push ebx
+    mov bx,ds:sc_server
+    Signal
+    pop ebx
+
+rcServerOk:
     clc
 
 rcDone:
