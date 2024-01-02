@@ -234,7 +234,6 @@ void HandleClientConnection(int consel, SSL *con)
     int handle = SSL_get_handle(con);
     int k;
 
-    int read_tty;
     int write_ssl;
     int read_ssl;
     int tty_on;
@@ -242,7 +241,6 @@ void HandleClientConnection(int consel, SSL *con)
 
     RdosStartTcpConnectionNotify(handle);
 
-    read_tty = 1;
     tty_on = 0;
     read_ssl = 1;
     write_ssl = 1;
@@ -276,16 +274,17 @@ void HandleClientConnection(int consel, SSL *con)
         if (rspace == 0)
             ssl_pending = 0;
 
-        if (!ssl_pending) 
+        if (!in_init && !ssl_pending)
         {
-            if (write_ssl || GetSendCount(consel))
+            if (GetSendCount(consel))
             {
-                if (RdosGetTcpConnectionWriteSpace(handle) == 0)
-                    RdosWaitMilli(25);
+                scount = GetSendBuf(consel, sbuf);
+                write_ssl = 1;
             }
-            else
-                RdosWaitForSignal();
         }
+
+        if (!ssl_pending && !write_ssl)
+            RdosWaitForSignal();
 
         if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(handle)) 
         {
@@ -300,16 +299,9 @@ void HandleClientConnection(int consel, SSL *con)
 
                 /* we have done a  write(con,NULL,0); */
                 if (scount <= 0) 
-                {
-                    read_tty = 1;
                     write_ssl = 0;
-                } 
                 else 
-                {        /* if (cbuf_len > 0) */
-
-                    read_tty = 0;
                     write_ssl = 1;
-                }
                 break;
 
             case SSL_ERROR_WANT_WRITE:
@@ -317,7 +309,6 @@ void HandleClientConnection(int consel, SSL *con)
                 RdosWriteString("write W BLOCK\r\n");
 #endif
                 write_ssl = 1;
-                read_tty = 0;
                 break;
 
             case SSL_ERROR_WANT_ASYNC:
@@ -325,7 +316,6 @@ void HandleClientConnection(int consel, SSL *con)
                 RdosWriteString("write A BLOCK\r\n");
 #endif
                 write_ssl = 1;
-                read_tty = 0;
                 break;
 
             case SSL_ERROR_WANT_READ:
@@ -351,10 +341,7 @@ void HandleClientConnection(int consel, SSL *con)
                     RdosCloseTcpConnection(handle);
                 } 
                 else 
-                {
-                    read_tty = 1;
                     write_ssl = 0;
-                }
                 break;
 
             case SSL_ERROR_SYSCALL:
@@ -366,10 +353,7 @@ void HandleClientConnection(int consel, SSL *con)
                     RdosCloseTcpConnection(handle);
                 } 
                 else 
-                {
-                    read_tty = 1;
                     write_ssl = 0;
-                }
                 break;
 
             case SSL_ERROR_WANT_ASYNC_JOB:
@@ -405,8 +389,7 @@ void HandleClientConnection(int consel, SSL *con)
                 RdosWriteString("read A BLOCK\r\n");
 #endif
                 read_ssl = 1;
-                if ((read_tty == 0) && (write_ssl == 0))
-                    write_ssl = 1;
+                write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_WRITE:
@@ -414,7 +397,6 @@ void HandleClientConnection(int consel, SSL *con)
                 RdosWriteString("read W BLOCK\r\n");
 #endif
                 write_ssl = 1;
-                read_tty = 0;
                 break;
 
             case SSL_ERROR_WANT_READ:
@@ -422,8 +404,7 @@ void HandleClientConnection(int consel, SSL *con)
                 RdosWriteString("read R BLOCK\r\n");
 #endif
                 read_ssl = 1;
-                if ((read_tty == 0) && (write_ssl == 0))
-                    write_ssl = 1;
+                write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_X509_LOOKUP:
@@ -456,15 +437,6 @@ void HandleClientConnection(int consel, SSL *con)
                 RdosCloseTcpConnection(handle);
                 break;
 
-            }
-        }
-        else if (read_tty)
-        {
-            if (GetSendCount(consel))
-            {
-                scount = GetSendBuf(consel, sbuf);
-                write_ssl = 1;
-                read_tty = 0;
             }
         }
     }
