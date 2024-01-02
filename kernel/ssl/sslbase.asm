@@ -1258,6 +1258,14 @@ handle_secure_connection     Proc far
     mov ds:sc_server,0
     mov ds:sc_active,0
     mov ds:sc_closed,1
+;
+    mov bx,ds:sc_wait_rec
+    mov bx,ds:sc_wait_rec
+    or bx,bx
+    jz hscDone
+;
+    mov es,ebx
+    SignalWait
     
 hscDone:
     popad
