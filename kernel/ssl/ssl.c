@@ -50,6 +50,9 @@
 #include "rdos.h"
 #include "rdosdev.h"
 
+// #define _DEBUG 1
+
+
 #define bool int
 #define false 0
 #define true 1
@@ -319,31 +322,41 @@ void HandleClientConnection(int consel, SSL *con)
                 break;
 
             case SSL_ERROR_WANT_WRITE:
+#ifdef _DEBUG
                 RdosWriteString("write W BLOCK\r\n");
+#endif
                 write_ssl = 1;
                 read_tty = 0;
                 break;
 
             case SSL_ERROR_WANT_ASYNC:
+#ifdef _DEBUG
                 RdosWriteString("write A BLOCK\r\n");
+#endif
                 write_ssl = 1;
                 read_tty = 0;
                 break;
 
             case SSL_ERROR_WANT_READ:
+#ifdef _DEBUG
                 RdosWriteString("write R BLOCK\r\n");
+#endif
                 read_ssl = 1;
                 write_ssl = 0;
                 break;
 
             case SSL_ERROR_WANT_X509_LOOKUP:
+#ifdef _DEBUG
                 RdosWriteString("write X BLOCK\r\n");
+#endif
                 break;
 
             case SSL_ERROR_ZERO_RETURN:
                 if (scount != 0) 
                 {
+#ifdef _DEBUG
                     RdosWriteString("shutdown\r\n");
+#endif
                     ret = 0;
                     RdosCloseTcpConnection(handle);
                 } 
@@ -357,7 +370,9 @@ void HandleClientConnection(int consel, SSL *con)
             case SSL_ERROR_SYSCALL:
                 if ((k != 0) || (scount != 0)) 
                 {
+#ifdef _DEBUG
                     RdosWriteString("Socket error\r\n");
+#endif
                     RdosCloseTcpConnection(handle);
                 } 
                 else 
@@ -371,7 +386,9 @@ void HandleClientConnection(int consel, SSL *con)
                 /* This shouldn't ever happen in s_client - treat as an error */
 
             case SSL_ERROR_SSL:
+#ifdef _DEBUG
                 RdosWriteString("SSL error\r\n");
+#endif
                 RdosCloseTcpConnection(handle);
                 break;
             }
@@ -390,43 +407,52 @@ void HandleClientConnection(int consel, SSL *con)
                 else
                     AddReceiveBuf(consel, rbuf, k);
 
-                rbuf[k] = 0;
-                RdosWriteString(rbuf);
-
                 read_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_ASYNC:
+#ifdef _DEBUG
                 RdosWriteString("read A BLOCK\r\n");
+#endif
                 read_ssl = 1;
                 if ((read_tty == 0) && (write_ssl == 0))
                     write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_WRITE:
+#ifdef _DEBUG
                 RdosWriteString("read W BLOCK\r\n");
+#endif
                 write_ssl = 1;
                 read_tty = 0;
                 break;
 
             case SSL_ERROR_WANT_READ:
+#ifdef _DEBUG
                 RdosWriteString("read R BLOCK\r\n");
+#endif
                 read_ssl = 1;
                 if ((read_tty == 0) && (write_ssl == 0))
                     write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_X509_LOOKUP:
+#ifdef _DEBUG
                 RdosWriteString("read X BLOCK\r\n");
+#endif
                 break;
 
             case SSL_ERROR_SYSCALL:
+#ifdef _DEBUG
                 RdosWriteString("CONNECTION CLOSED BY SERVER\r\n");
+#endif
                 RdosCloseTcpConnection(handle);
                 break;
 
             case SSL_ERROR_ZERO_RETURN:
+#ifdef _DEBUG
                 RdosWriteString("closed\r\n");
+#endif
                 ret = 0;
                 RdosCloseTcpConnection(handle);
                 break;
@@ -435,7 +461,9 @@ void HandleClientConnection(int consel, SSL *con)
                 /* This shouldn't ever happen in s_client. Treat as an error */
 
             case SSL_ERROR_SSL:
+#ifdef _DEBUG
                 RdosWriteString("SSL error\r\n");
+#endif
                 RdosCloseTcpConnection(handle);
                 break;
 

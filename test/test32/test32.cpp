@@ -65,6 +65,8 @@ void main()
 
             if (ch == 0xd)
             {
+                RdosWriteString("\r\n");
+
                 kbuf[keys] = 0xd;
                 kbuf[keys+1] = 0xa;
                 RdosWriteSecureConnection(sock, kbuf, keys+2);
