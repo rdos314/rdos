@@ -270,10 +270,7 @@ void HandleClientConnection(int consel, SSL *con)
         if (!in_init && !ssl_pending)
         {
             if (GetSendCount(consel))
-            {
-                scount = GetSendBuf(consel, sbuf);
                 write_ssl = true;
-            }
             else
                 write_ssl = false;
         }
@@ -283,6 +280,7 @@ void HandleClientConnection(int consel, SSL *con)
 
         if (!ssl_pending && write_ssl && RdosGetTcpConnectionWriteSpace(handle)) 
         {
+            scount = GetSendBuf(consel, sbuf);
             len = SSL_write(con, sbuf, (unsigned int)scount);
             switch (SSL_get_error(con, len)) 
             {
