@@ -99,6 +99,7 @@ tcp_next			DW ?
 tcp_listen_link		DW ?
 tcp_owner			DW ?
 tcp_writer          DW ?
+tcp_signal_change   DW ?
 tcp_wait            DW ?
 tcp_read_wait       DW ?
 tcp_write_wait      DW ?

@@ -774,6 +774,7 @@ CreateConnection    Proc near
     mov es:tcp_read_wait,0
     mov es:tcp_write_wait,0
     mov es:tcp_exc_wait,0
+    mov es:tcp_signal_change,0
     mov es:tcp_options,0
     mov es:tcp_port,si
     mov es:tcp_remote_ip,edx
@@ -1325,6 +1326,30 @@ UpdateRto       Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           SignalChange
+;
+;       Purpose:        Signal change in connection
+;
+;       Parameters:         DS          Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalChange     Proc near
+    push ebx
+;
+    mov bx,ds:tcp_signal_change
+    or bx,bx
+    jz scDone
+;
+    Signal
+
+scDone:
+    pop ebx
+    ret
+SignalChange     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           IgnoreDummy
 ;
 ;       Purpose:        Igonre (dummy proc)
@@ -1808,6 +1833,8 @@ retrans_close:
     mov bx,ds:tcp_owner
     Signal
 ;
+    call SignalChange
+;
     xor bx,bx
     xchg bx,ds:tcp_read_wait
     or bx,bx
@@ -1981,6 +2008,8 @@ CheckRst    Proc near
     or ds:tcp_pending,FLAG_DELETE_NET
     mov bx,ds:tcp_owner
     Signal
+;
+    call SignalChange
 ;
     xor bx,bx
     xchg bx,ds:tcp_read_wait
@@ -2661,6 +2690,8 @@ process_data_wake:
     mov bx,ds:tcp_receive_count
     or bx,bx
     jz process_data_not_read
+;
+    call SignalChange
 ;
     xor bx,bx
     xchg bx,ds:tcp_read_wait
@@ -3509,6 +3540,8 @@ receive_leave:
     pop ecx
     jbe receive_not_write
 ;
+    call SignalChange
+;
     xor bx,bx
     xchg bx,ds:tcp_write_wait
     or bx,bx
@@ -4101,6 +4134,8 @@ CloseConnection    Proc near
     add bx,bx
     call word ptr cs:[bx].close_tab
     LeaveSection ds:tcp_section
+;
+    call SignalChange
 ;
     xor bx,bx
     xchg bx,ds:tcp_read_wait
