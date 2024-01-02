@@ -274,6 +274,8 @@ void HandleClientConnection(int consel, SSL *con)
                 scount = GetSendBuf(consel, sbuf);
                 write_ssl = 1;
             }
+            else
+                write_ssl = 0;
         }
 
         if (!ssl_pending && !write_ssl)
@@ -289,12 +291,6 @@ void HandleClientConnection(int consel, SSL *con)
                     RdosCloseTcpConnection(handle);
                 else
                     ClearSendCount(consel, k);
-
-                /* we have done a  write(con,NULL,0); */
-                if (scount <= 0) 
-                    write_ssl = 0;
-                else 
-                    write_ssl = 1;
                 break;
 
             case SSL_ERROR_WANT_WRITE:
