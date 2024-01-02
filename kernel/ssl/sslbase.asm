@@ -1563,6 +1563,41 @@ cscSave:
     pop ds
     ret
 ClearSendCount_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetSecureTcpHandle
+;
+;       Purpose:        Get tcp handle
+;
+;       Parameters:     BX          connection handle
+;
+;       Returns:        AX          TCP handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_secure_tcp_handle_name    DB 'Get Secure TCP Handle',0
+
+get_secure_tcp_handle Proc far
+    push ds
+    push ebx
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc gsthFail
+;
+    mov ds,[ebx].sc_conn_sel
+    movzx eax,ds:sc_socket_handle
+    jmp gsthDone
+
+gsthFail:
+    xor eax,eax
+
+gsthDone:
+    pop ebx
+    pop ds
+    ret
+get_secure_tcp_handle  Endp
                 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2328,6 +2363,12 @@ InitSecure_    Proc near
     mov edi,OFFSET close_secure_connection_name
     xor dx,dx
     mov ax,close_secure_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_secure_tcp_handle
+    mov edi,OFFSET get_secure_tcp_handle_name
+    xor dx,dx
+    mov ax,get_secure_tcp_handle_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET handle_secure_connection
