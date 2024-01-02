@@ -3099,6 +3099,11 @@
     CallGate_close_secure_connection  \
     __parm [__ebx]
 
+#pragma aux RdosGetSecureTcpHandle = \
+    CallGate_get_secure_tcp_handle  \
+    __parm [__ebx]  \
+    __value [__eax]
+
 #pragma aux RdosHandleSecureConnection = \
     CallGate_handle_secure_connection  \
     __parm [__ebx]

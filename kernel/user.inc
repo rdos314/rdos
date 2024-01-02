@@ -2239,6 +2239,12 @@ CreateSecureConnection       MACRO
         UserGate create_secure_connection_nr
                         ENDM
 
+; IN  BX                connection handle
+; OUT AX                TCP connection handle
+GetSecureTcpHandle       MACRO
+        UserGate get_secure_tcp_handle_nr
+                        ENDM
+
 ; IN  EBX               connection handle
 CloseSecureConnection       MACRO
         UserGate close_secure_connection_nr

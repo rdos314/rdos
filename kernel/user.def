@@ -1013,5 +1013,6 @@ add_wait_for_secure_connection_nr = 830
 read_secure_connection_nr         = 832
 write_secure_connection_nr        = 833
 poll_secure_connection_nr         = 834
+get_secure_tcp_handle_nr          = 835
 
 usergate_entries                  = 860

@@ -1013,6 +1013,7 @@
 #define usergate_read_secure_connection 0x00000340
 #define usergate_write_secure_connection 0x00000341
 #define usergate_poll_secure_connection 0x00000342
+#define usergate_get_secure_tcp_handle 0x00000343
 
 
 
@@ -2032,6 +2033,7 @@
 #define CallGate_read_secure_connection 0x55 0x67 0x9a 64 3 0 0 3 0 0x5d
 #define CallGate_write_secure_connection 0x55 0x67 0x9a 65 3 0 0 3 0 0x5d
 #define CallGate_poll_secure_connection 0x55 0x67 0x9a 66 3 0 0 3 0 0x5d
+#define CallGate_get_secure_tcp_handle 0x55 0x67 0x9a 67 3 0 0 3 0 0x5d
 
 #else
 
@@ -3049,5 +3051,6 @@
 #define CallGate_read_secure_connection 0x3e 0x67 0x9a 64 3 0 0 3 0
 #define CallGate_write_secure_connection 0x3e 0x67 0x9a 65 3 0 0 3 0
 #define CallGate_poll_secure_connection 0x3e 0x67 0x9a 66 3 0 0 3 0
+#define CallGate_get_secure_tcp_handle 0x3e 0x67 0x9a 67 3 0 0 3 0
 
 #endif
