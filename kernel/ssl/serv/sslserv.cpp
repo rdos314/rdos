@@ -5,6 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "sslint.h"
+
 /*##########################################################################
 #
 #   Name       : main
@@ -18,4 +20,16 @@
 ##########################################################################*/
 int main()
 {
+    TSslServer *Server;
+
+    bool init = false;
+
+    while (!init)
+        RdosWaitMilli(50);
+        
+    Server = new TSslServer;
+
+    for (;;)
+        Server->WaitForMsg();
+
 }
