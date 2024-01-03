@@ -42,6 +42,9 @@ TestServ  MACRO
     ServGate test_serv_nr
                     ENDM
 
+;;;;;;;;; VFS ;;;;;;;;;;;;;;;;;;
+
+
 ; OUT EBX              VFS handle
 GetVfsHandle  MACRO
     ServGate get_vfs_handle_nr
@@ -352,4 +355,12 @@ ServFreeVfsFileReq  MACRO
 ; IN  EBX              Kernel handle
 ReplyVfsPost  MACRO
     ServGate reply_vfs_post_nr
+                    ENDM
+
+;;;;;;;;; SSL ;;;;;;;;;;;;;;;;;;
+
+; IN  EBX              VFS handle
+; OUT EDX              Cmd
+WaitForSslCmd  MACRO
+    ServGate wait_for_ssl_cmd_nr
                     ENDM

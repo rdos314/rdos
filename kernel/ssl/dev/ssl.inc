@@ -25,6 +25,39 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+MAX_SSL_REQ_COUNT  = 16
+
+
+ssl_cmd  STRUC
+
+ssl_req_section          section_typ <>
+ssl_cmd_thread           DW ?
+ssl_cmd_curr             DD ?
+
+ssl_cmd_unused_mask      DD ?
+ssl_cmd_free_mask        DD ?
+ssl_cmd_arr              DD 4 * 32 DUP(?)
+ssl_cmd_ring             DB 34 DUP(?)
+ssl_cmd_head             DB ?
+ssl_cmd_tail             DB ?
+
+ssl_req_arr              DW MAX_SSL_REQ_COUNT DUP(?)
+
+ssl_cmd  ENDS
+
+
+; should be 16 bytes!
+
+ssl_server_msg  STRUC
+
+ssls_phys                  DD ?,?
+ssls_server_linear         DD ?
+ssls_sel                   DW ?
+ssls_thread                DW ?
+
+ssl_server_msg  ENDS
+
+
 ssl_connection	STRUC
 
 sc_section		section_typ <>

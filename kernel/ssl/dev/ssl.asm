@@ -88,6 +88,8 @@ ssl_wait_header ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+
+    extern init_server:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1188,6 +1190,8 @@ delete_secure_connection    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init    Proc far
+    call init_server
+;
     mov ax,cs
     mov ds,ax
     mov es,ax
