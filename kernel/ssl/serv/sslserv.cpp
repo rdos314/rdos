@@ -5,7 +5,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "sslint.h"
+extern "C" {
+
+extern void HandleSsl();
+
+}
 
 /*##########################################################################
 #
@@ -20,11 +24,5 @@
 ##########################################################################*/
 int main()
 {
-    TSslServer *Server;
-        
-    Server = new TSslServer;
-
-    for (;;)
-        Server->WaitForMsg();
-
+    HandleSsl();
 }

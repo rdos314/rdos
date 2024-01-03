@@ -62,18 +62,21 @@
 SSL_CONF_CTX *ClientConf;
 SSL_CTX *ClientSessionArr[MAX_SESSION_COUNT];
 
+extern void WaitForMsg();
+#pragma aux WaitForMsg
+
 /*##########################################################################
 #
-#   Name       : InitSsl
+#   Name       : HandleSsl
 #
-#   Purpose....: Init SSL
+#   Purpose....: Handle SSL
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void InitSsl()
+void HandleSsl()
 {
     int i;
 
@@ -82,6 +85,8 @@ void InitSsl()
 
     for (i = 0; i < MAX_SESSION_COUNT; i++)
         ClientSessionArr[i] = 0;
+
+    WaitForMsg();
 }
 
 /*##########################################################################
