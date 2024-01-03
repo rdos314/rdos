@@ -36,9 +36,6 @@ public:
 
     bool WaitForMsg();
 
-    int OpenSession();
-    void CloseSession(int handle);
-
 protected:
 };
 
