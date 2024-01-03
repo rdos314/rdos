@@ -31,11 +31,27 @@
 #include "sslint.h"
 
 static int handle = 0;
+static TSslServer *Server = 0;
 
 extern "C" {
 
 extern int WaitForMsg(int handle);
 #pragma aux WaitForMsg parm routine [ebx] value [eax]
+
+int OpenSession()
+{
+    if (Server)
+        return Server->OpenSession();
+    else
+        return 0;
+}
+
+void CloseSession(int handle)
+{
+    if (Server)
+        Server->CloseSession(handle);
+}
+
 
 }
 
@@ -52,6 +68,7 @@ extern int WaitForMsg(int handle);
 ##########################################################################*/
 TSslServer::TSslServer()
 {
+    Server = this;
 }
 
 /*##########################################################################
@@ -83,4 +100,35 @@ TSslServer::~TSslServer()
 bool TSslServer::WaitForMsg()
 {
     return ::WaitForMsg(handle);
+}
+
+/*##########################################################################
+#
+#   Name       : TSslServer::OpenSession
+#
+#   Purpose....: Open session
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSslServer::OpenSession()
+{
+    return -1;
+}
+
+/*##########################################################################
+#
+#   Name       : TSslServer::CloseSession
+#
+#   Purpose....: Close session
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSslServer::CloseSession(int handle)
+{
 }

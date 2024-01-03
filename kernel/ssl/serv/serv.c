@@ -25,6 +25,9 @@
 #
 ########################################################################*/
 
+int OpenSession();
+void CloseSession(int handle);
+
 /*##########################################################################
 #
 #   Name       : LowOpenSession
@@ -33,7 +36,7 @@
 #pragma aux LowOpenSession "*" parm routine value [ebx]
 int LowOpenSession()
 {
-    return -1;
+    return OpenSession();
 }
 
 /*##########################################################################
@@ -44,4 +47,5 @@ int LowOpenSession()
 #pragma aux LowCloseSession "*" parm routine [ebx] 
 void LowCloseSession(int handle)
 {
+    CloseSession(handle);
 }
