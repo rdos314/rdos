@@ -35,6 +35,7 @@ INCLUDE ..\os.inc
 include ..\handle.inc
 include ..\wait.inc
 include dev\ssl.inc
+include dev\devmsg.inc
 
 IFDEF __WASM__
     .686p
@@ -90,6 +91,8 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern init_server:near
+    extern AllocateMsg:near
+    extern RunMsg:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -105,19 +108,19 @@ create_secure_session_name    DB 'Create Secure Session',0
 
 create_secure_session     Proc far
     push ds
+    push es
     push eax
     push ecx
     push edx
     push esi
     push edi
 ;
-;    mov eax,ssl_data_sel
-;    mov ds,eax
-;    call CreateClientSession
+    call AllocateMsg
+    jc cssDone
 ;
-    or dx,dx
-    stc
-    jz cssDone
+    mov eax,SSL_OPEN_SESSION
+    call RunMsg
+    jc cssDone
 ;
     mov ax,SSL_SESS_HANDLE
     mov cx,SIZE ssl_session_handle_seg
@@ -134,6 +137,7 @@ cssDone:
     pop edx
     pop ecx
     pop eax
+    pop es
     pop ds
     ret
 create_secure_session     Endp

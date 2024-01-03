@@ -45,6 +45,7 @@ include ssl.inc
 data    SEGMENT byte public 'DATA'
 
 ssl_serv_handle    DW ?
+ssl_msg_sel        DW ?
 
 data    ENDS
 
@@ -53,7 +54,6 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -67,13 +67,10 @@ code    SEGMENT byte public 'CODE'
 lpname DB 'sslserv', 0
 lpcmd  DB 0
 
-    public LoadSslServer
-
 LoadSslServer  Proc near
     push ds
     push es
-    push fs
-    push eax
+    pushad
 ;
     mov eax,cs
     mov ds,eax
@@ -88,12 +85,72 @@ LoadSslServer  Proc near
     mov ds,eax
     mov ds:ssl_serv_handle,bx
 ;
-    pop eax
-    pop fs
+    popad
     pop es
     pop ds
     ret
 LoadSslServer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           CreateMsgSel
+;
+;       DESCRIPTION:    Create msg sel
+;
+;       RETURNS:        AX     MSG sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateMsgSel  Proc near
+    push es
+    push ecx
+    push edi
+;
+    mov eax,SIZE ssl_cmd
+    AllocateSmallGlobalMem
+    mov ecx,eax
+    xor edi,edi
+    xor al,al
+    rep stos byte ptr es:[edi]
+;
+    mov eax,es
+;
+    pop edi
+    pop ecx
+    pop es
+    ret
+CreateMsgSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetMsgSel
+;
+;       DESCRIPTION:    Get msg sel
+;
+;       RETURNS:        DS     MSG sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMsgSel  Proc near
+    push eax
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov ax,ds:ssl_msg_sel
+    or ax,ax
+    jnz gmsOk
+;
+    call CreateMsgSel
+    call LoadSslServer
+
+gmsOk:
+    mov ds,eax
+;
+    pop eax
+    ret
+GetMsgSel Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -119,12 +176,7 @@ wait_for_ssl_cmd   Proc far
     push esi
     push edi
 ;
-    stc
-;    call HandleToPartEs
-    jc wfcDone
-;
-    mov ax,es
-    mov ds,ax
+    call GetMsgSel
 ;
     GetThread
     mov ds:ssl_cmd_thread,ax
@@ -289,9 +341,8 @@ GetMsgEntry  Endp
 ;
 ;       DESCRIPTION:    Allocate msg
 ;
-;       PARAMETERS:     DS      Msg sel
-;
-;       RETURNS:        EBX     Msg entry
+;       RETURNS:        DS      Msg sel
+;                       EBX     Msg entry
 ;                       ES      Msg buffer
 ;                       EDI     FS msg data
 ;
@@ -302,6 +353,7 @@ GetMsgEntry  Endp
 AllocateMsg  Proc near
     push ebx
 ;
+    call GetMsgSel
     call GetMsgEntry
     jnc amSave
 ;
@@ -456,6 +508,7 @@ init_server    Proc near
     mov eax,SEG data
     mov es,eax
     mov es:ssl_serv_handle,0
+    mov es:ssl_msg_sel,0
 ;
     mov eax,cs
     mov ds,eax
