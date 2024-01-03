@@ -66,10 +66,10 @@ _TEXT   segment use32 word public 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extern LowOpenSession:near
+    extern OpenSession:near
 
 LocalOpenSession Proc near
-    call LowOpenSession
+    call OpenSession
     mov [edi].fc_ebx,ebx
 ;
     mov ebx,[edi].fc_handle
@@ -88,10 +88,10 @@ LocalOpenSession Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extern LowCloseSession:near
+    extern CloseSession:near
 
 LocalCloseSession Proc near
-    call LowCloseSession
+    call CloseSession
 ;
     mov ebx,[edi].fc_handle
     ReplySslCmd

@@ -100,6 +100,7 @@ void HandleSsl()
 #   Returns....: *
 #
 ##########################################################################*/
+#pragma aux OpenSession "*" parm routine value [ebx]
 int OpenSession()
 {
     void *p;
@@ -152,6 +153,7 @@ int OpenSession()
 #   Returns....: *
 #
 ##########################################################################*/
+#pragma aux CloseSession "*" parm routine [ebx] 
 void CloseSession(int index)
 {
     SSL_CTX *ctx = 0;
