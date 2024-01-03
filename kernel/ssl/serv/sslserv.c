@@ -5,11 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
-extern "C" {
-
 extern void HandleSsl();
-
-}
 
 /*##########################################################################
 #
