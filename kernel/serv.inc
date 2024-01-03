@@ -359,8 +359,13 @@ ReplyVfsPost  MACRO
 
 ;;;;;;;;; SSL ;;;;;;;;;;;;;;;;;;
 
-; IN  EBX              VFS handle
+; IN  EBX              SSL handle
 ; OUT EDX              Cmd
 WaitForSslCmd  MACRO
     ServGate wait_for_ssl_cmd_nr
+                    ENDM
+
+; IN  EBX              SSL handle
+ReplySslCmd  MACRO    
+    ServGate reply_ssl_cmd_nr
                     ENDM

@@ -522,6 +522,57 @@ rmDone:
 RunMsg  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReplySslCmd
+;
+;       DESCRIPTION:    Reply on SSL run cmd
+;
+;       PARAMETERS:     EBX        SSL handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reply_ssl_cmd_name DB 'Reply SSL Cmd', 0
+
+reply_ssl_cmd   Proc far
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    mov es:[edi].reg_op,REPLY_DEFAULT
+;
+    call GetMsgSel
+    mov esi,ds:ssl_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET ssl_cmd_arr
+    xor bx,bx
+    xchg bx,ds:[esi].ssls_thread
+    Signal
+;
+    mov edx,ds:[esi].ssls_server_linear
+    mov eax,ds:[esi].ssls_phys
+    mov ebx,ds:[esi].ssls_phys+4
+    or ax,863h
+    mov cx,system_data_sel
+    mov es,cx
+    add edx,es:flat_base
+    SetPageEntry
+
+rfcDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+reply_ssl_cmd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -545,6 +596,12 @@ init_server    Proc near
     mov edi,OFFSET wait_for_ssl_cmd_name
     xor cl,cl
     mov ax,wait_for_ssl_cmd_nr
+    RegisterServGate
+;
+    mov esi,OFFSET reply_ssl_cmd
+    mov edi,OFFSET reply_ssl_cmd_name
+    xor cl,cl
+    mov ax,reply_ssl_cmd_nr
     RegisterServGate
     ret
 init_server    Endp

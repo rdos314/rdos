@@ -54,6 +54,50 @@ _TEXT   segment use32 word public 'CODE'
 
     assume  cs:_TEXT
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LocalOpenSession
+;
+;       DESCRIPTION:    open session
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowOpenSession:near
+
+LocalOpenSession Proc near
+    call LowOpenSession
+    mov [edi].fc_ebx,ebx
+;
+    mov ebx,[edi].fc_handle
+    ReplySslCmd
+    ret
+LocalOpenSession Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LocalCloseSession
+;
+;       DESCRIPTION:    close session
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowCloseSession:near
+
+LocalCloseSession Proc near
+    call LowCloseSession
+;
+    mov ebx,[edi].fc_handle
+    ReplySslCmd
+    ret
+LocalCloseSession Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -73,7 +117,8 @@ Unused   Proc near
 Unused   Endp
 
 msgtab:
-m00 DD OFFSET Unused
+m00 DD OFFSET LocalOpenSession
+m01 DD OFFSET LocalCloseSession
 
 WaitForMsg_    Proc near
     push ebx

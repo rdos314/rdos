@@ -54,5 +54,6 @@ serv_file_write_req_nr     = 52
 serv_update_file_req_nr    = 53
 
 wait_for_ssl_cmd_nr        = 54
+reply_ssl_cmd_nr           = 55
 
 serv_gate_entries          = 80
