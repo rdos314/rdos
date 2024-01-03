@@ -1224,12 +1224,6 @@ init    Proc far
     mov ax,close_secure_connection_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET handle_secure_connection
-    mov edi,OFFSET handle_secure_connection_name
-    xor dx,dx
-    mov ax,handle_secure_connection_nr
-    RegisterBimodalUserGate
-;
     mov esi,OFFSET wait_for_secure_connection
     mov edi,OFFSET wait_for_secure_connection_name
     xor dx,dx
