@@ -21,11 +21,6 @@
 int main()
 {
     TSslServer *Server;
-
-    bool init = false;
-
-    while (!init)
-        RdosWaitMilli(50);
         
     Server = new TSslServer;
 

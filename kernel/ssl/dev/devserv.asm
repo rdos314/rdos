@@ -44,7 +44,6 @@ include ssl.inc
 
 data    SEGMENT byte public 'DATA'
 
-ssl_serv_handle    DW ?
 ssl_msg_sel        DW ?
 
 data    ENDS
@@ -58,14 +57,42 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           SslServer
+;
+;       DESCRIPTION:    SSL server
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lpname DB 'sslserv', 0
+lpcmd  DB 0
+
+SslServer:
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET lpcmd
+    mov edi,OFFSET lpname
+    mov ax,4
+    xor bx,bx
+    LoadServer
+
+ssLoop:
+    mov ax,250
+    WaitMilliSec
+    jmp ssLoop
+;
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           LoadSslServer
 ;
 ;       DESCRIPTION:    Load SSL server
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lpname DB 'sslserv', 0
-lpcmd  DB 0
+    public LoadSslServer
 
 LoadSslServer  Proc near
     push ds
@@ -75,15 +102,10 @@ LoadSslServer  Proc near
     mov eax,cs
     mov ds,eax
     mov es,eax
-    mov esi,OFFSET lpcmd
+    mov esi,OFFSET SslServer
     mov edi,OFFSET lpname
-    mov ax,4
-    xor bx,bx
-    LoadServer
-;
-    mov eax,SEG data
-    mov ds,eax
-    mov ds:ssl_serv_handle,bx
+    mov al,2
+    CreateServerProcess
 ;
     popad
     pop es
@@ -113,6 +135,8 @@ CreateMsgSel  Proc near
     xor edi,edi
     xor al,al
     rep stos byte ptr es:[edi]
+    mov es:ssl_cmd_unused_mask,-1
+    InitSection es:ssl_req_section
 ;
     mov eax,es
 ;
@@ -133,6 +157,8 @@ CreateMsgSel  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public GetMsgSel
+
 GetMsgSel  Proc near
     push eax
 ;
@@ -143,6 +169,8 @@ GetMsgSel  Proc near
     jnz gmsOk
 ;
     call CreateMsgSel
+    mov ds:ssl_msg_sel,ax
+;
     call LoadSslServer
 
 gmsOk:
@@ -507,7 +535,6 @@ RunMsg  Endp
 init_server    Proc near
     mov eax,SEG data
     mov es,eax
-    mov es:ssl_serv_handle,0
     mov es:ssl_msg_sel,0
 ;
     mov eax,cs

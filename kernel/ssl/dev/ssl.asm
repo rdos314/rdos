@@ -93,6 +93,7 @@ code    SEGMENT byte public 'CODE'
     extern init_server:near
     extern AllocateMsg:near
     extern RunMsg:near
+    extern GetMsgSel:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1184,6 +1185,59 @@ delete_secure_connection    Proc far
     ret
 delete_secure_connection    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           init_ssl_thread
+;
+;           DESCRIPTION:    init ssl thread
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_ssl_name      DB 'Init SSL',0
+
+init_ssl_thread:
+    call GetMsgSel
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_ssl
+;
+;           DESCRIPTION:    init ssl module
+;
+;       PARAMETERS:     
+;
+;           RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+init_ssl      Proc far
+    push ds
+    push es
+    pushad
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov edi,OFFSET init_ssl_name
+    mov esi,OFFSET init_ssl_thread
+    mov ax,4
+    mov cx,stack0_size
+    CreateThread
+;       
+    popad
+    pop es
+    pop ds
+    ret
+init_ssl      Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1199,6 +1253,9 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET init_ssl
+    HookInitTasking
 ;
     mov edi,OFFSET delete_secure_session
     mov ax,SSL_SESS_HANDLE
