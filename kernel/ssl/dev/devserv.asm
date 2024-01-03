@@ -46,6 +46,22 @@ REPLY_DEFAULT      = 0
 REPLY_BLOCK        = 1
 REPLY_DATA         = 2
 
+fc_cmd      STRUC
+
+fc_op              DD ?
+fc_handle          DD ?
+fc_buf             DD ?,?
+fc_size            DD ?
+fc_eflags          DD ?
+fc_eax             DD ?
+fc_ebx             DD ?
+fc_ecx             DD ?
+fc_edx             DD ?
+fc_esi             DD ?
+fc_edi             DD ?
+
+fc_cmd      ENDS
+
 data    SEGMENT byte public 'DATA'
 
 ssl_serv_handle    DW ?
@@ -192,6 +208,256 @@ wfcDone:
     pop ds
     ret
 wait_for_ssl_cmd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetMsgEntry
+;
+;       DESCRIPTION:    Get fs msg entry
+;
+;       PARAMETERS:     DS      Msg sel
+;
+;       RETURNS:        EBX     FS entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMsgEntry  Proc near
+    push ecx
+
+gmeRetry:
+    mov ebx,ds:ssl_cmd_free_mask
+    or ebx,ebx
+    jz gmeTryUnused
+;
+    bsf ecx,ebx
+    lock btc ds:ssl_cmd_free_mask,ecx
+    jc gmeOk
+    jmp gmeRetry
+
+gmeTryUnused:
+    mov ebx,ds:ssl_cmd_unused_mask
+    or ebx,ebx
+    jz gmeBlock
+;
+    bsf ecx,ebx
+    lock btc ds:ssl_cmd_unused_mask,ecx
+    jc gmeAlloc
+    jmp gmeRetry
+
+gmeBlock:
+    int 3
+    jmp gmeRetry
+
+gmeAlloc:
+    mov ebx,ecx
+    shl ebx,4
+    add ebx,OFFSET ssl_cmd_arr
+;
+    push eax
+    push ebx
+    push edx
+    push edi
+;
+    mov edi,ebx
+;
+    mov eax,1000h
+    AllocateBigLinear
+;
+    AllocatePhysical64
+    mov ds:[edi].ssls_phys,eax
+    mov ds:[edi].ssls_phys+4,ebx
+;
+    or al,63h
+    SetPageEntry
+;    
+    mov ecx,1000h
+    AllocateGdt
+    mov ds:[edi].ssls_sel,bx
+    CreateDataSelector32
+;
+    mov ds:[edi].ssls_server_linear,0
+    mov ds:[edi].ssls_thread,0
+;
+    pop edi
+    pop edx
+    pop ebx
+    pop eax
+;
+    clc
+    jmp gmeDone
+
+gmeFailed:
+    stc
+    jmp gmeDone
+
+gmeOk:
+    mov ebx,ecx
+    shl ebx,4
+    add ebx,OFFSET ssl_cmd_arr
+    clc
+
+gmeDone:
+    pop ecx
+    ret
+GetMsgEntry  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           AllocateMsg
+;
+;       DESCRIPTION:    Allocate fs msg
+;
+;       PARAMETERS:     DS      Msg sel
+;
+;       RETURNS:        EBX     Msg entry
+;                       ES      Msg buffer
+;                       EDI     FS msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateMsg  Proc near
+    push ebx
+;
+    call GetMsgEntry
+    jnc amSave
+;
+    pop ebx
+    xor ebx,ebx
+    mov es,ebx
+    stc
+    jmp amDone
+
+amSave:
+    mov es,ds:[ebx].ssls_sel
+    mov es:fc_size,0
+    pop es:fc_ebx
+;
+    stc
+    pushfd
+    pop es:fc_eflags
+;
+    mov es:fc_eax,eax
+    mov es:fc_ecx,ecx
+    mov es:fc_edx,edx
+    mov es:fc_esi,esi
+    mov es:fc_edi,edi
+;
+    mov edi,SIZE fc_cmd
+    clc
+
+amDone:
+    ret
+AllocateMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           no_reply
+;
+;       DESCRIPTION:    No reply processing
+;
+;       PARAMETERS:     ES      Msg buf
+;
+;       RETURNS:        EBP     Reply data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+no_reply   Proc near
+    xor ebp,ebp
+    clc
+    ret
+no_reply   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           RunMsg
+;
+;       DESCRIPTION:    Run ssl msg
+;
+;       PARAMETERS:     DS      Msg sel
+;                       ES      Msg buf
+;                       EAX     Op
+;                       EBX     Msg entry
+;
+;       RETURNS:        EBP     Reply data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public RunMsg
+
+reply_tab:
+r00 DD OFFSET no_reply
+
+RunMsg  Proc near
+    mov esi,ebx
+    mov es:fc_op,eax
+;
+    GetThread
+    mov ds:[esi].ssls_thread,ax
+;
+    sub ebx,OFFSET ssl_cmd_arr
+    shr ebx,4
+    mov al,bl
+    inc al
+;
+    movzx ebx,ds:ssl_cmd_tail
+    mov ds:[ebx].ssl_cmd_ring,al
+    inc bl
+    cmp bl,34
+    jb rmSaveTail
+;
+    xor bl,bl
+
+rmSaveTail:
+    mov ds:ssl_cmd_tail,bl
+;
+    mov bx,ds:ssl_cmd_thread
+    Signal
+
+rmWait:
+    WaitForSignal
+;
+    mov bx,ds:[esi].ssls_thread
+    or bx,bx
+    jnz rmWait
+;
+    mov ebp,es:fc_eax
+    mov ebx,es:fc_ebx
+    mov ecx,es:fc_ecx
+    mov edx,es:fc_edx
+    mov esi,es:fc_esi
+    mov edi,es:fc_edi
+;
+    dec al
+    movzx eax,al
+    push es:fc_eflags
+    push ebp
+    push eax
+;
+    xor ebp,ebp
+    push es:fc_eflags
+    popfd
+    jc rmFree
+;
+    push ebx
+    mov ebx,es:fc_op
+    shl ebx,2
+    call dword ptr cs:[ebx].reply_tab
+    pop ebx
+
+rmFree:
+    pop eax
+    lock bts ds:ssl_cmd_free_mask,eax
+;
+    pop eax
+    popfd
+
+rmDone:
+    ret
+RunMsg  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
