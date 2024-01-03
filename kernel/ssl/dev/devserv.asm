@@ -42,26 +42,6 @@ include ssl.inc
 
     .386p
 
-REPLY_DEFAULT      = 0
-REPLY_BLOCK        = 1
-REPLY_DATA         = 2
-
-fc_cmd      STRUC
-
-fc_op              DD ?
-fc_handle          DD ?
-fc_buf             DD ?,?
-fc_size            DD ?
-fc_eflags          DD ?
-fc_eax             DD ?
-fc_ebx             DD ?
-fc_ecx             DD ?
-fc_edx             DD ?
-fc_esi             DD ?
-fc_edi             DD ?
-
-fc_cmd      ENDS
-
 data    SEGMENT byte public 'DATA'
 
 ssl_serv_handle    DW ?
@@ -307,7 +287,7 @@ GetMsgEntry  Endp
 ;
 ;       NAME:           AllocateMsg
 ;
-;       DESCRIPTION:    Allocate fs msg
+;       DESCRIPTION:    Allocate msg
 ;
 ;       PARAMETERS:     DS      Msg sel
 ;
@@ -316,6 +296,8 @@ GetMsgEntry  Endp
 ;                       EDI     FS msg data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateMsg
 
 AllocateMsg  Proc near
     push ebx
@@ -331,20 +313,20 @@ AllocateMsg  Proc near
 
 amSave:
     mov es,ds:[ebx].ssls_sel
-    mov es:fc_size,0
-    pop es:fc_ebx
+    mov es:reg_size,0
+    pop es:reg_ebx
 ;
     stc
     pushfd
-    pop es:fc_eflags
+    pop es:reg_eflags
 ;
-    mov es:fc_eax,eax
-    mov es:fc_ecx,ecx
-    mov es:fc_edx,edx
-    mov es:fc_esi,esi
-    mov es:fc_edi,edi
+    mov es:reg_eax,eax
+    mov es:reg_ecx,ecx
+    mov es:reg_edx,edx
+    mov es:reg_esi,esi
+    mov es:reg_edi,edi
 ;
-    mov edi,SIZE fc_cmd
+    mov edi,SIZE ssl_reg
     clc
 
 amDone:
@@ -393,7 +375,7 @@ r00 DD OFFSET no_reply
 
 RunMsg  Proc near
     mov esi,ebx
-    mov es:fc_op,eax
+    mov es:reg_op,eax
 ;
     GetThread
     mov ds:[esi].ssls_thread,ax
@@ -424,26 +406,26 @@ rmWait:
     or bx,bx
     jnz rmWait
 ;
-    mov ebp,es:fc_eax
-    mov ebx,es:fc_ebx
-    mov ecx,es:fc_ecx
-    mov edx,es:fc_edx
-    mov esi,es:fc_esi
-    mov edi,es:fc_edi
+    mov ebp,es:reg_eax
+    mov ebx,es:reg_ebx
+    mov ecx,es:reg_ecx
+    mov edx,es:reg_edx
+    mov esi,es:reg_esi
+    mov edi,es:reg_edi
 ;
     dec al
     movzx eax,al
-    push es:fc_eflags
+    push es:reg_eflags
     push ebp
     push eax
 ;
     xor ebp,ebp
-    push es:fc_eflags
+    push es:reg_eflags
     popfd
     jc rmFree
 ;
     push ebx
-    mov ebx,es:fc_op
+    mov ebx,es:reg_op
     shl ebx,2
     call dword ptr cs:[ebx].reply_tab
     pop ebx

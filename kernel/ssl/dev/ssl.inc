@@ -27,6 +27,9 @@
 
 MAX_SSL_REQ_COUNT  = 16
 
+REPLY_DEFAULT      = 0
+REPLY_BLOCK        = 1
+REPLY_DATA         = 2
 
 ssl_cmd  STRUC
 
@@ -56,6 +59,22 @@ ssls_sel                   DW ?
 ssls_thread                DW ?
 
 ssl_server_msg  ENDS
+
+ssl_reg      STRUC
+
+reg_op              DD ?
+reg_handle          DD ?
+reg_buf             DD ?,?
+reg_size            DD ?
+reg_eflags          DD ?
+reg_eax             DD ?
+reg_ebx             DD ?
+reg_ecx             DD ?
+reg_edx             DD ?
+reg_esi             DD ?
+reg_edi             DD ?
+
+ssl_reg      ENDS
 
 
 ssl_connection	STRUC
