@@ -76,11 +76,20 @@ code    SEGMENT byte public 'CODE'
 
 GetConnSel   Proc near
     push eax
+    push ebx
 ;
+    or ebx,ebx
+    jz gcsDone
+;
+    dec ebx
     mov eax,SEG data
     mov ds,eax
-    mov ds,ds:[2*ebx]
+    mov bx,ds:[2*ebx].conn_arr
+
+gcsDone:
+    mov ds,ebx
 ;
+    pop ebx
     pop eax
     ret
 GetConnSel  Endp
