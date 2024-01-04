@@ -54,7 +54,6 @@ _TEXT   segment use32 word public 'CODE'
 
     assume  cs:_TEXT
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -107,6 +106,55 @@ LocalCloseSession Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalOpenConnection
+;
+;       DESCRIPTION:    open connection
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern OpenConnection:near
+
+LocalOpenConnection Proc near
+    call OpenConnection
+    mov [edi].fc_ebx,ebx
+    or ebx,ebx
+    jz ocReply
+;
+    and [edi].fc_eflags,NOT 1
+
+ocReply:
+    mov ebx,[edi].fc_handle
+    ReplySslCmd
+    ret
+LocalOpenConnection Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LocalCloseConnection
+;
+;       DESCRIPTION:    close connection
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern CloseConnection:near
+
+LocalCloseConnection Proc near
+    call CloseConnection
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+    ReplySslCmd
+    ret
+LocalCloseConnection Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -125,6 +173,8 @@ Unused   Endp
 msgtab:
 m00 DD OFFSET LocalOpenSession
 m01 DD OFFSET LocalCloseSession
+m02 DD OFFSET LocalOpenConnection
+m03 DD OFFSET LocalCloseConnection
 
 WaitForMsg_    Proc near
     push ebx

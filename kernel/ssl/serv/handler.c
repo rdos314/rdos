@@ -62,32 +62,8 @@
 SSL_CONF_CTX *ClientConf;
 SSL_CTX *ClientSessionArr[MAX_SESSION_COUNT];
 
-extern void WaitForMsg();
-#pragma aux WaitForMsg
-
-/*##########################################################################
-#
-#   Name       : HandleSsl
-#
-#   Purpose....: Handle SSL
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void HandleSsl()
-{
-    int i;
-
-    ClientConf = SSL_CONF_CTX_new();
-    SSL_CONF_CTX_set_flags(ClientConf, SSL_CONF_FLAG_CLIENT | SSL_CONF_FLAG_CMDLINE);
-
-    for (i = 0; i < MAX_SESSION_COUNT; i++)
-        ClientSessionArr[i] = 0;
-
-    WaitForMsg();
-}
+extern int WaitForMsg();
+#pragma aux WaitForMsg value [eax]
 
 /*##########################################################################
 #
@@ -153,7 +129,7 @@ int OpenSession()
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux CloseSession "*" parm routine [ebx] 
+#pragma aux CloseSession "*" parm routine [ebx]
 void CloseSession(int index)
 {
     SSL_CTX *ctx = 0;
@@ -166,4 +142,63 @@ void CloseSession(int index)
 
     if (ctx)
         SSL_CTX_free(ctx);
+}
+
+/*##########################################################################
+#
+#   Name       : OpenConnection
+#
+#   Purpose....: Open client connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux OpenConnection "*" parm routine [eax] [ebx] value [ebx]
+int OpenConnection(int session, int socket)
+{
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : CloseConnection
+#
+#   Purpose....: Close client connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux CloseConnection "*" parm routine [ebx]
+void CloseConnection(int index)
+{
+}
+
+
+/*##########################################################################
+#
+#   Name       : main
+#
+#   Purpose....:
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int main()
+{
+    int i;
+
+    ClientConf = SSL_CONF_CTX_new();
+    SSL_CONF_CTX_set_flags(ClientConf, SSL_CONF_FLAG_CLIENT | SSL_CONF_FLAG_CMDLINE);
+
+    for (i = 0; i < MAX_SESSION_COUNT; i++)
+        ClientSessionArr[i] = 0;
+
+    while (WaitForMsg())
+        ;
 }
