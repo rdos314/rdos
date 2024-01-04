@@ -58,6 +58,8 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
     
     extern CreateConnection:near
+    extern CopyToBuffer:near
+    extern CopyFromBuffer:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -79,12 +81,14 @@ GetConnSel   Proc near
     push ebx
 ;
     or ebx,ebx
+    stc
     jz gcsDone
 ;
     dec ebx
     mov eax,SEG data
     mov ds,eax
     mov bx,ds:[2*ebx].conn_arr
+    clc
 
 gcsDone:
     mov ds,ebx
@@ -645,6 +649,288 @@ cscDone:
 create_ssl_conn  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           InitStart
+;
+;       DESCRIPTION:    Start initialization process
+;
+;       PARAMETERS:     EBX            Connection Index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_start_name DB 'SSL Init Start', 0
+
+init_start   PROC far
+    push ds
+;
+    call GetConnSel
+    jc isDone
+;
+    mov ds:sc_active,0
+
+isDone:
+    pop ds
+    ret
+init_start   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           InitDone
+;
+;       DESCRIPTION:    Initialization process done
+;
+;       PARAMETERS:     EBX            Connection Index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_done_name DB 'SSL Init Done', 0
+
+init_done   PROC far
+    push ds
+    push ebx
+    push ds
+;
+    call GetConnSel
+    jc idDone
+;
+    mov ds:sc_active,1
+    mov bx,ds:sc_wait_conn
+    or bx,bx
+    jz idDone
+;
+    Signal
+
+idDone:
+    pop ebx
+    pop ds
+    ret
+init_done   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetReceiveSpace
+;
+;       DESCRIPTION:    Get space in receive buffer
+;
+;       PARAMETERS:     EBX            Connection index
+;
+;       RETURNS:        ECX            Space in receive buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_receive_space_name DB 'SSL Get Receive Space', 0
+
+get_receive_space   PROC far
+    push ds
+    push ebx
+;
+    xor ecx,ecx
+    call GetConnSel
+    jc grsDone
+;
+    mov cx,ds:sc_buffer_size
+    sub cx,ds:sc_receive_count
+    movzx ecx,cx
+
+grsDone:
+    pop ebx
+    pop ds
+    ret
+get_receive_space   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddReceiveBuf
+;
+;       DESCRIPTION:    Add data to receive buffer
+;
+;       PARAMETERS:     EBX            Connection index
+;                       ES:EDI         Buffer
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_receive_buf_name DB 'SSL Add Receive Buf', 0
+
+add_receive_buf   PROC far
+    push ds
+    push fs
+    push ebx
+;
+    call GetConnSel
+    jc arbDone
+;
+    EnterSection ds:sc_section
+    mov fs,ds:sc_receive_buffer
+    add ds:sc_receive_count,cx
+    mov bx,ds:sc_receive_tail
+    call CopyToBuffer
+    mov ds:sc_receive_tail,bx
+    LeaveSection ds:sc_section
+;
+    mov bx,ds:sc_wait_rec
+    or bx,bx
+    jz arbDone
+;
+    push es
+    mov es,ebx
+    SignalWait
+    pop es
+
+arbDone:
+    pop ebx
+    pop fs
+    pop ds
+    ret
+add_receive_buf   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetSendCount
+;
+;       DESCRIPTION:    Get bytes in send buffer
+;
+;       PARAMETERS:     EBX            Connection index
+;
+;       RETURNS:        ECX            Bytes in send buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_send_count_name DB 'SSL Get Send Count', 0
+
+get_send_count   PROC far
+    push ds
+    push ebx
+;
+    call GetConnSel
+    jc gscDone
+;
+    movzx ecx,ds:sc_send_count
+
+gscDone:
+    pop ebx
+    pop ds
+    ret
+get_send_count   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetSendBuf
+;
+;       DESCRIPTION:    Get send buffer size
+;
+;       PARAMETERS:     EBX            Connection index
+;                       ES:EDI         Buffer
+;
+;       RETURNS:        ECX            Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_send_buf_name DB 'SSL Get Send Buf', 0
+
+get_send_buf   PROC far
+    push ds
+    push fs
+    push ecx
+    push ebx
+    push edi
+;
+    call GetConnSel
+    jc gsbDone
+;
+    movzx ecx,ds:sc_send_count
+    or ecx,ecx
+    jz gsbDone
+;
+    EnterSection ds:sc_section
+    mov fs,ds:sc_send_buffer
+    mov bx,ds:sc_send_head
+    call CopyFromBuffer
+    LeaveSection ds:sc_section
+
+gsbDone:
+    pop edi
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+get_send_buf   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ClearSendCount
+;
+;       DESCRIPTION:    Remove bytes in send buffer
+;
+;       PARAMETERS:     EBX            Connection index
+;                       ECX            Bytes to remove from send buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_send_count_name DB 'SSL Clear Send Count', 0
+
+clear_send_count   PROC far
+    push ds
+    push ebx
+;
+    call GetConnSel
+    jc clscDone
+;
+    EnterSection ds:sc_section
+    sub ds:sc_send_count,cx
+    mov bx,ds:sc_send_head
+    add bx,cx
+;
+    cmp bx,ds:sc_buffer_size
+    jb clscSave
+;
+    sub bx,ds:sc_buffer_size
+
+clscSave:
+    mov ds:sc_send_head,bx
+    LeaveSection ds:sc_section
+
+clscDone:
+    pop ebx
+    pop ds
+    ret
+clear_send_count   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WaitForChange
+;
+;       DESCRIPTION:    Wait for connection change
+;
+;       PARAMETERS:     EBX            Connection Index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_change_name DB 'SSL Wait For Change', 0
+
+wait_for_change   PROC far
+    push ds
+;
+    call GetConnSel
+    jc wafcDone
+;
+    WaitForSignal
+
+wafcDone:
+    pop ds
+    ret
+wait_for_change   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -684,6 +970,54 @@ init_server    Proc near
     mov edi,OFFSET create_ssl_conn_name
     xor cl,cl
     mov ax,create_ssl_conn_nr
+    RegisterServGate
+;
+    mov esi,OFFSET init_start
+    mov edi,OFFSET init_start_name
+    xor cl,cl
+    mov ax,ssl_init_start_nr
+    RegisterServGate
+;
+    mov esi,OFFSET init_done
+    mov edi,OFFSET init_done_name
+    xor cl,cl
+    mov ax,ssl_init_done_nr
+    RegisterServGate
+;
+    mov esi,OFFSET get_receive_space
+    mov edi,OFFSET get_receive_space_name
+    xor cl,cl
+    mov ax,ssl_get_receive_space_nr
+    RegisterServGate
+;
+    mov esi,OFFSET add_receive_buf
+    mov edi,OFFSET add_receive_buf_name
+    xor cl,cl
+    mov ax,ssl_add_receive_buf_nr
+    RegisterServGate
+;
+    mov esi,OFFSET get_send_count
+    mov edi,OFFSET get_send_count_name
+    xor cl,cl
+    mov ax,ssl_get_send_count_nr
+    RegisterServGate
+;
+    mov esi,OFFSET get_send_buf
+    mov edi,OFFSET get_send_buf_name
+    xor cl,cl
+    mov ax,ssl_get_send_buf_nr
+    RegisterServGate
+;
+    mov esi,OFFSET clear_send_count
+    mov edi,OFFSET clear_send_count_name
+    xor cl,cl
+    mov ax,ssl_clear_send_count_nr
+    RegisterServGate
+;
+    mov esi,OFFSET wait_for_change
+    mov edi,OFFSET wait_for_change_name
+    xor cl,cl
+    mov ax,ssl_wait_for_change_nr
     RegisterServGate
     ret
 init_server    Endp

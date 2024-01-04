@@ -312,6 +312,8 @@ FreeBuffer    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public CopyFromBuffer
+
 CopyFromBuffer    Proc near
     push ecx
 ;
@@ -375,6 +377,8 @@ CopyFromBuffer  Endp
 ;                       ESI     New source
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CopyToBuffer
 
 CopyToBuffer    Proc near
     push eax
