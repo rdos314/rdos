@@ -535,12 +535,9 @@ RunMsg  Endp
 reply_ssl_cmd_name DB 'Reply SSL Cmd', 0
 
 reply_ssl_cmd   Proc far
+    push ds
     push es
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
+    pushad
 ;
     mov es:[edi].reg_op,REPLY_DEFAULT
 ;
@@ -563,12 +560,9 @@ reply_ssl_cmd   Proc far
     SetPageEntry
 
 rfcDone:
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
+    popad
     pop es
+    pop ds
     ret
 reply_ssl_cmd  Endp
 
