@@ -690,7 +690,6 @@ init_done_name DB 'SSL Init Done', 0
 init_done   PROC far
     push ds
     push ebx
-    push ds
 ;
     call GetConnSel
     jc idDone
@@ -807,6 +806,7 @@ get_send_count   PROC far
     push ds
     push ebx
 ;
+    xor ecx,ecx
     call GetConnSel
     jc gscDone
 ;
@@ -837,10 +837,11 @@ get_send_buf_name DB 'SSL Get Send Buf', 0
 get_send_buf   PROC far
     push ds
     push fs
-    push ecx
+    push eax
     push ebx
     push edi
 ;
+    xor ecx,ecx
     call GetConnSel
     jc gsbDone
 ;

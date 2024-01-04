@@ -180,8 +180,8 @@ void CloseSession(int index)
 ##########################################################################*/
 static void ConnectionHandler(void *par)
 {
-    int index = CurrIndex;
-    SSL *con = ClientConnectionArr[index];
+    int index = CurrIndex + 1;
+    SSL *con = ClientConnectionArr[index - 1];
     int timeout = CurrTimeout;
     int size = CurrSize;
     int handle = SSL_get_handle(con);
