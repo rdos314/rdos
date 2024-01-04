@@ -60,4 +60,13 @@ create_ssl_conn_nr         = 56
 start_tcp_ssl_notify_nr    = 57
 stop_tcp_ssl_notify_nr     = 58
 
+ssl_init_start_nr          = 59
+ssl_init_done_nr           = 60
+ssl_get_receive_space_nr   = 61
+ssl_add_receive_buf_nr     = 62
+ssl_get_send_count_nr      = 63
+ssl_get_send_buf_nr        = 64
+ssl_clear_send_count_nr    = 65
+ssl_wait_for_change_nr     = 66
+
 serv_gate_entries          = 80

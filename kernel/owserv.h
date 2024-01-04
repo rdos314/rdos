@@ -284,3 +284,37 @@
 #pragma aux ServStopTcpSslNotify = \
     ServGate_stop_tcp_ssl_notify  \
     __parm [__ebx]
+
+#pragma aux ServSslInitStart = \
+    ServGate_ssl_init_start  \
+    __parm [__ebx]
+
+#pragma aux ServSslInitDone = \
+    ServGate_ssl_init_done  \
+    __parm [__ebx]
+
+#pragma aux ServSslGetReceiveSpace = \
+    ServGate_ssl_get_receive_space  \
+    __parm [__ebx] \
+    __value [__ecx]
+
+#pragma aux ServSslAddReceiveBuf = \
+    ServGate_ssl_add_receive_buf  \
+    __parm [__ebx] [__edi] [__ecx]
+
+#pragma aux ServSslGetSendCount = \
+    ServGate_ssl_get_send_count  \
+    __parm [__ebx] \
+    __value [__ecx]
+
+#pragma aux ServSslGetSendBuf = \
+    ServGate_ssl_get_send_buf  \
+    __parm [__ebx] [__edi] [__ecx]
+
+#pragma aux ServSslClearSendCount = \
+    ServGate_ssl_clear_send_count  \
+    __parm [__ebx] [__ecx]
+
+#pragma aux ServSslWaitForChange = \
+    ServGate_ssl_wait_for_change  \
+    __parm [__ebx]

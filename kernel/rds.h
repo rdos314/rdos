@@ -60,6 +60,15 @@
 #define serv_gate_start_tcp_ssl_notify 0x00000039
 #define serv_gate_stop_tcp_ssl_notify 0x0000003A
 
+#define serv_gate_ssl_init_start 0x0000003B
+#define serv_gate_ssl_init_done 0x0000003C
+#define serv_gate_ssl_get_receive_space 0x0000003D
+#define serv_gate_ssl_add_receive_buf 0x0000003E
+#define serv_gate_ssl_get_send_count 0x0000003F
+#define serv_gate_ssl_get_send_buf 0x00000040
+#define serv_gate_ssl_clear_send_count 0x00000041
+#define serv_gate_ssl_wait_for_change 0x00000042
+
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
 #define ServGate_get_vfs_handle 0x55 0x67 0x9a 2 0 0 0 4 0 0x5d
@@ -121,4 +130,13 @@
 
 #define ServGate_start_tcp_ssl_notify 0x55 0x67 0x9a 57 0 0 0 4 0 0x5d
 #define ServGate_stop_tcp_ssl_notify 0x55 0x67 0x9a 58 0 0 0 4 0 0x5d
+
+#define ServGate_ssl_init_start 0x55 0x67 0x9a 59 0 0 0 4 0 0x5d
+#define ServGate_ssl_init_done 0x55 0x67 0x9a 60 0 0 0 4 0 0x5d
+#define ServGate_ssl_get_receive_space 0x55 0x67 0x9a 61 0 0 0 4 0 0x5d
+#define ServGate_ssl_add_receive_buf 0x55 0x67 0x9a 62 0 0 0 4 0 0x5d
+#define ServGate_ssl_get_send_count 0x55 0x67 0x9a 63 0 0 0 4 0 0x5d
+#define ServGate_ssl_get_send_buf 0x55 0x67 0x9a 64 0 0 0 4 0 0x5d
+#define ServGate_ssl_clear_send_count 0x55 0x67 0x9a 65 0 0 0 4 0 0x5d
+#define ServGate_ssl_wait_for_change 0x55 0x67 0x9a 66 0 0 0 4 0 0x5d
 
