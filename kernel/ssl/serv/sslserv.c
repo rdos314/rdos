@@ -61,12 +61,32 @@
 #define MAX_SESSION_COUNT 16
 #define MAX_CONNECTION_COUNT 128
 
+static int CurrIndex;
+static int CurrTimeout;
+static int CurrTcpHandle;
+
 SSL_CONF_CTX *ClientConf;
 SSL_CTX *ClientSessionArr[MAX_SESSION_COUNT];
 SSL *ClientConnectionArr[MAX_CONNECTION_COUNT];
 
 extern int WaitForMsg();
 #pragma aux WaitForMsg value [eax]
+
+/*##########################################################################
+#
+#   Name       : CreateClientName
+#
+#   Purpose....: returns thread name based on IP&port
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CreateClientName(char *str, int Ip, int port)
+{
+    sprintf(str, "c%d.%d.%d.%d:%d", Ip & 0xff, (Ip >> 8) & 0xff, (Ip >> 16) & 0xff, (unsigned int)(Ip) >> 24, port);
+}
 
 /*##########################################################################
 #
@@ -149,6 +169,27 @@ void CloseSession(int index)
 
 /*##########################################################################
 #
+#   Name       : ConnectionHandler
+#
+#   Purpose....: Connection handler
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ConnectionHandler(void *par)
+{
+    int index = CurrIndex;
+    int sock = CurrTcpHandle;
+    int timeout = CurrTimeout;
+
+    for (;;)
+        RdosWaitMilli(25);
+}
+
+/*##########################################################################
+#
 #   Name       : OpenConnection
 #
 #   Purpose....: Open client connection
@@ -162,9 +203,12 @@ void CloseSession(int index)
 int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int BufferSize, int Timeout)
 {
     SSL_CTX *ctx = 0;
-    int handle = 0;
     int i;
-    int index = -1;
+    char str[80];
+
+    CurrIndex = -1;
+    CurrTcpHandle = 0;
+    CurrTimeout = Timeout;
 
     if (session > 0 && session <= MAX_SESSION_COUNT)
         ctx = ClientSessionArr[session - 1];
@@ -175,19 +219,25 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
         {
             if (ClientConnectionArr[i] == 0)
             {
-                index = i;
+                CurrIndex = i;
                 break;
             }
         }
     }
 
-    if (index >= 0)
-        handle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
+    if (CurrIndex >= 0)
+        CurrTcpHandle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
 
-    if (handle)
-        ServCreateSslConnection(handle, IP, LocalPort, RemotePort, BufferSize);
+    if (CurrTcpHandle)
+    {
+        ServCreateSslConnection(CurrIndex, IP, LocalPort, RemotePort, BufferSize);
+        CreateClientName(str, IP, RemotePort);
+        RdosCreateThread(ConnectionHandler, str, 0, 0x4000);
+    }
+    else
+        CurrIndex = -1;
 
-    return index + 1;
+    return CurrIndex + 1;
 }
 
 /*##########################################################################
