@@ -48,10 +48,6 @@ echo "Building USB Device"
 ide2make -p kernel/usbdev/usbdev 1>nul
 wmake -f kernel/usbdev/usbdev.mk -h -e 1>nul
 
-echo "Building SSL Device"
-ide2make -p kernel/ssl/ssl 1>nul
-wmake -f kernel/ssl/ssl.mk -h -e 1>nul
-
 echo "Building BIOS device"
 ide2make -p kernel/bios/bios 1>nul
 wmake -f kernel/bios/bios.mk -h -e 1>nul
@@ -75,6 +71,14 @@ wmake -f classlib/rdos/rdos.mk -h -e 1>nul
 echo "Building FS"
 ide2make -p kernel/fs/fs 1>nul
 wmake -f kernel/fs/fs.mk -h -e 1>nul
+
+echo "Building Open SSL Lib"
+ide2make -p classlib/ssl/openssl 1>nul
+wmake -f classlib/ssl/openssl.mk -h -e 1>nul
+
+echo "Building SSL Device"
+ide2make -p kernel/ssl/ssl 1>nul
+wmake -f kernel/ssl/ssl.mk -h -e 1>nul
 
 echo "Building Win32 classlib"
 ide2make -p classlib/win32/win32 1>nul
