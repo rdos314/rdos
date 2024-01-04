@@ -369,3 +369,12 @@ WaitForSslCmd  MACRO
 ReplySslCmd  MACRO    
     ServGate reply_ssl_cmd_nr
                     ENDM
+
+; IN  EBX              Socket handle
+; IN  EDX              IP
+; IN  SI               Local port
+; IN  DI               Remote port
+; IN  ECX              Buffer size
+CreateSslConnection  MACRO    
+    ServGate create_ssl_conn_nr
+                    ENDM

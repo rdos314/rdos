@@ -53,6 +53,10 @@
 #define serv_gate_serv_file_write_req 0x00000034
 #define serv_gate_serv_update_file_req 0x00000035
 
+#define serv_gate_wait_for_ssl_cmd 0x00000036
+#define serv_gate_reply_ssl_cmd 0x00000037
+#define serv_gate_create_ssl_conn 0x00000038
+
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
 #define ServGate_get_vfs_handle 0x55 0x67 0x9a 2 0 0 0 4 0 0x5d
@@ -107,4 +111,8 @@
 #define ServGate_is_vfs_busy 0x55 0x67 0x9a 51 0 0 0 4 0 0x5d
 #define ServGate_serv_file_write_req 0x55 0x67 0x9a 52 0 0 0 4 0 0x5d
 #define ServGate_serv_update_file_req 0x55 0x67 0x9a 53 0 0 0 4 0 0x5d
+
+#define ServGate_wait_for_ssl_cmd 0x55 0x67 0x9a 54 0 0 0 4 0 0x5d
+#define ServGate_reply_ssl_cmd 0x55 0x67 0x9a 55 0 0 0 4 0 0x5d
+#define ServGate_create_ssl_conn 0x55 0x67 0x9a 56 0 0 0 4 0 0x5d
 

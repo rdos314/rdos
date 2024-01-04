@@ -80,6 +80,8 @@ void RDOSAPI ServAddWaitForVfsReq(int waithandle, int handle, int id);
 
 void RDOSAPI ServNotifyVfsMsg(int Handle, const char *Msg);
 
+void RDOSAPI ServCreateSslConnection(int Handle, long IP, int LocalPort, int RemotePort, int BufferSize);
+
 #ifdef __cplusplus
 }
 #endif

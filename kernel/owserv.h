@@ -272,3 +272,7 @@
 #pragma aux ServNotifyVfsMsg = \
     ServGate_notify_vfs_msg  \
     __parm [__ebx] [__edx]
+
+#pragma aux ServCreateSslConnection = \
+    ServGate_create_ssl_conn  \
+    __parm [__ebx] [__edx] [__esi] [__edi] [__ecx]

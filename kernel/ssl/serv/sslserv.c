@@ -48,6 +48,7 @@
 #include <openssl/ct.h>
 
 #include "rdos.h"
+#include "serv.h"
 
 // #define _DEBUG 1
 
@@ -58,9 +59,11 @@
 
 #define BUFSIZZ 1024*8
 #define MAX_SESSION_COUNT 16
+#define MAX_CONNECTION_COUNT 128
 
 SSL_CONF_CTX *ClientConf;
 SSL_CTX *ClientSessionArr[MAX_SESSION_COUNT];
+SSL *ClientConnectionArr[MAX_CONNECTION_COUNT];
 
 extern int WaitForMsg();
 #pragma aux WaitForMsg value [eax]
@@ -88,7 +91,7 @@ int OpenSession()
     {
         if (ClientSessionArr[i] == 0)
         {
-            index = 0;
+            index = i;
             break;
         }
     }
@@ -156,9 +159,35 @@ void CloseSession(int index)
 #
 ##########################################################################*/
 #pragma aux OpenConnection "*" parm routine [ebx] [edx] [esi] [edi] [ecx] [eax] value [ebx]
-int OpenConnection(int session, long IP, int LocalPort, int RemPort, int BufferSize, int Timeout)
+int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int BufferSize, int Timeout)
 {
-    return 0;
+    SSL_CTX *ctx = 0;
+    int handle = 0;
+    int i;
+    int index = -1;
+
+    if (session > 0 && session <= MAX_SESSION_COUNT)
+        ctx = ClientSessionArr[session - 1];
+
+    if (ctx)
+    {
+        for (i = 0; i < MAX_CONNECTION_COUNT; i++)
+        {
+            if (ClientConnectionArr[i] == 0)
+            {
+                index = i;
+                break;
+            }
+        }
+    }
+
+    if (index >= 0)
+        handle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
+
+    if (handle)
+        ServCreateSslConnection(handle, IP, LocalPort, RemotePort, BufferSize);
+
+    return index + 1;
 }
 
 /*##########################################################################
@@ -198,6 +227,9 @@ int main()
 
     for (i = 0; i < MAX_SESSION_COUNT; i++)
         ClientSessionArr[i] = 0;
+
+    for (i = 0; i < MAX_CONNECTION_COUNT; i++)
+        ClientConnectionArr[i] = 0;
 
     while (WaitForMsg())
         ;
