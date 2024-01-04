@@ -155,8 +155,8 @@ void CloseSession(int index)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux OpenConnection "*" parm routine [eax] [ebx] value [ebx]
-int OpenConnection(int session, int socket)
+#pragma aux OpenConnection "*" parm routine [ebx] [edx] [esi] [edi] [ecx] [eax] value [ebx]
+int OpenConnection(int session, long IP, int LocalPort, int RemPort, int BufferSize, int Timeout)
 {
     return 0;
 }

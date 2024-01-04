@@ -117,7 +117,11 @@ LocalCloseSession Endp
     extern OpenConnection:near
 
 LocalOpenConnection Proc near
+    push edi
+    mov edi,[edi].fc_edi
     call OpenConnection
+    pop edi
+;
     mov [edi].fc_ebx,ebx
     or ebx,ebx
     jz ocReply

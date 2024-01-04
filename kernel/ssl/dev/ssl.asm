@@ -303,11 +303,11 @@ FreeBuffer    Endp
 ;       Purpose:        Copy from buffer
 ;
 ;       Parameters:     CX      Number of bytes
-;           		FS:BX   Buffer pointer
-;           		ES:EDI  Destination address
+;                       FS:BX   Buffer pointer
+;                       ES:EDI  Destination address
 ;
-;       Returns:    	BX      New buffer pointer
-;           		EDI     New destination
+;       Returns:        BX      New buffer pointer
+;                       EDI     New destination
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -367,11 +367,11 @@ CopyFromBuffer  Endp
 ;       Purpose:        Copy to buffer
 ;
 ;       Parameters:     CX      Number of bytes
-;           		FS:BX       Buffer pointer
-;           		ES:ESI      Source address
+;                       FS:BX       Buffer pointer
+;                       ES:ESI      Source address
 ;
-;       Returns:    	BX      New buffer pointer
-;           		ESI     New source
+;       Returns:        BX      New buffer pointer
+;                       ESI     New source
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -440,8 +440,10 @@ CopyToBuffer    Endp
 ;
 ;       Purpose:        Create a connection and link it
 ;
-;       Parameters:     BX          socket handle
-;			CX          buffer size
+;       Parameters:     ECX         buffer size
+;                       EDX         ip address
+;                       ESI         local port (0 for dynamic port)
+;                       EDI         remote port
 ;
 ;       Returns:        DS          connection selector
 ;
@@ -451,8 +453,7 @@ CreateConnection    Proc near
     push es
     push ax
     push ecx
-    push edx
-
+;
     dec ecx
     and cx,0F000h
     add ecx,1000h
@@ -461,7 +462,10 @@ CreateConnection    Proc near
     AllocateSmallGlobalMem
 ;
     mov es:sc_buffer_size,cx
-    mov es:sc_socket_handle,bx
+    mov es:sc_socket_handle,0
+    mov es:sc_rem_ip,edx
+    mov es:sc_rem_port,di
+    mov es:sc_my_port,si
 ;
     call CreateBuffer
     mov es:sc_receive_buffer,ax
@@ -485,7 +489,6 @@ CreateConnection    Proc near
     mov ds,ax
     InitSection ds:sc_section
 ;
-    pop edx
     pop ecx
     pop ax
     pop es
@@ -556,47 +559,25 @@ create_secure_connection     Proc far
     push eax
     push ecx
     push edx
+    push esi
     push edi
     push ebp
 ;
-    mov ebp,ebx
-;
-    OpenTcpConnection
-    jc crscDone
-;
-    mov eax,6000
-    WaitForTcpConnection
-    jnc crscOk
-
-crscFree:
-    CloseTcpConnection
-    stc
-    jmp crscDone
-
-crscOk:
-    call CreateConnection
-;
-    mov ebx,ebp
-    mov ebp,ds
+    push eax
     mov ax,SSL_SESS_HANDLE
     DerefHandle
-    jnc crscCreate
-
-crscFail:
-    mov ds,ebp
-    call DeleteConnection
-    jmp crscFree
-
-crscCreate:
-    mov eax,ds:[ebx].ss_id
-    mov ds,ebp
-    movzx ebx,ds:sc_socket_handle
+    pop eax
+    jc crscDone
+;
+    mov ebx,ds:[ebx].ss_id
+    movzx esi,si
+    movzx edi,di
     call AllocateMsg
-    jc crscFail
+    jc crscDone
 ;
     mov eax,SSL_OPEN_CONNECTION
     call RunMsg
-    jc crscFail
+    jc crscDone
 ;
     mov edx,ebx
     mov ax,SSL_CONN_HANDLE
@@ -611,6 +592,7 @@ crscCreate:
 crscDone:
     pop ebp
     pop edi
+    pop esi
     pop edx
     pop ecx
     pop eax

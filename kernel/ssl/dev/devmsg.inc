@@ -31,8 +31,12 @@ SSL_OPEN_SESSION               = 0
 ; IN  EBX       Session ID
 SSL_CLOSE_SESSION              = 1
 
-; IN  EAX       Session ID
-; IN  EBX       Socket handle
+; IN  EAX       Timeout in milliseconds for connection
+; IN  EBX       Session ID
+; IN  ECX       buffer size
+; IN  EDX       ip address
+; IN  ESI       local port (0 for dynamic port)
+; IN  EDI       remote port
 ; OUT EBX       Connection ID
 SSL_OPEN_CONNECTION            = 2
 

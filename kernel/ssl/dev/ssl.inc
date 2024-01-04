@@ -80,6 +80,9 @@ ssl_reg      ENDS
 ssl_connection	STRUC
 
 sc_section		section_typ <>
+sc_rem_ip               DD ?
+sc_rem_port             DW ?
+sc_my_port              DW ?
 sc_socket_handle        DW ?
 sc_buffer_size		DW ?
 sc_receive_buffer	DW ?
