@@ -63,7 +63,6 @@
 
 static int CurrIndex;
 static int CurrTimeout;
-static int CurrTcpHandle;
 
 SSL_CONF_CTX *ClientConf;
 SSL_CTX *ClientSessionArr[MAX_SESSION_COUNT];
@@ -181,7 +180,7 @@ void CloseSession(int index)
 static void ConnectionHandler(void *par)
 {
     int index = CurrIndex;
-    int sock = CurrTcpHandle;
+    SSL *con = ClientConnectionArr[index];
     int timeout = CurrTimeout;
 
     for (;;)
@@ -203,11 +202,13 @@ static void ConnectionHandler(void *par)
 int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int BufferSize, int Timeout)
 {
     SSL_CTX *ctx = 0;
+    BIO *sbio;
+    SSL *con;
+    int handle = 0;
     int i;
     char str[80];
 
     CurrIndex = -1;
-    CurrTcpHandle = 0;
     CurrTimeout = Timeout;
 
     if (session > 0 && session <= MAX_SESSION_COUNT)
@@ -226,11 +227,20 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
     }
 
     if (CurrIndex >= 0)
-        CurrTcpHandle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
+        handle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
 
-    if (CurrTcpHandle)
+    if (handle)
     {
         ServCreateSslConnection(CurrIndex, IP, LocalPort, RemotePort, BufferSize);
+
+        sbio = BIO_new_socket(handle, BIO_NOCLOSE);
+        con = SSL_new(ctx);
+
+        SSL_set_bio(con, sbio, sbio);
+        SSL_set_connect_state(con);
+
+        ClientConnectionArr[CurrIndex] = con;
+
         CreateClientName(str, IP, RemotePort);
         RdosCreateThread(ConnectionHandler, str, 0, 0x4000);
     }
