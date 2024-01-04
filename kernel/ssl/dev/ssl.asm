@@ -73,7 +73,6 @@ ssl_session_handle_seg      ENDS
 ssl_connection_handle_seg      STRUC
 
 sc_base     handle_header <>
-sc_conn_sel DW ?
 sc_id       DD ?
 
 ssl_connection_handle_seg      ENDS
@@ -586,14 +585,10 @@ create_secure_connection     Proc far
     call RunMsg
     jc crscDone
 ;
-    call GetConnSel
-    mov bp,ds
     mov edx,ebx
-;
     mov ax,SSL_CONN_HANDLE
     mov cx,SIZE ssl_connection_handle_seg
     AllocateHandle
-    mov [ebx].sc_conn_sel,bp
     mov [ebx].sc_id,edx
     mov [ebx].hh_sign,SSL_CONN_HANDLE
     mov bx,[ebx].hh_handle
@@ -643,11 +638,11 @@ close_secure_connection     Proc far
     push ds
     push ebx
 ;
-    mov ds,[ebx].sc_conn_sel
-    mov bx,ds:sc_socket_handle
-    CloseTcpConnection
+;    mov ds,[ebx].sc_conn_sel
+;    mov bx,ds:sc_socket_handle
+;    CloseTcpConnection
 ;    
-    call DeleteConnection
+;    call DeleteConnection
 ;
     pop ebx
     pop ds
@@ -685,7 +680,10 @@ wait_for_secure_connection Proc far
     jc wscDone
 ;    
     GetThread
-    mov ds,[ebx].sc_conn_sel
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc wscDone
+;
     mov ds:sc_wait_conn,ax
     mov al,ds:sc_active
     or al,al
@@ -726,7 +724,10 @@ is_secure_connection_closed Proc far
     DerefHandle
     jc isccDone
 ;    
-    mov ds,[ebx].sc_conn_sel
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc isccDone
+;
     mov al,ds:sc_closed
     or al,al
     clc
@@ -762,11 +763,10 @@ start_wait_for_connection       PROC far
     DerefHandle
     jc swfcDone
 ;    
-    mov ax,[ebx].sc_conn_sel
-    or ax,ax
-    jz swfcDone
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc swfcDone
 ;
-    mov ds,ax
     mov ds:sc_wait_rec,es
     mov ax,ds:sc_receive_count
     or ax,ax
@@ -808,9 +808,9 @@ stop_wait_for_connection    PROC far
     DerefHandle
     jc swDone
 ;    
-    mov ax,[ebx].sc_conn_sel
-    or ax,ax
-    jz swDone
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc swDone
 ;
     mov ds,ax
     mov ds:sc_wait_rec,0
@@ -858,10 +858,9 @@ is_connection_idle      PROC far
     DerefHandle
     jc iiDone
 ;    
-    mov ax,[ebx].sc_conn_sel
-    or ax,ax
-    stc
-    jz iiDone
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc iiDone
 ;
     mov ds,ax
     mov al,ds:sc_closed
@@ -952,7 +951,10 @@ poll_secure_connection  Proc far
     DerefHandle
     jc pcDone
 ;
-    mov ds,[ebx].sc_conn_sel
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc pcDone
+;
     movzx eax,ds:sc_receive_count
     clc
 
@@ -990,7 +992,10 @@ ReadConnection   Proc near
     DerefHandle
     jc rcDone
 ;
-    mov ds,[ebx].sc_conn_sel
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc rcDone
+;
     EnterSection ds:sc_section
 ;
     movzx eax,ds:sc_receive_count
@@ -1074,7 +1079,10 @@ WriteConnection   Proc near
     DerefHandle
     jc wcDone
 ;
-    mov ds,[ebx].sc_conn_sel
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc wcDone
+;
     EnterSection ds:sc_section
 
     mov fs,ds:sc_send_buffer
