@@ -60,6 +60,32 @@ code    SEGMENT byte public 'CODE'
     extern CreateConnection:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetConnSel
+;
+;       DESCRIPTION:    Get connection sel
+;
+;       PARAMETERS:     EBX              Connection index
+;
+;       RETURNS:        DS               Connection sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetConnSel
+
+GetConnSel   Proc near
+    push eax
+;
+    mov eax,SEG data
+    mov ds,eax
+    mov ds,ds:[2*ebx]
+;
+    pop eax
+    ret
+GetConnSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           SslServer

@@ -42,7 +42,7 @@ public:
     virtual ~TSocket();
 
     static long GetLocalIP();
-        
+
     virtual long GetRemoteIP() const = 0;
     virtual int GetRemotePort() const = 0;
     virtual int GetLocalPort() const = 0;
@@ -71,7 +71,7 @@ public:
     virtual void DeviceName(char *Name, int MaxLen) const;
     virtual int IsOpen();
     virtual void NotifyClose();
-        
+
     virtual long GetRemoteIP() const;
     virtual int GetRemotePort() const;
     virtual int GetLocalPort() const;
@@ -102,7 +102,7 @@ public:
 
     virtual void DeviceName(char *Name, int MaxLen) const;
     virtual void NotifyClose();
-        
+
     virtual long GetRemoteIP() const;
     virtual int GetRemotePort() const;
     virtual int GetLocalPort() const;
@@ -133,7 +133,7 @@ public:
     virtual void DeviceName(char *Name, int MaxLen) const;
     virtual int IsOpen();
     virtual void NotifyClose();
-        
+
     virtual long GetRemoteIP() const;
     virtual int GetRemotePort() const;
     virtual int GetLocalPort() const;
@@ -156,7 +156,6 @@ protected:
 
     int FSession;
     int FHandle;
-    int FTcpHandle;
 };
 
 
@@ -168,13 +167,13 @@ public:
     virtual ~TSocketServer();
 
     long GetRemoteIP();
-    
+
 protected:
     virtual void HandleSocket() = 0;
     virtual void NotifyStarted();
     virtual void NotifyStopped();
     virtual void Execute();
-    
+
     TSocketServer *FNext;
     TTcpSocket *FSocket;
 };
@@ -192,7 +191,7 @@ public:
 protected:
     void Cleanup();
     void Insert(TSocketServer *server);
-    
+
     virtual void SignalNewData();
     virtual void Add(TWait *Wait);
 
@@ -214,9 +213,9 @@ public:
     long GetIP();
     int GetPort();
     int GetMsgSize();
-    int GetMsg(char *buf, int size);    
+    int GetMsg(char *buf, int size);
     void ClearMsg();
-    
+
 protected:
     virtual void SignalNewData();
     virtual void Add(TWait *Wait);

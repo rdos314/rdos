@@ -93,6 +93,7 @@ code    SEGMENT byte public 'CODE'
     extern AllocateMsg:near
     extern RunMsg:near
     extern GetMsgSel:near
+    extern GetConnSel:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -581,7 +582,10 @@ create_secure_connection     Proc far
     call RunMsg
     jc crscDone
 ;
+    call GetConnSel
+    mov bp,ds
     mov edx,ebx
+;
     mov ax,SSL_CONN_HANDLE
     mov cx,SIZE ssl_connection_handle_seg
     AllocateHandle

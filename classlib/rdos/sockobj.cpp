@@ -35,23 +35,6 @@
 
 /*##########################################################################
 #
-#   Name       : SslSocketHandler
-#
-#   Purpose....: SSL socket handler
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void SslSocketHandler(void *Param)
-{
-    int *handle = (int *)Param;
-    RdosHandleSecureConnection(*handle);
-}
-
-/*##########################################################################
-#
 #   Name       : IpToString
 #
 #   Purpose....: returns a string with the ip in the format "x.x.x.x"
@@ -207,7 +190,7 @@ TTcpSocket::TTcpSocket(long IP, int Port, int Timeout, int BufferSize)
 TTcpSocket::TTcpSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize)
 {
     FHandle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
-    Open();     
+    Open();
 }
 
 /*##########################################################################
@@ -275,7 +258,7 @@ int TTcpSocket::IsOpen()
 {
     if (TDevice::IsOpen() && FHandle)
         return !RdosIsTcpConnectionClosed(FHandle);
-    else    
+    else
         return FALSE;
 }
 
@@ -480,7 +463,7 @@ char TTcpSocket::Read()
     if (FHandle)
         RdosReadTcpConnection(FHandle, &ch, 1);
 
-    return ch;    
+    return ch;
 }
 
 /*##########################################################################
@@ -521,8 +504,6 @@ TSslSocket::TSslSocket(long IP, int Port, int Timeout, int BufferSize, const cha
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, 0, Port, Timeout, BufferSize);
-    FTcpHandle = RdosGetSecureTcpHandle(FHandle);
-    RdosCreateThread(SslSocketHandler, ThreadName, &FHandle, 0x1000);
     Open();
 }
 
@@ -546,8 +527,6 @@ TSslSocket::TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int 
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, LocalPort, RemotePort, Timeout, BufferSize);
-    FTcpHandle = RdosGetSecureTcpHandle(FHandle);
-    RdosCreateThread(SslSocketHandler, ThreadName, &FHandle, 0x1000);
     Open();
 }
 
@@ -593,7 +572,7 @@ void TSslSocket::DeviceName(char *Name, int MaxLen) const
 #
 #   Purpose....: Create session
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -632,7 +611,7 @@ int TSslSocket::IsOpen()
 {
     if (TDevice::IsOpen() && FHandle)
         return !RdosIsSecureConnectionClosed(FHandle);
-    else    
+    else
         return FALSE;
 }
 
@@ -658,10 +637,7 @@ void TSslSocket::NotifyClose()
 *##########################################################################*/
 long TSslSocket::GetRemoteIP() const
 {
-    if (FTcpHandle)
-        return RdosGetRemoteTcpConnectionIP(FTcpHandle);
-    else
-        return -1;
+    return -1;
 }
 
 /*##################  TSslSocket::GetRemotePort  ############################
@@ -673,10 +649,7 @@ long TSslSocket::GetRemoteIP() const
 *##########################################################################*/
 int TSslSocket::GetRemotePort() const
 {
-    if (FTcpHandle)
-        return RdosGetRemoteTcpConnectionPort(FTcpHandle);
-    else
-        return 0;
+    return 0;
 }
 
 /*##################  TSslSocket::GetLocalPort  ############################
@@ -688,10 +661,7 @@ int TSslSocket::GetRemotePort() const
 *##########################################################################*/
 int TSslSocket::GetLocalPort() const
 {
-    if (FTcpHandle)
-        return RdosGetLocalTcpConnectionPort(FTcpHandle);
-    else
-        return 0;
+    return 0;
 }
 
 /*##################  TSslSocket::Push  ############################
@@ -703,8 +673,6 @@ int TSslSocket::GetLocalPort() const
 *##########################################################################*/
 void TSslSocket::Push()
 {
-    if (FTcpHandle)
-        RdosPushTcpConnection(FTcpHandle);
 }
 
 /*##################  TSslSocket::IsIdle  ############################
@@ -716,10 +684,7 @@ void TSslSocket::Push()
 *##########################################################################*/
 int TSslSocket::IsIdle()
 {
-//    if (FTcpHandle)
-//        return RdosIsTcpConnectionIdle(FTcpHandle);
-//    else
-        return TRUE;
+    return TRUE;
 }
 
 /*##################  TSslSocket::WaitForConnection  ############################
@@ -837,7 +802,7 @@ char TSslSocket::Read()
     if (FHandle)
         RdosReadSecureConnection(FHandle, &ch, 1);
 
-    return ch;    
+    return ch;
 }
 
 /*##########################################################################
@@ -878,7 +843,7 @@ TUdpSocket::TUdpSocket(long IP, int LocalPort, int RemotePort)
     FLocalPort = LocalPort;
     FRemotePort = RemotePort;
     FRemoteIp = IP;
-    Open();     
+    Open();
 }
 
 /*##########################################################################
@@ -1117,7 +1082,7 @@ TSocketServer::~TSocketServer()
 #
 #   Purpose....: Get remote IP
 #
-#   In params..: 
+#   In params..:
 #   Out params.: *
 #   Returns....: *
 #
@@ -1176,12 +1141,12 @@ void TSocketServer::Execute()
     RdosWaitMilli(50);
 
     NotifyStarted();
-        
+
     HandleSocket();
-    
+
     FSocket->Close();
     delete FSocket;
-    FSocket = 0;        
+    FSocket = 0;
 
     NotifyStopped();
 }
