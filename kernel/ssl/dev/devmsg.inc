@@ -30,3 +30,11 @@ SSL_OPEN_SESSION               = 0
 
 ; IN  EBX       Session ID
 SSL_CLOSE_SESSION              = 1
+
+; IN  EAX       Session ID
+; IN  EBX       Socket handle
+; OUT EBX       Connection ID
+SSL_OPEN_CONNECTION            = 2
+
+; IN  EBX       Connection ID
+SSL_CLOSE_CONNECTION           = 3

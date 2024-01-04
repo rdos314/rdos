@@ -66,7 +66,7 @@ ssl_mem_struc  ENDS
 ssl_session_handle_seg      STRUC
 
 ss_base     handle_header <>
-ss_ctx      DD ?,?
+ss_id       DD ?
 
 ssl_session_handle_seg      ENDS
 
@@ -74,8 +74,7 @@ ssl_connection_handle_seg      STRUC
 
 sc_base     handle_header <>
 sc_conn_sel DW ?
-sc_ctx      DD ?,?
-sc_con      DD ?,?
+sc_id       DD ?
 
 ssl_connection_handle_seg      ENDS
 
@@ -115,24 +114,26 @@ create_secure_session     Proc far
     push edx
     push esi
     push edi
+    push ebp
 ;
     call AllocateMsg
-    jc cssDone
+    jc crssDone
 ;
     mov eax,SSL_OPEN_SESSION
     call RunMsg
-    jc cssDone
+    jc crssDone
 ;
+    mov edx,ebx
     mov ax,SSL_SESS_HANDLE
     mov cx,SIZE ssl_session_handle_seg
     AllocateHandle
-    mov dword ptr [ebx].ss_ctx,edi
-    mov word ptr [ebx].ss_ctx+4,dx
+    mov [ebx].ss_id,edx
     mov [ebx].hh_sign,SSL_SESS_HANDLE
     mov bx,[ebx].hh_handle
     clc
 
-cssDone:
+crssDone:
+    pop ebp
     pop edi
     pop esi
     pop edx
@@ -162,13 +163,19 @@ close_secure_session     Proc far
 ;
     mov ax,SSL_SESS_HANDLE
     DerefHandle
-    jc cssDone
+    jc clssDone
 ;
-;    les edi,fword ptr [ebx].ss_ctx
-;    mov eax,ssl_data_sel
-;    mov ds,eax
-;    call FreeClientSession
+    push ds:[ebx].ss_id
+    FreeHandle
+    pop ebx
 ;
+    call AllocateMsg
+    jc clssDone
+;
+    mov eax,SSL_CLOSE_SESSION
+    call RunMsg
+
+clssDone:
     popad
     pop es
     pop ds
@@ -549,63 +556,61 @@ create_secure_connection     Proc far
     push eax
     push ecx
     push edx
+    push edi
     push ebp
 ;
     mov ebp,ebx
 ;
     OpenTcpConnection
-    jc cscDone
+    jc crscDone
 ;
     mov eax,6000
     WaitForTcpConnection
-    jnc cscOk
+    jnc crscOk
 
-cscFree:
+crscFree:
     CloseTcpConnection
     stc
-    jmp cscDone
+    jmp crscDone
 
-cscOk:
+crscOk:
     call CreateConnection
 ;
     mov ebx,ebp
     mov ebp,ds
     mov ax,SSL_SESS_HANDLE
     DerefHandle
-    jnc cscCreate
-;
+    jnc crscCreate
+
+crscFail:
     mov ds,ebp
     call DeleteConnection
-    jmp cscFree
+    jmp crscFree
 
-cscCreate:
-;    les edi,fword ptr [ebx].ss_ctx
-;    push es
-;    push edi
+crscCreate:
+    mov eax,ds:[ebx].ss_id
+    mov ds,ebp
+    movzx ebx,ds:sc_socket_handle
+    call AllocateMsg
+    jc crscFail
 ;
-;    mov ds,ebp
-;    movzx ebx,ds:sc_socket_handle
-;    call CreateClientConnection
+    mov eax,SSL_OPEN_CONNECTION
+    call RunMsg
+    jc crscFail
 ;
+    mov edx,ebx
     mov ax,SSL_CONN_HANDLE
     mov cx,SIZE ssl_connection_handle_seg
     AllocateHandle
     mov [ebx].sc_conn_sel,bp
-;
-    mov dword ptr [ebx].sc_con,edi
-    mov word ptr [ebx].sc_con+4,dx
-;
-;    pop edi
-;    pop es
-;    mov dword ptr [ebx].sc_ctx,edi
-;    mov word ptr [ebx].sc_ctx+4,es
-;
+    mov [ebx].sc_id,edx
     mov [ebx].hh_sign,SSL_CONN_HANDLE
     mov bx,[ebx].hh_handle
     clc
 
-cscDone:
+crscDone:
     pop ebp
+    pop edi
     pop edx
     pop ecx
     pop eax

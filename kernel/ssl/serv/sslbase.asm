@@ -71,7 +71,12 @@ _TEXT   segment use32 word public 'CODE'
 LocalOpenSession Proc near
     call OpenSession
     mov [edi].fc_ebx,ebx
+    or ebx,ebx
+    jz osReply
 ;
+    and [edi].fc_eflags,NOT 1
+
+osReply:
     mov ebx,[edi].fc_handle
     ReplySslCmd
     ret
@@ -94,6 +99,7 @@ LocalCloseSession Proc near
     call CloseSession
 ;
     mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
     ReplySslCmd
     ret
 LocalCloseSession Endp
