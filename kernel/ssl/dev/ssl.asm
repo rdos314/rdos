@@ -449,6 +449,8 @@ CopyToBuffer    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public CreateConnection
+
 CreateConnection    Proc near
     push es
     push ax

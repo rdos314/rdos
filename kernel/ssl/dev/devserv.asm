@@ -42,9 +42,12 @@ include ssl.inc
 
     .386p
 
+MAX_CONN_COUNT = 128
+
 data    SEGMENT byte public 'DATA'
 
 ssl_msg_sel        DW ?
+conn_arr           DW MAX_CONN_COUNT DUP(?)
 
 data    ENDS
 
@@ -53,6 +56,8 @@ data    ENDS
 code    SEGMENT byte public 'CODE'
 
     assume cs:code
+    
+    extern CreateConnection:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -567,6 +572,44 @@ rfcDone:
 reply_ssl_cmd  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateSslConnection
+;
+;       DESCRIPTION:    Create SSL connection
+;
+;       PARAMETERS:     EBX              Connection index
+;                       EDX              IP
+;                       SI               Local port
+;                       DI               Remote port
+;                       ECX              Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_ssl_conn_name DB 'Create SSL Connection', 0
+
+create_ssl_conn   Proc far
+    push ds
+    push eax
+    push edx
+;
+    cmp ebx,MAX_CONN_COUNT
+    jae cscDone
+;
+    call CreateConnection
+    mov edx,ds
+    mov eax,SEG data
+    mov ds,eax
+    mov ds:[2*ebx].conn_arr,dx
+
+cscDone:
+    pop edx
+    pop eax
+    pop ds
+    ret
+create_ssl_conn  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -581,6 +624,10 @@ init_server    Proc near
     mov eax,SEG data
     mov es,eax
     mov es:ssl_msg_sel,0
+    mov edi,OFFSET conn_arr
+    mov ecx,MAX_CONN_COUNT
+    xor ax,ax
+    rep stosw
 ;
     mov eax,cs
     mov ds,eax
@@ -596,6 +643,12 @@ init_server    Proc near
     mov edi,OFFSET reply_ssl_cmd_name
     xor cl,cl
     mov ax,reply_ssl_cmd_nr
+    RegisterServGate
+;
+    mov esi,OFFSET create_ssl_conn
+    mov edi,OFFSET create_ssl_conn_name
+    xor cl,cl
+    mov ax,create_ssl_conn_nr
     RegisterServGate
     ret
 init_server    Endp
