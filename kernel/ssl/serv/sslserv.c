@@ -50,9 +50,6 @@
 #include "rdos.h"
 #include "serv.h"
 
-// #define _DEBUG 1
-
-
 #define bool int
 #define false 0
 #define true 1
@@ -196,6 +193,8 @@ static void ConnectionHandler(void *par)
     if (!RdosWaitForTcpConnection(handle, timeout))
         return;
 
+    printf("connected\r\n");
+
     ServStartTcpSslNotify(handle);
     buf = (char *)malloc(size);
 
@@ -236,6 +235,9 @@ static void ConnectionHandler(void *par)
             rspace = ServSslGetReceiveSpace(index);
             len = SSL_read(con, buf, rspace);
 
+            if (len > 0)
+                printf("Received %d bytes\r\n", len);
+
             switch (SSL_get_error(con, len))
             {
             case SSL_ERROR_NONE:
@@ -269,6 +271,10 @@ static void ConnectionHandler(void *par)
         else if (write_ssl)
         {
             scount = ServSslGetSendBuf(index, buf);
+
+            if (scount > 0)
+                printf("Sent %d bytes\r\n", scount);
+
             len = SSL_write(con, buf, (unsigned int)scount);
             switch (SSL_get_error(con, len))
             {
@@ -308,6 +314,8 @@ static void ConnectionHandler(void *par)
         else
             ServSslWaitForChange(index);
     }
+
+    printf("closed\r\n");
 
     ServStopTcpSslNotify(handle);
     free(buf);
