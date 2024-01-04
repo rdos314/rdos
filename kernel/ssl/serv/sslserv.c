@@ -188,19 +188,25 @@ static void ConnectionHandler(void *par)
     bool in_init = true;
     bool write_ssl = true;
     bool ssl_pending;
+    bool open;
     int len;
     int scount = 0;
     int rspace = 0;
     char *buf = (char *)malloc(size);
 
-    ServStartTcpSslNotify(handle);
+    open = RdosWaitForTcpConnection(handle, timeout);
 
-    for (;;)
-        RdosWaitMilli(25);
+    if (open)
+    {
+        ServStartTcpSslNotify(handle);
+
+        for (;;)
+            RdosWaitMilli(25);
+
+        ServStopTcpSslNotify(handle);
+    }
 
     free(buf);
-
-    ServStopTcpSslNotify(handle);
 }
 
 /*##########################################################################
