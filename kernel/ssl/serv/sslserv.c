@@ -63,6 +63,7 @@
 
 static int CurrIndex;
 static int CurrTimeout;
+static int CurrSize;
 
 SSL_CONF_CTX *ClientConf;
 SSL_CTX *ClientSessionArr[MAX_SESSION_COUNT];
@@ -182,9 +183,24 @@ static void ConnectionHandler(void *par)
     int index = CurrIndex;
     SSL *con = ClientConnectionArr[index];
     int timeout = CurrTimeout;
+    int size = CurrSize;
+    int handle = SSL_get_handle(con);
+    bool in_init = true;
+    bool write_ssl = true;
+    bool ssl_pending;
+    int len;
+    int scount = 0;
+    int rspace = 0;
+    char *buf = (char *)malloc(size);
+
+    ServStartTcpSslNotify(handle);
 
     for (;;)
         RdosWaitMilli(25);
+
+    free(buf);
+
+    ServStopTcpSslNotify(handle);
 }
 
 /*##########################################################################
@@ -210,6 +226,7 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
 
     CurrIndex = -1;
     CurrTimeout = Timeout;
+    CurrSize = BufferSize;
 
     if (session > 0 && session <= MAX_SESSION_COUNT)
         ctx = ClientSessionArr[session - 1];

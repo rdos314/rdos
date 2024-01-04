@@ -276,3 +276,11 @@
 #pragma aux ServCreateSslConnection = \
     ServGate_create_ssl_conn  \
     __parm [__ebx] [__edx] [__esi] [__edi] [__ecx]
+
+#pragma aux ServStartTcpSslNotify = \
+    ServGate_start_tcp_ssl_notify  \
+    __parm [__ebx]
+
+#pragma aux ServStopTcpSslNotify = \
+    ServGate_stop_tcp_ssl_notify  \
+    __parm [__ebx]

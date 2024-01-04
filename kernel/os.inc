@@ -3399,17 +3399,6 @@ HasTcpSocketException               MACRO
     OsGate has_tcp_socket_exc_nr
                         ENDM
 
-
-; IN  BX        Connection handle
-StartTcpConnectionNotify               MACRO
-    OsGate start_tcp_conn_notify_nr
-                        ENDM
-
-; IN  BX        Connection handle
-StopTcpConnectionNotify               MACRO
-    OsGate stop_tcp_conn_notify_nr
-                        ENDM
-
 ; IN  EDX       IP
 ; IN  SI        port
 ; OUT AX        Udp selector
