@@ -937,6 +937,7 @@ poll_secure_connection_name       DB 'Poll Secure Connection',0
 poll_secure_connection  Proc far
     push ds
     push fs
+    push ebx
 ;
     mov ax,SSL_CONN_HANDLE
     DerefHandle
@@ -950,11 +951,137 @@ poll_secure_connection  Proc far
     clc
 
 pcDone:
+    pop ebx
     pop fs
     pop ds
     ret
 poll_secure_connection  Endp
         
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           PushSecureConnection
+;
+;       Purpose:        Push secure connection
+;
+;       Parameters:     BX              connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+push_secure_connection_name       DB 'Push Secure Connection',0
+
+push_secure_connection  Proc far
+    push ds
+    push fs
+    push ebx
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc pscDone
+;
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc pscDone
+;
+    int 3
+
+pscDone:
+    pop ebx
+    pop fs
+    pop ds
+    ret
+push_secure_connection  Endp
+                
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetRemoteSecureConnectionIP
+;
+;       Purpose:        Get remote IP of connection
+;
+;       Parameters:     BX      Connection handle
+;
+;       Returns:        EAX     IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_remote_secure_ip_name DB 'Get Remote Secure Connection IP',0
+
+get_remote_secure_ip    Proc far
+    ret
+get_remote_secure_ip    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetRemoteSecureConnectionPort
+;
+;       Purpose:        Get remote port of connection
+;
+;       Parameters:     BX      Connection handle
+;
+;       Returns:        AX      port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_remote_secure_port_name DB 'Get Remote Secure Connection Port',0
+
+get_remote_secure_port  Proc far
+    ret
+get_remote_secure_port  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetLocalSecureConnectionPort
+;
+;       Purpose:        Get local port of connection
+;
+;       Parameters:     BX      Connection handle
+;
+;       Returns:        AX      port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_local_secure_port_name DB 'Get Local Secure Connection Port',0
+
+get_local_secure_port  Proc far
+    ret
+get_local_secure_port  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           IsSecureConnectionIdle
+;
+;       Purpose:        Check if connection is idle
+;
+;       Parameters:     BX      Connection handle
+;
+;       Returns:        NC      Connection is idle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_secure_connection_idle_name DB 'Is Secure Connection Idle?',0
+
+is_secure_connection_idle  Proc far
+    ret
+is_secure_connection_idle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           GetSecureConnectionWriteSpace
+;
+;       DESCRIPTION:    Get secure connection write space
+;
+;       PARAMETERS:     BX        Connection handle
+;
+;       RETURNS:        EAX       Space in send buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_secure_write_space_name DB 'Get Secure connection Write Space', 0
+
+get_secure_write_space    Proc far
+    ret
+get_secure_write_space    Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;       Name:           ReadSecureConnection
@@ -1340,16 +1467,52 @@ init    Proc far
     mov ax,is_secure_connection_closed_nr
     RegisterBimodalUserGate
 ;
-    mov esi,OFFSET add_wait_for_secure_connection
-    mov edi,OFFSET add_wait_for_secure_connection_name
+    mov esi,OFFSET is_secure_connection_idle
+    mov edi,OFFSET is_secure_connection_idle_name
     xor dx,dx
-    mov ax,add_wait_for_secure_connection_nr
+    mov ax,is_secure_connection_idle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET push_secure_connection
+    mov edi,OFFSET push_secure_connection_name
+    xor dx,dx
+    mov ax,push_secure_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET push_secure_connection
+    mov edi,OFFSET push_secure_connection_name
+    xor dx,dx
+    mov ax,push_secure_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_remote_secure_ip
+    mov edi,OFFSET get_remote_secure_ip_name
+    xor dx,dx
+    mov ax,get_remote_secure_ip_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_remote_secure_port
+    mov edi,OFFSET get_remote_secure_port_name
+    xor dx,dx
+    mov ax,get_remote_secure_port_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_local_secure_port
+    mov edi,OFFSET get_local_secure_port_name
+    xor dx,dx
+    mov ax,get_local_secure_port_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET poll_secure_connection
     mov edi,OFFSET poll_secure_connection_name
     xor dx,dx
     mov ax,poll_secure_connection_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_secure_write_space
+    mov edi,OFFSET get_secure_write_space_name
+    xor dx,dx
+    mov ax,get_secure_write_space_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET read_secure_connection16

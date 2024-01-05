@@ -39,7 +39,16 @@ void main()
     wait.Add(&Keyboard);
 
     if (sock->IsOpen())
+    {
         printf("connected\r\n");
+        ip = sock->GetRemoteIP();
+        IpToString(host, ip);
+        printf("IP: %s\r\n", host);
+        port = sock->GetRemotePort();
+        printf("Remote port: %s\r\n", port);
+        port = sock->GetLocalPort();
+        printf("Local port: %s\r\n", port);
+    }
 
     while (sock->IsOpen())
     {
