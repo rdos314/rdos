@@ -84,6 +84,7 @@ void main()
             {
                 kbuf[keys] = ch;
                 keys++;
+                sock->Push();
             }
         }
     }

@@ -395,6 +395,34 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
 
 /*##########################################################################
 #
+#   Name       : PushConnection
+#
+#   Purpose....: Push connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux PushConnection "*" parm routine [ebx]
+void PushConnection(int index)
+{
+    SSL *con = 0;
+    int handle;
+
+    if (index > 0 && index <= MAX_CONNECTION_COUNT)
+        con = ClientConnectionArr[index - 1];
+
+    if (con)
+    {
+        handle = SSL_get_handle(con);
+        if (!RdosIsTcpConnectionClosed(handle) && !ServSslGetSendCount(index))
+            RdosPushTcpConnection(handle);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : CloseConnection
 #
 #   Purpose....: Close client connection

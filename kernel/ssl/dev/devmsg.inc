@@ -42,3 +42,6 @@ SSL_OPEN_CONNECTION            = 2
 
 ; IN  EBX       Connection ID
 SSL_CLOSE_CONNECTION           = 3
+
+; IN  EBX       Connection ID
+SSL_PUSH_CONNECTION            = 4

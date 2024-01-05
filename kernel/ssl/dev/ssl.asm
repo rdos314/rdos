@@ -937,7 +937,6 @@ poll_secure_connection_name       DB 'Poll Secure Connection',0
 
 poll_secure_connection  Proc far
     push ds
-    push fs
     push ebx
 ;
     mov ax,SSL_CONN_HANDLE
@@ -953,7 +952,6 @@ poll_secure_connection  Proc far
 
 pcDone:
     pop ebx
-    pop fs
     pop ds
     ret
 poll_secure_connection  Endp
@@ -972,9 +970,8 @@ push_secure_connection_name       DB 'Push Secure Connection',0
 
 push_secure_connection  Proc far
     push ds
-    push fs
-    push eax
-    push ebx
+    push es
+    pushad
 ;
     mov ax,SSL_CONN_HANDLE
     DerefHandle
@@ -988,7 +985,11 @@ push_secure_connection  Proc far
     or ax,ax
     jnz pscSend
 ;
-    int 3
+    call AllocateMsg
+    jc pscDone
+;
+    mov eax,SSL_PUSH_CONNECTION
+    call RunMsg
     jmp pscDone
 
 pscSend:
@@ -1005,9 +1006,8 @@ pscSend:
     Signal
 
 pscDone:
-    pop ebx
-    pop eax
-    pop fs
+    popad
+    pop es
     pop ds
     ret
 push_secure_connection  Endp

@@ -159,6 +159,28 @@ LocalCloseConnection Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalPushConnection
+;
+;       DESCRIPTION:    Push connection
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern PushConnection:near
+
+LocalPushConnection Proc near
+    call PushConnection
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+    ReplySslCmd
+    ret
+LocalPushConnection Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -179,6 +201,7 @@ m00 DD OFFSET LocalOpenSession
 m01 DD OFFSET LocalCloseSession
 m02 DD OFFSET LocalOpenConnection
 m03 DD OFFSET LocalCloseConnection
+m04 DD OFFSET LocalPushConnection
 
 WaitForMsg_    Proc near
     push ebx
