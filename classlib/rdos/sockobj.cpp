@@ -637,7 +637,10 @@ void TSslSocket::NotifyClose()
 *##########################################################################*/
 long TSslSocket::GetRemoteIP() const
 {
-    return -1;
+    if (FHandle)
+        return RdosGetRemoteSecureConnectionIP(FHandle);
+    else
+        return 0;
 }
 
 /*##################  TSslSocket::GetRemotePort  ############################
@@ -649,7 +652,10 @@ long TSslSocket::GetRemoteIP() const
 *##########################################################################*/
 int TSslSocket::GetRemotePort() const
 {
-    return 0;
+    if (FHandle)
+        return RdosGetRemoteSecureConnectionPort(FHandle);
+    else
+        return 0;
 }
 
 /*##################  TSslSocket::GetLocalPort  ############################
@@ -661,7 +667,10 @@ int TSslSocket::GetRemotePort() const
 *##########################################################################*/
 int TSslSocket::GetLocalPort() const
 {
-    return 0;
+    if (FHandle)
+        return RdosGetLocalSecureConnectionPort(FHandle);
+    else
+        return 0;
 }
 
 /*##################  TSslSocket::Push  ############################
@@ -673,6 +682,8 @@ int TSslSocket::GetLocalPort() const
 *##########################################################################*/
 void TSslSocket::Push()
 {
+    if (FHandle)
+        RdosPushSecureConnection(FHandle);
 }
 
 /*##################  TSslSocket::IsIdle  ############################
@@ -684,7 +695,10 @@ void TSslSocket::Push()
 *##########################################################################*/
 int TSslSocket::IsIdle()
 {
-    return TRUE;
+    if (FHandle)
+        return RdosIsSecureConnectionIdle(FHandle);
+    else
+        return TRUE;
 }
 
 /*##################  TSslSocket::WaitForConnection  ############################
@@ -726,9 +740,9 @@ int TSslSocket::GetSize()
 *##########################################################################*/
 int TSslSocket::GetWriteSpace()
 {
-//    if (FHandle)
-//        return RdosGetTcpConnectionWriteSpace(FHandle);
-//    else
+    if (FHandle)
+        return RdosGetSecureConnectionWriteSpace(FHandle);
+    else
         return 0;
 }
 
