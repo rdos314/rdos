@@ -57,8 +57,8 @@ wait_for_ssl_cmd_nr        = 54
 reply_ssl_cmd_nr           = 55
 create_ssl_conn_nr         = 56
 
-start_tcp_ssl_notify_nr    = 57
-stop_tcp_ssl_notify_nr     = 58
+ssl_start_nr               = 57
+ssl_stop_nr                = 58
 
 ssl_init_start_nr          = 59
 ssl_init_done_nr           = 60

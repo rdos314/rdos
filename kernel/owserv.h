@@ -277,17 +277,17 @@
     ServGate_create_ssl_conn  \
     __parm [__ebx] [__edx] [__esi] [__edi] [__ecx]
 
-#pragma aux ServStartTcpSslNotify = \
-    ServGate_start_tcp_ssl_notify  \
+#pragma aux ServSslStart = \
+    ServGate_ssl_start  \
     __parm [__ebx]
 
-#pragma aux ServStopTcpSslNotify = \
-    ServGate_stop_tcp_ssl_notify  \
-    __parm [__ebx]
+#pragma aux ServSslStop = \
+    ServGate_ssl_stop  \
+    __parm [__ebx] [__eax]
 
 #pragma aux ServSslInitStart = \
     ServGate_ssl_init_start  \
-    __parm [__ebx]
+    __parm [__ebx] [__eax]
 
 #pragma aux ServSslInitDone = \
     ServGate_ssl_init_done  \

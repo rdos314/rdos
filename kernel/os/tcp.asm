@@ -30,7 +30,6 @@ INCLUDE system.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
-INCLUDE ..\serv.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 include ..\handle.inc
@@ -138,7 +137,7 @@ InitLog   Endp
 ;
 ;       Purpose:        Log time
 ;
-;       Parameters:     EAX             Value       
+;       Parameters:     EAX		Value       
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -168,7 +167,7 @@ LogTime     Proc near
     pop es
     pop ds
     ret
-LogTime Endp
+LogTime	Endp
 
 
 
@@ -751,7 +750,7 @@ CopyToBuffer    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-rto_log DB 'd:/cap/rtt.log', 0
+rto_log	DB 'd:/cap/rtt.log', 0
 
 CreateConnection    Proc near
     push es
@@ -5680,7 +5679,7 @@ ptcDone:
     popad
     pop es
     ret
-PushConnection  Endp
+PushConnection	Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5823,17 +5822,17 @@ get_tcp_connection_write_space    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartTcpSslNotify
+;       NAME:           StartTcpConnectionNotify
 ;
-;       DESCRIPTION:    Start TCP SSL notify
+;       DESCRIPTION:    Start TCP notify
 ;
 ;       PARAMETERS;     IN  BX        Connection handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_tcp_ssl_notify_name DB 'Start Tcp SSL Notify', 0
+start_tcp_connection_notify_name DB 'Start Tcp connection Notify', 0
 
-start_tcp_ssl_notify    Proc far
+start_tcp_connection_notify    Proc far
     push ds
     push eax
     push ebx
@@ -5857,22 +5856,22 @@ startNotifyDone:
     pop eax
     pop ds
     retf32
-start_tcp_ssl_notify    Endp
+start_tcp_connection_notify    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopTcpSslNotify
+;       NAME:           StopTcpConnectionNotify
 ;
-;       DESCRIPTION:    Stop TCP SSL notify
+;       DESCRIPTION:    Stop TCP notify
 ;
 ;       PARAMETERS;     IN  BX        Connection handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-stop_tcp_ssl_notify_name DB 'Stop Tcp SSL Notify', 0
+stop_tcp_connection_notify_name DB 'Stop Tcp connection Notify', 0
 
-stop_tcp_ssl_notify    Proc far
+stop_tcp_connection_notify    Proc far
     push ds
     push eax
     push ebx
@@ -5895,7 +5894,7 @@ stopNotifyDone:
     pop eax
     pop ds
     retf32
-stop_tcp_ssl_notify    Endp
+stop_tcp_connection_notify    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6263,7 +6262,7 @@ update_tcp_mtu  Endp
 
 connect_tcp_socket_name  DB 'Connect Tcp Socket', 0
 
-connect_tcp_socket      Proc far
+connect_tcp_socket	Proc far
     push ds
     push ecx
     push esi
@@ -6296,7 +6295,7 @@ ctdDone:
     pop ecx
     pop ds
     retf32
-connect_tcp_socket      Endp
+connect_tcp_socket	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6400,7 +6399,7 @@ ptsLeave:
 ptsDone:
     pop ds
     retf32
-poll_tcp_socket    Endp
+poll_tcp_socket	   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -7045,17 +7044,17 @@ init_task_tcp    PROC near
     mov ax,stop_exc_tcp_socket_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET start_tcp_ssl_notify
-    mov edi,OFFSET start_tcp_ssl_notify_name
+    mov esi,OFFSET start_tcp_connection_notify
+    mov edi,OFFSET start_tcp_connection_notify_name
     xor cl,cl
-    mov ax,start_tcp_ssl_notify_nr
-    RegisterServGate
+    mov ax,start_tcp_conn_notify_nr
+    RegisterOsGate
 ;
-    mov esi,OFFSET stop_tcp_ssl_notify
-    mov edi,OFFSET stop_tcp_ssl_notify_name
+    mov esi,OFFSET stop_tcp_connection_notify
+    mov edi,OFFSET stop_tcp_connection_notify_name
     xor cl,cl
-    mov ax,stop_tcp_ssl_notify_nr
-    RegisterServGate
+    mov ax,stop_tcp_conn_notify_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET open_tcp_connection
     mov edi,OFFSET open_tcp_connection_name

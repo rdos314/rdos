@@ -195,7 +195,7 @@ static void ConnectionHandler(void *par)
 
     printf("connected\r\n");
 
-    ServStartTcpSslNotify(handle);
+    ServSslStart(index, handle);
     buf = (char *)malloc(size);
 
     while (!RdosIsTcpConnectionClosed(handle))
@@ -317,7 +317,7 @@ static void ConnectionHandler(void *par)
 
     printf("closed\r\n");
 
-    ServStopTcpSslNotify(handle);
+    ServSslStop(index, handle);
     free(buf);
 }
 

@@ -651,6 +651,84 @@ create_ssl_conn  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SslStart
+;
+;       DESCRIPTION:    Start SSL handler
+;
+;       PARAMETERS:     EBX            Connection Index
+;                       EAX            Socket handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handler_start_name DB 'SSL Handler Start', 0
+
+handler_start   PROC far
+    push ds
+    push eax
+    push ebx
+;
+    call GetConnSel
+    jc hsDone
+;
+    mov ebx,eax
+    StartTcpConnectionNotify
+;
+    GetThread
+    mov ds:sc_server,ax
+
+hsDone:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+handler_start   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SslStop
+;
+;       DESCRIPTION:    Stop SSL handler
+;
+;       PARAMETERS:     EBX            Connection Index
+;                       EAX            Socket handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handler_stop_name DB 'SSL Handler Stop', 0
+
+handler_stop   PROC far
+    push ds
+    push ebx
+;
+    call GetConnSel
+    jc heDone
+;
+    mov ebx,eax
+    StopTcpConnectionNotify
+;
+    mov ds:sc_server,0
+    mov ds:sc_active,0
+    mov ds:sc_closed,1
+;
+    mov bx,ds:sc_wait_rec
+    or bx,bx
+    jz heDone
+;
+    push es
+    mov es,ebx
+    SignalWait
+    pop es
+    
+heDone:
+    pop ebx
+    pop ds
+    ret
+handler_stop   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           InitStart
 ;
 ;       DESCRIPTION:    Start initialization process
@@ -971,6 +1049,18 @@ init_server    Proc near
     mov edi,OFFSET create_ssl_conn_name
     xor cl,cl
     mov ax,create_ssl_conn_nr
+    RegisterServGate
+;
+    mov esi,OFFSET handler_start
+    mov edi,OFFSET handler_start_name
+    xor cl,cl
+    mov ax,ssl_start_nr
+    RegisterServGate
+;
+    mov esi,OFFSET handler_stop
+    mov edi,OFFSET handler_stop_name
+    xor cl,cl
+    mov ax,ssl_stop_nr
     RegisterServGate
 ;
     mov esi,OFFSET init_start

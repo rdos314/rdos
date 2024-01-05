@@ -57,8 +57,8 @@
 #define serv_gate_reply_ssl_cmd 0x00000037
 #define serv_gate_create_ssl_conn 0x00000038
 
-#define serv_gate_start_tcp_ssl_notify 0x00000039
-#define serv_gate_stop_tcp_ssl_notify 0x0000003A
+#define serv_gate_ssl_start 0x00000039
+#define serv_gate_ssl_stop 0x0000003A
 
 #define serv_gate_ssl_init_start 0x0000003B
 #define serv_gate_ssl_init_done 0x0000003C
@@ -128,8 +128,8 @@
 #define ServGate_reply_ssl_cmd 0x55 0x67 0x9a 55 0 0 0 4 0 0x5d
 #define ServGate_create_ssl_conn 0x55 0x67 0x9a 56 0 0 0 4 0 0x5d
 
-#define ServGate_start_tcp_ssl_notify 0x55 0x67 0x9a 57 0 0 0 4 0 0x5d
-#define ServGate_stop_tcp_ssl_notify 0x55 0x67 0x9a 58 0 0 0 4 0 0x5d
+#define ServGate_ssl_start 0x55 0x67 0x9a 57 0 0 0 4 0 0x5d
+#define ServGate_ssl_stop 0x55 0x67 0x9a 58 0 0 0 4 0 0x5d
 
 #define ServGate_ssl_init_start 0x55 0x67 0x9a 59 0 0 0 4 0 0x5d
 #define ServGate_ssl_init_done 0x55 0x67 0x9a 60 0 0 0 4 0 0x5d

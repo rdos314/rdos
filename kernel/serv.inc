@@ -379,12 +379,14 @@ CreateSslConnection  MACRO
     ServGate create_ssl_conn_nr
                     ENDM
 
-; IN  BX        Connection handle
-StartTcpSslNotify               MACRO
-    ServGate start_tcp_ssl_notify_nr
+; IN  EBX              Connection index
+; IN  EAX              Socket handler
+StartSsl               MACRO
+    ServGate ssl_start_nr
                         ENDM
 
-; IN  BX        Connection handle
-StopTcpSslNotify               MACRO
-    ServGate stop_tcp_ssl_notify_nr
+; IN  EBX              Connection index
+; IN  EAX              Socket handler
+SslStop               MACRO
+    ServGate ssl_stop_nr
                         ENDM
