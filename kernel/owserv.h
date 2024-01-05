@@ -277,6 +277,10 @@
     ServGate_create_ssl_conn  \
     __parm [__ebx] [__edx] [__esi] [__edi] [__ecx]
 
+#pragma aux ServDeleteSslConnection = \
+    ServGate_delete_ssl_conn  \
+    __parm [__ebx]
+
 #pragma aux ServSslStart = \
     ServGate_ssl_start  \
     __parm [__ebx]

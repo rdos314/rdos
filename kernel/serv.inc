@@ -370,13 +370,18 @@ ReplySslCmd  MACRO
     ServGate reply_ssl_cmd_nr
                     ENDM
 
-; IN  EBX              Socket handle
+; IN  EBX              Connection index
 ; IN  EDX              IP
 ; IN  SI               Local port
 ; IN  DI               Remote port
 ; IN  ECX              Buffer size
 CreateSslConnection  MACRO    
     ServGate create_ssl_conn_nr
+                    ENDM
+
+; IN  EBX              Connection index
+DeleteSslConnection  MACRO    
+    ServGate delete_ssl_conn_nr
                     ENDM
 
 ; IN  EBX              Connection index

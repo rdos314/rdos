@@ -69,6 +69,8 @@
 #define serv_gate_ssl_clear_send_count 0x00000041
 #define serv_gate_ssl_wait_for_change 0x00000042
 
+#define serv_gate_delete_ssl_conn 0x00000043
+
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
 #define ServGate_get_vfs_handle 0x55 0x67 0x9a 2 0 0 0 4 0 0x5d
@@ -139,4 +141,6 @@
 #define ServGate_ssl_get_send_buf 0x55 0x67 0x9a 64 0 0 0 4 0 0x5d
 #define ServGate_ssl_clear_send_count 0x55 0x67 0x9a 65 0 0 0 4 0 0x5d
 #define ServGate_ssl_wait_for_change 0x55 0x67 0x9a 66 0 0 0 4 0 0x5d
+
+#define ServGate_delete_ssl_conn 0x55 0x67 0x9a 67 0 0 0 4 0 0x5d
 

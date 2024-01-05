@@ -80,7 +80,8 @@ void RDOSAPI ServAddWaitForVfsReq(int waithandle, int handle, int id);
 
 void RDOSAPI ServNotifyVfsMsg(int Handle, const char *Msg);
 
-void RDOSAPI ServCreateSslConnection(int Handle, long IP, int LocalPort, int RemotePort, int BufferSize);
+void RDOSAPI ServCreateSslConnection(int index, long IP, int LocalPort, int RemotePort, int BufferSize);
+void RDOSAPI ServDeleteSslConnection(int index);
 
 void RDOSAPI ServStartSsl(int index, int handle);
 void RDOSAPI ServStopSsl(int index, int handle);

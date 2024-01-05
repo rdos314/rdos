@@ -366,7 +366,7 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
 
     if (handle)
     {
-        ServCreateSslConnection(CurrIndex, IP, LocalPort, RemotePort, BufferSize);
+        ServCreateSslConnection(CurrIndex + 1, IP, LocalPort, RemotePort, BufferSize);
 
         sbio = BIO_new_socket(handle, BIO_NOCLOSE);
         con = SSL_new(ctx);
@@ -399,8 +399,26 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
 #pragma aux CloseConnection "*" parm routine [ebx]
 void CloseConnection(int index)
 {
-}
+    SSL *con = 0;
+    int handle;
 
+    if (index > 0 && index <= MAX_CONNECTION_COUNT)
+    {
+        con = ClientConnectionArr[index - 1];
+        ClientConnectionArr[index - 1] = 0;
+    }
+
+    if (con)
+    {
+        handle = SSL_get_handle(con);
+
+        SSL_shutdown(con);
+        SSL_free(con);
+
+        RdosDeleteTcpConnection(handle);
+        ServDeleteSslConnection(index);
+    }
+}
 
 /*##########################################################################
 #

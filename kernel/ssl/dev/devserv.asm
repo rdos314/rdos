@@ -58,6 +58,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
     
     extern CreateConnection:near
+    extern DeleteConnection:near
     extern CopyToBuffer:near
     extern CopyFromBuffer:near
 
@@ -630,11 +631,16 @@ create_ssl_conn_name DB 'Create SSL Connection', 0
 create_ssl_conn   Proc far
     push ds
     push eax
+    push ebx
     push edx
 ;
+    or ebx,ebx
+    jz cscDone
+;    
     cmp ebx,MAX_CONN_COUNT
-    jae cscDone
+    ja cscDone
 ;
+    dec ebx
     call CreateConnection
     mov edx,ds
     mov eax,SEG data
@@ -643,10 +649,37 @@ create_ssl_conn   Proc far
 
 cscDone:
     pop edx
+    pop ebx
     pop eax
     pop ds
     ret
 create_ssl_conn  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteSslConnection
+;
+;       DESCRIPTION:    Delete SSL connection
+;
+;       PARAMETERS:     EBX              Connection index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_ssl_conn_name DB 'Delete SSL Connection', 0
+
+delete_ssl_conn   Proc far
+    push ds
+;
+    call GetConnSel
+    jc dscDone
+;
+    call DeleteConnection
+
+dscDone:
+    pop ds
+    ret
+delete_ssl_conn  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1052,6 +1085,12 @@ init_server    Proc near
     mov edi,OFFSET create_ssl_conn_name
     xor cl,cl
     mov ax,create_ssl_conn_nr
+    RegisterServGate
+;
+    mov esi,OFFSET delete_ssl_conn
+    mov edi,OFFSET delete_ssl_conn_name
+    xor cl,cl
+    mov ax,delete_ssl_conn_nr
     RegisterServGate
 ;
     mov esi,OFFSET handler_start

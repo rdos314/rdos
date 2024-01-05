@@ -512,6 +512,8 @@ CreateConnection    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public DeleteConnection
+
 DeleteConnection    Proc near
     push es
     push ax
