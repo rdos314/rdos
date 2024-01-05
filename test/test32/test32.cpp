@@ -80,7 +80,7 @@ void main()
 
     printf("closed\r\n");
 
-    delete sock;
+//    delete sock;
 
 
 //    RdosTestGate("");

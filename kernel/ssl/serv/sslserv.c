@@ -120,6 +120,8 @@ int OpenSession()
 
         if (ctx)
         {
+            printf("Open session %d\r\n", index + 1);
+
             SSL_CTX_clear_mode(ctx, SSL_MODE_AUTO_RETRY);
             SSL_CONF_CTX_set_ssl_ctx(ClientConf, ctx);
 
@@ -158,6 +160,7 @@ void CloseSession(int index)
     {
         ctx = ClientSessionArr[index - 1];
         ClientSessionArr[index - 1] = 0;
+        printf("Close session %d\r\n", index);
     }
 
     if (ctx)
@@ -366,6 +369,8 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
 
     if (handle)
     {
+        printf("Open connection %d\r\n", CurrIndex + 1);
+
         ServCreateSslConnection(CurrIndex + 1, IP, LocalPort, RemotePort, BufferSize);
 
         sbio = BIO_new_socket(handle, BIO_NOCLOSE);
@@ -406,6 +411,8 @@ void CloseConnection(int index)
     {
         con = ClientConnectionArr[index - 1];
         ClientConnectionArr[index - 1] = 0;
+
+        printf("Close connection %d\r\n", index);
     }
 
     if (con)

@@ -1163,6 +1163,28 @@ write_secure_connection32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_secure_session    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,SSL_SESS_HANDLE
+    DerefHandle
+    jc dssDone
+;
+    push ds:[ebx].ss_id
+    FreeHandle
+    pop ebx
+;
+    call AllocateMsg
+    jc dssDone
+;
+    mov eax,SSL_CLOSE_SESSION
+    call RunMsg
+
+dssDone:
+    popad
+    pop es
+    pop ds
     ret
 delete_secure_session    Endp
 
@@ -1178,9 +1200,30 @@ delete_secure_session    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_secure_connection    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc dscDone
+;
+    push ds:[ebx].sc_id
+    FreeHandle
+    pop ebx
+;
+    call AllocateMsg
+    jc dscDone
+;
+    mov eax,SSL_CLOSE_CONNECTION
+    call RunMsg
+
+dscDone:
+    popad
+    pop es
+    pop ds
     ret
 delete_secure_connection    Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
