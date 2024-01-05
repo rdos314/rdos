@@ -309,7 +309,8 @@
 
 #pragma aux ServSslGetSendBuf = \
     ServGate_ssl_get_send_buf  \
-    __parm [__ebx] [__edi] [__ecx]
+    __parm [__ebx] [__edi] [__ecx] \
+    __value [__ecx]
 
 #pragma aux ServSslClearSendCount = \
     ServGate_ssl_clear_send_count  \

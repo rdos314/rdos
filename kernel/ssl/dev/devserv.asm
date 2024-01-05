@@ -837,10 +837,12 @@ add_receive_buf   PROC far
     push ds
     push fs
     push ebx
+    push esi
 ;
     call GetConnSel
     jc arbDone
 ;
+    mov esi,edi
     EnterSection ds:sc_section
     mov fs,ds:sc_receive_buffer
     add ds:sc_receive_count,cx
@@ -859,6 +861,7 @@ add_receive_buf   PROC far
     pop es
 
 arbDone:
+    pop esi
     pop ebx
     pop fs
     pop ds
