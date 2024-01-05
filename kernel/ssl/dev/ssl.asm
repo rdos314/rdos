@@ -627,25 +627,15 @@ close_secure_connection     Proc far
     DerefHandle
     jc fscDone
 ;
-;    push ds
-;    push ebx
-;    les edi,fword ptr [ebx].sc_con
-;    call FreeClientConnection
-;
-;    pop ebx
-;    pop ds
-;
-    push ds
-    push ebx
-;
-;    mov ds,[ebx].sc_conn_sel
-;    mov bx,ds:sc_socket_handle
-;    CloseTcpConnection
-;    
-;    call DeleteConnection
-;
+    push ds:[ebx].sc_id
+    FreeHandle
     pop ebx
-    pop ds
+;
+    call AllocateMsg
+    jc fscDone
+;
+    mov eax,SSL_CLOSE_CONNECTION
+    call RunMsg
 
 fscDone:
     popad
