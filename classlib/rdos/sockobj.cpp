@@ -500,7 +500,7 @@ int TTcpSocket::Read(char *buf, int size)
 #   Returns....: *
 #
 ##########################################################################*/
-TSslSocket::TSslSocket(long IP, int Port, int Timeout, int BufferSize, const char *ThreadName)
+TSslSocket::TSslSocket(long IP, int Port, int Timeout, int BufferSize)
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, 0, Port, Timeout, BufferSize);
@@ -523,7 +523,7 @@ TSslSocket::TSslSocket(long IP, int Port, int Timeout, int BufferSize, const cha
 #   Returns....: *
 #
 ##########################################################################*/
-TSslSocket::TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize, const char *ThreadName)
+TSslSocket::TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize)
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, LocalPort, RemotePort, Timeout, BufferSize);

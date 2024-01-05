@@ -32,7 +32,7 @@ void main()
 //    port = 443;
     port = 6666;
 
-    sock = new TSslSocket(ip, port, 5000, 0x1000, "SSL 6666");
+    sock = new TSslSocket(ip, port, 5000, 0x1000);
     sock->WaitForConnection(7000);
 
     wait.Add(sock);

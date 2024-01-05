@@ -126,8 +126,8 @@ protected:
 class TSslSocket : public TSocket
 {
 public:
-    TSslSocket(long IP, int Port, int Timeout, int BufferSize, const char *ThreadName);
-    TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize, const char *ThreadName);
+    TSslSocket(long IP, int Port, int Timeout, int BufferSize);
+    TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
     ~TSslSocket();
 
     virtual void DeviceName(char *Name, int MaxLen) const;
