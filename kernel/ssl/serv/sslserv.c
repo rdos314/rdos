@@ -371,6 +371,9 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
     {
         printf("Open connection %d\r\n", CurrIndex + 1);
 
+        if (!LocalPort)
+            LocalPort = RdosGetLocalTcpConnectionPort(handle);
+
         ServCreateSslConnection(CurrIndex + 1, IP, LocalPort, RemotePort, BufferSize);
 
         sbio = BIO_new_socket(handle, BIO_NOCLOSE);
