@@ -812,7 +812,6 @@ stop_wait_for_connection    PROC far
     call GetConnSel
     jc swDone
 ;
-    mov ds,ax
     mov ds:sc_wait_rec,0
 
 swDone:
