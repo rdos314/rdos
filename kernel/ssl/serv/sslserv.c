@@ -193,7 +193,7 @@ static void ConnectionHandler(void *par)
     if (!RdosWaitForTcpConnection(handle, timeout))
         return;
 
-    printf("connected\r\n");
+    printf("connected %d\r\n", index);
 
     ServSslStart(index, handle);
     buf = (char *)malloc(size);
@@ -315,7 +315,7 @@ static void ConnectionHandler(void *par)
             ServSslWaitForChange(index);
     }
 
-    printf("closed\r\n");
+    printf("closed %d\r\n", index);
 
     ServSslStop(index, handle);
     free(buf);
