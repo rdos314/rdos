@@ -1006,6 +1006,23 @@ push_secure_connection  Endp
 get_remote_secure_ip_name DB 'Get Remote Secure Connection IP',0
 
 get_remote_secure_ip    Proc far
+    push ds
+    push ebx
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc grsiDone
+;
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc grsiDone
+;
+    mov eax,ds:sc_rem_ip
+    clc
+
+grsiDone:
+    pop ebx
+    pop ds
     ret
 get_remote_secure_ip    Endp
         
@@ -1024,6 +1041,23 @@ get_remote_secure_ip    Endp
 get_remote_secure_port_name DB 'Get Remote Secure Connection Port',0
 
 get_remote_secure_port  Proc far
+    push ds
+    push ebx
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc grspDone
+;
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc grspDone
+;
+    mov ax,ds:sc_rem_port
+    clc
+
+grspDone:
+    pop ebx
+    pop ds
     ret
 get_remote_secure_port  Endp
         
@@ -1042,6 +1076,23 @@ get_remote_secure_port  Endp
 get_local_secure_port_name DB 'Get Local Secure Connection Port',0
 
 get_local_secure_port  Proc far
+    push ds
+    push ebx
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc glspDone
+;
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc glspDone
+;
+    mov ax,ds:sc_my_port
+    clc
+
+glspDone:
+    pop ebx
+    pop ds
     ret
 get_local_secure_port  Endp
         
@@ -1060,6 +1111,36 @@ get_local_secure_port  Endp
 is_secure_connection_idle_name DB 'Is Secure Connection Idle?',0
 
 is_secure_connection_idle  Proc far
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc isciOk
+;
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc isciOk
+;
+    mov al,ds:sc_closed
+    or al,al
+    jnz isciOk
+;
+    mov ax,ds:sc_receive_count
+    or ax,ax
+    je isciOk
+;
+    stc
+    jmp isciDone
+
+isciOk:
+    clc
+
+isciDone:
+    pop ebx
+    pop eax
+    pop ds
     ret
 is_secure_connection_idle  Endp
 
@@ -1079,6 +1160,25 @@ is_secure_connection_idle  Endp
 get_secure_write_space_name DB 'Get Secure connection Write Space', 0
 
 get_secure_write_space    Proc far
+    push ds
+    push ebx
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc gswsDone
+;
+    mov ebx,[ebx].sc_id
+    call GetConnSel
+    jc gswsDone
+;
+    mov ax,ds:sc_buffer_size
+    sub ax,ds:sc_send_count
+    movzx eax,ax
+    clc
+
+gswsDone:
+    pop ebx
+    pop ds
     ret
 get_secure_write_space    Endp
 

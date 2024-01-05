@@ -45,9 +45,9 @@ void main()
         IpToString(host, ip);
         printf("IP: %s\r\n", host);
         port = sock->GetRemotePort();
-        printf("Remote port: %s\r\n", port);
+        printf("Remote port: %d\r\n", port);
         port = sock->GetLocalPort();
-        printf("Local port: %s\r\n", port);
+        printf("Local port: %d\r\n", port);
     }
 
     while (sock->IsOpen())
