@@ -1012,7 +1012,13 @@
 #define usergate_read_secure_connection 0x00000340
 #define usergate_write_secure_connection 0x00000341
 #define usergate_poll_secure_connection 0x00000342
-#define usergate_get_secure_tcp_handle 0x00000343
+
+#define usergate_push_secure_connection 0x00000344
+#define usergate_get_remote_secure_ip 0x00000345
+#define usergate_get_remote_secure_port 0x00000346
+#define usergate_get_local_secure_port 0x00000347
+#define usergate_is_secure_connection_idle 0x00000348
+#define usergate_get_secure_write_space 0x00000349
 
 
 
@@ -2031,7 +2037,13 @@
 #define CallGate_read_secure_connection 0x55 0x67 0x9a 64 3 0 0 3 0 0x5d
 #define CallGate_write_secure_connection 0x55 0x67 0x9a 65 3 0 0 3 0 0x5d
 #define CallGate_poll_secure_connection 0x55 0x67 0x9a 66 3 0 0 3 0 0x5d
-#define CallGate_get_secure_tcp_handle 0x55 0x67 0x9a 67 3 0 0 3 0 0x5d
+
+#define CallGate_push_secure_connection 0x55 0x67 0x9a 68 3 0 0 3 0 0x5d
+#define CallGate_get_remote_secure_ip 0x55 0x67 0x9a 69 3 0 0 3 0 0x5d
+#define CallGate_get_remote_secure_port 0x55 0x67 0x9a 70 3 0 0 3 0 0x5d
+#define CallGate_get_local_secure_port 0x55 0x67 0x9a 71 3 0 0 3 0 0x5d
+#define CallGate_is_secure_connection_idle 0x55 0x67 0x9a 72 3 0 0 3 0 0x5d
+#define CallGate_get_secure_write_space 0x55 0x67 0x9a 73 3 0 0 3 0 0x5d
 
 #else
 
@@ -3048,6 +3060,12 @@
 #define CallGate_read_secure_connection 0x3e 0x67 0x9a 64 3 0 0 3 0
 #define CallGate_write_secure_connection 0x3e 0x67 0x9a 65 3 0 0 3 0
 #define CallGate_poll_secure_connection 0x3e 0x67 0x9a 66 3 0 0 3 0
-#define CallGate_get_secure_tcp_handle 0x3e 0x67 0x9a 67 3 0 0 3 0
+
+#define CallGate_push_secure_connection 0x3e 0x67 0x9a 68 3 0 0 3 0
+#define CallGate_get_remote_secure_ip 0x3e 0x67 0x9a 69 3 0 0 3 0
+#define CallGate_get_remote_secure_port 0x3e 0x67 0x9a 70 3 0 0 3 0
+#define CallGate_get_local_secure_port 0x3e 0x67 0x9a 71 3 0 0 3 0
+#define CallGate_is_secure_connection_idle 0x3e 0x67 0x9a 72 3 0 0 3 0
+#define CallGate_get_secure_write_space 0x3e 0x67 0x9a 73 3 0 0 3 0
 
 #endif

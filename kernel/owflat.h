@@ -3099,11 +3099,6 @@
     CallGate_close_secure_connection  \
     __parm [__ebx]
 
-#pragma aux RdosGetSecureTcpHandle = \
-    CallGate_get_secure_tcp_handle  \
-    __parm [__ebx]  \
-    __value [__eax]
-
 #pragma aux RdosWaitForSecureConnection = \
     CallGate_wait_for_secure_connection  \
     CarryToBool \
@@ -3118,6 +3113,32 @@
     CallGate_is_secure_connection_closed  \
     "cmc"   \
     CarryToBool \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux RdosIsSecureConnectionIdle = \
+    CallGate_is_secure_connection_idle  \
+    CarryToBool \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux RdosGetRemoteSecureConnectionIP = \
+    CallGate_get_remote_secure_ip  \
+    ValidateEax \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux RdosGetRemoteSecureConnectionPort = \
+    CallGate_get_remote_secure_port  \
+    "movzx eax,ax"\
+    ValidateEax \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux RdosGetLocalSecureConnectionPort = \
+    CallGate_get_local_secure_port  \
+    "movzx eax,ax"\
+    ValidateEax \
     __parm [__ebx] \
     __value [__eax]
 
@@ -3136,6 +3157,18 @@
 #pragma aux RdosPollSecureConnection = \
     CallGate_poll_secure_connection  \
     ValidateEax \
+    __parm [__ebx] \
+    __value [__eax]
+
+#pragma aux RdosPushSecureConnection = \
+    CallGate_push_secure_connection  \
+    __parm [__ebx]
+
+#pragma aux RdosGetSecureConnectionWriteSpace = \
+    CallGate_get_secure_write_space  \
+    "jnc ok" \
+    "mov eax,07FFFFFFFh" \
+    "ok:" \
     __parm [__ebx] \
     __value [__eax]
 

@@ -1012,6 +1012,12 @@ add_wait_for_secure_connection_nr = 830
 read_secure_connection_nr         = 832
 write_secure_connection_nr        = 833
 poll_secure_connection_nr         = 834
-get_secure_tcp_handle_nr          = 835
+
+push_secure_connection_nr         = 836
+get_remote_secure_ip_nr           = 837
+get_remote_secure_port_nr         = 838
+get_local_secure_port_nr          = 839
+is_secure_connection_idle_nr      = 840
+get_secure_write_space_nr         = 841
 
 usergate_entries                  = 860

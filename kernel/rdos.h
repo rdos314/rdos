@@ -881,9 +881,16 @@ int RDOSAPI RdosWaitForSecureConnection(int Handle, long Timeout);
 
 void RDOSAPI RdosAddWaitForSecureConnection(int Handle, int ConHandle, int ID);
 int RDOSAPI RdosIsSecureConnectionClosed(int Handle);
+void RDOSAPI RdosPushSecureConnection(int Handle);
+int RDOSAPI RdosIsSecuConnectionClosed(int Handle);
+int RDOSAPI RdosIsSecureConnectionIdle(int Handle);
+long RDOSAPI RdosGetRemoteSecureConnectionIP(int Handle);
+int RDOSAPI RdosGetRemoteSecureConnectionPort(int Handle);
+int RDOSAPI RdosGetLocalSecureConnectionPort(int Handle);
 int RDOSAPI RdosReadSecureConnection(int Handle, void *Buf, int Size);
 int RDOSAPI RdosWriteSecureConnection(int Handle, const void *Buf, int Size);
 int RDOSAPI RdosPollSecureConnection(int Handle);
+int RDOSAPI RdosGetSecureConnectionWriteSpace(int Handle);
 
 int RDOSAPI RdosGetLocalMailslot(const char *Name);
 int RDOSAPI RdosGetRemoteMailslot(long Ip, const char *Name);

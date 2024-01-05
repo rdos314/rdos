@@ -2239,12 +2239,6 @@ CreateSecureConnection       MACRO
         UserGate create_secure_connection_nr
                         ENDM
 
-; IN  BX                connection handle
-; OUT AX                TCP connection handle
-GetSecureTcpHandle       MACRO
-        UserGate get_secure_tcp_handle_nr
-                        ENDM
-
 ; IN  EBX               connection handle
 CloseSecureConnection       MACRO
         UserGate close_secure_connection_nr
@@ -2281,6 +2275,41 @@ WriteSecureConnection              MACRO
 ; OUT (E)AX             number of available bytes in buffer
 PollSecureConnection               MACRO
         UserGate poll_secure_connection_nr
+                        ENDM
+
+; IN  BX                connection handle
+; OUT (E)AX             number of free bytes in write buffer
+GetSecureConnectionWriteSpace               MACRO
+        UserGate get_secure_write_space_nr
+                        ENDM
+
+; IN  BX                connection handle
+PushSecureConnection               MACRO
+        UserGate push_secure_connection_nr
+                        ENDM
+
+; IN  BX                connection handle
+; OUT NC        Idle
+IsSecureConnectionIdle     MACRO
+        UserGate is_secure_connection_idle_nr
+                        ENDM
+
+; IN  BX                connection handle
+; OUT EAX       IP
+GetRemoteSecureConnectionIP        MACRO
+        UserGate get_remote_secure_ip_nr
+                        ENDM
+
+; IN  BX                connection handle
+; OUT AX        port
+GetRemoteSecureConnectionPort      MACRO
+        UserGate get_remote_secure_port_nr
+                        ENDM
+
+; IN  BX                connection handle
+; OUT AX        port
+GetLocalSecureConnectionPort       MACRO
+        UserGate get_local_secure_port_nr
                         ENDM
 
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
