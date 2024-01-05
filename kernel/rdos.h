@@ -877,7 +877,6 @@ int RDOSAPI RdosCloseSecureSession(int Handle);
 int RDOSAPI RdosCreateSecureConnection(int Session, int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
 void RDOSAPI RdosCloseSecureConnection(int Handle);
 int RDOSAPI RdosGetSecureTcpHandle(int Handle);
-void RDOSAPI RdosHandleSecureConnection(int Handle);
 int RDOSAPI RdosWaitForSecureConnection(int Handle, long Timeout);
 
 void RDOSAPI RdosAddWaitForSecureConnection(int Handle, int ConHandle, int ID);

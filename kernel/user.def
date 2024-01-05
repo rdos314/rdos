@@ -1006,7 +1006,6 @@ grow_handle_nr                    = 824
 create_secure_session_nr          = 825
 close_secure_session_nr           = 826
 close_secure_connection_nr        = 827
-handle_secure_connection_nr       = 828
 wait_for_secure_connection_nr     = 829
 is_secure_connection_closed_nr    = 831
 add_wait_for_secure_connection_nr = 830

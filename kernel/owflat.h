@@ -3104,10 +3104,6 @@
     __parm [__ebx]  \
     __value [__eax]
 
-#pragma aux RdosHandleSecureConnection = \
-    CallGate_handle_secure_connection  \
-    __parm [__ebx]
-
 #pragma aux RdosWaitForSecureConnection = \
     CallGate_wait_for_secure_connection  \
     CarryToBool \

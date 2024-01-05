@@ -2250,11 +2250,6 @@ CloseSecureConnection       MACRO
         UserGate close_secure_connection_nr
                         ENDM
 
-; IN  EBX               connection handle
-HandleSecureConnection       MACRO
-        UserGate handle_secure_connection_nr
-                        ENDM
-
 ; IN  BX                connection handle
 ; IN  EAX               timeout in milliseconds
 WaitForSecureConnection    MACRO
