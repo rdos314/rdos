@@ -670,13 +670,26 @@ delete_ssl_conn_name DB 'Delete SSL Connection', 0
 
 delete_ssl_conn   Proc far
     push ds
+    push eax
+    push ebx
 ;
-    call GetConnSel
-    jc dscDone
+    or ebx,ebx
+    jz dscDone
 ;
+    dec ebx
+    mov eax,SEG data
+    mov ds,eax
+    xor ax,ax
+    xchg ax,ds:[2*ebx].conn_arr
+    or ax,ax
+    jz dscDone
+;
+    mov ds,ax
     call DeleteConnection
 
 dscDone:
+    pop ebx
+    pop eax
     pop ds
     ret
 delete_ssl_conn  Endp
