@@ -482,6 +482,7 @@ CreateConnection    Proc near
     call CreateBuffer
     mov es:sc_send_buffer,ax
     mov es:sc_send_count,0
+    mov es:sc_send_pend,0
     mov es:sc_send_head,0
     mov es:sc_send_tail,0
 ;
@@ -972,6 +973,7 @@ push_secure_connection_name       DB 'Push Secure Connection',0
 push_secure_connection  Proc far
     push ds
     push fs
+    push eax
     push ebx
 ;
     mov ax,SSL_CONN_HANDLE
@@ -982,10 +984,29 @@ push_secure_connection  Proc far
     call GetConnSel
     jc pscDone
 ;
+    mov ax,ds:sc_send_pend
+    or ax,ax
+    jnz pscSend
+;
     int 3
+    jmp pscDone
+
+pscSend:
+    EnterSection ds:sc_section
+    xor ax,ax
+    xchg ax,ds:sc_send_pend
+    add ds:sc_send_count,ax
+    LeaveSection ds:sc_section
+;
+    mov bx,ds:sc_server
+    or bx,bx
+    jz pscDone
+;
+    Signal
 
 pscDone:
     pop ebx
+    pop eax
     pop fs
     pop ds
     ret
@@ -1173,6 +1194,7 @@ get_secure_write_space    Proc far
 ;
     mov ax,ds:sc_buffer_size
     sub ax,ds:sc_send_count
+    sub ax,ds:sc_send_pend
     movzx eax,ax
     clc
 
@@ -1317,6 +1339,7 @@ wcRetry:
 ;       
     mov dx,ds:sc_buffer_size
     sub dx,ds:sc_send_count
+    sub dx,ds:sc_send_pend
     movzx edx,dx
 ;
     mov eax,ecx
@@ -1329,7 +1352,7 @@ wcSizeOk:
     or ecx,ecx
     jz wcFull
 ;
-    add ds:sc_send_count,cx
+    add ds:sc_send_pend,cx
     mov bx,ds:sc_send_tail
     call CopyToBuffer
     mov ds:sc_send_tail,bx
@@ -1346,12 +1369,6 @@ wcOk:
 
 wcLeave:
     LeaveSection ds:sc_section
-;
-    mov bx,ds:sc_server
-    or bx,bx
-    jz wcDone
-;
-    Signal
 
 wcDone:
     popad

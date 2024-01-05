@@ -76,6 +76,7 @@ void main()
                 kbuf[keys] = 0xd;
                 kbuf[keys+1] = 0xa;
                 sock->Write(kbuf, keys+2);
+                sock->Push();
 
                 keys = 0;
             }

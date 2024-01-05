@@ -91,6 +91,7 @@ sc_receive_head		DW ?
 sc_receive_tail		DW ?
 sc_send_buffer		DW ?
 sc_send_count		DW ?
+sc_send_pend            DW ?
 sc_send_head		DW ?
 sc_send_tail		DW ?
 
