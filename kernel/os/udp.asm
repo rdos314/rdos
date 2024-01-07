@@ -189,6 +189,51 @@ calc_checksum_done:
     ret
 CalcChecksum    Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CalcUdpCheckSum
+;
+;           DESCRIPTION:    Calculate checksum for UDP
+;
+;           PARAMETERS:     ES:DI       Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CalcUdpCheckSum
+
+CalcUdpCheckSum    Proc near
+    push dx
+    push si
+;
+    mov es:[di].udp_checksum,0
+    mov cx,es:[edi].udp_len
+    mov dx,cx
+    xchg cl,ch
+    add dx,1100h
+    adc dx,0
+    adc dx,0
+    mov si,di
+    sub si,8
+    lodsw
+    add dx,ax
+    lodsw
+    adc dx,ax
+    lodsw
+    adc dx,ax
+    lodsw
+    adc dx,ax
+    mov ax,dx
+    adc ax,0
+    adc ax,0
+    call CalcChecksum
+    not ax
+    mov es:[di].udp_checksum,ax
+;
+    pop si
+    pop dx
+    ret
+CalcUdpCheckSum  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

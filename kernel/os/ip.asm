@@ -49,6 +49,7 @@ INCLUDE udp.inc
     extrn init_cache:near
     extrn IsDhcpDone:near
     extrn IsDhcpEnabled:near
+    extrn CalcUdpCheckSum:near
 
 Reverse MACRO
     xchg al,ah
@@ -62,6 +63,9 @@ my_ip               DD ?
 bc_ip               DD ?
 ip_mask             DD ?
 gateway             DD ?
+reroute_src         DD ?
+reroute_dst         DD ?
+reroute_ip          DD ?
 ip_handle               DW ?
 curr_id             DW ?
 host_name_sel       DW ?
@@ -1376,9 +1380,46 @@ receive_dhcp_done:
     mov cx,gs:[si].ip_size
     xchg cl,ch
     sub cx,SIZE ip_header
+;
+    mov edx,ds:reroute_src
+    or edx,edx
+    jz receive_not_reroute
+;
+    cmp edx,gs:[si].ip_dest
+    jnz receive_not_reroute
+;
+    mov al,gs:[si].ip_proto
+    cmp al,17
+    jnz receive_not_reroute
+;
+    mov edx,ds:reroute_dst
+    mov gs:[si].ip_dest,edx
+;
+    push ds
+    push di
+;
+    mov di,gs
+    mov ds,di
+    mov di,si
+    call CalcCheckSum
+;
+    mov di,si
+    mov al,ds:[di].ip_hdr_ver
+    and al,0Fh
+    shl al,2
+    xor ah,ah
+    add di,SIZE ip_header
+    call CalcUdpCheckSum
+;
+    pop di
+    pop ds
+
+receive_not_reroute:
+    mov si,di
     mov ah,gs:[si].ip_ttl
     mov al,gs:[si].ip_proto
     mov edx,gs:[si].ip_dest
+;
     push si
     mov si,cs
     mov ds,si       
@@ -1723,7 +1764,7 @@ define_gateway  Endp
 
     public RebindGateway
 
-RebindGateway	Proc near        
+RebindGateway   Proc near        
     push ds
     push fs
     push ax
@@ -1751,7 +1792,7 @@ rgDone:
     pop fs
     pop ds
     ret
-RebindGateway	Endp
+RebindGateway   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1759,13 +1800,13 @@ RebindGateway	Endp
 ;
 ;       Purpose:        Rebind IP
 ;
-;       Parameters:     EDX		IP
+;       Parameters:     EDX             IP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public RebindIP
 
-RebindIP	Proc near        
+RebindIP        Proc near        
     push ds
     push fs
     push ax
@@ -1800,7 +1841,7 @@ riDone:
     pop fs
     pop ds
     ret
-RebindIP	Endp
+RebindIP        Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2119,14 +2160,14 @@ link_up_arp Endp
 ;
 ;       Purpose:        Get Mac of IP address
 ;
-;       Parameters:     EDX     	IP
-;			ES:(E)DI	Mac buffer
+;       Parameters:     EDX             IP
+;                       ES:(E)DI        Mac buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ip_to_mac_name   DB 'IP to MAC',0
 
-ip_to_mac	proc near
+ip_to_mac       proc near
     push ds
     push fs
     pushad
@@ -2200,13 +2241,13 @@ ip_to_mac16   ENDP
 ;
 ;       Purpose:        Get Mac of local network adapter
 ;
-;       Parameters:     ES:(E)DI	Mac buffer
+;       Parameters:     ES:(E)DI        Mac buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_mac_name   DB 'Get MAC',0
 
-get_mac	proc near
+get_mac proc near
     push ds
     push fs
     pushad
@@ -2261,11 +2302,11 @@ get_mac16   ENDP
 ;
 ;       Purpose:        Check if IP is cachable
 ;
-;       Parameters:     ES:EDI	    Ip address
+;       Parameters:     ES:EDI      Ip address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-is_cachable	Proc far
+is_cachable     Proc far
     push ds
     push eax
     push edx
@@ -2406,12 +2447,26 @@ init_tasking    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+reroute_ip_src_name    DB 'REROUTE.SRC',0
+reroute_ip_dst_name    DB 'REROUTE.DST',0
+
 init    PROC far
     mov bx,SEG data
     mov es,bx
     mov ds,bx
     mov ds:protocol_count,0
     mov ds:curr_id,1
+    mov ds:reroute_ip,0
+;
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET reroute_ip_src_name
+    call GetIPNumber
+    mov ds:reroute_src,eax
+;
+    mov di,OFFSET reroute_ip_dst_name
+    call GetIPNumber
+    mov ds:reroute_dst,eax
 ;
     mov ax,cs
     mov ds,ax
