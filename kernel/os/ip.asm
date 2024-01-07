@@ -1386,14 +1386,56 @@ receive_dhcp_done:
     jz receive_not_reroute
 ;
     cmp edx,gs:[si].ip_dest
+    jnz receive_test_src_reroute
+;
+    mov al,gs:[si].ip_proto
+    cmp al,17
+    jnz receive_not_reroute
+;
+    mov edx,gs:[si].ip_source
+    mov ds:reroute_ip,edx
+;
+    mov edx,ds:reroute_dst
+    mov gs:[si].ip_dest,edx
+;
+    push ds
+    push di
+;
+    mov di,gs
+    mov ds,di
+    mov di,si
+    call CalcCheckSum
+;
+    mov di,si
+    mov al,ds:[di].ip_hdr_ver
+    and al,0Fh
+    shl al,2
+    xor ah,ah
+    add di,SIZE ip_header
+    call CalcUdpCheckSum
+;
+    pop di
+    pop ds
+    jmp receive_not_reroute
+
+receive_test_src_reroute:
+    mov edx,ds:reroute_ip
+    or edx,edx
+    jz receive_not_reroute
+;
+    cmp edx,gs:[si].ip_dest
+    jnz receive_not_reroute
+;
+    mov edx,ds:reroute_dst
+    cmp edx,gs:[si].ip_source
     jnz receive_not_reroute
 ;
     mov al,gs:[si].ip_proto
     cmp al,17
     jnz receive_not_reroute
 ;
-    mov edx,ds:reroute_dst
-    mov gs:[si].ip_dest,edx
+    mov edx,ds:reroute_src
+    mov gs:[si].ip_source,edx
 ;
     push ds
     push di
