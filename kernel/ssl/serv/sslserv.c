@@ -62,9 +62,23 @@ static int CurrIndex;
 static int CurrTimeout;
 static int CurrSize;
 
+struct TServerEntry
+{
+    SSL_CTX *ctx;
+    int ListenHandle;
+    int Port;
+    int MaxConnections;
+    int BufferSize;
+    int CurrConnection;
+    SSL **ConnectionArr;
+};
+
 SSL_CONF_CTX *ClientConf;
 SSL_CTX *ClientSessionArr[MAX_SESSION_COUNT];
 SSL *ClientConnectionArr[MAX_CONNECTION_COUNT];
+
+SSL_CONF_CTX *ServerConf;
+struct TServerEntry *ServerSessionArr[MAX_SESSION_COUNT];
 
 extern int WaitForMsg();
 #pragma aux WaitForMsg value [eax]
@@ -82,7 +96,39 @@ extern int WaitForMsg();
 ##########################################################################*/
 void CreateClientName(char *str, int Ip, int port)
 {
-    sprintf(str, "c%d.%d.%d.%d:%d", Ip & 0xff, (Ip >> 8) & 0xff, (Ip >> 16) & 0xff, (unsigned int)(Ip) >> 24, port);
+    sprintf(str, "c-%d.%d.%d.%d:%d", Ip & 0xff, (Ip >> 8) & 0xff, (Ip >> 16) & 0xff, (unsigned int)(Ip) >> 24, port);
+}
+
+/*##########################################################################
+#
+#   Name       : CreateListenName
+#
+#   Purpose....: returns thread name based on port
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CreateListenName(char *str, int port)
+{
+    sprintf(str, "s-%d", port);
+}
+
+/*##########################################################################
+#
+#   Name       : CreateServerName
+#
+#   Purpose....: returns thread name based on IP&port
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CreateServerName(char *str, int Ip, int port)
+{
+    sprintf(str, "s-%d.%d.%d.%d:%d", Ip & 0xff, (Ip >> 8) & 0xff, (Ip >> 16) & 0xff, (unsigned int)(Ip) >> 24, port);
 }
 
 /*##########################################################################
@@ -395,6 +441,143 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
 
 /*##########################################################################
 #
+#   Name       : ListenHandler
+#
+#   Purpose....: Listen handler
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ListenHandler(void *par)
+{
+    int index = CurrIndex + 1;
+    struct TServerEntry *entry = ServerSessionArr[index - 1];
+    int sock;
+    TWait wait;
+    int Ip;
+    int RemotePort;
+    BIO *sbio;
+    SSL *con;
+    int i;
+    int ci;
+    char str[80];
+
+    RdosAddWaitForTcpListen(Wait.GetHandle(), entry->ListenHandle, 0);
+
+    while (ServerSessionArr[index - 1])
+    {
+        wait.WaitForever();
+
+        sock = RdosGetTcpListen(entry->ListenHandle);
+        while (sock)
+        {
+            entry->CurrConnection = -1;
+
+            for (i = 0; i < entry->MaxConnections; i++)
+            {
+                if (entry->ConnectionArr[i] == 0)
+                {
+                    entry->CurrConnection = i;
+                    break;
+                }
+            }
+
+            if (entry->CurrConnection >= 0)
+            {
+                printf("Add connection %d:%d\r\n", index, entry->CurrConnection);
+
+                Ip = RdosGetRemoteTcpConnectionIP(sock);
+                RemotePort = RdosGetLocalTcpConnectionPort(sock);
+
+                ServCreateSslConnection(CurrIndex + 1, IP, entry->Port, RemotePort, entry->BufferSize);
+
+                sbio = BIO_new_socket(sock, BIO_NOCLOSE);
+                con = SSL_new(ctx);
+
+                SSL_set_bio(con, sbio, sbio);
+                SSL_set_accept_state(con);
+
+                ServerConnectionArr[CurrIndex] = con;
+
+                CreateServerName(str, IP, entry->Port);
+                RdosCreateThread(ConnectionHandler, str, 0, 0x4000);
+            }
+
+            sock = RdosGetTcpListen(entry->ListenHandle);
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : OpenServer
+#
+#   Purpose....: Open server session
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux OpenServer "*" parm routine [eax] [edx] [ecx] value [ebx]
+int OpenServer(int Port, int MaxConnections, int BufferSize)
+{
+    void *p;
+    SSL_CTX *ctx = NULL;
+    int i;
+    struct TServerEntry *listen;
+    char str[80];
+
+    CurrIndex = -1;
+
+    for (i = 0; i < MAX_SESSION_COUNT; i++)
+    {
+        if (ServerSessionArr[i] == 0)
+        {
+            CurrIndex = i;
+            break;
+        }
+    }
+
+    if (CurrIndex >= 0)
+    {
+        ctx = SSL_CTX_new(TLS_server_method());
+
+        if (ctx)
+        {
+            printf("Open server %d\r\n", CurrIndex + 1);
+
+            SSL_CTX_clear_mode(ctx, SSL_MODE_AUTO_RETRY);
+            SSL_CONF_CTX_set_ssl_ctx(ServerConf, ctx);
+
+            SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_NO_INTERNAL | SSL_SESS_CACHE_SERVER);
+
+            listen = (struct TServerEntry *)malloc(sizeof(struct TServerEntry));
+            listen->MaxConnections = MaxConnections;
+            listen->BufferSize = BufferSize;
+            listen->ListenHandle = RdosCreateTcpListen(Port, MaxConnections, BufferSize);
+            listen->ctx = ctx;
+            Listen->ConnectionArr = (SSL **)malloc(MaxConnections * sizeof(SSL *));
+
+            for (i = 0; i < MaxConnections; i++)
+                Listen->ConnectionArr[i] = 0;
+
+            ServerSessionArr[CurrIndex] = listen;
+
+            CreateListenName(str, Port);
+            RdosCreateThread(ListenHandler, str, 0, 0x4000);
+        }
+        else
+            CurrIndex = -1;
+    }
+
+    return CurrIndex + 1;
+}
+
+/*##########################################################################
+#
 #   Name       : PushConnection
 #
 #   Purpose....: Push connection
@@ -476,11 +659,17 @@ int main()
     ClientConf = SSL_CONF_CTX_new();
     SSL_CONF_CTX_set_flags(ClientConf, SSL_CONF_FLAG_CLIENT | SSL_CONF_FLAG_CMDLINE);
 
+    ServerConf = SSL_CONF_CTX_new();
+    SSL_CONF_CTX_set_flags(ServerConf, SSL_CONF_FLAG_SERVER | SSL_CONF_FLAG_CMDLINE);
+
     for (i = 0; i < MAX_SESSION_COUNT; i++)
         ClientSessionArr[i] = 0;
 
     for (i = 0; i < MAX_CONNECTION_COUNT; i++)
         ClientConnectionArr[i] = 0;
+
+    for (i = 0; i < MAX_SESSION_COUNT; i++)
+        ServerSessionArr[i] = 0;
 
     while (WaitForMsg())
         ;
