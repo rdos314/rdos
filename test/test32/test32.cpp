@@ -6,6 +6,135 @@
 #include "sockobj.h"
 #include "keyboard.h"
 
+class TTestSocketServer : public TSocketServer
+{
+public:
+    TTestSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
+    ~TTestSocketServer();
+
+    virtual void HandleSocket();
+};
+
+class TTestSocketServerFactory : public TSslSocketServerFactory
+{
+public:
+    TTestSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~TTestSocketServerFactory();
+
+    virtual TSocketServer *Create(TTcpSocket *Socket);
+};
+
+/*##########################################################################
+#
+#   Name       : TTestSocketServer::TTestSocketServer
+#
+#   Purpose....: Socket server constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTestSocketServer::TTestSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
+  : TSocketServer(Name, StackSize, Socket)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TTestSocketServer::~TTestSocketServer
+#
+#   Purpose....: Socket server destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTestSocketServer::~TTestSocketServer()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TTestSocketServer::HandleSocket
+#
+#   Purpose....: Handle socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTestSocketServer::HandleSocket()
+{
+    int count;
+    char *rbuf = new char[1025];
+
+    while (FSocket->IsOpen())
+    {
+        count = FSocket->GetSize();
+        if (count)
+        {
+            count = FSocket->Read(rbuf, count);
+            rbuf[count] = 0;
+            printf(rbuf);
+        }
+        else
+            RdosWaitMilli(50);
+    }
+    delete rbuf;
+}
+
+/*##########################################################################
+#
+#   Name       : TTestSocketServerFactory::TTestSocketServerFactory
+#
+#   Purpose....: Socket server factory constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTestSocketServerFactory::TTestSocketServerFactory(int Port, int MaxConnections, int BufferSize)
+  : TSslSocketServerFactory(Port, MaxConnections, BufferSize)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TTestSocketServerFactory::~TTestSocketServerFactory
+#
+#   Purpose....: Socket server factory destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTestSocketServerFactory::~TTestSocketServerFactory()
+{
+}        
+
+/*##########################################################################
+#
+#   Name       : TTestSocketServerFactory::Create
+#
+#   Purpose....: Create a socket server instance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServer *TTestSocketServerFactory::Create(TTcpSocket *Socket)
+{
+    TTestSocketServer *server;
+    server = new TTestSocketServer("Test Listen", 0x2000, Socket);
+    return server;
+}
+
 void main()
 {
     int port;
@@ -18,6 +147,12 @@ void main()
     TWait wait;
     TTcpSocket *sock;
     TKeyboardDevice keyboard;
+
+    TTestSocketServerFactory fact(443, 100, 0x1000);
+
+    for (;;)
+        fact.WaitForever();
+
 
     strcpy(host, "185.20.15.60");
 //    strcpy(host, "10.8.8.240");
