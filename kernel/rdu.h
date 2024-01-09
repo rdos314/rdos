@@ -1020,6 +1020,11 @@
 #define usergate_is_secure_connection_idle 0x00000348
 #define usergate_get_secure_write_space 0x00000349
 
+#define usergate_add_wait_for_secure_listen 0x0000034A
+#define usergate_create_secure_listen 0x0000034B
+#define usergate_get_secure_listen 0x0000034C
+#define usergate_close_secure_listen 0x0000034D
+
 
 
 #ifdef __FLAT__
@@ -2045,6 +2050,11 @@
 #define CallGate_is_secure_connection_idle 0x55 0x67 0x9a 72 3 0 0 3 0 0x5d
 #define CallGate_get_secure_write_space 0x55 0x67 0x9a 73 3 0 0 3 0 0x5d
 
+#define CallGate_add_wait_for_secure_listen 0x55 0x67 0x9a 74 3 0 0 3 0 0x5d
+#define CallGate_create_secure_listen 0x55 0x67 0x9a 75 3 0 0 3 0 0x5d
+#define CallGate_get_secure_listen 0x55 0x67 0x9a 76 3 0 0 3 0 0x5d
+#define CallGate_close_secure_listen 0x55 0x67 0x9a 77 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -3067,5 +3077,10 @@
 #define CallGate_get_local_secure_port 0x3e 0x67 0x9a 71 3 0 0 3 0
 #define CallGate_is_secure_connection_idle 0x3e 0x67 0x9a 72 3 0 0 3 0
 #define CallGate_get_secure_write_space 0x3e 0x67 0x9a 73 3 0 0 3 0
+
+#define CallGate_add_wait_for_secure_listen 0x3e 0x67 0x9a 74 3 0 0 3 0
+#define CallGate_create_secure_listen 0x3e 0x67 0x9a 75 3 0 0 3 0
+#define CallGate_get_secure_listen 0x3e 0x67 0x9a 76 3 0 0 3 0
+#define CallGate_close_secure_listen 0x3e 0x67 0x9a 77 3 0 0 3 0
 
 #endif

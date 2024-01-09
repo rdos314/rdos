@@ -2900,6 +2900,28 @@
     CallGate_add_wait_for_tcp_listen  \
     __parm [__ebx] [__eax] [__ecx]
 
+#pragma aux RdosCreateSecureListen = \
+    CallGate_create_secure_listen  \
+    ValidateHandle \
+    __parm [__esi] [__eax] [__ecx] \
+    __value [__ebx]
+
+#pragma aux RdosGetSecureListen = \
+    CallGate_get_secure_listen  \
+    "movzx ebx,ax" \
+    ValidateHandle \
+    __parm [__ebx] \
+    __value [__ebx] \
+    __modify [__ax]
+
+#pragma aux RdosCloseSecureListen = \
+    CallGate_close_secure_listen  \
+    __parm [__ebx]
+
+#pragma aux RdosAddWaitForSecureListen = \
+    CallGate_add_wait_for_secure_listen  \
+    __parm [__ebx] [__eax] [__ecx]
+
 #pragma aux RdosCreateUdpListen = \
     CallGate_create_udp_listen  \
     ValidateHandle \

@@ -1416,7 +1416,7 @@ void TSocketServerFactory::CloseAllSockets()
 ##########################################################################*/
 TSslSocketServerFactory::TSslSocketServerFactory(int Port, int MaxConnections, int BufferSize)
 {
-//    FListenHandle = RdosCreateSecureListen(Port, MaxConnections, BufferSize);
+    FListenHandle = RdosCreateSecureListen(Port, MaxConnections, BufferSize);
 }
 
 /*##########################################################################
@@ -1432,8 +1432,8 @@ TSslSocketServerFactory::TSslSocketServerFactory(int Port, int MaxConnections, i
 ##########################################################################*/
 TSslSocketServerFactory::~TSslSocketServerFactory()
 {
-//    if (FListenHandle)
-//        RdosCloseSecureListen(FListenHandle);
+    if (FListenHandle)
+        RdosCloseSecureListen(FListenHandle);
 }
 
 /*##########################################################################
@@ -1448,8 +1448,8 @@ TSslSocketServerFactory::~TSslSocketServerFactory()
 ##########################################################################*/
 void TSslSocketServerFactory::Add(TWait *Wait)
 {
-//    if (FListenHandle)
-//        RdosAddWaitForSecureListen(Wait->GetHandle(), FListenHandle, (int)this);
+    if (FListenHandle)
+        RdosAddWaitForSecureListen(Wait->GetHandle(), FListenHandle, (int)this);
 }
 
 /*##########################################################################
@@ -1470,7 +1470,7 @@ void TSslSocketServerFactory::SignalNewData()
     TSocketServer *server;
 
     Cleanup();
-//    handle = RdosGetSecureListen(FListenHandle);
+    handle = RdosGetSecureListen(FListenHandle);
     if (handle)
     {
         socket = new TSslSocket(handle);

@@ -1020,4 +1020,9 @@ get_local_secure_port_nr          = 839
 is_secure_connection_idle_nr      = 840
 get_secure_write_space_nr         = 841
 
+add_wait_for_secure_listen_nr     = 842
+create_secure_listen_nr           = 843
+get_secure_listen_nr              = 844
+close_secure_listen_nr            = 845
+
 usergate_entries                  = 860

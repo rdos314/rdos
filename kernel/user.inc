@@ -749,6 +749,13 @@ AddWaitForTcpListen       MACRO
         UserGate add_wait_for_tcp_listen_nr
                                                 ENDM
 
+; IN  AX        Secure listen handle
+; IN  BX                Wait handle
+; IN  ECX       Object ID
+AddWaitForSecureListen       MACRO
+        UserGate add_wait_for_secure_listen_nr
+                                                ENDM
+
 ; IN  AX        Udp listen handle
 ; IN  BX                Wait handle
 ; IN  ECX       Object ID
@@ -1928,6 +1935,25 @@ GetTcpListen    MACRO
 ; IN  BX                listen handle
 CloseTcpListen  MACRO
         UserGate close_tcp_listen_nr
+                        ENDM
+
+; IN  AX            max connections
+; IN  ECX                       buffer size
+; IN  SI                        local port
+; OUT BX            listen handle
+CreateSecureListen MACRO
+        UserGate create_secure_listen_nr
+                        ENDM
+
+; IN  BX            listen handle
+; OUT AX            connection handle
+GetSecureListen    MACRO
+        UserGate get_secure_listen_nr
+                        ENDM
+
+; IN  BX                listen handle
+CloseSecureListen  MACRO
+        UserGate close_secure_listen_nr
                         ENDM
 
 ; IN  EAX               Timeout in milliseconds for connection
