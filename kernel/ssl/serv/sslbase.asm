@@ -181,6 +181,34 @@ LocalPushConnection Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalOpenServer
+;
+;       DESCRIPTION:    open server
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern OpenServer:near
+
+LocalOpenServer Proc near
+    call OpenServer
+;
+    mov [edi].fc_ebx,ebx
+    or ebx,ebx
+    jz osrvReply
+;
+    and [edi].fc_eflags,NOT 1
+
+osrvReply:
+    mov ebx,[edi].fc_handle
+    ReplySslCmd
+    ret
+LocalOpenServer Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -202,6 +230,7 @@ m01 DD OFFSET LocalCloseSession
 m02 DD OFFSET LocalOpenConnection
 m03 DD OFFSET LocalCloseConnection
 m04 DD OFFSET LocalPushConnection
+m05 DD OFFSET LocalOpenServer
 
 WaitForMsg_    Proc near
     push ebx

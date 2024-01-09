@@ -424,6 +424,7 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
         Conn->Index = index + 1;
         Conn->Timeout = Timeout;
         Conn->BufferSize = BufferSize;
+        Conn->Server = 0;
 
         printf("Open connection %d\r\n", Conn->Index);
 

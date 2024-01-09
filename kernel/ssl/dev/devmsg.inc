@@ -45,3 +45,9 @@ SSL_CLOSE_CONNECTION           = 3
 
 ; IN  EBX       Connection ID
 SSL_PUSH_CONNECTION            = 4
+
+; IN  EAX       Port
+; IN  EDX       Max connections
+; IN  ECX       Buffer size
+; OUT EBX       Server ID
+SSL_OPEN_SERVER                = 5
