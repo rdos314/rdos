@@ -16,7 +16,7 @@ void main()
     char *rbuf = new char[1025];
     char buf[80];
     TWait wait;
-    TSslSocket *sock;
+    TTcpSocket *sock;
     TKeyboardDevice keyboard;
 
     strcpy(host, "185.20.15.60");
