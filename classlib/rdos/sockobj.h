@@ -66,7 +66,7 @@ public:
     TTcpSocket(int Handle);
     TTcpSocket(long IP, int Port, int Timeout, int BufferSize);
     TTcpSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
-    ~TTcpSocket();
+    virtual ~TTcpSocket();
 
     virtual void DeviceName(char *Name, int MaxLen) const;
     virtual int IsOpen();
@@ -76,10 +76,10 @@ public:
     virtual int GetRemotePort() const;
     virtual int GetLocalPort() const;
 
-    void Push();
-    void Write(char ch);
-    char Read();
-    int WaitForConnection(int Timeout);
+    virtual void Push();
+    virtual void Write(char ch);
+    virtual char Read();
+    virtual int WaitForConnection(int Timeout);
 
     virtual int IsIdle();
     virtual int GetSize();
@@ -89,8 +89,11 @@ public:
     virtual int Read(char *buf, int size);
 
 protected:
+    TTcpSocket();
+
     virtual void Add(TWait *Wait);
 
+private:
     int FHandle;
 };
 
@@ -98,7 +101,7 @@ class TUdpSocket : public TSocket
 {
 public:
     TUdpSocket(long IP, int LocalPort, int RemotePort);
-    ~TUdpSocket();
+    virtual ~TUdpSocket();
 
     virtual void DeviceName(char *Name, int MaxLen) const;
     virtual void NotifyClose();
@@ -123,12 +126,12 @@ protected:
     int FRemotePort;
 };
 
-class TSslSocket : public TSocket
+class TSslSocket : public TTcpSocket
 {
 public:
     TSslSocket(long IP, int Port, int Timeout, int BufferSize);
     TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
-    ~TSslSocket();
+    virtual ~TSslSocket();
 
     virtual void DeviceName(char *Name, int MaxLen) const;
     virtual int IsOpen();
@@ -138,10 +141,10 @@ public:
     virtual int GetRemotePort() const;
     virtual int GetLocalPort() const;
 
-    void Push();
-    void Write(char ch);
-    char Read();
-    int WaitForConnection(int Timeout);
+    virtual void Push();
+    virtual void Write(char ch);
+    virtual char Read();
+    virtual int WaitForConnection(int Timeout);
 
     virtual int IsIdle();
     virtual int GetSize();
@@ -154,10 +157,10 @@ protected:
     int CreateSession();
     virtual void Add(TWait *Wait);
 
-    int FSession;
+private:
     int FHandle;
+    int FSession;
 };
-
 
 class TSocketServer : public TThread
 {

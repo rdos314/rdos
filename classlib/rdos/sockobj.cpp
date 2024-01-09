@@ -141,6 +141,22 @@ void TSocket::SignalNewData()
 #
 #   Purpose....: Constructor
 #
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTcpSocket::TTcpSocket()
+{
+    FHandle = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TTcpSocket::TTcpSocket
+#
+#   Purpose....: Constructor
+#
 #   In params..: Handle     Socket handle
 #   Out params.: *
 #   Returns....: *
