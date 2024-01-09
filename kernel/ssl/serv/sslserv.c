@@ -58,27 +58,33 @@
 #define MAX_SESSION_COUNT 16
 #define MAX_CONNECTION_COUNT 128
 
-static int CurrIndex;
-static int CurrTimeout;
-static int CurrSize;
-
-struct TServerEntry
+struct TServer
 {
+    int Index;
     SSL_CTX *ctx;
     int ListenHandle;
     int Port;
     int MaxConnections;
     int BufferSize;
     int CurrConnection;
-    SSL **ConnectionArr;
+    struct TConnection **ConnectionArr;
+};
+
+struct TConnection
+{
+    int Index;
+    int Timeout;
+    int BufferSize;
+    struct TServer *Server;
+    SSL *Con;
 };
 
 SSL_CONF_CTX *ClientConf;
 SSL_CTX *ClientSessionArr[MAX_SESSION_COUNT];
-SSL *ClientConnectionArr[MAX_CONNECTION_COUNT];
+struct TConnection *ConnectionArr[MAX_CONNECTION_COUNT];
 
 SSL_CONF_CTX *ServerConf;
-struct TServerEntry *ServerSessionArr[MAX_SESSION_COUNT];
+struct TServer *ServerSessionArr[MAX_SESSION_COUNT];
 
 extern int WaitForMsg();
 #pragma aux WaitForMsg value [eax]
@@ -226,10 +232,11 @@ void CloseSession(int index)
 ##########################################################################*/
 static void ConnectionHandler(void *par)
 {
-    int index = CurrIndex + 1;
-    SSL *con = ClientConnectionArr[index - 1];
-    int timeout = CurrTimeout;
-    int size = CurrSize;
+    struct TConnection *Conn = (struct TConnection *)par;
+    int index = Conn->Index;
+    SSL *con = Conn->Con;
+    int timeout = Conn->Timeout;
+    int size = Conn->BufferSize;
     int handle = SSL_get_handle(con);
     bool in_init = true;
     bool write_ssl = true;
@@ -384,16 +391,14 @@ static void ConnectionHandler(void *par)
 #pragma aux OpenConnection "*" parm routine [ebx] [edx] [esi] [edi] [ecx] [eax] value [ebx]
 int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int BufferSize, int Timeout)
 {
+    struct TConnection *Conn = 0;
     SSL_CTX *ctx = 0;
     BIO *sbio;
     SSL *con;
     int handle = 0;
     int i;
+    int index = -1;
     char str[80];
-
-    CurrIndex = -1;
-    CurrTimeout = Timeout;
-    CurrSize = BufferSize;
 
     if (session > 0 && session <= MAX_SESSION_COUNT)
         ctx = ClientSessionArr[session - 1];
@@ -402,41 +407,47 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
     {
         for (i = 0; i < MAX_CONNECTION_COUNT; i++)
         {
-            if (ClientConnectionArr[i] == 0)
+            if (ConnectionArr[i] == 0)
             {
-                CurrIndex = i;
+                index = i;
                 break;
             }
         }
     }
 
-    if (CurrIndex >= 0)
+    if (index >= 0)
         handle = RdosOpenTcpConnection(IP, LocalPort, RemotePort, Timeout, BufferSize);
 
     if (handle)
     {
-        printf("Open connection %d\r\n", CurrIndex + 1);
+        Conn = (struct TConnection *)malloc(sizeof(struct TConnection));
+        Conn->Index = index + 1;
+        Conn->Timeout = Timeout;
+        Conn->BufferSize = BufferSize;
+
+        printf("Open connection %d\r\n", Conn->Index);
 
         if (!LocalPort)
             LocalPort = RdosGetLocalTcpConnectionPort(handle);
 
-        ServCreateSslConnection(CurrIndex + 1, IP, LocalPort, RemotePort, BufferSize);
+        ServCreateSslConnection(Conn->Index, IP, LocalPort, RemotePort, BufferSize);
 
         sbio = BIO_new_socket(handle, BIO_NOCLOSE);
         con = SSL_new(ctx);
+        Conn->Con = con;
 
         SSL_set_bio(con, sbio, sbio);
         SSL_set_connect_state(con);
 
-        ClientConnectionArr[CurrIndex] = con;
+        ConnectionArr[Conn->Index - 1] = Conn;
 
         CreateClientName(str, IP, RemotePort);
-        RdosCreateThread(ConnectionHandler, str, 0, 0x4000);
+        RdosCreateThread(ConnectionHandler, str, Conn, 0x4000);
+
+        return Conn->Index;
     }
     else
-        CurrIndex = -1;
-
-    return CurrIndex + 1;
+        return -1;
 }
 
 /*##########################################################################
@@ -452,62 +463,63 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
 ##########################################################################*/
 static void ListenHandler(void *par)
 {
-    int index = CurrIndex + 1;
-    struct TServerEntry *entry = ServerSessionArr[index - 1];
+    struct TServer *Server = (struct TServer *)par;
+    int index;
     int sock;
-    TWait wait;
+    int WaitHandle = RdosCreateWait();
     int Ip;
     int RemotePort;
     BIO *sbio;
     SSL *con;
     int i;
-    int ci;
     char str[80];
 
-    RdosAddWaitForTcpListen(Wait.GetHandle(), entry->ListenHandle, 0);
+    RdosAddWaitForTcpListen(WaitHandle, Server->ListenHandle, 0);
 
-    while (ServerSessionArr[index - 1])
+    for (;;)
     {
-        wait.WaitForever();
+        RdosWaitForever(WaitHandle);
 
-        sock = RdosGetTcpListen(entry->ListenHandle);
+        sock = RdosGetTcpListen(Server->ListenHandle);
         while (sock)
         {
-            entry->CurrConnection = -1;
+            index = -1;
 
-            for (i = 0; i < entry->MaxConnections; i++)
+            for (i = 0; i < Server->MaxConnections; i++)
             {
-                if (entry->ConnectionArr[i] == 0)
+                if (Server->ConnectionArr[i] == 0)
                 {
-                    entry->CurrConnection = i;
+                    index = i;
                     break;
                 }
             }
 
-            if (entry->CurrConnection >= 0)
+            if (index >= 0)
             {
-                printf("Add connection %d:%d\r\n", index, entry->CurrConnection);
+                printf("Add connection %d:%d\r\n", Server->Index, index);
 
                 Ip = RdosGetRemoteTcpConnectionIP(sock);
                 RemotePort = RdosGetLocalTcpConnectionPort(sock);
 
-                ServCreateSslConnection(CurrIndex + 1, IP, entry->Port, RemotePort, entry->BufferSize);
+//                ServCreateSslConnection(index + 1, Ip, Server->Port, RemotePort, Server->BufferSize);
 
                 sbio = BIO_new_socket(sock, BIO_NOCLOSE);
-                con = SSL_new(ctx);
+                con = SSL_new(Server->ctx);
 
                 SSL_set_bio(con, sbio, sbio);
                 SSL_set_accept_state(con);
 
-                ServerConnectionArr[CurrIndex] = con;
+//                ServerConnectionArr[index] = con;
 
-                CreateServerName(str, IP, entry->Port);
-                RdosCreateThread(ConnectionHandler, str, 0, 0x4000);
+//                CreateServerName(str, IP, entry->Port);
+//                RdosCreateThread(ConnectionHandler, str, 0, 0x4000);
             }
 
-            sock = RdosGetTcpListen(entry->ListenHandle);
+            sock = RdosGetTcpListen(Server->ListenHandle);
         }
     }
+
+    RdosCloseWait(WaitHandle);
 }
 
 /*##########################################################################
@@ -524,56 +536,56 @@ static void ListenHandler(void *par)
 #pragma aux OpenServer "*" parm routine [eax] [edx] [ecx] value [ebx]
 int OpenServer(int Port, int MaxConnections, int BufferSize)
 {
+    struct TServer *Server;
     void *p;
     SSL_CTX *ctx = NULL;
     int i;
-    struct TServerEntry *listen;
+    int index = -1;
     char str[80];
-
-    CurrIndex = -1;
 
     for (i = 0; i < MAX_SESSION_COUNT; i++)
     {
         if (ServerSessionArr[i] == 0)
         {
-            CurrIndex = i;
+            index = i;
             break;
         }
     }
 
-    if (CurrIndex >= 0)
+    if (index >= 0)
     {
         ctx = SSL_CTX_new(TLS_server_method());
 
         if (ctx)
         {
-            printf("Open server %d\r\n", CurrIndex + 1);
+            printf("Open server %d\r\n", index + 1);
 
             SSL_CTX_clear_mode(ctx, SSL_MODE_AUTO_RETRY);
             SSL_CONF_CTX_set_ssl_ctx(ServerConf, ctx);
 
             SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_NO_INTERNAL | SSL_SESS_CACHE_SERVER);
 
-            listen = (struct TServerEntry *)malloc(sizeof(struct TServerEntry));
-            listen->MaxConnections = MaxConnections;
-            listen->BufferSize = BufferSize;
-            listen->ListenHandle = RdosCreateTcpListen(Port, MaxConnections, BufferSize);
-            listen->ctx = ctx;
-            Listen->ConnectionArr = (SSL **)malloc(MaxConnections * sizeof(SSL *));
+            Server = (struct TServer *)malloc(sizeof(struct TServer));
+            Server->Index = index;
+            Server->MaxConnections = MaxConnections;
+            Server->BufferSize = BufferSize;
+            Server->ListenHandle = RdosCreateTcpListen(Port, MaxConnections, BufferSize);
+            Server->ctx = ctx;
+            Server->ConnectionArr = (struct TConnection **)malloc(MaxConnections * sizeof(struct TConnection *));
 
             for (i = 0; i < MaxConnections; i++)
-                Listen->ConnectionArr[i] = 0;
+                Server->ConnectionArr[i] = 0;
 
-            ServerSessionArr[CurrIndex] = listen;
+            ServerSessionArr[index] = Server;
 
             CreateListenName(str, Port);
-            RdosCreateThread(ListenHandler, str, 0, 0x4000);
+            RdosCreateThread(ListenHandler, str, Server, 0x4000);
         }
         else
-            CurrIndex = -1;
+            index = -1;
     }
 
-    return CurrIndex + 1;
+    return index + 1;
 }
 
 /*##########################################################################
@@ -590,14 +602,18 @@ int OpenServer(int Port, int MaxConnections, int BufferSize)
 #pragma aux PushConnection "*" parm routine [ebx]
 void PushConnection(int index)
 {
+    struct TConnection *Conn = 0;
     SSL *con = 0;
     int handle;
 
     if (index > 0 && index <= MAX_CONNECTION_COUNT)
-        con = ClientConnectionArr[index - 1];
+        Conn = ConnectionArr[index - 1];
+
+    if (Conn)
+        con = Conn->Con;
 
     if (con)
-    {
+    {       
         handle = SSL_get_handle(con);
         if (!RdosIsTcpConnectionClosed(handle) && !ServSslGetSendCount(index))
             RdosPushTcpConnection(handle);
@@ -618,26 +634,33 @@ void PushConnection(int index)
 #pragma aux CloseConnection "*" parm routine [ebx]
 void CloseConnection(int index)
 {
+    struct TConnection *Conn = 0;
     SSL *con = 0;
     int handle;
 
     if (index > 0 && index <= MAX_CONNECTION_COUNT)
     {
-        con = ClientConnectionArr[index - 1];
-        ClientConnectionArr[index - 1] = 0;
+        Conn = ConnectionArr[index - 1];
+        ConnectionArr[index - 1] = 0;
 
         printf("Close connection %d\r\n", index);
     }
 
-    if (con)
+    if (Conn)
     {
-        handle = SSL_get_handle(con);
+        con = Conn->Con;
 
-        SSL_shutdown(con);
-        SSL_free(con);
+        if (con)
+        {
+            handle = SSL_get_handle(con);
 
-        RdosDeleteTcpConnection(handle);
-        ServDeleteSslConnection(index);
+            SSL_shutdown(con);
+            SSL_free(con);
+ 
+            RdosDeleteTcpConnection(handle);
+            ServDeleteSslConnection(index);
+        }
+        free(Conn);
     }
 }
 
@@ -666,7 +689,7 @@ int main()
         ClientSessionArr[i] = 0;
 
     for (i = 0; i < MAX_CONNECTION_COUNT; i++)
-        ClientConnectionArr[i] = 0;
+        ConnectionArr[i] = 0;
 
     for (i = 0; i < MAX_SESSION_COUNT; i++)
         ServerSessionArr[i] = 0;
