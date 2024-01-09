@@ -129,6 +129,7 @@ protected:
 class TSslSocket : public TTcpSocket
 {
 public:
+    TSslSocket(int Handle);
     TSslSocket(long IP, int Port, int Timeout, int BufferSize);
     TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int BufferSize);
     virtual ~TSslSocket();
@@ -185,13 +186,15 @@ class TSocketServerFactory : public TWaitDevice
 {
 public:
     TSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-    ~TSocketServerFactory();
+    virtual ~TSocketServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket) = 0;
     void CloseAllSockets();
     int GetConnectionCount();
 
 protected:
+    TSocketServerFactory();
+
     void Cleanup();
     void Insert(TSocketServer *server);
 
@@ -199,8 +202,24 @@ protected:
     virtual void Add(TWait *Wait);
 
     TSocketServer *FList;
-    int FListenHandle;
     int FServerCount;
+
+private:
+    int FListenHandle;
+};
+
+class TSslSocketServerFactory : public TSocketServerFactory
+{
+public:
+    TSslSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    virtual ~TSslSocketServerFactory();
+
+protected:
+    virtual void SignalNewData();
+    virtual void Add(TWait *Wait);
+
+private:
+    int FListenHandle;
 };
 
 class TUdpSocketListner : public TWaitDevice

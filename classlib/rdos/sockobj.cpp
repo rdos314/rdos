@@ -507,6 +507,24 @@ int TTcpSocket::Read(char *buf, int size)
 #
 #   Purpose....: Constructor
 #
+#   In params..: Handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSslSocket::TSslSocket(int Handle)
+{
+    FSession = 0;
+    FHandle = Handle;
+    Open();
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::TSslSocket
+#
+#   Purpose....: Constructor
+#
 #   In params..: IP         Remote IP address
 #                Port       remote port to connect to
 #                Timeout        establish timeout in ms
@@ -1192,6 +1210,24 @@ void TSocketServer::Execute()
 #   Returns....: *
 #
 ##########################################################################*/
+TSocketServerFactory::TSocketServerFactory()
+{
+    FServerCount = 0;
+    FList = 0;
+    FListenHandle = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServerFactory::TSocketServerFactory
+#
+#   Purpose....: Constructor for socket server factory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 TSocketServerFactory::TSocketServerFactory(int Port, int MaxConnections, int BufferSize)
 {
     FServerCount = 0;
@@ -1212,7 +1248,8 @@ TSocketServerFactory::TSocketServerFactory(int Port, int MaxConnections, int Buf
 ##########################################################################*/
 TSocketServerFactory::~TSocketServerFactory()
 {
-     RdosCloseTcpListen(FListenHandle);
+    if (FListenHandle)
+        RdosCloseTcpListen(FListenHandle);
 }
 
 /*##########################################################################
@@ -1304,7 +1341,8 @@ void TSocketServerFactory::Insert(TSocketServer *server)
 ##########################################################################*/
 void TSocketServerFactory::Add(TWait *Wait)
 {
-    RdosAddWaitForTcpListen(Wait->GetHandle(), FListenHandle, (int)this);
+    if (FListenHandle)
+        RdosAddWaitForTcpListen(Wait->GetHandle(), FListenHandle, (int)this);
 }
 
 /*##########################################################################
@@ -1363,6 +1401,83 @@ void TSocketServerFactory::CloseAllSockets()
 
     // give the socket threads some time to terminate
     RdosWaitMilli(50);
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocketServerFactory::TSslSocketServerFactory
+#
+#   Purpose....: Constructor for SSL socket server factory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSslSocketServerFactory::TSslSocketServerFactory(int Port, int MaxConnections, int BufferSize)
+{
+//    FListenHandle = RdosCreateSecureListen(Port, MaxConnections, BufferSize);
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocketServerFactory::~TSslSocketServerFactory
+#
+#   Purpose....: Destructor for SSL socket server factory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSslSocketServerFactory::~TSslSocketServerFactory()
+{
+//    if (FListenHandle)
+//        RdosCloseSecureListen(FListenHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocketServerFactory::Add
+#
+#   Purpose....: Add this object to wait list
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSslSocketServerFactory::Add(TWait *Wait)
+{
+//    if (FListenHandle)
+//        RdosAddWaitForSecureListen(Wait->GetHandle(), FListenHandle, (int)this);
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocketServerFactory::SignalNewData
+#
+#   Purpose....: Signal new data if available
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSslSocketServerFactory::SignalNewData()
+{
+    int handle;
+    TSslSocket *socket;
+    TSocketServer *server;
+
+    Cleanup();
+//    handle = RdosGetSecureListen(FListenHandle);
+    if (handle)
+    {
+        socket = new TSslSocket(handle);
+        server = Create(socket);
+        if (server)
+            Insert(server);
+    }
 }
 
 /*##########################################################################
