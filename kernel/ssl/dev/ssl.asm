@@ -551,6 +551,82 @@ DeleteConnection    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;       Name:           CreateListen
+;
+;       Purpose:        Create a listen
+;
+;       Parameters:     CX          max connections
+;                       SI          listen port
+;
+;       Returns:        DS          listen selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateListen
+
+CreateListen    Proc near
+    push es
+    push eax
+    push edi
+;
+    movzx eax,cx
+    dec eax
+    shr eax,2
+    shl eax,2
+    add eax,4
+    add eax,OFFSET sl_pend_mask
+    AllocateSmallGlobalMem
+;
+    push ecx
+    mov ecx,eax
+    xor edi,edi
+    xor al,al
+    rep stosb
+    pop ecx
+;    
+    mov es:sl_port,si
+    mov es:sl_max_connections,cx
+;       
+    mov ax,es
+    mov ds,ax
+    InitSection ds:sl_section
+;
+    pop edi
+    pop eax
+    pop es
+    ret
+CreateListen    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           DeleteListen
+;
+;       Purpose:        Delete a listen. ListSection & connection section
+;                       must be taken prior to call
+;
+;       Parameters:     DS          listen selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DeleteListen
+
+DeleteListen    Proc near
+    push es
+    push ebx
+;
+    mov ebx,ds
+    mov es,ebx
+    xor ebx,ebx
+    mov ds,ebx
+    FreeMem
+;
+    pop ebx
+    pop es
+    ret
+DeleteListen    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;       Name:           CreateSecureConnection
 ;
 ;       Purpose:        Create a secure connection

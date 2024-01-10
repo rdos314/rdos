@@ -102,3 +102,13 @@ sc_active               DB ?
 sc_closed               DB ?
 
 ssl_connection	ENDS
+
+ssl_listen   STRUC
+
+sl_section		section_typ <>
+sl_port                 DW ?
+sl_max_connections      DW ?
+
+sl_pend_mask            DD ?
+
+ssl_listen   ENDS
