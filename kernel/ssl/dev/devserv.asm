@@ -1181,6 +1181,60 @@ dslDone:
 delete_ssl_listen  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddSslListen
+;
+;       DESCRIPTION:    Add SSL listen
+;
+;       PARAMETERS:     EBX              Listen index
+;                       EAX              Connection entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_ssl_listen_name DB 'Add SSL Listen', 0
+
+add_ssl_listen   Proc far
+    push ds
+    push es
+    push ebx
+    push edx
+;
+    or ebx,ebx
+    jz aslDone
+;
+    or eax,eax
+    jz aslDone
+;
+    dec ebx
+    dec eax
+    mov edx,SEG data
+    mov ds,edx
+    mov dx,ds:[2*ebx].listen_arr
+    or dx,dx
+    jz aslDone
+;
+    mov ds,dx
+    bts ds:sl_pend_mask,eax
+    jc aslDone
+;
+    inc ds:sl_pend_count
+    mov dx,ds:sl_wait
+    or dx,dx
+    jz aslDone
+;
+    mov es,edx
+    SignalWait
+
+aslDone:
+    pop edx
+    pop ebx
+    pop es
+    pop ds
+    ret
+add_ssl_listen  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -1304,6 +1358,12 @@ init_server    Proc near
     mov edi,OFFSET delete_ssl_listen_name
     xor cl,cl
     mov ax,delete_ssl_listen_nr
+    RegisterServGate
+;
+    mov esi,OFFSET add_ssl_listen
+    mov edi,OFFSET add_ssl_listen_name
+    xor cl,cl
+    mov ax,add_ssl_listen_nr
     RegisterServGate
     ret
 init_server    Endp
