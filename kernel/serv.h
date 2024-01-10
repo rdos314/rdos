@@ -83,6 +83,9 @@ void RDOSAPI ServNotifyVfsMsg(int Handle, const char *Msg);
 void RDOSAPI ServCreateSslConnection(int index, long IP, int LocalPort, int RemotePort, int BufferSize);
 void RDOSAPI ServDeleteSslConnection(int index);
 
+void RDOSAPI ServCreateSslListen(int index, int Port, int BufferSize);
+void RDOSAPI ServDeleteSslListen(int index);
+
 void RDOSAPI ServSslStart(int index, int handle);
 void RDOSAPI ServSslStop(int index, int handle);
 

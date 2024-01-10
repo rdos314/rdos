@@ -43,10 +43,12 @@ include ssl.inc
     .386p
 
 MAX_CONN_COUNT = 128
+MAX_LISTEN_COUNT = 16
 
 data    SEGMENT byte public 'DATA'
 
 ssl_msg_sel        DW ?
+listen_arr         DW MAX_LISTEN_COUNT DUP(?)
 conn_arr           DW MAX_CONN_COUNT DUP(?)
 
 data    ENDS
@@ -59,6 +61,8 @@ code    SEGMENT byte public 'CODE'
     
     extern CreateConnection:near
     extern DeleteConnection:near
+    extern CreateListen:near
+    extern DeleteListen:near
     extern CopyToBuffer:near
     extern CopyFromBuffer:near
 
@@ -1059,6 +1063,87 @@ wafcDone:
 wait_for_change   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateSslListen
+;
+;       DESCRIPTION:    Create SSL listen
+;
+;       PARAMETERS:     EBX              Listen index
+;                       SI               Port
+;                       ECX              Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_ssl_listen_name DB 'Create SSL Listen', 0
+
+create_ssl_listen   Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    or ebx,ebx
+    jz cscDone
+;    
+    cmp ebx,MAX_LISTEN_COUNT
+    ja cslDone
+;
+    dec ebx
+    call CreateListen
+    mov edx,ds
+    mov eax,SEG data
+    mov ds,eax
+    mov ds:[2*ebx].listen_arr,dx
+
+cslDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+create_ssl_listen  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteSslListen
+;
+;       DESCRIPTION:    Delete SSL listen
+;
+;       PARAMETERS:     EBX              Listen index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_ssl_listen_name DB 'Delete SSL Listen', 0
+
+delete_ssl_listen   Proc far
+    push ds
+    push eax
+    push ebx
+;
+    or ebx,ebx
+    jz dslDone
+;
+    dec ebx
+    mov eax,SEG data
+    mov ds,eax
+    xor ax,ax
+    xchg ax,ds:[2*ebx].listen_arr
+    or ax,ax
+    jz dslDone
+;
+    mov ds,ax
+    call DeleteListen
+
+dslDone:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+delete_ssl_listen  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_server
@@ -1073,8 +1158,14 @@ init_server    Proc near
     mov eax,SEG data
     mov es,eax
     mov es:ssl_msg_sel,0
+;
     mov edi,OFFSET conn_arr
     mov ecx,MAX_CONN_COUNT
+    xor ax,ax
+    rep stosw
+;
+    mov edi,OFFSET listen_arr
+    mov ecx,MAX_LISTEN_COUNT
     xor ax,ax
     rep stosw
 ;
@@ -1164,6 +1255,18 @@ init_server    Proc near
     mov edi,OFFSET wait_for_change_name
     xor cl,cl
     mov ax,ssl_wait_for_change_nr
+    RegisterServGate
+;
+    mov esi,OFFSET create_ssl_listen
+    mov edi,OFFSET create_ssl_listen_name
+    xor cl,cl
+    mov ax,create_ssl_listen_nr
+    RegisterServGate
+;
+    mov esi,OFFSET delete_ssl_listen
+    mov edi,OFFSET delete_ssl_listen_name
+    xor cl,cl
+    mov ax,delete_ssl_listen_nr
     RegisterServGate
     ret
 init_server    Endp

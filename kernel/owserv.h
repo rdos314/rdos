@@ -281,6 +281,14 @@
     ServGate_delete_ssl_conn  \
     __parm [__ebx]
 
+#pragma aux ServCreateSslListen = \
+    ServGate_create_ssl_listen  \
+    __parm [__ebx] [__esi] [__ecx]
+
+#pragma aux ServDeleteSslListen = \
+    ServGate_delete_ssl_listen  \
+    __parm [__ebx]
+
 #pragma aux ServSslStart = \
     ServGate_ssl_start  \
     __parm [__ebx]

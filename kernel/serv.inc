@@ -395,3 +395,15 @@ StartSsl               MACRO
 SslStop               MACRO
     ServGate ssl_stop_nr
                         ENDM
+
+; IN  EBX              Listen index
+; IN  SI               Local port
+; IN  ECX              Buffer size
+CreateSslListen  MACRO    
+    ServGate create_ssl_listen_nr
+                    ENDM
+
+; IN  EBX              Listen index
+DeleteSslListen  MACRO    
+    ServGate delete_ssl_listen_nr
+                    ENDM

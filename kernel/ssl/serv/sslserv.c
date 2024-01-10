@@ -653,6 +653,8 @@ int OpenServer(int Port, int MaxConnections, int BufferSize)
             for (i = 0; i < MaxConnections; i++)
                 Server->ConnectionArr[i] = 0;
 
+            ServCreateSslListen(Server->Index, Port, MaxConnections);
+
             ServerSessionArr[index] = Server;
 
             CreateListenName(str, Port);
