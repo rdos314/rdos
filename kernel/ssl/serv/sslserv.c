@@ -541,15 +541,11 @@ void CloseConnection(int index)
 static void ListenHandler(void *par)
 {
     struct TServer *Server = (struct TServer *)par;
+    struct TConnection *Conn;
     int index;
     int sock;
     int WaitHandle = RdosCreateWait();
-    int Ip;
-    int RemotePort;
-    BIO *sbio;
-    SSL *con;
     int i;
-    char str[80];
 
     RdosAddWaitForTcpListen(WaitHandle, Server->ListenHandle, 0);
 
@@ -575,21 +571,16 @@ static void ListenHandler(void *par)
             {
                 printf("Add connection %d:%d\r\n", Server->Index, index);
 
-                Ip = RdosGetRemoteTcpConnectionIP(sock);
-                RemotePort = RdosGetLocalTcpConnectionPort(sock);
+                Conn = (struct TConnection *)malloc(sizeof(struct TConnection));
+                Conn->Index = sock;
+                Conn->Timeout = 0;
+                Conn->BufferSize = Server->BufferSize;
+                Conn->Server = 0;
+                Conn->Con = 0;
 
-//                ServCreateSslConnection(index + 1, Ip, Server->Port, RemotePort, Server->BufferSize);
+                Server->ConnectionArr[index] = Conn;
 
-                sbio = BIO_new_socket(sock, BIO_NOCLOSE);
-                con = SSL_new(Server->ctx);
-
-                SSL_set_bio(con, sbio, sbio);
-                SSL_set_accept_state(con);
-
-//                ServerConnectionArr[index] = con;
-
-//                CreateServerName(str, IP, entry->Port);
-//                RdosCreateThread(ConnectionHandler, str, 0, 0x4000);
+                ServAddSslListen(Server->Index, index + 1);
             }
 
             sock = RdosGetTcpListen(Server->ListenHandle);

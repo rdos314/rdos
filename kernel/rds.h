@@ -72,6 +72,7 @@
 #define serv_gate_delete_ssl_conn 0x00000043
 #define serv_gate_create_ssl_listen 0x00000044
 #define serv_gate_delete_ssl_listen 0x00000045
+#define serv_gate_add_ssl_listen 0x00000046
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -147,4 +148,5 @@
 #define ServGate_delete_ssl_conn 0x55 0x67 0x9a 67 0 0 0 4 0 0x5d
 #define ServGate_create_ssl_listen 0x55 0x67 0x9a 68 0 0 0 4 0 0x5d
 #define ServGate_delete_ssl_listen 0x55 0x67 0x9a 69 0 0 0 4 0 0x5d
+#define ServGate_add_ssl_listen 0x55 0x67 0x9a 70 0 0 0 4 0 0x5d
 

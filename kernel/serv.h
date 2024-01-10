@@ -85,6 +85,7 @@ void RDOSAPI ServDeleteSslConnection(int index);
 
 void RDOSAPI ServCreateSslListen(int index, int Port, int BufferSize);
 void RDOSAPI ServDeleteSslListen(int index);
+void RDOSAPI ServAddSslListen(int index, int entry);
 
 void RDOSAPI ServSslStart(int index, int handle);
 void RDOSAPI ServSslStop(int index, int handle);

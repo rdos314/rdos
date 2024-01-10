@@ -407,3 +407,9 @@ CreateSslListen  MACRO
 DeleteSslListen  MACRO    
     ServGate delete_ssl_listen_nr
                     ENDM
+
+; IN  EBX              Listen index
+; IN  EAX              Connection entry
+AddSslListen  MACRO    
+    ServGate add_ssl_listen_nr
+                    ENDM
