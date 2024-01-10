@@ -1215,10 +1215,15 @@ add_ssl_listen   Proc far
     jz aslDone
 ;
     mov ds,dx
+    EnterSection ds:sl_section
     bts ds:sl_pend_mask,eax
-    jc aslDone
+    jc aslLeave
 ;
     inc ds:sl_pend_count
+
+aslLeave:
+    LeaveSection ds:sl_section
+;
     mov dx,ds:sl_wait
     or dx,dx
     jz aslDone

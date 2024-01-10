@@ -1555,13 +1555,59 @@ get_secure_listen_name     DB 'Get Secure listen',0
 get_secure_listen  Proc far
     push ds
     push ebx
+    push ecx
+    push edx
+    push esi
 ;
     mov ax,SSL_LISTEN_HANDLE
     DerefHandle
     jc glDone
-;    
+;
+    mov ebx,ds:[ebx].sl_id
+    call GetListenSel
+    jc crslDone
+;
+    mov cx,ds:sl_pend_count
+    or cx,cx
+    jz glDone
+;
+    EnterSection ds:sl_section
+;
+    xor eax,eax
+    xor edx,edx
+    mov esi,OFFSET sl_pend_mask
+
+glLoop:
+    lodsb
+    or al,al
+    jz glNext
+;
+    bsf ecx,eax
+    add edx,ecx
+    jmp glMsg
+
+glNext:
+    add edx,8
+    jmp glLoop
+
+glMsg:
+    btc ds:sl_pend_mask,edx
+    dec ds:sl_pend_count
+    LeaveSection ds:sl_section
+;
+    movzx eax,cx  
+    inc eax  
+    call AllocateMsg
+    jc glDone
+;
+    mov eax,SSL_ACCEPT_SERVER
+    call RunMsg
+    jc glDone
 
 glDone:
+    pop esi
+    pop edx
+    pop ecx
     pop ebx
     pop ds  
     ret

@@ -55,3 +55,7 @@ SSL_OPEN_SERVER                = 5
 ; IN  EBX       Server ID
 SSL_CLOSE_SERVER               = 6
 
+; IN  EBX       Server ID
+; IN  EAX       Entry #
+; OUT EBX       Connection ID
+SSL_ACCEPT_SERVER              = 7

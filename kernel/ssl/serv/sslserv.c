@@ -660,6 +660,22 @@ int OpenServer(int Port, int MaxConnections, int BufferSize)
 
 /*##########################################################################
 #
+#   Name       : AcceptServer
+#
+#   Purpose....: Accept server socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux AcceptServer "*" parm routine [ebx] [eax]
+void AcceptServer(int index, int entry)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : CloseServer
 #
 #   Purpose....: Close server

@@ -231,6 +231,34 @@ LocalCloseServer Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalAcceptServer
+;
+;       DESCRIPTION:    Accept server socket
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern AcceptServer:near
+
+LocalAcceptServer Proc near
+    call AcceptServer
+;
+    mov [edi].fc_ebx,ebx
+    or ebx,ebx
+    jz asrvReply
+;
+    and [edi].fc_eflags,NOT 1
+
+asrvReply:
+    mov ebx,[edi].fc_handle
+    ReplySslCmd
+    ret
+LocalAcceptServer Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -254,6 +282,7 @@ m03 DD OFFSET LocalCloseConnection
 m04 DD OFFSET LocalPushConnection
 m05 DD OFFSET LocalOpenServer
 m06 DD OFFSET LocalCloseServer
+m07 DD OFFSET LocalAcceptServer
 
 WaitForMsg_    Proc near
     push ebx
