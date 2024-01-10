@@ -643,7 +643,7 @@ int OpenServer(int Port, int MaxConnections, int BufferSize)
             SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_NO_INTERNAL | SSL_SESS_CACHE_SERVER);
 
             Server = (struct TServer *)malloc(sizeof(struct TServer));
-            Server->Index = index;
+            Server->Index = index + 1;
             Server->MaxConnections = MaxConnections;
             Server->BufferSize = BufferSize;
             Server->ListenHandle = RdosCreateTcpListen(Port, MaxConnections, BufferSize);
