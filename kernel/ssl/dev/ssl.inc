@@ -108,6 +108,8 @@ ssl_listen   STRUC
 sl_section		section_typ <>
 sl_port                 DW ?
 sl_max_connections      DW ?
+sl_wait                 DW ?
+sl_pend_count           DW ?
 
 sl_pend_mask            DD ?
 

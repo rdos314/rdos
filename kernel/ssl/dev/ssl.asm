@@ -100,6 +100,7 @@ code    SEGMENT byte public 'CODE'
     extern RunMsg:near
     extern GetMsgSel:near
     extern GetConnSel:near
+    extern GetListenSel:near
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -586,6 +587,8 @@ CreateListen    Proc near
 ;    
     mov es:sl_port,si
     mov es:sl_max_connections,cx
+    mov es:sl_pend_count,0
+    mov es:sl_wait,0
 ;       
     mov ax,es
     mov ds,ax
@@ -831,7 +834,7 @@ is_secure_connection_closed Endp
 
 start_wait_for_connection       PROC far
     push ds
-    push ax
+    push eax
     push ebx
 ;
     mov bx,es:sw_handle
@@ -858,7 +861,7 @@ swfcSignal:
 
 swfcDone:
     pop ebx
-    pop ax
+    pop eax
     pop ds
     ret
 start_wait_for_connection Endp
@@ -876,7 +879,7 @@ start_wait_for_connection Endp
 
 stop_wait_for_connection    PROC far
     push ds
-    push ax
+    push eax
     push ebx
 ;
     mov bx,es:sw_handle
@@ -892,7 +895,7 @@ stop_wait_for_connection    PROC far
 
 swDone:
     pop ebx
-    pop ax
+    pop eax
     pop ds
     ret
 stop_wait_for_connection Endp
@@ -925,7 +928,7 @@ clear_connection Endp
 
 is_connection_idle      PROC far
     push ds
-    push ax
+    push eax
     push ebx
 ;
     mov bx,es:sw_handle
@@ -952,7 +955,7 @@ is_connection_idle      PROC far
 
 iiDone:
     pop ebx
-    pop ax
+    pop eax
     pop ds
     ret
 is_connection_idle Endp
@@ -1601,6 +1604,135 @@ clslDone:
     pop ds
     ret
 close_secure_listen    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StartWaitForListen
+;
+;           DESCRIPTION:    Start a wait for listen
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_listen       PROC far
+    push ds
+    push eax
+    push ebx
+;
+    mov bx,es:sw_handle
+    mov ax,SSL_LISTEN_HANDLE
+    DerefHandle
+    jc swflDone
+;    
+    mov ebx,[ebx].sl_id
+    call GetListenSel
+    jc swflDone
+;
+    mov ds:sl_wait,es
+    mov ax,ds:sl_pend_count
+    or ax,ax
+    jz swflDone
+;
+    mov ds:sl_wait,0
+    SignalWait
+
+swflDone:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+start_wait_for_listen Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           StopWaitForListen
+;
+;           DESCRIPTION:    Stop a wait for listen
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_listen    PROC far
+    push ds
+    push eax
+    push ebx
+;
+    mov bx,es:sw_handle
+    mov ax,SSL_LISTEN_HANDLE
+    DerefHandle
+    jc swlDone
+;    
+    mov ebx,[ebx].sl_id
+    call GetListenSel
+    jc swlDone
+;
+    mov ds:sl_wait,0
+
+swlDone:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+stop_wait_for_listen Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ClearListen
+;
+;           DESCRIPTION:    Clear listen
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_listen    PROC far
+    ret
+clear_listen Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           IsListenIdle
+;
+;           DESCRIPTION:    Check if listen is idle
+;
+;           PARAMETERS:     ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_listen_idle      PROC far
+    push ds
+    push eax
+    push ebx
+;
+    mov bx,es:sw_handle
+    mov ax,SSL_LISTEN_HANDLE
+    DerefHandle
+    jc iliDone
+;    
+    mov ebx,[ebx].sl_id
+    call GetListenSel
+    jc iliDone
+;
+    mov ds,ax
+    mov ax,ds:sl_pend_count
+    or ax,ax
+    clc
+    je iliDone
+;
+    stc
+
+iliDone:
+    pop ebx
+    pop eax
+    pop ds
+    ret
+is_listen_idle Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1618,10 +1750,10 @@ close_secure_listen    Endp
 add_wait_for_secure_listen_name    DB 'Add Wait For Secure Listen',0
 
 add_waitl_tab:
-;aw0 DD OFFSET start_wait_for_connection,    SEG _TEXT
-;aw1 DD OFFSET stop_wait_for_connection,     SEG _TEXT
-;aw2 DD OFFSET clear_connection,             SEG _TEXT
-;aw3 DD OFFSET is_connection_idle,           SEG _TEXT
+awl0 DD OFFSET start_wait_for_listen,    SEG _TEXT
+awl1 DD OFFSET stop_wait_for_listen,     SEG _TEXT
+awl2 DD OFFSET clear_listen,             SEG _TEXT
+awl3 DD OFFSET is_listen_idle,           SEG _TEXT
 
 add_wait_for_secure_listen     PROC far
     push ds
@@ -1632,13 +1764,13 @@ add_wait_for_secure_listen     PROC far
     push eax
     mov eax,cs
     mov es,eax
-;    mov eax,SIZE ssl_wait_header - SIZE wait_obj_header
+    mov eax,SIZE ssl_wait_header - SIZE wait_obj_header
     mov edi,OFFSET add_waitl_tab
-;    AddWait
+    AddWait
     pop eax
     jc awlDone
 ;
-;    mov es:sw_handle,ax
+    mov es:sw_handle,ax
 
 awlDone:
     pop edi

@@ -104,6 +104,43 @@ gcsDone:
 GetConnSel  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetListenSel
+;
+;       DESCRIPTION:    Get listen sel
+;
+;       PARAMETERS:     EBX              Listen index
+;
+;       RETURNS:        DS               Listen sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetListenSel
+
+GetListenSel   Proc near
+    push eax
+    push ebx
+;
+    or ebx,ebx
+    stc
+    jz gclDone
+;
+    dec ebx
+    mov eax,SEG data
+    mov ds,eax
+    mov bx,ds:[2*ebx].listen_arr
+    clc
+
+gclDone:
+    mov ds,ebx
+;
+    pop ebx
+    pop eax
+    ret
+GetListenSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           SslServer
