@@ -77,6 +77,13 @@ sc_id       DD ?
 
 ssl_connection_handle_seg      ENDS
 
+ssl_listen_handle_seg      STRUC
+
+sl_base     handle_header <>
+sl_id       DD ?
+
+ssl_listen_handle_seg      ENDS
+
 ssl_wait_header STRUC
 
 sw_obj          wait_obj_header <>
@@ -1403,8 +1410,8 @@ write_secure_connection32  Endp
 ;       Purpose:        Create a secure listen handle
 ;
 ;       Parameters:     AX      max connections
-;                       ECX         buffer size
-;                       SI              local port
+;                       ECX     buffer size
+;                       SI      local port
 ;
 ;       Returns:        BX      listen handle
 ;
@@ -1418,14 +1425,32 @@ create_secure_listen       Proc far
     push eax
     push ecx
     push edx
+    push esi
+    push edi
+    push ebp
 ;
+    movzx eax,ax
+    movzx esi,si
+    call AllocateMsg
+    jc crslDone
+;
+    mov eax,SSL_OPEN_SERVER
+    call RunMsg
+    jc crslDone
+;
+    mov edx,ebx
     mov ax,SSL_LISTEN_HANDLE
-;    mov cx,SIZE listen_handle_seg
+    mov cx,SIZE ssl_session_handle_seg
     AllocateHandle
-;    mov [ebx].listen_handle_sel,dx
+    mov [ebx].ss_id,edx
     mov [ebx].hh_sign,SSL_LISTEN_HANDLE
     mov bx,[ebx].hh_handle
-;       
+    clc
+
+crslDone:
+    pop ebp
+    pop edi
+    pop esi
     pop edx
     pop ecx
     pop eax
@@ -1477,15 +1502,26 @@ close_secure_listen_name DB 'Close Secure Listen',0
 
 close_secure_listen    Proc far
     push ds
+    push es
     pushad
 ;
     mov ax,SSL_LISTEN_HANDLE
     DerefHandle
-    jc cslDone
-;    
+    jc clslDone
+;
+    push ds:[ebx].sl_id
+    FreeHandle
+    pop ebx
+;
+    call AllocateMsg
+    jc clslDone
+;
+    mov eax,SSL_CLOSE_SERVER
+    call RunMsg
 
-cslDone:
+clslDone:
     popad
+    pop es
     pop ds
     ret
 close_secure_listen    Endp
@@ -1622,6 +1658,28 @@ delete_secure_connection    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_secure_listen    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov ax,SSL_LISTEN_HANDLE
+    DerefHandle
+    jc dslDone
+;
+    push ds:[ebx].sl_id
+    FreeHandle
+    pop ebx
+;
+    call AllocateMsg
+    jc dslDone
+;
+    mov eax,SSL_CLOSE_SERVER
+    call RunMsg
+
+dslDone:
+    popad
+    pop es
+    pop ds
     ret
 delete_secure_listen     Endp
 

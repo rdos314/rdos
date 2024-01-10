@@ -209,6 +209,28 @@ LocalOpenServer Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalCloseServer
+;
+;       DESCRIPTION:    close server
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern CloseServer:near
+
+LocalCloseServer Proc near
+    call CloseServer
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+    ReplySslCmd
+    ret
+LocalCloseServer Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -231,6 +253,7 @@ m02 DD OFFSET LocalOpenConnection
 m03 DD OFFSET LocalCloseConnection
 m04 DD OFFSET LocalPushConnection
 m05 DD OFFSET LocalOpenServer
+m06 DD OFFSET LocalCloseServer
 
 WaitForMsg_    Proc near
     push ebx

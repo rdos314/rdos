@@ -453,6 +453,82 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
 
 /*##########################################################################
 #
+#   Name       : PushConnection
+#
+#   Purpose....: Push connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux PushConnection "*" parm routine [ebx]
+void PushConnection(int index)
+{
+    struct TConnection *Conn = 0;
+    SSL *con = 0;
+    int handle;
+
+    if (index > 0 && index <= MAX_CONNECTION_COUNT)
+        Conn = ConnectionArr[index - 1];
+
+    if (Conn)
+        con = Conn->Con;
+
+    if (con)
+    {       
+        handle = SSL_get_handle(con);
+        if (!RdosIsTcpConnectionClosed(handle) && !ServSslGetSendCount(index))
+            RdosPushTcpConnection(handle);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : CloseConnection
+#
+#   Purpose....: Close client connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux CloseConnection "*" parm routine [ebx]
+void CloseConnection(int index)
+{
+    struct TConnection *Conn = 0;
+    SSL *con = 0;
+    int handle;
+
+    if (index > 0 && index <= MAX_CONNECTION_COUNT)
+    {
+        Conn = ConnectionArr[index - 1];
+        ConnectionArr[index - 1] = 0;
+
+        printf("Close connection %d\r\n", index);
+    }
+
+    if (Conn)
+    {
+        con = Conn->Con;
+
+        if (con)
+        {
+            handle = SSL_get_handle(con);
+
+            SSL_shutdown(con);
+            SSL_free(con);
+ 
+            RdosDeleteTcpConnection(handle);
+            ServDeleteSslConnection(index);
+        }
+        free(Conn);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : ListenHandler
 #
 #   Purpose....: Listen handler
@@ -534,7 +610,7 @@ static void ListenHandler(void *par)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux OpenServer "*" parm routine [eax] [edx] [ecx] value [ebx]
+#pragma aux OpenServer "*" parm routine [esi] [eax] [ecx] value [ebx]
 int OpenServer(int Port, int MaxConnections, int BufferSize)
 {
     struct TServer *Server;
@@ -591,78 +667,18 @@ int OpenServer(int Port, int MaxConnections, int BufferSize)
 
 /*##########################################################################
 #
-#   Name       : PushConnection
+#   Name       : CloseServer
 #
-#   Purpose....: Push connection
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux PushConnection "*" parm routine [ebx]
-void PushConnection(int index)
-{
-    struct TConnection *Conn = 0;
-    SSL *con = 0;
-    int handle;
-
-    if (index > 0 && index <= MAX_CONNECTION_COUNT)
-        Conn = ConnectionArr[index - 1];
-
-    if (Conn)
-        con = Conn->Con;
-
-    if (con)
-    {       
-        handle = SSL_get_handle(con);
-        if (!RdosIsTcpConnectionClosed(handle) && !ServSslGetSendCount(index))
-            RdosPushTcpConnection(handle);
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : CloseConnection
-#
-#   Purpose....: Close client connection
+#   Purpose....: Close server
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux CloseConnection "*" parm routine [ebx]
-void CloseConnection(int index)
+#pragma aux CloseServer "*" parm routine [ebx]
+void CloseServer(int index)
 {
-    struct TConnection *Conn = 0;
-    SSL *con = 0;
-    int handle;
-
-    if (index > 0 && index <= MAX_CONNECTION_COUNT)
-    {
-        Conn = ConnectionArr[index - 1];
-        ConnectionArr[index - 1] = 0;
-
-        printf("Close connection %d\r\n", index);
-    }
-
-    if (Conn)
-    {
-        con = Conn->Con;
-
-        if (con)
-        {
-            handle = SSL_get_handle(con);
-
-            SSL_shutdown(con);
-            SSL_free(con);
- 
-            RdosDeleteTcpConnection(handle);
-            ServDeleteSslConnection(index);
-        }
-        free(Conn);
-    }
 }
 
 /*##########################################################################

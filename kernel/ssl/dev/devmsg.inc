@@ -51,3 +51,7 @@ SSL_PUSH_CONNECTION            = 4
 ; IN  ECX       Buffer size
 ; OUT EBX       Server ID
 SSL_OPEN_SERVER                = 5
+
+; IN  EBX       Server ID
+SSL_CLOSE_SERVER               = 6
+
