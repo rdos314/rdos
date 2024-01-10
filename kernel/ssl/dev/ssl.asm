@@ -1395,6 +1395,147 @@ write_secure_connection32  Proc far
     ret
 write_secure_connection32  Endp
 
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CreateSecureListen
+;
+;       Purpose:        Create a secure listen handle
+;
+;       Parameters:     AX      max connections
+;                       ECX         buffer size
+;                       SI              local port
+;
+;       Returns:        BX      listen handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_secure_listen_name  DB 'Create Secure listen',0
+
+create_secure_listen       Proc far
+    push ds
+    push es
+    push eax
+    push ecx
+    push edx
+;
+    mov ax,SSL_LISTEN_HANDLE
+;    mov cx,SIZE listen_handle_seg
+    AllocateHandle
+;    mov [ebx].listen_handle_sel,dx
+    mov [ebx].hh_sign,SSL_LISTEN_HANDLE
+    mov bx,[ebx].hh_handle
+;       
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+create_secure_listen   Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetSecureListen
+;
+;       Purpose:        Get a connection from a listen
+;
+;       Parameters:     BX      listen handle
+;
+;       Returns:        AX      connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_secure_listen_name     DB 'Get Secure listen',0
+
+get_secure_listen  Proc far
+    push ds
+    push ebx
+;
+    mov ax,SSL_LISTEN_HANDLE
+    DerefHandle
+    jc glDone
+;    
+
+glDone:
+    pop ebx
+    pop ds  
+    ret
+get_secure_listen  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           CloseSecureListen
+;
+;       Purpose:        Close listen
+;
+;       Parameters:     BX          Listen handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_secure_listen_name DB 'Close Secure Listen',0
+
+close_secure_listen    Proc far
+    push ds
+    pushad
+;
+    mov ax,SSL_LISTEN_HANDLE
+    DerefHandle
+    jc cslDone
+;    
+
+cslDone:
+    popad
+    pop ds
+    ret
+close_secure_listen    Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           AddWaitForSecureListen
+;
+;           DESCRIPTION:    Add a wait for secure listen
+;
+;           PARAMETERS:     AX      Connection handle
+;                           BX      Wait handle
+;                           ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_secure_listen_name    DB 'Add Wait For Secure Listen',0
+
+add_waitl_tab:
+;aw0 DD OFFSET start_wait_for_connection,    SEG _TEXT
+;aw1 DD OFFSET stop_wait_for_connection,     SEG _TEXT
+;aw2 DD OFFSET clear_connection,             SEG _TEXT
+;aw3 DD OFFSET is_connection_idle,           SEG _TEXT
+
+add_wait_for_secure_listen     PROC far
+    push ds
+    push es
+    push eax
+    push edi
+;
+    push eax
+    mov eax,cs
+    mov es,eax
+;    mov eax,SIZE ssl_wait_header - SIZE wait_obj_header
+    mov edi,OFFSET add_waitl_tab
+;    AddWait
+    pop eax
+    jc awlDone
+;
+;    mov es:sw_handle,ax
+
+awlDone:
+    pop edi
+    pop eax
+    pop es
+    pop ds
+    ret
+add_wait_for_secure_listen     ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1468,6 +1609,21 @@ dscDone:
     pop ds
     ret
 delete_secure_connection    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Delete_secure_listen
+;
+;           DESCRIPTION:    Delete secure listen (called from handle module)
+;
+;           PARAMETERS:     BX              SECURE LISTEN HANDLE
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_secure_listen    Proc far
+    ret
+delete_secure_listen     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1546,6 +1702,10 @@ init    Proc far
 ;
     mov edi,OFFSET delete_secure_connection
     mov ax,SSL_CONN_HANDLE
+    RegisterHandle
+;
+    mov edi,OFFSET delete_secure_listen
+    mov ax,SSL_LISTEN_HANDLE
     RegisterHandle
 ;
     mov esi,OFFSET create_secure_session
@@ -1645,6 +1805,30 @@ init    Proc far
     mov dx,virt_es_in
     mov ax,write_secure_connection_nr
     RegisterUserGate
+;
+    mov esi,OFFSET create_secure_listen
+    mov edi,OFFSET create_secure_listen_name
+    xor dx,dx
+    mov ax,create_secure_listen_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_secure_listen
+    mov edi,OFFSET get_secure_listen_name
+    xor dx,dx
+    mov ax,get_secure_listen_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET close_secure_listen
+    mov edi,OFFSET close_secure_listen_name
+    xor dx,dx
+    mov ax,close_secure_listen_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET add_wait_for_secure_listen
+    mov edi,OFFSET add_wait_for_secure_listen_name
+    xor dx,dx
+    mov ax,add_wait_for_secure_listen_nr
+    RegisterBimodalUserGate
     clc
 ;
     ret
