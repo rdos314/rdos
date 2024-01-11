@@ -89,6 +89,234 @@ struct TServer *ServerSessionArr[MAX_SESSION_COUNT];
 extern int WaitForMsg();
 #pragma aux WaitForMsg value [eax]
 
+
+typedef struct string_int_pair_st {
+    const char *name;
+    int retval;
+} OPT_PAIR, STRINT_PAIR;
+
+static const char *lookup(int val, const STRINT_PAIR* list, const char* def)
+{
+    for ( ; list->name; ++list)
+        if (list->retval == val)
+            return list->name;
+    return def;
+}
+
+static STRINT_PAIR ssl_versions[] = {
+    {"SSL 3.0", SSL3_VERSION},
+    {"TLS 1.0", TLS1_VERSION},
+    {"TLS 1.1", TLS1_1_VERSION},
+    {"TLS 1.2", TLS1_2_VERSION},
+    {"TLS 1.3", TLS1_3_VERSION},
+    {"DTLS 1.0", DTLS1_VERSION},
+    {"DTLS 1.0 (bad)", DTLS1_BAD_VER},
+    {NULL}
+};
+
+static STRINT_PAIR alert_types[] = {
+    {" close_notify", 0},
+    {" end_of_early_data", 1},
+    {" unexpected_message", 10},
+    {" bad_record_mac", 20},
+    {" decryption_failed", 21},
+    {" record_overflow", 22},
+    {" decompression_failure", 30},
+    {" handshake_failure", 40},
+    {" bad_certificate", 42},
+    {" unsupported_certificate", 43},
+    {" certificate_revoked", 44},
+    {" certificate_expired", 45},
+    {" certificate_unknown", 46},
+    {" illegal_parameter", 47},
+    {" unknown_ca", 48},
+    {" access_denied", 49},
+    {" decode_error", 50},
+    {" decrypt_error", 51},
+    {" export_restriction", 60},
+    {" protocol_version", 70},
+    {" insufficient_security", 71},
+    {" internal_error", 80},
+    {" inappropriate_fallback", 86},
+    {" user_canceled", 90},
+    {" no_renegotiation", 100},
+    {" missing_extension", 109},
+    {" unsupported_extension", 110},
+    {" certificate_unobtainable", 111},
+    {" unrecognized_name", 112},
+    {" bad_certificate_status_response", 113},
+    {" bad_certificate_hash_value", 114},
+    {" unknown_psk_identity", 115},
+    {" certificate_required", 116},
+    {NULL}
+};
+
+static STRINT_PAIR handshakes[] = {
+    {", HelloRequest", SSL3_MT_HELLO_REQUEST},
+    {", ClientHello", SSL3_MT_CLIENT_HELLO},
+    {", ServerHello", SSL3_MT_SERVER_HELLO},
+    {", HelloVerifyRequest", DTLS1_MT_HELLO_VERIFY_REQUEST},
+    {", NewSessionTicket", SSL3_MT_NEWSESSION_TICKET},
+    {", EndOfEarlyData", SSL3_MT_END_OF_EARLY_DATA},
+    {", EncryptedExtensions", SSL3_MT_ENCRYPTED_EXTENSIONS},
+    {", Certificate", SSL3_MT_CERTIFICATE},
+    {", ServerKeyExchange", SSL3_MT_SERVER_KEY_EXCHANGE},
+    {", CertificateRequest", SSL3_MT_CERTIFICATE_REQUEST},
+    {", ServerHelloDone", SSL3_MT_SERVER_DONE},
+    {", CertificateVerify", SSL3_MT_CERTIFICATE_VERIFY},
+    {", ClientKeyExchange", SSL3_MT_CLIENT_KEY_EXCHANGE},
+    {", Finished", SSL3_MT_FINISHED},
+    {", CertificateUrl", SSL3_MT_CERTIFICATE_URL},
+    {", CertificateStatus", SSL3_MT_CERTIFICATE_STATUS},
+    {", SupplementalData", SSL3_MT_SUPPLEMENTAL_DATA},
+    {", KeyUpdate", SSL3_MT_KEY_UPDATE},
+#ifndef OPENSSL_NO_NEXTPROTONEG
+    {", NextProto", SSL3_MT_NEXT_PROTO},
+#endif
+    {", MessageHash", SSL3_MT_MESSAGE_HASH},
+    {NULL}
+};
+
+void msg_cb(int write_p, int version, int content_type, const void *buf,
+            size_t len, SSL *ssl, void *arg)
+{
+    BIO *bio = arg;
+    const char *str_write_p = write_p ? ">>>" : "<<<";
+    const char *str_version = lookup(version, ssl_versions, "???");
+    const char *str_content_type = "", *str_details1 = "", *str_details2 = "";
+    const unsigned char* bp = buf;
+
+    if (version == SSL3_VERSION ||
+        version == TLS1_VERSION ||
+        version == TLS1_1_VERSION ||
+        version == TLS1_2_VERSION ||
+        version == TLS1_3_VERSION ||
+        version == DTLS1_VERSION || version == DTLS1_BAD_VER) {
+        switch (content_type) {
+        case 20:
+            str_content_type = ", ChangeCipherSpec";
+            break;
+        case 21:
+            str_content_type = ", Alert";
+            str_details1 = ", ???";
+            if (len == 2) {
+                switch (bp[0]) {
+                case 1:
+                    str_details1 = ", warning";
+                    break;
+                case 2:
+                    str_details1 = ", fatal";
+                    break;
+                }
+                str_details2 = lookup((int)bp[1], alert_types, " ???");
+            }
+            break;
+        case 22:
+            str_content_type = ", Handshake";
+            str_details1 = "???";
+            if (len > 0)
+                str_details1 = lookup((int)bp[0], handshakes, "???");
+            break;
+        case 23:
+            str_content_type = ", ApplicationData";
+            break;
+#ifndef OPENSSL_NO_HEARTBEATS
+        case 24:
+            str_details1 = ", Heartbeat";
+
+            if (len > 0) {
+                switch (bp[0]) {
+                case 1:
+                    str_details1 = ", HeartbeatRequest";
+                    break;
+                case 2:
+                    str_details1 = ", HeartbeatResponse";
+                    break;
+                }
+            }
+            break;
+#endif
+        }
+    }
+
+    BIO_printf(bio, "%s %s%s [length %04lx]%s%s\n", str_write_p, str_version,
+               str_content_type, (unsigned long)len, str_details1,
+               str_details2);
+
+    if (len > 0) {
+        size_t num, i;
+
+        BIO_printf(bio, "   ");
+        num = len;
+        for (i = 0; i < num; i++) {
+            if (i % 16 == 0 && i > 0)
+                BIO_printf(bio, "\n   ");
+            BIO_printf(bio, " %02x", ((const unsigned char *)buf)[i]);
+        }
+        if (i < len)
+            BIO_printf(bio, " ...");
+        BIO_printf(bio, "\n");
+    }
+    (void)BIO_flush(bio);
+}
+
+
+static STRINT_PAIR tlsext_types[] = {
+    {"server name", TLSEXT_TYPE_server_name},
+    {"max fragment length", TLSEXT_TYPE_max_fragment_length},
+    {"client certificate URL", TLSEXT_TYPE_client_certificate_url},
+    {"trusted CA keys", TLSEXT_TYPE_trusted_ca_keys},
+    {"truncated HMAC", TLSEXT_TYPE_truncated_hmac},
+    {"status request", TLSEXT_TYPE_status_request},
+    {"user mapping", TLSEXT_TYPE_user_mapping},
+    {"client authz", TLSEXT_TYPE_client_authz},
+    {"server authz", TLSEXT_TYPE_server_authz},
+    {"cert type", TLSEXT_TYPE_cert_type},
+    {"supported_groups", TLSEXT_TYPE_supported_groups},
+    {"EC point formats", TLSEXT_TYPE_ec_point_formats},
+    {"SRP", TLSEXT_TYPE_srp},
+    {"signature algorithms", TLSEXT_TYPE_signature_algorithms},
+    {"use SRTP", TLSEXT_TYPE_use_srtp},
+    {"heartbeat", TLSEXT_TYPE_heartbeat},
+    {"session ticket", TLSEXT_TYPE_session_ticket},
+    {"renegotiation info", TLSEXT_TYPE_renegotiate},
+    {"signed certificate timestamps", TLSEXT_TYPE_signed_certificate_timestamp},
+    {"TLS padding", TLSEXT_TYPE_padding},
+#ifdef TLSEXT_TYPE_next_proto_neg
+    {"next protocol", TLSEXT_TYPE_next_proto_neg},
+#endif
+#ifdef TLSEXT_TYPE_encrypt_then_mac
+    {"encrypt-then-mac", TLSEXT_TYPE_encrypt_then_mac},
+#endif
+#ifdef TLSEXT_TYPE_application_layer_protocol_negotiation
+    {"application layer protocol negotiation",
+     TLSEXT_TYPE_application_layer_protocol_negotiation},
+#endif
+#ifdef TLSEXT_TYPE_extended_master_secret
+    {"extended master secret", TLSEXT_TYPE_extended_master_secret},
+#endif
+    {"key share", TLSEXT_TYPE_key_share},
+    {"supported versions", TLSEXT_TYPE_supported_versions},
+    {"psk", TLSEXT_TYPE_psk},
+    {"psk kex modes", TLSEXT_TYPE_psk_kex_modes},
+    {"certificate authorities", TLSEXT_TYPE_certificate_authorities},
+    {"post handshake auth", TLSEXT_TYPE_post_handshake_auth},
+    {NULL}
+};
+
+
+void tlsext_cb(SSL *s, int client_server, int type,
+               const unsigned char *data, int len, void *arg)
+{
+    BIO *bio = arg;
+    const char *extname = lookup(type, tlsext_types, "unknown");
+
+    BIO_printf(bio, "TLS %s extension \"%s\" (id=%d), len=%d\n",
+               client_server ? "server" : "client", extname, type, len);
+    BIO_dump(bio, (const char *)data, len);
+    (void)BIO_flush(bio);
+}
+
 /*##########################################################################
 #
 #   Name       : CreateClientName
@@ -245,6 +473,15 @@ static void ClientHandler(void *par)
     int scount = 0;
     int rspace = 0;
     char *buf;
+
+
+    BIO *bio_s_out = BIO_new_fp(stdout, BIO_NOCLOSE | BIO_FP_TEXT);
+
+    SSL_set_tlsext_debug_callback(con, tlsext_cb);
+    SSL_set_tlsext_debug_arg(con, bio_s_out);
+
+    SSL_set_msg_callback(con, msg_cb);
+    SSL_set_msg_callback_arg(con, bio_s_out);
 
     if (!RdosWaitForTcpConnection(handle, timeout))
         return;
@@ -683,6 +920,14 @@ static void ServerHandler(void *par)
     int scount = 0;
     int rspace = 0;
     char *buf;
+
+    BIO *bio_s_out = BIO_new_fp(stdout, BIO_NOCLOSE | BIO_FP_TEXT);
+
+    SSL_set_tlsext_debug_callback(con, tlsext_cb);
+    SSL_set_tlsext_debug_arg(con, bio_s_out);
+
+    SSL_set_msg_callback(con, msg_cb);
+    SSL_set_msg_callback_arg(con, bio_s_out);
 
     ServSslStart(index, handle);
     buf = (char *)malloc(size);
