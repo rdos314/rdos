@@ -1554,10 +1554,13 @@ get_secure_listen_name     DB 'Get Secure listen',0
 
 get_secure_listen  Proc far
     push ds
+    push es
     push ebx
     push ecx
     push edx
     push esi
+    push edi
+    push ebp
 ;
     mov ax,SSL_LISTEN_HANDLE
     DerefHandle
@@ -1603,12 +1606,24 @@ glMsg:
     mov eax,SSL_ACCEPT_SERVER
     call RunMsg
     jc glDone
+;
+    mov edx,ebx
+    mov ax,SSL_CONN_HANDLE
+    mov cx,SIZE ssl_connection_handle_seg
+    AllocateHandle
+    mov [ebx].sc_id,edx
+    mov [ebx].hh_sign,SSL_CONN_HANDLE
+    mov ax,[ebx].hh_handle
+    clc
 
 glDone:
+    pop ebp
+    pop edi
     pop esi
     pop edx
     pop ecx
     pop ebx
+    pop es
     pop ds  
     ret
 get_secure_listen  Endp
