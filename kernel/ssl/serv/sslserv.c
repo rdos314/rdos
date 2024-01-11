@@ -86,6 +86,8 @@ struct TConnection *ConnectionArr[MAX_CONNECTION_COUNT];
 SSL_CONF_CTX *ServerConf;
 struct TServer *ServerSessionArr[MAX_SESSION_COUNT];
 
+BIO *bio_s_out;
+
 extern int WaitForMsg();
 #pragma aux WaitForMsg value [eax]
 
@@ -473,9 +475,6 @@ static void ClientHandler(void *par)
     int scount = 0;
     int rspace = 0;
     char *buf;
-
-
-    BIO *bio_s_out = BIO_new_fp(stdout, BIO_NOCLOSE | BIO_FP_TEXT);
 
     SSL_set_tlsext_debug_callback(con, tlsext_cb);
     SSL_set_tlsext_debug_arg(con, bio_s_out);
@@ -895,6 +894,32 @@ int OpenServer(int Port, int MaxConnections, int BufferSize)
     return index + 1;
 }
 
+
+static int init_ssl_connection(SSL *con)
+{
+    int i;
+    long verify_err;
+
+    i = SSL_accept(con);
+
+    if (i <= 0) 
+    {
+        BIO_printf(bio_s_out, "ERROR\n");
+
+        verify_err = SSL_get_verify_result(con);
+        if (verify_err != X509_V_OK) {
+            BIO_printf(bio_s_out, "verify error:%s\n",
+                       X509_verify_cert_error_string(verify_err));
+        }
+        /* Always print any error messages */
+        ERR_print_errors(bio_s_out);
+        return 0;
+    }
+
+//    print_connection_info(con);
+    return 1;
+}
+
 /*##########################################################################
 #
 #   Name       : ServerHandler
@@ -913,15 +938,13 @@ static void ServerHandler(void *par)
     SSL *con = Conn->Con;
     int size = Conn->BufferSize;
     int handle = SSL_get_handle(con);
-    bool in_init = true;
-    bool write_ssl = true;
-    bool ssl_pending;
     int len;
+    int i;
     int scount = 0;
     int rspace = 0;
     char *buf;
-
-    BIO *bio_s_out = BIO_new_fp(stdout, BIO_NOCLOSE | BIO_FP_TEXT);
+    bool read_from_terminal;
+    bool read_from_sslcon;
 
     SSL_set_tlsext_debug_callback(con, tlsext_cb);
     SSL_set_tlsext_debug_arg(con, bio_s_out);
@@ -934,74 +957,18 @@ static void ServerHandler(void *par)
 
     while (!RdosIsTcpConnectionClosed(handle))
     {
-        if (!SSL_is_init_finished(con))
-        {
-            if (!in_init)
-                ServSslInitStart(index);
+        read_from_terminal = false;
+        read_from_sslcon = SSL_has_pending(con) || RdosPollTcpConnection(handle);
 
-            in_init = true;
-        }
-        else
-        {
-            if (in_init)
-            {
-                in_init = false;
-                ServSslInitDone(index);
-            }
-        }
-
-        if (ServSslGetReceiveSpace(index))
-            ssl_pending = SSL_has_pending(con) || RdosPollTcpConnection(handle);
-        else
-            ssl_pending = false;
-
-        if (!in_init && !ssl_pending)
+        if (!read_from_sslcon) 
         {
             if (ServSslGetSendCount(index) && RdosGetTcpConnectionWriteSpace(handle))
-                write_ssl = true;
+                read_from_terminal = true;
             else
-                write_ssl = false;
+                read_from_terminal = false;
         }
 
-        if (ssl_pending)
-        {
-            rspace = ServSslGetReceiveSpace(index);
-            len = SSL_read(con, buf, rspace);
-
-            if (len > 0)
-                printf("Received %d bytes\r\n", len);
-
-            switch (SSL_get_error(con, len))
-            {
-            case SSL_ERROR_NONE:
-                if (len <= 0)
-                    RdosCloseTcpConnection(handle);
-                else
-                    ServSslAddReceiveBuf(index, buf, len);
-
-                break;
-
-            case SSL_ERROR_SYSCALL:
-                printf("CONNECTION CLOSED BY SERVER\r\n");
-                RdosCloseTcpConnection(handle);
-                break;
-
-            case SSL_ERROR_ZERO_RETURN:
-                printf("closed\r\n");
-                RdosCloseTcpConnection(handle);
-                break;
-
-            case SSL_ERROR_WANT_ASYNC_JOB:
-                /* This shouldn't ever happen in s_client. Treat as an error */
-
-            case SSL_ERROR_SSL:
-                printf("SSL error\r\n");
-                RdosCloseTcpConnection(handle);
-                break;
-
-            }
-        }
-        else if (write_ssl)
+        if (read_from_terminal) 
         {
             scount = ServSslGetSendBuf(index, buf);
 
@@ -1011,38 +978,60 @@ static void ServerHandler(void *par)
             len = SSL_write(con, buf, (unsigned int)scount);
             switch (SSL_get_error(con, len))
             {
-            case SSL_ERROR_NONE:
-                if (len <= 0)
+                case SSL_ERROR_NONE:
+                    if (len <= 0)
+                        RdosCloseTcpConnection(handle);
+                    else
+                        ServSslClearSendCount(index, len);
+                    break;
+
+                case SSL_ERROR_WANT_ASYNC_JOB:
+                case SSL_ERROR_SSL:
+                case SSL_ERROR_SYSCALL:
+                    printf("SSL error\r\n");
                     RdosCloseTcpConnection(handle);
-                else
-                    ServSslClearSendCount(index, len);
-                break;
-
-            case SSL_ERROR_ZERO_RETURN:
-                if (scount)
-                {
-                    printf("shutdown\r\n");
-                    RdosCloseTcpConnection(handle);
-                }
-                break;
-
-            case SSL_ERROR_SYSCALL:
-                if (len || scount)
-                {
-                    printf("Socket error\r\n");
-                    RdosCloseTcpConnection(handle);
-                }
-                break;
-
-            case SSL_ERROR_WANT_ASYNC_JOB:
-                /* This shouldn't ever happen in s_client - treat as an error */
-
-            case SSL_ERROR_SSL:
-                printf("SSL error\r\n");
-                RdosCloseTcpConnection(handle);
-                break;
+                    break;
             }
             scount = 0;
+        }
+        else if (read_from_sslcon) 
+        {
+            if (!SSL_is_init_finished(con))
+            {
+                i = init_ssl_connection(con);
+
+                if (i <= 0) 
+                {
+                    printf("Init connection error\r\n");
+                    RdosCloseTcpConnection(handle);
+                }
+            } 
+            else 
+            {
+                rspace = ServSslGetReceiveSpace(index);
+                len = SSL_read(con, buf, rspace);
+
+                if (len > 0)
+                    printf("Received %d bytes\r\n", len);
+
+                switch (SSL_get_error(con, len))
+                {
+                    case SSL_ERROR_NONE:
+                        if (len <= 0)
+                            RdosCloseTcpConnection(handle);
+                        else
+                            ServSslAddReceiveBuf(index, buf, len);
+
+                        break;
+
+                    case SSL_ERROR_SYSCALL:
+                    case SSL_ERROR_WANT_ASYNC_JOB:
+                    case SSL_ERROR_SSL:
+                        printf("SSL error\r\n");
+                        RdosCloseTcpConnection(handle);
+                        break;
+                }
+            }
         }
         else
             ServSslWaitForChange(index);
@@ -1168,6 +1157,8 @@ void CloseServer(int index)
 int main()
 {
     int i;
+
+    bio_s_out = BIO_new_fp(stdout, BIO_NOCLOSE | BIO_FP_TEXT);
 
     ClientConf = SSL_CONF_CTX_new();
     SSL_CONF_CTX_set_flags(ClientConf, SSL_CONF_FLAG_CLIENT | SSL_CONF_FLAG_CMDLINE);

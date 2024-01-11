@@ -148,10 +148,10 @@ void main()
     TTcpSocket *sock;
     TKeyboardDevice keyboard;
 
-//    TTestSocketServerFactory fact(443, 100, 0x1000);
+    TTestSocketServerFactory fact(443, 100, 0x1000);
 
-//    for (;;)
-//        fact.WaitForever();
+    for (;;)
+        fact.WaitForever();
 
 
     strcpy(host, "185.20.15.60");
