@@ -221,16 +221,16 @@ void CloseSession(int index)
 
 /*##########################################################################
 #
-#   Name       : ConnectionHandler
+#   Name       : ClientHandler
 #
-#   Purpose....: Connection handler
+#   Purpose....: Client connection handler
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-static void ConnectionHandler(void *par)
+static void ClientHandler(void *par)
 {
     struct TConnection *Conn = (struct TConnection *)par;
     int index = Conn->Index;
@@ -443,7 +443,7 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
         ConnectionArr[Conn->Index - 1] = Conn;
 
         CreateClientName(str, IP, RemotePort);
-        RdosCreateThread(ConnectionHandler, str, Conn, 0x4000);
+        RdosCreateThread(ClientHandler, str, Conn, 0x4000);
 
         return Conn->Index;
     }
@@ -660,6 +660,157 @@ int OpenServer(int Port, int MaxConnections, int BufferSize)
 
 /*##########################################################################
 #
+#   Name       : ServerHandler
+#
+#   Purpose....: Server connection handler
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ServerHandler(void *par)
+{
+    struct TConnection *Conn = (struct TConnection *)par;
+    int index = Conn->Index;
+    SSL *con = Conn->Con;
+    int size = Conn->BufferSize;
+    int handle = SSL_get_handle(con);
+    bool in_init = true;
+    bool write_ssl = true;
+    bool ssl_pending;
+    int len;
+    int scount = 0;
+    int rspace = 0;
+    char *buf;
+
+    ServSslStart(index, handle);
+    buf = (char *)malloc(size);
+
+    while (!RdosIsTcpConnectionClosed(handle))
+    {
+        if (!SSL_is_init_finished(con))
+        {
+            if (!in_init)
+                ServSslInitStart(index);
+
+            in_init = true;
+        }
+        else
+        {
+            if (in_init)
+            {
+                in_init = false;
+                ServSslInitDone(index);
+            }
+        }
+
+        if (ServSslGetReceiveSpace(index))
+            ssl_pending = SSL_has_pending(con) || RdosPollTcpConnection(handle);
+        else
+            ssl_pending = false;
+
+        if (!in_init && !ssl_pending)
+        {
+            if (ServSslGetSendCount(index) && RdosGetTcpConnectionWriteSpace(handle))
+                write_ssl = true;
+            else
+                write_ssl = false;
+        }
+
+        if (ssl_pending)
+        {
+            rspace = ServSslGetReceiveSpace(index);
+            len = SSL_read(con, buf, rspace);
+
+            if (len > 0)
+                printf("Received %d bytes\r\n", len);
+
+            switch (SSL_get_error(con, len))
+            {
+            case SSL_ERROR_NONE:
+                if (len <= 0)
+                    RdosCloseTcpConnection(handle);
+                else
+                    ServSslAddReceiveBuf(index, buf, len);
+
+                break;
+
+            case SSL_ERROR_SYSCALL:
+                printf("CONNECTION CLOSED BY SERVER\r\n");
+                RdosCloseTcpConnection(handle);
+                break;
+
+            case SSL_ERROR_ZERO_RETURN:
+                printf("closed\r\n");
+                RdosCloseTcpConnection(handle);
+                break;
+
+            case SSL_ERROR_WANT_ASYNC_JOB:
+                /* This shouldn't ever happen in s_client. Treat as an error */
+
+            case SSL_ERROR_SSL:
+                printf("SSL error\r\n");
+                RdosCloseTcpConnection(handle);
+                break;
+
+            }
+        }
+        else if (write_ssl)
+        {
+            scount = ServSslGetSendBuf(index, buf);
+
+            if (scount > 0)
+                printf("Sent %d bytes\r\n", scount);
+
+            len = SSL_write(con, buf, (unsigned int)scount);
+            switch (SSL_get_error(con, len))
+            {
+            case SSL_ERROR_NONE:
+                if (len <= 0)
+                    RdosCloseTcpConnection(handle);
+                else
+                    ServSslClearSendCount(index, len);
+                break;
+
+            case SSL_ERROR_ZERO_RETURN:
+                if (scount)
+                {
+                    printf("shutdown\r\n");
+                    RdosCloseTcpConnection(handle);
+                }
+                break;
+
+            case SSL_ERROR_SYSCALL:
+                if (len || scount)
+                {
+                    printf("Socket error\r\n");
+                    RdosCloseTcpConnection(handle);
+                }
+                break;
+
+            case SSL_ERROR_WANT_ASYNC_JOB:
+                /* This shouldn't ever happen in s_client - treat as an error */
+
+            case SSL_ERROR_SSL:
+                printf("SSL error\r\n");
+                RdosCloseTcpConnection(handle);
+                break;
+            }
+            scount = 0;
+        }
+        else
+            ServSslWaitForChange(index);
+    }
+
+    printf("closed %d\r\n", index);
+
+    ServSslStop(index, handle);
+    free(buf);
+}
+
+/*##########################################################################
+#
 #   Name       : AcceptServer
 #
 #   Purpose....: Accept server socket
@@ -669,9 +820,77 @@ int OpenServer(int Port, int MaxConnections, int BufferSize)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux AcceptServer "*" parm routine [ebx] [eax]
-void AcceptServer(int index, int entry)
+#pragma aux AcceptServer "*" parm routine [ebx] [eax] value [ebx]
+int AcceptServer(int index, int entry)
 {
+    struct TServer *Server = 0;
+    struct TConnection *Conn = 0;
+    int sock;
+    int Ip;
+    int RemotePort;
+    int i;
+    BIO *sbio;
+    SSL *con = 0;
+    char str[80];
+
+    if (index > 0 && index <= MAX_SESSION_COUNT)
+        Server = ServerSessionArr[index - 1];
+
+    if (Server)
+        if (entry > 0 && entry <= MAX_CONNECTION_COUNT)
+            Conn = Server->ConnectionArr[entry - 1];
+
+    if (Conn)
+    {
+        sock = Conn->Index;
+        Conn->Index = -1;
+
+        for (i = 0; i < MAX_CONNECTION_COUNT; i++)
+        {
+            if (ConnectionArr[i] == 0)
+            {
+                Conn->Index = i;
+                break;
+            }
+        }
+
+        if (Conn->Index < 0)
+        {
+            RdosCloseTcpConnection(sock);
+            RdosDeleteTcpConnection(sock);
+            free(Conn);
+            Conn = 0;
+            Server->ConnectionArr[entry - 1] = 0;
+        }
+    }
+
+    if (Conn)
+    {
+        Conn->Index++;
+
+        printf("Accept connection %d\r\n", Conn->Index);
+
+        Ip = RdosGetRemoteTcpConnectionIP(sock);
+        RemotePort = RdosGetRemoteTcpConnectionPort(sock);
+
+        ServCreateSslConnection(Conn->Index, Ip, Server->Port, RemotePort, Server->BufferSize);
+
+        sbio = BIO_new_socket(sock, BIO_NOCLOSE);
+        con = SSL_new(Server->ctx);
+        Conn->Con = con;
+
+        SSL_set_bio(con, sbio, sbio);
+        SSL_set_accept_state(con);
+
+        ConnectionArr[Conn->Index - 1] = Conn;
+
+        CreateServerName(str, Ip, Server->Port);
+        RdosCreateThread(ServerHandler, str, Conn, 0x4000);
+
+        return Conn->Index;
+    }
+    else
+        return 0;
 }
 
 /*##########################################################################
