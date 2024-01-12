@@ -212,6 +212,8 @@ void TGraphicDevice::InitDevice()
 {
     if (FBitmapHandle)
     {
+        RdosGetBitmapInfo(FBitmapHandle, &FBpp, &FWidth, &FHeight, &FRowSize, &FLinear);
+
         RdosSetDrawColor(FBitmapHandle, FColor);
         RdosSetLGOP(FBitmapHandle, FLgop);
 
