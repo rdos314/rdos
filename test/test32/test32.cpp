@@ -148,6 +148,8 @@ void main()
     TTcpSocket *sock;
     TKeyboardDevice keyboard;
 
+    const char *OcppName = "resi-prod-ocpp-server.azurewebsites.net";
+
     TTestSocketServerFactory fact(443, 100, 0x1000);
 
     fact.SetCertificate("d:/ssl/cert.pem", "d:/ssl/privkey.pem", "d:/ssl/chain.pem");
