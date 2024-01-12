@@ -2918,6 +2918,14 @@
     CallGate_close_secure_listen  \
     __parm [__ebx]
 
+#pragma aux RdosSetSecureCertificate = \
+    CallGate_set_secure_cert  \
+    __parm [__ebx] [__edi]
+
+#pragma aux RdosSetSecurePrivateKey = \
+    CallGate_set_secure_priv_key  \
+    __parm [__ebx] [__edi]
+
 #pragma aux RdosAddWaitForSecureListen = \
     CallGate_add_wait_for_secure_listen  \
     __parm [__ebx] [__eax] [__ecx]

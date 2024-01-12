@@ -1454,6 +1454,38 @@ void TSslSocketServerFactory::Add(TWait *Wait)
 
 /*##########################################################################
 #
+#   Name       : TSslSocketServerFactory::SetCertificate
+#
+#   Purpose....: Set certificate
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSslSocketServerFactory::SetCertificate(const char *FileName)
+{
+    if (FListenHandle)
+        RdosSetSecureCertificate(FListenHandle, FileName);
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocketServerFactory::SetPrivateKey
+#
+#   Purpose....: Set private key
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSslSocketServerFactory::SetPrivateKey(const char *FileName)
+{
+    if (FListenHandle)
+        RdosSetSecurePrivateKey(FListenHandle, FileName);
+}
+
+/*##########################################################################
+#
 #   Name       : TSslSocketServerFactory::SignalNewData
 #
 #   Purpose....: Signal new data if available

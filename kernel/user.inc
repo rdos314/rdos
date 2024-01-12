@@ -1951,6 +1951,18 @@ GetSecureListen    MACRO
         UserGate get_secure_listen_nr
                         ENDM
 
+; IN  BX            listen handle
+; IN  DS:(E)DI      certificate filename
+SetSecureCertificate    MACRO
+        UserGate set_secure_cert_nr
+                        ENDM
+
+; IN  BX            listen handle
+; IN  DS:(E)DI      private key filename
+SetSecurePrivateKey    MACRO
+        UserGate set_secure_priv_key_nr
+                        ENDM
+
 ; IN  BX                listen handle
 CloseSecureListen  MACRO
         UserGate close_secure_listen_nr
