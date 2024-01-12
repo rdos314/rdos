@@ -214,7 +214,7 @@ public:
     TSslSocketServerFactory(int Port, int MaxConnections, int BufferSize);
     virtual ~TSslSocketServerFactory();
 
-    void SetCertificate(const char *CertFileName, const char *PrivateKeyFileName);
+    void SetCertificate(const char *CertFileName, const char *PrivateKeyFileName, const char *ChainFileName);
 
 protected:
     virtual void SignalNewData();

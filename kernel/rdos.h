@@ -841,7 +841,7 @@ int RDOSAPI RdosCreateSecureListen(int Port, int MaxConnections, int BufferSize)
 int RDOSAPI RdosGetSecureListen(int Handle);
 void RDOSAPI RdosCloseSecureListen(int Handle);
 void RDOSAPI RdosAddWaitForSecureListen(int Handle, int ConHandle, int ID);
-void RDOSAPI RdosSetSecureCertificate(int Handle, const char *CertFileName, const char *PrivateKeyFileName);
+void RDOSAPI RdosSetSecureCertificate(int Handle, const char *CertFileName, const char *PrivateKeyFileName, const char *ChainFileName);
 
 int RDOSAPI RdosCreateUdpListen(int Port, int MaxBufferedMessages);
 int RDOSAPI RdosGetUdpListenSize(int Handle);

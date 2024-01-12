@@ -275,6 +275,7 @@ LocalSetServerCert Proc near
 ;
     add edi,SIZE ssl_cmd_struc
     add esi,edi
+    add edx,edi
     call SetServerCert
 ;
     pop edi

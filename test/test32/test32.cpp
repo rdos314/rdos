@@ -115,7 +115,7 @@ TTestSocketServerFactory::TTestSocketServerFactory(int Port, int MaxConnections,
 ##########################################################################*/
 TTestSocketServerFactory::~TTestSocketServerFactory()
 {
-}        
+}
 
 /*##########################################################################
 #
@@ -150,7 +150,7 @@ void main()
 
     TTestSocketServerFactory fact(443, 100, 0x1000);
 
-    fact.SetCertificate("d:/ssl/cert.pem", "d:/ssl/key.pem");
+    fact.SetCertificate("d:/ssl/cert.pem", "d:/ssl/privkey.pem", "d:/ssl/chain.pem");
 
     for (;;)
         fact.WaitForever();

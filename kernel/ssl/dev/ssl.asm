@@ -1673,7 +1673,8 @@ close_secure_listen    Endp
 ;
 ;       Parameters:     BX          Listen handle
 ;                       DS:(E)SI    Cert filename
-;                       ES:(E)DI    Key Filename
+;                       ES:(E)DI    Key gilename
+;                       ES:(E)DX    Chain filemane
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1722,6 +1723,17 @@ sscCopyKey:
     stosb
     or al,al
     jnz sscCopyKey
+;
+    mov eax,edi
+    sub eax,SIZE ssl_reg
+    mov es:reg_edx,eax
+    mov esi,edx
+
+sscCopyChain:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz sscCopyChain
 ;
     mov eax,SSL_SERVER_CERT
     call RunMsg

@@ -2920,7 +2920,7 @@
 
 #pragma aux RdosSetSecureCertificate = \
     CallGate_set_secure_cert  \
-    __parm [__ebx] [__esi] [__edi]
+    __parm [__ebx] [__esi] [__edi] [__edx]
 
 #pragma aux RdosAddWaitForSecureListen = \
     CallGate_add_wait_for_secure_listen  \

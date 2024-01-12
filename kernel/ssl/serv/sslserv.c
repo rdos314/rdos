@@ -523,7 +523,7 @@ void PushConnection(int index)
         con = Conn->Con;
 
     if (con)
-    {       
+    {
         handle = SSL_get_handle(con);
         if (!RdosIsTcpConnectionClosed(handle) && !ServSslGetSendCount(index))
             RdosPushTcpConnection(handle);
@@ -566,7 +566,7 @@ void CloseConnection(int index)
 
             SSL_shutdown(con);
             SSL_free(con);
- 
+
             RdosDeleteTcpConnection(handle);
             ServDeleteSslConnection(index);
         }
@@ -713,7 +713,7 @@ static int init_ssl_connection(SSL *con)
 
     i = SSL_accept(con);
 
-    if (i <= 0) 
+    if (i <= 0)
     {
         BIO_printf(bio_s_out, "ERROR\n");
 
@@ -771,7 +771,7 @@ static void ServerHandler(void *par)
         read_from_terminal = false;
         read_from_sslcon = SSL_has_pending(con) || RdosPollTcpConnection(handle);
 
-        if (!read_from_sslcon) 
+        if (!read_from_sslcon)
         {
             if (ServSslGetSendCount(index) && RdosGetTcpConnectionWriteSpace(handle))
                 read_from_terminal = true;
@@ -779,7 +779,7 @@ static void ServerHandler(void *par)
                 read_from_terminal = false;
         }
 
-        if (read_from_terminal) 
+        if (read_from_terminal)
         {
             scount = ServSslGetSendBuf(index, buf);
 
@@ -805,19 +805,19 @@ static void ServerHandler(void *par)
             }
             scount = 0;
         }
-        else if (read_from_sslcon) 
+        else if (read_from_sslcon)
         {
             if (!SSL_is_init_finished(con))
             {
                 i = init_ssl_connection(con);
 
-                if (i <= 0) 
+                if (i <= 0)
                 {
                     printf("Init connection error\r\n");
                     RdosCloseTcpConnection(handle);
                 }
-            } 
-            else 
+            }
+            else
             {
                 rspace = ServSslGetReceiveSpace(index);
                 len = SSL_read(con, buf, rspace);
@@ -949,11 +949,12 @@ int AcceptServer(int index, int entry)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux SetServerCert "*" parm routine [ebx] [edi] [esi]
-void SetServerCert(int index, const char *CertFileName, const char *KeyFileName)
+#pragma aux SetServerCert "*" parm routine [ebx] [edi] [esi] [edx]
+void SetServerCert(int index, const char *CertFileName, const char *KeyFileName, const char *ChainFileName)
 {
     struct TServer *Server = 0;
     X509 *cert;
+    STACK_OF(X509) *chain = NULL;
     EVP_PKEY *key;
 
     if (index > 0 && index <= MAX_SESSION_COUNT)
@@ -971,10 +972,13 @@ void SetServerCert(int index, const char *CertFileName, const char *KeyFileName)
         if (!cert)
             printf("Cannot load %s as a certificate\r\n", CertFileName);
 
-        if (set_cert_key_stuff(Server->ctx, cert, key, 0, 0))
-            printf("Loaded Cert: %s, Private Key: %s\r\n", CertFileName, KeyFileName);
+        if (!load_certs(ChainFileName, &chain, FORMAT_PEM, NULL, "server certificate chain"))
+            printf("Cannot load %s as a certificate chain\r\n", ChainFileName);
+
+        if (set_cert_key_stuff(Server->ctx, cert, key, chain, 0))
+            printf("Loaded Cert: %s, Private Key: %s, Chain: %s\r\n", CertFileName, KeyFileName, ChainFileName);
         else
-            printf("Failed Cert: %s, Private Key: %s\r\n", CertFileName, KeyFileName);
+            printf("Failed Cert: %s, Private Key: %s, Chain: %s\r\n", CertFileName, KeyFileName, ChainFileName);
     }
 }
 

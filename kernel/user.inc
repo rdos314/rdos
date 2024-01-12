@@ -1954,6 +1954,7 @@ GetSecureListen    MACRO
 ; IN  BX            listen handle
 ; IN  DS:(E)SI      certificate filename
 ; IN  ES:(E)DI      key filename
+; IN  ES:(E)DX      chain filename
 SetSecureCertificate    MACRO
         UserGate set_secure_cert_nr
                         ENDM

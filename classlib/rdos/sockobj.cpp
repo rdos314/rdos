@@ -1462,10 +1462,10 @@ void TSslSocketServerFactory::Add(TWait *Wait)
 #   Returns....: *
 #
 ##########################################################################*/
-void TSslSocketServerFactory::SetCertificate(const char *CertFile, const char *PrivKeyFile)
+void TSslSocketServerFactory::SetCertificate(const char *CertFile, const char *PrivKeyFile, const char *ChainFile)
 {
     if (FListenHandle)
-        RdosSetSecureCertificate(FListenHandle, CertFile, PrivKeyFile);
+        RdosSetSecureCertificate(FListenHandle, CertFile, PrivKeyFile, ChainFile);
 }
 
 /*##########################################################################
