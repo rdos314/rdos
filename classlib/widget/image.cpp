@@ -828,6 +828,41 @@ void TImageControl::LoadImage(const char *FileName)
 
 /*##########################################################################
 #
+#   Name       : TImageControl::SetImage
+#
+#   Purpose....: Set a single image without a sequence loader
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TImageControl::SetImage(const TGraphicDevice *Image)
+{
+    TBitmapGraphicDevice *Bitmap = new TBitmapGraphicDevice(*Image);
+
+    FImageName.Reset();
+
+    FLoading++;
+    FCount = 0;
+
+    Protect();
+            
+    if (FImgArr[FCount])
+        delete FImgArr[FCount];
+
+    FImgArr[FCount] = Bitmap;
+    FDelayArr[FCount] = 0;
+    FCount++;
+
+    Unprotect();
+
+    FLoading--;
+    Redraw();
+}
+
+/*##########################################################################
+#
 #   Name       : TImageControl::CreateImage
 #
 #   Purpose....: Create empty image

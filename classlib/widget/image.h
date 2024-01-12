@@ -47,6 +47,7 @@ public:
     virtual void Set(const char *IniName, const char *IniSection);
 
     void LoadImage(const char *FileName);
+    void SetImage(const TGraphicDevice *Image);
 
     TBitmapGraphicDevice *GetImage(int Id);
 
