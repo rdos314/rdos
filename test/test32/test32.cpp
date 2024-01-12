@@ -150,8 +150,7 @@ void main()
 
     TTestSocketServerFactory fact(443, 100, 0x1000);
 
-    fact.SetPrivateKey("d:/ssl/key.pem");
-    fact.SetCertificate("d:/ssl/cert.pem");
+    fact.SetCertificate("d:/ssl/cert.pem", "d:/ssl/key.pem");
 
     for (;;)
         fact.WaitForever();

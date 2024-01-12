@@ -1025,6 +1025,5 @@ create_secure_listen_nr           = 843
 get_secure_listen_nr              = 844
 close_secure_listen_nr            = 845
 set_secure_cert_nr                = 846
-set_secure_priv_key_nr            = 847
 
 usergate_entries                  = 860

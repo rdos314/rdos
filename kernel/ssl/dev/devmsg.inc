@@ -59,3 +59,8 @@ SSL_CLOSE_SERVER               = 6
 ; IN  EAX       Entry #
 ; OUT EBX       Connection ID
 SSL_ACCEPT_SERVER              = 7
+
+; IN  EBX       Server ID
+; IN  ESI       Key file offset
+; IN            Cert pathname
+SSL_SERVER_CERT                = 8

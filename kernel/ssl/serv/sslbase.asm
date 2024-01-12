@@ -259,6 +259,37 @@ LocalAcceptServer Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalSetServerCert
+;
+;       DESCRIPTION:    Set server certificate
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern SetServerCert:near
+
+LocalSetServerCert Proc near
+    push esi
+    push edi
+;
+    add edi,SIZE ssl_cmd_struc
+    add esi,edi
+    call SetServerCert
+;
+    pop edi
+    pop esi
+;
+    and [edi].fc_eflags,NOT 1
+;
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalSetServerCert Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -283,6 +314,7 @@ m04 DD OFFSET LocalPushConnection
 m05 DD OFFSET LocalOpenServer
 m06 DD OFFSET LocalCloseServer
 m07 DD OFFSET LocalAcceptServer
+m08 DD OFFSET LocalSetServerCert
 
 WaitForMsg_    Proc near
     push ebx

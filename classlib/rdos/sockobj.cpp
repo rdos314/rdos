@@ -1462,26 +1462,10 @@ void TSslSocketServerFactory::Add(TWait *Wait)
 #   Returns....: *
 #
 ##########################################################################*/
-void TSslSocketServerFactory::SetCertificate(const char *FileName)
+void TSslSocketServerFactory::SetCertificate(const char *CertFile, const char *PrivKeyFile)
 {
     if (FListenHandle)
-        RdosSetSecureCertificate(FListenHandle, FileName);
-}
-
-/*##########################################################################
-#
-#   Name       : TSslSocketServerFactory::SetPrivateKey
-#
-#   Purpose....: Set private key
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSslSocketServerFactory::SetPrivateKey(const char *FileName)
-{
-    if (FListenHandle)
-        RdosSetSecurePrivateKey(FListenHandle, FileName);
+        RdosSetSecureCertificate(FListenHandle, CertFile, PrivKeyFile);
 }
 
 /*##########################################################################

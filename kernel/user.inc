@@ -1952,15 +1952,10 @@ GetSecureListen    MACRO
                         ENDM
 
 ; IN  BX            listen handle
-; IN  DS:(E)DI      certificate filename
+; IN  DS:(E)SI      certificate filename
+; IN  ES:(E)DI      key filename
 SetSecureCertificate    MACRO
         UserGate set_secure_cert_nr
-                        ENDM
-
-; IN  BX            listen handle
-; IN  DS:(E)DI      private key filename
-SetSecurePrivateKey    MACRO
-        UserGate set_secure_priv_key_nr
                         ENDM
 
 ; IN  BX                listen handle

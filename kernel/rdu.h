@@ -1025,7 +1025,6 @@
 #define usergate_get_secure_listen 0x0000034C
 #define usergate_close_secure_listen 0x0000034D
 #define usergate_set_secure_cert 0x0000034E
-#define usergate_set_secure_priv_key 0x0000034F
 
 
 
@@ -2057,7 +2056,6 @@
 #define CallGate_get_secure_listen 0x55 0x67 0x9a 76 3 0 0 3 0 0x5d
 #define CallGate_close_secure_listen 0x55 0x67 0x9a 77 3 0 0 3 0 0x5d
 #define CallGate_set_secure_cert 0x55 0x67 0x9a 78 3 0 0 3 0 0x5d
-#define CallGate_set_secure_priv_key 0x55 0x67 0x9a 79 3 0 0 3 0 0x5d
 
 #else
 
@@ -3087,6 +3085,5 @@
 #define CallGate_get_secure_listen 0x3e 0x67 0x9a 76 3 0 0 3 0
 #define CallGate_close_secure_listen 0x3e 0x67 0x9a 77 3 0 0 3 0
 #define CallGate_set_secure_cert 0x3e 0x67 0x9a 78 3 0 0 3 0
-#define CallGate_set_secure_priv_key 0x3e 0x67 0x9a 79 3 0 0 3 0
 
 #endif

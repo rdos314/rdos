@@ -637,39 +637,6 @@ static void ListenHandler(void *par)
     RdosCloseWait(WaitHandle);
 }
 
-
-/*##########################################################################
-#
-#   Name       : LoadCert
-#
-#   Purpose....: Load certificates
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool LoadCert(SSL_CTX *ctx)
-{
-    X509 *s_cert;
-    EVP_PKEY *s_key;
-
-    s_key = load_key("d:/ssl/key.pem", FORMAT_PEM, 0, 0, 0, "server certificate private key file");
-
-    if (!s_key)
-        return false;
-
-    s_cert = load_cert("d:/ssl/cert.pem", FORMAT_PEM, "server certificate file");
-
-    if (!s_cert)
-        return false;
-
-    if (set_cert_key_stuff(ctx, s_cert, s_key, 0, 0))
-        return true;
-    else
-        return false;
-}
-
 /*##########################################################################
 #
 #   Name       : OpenServer
@@ -707,8 +674,6 @@ int OpenServer(int Port, int MaxConnections, int BufferSize)
         if (ctx)
         {
             printf("Open server %d\r\n", index + 1);
-
-            LoadCert(ctx);
 
             SSL_CTX_clear_mode(ctx, SSL_MODE_AUTO_RETRY);
             SSL_CONF_CTX_set_ssl_ctx(ServerConf, ctx);
@@ -971,6 +936,35 @@ int AcceptServer(int index, int entry)
     }
     else
         return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : SetServerCert
+#
+#   Purpose....: Set server certificate
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux SetServerCert "*" parm routine [ebx] [esi] [edi]
+void SetServerCert(int index, const char *CertFileName, const char *KeyFileName)
+{
+    struct TServer *Server = 0;
+    X509 *cert;
+    EVP_PKEY *key;
+
+    if (index > 0 && index <= MAX_SESSION_COUNT)
+        Server = ServerSessionArr[index - 1];
+
+    if (Server)
+    {
+        key = load_key(KeyFileName, FORMAT_PEM, 0, 0, 0, "server certificate private key file");
+        cert = load_cert(CertFileName, FORMAT_PEM, "server certificate file");
+        set_cert_key_stuff(Server->ctx, cert, key, 0, 0);
+    }
 }
 
 /*##########################################################################

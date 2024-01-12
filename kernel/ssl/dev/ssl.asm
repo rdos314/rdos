@@ -1480,7 +1480,6 @@ write_secure_connection32  Proc far
     call WriteConnection
     ret
 write_secure_connection32  Endp
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1665,6 +1664,93 @@ clslDone:
     pop ds
     ret
 close_secure_listen    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           SetSecureCertificate
+;
+;       Purpose:        Set certificate
+;
+;       Parameters:     BX          Listen handle
+;                       DS:(E)SI    Cert filename
+;                       ES:(E)DI    Key Filename
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_secure_cert_name DB 'Set Secure Certificate',0
+
+set_secure_cert    Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,SSL_LISTEN_HANDLE
+    DerefHandle
+    jc sscDone
+;
+    mov eax,ds
+    mov fs,eax
+    mov eax,es
+    mov gs,eax
+    mov ebp,esi
+    mov esi,edi
+;
+    call AllocateMsg
+    jc sscDone
+;
+    push esi
+;
+    mov esi,ebp
+
+sscCopyCert:
+    lods byte ptr fs:[esi]
+    stosb
+    or al,al
+    jnz sscCopyCert
+;    
+    pop esi
+;
+    mov eax,edi
+    sub eax,SIZE ssl_reg
+    mov es:reg_esi,eax
+
+sscCopyKey:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz sscCopyKey
+;
+    mov eax,SSL_SERVER_CERT
+    call RunMsg
+
+sscDone:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+set_secure_cert    Endp
+
+set_secure_cert16  Proc far
+    push esi
+    push edi
+;
+    movzx esi,si
+    movzx edi,di
+    call set_secure_cert
+;
+    pop edi
+    pop esi
+    ret
+set_secure_cert16  Endp
+
+set_secure_cert32  Proc far
+    call set_secure_cert
+    ret
+set_secure_cert32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2156,6 +2242,13 @@ init    Proc far
     xor dx,dx
     mov ax,add_wait_for_secure_listen_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET set_secure_cert16
+    mov esi,OFFSET set_secure_cert32
+    mov edi,OFFSET set_secure_cert_name
+    mov dx,virt_ds_in OR virt_es_in
+    mov ax,set_secure_cert_nr
+    RegisterUserGate
     clc
 ;
     ret
