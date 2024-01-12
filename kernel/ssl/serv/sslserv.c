@@ -949,7 +949,7 @@ int AcceptServer(int index, int entry)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux SetServerCert "*" parm routine [ebx] [esi] [edi]
+#pragma aux SetServerCert "*" parm routine [ebx] [edi] [esi]
 void SetServerCert(int index, const char *CertFileName, const char *KeyFileName)
 {
     struct TServer *Server = 0;

@@ -1686,10 +1686,6 @@ set_secure_cert    Proc near
     push gs
     pushad
 ;
-    mov ax,SSL_LISTEN_HANDLE
-    DerefHandle
-    jc sscDone
-;
     mov eax,ds
     mov fs,eax
     mov eax,es
@@ -1697,6 +1693,11 @@ set_secure_cert    Proc near
     mov ebp,esi
     mov esi,edi
 ;
+    mov ax,SSL_LISTEN_HANDLE
+    DerefHandle
+    jc sscDone
+;
+    mov ebx,ds:[ebx].sl_id
     call AllocateMsg
     jc sscDone
 ;
