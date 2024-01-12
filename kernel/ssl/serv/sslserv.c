@@ -962,8 +962,19 @@ void SetServerCert(int index, const char *CertFileName, const char *KeyFileName)
     if (Server)
     {
         key = load_key(KeyFileName, FORMAT_PEM, 0, 0, 0, "server certificate private key file");
+
+        if (!key)
+            printf("Cannot load %s as a key\r\n", KeyFileName);
+
         cert = load_cert(CertFileName, FORMAT_PEM, "server certificate file");
-        set_cert_key_stuff(Server->ctx, cert, key, 0, 0);
+
+        if (!cert)
+            printf("Cannot load %s as a certificate\r\n", CertFileName);
+
+        if (set_cert_key_stuff(Server->ctx, cert, key, 0, 0))
+            printf("Loaded Cert: %s, Private Key: %s\r\n", CertFileName, KeyFileName);
+        else
+            printf("Failed Cert: %s, Private Key: %s\r\n", CertFileName, KeyFileName);
     }
 }
 
