@@ -78,6 +78,7 @@ struct TConnection
     int Timeout;
     int BufferSize;
     struct TServer *Server;
+    int ServerEntry;
     SSL *Con;
 };
 
@@ -545,6 +546,8 @@ void PushConnection(int index)
 void CloseConnection(int index)
 {
     struct TConnection *Conn = 0;
+    struct TServer *Server;
+    int Entry;
     SSL *con = 0;
     int handle;
 
@@ -570,6 +573,18 @@ void CloseConnection(int index)
             RdosDeleteTcpConnection(handle);
             ServDeleteSslConnection(index);
         }
+
+        Server = Conn->Server;
+
+        if (Server)
+        {
+            Entry = Conn->ServerEntry;
+
+            if (Entry > 0 && Entry <= Server->MaxConnections)
+                if (Server->ConnectionArr[Entry - 1] == Conn)
+                    Server->ConnectionArr[Entry - 1] = 0;
+        }
+
         free(Conn);
     }
 }
@@ -923,6 +938,8 @@ int AcceptServer(int index, int entry)
         sbio = BIO_new_socket(sock, BIO_NOCLOSE);
         con = SSL_new(Server->ctx);
         Conn->Con = con;
+        Conn->Server = Server;
+        Conn->ServerEntry = entry;
 
         SSL_set_bio(con, sbio, sbio);
         SSL_set_accept_state(con);
