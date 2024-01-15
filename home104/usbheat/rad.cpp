@@ -53,7 +53,8 @@
 #
 ##########################################################################*/
 TRad::TRad(const char *name, TRadControl *control, int rad, int Address)
-  : FLog("TRad")
+  : FLog("TRad"),
+    FSection("Rad.Section")
 {
     char str[40];
 

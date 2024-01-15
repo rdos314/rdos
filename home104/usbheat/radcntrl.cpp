@@ -58,7 +58,9 @@
 #
 ##########################################################################*/
 TRadControl::TRadControl(TControlThread *dev, int xmin, int ymin, int width, int height)
- : TControl(dev, xmin, ymin, width, height)
+ : TControl(dev, xmin, ymin, width, height),
+   FSection("Rad.Ctrl.Section")
+
 {
     int i;
 

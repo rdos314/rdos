@@ -74,9 +74,9 @@ int GetWebConnectionCount();
 
 TGraphicDevice *vbe;
 TControlThread *control;
-TSection FGuiSection;
+TSection FGuiSection("Gui.Section");
 
-TSection FDataSection;
+TSection FDataSection("Data.Section");
 static TFile *DayFile = 0;
 
 static int SolarPowerCount;

@@ -38,7 +38,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TSection FDataSection;
+TSection FDataSection("Met.Data.Section");
 
 static int WindDirCount = 0;
 static long double WindDirSum = 0.0;

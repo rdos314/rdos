@@ -62,7 +62,8 @@ TVp::TVp(TControlThread *control)
   : FLog("TVp"),
     FSerial(2, 9600, 'E', 8, 1),
     FModDev(&FSerial),
-    FEch(&FModDev, 1)
+    FEch(&FModDev, 1),
+    FSection("Vp")
 {
     int i;
 
