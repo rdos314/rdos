@@ -71,6 +71,7 @@ class THttpCustomPageFactory
 {
 friend class THttpSocketServer;
 friend class THttpSocketServerFactory;
+friend class THttpsSocketServerFactory;
 
 public:
 	THttpCustomPageFactory(const char *ReqName);
@@ -91,6 +92,7 @@ class THttpCustomDirFactory
 {
 friend class THttpSocketServer;
 friend class THttpSocketServerFactory;
+friend class THttpsSocketServerFactory;
 
 public:
 	THttpCustomDirFactory(const char *ReqName);
