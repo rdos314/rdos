@@ -1567,13 +1567,13 @@ get_secure_listen  Proc far
 ;
     mov ebx,ds:[ebx].sl_id
     call GetListenSel
-    jc crslDone
+    jc glDone
+;
+    EnterSection ds:sl_section
 ;
     mov cx,ds:sl_pend_count
     or cx,cx
-    jz glDone
-;
-    EnterSection ds:sl_section
+    jz glLeave
 ;
     xor eax,eax
     xor edx,edx
@@ -1591,6 +1591,10 @@ glLoop:
 glNext:
     add edx,8
     jmp glLoop
+
+glLeave:
+    LeaveSection ds:sl_section
+    jmp glDone
 
 glMsg:
     btc ds:sl_pend_mask,edx
