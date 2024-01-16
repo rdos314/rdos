@@ -54,7 +54,7 @@
 THttpsSocketServerFactory::THttpsSocketServerFactory(int Port, int MaxConnections, int BufferSize)
   : TSslSocketServerFactory(Port, MaxConnections, BufferSize)
 {
-	Init();
+        Init();
 }
 
 /*##########################################################################
@@ -109,7 +109,7 @@ void THttpsSocketServerFactory::AddCustomPage(THttpCustomPageFactory *page)
 
     page->FList = 0;
     curr = FPageList;
-   
+
     if (curr)
     {
         while (curr->FList)
@@ -118,7 +118,7 @@ void THttpsSocketServerFactory::AddCustomPage(THttpCustomPageFactory *page)
         curr->FList = page;
     }
     else
-        FPageList = page;    
+        FPageList = page;
 }
 
 /*##########################################################################
@@ -138,7 +138,7 @@ void THttpsSocketServerFactory::AddCustomDir(THttpCustomDirFactory *dir)
 
     dir->FList = 0;
     curr = FDirList;
-   
+
     if (curr)
     {
         while (curr->FList)
@@ -147,7 +147,7 @@ void THttpsSocketServerFactory::AddCustomDir(THttpCustomDirFactory *dir)
         curr->FList = dir;
     }
     else
-        FDirList = dir;    
+        FDirList = dir;
 }
 
 /*##########################################################################
@@ -185,6 +185,8 @@ void THttpsSocketServerFactory::LinkServer(THttpSocketServer *server)
 TSocketServer *THttpsSocketServerFactory::Create(TTcpSocket *Socket)
 {
     THttpSocketServer *server;
+
+    printf("Create Server\r\n");
 
     server = new THttpSocketServer("HTTP", 0x2000, Socket);
     LinkServer(server);

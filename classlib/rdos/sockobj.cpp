@@ -1485,11 +1485,16 @@ void TSslSocketServerFactory::SignalNewData()
     TSslSocket *socket;
     TSocketServer *server;
 
+    printf("New data\r\n");
+
     Cleanup();
     handle = RdosGetSecureListen(FListenHandle);
     if (handle)
     {
+        printf("Create socket\r\n");
         socket = new TSslSocket(handle);
+
+        printf("Create server\r\n");
         server = Create(socket);
         if (server)
             Insert(server);
