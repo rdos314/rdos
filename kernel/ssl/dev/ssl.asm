@@ -1448,7 +1448,24 @@ wcSizeOk:
     jmp wcRetry
 
 wcFull:
-    int 3
+    mov ecx,eax
+    xor ax,ax
+    xchg ax,ds:sc_send_pend
+    add ds:sc_send_count,ax
+    LeaveSection ds:sc_section
+;
+    mov bx,ds:sc_server
+    or bx,bx
+    stc
+    jz wcDone
+;
+    Signal
+;
+    mov ax,10
+    WaitMilliSec
+;
+    EnterSection ds:sc_section
+    jmp wcRetry
 
 wcOk:
     clc

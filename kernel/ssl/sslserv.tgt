@@ -103,8 +103,8 @@ r????Include directories:
 1
 25
 WString
-113
-"\rdos\kernel;\rdos\classlib;\rdos\classlib\ssl;\rdos\classlib\ssl\include;\rdos\classlib\ssl\apps;$(%watcom)/rh"
+133
+"\rdos\kernel;\rdos\classlib;\rdos\classlib\ssl;\rdos\classlib\ssl\include;\rdos\classlib\ssl\apps;\rdos\classlib\rdos;$(%watcom)/rh"
 0
 26
 MVState
