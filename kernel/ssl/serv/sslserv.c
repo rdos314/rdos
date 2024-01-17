@@ -803,6 +803,7 @@ static void ServerHandler(void *par)
     int scount = 0;
     int rspace = 0;
     char *buf;
+    bool in_init = true;
     bool read_from_terminal;
     bool read_from_sslcon;
 
@@ -858,6 +859,11 @@ static void ServerHandler(void *par)
         {
             if (!SSL_is_init_finished(con))
             {
+                if (!in_init)
+                    ServSslInitStart(index);
+
+                in_init = true;
+
                 i = init_ssl_connection(con);
 
                 if (i < 0)
@@ -868,6 +874,12 @@ static void ServerHandler(void *par)
             }
             else
             {
+                if (in_init)
+                {
+                    in_init = false;
+                    ServSslInitDone(index);
+                }
+
                 rspace = ServSslGetReceiveSpace(index);
                 len = SSL_read(con, buf, rspace);
 
