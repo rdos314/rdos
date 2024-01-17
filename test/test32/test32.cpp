@@ -20,11 +20,10 @@ void main()
     TTcpSocket *sock;
     TKeyboardDevice keyboard;
 
-//    TOcppSslSocketServerFactory fact(443, 100, 0x1000);
+    TOcppSslSocketServerFactory fact(443, 100, 0x1000);
 
-
-    THttpsSocketServerFactory fact(443, 100, 0x1000);
-    fact.RootDir = "d:/www";
+//    THttpsSocketServerFactory fact(443, 100, 0x1000);
+//    fact.RootDir = "d:/www";
 
     fact.SetCertificate("d:/ssl/cert.pem", "d:/ssl/privkey.pem", "d:/ssl/chain.pem");
 

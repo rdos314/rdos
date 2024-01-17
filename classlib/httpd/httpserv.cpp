@@ -826,8 +826,6 @@ void THttpSocketServer::HandleSocket()
         ptr = ReadLine();
         if (ptr)
         {
-            printf(ptr);
-
             cmd = Parse(ptr);
             if (cmd)
             {
