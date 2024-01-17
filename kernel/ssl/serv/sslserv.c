@@ -826,7 +826,7 @@ static void ServerHandler(void *par)
             {
                 i = init_ssl_connection(con);
 
-                if (i <= 0)
+                if (i < 0)
                 {
                     printf("Init connection error\r\n");
                     RdosCloseTcpConnection(handle);
