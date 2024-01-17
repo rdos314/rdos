@@ -775,8 +775,8 @@ static void ServerHandler(void *par)
 //    SSL_set_tlsext_debug_callback(con, tlsext_cb);
 //    SSL_set_tlsext_debug_arg(con, bio_s_out);
 
-//    SSL_set_msg_callback(con, msg_cb);
-//    SSL_set_msg_callback_arg(con, bio_s_out);
+    SSL_set_msg_callback(con, msg_cb);
+    SSL_set_msg_callback_arg(con, bio_s_out);
 
     ServSslStart(index, handle);
     buf = (char *)malloc(size);
