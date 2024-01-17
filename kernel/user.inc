@@ -2057,6 +2057,11 @@ GetTcpConnectionWriteSpace               MACRO
         UserGate get_tcp_connection_write_space_nr
                         ENDM
 
+; IN  BX                connection handle
+WaitForTcpConnectionWriteSpace               MACRO
+        UserGate wait_for_tcp_connection_write_space_nr
+                        ENDM
+
 ; OUT EDX               My IP address
 GetIpAddress    MACRO
         UserGate get_ip_address_nr

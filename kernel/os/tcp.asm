@@ -5822,6 +5822,71 @@ get_tcp_connection_write_space    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           WaitForWriteSpace
+;
+;       DESCRIPTION:    Wait for write space
+;
+;       PARAMETERS;     IN  BX        Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_tcp_connection_write_space_name DB 'Wait Tcp connection Write Space', 0
+
+wait_for_tcp_connection_write_space    Proc far
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    mov ax,TCP_SOCKET_HANDLE
+    DerefHandle
+    jc wcwsDone
+;    
+    mov ax,[ebx].tcp_handle_sel
+    or ax,ax
+    stc
+    jz wcwsDone
+;
+    mov ds,ax
+    EnterSection ds:tcp_section
+    mov cx,ds:tcp_buffer_size
+    sub cx,ds:tcp_send_count
+    movzx ecx,cx
+    mov eax,ds:tcp_send_next
+    sub eax,ds:tcp_send_una
+    sub ecx,eax
+    jnc wcwsSizeOk
+;
+    xor ecx,ecx
+
+wcwsSizeOk:
+    or ecx,ecx
+    jnz wcwsLeave
+;
+    ClearSignal
+    GetThread
+    mov ds:tcp_writer,ax
+    LeaveSection ds:tcp_section
+;
+    WaitForSignal
+;
+    EnterSection ds:tcp_section
+    mov ds:tcp_writer,0
+
+wcwsLeave:
+    LeaveSection ds:tcp_section
+
+wcwsDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+wait_for_tcp_connection_write_space    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           StartTcpConnectionNotify
 ;
 ;       DESCRIPTION:    Start TCP notify
@@ -7164,6 +7229,12 @@ init_task_tcp    PROC near
     mov edi,OFFSET get_tcp_connection_write_space_name
     xor dx,dx
     mov ax,get_tcp_connection_write_space_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET wait_for_tcp_connection_write_space
+    mov edi,OFFSET wait_for_tcp_connection_write_space_name
+    xor dx,dx
+    mov ax,wait_for_tcp_connection_write_space_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET add_wait_for_tcp_connection

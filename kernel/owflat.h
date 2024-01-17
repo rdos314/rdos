@@ -3060,6 +3060,10 @@
     __parm [__ebx] \
     __value [__eax]
 
+#pragma aux RdosWaitForTcpConnectionWriteSpace = \
+    CallGate_wait_for_tcp_connection_write_space  \
+    __parm [__ebx]
+
 #pragma aux RdosCreateTcpSocket = \
     CallGate_create_tcp_socket  \
     ValidateHandle \

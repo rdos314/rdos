@@ -876,6 +876,7 @@ int RDOSAPI RdosReadTcpConnection(int Handle, void *Buf, int Size);
 int RDOSAPI RdosWriteTcpConnection(int Handle, const void *Buf, int Size);
 int RDOSAPI RdosPollTcpConnection(int Handle);
 int RDOSAPI RdosGetTcpConnectionWriteSpace(int Handle);
+void RDOSAPI RdosWaitForTcpConnectionWriteSpace(int Handle);
 
 int RDOSAPI RdosCreateSecureSession();
 int RDOSAPI RdosCloseSecureSession(int Handle);

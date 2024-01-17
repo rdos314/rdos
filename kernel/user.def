@@ -1026,4 +1026,6 @@ get_secure_listen_nr              = 844
 close_secure_listen_nr            = 845
 set_secure_cert_nr                = 846
 
+wait_for_tcp_connection_write_space_nr = 847
+
 usergate_entries                  = 860
