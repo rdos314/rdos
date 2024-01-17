@@ -161,6 +161,7 @@ protected:
 private:
     int FHandle;
     int FSession;
+    bool FWaitDone;
 };
 
 class TSocketServer : public TThread

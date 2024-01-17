@@ -70,8 +70,7 @@ protected:
 class THttpCustomPageFactory
 {
 friend class THttpSocketServer;
-friend class THttpSocketServerFactory;
-friend class THttpsSocketServerFactory;
+friend class THttpServerFactory;
 
 public:
 	THttpCustomPageFactory(const char *ReqName);
@@ -91,8 +90,7 @@ protected:
 class THttpCustomDirFactory
 {
 friend class THttpSocketServer;
-friend class THttpSocketServerFactory;
-friend class THttpsSocketServerFactory;
+friend class THttpServerFactory;
 
 public:
 	THttpCustomDirFactory(const char *ReqName);

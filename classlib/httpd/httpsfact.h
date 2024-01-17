@@ -29,30 +29,15 @@
 #define _HTTPSFACT_H
 
 #include "httpcmd.h"
+#include "httpbase.h"
 
-class THttpsSocketServerFactory : public TSslSocketServerFactory
+class THttpsSocketServerFactory : public TSslSocketServerFactory, public THttpServerFactory
 {
 public:
     THttpsSocketServerFactory(int Port, int MaxConnections, int BufferSize);
     ~THttpsSocketServerFactory();
 
-    void AddCustomPage(THttpCustomPageFactory *page);
-    void AddCustomDir(THttpCustomDirFactory *dir);
-
     virtual TSocketServer *Create(TTcpSocket *Socket);
-
-    void (*OnCommand)(THttpSocketServer *server, const char *str);
-    int (*OnAuthorize)(THttpSocketServer *server, const char *user, const char *passw);
-
-    TString RootDir;
-    int KeepAlive;
-
-protected:
-    void LinkServer(THttpSocketServer *server);
-    void Init();
-
-    THttpCustomPageFactory *FPageList;
-    THttpCustomDirFactory *FDirList;
 };
 
 #endif

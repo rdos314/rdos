@@ -516,6 +516,7 @@ TSslSocket::TSslSocket(int Handle)
 {
     FSession = 0;
     FHandle = Handle;
+    FWaitDone = false;
     Open();
 }
 
@@ -538,6 +539,7 @@ TSslSocket::TSslSocket(long IP, int Port, int Timeout, int BufferSize)
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, 0, Port, Timeout, BufferSize);
+    FWaitDone = false;
     Open();
 }
 
@@ -561,6 +563,7 @@ TSslSocket::TSslSocket(long IP, int LocalPort, int RemotePort, int Timeout, int 
 {
     FSession = CreateSession();
     FHandle = RdosCreateSecureConnection(FSession, IP, LocalPort, RemotePort, Timeout, BufferSize);
+    FWaitDone = false;
     Open();
 }
 
@@ -644,7 +647,14 @@ void TSslSocket::Add(TWait *Wait)
 int TSslSocket::IsOpen()
 {
     if (TDevice::IsOpen() && FHandle)
+    {
+        if (!FWaitDone)
+        {
+            FWaitDone = true;
+            RdosWaitForSecureConnection(FHandle, 5000);
+        }
         return !RdosIsSecureConnectionClosed(FHandle);
+    }
     else
         return FALSE;
 }
@@ -730,7 +740,14 @@ void TSslSocket::Push()
 int TSslSocket::IsIdle()
 {
     if (FHandle)
+    {
+        if (!FWaitDone)
+        {
+            FWaitDone = true;
+            RdosWaitForSecureConnection(FHandle, 5000);
+        }
         return RdosIsSecureConnectionIdle(FHandle);
+    }
     else
         return TRUE;
 }
@@ -745,7 +762,10 @@ int TSslSocket::IsIdle()
 int TSslSocket::WaitForConnection(int Timeout)
 {
     if (FHandle)
+    {
+        FWaitDone = true;
         return RdosWaitForSecureConnection(FHandle, Timeout);
+    }
     else
         return FALSE;
 }
@@ -794,7 +814,14 @@ int TSslSocket::GetWriteSpace()
 void TSslSocket::Write(char ch)
 {
     if (FHandle)
+    {
+        if (!FWaitDone)
+        {
+            FWaitDone = true;
+            RdosWaitForSecureConnection(FHandle, 5000);
+        }
         RdosWriteSecureConnection(FHandle, &ch, 1);
+    }
 }
 
 /*##########################################################################
@@ -812,7 +839,14 @@ void TSslSocket::Write(char ch)
 void TSslSocket::Write(const char *buf, int count)
 {
     if (FHandle)
+    {
+        if (!FWaitDone)
+        {
+            FWaitDone = true;
+            RdosWaitForSecureConnection(FHandle, 5000);
+        }
         RdosWriteSecureConnection(FHandle, buf, count);
+    }
 }
 
 /*##########################################################################
@@ -829,7 +863,14 @@ void TSslSocket::Write(const char *buf, int count)
 void TSslSocket::Write(const char *str)
 {
     if (FHandle)
+    {
+        if (!FWaitDone)
+        {
+            FWaitDone = true;
+            RdosWaitForSecureConnection(FHandle, 5000);
+        }
         RdosWriteSecureConnection(FHandle, str, strlen(str));
+    }
 }
 
 /*##########################################################################
@@ -1485,16 +1526,11 @@ void TSslSocketServerFactory::SignalNewData()
     TSslSocket *socket;
     TSocketServer *server;
 
-    printf("New data\r\n");
-
     Cleanup();
     handle = RdosGetSecureListen(FListenHandle);
     if (handle)
     {
-        printf("Create socket\r\n");
         socket = new TSslSocket(handle);
-
-        printf("Create server\r\n");
         server = Create(socket);
         if (server)
             Insert(server);

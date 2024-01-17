@@ -35,8 +35,6 @@
 #include "httpfact.h"
 #include "httpcust.h"
 
-#include "path.h"
-
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -54,7 +52,6 @@
 THttpSocketServerFactory::THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize)
   : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
-	Init();
 }
 
 /*##########################################################################
@@ -70,105 +67,6 @@ THttpSocketServerFactory::THttpSocketServerFactory(int Port, int MaxConnections,
 ##########################################################################*/
 THttpSocketServerFactory::~THttpSocketServerFactory()
 {
-}
-
-/*##########################################################################
-#
-#   Name       : THttpSocketServerFactory::Init
-#
-#   Purpose....: Init
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpSocketServerFactory::Init()
-{
-    OnCommand = 0;
-    OnAuthorize = 0;
-    KeepAlive = 15;
-    FPageList = 0;
-    FDirList = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : THttpSocketServerFactory::AddCustomPage
-#
-#   Purpose....: Add a custom page
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpSocketServerFactory::AddCustomPage(THttpCustomPageFactory *page)
-{
-	THttpCustomPageFactory *curr;
-
-    page->FList = 0;
-	curr = FPageList;
-   
-	if (curr)
-	{
-		while (curr->FList)
-			curr = curr->FList;
-
-		curr->FList = page;
-	}
-	else
-		FPageList = page;    
-}
-
-/*##########################################################################
-#
-#   Name       : THttpSocketServerFactory::AddCustomDir
-#
-#   Purpose....: Add a custom directory
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpSocketServerFactory::AddCustomDir(THttpCustomDirFactory *dir)
-{
-	THttpCustomDirFactory *curr;
-
-    dir->FList = 0;
-	curr = FDirList;
-   
-	if (curr)
-	{
-		while (curr->FList)
-			curr = curr->FList;
-
-		curr->FList = dir;
-	}
-	else
-		FDirList = dir;    
-}
-
-/*##########################################################################
-#
-#   Name       : THttpSocketServerFactory::LinkServer
-#
-#   Purpose....: Setup server links
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpSocketServerFactory::LinkServer(THttpSocketServer *server)
-{
-    server->OnCommand = OnCommand;
-    server->OnAuthorize = OnAuthorize;
-    server->RootDir = RootDir;
-    server->KeepAlive = KeepAlive;
-    server->FPageList = FPageList;
-    server->FDirList = FDirList;
 }
 
 /*##########################################################################

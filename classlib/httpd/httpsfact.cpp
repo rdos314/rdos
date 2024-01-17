@@ -35,8 +35,6 @@
 #include "httpsfact.h"
 #include "httpcust.h"
 
-#include "path.h"
-
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -54,7 +52,6 @@
 THttpsSocketServerFactory::THttpsSocketServerFactory(int Port, int MaxConnections, int BufferSize)
   : TSslSocketServerFactory(Port, MaxConnections, BufferSize)
 {
-        Init();
 }
 
 /*##########################################################################
@@ -74,105 +71,6 @@ THttpsSocketServerFactory::~THttpsSocketServerFactory()
 
 /*##########################################################################
 #
-#   Name       : THttpsSocketServerFactory::Init
-#
-#   Purpose....: Init
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpsSocketServerFactory::Init()
-{
-    OnCommand = 0;
-    OnAuthorize = 0;
-    KeepAlive = 15;
-    FPageList = 0;
-    FDirList = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : THttpsSocketServerFactory::AddCustomPage
-#
-#   Purpose....: Add a custom page
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpsSocketServerFactory::AddCustomPage(THttpCustomPageFactory *page)
-{
-    THttpCustomPageFactory *curr;
-
-    page->FList = 0;
-    curr = FPageList;
-
-    if (curr)
-    {
-        while (curr->FList)
-            curr = curr->FList;
-
-        curr->FList = page;
-    }
-    else
-        FPageList = page;
-}
-
-/*##########################################################################
-#
-#   Name       : THttpsSocketServerFactory::AddCustomDir
-#
-#   Purpose....: Add a custom directory
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpsSocketServerFactory::AddCustomDir(THttpCustomDirFactory *dir)
-{
-    THttpCustomDirFactory *curr;
-
-    dir->FList = 0;
-    curr = FDirList;
-
-    if (curr)
-    {
-        while (curr->FList)
-            curr = curr->FList;
-
-        curr->FList = dir;
-    }
-    else
-        FDirList = dir;
-}
-
-/*##########################################################################
-#
-#   Name       : THttpsSocketServerFactory::LinkServer
-#
-#   Purpose....: Setup server links
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpsSocketServerFactory::LinkServer(THttpSocketServer *server)
-{
-    server->OnCommand = OnCommand;
-    server->OnAuthorize = OnAuthorize;
-    server->RootDir = RootDir;
-    server->KeepAlive = KeepAlive;
-    server->FPageList = FPageList;
-    server->FDirList = FDirList;
-}
-
-/*##########################################################################
-#
 #   Name       : THttpsSocketServerFactory::Create
 #
 #   Purpose....: Create a socket server instance
@@ -186,9 +84,7 @@ TSocketServer *THttpsSocketServerFactory::Create(TTcpSocket *Socket)
 {
     THttpSocketServer *server;
 
-    printf("Create Server\r\n");
-
-    server = new THttpSocketServer("HTTP", 0x2000, Socket);
+    server = new THttpSocketServer("HTTPS", 0x2000, Socket);
     LinkServer(server);
 
     return server;

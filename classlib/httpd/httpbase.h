@@ -20,24 +20,38 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# httpfact.h
-# HTTP Command factory base class
+# httpbase.h
+# HTTP factory base class
 #
 ########################################################################*/
 
-#ifndef _HTTPFACT_H
-#define _HTTPFACT_H
+#ifndef _HTTPBASE_H
+#define _HTTPBASE_H
 
 #include "httpcmd.h"
-#include "httpbase.h"
 
-class THttpSocketServerFactory : public TSocketServerFactory, public THttpServerFactory
+class THttpServerFactory
 {
 public:
-    THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-    ~THttpSocketServerFactory();
+    THttpServerFactory();
+    ~THttpServerFactory();
+
+    void AddCustomPage(THttpCustomPageFactory *page);
+    void AddCustomDir(THttpCustomDirFactory *dir);
 
     virtual TSocketServer *Create(TTcpSocket *Socket);
+
+    void (*OnCommand)(THttpSocketServer *server, const char *str);
+    int (*OnAuthorize)(THttpSocketServer *server, const char *user, const char *passw);
+
+    TString RootDir;
+    int KeepAlive;
+
+protected:
+    void LinkServer(THttpSocketServer *server);
+
+    THttpCustomPageFactory *FPageList;
+    THttpCustomDirFactory *FDirList;
 };
 
 #endif
