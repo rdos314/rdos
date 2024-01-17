@@ -2222,6 +2222,12 @@ init    Proc far
     mov ax,get_secure_write_space_nr
     RegisterBimodalUserGate
 ;
+    mov esi,OFFSET add_wait_for_secure_connection
+    mov edi,OFFSET add_wait_for_secure_connection_name
+    xor dx,dx
+    mov ax,add_wait_for_secure_connection_nr
+    RegisterBimodalUserGate
+;
     mov ebx,OFFSET read_secure_connection16
     mov esi,OFFSET read_secure_connection32
     mov edi,OFFSET read_secure_connection_name
