@@ -48,6 +48,7 @@
 #include <openssl/ct.h>
 
 #include "rdos.h"
+#include "futex.h"
 #include "serv.h"
 #include "apps.h"
 #include "s_apps.h"
@@ -80,6 +81,9 @@ struct TConnection
     struct TServer *Server;
     int ServerEntry;
     SSL *Con;
+    bool Active;
+    bool Closed;
+    struct RdosFutex Futex;
 };
 
 SSL_CONF_CTX *ClientConf;
@@ -260,6 +264,45 @@ void CloseSession(int index)
     if (ctx)
         SSL_CTX_free(ctx);
 }
+       
+/*##########################################################################
+#
+#   Name       : FreeConnection
+#
+#   Purpose....: Free connection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void FreeConnection(struct TConnection *Conn)
+{
+    SSL *con = Conn->Con;
+    int handle = SSL_get_handle(con);
+    struct TServer *Server = Conn->Server;
+    int Entry = Conn->ServerEntry;
+
+    ConnectionArr[Conn->Index - 1] = 0;
+
+    if (Server)
+        if (Entry > 0 && Entry <= Server->MaxConnections)
+            if (Server->ConnectionArr[Entry - 1] == Conn)
+                Server->ConnectionArr[Entry - 1] = 0;
+
+    if (con)
+    {
+        SSL_shutdown(con);
+        SSL_free(con);
+
+        RdosDeleteTcpConnection(handle);
+        ServDeleteSslConnection(Conn->Index);
+    }
+
+    LeaveFutex(&Conn->Futex);
+    ResetFutex(&Conn->Futex);
+    free(Conn);
+}
 
 /*##########################################################################
 #
@@ -423,6 +466,13 @@ static void ClientHandler(void *par)
 
     ServSslStop(index, handle);
     free(buf);
+
+    EnterFutex(&Conn->Futex);
+    Conn->Active = false;
+    if (Conn->Closed)
+        FreeConnection(Conn);
+    else
+        LeaveFutex(&Conn->Futex);
 }
 
 /*##########################################################################
@@ -473,6 +523,10 @@ int OpenConnection(int session, long IP, int LocalPort, int RemotePort, int Buff
         Conn->Timeout = Timeout;
         Conn->BufferSize = BufferSize;
         Conn->Server = 0;
+        Conn->Active = true;
+        Conn->Closed = false;
+        sprintf(str, "Conn.%d", Conn->Index);
+        InitFutex(&Conn->Futex, str);
 
         printf("Open connection %d\r\n", Conn->Index);
 
@@ -523,7 +577,7 @@ void PushConnection(int index)
     if (Conn)
         con = Conn->Con;
 
-    if (con)
+    if (con && !Conn->Closed)
     {
         handle = SSL_get_handle(con);
         if (!RdosIsTcpConnectionClosed(handle) && !ServSslGetSendCount(index))
@@ -546,47 +600,22 @@ void PushConnection(int index)
 void CloseConnection(int index)
 {
     struct TConnection *Conn = 0;
-    struct TServer *Server;
-    int Entry;
-    SSL *con = 0;
-    int handle;
 
     if (index > 0 && index <= MAX_CONNECTION_COUNT)
     {
         Conn = ConnectionArr[index - 1];
-        ConnectionArr[index - 1] = 0;
-
         printf("Close connection %d\r\n", index);
     }
 
     if (Conn)
     {
-        con = Conn->Con;
-
-        if (con)
-        {
-            handle = SSL_get_handle(con);
-
-            SSL_shutdown(con);
-            SSL_free(con);
-
-            RdosDeleteTcpConnection(handle);
-            ServDeleteSslConnection(index);
-        }
-
-        Server = Conn->Server;
-
-        if (Server)
-        {
-            Entry = Conn->ServerEntry;
-
-            if (Entry > 0 && Entry <= Server->MaxConnections)
-                if (Server->ConnectionArr[Entry - 1] == Conn)
-                    Server->ConnectionArr[Entry - 1] = 0;
-        }
-
-        free(Conn);
-    }
+        EnterFutex(&Conn->Futex);
+        Conn->Closed = true;
+        if (Conn->Active)
+            LeaveFutex(&Conn->Futex);
+        else
+            FreeConnection(Conn);
+     }
 }
 
 /*##########################################################################
@@ -608,6 +637,7 @@ static void ListenHandler(void *par)
     int sock;
     int WaitHandle = RdosCreateWait();
     int i;
+    char str[80];
 
     RdosAddWaitForTcpListen(WaitHandle, Server->ListenHandle, 0);
 
@@ -639,6 +669,10 @@ static void ListenHandler(void *par)
                 Conn->BufferSize = Server->BufferSize;
                 Conn->Server = 0;
                 Conn->Con = 0;
+                Conn->Active = true;
+                Conn->Closed = false;
+                sprintf(str, "Conn%d:%d", Server->Index, index);   
+                InitFutex(&Conn->Futex, str);
 
                 Server->ConnectionArr[index] = Conn;
 
@@ -867,6 +901,13 @@ static void ServerHandler(void *par)
 
     ServSslStop(index, handle);
     free(buf);
+
+    EnterFutex(&Conn->Futex);
+    Conn->Active = false;
+    if (Conn->Closed)
+        FreeConnection(Conn);
+    else
+        LeaveFutex(&Conn->Futex);
 }
 
 /*##########################################################################
@@ -918,6 +959,7 @@ int AcceptServer(int index, int entry)
         {
             RdosCloseTcpConnection(sock);
             RdosDeleteTcpConnection(sock);
+            ResetFutex(&Conn->Futex);
             free(Conn);
             Conn = 0;
             Server->ConnectionArr[entry - 1] = 0;
