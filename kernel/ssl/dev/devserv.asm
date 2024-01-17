@@ -93,7 +93,11 @@ GetConnSel   Proc near
     mov eax,SEG data
     mov ds,eax
     mov bx,ds:[2*ebx].conn_arr
+    or bx,bx
     clc
+    jnz gcsDone
+;
+    stc
 
 gcsDone:
     mov ds,ebx
