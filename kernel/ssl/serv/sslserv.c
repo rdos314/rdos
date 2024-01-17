@@ -807,11 +807,11 @@ static void ServerHandler(void *par)
     bool read_from_terminal;
     bool read_from_sslcon;
 
-//    SSL_set_tlsext_debug_callback(con, tlsext_cb);
-//    SSL_set_tlsext_debug_arg(con, bio_s_out);
+    SSL_set_tlsext_debug_callback(con, tlsext_cb);
+    SSL_set_tlsext_debug_arg(con, bio_s_out);
 
-//    SSL_set_msg_callback(con, msg_cb);
-//    SSL_set_msg_callback_arg(con, bio_s_out);
+    SSL_set_msg_callback(con, msg_cb);
+    SSL_set_msg_callback_arg(con, bio_s_out);
 
     ServSslStart(index, handle);
     buf = (char *)malloc(size);
@@ -1083,10 +1083,13 @@ void CloseServer(int index)
 int main(int argc, char **argv)
 {
     int i;
+    FILE *fp;
+
+    fp = fopen("d:/ssl/log.txt", "w");
 
     prog = argv[0];
 
-    bio_s_out = BIO_new_fp(stdout, BIO_NOCLOSE | BIO_FP_TEXT);
+    bio_s_out = BIO_new_fp(fp, BIO_NOCLOSE | BIO_FP_TEXT);
 
     ClientConf = SSL_CONF_CTX_new();
     SSL_CONF_CTX_set_flags(ClientConf, SSL_CONF_FLAG_CLIENT | SSL_CONF_FLAG_CMDLINE);
