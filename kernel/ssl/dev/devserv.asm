@@ -764,6 +764,7 @@ handler_start   PROC far
     mov ebx,eax
     StartTcpConnectionNotify
 ;
+    mov ds:sc_socket_handle,ax
     GetThread
     mov ds:sc_server,ax
 
@@ -801,6 +802,7 @@ handler_stop   PROC far
     mov ds:sc_server,0
     mov ds:sc_active,0
     mov ds:sc_closed,1
+    mov ds:sc_socket_handle,0
 ;
     mov bx,ds:sc_wait_rec
     or bx,bx
@@ -1092,13 +1094,26 @@ wait_for_change_name DB 'SSL Wait For Change', 0
 
 wait_for_change   PROC far
     push ds
+    push eax
+    push ebx
 ;
     call GetConnSel
     jc wafcDone
 ;
+    mov bx,ds:sc_send_count
+    or bx,bx
+    jnz wafcDone
+;
+    mov bx,ds:sc_socket_handle
+    PollTcpConnection
+    or ax,ax
+    jnz wafcDone
+;
     WaitForSignal
 
 wafcDone:
+    pop ebx
+    pop eax
     pop ds
     ret
 wait_for_change   Endp

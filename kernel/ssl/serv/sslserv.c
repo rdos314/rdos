@@ -459,7 +459,12 @@ static void ClientHandler(void *par)
             scount = 0;
         }
         else
-            ServSslWaitForChange(index);
+        {
+            if (RdosPollTcpConnection(handle) || ServSslGetSendCount(index) || SSL_has_pending(con))
+                RdosWaitMilli(25);
+            else
+                ServSslWaitForChange(index);
+        }
     }
 
     printf("closed %d\r\n", index);
@@ -906,7 +911,12 @@ static void ServerHandler(void *par)
             }
         }
         else
-            ServSslWaitForChange(index);
+        {
+            if (RdosPollTcpConnection(handle) || ServSslGetSendCount(index) || SSL_has_pending(con))
+                RdosWaitMilli(25);
+            else
+                ServSslWaitForChange(index);
+        }
     }
 
     printf("closed %d\r\n", index);
