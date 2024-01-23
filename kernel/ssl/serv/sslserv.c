@@ -306,6 +306,50 @@ static void FreeConnection(struct TConnection *Conn)
 
 /*##########################################################################
 #
+#   Name       : ShowCert
+#
+#   Purpose....: Show certificate
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ShowCert(SSL *con)
+{
+    X509 *peer = NULL;
+    STACK_OF(X509) *sk;
+    int i;
+
+    sk = SSL_get_peer_cert_chain(con);
+    if (sk != NULL) 
+    {
+        BIO_printf(bio_s_out, "---\nCertificate chain\n");
+        for (i = 0; i < sk_X509_num(sk); i++) 
+        {
+            BIO_printf(bio_s_out, "%2d s:", i);
+            X509_NAME_print_ex(bio_s_out, X509_get_subject_name(sk_X509_value(sk, i)), 0, get_nameopt());
+            BIO_puts(bio_s_out, "\n");
+            BIO_printf(bio_s_out, "   i:");
+            X509_NAME_print_ex(bio_s_out, X509_get_issuer_name(sk_X509_value(sk, i)), 0, get_nameopt());
+            BIO_puts(bio_s_out, "\n");
+            PEM_write_bio_X509(bio_s_out, sk_X509_value(sk, i));
+        }
+    }
+
+    BIO_printf(bio_s_out, "---\n");
+    peer = SSL_get_peer_certificate(con);
+    if (peer != NULL) 
+    {
+        BIO_printf(bio_s_out, "Server certificate\n");
+
+        PEM_write_bio_X509(bio_s_out, peer);
+        dump_cert_text(bio_s_out, peer);
+    } 
+}
+
+/*##########################################################################
+#
 #   Name       : ClientHandler
 #
 #   Purpose....: Client connection handler
@@ -361,6 +405,8 @@ static void ClientHandler(void *par)
             {
                 in_init = false;
                 ServSslInitDone(index);
+
+                ShowCert(con);
             }
         }
 
