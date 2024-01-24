@@ -43,6 +43,7 @@ struct buf_mem_st {
 };
 
 # define BUF_MEM_FLAG_SECURE  0x01
+# define BUF_MEM_FLAG_FIXED   0x02
 
 BUF_MEM *BUF_MEM_new(void);
 BUF_MEM *BUF_MEM_new_ex(unsigned long flags);

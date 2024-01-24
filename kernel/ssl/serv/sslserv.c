@@ -322,14 +322,14 @@ static void ShowCert(SSL *con)
 //    int i;
 
     struct buf_mem_st *mb = (struct buf_mem_st *)malloc(sizeof(struct buf_mem_st));
+    char *buf = (char *)malloc(0x1000);
     BIO *bio = BIO_new(BIO_s_mem());
 
     mb->length = 0;
-    mb->max = 0x1000;
-    mb->data = (char *)malloc(0x1000);
-    mb->flags = 0;
+    mb->max = 5;
+    mb->data = buf;
+    mb->flags = BUF_MEM_FLAG_FIXED;
 
-    BIO_set_write_buf_size(bio, 0x1000);
     BIO_set_mem_buf(bio, mb, BIO_NOCLOSE);
 
 //    sk = SSL_get_peer_cert_chain(con);
@@ -359,6 +359,9 @@ static void ShowCert(SSL *con)
     } 
 
     BIO_free(bio);
+
+    free(buf);
+    free(mb);
 }
 
 /*##########################################################################
