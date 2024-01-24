@@ -321,6 +321,17 @@ static void ShowCert(SSL *con)
 //    STACK_OF(X509) *sk;
 //    int i;
 
+    struct buf_mem_st *mb = (struct buf_mem_st *)malloc(sizeof(struct buf_mem_st));
+    BIO *bio = BIO_new(BIO_s_mem());
+
+    mb->length = 0;
+    mb->max = 0x1000;
+    mb->data = (char *)malloc(0x1000);
+    mb->flags = 0;
+
+    BIO_set_write_buf_size(bio, 0x1000);
+    BIO_set_mem_buf(bio, mb, BIO_NOCLOSE);
+
 //    sk = SSL_get_peer_cert_chain(con);
 //    if (sk != NULL) 
 //    {
@@ -337,15 +348,17 @@ static void ShowCert(SSL *con)
 //        }
 //    }
 
-    BIO_printf(bio_s_out, "---\n");
+    BIO_printf(bio, "---\n");
     peer = SSL_get_peer_certificate(con);
     if (peer != NULL) 
     {
-        BIO_printf(bio_s_out, "Server certificate\n");
+        BIO_printf(bio, "Server certificate\n");
 
-        PEM_write_bio_X509(bio_s_out, peer);
-        dump_cert_text(bio_s_out, peer);
+        PEM_write_bio_X509(bio, peer);
+        dump_cert_text(bio, peer);
     } 
+
+    BIO_free(bio);
 }
 
 /*##########################################################################
