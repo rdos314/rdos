@@ -28,8 +28,7 @@
 MAX_SSL_REQ_COUNT  = 16
 
 REPLY_DEFAULT      = 0
-REPLY_BLOCK        = 1
-REPLY_DATA         = 2
+REPLY_DATA         = 1
 
 ssl_cmd  STRUC
 

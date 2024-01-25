@@ -601,7 +601,7 @@ void PushConnection(int index)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux GetConnectionCert "*" parm routine [ebx] [edi] [ecx] value [ecx]
+#pragma aux GetConnectionCert "*" parm routine [ebx] [edi] [ecx] value [eax]
 int GetConnectionCert(int index, char *buf, int size)
 {
     struct TConnection *Conn = 0;
@@ -632,9 +632,7 @@ int GetConnectionCert(int index, char *buf, int size)
         BIO_set_mem_buf(bio, &mb, BIO_NOCLOSE);
         PEM_write_bio_X509(bio, peer);
         BIO_free(bio);
-
         count = mb.length;
-        buf[count] = 0;
     }
 
     return count;
@@ -651,12 +649,16 @@ int GetConnectionCert(int index, char *buf, int size)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux GetConnectionCertChain "*" parm routine [ebx] [eax] [edi] [ecx] value [ecx]
+#pragma aux GetConnectionCertChain "*" parm routine [ebx] [eax] [edi] [ecx] value [eax]
 int GetConnectionCertChain(int index, int entry, char *buf, int size)
 {
     struct TConnection *Conn = 0;
     SSL *con = 0;
     int handle;
+    STACK_OF(X509) *sk = 0;
+    struct buf_mem_st mb;
+    BIO *bio;
+    int count = 0;
 
     if (index > 0 && index <= MAX_CONNECTION_COUNT)
         Conn = ConnectionArr[index - 1];
@@ -665,11 +667,27 @@ int GetConnectionCertChain(int index, int entry, char *buf, int size)
         con = Conn->Con;
 
     if (con)
+        sk = SSL_get_peer_cert_chain(con);
+
+    if (sk)
+        if (entry >= sk_X509_num(sk))
+            sk = 0;
+
+    if (sk)
     {
-        return 0;
+        BIO *bio = BIO_new(BIO_s_mem());
+
+        mb.length = 0;
+        mb.max = size;
+        mb.data = buf;
+        mb.flags = BUF_MEM_FLAG_FIXED;
+        BIO_set_mem_buf(bio, &mb, BIO_NOCLOSE);
+        PEM_write_bio_X509(bio, sk_X509_value(sk, entry));
+        BIO_free(bio);
+        count = mb.length;
     }
-    else
-        return 0;
+
+    return count;
 }
 
 /*##########################################################################

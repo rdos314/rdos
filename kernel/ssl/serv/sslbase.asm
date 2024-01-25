@@ -304,20 +304,19 @@ LocalSetServerCert Endp
 LocalGetConnectionCert Proc near
     push edi
     add edi,SIZE ssl_cmd_struc
-    mov ecx,1000h - SIZE ssl_cmd_struc - 1
+    add edi,4
+    mov ecx,1000h - SIZE ssl_cmd_struc - 5
     call GetConnectionCert
     pop edi
 ;
-    mov [edi].fc_ecx,ecx
-    or ecx,ecx
-    jz gccReply
+    push edi
+    add edi,SIZE ssl_cmd_struc
+    stosd
+    pop edi
 ;
-    and [edi].fc_eflags,NOT 1
-
-gccReply:
     mov ebx,[edi].fc_handle
     and [edi].fc_eflags,NOT 1
-    ReplySslCmd
+    ReplySslDataCmd
     ret
 LocalGetConnectionCert Endp
 
@@ -338,13 +337,19 @@ LocalGetConnectionCertChain Proc near
     push edi
     mov eax,[edi].fc_eax
     add edi,SIZE ssl_cmd_struc
-    mov ecx,1000h - SIZE ssl_cmd_struc - 1
+    add edi,4
+    mov ecx,1000h - SIZE ssl_cmd_struc - 5
     call GetConnectionCertChain
+    pop edi
+;
+    push edi
+    add edi,SIZE ssl_cmd_struc
+    stosd
     pop edi
 ;
     mov ebx,[edi].fc_handle
     and [edi].fc_eflags,NOT 1
-    ReplySslCmd
+    ReplySslDataCmd
     ret
 LocalGetConnectionCertChain Endp
 

@@ -97,6 +97,7 @@ code    SEGMENT byte public 'CODE'
 
     extern init_server:near
     extern AllocateMsg:near
+    extern AddMsgBuffer:near
     extern RunMsg:near
     extern GetMsgSel:near
     extern GetConnSel:near
@@ -1518,21 +1519,42 @@ get_secure_connection_cert_name       DB 'Get Secure Connection Certificate',0
 GetConnectionCert   Proc near
     push ds
     push es
-    pushad
+    push gs
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov gs,eax
 ;
     mov ax,SSL_CONN_HANDLE
     DerefHandle
     jc gccDone
 ;
+    push edi
     mov ebx,[ebx].sc_id
     call AllocateMsg
+    pop edi
     jc gccDone
+;
+    call AddMsgBuffer
 ;
     mov eax,SSL_GET_CERT
     call RunMsg
+;
+    mov ecx,ebp
 
 gccDone:
-    popad
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop gs
     pop es
     pop ds
     ret
@@ -1577,23 +1599,43 @@ get_secure_connection_cert_chain_name       DB 'Get Secure Connection Certificat
 GetConnectionCertChain   Proc near
     push ds
     push es
-    pushad
+    push gs
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
 ;
     push eax
+    mov eax,es
+    mov gs,eax
     mov ax,SSL_CONN_HANDLE
     DerefHandle
     pop eax
     jc gcccDone
 ;
+    push edi
     mov ebx,[ebx].sc_id
     call AllocateMsg
+    pop edi
     jc gcccDone
+;
+    call AddMsgBuffer
 ;
     mov eax,SSL_GET_CERT_CHAIN
     call RunMsg
+;
+    mov ecx,ebp
 
 gcccDone:
-    popad
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop gs
     pop es
     pop ds
     ret

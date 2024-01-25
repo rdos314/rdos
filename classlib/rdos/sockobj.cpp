@@ -926,10 +926,14 @@ int TSslSocket::Read(char *buf, int size)
 ##########################################################################*/
 int TSslSocket::GetCertificate(char *buf, int size)
 {
+    int count = 0;
+
     if (FHandle)
-        return RdosGetSecureConnectionCertificate(FHandle, buf, size);
-    else
-        return 0;
+        count = RdosGetSecureConnectionCertificate(FHandle, buf, size - 1);
+
+    buf[count] = 0;
+
+    return count;
 }
 
 /*##########################################################################
@@ -945,10 +949,14 @@ int TSslSocket::GetCertificate(char *buf, int size)
 ##########################################################################*/
 int TSslSocket::GetCertificateChain(int entry, char *buf, int size)
 {
+    int count = 0;
+
     if (FHandle)
-        return RdosGetSecureConnectionCertificateChain(FHandle, entry, buf, size);
-    else
-        return 0;
+        count = RdosGetSecureConnectionCertificateChain(FHandle, entry, buf, size);
+
+    buf[count] = 0;
+
+    return count;
 }
 
 /*##########################################################################

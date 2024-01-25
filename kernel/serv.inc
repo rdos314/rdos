@@ -370,6 +370,11 @@ ReplySslCmd  MACRO
     ServGate reply_ssl_cmd_nr
                     ENDM
 
+; IN  EBX              VFS handle
+ReplySslDataCmd  MACRO    
+    ServGate reply_ssl_data_cmd_nr
+                    ENDM
+
 ; IN  EBX              Connection index
 ; IN  EDX              IP
 ; IN  SI               Local port

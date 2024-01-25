@@ -74,4 +74,6 @@ create_ssl_listen_nr       = 68
 delete_ssl_listen_nr       = 69
 add_ssl_listen_nr          = 70
 
+reply_ssl_data_cmd_nr      = 71
+
 serv_gate_entries          = 80

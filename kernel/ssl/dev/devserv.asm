@@ -506,6 +506,29 @@ AllocateMsg  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;       NAME:           AddMsgBuffer
+;
+;       DESCRIPTION:    Add msg buffer
+;
+;       PARAMETERS:     DS      Msg sel
+;                       ES      Msg buffer
+;                       GS:EDI  Data buffer
+;                       ECX     Size of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AddMsgBuffer
+
+AddMsgBuffer  Proc near
+    mov es:reg_buf,edi
+    mov es:reg_buf+4,gs
+    mov es:reg_size,ecx
+    ret
+AddMsgBuffer  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           no_reply
 ;
 ;       DESCRIPTION:    No reply processing
@@ -521,6 +544,61 @@ no_reply   Proc near
     clc
     ret
 no_reply   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           data_reply
+;
+;       DESCRIPTION:    Data reply processing
+;
+;       PARAMETERS:     ES      Msg buf
+;
+;       RETURNS:        EBP     Reply data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+data_reply  Proc near
+    push ds
+    push es
+    push eax
+    push ecx
+    push esi
+    push edi
+;
+    xor ebp,ebp
+    mov eax,es
+    mov ds,eax
+    mov esi,SIZE ssl_reg
+    mov ecx,ds:reg_size
+    or ecx,ecx
+    jz drpDone
+;
+    lods dword ptr ds:[esi]
+    or eax,eax
+    jz drpDone
+;
+    cmp eax,ecx
+    jae drpCopy
+;
+    mov ecx,eax
+
+drpCopy:
+    mov ebp,ecx
+    les edi,ds:reg_buf
+    rep movs byte ptr es:[edi],ds:[esi]
+
+drpDone:
+    clc
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    pop ds
+    ret
+data_reply  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -542,6 +620,7 @@ no_reply   Endp
 
 reply_tab:
 r00 DD OFFSET no_reply
+r01 DD OFFSET data_reply
 
 RunMsg  Proc near
     mov esi,ebx
@@ -655,6 +734,50 @@ rfcDone:
     pop ds
     ret
 reply_ssl_cmd  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReplySslDataCmd
+;
+;       DESCRIPTION:    Reply on SSL data cmd
+;
+;       PARAMETERS:     EBX        SSL handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reply_ssl_data_cmd_name DB 'Reply SSL Data Cmd', 0
+
+reply_ssl_data_cmd   Proc far
+    push ds
+    push es
+    pushad
+;
+    mov es:[edi].reg_op,REPLY_DATA
+;
+    call GetMsgSel
+    mov esi,ds:ssl_cmd_curr
+    dec esi
+    shl esi,4
+    add esi,OFFSET ssl_cmd_arr
+    xor bx,bx
+    xchg bx,ds:[esi].ssls_thread
+    Signal
+;
+    mov edx,ds:[esi].ssls_server_linear
+    mov eax,ds:[esi].ssls_phys
+    mov ebx,ds:[esi].ssls_phys+4
+    or ax,863h
+    mov cx,system_data_sel
+    mov es,cx
+    add edx,es:flat_base
+    SetPageEntry
+;
+    popad
+    pop es
+    pop ds
+    ret
+reply_ssl_data_cmd  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1298,6 +1421,12 @@ init_server    Proc near
     mov edi,OFFSET reply_ssl_cmd_name
     xor cl,cl
     mov ax,reply_ssl_cmd_nr
+    RegisterServGate
+;
+    mov esi,OFFSET reply_ssl_data_cmd
+    mov edi,OFFSET reply_ssl_data_cmd_name
+    xor cl,cl
+    mov ax,reply_ssl_data_cmd_nr
     RegisterServGate
 ;
     mov esi,OFFSET create_ssl_conn
