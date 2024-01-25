@@ -3202,12 +3202,12 @@
     __parm [__ebx] \
     __value [__eax]
 
-#pragma aux GetSecureConnectionCertificate = \
+#pragma aux RdosGetSecureConnectionCertificate = \
     CallGate_get_secure_connection_cert  \
     __parm [__ebx] [__edi] [__ecx] \
     __value [__ecx]
 
-#pragma aux GetSecureConnectionCertificateChain = \
+#pragma aux RdosGetSecureConnectionCertificateChain = \
     CallGate_get_secure_connection_cert  \
     __parm [__ebx] [__eax] [__edi] [__ecx] \
     __value [__ecx]

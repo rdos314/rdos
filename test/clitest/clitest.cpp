@@ -13,10 +13,11 @@ void main()
     int n0,n1,n2,n3;
     char host[80];
     int count;
+    int i;
     char *rbuf = new char[1025];
     char buf[80];
     TWait wait;
-    TTcpSocket *sock;
+    TSslSocket *sock;
     TKeyboardDevice keyboard;
 
     strcpy(host, "185.20.15.60");
@@ -38,6 +39,26 @@ void main()
     if (sock->IsOpen())
     {
         printf("connected\r\n");
+
+        if (sock->GetCertificate(rbuf, 0x1000))
+        {
+            printf("Certificate: \r\n");
+            printf(rbuf);
+            printf("\r\n");
+        }
+
+        for (i = 0; i < 100; i++)
+        {
+            if (sock->GetCertificateChain(i, rbuf, 0x1000))
+            {
+                printf("Chain: %d: \r\n", i + 1);
+                printf(rbuf);
+                printf("\r\n");
+            }
+            else
+                break;
+        }
+
         ip = sock->GetRemoteIP();
         IpToString(buf, ip);
         printf("IP: %s\r\n", buf);
