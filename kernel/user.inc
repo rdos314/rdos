@@ -2305,7 +2305,7 @@ ReadSecureConnection       MACRO
 
 ; IN  BX                connection handle
 ; IN  (E)CX             buffer size
-; IN  ES:(E)DI  data buffer
+; IN  ES:(E)DI          data buffer
 WriteSecureConnection              MACRO
         UserGate write_secure_connection_nr
                         ENDM
@@ -2328,27 +2328,44 @@ PushSecureConnection               MACRO
                         ENDM
 
 ; IN  BX                connection handle
-; OUT NC        Idle
+; OUT NC                Idle
 IsSecureConnectionIdle     MACRO
         UserGate is_secure_connection_idle_nr
                         ENDM
 
 ; IN  BX                connection handle
-; OUT EAX       IP
+; OUT EAX               IP
 GetRemoteSecureConnectionIP        MACRO
         UserGate get_remote_secure_ip_nr
                         ENDM
 
 ; IN  BX                connection handle
-; OUT AX        port
+; OUT AX                port
 GetRemoteSecureConnectionPort      MACRO
         UserGate get_remote_secure_port_nr
                         ENDM
 
 ; IN  BX                connection handle
-; OUT AX        port
+; OUT AX                port
 GetLocalSecureConnectionPort       MACRO
         UserGate get_local_secure_port_nr
+                        ENDM
+
+; IN  BX                connection handle
+; IN  ES:(E)DI          certificate
+; IN  (E)CX             max size
+; OUT ECX               actual size
+GetSecureConnectionCertificate       MACRO
+        UserGate get_secure_connection_cert_nr
+                        ENDM
+
+; IN  BX                connection handle
+; IN  EAX               entry #
+; IN  ES:(E)DI          certificate
+; IN  (E)CX             max size
+; OUT ECX               actual size
+GetSecureConnectionCertificateChain       MACRO
+        UserGate get_secure_connection_cert_chain_nr
                         ENDM
 
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;

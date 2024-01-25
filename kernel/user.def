@@ -1028,4 +1028,7 @@ set_secure_cert_nr                = 846
 
 wait_for_tcp_connection_write_space_nr = 847
 
+get_secure_connection_cert_nr       = 848
+get_secure_connection_cert_chain_nr = 849
+
 usergate_entries                  = 860

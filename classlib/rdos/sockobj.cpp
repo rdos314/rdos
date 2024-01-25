@@ -915,6 +915,44 @@ int TSslSocket::Read(char *buf, int size)
 
 /*##########################################################################
 #
+#   Name       : TSslSocket::GetCertificate
+#
+#   Purpose....: Get certificate
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: read chars
+#
+##########################################################################*/
+int TSslSocket::GetCertificate(char *buf, int size)
+{
+    if (FHandle)
+        return RdosGetSecureConnectionCertificate(FHandle, buf, size);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSslSocket::GetCertificateChain
+#
+#   Purpose....: Get certificate chain
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: read chars
+#
+##########################################################################*/
+int TSslSocket::GetCertificateChain(int entry, char *buf, int size)
+{
+    if (FHandle)
+        return RdosGetSecureConnectionCertificateChain(FHandle, entry, buf, size);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TUdpSocket::TUdpSocket
 #
 #   Purpose....: Constructor

@@ -154,6 +154,9 @@ public:
     virtual void Write(const char *str);
     virtual int Read(char *buf, int size);
 
+    int GetCertificate(char *buf, int size);
+    int GetCertificateChain(int entry, char *buf, int size);
+
 protected:
     int CreateSession();
     virtual void Add(TWait *Wait);
