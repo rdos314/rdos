@@ -308,6 +308,13 @@ LocalGetConnectionCert Proc near
     call GetConnectionCert
     pop edi
 ;
+    mov [edi].fc_ecx,ecx
+    or ecx,ecx
+    jz gccReply
+;
+    and [edi].fc_eflags,NOT 1
+
+gccReply:
     mov ebx,[edi].fc_handle
     and [edi].fc_eflags,NOT 1
     ReplySslCmd

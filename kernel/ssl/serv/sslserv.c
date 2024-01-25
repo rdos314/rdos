@@ -607,6 +607,10 @@ int GetConnectionCert(int index, char *buf, int size)
     struct TConnection *Conn = 0;
     SSL *con = 0;
     int handle;
+    X509 *peer = NULL;
+    struct buf_mem_st mb;
+    BIO *bio;
+    int count = 0;
 
     if (index > 0 && index <= MAX_CONNECTION_COUNT)
         Conn = ConnectionArr[index - 1];
@@ -615,11 +619,25 @@ int GetConnectionCert(int index, char *buf, int size)
         con = Conn->Con;
 
     if (con)
+        peer = SSL_get_peer_certificate(con);
+
+    if (peer)
     {
-        return 0;
+        BIO *bio = BIO_new(BIO_s_mem());
+
+        mb.length = 0;
+        mb.max = size;
+        mb.data = buf;
+        mb.flags = BUF_MEM_FLAG_FIXED;
+        BIO_set_mem_buf(bio, &mb, BIO_NOCLOSE);
+        PEM_write_bio_X509(bio, peer);
+        BIO_free(bio);
+
+        count = mb.length;
+        buf[count] = 0;
     }
-    else
-        return 0;
+
+    return count;
 }
 
 /*##########################################################################
