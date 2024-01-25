@@ -1516,6 +1516,25 @@ write_secure_connection32  Endp
 get_secure_connection_cert_name       DB 'Get Secure Connection Certificate',0
 
 GetConnectionCert   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc gccDone
+;
+    mov ebx,[ebx].sc_id
+    call AllocateMsg
+    jc gccDone
+;
+    mov eax,SSL_GET_CERT
+    call RunMsg
+
+gccDone:
+    popad
+    pop es
+    pop ds
     ret
 GetConnectionCert   Endp
 
@@ -1556,6 +1575,27 @@ get_secure_connection_cert32  Endp
 get_secure_connection_cert_chain_name       DB 'Get Secure Connection Certificate Chain',0
 
 GetConnectionCertChain   Proc near
+    push ds
+    push es
+    pushad
+;
+    push eax
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    pop eax
+    jc gcccDone
+;
+    mov ebx,[ebx].sc_id
+    call AllocateMsg
+    jc gcccDone
+;
+    mov eax,SSL_GET_CERT_CHAIN
+    call RunMsg
+
+gcccDone:
+    popad
+    pop es
+    pop ds
     ret
 GetConnectionCertChain   Endp
 

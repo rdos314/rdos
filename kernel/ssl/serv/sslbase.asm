@@ -291,6 +291,59 @@ LocalSetServerCert Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalGetConnectionCert
+;
+;       DESCRIPTION:    Get connection certificate
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern GetConnectionCert:near
+
+LocalGetConnectionCert Proc near
+    push edi
+    add edi,SIZE ssl_cmd_struc
+    mov ecx,1000h - SIZE ssl_cmd_struc - 1
+    call GetConnectionCert
+    pop edi
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+    ReplySslCmd
+    ret
+LocalGetConnectionCert Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LocalGetConnectionCertChain
+;
+;       DESCRIPTION:    Get connection certificate chain
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern GetConnectionCertChain:near
+
+LocalGetConnectionCertChain Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    add edi,SIZE ssl_cmd_struc
+    mov ecx,1000h - SIZE ssl_cmd_struc - 1
+    call GetConnectionCertChain
+    pop edi
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+    ReplySslCmd
+    ret
+LocalGetConnectionCertChain Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -316,6 +369,8 @@ m05 DD OFFSET LocalOpenServer
 m06 DD OFFSET LocalCloseServer
 m07 DD OFFSET LocalAcceptServer
 m08 DD OFFSET LocalSetServerCert
+m09 DD OFFSET LocalGetConnectionCert
+m0A DD OFFSET LocalGetConnectionCertChain
 
 WaitForMsg_    Proc near
     push ebx

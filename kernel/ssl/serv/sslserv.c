@@ -306,66 +306,6 @@ static void FreeConnection(struct TConnection *Conn)
 
 /*##########################################################################
 #
-#   Name       : ShowCert
-#
-#   Purpose....: Show certificate
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void ShowCert(SSL *con)
-{
-    X509 *peer = NULL;
-//    STACK_OF(X509) *sk;
-//    int i;
-
-    struct buf_mem_st *mb = (struct buf_mem_st *)malloc(sizeof(struct buf_mem_st));
-    char *buf = (char *)malloc(0x1000);
-    BIO *bio = BIO_new(BIO_s_mem());
-
-    mb->length = 0;
-    mb->max = 5;
-    mb->data = buf;
-    mb->flags = BUF_MEM_FLAG_FIXED;
-
-    BIO_set_mem_buf(bio, mb, BIO_NOCLOSE);
-
-//    sk = SSL_get_peer_cert_chain(con);
-//    if (sk != NULL) 
-//    {
-//        BIO_printf(bio_s_out, "---\nCertificate chain\n");
-//        for (i = 0; i < sk_X509_num(sk); i++) 
-//        {
-//            BIO_printf(bio_s_out, "%2d s:", i);
-//            X509_NAME_print_ex(bio_s_out, X509_get_subject_name(sk_X509_value(sk, i)), 0, get_nameopt());
-//            BIO_puts(bio_s_out, "\n");
-//            BIO_printf(bio_s_out, "   i:");
-//            X509_NAME_print_ex(bio_s_out, X509_get_issuer_name(sk_X509_value(sk, i)), 0, get_nameopt());
-//            BIO_puts(bio_s_out, "\n");
-//            PEM_write_bio_X509(bio_s_out, sk_X509_value(sk, i));
-//        }
-//    }
-
-    BIO_printf(bio, "---\n");
-    peer = SSL_get_peer_certificate(con);
-    if (peer != NULL) 
-    {
-        BIO_printf(bio, "Server certificate\n");
-
-        PEM_write_bio_X509(bio, peer);
-        dump_cert_text(bio, peer);
-    } 
-
-    BIO_free(bio);
-
-    free(buf);
-    free(mb);
-}
-
-/*##########################################################################
-#
 #   Name       : ClientHandler
 #
 #   Purpose....: Client connection handler
@@ -421,8 +361,6 @@ static void ClientHandler(void *par)
             {
                 in_init = false;
                 ServSslInitDone(index);
-
-                ShowCert(con);
             }
         }
 
@@ -651,6 +589,131 @@ void PushConnection(int index)
             RdosPushTcpConnection(handle);
     }
 }
+
+/*##########################################################################
+#
+#   Name       : GetConnectionCert
+#
+#   Purpose....: Get connection certificate
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetConnectionCert "*" parm routine [ebx] [edi] [ecx] value [ecx]
+int GetConnectionCert(int index, char *buf, int size)
+{
+    struct TConnection *Conn = 0;
+    SSL *con = 0;
+    int handle;
+
+    if (index > 0 && index <= MAX_CONNECTION_COUNT)
+        Conn = ConnectionArr[index - 1];
+
+    if (Conn)
+        con = Conn->Con;
+
+    if (con)
+    {
+        return 0;
+    }
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : GetConnectionCertChain
+#
+#   Purpose....: Get connection certificate chain
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetConnectionCertChain "*" parm routine [ebx] [eax] [edi] [ecx] value [ecx]
+int GetConnectionCertChain(int index, int entry, char *buf, int size)
+{
+    struct TConnection *Conn = 0;
+    SSL *con = 0;
+    int handle;
+
+    if (index > 0 && index <= MAX_CONNECTION_COUNT)
+        Conn = ConnectionArr[index - 1];
+
+    if (Conn)
+        con = Conn->Con;
+
+    if (con)
+    {
+        return 0;
+    }
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : ShowCert
+#
+#   Purpose....: Show certificate
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ShowCert(SSL *con)
+{
+    X509 *peer = NULL;
+//    STACK_OF(X509) *sk;
+//    int i;
+
+    struct buf_mem_st *mb = (struct buf_mem_st *)malloc(sizeof(struct buf_mem_st));
+    char *buf = (char *)malloc(0x1000);
+    BIO *bio = BIO_new(BIO_s_mem());
+
+    mb->length = 0;
+    mb->max = 5;
+    mb->data = buf;
+    mb->flags = BUF_MEM_FLAG_FIXED;
+
+    BIO_set_mem_buf(bio, mb, BIO_NOCLOSE);
+
+//    sk = SSL_get_peer_cert_chain(con);
+//    if (sk != NULL) 
+//    {
+//        BIO_printf(bio_s_out, "---\nCertificate chain\n");
+//        for (i = 0; i < sk_X509_num(sk); i++) 
+//        {
+//            BIO_printf(bio_s_out, "%2d s:", i);
+//            X509_NAME_print_ex(bio_s_out, X509_get_subject_name(sk_X509_value(sk, i)), 0, get_nameopt());
+//            BIO_puts(bio_s_out, "\n");
+//            BIO_printf(bio_s_out, "   i:");
+//            X509_NAME_print_ex(bio_s_out, X509_get_issuer_name(sk_X509_value(sk, i)), 0, get_nameopt());
+//            BIO_puts(bio_s_out, "\n");
+//            PEM_write_bio_X509(bio_s_out, sk_X509_value(sk, i));
+//        }
+//    }
+
+    BIO_printf(bio, "---\n");
+    peer = SSL_get_peer_certificate(con);
+    if (peer != NULL) 
+    {
+        BIO_printf(bio, "Server certificate\n");
+
+        PEM_write_bio_X509(bio, peer);
+        dump_cert_text(bio, peer);
+    } 
+
+    BIO_free(bio);
+
+    free(buf);
+    free(mb);
+}
+
 
 /*##########################################################################
 #

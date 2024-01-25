@@ -65,3 +65,10 @@ SSL_ACCEPT_SERVER              = 7
 ; IN  EDX       Chain file offset
 ; IN            Cert pathname
 SSL_SERVER_CERT                = 8
+
+; IN  EBX       Connection ID
+SSL_GET_CERT                   = 9
+
+; IN  EBX       Connection ID
+; IN  EAX       Entry
+SSL_GET_CERT_CHAIN             = 10
