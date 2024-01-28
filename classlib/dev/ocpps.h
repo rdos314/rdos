@@ -26,7 +26,7 @@ public:
     void SendReq(int Seq, const char *Action, TJsonDocument *json);
 
     void SetZone(int diff);
-    
+
 protected:
     void StartLog();
     void StopLog();
@@ -35,6 +35,9 @@ protected:
     void HandleBootNotification(TJsonDocument *doc);
     void HandleStatusNotification(TJsonDocument *doc);
     void HandleHeartbeat(TJsonDocument *doc);
+    void HandleAuthorize(TJsonDocument *doc);
+    void HandleStartTransaction(TJsonDocument *doc);
+    void HandleStopTransaction(TJsonDocument *doc);
     void ReplyBootNotification(bool Defined);
     void NotifyJsonReq(char *str);
     void NotifyJsonReply(int seq, char *str);

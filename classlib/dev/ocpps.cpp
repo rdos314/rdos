@@ -10,17 +10,17 @@
 #include "ocpps.h"
 
 #define STATE_UNKNOWN      0
-#define STATE_FAULT   	   1
-#define STATE_AVAILABLE	   2
-#define STATE_PREPARE	   3
-#define STATE_CHARGE	   4
+#define STATE_FAULT        1
+#define STATE_AVAILABLE    2
+#define STATE_PREPARE      3
+#define STATE_CHARGE       4
 #define STATE_FINISH       5
 #define STATE_SUSP_EV      6
 #define STATE_SUSP_EVSE    7
 #define STATE_RESERVED     8
 #define STATE_UNAVAILABLE  9
 
-#define MAX_LOG_FILES			50
+#define MAX_LOG_FILES                   50
 #define MAX_FILE_SIZE                   256 * 1024
 
 /*##########################################################################
@@ -271,7 +271,7 @@ void TOcppSocketServer::ReplyBootNotification(bool Defined)
 
     SendReply(json);
 
-    delete json; 
+    delete json;
 
     FBootReq = false;
 }
@@ -298,7 +298,86 @@ void TOcppSocketServer::HandleHeartbeat(TJsonDocument *doc)
 
     SendReply(json);
 
-    delete json; 
+    delete json;
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::HandleAuthorize
+#
+#   Purpose....: Handle authorize
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::HandleAuthorize(TJsonDocument *doc)
+{
+    TJsonCollection *root = doc->GetRoot();
+    const char *id = root->GetText("idTag", "");
+    TJsonCollection *info;
+
+    TJsonDocument *json = new TJsonDocument;
+    root = json->CreateRoot();
+    info = root->AddCollection("idTagInfo");
+    info->AddString("status", "Accepted");
+    SendReply(json);
+
+    delete json;
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::HandleStartTransaction
+#
+#   Purpose....: Handle start transaction
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::HandleStartTransaction(TJsonDocument *doc)
+{
+    TJsonCollection *root = doc->GetRoot();
+    const char *id = root->GetText("idTag", "");
+    TJsonCollection *info;
+
+    TJsonDocument *json = new TJsonDocument;
+    root = json->CreateRoot();
+    root->AddInt("transactionId", 123);
+    info = root->AddCollection("idTagInfo");
+    info->AddString("status", "Accepted");
+    SendReply(json);
+
+    delete json;
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::HandleStopTransaction
+#
+#   Purpose....: Handle stop transaction
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::HandleStopTransaction(TJsonDocument *doc)
+{
+    TJsonCollection *root = doc->GetRoot();
+    const char *id = root->GetText("idTag", "");
+    TJsonCollection *info;
+
+    TJsonDocument *json = new TJsonDocument;
+    root = json->CreateRoot();
+    info = root->AddCollection("idTagInfo");
+    info->AddString("status", "Accepted");
+    SendReply(json);
+
+    delete json;
 }
 
 /*##########################################################################
@@ -329,6 +408,24 @@ void TOcppSocketServer::NotifyJsonReq(char *str)
     if (!handled && !strcmp(action, "Heartbeat"))
     {
         HandleHeartbeat(json);
+        handled = true;
+    }
+
+    if (!handled && !strcmp(action, "Authorize"))
+    {
+        HandleAuthorize(json);
+        handled = true;
+    }
+
+    if (!handled && !strcmp(action, "StartTransaction"))
+    {
+        HandleStartTransaction(json);
+        handled = true;
+    }
+
+    if (!handled && !strcmp(action, "StopTransaction"))
+    {
+        HandleStopTransaction(json);
         handled = true;
     }
 
@@ -448,7 +545,7 @@ void TOcppSocketServer::ReceivedText(char *str)
 
     *tempptr = 0;
     id = atoi(ptr);
-    
+
     if (id == 0)
         return;
 
