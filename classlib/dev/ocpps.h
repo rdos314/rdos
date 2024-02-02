@@ -32,13 +32,17 @@ protected:
     void StopLog();
     void LogMsg(const char *Dir, const char *Msg);
 
+    long long UpdateMeter(TJsonCollection *root);
+    void HandleMeterValues(TJsonCollection *root);
+
     void HandleBootNotification(TJsonDocument *doc);
     void HandleStatusNotification(TJsonDocument *doc);
     void HandleHeartbeat(TJsonDocument *doc);
     void HandleAuthorize(TJsonDocument *doc);
     void HandleStartTransaction(TJsonDocument *doc);
     void HandleStopTransaction(TJsonDocument *doc);
-    void ReplyBootNotification(bool Defined);
+    void HandleMeterValues(TJsonDocument *doc);
+    void ReplyBootNotification();
     void NotifyJsonReq(char *str);
     void NotifyJsonReply(int seq, char *str);
 

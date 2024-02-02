@@ -226,16 +226,7 @@ const char *TOcppSocketServer::GetProtocol()
 ##########################################################################*/
 void TOcppSocketServer::HandleBootNotification(TJsonDocument *doc)
 {
-    int ip;
-    char str[40];
-
-    if (FSocket)
-    {
-        ip = FSocket->GetRemoteIP();
-        IpToString(str, ip);
-    }
-
-    ReplyBootNotification(true);
+    ReplyBootNotification();
 }
 
 /*##########################################################################
@@ -249,7 +240,7 @@ void TOcppSocketServer::HandleBootNotification(TJsonDocument *doc)
 #   Returns....: *
 #
 ##########################################################################*/
-void TOcppSocketServer::ReplyBootNotification(bool Defined)
+void TOcppSocketServer::ReplyBootNotification()
 {
     TDateTime now;
     TJsonDocument *json = new TJsonDocument;
@@ -258,16 +249,8 @@ void TOcppSocketServer::ReplyBootNotification(bool Defined)
 
     root->AddDateTimeZone("currentTime", now, FUtcDiff);
 
-    if (Defined)
-    {
-        root->AddInt("interval", 15);
-        root->AddString("status", "Accepted");
-    }
-    else
-    {
-        root->AddInt("interval", 5 * 30);
-        root->AddString("status", "Rejected");
-    }
+    root->AddInt("interval", 15);
+    root->AddString("status", "Accepted");
 
     SendReply(json);
 
@@ -380,6 +363,208 @@ void TOcppSocketServer::HandleStopTransaction(TJsonDocument *doc)
     delete json;
 }
 
+/*##################  TOcppSocketServer::UpdateMeter ############################
+*   Purpose....: Update meter value                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long long TOcppSocketServer::UpdateMeter(TJsonCollection *root)
+{
+    TJsonArrayCollection *values;
+    TJsonArrayCollection *sample;
+    TJsonObject *obj;
+    int i;
+    int count;
+    TString valstr;
+    const char *ptr;
+    long long val;
+    bool use;
+    bool kwh;
+
+    if (root)
+    {
+        values = (TJsonArrayCollection *)root->GetCollection("meterValue");
+        if (values)
+        {
+            values->SelectArray(0);
+
+            sample = (TJsonArrayCollection *)values->GetCollection("sampledValue");
+
+            if (sample)
+            {
+                count = sample->GetArrayCount();
+
+                for (i = 0; i < count; i++)
+                {
+                    sample->SelectArray(i);
+
+                    if (sample)
+                    {
+                        obj = sample->GetObj("measurand");
+                        
+                        if (obj)
+                        {
+                            valstr = obj->GetText();
+                            ptr = valstr.GetData();
+//                            FLog.Write(TLog::DEBUG, "UpdateMeter", "Measurand: %s", ptr);
+
+                            if (strstr(ptr, "Energy") == 0)
+                                use = false;
+                            else
+                                use = true;
+                        }
+                        else
+                            use = true;
+
+                        if (use)
+                        {
+                            obj = sample->GetObj("location");
+                        
+                            if (obj)
+                            {
+                                valstr = obj->GetText();
+                                ptr = valstr.GetData();
+//                                FLog.Write(TLog::DEBUG, "UpdateMeter", "Location: %s", ptr);
+
+                                if (strstr(ptr, "Outlet") == 0)
+                                    use = false;
+                            }
+                        }
+
+                        if (use)
+                        {
+                            obj = sample->GetObj("format");
+                        
+                            if (obj)
+                            {
+                                valstr = obj->GetText();
+                                ptr = valstr.GetData();
+//                                FLog.Write(TLog::DEBUG, "UpdateMeter", "Format: %s", ptr);
+
+                                if (strstr(ptr, "Raw") == 0)
+                                    use = false;
+                            }
+                        }
+
+
+                        if (use)
+                        {
+                            obj = sample->GetObj("unit");
+                        
+                            if (obj)
+                            {
+                                valstr = obj->GetText();
+                                ptr = valstr.GetData();
+//                                FLog.Write(TLog::DEBUG, "UpdateMeter", "Unit: %s", ptr);
+
+                                if (strstr(ptr, "Wh"))
+                                    kwh = false;
+                                else if (strstr(ptr, "kWh"))
+                                    kwh = true;
+                                else
+                                    use = false;
+                            }
+                        }
+
+                        if (use)
+                        {
+                            obj = sample->GetObj("value");
+                        
+                            if (obj)
+                            {
+                                valstr = obj->GetText();
+                                ptr = valstr.GetData();
+//                                FLog.Write(TLog::DEBUG, "UpdateMeter", "Value: %s", ptr);
+                                val = atoll(ptr);
+                                if (kwh)
+                                    return val * 100;
+                                else
+                                    return val / 10;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::HandleMeterValues
+#
+#   Purpose....: Handle meter values
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::HandleMeterValues(TJsonCollection *root)
+{
+    TJsonCollection *values = root->GetCollection("meterValue");
+    TJsonCollection *sample;
+    TJsonObject *obj;
+    TString valstr;
+    const char *ptr;
+
+    if (values)
+    {
+        sample = values->GetCollection("sampledValue");
+
+        if (sample)
+        {
+            obj = sample->GetObj("value");
+            if (obj)
+            {
+                valstr = obj->GetText();
+                ptr = valstr.GetData();
+                printf("Meter: %s Wh", ptr);
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::HandleMeterValues
+#
+#   Purpose....: Handle meter values
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::HandleMeterValues(TJsonDocument *doc)
+{
+    TJsonCollection *root = doc->GetRoot();
+    TJsonObject *obj;
+    int id;
+    TJsonDocument *json = new TJsonDocument;
+
+    obj = root->GetObj("connectorId");
+    if (obj)
+    {
+        id = (int)obj->GetInt();
+
+        if (id == 0)
+            HandleMeterValues(root);
+        else
+            UpdateMeter(root);
+    }
+
+    root = json->CreateRoot();
+    SendReply(json);
+
+    delete json; 
+}
+
 /*##########################################################################
 #
 #   Name       : TOcppSocketServer::NotifyJsonReq
@@ -426,6 +611,12 @@ void TOcppSocketServer::NotifyJsonReq(char *str)
     if (!handled && !strcmp(action, "StopTransaction"))
     {
         HandleStopTransaction(json);
+        handled = true;
+    }
+
+    if (!handled && !strcmp(action, "MeterValues"))
+    {
+        HandleMeterValues(json);
         handled = true;
     }
 
