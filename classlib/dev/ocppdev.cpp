@@ -381,7 +381,7 @@ void TOcppSocketServer::SetChargingProfile(int conn, const char *unit, double va
     prof->AddInt("stackLevel", 0);
     prof->AddInt("transactionId", 123);
     prof->AddString("chargingProfilePurpose", "TxProfile");
-    prof->AddString("chargingProfileKind", "Relative");
+    prof->AddString("chargingProfileKind", "Absolute");
 
     sched = prof->AddCollection("chargingSchedule");
     sched->AddString("chargingRateUnit", unit);
