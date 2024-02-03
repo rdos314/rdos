@@ -7,38 +7,38 @@
 #include "ocppdev.h"
 #include "keyboard.h"
 
-static void NotifyState(TOcppSslSocketServerFactory *Server, const char *state)
+static void NotifyState(TOcppNotify *Server, const char *state)
 {
     printf("State: %s\r\n", state);
 }
 
-static void NotifyStart(TOcppSslSocketServerFactory *Server, int val)
+static void NotifyStart(TOcppNotify *Server, int val)
 {
     Server->LimitCurrent(1, 5.0);
     printf("Start: %d.%03d\r\n", val / 1000, val % 1000);
 }
 
-static void NotifyStop(TOcppSslSocketServerFactory *Server, int val)
+static void NotifyStop(TOcppNotify *Server, int val)
 {
     printf("Stop: %d.%03d\r\n", val / 1000, val % 1000);
 }
 
-static void NotifyVoltage(TOcppSslSocketServerFactory *Server, int phase, double val)
+static void NotifyVoltage(TOcppNotify *Server, int phase, double val)
 {
     printf("Voltage: L%d %2.1Lf\r\n", phase, val);
 }
 
-static void NotifyCurrent(TOcppSslSocketServerFactory *Server, int phase, double val)
+static void NotifyCurrent(TOcppNotify *Server, int phase, double val)
 {
     printf("Current: L%d %2.1Lf\r\n", phase, val);
 }
 
-static void NotifyEnergy(TOcppSslSocketServerFactory *Server, int val)
+static void NotifyEnergy(TOcppNotify *Server, int val)
 {
     printf("Energy: %d.%03d\r\n", val / 1000, val % 1000);
 }
 
-static void NotifyKey(TOcppSslSocketServerFactory *Server, const char *key, bool rdonly, const char *value)
+static void NotifyKey(TOcppNotify *Server, const char *key, bool rdonly, const char *value)
 {
     if (rdonly)
         printf(" Key: %s=%s\r\n", key, value);

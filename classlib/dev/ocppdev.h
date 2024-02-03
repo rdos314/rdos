@@ -1,37 +1,32 @@
-#ifndef _OCPPS_H
-#define _OCPPS_H
+#ifndef _OCPPDEV_H
+#define _OCPPDEV_H
 
 #include "str.h"
 #include "websock.h"
+#include "httpfact.h"
 #include "httpsfact.h"
 #include "json.h"
 #include "rdoslog.h"
 
-class TOcppSslSocketServerFactory : public THttpsSocketServerFactory
+class TOcppNotify
 {
 friend class TOcppSocketServer;
 public:
-    TOcppSslSocketServerFactory(int Port, int MaxConnections, int BufferSize);
-    ~TOcppSslSocketServerFactory();
+    TOcppNotify();
+    ~TOcppNotify();
 
-    virtual TSocketServer *Create(TTcpSocket *Socket);
-
-    void (*OnOnline)(TOcppSslSocketServerFactory *Server);
-    void (*OnOffline)(TOcppSslSocketServerFactory *Server);
-    void (*OnState)(TOcppSslSocketServerFactory *Server, const char *State);
-    void (*OnStart)(TOcppSslSocketServerFactory *Server, int val);
-    void (*OnStop)(TOcppSslSocketServerFactory *Server, int val);
-    void (*OnVoltage)(TOcppSslSocketServerFactory *Server, int Phase, double Val);
-    void (*OnCurrent)(TOcppSslSocketServerFactory *Server, int Phase, double Val);
-    void (*OnEnergy)(TOcppSslSocketServerFactory *Server, int Val);
-    void (*OnKey)(TOcppSslSocketServerFactory *Server, const char *key, bool rdonly, const char *value);
+    void (*OnState)(TOcppNotify *Server, const char *State);
+    void (*OnStart)(TOcppNotify *Server, int val);
+    void (*OnStop)(TOcppNotify *Server, int val);
+    void (*OnVoltage)(TOcppNotify *Server, int Phase, double Val);
+    void (*OnCurrent)(TOcppNotify *Server, int Phase, double Val);
+    void (*OnEnergy)(TOcppNotify *Server, int Val);
+    void (*OnKey)(TOcppNotify *Server, const char *key, bool rdonly, const char *value);
 
     void LimitCurrent(int conn, double val);
     void ChangeConfiguration(const char *key, const char *value);
 
 protected:
-    void NotifyOnline();
-    void NotifyOffline();
     void NotifyState(const char *State);
     void NotifyStart(int val);
     void NotifyStop(int val);
@@ -41,6 +36,15 @@ protected:
     void NotifyKey(const char *key, bool rdonly, const char *value);
 
     TOcppSocketServer *FServer;
+};
+
+class TOcppSslSocketServerFactory : public THttpsSocketServerFactory, public TOcppNotify
+{
+public:
+    TOcppSslSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~TOcppSslSocketServerFactory();
+
+    virtual TSocketServer *Create(TTcpSocket *Socket);
 };
 
 class TOcppSocketServer : public TWebSocketServer
@@ -60,8 +64,6 @@ public:
 protected:
     void SetChargingProfile(int conn, const char *unit, double val);
 
-    void NotifyOnline();
-    void NotifyOffline();
     void NotifyVoltage(const char *phase, const char *unit, const char *data);
     void NotifyCurrent(const char *phase, const char *unit, const char *data);
     void NotifyEnergy(const char *unit, const char *data);

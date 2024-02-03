@@ -9,19 +9,202 @@
 #include "file.h"
 #include "ocppdev.h"
 
-#define STATE_UNKNOWN      0
-#define STATE_FAULT        1
-#define STATE_AVAILABLE    2
-#define STATE_PREPARE      3
-#define STATE_CHARGE       4
-#define STATE_FINISH       5
-#define STATE_SUSP_EV      6
-#define STATE_SUSP_EVSE    7
-#define STATE_RESERVED     8
-#define STATE_UNAVAILABLE  9
-
 #define MAX_LOG_FILES                   50
 #define MAX_FILE_SIZE                   256 * 1024
+
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::TOcppNotify
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TOcppNotify::TOcppNotify()
+{
+    OnState = 0;
+    OnStart = 0;
+    OnStop = 0;
+    OnVoltage = 0;
+    OnCurrent = 0;
+    OnEnergy = 0;
+    OnKey = 0;
+
+    FServer = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::~TOcppNotify
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TOcppNotify::~TOcppNotify()
+{
+}
+
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::LimitCurrent
+#
+#   Purpose....: Limit current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::LimitCurrent(int conn, double val)
+{
+    if (FServer)
+        FServer->LimitCurrent(conn, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::ChangeConfiguration
+#
+#   Purpose....: Change configuration
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::ChangeConfiguration(const char *key, const char *value)
+{
+    if (FServer)
+        FServer->ChangeConfiguration(key, value);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::NotifyState
+#
+#   Purpose....: Notify state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::NotifyState(const char *State)
+{
+    if (OnState)
+        (*OnState)(this, State);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::NotifyStart
+#
+#   Purpose....: Notify start
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::NotifyStart(int val)
+{
+    if (OnStart)
+        (*OnStart)(this, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::NotifyStop
+#
+#   Purpose....: Notify stop
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::NotifyStop(int val)
+{
+    if (OnStop)
+        (*OnStop)(this, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::NotifyVoltage
+#
+#   Purpose....: Notify voltage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::NotifyVoltage(int phase, double val)
+{
+    if (OnVoltage)
+        (*OnVoltage)(this, phase, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::NotifyCurrent
+#
+#   Purpose....: Notify current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::NotifyCurrent(int phase, double val)
+{
+    if (OnCurrent)
+        (*OnCurrent)(this, phase, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::NotifyEnergy
+#
+#   Purpose....: Notify energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::NotifyEnergy(int val)
+{
+    if (OnEnergy)
+        (*OnEnergy)(this, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::NotifyKey
+#
+#   Purpose....: Notify key
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::NotifyKey(const char *key, bool rdonly, const char *value)
+{
+    if (OnKey)
+        (*OnKey)(this, key, rdonly, value);
+}
 
 /*##########################################################################
 #
@@ -37,18 +220,6 @@
 TOcppSslSocketServerFactory::TOcppSslSocketServerFactory(int Port, int MaxConnections, int BufferSize)
   : THttpsSocketServerFactory(Port, MaxConnections, BufferSize)
 {
-    OnOnline = 0;
-    OnOffline = 0;
-    OnState = 0;
-    OnStart = 0;
-    OnStop = 0;
-    OnVoltage = 0;
-    OnCurrent = 0;
-    OnEnergy = 0;
-    OnKey = 0;
-
-    FServer = 0;
-
     Start("OCPP Listen", 0x10000);
 }
 
@@ -82,196 +253,6 @@ TSocketServer *TOcppSslSocketServerFactory::Create(TTcpSocket *Socket)
 {
     FServer = new TOcppSocketServer(this, "OCPP", 0x10000, Socket);
     return FServer;
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::LimitCurrent
-#
-#   Purpose....: Limit current
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::LimitCurrent(int conn, double val)
-{
-    if (FServer)
-        FServer->LimitCurrent(conn, val);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::ChangeConfiguration
-#
-#   Purpose....: Change configuration
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::ChangeConfiguration(const char *key, const char *value)
-{
-    if (FServer)
-        FServer->ChangeConfiguration(key, value);
-}
-
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::NotifyOnline
-#
-#   Purpose....: Notify online
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::NotifyOnline()
-{
-    if (OnOnline)
-        (*OnOnline)(this);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::NotifyOffline
-#
-#   Purpose....: Notify offline
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::NotifyOffline()
-{
-    FServer = 0;
-
-    if (OnOffline)
-        (*OnOffline)(this);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::NotifyState
-#
-#   Purpose....: Notify state
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::NotifyState(const char *State)
-{
-    if (OnState)
-        (*OnState)(this, State);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::NotifyStart
-#
-#   Purpose....: Notify start
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::NotifyStart(int val)
-{
-    if (OnStart)
-        (*OnStart)(this, val);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::NotifyStop
-#
-#   Purpose....: Notify stop
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::NotifyStop(int val)
-{
-    if (OnStop)
-        (*OnStop)(this, val);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::NotifyVoltage
-#
-#   Purpose....: Notify voltage
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::NotifyVoltage(int phase, double val)
-{
-    if (OnVoltage)
-        (*OnVoltage)(this, phase, val);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::NotifyCurrent
-#
-#   Purpose....: Notify current
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::NotifyCurrent(int phase, double val)
-{
-    if (OnCurrent)
-        (*OnCurrent)(this, phase, val);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::NotifyEnergy
-#
-#   Purpose....: Notify energy
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::NotifyEnergy(int val)
-{
-    if (OnEnergy)
-        (*OnEnergy)(this, val);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSslSocketServerFactory::NotifyKey
-#
-#   Purpose....: Notify key
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSslSocketServerFactory::NotifyKey(const char *key, bool rdonly, const char *value)
-{
-    if (OnKey)
-        (*OnKey)(this, key, rdonly, value);
 }
 
 /*##########################################################################
@@ -401,10 +382,10 @@ void TOcppSocketServer::SetChargingProfile(int conn, const char *unit, double va
     prof->AddString("chargingProfilePurpose", "TxProfile");
     prof->AddString("chargingProfileKind", "Relative");
 
-    sched = root->AddCollection("chargingSchedule");
+    sched = prof->AddCollection("chargingSchedule");
     sched->AddString("chargingRateUnit", unit);
 
-    period = root->AddArrayCollection("chargingSchedulePeriod");
+    period = sched->AddArrayCollection("chargingSchedulePeriod");
     period->AddInt("startPeriod", 0);
     period->AddDouble("limit", val, 1);
 
@@ -469,38 +450,6 @@ void TOcppSocketServer::ChangeConfiguration(const char *key, const char *value)
 
     FSeq++;
     SendReq(FSeq, "ChangeConfiguration", json);
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSocketServer::NotifyOnline
-#
-#   Purpose....: Notify online
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSocketServer::NotifyOnline()
-{
-    FFactory->NotifyOnline();
-}
-
-/*##########################################################################
-#
-#   Name       : TOcppSocketServer::NotifyOffline
-#
-#   Purpose....: Notify offline
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSocketServer::NotifyOffline()
-{
-    FFactory->NotifyOffline();
 }
 
 /*##########################################################################
@@ -1158,7 +1107,6 @@ void TOcppSocketServer::StartWebSocket()
     FPollCount = 0;
 
     StartLog();
-    NotifyOnline();
 
 //    ChangeConfiguration("SupervisionUrl", "wss://ocpp.rdos.se:443/");
     GetConfiguration();
@@ -1177,7 +1125,6 @@ void TOcppSocketServer::StartWebSocket()
 ##########################################################################*/
 void TOcppSocketServer::EndWebSocket()
 {
-    NotifyOffline();
     StopLog();
 }
 
