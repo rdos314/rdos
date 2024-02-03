@@ -45,6 +45,7 @@ TOcppSslSocketServerFactory::TOcppSslSocketServerFactory(int Port, int MaxConnec
     OnVoltage = 0;
     OnCurrent = 0;
     OnEnergy = 0;
+    OnKey = 0;
 
     FServer = 0;
 
@@ -240,6 +241,23 @@ void TOcppSslSocketServerFactory::NotifyEnergy(int val)
 
 /*##########################################################################
 #
+#   Name       : TOcppSslSocketServerFactory::NotifyKey
+#
+#   Purpose....: Notify key
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::NotifyKey(const char *key, bool rdonly, const char *value)
+{
+    if (OnKey)
+        (*OnKey)(this, key, rdonly, value);
+}
+
+/*##########################################################################
+#
 #   Name       : TOcppSocketServer::TOcppSocketServer
 #
 #   Purpose....: Constructor
@@ -374,6 +392,26 @@ void TOcppSocketServer::SetChargingProfile(int conn, const char *unit, double va
 
     FSeq++;
     SendReq(FSeq, "SetChargingProfile", json);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::GetConfiguration
+#
+#   Purpose....: Get configuration
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::GetConfiguration()
+{
+    TJsonDocument *json = new TJsonDocument;
+    TJsonCollection *root = json->CreateRoot();
+
+    FSeq++;
+    SendReq(FSeq, "GetConfiguration", json);
 }
 
 /*##########################################################################
@@ -994,6 +1032,41 @@ void TOcppSocketServer::NotifyJsonReq(char *str)
 
 /*##########################################################################
 #
+#   Name       : TOcppSocketServer::HandleConfiguration
+#
+#   Purpose....: Handle configuration
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::HandleConfiguration(TJsonDocument *doc)
+{
+    int i;
+    int count;
+    TJsonCollection *root = doc->GetRoot();
+    TJsonArrayCollection *keys = (TJsonArrayCollection *)root->GetCollection("configurationKey");
+    const char *key;
+    bool rdonly;
+    const char *value;
+
+    if (keys && keys->IsArray())
+    {
+        count = keys->GetArrayCount();
+        for (i = 0; i < count; i++)
+        {
+            keys->SelectArray(i);
+            key = keys->GetText("key", "");
+            rdonly = keys->GetBoolean("readonly", false);
+            value = keys->GetText("value", "");
+            FFactory->NotifyKey(key, rdonly, value);
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TOcppSocketServer::NotifyJsonReply
 #
 #   Purpose....: Notify json reply message
@@ -1005,11 +1078,21 @@ void TOcppSocketServer::NotifyJsonReq(char *str)
 ##########################################################################*/
 void TOcppSocketServer::NotifyJsonReply(int seq, char *str)
 {
+    const char *action = FReq.GetData();
+    bool handled = false;
     TJsonDocument *json;
 
-    json = new TJsonDocument(str);
+    if (seq == FSeq)
+    {
+        json = new TJsonDocument(str);
 
-    delete json;
+        if (!strcmp(action, "GetConfiguration"))
+        {
+            HandleConfiguration(json);
+            handled = true;
+        }
+        delete json;
+    }
 }
 
 /*##########################################################################
@@ -1029,6 +1112,8 @@ void TOcppSocketServer::StartWebSocket()
 
     StartLog();
     NotifyOnline();
+
+    GetConfiguration();
 }
 
 /*##########################################################################
@@ -1233,6 +1318,8 @@ void TOcppSocketServer::SendReq(int seq, const char *action, TJsonDocument *json
 {
     TString str;
     TString jsonstr;
+
+    FReq = action;
 
     str.printf("[2,\r\n\"%d\", \"%s\",\r\n", seq, action);
     json->Write(jsonstr);

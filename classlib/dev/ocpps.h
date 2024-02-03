@@ -24,6 +24,7 @@ public:
     void (*OnVoltage)(TOcppSslSocketServerFactory *Server, int Phase, double Val);
     void (*OnCurrent)(TOcppSslSocketServerFactory *Server, int Phase, double Val);
     void (*OnEnergy)(TOcppSslSocketServerFactory *Server, int Val);
+    void (*OnKey)(TOcppSslSocketServerFactory *Server, const char *key, bool rdonly, const char *value);
 
     void LimitCurrent(int conn, double val);
 
@@ -36,6 +37,7 @@ protected:
     void NotifyVoltage(int Phase, double val);
     void NotifyCurrent(int Phase, double val);
     void NotifyEnergy(int val);
+    void NotifyKey(const char *key, bool rdonly, const char *value);
 
     TOcppSocketServer *FServer;
 };
@@ -51,6 +53,7 @@ public:
 
     void SetZone(int diff);
     void LimitCurrent(int conn, double val);
+    void GetConfiguration();
 
 protected:
     void SetChargingProfile(int conn, const char *unit, double val);
@@ -81,6 +84,9 @@ protected:
     void HandleMeterValues(TJsonDocument *doc);
     void ReplyBootNotification();
     void NotifyJsonReq(char *str);
+
+    void HandleConfiguration(TJsonDocument *doc);
+
     void NotifyJsonReply(int seq, char *str);
 
     virtual const char *GetProtocol();
@@ -93,6 +99,7 @@ protected:
 
     TString FRecSeq;
     TString FAction;
+    TString FReq;
 
     int FSeq;
 

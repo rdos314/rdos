@@ -38,6 +38,14 @@ static void NotifyEnergy(TOcppSslSocketServerFactory *Server, int val)
     printf("Energy: %d.%03d\r\n", val / 1000, val % 1000);
 }
 
+static void NotifyKey(TOcppSslSocketServerFactory *Server, const char *key, bool rdonly, const char *value)
+{
+    if (rdonly)
+        printf(" Key: %s=%s\r\n", key, value);
+    else
+        printf("*Key: %s=%s\r\n", key, value);
+}
+
 void main()
 {
     int port;
@@ -64,6 +72,7 @@ void main()
     fact.OnVoltage = NotifyVoltage;
     fact.OnCurrent = NotifyCurrent;
     fact.OnEnergy = NotifyEnergy;
+    fact.OnKey = NotifyKey;
 
     for (;;)
         fact.WaitForever();
