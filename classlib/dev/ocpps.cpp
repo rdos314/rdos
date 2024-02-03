@@ -632,9 +632,15 @@ void TOcppSocketServer::HandleStatus(TJsonDocument *doc)
     TJsonCollection *root = doc->GetRoot();
     long long cid = root->GetInt("connectorId", 0);
     const char *state = root->GetText("status", "");
+    TJsonDocument *json = new TJsonDocument;
 
     if (cid)
         FFactory->NotifyState(state);
+
+    root = json->CreateRoot();
+    SendReply(json);
+
+    delete json;
 }
 
 /*##########################################################################
@@ -1154,7 +1160,7 @@ void TOcppSocketServer::StartWebSocket()
     StartLog();
     NotifyOnline();
 
-//    ChangeConfiguration("defaultidtag", "free");
+//    ChangeConfiguration("SupervisionUrl", "wss://ocpp.rdos.se:443/");
     GetConfiguration();
 }
 
