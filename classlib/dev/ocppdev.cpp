@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include "rdos.h"
 #include "file.h"
-#include "ocpps.h"
+#include "ocppdev.h"
 
 #define STATE_UNKNOWN      0
 #define STATE_FAULT        1
