@@ -7,6 +7,11 @@
 #include "ocpps.h"
 #include "keyboard.h"
 
+static void NotifyState(TOcppSslSocketServerFactory *Server, const char *state)
+{
+    printf("State: %s\r\n", state);
+}
+
 static void NotifyStart(TOcppSslSocketServerFactory *Server, int val)
 {
     printf("Start: %d.%03d\r\n", val / 1000, val % 1000);
@@ -52,6 +57,7 @@ void main()
 
     fact.SetCertificate("d:/ssl/cert.pem", "d:/ssl/privkey.pem", "d:/ssl/chain.pem");
 
+    fact.OnState = NotifyState;
     fact.OnStart = NotifyStart;
     fact.OnStop = NotifyStop;
     fact.OnVoltage = NotifyVoltage;
