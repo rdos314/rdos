@@ -9,17 +9,38 @@
 
 class TOcppSslSocketServerFactory : public THttpsSocketServerFactory
 {
+friend class TOcppSocketServer;
 public:
     TOcppSslSocketServerFactory(int Port, int MaxConnections, int BufferSize);
     ~TOcppSslSocketServerFactory();
 
     virtual TSocketServer *Create(TTcpSocket *Socket);
+
+    void (*OnOnline)(TOcppSslSocketServerFactory *Server);
+    void (*OnOffline)(TOcppSslSocketServerFactory *Server);
+    void (*OnState)(TOcppSslSocketServerFactory *Server, const char *State);
+    void (*OnStart)(TOcppSslSocketServerFactory *Server, int val);
+    void (*OnStop)(TOcppSslSocketServerFactory *Server, int val);
+    void (*OnVoltage)(TOcppSslSocketServerFactory *Server, int Phase, double Val);
+    void (*OnCurrent)(TOcppSslSocketServerFactory *Server, int Phase, double Val);
+    void (*OnEnergy)(TOcppSslSocketServerFactory *Server, int Val);
+
+protected:
+    void NotifyOnline();
+    void NotifyOffline();
+    void NotifyState(const char *State);
+    void NotifyStart(int val);
+    void NotifyStop(int val);
+    void NotifyVoltage(int Phase, double val);
+    void NotifyCurrent(int Phase, double val);
+    void NotifyEnergy(int val);
+
 };
 
 class TOcppSocketServer : public TWebSocketServer
 {
 public:
-    TOcppSocketServer(const char *Name, int StackSize, TTcpSocket *Socket);
+    TOcppSocketServer(TOcppSslSocketServerFactory *Factory, const char *Name, int StackSize, TTcpSocket *Socket);
     virtual ~TOcppSocketServer();
 
     void SendReply(TJsonDocument *json);
@@ -28,15 +49,25 @@ public:
     void SetZone(int diff);
 
 protected:
+    void NotifyOnline();
+    void NotifyOffline();
+    void NotifyVoltage(const char *phase, const char *unit, const char *data);
+    void NotifyCurrent(const char *phase, const char *unit, const char *data);
+    void NotifyEnergy(const char *unit, const char *data);
+
     void StartLog();
     void StopLog();
     void LogMsg(const char *Dir, const char *Msg);
 
-    long long UpdateMeter(TJsonCollection *root);
+    int DecodePhase(const char *phase);
+    void NotifyData(const char *param, const char *unit, const char *data);
+    void NotifyData(const char *param, const char *phase, const char *unit, const char *data);
+
+    void UpdateMeter(TJsonCollection *root);
     void HandleMeterValues(TJsonCollection *root);
 
     void HandleBootNotification(TJsonDocument *doc);
-    void HandleStatusNotification(TJsonDocument *doc);
+    void HandleStatus(TJsonDocument *doc);
     void HandleHeartbeat(TJsonDocument *doc);
     void HandleAuthorize(TJsonDocument *doc);
     void HandleStartTransaction(TJsonDocument *doc);
@@ -57,6 +88,7 @@ protected:
     TString FRecSeq;
     TString FAction;
 
+    TOcppSslSocketServerFactory *FFactory;
     TRdosLogThread *FLogDev;
     TRdosLog *FMsgLog;
 

@@ -37,6 +37,15 @@
 TOcppSslSocketServerFactory::TOcppSslSocketServerFactory(int Port, int MaxConnections, int BufferSize)
   : THttpsSocketServerFactory(Port, MaxConnections, BufferSize)
 {
+    OnOnline = 0;
+    OnOffline = 0;
+    OnState = 0;
+    OnStart = 0;
+    OnStop = 0;
+    OnVoltage = 0;
+    OnCurrent = 0;
+    OnEnergy = 0;
+
     Start("OCPP Listen", 0x10000);
 }
 
@@ -68,7 +77,143 @@ TOcppSslSocketServerFactory::~TOcppSslSocketServerFactory()
 ##########################################################################*/
 TSocketServer *TOcppSslSocketServerFactory::Create(TTcpSocket *Socket)
 {
-    return new TOcppSocketServer("OCPP", 0x10000, Socket);
+    return new TOcppSocketServer(this, "OCPP", 0x10000, Socket);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSslSocketServerFactory::NotifyOnline
+#
+#   Purpose....: Notify online
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::NotifyOnline()
+{
+    if (OnOnline)
+        (*OnOnline)(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSslSocketServerFactory::NotifyOffline
+#
+#   Purpose....: Notify offline
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::NotifyOffline()
+{
+    if (OnOffline)
+        (*OnOffline)(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSslSocketServerFactory::NotifyState
+#
+#   Purpose....: Notify state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::NotifyState(const char *State)
+{
+    if (OnState)
+        (*OnState)(this, State);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSslSocketServerFactory::NotifyStart
+#
+#   Purpose....: Notify start
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::NotifyStart(int val)
+{
+    if (OnStart)
+        (*OnStart)(this, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSslSocketServerFactory::NotifyStop
+#
+#   Purpose....: Notify stop
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::NotifyStop(int val)
+{
+    if (OnStop)
+        (*OnStop)(this, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSslSocketServerFactory::NotifyVoltage
+#
+#   Purpose....: Notify voltage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::NotifyVoltage(int phase, double val)
+{
+    if (OnVoltage)
+        (*OnVoltage)(this, phase, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSslSocketServerFactory::NotifyCurrent
+#
+#   Purpose....: Notify current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::NotifyCurrent(int phase, double val)
+{
+    if (OnCurrent)
+        (*OnCurrent)(this, phase, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSslSocketServerFactory::NotifyEnergy
+#
+#   Purpose....: Notify energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::NotifyEnergy(int val)
+{
+    if (OnEnergy)
+        (*OnEnergy)(this, val);
 }
 
 /*##########################################################################
@@ -82,7 +227,7 @@ TSocketServer *TOcppSslSocketServerFactory::Create(TTcpSocket *Socket)
 #   Returns....: *
 #
 ##########################################################################*/
-TOcppSocketServer::TOcppSocketServer(const char *Name, int StackSize, TTcpSocket *Socket)
+TOcppSocketServer::TOcppSocketServer(TOcppSslSocketServerFactory *Factory, const char *Name, int StackSize, TTcpSocket *Socket)
   : TWebSocketServer(Name, StackSize, Socket)
 {
     FBootReq = false;
@@ -90,6 +235,7 @@ TOcppSocketServer::TOcppSocketServer(const char *Name, int StackSize, TTcpSocket
 
     FLogDev = 0;
     FMsgLog = 0;
+    FFactory = Factory;
 }
 
 /*##########################################################################
@@ -167,6 +313,38 @@ void TOcppSocketServer::LogMsg(const char *Dir, const char *Msg)
 
     if (FMsgLog)
         FMsgLog->Log(0, "", str.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::NotifyOnline
+#
+#   Purpose....: Notify online
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::NotifyOnline()
+{
+    FFactory->NotifyOnline();
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::NotifyOffline
+#
+#   Purpose....: Notify offline
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::NotifyOffline()
+{
+    FFactory->NotifyOffline();
 }
 
 /*##########################################################################
@@ -286,6 +464,27 @@ void TOcppSocketServer::HandleHeartbeat(TJsonDocument *doc)
 
 /*##########################################################################
 #
+#   Name       : TOcppSocketServer::HandleStatus
+#
+#   Purpose....: Handle status
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::HandleStatus(TJsonDocument *doc)
+{
+    TJsonCollection *root = doc->GetRoot();
+    long long cid = root->GetInt("connectorId", 0);
+    const char *state = root->GetText("status", "");
+
+    if (cid)
+        FFactory->NotifyState(state);
+}
+
+/*##########################################################################
+#
 #   Name       : TOcppSocketServer::HandleAuthorize
 #
 #   Purpose....: Handle authorize
@@ -325,7 +524,10 @@ void TOcppSocketServer::HandleStartTransaction(TJsonDocument *doc)
 {
     TJsonCollection *root = doc->GetRoot();
     const char *id = root->GetText("idTag", "");
+    long meter = root->GetInt("meterStart", 0);
     TJsonCollection *info;
+
+    FFactory->NotifyStart(meter);
 
     TJsonDocument *json = new TJsonDocument;
     root = json->CreateRoot();
@@ -352,7 +554,10 @@ void TOcppSocketServer::HandleStopTransaction(TJsonDocument *doc)
 {
     TJsonCollection *root = doc->GetRoot();
     const char *id = root->GetText("idTag", "");
+    long meter = root->GetInt("meterStop", 0);
     TJsonCollection *info;
+
+    FFactory->NotifyStop(meter);
 
     TJsonDocument *json = new TJsonDocument;
     root = json->CreateRoot();
@@ -363,6 +568,114 @@ void TOcppSocketServer::HandleStopTransaction(TJsonDocument *doc)
     delete json;
 }
 
+/*##################  TOcppSocketServer::DecodePhase ############################
+*   Purpose....: Decode phase                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TOcppSocketServer::DecodePhase(const char *phase)
+{
+    if (!strcmp(phase, "L1"))
+        return 1;
+
+    if (!strcmp(phase, "L2"))
+        return 2;
+
+    if (!strcmp(phase, "L3"))
+        return 3;
+
+    return 0;
+}
+
+/*##################  TOcppSocketServer::NotifyVoltage ############################
+*   Purpose....: Notify voltage                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TOcppSocketServer::NotifyVoltage(const char *phase, const char *unit, const char *data)
+{
+    int ph = DecodePhase(phase);
+    double val;
+
+    if (!strcmp(unit, "V"))
+    {
+        val = atof(data);
+        FFactory->NotifyVoltage(ph, val);
+    }
+}
+
+/*##################  TOcppSocketServer::NotifyCurrent ############################
+*   Purpose....: Notify current                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TOcppSocketServer::NotifyCurrent(const char *phase, const char *unit, const char *data)
+{
+    int ph = DecodePhase(phase);
+    double val;
+
+    if (!strcmp(unit, "A"))
+    {
+        val = atof(data);
+        FFactory->NotifyCurrent(ph, val);
+    }
+}
+
+/*##################  TOcppSocketServer::NotifyData ############################
+*   Purpose....: Notify data                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TOcppSocketServer::NotifyData(const char *param, const char *phase, const char *unit, const char *data)
+{
+    if (strstr(param, "Voltage"))
+        NotifyVoltage(phase, unit, data);
+    else if (strstr(param, "Current"))
+        NotifyCurrent(phase, unit, data);
+}
+
+/*##################  TOcppSocketServer::NotifyEnergy ############################
+*   Purpose....: Notify energy                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TOcppSocketServer::NotifyEnergy(const char *unit, const char *data)
+{
+    int val = 0;
+
+    if (!strcmp(unit, "Wh"))
+        val = atoi(data);
+
+    if (!strcmp(unit, "kWh"))
+        val = 1000 * atoi(data);
+
+    if (val > 0)
+        FFactory->NotifyEnergy(val);
+}
+
+/*##################  TOcppSocketServer::NotifyData ############################
+*   Purpose....: Notify data                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TOcppSocketServer::NotifyData(const char *param, const char *unit, const char *data)
+{
+    if (strstr(param, "Energy"))
+        NotifyEnergy(unit, data);
+}
+
 /*##################  TOcppSocketServer::UpdateMeter ############################
 *   Purpose....: Update meter value                     #
 *   In params..: *                                                          #
@@ -370,7 +683,7 @@ void TOcppSocketServer::HandleStopTransaction(TJsonDocument *doc)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-long long TOcppSocketServer::UpdateMeter(TJsonCollection *root)
+void TOcppSocketServer::UpdateMeter(TJsonCollection *root)
 {
     TJsonArrayCollection *values;
     TJsonArrayCollection *sample;
@@ -378,6 +691,9 @@ long long TOcppSocketServer::UpdateMeter(TJsonCollection *root)
     int i;
     int count;
     TString valstr;
+    TString phase;
+    TString param;
+    TString unit;
     const char *ptr;
     long long val;
     bool use;
@@ -402,86 +718,61 @@ long long TOcppSocketServer::UpdateMeter(TJsonCollection *root)
 
                     if (sample)
                     {
-                        obj = sample->GetObj("measurand");
-                        
+                        phase.Reset();
+
+                        obj = sample->GetObj("location");
+
                         if (obj)
                         {
                             valstr = obj->GetText();
                             ptr = valstr.GetData();
-//                            FLog.Write(TLog::DEBUG, "UpdateMeter", "Measurand: %s", ptr);
-
-                            if (strstr(ptr, "Energy") == 0)
-                                use = false;
-                            else
+                            if (strstr(ptr, "Outlet"))
                                 use = true;
+                            else
+                                use = false;
                         }
                         else
-                            use = true;
+                            use = false;
 
                         if (use)
                         {
-                            obj = sample->GetObj("location");
-                        
-                            if (obj)
-                            {
-                                valstr = obj->GetText();
-                                ptr = valstr.GetData();
-//                                FLog.Write(TLog::DEBUG, "UpdateMeter", "Location: %s", ptr);
+                            obj = sample->GetObj("measurand");
 
-                                if (strstr(ptr, "Outlet") == 0)
-                                    use = false;
-                            }
+                            if (obj)
+                                param = obj->GetText();
+                            else
+                                use = false;
                         }
 
                         if (use)
                         {
-                            obj = sample->GetObj("format");
-                        
+                            obj = sample->GetObj("phase");
+
                             if (obj)
-                            {
-                                valstr = obj->GetText();
-                                ptr = valstr.GetData();
-//                                FLog.Write(TLog::DEBUG, "UpdateMeter", "Format: %s", ptr);
-
-                                if (strstr(ptr, "Raw") == 0)
-                                    use = false;
-                            }
+                                phase = obj->GetText();
                         }
-
 
                         if (use)
                         {
                             obj = sample->GetObj("unit");
-                        
-                            if (obj)
-                            {
-                                valstr = obj->GetText();
-                                ptr = valstr.GetData();
-//                                FLog.Write(TLog::DEBUG, "UpdateMeter", "Unit: %s", ptr);
 
-                                if (strstr(ptr, "Wh"))
-                                    kwh = false;
-                                else if (strstr(ptr, "kWh"))
-                                    kwh = true;
-                                else
-                                    use = false;
-                            }
+                            if (obj)
+                                unit = obj->GetText();
+                            else
+                                use = false;
                         }
 
                         if (use)
                         {
                             obj = sample->GetObj("value");
-                        
+
                             if (obj)
                             {
                                 valstr = obj->GetText();
-                                ptr = valstr.GetData();
-//                                FLog.Write(TLog::DEBUG, "UpdateMeter", "Value: %s", ptr);
-                                val = atoll(ptr);
-                                if (kwh)
-                                    return val * 100;
+                                if (phase.GetSize())
+                                    NotifyData(param.GetData(), phase.GetData(), unit.GetData(), valstr.GetData());
                                 else
-                                    return val / 10;
+                                    NotifyData(param.GetData(), unit.GetData(), valstr.GetData());
                             }
                         }
                     }
@@ -489,9 +780,6 @@ long long TOcppSocketServer::UpdateMeter(TJsonCollection *root)
             }
         }
     }
-
-    return 0;
-
 }
 
 /*##########################################################################
@@ -562,7 +850,7 @@ void TOcppSocketServer::HandleMeterValues(TJsonDocument *doc)
     root = json->CreateRoot();
     SendReply(json);
 
-    delete json; 
+    delete json;
 }
 
 /*##########################################################################
@@ -593,6 +881,12 @@ void TOcppSocketServer::NotifyJsonReq(char *str)
     if (!handled && !strcmp(action, "Heartbeat"))
     {
         HandleHeartbeat(json);
+        handled = true;
+    }
+
+    if (!handled && !strcmp(action, "StatusNotification"))
+    {
+        HandleStatus(json);
         handled = true;
     }
 
@@ -659,6 +953,7 @@ void TOcppSocketServer::StartWebSocket()
     FPollCount = 0;
 
     StartLog();
+    NotifyOnline();
 }
 
 /*##########################################################################
@@ -674,6 +969,7 @@ void TOcppSocketServer::StartWebSocket()
 ##########################################################################*/
 void TOcppSocketServer::EndWebSocket()
 {
+    NotifyOffline();
     StopLog();
 }
 

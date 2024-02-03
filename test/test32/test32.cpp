@@ -7,6 +7,31 @@
 #include "ocpps.h"
 #include "keyboard.h"
 
+static void NotifyStart(TOcppSslSocketServerFactory *Server, int val)
+{
+    printf("Start: %d.%03d\r\n", val / 1000, val % 1000);
+}
+
+static void NotifyStop(TOcppSslSocketServerFactory *Server, int val)
+{
+    printf("Stop: %d.%03d\r\n", val / 1000, val % 1000);
+}
+
+static void NotifyVoltage(TOcppSslSocketServerFactory *Server, int phase, double val)
+{
+    printf("Voltage: L%d %2.1Lf\r\n", phase, val);
+}
+
+static void NotifyCurrent(TOcppSslSocketServerFactory *Server, int phase, double val)
+{
+    printf("Current: L%d %2.1Lf\r\n", phase, val);
+}
+
+static void NotifyEnergy(TOcppSslSocketServerFactory *Server, int val)
+{
+    printf("Energy: %d.%03d\r\n", val / 1000, val % 1000);
+}
+
 void main()
 {
     int port;
@@ -26,6 +51,12 @@ void main()
 //    fact.RootDir = "d:/www";
 
     fact.SetCertificate("d:/ssl/cert.pem", "d:/ssl/privkey.pem", "d:/ssl/chain.pem");
+
+    fact.OnStart = NotifyStart;
+    fact.OnStop = NotifyStop;
+    fact.OnVoltage = NotifyVoltage;
+    fact.OnCurrent = NotifyCurrent;
+    fact.OnEnergy = NotifyEnergy;
 
     for (;;)
         fact.WaitForever();
