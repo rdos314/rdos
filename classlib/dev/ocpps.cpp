@@ -103,6 +103,24 @@ void TOcppSslSocketServerFactory::LimitCurrent(int conn, double val)
 
 /*##########################################################################
 #
+#   Name       : TOcppSslSocketServerFactory::ChangeConfiguration
+#
+#   Purpose....: Change configuration
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::ChangeConfiguration(const char *key, const char *value)
+{
+    if (FServer)
+        FServer->ChangeConfiguration(key, value);
+}
+
+
+/*##########################################################################
+#
 #   Name       : TOcppSslSocketServerFactory::NotifyOnline
 #
 #   Purpose....: Notify online
@@ -428,6 +446,29 @@ void TOcppSocketServer::GetConfiguration()
 void TOcppSocketServer::LimitCurrent(int conn, double val)
 {
     SetChargingProfile(conn, "A", val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::ChangeConfiguration
+#
+#   Purpose....: Change configuration
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::ChangeConfiguration(const char *key, const char *value)
+{
+    TJsonDocument *json = new TJsonDocument;
+    TJsonCollection *root = json->CreateRoot();
+
+    root->AddString("key", key);
+    root->AddString("value", value);
+
+    FSeq++;
+    SendReq(FSeq, "ChangeConfiguration", json);
 }
 
 /*##########################################################################
@@ -1113,6 +1154,7 @@ void TOcppSocketServer::StartWebSocket()
     StartLog();
     NotifyOnline();
 
+//    ChangeConfiguration("defaultidtag", "free");
     GetConfiguration();
 }
 

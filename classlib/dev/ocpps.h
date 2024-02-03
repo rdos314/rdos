@@ -27,6 +27,7 @@ public:
     void (*OnKey)(TOcppSslSocketServerFactory *Server, const char *key, bool rdonly, const char *value);
 
     void LimitCurrent(int conn, double val);
+    void ChangeConfiguration(const char *key, const char *value);
 
 protected:
     void NotifyOnline();
@@ -54,6 +55,7 @@ public:
     void SetZone(int diff);
     void LimitCurrent(int conn, double val);
     void GetConfiguration();
+    void ChangeConfiguration(const char *key, const char *value);
 
 protected:
     void SetChargingProfile(int conn, const char *unit, double val);
