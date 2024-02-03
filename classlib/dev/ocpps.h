@@ -25,6 +25,8 @@ public:
     void (*OnCurrent)(TOcppSslSocketServerFactory *Server, int Phase, double Val);
     void (*OnEnergy)(TOcppSslSocketServerFactory *Server, int Val);
 
+    void LimitCurrent(int conn, double val);
+
 protected:
     void NotifyOnline();
     void NotifyOffline();
@@ -35,6 +37,7 @@ protected:
     void NotifyCurrent(int Phase, double val);
     void NotifyEnergy(int val);
 
+    TOcppSocketServer *FServer;
 };
 
 class TOcppSocketServer : public TWebSocketServer
@@ -47,8 +50,11 @@ public:
     void SendReq(int Seq, const char *Action, TJsonDocument *json);
 
     void SetZone(int diff);
+    void LimitCurrent(int conn, double val);
 
 protected:
+    void SetChargingProfile(int conn, const char *unit, double val);
+
     void NotifyOnline();
     void NotifyOffline();
     void NotifyVoltage(const char *phase, const char *unit, const char *data);
@@ -87,6 +93,8 @@ protected:
 
     TString FRecSeq;
     TString FAction;
+
+    int FSeq;
 
     TOcppSslSocketServerFactory *FFactory;
     TRdosLogThread *FLogDev;

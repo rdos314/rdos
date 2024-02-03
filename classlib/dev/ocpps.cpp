@@ -46,6 +46,8 @@ TOcppSslSocketServerFactory::TOcppSslSocketServerFactory(int Port, int MaxConnec
     OnCurrent = 0;
     OnEnergy = 0;
 
+    FServer = 0;
+
     Start("OCPP Listen", 0x10000);
 }
 
@@ -77,7 +79,25 @@ TOcppSslSocketServerFactory::~TOcppSslSocketServerFactory()
 ##########################################################################*/
 TSocketServer *TOcppSslSocketServerFactory::Create(TTcpSocket *Socket)
 {
-    return new TOcppSocketServer(this, "OCPP", 0x10000, Socket);
+    FServer = new TOcppSocketServer(this, "OCPP", 0x10000, Socket);
+    return FServer;
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSslSocketServerFactory::LimitCurrent
+#
+#   Purpose....: Limit current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSslSocketServerFactory::LimitCurrent(int conn, double val)
+{
+    if (FServer)
+        FServer->LimitCurrent(conn, val);
 }
 
 /*##########################################################################
@@ -110,6 +130,8 @@ void TOcppSslSocketServerFactory::NotifyOnline()
 ##########################################################################*/
 void TOcppSslSocketServerFactory::NotifyOffline()
 {
+    FServer = 0;
+
     if (OnOffline)
         (*OnOffline)(this);
 }
@@ -232,6 +254,7 @@ TOcppSocketServer::TOcppSocketServer(TOcppSslSocketServerFactory *Factory, const
 {
     FBootReq = false;
     FUtcDiff = 0;
+    FSeq = 0;
 
     FLogDev = 0;
     FMsgLog = 0;
@@ -313,6 +336,60 @@ void TOcppSocketServer::LogMsg(const char *Dir, const char *Msg)
 
     if (FMsgLog)
         FMsgLog->Log(0, "", str.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::SetChargingProfile
+#
+#   Purpose....: Set charging profile
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::SetChargingProfile(int conn, const char *unit, double val)
+{
+    TJsonDocument *json = new TJsonDocument;
+    TJsonCollection *root = json->CreateRoot();
+    TJsonCollection *prof;
+    TJsonCollection *sched;
+    TJsonArrayCollection *period;
+
+    root->AddInt("connectorId", conn);
+
+    prof = root->AddCollection("csChargingProfiles");
+    prof->AddInt("chargingProfileId", 1);
+    prof->AddInt("stackLevel", 0);
+    prof->AddString("chargingProfilePurpose", "TxProfile");
+    prof->AddString("chargingProfileKind", "Relative");
+
+    sched = root->AddCollection("chargingSchedule");
+    sched->AddString("chargingRateUnit", unit);
+
+    period = root->AddArrayCollection("chargingSchedulePeriod");
+    period->AddInt("startPeriod", 0);
+    period->AddDouble("limit", val, 1);
+
+    FSeq++;
+    SendReq(FSeq, "SetChargingProfile", json);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::LimitCurrent
+#
+#   Purpose....: Limit current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::LimitCurrent(int conn, double val)
+{
+    SetChargingProfile(conn, "A", val);
 }
 
 /*##########################################################################
@@ -422,7 +499,6 @@ void TOcppSocketServer::ReplyBootNotification()
 {
     TDateTime now;
     TJsonDocument *json = new TJsonDocument;
-
     TJsonCollection *root = json->CreateRoot();
 
     root->AddDateTimeZone("currentTime", now, FUtcDiff);
@@ -452,7 +528,6 @@ void TOcppSocketServer::HandleHeartbeat(TJsonDocument *doc)
 {
     TDateTime now;
     TJsonDocument *json = new TJsonDocument;
-
     TJsonCollection *root = json->CreateRoot();
 
     root->AddDateTime("currentTime", now, true);

@@ -14,6 +14,7 @@ static void NotifyState(TOcppSslSocketServerFactory *Server, const char *state)
 
 static void NotifyStart(TOcppSslSocketServerFactory *Server, int val)
 {
+    Server->LimitCurrent(1, 5.0);
     printf("Start: %d.%03d\r\n", val / 1000, val % 1000);
 }
 
