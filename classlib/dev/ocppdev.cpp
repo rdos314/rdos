@@ -377,8 +377,9 @@ void TOcppSocketServer::SetChargingProfile(int conn, const char *unit, double va
     root->AddInt("connectorId", conn);
 
     prof = root->AddCollection("csChargingProfiles");
-    prof->AddInt("chargingProfileId", 1);
+    prof->AddInt("chargingProfileId", 154);
     prof->AddInt("stackLevel", 0);
+    prof->AddInt("transactionId", 123);
     prof->AddString("chargingProfilePurpose", "TxProfile");
     prof->AddString("chargingProfileKind", "Relative");
 
@@ -636,8 +637,6 @@ void TOcppSocketServer::HandleStartTransaction(TJsonDocument *doc)
     long meter = root->GetInt("meterStart", 0);
     TJsonCollection *info;
 
-    FFactory->NotifyStart(meter);
-
     TJsonDocument *json = new TJsonDocument;
     root = json->CreateRoot();
     root->AddInt("transactionId", 123);
@@ -646,6 +645,8 @@ void TOcppSocketServer::HandleStartTransaction(TJsonDocument *doc)
     SendReply(json);
 
     delete json;
+
+    FFactory->NotifyStart(meter);
 }
 
 /*##########################################################################
@@ -1109,7 +1110,7 @@ void TOcppSocketServer::StartWebSocket()
     StartLog();
 
 //    ChangeConfiguration("SupervisionUrl", "wss://ocpp.rdos.se:443/");
-    GetConfiguration();
+//    GetConfiguration();
 }
 
 /*##########################################################################
