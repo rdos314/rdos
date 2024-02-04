@@ -110,7 +110,7 @@ void SetupFaultSave()
             delete Disc;
             break;
         }
-    }    
+    }
 }
 
 /*##################  AddFaultState  #####################################
@@ -120,10 +120,10 @@ void SetupFaultSave()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void AddFaultState(TString &fstr, ThreadActionState *state)
+void AddFaultState(TString &fstr, RdosThreadActionState *state)
 {
     char str[128];
-        
+
     sprintf(str, "Thread %04hX:", state->ID);
     fstr += str;
 
@@ -141,50 +141,50 @@ void AddFaultState(TString &fstr, ThreadActionState *state)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void AddFaultTss(TString &fstr, Tss *tss)
+void AddFaultTss(TString &fstr, RdosTss *tss)
 {
     TString str;
-    
+
     str.printf("CS:EIP = %04hX:%08lX\r\n", tss->cs, tss->eip);
     fstr += str;
-    
-    str.printf("SS:ESP = %04hX:%08lX\r\n", tss->ss, tss->esp);    
+
+    str.printf("SS:ESP = %04hX:%08lX\r\n", tss->ss, tss->esp);
     fstr += str;
 
-    str.printf("EAX = %08lX ", tss->eax);    
+    str.printf("EAX = %08lX ", tss->eax);
     fstr += str;
 
-    str.printf("EBX = %08lX ", tss->ebx);    
+    str.printf("EBX = %08lX ", tss->ebx);
     fstr += str;
 
-    str.printf("ECX = %08lX ", tss->ecx);    
+    str.printf("ECX = %08lX ", tss->ecx);
     fstr += str;
 
-    str.printf("EDX = %08lX\r\n", tss->edx);    
+    str.printf("EDX = %08lX\r\n", tss->edx);
     fstr += str;
 
-    str.printf("ESI = %08lX ", tss->esi);    
+    str.printf("ESI = %08lX ", tss->esi);
     fstr += str;
 
-    str.printf("EDI = %08lX ", tss->edi);    
+    str.printf("EDI = %08lX ", tss->edi);
     fstr += str;
 
-    str.printf("EBP = %08lX ", tss->ebp);    
+    str.printf("EBP = %08lX ", tss->ebp);
     fstr += str;
 
-    str.printf("EFL = %08lX\r\n", tss->eflags);        
+    str.printf("EFL = %08lX\r\n", tss->eflags);
     fstr += str;
 
-    str.printf("DS = %04hX ", tss->ds);    
+    str.printf("DS = %04hX ", tss->ds);
     fstr += str;
 
-    str.printf("ES = %04hX ", tss->es);    
+    str.printf("ES = %04hX ", tss->es);
     fstr += str;
 
-    str.printf("FS = %04hX ", tss->fs);    
+    str.printf("FS = %04hX ", tss->fs);
     fstr += str;
 
-    str.printf("GS = %04hX\r\n", tss->gs);    
+    str.printf("GS = %04hX\r\n", tss->gs);
     fstr += str;
 }
 
@@ -195,7 +195,7 @@ void AddFaultTss(TString &fstr, Tss *tss)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void AddFaultCallStack(TString &fstr, ThreadActionState *state)
+void AddFaultCallStack(TString &fstr, RdosThreadActionState *state)
 {
     int i;
     TString str;
@@ -235,12 +235,12 @@ void AddCoreSelector(TString &fstr, const char *Name, TCrashSelectorInfo *info)
     fstr += Name;
     fstr += "=";
 
-    str.printf("%04hX", info->Selector);    
+    str.printf("%04hX", info->Selector);
     fstr += str;
 
     if (info->Valid)
-    {    
-        str.printf(" %08lX (%08lX) ", info->Base, info->Limit);    
+    {
+        str.printf(" %08lX (%08lX) ", info->Base, info->Limit);
         fstr += str;
         fstr += info->InfoText;
     }
@@ -261,7 +261,7 @@ void AddCoreDt(TString &fstr, const char *Name, TCrashSelectorInfo *info)
     fstr += Name;
     fstr += "=";
 
-    str.printf("%08lX (%08lX)\r\n", info->Base, info->Limit);    
+    str.printf("%08lX (%08lX)\r\n", info->Base, info->Limit);
     fstr += str;
 }
 
@@ -276,7 +276,7 @@ void AddCoreFlags(TString &fstr, long long flags)
 {
     int iopl = (((int)flags) >> 12) & 0x3;
     TString str;
-     
+
     if (flags & 0x1)
         fstr += "CY ";
     else
@@ -317,21 +317,21 @@ void AddCoreThread(TString &fstr, TCrashThreadInfo *info)
 {
     TString str;
 
-    str.printf("%04hX ", info->Selector);    
+    str.printf("%04hX ", info->Selector);
     fstr += str;
 
-    str.printf("PRIO=%d ", info->Prio);    
+    str.printf("PRIO=%d ", info->Prio);
     fstr += str;
 
     if (info->Core)
     {
-        str.printf("CORE=%d ", info->Core);    
+        str.printf("CORE=%d ", info->Core);
         fstr += str;
     }
 
     if (info->WantedCore)
     {
-        str.printf("WCORE=%d ", info->WantedCore);    
+        str.printf("WCORE=%d ", info->WantedCore);
         fstr += str;
     }
 
@@ -355,7 +355,7 @@ void AddCoreStack(TString &fstr, char *data, int sel, int base, int size)
     int i;
     short int sval;
     TString str;
-    
+
     while (size >= 16)
     {
         ads = base + size - 16;
@@ -375,7 +375,7 @@ void AddCoreStack(TString &fstr, char *data, int sel, int base, int size)
             else
                 fstr += " ";
         }
-        size -= 16;                
+        size -= 16;
     }
 
     if (size)
@@ -387,7 +387,7 @@ void AddCoreStack(TString &fstr, char *data, int sel, int base, int size)
         fstr += str;
 
         size = size / 2;
-    
+
         for (i = 0; i < 8 - size; i++)
             fstr += "     ";
 
@@ -401,7 +401,7 @@ void AddCoreStack(TString &fstr, char *data, int sel, int base, int size)
                 fstr += "\r\n";
             else
                 fstr += " ";
-        }        
+        }
     }
 }
 
@@ -419,32 +419,32 @@ void AddCore(TString &fstr, int core, TCrashCoreInfo *info)
 
     str.printf("Core=%d (%04hX)\r\n", core, info->Core);
     fstr += str;
-    
+
     str.printf("CS:EIP=%04hX:%08lX\r\n", info->Cs.Selector, (int)info->Rip);
     fstr += str;
-    
-    str.printf("SS:ESP=%04hX:%08lX\r\n", info->Ss.Selector, (int)info->Rsp); 
+
+    str.printf("SS:ESP=%04hX:%08lX\r\n", info->Ss.Selector, (int)info->Rsp);
     fstr += str;
 
-    str.printf("EAX=%08lX ", (int)info->Rax);    
+    str.printf("EAX=%08lX ", (int)info->Rax);
     fstr += str;
 
-    str.printf("EBX=%08lX ", (int)info->Rbx);    
+    str.printf("EBX=%08lX ", (int)info->Rbx);
     fstr += str;
 
-    str.printf("ECX=%08lX ", (int)info->Rcx);    
+    str.printf("ECX=%08lX ", (int)info->Rcx);
     fstr += str;
 
-    str.printf("EDX=%08lX\r\n", (int)info->Rdx);    
+    str.printf("EDX=%08lX\r\n", (int)info->Rdx);
     fstr += str;
 
-    str.printf("ESI=%08lX ", (int)info->Rsi);    
+    str.printf("ESI=%08lX ", (int)info->Rsi);
     fstr += str;
 
-    str.printf("EDI=%08lX ", (int)info->Rdi);    
+    str.printf("EDI=%08lX ", (int)info->Rdi);
     fstr += str;
 
-    str.printf("EBP=%08lX\r\n", (int)info->Rbp);    
+    str.printf("EBP=%08lX\r\n", (int)info->Rbp);
     fstr += str;
 
     AddCoreFlags(fstr, info->Rflags);
@@ -459,19 +459,19 @@ void AddCore(TString &fstr, int core, TCrashCoreInfo *info)
     AddCoreDt(fstr, "GDT", &info->Gdt);
     AddCoreDt(fstr, "IDT", &info->Idt);
 
-    str.printf("CR0=%08lX ", info->Cr0);    
+    str.printf("CR0=%08lX ", info->Cr0);
     fstr += str;
 
-    str.printf("CR2=%08lX ", info->Cr2);    
+    str.printf("CR2=%08lX ", info->Cr2);
     fstr += str;
 
-    str.printf("CR3=%08lX ", info->Cr3);    
+    str.printf("CR3=%08lX ", info->Cr3);
     fstr += str;
 
-    str.printf("CR4=%08lX\r\n", info->Cr4);    
+    str.printf("CR4=%08lX\r\n", info->Cr4);
     fstr += str;
 
-    str.printf("NEST=%d\r\n", (int)info->Nesting);    
+    str.printf("NEST=%d\r\n", (int)info->Nesting);
     fstr += str;
 
     AddCoreSelector(fstr, "TR", &info->Tr);
@@ -494,7 +494,7 @@ void AddCore(TString &fstr, int core, TCrashCoreInfo *info)
 *##########################################################################*/
 void LogFault()
 {
-    int i;    
+    int i;
     int ok;
     bool clear = false;
 
@@ -522,8 +522,8 @@ void LogFault()
     for (i = 0; i < 256 && ok; i++)
     {
         TString str;
-        ThreadActionState FaultState;
-        Tss FaultTss;
+        RdosThreadActionState FaultState;
+        RdosTss FaultTss;
 
         ok = RdosGetFaultThreadState(i, &FaultState);
         if (ok)
@@ -567,7 +567,7 @@ void LogFault()
  *   Created....: 96-10-02 le                                                #
  *##########################################################################*/
 void DebuggerThread(void *ptr)
-{    
+{
 }
 
 /*##################  StartApp  #####################################
