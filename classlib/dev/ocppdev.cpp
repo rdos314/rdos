@@ -96,6 +96,23 @@ TOcppNotify::~TOcppNotify()
 
 /*##########################################################################
 #
+#   Name       : TOcppNotify::GetConfiguration
+#
+#   Purpose....: Get configuration
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::GetConfiguration()
+{
+    if (FServer)
+        FServer->GetConfiguration();
+}
+
+/*##########################################################################
+#
 #   Name       : TOcppNotify::LimitCurrent
 #
 #   Purpose....: Limit current
@@ -1261,17 +1278,14 @@ void TOcppSocketServer::NotifyJsonReply(int seq, char *str)
     bool handled = false;
     TJsonDocument *json;
 
-    if (seq == FSeq)
-    {
-        json = new TJsonDocument(str);
+    json = new TJsonDocument(str);
 
-        if (!strcmp(action, "GetConfiguration"))
-        {
-            HandleConfiguration(json);
-            handled = true;
-        }
-        delete json;
+    if (!strcmp(action, "GetConfiguration"))
+    {
+        HandleConfiguration(json);
+        handled = true;
     }
+    delete json;
 }
 
 /*##########################################################################
@@ -1292,6 +1306,7 @@ void TOcppSocketServer::StartWebSocket()
     StartLog();
 
 //    ChangeConfiguration("SupervisionUrl", "ws://ocpp.rdos.se:7000/");
+//    ChangeConfiguration("SecurityProfile", "1");
 //    GetConfiguration();
 //    GetCompositeSchedule();
 //    ClearChargingProfile();

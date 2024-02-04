@@ -23,6 +23,7 @@ public:
     void (*OnEnergy)(TOcppNotify *Server, int Val);
     void (*OnKey)(TOcppNotify *Server, const char *key, bool rdonly, const char *value);
 
+    void GetConfiguration();
     void LimitCurrent(int conn, double val);
     void LimitPower(int conn, double val);
     void ChangeConfiguration(const char *key, const char *value);

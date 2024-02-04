@@ -9,7 +9,7 @@
 
 static void NotifyState(TOcppNotify *Server, const char *state)
 {
-    Server->LimitPower(1, 1000.0);
+//    Server->GetConfiguration();
     printf("State: %s\r\n", state);
 }
 
@@ -25,7 +25,8 @@ static void NotifyStop(TOcppNotify *Server, int val)
 
 static void NotifyVoltage(TOcppNotify *Server, int phase, double val)
 {
-//    printf("Voltage: L%d %2.1Lf\r\n", phase, val);
+    if (phase == 1)
+        printf("Voltage: L%d %2.1Lf\r\n", phase, val);
 }
 
 static void NotifyCurrent(TOcppNotify *Server, int phase, double val)
