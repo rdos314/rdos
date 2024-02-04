@@ -39,6 +39,15 @@ protected:
     TOcppSocketServer *FServer;
 };
 
+class TOcppSocketServerFactory : public THttpSocketServerFactory, public TOcppNotify
+{
+public:
+    TOcppSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~TOcppSocketServerFactory();
+
+    virtual TSocketServer *Create(TTcpSocket *Socket);
+};
+
 class TOcppSslSocketServerFactory : public THttpsSocketServerFactory, public TOcppNotify
 {
 public:
@@ -51,7 +60,7 @@ public:
 class TOcppSocketServer : public TWebSocketServer
 {
 public:
-    TOcppSocketServer(TOcppSslSocketServerFactory *Factory, const char *Name, int StackSize, TTcpSocket *Socket);
+    TOcppSocketServer(TOcppNotify *Factory, const char *Name, int StackSize, TTcpSocket *Socket);
     virtual ~TOcppSocketServer();
 
     void SendReply(TJsonDocument *json);
@@ -111,7 +120,7 @@ protected:
 
     int FSeq;
 
-    TOcppSslSocketServerFactory *FFactory;
+    TOcppNotify *FFactory;
     TRdosLogThread *FLogDev;
     TRdosLog *FMsgLog;
 

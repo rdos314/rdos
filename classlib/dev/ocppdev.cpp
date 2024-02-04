@@ -315,6 +315,55 @@ TSocketServer *TOcppSslSocketServerFactory::Create(TTcpSocket *Socket)
 
 /*##########################################################################
 #
+#   Name       : TOcppSocketServerFactory::TOcppSocketServerFactory
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TOcppSocketServerFactory::TOcppSocketServerFactory(int Port, int MaxConnections, int BufferSize)
+  : THttpSocketServerFactory(Port, MaxConnections, BufferSize)
+{
+    Start("OCPP Listen", 0x10000);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServerFactory::~TOcppSocketServerFactory
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TOcppSocketServerFactory::~TOcppSocketServerFactory()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServerFactory::Create
+#
+#   Purpose....: Create web socket server
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServer *TOcppSocketServerFactory::Create(TTcpSocket *Socket)
+{
+    FServer = new TOcppSocketServer(this, "OCPP", 0x10000, Socket);
+    return FServer;
+}
+
+/*##########################################################################
+#
 #   Name       : TOcppSocketServer::TOcppSocketServer
 #
 #   Purpose....: Constructor
@@ -324,7 +373,7 @@ TSocketServer *TOcppSslSocketServerFactory::Create(TTcpSocket *Socket)
 #   Returns....: *
 #
 ##########################################################################*/
-TOcppSocketServer::TOcppSocketServer(TOcppSslSocketServerFactory *Factory, const char *Name, int StackSize, TTcpSocket *Socket)
+TOcppSocketServer::TOcppSocketServer(TOcppNotify *Factory, const char *Name, int StackSize, TTcpSocket *Socket)
   : TWebSocketServer(Name, StackSize, Socket)
 {
     FBootReq = false;
@@ -1242,7 +1291,7 @@ void TOcppSocketServer::StartWebSocket()
 
     StartLog();
 
-    ChangeConfiguration("SupervisionUrl", "ws://ocpp.rdos.se:7000/");
+//    ChangeConfiguration("SupervisionUrl", "ws://ocpp.rdos.se:7000/");
 //    GetConfiguration();
 //    GetCompositeSchedule();
 //    ClearChargingProfile();
