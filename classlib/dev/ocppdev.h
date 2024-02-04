@@ -24,6 +24,7 @@ public:
     void (*OnKey)(TOcppNotify *Server, const char *key, bool rdonly, const char *value);
 
     void LimitCurrent(int conn, double val);
+    void LimitPower(int conn, double val);
     void ChangeConfiguration(const char *key, const char *value);
 
 protected:
@@ -58,7 +59,10 @@ public:
 
     void SetZone(int diff);
     void LimitCurrent(int conn, double val);
+    void LimitPower(int conn, double val);
     void GetConfiguration();
+    void GetCompositeSchedule();
+    void ClearChargingProfile();
     void ChangeConfiguration(const char *key, const char *value);
 
 protected:

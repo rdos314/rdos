@@ -12,6 +12,48 @@
 #define MAX_LOG_FILES                   50
 #define MAX_FILE_SIZE                   256 * 1024
 
+/*##################  UuidToStr  #############
+*   Purpose....: Convert UUID to string                                                                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+static void UuidToStr(const char *uuid, char *str)
+{
+    int ival;
+    int *ip;
+    short int sval;
+    short int *sp;
+
+    ip = (int *)uuid;
+    ival = *ip;
+    sprintf(str, "%08lX-", ival);
+
+    sp = (short int *)(uuid + 4);
+    sval = *sp;
+    sprintf(str+9, "%04hX-", sval);
+
+    sp = (short int *)(uuid + 6);
+    sval = *sp;
+    sprintf(str+14, "%04hX-", sval);
+
+    sp = (short int *)(uuid + 8);
+    sval = RdosSwapShort(*sp);
+    sprintf(str+19, "%04hX-", sval);
+
+    sp = (short int *)(uuid + 10);
+    sval = RdosSwapShort(*sp);
+    sprintf(str+24, "%04hX", sval);
+
+    sp = (short int *)(uuid + 12);
+    sval = RdosSwapShort(*sp);
+    sprintf(str+28, "%04hX", sval);
+
+    sp = (short int *)(uuid + 14);
+    sval = RdosSwapShort(*sp);
+    sprintf(str+32, "%04hX", sval);
+}
 
 /*##########################################################################
 #
@@ -52,7 +94,6 @@ TOcppNotify::~TOcppNotify()
 {
 }
 
-
 /*##########################################################################
 #
 #   Name       : TOcppNotify::LimitCurrent
@@ -68,6 +109,23 @@ void TOcppNotify::LimitCurrent(int conn, double val)
 {
     if (FServer)
         FServer->LimitCurrent(conn, val);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::LimitPower
+#
+#   Purpose....: Limit power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::LimitPower(int conn, double val)
+{
+    if (FServer)
+        FServer->LimitPower(conn, val);
 }
 
 /*##########################################################################
@@ -373,22 +431,34 @@ void TOcppSocketServer::SetChargingProfile(int conn, const char *unit, double va
     TJsonCollection *prof;
     TJsonCollection *sched;
     TJsonArrayCollection *period;
+    TDateTime from(2024, 1, 1);
+    TDateTime to(2061, 1, 1);
+    TDateTime now;
 
-    root->AddInt("connectorId", conn);
+    root->AddInt("connectorId", 1);
 
     prof = root->AddCollection("csChargingProfiles");
-    prof->AddInt("chargingProfileId", 154);
+    prof->AddInt("chargingProfileId", 100);
     prof->AddInt("stackLevel", 0);
-    prof->AddInt("transactionId", 123);
-    prof->AddString("chargingProfilePurpose", "TxProfile");
-    prof->AddString("chargingProfileKind", "Absolute");
+//    prof->AddInt("transactionId", 123);
+    prof->AddString("chargingProfilePurpose", "TxDefaultProfile");
+    prof->AddString("chargingProfileKind", "Recurring");
+    prof->AddString("RecurrencyKindType", "Daily");
+//    prof->AddDateTimeZone("validFrom", from, FUtcDiff);
+//    prof->AddDateTimeZone("validTo", to, FUtcDiff);
 
     sched = prof->AddCollection("chargingSchedule");
-    sched->AddString("chargingRateUnit", unit);
+    sched->AddDateTimeZone("startSchedule", now, FUtcDiff);
+    sched->AddInt("duration", 86400);
+    sched->AddString("chargingRateUnit", "A");
 
     period = sched->AddArrayCollection("chargingSchedulePeriod");
     period->AddInt("startPeriod", 0);
-    period->AddDouble("limit", val, 1);
+    period->AddInt("limit", 5);
+
+    period->AddArray();
+    period->AddInt("startPeriod", 3600);
+    period->AddInt("limit", 6);
 
     FSeq++;
     SendReq(FSeq, "SetChargingProfile", json);
@@ -416,6 +486,52 @@ void TOcppSocketServer::GetConfiguration()
 
 /*##########################################################################
 #
+#   Name       : TOcppSocketServer::GetCompositeSchedule
+#
+#   Purpose....: Get composite schedule
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::GetCompositeSchedule()
+{
+    TJsonDocument *json = new TJsonDocument;
+    TJsonCollection *root = json->CreateRoot();
+
+    root->AddInt("connectorId", 0);
+    root->AddInt("duration", 3600);
+    root->AddString("chargingRateUnit", "A");
+
+    FSeq++;
+    SendReq(FSeq, "GetCompositeSchedule", json);
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::ClearChargingProfile
+#
+#   Purpose....: Clear charging profile
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::ClearChargingProfile()
+{
+    TJsonDocument *json = new TJsonDocument;
+    TJsonCollection *root = json->CreateRoot();
+
+    root->AddInt("connectorId", 1);
+
+    FSeq++;
+    SendReq(FSeq, "ClearChargingProfile", json);
+}
+
+/*##########################################################################
+#
 #   Name       : TOcppSocketServer::LimitCurrent
 #
 #   Purpose....: Limit current
@@ -428,6 +544,23 @@ void TOcppSocketServer::GetConfiguration()
 void TOcppSocketServer::LimitCurrent(int conn, double val)
 {
     SetChargingProfile(conn, "A", val);
+}
+
+
+/*##########################################################################
+#
+#   Name       : TOcppSocketServer::LimitPower
+#
+#   Purpose....: Limit power
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppSocketServer::LimitPower(int conn, double val)
+{
+    SetChargingProfile(conn, "W", val);
 }
 
 /*##########################################################################
@@ -584,13 +717,13 @@ void TOcppSocketServer::HandleStatus(TJsonDocument *doc)
     const char *state = root->GetText("status", "");
     TJsonDocument *json = new TJsonDocument;
 
-    if (cid)
-        FFactory->NotifyState(state);
-
     root = json->CreateRoot();
     SendReply(json);
 
     delete json;
+
+    if (cid)
+        FFactory->NotifyState(state);
 }
 
 /*##########################################################################
@@ -1109,8 +1242,10 @@ void TOcppSocketServer::StartWebSocket()
 
     StartLog();
 
-//    ChangeConfiguration("SupervisionUrl", "wss://ocpp.rdos.se:443/");
+    ChangeConfiguration("SupervisionUrl", "ws://ocpp.rdos.se:7000/");
 //    GetConfiguration();
+//    GetCompositeSchedule();
+//    ClearChargingProfile();
 }
 
 /*##########################################################################
@@ -1314,10 +1449,15 @@ void TOcppSocketServer::SendReq(int seq, const char *action, TJsonDocument *json
 {
     TString str;
     TString jsonstr;
+    char Guid[16];
+    char GuidStr[60];
+
+    RdosCreateUuid(Guid);
+    UuidToStr(Guid, GuidStr);
 
     FReq = action;
 
-    str.printf("[2,\r\n\"%d\", \"%s\",\r\n", seq, action);
+    str.printf("[2,\r\n\"%s\", \"%s\",\r\n", GuidStr, action);
     json->Write(jsonstr);
     str += jsonstr;
     str += "]";
