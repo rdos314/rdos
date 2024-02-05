@@ -104,6 +104,10 @@ static double ConsPowerSum;
 static double ProdDayE = 0.0;
 static double ConsDayE = 0.0;
 
+static double OcppVoltage[3];
+static double OcppCurrent[3];
+static int OcppEnergy;
+
 int WdTimeout;
 
 
@@ -344,6 +348,21 @@ static void NotifyConsDayEnergy(double val)
 
 /*##########################################################################
 #
+#   Name       : NotifyOcppState
+#
+#   Purpose....: Notify OCPP state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyOcppState(TOcppNotify *Server, const char *state)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : NotifyOcppStart
 #
 #   Purpose....: Notify OCPP start
@@ -385,6 +404,19 @@ static void NotifyOcppStop(TOcppNotify *Server, int val)
 ##########################################################################*/
 static void NotifyOcppData(TOcppNotify *Server)
 {
+    int i;
+
+    FDataSection.Enter();
+
+    OcppEnergy = Server->GetEnergy();
+
+    for (i = 0; i < 3; i++)
+    {
+        OcppVoltage[i] = Server->GetVoltage(i);
+        OcppCurrent[i] = Server->GetCurrent(i);
+    }
+
+    FDataSection.Leave();
 }
 
 /*##########################################################################
@@ -1488,6 +1520,7 @@ int main()
     WindInv->OnDumpPower = NotifyWindDumpPower;
     WindInv->OnDayEnergy = NotifyWindDayEnergy;
 
+    Ocpp->OnState = NotifyOcppState;
     Ocpp->OnStart = NotifyOcppStart;
     Ocpp->OnStop = NotifyOcppStop;
     Ocpp->OnData = NotifyOcppData;

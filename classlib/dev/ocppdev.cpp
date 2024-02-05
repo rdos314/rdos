@@ -78,7 +78,9 @@ TOcppNotify::TOcppNotify()
 
     FStartEnergy = 0;
     FCurrEnergy = 0;
+    FCharging = false;
 
+    OnState = 0;
     OnStart = 0;
     OnStop = 0;
     OnData = 0;
@@ -173,6 +175,102 @@ void TOcppNotify::ChangeConfiguration(const char *key, const char *value)
 
 /*##########################################################################
 #
+#   Name       : TOcppNotify::GetVoltage
+#
+#   Purpose....: Get voltage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TOcppNotify::GetVoltage(int phase)
+{
+    return FVoltage[phase];
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::GetCurrent
+#
+#   Purpose....: Get current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TOcppNotify::GetCurrent(int phase)
+{
+    return FCurrent[phase];
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::IsCharging
+#
+#   Purpose....: Is charging?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TOcppNotify::IsCharging()
+{
+    return FCharging;
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::GetStartEnergy
+#
+#   Purpose....: Get start energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TOcppNotify::GetStartEnergy()
+{
+    return FStartEnergy;
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::GetCurrentEnergy
+#
+#   Purpose....: Get current energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TOcppNotify::GetCurrentEnergy()
+{
+    return FCurrEnergy;
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::GetEnergy
+#
+#   Purpose....: Get energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TOcppNotify::GetEnergy()
+{
+    return FCurrEnergy - FStartEnergy;
+}
+
+/*##########################################################################
+#
 #   Name       : TOcppNotify::NotifyState
 #
 #   Purpose....: Notify state
@@ -184,7 +282,11 @@ void TOcppNotify::ChangeConfiguration(const char *key, const char *value)
 ##########################################################################*/
 void TOcppNotify::NotifyState(const char *State)
 {
-    FState = State;
+    if (!strcmp(State, "CHARGING"))
+        FCharging = true;
+
+    if (OnState)
+        (*OnState)(this, State);
 }
 
 /*##########################################################################
@@ -202,6 +304,7 @@ void TOcppNotify::NotifyStart(int val)
 {
     FStartEnergy = val;
     FCurrEnergy = val;
+    FCharging = true;
 
     if (OnStart)
         (*OnStart)(this, val);
@@ -221,6 +324,7 @@ void TOcppNotify::NotifyStart(int val)
 void TOcppNotify::NotifyStop(int val)
 {
     FCurrEnergy = val;
+    FCharging = false;
 
     if (OnStop)
         (*OnStop)(this, val);

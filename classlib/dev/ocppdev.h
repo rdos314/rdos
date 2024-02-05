@@ -15,6 +15,7 @@ public:
     TOcppNotify();
     ~TOcppNotify();
 
+    void (*OnState)(TOcppNotify *Server, const char *state);
     void (*OnStart)(TOcppNotify *Server, int val);
     void (*OnStop)(TOcppNotify *Server, int val);
     void (*OnData)(TOcppNotify *Server);
@@ -25,7 +26,6 @@ public:
     int GetStartEnergy();
     int GetCurrentEnergy();
     int GetEnergy();
-    const char *GetState();
     bool IsCharging();
 
     void GetConfiguration();
@@ -45,6 +45,7 @@ protected:
 
     TOcppSocketServer *FServer;
 
+    bool FCharging;
     double FVoltage[3];
     double FCurrent[3];
     int FStartEnergy;
