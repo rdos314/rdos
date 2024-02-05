@@ -124,7 +124,7 @@ void *TJsonMem::Allocate(int size)
 {
     char *p;
     
-    if (FPos + size < FSize)
+    if (FPos + size <= FSize)
     {
         p = FArr + FPos;
         FPos += size;
@@ -1505,7 +1505,7 @@ TJsonBooleanArray::~TJsonBooleanArray()
 ##########################################################################*/
 bool *TJsonBooleanArray::AllocateArr(int count)
 {
-    int size = count * sizeof(bool *);
+    int size = count * sizeof(bool);
 
     return (bool *)FAlloc->Allocate(size);
 }
@@ -1771,7 +1771,7 @@ TJsonIntArray::~TJsonIntArray()
 ##########################################################################*/
 long long *TJsonIntArray::AllocateArr(int count)
 {
-    int size = count * sizeof(long long *);
+    int size = count * sizeof(long long);
 
     return (long long *)FAlloc->Allocate(size);
 }
@@ -2041,7 +2041,7 @@ TJsonDoubleArray::~TJsonDoubleArray()
 ##########################################################################*/
 double *TJsonDoubleArray::AllocateArr(int count)
 {
-    int size = count * sizeof(double *);
+    int size = count * sizeof(double);
 
     return (double *)FAlloc->Allocate(size);
 }
@@ -2367,7 +2367,7 @@ TJsonStringArray::~TJsonStringArray()
 ##########################################################################*/
 char **TJsonStringArray::AllocateArr(int count)
 {
-    int size = count * sizeof(char **);
+    int size = count * sizeof(char *);
 
     return (char **)FAlloc->Allocate(size);
 }
@@ -2650,7 +2650,7 @@ TJsonCollectionData::~TJsonCollectionData()
 ##########################################################################*/
 TJsonObject **TJsonCollectionData::AllocateArr(int count)
 {
-    int size = count * sizeof(TJsonObject **);
+    int size = count * sizeof(TJsonObject *);
 
     return (TJsonObject **)FAlloc->Allocate(size);
 }
@@ -3797,7 +3797,7 @@ TJsonArrayCollection::~TJsonArrayCollection()
 ##########################################################################*/
 TJsonCollectionData **TJsonArrayCollection::AllocateArr(int count)
 {
-    int size = count * sizeof(TJsonCollectionData **);
+    int size = count * sizeof(TJsonCollectionData *);
 
     return (TJsonCollectionData **)FAlloc->Allocate(size);
 }

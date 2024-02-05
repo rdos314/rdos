@@ -6,47 +6,7 @@
 #include "httpsfact.h"
 #include "ocppdev.h"
 #include "keyboard.h"
-
-static void NotifyState(TOcppNotify *Server, const char *state)
-{
-//    Server->GetConfiguration();
-    printf("State: %s\r\n", state);
-}
-
-static void NotifyStart(TOcppNotify *Server, int val)
-{
-    printf("Start: %d.%03d\r\n", val / 1000, val % 1000);
-}
-
-static void NotifyStop(TOcppNotify *Server, int val)
-{
-    printf("Stop: %d.%03d\r\n", val / 1000, val % 1000);
-}
-
-static void NotifyVoltage(TOcppNotify *Server, int phase, double val)
-{
-    if (phase == 1)
-        printf("Voltage: L%d %2.1Lf\r\n", phase, val);
-}
-
-static void NotifyCurrent(TOcppNotify *Server, int phase, double val)
-{
-    if (phase == 1)
-        printf("Current: L%d %2.1Lf\r\n", phase, val);
-}
-
-static void NotifyEnergy(TOcppNotify *Server, int val)
-{
-    printf("Energy: %d.%03d\r\n", val / 1000, val % 1000);
-}
-
-static void NotifyKey(TOcppNotify *Server, const char *key, bool rdonly, const char *value)
-{
-    if (rdonly)
-        printf(" Key: %s=%s\r\n", key, value);
-    else
-        printf("*Key: %s=%s\r\n", key, value);
-}
+#include "json.h"
 
 void main()
 {
@@ -61,20 +21,36 @@ void main()
     TTcpSocket *sock;
     TKeyboardDevice keyboard;
 
-    TOcppSocketServerFactory fact(7000, 100, 0x1000);
+    TString jsonstr;
+    TJsonDocument *json = new TJsonDocument;
+    TJsonCollection *root = json->CreateRoot();
+    TJsonDoubleArray *arr;
+    int hour, min;
+
+    arr = root->AddDoubleArray("values", 1);
+
+    for (hour = 0; hour < 24; hour++)
+        for (min = 0; min < 60; min++)
+             arr->Add(20.1);
+
+
+    json->Write(jsonstr);
+    delete json;
+
+//    TOcppSocketServerFactory fact(7000, 100, 0x1000);
 
 //    fact.SetCertificate("d:/ssl/cert.pem", "d:/ssl/privkey.pem", "d:/ssl/chain.pem");
 
-    fact.OnState = NotifyState;
-    fact.OnStart = NotifyStart;
-    fact.OnStop = NotifyStop;
-    fact.OnVoltage = NotifyVoltage;
-    fact.OnCurrent = NotifyCurrent;
-    fact.OnEnergy = NotifyEnergy;
-    fact.OnKey = NotifyKey;
+//    fact.OnState = NotifyState;
+//    fact.OnStart = NotifyStart;
+//    fact.OnStop = NotifyStop;
+//    fact.OnVoltage = NotifyVoltage;
+//    fact.OnCurrent = NotifyCurrent;
+//    fact.OnEnergy = NotifyEnergy;
+//    fact.OnKey = NotifyKey;
 
-    for (;;)
-        fact.WaitForever();
+//    for (;;)
+//        fact.WaitForever();
 
 
     const char *OcppName = "resi-prod-ocpp-server.azurewebsites.net";
