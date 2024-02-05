@@ -15,13 +15,18 @@ public:
     TOcppNotify();
     ~TOcppNotify();
 
-    void (*OnState)(TOcppNotify *Server, const char *State);
     void (*OnStart)(TOcppNotify *Server, int val);
     void (*OnStop)(TOcppNotify *Server, int val);
-    void (*OnVoltage)(TOcppNotify *Server, int Phase, double Val);
-    void (*OnCurrent)(TOcppNotify *Server, int Phase, double Val);
-    void (*OnEnergy)(TOcppNotify *Server, int Val);
+    void (*OnData)(TOcppNotify *Server);
     void (*OnKey)(TOcppNotify *Server, const char *key, bool rdonly, const char *value);
+
+    double GetVoltage(int phase);
+    double GetCurrent(int phase);
+    int GetStartEnergy();
+    int GetCurrentEnergy();
+    int GetEnergy();
+    const char *GetState();
+    bool IsCharging();
 
     void GetConfiguration();
     void LimitCurrent(int conn, double val);
@@ -35,9 +40,16 @@ protected:
     void NotifyVoltage(int Phase, double val);
     void NotifyCurrent(int Phase, double val);
     void NotifyEnergy(int val);
+    void NotifyNewData();
     void NotifyKey(const char *key, bool rdonly, const char *value);
 
     TOcppSocketServer *FServer;
+
+    double FVoltage[3];
+    double FCurrent[3];
+    int FStartEnergy;
+    int FCurrEnergy;
+    TString FState;
 };
 
 class TOcppSocketServerFactory : public THttpSocketServerFactory, public TOcppNotify
@@ -91,7 +103,6 @@ protected:
     void NotifyData(const char *param, const char *phase, const char *unit, const char *data);
 
     void UpdateMeter(TJsonCollection *root);
-    void HandleMeterValues(TJsonCollection *root);
 
     void HandleBootNotification(TJsonDocument *doc);
     void HandleStatus(TJsonDocument *doc);

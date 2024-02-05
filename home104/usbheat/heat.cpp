@@ -344,23 +344,6 @@ static void NotifyConsDayEnergy(double val)
 
 /*##########################################################################
 #
-#   Name       : NotifyOcppState
-#
-#   Purpose....: Notify OCPP state
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void NotifyOcppState(TOcppNotify *Server, const char *state)
-{
-    FDataSection.Enter();
-    FDataSection.Leave();
-}
-
-/*##########################################################################
-#
 #   Name       : NotifyOcppStart
 #
 #   Purpose....: Notify OCPP start
@@ -372,8 +355,6 @@ static void NotifyOcppState(TOcppNotify *Server, const char *state)
 ##########################################################################*/
 static void NotifyOcppStart(TOcppNotify *Server, int val)
 {
-    FDataSection.Enter();
-    FDataSection.Leave();
 }
 
 /*##########################################################################
@@ -389,59 +370,21 @@ static void NotifyOcppStart(TOcppNotify *Server, int val)
 ##########################################################################*/
 static void NotifyOcppStop(TOcppNotify *Server, int val)
 {
-    FDataSection.Enter();
-    FDataSection.Leave();
 }
 
 /*##########################################################################
 #
-#   Name       : NotifyOcppVoltage
+#   Name       : NotifyOcppData
 #
-#   Purpose....: Notify OCPP voltage
+#   Purpose....: Notify OCPP data
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-static void NotifyOcppVoltage(TOcppNotify *Server, int phase, double val)
+static void NotifyOcppData(TOcppNotify *Server)
 {
-    FDataSection.Enter();
-    FDataSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : NotifyOcppCurrent
-#
-#   Purpose....: Notify OCPP current
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void NotifyOcppCurrent(TOcppNotify *Server, int phase, double val)
-{
-    FDataSection.Enter();
-    FDataSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : NotifyOcppEnergy
-#
-#   Purpose....: Notify OCPP energy
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void NotifyOcppEnergy(TOcppNotify *Server, int val)
-{
-    FDataSection.Enter();
-    FDataSection.Leave();
 }
 
 /*##########################################################################
@@ -1545,12 +1488,9 @@ int main()
     WindInv->OnDumpPower = NotifyWindDumpPower;
     WindInv->OnDayEnergy = NotifyWindDayEnergy;
 
-    Ocpp->OnState = NotifyOcppState;
     Ocpp->OnStart = NotifyOcppStart;
     Ocpp->OnStop = NotifyOcppStop;
-    Ocpp->OnVoltage = NotifyOcppVoltage;
-    Ocpp->OnCurrent = NotifyOcppCurrent;
-    Ocpp->OnEnergy = NotifyOcppEnergy;
+    Ocpp->OnData = NotifyOcppData;
 
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
     RdosCreateThread(PerfThread, "Perf", vbe, 0x4000);

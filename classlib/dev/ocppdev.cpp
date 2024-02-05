@@ -68,13 +68,22 @@ static void UuidToStr(const char *uuid, char *str)
 ##########################################################################*/
 TOcppNotify::TOcppNotify()
 {
-    OnState = 0;
+    int i;
+
+    for (i = 0; i < 3; i++)
+    {
+        FVoltage[i] = 0.0;
+        FCurrent[i] = 0.0;
+    }
+
+    FStartEnergy = 0;
+    FCurrEnergy = 0;
+
     OnStart = 0;
     OnStop = 0;
-    OnVoltage = 0;
-    OnCurrent = 0;
-    OnEnergy = 0;
+    OnData = 0;
     OnKey = 0;
+
 
     FServer = 0;
 }
@@ -175,8 +184,7 @@ void TOcppNotify::ChangeConfiguration(const char *key, const char *value)
 ##########################################################################*/
 void TOcppNotify::NotifyState(const char *State)
 {
-    if (OnState)
-        (*OnState)(this, State);
+    FState = State;
 }
 
 /*##########################################################################
@@ -192,6 +200,9 @@ void TOcppNotify::NotifyState(const char *State)
 ##########################################################################*/
 void TOcppNotify::NotifyStart(int val)
 {
+    FStartEnergy = val;
+    FCurrEnergy = val;
+
     if (OnStart)
         (*OnStart)(this, val);
 }
@@ -209,6 +220,8 @@ void TOcppNotify::NotifyStart(int val)
 ##########################################################################*/
 void TOcppNotify::NotifyStop(int val)
 {
+    FCurrEnergy = val;
+
     if (OnStop)
         (*OnStop)(this, val);
 }
@@ -226,8 +239,7 @@ void TOcppNotify::NotifyStop(int val)
 ##########################################################################*/
 void TOcppNotify::NotifyVoltage(int phase, double val)
 {
-    if (OnVoltage)
-        (*OnVoltage)(this, phase, val);
+    FVoltage[phase] = val;
 }
 
 /*##########################################################################
@@ -243,8 +255,7 @@ void TOcppNotify::NotifyVoltage(int phase, double val)
 ##########################################################################*/
 void TOcppNotify::NotifyCurrent(int phase, double val)
 {
-    if (OnCurrent)
-        (*OnCurrent)(this, phase, val);
+    FCurrent[phase] = val;
 }
 
 /*##########################################################################
@@ -260,8 +271,24 @@ void TOcppNotify::NotifyCurrent(int phase, double val)
 ##########################################################################*/
 void TOcppNotify::NotifyEnergy(int val)
 {
-    if (OnEnergy)
-        (*OnEnergy)(this, val);
+    FCurrEnergy = val;
+}
+
+/*##########################################################################
+#
+#   Name       : TOcppNotify::NotifyNewData
+#
+#   Purpose....: Notify new data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TOcppNotify::NotifyNewData()
+{
+    if (OnData)
+        (*OnData)(this);
 }
 
 /*##########################################################################
@@ -866,8 +893,6 @@ void TOcppSocketServer::HandleStopTransaction(TJsonDocument *doc)
     long meter = root->GetInt("meterStop", 0);
     TJsonCollection *info;
 
-    FFactory->NotifyStop(meter);
-
     TJsonDocument *json = new TJsonDocument;
     root = json->CreateRoot();
     info = root->AddCollection("idTagInfo");
@@ -875,6 +900,8 @@ void TOcppSocketServer::HandleStopTransaction(TJsonDocument *doc)
     SendReply(json);
 
     delete json;
+
+    FFactory->NotifyStop(meter);
 }
 
 /*##################  TOcppSocketServer::DecodePhase ############################
@@ -1007,6 +1034,7 @@ void TOcppSocketServer::UpdateMeter(TJsonCollection *root)
     long long val;
     bool use;
     bool kwh;
+    bool data = false;
 
     if (root)
     {
@@ -1077,6 +1105,7 @@ void TOcppSocketServer::UpdateMeter(TJsonCollection *root)
 
                             if (obj)
                             {
+                                data = true;
                                 valstr = obj->GetText();
                                 if (phase.GetSize())
                                     NotifyData(param.GetData(), phase.GetData(), unit.GetData(), valstr.GetData());
@@ -1089,42 +1118,9 @@ void TOcppSocketServer::UpdateMeter(TJsonCollection *root)
             }
         }
     }
-}
 
-/*##########################################################################
-#
-#   Name       : TOcppSocketServer::HandleMeterValues
-#
-#   Purpose....: Handle meter values
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TOcppSocketServer::HandleMeterValues(TJsonCollection *root)
-{
-    TJsonCollection *values = root->GetCollection("meterValue");
-    TJsonCollection *sample;
-    TJsonObject *obj;
-    TString valstr;
-    const char *ptr;
-
-    if (values)
-    {
-        sample = values->GetCollection("sampledValue");
-
-        if (sample)
-        {
-            obj = sample->GetObj("value");
-            if (obj)
-            {
-                valstr = obj->GetText();
-                ptr = valstr.GetData();
-                printf("Meter: %s Wh", ptr);
-            }
-        }
-    }
+    if (data)
+        FFactory->NotifyNewData();
 }
 
 /*##########################################################################
@@ -1150,9 +1146,7 @@ void TOcppSocketServer::HandleMeterValues(TJsonDocument *doc)
     {
         id = (int)obj->GetInt();
 
-        if (id == 0)
-            HandleMeterValues(root);
-        else
+        if (id)
             UpdateMeter(root);
     }
 
