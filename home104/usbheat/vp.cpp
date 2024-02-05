@@ -684,13 +684,13 @@ void TVp::Execute()
     UnitLabelFactory.SetFont(35);
     UnitLabelFactory.SetBackColor(0, 20, 50);
     UnitLabelFactory.SetDrawColor(0, 0, 0);
-   UnitLabelFactory.AlignLeft();
+    UnitLabelFactory.AlignLeft();
 
     TTableControl *Table;
 
     LockGUI();
 
-    Table = new TTableControl(FControl, 5, 430, 800, 250);
+    Table = new TTableControl(FControl, 5, 430, 500, 250);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);

@@ -104,9 +104,11 @@ static double ConsPowerSum;
 static double ProdDayE = 0.0;
 static double ConsDayE = 0.0;
 
+static TString OcppState;
 static double OcppVoltage[3];
 static double OcppCurrent[3];
 static int OcppEnergy;
+static bool OcppHasData = false;
 
 int WdTimeout;
 
@@ -359,6 +361,7 @@ static void NotifyConsDayEnergy(double val)
 ##########################################################################*/
 static void NotifyOcppState(TOcppNotify *Server, const char *state)
 {
+    OcppState = state;
 }
 
 /*##########################################################################
@@ -417,6 +420,8 @@ static void NotifyOcppData(TOcppNotify *Server)
     }
 
     FDataSection.Leave();
+
+    OcppHasData = true;
 }
 
 /*##########################################################################
@@ -847,79 +852,69 @@ void UnlockGUI()
 ##########################################################################*/
 void TimeThread(void *Param)
 {
-    TTableControl *Table;
-    TLabelFactory CommentFactory;
-    TLabelFactory ValueFactory;
-    TLabelFactory ChangeFactory;
     TLabelControl *Label;
     int year, month, day;
     int hour, min, sec;
     int ms, us;
     unsigned long msb, lsb;
     char str[100];
-    int count;
-    int Gdt;
-    int GdtBase;
-    int Handle;
-    int HandleBase;
-    unsigned int Mem;
-    unsigned int MemBase;
-    long long PhysMem;
-    long long PhysBase;
-    long long PhysDiff;
-    int mb;
-    int kb;
+    TTableControl *Table;
+    TTableControl *SumTable;
+    TLabelFactory CommentFactory;
+    TLabelFactory ValueFactory;
+    TLabelFactory UnitFactory;
 
     RdosWaitMilli(5000);
-
-    GdtBase = RdosGetFreeGdt();
-    HandleBase = RdosGetFreeHandles();
-    MemBase = (unsigned int)RdosGetFreeBigLocalLinear();
-    PhysBase = RdosGetFreePhysical();
 
     LockGUI();
 
     CommentFactory.SetSpace(4, 4);
-    CommentFactory.SetFont(30);
+    CommentFactory.SetFont(35);
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
 
     ValueFactory.SetSpace(4, 4);
-    ValueFactory.SetFont(30);
+    ValueFactory.SetFont(35);
     ValueFactory.SetBackColor(100, 100, 100);
     ValueFactory.SetDrawColor(0, 0, 0);
     ValueFactory.AlignRight();
 
-    ChangeFactory.SetSpace(4, 4);
-    ChangeFactory.SetFont(30);
-    ChangeFactory.SetBackColor(100, 100, 100);
-    ChangeFactory.SetDrawColor(0, 0, 0);
-    ChangeFactory.AlignRight();
+    UnitFactory.SetSpace(4, 4);
+    UnitFactory.SetFont(35);
+    UnitFactory.SetBackTransparent();
+    UnitFactory.SetDrawColor(0, 0, 0);
+    UnitFactory.AlignLeft();
 
-    Table = new TTableControl(control, 1400, 100, 500, 400);
+    Table = new TTableControl(control, 1500, 5, 400, 250);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentFactory, 150);
-    Table->AddLabelColumn(&ValueFactory, 150);
-    Table->AddLabelColumn(&ChangeFactory, 150);
+    Table->AddLabelColumn(&CommentFactory, 125);
+    Table->AddLabelColumn(&ValueFactory, 125);
+    Table->AddLabelColumn(&UnitFactory, 100);
 
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
-    Table->AddRow(35, 55);
 
-    Table->SetText(0, 0, "GDT");
-    Table->SetText(1, 0, "Handles");
-    Table->SetText(2, 0, "App mem");
-    Table->SetText(3, 0, "Phys mem");
-    Table->SetText(4, 0, "Connections");
+    Table->SetText(0, 0, "State");
+    Table->SetText(1, 0, "Volt");
+    Table->SetText(2, 0, "Current");
+    Table->SetText(3, 0, "Energy");
+
+    Table->SetText(1, 2, "V");
+    Table->SetText(2, 2, "A");
+    Table->SetText(3, 2, "kWh");
     Table->Show();
 
-    Label = new TLabelControl(control, 1600, 5, 300, 35);
+    RdosWaitMilli(500);
+
+    LockGUI();
+
+    Label = new TLabelControl(control, 5, 700, 250, 35);
     Label->SetFont(30);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
@@ -929,47 +924,23 @@ void TimeThread(void *Param)
 
     for (;;)
     {
-        Gdt = RdosGetFreeGdt();
-        sprintf(str, "%d", Gdt);
-        Table->SetText(0, 1, str);
-        sprintf(str, "%d", Gdt - GdtBase);
-        Table->SetText(0, 2, str);
+        FDataSection.Enter();
 
-        Handle = RdosGetFreeHandles();
-        sprintf(str, "%d", Handle);
-        Table->SetText(1, 1, str);
-        sprintf(str, "%d", Handle - HandleBase);
-        Table->SetText(1, 2, str);
+        if (OcppHasData)
+        {
+            Table->SetText(0, 1, OcppState.GetData());
 
-        Mem = (unsigned int)RdosGetFreeBigLocalLinear();
-        mb = Mem / 1024 / 1024;
-        kb = Mem - mb * 1024 * 1024;
-        kb = kb * 1000 / 1024;
-        kb = kb * 100 / 1024;
-        sprintf(str, "%d.%05d", mb, kb);
-        Table->SetText(2, 1, str);
+            sprintf(str, "%5.1Lf", OcppVoltage[0]);
+            Table->SetText(1, 1, str);
 
-        kb = Mem - MemBase;
-        kb = kb / 1024;
-        sprintf(str, "%d", kb);
-        Table->SetText(2, 2, str);
+            sprintf(str, "%5.1Lf", OcppCurrent[0]);
+            Table->SetText(2, 1, str);
 
-        PhysMem = RdosGetFreePhysical();
-        mb = (int)(PhysMem / 1024LL / 1024LL);
-        kb = PhysMem - (long long)mb * 1024LL * 1024LL;
-        kb = kb * 1000 / 1024;
-        kb = kb * 100 / 1024;
-        sprintf(str, "%d.%05d", mb, kb);
-        Table->SetText(3, 1, str);
+            sprintf(str, "%d.%03d", OcppEnergy / 1000, OcppEnergy % 1000);
+            Table->SetText(3, 1, str);
+        }
 
-        PhysDiff = (PhysMem - PhysBase) / 1024;
-        kb = (int)PhysDiff;
-        sprintf(str, "%d", kb);
-        Table->SetText(3, 2, str);
-
-        count = GetWebConnectionCount();
-        sprintf(str, "%d", count);
-        Table->SetText(4, 1, str);
+        FDataSection.Leave();
 
         RdosGetTime(&msb, &lsb);
         RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
@@ -1040,7 +1011,7 @@ void SmaThread(void *Param)
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    Table = new TTableControl(control, 1100, 350, 700, 300);
+    Table = new TTableControl(control, 1200, 350, 700, 300);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
@@ -1073,7 +1044,7 @@ void SmaThread(void *Param)
     Table->SetText(5, 4, "kWh");
     Table->Show();
 
-    SumTable = new TTableControl(control, 550, 420, 500, 200);
+    SumTable = new TTableControl(control, 525, 420, 500, 200);
     SumTable->SetBackColor(0, 20, 50);
     SumTable->SetRowSpacing(10);
     SumTable->SetColSpacing(16);
@@ -1264,87 +1235,6 @@ void OcppThread(void *Param)
         Ocpp->WaitForever();
 }
 
-/*##################  PerfThread  ##############################################
- *   Purpose....: Watchdog thread                                                                           #
- *   In params..: *                                                          #
- *   Out params.: *                                                          #
- *   Returns....: *                                                          #
- *   Created....: 96-10-02 le                                                #
- *##########################################################################*/
-void PerfThread(void *ptr)
-{
-    int width, height;
-    int i;
-    int Cores;
-    TFont AxisFont(15);
-    TChart *PerfChart[MAX_CORES];
-    TTimeXAxis *XAxis[MAX_CORES];
-    TLinYAxis *YAxis[MAX_CORES];
-    long long CoreTicsArr[MAX_CORES];
-    long long NullTicsArr[MAX_CORES];
-    long long CoreTics;
-    long long NullTics;
-    long long CoreDiff;
-    long long NullDiff;
-    long double XVal;
-    long double YVal;
-    unsigned long Msb, Lsb;
-    int Count = 0;
-
-    for (Cores = 0; Cores < MAX_CORES; Cores++)
-    {
-        if (RdosGetCoreLoad(Cores, &NullTicsArr[Cores], &CoreTicsArr[Cores]))
-        {
-            XAxis[Cores] = new TTimeXAxis(&AxisFont);
-            XAxis[Cores]->SetBackColor(0, 0, 0);
-            XAxis[Cores]->SetForeColor(255, 255, 255);
-            YAxis[Cores] = new TLinYAxis(&AxisFont);
-            YAxis[Cores]->SetBackColor(0, 0, 0);
-            YAxis[Cores]->SetForeColor(255, 255, 255);
-            PerfChart[Cores] = new TChart(vbe, XAxis[Cores], YAxis[Cores]);
-            PerfChart[Cores] = new TChart(vbe, XAxis[Cores], YAxis[Cores]);
-
-            PerfChart[Cores]->SetWindow(1100, 20 + Cores * 150, 1390, 160 + Cores * 150);
-
-            PerfChart[Cores]->SetBackColor(0, 0, 0);
-            PerfChart[Cores]->SetLineColor(0, 50, 200, 100);
-            PerfChart[Cores]->SetYAxis(0.0, 100.0);
-        }
-        else
-            break;
-    }
-
-    for (;;)
-    {
-        RdosWaitMilli(1000);
-
-        RdosGetTime(&Msb, &Lsb);
-        XVal = (long double)Lsb / 65536.0 / 65536.0;
-        XVal += (long double)Msb;
-
-        for (i = 0; i < Cores; i++)
-        {
-            RdosGetCoreLoad(i, &NullTics, &CoreTics);
-            CoreDiff = CoreTics - CoreTicsArr[i];
-            NullDiff = NullTics - NullTicsArr[i];
-            CoreTicsArr[i] = CoreTics;
-            NullTicsArr[i] = NullTics;
-            if (CoreDiff > 1192 * 500)
-            {
-                YVal = 100.0 - (long double)NullDiff / (long double)CoreDiff * 100.0;
-                if (Count == MAX_SAMPLES)
-                    PerfChart[i]->Remove(0);
-
-                PerfChart[i]->Add(0, XVal, YVal);
-                PerfChart[i]->Draw();
-            }
-        }
-        if (Count < MAX_SAMPLES)
-            Count++;
-
-    }
-}
-
 /*##########################################################################
 #
 #   Name       : main
@@ -1450,7 +1340,7 @@ int main()
     vbe->SetFilledStyle();
     vbe->DrawRect(0, 0, vbe->GetWidth(), vbe->GetHeight());
 
-    RadControl = new TRadControl(control, 5, 750, 1150, 35 * 8);
+    RadControl = new TRadControl(control, 5, 795, 1150, 35 * 8);
 
     index = 0;
 
@@ -1526,12 +1416,11 @@ int main()
     Ocpp->OnData = NotifyOcppData;
 
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
-    RdosCreateThread(PerfThread, "Perf", vbe, 0x4000);
     RdosCreateThread(SmaThread, "Sma", control, 0x4000);
     RdosCreateThread(OcppThread, "Ocpp Listen", Ocpp, 0x4000);
 
     LockGUI();
-    Label = new TLabelControl(control, 1700, 50, 200, 35);
+    Label = new TLabelControl(control, 5, 740, 250, 35);
     Label->SetFont(35);
     Label->SetBackColor(0, 20, 50);
     Label->SetDrawColor(255, 255, 255);
@@ -1562,7 +1451,7 @@ int main()
     PhLabelFactory.SetDrawColor(0, 0, 0);
     PhLabelFactory.AlignRight();
 
-    Table = new TTableControl(control, 1250, 675, 800, 400);
+    Table = new TTableControl(control, 1200, 675, 525, 400);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
@@ -1655,7 +1544,7 @@ int main()
 
     WeatherTable->Show();
 
-    WindTable = new TTableControl(control, 550, 5, 500, 270);
+    WindTable = new TTableControl(control, 525, 5, 500, 270);
     WindTable->SetBackColor(0, 20, 50);
     WindTable->SetRowSpacing(10);
     WindTable->SetColSpacing(16);
@@ -1686,7 +1575,7 @@ int main()
     WindTable->SetText(4, 2, "kWh");
     WindTable->Show();
 
-    SolarTable = new TTableControl(control, 550, 300, 500, 100);
+    SolarTable = new TTableControl(control, 525, 300, 500, 100);
     SolarTable->SetBackColor(0, 20, 50);
     SolarTable->SetRowSpacing(10);
     SolarTable->SetColSpacing(16);
