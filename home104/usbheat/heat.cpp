@@ -866,8 +866,6 @@ void TimeThread(void *Param)
 
     RdosWaitMilli(5000);
 
-    LockGUI();
-
     CommentFactory.SetSpace(4, 4);
     CommentFactory.SetFont(35);
     CommentFactory.SetBackTransparent();
@@ -1232,7 +1230,10 @@ void OcppThread(void *Param)
     TOcppSocketServerFactory *Ocpp = (TOcppSocketServerFactory *)Param;
 
     for (;;)
+    {
         Ocpp->WaitForever();
+        RdosWaitMilli(500);
+    }
 }
 
 /*##########################################################################
