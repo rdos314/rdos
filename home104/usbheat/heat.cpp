@@ -43,6 +43,7 @@
 #include "videodev.h"
 #include "radcntrl.h"
 #include "solar.h"
+#include "ocppdev.h"
 #include "table.h"
 #include "jpeg.h"
 #include "file.h"
@@ -338,6 +339,108 @@ static void NotifyConsDayEnergy(double val)
 
     ConsDayE = val;
 
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyOcppState
+#
+#   Purpose....: Notify OCPP state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyOcppState(TOcppNotify *Server, const char *state)
+{
+    FDataSection.Enter();
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyOcppStart
+#
+#   Purpose....: Notify OCPP start
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyOcppStart(TOcppNotify *Server, int val)
+{
+    FDataSection.Enter();
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyOcppStop
+#
+#   Purpose....: Notify OCPP stop
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyOcppStop(TOcppNotify *Server, int val)
+{
+    FDataSection.Enter();
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyOcppVoltage
+#
+#   Purpose....: Notify OCPP voltage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyOcppVoltage(TOcppNotify *Server, int phase, double val)
+{
+    FDataSection.Enter();
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyOcppCurrent
+#
+#   Purpose....: Notify OCPP current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyOcppCurrent(TOcppNotify *Server, int phase, double val)
+{
+    FDataSection.Enter();
+    FDataSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : NotifyOcppEnergy
+#
+#   Purpose....: Notify OCPP energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void NotifyOcppEnergy(TOcppNotify *Server, int val)
+{
+    FDataSection.Enter();
     FDataSection.Leave();
 }
 
@@ -1167,6 +1270,25 @@ void SmaThread(void *Param)
     }
 }
 
+/*##########################################################################
+#
+#   Name       : OcppThread
+#
+#   Purpose....: Ocpp thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void OcppThread(void *Param)
+{
+    TOcppSocketServerFactory *Ocpp = (TOcppSocketServerFactory *)Param;
+
+    for (;;)
+        Ocpp->WaitForever();
+}
+
 /*##################  PerfThread  ##############################################
  *   Purpose....: Watchdog thread                                                                           #
  *   In params..: *                                                          #
@@ -1268,6 +1390,7 @@ int main()
     TSmartPowInverter *WindInv;
     TMisolWeather *Misol;
     TMet *Met;
+    TOcppSocketServerFactory *Ocpp;
     int i;
     int index;
     int diostat;
@@ -1409,6 +1532,7 @@ int main()
     WindInv = new TSmartPowInverter("192.168.1.100");
     Misol = new TMisolWeather("192.168.1.57", 1234);
     Met = new TMet(Misol);
+    Ocpp = new TOcppSocketServerFactory(7000, 100, 0x1000);
 
     InitWeb(Misol, SolarInv, WindInv);
 
@@ -1421,9 +1545,17 @@ int main()
     WindInv->OnDumpPower = NotifyWindDumpPower;
     WindInv->OnDayEnergy = NotifyWindDayEnergy;
 
+    Ocpp->OnState = NotifyOcppState;
+    Ocpp->OnStart = NotifyOcppStart;
+    Ocpp->OnStop = NotifyOcppStop;
+    Ocpp->OnVoltage = NotifyOcppVoltage;
+    Ocpp->OnCurrent = NotifyOcppCurrent;
+    Ocpp->OnEnergy = NotifyOcppEnergy;
+
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
     RdosCreateThread(PerfThread, "Perf", vbe, 0x4000);
     RdosCreateThread(SmaThread, "Sma", control, 0x4000);
+    RdosCreateThread(OcppThread, "Ocpp Listen", Ocpp, 0x4000);
 
     LockGUI();
     Label = new TLabelControl(control, 1700, 50, 200, 35);
