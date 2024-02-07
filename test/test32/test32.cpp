@@ -21,21 +21,15 @@ void main()
     TTcpSocket *sock;
     TKeyboardDevice keyboard;
 
-    TString jsonstr;
-    TJsonDocument *json = new TJsonDocument;
-    TJsonCollection *root = json->CreateRoot();
-    TJsonDoubleArray *arr;
-    int hour, min;
+    TJsonDocument json;
+    TJsonCollection *root = json.CreateRoot();
+    TJsonArrayCollection *arr;
 
-    arr = root->AddDoubleArray("values", 1);
+    arr = root->AddArrayCollection("series");
+    arr->GetArrayCount();
+    arr->GetObjCount();
+    arr->AddArray();
 
-    for (hour = 0; hour < 24; hour++)
-        for (min = 0; min < 60; min++)
-             arr->Add(20.1);
-
-
-    json->Write(jsonstr);
-    delete json;
 
 //    TOcppSocketServerFactory fact(7000, 100, 0x1000);
 
