@@ -408,15 +408,19 @@ static void NotifyOcppStop(TOcppNotify *Server, int val)
 static void NotifyOcppData(TOcppNotify *Server)
 {
     int i;
+    double v = Server->GetVoltage(0);
 
     FDataSection.Enter();
 
-    OcppEnergy = Server->GetEnergy();
+    if (v <= 240.0)
+        OcppEnergy = Server->GetEnergy();
 
     for (i = 0; i < 3; i++)
     {
         OcppVoltage[i] = Server->GetVoltage(i);
-        OcppCurrent[i] = Server->GetCurrent(i);
+
+        if (v <= 240.0)
+            OcppCurrent[i] = Server->GetCurrent(i);
     }
 
     FDataSection.Leave();
@@ -1216,28 +1220,6 @@ void SmaThread(void *Param)
 
 /*##########################################################################
 #
-#   Name       : OcppThread
-#
-#   Purpose....: Ocpp thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void OcppThread(void *Param)
-{
-    TOcppSocketServerFactory *Ocpp = (TOcppSocketServerFactory *)Param;
-
-    for (;;)
-    {
-        Ocpp->WaitForever();
-        RdosWaitMilli(500);
-    }
-}
-
-/*##########################################################################
-#
 #   Name       : main
 #
 #   Purpose....: Main program
@@ -1418,7 +1400,6 @@ int main()
 
     RdosCreateThread(TimeThread, "Time", control, 0x4000);
     RdosCreateThread(SmaThread, "Sma", control, 0x4000);
-    RdosCreateThread(OcppThread, "Ocpp Listen", Ocpp, 0x4000);
 
     LockGUI();
     Label = new TLabelControl(control, 5, 740, 250, 35);

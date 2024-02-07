@@ -6,14 +6,42 @@
 #include "httpsfact.h"
 #include "ocppdev.h"
 #include "keyboard.h"
-#include "json.h"
 
-
-void CreateDataSerie(TJsonArrayCollection *obj)
+static void NotifyState(TOcppNotify *Server, const char *state)
 {
-    obj->AddString("legendText", "solar");
-    obj->AddArray();
-    obj->AddString("legendText", "wind");
+//    Server->GetConfiguration();
+    printf("State: %s\r\n", state);
+}
+
+static void NotifyStart(TOcppNotify *Server, int val)
+{
+    printf("Start: %d.%03d\r\n", val / 1000, val % 1000);
+}
+
+static void NotifyStop(TOcppNotify *Server, int val)
+{
+    printf("Stop: %d.%03d\r\n", val / 1000, val % 1000);
+}
+
+static void NotifyData(TOcppNotify *Server)
+{
+    double v;
+    double i;
+    int e;
+
+    v = Server->GetVoltage(0);
+    i = Server->GetCurrent(0);
+    e = Server->GetEnergy();
+
+    printf("U: %3.1Lf, I: %3.1Lf, E: %d.%03d \r\n", v, i, e / 1000, e % 1000);
+}
+
+static void NotifyKey(TOcppNotify *Server, const char *key, bool rdonly, const char *value)
+{
+    if (rdonly)
+        printf(" Key: %s=%s\r\n", key, value);
+    else
+        printf("*Key: %s=%s\r\n", key, value);
 }
 
 void main()
@@ -29,28 +57,18 @@ void main()
     TTcpSocket *sock;
     TKeyboardDevice keyboard;
 
-    TJsonDocument json;
-    TJsonCollection *root = json.CreateRoot();
-    TJsonArrayCollection *arr;
-
-    arr = root->AddArrayCollection("series");
-    CreateDataSerie(arr);
-
-
-//    TOcppSocketServerFactory fact(7000, 100, 0x1000);
+    TOcppSocketServerFactory fact(7000, 100, 0x1000);
 
 //    fact.SetCertificate("d:/ssl/cert.pem", "d:/ssl/privkey.pem", "d:/ssl/chain.pem");
 
-//    fact.OnState = NotifyState;
-//    fact.OnStart = NotifyStart;
-//    fact.OnStop = NotifyStop;
-//    fact.OnVoltage = NotifyVoltage;
-//    fact.OnCurrent = NotifyCurrent;
-//    fact.OnEnergy = NotifyEnergy;
-//    fact.OnKey = NotifyKey;
+    fact.OnState = NotifyState;
+    fact.OnStart = NotifyStart;
+    fact.OnStop = NotifyStop;
+    fact.OnData = NotifyData;
+    fact.OnKey = NotifyKey;
 
-//    for (;;)
-//        fact.WaitForever();
+    for (;;)
+        RdosWaitMilli(250);
 
 
     const char *OcppName = "resi-prod-ocpp-server.azurewebsites.net";
