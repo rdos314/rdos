@@ -690,12 +690,12 @@ void TVp::Execute()
 
     LockGUI();
 
-    Table = new TTableControl(FControl, 5, 430, 500, 250);
+    Table = new TTableControl(FControl, 5, 430, 450, 250);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentLabelFactory, 250);
+    Table->AddLabelColumn(&CommentLabelFactory, 200);
     Table->AddLabelColumn(&ValueLabelFactory, 125);
     Table->AddLabelColumn(&UnitLabelFactory, 125);
 

@@ -888,13 +888,13 @@ void TimeThread(void *Param)
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    Table = new TTableControl(control, 1500, 5, 400, 250);
+    Table = new TTableControl(control, 1300, 5, 500, 250);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
     Table->SetSpacingColor(0, 20, 50);
     Table->AddLabelColumn(&CommentFactory, 125);
-    Table->AddLabelColumn(&ValueFactory, 125);
+    Table->AddLabelColumn(&ValueFactory, 175);
     Table->AddLabelColumn(&UnitFactory, 100);
 
     Table->AddRow(35, 55);
@@ -1013,7 +1013,7 @@ void SmaThread(void *Param)
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    Table = new TTableControl(control, 1200, 350, 700, 300);
+    Table = new TTableControl(control, 1200, 450, 700, 300);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
@@ -1046,12 +1046,12 @@ void SmaThread(void *Param)
     Table->SetText(5, 4, "kWh");
     Table->Show();
 
-    SumTable = new TTableControl(control, 525, 420, 500, 200);
+    SumTable = new TTableControl(control, 475, 420, 475, 200);
     SumTable->SetBackColor(0, 20, 50);
     SumTable->SetRowSpacing(10);
     SumTable->SetColSpacing(16);
     SumTable->SetSpacingColor(0, 20, 50);
-    SumTable->AddLabelColumn(&CommentFactory, 175);
+    SumTable->AddLabelColumn(&CommentFactory, 150);
     SumTable->AddLabelColumn(&ValueFactory, 175);
     SumTable->AddLabelColumn(&UnitFactory, 100);
 
@@ -1433,12 +1433,12 @@ int main()
     PhLabelFactory.SetDrawColor(0, 0, 0);
     PhLabelFactory.AlignRight();
 
-    Table = new TTableControl(control, 1200, 675, 525, 400);
+    Table = new TTableControl(control, 1250, 750, 600, 400);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentLabelFactory, 150);
+    Table->AddLabelColumn(&CommentLabelFactory, 100);
     Table->AddLabelColumn(&AltLabelFactory, 125);
     Table->AddLabelColumn(&AziLabelFactory, 125);
     Table->AddLabelColumn(&PhLabelFactory, 125);
@@ -1478,12 +1478,12 @@ int main()
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    WeatherTable = new TTableControl(control, 5, 5, 500, 420);
+    WeatherTable = new TTableControl(control, 5, 5, 450, 420);
     WeatherTable->SetBackColor(0, 20, 50);
     WeatherTable->SetRowSpacing(10);
     WeatherTable->SetColSpacing(16);
     WeatherTable->SetSpacingColor(0, 20, 50);
-    WeatherTable->AddLabelColumn(&CommentFactory, 250);
+    WeatherTable->AddLabelColumn(&CommentFactory, 200);
     WeatherTable->AddLabelColumn(&ValueFactory, 125);
     WeatherTable->AddLabelColumn(&UnitFactory, 125);
 
@@ -1526,12 +1526,12 @@ int main()
 
     WeatherTable->Show();
 
-    WindTable = new TTableControl(control, 525, 5, 500, 270);
+    WindTable = new TTableControl(control, 475, 5, 475, 270);
     WindTable->SetBackColor(0, 20, 50);
     WindTable->SetRowSpacing(10);
     WindTable->SetColSpacing(16);
     WindTable->SetSpacingColor(0, 20, 50);
-    WindTable->AddLabelColumn(&CommentFactory, 175);
+    WindTable->AddLabelColumn(&CommentFactory, 150);
     WindTable->AddLabelColumn(&ValueFactory, 175);
     WindTable->AddLabelColumn(&UnitFactory, 100);
 
@@ -1557,12 +1557,12 @@ int main()
     WindTable->SetText(4, 2, "kWh");
     WindTable->Show();
 
-    SolarTable = new TTableControl(control, 525, 300, 500, 100);
+    SolarTable = new TTableControl(control, 475, 300, 475, 100);
     SolarTable->SetBackColor(0, 20, 50);
     SolarTable->SetRowSpacing(10);
     SolarTable->SetColSpacing(16);
     SolarTable->SetSpacingColor(0, 20, 50);
-    SolarTable->AddLabelColumn(&CommentFactory, 175);
+    SolarTable->AddLabelColumn(&CommentFactory, 150);
     SolarTable->AddLabelColumn(&ValueFactory, 175);
     SolarTable->AddLabelColumn(&UnitFactory, 100);
 
