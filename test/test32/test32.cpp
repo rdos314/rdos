@@ -8,6 +8,14 @@
 #include "keyboard.h"
 #include "json.h"
 
+
+void CreateDataSerie(TJsonArrayCollection *obj)
+{
+    obj->AddString("legendText", "solar");
+    obj->AddArray();
+    obj->AddString("legendText", "wind");
+}
+
 void main()
 {
     int port;
@@ -26,9 +34,7 @@ void main()
     TJsonArrayCollection *arr;
 
     arr = root->AddArrayCollection("series");
-    arr->GetArrayCount();
-    arr->GetObjCount();
-    arr->AddArray();
+    CreateDataSerie(arr);
 
 
 //    TOcppSocketServerFactory fact(7000, 100, 0x1000);
