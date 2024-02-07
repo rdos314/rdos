@@ -916,7 +916,7 @@ void TimeThread(void *Param)
 
     LockGUI();
 
-    Label = new TLabelControl(control, 5, 700, 250, 35);
+    Label = new TLabelControl(control, 10, 750, 250, 35);
     Label->SetFont(30);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
@@ -1323,7 +1323,6 @@ int main()
     int i;
     int index;
     int diostat;
-    int mask;
     TDateTime *CurrTime;
     int LastMin;
     int LastDay;
@@ -1361,7 +1360,6 @@ int main()
     long double solalt;
     int ph;
     TDateTime currtime;
-    TLabelControl *Label;
     TTableControl *Table;
 
     TLabelFactory CommentLabelFactory;
@@ -1484,12 +1482,6 @@ int main()
     RdosCreateThread(SmaThread, "Sma", control, 0x4000);
 
     LockGUI();
-    Label = new TLabelControl(control, 5, 740, 250, 35);
-    Label->SetFont(35);
-    Label->SetBackColor(0, 20, 50);
-    Label->SetDrawColor(255, 255, 255);
-    Label->SetText("");
-    Label->Show();
 
     CommentLabelFactory.SetSpace(4, 4);
     CommentLabelFactory.SetFont(35);
@@ -1565,8 +1557,8 @@ int main()
     WeatherTable->SetRowSpacing(10);
     WeatherTable->SetColSpacing(16);
     WeatherTable->SetSpacingColor(0, 20, 50);
-    WeatherTable->AddLabelColumn(&CommentFactory, 200);
-    WeatherTable->AddLabelColumn(&ValueFactory, 125);
+    WeatherTable->AddLabelColumn(&CommentFactory, 175);
+    WeatherTable->AddLabelColumn(&ValueFactory, 150);
     WeatherTable->AddLabelColumn(&UnitFactory, 125);
 
     WeatherTable->AddRow(35, 55);
@@ -1908,16 +1900,6 @@ int main()
 
         if (RdosReadSerialLines(1, &diostat))
         {
-            mask = 0x80;
-            for (i = 0; i < 8; i++)
-            {
-                if (diostat & mask)
-                    strcat(str, "1");
-                else
-                    strcat(str, "0");
-                mask = mask >> 1;
-            }
-
             currtime = TDateTime();
 
             solar.SetTime(currtime, 1);
@@ -1934,10 +1916,6 @@ int main()
                     RdosToggleSerialLine(1, 7);
             }
         }
-        else
-            strcpy(str, "------");
-
-        Label->SetText(str);
 
         if (LastMin != CurrTime->GetMin())
         {

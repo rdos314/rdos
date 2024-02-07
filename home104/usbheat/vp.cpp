@@ -660,6 +660,7 @@ void TVp::Execute()
     int LastDay;
     int UsedDay;
     int diostat;
+    int mask;
     int ival;
     char str[50];
 
@@ -690,15 +691,16 @@ void TVp::Execute()
 
     LockGUI();
 
-    Table = new TTableControl(FControl, 5, 430, 450, 250);
+    Table = new TTableControl(FControl, 5, 430, 450, 400);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
     Table->SetSpacingColor(0, 20, 50);
-    Table->AddLabelColumn(&CommentLabelFactory, 200);
-    Table->AddLabelColumn(&ValueLabelFactory, 125);
+    Table->AddLabelColumn(&CommentLabelFactory, 175);
+    Table->AddLabelColumn(&ValueLabelFactory, 150);
     Table->AddLabelColumn(&UnitLabelFactory, 125);
 
+    Table->AddRow(35, 55);
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
@@ -719,6 +721,9 @@ void TVp::Execute()
 
     Table->SetText(4, 0, "Manual larm");
     Table->SetText(4, 2, "");
+
+    Table->SetText(5, 0, "Relays");
+    Table->SetText(5, 2, "");
 
     Table->Show();
 
@@ -755,6 +760,24 @@ void TVp::Execute()
 
     while (FInstalled)
     {
+       if (RdosReadSerialLines(1, &diostat))
+        {
+            mask = 0x80;
+            for (i = 0; i < 8; i++)
+            {
+                if (diostat & mask)
+                    str[i] = '1';
+                else
+                    str[i] = '0';
+                mask = mask >> 1;
+            }
+            str[8] = 0;
+        }
+        else
+            strcpy(str, "------");
+
+        Table->SetText(5, 1, str);
+
         if (FVpCircOn)
         {
             ival = FEch.GetHeatInlet();
