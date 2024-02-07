@@ -888,13 +888,13 @@ void TimeThread(void *Param)
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    Table = new TTableControl(control, 1300, 5, 500, 250);
+    Table = new TTableControl(control, 1400, 5, 550, 250);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
     Table->SetSpacingColor(0, 20, 50);
     Table->AddLabelColumn(&CommentFactory, 125);
-    Table->AddLabelColumn(&ValueFactory, 175);
+    Table->AddLabelColumn(&ValueFactory, 225);
     Table->AddLabelColumn(&UnitFactory, 100);
 
     Table->AddRow(35, 55);
