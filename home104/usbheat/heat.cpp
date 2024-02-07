@@ -888,7 +888,7 @@ void TimeThread(void *Param)
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    Table = new TTableControl(control, 1400, 5, 550, 250);
+    Table = new TTableControl(control, 1450, 5, 550, 250);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
@@ -1013,15 +1013,15 @@ void SmaThread(void *Param)
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    Table = new TTableControl(control, 1200, 450, 700, 300);
+    Table = new TTableControl(control, 1175, 450, 775, 300);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
     Table->SetSpacingColor(0, 20, 50);
     Table->AddLabelColumn(&CommentFactory, 150);
-    Table->AddLabelColumn(&ValueFactory, 125);
-    Table->AddLabelColumn(&ValueFactory, 125);
-    Table->AddLabelColumn(&ValueFactory, 125);
+    Table->AddLabelColumn(&ValueFactory, 150);
+    Table->AddLabelColumn(&ValueFactory, 150);
+    Table->AddLabelColumn(&ValueFactory, 150);
     Table->AddLabelColumn(&UnitFactory, 100);
 
     Table->AddRow(35, 55);
@@ -1507,7 +1507,7 @@ int main()
     PhLabelFactory.SetDrawColor(0, 0, 0);
     PhLabelFactory.AlignRight();
 
-    Table = new TTableControl(control, 1250, 750, 600, 400);
+    Table = new TTableControl(control, 1300, 750, 600, 400);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
