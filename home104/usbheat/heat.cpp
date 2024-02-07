@@ -63,7 +63,7 @@ int GetWebConnectionCount();
 #define FALSE   0
 #define TRUE    !FALSE
 
-#define MAX_CORES   2
+#define MAX_CORES   3
 #define MAX_SAMPLES 5 * 60
 
 #define ROOT_DIR "e:/data/power"
@@ -1258,7 +1258,7 @@ void PerfThread(void *ptr)
             PerfChart[Cores] = new TChart(vbe, XAxis[Cores], YAxis[Cores]);
             PerfChart[Cores] = new TChart(vbe, XAxis[Cores], YAxis[Cores]);
 
-            PerfChart[Cores]->SetWindow(1100, 20 + Cores * 150, 1390, 160 + Cores * 150);
+            PerfChart[Cores]->SetWindow(950, 10 + Cores * 140, 1200, 150 + Cores * 140);
 
             PerfChart[Cores]->SetBackColor(0, 0, 0);
             PerfChart[Cores]->SetLineColor(0, 50, 200, 100);
