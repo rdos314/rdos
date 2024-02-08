@@ -58,7 +58,7 @@ void UnlockGUI();
 #   Returns....: *
 #
 ##########################################################################*/
-TVp::TVp(TControlThread *control)
+TVp::TVp(TControlThread *control, TOcppNotify *ocpp)
   : FLog("TVp"),
     FSerial(2, 9600, 'E', 8, 1),
     FModDev(&FSerial),
@@ -68,6 +68,7 @@ TVp::TVp(TControlThread *control)
     int i;
 
     FControl = control;
+    FOcpp = ocpp;
     FCheckDelay = 0;
 
     FValidAmbient = FALSE;
@@ -378,7 +379,7 @@ void TVp::UpdateVp()
 
         FTankTemp = FEch.GetHeatInlet();
 
-        if (!FEch.IsOn() || FCirc < 25)
+        if (!FEch.IsOn() || FCirc < 25 || FOcpp->IsCharging())
         {
             if (RdosReadSerialLines(1, &diostat))
             {
@@ -427,7 +428,7 @@ void TVp::UpdateVp()
             {
                 FTankTemp = FEch.GetHeatInlet();
 
-                if (FTankTemp <= FLowTemp + 5 && FTankTemp < FMaxTank && FCirc > 75)
+                if (FTankTemp <= FLowTemp + 5 && FTankTemp < FMaxTank && FCirc > 75 && !FOcpp->IsCharging())
                 {
                     FLog.printf(0, "UpdateVp", "Set Limit %d.%01d", FMaxTank / 10, FMaxTank % 10);
 
@@ -830,6 +831,9 @@ void TVp::Execute()
 
             FSection.Leave();
         }
+        else
+            if (FVpCircOn && FOcpp->IsCharging())
+                UpdateVp();
 
         if (LastMin != CurrTime->GetMin())
         {

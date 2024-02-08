@@ -282,8 +282,12 @@ int TOcppNotify::GetEnergy()
 ##########################################################################*/
 void TOcppNotify::NotifyState(const char *State)
 {
-    if (!strcmp(State, "CHARGING"))
+    if (!strcmp(State, "Charging"))
         FCharging = true;
+    else if (!strcmp(State, "Preparing"))
+        FCharging = true;
+    else
+        FCharging = false;
 
     if (OnState)
         (*OnState)(this, State);
@@ -359,6 +363,9 @@ void TOcppNotify::NotifyVoltage(int phase, double val)
 ##########################################################################*/
 void TOcppNotify::NotifyCurrent(int phase, double val)
 {
+    if (val > 5.0)
+        FCharging = true;
+
     FCurrent[phase] = val;
 }
 

@@ -1453,13 +1453,13 @@ int main()
 
     RdosWaitMilli(1000);
 
-    Vp = new TVp(control);
-
     SolarInv = new TFroniusInverter("192.168.1.51");
     WindInv = new TSmartPowInverter("192.168.1.100");
     Misol = new TMisolWeather("192.168.1.57", 1234);
     Met = new TMet(Misol);
     Ocpp = new TOcppSocketServerFactory(7000, 100, 0x1000);
+
+    Vp = new TVp(control, Ocpp);
 
     InitWeb(Misol, SolarInv, WindInv);
 
