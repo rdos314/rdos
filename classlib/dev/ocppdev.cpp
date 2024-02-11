@@ -363,9 +363,6 @@ void TOcppNotify::NotifyVoltage(int phase, double val)
 ##########################################################################*/
 void TOcppNotify::NotifyCurrent(int phase, double val)
 {
-    if (val > 5.0)
-        FCharging = true;
-
     FCurrent[phase] = val;
 }
 
