@@ -50,9 +50,9 @@ code    SEGMENT byte public use32 'CODE'
 ;
 ;       Name:           GetIPNumber
 ;
-;       Purpose:        received IP data
+;       Purpose:        Get IP from environment
 ;
-;       Parameters:         ES:DI   Name
+;       Parameters:     ES:EDI   Name
 ;
 ;       Returns:        NC          Found
 ;                       EAX         IP number
@@ -62,32 +62,32 @@ code    SEGMENT byte public use32 'CODE'
 GetIPNumber     Proc near
     push ds
     push ebx
-    push cx
-    push si
+    push ecx
+    push esi
 ;
     LockSysEnv
-    mov ds,bx
-    xor si,si
+    mov ds,ebx
+    xor esi,esi
 find_ip:
-    push di
+    push edi
 find_ip_loop:
     cmpsb
     jnz find_ip_next
-    mov al,es:[di]
+    mov al,es:[edi]
     or al,al
     jnz find_ip_loop
-    mov al,[si]
+    mov al,[esi]
     cmp al,'='
     je find_ip_found
 
 find_ip_next:
-    pop di
+    pop edi
 
 find_ip_next_bp:
     lodsb
     or al,al
     jnz find_ip_next_bp
-    mov al,[si]
+    mov al,[esi]
     or al,al
     jne find_ip
     xor eax,eax
@@ -95,15 +95,15 @@ find_ip_next_bp:
     jmp find_ip_done
 
 find_ip_found:
-    pop di
+    pop edi
     xor ebx,ebx
-    inc si
-    mov cx,4
+    inc esi
+    mov ecx,4
 find_ip_decode:
     xor al,al
 find_ip_digit:
-    mov dl,[si]
-    inc si
+    mov dl,[esi]
+    inc esi
     sub dl,'0'
     jc find_ip_save
     cmp dl,10
@@ -126,8 +126,8 @@ find_ip_done:
     UnlockSysEnv
     popf
 ;
-    pop si
-    pop cx
+    pop esi
+    pop ecx
     pop ebx
     pop ds
     ret
@@ -146,8 +146,14 @@ GetIPNumber     Endp
 
 init_relay_thread_name DB 'Init Relay', 0
 
+relay_ip_str  DB 'RELAY.IP', 0
+
 init_relay_thread Proc far
     int 3
+    mov eax,cs
+    mov es,eax
+    mov edi,OFFSET relay_ip_str
+    call GetIPNumber
     ret
 init_relay_thread Endp
 
