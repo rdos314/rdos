@@ -42,6 +42,8 @@ public:
 
 protected:
     void HandleName(char *str);
+    void HandleRelay(char *str);
+    void HandleInput(char *str);
     void HandleData();
 
     virtual void Execute();
@@ -51,6 +53,7 @@ protected:
     int FPort;
     TString FName;
     bool FRelayArr[8];
+    bool FInputArr[8];
     char *FHostStr;
     TTcpSocket *FSocket;
 };

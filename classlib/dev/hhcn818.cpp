@@ -52,7 +52,10 @@ THhcRelay::THhcRelay(char *HostStr)
     FOnline = false;
 
     for (i = 0; i < 8; i++)
+    {
         FRelayArr[i] = false;
+        FInputArr[i] = false;
+    }
 
     FHostStr = new char[size + 1];
     strcpy(FHostStr, HostStr);
@@ -138,6 +141,96 @@ void THhcRelay::HandleName(char *str)
 
 /*##########################################################################
 #
+#   Name       : THhcRelay::HandleRelay
+#
+#   Purpose....: Handle relay state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THhcRelay::HandleRelay(char *str)
+{
+    char *ptr;
+    int i;
+    char ch;
+
+    ch = str[5];
+    str[5] = 0;
+
+    if (!strcmp(str, "relay"))
+    {
+        ptr = str + 5;
+        *ptr = ch;
+
+        for (i = 7; i >= 0; i--)
+        {
+            switch (*ptr)
+            {
+                case '0':
+                    FRelayArr[i] = false;
+                    break;
+
+                case '1':
+                    FRelayArr[i] = true;
+                    break;
+
+                default:
+                    return;
+            }
+            ptr++;
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THhcRelay::HandleInput
+#
+#   Purpose....: Handle input state
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THhcRelay::HandleInput(char *str)
+{
+    char *ptr;
+    int i;
+    char ch;
+
+    ch = str[5];
+    str[5] = 0;
+
+    if (!strcmp(str, "input"))
+    {
+        ptr = str + 5;
+        *ptr = ch;
+
+        for (i = 7; i >= 0; i--)
+        {
+            switch (*ptr)
+            {
+                case '0':
+                    FInputArr[i] = false;
+                    break;
+
+                case '1':
+                    FInputArr[i] = true;
+                    break;
+
+                default:
+                    return;
+            }
+            ptr++;
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : THhcRelay::HandleData
 #
 #   Purpose....: Handle device data
@@ -164,6 +257,14 @@ void THhcRelay::HandleData()
             {
                 case 'n':
                     HandleName(str);
+                    break;
+
+                case 'r':
+                    HandleRelay(str);
+                    break;
+
+                case 'i':
+                    HandleInput(str);
                     break;
             }
         }
