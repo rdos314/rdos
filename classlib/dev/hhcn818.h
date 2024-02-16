@@ -41,7 +41,8 @@ public:
     bool IsOnline();
 
 protected:
-    void HandleName();
+    void HandleName(char *str);
+    void HandleData();
 
     virtual void Execute();
 
@@ -52,8 +53,6 @@ protected:
     bool FRelayArr[8];
     char *FHostStr;
     TTcpSocket *FSocket;
-    char FBuf[8192];
-
 };
 
 #endif

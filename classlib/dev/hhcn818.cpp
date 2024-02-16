@@ -114,47 +114,65 @@ bool THhcRelay::IsOnline()
 #   Returns....: *
 #
 ##########################################################################*/
-void THhcRelay::HandleName()
+void THhcRelay::HandleName(char *str)
 {
-    bool ok = true;
-    char ch;
-    int i;
+    char *ptr;
+    int size;
 
-    for (i = 1; i < 6 && ok; i++)
+    if (str[4] == '=')
     {
-        ok = FSocket->WaitForData(250);
-        if (ok)
+        str[4] = 0;
+        if (!strcmp(str, "name"))
         {
-            ch = FSocket->Read();
-
-            switch (i)
+            ptr = str + 5;
+            size = strlen(ptr);
+            if (ptr[0] == '"' && ptr[size - 1] == '"')
             {
-                case 1:
-                    if (ch != 'a')
-                        ok = false;
-                    break;
+                ptr[size - 1] = 0;
+                ptr++;
+                FName = ptr;
+            }
+        }
+    }
+}
 
-                case 2:
-                    if (ch != 'm')
-                        ok = false;
-                    break;
+/*##########################################################################
+#
+#   Name       : THhcRelay::HandleData
+#
+#   Purpose....: Handle device data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THhcRelay::HandleData()
+{
+    char str[80];
+    int count;
+    int size = FSocket->GetSize();
 
-                case 3:
-                    if (ch != 'e')
-                        ok = false;
-                    break;
+    if (size > 0 && size < 80)
+    {
+        count = FSocket->Read(str, size);
+        if (size == count)
+        {
+            str[size] = 0;
 
-                case 4:
-                    if (ch != '=')
-                        ok = false;
-                    break;
-
-                case 5:
-                    if (ch != '"')
-                        ok = false;
+            switch (str[0])
+            {
+                case 'n':
+                    HandleName(str);
                     break;
             }
         }
+    }
+    else
+    {
+        FSocket->Close();
+        delete FSocket;
+        FSocket = 0;
     }
 }
 
@@ -197,28 +215,24 @@ void THhcRelay::Execute()
         {
             FSocket->Write("name");
             FSocket->Push();
+            if (FSocket->WaitForData(1000))
+                HandleData();
 
             FSocket->Write("read");
             FSocket->Push();
+            if (FSocket->WaitForData(1000))
+                HandleData();
 
             FSocket->Write("input");
             FSocket->Push();
+            if (FSocket->WaitForData(1000))
+                HandleData();
         }
 
         while (FSocket->IsOpen())
         {
             if (FSocket->WaitForData(1000))
-            {
-               ch = FSocket->Read();
-               switch (ch)
-               {
-                   case 'n':
-                       HandleName();
-                       break;
-               }
-            }
-
-            RdosWaitMilli(2500);
+                HandleData();
         }
 
         delete FSocket;
