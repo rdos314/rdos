@@ -108,6 +108,90 @@ bool THhcRelay::IsOnline()
 
 /*##########################################################################
 #
+#   Name       : THhcRelay::IsOn
+#
+#   Purpose....: Read relay status
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THhcRelay::IsOn(int relay)
+{
+    if (relay >= 0 && relay < 8)
+        return FRelayArr[relay];
+    else
+        return false;
+}
+
+/*##########################################################################
+#
+#   Name       : THhcRelay::On
+#
+#   Purpose....: Turn on relay
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THhcRelay::On(int relay)
+{
+    char str[10];
+
+    if (FOnline && relay >= 0 && relay < 8)
+    {
+        sprintf(str, "on%d", relay);
+        FSocket->Write(str);
+        FSignal.WaitTimeout(1000);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THhcRelay::Off
+#
+#   Purpose....: Turn off relay
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THhcRelay::Off(int relay)
+{
+    char str[10];
+
+    if (FOnline && relay >= 0 && relay < 8)
+    {
+        sprintf(str, "off%d", relay);
+        FSocket->Write(str);
+        FSignal.WaitTimeout(1000);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THhcRelay::ReadInput
+#
+#   Purpose....: Read input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool THhcRelay::ReadInput(int chan)
+{
+    if (chan >= 0 && chan < 8)
+        return FInputArr[chan];
+    else
+        return false;
+}
+
+/*##########################################################################
+#
 #   Name       : THhcRelay::HandleName
 #
 #   Purpose....: Handle device name
@@ -328,6 +412,8 @@ void THhcRelay::Execute()
             FSocket->Push();
             if (FSocket->WaitForData(1000))
                 HandleData();
+
+            FOnline = true;
         }
 
         while (FSocket->IsOpen())
@@ -336,6 +422,7 @@ void THhcRelay::Execute()
                 HandleData();
         }
 
+        FOnline = false;
         delete FSocket;
     }
 }

@@ -31,6 +31,7 @@
 #include "sockobj.h"
 #include "thread.h"
 #include "str.h"
+#include "sigdev.h"
 
 class THhcRelay : public TThread
 {
@@ -39,6 +40,12 @@ public:
     virtual ~THhcRelay();
 
     bool IsOnline();
+
+    bool IsOn(int relay);
+    void On(int relay);
+    void Off(int relay);
+
+    bool ReadInput(int input);
 
 protected:
     void HandleName(char *str);
@@ -56,6 +63,7 @@ protected:
     bool FInputArr[8];
     char *FHostStr;
     TTcpSocket *FSocket;
+    TSignalDevice FSignal;
 };
 
 #endif
