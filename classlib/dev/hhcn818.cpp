@@ -47,8 +47,12 @@ THhcRelay::THhcRelay(char *HostStr)
 {
     int size = strlen(HostStr);
     char *ptr;
+    int i;
 
     FOnline = false;
+
+    for (i = 0; i < 8; i++)
+        FRelayArr[i] = false;
 
     FHostStr = new char[size + 1];
     strcpy(FHostStr, HostStr);
@@ -101,6 +105,61 @@ bool THhcRelay::IsOnline()
 
 /*##########################################################################
 #
+#   Name       : THhcRelay::HandleName
+#
+#   Purpose....: Handle device name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THhcRelay::HandleName()
+{
+    bool ok = true;
+    char ch;
+    int i;
+
+    for (i = 1; i < 6 && ok; i++)
+    {
+        ok = FSocket->WaitForData(250);
+        if (ok)
+        {
+            ch = FSocket->Read();
+
+            switch (i)
+            {
+                case 1:
+                    if (ch != 'a')
+                        ok = false;
+                    break;
+
+                case 2:
+                    if (ch != 'm')
+                        ok = false;
+                    break;
+
+                case 3:
+                    if (ch != 'e')
+                        ok = false;
+                    break;
+
+                case 4:
+                    if (ch != '=')
+                        ok = false;
+                    break;
+
+                case 5:
+                    if (ch != '"')
+                        ok = false;
+                    break;
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : THhcRelay::Execute
 #
 #   Purpose....: Execute method
@@ -115,6 +174,7 @@ void THhcRelay::Execute()
     char ch;
     int size;
     char *ptr;
+    int i;
     struct hostent *host;
 
     FOnline = false;
@@ -132,8 +192,32 @@ void THhcRelay::Execute()
     {
         FSocket = new TTcpSocket(FIP, FPort, 5000, 0x2000);
         FSocket->WaitForConnection(5000);
+
+        if (FSocket->IsOpen())
+        {
+            FSocket->Write("name");
+            FSocket->Push();
+
+            FSocket->Write("read");
+            FSocket->Push();
+
+            FSocket->Write("input");
+            FSocket->Push();
+        }
+
         while (FSocket->IsOpen())
         {
+            if (FSocket->WaitForData(1000))
+            {
+               ch = FSocket->Read();
+               switch (ch)
+               {
+                   case 'n':
+                       HandleName();
+                       break;
+               }
+            }
+
             RdosWaitMilli(2500);
         }
 

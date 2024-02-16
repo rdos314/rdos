@@ -30,6 +30,7 @@
 
 #include "sockobj.h"
 #include "thread.h"
+#include "str.h"
 
 class THhcRelay : public TThread
 {
@@ -40,11 +41,14 @@ public:
     bool IsOnline();
 
 protected:
+    void HandleName();
+
     virtual void Execute();
 
     bool FOnline;
     long FIP;
     int FPort;
+    TString FName;
     bool FRelayArr[8];
     char *FHostStr;
     TTcpSocket *FSocket;
