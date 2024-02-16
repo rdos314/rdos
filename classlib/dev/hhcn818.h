@@ -32,6 +32,7 @@
 #include "thread.h"
 #include "str.h"
 #include "sigdev.h"
+#include "section.h"
 
 class THhcRelay : public TThread
 {
@@ -66,6 +67,7 @@ protected:
     char *FHostStr;
     TTcpSocket *FSocket;
     TSignalDevice FSignal;
+    TSection FSection;
 };
 
 #endif

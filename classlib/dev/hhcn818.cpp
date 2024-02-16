@@ -44,6 +44,7 @@
 #
 ##########################################################################*/
 THhcRelay::THhcRelay(char *HostStr)
+  : FSection("HHC")
 {
     int size = strlen(HostStr);
     char *ptr;
@@ -140,12 +141,20 @@ void THhcRelay::On(int relay)
 {
     char str[10];
 
+    FSection.Enter();
+
     if (FOnline && relay >= 0 && relay < 8)
     {
+        RdosWaitMilli(50);
+
         sprintf(str, "on%d", relay + 1);
         FSocket->Write(str);
         FSignal.WaitTimeout(1000);
+
+        RdosWaitMilli(150);
     }
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -163,12 +172,20 @@ void THhcRelay::Off(int relay)
 {
     char str[10];
 
+    FSection.Enter();
+
     if (FOnline && relay >= 0 && relay < 8)
     {
+        RdosWaitMilli(50);
+
         sprintf(str, "off%d", relay + 1);
         FSocket->Write(str);
         FSignal.WaitTimeout(1000);
+
+        RdosWaitMilli(150);
     }
+
+    FSection.Leave();
 }
 
 /*##########################################################################
