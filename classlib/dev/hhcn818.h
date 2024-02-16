@@ -51,6 +51,8 @@ protected:
     void HandleName(char *str);
     void HandleRelay(char *str);
     void HandleInput(char *str);
+    void HandleOn(char *str);
+    void HandleOff(char *str);
     void HandleData();
 
     virtual void Execute();

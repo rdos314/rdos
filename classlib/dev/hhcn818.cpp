@@ -142,7 +142,7 @@ void THhcRelay::On(int relay)
 
     if (FOnline && relay >= 0 && relay < 8)
     {
-        sprintf(str, "on%d", relay);
+        sprintf(str, "on%d", relay + 1);
         FSocket->Write(str);
         FSignal.WaitTimeout(1000);
     }
@@ -165,7 +165,7 @@ void THhcRelay::Off(int relay)
 
     if (FOnline && relay >= 0 && relay < 8)
     {
-        sprintf(str, "off%d", relay);
+        sprintf(str, "off%d", relay + 1);
         FSocket->Write(str);
         FSignal.WaitTimeout(1000);
     }
@@ -315,6 +315,74 @@ void THhcRelay::HandleInput(char *str)
 
 /*##########################################################################
 #
+#   Name       : THhcRelay::HandleOn
+#
+#   Purpose....: Handle on
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THhcRelay::HandleOn(char *str)
+{
+    char *ptr;
+    int chan;
+    char ch;
+
+    ch = str[2];
+    str[2] = 0;
+
+    if (!strcmp(str, "on"))
+    {
+        ptr = str + 2;
+        *ptr = ch;
+        chan = atoi(ptr);
+
+        if (chan > 0 && chan <= 8)
+        {
+            FRelayArr[chan - 1] = true;
+            FSignal.Signal();
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THhcRelay::HandleOff
+#
+#   Purpose....: Handle off
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THhcRelay::HandleOff(char *str)
+{
+    char *ptr;
+    int chan;
+    char ch;
+
+    ch = str[3];
+    str[3] = 0;
+
+    if (!strcmp(str, "off"))
+    {
+        ptr = str + 3;
+        *ptr = ch;
+        chan = atoi(ptr);
+
+        if (chan > 0 && chan <= 8)
+        {
+            FRelayArr[chan - 1] = false;
+            FSignal.Signal();
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : THhcRelay::HandleData
 #
 #   Purpose....: Handle device data
@@ -349,6 +417,14 @@ void THhcRelay::HandleData()
 
                 case 'i':
                     HandleInput(str);
+                    break;
+
+                case 'o':
+                    if (str[1] == 'n')
+                        HandleOn(str);
+
+                    if (str[1] == 'f')
+                        HandleOff(str);
                     break;
             }
         }
