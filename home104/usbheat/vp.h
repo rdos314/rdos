@@ -34,13 +34,14 @@
 #include "rdoslog.h"
 #include "ech200.h"
 #include "ocppdev.h"
+#include "hhcn818.h"
 
 #define POWER_COUNT          30
 
 class TVp : public TFuzzy
 {
 public:
-    TVp(TControlThread *control, TOcppNotify *ocpp);
+    TVp(TControlThread *control, TOcppNotify *ocpp, THhcRelay *relay);
     ~TVp();
 
     void DeviceName(char *Name, int Size) const;
@@ -106,6 +107,7 @@ protected:
 
     TControlThread *FControl;
     TOcppNotify *FOcpp;
+    THhcRelay *FRelay;
 
     TSerialDevice FSerial;
     TModbusDevice FModDev;

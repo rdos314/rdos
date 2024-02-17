@@ -57,6 +57,7 @@
 #include "ddns.h"
 #include "smameter.h"
 #include "ini.h"
+#include "hhcn818.h"
 
 int GetWebConnectionCount();
 
@@ -916,7 +917,7 @@ void TimeThread(void *Param)
 
     LockGUI();
 
-    Label = new TLabelControl(control, 10, 750, 250, 35);
+    Label = new TLabelControl(control, 10, 790, 250, 35);
     Label->SetFont(30);
     Label->SetBackColor(100, 100, 100);
     Label->SetDrawColor(0, 0, 0);
@@ -1320,6 +1321,7 @@ int main()
     TMisolWeather *Misol;
     TMet *Met;
     TOcppSocketServerFactory *Ocpp;
+    THhcRelay *Relay;
     int i;
     int index;
     int diostat;
@@ -1455,11 +1457,13 @@ int main()
 
     SolarInv = new TFroniusInverter("192.168.1.51");
     WindInv = new TSmartPowInverter("192.168.1.100");
-    Misol = new TMisolWeather("192.168.1.57", 1234);
+//    Misol = new TMisolWeather("192.168.1.57", 1234);
+    Misol = new TMisolWeather("192.168.1.118", 5001);
     Met = new TMet(Misol);
     Ocpp = new TOcppSocketServerFactory(7000, 100, 0x1000);
+    Relay = new THhcRelay("192.168.1.118:5000");
 
-    Vp = new TVp(control, Ocpp);
+    Vp = new TVp(control, Ocpp, Relay);
 
     InitWeb(Misol, SolarInv, WindInv);
 

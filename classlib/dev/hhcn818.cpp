@@ -496,26 +496,33 @@ void THhcRelay::Execute()
             if (FSocket->WaitForData(1000))
                 HandleData();
 
-            FSocket->Write("read");
-            FSocket->Push();
-            if (FSocket->WaitForData(1000))
-                HandleData();
-
-            FSocket->Write("input");
-            FSocket->Push();
-            if (FSocket->WaitForData(1000))
-                HandleData();
-
             FOnline = true;
         }
 
         while (FSocket->IsOpen())
         {
-            if (FSocket->WaitForData(1000))
+            if (FSocket->WaitForData(2500))
                 HandleData();
+            else
+            {
+                FSection.Enter();
+
+                FSocket->Write("read");
+                FSocket->Push();
+                if (FSocket->WaitForData(1000))
+                    HandleData();
+
+                FSocket->Write("input");
+                FSocket->Push();
+                if (FSocket->WaitForData(1000))
+                    HandleData();
+
+                FSection.Leave();
+            }
         }
 
         FOnline = false;
         delete FSocket;
+        FSocket = 0;
     }
 }

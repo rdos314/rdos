@@ -58,7 +58,7 @@ void UnlockGUI();
 #   Returns....: *
 #
 ##########################################################################*/
-TVp::TVp(TControlThread *control, TOcppNotify *ocpp)
+TVp::TVp(TControlThread *control, TOcppNotify *ocpp, THhcRelay *relay)
   : FLog("TVp"),
     FSerial(2, 9600, 'E', 8, 1),
     FModDev(&FSerial),
@@ -69,6 +69,7 @@ TVp::TVp(TControlThread *control, TOcppNotify *ocpp)
 
     FControl = control;
     FOcpp = ocpp;
+    FRelay = relay;
     FCheckDelay = 0;
 
     FValidAmbient = FALSE;
@@ -692,7 +693,7 @@ void TVp::Execute()
 
     LockGUI();
 
-    Table = new TTableControl(FControl, 5, 430, 450, 400);
+    Table = new TTableControl(FControl, 5, 430, 450, 450);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
@@ -701,6 +702,7 @@ void TVp::Execute()
     Table->AddLabelColumn(&ValueLabelFactory, 150);
     Table->AddLabelColumn(&UnitLabelFactory, 125);
 
+    Table->AddRow(35, 55);
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
@@ -723,8 +725,11 @@ void TVp::Execute()
     Table->SetText(4, 0, "Manual larm");
     Table->SetText(4, 2, "");
 
-    Table->SetText(5, 0, "Relays");
+    Table->SetText(5, 0, "Outputs");
     Table->SetText(5, 2, "");
+
+    Table->SetText(6, 0, "Relays");
+    Table->SetText(6, 2, "");
 
     Table->Show();
 
@@ -778,6 +783,22 @@ void TVp::Execute()
             strcpy(str, "------");
 
         Table->SetText(5, 1, str);
+
+       if (FRelay->IsOnline())
+        {
+            for (i = 0; i < 8; i++)
+            {
+                if (FRelay->IsOn(7-i))
+                    str[i] = '1';
+                else
+                    str[i] = '0';
+            }
+            str[8] = 0;
+        }
+        else
+            strcpy(str, "------");
+
+        Table->SetText(6, 1, str);
 
         if (FVpCircOn)
         {
