@@ -6,29 +6,19 @@
 #include "httpsfact.h"
 #include "hhcn818.h"
 #include "keyboard.h"
+#include "serial.h"
 
 void main()
 {
-    THhcRelay relay("192.168.1.118:5000");
+    TSerialDevice serial(7, 9600, 'N', 8, 1);
 
-    relay.On(0);
-    relay.On(1);
-    relay.On(2);
-    relay.On(3);
-    relay.On(4);
-    relay.On(5);
-    relay.On(6);
-    relay.On(7);
-
-    relay.Off(0);
-    relay.Off(1);
-    relay.Off(2);
-    relay.Off(3);
-    relay.Off(4);
-    relay.Off(5);
-    relay.Off(6);
-    relay.Off(7);
-
+    for (;;)
+    {
+        serial.Write("Hej");
+        while (serial.WaitForChar(100))
+            serial.Read();
+    }
+  
 //    RdosTestGate("");
 }
 
