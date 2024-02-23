@@ -79,6 +79,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extrn RebindIP:near
+    extrn IsDhcpActive:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -179,6 +180,9 @@ ReceiveEchoReply    Endp
 
 ReceiveEchoReq  Proc near
     push es
+;
+    call IsDhcpActive
+    jc rerDone
 ;
     push es
     push edi

@@ -3039,6 +3039,43 @@ IsDhcpDone      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IsDhcpActive
+;
+;           DESCRIPTION:    Check if DHCP is active
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public IsDhcpActive
+
+IsDhcpActive      Proc near
+    push ds
+    push eax
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov eax,ds:dhcp_server
+    or eax,eax
+    jnz is_dhcp_active_ok
+;
+    mov eax,ds:dhcp_lease
+    cmp eax,1
+    ja is_dhcp_active_ok
+;
+    stc
+    jmp is_dhcp_active_done
+
+is_dhcp_active_ok:
+    clc
+
+is_dhcp_active_done:
+    pop eax
+    pop ds
+    ret
+IsDhcpActive      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           IsDhcpEnabled
 ;
 ;           DESCRIPTION:    Check if DHCP is enabled
