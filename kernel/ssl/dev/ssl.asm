@@ -2301,8 +2301,8 @@ init    Proc far
     mov ds,ax
     mov es,ax
 ;
-    mov edi,OFFSET init_ssl
-    HookInitTasking
+;    mov edi,OFFSET init_ssl
+;    HookInitTasking
 ;
     mov edi,OFFSET delete_secure_session
     mov ax,SSL_SESS_HANDLE
