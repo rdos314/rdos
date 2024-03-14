@@ -29,6 +29,7 @@
 #define _MODBUS_H
 
 #include "serial.h"
+#include "sockobj.h"
 
 class TModbusDevice;
 
@@ -89,6 +90,7 @@ class TModbusDevice
 friend class TModbus;
 public:
     TModbusDevice(TSerialDevice *serial);
+    TModbusDevice(long Ip, int port);
     ~TModbusDevice();
 
     void Reset();
@@ -104,6 +106,9 @@ public:
 
 protected:
     void CalcCrc(const char *buf, int size, char crc[2]);
+    void Write(const char *buf, int size);
+    int WaitForData(int timeout);
+    char Read();
     int SendAndReceive(const char *buf, int size, char *reply, int *datalen, int *replylen);
 
     int FHasEcho;
@@ -111,7 +116,15 @@ protected:
 
     TModbus *FModbusArr[0x80];
     TSerialDevice *FSerial;
+
+    long FIp;
+    int FPort;
+    TTcpSocket *FSocket;
+
     TSection FSection;
+
+private:
+    void Init();
 };
 
 #endif

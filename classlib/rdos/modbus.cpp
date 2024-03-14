@@ -996,14 +996,25 @@ int TModbus::DoWritePresetRegisters()
 TModbusDevice::TModbusDevice(TSerialDevice *serial)
  : FSection("Modbus")
 {
-    int i;
+    Init();
 
     FSerial = serial;
-    FHasEcho = FALSE;
-    FTimeout = 250;
+}
 
-    for (i = 0; i < 0x80; i++)
-        FModbusArr[i] = 0;
+/*##################  TModbusDevice::TModbusDevice  ###############
+*   Purpose....: Constructor for TModbusDevice                                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+TModbusDevice::TModbusDevice(long Ip, int Port)
+ : FSection("Modbus")
+{
+    Init();
+
+    FIp = Ip;
+    FPort = Port;
 }
 
 /*##################  TModbusDevice::TModbusDevice  ###############
@@ -1015,6 +1026,29 @@ TModbusDevice::TModbusDevice(TSerialDevice *serial)
 *##########################################################################*/
 TModbusDevice::~TModbusDevice()
 {
+}
+
+/*##################  TModbusDevice::Init  ###############
+*   Purpose....: Init                                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TModbusDevice::Init()
+{
+    int i;
+
+    FSerial = 0;
+    FIp = 0;
+    FPort = 0;
+    FSocket = 0;
+
+    FHasEcho = FALSE;
+    FTimeout = 250;
+
+    for (i = 0; i < 0x80; i++)
+        FModbusArr[i] = 0;
 }
 
 /*##################  TModbusDevice::Add  ###############
@@ -1066,7 +1100,17 @@ TSerialDevice *TModbusDevice::GetSerial()
 *##########################################################################*/
 void TModbusDevice::Reset()
 {
-    FSerial->Reset();
+    if (FSerial)
+        FSerial->Reset();
+    else
+    {
+        if (FSocket)
+        {
+            FSocket->Close();
+            delete FSocket;
+            FSocket = 0;
+        }
+    }
 }
 
 /*##########################################################################
@@ -1156,6 +1200,89 @@ void TModbusDevice::CalcCrc(const char *buf, int size, char crc[2])
 
 /*##########################################################################
 #
+#   Name       : TModbusDevice::Write
+#
+#   Purpose....: Write data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbusDevice::Write(const char *msg, int size)
+{
+    if (FSerial)
+        FSerial->Write(msg, size);
+    else
+    {
+        if (FSocket && !FSocket->IsOpen())
+        {
+            delete FSocket;
+            FSocket = 0;
+        }
+
+        if (!FSocket)
+        {
+            FSocket = new TTcpSocket(FIp, FPort, 5000, 0x2000);
+            FSocket->WaitForConnection(5000);
+        }
+
+        if (FSocket && FSocket->IsOpen())
+            if (FSocket->GetWriteSpace() >= size)
+                FSocket->Write(msg, size);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TModbusDevice::WaitForData
+#
+#   Purpose....: Wait for data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TModbusDevice::WaitForData(int timeout)
+{
+    if (FSerial)
+        return FSerial->WaitForChar(timeout);
+    else
+    {
+        if (FSocket && FSocket->IsOpen())
+            return FSocket->WaitForData(timeout);
+        else
+            return FALSE;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TModbusDevice::Read
+#
+#   Purpose....: Read single char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TModbusDevice::Read()
+{
+    if (FSerial)
+        return FSerial->Read();
+    else
+    {
+        if (FSocket)
+            return FSocket->Read();
+        else
+            return 0;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TModbusDevice::SendAndReceive
 #
 #   Purpose....: Send message & receive answer
@@ -1182,17 +1309,17 @@ int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *d
         memcpy(msg, buf, size);
         memcpy(msg+size, crc, 2);
 
-        FSerial->Write(msg, size + 2);
+        Write(msg, size + 2);
 
         if (FHasEcho)
         {
             pos = 0;
             while (ok && pos < size + 2 && ch == msg[pos])
             {
-                ok = FSerial->WaitForChar(FTimeout);
+                ok = WaitForData(FTimeout);
                 if (ok)
                 {
-                    ch = FSerial->Read();
+                    ch = Read();
                     pos++;
                 }
             }
@@ -1200,24 +1327,24 @@ int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *d
 
         pos = 0;
 
-        ok = FSerial->WaitForChar(500);
+        ok = WaitForData(500);
         if (ok)
         {
 
-            ch = FSerial->Read();
+            ch = Read();
             while (ok && ch != msg[0])
             {
-                ok = FSerial->WaitForChar(FTimeout);
+                ok = WaitForData(FTimeout);
                 if (ok)
-                    ch = FSerial->Read();
+                    ch = Read();
             }
 
             if (ok)
             {
-                ok = FSerial->WaitForChar(FTimeout);
+                ok = WaitForData(FTimeout);
                 if (ok)
                 {
-                    ch = FSerial->Read();
+                    ch = Read();
                     if (ch != msg[1])
                         ok = FALSE;
                 }
@@ -1229,9 +1356,9 @@ int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *d
             reply[0] = msg[0];
             reply[1] = msg[1];
 
-            ok = FSerial->WaitForChar(250);
+            ok = WaitForData(250);
             if (ok)
-                reply[2] = FSerial->Read();
+                reply[2] = Read();
         }
 
         if (ok)
@@ -1263,10 +1390,10 @@ int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *d
 
             while (ok && pos < *replylen)
             {
-                ok = FSerial->WaitForChar(250);
+                ok = WaitForData(250);
                 if (ok)
                 {
-                    reply[pos] = FSerial->Read();
+                    reply[pos] = Read();
                     pos++;
                 }
             }
@@ -1285,8 +1412,8 @@ int TModbusDevice::SendAndReceive(const char *buf, int size, char *reply, int *d
     }
 
     if (!ok)
-        while (FSerial->WaitForChar(2 * FTimeout))
-            FSerial->Read();
+        while (WaitForData(2 * FTimeout))
+            Read();
 
     FSection.Leave();
 
