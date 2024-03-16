@@ -4,25 +4,23 @@
 
 #include "rdos.h"
 #include "keyboard.h"
-#include "sockobj.h"
-#include "cotex.h"
+#include "modbus.h"
 
 void main()
 {
-    int size;
-    char *msg;
-    TCotex doc(0x1000);
-    TSslSocket sock(0x81A977D9, 2091, 5000, 0x2000);
+    TModbusDevice dev(0x7701A8C0, 502);
+    TModbus unit(&dev, 5);
+    int val;
 
-    if (sock.WaitForConnection(5000))
-    {
-        size = doc.GetSize();
-        msg = new char[size + 1];
-        doc.GetData(msg);
+    val = unit.ReadInputRegister(44501);
+    val = unit.ReadInputRegister(44502);
+    val = unit.ReadInputRegister(44503);
+    val = unit.ReadInputRegister(44504);
 
-        sock.Write(msg, size);
-    }
-  
+    val = unit.ReadInputRegister(40001);
+    val = unit.ReadInputRegister(40002);
+
+
 //    RdosTestGate("");
 }
 
