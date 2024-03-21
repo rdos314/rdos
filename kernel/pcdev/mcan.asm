@@ -1426,6 +1426,9 @@ delete_id_hook    Endp
 capture_thread_name DB 'Can Capture', 0
 
 capture_thread_pr:
+    int 3
+    call SetupDevice
+
     mov bx,SEG data
     mov ds,bx
     GetThread
@@ -1671,8 +1674,8 @@ init_can    Proc far
     push es
     pusha
 ;
-    call SetupDevice
-    jc icDone
+;    call SetupDevice
+;    jc icDone
 ;    
     mov ax,cs
     mov ds,ax
