@@ -87,7 +87,7 @@ can_txbto       DD ?
 can_txbcf       DD ?
 can_txbtie      DD ?
 can_txbcie      DD ?
-can_resv5       DD ?,?,?
+can_resv5       DD ?,?
 can_txefc       DD ?
 can_txefs       DD ?
 can_txefa       DD ?
@@ -158,6 +158,9 @@ SetupDevice  Proc near
     pop edi
     pop es
 ;
+    mov eax,SEG data
+    mov ds,eax
+;
     push cx
     mov eax,1000h    
     AllocateBigLinear
@@ -185,21 +188,16 @@ SetupDevice  Proc near
     SetPageEntry
 ;
     AllocateGdt
-    or dx,si
-    mov ecx,200h
+    mov ecx,1000h
     CreateDataSelector16
     mov es,ebx
     mov ds:can_sel,bx
-;
-    mov eax,es:can_ecr
-    mov eax,es:can_gfc
-    mov eax,es:can_txefa
 ;    
     pop ecx
     pop ebx    
 ;
     GetPciMsi
-    jc sdIrq
+    jc sdDone
 
 sdMsi:
     push cx
@@ -207,7 +205,7 @@ sdMsi:
     mov al,12h
     AllocateInts
     pop cx
-    jc sdIrq
+    jc sdDone
 ;    
     mov dl,1
     SetupPciMsi
@@ -216,18 +214,6 @@ sdMsi:
     mov es,di
     mov edi,OFFSET CanInt
     RequestMsiHandler
-    jmp sdConf
-
-sdIrq:
-    GetPciIrqNr
-    mov ah,12h
-    mov bx,cs
-    mov es,bx
-    mov edi,OFFSET CanInt    
-    RequestIrqHandler
-
-sdConf:
-    mov es,ds:can_sel
     clc
 
 sdDone:
@@ -387,8 +373,9 @@ can_thread_name DB 'Can', 0
 
 can_thread_pr:
     int 3
-    call SetupDevice
-
+    mov eax,SEG data
+    mov ds,eax
+    mov es,ds:can_sel
     retf    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -441,8 +428,8 @@ init_can    Proc far
     push es
     pusha
 ;
-;    call SetupDevice
-;    jc icDone
+    call SetupDevice
+    jc icDone
 ;    
     mov ax,cs
     mov ds,ax
