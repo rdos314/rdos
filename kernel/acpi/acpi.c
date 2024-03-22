@@ -1743,7 +1743,6 @@ int __far ImplGetPciDeviceDsd(int Index, const char *Name, int *Arr, int MaxEntr
 {
     struct TDeviceEntry *DevEntry;
     ACPI_STATUS Status;
-    ACPI_HANDLE Object;
     ACPI_BUFFER Buffer;
     int sel;
     
@@ -1751,12 +1750,9 @@ int __far ImplGetPciDeviceDsd(int Index, const char *Name, int *Arr, int MaxEntr
     {
         DevEntry = PciDevArr[Index];
 
-        Buffer.Length = 0;
-        Buffer.Pointer = 0;
-        Status = AcpiEvaluateObject(Object, "_DSD", 0, &Buffer);
-
-        Buffer.Pointer = RdosAllocateSmallGlobalMem(Buffer.Length);
-        Status = AcpiEvaluateObject(Object, "_DSD", 0, &Buffer);
+        Buffer.Length = 0x1000;
+        Buffer.Pointer = RdosAllocateSmallGlobalMem(0x1000);
+        Status = AcpiEvaluateObject(DevEntry->Handle, "_DSD", 0, &Buffer);
 
         if (Status == AE_OK)
             CheckObj((ACPI_OBJECT *)Buffer.Pointer);
