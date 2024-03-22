@@ -388,12 +388,26 @@ delete_id_hook    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 can_thread_name DB 'Can', 0
+can_config_name DB 'bosch,mram-cfg', 0
 
 can_thread_pr:
     int 3
-    mov eax,SEG data
+;
+    mov ax,SEG data
     mov ds,eax
-    mov es,ds:can_sel
+    mov ds,ds:can_sel
+    mov bh,ds:cd_bus
+    mov bl,ds:cd_dev
+    mov ch,ds:cd_func
+    mov eax,cs
+    mov es,eax
+    mov esi,OFFSET can_config_name
+    mov eax,ds
+    mov fs,eax
+    mov edi,OFFSET cd_config_arr
+    mov eax,8
+    GetPciDsdConfig
+    mov ds:cd_config_size,ax
     retf    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -456,7 +470,7 @@ init_can    Proc far
     mov esi,OFFSET can_thread_pr
     mov ax,2
     mov cx,stack0_size
-;    CreateThread
+    CreateThread
 
 icDone:
     popa
@@ -464,41 +478,6 @@ icDone:
     pop ds
     ret
 init_can    Endp
-
-test_gate_name   DB 'Test', 0
-
-
-can_config_name DB 'bosch,mram-cfg', 0
-
-test_gate    Proc far
-    push ds
-    push es
-    push fs
-    push gs
-    pushad
-;
-    mov ax,SEG data
-    mov ds,eax
-    mov ds,ds:can_sel
-    mov bh,ds:cd_bus
-    mov bl,ds:cd_dev
-    mov ch,ds:cd_func
-    mov eax,cs
-    mov es,eax
-    mov esi,OFFSET can_config_name
-    mov eax,ds
-    mov fs,eax
-    mov edi,OFFSET cd_config_arr
-    mov eax,8
-    GetPciDsdConfig
-;
-    popad
-    pop gs
-    pop fs
-    pop es
-    pop ds
-    ret
-test_gate    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -569,12 +548,6 @@ init    PROC far
     mov edi,OFFSET stop_can_capture_name
     xor dx,dx
     mov ax,stop_can_capture_nr
-    RegisterBimodalUserGate
-;
-    mov esi,OFFSET test_gate
-    mov edi,OFFSET test_gate_name
-    xor dx,dx
-    mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;    
     clc

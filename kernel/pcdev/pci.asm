@@ -1326,7 +1326,7 @@ gpdcDone:
     pop ebp
     pop gs
     pop ds
-    ret
+    retf32
 get_pci_dsd_config   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -1683,55 +1683,87 @@ int __far ImplGetCpuTemperature()
 
 /*##########################################################################
 #
-#   Name       : CheckObj
+#   Name       : GetDsdArr
 #
-#   Purpose....: Check DSD obj
+#   Purpose....: Get Dsd array
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void CheckObj(ACPI_OBJECT *obj)
+int GetDsdArr(ACPI_OBJECT *obj, int *Arr, int MaxEntries)
 {
-    int val;
-    int len;
+    ACPI_OBJECT *objarr;
     int i;
     int count;
-    const char *ptr;
-    ACPI_OBJECT *objarr;
+    int res = 0;
 
-    switch (obj->Type)
+    if (obj->Type == ACPI_TYPE_PACKAGE)
     {
-        case ACPI_TYPE_INTEGER:
-            val = obj->Integer.Value;
-            break;
+        count = obj->Package.Count;
+        objarr = obj->Package.Elements;
 
-        case ACPI_TYPE_STRING:
-            ptr = obj->String.Pointer;
-            len = obj->String.Length;
-            break;
-
-        case ACPI_TYPE_BUFFER:
-            ptr = obj->Buffer.Pointer;
-            len = obj->Buffer.Length;
-            break;
-
-        case ACPI_TYPE_PACKAGE:
-            count = obj->Package.Count;
-            objarr = obj->Package.Elements;
-            for (i = 0; i < count; i++)
-                CheckObj(objarr + i);        
-            break;
-
+        for (i = 0; i < count; i++)
+        {
+            if (objarr[i].Type == ACPI_TYPE_INTEGER && res < MaxEntries)
+            {
+                Arr[res] = objarr[i].Integer.Value;
+                res++;
+            }
+        }
     }
 }
 
 /*##########################################################################
 #
-#   Name       : GetPciDeviceIrq
+#   Name       : GetDsdConfig
 #
-#   Purpose....: Get PCI device IRQ
+#   Purpose....: Get Dsd config
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int GetDsdConfig(ACPI_OBJECT *obj, const char *Name, int *Arr, int MaxEntries)
+{
+    int len;
+    int i;
+    int count;
+    int res = 0;
+    const char *ptr;
+    ACPI_OBJECT *objarr;
+
+    if (obj->Type == ACPI_TYPE_PACKAGE)
+    {
+        count = obj->Package.Count;
+        objarr = obj->Package.Elements;
+
+        if (objarr[0].Type == ACPI_TYPE_STRING)
+        {
+            ptr = objarr[0].String.Pointer;
+            len = objarr[0].String.Length;
+            if (len == strlen(Name))
+                if (!memcmp(Name, ptr, len))
+                    for (i = 1; i < count; i++)
+                        res += GetDsdArr(objarr + i, &Arr[res], MaxEntries - res);
+        }
+        else
+        {
+            for (i = 0; i < count && !res; i++)
+                res = GetDsdConfig(objarr + i, Name, Arr, MaxEntries);
+        }
+
+    }
+    return res;
+}
+
+/*##########################################################################
+#
+#   Name       : GetPciDeviceDsd
+#
+#   Purpose....: Get PCI device DSD
 #
 #   In params..: *
 #   Out params.: *
@@ -1745,6 +1777,7 @@ int __far ImplGetPciDeviceDsd(int Index, const char *Name, int *Arr, int MaxEntr
     ACPI_STATUS Status;
     ACPI_BUFFER Buffer;
     int sel;
+    int count = 0;
     
     if (Index < PciDevCount)
     {
@@ -1755,13 +1788,13 @@ int __far ImplGetPciDeviceDsd(int Index, const char *Name, int *Arr, int MaxEntr
         Status = AcpiEvaluateObject(DevEntry->Handle, "_DSD", 0, &Buffer);
 
         if (Status == AE_OK)
-            CheckObj((ACPI_OBJECT *)Buffer.Pointer);
+            count = GetDsdConfig((ACPI_OBJECT *)Buffer.Pointer, Name, Arr, MaxEntries);
 
         sel = RdosPointerToSelector(Buffer.Pointer);
         RdosFreeMem(sel);        
     }
 
-    return 0;
+    return count;
 }
 
 /*##########################################################################
