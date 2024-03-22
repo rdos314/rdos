@@ -1683,6 +1683,96 @@ int __far ImplGetCpuTemperature()
 
 /*##########################################################################
 #
+#   Name       : CheckObj
+#
+#   Purpose....: Check DSD obj
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void CheckObj(ACPI_OBJECT *obj)
+{
+    int val;
+    int len;
+    int i;
+    int count;
+    const char *ptr;
+    ACPI_OBJECT *objarr;
+
+    switch (obj->Type)
+    {
+        case ACPI_TYPE_INTEGER:
+            val = obj->Integer.Value;
+            break;
+
+        case ACPI_TYPE_STRING:
+            ptr = obj->String.Pointer;
+            len = obj->String.Length;
+            break;
+
+        case ACPI_TYPE_BUFFER:
+            ptr = obj->Buffer.Pointer;
+            len = obj->Buffer.Length;
+            break;
+
+        case ACPI_TYPE_PACKAGE:
+            count = obj->Package.Count;
+            objarr = obj->Package.Elements;
+            for (i = 0; i < count; i++)
+                CheckObj(objarr + i);        
+            break;
+
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : GetPciDeviceIrq
+#
+#   Purpose....: Get PCI device IRQ
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux ImplGetPciDeviceDsd "*" rdosdev parm routine [eax] [es esi] [fs edi] [gs ebx]
+void __far ImplGetPciDeviceDsd(int Index, const char *Name, int *Arr)
+{
+    struct TDeviceEntry *DevEntry;
+    ACPI_STATUS Status;
+    ACPI_HANDLE Object;
+    ACPI_BUFFER Buffer;
+    int sel;
+    
+    if (Index < PciDevCount)
+    {
+        DevEntry = PciDevArr[Index];
+
+        Buffer.Length = 0;
+        Buffer.Pointer = 0;
+        Status = AcpiEvaluateObject(Object, "_DSD", 0, &Buffer);
+
+        Buffer.Pointer = RdosAllocateSmallGlobalMem(Buffer.Length);
+        Status = AcpiEvaluateObject(Object, "_DSD", 0, &Buffer);
+
+        if (Status == AE_OK)
+            CheckObj((ACPI_OBJECT *)Buffer.Pointer);
+
+        sel = RdosPointerToSelector(Buffer.Pointer);
+        RdosFreeMem(sel);        
+    }
+
+    if (Status == AE_OK)
+        RdosSetSuccess();
+    else
+        RdosSetFailure();
+}
+
+/*##########################################################################
+#
 #   Name       : GetListDev
 #
 #   Purpose....: Get position in device-tree
@@ -3294,6 +3384,7 @@ int main()
     RdosRegisterOsGate(osgate_get_acpi_pci_device_name, (__rdos_gate_callback *)&ImplGetPciDeviceName, "Get PCI Device Name");
     RdosRegisterOsGate(osgate_get_acpi_pci_device_irq, (__rdos_gate_callback *)&ImplGetPciDeviceIrq, "Get PCI Device IRQ");
     RdosRegisterOsGate(osgate_get_acpi_pnp_device_mem, (__rdos_gate_callback *)&ImplGetAcpiPnpDeviceMem, "Get ACPI Pnp Device Mem");
+    RdosRegisterOsGate(osgate_get_acpi_pci_dsd, (__rdos_gate_callback *)&ImplGetPciDeviceDsd, "Get ACPI Device DSD");
     RdosRegisterBimodalUserGate(usergate_get_acpi_status, (__rdos_gate_callback *)&ImplGetAcpiStatus, "Get ACPI Status");
     RdosRegisterUserGate(usergate_get_acpi_object, (__rdos_gate_callback *)&ImplGetAcpiObject16, &ImplGetAcpiObject32, "Get ACPI Object");
     RdosRegisterUserGate(usergate_get_acpi_method, (__rdos_gate_callback *)&ImplGetAcpiMethod16, &ImplGetAcpiMethod32, "Get ACPI Method");

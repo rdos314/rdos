@@ -913,6 +913,7 @@
 
 #define osgate_start_tcp_conn_notify 828
 #define osgate_stop_tcp_conn_notify 829
+#define osgate_get_acpi_pci_dsd 830
 
 
 
@@ -1831,4 +1832,5 @@
 
 #define OsGate_start_tcp_conn_notify 0x3E 0x67 0x9a 60 3 0 0 2 0
 #define OsGate_stop_tcp_conn_notify 0x3E 0x67 0x9a 61 3 0 0 2 0
+#define OsGate_get_acpi_pci_dsd 0x3E 0x67 0x9a 62 3 0 0 2 0
 
