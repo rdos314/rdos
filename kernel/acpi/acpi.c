@@ -1738,8 +1738,8 @@ void CheckObj(ACPI_OBJECT *obj)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux ImplGetPciDeviceDsd "*" rdosdev parm routine [eax] [es esi] [fs edi] [gs ebx]
-void __far ImplGetPciDeviceDsd(int Index, const char *Name, int *Arr)
+#pragma aux ImplGetPciDeviceDsd "*" rdosdev parm routine [eax] [es esi] [fs edi] [ecx] value [eax]
+int __far ImplGetPciDeviceDsd(int Index, const char *Name, int *Arr, int MaxEntries)
 {
     struct TDeviceEntry *DevEntry;
     ACPI_STATUS Status;
@@ -1765,10 +1765,7 @@ void __far ImplGetPciDeviceDsd(int Index, const char *Name, int *Arr)
         RdosFreeMem(sel);        
     }
 
-    if (Status == AE_OK)
-        RdosSetSuccess();
-    else
-        RdosSetFailure();
+    return 0;
 }
 
 /*##########################################################################

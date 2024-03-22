@@ -94,6 +94,18 @@ can_txefa       DD ?
 
 can_struc  ENDS 
 
+can_dev_struc   STRUC
+
+cd_reg          DW ?
+cd_bus          DB ?
+cd_dev          DB ?
+cd_func         DB ?
+cd_resv         DB ?
+
+cd_config_size  DW ?
+cd_config_arr   DD 8 DUP(?)
+
+can_dev_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -158,9 +170,6 @@ SetupDevice  Proc near
     pop edi
     pop es
 ;
-    mov eax,SEG data
-    mov ds,eax
-;
     push cx
     mov eax,1000h    
     AllocateBigLinear
@@ -171,27 +180,24 @@ SetupDevice  Proc near
     or al,6
     WritePciDword
 ;
-    mov cl,10h
-    ReadPciDword
-    mov ds:can_bar0,eax
-;
     mov cl,14h
     ReadPciDword
-    mov ds:can_bar0+4,eax
+    mov ebp,eax
+;
+    mov cl,10h
+    ReadPciDword
 ;
     push ebx
     push ecx
 ;
-    mov eax,ds:can_bar0
-    mov ebx,ds:can_bar0+4
+    mov ebx,ebp
     mov al,13h
     SetPageEntry
 ;
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
-    mov es,ebx
-    mov ds:can_sel,bx
+    mov bp,bx
 ;    
     pop ecx
     pop ebx    
@@ -214,6 +220,18 @@ sdMsi:
     mov es,di
     mov edi,OFFSET CanInt
     RequestMsiHandler
+;
+    mov eax,SIZE can_dev_struc
+    AllocateSmallGlobalMem
+;
+    mov es:cd_reg,bp
+    mov es:cd_bus,bh
+    mov es:cd_dev,bl
+    mov es:cd_func,ch
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ds:can_sel,es
     clc
 
 sdDone:
@@ -427,7 +445,7 @@ init_can    Proc far
     push ds
     push es
     pusha
-;
+;    
     call SetupDevice
     jc icDone
 ;    
@@ -438,7 +456,7 @@ init_can    Proc far
     mov esi,OFFSET can_thread_pr
     mov ax,2
     mov cx,stack0_size
-    CreateThread
+;    CreateThread
 
 icDone:
     popa
@@ -446,6 +464,41 @@ icDone:
     pop ds
     ret
 init_can    Endp
+
+test_gate_name   DB 'Test', 0
+
+
+can_config_name DB 'bosch,mram-cfg', 0
+
+test_gate    Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,SEG data
+    mov ds,eax
+    mov ds,ds:can_sel
+    mov bh,ds:cd_bus
+    mov bl,ds:cd_dev
+    mov ch,ds:cd_func
+    mov eax,cs
+    mov es,eax
+    mov esi,OFFSET can_config_name
+    mov eax,ds
+    mov fs,eax
+    mov edi,OFFSET cd_config_arr
+    mov eax,8
+    GetPciDsdConfig
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+test_gate    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -516,6 +569,12 @@ init    PROC far
     mov edi,OFFSET stop_can_capture_name
     xor dx,dx
     mov ax,stop_can_capture_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;    
     clc
