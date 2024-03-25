@@ -102,10 +102,25 @@ cd_dev          DB ?
 cd_func         DB ?
 cd_resv         DB ?
 
-cd_config_size  DW ?
-cd_config_arr   DD 8 DUP(?)
+// ram config settings
+cd_sidf_offset  DD ?
+cd_sidf_count   DD ?
+cd_xidf_count   DD ?
+cd_rxf0_count   DD ?
+cd_rxf1_count   DD ?
+cd_rxb_count    DD ?
+cd_txe_count    DD ?
+cd_txb_count    DD ?
 
 can_dev_struc   ENDS
+
+SIDF_ELEMENT_SIZE = 4
+XIDF_ELEMENT_SIZE = 8
+RXF0_ELEMENT_SIZE = 72
+RXF1_ELEMENT_SIZE = 72
+RXB_ELEMENT_SIZE = 72
+TXE_ELEMENT_SIZE = 8
+TXB_ELEMENT_SIZE = 72
 
 data    SEGMENT byte public 'DATA'
 
@@ -396,6 +411,15 @@ can_thread_pr:
     mov ax,SEG data
     mov ds,eax
     mov ds,ds:can_sel
+    mov ds:cd_sidf_offset,0
+    mov ds:cd_sidf_count,0
+    mov ds:cd_xidf_count,0
+    mov ds:cd_rxf0_count,0
+    mov ds:cd_rxf1_count,0
+    mov ds:cd_rxb_count,0
+    mov ds:cd_txe_count,0
+    mov ds:cd_txb_count,0
+;
     mov bh,ds:cd_bus
     mov bl,ds:cd_dev
     mov ch,ds:cd_func
@@ -404,10 +428,11 @@ can_thread_pr:
     mov esi,OFFSET can_config_name
     mov eax,ds
     mov fs,eax
-    mov edi,OFFSET cd_config_arr
+    mov edi,OFFSET cd_sidf_offset
     mov eax,8
     GetPciDsdConfig
-    mov ds:cd_config_size,ax
+;
+    mov eax,ds:cd_sidf_offset
     retf    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
