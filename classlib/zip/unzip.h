@@ -65,6 +65,7 @@ struct TUnzipHeader
     unsigned short zipfile_comment_length;
 };
 
+bool GzipToZip(const char *GzipFile, const char *ZipFile, const char *name);
 
 class TUnzip;
 
