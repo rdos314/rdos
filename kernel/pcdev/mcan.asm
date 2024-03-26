@@ -102,6 +102,9 @@ cd_dev          DB ?
 cd_func         DB ?
 cd_resv         DB ?
 
+cd_ver          DB ?
+cd_rel          DB ?
+
 // ram config settings
 cd_sidf_offset  DD ?
 cd_sidf_count   DD ?
@@ -159,11 +162,52 @@ CanInt   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           SetupBitTiming
+;
+;   DESCRIPTION:    Setup bit timing
+;
+;   PARAMETERS:     ES      CAN sel
+;                   AL      TSEG1
+;                   AH      TSEG2
+;                   CL      Baud divisor
+;                   BL      SJW
+;
+;   RETURNS:        
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupBitTiming  Proc near
+    pushad
+;
+    dec cl
+    movzx edx,cl
+    shl edx,16
+;
+    dec bl
+    movzx ebx,bl
+    shl ebx,25
+    or edx,ebx
+;
+    dec ah
+    mov dl,ah
+;
+    dec al
+    mov dh,al
+    mov es:can_btp,edx
+;
+    popad  
+    ret
+SetupBitTiming  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           SetupDevice
 ;
 ;   DESCRIPTION:    Setup device
 ;
 ;   RETURNS:        NC      OK
+;                      DS   Can sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -247,7 +291,56 @@ sdMsi:
     mov ax,SEG data
     mov ds,eax
     mov ds:can_sel,es
+;
+    mov ds,ds:can_sel
+    mov ds:cd_sidf_offset,0
+    mov ds:cd_sidf_count,0
+    mov ds:cd_xidf_count,0
+    mov ds:cd_rxf0_count,0
+    mov ds:cd_rxf1_count,0
+    mov ds:cd_rxb_count,0
+    mov ds:cd_txe_count,0
+    mov ds:cd_txb_count,0
+;
+    mov bh,ds:cd_bus
+    mov bl,ds:cd_dev
+    mov ch,ds:cd_func
+    mov eax,cs
+    mov es,eax
+    mov esi,OFFSET can_config_name
+    mov eax,ds
+    mov fs,eax
+    mov edi,OFFSET cd_sidf_offset
+    mov eax,8
+    GetPciDsdConfig
+;
+    mov eax,ds:cd_rxf0_count
+    or eax,eax
+    jz sdFail
+;
+    mov es,ds:can_sel
+    mov eax,es:can_crel
+    shr eax,24
+    mov ah,al
+    and al,0Fh
+    mov ds:cd_rel,al
+    and ah,0F0h
+    shr ah,4
+    mov ds:cd_ver,ah
+;
+    mov al,ds:cd_ver
+    cmp al,3
+    jne sdFail
+;
+    mov al,ds:cd_rel
+    cmp al,3
+    ja sdFail
+;
     clc
+    jmp sdDone
+
+sdFail:
+    stc
 
 sdDone:
     ret
@@ -411,28 +504,19 @@ can_thread_pr:
     mov ax,SEG data
     mov ds,eax
     mov ds,ds:can_sel
-    mov ds:cd_sidf_offset,0
-    mov ds:cd_sidf_count,0
-    mov ds:cd_xidf_count,0
-    mov ds:cd_rxf0_count,0
-    mov ds:cd_rxf1_count,0
-    mov ds:cd_rxb_count,0
-    mov ds:cd_txe_count,0
-    mov ds:cd_txb_count,0
+    mov es,ds:cd_reg
 ;
-    mov bh,ds:cd_bus
-    mov bl,ds:cd_dev
-    mov ch,ds:cd_func
-    mov eax,cs
-    mov es,eax
-    mov esi,OFFSET can_config_name
-    mov eax,ds
-    mov fs,eax
-    mov edi,OFFSET cd_sidf_offset
-    mov eax,8
-    GetPciDsdConfig
+    mov eax,es:can_cccr
+    or al,3
+    mov es:can_cccr,eax
 ;
-    mov eax,ds:cd_sidf_offset
+    mov al,16   ; TSEG 1
+    mov ah,7    ; TSEG 2
+    mov bl,4    ; SJW
+    mov cl,1    ; Divisor
+    call SetupBitTiming
+
+ctDone:
     retf    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
