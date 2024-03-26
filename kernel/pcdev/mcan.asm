@@ -36,7 +36,6 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
 INCLUDE pci.inc
 
-
 can_struc   STRUC
 
 can_crel	DD ?
@@ -100,6 +99,7 @@ cd_bar_phys     DD ?,?
 cd_bar_linear   DD ?
 cd_ram_size     DD ?
 cd_reg          DW ?
+cd_filter_sel   DW ?
 cd_bus          DB ?
 cd_dev          DB ?
 cd_func         DB ?
@@ -273,6 +273,59 @@ rbInitLoop:
     popad
     ret
 RemapBar  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateFilterSel
+;
+;   DESCRIPTION:    Create filter sel
+;
+;   PARAMETERS:     DS      CAN sel
+;                   EDX     RAM linear
+;
+;   RETURNS:        EDX     RAM linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateFilterSel  Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    AllocateGdt
+    mov ecx,SIDF_ENTRIES * SIDF_ELEMENT_SIZE
+    CreateDataSelector16
+    mov es,bx
+    xor edi,edi
+    mov ecx,SIDF_ENTRIES
+    mov eax,0FFFFFFFFh
+    rep stosd
+    mov ds:cd_filter_sel,bx
+;
+    mov es,ds:cd_reg
+    mov eax,SIDF_ENTRIES
+    shl eax,16
+    mov ecx,edx
+    sub ecx,ds:cd_bar_linear
+    sub ecx,ds:cd_sidf_offset
+    mov ax,cx
+    mov es:can_sidfc,eax
+;
+    xor eax,eax
+    mov es:can_xidfc,eax
+;
+    add edx,SIDF_ENTRIES * SIDF_ELEMENT_SIZE
+;
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+CreateFilterSel  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -603,8 +656,11 @@ can_thread_pr:
     mov bl,4    ; SJW
     mov cl,1    ; Divisor
     call SetupBitTiming
+;
+    mov edx,ds:cd_bar_linear
+    add edx,ds:cd_sidf_offset
+    call CreateFiltersel
    
-
 ctDone:
     retf    
 
