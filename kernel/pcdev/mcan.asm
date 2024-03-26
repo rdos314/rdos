@@ -97,6 +97,8 @@ can_struc  ENDS
 can_dev_struc   STRUC
 
 cd_bar_phys     DD ?,?
+cd_bar_linear   DD ?
+cd_ram_size     DD ?
 cd_reg          DW ?
 cd_bus          DB ?
 cd_dev          DB ?
@@ -120,11 +122,19 @@ can_dev_struc   ENDS
 
 SIDF_ELEMENT_SIZE = 4
 XIDF_ELEMENT_SIZE = 8
-RXF0_ELEMENT_SIZE = 72
-RXF1_ELEMENT_SIZE = 72
-RXB_ELEMENT_SIZE = 72
+RXF0_ELEMENT_SIZE = 16
+RXF1_ELEMENT_SIZE = 16
+RXB_ELEMENT_SIZE = 16
 TXE_ELEMENT_SIZE = 8
-TXB_ELEMENT_SIZE = 72
+TXB_ELEMENT_SIZE = 16
+
+SIDF_ENTRIES = 16
+XIDF_ENTRIES = 0
+RXF0_ENTRIES = 64
+RXF1_ENTRIES = 64
+RXB_ENTRIES = 0
+TXE_ENTRIES = 0
+TXB_ENTRIES = 32
 
 data    SEGMENT byte public 'DATA'
 
@@ -208,14 +218,57 @@ SetupBitTiming  Endp
 ;   DESCRIPTION:    Remap BAR with correct size
 ;
 ;   PARAMETERS:     DS      CAN sel
+;                   ES      Can reg sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RemapBar  Proc near
     pushad
 ;
+    mov ecx,SIDF_ENTRIES * SIDF_ELEMENT_SIZE
+    add ecx,XIDF_ENTRIES * XIDF_ELEMENT_SIZE
+    add ecx,RXF0_ENTRIES * RXF0_ELEMENT_SIZE
+    add ecx,RXF1_ENTRIES * RXF1_ELEMENT_SIZE
+    add ecx,RXB_ENTRIES * RXB_ELEMENT_SIZE
+    add ecx,TXE_ENTRIES * TXE_ELEMENT_SIZE
+    add ecx,TXB_ENTRIES * TXB_ELEMENT_SIZE
+    mov ds:cd_ram_size,ecx
+;
     mov eax,ds:cd_bar_phys
     mov ebx,ds:cd_bar_phys+4
+    add eax,ds:cd_sidf_offset
+    add ecx,eax
+    sub ecx,ds:cd_bar_phys
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h
+;
+    push ecx
+    mov eax,ecx
+    AllocateBigLinear
+    pop ecx
+    mov ds:cd_bar_linear,edx
+;
+    mov eax,ds:cd_bar_phys
+    or ax,813h
+
+rbInitLoop:
+    SetPageEntry
+    add edx,1000h
+    add eax,1000h
+    sub ecx,1000h
+    jnz rbInitLoop
+;
+    mov bx,ds:cd_reg
+    GetSelectorBaseSize
+;
+    mov ecx,1000h
+    FreeLinear
+;
+    mov ecx,SIZE can_struc
+    mov edx,ds:cd_bar_linear
+    CreateDataSelector16
+    mov es,bx
 ;
     popad
     ret
@@ -272,16 +325,19 @@ SetupDevice  Proc near
     push ecx
 ;
     mov ebx,ebp
-    mov al,13h
+    xor al,al
+    or ax,813h
     SetPageEntry
 ;
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
 ;
+    push eax
     mov eax,SIZE can_dev_struc
     AllocateSmallGlobalMem
     mov es:cd_reg,bx
+    pop eax
 ;
     xor al,al
     mov es:cd_bar_phys,eax
