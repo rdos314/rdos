@@ -96,6 +96,7 @@ can_struc  ENDS
 
 can_dev_struc   STRUC
 
+cd_bar_phys     DD ?,?
 cd_reg          DW ?
 cd_bus          DB ?
 cd_dev          DB ?
@@ -166,7 +167,7 @@ CanInt   Endp
 ;
 ;   DESCRIPTION:    Setup bit timing
 ;
-;   PARAMETERS:     ES      CAN sel
+;   PARAMETERS:     ES      CAN reg sel
 ;                   AL      TSEG1
 ;                   AH      TSEG2
 ;                   CL      Baud divisor
@@ -198,6 +199,27 @@ SetupBitTiming  Proc near
     popad  
     ret
 SetupBitTiming  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           RemapBar
+;
+;   DESCRIPTION:    Remap BAR with correct size
+;
+;   PARAMETERS:     DS      CAN sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemapBar  Proc near
+    pushad
+;
+    mov eax,ds:cd_bar_phys
+    mov ebx,ds:cd_bar_phys+4
+;
+    popad
+    ret
+RemapBar  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -256,10 +278,21 @@ SetupDevice  Proc near
     AllocateGdt
     mov ecx,1000h
     CreateDataSelector16
-    mov bp,bx
+;
+    mov eax,SIZE can_dev_struc
+    AllocateSmallGlobalMem
+    mov es:cd_reg,bx
+;
+    xor al,al
+    mov es:cd_bar_phys,eax
+    mov es:cd_bar_phys+4,ebp
 ;    
     pop ecx
     pop ebx    
+;
+    mov es:cd_bus,bh
+    mov es:cd_dev,bl
+    mov es:cd_func,ch
 ;
     GetPciMsi
     jc sdDone
@@ -275,18 +308,13 @@ sdMsi:
     mov dl,1
     SetupPciMsi
 ;    
-    mov di,cs
-    mov es,di
+    push es
+    mov edi,cs
+    mov es,edi
     mov edi,OFFSET CanInt
     RequestMsiHandler
+    pop es
 ;
-    mov eax,SIZE can_dev_struc
-    AllocateSmallGlobalMem
-;
-    mov es:cd_reg,bp
-    mov es:cd_bus,bh
-    mov es:cd_dev,bl
-    mov es:cd_func,ch
 ;
     mov ax,SEG data
     mov ds,eax
@@ -318,7 +346,7 @@ sdMsi:
     or eax,eax
     jz sdFail
 ;
-    mov es,ds:can_sel
+    mov es,ds:cd_reg
     mov eax,es:can_crel
     shr eax,24
     mov ah,al
@@ -506,6 +534,8 @@ can_thread_pr:
     mov ds,ds:can_sel
     mov es,ds:cd_reg
 ;
+    call RemapBar
+;
     mov eax,es:can_cccr
     or al,3
     mov es:can_cccr,eax
@@ -515,6 +545,7 @@ can_thread_pr:
     mov bl,4    ; SJW
     mov cl,1    ; Divisor
     call SetupBitTiming
+   
 
 ctDone:
     retf    
