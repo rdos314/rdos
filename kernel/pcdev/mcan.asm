@@ -605,6 +605,7 @@ hook_gen_bus_msg    Endp
 create_id_hook_name   DB 'Create CAN ID Hook', 0
 
 create_id_hook    Proc far
+    int 3
     stc
     ret
 create_id_hook    Endp    
@@ -623,6 +624,7 @@ create_id_hook    Endp
 delete_id_hook_name   DB 'Delete CAN ID Hook', 0
 
 delete_id_hook    Proc far    
+    int 3
     stc
     ret
 delete_id_hook    Endp    
