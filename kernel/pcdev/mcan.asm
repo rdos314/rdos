@@ -351,7 +351,7 @@ SetupDevice  Proc near
     mov es:cd_func,ch
 ;
     GetPciMsi
-    jc sdDone
+    jc sdFail
 
 sdMsi:
     push cx
@@ -359,7 +359,7 @@ sdMsi:
     mov al,12h
     AllocateInts
     pop cx
-    jc sdDone
+    jc sdFail
 ;    
     mov dl,1
     SetupPciMsi
@@ -420,10 +420,15 @@ sdMsi:
     cmp al,3
     ja sdFail
 ;
+    call RemapBar
     clc
     jmp sdDone
 
 sdFail:
+    FreeMem
+    mov eax,ds
+    mov es,eax
+    FreeMem
     stc
 
 sdDone:
@@ -584,13 +589,10 @@ can_config_name DB 'bosch,mram-cfg', 0
 
 can_thread_pr:
     int 3
-;
     mov ax,SEG data
     mov ds,eax
     mov ds,ds:can_sel
     mov es,ds:cd_reg
-;
-    call RemapBar
 ;
     mov eax,es:can_cccr
     or al,3
