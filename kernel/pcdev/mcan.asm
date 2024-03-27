@@ -36,6 +36,22 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\core.inc
 INCLUDE pci.inc
 
+SIDF_ELEMENT_SIZE = 4
+XIDF_ELEMENT_SIZE = 8
+RXF0_ELEMENT_SIZE = 16
+RXF1_ELEMENT_SIZE = 16
+RXB_ELEMENT_SIZE = 16
+TXE_ELEMENT_SIZE = 8
+TXB_ELEMENT_SIZE = 16
+
+SIDF_ENTRIES = 16
+XIDF_ENTRIES = 0
+RXF0_ENTRIES = 64
+RXF1_ENTRIES = 64
+RXB_ENTRIES = 0
+TXE_ENTRIES = 0
+TXB_ENTRIES = 32
+
 can_struc   STRUC
 
 can_crel	DD ?
@@ -120,26 +136,25 @@ cd_txb_count    DD ?
 
 can_dev_struc   ENDS
 
-SIDF_ELEMENT_SIZE = 4
-XIDF_ELEMENT_SIZE = 8
-RXF0_ELEMENT_SIZE = 16
-RXF1_ELEMENT_SIZE = 16
-RXB_ELEMENT_SIZE = 16
-TXE_ELEMENT_SIZE = 8
-TXB_ELEMENT_SIZE = 16
 
-SIDF_ENTRIES = 16
-XIDF_ENTRIES = 0
-RXF0_ENTRIES = 64
-RXF1_ENTRIES = 64
-RXB_ENTRIES = 0
-TXE_ENTRIES = 0
-TXB_ENTRIES = 32
+id_hook_struc   STRUC
+
+ih_id       DD ?
+ih_mask     DD ?
+ih_offset   DD ?
+ih_sel      DW ?
+ih_param    DW ?
+
+id_hook_struc   ENDS
 
 data    SEGMENT byte public 'DATA'
 
 can_sel                 DW ?
 can_thread              DW ?
+
+can_rec_section         section_typ <>
+
+can_id_hook_arr         DD 15 * 4 DUP(?)
 
 can_bar0                DD ?,?
 
@@ -606,7 +621,53 @@ create_id_hook_name   DB 'Create CAN ID Hook', 0
 
 create_id_hook    Proc far
     int 3
+    push ds
+    push es
+    push ecx
+    push esi
+    push ebp
+;    
+    mov ebp,ds
+    mov ebx,SEG data
+    mov ds,ebx
+;
+    mov bx,OFFSET can_id_hook_arr
+    mov ecx,15
+
+cihLoop:
+    mov si,ds:[bx].ih_sel
+    or si,si
+    jz cihFound
+;
+    add bx,16        
+    loop cihLoop
+;
     stc
+    jmp cihDone
+
+cihFound:
+    EnterSection ds:can_rec_section
+    mov ds:[bx].ih_id,eax
+    mov ds:[bx].ih_mask,edx
+    mov ds:[bx].ih_param,bp
+    mov ds:[bx].ih_offset,edi
+    mov ds:[bx].ih_sel,es
+;            
+    sub bx,OFFSET can_id_hook_arr
+    shr bx,4
+    inc bx
+;
+    mov es,ds:can_sel
+;    call SetupIdFilter
+    LeaveSection ds:can_rec_section    
+    clc
+    
+cihDone:
+    pop ebp
+    pop esi
+    pop ecx
+    pop es
+    pop ds    
     ret
 create_id_hook    Endp    
 
@@ -625,7 +686,41 @@ delete_id_hook_name   DB 'Delete CAN ID Hook', 0
 
 delete_id_hook    Proc far    
     int 3
-    stc
+    or bx,bx
+    jz dihDone
+;
+    cmp bx,15
+    jae dihDone
+;        
+    push ds
+    push es
+    push eax
+    push ebx
+;    
+    mov eax,SEG data
+    mov ds,eax
+    EnterSection ds:can_rec_section
+    mov es,ds:can_sel
+;    call ClearIdFilter
+;    
+    dec bx
+    shl bx,4
+    add bx,OFFSET can_id_hook_arr
+    mov ds:[bx].ih_id,0
+    mov ds:[bx].ih_mask,0
+    mov ds:[bx].ih_param,0
+    mov ds:[bx].ih_offset,0
+    mov ds:[bx].ih_sel,0
+;
+    LeaveSection ds:can_rec_section    
+;    
+    pop ebx
+    pop eax
+    pop es
+    pop ds    
+    
+dihDone:
+    clc
     ret
 delete_id_hook    Endp    
 
@@ -752,6 +847,13 @@ init    PROC far
     mov ax,SEG data
     mov ds,ax
     mov es,ax
+;
+    InitSection ds:can_rec_section
+;
+    mov edi,OFFSET can_id_hook_arr
+    mov ecx,4 * 15
+    xor eax,eax
+    rep stosd
 ;
     mov ax,cs
     mov es,ax
