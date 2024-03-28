@@ -764,7 +764,8 @@ reset_can_buffers    Endp
 send_can_bus_msg_name   DB 'Send CAN Bus Message', 0
 
 send_can_bus_msg    Proc far
-    stc
+    int 3
+    clc
     ret
 send_can_bus_msg    Endp    
 
@@ -786,7 +787,8 @@ send_can_bus_msg    Endp
 send_can_bus_block_name   DB 'Send CAN Bus Message Block', 0
 
 send_can_bus_block    Proc far
-    stc
+    int 3
+    clc
     ret
 send_can_bus_block    Endp    
 
@@ -804,7 +806,8 @@ send_can_bus_block    Endp
 has_can_send_buf_name   DB 'Has CAN Send Buf', 0
 
 has_can_send_buf    Proc far
-    stc
+    int 3
+    clc
     ret
 has_can_send_buf    Endp    
 
@@ -822,7 +825,8 @@ has_can_send_buf    Endp
 hook_gen_bus_msg_name   DB 'Hook General CAN Bus Message', 0
 
 hook_gen_bus_msg    Proc far
-    stc
+    int 3
+    clc
     ret
 hook_gen_bus_msg    Endp    
 
@@ -996,9 +1000,10 @@ can_thread_pr:
     call CreateRx1Sel
     call CreateTxSel
 ;
-    int 3   
     xor eax,eax
     mov es:can_cccr,eax
+;
+    int 3
 
 ctDone:
     retf    
