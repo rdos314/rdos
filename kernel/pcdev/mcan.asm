@@ -154,7 +154,7 @@ can_thread              DW ?
 
 can_rec_section         section_typ <>
 
-can_id_hook_arr         DD 15 * 4 DUP(?)
+can_id_hook_arr         DD 16 * 4 DUP(?)
 
 can_bar0                DD ?,?
 
@@ -341,6 +341,82 @@ CreateFilterSel  Proc near
     pop es
     ret
 CreateFilterSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           ClearIdFilter
+;
+;   DESCRIPTION:    Clear ID filter (empty msg)
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearIdFilter  Proc near
+    push ds
+    push eax
+    push ebx
+;
+    mov ds,es:cd_filter_sel
+    dec bx
+    shl bx,2
+    xor eax,eax
+    mov ds:[bx],eax
+;
+    pop ebx
+    pop eax
+    pop ds
+    ret
+ClearIdFilter    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           SetupIdFilter
+;
+;   DESCRIPTION:    Setup ID filter
+;
+;   PARAMETERS:     ES      Can sel
+;                   BX      Message #
+;                   EAX     ID
+;                   EDX     Mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupIdFilter  Proc near
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    mov ds,es:cd_filter_sel
+    dec bx
+;
+    shr eax,2
+    shr edx,18
+    mov ax,dx
+    test bx,1
+    jz sifEven
+
+sifOdd:
+    or eax,88000000h
+    jmp sifSave
+
+sifEven:
+    or eax,90000000h
+
+sifSave:    
+    shl bx,2
+    mov ds:[bx],eax
+;
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+SetupIdFilter    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -632,7 +708,7 @@ create_id_hook    Proc far
     mov ds,ebx
 ;
     mov bx,OFFSET can_id_hook_arr
-    mov ecx,15
+    mov ecx,16
 
 cihLoop:
     mov si,ds:[bx].ih_sel
@@ -658,7 +734,7 @@ cihFound:
     inc bx
 ;
     mov es,ds:can_sel
-;    call SetupIdFilter
+    call SetupIdFilter
     LeaveSection ds:can_rec_section    
     clc
     
@@ -689,7 +765,7 @@ delete_id_hook    Proc far
     or bx,bx
     jz dihDone
 ;
-    cmp bx,15
+    cmp bx,16
     jae dihDone
 ;        
     push ds
@@ -701,7 +777,7 @@ delete_id_hook    Proc far
     mov ds,eax
     EnterSection ds:can_rec_section
     mov es,ds:can_sel
-;    call ClearIdFilter
+    call ClearIdFilter
 ;    
     dec bx
     shl bx,4
@@ -738,7 +814,6 @@ can_thread_name DB 'Can', 0
 can_config_name DB 'bosch,mram-cfg', 0
 
 can_thread_pr:
-    int 3
     mov ax,SEG data
     mov ds,eax
     mov ds,ds:can_sel
@@ -757,6 +832,7 @@ can_thread_pr:
     mov edx,ds:cd_bar_linear
     add edx,ds:cd_sidf_offset
     call CreateFiltersel
+    int 3
    
 ctDone:
     retf    
@@ -851,7 +927,7 @@ init    PROC far
     InitSection ds:can_rec_section
 ;
     mov edi,OFFSET can_id_hook_arr
-    mov ecx,4 * 15
+    mov ecx,4 * 16
     xor eax,eax
     rep stosd
 ;
