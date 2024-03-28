@@ -970,8 +970,7 @@ can_thread_pr:
     mov ds,ds:can_sel
     mov es,ds:cd_reg
 ;
-    mov eax,es:can_cccr
-    or al,3
+    mov eax,3
     mov es:can_cccr,eax
 ;
     mov al,16   ; TSEG 1
@@ -980,14 +979,27 @@ can_thread_pr:
     mov cl,1    ; Divisor
     call SetupBitTiming
 ;
+    mov eax,3Fh
+    mov es:can_gfc,eax
+;
+    xor eax,eax
+    mov es:can_rxesc,eax
+
+    xor eax,eax
+    mov es:can_txesc,eax
+;
     mov edx,ds:cd_bar_linear
     add edx,ds:cd_sidf_offset
+;
     call CreateFiltersel
     call CreateRx0Sel
     call CreateRx1Sel
-    int 3
     call CreateTxSel
-   
+;
+    int 3   
+    xor eax,eax
+    mov es:can_cccr,eax
+
 ctDone:
     retf    
 
