@@ -118,6 +118,7 @@ cd_reg          DW ?
 cd_filter_sel   DW ?
 cd_rx0_sel      DW ?
 cd_rx1_sel      DW ?
+cd_tx_sel       DW ?
 cd_bus          DB ?
 cd_dev          DB ?
 cd_func         DB ?
@@ -443,6 +444,56 @@ CreateRx1Sel  Proc near
     pop es
     ret
 CreateRx1Sel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateTxSel
+;
+;   DESCRIPTION:    Create tx0 fifo selector
+;
+;   PARAMETERS:     DS      CAN sel
+;                   EDX     RAM linear
+;
+;   RETURNS:        EDX     RAM linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateTxSel  Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    AllocateGdt
+    mov ecx,TXB_ENTRIES * TXB_ELEMENT_SIZE
+    CreateDataSelector16
+    mov es,bx
+    xor edi,edi
+    mov ecx,TXB_ENTRIES * TXB_ELEMENT_SIZE / 4
+    xor eax,eax
+    rep stosd
+    mov ds:cd_tx_sel,bx
+;
+    mov es,ds:cd_reg
+    mov eax,TXB_ENTRIES
+    shl eax,24
+    mov ecx,edx
+    sub ecx,ds:cd_bar_linear
+    sub ecx,ds:cd_sidf_offset
+    mov ax,cx
+    mov es:can_txbc,eax
+;
+    add edx,TXB_ENTRIES * TXB_ELEMENT_SIZE
+;
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+CreateTxSel  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -932,9 +983,10 @@ can_thread_pr:
     mov edx,ds:cd_bar_linear
     add edx,ds:cd_sidf_offset
     call CreateFiltersel
-    int 3
     call CreateRx0Sel
     call CreateRx1Sel
+    int 3
+    call CreateTxSel
    
 ctDone:
     retf    
