@@ -116,6 +116,8 @@ cd_bar_linear   DD ?
 cd_ram_size     DD ?
 cd_reg          DW ?
 cd_filter_sel   DW ?
+cd_rx0_sel      DW ?
+cd_rx1_sel      DW ?
 cd_bus          DB ?
 cd_dev          DB ?
 cd_func         DB ?
@@ -341,6 +343,106 @@ CreateFilterSel  Proc near
     pop es
     ret
 CreateFilterSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateRx0Sel
+;
+;   DESCRIPTION:    Create rx0 fifo selector
+;
+;   PARAMETERS:     DS      CAN sel
+;                   EDX     RAM linear
+;
+;   RETURNS:        EDX     RAM linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateRx0Sel  Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    AllocateGdt
+    mov ecx,RXF0_ENTRIES * RXF0_ELEMENT_SIZE
+    CreateDataSelector16
+    mov es,bx
+    xor edi,edi
+    mov ecx,RXF0_ENTRIES * RXF0_ELEMENT_SIZE / 4
+    xor eax,eax
+    rep stosd
+    mov ds:cd_rx0_sel,bx
+;
+    mov es,ds:cd_reg
+    mov eax,RXF0_ENTRIES
+    shl eax,16
+    mov ecx,edx
+    sub ecx,ds:cd_bar_linear
+    sub ecx,ds:cd_sidf_offset
+    mov ax,cx
+    mov es:can_rxf0c,eax
+;
+    add edx,RXF0_ENTRIES * RXF0_ELEMENT_SIZE
+;
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+CreateRx0Sel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CreateRx1Sel
+;
+;   DESCRIPTION:    Create rx1 fifo selector
+;
+;   PARAMETERS:     DS      CAN sel
+;                   EDX     RAM linear
+;
+;   RETURNS:        EDX     RAM linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateRx1Sel  Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edi
+;
+    AllocateGdt
+    mov ecx,RXF1_ENTRIES * RXF1_ELEMENT_SIZE
+    CreateDataSelector16
+    mov es,bx
+    xor edi,edi
+    mov ecx,RXF1_ENTRIES * RXF1_ELEMENT_SIZE / 4
+    xor eax,eax
+    rep stosd
+    mov ds:cd_rx1_sel,bx
+;
+    mov es,ds:cd_reg
+    mov eax,RXF1_ENTRIES
+    shl eax,16
+    mov ecx,edx
+    sub ecx,ds:cd_bar_linear
+    sub ecx,ds:cd_sidf_offset
+    mov ax,cx
+    mov es:can_rxf1c,eax
+;
+    add edx,RXF1_ENTRIES * RXF1_ELEMENT_SIZE
+;
+    pop edi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+CreateRx1Sel  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -696,7 +798,6 @@ hook_gen_bus_msg    Endp
 create_id_hook_name   DB 'Create CAN ID Hook', 0
 
 create_id_hook    Proc far
-    int 3
     push ds
     push es
     push ecx
@@ -761,7 +862,6 @@ create_id_hook    Endp
 delete_id_hook_name   DB 'Delete CAN ID Hook', 0
 
 delete_id_hook    Proc far    
-    int 3
     or bx,bx
     jz dihDone
 ;
@@ -833,6 +933,8 @@ can_thread_pr:
     add edx,ds:cd_sidf_offset
     call CreateFiltersel
     int 3
+    call CreateRx0Sel
+    call CreateRx1Sel
    
 ctDone:
     retf    
