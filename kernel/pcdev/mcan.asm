@@ -780,8 +780,56 @@ reset_can_buffers    Endp
 send_can_bus_msg_name   DB 'Send CAN Bus Message', 0
 
 send_can_bus_msg    Proc far
+    push ds
+    push es
+    push ecx
+    push esi
+    push edi
+;
     int 3
+    mov esi,SEG data
+    mov ds,esi
+    mov ds,ds:can_sel
+    mov es,ds:cd_reg
+    mov esi,es:can_txfqs
+    shr esi,16
+    test si,20h
+    jnz scbFail
+;
+    mov edi,esi
+    and edi,1Fh
+    shl edi,4
+    mov es,ds:cd_tx_sel
+    mov es:[edi],ebx
+    add edi,4
+;
+    movzx ecx,cl
+    shl ecx,16
+    mov es:[edi],ecx
+    add edi,4
+;
+    mov es:[edi],eax
+    add edi,4
+;
+    mov es:[edi],edx
+;
+    mov cx,si
+    mov esi,1
+    shl esi,cl
+    mov es,ds:cd_reg
+    mov es:can_txbar,esi
     clc
+    jmp scbDone
+
+scbFail:
+    stc
+
+scbDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+    pop ds
     ret
 send_can_bus_msg    Endp    
 
