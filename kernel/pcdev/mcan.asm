@@ -209,20 +209,36 @@ SetupBitTiming  Proc near
     pushad
 ;
     dec cl
+    dec bl
+    dec ah
+    dec al
+;
     movzx edx,cl
     shl edx,16
 ;
-    dec bl
-    movzx ebx,bl
-    shl ebx,25
-    or edx,ebx
+    movzx esi,bl
+    shl esi,25
+    or edx,esi
 ;
-    dec ah
     mov dl,ah
 ;
-    dec al
     mov dh,al
     mov es:can_btp,edx
+;
+    movzx edx,bl
+;
+    movzx esi,ah
+    shl esi,4
+    or edx,esi
+;
+    movzx esi,al
+    shl esi,8
+    or edx,esi
+;
+    movzx esi,cl
+    shl esi,16
+    or edx,esi
+    mov es:can_dbtp,edx
 ;
     popad  
     ret
@@ -977,10 +993,10 @@ can_thread_pr:
     mov eax,3
     mov es:can_cccr,eax
 ;
-    mov al,16   ; TSEG 1
-    mov ah,7    ; TSEG 2
+    mov al,11   ; TSEG 1
+    mov ah,4    ; TSEG 2
     mov bl,4    ; SJW
-    mov cl,1    ; Divisor
+    mov cl,2    ; Divisor
     call SetupBitTiming
 ;
     mov eax,3Fh
