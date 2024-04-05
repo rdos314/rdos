@@ -554,7 +554,7 @@ int TQuizQ10::GetChoice(TQuizRow *row, int pos, bool rev)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizQ10::AddFacet(TQuizRow *row, int facet, int start, bool rev1, bool rev2, bool rev3, bool rev4)
+int TQuizQ10::AddFacet(TQuizRow *row, int facet, int start, bool rev1, bool rev2, bool rev3, bool rev4)
 {
     int score = 0;
 
@@ -564,6 +564,7 @@ void TQuizQ10::AddFacet(TQuizRow *row, int facet, int start, bool rev1, bool rev
     score += GetChoice(row, start + 90, rev4);
 
     row->Quiz[239 + facet] = score;
+    return score;
 }
 
 /*##################  TQuizQ10::ProcessRow ##########################
@@ -587,10 +588,14 @@ void TQuizQ10::ProcessRow(char *str)
     int hour, min, sec;
     TDateTime *time;
     TQuizRow Row;
-    int score = 0;
+    int score;
     int corr_count = 0;
+    int n, e, o, a, c;
 
     str++;
+
+    for (i = 0; i < 269; i++)
+        Row.Quiz[i] = 0;
 
     ptr = str;
     for (fieldno = 0; ptr; fieldno++)
@@ -685,6 +690,26 @@ void TQuizQ10::ProcessRow(char *str)
                 Row.Score = atoi(valstr);
                 break;
 
+            case 17:
+                n = atoi(valstr);
+                break;
+
+            case 18:
+                e = atoi(valstr);
+                break;
+
+            case 19:
+                o = atoi(valstr);
+                break;
+
+            case 20:
+                a = atoi(valstr);
+                break;
+
+            case 21:
+                c = atoi(valstr);
+                break;
+
             default:
                 i = fieldno - 27;
                 if (i >= 0)
@@ -693,40 +718,59 @@ void TQuizQ10::ProcessRow(char *str)
         }
     }
 
-    AddFacet(&Row, 0, 0, false, false, false, false);
-    AddFacet(&Row, 1, 5, false, false, false, true);
-    AddFacet(&Row, 2, 10, false, false, false, true);
-    AddFacet(&Row, 3, 15, false, false, false, false);
-    AddFacet(&Row, 4, 20, false, true, true, true);
-    AddFacet(&Row, 5, 25, false, false, false, true);
+    if (n && e && o && a && c)
+    {
+        score = AddFacet(&Row, 0, 0, false, false, false, false);
+        score += AddFacet(&Row, 1, 5, false, false, false, true);
+        score += AddFacet(&Row, 2, 10, false, false, false, true);
+        score += AddFacet(&Row, 3, 15, false, false, false, true);
+        score += AddFacet(&Row, 4, 20, false, true, true, true);
+        score += AddFacet(&Row, 5, 25, false, false, false, true);
 
-    AddFacet(&Row, 6, 1, false, false, true, true);
-    AddFacet(&Row, 7, 6, false, false, true, true);
-    AddFacet(&Row, 8, 11, false, false, false, true);
-    AddFacet(&Row, 9, 16, false, false, false, true);
-    AddFacet(&Row, 10, 21, false, false, false, false);
-    AddFacet(&Row, 11, 26, false, false, false, false);
+        if (score != n)
+            printf("n error\r\n");
 
-    AddFacet(&Row, 12, 2, false, false, false, false);
-    AddFacet(&Row, 13, 7, false, false, true, true);
-    AddFacet(&Row, 14, 12, false, false, true, true);
-    AddFacet(&Row, 15, 17, false, true, true, true);
-    AddFacet(&Row, 16, 22, false, true, true, true);
-    AddFacet(&Row, 17, 27, false, false, true, true);
+        score = AddFacet(&Row, 6, 1, false, false, true, true);
+        score += AddFacet(&Row, 7, 6, false, false, true, true);
+        score += AddFacet(&Row, 8, 11, false, false, false, true);
+        score += AddFacet(&Row, 9, 16, false, false, false, true);
+        score += AddFacet(&Row, 10, 21, false, false, false, false);
+        score += AddFacet(&Row, 11, 26, false, false, false, false);
 
-    AddFacet(&Row, 18, 3, false, false, false, true);
-    AddFacet(&Row, 19, 8, true, true, true, true);
-    AddFacet(&Row, 20, 13, false, false, true, true);
-    AddFacet(&Row, 21, 18, true, true, true, true);
-    AddFacet(&Row, 22, 23, true, true, true, true);
-    AddFacet(&Row, 23, 28, false, false, true, true);
+        if (score != e)
+            printf("e error\r\n");
 
-    AddFacet(&Row, 24, 4, false, false, false, false);
-    AddFacet(&Row, 25, 9, false, true, true, true);
-    AddFacet(&Row, 26, 14, false, false, true, true);
-    AddFacet(&Row, 27, 19, false, false, true, true);
-    AddFacet(&Row, 28, 24, false, false, true, true);
-    AddFacet(&Row, 29, 29, true, true, true, true);
+        score = AddFacet(&Row, 12, 2, false, false, false, false);
+        score += AddFacet(&Row, 13, 7, false, false, true, true);
+        score += AddFacet(&Row, 14, 12, false, false, true, true);
+        score += AddFacet(&Row, 15, 17, false, true, true, true);
+        score += AddFacet(&Row, 16, 22, false, true, true, true);
+        score += AddFacet(&Row, 17, 27, false, false, true, true);
+
+        if (score != o)
+            printf("o error\r\n");
+
+        score = AddFacet(&Row, 18, 3, false, false, false, true);
+        score += AddFacet(&Row, 19, 8, true, true, true, true);
+        score += AddFacet(&Row, 20, 13, false, false, true, true);
+        score += AddFacet(&Row, 21, 18, true, true, true, true);
+        score += AddFacet(&Row, 22, 23, true, true, true, true);
+        score += AddFacet(&Row, 23, 28, false, false, true, true);
+
+        if (score != a)
+            printf("a error\r\n");
+
+        score = AddFacet(&Row, 24, 4, false, false, false, false);
+        score += AddFacet(&Row, 25, 9, false, true, true, true);
+        score += AddFacet(&Row, 26, 14, false, false, true, true);
+        score += AddFacet(&Row, 27, 19, false, false, true, true);
+        score += AddFacet(&Row, 28, 24, false, false, true, true);
+        score += AddFacet(&Row, 29, 29, true, true, true, true);
+
+        if (score != c)
+            printf("c error\r\n");
+
+    }
 
     AddRow(&Row);
 }

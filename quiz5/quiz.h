@@ -49,7 +49,7 @@
 #define GROUP_NT_SOCIAL         9
 #define GROUP_MIXED             10
 
-#define MAX_QUESTIONS           250
+#define MAX_QUESTIONS           300
 
 class TQuiz;
 class TQuizItem;

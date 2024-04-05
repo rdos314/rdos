@@ -39,7 +39,7 @@ public:
 
 protected:
     int GetChoice(TQuizRow *row, int pos, bool rev);
-    void AddFacet(TQuizRow *row, int facet, int start, bool rev1, bool rev2, bool rev3, bool rev4);
+    int AddFacet(TQuizRow *row, int facet, int start, bool rev1, bool rev2, bool rev3, bool rev4);
     virtual void Load();
     virtual void WriteName(TFile &File);
     virtual void WriteLongName(TFile &File);
