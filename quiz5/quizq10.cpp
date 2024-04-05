@@ -47,7 +47,7 @@
 #
 ##########################################################################*/
 TQuizQ10::TQuizQ10()
-  : TQuiz(239)
+  : TQuiz(269)
 {
     SetupTexts();
 }
@@ -78,8 +78,11 @@ int TQuizQ10::GetCatCount(int Question)
 {
     if (Question < 120)
         return 3;
-    else
+
+    if (Question < 239)
         return 5;
+
+    return 120;
 }
 
 /*##################  TQuizQ10::GetQuizN ##########################
@@ -496,6 +499,71 @@ void TQuizQ10::SetupTexts()
   ItemArr[237]->Text = "Try not to think about the needy.";
   ItemArr[238]->Text = "Act without thinking.";
 
+  ItemArr[239]->Text = "N1 Anxiety";
+  ItemArr[240]->Text = "N2 Anger";
+  ItemArr[241]->Text = "N3 Depression";
+  ItemArr[242]->Text = "N4 Self-consciousness";
+  ItemArr[243]->Text = "N5 Immoderation";
+  ItemArr[244]->Text = "N6 Vulnerability";
+  ItemArr[245]->Text = "E1 Friendliness";
+  ItemArr[246]->Text = "E2 Gregariousness";
+  ItemArr[247]->Text = "E3 Assertiveness";
+  ItemArr[248]->Text = "E4 Activity level";
+  ItemArr[249]->Text = "E5 Excitement seeking";
+  ItemArr[250]->Text = "E6 Cheerfulness";
+  ItemArr[251]->Text = "O1 Imagination";
+  ItemArr[252]->Text = "O2 Artistic interests";
+  ItemArr[253]->Text = "O3 Emotionality";
+  ItemArr[254]->Text = "O4 Adventurousness";
+  ItemArr[255]->Text = "O5 Intellect";
+  ItemArr[256]->Text = "O6 Liberalism";
+  ItemArr[257]->Text = "A1 Trust";
+  ItemArr[258]->Text = "A2 Morality";
+  ItemArr[259]->Text = "A3 Altruism";
+  ItemArr[260]->Text = "A4 Cooperation";
+  ItemArr[261]->Text = "A5 Modesty";
+  ItemArr[262]->Text = "A6 Sympathy";
+  ItemArr[263]->Text = "C1 Self-efficacy";
+  ItemArr[264]->Text = "C2 Orderliness";
+  ItemArr[265]->Text = "C3 Dutifulness";
+  ItemArr[266]->Text = "C4 Achievement-striving";
+  ItemArr[267]->Text = "C5 Self-discipline";
+  ItemArr[268]->Text = "C6 Cautiousness";
+
+}
+
+/*##################  TQuizQ10::GetChoice ##########################
+*   Purpose....: Get choice                                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizQ10::GetChoice(TQuizRow *row, int pos, bool rev)
+{
+    if (rev)
+        return 6 - row->Quiz[pos + 119];
+    else
+        return row->Quiz[pos + 119];
+}
+
+/*##################  TQuizQ10::AddFacet ##########################
+*   Purpose....: Add facet score                                                                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizQ10::AddFacet(TQuizRow *row, int facet, int start, bool rev1, bool rev2, bool rev3, bool rev4)
+{
+    int score = 0;
+
+    score += GetChoice(row, start, rev1);
+    score += GetChoice(row, start + 30, rev2);
+    score += GetChoice(row, start + 60, rev3);
+    score += GetChoice(row, start + 90, rev4);
+
+    row->Quiz[239 + facet] = score;
 }
 
 /*##################  TQuizQ10::ProcessRow ##########################
@@ -624,6 +692,42 @@ void TQuizQ10::ProcessRow(char *str)
                 break;
         }
     }
+
+    AddFacet(&Row, 0, 0, false, false, false, false);
+    AddFacet(&Row, 1, 5, false, false, false, true);
+    AddFacet(&Row, 2, 10, false, false, false, true);
+    AddFacet(&Row, 3, 15, false, false, false, false);
+    AddFacet(&Row, 4, 20, false, true, true, true);
+    AddFacet(&Row, 5, 25, false, false, false, true);
+
+    AddFacet(&Row, 6, 1, false, false, true, true);
+    AddFacet(&Row, 7, 6, false, false, true, true);
+    AddFacet(&Row, 8, 11, false, false, false, true);
+    AddFacet(&Row, 9, 16, false, false, false, true);
+    AddFacet(&Row, 10, 21, false, false, false, false);
+    AddFacet(&Row, 11, 26, false, false, false, false);
+
+    AddFacet(&Row, 12, 2, false, false, false, false);
+    AddFacet(&Row, 13, 7, false, false, true, true);
+    AddFacet(&Row, 14, 12, false, false, true, true);
+    AddFacet(&Row, 15, 17, false, true, true, true);
+    AddFacet(&Row, 16, 22, false, true, true, true);
+    AddFacet(&Row, 17, 27, false, false, true, true);
+
+    AddFacet(&Row, 18, 3, false, false, false, true);
+    AddFacet(&Row, 19, 8, true, true, true, true);
+    AddFacet(&Row, 20, 13, false, false, true, true);
+    AddFacet(&Row, 21, 18, true, true, true, true);
+    AddFacet(&Row, 22, 23, true, true, true, true);
+    AddFacet(&Row, 23, 28, false, false, true, true);
+
+    AddFacet(&Row, 24, 4, false, false, false, false);
+    AddFacet(&Row, 25, 9, false, true, true, true);
+    AddFacet(&Row, 26, 14, false, false, true, true);
+    AddFacet(&Row, 27, 19, false, false, true, true);
+    AddFacet(&Row, 28, 24, false, false, true, true);
+    AddFacet(&Row, 29, 29, true, true, true, true);
+
     AddRow(&Row);
 }
 
