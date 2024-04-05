@@ -64,6 +64,7 @@ struct TQuizRow
     long FilloutTime;
     int  BirthYear;
     int  BirthMonth;
+    char Sex;
     char Gender;
     int Country;
     int Ancestry;
@@ -82,10 +83,10 @@ public:
     TQuizGroup(int number, const char *pos, const char *neg);
     ~TQuizGroup();
 
-    void Add(int gender, double p, char *value, TQuizItem **item, int count);
+    void Add(int sex, double p, char *value, TQuizItem **item, int count);
     void InitDone1();
 
-    void Update(int gender, double p, char *value, TQuizItem **item, int count);
+    void Update(int sex, double p, char *value, TQuizItem **item, int count);
     void InitDone2();
 
     const char *PosName;
@@ -121,13 +122,13 @@ public:
     TQuizItem(int number);
     ~TQuizItem();
 
-    void Add(int gender, double p, int value);
+    void Add(int sex, double p, int value);
     void InitDone1();
 
-    void Update(int gender, double p, char *value, TQuizItem **item, int count);
+    void Update(int sex, double p, char *value, TQuizItem **item, int count);
     void InitDone2();
 
-    void Update(int gender, double p, char *value, TQuizGroup **group, TQuizItem **item, int count);
+    void Update(int sex, double p, char *value, TQuizGroup **group, TQuizItem **item, int count);
     void InitDone3(TQuizGroup **group, TQuizItem **item, int count);
 
     double GetNoAnswer();
@@ -153,9 +154,9 @@ public:
 protected:
     double ConvGroupMean(TQuizGroup *group, double gmean, double imean);
 
-    void Update(int gender, double p, char value);
-    void Update(int gender, double p, char myval, char value, TQuizItem *item);
-    void Update(int gender, double p, char myval, int gval, TQuizGroup *group);
+    void Update(int sex, double p, char value);
+    void Update(int sex, double p, char myval, char value, TQuizItem *item);
+    void Update(int sex, double p, char myval, int gval, TQuizGroup *group);
 
     int NoAnswer;
     int Count;

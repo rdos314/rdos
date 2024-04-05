@@ -94,7 +94,7 @@ TQuizGroup::~TQuizGroup()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int count)
+void TQuizGroup::Add(int sex, double p, char *value, TQuizItem **item, int count)
 {
     int i;
     char val;
@@ -115,7 +115,7 @@ void TQuizGroup::Add(int gender, double p, char *value, TQuizItem **item, int co
         }
     }
 
-    switch (gender)
+    switch (sex)
     {
         case 1:
             NaMaleCount += p;
@@ -163,7 +163,7 @@ void TQuizGroup::InitDone1()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizGroup::Update(int gender, double p, char *value, TQuizItem **item, int count)
+void TQuizGroup::Update(int sex, double p, char *value, TQuizItem **item, int count)
 {
     int i;
     char val;
@@ -185,7 +185,7 @@ void TQuizGroup::Update(int gender, double p, char *value, TQuizItem **item, int
 
     Count++;
 
-    switch (gender)
+    switch (sex)
     {
         case 1:
             diff = dval - MaleAtypicalMean;
@@ -199,7 +199,7 @@ void TQuizGroup::Update(int gender, double p, char *value, TQuizItem **item, int
     diff = diff * diff * p;
     Sd += diff;
 
-    switch (gender)
+    switch (sex)
     {
         case 1:
             diff = dval - MaleTypicalMean;
@@ -303,7 +303,7 @@ TQuizItem::~TQuizItem()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Add(int gender, double p, int value)
+void TQuizItem::Add(int sex, double p, int value)
 {
     double dval;
     double p1 = 1.0 - p;
@@ -313,7 +313,7 @@ void TQuizItem::Add(int gender, double p, int value)
         Count++;
         dval = (double)(value - 1);
 
-        switch (gender)
+        switch (sex)
         {
             case 1:
                 NaMaleCount += p;
@@ -369,7 +369,7 @@ void TQuizItem::InitDone1()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Update(int gender, double p, char value)
+void TQuizItem::Update(int sex, double p, char value)
 {
     double dval;
     double diff;
@@ -378,7 +378,7 @@ void TQuizItem::Update(int gender, double p, char value)
     {
         dval = (double)(value - 1);
 
-        switch (gender)
+        switch (sex)
         {
             case 1:
                 diff = dval - MaleAtypicalMean;
@@ -392,7 +392,7 @@ void TQuizItem::Update(int gender, double p, char value)
         diff = diff * diff * p;
         Sd += diff;
 
-        switch (gender)
+        switch (sex)
         {
             case 1:
                 diff = dval - MaleTypicalMean;
@@ -419,7 +419,7 @@ void TQuizItem::Update(int gender, double p, char value)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *item)
+void TQuizItem::Update(int sex, double p, char myval, char value, TQuizItem *item)
 {
     int other = item->Nr;
     double mval;
@@ -434,7 +434,7 @@ void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *
         mval = (double)(myval - 1);
         oval = (double)(value - 1);
 
-        switch (gender)
+        switch (sex)
         {
             case 1:
                 mdiff = mval - MaleAtypicalMean;
@@ -449,7 +449,7 @@ void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *
 
         Cov[other] += mdiff * odiff * p;
 
-        switch (gender)
+        switch (sex)
         {
             case 1:
                 mdiff = mval - MaleTypicalMean;
@@ -477,14 +477,14 @@ void TQuizItem::Update(int gender, double p, char myval, char value, TQuizItem *
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Update(int gender, double p, char *value, TQuizItem **item, int count)
+void TQuizItem::Update(int sex, double p, char *value, TQuizItem **item, int count)
 {
     int i;
 
-    Update(gender, p, value[Nr]);
+    Update(sex, p, value[Nr]);
 
     for (i = 0; i < count; i++)
-        Update(gender, p, value[Nr], value[i], item[i]);
+        Update(sex, p, value[Nr], value[i], item[i]);
 }
 
 /*##########################################################################
@@ -573,7 +573,7 @@ double TQuizItem::ConvGroupMean(TQuizGroup *group, double gmean, double imean)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Update(int gender, double p, char myval, int gvalue, TQuizGroup *group)
+void TQuizItem::Update(int sex, double p, char myval, int gvalue, TQuizGroup *group)
 {
     double mval;
     double gval;
@@ -586,7 +586,7 @@ void TQuizItem::Update(int gender, double p, char myval, int gvalue, TQuizGroup 
     mval = (double)myval;
     gval = (double)gvalue;
 
-    switch (gender)
+    switch (sex)
     {
         case 1:
             mdiff = mval - MaleAtypicalMean;
@@ -601,7 +601,7 @@ void TQuizItem::Update(int gender, double p, char myval, int gvalue, TQuizGroup 
 
     GroupCov[grp] += mdiff * gdiff * p;
 
-    switch (gender)
+    switch (sex)
     {
         case 1:
             mdiff = mval - MaleTypicalMean;
@@ -628,7 +628,7 @@ void TQuizItem::Update(int gender, double p, char myval, int gvalue, TQuizGroup 
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQuizItem **item, int count)
+void TQuizItem::Update(int sex, double p, char *value, TQuizGroup **group, TQuizItem **item, int count)
 {
     int i;
     int g;
@@ -663,7 +663,7 @@ void TQuizItem::Update(int gender, double p, char *value, TQuizGroup **group, TQ
             }
 
             if (ok)
-                Update(gender, p, mval, gval, group[g]);
+                Update(sex, p, mval, gval, group[g]);
         }
     }
 }
@@ -1116,7 +1116,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
     for (g = 0; g < GROUP_COUNT; g++)
     {
         file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-        
+
         file.Write("<tr style='height:24.75pt'>");
 
         WriteCenteredFieldHeader(file, 3);
@@ -1582,25 +1582,25 @@ void TQuiz::AddRow(TQuizRow *Row)
     {
         case 1:
             for (i = 0; i < N; i++)
-                ItemArr[i]->Add(Row->Gender, Row->P, Row->Quiz[i]);
+                ItemArr[i]->Add(Row->Sex, Row->P, Row->Quiz[i]);
 
             break;
 
         case 2:
             for (i = 0; i < N; i++)
-                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, i);
+                ItemArr[i]->Update(Row->Sex, Row->P, Row->Quiz, ItemArr, i);
 
             for (i = 0; i < GROUP_COUNT; i++)
-                GroupArr[i]->Add(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
+                GroupArr[i]->Add(Row->Sex, Row->P, Row->Quiz, ItemArr, N);
 
             break;
 
         case 3:
             for (i = 0; i < N; i++)
-                ItemArr[i]->Update(Row->Gender, Row->P, Row->Quiz, GroupArr, ItemArr, N);
+                ItemArr[i]->Update(Row->Sex, Row->P, Row->Quiz, GroupArr, ItemArr, N);
 
             for (i = 0; i < GROUP_COUNT; i++)
-                GroupArr[i]->Update(Row->Gender, Row->P, Row->Quiz, ItemArr, N);
+                GroupArr[i]->Update(Row->Sex, Row->P, Row->Quiz, ItemArr, N);
 
             break;
     }
