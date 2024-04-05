@@ -1316,7 +1316,7 @@ void TQuiz::WriteIntercorr(const char *filename)
 
         while (MaxCorr >= 0.3)
         {
-            if (count < 15)
+            if (count < 50)
             {
                 count++;
 
