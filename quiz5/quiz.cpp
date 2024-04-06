@@ -241,7 +241,7 @@ void TQuizGroup::InitDone2()
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizItem::TQuizItem(int number)
+TQuizItem::TQuizItem(int number, int catcount)
 {
     int i;
 
@@ -249,6 +249,7 @@ TQuizItem::TQuizItem(int number)
     MyGroup = GROUP_MIXED;
     Reverse = false;
     Nr = number;
+    CatCount = catcount;
 
     NoAnswer = 0;
     Count = 0;
@@ -533,7 +534,7 @@ double TQuizItem::GetDiff()
 char TQuizItem::ConvGroupChoice(char val)
 {
     if (Reverse)
-        return 3 - val;
+        return CatCount - val;
     else
         return val - 1;
 }
@@ -749,7 +750,7 @@ TQuiz::TQuiz(int Questions)
     ItemArr = new TQuizItem*[N];
 
     for (i = 0; i < N; i++)
-        ItemArr[i] = new TQuizItem(i);
+        ItemArr[i] = new TQuizItem(i, GetCatCount(i));
 
     GroupArr = new TQuizGroup*[GROUP_COUNT];
 

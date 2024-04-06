@@ -80,9 +80,9 @@ int TQuizQ10::GetCatCount(int Question)
         return 3;
 
     if (Question < 239)
-        return 5;
+        return 6;
 
-    return 120;
+    return 21;
 }
 
 /*##################  TQuizQ10::GetQuizN ##########################
@@ -542,9 +542,9 @@ void TQuizQ10::SetupTexts()
 int TQuizQ10::GetChoice(TQuizRow *row, int pos, bool rev)
 {
     if (rev)
-        return 6 - row->Quiz[pos + 119];
+        return 6 - (row->Quiz[pos + 119] - 1);
     else
-        return row->Quiz[pos + 119];
+        return row->Quiz[pos + 119] - 1;
 }
 
 /*##################  TQuizQ10::AddFacet ##########################
@@ -563,7 +563,7 @@ int TQuizQ10::AddFacet(TQuizRow *row, int facet, int start, bool rev1, bool rev2
     score += GetChoice(row, start + 60, rev3);
     score += GetChoice(row, start + 90, rev4);
 
-    row->Quiz[239 + facet] = score;
+    row->Quiz[239 + facet] = score + 1;
     return score;
 }
 
@@ -713,7 +713,15 @@ void TQuizQ10::ProcessRow(char *str)
             default:
                 i = fieldno - 27;
                 if (i >= 0)
-                    Row.Quiz[i] = atoi(valstr);
+                {
+                    if (i < 119)
+                        Row.Quiz[i] = atoi(valstr);
+                    else
+                    {
+                        if (n && e && o && a && c)
+                            Row.Quiz[i] = atoi(valstr) + 1;
+                    }
+                }
                 break;
         }
     }

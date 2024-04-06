@@ -119,7 +119,7 @@ protected:
 class TQuizItem
 {
 public:
-    TQuizItem(int number);
+    TQuizItem(int number, int catcount);
     ~TQuizItem();
 
     void Add(int sex, double p, int value);
@@ -141,6 +141,7 @@ public:
     int MyGroup;
 
     int Nr;
+    int CatCount;
 
     double MaleAtypicalMean;
     double MaleTypicalMean;
