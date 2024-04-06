@@ -195,10 +195,12 @@ public:
     void ExportToPhp(const char *filename);
 
 protected:
+    void Init();
     double CalcNorm(double x, double u, double sd, double scale);
     void CalcProbArr(double u, double sd);
     void AddRow(TQuizRow *Row);
 
+    virtual void SetupTexts() = 0;
     virtual void Load() = 0;
     virtual void WriteName(TFile &File) = 0;
     virtual void WriteLongName(TFile &File) = 0;

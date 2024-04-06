@@ -49,7 +49,6 @@
 TQuizQ10::TQuizQ10()
   : TQuiz(269)
 {
-    SetupTexts();
 }
 
 /*##########################################################################
@@ -499,36 +498,36 @@ void TQuizQ10::SetupTexts()
   ItemArr[237]->Text = "A6 - Try not to think about the needy.";
   ItemArr[238]->Text = "C6 - Act without thinking.";
 
-  ItemArr[239]->Text = "N1 - Anxiety";
-  ItemArr[240]->Text = "N2 - Anger";
-  ItemArr[241]->Text = "N3 - Depression";
-  ItemArr[242]->Text = "N4 - Self-consciousness";
-  ItemArr[243]->Text = "N5 - Immoderation";
-  ItemArr[244]->Text = "N6 - Vulnerability";
-  ItemArr[245]->Text = "E1 - Friendliness";
-  ItemArr[246]->Text = "E2 - Gregariousness";
-  ItemArr[247]->Text = "E3 - Assertiveness";
-  ItemArr[248]->Text = "E4 - Activity level";
-  ItemArr[249]->Text = "E5 - Excitement seeking";
-  ItemArr[250]->Text = "E6 - Cheerfulness";
-  ItemArr[251]->Text = "O1 - Imagination";
-  ItemArr[252]->Text = "O2 - Artistic interests";
-  ItemArr[253]->Text = "O3 - Emotionality";
-  ItemArr[254]->Text = "O4 - Adventurousness";
-  ItemArr[255]->Text = "O5 - Intellect";
-  ItemArr[256]->Text = "O6 - Liberalism";
-  ItemArr[257]->Text = "A1 - Trust";
-  ItemArr[258]->Text = "A2 - Morality";
-  ItemArr[259]->Text = "A3 - Altruism";
-  ItemArr[260]->Text = "A4 - Cooperation";
-  ItemArr[261]->Text = "A5 - Modesty";
-  ItemArr[262]->Text = "A6 - Sympathy";
-  ItemArr[263]->Text = "C1 - Self-efficacy";
-  ItemArr[264]->Text = "C2 - Orderliness";
-  ItemArr[265]->Text = "C3 - Dutifulness";
-  ItemArr[266]->Text = "C4 - Achievement-striving";
-  ItemArr[267]->Text = "C5 - Self-discipline";
-  ItemArr[268]->Text = "C6 - Cautiousness";
+  ItemArr[239]->Text = "N1 : Anxiety";
+  ItemArr[240]->Text = "N2 : Anger";
+  ItemArr[241]->Text = "N3 : Depression";
+  ItemArr[242]->Text = "N4 : Self-consciousness";
+  ItemArr[243]->Text = "N5 : Immoderation";
+  ItemArr[244]->Text = "N6 : Vulnerability";
+  ItemArr[245]->Text = "E1 : Friendliness";
+  ItemArr[246]->Text = "E2 : Gregariousness";
+  ItemArr[247]->Text = "E3 : Assertiveness";
+  ItemArr[248]->Text = "E4 : Activity level";
+  ItemArr[249]->Text = "E5 : Excitement seeking";
+  ItemArr[250]->Text = "E6 : Cheerfulness";
+  ItemArr[251]->Text = "O1 : Imagination";
+  ItemArr[252]->Text = "O2 : Artistic interests";
+  ItemArr[253]->Text = "O3 : Emotionality";
+  ItemArr[254]->Text = "O4 : Adventurousness";
+  ItemArr[255]->Text = "O5 : Intellect";
+  ItemArr[256]->Text = "O6 : Liberalism";
+  ItemArr[257]->Text = "A1 : Trust";
+  ItemArr[258]->Text = "A2 : Morality";
+  ItemArr[259]->Text = "A3 : Altruism";
+  ItemArr[260]->Text = "A4 : Cooperation";
+  ItemArr[261]->Text = "A5 : Modesty";
+  ItemArr[262]->Text = "A6 : Sympathy";
+  ItemArr[263]->Text = "C1 : Self-efficacy";
+  ItemArr[264]->Text = "C2 : Orderliness";
+  ItemArr[265]->Text = "C3 : Dutifulness";
+  ItemArr[266]->Text = "C4 : Achievement-striving";
+  ItemArr[267]->Text = "C5 : Self-discipline";
+  ItemArr[268]->Text = "C6 : Cautiousness";
 
 }
 

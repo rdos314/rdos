@@ -747,30 +747,6 @@ TQuiz::TQuiz(int Questions)
 
     N = Questions;
 
-    ItemArr = new TQuizItem*[N];
-
-    for (i = 0; i < N; i++)
-        ItemArr[i] = new TQuizItem(i, GetCatCount(i));
-
-    GroupArr = new TQuizGroup*[GROUP_COUNT];
-
-    GroupArr[GROUP_ASPIE_TALENT] = new TQuizGroup(GROUP_ASPIE_TALENT,  "Atypical ability", "Atypical ability problem");
-    GroupArr[GROUP_NT_TALENT] = new TQuizGroup(GROUP_NT_TALENT,  "Typical ability problem", "Typical ability");
-
-    GroupArr[GROUP_ASPIE_SENSORY] = new TQuizGroup(GROUP_ASPIE_SENSORY,  "Atypical sensory", "Atypical sensory problem");
-    GroupArr[GROUP_NT_SENSORY] = new TQuizGroup(GROUP_NT_SENSORY,  "Typical sensory problem", "Typical sensory");
-
-    GroupArr[GROUP_ASPIE_NVC] = new TQuizGroup(GROUP_ASPIE_NVC,  "Atypical communication", "Atypical communication problem");
-    GroupArr[GROUP_NT_NVC] = new TQuizGroup(GROUP_NT_NVC,  "Typical communication problem", "Typical communication");
-
-    GroupArr[GROUP_ASPIE_RELATION] = new TQuizGroup(GROUP_ASPIE_RELATION,  "Atypical relationship", "Atypical relationship problem");
-    GroupArr[GROUP_NT_RELATION] = new TQuizGroup(GROUP_NT_RELATION,  "Typical relationship problem", "Typical relationship");
-
-    GroupArr[GROUP_ASPIE_SOCIAL] = new TQuizGroup(GROUP_ASPIE_SOCIAL,  "Atypical social", "Atypical social problem");
-    GroupArr[GROUP_NT_SOCIAL] = new TQuizGroup(GROUP_NT_SOCIAL,  "Typical social problem", "Typical social");
-
-    GroupArr[GROUP_MIXED] = new TQuizGroup(GROUP_MIXED,  "Atypical mixed", "Typical mixed");
-
     CalcProbArr(28.4, 28.0);
 }
 
@@ -798,6 +774,44 @@ TQuiz::~TQuiz()
         delete GroupArr[i];
 
     delete GroupArr;
+}
+
+/*##################  TQuiz::Init ##########################
+*   Purpose....: Init quiz                                                                   #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::Init()
+{
+    int i;
+
+    ItemArr = new TQuizItem*[N];
+
+    for (i = 0; i < N; i++)
+        ItemArr[i] = new TQuizItem(i, GetCatCount(i));
+
+    GroupArr = new TQuizGroup*[GROUP_COUNT];
+
+    GroupArr[GROUP_ASPIE_TALENT] = new TQuizGroup(GROUP_ASPIE_TALENT,  "Atypical ability", "Atypical ability problem");
+    GroupArr[GROUP_NT_TALENT] = new TQuizGroup(GROUP_NT_TALENT,  "Typical ability problem", "Typical ability");
+
+    GroupArr[GROUP_ASPIE_SENSORY] = new TQuizGroup(GROUP_ASPIE_SENSORY,  "Atypical sensory", "Atypical sensory problem");
+    GroupArr[GROUP_NT_SENSORY] = new TQuizGroup(GROUP_NT_SENSORY,  "Typical sensory problem", "Typical sensory");
+
+    GroupArr[GROUP_ASPIE_NVC] = new TQuizGroup(GROUP_ASPIE_NVC,  "Atypical communication", "Atypical communication problem");
+    GroupArr[GROUP_NT_NVC] = new TQuizGroup(GROUP_NT_NVC,  "Typical communication problem", "Typical communication");
+
+    GroupArr[GROUP_ASPIE_RELATION] = new TQuizGroup(GROUP_ASPIE_RELATION,  "Atypical relationship", "Atypical relationship problem");
+    GroupArr[GROUP_NT_RELATION] = new TQuizGroup(GROUP_NT_RELATION,  "Typical relationship problem", "Typical relationship");
+
+    GroupArr[GROUP_ASPIE_SOCIAL] = new TQuizGroup(GROUP_ASPIE_SOCIAL,  "Atypical social", "Atypical social problem");
+    GroupArr[GROUP_NT_SOCIAL] = new TQuizGroup(GROUP_NT_SOCIAL,  "Typical social problem", "Typical social");
+
+    GroupArr[GROUP_MIXED] = new TQuizGroup(GROUP_MIXED,  "Atypical mixed", "Typical mixed");
+
+    SetupTexts();
 }
 
 /*##################  TQuiz::CalcNorm ##########################
@@ -1618,6 +1632,8 @@ void TQuiz::Analyse()
 {
     int i;
     int j;
+
+    Init();
 
     Stage = 1;
     Load();
