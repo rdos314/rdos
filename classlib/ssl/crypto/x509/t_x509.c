@@ -230,12 +230,54 @@ JSON_DOC *X509_get_json(X509 *x)
     const char *neg;
     JSON_DOC *doc;
     JSON_COLL *root;
+    char *str;
+    char hex[8];
+
+    str = (char *)malloc(0x1000);
 
     doc = CreateJson();
     root = GetJsonRoot(doc);
 
     l = X509_get_version(x);
     AddJsonInt(root, "version", l + 1);
+
+    bs = X509_get_serialNumber(x);
+    if (bs->length <= (int)sizeof(long)) 
+        l = ASN1_INTEGER_get(bs);
+    else
+        l = -1;
+
+    if (l != -1) 
+    {
+        unsigned long ul;
+        if (bs->type == V_ASN1_NEG_INTEGER)
+        {
+            ul = 0 - (unsigned long)l;
+            neg = "-";
+        } 
+        else 
+        {
+            ul = l;
+            neg = "";
+        }
+
+        sprintf(str, "%s%lu", neg, ul);
+    } 
+    else 
+    {
+        neg = (bs->type == V_ASN1_NEG_INTEGER) ? "-" : "";
+        strcpy(str, neg);
+
+        for (i = 0; i < bs->length; i++) 
+        {
+            sprintf(hex, "%02x", bs->data[i]);
+            strcat(str, hex);
+        }
+    }
+
+    AddJsonString(root, "serial", str);
+
+    free(str);
 
     return doc;
 }
