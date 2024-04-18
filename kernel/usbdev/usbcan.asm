@@ -511,6 +511,33 @@ is_can_online   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ResetCanModules
+;
+;       DESCRIPTION:    Reset can communication
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_can_modules_name    DB 'Reset Can Modules', 0
+
+reset_can_modules   Proc far
+    push ds
+    push bx
+;
+    mov ax,SEG data
+    mov ds,ax
+    mov ds:can_active,0
+;
+    mov bx,ds:cd_dev_handle
+    ResetUsbDevice
+;
+    pop bx
+    pop ds
+    retf32
+reset_can_modules  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           RestartCanModules
 ;
 ;       DESCRIPTION:    Restart can communication
@@ -1739,6 +1766,11 @@ init    Proc far
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET reset_can_modules
+    mov edi,OFFSET reset_can_modules_name
+    mov ax,reset_can_modules_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET restart_can_modules
     mov edi,OFFSET restart_can_modules_name

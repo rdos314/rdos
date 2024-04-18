@@ -4710,6 +4710,10 @@ RestartCanModules      MACRO
     OsGate restart_can_modules_nr
                         ENDM
 
+ResetCanModules      MACRO
+    OsGate reset_can_modules_nr
+                        ENDM
+
 ; OUT  NC       Has buffer
 HasCanSendBuf      MACRO
     OsGate has_can_send_buf_nr
