@@ -61,6 +61,12 @@ JSON_COLL *GetJsonRoot(JSON_DOC *doc)
     return (JSON_COLL *)root;
 }
 
+void AddJsonInt(JSON_COLL *c, const char *field, long long val)
+{
+    TJsonCollection *coll = (TJsonCollection *)c;
+    coll->AddInt(field, val);
+}
+
 int GetJsonText(JSON_DOC *doc, char *buf, int maxsize)
 {
     TString str;

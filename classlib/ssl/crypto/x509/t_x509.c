@@ -233,6 +233,10 @@ JSON_DOC *X509_get_json(X509 *x)
 
     doc = CreateJson();
     root = GetJsonRoot(doc);
+
+    l = X509_get_version(x);
+    AddJsonInt(root, "version", l + 1);
+
     return doc;
 }
 
