@@ -12,7 +12,10 @@ void main()
     char *buf = new char[4000];
     int size;
 
-    size = RdosGetCertificateJson("d:/ssl/cert.pem", buf, size);    
+    size = RdosGetCertificateJson("d:/ssl/cert.pem", buf, size);   
+
+    buf[size] = 0;
+    printf(buf); 
 
     RdosTestGate("");
 }
