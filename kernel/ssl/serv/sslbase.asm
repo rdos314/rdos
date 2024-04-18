@@ -367,13 +367,19 @@ LocalGetConnectionCertChain Endp
     extern GetCertJson:near
 
 LocalGetCertJson Proc near
+    push esi
     push edi
     mov eax,[edi].fc_eax
     add edi,SIZE ssl_cmd_struc
+    mov esi,edi
     add edi,4
     mov ecx,1000h - SIZE ssl_cmd_struc - 5
     call GetCertJson
     pop edi
+    pop esi
+;
+    or eax,eax
+    jz gcjFail
 ;
     push edi
     add edi,SIZE ssl_cmd_struc
@@ -383,6 +389,11 @@ LocalGetCertJson Proc near
     mov ebx,[edi].fc_handle
     and [edi].fc_eflags,NOT 1
     ReplySslDataCmd
+    ret
+
+gcjFail:
+    mov ebx,[edi].fc_handle
+    ReplySslCmd
     ret
 LocalGetCertJson Endp
 

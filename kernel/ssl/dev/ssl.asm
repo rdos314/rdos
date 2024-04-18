@@ -1679,6 +1679,7 @@ get_cert_json_name       DB 'Get Certificate Json',0
 GetCertJson   Proc near
     push ds
     push es
+    push fs
     push gs
     push eax
     push ebx
@@ -1687,18 +1688,27 @@ GetCertJson   Proc near
     push edi
     push ebp
 ;
+    mov eax,ds
+    mov fs,eax    
     mov eax,es
     mov gs,eax
 ;
-    mov ax,SSL_CONN_HANDLE
-    DerefHandle
+    push edi
+    call AllocateMsg
+    mov ebp,edi
+    pop edi
     jc gcjDone
 ;
     push edi
-    mov ebx,[ebx].sc_id
-    call AllocateMsg
+    mov edi,ebp
+
+gcjCopyPath:
+    lods byte ptr fs:[esi]
+    stosb
+    or al,al
+    jnz gcjCopyPath
+;
     pop edi
-    jc gcjDone
 ;
     call AddMsgBuffer
 ;
@@ -1715,6 +1725,7 @@ gcjDone:
     pop ebx
     pop eax
     pop gs
+    pop fs
     pop es
     pop ds
     ret
@@ -2383,8 +2394,8 @@ init    Proc far
     mov ds,ax
     mov es,ax
 ;
-;    mov edi,OFFSET init_ssl
-;    HookInitTasking
+    mov edi,OFFSET init_ssl
+    HookInitTasking
 ;
     mov edi,OFFSET delete_secure_session
     mov ax,SSL_SESS_HANDLE

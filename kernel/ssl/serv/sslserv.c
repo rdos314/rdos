@@ -701,12 +701,12 @@ int GetConnectionCertChain(int index, int entry, char *buf, int size)
 #   Returns....: *
 #
 ##########################################################################*/
-#pragma aux GetCertJson "*" parm routine [edi] [ecx] value [eax]
-int GetCertJson(char *buf, int size)
+#pragma aux GetCertJson "*" parm routine [esi] [edi] [ecx] value [eax]
+int GetCertJson(const char *filename, char *buf, int size)
 {
     X509 *x;
 
-    x = load_cert(buf, FORMAT_PEM, "Certificate");
+    x = load_cert(filename, FORMAT_PEM, "Certificate");
 
     if (x)
         X509_free(x);
