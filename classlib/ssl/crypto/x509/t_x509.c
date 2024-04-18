@@ -227,6 +227,7 @@ JSON_DOC *X509_get_json(X509 *x)
     int nmindent = 0;
     ASN1_INTEGER *bs;
     EVP_PKEY *pkey = NULL;
+    const X509_ALGOR *tsig_alg = X509_get0_tbs_sigalg(x);
     const char *neg;
     JSON_DOC *doc;
     JSON_COLL *root;
@@ -276,6 +277,8 @@ JSON_DOC *X509_get_json(X509 *x)
     }
 
     AddJsonString(root, "serial", str);
+
+    X509_signature_json(root, tsig_alg, NULL);
 
     free(str);
 
@@ -385,6 +388,21 @@ int X509_signature_print(BIO *bp, const X509_ALGOR *sigalg,
         return X509_signature_dump(bp, sig, 9);
     else if (BIO_puts(bp, "\n") <= 0)
         return 0;
+    return 1;
+}
+
+int X509_signature_json(JSON_COLL *coll, const X509_ALGOR *sigalg,
+                         const ASN1_STRING *sig)
+{
+    int sig_nid;
+    char *str;
+
+    str = (char *)malloc(0x1000);
+
+    i2t_ASN1_OBJECT(str, 0x1000, sigalg->algorithm);
+    AddJsonString(coll, "signature", str);
+    free(str);
+
     return 1;
 }
 

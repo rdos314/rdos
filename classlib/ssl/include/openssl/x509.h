@@ -363,6 +363,8 @@ int NETSCAPE_SPKI_print(BIO *out, NETSCAPE_SPKI *spki);
 int X509_signature_dump(BIO *bp, const ASN1_STRING *sig, int indent);
 int X509_signature_print(BIO *bp, const X509_ALGOR *alg,
                          const ASN1_STRING *sig);
+int X509_signature_json(JSON_COLL *coll, const X509_ALGOR *alg,
+                         const ASN1_STRING *sig);
 
 int X509_sign(X509 *x, EVP_PKEY *pkey, const EVP_MD *md);
 int X509_sign_ctx(X509 *x, EVP_MD_CTX *ctx);
