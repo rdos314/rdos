@@ -2368,6 +2368,14 @@ GetSecureConnectionCertificateChain       MACRO
         UserGate get_secure_connection_cert_chain_nr
                         ENDM
 
+; IN  DS:(E)SI          filename
+; IN  ES:(E)DI          JSON
+; IN  (E)CX             max size
+; OUT ECX               actual size
+GetCertificateJson       MACRO
+        UserGate get_cert_json_nr
+                        ENDM
+
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
 

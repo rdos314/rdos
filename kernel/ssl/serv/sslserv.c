@@ -692,6 +692,30 @@ int GetConnectionCertChain(int index, int entry, char *buf, int size)
 
 /*##########################################################################
 #
+#   Name       : GetCertJson
+#
+#   Purpose....: Get certficate in JSON format
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+#pragma aux GetCertJson "*" parm routine [edi] [ecx] value [eax]
+int GetCertJson(char *buf, int size)
+{
+    X509 *x;
+
+    x = load_cert(buf, FORMAT_PEM, "Certificate");
+
+    if (x)
+        X509_free(x);
+
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : ShowCert
 #
 #   Purpose....: Show certificate

@@ -9,26 +9,10 @@
 
 void main()
 {
-    TUnzip unzip;
-    int i;
-    bool ok;
-    TUnzipFile *file;
-    const char *filename;
+    char *buf = new char[4000];
+    int size;
 
-    ok = GzipToZip("udp.zip", "my.zip", "udp.txt");
-
-    unzip.OpenNoHeader("my.zip");
-
-    for (i = 0; i < unzip.GetFileCount(); i++)
-    {
-        file = unzip.GetFile(i);
-        filename = file->GetFileName();
-
-        ok = file->IsOk();
-
-        if (ok)
-             ok = file->Extract(filename);
-    }
+    size = RdosGetCertificateJson("cert.pem", buf, size);    
 
     RdosTestGate("");
 }

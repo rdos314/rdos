@@ -1658,6 +1658,88 @@ get_secure_connection_cert_chain32  Proc far
     call GetConnectionCertChain
     ret
 get_secure_connection_cert_chain32  Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetCertificateJson
+;
+;       Purpose:        Get certificate in JSON format
+;
+;       Parameters:     DS:(E)SI        Filename
+;                       ES:(E)DI        buffer
+;                       (E)CX           buffer size
+;
+;       Returns:        NC              ok
+;                         ECX           size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_cert_json_name       DB 'Get Certificate Json',0
+
+GetCertJson   Proc near
+    push ds
+    push es
+    push gs
+    push eax
+    push ebx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov gs,eax
+;
+    mov ax,SSL_CONN_HANDLE
+    DerefHandle
+    jc gcjDone
+;
+    push edi
+    mov ebx,[ebx].sc_id
+    call AllocateMsg
+    pop edi
+    jc gcjDone
+;
+    call AddMsgBuffer
+;
+    mov eax,SSL_GET_CERT_JSON
+    call RunMsg
+;
+    mov ecx,ebp
+
+gcjDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ebx
+    pop eax
+    pop gs
+    pop es
+    pop ds
+    ret
+GetCertJson   Endp
+
+get_cert_json16  Proc far
+    push ecx
+    push esi
+    push edi
+;
+    movzx ecx,cx
+    movzx esi,si
+    movzx edi,di
+    call GetCertJson
+;
+    pop edi
+    pop esi
+    pop ecx
+    ret
+get_cert_json16  Endp
+
+get_cert_json32  Proc far
+    call GetCertJson
+    ret
+get_cert_json32  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2432,6 +2514,13 @@ init    Proc far
     mov edi,OFFSET get_secure_connection_cert_chain_name
     mov dx,virt_es_in
     mov ax,get_secure_connection_cert_chain_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET get_cert_json16
+    mov esi,OFFSET get_cert_json32
+    mov edi,OFFSET get_cert_json_name
+    mov dx,virt_es_in
+    mov ax,get_cert_json_nr
     RegisterUserGate
 ;
     mov esi,OFFSET create_secure_listen

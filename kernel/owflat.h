@@ -3218,6 +3218,15 @@
     __parm [__ebx] [__eax] [__edi] [__ecx] \
     __value [__ecx]
 
+#pragma aux RdosGetCertificateJson = \
+    CallGate_get_cert_json  \
+    "jnc ok" \
+    "xor ecx,ecx" \
+    "ok:" \
+    __parm [__esi] [__edi] [__ecx] \
+    __value [__ecx]
+
+
 #pragma aux RdosGetLocalMailslot = \
     CallGate_get_local_mailslot  \
     ValidateHandle \

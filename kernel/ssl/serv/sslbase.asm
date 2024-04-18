@@ -356,6 +356,39 @@ LocalGetConnectionCertChain Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalGetCertJson
+;
+;       DESCRIPTION:    Get certificate in JSON format
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern GetCertJson:near
+
+LocalGetCertJson Proc near
+    push edi
+    mov eax,[edi].fc_eax
+    add edi,SIZE ssl_cmd_struc
+    add edi,4
+    mov ecx,1000h - SIZE ssl_cmd_struc - 5
+    call GetCertJson
+    pop edi
+;
+    push edi
+    add edi,SIZE ssl_cmd_struc
+    stosd
+    pop edi
+;
+    mov ebx,[edi].fc_handle
+    and [edi].fc_eflags,NOT 1
+    ReplySslDataCmd
+    ret
+LocalGetCertJson Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForMsg
 ;
 ;       DESCRIPTION:    Wait for msg
@@ -383,6 +416,7 @@ m07 DD OFFSET LocalAcceptServer
 m08 DD OFFSET LocalSetServerCert
 m09 DD OFFSET LocalGetConnectionCert
 m0A DD OFFSET LocalGetConnectionCertChain
+m0B DD OFFSET LocalGetCertJson
 
 WaitForMsg_    Proc near
     push ebx
