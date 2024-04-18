@@ -26,8 +26,11 @@
 ########################################################################*/
 
 #include <memory.h>
+#include <time.h>
+
 #include "json.h"
 #include "str.h"
+#include "datetime.h"
 
 #define JSON_DOC void
 #define JSON_COLL void
@@ -79,6 +82,13 @@ void AddJsonString(JSON_COLL *c, const char *field, const char *val)
 {
     TJsonCollection *coll = (TJsonCollection *)c;
     coll->AddString(field, val);
+}
+
+void AddJsonTime(JSON_COLL *c, const char *field, struct tm *ts)
+{
+    TJsonCollection *coll = (TJsonCollection *)c;
+    TDateTime time(ts->tm_year + 1900, ts->tm_mon + 1, ts->tm_mday, ts->tm_hour, ts->tm_min, ts->tm_sec);
+    coll->AddDateTime(field, time, 1);
 }
 
 int GetJsonText(JSON_DOC *doc, char *buf, int maxsize)

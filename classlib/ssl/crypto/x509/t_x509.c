@@ -229,6 +229,7 @@ JSON_DOC *X509_get_json(X509 *x)
     EVP_PKEY *pkey = NULL;
     const X509_ALGOR *tsig_alg = X509_get0_tbs_sigalg(x);
     const char *neg;
+    struct tm tm;
     JSON_DOC *doc;
     JSON_COLL *root;
     char *str;
@@ -279,8 +280,13 @@ JSON_DOC *X509_get_json(X509 *x)
     AddJsonString(root, "serial", str);
 
     X509_signature_json(root, tsig_alg, NULL);
-
     X509_NAME_json(root, "issuer", X509_get_issuer_name(x));
+
+    ASN1_TIME_to_tm(X509_get0_notBefore(x), &tm);
+    AddJsonTime(root, "from", &tm);
+
+    ASN1_TIME_to_tm(X509_get0_notAfter(x), &tm);
+    AddJsonTime(root, "to", &tm);
 
     free(str);
 
