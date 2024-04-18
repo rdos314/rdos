@@ -229,8 +229,10 @@ JSON_DOC *X509_get_json(X509 *x)
     EVP_PKEY *pkey = NULL;
     const char *neg;
     JSON_DOC *doc;
+    JSON_COLL *root;
 
     doc = CreateJson();
+    root = GetJsonRoot(doc);
     return doc;
 }
 

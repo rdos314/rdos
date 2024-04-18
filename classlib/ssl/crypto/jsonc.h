@@ -29,6 +29,8 @@
 #define _JSONC_H
 
 extern JSON_DOC *CreateJson();
+extern JSON_COLL *GetJsonRoot(JSON_DOC *doc);
 extern void DeleteJson(JSON_DOC *doc);
+extern int GetJsonText(JSON_DOC *doc, char *buf, int maxsize);
 
 #endif

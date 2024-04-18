@@ -25,7 +25,9 @@
 #
 ########################################################################*/
 
+#include <memory.h>
 #include "json.h"
+#include "str.h"
 
 #define JSON_DOC void
 #define JSON_COLL void
@@ -46,4 +48,39 @@ void DeleteJson(JSON_DOC *doc)
 
     if (json)
         delete json;
+}
+
+JSON_COLL *GetJsonRoot(JSON_DOC *doc)
+{
+    TJsonDocument *json = (TJsonDocument *)doc;
+    TJsonCollection *root = json->GetRoot();
+
+    if (!root)
+        root = json->CreateRoot();
+
+    return (JSON_COLL *)root;
+}
+
+int GetJsonText(JSON_DOC *doc, char *buf, int maxsize)
+{
+    TString str;
+    int size = 0;
+    TJsonDocument *json = (TJsonDocument *)doc;
+
+    if (maxsize)
+    {
+        json->Write(str);
+
+        size = str.GetSize() + 1;
+
+        if (size > maxsize)
+            size = maxsize;
+
+        size--;
+
+        memcpy(buf, str.GetData(), size);
+        buf[size] = 0;
+    }
+
+    return size;
 }
