@@ -10,6 +10,9 @@
 #ifndef HEADER_OPENSSL_TYPES_H
 # define HEADER_OPENSSL_TYPES_H
 
+#define JSON_DOC void
+#define JSON_COLL void
+
 #include <limits.h>
 
 #ifdef  __cplusplus

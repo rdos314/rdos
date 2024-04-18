@@ -705,11 +705,17 @@ int GetConnectionCertChain(int index, int entry, char *buf, int size)
 int GetCertJson(const char *filename, char *buf, int size)
 {
     X509 *x;
+    JSON_DOC *doc;
 
     x = load_cert(filename, FORMAT_PEM, "Certificate");
 
     if (x)
+    {
+        doc = X509_get_json(x);
+        
         X509_free(x);
+        DeleteJson(doc);
+    }
 
     return 0;
 }

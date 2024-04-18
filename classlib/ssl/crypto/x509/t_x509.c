@@ -15,6 +15,7 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include "crypto/asn1.h"
+#include "crypto/jsonc.h"
 
 #ifndef OPENSSL_NO_STDIO
 int X509_print_fp(FILE *fp, X509 *x)
@@ -216,6 +217,21 @@ int X509_print_ex(BIO *bp, X509 *x, unsigned long nmflags,
  err:
     OPENSSL_free(m);
     return ret;
+}
+
+JSON_DOC *X509_get_json(X509 *x)
+{
+    long l;
+    int ret = 0, i;
+    char *m = NULL, mlch = ' ';
+    int nmindent = 0;
+    ASN1_INTEGER *bs;
+    EVP_PKEY *pkey = NULL;
+    const char *neg;
+    JSON_DOC *doc;
+
+    doc = CreateJson();
+    return doc;
 }
 
 int X509_ocspid_print(BIO *bp, X509 *x)
