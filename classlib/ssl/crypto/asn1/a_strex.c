@@ -567,6 +567,49 @@ int X509_NAME_print_ex(BIO *out, const X509_NAME *nm, int indent,
     return do_name_ex(send_bio_chars, out, nm, indent, flags);
 }
 
+int X509_NAME_json(JSON_COLL *c, const char *t, const X509_NAME *n)
+{
+    int i, cnt;
+    int fn_nid;
+    ASN1_OBJECT *fn;
+    const ASN1_STRING *val;
+    const X509_NAME_ENTRY *ent;
+    char objtmp[80];
+    const char *objbuf;
+    char *str;
+    
+    JSON_COLL *coll;
+
+    coll = AddJsonColl(c, t);
+    
+    cnt = X509_NAME_entry_count(n);
+
+    for (i = 0; i < cnt; i++) 
+    {
+        ent = X509_NAME_get_entry(n, i);
+
+        fn = X509_NAME_ENTRY_get_object(ent);
+        val = X509_NAME_ENTRY_get_data(ent);
+        fn_nid = OBJ_obj2nid(fn);
+
+        if (fn_nid == NID_undef) 
+        {
+            OBJ_obj2txt(objtmp, sizeof(objtmp), fn, 1);
+            objbuf = objtmp;
+        } 
+        else 
+            objbuf = OBJ_nid2ln(fn_nid);
+
+        str = (char *)malloc(val->length + 1);
+        memcpy(str, val->data, val->length);
+        str[val->length] = 0;
+        AddJsonString(coll, objbuf, str);
+        free(str);
+    }
+    return 1;
+}
+
+
 #ifndef OPENSSL_NO_STDIO
 int X509_NAME_print_ex_fp(FILE *fp, const X509_NAME *nm, int indent,
                           unsigned long flags)

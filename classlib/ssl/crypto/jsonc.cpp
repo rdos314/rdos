@@ -61,6 +61,14 @@ JSON_COLL *GetJsonRoot(JSON_DOC *doc)
     return (JSON_COLL *)root;
 }
 
+JSON_COLL *AddJsonColl(JSON_COLL *c, const char *field)
+{
+    TJsonCollection *cb = (TJsonCollection *)c;
+    TJsonCollection *coll = cb->AddCollection(field);
+
+    return (JSON_COLL *)coll;
+}
+
 void AddJsonInt(JSON_COLL *c, const char *field, long long val)
 {
     TJsonCollection *coll = (TJsonCollection *)c;

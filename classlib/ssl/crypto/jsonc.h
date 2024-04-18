@@ -30,6 +30,7 @@
 
 extern JSON_DOC *CreateJson();
 extern JSON_COLL *GetJsonRoot(JSON_DOC *doc);
+extern JSON_COLL *AddJsonColl(JSON_COLL *coll, const char *field);
 extern void AddJsonInt(JSON_COLL *coll, const char *field, long long val);
 extern void AddJsonString(JSON_COLL *coll, const char *field, const char *val);
 extern void DeleteJson(JSON_DOC *doc);

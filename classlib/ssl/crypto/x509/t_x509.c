@@ -280,6 +280,8 @@ JSON_DOC *X509_get_json(X509 *x)
 
     X509_signature_json(root, tsig_alg, NULL);
 
+    X509_NAME_json(root, "issuer", X509_get_issuer_name(x));
+
     free(str);
 
     return doc;

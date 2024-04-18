@@ -790,6 +790,8 @@ int X509_NAME_print_ex_fp(FILE *fp, const X509_NAME *nm, int indent,
                           unsigned long flags);
 # endif
 
+int X509_NAME_json(JSON_COLL *coll, const char *tag, const X509_NAME *nm);
+
 int X509_NAME_print(BIO *bp, const X509_NAME *name, int obase);
 int X509_NAME_print_ex(BIO *out, const X509_NAME *nm, int indent,
                        unsigned long flags);
