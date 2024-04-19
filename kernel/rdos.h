@@ -898,7 +898,6 @@ int RDOSAPI RdosReadSecureConnection(int Handle, void *Buf, int Size);
 int RDOSAPI RdosWriteSecureConnection(int Handle, const void *Buf, int Size);
 int RDOSAPI RdosPollSecureConnection(int Handle);
 int RDOSAPI RdosGetSecureConnectionCertificate(int Handle, void *Buf, int MaxSize);
-int RDOSAPI RdosGetSecureConnectionCertificateChain(int Handle, int Entry, void *Buf, int MaxSize);
 int RDOSAPI RdosGetCertificateJson(const char *FileName, void *Buf, int MaxSize);
 
 int RDOSAPI RdosGetSecureConnectionWriteSpace(int Handle);

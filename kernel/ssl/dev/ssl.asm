@@ -1503,7 +1503,7 @@ write_secure_connection32  Endp
 ;
 ;       Name:           GetSecureConnectionCertificate
 ;
-;       Purpose:        Get secure connection certificate
+;       Purpose:        Get secure connection certificate in JSON format
 ;
 ;       Parameters:     BX              connection handle
 ;                       ES:(E)DI        buffer
@@ -1542,7 +1542,7 @@ GetConnectionCert   Proc near
 ;
     call AddMsgBuffer
 ;
-    mov eax,SSL_GET_CERT
+    mov eax,SSL_GET_CONNECTION_CERT
     call RunMsg
 ;
     mov ecx,ebp
@@ -1577,87 +1577,6 @@ get_secure_connection_cert32  Proc far
     call GetConnectionCert
     ret
 get_secure_connection_cert32  Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;       Name:           GetSecureConnectionCertificateChain
-;
-;       Purpose:        Get secure connection certificate chain
-;
-;       Parameters:     BX              connection handle
-;                       EAX             entry
-;                       ES:(E)DI        buffer
-;                       (E)CX           buffer size
-;
-;       Returns:        NC              ok
-;                         ECX           size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_secure_connection_cert_chain_name       DB 'Get Secure Connection Certificate Chain',0
-
-GetConnectionCertChain   Proc near
-    push ds
-    push es
-    push gs
-    push eax
-    push ebx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    push eax
-    mov eax,es
-    mov gs,eax
-    mov ax,SSL_CONN_HANDLE
-    DerefHandle
-    pop eax
-    jc gcccDone
-;
-    push edi
-    mov ebx,[ebx].sc_id
-    call AllocateMsg
-    pop edi
-    jc gcccDone
-;
-    call AddMsgBuffer
-;
-    mov eax,SSL_GET_CERT_CHAIN
-    call RunMsg
-;
-    mov ecx,ebp
-
-gcccDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ebx
-    pop eax
-    pop gs
-    pop es
-    pop ds
-    ret
-GetConnectionCertChain   Endp
-
-get_secure_connection_cert_chain16  Proc far
-    push ecx
-    push edi
-;
-    movzx ecx,cx
-    movzx edi,di
-    call GetConnectionCertChain
-;
-    pop edi
-    pop ecx
-    ret
-get_secure_connection_cert_chain16  Endp
-
-get_secure_connection_cert_chain32  Proc far
-    call GetConnectionCertChain
-    ret
-get_secure_connection_cert_chain32  Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2518,13 +2437,6 @@ init    Proc far
     mov edi,OFFSET get_secure_connection_cert_name
     mov dx,virt_es_in
     mov ax,get_secure_connection_cert_nr
-    RegisterUserGate
-;
-    mov ebx,OFFSET get_secure_connection_cert_chain16
-    mov esi,OFFSET get_secure_connection_cert_chain32
-    mov edi,OFFSET get_secure_connection_cert_chain_name
-    mov dx,virt_es_in
-    mov ax,get_secure_connection_cert_chain_nr
     RegisterUserGate
 ;
     mov ebx,OFFSET get_cert_json16

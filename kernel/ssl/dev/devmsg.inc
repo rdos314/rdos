@@ -67,12 +67,9 @@ SSL_ACCEPT_SERVER              = 7
 SSL_SERVER_CERT                = 8
 
 ; IN  EBX       Connection ID
-SSL_GET_CERT                   = 9
-
-; IN  EBX       Connection ID
-; IN  EAX       Entry
-SSL_GET_CERT_CHAIN             = 10
+; OUT           Certificate JSON
+SSL_GET_CONNECTION_CERT        = 9
 
 ; IN            Filename
 ; OUT           Certificate JSON
-SSL_GET_CERT_JSON              = 11
+SSL_GET_CERT_JSON              = 10

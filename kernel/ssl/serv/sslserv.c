@@ -602,15 +602,13 @@ void PushConnection(int index)
 #
 ##########################################################################*/
 #pragma aux GetConnectionCert "*" parm routine [ebx] [edi] [ecx] value [eax]
-int GetConnectionCert(int index, char *buf, int size)
+int GetConnectionCert(int index, char *buf, int maxsize)
 {
     struct TConnection *Conn = 0;
     SSL *con = 0;
-    int handle;
     X509 *peer = NULL;
-    struct buf_mem_st mb;
-    BIO *bio;
-    int count = 0;
+    int size = 0;
+    JSON_DOC *doc;
 
     if (index > 0 && index <= MAX_CONNECTION_COUNT)
         Conn = ConnectionArr[index - 1];
@@ -623,71 +621,12 @@ int GetConnectionCert(int index, char *buf, int size)
 
     if (peer)
     {
-        BIO *bio = BIO_new(BIO_s_mem());
-
-        mb.length = 0;
-        mb.max = size;
-        mb.data = buf;
-        mb.flags = BUF_MEM_FLAG_FIXED;
-        BIO_set_mem_buf(bio, &mb, BIO_NOCLOSE);
-        PEM_write_bio_X509(bio, peer);
-        BIO_free(bio);
-        count = mb.length;
+        doc = X509_get_json(peer);
+        size = GetJsonText(doc, buf, maxsize);
+        DeleteJson(doc);
     }
 
-    return count;
-}
-
-/*##########################################################################
-#
-#   Name       : GetConnectionCertChain
-#
-#   Purpose....: Get connection certificate chain
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-#pragma aux GetConnectionCertChain "*" parm routine [ebx] [eax] [edi] [ecx] value [eax]
-int GetConnectionCertChain(int index, int entry, char *buf, int size)
-{
-    struct TConnection *Conn = 0;
-    SSL *con = 0;
-    int handle;
-    STACK_OF(X509) *sk = 0;
-    struct buf_mem_st mb;
-    BIO *bio;
-    int count = 0;
-
-    if (index > 0 && index <= MAX_CONNECTION_COUNT)
-        Conn = ConnectionArr[index - 1];
-
-    if (Conn)
-        con = Conn->Con;
-
-    if (con)
-        sk = SSL_get_peer_cert_chain(con);
-
-    if (sk)
-        if (entry >= sk_X509_num(sk))
-            sk = 0;
-
-    if (sk)
-    {
-        BIO *bio = BIO_new(BIO_s_mem());
-
-        mb.length = 0;
-        mb.max = size;
-        mb.data = buf;
-        mb.flags = BUF_MEM_FLAG_FIXED;
-        BIO_set_mem_buf(bio, &mb, BIO_NOCLOSE);
-        PEM_write_bio_X509(bio, sk_X509_value(sk, entry));
-        BIO_free(bio);
-        count = mb.length;
-    }
-
-    return count;
+    return size;
 }
 
 /*##########################################################################

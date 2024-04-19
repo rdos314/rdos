@@ -2352,20 +2352,11 @@ GetLocalSecureConnectionPort       MACRO
                         ENDM
 
 ; IN  BX                connection handle
-; IN  ES:(E)DI          certificate
+; IN  ES:(E)DI          JSON
 ; IN  (E)CX             max size
 ; OUT ECX               actual size
 GetSecureConnectionCertificate       MACRO
         UserGate get_secure_connection_cert_nr
-                        ENDM
-
-; IN  BX                connection handle
-; IN  EAX               entry #
-; IN  ES:(E)DI          certificate
-; IN  (E)CX             max size
-; OUT ECX               actual size
-GetSecureConnectionCertificateChain       MACRO
-        UserGate get_secure_connection_cert_chain_nr
                         ENDM
 
 ; IN  DS:(E)SI          filename

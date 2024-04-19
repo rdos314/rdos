@@ -3210,14 +3210,6 @@
     __parm [__ebx] [__edi] [__ecx] \
     __value [__ecx]
 
-#pragma aux RdosGetSecureConnectionCertificateChain = \
-    CallGate_get_secure_connection_cert  \
-    "jnc ok" \
-    "xor ecx,ecx" \
-    "ok:" \
-    __parm [__ebx] [__eax] [__edi] [__ecx] \
-    __value [__ecx]
-
 #pragma aux RdosGetCertificateJson = \
     CallGate_get_cert_json  \
     "jnc ok" \

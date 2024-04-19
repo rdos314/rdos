@@ -935,30 +935,6 @@ int TSslSocket::GetCertificate(char *buf, int size)
 
     return count;
 }
-
-/*##########################################################################
-#
-#   Name       : TSslSocket::GetCertificateChain
-#
-#   Purpose....: Get certificate chain
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: read chars
-#
-##########################################################################*/
-int TSslSocket::GetCertificateChain(int entry, char *buf, int size)
-{
-    int count = 0;
-
-    if (FHandle)
-        count = RdosGetSecureConnectionCertificateChain(FHandle, entry, buf, size);
-
-    buf[count] = 0;
-
-    return count;
-}
-
 /*##########################################################################
 #
 #   Name       : TUdpSocket::TUdpSocket

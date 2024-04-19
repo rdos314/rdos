@@ -1029,8 +1029,7 @@
 #define usergate_wait_for_tcp_connection_write_space 0x0000034F
 
 #define usergate_get_secure_connection_cert 0x00000350
-#define usergate_get_secure_connection_cert_chain 0x00000351
-#define usergate_get_cert_json 0x00000352
+#define usergate_get_cert_json 0x00000351
 
 
 
@@ -2066,8 +2065,7 @@
 #define CallGate_wait_for_tcp_connection_write_space 0x55 0x67 0x9a 79 3 0 0 3 0 0x5d
 
 #define CallGate_get_secure_connection_cert 0x55 0x67 0x9a 80 3 0 0 3 0 0x5d
-#define CallGate_get_secure_connection_cert_chain 0x55 0x67 0x9a 81 3 0 0 3 0 0x5d
-#define CallGate_get_cert_json 0x55 0x67 0x9a 82 3 0 0 3 0 0x5d
+#define CallGate_get_cert_json 0x55 0x67 0x9a 81 3 0 0 3 0 0x5d
 
 #else
 
@@ -3101,7 +3099,6 @@
 #define CallGate_wait_for_tcp_connection_write_space 0x3e 0x67 0x9a 79 3 0 0 3 0
 
 #define CallGate_get_secure_connection_cert 0x3e 0x67 0x9a 80 3 0 0 3 0
-#define CallGate_get_secure_connection_cert_chain 0x3e 0x67 0x9a 81 3 0 0 3 0
-#define CallGate_get_cert_json 0x3e 0x67 0x9a 82 3 0 0 3 0
+#define CallGate_get_cert_json 0x3e 0x67 0x9a 81 3 0 0 3 0
 
 #endif

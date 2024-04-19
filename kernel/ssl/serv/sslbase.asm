@@ -309,6 +309,9 @@ LocalGetConnectionCert Proc near
     call GetConnectionCert
     pop edi
 ;
+    or eax,eax
+    jz gccFail
+;
     push edi
     add edi,SIZE ssl_cmd_struc
     stosd
@@ -318,40 +321,11 @@ LocalGetConnectionCert Proc near
     and [edi].fc_eflags,NOT 1
     ReplySslDataCmd
     ret
+
+gccFail:
+    mov ebx,[edi].fc_handle
+    ReplySslCmd
 LocalGetConnectionCert Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           LocalGetConnectionCertChain
-;
-;       DESCRIPTION:    Get connection certificate chain
-;
-;       PARAMETERS:     EDI         Msg data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    extern GetConnectionCertChain:near
-
-LocalGetConnectionCertChain Proc near
-    push edi
-    mov eax,[edi].fc_eax
-    add edi,SIZE ssl_cmd_struc
-    add edi,4
-    mov ecx,1000h - SIZE ssl_cmd_struc - 5
-    call GetConnectionCertChain
-    pop edi
-;
-    push edi
-    add edi,SIZE ssl_cmd_struc
-    stosd
-    pop edi
-;
-    mov ebx,[edi].fc_handle
-    and [edi].fc_eflags,NOT 1
-    ReplySslDataCmd
-    ret
-LocalGetConnectionCertChain Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -426,8 +400,7 @@ m06 DD OFFSET LocalCloseServer
 m07 DD OFFSET LocalAcceptServer
 m08 DD OFFSET LocalSetServerCert
 m09 DD OFFSET LocalGetConnectionCert
-m0A DD OFFSET LocalGetConnectionCertChain
-m0B DD OFFSET LocalGetCertJson
+m0A DD OFFSET LocalGetCertJson
 
 WaitForMsg_    Proc near
     push ebx

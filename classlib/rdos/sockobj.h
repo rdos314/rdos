@@ -155,7 +155,6 @@ public:
     virtual int Read(char *buf, int size);
 
     int GetCertificate(char *buf, int size);
-    int GetCertificateChain(int entry, char *buf, int size);
 
 protected:
     int CreateSession();
