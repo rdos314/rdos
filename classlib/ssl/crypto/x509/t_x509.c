@@ -288,6 +288,8 @@ JSON_DOC *X509_get_json(X509 *x)
     ASN1_TIME_to_tm(X509_get0_notAfter(x), &tm);
     AddJsonTime(root, "to", &tm);
 
+    X509_NAME_json(root, "subject", X509_get_subject_name(x));
+
     free(str);
 
     return doc;
