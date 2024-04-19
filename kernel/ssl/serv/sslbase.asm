@@ -325,6 +325,7 @@ LocalGetConnectionCert Proc near
 gccFail:
     mov ebx,[edi].fc_handle
     ReplySslCmd
+    ret
 LocalGetConnectionCert Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
