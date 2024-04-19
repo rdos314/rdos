@@ -4,18 +4,31 @@
 
 #include "rdos.h"
 #include "keyboard.h"
-#include "json.h"
+#include "cotex.h"
+#include "sockobj.h"
 
 
 void main()
 {
-    char *buf = new char[4000];
     int size;
+    char *msg;
+    TCotex doc(0x1000);
+    TSslSocket sock(0x81A977D9, 2091, 5000, 0x2000);
 
-    size = RdosGetCertificateJson("d:/ssl/cert.pem", buf, size);   
+    if (sock.WaitForConnection(5000))
+    {
+        msg = new char[0x1000];
+        size = sock.GetCertificate(msg, 0x1000);
+        msg[size] = 0;
+        printf(msg);
+        delete msg;
 
-    buf[size] = 0;
-    printf(buf); 
+        size = doc.GetSize();
+        msg = new char[size + 1];
+        doc.GetData(msg);
+
+        sock.Write(msg, size);
+    }
 
     RdosTestGate("");
 }
