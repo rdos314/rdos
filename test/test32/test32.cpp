@@ -4,7 +4,6 @@
 
 #include "rdos.h"
 #include "keyboard.h"
-#include "cotex.h"
 #include "sockobj.h"
 
 
