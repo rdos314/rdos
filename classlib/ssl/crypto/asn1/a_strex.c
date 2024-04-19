@@ -598,7 +598,7 @@ int X509_NAME_json(JSON_COLL *c, const char *t, const X509_NAME *n)
             objbuf = objtmp;
         } 
         else 
-            objbuf = OBJ_nid2ln(fn_nid);
+            objbuf = OBJ_nid2sn(fn_nid);
 
         str = (char *)malloc(val->length + 1);
         memcpy(str, val->data, val->length);
