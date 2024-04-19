@@ -2514,7 +2514,7 @@ void TJsonStringArray::Add(const char *str)
     int size = strlen(str);
     char *s;
 
-    s = new(FAlloc) char[size + 1];
+    s = (char *)Allocate(size + 1);
     strcpy(s, str);         
 
     if (FArraySize == FArrayCount)

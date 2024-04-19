@@ -12,6 +12,7 @@
 
 #define JSON_DOC void
 #define JSON_COLL void
+#define JSON_STR_ARR void
 
 #include <limits.h>
 

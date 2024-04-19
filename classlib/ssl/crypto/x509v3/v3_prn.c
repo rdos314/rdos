@@ -64,6 +64,45 @@ void X509V3_EXT_val_prn(BIO *out, STACK_OF(CONF_VALUE) *val, int indent,
     }
 }
 
+void X509V3_EXT_val_json(JSON_COLL *coll, STACK_OF(CONF_VALUE) *val)
+{
+    int i, j;
+    CONF_VALUE *nval;
+    int count = 0;
+    int found;
+    int pos;
+    JSON_STR_ARR *arr[10];
+
+    if (!val)
+        return;
+
+    for (i = 0; i < sk_CONF_VALUE_num(val); i++) 
+    {
+        nval = sk_CONF_VALUE_value(val, i);
+
+        found = 0;
+        for (j = 0; j < count && !found; j++)
+        {
+            if (!strcmp(nval->name, GetJsonStringArrayName(arr[j])))
+            {
+                pos = j;
+                found = 1;
+            }
+        }
+
+        if (!found && count < 10)
+        {
+            arr[count] = AddJsonStringArray(coll, nval->name);
+            pos = count;
+            count++;
+            found = 1;
+        }
+
+        if (found)
+            AddJsonStringArrayData(arr[pos], nval->value);
+    }
+}
+
 /* Main routine: print out a general extension */
 
 int X509V3_EXT_print(BIO *out, X509_EXTENSION *ext, unsigned long flag,
@@ -166,6 +205,71 @@ int X509V3_extensions_print(BIO *bp, const char *title,
         }
         if (BIO_write(bp, "\n", 1) <= 0)
             return 0;
+    }
+    return 1;
+}
+
+int X509V3_EXT_json(JSON_COLL *coll, const char *field, X509_EXTENSION *ext)
+{
+    void *ext_str = NULL;
+    ASN1_OCTET_STRING *extoct;
+    const unsigned char *p;
+    int extlen;
+    const X509V3_EXT_METHOD *method;
+    STACK_OF(CONF_VALUE) *nval = NULL;
+    JSON_COLL *ncoll;
+
+    method = X509V3_EXT_get(ext);
+
+    if (!method)
+        return 0;
+
+    extoct = X509_EXTENSION_get_data(ext);
+    p = ASN1_STRING_get0_data(extoct);
+    extlen = ASN1_STRING_length(extoct);
+
+    if (method->it)
+        ext_str = ASN1_item_d2i(NULL, &p, extlen, ASN1_ITEM_ptr(method->it));
+    else
+        ext_str = method->d2i(NULL, &p, extlen);
+
+    if (method->i2v) 
+    {
+        nval = method->i2v(method, ext_str, NULL);
+
+        if (nval)
+        {
+            ncoll = AddJsonColl(coll, field);
+            X509V3_EXT_val_json(ncoll, nval);
+            sk_CONF_VALUE_pop_free(nval, X509V3_conf_free);
+        }
+    }
+
+    if (method->it)
+        ASN1_item_free(ext_str, ASN1_ITEM_ptr(method->it));
+    else
+        method->ext_free(ext_str);
+
+    return 1;
+}
+
+int X509V3_extensions_json(JSON_COLL *coll, const STACK_OF(X509_EXTENSION) *exts)
+{
+    int i, j;
+    char name[128];
+
+    for (i = 0; i < sk_X509_EXTENSION_num(exts); i++) 
+    {
+        ASN1_OBJECT *obj;
+        X509_EXTENSION *ex;
+
+        ex = sk_X509_EXTENSION_value(exts, i);
+
+        obj = X509_EXTENSION_get_object(ex);
+        i2t_ASN1_OBJECT(name, 128, obj);
+
+        if (!strcmp(name, "X509v3 Subject Alternative Name"))
+            X509V3_EXT_json(coll, "subject", ex);
     }
     return 1;
 }

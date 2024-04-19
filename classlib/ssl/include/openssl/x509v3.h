@@ -638,6 +638,7 @@ int X509V3_add1_i2d(STACK_OF(X509_EXTENSION) **x, int nid, void *value,
 
 void X509V3_EXT_val_prn(BIO *out, STACK_OF(CONF_VALUE) *val, int indent,
                         int ml);
+void X509V3_EXT_val_json(JSON_COLL *coll, STACK_OF(CONF_VALUE) *val);
 int X509V3_EXT_print(BIO *out, X509_EXTENSION *ext, unsigned long flag,
                      int indent);
 #ifndef OPENSSL_NO_STDIO
@@ -646,6 +647,7 @@ int X509V3_EXT_print_fp(FILE *out, X509_EXTENSION *ext, int flag, int indent);
 int X509V3_extensions_print(BIO *out, const char *title,
                             const STACK_OF(X509_EXTENSION) *exts,
                             unsigned long flag, int indent);
+int X509V3_extensions_json(JSON_COLL *coll, const STACK_OF(X509_EXTENSION) *exts);
 
 int X509_check_ca(X509 *x);
 int X509_check_purpose(X509 *x, int id, int ca);

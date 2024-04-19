@@ -34,6 +34,7 @@
 
 #define JSON_DOC void
 #define JSON_COLL void
+#define JSON_STR_ARR void
 
 extern "C" {
 #include "jsonc.h"
@@ -67,7 +68,12 @@ JSON_COLL *GetJsonRoot(JSON_DOC *doc)
 JSON_COLL *AddJsonColl(JSON_COLL *c, const char *field)
 {
     TJsonCollection *cb = (TJsonCollection *)c;
-    TJsonCollection *coll = cb->AddCollection(field);
+    TJsonCollection *coll;
+
+    coll = cb->GetCollection(field);
+
+    if (!coll)
+        coll = cb->AddCollection(field);
 
     return (JSON_COLL *)coll;
 }
@@ -89,6 +95,26 @@ void AddJsonTime(JSON_COLL *c, const char *field, struct tm *ts)
     TJsonCollection *coll = (TJsonCollection *)c;
     TDateTime time(ts->tm_year + 1900, ts->tm_mon + 1, ts->tm_mday, ts->tm_hour, ts->tm_min, ts->tm_sec);
     coll->AddDateTime(field, time, 1);
+}
+
+JSON_STR_ARR *AddJsonStringArray(JSON_COLL *c, const char *field)
+{
+    TJsonCollection *coll = (TJsonCollection *)c;
+    TJsonStringArray *arr = coll->AddStringArray(field);
+
+    return (JSON_STR_ARR *)arr;
+}
+
+const char *GetJsonStringArrayName(JSON_STR_ARR *a)
+{
+    TJsonStringArray *arr = (TJsonStringArray *)a;
+    return arr->GetFieldName();
+}
+
+void AddJsonStringArrayData(JSON_STR_ARR *a, const char *val)
+{
+    TJsonStringArray *arr = (TJsonStringArray *)a;
+    arr->Add(val);
 }
 
 int GetJsonText(JSON_DOC *doc, char *buf, int maxsize)

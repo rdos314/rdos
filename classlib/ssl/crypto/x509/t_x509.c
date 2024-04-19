@@ -290,6 +290,8 @@ JSON_DOC *X509_get_json(X509 *x)
 
     X509_NAME_json(root, "subject", X509_get_subject_name(x));
 
+    X509V3_extensions_json(root, X509_get0_extensions(x));
+
     free(str);
 
     return doc;
