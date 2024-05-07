@@ -47,7 +47,7 @@
 #
 ##########################################################################*/
 TQuizQ11::TQuizQ11()
-  : TQuiz(132)
+  : TQuiz(135)
 {
 }
 
@@ -78,7 +78,10 @@ int TQuizQ11::GetCatCount(int Question)
     if (Question < 132)
         return 3;
 
-    return 43;
+    if (Question < 134)
+        return 43;
+
+    return 30;
 }
 
 /*##################  TQuizQ11::GetQuizN ##########################
@@ -90,7 +93,7 @@ int TQuizQ11::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizQ11::GetQuizN()
 {
-    return 132;
+    return 135;
 }
 
 /*##########################################################################
@@ -389,6 +392,10 @@ void TQuizQ11::SetupTexts()
   ItemArr[130]->Text = "Do you have panic attacks?";
   ItemArr[131]->Text = "Do you have physical health issues?";
 
+  ItemArr[132]->Text = "Mental age";
+  ItemArr[133]->Text = "Physical age";
+  ItemArr[134]->Text = "Stress";
+
 }
 
 /*##################  TQuizQ11::ProcessRow ##########################
@@ -405,6 +412,7 @@ void TQuizQ11::ProcessRow(char *str)
     int fieldno;
     int i, j;
     int val;
+    int temp;
     int minval, maxval;
     int range;
     int count = 0;
@@ -413,8 +421,8 @@ void TQuizQ11::ProcessRow(char *str)
     TDateTime *time;
     TQuizRow Row;
     int score;
+    bool ok;
     int corr_count = 0;
-    int n, e, o, a, c;
 
     str++;
 
@@ -480,6 +488,36 @@ void TQuizQ11::ProcessRow(char *str)
                 Row.Gender = atoi(valstr);
                 break;
 
+            case 9:
+                if (Row.BirthYear > 1993)
+                    val = 0;
+                else
+                {
+                    val = atoi(valstr);
+                    if (val == 100)
+                       val = 0;
+                    else
+                       val = val + 22;
+                }
+
+                Row.Quiz[132] = val;
+                break;
+
+            case 10:
+                if (Row.BirthYear > 1993)
+                    val = 0;
+                else
+                {
+                    val = atoi(valstr);
+                    if (val == 100)
+                       val = 0;
+                    else
+                       val = val + 22;
+                }
+
+                Row.Quiz[133] = val;
+                break;
+
             case 11:
                 Row.Country = atoi(valstr);
                 break;
@@ -518,6 +556,34 @@ void TQuizQ11::ProcessRow(char *str)
                 break;
         }
     }
+
+    ok = true;
+    val = 1;
+
+    for (i = 0; i < 10 && ok; i++)
+    {
+        temp = Row.Quiz[119 + i];
+        if (temp)
+        {
+            switch (i)
+            {
+                case 3:
+                case 4:
+                case 5:
+                case 7:
+                    temp = 4 - temp;
+                    break;
+            }
+            val += temp - 1;
+        }
+        else
+            ok = false;
+    }
+
+    if (ok)
+        Row.Quiz[134] = val;
+    else
+        Row.Quiz[134] = 0;
 
     AddRow(&Row);
 }
