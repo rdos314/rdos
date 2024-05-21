@@ -5472,6 +5472,8 @@ int TJsonStackEntry::HandleStart(TJsonDocument *doc)
         case '8':
         case '9':
         case '-':
+        case ',':
+        case '.':
             FState = json_tokener_state_number;
             FData.Reset();
             FIsDouble = false;
@@ -6034,16 +6036,38 @@ int TJsonStackEntry::HandleNumber(TJsonDocument *doc)
     if (case_len > 0)
         FData.Append(case_start, case_len);
 
-    if (FData[0] == '-' && case_len <= 1 && (*FDataPtr == 'i' || *FDataPtr == 'I'))
+    if (FData.GetSize())
     {
-        FState = json_tokener_state_inf;
+        if (FData[0] == '-')
+        {
+            if (case_len <= 1 && (*FDataPtr == 'i' || *FDataPtr == 'I'))
+            {
+                FState = json_tokener_state_inf;
+                return json_ret_redo;
+            }
+            else if (FData.GetSize() == 1)
+            {
+                doc->AddInt(0);
+
+                FSavedState = json_tokener_state_finish;
+                FState = json_tokener_state_eatws;
+                return json_ret_redo;
+            }
+        }
+
+        if (FIsDouble)
+            return DecodeDouble(doc);
+        else
+            return DecodeInt(doc);
+    }
+    else
+    {
+        doc->AddInt(0);
+
+        FSavedState = json_tokener_state_finish;
+        FState = json_tokener_state_eatws;
         return json_ret_redo;
     }
-
-    if (FIsDouble)
-        return DecodeDouble(doc);
-    else
-        return DecodeInt(doc);
 }
 
 /*##########################################################################
