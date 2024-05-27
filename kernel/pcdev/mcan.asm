@@ -185,6 +185,7 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CanInt   Proc far
+    CrashGate
     ret
 CanInt   Endp
 
@@ -684,7 +685,6 @@ sdMsi:
     RequestMsiHandler
     pop es
 ;
-;
     mov ax,SEG data
     mov ds,eax
     mov ds:can_sel,es
@@ -716,6 +716,15 @@ sdMsi:
     jz sdFail
 ;
     mov es,ds:cd_reg
+    mov edi,500h
+    mov eax,es:[edi+8]
+    or eax,eax
+    jnz sdIntMapped
+;
+    mov eax,1
+    mov es:[edi+8],eax
+
+sdIntMapped:
     mov eax,es:can_crel
     shr eax,24
     mov ah,al
@@ -1035,11 +1044,19 @@ can_config_name DB 'bosch,mram-cfg', 0
 can_thread_pr:
     mov ax,SEG data
     mov ds,eax
+    EnterSection ds:can_rec_section
+;
+    int 3
     mov ds,ds:can_sel
     mov es,ds:cd_reg
 ;
     mov eax,3
     mov es:can_cccr,eax
+;
+    mov es:can_ir,3FFFFFFFh
+    mov es:can_ie,1FFFFFFFh
+    mov es:can_ils,0
+    mov es:can_ile,3
 ;
     mov al,11   ; TSEG 1
     mov ah,4    ; TSEG 2
@@ -1066,6 +1083,10 @@ can_thread_pr:
 ;
     xor eax,eax
     mov es:can_cccr,eax
+;
+    mov ax,SEG data
+    mov ds,eax
+    LeaveSection ds:can_rec_section
 ;
     int 3
 
