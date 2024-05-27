@@ -1586,7 +1586,6 @@ send_audio_out  Endp
 ;
 ;       PARAMETERS:     BX      Bus/device
 ;                       CH      Function
-;                       EAX     Register base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1595,7 +1594,6 @@ AddFunction  Proc near
     push es
     pushad
 ;    
-    push eax
     mov eax,SIZE hda_seg
     AllocateSmallGlobalMem
     movzx eax,ds:HdaCount
@@ -1609,12 +1607,35 @@ AddFunction  Proc near
     mov ds:Req,0
     mov ds:CodecThread,0
 ;
+    mov cl,4h
+    ReadPciDword
+    or al,6
+    WritePciDword
+;
     call SetupInts
+;
+    push ecx
     mov eax,1000h
     AllocateBigLinear
-    pop eax
+    pop ecx
 ;
+    mov cl,10h
+    ReadPciDword
+    test al,4
+    jz af32
+;
+    push eax
+    mov cl,14h
+    ReadPciDword
+    mov ebx,eax
+    pop eax
+    jmp afcom
+
+af32:
     xor ebx,ebx
+
+afCom:
+    and ax,0FFF0h
     or ax,13h
     SetPageEntry
 ;
@@ -1682,7 +1703,7 @@ init_pci_probe_found:
 ;    
     mov edi,OFFSET DevName
     PciPowerOn
-    and ax,0FFF0h
+;
     mov ebp,eax
     call AddFunction
 
@@ -1701,7 +1722,7 @@ init_pci_probe_done:
 ;    
     mov edi,OFFSET DevName
     PciPowerOn
-    and ax,0FFF0h
+;
     mov ebp,eax
     call AddFunction
 
@@ -1721,10 +1742,10 @@ init_pci_loop:
     test al,1
     jnz init_pci_next
 ;    
-    and ax,0FFF0h
     cmp eax,ebp
     je init_pci_done
 ;       
+    mov ebp,eax
     mov edi,OFFSET DevName
     PciPowerOn
     call AddFunction

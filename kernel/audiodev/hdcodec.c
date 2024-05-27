@@ -3297,7 +3297,7 @@ void __far InitPci()
     InitPciHda();
     RdosCreateKernelThread(5, 0x1000, &HdaThread, "HDA", 0);
 } 
-
+    
 /*##########################################################################
 #
 #   Name       : main
