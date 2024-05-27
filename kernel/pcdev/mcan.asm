@@ -114,6 +114,8 @@ can_dev_struc   STRUC
 cd_bar_phys     DD ?,?
 cd_bar_linear   DD ?
 cd_ram_size     DD ?
+cd_irqs         DD ?
+cd_server       DW ?
 cd_reg          DW ?
 cd_filter_sel   DW ?
 cd_rx0_sel      DW ?
@@ -122,7 +124,7 @@ cd_tx_sel       DW ?
 cd_bus          DB ?
 cd_dev          DB ?
 cd_func         DB ?
-cd_resv         DB ?
+cd_resv         DB ?,?,?
 
 cd_ver          DB ?
 cd_rel          DB ?
@@ -185,7 +187,24 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CanInt   Proc far
-    CrashGate
+    mov es,ds:cd_reg
+
+    mov eax,es:can_ir
+    and eax,1FFFFFFFh
+    jz ciDone
+
+ciRetry:
+    lock or es:can_ir,eax
+    or ds:cd_irqs,eax
+;
+    mov eax,es:can_ir
+    and eax,1FFFFFFFh
+    jnz ciRetry
+;
+    mov bx,ds:cd_server
+    Signal
+
+ciDone:
     ret
 CanInt   Endp
 
@@ -678,12 +697,16 @@ sdMsi:
     mov dl,1
     SetupPciMsi
 ;    
+    push ds
     push es
+    mov edi,es
+    mov ds,edi
     mov edi,cs
     mov es,edi
     mov edi,OFFSET CanInt
     RequestMsiHandler
     pop es
+    pop ds
 ;
     mov ax,SEG data
     mov ds,eax
@@ -1050,6 +1073,10 @@ can_thread_pr:
     mov ds,ds:can_sel
     mov es,ds:cd_reg
 ;
+    GetThread
+    mov ds:cd_server,ax
+    mov ds:cd_irqs,0
+;
     mov eax,3
     mov es:can_cccr,eax
 ;
@@ -1083,6 +1110,9 @@ can_thread_pr:
 ;
     xor eax,eax
     mov es:can_cccr,eax
+;
+    WaitForSignal
+    mov eax,ds:cd_irqs
 ;
     mov ax,SEG data
     mov ds,eax
