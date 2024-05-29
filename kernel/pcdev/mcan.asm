@@ -44,6 +44,8 @@ RXB_ELEMENT_SIZE = 16
 TXE_ELEMENT_SIZE = 8
 TXB_ELEMENT_SIZE = 16
 
+RXF_SHIFT = 4
+
 SIDF_ENTRIES = 16
 XIDF_ENTRIES = 0
 RXF0_ENTRIES = 64
@@ -1036,6 +1038,31 @@ delete_id_hook    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           HandleRx
+;
+;   DESCRIPTION:    Handle RX FIFO
+;
+;   PARAMETERS:     DS:EBX  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleRx    Proc near
+    push eax
+    push ecx
+;
+    mov eax,ds:[ebx]
+    int 3
+    mov cl,ds:[ebx+6]
+    and cl,7
+;
+    pop ecx
+    pop eax
+    ret
+HandleRx    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HandleRx0
 ;
 ;   DESCRIPTION:    Handle RX 0 FIFO
@@ -1048,12 +1075,28 @@ delete_id_hook    Endp
 
 HandleRx0    Proc near
     push ds
-    pushad
+    push ebx
+    push edx
 ;
-    mov ax,ds:cd_rx0_sel
-    mov ds,eax
+    mov dx,ds:cd_rx0_sel
+    mov ds,edx
+
+hrxLoop0:
+    mov edx,es:can_rxf0s
+    or dl,dl
+    jz hrxDone0
 ;
-    popad
+    movzx ebx,dh
+    shl ebx,RXF_SHIFT
+    call HandleRx
+;
+    movzx eax,dh
+    mov es:can_rxf0a,eax
+    jmp hrxLoop0
+
+hrxDone0:
+    pop edx
+    pop ebx
     pop ds
     ret
 HandleRx0   Endp
@@ -1076,7 +1119,6 @@ can_thread_pr:
     mov ds,eax
     EnterSection ds:can_rec_section
 ;
-    int 3
     mov cl,ds:can_div    ; Divisor
     mov al,11   ; TSEG 1
     mov ah,4    ; TSEG 2
@@ -1114,7 +1156,6 @@ can_thread_pr:
     call CreateRx1Sel
     call CreateTxSel
 
-    int 3
     xor edx,edx
     mov es:can_cccr,edx
 
