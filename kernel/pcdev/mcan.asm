@@ -188,7 +188,6 @@ code    SEGMENT byte public 'CODE'
 
 CanInt   Proc far
     mov es,ds:cd_reg
-
     mov eax,es:can_ir
     and eax,1FFFFFFFh
     jz ciDone
@@ -244,21 +243,6 @@ SetupBitTiming  Proc near
 ;
     mov dh,al
     mov es:can_btp,edx
-;
-    movzx edx,bl
-;
-    movzx esi,ah
-    shl esi,4
-    or edx,esi
-;
-    movzx esi,al
-    shl esi,8
-    or edx,esi
-;
-    movzx esi,cl
-    shl esi,16
-    or edx,esi
-    mov es:can_dbtp,edx
 ;
     popad  
     ret
@@ -1051,6 +1035,69 @@ dihDone:
     ret
 delete_id_hook    Endp    
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           CheckParam
+;
+;   PARAMETERS:     ES      CAN reg sel
+;                   AL      TSEG1
+;                   AH      TSEG2
+;                   CL      Baud divisor
+;                   BL      SJW
+;
+;   RETURNS:        EDX     PSR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckParam  Proc near
+    mov edx,es:can_psr
+;
+    mov edx,es:can_cccr
+    test dl,1
+    jnz cpSetup
+
+cpStop:
+    or dl,10h
+    mov es:can_cccr,edx
+;
+    push eax
+    mov ax,10
+    WaitMilliSec
+    pop eax
+;
+    mov edx,es:can_cccr
+    test dl,8
+    jz cpStop
+
+cpSetup:
+    mov edx,3
+    mov es:can_cccr,edx
+    mov ds:cd_irqs,0
+    mov edx,es:can_psr
+;
+    call SetupBitTiming
+;
+    xor edx,edx
+    mov es:can_cccr,edx
+
+cpWait:
+    WaitForSignal
+    mov edx,ds:cd_irqs
+    or dx,dx
+    jz cpNext
+;
+    int 3
+
+cpNext:
+    test edx,08000000h
+    jz cpWait
+;
+    mov edx,es:can_psr
+    ret
+CheckParam  Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1075,7 +1122,6 @@ can_thread_pr:
 ;
     GetThread
     mov ds:cd_server,ax
-    mov ds:cd_irqs,0
 ;
     mov eax,3
     mov es:can_cccr,eax
@@ -1085,13 +1131,7 @@ can_thread_pr:
     mov es:can_ils,0
     mov es:can_ile,3
 ;
-    mov al,11   ; TSEG 1
-    mov ah,4    ; TSEG 2
-    mov bl,4    ; SJW
-    mov cl,2    ; Divisor
-    call SetupBitTiming
-;
-    mov eax,3Fh
+    mov eax,0Fh
     mov es:can_gfc,eax
 ;
     xor eax,eax
@@ -1107,12 +1147,20 @@ can_thread_pr:
     call CreateRx0Sel
     call CreateRx1Sel
     call CreateTxSel
-;
-    xor eax,eax
-    mov es:can_cccr,eax
-;
-    WaitForSignal
-    mov eax,ds:cd_irqs
+
+    mov cl,12    ; Divisor
+    mov al,11   ; TSEG 1
+    mov ah,4    ; TSEG 2
+    mov bl,4    ; SJW
+
+ctDiv:
+    call CheckParam
+    dec cl
+    or cl,cl
+    jnz ctDiv
+;    
+    int 3
+
 ;
     mov ax,SEG data
     mov ds,eax
