@@ -1104,6 +1104,47 @@ HandleRx0   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           HandleRx1
+;
+;   DESCRIPTION:    Handle RX 1 FIFO
+;
+;   PARAMETERS:     DS      CAN sel
+;                   ES      CAN reg sel
+;                   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleRx1    Proc near
+    push ds
+    push ebx
+    push edx
+;
+    mov dx,ds:cd_rx1_sel
+    mov ds,edx
+
+hrxLoop1:
+    mov edx,es:can_rxf1s
+    or dl,dl
+    jz hrxDone1
+;
+    movzx ebx,dh
+    shl ebx,RXF_SHIFT
+    call HandleRx
+;
+    movzx eax,dh
+    mov es:can_rxf1a,eax
+    jmp hrxLoop1
+
+hrxDone1:
+    pop edx
+    pop ebx
+    pop ds
+    ret
+HandleRx1   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CanThread
 ;
 ;           description:    Can thread
@@ -1139,7 +1180,7 @@ can_thread_pr:
     mov ds:cd_server,ax
     mov ds:cd_irqs,0
 ;
-    mov eax,0Fh
+    mov eax,1Fh
     mov es:can_gfc,eax
 ;
     xor eax,eax
@@ -1171,6 +1212,13 @@ ctWait:
     call HandleRx0
 
 ctNotRx0:
+    test edx,10h
+    jz ctNotRx1
+;
+    int 3
+    call HandleRx1
+
+ctNotRx1:
     jmp ctWait
 ;
     mov ax,SEG data
