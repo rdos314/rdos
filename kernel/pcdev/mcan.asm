@@ -144,6 +144,18 @@ cd_txb_count    DD ?
 can_dev_struc   ENDS
 
 
+capture_block   STRUC
+
+cc_prev     DD ?
+cc_next     DD ?
+cc_time     DD ?,?
+cc_id       DD ?
+cc_data     DD ?,?
+cc_size     DB ?
+
+capture_block   ENDS
+
+
 id_hook_struc   STRUC
 
 ih_id       DD ?
@@ -162,6 +174,11 @@ can_div                 DB ?
 can_resv                DB ?
 
 can_rec_section         section_typ <>
+
+capture_handle          DW ?
+capture_thread          DW ?
+capture_list            DD ?
+capture_section         section_typ <>
 
 can_id_hook_arr         DD 16 * 4 DUP(?)
 
@@ -1038,6 +1055,246 @@ delete_id_hook    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CaptureThread
+;
+;           description:    Capture thread
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+capture_thread_name DB 'Can Capture', 0
+
+capture_thread_pr proc far
+    mov bx,SEG data
+    mov ds,bx
+    GetThread
+    mov ds:capture_thread,ax
+    LeaveSection ds:capture_section
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov bx,ds:capture_handle
+    xor eax,eax
+    SetFilePos32
+    SetFileSize32
+
+ctpLoop:
+    WaitForSignal
+
+ctpMore:
+    EnterSection ds:capture_section    
+    mov ax,ds:capture_thread
+    or ax,ax
+    jz ctpExit
+;
+    mov edx,ds:capture_list
+    or edx,edx
+    jz ctpNext
+;
+    push ebx
+    mov eax,es:[edx].cc_next
+    mov ebx,es:[edx].cc_prev
+    mov es:[ebx].cc_next,eax
+    mov es:[eax].cc_prev,ebx
+    pop ebx
+    cmp eax,edx
+    jne ctpUnlink
+;
+    mov ds:capture_list,0
+    jmp ctpWrite
+
+ctpUnlink:
+    mov ds:capture_list,eax
+
+ctpWrite:       
+    LeaveSection ds:capture_section
+;    
+    mov edi,edx
+    add edi,OFFSET cc_time
+    mov ecx,SIZE capture_block - OFFSET cc_time
+    UserGateForce32 write_file_nr
+;
+    mov ecx,SIZE capture_block
+    FreeLinear    
+    jmp ctpMore
+    
+ctpNext:
+    LeaveSection ds:capture_section
+    jmp ctpLoop
+
+ctpExit:  
+    mov ds:capture_thread,0
+    LeaveSection ds:capture_section
+    ret
+capture_thread_pr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           NotifyMsg
+;
+;   Description:    Notify reception of ethernet packet
+;
+;   PARAMETERS:     EDX:EAX     Data
+;                   CL          Size (0..8)
+;                   EBX         Identifier
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyMsg  Proc near
+    push ds
+    push si
+;
+    mov si,SEG data
+    mov ds,si
+    EnterSection ds:capture_section
+    mov si,ds:capture_thread
+    or si,si
+    jz nmLeave
+;    
+    push es
+    pushad
+;    
+    push eax
+    push edx
+    mov dx,flat_sel
+    mov es,dx
+    mov eax,SIZE capture_block
+    AllocateSmallLinear
+    mov edi,edx
+    GetTime
+    mov es:[edi].cc_time,eax
+    mov es:[edi].cc_time+4,edx
+    pop edx
+    pop eax
+;    
+    mov es:[edi].cc_id,ebx
+    mov es:[edi].cc_data,eax
+    mov es:[edi].cc_data+4,edx
+    mov es:[edi].cc_size,cl
+    mov edx,edi
+;
+    mov bx,SEG data
+    mov ds,bx
+;
+    mov eax,ds:capture_list
+    or eax,eax
+    jne nmQueue
+
+nmEmpty:
+    mov es:[edx].cc_prev,edx
+    mov es:[edx].cc_next,edx
+    mov ds:capture_list,edx
+    jmp nmSignal
+
+nmQueue:
+    mov ebx,es:[eax].cc_prev
+    mov es:[eax].cc_prev,edx
+    mov es:[ebx].cc_next,edx
+    mov es:[edx].cc_prev,ebx
+    mov es:[edx].cc_next,eax    
+
+nmSignal:
+    mov bx,ds:capture_thread
+    Signal
+;
+    popad
+    pop es
+
+nmLeave:
+    LeaveSection ds:capture_section
+;    
+    pop si
+    pop ds    
+    ret
+NotifyMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StartCanCapture
+;
+;           description:    Start capturing CAN-packets
+;
+;       parameters:     BX      File handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_can_capture_name DB 'Start Can Capture', 0
+
+start_can_capture       Proc far
+    push ds
+    push es
+    push ax
+    push bx
+    push cx
+    push si
+    push di
+;    
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:capture_section
+;
+    mov ds:capture_handle,bx
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    mov si,OFFSET capture_thread_pr
+    mov di,OFFSET capture_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+;       
+    pop di
+    pop si
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+start_can_capture       Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           StopCanCapture
+;
+;           description:    Stop capturing can-packets
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_can_capture_name DB 'Stop Can Capture', 0
+
+stop_can_capture    Proc far
+    push ds
+    push bx
+;    
+    mov bx,SEG data
+    mov ds,bx
+    EnterSection ds:capture_section
+    xor bx,bx
+    xchg bx,ds:capture_thread
+    or bx,bx
+    jz sncThreadDone
+;    
+    Signal
+    mov bx,ds:capture_handle
+    CloseFile
+
+sncThreadDone:
+    mov ds:capture_handle,0
+    LeaveSection ds:capture_section    
+;
+    pop bx
+    pop ds    
+    ret
+stop_can_capture    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           HandleRx
 ;
 ;   DESCRIPTION:    Handle RX FIFO
@@ -1047,16 +1304,43 @@ delete_id_hook    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleRx    Proc near
+    push ds
+    push es
     push eax
     push ecx
+    push esi
 ;
-    mov eax,ds:[ebx]
     int 3
+    mov eax,SEG data
+    mov es,eax
+;
+    mov al,ds:[ebx+7]
+    test al,80h
+    jnz hrxDone
+;
+    movzx esi,al
+    shl esi,4
+    mov esi,OFFSET can_id_hook_arr
+;
+    mov ax,es:[esi].ih_sel
+    or ax,ax
+    jz hrxDone
+;
     mov cl,ds:[ebx+6]
     and cl,7
-;
+    mov eax,ds:[ebx+8]
+    mov edx,ds:[ebx+12]
+    mov ebx,ds:[ebx]
+    mov ds,es:[esi].ih_param
+    call NotifyMsg
+    call fword ptr es:[esi].ih_offset
+
+hrxDone:
+    pop esi
     pop ecx
     pop eax
+    pop es
+    pop ds
     ret
 HandleRx    Endp
 
@@ -1233,38 +1517,6 @@ ctDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           StartCanCapture
-;
-;           description:    Start capturing CAN-packets
-;
-;       parameters:     BX      File handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-start_can_capture_name DB 'Start Can Capture', 0
-
-start_can_capture       Proc far
-    ret
-start_can_capture       Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           StopCanCapture
-;
-;           description:    Stop capturing can-packets
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-stop_can_capture_name DB 'Stop Can Capture', 0
-
-stop_can_capture    Proc far
-    ret
-stop_can_capture    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           Init_can
 ;
 ;           DESCRIPTION:    inits adpater
@@ -1384,6 +1636,10 @@ init    PROC far
     mov ds:can_div,al
 ;
     InitSection ds:can_rec_section
+    InitSection ds:capture_section
+    mov ds:capture_handle,0
+    mov ds:capture_thread,0
+    mov ds:capture_list,0
 ;
     mov ax,SEG data
     mov es,ax
