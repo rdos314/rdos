@@ -350,7 +350,6 @@ CreateFilterSel  Proc near
     shl eax,16
     mov ecx,edx
     sub ecx,ds:cd_bar_linear
-    sub ecx,ds:cd_sidf_offset
     mov ax,cx
     mov es:can_sidfc,eax
 ;
@@ -403,7 +402,6 @@ CreateRx0Sel  Proc near
     shl eax,16
     mov ecx,edx
     sub ecx,ds:cd_bar_linear
-    sub ecx,ds:cd_sidf_offset
     mov ax,cx
     mov es:can_rxf0c,eax
 ;
@@ -453,7 +451,6 @@ CreateRx1Sel  Proc near
     shl eax,16
     mov ecx,edx
     sub ecx,ds:cd_bar_linear
-    sub ecx,ds:cd_sidf_offset
     mov ax,cx
     mov es:can_rxf1c,eax
 ;
@@ -503,7 +500,6 @@ CreateTxSel  Proc near
     shl eax,24
     mov ecx,edx
     sub ecx,ds:cd_bar_linear
-    sub ecx,ds:cd_sidf_offset
     mov ax,cx
     mov es:can_txbc,eax
 ;
@@ -1040,6 +1036,31 @@ delete_id_hook    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           HandleRx0
+;
+;   DESCRIPTION:    Handle RX 0 FIFO
+;
+;   PARAMETERS:     DS      CAN sel
+;                   ES      CAN reg sel
+;                   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleRx0    Proc near
+    push ds
+    pushad
+;
+    mov ax,ds:cd_rx0_sel
+    mov ds,eax
+;
+    popad
+    pop ds
+    ret
+HandleRx0   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CanThread
 ;
 ;           description:    Can thread
@@ -1102,6 +1123,13 @@ ctWait:
 ;
     xor edx,edx
     xchg edx,ds:cd_irqs
+;
+    test edx,1
+    jz ctNotRx0
+;
+    call HandleRx0
+
+ctNotRx0:
     jmp ctWait
 ;
     mov ax,SEG data
