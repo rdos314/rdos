@@ -1180,7 +1180,7 @@ can_thread_pr:
     mov ds:cd_server,ax
     mov ds:cd_irqs,0
 ;
-    mov eax,1Fh
+    mov eax,3Fh
     mov es:can_gfc,eax
 ;
     xor eax,eax
@@ -1199,6 +1199,12 @@ can_thread_pr:
 
     xor edx,edx
     mov es:can_cccr,edx
+;
+    push ds
+    mov ax,SEG data
+    mov ds,eax
+    LeaveSection ds:can_rec_section
+    pop ds
 
 ctWait:
     WaitForSignal
@@ -1220,12 +1226,6 @@ ctNotRx0:
 
 ctNotRx1:
     jmp ctWait
-;
-    mov ax,SEG data
-    mov ds,eax
-    LeaveSection ds:can_rec_section
-;
-    int 3
 
 ctDone:
     retf    
