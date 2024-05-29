@@ -156,6 +156,8 @@ data    SEGMENT byte public 'DATA'
 
 can_sel                 DW ?
 can_thread              DW ?
+can_div                 DB ?
+can_resv                DB ?
 
 can_rec_section         section_typ <>
 
@@ -1035,69 +1037,6 @@ dihDone:
     ret
 delete_id_hook    Endp    
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;   NAME:           CheckParam
-;
-;   PARAMETERS:     ES      CAN reg sel
-;                   AL      TSEG1
-;                   AH      TSEG2
-;                   CL      Baud divisor
-;                   BL      SJW
-;
-;   RETURNS:        EDX     PSR
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckParam  Proc near
-    mov edx,es:can_psr
-;
-    mov edx,es:can_cccr
-    test dl,1
-    jnz cpSetup
-
-cpStop:
-    or dl,10h
-    mov es:can_cccr,edx
-;
-    push eax
-    mov ax,10
-    WaitMilliSec
-    pop eax
-;
-    mov edx,es:can_cccr
-    test dl,8
-    jz cpStop
-
-cpSetup:
-    mov edx,3
-    mov es:can_cccr,edx
-    mov ds:cd_irqs,0
-    mov edx,es:can_psr
-;
-    call SetupBitTiming
-;
-    xor edx,edx
-    mov es:can_cccr,edx
-
-cpWait:
-    WaitForSignal
-    mov edx,ds:cd_irqs
-    or dx,dx
-    jz cpNext
-;
-    int 3
-
-cpNext:
-    test edx,08000000h
-    jz cpWait
-;
-    mov edx,es:can_psr
-    ret
-CheckParam  Endp
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1117,19 +1056,25 @@ can_thread_pr:
     EnterSection ds:can_rec_section
 ;
     int 3
+    mov cl,ds:can_div    ; Divisor
+    mov al,11   ; TSEG 1
+    mov ah,4    ; TSEG 2
+    mov bl,4    ; SJW
+;
     mov ds,ds:can_sel
     mov es,ds:cd_reg
 ;
-    GetThread
-    mov ds:cd_server,ax
-;
-    mov eax,3
-    mov es:can_cccr,eax
-;
+    mov es:can_cccr,3
     mov es:can_ir,3FFFFFFFh
     mov es:can_ie,1FFFFFFFh
     mov es:can_ils,0
     mov es:can_ile,3
+;
+    call SetupBitTiming
+;
+    GetThread
+    mov ds:cd_server,ax
+    mov ds:cd_irqs,0
 ;
     mov eax,0Fh
     mov es:can_gfc,eax
@@ -1148,19 +1093,16 @@ can_thread_pr:
     call CreateRx1Sel
     call CreateTxSel
 
-    mov cl,12    ; Divisor
-    mov al,11   ; TSEG 1
-    mov ah,4    ; TSEG 2
-    mov bl,4    ; SJW
-
-ctDiv:
-    call CheckParam
-    dec cl
-    or cl,cl
-    jnz ctDiv
-;    
     int 3
+    xor edx,edx
+    mov es:can_cccr,edx
 
+ctWait:
+    WaitForSignal
+;
+    xor edx,edx
+    xchg edx,ds:cd_irqs
+    jmp ctWait
 ;
     mov ax,SEG data
     mov ds,eax
@@ -1239,6 +1181,69 @@ icDone:
     pop ds
     ret
 init_can    Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;       Name:           GetValue
+;
+;       Purpose:        Get value from string
+;
+;       Parameters:     ES:EDI      String
+;
+;       Returns:        NC          Found
+;                           AX      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetValue    Proc near
+    push bx
+    push cx
+    push dx
+;    
+    xor ax,ax
+
+find_first_loop:
+    mov bl,es:[edi]
+    cmp bl,' '
+    je find_first_next
+;
+    cmp bl,','
+    je find_first_next
+;
+    cmp bl,8
+    je find_first_next
+;ù
+    or bl,bl
+    jnz find_val_digit  
+
+find_first_next:
+    inc edi
+    jmp find_first_loop      
+
+find_val_digit:
+    mov bl,es:[edi]
+    or bl,bl
+    jz find_val_save
+;    
+    inc edi
+    sub bl,'0'
+    jc find_val_save
+;
+    cmp bl,10
+    jnc find_val_save
+;       
+    mov cx,10
+    mul cx
+    add al,bl
+    adc ah,0
+    jmp find_val_digit
+
+find_val_save:
+    pop dx
+    pop cx
+    pop bx
+    ret
+GetValue    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1255,11 +1260,16 @@ init_can    Endp
 
 init    PROC far
     mov ax,SEG data
-    mov ds,ax
-    mov es,ax
+    mov ds,ax    
+    mov ds:can_div,1
+;        
+    call GetValue
+    mov ds:can_div,al
 ;
     InitSection ds:can_rec_section
 ;
+    mov ax,SEG data
+    mov es,ax
     mov edi,OFFSET can_id_hook_arr
     mov ecx,4 * 16
     xor eax,eax
