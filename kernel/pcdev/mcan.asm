@@ -170,8 +170,6 @@ data    SEGMENT byte public 'DATA'
 
 can_sel                 DW ?
 can_thread              DW ?
-can_div                 DB ?
-can_resv                DB ?
 
 can_rec_section         section_typ <>
 
@@ -1320,7 +1318,7 @@ HandleRx    Proc near
 ;
     movzx esi,al
     shl esi,4
-    mov esi,OFFSET can_id_hook_arr
+    add esi,OFFSET can_id_hook_arr
 ;
     mov ax,es:[esi].ih_sel
     or ax,ax
@@ -1444,10 +1442,10 @@ can_thread_pr:
     mov ds,eax
     EnterSection ds:can_rec_section
 ;
-    mov cl,ds:can_div    ; Divisor
-    mov al,11   ; TSEG 1
-    mov ah,4    ; TSEG 2
-    mov bl,4    ; SJW
+    mov cl,5    ; divider
+    mov al,34   ; TSEG 1
+    mov ah,5    ; TSEG 2
+    mov bl,1    ; SJW
 ;
     mov ds,ds:can_sel
     mov es,ds:cd_reg
@@ -1550,69 +1548,6 @@ icDone:
     pop ds
     ret
 init_can    Endp
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;       Name:           GetValue
-;
-;       Purpose:        Get value from string
-;
-;       Parameters:     ES:EDI      String
-;
-;       Returns:        NC          Found
-;                           AX      Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetValue    Proc near
-    push bx
-    push cx
-    push dx
-;    
-    xor ax,ax
-
-find_first_loop:
-    mov bl,es:[edi]
-    cmp bl,' '
-    je find_first_next
-;
-    cmp bl,','
-    je find_first_next
-;
-    cmp bl,8
-    je find_first_next
-;ù
-    or bl,bl
-    jnz find_val_digit  
-
-find_first_next:
-    inc edi
-    jmp find_first_loop      
-
-find_val_digit:
-    mov bl,es:[edi]
-    or bl,bl
-    jz find_val_save
-;    
-    inc edi
-    sub bl,'0'
-    jc find_val_save
-;
-    cmp bl,10
-    jnc find_val_save
-;       
-    mov cx,10
-    mul cx
-    add al,bl
-    adc ah,0
-    jmp find_val_digit
-
-find_val_save:
-    pop dx
-    pop cx
-    pop bx
-    ret
-GetValue    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1630,10 +1565,7 @@ GetValue    Endp
 init    PROC far
     mov ax,SEG data
     mov ds,ax    
-    mov ds:can_div,1
-;        
-    call GetValue
-    mov ds:can_div,al
+    mov es,ax
 ;
     InitSection ds:can_rec_section
     InitSection ds:capture_section
@@ -1641,8 +1573,6 @@ init    PROC far
     mov ds:capture_thread,0
     mov ds:capture_list,0
 ;
-    mov ax,SEG data
-    mov es,ax
     mov edi,OFFSET can_id_hook_arr
     mov ecx,4 * 16
     xor eax,eax
