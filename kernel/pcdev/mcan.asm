@@ -124,6 +124,8 @@ cd_filter_sel   DW ?
 cd_rx0_sel      DW ?
 cd_rx1_sel      DW ?
 cd_tx_sel       DW ?
+cd_tx_notify    DW TXB_ENTRIES DUP(?)
+
 cd_bus          DB ?
 cd_dev          DB ?
 cd_func         DB ?
@@ -680,6 +682,15 @@ SetupDevice  Proc near
     xor al,al
     mov es:cd_bar_phys,eax
     mov es:cd_bar_phys+4,ebp
+;
+    push ecx
+    push edx
+    mov edi,OFFSET cd_tx_notify
+    mov ecx,TXB_ENTRIES
+    xor ax,ax
+    rep stosw
+    pop edx
+    pop ecx
 ;    
     pop ecx
     pop ebx    
@@ -1010,8 +1021,121 @@ send_can_bus_msg    Endp
 send_can_bus_block_name   DB 'Send CAN Bus Message Block', 0
 
 send_can_bus_block    Proc far
+    push ds
+    push es
+    push fs
+    push eax
+    push ecx
+    push esi
+    push edi
+    push ebp
+;
+    call NotifyMsg    
+;
+    mov ebp,2000
+    mov esi,SEG data
+    mov ds,esi
+    mov fs,ds:can_sel
+    mov es,fs:cd_reg
+
+scbbRetry:
+    EnterSection ds:can_send_section
+;
+    mov esi,es:can_txfqs
+    and si,3Fh
+    or si,si
+    jz scbbWait
+;
+    shr esi,16
+    test si,20h
+    jnz scbbLeaveFail
+    jmp scbbOk
+
+scbbWait:
+    LeaveSection ds:can_send_section
+;
+    push eax
+    mov ax,1
+    WaitMilliSec
+    pop eax
+;
+    sub ebp,1
+    jnz scbbRetry
+;
+    jmp scbbFail
+
+scbbOk:
+    mov edi,esi
+    and edi,1Fh
+    shl edi,4
+    mov es,fs:cd_tx_sel
+    mov es:[edi],ebx
+    add edi,4
+;
+    movzx ecx,cl
+    shl ecx,16
+    mov es:[edi],ecx
+    add edi,4
+;
+    mov es:[edi],eax
+    add edi,4
+;
+    mov es:[edi],edx
+;
+    mov cx,si
+    mov esi,1
+    shl esi,cl
+    mov es,fs:cd_reg
+    test esi,es:can_txbar
+    jz scbbAdd
+;
     int 3
+    jmp scbbLeaveFail
+
+scbbAdd:
+    movzx ebx,cl
+    shl ebx,1
+    GetThread
+    mov fs:[ebx].cd_tx_notify,ax
+;
+    lock or fs:cd_pend_tx,esi
+    mov es:can_txbar,esi
+    LeaveSection ds:can_send_section
+;
+    mov ebp,200
+
+scbbWC:
+    GetSystemTime
+    add eax,11930
+    adc edx,0
+    WaitForSignalWithTimeout
+;
+    mov ax,fs:[ebx].cd_tx_notify
+    or ax,ax
     clc
+    jz scbbDone
+;
+    sub ebp,1
+    jnz scbbWC
+;
+    mov fs:[ebx].cd_tx_notify,0
+
+scbbLeaveFail:
+    LeaveSection ds:can_send_section
+
+scbbFail:
+    int 3
+    stc
+
+scbbDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop ecx
+    pop eax
+    pop fs
+    pop es
+    pop ds
     ret
 send_can_bus_block    Endp    
 
@@ -1032,7 +1156,6 @@ has_can_send_buf    Proc far
     push ds
     push eax
 ;
-    int 3
     mov eax,SEG data
     mov ds,eax
     mov ds,ds:can_sel
@@ -1505,6 +1628,20 @@ HandleRx1   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NotifyTxDone    Proc near
+    push ebx
+;
+    xor ax,ax
+    xchg ax,fs:[2*ebx].cd_tx_notify
+    or ax,ax
+    jz ntdDone
+;
+    push ebx
+    mov ebx,eax
+    Signal
+    pop ebx
+
+ntdDone:
+    pop eax
     ret
 NotifyTxDone    Endp
 
