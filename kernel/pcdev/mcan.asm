@@ -520,6 +520,10 @@ CreateTxSel  Proc near
     mov ax,cx
     mov es:can_txbc,eax
 ;
+    mov eax,0FFFFFFFFh
+    mov es:can_txbtie,eax
+    mov es:can_txbcie,eax
+;
     add edx,TXB_ENTRIES * TXB_ELEMENT_SIZE
 ;
     pop edi
@@ -817,12 +821,15 @@ send_can_bus_msg    Proc far
     push esi
     push edi
 ;
-    int 3
     mov esi,SEG data
     mov ds,esi
     mov ds,ds:can_sel
     mov es,ds:cd_reg
     mov esi,es:can_txfqs
+    and si,3Fh
+    or si,si
+    jz scbFail
+;
     shr esi,16
     test si,20h
     jnz scbFail
@@ -853,6 +860,7 @@ send_can_bus_msg    Proc far
     jmp scbDone
 
 scbFail:
+    int 3
     stc
 
 scbDone:
@@ -1427,6 +1435,109 @@ HandleRx1   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           NotifyTxDone
+;
+;   DESCRIPTION:    Notify TX done
+;
+;   PARAMETERS:     DS      CAN sel
+;                   ES      CAN reg sel
+;                   EBX     FIFO entry
+;                   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyTxDone    Proc near
+    ret
+NotifyTxDone    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleTxComplete
+;
+;   DESCRIPTION:    Handle TX complete
+;
+;   PARAMETERS:     DS      CAN sel
+;                   ES      CAN reg sel
+;                   EAX     complete mask
+;                   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleTxComplete    Proc near
+    push ebx
+    push ecx
+;
+    mov ecx,TXB_ENTRIES
+    xor ebx,ebx
+
+htxcLoop:
+    test eax,1
+    jz htcxNext
+;
+    call NotifyTxDone
+
+htcxNext:
+    ror eax,1
+    inc ebx
+    loop htxcLoop
+;
+    pop ecx
+    pop ebx
+    ret
+HandleTxComplete    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleTxOk
+;
+;   DESCRIPTION:    Handle TX ok
+;
+;   PARAMETERS:     DS      CAN sel
+;                   ES      CAN reg sel
+;                   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleTxOk    Proc near
+    push eax
+;
+    xor eax,eax
+    xchg eax,es:can_txbto
+    call HandleTxComplete
+;
+    pop eax
+    ret
+HandleTxOk    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;   NAME:           HandleTxCancel
+;
+;   DESCRIPTION:    Handle TX cancel
+;
+;   PARAMETERS:     DS      CAN sel
+;                   ES      CAN reg sel
+;                   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleTxCancel    Proc near
+    push eax
+;
+    xor eax,eax
+    xchg eax,es:can_txbcf
+    call HandleTxComplete
+;
+    pop eax
+    ret
+HandleTxCancel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CanThread
 ;
 ;           description:    Can thread
@@ -1479,7 +1590,7 @@ can_thread_pr:
     call CreateRx1Sel
     call CreateTxSel
 
-    xor edx,edx
+    mov edx,40h
     mov es:can_cccr,edx
 ;
     push ds
@@ -1503,10 +1614,23 @@ ctNotRx0:
     test edx,10h
     jz ctNotRx1
 ;
-    int 3
     call HandleRx1
 
 ctNotRx1:
+    test edx,200h
+    jz ctNotTxOk
+;
+    int 3
+    call HandleTxOk    
+
+ctNotTxOk:
+    test edx,400h
+    jz ctNotTxCancel
+;
+    int 3
+    call HandleTxCancel
+
+ctNotTxCancel:
     jmp ctWait
 
 ctDone:
