@@ -117,6 +117,7 @@ cd_bar_phys     DD ?,?
 cd_bar_linear   DD ?
 cd_ram_size     DD ?
 cd_irqs         DD ?
+cd_pend_tx      DD ?
 cd_server       DW ?
 cd_reg          DW ?
 cd_filter_sel   DW ?
@@ -172,6 +173,7 @@ can_sel                 DW ?
 can_thread              DW ?
 
 can_rec_section         section_typ <>
+can_send_section        section_typ <>
 
 capture_handle          DW ?
 capture_thread          DW ?
@@ -786,6 +788,87 @@ SetupDevice Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           NotifyMsg
+;
+;   Description:    Notify reception of ethernet packet
+;
+;   PARAMETERS:     EDX:EAX     Data
+;                   CL          Size (0..8)
+;                   EBX         Identifier
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NotifyMsg  Proc near
+    push ds
+    push si
+;
+    mov si,SEG data
+    mov ds,si
+    EnterSection ds:capture_section
+    mov si,ds:capture_thread
+    or si,si
+    jz nmLeave
+;    
+    push es
+    pushad
+;    
+    push eax
+    push edx
+    mov dx,flat_sel
+    mov es,dx
+    mov eax,SIZE capture_block
+    AllocateSmallLinear
+    mov edi,edx
+    GetTime
+    mov es:[edi].cc_time,eax
+    mov es:[edi].cc_time+4,edx
+    pop edx
+    pop eax
+;    
+    mov es:[edi].cc_id,ebx
+    mov es:[edi].cc_data,eax
+    mov es:[edi].cc_data+4,edx
+    mov es:[edi].cc_size,cl
+    mov edx,edi
+;
+    mov bx,SEG data
+    mov ds,bx
+;
+    mov eax,ds:capture_list
+    or eax,eax
+    jne nmQueue
+
+nmEmpty:
+    mov es:[edx].cc_prev,edx
+    mov es:[edx].cc_next,edx
+    mov ds:capture_list,edx
+    jmp nmSignal
+
+nmQueue:
+    mov ebx,es:[eax].cc_prev
+    mov es:[eax].cc_prev,edx
+    mov es:[ebx].cc_next,edx
+    mov es:[edx].cc_prev,ebx
+    mov es:[edx].cc_next,eax    
+
+nmSignal:
+    mov bx,ds:capture_thread
+    Signal
+;
+    popad
+    pop es
+
+nmLeave:
+    LeaveSection ds:capture_section
+;    
+    pop si
+    pop ds    
+    ret
+NotifyMsg  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;   NAME:           ResetCanBuffers
 ;
 ;   DESCRIPTION:    Reset CAN 
@@ -821,8 +904,12 @@ send_can_bus_msg    Proc far
     push esi
     push edi
 ;
+    call NotifyMsg    
+;
     mov esi,SEG data
     mov ds,esi
+    EnterSection ds:can_send_section
+;
     mov ds,ds:can_sel
     mov es,ds:cd_reg
     mov esi,es:can_txfqs
@@ -855,6 +942,13 @@ send_can_bus_msg    Proc far
     mov esi,1
     shl esi,cl
     mov es,ds:cd_reg
+    test esi,es:can_txbar
+    jz scbAdd
+;
+    int 3
+
+scbAdd:
+    lock or ds:cd_pend_tx,esi
     mov es:can_txbar,esi
     clc
     jmp scbDone
@@ -864,6 +958,10 @@ scbFail:
     stc
 
 scbDone:
+    mov esi,SEG data
+    mov ds,esi
+    LeaveSection ds:can_send_section
+;
     pop edi
     pop esi
     pop ecx
@@ -1138,87 +1236,6 @@ capture_thread_pr	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;   NAME:           NotifyMsg
-;
-;   Description:    Notify reception of ethernet packet
-;
-;   PARAMETERS:     EDX:EAX     Data
-;                   CL          Size (0..8)
-;                   EBX         Identifier
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NotifyMsg  Proc near
-    push ds
-    push si
-;
-    mov si,SEG data
-    mov ds,si
-    EnterSection ds:capture_section
-    mov si,ds:capture_thread
-    or si,si
-    jz nmLeave
-;    
-    push es
-    pushad
-;    
-    push eax
-    push edx
-    mov dx,flat_sel
-    mov es,dx
-    mov eax,SIZE capture_block
-    AllocateSmallLinear
-    mov edi,edx
-    GetTime
-    mov es:[edi].cc_time,eax
-    mov es:[edi].cc_time+4,edx
-    pop edx
-    pop eax
-;    
-    mov es:[edi].cc_id,ebx
-    mov es:[edi].cc_data,eax
-    mov es:[edi].cc_data+4,edx
-    mov es:[edi].cc_size,cl
-    mov edx,edi
-;
-    mov bx,SEG data
-    mov ds,bx
-;
-    mov eax,ds:capture_list
-    or eax,eax
-    jne nmQueue
-
-nmEmpty:
-    mov es:[edx].cc_prev,edx
-    mov es:[edx].cc_next,edx
-    mov ds:capture_list,edx
-    jmp nmSignal
-
-nmQueue:
-    mov ebx,es:[eax].cc_prev
-    mov es:[eax].cc_prev,edx
-    mov es:[ebx].cc_next,edx
-    mov es:[edx].cc_prev,ebx
-    mov es:[edx].cc_next,eax    
-
-nmSignal:
-    mov bx,ds:capture_thread
-    Signal
-;
-    popad
-    pop es
-
-nmLeave:
-    LeaveSection ds:capture_section
-;    
-    pop si
-    pop ds    
-    ret
-NotifyMsg  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           StartCanCapture
 ;
 ;           description:    Start capturing CAN-packets
@@ -1306,7 +1323,9 @@ stop_can_capture    Endp
 ;   DESCRIPTION:    Handle RX FIFO
 ;
 ;   PARAMETERS:     DS:EBX  Buffer
-;
+;                   ES      CAN reg sel
+;                   FS      CAN sel
+;                   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleRx    Proc near
@@ -1314,9 +1333,9 @@ HandleRx    Proc near
     push es
     push eax
     push ecx
+    push edx
     push esi
 ;
-    int 3
     mov eax,SEG data
     mov es,eax
 ;
@@ -1343,6 +1362,7 @@ HandleRx    Proc near
 
 hrxDone:
     pop esi
+    pop edx
     pop ecx
     pop eax
     pop es
@@ -1357,9 +1377,9 @@ HandleRx    Endp
 ;
 ;   DESCRIPTION:    Handle RX 0 FIFO
 ;
-;   PARAMETERS:     DS      CAN sel
+;   PARAMETERS:     DS      Data
 ;                   ES      CAN reg sel
-;                   
+;                   FS      CAN sel                   
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1368,8 +1388,7 @@ HandleRx0    Proc near
     push ebx
     push edx
 ;
-    mov dx,ds:cd_rx0_sel
-    mov ds,edx
+    mov ds,fs:cd_rx0_sel
 
 hrxLoop0:
     mov edx,es:can_rxf0s
@@ -1398,9 +1417,9 @@ HandleRx0   Endp
 ;
 ;   DESCRIPTION:    Handle RX 1 FIFO
 ;
-;   PARAMETERS:     DS      CAN sel
+;   PARAMETERS:     DS      Data
 ;                   ES      CAN reg sel
-;                   
+;                   FS      CAN sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1409,8 +1428,7 @@ HandleRx1    Proc near
     push ebx
     push edx
 ;
-    mov dx,ds:cd_rx1_sel
-    mov ds,edx
+    mov ds,fs:cd_rx1_sel
 
 hrxLoop1:
     mov edx,es:can_rxf1s
@@ -1439,8 +1457,9 @@ HandleRx1   Endp
 ;
 ;   DESCRIPTION:    Notify TX done
 ;
-;   PARAMETERS:     DS      CAN sel
+;   PARAMETERS:     DS      Data
 ;                   ES      CAN reg sel
+;                   FS      CAN sel
 ;                   EBX     FIFO entry
 ;                   
 ;
@@ -1457,8 +1476,9 @@ NotifyTxDone    Endp
 ;
 ;   DESCRIPTION:    Handle TX complete
 ;
-;   PARAMETERS:     DS      CAN sel
+;   PARAMETERS:     DS      Data
 ;                   ES      CAN reg sel
+;                   FS      CAN sel
 ;                   EAX     complete mask
 ;                   
 ;
@@ -1468,8 +1488,11 @@ HandleTxComplete    Proc near
     push ebx
     push ecx
 ;
-    mov ecx,TXB_ENTRIES
+    and eax,fs:cd_pend_tx
+    lock xor fs:cd_pend_tx,eax
+;
     xor ebx,ebx
+    mov ecx,TXB_ENTRIES
 
 htxcLoop:
     test eax,1
@@ -1494,8 +1517,9 @@ HandleTxComplete    Endp
 ;
 ;   DESCRIPTION:    Handle TX ok
 ;
-;   PARAMETERS:     DS      CAN sel
+;   PARAMETERS:     DS      Data
 ;                   ES      CAN reg sel
+;                   FS      CAN sel
 ;                   
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1503,9 +1527,12 @@ HandleTxComplete    Endp
 HandleTxOk    Proc near
     push eax
 ;
-    xor eax,eax
-    xchg eax,es:can_txbto
+    EnterSection ds:can_send_section
+;
+    mov eax,es:can_txbto
     call HandleTxComplete
+;
+    LeaveSection ds:can_send_section
 ;
     pop eax
     ret
@@ -1518,8 +1545,9 @@ HandleTxOk    Endp
 ;
 ;   DESCRIPTION:    Handle TX cancel
 ;
-;   PARAMETERS:     DS      CAN sel
+;   PARAMETERS:     DS      Data
 ;                   ES      CAN reg sel
+;                   FS      CAN sel
 ;                   
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1527,9 +1555,12 @@ HandleTxOk    Endp
 HandleTxCancel    Proc near
     push eax
 ;
-    xor eax,eax
-    xchg eax,es:can_txbcf
+    EnterSection ds:can_send_section
+;
+    mov eax,es:can_txbcf
     call HandleTxComplete
+;
+    LeaveSection ds:can_send_section
 ;
     pop eax
     ret
@@ -1572,6 +1603,7 @@ can_thread_pr:
     GetThread
     mov ds:cd_server,ax
     mov ds:cd_irqs,0
+    mov ds:cd_pend_tx,0
 ;
     mov eax,3Fh
     mov es:can_gfc,eax
@@ -1593,17 +1625,16 @@ can_thread_pr:
     mov edx,40h
     mov es:can_cccr,edx
 ;
-    push ds
     mov ax,SEG data
     mov ds,eax
     LeaveSection ds:can_rec_section
-    pop ds
+    mov fs,ds:can_sel
 
 ctWait:
     WaitForSignal
 ;
     xor edx,edx
-    xchg edx,ds:cd_irqs
+    xchg edx,fs:cd_irqs
 ;
     test edx,1
     jz ctNotRx0
@@ -1620,7 +1651,6 @@ ctNotRx1:
     test edx,200h
     jz ctNotTxOk
 ;
-    int 3
     call HandleTxOk    
 
 ctNotTxOk:
@@ -1692,6 +1722,7 @@ init    PROC far
     mov es,ax
 ;
     InitSection ds:can_rec_section
+    InitSection ds:can_send_section
     InitSection ds:capture_section
     mov ds:capture_handle,0
     mov ds:capture_thread,0
