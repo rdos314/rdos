@@ -1063,8 +1063,10 @@ scRetry:
 ;
     LeaveSection ds:can_send_section
 ;
+    push ax
     mov ax,1
     WaitMilliSec
+    pop ax
 ;
     sub bp,1
     jnz scRetry

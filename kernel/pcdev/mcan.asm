@@ -903,23 +903,44 @@ send_can_bus_msg    Proc far
     push ecx
     push esi
     push edi
+    push ebp
 ;
     call NotifyMsg    
 ;
+    mov ebp,2000
     mov esi,SEG data
     mov ds,esi
+    mov es,ds:can_sel
+    mov es,es:cd_reg
+
+scbRetry:
     EnterSection ds:can_send_section
 ;
-    mov ds,ds:can_sel
-    mov es,ds:cd_reg
     mov esi,es:can_txfqs
     and si,3Fh
     or si,si
-    jz scbFail
+    jz scbWait
 ;
     shr esi,16
     test si,20h
     jnz scbFail
+    jmp scbOk
+
+scbWait:
+    LeaveSection ds:can_send_section
+;
+    push eax
+    mov ax,1
+    WaitMilliSec
+    pop eax
+;
+    sub ebp,1
+    jnz scbRetry
+;
+    jmp scbFail
+
+scbOk:
+    mov ds,ds:can_sel
 ;
     mov edi,esi
     and edi,1Fh
@@ -962,6 +983,7 @@ scbDone:
     mov ds,esi
     LeaveSection ds:can_send_section
 ;
+    pop ebp
     pop edi
     pop esi
     pop ecx
@@ -1007,8 +1029,25 @@ send_can_bus_block    Endp
 has_can_send_buf_name   DB 'Has CAN Send Buf', 0
 
 has_can_send_buf    Proc far
+    push ds
+    push eax
+;
     int 3
+    mov eax,SEG data
+    mov ds,eax
+    mov ds,ds:can_sel
+    mov ds,ds:cd_reg
+    mov eax,ds:can_txfqs
+    and ax,3Fh
+    or ax,ax
     clc
+    jnz hcsbDone
+;
+    stc
+
+hcsbDone:
+    pop eax
+    pop ds
     ret
 has_can_send_buf    Endp    
 
