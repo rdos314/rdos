@@ -1681,7 +1681,7 @@ init_can    Proc far
     mov es,ax
     mov edi,OFFSET can_thread_name
     mov esi,OFFSET can_thread_pr
-    mov ax,2
+    mov ax,4
     mov cx,stack0_size
     CreateThread
 
