@@ -4105,8 +4105,13 @@ TJsonObject *TJsonArrayCollection::GetObj(int n)
         FReqAdd = false;
     }
 
-    if (n >= 0 && n < FArray[FCurrInd]->FObjArrayCount)
-        return FArray[FCurrInd]->FObjArr[n];
+    if (FArray)
+    {
+        if (n >= 0 && n < FArray[FCurrInd]->FObjArrayCount)
+           return FArray[FCurrInd]->FObjArr[n];
+        else
+            return 0;
+    }
     else
         return 0;
 }
@@ -4133,12 +4138,15 @@ TJsonObject *TJsonArrayCollection::GetObj(const char *FieldName)
         FReqAdd = false;
     }
 
-    for (n = 0; n < FArray[FCurrInd]->FObjArrayCount; n++)
+    if (FArray)
     {
-        obj = FArray[FCurrInd]->FObjArr[n];
-        if (!obj->IsCollection())
-            if (!strcmp(obj->GetFieldName(), FieldName))
-                return obj;
+        for (n = 0; n < FArray[FCurrInd]->FObjArrayCount; n++)
+        {
+            obj = FArray[FCurrInd]->FObjArr[n];
+            if (!obj->IsCollection())
+                if (!strcmp(obj->GetFieldName(), FieldName))
+                    return obj;
+        }
     }
 
     return 0;
@@ -4166,12 +4174,15 @@ TJsonCollection *TJsonArrayCollection::GetCollection(const char *FieldName)
         FReqAdd = false;
     }
 
-    for (n = 0; n < FArray[FCurrInd]->FObjArrayCount; n++)
+    if (FArray)
     {
-        obj = FArray[FCurrInd]->FObjArr[n];
-        if (obj->IsCollection())
-            if (!strcmp(obj->GetFieldName(), FieldName))
-                return (TJsonCollection *)obj;
+        for (n = 0; n < FArray[FCurrInd]->FObjArrayCount; n++)
+        {
+            obj = FArray[FCurrInd]->FObjArr[n];
+            if (obj->IsCollection())
+                if (!strcmp(obj->GetFieldName(), FieldName))
+                    return (TJsonCollection *)obj;
+        }
     }
 
     return 0;
