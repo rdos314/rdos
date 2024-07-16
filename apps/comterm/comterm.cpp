@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     if (port && baud)
     {
         printf("\r\n");
-        
+
         Serial = new TSerialDevice(port, baud, 'N', 8, 1);
 
         for (;;)
@@ -59,8 +59,16 @@ int main(int argc, char **argv)
             while (Serial->WaitForChar(100))
             {
                 ch = Serial->Read();
-                str[0] = ch;
-                str[1] = 0;
+
+                sprintf(str, "%04hX", ch);
+                str[0] = str[2];
+                str[1] = str[3];
+                str[2] = ' ';
+                str[3] = ' ';
+                str[4] = 0;
+
+//                str[0] = ch;
+//                str[1] = 0;
                 RdosWriteString(str);
             }
 
