@@ -30,85 +30,82 @@
 
 #include "mp3tag.h"
 #include "decoder.h"
+#include "sigdev.h"
 
 class TMp3Player : protected TMadDecoder
 {
 public:
-	TMp3Player();
-	~TMp3Player();
+    TMp3Player();
+    ~TMp3Player();
 
     void Close();
-	void Load(const char *FileName);
+    void Load(const char *FileName);
 
-	void SetVolume(int vol);
-	void SetPosition(int ms);
+    void SetVolume(int vol);
+    void SetPosition(int ms);
 
-	void Play();
+    void Play();
 
     int IsRunning();
-	void Start();
-	void Stop();
+    void Start();
+    void Stop();
 
-	void Thread();
+    void Thread();
 
-	int FChannels;
-	unsigned int FSampleRate;		/* sampling frequency (Hz) */
-	int FSamplesPerFrame;
-	long double FAvgBitRate;
-	long double FAvgFrameSize;
+    int FChannels;
+    unsigned int FSampleRate;		/* sampling frequency (Hz) */
+    int FSamplesPerFrame;
+    long double FAvgBitRate;
+    long double FAvgFrameSize;
 
-	enum mad_layer FLayer;			/* audio layer (1, 2, or 3) */
-	enum mad_mode FMode;			/* channel mode (see above) */
-	enum mad_emphasis FEmphasis;		/* de-emphasis to use (see above) */
+    enum mad_layer FLayer;			/* audio layer (1, 2, or 3) */
+    enum mad_mode FMode;			/* channel mode (see above) */
+    enum mad_emphasis FEmphasis;		/* de-emphasis to use (see above) */
 
-	int FModeExtension;			/* additional mode info */
+    int FModeExtension;			/* additional mode info */
 
-	unsigned long FBitrate;		/* stream bitrate (bps) */
-	mad_timer_t FDuration;			/* audio playing time of frame */
+    unsigned long FBitrate;		/* stream bitrate (bps) */
+    mad_timer_t FDuration;			/* audio playing time of frame */
 
-	int FHeaderFlags;				/* flags (see below) */
+    int FHeaderFlags;				/* flags (see below) */
 
-	int FValidTag;
-	int FConstantBitRate;
+    int FValidTag;
+    int FConstantBitRate;
 
-	int FTagFrameSize;
-	int FSongFrames;
-	int FSongSamples;
-	unsigned int FSongMs;
-	int FSongBytes;
+    int FTagFrameSize;
+    int FSongFrames;
+    int FSongSamples;
+    unsigned int FSongMs;
+    int FSongBytes;
 
-	TMp3Tag FTag;
+    TMp3Tag FTag;
 
 protected:
-	void FindStart();
-	void Check();
-	int ParseTag();
-	void CalcSongParams();
+    void FindStart();
+    void Check();
+    int ParseTag();
+    void CalcSongParams();
 
-	int FThreadRunning;
+    bool FThreadRunning;
+    bool FReqStop;
 
-//	virtual enum mad_flow Input(void *);
-//	virtual enum mad_flow Header(TMadHeader *);
-//	virtual enum mad_flow Filter();
-//	virtual enum mad_flow Output(TMadHeader *, struct mad_pcm *);
-//	virtual enum mad_flow Error(void *);
+    int FAudioHandle;
 
-	int FAudioHandle;
+    int FFileHandle;
+    int FMapHandle;
+    unsigned char *FFileBuf;
+    int FFileSize;
+    int FValid;
+    int FVolume;
 
-	int FFileHandle;
-	int FMapHandle;
-	unsigned char *FFileBuf;
-	int FFileSize;
-	int FValid;
-	int FVolume;
+    int FId3V1;
+    int FId3V2;
 
-	int FId3V1;
-	int FId3V2;
+    unsigned char *FMp3Start;
+    int FMp3Size;
 
-	unsigned char *FMp3Start;
-	int FMp3Size;
-
-	unsigned char *FCurrentPos;
+    unsigned char *FCurrentPos;
+    TSignalDevice FSignal;
 
 };
 
