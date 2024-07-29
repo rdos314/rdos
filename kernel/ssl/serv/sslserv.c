@@ -1228,6 +1228,12 @@ int main(int argc, char **argv)
     int i;
     FILE *fp;
 
+    if (!RdosSetCurDir("d:/ssl"))
+    {
+        RdosDeleteFile("d:/ssl/log.txt");    
+        RdosMakeDir("d:/ssl");
+    }
+
     fp = fopen("d:/ssl/log.txt", "w");
 
     prog = argv[0];
