@@ -4171,6 +4171,15 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 	{
 		XMLVariable* x = new XMLVariable(vn, vv, 0, 0);
 		return AddVariable(x);
+    }
+
+	int XMLElement::AddVariableDateTime(const char* vn, const TDateTime &time)
+	{
+		char str[80];
+
+		sprintf(str, "%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+
+		return AddVariable(vn, str);
 	}
 
 	int XMLElement::AddVariableBool(const char* vn, int val)

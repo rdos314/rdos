@@ -402,6 +402,7 @@ class XMLElement
                 int AddVariableBool(const char*, int);
                 int AddVariableInt(const char*, int);
                 int AddVariableUInt(const char*, unsigned int);
+                int AddVariableDateTime(const char*, const TDateTime &time);
                 int AddBinaryVariable(const char*,const char*,int);
 
                 int FindVariable(XMLVariable*);
