@@ -368,6 +368,12 @@ class XMLElement
                 unsigned int GetContentsNum();
 
                 TString GetContentString(const char *def);
+		int GetContentInt(int def);
+		unsigned int GetContentUInt(unsigned int def);
+		long long GetContentInt64(long long def);
+		unsigned long long GetContentInt64(unsigned long long def);
+		bool GetContentBolean(bool def);
+
 		void AddContentString(TString str);
 
 

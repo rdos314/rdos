@@ -4362,6 +4362,92 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
             }
 	}
 
+	int XMLElement::GetContentInt(int def)
+	{
+            int val = def;
+
+            if (contentsnum)
+            {
+                int len = contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                contents[0]->GetValue(str);
+		val = atoi(str);
+                delete str;                
+            }
+            return val;
+	}
+
+	unsigned int XMLElement::GetContentUInt(unsigned int def)
+	{
+            unsigned int x = def;
+
+            if (contentsnum)
+            {
+                int len = contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                x = 0;
+                contents[0]->GetValue(str);
+		sscanf(str, "%u", &x);
+                delete str;                
+            }
+            return x;
+	}
+
+	long long XMLElement::GetContentInt64(long long def)
+	{
+            long long x = def;
+
+            if (contentsnum)
+            {
+                int len = contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+		x = 0;
+                contents[0]->GetValue(str);
+		sscanf(str, "%I64i", &x);
+                delete str;                
+            }
+            return x;
+	}
+
+	unsigned long long XMLElement::GetContentInt64(unsigned long long def)
+	{
+            unsigned long long x = def;
+
+            if (contentsnum)
+            {
+                int len = contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+		x = 0;
+                contents[0]->GetValue(str);
+		sscanf(str, "%I64u", &x);
+                delete str;                
+            }
+            return x;
+	}
+
+	bool XMLElement::GetContentBolean(bool def)
+	{
+            bool val = def;
+
+            if (contentsnum)
+            {
+                int len = contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                contents[0]->GetValue(str);
+                if (!strcmp(str, "true"))
+                    val = true;
+                else
+                    val = atoi(str);
+                delete str;                
+            }
+            return val;
+	}
+
 	void XMLElement::AddContentString(TString str)
 	{
                 AddContent(str.GetData(), -1, 0);
