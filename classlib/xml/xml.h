@@ -376,7 +376,7 @@ class XMLElement
 		long long GetContentInt64(long long def);
 		unsigned long long GetContentInt64(unsigned long long def);
 		bool GetContentBolean(bool def);
-                TDateTime GetContentDateTime(TDateTime &def);
+                TDateTime GetContentDateTime();
 
                 TString GetContentString(const char *tag, const char *def);
 		int GetContentInt(const char *tag, int def);
@@ -384,7 +384,7 @@ class XMLElement
 		long long GetContentInt64(const char *tag, long long def);
 		unsigned long long GetContentInt64(const char *tag, unsigned long long def);
 		bool GetContentBolean(const char *tag, bool def);
-                TDateTime GetContentDateTime(const char *tag, TDateTime &def);
+                TDateTime GetContentDateTime(const char *tag);
 
 
                 // Children Stuff
@@ -420,7 +420,7 @@ class XMLElement
                 unsigned int GetVariableUInt(const char*  x, unsigned int def);
                 int GetVariableHex(const char*  x, int def);
                 TString GetVariableString(const char*  x, const char *def);
-                TDateTime GetVariableDateTime(const char *x, TDateTime &def);
+                TDateTime GetVariableDateTime(const char *x);
                              
                 XMLElement* GetElementInSection(const char*);
                 int XMLQuery(const char* expression,XMLElement** rv,unsigned int deep = 0xFFFFFFFF);
