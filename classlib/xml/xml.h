@@ -34,6 +34,7 @@
 #include <assert.h>
 
 #include "str.h"
+#include "datetime.h"
 
 
 // Z template class
@@ -375,6 +376,7 @@ class XMLElement
 		long long GetContentInt64(long long def);
 		unsigned long long GetContentInt64(unsigned long long def);
 		bool GetContentBolean(bool def);
+                TDateTime GetContentDateTime(TDateTime &def);
 
                 TString GetContentString(const char *tag, const char *def);
 		int GetContentInt(const char *tag, int def);
@@ -382,6 +384,7 @@ class XMLElement
 		long long GetContentInt64(const char *tag, long long def);
 		unsigned long long GetContentInt64(const char *tag, unsigned long long def);
 		bool GetContentBolean(const char *tag, bool def);
+                TDateTime GetContentDateTime(const char *tag, TDateTime &def);
 
 
                 // Children Stuff
@@ -417,6 +420,7 @@ class XMLElement
                 unsigned int GetVariableUInt(const char*  x, unsigned int def);
                 int GetVariableHex(const char*  x, int def);
                 TString GetVariableString(const char*  x, const char *def);
+                TDateTime GetVariableDateTime(const char *x, TDateTime &def);
                              
                 XMLElement* GetElementInSection(const char*);
                 int XMLQuery(const char* expression,XMLElement** rv,unsigned int deep = 0xFFFFFFFF);
@@ -501,6 +505,7 @@ class XMLVariable
                 unsigned long long GetValueUInt64();
                 int GetValueHex();
                 TString GetValueString();
+                TDateTime GetValueDateTime();
                 bool GetValueBoolean();
                 float GetValueFloat();
                 void SetName(const char*,int NoDecode = 0);

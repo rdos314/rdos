@@ -3581,6 +3581,16 @@ TString XMLElement :: GetVariableString(const char*  x, const char *def)
             return def;
 }
 
+TDateTime XMLElement :: GetVariableDateTime(const char*  x, TDateTime &def)
+{
+        XMLVariable* V = GetVariable(x);
+
+        if (V)
+            return V->GetValueDateTime();
+        else
+            return TDateTime(def);
+}
+
 bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 {
 	XMLVariable* V = GetVariable(x);
@@ -4362,6 +4372,34 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
             }
 	}
 
+	TDateTime XMLElement::GetContentDateTime(TDateTime &def)
+	{
+            if (contentsnum == 0)
+                return TDateTime(def);
+            else
+            {
+                int year, month, day;
+                int hour, min, sec;
+                int count;
+                int len = contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                year = 1970;
+                month = 1;
+                day = 1;
+                hour = 0;
+                min = 0;
+                sec = 0;
+
+                contents[0]->GetValue(str);
+
+                count = sscanf(str, "%04d-%02d-%02dT%02d:%02d:%02d", &year, &month, &day, &hour, &min, &sec);
+                TDateTime ret(year, month, day, hour, min, sec);
+                delete str;                
+                return ret;
+            }
+	}
+
 	int XMLElement::GetContentInt(int def)
 	{
             int val = def;
@@ -4464,6 +4502,36 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
             }
             else
                 return TString(def);
+	}
+
+	TDateTime XMLElement::GetContentDateTime(const char *tag, TDateTime &def)
+	{
+            XMLElement *elem = GetElement(tag);
+
+            if (elem && elem->contentsnum)
+            {
+                int year, month, day;
+                int hour, min, sec;
+                int count;
+                int len = elem->contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                year = 1970;
+                month = 1;
+                day = 1;
+                hour = 0;
+                min = 0;
+                sec = 0;
+
+                elem->contents[0]->GetValue(str);
+
+                count = sscanf(str, "%04d-%02d-%02dT%02d:%02d:%02d", &year, &month, &day, &hour, &min, &sec);
+                TDateTime ret(year, month, day, hour, min, sec);
+                delete str;                
+                return ret;
+            }
+            else
+                return TDateTime(def);
 	}
 
 	int XMLElement::GetContentInt(const char *tag, int def)
@@ -5308,6 +5376,30 @@ TString XMLVariable :: GetValueString()
         TString ret(str);
         delete str;                
         return ret;
+	}
+
+	TDateTime XMLVariable::GetValueDateTime()
+	{
+            int year, month, day;
+            int hour, min, sec;
+            int count;
+            int len = GetValue(0);
+            char *str = new char[len + 1];
+
+            GetValue(str);
+
+            year = 1970;
+            month = 1;
+            day = 1;
+            hour = 0;
+            min = 0;
+            sec = 0;
+
+            count = sscanf(str, "%04d-%02d-%02dT%02d:%02d:%02d", &year, &month, &day, &hour, &min, &sec);
+            
+            TDateTime ret(year, month, day, hour, min, sec);
+            delete str;                
+            return ret;
 	}
 
 	bool XMLVariable::GetValueBoolean()
