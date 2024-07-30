@@ -367,6 +367,8 @@ class XMLElement
                 void RemoveAllContents();
                 unsigned int GetContentsNum();
 
+		void AddContentString(TString str);
+
                 TString GetContentString(const char *def);
 		int GetContentInt(int def);
 		unsigned int GetContentUInt(unsigned int def);
@@ -374,7 +376,12 @@ class XMLElement
 		unsigned long long GetContentInt64(unsigned long long def);
 		bool GetContentBolean(bool def);
 
-		void AddContentString(TString str);
+                TString GetContentString(const char *tag, const char *def);
+		int GetContentInt(const char *tag, int def);
+		unsigned int GetContentUInt(const char *tag, unsigned int def);
+		long long GetContentInt64(const char *tag, long long def);
+		unsigned long long GetContentInt64(const char *tag, unsigned long long def);
+		bool GetContentBolean(const char *tag, bool def);
 
 
                 // Children Stuff

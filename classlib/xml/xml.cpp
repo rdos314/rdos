@@ -4448,6 +4448,116 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
             return val;
 	}
 
+	TString XMLElement::GetContentString(const char *tag, const char *def)
+	{
+            XMLElement *elem = GetElement(tag);
+
+            if (elem && elem->contentsnum)
+            {
+                int len = elem->contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                elem->contents[0]->GetValue(str);
+                TString ret(str);
+                delete str;                
+                return ret;
+            }
+            else
+                return TString(def);
+	}
+
+	int XMLElement::GetContentInt(const char *tag, int def)
+	{
+            XMLElement *elem = GetElement(tag);
+            int val = def;
+
+            if (elem && elem->contentsnum)
+            {
+                int len = elem->contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                elem->contents[0]->GetValue(str);
+		val = atoi(str);
+                delete str;                
+            }
+            return val;
+	}
+
+	unsigned int XMLElement::GetContentUInt(const char *tag, unsigned int def)
+	{
+            XMLElement *elem = GetElement(tag);
+            unsigned int x = def;
+
+            if (elem && elem->contentsnum)
+            {
+                int len = elem->contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                x = 0;
+                elem->contents[0]->GetValue(str);
+		sscanf(str, "%u", &x);
+                delete str;                
+            }
+            return x;
+	}
+
+	long long XMLElement::GetContentInt64(const char *tag, long long def)
+	{
+            XMLElement *elem = GetElement(tag);
+            long long x = def;
+
+            if (elem && elem->contentsnum)
+            {
+                int len = elem->contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+		x = 0;
+                elem->contents[0]->GetValue(str);
+		sscanf(str, "%I64i", &x);
+                delete str;                
+            }
+            return x;
+	}
+
+	unsigned long long XMLElement::GetContentInt64(const char *tag, unsigned long long def)
+	{
+            XMLElement *elem = GetElement(tag);
+            unsigned long long x = def;
+
+            if (elem && elem->contentsnum)
+            {
+                int len = elem->contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+		x = 0;
+                elem->contents[0]->GetValue(str);
+		sscanf(str, "%I64u", &x);
+                delete str;                
+            }
+            return x;
+	}
+
+	bool XMLElement::GetContentBolean(const char *tag, bool def)
+	{
+            XMLElement *elem = GetElement(tag);
+            bool val = def;
+
+            if (elem && elem->contentsnum)
+            {
+                int len = elem->contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                elem->contents[0]->GetValue(str);
+                if (!strcmp(str, "true"))
+                    val = true;
+                else
+                    val = atoi(str);
+                delete str;                
+            }
+            return val;
+	}
+
+
 	void XMLElement::AddContentString(TString str)
 	{
                 AddContent(str.GetData(), -1, 0);
