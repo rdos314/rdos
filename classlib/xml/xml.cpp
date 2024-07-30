@@ -4453,13 +4453,13 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 
 		x = 0;
                 contents[0]->GetValue(str);
-		sscanf(str, "%I64i", &x);
+		sscanf(str, "%lld", &x);
                 delete str;                
             }
             return x;
 	}
 
-	unsigned long long XMLElement::GetContentInt64(unsigned long long def)
+	unsigned long long XMLElement::GetContentUInt64(unsigned long long def)
 	{
             unsigned long long x = def;
 
@@ -4470,13 +4470,13 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 
 		x = 0;
                 contents[0]->GetValue(str);
-		sscanf(str, "%I64u", &x);
+		sscanf(str, "%llud", &x);
                 delete str;                
             }
             return x;
 	}
 
-	bool XMLElement::GetContentBolean(bool def)
+	bool XMLElement::GetContentBoolean(bool def)
 	{
             bool val = def;
 
@@ -4499,16 +4499,8 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 	{
             XMLElement *elem = GetElement(tag);
 
-            if (elem && elem->contentsnum)
-            {
-                int len = elem->contents[0]->GetValue(0);
-                char *str = new char[len + 1];
-
-                elem->contents[0]->GetValue(str);
-                TString ret(str);
-                delete str;                
-                return ret;
-            }
+            if (elem)
+                return elem->GetContentString(def);
             else
                 return TString(def);
 	}
@@ -4517,28 +4509,8 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 	{
             XMLElement *elem = GetElement(tag);
 
-            if (elem && elem->contentsnum)
-            {
-                int year, month, day;
-                int hour, min, sec;
-                int count;
-                int len = elem->contents[0]->GetValue(0);
-                char *str = new char[len + 1];
-
-                year = 1970;
-                month = 1;
-                day = 1;
-                hour = 0;
-                min = 0;
-                sec = 0;
-
-                elem->contents[0]->GetValue(str);
-
-                count = sscanf(str, "%04d-%02d-%02dT%02d:%02d:%02d", &year, &month, &day, &hour, &min, &sec);
-                TDateTime ret(year, month, day, hour, min, sec);
-                delete str;                
-                return ret;
-            }
+            if (elem)
+                return elem->GetContentDateTime();
             else
                 return TDateTime();
 	}
@@ -4546,92 +4518,51 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 	int XMLElement::GetContentInt(const char *tag, int def)
 	{
             XMLElement *elem = GetElement(tag);
-            int val = def;
 
-            if (elem && elem->contentsnum)
-            {
-                int len = elem->contents[0]->GetValue(0);
-                char *str = new char[len + 1];
-
-                elem->contents[0]->GetValue(str);
-		val = atoi(str);
-                delete str;                
-            }
-            return val;
+            if (elem)
+                return elem->GetContentInt(def);
+            else
+                return def;
 	}
 
 	unsigned int XMLElement::GetContentUInt(const char *tag, unsigned int def)
 	{
             XMLElement *elem = GetElement(tag);
-            unsigned int x = def;
 
-            if (elem && elem->contentsnum)
-            {
-                int len = elem->contents[0]->GetValue(0);
-                char *str = new char[len + 1];
-
-                x = 0;
-                elem->contents[0]->GetValue(str);
-		sscanf(str, "%u", &x);
-                delete str;                
-            }
-            return x;
+            if (elem)
+                return elem->GetContentUInt(def);
+            else
+                return def;
 	}
 
 	long long XMLElement::GetContentInt64(const char *tag, long long def)
 	{
             XMLElement *elem = GetElement(tag);
-            long long x = def;
 
-            if (elem && elem->contentsnum)
-            {
-                int len = elem->contents[0]->GetValue(0);
-                char *str = new char[len + 1];
-
-		x = 0;
-                elem->contents[0]->GetValue(str);
-		sscanf(str, "%I64i", &x);
-                delete str;                
-            }
-            return x;
+            if (elem)
+                return elem->GetContentInt64(def);
+            else
+                return def;
 	}
 
-	unsigned long long XMLElement::GetContentInt64(const char *tag, unsigned long long def)
+	unsigned long long XMLElement::GetContentUInt64(const char *tag, unsigned long long def)
 	{
             XMLElement *elem = GetElement(tag);
-            unsigned long long x = def;
 
-            if (elem && elem->contentsnum)
-            {
-                int len = elem->contents[0]->GetValue(0);
-                char *str = new char[len + 1];
-
-		x = 0;
-                elem->contents[0]->GetValue(str);
-		sscanf(str, "%I64u", &x);
-                delete str;                
-            }
-            return x;
+            if (elem)
+                return elem->GetContentUInt64(def);
+            else
+                return def;
 	}
 
-	bool XMLElement::GetContentBolean(const char *tag, bool def)
+	bool XMLElement::GetContentBoolean(const char *tag, bool def)
 	{
             XMLElement *elem = GetElement(tag);
-            bool val = def;
 
-            if (elem && elem->contentsnum)
-            {
-                int len = elem->contents[0]->GetValue(0);
-                char *str = new char[len + 1];
-
-                elem->contents[0]->GetValue(str);
-                if (!strcmp(str, "true"))
-                    val = true;
-                else
-                    val = atoi(str);
-                delete str;                
-            }
-            return val;
+            if (elem)
+                return elem->GetContentBoolean(def);
+            else
+                return def;
 	}
 
 
@@ -4640,6 +4571,97 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
                 AddContent(str.GetData(), -1, 0);
 	}
 
+	void XMLElement::AddContentInt(int val)
+	{
+		char str[40];
+
+                sprintf(str, "%d", val);
+                AddContent(str, -1, 0);
+	}
+
+	void XMLElement::AddContentUInt(unsigned int val)
+	{
+		char str[40];
+
+                sprintf(str, "%u", val);
+                AddContent(str, -1, 0);
+	}
+
+	void XMLElement::AddContentInt64(long long val)
+	{
+		char str[40];
+
+                sprintf(str, "%lld", val);
+                AddContent(str, -1, 0);
+	}
+
+	void XMLElement::AddContentUInt64(unsigned long long val)
+	{
+		char str[40];
+
+                sprintf(str, "%llu", val);
+                AddContent(str, -1, 0);
+	}
+
+	void XMLElement::AddContentBoolean(bool val)
+	{
+		char str[40];
+
+                sprintf(str, "%d", val);
+                AddContent(str, -1, 0);
+	}
+
+	void XMLElement::AddContentDateTime(const TDateTime &time)
+	{
+		char str[80];
+
+		sprintf(str, "%04d-%02d-%02dT%02d:%02d:%02d", time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(), time.GetSec());
+                AddContent(str, -1, 0);
+	}
+
+
+
+	void XMLElement::AddContentString(const char *tag, TString str)
+	{
+                XMLElement *elem = AddElement(tag);
+                elem->AddContentString(str);
+	}
+
+	void XMLElement::AddContentInt(const char *tag, int val)
+	{
+                XMLElement *elem = AddElement(tag);
+                elem->AddContentInt(val);
+	}
+
+	void XMLElement::AddContentUInt(const char *tag, unsigned int val)
+	{
+                XMLElement *elem = AddElement(tag);
+                elem->AddContentUInt(val);
+	}
+
+	void XMLElement::AddContentInt64(const char *tag, long long val)
+	{
+                XMLElement *elem = AddElement(tag);
+                elem->AddContentInt64(val);
+	}
+
+	void XMLElement::AddContentUInt64(const char *tag, unsigned long long val)
+	{
+                XMLElement *elem = AddElement(tag);
+                elem->AddContentUInt64(val);
+	}
+
+	void XMLElement::AddContentBoolean(const char *tag, bool val)
+	{
+                XMLElement *elem = AddElement(tag);
+                elem->AddContentBoolean(val);
+	}
+
+	void XMLElement::AddContentDateTime(const char *tag, const TDateTime &time)
+	{
+                XMLElement *elem = AddElement(tag);
+                elem->AddContentDateTime(time);
+	}
 
 	unsigned int XMLElement::GetAllChildren(XMLElement** x, unsigned int deep)
 	{

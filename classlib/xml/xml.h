@@ -369,21 +369,35 @@ class XMLElement
                 unsigned int GetContentsNum();
 
 		void AddContentString(TString str);
+		void AddContentInt(int val);
+		void AddContentUInt(unsigned int val);
+		void AddContentInt64(long long val);
+		void AddContentUInt64(unsigned long long val);
+		void AddContentBoolean(bool val);
+                void AddContentDateTime(const TDateTime &time);
+
+		void AddContentString(const char *tag, TString str);
+		void AddContentInt(const char *tag, int val);
+		void AddContentUInt(const char *tag, unsigned int val);
+		void AddContentInt64(const char *tag, long long val);
+		void AddContentUInt64(const char *tag, unsigned long long val);
+		void AddContentBoolean(const char *tag, bool val);
+                void AddContentDateTime(const char *tag, const TDateTime &time);
 
                 TString GetContentString(const char *def);
 		int GetContentInt(int def);
 		unsigned int GetContentUInt(unsigned int def);
 		long long GetContentInt64(long long def);
-		unsigned long long GetContentInt64(unsigned long long def);
-		bool GetContentBolean(bool def);
+		unsigned long long GetContentUInt64(unsigned long long def);
+		bool GetContentBoolean(bool def);
                 TDateTime GetContentDateTime();
 
                 TString GetContentString(const char *tag, const char *def);
 		int GetContentInt(const char *tag, int def);
 		unsigned int GetContentUInt(const char *tag, unsigned int def);
 		long long GetContentInt64(const char *tag, long long def);
-		unsigned long long GetContentInt64(const char *tag, unsigned long long def);
-		bool GetContentBolean(const char *tag, bool def);
+		unsigned long long GetContentUInt64(const char *tag, unsigned long long def);
+		bool GetContentBoolean(const char *tag, bool def);
                 TDateTime GetContentDateTime(const char *tag);
 
 
