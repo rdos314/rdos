@@ -44,7 +44,7 @@
 *##########################################################################*/
 void cdecl main()
 {
-        TFile RawFile("c:/cap/raw0000.dat");
+        TFile RawFile("c:/cap/raw0003.dat");
 
         TProtocolAnalyser analyzer(&RawFile, 0x400);
 
