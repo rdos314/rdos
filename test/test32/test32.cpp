@@ -4,111 +4,43 @@
 
 #include "rdos.h"
 #include "keyboard.h"
-#include "sockobj.h"
-#include "json.h"
-#include "str.h"
-
-TString FWanIp;
-TString FImei;
-TString FImsi;
-TString FNetState;
-TString FSimState;
-TString FCellId;
-TString FOperator;
-TString FConType;
-TString FBand;
-
-static void HandleGzipJson(TJsonDocument *json)
-{
-    TJsonCollection *root = json->GetRoot();
-    TJsonCollection *cache = 0;
-    TJsonCollection *coll;
-    TJsonArrayCollection *cell;
-    TString str;
-    int ival;
-    int signal;
-    int rsrp;
-    double rsrq;
-    double sinr;
-    double temp;
-
-    if (root)
-        cache = root->GetCollection("cache");
-
-    if (cache)
-    {
-        str = cache->GetText("imei", FImei.GetData());
-        if (str != FImei)
-        {
-            FImei = str;
-            str = "IMEI: " + FImei; 
-        }        
-
-        str = cache->GetText("imsi", FImsi.GetData());
-        if (str != FImsi)
-        {
-            FImsi = str;
-            str = "IMSI: " + FImsi; 
-        }        
-
-        coll = cache->GetCollection("cell_info");
-        if (coll && coll->IsArray())
-        {
-            cell = (TJsonArrayCollection *)coll;
-            str = cell->GetText("cellid", FCellId.GetData());
-            if (str != FCellId)
-            {
-                FCellId = str;
-                str = "Cell Id: " + FCellId; 
-            }        
-        }
-
-        str = cache->GetText("band_str", FNetState.GetData());
-        if (str != FNetState)
-        {
-            FNetState = str;
-            str = "Band: " + FNetState; 
-        }        
-
-        ival = cache->GetInt("sim", 0);
-        str.printf("%d", ival);
-        if (str != FSimState)
-        {
-            FSimState = str;
-            str = "SimState: " + FSimState; 
-        }        
-
-        str = cache->GetText("operator", FOperator.GetData());
-        if (str != FOperator)
-        {
-            FOperator = str;
-            str = "Operator: " + FOperator; 
-        }        
-
-        signal = cache->GetInt("rssi_value", 0);
-        rsrp = cache->GetInt("rsrp_value", 0);
-        rsrq = cache->GetInt("rsrq_value", 0);
-        sinr = cache->GetInt("sinr_value", 0);
-
-        temp = (double)cache->GetInt("temperature", 0) / 10.0;
-    }            
-}
+#include "modbus.h"
 
 void main()
 {
-    TFile file("udp.txt");
-    int size = file.GetSize();
-    char *buf = new char[size + 1];
-    TJsonDocument *json;
+    TModbusDevice dev(0x7701A8C0, 502);
+    TModbus unit(&dev, 1);
+    int i;
+    int val;
 
-    file.Read(buf, size);
-    buf[size] = 0;
+    for (;;)
+    {
+        if (unit.ReqHoldingRegisters(40203, 28))
+        {
+            unit.GetBufferedHoldingRegister(40214, &val);
+            printf("Output power %dW", val);
 
-    json = new TJsonDocument(buf);
-    HandleGzipJson(json);
-    delete json;
+            unit.GetBufferedHoldingRegister(40224, &val);
+            printf(", PV power %dW", val);
 
-    RdosTestGate("");
+            unit.GetBufferedHoldingRegister(40216, &val);
+            printf(", Battery voltage %d.%1dV", val / 10, val %10);
+
+            unit.GetBufferedHoldingRegister(40217, &val);
+            printf(", current ");
+            if (val < 0)
+            {
+                val = -val;
+                printf("-");
+            }
+            printf("%d.%1dA\r\n", val / 10, val %10);
+        }
+
+        for (i = 0; i < 60; i++)
+            RdosWaitMilli(1000);
+    }
+
+//    RdosTestGate("");
 }
 
 
