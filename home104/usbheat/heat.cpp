@@ -844,6 +844,31 @@ void UnlockGUI()
     FGuiSection.Leave();
 }
 
+/*################## GetFile ##########################
+*   Purpose....: Get a new file                                                                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TFile *GetFile()
+{
+    int num;
+    int handle;
+    char FileName[40];
+
+    for (num = 0; num < 10000; num++)
+    {
+        sprintf(FileName, "d:\\inv\\log%04d.dat", num);
+        handle = RdosOpenFile(FileName, 0);
+        if (handle)
+            RdosCloseFile(handle);
+        else
+            break;
+    }
+    return new TFile(FileName, 0);
+}
+
 /*##########################################################################
 #
 #   Name       : TimeThread
@@ -857,10 +882,18 @@ void UnlockGUI()
 ##########################################################################*/
 void TimeThread(void *Param)
 {
+    TFile *File = GetFile();
+    TModbusDevice dev(0x7701A8C0, 502);
+    TModbus unit(&dev, 1);
+    int i;
+    int val;
+    TString row;
+
     TLabelControl *Label;
     int year, month, day;
     int hour, min, sec;
     int ms, us;
+    int prevmin = -1;
     unsigned long msb, lsb;
     char str[100];
     TTableControl *Table;
@@ -889,7 +922,7 @@ void TimeThread(void *Param)
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
 
-    Table = new TTableControl(control, 1450, 5, 550, 250);
+    Table = new TTableControl(control, 1450, 5, 550, 450);
     Table->SetBackColor(0, 20, 50);
     Table->SetRowSpacing(10);
     Table->SetColSpacing(16);
@@ -903,14 +936,25 @@ void TimeThread(void *Param)
     Table->AddRow(35, 55);
     Table->AddRow(35, 55);
 
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+    Table->AddRow(35, 55);
+
     Table->SetText(0, 0, "State");
     Table->SetText(1, 0, "Volt");
     Table->SetText(2, 0, "Current");
     Table->SetText(3, 0, "Energy");
 
-    Table->SetText(1, 2, "V");
-    Table->SetText(2, 2, "A");
-    Table->SetText(3, 2, "kWh");
+    Table->SetText(4, 0, "Output");
+    Table->SetText(5, 0, "PV");
+    Table->SetText(6, 0, "Voltage");
+    Table->SetText(7, 0, "Current");
+
+    Table->SetText(4, 2, "W");
+    Table->SetText(5, 2, "W");
+    Table->SetText(6, 2, "V");
+    Table->SetText(7, 2, "A");
     Table->Show();
 
     RdosWaitMilli(500);
@@ -953,6 +997,54 @@ void TimeThread(void *Param)
                         year, month, day,
                         hour, min, sec);
         Label->SetText(str);
+
+        if (prevmin != min)
+        {
+            prevmin = min;
+
+            if (unit.ReqHoldingRegisters(40203, 28))
+            {
+                row.printf("%04d-%02d-%02d %02d.%02d ", year, month, day, hour, min);
+
+                unit.GetBufferedHoldingRegister(40214, &val);
+                sprintf(str, "Output power %dW", val);
+                row += str;
+
+                sprintf(str, "%d", val);
+                Table->SetText(4, 1, str);
+
+                unit.GetBufferedHoldingRegister(40224, &val);
+                sprintf(str, ", PV power %dW", val);
+                row += str;
+
+                sprintf(str, "%d", val);
+                Table->SetText(5, 1, str);
+
+                unit.GetBufferedHoldingRegister(40216, &val);
+                sprintf(str, ", Battery voltage %d.%1dV", val / 10, val %10);
+                row += str;
+
+                sprintf(str, "%d.%1d",  val / 10, val %10);
+                Table->SetText(6, 1, str);
+
+                unit.GetBufferedHoldingRegister(40217, &val);
+                row += ", current ";
+                if (val < 0)
+                {
+                    val = -val;
+                    sprintf(str, "-%d.%1d", val / 10, val %10);
+                }
+                else
+                    sprintf(str, "%d.%1d", val / 10, val %10);
+
+                Table->SetText(7, 1, str);
+
+                row += str;
+                row += "A\r\n";
+            }
+
+            File->Write(row.GetData(), row.GetSize());
+        }
 
         RdosWaitMilli(200);
     }
