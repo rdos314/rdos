@@ -45,6 +45,8 @@ TPowHvmP::TPowHvmP(TModbusDevice *moddev, int address)
   : FModbus(moddev, address)
 {
     FOnline = false;
+    FHasData = false;
+    FLogFile = 0;
     ClearEnergy();
 
     Start("POW-HVM-P", 0x8000);
@@ -67,6 +69,67 @@ TPowHvmP::~TPowHvmP()
 
 /*##########################################################################
 #
+#   Name       : TPowHvmP::StartLog
+#
+#   Purpose....: Start log
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPowHvmP::StartLog(const char *path)
+{
+    int num;
+    int handle;
+    char FileName[80];
+
+    for (num = 0; num < 10000; num++)
+    {
+        sprintf(FileName, "%s/log%04d.dat", path, num);
+        handle = RdosOpenFile(FileName, 0);
+        if (handle)
+            RdosCloseFile(handle);
+        else
+            break;
+    }
+    FLogFile = new TFile(FileName, 0);
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::HasNewData
+#
+#   Purpose....: Check for new data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPowHvmP::HasNewData()
+{
+    return FHasData;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::ClearNewData
+#
+#   Purpose....: Clear new data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPowHvmP::ClearNewData()
+{
+    FHasData = false;
+}
+
+/*##########################################################################
+#
 #   Name       : TPowHvmP::ClearEnergy
 #
 #   Purpose....: Clear energy
@@ -81,7 +144,8 @@ void TPowHvmP::ClearEnergy()
     FGridEnergy = 0;
     FOutputEnergy = 0;
     FSolarEnergy = 0;
-    FBatteryEnergy = 0;
+    FBatteryChargeEnergy = 0;
+    FBatteryDischargeEnergy = 0;
 }
 
 /*##########################################################################
@@ -98,6 +162,22 @@ void TPowHvmP::ClearEnergy()
 bool TPowHvmP::IsOnline()
 {
     return FOnline;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::GetMode
+#
+#   Purpose....: Get operation mode
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPowHvmP::GetMode()
+{
+    return FMode;
 }
 
 /*##########################################################################
@@ -358,18 +438,34 @@ double TPowHvmP::GetBatteryPower()
 
 /*##########################################################################
 #
-#   Name       : TPowHvmP::GetBatteryEnergy
+#   Name       : TPowHvmP::GetBatteryChargeEnergy
 #
-#   Purpose....: Get battery energy
+#   Purpose....: Get battery charge energy
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetBatteryEnergy()
+double TPowHvmP::GetBatteryChargeEnergy()
 {
-    return FBatteryEnergy;
+    return FBatteryChargeEnergy;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::GetBatteryDischargeEnergy
+#
+#   Purpose....: Get battery discharge energy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TPowHvmP::GetBatteryDischargeEnergy()
+{
+    return FBatteryDischargeEnergy;
 }
 
 /*##########################################################################
@@ -420,13 +516,17 @@ void TPowHvmP::Execute()
     bool ok;
     int val;
     int i;
+    TString str;
 
     for (;;)
     {
-        ok = FModbus.ReqHoldingRegisters(40203, 28);
+        ok = FModbus.ReqHoldingRegisters(40202, 27);
 
         if (ok)
         {
+            FModbus.GetBufferedHoldingRegister(40202, &val);
+            FMode = val;
+
             FModbus.GetBufferedHoldingRegister(40203, &val);
             FGridVoltage = (double)val / 10.0;
 
@@ -458,7 +558,11 @@ void TPowHvmP::Execute()
 
             FModbus.GetBufferedHoldingRegister(40218, &val);
             FBatteryPower = (double)val;
-            FBatteryEnergy += FBatteryPower / 60.0;
+
+            if (FBatteryCurrent > 0.0)
+                FBatteryChargeEnergy += FBatteryPower / 60.0;
+            else
+                FBatteryDischargeEnergy += FBatteryPower / 60.0;
 
             FModbus.GetBufferedHoldingRegister(40220, &val);
             FSolarVoltage = (double)val / 10.0;
@@ -475,6 +579,20 @@ void TPowHvmP::Execute()
 
             FModbus.GetBufferedHoldingRegister(40228, &val);
             FInverterTemp = val;
+
+            FHasData = true;
+
+            if (FLogFile)
+            {
+                str.printf("Mode %d Grid: %6.1LfV %5dW Output: %6.1LfV %5.1LfA %5dW Solar: %6.1LfV %5.1LfA %5dW Battery: %6.1LfV %5.1LfA %5dW Temp %d %d\r\n",
+                                            FMode,
+                                            FGridVoltage, (int)FGridPower,
+                                            FOutputVoltage, FOutputCurrent, (int)FOutputPower,
+                                            FSolarVoltage, FSolarCurrent, (int)FSolarPower,
+                                            FBatteryVoltage, FBatteryCurrent, (int)FBatteryPower,
+                                            FDcDcTemp, FInverterTemp);
+                FLogFile->Write(str.GetData(), str.GetSize());
+            }
         }
 
         FOnline = ok;

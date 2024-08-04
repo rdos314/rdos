@@ -58,6 +58,7 @@
 #include "smameter.h"
 #include "ini.h"
 #include "hhcn818.h"
+#include "powhvmp.h"
 
 int GetWebConnectionCount();
 
@@ -80,6 +81,8 @@ TSection FGuiSection("Gui.Section");
 
 TSection FDataSection("Data.Section");
 static TFile *DayFile = 0;
+
+static TPowHvmP *PowInv = 0;
 
 static int SolarPowerCount;
 static int SolarPowerSum;
@@ -844,31 +847,6 @@ void UnlockGUI()
     FGuiSection.Leave();
 }
 
-/*################## GetFile ##########################
-*   Purpose....: Get a new file                                                                 #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-TFile *GetFile()
-{
-    int num;
-    int handle;
-    char FileName[40];
-
-    for (num = 0; num < 10000; num++)
-    {
-        sprintf(FileName, "d:\\inv\\log%04d.dat", num);
-        handle = RdosOpenFile(FileName, 0);
-        if (handle)
-            RdosCloseFile(handle);
-        else
-            break;
-    }
-    return new TFile(FileName, 0);
-}
-
 /*##########################################################################
 #
 #   Name       : TimeThread
@@ -882,19 +860,12 @@ TFile *GetFile()
 ##########################################################################*/
 void TimeThread(void *Param)
 {
-    TFile *File = GetFile();
-    TModbusDevice dev(0x7701A8C0, 502);
-    TModbus unit(&dev, 1);
-    int i;
-    int val;
-    TString row;
-
     TLabelControl *Label;
     int year, month, day;
     int hour, min, sec;
     int ms, us;
-    int prevmin = -1;
     unsigned long msb, lsb;
+    int val;
     char str[100];
     TTableControl *Table;
     TTableControl *SumTable;
@@ -942,19 +913,21 @@ void TimeThread(void *Param)
     Table->AddRow(35, 55);
 
     Table->SetText(0, 0, "State");
-    Table->SetText(1, 0, "Volt");
-    Table->SetText(2, 0, "Current");
-    Table->SetText(3, 0, "Energy");
+    Table->SetText(1, 0, "Energy");
+    Table->SetText(2, 0, "Voltage");
+    Table->SetText(3, 0, "Output");
+    Table->SetText(4, 0, "PV");
+    Table->SetText(5, 0, "Voltage");
+    Table->SetText(6, 0, "Current");
+    Table->SetText(7, 0, "Energy");
 
-    Table->SetText(4, 0, "Output");
-    Table->SetText(5, 0, "PV");
-    Table->SetText(6, 0, "Voltage");
-    Table->SetText(7, 0, "Current");
-
+    Table->SetText(1, 2, "kWh");
+    Table->SetText(2, 2, "V");
+    Table->SetText(3, 2, "W");
     Table->SetText(4, 2, "W");
-    Table->SetText(5, 2, "W");
-    Table->SetText(6, 2, "V");
-    Table->SetText(7, 2, "A");
+    Table->SetText(5, 2, "V");
+    Table->SetText(6, 2, "A");
+    Table->SetText(7, 2, "kWh");
     Table->Show();
 
     RdosWaitMilli(500);
@@ -977,14 +950,8 @@ void TimeThread(void *Param)
         {
             Table->SetText(0, 1, OcppState.GetData());
 
-            sprintf(str, "%5.1Lf", OcppVoltage[0]);
-            Table->SetText(1, 1, str);
-
-            sprintf(str, "%5.1Lf", OcppCurrent[0]);
-            Table->SetText(2, 1, str);
-
             sprintf(str, "%d.%03d", OcppEnergy / 1000, OcppEnergy % 1000);
-            Table->SetText(3, 1, str);
+            Table->SetText(1, 1, str);
         }
 
         FDataSection.Leave();
@@ -998,52 +965,27 @@ void TimeThread(void *Param)
                         hour, min, sec);
         Label->SetText(str);
 
-        if (prevmin != min)
+        if (PowInv->HasNewData())
         {
-            prevmin = min;
+            sprintf(str, "%3.1Lf", PowInv->GetGridVoltage());
+            Table->SetText(2, 1, str);
 
-            if (unit.ReqHoldingRegisters(40203, 28))
-            {
-                row.printf("%04d-%02d-%02d %02d.%02d ", year, month, day, hour, min);
+            sprintf(str, "%d", (int)PowInv->GetGridPower());
+            Table->SetText(3, 1, str);
 
-                unit.GetBufferedHoldingRegister(40214, &val);
-                sprintf(str, "Output power %dW", val);
-                row += str;
+            sprintf(str, "%d", (int)PowInv->GetSolarPower());
+            Table->SetText(4, 1, str);
 
-                sprintf(str, "%d", val);
-                Table->SetText(4, 1, str);
+            sprintf(str, "%3.1Lf", PowInv->GetBatteryVoltage());
+            Table->SetText(5, 1, str);
 
-                unit.GetBufferedHoldingRegister(40224, &val);
-                sprintf(str, ", PV power %dW", val);
-                row += str;
+            sprintf(str, "%3.1Lf", PowInv->GetBatteryCurrent());
+            Table->SetText(6, 1, str);
 
-                sprintf(str, "%d", val);
-                Table->SetText(5, 1, str);
+            sprintf(str, "%4.3Lf", PowInv->GetBatteryChargeEnergy() / 1000.0);
+            Table->SetText(7, 1, str);
 
-                unit.GetBufferedHoldingRegister(40216, &val);
-                sprintf(str, ", Battery voltage %d.%1dV", val / 10, val %10);
-                row += str;
-
-                sprintf(str, "%d.%1d",  val / 10, val %10);
-                Table->SetText(6, 1, str);
-
-                unit.GetBufferedHoldingRegister(40217, &val);
-                row += ", current ";
-                if (val < 0)
-                {
-                    val = -val;
-                    sprintf(str, "-%d.%1d", val / 10, val %10);
-                }
-                else
-                    sprintf(str, "%d.%1d", val / 10, val %10);
-
-                Table->SetText(7, 1, str);
-
-                row += str;
-                row += "A\r\n";
-            }
-
-            File->Write(row.GetData(), row.GetSize());
+            PowInv->ClearNewData();
         }
 
         RdosWaitMilli(200);
@@ -1555,6 +1497,10 @@ int main()
     Ocpp = new TOcppSocketServerFactory(7000, 100, 0x1000);
     Relay = new THhcRelay("192.168.1.118:5000");
 
+    TModbusDevice PowModbus(0x7701A8C0, 502);
+    PowInv = new TPowHvmP(&PowModbus, 1);
+    PowInv->StartLog("d:/inv");
+
     Vp = new TVp(control, Ocpp, Relay);
 
     InitWeb(Misol, SolarInv, WindInv);
@@ -2027,6 +1973,7 @@ int main()
             if (LastDay != CurrTime->GetDay())
             {
                 LastDay = CurrTime->GetDay();
+                PowInv->ClearEnergy();
                 CreateDayFile(CurrTime->GetYear(), CurrTime->GetMonth(), CurrTime->GetDay());
             }
 

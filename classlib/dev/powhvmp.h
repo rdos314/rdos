@@ -39,7 +39,13 @@ public:
 
     bool IsOnline();
 
+    void StartLog(const char *path);
+
+    bool HasNewData();
+    void ClearNewData();
     void ClearEnergy();
+
+    int GetMode();
 
     double GetGridVoltage();
     double GetGridFrequency();
@@ -60,7 +66,8 @@ public:
     double GetBatteryVoltage();
     double GetBatteryCurrent();
     double GetBatteryPower();
-    double GetBatteryEnergy();
+    double GetBatteryChargeEnergy();
+    double GetBatteryDischargeEnergy();
 
     int GetDcDcTemperature();
     int GetInverterTemperature();
@@ -69,6 +76,10 @@ protected:
     virtual void Execute();
 
     bool FOnline;
+    bool FHasData;
+    TFile *FLogFile;
+
+    int FMode;
 
     double FGridVoltage;
     double FGridFrequency;
@@ -89,7 +100,8 @@ protected:
     double FBatteryVoltage;
     double FBatteryCurrent;
     double FBatteryPower;
-    double FBatteryEnergy;
+    double FBatteryChargeEnergy;
+    double FBatteryDischargeEnergy;
 
     int FDcDcTemp;
     int FInverterTemp;
