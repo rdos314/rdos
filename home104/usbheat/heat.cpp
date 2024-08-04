@@ -914,7 +914,7 @@ void TimeThread(void *Param)
 
     Table->SetText(0, 0, "State");
     Table->SetText(1, 0, "Energy");
-    Table->SetText(2, 0, "Voltage");
+    Table->SetText(2, 0, "Mode");
     Table->SetText(3, 0, "Output");
     Table->SetText(4, 0, "PV");
     Table->SetText(5, 0, "Voltage");
@@ -922,7 +922,6 @@ void TimeThread(void *Param)
     Table->SetText(7, 0, "Energy");
 
     Table->SetText(1, 2, "kWh");
-    Table->SetText(2, 2, "V");
     Table->SetText(3, 2, "W");
     Table->SetText(4, 2, "W");
     Table->SetText(5, 2, "V");
@@ -967,10 +966,40 @@ void TimeThread(void *Param)
 
         if (PowInv->HasNewData())
         {
-            sprintf(str, "%3.1Lf", PowInv->GetGridVoltage());
+            switch (PowInv->GetMode())
+            {
+                case 0:
+                    strcpy(str, "Power On");
+                    break;
+
+                case 1:
+                    strcpy(str, "Standby");
+                    break;
+
+                case 2:
+                    strcpy(str, "Mains");
+                    break;
+
+                case 3:
+                    strcpy(str, "Off-Grid");
+                    break;
+
+                case 4:
+                    strcpy(str, "Bypass");
+                    break;
+
+                case 5:
+                    strcpy(str, "Charging");
+                    break;
+
+                default:
+                    strcpy(str, "Fault");
+                    break;
+
+            }
             Table->SetText(2, 1, str);
 
-            sprintf(str, "%d", (int)PowInv->GetGridPower());
+            sprintf(str, "%d", (int)PowInv->GetOutputPower());
             Table->SetText(3, 1, str);
 
             sprintf(str, "%d", (int)PowInv->GetSolarPower());
@@ -1951,11 +1980,17 @@ int main()
             {
                 if ((diostat & 0x80) == 0)
                     RdosToggleSerialLine(1, 7);
+
+                if (!Relay->IsOn(6))
+                    Relay->On(6);
             }
             else
             {
                 if (diostat & 0x80)
                     RdosToggleSerialLine(1, 7);
+
+                if (Relay->IsOn(6))
+                    Relay->Off(6);
             }
         }
 

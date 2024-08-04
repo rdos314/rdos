@@ -584,7 +584,10 @@ void TPowHvmP::Execute()
 
             if (FLogFile)
             {
-                str.printf("Mode %d Grid: %6.1LfV %5dW Output: %6.1LfV %5.1LfA %5dW Solar: %6.1LfV %5.1LfA %5dW Battery: %6.1LfV %5.1LfA %5dW Temp %d %d\r\n",
+                TDateTime time;
+
+                str.printf("%04d-%02d-%02d %02d.%02d Mode %d Grid: %6.1LfV %5dW Output: %6.1LfV %5.1LfA %5dW Solar: %6.1LfV %5.1LfA %5dW Battery: %6.1LfV %5.1LfA %5dW Temp %d %d\r\n",
+                                            time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(),
                                             FMode,
                                             FGridVoltage, (int)FGridPower,
                                             FOutputVoltage, FOutputCurrent, (int)FOutputPower,
