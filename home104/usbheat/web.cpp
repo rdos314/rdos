@@ -43,6 +43,7 @@ static TSocketServerFactory *sockfact = 0;
 static TMisolWeather *Misol;
 static TFroniusInverter *Solar;
 static TSmartPowInverter *Wind;
+static TPowHvmP *Charger;
 
 /*##########################################################################
 #
@@ -499,8 +500,287 @@ void TRootPage::SendAnswer()
 
     Write("</table>\r\n");
 
+    Write("<span style='font-size:20.0pt;color:#0033CC'>\r\n");
+    Write("<br>Charger<br>\r\n");
+    Write("</span>\r\n");
+
+    Write("<table cellspacing=2px cellpadding=2px>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Solar power");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetSolarPower();
+    ival = (int)val;
+    sprintf(str, " %d", ival);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" W");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Grid power");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetGridPower();
+    ival = (int)val;
+    sprintf(str, " %d", ival);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" W");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Battery power");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetBatteryPower();
+    ival = (int)val;
+    sprintf(str, " %d", ival);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" W");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Used power");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetOutputPower();
+    ival = (int)val;
+    sprintf(str, " %d", ival);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" W");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Solar energy");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetSolarEnergy() / 1000.0;
+    sprintf(str, " %3.1Lf", val);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" kWh");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Grid energy");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetGridEnergy() / 1000.0;
+    sprintf(str, " %3.1Lf", val);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" kWh");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Charge energy");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetBatteryChargeEnergy() / 1000.0;
+    sprintf(str, " %3.1Lf", val);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" kWh");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Discharge energy");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetBatteryDischargeEnergy() / 1000.0;
+    sprintf(str, " %3.1Lf", val);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" kWh");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Used energy");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetOutputEnergy() / 1000.0;
+    sprintf(str, " %3.1Lf", val);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" kWh");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Battery voltage");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetBatteryVoltage();
+    sprintf(str, " %3.1Lf", val);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" V");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("State");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td colspan=2 align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+
+    switch (Charger->GetMode())
+    {
+        case 0:
+            Write("Power On");
+            break;
+
+        case 1:
+            Write("Standby");
+            break;
+
+        case 2:
+            Write("Mains");
+            break;
+
+        case 3:
+            Write("Off-Grid");
+            break;
+
+        case 4:
+            Write("Bypass");
+            break;
+
+        case 5:
+            Write("Charging");
+            break;
+
+        default:
+            Write("Fault");
+            break;
+
+    }
+
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("</table>\r\n");
+
     Write("</b>\r\n");
     Write("</p>\r\n");
+
 
     Write("<form method=\"POST\" action=\"/power/web\">\r\n");
 
@@ -622,11 +902,12 @@ static void WebSocketThread(void *ptr)
 #   Returns....: *
 #
 ##########################################################################*/
-void InitWeb(TMisolWeather *misol, TFroniusInverter *solar, TSmartPowInverter *wind)
+void InitWeb(TMisolWeather *misol, TFroniusInverter *solar, TSmartPowInverter *wind,  TPowHvmP *charger)
 {
     Misol = misol;
     Solar = solar;
     Wind = wind;
+    Charger = charger;
 
     RdosCreateThread(WebSocketThread, "Web listner", 0, STACK_SIZE);
 }

@@ -1532,7 +1532,7 @@ int main()
 
     Vp = new TVp(control, Ocpp, Relay);
 
-    InitWeb(Misol, SolarInv, WindInv);
+    InitWeb(Misol, SolarInv, WindInv, PowInv);
 
     ResetSolarWind();
 
@@ -1981,16 +1981,16 @@ int main()
                 if ((diostat & 0x80) == 0)
                     RdosToggleSerialLine(1, 7);
 
-                if (!Relay->IsOn(6))
-                    Relay->On(6);
+                if (!Relay->IsOn(7))
+                    Relay->On(7);
             }
             else
             {
                 if (diostat & 0x80)
                     RdosToggleSerialLine(1, 7);
 
-                if (Relay->IsOn(6))
-                    Relay->Off(6);
+                if (Relay->IsOn(7))
+                    Relay->Off(7);
             }
         }
 

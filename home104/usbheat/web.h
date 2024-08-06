@@ -32,8 +32,9 @@
 #include "misol.h"
 #include "frinv.h"
 #include "powinv.h"
+#include "powhvmp.h"
 
-void InitWeb(TMisolWeather *Misol, TFroniusInverter *Solar, TSmartPowInverter *Wind);
+void InitWeb(TMisolWeather *Misol, TFroniusInverter *Solar, TSmartPowInverter *Wind,  TPowHvmP *Charger);
 
 class TRootFactory : public THttpCustomPageFactory
 {
