@@ -4621,46 +4621,53 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 
 
 
-	void XMLElement::AddContentString(const char *tag, TString str)
+	XMLElement *XMLElement::AddContentString(const char *tag, TString str)
 	{
                 XMLElement *elem = AddElement(tag);
                 elem->AddContentString(str);
+		return elem;
 	}
 
-	void XMLElement::AddContentInt(const char *tag, int val)
+	XMLElement *XMLElement::AddContentInt(const char *tag, int val)
 	{
                 XMLElement *elem = AddElement(tag);
                 elem->AddContentInt(val);
+		return elem;
 	}
 
-	void XMLElement::AddContentUInt(const char *tag, unsigned int val)
+	XMLElement *XMLElement::AddContentUInt(const char *tag, unsigned int val)
 	{
                 XMLElement *elem = AddElement(tag);
                 elem->AddContentUInt(val);
+		return elem;
 	}
 
-	void XMLElement::AddContentInt64(const char *tag, long long val)
+	XMLElement *XMLElement::AddContentInt64(const char *tag, long long val)
 	{
                 XMLElement *elem = AddElement(tag);
                 elem->AddContentInt64(val);
+		return elem;
 	}
 
-	void XMLElement::AddContentUInt64(const char *tag, unsigned long long val)
+	XMLElement *XMLElement::AddContentUInt64(const char *tag, unsigned long long val)
 	{
                 XMLElement *elem = AddElement(tag);
                 elem->AddContentUInt64(val);
+		return elem;
 	}
 
-	void XMLElement::AddContentBoolean(const char *tag, bool val)
+	XMLElement *XMLElement::AddContentBoolean(const char *tag, bool val)
 	{
                 XMLElement *elem = AddElement(tag);
                 elem->AddContentBoolean(val);
+		return elem;
 	}
 
-	void XMLElement::AddContentDateTime(const char *tag, const TDateTime &time)
+	XMLElement *XMLElement::AddContentDateTime(const char *tag, const TDateTime &time)
 	{
                 XMLElement *elem = AddElement(tag);
                 elem->AddContentDateTime(time);
+		return elem;
 	}
 
 	unsigned int XMLElement::GetAllChildren(XMLElement** x, unsigned int deep)

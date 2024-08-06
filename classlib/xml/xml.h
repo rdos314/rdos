@@ -376,13 +376,13 @@ class XMLElement
 		void AddContentBoolean(bool val);
                 void AddContentDateTime(const TDateTime &time);
 
-		void AddContentString(const char *tag, TString str);
-		void AddContentInt(const char *tag, int val);
-		void AddContentUInt(const char *tag, unsigned int val);
-		void AddContentInt64(const char *tag, long long val);
-		void AddContentUInt64(const char *tag, unsigned long long val);
-		void AddContentBoolean(const char *tag, bool val);
-                void AddContentDateTime(const char *tag, const TDateTime &time);
+		XMLElement *AddContentString(const char *tag, TString str);
+		XMLElement *AddContentInt(const char *tag, int val);
+		XMLElement *AddContentUInt(const char *tag, unsigned int val);
+		XMLElement *AddContentInt64(const char *tag, long long val);
+		XMLElement *AddContentUInt64(const char *tag, unsigned long long val);
+		XMLElement *AddContentBoolean(const char *tag, bool val);
+                XMLElement *AddContentDateTime(const char *tag, const TDateTime &time);
 
                 TString GetContentString(const char *def);
 		int GetContentInt(int def);
