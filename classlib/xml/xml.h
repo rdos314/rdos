@@ -371,6 +371,7 @@ class XMLElement
 		void AddContentString(TString str);
 		void AddContentInt(int val);
 		void AddContentUInt(unsigned int val);
+		void AddContentDouble(double val, int decimals);
 		void AddContentInt64(long long val);
 		void AddContentUInt64(unsigned long long val);
 		void AddContentBoolean(bool val);
@@ -379,6 +380,7 @@ class XMLElement
 		XMLElement *AddContentString(const char *tag, TString str);
 		XMLElement *AddContentInt(const char *tag, int val);
 		XMLElement *AddContentUInt(const char *tag, unsigned int val);
+		XMLElement *AddContentDouble(const char *tag, double val, int decimals);
 		XMLElement *AddContentInt64(const char *tag, long long val);
 		XMLElement *AddContentUInt64(const char *tag, unsigned long long val);
 		XMLElement *AddContentBoolean(const char *tag, bool val);
@@ -387,6 +389,7 @@ class XMLElement
                 TString GetContentString(const char *def);
 		int GetContentInt(int def);
 		unsigned int GetContentUInt(unsigned int def);
+		double GetContentDouble(double def);
 		long long GetContentInt64(long long def);
 		unsigned long long GetContentUInt64(unsigned long long def);
 		bool GetContentBoolean(bool def);
@@ -395,6 +398,7 @@ class XMLElement
                 TString GetContentString(const char *tag, const char *def);
 		int GetContentInt(const char *tag, int def);
 		unsigned int GetContentUInt(const char *tag, unsigned int def);
+		double GetContentDouble(const char *tag, double def);
 		long long GetContentInt64(const char *tag, long long def);
 		unsigned long long GetContentUInt64(const char *tag, unsigned long long def);
 		bool GetContentBoolean(const char *tag, bool def);

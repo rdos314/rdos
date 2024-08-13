@@ -4442,6 +4442,22 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
             return x;
 	}
 
+	double XMLElement::GetContentDouble(double def)
+	{
+            double val = def;
+
+            if (contentsnum)
+            {
+                int len = contents[0]->GetValue(0);
+                char *str = new char[len + 1];
+
+                contents[0]->GetValue(str);
+		val = atof(str);
+                delete str;                
+            }
+            return val;
+	}
+
 	long long XMLElement::GetContentInt64(long long def)
 	{
             long long x = def;
@@ -4535,6 +4551,16 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
                 return def;
 	}
 
+	double XMLElement::GetContentDouble(const char *tag, double def)
+	{
+            XMLElement *elem = GetElement(tag);
+
+            if (elem)
+                return elem->GetContentDouble(def);
+            else
+                return def;
+	}
+
 	long long XMLElement::GetContentInt64(const char *tag, long long def)
 	{
             XMLElement *elem = GetElement(tag);
@@ -4576,6 +4602,44 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 		char str[40];
 
                 sprintf(str, "%d", val);
+                AddContent(str, -1, 0);
+	}
+
+	void XMLElement::AddContentDouble(double val, int decimals)
+	{
+		double temp;
+		int digits;
+		char str[80];
+		char formstr[40];
+
+		if (decimals < 0)
+		        decimals = 0;
+
+	        temp = val;
+
+	        if (temp < 0)
+        	{
+	            digits = 2;
+        	    temp = -temp;
+	        }
+        	else
+	            digits = 1;
+
+	        if (temp >= 1e+16)
+		{
+			sprintf(str, "%Lf", val);
+	        }
+		else
+		{
+			while (temp >= 10.0)
+			{
+				digits++;
+				temp = temp / 10.0;
+			}
+
+			sprintf(formstr, "%%%d.%dLf", digits + decimals + 1, decimals);
+			sprintf(str, formstr, val);
+		}
                 AddContent(str, -1, 0);
 	}
 
@@ -4639,6 +4703,13 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 	{
                 XMLElement *elem = AddElement(tag);
                 elem->AddContentUInt(val);
+		return elem;
+	}
+
+	XMLElement *XMLElement::AddContentDouble(const char *tag, double val, int decimals)
+	{
+                XMLElement *elem = AddElement(tag);
+                elem->AddContentDouble(val, decimals);
 		return elem;
 	}
 
