@@ -393,7 +393,7 @@ class XMLElement
 		long long GetContentInt64(long long def);
 		unsigned long long GetContentUInt64(unsigned long long def);
 		bool GetContentBoolean(bool def);
-                TDateTime GetContentDateTime();
+                TDateTime GetContentDateTime(TDateTime &def);
 
                 TString GetContentString(const char *tag, const char *def);
 		int GetContentInt(const char *tag, int def);
@@ -402,7 +402,7 @@ class XMLElement
 		long long GetContentInt64(const char *tag, long long def);
 		unsigned long long GetContentUInt64(const char *tag, unsigned long long def);
 		bool GetContentBoolean(const char *tag, bool def);
-                TDateTime GetContentDateTime(const char *tag);
+                TDateTime GetContentDateTime(const char *tag, TDateTime &def);
 
 
                 // Children Stuff

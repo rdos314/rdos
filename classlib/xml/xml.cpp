@@ -4381,10 +4381,10 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
             }
 	}
 
-	TDateTime XMLElement::GetContentDateTime()
+	TDateTime XMLElement::GetContentDateTime(TDateTime &def)
 	{
             if (contentsnum == 0)
-                return TDateTime();
+                return def;
             else
             {
                 int year, month, day;
@@ -4521,12 +4521,12 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
                 return TString(def);
 	}
 
-	TDateTime XMLElement::GetContentDateTime(const char *tag)
+	TDateTime XMLElement::GetContentDateTime(const char *tag, TDateTime &def)
 	{
             XMLElement *elem = GetElement(tag);
 
             if (elem)
-                return elem->GetContentDateTime();
+                return elem->GetContentDateTime(def);
             else
                 return TDateTime();
 	}
