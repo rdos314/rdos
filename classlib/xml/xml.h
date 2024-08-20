@@ -437,6 +437,7 @@ class XMLElement
                 bool GetVariableBoolean(const char*  x, bool def);
                 int GetVariableInt(const char*  x, int def);
                 unsigned int GetVariableUInt(const char*  x, unsigned int def);
+                double GetVariableDouble(const char*  x, double def);
                 int GetVariableHex(const char*  x, int def);
                 TString GetVariableString(const char*  x, const char *def);
                 TDateTime GetVariableDateTime(const char *x);
@@ -520,6 +521,7 @@ class XMLVariable
                 size_t GetValue(char*,int NoDecode = 0) const;
                 int GetValueInt();
                 unsigned int GetValueUInt();
+                double GetValueDouble();
                 long long GetValueInt64();
                 unsigned long long GetValueUInt64();
                 int GetValueHex();

@@ -3561,6 +3561,17 @@ namespace XMLPP
 			return def;
 	}
 
+	double XMLElement::GetVariableDouble(const char*  x, double def)
+	{
+		XMLVariable* V = GetVariable(x);
+
+		if (V)
+			return V->GetValueDouble();
+		else
+			return def;
+	}
+
+
 int XMLElement :: GetVariableHex(const char*  x, int def)
 {
         XMLVariable* V = GetVariable(x);
@@ -5424,6 +5435,15 @@ bool XMLElement::GetVariableBoolean(const char*  x, bool def)
 		sscanf(d, "%u", &x);
 		return x;
 	}
+
+	double XMLVariable::GetValueDouble()
+	{
+		size_t p = GetValue(0);
+		Z<char> d(p + 10);
+		GetValue(d);
+		return atof(d);
+	}
+
 
 	long long XMLVariable::GetValueInt64()
 	{
