@@ -1403,9 +1403,9 @@ void TLabelControl::ReformatText()
 
 /*##########################################################################
 #
-#   Name       : TLabelControl::SetText
+#   Name       : TLabelControl::SetTextFit
 #
-#   Purpose....: Set text
+#   Purpose....: Set text, change font size to fit label
 #
 #   In params..: *
 #   Out params.: *
@@ -1416,8 +1416,17 @@ void TLabelControl::SetText(const char *Text)
 {
     int same = FALSE;
     int len = strlen(Text);
+	int xsize, ysize;
+    int xoffs, yoffs;
+    int xdiff, ydiff;
+	int fontHeight, fontId;
 
     FSection.Enter();
+    
+    GetSize(&xsize, &ysize);
+    GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
+    
+    ysize -= ydiff;
 
     if (FOrgText && len > 0)
         if (!strcmp(Text, FOrgText))
@@ -1438,6 +1447,18 @@ void TLabelControl::SetText(const char *Text)
         strcpy(FOrgText, Text);
 
         ReformatText();
+        
+        while(GetMinHeight() > ysize)
+        {
+            strcpy(FText, FOrgText);
+            fontId = FFont->GetId();
+            fontHeight = FFont->GetHeight();
+            fontHeight--;
+            if(fontHeight > 10)
+                SetFont(fontId, fontHeight);
+            else
+                break;
+        }
     }
 
     FSection.Leave();
@@ -1453,9 +1474,9 @@ void TLabelControl::SetText(const char *Text)
 
 /*##########################################################################
 #
-#   Name       : TLabelControl::SetText
+#   Name       : TLabelControl::SetTextFit
 #
-#   Purpose....: Set text
+#   Purpose....: Set text, change font size to fit label
 #
 #   In params..: *
 #   Out params.: *
