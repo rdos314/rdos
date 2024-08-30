@@ -109,7 +109,6 @@ protected:
     TOcppNotify *FOcpp;
     THhcRelay *FRelay;
 
-    TSerialDevice FSerial;
     TModbusDevice FModDev;
     TEch200 FEch;
 

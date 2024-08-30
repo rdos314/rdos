@@ -60,11 +60,12 @@ void UnlockGUI();
 ##########################################################################*/
 TVp::TVp(TControlThread *control, TOcppNotify *ocpp, THhcRelay *relay)
   : FLog("TVp"),
-    FSerial(2, 9600, 'E', 8, 1),
-    FModDev(&FSerial),
+    FModDev(0x7D01A8C0, 502),
     FEch(&FModDev, 1),
     FSection("Vp")
 {
+    TModbusDevice PowModbus(0x7701A8C0, 502);
+
     int i;
 
     FControl = control;
