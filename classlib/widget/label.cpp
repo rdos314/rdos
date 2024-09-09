@@ -717,6 +717,9 @@ TLabelControl::~TLabelControl()
 
     if (FFont)
         delete FFont;
+
+    if (FScaleFont)
+        delete FScaleFont;
 }
 
 /*##########################################################################
@@ -735,6 +738,7 @@ void TLabelControl::Init()
     FOrgText = 0;
     FText = 0;
     FFont = 0;
+    FScaleFont = 0;
     FFontId = 0;
     FFontHeight = 0;
 
@@ -941,6 +945,29 @@ void TLabelControl::SetFont(int id, int height)
         ReformatText();
         FSection.Leave();
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::SetScaleFont
+#
+#   Purpose....: Set scale font
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::SetScaleFont(int id, int height)
+{
+    if (FScaleFont)
+        delete FScaleFont;
+
+    FScaleFont = new TFont(id, height);
+
+    FSection.Enter();
+    ReformatText();
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -1416,8 +1443,17 @@ void TLabelControl::SetText(const char *Text)
 {
     int same = FALSE;
     int len = strlen(Text);
+	int xsize, ysize;
+    int xoffs, yoffs;
+    int xdiff, ydiff;
+	int fontHeight, fontId;
 
     FSection.Enter();
+
+    GetSize(&xsize, &ysize);
+    GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
+    
+    ysize -= ydiff;
 
     if (FOrgText && len > 0)
         if (!strcmp(Text, FOrgText))
@@ -1425,6 +1461,12 @@ void TLabelControl::SetText(const char *Text)
 
     if (!same)
     {    
+        if (FScaleFont)
+        {
+            delete FScaleFont;
+            FScaleFont = 0;
+        }
+
         if (FText)
             delete FText;
 
@@ -1438,6 +1480,18 @@ void TLabelControl::SetText(const char *Text)
         strcpy(FOrgText, Text);
 
         ReformatText();
+        
+        while(GetMinHeight() > ysize)
+        {
+            strcpy(FText, FOrgText);
+            fontId = FFont->GetId();
+            fontHeight = FScaleFont->GetHeight();
+            fontHeight--;
+            if(fontHeight > 10)
+                SetScaleFont(fontId, fontHeight);
+            else
+                break;
+    }
     }
 
     FSection.Leave();
@@ -1557,6 +1611,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     int xoffs, yoffs;
     int xdiff, ydiff;
     int redraw;
+    TFont *font;
 
     if (IsTransparent())
     {
@@ -1575,6 +1630,11 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     height -= ydiff;
 
     FSection.Enter();
+
+    if (FScaleFont)
+        font = FScaleFont;
+    else
+        font = FFont;
 
     xmax = xmin + width - 1;
     ymax = ymin + height - 1;
@@ -1596,7 +1656,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
         if (FOrgText)
         {
 
-            FFont->GetStringMetrics("", &xsize, &ysize);
+            font->GetStringMetrics("", &xsize, &ysize);
 
             for (row = 0; row < MAX_LABEL_ROWS; row++)
                 if (FTextRow[row] == 0)
@@ -1623,7 +1683,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
             {
                 if (FTextRow[row])
                 {
-                        FFont->GetStringMetrics(FTextRow[row], &xsize, &ysize);
+                        font->GetStringMetrics(FTextRow[row], &xsize, &ysize);
     
                         switch (FHorAlign)
                         {
@@ -1640,7 +1700,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                                             break;
                     }
         
-                    dev->SetFont(FFont);
+                    dev->SetFont(font);
                     dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
                     dev->DrawString(xstart, ystart, FTextRow[row]);
                 }

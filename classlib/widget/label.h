@@ -145,8 +145,10 @@ public:
     virtual int GetMinHeight();
     
 protected:
+    void SetScaleFont(int id, int height);
+
     virtual void NotifyResize();
-        virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);     
+    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);     
 
     TSection FSection;
 
@@ -169,6 +171,7 @@ private:
     int FFontId;
     int FFontHeight;
     TFont *FFont;
+    TFont *FScaleFont;
 
     char *FOrgText;
     char *FText;
