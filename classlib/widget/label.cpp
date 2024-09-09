@@ -1443,10 +1443,11 @@ void TLabelControl::SetText(const char *Text)
 {
     int same = FALSE;
     int len = strlen(Text);
-	int xsize, ysize;
+    int xsize, ysize;
     int xoffs, yoffs;
     int xdiff, ydiff;
-	int fontHeight, fontId;
+    int fontHeight, fontId;
+    TFont *font;
 
     FSection.Enter();
 
@@ -1480,18 +1481,23 @@ void TLabelControl::SetText(const char *Text)
         strcpy(FOrgText, Text);
 
         ReformatText();
+
+        font = FFont;
+        fontId = font->GetId();
         
         while(GetMinHeight() > ysize)
         {
             strcpy(FText, FOrgText);
-            fontId = FFont->GetId();
-            fontHeight = FScaleFont->GetHeight();
+            fontHeight = font->GetHeight();
             fontHeight--;
-            if(fontHeight > 10)
+            if (fontHeight > 10)
+            {
                 SetScaleFont(fontId, fontHeight);
+                font = FScaleFont;
+            }
             else
                 break;
-    }
+        }
     }
 
     FSection.Leave();
