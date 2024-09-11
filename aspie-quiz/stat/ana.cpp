@@ -49,10 +49,6 @@ static double Mean[117];
 
 struct TQuizRow
 {
-    long ID;
-    long UserID;
-    int  BirthYear;
-    int  BirthMonth;
     int Gender;
     long AsResult;
     long NtResult;
@@ -2030,7 +2026,7 @@ static void WriteNormGroup()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-static void HandleRow(TFile &outfile, TQuizRow *Row)
+static void HandleRow(int id, TFile &outfile, TQuizRow *Row)
 {
     int diff;
     int i;
@@ -2214,7 +2210,7 @@ static void HandleRow(TFile &outfile, TQuizRow *Row)
 
     sprintf(str, "%d;%5.3Lf\r\n", diff, ndprob);
     outfile.Write(str);
-    printf("%d, Diff: %d\r\n", Row->ID, diff);
+    printf("%d, Diff: %d\r\n", id, diff);
 }
 
 /*##################  ProcessRow ##########################
@@ -2224,7 +2220,7 @@ static void HandleRow(TFile &outfile, TQuizRow *Row)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-static void ProcessRow(TFile &outfile, char *str)
+static void ProcessRow(int id, TFile &outfile, char *str)
 {
     char *valstr;
     char *ptr;
@@ -2251,41 +2247,26 @@ static void ProcessRow(TFile &outfile, char *str)
 
         switch (fieldno)
         {
-            case 0:
-                Row.ID = atol(valstr);
-                break;
-
             case 1:
-                Row.BirthYear = atoi(valstr);
-                break;
-
-            case 2:
-                Row.BirthMonth = atoi(valstr);
-                break;
-
-            case 3:
                 Row.Gender = atoi(valstr);
                 break;
 
-            case 4:
+            case 2:
                  Row.AsResult = atoi(valstr);
                  break;
 
-            case 5:
+            case 3:
                  Row.NtResult = atoi(valstr);
                  break;
 
-            case 6:
-                 break;
-
             default:
-                 i = fieldno - 7;
+                 i = fieldno - 4;
                  Row.Quiz[i] = (double)atoi(valstr);
                  break;
         }
     }
 
-    HandleRow(outfile, &Row);
+    HandleRow(id, outfile, &Row);
 }
 
 /*################## main ##########################
@@ -2303,6 +2284,7 @@ void main()
     TFile infile("filt.csv");
     TFile outfile("nscore.csv", 0);
     char *ptr;
+    int id = 0;
 
     InitArr();
     InitGroup();
@@ -2331,7 +2313,9 @@ void main()
         infile.SetPos(pos);
 
         if (ptr)
-            ProcessRow(outfile, buf);
+            ProcessRow(id, outfile, buf);
+
+        id++;
     }
     CalcDist();
     CalcFullDist();
