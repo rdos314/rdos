@@ -2028,7 +2028,7 @@ static void WriteNormGroup()
 *##########################################################################*/
 static void HandleRow(int id, TFile &outfile, TQuizRow *Row)
 {
-    int diff;
+    int diff = 0;
     int i;
     int j;
     double ndprob;
