@@ -115,6 +115,9 @@ public:
     void ForceSingle();
     void AllowMultiple();
     
+    void ForceNoScale();
+    void AllowScale();
+    
     void SetFont(int height);
     void SetFont(int id, int height);
     void SetFont(TFont *font);
@@ -157,6 +160,7 @@ private:
     void ReformatText();
 
     int FForceSingle;
+    int FAllowScale;
 
     int FHorAlign;
     int FVerAlign;

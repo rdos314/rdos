@@ -743,6 +743,7 @@ void TLabelControl::Init()
     FFontHeight = 0;
 
     FForceSingle = FALSE;
+    FAllowScale = TRUE;
 
     FHorAlign = HOR_CENTER;
     FVerAlign = VER_CENTER;
@@ -1100,6 +1101,38 @@ void TLabelControl::AllowMultiple()
 
 /*##########################################################################
 #
+#   Name       : TLabelControl::ForceNoScale
+#
+#   Purpose....: Force ReformatText to use orignial font size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::ForceNoScale()
+{
+    FAllowScale = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelControl::AllowScale
+#
+#   Purpose....: Allow ReformatText to change font size to fit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelControl::AllowScale()
+{
+    FAllowScale = TRUE;
+}
+
+/*##########################################################################
+#
 #   Name       : TLabelControl::AlignTopLeft
 #
 #   Purpose....: Align text top, left
@@ -1371,7 +1404,10 @@ void TLabelControl::ReformatText()
                 ch = *ptr;
                 *ptr = 0;
 
-                FFont->GetStringMetrics(start, &width, &height);
+                if (FScaleFont)
+                    FScaleFont->GetStringMetrics(start, &width, &height);
+                else
+                    FFont->GetStringMetrics(start, &width, &height);
 
                 if (width > xsize)
                 {
@@ -1482,21 +1518,24 @@ void TLabelControl::SetText(const char *Text)
 
         ReformatText();
 
-        font = FFont;
-        fontId = font->GetId();
-        
-        while(GetMinHeight() > ysize)
+        if (FAllowScale)
         {
-            strcpy(FText, FOrgText);
-            fontHeight = font->GetHeight();
-            fontHeight--;
-            if (fontHeight > 10)
+            font = FFont;
+            fontId = font->GetId();
+            
+            while(GetMinHeight() > ysize)
             {
-                SetScaleFont(fontId, fontHeight);
-                font = FScaleFont;
+                strcpy(FText, FOrgText);
+                fontHeight = font->GetHeight();
+                fontHeight--;
+                if (fontHeight > 10)
+                {
+                    SetScaleFont(fontId, fontHeight);
+                    font = FScaleFont;
+                }
+                else
+                    break;
             }
-            else
-                break;
         }
     }
 
@@ -1563,7 +1602,9 @@ int TLabelControl::GetMinHeight()
     int row;
     int height = TPanelControl::GetMinHeight();
 
-    if (FFont)
+    if (FScaleFont)
+        FScaleFont->GetStringMetrics("", &xsize, &ysize);
+    else if (FFont)
         FFont->GetStringMetrics("", &xsize, &ysize);
     else
         ysize = 0;
