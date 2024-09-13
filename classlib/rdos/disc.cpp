@@ -311,6 +311,8 @@ int TDisc::GetDrive(long long Start, long long Size)
     int DriveNr;
     int DiscNr;
     long long StartSector;
+    long ShortStartSector;
+    long DriveSize;
 
     for (DriveNr = 0; DriveNr < 25; DriveNr++)
     {
@@ -320,6 +322,13 @@ int TDisc::GetDrive(long long Start, long long Size)
             StartSector = RdosGetVfsDriveStart(DriveNr);
             if (Start == StartSector)
                 return DriveNr;
+        }
+        else
+        {
+            if (RdosGetDriveDiscParam(DriveNr, &DiscNr, &ShortStartSector, &DriveSize))    
+                if (DiscNr == FDisc)
+                    if (Start == ShortStartSector)
+                        return DriveNr;
         }
     }
 
