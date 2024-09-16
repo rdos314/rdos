@@ -270,42 +270,6 @@ int TDisc::Write(long long Sector, const char *buf, int size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TDisc::GetDrive(long Start, long Size)
-{
-    int DriveNr;
-    int DiscNr;
-    long StartSector;
-    long DriveSize;
-    long long LongStartSector;
-
-    for (DriveNr = 0; DriveNr < 25; DriveNr++)
-    {
-        DiscNr = RdosGetVfsDriveDisc(DriveNr);
-        if (DiscNr == FDisc)
-        {
-            LongStartSector = RdosGetVfsDriveStart(DriveNr);
-            if ((long long)Start == LongStartSector)
-                return DriveNr;
-        }
-        else
-        {
-            if (RdosGetDriveDiscParam(DriveNr, &DiscNr, &StartSector, &DriveSize))    
-                if (DiscNr == FDisc)
-                    if (Start == StartSector)
-                        return DriveNr;
-        }
-    }
-
-    return 0;
-}
-
-/*##################  TDisc::GetDrive  #############
-*   Purpose....: Get drive from physical sectors                                                #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-02 le                                                #
-*##########################################################################*/
 int TDisc::GetDrive(long long Start, long long Size)
 {
     int DriveNr;
