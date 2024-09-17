@@ -1379,7 +1379,7 @@ ctpWrite:
     mov edi,edx
     add edi,OFFSET cc_time
     mov ecx,SIZE capture_block - OFFSET cc_time
-    UserGateForce32 write_file_nr
+    WriteFile
 ;
     mov ecx,SIZE capture_block
     FreeLinear    
@@ -1411,31 +1411,31 @@ start_can_capture_name DB 'Start Can Capture', 0
 start_can_capture       Proc far
     push ds
     push es
-    push ax
-    push bx
-    push cx
-    push si
-    push di
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
 ;    
     mov ax,SEG data
-    mov ds,ax
+    mov ds,eax
     EnterSection ds:capture_section
 ;
     mov ds:capture_handle,bx
     mov ax,cs
     mov ds,ax
     mov es,ax
-    mov si,OFFSET capture_thread_pr
-    mov di,OFFSET capture_thread_name
+    mov esi,OFFSET capture_thread_pr
+    mov edi,OFFSET capture_thread_name
     mov ax,3
     mov cx,stack0_size
     CreateThread
 ;       
-    pop di
-    pop si
-    pop cx
-    pop bx
-    pop ax
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
     pop es
     pop ds
     ret
