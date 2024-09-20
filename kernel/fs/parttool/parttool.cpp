@@ -113,9 +113,12 @@ int main(int argc, char **argv)
         if (Disc)
         {
             Disc->LoadPart();
+            ServPartitionsStarted();
 
             while (Server->IsActive())
                 Server->Run(Disc);
         }
     }
+    ServPartitionsStarted();
+
 }

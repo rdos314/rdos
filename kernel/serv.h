@@ -50,6 +50,7 @@ int RDOSAPI ServLoadVfsPartition(int handle, int FsType, long long StartSector, 
 void RDOSAPI ServDisableVfsPartition(int handle);
 void RDOSAPI ServStartVfsPartition(int handle);
 void RDOSAPI ServStopVfsPartition(int handle);
+void RDOSAPI ServPartitionsStarted();
 
 int RDOSAPI ServFormatVfsPartition(int handle);
 
