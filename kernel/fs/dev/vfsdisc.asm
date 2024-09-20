@@ -129,6 +129,8 @@ CreateDiscSel  Proc near
     mov es:vfs_flags,0
     mov es:vfs_server,0
     mov es:vfs_cached_pages,0
+    mov es:vfs_part_thread,0
+    mov es:vfs_part_done,0
 ;
 ; test only
 ;
@@ -959,6 +961,22 @@ gdlDone:
 get_disc_locked   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WaitForVfsDiscs
+;
+;       DESCRIPTION:    Wait for VFS discs to be completed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_vfs_discs_name       DB 'Wait For VFS Discs',0
+
+wait_for_vfs_discs    Proc far
+    int 3
+    ret
+wait_for_vfs_discs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;       NAME:           init_disc
@@ -981,6 +999,12 @@ init_disc    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET wait_for_vfs_discs
+    mov edi,OFFSET wait_for_vfs_discs_name
+    xor cl,cl
+    mov ax,wait_for_vfs_discs_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET get_vfs_disc_info
     mov edi,OFFSET get_vfs_disc_info_name

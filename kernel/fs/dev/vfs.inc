@@ -124,6 +124,9 @@ vfs_gpt_start_sector     DD ?,?
 
 vfs_cache_discard_pos    DD ?,?
 
+vfs_part_thread          DW ?
+vfs_part_done            DW ?
+
 vfs_cmd_thread           DW ?
 vfs_vendor_str           DB 256 DUP(?)
 
