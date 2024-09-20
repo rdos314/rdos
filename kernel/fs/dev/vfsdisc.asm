@@ -1062,14 +1062,20 @@ init_parts    Proc far
     or ax,ax
     jz ipsDone
 ;
-    mov ds,eax
+    mov es,eax
     GetThread
-    mov ds:vfs_part_thread,ax
+    mov es:vfs_part_thread,ax
+;
+    mov bx,ds:disc_wait_thread
+    or bx,bx
+    jz ipsWait
+;
+    Signal
 
 ipsWait:
     WaitForSignal
 ;
-    mov ax,ds:vfs_part_thread
+    mov ax,es:vfs_part_thread
     or ax,ax
     jnz ipsWait
 
