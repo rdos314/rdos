@@ -7,7 +7,7 @@
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version. The only exception to this rule
 ; is for commercial usage in embedded systems. For information on
-; usage in commercial embedded systems, contact embedded@rdos.net
+; usage in commercial embedded systems, contact embedded@rdos.netV
 ;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -966,6 +966,79 @@ get_disc_locked   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           InitParts
+;
+;       DESCRIPTION:    Initialize partitions
+;
+;       PARAMETERS:     EBX         VFS handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_parts_name       DB 'Init VFS Parts',0
+
+init_parts    Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    int 3
+;
+    or bh,bh
+    jz ipsFail
+;
+    mov eax,ebx
+    shr eax,24
+    cmp al,VFS_HANDLE_SIG
+    jne ipsFail
+;
+    mov ax,SEG data
+    mov fs,ax
+    movzx eax,bh
+    dec ax
+    cmp ax,MAX_DISC_COUNT
+    jae ipsFail
+;
+
+ipsFail:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+init_parts   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DoneParts
+;
+;       DESCRIPTION:    Partitions done
+;
+;       PARAMETERS:     EBX         VFS handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+done_parts_name       DB 'VFS Parts Done',0
+
+done_parts    Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    int 3
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+done_parts   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForVfsDiscs
 ;
 ;       DESCRIPTION:    Wait for VFS discs to be completed
@@ -1006,66 +1079,6 @@ wait_for_vfs_discs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitFs
-;
-;           DESCRIPTION:    Init FS thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_fs_thread_name DB 'Program Autostart', 0
-
-init_fs_thread_pr:
-    mov ax,25
-    WaitMilliSec
-;
-    int 3
-    mov ax,SEG data
-    mov ds,eax
-    mov ax,ds:disc_wait_thread
-    or ax,ax
-    jnz ifDone
-;
-    WaitForVfsDiscs
-
-ifDone:
-    TerminateThread
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Init_fs
-;
-;           DESCRIPTION:    Create init fs thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_fs    Proc far
-    push ds
-    push es
-    pushad
-;
-    mov eax,cs
-    mov ds,eax
-    mov es,eax
-    mov esi,OFFSET init_fs_thread_pr
-    mov edi,OFFSET init_fs_thread_name
-    mov ax,3
-    mov cx,stack0_size
-    CreateThread
-;
-    popad
-    pop es
-    pop ds
-    ret
-init_fs    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           init_disc
 ;
 ;       description:    Init disc
@@ -1088,9 +1101,6 @@ init_disc    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov edi,OFFSET init_fs
-    HookInitTasking
 ;
     mov esi,OFFSET wait_for_vfs_discs
     mov edi,OFFSET wait_for_vfs_discs_name
@@ -1121,6 +1131,18 @@ init_disc    Proc near
     xor cl,cl
     mov ax,write_vfs_disc_nr
     RegisterOsGate
+;
+    mov esi,OFFSET init_parts
+    mov edi,OFFSET init_parts_name
+    xor cl,cl
+    mov ax,vfs_init_parts_nr
+    RegisterServGate
+;
+    mov esi,OFFSET done_parts
+    mov edi,OFFSET done_parts_name
+    xor cl,cl
+    mov ax,vfs_done_parts_nr
+    RegisterServGate
 ;
     mov esi,OFFSET is_vfs_disc
     mov edi,OFFSET is_vfs_disc_name
