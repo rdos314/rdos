@@ -67,6 +67,8 @@ data    SEGMENT byte public 'DATA'
 
 disc_arr        DW MAX_DISC_COUNT DUP (?)
 
+disc_wait_thread DW ?
+
 data    ENDS
 
 
@@ -973,7 +975,19 @@ get_disc_locked   Endp
 wait_for_vfs_discs_name       DB 'Wait For VFS Discs',0
 
 wait_for_vfs_discs    Proc far
+    push ds
+    push eax
+    push ebx
+;
     int 3
+    mov ax,SEG data
+    mov ds,eax
+    GetThread
+    mov ds:disc_wait_thread,ax
+;
+    pop ebx
+    pop eax
+    pop ds
     ret
 wait_for_vfs_discs    Endp
 
@@ -1059,6 +1073,8 @@ init_disc    Proc near
     mov ecx,MAX_DISC_COUNT
     xor ax,ax
     rep stos word ptr es:[edi]
+;
+    mov es:disc_wait_thread,0
 ;
     mov ax,cs
     mov ds,ax
