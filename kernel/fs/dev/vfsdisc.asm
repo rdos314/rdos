@@ -985,22 +985,36 @@ init_parts    Proc far
     int 3
 ;
     or bh,bh
-    jz ipsFail
+    jz ipsDone
 ;
     mov eax,ebx
     shr eax,24
     cmp al,VFS_HANDLE_SIG
-    jne ipsFail
+    jne ipsDone
 ;
     mov ax,SEG data
-    mov fs,ax
+    mov ds,ax
     movzx eax,bh
     dec ax
     cmp ax,MAX_DISC_COUNT
-    jae ipsFail
+    jae ipsDone
 ;
+    mov ax,ds:[2*eax].disc_arr
+    or ax,ax
+    jz ipsDone
+;
+    mov ds,eax
+    GetThread
+    mov ds:vfs_part_thread,ax
 
-ipsFail:
+ipsWait:
+    WaitForSignal
+;
+    mov ax,ds:vfs_part_thread
+    or ax,ax
+    jnz ipsWait
+
+ipsDone:
     popad
     pop fs
     pop es
