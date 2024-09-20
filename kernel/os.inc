@@ -3469,6 +3469,10 @@ GetUdpSocketReadCount               MACRO
 
 ;;;;;;;;;;; VFS ;;;;;;;;;;;;
 
+WaitForVfsDiscs    MACRO
+    OsGate wait_for_vfs_discs_nr
+                    ENDM
+
 ;  IN  ES:ESI    Server proc
 ;  IN  ES:EDI    Server name
 ;  IN  BX        Data passed to server
@@ -3476,6 +3480,7 @@ GetUdpSocketReadCount               MACRO
 StartVfs    MACRO
     OsGate start_vfs_nr
                     ENDM
+
 ;  IN  BX       VFS handle
 StopVfs    MACRO
     OsGate stop_vfs_nr

@@ -7853,6 +7853,8 @@ dtRetry:
 dtInitDo:        
     call UpdateDiscs
 ;
+    WaitForVfsDiscs
+;
     mov ax,SEG data
     mov ds,ax
     GetSystemTime
