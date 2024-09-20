@@ -469,69 +469,6 @@ rename_file16   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitFs
-;
-;           DESCRIPTION:    Init FS thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_fs_thread_name DB 'Init File System', 0
-
-init_fs_thread_pr:
-    mov ax,200
-    WaitMilliSec
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ax,ds:pf_cur_dir_sel
-    or ax,ax
-    jnz ifDirOk
-;
-    CreateCurDir
-    mov ds:pf_cur_dir_sel,ax
-
-ifDirOk:
-    StartPrograms
-;
-    TerminateThread
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           Init_fs
-;
-;           DESCRIPTION:    Create init fs thread
-;
-;           PARAMETERS:         
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_fs    Proc far
-    push ds
-    push es
-    pushad
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov si,OFFSET init_fs_thread_pr
-    mov di,OFFSET init_fs_thread_name
-    mov ax,3
-    mov cx,stack0_size
-    CreateThread
-;
-    popad
-    pop es
-    pop ds
-    retf32
-init_fs    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           INIT
 ;
 ;           DESCRIPTION:    Init driver
@@ -545,9 +482,6 @@ init    PROC far
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-    mov edi,OFFSET init_fs
-    HookInitTasking
 ;
     mov esi,OFFSET register_file_system
     mov edi,OFFSET register_file_system_name

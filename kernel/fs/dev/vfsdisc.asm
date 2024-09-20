@@ -36,6 +36,7 @@ include ..\driver.def
 include ..\handle.inc
 include ..\wait.inc
 include ..\os\protseg.def
+include ..\os\exec.def
 include vfs.inc
 
     .386p
@@ -979,6 +980,69 @@ wait_for_vfs_discs    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InitFs
+;
+;           DESCRIPTION:    Init FS thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_fs_thread_name DB 'Init File System', 0
+
+init_fs_thread_pr:
+    mov ax,200
+    WaitMilliSec
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ax,ds:pf_cur_dir_sel
+    or ax,ax
+    jnz ifDirOk
+;
+    CreateCurDir
+    mov ds:pf_cur_dir_sel,ax
+
+ifDirOk:
+    StartPrograms
+;
+    TerminateThread
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Init_fs
+;
+;           DESCRIPTION:    Create init fs thread
+;
+;           PARAMETERS:         
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_fs    Proc far
+    push ds
+    push es
+    pushad
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET init_fs_thread_pr
+    mov edi,OFFSET init_fs_thread_name
+    mov ax,3
+    mov cx,stack0_size
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    ret
+init_fs    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           init_disc
 ;
 ;       description:    Init disc
@@ -999,6 +1063,9 @@ init_disc    Proc near
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov edi,OFFSET init_fs
+    HookInitTasking
 ;
     mov esi,OFFSET wait_for_vfs_discs
     mov edi,OFFSET wait_for_vfs_discs_name
