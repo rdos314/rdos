@@ -1112,6 +1112,57 @@ done_parts   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CheckPendDisc
+;
+;       DESCRIPTION:    Check if any disc is pending
+;
+;       PARAMETERS:     DS	Data seg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckPendDisc   Proc near
+    push es
+    push eax
+    push ecx
+    push esi
+;
+    mov ecx,MAX_DISC_COUNT
+    mov esi, OFFSET disc_arr
+
+cpdLoop:
+    lodsw
+    or ax,ax
+    jz cpdNext
+;
+    mov es,eax
+    mov ax,es:vfs_part_done
+    or ax,ax
+    jnz cpdNext
+;
+    mov ax,es:vfs_part_thread
+    or ax,ax
+    jnz cpdNext
+;
+    stc
+    jmp cpdDone
+
+cpdNext:
+    loop cpdLoop
+;
+
+    clc
+
+cpdDone:
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CheckPendDisc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForVfsDiscs
 ;
 ;       DESCRIPTION:    Wait for VFS discs to be completed
@@ -1130,16 +1181,20 @@ wait_for_vfs_discs    Proc far
     GetThread
     mov ds:disc_wait_thread,ax
 
-wfdWait:
+wfdRetry:
     mov ax,pending_count
     or ax,ax
     jz wfdPendOk
-;
+
+wfdWait:
     WaitForSignal
-    jmp wfdWait
+    jmp wfdRetry
 
 wfdPendOk:
     int 3
+    call CheckPendDisc
+    jc wfdWait
+
     GetThread
 
 
