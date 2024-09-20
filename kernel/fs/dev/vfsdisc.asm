@@ -985,6 +985,18 @@ wait_for_vfs_discs    Proc far
     GetThread
     mov ds:disc_wait_thread,ax
 ;
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ax,ds:pf_cur_dir_sel
+    or ax,ax
+    jnz ifDirOk
+;
+    CreateCurDir
+    mov ds:pf_cur_dir_sel,ax
+
+ifDirOk:
+    StartPrograms
+;
     pop ebx
     pop eax
     pop ds
@@ -1002,25 +1014,22 @@ wait_for_vfs_discs    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_fs_thread_name DB 'Init File System', 0
+init_fs_thread_name DB 'Program Autostart', 0
 
 init_fs_thread_pr:
-    mov ax,200
+    mov ax,25
     WaitMilliSec
 ;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ax,ds:pf_cur_dir_sel
+    int 3
+    mov ax,SEG data
+    mov ds,eax
+    mov ax,ds:disc_wait_thread
     or ax,ax
-    jnz ifDirOk
+    jnz ifDone
 ;
-    CreateCurDir
-    mov ds:pf_cur_dir_sel,ax
+    WaitForVfsDiscs
 
-ifDirOk:
-    StartPrograms
-;
+ifDone:
     TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
