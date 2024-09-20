@@ -75,6 +75,7 @@ delete_ssl_listen_nr       = 69
 add_ssl_listen_nr          = 70
 
 reply_ssl_data_cmd_nr      = 71
-vfs_parts_started_nr       = 72
+vfs_init_parts_nr          = 72
+vfs_done_parts_nr          = 73
 
 serv_gate_entries          = 80

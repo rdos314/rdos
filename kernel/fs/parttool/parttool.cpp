@@ -96,6 +96,7 @@ int main(int argc, char **argv)
     int dev;
     char *ptr;
     TDiscServer *Server;
+    int handle;
 
     if (argc >= 2)
     {
@@ -109,16 +110,25 @@ int main(int argc, char **argv)
         info = new TInfoFactory(Server);
         addp = new TAddPartitionFactory(Server);
 
+        handle = Server->GetHandle();
+
         Disc = CreateDisc(Server);
         if (Disc)
         {
+            ServInitPartitions(handle);
             Disc->LoadPart();
-            ServPartitionsStarted();
+            ServPartitionsDone(handle);
 
             while (Server->IsActive())
                 Server->Run(Disc);
         }
+        else
+            ServPartitionsDone(handle);
     }
-    ServPartitionsStarted();
+    else
+    {
+        handle = ServGetVfsHandle();
+        ServPartitionsDone(handle);
+    }
 
 }

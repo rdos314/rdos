@@ -112,6 +112,16 @@ ServLoadPart  MACRO
                     ENDM
 
 ; IN  EBX              VFS handle
+ServInitParts  MACRO
+    ServGate vfs_init_parts_nr
+                    ENDM
+
+; IN  EBX              VFS handle
+ServPartsDone  MACRO
+    ServGate vfs_parts_done_nr
+                    ENDM
+
+; IN  EBX              VFS handle
 ServStartPart  MACRO
     ServGate serv_start_part_nr
                     ENDM

@@ -196,8 +196,13 @@
     __parm [__ebx] \
     __value [__eax]
 
-#pragma aux ServPartitionsStarted = \
-    ServGate_vfs_parts_started
+#pragma aux ServInitPartitions = \
+    ServGate_vfs_init_parts \
+    __parm [__ebx]
+
+#pragma aux ServPartitionsDone = \
+    ServGate_vfs_done_parts \
+    __parm [__ebx]
 
 #pragma aux ServCreateVfsReq = \
     ServGate_create_vfs_req  \
