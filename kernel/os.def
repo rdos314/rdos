@@ -921,4 +921,7 @@ reset_can_modules_nr        = 832
 allocate_static_vfs_drive_nr = 833
 allocate_dynamic_vfs_drive_nr = 834
 
+begin_vfs_disc_nr           = 835
+end_vfs_disc_nr             = 836
+
 osgate_entries              = 850

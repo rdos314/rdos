@@ -3578,6 +3578,14 @@ InstallFixedDisc     MACRO
     OsGate install_fixed_disc_nr
                     ENDM
 
+BeginVfsDisc    MACRO
+    OsGate begin_vfs_disc_nr
+                    ENDM
+
+EndVfsDisc    MACRO
+    OsGate end_vfs_disc_nr
+                    ENDM
+
 ; OUT AL          Disc #
 InstallVfsDisc     MACRO
     OsGate install_vfs_disc_nr

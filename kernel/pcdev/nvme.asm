@@ -2033,6 +2033,8 @@ init_nvme    Proc far
     jc inDone
 
 inDone:
+    EndVfsDisc
+;
     popad
     pop es
     pop ds
@@ -2063,6 +2065,8 @@ init    PROC far
     mov ds,ax
     mov edi,OFFSET init_nvme
     HookInitPci
+;
+    BeginVfsDisc
 ;    
     clc
     ret
