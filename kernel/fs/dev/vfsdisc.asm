@@ -1105,7 +1105,6 @@ done_parts    Proc far
     push fs
     pushad
 ;
-    int 3
     or bh,bh
     jz dpsDone
 ;
