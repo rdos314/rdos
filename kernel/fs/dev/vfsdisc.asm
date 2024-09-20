@@ -1004,7 +1004,6 @@ end_vfs_disc    Proc far
     push eax
     push ebx
 ;
-    int 3
     mov eax,sEG data
     mov ds,eax
     sub ds:pending_count,1
@@ -1126,22 +1125,34 @@ wait_for_vfs_discs    Proc far
     push eax
     push ebx
 ;
-    int 3
     mov ax,SEG data
     mov ds,eax
     GetThread
     mov ds:disc_wait_thread,ax
+
+wfdWait:
+    mov ax,pending_count
+    or ax,ax
+    jz wfdPendOk
 ;
+    WaitForSignal
+    jmp wfdWait
+
+wfdPendOk:
+    int 3
+    GetThread
+
+
     mov ds,ax
     mov ds,ds:p_proc_sel
     mov ax,ds:pf_cur_dir_sel
     or ax,ax
-    jnz ifDirOk
+    jnz wfdDirOk
 ;
     CreateCurDir
     mov ds:pf_cur_dir_sel,ax
 
-ifDirOk:
+wfdDirOk:
     StartPrograms
 ;
     pop ebx
