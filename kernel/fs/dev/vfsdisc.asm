@@ -1285,14 +1285,11 @@ wfdPendOk:
     call CheckPendDisc
     jc wfdWait
 ;
-    int 3
     mov ds:disc_wait_thread,0
     ClearSignal
     call AssignPendDisc
 ;
     GetThread
-
-
     mov ds,ax
     mov ds,ds:p_proc_sel
     mov ax,ds:pf_cur_dir_sel
