@@ -67,7 +67,8 @@ data    SEGMENT byte public 'DATA'
 
 disc_arr        DW MAX_DISC_COUNT DUP (?)
 
-disc_wait_thread DW ?
+disc_wait_thread   DW ?
+pending_count      DW ?
 
 data    ENDS
 
@@ -966,6 +967,58 @@ get_disc_locked   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           BeginVfsDisc
+;
+;       DESCRIPTION:    Begin VFS detect
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+begin_vfs_disc_name       DB 'Begin VFS Disc',0
+
+begin_vfs_disc    Proc far
+    push ds
+    push eax
+;
+    mov eax,sEG data
+    mov ds,eax
+    inc ds:pending_count
+;
+    pop eax
+    pop ds
+    ret
+begin_vfs_disc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           EndVfsDisc
+;
+;       DESCRIPTION:    End VFS detect
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+end_vfs_disc_name       DB 'End VFS Disc',0
+
+end_vfs_disc    Proc far
+    push ds
+    push eax
+;
+    int 3
+    mov eax,sEG data
+    mov ds,eax
+    sub ds:pending_count,1
+    jnz evdDone
+;
+
+evdDone:
+    pop eax
+    pop ds
+    ret
+end_vfs_disc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           InitParts
 ;
 ;       DESCRIPTION:    Initialize partitions
@@ -1111,10 +1164,23 @@ init_disc    Proc near
     rep stos word ptr es:[edi]
 ;
     mov es:disc_wait_thread,0
+    mov es:pending_count,0
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
+;
+    mov esi,OFFSET begin_vfs_disc
+    mov edi,OFFSET begin_vfs_disc_name
+    xor cl,cl
+    mov ax,begin_vfs_disc_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET end_vfs_disc
+    mov edi,OFFSET end_vfs_disc_name
+    xor cl,cl
+    mov ax,end_vfs_disc_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET wait_for_vfs_discs
     mov edi,OFFSET wait_for_vfs_discs_name
