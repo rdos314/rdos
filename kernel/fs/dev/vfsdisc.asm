@@ -1002,6 +1002,7 @@ end_vfs_disc_name       DB 'End VFS Disc',0
 end_vfs_disc    Proc far
     push ds
     push eax
+    push ebx
 ;
     int 3
     mov eax,sEG data
@@ -1009,8 +1010,14 @@ end_vfs_disc    Proc far
     sub ds:pending_count,1
     jnz evdDone
 ;
+    mov bx,ds:disc_wait_thread
+    or bx,bx
+    jz evdDone
+;
+    Signal
 
 evdDone:
+    pop ebx
     pop eax
     pop ds
     ret
