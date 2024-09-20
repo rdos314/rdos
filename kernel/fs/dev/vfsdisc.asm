@@ -69,6 +69,7 @@ disc_arr        DW MAX_DISC_COUNT DUP (?)
 
 disc_wait_thread   DW ?
 pending_count      DW ?
+assign_thread      DW ?
 
 data    ENDS
 
@@ -1041,8 +1042,6 @@ init_parts    Proc far
     push fs
     pushad
 ;
-    int 3
-;
     or bh,bh
     jz ipsDone
 ;
@@ -1107,7 +1106,35 @@ done_parts    Proc far
     pushad
 ;
     int 3
+    or bh,bh
+    jz dpsDone
 ;
+    mov eax,ebx
+    shr eax,24
+    cmp al,VFS_HANDLE_SIG
+    jne dpsDone
+;
+    mov ax,SEG data
+    mov ds,ax
+    movzx eax,bh
+    dec ax
+    cmp ax,MAX_DISC_COUNT
+    jae dpsDone
+;
+    mov ax,ds:[2*eax].disc_arr
+    or ax,ax
+    jz dpsDone
+;
+    mov es,eax
+    mov es:vfs_part_done,1
+;
+    mov bx,ds:assign_thread
+    or bx,bx
+    jz dpsDone
+;
+    Signal
+
+dpsDone:
     popad
     pop fs
     pop es
@@ -1169,6 +1196,65 @@ CheckPendDisc   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AssignPendDisc
+;
+;       DESCRIPTION:    Assign drives to pending discs
+;
+;       PARAMETERS:     DS	Data seg
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AssignPendDisc   Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push esi
+;
+    mov ecx,MAX_DISC_COUNT
+    mov esi, OFFSET disc_arr
+
+apdLoop:
+    lodsw
+    or ax,ax
+    jz apdNext
+;
+    mov es,eax
+    mov ax,es:vfs_part_done
+    or ax,ax
+    jnz apdNext
+;
+    GetThread
+    mov ds:assign_thread,ax
+;
+    xor bx,bx
+    xchg bx,es:vfs_part_thread
+
+apdRetry:
+    Signal
+;
+    WaitForSignal
+    mov ax,es:vfs_part_done
+    or ax,ax
+    jz apdRetry
+;
+    mov ds:assign_thread,0
+
+apdNext:
+    loop apdLoop
+
+apdDone:
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+AssignPendDisc   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForVfsDiscs
 ;
 ;       DESCRIPTION:    Wait for VFS discs to be completed
@@ -1197,10 +1283,14 @@ wfdWait:
     jmp wfdRetry
 
 wfdPendOk:
-    int 3
     call CheckPendDisc
     jc wfdWait
-
+;
+    int 3
+    mov ds:disc_wait_thread,0
+    ClearSignal
+    call AssignPendDisc
+;
     GetThread
 
 
@@ -1243,6 +1333,7 @@ init_disc    Proc near
     rep stos word ptr es:[edi]
 ;
     mov es:disc_wait_thread,0
+    mov es:assign_thread,0
     mov es:pending_count,0
 ;
     mov ax,cs
