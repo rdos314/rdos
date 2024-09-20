@@ -1745,6 +1745,20 @@ WriteVfs      Proc far
     pop ds
     ret
 WriteVfs  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           IsStaticVfs
+;
+;       DESCRIPTION:    Check for static disc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsStaticVfs      Proc far
+    clc
+    ret
+IsStaticVfs      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1917,6 +1931,7 @@ vfs02   DD OFFSET ExitVfs,        DD SEG code
 vfs03   DD OFFSET GetBiosVfs,     DD SEG code
 vfs04   DD OFFSET ReadVfs,        DD SEG code
 vfs05   DD OFFSET WriteVfs,       DD SEG code
+vfs06   DD OFFSET IsStaticVfs,    DD SEG code
 
 SetupDevice  Proc near
     mov ax,SEG data

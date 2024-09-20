@@ -3584,8 +3584,13 @@ RemoveVfsDisc     MACRO
                     ENDM
 
 ; OUT AL          Drive #
-AllocateVfsDrive     MACRO
-    OsGate allocate_vfs_drive_nr
+AllocateStaticVfsDrive     MACRO
+    OsGate allocate_static_vfs_drive_nr
+                    ENDM
+
+; OUT AL          Drive #
+AllocateDynamicVfsDrive     MACRO
+    OsGate allocate_dynamic_vfs_drive_nr
                     ENDM
 
 ; IN  AL          Drive #

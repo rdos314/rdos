@@ -300,8 +300,19 @@ LoadPartServer  Proc near
     push fs
     push eax
 ;
+    call fword ptr ds:vfs_is_static
+    jnc lpsStatic
+
+lpsDynamic:
     mov fs,bx
-    AllocateVfsDrive
+    AllocateDynamicVfsDrive
+    jmp lpsDriveOk
+
+lpsStatic:
+    mov fs,bx
+    AllocateStaticVfsDrive
+
+lpsDriveOk:
     mov fs:vfsp_drive_nr,al
     movzx ebx,al
     shl ebx,1

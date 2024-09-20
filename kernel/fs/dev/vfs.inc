@@ -77,6 +77,10 @@ vfs_read                 DD ?,?
 ; IN  ES:EDI    Physical entries
 vfs_write                DD ?,?
 
+; OUT NC        Static
+;     CY        Dynamic
+vfs_is_static            DD ?,?
+
 vfs_table_struc   ENDS
 
 vfs_struc  STRUC
