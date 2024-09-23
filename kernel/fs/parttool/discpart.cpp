@@ -645,6 +645,7 @@ void TDisc::Remove(TPartition *part)
 bool TDisc::LoadPart()
 {
     int PartNr;
+    char DriveNr;
     TPartition *Part;
     int Handle = FServer->GetHandle();
     long long Start;
@@ -661,6 +662,8 @@ bool TDisc::LoadPart()
             Type = Part->GetType();
             Part->Handle = ServLoadVfsPartition(Handle, Type, Start, Size);
             ServStartVfsPartition(Part->Handle);
+            DriveNr = ServGetVfsPartDrive(Part->Handle);
+            Part->SetDrive(DriveNr);
         }
     }
     return true;
