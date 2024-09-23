@@ -51,7 +51,7 @@ public:
 
 protected:
     void ShowHeader();
-    void ShowPart(TPartition *part);
+    void ShowPart(int index, TPartition *part);
     void ShowDisc(TDisc *disc);
 
     TDiscServer *FServer;

@@ -126,11 +126,11 @@ void TInfoCommand::ShowHeader()
 #   Returns....: *
 #
 ##########################################################################*/
-void TInfoCommand::ShowPart(TPartition *part)
+void TInfoCommand::ShowPart(int index, TPartition *part)
 {
     long long start = part->GetStartSector();
     long long end = start + part->GetSectorCount() - 1;
-    int handle = part->Handle;
+    char drive = part->GetDrive();
     const char *fstype;
 
     switch (part->GetType())
@@ -160,8 +160,16 @@ void TInfoCommand::ShowPart(TPartition *part)
             break;
     }
 
-    FMsg.printf("%6d %04lX_%08lX-%04lX_%08lX %s \r\n",
-                    handle,
+    if (drive)
+        FMsg.printf("%d: %c: %04lX_%08lX-%04lX_%08lX %s \r\n",
+                    index,
+                    drive + 'A',
+                    (int)(start >> 32), (int)(start & 0xFFFFFFFF),
+                    (int)(end >> 32), (int)(end & 0xFFFFFFFF),
+                    fstype);
+    else
+        FMsg.printf("%d: -- %04lX_%08lX-%04lX_%08lX %s \r\n",
+                    index,
                     (int)(start >> 32), (int)(start & 0xFFFFFFFF),
                     (int)(end >> 32), (int)(end & 0xFFFFFFFF),
                     fstype);
@@ -208,7 +216,7 @@ void TInfoCommand::ShowDisc(TDisc *disc)
         Write("HANDLE SECTORS                     FILESYS\r\n");
 
         for (i = 0; i < disc->FCurrPartCount; i++)
-            ShowPart(disc->FPartArr[i]);
+            ShowPart(i, disc->FPartArr[i]);
     }
 }
 
