@@ -126,6 +126,11 @@
     __parm [__ebx] \
     __value [__eax]
 
+#pragma aux ServGetVfsPartDrive = \
+    ServGate_get_vfs_part_drive  \
+    __parm [__ebx] \
+    __value [__al]
+
 #pragma aux ServSetVfsStartSector = \
     ServGate_set_vfs_start_sector  \
     __parm [__ebx] [__edx __eax]

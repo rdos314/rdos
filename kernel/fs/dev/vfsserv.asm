@@ -1144,6 +1144,41 @@ serv_get_part_type   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetVfsPartDrive
+;
+;       DESCRIPTION:    Get partition drive
+;
+;       PARAMETERS:     EBX         Partition handle
+;
+;       RETURNS:        AL          Part drive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_get_part_drive_name       DB 'Get VFS Part Drive',0
+
+serv_get_part_drive    Proc far
+    push ds
+    push fs
+    push ebx
+;
+    xor eax,eax
+;
+    call HandleToPartFs
+    jc gpdDone
+;
+    movzx eax,fs:vfsp_drive_nr
+    clc
+
+gpdDone:
+    pop ebx
+    pop fs
+    pop ds
+    ret
+serv_get_part_drive   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           StartVfsPart
 ;
 ;       DESCRIPTION:    Start partition
@@ -5295,6 +5330,12 @@ init_server    Proc near
     mov edi,OFFSET serv_get_part_type_name
     xor cl,cl
     mov ax,get_vfs_part_type_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_get_part_drive
+    mov edi,OFFSET serv_get_part_drive_name
+    xor cl,cl
+    mov ax,get_vfs_part_drive_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_start_part

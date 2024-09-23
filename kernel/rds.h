@@ -77,6 +77,7 @@
 #define serv_gate_reply_ssl_data_cmd 0x00000047
 #define serv_gate_vfs_init_parts 0x00000048
 #define serv_gate_vfs_done_parts 0x00000049
+#define serv_gate_get_vfs_part_drive 0x0000004A
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -157,4 +158,5 @@
 #define ServGate_reply_ssl_data_cmd 0x55 0x67 0x9a 71 0 0 0 4 0 0x5d
 #define ServGate_vfs_init_parts 0x55 0x67 0x9a 72 0 0 0 4 0 0x5d
 #define ServGate_vfs_done_parts 0x55 0x67 0x9a 73 0 0 0 4 0 0x5d
+#define ServGate_get_vfs_part_drive 0x55 0x67 0x9a 74 0 0 0 4 0 0x5d
 

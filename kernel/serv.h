@@ -61,6 +61,7 @@ int RDOSAPI ServGetVfsHandle();
 int RDOSAPI ServGetVfsDisc(int handle);
 int RDOSAPI ServGetVfsPart(int handle);
 int RDOSAPI ServGetVfsPartType(int handle);
+char RDOSAPI ServGetVfsPartDrive(int handle);
 void RDOSAPI ServSetVfsStartSector(int handle, long long StartSector);
 void RDOSAPI ServSetVfsSectors(int handle, long long SectorCount);
 long long RDOSAPI ServGetVfsStartSector(int handle);
