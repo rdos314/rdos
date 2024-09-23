@@ -48,6 +48,7 @@ TPartition::TPartition(long long StartSector, long long SectorCount)
     FStartSector = StartSector;
     FSectorCount = SectorCount;
     FPartType = PART_TYPE_UNKNOWN;
+    FDriveNr = 0;
 
     Handle = 0;
 }
@@ -97,6 +98,38 @@ void TPartition::SetType(int PartType)
 int TPartition::GetType()
 {
     return FPartType;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartition::SetDrive
+#
+#   Purpose....: Set partition drive
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPartition::SetDrive(char DriveNr)
+{
+    FDriveNr = DriveNr;
+}
+
+/*##########################################################################
+#
+#   Name       : TPartition::GetDrive
+#
+#   Purpose....: Get partition drive
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TPartition::GetDrive()
+{
+    return FDriveNr;
 }
 
 /*##########################################################################

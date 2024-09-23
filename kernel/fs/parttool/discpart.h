@@ -42,6 +42,9 @@ public:
     void SetType(int PartType);
     int GetType();
 
+    void SetDrive(char DriveNr);
+    char GetDrive();
+
     long long GetStartSector();
     long long GetSectorCount();
 
@@ -51,6 +54,7 @@ public:
 
 protected:
     int FPartType;
+    char FDriveNr;
 
     long long FStartSector;
     long long FSectorCount;
