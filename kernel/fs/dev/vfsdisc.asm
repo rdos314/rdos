@@ -70,6 +70,7 @@ disc_arr        DW MAX_DISC_COUNT DUP (?)
 disc_wait_thread   DW ?
 pending_count      DW ?
 assign_thread      DW ?
+init_completed     DW ?
 
 data    ENDS
 
@@ -1067,9 +1068,18 @@ init_parts    Proc far
 ;
     mov bx,ds:disc_wait_thread
     or bx,bx
-    jz ipsWait
+    jz ipsIdle
 ;
     Signal
+    jmp ipsWait
+
+ipsIdle:
+    mov ax,ds:init_completed
+    or ax,ax
+    jz ipsWait
+
+ipsStart:
+    call StartPendHandler
 
 ipsWait:
     WaitForSignal
@@ -1254,6 +1264,86 @@ AssignPendDisc   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           HandlePendDiscs
+;
+;       DESCRIPTION:    Handle pending discs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandlePendDiscs   Proc near
+    push ds
+    push eax
+    push ebx
+
+wfdRetry:
+    mov ax,ds:pending_count
+    or ax,ax
+    jz wfdPendOk
+
+wfdWait:
+    WaitForSignal
+    jmp wfdRetry
+
+wfdPendOk:
+    call CheckPendDisc
+    jc wfdWait
+;
+    mov ds:disc_wait_thread,0
+    ClearSignal
+    call AssignPendDisc
+;
+    pop ebx
+    pop eax
+    pop ds
+    ret
+HandlePendDiscs   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           StartPendHandler
+;
+;       DESCRIPTION:    Start pending disc handler
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pend_handler_name   DB 'Pending Discs', 0
+
+pend_handler:
+    mov ax,SEG data
+    mov ds,eax
+    GetThread
+    xchg ax,ds:disc_wait_thread
+    or ax,ax
+    jnz phExit
+;
+    call HandlePendDiscs
+
+phExit:
+    TerminateThread
+
+StartPendHandler   Proc near
+    push ds
+    push es
+    pushad
+;
+    mov eax,cs
+    mov ds,eax
+    mov es,eax
+    mov esi,OFFSET pend_handler
+    mov edi,OFFSET pend_handler_name
+    mov al,2
+    CreateThread
+;
+    popad
+    pop es
+    pop ds
+    ret
+StartPendHandler  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForVfsDiscs
 ;
 ;       DESCRIPTION:    Wait for VFS discs to be completed
@@ -1271,23 +1361,10 @@ wait_for_vfs_discs    Proc far
     mov ds,eax
     GetThread
     mov ds:disc_wait_thread,ax
-
-wfdRetry:
-    mov ax,pending_count
-    or ax,ax
-    jz wfdPendOk
-
-wfdWait:
-    WaitForSignal
-    jmp wfdRetry
-
-wfdPendOk:
-    call CheckPendDisc
-    jc wfdWait
 ;
-    mov ds:disc_wait_thread,0
-    ClearSignal
-    call AssignPendDisc
+    call HandlePendDiscs
+;
+    mov ds:init_completed,1
 ;
     GetThread
     mov ds,ax
@@ -1331,6 +1408,7 @@ init_disc    Proc near
     mov es:disc_wait_thread,0
     mov es:assign_thread,0
     mov es:pending_count,0
+    mov es:init_completed,0
 ;
     mov ax,cs
     mov ds,ax
