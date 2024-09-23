@@ -1161,7 +1161,8 @@ serv_get_part_drive    Proc far
     push fs
     push ebx
 ;
-    xor eax,eax
+    call FindVfsHandle
+    jc gpdDone
 ;
     call HandleToPartFs
     jc gpdDone
