@@ -103,6 +103,8 @@ int main(int argc, char **argv)
         ptr = argv[1];
         dev = atoi(ptr);
 
+        printf("Part tool %d\r\n", dev);
+
         Server = new TDiscServer;
         Server->OnInit = InitDisc;
 
