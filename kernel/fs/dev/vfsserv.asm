@@ -2585,7 +2585,7 @@ rrsDecRem:
     sub gs:vfsrh_remain_count,1
     jnc rrsNext
 ;
-    CrashGate
+    int 3
 
 rrsNext:
     add eax,8
