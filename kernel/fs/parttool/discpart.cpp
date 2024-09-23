@@ -48,7 +48,6 @@ TPartition::TPartition(long long StartSector, long long SectorCount)
     FStartSector = StartSector;
     FSectorCount = SectorCount;
     FPartType = PART_TYPE_UNKNOWN;
-    FDriveNr = 0;
 
     Handle = 0;
 }
@@ -102,22 +101,6 @@ int TPartition::GetType()
 
 /*##########################################################################
 #
-#   Name       : TPartition::SetDrive
-#
-#   Purpose....: Set partition drive
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPartition::SetDrive(char DriveNr)
-{
-    FDriveNr = DriveNr;
-}
-
-/*##########################################################################
-#
 #   Name       : TPartition::GetDrive
 #
 #   Purpose....: Get partition drive
@@ -129,7 +112,7 @@ void TPartition::SetDrive(char DriveNr)
 ##########################################################################*/
 char TPartition::GetDrive()
 {
-    return FDriveNr;
+    return ServGetVfsPartDrive(Handle);
 }
 
 /*##########################################################################
@@ -645,7 +628,6 @@ void TDisc::Remove(TPartition *part)
 bool TDisc::LoadPart()
 {
     int PartNr;
-    char DriveNr;
     TPartition *Part;
     int Handle = FServer->GetHandle();
     long long Start;
@@ -662,8 +644,6 @@ bool TDisc::LoadPart()
             Type = Part->GetType();
             Part->Handle = ServLoadVfsPartition(Handle, Type, Start, Size);
             ServStartVfsPartition(Part->Handle);
-            DriveNr = ServGetVfsPartDrive(Part->Handle);
-            Part->SetDrive(DriveNr);
         }
     }
     return true;
