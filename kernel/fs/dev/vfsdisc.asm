@@ -224,7 +224,7 @@ fvhPartLoop:
     jmp fvhFound
     
 fvhPartNext:
-    add esi,2
+    inc esi
     loop fvhPartLoop
 ;
     pop ecx
