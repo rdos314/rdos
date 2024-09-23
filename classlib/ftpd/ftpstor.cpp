@@ -102,6 +102,60 @@ TFtpStorCommand::~TFtpStorCommand()
 
 /*##########################################################################
 #
+#   Name       : TFtpStorCommand::SaveFile
+#
+#   Purpose....: Save file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpStorCommand::SaveFile(const char *name)
+{
+    TFtpLangString msg;
+    int size;
+    int totalsize = 0;
+    int res;
+    char *buf = new char[512];
+    TPathName relpath = TPathName(FServer->CurrDir) + TString(name);
+    TPathName abspath = TPathName(FServer->RootDir) + relpath.Get();
+    TFile file = abspath.CreateFile(0);
+
+    if (file.IsOpen())
+    {
+        msg.Load(150);
+        FServer->Reply(&msg);    
+
+        while (FServer->IsOpen())
+        {
+            size = FServer->Read(buf, 512);
+            totalsize += size;
+            file.Write(buf, size);
+        }
+
+        size = FServer->Read(buf, 512);
+        while (size)
+        {
+            totalsize += size;
+            file.Write(buf, size);
+            size = FServer->Read(buf, 512);
+        }
+
+        FServer->Push();
+
+        res = 226;
+    }
+    else
+        res = 450;
+
+    delete buf;
+
+    return res;
+}
+
+/*##########################################################################
+#
 #   Name       : TFtpStorCommand::Execute
 #
 #   Purpose....: Run command
@@ -113,69 +167,38 @@ TFtpStorCommand::~TFtpStorCommand()
 ##########################################################################*/
 void TFtpStorCommand::Execute(char *param)
 {
-	TFtpArg *arg;
-	int ArgCount;
-	TFtpLangString msg;
-	int ok;
+    TFtpArg *arg;
+    int ArgCount;
+    TFtpLangString msg;
+    int res;
+    int ok;
 
-	if (FServer->VerifyUser())
-	{
-		ok = ScanCmdLine(param, 0);
-		if (ok)
-		{
-			ArgCount = 0;
-			arg = FArgList;
-			while (arg)
-			{
-				ArgCount++;
-				arg = arg->FList;
-			}
+    if (FServer->VerifyUser())
+    {
+        ok = ScanCmdLine(param, 0);
+        if (ok)
+        {
+            ArgCount = 0;
+            arg = FArgList;
+            while (arg)
+            {
+                ArgCount++;
+                arg = arg->FList;
+            }
 
-			ok = (FArgCount == 1);
-		}
+            ok = (FArgCount == 1);
+        }
 
-		if (ok)
-		{
-			TPathName relpath = TPathName(FServer->CurrDir) + TString(FArgList->FName);
-			TPathName abspath = TPathName(FServer->RootDir) + relpath.Get();
-
-			TFile file = abspath.CreateFile(0);
-			int size;
-
-			if (file.IsOpen())
-			{
-				char *buf = new char[512];
-
-    			msg.Load(150);
-	    	    FServer->Reply(&msg);    
-
-				while (FServer->IsOpen())
-				{
-					size = FServer->Read(buf, 512);
-					file.Write(buf, size);
-				}
-
-				size = FServer->Read(buf, 512);
-				while (size)
-				{
-					file.Write(buf, size);
-					size = FServer->Read(buf, 512);
-				}
-
-				delete buf;
-
-				FServer->Push();
-
-		    	msg.Load(226);
-			}
-			else
-				msg.Load(450);
-		}
-		else
-			msg.Load(501);
-	}
-	else
-   	    msg.Load(530);
+        if (ok)
+        {
+            res = SaveFile(FArgList->FName.GetData()); 
+            msg.Load(res);
+        }
+        else
+            msg.Load(501);
+    }
+    else
+        msg.Load(530);
 
     FServer->Reply(&msg);    
 

@@ -34,8 +34,8 @@
 class TFtpStorFactory : public TFtpCommandFactory
 {
 public:
-	TFtpStorFactory();
-	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
+    TFtpStorFactory();
+    virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
@@ -43,10 +43,12 @@ protected:
 class TFtpStorCommand : public TFtpCommand
 {
 public:
-	TFtpStorCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TFtpStorCommand();
+    TFtpStorCommand(TFtpSocketServer *Server, const char *param);
+    virtual ~TFtpStorCommand();
 
-	virtual void Execute(char *param);
+    int SaveFile(const char *name);
+
+    virtual void Execute(char *param);
 
 protected:
 };
