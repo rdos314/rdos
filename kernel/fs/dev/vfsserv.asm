@@ -287,6 +287,7 @@ CreatePartSel   Endp
 ;
 ;       PARAMETERS:     DS         VFS sel
 ;                       BX         Part sel
+;                       ECX        Part type
 ;                       CS:ESI     Partition name
 ;                       CS:EDI     Server name
 ;
@@ -300,16 +301,25 @@ LoadPartServer  Proc near
     push fs
     push eax
 ;
+    mov fs,bx
+;
     call fword ptr ds:vfs_is_static
     jnc lpsStatic
 
 lpsDynamic:
-    mov fs,bx
     AllocateDynamicVfsDrive
     jmp lpsDriveOk
 
 lpsStatic:
-    mov fs,bx
+    cmp ecx,5
+    jne lpsNormal
+
+lpsEfi:
+    mov al,1
+    AllocateFixedVfsDrive
+    jnc lpsDriveOk
+
+lpsNormal:
     AllocateStaticVfsDrive
 
 lpsDriveOk:
@@ -1058,6 +1068,7 @@ serv_load_part    Proc far
     shl ecx,3
     mov edi,cs:[ecx].sl_tab
     mov esi,cs:[ecx].sl_tab+4
+    shr ecx,3
     call LoadPartServer
 
 lpDone:

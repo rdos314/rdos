@@ -3160,6 +3160,58 @@ allocate_static_vfs_drive  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;   NAME:           AllocFixedVfsDrive
+;
+;   DESCRIPTION:    Allocate fixed VFS drive
+;
+;   PARAMETERS:     AL          Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_fixed_vfs_drive_name       DB 'Allocate Fixed VFS Drive',0
+
+allocate_fixed_vfs_drive    Proc far
+    push ds
+    push ax
+    push cx
+    push si
+;
+    mov si,SEG data
+    mov ds,si
+;
+    movzx ax,al
+    cmp ax,MAX_DRIVES
+    jae afvdFail
+;
+    mov si,OFFSET drive_def_arr
+    add ax,ax
+    add si,ax
+;
+    mov ax,[si]
+    or ax,ax
+    jnz afvdFail
+;
+    cmp ax,-1
+    je afvdFail
+;
+    mov word ptr [si],-1
+    clc
+    jmp afvdDone
+    
+afvdFail:
+    stc
+    
+afvdDone:
+    pop si
+    pop cx
+    pop ax
+    pop ds
+    retf32
+allocate_fixed_vfs_drive  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CloseVfsDrive
 ;
 ;           DESCRIPTION:    Close VFS drive
@@ -7959,6 +8011,11 @@ init    PROC far
     mov esi,OFFSET allocate_dynamic_vfs_drive
     mov edi,OFFSET allocate_dynamic_vfs_drive_name
     mov ax,allocate_dynamic_vfs_drive_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_fixed_vfs_drive
+    mov edi,OFFSET allocate_fixed_vfs_drive_name
+    mov ax,allocate_fixed_vfs_drive_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_vfs_drive

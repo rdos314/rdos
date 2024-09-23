@@ -3607,6 +3607,11 @@ AllocateDynamicVfsDrive     MACRO
                     ENDM
 
 ; IN  AL          Drive #
+AllocateFixedVfsDrive     MACRO
+    OsGate allocate_fixed_vfs_drive_nr
+                    ENDM
+
+; IN  AL          Drive #
 CloseVfsDrive     MACRO
     OsGate close_vfs_drive_nr
                     ENDM

@@ -924,4 +924,6 @@ allocate_dynamic_vfs_drive_nr = 834
 begin_vfs_disc_nr           = 835
 end_vfs_disc_nr             = 836
 
+allocate_fixed_vfs_drive_nr = 837
+
 osgate_entries              = 850
