@@ -117,67 +117,6 @@ void TInfoCommand::ShowHeader()
 
 /*##########################################################################
 #
-#   Name       : TShowPartitionCommand::ShowPart
-#
-#   Purpose....: Show part
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TInfoCommand::ShowPart(int index, TPartition *part)
-{
-    long long start = part->GetStartSector();
-    long long end = start + part->GetSectorCount() - 1;
-    char drive = part->GetDrive();
-    const char *fstype;
-
-    switch (part->GetType())
-    {
-        case PART_TYPE_FAT12:
-            fstype = "FAT12";
-            break;
-
-        case PART_TYPE_FAT16:
-            fstype = "FAT16";
-            break;
-
-        case PART_TYPE_FAT32:
-            fstype = "FAT32";
-            break;
-
-        case PART_TYPE_FAT:
-            fstype = "FAT";
-            break;
-
-        case PART_TYPE_EFI:
-            fstype = "EFI";
-            break;
-
-        default:
-            fstype = "UNKNOWN";
-            break;
-    }
-
-    if (drive)
-        FMsg.printf("%d: %c: %04lX_%08lX-%04lX_%08lX %s \r\n",
-                    index,
-                    drive + 'A',
-                    (int)(start >> 32), (int)(start & 0xFFFFFFFF),
-                    (int)(end >> 32), (int)(end & 0xFFFFFFFF),
-                    fstype);
-    else
-        FMsg.printf("%d: -- %04lX_%08lX-%04lX_%08lX %s \r\n",
-                    index,
-                    (int)(start >> 32), (int)(start & 0xFFFFFFFF),
-                    (int)(end >> 32), (int)(end & 0xFFFFFFFF),
-                    fstype);
-    Write(FMsg);
-}
-
-/*##########################################################################
-#
 #   Name       : TShowPartitionCommand::ShowDisc
 #
 #   Purpose....: Show disc
@@ -190,7 +129,14 @@ void TInfoCommand::ShowPart(int index, TPartition *part)
 void TInfoCommand::ShowDisc(TDisc *disc)
 {
     long long TotalSectors = 0;
+    long long CurrSector = 0;
+    long long start;
+    long long end;
+    long double Space;
+    TPartition *part;
     const char *parttype;
+    const char *fstype;
+    char drive;
     int i;
 
     if (disc)
@@ -213,10 +159,88 @@ void TInfoCommand::ShowDisc(TDisc *disc)
 
     if (disc)
     {
-        Write("HANDLE SECTORS                     FILESYS\r\n");
+        Write("  DRV           SECTORS            FILESYS        SIZE\r\n");
 
         for (i = 0; i < disc->FCurrPartCount; i++)
-            ShowPart(i, disc->FPartArr[i]);
+        {
+            part = disc->FPartArr[i];
+
+            start = part->GetStartSector();
+            end = start + part->GetSectorCount() - 1;
+           
+            if (CurrSector + 64 < start) 
+            {
+                Space = (double)(start - CurrSector) * (double)512 / (double)0x100000;
+                start--;
+                FMsg.printf("-: -- %04lX_%08lX-%04lX_%08lX     Free %8ld MB \r\n",
+                    (int)(CurrSector >> 32), (int)(CurrSector & 0xFFFFFFFF),
+                    (int)(start >> 32), (int)(start & 0xFFFFFFFF),
+                    (int)Space);
+                Write(FMsg);
+                start++;
+            }
+
+            switch (part->GetType())
+            {
+                case PART_TYPE_FAT12:
+                    fstype = "    FAT12";
+                    break;
+
+                case PART_TYPE_FAT16:
+                    fstype = "    FAT16";
+                    break;
+
+                case PART_TYPE_FAT32:
+                    fstype = "    FAT32";
+                    break;
+
+                case PART_TYPE_FAT:
+                    fstype = "     FAT";
+                    break;
+
+                case PART_TYPE_EFI:
+                    fstype = "     EFI";
+                    break;
+
+                default:
+                    fstype = "UNKNOWN";
+                    break;
+            }
+
+            Space = (double)(end - start) * (double)512 / (double)0x100000;
+            drive = part->GetDrive();
+
+            if (drive)
+                FMsg.printf("%d: %c: %04lX_%08lX-%04lX_%08lX %s %8ld MB \r\n",
+                        i,
+                        drive + 'A',
+                        (int)(start >> 32), (int)(start & 0xFFFFFFFF),
+                        (int)(end >> 32), (int)(end & 0xFFFFFFFF),
+                        fstype,
+                        (int)Space);
+            else
+                FMsg.printf("%d: -- %04lX_%08lX-%04lX_%08lX %s %8ld MB \r\n",
+                        i,
+                        (int)(start >> 32), (int)(start & 0xFFFFFFFF),
+                        (int)(end >> 32), (int)(end & 0xFFFFFFFF),
+                        fstype,
+                        (int)Space);
+            Write(FMsg);
+
+            CurrSector = end;
+        }
+
+        end = TotalSectors - 34;
+
+        if (CurrSector < end) 
+        {
+            Space = (double)(TotalSectors - CurrSector) * (double)512 / (double)0x100000;
+            FMsg.printf("-: -- %04lX_%08lX-%04lX_%08lX     Free %8ld MB \r\n",
+                (int)(CurrSector >> 32), (int)(CurrSector & 0xFFFFFFFF),
+                (int)(end >> 32), (int)(end & 0xFFFFFFFF),
+                (int)Space);
+            Write(FMsg);
+        }
     }
 }
 
