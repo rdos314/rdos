@@ -387,6 +387,15 @@ serv_shrink_file    Proc far
     int 3
     call FileHandleToPartFs
     jc ssfDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc ssfDone
+;
+    dec bx
+    shl bx,2
+    add bx,OFFSET vfsp_file_arr
+    mov ds,fs:[bx].ff_sel
 
 ssfDone:
     pop ecx

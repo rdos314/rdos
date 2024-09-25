@@ -1201,17 +1201,13 @@ TFileReq *TFile::HandleGrowReq(long long req)
 ##########################################################################*/
 void TFile::HandleSizeReq(long long req)
 {
-    long long size = Info->CurrSize;
     char str[80];
 
     sprintf(str, "Size %d.%lld\r\n", Index, req);
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
 
-    Info->CurrSize = req;
-
-    if (req < size)
-        req = ServShrinkVfsFile(Handle, req);
+    req = ServShrinkVfsFile(Handle, req);
 
     SetSize(req);
 }
