@@ -122,6 +122,8 @@ code    SEGMENT byte public 'CODE'
     extern GetVfsFileInfo:near
     extern GetVfsFilePos:near
     extern SetVfsFilePos:near
+    extern GetVfsFileSize:near
+    extern SetVfsFileSize:near
     extern DupVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2343,6 +2345,11 @@ get_size_file       Proc near
     ret
 get_size_file       Endp
 
+get_size_vfs       Proc near
+    call GetVfsFileSize
+    ret
+get_size_vfs       Endp
+
 get_size_tab:
 gst00  DD OFFSET get_size_dummy
 gst01  DD OFFSET get_size_file
@@ -2350,7 +2357,7 @@ gst02  DD OFFSET get_size_dummy
 gst03  DD OFFSET get_size_dummy
 gst04  DD OFFSET get_size_dummy
 gst05  DD OFFSET get_size_dummy
-gst06  DD OFFSET get_size_dummy
+gst06  DD OFFSET get_size_vfs
 gst07  DD OFFSET get_size_dummy
 gst08  DD OFFSET get_size_dummy
 gst09  DD OFFSET get_size_dummy
@@ -2480,6 +2487,11 @@ set_size_file       Proc near
     ret
 set_size_file       Endp
 
+set_size_vfs       Proc near
+    call SetVfsFileSize
+    ret
+set_size_vfs       Endp
+
 set_size_tab:
 sst00  DD OFFSET set_size_dummy
 sst01  DD OFFSET set_size_file
@@ -2487,7 +2499,7 @@ sst02  DD OFFSET set_size_dummy
 sst03  DD OFFSET set_size_dummy
 sst04  DD OFFSET set_size_dummy
 sst05  DD OFFSET set_size_dummy
-sst06  DD OFFSET set_size_dummy
+sst06  DD OFFSET set_size_vfs
 sst07  DD OFFSET set_size_dummy
 sst08  DD OFFSET set_size_dummy
 sst09  DD OFFSET set_size_dummy

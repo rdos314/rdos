@@ -4004,37 +4004,59 @@ delete_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           set_vfs_file_size
+;       NAME:           GetVfsFileSize
+;
+;       DESCRIPTION:    Get VFS file size
+;
+;       PARAMETERS:     DS             File sel
+;
+;       RETRURNS:       EDX:EAX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetVfsFileSize
+
+GetVfsFileSize  Proc near
+    push es
+    push edi
+;
+    int 3
+    mov ax,flat_sel
+    mov es,eax
+    mov edi,ds:kf_info_linear
+    mov eax,es:[edi].fi_size
+    mov edx,es:[edi].fi_size+4       
+;
+    pop edi
+    pop es
+    ret
+GetVfsFileSize  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetVfsFileSize
 ;
 ;       DESCRIPTION:    Set VFS file size
 ;
-;       PARAMETERS:     DS             Prog sel
+;       PARAMETERS:     DS             File sel
 ;                       EDX:EAX        Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_vfs_file_size  Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;    
-    mov bx,ds:kfm_file_sel
-    or bx,bx
-    stc
-    jz svfsDone
+    public SetVfsFileSize
+
+SetVfsFileSize  Proc near
+    push ebx
 ;
-    mov ds,ebx
+    int 3
     mov ebx,REQ_SIZE
     call AddReq
 
 svfsDone:
-    popad
-    pop fs
-    pop es
-    pop ds
+    pop ebx
     ret
-set_vfs_file_size  Endp
+SetVfsFileSize  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
