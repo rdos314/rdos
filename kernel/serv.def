@@ -78,5 +78,6 @@ reply_ssl_data_cmd_nr      = 71
 vfs_init_parts_nr          = 72
 vfs_done_parts_nr          = 73
 get_vfs_part_drive_nr      = 74
+serv_shrink_file_nr        = 75
 
 serv_gate_entries          = 80

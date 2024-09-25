@@ -52,6 +52,11 @@
     ServGate_serv_close_file  \
     __parm [__ebx]
 
+#pragma aux ServShrinkVfsFile = \
+    ServGate_serv_shrink_file  \
+    __parm [__ebx] [__edx __eax] \
+    __value [__edx __eax]
+
 #pragma aux ServNotifyVfsFileReq = \
     ServGate_serv_notify_file_req  \
     __parm [__ebx] [__edx __eax] [__ecx]

@@ -366,6 +366,38 @@ serv_close_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ServShrinkFile
+;
+;       DESCRIPTION:    Serv shrink VFS file req
+;
+;       PARAMETERS:     EBX            kernel handle
+;                       EDX:EAX        new size
+;
+;       RETURNS:        EDX:EAX        actual size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_shrink_file_name       DB 'Serv Shrink File',0
+
+serv_shrink_file    Proc far
+    push ds
+    push fs
+    push ecx
+;
+    int 3
+    call FileHandleToPartFs
+    jc ssfDone
+
+ssfDone:
+    pop ecx
+    pop ds
+    pop ds
+    ret
+serv_shrink_file   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServFileInfo
 ;
 ;       DESCRIPTION:    Serv file info
@@ -1605,6 +1637,12 @@ init_server_file    Proc near
     mov edi,OFFSET serv_close_file_name
     xor cl,cl
     mov ax,serv_close_file_nr
+    RegisterServGate
+;
+    mov esi,OFFSET serv_shrink_file
+    mov edi,OFFSET serv_shrink_file_name
+    xor cl,cl
+    mov ax,serv_shrink_file_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_notify_file_req

@@ -312,6 +312,13 @@ ServCloseVfsFile  MACRO
     ServGate serv_close_file_nr
                     ENDM
 
+; IN  BX               Kernel handle
+; IN  EDX:EAX          Req size
+; OUT EDX:EAX          New size
+ServShrinkVfsFile  MACRO
+    ServGate serv_shrink_file_nr
+                    ENDM
+
 ; IN  EBX              VFS handle
 ; OUT EAX              Req count
 ; OUT EBX              Wait count
