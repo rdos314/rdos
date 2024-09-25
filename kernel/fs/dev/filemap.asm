@@ -4008,7 +4008,7 @@ delete_file32  Endp
 ;
 ;       DESCRIPTION:    Get VFS file size
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     BX             File sel
 ;
 ;       RETRURNS:       EDX:EAX        Size
 ;
@@ -4017,18 +4017,18 @@ delete_file32  Endp
     public GetVfsFileSize
 
 GetVfsFileSize  Proc near
-    push es
+    push ds
     push edi
 ;
-    int 3
-    mov ax,flat_sel
-    mov es,eax
+    mov ds,ebx
     mov edi,ds:kf_info_linear
-    mov eax,es:[edi].fi_size
-    mov edx,es:[edi].fi_size+4       
+    mov ax,flat_sel
+    mov ds,eax
+    mov eax,ds:[edi].fi_size
+    mov edx,ds:[edi].fi_size+4       
 ;
     pop edi
-    pop es
+    pop ds
     ret
 GetVfsFileSize  Endp
 
@@ -4039,7 +4039,7 @@ GetVfsFileSize  Endp
 ;
 ;       DESCRIPTION:    Set VFS file size
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     BX             File sel
 ;                       EDX:EAX        Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4047,14 +4047,16 @@ GetVfsFileSize  Endp
     public SetVfsFileSize
 
 SetVfsFileSize  Proc near
+    push ds
     push ebx
 ;
-    int 3
+    mov ds,ebx
     mov ebx,REQ_SIZE
     call AddReq
 
 svfsDone:
     pop ebx
+    pop ds
     ret
 SetVfsFileSize  Endp
 
