@@ -312,7 +312,12 @@ long long TFile::GetSize()
 void TFile::SetSize(long long Size)
 {
     if (FHandle)
-        RdosSetFileSize(FHandle, Size);
+    {
+        if (FLegacy)
+            RdosSetFileSize(FHandle, Size);
+        else
+            RdosSetHandleSize(FHandle, Size);
+    }
 }
 
 /*##########################################################################
