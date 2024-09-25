@@ -119,6 +119,7 @@ code    SEGMENT byte public 'CODE'
     extern WriteVfsFile:near
     extern MapVfsFile_:near
     extern GrowVfsFile_:near
+    extern UpdateVfsFile_:near
     extern GetVfsFileInfo:near
     extern GetVfsFilePos:near
     extern SetVfsFilePos:near
@@ -1351,6 +1352,77 @@ vmhDone:
     pop ds    
     ret
 map_handle     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateHandle
+;
+;           DESCRIPTION:    Update handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_handle_name  DB 'Update Handle', 0
+
+update_handle     Proc far
+    push ds
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    push eax
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+    pop eax
+;    
+    cmp bx,MAX_HANDLES
+    jae vuhDone
+;   
+    mov si,bx
+    shl esi,16
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov si,ds:[ebx].hp_access
+    test si,IO_READ
+    jz vuhDone
+;
+    mov si,ds:[ebx].hp_vfs_sel
+    mov bp,ds:[ebx].hp_handle
+;
+    cmp bp,SYS_HANDLE_COUNT
+    jae vuhDone
+;    
+    or bp,bp
+    jz vuhDone
+;
+    movzx ebx,bp
+    dec ebx
+    shl ebx,4
+    add ebx,OFFSET hd_data
+    mov ebp,SEG data
+    mov ds,ebp
+;
+    movzx ebp,ds:[ebx].he_type
+    cmp ebp,C_HANDLE_VFS
+    stc
+    jne vuhDone
+;    
+    call UpdateVfsFile_
+
+vuhDone:
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop ds    
+    ret
+update_handle     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5936,6 +6008,12 @@ init_handle     PROC near
     mov edi,OFFSET get_handle_map_name
     xor cl,cl
     mov ax,get_handle_map_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET update_handle
+    mov edi,OFFSET update_handle_name
+    xor cl,cl
+    mov ax,update_handle_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET map_handle

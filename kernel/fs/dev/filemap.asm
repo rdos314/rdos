@@ -3469,18 +3469,12 @@ GrowVfsFile_      Endp
 ;       DESCRIPTION:    Update VFS file
 ;
 ;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
-;                       EDX:EAX        Position
-;                       ECX            Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     public UpdateVfsFile_
 
 UpdateVfsFile_      Proc near
-    push ds
-    mov ds,si
-    call UpdateFile
-    pop ds
     ret
 UpdateVfsFile_      Endp
 
