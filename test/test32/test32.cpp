@@ -25,6 +25,9 @@ void main()
 
     file.SetSize(0);
 
+    for (;;)
+        RdosWaitMilli(50);
+
 //    RdosTestGate("");
 }
 

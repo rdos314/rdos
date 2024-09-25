@@ -457,6 +457,50 @@ CloseFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetLowestFileSize
+;
+;       DESCRIPTION:    Get lowest file size
+;
+;       PARAMETERS:     FS             Part sel
+;                       AX             File sel
+;
+;       RETURNS:        EDX:EAX        Lowest file size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GetLowestFileSize
+
+GetLowestFileSize   Proc near
+    push ds
+    push ecx
+;
+    mov ds,ax
+    EnterSection ds:kf_section
+    xor eax,eax
+    xor edx,edx
+;
+    mov ecx,ds:kf_req_count
+    or ecx,ecx
+    jz glfsDone
+;
+    movzx ecx,ds:[ecx].kf_sorted_arr-1
+    mov ecx,ds:[4*ecx].kf_handle_arr
+    mov eax,ds:[ecx].kre_pos
+    mov edx,ds:[ecx].kre_pos+4
+    add eax,ds:[ecx].kre_size
+    adc edx,0
+
+glfsDone:
+    LeaveSection ds:kf_section
+;
+    pop ecx
+    pop ds
+    ret
+GetLowestFileSize   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AddFileReq
 ;
 ;       DESCRIPTION:    Serv add VFS file req

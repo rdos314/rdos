@@ -65,6 +65,7 @@ code    SEGMENT byte public 'CODE'
     extern FreeFileReq:near
     extern GetFileDebugInfo:near
     extern RelSectorToBlock:near
+    extern GetLowestFileSize:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -371,9 +372,8 @@ serv_close_file    Endp
 ;       DESCRIPTION:    Serv shrink VFS file req
 ;
 ;       PARAMETERS:     EBX            kernel handle
-;                       EDX:EAX        new size
 ;
-;       RETURNS:        EDX:EAX        actual size
+;       RETURNS:        EDX:EAX        lowest size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -394,8 +394,9 @@ serv_shrink_file    Proc far
     dec bx
     shl bx,2
     add bx,OFFSET vfsp_file_arr
-    mov ds,fs:[bx].ff_sel
+    mov ax,fs:[bx].ff_sel
     int 3
+    call GetLowestFileSize
 
 ssfDone:
     pop ecx
