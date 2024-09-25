@@ -45,7 +45,7 @@ public:
     virtual long long GetSector(long long RelSector);
 
     virtual bool GrowDisc(long long Size);
-    virtual bool SetSize(long long Size);
+    virtual bool SetDiscSize(long long Size);
 
 protected:
     unsigned int SizeToClusters(long long size);

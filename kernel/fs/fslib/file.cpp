@@ -1199,23 +1199,50 @@ TFileReq *TFile::HandleGrowReq(long long req)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::HandleSizeReq(long long req)
+void TFile::HandleSizeReq(long long size)
 {
-    long long min;
     char str[80];
 
-    sprintf(str, "Size %d.%lld\r\n", Index, req);
+    sprintf(str, "Size %d.%lld\r\n", Index, size);
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
 
-    SyncDirEntry();
+    SetSize(size);
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::SetSize
+#
+#   Purpose....: Set file size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFile::SetSize(long long size)
+{
+    long long min;
+    long long ds;
+    bool ok;
 
     min = ServGetMinVfsFileSize(Handle);
 
-    if (min > req)
-        req = min;
+    if (min > size)
+        ds = min;
+    else
+        ds = size;
 
-    SetSize(req);
+    ok = SetDiscSize(ds);
+
+    if (ok)
+    {
+        Info->CurrSize = size;
+        SyncDirEntry();
+    }
+
+    return ok;
 }
 
 /*##########################################################################

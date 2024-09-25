@@ -404,16 +404,16 @@ bool TFatFile::GrowDisc(long long Size)
 
 /*##########################################################################
 #
-#   Name       : TFatFile::SetSize
+#   Name       : TFatFile::SetDiscSize
 #
-#   Purpose....: Set file size
+#   Purpose....: Set file size on disc
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-bool TFatFile::SetSize(long long Size)
+bool TFatFile::SetDiscSize(long long Size)
 {
     unsigned int CurrClusters;
     unsigned int NewClusters;
@@ -439,9 +439,6 @@ bool TFatFile::SetSize(long long Size)
             if (NewClusters < CurrClusters)
                 ok = Shrink(CurrClusters - NewClusters);
         }
-
-        if (ok)
-            Info->CurrSize = Size;
 
         FClusterCount = FClusterChain->GetSize();
         FClusterArr = FClusterChain->GetChain();

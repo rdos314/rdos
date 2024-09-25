@@ -81,9 +81,9 @@ public:
 
     void SetAccessTime(long long time);
     void SetModifyTime(long long time);
+    bool SetSize(long long Size);
 
     virtual bool GrowDisc(long long Size) = 0;
-    virtual bool SetSize(long long Size) = 0;
 
     int Handle;
     int Index;
@@ -96,6 +96,7 @@ protected:
     virtual void HandleFreeReq(int index);
     virtual TFileReq *HandleGrowReq(long long size);
     virtual void HandleSizeReq(long long size);
+    virtual bool SetDiscSize(long long Size) = 0;
 
     virtual void SetRead(long long RelSector, int Sectors);
     virtual void SetWrite(long long RelSector, int Sectors);

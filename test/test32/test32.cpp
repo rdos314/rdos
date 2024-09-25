@@ -10,7 +10,7 @@
 
 void main()
 {
-    TFile file("e:/safe.bin");
+    TFile file("e:/test.bin");
     char *buf = new char[1024];
     int size;
 
@@ -25,8 +25,8 @@ void main()
 
     file.SetSize(0);
 
-    for (;;)
-        RdosWaitMilli(50);
+    file.SetPos(760234);
+    size = file.Read(buf, 455);
 
 //    RdosTestGate("");
 }
