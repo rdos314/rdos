@@ -367,9 +367,9 @@ serv_close_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ServShrinkFile
+;       NAME:           ServGetMinFileSize
 ;
-;       DESCRIPTION:    Serv shrink VFS file req
+;       DESCRIPTION:    Serv get minimum file size
 ;
 ;       PARAMETERS:     EBX            kernel handle
 ;
@@ -377,33 +377,35 @@ serv_close_file    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-serv_shrink_file_name       DB 'Serv Shrink File',0
+serv_get_min_file_size_name       DB 'Serv Get Min File Size',0
 
-serv_shrink_file    Proc far
+serv_get_min_file_size    Proc far
     push ds
     push fs
     push ecx
 ;
+    xor eax,eax
+    xor edx,edx
+;
     call FileHandleToPartFs
-    jc ssfDone
+    jc gmfsDone
 ;
     cmp bx,MAX_VFS_FILE_COUNT    
     cmc
-    jc ssfDone
+    jc gmfsDone
 ;
     dec bx
     shl bx,2
     add bx,OFFSET vfsp_file_arr
     mov ax,fs:[bx].ff_sel
-    int 3
     call GetLowestFileSize
 
-ssfDone:
+gmfsDone:
     pop ecx
     pop fs
     pop ds
     ret
-serv_shrink_file   Endp
+serv_get_min_file_size   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1649,10 +1651,10 @@ init_server_file    Proc near
     mov ax,serv_close_file_nr
     RegisterServGate
 ;
-    mov esi,OFFSET serv_shrink_file
-    mov edi,OFFSET serv_shrink_file_name
+    mov esi,OFFSET serv_get_min_file_size
+    mov edi,OFFSET serv_get_min_file_size_name
     xor cl,cl
-    mov ax,serv_shrink_file_nr
+    mov ax,serv_get_min_file_size_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_notify_file_req

@@ -313,10 +313,9 @@ ServCloseVfsFile  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
-; IN  EDX:EAX          Req size
 ; OUT EDX:EAX          New size
-ServShrinkVfsFile  MACRO
-    ServGate serv_shrink_file_nr
+ServGetMinVfsFileSize  MACRO
+    ServGate serv_get_min_file_size_nr
                     ENDM
 
 ; IN  EBX              VFS handle
