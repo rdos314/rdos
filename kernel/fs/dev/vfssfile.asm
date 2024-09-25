@@ -384,7 +384,6 @@ serv_shrink_file    Proc far
     push fs
     push ecx
 ;
-    int 3
     call FileHandleToPartFs
     jc ssfDone
 ;
@@ -396,10 +395,11 @@ serv_shrink_file    Proc far
     shl bx,2
     add bx,OFFSET vfsp_file_arr
     mov ds,fs:[bx].ff_sel
+    int 3
 
 ssfDone:
     pop ecx
-    pop ds
+    pop fs
     pop ds
     ret
 serv_shrink_file   Endp
