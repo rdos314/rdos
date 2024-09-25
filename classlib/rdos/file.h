@@ -56,6 +56,7 @@ public:
     int Write(const char *str);
 
 protected:
+    void VfsCheck();
     int VfsReadOne(int index, char *Buf, long long Pos, int Size);
     int VfsWriteOne(int index, char *Buf, long long Pos, int Size);
     int VfsFind(long long Pos);

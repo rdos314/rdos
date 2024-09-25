@@ -591,6 +591,7 @@ int RDOSAPI RdosWaitForCanBridgeProgramming(int *ErrorCode, int *Position);
 int RDOSAPI RdosOpenHandle(const char *Name, int Mode);
 int RDOSAPI RdosCloseHandle(int Handle);
 struct RdosFileMap *RDOSAPI RdosGetHandleMap(int Handle, int *HandleId);
+void RDOSAPI RdosUpdateHandle(int Handle);
 int RDOSAPI RdosMapHandle(int Handle, long long Pos, int Size);
 int RDOSAPI RdosGrowHandle(int Handle, long long Pos, int Size);
 int RDOSAPI RdosPollHandle(int Handle, void *Buf, int Size);

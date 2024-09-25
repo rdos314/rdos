@@ -1031,6 +1031,8 @@
 #define usergate_get_secure_connection_cert 0x00000350
 #define usergate_get_cert_json 0x00000351
 
+#define usergate_update_handle 0x00000352
+
 
 
 #ifdef __FLAT__
@@ -2067,6 +2069,8 @@
 #define CallGate_get_secure_connection_cert 0x55 0x67 0x9a 80 3 0 0 3 0 0x5d
 #define CallGate_get_cert_json 0x55 0x67 0x9a 81 3 0 0 3 0 0x5d
 
+#define CallGate_update_handle 0x55 0x67 0x9a 82 3 0 0 3 0 0x5d
+
 #else
 
 #define CallGate_allocate_dos_mem 0x3e 0x67 0x9a 0 0 0 0 3 0
@@ -3100,5 +3104,7 @@
 
 #define CallGate_get_secure_connection_cert 0x3e 0x67 0x9a 80 3 0 0 3 0
 #define CallGate_get_cert_json 0x3e 0x67 0x9a 81 3 0 0 3 0
+
+#define CallGate_update_handle 0x3e 0x67 0x9a 82 3 0 0 3 0
 
 #endif

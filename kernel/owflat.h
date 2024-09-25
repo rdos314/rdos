@@ -1563,6 +1563,10 @@
     __parm [__ebx] [__esi] \
     __value [__edi]
 
+#pragma aux RdosUpdateHandle = \
+    CallGate_update_handle  \
+    __parm [__ebx]
+
 #pragma aux RdosMapHandle = \
     CallGate_map_handle  \
     CarryToBool \

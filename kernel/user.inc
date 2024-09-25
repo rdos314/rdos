@@ -1309,6 +1309,11 @@ MapHandle        MACRO
                                                 ENDM
 
 ; IN  BX            C handle
+UpdateHandle        MACRO
+        UserGate update_handle_nr
+                                                ENDM
+
+; IN  BX            C handle
 ; IN  EDX:EAX       File position
 ; IN  ECX           Size
 GrowHandle        MACRO

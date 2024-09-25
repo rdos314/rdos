@@ -363,7 +363,7 @@ long long TFile::GetPos()
 void TFile::SetPos(long long Pos)
 {
     if (FMap)
-        FMap->Handle->PosArr[FMapIndex - 1] = Pos;
+        FMap->Handle->PosArr[FMapIndex - 1] = Pos;    
     else
     {
         if (FHandle)
@@ -421,6 +421,36 @@ void TFile::SetTime(const TDateTime &time)
         lsb = time.GetLsb();
         RdosSetFileTime(FHandle, msb, lsb);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::Check
+#
+#   Purpose....: VFS check entries
+#
+##########################################################################*/
+void TFile::VfsCheck()
+{
+    int i;
+    int index;
+    long long pos;
+    long long size = FMap->Info->CurrSize;
+    bool update = false;
+
+    if (FMap->Count)
+    {
+        index = FMap->SortedArr[FMap->Count - 1];
+        if (index != 0xFF)
+        {
+            pos = FMap->MapArr[index].Pos;
+            if (pos >= size)
+                update = true;
+        }
+    }
+
+    if (update)
+        RdosUpdateHandle(FHandle);
 }
 
 /*##########################################################################
@@ -541,7 +571,10 @@ int TFile::VfsRead(void *Buf, int Size)
         Pos = TotalSize;
 
     if (Pos + Size > TotalSize)
+    {
         Size = TotalSize - Pos;
+        VfsCheck();
+    }
 
     EnterFutex(&FMap->Handle->Futex);
 
