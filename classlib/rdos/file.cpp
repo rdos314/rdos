@@ -567,14 +567,14 @@ int TFile::VfsRead(void *Buf, int Size)
     int ret = 0;
     char *ptr = (char *)Buf;
 
-    if (Pos > TotalSize)
-        Pos = TotalSize;
-
-    if (Pos + Size > TotalSize)
+    if (Pos >= TotalSize)
     {
-        Size = TotalSize - Pos;
+        Pos = TotalSize;
         VfsCheck();
     }
+
+    if (Pos + Size > TotalSize)
+        Size = TotalSize - Pos;
 
     EnterFutex(&FMap->Handle->Futex);
 
