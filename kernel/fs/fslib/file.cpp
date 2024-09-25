@@ -34,7 +34,7 @@
 #include "fs.h"
 #include "datetime.h"
 
-// define DEBUG   1
+#define DEBUG   1
 
 static int FileHandle = 0;
 
@@ -236,7 +236,7 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
 
 #ifdef DEBUG
     if (!FileHandle)
-        FileHandle = RdosCreateFile("d:/test/log.txt", 0);
+        FileHandle = RdosCreateFile("z:/log.txt", 0);
 #endif
 
     FClosing = false;
@@ -823,7 +823,7 @@ TFileReq *TFile::HandleRead(long long pos, int size)
 
     if (FileReq)
     {
-        sprintf(str, "Allocated %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
+        sprintf(str, "Read allocated %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
         RdosWriteFile(FileHandle, str, strlen(str));
         printf(str);
 
@@ -1116,7 +1116,7 @@ TFileReq *TFile::HandleGrowReq(long long req)
 
     if (FileReq)
     {
-        sprintf(str, "Allocated %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
+        sprintf(str, "Grow %d.%d pos %lld size %d \r\n", Index, FileReq->Req, pos, size);
         RdosWriteFile(FileHandle, str, strlen(str));
         printf(str);
 
@@ -1160,7 +1160,7 @@ TFileReq *TFile::HandleGrowReq(long long req)
             FileReq->SetPos(FBytesPerSector, FCurrStart);
         else
         {
-            sprintf(str, "Read %d No size, pos %lld size %d\r\n", Index, pos, size);
+            sprintf(str, "Grow %d No size, pos %lld size %d\r\n", Index, pos, size);
             RdosWriteFile(FileHandle, str, strlen(str));
             printf(str);
             ServNotifyVfsFileReq(Handle, pos, size);
@@ -1168,7 +1168,7 @@ TFileReq *TFile::HandleGrowReq(long long req)
     }
     else
     {
-        sprintf(str,"Read %d No req available, pos %lld size %d\r\n", Index, pos, size);
+        sprintf(str,"Grow %d No req available, pos %lld size %d\r\n", Index, pos, size);
         RdosWriteFile(FileHandle, str, strlen(str));
         printf(str);
         ServNotifyVfsFileReq(Handle, pos, size);
