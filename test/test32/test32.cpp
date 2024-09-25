@@ -10,13 +10,20 @@
 
 void main()
 {
-    int handle;
-    long long size;
+    TFile file("e:/safe.bin");
+    char *buf = new char[1024];
+    int size;
 
-    handle = RdosOpenHandle("e:/safe.bin", O_RDWR);
-    size = RdosGetHandleSize(handle);
-    RdosSetHandleSize(handle, 0);
+    file.SetPos(500234);
+    size = file.Read(buf, 267);
+    
+    file.SetPos(1000234);
+    size = file.Read(buf, 99);
+    
+    file.SetPos(100234);
+    size = file.Read(buf, 567);
 
+    file.SetSize(0);
 
 //    RdosTestGate("");
 }
