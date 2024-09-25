@@ -539,6 +539,9 @@ void TFile::FreeReq(TFileReq *req)
 {
     req->Link = FFreeList;
     FFreeList = req;
+
+    if (req->BytePos >= Info->CurrSize)
+        SetSize(Info->CurrSize);
 }
 
 /*##########################################################################
