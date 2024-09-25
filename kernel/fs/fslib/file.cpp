@@ -1208,6 +1208,8 @@ void TFile::HandleSizeReq(long long req)
     RdosWriteFile(FileHandle, str, strlen(str));
     printf(str);
 
+    SyncDirEntry();
+
     min = ServGetMinVfsFileSize(Handle);
 
     if (min > req)
