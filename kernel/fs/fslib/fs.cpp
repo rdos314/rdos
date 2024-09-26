@@ -1157,9 +1157,16 @@ int TFs::DeleteFile(int rel, char *path)
     {
         printf("Delete %d <%s>\r\n", file->Index, path);
 
-        dir = file->FParent;
-        if (DeleteFile(dir, file))
-            return 0;
+        file->SetSize(0);
+
+        if (file->GetDiscSize() == 0)
+        {
+            dir = file->FParent;
+            if (DeleteFile(dir, file))
+                return 0;
+            else
+                return -1;
+        }
         else
             return -1;
     }

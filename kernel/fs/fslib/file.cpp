@@ -491,6 +491,22 @@ int TFile::GetAttrib()
 
 /*##########################################################################
 #
+#   Name       : TFile::GetDiscSize
+#
+#   Purpose....: Get size on disc
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long long TFile::GetDiscSize()
+{
+    return Info->DiscSize;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::AllocateReq
 #
 #   Purpose....: Allocate new req

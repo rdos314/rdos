@@ -82,6 +82,7 @@ public:
     void SetAccessTime(long long time);
     void SetModifyTime(long long time);
     bool SetSize(long long Size);
+    long long GetDiscSize();
 
     virtual bool GrowDisc(long long Size) = 0;
 

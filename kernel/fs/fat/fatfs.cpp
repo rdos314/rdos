@@ -525,7 +525,5 @@ bool TFat::DeleteFile(TDir *ParentDir, TFile *File)
 {
     TFatDir *dir = (TFatDir *)ParentDir;
 
-    File->SetSize(0);
-
     return false;
 }
