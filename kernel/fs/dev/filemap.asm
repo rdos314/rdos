@@ -3475,6 +3475,57 @@ GrowVfsFile_      Endp
     public UpdateVfsFile_
 
 UpdateVfsFile_      Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ax,flat_sel
+    mov fs,eax
+    mov ds,si
+    mov es,ds:kfm_kernel_sel
+    mov gs,ds:kfm_file_sel
+    mov ebp,gs:kf_info_linear
+    mov ebx,OFFSET fm_sorted_arr
+    mov ecx,240
+    EnterSection ds:kfm_section
+
+uvfLoop:
+    mov al,es:[ebx]
+    cmp al,-1
+    je uvfLeave
+;
+    movzx esi,al
+    add esi,OFFSET kfm_ref_arr
+    movzx edi,al
+    shl edi,4
+    add edi,OFFSET fm_entry_arr    
+;
+    mov eax,fs:[ebp].fi_size
+    mov edx,fs:[ebp].fi_size+4
+    sub eax,es:[edi].fmb_pos
+    sbb edx,es:[edi].fmb_pos+4
+    jnc uvfNext
+;
+    call CheckDirtyMap
+    call FreeMap
+    jmp uvfLoop
+
+uvfNext:
+    inc ebx
+    loop uvfLoop
+
+uvfLeave:
+    call UpdateUnlinked
+;
+    LeaveSection ds:kfm_section
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
     ret
 UpdateVfsFile_      Endp
 
