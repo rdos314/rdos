@@ -79,7 +79,8 @@ protected:
 
     void Add(int pos, const char *name, struct TFatDirEntry *fat);
     void AddLfn(int pos, struct TFatDirEntry *entry);
-    struct TLfnEntry *FindLfn(int pos);
+    bool FindLfn(int pos, int *index);
+    void DeleteLfn(int index, struct TLfnEntry *copy);
 
     void ProcessFixed();
     void ProcessCluster(unsigned int Cluster, int *pos);

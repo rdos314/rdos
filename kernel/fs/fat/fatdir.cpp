@@ -270,15 +270,52 @@ bool TFatDir::FindLfn(const char *path)
 #   Returns....: *
 #
 ##########################################################################*/
-struct TLfnEntry *TFatDir::FindLfn(int pos)
+bool TFatDir::FindLfn(int pos, int *index)
 {
     int i;
 
     for (i = 0; i < LfnCount; i++)
+    {
         if (LfnArr[i].Pos == pos)
-            return &LfnArr[i];
+        {
+            *index = i;
+            return true;
+        }
+    }
 
-    return 0;
+    return false;
+}
+
+/*##########################################################################
+#
+#   Name       : TFatDir::DeleteLfn
+#
+#   Purpose....: Delete entry in LFN array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFatDir::DeleteLfn(int index, struct TLfnEntry *entry)
+{
+    int i;
+
+    if (index >= 0 && index < LfnCount)
+    {
+        strcpy(entry->Name, LfnArr[index].Name);
+        entry->Pos = LfnArr[index].Pos;
+        entry->Count = LfnArr[index].Count;
+
+        LfnCount--;
+
+        for (i = index; i < LfnCount; i++)
+        {
+            strcpy(LfnArr[i].Name, LfnArr[i+1].Name);
+            LfnArr[i].Pos = LfnArr[i+1].Pos;
+            LfnArr[i].Count = LfnArr[i+1].Count;
+        }
+    }
 }
 
 /*##########################################################################
@@ -1053,7 +1090,16 @@ bool TFatDir::UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fi
 bool TFatDir::DeleteEntry(struct RdosDirEntry *direntry)
 {
     int pos = direntry->Pos;
-    bool ok = FindLfn(pos);
+    int index;
+    struct TLfnEntry entry;
+    bool lfn;
+
+    lfn = FindLfn(pos, &index);
+
+    if (lfn)
+    {
+        DeleteLfn(index, &entry);
+    }
 
     return true;
 }
