@@ -1161,10 +1161,7 @@ int TFs::DeleteFile(int rel, char *path)
 
         if (file->GetDiscSize() == 0)
         {
-            dir = file->FParent;
-            file->DeleteDirEntry();
-
-            if (DeleteFile(dir, file))
+            if (file->DeleteDirEntry())
                 return 0;
             else
                 return -1;

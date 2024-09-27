@@ -595,7 +595,7 @@ void TFile::AddActive(TFileReq *req)
                 curr = temp;
             }
             break;
-        }                
+        }
     }
 
     FActiveArr[FCurrActiveCount] = curr;
@@ -978,7 +978,7 @@ void TFile::HandleUpdateReq(long long pos, int size)
 
                 start += curr;
                 count -= curr;
-            }            
+            }
             else
             {
                 sprintf(str, "Update with no req %d pos %lld\r\n", Index, pos);
@@ -1314,15 +1314,21 @@ void TFile::SyncDirEntry()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::DeleteDirEntry()
+bool TFile::DeleteDirEntry()
 {
+    bool ok;
+
     if (FParent)
     {
         FParent->ClearFileLink(FParentIndex);
-        FParent->DeleteEntry(FParentIndex);
+        ok = FParent->DeleteEntry(FParentIndex);
         FParent = 0;
         FParentIndex = -1;
     }
+    else
+        ok = false;
+
+    return ok;
 }
 
 /*##########################################################################

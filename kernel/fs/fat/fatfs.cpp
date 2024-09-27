@@ -509,21 +509,3 @@ bool TFat::CreateFile(TDir *ParentDir, const char *Name, int Attrib)
 
     return ok;
 }
-
-/*##########################################################################
-#
-#   Name       : TFat::DeleteFile
-#
-#   Purpose....: Delete file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TFat::DeleteFile(TDir *ParentDir, TFile *File)
-{
-    TFatDir *dir = (TFatDir *)ParentDir;
-
-    return false;
-}

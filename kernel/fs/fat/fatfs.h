@@ -96,7 +96,6 @@ public:
     virtual TFile *OpenFile(TDir *ParentDir, int ParentIndex, long long Inode);
     virtual bool CreateDir(TDir *ParentDir, const char *Name);
     virtual bool CreateFile(TDir *ParentDir, const char *Name, int Attrib);
-    virtual bool DeleteFile(TDir *ParentDir, TFile *File);
 
     int FatSize;
     unsigned int PartSectors;
