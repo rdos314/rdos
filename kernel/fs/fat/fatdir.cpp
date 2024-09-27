@@ -213,12 +213,14 @@ void TFatDir::GrowLfn()
     {
         strcpy(NewArr[i].Name, LfnArr[i].Name);
         NewArr[i].Pos = LfnArr[i].Pos;
+        NewArr[i].Count = LfnArr[i].Count;
     }
 
     for (i = LfnMax; i < Size; i++)
     {
         NewArr[i].Name[0] = 0;
         NewArr[i].Pos = 0;
+        NewArr[i].Count = 0;
     }
 
     delete LfnArr;
@@ -290,6 +292,7 @@ void TFatDir::AddStd(int pos, struct TFatDirEntry *entry)
 void TFatDir::AddLfn(int pos, struct TFatDirEntry *entry)
 {
     int size = FCurrLfn->GetNameSize();
+    int count = FCurrLfn->GetEntryCount();
     char *buf = new char[size];
 
     if (LfnMax == LfnCount)
@@ -297,6 +300,7 @@ void TFatDir::AddLfn(int pos, struct TFatDirEntry *entry)
 
     GetEntryName(entry, LfnArr[LfnCount].Name);
     LfnArr[LfnCount].Pos = pos;
+    LfnArr[LfnCount].Count = count;
 
     LfnCount++;
 
@@ -317,13 +321,14 @@ void TFatDir::AddLfn(int pos, struct TFatDirEntry *entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::AddLfn(int pos, const char *name, struct TFatDirEntry *entry)
+void TFatDir::AddLfn(int pos, const char *name, struct TFatDirEntry *entry, int count)
 {
     if (LfnMax == LfnCount)
        GrowLfn();
 
     GetEntryName(entry, LfnArr[LfnCount].Name);
     LfnArr[LfnCount].Pos = pos;
+    LfnArr[LfnCount].Count = count;
 
     LfnCount++;
 
@@ -888,7 +893,7 @@ bool TFatDir::SetupLfnEntry(struct TFatDirEntry *entry, TFatLfn *lfn, const char
         delete ReqEntry;
         delete Req;
 
-        AddLfn(pos, name, entry);
+        AddLfn(pos, name, entry, count);
 
         return true;
     }
@@ -915,7 +920,6 @@ bool TFatDir::CreateEntry(const char *name, unsigned int cluster, char attr)
     long long RdosTime = RdosGetLongTime();
     int i;
     char str[14];
-    int count;
     int pos;
 
     entry.Attr = attr;
@@ -942,7 +946,6 @@ bool TFatDir::CreateEntry(const char *name, unsigned int cluster, char attr)
     else
     {
         lfn.SetName(name);
-        count = lfn.GetEntryCount();
 
         for (i = 1; i < 99999; i++)
         {

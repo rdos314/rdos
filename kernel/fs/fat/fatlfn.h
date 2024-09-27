@@ -68,6 +68,7 @@ protected:
     bool First;
     char ChkSum;
     char Count;
+    int Entries;
     int MaxSize;
     short int *Buf;
 };

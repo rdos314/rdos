@@ -79,6 +79,7 @@ TFatLfn::TFatLfn(struct TFatLfnEntry *entry)
 {
     ChkSum = entry->ChkSum;
     Count = entry->Ord & 0x3F;
+    Entries = Count;
     MaxSize = 13 * (int)Count;
     Buf = new short int[MaxSize];
 
@@ -203,7 +204,7 @@ int TFatLfn::GetNameSize()
 #
 #   Name       : TFatLfn::GetEntryCount
 #
-#   Purpose....: Get required dir entry count
+#   Purpose....: Get dir entry count
 #
 #   In params..: *
 #   Out params.: *
@@ -212,7 +213,7 @@ int TFatLfn::GetNameSize()
 ##########################################################################*/
 int TFatLfn::GetEntryCount()
 {
-    return Count + 1;
+    return Entries + 1;
 }
 
 /*##########################################################################
@@ -548,4 +549,5 @@ void TFatLfn::SetName(const char *name)
     *outptr = 0;
 
     Count = (tlen - 1) / 13 + 1;
+    Entries = Count;
 }

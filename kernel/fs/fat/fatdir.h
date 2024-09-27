@@ -37,6 +37,7 @@ struct TLfnEntry
 {
     char Name[14];
     int Pos;
+    int Count;
 };
 
 class TFat;
@@ -54,7 +55,7 @@ public:
 
     void Add(int pos, struct TFatDirEntry *entry);
     void AddStd(int pos, struct TFatDirEntry *entry);
-    void AddLfn(int pos, const char *name, struct TFatDirEntry *fat);
+    void AddLfn(int pos, const char *name, struct TFatDirEntry *fat, int count);
     bool FindLfn(const char *path);
 
     virtual bool UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fileinfo);
