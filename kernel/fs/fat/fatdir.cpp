@@ -261,6 +261,34 @@ bool TFatDir::FindLfn(const char *path)
 
 /*##########################################################################
 #
+#   Name       : TFatDir::FindLfn
+#
+#   Purpose....: Find LFN entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+struct TLfnEntry *TFatDir::FindLfn(int pos)
+{
+    int i;
+    int lpos;
+    struct TLfnEntry *entry;
+
+    for (i = 0; i < LfnCount; i++)
+    {
+        entry = &LfnArr[i];
+        lpos = entry->Pos - entry->Count + 1;
+        if (pos == lpos)
+            return entry;
+    }
+
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFatDir::AddStd
 #
 #   Purpose....: Add std entry
