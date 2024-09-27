@@ -178,6 +178,30 @@ void TDir::Grow()
 
 /*##########################################################################
 #
+#   Name       : TDir::FindFree
+#
+#   Purpose....: Find free entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDir::FindFree()
+{
+    int i;
+
+    for (i = 0; i < MaxCount; i++)
+        if (!EntryArr[i].Offset)
+            return i;
+
+    i = MaxCount;
+    Grow();
+    return i;
+}
+
+/*##########################################################################
+#
 #   Name       : TDir::Add
 #
 #   Purpose....: Add directory entry
@@ -192,21 +216,24 @@ struct RdosDirEntry *TDir::Add(const char *path, long long inode)
     int pos;
     short int len = (short int)strlen(path);
     char *ptr;
+    int index;
     struct RdosDirEntry *entry;
 
     len = len & 0xFFFC;
     len += 4;
 
-    if (EntryCount == MaxCount)
-        Grow();
+    Section.Enter();
+
+    index = FindFree();
 
     if (obj->UsageCount > 1)
         CopyOnUsed();
 
     pos = TBlock::Add(len + sizeof(struct RdosDirEntry));
 
-    EntryArr[EntryCount].Offset = pos;
-    EntryArr[EntryCount].Link = 0;
+    EntryArr[index].Offset = pos;
+    EntryArr[index].Link = 0;
+
     EntryCount++;
 
     ptr = (char *)obj;
@@ -224,6 +251,8 @@ struct RdosDirEntry *TDir::Add(const char *path, long long inode)
     entry->Gid = 0;
     entry->PathNameSize = len;
     strcpy(entry->PathName, path);
+
+    Section.Leave();
 
     return entry;
 }

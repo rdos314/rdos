@@ -83,6 +83,7 @@ public:
 
 protected:
     void Grow();
+    int FindFree();
 
     struct TDirLink *EntryArr;
     TDir *Parent;
