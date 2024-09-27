@@ -197,6 +197,7 @@ int TDir::FindFree()
 
     i = MaxCount;
     Grow();
+
     return i;
 }
 
@@ -467,8 +468,12 @@ void TDir::UnlockEntry(struct RdosDirEntry *entry)
 bool TDir::DeleteEntry(int index)
 {
     char *ptr;
+    char *src;
+    char *dst;
     int pos;
     int size;
+    int count;
+    int i;
     struct RdosDirEntry *entry;
 
     if (index < 0)
@@ -505,6 +510,33 @@ bool TDir::DeleteEntry(int index)
 
     if (obj->UsageCount > 1)
         CopyOnUsed();
+
+    count = 0;
+
+    for (i = 0; i < MaxCount; i++)
+    {
+        if (EntryArr[i].Offset > pos)
+        {
+            EntryArr[i].Offset -= size;
+            count++;
+        }
+    }
+
+    TBlock::Sub(size);
+    EntryCount--;
+
+    dst = ptr;
+    src = ptr + size;
+
+    for (i = 0; i < count; i++)
+    {
+        ptr += size;
+        entry = (struct RdosDirEntry *)ptr;
+        size = entry->PathNameSize + sizeof(struct RdosDirEntry);
+        memcpy(dst, src, size);
+        src += size;
+        dst += size;
+    }
 
     Section.Leave();
 
