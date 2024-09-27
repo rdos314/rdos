@@ -1139,6 +1139,7 @@ int TFs::DeleteFile(int rel, char *path)
     TParser Parser(GetStartDir(rel), path);
     TFile *file;
     TDir *dir;
+    int ret;
 
     if (FStopped)
         return -1;
@@ -1162,15 +1163,19 @@ int TFs::DeleteFile(int rel, char *path)
         if (file->GetDiscSize() == 0)
         {
             if (file->DeleteDirEntry())
-                return 0;
+                ret = 0;
             else
-                return -1;
+                ret = -1;
         }
         else
-            return -1;
+            ret = -1;
+
+        delete file;
     }
     else
-        return -1;
+        ret = -1;
+
+    return ret;
 }
 
 /*##########################################################################
