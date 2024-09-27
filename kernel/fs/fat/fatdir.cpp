@@ -261,33 +261,6 @@ bool TFatDir::FindLfn(const char *path)
 
 /*##########################################################################
 #
-#   Name       : TFatDir::FindLfn
-#
-#   Purpose....: Find LFN entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-bool TFatDir::FindLfn(int pos, int *index)
-{
-    int i;
-
-    for (i = 0; i < LfnCount; i++)
-    {
-        if (LfnArr[i].Pos == pos)
-        {
-            *index = i;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/*##########################################################################
-#
 #   Name       : TFatDir::DeleteLfn
 #
 #   Purpose....: Delete entry in LFN array
@@ -297,16 +270,25 @@ bool TFatDir::FindLfn(int pos, int *index)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFatDir::DeleteLfn(int index, struct TLfnEntry *entry)
+int TFatDir::DeleteLfn(int pos)
 {
     int i;
+    bool found = false;
+    int index;
+    int count = 1;
 
-    if (index >= 0 && index < LfnCount)
+    for (i = 0; i < LfnCount && !found; i++)
     {
-        strcpy(entry->Name, LfnArr[index].Name);
-        entry->Pos = LfnArr[index].Pos;
-        entry->Count = LfnArr[index].Count;
+        if (LfnArr[i].Pos == pos)
+        {
+            index = i;
+            found = true;
+        }
+    }
 
+    if (found)
+    {
+        count = LfnArr[index].Count;
         LfnCount--;
 
         for (i = index; i < LfnCount; i++)
@@ -316,6 +298,8 @@ void TFatDir::DeleteLfn(int index, struct TLfnEntry *entry)
             LfnArr[i].Count = LfnArr[i+1].Count;
         }
     }
+
+    return count;
 }
 
 /*##########################################################################
@@ -1090,16 +1074,9 @@ bool TFatDir::UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fi
 bool TFatDir::DeleteEntry(struct RdosDirEntry *direntry)
 {
     int pos = direntry->Pos;
-    int index;
-    struct TLfnEntry entry;
-    bool lfn;
+    int count;
 
-    lfn = FindLfn(pos, &index);
-
-    if (lfn)
-    {
-        DeleteLfn(index, &entry);
-    }
+    count = DeleteLfn(pos);
 
     return true;
 }
