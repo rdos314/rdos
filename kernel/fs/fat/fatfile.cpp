@@ -304,7 +304,7 @@ bool TFatFile::Grow(unsigned int count)
 
     ok = FFat->GrowClusterChain(FClusterChain, count);
 
-    if (update && FClusterChain->GetSize())
+    if (FParent && update && FClusterChain->GetSize())
     {
         Arr = FClusterChain->GetChain();
 
@@ -344,7 +344,7 @@ bool TFatFile::Shrink(unsigned int count)
 
     ok = FFat->ShrinkClusterChain(FClusterChain, count);
 
-    if (update && FClusterChain->GetSize() == 0)
+    if (FParent && update && FClusterChain->GetSize() == 0)
     {
         entry = FParent->LockEntry(FParentIndex);
         if (entry)
