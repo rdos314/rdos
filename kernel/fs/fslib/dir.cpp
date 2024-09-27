@@ -180,7 +180,7 @@ void TDir::Grow()
 #
 #   Name       : TDir::Add
 #
-#   Purpose....: Add directory
+#   Purpose....: Add directory entry
 #
 #   In params..: *
 #   Out params.: *
@@ -226,6 +226,39 @@ struct RdosDirEntry *TDir::Add(const char *path, long long inode)
     strcpy(entry->PathName, path);
 
     return entry;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::Delete
+#
+#   Purpose....: Delete directory entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::Delete(long long inode)
+{
+    int i;
+    bool found = false;
+    char *ptr;
+    struct RdosDirEntry *entry;
+
+    if (obj->UsageCount > 1)
+        CopyOnUsed();
+
+    ptr = (char *)obj;
+
+    for (i = 0; i < EntryCount && !found; i++)
+    {
+        pos = EntryArr[i].Offset;
+        entry = (struct RdosDirEntry *)(ptr + pos);
+        if (entry->Inode == inode)
+            found = true;
+    }
+
 }
 
 /*##########################################################################
@@ -413,6 +446,37 @@ void TDir::UnlockEntry(struct RdosDirEntry *entry)
 {
     if (entry)
         Section.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::DeleteEntry
+#
+#   Purpose....: Delete dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TDir::DeleteEntry(int index)
+{
+    char *ptr;
+
+    if (index < 0)
+        return false;
+
+    if (index >= EntryCount)
+        return false;
+
+    Section.Enter();
+
+    ptr = (char *)obj;
+    ptr += EntryArr[index].Offset;
+
+    Section.Leave();
+
+    return true;
 }
 
 /*##########################################################################

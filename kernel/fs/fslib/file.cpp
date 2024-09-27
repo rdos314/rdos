@@ -1289,6 +1289,22 @@ void TFile::SyncDirEntry()
 
 /*##########################################################################
 #
+#   Name       : TFile::DeleteDirEntry
+#
+#   Purpose....: Delete dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::DeleteDirEntry()
+{
+    FParent->DeleteEntry(FParentIndex);
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::SetAccessTime
 #
 #   Purpose....: Set access time

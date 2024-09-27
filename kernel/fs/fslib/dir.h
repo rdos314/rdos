@@ -61,6 +61,7 @@ public:
     struct RdosDirEntry *LockEntry(int index);
     struct RdosDirEntry *LockEntry(struct TDirLink *link);
     void UnlockEntry(struct RdosDirEntry *entry);
+    bool DeleteEntry(int index);
 
     virtual bool UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fileinfo) = 0;
 
@@ -77,6 +78,7 @@ public:
     void ClearFileLink(int index);
 
     struct RdosDirEntry *Add(const char *path, long long inode);
+    void Delete(long long inode);
 
     int Entry;
 

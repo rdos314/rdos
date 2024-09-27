@@ -104,6 +104,7 @@ protected:
     virtual long long GetSector(long long pos);
 
     void SyncDirEntry();
+    void DeleteDirEntry();
 
     TFileReq *AllocateReq();
     void FreeReq(TFileReq *req);
