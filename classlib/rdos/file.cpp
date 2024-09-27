@@ -316,7 +316,15 @@ void TFile::SetSize(long long Size)
         if (FLegacy)
             RdosSetFileSize(FHandle, Size);
         else
-            RdosSetHandleSize(FHandle, Size);
+        {
+            if (FMap->Info->CurrSize > Size)
+            {
+                RdosSetHandleSize(FHandle, Size);
+                VfsCheck();
+            }
+            else
+                RdosSetHandleSize(FHandle, Size);
+        }
     }
 }
 
@@ -363,7 +371,7 @@ long long TFile::GetPos()
 void TFile::SetPos(long long Pos)
 {
     if (FMap)
-        FMap->Handle->PosArr[FMapIndex - 1] = Pos;    
+        FMap->Handle->PosArr[FMapIndex - 1] = Pos;
     else
     {
         if (FHandle)
