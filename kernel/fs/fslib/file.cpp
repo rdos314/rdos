@@ -832,6 +832,9 @@ TFileReq *TFile::HandleRead(long long pos, int size)
     TFileReq *FileReq = 0;
     char str[80];
 
+    if (!FParent)
+        return 0;
+
     FCurrPos = pos / FBytesPerSector;
 
     SetRead(FCurrPos, size / FBytesPerSector);
@@ -936,6 +939,9 @@ void TFile::HandleUpdateReq(long long pos, int size)
     int offset;
     int curr;
     bool update = false;
+
+    if (!FParent)
+        return;
 
     if (pos + size > Info->CurrSize)
         size = (int)(Info->CurrSize - pos);
@@ -1108,6 +1114,9 @@ TFileReq *TFile::HandleGrowReq(long long req)
     int size;
     long long pages;
 
+    if (!FParent)
+        return 0;
+
     pos = Info->DiscSize;
 
     pages = req >> 12;
@@ -1247,6 +1256,9 @@ bool TFile::SetSize(long long size)
     long long ds;
     bool ok;
 
+    if (!FParent)
+        return false;
+
     min = ServGetMinVfsFileSize(Handle);
 
     if (min > size)
@@ -1280,11 +1292,14 @@ void TFile::SyncDirEntry()
 {
     struct RdosDirEntry *entry;
 
-    entry = FParent->LockEntry(FParentIndex);
-    if (entry)
+    if (FParent)
     {
-        FParent->UpdateEntry(entry, Info);
-        FParent->UnlockEntry(entry);
+        entry = FParent->LockEntry(FParentIndex);
+        if (entry)
+        {
+            FParent->UpdateEntry(entry, Info);
+            FParent->UnlockEntry(entry);
+        }
     }
 }
 
@@ -1301,10 +1316,13 @@ void TFile::SyncDirEntry()
 ##########################################################################*/
 void TFile::DeleteDirEntry()
 {
-    FParent->ClearFileLink(FParentIndex);
-    FParent->DeleteEntry(FParentIndex);
-    FParent = 0;
-    FParentIndex = -1;
+    if (FParent)
+    {
+        FParent->ClearFileLink(FParentIndex);
+        FParent->DeleteEntry(FParentIndex);
+        FParent = 0;
+        FParentIndex = -1;
+    }
 }
 
 /*##########################################################################
