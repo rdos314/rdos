@@ -319,7 +319,8 @@ TFile::~TFile()
 
     RdosFreeMem(Info);
 
-    FParent->ClearFileLink(FParentIndex);
+    if (FParent)
+        FParent->ClearFileLink(FParentIndex);
 }
 
 /*##########################################################################
@@ -1300,6 +1301,7 @@ void TFile::SyncDirEntry()
 ##########################################################################*/
 void TFile::DeleteDirEntry()
 {
+    FParent->ClearFileLink(FParentIndex);
     FParent->DeleteEntry(FParentIndex);
     FParent = 0;
     FParentIndex = -1;

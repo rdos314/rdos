@@ -429,6 +429,9 @@ void TDir::UnlockEntry(struct RdosDirEntry *entry)
 bool TDir::DeleteEntry(int index)
 {
     char *ptr;
+    int pos;
+    int size;
+    struct RdosDirEntry *entry;
 
     if (index < 0)
         return false;
@@ -436,10 +439,28 @@ bool TDir::DeleteEntry(int index)
     if (index >= EntryCount)
         return false;
 
+    if (EntryArr[index].Link)
+        return false;
+
+    if (EntryArr[index].WaitHandle)
+        return false;
+
+    if (EntryArr[index].RefCount)
+        return false;
+
+    if (EntryArr[index].WaitCount)
+        return false;
+
     Section.Enter();
 
+    pos = EntryArr[index].Offset;
+    EntryArr[index].Offset = 0;
+
     ptr = (char *)obj;
-    ptr += EntryArr[index].Offset;
+    ptr += pos;
+
+    entry = (struct RdosDirEntry *)ptr;
+    size = entry->PathNameSize + sizeof(struct RdosDirEntry);
 
     if (obj->UsageCount > 1)
         CopyOnUsed();
