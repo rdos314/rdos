@@ -64,6 +64,7 @@ public:
     bool DeleteEntry(int index);
 
     virtual bool UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fileinfo) = 0;
+    virtual bool DeleteEntry(struct RdosDirEntry *direntry) = 0;
 
     long long GetInode();
     TDir *GetParentDir();

@@ -59,6 +59,7 @@ public:
     bool FindLfn(const char *path);
 
     virtual bool UpdateEntry(struct RdosDirEntry *direntry, struct RdosFileInfo *fileinfo);
+    virtual bool DeleteEntry(struct RdosDirEntry *direntry);
 
     int GetClusterCount();
     unsigned int GetCluster(int index);

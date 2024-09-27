@@ -497,8 +497,6 @@ bool TDir::DeleteEntry(int index)
     if (EntryArr[index].WaitCount)
         return false;
 
-    Section.Enter();
-
     pos = EntryArr[index].Offset;
     EntryArr[index].Offset = 0;
 
@@ -506,6 +504,13 @@ bool TDir::DeleteEntry(int index)
     ptr += pos;
 
     entry = (struct RdosDirEntry *)ptr;
+
+    if (!DeleteEntry(entry))
+        return false;
+
+    Section.Enter();
+
+
     size = entry->PathNameSize + sizeof(struct RdosDirEntry);
 
     if (obj->UsageCount > 1)
