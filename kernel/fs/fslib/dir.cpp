@@ -230,39 +230,6 @@ struct RdosDirEntry *TDir::Add(const char *path, long long inode)
 
 /*##########################################################################
 #
-#   Name       : TDir::Delete
-#
-#   Purpose....: Delete directory entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDir::Delete(long long inode)
-{
-    int i;
-    bool found = false;
-    char *ptr;
-    struct RdosDirEntry *entry;
-
-    if (obj->UsageCount > 1)
-        CopyOnUsed();
-
-    ptr = (char *)obj;
-
-    for (i = 0; i < EntryCount && !found; i++)
-    {
-        pos = EntryArr[i].Offset;
-        entry = (struct RdosDirEntry *)(ptr + pos);
-        if (entry->Inode == inode)
-            found = true;
-    }
-
-}
-
-/*##########################################################################
-#
 #   Name       : TDir::Share
 #
 #   Purpose....: Share directory
@@ -473,6 +440,9 @@ bool TDir::DeleteEntry(int index)
 
     ptr = (char *)obj;
     ptr += EntryArr[index].Offset;
+
+    if (obj->UsageCount > 1)
+        CopyOnUsed();
 
     Section.Leave();
 

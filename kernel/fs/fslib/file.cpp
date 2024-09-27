@@ -1301,6 +1301,8 @@ void TFile::SyncDirEntry()
 void TFile::DeleteDirEntry()
 {
     FParent->DeleteEntry(FParentIndex);
+    FParent = 0;
+    FParentIndex = -1;
 }
 
 /*##########################################################################

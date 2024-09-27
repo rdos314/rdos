@@ -78,7 +78,6 @@ public:
     void ClearFileLink(int index);
 
     struct RdosDirEntry *Add(const char *path, long long inode);
-    void Delete(long long inode);
 
     int Entry;
 
