@@ -295,15 +295,18 @@ int TDir::Find(long long inode)
 
     Section.Enter();
 
-    for (i = 0; i < EntryCount; i++)
+    for (i = 0; i < MaxCount; i++)
     {
-        ptr = (char *)obj;
-        ptr += EntryArr[i].Offset;
-        entry = (struct RdosDirEntry *)ptr;
-        if (inode == entry->Inode)
+        if (EntryArr[i].Offset)
         {
-            Section.Leave();
-            return i;
+            ptr = (char *)obj;
+            ptr += EntryArr[i].Offset;
+            entry = (struct RdosDirEntry *)ptr;
+            if (inode == entry->Inode)
+            {
+                Section.Leave();
+                return i;
+            }
         }
     }
 
@@ -331,15 +334,18 @@ int TDir::Find(const char *path)
 
     Section.Enter();
 
-    for (i = 0; i < EntryCount; i++)
+    for (i = 0; i < MaxCount; i++)
     {
-        ptr = (char *)obj;
-        ptr += EntryArr[i].Offset;
-        entry = (struct RdosDirEntry *)ptr;
-        if (!strcmp(path, entry->PathName))
+        if (EntryArr[i].Offset)
         {
-            Section.Leave();
-            return i;
+            ptr = (char *)obj;
+            ptr += EntryArr[i].Offset;
+            entry = (struct RdosDirEntry *)ptr;
+            if (!strcmp(path, entry->PathName))
+            {
+                Section.Leave();
+                return i;
+            }
         }
     }
 
@@ -366,7 +372,10 @@ struct RdosDirEntry *TDir::LockEntry(int index)
     if (index < 0)
         return 0;
 
-    if (index >= EntryCount)
+    if (index >= MaxCount)
+        return 0;
+
+    if (!EntryArr[index].Offset)
         return 0;
 
     Section.Enter();
@@ -436,7 +445,10 @@ bool TDir::DeleteEntry(int index)
     if (index < 0)
         return false;
 
-    if (index >= EntryCount)
+    if (index >= MaxCount)
+        return false;
+
+    if (!EntryArr[index].Offset)
         return false;
 
     if (EntryArr[index].Link)
@@ -504,7 +516,10 @@ TDir *TDir::LockDirLink(int index)
     if (index < 0)
         return 0;
 
-    if (index >= EntryCount)
+    if (index >= MaxCount)
+        return 0;
+
+    if (!EntryArr[index].Offset)
         return 0;
 
     LockDirLinkObject(this, index, &EntryArr[index]);
@@ -530,7 +545,10 @@ TFile *TDir::LockFileLink(int index)
     if (index < 0)
         return 0;
 
-    if (index >= EntryCount)
+    if (index >= MaxCount)
+        return 0;
+
+    if (!EntryArr[index].Offset)
         return 0;
 
     LockDirLinkObject(this, index, &EntryArr[index]);
@@ -554,7 +572,10 @@ void TDir::UnlockDirLink(int index)
     if (index < 0)
         return;
 
-    if (index >= EntryCount)
+    if (index >= MaxCount)
+        return;
+
+    if (!EntryArr[index].Offset)
         return;
 
     UnlockDirLinkObject(&EntryArr[index]);
@@ -577,7 +598,10 @@ TDir *TDir::GetDirLink(int index)
     if (index < 0)
         return 0;
 
-    if (index >= EntryCount)
+    if (index >= MaxCount)
+        return 0;
+
+    if (!EntryArr[index].Offset)
         return 0;
 
     return (TDir *)EntryArr[index].Link;
@@ -599,7 +623,10 @@ void TDir::SetDirLink(int index, TDir *dir)
     if (index < 0)
         return;
 
-    if (index >= EntryCount)
+    if (index >= MaxCount)
+        return;
+
+    if (!EntryArr[index].Offset)
         return;
 
     EntryArr[index].Link = dir;
@@ -621,7 +648,10 @@ void TDir::SetFileLink(int index, TFile *file)
     if (index < 0)
         return;
 
-    if (index >= EntryCount)
+    if (index >= MaxCount)
+        return;
+
+    if (!EntryArr[index].Offset)
         return;
 
     EntryArr[index].Link = file;
@@ -643,7 +673,10 @@ void TDir::ClearFileLink(int index)
     if (index < 0)
         return;
 
-    if (index >= EntryCount)
+    if (index >= MaxCount)
+        return;
+
+    if (!EntryArr[index].Offset)
         return;
 
     EntryArr[index].Link = 0;
