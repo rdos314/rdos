@@ -1075,8 +1075,54 @@ bool TFatDir::DeleteEntry(struct RdosDirEntry *direntry)
 {
     int pos = direntry->Pos;
     int count;
+    int i;
+    TPartReq *Req;
+    TPartReqEntry *ReqEntry;
+    long long Sector;
+    long long Next;
+    char *e;
 
     count = DeleteLfn(pos);
+    pos = pos - count + 1;
+
+    Sector = GetSector(pos);
+
+    Req = new TPartReq(FFat->GetServer());
+    ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
+
+    Req->WaitForever();
+
+    e = ReqEntry->Map();
+    e += sizeof(struct TFatDirEntry) * GetIndex(pos);
+
+    for (i = 0; i < count; i++)
+    {
+        *e = 0xE5;
+        e += sizeof(struct TFatDirEntry);
+
+        pos++;
+
+        Next = GetSector(pos);
+        if (Next != Sector)
+        {
+            ReqEntry->Write();
+            delete ReqEntry;
+            delete Req;
+
+            Sector = Next;
+
+            Req = new TPartReq(FFat->GetServer());
+            ReqEntry = new TPartReqEntry(Req, Sector, 1, false);
+
+            Req->WaitForever();
+            e = ReqEntry->Map();
+        }
+    }
+
+    ReqEntry->Write();
+
+    delete ReqEntry;
+    delete Req;
 
     return true;
 }
