@@ -1404,9 +1404,8 @@ void TFs::CloseFile(int handle)
         if (file)
         {
             file->WaitForClosing();
-
             FFileArr[index] = 0;
-            delete file;
+            file->Deref();
         }
     }
 }
