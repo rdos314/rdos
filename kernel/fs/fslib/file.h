@@ -104,6 +104,9 @@ protected:
     virtual void SetWrite(long long RelSector, int Sectors);
     virtual long long GetSector(long long pos);
 
+    bool IsDirEntryUnlinked();
+    void UnlinkDirEntry();
+
     void SyncDirEntry();
     bool DeleteDirEntry();
 

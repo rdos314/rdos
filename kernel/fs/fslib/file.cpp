@@ -1321,6 +1321,42 @@ void TFile::SyncDirEntry()
 
 /*##########################################################################
 #
+#   Name       : TFile::IsDirEntryUnlinked
+#
+#   Purpose....: Check if dir entry is unlinked
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFile::IsDirEntryUnlinked()
+{
+    if (FParent)
+        return false;
+    else
+        return true;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::UnlinkDirEntry
+#
+#   Purpose....: Unlink dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::UnlinkDirEntry()
+{
+    FParent = 0;
+    FParentIndex = -1;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::DeleteDirEntry
 #
 #   Purpose....: Delete dir entry
@@ -1338,8 +1374,7 @@ bool TFile::DeleteDirEntry()
     {
         FParent->ClearFileLink(FParentIndex);
         ok = FParent->DeleteEntry(FParentIndex);
-        FParent = 0;
-        FParentIndex = -1;
+        UnlinkDirEntry();
     }
     else
         ok = false;
