@@ -768,20 +768,21 @@ void TFs::LockDirLink(TDir *dir, int index)
 void TFs::UnlockDirLink(TDir *dir, int index)
 {
     struct RdosDirEntry *entry;
-    TDir *newdir;
     TFile *file;
-    long long inode;
 
     entry = dir->LockEntry(index);
-    inode = entry->Inode;
-    dir->UnlockEntry(entry);
 
     if (entry->Attrib & FILE_ATTRIBUTE_DIRECTORY)
     {
     }
     else
     {
+        file = dir->GetFileLink(index);
+        if (file)
+            delete file;
     }
+
+    dir->UnlockEntry(entry);
 }
 
 /*##########################################################################

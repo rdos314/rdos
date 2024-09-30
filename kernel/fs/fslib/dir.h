@@ -75,6 +75,8 @@ public:
 
     TDir *GetDirLink(int index);
     void SetDirLink(int index, TDir *dir);
+
+    TFile *GetFileLink(int index);
     void SetFileLink(int index, TFile *file);
     void ClearFileLink(int index);
 

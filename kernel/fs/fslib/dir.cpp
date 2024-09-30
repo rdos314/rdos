@@ -699,6 +699,31 @@ void TDir::SetDirLink(int index, TDir *dir)
 
 /*##########################################################################
 #
+#   Name       : TDir::GetFileLink
+#
+#   Purpose....: Get file link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *TDir::GetFileLink(int index)
+{
+    if (index < 0)
+        return 0;
+
+    if (index >= MaxCount)
+        return 0;
+
+    if (!EntryArr[index].Offset)
+        return 0;
+
+    return (TFile *)EntryArr[index].Link;
+}
+
+/*##########################################################################
+#
 #   Name       : TDir::SetFileLink
 #
 #   Purpose....: Set file link
@@ -745,5 +770,4 @@ void TDir::ClearFileLink(int index)
         return;
 
     EntryArr[index].Link = 0;
-    EntryArr[index].RefCount = 0;
 }
