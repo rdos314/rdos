@@ -13,6 +13,7 @@ void main()
     TFile file("e:/test.bin");
     char *buf = new char[1024];
     int size;
+    int dummy;
 
     file.SetPos(500234);
     size = file.Read(buf, 267);
@@ -22,6 +23,8 @@ void main()
     
     file.SetPos(100234);
     size = file.Read(buf, 567);
+
+    scanf("%d", &dummy);
 
     file.SetSize(0);
 

@@ -307,15 +307,14 @@ TFile::~TFile()
 {
     int i;
 
-    printf("Close %d\r\n", Index);
-
     for (i = 0; i < FCurrAllocatedCount; i++)
         delete FAllocatedArr[i];
 
     delete FActiveArr;
     delete FAllocatedArr;
 
-    ServCloseVfsFile(Handle);
+    if (Handle)
+        ServCloseVfsFile(Handle);
 
     RdosFreeMem(Info);
 

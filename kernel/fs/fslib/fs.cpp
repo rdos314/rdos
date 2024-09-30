@@ -1379,6 +1379,7 @@ void TFs::DerefFile(int handle)
     if (index >= 0 && index < FMaxFileCount)
     {
         file = FFileArr[index];
+        printf("Deref %d\r\n", file->Index);
         file->Deref();
     }
 }
@@ -1404,6 +1405,8 @@ void TFs::CloseFile(int handle)
         file = FFileArr[index];
         if (file)
         {
+            printf("Close %d\r\n", file->Index);
+
             file->WaitForClosing();
             FFileArr[index] = 0;
             file->Deref();
