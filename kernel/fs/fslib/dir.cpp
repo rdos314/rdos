@@ -35,8 +35,8 @@ extern "C" {
 extern void LockDirLinkObject(TDir *dir, int index, struct TDirLink *link);
 #pragma aux LockDirLinkObject parm routine [esi] [edx] [edi]
 
-extern void UnlockDirLinkObject(struct TDirLink *link);
-#pragma aux UnlockDirLinkObject parm routine [edi]
+extern void UnlockDirLinkObject(TDir *dir, int index, struct TDirLink *link);
+#pragma aux UnlockDirLinkObject parm routine [esi] [edx] [edi]
 
 }
 
@@ -644,9 +644,8 @@ void TDir::UnlockDirLink(int index)
     if (!EntryArr[index].Offset)
         return;
 
-    UnlockDirLinkObject(&EntryArr[index]);
+    UnlockDirLinkObject(this, index, &EntryArr[index]);
 }
-
 
 /*##########################################################################
 #

@@ -161,7 +161,8 @@ LockDirLinkObject_ Endp
 ;
 ;       DESCRIPTION:    Unlock dir link object
 ;
-;       PARAMETERS:     EDI           Link object
+;       PARAMETERS:     ESI           Dir object
+;                       EDI           Link object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
