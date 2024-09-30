@@ -111,7 +111,8 @@ public:
 
     int CreateDir(int rel, char *path);
 
-    void ReadDirLink(TDir *dir, int index);
+    void LockDirLink(TDir *dir, int index);
+    void UnlockDirLink(TDir *dir, int index);
 
     void Execute();
 

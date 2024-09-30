@@ -36,7 +36,8 @@ int LockRelDir(int rel, char *path);
 void CloneRelDir(int rel);
 void UnlockRelDir(int rel);
 int GetRelDir(int rel, char *path);
-void ReadDirLink(void *dir, int index);
+void LockDirLink(void *dir, int index);
+void UnlockDirLink(void *dir, int index);
 int OpenFile(int rel, char *path);
 int CreateFile(int rel, char *path, int attrib);
 int DeleteFile(int rel, char *path);
@@ -169,13 +170,24 @@ int LowGetRelDir(int rel, char *path)
 
 /*##########################################################################
 #
-#   Name       : LowReadDirLink
+#   Name       : LowLockDirLink
 #
 ##########################################################################*/
-#pragma aux LowReadDirLink "*" parm routine [esi] [edx]
-void LowReadDirLink(void *dir, int index)
+#pragma aux LowLockDirLink "*" parm routine [esi] [edx]
+void LowLockDirLink(void *dir, int index)
 {
-    ReadDirLink(dir, index);
+    LockDirLink(dir, index);
+}
+
+/*##########################################################################
+#
+#   Name       : LowUnlockDirLink
+#
+##########################################################################*/
+#pragma aux LowUnlockDirLink "*" parm routine [esi] [edx]
+void LowUnlockDirLink(void *dir, int index)
+{
+    UnlockDirLink(dir, index);
 }
 
 /*##########################################################################

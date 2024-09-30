@@ -117,12 +117,20 @@ int GetRelDir(int rel, char *path)
         return 0;
 }
 
-void ReadDirLink(void *d, int index)
+void LockDirLink(void *d, int index)
 {
     TDir *dir = (TDir *)d;
 
     if (Fs)
-        Fs->ReadDirLink(dir, index);
+        Fs->LockDirLink(dir, index);
+}
+
+void UnlockDirLink(void *d, int index)
+{
+    TDir *dir = (TDir *)d;
+
+    if (Fs)
+        Fs->UnlockDirLink(dir, index);
 }
 
 int OpenFile(int rel, char *path)

@@ -76,7 +76,7 @@ _TEXT   segment use32 word public 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    extern LowReadDirLink:near
+    extern LowLockDirLink:near
     public LockDirLinkObject_
 
 wait_name DB "Wait Dir", 0
@@ -95,7 +95,7 @@ ldlRetry:
     lock sub [edi].dl_ref_count,1
     jnc ldlLockFailed
 ;
-    call LowReadDirLink
+    call LowLockDirLink
     lock inc [edi].dl_ref_count
 
 ldlWaitLoop:
@@ -165,10 +165,17 @@ LockDirLinkObject_ Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    extern LowUnlockDirLink:near
+
     public UnlockDirLinkObject_
 
 UnlockDirLinkObject_ Proc near
-    lock dec [edi].dl_ref_count
+    lock sub [edi].dl_ref_count,1
+    jnz udlDone
+;
+    call LowUnlockDirLink
+
+udlDone:
     ret
 UnlockDirLinkObject_ Endp
 

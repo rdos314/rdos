@@ -718,16 +718,16 @@ void TFs::Remove(TFile *file)
 
 /*##########################################################################
 #
-#   Name       : TFs::ReadDirLink
+#   Name       : TFs::LockDirLink
 #
-#   Purpose....: Read dir link
+#   Purpose....: Lock dir link
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::ReadDirLink(TDir *dir, int index)
+void TFs::LockDirLink(TDir *dir, int index)
 {
     struct RdosDirEntry *entry;
     TDir *newdir;
@@ -751,6 +751,36 @@ void TFs::ReadDirLink(TDir *dir, int index)
 
         Add(file);
         dir->SetFileLink(index, file);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFs::UnlockDirLink
+#
+#   Purpose....: Unlock dir link
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::UnlockDirLink(TDir *dir, int index)
+{
+    struct RdosDirEntry *entry;
+    TDir *newdir;
+    TFile *file;
+    long long inode;
+
+    entry = dir->LockEntry(index);
+    inode = entry->Inode;
+    dir->UnlockEntry(entry);
+
+    if (entry->Attrib & FILE_ATTRIBUTE_DIRECTORY)
+    {
+    }
+    else
+    {
     }
 }
 
