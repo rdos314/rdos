@@ -1409,7 +1409,11 @@ void TFs::CloseFile(int handle)
 
             file->WaitForClosing();
             FFileArr[index] = 0;
-            file->Deref();
+
+            if (file->IsDirEntryUnlinked())
+                delete file;
+            else
+                file->Deref();
         }
     }
 }
