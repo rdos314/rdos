@@ -1331,6 +1331,28 @@ bool TFs::SetFileSize(int handle, long long size)
 
 /*##########################################################################
 #
+#   Name       : TFs::DerefFile
+#
+#   Purpose....: Deref file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::DerefFile(int handle)
+{
+    TFile *file;
+    int index = FileHandleToIndex(handle);
+
+    if (index >= 0 && index < FMaxFileCount)
+    {
+        file = FFileArr[index];
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::CloseFile
 #
 #   Purpose....: Close file

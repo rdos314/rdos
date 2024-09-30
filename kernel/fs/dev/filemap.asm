@@ -867,6 +867,40 @@ AddReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SendDerefReq
+;
+;       DESCRIPTION:    Send deref req
+;
+;       PARAMETERS:     DS             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendDerefReq     Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ebx,ds:kf_serv_handle
+    mov fs,ds:kf_part_sel
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+    jc sdrDone
+;
+    mov eax,VFS_DEREF_FILE
+    call RunMsg
+
+sdrDone:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+SendDerefReq     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SendCloseReq
 ;
 ;       DESCRIPTION:    Send close req
@@ -3664,6 +3698,7 @@ ovfFound:
     or bx,bx
     jz ovfNew
 ;
+    call SendDerefReq
     call RefVfsHandle
     jmp ovfHandleOk
 

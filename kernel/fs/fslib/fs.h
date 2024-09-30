@@ -106,6 +106,7 @@ public:
     int GetFileHandle(int handle);
     int GetFileAttrib(int handle);
     bool SetFileSize(int handle, long long size);
+    void DerefFile(int handle);
     void CloseFile(int handle);
 
     int CreateDir(int rel, char *path);

@@ -42,6 +42,7 @@ int CreateFile(int rel, char *path, int attrib);
 int DeleteFile(int rel, char *path);
 int GetFileAttrib(int handle);
 int GetFileHandle(int handle);
+void DerefFile(int handle);
 void CloseFile(int handle);
 int CreateDir(int rel, char *path);
 
@@ -208,6 +209,17 @@ int LowCreateFile(int rel, char *path, int attrib)
 int LowDeleteFile(int rel, char *path)
 {
     return DeleteFile(rel, path);
+}
+
+/*##########################################################################
+#
+#   Name       : LowDerefFile
+#
+##########################################################################*/
+#pragma aux LowDerefFile "*" parm routine [ebx]
+void LowDerefFile(int handle)
+{
+    DerefFile(handle);
 }
 
 /*##########################################################################

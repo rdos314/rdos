@@ -549,6 +549,30 @@ LocalCloseFile Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LocalDerefFile
+;
+;       DESCRIPTION:    Deref file
+;
+;       PARAMETERS:     EDI         Msg data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    extern LowDerefFile:near
+
+LocalDerefFile Proc near
+    push edi
+    mov esi,[edi].fc_handle
+    call LowDerefFile
+    pop edi
+;
+    mov ebx,[edi].fc_handle
+    ReplyVfsCmd
+    ret
+LocalDerefFile Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LocalStart
 ;
 ;       DESCRIPTION:    Start partition
@@ -672,11 +696,12 @@ m06 DD OFFSET CloneRelDir
 m07 DD OFFSET UnlockRelDir
 m08 DD OFFSET GetRelDir
 m09 DD OFFSET LocalOpenFile
-m10 DD OFFSET LocalCloseFile
-m11 DD OFFSET LocalFormat
-m12 DD OFFSET LocalCreateDir
-m13 DD OFFSET LocalCreateFile
-m14 DD OFFSET LocalDeleteFile
+m10 DD OFFSET LocalDerefFile
+m11 DD OFFSET LocalCloseFile
+m12 DD OFFSET LocalFormat
+m13 DD OFFSET LocalCreateDir
+m14 DD OFFSET LocalCreateFile
+m15 DD OFFSET LocalDeleteFile
 
 WaitForMsg_    Proc near
     push ebx

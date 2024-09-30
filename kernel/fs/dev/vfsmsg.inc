@@ -65,35 +65,38 @@ VFS_GET_REL_DIR           = 8
 VFS_OPEN_FILE             = 9
 
 ; IN  BX        File handle
-VFS_CLOSE_FILE            = 10
+VFS_DEREF_FILE            = 10
+
+; IN  BX        File handle
+VFS_CLOSE_FILE            = 11
 
 ; IN  EDX:EAX   Sectors
 ; IN            Fs name
 ; OUT BX        Offset
 ; OUT EDX:EAX   Sectors
-VFS_FORMAT                = 11
+VFS_FORMAT                = 12
 
 ; IN  EAX       Start handle
 ; IN            Path name
-VFS_CREATE_DIR            = 12
+VFS_CREATE_DIR            = 13
 
 ; IN  EAX       Start handle
 ; IN  ECX       Attribute
 ; IN            Path name
 ; OUT BX        File handle
-VFS_CREATE_FILE           = 13
+VFS_CREATE_FILE           = 14
 
 ; IN  EAX       Start handle
 ; IN            Path name
-VFS_DELETE_FILE           = 14
+VFS_DELETE_FILE           = 15
 
 ; IN            Cmd
-VFS_CMD                   = 15
+VFS_CMD                   = 16
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_READ_SECTOR           = 16
+VFS_READ_SECTOR           = 17
 
 ; IN EBX       Buffer
 ; IN EDX:EAX   Sector
-VFS_WRITE_SECTOR          = 17
+VFS_WRITE_SECTOR          = 18

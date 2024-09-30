@@ -164,6 +164,12 @@ int GetFileHandle(int handle)
     return 0;
 }
 
+void DerefFile(int handle)
+{
+    if (Fs)
+        Fs->DerefFile(handle);
+}
+
 void CloseFile(int handle)
 {
     if (Fs)
