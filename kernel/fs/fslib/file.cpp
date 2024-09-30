@@ -412,6 +412,23 @@ int TFile::Setup(int VfsHandle)
 
 /*##########################################################################
 #
+#   Name       : TFile::Deref
+#
+#   Purpose....: Req to derefence
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::Deref()
+{
+    if (FParent)
+        FParent->UnlockDirLink(FParentIndex);
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::Close
 #
 #   Purpose....: Req to close

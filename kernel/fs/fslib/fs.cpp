@@ -1348,6 +1348,7 @@ void TFs::DerefFile(int handle)
     if (index >= 0 && index < FMaxFileCount)
     {
         file = FFileArr[index];
+        file->Deref();
     }
 }
 

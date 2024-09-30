@@ -71,6 +71,7 @@ public:
     virtual ~TFile();
 
     int Setup(int VfsHandle);
+    void Deref();
     void Close();
     void WaitForClosing();
 
