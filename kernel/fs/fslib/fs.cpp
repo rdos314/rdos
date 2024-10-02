@@ -707,11 +707,9 @@ void TFs::Add(TFile *file)
 ##########################################################################*/
 void TFs::Remove(TFile *file)
 {
-    int handle = file->Handle;
-
-    if (FFileArr[handle] == file)
+    if (FFileArr[file->Index] == file)
     {
-        FFileArr[handle] = 0;
+        FFileArr[file->Index] = 0;
         FCurrFileCount--;
     }
 }
@@ -779,7 +777,10 @@ void TFs::UnlockDirLink(TDir *dir, int index)
     {
         file = dir->GetFileLink(index);
         if (file)
+        {
+            Remove(file);
             delete file;
+        }
     }
 
     dir->UnlockEntry(entry);
@@ -1197,11 +1198,12 @@ int TFs::DeleteFile(int rel, char *path)
                 ret = 0;
             else
                 ret = -1;
+
+            Remove(file);
+            delete file;
         }
         else
             ret = -1;
-
-        delete file;
     }
     else
         ret = -1;
@@ -1408,7 +1410,6 @@ void TFs::CloseFile(int handle)
             printf("Close %d\r\n", file->Index);
 
             file->WaitForClosing();
-            FFileArr[index] = 0;
 
             if (file->IsDirEntryUnlinked())
                 delete file;
