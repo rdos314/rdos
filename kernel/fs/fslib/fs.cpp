@@ -1203,7 +1203,10 @@ int TFs::DeleteFile(int rel, char *path)
             delete file;
         }
         else
+        {
+            file->Deref();
             ret = -1;
+        }
     }
     else
         ret = -1;
