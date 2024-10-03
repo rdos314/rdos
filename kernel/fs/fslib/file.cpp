@@ -62,6 +62,8 @@ TFileReq::TFileReq(int handle, int index, int req)
     BytePos = 0;
     SectPos = 0;
 
+    Enabled = true;
+
     Link = 0;
 }
 
@@ -161,6 +163,39 @@ void TFileReq::SetPos(int BytesPerSector, long long spos)
 
 /*##########################################################################
 #
+#   Name       : TFileReq::Disable
+#
+#   Purpose....: Disable request
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFileReq::Disable()
+{
+    Enabled = false;
+    FreeArray();
+}
+
+/*##########################################################################
+#
+#   Name       : TFileReq::IsEnabled
+#
+#   Purpose....: Is request enabled?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TFileReq::IsEnabled()
+{
+    return Enabled;
+}
+
+/*##########################################################################
+#
 #   Name       : TFileReq::StartRead
 #
 #   Purpose....: Start read
@@ -175,17 +210,20 @@ void TFileReq::StartRead()
     char str[80];
     int ReqCount = SectorCount;
 
-    SectorCount = ServVfsFileReadReq(File, Req + 1, BytePos, SectorArr, SectorCount);
+    if (Enabled)
+    {
+        SectorCount = ServVfsFileReadReq(File, Req + 1, BytePos, SectorArr, SectorCount);
 
-    if (ReqCount == SectorCount)
-        sprintf(str, "Read %d.%d start %lld size %d\r\n", Index, Req, SectPos, SectorCount);
-    else
-        sprintf(str, "Read %d.%d start %lld size %d (%d)\r\n", Index, Req, SectPos, SectorCount, ReqCount);
+        if (ReqCount == SectorCount)
+            sprintf(str, "Read %d.%d start %lld size %d\r\n", Index, Req, SectPos, SectorCount);
+        else
+            sprintf(str, "Read %d.%d start %lld size %d (%d)\r\n", Index, Req, SectPos, SectorCount, ReqCount);
 
-    RdosWriteFile(FileHandle, str, strlen(str));
-    printf(str);
+        RdosWriteFile(FileHandle, str, strlen(str));
+        printf(str);
 
-    FreeArray();
+        FreeArray();
+    }
 }
 
 /*##########################################################################
@@ -204,17 +242,20 @@ void TFileReq::StartWrite()
     char str[80];
     int ReqCount = SectorCount;
 
-    SectorCount = ServVfsFileWriteReq(File, Req + 1, BytePos, SectorArr, SectorCount);
+    if (Enabled)
+    {
+        SectorCount = ServVfsFileWriteReq(File, Req + 1, BytePos, SectorArr, SectorCount);
 
-    if (ReqCount == SectorCount)
-        sprintf(str, "Write %d.%d start %lld size %d\r\n", Index, Req, SectPos, SectorCount);
-    else
-        sprintf(str, "Write %d.%d start %lld size %d (%d)\r\n", Index, Req, SectPos, SectorCount, ReqCount);
+        if (ReqCount == SectorCount)
+            sprintf(str, "Write %d.%d start %lld size %d\r\n", Index, Req, SectPos, SectorCount);
+        else
+            sprintf(str, "Write %d.%d start %lld size %d (%d)\r\n", Index, Req, SectPos, SectorCount, ReqCount);
 
-    RdosWriteFile(FileHandle, str, strlen(str));
-    printf(str);
+        RdosWriteFile(FileHandle, str, strlen(str));
+        printf(str);
 
-    FreeArray();
+        FreeArray();
+    }
 }
 
 /*##########################################################################
@@ -573,7 +614,7 @@ void TFile::FreeReq(TFileReq *req)
     req->Link = FFreeList;
     FFreeList = req;
 
-    if (req->BytePos >= Info->CurrSize)
+    if (req->IsEnabled() && req->BytePos >= Info->CurrSize)
         SetSize(Info->CurrSize);
 }
 
@@ -677,6 +718,7 @@ void TFile::SetRead(long long StartSector, int Sectors)
     long long sect;
     long long exp;
     int i;
+    TFileReq *FileReq;
 
     if (StartSector < 0)
         StartSector = 0;
@@ -742,20 +784,25 @@ void TFile::SetRead(long long StartSector, int Sectors)
 
     for (i = 0; i < FCurrActiveCount && count > 0; i++)
     {
-        temp = FActiveArr[i]->SectPos - start;
-        if (temp > 0)
+        FileReq = FActiveArr[i];
+
+        if (FileReq->IsEnabled())
         {
-            if (temp < count)
-                count = (int)temp;
-            break;
-        }
-        else
-        {
-            temp = FActiveArr[i]->SectPos + FActiveArr[i]->SectorCount;
-            if (temp > start)
+            temp = FileReq->SectPos - start;
+            if (temp > 0)
             {
-                count = (int)(start + count - temp);
-                start = temp;
+                if (temp < count)
+                    count = (int)temp;
+                break;
+            }
+            else
+            {
+                temp = FileReq->SectPos + FileReq->SectorCount;
+                if (temp > start)
+                {
+                    count = (int)(start + count - temp);
+                    start = temp;
+                }
             }
         }
     }
@@ -785,6 +832,7 @@ void TFile::SetWrite(long long StartSector, int Sectors)
     long long end;
     long long temp;
     int i;
+    TFileReq *FileReq;
 
     if (StartSector < 0)
         StartSector = 0;
@@ -802,20 +850,25 @@ void TFile::SetWrite(long long StartSector, int Sectors)
 
     for (i = 0; i < FCurrActiveCount && count > 0; i++)
     {
-        temp = FActiveArr[i]->SectPos - start;
-        if (temp > 0)
+        FileReq = FActiveArr[i];
+
+        if (FileReq->IsEnabled())
         {
-            if (temp < count)
-                count = (int)temp;
-            break;
-        }
-        else
-        {
-            temp = FActiveArr[i]->SectPos + FActiveArr[i]->SectorCount;
-            if (temp > start)
+            temp = FileReq->SectPos - start;
+            if (temp > 0)
             {
-                count = (int)(start + count - temp);
-                start = temp;
+                if (temp < count)
+                    count = (int)temp;
+                break;
+            }
+            else
+            {
+                temp = FileReq->SectPos + FileReq->SectorCount;
+                if (temp > start)
+                {
+                    count = (int)(start + count - temp);
+                    start = temp;
+                }
             }
         }
     }
@@ -971,7 +1024,7 @@ void TFile::HandleUpdateReq(long long pos, int size)
         while (count)
         {
             FileReq = FindReq(start);
-            if (FileReq)
+            if (FileReq && FileReq->IsEnabled())
             {
                 offset = (int)(FileReq->SectPos - start);
 
@@ -1078,7 +1131,6 @@ void TFile::HandleFreeReq(int req)
 void TFile::HandleCompletedReq(int req)
 {
     int i;
-    TFileReq *FileReq;
     char str[80];
 
     sprintf(str, "Completed %d.%d\r\n", Index, req);

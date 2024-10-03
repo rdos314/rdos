@@ -48,6 +48,9 @@ public:
     void StartRead();
     void StartWrite();
 
+    void Disable();
+    bool IsEnabled();
+
     int File;
     int Index;
     int Req;
@@ -59,6 +62,7 @@ public:
     int SectorCount;
 
 protected:
+    bool Enabled;
     int MaxSectors;
     long long *SectorArr;
 };
