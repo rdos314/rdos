@@ -1328,11 +1328,15 @@ bool TFile::SetSize(long long size)
     if (!FParent)
         return false;
 
+    pos = Info->DiscSize;
+
     ok = SetDiscSize(size);
 
     if (ok)
     {
-        if (size < Info->CurrSize)
+        Info->CurrSize = size;
+
+        if (Info->DiscSize < pos)
         {
             for (i = 0; i < FCurrActiveCount; i++)
             {
@@ -1343,7 +1347,6 @@ bool TFile::SetSize(long long size)
             }
         }
 
-        Info->CurrSize = size;
         SyncDirEntry();
     }
 
