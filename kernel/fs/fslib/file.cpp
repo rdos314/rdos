@@ -1323,24 +1323,26 @@ bool TFile::SetSize(long long size)
     bool ok;
     int i;
     TFileReq *FileReq;
+    long long pos;
 
     if (!FParent)
         return false;
-
-    if (size < Info->CurrSize)
-    {
-        for (i = 0; i < FCurrActiveCount; i++)
-        {
-            FileReq = FActiveArr[i];
-            if (FileReq->BytePos > size)
-                FileReq->Disable();
-        }
-    }
 
     ok = SetDiscSize(size);
 
     if (ok)
     {
+        if (size < Info->CurrSize)
+        {
+            for (i = 0; i < FCurrActiveCount; i++)
+            {
+                FileReq = FActiveArr[i];
+                pos = (FileReq->SectPos + FileReq->SectorCount) * FBytesPerSector;
+                if (pos > Info->DiscSize)
+                    FileReq->Disable();
+            }
+        }
+
         Info->CurrSize = size;
         SyncDirEntry();
     }
