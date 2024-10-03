@@ -1320,21 +1320,24 @@ void TFile::HandleSizeReq(long long size)
 ##########################################################################*/
 bool TFile::SetSize(long long size)
 {
-    long long min;
-    long long ds;
     bool ok;
+    int i;
+    TFileReq *FileReq;
 
     if (!FParent)
         return false;
 
-    min = ServGetMinVfsFileSize(Handle);
+    if (size < Info->CurrSize)
+    {
+        for (i = 0; i < FCurrActiveCount; i++)
+        {
+            FileReq = FActiveArr[i];
+            if (FileReq->BytePos > size)
+                FileReq->Disable();
+        }
+    }
 
-    if (min > size)
-        ds = min;
-    else
-        ds = size;
-
-    ok = SetDiscSize(ds);
+    ok = SetDiscSize(size);
 
     if (ok)
     {
