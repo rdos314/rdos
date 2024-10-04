@@ -24,9 +24,9 @@ void main()
     file.SetPos(100234);
     size = file.Read(buf, 567);
 
-    scanf("%d", &dummy);
-
     file.SetSize(0);
+
+    scanf("%d", &dummy);
 
     file.SetPos(760234);
     size = file.Read(buf, 455);
