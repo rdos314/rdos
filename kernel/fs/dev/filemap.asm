@@ -68,7 +68,8 @@ kre_block_arr     DD ?
 kre_req_size      DD ?
 kre_pages         DW ?
 kre_usage         DW ?
-kre_done          DW ?
+kre_done          DB ?
+kre_disabled      DB ?
 
 kernel_req_entry  ENDS
 
@@ -583,6 +584,7 @@ afrRecalc:
     mul ecx
     mov ds:[edi].kre_size,eax
     mov ds:[edi].kre_done,0
+    mov ds:[edi].kre_disabled,0
 ;
     mov ebx,OFFSET kf_sorted_arr
     mov ebp,ds:kf_req_count
@@ -2443,8 +2445,8 @@ NotifyFileData  Proc near
 ;
     dec ebx
     mov esi,ds:[4*ebx].kf_handle_arr
-    mov ax,1
-    xchg ax,ds:[esi].kre_done
+    mov al,1
+    xchg al,ds:[esi].kre_done
     or ax,ax
     jne nfdLeave
 ;
@@ -2672,18 +2674,12 @@ UpdateFileReq  Endp
     public DisableFileReq
 
 DisableFileReq  Proc near
-    push ds
-    push es
-    push gs
-    pushad
+    push ebx
 ;    
     mov ebx,ds:[4*edx].kf_handle_arr
-    mov ecx,ds:[ebx].kre_req_size
+    mov ds:[ebx].kre_disabled,1
 ;
-    popad
-    pop gs
-    pop es
-    pop ds
+    pop ebx
     ret
 DisableFileReq  Endp
 
