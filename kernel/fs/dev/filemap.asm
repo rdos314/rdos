@@ -2685,10 +2685,7 @@ DisableFileReq  Proc near
     mov ebx,OFFSET kf_mod_arr
     mov ecx,ds:kf_mod_count
     or ecx,ecx
-    jnz dfrLoop
-;
-    int 3
-    jmp dfrDone
+    jz dfrDone
 
 dfrLoop:
     mov ax,ds:[ebx].km_map_sel
@@ -4174,6 +4171,7 @@ GetVfsFileSize  Endp
 ;       DESCRIPTION:    Set VFS file size
 ;
 ;       PARAMETERS:     BX             File sel
+;                       SI             Mod sel
 ;                       EDX:EAX        Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4184,6 +4182,9 @@ SetVfsFileSize  Proc near
     push ds
     push es
     push edi
+;
+    mov ds,esi
+    mov ds:kfm_check,1
 ;
     mov ds,ebx
     mov edi,flat_sel

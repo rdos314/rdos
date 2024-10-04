@@ -2580,6 +2580,7 @@ set_handle_size32     Proc far
     push ds
     push ebx
     push edx
+    push esi
     push ebp
 ;
     push eax
@@ -2603,6 +2604,7 @@ set_handle_size32     Proc far
     or ax,ax
     jz shsFail32
 ;
+    mov si,ds:[ebx].hp_vfs_sel
     movzx ebx,ax
     dec ebx
     shl ebx,4
@@ -2629,6 +2631,7 @@ shsFail32:
 
 shsDone32:
     pop ebp
+    pop esi
     pop edx
     pop ebx
     pop ds    
@@ -2638,6 +2641,7 @@ set_handle_size32     Endp
 set_handle_size64     Proc far
     push ds
     push ebx
+    push esi
     push ebp
 ;
     push eax
@@ -2662,6 +2666,7 @@ set_handle_size64     Proc far
     or ax,ax
     jz shsFail64
 ;
+    mov si,ds:[ebx].hp_vfs_sel
     movzx ebx,ax
     dec ebx
     shl ebx,4
@@ -2691,6 +2696,7 @@ shsFail64:
 
 shsDone64:
     pop ebp
+    pop esi
     pop ebx
     pop ds    
     ret
