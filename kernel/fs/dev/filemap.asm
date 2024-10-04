@@ -59,6 +59,9 @@ fh_handle     DW ?
 
 file_handle_seg     ENDS
 
+KRE_DONE = 0
+KRE_DISABLED = 1
+
 kernel_req_entry  STRUC
 
 kre_pos           DD ?,?
@@ -68,8 +71,7 @@ kre_block_arr     DD ?
 kre_req_size      DD ?
 kre_pages         DW ?
 kre_usage         DW ?
-kre_done          DB ?
-kre_disabled      DB ?
+kre_flags         DW ?
 
 kernel_req_entry  ENDS
 
@@ -583,8 +585,7 @@ afrRecalc:
     pop ds
     mul ecx
     mov ds:[edi].kre_size,eax
-    mov ds:[edi].kre_done,0
-    mov ds:[edi].kre_disabled,0
+    mov ds:[edi].kre_flags,0
 ;
     mov ebx,OFFSET kf_sorted_arr
     mov ebp,ds:kf_req_count
@@ -2445,10 +2446,8 @@ NotifyFileData  Proc near
 ;
     dec ebx
     mov esi,ds:[4*ebx].kf_handle_arr
-    mov al,1
-    xchg al,ds:[esi].kre_done
-    or ax,ax
-    jne nfdLeave
+    lock bts ds:[esi].kre_flags, KRE_DONE
+    jc nfdLeave
 ;
     mov esi,gs:vfs_rd_chain_ptr
     call CalcPageCount
@@ -2677,7 +2676,7 @@ DisableFileReq  Proc near
     push ebx
 ;    
     mov ebx,ds:[4*edx].kf_handle_arr
-    mov ds:[ebx].kre_disabled,1
+    lock bts ds:[ebx].kre_flags,KRE_DISABLED
 ;
     pop ebx
     ret
