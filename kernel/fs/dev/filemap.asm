@@ -138,6 +138,7 @@ kfm_ref_count     DW ?
 kfm_section       section_typ <>
 kfm_free_count    DB ?
 kfm_unlink_count  DB ?
+kfm_check         DW ?
 kfm_src_arr       DD 240 DUP(?)
 kfm_ref_arr       DB 240 DUP(?)
 kfm_free_arr      DB 240 DUP(?)
@@ -2673,12 +2674,39 @@ UpdateFileReq  Endp
     public DisableFileReq
 
 DisableFileReq  Proc near
+    push es
+    push eax
     push ebx
+    push ecx
 ;    
     mov ebx,ds:[4*edx].kf_handle_arr
     lock bts ds:[ebx].kre_flags,KRE_DISABLED
 ;
+    mov ebx,OFFSET kf_mod_arr
+    mov ecx,ds:kf_mod_count
+    or ecx,ecx
+    jnz dfrLoop
+;
+    int 3
+    jmp dfrDone
+
+dfrLoop:
+    mov ax,ds:[ebx].km_map_sel
+    or ax,ax
+    jz dfrNext
+;
+    mov es,eax
+    mov es:kfm_check,1
+
+dfrNext:
+    add ebx,4
+    loop dfrLoop
+
+dfrDone:
+    pop ecx
     pop ebx
+    pop eax
+    pop es
     ret
 DisableFileReq  Endp
 
