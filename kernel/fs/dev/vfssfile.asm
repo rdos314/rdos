@@ -62,10 +62,10 @@ code    SEGMENT byte public 'CODE'
     extern UnlinkRequest:near
     extern AddFileReq:near
     extern UpdateFileReq:near
+    extern DisableFileReq:near
     extern FreeFileReq:near
     extern GetFileDebugInfo:near
     extern RelSectorToBlock:near
-    extern GetLowestFileSize:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -261,6 +261,56 @@ serv_update_file_req   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ServDisableFileReq
+;
+;       DESCRIPTION:    Serv disable VFS file req
+;
+;       PARAMETERS:     EBX            kernel handle
+;                       EDX            req # (1-based)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_disable_file_req_name       DB 'Serv Disable File Req',0
+
+serv_disable_file_req    Proc far
+    push ds
+    push fs
+    push eax
+    push ebx
+;
+    call FileHandleToPartFs
+    jc sdfrDone
+;
+    cmp bx,MAX_VFS_FILE_COUNT    
+    cmc
+    jc sdfrDone
+;
+    dec bx
+    shl bx,2
+    add bx,OFFSET vfsp_file_arr
+    mov ds,fs:[bx].ff_sel
+    or edx,edx
+    stc
+    jz sdfrDone
+;
+    dec edx
+    cmp edx,240
+    cmc
+    jc sdfrDone
+;
+    call DisableFileReq
+
+sdfrDone:
+    pop ebx
+    pop eax
+    pop fs
+    pop ds
+    ret
+serv_disable_file_req   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ServFreeFileReq
 ;
 ;       DESCRIPTION:    Serv free VFS file req
@@ -363,49 +413,6 @@ scfDone:
     pop ds
     ret
 serv_close_file    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           ServGetMinFileSize
-;
-;       DESCRIPTION:    Serv get minimum file size
-;
-;       PARAMETERS:     EBX            kernel handle
-;
-;       RETURNS:        EDX:EAX        lowest size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-serv_get_min_file_size_name       DB 'Serv Get Min File Size',0
-
-serv_get_min_file_size    Proc far
-    push ds
-    push fs
-    push ecx
-;
-    xor eax,eax
-    xor edx,edx
-;
-    call FileHandleToPartFs
-    jc gmfsDone
-;
-    cmp bx,MAX_VFS_FILE_COUNT    
-    cmc
-    jc gmfsDone
-;
-    dec bx
-    shl bx,2
-    add bx,OFFSET vfsp_file_arr
-    mov ax,fs:[bx].ff_sel
-    call GetLowestFileSize
-
-gmfsDone:
-    pop ecx
-    pop fs
-    pop ds
-    ret
-serv_get_min_file_size   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1639,6 +1646,12 @@ init_server_file    Proc near
     mov ax,serv_update_file_req_nr
     RegisterServGate
 ;
+    mov esi,OFFSET serv_disable_file_req
+    mov edi,OFFSET serv_disable_file_req_name
+    xor cl,cl
+    mov ax,serv_disable_file_req_nr
+    RegisterServGate
+;
     mov esi,OFFSET serv_free_file_req
     mov edi,OFFSET serv_free_file_req_name
     xor cl,cl
@@ -1649,12 +1662,6 @@ init_server_file    Proc near
     mov edi,OFFSET serv_close_file_name
     xor cl,cl
     mov ax,serv_close_file_nr
-    RegisterServGate
-;
-    mov esi,OFFSET serv_get_min_file_size
-    mov edi,OFFSET serv_get_min_file_size_name
-    xor cl,cl
-    mov ax,serv_get_min_file_size_nr
     RegisterServGate
 ;
     mov esi,OFFSET serv_notify_file_req

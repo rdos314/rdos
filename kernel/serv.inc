@@ -312,12 +312,6 @@ ServCloseVfsFile  MACRO
     ServGate serv_close_file_nr
                     ENDM
 
-; IN  BX               Kernel handle
-; OUT EDX:EAX          New size
-ServGetMinVfsFileSize  MACRO
-    ServGate serv_get_min_file_size_nr
-                    ENDM
-
 ; IN  EBX              VFS handle
 ; OUT EAX              Req count
 ; OUT EBX              Wait count
@@ -360,6 +354,12 @@ ServVfsFileWriteReq  MACRO
 ; IN  ECX              Sector count
 ServUpdateVfsFileReq  MACRO
     ServGate serv_update_file_req_nr
+                    ENDM
+
+; IN  BX               Kernel handle
+; IN  EDX              Req #
+ServDisableVfsFileReq  MACRO
+    ServGate serv_disable_file_req_nr
                     ENDM
 
 ; IN  BX               Kernel handle

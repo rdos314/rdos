@@ -174,8 +174,12 @@ void TFileReq::SetPos(int BytesPerSector, long long spos)
 ##########################################################################*/
 void TFileReq::Disable()
 {
-    Enabled = false;
-    FreeArray();
+    if (Enabled)
+    {
+        ServDisableVfsFileReq(File, Req + 1);
+        Enabled = false;
+        FreeArray();
+    }
 }
 
 /*##########################################################################

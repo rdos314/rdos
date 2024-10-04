@@ -52,11 +52,6 @@
     ServGate_serv_close_file  \
     __parm [__ebx]
 
-#pragma aux ServGetMinVfsFileSize = \
-    ServGate_serv_get_min_file_size  \
-    __parm [__ebx] \
-    __value [__edx __eax]
-
 #pragma aux ServNotifyVfsFileReq = \
     ServGate_serv_notify_file_req  \
     __parm [__ebx] [__edx __eax] [__ecx]
@@ -74,6 +69,10 @@
 #pragma aux ServUpdateVfsFileReq = \
     ServGate_serv_update_file_req  \
     __parm [__ebx] [__edx] [__esi] [__ecx]
+
+#pragma aux ServDisableVfsFileReq = \
+    ServGate_serv_disable_file_req  \
+    __parm [__ebx] [__edx]
 
 #pragma aux ServFreeVfsFileReq = \
     ServGate_serv_free_file_req  \
