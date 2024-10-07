@@ -317,13 +317,10 @@ void TFile::SetSize(long long Size)
             RdosSetFileSize(FHandle, Size);
         else
         {
-            if (FMap->Info->CurrSize > Size)
-            {
-                RdosSetHandleSize(FHandle, Size);
-                VfsCheck();
-            }
-            else
-                RdosSetHandleSize(FHandle, Size);
+            RdosSetHandleSize(FHandle, Size);
+
+            if (FMap->Update)
+                RdosUpdateHandle(FHandle);
         }
     }
 }
@@ -433,36 +430,6 @@ void TFile::SetTime(const TDateTime &time)
 
 /*##########################################################################
 #
-#   Name       : TFile::Check
-#
-#   Purpose....: VFS check entries
-#
-##########################################################################*/
-void TFile::VfsCheck()
-{
-    int i;
-    int index;
-    long long pos;
-    long long size = FMap->Info->CurrSize;
-    bool update = false;
-
-    if (FMap->Count)
-    {
-        index = FMap->SortedArr[FMap->Count - 1];
-        if (index != 0xFF)
-        {
-            pos = FMap->MapArr[index].Pos;
-            if (pos >= size)
-                update = true;
-        }
-    }
-
-    if (update)
-        RdosUpdateHandle(FHandle);
-}
-
-/*##########################################################################
-#
 #   Name       : TFile::VfsFind
 #
 #   Purpose....: VFS find
@@ -481,6 +448,9 @@ int TFile::VfsFind(long long Pos)
 
     for (;;)
     {
+        if (FMap->Update)
+            RdosUpdateHandle(FHandle);
+
         index = FMap->SortedArr[Curr + Step];
         if (index != 0xFF)
         {
@@ -575,11 +545,8 @@ int TFile::VfsRead(void *Buf, int Size)
     int ret = 0;
     char *ptr = (char *)Buf;
 
-    if (Pos >= TotalSize)
-    {
-        Pos = TotalSize;
-        VfsCheck();
-    }
+    if (FMap->Update)
+        RdosUpdateHandle(FHandle);
 
     if (Pos + Size > TotalSize)
         Size = TotalSize - Pos;
@@ -734,6 +701,9 @@ int TFile::VfsWrite(const void *Buf, int Size)
     char *ptr = (char *)Buf;
     struct RdosFileInfo *info = FMap->Info;
     long long Grow;
+
+    if (FMap->Update)
+        RdosUpdateHandle(FHandle);
 
     Grow = Pos + Size - info->DiscSize;
 
