@@ -205,7 +205,8 @@ struct RdosFileHandleInfo
 struct RdosFileMap
 {
     unsigned char SortedArr[241];
-    char Resv[3];
+    unsigned short int Resv;
+    char Update;
     int Count;
     struct RdosFileHandleInfo *Handle;
     struct RdosFileInfo *Info;

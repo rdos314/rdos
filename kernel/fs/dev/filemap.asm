@@ -3013,6 +3013,7 @@ CreateVfsMod   Proc near
     mov es:[edx].fm_handle_ptr,eax
     add eax,1000h
     mov es:[edx].fm_info_ptr,eax
+    mov es:[edx].fm_update,0
 ;
     mov ax,flat_data_sel
     mov es,eax
