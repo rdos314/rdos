@@ -1601,9 +1601,10 @@ void TFs::HandleUpdateReq(TFile *file, long long pos, int size)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFs::HandleSizeReq(TFile *file, long long req)
+void TFs::HandleSizeReq(TFile *file, long long req, int thread)
 {
     file->HandleSizeReq(req);
+    ServSignal(thread);
 }
 
 /*##########################################################################
@@ -1646,7 +1647,7 @@ void TFs::HandleQueue(TFile *file, struct TFsQueueEntry *entry)
             break;
 
         case REQ_SIZE:
-            HandleSizeReq(file, entry->Par64);
+            HandleSizeReq(file, entry->Par64, entry->Par32);
             break;
 
         case REQ_CLOSE:
