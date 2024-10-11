@@ -141,6 +141,7 @@ kfm_unlink_count  DB ?
 kfm_check         DW ?
 kfm_src_arr       DD 240 DUP(?)
 kfm_ref_arr       DB 240 DUP(?)
+kfm_disabled_arr  DB 240 DUP(?)
 kfm_free_arr      DB 240 DUP(?)
 kfm_unlink_arr    DB 240 DUP(?)
 
@@ -2725,12 +2726,65 @@ UpdateFileReq  Endp
     public DisableFileReq
 
 DisableFileReq  Proc near
+    push es
+    push eax
     push ebx
+    push ecx
 ;
     mov ebx,ds:[4*edx].kf_handle_arr
     lock bts ds:[ebx].kre_flags,KRE_DISABLED
 ;
+    mov ebx,OFFSET kf_mod_arr
+    mov ecx,ds:kf_mod_count
+    or ecx,ecx
+    jz dfrDone
+
+dfrLoop:
+    mov ax,ds:[ebx].km_map_sel
+    or ax,ax
+    jz dfrNext
+;
+    push ds
+    push ebx
+    push ecx
+;
+    mov ds,eax
+    EnterSection ds:kfm_section
+;
+    mov ecx,240
+    xor ebx,ebx
+
+dfrmLoop:
+    mov al,ds:[ebx].kfm_ref_arr
+    or al,al
+    jz dfrmNext
+;
+    cmp edx,ds:[4*ebx].kfm_src_arr
+    jne dfrmNext
+;
+    mov ds:[ebx].kfm_disabled_arr,1
+    jmp dfrmLeave
+
+dfrmNext:
+    inc ebx
+    loop dfrmLoop
+
+dfrmLeave:
+    LeaveSection ds:kfm_section
+;
+    pop ecx
     pop ebx
+    pop ds
+
+dfrNext:
+    add ebx,4
+    loop dfrLoop
+
+dfrDone:
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
     ret
 DisableFileReq  Endp
 
