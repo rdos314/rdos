@@ -5185,6 +5185,34 @@ get_vfs_resp_data32   Proc far
     ret
 get_vfs_resp_data32   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ServSignal
+;
+;       DESCRIPTION:    Signal thread using ID
+;
+;       PARAMETERS:     AX        Thread ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+serv_signal_name DB 'Serv Signal', 0
+
+serv_signal   Proc far
+    push ebx
+;
+    mov bx,ax
+    ThreadToSel
+    jc ssDone
+;
+    Signal
+
+ssDone:
+    pop ebx
+    ret
+serv_signal   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5247,6 +5275,12 @@ init_server    Proc near
     mov edi,OFFSET delete_cmd_handle
     mov ax,VFS_CMD_HANDLE
     RegisterHandle
+;
+    mov esi,OFFSET serv_signal
+    mov edi,OFFSET serv_signal_name
+    xor cl,cl
+    mov ax,serv_signal_nr
+    RegisterServGate
 ;
     mov esi,OFFSET get_vfs_handle
     mov edi,OFFSET get_vfs_handle_name
