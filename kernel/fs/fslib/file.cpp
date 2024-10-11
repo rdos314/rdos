@@ -1325,6 +1325,7 @@ void TFile::HandleSizeReq(long long size)
 bool TFile::SetSize(long long size)
 {
     bool ok;
+    bool update = false;
     int i;
     TFileReq *FileReq;
     long long pos;
@@ -1347,9 +1348,15 @@ bool TFile::SetSize(long long size)
                 FileReq = FActiveArr[i];
                 pos = (FileReq->SectPos + FileReq->SectorCount) * FBytesPerSector;
                 if (pos > Info->DiscSize)
+                {
                     FileReq->Disable();
+                    update = true;
+                }
             }
         }
+
+        if (update)
+            ServUpdateVfsFile(Handle);
 
         SyncDirEntry();
     }

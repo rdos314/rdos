@@ -312,6 +312,11 @@ ServWaitVfsIoServer  MACRO
                     ENDM
 
 ; IN  BX               Kernel handle
+ServUpdateVfsFile  MACRO
+    ServGate serv_update_file_nr
+                    ENDM
+
+; IN  BX               Kernel handle
 ServCloseVfsFile  MACRO
     ServGate serv_close_file_nr
                     ENDM

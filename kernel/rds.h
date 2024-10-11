@@ -80,6 +80,7 @@
 #define serv_gate_get_vfs_part_drive 0x0000004A
 #define serv_gate_serv_disable_file_req 0x0000004B
 #define serv_gate_serv_signal 0x0000004C
+#define serv_gate_serv_update_file 0x0000004D
 
 #define ServGate_invalid_serv 0x55 0x67 0x9a 0 0 0 0 4 0 0x5d
 #define ServGate_test_serv 0x55 0x67 0x9a 1 0 0 0 4 0 0x5d
@@ -163,4 +164,5 @@
 #define ServGate_get_vfs_part_drive 0x55 0x67 0x9a 74 0 0 0 4 0 0x5d
 #define ServGate_serv_disable_file_req 0x55 0x67 0x9a 75 0 0 0 4 0 0x5d
 #define ServGate_serv_signal 0x55 0x67 0x9a 76 0 0 0 4 0 0x5d
+#define ServGate_serv_update_file 0x55 0x67 0x9a 77 0 0 0 4 0 0x5d
 

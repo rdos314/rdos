@@ -429,6 +429,33 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateFileSel
+;
+;       DESCRIPTION:    Update file selector
+;
+;       PARAMETERS:     FS             Part sel
+                        AX             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UpdateFileSel
+
+UpdateFileSel   Proc near
+    push ds
+    push ecx
+    push edx
+;
+    mov ds,ax
+;
+    pop edx
+    pop ecx
+    pop ds
+    ret
+UpdateFileSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CloseFileSel
 ;
 ;       DESCRIPTION:    Close file selector
