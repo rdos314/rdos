@@ -2061,6 +2061,7 @@ cmNone:
     jnz cmOk
 
 cmFree:
+    mov ds:[esi].kfm_ref_arr,0
     call FreeMap
     stc
     jmp cmDone
