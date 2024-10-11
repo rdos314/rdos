@@ -2324,6 +2324,7 @@ UpdateMap  Proc near
     mov eax,fs
     mov ds,eax
     mov es,ds:kfm_kernel_sel
+    mov es:fm_update,0
     mov ebx,OFFSET fm_sorted_arr
     mov ecx,es:fm_count
     EnterSection ds:kfm_section
