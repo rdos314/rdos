@@ -4208,34 +4208,21 @@ GetVfsFileSize  Endp
 
 SetVfsFileSize  Proc near
     push ds
-    push es
     push ecx
-    push edi
-;
-    mov ds,esi
-    mov ds:kfm_check,1
-;
-    mov ds,ebx
-    mov edi,flat_sel
-    mov es,edi
-    mov edi,ds:kf_info_linear
-    mov es:[edi].fi_size,eax
-    mov es:[edi].fi_size+4,edx
 ;
     push eax
     GetThreadHandle
     movzx ecx,ax
     pop eax
 ;
+    mov ds,ebx
     mov ebx,REQ_SIZE
     call AddReq
 ;
     WaitForSignal
 
 svfsDone:
-    pop edi
     pop ecx
-    pop es
     pop ds
     ret
 SetVfsFileSize  Endp
