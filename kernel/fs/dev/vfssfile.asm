@@ -373,7 +373,6 @@ serv_free_file_req   Endp
 serv_update_file_name       DB 'Serv Update File',0
 
 serv_update_file    Proc far
-    push ds
     push fs
     push eax
     push ecx
@@ -385,13 +384,10 @@ serv_update_file    Proc far
     cmc
     jc sufDone
 ;
-    mov eax,fs
-    mov ds,eax
-;
     dec bx
     shl bx,2
     add bx,OFFSET vfsp_file_arr
-    mov ax,ds:[bx].ff_sel
+    mov ax,fs:[bx].ff_sel
 ;
     or ax,ax
     jz sufDone
@@ -402,7 +398,6 @@ sufDone:
     pop ecx
     pop eax
     pop fs
-    pop ds
     ret
 serv_update_file    Endp
 

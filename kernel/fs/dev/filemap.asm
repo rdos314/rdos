@@ -442,13 +442,37 @@ CreateFileSel   Endp
 
 UpdateFileSel   Proc near
     push ds
+    push es
+    push ebx
     push ecx
     push edx
 ;
     mov ds,ax
+    mov ebx,OFFSET kf_mod_arr
+    mov ecx,ds:kf_mod_count
+    or ecx,ecx
+    jz ufsDone
+
+ufsLoop:
+    mov ax,ds:[ebx].km_map_sel
+    or ax,ax
+    jz ufsNext
 ;
+    mov es,eax
+    mov es:kfm_check,1
+;
+    mov es,es:kfm_kernel_sel
+    mov es:fm_update,1
+
+ufsNext:
+    add ebx,4
+    loop ufsLoop
+
+ufsDone:
     pop edx
     pop ecx
+    pop ebx
+    pop es
     pop ds
     ret
 UpdateFileSel   Endp
@@ -2692,8 +2716,8 @@ UpdateFileReq  Endp
 ;
 ;       DESCRIPTION:    Disable file req
 ;
-;       PARAMETERS:     FS                 Part sel                       
-;                       GS                 File sel
+;       PARAMETERS:     DS                 File sel
+;                       FS                 Part sel                       
 ;                       EDX                Req id
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2701,36 +2725,12 @@ UpdateFileReq  Endp
     public DisableFileReq
 
 DisableFileReq  Proc near
-    push es
-    push eax
     push ebx
-    push ecx
-;    
+;
     mov ebx,ds:[4*edx].kf_handle_arr
     lock bts ds:[ebx].kre_flags,KRE_DISABLED
 ;
-    mov ebx,OFFSET kf_mod_arr
-    mov ecx,ds:kf_mod_count
-    or ecx,ecx
-    jz dfrDone
-
-dfrLoop:
-    mov ax,ds:[ebx].km_map_sel
-    or ax,ax
-    jz dfrNext
-;
-    mov es,eax
-    mov es:kfm_check,1
-
-dfrNext:
-    add ebx,4
-    loop dfrLoop
-
-dfrDone:
-    pop ecx
     pop ebx
-    pop eax
-    pop es
     ret
 DisableFileReq  Endp
 
