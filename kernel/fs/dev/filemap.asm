@@ -1849,7 +1849,7 @@ FreeMap Endp
 ;
 ;       DESCRIPTION:    Update file
 ;
-;       PARAMETERS:     DS             File req
+;       PARAMETERS:     DS             Process map sel
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
@@ -1914,7 +1914,7 @@ UpdateFile      Endp
 ;
 ;       DESCRIPTION:    Signal written page
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Process map sel
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;                       EDX            Linea address
@@ -1960,7 +1960,7 @@ AddDirtyMap   Endp
 ;
 ;       DESCRIPTION:    Check map for written pages
 ;
-;       PARAMETERS:     DS:ESI         Reference
+;       PARAMETERS:     DS             Process map sel
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;
@@ -2021,36 +2021,52 @@ CheckDirtyMap  Endp
 ;
 ;       DESCRIPTION:    Check map
 ;
-;       PARAMETERS:     DS:ESI         Reference
+;       PARAMETERS:     DS             Process map sel
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
+;                       ESI            Index
+;
+;       RETRURNS:       CY             Entry freed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    add esi,OFFSET kfm_ref_arr
+
+
 CheckMap  Proc near
     push eax
+;
+    xor al,al
+    xchg al,ds:[esi].kfm_disabled_arr
+    or al,al
+    jnz cmFree
 ;
     call CheckDirtyMap
 ;
     test al,20h
     jz cmNone
 ;
-    add byte ptr ds:[esi],1
-    jnc cmDone
+    add byte ptr ds:[esi].kfm_ref_arr,1
+    jnc cmOk
 ;
-    dec byte ptr ds:[esi]
-    jmp cmDone
+    dec byte ptr ds:[esi].kfm_ref_arr
+    jmp cmOk
 
 cmNone:
-    mov al,ds:[esi]
+    mov al,ds:[esi].kfm_ref_arr
     or al,al
     jz cmFree
 ;
-    sub byte ptr ds:[esi],1
-    jnz cmDone
+    sub byte ptr ds:[esi].kfm_ref_arr,1
+    jnz cmOk
 
 cmFree:
     call FreeMap
+    stc
+    jmp cmDone
+
+cmOk:
+    clc
 
 cmDone:
     pop eax
@@ -2319,14 +2335,16 @@ umLoop:
     je umLeave
 ;
     movzx esi,al
-    add esi,OFFSET kfm_ref_arr
     movzx edi,al
     shl edi,4
     add edi,OFFSET fm_entry_arr
     call CheckMap
+    jc umSkip
 
 umNext:
     inc ebx
+
+umSkip:
     loop umLoop
 
 umLeave:
@@ -3604,45 +3622,14 @@ UpdateVfsFile_      Proc near
     push gs
     pushad
 ;
-    mov ax,flat_sel
-    mov fs,eax
-    mov ds,si
+    mov ds,esi
+    mov fs,esi
+    shr esi,16
+    mov bx,si
+;
     mov es,ds:kfm_kernel_sel
     mov gs,ds:kfm_file_sel
-    mov ebp,gs:kf_info_linear
-    mov ebx,OFFSET fm_sorted_arr
-    mov ecx,240
-    EnterSection ds:kfm_section
-
-uvfLoop:
-    mov al,es:[ebx]
-    cmp al,-1
-    je uvfLeave
-;
-    movzx esi,al
-    add esi,OFFSET kfm_ref_arr
-    movzx edi,al
-    shl edi,4
-    add edi,OFFSET fm_entry_arr    
-;
-    mov eax,fs:[ebp].fi_size
-    mov edx,fs:[ebp].fi_size+4
-    sub eax,es:[edi].fmb_pos
-    sbb edx,es:[edi].fmb_pos+4
-    jnc uvfNext
-;
-    call CheckDirtyMap
-    call FreeMap
-    jmp uvfLoop
-
-uvfNext:
-    inc ebx
-    loop uvfLoop
-
-uvfLeave:
-    call UpdateUnlinked
-;
-    LeaveSection ds:kfm_section
+    call UpdateMap
 ;
     popad
     pop gs
