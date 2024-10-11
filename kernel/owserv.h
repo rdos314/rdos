@@ -25,6 +25,11 @@
 // check disc id, set to -1 on carry, extend to eax
 #define ValidateDisc 0x73 2 0xB0 0xFF 0xF 0xBE 0xC0
 
+
+#pragma aux ServSignal = \
+    ServGate_serv_signal  \
+    __parm [__eax]
+
 #pragma aux ServCreateShareBlock = \
     ServGate_create_serv_share_block  \
     __value [__edx]

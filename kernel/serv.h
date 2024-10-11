@@ -57,6 +57,8 @@ void RDOSAPI ServPartitionsDone(int handle);
 
 int RDOSAPI ServFormatVfsPartition(int handle);
 
+void RDOSAPI ServSignal(int threadid);
+
 int RDOSAPI ServTest();
 int RDOSAPI ServGetVfsHandle();
 int RDOSAPI ServGetVfsDisc(int handle);

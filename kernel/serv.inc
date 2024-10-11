@@ -44,6 +44,10 @@ TestServ  MACRO
 
 ;;;;;;;;; VFS ;;;;;;;;;;;;;;;;;;
 
+; IN AX              Thread ID
+ServSignal  MACRO
+    ServGate serv_signal_nr
+                    ENDM
 
 ; OUT EBX              VFS handle
 GetVfsHandle  MACRO

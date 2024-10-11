@@ -79,5 +79,6 @@ vfs_init_parts_nr          = 72
 vfs_done_parts_nr          = 73
 get_vfs_part_drive_nr      = 74
 serv_disable_file_req_nr   = 75
+serv_signal_nr             = 76
 
 serv_gate_entries          = 80
