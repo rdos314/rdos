@@ -2894,7 +2894,7 @@ FreeFileReq  Proc near
     or ecx,ecx
     jz ffrReq
 ;
-    mov edi,ds:[ebx].kre_block_arr
+    xor edi,edi
     mov edx,ds:[ebx].kre_phys_arr
     mov edx,ds:[edx]
     and edx,0FFFh
@@ -2916,11 +2916,16 @@ ffrFreeAll:
     shr eax,9
 ;    
     push eax
-    mov eax,es:[edi]
-    mov edx,es:[edi+4]
+    push edx
+;
+    mov edx,gs:[ebx].kre_block_arr
+    mov eax,es:[edx+edi]
+    mov edx,es:[edx+edi+4]
     call IsBlockCached
+;
+    pop edx
     pop eax
-    jc ffrFreeNext
+    jc ffrFreePhys
 ;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz ffrFreeNext
@@ -2934,6 +2939,19 @@ ffrOk:
     jnz ffrFreeNext
 ;
     dec ds:vfs_locked_pages
+    jmp ffrFreeNext
+
+ffrFreePhys:
+    push eax
+    push ebx
+;
+    mov ebx,gs:[ebx].kre_phys_arr
+    mov eax,gs:[ebx+edi]
+    mov ebx,gs:[ebx+edi+4]
+    FreePhysical
+;
+    pop ebx
+    pop eax
 
 ffrFreeNext:
     or ecx,ecx
