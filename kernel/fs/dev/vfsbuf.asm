@@ -845,6 +845,89 @@ RelSectorToBlock  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           IsBlockCached
+;
+;       DESCRIPTION:    Check if block is cached
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       EDX:EAX     Block #
+;
+;       RETURNS:        NC
+;                         ESI       Physical entry buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public IsBlockCached
+
+IsBlockCached    Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov esi,eax
+    mov ebx,edx
+    shl ebx,2
+    mov eax,ds:[ebx].vfs_buf_arr
+    or eax,eax
+    jnz ibcEntryOk
+;
+    call CreateEntry
+    or ax,VFS_BUF_PRESENT
+    mov ds:[ebx].vfs_buf_arr,eax
+
+ibcEntryOk:
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,20
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    jnz ibcBufPtr
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx],eax
+
+ibcBufPtr:
+    and ax,0F000h
+;
+    mov ebx,esi
+    shr ebx,10
+    and ebx,0FFCh
+    add ebx,eax
+    mov eax,es:[ebx]
+    or eax,eax
+    jnz ibcBufDir
+;
+    call CreateBufEntry
+    or ax,VFS_BUF_PRESENT
+    mov es:[ebx],eax
+
+ibcBufDir:
+    and ax,0F000h
+    and esi,0FF8h
+    add esi,eax
+    test es:[esi].vfsp_flags,VFS_PHYS_PRESENT
+    stc
+    jz ibcDone
+;
+    clc
+
+ibcDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+IsBlockCached   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           BlockToBuf
 ;
 ;       DESCRIPTION:    Converts between block # and physical address
@@ -941,6 +1024,42 @@ btbDone:
     pop eax
     ret
 BlockToBuf   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DisableBuf
+;
+;       DESCRIPTION:    Disable physical entry
+;
+;       PARAMETERS:     DS          VFS sel
+;                       ES          Server flat sel
+;                       AX          Lock count
+;                       ESI         Physical entry buf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DisableBuf
+
+DisableBuf    Proc near
+    push eax
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz dbDone
+;
+    sub es:[esi].vfsp_ref_bitmap,ax
+    jnz dbDone
+;
+    xor eax,eax
+    mov es:[esi],eax
+    mov es:[esi+4],eax
+    dec ds:vfs_cached_pages
+    dec ds:vfs_locked_pages
+
+dbDone:
+    pop eax
+    ret
+DisableBuf   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

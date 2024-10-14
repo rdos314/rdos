@@ -161,7 +161,9 @@ code    SEGMENT byte public 'CODE'
     extern AllocateMsg:near
     extern RunMsg:near
     extern PostMsg:near
+    extern IsBlockCached:near
     extern BlockToBuf:near
+    extern DisableBuf:near
     extern GetDrivePart:near
     extern GetPathDrive:near
     extern GetRelDir:near
@@ -2836,20 +2838,11 @@ dfrcAll:
     push eax
     mov eax,es:[edi]
     mov edx,es:[edi+4]
-    call BlockToPhys
+    call IsBlockCached
     pop eax
+    jc dfrcNext
 ;
-    test es:[esi].vfsp_flags,VFS_PHYS_VALID
-    jz dfrcNext
-;
-    sub es:[esi].vfsp_ref_bitmap,ax
-    jnz dfrcNext
-
-dfrcOk:
-    xor eax,eax
-    mov es:[esi],eax
-    mov es:[esi+4],eax
-    dec ds:vfs_locked_pages
+    call DisableBuf
 
 dfrcNext:
     or ecx,ecx
@@ -2925,8 +2918,9 @@ ffrFreeAll:
     push eax
     mov eax,es:[edi]
     mov edx,es:[edi+4]
-    call BlockToPhys
+    call IsBlockCached
     pop eax
+    jc ffrFreeNext
 ;
     test es:[esi].vfsp_flags,VFS_PHYS_VALID
     jz ffrFreeNext
