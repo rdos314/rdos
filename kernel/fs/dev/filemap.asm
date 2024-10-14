@@ -2817,14 +2817,13 @@ dfrCache:
     mov edx,ds:[ebx].kre_phys_arr
     mov edx,ds:[edx]
     and edx,0FFFh
-    shr edx,9
-    mov eax,8
-    sub eax,edx
+    jnz dfrcDone
+;
     mov ds,fs:vfsp_disc_sel
     EnterSection ds:vfs_section
 
 dfrcLoop:
-    shl eax,9
+    mov eax,1000h
     cmp ecx,eax
     jae dfrcAll
 ;
@@ -2844,13 +2843,12 @@ dfrcAll:
     jz dfrcNext
 ;
     sub es:[esi].vfsp_ref_bitmap,ax
-    jnc dfrcOk
-;
-    int 3
+    jnz dfrcNext
 
 dfrcOk:
-    jnz dfrcNext
-;
+    xor eax,eax
+    mov es:[esi],eax
+    mov es:[esi+4],eax
     dec ds:vfs_locked_pages
 
 dfrcNext:
@@ -2858,7 +2856,6 @@ dfrcNext:
     jz dfrcEntry
 ;
     add edi,8
-    mov eax,8
     jmp dfrcLoop
 
 dfrcEntry:
