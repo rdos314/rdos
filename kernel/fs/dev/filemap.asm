@@ -2747,9 +2747,8 @@ UpdateFileReq  Endp
 
 DisableFileReq  Proc near
     push es
-    push eax
-    push ebx
-    push ecx
+    push gs
+    pushad
 ;
     mov ebx,ds:[4*edx].kf_handle_arr
     lock bts ds:[ebx].kre_flags,KRE_DISABLED
@@ -2757,7 +2756,7 @@ DisableFileReq  Proc near
     mov ebx,OFFSET kf_mod_arr
     mov ecx,ds:kf_mod_count
     or ecx,ecx
-    jz dfrDone
+    jz dfrCache
 
 dfrLoop:
     mov ax,ds:[ebx].km_map_sel
@@ -2791,7 +2790,7 @@ dfrmNext:
 
 dfrmLeave:
     LeaveSection ds:kfm_section
-;
+; 
     pop ecx
     pop ebx
     pop ds
@@ -2800,10 +2799,74 @@ dfrNext:
     add ebx,4
     loop dfrLoop
 
-dfrDone:
-    pop ecx
-    pop ebx
+dfrCache:
+    mov ebx,ds:[4*edx].kf_handle_arr
+    mov ecx,ds:[ebx].kre_req_size
+;
+    mov eax,ds
+    mov gs,eax
+;    
+    mov ax,serv_flat_sel
+    mov es,eax
+;
+    mov ebp,ebx
+    or ecx,ecx
+    jz dfrcDone
+;
+    mov edi,ds:[ebx].kre_block_arr
+    mov edx,ds:[ebx].kre_phys_arr
+    mov edx,ds:[edx]
+    and edx,0FFFh
+    shr edx,9
+    mov eax,8
+    sub eax,edx
+    mov ds,fs:vfsp_disc_sel
+    EnterSection ds:vfs_section
+
+dfrcLoop:
+    shl eax,9
+    cmp ecx,eax
+    jae dfrcAll
+;
+    mov eax,ecx
+
+dfrcAll:
+    sub ecx,eax
+    shr eax,9
+;    
+    push eax
+    mov eax,es:[edi]
+    mov edx,es:[edi+4]
+    call BlockToPhys
     pop eax
+;
+    test es:[esi].vfsp_flags,VFS_PHYS_VALID
+    jz dfrcNext
+;
+    sub es:[esi].vfsp_ref_bitmap,ax
+    jnc dfrcOk
+;
+    int 3
+
+dfrcOk:
+    jnz dfrcNext
+;
+    dec ds:vfs_locked_pages
+
+dfrcNext:
+    or ecx,ecx
+    jz dfrcEntry
+;
+    add edi,8
+    mov eax,8
+    jmp dfrcLoop
+
+dfrcEntry:
+    LeaveSection ds:vfs_section
+
+dfrcDone:
+    popad
+    pop gs
     pop es
     ret
 DisableFileReq  Endp
