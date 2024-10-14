@@ -10,7 +10,7 @@
 
 void main()
 {
-    TFile file("e:/test.bin");
+/*    TFile file("e:/test.bin");
     char *buf = new char[1024];
     int size;
     int dummy;
@@ -24,12 +24,39 @@ void main()
     file.SetPos(100234);
     size = file.Read(buf, 567);
 
-    file.SetSize(0);
-
     scanf("%d", &dummy);
 
     file.SetPos(760234);
     size = file.Read(buf, 455);
+
+*/
+
+    char *buf = new char[1024];
+    int size;
+    int dummy;
+    int handle = RdosOpenHandle("e:/test.bin", O_RDWR);
+
+    RdosSetHandlePos(handle, 500234);
+    size = RdosReadHandle(handle, buf, 267);
+
+    RdosSetHandlePos(handle, 1000234);
+    size = RdosReadHandle(handle, buf, 99);
+    
+    RdosSetHandlePos(handle, 1000234);
+    size = RdosReadHandle(handle, buf, 567);
+
+    RdosSetHandleSize(handle, 0);
+
+    scanf("%d", &dummy);
+
+    RdosSetHandlePos(handle, 760234);
+    size = RdosReadHandle(handle, buf, 455);
+
+    RdosCloseHandle(handle);
+
+    delete buf;
+
+
 
 //    RdosTestGate("");
 }
