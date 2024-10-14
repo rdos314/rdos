@@ -551,6 +551,9 @@ int TFile::VfsRead(void *Buf, int Size)
     if (Pos + Size > TotalSize)
         Size = TotalSize - Pos;
 
+    if (Size < 0)
+        Size = 0;
+
     EnterFutex(&FMap->Handle->Futex);
 
     if (FLastIndex < 0)
