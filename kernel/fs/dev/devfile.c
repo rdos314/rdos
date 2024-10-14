@@ -51,7 +51,8 @@ struct RdosFileMapEntry
 struct RdosFileMap
 {
     unsigned char SortedArr[241];
-    char Resv[3];
+    unsigned short int Resv;
+    char Update;
     int Count;
     int HandleOffset;
     int InfoOffset;
@@ -92,8 +93,8 @@ extern void MapVfsFile(int handlemod, long long pos, int size);
 extern void GrowVfsFile(int handle, long long csize, int incr);
 #pragma aux GrowVfsFile parm routine [__esi] [__edx __eax] [__ecx]
 
-extern void UpdateVfsFile(int handle, long long base, int size);
-#pragma aux UpdateVfsFile parm routine [__esi] [__edx __eax] [__ecx]
+extern void UpdateVfsFile(int handle);
+#pragma aux UpdateVfsFile parm routine [__esi]
 
 /*##########################################################################
 #
@@ -106,7 +107,7 @@ extern void UpdateVfsFile(int handle, long long base, int size);
 #   Returns....: Buffer index
 #
 ##########################################################################*/
-static int VfsFind(struct RdosFileMap *Map, long long Pos)
+static int VfsFind(int HandleMod, struct RdosFileMap *Map, long long Pos)
 {
     int Step = 0x80;
     int Curr = 0;
@@ -115,6 +116,9 @@ static int VfsFind(struct RdosFileMap *Map, long long Pos)
 
     for (;;)
     {
+        if (Map->Update)
+            UpdateVfsFile(HandleMod);
+
         index = Map->SortedArr[Curr + Step];
         if (index != 0xFF)
         {
@@ -259,18 +263,18 @@ int VfsRead(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, in
     struct RdosFileHandleInfo *hinfo = (struct RdosFileHandleInfo *)OffsetToPtr(sel, Map->HandleOffset);
     long long TotalSize = info->CurrSize;
 
-    if (hinfo->ReqSize > TotalSize)
-        TotalSize = hinfo->ReqSize;
-
-    if (Pos > TotalSize)
-        Pos = TotalSize;
+    if (Map->Update)
+        UpdateVfsFile(HandleMod);
 
     if (Pos + Size > TotalSize)
         Size = TotalSize - Pos;
 
+    if (Size < 0)
+        Size = 0;
+
     LockMod(Map);
 
-    LastIndex = VfsFind(Map, Pos);
+    LastIndex = VfsFind(HandleMod, Map, Pos);
 
     while (Size)
     {
@@ -292,7 +296,7 @@ int VfsRead(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, in
                 MapVfsFile(HandleMod, Pos, Size);
 
                 LockMod(Map);
-                LastIndex = VfsFind(Map, Pos);
+                LastIndex = VfsFind(HandleMod, Map, Pos);
                 if (LastIndex >= 0)
                     break;
             }
@@ -331,6 +335,9 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
     struct RdosFileHandleInfo *hinfo = (struct RdosFileHandleInfo *)OffsetToPtr(sel, Map->HandleOffset);
     long long Grow;
 
+    if (Map->Update)
+        UpdateVfsFile(HandleMod);
+
     Grow = Pos + Size - info->DiscSize;
 
     if (Grow > 0)
@@ -338,7 +345,7 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
 
     LockMod(Map);
 
-    LastIndex = VfsFind(Map, Pos);
+    LastIndex = VfsFind(HandleMod, Map, Pos);
 
     while (Size)
     {
@@ -348,7 +355,7 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
 
             if (count)
             {
-                UpdateVfsFile(HandleMod, Pos, count);
+                UpdateVfsFile(HandleMod);
 
                 ptr += count;
                 Size -= count;
@@ -359,7 +366,7 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
 
         if (Size)
         {
-            LastIndex = VfsFind(Map, Pos);
+            LastIndex = VfsFind(HandleMod, Map, Pos);
 
             for (i = 0; i < 10; i++)
             {
@@ -373,7 +380,7 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
                     MapVfsFile(HandleMod, Pos, Size);
 
                 LockMod(Map);
-                LastIndex = VfsFind(Map, Pos);
+                LastIndex = VfsFind(HandleMod, Map, Pos);
                 if (LastIndex >= 0)
                     break;
             }
