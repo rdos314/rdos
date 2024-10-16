@@ -4012,67 +4012,23 @@ WriteVfsFile    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_vfs_file    Proc near
-    ret
+    push ebx
+    push ecx
+;
 
-    push ds
-    push es
-    push fs
-    push gs
-    pushad
-;
-    mov eax,es
-    mov gs,eax
-;
-    call GetPathDrive
+    xor ecx,ecx    
+    call OpenVfsFile
     jc dvfFail
 ;
-    call GetDrivePart
-    or bx,bx
-    jz dvfFail
-;
-    mov ah,es:[edi]
-    cmp ah,'/'
-    je dvfRoot
-;
-    cmp ah,'\'
-    je dvfRoot
 
-dvfRel:
-    call GetRelDir
-    jmp dvfHasStart
 
-dvfRoot:
-    inc edi
-    xor ax,ax
-
-dvfHasStart:
-    mov esi,edi
-    mov fs,bx
-    mov ds,fs:vfsp_disc_sel
-;
-    movzx eax,ax
-    call AllocateMsg
-    jc dvfFail
-
-dvfCopyPath:
-    lods byte ptr gs:[esi]
-    stosb
-    or al,al
-    jnz dvfCopyPath
-;
-;    mov eax,VFS_DELETE_FILE
-;    call RunMsg
-    jnc dvfDone
 
 dvfFail:
     stc
 
 dvfDone:
-    popad
-    pop gs
-    pop fs
-    pop es
-    pop ds
+    pop ecx
+    pop ebx
     ret
 delete_vfs_file    Endp
 
