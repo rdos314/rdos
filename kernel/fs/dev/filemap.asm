@@ -4003,40 +4003,6 @@ WriteVfsFile    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           delete_vfs_file
-;
-;       DESCRIPTION:    Delete VFS file
-;
-;       PARAMETERS:     ES:EDI         Pathname
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_vfs_file    Proc near
-    push ebx
-    push ecx
-;
-
-    xor ecx,ecx    
-    call OpenVfsFile
-    jc dvfFail
-;
-    DeleteHandle
-    CloseHandle
-    clc
-    jmp dvfDone
-
-dvfFail:
-    stc
-
-dvfDone:
-    pop ecx
-    pop ebx
-    ret
-delete_vfs_file    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           CloseVfsFile
 ;
 ;       DESCRIPTION:    Close VFS file
@@ -4227,6 +4193,31 @@ DeleteVfsFile  Endp
 delete_file_name       DB 'Delete VFS File',0
 
 org_delete DD ?,?
+
+delete_vfs_file    Proc near
+    push ebx
+    push ecx
+;
+    xor ecx,ecx    
+    call OpenVfsFile
+    jc dvfFail
+;
+    int 3
+    DeleteHandle
+;
+    int 3
+    CloseHandle
+    clc
+    jmp dvfDone
+
+dvfFail:
+    stc
+
+dvfDone:
+    pop ecx
+    pop ebx
+    ret
+delete_vfs_file    Endp
 
 delete_file16  Proc far
     push ecx
