@@ -112,6 +112,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern OpenVfsFile:near
+    extern DeleteVfsFile:near
     extern CloseVfsFile:near
     extern CloseVfsMod:near
     extern FreeUserHandle:near
@@ -1071,6 +1072,99 @@ close_kernel_handle Proc far
     CloseLegacyFile
     ret
 close_kernel_handle Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DeleteHandle
+;
+;           DESCRIPTION:    Delete C handle object (file)
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EBX         Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle_name  DB 'Delete C Handle', 0
+
+delete_dummy     Proc near
+    ret
+delete_dummy     Endp
+
+delete_vfs      Proc near
+    mov bx,ax
+    call DeleteVfsFile
+    ret
+delete_vfs      Endp
+
+delete_tab:
+dt00  DD OFFSET delete_dummy
+dt01  DD OFFSET delete_dummy
+dt02  DD OFFSET delete_dummy
+dt03  DD OFFSET delete_dummy
+dt04  DD OFFSET delete_dummy
+dt05  DD OFFSET delete_dummy
+dt06  DD OFFSET delete_vfs
+dt07  DD OFFSET delete_dummy
+dt08  DD OFFSET delete_dummy
+dt09  DD OFFSET delete_dummy
+
+delete_handle     Proc far
+    push ds
+    push eax
+    push ecx
+    push edx
+    push ebp
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+    mov ax,ds:pf_c_handle_sel
+    or ax,ax
+    jz dfhFail
+;
+    mov ds,eax
+;    
+    cmp bx,MAX_HANDLES
+    jae dfhFail
+;
+    mov ax,ds:[ebx].hp_handle
+    cmp ax,SYS_HANDLE_COUNT
+    jae dfhFail
+;    
+    or ax,ax
+    jz dfhFail
+;
+    movzx ebx,ax
+    dec ebx
+    mov ecx,ebx
+    shl ebx,4
+    add ebx,OFFSET hd_data
+    mov eax,SEG data
+    mov ds,eax
+;
+    mov ax,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].he_type
+;
+    cmp ebp,10
+    jae dfhFail
+;
+    call dword ptr cs:[4*ebp].delete_tab
+    xor ebx,ebx
+    jmp dfhDone
+
+dfhFail:
+    mov ebx,-1
+
+dfhDone:
+    pop ebp
+    pop edx
+    pop ecx
+    pop eax
+    pop ds    
+    ret
+delete_handle    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6003,6 +6097,12 @@ init_handle     PROC near
     mov dx,virt_es_in
     mov ax,open_handle_nr
     RegisterUserGate
+;
+    mov esi,OFFSET delete_handle
+    mov edi,OFFSET delete_handle_name
+    xor cl,cl
+    mov ax,delete_handle_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET close_handle
     mov edi,OFFSET close_handle_name

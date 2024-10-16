@@ -4020,8 +4020,10 @@ delete_vfs_file    Proc near
     call OpenVfsFile
     jc dvfFail
 ;
-
-
+    DeleteHandle
+    CloseHandle
+    clc
+    jmp dvfDone
 
 dvfFail:
     stc
@@ -4192,6 +4194,24 @@ DupVfsFile  Proc near
     pop ds
     ret
 DupVfsFile  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteVfsFile
+;
+;       DESCRIPTION:    Delete VFS file
+;
+;       PARAMETERS:     BX		File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DeleteVfsFile
+
+DeleteVfsFile  Proc near
+    int 3
+    ret
+DeleteVfsFile  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
