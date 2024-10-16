@@ -102,7 +102,6 @@ public:
 
     int OpenFile(int rel, char *path);
     int CreateFile(int rel, char *path, int attrib);
-    int DeleteFile(int rel, char *path);
     int GetFileHandle(int handle);
     int GetFileAttrib(int handle);
     bool SetFileSize(int handle, long long size);

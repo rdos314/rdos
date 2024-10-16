@@ -4012,6 +4012,8 @@ WriteVfsFile    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_vfs_file    Proc near
+    ret
+
     push ds
     push es
     push fs
@@ -4058,8 +4060,8 @@ dvfCopyPath:
     or al,al
     jnz dvfCopyPath
 ;
-    mov eax,VFS_DELETE_FILE
-    call RunMsg
+;    mov eax,VFS_DELETE_FILE
+;    call RunMsg
     jnc dvfDone
 
 dvfFail:

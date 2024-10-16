@@ -149,14 +149,6 @@ int CreateFile(int rel, char *path, int attrib)
         return 0;
 }
 
-int DeleteFile(int rel, char *path)
-{
-    if (Fs)
-        return Fs->DeleteFile(rel, path);
-    else
-        return 0;
-}
-
 int GetFileAttrib(int handle)
 {
     if (Fs)
