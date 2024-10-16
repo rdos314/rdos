@@ -711,21 +711,22 @@ void TRootPage::SendAnswer()
     Write("<tr style='height:24.75pt'>\r\n");
     Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
-    Write("Battery voltage");
+    Write("Battery State of Charge");
     Write("</span>\r\n");
     Write("</td>\r\n");
 
     Write("<td align='right' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
-    val = Charger->GetBatteryVoltage();
-    sprintf(str, " %3.1Lf", val);
+    val = Charger->GetBatterySoc();
+    ival = (int)(val * 100.0);
+    sprintf(str, " %d", ival);
     Write(str);
     Write("</span>\r\n");
     Write("</td>\r\n");
 
     Write("<td align='left' valign=top halign=center'>\r\n");
     Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
-    Write(" V");
+    Write(" %");
     Write("</span>\r\n");
     Write("</td>\r\n");
     Write("</tr>\r\n");
