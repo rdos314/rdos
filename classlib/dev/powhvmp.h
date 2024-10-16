@@ -68,6 +68,7 @@ public:
     double GetBatteryPower();
     double GetBatteryChargeEnergy();
     double GetBatteryDischargeEnergy();
+    double GetBatterySoc();
 
     int GetDcDcTemperature();
     int GetInverterTemperature();
@@ -102,6 +103,8 @@ protected:
     double FBatteryPower;
     double FBatteryChargeEnergy;
     double FBatteryDischargeEnergy;
+    double FBatteryVc;
+    double FBatterySoc;
 
     int FDcDcTemp;
     int FInverterTemp;

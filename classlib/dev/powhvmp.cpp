@@ -438,6 +438,22 @@ double TPowHvmP::GetBatteryPower()
 
 /*##########################################################################
 #
+#   Name       : TPowHvmP::GetBatterySoc
+#
+#   Purpose....: Get battery state of charge
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TPowHvmP::GetBatterySoc()
+{
+    return FBatterySoc;
+}
+
+/*##########################################################################
+#
 #   Name       : TPowHvmP::GetBatteryChargeEnergy
 #
 #   Purpose....: Get battery charge energy
@@ -579,6 +595,13 @@ void TPowHvmP::Execute()
 
             FModbus.GetBufferedHoldingRegister(40228, &val);
             FInverterTemp = val;
+
+            if (FHasData)
+                FBatteryVc = 0.9 * FBatteryVc + 0.1 * (FBatteryVoltage - 0.03 * FBatteryCurrent);
+            else
+                FBatteryVc = FBatteryVoltage - 0.03 * FBatteryCurrent;
+
+            FBatterySoc = (FBatteryVc - 47.04) / 4.13;
 
             FHasData = true;
 

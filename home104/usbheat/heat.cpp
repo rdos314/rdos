@@ -917,14 +917,14 @@ void TimeThread(void *Param)
     Table->SetText(2, 0, "Mode");
     Table->SetText(3, 0, "Output");
     Table->SetText(4, 0, "PV");
-    Table->SetText(5, 0, "Voltage");
+    Table->SetText(5, 0, "SoC");
     Table->SetText(6, 0, "Current");
     Table->SetText(7, 0, "Energy");
 
     Table->SetText(1, 2, "kWh");
     Table->SetText(3, 2, "W");
     Table->SetText(4, 2, "W");
-    Table->SetText(5, 2, "V");
+    Table->SetText(5, 2, "%");
     Table->SetText(6, 2, "A");
     Table->SetText(7, 2, "kWh");
     Table->Show();
@@ -1005,7 +1005,8 @@ void TimeThread(void *Param)
             sprintf(str, "%d", (int)PowInv->GetSolarPower());
             Table->SetText(4, 1, str);
 
-            sprintf(str, "%3.1Lf", PowInv->GetBatteryVoltage());
+            val = (int)(100.0 * PowInv->GetBatterySoc());
+            sprintf(str, "%d", val);
             Table->SetText(5, 1, str);
 
             sprintf(str, "%3.1Lf", PowInv->GetBatteryCurrent());
