@@ -1331,6 +1331,7 @@ void TFile::HandleDeleteReq()
     printf(str);
 
     SetSize(0);
+    DeleteDirEntry();
 }
 
 /*##########################################################################
