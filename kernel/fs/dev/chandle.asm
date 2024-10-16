@@ -112,7 +112,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern OpenVfsFile:near
-    extern DeleteVfsFile:near
     extern CloseVfsFile:near
     extern CloseVfsMod:near
     extern FreeUserHandle:near
@@ -121,6 +120,7 @@ code    SEGMENT byte public 'CODE'
     extern MapVfsFile_:near
     extern GrowVfsFile_:near
     extern UpdateVfsFile_:near
+    extern DeleteVfsFile_:near
     extern GetVfsFileInfo:near
     extern GetVfsFilePos:near
     extern SetVfsFilePos:near
@@ -1082,86 +1082,60 @@ close_kernel_handle Endp
 ;
 ;           PARAMETERS:     BX          Handle
 ;
-;           RETURNS:        EBX         Result
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_handle_name  DB 'Delete C Handle', 0
 
-delete_dummy     Proc near
-    ret
-delete_dummy     Endp
-
-delete_vfs      Proc near
-    mov bx,ax
-    call DeleteVfsFile
-    ret
-delete_vfs      Endp
-
-delete_tab:
-dt00  DD OFFSET delete_dummy
-dt01  DD OFFSET delete_dummy
-dt02  DD OFFSET delete_dummy
-dt03  DD OFFSET delete_dummy
-dt04  DD OFFSET delete_dummy
-dt05  DD OFFSET delete_dummy
-dt06  DD OFFSET delete_vfs
-dt07  DD OFFSET delete_dummy
-dt08  DD OFFSET delete_dummy
-dt09  DD OFFSET delete_dummy
-
 delete_handle     Proc far
     push ds
-    push eax
-    push ecx
+    push ebx
     push edx
+    push esi
     push ebp
 ;
+    push eax
     GetThread
-    mov ds,eax
+    mov ds,ax
     mov ds,ds:p_proc_sel
-    mov ax,ds:pf_c_handle_sel
-    or ax,ax
-    jz dfhFail
-;
-    mov ds,eax
+    mov ds,ds:pf_c_handle_sel
+    pop eax
 ;    
     cmp bx,MAX_HANDLES
-    jae dfhFail
+    jae duhDone
+;   
+    mov si,bx
+    shl esi,16
+    movzx ebx,bx
+    shl ebx,4
+    add ebx,OFFSET h_arr
+    mov si,ds:[ebx].hp_vfs_sel
+    mov bp,ds:[ebx].hp_handle
 ;
-    mov ax,ds:[ebx].hp_handle
-    cmp ax,SYS_HANDLE_COUNT
-    jae dfhFail
+    cmp bp,SYS_HANDLE_COUNT
+    jae duhDone
 ;    
-    or ax,ax
-    jz dfhFail
+    or bp,bp
+    jz duhDone
 ;
-    movzx ebx,ax
+    movzx ebx,bp
     dec ebx
-    mov ecx,ebx
     shl ebx,4
     add ebx,OFFSET hd_data
-    mov eax,SEG data
-    mov ds,eax
+    mov ebp,SEG data
+    mov ds,ebp
 ;
-    mov ax,ds:[ebx].he_sel
     movzx ebp,ds:[ebx].he_type
-;
-    cmp ebp,10
-    jae dfhFail
-;
-    call dword ptr cs:[4*ebp].delete_tab
-    xor ebx,ebx
-    jmp dfhDone
+    cmp ebp,C_HANDLE_VFS
+    stc
+    jne vuhDone
+;    
+    call DeleteVfsFile_
 
-dfhFail:
-    mov ebx,-1
-
-dfhDone:
+duhDone:
     pop ebp
+    pop esi
     pop edx
-    pop ecx
-    pop eax
+    pop ebx
     pop ds    
     ret
 delete_handle    Endp

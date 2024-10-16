@@ -3716,6 +3716,24 @@ UpdateVfsFile_      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DeleteVfsFile_
+;
+;       DESCRIPTION:    Delete VFS file
+;
+;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DeleteVfsFile_
+
+DeleteVfsFile_  Proc near
+    int 3
+    ret
+DeleteVfsFile_  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CloseVfsMod
 ;
 ;       DESCRIPTION:    Close VFS module sel
@@ -4164,24 +4182,6 @@ DupVfsFile  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteVfsFile
-;
-;       DESCRIPTION:    Delete VFS file
-;
-;       PARAMETERS:     BX		File sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public DeleteVfsFile
-
-DeleteVfsFile  Proc near
-    int 3
-    ret
-DeleteVfsFile  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           DeleteFile
 ;
 ;       DESCRIPTION:    Delete file
@@ -4202,10 +4202,10 @@ delete_vfs_file    Proc near
     call OpenVfsFile
     jc dvfFail
 ;
-    int 3
+    push ebx
     DeleteHandle
+    pop ebx
 ;
-    int 3
     CloseHandle
     clc
     jmp dvfDone
