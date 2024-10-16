@@ -1032,5 +1032,6 @@ get_secure_connection_cert_nr     = 848
 get_cert_json_nr                  = 849
 
 update_handle_nr                  = 850
+delete_handle_nr                  = 851
 
 usergate_entries                  = 860

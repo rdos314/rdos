@@ -1385,6 +1385,11 @@ SetHandleSize64     MACRO
         UserGate set_handle_size64_nr
                                                 ENDM
 
+; IN    BX          Handle
+DeleteHandle     MACRO
+        UserGate delete_handle_nr
+                                                ENDM
+
 ; IN    BX      Handle
 ; OUT   EAX     Mode
 GetHandleMode     MACRO

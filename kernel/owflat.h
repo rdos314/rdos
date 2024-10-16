@@ -1548,6 +1548,12 @@
     __parm [__edi] [__ecx] \
     __value [__ebx]
 
+#pragma aux RdosDeleteHandle = \
+    CallGate_delete_handle  \
+    CarryToBool \
+    __parm [__ebx] \
+    __value [__eax]
+
 #pragma aux RdosCloseHandle = \
     CallGate_close_handle  \
     __parm [__ebx] \
