@@ -47,6 +47,7 @@ include vfsfile.inc
   REQ_SIZE = 6
   REQ_GROW = 7
   REQ_UPDATE = 8
+  REQ_DELETE = 9
 
     .386p
 
@@ -3727,7 +3728,26 @@ UpdateVfsFile_      Endp
     public DeleteVfsFile_
 
 DeleteVfsFile_  Proc near
-    int 3
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    mov ds,esi
+;
+    GetThreadHandle
+    movzx ecx,ax
+;
+    mov ds,ds:kfm_file_sel
+    mov ebx,REQ_DELETE
+    call AddReq
+;
+    WaitForSignal
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
     ret
 DeleteVfsFile_  Endp
 
