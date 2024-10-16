@@ -42,6 +42,7 @@
 #define REQ_SIZE       6
 #define REQ_GROW       7
 #define REQ_UPDATE     8
+#define REQ_DELETE     9
 
 /*##########################################################################
 #
@@ -1550,6 +1551,23 @@ void TFs::HandleSizeReq(TFile *file, long long req, int thread)
 
 /*##########################################################################
 #
+#   Name       : TFs::HandleDeleteReq
+#
+#   Purpose....: Handle delete req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFs::HandleDeleteReq(TFile *file, int thread)
+{
+    file->HandleDeleteReq();
+    ServSignal(thread);
+}
+
+/*##########################################################################
+#
 #   Name       : TFs::HandleQueue
 #
 #   Purpose....: Handle queue entry
@@ -1589,6 +1607,10 @@ void TFs::HandleQueue(TFile *file, struct TFsQueueEntry *entry)
 
         case REQ_SIZE:
             HandleSizeReq(file, entry->Par64, entry->Par32);
+            break;
+
+        case REQ_DELETE:
+            HandleDeleteReq(file, entry->Par32);
             break;
 
         case REQ_CLOSE:

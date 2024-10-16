@@ -1313,6 +1313,28 @@ void TFile::HandleSizeReq(long long size)
 
 /*##########################################################################
 #
+#   Name       : TFile::HandleDeleteReq
+#
+#   Purpose....: Handle delete req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFile::HandleDeleteReq()
+{
+    char str[80];
+
+    sprintf(str, "Delete %d\r\n", Index);
+    RdosWriteFile(FileHandle, str, strlen(str));
+    printf(str);
+
+    SetSize(0);
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::SetSize
 #
 #   Purpose....: Set file size

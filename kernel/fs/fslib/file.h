@@ -102,6 +102,7 @@ protected:
     virtual void HandleFreeReq(int index);
     virtual TFileReq *HandleGrowReq(long long size);
     virtual void HandleSizeReq(long long size);
+    virtual void HandleDeleteReq();
     virtual bool SetDiscSize(long long Size) = 0;
 
     virtual void SetRead(long long RelSector, int Sectors);
