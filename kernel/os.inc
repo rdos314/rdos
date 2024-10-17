@@ -2619,6 +2619,30 @@ WriteLegacyFile MACRO
                     ENDM
 
 ; IN  BX        File selector
+; OUT EAX       File size
+GetLegacyFileSize MACRO
+    OsGate get_legacy_file_size_nr
+                    ENDM
+
+; IN  BX        File selector
+; IN  EAX       File size
+SetLegacyFileSize MACRO
+    OsGate set_legacy_file_size_nr
+                    ENDM
+
+; IN  BX            File selector
+; OUT EDX:EAX       File time
+GetLegacyFileTime MACRO
+    OsGate get_legacy_file_time_nr
+                    ENDM
+
+; IN  BX            File selector
+; IN  EDX:EAX       File time
+SetLegacyFileTime MACRO
+    OsGate set_legacy_file_time_nr
+                    ENDM
+
+; IN  BX        File selector
 CloseLegacyFile MACRO
     OsGate close_legacy_file_nr
                     ENDM
@@ -2666,30 +2690,6 @@ WriteKernelHandle MACRO
 ; IN  BX        Handle
 CloseKernelHandle MACRO
     OsGate close_kernel_handle_nr
-                    ENDM
-
-; IN  BX        File selector
-; OUT EAX       File size
-GetCFileSize MACRO
-    OsGate get_c_file_size_nr
-                    ENDM
-
-; IN  BX        File selector
-; IN  EAX       File size
-SetCFileSize MACRO
-    OsGate set_c_file_size_nr
-                    ENDM
-
-; IN  BX            File selector
-; OUT EDX:EAX       File time
-GetCFileTime MACRO
-    OsGate get_c_file_time_nr
-                    ENDM
-
-; IN  BX            File selector
-; IN  EDX:EAX       File time
-SetCFileTime MACRO
-    OsGate set_c_file_time_nr
                     ENDM
 
 ; IN  BX        File selector

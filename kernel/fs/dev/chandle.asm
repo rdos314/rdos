@@ -2421,7 +2421,7 @@ get_size_dummy      Proc near
 get_size_dummy      Endp
 
 get_size_file       Proc near
-    GetCFileSize
+    GetLegacyFileSize
     ret
 get_size_file       Endp
 
@@ -2563,7 +2563,7 @@ set_size_dummy      Proc near
 set_size_dummy      Endp
 
 set_size_file       Proc near
-    SetCFileSize
+    SetLegacyFileSize
     ret
 set_size_file       Endp
 
@@ -2731,7 +2731,7 @@ get_time_dummy      Proc near
 get_time_dummy      Endp
 
 get_time_file       Proc near
-    GetCFileTime
+    GetLegacyFileTime
     ret
 get_time_file       Endp
 
@@ -2940,7 +2940,7 @@ set_time_dummy      Proc near
 set_time_dummy      Endp
 
 set_time_file       Proc near
-    SetCFileTime
+    SetLegacyFileTime
     ret
 set_time_file       Endp
 
@@ -3374,7 +3374,7 @@ eof_stdout      Proc near
 eof_stdout      Endp
 
 eof_file       Proc near
-    GetCFileSize
+    GetLegacyFileSize
     cmp eax,edx
     je eof_file_ok
 ;
@@ -3707,7 +3707,7 @@ read_buf_stdin       Endp
 
 read_buf_file       Proc near
     mov ecx,eax
-    GetCFileSize
+    GetLegacyFileSize
     sub ecx,eax
     neg ecx
     clc
@@ -3836,7 +3836,7 @@ write_buf_stdout       Proc near
 write_buf_stdout       Endp
 
 write_buf_file       Proc near
-    GetCFileSize
+    GetLegacyFileSize
     mov ecx,7FFFFFFFh
     sub ecx,eax
     clc

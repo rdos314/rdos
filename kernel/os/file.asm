@@ -2307,9 +2307,9 @@ get_file_size_done64:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           get_c_file_size
+;           NAME:           get_legacy_file_size
 ;
-;           DESCRIPTION:    Get C file size
+;           DESCRIPTION:    Get legacy file size
 ;
 ;           PARAMETERS:     BX              File selector
 ;                   
@@ -2317,9 +2317,9 @@ get_file_size_done64:
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_c_file_size_name      DB 'Get C File Size',0
+get_legacy_file_size_name      DB 'Get Legacy File Size',0
 
-get_c_file_size Proc far
+get_legacy_file_size Proc far
     push ds
 ;
     or bx,bx
@@ -2335,7 +2335,7 @@ get_c_file_size Proc far
 gcfsDone:
     pop ds
     retf32
-get_c_file_size Endp
+get_legacy_file_size Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2417,18 +2417,18 @@ set_file_size_done64:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           set_c_file_size
+;           NAME:           set_legacy_file_size
 ;
-;           DESCRIPTION:    Set C file size
+;           DESCRIPTION:    Set legacy file size
 ;
 ;           PARAMETERS:     BX              File selector
 ;                           EAX             New size
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_c_file_size_name      DB 'Set C File Size',0
+set_legacy_file_size_name      DB 'Set Legacy File Size',0
 
-set_c_file_size Proc far
+set_legacy_file_size Proc far
     push ds
     push eax
     push edx
@@ -2449,7 +2449,7 @@ scfsDone:
     pop eax
     pop ds
     retf32
-set_c_file_size Endp
+set_legacy_file_size Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2628,7 +2628,7 @@ get_file_time_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           get_c_file_time
+;           NAME:           get_legacy_file_time
 ;
 ;           DESCRIPTION:    Get C file time & date
 ;
@@ -2638,9 +2638,9 @@ get_file_time_done:
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_c_file_time_name      DB 'Get C File Time',0
+get_legacy_file_time_name      DB 'Get Legacy File Time',0
 
-get_c_file_time Proc far
+get_legacy_file_time Proc far
     push ds
     push es
 ;
@@ -2660,7 +2660,7 @@ gftDone:
     pop es
     pop ds
     retf32
-get_c_file_time Endp
+get_legacy_file_time Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2733,7 +2733,7 @@ set_file_time_done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           set_c_file_time
+;           NAME:           set_legacy_file_time
 ;
 ;           DESCRIPTION:    Set C file time & date
 ;
@@ -2742,9 +2742,9 @@ set_file_time_done:
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_c_file_time_name      DB 'Set C File Time',0
+set_legacy_file_time_name      DB 'Set Legacy File Time',0
 
-set_c_file_time Proc far
+set_legacy_file_time Proc far
     push ds
     push es
     push fs
@@ -2781,7 +2781,7 @@ sftDone:
     pop es
     pop ds
     retf32
-set_c_file_time Endp
+set_legacy_file_time Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3570,28 +3570,28 @@ init_file       PROC near
     mov ax,write_legacy_file_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET get_c_file_size
-    mov edi,OFFSET get_c_file_size_name
+    mov esi,OFFSET get_legacy_file_size
+    mov edi,OFFSET get_legacy_file_size_name
     xor cl,cl
-    mov ax,get_c_file_size_nr
+    mov ax,get_legacy_file_size_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET set_c_file_size
-    mov edi,OFFSET set_c_file_size_name
+    mov esi,OFFSET set_legacy_file_size
+    mov edi,OFFSET set_legacy_file_size_name
     xor cl,cl
-    mov ax,set_c_file_size_nr
+    mov ax,set_legacy_file_size_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET get_c_file_time
-    mov edi,OFFSET get_c_file_time_name
+    mov esi,OFFSET get_legacy_file_time
+    mov edi,OFFSET get_legacy_file_time_name
     xor cl,cl
-    mov ax,get_c_file_time_nr
+    mov ax,get_legacy_file_time_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET set_c_file_time
-    mov edi,OFFSET set_c_file_time_name
+    mov esi,OFFSET set_legacy_file_time
+    mov edi,OFFSET set_legacy_file_time_name
     xor cl,cl
-    mov ax,set_c_file_time_nr
+    mov ax,set_legacy_file_time_nr
     RegisterOsGate
 ;
     mov esi,OFFSET start_read_c_file
