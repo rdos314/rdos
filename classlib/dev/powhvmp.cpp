@@ -533,6 +533,9 @@ void TPowHvmP::Execute()
     int val;
     int i;
     TString str;
+    bool regs = false;
+    int RegArr[40];
+    TFile file("z:/reg.txt", 0);
 
     for (;;)
     {
@@ -618,6 +621,29 @@ void TPowHvmP::Execute()
                                             FBatteryVoltage, FBatteryCurrent, (int)FBatteryPower,
                                             FDcDcTemp, FInverterTemp);
                 FLogFile->Write(str.GetData(), str.GetSize());
+            }
+        }
+
+        if (FModbus.ReqHoldingRegisters(40301, 37))
+        {
+            if (regs)
+            {
+                for (i = 0; i < 37; i++)
+                {
+                    FModbus.GetBufferedHoldingRegister(40301 + i, &val);
+                    if (val != RegArr[i])
+                    {
+                        str.printf("Reg %d, changed from %d to %d\r\n", 301 + i, RegArr[i], val);
+                        file.Write(str.GetData(), str.GetSize());
+                        RegArr[i] = val;
+                    }
+                }
+            }
+            else
+            {
+                regs = true;
+                for (i = 0; i < 37; i++)
+                    FModbus.GetBufferedHoldingRegister(40301 + i, &RegArr[i]);
             }
         }
 
