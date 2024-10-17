@@ -1997,6 +1997,27 @@ int main()
 
         if (LastMin != CurrTime->GetMin())
         {
+            if (PowInv)
+            {
+                if (Ocpp->IsCharging())
+                {
+                    switch (PowInv->GetOutputPrio())
+                    {
+                        case 0:
+                            if (PowInv->GetBatterySoc() > 0.6)
+                                PowInv->SetOutputPrio(2);
+                            break;
+
+                        case 2:
+                            if (PowInv->GetBatterySoc() < 0.4)
+                                PowInv->SetOutputPrio(0);
+                            break;
+                    }
+                }
+                else
+                    PowInv->SetOutputPrio(2);
+            }
+
             WdTimeout = 2 * 100;
 
             if (PowerCount)
