@@ -996,6 +996,72 @@ open_kernel_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CloseKernelHandle
+;
+;           DESCRIPTION:    Close kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_kernel_handle_name DB 'Close Kernel Handle', 0
+
+close_kernel_handle Proc far
+    CloseLegacyFile
+    ret
+close_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadKernelHandle
+;
+;           DESCRIPTION:    Read with kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Position
+;                           ES:EDI    Buffer
+;                           ECX       Size
+;
+;           RETURNS:        ECX       Read size
+;                           EDX:EAX   New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_kernel_handle_name DB 'Read Kernel Handle', 0
+
+read_kernel_handle Proc far
+    ReadLegacyFile
+    ret
+read_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteKernelHandle
+;
+;           DESCRIPTION:    Write with kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Position
+;                           ES:EDI    Buffer
+;                           ECX       Size
+;
+;           RETURNS:        ECX       Read size
+;                           EDX:EAX   New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_kernel_handle_name DB 'Write Kernel Handle', 0
+
+write_kernel_handle Proc far
+    WriteLegacyFile
+    ret
+write_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -1075,24 +1141,6 @@ open_handle32    PROC far
     call open_handle
     ret
 open_handle32    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CloseKernelHandle
-;
-;           DESCRIPTION:    Close kernel handle
-;
-;           PARAMETERS:     BX        Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_kernel_handle_name DB 'Close Kernel Handle', 0
-
-close_kernel_handle Proc far
-    CloseLegacyFile
-    ret
-close_kernel_handle Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1743,30 +1791,6 @@ poll_handle32    PROC far
     call poll_handle
     ret
 poll_handle32    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadKernelHandle
-;
-;           DESCRIPTION:    Read with kernel handle
-;
-;           PARAMETERS:     BX        Handle
-;                           EDX:EAX   Position
-;                           ES:EDI    Buffer
-;                           ECX       Size
-;
-;           RETURNS:        ECX       Read size
-;                           EDX:EAX   New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_kernel_handle_name DB 'Read Kernel Handle', 0
-
-read_kernel_handle Proc far
-    ReadLegacyFile
-    ret
-read_kernel_handle Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1953,30 +1977,6 @@ read_handle32    PROC far
     call read_handle
     ret
 read_handle32    ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WriteKernelHandle
-;
-;           DESCRIPTION:    Write with kernel handle
-;
-;           PARAMETERS:     BX        Handle
-;                           EDX:EAX   Position
-;                           ES:EDI    Buffer
-;                           ECX       Size
-;
-;           RETURNS:        ECX       Read size
-;                           EDX:EAX   New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_kernel_handle_name DB 'Write Kernel Handle', 0
-
-write_kernel_handle Proc far
-    WriteLegacyFile
-    ret
-write_kernel_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
