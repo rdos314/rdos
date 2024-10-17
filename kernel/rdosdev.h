@@ -1939,30 +1939,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     __parm [__eax] \
     __value [__eax]
 
-#pragma aux RdosOpenKernelFile = \
-    OsGate_open_kernel_file \
-    ValidateHandle  \
-    __parm [__es __edi] [__cx] \
-    __value [__ebx]
-
-#pragma aux RdosCloseKernelFile = \
-    OsGate_close_kernel_handle  \
-    __parm [__ebx]
-
-#pragma aux RdosReadKernelFile = \
-    OsGate_read_kernel_handle  \
-    ValidateEax \
-    __parm [__ebx] [__es __edi] [__ecx] [__edx]  \
-    __value [__eax] \
-    __modify [__edx]
-
-#pragma aux RdosWriteKernelFile = \
-    OsGate_write_kernel_handle  \
-    ValidateEax \
-    __parm [__ebx] [__es __edi] [__ecx] [__edx]  \
-    __value [__eax] \
-    __modify [__edx]
-
 #pragma aux RdosReadPciByte = \
     OsGate_read_pci_byte \
     __parm [__bh] [__bl] [__ch] [__cl] \

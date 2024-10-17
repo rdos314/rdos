@@ -2202,9 +2202,9 @@ dupl_c_file_to_file   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           open_kernel_file
+;           NAME:           open_legacy_kernel_file
 ;
-;           DESCRIPTION:    Open kernel C file
+;           DESCRIPTION:    Open legacy kernel file
 ;
 ;           PARAMETERS:     ES:EDI      Filename
 ;                           CX          Mode
@@ -2214,9 +2214,9 @@ dupl_c_file_to_file   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_kernel_file_name  DB 'Open Kernel C File',0
+open_legacy_kernel_file_name  DB 'Open Legacy Kernel File',0
 
-open_kernel_file    Proc far
+open_legacy_kernel_file    Proc far
     push ds
     push es
     push fs
@@ -2308,7 +2308,7 @@ okfDone:
     pop es
     pop ds
     retf32
-open_kernel_file   Endp
+open_legacy_kernel_file   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3312,10 +3312,10 @@ init_dir    PROC near
     mov ax,open_legacy_file_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET open_kernel_file
-    mov edi,OFFSET open_kernel_file_name
+    mov esi,OFFSET open_legacy_kernel_file
+    mov edi,OFFSET open_legacy_kernel_file_name
     xor cl,cl
-    mov ax,open_kernel_file_nr
+    mov ax,open_legacy_kernel_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET dupl_c_file_to_file

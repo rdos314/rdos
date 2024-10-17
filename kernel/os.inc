@@ -2658,6 +2658,13 @@ CloseLegacyFile MACRO
     OsGate close_legacy_file_nr
                     ENDM
 
+; IN  ES:EDI    Filename
+; IN  CX        Mode
+; OUT BX        Handle
+OpenLegacyKernelFile MACRO
+    OsGate open_legacy_kernel_file_nr
+                    ENDM
+
 ; IN  BX        C handle
 ; IN  CX        Mode
 ; OUT BX        Process handle
@@ -2667,9 +2674,9 @@ AllocateCProcHandle MACRO
 
 ; IN  ES:EDI    Filename
 ; IN  CX        Mode
-; OUT BX        File selector
-OpenKernelFile MACRO
-    OsGate open_kernel_file_nr
+; OUT BX        Handle
+OpenKernelHandle MACRO
+    OsGate open_kernel_handle_nr
                     ENDM
 
 ; IN  BX        C File handle

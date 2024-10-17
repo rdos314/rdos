@@ -94,7 +94,7 @@ logger:
     mov es,ax
     mov edi,OFFSET log_name
     mov cx,O_RDWR OR O_CREAT OR O_TRUNC
-    OpenKernelFile
+    OpenKernelHandle
 
 logger_loop:
     int 3

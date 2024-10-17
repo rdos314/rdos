@@ -626,7 +626,7 @@
 #define osgate_set_legacy_file_time 593
 #define osgate_read_c_console 594
 #define osgate_write_c_console 595
-#define osgate_open_kernel_file 596
+#define osgate_open_kernel_handle 596
 
 #define osgate_fork_process 597
 
@@ -1555,7 +1555,7 @@
 #define OsGate_set_legacy_file_time 0x3E 0x67 0x9a 81 2 0 0 2 0
 #define OsGate_read_c_console 0x3E 0x67 0x9a 82 2 0 0 2 0
 #define OsGate_write_c_console 0x3E 0x67 0x9a 83 2 0 0 2 0
-#define OsGate_open_kernel_file 0x3E 0x67 0x9a 84 2 0 0 2 0
+#define OsGate_open_kernel_handle 0x3E 0x67 0x9a 84 2 0 0 2 0
 
 #define OsGate_fork_process 0x3E 0x67 0x9a 85 2 0 0 2 0
 

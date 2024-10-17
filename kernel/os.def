@@ -626,7 +626,7 @@ get_legacy_file_time_nr     = 592
 set_legacy_file_time_nr     = 593
 read_c_console_nr           = 594
 write_c_console_nr          = 595
-open_kernel_file_nr         = 596
+open_legacy_kernel_file_nr  = 596
 
 fork_process_nr             = 597
 
@@ -924,5 +924,6 @@ begin_vfs_disc_nr           = 835
 end_vfs_disc_nr             = 836
 
 allocate_fixed_vfs_drive_nr = 837
+open_kernel_handle_nr       = 838
 
 osgate_entries              = 850

@@ -975,6 +975,27 @@ AllocateModHandle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           OpenKernelHandle
+;
+;           DESCRIPTION:    Open kernel handle
+;
+;           PARAMETERS:     ES:EDI    Filename
+;                           CX        Mode
+;
+;           RETURNS:        BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_kernel_handle_name DB 'Open Kernel Handle', 0
+
+open_kernel_handle Proc far
+    OpenLegacyKernelFile
+    ret
+open_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -5937,6 +5958,12 @@ init_handle     PROC near
     mov edi,OFFSET clone_c_handle_name
     xor cl,cl
     mov ax,clone_c_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET open_kernel_handle
+    mov edi,OFFSET open_kernel_handle_name
+    xor cl,cl
+    mov ax,open_kernel_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET read_kernel_handle
