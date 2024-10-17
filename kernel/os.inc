@@ -2643,6 +2643,17 @@ SetLegacyFileTime MACRO
                     ENDM
 
 ; IN  BX        File selector
+; IN  AX        Handle
+StartReadLegacyFile               MACRO
+    OsGate start_read_legacy_file_nr
+                        ENDM
+
+; IN  BX        File selector
+StopReadLegacyFile               MACRO
+    OsGate stop_read_legacy_file_nr
+                        ENDM
+
+; IN  BX        File selector
 CloseLegacyFile MACRO
     OsGate close_legacy_file_nr
                     ENDM
@@ -2691,18 +2702,6 @@ WriteKernelHandle MACRO
 CloseKernelHandle MACRO
     OsGate close_kernel_handle_nr
                     ENDM
-
-; IN  BX        File selector
-; IN  AX        Handle
-StartReadCFile               MACRO
-    OsGate start_read_c_file_nr
-                        ENDM
-
-; IN  BX        File selector
-StopReadCFile               MACRO
-    OsGate stop_read_c_file_nr
-                        ENDM
-
 
 ; IN  ES:EDI    Buffer
 ; IN  ECX       Size

@@ -3075,7 +3075,7 @@ write_file16    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StartReadCFile
+;       NAME:           StartReadLegacyFile
 ;
 ;       DESCRIPTION:    Start read file
 ;
@@ -3084,9 +3084,9 @@ write_file16    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_read_c_file_name DB 'Start Read C File', 0
+start_read_legacy_file_name DB 'Start Read Legacy File', 0
 
-start_read_c_file    Proc far
+start_read_legacy_file    Proc far
     push ds
 ;
     or bx,bx
@@ -3102,12 +3102,12 @@ srcfSignal:
 srcfDone:
     pop ds
     retf32
-start_read_c_file    Endp
+start_read_legacy_file    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;       NAME:           StopReadCFile
+;       NAME:           StopReadLegacyFile
 ;
 ;       DESCRIPTION:    Stop read file
 ;
@@ -3115,9 +3115,9 @@ start_read_c_file    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-stop_read_c_file_name DB 'Stop Read C File', 0
+stop_read_legacy_file_name DB 'Stop Read Legacy File', 0
 
-stop_read_c_file    Proc far
+stop_read_legacy_file    Proc far
     push ds
 ;
     or bx,bx
@@ -3130,7 +3130,7 @@ stop_read_c_file    Proc far
 ercfDone:
     pop ds
     retf32
-stop_read_c_file    Endp
+stop_read_legacy_file    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3594,16 +3594,16 @@ init_file       PROC near
     mov ax,set_legacy_file_time_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET start_read_c_file
-    mov edi,OFFSET start_read_c_file_name
+    mov esi,OFFSET start_read_legacy_file
+    mov edi,OFFSET start_read_legacy_file_name
     xor cl,cl
-    mov ax,start_read_c_file_nr
+    mov ax,start_read_legacy_file_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET stop_read_c_file
-    mov edi,OFFSET stop_read_c_file_name
+    mov esi,OFFSET stop_read_legacy_file
+    mov edi,OFFSET stop_read_legacy_file_name
     xor cl,cl
-    mov ax,stop_read_c_file_nr
+    mov ax,stop_read_legacy_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_file

@@ -755,8 +755,8 @@
 #define osgate_start_read_stdin 701
 #define osgate_stop_read_stdin 702
 
-#define osgate_start_read_c_file 703
-#define osgate_stop_read_c_file 704
+#define osgate_start_read_legacy_file 703
+#define osgate_stop_read_legacy_file 704
 
 #define osgate_poll_udp_socket 705
 #define osgate_poll_tcp_socket 706
@@ -1684,8 +1684,8 @@
 #define OsGate_start_read_stdin 0x3E 0x67 0x9a 189 2 0 0 2 0
 #define OsGate_stop_read_stdin 0x3E 0x67 0x9a 190 2 0 0 2 0
 
-#define OsGate_start_read_c_file 0x3E 0x67 0x9a 191 2 0 0 2 0
-#define OsGate_stop_read_c_file 0x3E 0x67 0x9a 192 2 0 0 2 0
+#define OsGate_start_read_legacy_file 0x3E 0x67 0x9a 191 2 0 0 2 0
+#define OsGate_stop_read_legacy_file 0x3E 0x67 0x9a 192 2 0 0 2 0
 
 #define OsGate_poll_udp_socket 0x3E 0x67 0x9a 193 2 0 0 2 0
 #define OsGate_poll_tcp_socket 0x3E 0x67 0x9a 194 2 0 0 2 0

@@ -4124,7 +4124,7 @@ start_read_stdin       Proc near
 start_read_stdin       Endp
 
 start_read_file       Proc near
-    StartReadCFile
+    StartReadLegacyFile
     ret
 start_read_file       Endp
 
@@ -4265,7 +4265,7 @@ stop_read_stdin       Proc near
 stop_read_stdin       Endp
 
 stop_read_file       Proc near
-    StopReadCFile
+    StopReadLegacyFile
     ret
 stop_read_file       Endp
 
