@@ -1409,6 +1409,7 @@ int main()
     int SyncCount = 0;
     TFile *file;
     int init = 0x8000;
+    int invdelay = 4;
     int ambient;
     bool night;
     bool summer;
@@ -1997,7 +1998,10 @@ int main()
 
         if (LastMin != CurrTime->GetMin())
         {
-            if (PowInv)
+            if (invdelay)
+                invdelay--;
+
+            if (PowInv && !invdelay)
             {
                 if (Ocpp->IsCharging())
                 {

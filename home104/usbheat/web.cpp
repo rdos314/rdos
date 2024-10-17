@@ -777,6 +777,124 @@ void TRootPage::SendAnswer()
     Write("</td>\r\n");
     Write("</tr>\r\n");
 
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Output priority");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td colspan=2 align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+
+    switch (Charger->GetOutputPrio())
+    {
+        case 0:
+            Write("Utility-PV-batt");
+            break;
+
+        case 1:
+            Write("PV-Utility-Battery");
+            break;
+
+        case 2:
+            Write("PV-Battery-Utility");
+            break;
+
+        default:
+            Write("Error");
+            break;
+
+    }
+
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Charger priority");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td colspan=2 align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+
+    switch (Charger->GetChargePrio())
+    {
+        case 0:
+            Write("Utility priority");
+            break;
+
+        case 1:
+            Write("PV priority");
+            break;
+
+        case 2:
+            Write("PV at the same level as Utility");
+            break;
+
+        case 3:
+            Write("Only PV charging");
+            break;
+
+        default:
+            Write("Error");
+            break;
+
+    }
+
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Max charge current");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetMaxChargeCurrent();
+    sprintf(str, " %3.1Lf", val);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" A");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
+    Write("<tr style='height:24.75pt'>\r\n");
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write("Max grid charge current");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='right' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    val = Charger->GetMaxGridChargeCurrent();
+    sprintf(str, " %3.1Lf", val);
+    Write(str);
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+
+    Write("<td align='left' valign=top halign=center'>\r\n");
+    Write("<span style='font-size:12.0pt;color:#0033CC'>\r\n");
+    Write(" A");
+    Write("</span>\r\n");
+    Write("</td>\r\n");
+    Write("</tr>\r\n");
+
     Write("</table>\r\n");
 
     Write("</b>\r\n");
