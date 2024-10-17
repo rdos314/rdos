@@ -46,6 +46,15 @@ public:
     void ClearEnergy();
 
     int GetMode();
+    int GetOutputPrio();
+    int GetChargePrio();
+    double GetMaxChargeCurrent();
+    double GetMaxGridChargeCurrent();
+
+    void SetOutputPrio(int prio);
+    void SetChargePrio(int prio);
+    void SetMaxChargeCurrent(double i);
+    void SetMaxGridChargeCurrent(double i);
 
     double GetGridVoltage();
     double GetGridFrequency();
@@ -74,6 +83,7 @@ public:
     int GetInverterTemperature();
 
 protected:
+    void WriteReg(int reg, int val);
     virtual void Execute();
 
     bool FOnline;
@@ -105,6 +115,12 @@ protected:
     double FBatteryDischargeEnergy;
     double FBatteryVc;
     double FBatterySoc;
+
+    int FOutputPrio;
+    int FChargePrio;
+
+    double FMaxChargeCurrent;
+    double FMaxGridChargeCurrent;
 
     int FDcDcTemp;
     int FInverterTemp;

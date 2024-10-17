@@ -49,6 +49,11 @@ TPowHvmP::TPowHvmP(TModbusDevice *moddev, int address)
     FLogFile = 0;
     ClearEnergy();
 
+    FOutputPrio = -1;
+    FChargePrio = -1;
+    FMaxChargeCurrent = -1.0;
+    FMaxGridChargeCurrent = -1.0;
+
     Start("POW-HVM-P", 0x8000);
 }
 
@@ -518,6 +523,152 @@ int TPowHvmP::GetInverterTemperature()
 
 /*##########################################################################
 #
+#   Name       : TPowHvmP::GetOutputPrio
+#
+#   Purpose....: Get output prio
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPowHvmP::GetOutputPrio()
+{
+    return FOutputPrio;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::GetChargePrio
+#
+#   Purpose....: Get charge prio
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPowHvmP::GetChargePrio()
+{
+    return FChargePrio;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::GetMaxChargeCurrent
+#
+#   Purpose....: Get max charge current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TPowHvmP::GetMaxChargeCurrent()
+{
+    return FMaxChargeCurrent;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::GetMaxGridChargeCurrent
+#
+#   Purpose....: Get max grid charge current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+double TPowHvmP::GetMaxGridChargeCurrent()
+{
+    return FMaxGridChargeCurrent;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::SetOutputPrio
+#
+#   Purpose....: Set output prio
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPowHvmP::SetOutputPrio(int prio)
+{
+    FOutputPrio = prio;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::SetChargePrio
+#
+#   Purpose....: Set charge prio
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPowHvmP::SetChargePrio(int prio)
+{
+    FChargePrio = prio;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::SetMaxChargeCurrent
+#
+#   Purpose....: Set max charge current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPowHvmP::SetMaxChargeCurrent(double i)
+{
+    FMaxChargeCurrent = i;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::SetMaxGridChargeCurrent
+#
+#   Purpose....: Set max grid charge current
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPowHvmP::SetMaxGridChargeCurrent(double i)
+{
+    FMaxGridChargeCurrent = i;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::WriteReg
+#
+#   Purpose....: Write register
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPowHvmP::WriteReg(int reg, int val)
+{
+    FModbus.StartWritePresetRegisters(reg, 1, val);
+    FModbus.AddPresetRegister(reg, val);
+    FModbus.DoWritePresetRegisters();
+}
+
+/*##########################################################################
+#
 #   Name       : TPowHvmP::Execute
 #
 #   Purpose....: Execute method
@@ -531,11 +682,15 @@ void TPowHvmP::Execute()
 {
     bool ok;
     int val;
+    int rval;
     int i;
     TString str;
-    bool regs = false;
-    int RegArr[40];
-    TFile file("z:/reg.txt", 0);
+    bool ChangeOutputPrio;
+    bool ChangeChargePrio;
+    bool ChangeChargeCurrent;
+    bool ChangeGridChargeCurrent;
+
+    RdosWaitMilli(250);
 
     for (;;)
     {
@@ -624,27 +779,70 @@ void TPowHvmP::Execute()
             }
         }
 
-        if (FModbus.ReqHoldingRegisters(40301, 37))
+        ChangeOutputPrio = false;
+        ChangeChargePrio = false;
+        ChangeChargeCurrent = false;
+        ChangeGridChargeCurrent = false;
+
+        if (FModbus.ReadHoldingRegister(40302, &val))
         {
-            if (regs)
+            if (FOutputPrio >= 0)
             {
-                for (i = 0; i < 37; i++)
-                {
-                    FModbus.GetBufferedHoldingRegister(40301 + i, &val);
-                    if (val != RegArr[i])
-                    {
-                        str.printf("Reg %d, changed from %d to %d\r\n", 301 + i, RegArr[i], val);
-                        file.Write(str.GetData(), str.GetSize());
-                        RegArr[i] = val;
-                    }
-                }
+                if (FOutputPrio != val)
+                    ChangeOutputPrio = true;
             }
             else
+                FOutputPrio = val;
+        }
+
+        if (FModbus.ReqHoldingRegisters(40332, 3))
+        {
+            FModbus.GetBufferedHoldingRegister(40332, &val);
+            if (FChargePrio >= 0)
             {
-                regs = true;
-                for (i = 0; i < 37; i++)
-                    FModbus.GetBufferedHoldingRegister(40301 + i, &RegArr[i]);
+                if (FChargePrio != val)
+                    ChangeChargePrio = true;
             }
+            else
+                FChargePrio = val;
+
+            FModbus.GetBufferedHoldingRegister(40333, &val);
+            if (FMaxChargeCurrent >= 0)
+            {
+                rval = (int)(10 * FMaxChargeCurrent + 0.5);
+                if (rval > val + 25 || rval < val - 25)
+                    ChangeChargeCurrent = true;
+            }
+            else
+                FMaxChargeCurrent = (double)val / 10.0;
+
+            FModbus.GetBufferedHoldingRegister(40334, &val);
+            if (FMaxGridChargeCurrent >= 0)
+            {
+                rval = (int)(10 * FMaxGridChargeCurrent + 0.5);
+                if (rval > val + 25 || rval < val - 25)
+                    ChangeGridChargeCurrent = true;
+            }
+            else
+                FMaxGridChargeCurrent = (double)val / 10.0;
+        }
+
+        if (ChangeOutputPrio)
+            WriteReg(40302, FOutputPrio);
+
+        if (ChangeChargePrio)
+            WriteReg(40332, FChargePrio);
+
+        if (ChangeChargeCurrent)
+        {
+            val = (int)(10 * FMaxChargeCurrent + 0.5);
+            WriteReg(40333, val);
+        }
+
+        if (ChangeGridChargeCurrent)
+        {
+            val = (int)(10 * FMaxGridChargeCurrent + 0.5);
+            WriteReg(40334, val);
         }
 
         FOnline = ok;
