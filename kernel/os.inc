@@ -2643,12 +2643,6 @@ DuplCFileToFile MACRO
     OsGate dupl_c_file_to_file_nr
                     ENDM
 
-; IN  BX        C File handle
-; OUT BX        File sel
-CHandleToFileSel MACRO
-    OsGate c_handle_to_file_sel_nr
-                    ENDM
-
 ; IN  BX        Handle
 ; IN  EDX:EAX   Position
 ; IN  ES:EDI    Buffer

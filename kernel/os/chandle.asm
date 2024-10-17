@@ -850,67 +850,6 @@ close_handle    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CHandleToFileSel
-;
-;           DESCRIPTION:    Convert C handle to file selector
-;
-;           PARAMETERS:     BX          Handle
-;
-;           RETURNS:        BX          File sel or 0
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-c_handle_to_file_sel_name  DB 'C Handle To File Sel', 0
-
-c_handle_to_file_sel     Proc near
-    push ds
-    push eax
-    push edx
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ds,ds:pf_c_handle_sel
-;    
-    cmp bx,MAX_HANDLES
-    jae chfsFail
-;   
-    shl bx,3
-    add bx,OFFSET h_arr
-;
-    mov ax,ds:[bx].hp_handle
-    cmp ax,SYS_HANDLE_COUNT
-    jae chfsFail
-;    
-    or ax,ax
-    jz chfsFail
-;
-    dec ax
-    mov dx,SIZE handle_entry_struc
-    mul dx
-    mov bx,ax
-    add bx,OFFSET hd_data
-    mov ax,chandle_data_sel
-    mov ds,ax
-;
-    mov bx,ds:[bx].he_sel
-    clc
-    jmp chfsDone
-
-chfsFail:
-    stc
-    xor bx,bx
-
-chfsDone:
-    pop edx
-    pop eax
-    pop ds    
-    retf32
-c_handle_to_file_sel     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           PollHandle
 ;
 ;           DESCRIPTION:    Poll C handle
@@ -5034,12 +4973,6 @@ init_chandle     PROC near
     mov edi,OFFSET allocate_c_proc_handle_name
     xor cl,cl
     mov ax,allocate_c_proc_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET c_handle_to_file_sel
-    mov edi,OFFSET c_handle_to_file_sel_name
-    xor cl,cl
-    mov ax,c_handle_to_file_sel_nr
     RegisterOsGate
 ;
     mov esi,OFFSET signal_read_handle

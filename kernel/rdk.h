@@ -636,7 +636,6 @@
 #define osgate_create_fork 610
 
 #define osgate_dupl_c_file_to_file 611
-#define osgate_c_handle_to_file_sel 612
 
 #define osgate_add_serio_device 613
 
@@ -874,7 +873,7 @@
 #define osgate_get_vfs_disc_vendor_info 798
 #define osgate_read_vfs_disc 799
 #define osgate_remove_vfs_disc 800
-#define osgate_allocate_vfs_drive 801
+#define osgate_wait_for_vfs_discs 801
 #define osgate_check_vfs_drive 802
 #define osgate_get_vfs_cur_dir 803
 
@@ -914,6 +913,17 @@
 #define osgate_start_tcp_conn_notify 828
 #define osgate_stop_tcp_conn_notify 829
 #define osgate_get_acpi_pci_dsd 830
+#define osgate_get_pci_dsd_config 831
+
+#define osgate_reset_can_modules 832
+
+#define osgate_allocate_static_vfs_drive 833
+#define osgate_allocate_dynamic_vfs_drive 834
+
+#define osgate_begin_vfs_disc 835
+#define osgate_end_vfs_disc 836
+
+#define osgate_allocate_fixed_vfs_drive 837
 
 
 
@@ -1555,7 +1565,6 @@
 #define OsGate_create_fork 0x3E 0x67 0x9a 98 2 0 0 2 0
 
 #define OsGate_dupl_c_file_to_file 0x3E 0x67 0x9a 99 2 0 0 2 0
-#define OsGate_c_handle_to_file_sel 0x3E 0x67 0x9a 100 2 0 0 2 0
 
 #define OsGate_add_serio_device 0x3E 0x67 0x9a 101 2 0 0 2 0
 
@@ -1793,7 +1802,7 @@
 #define OsGate_get_vfs_disc_vendor_info 0x3E 0x67 0x9a 30 3 0 0 2 0
 #define OsGate_read_vfs_disc 0x3E 0x67 0x9a 31 3 0 0 2 0
 #define OsGate_remove_vfs_disc 0x3E 0x67 0x9a 32 3 0 0 2 0
-#define OsGate_allocate_vfs_drive 0x3E 0x67 0x9a 33 3 0 0 2 0
+#define OsGate_wait_for_vfs_discs 0x3E 0x67 0x9a 33 3 0 0 2 0
 #define OsGate_check_vfs_drive 0x3E 0x67 0x9a 34 3 0 0 2 0
 #define OsGate_get_vfs_cur_dir 0x3E 0x67 0x9a 35 3 0 0 2 0
 
@@ -1833,4 +1842,15 @@
 #define OsGate_start_tcp_conn_notify 0x3E 0x67 0x9a 60 3 0 0 2 0
 #define OsGate_stop_tcp_conn_notify 0x3E 0x67 0x9a 61 3 0 0 2 0
 #define OsGate_get_acpi_pci_dsd 0x3E 0x67 0x9a 62 3 0 0 2 0
+#define OsGate_get_pci_dsd_config 0x3E 0x67 0x9a 63 3 0 0 2 0
+
+#define OsGate_reset_can_modules 0x3E 0x67 0x9a 64 3 0 0 2 0
+
+#define OsGate_allocate_static_vfs_drive 0x3E 0x67 0x9a 65 3 0 0 2 0
+#define OsGate_allocate_dynamic_vfs_drive 0x3E 0x67 0x9a 66 3 0 0 2 0
+
+#define OsGate_begin_vfs_disc 0x3E 0x67 0x9a 67 3 0 0 2 0
+#define OsGate_end_vfs_disc 0x3E 0x67 0x9a 68 3 0 0 2 0
+
+#define OsGate_allocate_fixed_vfs_drive 0x3E 0x67 0x9a 69 3 0 0 2 0
 

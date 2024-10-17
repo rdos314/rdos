@@ -94,84 +94,6 @@ ELSE
 ENDIF
     
     assume cs:code
-
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;       Name:           InitLog
-;
-;       Purpose:        Init log
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitLog     Proc near
-    push ds
-    push es
-    pushad
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov ax,ds:RtoLogHandle
-    or ax,ax
-    jnz ccLogOk
-;
-    mov ax,cs
-    mov es,ax
-    mov edi,OFFSET rto_log
-    mov cx,O_RDWR OR O_TRUNC OR O_CREAT
-    OpenKernelFile
-    mov ds:RtoLogHandle,bx
-
-ccLogOk:
-    popad
-    pop es
-    pop ds
-    ret
-InitLog   Endp
-    
-
-        
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;       Name:           LogTime
-;
-;       Purpose:        Log time
-;
-;       Parameters:     EAX		Value       
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LogTime     Proc near
-    push ds
-    push es
-    pushad
-;
-    push eax
-    GetSystemTime
-    push edx
-    push eax
-;
-    mov ax,SEG data
-    mov ds,ax
-    mov bx,ds:RtoLogHandle
-    GetCFileSize
-    mov edx,eax
-    mov ecx,12
-    mov ax,ss
-    mov es,ax
-    mov edi,esp
-    WriteKernelHandle
-;
-    add esp,12
-    popad
-    pop es
-    pop ds
-    ret
-LogTime	Endp
-
-
-
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -749,17 +671,12 @@ CopyToBuffer    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-rto_log	DB 'd:/cap/rtt.log', 0
-
 CreateConnection    Proc near
     push es
     push ax
     push ecx
     push edx
 ;
-;    call InitLog
-
     dec ecx
     and cx,0F000h
     add ecx,1000h
@@ -1284,8 +1201,6 @@ UpdateRto       Proc near
 ;
     GetSystemTime
     sub eax,ds:tcp_time_val
-
-;    call LogTime
 
     cmp eax,5 * 1193000
     ja update_rto_rtt_ok

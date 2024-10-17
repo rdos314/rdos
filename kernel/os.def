@@ -636,7 +636,6 @@ exec_app_nr                 = 602
 create_fork_nr              = 610
 
 dupl_c_file_to_file_nr      = 611
-c_handle_to_file_sel_nr     = 612
 
 add_serio_device_nr         = 613
 
