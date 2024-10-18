@@ -88,12 +88,12 @@ kernel_wait_entry  ENDS
 ; must be 4 bytes!
 ;
 
-kernel_mod_struc  STRUC
+proc_entry  STRUC
 
 pe_proc_sel       DW ?
 pe_map_sel        DW ?
 
-kernel_mod_struc  ENDS
+proc_entry  ENDS
 
 kernel_file       STRUC
 
