@@ -39,9 +39,21 @@ INCLUDE vfs.inc
     .386p
 
 MAX_HANDLES           = 512
+MAX_KERNEL_HANDLES    = 64
 SYS_HANDLE_COUNT      = 1024
 SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
 HANDLE_WAIT_OBJ_COUNT = 8
+
+;
+; this should always be 4 bytes!
+;
+
+kernel_handle_struc    STRUC
+
+kh_legacy_sel        DW ?
+kh_vfs_sel           DW ?
+
+kernel_handle_struc    ENDS
 
 ;
 ; this should always be 16 bytes!
@@ -100,6 +112,7 @@ data    SEGMENT byte public 'DATA'
 hd_section       section_typ <>
 hd_mod_count     DW ?
 
+hd_kernel_arr    DD MAX_KERNEL_HANDLES DUP(?)
 hd_mod_arr       DW MAX_MODULES DUP(?)
 hd_bitmap        DD SYS_BITMAP_COUNT DUP(?)
 hd_data          DD 4 * SYS_HANDLE_COUNT DUP(?)
@@ -5895,6 +5908,68 @@ select32    Proc far
     ret
 select32    Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TestOpenKernelFile
+;
+;           DESCRIPTION:    Test to open kernel file
+;
+;           PARAMETERS:     ES:EDI    Filename
+;                           CX        Mode
+;
+;           RETURNS:        BX          Entry handle offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TestOpenKernelFile     Proc near
+    push ds
+    push eax
+    push ecx
+    push edi
+;
+    OpenLegacyKernelFile
+    jc okfDone
+;
+    movzx ebx,bx
+    mov ax,SEG data
+    mov ds,eax
+    EnterSection ds:hd_section
+;
+    mov ecx,MAX_KERNEL_HANDLES  
+    mov edi,OFFSET hd_kernel_arr
+
+okfLoop:
+    mov eax,ds:[edi]
+    or eax,eax
+    jnz okfNext
+;
+    mov ds:[edi],ebx
+    mov ebx,edi
+    sub ebx,OFFSET hd_kernel_arr
+    shr ebx,2
+    inc ebx
+    clc
+    jmp okfLeave
+
+okfNext:
+    add edi,4
+    loop okfLoop
+;
+    stc
+
+okfLeave:
+    LeaveSection ds:hd_section
+
+okfDone:
+    pop edi
+    pop ecx
+    pop eax
+    pop ds
+    ret
+TestOpenKernelFile  Endp   
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5905,7 +5980,7 @@ select32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_gate_name DB 'Test', 0
-test_file      DB 'd:/can.log', 0
+test_file      DB 'd:/log/1.log', 0
 
 test_gate    Proc far
     push es
@@ -5916,8 +5991,10 @@ test_gate    Proc far
     mov es,ecx
     mov edi,OFFSET test_file
     xor ecx,ecx
-    OpenKernelHandle
-;
+    call TestOpenKernelFile
+    jc tgDone
+
+tgDone:
     pop edi
     pop ecx
     pop es
@@ -5942,6 +6019,11 @@ init_handle     PROC near
 ;
     mov bx,SEG data
     mov es,bx
+;
+    mov edi,OFFSET hd_kernel_arr
+    xor eax,eax
+    mov ecx,MAX_KERNEL_HANDLES
+    rep stosd
 ;
     mov edi,OFFSET hd_mod_arr
     xor eax,eax
