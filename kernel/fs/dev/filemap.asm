@@ -4012,6 +4012,85 @@ UpdateKernelFile_      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           WaitForKernelReq
+;
+;       DESCRIPTION:    Wait for kernel req
+;
+;       PARAMETERS:     DS		File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForKernelReq   Proc near
+    push esi
+    push edi
+;
+    EnterSection ds:kf_section
+    call FindReq
+    jnc wfkrCheck
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+;
+    mov ebx,REQ_READ
+    call AddReq
+;    call UpdateMap
+
+wfkrWait:
+    WaitForSignal
+;
+    EnterSection ds:kf_section
+    call FindReq
+    jnc wfkrCheck
+;
+    LeaveSection ds:kf_section
+;
+    push eax
+    mov ax,20
+    WaitMilliSec
+    pop eax
+    jmp wfkrDone
+
+wfkrCheck:
+    mov esi,ds:[4*ebx].kf_handle_arr
+    mov esi,ds:[esi].kre_phys_arr
+    or esi,esi
+    jnz wfkrLock
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+    jmp wfkrWait
+
+wfkrLock:
+    mov esi,ds:[4*ebx].kf_handle_arr
+;
+    mov di,ds:[esi].kre_usage
+    inc di
+    mov ds:[esi].kre_usage,di
+    sub di,1
+    LeaveSection ds:kf_section
+    clc
+    jnz wfkrDone
+;
+    push ebx
+    mov cx,bx
+    mov bx,REQ_MAP
+    call AddReq
+    pop ebx
+    clc
+    jmp wfkrDone
+
+wfkrLeave:
+    LeaveSection ds:kf_section
+
+wfkrDone:
+    pop edi
+    pop esi
+    ret
+WaitForKernelReq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           MapKernelFile
 ;
 ;       DESCRIPTION:    Map kernel file
@@ -4026,17 +4105,12 @@ UpdateKernelFile_      Endp
 
 MapKernelFile_      Proc near
     push ds
-    push es
-    push fs
-    push gs
     pushad
 ;
     mov ds,esi
+    call WaitForKernelReq
 ;
     popad
-    pop gs
-    pop fs
-    pop es
     pop ds
     ret
 MapKernelFile_   Endp
