@@ -1220,7 +1220,7 @@ SignalReadReq  Endp
 ;
 ;       DESCRIPTION:    Wait for req
 ;
-;       PARAMETERS:     FS             Kernel process sel
+;       PARAMETERS:     FS             Proc file sel
 ;                       GS             File sel
 ;                       EDX:EAX        Req position
 ;
@@ -1308,7 +1308,7 @@ WaitForReq    Endp
 ;
 ;       DESCRIPTION:    Wait for grow
 ;
-;       PARAMETERS:     FS             Kernel process sel
+;       PARAMETERS:     FS             Proc file sel
 ;                       GS             File sel
 ;                       EDX:EAX        Req position
 ;                       ECX            Increase
@@ -1493,8 +1493,8 @@ FreeReq      Endp
 ;
 ;       DESCRIPTION:    Lock map
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1550,8 +1550,8 @@ LockMap     Endp
 ;
 ;       DESCRIPTION:    Unlock map
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1593,7 +1593,7 @@ UnlockMap     Endp
 ;
 ;       DESCRIPTION:    Find a read map
 ;
-;       PARAMETERS:     ES             Kernel mapping sel
+;       PARAMETERS:     ES             Proc map sel
 ;                       EDX:EAX        Position
 ;
 ;       RETURNS:        EBX            Req offset
@@ -1651,7 +1651,8 @@ FindReadMap  Endp
 ;
 ;       DESCRIPTION:    Add read map entry
 ;
-;       PARAMETERS:     DS             Kernel processes
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;                       EDI            Req id            
 ;
 ;       RETURNS:        BX             Entry offset
@@ -1685,8 +1686,8 @@ AllocateMapEntry      Endp
 ;
 ;       DESCRIPTION:    Map entry
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;                       GS:ESI         Physical address buffer
 ;                       BX             Entry offset
 ;                       ECX            Pages
@@ -1753,8 +1754,8 @@ MapEntry      Endp
 ;
 ;       DESCRIPTION:    Add read map
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;                       BX             Entry offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1825,8 +1826,8 @@ AddReadMap      Endp
 ;
 ;       DESCRIPTION:    Free map
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;                       BX             Sorted index
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1871,7 +1872,7 @@ FreeMap Endp
 ;
 ;       DESCRIPTION:    Update file
 ;
-;       PARAMETERS:     DS             Process map sel
+;       PARAMETERS:     DS             Proc file sel
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
@@ -1936,7 +1937,7 @@ UpdateFile      Endp
 ;
 ;       DESCRIPTION:    Signal written page
 ;
-;       PARAMETERS:     DS             Process map sel
+;       PARAMETERS:     DS             Proc file sel
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;                       EDX            Linea address
@@ -1982,7 +1983,7 @@ AddDirtyMap   Endp
 ;
 ;       DESCRIPTION:    Check map for written pages
 ;
-;       PARAMETERS:     DS             Process map sel
+;       PARAMETERS:     DS             Proc file sel
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;
@@ -2043,7 +2044,7 @@ CheckDirtyMap  Endp
 ;
 ;       DESCRIPTION:    Check map
 ;
-;       PARAMETERS:     DS             Process map sel
+;       PARAMETERS:     DS             Proc file sel
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;                       ESI            Index
@@ -2103,7 +2104,8 @@ CheckMap  Endp
 ;
 ;       DESCRIPTION:    Unlink linear address
 ;
-;       PARAMETERS:     ES             Kernel mapping sel
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;                       AL             Entry #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2147,8 +2149,8 @@ UnlinkLinear   Endp
 ;
 ;       DESCRIPTION:    Unlink entries
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;                       FS             User flat sel
 ;                       GS             File sel
 ;
@@ -2195,8 +2197,8 @@ UnlinkMap  Endp
 ;
 ;       DESCRIPTION:    Update unlinked entries
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;                       GS             File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2287,7 +2289,7 @@ SyncFileSize      Endp
 ;
 ;       DESCRIPTION:    Send update
 ;
-;       PARAMETERS:     DS             Process file sel
+;       PARAMETERS:     DS             Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2333,7 +2335,7 @@ SendUpdate  Endp
 ;
 ;       DESCRIPTION:    Update map requests
 ;
-;       PARAMETERS:     FS             Kernel processes
+;       PARAMETERS:     FS             Proc file sel
 ;                       GS             File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2391,8 +2393,8 @@ UpdateMap  Endp
 ;
 ;       DESCRIPTION:    Sync map from file sel
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
+;       PARAMETERS:     DS             Proc file sel
+;                       ES             Proc map sel
 ;                       GS             File sel
 ;                       EBX            Req id
 ;
@@ -2447,7 +2449,7 @@ SyncMap  Endp
 ;
 ;       DESCRIPTION:    Delete all mapped requests
 ;
-;       PARAMETERS:     DS             Process file sel
+;       PARAMETERS:     DS             Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3482,7 +3484,7 @@ FreeUserHandle      Endp
 ;
 ;       DESCRIPTION:    Lock mod
 ;
-;       PARAMETERS:     FS:ESI          Proc file map
+;       PARAMETERS:     FS:ESI          Proc map ptr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3540,7 +3542,7 @@ LockMod_   Endp
 ;
 ;       DESCRIPTION:    Inlock mod
 ;
-;       PARAMETERS:     FS:ESI          Proc file map
+;       PARAMETERS:     FS:ESI          Proc map ptr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
