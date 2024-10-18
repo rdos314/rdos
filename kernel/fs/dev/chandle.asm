@@ -6016,6 +6016,54 @@ TestCloseKernelHandle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           TestReadKernelHandle
+;
+;           DESCRIPTION:    Test read with kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Position
+;                           ES:EDI    Buffer
+;                           ECX       Size
+;
+;           RETURNS:        ECX       Read size
+;                           EDX:EAX   New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TestReadKernelHandle Proc near
+    push ds
+    push ebx
+    push esi
+;
+    or bx,bx
+    jz rkhDone
+;
+    cmp bx,MAX_KERNEL_HANDLES
+    ja rkhDone
+;
+    mov si,SEG data
+    mov ds,esi
+    movzx esi,bx
+    dec esi
+    shl esi,2
+    add esi,OFFSET hd_kernel_arr
+;
+    mov bx,ds:[esi].kh_legacy_sel
+    or bx,bx
+    jz rkhDone
+;
+    ReadLegacyFile
+
+rkhDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+TestReadKernelHandle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           Test gate
 ;
 ;       DESCRIPTION:    Test
@@ -6030,17 +6078,23 @@ test_gate    Proc far
     push ecx
     push edi
 ;    
+    push es
+    push edi
+;
     mov ecx,cs
     mov es,ecx
     mov edi,OFFSET test_file
     xor ecx,ecx
     call TestOpenKernelHandle
+;
+    pop edi
+    pop es
     jc tgDone
 ;
-    push ebx
-    call TestOpenKernelHandle
-    call TestCloseKernelHandle
-    pop ebx
+    xor edx,edx
+    xor eax,eax
+    mov ecx,1000h
+    call TestReadKernelHandle
     call TestCloseKernelHandle
 
 tgDone:
