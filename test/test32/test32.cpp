@@ -57,8 +57,9 @@ void main()
 */
 
 
+    char *buf = new char[1024];
 
-    RdosTestGate("");
+    RdosTestGate(buf);
 }
 
 

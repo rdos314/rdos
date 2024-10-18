@@ -1002,7 +1002,50 @@ AllocateModHandle  Endp
 open_kernel_handle_name DB 'Open Kernel Handle', 0
 
 open_kernel_handle Proc far
+    push ds
+    push eax
+    push ecx
+    push edi
+;
     OpenLegacyKernelFile
+    jc okhDone
+;
+    movzx ebx,bx
+    mov ax,SEG data
+    mov ds,eax
+    EnterSection ds:hd_section
+;
+    mov ecx,MAX_KERNEL_HANDLES  
+    mov edi,OFFSET hd_kernel_arr
+
+okhLoop:
+    mov eax,ds:[edi]
+    or eax,eax
+    jnz okhNext
+;
+    mov ds:[edi],ebx
+    mov ebx,edi
+    sub ebx,OFFSET hd_kernel_arr
+    shr ebx,2
+    inc ebx
+    clc
+    jmp okhLeave
+
+okhNext:
+    add edi,4
+    loop okhLoop
+;
+    int 3
+    stc
+
+okhLeave:
+    LeaveSection ds:hd_section
+
+okhDone:
+    pop edi
+    pop ecx
+    pop eax
+    pop ds
     ret
 open_kernel_handle Endp
 
@@ -1020,7 +1063,40 @@ open_kernel_handle Endp
 close_kernel_handle_name DB 'Close Kernel Handle', 0
 
 close_kernel_handle Proc far
+    push ds
+    push eax
+    push edi
+;
+    or bx,bx
+    jz ckhDone
+;
+    cmp bx,MAX_KERNEL_HANDLES
+    ja ckhDone
+;
+    movzx edi,bx
+    dec edi
+    shl edi,2
+    add edi,OFFSET hd_kernel_arr
+;
+    mov ax,SEG data
+    mov ds,eax
+    EnterSection ds:hd_section
+    xor bx,bx
+    xchg bx,ds:[edi].kh_legacy_sel
+    or bx,bx
+    jz ckhLeave
+;
     CloseLegacyFile
+
+ckhLeave:
+    LeaveSection ds:hd_section
+
+ckhDone:
+    xor bx,bx
+;
+    pop edi
+    pop eax
+    pop ds
     ret
 close_kernel_handle Endp
 
@@ -1044,7 +1120,38 @@ close_kernel_handle Endp
 read_kernel_handle_name DB 'Read Kernel Handle', 0
 
 read_kernel_handle Proc far
+    push ds
+    push ebx
+    push esi
+;
+    or bx,bx
+    jz rkhFail
+;
+    cmp bx,MAX_KERNEL_HANDLES
+    ja rkhFail
+;
+    mov si,SEG data
+    mov ds,esi
+    movzx esi,bx
+    dec esi
+    shl esi,2
+    add esi,OFFSET hd_kernel_arr
+;
+    mov bx,ds:[esi].kh_legacy_sel
+    or bx,bx
+    jz rkhFail
+;
     ReadLegacyFile
+    jmp rkhDone
+
+rkhFail:
+    xor ecx,ecx
+    stc
+
+rkhDone:
+    pop esi
+    pop ebx
+    pop ds
     ret
 read_kernel_handle Endp
 
@@ -1068,7 +1175,38 @@ read_kernel_handle Endp
 write_kernel_handle_name DB 'Write Kernel Handle', 0
 
 write_kernel_handle Proc far
+    push ds
+    push ebx
+    push esi
+;
+    or bx,bx
+    jz wkhFail
+;
+    cmp bx,MAX_KERNEL_HANDLES
+    ja wkhFail
+;
+    mov si,SEG data
+    mov ds,esi
+    movzx esi,bx
+    dec esi
+    shl esi,2
+    add esi,OFFSET hd_kernel_arr
+;
+    mov bx,ds:[esi].kh_legacy_sel
+    or bx,bx
+    jz wkhFail
+;
     WriteLegacyFile
+    jmp wkhDone
+
+wkhFail:
+    xor ecx,ecx
+    stc
+
+wkhDone:
+    pop esi
+    pop ebx
+    pop ds
     ret
 write_kernel_handle Endp
 
@@ -5907,163 +6045,6 @@ select32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TestOpenKernelHandle
-;
-;           DESCRIPTION:    Test to open kernel file
-;
-;           PARAMETERS:     ES:EDI    Filename
-;                           CX        Mode
-;
-;           RETURNS:        BX          Entry handle offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TestOpenKernelHandle     Proc near
-    push ds
-    push eax
-    push ecx
-    push edi
-;
-    OpenLegacyKernelFile
-    jc okhDone
-;
-    movzx ebx,bx
-    mov ax,SEG data
-    mov ds,eax
-    EnterSection ds:hd_section
-;
-    mov ecx,MAX_KERNEL_HANDLES  
-    mov edi,OFFSET hd_kernel_arr
-
-okhLoop:
-    mov eax,ds:[edi]
-    or eax,eax
-    jnz okhNext
-;
-    mov ds:[edi],ebx
-    mov ebx,edi
-    sub ebx,OFFSET hd_kernel_arr
-    shr ebx,2
-    inc ebx
-    clc
-    jmp okhLeave
-
-okhNext:
-    add edi,4
-    loop okhLoop
-;
-    int 3
-    stc
-
-okhLeave:
-    LeaveSection ds:hd_section
-
-okhDone:
-    pop edi
-    pop ecx
-    pop eax
-    pop ds
-    ret
-TestOpenKernelHandle  Endp   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TestCloseKernelHandle
-;
-;           DESCRIPTION:    test Close kernel handle
-;
-;           PARAMETERS:     BX        Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TestCloseKernelHandle  Proc near
-    push ds
-    push edi
-;
-    or bx,bx
-    jz ckhDone
-;
-    cmp bx,MAX_KERNEL_HANDLES
-    ja ckhDone
-;
-    movzx edi,bx
-    dec edi
-    shl edi,2
-    add edi,OFFSET hd_kernel_arr
-;
-    mov ax,SEG data
-    mov ds,eax
-    EnterSection ds:hd_section
-    xor bx,bx
-    xchg bx,ds:[edi].kh_legacy_sel
-    or bx,bx
-    jz ckhLeave
-;
-    CloseLegacyFile
-
-ckhLeave:
-    LeaveSection ds:hd_section
-
-ckhDone:
-    xor bx,bx
-;
-    pop edi
-    pop ds
-    ret
-TestCloseKernelHandle  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           TestReadKernelHandle
-;
-;           DESCRIPTION:    Test read with kernel handle
-;
-;           PARAMETERS:     BX        Handle
-;                           EDX:EAX   Position
-;                           ES:EDI    Buffer
-;                           ECX       Size
-;
-;           RETURNS:        ECX       Read size
-;                           EDX:EAX   New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TestReadKernelHandle Proc near
-    push ds
-    push ebx
-    push esi
-;
-    or bx,bx
-    jz rkhDone
-;
-    cmp bx,MAX_KERNEL_HANDLES
-    ja rkhDone
-;
-    mov si,SEG data
-    mov ds,esi
-    movzx esi,bx
-    dec esi
-    shl esi,2
-    add esi,OFFSET hd_kernel_arr
-;
-    mov bx,ds:[esi].kh_legacy_sel
-    or bx,bx
-    jz rkhDone
-;
-    ReadLegacyFile
-
-rkhDone:
-    pop esi
-    pop ebx
-    pop ds
-    ret
-TestReadKernelHandle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           Test gate
 ;
 ;       DESCRIPTION:    Test
@@ -6085,7 +6066,7 @@ test_gate    Proc far
     mov es,ecx
     mov edi,OFFSET test_file
     xor ecx,ecx
-    call TestOpenKernelHandle
+    OpenKernelHandle
 ;
     pop edi
     pop es
@@ -6094,8 +6075,8 @@ test_gate    Proc far
     xor edx,edx
     xor eax,eax
     mov ecx,1000h
-    call TestReadKernelHandle
-    call TestCloseKernelHandle
+    ReadKernelHandle
+    CloseKernelHandle
 
 tgDone:
     pop edi
