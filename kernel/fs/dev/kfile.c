@@ -69,6 +69,9 @@ void memcpy(void *dst, void *src, int count);
     "rep movs byte ptr es:[edi],fs:[esi]" \
     __parm [es edi] [fs esi] [ecx]
 
+extern void MapKernelFile(int handle, long long pos, int size);
+#pragma aux MapKernelFile parm routine [__esi] [__edx __eax] [__ecx]
+
 extern void UpdateKernelFile(int handle);
 #pragma aux UpdateKernelFile parm routine [__esi]
 
@@ -117,6 +120,52 @@ static int VfsFind(int Handle, struct RdosFileMap *Map, long long Pos)
 
 /*##########################################################################
 #
+#   Name       : VfsReadOne
+#
+#   Purpose....: Do one read
+#
+#   In params..:
+#   Out params.: *
+#   Returns....:
+#
+##########################################################################*/
+static int VfsReadOne(struct RdosFileMap *Map, int index, char *buf, long long pos, int size)
+{
+    int diff;
+    int count = 0;
+    char *src;
+    struct RdosFileMapEntry *entry;
+
+    index = Map->SortedArr[index];
+
+    if (index >= 0)
+    {
+        entry = &Map->MapArr[index];
+        diff = pos - entry->Pos;
+
+        if (entry->Linear && diff >= 0)
+        {
+            count = entry->Size - diff;
+
+            if (count > 0)
+            {
+                src = LinearToPtr(entry->Linear);
+                src += diff;
+                if (count > size)
+                    count = size;
+
+                memcpy(buf, src, count);
+            }
+            else
+                count = 0;
+        }
+    }
+
+    return count;
+}
+
+/*##########################################################################
+#
 #   Name       : KernelRead
 #
 #   Purpose....: Kernel read
@@ -147,6 +196,35 @@ int KernelRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, in
         Size = 0;
 
     LastIndex = VfsFind(Handle, Map, Pos);
+
+    while (Size)
+    {
+        if (LastIndex >= 0)
+        {
+            count = VfsReadOne(Map, LastIndex, ptr, Pos, Size);
+            ptr += count;
+            Size -= count;
+            ret += count;
+            Pos += count;
+        }
+
+        if (Size)
+        {
+            for (i = 0; i < 10; i++)
+            {
+                MapKernelFile(Handle, Pos, Size);
+
+                LastIndex = VfsFind(Handle, Map, Pos);
+                if (LastIndex >= 0)
+                    break;
+            }
+
+            if (LastIndex < 0)
+                break;
+        }
+    }
+
+    UnlockMod(Map);
 
     return ret;
 }

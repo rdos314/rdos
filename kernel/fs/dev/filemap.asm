@@ -4010,6 +4010,38 @@ UpdateKernelFile_      Proc near
 UpdateKernelFile_      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           MapKernelFile
+;
+;       DESCRIPTION:    Map kernel file
+;
+;       PARAMETERS:     SI             File sel
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public MapKernelFile_
+
+MapKernelFile_      Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov ds,esi
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+MapKernelFile_   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           OpenKernelVfsFile
