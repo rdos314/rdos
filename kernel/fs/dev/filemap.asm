@@ -130,7 +130,7 @@ kf_handle_arr     DD 256 DUP(?)
 
 kernel_file       ENDS
 
-kernel_file_map   STRUC
+process_file   STRUC
 
 pf_flat_base     DD ?
 pf_user_base     DD ?
@@ -149,7 +149,7 @@ pf_disabled_arr  DB 240 DUP(?)
 pf_free_arr      DB 240 DUP(?)
 pf_unlink_arr    DB 240 DUP(?)
 
-kernel_file_map   ENDS
+process_file   ENDS
 
 kernel_map_struc  STRUC
 
@@ -3245,12 +3245,12 @@ CreateVfsMod   Proc near
     pop edx
     pop ebx
 ;
-    mov eax,SIZE kernel_file_map
+    mov eax,SIZE process_file
     AllocateSmallGlobalMem
 ;
     xor edi,edi
     xor eax,eax
-    mov ecx,SIZE kernel_file_map
+    mov ecx,SIZE process_file
     shr ecx,1
     rep stosw
 ;
