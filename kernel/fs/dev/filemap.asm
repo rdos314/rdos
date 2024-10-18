@@ -153,15 +153,15 @@ process_file   ENDS
 
 kernel_map_struc  STRUC
 
-kms_map           file_map <>
+kfm_map           file_map <>
 
-kms_usage         DW ?
-kms_free_count    DB ?
-kms_unlink_count  DB ?
-kms_src_arr       DD 240 DUP(?)
-kms_ref_arr       DB 240 DUP(?)
-kms_free_arr      DB 240 DUP(?)
-kms_unlink_arr    DB 240 DUP(?)
+kfm_usage         DW ?
+kfm_free_count    DB ?
+kfm_unlink_count  DB ?
+kfm_src_arr       DD 240 DUP(?)
+kfm_ref_arr       DB 240 DUP(?)
+kfm_free_arr      DB 240 DUP(?)
+kfm_unlink_arr    DB 240 DUP(?)
 
 kernel_map_struc  ENDS
 
@@ -4002,9 +4002,9 @@ CreateKernelMap   Proc near
     mov es,bx
 ;
     mov ecx,240
-    mov es:kms_free_count,cl
+    mov es:kfm_free_count,cl
 ;
-    mov edi,OFFSET kms_free_arr
+    mov edi,OFFSET kfm_free_arr
     mov al,cl
     dec al
 
@@ -4310,7 +4310,7 @@ okvfFound:
 
 okvfPresent:
     mov es,eax
-    inc es:kms_usage
+    inc es:kfm_usage
 
 okvfLeave:
     LeaveSection ds:kf_kmap_section
