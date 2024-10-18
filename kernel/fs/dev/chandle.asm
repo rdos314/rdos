@@ -5905,7 +5905,7 @@ select32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_gate_name DB 'Test', 0
-test_file      DB 'e:/test.bin', 0
+test_file      DB 'd:/can.log', 0
 
 test_gate    Proc far
     push es
