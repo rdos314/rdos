@@ -3993,6 +3993,23 @@ CreateKernelMap   Proc near
 CreateKernelMap      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UpdateKernelFile
+;
+;       DESCRIPTION:    Update kernel file
+;
+;       PARAMETERS:     SI		File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public UpdateKernelFile_
+
+UpdateKernelFile_      Proc near
+    ret
+UpdateKernelFile_      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           OpenKernelVfsFile

@@ -69,6 +69,52 @@ void memcpy(void *dst, void *src, int count);
     "rep movs byte ptr es:[edi],fs:[esi]" \
     __parm [es edi] [fs esi] [ecx]
 
+extern void UpdateKernelFile(int handle);
+#pragma aux UpdateKernelFile parm routine [__esi]
+
+/*##########################################################################
+#
+#   Name       : VfsFind
+#
+#   Purpose....: VFS find
+#
+#   In params..: pos, size
+#   Out params.: *
+#   Returns....: Buffer index
+#
+##########################################################################*/
+static int VfsFind(int Handle, struct RdosFileMap *Map, long long Pos)
+{
+    int Step = 0x80;
+    int Curr = 0;
+    unsigned char index;
+    long long Diff;
+
+    for (;;)
+    {
+        if (Map->Update)
+            UpdateKernelFile(Handle);
+
+        index = Map->SortedArr[Curr + Step];
+        if (index != 0xFF)
+        {
+            Diff = Pos - Map->MapArr[index].Pos;
+            if (Diff >= 0)
+            {
+                Curr += Step;
+
+                if (Diff < Map->MapArr[index].Size)
+                    return Curr;
+            }
+        }
+        if (Step)
+            Step = Step >> 1;
+        else
+            break;
+    }
+    return -1;
+}
+
 /*##########################################################################
 #
 #   Name       : KernelRead
@@ -91,8 +137,8 @@ int KernelRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, in
     struct RdosFileInfo *info = Map->Info;
     long long TotalSize = info->CurrSize;
 
-//    if (Map->Update)
-//        UpdateVfsFile(HandleMod);
+    if (Map->Update)
+        UpdateKernelFile(Handle);
 
     if (Pos + Size > TotalSize)
         Size = TotalSize - Pos;
@@ -100,6 +146,7 @@ int KernelRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, in
     if (Size < 0)
         Size = 0;
 
+    LastIndex = VfsFind(Handle, Map, Pos);
 
     return ret;
 }
