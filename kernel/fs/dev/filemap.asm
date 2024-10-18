@@ -109,8 +109,9 @@ kf_req_sync       DW ?
 kf_wait_thread    DW ?
 kf_wr_ptr         DW ?
 kf_c_handle       DW ?
-kf_kernel_map_sel DW ?
+kf_kernel_usage   DW ?
 kf_resv           DW ?
+kf_kernel_map     DD ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 
@@ -383,7 +384,8 @@ CreateFileSel   Proc near
     mov ds:kf_phys_count,0
     mov ds:kf_wr_ptr,0
     mov ds:kf_c_handle,0
-    mov ds:kf_kernel_map_sel,0
+    mov ds:kf_kernel_map,0
+    mov ds:kf_kernel_usage,0
     mov ds:kf_mod_count,0
 ;
     mov ecx,256
@@ -3937,6 +3939,57 @@ ovfDone:
     ret
 OpenVfsFile   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateKernelMap
+;
+;       DESCRIPTION:    Create map sel
+;
+;       PARAMETERS:     DS              File sel
+;
+;       RETURNS:        NC
+;                         EDX           Kernel map linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateKernelMap   Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+;
+    mov eax,-1
+    mov ecx,3Dh
+    rep stosd
+;
+    xor eax,eax
+    mov ecx,3C3h
+    rep stosd
+;
+    mov es:[edx].fm_handle_ptr,0
+    mov es:[edx].fm_info_ptr,0
+    mov es:[edx].fm_update,0
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+CreateKernelMap      Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4034,6 +4087,18 @@ okvfFound:
     mov ebx,eax
     mov ds,eax
     EnterSection ds:kf_section
+    mov edx,ds:kf_kernel_map
+    or edx,edx
+    jnz okvfPresent
+;
+    mov ds:kf_kernel_usage,0
+    call CreateKernelMap
+    mov ds:kf_kernel_map,edx
+
+okvfPresent:
+    inc ds:kf_kernel_usage
+
+okvfLeave:
     LeaveSection ds:kf_section
     clc
     jmp okvfDone
