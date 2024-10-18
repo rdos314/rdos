@@ -2022,6 +2022,29 @@ int main()
                     PowInv->SetOutputPrio(2);
             }
 
+            val = PowInv->GetMaxChargeCurrent();
+
+            if (PowInv->GetBatterySoc() < 0.7)
+                PowInv->SetMaxChargeCurrent(70.0);
+            else if (PowInv->GetBatterySoc() > 1.1)
+                PowInv->SetMaxChargeCurrent(4.0);
+            else
+            {
+                if (PowInv->GetBatterySoc() < 0.9)
+                {
+                    if (PowInv->GetMaxChargeCurrent() < 5.0)
+                        PowInv->SetMaxChargeCurrent(20.0);
+                }
+                else
+                {
+                    if (PowInv->GetMaxChargeCurrent() > 25.0)
+                        PowInv->SetMaxChargeCurrent(20.0);
+                }
+            }
+
+            if (val != PowInv->GetMaxChargeCurrent())
+                Log.printf(0, "", "Max charge current: %3.1Lf A", PowInv->GetMaxChargeCurrent());
+
             WdTimeout = 2 * 100;
 
             if (PowerCount)
