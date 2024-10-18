@@ -29,8 +29,6 @@ void main()
     file.SetPos(760234);
     size = file.Read(buf, 455);
 
-*/
-
     char *buf = new char[1024];
     int size;
     int dummy;
@@ -56,9 +54,11 @@ void main()
 
     delete buf;
 
+*/
 
 
-//    RdosTestGate("");
+
+    RdosTestGate("");
 }
 
 

@@ -5894,6 +5894,35 @@ select32    Proc far
     pop ds
     ret
 select32    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Test gate
+;
+;       DESCRIPTION:    Test
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name DB 'Test', 0
+test_file      DB 'e:/test.bin', 0
+
+test_gate    Proc far
+    push es
+    push ecx
+    push edi
+;    
+    mov ecx,cs
+    mov es,ecx
+    mov edi,OFFSET test_file
+    xor ecx,ecx
+    OpenKernelHandle
+;
+    pop edi
+    pop ecx
+    pop es
+    ret
+test_gate    Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6269,6 +6298,12 @@ init_handle     PROC near
     mov dx,virt_es_in
     mov ax,select_nr
     RegisterUserGate
+;
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es
