@@ -113,7 +113,7 @@ hd_section       section_typ <>
 hd_proc_count     DW ?
 
 hd_kernel_arr    DD MAX_KERNEL_HANDLES DUP(?)
-hd_proc_arr       DW MAX_MODULES DUP(?)
+hd_proc_arr      DW MAX_PROC_COUNT DUP(?)
 hd_bitmap        DD SYS_BITMAP_COUNT DUP(?)
 hd_data          DD 4 * SYS_HANDLE_COUNT DUP(?)
 
@@ -6131,7 +6131,7 @@ init_handle     PROC near
 ;
     mov edi,OFFSET hd_proc_arr
     xor eax,eax
-    mov ecx,MAX_MODULES
+    mov ecx,MAX_PROC_COUNT
     rep stosw
 ;
     mov edi,OFFSET hd_bitmap
