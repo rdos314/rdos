@@ -1008,17 +1008,16 @@ open_kernel_handle Proc far
     push ecx
     push edi
 ;
+    call OpenKernelVfsFile
+    jnc okhVfs
+;
     OpenLegacyKernelFile
-    jc okhCheckVfs
+    jc okhDone
 ;
     movzx ebx,bx
     jmp okhHandle
 
-okhCheckVfs:
-    int 3
-    call OpenKernelVfsFile
-    jc okhDone
-;
+okhVfs:
     shl ebx,16
     xor bx,bx
 
