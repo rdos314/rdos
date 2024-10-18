@@ -81,7 +81,7 @@ void memcpy(void *dst, void *src, int count);
 #
 ##########################################################################*/
 #pragma aux KernelRead "*" parm routine [ebx] [fs esi] [edx eax] [es edi] [ecx] value [ecx]
-int KernelRead(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, int Size)
+int KernelRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int Size)
 {
     int count;
     int i;

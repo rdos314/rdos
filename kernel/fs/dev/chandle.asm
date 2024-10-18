@@ -141,6 +141,7 @@ code    SEGMENT byte public 'CODE'
     extern SetVfsFileSize:near
     extern DupVfsFile:near
     extern OpenKernelVfsFile:near
+    extern ReadKernelVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1150,9 +1151,17 @@ read_kernel_handle Proc far
 ;
     mov bx,ds:[esi].kh_legacy_sel
     or bx,bx
-    jz rkhFail
+    jz rkhVfs
 ;
     ReadLegacyFile
+    jmp rkhDone
+
+rkhVfs:
+    mov bx,ds:[esi].kh_vfs_sel
+    or bx,bx
+    jz rkhFail
+;
+    call ReadKernelVfsFile
     jmp rkhDone
 
 rkhFail:

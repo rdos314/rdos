@@ -177,6 +177,7 @@ code    SEGMENT byte public 'CODE'
     extern AllocateModHandle:near
     extern VfsRead:near
     extern VfsWrite:near
+    extern KernelRead:near
     extern UpdateWrBitmap:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3977,8 +3978,9 @@ CreateKernelMap   Proc near
     mov ecx,3C3h
     rep stosd
 ;
-    mov es:[edx].fm_handle_ptr,0
-    mov es:[edx].fm_info_ptr,0
+    mov eax,ds:kf_info_linear
+    mov es:[edx].fm_handle_ptr,eax
+    mov es:[edx].fm_info_ptr,20h
     mov es:[edx].fm_update,0
 ;
     pop edi
@@ -4119,6 +4121,56 @@ okvfDone:
     pop ds
     ret
 OpenKernelVfsFile   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadKernelVfsFile
+;
+;       DESCRIPTION:    Read kernel VFS file
+;
+;       PARAMETERS:     BX		File sel
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Count
+;                       EDX:EAX         New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ReadKernelVfsFile
+
+ReadKernelVfsFile    Proc near
+    push ds
+    push fs
+    push ebx
+    push esi
+    push ebp
+;
+    push eax
+    push edx
+;
+    mov esi,flat_sel
+    mov fs,esi
+    mov ds,ebx
+    mov esi,ds:kf_kernel_map
+    xor ebp,ebp
+    call KernelRead
+;
+    pop edx
+    pop eax
+;
+    add eax,ecx
+    adc edx,0
+;
+    pop ebp
+    pop esi
+    pop ebx
+    pop fs
+    pop ds
+    ret
+ReadKernelVfsFile    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
