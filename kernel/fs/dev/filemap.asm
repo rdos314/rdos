@@ -104,12 +104,12 @@ kf_info_linear    DD ?
 kf_sector_size    DW ?
 kf_section        section_typ <>
 kf_update_section section_typ <>
+kf_kmap_section   section_typ <>
 kf_part_sel       DW ?
 kf_req_sync       DW ?
 kf_wait_thread    DW ?
 kf_wr_ptr         DW ?
 kf_c_handle       DW ?
-kf_kmap_usage     DW ?
 kf_kmap_sel       DW ?
 kf_kmap_linear    DD ?
 kf_serv_handle    DD ?
@@ -118,13 +118,13 @@ kf_wait_list      DD ?
 kf_wr_base        DD ?,?
 kf_wr_size        DD ?
 
-kf_proc_count      DD ?
+kf_proc_count     DD ?
 kf_req_count      DD ?
 kf_wait_count     DD ?
 kf_block_count    DD ?
 kf_phys_count     DD ?
 
-kf_proc_arr        DD 64 DUP(?)
+kf_proc_arr       DD 64 DUP(?)
 kf_sorted_arr     DB 256 DUP(?)
 kf_handle_arr     DD 256 DUP(?)
 
@@ -155,6 +155,7 @@ kernel_map_struc  STRUC
 
 kms_map           file_map <>
 
+kms_usage         DW ?
 kms_free_count    DB ?
 kms_unlink_count  DB ?
 kms_src_arr       DD 240 DUP(?)
@@ -384,6 +385,7 @@ CreateFileSel   Proc near
 ;
     InitSection ds:kf_section
     InitSection ds:kf_update_section
+    InitSection ds:kf_kmap_section
     mov ds:kf_sector_size,di
     mov ds:kf_part_sel,fs
     mov ds:kf_serv_handle,ebx
@@ -399,7 +401,6 @@ CreateFileSel   Proc near
     mov ds:kf_c_handle,0
     mov ds:kf_kmap_linear,0
     mov ds:kf_kmap_sel,0
-    mov ds:kf_kmap_usage,0
     mov ds:kf_proc_count,0
 ;
     mov ecx,256
@@ -3960,13 +3961,13 @@ OpenVfsFile   Endp
 ;
 ;       DESCRIPTION:    Create kernel map sel
 ;
-;       PARAMETERS:     DS              File sel
+;       RETURNS:        AX              Kernel map sel
+;                       EDX             Kernal map linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateKernelMap   Proc near
     push es
-    push eax
     push ebx
     push ecx
     push esi
@@ -3994,12 +3995,10 @@ CreateKernelMap   Proc near
     mov es:[edx].fm_handle_ptr,eax
     mov es:[edx].fm_info_ptr,20h
     mov es:[edx].fm_update,0
-    mov ds:kf_kmap_linear,edx
 ;
     AllocateGdt
     mov ecx,SIZE kernel_map_struc
     CreateDataSelector32
-    mov ds:kf_kmap_sel,bx
     mov es,bx
 ;
     mov ecx,240
@@ -4014,11 +4013,12 @@ ckmLoop:
     dec al
     loop ckmLoop
 ;
+    mov eax,ebx
+;
     pop edi
     pop esi
     pop ecx
     pop ebx
-    pop eax
     pop es
     ret
 CreateKernelMap      Endp
@@ -4081,7 +4081,7 @@ SyncKernelMap  Endp
 ;
 ;       DESCRIPTION:    Update kernel file
 ;
-;       PARAMETERS:     SI		File sel
+;       PARAMETERS:     SI              File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4098,7 +4098,7 @@ UpdateKernelFile_      Endp
 ;
 ;       DESCRIPTION:    Wait for kernel req
 ;
-;       PARAMETERS:     DS		File sel
+;       PARAMETERS:     DS              File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4299,19 +4299,21 @@ okvfFound:
 ;
     mov ebx,eax
     mov ds,eax
-    EnterSection ds:kf_section
-    mov dx,ds:kf_kmap_sel
-    or dx,dx
+    EnterSection ds:kf_kmap_section
+    mov ax,ds:kf_kmap_sel
+    or ax,ax
     jnz okvfPresent
 ;
-    mov ds:kf_kmap_usage,0
     call CreateKernelMap
+    mov ds:kf_kmap_sel,ax
+    mov ds:kf_kmap_linear,edx
 
 okvfPresent:
-    inc ds:kf_kmap_usage
+    mov es,eax
+    inc es:kms_usage
 
 okvfLeave:
-    LeaveSection ds:kf_section
+    LeaveSection ds:kf_kmap_section
     clc
     jmp okvfDone
 
@@ -4339,7 +4341,7 @@ OpenKernelVfsFile   Endp
 ;
 ;       DESCRIPTION:    Read kernel VFS file
 ;
-;       PARAMETERS:     BX		File sel
+;       PARAMETERS:     BX              File sel
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
@@ -4388,7 +4390,7 @@ ReadKernelVfsFile    Endp
 ;
 ;       DESCRIPTION:    Read VFS file
 ;
-;       PARAMETERS:     BX		File sel
+;       PARAMETERS:     BX              File sel
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
@@ -4440,7 +4442,7 @@ ReadVfsFile    Endp
 ;
 ;       DESCRIPTION:    Write VFS file
 ;
-;       PARAMETERS:     BX		File sel
+;       PARAMETERS:     BX              File sel
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
