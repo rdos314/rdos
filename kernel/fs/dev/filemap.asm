@@ -90,7 +90,7 @@ kernel_wait_entry  ENDS
 
 kernel_mod_struc  STRUC
 
-pe_c_sel          DW ?
+pe_proc_sel          DW ?
 pe_map_sel        DW ?
 
 kernel_mod_struc  ENDS
@@ -3043,7 +3043,7 @@ FindVfsMod      Proc near
     jz fvmDone
 
 fvmLoop:
-    cmp ax,ds:[ebx].pe_c_sel
+    cmp ax,ds:[ebx].pe_proc_sel
     je fvmFound
 ;
     add ebx,4
@@ -3093,7 +3093,7 @@ AddVfsMod      Proc near
 ;
     pop ds
 ;
-    mov ds:[ebx].pe_c_sel,ax
+    mov ds:[ebx].pe_proc_sel,ax
     inc ds:kf_proc_count
 ;
     pop ebx
