@@ -118,13 +118,13 @@ kf_wait_list      DD ?
 kf_wr_base        DD ?,?
 kf_wr_size        DD ?
 
-kf_mod_count      DD ?
+kf_proc_count      DD ?
 kf_req_count      DD ?
 kf_wait_count     DD ?
 kf_block_count    DD ?
 kf_phys_count     DD ?
 
-kf_mod_arr        DD 64 DUP(?)
+kf_proc_arr        DD 64 DUP(?)
 kf_sorted_arr     DB 256 DUP(?)
 kf_handle_arr     DD 256 DUP(?)
 
@@ -400,7 +400,7 @@ CreateFileSel   Proc near
     mov ds:kf_kmap_linear,0
     mov ds:kf_kmap_sel,0
     mov ds:kf_kmap_usage,0
-    mov ds:kf_mod_count,0
+    mov ds:kf_proc_count,0
 ;
     mov ecx,256
     mov edi,OFFSET kf_handle_arr
@@ -471,8 +471,8 @@ UpdateFileSel   Proc near
     push edx
 ;
     mov ds,ax
-    mov ebx,OFFSET kf_mod_arr
-    mov ecx,ds:kf_mod_count
+    mov ebx,OFFSET kf_proc_arr
+    mov ecx,ds:kf_proc_count
     or ecx,ecx
     jz ufsDone
 
@@ -2235,7 +2235,7 @@ UpdateUnlinked Endp
 ;
 ;       DESCRIPTION:    Sync file size from userspace
 ;
-;       PARAMETERS:     DS              Mod sel
+;       PARAMETERS:     DS              Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2286,7 +2286,7 @@ SyncFileSize      Endp
 ;
 ;       DESCRIPTION:    Send update
 ;
-;       PARAMETERS:     DS             Module sel
+;       PARAMETERS:     DS             Process file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2446,7 +2446,7 @@ SyncMap  Endp
 ;
 ;       DESCRIPTION:    Delete all mapped requests
 ;
-;       PARAMETERS:     DS             Mod sel
+;       PARAMETERS:     DS             Process file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2774,8 +2774,8 @@ DisableFileReq  Proc near
     mov ebx,ds:[4*edx].kf_handle_arr
     lock bts ds:[ebx].kre_flags,KRE_DISABLED
 ;
-    mov ebx,OFFSET kf_mod_arr
-    mov ecx,ds:kf_mod_count
+    mov ebx,OFFSET kf_proc_arr
+    mov ecx,ds:kf_proc_count
     or ecx,ecx
     jz dfrCache
 
@@ -3019,7 +3019,7 @@ FreeFileReq  Endp
 ;       PARAMETERS:     DS              File sel
 ;
 ;       RETURNS:        NC
-;                         AX            Map sel
+;                         AX            Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3033,8 +3033,8 @@ FindVfsMod      Proc near
     mov es,es:p_proc_sel
     mov ax,es:pf_c_handle_sel
 ;
-    mov ebx,OFFSET kf_mod_arr
-    mov ecx,ds:kf_mod_count
+    mov ebx,OFFSET kf_proc_arr
+    mov ecx,ds:kf_proc_count
     or ecx,ecx
     stc
     jz fvmDone
@@ -3068,7 +3068,7 @@ FindVfsMod    Endp
 ;       DESCRIPTION:    Add VFS module
 ;
 ;       PARAMETERS:     DS              File sel
-;                       AX              Map sel
+;                       AX              Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3076,9 +3076,9 @@ AddVfsMod      Proc near
     push eax
     push ebx
 ;
-    mov ebx,ds:kf_mod_count
+    mov ebx,ds:kf_proc_count
     shl ebx,2
-    add ebx,OFFSET kf_mod_arr
+    add ebx,OFFSET kf_proc_arr
     mov ds:[ebx].km_map_sel,ax
 ;
     push ds
@@ -3091,7 +3091,7 @@ AddVfsMod      Proc near
     pop ds
 ;
     mov ds:[ebx].km_c_sel,ax
-    inc ds:kf_mod_count
+    inc ds:kf_proc_count
 ;
     pop ebx
     pop eax
@@ -3106,7 +3106,7 @@ AddVfsMod    Endp
 ;       DESCRIPTION:    Remove VFS module
 ;
 ;       PARAMETERS:     DS              File sel
-;                       AX              Map sel
+;                       AX              Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3115,8 +3115,8 @@ RemoveVfsMod      Proc near
     push ebx
     push ecx
 ;
-    mov ebx,OFFSET kf_mod_arr
-    mov ecx,ds:kf_mod_count
+    mov ebx,OFFSET kf_proc_arr
+    mov ecx,ds:kf_proc_count
     or ecx,ecx
     jnz rvmLoop
 ;
@@ -3139,7 +3139,7 @@ rvmFound:
     add ebx,4
     loop rvmFound
 ;
-    dec ds:kf_mod_count
+    dec ds:kf_proc_count
 
 rvmDone:
     pop ecx
@@ -3158,7 +3158,7 @@ RemoveVfsMod      Endp
 ;       PARAMETERS:     DS              File sel
 ;
 ;       RETURNS:        NC
-;                         AX            mod sel
+;                         AX            Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3297,7 +3297,7 @@ CreateVfsMod      Endp
 ;
 ;       DESCRIPTION:    Delete VFS module sel
 ;
-;       PARAMETERS:     AX              Mod sel
+;       PARAMETERS:     AX              Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3360,7 +3360,7 @@ DeleteVfsMod      Endp
 ;
 ;       DESCRIPTION:    Allocate user handle
 ;
-;       PARAMETERS:     AX              Mod sel
+;       PARAMETERS:     AX              Proc file sel
 ;
 ;       RETURNS:        NC
 ;                         DX            User handle
@@ -3438,7 +3438,7 @@ AllocateUserHandle      Endp
 ;
 ;       DESCRIPTION:    Free user handle
 ;
-;       PARAMETERS:     AX              Mod sel
+;       PARAMETERS:     AX              Proc file sel
 ;                       BX              Handle    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3481,7 +3481,7 @@ FreeUserHandle      Endp
 ;
 ;       DESCRIPTION:    Lock mod
 ;
-;       PARAMETERS:     FS:ESI          User map
+;       PARAMETERS:     FS:ESI          Proc file map
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3539,7 +3539,7 @@ LockMod_   Endp
 ;
 ;       DESCRIPTION:    Inlock mod
 ;
-;       PARAMETERS:     FS:ESI          User map
+;       PARAMETERS:     FS:ESI          Proc file map
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3583,7 +3583,7 @@ UnlockMod_   Endp
 ;
 ;       DESCRIPTION:    Get VFS file info
 ;
-;       PARAMETERS:     BX             Mod sel
+;       PARAMETERS:     BX             Proc file sel
 ;
 ;       RETURNS:        EDI            File info
 ;
@@ -3606,7 +3606,7 @@ GetVfsFileInfo    Endp
 ;
 ;       DESCRIPTION:    Map VFS file
 ;
-;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
+;       PARAMETERS:     ESI            Handle (high) + Proc file sel (low)
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
@@ -3654,7 +3654,7 @@ MapVfsFile_   Endp
 ;
 ;       DESCRIPTION:    Grow VFS file
 ;
-;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
+;       PARAMETERS:     ESI            Handle (high) + Proc file sel (low)
 ;                       EDX:EAX        Current size
 ;                       ECX            Increase
 ;
@@ -3702,7 +3702,7 @@ GrowVfsFile_      Endp
 ;
 ;       DESCRIPTION:    Update VFS file
 ;
-;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
+;       PARAMETERS:     ESI            Handle (high) + Proc file sel (low)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3739,7 +3739,7 @@ UpdateVfsFile_      Endp
 ;
 ;       DESCRIPTION:    Delete VFS file
 ;
-;       PARAMETERS:     ESI            Handle (high) + Mod sel (low)
+;       PARAMETERS:     ESI            Handle (high) + Proc file sel (low)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3776,7 +3776,7 @@ DeleteVfsFile_  Endp
 ;
 ;       DESCRIPTION:    Close VFS module sel
 ;
-;       PARAMETERS:     AX            Mod sel
+;       PARAMETERS:     AX            Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4392,7 +4392,7 @@ ReadKernelVfsFile    Endp
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
-;                       ESI             Mod sel (low) & handle (high)
+;                       ESI             Proc file sel (low) & handle (high)
 ;
 ;       RETURNS:        ECX             Count
 ;                       EDX:EAX         New position
@@ -4444,7 +4444,7 @@ ReadVfsFile    Endp
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
-;                       ESI             Mod sel (low) & handle (high)
+;                       ESI             Proc file sel (low) & handle (high)
 ;
 ;       RETURNS:        ECX             Count
 ;                       EDX:EAX         New position
@@ -4513,7 +4513,7 @@ CloseVfsFile  Endp
 ;
 ;       DESCRIPTION:    Get VFS file pos
 ;
-;       PARAMETERS:     BX             Mod sel
+;       PARAMETERS:     BX             Proc file sel
 ;                       CX             User handle
 ;
 ;       RETURNS:        EDX:EAX        Position
@@ -4554,7 +4554,7 @@ GetVfsFilePos  Endp
 ;
 ;       DESCRIPTION:    Set VFS file pos
 ;
-;       PARAMETERS:     BX             Mod sel
+;       PARAMETERS:     BX             Proc file sel
 ;                       CX             User handle
 ;                       EDX:EAX        Position
 ;
@@ -4598,7 +4598,7 @@ SetVfsFilePos  Endp
 ;
 ;       DESCRIPTION:    Dup VFS file
 ;
-;       PARAMETERS:     BX             Mod sel
+;       PARAMETERS:     BX             Proc file sel
 ;                       EDX:EAX        Position
 ;
 ;       RETURNS:        DX             Dest user handle
@@ -4750,7 +4750,7 @@ GetVfsFileSize  Endp
 ;       DESCRIPTION:    Set VFS file size
 ;
 ;       PARAMETERS:     BX             File sel
-;                       SI             Mod sel
+;                       SI             Proc file sel
 ;                       EDX:EAX        Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
