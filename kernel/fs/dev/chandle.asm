@@ -990,6 +990,11 @@ open_kernel_handle_name DB 'Open Kernel Handle', 0
 
 open_kernel_handle Proc far
     OpenLegacyKernelFile
+    jnc okhDone
+;
+    int 3
+
+okhDone:
     ret
 open_kernel_handle Endp
 

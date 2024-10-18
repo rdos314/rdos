@@ -109,6 +109,8 @@ kf_req_sync       DW ?
 kf_wait_thread    DW ?
 kf_wr_ptr         DW ?
 kf_c_handle       DW ?
+kf_kernel_map_sel DW ?
+kf_resv           DW ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 
@@ -381,6 +383,7 @@ CreateFileSel   Proc near
     mov ds:kf_phys_count,0
     mov ds:kf_wr_ptr,0
     mov ds:kf_c_handle,0
+    mov ds:kf_kernel_map_sel,0
     mov ds:kf_mod_count,0
 ;
     mov ecx,256
