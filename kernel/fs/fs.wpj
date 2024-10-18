@@ -4,7 +4,7 @@ projectIdent
 VpeMain
 1
 WRect
-1264
+688
 128
 8320
 9216
@@ -77,7 +77,7 @@ VComponent
 18
 WRect
 1264
-1169
+1160
 5680
 4224
 0
@@ -87,7 +87,7 @@ WFileName
 7
 vfs.tgt
 0
-10
+9
 20
 VComponent
 21
@@ -95,7 +95,7 @@ WRect
 560
 512
 5680
-4258
+4249
 0
 0
 22
@@ -108,10 +108,10 @@ servlib.tgt
 VComponent
 24
 WRect
-101
-1254
+96
+1245
 5680
-4266
+4258
 0
 0
 25
@@ -120,4 +120,4 @@ WFileName
 fslib.tgt
 0
 4
-14
+17
