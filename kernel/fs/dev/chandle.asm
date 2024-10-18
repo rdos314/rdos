@@ -110,10 +110,10 @@ socket_wait_header ENDS
 data    SEGMENT byte public 'DATA'
 
 hd_section       section_typ <>
-hd_mod_count     DW ?
+hd_proc_count     DW ?
 
 hd_kernel_arr    DD MAX_KERNEL_HANDLES DUP(?)
-hd_mod_arr       DW MAX_MODULES DUP(?)
+hd_proc_arr       DW MAX_MODULES DUP(?)
 hd_bitmap        DD SYS_BITMAP_COUNT DUP(?)
 hd_data          DD 4 * SYS_HANDLE_COUNT DUP(?)
 
@@ -216,10 +216,10 @@ nsLoop:
     InitSection es:h_section
 ;
     EnterSection ds:hd_section
-    movzx ebx,ds:hd_mod_count
+    movzx ebx,ds:hd_proc_count
     shl ebx,1
-    mov ds:[ebx].hd_mod_arr,es
-    inc ds:hd_mod_count
+    mov ds:[ebx].hd_proc_arr,es
+    inc ds:hd_proc_count
     LeaveSection ds:hd_section
 ;
     mov eax,es
@@ -324,10 +324,10 @@ ncNext:
     mov eax,SEG data
     mov ds,eax
     EnterSection ds:hd_section
-    movzx ebx,ds:hd_mod_count
+    movzx ebx,ds:hd_proc_count
     shl ebx,1
-    mov ds:[ebx].hd_mod_arr,es
-    inc ds:hd_mod_count
+    mov ds:[ebx].hd_proc_arr,es
+    inc ds:hd_proc_count
     LeaveSection ds:hd_section
 ;
     mov eax,es
@@ -361,8 +361,8 @@ delete_c_handle Proc far
     mov ds,edx
 ;
     EnterSection ds:hd_section
-    movzx ecx,ds:hd_mod_count
-    mov ebx,OFFSET hd_mod_arr
+    movzx ecx,ds:hd_proc_count
+    mov ebx,OFFSET hd_proc_arr
 
 ntUnlinkLoop:
     cmp ax,ds:[ebx]
@@ -384,7 +384,7 @@ ntUnlinkFound:
     jna ntUnlinkFound
 
 ntUnlinked:
-    dec ds:hd_mod_count
+    dec ds:hd_proc_count
     LeaveSection ds:hd_section
 ;
     mov ds,eax
@@ -6129,7 +6129,7 @@ init_handle     PROC near
     mov ecx,MAX_KERNEL_HANDLES
     rep stosd
 ;
-    mov edi,OFFSET hd_mod_arr
+    mov edi,OFFSET hd_proc_arr
     xor eax,eax
     mov ecx,MAX_MODULES
     rep stosw
@@ -6146,7 +6146,7 @@ init_handle     PROC near
 ;
     InitSection es:hd_section
     mov es:hd_bitmap,3
-    mov es:hd_mod_count,0
+    mov es:hd_proc_count,0
 ;
     mov edi,OFFSET hd_data
     mov es:[edi].he_type,C_HANDLE_STDIN
