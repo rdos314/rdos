@@ -132,22 +132,22 @@ kernel_file       ENDS
 
 kernel_file_map   STRUC
 
-kfm_flat_base     DD ?
-kfm_user_base     DD ?
-kfm_prog_sel      DW ?
-kfm_file_sel      DW ?
-kfm_kernel_sel    DW ?
-kfm_handle        DW ?
-kfm_ref_count     DW ?
-kfm_section       section_typ <>
-kfm_free_count    DB ?
-kfm_unlink_count  DB ?
-kfm_check         DW ?
-kfm_src_arr       DD 240 DUP(?)
-kfm_ref_arr       DB 240 DUP(?)
-kfm_disabled_arr  DB 240 DUP(?)
-kfm_free_arr      DB 240 DUP(?)
-kfm_unlink_arr    DB 240 DUP(?)
+pf_flat_base     DD ?
+pf_user_base     DD ?
+pf_prog_sel      DW ?
+pf_file_sel      DW ?
+pf_kernel_sel    DW ?
+pf_handle        DW ?
+pf_ref_count     DW ?
+pf_section       section_typ <>
+pf_free_count    DB ?
+pf_unlink_count  DB ?
+pf_check         DW ?
+pf_src_arr       DD 240 DUP(?)
+pf_ref_arr       DB 240 DUP(?)
+pf_disabled_arr  DB 240 DUP(?)
+pf_free_arr      DB 240 DUP(?)
+pf_unlink_arr    DB 240 DUP(?)
 
 kernel_file_map   ENDS
 
@@ -482,9 +482,9 @@ ufsLoop:
     jz ufsNext
 ;
     mov es,eax
-    mov es:kfm_check,1
+    mov es:pf_check,1
 ;
-    mov es,es:kfm_kernel_sel
+    mov es,es:pf_kernel_sel
     mov es:fm_update,1
 
 ufsNext:
@@ -1658,17 +1658,17 @@ FindReadMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateMapEntry      Proc near
-    movzx ebx,ds:kfm_free_count
+    movzx ebx,ds:pf_free_count
     or bx,bx
     stc
     je ameDone
 ;
     inc es:fm_count
     dec bx
-    mov ds:kfm_free_count,bl
-    mov bl,ds:[bx].kfm_free_arr
-    mov ds:[ebx].kfm_ref_arr,1
-    mov ds:[4*ebx].kfm_src_arr,edi
+    mov ds:pf_free_count,bl
+    mov bl,ds:[bx].pf_free_arr
+    mov ds:[ebx].pf_ref_arr,1
+    mov ds:[4*ebx].pf_src_arr,edi
     shl bx,4
     add bx,OFFSET fm_entry_arr
     clc
@@ -1732,7 +1732,7 @@ meLoop:
     pop edx
     pop ebx
 ;
-    sub edx,ds:kfm_flat_base
+    sub edx,ds:pf_flat_base
     mov eax,gs:[esi]
     and ax,0FFFh
     or dx,ax
@@ -1850,10 +1850,10 @@ fmLoop:
     loop fmLoop
 ;
     dec es:fm_count
-    movzx bx,ds:kfm_unlink_count
-    mov ds:[bx].kfm_unlink_arr,al
+    movzx bx,ds:pf_unlink_count
+    mov ds:[bx].pf_unlink_arr,al
     inc bl
-    mov ds:kfm_unlink_count,bl
+    mov ds:pf_unlink_count,bl
 ;
     pop esi
     pop edx
@@ -1883,7 +1883,7 @@ UpdateFile      Proc near
 ;
     call SyncFileSize
 ;
-    mov ds,ds:kfm_file_sel
+    mov ds,ds:pf_file_sel
     EnterSection ds:kf_update_section
 ;
     mov ebx,ds:kf_wr_size
@@ -2004,7 +2004,7 @@ CheckDirtyMap  Proc near
     dec ecx
     shr ecx,12
     inc ecx
-    add edx,ds:kfm_flat_base
+    add edx,ds:pf_flat_base
 
 cdmLoop:
     GetPageEntry
@@ -2051,14 +2051,14 @@ CheckDirtyMap  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    add esi,OFFSET kfm_ref_arr
+    add esi,OFFSET pf_ref_arr
 
 
 CheckMap  Proc near
     push eax
 ;
     xor al,al
-    xchg al,ds:[esi].kfm_disabled_arr
+    xchg al,ds:[esi].pf_disabled_arr
     or al,al
     jnz cmFree
 ;
@@ -2067,22 +2067,22 @@ CheckMap  Proc near
     test al,20h
     jz cmNone
 ;
-    add byte ptr ds:[esi].kfm_ref_arr,1
+    add byte ptr ds:[esi].pf_ref_arr,1
     jnc cmOk
 ;
-    dec byte ptr ds:[esi].kfm_ref_arr
+    dec byte ptr ds:[esi].pf_ref_arr
     jmp cmOk
 
 cmNone:
-    mov al,ds:[esi].kfm_ref_arr
+    mov al,ds:[esi].pf_ref_arr
     or al,al
     jz cmFree
 ;
-    sub byte ptr ds:[esi].kfm_ref_arr,1
+    sub byte ptr ds:[esi].pf_ref_arr,1
     jnz cmOk
 
 cmFree:
-    mov ds:[esi].kfm_ref_arr,0
+    mov ds:[esi].pf_ref_arr,0
     call FreeMap
     stc
     jmp cmDone
@@ -2120,7 +2120,7 @@ UnlinkLinear  Proc near
     or edx,edx
     jz ulDone
 ;
-    add edx,ds:kfm_flat_base
+    add edx,ds:pf_flat_base
     mov ecx,edx
     add ecx,es:[esi].fmb_size
     dec ecx
@@ -2158,8 +2158,8 @@ UnlinkMap  Proc near
     push ecx
     push edx
 ;
-    movzx ecx,ds:kfm_unlink_count
-    mov ebx,OFFSET kfm_unlink_arr
+    movzx ecx,ds:pf_unlink_count
+    mov ebx,OFFSET pf_unlink_arr
 
 urmLoop:
     mov al,ds:[ebx]
@@ -2167,19 +2167,19 @@ urmLoop:
 ;
     push ebx
     movzx ebx,al
-    mov ebx,ds:[4*ebx].kfm_src_arr
+    mov ebx,ds:[4*ebx].pf_src_arr
     call FreeReq
     pop ebx
 ;
-    movzx edx,ds:kfm_free_count
-    mov ds:[edx].kfm_free_arr,al
+    movzx edx,ds:pf_free_count
+    mov ds:[edx].pf_free_arr,al
     inc dl
-    mov ds:kfm_free_count,dl
+    mov ds:pf_free_count,dl
 
     inc ebx
     loop urmLoop
 ;
-    mov ds:kfm_unlink_count,0
+    mov ds:pf_unlink_count,0
 ;
     pop edx
     pop ecx
@@ -2203,7 +2203,7 @@ UnlinkMap  Endp
 UpdateUnlinked  Proc near
     push eax
 ;
-    movzx eax,ds:kfm_unlink_count
+    movzx eax,ds:pf_unlink_count
     or eax,eax
     jz uuDone
 ;
@@ -2250,14 +2250,14 @@ SyncFileSize      Proc near
 ;
     mov bx,flat_data_sel
     mov es,ebx
-    mov edx,ds:kfm_user_base
+    mov edx,ds:pf_user_base
     mov edx,es:[edx].fm_handle_ptr
     mov eax,es:[edx].fh_req_size    
     mov edx,es:[edx].fh_req_size+4
 ;
     mov bx,flat_sel
     mov es,ebx
-    mov ds,ds:kfm_file_sel
+    mov ds,ds:pf_file_sel
     mov esi,ds:kf_info_linear
     mov ebx,es:[esi].fi_size
     sub ebx,eax
@@ -2296,7 +2296,7 @@ SendUpdate  Proc near
 ;
     call SyncFileSize
 ;
-    mov ds,ds:kfm_file_sel
+    mov ds,ds:pf_file_sel
     EnterSection ds:kf_update_section
 ;
     xor ecx,ecx
@@ -2344,11 +2344,11 @@ UpdateMap  Proc near
 ;
     mov eax,fs
     mov ds,eax
-    mov es,ds:kfm_kernel_sel
+    mov es,ds:pf_kernel_sel
     mov es:fm_update,0
     mov ebx,OFFSET fm_sorted_arr
     mov ecx,es:fm_count
-    EnterSection ds:kfm_section
+    EnterSection ds:pf_section
     or ecx,ecx
     jz umLeave
 
@@ -2373,7 +2373,7 @@ umSkip:
 umLeave:
     call UpdateUnlinked
 ;
-    LeaveSection ds:kfm_section
+    LeaveSection ds:pf_section
 ;
     call SendUpdate
 ;
@@ -2409,7 +2409,7 @@ SyncMap  Proc near
     mov esi,gs:[ebx].kre_phys_arr
     movzx ebp,gs:[ebx].kre_pages
 ;
-    EnterSection ds:kfm_section
+    EnterSection ds:pf_section
 ;
     push ecx
     call FindReadMap
@@ -2433,7 +2433,7 @@ smAdd:
     clc
 
 smLeave:
-    LeaveSection ds:kfm_section
+    LeaveSection ds:pf_section
 ;
     popad
     ret
@@ -2455,11 +2455,11 @@ DeleteMap  Proc near
     push gs
     pushad
 ;
-    mov es,ds:kfm_kernel_sel
-    mov gs,ds:kfm_file_sel
+    mov es,ds:pf_kernel_sel
+    mov gs,ds:pf_file_sel
     mov ebx,OFFSET fm_sorted_arr
     mov ecx,240
-    EnterSection ds:kfm_section
+    EnterSection ds:pf_section
 
 dmLoop:
     mov al,es:[ebx]
@@ -2467,7 +2467,7 @@ dmLoop:
     je dmLeave
 ;
     movzx esi,al
-    add esi,OFFSET kfm_ref_arr
+    add esi,OFFSET pf_ref_arr
     movzx edi,al
     shl edi,4
     add edi,OFFSET fm_entry_arr    
@@ -2482,7 +2482,7 @@ dmNext:
 dmLeave:
     call UpdateUnlinked
 ;
-    LeaveSection ds:kfm_section
+    LeaveSection ds:pf_section
 ;
     popad
     pop gs
@@ -2789,20 +2789,20 @@ dfrLoop:
     push ecx
 ;
     mov ds,eax
-    EnterSection ds:kfm_section
+    EnterSection ds:pf_section
 ;
     mov ecx,240
     xor ebx,ebx
 
 dfrmLoop:
-    mov al,ds:[ebx].kfm_ref_arr
+    mov al,ds:[ebx].pf_ref_arr
     or al,al
     jz dfrmNext
 ;
-    cmp edx,ds:[4*ebx].kfm_src_arr
+    cmp edx,ds:[4*ebx].pf_src_arr
     jne dfrmNext
 ;
-    mov ds:[ebx].kfm_disabled_arr,1
+    mov ds:[ebx].pf_disabled_arr,1
     jmp dfrmLeave
 
 dfrmNext:
@@ -2810,7 +2810,7 @@ dfrmNext:
     loop dfrmLoop
 
 dfrmLeave:
-    LeaveSection ds:kfm_section
+    LeaveSection ds:pf_section
 ; 
     pop ecx
     pop ebx
@@ -3255,9 +3255,9 @@ CreateVfsMod   Proc near
     rep stosw
 ;
     mov ecx,240
-    mov es:kfm_free_count,cl
+    mov es:pf_free_count,cl
 ;
-    mov edi,OFFSET kfm_free_arr
+    mov edi,OFFSET pf_free_arr
     mov al,cl
     dec al
 
@@ -3266,18 +3266,18 @@ cvmsLoop:
     dec al
     loop cvmsLoop
 ;
-    mov es:kfm_flat_base,ebx
-    mov es:kfm_user_base,edx
-    mov es:kfm_prog_sel,si
-    mov es:kfm_file_sel,ds
-    mov es:kfm_handle,0
-    mov es:kfm_ref_count,0
+    mov es:pf_flat_base,ebx
+    mov es:pf_user_base,edx
+    mov es:pf_prog_sel,si
+    mov es:pf_file_sel,ds
+    mov es:pf_handle,0
+    mov es:pf_ref_count,0
 ;
     AllocateGdt
     mov ecx,1000h
     mov edx,ebp
     CreateDataSelector32
-    mov es:kfm_kernel_sel,bx
+    mov es:pf_kernel_sel,bx
     mov eax,es
 ;
     pop ebp
@@ -3313,7 +3313,7 @@ DeleteVfsMod   Proc near
     push eax
 ;
     mov ds,eax
-    mov ds,ds:kfm_kernel_sel
+    mov ds,ds:pf_kernel_sel
     mov ax,flat_data_sel
     mov es,eax
     mov ebx,ds:fm_handle_ptr
@@ -3327,7 +3327,7 @@ DeleteVfsMod   Proc near
 dpsPop:
     pop ds
 ;
-    mov es,ds:kfm_kernel_sel
+    mov es,ds:pf_kernel_sel
     FreeMem
 ;
     mov eax,ds
@@ -3336,8 +3336,8 @@ dpsPop:
     xor eax,eax
     mov ds,eax
 ;
-    mov edx,es:kfm_user_base
-    add edx,es:kfm_flat_base
+    mov edx,es:pf_user_base
+    add edx,es:pf_flat_base
     mov ecx,3000h
     FreeLinear
 ;
@@ -3378,7 +3378,7 @@ AllocateUserHandle      Proc near
     mov ds,eax
     mov bx,flat_data_sel
     mov es,ebx
-    mov edx,ds:kfm_user_base
+    mov edx,ds:pf_user_base
     mov edx,es:[edx].fm_handle_ptr
     add edx,OFFSET fh_bitmap
     mov ecx,15
@@ -3398,7 +3398,7 @@ auhLoop:
     add ebx,esi
 ;
     mov esi,ebx
-    mov edx,ds:kfm_user_base
+    mov edx,ds:pf_user_base
     mov edx,es:[edx].fm_handle_ptr
     shl esi,3
 
@@ -3456,7 +3456,7 @@ FreeUserHandle      Proc near
     mov ds,eax
     mov dx,flat_data_sel
     mov es,edx
-    mov edx,ds:kfm_user_base
+    mov edx,ds:pf_user_base
     mov edx,es:[edx].fm_handle_ptr
     add edx,OFFSET fh_bitmap
 ;
@@ -3594,7 +3594,7 @@ UnlockMod_   Endp
 GetVfsFileInfo     Proc near
     push ds
     mov ds,ebx
-    mov edi,ds:kfm_user_base
+    mov edi,ds:pf_user_base
     pop ds
     ret
 GetVfsFileInfo    Endp
@@ -3626,8 +3626,8 @@ MapVfsFile_      Proc near
     shr esi,16
     mov bx,si
 ;
-    mov es,ds:kfm_kernel_sel
-    mov gs,ds:kfm_file_sel
+    mov es,ds:pf_kernel_sel
+    mov gs,ds:pf_file_sel
 ;
     call WaitForReq
     jc mcvfDone
@@ -3674,8 +3674,8 @@ GrowVfsFile_      Proc near
     shr esi,16
     mov bx,si
 ;
-    mov es,ds:kfm_kernel_sel
-    mov gs,ds:kfm_file_sel
+    mov es,ds:pf_kernel_sel
+    mov gs,ds:pf_file_sel
 ;
     call WaitForGrow
     jc gvfsDone
@@ -3720,8 +3720,8 @@ UpdateVfsFile_      Proc near
     shr esi,16
     mov bx,si
 ;
-    mov es,ds:kfm_kernel_sel
-    mov gs,ds:kfm_file_sel
+    mov es,ds:pf_kernel_sel
+    mov gs,ds:pf_file_sel
     call UpdateMap
 ;
     popad
@@ -3756,7 +3756,7 @@ DeleteVfsFile_  Proc near
     GetThreadHandle
     movzx ecx,ax
 ;
-    mov ds,ds:kfm_file_sel
+    mov ds,ds:pf_file_sel
     mov ebx,REQ_DELETE
     call AddReq
 ;
@@ -3788,12 +3788,12 @@ CloseVfsMod   Proc near
     mov ds,eax
     call SyncFileSize
 ;
-    sub ds:kfm_ref_count,1
+    sub ds:pf_ref_count,1
     jnz cvmDone
 ;
     call DeleteMap
 ;
-    mov ds,ds:kfm_file_sel
+    mov ds,ds:pf_file_sel
     call RemoveVfsMod
 ;
     call DeleteVfsMod
@@ -3931,7 +3931,7 @@ ovfModOk:
 
 ovfModHOk:
     mov ds,eax
-    inc ds:kfm_ref_count
+    inc ds:pf_ref_count
     clc
     jmp ovfDone
 
@@ -4413,7 +4413,7 @@ ReadVfsFile    Proc near
     push edx
 ;
     mov fs,si
-    mov esi,fs:kfm_user_base
+    mov esi,fs:pf_user_base
     mov ebx,flat_data_sel
     mov fs,ebx
     mov ebx,ebp
@@ -4465,7 +4465,7 @@ WriteVfsFile    Proc near
     push edx
 ;
     mov fs,si
-    mov esi,fs:kfm_user_base
+    mov esi,fs:pf_user_base
     mov ebx,flat_data_sel
     mov fs,ebx
     mov ebx,ebp
@@ -4534,7 +4534,7 @@ GetVfsFilePos  Proc near
     dec edx
     shl edx,3
 ;
-    mov eax,ds:kfm_user_base
+    mov eax,ds:pf_user_base
     mov eax,es:[eax].fm_handle_ptr
     add eax,OFFSET fh_pos_arr
     add edx,eax
@@ -4576,7 +4576,7 @@ SetVfsFilePos  Proc near
     dec ecx
     shl ecx,3
 ;
-    mov edi,ds:kfm_user_base
+    mov edi,ds:pf_user_base
     mov edi,es:[edi].fm_handle_ptr
     add edi,OFFSET fh_pos_arr
     add edi,ecx
@@ -4619,7 +4619,7 @@ DupVfsFile  Proc near
     mov eax,ebx
     mov ds,eax
 ;
-    inc ds:kfm_ref_count
+    inc ds:pf_ref_count
     call AllocateUserHandle
     movzx edi,dx
     dec edi
@@ -4627,7 +4627,7 @@ DupVfsFile  Proc near
 ;
     mov ax,flat_data_sel
     mov es,eax
-    mov eax,ds:kfm_user_base
+    mov eax,ds:pf_user_base
     mov eax,es:[eax].fm_handle_ptr
     add eax,OFFSET fh_pos_arr
     add edi,eax
