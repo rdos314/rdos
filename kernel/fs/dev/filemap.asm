@@ -136,7 +136,7 @@ pf_flat_base     DD ?
 pf_user_base     DD ?
 pf_prog_sel      DW ?
 pf_file_sel      DW ?
-pf_kernel_sel    DW ?
+pf_map_sel       DW ?
 pf_handle        DW ?
 pf_ref_count     DW ?
 pf_section       section_typ <>
@@ -485,7 +485,7 @@ ufsLoop:
     mov es,eax
     mov es:pf_check,1
 ;
-    mov es,es:pf_kernel_sel
+    mov es,es:pf_map_sel
     mov es:fm_update,1
 
 ufsNext:
@@ -2347,7 +2347,7 @@ UpdateMap  Proc near
 ;
     mov eax,fs
     mov ds,eax
-    mov es,ds:pf_kernel_sel
+    mov es,ds:pf_map_sel
     mov es:fm_update,0
     mov ebx,OFFSET fm_sorted_arr
     mov ecx,es:fm_count
@@ -2458,7 +2458,7 @@ DeleteMap  Proc near
     push gs
     pushad
 ;
-    mov es,ds:pf_kernel_sel
+    mov es,ds:pf_map_sel
     mov gs,ds:pf_file_sel
     mov ebx,OFFSET fm_sorted_arr
     mov ecx,240
@@ -3280,7 +3280,7 @@ cvmsLoop:
     mov ecx,1000h
     mov edx,ebp
     CreateDataSelector32
-    mov es:pf_kernel_sel,bx
+    mov es:pf_map_sel,bx
     mov eax,es
 ;
     pop ebp
@@ -3316,7 +3316,7 @@ DeleteVfsMod   Proc near
     push eax
 ;
     mov ds,eax
-    mov ds,ds:pf_kernel_sel
+    mov ds,ds:pf_map_sel
     mov ax,flat_data_sel
     mov es,eax
     mov ebx,ds:fm_handle_ptr
@@ -3330,7 +3330,7 @@ DeleteVfsMod   Proc near
 dpsPop:
     pop ds
 ;
-    mov es,ds:pf_kernel_sel
+    mov es,ds:pf_map_sel
     FreeMem
 ;
     mov eax,ds
@@ -3629,7 +3629,7 @@ MapVfsFile_      Proc near
     shr esi,16
     mov bx,si
 ;
-    mov es,ds:pf_kernel_sel
+    mov es,ds:pf_map_sel
     mov gs,ds:pf_file_sel
 ;
     call WaitForReq
@@ -3677,7 +3677,7 @@ GrowVfsFile_      Proc near
     shr esi,16
     mov bx,si
 ;
-    mov es,ds:pf_kernel_sel
+    mov es,ds:pf_map_sel
     mov gs,ds:pf_file_sel
 ;
     call WaitForGrow
@@ -3723,7 +3723,7 @@ UpdateVfsFile_      Proc near
     shr esi,16
     mov bx,si
 ;
-    mov es,ds:pf_kernel_sel
+    mov es,ds:pf_map_sel
     mov gs,ds:pf_file_sel
     call UpdateMap
 ;
