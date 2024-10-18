@@ -1003,11 +1003,6 @@ open_kernel_handle_name DB 'Open Kernel Handle', 0
 
 open_kernel_handle Proc far
     OpenLegacyKernelFile
-    jnc okhDone
-;
-    int 3
-
-okhDone:
     ret
 open_kernel_handle Endp
 
@@ -5912,7 +5907,7 @@ select32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           TestOpenKernelFile
+;           NAME:           TestOpenKernelHandle
 ;
 ;           DESCRIPTION:    Test to open kernel file
 ;
@@ -5923,14 +5918,14 @@ select32    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TestOpenKernelFile     Proc near
+TestOpenKernelHandle     Proc near
     push ds
     push eax
     push ecx
     push edi
 ;
     OpenLegacyKernelFile
-    jc okfDone
+    jc okhDone
 ;
     movzx ebx,bx
     mov ax,SEG data
@@ -5940,10 +5935,10 @@ TestOpenKernelFile     Proc near
     mov ecx,MAX_KERNEL_HANDLES  
     mov edi,OFFSET hd_kernel_arr
 
-okfLoop:
+okhLoop:
     mov eax,ds:[edi]
     or eax,eax
-    jnz okfNext
+    jnz okhNext
 ;
     mov ds:[edi],ebx
     mov ebx,edi
@@ -5951,24 +5946,72 @@ okfLoop:
     shr ebx,2
     inc ebx
     clc
-    jmp okfLeave
+    jmp okhLeave
 
-okfNext:
+okhNext:
     add edi,4
-    loop okfLoop
+    loop okhLoop
 ;
+    int 3
     stc
 
-okfLeave:
+okhLeave:
     LeaveSection ds:hd_section
 
-okfDone:
+okhDone:
     pop edi
     pop ecx
     pop eax
     pop ds
     ret
-TestOpenKernelFile  Endp   
+TestOpenKernelHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           TestCloseKernelHandle
+;
+;           DESCRIPTION:    test Close kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TestCloseKernelHandle  Proc near
+    push ds
+    push edi
+;
+    or bx,bx
+    jz ckhDone
+;
+    cmp bx,MAX_KERNEL_HANDLES
+    ja ckhDone
+;
+    movzx edi,bx
+    dec edi
+    shl edi,2
+    add edi,OFFSET hd_kernel_arr
+;
+    mov ax,SEG data
+    mov ds,eax
+    EnterSection ds:hd_section
+    xor bx,bx
+    xchg bx,ds:[edi].kh_legacy_sel
+    or bx,bx
+    jz ckhLeave
+;
+    CloseLegacyFile
+
+ckhLeave:
+    LeaveSection ds:hd_section
+
+ckhDone:
+    xor bx,bx
+;
+    pop edi
+    pop ds
+    ret
+TestCloseKernelHandle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -5991,8 +6034,14 @@ test_gate    Proc far
     mov es,ecx
     mov edi,OFFSET test_file
     xor ecx,ecx
-    call TestOpenKernelFile
+    call TestOpenKernelHandle
     jc tgDone
+;
+    push ebx
+    call TestOpenKernelHandle
+    call TestCloseKernelHandle
+    pop ebx
+    call TestCloseKernelHandle
 
 tgDone:
     pop edi
