@@ -914,7 +914,7 @@ OpenToIo  Endp
 ;           PARAMETERS:     AX          Map sel
 ;                           BX          Proc sel
 ;                           CX          Mode
-;                           DX          Mod handle
+;                           DX          Proc handle
 ;
 ;           RETURNS:        BX          Handle
 ;
