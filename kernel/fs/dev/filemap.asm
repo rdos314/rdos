@@ -151,7 +151,7 @@ pf_unlink_arr    DB 240 DUP(?)
 
 process_file   ENDS
 
-kernel_map_struc  STRUC
+kernel_file_map  STRUC
 
 kfm_map           file_map <>
 
@@ -163,7 +163,7 @@ kfm_ref_arr       DB 240 DUP(?)
 kfm_free_arr      DB 240 DUP(?)
 kfm_unlink_arr    DB 240 DUP(?)
 
-kernel_map_struc  ENDS
+kernel_file_map  ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -3976,7 +3976,7 @@ CreateKernelMap   Proc near
     mov ax,flat_sel
     mov es,eax
 ;
-    mov eax,SIZE kernel_map_struc
+    mov eax,SIZE kernel_file_map
     AllocateBigLinear
     mov edi,edx
 ;
@@ -3988,7 +3988,7 @@ CreateKernelMap   Proc near
     mov ecx,3C3h
     rep stosd
 ;
-    mov ecx,SIZE kernel_map_struc - 1000h
+    mov ecx,SIZE kernel_file_map - 1000h
     rep stosb
 ;
     mov eax,ds:kf_info_linear
@@ -3997,7 +3997,7 @@ CreateKernelMap   Proc near
     mov es:[edx].fm_update,0
 ;
     AllocateGdt
-    mov ecx,SIZE kernel_map_struc
+    mov ecx,SIZE kernel_file_map
     CreateDataSelector32
     mov es,bx
 ;
