@@ -90,8 +90,8 @@ kernel_wait_entry  ENDS
 
 kernel_mod_struc  STRUC
 
-km_c_sel          DW ?
-km_map_sel        DW ?
+pe_c_sel          DW ?
+pe_map_sel        DW ?
 
 kernel_mod_struc  ENDS
 
@@ -478,7 +478,7 @@ UpdateFileSel   Proc near
     jz ufsDone
 
 ufsLoop:
-    mov ax,ds:[ebx].km_map_sel
+    mov ax,ds:[ebx].pe_map_sel
     or ax,ax
     jz ufsNext
 ;
@@ -2783,7 +2783,7 @@ DisableFileReq  Proc near
     jz dfrCache
 
 dfrLoop:
-    mov ax,ds:[ebx].km_map_sel
+    mov ax,ds:[ebx].pe_map_sel
     or ax,ax
     jz dfrNext
 ;
@@ -3043,7 +3043,7 @@ FindVfsMod      Proc near
     jz fvmDone
 
 fvmLoop:
-    cmp ax,ds:[ebx].km_c_sel
+    cmp ax,ds:[ebx].pe_c_sel
     je fvmFound
 ;
     add ebx,4
@@ -3053,7 +3053,7 @@ fvmLoop:
     jmp fvmDone
 
 fvmFound:
-    mov ax,ds:[ebx].km_map_sel
+    mov ax,ds:[ebx].pe_map_sel
     clc
 
 fvmDone:
@@ -3082,7 +3082,7 @@ AddVfsMod      Proc near
     mov ebx,ds:kf_proc_count
     shl ebx,2
     add ebx,OFFSET kf_proc_arr
-    mov ds:[ebx].km_map_sel,ax
+    mov ds:[ebx].pe_map_sel,ax
 ;
     push ds
 ;
@@ -3093,7 +3093,7 @@ AddVfsMod      Proc near
 ;
     pop ds
 ;
-    mov ds:[ebx].km_c_sel,ax
+    mov ds:[ebx].pe_c_sel,ax
     inc ds:kf_proc_count
 ;
     pop ebx
@@ -3127,7 +3127,7 @@ RemoveVfsMod      Proc near
     jmp rvmDone
 
 rvmLoop:
-    cmp ax,ds:[ebx].km_map_sel
+    cmp ax,ds:[ebx].pe_map_sel
     je rvmFound
 ;
     add ebx,4
