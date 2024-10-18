@@ -133,10 +133,10 @@ kernel_file       ENDS
 process_file   STRUC
 
 pf_flat_base     DD ?
-pf_user_base     DD ?
+pf_map_linear    DD ?
+pf_map_sel       DW ?
 pf_prog_sel      DW ?
 pf_file_sel      DW ?
-pf_map_sel       DW ?
 pf_handle        DW ?
 pf_ref_count     DW ?
 pf_section       section_typ <>
@@ -2253,7 +2253,7 @@ SyncFileSize      Proc near
 ;
     mov bx,flat_data_sel
     mov es,ebx
-    mov edx,ds:pf_user_base
+    mov edx,ds:pf_map_linear
     mov edx,es:[edx].fm_handle_ptr
     mov eax,es:[edx].fh_req_size    
     mov edx,es:[edx].fh_req_size+4
@@ -3270,7 +3270,7 @@ cvmsLoop:
     loop cvmsLoop
 ;
     mov es:pf_flat_base,ebx
-    mov es:pf_user_base,edx
+    mov es:pf_map_linear,edx
     mov es:pf_prog_sel,si
     mov es:pf_file_sel,ds
     mov es:pf_handle,0
@@ -3339,7 +3339,7 @@ dpsPop:
     xor eax,eax
     mov ds,eax
 ;
-    mov edx,es:pf_user_base
+    mov edx,es:pf_map_linear
     add edx,es:pf_flat_base
     mov ecx,3000h
     FreeLinear
@@ -3381,7 +3381,7 @@ AllocateUserHandle      Proc near
     mov ds,eax
     mov bx,flat_data_sel
     mov es,ebx
-    mov edx,ds:pf_user_base
+    mov edx,ds:pf_map_linear
     mov edx,es:[edx].fm_handle_ptr
     add edx,OFFSET fh_bitmap
     mov ecx,15
@@ -3401,7 +3401,7 @@ auhLoop:
     add ebx,esi
 ;
     mov esi,ebx
-    mov edx,ds:pf_user_base
+    mov edx,ds:pf_map_linear
     mov edx,es:[edx].fm_handle_ptr
     shl esi,3
 
@@ -3459,7 +3459,7 @@ FreeUserHandle      Proc near
     mov ds,eax
     mov dx,flat_data_sel
     mov es,edx
-    mov edx,ds:pf_user_base
+    mov edx,ds:pf_map_linear
     mov edx,es:[edx].fm_handle_ptr
     add edx,OFFSET fh_bitmap
 ;
@@ -3597,7 +3597,7 @@ UnlockMod_   Endp
 GetVfsFileInfo     Proc near
     push ds
     mov ds,ebx
-    mov edi,ds:pf_user_base
+    mov edi,ds:pf_map_linear
     pop ds
     ret
 GetVfsFileInfo    Endp
@@ -4417,7 +4417,7 @@ ReadVfsFile    Proc near
     push edx
 ;
     mov fs,si
-    mov esi,fs:pf_user_base
+    mov esi,fs:pf_map_linear
     mov ebx,flat_data_sel
     mov fs,ebx
     mov ebx,ebp
@@ -4469,7 +4469,7 @@ WriteVfsFile    Proc near
     push edx
 ;
     mov fs,si
-    mov esi,fs:pf_user_base
+    mov esi,fs:pf_map_linear
     mov ebx,flat_data_sel
     mov fs,ebx
     mov ebx,ebp
@@ -4538,7 +4538,7 @@ GetVfsFilePos  Proc near
     dec edx
     shl edx,3
 ;
-    mov eax,ds:pf_user_base
+    mov eax,ds:pf_map_linear
     mov eax,es:[eax].fm_handle_ptr
     add eax,OFFSET fh_pos_arr
     add edx,eax
@@ -4580,7 +4580,7 @@ SetVfsFilePos  Proc near
     dec ecx
     shl ecx,3
 ;
-    mov edi,ds:pf_user_base
+    mov edi,ds:pf_map_linear
     mov edi,es:[edi].fm_handle_ptr
     add edi,OFFSET fh_pos_arr
     add edi,ecx
@@ -4631,7 +4631,7 @@ DupVfsFile  Proc near
 ;
     mov ax,flat_data_sel
     mov es,eax
-    mov eax,ds:pf_user_base
+    mov eax,ds:pf_map_linear
     mov eax,es:[eax].fm_handle_ptr
     add eax,OFFSET fh_pos_arr
     add edi,eax
