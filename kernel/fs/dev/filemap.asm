@@ -151,6 +151,18 @@ kfm_unlink_arr    DB 240 DUP(?)
 
 kernel_file_map   ENDS
 
+kernel_map_struc  STRUC
+
+kms_map           file_map <>
+
+kms_free_count    DB ?
+kms_unlink_count  DB ?
+kms_src_arr       DD 240 DUP(?)
+kms_ref_arr       DB 240 DUP(?)
+kms_free_arr      DB 240 DUP(?)
+kms_unlink_arr    DB 240 DUP(?)
+
+kernel_map_struc  ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -3963,7 +3975,7 @@ CreateKernelMap   Proc near
     mov ax,flat_sel
     mov es,eax
 ;
-    mov eax,1000h
+    mov eax,SIZE kernel_map_struc
     AllocateBigLinear
     mov edi,edx
 ;
@@ -3975,6 +3987,9 @@ CreateKernelMap   Proc near
     mov ecx,3C3h
     rep stosd
 ;
+    mov ecx,SIZE kernel_map_struc - 1000h
+    rep stosb
+;
     mov eax,ds:kf_info_linear
     mov es:[edx].fm_handle_ptr,eax
     mov es:[edx].fm_info_ptr,20h
@@ -3982,9 +3997,22 @@ CreateKernelMap   Proc near
     mov ds:kf_kmap_linear,edx
 ;
     AllocateGdt
-    mov ecx,1000h
+    mov ecx,SIZE kernel_map_struc
     CreateDataSelector32
     mov ds:kf_kmap_sel,bx
+    mov es,bx
+;
+    mov ecx,240
+    mov es:kms_free_count,cl
+;
+    mov edi,OFFSET kms_free_arr
+    mov al,cl
+    dec al
+
+ckmLoop:
+    stosb
+    dec al
+    loop ckmLoop
 ;
     pop edi
     pop esi
