@@ -140,6 +140,7 @@ code    SEGMENT byte public 'CODE'
     extern GetVfsFileSize:near
     extern SetVfsFileSize:near
     extern DupVfsFile:near
+    extern OpenKernelVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1008,9 +1009,20 @@ open_kernel_handle Proc far
     push edi
 ;
     OpenLegacyKernelFile
-    jc okhDone
+    jc okhCheckVfs
 ;
     movzx ebx,bx
+    jmp okhHandle
+
+okhCheckVfs:
+    int 3
+    call OpenKernelVfsFile
+    jc okhDone
+;
+    shl ebx,16
+    xor bx,bx
+
+okhHandle:
     mov ax,SEG data
     mov ds,eax
     EnterSection ds:hd_section
@@ -6052,7 +6064,7 @@ select32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_gate_name DB 'Test', 0
-test_file      DB 'd:/log/1.log', 0
+test_file      DB 'e:/test.bin', 0
 
 test_gate    Proc far
     push es

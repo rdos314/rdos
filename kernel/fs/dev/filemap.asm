@@ -3938,6 +3938,124 @@ ovfDone:
 OpenVfsFile   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenKernelVfsFile
+;
+;           DESCRIPTION:    Open kernel VFS file
+;
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        BX          File sel
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public OpenKernelVfsFile
+
+OpenKernelVfsFile    Proc near
+    push ds
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov gs,eax
+;
+    call GetPathDrive
+    jc okvfFail
+;
+    call GetDrivePart
+    or bx,bx
+    jz okvfFail
+;
+    mov ah,es:[edi]
+    cmp ah,'/'
+    je okvfRoot
+;
+    cmp ah,'\'
+    je okvfRoot
+
+okvfRel:
+    call GetRelDir
+    jmp okvfHasStart
+
+okvfRoot:
+    inc edi
+    xor ax,ax
+
+okvfHasStart:
+    mov esi,edi
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    push ecx
+    xor ecx,ecx
+    movzx eax,ax
+    call AllocateMsg
+    pop ecx
+    jc okvfFail
+
+okvfCopyPath:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz okvfCopyPath
+;
+    test cx,O_CREAT
+    jz okvfOpen
+
+okvfCreate:
+    push ecx
+    mov eax,VFS_CREATE_FILE
+    call RunMsg
+    pop ecx
+    jnc okvfFound
+    jmp okvfFail
+
+okvfOpen:
+    push ecx
+    mov eax,VFS_OPEN_FILE
+    call RunMsg
+    pop ecx
+    jc okvfFail
+
+okvfFound:
+    call GetFileSel
+    jc okvfFail
+;
+    mov ebx,eax
+    mov ds,eax
+    EnterSection ds:kf_section
+    LeaveSection ds:kf_section
+    clc
+    jmp okvfDone
+
+okvfFail:
+    stc
+
+okvfDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+OpenKernelVfsFile   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           ReadVfsFile
