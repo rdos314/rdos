@@ -1580,8 +1580,7 @@ UnlockMap     Endp
 ;
 ;       DESCRIPTION:    Find a read map
 ;
-;       PARAMETERS:     DS             Kernel processes
-;                       ES             Kernel mapping sel
+;       PARAMETERS:     ES             Kernel mapping sel
 ;                       EDX:EAX        Position
 ;
 ;       RETURNS:        EBX            Req offset
@@ -3999,6 +3998,57 @@ CreateKernelMap      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SyncKernelMap
+;
+;       DESCRIPTION:    Sync kernel map from file sel
+;
+;       PARAMETERS:     DS             File sel
+;                       ES             Kernel mapping sel
+;                       EBX            Req id
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SyncKernelMap  Proc near
+    pushad
+;
+    mov edi,ebx
+    mov ebx,ds:[4*ebx].kf_handle_arr
+    mov eax,ds:[ebx].kre_pos
+    mov edx,ds:[ebx].kre_pos+4
+    mov ecx,ds:[ebx].kre_size
+;
+    mov esi,ds:[ebx].kre_phys_arr
+    movzx ebp,ds:[ebx].kre_pages
+;
+    push ecx
+    call FindReadMap
+    pop ecx
+    jc skmAdd
+;
+    mov edi,ds:[4*edi].kf_handle_arr
+    dec ds:[edi].kre_usage
+    stc
+    jmp skmDone
+
+skmAdd:
+;    call AllocateMapEntry
+    mov es:[bx].fmb_pos,eax
+    mov es:[bx].fmb_pos+4,edx
+    mov es:[bx].fmb_size,ecx
+;
+    mov ecx,ebp
+;    call MapEntry
+;    call AddReadMap
+    clc
+
+skmDone:
+    popad
+    ret
+SyncKernelMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UpdateKernelFile
 ;
 ;       DESCRIPTION:    Update kernel file
@@ -4025,6 +4075,7 @@ UpdateKernelFile_      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForKernelReq   Proc near
+    push ecx
     push esi
     push edi
 ;
@@ -4089,6 +4140,7 @@ wfkrLeave:
 wfkrDone:
     pop edi
     pop esi
+    pop ecx
     ret
 WaitForKernelReq   Endp
 
@@ -4113,7 +4165,11 @@ MapKernelFile_      Proc near
 ;
     mov ds,esi
     call WaitForKernelReq
+    jc mkfDone
 ;
+    call SyncKernelMap
+
+mkfDone:
     popad
     pop ds
     ret
