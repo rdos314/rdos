@@ -90,7 +90,7 @@ kernel_wait_entry  ENDS
 
 kernel_mod_struc  STRUC
 
-pe_proc_sel          DW ?
+pe_proc_sel       DW ?
 pe_map_sel        DW ?
 
 kernel_mod_struc  ENDS
