@@ -81,11 +81,11 @@ void memcpy(void *dst, void *src, int count);
     "rep movs byte ptr es:[edi],fs:[esi]" \
     __parm [es edi] [fs esi] [ecx]
 
-extern void LockMod(struct RdosFileMap *Map);
-#pragma aux LockMod parm routine [fs esi]
+extern void LockMap(struct RdosFileMap *Map);
+#pragma aux LockMap parm routine [fs esi]
 
-extern void UnlockMod(struct RdosFileMap *Map);
-#pragma aux UnlockMod parm routine [fs esi]
+extern void UnlockMap(struct RdosFileMap *Map);
+#pragma aux UnlockMap parm routine [fs esi]
 
 extern void MapVfsFile(int handlemod, long long pos, int size);
 #pragma aux MapVfsFile parm routine [__esi] [__edx __eax] [__ecx]
@@ -226,7 +226,7 @@ static int VfsWriteOne(struct RdosFileMap *Map, int index, char *buf, long long 
                     count = size;
 
                 memcpy(dst, buf, count);
-   
+
                 FileSize = pos + count;
                 if (FileSize > hinfo->ReqSize)
                     hinfo->ReqSize = FileSize;
@@ -272,7 +272,7 @@ int VfsRead(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, in
     if (Size < 0)
         Size = 0;
 
-    LockMod(Map);
+    LockMap(Map);
 
     LastIndex = VfsFind(HandleMod, Map, Pos);
 
@@ -291,11 +291,11 @@ int VfsRead(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, in
         {
             for (i = 0; i < 10; i++)
             {
-                UnlockMod(Map);
+                UnlockMap(Map);
 
                 MapVfsFile(HandleMod, Pos, Size);
 
-                LockMod(Map);
+                LockMap(Map);
                 LastIndex = VfsFind(HandleMod, Map, Pos);
                 if (LastIndex >= 0)
                     break;
@@ -306,7 +306,7 @@ int VfsRead(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, in
         }
     }
 
-    UnlockMod(Map);
+    UnlockMap(Map);
 
     return ret;
 }
@@ -343,7 +343,7 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
     if (Grow > 0)
         GrowVfsFile(HandleMod, info->DiscSize, Grow);
 
-    LockMod(Map);
+    LockMap(Map);
 
     LastIndex = VfsFind(HandleMod, Map, Pos);
 
@@ -370,7 +370,7 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
 
             for (i = 0; i < 10; i++)
             {
-                UnlockMod(Map);
+                UnlockMap(Map);
 
                 Grow = Pos + Size - info->DiscSize;
 
@@ -379,7 +379,7 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
                 else
                     MapVfsFile(HandleMod, Pos, Size);
 
-                LockMod(Map);
+                LockMap(Map);
                 LastIndex = VfsFind(HandleMod, Map, Pos);
                 if (LastIndex >= 0)
                     break;
@@ -390,7 +390,7 @@ int VfsWrite(int HandleMod, struct RdosFileMap *Map, long long Pos, void *Buf, i
         }
     }
 
-    UnlockMod(Map);
+    UnlockMap(Map);
 
     return ret;
 }

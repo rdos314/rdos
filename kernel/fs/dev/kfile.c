@@ -224,7 +224,5 @@ int KernelRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, in
         }
     }
 
-    UnlockMod(Map);
-
     return ret;
 }

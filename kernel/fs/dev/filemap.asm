@@ -187,7 +187,7 @@ code    SEGMENT byte public 'CODE'
     extern FileHandleToPartFs:near
     extern AllocateVfsHandle:near
     extern RefVfsHandle:near
-    extern AllocateModHandle:near
+    extern AllocateProcHandle:near
     extern VfsRead:near
     extern VfsWrite:near
     extern KernelRead:near
@@ -3015,9 +3015,9 @@ FreeFileReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           FindVfsMod
+;       NAME:           FindVfsProc
 ;
-;       DESCRIPTION:    Find VFS module
+;       DESCRIPTION:    Find VFS proc sel
 ;
 ;       PARAMETERS:     DS              File sel
 ;
@@ -3026,7 +3026,7 @@ FreeFileReq  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FindVfsMod      Proc near
+FindVfsProc      Proc near
     push es
     push ebx
     push ecx
@@ -3061,21 +3061,21 @@ fvmDone:
     pop ebx
     pop es
     ret
-FindVfsMod    Endp
+FindVfsProc    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AddVfsMod
+;       NAME:           AddVfsProc
 ;
-;       DESCRIPTION:    Add VFS module
+;       DESCRIPTION:    Add VFS proc
 ;
 ;       PARAMETERS:     DS              File sel
 ;                       AX              Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddVfsMod      Proc near
+AddVfsProc      Proc near
     push eax
     push ebx
 ;
@@ -3099,21 +3099,21 @@ AddVfsMod      Proc near
     pop ebx
     pop eax
     ret
-AddVfsMod    Endp
+AddVfsProc    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           RemoveVfsMod
+;       NAME:           RemoveVfsProc
 ;
-;       DESCRIPTION:    Remove VFS module
+;       DESCRIPTION:    Remove VFS proc
 ;
 ;       PARAMETERS:     DS              File sel
 ;                       AX              Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RemoveVfsMod      Proc near
+RemoveVfsProc      Proc near
     push eax
     push ebx
     push ecx
@@ -3149,14 +3149,14 @@ rvmDone:
     pop ebx
     pop eax
     ret
-RemoveVfsMod      Endp
+RemoveVfsProc      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateVfsMod
+;       NAME:           CreateVfsProc
 ;
-;       DESCRIPTION:    Create VFS module sel
+;       DESCRIPTION:    Create VFS proc sel
 ;
 ;       PARAMETERS:     DS              File sel
 ;
@@ -3165,7 +3165,7 @@ RemoveVfsMod      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateVfsMod   Proc near
+CreateVfsProc   Proc near
     push es
     push ebx
     push ecx
@@ -3291,20 +3291,20 @@ cvmsLoop:
     pop ebx
     pop es
     ret
-CreateVfsMod      Endp
+CreateVfsProc      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteVfsMod
+;       NAME:           DeleteVfsProc
 ;
-;       DESCRIPTION:    Delete VFS module sel
+;       DESCRIPTION:    Delete VFS proc
 ;
 ;       PARAMETERS:     AX              Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteVfsMod   Proc near
+DeleteVfsProc   Proc near
     push ds
     push es
     push fs
@@ -3354,7 +3354,7 @@ dpsPop:
     pop es
     pop ds
     ret
-DeleteVfsMod      Endp
+DeleteVfsProc      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3480,17 +3480,17 @@ FreeUserHandle      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           LockMod
+;       NAME:           LockMap
 ;
-;       DESCRIPTION:    Lock mod
+;       DESCRIPTION:    Lock map
 ;
 ;       PARAMETERS:     FS:ESI          Proc map ptr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public LockMod_
+    public LockMap_
 
-LockMod_      Proc near
+LockMap_      Proc near
     push es
     push eax
     push ebx
@@ -3533,22 +3533,22 @@ lmmDone:
     pop eax
     pop es
     ret
-LockMod_   Endp
+LockMap_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UnlockMod
+;       NAME:           UnlockMap
 ;
-;       DESCRIPTION:    Inlock mod
+;       DESCRIPTION:    Unlock map
 ;
 ;       PARAMETERS:     FS:ESI          Proc map ptr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public UnlockMod_
+    public UnlockMap_
 
-UnlockMod_      Proc near
+UnlockMap_      Proc near
     push es
     push eax
     push ebx
@@ -3577,7 +3577,7 @@ ummDone:
     pop eax
     pop es
     ret
-UnlockMod_   Endp
+UnlockMap_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3775,17 +3775,17 @@ DeleteVfsFile_  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CloseVfsMod
+;       NAME:           CloseVfsMap
 ;
-;       DESCRIPTION:    Close VFS module sel
+;       DESCRIPTION:    Close VFS proc sel
 ;
 ;       PARAMETERS:     AX            Proc file sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public CloseVfsMod
+    public CloseVfsProc
 
-CloseVfsMod   Proc near
+CloseVfsProc   Proc near
     push ds
 ;
     mov ds,eax
@@ -3797,14 +3797,14 @@ CloseVfsMod   Proc near
     call DeleteMap
 ;
     mov ds,ds:pf_file_sel
-    call RemoveVfsMod
+    call RemoveVfsProc
 ;
-    call DeleteVfsMod
+    call DeleteVfsProc
 
 cvmDone:
     pop ds
     ret
-CloseVfsMod   Endp
+CloseVfsProc   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3916,17 +3916,17 @@ ovfNew:
     mov ds:kf_c_handle,bx
 
 ovfHandleOk:
-    call FindVfsMod
+    call FindVfsProc
     jnc ovfModOk
 ;
-    call CreateVfsMod
-    call AddVfsMod
+    call CreateVfsProc
+    call AddVfsProc
 
 ovfModOk:
     LeaveSection ds:kf_section
 ;
     call AllocateUserHandle
-    call AllocateModHandle
+    call AllocateProcHandle
     jnc ovfModHOk
 ;
     int 3

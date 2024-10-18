@@ -126,7 +126,7 @@ code    SEGMENT byte public 'CODE'
 
     extern OpenVfsFile:near
     extern CloseVfsFile:near
-    extern CloseVfsMod:near
+    extern CloseVfsProc:near
     extern FreeUserHandle:near
     extern ReadVfsFile:near
     extern WriteVfsFile:near
@@ -907,12 +907,12 @@ OpenToIo  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateModHandle
+;           NAME:           AllocateProcHandle
 ;
-;           DESCRIPTION:    Allocate module handle
+;           DESCRIPTION:    Allocate proc handle
 ;
 ;           PARAMETERS:     AX          Map sel
-;                           BX          C Handle
+;                           BX          Proc sel
 ;                           CX          Mode
 ;                           DX          Mod handle
 ;
@@ -920,9 +920,9 @@ OpenToIo  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public AllocateModHandle
+    public AllocateProcHandle
 
-AllocateModHandle     Proc near
+AllocateProcHandle     Proc near
     push ds
     push eax
     push edx
@@ -985,7 +985,7 @@ amhDone:
     pop eax
     pop ds
     ret
-AllocateModHandle  Endp   
+AllocateProcHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1482,7 +1482,7 @@ close_handle     Proc far
     mov eax,edx
     mov ebx,ebp
     call FreeUserHandle
-    call CloseVfsMod
+    call CloseVfsProc
 ;
     pop eax
 
