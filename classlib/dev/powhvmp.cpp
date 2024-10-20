@@ -731,14 +731,6 @@ void TPowHvmP::Execute()
             FModbus.GetBufferedHoldingRegister(40217, &val);
             FBatteryCurrent = (double)val / 10.0;
 
-            FModbus.GetBufferedHoldingRegister(40218, &val);
-            FBatteryPower = (double)val;
-
-            if (FBatteryCurrent > 0.0)
-                FBatteryChargeEnergy += FBatteryPower / 60.0;
-            else
-                FBatteryDischargeEnergy += FBatteryPower / 60.0;
-
             FModbus.GetBufferedHoldingRegister(40220, &val);
             FSolarVoltage = (double)val / 10.0;
 
@@ -758,9 +750,16 @@ void TPowHvmP::Execute()
             if (first)
                 FBatteryVc = FBatteryVoltage - 0.038 * FBatteryCurrent;
             else
-                FBatteryVc = 0.85 * FBatteryVc + 0.15 * (FBatteryVoltage - 0.038 * FBatteryCurrent);
+                FBatteryVc = 0.95 * FBatteryVc + 0.05 * (FBatteryVoltage - 0.038 * FBatteryCurrent);
 
-            FBatterySoc = (FBatteryVc - 47.04) / 4.13;
+            FBatteryPower = FBatteryVc * FBatteryCurrent;
+
+            if (FBatteryCurrent > 0.0)
+                FBatteryChargeEnergy += FBatteryPower / 60.0;
+            else
+                FBatteryDischargeEnergy += FBatteryPower / 60.0;
+
+            FBatterySoc = (FBatteryVc - 45.6) / 7.4;
 
             FHasData = true;
             first = false;
