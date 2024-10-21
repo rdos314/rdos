@@ -1894,6 +1894,28 @@ wcfFillCheck:
 
 wcfDo:
     mov al,ds:file_drive
+;
+    push es
+    push edx
+;
+    push eax
+    push esi
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,ds:file_dir_entry
+    GetTime
+    mov es:[esi].de_time,eax
+    mov es:[esi].de_time+4,edx
+    mov edx,esi
+    pop esi
+    pop eax
+;
+    CallFileSystem fs_update_file_proc
+;
+    pop edx
+    pop es
+;
+    mov al,ds:file_drive
     test ds:file_attrib, FILE_ATTRIB_NOBUFFER
     jz wcfDoBuf
 ;
