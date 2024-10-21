@@ -4802,7 +4802,7 @@ dupl_module_file_handle  Proc far
 ;
     mov ds,ebx
     mov bx,ds:mod_c_file_handle
-    DuplCFileToFile
+    DuplKernelToLegacy
     clc
 
 dupl_module_file_handle_done:

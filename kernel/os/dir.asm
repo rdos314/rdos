@@ -2168,9 +2168,9 @@ open_legacy_file   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           dupl_c_file_to_file
+;           NAME:           DuplLegacyFile
 ;
-;           DESCRIPTION:    Dupl C file to file
+;           DESCRIPTION:    Dupl legacy file
 ;
 ;           PARAMETERS:     EBX          File handle entry
 ;                           
@@ -2179,9 +2179,9 @@ open_legacy_file   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dupl_c_file_to_file_name  DB 'Dupl C File To File',0
+dupl_legacy_file_name  DB 'Dupl Legacy File',0
 
-dupl_c_file_to_file    Proc far
+dupl_legacy_file    Proc far
     push es
     push ax
     push cx
@@ -2197,7 +2197,7 @@ dcfDone:
     pop ax
     pop es
     retf32
-dupl_c_file_to_file   Endp
+dupl_legacy_file   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3318,10 +3318,10 @@ init_dir    PROC near
     mov ax,open_legacy_kernel_file_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET dupl_c_file_to_file
-    mov edi,OFFSET dupl_c_file_to_file_name
+    mov esi,OFFSET dupl_legacy_file
+    mov edi,OFFSET dupl_legacy_file_name
     xor cl,cl
-    mov ax,dupl_c_file_to_file_nr
+    mov ax,dupl_legacy_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_drive_info

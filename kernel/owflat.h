@@ -1702,7 +1702,7 @@
     __modify [__edx] \
     __value [__eax]
 
-#pragma aux RdosSetModifyHandleTime = \
+#pragma aux RdosSetHandleModifyTime = \
     CallGate_set_handle_modify_time  \
     __parm [__ebx] [__edx] [__eax] \
     __value [__eax]

@@ -63,7 +63,6 @@ protected:
     int VfsWrite(const void *Buf, int Size);
 
 private:
-    bool FLegacy;
     long FHandle;
     char *FFileName;
     struct RdosFileMap *FMap;

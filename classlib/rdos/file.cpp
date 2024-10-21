@@ -47,22 +47,12 @@ TFile::TFile(const char *FileName)
 {
     int len;
 
-    FMap = 0;
-    FHandle = RdosOpenFile(FileName, 0);
+    FHandle = RdosOpenHandle(FileName, O_RDWR);
 
     if (FHandle)
-        FLegacy = true;
+        FMap = RdosGetHandleMap(FHandle, &FMapIndex);
     else
-    {
-        FLegacy = false;
-        FHandle = RdosOpenHandle(FileName, O_RDWR);
-
-        if (FHandle)
-            FMap = RdosGetHandleMap(FHandle, &FMapIndex);
-
-        if (FMap == 0)
-            FHandle = 0;
-    }
+        FMap = 0;
 
     if (FMap)
         FFileName = 0;
@@ -91,22 +81,12 @@ TFile::TFile(const char *FileName, int Attrib)
 {
     int len;
 
-    FMap = 0;
-    FHandle = RdosCreateFile(FileName, Attrib);
+    FHandle = RdosOpenHandle(FileName, O_CREAT | O_RDWR);
 
     if (FHandle)
-        FLegacy = true;
+        FMap = RdosGetHandleMap(FHandle, &FMapIndex);
     else
-    {
-        FLegacy = false;
-        FHandle = RdosOpenHandle(FileName, O_CREAT | O_RDWR);
-
-        if (FHandle)
-            FMap = RdosGetHandleMap(FHandle, &FMapIndex);
-
-        if (FMap == 0)
-            FHandle = 0;
-    }
+        FMap = 0;
 
     if (FMap)
         FFileName = 0;
@@ -143,19 +123,13 @@ TFile::TFile(const TFile &file)
     else
         FFileName = 0;
 
-    FLegacy = file.FLegacy;
     FMap = 0;
 
     if (file.FHandle)
     {
-        if (FLegacy)
-            FHandle = RdosDuplFile(file.FHandle);
-        else
-        {
-            FHandle = RdosDupHandle(file.FHandle);
-            if (FHandle)
-                FMap = RdosGetHandleMap(FHandle, &FMapIndex);
-        }
+        FHandle = RdosDupHandle(file.FHandle);
+        if (FHandle)
+            FMap = RdosGetHandleMap(FHandle, &FMapIndex);
     }
     else
         FHandle = 0;
@@ -177,12 +151,7 @@ TFile::TFile(const TFile &file)
 TFile::~TFile()
 {
     if (FHandle)
-    {
-        if (FLegacy)
-            RdosCloseFile(FHandle);
-        else
-            RdosCloseHandle(FHandle);
-    }
+        RdosCloseHandle(FHandle);
 
     if (FFileName)
         delete FFileName;
@@ -221,12 +190,7 @@ int TFile::IsOpen()
 int TFile::IsDevice()
 {
     if (FHandle)
-    {
-        if (FLegacy)
-            return RdosIsDevice(FHandle);
-        else
-            return RdosIsHandleDevice(FHandle);
-    }
+        return RdosIsHandleDevice(FHandle);
     else
         return FALSE;
 }
@@ -245,12 +209,7 @@ int TFile::IsDevice()
 int TFile::IsFile()
 {
     if (FHandle)
-    {
-        if (FLegacy)
-            return !RdosIsDevice(FHandle);
-        else
-            return !RdosIsHandleDevice(FHandle);
-    }
+        return !RdosIsHandleDevice(FHandle);
     else
         return FALSE;
 }
@@ -292,7 +251,7 @@ long long TFile::GetSize()
     else
     {
         if (FHandle)
-            return RdosGetFileSize(FHandle);
+            return RdosGetHandleSize(FHandle);
         else
             return 0;
     }
@@ -313,15 +272,10 @@ void TFile::SetSize(long long Size)
 {
     if (FHandle)
     {
-        if (FLegacy)
-            RdosSetFileSize(FHandle, Size);
-        else
-        {
-            RdosSetHandleSize(FHandle, Size);
+        RdosSetHandleSize(FHandle, Size);
 
-            if (FMap->Update)
-                RdosUpdateHandle(FHandle);
-        }
+        if (FMap && FMap->Update)
+            RdosUpdateHandle(FHandle);
     }
 }
 
@@ -343,12 +297,7 @@ long long TFile::GetPos()
     else
     {
         if (FHandle)
-        {
-            if (FLegacy)
-                return RdosGetFilePos(FHandle);
-            else
-                return RdosGetHandlePos(FHandle);
-        }
+            return RdosGetHandlePos(FHandle);
         else
             return 0;
     }
@@ -372,12 +321,7 @@ void TFile::SetPos(long long Pos)
     else
     {
         if (FHandle)
-        {
-            if (FLegacy)
-                RdosSetFilePos(FHandle, Pos);
-            else
-                RdosSetHandlePos(FHandle, Pos);
-        }
+            RdosSetHandlePos(FHandle, Pos);
     }
 }
 
@@ -398,7 +342,7 @@ TDateTime TFile::GetTime()
 
     if (FHandle)
     {
-        RdosGetFileTime(FHandle, &msb, &lsb);
+        RdosGetHandleModifyTime(FHandle, &msb, &lsb);
         return TDateTime(msb, lsb);
     }
 
@@ -424,7 +368,7 @@ void TFile::SetTime(const TDateTime &time)
     {
         msb = time.GetMsb();
         lsb = time.GetLsb();
-        RdosSetFileTime(FHandle, msb, lsb);
+        RdosSetHandleModifyTime(FHandle, msb, lsb);
     }
 }
 
@@ -613,12 +557,7 @@ int TFile::Read(void *Buf, int Size)
     else
     {
         if (FHandle)
-        {
-            if (FLegacy)
-                return RdosReadFile(FHandle, Buf, Size);
-            else
-                return RdosReadHandle(FHandle, Buf, Size);
-        }
+            return RdosReadHandle(FHandle, Buf, Size);
         else
             return 0;
     }
@@ -777,12 +716,7 @@ int TFile::Write(const void *Buf, int Size)
     else
     {
         if (FHandle)
-        {
-            if (FLegacy)
-                return RdosWriteFile(FHandle, Buf, Size);
-            else
-                return RdosWriteHandle(FHandle, Buf, Size);
-        }
+            return RdosWriteHandle(FHandle, Buf, Size);
         else
             return 0;
     }

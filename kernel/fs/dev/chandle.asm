@@ -1233,6 +1233,58 @@ write_kernel_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           dupl_kernel_to_legacy
+;
+;           DESCRIPTION:    Dupl kernel file to legacy file
+;
+;           PARAMETERS:     EBX          File handle entry
+;                           
+;           RETURNS:        EBX          File handle
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dupl_kernel_to_legacy_name  DB 'Dupl Kernel File to Legacy File',0
+
+dupl_kernel_to_legacy    Proc far
+    push ds
+    push ebx
+    push esi
+;
+    or bx,bx
+    jz dklFail
+;
+    cmp bx,MAX_KERNEL_HANDLES
+    ja dklFail
+;
+    mov si,SEG data
+    mov ds,esi
+    movzx esi,bx
+    dec esi
+    shl esi,2
+    add esi,OFFSET hd_kernel_arr
+;
+    mov bx,ds:[esi].kh_legacy_sel
+    or bx,bx
+    jz dklFail
+;
+    DuplLegacyFile
+    jmp wkhDone
+
+dklFail:
+    xor ebx,ebx
+
+dklDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+    ret
+dupl_kernel_to_legacy    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -6244,6 +6296,12 @@ init_handle     PROC near
     mov edi,OFFSET signal_exc_handle_name
     xor cl,cl
     mov ax,signal_exc_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET dupl_kernel_to_legacy
+    mov edi,OFFSET dupl_kernel_to_legacy_name
+    xor cl,cl
+    mov ax,dupl_kernel_to_legacy_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16

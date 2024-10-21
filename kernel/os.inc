@@ -2679,10 +2679,16 @@ OpenKernelHandle MACRO
     OsGate open_kernel_handle_nr
                     ENDM
 
-; IN  BX        C File handle
-; OUT BX        File handle
-DuplCFileToFile MACRO
-    OsGate dupl_c_file_to_file_nr
+; IN  BX        Kernel handle
+; OUT BX        Legacy file handle
+DuplKernelToLegacy MACRO
+    OsGate dupl_kernel_to_legacy_nr
+                    ENDM
+
+; IN  BX        Legacy sel
+; OUT BX        Legacy file handle
+DuplLegacyFile MACRO
+    OsGate dupl_legacy_file_nr
                     ENDM
 
 ; IN  BX        Handle
