@@ -1240,11 +1240,11 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
     strcat(filename, "\\");
     strcat(filename, str);
 
-    handle = RdosOpenFile(filename, 0);
+    handle = RdosOpenHandle(filename, O_RDWR);
     if (handle)
     {
 	    ok = TRUE;
-        RdosCloseFile(handle);
+        RdosCloseHandle(handle);
     }
     else
         ok = CreateHistoryTempJpeg(address, year, month, day);
@@ -1332,10 +1332,10 @@ void THttpRadPage::WriteTemp(int address)
     strcat(filename, "\\");
     strcat(filename, str);
 
-    handle = RdosOpenFile(filename, 0);
+    handle = RdosOpenHandle(filename, O_RDWR);
     if (handle)
     {
-        RdosGetFileTime(handle, &Msb, &Lsb);
+        RdosGetHandleModifyTime(handle, &Msb, &Lsb);
         filetime = TDateTime(Msb, Lsb);
         filetime.AddMin(5);
 
@@ -1344,7 +1344,7 @@ void THttpRadPage::WriteTemp(int address)
         else
             ok = FALSE;
 
-        RdosCloseFile(handle);
+        RdosCloseHandle(handle);
     }
     else
         ok = FALSE;

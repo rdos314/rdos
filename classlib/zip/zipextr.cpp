@@ -96,8 +96,8 @@ TUnzipExtractor::TUnzipExtractor(int InputFileHandle, TUnzipFile *File, const ch
         destptr++;
     }    
 
-    FInputHandle = RdosDuplFile(InputFileHandle);
-    FOutputHandle = RdosCreateFile(DestFileName, 0);
+    FInputHandle = RdosDupHandle(InputFileHandle);
+    FOutputHandle = RdosOpenHandle(DestFileName, O_CREAT | O_RDWR);
 
     FFile = File;    
 }
@@ -115,9 +115,9 @@ TUnzipExtractor::TUnzipExtractor(int InputFileHandle, TUnzipFile *File, const ch
 ##########################################################################*/
 TUnzipExtractor::~TUnzipExtractor()
 {
-    RdosSetFileTime(FOutputHandle, FFile->rdos_msb_time, FFile->rdos_lsb_time);
-    RdosCloseFile(FOutputHandle);
-    RdosCloseFile(FInputHandle);
+    RdosSetHandleModifyTime(FOutputHandle, FFile->rdos_msb_time, FFile->rdos_lsb_time);
+    RdosCloseHandle(FOutputHandle);
+    RdosCloseHandle(FInputHandle);
 
     delete FOutBuf;
     delete FInBuf;
@@ -201,8 +201,8 @@ int TUnzipExtractor::Seek(long abs_offset)
     if (request < 0)
         return FALSE;
 
-    RdosSetFilePos(FInputHandle, bufstart);
-    FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+    RdosSetHandlePos(FInputHandle, bufstart);
+    FInCount = RdosReadHandle(FInputHandle, FInBuf, INBUFSIZ);
     if (FInCount <= 0)
         return FALSE;
 
@@ -377,7 +377,7 @@ int TUnzipExtractor::ReadByte()   /* refill inbuf and return a byte if available
         return EOF;
     }
     if (FInCount <= 0) {
-        FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+        FInCount = RdosReadHandle(FInputHandle, FInBuf, INBUFSIZ);
         if (FInCount == 0)
             return EOF;
 
@@ -448,7 +448,7 @@ char *TUnzipExtractor::GetInbuf()
 ##########################################################################*/
 int TUnzipExtractor::FillInbuf() /* like readbyte() except returns number of bytes in inbuf */
 {
-    FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+    FInCount = RdosReadHandle(FInputHandle, FInBuf, INBUFSIZ);
     if (FInCount <= 0)
         return 0;
 
@@ -537,7 +537,7 @@ int TUnzipExtractor::Flush(char *rawbuf, int size)
       -----------------------------------------------------------------------*/
 
         if (q > FTmpOutBuf) {
-            if (!RdosWriteFile(FOutputHandle, FTmpOutBuf, q-FTmpOutBuf))
+            if (!RdosWriteHandle(FOutputHandle, FTmpOutBuf, q-FTmpOutBuf))
                 return FALSE;
         }
     } else {   /* binary mode:  aflag is false */
@@ -552,7 +552,7 @@ int TUnzipExtractor::Flush(char *rawbuf, int size)
          * at least MSC 5.1 has a lousy implementation of fwrite() (as does
          * DEC Ultrix cc), write() is used anyway.
          */
-        if (!RdosWriteFile(FOutputHandle, rawbuf, size))
+        if (!RdosWriteHandle(FOutputHandle, rawbuf, size))
             return FALSE;
     }
 

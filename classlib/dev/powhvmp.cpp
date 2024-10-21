@@ -92,9 +92,9 @@ void TPowHvmP::StartLog(const char *path)
     for (num = 0; num < 10000; num++)
     {
         sprintf(FileName, "%s/log%04d.dat", path, num);
-        handle = RdosOpenFile(FileName, 0);
+        handle = RdosOpenHandle(FileName, O_RDWR);
         if (handle)
-            RdosCloseFile(handle);
+            RdosCloseHandle(handle);
         else
             break;
     }

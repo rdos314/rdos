@@ -453,10 +453,10 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
 
     FIndex = MAX_IMAGE_COUNT;
 
-    fh = RdosOpenFile(IniName, 0);
+    fh = RdosOpenHandle(IniName, O_RDWR);
     if (fh)
     {
-        RdosCloseFile(fh);
+        RdosCloseHandle(fh);
 
         FLoadIni = new TAppIniFile(IniName);
         FLoadSection = IniSection;
@@ -602,10 +602,10 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
     int DoCheckBmp = TRUE;
     int DoCheckGif = TRUE;
 
-    fh = RdosOpenFile(path, 0);
+    fh = RdosOpenHandle(path, O_RDWR);
     if (fh)
     {
-        RdosCloseFile(fh);
+        RdosCloseHandle(fh);
 
         bitmap = 0;
 
@@ -648,10 +648,10 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
         strcpy(str, path);
         strcat(str, "\\image.ini");
 
-        fh = RdosOpenFile(str, 0);
+        fh = RdosOpenHandle(str, O_RDWR);
         if (fh)
         {
-            RdosCloseFile(fh);
+            RdosCloseHandle(fh);
 
             SeqIni = new TAppIniFile(str);
 

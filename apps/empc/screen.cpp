@@ -48,7 +48,7 @@ void __stdcall ShowAsciiz(char *str);
 *##########################################################################*/
 void OpenScreen(const char *FileName)
 {
-    handle = RdosCreateFile(FileName, 0);
+    handle = RdosCOpenHandle(FileName, O_CREAT | O_RDWR);
 }
 
 /*##################  CloseScreen  ###############
@@ -60,7 +60,7 @@ void OpenScreen(const char *FileName)
 *##########################################################################*/
 void CloseScreen()
 {
-    RdosCloseFile(handle);
+    RdosCloseHandle(handle);
 }
 
 /*##################  ShowChar  ###############
@@ -73,7 +73,7 @@ void CloseScreen()
 void __stdcall ShowChar(char ch)
 {
 	RdosWriteChar(ch);
-	RdosWriteFile(handle, &ch, 1);
+	RdosWriteHandle(handle, &ch, 1);
 }
 
 /*##################  ShowSizeString  ###############
@@ -88,7 +88,7 @@ void __stdcall ShowSizeString(char *str, int Size)
     if (Size > 0)
     {
     	RdosWriteSizeString(str, Size);
-	    RdosWriteFile(handle, str, Size);
+	    RdosWriteHandle(handle, str, Size);
 	}
 }
 
@@ -102,5 +102,5 @@ void __stdcall ShowSizeString(char *str, int Size)
 void __stdcall ShowAsciiz(char *str)
 {
 	RdosWriteString(str);
-	RdosWriteFile(handle, str, strlen(str));
+	RdosWriteHandle(handle, str, strlen(str));
 }

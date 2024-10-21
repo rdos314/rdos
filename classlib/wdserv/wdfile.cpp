@@ -155,7 +155,7 @@ void TWdFileService::ReqOpen()
 
     GetString(fname, 255);
 
-    handle = RdosOpenFile(fname, 0);
+    handle = RdosOpenHandle(fname, O_RDWR);
 
     if (handle)
     {
@@ -192,21 +192,21 @@ void TWdFileService::ReqSeek()
 	switch (mode)
 	{
 		case 0:
-			RdosSetFilePos(handle, pos);
+			RdosSetHandlePos(handle, pos);
 			PutDword(0);
 			PutDword(pos);
 			break;
 
 		case 1:
-			pos += RdosGetFilePos(handle);
-			RdosSetFilePos(handle, pos);
+			pos += RdosGetHandlePos(handle);
+			RdosSetHandlePos(handle, pos);
 			PutDword(0);
 			PutDword(pos);
 			break;
 
 		case 2:
-			pos += RdosGetFileSize(handle);
-			RdosSetFilePos(handle, pos);
+			pos += RdosGetHandleSize(handle);
+			RdosSetHandlePos(handle, pos);
 			PutDword(0);
 			PutDword(pos);
 			break;
@@ -238,7 +238,7 @@ void TWdFileService::ReqRead()
     if (size)
     {
         buf = new char[size];
-        count = RdosReadFile(handle, buf, size);
+        count = RdosReadHandle(handle, buf, size);
         PutDword(0);
         PutData(buf, count);
         delete buf;
@@ -294,7 +294,7 @@ void TWdFileService::ReqClose()
 {
     int handle = GetDword();
 
-    RdosCloseFile(handle);
+    RdosCloseHandle(handle);
 
     PutDword(0);
 }
@@ -391,13 +391,13 @@ void TWdFileService::ReqStrToFullPath()
     FileType = GetByte();
     GetString(FileName, 255);
 
-    handle = RdosOpenFile(FileName, 0);
+    handle = RdosOpenHandle(FileName, O_RDWR);
     if (handle)
     {
         PutDword(0);
         PutString(FileName);
 
-        RdosCloseFile(handle);
+        RdosCloseHandle(handle);
     }
     else
     {

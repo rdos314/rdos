@@ -842,9 +842,9 @@ int TUnzipFile::ProcessFileHeader()
         abs_data_offset = FUnzip->FBufStart + (FUnzip->FInPtr-FUnzip->FInBuf);
     }
 
-    RdosSetFilePos(FUnzip->FInputHandle, bufstart);
-    FUnzip->FBufStart = RdosGetFilePos(FUnzip->FInputHandle);
-    RdosReadFile(FUnzip->FInputHandle, FUnzip->FInBuf, INBUFSIZ);  /* been here before... */
+    RdosSetHandlePos(FUnzip->FInputHandle, bufstart);
+    FUnzip->FBufStart = RdosGetHandlePos(FUnzip->FInputHandle);
+    RdosReadHandle(FUnzip->FInputHandle, FUnzip->FInBuf, INBUFSIZ);  /* been here before... */
     FUnzip->FInPtr = inptr;
     FUnzip->FInCount = incnt;
 
@@ -1003,13 +1003,13 @@ int TUnzipFile::CheckForNewer(const char *filename)
     unsigned long msb, lsb;
     int handle;
 
-    handle = RdosOpenFile(filename, 0);
+    handle = RdosOpenHandle(filename, O_RDWR);
 
     if (handle)
     {
-        RdosGetFileTime(handle, &msb, &lsb);
+        RdosGetHandleModifyTime(handle, &msb, &lsb);
         RdosAddSec(&msb, &lsb, 2);
-        RdosCloseFile(handle);
+        RdosCloseHandle(handle);
 
         if (msb == rdos_msb_time)
             return lsb >= rdos_msb_time;
@@ -1044,11 +1044,11 @@ int TUnzipFile::NeedUpdate(const char *filename)
     int size;
     unsigned long old_crc;
 
-    handle = RdosOpenFile(filename, 0);
+    handle = RdosOpenHandle(filename, O_RDWR);
 
     if (handle)
     {
-        RdosGetFileTime(handle, &msb, &lsb);
+        RdosGetHandleAccessTime(handle, &msb, &lsb);
 
         old_time = ((long long)msb << 32) + lsb;
         new_time = ((long long)rdos_msb_time << 32) + rdos_lsb_time;
@@ -1059,13 +1059,13 @@ int TUnzipFile::NeedUpdate(const char *filename)
 
         if (diff_time > 2 * 1193)
         {
-            RdosCloseFile(handle);
+            RdosCloseHandle(handle);
             return TRUE;
         }
 
-        if (RdosGetFileSize(handle) != uncompr_size)
+        if (RdosGetHandleSize(handle) != uncompr_size)
         {
-            RdosCloseFile(handle);
+            RdosCloseHandle(handle);
             return TRUE;
         }
 
@@ -1074,7 +1074,7 @@ int TUnzipFile::NeedUpdate(const char *filename)
 
         for (;;)
         {
-            size = RdosReadFile(handle, buf, WSIZE);
+            size = RdosReadHandle(handle, buf, WSIZE);
 
             if (size)
                 old_crc = crc32(old_crc, (unsigned char *)buf, size);
@@ -1082,7 +1082,7 @@ int TUnzipFile::NeedUpdate(const char *filename)
                 break;
         }
 
-        RdosCloseFile(handle);
+        RdosCloseHandle(handle);
         delete buf;
 
         if (old_crc == crc)
@@ -1736,7 +1736,7 @@ int TUnzip::Open(const char *filename)
 
     Close();
 
-    FInputHandle = RdosOpenFile(filename, 0);
+    FInputHandle = RdosOpenHandle(filename, O_RDWR);
 
     if (!FInputHandle)
     {
@@ -1744,13 +1744,13 @@ int TUnzip::Open(const char *filename)
         return FALSE;
     }
 
-    FZipLen = RdosGetFileSize(FInputHandle);
+    FZipLen = RdosGetHandleSize(FInputHandle);
 
     ok = ProcessFiles(filename, TRUE);
 
     if (!ok)
     {
-        RdosCloseFile(FInputHandle);
+        RdosCloseHandle(FInputHandle);
         FInputHandle = 0;
     }
 
@@ -1774,7 +1774,7 @@ int TUnzip::OpenNoHeader(const char *filename)
 
     Close();
 
-    FInputHandle = RdosOpenFile(filename, 0);
+    FInputHandle = RdosOpenHandle(filename, O_RDWR);
 
     if (!FInputHandle)
     {
@@ -1782,13 +1782,13 @@ int TUnzip::OpenNoHeader(const char *filename)
         return FALSE;
     }
 
-    FZipLen = RdosGetFileSize(FInputHandle);
+    FZipLen = RdosGetHandleSize(FInputHandle);
 
     ok = ProcessFiles(filename, FALSE);
 
     if (!ok)
     {
-        RdosCloseFile(FInputHandle);
+        RdosCloseHandle(FInputHandle);
         FInputHandle = 0;
     }
 
@@ -1813,7 +1813,7 @@ void TUnzip::Close()
 
     if (FInputHandle)
     {
-        RdosCloseFile(FInputHandle);
+        RdosCloseHandle(FInputHandle);
         FInputHandle = 0;
     }
 
@@ -1986,9 +1986,9 @@ int TUnzip::FindRec(long searchlen, char* signature, int rec_size)
   ---------------------------------------------------------------------------*/
 
     if ((tail_len = FZipLen % INBUFSIZ) > rec_size) {
-        RdosSetFilePos(FInputHandle, FZipLen-tail_len);
-        FBufStart = RdosGetFilePos(FInputHandle);
-        if ((FInCount = RdosReadFile(FInputHandle, FInBuf,
+        RdosSetHandlePos(FInputHandle, FZipLen-tail_len);
+        FBufStart = RdosGetHandlePos(FInputHandle);
+        if ((FInCount = RdosReadHandle(FInputHandle, FInBuf,
             (unsigned int)tail_len)) != (int)tail_len)
             return 2;      /* it's expedient... */
 
@@ -2019,8 +2019,8 @@ int TUnzip::FindRec(long searchlen, char* signature, int rec_size)
 
     for (i = 1;  !found && (i <= numblks);  ++i) {
         FBufStart -= INBUFSIZ;
-        RdosSetFilePos(FInputHandle, FBufStart);
-        if ((FInCount = RdosReadFile(FInputHandle,FInBuf,INBUFSIZ))
+        RdosSetHandlePos(FInputHandle, FBufStart);
+        if ((FInCount = RdosReadHandle(FInputHandle,FInBuf,INBUFSIZ))
             != INBUFSIZ)
             return 2;          /* read error is fatal failure */
 
@@ -2063,8 +2063,8 @@ int TUnzip::GetCentralHeader(const char *filename, long searchlen, int verbose)
   ---------------------------------------------------------------------------*/
 
     if (FZipLen <= INBUFSIZ) {
-        RdosSetFilePos(FInputHandle, 0L);
-        FInCount = RdosReadFile(FInputHandle, FInBuf, FZipLen);
+        RdosSetHandlePos(FInputHandle, 0L);
+        FInCount = RdosReadHandle(FInputHandle, FInBuf, FZipLen);
         if (FInCount == FZipLen)
 
             /* 'P' must be at least (ECREC_SIZE+4) bytes from end of zipfile */
@@ -2154,7 +2154,7 @@ unsigned TUnzip::ReadBuf(char *buf, register unsigned size)   /* return number o
     n = size;
     while (size) {
         if (FInCount <= 0) {
-            FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+            FInCount = RdosReadHandle(FInputHandle, FInBuf, INBUFSIZ);
             if (FInCount == 0)
                 return (n-size);
 
@@ -2209,9 +2209,9 @@ int TUnzip::Seek(long abs_offset)
         return FALSE;
     
     if (bufstart != FBufStart) {
-        RdosSetFilePos(FInputHandle, bufstart);
-        FBufStart = RdosGetFilePos(FInputHandle);
-        FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+        RdosSetHandlePos(FInputHandle, bufstart);
+        FBufStart = RdosGetHandlePos(FInputHandle);
+        FInCount = RdosReadHandle(FInputHandle, FInBuf, INBUFSIZ);
         if (FInCount <= 0)
             return FALSE;
         FInCount -= (int)inbuf_offset;
@@ -2353,9 +2353,9 @@ int TUnzip::SeekFile(TUnzipFile *file)
     }
 
     if (bufstart != FBufStart) {
-        RdosSetFilePos(FInputHandle, bufstart);
-        FBufStart = RdosGetFilePos(FInputHandle);
-        FInCount = RdosReadFile(FInputHandle, FInBuf, INBUFSIZ);
+        RdosSetHandlePos(FInputHandle, bufstart);
+        FBufStart = RdosGetHandlePos(FInputHandle);
+        FInCount = RdosReadHandle(FInputHandle, FInBuf, INBUFSIZ);
         if (FInCount <= 0)
         {
             Info(0x401, OffsetMsg, "lseek", bufstart);

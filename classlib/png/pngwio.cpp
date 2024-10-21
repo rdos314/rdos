@@ -29,7 +29,7 @@
 void /* PRIVATE */
 png_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
-   if (RdosWriteFile(png_ptr->file_handle, data, length) != length)
+   if (RdosWriteHandle(png_ptr->file_handle, data, length) != length)
           png_error(png_ptr, "Write Error");
 }
 
@@ -44,7 +44,7 @@ png_default_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    png_uint_32 check;
 
-   check = RdosWriteFile(png_ptr->file_handle, data, length);
+   check = RdosWriteHandle(png_ptr->file_handle, data, length);
 
    if (check != length)
           png_error(png_ptr, "Write Error");

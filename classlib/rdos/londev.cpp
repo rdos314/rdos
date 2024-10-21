@@ -1344,14 +1344,14 @@ int TLonDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCo
     {
         sprintf(str, "%s/%d.sdd", LogPath, i);
 
-        int fileHandle = RdosOpenFile(str, 0);
+        int fileHandle = RdosOpenHandle(str, O_RDWR);
         if (fileHandle == 0) 
-            fileHandle = RdosCreateFile(str, 0);
+            fileHandle = RdosOpenHandle(str, O_CREAT | O_RDWR);
         
         if (fileHandle == 0) 
             return FALSE;
         else
-            RdosCloseFile(fileHandle);
+            RdosCloseHandle(fileHandle);
     }
 
     FLogPath = LogPath;
@@ -1465,7 +1465,7 @@ int TLonDevice::GetNextDumpFile()
         RdosCloseDir(dir);
 
         sprintf(filename, "%s/%s", FLogPath.GetData(), OldestName);
-        return RdosOpenFile(filename, 0);
+        return RdosOpenHandle(filename, O_RDWR);
     }
     return 0;
 }
@@ -1496,17 +1496,17 @@ void TLonDevice::DumpOnce()
         
         FEventSection.Leave();
         
-        RdosSetFileSize(fileHandle, 0);
+        RdosSetHandleSize(fileHandle, 0);
 
         for (int i = pos; i < FEntryCount; i++) 
             if (FEntryArr[i].Time)
-                RdosWriteFile(fileHandle, &DumpArr[i], sizeof(struct TLonDebug));
+                RdosWriteHandle(fileHandle, &DumpArr[i], sizeof(struct TLonDebug));
 
         for (int i = 0; i < pos; i++)
             if (FEntryArr[i].Time)
-                RdosWriteFile(fileHandle, &DumpArr[i], sizeof(struct TLonDebug));
+                RdosWriteHandle(fileHandle, &DumpArr[i], sizeof(struct TLonDebug));
 
-        RdosCloseFile(fileHandle);
+        RdosCloseHandle(fileHandle);
 
         delete DumpArr;
 
