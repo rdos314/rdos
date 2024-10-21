@@ -2313,7 +2313,7 @@ get_file_size_done64:
 ;
 ;           PARAMETERS:     BX              File selector
 ;                   
-;           RETURNS:        EAX             Size
+;           RETURNS:        EDX:EAX             Size
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2329,6 +2329,7 @@ get_legacy_file_size Proc far
     mov ds,bx
     EnterReadSection ds:file_size_section
     mov eax,ds:file_size
+    xor edx,edx
     LeaveReadSection ds:file_size_section
     clc
 

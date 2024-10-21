@@ -2689,6 +2689,7 @@ gst09  DD OFFSET get_size_dummy
 get_handle_size32     Proc far
     push ds
     push ebx
+    push edx
     push ebp
 ;
     GetThread
@@ -2728,6 +2729,7 @@ ghsFail32:
 
 ghsDone32:
     pop ebp
+    pop edx
     pop ebx
     pop ds    
     ret
