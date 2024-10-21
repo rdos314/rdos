@@ -27,9 +27,9 @@ TFile *GetFile()
         for (num = 0; num < 10000; num++)
         {
                 sprintf(FileName, "d:\\comlog\\raw%04d.dat", num);
-                handle = RdosOpenFile(FileName, 0);
-                if (handle)
-                        RdosCloseFile(handle);
+                handle = RdosOpenHandle(FileName, O_RDWR);
+                if (handle > 0)
+                        RdosCloseHandle(handle);
                 else
                         break;
         }

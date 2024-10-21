@@ -93,7 +93,7 @@ fill_input_buffer (j_decompress_ptr cinfo)
   my_src_ptr src = (my_src_ptr) cinfo->src;
   size_t nbytes;
 
-  nbytes = RdosReadFile(src->infile, src->buffer, INPUT_BUF_SIZE);
+  nbytes = RdosReadHandle(src->infile, src->buffer, INPUT_BUF_SIZE);
 
   if (nbytes <= 0) {
     if (src->start_of_file)	/* Treat empty input file as fatal error */

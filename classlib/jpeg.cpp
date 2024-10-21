@@ -89,7 +89,7 @@ TJpegBitmapDevice *TJpegBitmapDevice::Create(const char *FileName)
 	struct jpeg_decompress_struct cinfo;
 	struct jpeg_error_mgr jerr;
 
-	handle = RdosOpenFile(FileName, 0);
+	handle = RdosOpenHandle(FileName, O_RDWR);
 	if (handle)
 	{
 		cinfo.err = jpeg_std_error(&jerr);
@@ -114,7 +114,7 @@ TJpegBitmapDevice *TJpegBitmapDevice::Create(const char *FileName)
 		jpeg_finish_decompress(&cinfo);
 		jpeg_destroy_decompress(&cinfo);
 
-		RdosCloseFile(handle);
+		RdosCloseHandle(handle);
 		return dev;
 	}
 	return 0;
@@ -144,7 +144,7 @@ int TJpegBitmapDevice::Save(const char *FileName)
 	TBitmapGraphicDevice *dev;
 	int FreeDev = FALSE;
 
-	handle = RdosCreateFile(FileName, 0);
+	handle = RdosOpenHandle(FileName, O_CREAT | O_RDWR);
 	if (handle)
 	{
 		if (GetBpp() == 24)
@@ -181,7 +181,7 @@ int TJpegBitmapDevice::Save(const char *FileName)
 		jpeg_finish_compress(&cinfo);
 		jpeg_destroy_compress(&cinfo);
 
-		RdosCloseFile(handle);
+		RdosCloseHandle(handle);
 
 		if (FreeDev)
 			delete dev;

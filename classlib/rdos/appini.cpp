@@ -603,15 +603,15 @@ TAppIniFile::TAppIniFile(const char *IniName)
     FCurrVar = 0;
     FSectionList = 0;
 
-    FileHandle = RdosOpenFile(IniName, 0);
+    FileHandle = RdosOpenHandle(IniName, O_RDWR);
 
     if (FileHandle)
-        FileSize = RdosGetFileSize(FileHandle);
+        FileSize = RdosGetHandleSize(FileHandle);
 
     if (FileSize)
     {
         buf = new char[FileSize + 2];
-        RdosReadFile(FileHandle, buf, FileSize);
+        RdosReadHandle(FileHandle, buf, FileSize);
         buf[FileSize] = 0;
         buf[FileSize + 1] = 0;
         Parse(buf);
@@ -619,7 +619,7 @@ TAppIniFile::TAppIniFile(const char *IniName)
     }
 
     if (FileHandle)
-        RdosCloseFile(FileHandle);
+        RdosCloseHandle(FileHandle);
 }
 
 /*##########################################################################
@@ -645,15 +645,15 @@ TAppIniFile::TAppIniFile(const TAppIniFile &ini)
     FCurrVar = 0;
     FSectionList = 0;
 
-    FileHandle = RdosOpenFile(ini.FName.GetData(), 0);
+    FileHandle = RdosOpenHandle(ini.FName.GetData(), O_RDWR);
 
     if (FileHandle)
-        FileSize = RdosGetFileSize(FileHandle);
+        FileSize = RdosGetHandleSize(FileHandle);
 
     if (FileSize)
     {
         buf = new char[FileSize + 2];
-        RdosReadFile(FileHandle, buf, FileSize);
+        RdosReadHandle(FileHandle, buf, FileSize);
         buf[FileSize] = 0;
         buf[FileSize + 1] = 0;
         Parse(buf);
@@ -661,7 +661,7 @@ TAppIniFile::TAppIniFile(const TAppIniFile &ini)
     }
 
     if (FileHandle)
-        RdosCloseFile(FileHandle);
+        RdosCloseHandle(FileHandle);
 }
 
 /*##########################################################################
@@ -873,14 +873,14 @@ void TAppIniFile::Update()
     char *buf;
     char *ptr;
 
-    handle = RdosOpenFile(FName.GetData(), 0);
+    handle = RdosOpenHandle(FName.GetData(), O_RDWR);
     if (!handle)
-        handle = RdosCreateFile(FName.GetData(), 0);
+        handle = RdosOpenHandle(FName.GetData(), O_CREAT | O_RDWR);
 
     if (handle)
     {
-        orgsize = RdosGetFileSize(handle);
-        RdosSetFilePos(handle, 0);
+        orgsize = RdosGetHandleSize(handle);
+        RdosSetHandlePos(handle, 0);
 
         size = 0;
         sect = FSectionList;
@@ -902,14 +902,14 @@ void TAppIniFile::Update()
             sect = sect->FNextSection;
         }
 
-        RdosWriteFile(handle, buf, size);
+        RdosWriteHandle(handle, buf, size);
 
         delete buf;
 
         if (orgsize > size)
-            RdosSetFileSize(handle, size);
+            RdosSetHandleSize(handle, size);
 
-        RdosCloseFile(handle);
+        RdosCloseHandle(handle);
     }
 
     FModified = false;

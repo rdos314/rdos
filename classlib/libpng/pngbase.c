@@ -52,7 +52,7 @@ static void PNGCBAPI png_read_data(png_structp png_ptr, png_bytep data, png_size
    io_ptr = png_get_io_ptr(png_ptr);
    if (io_ptr != NULL)
    {
-      check = RdosReadFile((int)io_ptr, data, length);
+      check = RdosReadHandle((int)io_ptr, data, length);
    }
 
    if (check != length)
@@ -93,7 +93,7 @@ int LoadPngBase(const char *FileName)
     char buf[8];
     unsigned char **row_pointers;
 
-    FileHandle = RdosOpenFile(FileName, 0);
+    FileHandle = RdosOpenHandle(FileName, O_RDWR);
     if (FileHandle)
     {
         read_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -151,7 +151,7 @@ int LoadPngBase(const char *FileName)
             png_read_end(read_ptr, end_info_ptr);
             png_destroy_read_struct(&read_ptr, &read_info_ptr, 0);
         }
-        RdosCloseFile(FileHandle);
+        RdosCloseHandle(FileHandle);
     }
     return bitmap;
 }
@@ -175,7 +175,7 @@ static void PNGCBAPI png_write_data(png_structp png_ptr, png_bytep data, png_siz
    io_ptr = png_get_io_ptr(png_ptr);
    if (io_ptr != NULL)
    {
-       check = RdosWriteFile((int)io_ptr, data, length);
+       check = RdosWriteHandle((int)io_ptr, data, length);
    }
 
    if (check != length)
@@ -211,7 +211,7 @@ int SavePngBase(const char *FileName, int Bitmap)
     unsigned char **row_pointers;
     unsigned char *ptr;
 
-    FileHandle = RdosCreateFile(FileName, 0);
+    FileHandle = RdosOpenHandle(FileName, O_CREAT | O_RDWR);
     if (FileHandle)
     {
         write_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -258,7 +258,7 @@ int SavePngBase(const char *FileName, int Bitmap)
             png_destroy_info_struct(write_ptr, &write_end_info_ptr);
             png_destroy_write_struct(&write_ptr, &write_info_ptr);
         }
-        RdosCloseFile(FileHandle);
+        RdosCloseHandle(FileHandle);
         return ok;
     }
 

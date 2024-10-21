@@ -28,7 +28,7 @@ void /* PRIVATE */
 png_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    png_debug1(4,"reading %d bytes\n", (int)length);
-   if (RdosReadFile(png_ptr->file_handle, data, length) != length)
+   if (RdosReadHandle(png_ptr->file_handle, data, length) != length)
           png_error(png_ptr, "Read Error");
 }
 
@@ -43,7 +43,7 @@ png_default_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    png_size_t check;
 
-   check = RdosReadFile(png_ptr->file_handle, data, length);
+   check = RdosReadHandle(png_ptr->file_handle, data, length);
 
    if (check != length)
           png_error(png_ptr, "Read Error");
@@ -62,7 +62,7 @@ png_default_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    png_size_t check;
 
-   check = RdosReadFile(png_ptr->file_handle, data, length);
+   check = RdosReadHandle(png_ptr->file_handle, data, length);
 
    if (check != length)
       png_error(png_ptr, "Read Error");

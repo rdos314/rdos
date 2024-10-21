@@ -443,10 +443,10 @@ static int DGifBufferedInput(GifFileType *GifFile, unsigned char *Buf, unsigned 
 
     if (Buf[0] == 0)
         {
-                if (RdosReadFile(Private->FileHandle, Buf, 1) != 1)
+                if (RdosReadHandle(Private->FileHandle, Buf, 1) != 1)
                         return FALSE;
 
-                if (RdosReadFile(Private->FileHandle, &Buf[1], Buf[0]) != Buf[0])
+                if (RdosReadHandle(Private->FileHandle, &Buf[1], Buf[0]) != Buf[0])
                         return FALSE;
 
                 *NextByte = Buf[1];
@@ -470,7 +470,7 @@ static int DGifGetWord(GifFileType *GifFile, int *Word)
     unsigned char c[2];
     GifFilePrivateType *Private = (GifFilePrivateType *) GifFile->Private;
 
-    if (RdosReadFile(Private->FileHandle,c, 2) != 2)
+    if (RdosReadHandle(Private->FileHandle,c, 2) != 2)
                 return FALSE;
 
         *Word = (((unsigned int) c[1]) << 8) + c[0];
@@ -487,7 +487,7 @@ static int DGifGetCodeNext(GifFileType *GifFile, unsigned char **CodeBlock)
     unsigned char Buf;
     GifFilePrivateType *Private = (GifFilePrivateType *) GifFile->Private;
 
-        if (RdosReadFile(Private->FileHandle, &Buf, 1) != 1)
+        if (RdosReadHandle(Private->FileHandle, &Buf, 1) != 1)
                 return FALSE;
 
         if (Buf > 0)
@@ -495,7 +495,7 @@ static int DGifGetCodeNext(GifFileType *GifFile, unsigned char **CodeBlock)
                 *CodeBlock = Private->Buf;             /* Use private unused buffer. */
                 (*CodeBlock)[0] = Buf;  /* Pascal strings notation (pos. 0 is len.). */
 
-                if (RdosReadFile(Private->FileHandle, &((*CodeBlock)[1]), Buf) != Buf)
+                if (RdosReadHandle(Private->FileHandle, &((*CodeBlock)[1]), Buf) != Buf)
                         return FALSE;
         }
         else
@@ -592,7 +592,7 @@ static int DGifSetupDecompress(GifFileType *GifFile)
     unsigned int *Prefix;
     GifFilePrivateType *Private = (GifFilePrivateType *) GifFile->Private;
 
-        RdosReadFile(Private->FileHandle,&CodeSize, 1);    /* Read Code size from file. */
+        RdosReadHandle(Private->FileHandle,&CodeSize, 1);    /* Read Code size from file. */
         BitsPerPixel = CodeSize;
 
         Private->Buf[0] = 0;                          /* Input Buffer empty. */
@@ -770,7 +770,7 @@ static int DGifGetScreenDesc(GifFileType *GifFile)
                                 !DGifGetWord(GifFile, &GifFile->SHeight))
                 return FALSE;
 
-        if (RdosReadFile(Private->FileHandle, Buf, 3) != 3)
+        if (RdosReadHandle(Private->FileHandle, Buf, 3) != 3)
                 return FALSE;
 
         GifFile->SColorResolution = (((Buf[0] & 0x70) + 1) >> 4) + 1;
@@ -784,7 +784,7 @@ static int DGifGetScreenDesc(GifFileType *GifFile)
                 /* Get the global color map: */
                 for (i = 0; i < GifFile->SColorMap->ColorCount; i++)
                 {
-                        if (RdosReadFile(Private->FileHandle, Buf, 3) != 3)
+                        if (RdosReadHandle(Private->FileHandle, Buf, 3) != 3)
                                 return FALSE;
 
                         GifFile->SColorMap->Colors[i].Red = Buf[0];
@@ -804,7 +804,7 @@ int DGifGetRecordType(GifFileType *GifFile, GifRecordType *Type)
         unsigned char Buf;
         GifFilePrivateType *Private = (GifFilePrivateType *) GifFile->Private;
 
-        if (RdosReadFile(Private->FileHandle, &Buf, 1) != 1)
+        if (RdosReadHandle(Private->FileHandle, &Buf, 1) != 1)
                 return FALSE;
 
         switch (Buf)
@@ -846,7 +846,7 @@ static int DGifGetImageDesc(GifFileType *GifFile)
                                 !DGifGetWord(GifFile, &GifFile->Image.Height))
                 return FALSE;
 
-        if (RdosReadFile(Private->FileHandle, Buf, 1) != 1)
+        if (RdosReadHandle(Private->FileHandle, Buf, 1) != 1)
                 return FALSE;
 
         BitsPerPixel = (Buf[0] & 0x07) + 1;
@@ -862,7 +862,7 @@ static int DGifGetImageDesc(GifFileType *GifFile)
                 /* Get the image local color map: */
                 for (i = 0; i < GifFile->Image.ColorMap->ColorCount; i++)
                 {
-                        if (RdosReadFile(Private->FileHandle,Buf, 3) != 3)
+                        if (RdosReadHandle(Private->FileHandle,Buf, 3) != 3)
                                 return FALSE;
 
                         GifFile->Image.ColorMap->Colors[i].Red = Buf[0];
@@ -952,7 +952,7 @@ static int DGifGetExtensionNext(GifFileType *GifFile, unsigned char **Extension)
                 *Extension = Private->Buf;           /* Use private unused buffer. */
                 (*Extension)[0] = Buf;  /* Pascal strings notation (pos. 0 is len.). */
 
-                if (RdosReadFile(Private->FileHandle,&((*Extension)[1]), Buf) != Buf)
+                if (RdosReadHandle(Private->FileHandle,&((*Extension)[1]), Buf) != Buf)
                         return FALSE;
         }
         else
@@ -973,7 +973,7 @@ static int DGifGetExtension(GifFileType *GifFile, int *ExtCode, unsigned char **
     unsigned char Buf;
     GifFilePrivateType *Private = (GifFilePrivateType *) GifFile->Private;
 
-        if (RdosReadFile(Private->FileHandle,&Buf, 1) != 1)
+        if (RdosReadHandle(Private->FileHandle,&Buf, 1) != 1)
                 return FALSE;
 
         *ExtCode = Buf;
@@ -1008,7 +1008,7 @@ static GifFileType *DGifOpenFileHandle(int FileHandle)
         GifFile->UserData = 0;  /* TVT */
 
         /* Lets see if this is a GIF file: */
-        if (RdosReadFile(Private->FileHandle, Buf, GIF_STAMP_LEN) != GIF_STAMP_LEN)
+        if (RdosReadHandle(Private->FileHandle, Buf, GIF_STAMP_LEN) != GIF_STAMP_LEN)
         {
                 free((char *) Private);
                 free((char *) GifFile);
@@ -1059,7 +1059,7 @@ static int DGifCloseFile(GifFileType *GifFile)
                 GifFile->SColorMap = NULL;
         }
 
-        RdosCloseFile(Private->FileHandle);
+        RdosCloseHandle(Private->FileHandle);
 
         if (Private)
         {
@@ -1244,7 +1244,7 @@ TGifBitmapDevice *TGifBitmapDevice::Create(const char *FileName)
     GifFileType *GifFile;
         TGifBitmapDevice *dev;
 
-        FileHandle = RdosOpenFile(FileName, 0);
+        FileHandle = RdosOpenHandle(FileName, O_RDWR);
         if (FileHandle)
         {
             GifFile = DGifOpenFileHandle(FileHandle);

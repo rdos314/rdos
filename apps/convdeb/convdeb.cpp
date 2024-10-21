@@ -44,24 +44,24 @@
 *##########################################################################*/
 int main()
 {
-    int in_handle = RdosOpenFile("z:\\debug.log", 0);
-    int out_handle = RdosCreateFile("z:\\debug.txt", 0);
+    int in_handle = RdosOpenHandle("z:\\debug.log", O_RDWR);
+    int out_handle = RdosOpenHandle("z:\\debug.txt", O_CREAT | O_RDWR);
     char in_buf[2*80];
     char out_buf[80+2];
     int size;
     int i;
 
-    size = RdosReadFile(in_handle, in_buf, 2 * 80);
+    size = RdosReadHandle(in_handle, in_buf, 2 * 80);
     while (size)
     {
         for (i = 0; i < 80; i++)
             out_buf[i] = in_buf[2*i];
         out_buf[80] = 0xd;
         out_buf[81] = 0xa;
-        RdosWriteFile(out_handle, out_buf, 82);
-        size = RdosReadFile(in_handle, in_buf, 2 * 80);
+        RdosWriteHandle(out_handle, out_buf, 82);
+        size = RdosReadHandle(in_handle, in_buf, 2 * 80);
     }
 
-    RdosCloseFile(in_handle);
-    RdosCloseFile(out_handle);        
+    RdosCloseHandle(in_handle);
+    RdosCloseHandle(out_handle);        
 }
