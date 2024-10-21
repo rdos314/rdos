@@ -1340,7 +1340,7 @@ ohSizeOk:
     jmp ohDone
 
 ohFail:
-    mov ebx,-1
+    xor ebx,ebx
     jmp ohDone
 
 ohDone:
@@ -1574,7 +1574,7 @@ chLeave:
     jmp chDone
 
 chFail:
-    mov ebx,-1
+    xor ebx,ebx
 
 chDone:
     pop ebp
