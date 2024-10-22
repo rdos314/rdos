@@ -30,6 +30,7 @@
 
 #include "thread.h"
 #include "modbus.h"
+#include "rdoslog.h"
 
 class TPowHvmP : public TThread
 {
@@ -126,6 +127,7 @@ protected:
     int FInverterTemp;
 
     TModbus FModbus;
+    TRdosLog FLog;
 
 };
 

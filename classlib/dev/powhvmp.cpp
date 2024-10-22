@@ -42,7 +42,8 @@
 #
 ##########################################################################*/
 TPowHvmP::TPowHvmP(TModbusDevice *moddev, int address)
-  : FModbus(moddev, address)
+  : FModbus(moddev, address),
+    FLog("PowHvmP")
 {
     FOnline = false;
     FHasData = false;
@@ -710,7 +711,7 @@ void TPowHvmP::Execute()
 
             FModbus.GetBufferedHoldingRegister(40205, &val);
             FGridPower = (double)val;
-            FGridEnergy += FGridPower / 60.0;
+            FGridEnergy += FGridPower / 60.0 / 4.0;
 
             FModbus.GetBufferedHoldingRegister(40211, &val);
             FOutputVoltage = (double)val / 10.0;
@@ -723,7 +724,7 @@ void TPowHvmP::Execute()
 
             FModbus.GetBufferedHoldingRegister(40214, &val);
             FOutputPower = (double)val;
-            FOutputEnergy += FOutputPower / 60.0;
+            FOutputEnergy += FOutputPower / 60.0 / 4.0;
 
             FModbus.GetBufferedHoldingRegister(40216, &val);
             FBatteryVoltage = (double)val / 10.0;
@@ -739,7 +740,7 @@ void TPowHvmP::Execute()
 
             FModbus.GetBufferedHoldingRegister(40224, &val);
             FSolarPower = (double)val;
-            FSolarEnergy += FSolarPower / 60.0;
+            FSolarEnergy += FSolarPower / 60.0 / 4.0;
 
             FModbus.GetBufferedHoldingRegister(40227, &val);
             FDcDcTemp = val;
@@ -750,14 +751,14 @@ void TPowHvmP::Execute()
             if (first)
                 FBatteryVc = FBatteryVoltage - 0.038 * FBatteryCurrent;
             else
-                FBatteryVc = 0.95 * FBatteryVc + 0.05 * (FBatteryVoltage - 0.038 * FBatteryCurrent);
+                FBatteryVc = 0.99 * FBatteryVc + 0.01 * (FBatteryVoltage - 0.038 * FBatteryCurrent);
 
             FBatteryPower = FBatteryVc * FBatteryCurrent;
 
             if (FBatteryCurrent > 0.0)
-                FBatteryChargeEnergy += FBatteryPower / 60.0;
+                FBatteryChargeEnergy += FBatteryPower / 60.0 / 4.0;
             else
-                FBatteryDischargeEnergy += FBatteryPower / 60.0;
+                FBatteryDischargeEnergy += FBatteryPower / 60.0 / 4.0;
 
             FBatterySoc = (FBatteryVc - 45.6) / 7.4;
 
@@ -830,27 +831,35 @@ void TPowHvmP::Execute()
         }
 
         if (ChangeOutputPrio)
+        {
+            FLog.printf(0, "Execute", "Change Output prio %d", FOutputPrio);
             WriteReg(40302, FOutputPrio);
+        }
 
         if (ChangeChargePrio)
+        {
+            FLog.printf(0, "Execute", "Change charge prio %d", FChargePrio);
             WriteReg(40332, FChargePrio);
+        }
 
         if (ChangeChargeCurrent)
         {
             val = (int)(10 * FMaxChargeCurrent + 0.5);
+            FLog.printf(0, "Execute", "Change charge current %d", val);
             WriteReg(40333, val);
         }
 
         if (ChangeGridChargeCurrent)
         {
             val = (int)(10 * FMaxGridChargeCurrent + 0.5);
+            FLog.printf(0, "Execute", "Change grid charge current %d", val);
             WriteReg(40334, val);
         }
 
         FOnline = ok;
 
         if (ok)
-            for (i = 0; i < 60; i++)
+            for (i = 0; i < 15; i++)
                 RdosWaitMilli(1000);
         else
             RdosWaitMilli(1000);
