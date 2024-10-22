@@ -57,8 +57,11 @@ public:
     void SetFont(int id, int height);
     void SetFont(int height);
     void SetSpace(int xspace, int yspace);
-    
+
     void SetDrawColor(int r, int g, int b);
+
+    void ForceNoScale();
+    void AllowScale();
 
     void AlignTopLeft();
     void AlignTop();
@@ -78,7 +81,7 @@ public:
 
         virtual TLabelControl *CreateLabel(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
         virtual TLabelControl *CreateLabel(TControl *control, int xstart, int ystart, int xsize, int ysize);
-                
+
 protected:
     void Init();
     void SetDefault(TLabelControl *label, int xstart, int ystart, int xsize, int ysize);
@@ -88,6 +91,8 @@ protected:
 
     int FStartX;
     int FStartY;
+
+    int FAllowScale;
 
     int FDrawR;
     int FDrawG;
@@ -114,17 +119,17 @@ public:
 
     void ForceSingle();
     void AllowMultiple();
-    
+
     void ForceNoScale();
     void AllowScale();
-    
+
     void SetFont(int height);
     void SetFont(int id, int height);
     void SetFont(TFont *font);
     TFont *GetFont();
-    
+
     void SetSpace(int xspace, int yspace);
-    
+
     void SetDrawColor(int r, int g, int b);
     void GetDrawColor(int *r, int *g, int *b);
 
@@ -146,12 +151,12 @@ public:
     void GetAlign(int *Hor, int *Ver);
 
     virtual int GetMinHeight();
-    
+
 protected:
     void SetScaleFont(int id, int height);
 
     virtual void NotifyResize();
-    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);     
+    virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 
     TSection FSection;
 
@@ -179,7 +184,7 @@ private:
 
     char *FOrgText;
     char *FText;
-    char *FTextRow[MAX_LABEL_ROWS];    
+    char *FTextRow[MAX_LABEL_ROWS];
 
 };
 

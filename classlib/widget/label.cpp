@@ -64,7 +64,7 @@ TLabelFactory::~TLabelFactory()
     if (FFont)
         delete FFont;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TLabelFactory::Init
@@ -81,10 +81,11 @@ void TLabelFactory::Init()
     FFont = 0;
     FFontId = 0;
     FFontHeight = 0;
+    FAllowScale = TRUE;
 
     FHorAlign = HOR_CENTER;
     FVerAlign = VER_CENTER;
-    
+
     FStartX = 0;
     FStartY = 0;
 
@@ -92,7 +93,7 @@ void TLabelFactory::Init()
     FDrawG = 0;
     FDrawB = 0;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TLabelFactory::Set
@@ -113,7 +114,7 @@ void TLabelFactory::Set(TAppIniFile *Ini, const char *IniSection)
     Ini->GotoSection(IniSection);
 
     if (Ini->ReadVar("Font.Id", str, 255))
-    {    
+    {
         id = atoi(str);
 
         if (id != FFontId)
@@ -121,15 +122,15 @@ void TLabelFactory::Set(TAppIniFile *Ini, const char *IniSection)
     }
 
     if (Ini->ReadVar("Font.Size", str, 255))
-    {    
+    {
         size = atoi(str);
 
         if (size && size != FFontHeight)
             SetFont(FFontId, size);
     }
-    
+
     if (Ini->ReadVar("Align", str, 255))
-    {    
+    {
         strupr(str);
 
         if (!strcmp(str, "TOPLEFT"))
@@ -159,11 +160,11 @@ void TLabelFactory::Set(TAppIniFile *Ini, const char *IniSection)
         if (!strcmp(str, "BOTTOMRIGHT"))
             AlignBottomRight();
     }
-            
+
 
     if (Ini->ReadVar("DrawColor.R", str, 255))
         FDrawR = atoi(str);
-    
+
     if (Ini->ReadVar("DrawColor.G", str, 255))
         FDrawG = atoi(str);
 
@@ -173,13 +174,13 @@ void TLabelFactory::Set(TAppIniFile *Ini, const char *IniSection)
 
     if (Ini->ReadVar("Space.X", str, 255))
         FStartX = atoi(str);
-    
+
     if (Ini->ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
 
     TPanelFactory::Set(Ini, IniSection);
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TLabelFactory::Set
@@ -434,6 +435,38 @@ void TLabelFactory::AlignBottomRight()
 
 /*##########################################################################
 #
+#   Name       : TLabelFactory::ForceNoScale
+#
+#   Purpose....: Force ReformatText to use orignial font size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::ForceNoScale()
+{
+    FAllowScale = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TLabelFactory::AllowScale
+#
+#   Purpose....: Allow ReformatText to change font size to fit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLabelFactory::AllowScale()
+{
+    FAllowScale = TRUE;
+}
+
+/*##########################################################################
+#
 #   Name       : TLabelFactory::SetDefault
 #
 #   Purpose....: Set default panel properties from factory settings
@@ -501,9 +534,14 @@ void TLabelFactory::SetDefault(TLabelControl *label, int xstart, int ystart, int
 
     if (FFont)
         label->SetFont(FFont);
-        
+
     label->SetSpace(FStartX, FStartY);
-    label->SetDrawColor(FDrawR, FDrawG, FDrawB);            
+    label->SetDrawColor(FDrawR, FDrawG, FDrawB);
+
+    if (FAllowScale)
+        label->AllowScale();
+    else
+        label->ForceNoScale();
 
     TPanelFactory::SetDefault(label, xstart, ystart, xsize, ysize);
 }
@@ -549,7 +587,7 @@ TLabelControl *TLabelFactory::Create(TControl *control, int xstart, int ystart, 
 
     SetDefault(label, xstart, ystart, xsize, ysize);
 
-    return label;        
+    return label;
 }
 
 /*##########################################################################
@@ -615,7 +653,7 @@ TLabelControl *TLabelFactory::CreateLabel(TControl *control, int xstart, int yst
 {
     return Create(control, xstart, ystart, xsize, ysize);
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TLabelControl::TLabelControl
@@ -659,7 +697,7 @@ TLabelControl::TLabelControl(TControl *control, int xstart, int ystart, int xsiz
     Move(xstart, ystart);
     Show();
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TLabelControl::TLabelControl
@@ -747,7 +785,7 @@ void TLabelControl::Init()
 
     FHorAlign = HOR_CENTER;
     FVerAlign = VER_CENTER;
-    
+
     FStartX = 0;
     FStartY = 0;
 
@@ -757,7 +795,7 @@ void TLabelControl::Init()
 
     ControlType += TString(".LABEL");
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TLabelControl::IsLabelControl
@@ -776,7 +814,7 @@ int TLabelControl::IsLabelControl(TControl *control)
     else
         return FALSE;
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TLabelControl::Set
@@ -797,7 +835,7 @@ void TLabelControl::Set(TAppIniFile *Ini, const char *IniSection)
     Ini->GotoSection(IniSection);
 
     if (Ini->ReadVar("Font.Id", str, 255))
-    {    
+    {
         id = atoi(str);
 
         if (id != FFontId)
@@ -805,7 +843,7 @@ void TLabelControl::Set(TAppIniFile *Ini, const char *IniSection)
     }
 
     if (Ini->ReadVar("Font.Size", str, 255))
-    {    
+    {
         size = atoi(str);
 
         if (size != FFontHeight)
@@ -813,15 +851,15 @@ void TLabelControl::Set(TAppIniFile *Ini, const char *IniSection)
     }
 
     if (Ini->ReadVar("Single", str, 255))
-    {    
+    {
         if (str[0] == '0')
             AllowMultiple();
         else
             ForceSingle();
     }
-    
+
     if (Ini->ReadVar("Align", str, 255))
-    {    
+    {
         strupr(str);
 
         if (!strcmp(str, "TOPLEFT"))
@@ -851,11 +889,11 @@ void TLabelControl::Set(TAppIniFile *Ini, const char *IniSection)
         if (!strcmp(str, "BOTTOMRIGHT"))
             AlignBottomRight();
     }
-            
+
 
     if (Ini->ReadVar("DrawColor.R", str, 255))
         FDrawR = atoi(str);
-    
+
     if (Ini->ReadVar("DrawColor.G", str, 255))
         FDrawG = atoi(str);
 
@@ -865,7 +903,7 @@ void TLabelControl::Set(TAppIniFile *Ini, const char *IniSection)
 
     if (Ini->ReadVar("Space.X", str, 255))
         FStartX = atoi(str);
-    
+
     if (Ini->ReadVar("Space.Y", str, 255))
         FStartY = atoi(str);
 
@@ -875,7 +913,7 @@ void TLabelControl::Set(TAppIniFile *Ini, const char *IniSection)
 
     TPanelControl::Set(Ini, IniSection);
 }
-    
+
 /*##########################################################################
 #
 #   Name       : TLabelControl::Set
@@ -986,7 +1024,7 @@ void TLabelControl::SetFont(TFont *font)
 {
     if (FFont)
         delete FFont;
-        
+
     FFont = new TFont(*font);
 
     FSection.Enter();
@@ -1376,7 +1414,7 @@ void TLabelControl::ReformatText()
 
                 while (*ptr == ' ' || *ptr == ' ')
                     ptr++;
-                
+
                 FTextRow[row] = ptr;
                 start = ptr;
                 prev = 0;
@@ -1394,13 +1432,13 @@ void TLabelControl::ReformatText()
 
                 while (*ptr == ' ' || *ptr == ' ')
                     ptr++;
-                
+
                 FTextRow[row] = ptr;
                 start = ptr;
                 prev = 0;
                 break;
 
-            default:            
+            default:
                 ch = *ptr;
                 *ptr = 0;
 
@@ -1415,17 +1453,17 @@ void TLabelControl::ReformatText()
                     {
                         *ptr = ch;
                         *prev = 0;
-    
+
                         if (row < MAX_LABEL_ROWS)
                             row++;
 
                         ptr = prev;
-    
+
                         ptr++;
-    
+
                         while (*ptr == ' ' || *ptr == ' ')
                             ptr++;
-                                
+
                         FTextRow[row] = ptr;
                         start = ptr;
                         prev = 0;
@@ -1434,27 +1472,27 @@ void TLabelControl::ReformatText()
                     {
                         if (row < MAX_LABEL_ROWS)
                             row++;
-    
+
                         if (ch != 0)
                         {
                             ptr++;
-    
+
                             while (*ptr == ' ' || *ptr == ' ')
                                 ptr++;
                         }
 
                         FTextRow[row] = ptr;
                         start = ptr;
-                    }                     
+                    }
                 }
                 else
                 {
                     prev = ptr;
-                
-                    *ptr = ch;                
+
+                    *ptr = ch;
                     while (*ptr == ' ' || *ptr == ' ')
                         ptr++;
-                }                        
+                }
                 break;
         }
     }
@@ -1489,7 +1527,7 @@ void TLabelControl::SetText(const char *Text)
 
     GetSize(&xsize, &ysize);
     GetInner(&xoffs, &yoffs, &xdiff, &ydiff);
-    
+
     ysize -= ydiff;
 
     if (FOrgText && len > 0)
@@ -1497,7 +1535,7 @@ void TLabelControl::SetText(const char *Text)
             same = TRUE;
 
     if (!same)
-    {    
+    {
         if (FScaleFont)
         {
             delete FScaleFont;
@@ -1522,7 +1560,7 @@ void TLabelControl::SetText(const char *Text)
         {
             font = FFont;
             fontId = font->GetId();
-            
+
             while(GetMinHeight() > ysize)
             {
                 strcpy(FText, FOrgText);
@@ -1689,8 +1727,8 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     redraw = IsVisible();
 
     if (width == 0 || height == 0)
-        redraw = FALSE;    
-    
+        redraw = FALSE;
+
     if (redraw)
     {
         dev->SetLgopNone();
@@ -1723,7 +1761,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
 
                 case VER_BOTTOM:
                     ystart = ymin + height - ysize - FStartY;
-                    break;        
+                    break;
             }
 
             for (row = 0; row < MAX_LABEL_ROWS; row++)
@@ -1731,7 +1769,7 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                 if (FTextRow[row])
                 {
                         font->GetStringMetrics(FTextRow[row], &xsize, &ysize);
-    
+
                         switch (FHorAlign)
                         {
                                 case HOR_LEFT:
@@ -1741,12 +1779,12 @@ void TLabelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
                                 case HOR_CENTER:
                                             xstart = xmin + (width - xsize) / 2;
                                         break;
-    
+
                                 case HOR_RIGHT:
                                         xstart = xmin + width - xsize - FStartX;
                                             break;
                     }
-        
+
                     dev->SetFont(font);
                     dev->SetDrawColor(FDrawR, FDrawG, FDrawB);
                     dev->DrawString(xstart, ystart, FTextRow[row]);
