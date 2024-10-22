@@ -82,6 +82,7 @@ TSection FGuiSection("Gui.Section");
 TSection FDataSection("Data.Section");
 static TFile *DayFile = 0;
 
+static TOcppSocketServerFactory *Ocpp;
 static TPowHvmP *PowInv = 0;
 
 static int SolarPowerCount;
@@ -1050,6 +1051,7 @@ void SmaThread(void *Param)
     TLabelFactory ValueFactory;
     TLabelFactory UnitFactory;
     int currday;
+    int currmin;
     int pyear, pmonth, pday;
     int year, month, day;
     int hour, min, sec;
@@ -1057,6 +1059,15 @@ void SmaThread(void *Param)
     int ok;
     int count;
     unsigned long msb, lsb;
+    int pcount;
+    int invdelay = 4;
+    double p2sum;
+    double p3sum;
+    double p2min;
+    double p3min;
+    double p2;
+    double p3;
+    double CurrA = 0.0;
     char str[100];
 
     RdosWaitMilli(5000);
@@ -1199,6 +1210,11 @@ void SmaThread(void *Param)
     }
 
     currday = day;
+    currmin = min;
+
+    pcount = 0;
+    p2sum = 0;
+    p3sum = 0;
 
     for (;;)
     {
@@ -1246,6 +1262,28 @@ void SmaThread(void *Param)
             Table->SetText(5, p, str);
         }
 
+        val = sma.GetProducePower(2);
+        p2sum += val;
+        if (pcount)
+        {
+            if (val < p2min)
+                p2min = val;
+        }
+        else
+            p2min = val;
+
+        val = sma.GetProducePower(3);
+        p3sum += val;
+        if (pcount)
+        {
+            if (val < p3min)
+                p3min = val;
+        }
+        else
+            p3min = val;
+
+        pcount++;
+
         val = sma.GetProducePower();
         sprintf(str, "%3.1Lf", val);
         SumTable->SetText(0, 1, str);
@@ -1258,6 +1296,62 @@ void SmaThread(void *Param)
 
         RdosGetTime(&msb, &lsb);
         RdosDecodeMsbTics(msb, &year, &month, &day, &hour);
+        RdosDecodeLsbTics(lsb, &min, &sec, &ms, &us);
+
+        if (min != currmin)
+        {
+            if (invdelay)
+                invdelay--;
+
+            p2 = (p2sum / (double)pcount + p2min) / 2.0;
+            p3 = (p3sum / (double)pcount + p3min) / 2.0;
+
+            val = p2 + p3;
+
+            if (PowInv->GetChargePrio() == 2)
+                val += PowInv->GetGridPower();
+
+            val = val / 50.0;
+
+            if (PowInv && !invdelay)
+            {
+                if (Ocpp->IsCharging())
+                {
+                    switch (PowInv->GetOutputPrio())
+                    {
+                        case 0:
+                            if (PowInv->GetBatterySoc() > 0.6)
+                                PowInv->SetOutputPrio(2);
+                            break;
+
+                        case 2:
+                            if (PowInv->GetBatterySoc() < 0.4)
+                                PowInv->SetOutputPrio(0);
+                            break;
+                    }
+                }
+                else
+                {
+                    if (val > 2.0)
+                    {
+                        PowInv->SetOutputPrio(0);
+                        PowInv->SetChargePrio(2);
+                        PowInv->SetMaxGridChargeCurrent(val);
+                    }
+                    else
+                    {
+                        PowInv->SetOutputPrio(2);
+                        PowInv->SetChargePrio(3);
+                    }
+                }
+            }
+
+            pcount = 0;
+            p2sum = 0.0;
+            p3sum = 0.0;
+
+            currmin = min;
+        }
 
         if (day != currday)
         {
@@ -1390,7 +1484,6 @@ int main()
     TSmartPowInverter *WindInv;
     TMisolWeather *Misol;
     TMet *Met;
-    TOcppSocketServerFactory *Ocpp;
     THhcRelay *Relay;
     int i;
     int index;
@@ -1415,7 +1508,6 @@ int main()
     int SyncCount = 0;
     TFile *file;
     int init = 0x8000;
-    int invdelay = 4;
     int ambient;
     bool night;
     bool summer;
@@ -2011,30 +2103,6 @@ int main()
 
         if (LastMin != CurrTime->GetMin())
         {
-            if (invdelay)
-                invdelay--;
-
-            if (PowInv && !invdelay)
-            {
-                if (Ocpp->IsCharging())
-                {
-                    switch (PowInv->GetOutputPrio())
-                    {
-                        case 0:
-                            if (PowInv->GetBatterySoc() > 0.6)
-                                PowInv->SetOutputPrio(2);
-                            break;
-
-                        case 2:
-                            if (PowInv->GetBatterySoc() < 0.4)
-                                PowInv->SetOutputPrio(0);
-                            break;
-                    }
-                }
-                else
-                    PowInv->SetOutputPrio(2);
-            }
-
             val = PowInv->GetMaxChargeCurrent();
 
             if (PowInv->GetBatterySoc() < 0.7)
