@@ -49,13 +49,13 @@ public:
     int GetMode();
     int GetOutputPrio();
     int GetChargePrio();
-    double GetMaxChargeCurrent();
-    double GetMaxGridChargeCurrent();
+    int GetMaxChargeCurrent();
+    int GetMaxGridChargeCurrent();
 
     void SetOutputPrio(int prio);
     void SetChargePrio(int prio);
-    void SetMaxChargeCurrent(double i);
-    void SetMaxGridChargeCurrent(double i);
+    void SetMaxChargeCurrent(int i);
+    void SetMaxGridChargeCurrent(int i);
 
     double GetGridVoltage();
     double GetGridFrequency();
@@ -120,8 +120,8 @@ protected:
     int FOutputPrio;
     int FChargePrio;
 
-    double FMaxChargeCurrent;
-    double FMaxGridChargeCurrent;
+    int FMaxChargeCurrent;
+    int FMaxGridChargeCurrent;
 
     int FDcDcTemp;
     int FInverterTemp;

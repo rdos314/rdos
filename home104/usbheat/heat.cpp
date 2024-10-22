@@ -1067,7 +1067,9 @@ void SmaThread(void *Param)
     double p3min;
     double p2;
     double p3;
-    double CurrA = 0.0;
+    double soc;
+    int maxca;
+    int ca;
     char str[100];
 
     RdosWaitMilli(5000);
@@ -1262,25 +1264,31 @@ void SmaThread(void *Param)
             Table->SetText(5, p, str);
         }
 
-        val = sma.GetProducePower(2);
-        p2sum += val;
-        if (pcount)
-        {
-            if (val < p2min)
-                p2min = val;
-        }
-        else
-            p2min = val;
+        p2 = sma.GetProducePower(2);
+        if (p2 < 1.0)
+            p2 = -sma.GetConsumePower(2);
 
-        val = sma.GetProducePower(3);
-        p3sum += val;
+        p3 = sma.GetProducePower(3);
+        if (p3 < 1.0)
+            p3 = -sma.GetConsumePower(3);
+
+        p2sum += p2;
         if (pcount)
         {
-            if (val < p3min)
-                p3min = val;
+            if (p2 < p2min)
+                p2min = p2;
         }
         else
-            p3min = val;
+            p2min = p2;
+
+        p3sum += p3;
+        if (pcount)
+        {
+            if (p3 < p3min)
+                p3min = p3;
+        }
+        else
+            p3min = p3;
 
         pcount++;
 
@@ -1303,6 +1311,29 @@ void SmaThread(void *Param)
             if (invdelay)
                 invdelay--;
 
+            soc = PowInv->GetBatterySoc();
+            maxca = PowInv->GetMaxChargeCurrent();
+
+            if (soc < 0.7)
+                PowInv->SetMaxChargeCurrent(70);
+            else if (soc > 1.1)
+                PowInv->SetMaxChargeCurrent(4);
+            else
+            {
+                if (soc < 0.9)
+                {
+                    if (maxca < 5)
+                        PowInv->SetMaxChargeCurrent(20);
+                }
+                else
+                {
+                    if (maxca > 25)
+                        PowInv->SetMaxChargeCurrent(20);
+                }
+            }
+
+            maxca = PowInv->GetMaxChargeCurrent();
+
             p2 = (p2sum / (double)pcount + p2min) / 2.0;
             p3 = (p3sum / (double)pcount + p3min) / 2.0;
 
@@ -1311,32 +1342,37 @@ void SmaThread(void *Param)
             if (PowInv->GetChargePrio() == 2)
                 val += PowInv->GetGridPower();
 
-            val = val / 50.0;
+            ca = (int)(val / 50.0);
+
+            if (ca > maxca)
+                ca = maxca;
 
             if (PowInv && !invdelay)
             {
                 if (Ocpp->IsCharging())
                 {
+                    PowInv->SetChargePrio(3);
+
                     switch (PowInv->GetOutputPrio())
                     {
                         case 0:
-                            if (PowInv->GetBatterySoc() > 0.6)
+                            if (soc > 0.6)
                                 PowInv->SetOutputPrio(2);
                             break;
 
                         case 2:
-                            if (PowInv->GetBatterySoc() < 0.4)
+                            if (soc < 0.4)
                                 PowInv->SetOutputPrio(0);
                             break;
                     }
                 }
                 else
                 {
-                    if (val > 2.0)
+                    if (ca > 5)
                     {
                         PowInv->SetOutputPrio(0);
                         PowInv->SetChargePrio(2);
-                        PowInv->SetMaxGridChargeCurrent(val);
+                        PowInv->SetMaxGridChargeCurrent(ca);
                     }
                     else
                     {
@@ -2103,29 +2139,6 @@ int main()
 
         if (LastMin != CurrTime->GetMin())
         {
-            val = PowInv->GetMaxChargeCurrent();
-
-            if (PowInv->GetBatterySoc() < 0.7)
-                PowInv->SetMaxChargeCurrent(70.0);
-            else if (PowInv->GetBatterySoc() > 1.1)
-                PowInv->SetMaxChargeCurrent(4.0);
-            else
-            {
-                if (PowInv->GetBatterySoc() < 0.9)
-                {
-                    if (PowInv->GetMaxChargeCurrent() < 5.0)
-                        PowInv->SetMaxChargeCurrent(20.0);
-                }
-                else
-                {
-                    if (PowInv->GetMaxChargeCurrent() > 25.0)
-                        PowInv->SetMaxChargeCurrent(20.0);
-                }
-            }
-
-            if (val != PowInv->GetMaxChargeCurrent())
-                Log.printf(0, "", "Max charge current: %3.1Lf A", PowInv->GetMaxChargeCurrent());
-
             WdTimeout = 2 * 100;
 
             if (PowerCount)

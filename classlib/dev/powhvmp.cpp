@@ -52,8 +52,8 @@ TPowHvmP::TPowHvmP(TModbusDevice *moddev, int address)
 
     FOutputPrio = -1;
     FChargePrio = -1;
-    FMaxChargeCurrent = -1.0;
-    FMaxGridChargeCurrent = -1.0;
+    FMaxChargeCurrent = -1;
+    FMaxGridChargeCurrent = -1;
 
     Start("POW-HVM-P", 0x8000);
 }
@@ -565,7 +565,7 @@ int TPowHvmP::GetChargePrio()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetMaxChargeCurrent()
+int TPowHvmP::GetMaxChargeCurrent()
 {
     return FMaxChargeCurrent;
 }
@@ -581,7 +581,7 @@ double TPowHvmP::GetMaxChargeCurrent()
 #   Returns....: *
 #
 ##########################################################################*/
-double TPowHvmP::GetMaxGridChargeCurrent()
+int TPowHvmP::GetMaxGridChargeCurrent()
 {
     return FMaxGridChargeCurrent;
 }
@@ -629,9 +629,11 @@ void TPowHvmP::SetChargePrio(int prio)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPowHvmP::SetMaxChargeCurrent(double i)
+void TPowHvmP::SetMaxChargeCurrent(int i)
 {
-    FMaxChargeCurrent = i;
+    int val = i / 3;
+
+    FMaxChargeCurrent = 3 * val;
 }
 
 /*##########################################################################
@@ -645,9 +647,11 @@ void TPowHvmP::SetMaxChargeCurrent(double i)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPowHvmP::SetMaxGridChargeCurrent(double i)
+void TPowHvmP::SetMaxGridChargeCurrent(int i)
 {
-    FMaxGridChargeCurrent = i;
+    int val = i / 3;
+
+    FMaxGridChargeCurrent = 3 * val;
 }
 
 /*##########################################################################
@@ -751,7 +755,7 @@ void TPowHvmP::Execute()
             if (first)
                 FBatteryVc = FBatteryVoltage - 0.038 * FBatteryCurrent;
             else
-                FBatteryVc = 0.99 * FBatteryVc + 0.01 * (FBatteryVoltage - 0.038 * FBatteryCurrent);
+                FBatteryVc = 0.95 * FBatteryVc + 0.05 * (FBatteryVoltage - 0.038 * FBatteryCurrent);
 
             FBatteryPower = FBatteryVc * FBatteryCurrent;
 
@@ -812,48 +816,76 @@ void TPowHvmP::Execute()
             FModbus.GetBufferedHoldingRegister(40333, &val);
             if (FMaxChargeCurrent >= 0)
             {
-                rval = (int)(10 * FMaxChargeCurrent + 0.5);
-                if (rval > val + 25 || rval < val - 25)
+                val = val / 10;
+                if (val != FMaxChargeCurrent)
                     ChangeChargeCurrent = true;
             }
             else
-                FMaxChargeCurrent = (double)val / 10.0;
+                FMaxChargeCurrent = val / 10;
 
             FModbus.GetBufferedHoldingRegister(40334, &val);
             if (FMaxGridChargeCurrent >= 0)
             {
-                rval = (int)(10 * FMaxGridChargeCurrent + 0.5);
-                if (rval > val + 25 || rval < val - 25)
+                val = val / 10;
+                if (val != FMaxGridChargeCurrent)
                     ChangeGridChargeCurrent = true;
             }
             else
-                FMaxGridChargeCurrent = (double)val / 10.0;
+                FMaxGridChargeCurrent = val / 10;
         }
 
         if (ChangeOutputPrio)
         {
-            FLog.printf(0, "Execute", "Change Output prio %d", FOutputPrio);
+            switch (FOutputPrio)
+            {
+                case 0:
+                    FLog.Log(0, "Execute", "Change output prio to: Utility-PV-batt");
+                    break;
+
+                case 1:
+                    FLog.Log(0, "Execute", "Change output prio to: PV-Utility-Battery");
+                    break;
+
+                case 2:
+                    FLog.Log(0, "Execute", "Change output prio to: PV-Battery-Utility");
+                    break;
+            }
             WriteReg(40302, FOutputPrio);
         }
 
         if (ChangeChargePrio)
         {
-            FLog.printf(0, "Execute", "Change charge prio %d", FChargePrio);
+            switch (FChargePrio)
+            {
+                case 0:
+                    FLog.Log(0, "Execute", "Change charge prio to: Utility priority");
+                    break;
+
+                case 1:
+                    FLog.Log(0, "Execute", "Change charge prio to: PV priority");
+                    break;
+
+                case 2:
+                    FLog.Log(0, "Execute", "Change charge prio to: PV at the same level as Utility");
+                    break;
+
+                case 3:
+                    FLog.Log(0, "Execute", "Change charge prio to: Only PV charging");
+                    break;
+            }
             WriteReg(40332, FChargePrio);
         }
 
         if (ChangeChargeCurrent)
         {
-            val = (int)(10 * FMaxChargeCurrent + 0.5);
-            FLog.printf(0, "Execute", "Change charge current %d", val);
-            WriteReg(40333, val);
+            FLog.printf(0, "Execute", "Change charge current to %d A", FMaxChargeCurrent);
+            WriteReg(40333, 10 * FMaxChargeCurrent);
         }
 
         if (ChangeGridChargeCurrent)
         {
-            val = (int)(10 * FMaxGridChargeCurrent + 0.5);
-            FLog.printf(0, "Execute", "Change grid charge current %d", val);
-            WriteReg(40334, val);
+            FLog.printf(0, "Execute", "Change grid charge current to %d A", FMaxGridChargeCurrent);
+            WriteReg(40334, 10 * FMaxGridChargeCurrent);
         }
 
         FOnline = ok;
