@@ -880,18 +880,21 @@ void TimeThread(void *Param)
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
+    CommentFactory.ForceNoScale();
 
     ValueFactory.SetSpace(4, 4);
     ValueFactory.SetFont(35);
     ValueFactory.SetBackColor(100, 100, 100);
     ValueFactory.SetDrawColor(0, 0, 0);
     ValueFactory.AlignRight();
+    ValueFactory.ForceNoScale();
 
     UnitFactory.SetSpace(4, 4);
     UnitFactory.SetFont(35);
     UnitFactory.SetBackTransparent();
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
+    UnitFactory.ForceNoScale();
 
     Table = new TTableControl(control, 1450, 5, 550, 450);
     Table->SetBackColor(0, 20, 50);
@@ -1065,18 +1068,21 @@ void SmaThread(void *Param)
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
+    CommentFactory.ForceNoScale();
 
     ValueFactory.SetSpace(4, 4);
     ValueFactory.SetFont(35);
     ValueFactory.SetBackColor(100, 100, 100);
     ValueFactory.SetDrawColor(0, 0, 0);
     ValueFactory.AlignRight();
+    ValueFactory.ForceNoScale();
 
     UnitFactory.SetSpace(4, 4);
     UnitFactory.SetFont(35);
     UnitFactory.SetBackTransparent();
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
+    UnitFactory.ForceNoScale();
 
     Table = new TTableControl(control, 1175, 450, 775, 300);
     Table->SetBackColor(0, 20, 50);
@@ -1561,24 +1567,28 @@ int main()
     CommentLabelFactory.SetBackTransparent();
     CommentLabelFactory.SetDrawColor(0, 0, 0);
     CommentLabelFactory.AlignLeft();
+    CommentLabelFactory.ForceNoScale();
 
     AltLabelFactory.SetSpace(4, 4);
     AltLabelFactory.SetFont(35);
     AltLabelFactory.SetBackColor(100, 100, 100);
     AltLabelFactory.SetDrawColor(0, 0, 0);
     AltLabelFactory.AlignRight();
+    AltLabelFactory.ForceNoScale();
 
     AziLabelFactory.SetSpace(4, 4);
     AziLabelFactory.SetFont(35);
     AziLabelFactory.SetBackColor(100, 100, 100);
     AziLabelFactory.SetDrawColor(0, 0, 0);
     AziLabelFactory.AlignRight();
+    AziLabelFactory.ForceNoScale();
 
     PhLabelFactory.SetSpace(4, 4);
     PhLabelFactory.SetFont(35);
     PhLabelFactory.SetBackColor(100, 100, 100);
     PhLabelFactory.SetDrawColor(0, 0, 0);
     PhLabelFactory.AlignRight();
+    PhLabelFactory.ForceNoScale();
 
     Table = new TTableControl(control, 1300, 750, 600, 400);
     Table->SetBackColor(0, 20, 50);
@@ -1612,18 +1622,21 @@ int main()
     CommentFactory.SetBackTransparent();
     CommentFactory.SetDrawColor(0, 0, 0);
     CommentFactory.AlignLeft();
+    CommentFactory.ForceNoScale();
 
     ValueFactory.SetSpace(4, 4);
     ValueFactory.SetFont(35);
     ValueFactory.SetBackColor(100, 100, 100);
     ValueFactory.SetDrawColor(0, 0, 0);
     ValueFactory.AlignRight();
+    ValueFactory.ForceNoScale();
 
     UnitFactory.SetSpace(4, 4);
     UnitFactory.SetFont(35);
     UnitFactory.SetBackTransparent();
     UnitFactory.SetDrawColor(0, 0, 0);
     UnitFactory.AlignLeft();
+    UnitFactory.ForceNoScale();
 
     WeatherTable = new TTableControl(control, 5, 5, 450, 420);
     WeatherTable->SetBackColor(0, 20, 50);

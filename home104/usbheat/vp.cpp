@@ -677,18 +677,21 @@ void TVp::Execute()
     CommentLabelFactory.SetBackColor(0, 20, 50);
     CommentLabelFactory.SetDrawColor(0, 0, 0);
     CommentLabelFactory.AlignLeft();
+    CommentLabelFactory.ForceNoScale();
 
     ValueLabelFactory.SetSpace(4, 4);
     ValueLabelFactory.SetFont(35);
     ValueLabelFactory.SetBackColor(100, 100, 100);
     ValueLabelFactory.SetDrawColor(0, 0, 0);
     ValueLabelFactory.AlignRight();
+    ValueLabelFactory.ForceNoScale();
 
     UnitLabelFactory.SetSpace(4, 4);
     UnitLabelFactory.SetFont(35);
     UnitLabelFactory.SetBackColor(0, 20, 50);
     UnitLabelFactory.SetDrawColor(0, 0, 0);
     UnitLabelFactory.AlignLeft();
+    UnitLabelFactory.ForceNoScale();
 
     TTableControl *Table;
 
