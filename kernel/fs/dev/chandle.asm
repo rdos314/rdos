@@ -1404,6 +1404,32 @@ dupl_legacy_file  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetLegacyFileSize
+;
+;           DESCRIPTION:    Get legacy file size
+;
+;           PARAMETERS:     BX              File handle
+;                   
+;           RETURNS:        (EDX:)EAX       Size of file
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_legacy_file_size32_name      DB 'Get Legacy File Size 32',0
+get_legacy_file_size64_name      DB 'Get Legacy File Size 64',0
+
+get_legacy_file_size32   Proc far
+    GetHandleSize32
+    ret
+get_legacy_file_size32   Endp
+
+get_legacy_file_size64   Proc far
+    GetHandleSize64
+    ret
+get_legacy_file_size64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -6688,6 +6714,18 @@ init_handle     PROC near
     mov edi,OFFSET dupl_legacy_file_name
     xor dx,dx
     mov ax,dupl_file_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_size32
+    mov edi,OFFSET get_legacy_file_size32_name
+    xor dx,dx
+    mov ax,get_file_size32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_size64
+    mov edi,OFFSET get_legacy_file_size64_name
+    xor dx,dx
+    mov ax,get_file_size64_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate
