@@ -42,6 +42,9 @@ public:
 
     TModbusDevice *GetDevice();
 
+    void DisableRetries();
+    void EnableRetries(int count);
+
     int ReadCoilStatus(int Coil);
     int ReadInputStatus(int Input);
     int ReadHoldingRegister(int Reg);
@@ -75,6 +78,7 @@ protected:
     TModbusDevice *FDevice;
     char FAddress;
     int FBigEndian;
+    int FRetryCount;
 
     int FStartReg;
     int FRegCount;

@@ -50,6 +50,7 @@ TModbus::TModbus(TModbusDevice *Device, char Address)
     FAddress = Address;
     FBigEndian = TRUE;
     FReplySize = 0;
+    FRetryCount = 10;
 }
 
 /*##########################################################################
@@ -69,6 +70,7 @@ TModbus::TModbus()
     FAddress = 0;
     FBigEndian = TRUE;
     FReplySize = 0;
+    FRetryCount = 10;
 }
 
 /*##########################################################################
@@ -104,6 +106,38 @@ TModbusDevice *TModbus::GetDevice()
 
 /*##########################################################################
 #
+#   Name       : TModbus::DisableRetries
+#
+#   Purpose....: Disable retries
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::DisableRetries()
+{
+    FRetryCount = 1;
+}
+
+/*##########################################################################
+#
+#   Name       : TModbus::EnableRetries
+#
+#   Purpose....: Enable retries
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TModbus::EnableRetries(int count)
+{
+    FRetryCount = count;
+}
+
+/*##########################################################################
+#
 #   Name       : TModbus::Session
 #
 #   Purpose....: Do a session
@@ -121,7 +155,7 @@ int TModbus::Session(char FunctionCode, const char *buf, int size, char *reply)
     int ok = FALSE;
     int tries;
 
-    for (tries = 0; tries < 10 && !ok; tries++)
+    for (tries = 0; tries < FRetryCount && !ok; tries++)
     {
         msg[0] = FAddress;
         msg[1] = FunctionCode;

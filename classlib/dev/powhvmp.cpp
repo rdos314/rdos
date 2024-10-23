@@ -50,6 +50,8 @@ TPowHvmP::TPowHvmP(TModbusDevice *moddev, int address)
     FLogFile = 0;
     ClearEnergy();
 
+    FModbus.DisableRetries();
+
     FOutputPrio = -1;
     FChargePrio = -1;
     FMaxChargeCurrent = -1;
