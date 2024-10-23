@@ -2068,51 +2068,6 @@ unlock_file  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CLOSE_FILE
-;
-;           DESCRIPTION:    Close file
-;
-;           PARAMETERS:         BX              FILE HANDLE
-;                           NC              SUCCESS
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_file_name DB 'Close File',0
-
-close_file:     
-    push ds
-    push eax
-    push ebx
-    push esi
-;
-    mov ax,FILE_HANDLE
-    DerefHandle
-    jc close_file_done
-;
-    mov esi,ebx
-    mov al,[ebx].file_handle_drive
-    mov bx,[ebx].file_handle_sel
-    or bx,bx
-    stc
-    jz close_file_done
-;
-    call ReleaseFileSel
-;
-    mov ebx,esi
-    FreeHandle
-    clc
-
-close_file_done:
-    pop esi
-    pop ebx
-    pop eax
-    pop ds
-    retf32
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           close_legacy_file
 ;
 ;           DESCRIPTION:    Close legacy file
@@ -3628,12 +3583,6 @@ init_file       PROC near
     xor cl,cl
     mov ax,stop_read_legacy_file_nr
     RegisterOsGate
-;
-    mov esi,OFFSET close_file
-    mov edi,OFFSET close_file_name
-    xor dx,dx
-    mov ax,close_file_nr
-    RegisterBimodalUserGate
 ;
     mov esi,OFFSET dupl_file
     mov edi,OFFSET dupl_file_name

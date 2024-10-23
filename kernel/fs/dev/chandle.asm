@@ -1364,6 +1364,25 @@ create_legacy_file16   ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CloseLegacyFile
+;
+;           DESCRIPTION:    Close legacy file
+;
+;           PARAMETERS:     BX              File handle
+;                           NC              Success
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_legacy_file_name DB 'Close Legacy File',0
+
+close_legacy_file   Proc far
+    CloseHandle
+    ret
+close_legacy_file   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -6637,6 +6656,12 @@ init_handle     PROC near
     mov dx,virt_es_in
     mov ax,create_file_nr
     RegisterUserGate
+;
+    mov esi,OFFSET close_legacy_file
+    mov edi,OFFSET close_legacy_file_name
+    xor dx,dx
+    mov ax,close_file_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate
     mov edi,OFFSET test_gate_name
