@@ -2208,74 +2208,6 @@ get_legacy_file_time Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SET_FILE_TIME
-;
-;           DESCRIPTION:    Set file time & date
-;
-;           PARAMETERS:         BX              FILE HANDLE
-;                           EDX:EAX     NEW FILE TIME
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_file_time_name      DB 'Set File Time',0
-
-set_file_time:
-    ApiSaveEax
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
-    push ds
-    push es
-    push fs
-    push ax
-    push ebx
-    push ecx
-    push edx
-    push edi
-;
-    mov cx,flat_sel
-    mov es,cx
-    mov ecx,eax
-    mov ax,FILE_HANDLE
-    DerefHandle
-    jc set_file_time_done
-;
-    mov al,[ebx].file_handle_drive
-    mov bx,[ebx].file_handle_sel
-    or bx,bx
-    stc
-    jz set_file_time_done
-;
-    mov fs,bx
-    mov edi,fs:file_dir_entry
-    mov es:[edi].de_time,ecx
-    mov es:[edi].de_time+4,edx
-    mov edx,edi
-    CallFileSystem fs_update_file_proc
-    clc
-
-set_file_time_done:
-    pop edi
-    pop edx
-    pop ecx
-    pop ebx
-    pop ax
-    pop fs
-    pop es
-    pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEax
-    retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           set_legacy_file_time
 ;
 ;           DESCRIPTION:    Set C file time & date
@@ -3148,13 +3080,6 @@ init_file       PROC near
     xor cl,cl
     mov ax,stop_read_legacy_file_nr
     RegisterOsGate
-;
-    mov esi,OFFSET set_file_time
-    mov edi,OFFSET set_file_time_name
-    xor dx,dx
-    xor ecx,ecx
-    mov ax,set_file_time_nr
-    RegisterBimodalSyscall
 ;
     mov ebx,OFFSET read_file16
     mov esi,OFFSET read_file32

@@ -1527,6 +1527,25 @@ get_legacy_file_time   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetLegacyFileTime
+;
+;           DESCRIPTION:    Set legacy file time & date
+;
+;           PARAMETERS:     BX              File handle
+;                           EDX:EAX         Time & date
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_legacy_file_time_name      DB 'Set Legacy File Time',0
+
+set_legacy_file_time   Proc far
+    SetHandleModifyTime
+    ret
+set_legacy_file_time   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -6865,6 +6884,12 @@ init_handle     PROC near
     mov edi,OFFSET get_legacy_file_time_name
     xor dx,dx
     mov ax,get_file_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_legacy_file_time
+    mov edi,OFFSET set_legacy_file_time_name
+    xor dx,dx
+    mov ax,set_file_time_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate
