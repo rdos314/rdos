@@ -2134,83 +2134,6 @@ get_legacy_file_size Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           SetFileSize
-;
-;           DESCRIPTION:    Set file size
-;
-;           PARAMETERS:     BX              FILE HANDLE
-;                           (EDX:)EAX       SIZE OF FILE
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_file_size32_name      DB 'Set File Size 32',0
-set_file_size64_name      DB 'Set File Size 64',0
-
-set_file_size32:
-    push ds
-    push eax
-    push ebx
-    push edx
-;
-    mov edx,eax
-    mov ax,FILE_HANDLE
-    DerefHandle
-    jc set_file_size_done32
-;
-    mov al,[ebx].file_handle_drive
-    mov bx,[ebx].file_handle_sel
-    or bx,bx
-    stc
-    jz set_file_size_done32
-;
-    mov ds,bx
-    EnterWriteSection ds:file_size_section
-    CallFileSystem fs_set_file_size_proc
-    LeaveWriteSection ds:file_size_section
-
-set_file_size_done32:
-    pop edx
-    pop ebx
-    pop eax
-    pop ds
-    retf32
-
-set_file_size64:
-    push ds
-    push eax
-    push ebx
-    push edx
-;
-    or edx,edx
-    stc
-    jnz set_file_size_done64
-;    
-    mov edx,eax
-    mov ax,FILE_HANDLE
-    DerefHandle
-    jc set_file_size_done64
-;
-    mov al,[ebx].file_handle_drive
-    mov bx,[ebx].file_handle_sel
-    or bx,bx
-    stc
-    jz set_file_size_done64
-;
-    mov ds,bx
-    EnterWriteSection ds:file_size_section
-    CallFileSystem fs_set_file_size_proc
-    LeaveWriteSection ds:file_size_section
-
-set_file_size_done64:
-    pop edx
-    pop ebx
-    pop eax
-    pop ds
-    retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           set_legacy_file_size
 ;
 ;           DESCRIPTION:    Set legacy file size
@@ -3399,20 +3322,6 @@ init_file       PROC near
     xor cl,cl
     mov ax,stop_read_legacy_file_nr
     RegisterOsGate
-;
-    mov esi,OFFSET set_file_size32
-    mov edi,OFFSET set_file_size32_name
-    xor dx,dx
-    xor ecx,ecx
-    mov ax,set_file_size32_nr
-    RegisterBimodalSyscall
-;
-    mov esi,OFFSET set_file_size64
-    mov edi,OFFSET set_file_size64_name
-    xor dx,dx
-    xor ecx,ecx
-    mov ax,set_file_size64_nr
-    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_file_pos32
     mov edi,OFFSET get_file_pos32_name
