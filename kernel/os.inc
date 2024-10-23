@@ -2665,6 +2665,12 @@ OpenLegacyKernelFile MACRO
     OsGate open_legacy_kernel_file_nr
                     ENDM
 
+; IN  BX        File selector
+; OUT BX        Handle
+RefLegacyKernelFile MACRO
+    OsGate ref_legacy_kernel_file_nr
+                    ENDM
+
 ; IN  BX        C handle
 ; IN  CX        Mode
 ; OUT BX        Process handle

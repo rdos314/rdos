@@ -1277,6 +1277,7 @@ dupkhLegacy:
     mov ds,ax
     mov ds,ds:p_proc_sel
     mov ds,ds:pf_c_handle_sel
+    RefLegacyKernelFile
 ;
     mov cx,IO_READ OR IO_WRITE
     xor eax,eax

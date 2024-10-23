@@ -2130,6 +2130,69 @@ open_legacy_kernel_file   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ref_legacy_kernel_file
+;
+;           DESCRIPTION:    Ref legacy file
+;
+;           PARAMETERS:     BX          File sel
+;                           
+;           RETURNS:        BX          File handle entry
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ref_legacy_kernel_file_name  DB 'Ref Legacy File',0
+
+ref_legacy_kernel_file    Proc far
+    push es
+    push eax
+    push ecx
+    push edx
+;
+    mov es,bx
+    mov bx,es:file_c_handle
+    or bx,bx
+    jnz rkfREf
+
+rkfAlloc:
+    mov edx,es
+    mov ax,C_HANDLE_FILE
+    AllocateCHandle
+    jnc rkfSaveHandle
+;
+    int 3
+    jmp rkfFailed
+
+rkfRef:
+    mov dx,es
+    mov ax,C_HANDLE_FILE
+    RefCHandle
+    jc rkfAlloc
+;
+    dec es:file_usage
+    jmp rkfOk
+
+rkfSaveHandle:
+    mov es:file_c_handle,bx
+
+rkfOk:
+    clc
+    jmp rkfDone
+
+rkfFailed:
+    stc
+
+rkfDone:
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    retf32
+ref_legacy_kernel_file   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           GET_DRIVE_INFO
 ;
 ;           DESCRIPTION:    Get drive info
@@ -3049,6 +3112,12 @@ init_dir    PROC near
     mov edi,OFFSET open_legacy_kernel_file_name
     xor cl,cl
     mov ax,open_legacy_kernel_file_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET ref_legacy_kernel_file
+    mov edi,OFFSET ref_legacy_kernel_file_name
+    xor cl,cl
+    mov ax,ref_legacy_kernel_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_drive_info
