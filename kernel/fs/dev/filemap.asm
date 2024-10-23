@@ -3955,7 +3955,6 @@ ovfDone:
     ret
 OpenVfsFile   Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -4649,6 +4648,75 @@ DupVfsFile  Proc near
     pop ds
     ret
 DupVfsFile  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DupKernelVfsFile
+;
+;           DESCRIPTION:    Dup kernel VFS file
+;
+;           PARAMETERS:     BX          File sel
+;                           
+;           RETURNS:        BX          File handle entry
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DupKernelVfsFile
+
+DupKernelVfsFile    Proc near
+    push ds
+    push eax
+    push edx
+;
+    mov ds,ebx
+    EnterSection ds:kf_section
+;
+    mov bx,ds:kf_c_handle
+    or bx,bx
+    jz dkvfNew
+;
+    call SendDerefReq
+    call RefVfsHandle
+    jmp dkvfHandleOk
+
+dkvfNew:
+    call AllocateVfsHandle
+    mov ds:kf_c_handle,bx
+
+dkvfHandleOk:
+    call FindVfsProc
+    jnc dkvfModOk
+;
+    call CreateVfsProc
+    call AddVfsProc
+
+dkvfModOk:
+    LeaveSection ds:kf_section
+;
+    call AllocateUserHandle
+    call AllocateProcHandle
+    jnc dkvfModHOk
+;
+    int 3
+    jmp dkvfFail
+
+dkvfModHOk:
+    mov ds,eax
+    inc ds:pf_ref_count
+    clc
+    jmp dkvfDone
+
+dkvfFail:
+    stc
+
+dkvfDone:
+    pop edx
+    pop eax
+    pop ds
+    ret
+DupKernelVfsFile   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

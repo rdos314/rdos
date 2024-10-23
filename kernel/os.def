@@ -635,8 +635,7 @@ exec_app_nr                 = 602
 
 create_fork_nr              = 610
 
-dupl_kernel_to_legacy_nr    = 611
-dupl_legacy_file_nr         = 612
+dupl_kernel_handle_nr       = 611
 
 add_serio_device_nr         = 613
 

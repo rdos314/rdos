@@ -142,6 +142,7 @@ code    SEGMENT byte public 'CODE'
     extern DupVfsFile:near
     extern OpenKernelVfsFile:near
     extern ReadKernelVfsFile:near
+    extern DupKernelVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1233,9 +1234,9 @@ write_kernel_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           dupl_kernel_to_legacy
+;           NAME:           dupl_kernel_handle
 ;
-;           DESCRIPTION:    Dupl kernel file to legacy file
+;           DESCRIPTION:    Dupl kernel handle
 ;
 ;           PARAMETERS:     EBX          File handle entry
 ;                           
@@ -1244,17 +1245,17 @@ write_kernel_handle Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dupl_kernel_to_legacy_name  DB 'Dupl Kernel File to Legacy File',0
+dupl_kernel_handle_name  DB 'Dupl Kernel Handle',0
 
-dupl_kernel_to_legacy    Proc far
+dupl_kernel_handle    Proc far
     push ds
     push esi
 ;
     or bx,bx
-    jz dklFail
+    jz dupkhFail
 ;
     cmp bx,MAX_KERNEL_HANDLES
-    ja dklFail
+    ja dupkhFail
 ;
     mov si,SEG data
     mov ds,esi
@@ -1265,23 +1266,27 @@ dupl_kernel_to_legacy    Proc far
 ;
     mov bx,ds:[esi].kh_legacy_sel
     or bx,bx
-    jz dklFail
+    jnz dupkhLegacy
 ;
-    DuplLegacyFile
-    jmp dklDone
+    mov bx,ds:[esi].kh_vfs_sel
+    call DupKernelVfsFile
+    jmp dupkhDone
 
-dklFail:
+dupkhLegacy:
+    mov cx,IO_READ OR IO_WRITE
+    xor eax,eax
+    xor edx,edx
+    call allocate_proc_handle
+    jnc dupkhDone
+
+dupkhFail:
     xor ebx,ebx
 
-dklDone:
+dupkhDone:
     pop esi
     pop ds
     ret
-    ret
-dupl_kernel_to_legacy    Endp
-
-
-
+dupl_kernel_handle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6637,10 +6642,10 @@ init_handle     PROC near
     mov ax,signal_exc_handle_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET dupl_kernel_to_legacy
-    mov edi,OFFSET dupl_kernel_to_legacy_name
+    mov esi,OFFSET dupl_kernel_handle
+    mov edi,OFFSET dupl_kernel_handle_name
     xor cl,cl
-    mov ax,dupl_kernel_to_legacy_nr
+    mov ax,dupl_kernel_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16
