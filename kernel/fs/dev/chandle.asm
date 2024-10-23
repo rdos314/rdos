@@ -1459,9 +1459,9 @@ set_legacy_file_size64   Endp
 ;
 ;           DESCRIPTION:    Get legacy file position
 ;
-;           PARAMETERS:     BX              FILE HANDLE
+;           PARAMETERS:     BX              File handle
 ;               
-;           RETURNS:        (EDX:)EAX       FILE POSITION
+;           RETURNS:        (EDX:)EAX       File position
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1477,6 +1477,52 @@ get_legacy_file_pos64   Proc far
     GetHandlePos64
     ret
 get_legacy_file_pos64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetLegacyFilePos
+;
+;           DESCRIPTION:    Set legacy file position
+;
+;           PARAMETERS:     BX              File handle
+;                           (EDX:)EAX       File position
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_legacy_file_pos32_name       DB 'Set Legacy File Position 32',0
+set_legacy_file_pos64_name       DB 'Set Legacy File Position 64',0
+
+
+set_legacy_file_pos32   Proc far
+    SetHandlePos32
+    ret
+set_legacy_file_pos32   Endp
+
+set_legacy_file_pos64   Proc far
+    SetHandlePos64
+    ret
+set_legacy_file_pos64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetLegacyFileTime
+;
+;           DESCRIPTION:    Get legacy file time & date
+;
+;           PARAMETERS:     BX              File handle
+;               
+;           RETURNS:        EDX:EAX         File time & date
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_legacy_file_time_name      DB 'Get Legacy File Time',0
+
+get_legacy_file_time   Proc far
+    GetHandleModifyTime
+    ret
+get_legacy_file_time   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6801,6 +6847,24 @@ init_handle     PROC near
     mov edi,OFFSET get_legacy_file_pos64_name
     xor dx,dx
     mov ax,get_file_pos64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_legacy_file_pos32
+    mov edi,OFFSET set_legacy_file_pos32_name
+    xor dx,dx
+    mov ax,set_file_pos32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_legacy_file_pos64
+    mov edi,OFFSET set_legacy_file_pos64_name
+    xor dx,dx
+    mov ax,set_file_pos64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_time
+    mov edi,OFFSET get_legacy_file_time_name
+    xor dx,dx
+    mov ax,get_file_time_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate
