@@ -1280,6 +1280,87 @@ dklDone:
     ret
 dupl_kernel_to_legacy    Endp
 
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenLegacyFile
+;
+;           DESCRIPTION:    Open legacy file
+;
+;           PARAMETERS:     ES:(E)DI    File name
+;                           
+;           RETURNS:        BX          File handle
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_legacy_file_name  DB 'Open Legacy File',0
+
+open_legacy_file32  Proc far
+    push ecx
+;
+    mov cx,O_RDWR
+    OpenHandle
+;
+    pop ecx
+    ret
+open_legacy_file32  Endp
+
+open_legacy_file16     PROC far
+    push ecx
+    push edi
+;
+    movzx edi,di
+    mov cx,O_RDWR
+    OpenHandle
+;
+    pop edi
+    pop ecx
+    ret
+open_legacy_file16     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateLegacyFile
+;
+;           DESCRIPTION:    Create legacy file
+;
+;           PARAMETERS:     ES:(E)DI        File name
+;
+;           RETURNS:        BX              File handle
+;                           NC              Success
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_legacy_file_name    DB 'Create Legacy File',0
+
+create_legacy_file32  Proc far
+    push ecx
+;
+    mov cx,O_RDWR OR O_CREAT
+    OpenHandle
+;
+    pop ecx
+    ret
+create_legacy_file32  Endp
+
+create_legacy_file16   PROC far
+    push ecx
+    push edi
+;
+    movzx edi,di
+    mov cx,O_RDWR OR O_CREAT
+    OpenHandle
+;
+    pop edi
+    pop ecx
+    ret
+create_legacy_file16   ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -6541,6 +6622,20 @@ init_handle     PROC near
     mov edi,OFFSET select_name
     mov dx,virt_es_in
     mov ax,select_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET open_legacy_file16
+    mov esi,OFFSET open_legacy_file32
+    mov edi,OFFSET open_legacy_file_name
+    mov dx,virt_es_in
+    mov ax,open_file_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET create_legacy_file16
+    mov esi,OFFSET create_legacy_file32
+    mov edi,OFFSET create_legacy_file_name
+    mov dx,virt_es_in
+    mov ax,create_file_nr
     RegisterUserGate
 ;
     mov esi,OFFSET test_gate

@@ -2770,90 +2770,6 @@ close_dir_done:
     retf32
 close_dir       Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           OPEN_FILE
-;
-;           DESCRIPTION:    Open file
-;
-;           PARAMETERS:         ES:(E)DI    FILENAME
-;                           CL              ACCESS CODE
-;                           
-;           RETURNS:        BX              FILE HANDLE
-;                           NC              SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_file_name  DB 'Open File',0
-
-open_file32:
-    ApiSaveEax
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
-    call OpenFileBase
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEax
-    retf32
-
-open_file16     PROC far
-    push edi
-    movzx edi,di
-    call OpenFileBase
-    pop edi
-    retf32
-open_file16     ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CREATE_FILE
-;
-;           DESCRIPTION:    Create file
-;
-;           PARAMETERS:         ES:(E)DI    FILENAME
-;                           CX              ATTRIBUTE
-;
-;           RETURNS:        BX              FILE HANDLE
-;                           NC              SUCCESS
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_file_name    DB 'Create File',0
-
-create_file32:
-    ApiSaveEax
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
-    call CreateFileBase
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEax
-    retf32
-
-create_file16   PROC far
-    push edi
-    movzx edi,di
-    call CreateFileBase
-    pop edi
-    retf32
-create_file16   ENDP
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3423,22 +3339,6 @@ init_dir    PROC near
     xor ecx,ecx
     mov ax,close_dir_nr
     RegisterBimodalSyscall
-;
-    mov ebx,OFFSET open_file16
-    mov esi,OFFSET open_file32
-    mov edi,OFFSET open_file_name
-    mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
-    mov ax,open_file_nr
-    RegisterSyscall
-;
-    mov ebx,OFFSET create_file16
-    mov esi,OFFSET create_file32
-    mov edi,OFFSET create_file_name
-    mov dx,virt_es_in
-    mov ecx,UG_SYSCALL_RD_PAR_ES_EDI
-    mov ax,create_file_nr
-    RegisterSyscall
 ;
     ret
 init_dir    ENDP
