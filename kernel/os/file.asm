@@ -1899,82 +1899,6 @@ write_legacy_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetFileInfo
-;
-;           DESCRIPTION:    Get file info
-;
-;           PARAMETERS:         BX              FILE HANDLE
-;
-;           RETURNS:        AX              FILE SYSTEM HANDLE
-;                           CL              ACCESS
-;                           CH              DRIVE
-;                           NC              SUCCESS
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_file_info_name      DB 'Get File info',0
-
-get_file_info   PROC far
-    push ds
-    push ebx
-    mov ax,FILE_HANDLE
-    DerefHandle
-    jc get_file_info_done
-;
-    mov ax,[ebx].file_handle_sel
-    mov cl,[ebx].file_handle_access
-    mov ch,[ebx].file_handle_drive
-    clc
-
-get_file_info_done:
-    pop ebx
-    pop ds
-    retf32
-get_file_info   ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DuplFileInfo
-;
-;           DESCRIPTION:    Duplicate handle using file-info
-;
-;           PARAMETERS:         AX              FILE SYSTEM HANDLE
-;                           CL              ACCESS
-;                           CH              DRIVE
-;
-;           RETURNS:        BX              FILE HANDLE
-;                           NC              SUCCESS
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_file_info_name     DB 'Duplicate File info',0
-
-dupl_file_info  PROC far
-    push ds
-    push ax
-    mov ds,ax
-    inc ds:file_usage
-    pop ax
-    push cx
-    mov cx,SIZE file_handle_seg
-    AllocateHandle
-    pop cx
-    mov [ebx].file_handle_pos,0
-    mov [ebx].file_handle_sel,ax
-    mov [ebx].file_handle_access,cl
-    mov [ebx].file_handle_drive,ch
-    mov [ebx].hh_sign,FILE_HANDLE
-    mov bx,[ebx].hh_handle
-    clc
-    pop ds
-    retf32
-dupl_file_info  ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           LockFile
 ;
 ;           DESCRIPTION:    Lock file using file-info
@@ -2669,18 +2593,6 @@ init_file       PROC near
     mov edi,OFFSET free_file_list_entry_name
     xor cl,cl
     mov ax,free_file_list_entry_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_file_info
-    mov edi,OFFSET get_file_info_name
-    xor cl,cl
-    mov ax,get_file_info_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET dupl_file_info
-    mov edi,OFFSET dupl_file_info_name
-    xor cl,cl
-    mov ax,dupl_file_info_nr
     RegisterOsGate
 ;
     mov esi,OFFSET lock_file

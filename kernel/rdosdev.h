@@ -746,9 +746,6 @@ int RdosCacheDir(int dir_sel, int dir_entry);
 void RdosInsertDirEntry(int dir_sel, int dir_entry);
 void RdosInsertFileEntry(int dir_sel, int file_entry);
 
-int RdosGetFileInfo(int handle, char *access, char *drive, int *file_sel);
-int RdosDuplFileInfo(char access, char drive, int file_sel);
-
 int RdosOpenKernelFile(const char *FileName, int Mode);
 void RdosCloseKernelFile(int Handle);
 int RdosReadKernelFile(int Handle, void *Buf, int Size, long Pos);
@@ -1908,24 +1905,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 #pragma aux RdosInsertFileEntry = \
     OsGate_insert_file_entry \
     __parm [__ebx] [__edx]
-
-#pragma aux RdosGetFileInfo = \
-    OsGate_get_file_info \
-    "push eax" \
-    CarryToBool \
-    "mov es:[edi],cl" \
-    "mov fs:[esi],ch" \
-    "pop ecx" \
-    "movzx ecx,cx" \
-    "mov gs:[edx],ecx" \
-    __parm [__ebx] [__es __edi] [__fs __esi] [__gs __edx] \
-    __value [__eax] \
-    __modify [__ecx]
-
-#pragma aux RdosDuplFileInfo = \
-    OsGate_dupl_file_info \
-    __parm [__cl] [__ch] [__eax] \
-    __value [__ebx]
 
 #pragma aux RdosLockFile = \
     OsGate_lock_file \

@@ -227,9 +227,6 @@
 #define osgate_insert_file_entry 242
 #define osgate_set_disc_use32 244
 
-#define osgate_get_file_info 247
-#define osgate_dupl_file_info 248
-
 #define osgate_get_utf8_bitmap 250
 #define osgate_register_video_mode 251
 
@@ -1157,9 +1154,6 @@
 #define OsGate_insert_dir_entry 0x3E 0x67 0x9a 241 0 0 0 2 0
 #define OsGate_insert_file_entry 0x3E 0x67 0x9a 242 0 0 0 2 0
 #define OsGate_set_disc_use32 0x3E 0x67 0x9a 244 0 0 0 2 0
-
-#define OsGate_get_file_info 0x3E 0x67 0x9a 247 0 0 0 2 0
-#define OsGate_dupl_file_info 0x3E 0x67 0x9a 248 0 0 0 2 0
 
 #define OsGate_get_utf8_bitmap 0x3E 0x67 0x9a 250 0 0 0 2 0
 #define OsGate_register_video_mode 0x3E 0x67 0x9a 251 0 0 0 2 0

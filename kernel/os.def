@@ -227,9 +227,6 @@ insert_dir_entry_nr                     = 241
 insert_file_entry_nr            = 242
 set_disc_use32_nr           = 244
 
-get_file_info_nr                        = 247
-dupl_file_info_nr                       = 248
-
 get_utf8_bitmap_nr                      = 250
 register_video_mode_nr          = 251
 

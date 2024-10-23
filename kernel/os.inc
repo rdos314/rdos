@@ -3951,22 +3951,6 @@ DeleteCurDir MACRO
 
 ;;;;;;;;;;;; FILE ;;;;;;;;;;;
 
-;  IN   BX          File handle
-;  OUT  CL          Acess
-;  OUT  CH          Drive
-;  OUT  AX          File selector
-GetFileInfo     MACRO
-    OsGate get_file_info_nr
-                    ENDM
-
-;  IN   CL          Access
-;  IN   CH          Drive
-;  IN   AX          File selector
-;  OUT  BX          File handle
-DuplFileInfo    MACRO
-    OsGate dupl_file_info_nr
-                    ENDM
-
 ;  IN   AX          File selector
 LockFile     MACRO
     OsGate lock_file_nr
