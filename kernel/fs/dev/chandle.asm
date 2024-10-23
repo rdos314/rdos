@@ -1383,6 +1383,27 @@ close_legacy_file   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DuplLegacyFile
+;
+;           DESCRIPTION:    Duplicate legacy file handle
+;
+;           PARAMETERS:     AX              Old file handle
+;
+;           RETURNS:        BX              New file handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dupl_legacy_file_name  DB 'Dupl Legacy File',0
+
+dupl_legacy_file  Proc far
+    mov ebx,eax
+    DupHandle
+    ret
+dupl_legacy_file  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -6661,6 +6682,12 @@ init_handle     PROC near
     mov edi,OFFSET close_legacy_file_name
     xor dx,dx
     mov ax,close_file_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET dupl_legacy_file
+    mov edi,OFFSET dupl_legacy_file_name
+    xor dx,dx
+    mov ax,dupl_file_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate

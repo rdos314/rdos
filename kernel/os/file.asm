@@ -2100,76 +2100,6 @@ close_legacy_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DUPL_FILE
-;
-;           DESCRIPTION:    Duplicate file handle
-;
-;           PARAMETERS:         AX              OLD FILE HANDLE
-;
-;           RETURNS:        BX              NEW FILE HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_file_name  DB 'Duplicate File Handle',0
-
-dupl_file:
-    ApiSaveEax
-    ApiSaveEcx
-    ApiSaveEdx
-    ApiSaveEsi
-    ApiSaveEdi
-
-    push ds
-    push es
-    push eax
-    push cx
-    push esi
-;
-    mov bx,ax
-    mov ax,FILE_HANDLE
-    DerefHandle
-    jc dupl_file_done
-;
-    mov esi,ebx
-    mov bx,[ebx].file_handle_sel
-    or bx,bx
-    stc
-    jz dupl_file_done
-;
-    mov ds,bx
-    inc ds:file_usage
-;
-    mov cx,SIZE file_handle_seg
-    AllocateHandle
-    mov eax,[esi].file_handle_pos
-    mov [ebx].file_handle_pos,eax
-    mov ax,[esi].file_handle_sel
-    mov [ebx].file_handle_sel,ax
-    mov al,[esi].file_handle_access
-    mov [ebx].file_handle_access,al
-    mov al,[esi].file_handle_drive
-    mov [ebx].file_handle_drive,al
-    mov [ebx].hh_sign,FILE_HANDLE
-    mov bx,[ebx].hh_handle
-    clc
-
-dupl_file_done:
-    pop esi
-    pop cx
-    pop eax
-    pop es
-    pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEdx
-    ApiCheckEcx
-    ApiCheckEax
-    retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GET_IOCTL_DATA
 ;
 ;           DESCRIPTION:    Get IOCTL data
@@ -3583,13 +3513,6 @@ init_file       PROC near
     xor cl,cl
     mov ax,stop_read_legacy_file_nr
     RegisterOsGate
-;
-    mov esi,OFFSET dupl_file
-    mov edi,OFFSET dupl_file_name
-    xor dx,dx
-    xor ecx,ecx
-    mov ax,dupl_file_nr
-    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_ioctl_data
     mov edi,OFFSET get_ioctl_data_name
