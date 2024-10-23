@@ -71,7 +71,6 @@ static void ThreadStartup(void *ptr)
 TMp3Player::TMp3Player()
 {
     FFileHandle = 0;
-    FMapHandle = 0;
     FFileBuf = 0;
     FFileSize = 0;
     FValid = FALSE;
@@ -345,25 +344,20 @@ void TMp3Player::Load(const char *FileName)
     if (FFileHandle)
     {
         FFileSize = RdosGetFileSize(FFileHandle);
-
-        FMapHandle = RdosCreateNamedFileMapping(FileName, FFileSize, FFileHandle);
-        if (FMapHandle)
-        {                 
-            size = FFileSize;
-            size--;
-            size = size & 0xFFFFF000;
-            size += 0x1000;
+        size = FFileSize;
+        size--;
+        size = size & 0xFFFFF000;
+        size += 0x1000;
             
-            FFileBuf = (unsigned char *)RdosAllocateMem(size);
-            RdosMapView(FMapHandle, 0, FFileBuf, FFileSize);
+        FFileBuf = (unsigned char *)RdosAllocateMem(size);
+        RdosReadFile(FFileHandle, FFileBuf, FFileSize);
 
-            FindStart();
-            Check();
-            if (!ParseTag())
-                CalcSongParams();
+        FindStart();
+        Check();
+        if (!ParseTag())
+            CalcSongParams();
 
-            SetPosition(0);
-        }
+        SetPosition(0);
     }
 }
 
@@ -386,13 +380,6 @@ void TMp3Player::Close()
 
     if (FFileHandle)
     {
-        if (FMapHandle)
-        {
-            RdosUnmapView(FMapHandle);
-            RdosCloseMapping(FMapHandle);
-            FMapHandle = 0;
-        }
-
         if (FFileBuf)
         {
             RdosFreeMem(FFileBuf);
