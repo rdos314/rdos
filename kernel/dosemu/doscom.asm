@@ -501,7 +501,7 @@ get_ioctl_data_handle_inrange:
     mov ax,6
     cmp bx,0FFh
     je ioctl_fail
-    GetIoctlData
+;    GetIoctlData
     and byte ptr [bp].vm_eflags,NOT 1
     pop di
     pop cx

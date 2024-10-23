@@ -139,7 +139,6 @@ open_file_nr                            = 123
 create_file_nr                          = 124
 close_file_nr                           = 125
 dupl_file_nr                            = 126
-get_ioctl_data_nr                       = 127
 get_file_size32_nr                      = 128
 set_file_size32_nr                      = 129
 get_file_pos32_nr                       = 130

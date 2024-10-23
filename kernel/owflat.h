@@ -1762,13 +1762,6 @@
     CallGate_close_file  \
     __parm [__ebx]
 
-#pragma aux RdosIsDevice = \
-    CallGate_get_ioctl_data  \
-    0x33 0xC0 0xF6 0xC6 0x80 0x74 1 0x40 \
-    __parm [__ebx]  \
-    __value [__eax] \
-    __modify [__dx]
-
 #pragma aux RdosDuplFile = \
     CallGate_dupl_file  \
     ValidateFileHandle  \

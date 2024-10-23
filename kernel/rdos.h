@@ -626,7 +626,6 @@ int RDOSAPI RdosSetHandleNonblockingMode(int Handle);
 long RDOSAPI RdosOpenFile(const char *FileName, char Access);
 long RDOSAPI RdosCreateFile(const char *FileName, int Attrib);
 void RDOSAPI RdosCloseFile(long Handle);
-int RDOSAPI RdosIsDevice(long Handle);
 long RDOSAPI RdosDuplFile(long Handle);
 long long RDOSAPI RdosGetFileSize(long Handle);
 void RDOSAPI RdosSetFileSize(long Handle, long long Size);

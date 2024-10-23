@@ -2735,12 +2735,6 @@ DuplFile       MACRO
         UserGate dupl_file_nr
                                                 ENDM
 
-;       IN      EBX              Handle
-;       OUT     DX              Device data
-GetIoctlData    MACRO
-        UserGate get_ioctl_data_nr
-                                                ENDM
-
 
 ;       IN      EBX             Handle
 ;       OUT     EAX             Filesize

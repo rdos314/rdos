@@ -139,7 +139,6 @@
 #define usergate_create_file 0x0000007C
 #define usergate_close_file 0x0000007D
 #define usergate_dupl_file 0x0000007E
-#define usergate_get_ioctl_data 0x0000007F
 #define usergate_get_file_size32 0x00000080
 #define usergate_set_file_size32 0x00000081
 #define usergate_get_file_pos32 0x00000082
@@ -1173,7 +1172,6 @@
 #define CallGate_create_file 0x55 0x67 0x9a 124 0 0 0 3 0 0x5d
 #define CallGate_close_file 0x55 0x67 0x9a 125 0 0 0 3 0 0x5d
 #define CallGate_dupl_file 0x55 0x67 0x9a 126 0 0 0 3 0 0x5d
-#define CallGate_get_ioctl_data 0x55 0x67 0x9a 127 0 0 0 3 0 0x5d
 #define CallGate_get_file_size32 0x55 0x67 0x9a 128 0 0 0 3 0 0x5d
 #define CallGate_set_file_size32 0x55 0x67 0x9a 129 0 0 0 3 0 0x5d
 #define CallGate_get_file_pos32 0x55 0x67 0x9a 130 0 0 0 3 0 0x5d
@@ -2205,7 +2203,6 @@
 #define CallGate_create_file 0x3e 0x67 0x9a 124 0 0 0 3 0
 #define CallGate_close_file 0x3e 0x67 0x9a 125 0 0 0 3 0
 #define CallGate_dupl_file 0x3e 0x67 0x9a 126 0 0 0 3 0
-#define CallGate_get_ioctl_data 0x3e 0x67 0x9a 127 0 0 0 3 0
 #define CallGate_get_file_size32 0x3e 0x67 0x9a 128 0 0 0 3 0
 #define CallGate_set_file_size32 0x3e 0x67 0x9a 129 0 0 0 3 0
 #define CallGate_get_file_pos32 0x3e 0x67 0x9a 130 0 0 0 3 0
