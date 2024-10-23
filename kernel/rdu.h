@@ -150,10 +150,7 @@
 
 #define usergate_create_mapping 0x00000089
 #define usergate_create_named_mapping 0x0000008A
-#define usergate_create_file_mapping 0x0000008B
-#define usergate_create_named_file_mapping 0x0000008C
 #define usergate_open_named_mapping 0x0000008D
-#define usergate_sync_mapping 0x0000008E
 #define usergate_close_mapping 0x0000008F
 #define usergate_map_view 0x00000090
 #define usergate_unmap_view 0x00000091
@@ -1183,10 +1180,7 @@
 
 #define CallGate_create_mapping 0x55 0x67 0x9a 137 0 0 0 3 0 0x5d
 #define CallGate_create_named_mapping 0x55 0x67 0x9a 138 0 0 0 3 0 0x5d
-#define CallGate_create_file_mapping 0x55 0x67 0x9a 139 0 0 0 3 0 0x5d
-#define CallGate_create_named_file_mapping 0x55 0x67 0x9a 140 0 0 0 3 0 0x5d
 #define CallGate_open_named_mapping 0x55 0x67 0x9a 141 0 0 0 3 0 0x5d
-#define CallGate_sync_mapping 0x55 0x67 0x9a 142 0 0 0 3 0 0x5d
 #define CallGate_close_mapping 0x55 0x67 0x9a 143 0 0 0 3 0 0x5d
 #define CallGate_map_view 0x55 0x67 0x9a 144 0 0 0 3 0 0x5d
 #define CallGate_unmap_view 0x55 0x67 0x9a 145 0 0 0 3 0 0x5d
@@ -2214,10 +2208,7 @@
 
 #define CallGate_create_mapping 0x3e 0x67 0x9a 137 0 0 0 3 0
 #define CallGate_create_named_mapping 0x3e 0x67 0x9a 138 0 0 0 3 0
-#define CallGate_create_file_mapping 0x3e 0x67 0x9a 139 0 0 0 3 0
-#define CallGate_create_named_file_mapping 0x3e 0x67 0x9a 140 0 0 0 3 0
 #define CallGate_open_named_mapping 0x3e 0x67 0x9a 141 0 0 0 3 0
-#define CallGate_sync_mapping 0x3e 0x67 0x9a 142 0 0 0 3 0
 #define CallGate_close_mapping 0x3e 0x67 0x9a 143 0 0 0 3 0
 #define CallGate_map_view 0x3e 0x67 0x9a 144 0 0 0 3 0
 #define CallGate_unmap_view 0x3e 0x67 0x9a 145 0 0 0 3 0

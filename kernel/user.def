@@ -149,11 +149,8 @@ read_file_nr                            = 134
 write_file_nr                           = 135
 
 create_mapping_nr                       = 137
-create_named_mapping_nr         = 138
-create_file_mapping_nr          = 139
-create_named_file_mapping_nr = 140
-open_named_mapping_nr           = 141
-sync_mapping_nr                         = 142
+create_named_mapping_nr                 = 138
+open_named_mapping_nr                   = 141
 close_mapping_nr                        = 143
 map_view_nr                                     = 144
 unmap_view_nr                           = 145

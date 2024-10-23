@@ -1838,21 +1838,11 @@
     __parm [__edi] [__eax]  \
     __value [__ebx]
 
-#pragma aux RdosCreateNamedFileMapping = \
-    CallGate_create_named_file_mapping  \
-    ValidateHandle  \
-    __parm [__edi] [__eax] [__ebx]  \
-    __value [__ebx]
-
 #pragma aux RdosOpenNamedMapping = \
     CallGate_open_named_mapping  \
     ValidateHandle  \
     __parm [__edi] \
     __value [__ebx]
-
-#pragma aux RdosSyncMapping = \
-    CallGate_sync_mapping  \
-    __parm [__ebx]
 
 #pragma aux RdosCloseMapping = \
     CallGate_close_mapping  \

@@ -2833,30 +2833,10 @@ CreateNamedMapping        MACRO
         UserGate create_named_mapping_nr
                                                 ENDM
 
-;       IN EAX                  Size of mapping object
-;       IN EBX                  File handle
-;       OUT BX                  Handle
-CreateFileMapping        MACRO
-        UserGate create_file_mapping_nr
-                                                ENDM
-
-;       IN EAX                  Size of mapping object
-;       IN EBX                  File handle
-;       IN ES:(E)DI     Name of mapping
-;       OUT BX                  Handle
-CreateNamedFileMapping        MACRO
-        UserGate create_named_file_mapping_nr
-                                                ENDM
-
 ;       IN      ES:(E)DI        Name of mapping
 ;       OUT BX                  Handle
 OpenNamedMapping        MACRO
         UserGate open_named_mapping_nr
-                                                ENDM
-
-;       IN  BX                  Handle
-SyncMapping        MACRO
-        UserGate sync_mapping_nr
                                                 ENDM
 
 ;       IN  BX                  Handle
