@@ -1248,7 +1248,6 @@ dupl_kernel_to_legacy_name  DB 'Dupl Kernel File to Legacy File',0
 
 dupl_kernel_to_legacy    Proc far
     push ds
-    push ebx
     push esi
 ;
     or bx,bx
@@ -1269,14 +1268,13 @@ dupl_kernel_to_legacy    Proc far
     jz dklFail
 ;
     DuplLegacyFile
-    jmp wkhDone
+    jmp dklDone
 
 dklFail:
     xor ebx,ebx
 
 dklDone:
     pop esi
-    pop ebx
     pop ds
     ret
     ret
