@@ -1734,21 +1734,6 @@
     __value [__eax] \
     __modify [__ecx __edx]
 
-#pragma aux RdosCreateFileDrive = \
-    "push ds" \
-    "mov ds,edx" \
-    CallGate_create_file_drive  \
-    CarryToBool \
-    "pop ds" \
-    __parm [__eax] [__ecx] [__edx __esi] [__es __edi] \
-    __value [__eax]
-
-#pragma aux RdosOpenFileDrive = \
-    CallGate_open_file_drive  \
-    CarryToBool \
-    __parm [__eax] [__es __edi] \
-    __value [__eax]
-
 #pragma aux RdosCreateCrc = \
     CallGate_create_crc  \
     ValidateHandle \

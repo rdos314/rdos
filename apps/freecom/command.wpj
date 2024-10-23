@@ -4,8 +4,8 @@ projectIdent
 VpeMain
 1
 WRect
-1072
-512
+688
+128
 7936
 9216
 2
@@ -29,7 +29,7 @@ VComponent
 8
 WRect
 880
-537
+529
 5632
 4096
 0
@@ -38,6 +38,6 @@ WRect
 WFileName
 11
 command.tgt
-0
-0
+28
+41
 7

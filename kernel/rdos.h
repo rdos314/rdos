@@ -987,9 +987,6 @@ int RDOSAPI RdosIsVfsPath(const char *PathName);
 int RDOSAPI RdosOpenVfsDir(const char *PathName, struct RdosDirInfo *Info);
 void RDOSAPI RdosCloseVfsDir(int Handle);
 
-int RDOSAPI RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
-int RDOSAPI RdosOpenFileDrive(int Drive, const char *FileName);
-
 int RDOSAPI RdosCreateCrc(unsigned short int CrcPoly);
 void RDOSAPI RdosCloseCrc(int Handle);
 unsigned short int RDOSAPI RdosCalcCrc(int Handle, unsigned short int CrcVal, const char *Buf, int Size);

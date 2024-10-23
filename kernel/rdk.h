@@ -626,7 +626,7 @@
 #define osgate_set_legacy_file_time 593
 #define osgate_read_c_console 594
 #define osgate_write_c_console 595
-#define osgate_open_kernel_handle 596
+#define osgate_open_legacy_kernel_file 596
 
 #define osgate_fork_process 597
 
@@ -635,7 +635,7 @@
 
 #define osgate_create_fork 610
 
-#define osgate_dupl_c_file_to_file 611
+#define osgate_dupl_kernel_handle 611
 
 #define osgate_add_serio_device 613
 
@@ -924,6 +924,8 @@
 #define osgate_end_vfs_disc 836
 
 #define osgate_allocate_fixed_vfs_drive 837
+#define osgate_open_kernel_handle 838
+#define osgate_ref_legacy_kernel_file 839
 
 
 
@@ -1555,7 +1557,7 @@
 #define OsGate_set_legacy_file_time 0x3E 0x67 0x9a 81 2 0 0 2 0
 #define OsGate_read_c_console 0x3E 0x67 0x9a 82 2 0 0 2 0
 #define OsGate_write_c_console 0x3E 0x67 0x9a 83 2 0 0 2 0
-#define OsGate_open_kernel_handle 0x3E 0x67 0x9a 84 2 0 0 2 0
+#define OsGate_open_legacy_kernel_file 0x3E 0x67 0x9a 84 2 0 0 2 0
 
 #define OsGate_fork_process 0x3E 0x67 0x9a 85 2 0 0 2 0
 
@@ -1564,7 +1566,7 @@
 
 #define OsGate_create_fork 0x3E 0x67 0x9a 98 2 0 0 2 0
 
-#define OsGate_dupl_c_file_to_file 0x3E 0x67 0x9a 99 2 0 0 2 0
+#define OsGate_dupl_kernel_handle 0x3E 0x67 0x9a 99 2 0 0 2 0
 
 #define OsGate_add_serio_device 0x3E 0x67 0x9a 101 2 0 0 2 0
 
@@ -1853,4 +1855,6 @@
 #define OsGate_end_vfs_disc 0x3E 0x67 0x9a 68 3 0 0 2 0
 
 #define OsGate_allocate_fixed_vfs_drive 0x3E 0x67 0x9a 69 3 0 0 2 0
+#define OsGate_open_kernel_handle 0x3E 0x67 0x9a 70 3 0 0 2 0
+#define OsGate_ref_legacy_kernel_file 0x3E 0x67 0x9a 71 3 0 0 2 0
 

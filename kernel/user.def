@@ -278,9 +278,6 @@ toggle_serial_line_nr           = 251
 read_serial_val_nr                      = 252
 write_serial_val_nr                     = 253
 
-create_file_drive_nr        = 254
-open_file_drive_nr          = 255
-
 open_sys_env_nr             = 257
 open_proc_env_nr            = 258
 close_env_nr                = 259

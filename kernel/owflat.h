@@ -3705,18 +3705,6 @@
     CallGate_close_vfs_dir  \
     __parm [__ebx]
 
-#pragma aux RdosCreateFileDrive = \
-    CallGate_create_file_drive  \
-    CarryToBool \
-    __parm [__eax] [__ecx] [__esi] [__edi] \
-    __value [__eax]
-
-#pragma aux RdosOpenFileDrive = \
-    CallGate_open_file_drive  \
-    CarryToBool \
-    __parm [__eax] [__edi] \
-    __value [__eax]
-
 #pragma aux RdosCreateCrc = \
     CallGate_create_crc  \
     ValidateHandle \

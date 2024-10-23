@@ -71,7 +71,6 @@
 #include "move.h"
 #include "synctime.h"
 #include "fd2file.h"
-#include "mount.h"
 #include "reboot.h"
 #include "capture.h"
 #include "com.h"
@@ -145,7 +144,6 @@ static TCommandFactory *lon;
 static TCommandFactory *md;
 static TCommandFactory *mkdirf;
 static TCommandFactory *mkpart;
-static TCommandFactory *mount;
 static TCommandFactory *move;
 static TCommandFactory *net;
 static TCommandFactory *pci;
@@ -229,7 +227,6 @@ TSession::TSession(TKeyboardDevice *Keyboard)
         showpart = new TShowPartitionFactory;
         net = new TNetFactory;
         move = new TMoveFactory;
-        mount = new TMountFactory;
         mkpart = new TMakePartitionFactory;
         mkdirf = new TMkdirFactory;
         md = new TMdFactory;
@@ -341,7 +338,6 @@ TSession::~TSession()
         delete showpart;
         delete net;
         delete move;
-        delete mount;
         delete mkpart;
         delete mkdirf;
         delete md;

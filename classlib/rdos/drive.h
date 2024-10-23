@@ -47,9 +47,6 @@ public:
     int Read(long long Sector, char *buf, int size);
     int Write(long long Sector, const char *buf, int size);
 
-    int CreateFileDrive(long Size, const char *FsName, const char *FileName);
-    int OpenFileDrive(const char *FileName);
-
     static TDrive *AllocateFixed(int DriveNr);
 
 protected:
