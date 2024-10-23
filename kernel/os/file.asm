@@ -207,49 +207,6 @@ rem_file_sel_leave:
     ret
 RemoveFileSel Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           CreateFileHandle
-;
-;           DESCRIPTION:    Creates a file handle
-;
-;           PARAMETERS:         AL              Drive
-;                           BX              File selector
-;                           CL              Access
-;
-;           RETURNS:        EBX             Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CreateFileHandle
-
-CreateFileHandle    Proc near
-    push ds
-    push dx
-    push si
-;
-    mov dx,bx
-    push cx
-    mov cx,SIZE file_handle_seg
-    AllocateHandle
-    pop cx
-    mov [ebx].file_handle_pos,0
-    mov [ebx].file_handle_sel,dx
-    mov [ebx].file_handle_access,cl
-    mov [ebx].file_handle_drive,al
-    mov [ebx].hh_sign,FILE_HANDLE
-    movzx ebx,[ebx].hh_handle
-    clc
-;
-    pop si
-    pop dx
-    pop ds
-    ret
-CreateFileHandle    Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;

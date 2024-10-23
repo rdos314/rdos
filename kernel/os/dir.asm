@@ -72,7 +72,6 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
-    extrn CreateFileHandle:near
     extrn RequestFileSel:near
     extrn ReleaseFileSel:near
 
@@ -1881,154 +1880,6 @@ CloseDirBase    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           OpenFileBase
-;
-;           DESCRIPTION:    Open a file
-;
-;           PARAMETERS:         ES:EDI      Pathname
-;
-;           RETURNS:        EBX             FILE HANDLE
-;                           NC              SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenFileBase    Proc near
-    push ds
-    push fs
-    push ax
-    push edx
-;
-    mov bx,flat_sel
-    mov fs,bx
-;
-    push edi
-    call ParseDir
-    jc open_file_pop_failed
-;
-    EnterReadSection ds:ds_access_section
-    dec ds:ds_usage
-    call ParseFile
-    jc open_file_leave_failed
-;
-    pop edi
-    call RequestFileSel
-    LeaveReadSection ds:ds_access_section
-
-open_file_handle:
-    call CreateFileHandle
-    call ParseEnd
-    clc
-    jmp open_file_done
-
-open_file_leave_failed:
-    LeaveReadSection ds:ds_access_section
-    call ParseEnd
-
-open_file_pop_failed:
-    pop edi
-    stc
-
-open_file_done:
-    pop edx
-    pop ax
-    pop fs
-    pop ds
-    ret
-OpenFileBase    Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateFileBase
-;
-;           DESCRIPTION:    Create a file
-;
-;           PARAMETERS:         ES:EDI      Pathname
-;                           CX              Attribute
-;
-;           RETURNS:        EBX              FILE HANDLE
-;                           NC              SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateFileBase  Proc near
-    push ds
-    push fs
-    push ax
-    push ecx
-    push edx
-;
-    mov bx,flat_sel
-    mov fs,bx
-;
-    push edi
-    call ParseDir
-    jc create_file_pop_failed
-;
-    EnterWriteSection ds:ds_access_section
-    dec ds:ds_usage
-    call ParseFile
-    jnc create_file_truncate
-;
-    call ParseName
-    jc create_file_leave_failed
-;
-    mov al,ds:ds_drive
-    mov bx,ds
-    CallFileSystem fs_create_file_proc
-    call RequestFileSel
-    LeaveWriteSection ds:ds_access_section
-    pop edi
-    jmp create_file_handle
-
-create_file_truncate:
-    pop edi
-    call RequestFileSel
-;
-    push ds
-    mov ds,bx
-    EnterWriteSection ds:file_size_section
-    pop ds
-;
-    push edx
-    xor edx,edx
-    CallFileSystem fs_set_file_size_proc
-    pop edx
-;
-    push ds
-    mov ds,bx
-    LeaveWriteSection ds:file_size_section
-    pop ds
-;
-    LeaveWriteSection ds:ds_access_section
-
-create_file_handle:
-    call CreateFileHandle
-    call ParseEnd
-    clc
-    jmp create_file_done
-
-create_file_leave_failed:
-    LeaveWriteSection ds:ds_access_section
-    call ParseEnd
-
-create_file_pop_failed:
-    pop edi
-    stc
-
-create_file_done:
-    pop edx
-    pop ecx
-    pop ax
-    pop fs
-    pop ds
-    ret
-CreateFileBase  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           open_legacy_file
 ;
 ;           DESCRIPTION:    Open legacy file
@@ -2164,40 +2015,6 @@ ocfDone:
     pop ds
     retf32
 open_legacy_file   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           DuplLegacyFile
-;
-;           DESCRIPTION:    Dupl legacy file
-;
-;           PARAMETERS:     EBX          File handle entry
-;                           
-;           RETURNS:        EBX          File handle
-;                           NC          Success
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_legacy_file_name  DB 'Dupl Legacy File',0
-
-dupl_legacy_file    Proc far
-    push es
-    push ax
-    push cx
-;
-    mov es,bx
-    mov al,es:file_drive
-    xor cl,cl
-    inc es:file_usage
-    call CreateFileHandle
-
-dcfDone:
-    pop cx
-    pop ax
-    pop es
-    retf32
-dupl_legacy_file   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3232,12 +3049,6 @@ init_dir    PROC near
     mov edi,OFFSET open_legacy_kernel_file_name
     xor cl,cl
     mov ax,open_legacy_kernel_file_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET dupl_legacy_file
-    mov edi,OFFSET dupl_legacy_file_name
-    xor cl,cl
-    mov ax,dupl_legacy_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_drive_info
