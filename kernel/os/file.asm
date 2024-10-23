@@ -2100,53 +2100,6 @@ close_legacy_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GET_IOCTL_DATA
-;
-;           DESCRIPTION:    Get IOCTL data
-;
-;           PARAMETERS:         BX              FILE HANDLE
-;
-;           RETURNS:        DX              DEVICE ATTRIBUTE
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_ioctl_data_name     DB 'Get IOCTL Data',0
-
-get_ioctl_data:
-    ApiSaveEax
-    ApiSaveEcx
-    ApiSaveEsi
-    ApiSaveEdi
-
-    push ds
-    push ax
-    push ebx
-;
-    mov ax,FILE_HANDLE
-    DerefHandle
-    jc get_ioctl_data_done
-;
-    mov al,[ebx].file_handle_drive
-    mov bx,[ebx].file_handle_sel
-    or bx,bx
-    stc
-    jz get_ioctl_data_done
-;
-    CallFileSystem fs_get_ioctl_data_proc
-get_ioctl_data_done:
-    pop ebx
-    pop ax
-    pop ds
-
-    ApiCheckEdi
-    ApiCheckEsi
-    ApiCheckEcx
-    ApiCheckEax
-    retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           GetFileSize
 ;
 ;           DESCRIPTION:    Get file size
@@ -3513,13 +3466,6 @@ init_file       PROC near
     xor cl,cl
     mov ax,stop_read_legacy_file_nr
     RegisterOsGate
-;
-    mov esi,OFFSET get_ioctl_data
-    mov edi,OFFSET get_ioctl_data_name
-    xor dx,dx
-    xor ecx,ecx
-    mov ax,get_ioctl_data_nr
-    RegisterBimodalSyscall
 ;
     mov esi,OFFSET get_file_size32
     mov edi,OFFSET get_file_size32_name
