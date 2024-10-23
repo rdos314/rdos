@@ -2171,65 +2171,6 @@ set_legacy_file_size Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           GetFilePos
-;
-;           DESCRIPTION:    Get file position
-;
-;           PARAMETERS:     BX              FILE HANDLE
-;               
-;           RETURNS:        (EDX:)EAX       FILE POSITION
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_file_pos32_name       DB 'Get File Position 32',0
-get_file_pos64_name       DB 'Get File Position 64',0
-
-get_file_pos32:
-    push ds
-    push ebx
-;
-    mov ax,FILE_HANDLE
-    DerefHandle
-    jc get_file_pos_done32
-;
-    mov ax,[ebx].file_handle_sel
-    or ax,ax
-    stc
-    jz get_file_pos_done32
-;
-    mov eax,[ebx].file_handle_pos
-    clc
-
-get_file_pos_done32:
-    pop ebx
-    pop ds
-    retf32
-
-get_file_pos64:
-    push ds
-    push ebx
-;
-    mov ax,FILE_HANDLE
-    DerefHandle
-    jc get_file_pos_done64
-;
-    mov ax,[ebx].file_handle_sel
-    or ax,ax
-    stc
-    jz get_file_pos_done64
-;
-    mov eax,[ebx].file_handle_pos
-    xor edx,edx
-    clc
-
-get_file_pos_done64:
-    pop ebx
-    pop ds
-    retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           SetFilePos
 ;
 ;           DESCRIPTION:    Set file position
@@ -3322,20 +3263,6 @@ init_file       PROC near
     xor cl,cl
     mov ax,stop_read_legacy_file_nr
     RegisterOsGate
-;
-    mov esi,OFFSET get_file_pos32
-    mov edi,OFFSET get_file_pos32_name
-    xor dx,dx
-    xor ecx,ecx
-    mov ax,get_file_pos32_nr
-    RegisterBimodalSyscall
-;
-    mov esi,OFFSET get_file_pos64
-    mov edi,OFFSET get_file_pos64_name
-    xor dx,dx
-    xor ecx,ecx
-    mov ax,get_file_pos64_nr
-    RegisterBimodalSyscall
 ;
     mov esi,OFFSET set_file_pos32
     mov edi,OFFSET set_file_pos32_name

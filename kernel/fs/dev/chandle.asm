@@ -1455,6 +1455,32 @@ set_legacy_file_size64   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetLegacyFilePos
+;
+;           DESCRIPTION:    Get legacy file position
+;
+;           PARAMETERS:     BX              FILE HANDLE
+;               
+;           RETURNS:        (EDX:)EAX       FILE POSITION
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_legacy_file_pos32_name       DB 'Get Legacy File Position 32',0
+get_legacy_file_pos64_name       DB 'Get Legacy File Position 64',0
+
+get_legacy_file_pos32   Proc far
+    GetHandlePos32
+    ret
+get_legacy_file_pos32   Endp
+
+get_legacy_file_pos64   Proc far
+    GetHandlePos64
+    ret
+get_legacy_file_pos64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -6763,6 +6789,18 @@ init_handle     PROC near
     mov edi,OFFSET set_legacy_file_size64_name
     xor dx,dx
     mov ax,set_file_size64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_pos32
+    mov edi,OFFSET get_legacy_file_pos32_name
+    xor dx,dx
+    mov ax,get_file_pos32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_pos64
+    mov edi,OFFSET get_legacy_file_pos64_name
+    xor dx,dx
+    mov ax,get_file_pos64_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate
