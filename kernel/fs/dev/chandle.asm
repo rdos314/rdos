@@ -1546,6 +1546,42 @@ set_legacy_file_time   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ReadLegacyFile
+;
+;           DESCRIPTION:    Read legacy file
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        (E)AX       Bytes read
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_legacy_file_name  DB 'Read Legacy File',0
+
+read_legacy_file32   Proc far
+    ReadHandle
+    ret
+read_legacy_file32   Endp
+
+read_legacy_file16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    ReadHandle
+;
+    pop edi
+    pop ecx
+    ret
+read_legacy_file16   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -6891,6 +6927,13 @@ init_handle     PROC near
     xor dx,dx
     mov ax,set_file_time_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET read_legacy_file16
+    mov esi,OFFSET read_legacy_file32
+    mov edi,OFFSET read_legacy_file_name
+    mov dx,virt_es_in
+    mov ax,read_file_nr
+    RegisterUserGate
 ;
     mov esi,OFFSET test_gate
     mov edi,OFFSET test_gate_name
