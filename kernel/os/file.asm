@@ -1899,56 +1899,6 @@ write_legacy_file    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LockFile
-;
-;           DESCRIPTION:    Lock file using file-info
-;
-;           PARAMETERS:     AX              FILE SYSTEM HANDLE
-;
-;           RETURNS:        NC              SUCCESS
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-lock_file_name     DB 'Lock File',0
-
-lock_file  PROC far
-    push ds
-    push ax
-    mov ds,ax
-    inc ds:file_usage
-    pop ax
-    clc
-    pop ds
-    retf32
-lock_file  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockFile
-;
-;           DESCRIPTION:    Unlock file using file-info
-;
-;           PARAMETERS:     AX              FILE SYSTEM HANDLE
-;
-;           RETURNS:        NC              SUCCESS
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unlock_file_name     DB 'Unlock File',0
-
-unlock_file  PROC far
-    push bx
-    mov bx,ax
-    call ReleaseFileSel
-    clc
-    pop bx
-    retf32
-unlock_file  ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           close_legacy_file
 ;
 ;           DESCRIPTION:    Close legacy file
@@ -2593,18 +2543,6 @@ init_file       PROC near
     mov edi,OFFSET free_file_list_entry_name
     xor cl,cl
     mov ax,free_file_list_entry_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET lock_file
-    mov edi,OFFSET lock_file_name
-    xor cl,cl
-    mov ax,lock_file_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET unlock_file
-    mov edi,OFFSET unlock_file_name
-    xor cl,cl
-    mov ax,unlock_file_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_legacy_file

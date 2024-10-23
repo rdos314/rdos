@@ -3949,18 +3949,6 @@ DeleteCurDir MACRO
     OsGate delete_cur_dir_nr
                     ENDM
 
-;;;;;;;;;;;; FILE ;;;;;;;;;;;
-
-;  IN   AX          File selector
-LockFile     MACRO
-    OsGate lock_file_nr
-                    ENDM
-
-;  IN   AX          File selector
-UnlockFile     MACRO
-    OsGate unlock_file_nr
-                    ENDM
-
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
 ;  IN   AX         Mode #

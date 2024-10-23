@@ -751,9 +751,6 @@ void RdosCloseKernelFile(int Handle);
 int RdosReadKernelFile(int Handle, void *Buf, int Size, long Pos);
 int RdosWriteKernelFile(int Handle, const void *Buf, int Size, long Pos);
 
-void RdosLockFile(int file_sel);
-void RdosUnlockFile(int file_sel);
-
 char RdosReadPciByte(char bus, char dev, char func, char reg);
 short int RdosReadPciWord(char bus, char dev, char func, char reg);
 long RdosReadPciDword(char bus, char dev, char func, char reg);
@@ -1905,18 +1902,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 #pragma aux RdosInsertFileEntry = \
     OsGate_insert_file_entry \
     __parm [__ebx] [__edx]
-
-#pragma aux RdosLockFile = \
-    OsGate_lock_file \
-    CarryToBool \
-    __parm [__eax] \
-    __value [__eax]
-
-#pragma aux RdosUnlockFile = \
-    OsGate_unlock_file \
-    CarryToBool \
-    __parm [__eax] \
-    __value [__eax]
 
 #pragma aux RdosReadPciByte = \
     OsGate_read_pci_byte \

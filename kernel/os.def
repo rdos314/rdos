@@ -435,9 +435,6 @@ start_dev32_nr              = 429
 
 get_ioapic_state_nr         = 430
 
-lock_file_nr                = 431
-unlock_file_nr              = 432
-
 app_patch_nr                = 435
 
 copy_page_entries_nr        = 436

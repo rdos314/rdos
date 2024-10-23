@@ -435,9 +435,6 @@
 
 #define osgate_get_ioapic_state 430
 
-#define osgate_lock_file 431
-#define osgate_unlock_file 432
-
 #define osgate_app_patch 435
 
 #define osgate_copy_page_entries 436
@@ -1362,9 +1359,6 @@
 #define OsGate_start_dev32 0x3E 0x67 0x9a 173 1 0 0 2 0
 
 #define OsGate_get_ioapic_state 0x3E 0x67 0x9a 174 1 0 0 2 0
-
-#define OsGate_lock_file 0x3E 0x67 0x9a 175 1 0 0 2 0
-#define OsGate_unlock_file 0x3E 0x67 0x9a 176 1 0 0 2 0
 
 #define OsGate_app_patch 0x3E 0x67 0x9a 179 1 0 0 2 0
 
