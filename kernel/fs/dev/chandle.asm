@@ -1582,6 +1582,42 @@ read_legacy_file16   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           WriteLegacyFile
+;
+;           DESCRIPTION:    Write legacy file
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        (E)AX       Bytes written
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_legacy_file_name DB 'Write Legacy File',0
+
+write_legacy_file32   Proc far
+    WriteHandle
+    ret
+write_legacy_file32   Endp
+
+write_legacy_file16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    WriteHandle
+;
+    pop edi
+    pop ecx
+    ret
+write_legacy_file16   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open C handle
@@ -6933,6 +6969,13 @@ init_handle     PROC near
     mov edi,OFFSET read_legacy_file_name
     mov dx,virt_es_in
     mov ax,read_file_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET write_legacy_file16
+    mov esi,OFFSET write_legacy_file32
+    mov edi,OFFSET write_legacy_file_name
+    mov dx,virt_es_in
+    mov ax,write_file_nr
     RegisterUserGate
 ;
     mov esi,OFFSET test_gate
