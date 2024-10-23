@@ -1273,6 +1273,11 @@ dupl_kernel_handle    Proc far
     jmp dupkhDone
 
 dupkhLegacy:
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_proc_sel
+    mov ds,ds:pf_c_handle_sel
+;
     mov cx,IO_READ OR IO_WRITE
     xor eax,eax
     xor edx,edx
