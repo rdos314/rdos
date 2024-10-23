@@ -2503,7 +2503,8 @@ rhSetOk:
     jmp rhDone
 
 rhFail:
-    mov eax,-1
+    xor eax,eax
+    stc
 
 rhDone:
     pop ebp
@@ -2704,7 +2705,8 @@ whSetOk:
     jmp whDone
 
 whFail:
-    mov eax,-1
+    xor eax,eax
+    stc
 
 whDone:
     pop ebp
@@ -3057,7 +3059,7 @@ get_handle_size32     Proc far
     jnc ghsDone32  
 
 ghsFail32:
-    mov eax,-1
+    xor eax,eax
     stc
 
 ghsDone32:
@@ -3108,8 +3110,8 @@ get_handle_size64     Proc far
     jmp ghsDone64
 
 ghsFail64:
-    mov eax,-1
-    mov edx,-1
+    xor eax,eax
+    xor edx,edx
     stc
 
 ghsDone64:
@@ -3735,7 +3737,8 @@ ghpVfs32:
     jmp ghpDone32
 
 ghpFail32:
-    mov eax,-1
+    xor eax,eax
+    stc
 
 ghpDone32:
     pop edx
@@ -3784,8 +3787,9 @@ ghpVfs64:
     jmp ghpDone64
 
 ghpFail64:
-    mov eax,-1
-    mov edx,-1
+    xor eax,eax
+    xor edx,edx
+    stc
 
 ghpDone64:
     pop ecx

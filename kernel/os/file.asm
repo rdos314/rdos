@@ -2792,9 +2792,6 @@ init_file       PROC near
     mov ax,stop_read_legacy_file_nr
     RegisterOsGate
 ;
-    mov ax,read_file_legacy_nr
-    RegisterUserGate
-;
     mov esi,OFFSET get_file_cache_size
     mov edi,OFFSET get_file_cache_size_name
     xor dx,dx

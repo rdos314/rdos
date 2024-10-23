@@ -955,8 +955,6 @@ create_thread_block_nr            = 782
 wait_thread_block_nr              = 783
 close_thread_block_nr             = 784
 
-read_file_legacy_nr               = 785
-
 used_user_sections_nr             = 787
 
 user_get_system_time_nr           = 788
