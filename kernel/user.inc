@@ -1289,7 +1289,6 @@ OpenHandle      MACRO
                                         ENDM
 
 ; IN  BX            C handle
-; OUT EBX           Result
 CloseHandle     MACRO
         UserGate close_handle_nr
                                         ENDM

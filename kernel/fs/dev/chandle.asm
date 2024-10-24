@@ -1785,8 +1785,6 @@ delete_handle    Endp
 ;
 ;           PARAMETERS:     BX          Handle
 ;
-;           RETURNS:        EBX         Result
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_handle_name  DB 'Close C Handle', 0
@@ -1835,6 +1833,7 @@ ct09  DD OFFSET close_dummy
 close_handle     Proc far
     push ds
     push eax
+    push ebx
     push ecx
     push edx
     push ebp
@@ -1924,6 +1923,7 @@ chDone:
     pop ebp
     pop edx
     pop ecx
+    pop ebx
     pop eax
     pop ds    
     ret

@@ -11068,6 +11068,10 @@ init_first_process      Proc near
 ;
     CreateEnvSel
     mov ds:pf_env_sel,ax
+;
+    CreateCHandle
+    mov ds:pf_c_handle_sel,ax    
+;
     ret
 init_first_process      Endp
     
