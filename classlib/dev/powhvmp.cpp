@@ -47,6 +47,9 @@ TPowHvmP::TPowHvmP(TModbusDevice *moddev, int address)
 {
     FOnline = false;
     FHasData = false;
+    FUp = true;
+    FFirst = true;
+    FChangeMaxGridCurrent = false;
     FLogFile = 0;
     ClearEnergy();
 
@@ -633,9 +636,7 @@ void TPowHvmP::SetChargePrio(int prio)
 ##########################################################################*/
 void TPowHvmP::SetMaxChargeCurrent(int i)
 {
-    int val = i / 3;
-
-    FMaxChargeCurrent = 3 * val;
+    FMaxChargeCurrent = i;
 }
 
 /*##########################################################################
@@ -651,9 +652,46 @@ void TPowHvmP::SetMaxChargeCurrent(int i)
 ##########################################################################*/
 void TPowHvmP::SetMaxGridChargeCurrent(int i)
 {
-    int val = i / 3;
+    int nval = i / 2;
+    int cval = FMaxGridChargeCurrent / 2;
 
-    FMaxGridChargeCurrent = 3 * val;
+    if (nval > cval)
+    {
+        if (FUp)
+        {
+            FMaxGridChargeCurrent = i;
+            FChangeMaxGridCurrent = true;
+        }
+        else
+        {
+            if (nval - cval > 1)
+            {
+                FUp = true;
+                FMaxGridChargeCurrent = i;
+                FChangeMaxGridCurrent = true;
+            }
+        }
+    }
+    else
+    {
+        if (nval < cval)
+        {
+            if (FUp)
+            {
+                if (cval - nval > 1)
+                {
+                    FUp = false;
+                    FMaxGridChargeCurrent = i;
+                    FChangeMaxGridCurrent = true;
+                }
+            }
+            else
+            {
+                FMaxGridChargeCurrent = i;
+                FChangeMaxGridCurrent = true;
+            }
+        }
+    }
 }
 
 /*##########################################################################
@@ -676,6 +714,226 @@ void TPowHvmP::WriteReg(int reg, int val)
 
 /*##########################################################################
 #
+#   Name       : TPowHvmP::GetData
+#
+#   Purpose....: Get messure data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+bool TPowHvmP::GetData()
+{
+    bool ok;
+    int val;
+    TString str;
+
+    ok = FModbus.ReqHoldingRegisters(40202, 27);
+
+    if (ok)
+    {
+        FModbus.GetBufferedHoldingRegister(40202, &val);
+        FMode = val;
+
+        FModbus.GetBufferedHoldingRegister(40203, &val);
+        FGridVoltage = (double)val / 10.0;
+
+        FModbus.GetBufferedHoldingRegister(40204, &val);
+        FGridFrequency = (double)val / 100.0;
+
+        FModbus.GetBufferedHoldingRegister(40205, &val);
+        FGridPower = (double)val;
+        FGridEnergy += FGridPower / 60.0 / 4.0;
+
+        FModbus.GetBufferedHoldingRegister(40211, &val);
+        FOutputVoltage = (double)val / 10.0;
+
+        FModbus.GetBufferedHoldingRegister(40212, &val);
+        FOutputCurrent = (double)val / 10.0;
+
+        FModbus.GetBufferedHoldingRegister(40213, &val);
+        FOutputFrequency = (double)val / 100.0;
+
+        FModbus.GetBufferedHoldingRegister(40214, &val);
+        FOutputPower = (double)val;
+        FOutputEnergy += FOutputPower / 60.0 / 4.0;
+
+        FModbus.GetBufferedHoldingRegister(40216, &val);
+        FBatteryVoltage = (double)val / 10.0;
+
+        FModbus.GetBufferedHoldingRegister(40217, &val);
+        FBatteryCurrent = (double)val / 10.0;
+
+        FModbus.GetBufferedHoldingRegister(40220, &val);
+        FSolarVoltage = (double)val / 10.0;
+
+        FModbus.GetBufferedHoldingRegister(40221, &val);
+        FSolarCurrent = (double)val / 10.0;
+
+        FModbus.GetBufferedHoldingRegister(40224, &val);
+        FSolarPower = (double)val;
+        FSolarEnergy += FSolarPower / 60.0 / 4.0;
+
+        FModbus.GetBufferedHoldingRegister(40227, &val);
+        FDcDcTemp = val;
+
+        FModbus.GetBufferedHoldingRegister(40228, &val);
+        FInverterTemp = val;
+
+        if (FFirst)
+            FBatteryVc = FBatteryVoltage - 0.038 * FBatteryCurrent;
+        else
+            FBatteryVc = 0.95 * FBatteryVc + 0.05 * (FBatteryVoltage - 0.038 * FBatteryCurrent);
+
+        FBatteryPower = FBatteryVc * FBatteryCurrent;
+
+        if (FBatteryCurrent > 0.0)
+            FBatteryChargeEnergy += FBatteryPower / 60.0 / 4.0;
+        else
+            FBatteryDischargeEnergy += FBatteryPower / 60.0 / 4.0;
+
+        FBatterySoc = (FBatteryVc - 45.6) / 7.4;
+
+        FHasData = true;
+        FFirst = false;
+
+        if (FLogFile)
+        {
+            TDateTime time;
+
+            str.printf("%04d-%02d-%02d %02d.%02d Mode %d Grid: %6.1LfV %5dW Output: %6.1LfV %5.1LfA %5dW Solar: %6.1LfV %5.1LfA %5dW Battery: %6.1LfV %5.1LfA %5dW Temp %d %d Calc: %6.1LfV %5.1Lf%%\r\n",
+                                        time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(),
+                                        FMode,
+                                        FGridVoltage, (int)FGridPower,
+                                        FOutputVoltage, FOutputCurrent, (int)FOutputPower,
+                                        FSolarVoltage, FSolarCurrent, (int)FSolarPower,
+                                        FBatteryVoltage, FBatteryCurrent, (int)FBatteryPower,
+                                        FDcDcTemp, FInverterTemp,
+                                        FBatteryVc, 100.0 * FBatterySoc);
+            FLogFile->Write(str.GetData(), str.GetSize());
+        }
+    }
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TPowHvmP::HandleParam
+#
+#   Purpose....: Handle parameters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPowHvmP::HandleParam()
+{
+    int val;
+    bool ChangeOutputPrio = false;
+    bool ChangeChargePrio = false;
+    bool ChangeChargeCurrent = false;
+
+    if (FModbus.ReadHoldingRegister(40302, &val))
+    {
+        if (FOutputPrio >= 0)
+        {
+            if (FOutputPrio != val)
+                ChangeOutputPrio = true;
+        }
+        else
+            FOutputPrio = val;
+    }
+
+    if (FModbus.ReqHoldingRegisters(40332, 3))
+    {
+        FModbus.GetBufferedHoldingRegister(40332, &val);
+        if (FChargePrio >= 0)
+        {
+            if (FChargePrio != val)
+                ChangeChargePrio = true;
+        }
+        else
+            FChargePrio = val;
+
+        FModbus.GetBufferedHoldingRegister(40333, &val);
+        if (FMaxChargeCurrent >= 0)
+        {
+            val = val / 10;
+            if (val != FMaxChargeCurrent)
+                ChangeChargeCurrent = true;
+        }
+        else
+            FMaxChargeCurrent = val / 10;
+
+        FModbus.GetBufferedHoldingRegister(40334, &val);
+        if (!FChangeMaxGridCurrent)
+        {
+            if (10 * FMaxGridChargeCurrent != val)
+                FLog.printf(0, "HandleParam", "Change of max grid current from %d A to %d A failed", val / 10, FMaxGridChargeCurrent);
+            FMaxGridChargeCurrent = val / 10;
+        }
+    }
+
+    if (ChangeOutputPrio)
+    {
+        switch (FOutputPrio)
+        {
+            case 0:
+                FLog.Log(0, "HandleParam", "Change output prio to: Utility-PV-batt");
+                break;
+
+            case 1:
+                FLog.Log(0, "HandleParam", "Change output prio to: PV-Utility-Battery");
+                break;
+
+            case 2:
+                FLog.Log(0, "HandleParam", "Change output prio to: PV-Battery-Utility");
+                break;
+        }
+        WriteReg(40302, FOutputPrio);
+    }
+
+    if (ChangeChargePrio)
+    {
+        switch (FChargePrio)
+        {
+            case 0:
+                FLog.Log(0, "HandleParam", "Change charge prio to: Utility priority");
+                break;
+
+            case 1:
+                FLog.Log(0, "HandleParam", "Change charge prio to: PV priority");
+                break;
+
+            case 2:
+                FLog.Log(0, "HandleParam", "Change charge prio to: PV at the same level as Utility");
+                break;
+
+            case 3:
+                FLog.Log(0, "HandleParam", "Change charge prio to: Only PV charging");
+                break;
+        }
+        WriteReg(40332, FChargePrio);
+    }
+
+    if (ChangeChargeCurrent)
+    {
+        FLog.printf(0, "HandleParam", "Change charge current to %d A", FMaxChargeCurrent);
+        WriteReg(40333, 10 * FMaxChargeCurrent);
+    }
+
+    if (FChangeMaxGridCurrent)
+    {
+        FChangeMaxGridCurrent = false;
+        FLog.printf(0, "HandleParam", "Change grid charge current to %d A", FMaxGridChargeCurrent);
+        WriteReg(40334, 10 * FMaxGridChargeCurrent);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TPowHvmP::Execute
 #
 #   Purpose....: Execute method
@@ -687,215 +945,22 @@ void TPowHvmP::WriteReg(int reg, int val)
 ##########################################################################*/
 void TPowHvmP::Execute()
 {
-    bool first = true;
-    bool ok;
-    int val;
-    int rval;
-    int i;
-    TString str;
-    bool ChangeOutputPrio;
-    bool ChangeChargePrio;
-    bool ChangeChargeCurrent;
-    bool ChangeGridChargeCurrent;
+    TDateTime ref;
+    int year = ref.GetYear();
+    int month = ref.GetMonth();
+    int day = ref.GetDay();
+    int hour = ref.GetHour();
+    int min = ref.GetMin();
+    int sec = 15 * (ref.GetSec() / 15) + 5;
+    TDateTime curr(year, month, day, hour, min, sec);
 
     RdosWaitMilli(250);
 
     for (;;)
     {
-        ok = FModbus.ReqHoldingRegisters(40202, 27);
-
-        if (ok)
-        {
-            FModbus.GetBufferedHoldingRegister(40202, &val);
-            FMode = val;
-
-            FModbus.GetBufferedHoldingRegister(40203, &val);
-            FGridVoltage = (double)val / 10.0;
-
-            FModbus.GetBufferedHoldingRegister(40204, &val);
-            FGridFrequency = (double)val / 100.0;
-
-            FModbus.GetBufferedHoldingRegister(40205, &val);
-            FGridPower = (double)val;
-            FGridEnergy += FGridPower / 60.0 / 4.0;
-
-            FModbus.GetBufferedHoldingRegister(40211, &val);
-            FOutputVoltage = (double)val / 10.0;
-
-            FModbus.GetBufferedHoldingRegister(40212, &val);
-            FOutputCurrent = (double)val / 10.0;
-
-            FModbus.GetBufferedHoldingRegister(40213, &val);
-            FOutputFrequency = (double)val / 100.0;
-
-            FModbus.GetBufferedHoldingRegister(40214, &val);
-            FOutputPower = (double)val;
-            FOutputEnergy += FOutputPower / 60.0 / 4.0;
-
-            FModbus.GetBufferedHoldingRegister(40216, &val);
-            FBatteryVoltage = (double)val / 10.0;
-
-            FModbus.GetBufferedHoldingRegister(40217, &val);
-            FBatteryCurrent = (double)val / 10.0;
-
-            FModbus.GetBufferedHoldingRegister(40220, &val);
-            FSolarVoltage = (double)val / 10.0;
-
-            FModbus.GetBufferedHoldingRegister(40221, &val);
-            FSolarCurrent = (double)val / 10.0;
-
-            FModbus.GetBufferedHoldingRegister(40224, &val);
-            FSolarPower = (double)val;
-            FSolarEnergy += FSolarPower / 60.0 / 4.0;
-
-            FModbus.GetBufferedHoldingRegister(40227, &val);
-            FDcDcTemp = val;
-
-            FModbus.GetBufferedHoldingRegister(40228, &val);
-            FInverterTemp = val;
-
-            if (first)
-                FBatteryVc = FBatteryVoltage - 0.038 * FBatteryCurrent;
-            else
-                FBatteryVc = 0.95 * FBatteryVc + 0.05 * (FBatteryVoltage - 0.038 * FBatteryCurrent);
-
-            FBatteryPower = FBatteryVc * FBatteryCurrent;
-
-            if (FBatteryCurrent > 0.0)
-                FBatteryChargeEnergy += FBatteryPower / 60.0 / 4.0;
-            else
-                FBatteryDischargeEnergy += FBatteryPower / 60.0 / 4.0;
-
-            FBatterySoc = (FBatteryVc - 45.6) / 7.4;
-
-            FHasData = true;
-            first = false;
-
-            if (FLogFile)
-            {
-                TDateTime time;
-
-                str.printf("%04d-%02d-%02d %02d.%02d Mode %d Grid: %6.1LfV %5dW Output: %6.1LfV %5.1LfA %5dW Solar: %6.1LfV %5.1LfA %5dW Battery: %6.1LfV %5.1LfA %5dW Temp %d %d Calc: %6.1LfV %5.1Lf%%\r\n",
-                                            time.GetYear(), time.GetMonth(), time.GetDay(), time.GetHour(), time.GetMin(),
-                                            FMode,
-                                            FGridVoltage, (int)FGridPower,
-                                            FOutputVoltage, FOutputCurrent, (int)FOutputPower,
-                                            FSolarVoltage, FSolarCurrent, (int)FSolarPower,
-                                            FBatteryVoltage, FBatteryCurrent, (int)FBatteryPower,
-                                            FDcDcTemp, FInverterTemp,
-                                            FBatteryVc, 100.0 * FBatterySoc);
-                FLogFile->Write(str.GetData(), str.GetSize());
-            }
-        }
-
-        ChangeOutputPrio = false;
-        ChangeChargePrio = false;
-        ChangeChargeCurrent = false;
-        ChangeGridChargeCurrent = false;
-
-        if (FModbus.ReadHoldingRegister(40302, &val))
-        {
-            if (FOutputPrio >= 0)
-            {
-                if (FOutputPrio != val)
-                    ChangeOutputPrio = true;
-            }
-            else
-                FOutputPrio = val;
-        }
-
-        if (FModbus.ReqHoldingRegisters(40332, 3))
-        {
-            FModbus.GetBufferedHoldingRegister(40332, &val);
-            if (FChargePrio >= 0)
-            {
-                if (FChargePrio != val)
-                    ChangeChargePrio = true;
-            }
-            else
-                FChargePrio = val;
-
-            FModbus.GetBufferedHoldingRegister(40333, &val);
-            if (FMaxChargeCurrent >= 0)
-            {
-                val = val / 10;
-                if (val != FMaxChargeCurrent)
-                    ChangeChargeCurrent = true;
-            }
-            else
-                FMaxChargeCurrent = val / 10;
-
-            FModbus.GetBufferedHoldingRegister(40334, &val);
-            if (FMaxGridChargeCurrent >= 0)
-            {
-                val = val / 10;
-                if (val != FMaxGridChargeCurrent)
-                    ChangeGridChargeCurrent = true;
-            }
-            else
-                FMaxGridChargeCurrent = val / 10;
-        }
-
-        if (ChangeOutputPrio)
-        {
-            switch (FOutputPrio)
-            {
-                case 0:
-                    FLog.Log(0, "Execute", "Change output prio to: Utility-PV-batt");
-                    break;
-
-                case 1:
-                    FLog.Log(0, "Execute", "Change output prio to: PV-Utility-Battery");
-                    break;
-
-                case 2:
-                    FLog.Log(0, "Execute", "Change output prio to: PV-Battery-Utility");
-                    break;
-            }
-            WriteReg(40302, FOutputPrio);
-        }
-
-        if (ChangeChargePrio)
-        {
-            switch (FChargePrio)
-            {
-                case 0:
-                    FLog.Log(0, "Execute", "Change charge prio to: Utility priority");
-                    break;
-
-                case 1:
-                    FLog.Log(0, "Execute", "Change charge prio to: PV priority");
-                    break;
-
-                case 2:
-                    FLog.Log(0, "Execute", "Change charge prio to: PV at the same level as Utility");
-                    break;
-
-                case 3:
-                    FLog.Log(0, "Execute", "Change charge prio to: Only PV charging");
-                    break;
-            }
-            WriteReg(40332, FChargePrio);
-        }
-
-        if (ChangeChargeCurrent)
-        {
-            FLog.printf(0, "Execute", "Change charge current to %d A", FMaxChargeCurrent);
-            WriteReg(40333, 10 * FMaxChargeCurrent);
-        }
-
-        if (ChangeGridChargeCurrent)
-        {
-            FLog.printf(0, "Execute", "Change grid charge current to %d A", FMaxGridChargeCurrent);
-            WriteReg(40334, 10 * FMaxGridChargeCurrent);
-        }
-
-        FOnline = ok;
-
-        if (ok)
-            for (i = 0; i < 15; i++)
-                RdosWaitMilli(1000);
-        else
-            RdosWaitMilli(1000);
+        curr.WaitUntilExpired();
+        FOnline = GetData();
+        HandleParam();
+        curr.AddSec(15);
     }
 }

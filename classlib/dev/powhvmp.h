@@ -85,10 +85,15 @@ public:
 
 protected:
     void WriteReg(int reg, int val);
+    bool GetData();
+    void HandleParam();
     virtual void Execute();
 
     bool FOnline;
     bool FHasData;
+    bool FUp;
+    bool FFirst;
+    bool FChangeMaxGridCurrent;
     TFile *FLogFile;
 
     int FMode;

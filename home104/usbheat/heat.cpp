@@ -1323,12 +1323,12 @@ void SmaThread(void *Param)
                 if (soc < 0.9)
                 {
                     if (maxca < 5)
-                        PowInv->SetMaxChargeCurrent(20);
+                        PowInv->SetMaxChargeCurrent(35);
                 }
                 else
                 {
                     if (maxca > 25)
-                        PowInv->SetMaxChargeCurrent(20);
+                        PowInv->SetMaxChargeCurrent(35);
                 }
             }
 
