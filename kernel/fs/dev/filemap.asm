@@ -4173,6 +4173,78 @@ MapKernelEntry      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AddKernelMap
+;
+;       DESCRIPTION:    Add kernel map
+;
+;       PARAMETERS:     DS             File sel
+;                       ES             Kernel map sel
+;                       BX             Entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddKernelMap      Proc near
+    pushad
+;
+    movzx esi,bx
+    mov ebx,OFFSET fm_sorted_arr
+    mov ebp,es:fm_count
+    sub ebp,1
+    jbe akmInsert
+ 
+akmFind:
+    movzx ecx,byte ptr es:[ebx]
+    shl ecx,4
+    mov eax,es:[esi].fmb_pos
+    mov edx,es:[esi].fmb_pos+4
+    sub eax,es:[ecx].fm_entry_arr.fmb_pos
+    sbb edx,es:[ecx].fm_entry_arr.fmb_pos+4
+    jb akmInsert
+    jnz akmNext
+;
+    cmp eax,ds:[ecx].fm_entry_arr.fmb_size
+    jb akmInsert
+
+akmNext:
+    inc ebx
+    sub ebp,1
+    jnz akmFind
+
+akmInsert:
+    sub ebx,OFFSET fm_sorted_arr
+    mov eax,ebx
+    mov ecx,es:fm_count
+    dec ecx
+    sub ecx,eax
+;
+    mov ebx,esi
+    sub ebx,OFFSET fm_entry_arr
+    shr ebx,4
+    lea esi,[eax+ecx].fm_sorted_arr
+    mov edi,esi
+    dec esi
+    or ecx,ecx
+    jz akmSave
+
+akmMove:
+    mov al,es:[esi]
+    mov es:[edi],al
+    dec esi
+    dec edi
+    loop akmMove
+
+akmSave:
+    mov es:[edi],bl
+    clc
+
+akmDone:
+    popad
+    ret
+AddKernelMap      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SyncKernelMap
 ;
 ;       DESCRIPTION:    Sync kernel map from file sel
@@ -4213,7 +4285,7 @@ skmAdd:
 ;
     mov ecx,ebp
     call MapKernelEntry
-;    call AddReadMap
+    call AddKernelMap
     clc
 
 skmDone:
