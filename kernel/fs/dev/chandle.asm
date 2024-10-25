@@ -6498,6 +6498,14 @@ test_gate    Proc far
     xor eax,eax
     mov ecx,1000h
     ReadKernelHandle
+;
+    mov ecx,1000h
+    ReadKernelHandle
+;
+    mov ecx,1000h
+    ReadKernelHandle
+;
+    mov ecx,123
     CloseKernelHandle
 
 tgDone:

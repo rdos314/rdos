@@ -4027,6 +4027,63 @@ CreateKernelMap      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CheckKernelMap
+;
+;       DESCRIPTION:    Check kernel map
+;
+;       PARAMETERS:     DS             File sel
+;                       ES:EDI         Req entry
+;                       BX             Sorted index
+;                       ESI            Index
+;
+;       RETRURNS:       CY             Entry freed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckKernelMap  Proc near
+    push eax
+;
+;    xor al,al
+;    xchg al,ds:[esi].pf_disabled_arr
+;    or al,al
+;    jnz ckmFree
+;
+;    call CheckDirtyMap
+;
+    test al,20h
+    jz ckmNone
+;
+    add byte ptr es:[esi].kfm_ref_arr,1
+    jnc ckmOk
+;
+    dec byte ptr es:[esi].kfm_ref_arr
+    jmp ckmOk
+
+ckmNone:
+    mov al,es:[esi].kfm_ref_arr
+    or al,al
+    jz ckmFree
+;
+    sub byte ptr es:[esi].kfm_ref_arr,1
+    jnz ckmOk
+
+ckmFree:
+    mov es:[esi].kfm_ref_arr,0
+;    call FreeMap
+    stc
+    jmp ckmDone
+
+ckmOk:
+    clc
+
+ckmDone:
+    pop eax
+    ret
+CheckKernelMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UpdateKernelMap
 ;
 ;       DESCRIPTION:    Update kernel map requests
@@ -4059,7 +4116,7 @@ ukmLoop:
     movzx edi,al
     shl edi,4
     add edi,OFFSET fm_entry_arr
-;    call CheckMap
+    call CheckKernelMap
     jc ukmSkip
 
 ukmNext:
