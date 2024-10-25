@@ -160,6 +160,7 @@ kfm_free_count    DB ?
 kfm_unlink_count  DB ?
 kfm_src_arr       DD 240 DUP(?)
 kfm_ref_arr       DB 240 DUP(?)
+kfm_disabled_arr  DB 240 DUP(?)
 kfm_free_arr      DB 240 DUP(?)
 kfm_unlink_arr    DB 240 DUP(?)
 
@@ -2785,7 +2786,7 @@ DisableFileReq  Proc near
     mov ebx,OFFSET kf_proc_arr
     mov ecx,ds:kf_proc_count
     or ecx,ecx
-    jz dfrCache
+    jz dfrKernel
 
 dfrLoop:
     mov ax,ds:[ebx].pe_map_sel
@@ -2827,6 +2828,34 @@ dfrmLeave:
 dfrNext:
     add ebx,4
     loop dfrLoop
+
+dfrKernel:
+    EnterSection ds:kf_kmap_section
+    mov ax,ds:kf_kmap_sel
+    or ax,ax
+    jz dfrkLeave
+;
+    mov es,eax
+    mov ecx,240
+    xor ebx,ebx
+
+dfrkLoop:
+    mov al,es:[ebx].kfm_ref_arr
+    or al,al
+    jz dfrkNext
+;
+    cmp edx,es:[4*ebx].kfm_src_arr
+    jne dfrkNext
+;
+    mov es:[ebx].kfm_disabled_arr,1
+    jmp dfrkLeave
+
+dfrkNext:
+    inc ebx
+    loop dfrkLoop
+
+dfrkLeave:
+    LeaveSection ds:kf_kmap_section
 
 dfrCache:
     mov ebx,ds:[4*edx].kf_handle_arr
@@ -4200,10 +4229,10 @@ FreeKernelMap Endp
 CheckKernelMap  Proc near
     push eax
 ;
-;    xor al,al
-;    xchg al,ds:[esi].pf_disabled_arr
-;    or al,al
-;    jnz ckmFree
+    xor al,al
+    xchg al,es:[esi].kfm_disabled_arr
+    or al,al
+    jnz ckmFree
 ;
     call CheckKernelDirtyMap
 ;
@@ -4225,7 +4254,6 @@ ckmNone:
     jnz ckmOk
 
 ckmFree:
-    int 3
     mov es:[esi].kfm_ref_arr,0
     call FreeKernelMap
     stc
