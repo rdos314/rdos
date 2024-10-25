@@ -1872,20 +1872,16 @@ FreeMap Endp
 ;
 ;       DESCRIPTION:    Update file
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             File sel
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateFile      Proc near
-    push ds
     push ebx
     push esi
 ;
-    call SyncFileSize
-;
-    mov ds,ds:pf_file_sel
     EnterSection ds:kf_update_section
 ;
     mov ebx,ds:kf_wr_size
@@ -1926,7 +1922,6 @@ ufLeave:
 ;
     pop esi
     pop ebx
-    pop ds
     ret
 UpdateFile      Endp
 
@@ -1965,7 +1960,13 @@ AddDirtyMap  Proc near
     mov edx,es:[edi].fmb_pos+4
     adc edx,0
     mov ecx,1000h
+;
+    call SyncFileSize
+;
+    push ds
+    mov ds,ds:pf_file_sel
     call UpdateFile
+    pop ds
 
 admDone:
     pop edx
@@ -4027,6 +4028,112 @@ CreateKernelMap      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AddKernelDirtyMap
+;
+;       DESCRIPTION:    Signal written page
+;
+;       PARAMETERS:     DS             File sel
+;                       ES:EDI         Req entry
+;                       BX             Sorted index
+;                       EDX            Linea address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddKernelDirtyMap  Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ecx,es:[edi].fmb_size
+    test cx,0FFFh
+    jnz akdmDone
+;
+    mov eax,es:[edi].fmb_base
+    test ax,0FFFh
+    jnz akdmDone
+;
+    sub edx,es:[edi].fmb_base
+    mov eax,es:[edi].fmb_pos
+    add eax,edx
+    mov edx,es:[edi].fmb_pos+4
+    adc edx,0
+    mov ecx,1000h
+    call UpdateFile
+
+akdmDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+AddKernelDirtyMap   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CheckKernelDirtyMap
+;
+;       DESCRIPTION:    Check kernel map for written pages
+;
+;       PARAMETERS:     DS             File sel
+;                       ES:EDI         Req entry
+;                       BX             Sorted index
+;
+;       RETURNS:        AX             Page bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckKernelDirtyMap  Proc near
+    push ebx
+    push ecx
+    push edx
+    push ebp
+;
+    xor bp,bp
+    mov ecx,es:[edi].fmb_size
+    mov edx,es:[edi].fmb_base
+    add ecx,edx
+    and dx,0F000h
+    sub ecx,edx
+    dec ecx
+    shr ecx,12
+    inc ecx
+
+ckdmLoop:
+    GetPageEntry
+    test ax,60h
+    jz ckdmNext
+;
+    test al,40h
+    jz ckdmClear
+;
+    call AddDirtyMap
+
+ckdmClear:
+    or bp,ax
+    and al,NOT 60h
+    SetPageEntry
+
+ckdmNext:
+    add edx,1000h
+    loop ckdmLoop
+;
+    mov ax,bp
+    and al,60h
+;
+    pop ebp
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+CheckKernelDirtyMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CheckKernelMap
 ;
 ;       DESCRIPTION:    Check kernel map
@@ -4048,7 +4155,7 @@ CheckKernelMap  Proc near
 ;    or al,al
 ;    jnz ckmFree
 ;
-;    call CheckDirtyMap
+    call CheckKernelDirtyMap
 ;
     test al,20h
     jz ckmNone
