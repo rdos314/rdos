@@ -5013,6 +5013,7 @@ CloseKernelVfsFile   Endp
 
 ReadKernelVfsFile    Proc near
     push ds
+    push es
     push fs
     push ebx
     push esi
@@ -5032,11 +5033,13 @@ ReadKernelVfsFile    Proc near
 ;
     add eax,ecx
     adc edx,0
+    clc
 ;
     pop ebp
     pop esi
     pop ebx
     pop fs
+    pop es
     pop ds
     ret
 ReadKernelVfsFile    Endp
