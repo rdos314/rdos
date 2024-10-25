@@ -5058,8 +5058,17 @@ WriteVfsFile    Endp
 
 CloseVfsFile  Proc near
     push ds
+    push eax
+;
     mov ds,ebx
+    mov ax,ds:kf_kmap_sel
+    or ax,ax
+    jnz cvfDone
+;    
     call SendCloseReq
+
+cvfDone:
+    pop eax
     pop ds
     ret
 CloseVfsFile  Endp
