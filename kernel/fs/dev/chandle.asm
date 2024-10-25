@@ -141,6 +141,7 @@ code    SEGMENT byte public 'CODE'
     extern SetVfsFileSize:near
     extern DupVfsFile:near
     extern OpenKernelVfsFile:near
+    extern CloseKernelVfsFile:near
     extern ReadKernelVfsFile:near
     extern DupKernelVfsFile:near
 
@@ -1097,10 +1098,18 @@ close_kernel_handle Proc far
     xor bx,bx
     xchg bx,ds:[edi].kh_legacy_sel
     or bx,bx
-    jz ckhLeave
+    jz ckhVfs
 ;
     CloseLegacyFile
+    jmp ckhLeave
 
+ckhVfs:
+    mov bx,ds:[esi].kh_vfs_sel
+    or bx,bx
+    jz ckhLeave
+;
+    call CloseKernelVfsFile
+    
 ckhLeave:
     LeaveSection ds:hd_section
 

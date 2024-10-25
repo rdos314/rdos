@@ -4641,6 +4641,49 @@ SyncKernelMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DeleteKernelMap
+;
+;       DESCRIPTION:    Delete all mapped requests for kernel file
+;
+;       PARAMETERS:     DS             File sel
+;                       ES             Kernel map sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteKernelMap  Proc near
+    pushad
+;
+    mov ebx,OFFSET fm_sorted_arr
+    mov ecx,240
+
+dkmLoop:
+    mov al,es:[ebx]
+    cmp al,-1
+    je dkmUnlink
+;
+    movzx esi,al
+    add esi,OFFSET kfm_ref_arr
+    movzx edi,al
+    shl edi,4
+    add edi,OFFSET fm_entry_arr    
+    call CheckKernelDirtyMap
+    call FreeKernelMap
+    jmp dkmLoop
+
+dkmNext:
+    inc ebx
+    loop dkmLoop
+
+dkmUnlink:
+    call UpdateKernelUnlinked
+;
+    popad
+    ret
+DeleteKernelMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           UpdateKernelFile
 ;
 ;       DESCRIPTION:    Update kernel file
@@ -4905,6 +4948,46 @@ okvfDone:
     pop ds
     ret
 OpenKernelVfsFile   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseKernelVfsFile
+;
+;       DESCRIPTION:    Close kernel VFS file
+;
+;       PARAMETERS:     BX            File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CloseKernelVfsFile
+
+CloseKernelVfsFile   Proc near
+    push ds
+    push es
+    push eax
+;
+    mov ds,ebx
+;
+    mov es,ds:kf_kmap_sel
+    call DeleteKernelMap
+;
+    mov ds:kf_kmap_sel,0
+    mov ds:kf_kmap_linear,0
+    FreeMem
+;
+    mov eax,ds:kf_proc_count
+    or eax,eax
+    jnz ckvfDone
+;
+    call SendCloseReq
+
+ckvfDone:
+    pop eax
+    pop es
+    pop ds
+    ret
+CloseKernelVfsFile   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
