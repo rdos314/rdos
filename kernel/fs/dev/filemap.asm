@@ -4027,6 +4027,98 @@ CreateKernelMap      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateKernelMap
+;
+;       DESCRIPTION:    Update kernel map requests
+;
+;       PARAMETERS:     DS             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateKernelMap  Proc near
+    push ds
+    push es
+    pushad
+;
+    EnterSection ds:kf_kmap_section
+;
+    mov es,ds:kf_kmap_sel
+    mov es:fm_update,0
+    mov ebx,OFFSET fm_sorted_arr
+    mov ecx,es:fm_count
+    or ecx,ecx
+    jz ukmLeave
+
+ukmLoop:
+    mov al,es:[ebx]
+    cmp al,-1
+    je ukmLeave
+;
+    int 3
+    movzx esi,al
+    movzx edi,al
+    shl edi,4
+    add edi,OFFSET fm_entry_arr
+;    call CheckMap
+    jc ukmSkip
+
+ukmNext:
+    inc ebx
+
+ukmSkip:
+    loop ukmLoop
+
+ukmLeave:
+;    call UpdateUnlinked
+;
+    LeaveSection ds:kf_kmap_section
+;
+;    call SendUpdate
+;
+    popad
+    pop es
+    pop ds
+    ret
+UpdateKernelMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AllocateKernelMapEntry
+;
+;       DESCRIPTION:    Allocate map entry
+;
+;       PARAMETERS:     DS             File sel
+;                       ES             Kernel map sel
+;                       EDI            Req id            
+;
+;       RETURNS:        BX             Entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateKernelMapEntry      Proc near
+    movzx ebx,es:kfm_free_count
+    or bx,bx
+    stc
+    je akmeDone
+;
+    inc es:fm_count
+    dec bx
+    mov es:kfm_free_count,bl
+    mov bl,es:[bx].kfm_free_arr
+    mov es:[ebx].kfm_ref_arr,1
+    mov es:[4*ebx].kfm_src_arr,edi
+    shl bx,4
+    add bx,OFFSET fm_entry_arr
+    clc
+
+akmeDone:
+    ret
+AllocateKernelMapEntry      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SyncKernelMap
 ;
 ;       DESCRIPTION:    Sync kernel map from file sel
@@ -4060,7 +4152,7 @@ SyncKernelMap  Proc near
     jmp skmDone
 
 skmAdd:
-;    call AllocateMapEntry
+    call AllocateKernelMapEntry
     mov es:[bx].fmb_pos,eax
     mov es:[bx].fmb_pos+4,edx
     mov es:[bx].fmb_size,ecx
@@ -4091,63 +4183,6 @@ SyncKernelMap  Endp
 UpdateKernelFile_      Proc near
     ret
 UpdateKernelFile_      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           UpdateKernelMap
-;
-;       DESCRIPTION:    Update kernel map requests
-;
-;       PARAMETERS:     DS             File sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateKernelMap  Proc near
-    push ds
-    push es
-    pushad
-;
-    EnterSection ds:kf_kmap_section
-;
-    mov es,ds:kf_kmap_sel
-    mov es:fm_update,0
-    mov ebx,OFFSET fm_sorted_arr
-    mov ecx,es:fm_count
-    or ecx,ecx
-    jz ukmLeave
-
-ukmLoop:
-    mov al,es:[ebx]
-    cmp al,-1
-    je ukmLeave
-;
-    movzx esi,al
-    movzx edi,al
-    shl edi,4
-    add edi,OFFSET fm_entry_arr
-;    call CheckMap
-    jc ukmSkip
-
-ukmNext:
-    inc ebx
-
-ukmSkip:
-    loop ukmLoop
-
-ukmLeave:
-;    call UpdateUnlinked
-;
-    LeaveSection ds:pf_section
-;
-;    call SendUpdate
-;
-    popad
-    pop es
-    pop ds
-    ret
-UpdateKernelMap  Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
