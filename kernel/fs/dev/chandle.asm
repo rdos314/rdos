@@ -143,6 +143,7 @@ code    SEGMENT byte public 'CODE'
     extern OpenKernelVfsFile:near
     extern CloseKernelVfsFile:near
     extern ReadKernelVfsFile:near
+    extern WriteKernelVfsFile:near
     extern DupKernelVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1224,9 +1225,17 @@ write_kernel_handle Proc far
 ;
     mov bx,ds:[esi].kh_legacy_sel
     or bx,bx
-    jz wkhFail
+    jz wkhVfs
 ;
     WriteLegacyFile
+    jmp wkhDone
+
+wkhVfs:
+    mov bx,ds:[esi].kh_vfs_sel
+    or bx,bx
+    jz wkhFail
+;
+    call WriteKernelVfsFile
     jmp wkhDone
 
 wkhFail:
@@ -6485,39 +6494,35 @@ select32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_gate_name DB 'Test', 0
-test_file      DB 'e:/test.bin', 0
+test_file      DB 'e:/test.txt', 0
+text_buf       DB 'This is written to file', 0Dh, 0Ah, 0
 
 test_gate    Proc far
     push es
     push ecx
     push edi
-;    
-    push es
-    push edi
 ;
     mov ecx,cs
     mov es,ecx
     mov edi,OFFSET test_file
-    xor ecx,ecx
+    mov cx,O_CREAT OR O_RDWR
     OpenKernelHandle
-;
-    pop edi
-    pop es
     jc tgDone
 ;
+    mov edi,OFFSET text_buf
     xor edx,edx
     xor eax,eax
-    mov ecx,1000h
-    ReadKernelHandle
+    mov ecx,25
+    WriteKernelHandle
 ;
-    mov ecx,1000h
-    ReadKernelHandle
+    mov ecx,25
+    WriteKernelHandle
 ;
-    mov ecx,1000h
-    ReadKernelHandle
+    mov ecx,25
+    WriteKernelHandle
 ;
-    mov ecx,1000h
-    ReadKernelHandle
+    mov ecx,25
+    WriteKernelHandle
 ;
     mov ecx,123
     CloseKernelHandle

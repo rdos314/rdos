@@ -192,6 +192,7 @@ code    SEGMENT byte public 'CODE'
     extern VfsRead:near
     extern VfsWrite:near
     extern KernelRead:near
+    extern KernelWrite:near
     extern UpdateWrBitmap:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5080,6 +5081,58 @@ ReadKernelVfsFile    Proc near
     pop ds
     ret
 ReadKernelVfsFile    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WriteKernelVfsFile
+;
+;       DESCRIPTION:    Write kernel VFS file
+;
+;       PARAMETERS:     BX              File sel
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Count
+;                       EDX:EAX         New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WriteKernelVfsFile
+
+WriteKernelVfsFile    Proc near
+    push ds
+    push es
+    push fs
+    push ebx
+    push esi
+    push ebp
+;
+    push eax
+    push edx
+;
+    mov ds,ebx
+    mov fs,ds:kf_kmap_sel
+    xor esi,esi
+    xor ebp,ebp
+    call KernelWrite
+;
+    pop edx
+    pop eax
+;
+    add eax,ecx
+    adc edx,0
+    clc
+;
+    pop ebp
+    pop esi
+    pop ebx
+    pop fs
+    pop es
+    pop ds
+    ret
+WriteKernelVfsFile    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
