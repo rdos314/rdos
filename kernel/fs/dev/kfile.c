@@ -73,8 +73,14 @@ void memcpy(void *dst, void *src, int count);
 extern void MapKernelFile(int handle, long long pos, int size);
 #pragma aux MapKernelFile parm routine [__esi] [__edx __eax] [__ecx]
 
+extern void SetKernelFileSize(int handle, long long size);
+#pragma aux SetKernelFileSize parm routine [__esi] [__edx __eax]
+
 extern void UpdateKernelFile(int handle);
 #pragma aux UpdateKernelFile parm routine [__esi]
+
+extern void GrowKernelFile(int handle, long long csize, int incr);
+#pragma aux GrowKernelFile parm routine [__esi] [__edx __eax] [__ecx]
 
 /*##########################################################################
 #
@@ -167,6 +173,56 @@ static int VfsReadOne(struct RdosFileMap *Map, int index, char *buf, long long p
 
 /*##########################################################################
 #
+#   Name       : VfsWriteOne
+#
+#   Purpose....: Do one write
+#
+#   In params..:
+#   Out params.: *
+#   Returns....:
+#
+##########################################################################*/
+static int VfsWriteOne(int Handle, struct RdosFileMap *Map, int index, char *buf, long long pos, int size)
+{
+    int diff;
+    int count = 0;
+    char *dst;
+    struct RdosFileMapEntry *entry;
+    long long FileSize;
+
+    index = Map->SortedArr[index];
+
+    if (index >= 0)
+    {
+        entry = &Map->MapArr[index];
+        diff = pos - entry->Pos;
+
+        if (entry->Linear && diff >= 0)
+        {
+            count = entry->Size - diff;
+
+            if (count > 0)
+            {
+                dst = LinearToPtr(entry->Linear);
+                dst += diff;
+                if (count > size)
+                    count = size;
+
+                memcpy(dst, buf, count);
+
+                FileSize = pos + count;
+                SetKernelFileSize(Handle, FileSize);
+            }
+            else
+                count = 0;
+        }
+    }
+
+    return count;
+}
+
+/*##########################################################################
+#
 #   Name       : KernelRead
 #
 #   Purpose....: Kernel read
@@ -214,6 +270,81 @@ int KernelRead(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, in
             for (i = 0; i < 10; i++)
             {
                 MapKernelFile(Handle, Pos, Size);
+
+                LastIndex = VfsFind(Handle, Map, Pos);
+                if (LastIndex >= 0)
+                    break;
+            }
+
+            if (LastIndex < 0)
+                break;
+        }
+    }
+
+    return ret;
+}
+
+/*##########################################################################
+#
+#   Name       : VfsWrite
+#
+#   Purpose....: VFS write
+#
+#   In params..: buf, size
+#   Out params.: *
+#   Returns....: Bytes written
+#
+##########################################################################*/
+#pragma aux KernelWrite "*" parm routine [ebx] [fs esi] [edx eax] [es edi] [ecx] value [ecx]
+int KernelWrite(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, int Size)
+{
+    int count;
+    int i;
+    int ret = 0;
+    char *ptr = (char *)Buf;
+    int LastIndex = 0;
+    struct RdosFileInfo *info = Map->Info;
+    long long Grow;
+
+    if (Map->Update)
+        UpdateKernelFile(Handle);
+
+    Grow = Pos + Size - info->DiscSize;
+
+    if (Grow > 0)
+        GrowKernelFile(Handle, info->DiscSize, Grow);
+
+    LastIndex = VfsFind(Handle, Map, Pos);
+
+    while (Size)
+    {
+        if (LastIndex >= 0)
+        {
+            count = VfsWriteOne(Handle, Map, LastIndex, ptr, Pos, Size);
+
+            if (count)
+            {
+                UpdateKernelFile(Handle);
+
+                ptr += count;
+                Size -= count;
+                ret += count;
+                Pos += count;
+            }
+        }
+
+        if (Size)
+        {
+            LastIndex = VfsFind(Handle, Map, Pos);
+
+            for (i = 0; i < 10; i++)
+            {
+                Grow = Pos + Size - info->DiscSize;
+
+                if (Grow > 0)
+                    GrowKernelFile(Handle, info->DiscSize, Grow);
+                else
+                    MapKernelFile(Handle, Pos, Size);
 
                 LastIndex = VfsFind(Handle, Map, Pos);
                 if (LastIndex >= 0)

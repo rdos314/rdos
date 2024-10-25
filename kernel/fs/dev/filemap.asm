@@ -4822,6 +4822,43 @@ mkfDone:
 MapKernelFile_   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetKernelFileSize
+;
+;       DESCRIPTION:    Set kernel file size
+;
+;       PARAMETERS:     SI             File sel
+;                       EDX:EAX        Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public SetKernelFileSize_
+
+SetKernelFileSize_      Proc near
+    ret
+SetKernelFileSize_      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GrowKernelFile
+;
+;       DESCRIPTION:    Grow kernel file
+;
+;       PARAMETERS:     SI             File sel
+;                       EDX:EAX        Current size
+;                       ECX            Grow amount
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public GrowKernelFile_
+
+GrowKernelFile_      Proc near
+    ret
+GrowKernelFile_      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           OpenKernelVfsFile
