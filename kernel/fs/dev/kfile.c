@@ -51,10 +51,11 @@ struct RdosFileMapEntry
 struct RdosFileMap
 {
     unsigned char SortedArr[241];
-    unsigned short int Resv;
+    unsigned short int Resv1;
     char Update;
     int Count;
     struct RdosFileInfo *Info;
+    unsigned short int Resv2;
     struct RdosFileMapEntry MapArr[240];
 };
 
