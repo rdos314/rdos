@@ -4715,6 +4715,9 @@ UpdateKernelFile_      Endp
 ;       DESCRIPTION:    Wait for kernel req
 ;
 ;       PARAMETERS:     DS              File sel
+;                       EDX:EAX        Req position
+;
+;       RETURNS:        EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4791,6 +4794,101 @@ WaitForKernelReq   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           WaitForKernelGrow
+;
+;       DESCRIPTION:    Wait for kernel grow
+;
+;       PARAMETERS:     DS             File sel
+;                       EDX:EAX        Req position
+;                       ECX            Increase
+;
+;       RETURNS:        EBX            Req id
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForKernelGrow      Proc near
+    push ecx
+    push esi
+    push edi
+;
+    push eax
+    push edx
+;
+    add eax,ecx
+    adc edx,0
+;
+    mov ebx,REQ_GROW
+    call AddReq
+;
+    pop edx
+    pop eax
+;
+    EnterSection ds:kf_section
+    call FindReq
+    jnc wfkgCheck
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+;
+    call UpdateKernelMap
+
+wfkgWait:
+    WaitForSignal
+;
+    EnterSection ds:kf_section
+    call FindReq
+    jnc wfkgCheck
+;
+    LeaveSection ds:kf_section
+;
+    push eax
+    mov ax,20
+    WaitMilliSec
+    pop eax
+    jmp wfkgDone
+
+wfkgCheck:
+    mov esi,ds:[4*ebx].kf_handle_arr
+    mov esi,ds:[esi].kre_phys_arr
+    or esi,esi
+    jnz wfkgLock
+;
+    call AddWaitReq
+    LeaveSection ds:kf_section
+    jmp wfkgWait
+
+wfkgLock:
+    mov esi,ds:[4*ebx].kf_handle_arr
+;
+    mov di,ds:[esi].kre_usage
+    inc di
+    mov ds:[esi].kre_usage,di
+    sub di,1
+    LeaveSection ds:kf_section
+    clc
+    jnz wfkgDone
+;
+    push ebx
+    mov cx,bx
+    mov bx,REQ_MAP
+    call AddReq
+    pop ebx
+    clc
+    jmp wfkgDone
+
+wfkgLeave:
+    LeaveSection ds:kf_section
+
+wfkgDone:
+    pop edi
+    pop esi
+    pop ecx
+    ret
+WaitForKernelGrow    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           MapKernelFile
 ;
 ;       DESCRIPTION:    Map kernel file
@@ -4825,24 +4923,6 @@ MapKernelFile_   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SetKernelFileSize
-;
-;       DESCRIPTION:    Set kernel file size
-;
-;       PARAMETERS:     SI             File sel
-;                       EDX:EAX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public SetKernelFileSize_
-
-SetKernelFileSize_      Proc near
-    ret
-SetKernelFileSize_      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           GrowKernelFile
 ;
 ;       DESCRIPTION:    Grow kernel file
@@ -4856,6 +4936,21 @@ SetKernelFileSize_      Endp
     public GrowKernelFile_
 
 GrowKernelFile_      Proc near
+    push ds
+    push es
+    pushad
+;
+    mov ds,esi
+    call WaitForKernelGrow
+    jc gkfDone
+;
+    mov es,ds:kf_kmap_sel
+    call SyncKernelMap
+
+gkfDone:
+    popad
+    pop es
+    pop ds
     ret
 GrowKernelFile_      Endp
 

@@ -73,9 +73,6 @@ void memcpy(void *dst, void *src, int count);
 extern void MapKernelFile(int handle, long long pos, int size);
 #pragma aux MapKernelFile parm routine [__esi] [__edx __eax] [__ecx]
 
-extern void SetKernelFileSize(int handle, long long size);
-#pragma aux SetKernelFileSize parm routine [__esi] [__edx __eax]
-
 extern void UpdateKernelFile(int handle);
 #pragma aux UpdateKernelFile parm routine [__esi]
 
@@ -182,11 +179,12 @@ static int VfsReadOne(struct RdosFileMap *Map, int index, char *buf, long long p
 #   Returns....:
 #
 ##########################################################################*/
-static int VfsWriteOne(int Handle, struct RdosFileMap *Map, int index, char *buf, long long pos, int size)
+static int VfsWriteOne(struct RdosFileMap *Map, int index, char *buf, long long pos, int size)
 {
     int diff;
     int count = 0;
     char *dst;
+    struct RdosFileInfo *info = Map->Info;
     struct RdosFileMapEntry *entry;
     long long FileSize;
 
@@ -211,7 +209,9 @@ static int VfsWriteOne(int Handle, struct RdosFileMap *Map, int index, char *buf
                 memcpy(dst, buf, count);
 
                 FileSize = pos + count;
-                SetKernelFileSize(Handle, FileSize);
+
+                if (info->CurrSize < FileSize)
+                    info->CurrSize = FileSize;
             }
             else
                 count = 0;
@@ -320,7 +320,7 @@ int KernelWrite(int Handle, struct RdosFileMap *Map, long long Pos, void *Buf, i
     {
         if (LastIndex >= 0)
         {
-            count = VfsWriteOne(Handle, Map, LastIndex, ptr, Pos, Size);
+            count = VfsWriteOne(Map, LastIndex, ptr, Pos, Size);
 
             if (count)
             {
