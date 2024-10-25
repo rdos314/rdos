@@ -1485,6 +1485,107 @@ FreeReq      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateFile
+;
+;       DESCRIPTION:    Update file
+;
+;       PARAMETERS:     DS             File sel
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateFile      Proc near
+    push ebx
+    push esi
+;
+    EnterSection ds:kf_update_section
+;
+    mov ebx,ds:kf_wr_size
+    or ebx,ebx
+    jz ufNew
+
+ufAdd:
+    push eax
+    push edx
+;
+    sub eax,ebx
+    sbb edx,0
+    cmp eax,ds:kf_wr_base
+    jne ufSend
+;
+    cmp edx,ds:kf_wr_base+4
+    jne ufSend
+;
+    pop edx
+    pop eax
+    add ds:kf_wr_size,ecx    
+    jmp ufLeave
+
+ufSend:
+    mov ebx,REQ_UPDATE
+    call AddReq
+;
+    pop edx
+    pop eax
+
+ufNew:
+    mov ds:kf_wr_base,eax
+    mov ds:kf_wr_base+4,edx
+    mov ds:kf_wr_size,ecx
+
+ufLeave:
+    LeaveSection ds:kf_update_section
+;
+    pop esi
+    pop ebx
+    ret
+UpdateFile      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SendUpdate
+;
+;       DESCRIPTION:    Send update
+;
+;       PARAMETERS:     DS             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendUpdate  Proc near
+    push ecx
+;
+    EnterSection ds:kf_update_section
+;
+    xor ecx,ecx
+    xchg ecx,ds:kf_wr_size
+    or ecx,ecx
+    jz suLeave
+;
+    push eax
+    push ebx
+    push edx
+;
+    mov eax,ds:kf_wr_base
+    mov edx,ds:kf_wr_base+4
+    mov ebx,REQ_UPDATE
+    call AddReq
+;
+    pop edx
+    pop ebx
+    pop eax
+    
+suLeave:
+    LeaveSection ds:kf_update_section
+;
+    pop ecx
+    ret
+SendUpdate  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           LockMap
 ;
 ;       DESCRIPTION:    Lock map
@@ -1864,66 +1965,6 @@ FreeMap Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UpdateFile
-;
-;       DESCRIPTION:    Update file
-;
-;       PARAMETERS:     DS             File sel
-;                       EDX:EAX        Position
-;                       ECX            Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateFile      Proc near
-    push ebx
-    push esi
-;
-    EnterSection ds:kf_update_section
-;
-    mov ebx,ds:kf_wr_size
-    or ebx,ebx
-    jz ufNew
-
-ufAdd:
-    push eax
-    push edx
-;
-    sub eax,ebx
-    sbb edx,0
-    cmp eax,ds:kf_wr_base
-    jne ufSend
-;
-    cmp edx,ds:kf_wr_base+4
-    jne ufSend
-;
-    pop edx
-    pop eax
-    add ds:kf_wr_size,ecx    
-    jmp ufLeave
-
-ufSend:
-    mov ebx,REQ_UPDATE
-    call AddReq
-;
-    pop edx
-    pop eax
-
-ufNew:
-    mov ds:kf_wr_base,eax
-    mov ds:kf_wr_base+4,edx
-    mov ds:kf_wr_size,ecx
-
-ufLeave:
-    LeaveSection ds:kf_update_section
-;
-    pop esi
-    pop ebx
-    ret
-UpdateFile      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddDirtyMap
 ;
 ;       DESCRIPTION:    Signal written page
@@ -2290,52 +2331,6 @@ SyncFileSize      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SendUpdate
-;
-;       DESCRIPTION:    Send update
-;
-;       PARAMETERS:     DS             Proc file sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendUpdate  Proc near
-    push ds
-    push ecx
-;
-    call SyncFileSize
-;
-    mov ds,ds:pf_file_sel
-    EnterSection ds:kf_update_section
-;
-    xor ecx,ecx
-    xchg ecx,ds:kf_wr_size
-    or ecx,ecx
-    jz suLeave
-;
-    push eax
-    push ebx
-    push edx
-;
-    mov eax,ds:kf_wr_base
-    mov edx,ds:kf_wr_base+4
-    mov ebx,REQ_UPDATE
-    call AddReq
-;
-    pop edx
-    pop ebx
-    pop eax
-    
-suLeave:
-    LeaveSection ds:kf_update_section
-;
-    pop ecx
-    pop ds
-    ret
-SendUpdate  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           UpdateMap
 ;
 ;       DESCRIPTION:    Update map requests
@@ -2383,7 +2378,12 @@ umLeave:
 ;
     LeaveSection ds:pf_section
 ;
+    call SyncFileSize
+;
+    push ds
+    mov ds,ds:pf_file_sel
     call SendUpdate
+    pop ds
 ;
     popad
     pop es
@@ -4382,7 +4382,7 @@ ukmLeave:
 ;
     LeaveSection ds:kf_kmap_section
 ;
-;    call SendUpdate
+    call SendUpdate
 ;
     popad
     pop es
