@@ -1104,7 +1104,7 @@ close_kernel_handle Proc far
     jmp ckhLeave
 
 ckhVfs:
-    mov bx,ds:[esi].kh_vfs_sel
+    xchg bx,ds:[edi].kh_vfs_sel
     or bx,bx
     jz ckhLeave
 ;
