@@ -4095,6 +4095,63 @@ UpdateKernelFile_      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           UpdateKernelMap
+;
+;       DESCRIPTION:    Update kernel map requests
+;
+;       PARAMETERS:     DS             File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateKernelMap  Proc near
+    push ds
+    push es
+    pushad
+;
+    EnterSection ds:kf_kmap_section
+;
+    mov es,ds:kf_kmap_sel
+    mov es:fm_update,0
+    mov ebx,OFFSET fm_sorted_arr
+    mov ecx,es:fm_count
+    or ecx,ecx
+    jz ukmLeave
+
+ukmLoop:
+    mov al,es:[ebx]
+    cmp al,-1
+    je ukmLeave
+;
+    movzx esi,al
+    movzx edi,al
+    shl edi,4
+    add edi,OFFSET fm_entry_arr
+;    call CheckMap
+    jc ukmSkip
+
+ukmNext:
+    inc ebx
+
+ukmSkip:
+    loop ukmLoop
+
+ukmLeave:
+;    call UpdateUnlinked
+;
+    LeaveSection ds:pf_section
+;
+;    call SendUpdate
+;
+    popad
+    pop es
+    pop ds
+    ret
+UpdateKernelMap  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WaitForKernelReq
 ;
 ;       DESCRIPTION:    Wait for kernel req
@@ -4117,7 +4174,7 @@ WaitForKernelReq   Proc near
 ;
     mov ebx,REQ_READ
     call AddReq
-;    call UpdateMap
+    call UpdateKernelMap
 
 wfkrWait:
     WaitForSignal
