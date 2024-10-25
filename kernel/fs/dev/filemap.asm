@@ -4119,6 +4119,60 @@ AllocateKernelMapEntry      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           MapKernelEntry
+;
+;       DESCRIPTION:    Map kernel entry
+;
+;       PARAMETERS:     DS             File sel
+;                       ES             Kernel map sel
+;                       DS:ESI         Physical address buffer
+;                       BX             Entry offset
+;                       ECX            Pages
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapKernelEntry      Proc near
+    push eax
+    push ecx
+    push edx
+;
+    mov eax,ecx
+    shl eax,12
+    AllocateBigLinear
+;
+    push ebx
+    push edx
+    push esi
+
+mkeLoop:
+    mov eax,ds:[esi]
+    mov ebx,ds:[esi+4]
+    and ax,0F000h
+    or ax,803h
+    SetPageEntry
+;
+    add edx,1000h
+    add esi,8
+    loop mkeLoop
+;
+    pop esi
+    pop edx
+    pop ebx
+;
+    mov eax,ds:[esi]
+    and ax,0FFFh
+    or dx,ax
+    mov es:[ebx].fmb_base,edx
+;
+    pop edx
+    pop ecx
+    pop eax
+    ret
+MapKernelEntry      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           SyncKernelMap
 ;
 ;       DESCRIPTION:    Sync kernel map from file sel
@@ -4158,7 +4212,7 @@ skmAdd:
     mov es:[bx].fmb_size,ecx
 ;
     mov ecx,ebp
-;    call MapEntry
+    call MapKernelEntry
 ;    call AddReadMap
     clc
 
