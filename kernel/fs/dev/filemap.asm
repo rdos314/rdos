@@ -1407,21 +1407,18 @@ WaitForGrow    Endp
 ;
 ;       DESCRIPTION:    Free req
 ;
-;       PARAMETERS:     GS             File sel
+;       PARAMETERS:     DS             File sel
 ;                       EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeReq      Proc near
-    push ds
     push eax
     push ebx
     push ecx
     push edx
     push esi
 ;
-    mov esi,gs
-    mov ds,esi
     EnterSection ds:kf_section
 ;
     mov esi,ds:[4*ebx].kf_handle_arr
@@ -1482,7 +1479,6 @@ frEnd:
     pop ecx
     pop ebx
     pop eax
-    pop ds
     ret
 FreeReq      Endp
 
@@ -2169,11 +2165,19 @@ urmLoop:
     mov al,ds:[ebx]
     call UnlinkLinear
 ;
+    push ds
+    push eax
     push ebx
+;
     movzx ebx,al
     mov ebx,ds:[4*ebx].pf_src_arr
+    mov eax,gs
+    mov ds,eax
     call FreeReq
+;
     pop ebx
+    pop eax
+    pop ds
 ;
     movzx edx,ds:pf_free_count
     mov ds:[edx].pf_free_arr,al
@@ -4134,6 +4138,52 @@ CheckKernelDirtyMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           FreeKernelMap
+;
+;       DESCRIPTION:    Free kernel map
+;
+;       PARAMETERS:     DS             File sel
+;                       ES             Kernel map sel
+;                       BX             Sorted index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeKernelMap  Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    movzx ebx,bx
+    mov ecx,es:fm_count
+    sub ecx,ebx
+    inc ecx
+    mov al,es:[ebx]
+
+fkmLoop:
+    mov ah,es:[ebx+1]
+    mov es:[ebx],ah
+    inc ebx
+    loop fkmLoop
+;
+    dec es:fm_count
+    movzx bx,es:kfm_unlink_count
+    mov es:[bx].kfm_unlink_arr,al
+    inc bl
+    mov es:kfm_unlink_count,bl
+;
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+FreeKernelMap Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CheckKernelMap
 ;
 ;       DESCRIPTION:    Check kernel map
@@ -4175,8 +4225,9 @@ ckmNone:
     jnz ckmOk
 
 ckmFree:
+    int 3
     mov es:[esi].kfm_ref_arr,0
-;    call FreeMap
+    call FreeKernelMap
     stc
     jmp ckmDone
 
@@ -4187,6 +4238,101 @@ ckmDone:
     pop eax
     ret
 CheckKernelMap  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlinkKernelLinear
+;
+;       DESCRIPTION:    Unlink kernel linear address
+;
+;       PARAMETERS:     ES             Kernel map sel
+;                       AL             Entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlinkKernelLinear  Proc near
+    push ecx
+    push edx
+    push esi
+;
+    movzx esi,al
+    shl esi,4
+    add esi,OFFSET fm_entry_arr
+    xor edx,edx
+    xchg edx,es:[esi].fmb_base
+    or edx,edx
+    jz uklDone
+;
+    mov ecx,edx
+    add ecx,es:[esi].fmb_size
+    dec ecx
+    shr ecx,12
+    inc ecx
+    shl ecx,12
+    shr edx,12
+    shl edx,12
+    sub ecx,edx
+    FreeLinear
+
+uklDone:
+    pop esi
+    pop edx
+    pop ecx
+    ret
+UnlinkKernelLinear   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UpdateKernelUnlinked
+;
+;       DESCRIPTION:    Update kernel unlinked entries
+;
+;       PARAMETERS:     DS             File sel
+;                       ES             Kernel map sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateKernelUnlinked  Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    movzx ecx,es:kfm_unlink_count
+    or ecx,ecx
+    jz ukuDone
+;
+    mov ebx,OFFSET kfm_unlink_arr
+
+ukuLoop:
+    mov al,es:[ebx]
+    call UnlinkKernelLinear
+;
+    push ebx
+    movzx ebx,al
+    mov ebx,es:[4*ebx].kfm_src_arr
+    call FreeReq
+    pop ebx
+;
+    movzx edx,es:kfm_free_count
+    mov es:[edx].kfm_free_arr,al
+    inc dl
+    mov es:kfm_free_count,dl
+
+    inc ebx
+    loop ukuLoop
+;
+    mov es:kfm_unlink_count,0
+
+ukuDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    ret
+UpdateKernelUnlinked Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4218,7 +4364,6 @@ ukmLoop:
     cmp al,-1
     je ukmLeave
 ;
-    int 3
     movzx esi,al
     movzx edi,al
     shl edi,4
@@ -4233,7 +4378,7 @@ ukmSkip:
     loop ukmLoop
 
 ukmLeave:
-;    call UpdateUnlinked
+    call UpdateKernelUnlinked
 ;
     LeaveSection ds:kf_kmap_section
 ;

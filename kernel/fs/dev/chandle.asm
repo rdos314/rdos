@@ -6505,6 +6505,9 @@ test_gate    Proc far
     mov ecx,1000h
     ReadKernelHandle
 ;
+    mov ecx,1000h
+    ReadKernelHandle
+;
     mov ecx,123
     CloseKernelHandle
 
