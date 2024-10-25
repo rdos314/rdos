@@ -4652,6 +4652,14 @@ SyncKernelMap  Endp
     public UpdateKernelFile_
 
 UpdateKernelFile_      Proc near
+    push ds
+    pushad
+;
+    mov ds,esi
+    call UpdateKernelMap
+;
+    popad
+    pop ds
     ret
 UpdateKernelFile_      Endp
 
