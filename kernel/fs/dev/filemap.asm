@@ -4152,7 +4152,7 @@ ckdmLoop:
     test al,40h
     jz ckdmClear
 ;
-    call AddDirtyMap
+    call AddKernelDirtyMap
 
 ckdmClear:
     or bp,ax
