@@ -3591,6 +3591,8 @@ set_handle_time     Proc far
     call dword ptr cs:[4*ebp].set_time_tab
     mov eax,0
     jnc shtDone
+    mov eax,-1
+    jmp shtDone
 
 shtFail:
     pop edx

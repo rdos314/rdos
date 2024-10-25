@@ -476,7 +476,7 @@ UpdateFileSel   Proc near
     mov ebx,OFFSET kf_proc_arr
     mov ecx,ds:kf_proc_count
     or ecx,ecx
-    jz ufsDone
+    jz ufsKernel
 
 ufsLoop:
     mov ax,ds:[ebx].pe_map_sel
@@ -492,6 +492,14 @@ ufsLoop:
 ufsNext:
     add ebx,4
     loop ufsLoop
+
+ufsKernel:
+    mov bx,ds:kf_kmap_sel    
+    or bx,bx
+    jz ufsDone
+;
+    mov es,ebx
+    mov es:fm_update,1
 
 ufsDone:
     pop edx
