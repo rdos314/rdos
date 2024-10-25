@@ -4804,16 +4804,19 @@ WaitForKernelReq   Endp
 
 MapKernelFile_      Proc near
     push ds
+    push es
     pushad
 ;
     mov ds,esi
     call WaitForKernelReq
     jc mkfDone
 ;
+    mov es,ds:kf_kmap_sel
     call SyncKernelMap
 
 mkfDone:
     popad
+    pop es
     pop ds
     ret
 MapKernelFile_   Endp
