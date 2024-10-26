@@ -110,11 +110,11 @@ socket_wait_header ENDS
 data    SEGMENT byte public 'DATA'
 
 hd_section       section_typ <>
-hd_proc_count     DW ?
+hd_proc_count    DW ?
 
 hd_kernel_arr    DD MAX_KERNEL_HANDLES DUP(?)
 hd_proc_arr      DW MAX_PROC_COUNT DUP(?)
-hd_bitmap        DD SYS_BITMAP_COUNT DUP(?)
+hd_sys_bitmap        DD SYS_BITMAP_COUNT DUP(?)
 hd_sys_arr       DD 4 * SYS_HANDLE_COUNT DUP(?)
 
 data       ENDS
@@ -461,7 +461,7 @@ allocate_c_handle     Proc far
 ;
     mov ecx,SYS_BITMAP_COUNT  
     xor edi,edi
-    mov bx,OFFSET hd_bitmap
+    mov bx,OFFSET hd_sys_bitmap
 
 achLoop:
     mov eax,ds:[bx]
@@ -481,7 +481,7 @@ achLoop:
 
 achOk:
     add edx,edi
-    bts ds:hd_bitmap,edx
+    bts ds:hd_sys_bitmap,edx
 ;    
     mov edi,edx
     shl edi,4
@@ -553,7 +553,7 @@ ref_c_handle     Proc far
 ;
     movzx eax,bx
     dec eax
-    bt ds:hd_bitmap,eax
+    bt ds:hd_sys_bitmap,eax
 ;
     pop edx
     pop eax
@@ -742,7 +742,7 @@ AllocateVfsSysHandle     Proc near
 ;
     mov ecx,SYS_BITMAP_COUNT  
     xor edi,edi
-    mov bx,OFFSET hd_bitmap
+    mov bx,OFFSET hd_sys_bitmap
 
 avhLoop:
     mov eax,ds:[bx]
@@ -761,7 +761,7 @@ avhLoop:
 
 avhOk:
     add edx,edi
-    bts ds:hd_bitmap,edx
+    bts ds:hd_sys_bitmap,edx
 ;    
     mov edi,edx
     shl edi,4
@@ -832,7 +832,7 @@ RefVfsHandle     Proc near
 ;
     movzx eax,bx
     dec eax
-    bt ds:hd_bitmap,eax
+    bt ds:hd_sys_bitmap,eax
     jnc rvhLeaveFail
 ;
     cmp ds:[edi].sh_type,C_HANDLE_VFS
@@ -1922,7 +1922,7 @@ chVfsOk:
     xchg ax,ds:[ebx].sh_sel
     movzx ebp,ds:[ebx].sh_type
 ;    mov bx,ds:[ebx].sh_handle
-    btc ds:hd_bitmap,ecx
+    btc ds:hd_sys_bitmap,ecx
 ;
     cmp ebp,10
     jae chLeave
@@ -6563,7 +6563,7 @@ init_handle     PROC near
     mov ecx,MAX_PROC_COUNT
     rep stosw
 ;
-    mov edi,OFFSET hd_bitmap
+    mov edi,OFFSET hd_sys_bitmap
     xor eax,eax
     mov ecx,SYS_BITMAP_COUNT
     rep stosd
@@ -6574,7 +6574,7 @@ init_handle     PROC near
     rep stosd
 ;
     InitSection es:hd_section
-    mov es:hd_bitmap,3
+    mov es:hd_sys_bitmap,3
     mov es:hd_proc_count,0
 ;
     mov edi,OFFSET hd_sys_arr
