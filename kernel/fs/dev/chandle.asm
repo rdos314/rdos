@@ -114,7 +114,7 @@ hd_proc_count    DW ?
 
 hd_kernel_arr    DD MAX_KERNEL_HANDLES DUP(?)
 hd_proc_arr      DW MAX_PROC_COUNT DUP(?)
-hd_sys_bitmap        DD SYS_BITMAP_COUNT DUP(?)
+hd_sys_bitmap    DD SYS_BITMAP_COUNT DUP(?)
 hd_sys_arr       DD 4 * SYS_HANDLE_COUNT DUP(?)
 
 data       ENDS
