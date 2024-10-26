@@ -715,9 +715,9 @@ allocate_c_proc_handle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateVfsHandle
+;           NAME:           AllocateVfsSysHandle
 ;
-;           DESCRIPTION:    Allocate VFS file handle
+;           DESCRIPTION:    Allocate VFS sys file handle
 ;
 ;           PARAMETERS:     DS          File sel
 ;
@@ -725,9 +725,9 @@ allocate_c_proc_handle  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public AllocateVfsHandle
+    public AllocateVfsSysHandle
 
-AllocateVfsHandle     Proc near
+AllocateVfsSysHandle     Proc near
     push ds
     push eax
     push ecx
@@ -792,7 +792,7 @@ avhLeave:
     pop eax
     pop ds
     ret
-AllocateVfsHandle  Endp   
+AllocateVfsSysHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

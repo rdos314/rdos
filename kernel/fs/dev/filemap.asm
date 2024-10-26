@@ -186,7 +186,7 @@ code    SEGMENT byte public 'CODE'
     extern GetPathDrive:near
     extern GetRelDir:near
     extern FileHandleToPartFs:near
-    extern AllocateVfsHandle:near
+    extern AllocateVfsSysHandle:near
     extern RefVfsHandle:near
     extern AllocateProcHandle:near
     extern VfsRead:near
@@ -3285,7 +3285,7 @@ CreateVfsProc   Proc near
 ;
     mov edx,ebp
     and ax,0F000h
-    or ax,867h
+    or ax,63h
     SetPageEntry
 ;
     pop edx
@@ -3955,7 +3955,7 @@ ovfFound:
     jmp ovfHandleOk
 
 ovfNew:
-    call AllocateVfsHandle
+    call AllocateVfsSysHandle
     mov ds:kf_c_handle,bx
 
 ovfHandleOk:
@@ -5536,7 +5536,7 @@ DupKernelVfsFile    Proc near
     jmp dkvfHandleOk
 
 dkvfNew:
-    call AllocateVfsHandle
+    call AllocateVfsSysHandle
     mov ds:kf_c_handle,bx
 
 dkvfHandleOk:
