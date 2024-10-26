@@ -115,7 +115,7 @@ hd_proc_count     DW ?
 hd_kernel_arr    DD MAX_KERNEL_HANDLES DUP(?)
 hd_proc_arr      DW MAX_PROC_COUNT DUP(?)
 hd_bitmap        DD SYS_BITMAP_COUNT DUP(?)
-hd_data          DD 4 * SYS_HANDLE_COUNT DUP(?)
+hd_sys_arr       DD 4 * SYS_HANDLE_COUNT DUP(?)
 
 data       ENDS
 
@@ -171,7 +171,7 @@ create_c_handle Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    mov edi,OFFSET hd_data
+    mov edi,OFFSET hd_sys_arr
     inc ds:[edi].sh_ref_count
 ;
     add edi,16
@@ -294,7 +294,7 @@ ncLoop:
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
     add ds:[ebx].sh_ref_count,1
@@ -485,7 +485,7 @@ achOk:
 ;    
     mov edi,edx
     shl edi,4
-    add edi,OFFSET hd_data
+    add edi,OFFSET hd_sys_arr
 ;
     pop edx
     pop eax
@@ -498,7 +498,7 @@ achOk:
     mov ds:[edi].sh_exc_wait_sel,0
 ;
     mov ebx,edi
-    sub ebx,OFFSET hd_data
+    sub ebx,OFFSET hd_sys_arr
     shr ebx,4
     inc bx
     clc
@@ -549,7 +549,7 @@ ref_c_handle     Proc far
     movzx edi,bx
     dec edi
     shl edi,4
-    add edi,OFFSET hd_data
+    add edi,OFFSET hd_sys_arr
 ;
     movzx eax,bx
     dec eax
@@ -765,7 +765,7 @@ avhOk:
 ;    
     mov edi,edx
     shl edi,4
-    add edi,OFFSET hd_data
+    add edi,OFFSET hd_sys_arr
 ;
     mov ds:[edi].sh_type,C_HANDLE_VFS
 ;
@@ -778,7 +778,7 @@ avhOk:
     mov ds:[edi].sh_exc_wait_sel,0
 ;
     mov ebx,edi
-    sub ebx,OFFSET hd_data
+    sub ebx,OFFSET hd_sys_arr
     shr ebx,4
     inc bx
     clc
@@ -828,7 +828,7 @@ RefVfsHandle     Proc near
     movzx edi,bx
     dec edi
     shl edi,4
-    add edi,OFFSET hd_data
+    add edi,OFFSET hd_sys_arr
 ;
     movzx eax,bx
     dec eax
@@ -1774,7 +1774,7 @@ delete_handle     Proc far
     movzx ebx,bp
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov ebp,SEG data
     mov ds,ebp
 ;
@@ -1910,7 +1910,7 @@ chVfsOk:
     dec ebx
     mov ecx,ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
     EnterSection ds:hd_section
@@ -2055,7 +2055,7 @@ map_handle     Proc far
     movzx ebx,bp
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov ebp,SEG data
     mov ds,ebp
 ;
@@ -2126,7 +2126,7 @@ update_handle     Proc far
     movzx ebx,bp
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov ebp,SEG data
     mov ds,ebp
 ;
@@ -2199,7 +2199,7 @@ grow_handle     Proc far
     movzx ebx,bp
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov ebp,SEG data
     mov ds,ebp
 ;
@@ -2332,7 +2332,7 @@ phGetOk:
     movzx ebx,bp
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov ebp,SEG data
     mov ds,ebp
 ;
@@ -2497,7 +2497,7 @@ rhGetOk:
     movzx ebx,bp
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov ebp,SEG data
     mov ds,ebp
 ;
@@ -2698,7 +2698,7 @@ whGetOk:
     movzx ebx,bp
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov ebp,SEG data
     mov ds,ebp
 ;
@@ -2815,7 +2815,7 @@ dup_handle     Proc far
     movzx edi,bx
     dec edi
     shl edi,4
-    add edi,OFFSET hd_data
+    add edi,OFFSET hd_sys_arr
     inc es:[edi].sh_ref_count
 ;
     mov bp,ds:[esi].hp_vfs_sel
@@ -2945,7 +2945,7 @@ dh2Dup:
     movzx eax,ds:[esi].hp_handle
     dec eax
     shl eax,4
-    add eax,OFFSET hd_data
+    add eax,OFFSET hd_sys_arr
     inc es:[eax].sh_ref_count
 ;
     mov bp,ds:[esi].hp_vfs_sel
@@ -3078,7 +3078,7 @@ get_handle_size32     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -3126,7 +3126,7 @@ get_handle_size64     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -3226,7 +3226,7 @@ set_handle_size32     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -3288,7 +3288,7 @@ set_handle_size64     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -3386,7 +3386,7 @@ get_handle_create_time     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -3447,7 +3447,7 @@ get_handle_modify_time     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -3508,7 +3508,7 @@ get_handle_access_time     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -3597,7 +3597,7 @@ set_handle_time     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -4041,7 +4041,7 @@ eof_handle     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -4125,7 +4125,7 @@ is_handle_device     Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -4186,7 +4186,7 @@ is_ipv4_socket	Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
 ;
     mov eax,SEG data
     mov ds,eax
@@ -4253,7 +4253,7 @@ connect_ipv4_socket	Proc far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
 ;
     mov eax,SEG data
     mov ds,eax
@@ -4382,7 +4382,7 @@ GetReadBufCount	Proc near
     movzx ebx,bp
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
 ;
     movzx ebp,ds:[ebx].sh_type
     mov bx,ds:[ebx].sh_sel
@@ -4507,7 +4507,7 @@ GetWriteBufSpace	Proc near
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -4615,7 +4615,7 @@ HasException	Proc near
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -4676,7 +4676,7 @@ signal_read_handle	Proc far
     movzx ebx,bx
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
 ;
     EnterSection ds:hd_section
     xor ax,ax
@@ -4808,7 +4808,7 @@ swfrCheck:
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -4940,7 +4940,7 @@ stop_wait_for_read    PROC far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -5140,7 +5140,7 @@ signal_write_handle	Proc far
     movzx ebx,bx
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
 ;
     EnterSection ds:hd_section
     xor ax,ax
@@ -5249,7 +5249,7 @@ start_wait_for_write       PROC far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -5370,7 +5370,7 @@ stop_wait_for_write    PROC far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -5570,7 +5570,7 @@ signal_exc_handle	Proc far
     movzx ebx,bx
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
 ;
     EnterSection ds:hd_section
     xor ax,ax
@@ -5679,7 +5679,7 @@ start_wait_for_exc       PROC far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -5799,7 +5799,7 @@ stop_wait_for_exc    PROC far
     movzx ebx,ax
     dec ebx
     shl ebx,4
-    add ebx,OFFSET hd_data
+    add ebx,OFFSET hd_sys_arr
     mov eax,SEG data
     mov ds,eax
 ;
@@ -6568,7 +6568,7 @@ init_handle     PROC near
     mov ecx,SYS_BITMAP_COUNT
     rep stosd
 ;
-    mov edi,OFFSET hd_data
+    mov edi,OFFSET hd_sys_arr
     xor eax,eax
     mov ecx,4 * SYS_HANDLE_COUNT
     rep stosd
@@ -6577,7 +6577,7 @@ init_handle     PROC near
     mov es:hd_bitmap,3
     mov es:hd_proc_count,0
 ;
-    mov edi,OFFSET hd_data
+    mov edi,OFFSET hd_sys_arr
     mov es:[edi].sh_type,C_HANDLE_STDIN
     mov es:[edi].sh_sel,0
     mov es:[edi].sh_ref_count,1
