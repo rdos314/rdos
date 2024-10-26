@@ -59,17 +59,17 @@ kernel_handle_struc    ENDS
 ; this should always be 16 bytes!
 ;
 
-handle_entry_struc    STRUC
+sys_handle_struc    STRUC
 
-he_type              DW ?
-he_sel               DW ?
-he_ref_count         DW ?
-he_read_wait_sel     DW ?
-he_write_wait_sel    DW ?
-he_exc_wait_sel      DW ?
-he_resv              DW ?,?
+sh_type              DW ?
+sh_sel               DW ?
+sh_ref_count         DW ?
+sh_read_wait_sel     DW ?
+sh_write_wait_sel    DW ?
+sh_exc_wait_sel      DW ?
+sh_resv              DW ?,?
 
-handle_entry_struc    ENDS
+sys_handle_struc    ENDS
 
 ;
 ; this should always be 16 bytes!
@@ -172,10 +172,10 @@ create_c_handle Proc far
     mov ds,eax
 ;
     mov edi,OFFSET hd_data
-    inc ds:[edi].he_ref_count
+    inc ds:[edi].sh_ref_count
 ;
     add edi,16
-    add ds:[edi].he_ref_count,2
+    add ds:[edi].sh_ref_count,2
 ;
     mov eax,SIZE handle_struc
     AllocateSmallGlobalMem
@@ -297,7 +297,7 @@ ncLoop:
     add ebx,OFFSET hd_data
     mov eax,SEG data
     mov ds,eax
-    add ds:[ebx].he_ref_count,1
+    add ds:[ebx].sh_ref_count,1
 ;
     pop ebx
     pop ds
@@ -490,12 +490,12 @@ achOk:
     pop edx
     pop eax
 ;
-    mov ds:[edi].he_type,ax
-    mov ds:[edi].he_sel,dx
-    mov ds:[edi].he_ref_count,1
-    mov ds:[edi].he_read_wait_sel,0
-    mov ds:[edi].he_write_wait_sel,0
-    mov ds:[edi].he_exc_wait_sel,0
+    mov ds:[edi].sh_type,ax
+    mov ds:[edi].sh_sel,dx
+    mov ds:[edi].sh_ref_count,1
+    mov ds:[edi].sh_read_wait_sel,0
+    mov ds:[edi].sh_write_wait_sel,0
+    mov ds:[edi].sh_exc_wait_sel,0
 ;
     mov ebx,edi
     sub ebx,OFFSET hd_data
@@ -559,13 +559,13 @@ ref_c_handle     Proc far
     pop eax
     jnc rchLeaveFail
 ;
-    cmp ax,ds:[edi].he_type
+    cmp ax,ds:[edi].sh_type
     jne rchLeaveFail
 ;
-    cmp dx,ds:[edi].he_sel
+    cmp dx,ds:[edi].sh_sel
     jne rchLeaveFail
 ;
-    add ds:[edi].he_ref_count,1
+    add ds:[edi].sh_ref_count,1
     clc
     jmp rchLeave
 
@@ -767,15 +767,15 @@ avhOk:
     shl edi,4
     add edi,OFFSET hd_data
 ;
-    mov ds:[edi].he_type,C_HANDLE_VFS
+    mov ds:[edi].sh_type,C_HANDLE_VFS
 ;
     pop eax
-    mov ds:[edi].he_sel,ax
+    mov ds:[edi].sh_sel,ax
 ;
-    mov ds:[edi].he_ref_count,1
-    mov ds:[edi].he_read_wait_sel,0
-    mov ds:[edi].he_write_wait_sel,0
-    mov ds:[edi].he_exc_wait_sel,0
+    mov ds:[edi].sh_ref_count,1
+    mov ds:[edi].sh_read_wait_sel,0
+    mov ds:[edi].sh_write_wait_sel,0
+    mov ds:[edi].sh_exc_wait_sel,0
 ;
     mov ebx,edi
     sub ebx,OFFSET hd_data
@@ -835,13 +835,13 @@ RefVfsHandle     Proc near
     bt ds:hd_bitmap,eax
     jnc rvhLeaveFail
 ;
-    cmp ds:[edi].he_type,C_HANDLE_VFS
+    cmp ds:[edi].sh_type,C_HANDLE_VFS
     jne rvhLeaveFail
 ;
-    cmp dx,ds:[edi].he_sel
+    cmp dx,ds:[edi].sh_sel
     jne rvhLeaveFail
 ;
-    add ds:[edi].he_ref_count,1
+    add ds:[edi].sh_ref_count,1
     clc
     jmp rvhLeave
 
@@ -1778,7 +1778,7 @@ delete_handle     Proc far
     mov ebp,SEG data
     mov ds,ebp
 ;
-    movzx ebp,ds:[ebx].he_type
+    movzx ebp,ds:[ebx].sh_type
     cmp ebp,C_HANDLE_VFS
     stc
     jne vuhDone
@@ -1915,13 +1915,13 @@ chVfsOk:
     mov ds,eax
     EnterSection ds:hd_section
 ;
-    sub ds:[ebx].he_ref_count,1
+    sub ds:[ebx].sh_ref_count,1
     jnz chLeave
 ;
     xor ax,ax
-    xchg ax,ds:[ebx].he_sel
-    movzx ebp,ds:[ebx].he_type
-;    mov bx,ds:[ebx].he_handle
+    xchg ax,ds:[ebx].sh_sel
+    movzx ebp,ds:[ebx].sh_type
+;    mov bx,ds:[ebx].sh_handle
     btc ds:hd_bitmap,ecx
 ;
     cmp ebp,10
@@ -2059,7 +2059,7 @@ map_handle     Proc far
     mov ebp,SEG data
     mov ds,ebp
 ;
-    movzx ebp,ds:[ebx].he_type
+    movzx ebp,ds:[ebx].sh_type
     cmp ebp,C_HANDLE_VFS
     stc
     jne vmhDone
@@ -2130,7 +2130,7 @@ update_handle     Proc far
     mov ebp,SEG data
     mov ds,ebp
 ;
-    movzx ebp,ds:[ebx].he_type
+    movzx ebp,ds:[ebx].sh_type
     cmp ebp,C_HANDLE_VFS
     stc
     jne vuhDone
@@ -2203,7 +2203,7 @@ grow_handle     Proc far
     mov ebp,SEG data
     mov ds,ebp
 ;
-    movzx ebp,ds:[ebx].he_type
+    movzx ebp,ds:[ebx].sh_type
     cmp ebp,C_HANDLE_VFS
     stc
     jne vghDone
@@ -2336,8 +2336,8 @@ phGetOk:
     mov ebp,SEG data
     mov ds,ebp
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].poll_tab
 ;
     pop ebx
@@ -2501,8 +2501,8 @@ rhGetOk:
     mov ebp,SEG data
     mov ds,ebp
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].read_tab
 ;
     pop ebx
@@ -2702,8 +2702,8 @@ whGetOk:
     mov ebp,SEG data
     mov ds,ebp
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].write_tab
 
 whWriteOk:
@@ -2816,7 +2816,7 @@ dup_handle     Proc far
     dec edi
     shl edi,4
     add edi,OFFSET hd_data
-    inc es:[edi].he_ref_count
+    inc es:[edi].sh_ref_count
 ;
     mov bp,ds:[esi].hp_vfs_sel
     or bp,bp
@@ -2856,7 +2856,7 @@ dhAlloc:
     jmp dhDone
 
 dhFailDec:
-    dec es:[edi].he_ref_count
+    dec es:[edi].sh_ref_count
 
 dhFail:
     mov ebx,-1
@@ -2946,7 +2946,7 @@ dh2Dup:
     dec eax
     shl eax,4
     add eax,OFFSET hd_data
-    inc es:[eax].he_ref_count
+    inc es:[eax].sh_ref_count
 ;
     mov bp,ds:[esi].hp_vfs_sel
     or bp,bp
@@ -3082,8 +3082,8 @@ get_handle_size32     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].get_size_tab
     jnc ghsDone32  
 
@@ -3130,8 +3130,8 @@ get_handle_size64     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].get_size_tab
     jc ghsFail64
 ;
@@ -3233,8 +3233,8 @@ set_handle_size32     Proc far
     pop eax
     xor edx,edx
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].set_size_tab
     jnc shsDone32
 ;
@@ -3295,8 +3295,8 @@ set_handle_size64     Proc far
     pop edx
     pop eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].set_size_tab
     jnc shsDone64
 ;
@@ -3390,8 +3390,8 @@ get_handle_create_time     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].get_create_time_tab
     jnc ghctDone
 
@@ -3451,8 +3451,8 @@ get_handle_modify_time     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].get_modify_time_tab
     jnc ghmtDone
 
@@ -3512,8 +3512,8 @@ get_handle_access_time     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].get_access_time_tab
     jnc ghatDone
 
@@ -3604,8 +3604,8 @@ set_handle_time     Proc far
     pop edx
     pop eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].set_time_tab
     mov eax,0
     jnc shtDone
@@ -4045,8 +4045,8 @@ eof_handle     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].eof_tab
     jmp ehDone
 
@@ -4129,8 +4129,8 @@ is_handle_device     Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].dev_tab
     jmp ihdDone
 
@@ -4190,7 +4190,7 @@ is_ipv4_socket	Proc far
 ;
     mov eax,SEG data
     mov ds,eax
-    mov ax,ds:[ebx].he_type
+    mov ax,ds:[ebx].sh_type
     cmp ax,C_HANDLE_TCP_SOCKET
     je iisOk
 ;
@@ -4257,7 +4257,7 @@ connect_ipv4_socket	Proc far
 ;
     mov eax,SEG data
     mov ds,eax
-    mov ax,ds:[ebx].he_type
+    mov ax,ds:[ebx].sh_type
     cmp ax,C_HANDLE_TCP_SOCKET
     je cisTcp
 ;
@@ -4266,12 +4266,12 @@ connect_ipv4_socket	Proc far
 
 cisUpd:
     ConnectUdpSocket
-    mov ds:[ebx].he_sel,ax
+    mov ds:[ebx].sh_sel,ax
     jmp cisDone
 
 cisTcp:
     ConnectTcpSocket
-    mov ds:[ebx].he_sel,ax
+    mov ds:[ebx].sh_sel,ax
     jmp cisDone
 
 cisFail:
@@ -4384,8 +4384,8 @@ GetReadBufCount	Proc near
     shl ebx,4
     add ebx,OFFSET hd_data
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].read_buf_tab
 ;
     pop ebx
@@ -4511,8 +4511,8 @@ GetWriteBufSpace	Proc near
     mov eax,SEG data
     mov ds,eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].write_buf_tab
 ;
     pop ebx
@@ -4619,8 +4619,8 @@ HasException	Proc near
     mov eax,SEG data
     mov ds,eax
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].exc_tab
 ;
     pop ebx
@@ -4680,7 +4680,7 @@ signal_read_handle	Proc far
 ;
     EnterSection ds:hd_section
     xor ax,ax
-    xchg ax,ds:[ebx].he_read_wait_sel
+    xchg ax,ds:[ebx].sh_read_wait_sel
     or ax,ax
     jz srhLeave
 ;
@@ -4815,7 +4815,7 @@ swfrCheck:
     EnterSection ds:hd_section
 ;
     mov bp,es
-    mov ax,ds:[bx].he_read_wait_sel
+    mov ax,ds:[bx].sh_read_wait_sel
     or ax,ax
     jnz swfrAdd
 ;
@@ -4824,12 +4824,12 @@ swfrCheck:
     mov es:hw_handle,di
     mov es:hw_count,1
     mov es:hw_arr,bp
-    mov ds:[bx].he_read_wait_sel,es
+    mov ds:[bx].sh_read_wait_sel,es
     LeaveSection ds:hd_section
 ;
     mov ax,di
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].start_wait_read_tab
     jmp swfrLinked
 
@@ -4945,7 +4945,7 @@ stop_wait_for_read    PROC far
     mov ds,eax
 ;
     EnterSection ds:hd_section
-    mov ax,ds:[ebx].he_read_wait_sel
+    mov ax,ds:[ebx].sh_read_wait_sel
     or ax,ax
     jz ewfrLeave
 ;
@@ -4993,11 +4993,11 @@ ewfrRemove:
     pop edx
     pop ecx
     pop ds
-    mov ds:[ebx].he_read_wait_sel,0
+    mov ds:[ebx].sh_read_wait_sel,0
     LeaveSection ds:hd_section
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].stop_wait_read_tab
     jmp ewfrPop
 
@@ -5144,7 +5144,7 @@ signal_write_handle	Proc far
 ;
     EnterSection ds:hd_section
     xor ax,ax
-    xchg ax,ds:[ebx].he_write_wait_sel
+    xchg ax,ds:[ebx].sh_write_wait_sel
     or ax,ax
     jz swhLeave
 ;
@@ -5256,7 +5256,7 @@ start_wait_for_write       PROC far
     EnterSection ds:hd_section
 ;
     mov bp,es
-    mov ax,ds:[ebx].he_write_wait_sel
+    mov ax,ds:[ebx].sh_write_wait_sel
     or ax,ax
     jnz swfwAdd
 ;
@@ -5265,12 +5265,12 @@ start_wait_for_write       PROC far
     mov es:hw_handle,di
     mov es:hw_count,1
     mov es:hw_arr,bp
-    mov ds:[ebx].he_write_wait_sel,es
+    mov ds:[ebx].sh_write_wait_sel,es
     LeaveSection ds:hd_section
 ;
     mov ax,di
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].start_wait_write_tab
     jmp swfwLinked
 
@@ -5375,7 +5375,7 @@ stop_wait_for_write    PROC far
     mov ds,eax
 ;
     EnterSection ds:hd_section
-    mov ax,ds:[ebx].he_write_wait_sel
+    mov ax,ds:[ebx].sh_write_wait_sel
     or ax,ax
     jz ewfwLeave
 ;
@@ -5423,11 +5423,11 @@ ewfwRemove:
     pop edx
     pop ecx
     pop ds
-    mov ds:[ebx].he_write_wait_sel,0
+    mov ds:[ebx].sh_write_wait_sel,0
     LeaveSection ds:hd_section
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].stop_wait_write_tab
     jmp ewfwPop
 
@@ -5574,7 +5574,7 @@ signal_exc_handle	Proc far
 ;
     EnterSection ds:hd_section
     xor ax,ax
-    xchg ax,ds:[ebx].he_exc_wait_sel
+    xchg ax,ds:[ebx].sh_exc_wait_sel
     or ax,ax
     jz sehLeave
 ;
@@ -5686,7 +5686,7 @@ start_wait_for_exc       PROC far
     EnterSection ds:hd_section
 ;
     mov bp,es
-    mov ax,ds:[ebx].he_exc_wait_sel
+    mov ax,ds:[ebx].sh_exc_wait_sel
     or ax,ax
     jnz swfeAdd
 ;
@@ -5695,12 +5695,12 @@ start_wait_for_exc       PROC far
     mov es:hw_handle,di
     mov es:hw_count,1
     mov es:hw_arr,bp
-    mov ds:[ebx].he_exc_wait_sel,es
+    mov ds:[ebx].sh_exc_wait_sel,es
     LeaveSection ds:hd_section
 ;
     mov ax,di
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].start_wait_exc_tab
     jmp swfeLinked
 
@@ -5804,7 +5804,7 @@ stop_wait_for_exc    PROC far
     mov ds,eax
 ;
     EnterSection ds:hd_section
-    mov ax,ds:[ebx].he_exc_wait_sel
+    mov ax,ds:[ebx].sh_exc_wait_sel
     or ax,ax
     jz ewfeLeave
 ;
@@ -5852,11 +5852,11 @@ ewfeRemove:
     pop edx
     pop ecx
     pop ds
-    mov ds:[ebx].he_exc_wait_sel,0
+    mov ds:[ebx].sh_exc_wait_sel,0
     LeaveSection ds:hd_section
 ;
-    movzx ebp,ds:[ebx].he_type
-    mov bx,ds:[ebx].he_sel
+    movzx ebp,ds:[ebx].sh_type
+    mov bx,ds:[ebx].sh_sel
     call dword ptr cs:[4*ebp].stop_wait_exc_tab
     jmp ewfePop
 
@@ -6578,20 +6578,20 @@ init_handle     PROC near
     mov es:hd_proc_count,0
 ;
     mov edi,OFFSET hd_data
-    mov es:[edi].he_type,C_HANDLE_STDIN
-    mov es:[edi].he_sel,0
-    mov es:[edi].he_ref_count,1
-    mov es:[edi].he_read_wait_sel,0
-    mov es:[edi].he_write_wait_sel,0
-    mov es:[edi].he_exc_wait_sel,0
+    mov es:[edi].sh_type,C_HANDLE_STDIN
+    mov es:[edi].sh_sel,0
+    mov es:[edi].sh_ref_count,1
+    mov es:[edi].sh_read_wait_sel,0
+    mov es:[edi].sh_write_wait_sel,0
+    mov es:[edi].sh_exc_wait_sel,0
 ;
     add edi,16
-    mov es:[edi].he_type,C_HANDLE_STDOUT
-    mov es:[edi].he_sel,0
-    mov es:[edi].he_ref_count,2
-    mov es:[edi].he_read_wait_sel,0
-    mov es:[edi].he_write_wait_sel,0
-    mov es:[edi].he_exc_wait_sel,0
+    mov es:[edi].sh_type,C_HANDLE_STDOUT
+    mov es:[edi].sh_sel,0
+    mov es:[edi].sh_ref_count,2
+    mov es:[edi].sh_read_wait_sel,0
+    mov es:[edi].sh_write_wait_sel,0
+    mov es:[edi].sh_exc_wait_sel,0
 ;
     mov eax,cs
     mov ds,eax
