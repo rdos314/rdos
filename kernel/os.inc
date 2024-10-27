@@ -568,7 +568,7 @@ NotifyInitProcess MACRO
     OsGate notify_init_process_nr
                     ENDM
 
-; OUT EAX	   CR3
+; OUT EAX          CR3
 NotifyCreateProcess MACRO
     OsGate notify_create_process_nr
                     ENDM
@@ -1315,7 +1315,7 @@ AllocateRealtimeCore    MACRO
     OsGate allocate_realtime_core_nr
                     ENDM
 
-;   IN  AX	Processor #
+;   IN  AX      Processor #
 FreeRealtimeCore    MACRO
     OsGate free_realtime_core_nr
                     ENDM
@@ -1330,7 +1330,7 @@ RunRealtime    MACRO
     OsGate run_realtime_nr
                     ENDM
 
-;   IN  AL	Apic ID
+;   IN  AL      Apic ID
 ;   IN  EBX     CR3
 ;   IN  ES:EDI  Boot startup code
 BootRealtimeCore    MACRO
@@ -1366,53 +1366,53 @@ CreatePid    MACRO
     OsGate create_pid_nr
                     ENDM
 
-;  IN  EBX  	Selector
-;  OUT AX   	PID
+;  IN  EBX      Selector
+;  OUT AX       PID
 ProgramCreated    MACRO
     OsGate program_created_nr
                     ENDM
 
-;  IN  EBX  	Selector
+;  IN  EBX      Selector
 ProgramTerminated    MACRO
     OsGate program_terminated_nr
                     ENDM
 
-;  IN  EBX  	Program ID
+;  IN  EBX      Program ID
 ;  OUT AX       Selector
 GetProgramSel    MACRO
     OsGate get_program_sel_nr
                     ENDM
 
-;  IN  EAX  	Program #
+;  IN  EAX      Program #
 ;  OUT AX       ID
 GetProgramId    MACRO
     OsGate get_program_id_nr
                     ENDM
 
-;  IN  EBX  	Selector
-;  OUT AX   	MID
+;  IN  EBX      Selector
+;  OUT AX       MID
 ModuleLoaded    MACRO
     OsGate module_loaded_nr
                     ENDM
 
-;  IN  EBX  	Selector
+;  IN  EBX      Selector
 ModuleUnloaded    MACRO
     OsGate module_unloaded_nr
                     ENDM
 
-;  IN  EAX  	Module #
+;  IN  EAX      Module #
 ;  OUT AX       ID
 GetModuleId    MACRO
     OsGate get_module_id_nr
                     ENDM
 
-;  IN  EBX  	Selector
-;  OUT AX   	PID
+;  IN  EBX      Selector
+;  OUT AX       PID
 ProcessCreated    MACRO
     OsGate process_created_nr
                     ENDM
 
-;  IN  EBX  	Selector
+;  IN  EBX      Selector
 ;  IN  EAX      Exit code
 ProcessTerminated    MACRO
     OsGate process_terminated_nr
@@ -1424,7 +1424,7 @@ ProcessIdToSel       MACRO
     OsGate process_id_to_sel_nr
                     ENDM
 
-;  IN  EAX  	Process #
+;  IN  EAX      Process #
 ;  OUT AX       ID
 GetProcessId    MACRO
     OsGate get_process_id_nr
@@ -1819,7 +1819,7 @@ GetSchedulerLockCounter    MACRO
     OsGate get_scheduler_lock_counter_nr
                         ENDM
 
-;   IN AL	Irq # (-1 for timer/non-specific)
+;   IN AL       Irq # (-1 for timer/non-specific)
 EnterInt    MACRO
     local eiOk
 
@@ -2492,22 +2492,22 @@ DerefHandle     MACRO
 ;;;;;;;;;;;;;; sys handle  ;;;;;;;;;;;;;;;;;;
 
 ; IN  ES       New process thread
-CreateSysHandle MACRO
-    OsGate create_sys_handle_nr
+CreateProcHandle MACRO
+    OsGate create_proc_handle_nr
                     ENDM
 
 ; IN  ES       New process thread
-CloneSysHandle MACRO
-    OsGate clone_sys_handle_nr
+CloneProcHandle MACRO
+    OsGate clone_proc_handle_nr
                     ENDM
 
-ApplySysHandle MACRO
-    OsGate apply_sys_handle_nr
+ApplyProcHandle MACRO
+    OsGate apply_proc_handle_nr
                     ENDM
 
 ; IN  ES       Delete process thread
-DeleteSysHandle MACRO
-    OsGate delete_sys_handle_nr
+DeleteProcHandle MACRO
+    OsGate delete_proc_handle_nr
                     ENDM
 
 ;;;;;;;;;;;;;; Application / process  ;;;;;;;;;;;;;;;;;;
@@ -2885,7 +2885,7 @@ WriteDosString  MACRO
     OsGate write_dos_string_nr
                     ENDM
 
-;  ES:EDI	Command line
+;  ES:EDI       Command line
 GetDeviceCmdLine  MACRO
     OsGate get_device_cmd_line_nr
                     ENDM

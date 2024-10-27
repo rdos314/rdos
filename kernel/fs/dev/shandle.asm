@@ -96,17 +96,17 @@ code    SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateSysHandle
+;           NAME:           CreateProcHandle
 ;
-;           DESCRIPTION:    Create sys handle
+;           DESCRIPTION:    Create proc handle
 ;
 ;           PARAMETERS:     ES          New process thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_sys_handle_name DB 'Create Sys Handle', 0
+create_proc_handle_name DB 'Create Proc Handle', 0
 
-create_sys_handle Proc far
+create_proc_handle Proc far
     push ds
     pushad
 ;    
@@ -167,7 +167,37 @@ nsLoop:
     popad
     pop ds
     ret
-create_sys_handle Endp
+create_proc_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ApplyProcHandle
+;
+;           DESCRIPTION:    Apply proc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+apply_proc_handle_name DB 'Apply Proc Handle', 0
+
+apply_proc_handle Proc far
+    push ds
+    push eax
+    push edx
+;
+    GetThread
+    mov ds,eax
+    mov ds,ds:p_proc_sel
+    mov edx,ds:pf_handle_linear
+    mov bx,proc_handle_sel
+    mov ecx,SIZE proc_handle_struc
+    CreateDataSelector32
+;
+    pop edx
+    pop eax
+    pop ds
+    ret
+apply_proc_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -257,10 +287,16 @@ init_sys_handle     PROC near
     mov ds,eax
     mov es,eax
 ;
-    mov esi,OFFSET create_sys_handle
-    mov edi,OFFSET create_sys_handle_name
+    mov esi,OFFSET create_proc_handle
+    mov edi,OFFSET create_proc_handle_name
     xor cl,cl
-    mov ax,create_sys_handle_nr
+    mov ax,create_proc_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET apply_proc_handle
+    mov edi,OFFSET apply_proc_handle_name
+    xor cl,cl
+    mov ax,apply_proc_handle_nr
     RegisterOsGate
 ;
     popad
