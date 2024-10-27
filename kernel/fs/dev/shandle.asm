@@ -168,6 +168,52 @@ nsLoop:
     pop ds
     ret
 create_sys_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSysObj
+;
+;           DESCRIPTION:    Create sys object
+;
+;           PARAMETERS:     EAX        Size of object
+;
+;           RETURNS:        DS         Sys handle sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateSysObj
+
+cr_proc_fail    Proc far
+    stc
+    ret
+cr_proc_fail    Endp
+
+del_sys_fail    Proc far
+    stc
+    ret
+del_sys_fail    Endp
+
+CreateSysObj    Proc near
+    push eax
+    push esi
+;
+    mov esi,eax
+    mov ax,8
+    CreateBlk
+;
+    mov ds:hsi_create_proc,OFFSET cr_proc_fail
+    mov ds:hsi_create_proc+4,cs
+;
+    mov ds:hsi_delete_proc,OFFSET del_sys_fail
+    mov ds:hsi_delete_proc+4,cs
+;
+    mov ds:hsi_index,0
+;
+    pop esi
+    pop eax
+    ret
+CreateSysObj   Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

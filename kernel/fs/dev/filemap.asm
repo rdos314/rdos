@@ -196,6 +196,8 @@ code    SEGMENT byte public 'CODE'
     extern KernelWrite:near
     extern UpdateWrBitmap:near
 
+    extern CreateSysObj:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -382,9 +384,8 @@ CreateFileSel   Proc near
     push esi
     push edi
 ;
-    mov ax,8
-    mov si,SIZE kernel_file
-    CreateBlk
+    mov eax,SIZE kernel_file
+    call CreateSysObj
 ;
     InitSection ds:kf_section
     InitSection ds:kf_update_section
