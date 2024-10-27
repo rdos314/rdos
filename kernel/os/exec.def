@@ -208,6 +208,8 @@ pf_c_handle_sel      DW ?
 pf_cur_dir_sel       DW ?
 pf_env_sel           DW ?
 
+pf_handle_linear     DD ?
+
 pf_virt_flags        DW ?
 pf_wait_sti          DW ?
 pf_cli_thread        DW ?
