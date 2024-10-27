@@ -2488,6 +2488,28 @@ DerefHandle     MACRO
     OsGate deref_handle_nr
                     ENDM
 
+
+;;;;;;;;;;;;;; sys handle  ;;;;;;;;;;;;;;;;;;
+
+; IN  ES       New process thread
+CreateSysHandle MACRO
+    OsGate create_sys_handle_nr
+                    ENDM
+
+; IN  ES       New process thread
+CloneSysHandle MACRO
+    OsGate clone_sys_handle_nr
+                    ENDM
+
+ApplySysHandle MACRO
+    OsGate apply_sys_handle_nr
+                    ENDM
+
+; IN  ES       Delete process thread
+DeleteSysHandle MACRO
+    OsGate delete_sys_handle_nr
+                    ENDM
+
 ;;;;;;;;;;;;;; Application / process  ;;;;;;;;;;;;;;;;;;
 
 ExecApp MACRO

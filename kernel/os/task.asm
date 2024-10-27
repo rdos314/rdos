@@ -2202,6 +2202,8 @@ delete_process_sel Proc near
     push es
     pushad
 ;
+    DeleteSysHandle
+;
     mov ds,es:p_proc_sel
     mov ax,ds:pf_c_handle_sel
     DeleteCHandle
@@ -10091,6 +10093,8 @@ init_process_regs    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_process_callback   PROC near
+    ApplySysHandle
+;
     push es
     mov eax,1000h
     AllocateGlobalMem
@@ -10194,6 +10198,7 @@ cp64:
     cmp bx,1
     je cpSkipped64
 ;
+    CreateSysHandle
     call create_c_handle
     call create_cur_dir
     call create_env_sel
@@ -10214,6 +10219,7 @@ cp32:
     cmp bx,1
     je cpSkipped32
 ;
+    CreateSysHandle
     call create_c_handle
     call create_cur_dir
     call create_env_sel
@@ -10568,6 +10574,7 @@ fork_process_name     DB 'Fork Process',0
 fork_start:
     sti
     call trap_create_process
+    ApplySysHandle
     xor eax,eax
     jmp fork_done
 
@@ -10606,6 +10613,7 @@ fork_process  PROC far
     call copy_process_modules
     call setup_fork
 ;
+    CloneSysHandle
     call create_c_handle
     call create_cur_dir
     call create_env_sel
@@ -11069,6 +11077,8 @@ init_first_process      Proc near
     CreateEnvSel
     mov ds:pf_env_sel,ax
 ;
+    CreateSysHandle
+    ApplySysHandle
     CreateCHandle
     mov ds:pf_c_handle_sel,ax    
 ;
@@ -11235,6 +11245,7 @@ create_serv_app  PROC far
     mov bx,[ebp].cr_ebx
     call create_process_sel
     call add_process_thread
+    CreateSysHandle
     call create_c_handle
     call create_cur_dir
     call create_env_sel
