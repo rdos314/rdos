@@ -192,7 +192,8 @@ apply_proc_handle Proc far
     mov bx,proc_handle_sel
     mov ecx,SIZE proc_handle_struc
     CreateDataSelector32
-;
+
+aphDone:
     pop edx
     pop eax
     pop ds
