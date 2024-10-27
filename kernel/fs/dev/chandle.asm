@@ -39,21 +39,9 @@ INCLUDE vfs.inc
     .386p
 
 MAX_HANDLES           = 512
-MAX_KERNEL_HANDLES    = 64
 SYS_HANDLE_COUNT      = 1024
 SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
 HANDLE_WAIT_OBJ_COUNT = 8
-
-;
-; this should always be 4 bytes!
-;
-
-kernel_handle_struc    STRUC
-
-kh_legacy_sel        DW ?
-kh_vfs_sel           DW ?
-
-kernel_handle_struc    ENDS
 
 ;
 ; this should always be 16 bytes!
@@ -112,7 +100,6 @@ data    SEGMENT byte public 'DATA'
 hd_section       section_typ <>
 hd_proc_count    DW ?
 
-hd_kernel_arr    DD MAX_KERNEL_HANDLES DUP(?)
 hd_proc_arr      DW MAX_PROC_COUNT DUP(?)
 hd_sys_bitmap    DD SYS_BITMAP_COUNT DUP(?)
 hd_sys_arr       DD 4 * SYS_HANDLE_COUNT DUP(?)
@@ -140,11 +127,6 @@ code    SEGMENT byte public 'CODE'
     extern GetVfsFileSize:near
     extern SetVfsFileSize:near
     extern DupVfsFile:near
-    extern OpenKernelVfsFile:near
-    extern CloseKernelVfsFile:near
-    extern ReadKernelVfsFile:near
-    extern WriteKernelVfsFile:near
-    extern DupKernelVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -596,6 +578,8 @@ ref_c_handle  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public allocate_proc_handle
+
 allocate_proc_handle     Proc near
     push esi
 ;
@@ -989,328 +973,6 @@ amhDone:
     pop ds
     ret
 AllocateProcHandle  Endp   
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           OpenKernelHandle
-;
-;           DESCRIPTION:    Open kernel handle
-;
-;           PARAMETERS:     ES:EDI    Filename
-;                           CX        Mode
-;
-;           RETURNS:        BX        Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_kernel_handle_name DB 'Open Kernel Handle', 0
-
-open_kernel_handle Proc far
-    push ds
-    push eax
-    push ecx
-    push edi
-;
-    call OpenKernelVfsFile
-    jnc okhVfs
-;
-    OpenLegacyKernelFile
-    jc okhDone
-;
-    movzx ebx,bx
-    jmp okhHandle
-
-okhVfs:
-    shl ebx,16
-    xor bx,bx
-
-okhHandle:
-    mov ax,SEG data
-    mov ds,eax
-    EnterSection ds:hd_section
-;
-    mov ecx,MAX_KERNEL_HANDLES  
-    mov edi,OFFSET hd_kernel_arr
-
-okhLoop:
-    mov eax,ds:[edi]
-    or eax,eax
-    jnz okhNext
-;
-    mov ds:[edi],ebx
-    mov ebx,edi
-    sub ebx,OFFSET hd_kernel_arr
-    shr ebx,2
-    inc ebx
-    clc
-    jmp okhLeave
-
-okhNext:
-    add edi,4
-    loop okhLoop
-;
-    int 3
-    stc
-
-okhLeave:
-    LeaveSection ds:hd_section
-
-okhDone:
-    pop edi
-    pop ecx
-    pop eax
-    pop ds
-    ret
-open_kernel_handle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CloseKernelHandle
-;
-;           DESCRIPTION:    Close kernel handle
-;
-;           PARAMETERS:     BX        Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_kernel_handle_name DB 'Close Kernel Handle', 0
-
-close_kernel_handle Proc far
-    push ds
-    push eax
-    push edi
-;
-    or bx,bx
-    jz ckhDone
-;
-    cmp bx,MAX_KERNEL_HANDLES
-    ja ckhDone
-;
-    movzx edi,bx
-    dec edi
-    shl edi,2
-    add edi,OFFSET hd_kernel_arr
-;
-    mov ax,SEG data
-    mov ds,eax
-    EnterSection ds:hd_section
-    xor bx,bx
-    xchg bx,ds:[edi].kh_legacy_sel
-    or bx,bx
-    jz ckhVfs
-;
-    CloseLegacyFile
-    jmp ckhLeave
-
-ckhVfs:
-    xchg bx,ds:[edi].kh_vfs_sel
-    or bx,bx
-    jz ckhLeave
-;
-    call CloseKernelVfsFile
-    
-ckhLeave:
-    LeaveSection ds:hd_section
-
-ckhDone:
-    xor bx,bx
-;
-    pop edi
-    pop eax
-    pop ds
-    ret
-close_kernel_handle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ReadKernelHandle
-;
-;           DESCRIPTION:    Read with kernel handle
-;
-;           PARAMETERS:     BX        Handle
-;                           EDX:EAX   Position
-;                           ES:EDI    Buffer
-;                           ECX       Size
-;
-;           RETURNS:        ECX       Read size
-;                           EDX:EAX   New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_kernel_handle_name DB 'Read Kernel Handle', 0
-
-read_kernel_handle Proc far
-    push ds
-    push ebx
-    push esi
-;
-    or bx,bx
-    jz rkhFail
-;
-    cmp bx,MAX_KERNEL_HANDLES
-    ja rkhFail
-;
-    mov si,SEG data
-    mov ds,esi
-    movzx esi,bx
-    dec esi
-    shl esi,2
-    add esi,OFFSET hd_kernel_arr
-;
-    mov bx,ds:[esi].kh_legacy_sel
-    or bx,bx
-    jz rkhVfs
-;
-    ReadLegacyFile
-    jmp rkhDone
-
-rkhVfs:
-    mov bx,ds:[esi].kh_vfs_sel
-    or bx,bx
-    jz rkhFail
-;
-    call ReadKernelVfsFile
-    jmp rkhDone
-
-rkhFail:
-    xor ecx,ecx
-    stc
-
-rkhDone:
-    pop esi
-    pop ebx
-    pop ds
-    ret
-read_kernel_handle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           WriteKernelHandle
-;
-;           DESCRIPTION:    Write with kernel handle
-;
-;           PARAMETERS:     BX        Handle
-;                           EDX:EAX   Position
-;                           ES:EDI    Buffer
-;                           ECX       Size
-;
-;           RETURNS:        ECX       Read size
-;                           EDX:EAX   New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_kernel_handle_name DB 'Write Kernel Handle', 0
-
-write_kernel_handle Proc far
-    push ds
-    push ebx
-    push esi
-;
-    or bx,bx
-    jz wkhFail
-;
-    cmp bx,MAX_KERNEL_HANDLES
-    ja wkhFail
-;
-    mov si,SEG data
-    mov ds,esi
-    movzx esi,bx
-    dec esi
-    shl esi,2
-    add esi,OFFSET hd_kernel_arr
-;
-    mov bx,ds:[esi].kh_legacy_sel
-    or bx,bx
-    jz wkhVfs
-;
-    WriteLegacyFile
-    jmp wkhDone
-
-wkhVfs:
-    mov bx,ds:[esi].kh_vfs_sel
-    or bx,bx
-    jz wkhFail
-;
-    call WriteKernelVfsFile
-    jmp wkhDone
-
-wkhFail:
-    xor ecx,ecx
-    stc
-
-wkhDone:
-    pop esi
-    pop ebx
-    pop ds
-    ret
-write_kernel_handle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           dupl_kernel_handle
-;
-;           DESCRIPTION:    Dupl kernel handle
-;
-;           PARAMETERS:     EBX          File handle entry
-;                           
-;           RETURNS:        EBX          File handle
-;                           NC          Success
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_kernel_handle_name  DB 'Dupl Kernel Handle',0
-
-dupl_kernel_handle    Proc far
-    push ds
-    push esi
-;
-    or bx,bx
-    jz dupkhFail
-;
-    cmp bx,MAX_KERNEL_HANDLES
-    ja dupkhFail
-;
-    mov si,SEG data
-    mov ds,esi
-    movzx esi,bx
-    dec esi
-    shl esi,2
-    add esi,OFFSET hd_kernel_arr
-;
-    mov bx,ds:[esi].kh_legacy_sel
-    or bx,bx
-    jnz dupkhLegacy
-;
-    mov bx,ds:[esi].kh_vfs_sel
-    call DupKernelVfsFile
-    jmp dupkhDone
-
-dupkhLegacy:
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ds,ds:pf_c_handle_sel
-    RefLegacyKernelFile
-;
-    mov cx,IO_READ OR IO_WRITE
-    xor eax,eax
-    xor edx,edx
-    call allocate_proc_handle
-    jnc dupkhDone
-
-dupkhFail:
-    xor ebx,ebx
-
-dupkhDone:
-    pop esi
-    pop ds
-    ret
-dupl_kernel_handle    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -6221,11 +5883,6 @@ init_handle     PROC near
     mov bx,SEG data
     mov es,bx
 ;
-    mov edi,OFFSET hd_kernel_arr
-    xor eax,eax
-    mov ecx,MAX_KERNEL_HANDLES
-    rep stosd
-;
     mov edi,OFFSET hd_proc_arr
     xor eax,eax
     mov ecx,MAX_PROC_COUNT
@@ -6277,30 +5934,6 @@ init_handle     PROC near
     mov ax,clone_c_handle_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET open_kernel_handle
-    mov edi,OFFSET open_kernel_handle_name
-    xor cl,cl
-    mov ax,open_kernel_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET read_kernel_handle
-    mov edi,OFFSET read_kernel_handle_name
-    xor cl,cl
-    mov ax,read_kernel_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET write_kernel_handle
-    mov edi,OFFSET write_kernel_handle_name
-    xor cl,cl
-    mov ax,write_kernel_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET close_kernel_handle
-    mov edi,OFFSET close_kernel_handle_name
-    xor cl,cl
-    mov ax,close_kernel_handle_nr
-    RegisterOsGate
-;
     mov esi,OFFSET delete_c_handle
     mov edi,OFFSET delete_c_handle_name
     xor cl,cl
@@ -6341,12 +5974,6 @@ init_handle     PROC near
     mov edi,OFFSET signal_exc_handle_name
     xor cl,cl
     mov ax,signal_exc_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET dupl_kernel_handle
-    mov edi,OFFSET dupl_kernel_handle_name
-    xor cl,cl
-    mov ax,dupl_kernel_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16
