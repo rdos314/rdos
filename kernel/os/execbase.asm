@@ -1693,6 +1693,7 @@ spawn_startup:
     sti
     CreatePrivateLdt
     CreateHandleData
+    ApplyProcHandle
 ;
     GetThread
     mov es,ax
@@ -1995,6 +1996,7 @@ spawn_program32 Endp
 fork_startup:
     CreatePrivateLdt
     CreateHandleData
+    ApplyProcHandle
 ;
     xor eax,eax
     push eax
@@ -6334,6 +6336,7 @@ exec_serv_name DB 'Exec Server', 0
 exec_serv:
     sti
     CreateHandleData
+    ApplyProcHandle
 ;
     mov ax,es
     mov fs,ax

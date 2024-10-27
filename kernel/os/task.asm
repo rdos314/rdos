@@ -8671,6 +8671,7 @@ trap_init_tasking       PROC near
     call trap_create_process
     CreatePrivateLdt
     CreateHandleData
+    ApplyProcHandle
 ;
     push cx
     mov ax,hook_sel
@@ -10093,8 +10094,6 @@ init_process_regs    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_process_callback   PROC near
-    ApplyProcHandle
-;
     push es
     mov eax,1000h
     AllocateGlobalMem
@@ -10574,7 +10573,6 @@ fork_process_name     DB 'Fork Process',0
 fork_start:
     sti
     call trap_create_process
-    ApplyProcHandle
     xor eax,eax
     jmp fork_done
 
@@ -11101,7 +11099,6 @@ init_first_process_callback:
 ;
     call trap_init_tasking
     sti
-    ApplyProcHandle
     jmp null_thread0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
