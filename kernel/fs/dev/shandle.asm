@@ -32,6 +32,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 include ..\wait.inc
+INCLUDE ..\os\blk.inc
 INCLUDE ..\hint.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\exec.def

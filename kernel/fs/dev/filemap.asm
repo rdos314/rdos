@@ -30,10 +30,11 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
+INCLUDE ..\os\blk.inc
+INCLUDE ..\hint.inc
 INCLUDE ..\os\system.def
 include ..\handle.inc
 INCLUDE ..\filemap.inc
-INCLUDE ..\os\blk.inc
 INCLUDE ..\os\exec.def
 include vfs.inc
 include vfsmsg.inc

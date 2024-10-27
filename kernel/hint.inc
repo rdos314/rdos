@@ -27,6 +27,8 @@
 
 handle_sys_interface    STRUC
 
+hsi_blk                   blk_header <>
+
 ;  IN	DS                Handle sys interface
 ;  OUT  AX                Proc interface
 hsi_create_proc           DD ?,?
