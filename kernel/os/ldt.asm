@@ -35,8 +35,6 @@ INCLUDE int.def
 INCLUDE protseg.def
 INCLUDE exec.def
 
-ldt_start       EQU 80h
-
     .386p
 
 code    SEGMENT byte public use16 'CODE'

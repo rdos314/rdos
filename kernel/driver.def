@@ -27,6 +27,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;
+; LDT system selectors
+;
+
+proc_handle_sel               EQU 7Ch
+
+ldt_start       EQU 80h
+
+
+;
 ; GDT system selectors
 ;
 
