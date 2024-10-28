@@ -394,9 +394,10 @@ FindProc    Endp
 ;
 ;           DESCRIPTION:    Create proc object
 ;
-;           PARAMETERS:     EAX        Size of object
-;                           DS         Sys handle sel
-;
+;           PARAMETERS:     DS         Sys handle sel
+;                           EAX        Size of oebject
+;                           EDX        Linear address of object
+;                           
 ;           RETURNS:        AX         Proc handle sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -417,9 +418,6 @@ CreateProcObj    Proc near
     push es
     push ebx
     push ecx
-    push edx
-;
-    AllocateSmallLinear
 ;
     push ds
     AllocateLdt
@@ -447,7 +445,6 @@ CreateProcObj    Proc near
 ;
     mov eax,es
 ;
-    pop edx
     pop ecx
     pop ebx
     pop es
@@ -521,8 +518,9 @@ AllocateProcHandle  Endp
 ;
 ;           DESCRIPTION:    Create proc object
 ;
-;           PARAMETERS:     EAX        Size of object
-;                           DS         Proc handle sel
+;           PARAMETERS:     DS         Proc handle sel
+;                           EAX        Size of oebject
+;                           EDX        Linear address of object
 ;
 ;           RETURNS:        AX         Handle sel
 ;
@@ -540,9 +538,6 @@ CreateHandleObj    Proc near
     push es
     push ebx
     push ecx
-    push edx
-;
-    AllocateSmallLinear
 ;
     push ds
     AllocateLdt
@@ -624,7 +619,6 @@ CreateHandleObj    Proc near
 ;
     mov eax,es
 ;
-    pop edx
     pop ecx
     pop ebx
     pop es

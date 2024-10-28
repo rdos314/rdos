@@ -3200,12 +3200,14 @@ CreateProcSel   Proc far
     or ax,63h
     SetPageEntry
 ;
-    pop edx
-    pop ebx
-;
     mov eax,SIZE process_file
+    AllocateBigLinear
+;
     call CreateProcObj
     mov es,eax
+;
+    pop edx
+    pop ebx
 ;
     xor eax,eax
     mov edi,SIZE pf_base
@@ -3381,6 +3383,8 @@ chsLoop:
     mov es:[edx],eax
 ;
     mov eax,SIZE handle_file
+    AllocateSmallLinear
+;
     call CreateHandleObj
     mov es,eax
 ;
