@@ -379,8 +379,12 @@ open_handle     Proc near
     jc ohFail
 ;
     call FindProc
+    jnc ohProcOk
 ;
+    call fword ptr ds:hsi_create_proc
+    jc ohFail
 
+ohProcOk:
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
 ;
