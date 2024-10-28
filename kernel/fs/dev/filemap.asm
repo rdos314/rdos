@@ -309,7 +309,7 @@ BlockToPhys  Endp
 ;
 ;       DESCRIPTION:    Get file info
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;
 ;       RETURNS:        EAX            Req count
 ;                       EBX            Wait count
@@ -338,7 +338,7 @@ GetFileDebugInfo   Endp
 ;       PARAMETERS:     EBX            File handle
 ;
 ;       RETURNS:        NC
-;                         AX           File sel
+;                         AX           Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -379,7 +379,7 @@ GetFileSel     Endp
 ;                       DI             Sector size
 ;
 ;       RETURNS:        NC
-;                         AX           File sel
+;                         AX           Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -474,7 +474,7 @@ CreateFileSel   Endp
 ;       DESCRIPTION:    Update file selector
 ;
 ;       PARAMETERS:     FS             Part sel
-                        AX             File sel
+                        AX             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -552,7 +552,7 @@ UpdateFileSel   Endp
 ;       DESCRIPTION:    Close file selector
 ;
 ;       PARAMETERS:     FS             Part sel
-                        AX             File sel
+;                       AX             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -772,7 +772,7 @@ AddFileReq   Endp
 ;
 ;       DESCRIPTION:    Find a req. Section must be taken!
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       EDX:EAX        Position
 ;
 ;       RETURNS:        EBX            Req id
@@ -834,7 +834,7 @@ FindReq  Endp
 ;
 ;       DESCRIPTION:    Add wait req. Section must be taken!
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       EDX:EAX        Position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -877,7 +877,7 @@ AddWaitReq  Endp
 ;
 ;       DESCRIPTION:    Add req
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       EBX            OP
 ;                       EDX:EAX        Par64
 ;                       ECX            Par32
@@ -949,7 +949,7 @@ AddReq     Endp
 ;
 ;       DESCRIPTION:    Send deref req
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -983,7 +983,7 @@ SendDerefReq     Endp
 ;
 ;       DESCRIPTION:    Send close req
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1073,7 +1073,7 @@ CalcPageCount  Endp
 ;
 ;       DESCRIPTION:    Setup read req
 ;
-;       PARAMETERS:     DS                 File sel
+;       PARAMETERS:     DS                 Sys interface
 ;                       EBX                Req id
 ;                       AX                 Pages
 ;                       ECX                Blocks
@@ -1116,7 +1116,7 @@ SetupReadReq  Endp
 ;
 ;       DESCRIPTION:    Process read req
 ;
-;       PARAMETERS:     DS                 File sel
+;       PARAMETERS:     DS                 Sys interface
 ;                       FS                 Part sel
 ;                       AX                 Pages needed
 ;                       EBX                Req id
@@ -1188,7 +1188,7 @@ ProcessReadReq  Endp
 ;
 ;       DESCRIPTION:    Signal read req done
 ;
-;       PARAMETERS:     DS                 File sel
+;       PARAMETERS:     DS                 Sys interface
 ;                       EDX:EAX            Position
 ;                       ECX                Size
 ;                       
@@ -1263,8 +1263,8 @@ SignalReadReq  Endp
 ;
 ;       DESCRIPTION:    Wait for req
 ;
-;       PARAMETERS:     FS             Proc file sel
-;                       GS             File sel
+;       PARAMETERS:     FS             Proc interface
+;                       GS             Sys interface
 ;                       EDX:EAX        Req position
 ;
 ;       RETURNS:        EBX            Req id
@@ -1351,8 +1351,8 @@ WaitForReq    Endp
 ;
 ;       DESCRIPTION:    Wait for grow
 ;
-;       PARAMETERS:     FS             Proc file sel
-;                       GS             File sel
+;       PARAMETERS:     FS             Proc interface
+;                       GS             Sys interface
 ;                       EDX:EAX        Req position
 ;                       ECX            Increase
 ;
@@ -1450,7 +1450,7 @@ WaitForGrow    Endp
 ;
 ;       DESCRIPTION:    Free req
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1532,7 +1532,7 @@ FreeReq      Endp
 ;
 ;       DESCRIPTION:    Update file
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
@@ -1592,7 +1592,7 @@ UpdateFile      Endp
 ;
 ;       DESCRIPTION:    Send update
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1633,7 +1633,7 @@ SendUpdate  Endp
 ;
 ;       DESCRIPTION:    Lock map
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1690,7 +1690,7 @@ LockMap     Endp
 ;
 ;       DESCRIPTION:    Unlock map
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1791,7 +1791,7 @@ FindReadMap  Endp
 ;
 ;       DESCRIPTION:    Add read map entry
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
 ;                       EDI            Req id            
 ;
@@ -1826,7 +1826,7 @@ AllocateMapEntry      Endp
 ;
 ;       DESCRIPTION:    Map entry
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
 ;                       GS:ESI         Physical address buffer
 ;                       BX             Entry offset
@@ -1894,7 +1894,7 @@ MapEntry      Endp
 ;
 ;       DESCRIPTION:    Add read map
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
 ;                       BX             Entry offset
 ;
@@ -1966,7 +1966,7 @@ AddReadMap      Endp
 ;
 ;       DESCRIPTION:    Free map
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
 ;                       BX             Sorted index
 ;
@@ -2012,7 +2012,7 @@ FreeMap Endp
 ;
 ;       DESCRIPTION:    Signal written page
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;                       EDX            Linea address
@@ -2064,7 +2064,7 @@ AddDirtyMap   Endp
 ;
 ;       DESCRIPTION:    Check map for written pages
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;
@@ -2125,7 +2125,7 @@ CheckDirtyMap  Endp
 ;
 ;       DESCRIPTION:    Check map
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;                       ESI            Index
@@ -2185,7 +2185,7 @@ CheckMap  Endp
 ;
 ;       DESCRIPTION:    Unlink linear address
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
 ;                       AL             Entry #
 ;
@@ -2230,10 +2230,10 @@ UnlinkLinear   Endp
 ;
 ;       DESCRIPTION:    Unlink entries
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
 ;                       FS             User flat sel
-;                       GS             File sel
+;                       GS             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2286,9 +2286,9 @@ UnlinkMap  Endp
 ;
 ;       DESCRIPTION:    Update unlinked entries
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
-;                       GS             File sel
+;                       GS             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2327,7 +2327,7 @@ UpdateUnlinked Endp
 ;
 ;       DESCRIPTION:    Sync file size from userspace
 ;
-;       PARAMETERS:     DS              Proc file sel
+;       PARAMETERS:     DS              Proc interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2378,8 +2378,8 @@ SyncFileSize      Endp
 ;
 ;       DESCRIPTION:    Update map requests
 ;
-;       PARAMETERS:     FS             Proc file sel
-;                       GS             File sel
+;       PARAMETERS:     FS             Proc interface
+;                       GS             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2441,9 +2441,9 @@ UpdateMap  Endp
 ;
 ;       DESCRIPTION:    Sync map from file sel
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;                       ES             Proc map sel
-;                       GS             File sel
+;                       GS             Sys interface
 ;                       EBX            Req id
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2497,7 +2497,7 @@ SyncMap  Endp
 ;
 ;       DESCRIPTION:    Delete all mapped requests
 ;
-;       PARAMETERS:     DS             Proc file sel
+;       PARAMETERS:     DS             Proc interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2671,7 +2671,7 @@ NotifyFileSignal  Endp
 ;       DESCRIPTION:    Update file req
 ;
 ;       PARAMETERS:     FS                 Part sel                       
-;                       GS                 File sel
+;                       GS                 Sys interface
 ;                       EDX                Req id
 ;                       ESI                Offset
 ;                       ECX                Count
@@ -2809,7 +2809,7 @@ UpdateFileReq  Endp
 ;
 ;       DESCRIPTION:    Disable file req
 ;
-;       PARAMETERS:     DS                 File sel
+;       PARAMETERS:     DS                 Sys interface
 ;                       FS                 Part sel                       
 ;                       EDX                Req id
 ;                       
@@ -3269,7 +3269,7 @@ CreateProcSel      Endp
 ;
 ;       DESCRIPTION:    Delete VFS proc
 ;
-;       PARAMETERS:     AX              Proc file sel
+;       PARAMETERS:     AX              Proc interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3417,7 +3417,7 @@ CreateHandleSel      Endp
 ;
 ;       DESCRIPTION:    Free user handle
 ;
-;       PARAMETERS:     AX              Proc file sel
+;       PARAMETERS:     AX              Proc interface
 ;                       BX              Handle    
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3562,7 +3562,7 @@ UnlockMap_   Endp
 ;
 ;       DESCRIPTION:    Get VFS file info
 ;
-;       PARAMETERS:     BX             Proc file sel
+;       PARAMETERS:     BX             Proc interface
 ;
 ;       RETURNS:        EDI            File info
 ;
@@ -3585,7 +3585,7 @@ GetVfsFileInfo    Endp
 ;
 ;       DESCRIPTION:    Map VFS file
 ;
-;       PARAMETERS:     ESI            Handle (high) + Proc file sel (low)
+;       PARAMETERS:     ESI            Handle (high) + Proc interface (low)
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
@@ -3633,7 +3633,7 @@ MapVfsFile_   Endp
 ;
 ;       DESCRIPTION:    Grow VFS file
 ;
-;       PARAMETERS:     ESI            Handle (high) + Proc file sel (low)
+;       PARAMETERS:     ESI            Handle (high) + Proc interface (low)
 ;                       EDX:EAX        Current size
 ;                       ECX            Increase
 ;
@@ -3681,7 +3681,7 @@ GrowVfsFile_      Endp
 ;
 ;       DESCRIPTION:    Update VFS file
 ;
-;       PARAMETERS:     ESI            Handle (high) + Proc file sel (low)
+;       PARAMETERS:     ESI            Handle (high) + Proc interface (low)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3718,7 +3718,7 @@ UpdateVfsFile_      Endp
 ;
 ;       DESCRIPTION:    Delete VFS file
 ;
-;       PARAMETERS:     ESI            Handle (high) + Proc file sel (low)
+;       PARAMETERS:     ESI            Handle (high) + Proc interface (low)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3755,7 +3755,7 @@ DeleteVfsFile_  Endp
 ;
 ;       DESCRIPTION:    Close VFS proc sel
 ;
-;       PARAMETERS:     AX            Proc file sel
+;       PARAMETERS:     AX            Proc interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3989,10 +3989,10 @@ CreateKernelMap      Endp
 ;
 ;       DESCRIPTION:    Signal written page
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
-;                       EDX            Linea address
+;                       EDX            Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4035,7 +4035,7 @@ AddKernelDirtyMap   Endp
 ;
 ;       DESCRIPTION:    Check kernel map for written pages
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;
@@ -4095,7 +4095,7 @@ CheckKernelDirtyMap  Endp
 ;
 ;       DESCRIPTION:    Free kernel map
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES             Kernel map sel
 ;                       BX             Sorted index
 ;
@@ -4141,7 +4141,7 @@ FreeKernelMap Endp
 ;
 ;       DESCRIPTION:    Check kernel map
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES:EDI         Req entry
 ;                       BX             Sorted index
 ;                       ESI            Index
@@ -4241,7 +4241,7 @@ UnlinkKernelLinear   Endp
 ;
 ;       DESCRIPTION:    Update kernel unlinked entries
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES             Kernel map sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4293,7 +4293,7 @@ UpdateKernelUnlinked Endp
 ;
 ;       DESCRIPTION:    Update kernel map requests
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4349,7 +4349,7 @@ UpdateKernelMap  Endp
 ;
 ;       DESCRIPTION:    Allocate map entry
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES             Kernel map sel
 ;                       EDI            Req id            
 ;
@@ -4384,7 +4384,7 @@ AllocateKernelMapEntry      Endp
 ;
 ;       DESCRIPTION:    Map kernel entry
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES             Kernel map sel
 ;                       DS:ESI         Physical address buffer
 ;                       BX             Entry offset
@@ -4438,7 +4438,7 @@ MapKernelEntry      Endp
 ;
 ;       DESCRIPTION:    Add kernel map
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES             Kernel map sel
 ;                       BX             Entry offset
 ;
@@ -4510,7 +4510,7 @@ AddKernelMap      Endp
 ;
 ;       DESCRIPTION:    Sync kernel map from file sel
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES             Kernel mapping sel
 ;                       EBX            Req id
 ;
@@ -4561,7 +4561,7 @@ SyncKernelMap  Endp
 ;
 ;       DESCRIPTION:    Delete all mapped requests for kernel file
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       ES             Kernel map sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4604,7 +4604,7 @@ DeleteKernelMap  Endp
 ;
 ;       DESCRIPTION:    Update kernel file
 ;
-;       PARAMETERS:     SI              File sel
+;       PARAMETERS:     SI              Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -4629,7 +4629,7 @@ UpdateKernelFile_      Endp
 ;
 ;       DESCRIPTION:    Wait for kernel req
 ;
-;       PARAMETERS:     DS              File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       EDX:EAX        Req position
 ;
 ;       RETURNS:        EBX            Req id
@@ -4713,7 +4713,7 @@ WaitForKernelReq   Endp
 ;
 ;       DESCRIPTION:    Wait for kernel grow
 ;
-;       PARAMETERS:     DS             File sel
+;       PARAMETERS:     DS             Sys interface
 ;                       EDX:EAX        Req position
 ;                       ECX            Increase
 ;
@@ -4808,7 +4808,7 @@ WaitForKernelGrow    Endp
 ;
 ;       DESCRIPTION:    Map kernel file
 ;
-;       PARAMETERS:     SI             File sel
+;       PARAMETERS:     SI             Sys interface
 ;                       EDX:EAX        Position
 ;                       ECX            Size
 ;
@@ -4842,7 +4842,7 @@ MapKernelFile_   Endp
 ;
 ;       DESCRIPTION:    Grow kernel file
 ;
-;       PARAMETERS:     SI             File sel
+;       PARAMETERS:     SI             Sys interface
 ;                       EDX:EAX        Current size
 ;                       ECX            Grow amount
 ;
@@ -4879,7 +4879,7 @@ GrowKernelFile_      Endp
 ;           PARAMETERS:     ES:EDI      Filename
 ;                           CX          Mode
 ;                           
-;           RETURNS:        BX          File sel
+;           RETURNS:        BX          Sys interface
 ;                           NC          Success
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5007,7 +5007,7 @@ OpenKernelVfsFile   Endp
 ;
 ;       DESCRIPTION:    Close kernel VFS file
 ;
-;       PARAMETERS:     BX            File sel
+;       PARAMETERS:     BX            Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5047,7 +5047,7 @@ CloseKernelVfsFile   Endp
 ;
 ;       DESCRIPTION:    Read kernel VFS file
 ;
-;       PARAMETERS:     BX              File sel
+;       PARAMETERS:     BX              Sys interface
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
@@ -5099,7 +5099,7 @@ ReadKernelVfsFile    Endp
 ;
 ;       DESCRIPTION:    Write kernel VFS file
 ;
-;       PARAMETERS:     BX              File sel
+;       PARAMETERS:     BX              Sys interface
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
@@ -5151,11 +5151,11 @@ WriteKernelVfsFile    Endp
 ;
 ;       DESCRIPTION:    Read VFS file
 ;
-;       PARAMETERS:     BX              File sel
+;       PARAMETERS:     BX              Sys interface
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
-;                       ESI             Proc file sel (low) & handle (high)
+;                       ESI             Proc interface (low) & handle (high)
 ;
 ;       RETURNS:        ECX             Count
 ;                       EDX:EAX         New position
@@ -5203,11 +5203,11 @@ ReadVfsFile    Endp
 ;
 ;       DESCRIPTION:    Write VFS file
 ;
-;       PARAMETERS:     BX              File sel
+;       PARAMETERS:     BX              Sys interface
 ;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
-;                       ESI             Proc file sel (low) & handle (high)
+;                       ESI             Proc interface (low) & handle (high)
 ;
 ;       RETURNS:        ECX             Count
 ;                       EDX:EAX         New position
@@ -5255,7 +5255,7 @@ WriteVfsFile    Endp
 ;
 ;       DESCRIPTION:    Close VFS file
 ;
-;       PARAMETERS:     BX             File sel
+;       PARAMETERS:     BX             Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5285,7 +5285,7 @@ CloseVfsFile  Endp
 ;
 ;       DESCRIPTION:    Get VFS file pos
 ;
-;       PARAMETERS:     BX             Proc file sel
+;       PARAMETERS:     BX             Proc interface
 ;                       CX             User handle
 ;
 ;       RETURNS:        EDX:EAX        Position
@@ -5326,7 +5326,7 @@ GetVfsFilePos  Endp
 ;
 ;       DESCRIPTION:    Set VFS file pos
 ;
-;       PARAMETERS:     BX             Proc file sel
+;       PARAMETERS:     BX             Proc interface
 ;                       CX             User handle
 ;                       EDX:EAX        Position
 ;
@@ -5370,7 +5370,7 @@ SetVfsFilePos  Endp
 ;
 ;       DESCRIPTION:    Dup VFS file
 ;
-;       PARAMETERS:     BX             Proc file sel
+;       PARAMETERS:     BX             Proc interface
 ;                       EDX:EAX        Position
 ;
 ;       RETURNS:        DX             Dest user handle
@@ -5425,7 +5425,7 @@ DupVfsFile  Endp
 ;
 ;           DESCRIPTION:    Dup kernel VFS file
 ;
-;           PARAMETERS:     BX          File sel
+;           PARAMETERS:     BX          Sys interface
 ;                           
 ;           RETURNS:        BX          File handle entry
 ;                           NC          Success
@@ -5558,7 +5558,7 @@ delete_file32  Endp
 ;
 ;       DESCRIPTION:    Get VFS file size
 ;
-;       PARAMETERS:     BX             File sel
+;       PARAMETERS:     BX             Sys interface
 ;
 ;       RETRURNS:       EDX:EAX        Size
 ;
@@ -5589,8 +5589,8 @@ GetVfsFileSize  Endp
 ;
 ;       DESCRIPTION:    Set VFS file size
 ;
-;       PARAMETERS:     BX             File sel
-;                       SI             Proc file sel
+;       PARAMETERS:     BX             Sys interface
+;                       SI             Proc interface
 ;                       EDX:EAX        Size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
