@@ -384,7 +384,6 @@ CreateFileSel   Proc near
     push esi
     push edi
 ;
-    int 3
     mov eax,SIZE kernel_file
     call CreateSysObj
 ;
@@ -3949,8 +3948,8 @@ ovfFound:
     mov ds,eax
     EnterSection ds:kf_section
 ;
-    mov bx,ds:kf_c_handle
-    or bx,bx
+    mov ebx,ds:hsi_index
+    or ebx,ebx
     jz ovfNew
 ;
     call SendDerefReq
@@ -3959,7 +3958,7 @@ ovfFound:
 
 ovfNew:
     call AllocateVfsSysHandle
-    mov ds:kf_c_handle,bx
+    mov ds:hsi_index,ebx
 
 ovfHandleOk:
     call FindVfsProc

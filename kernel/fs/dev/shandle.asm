@@ -45,21 +45,6 @@ SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
 PROC_HANDLE_COUNT     = 512
 
 ;
-; this should always be 16 bytes!
-;
-
-sys_handle_struc    STRUC
-
-sh_sel               DW ?
-sh_ref_count         DW ?
-sh_read_wait_sel     DW ?
-sh_write_wait_sel    DW ?
-sh_exc_wait_sel      DW ?
-sh_resv              DW ?,?,?
-
-sys_handle_struc    ENDS
-
-;
 ; this should always be 8 bytes!
 
 proc_entry_struc       STRUC
@@ -85,7 +70,7 @@ hd_proc_count    DW ?
 
 hd_proc_arr      DD MAX_PROC_COUNT DUP(?)
 hd_sys_bitmap    DD SYS_BITMAP_COUNT DUP(?)
-hd_sys_arr       DD 4 * SYS_HANDLE_COUNT DUP(?)
+hd_sys_arr       DW SYS_HANDLE_COUNT DUP(?)
 
 data       ENDS
 
@@ -111,15 +96,6 @@ create_proc_handle_name DB 'Create Proc Handle', 0
 create_proc_handle Proc far
     push ds
     pushad
-;    
-    mov eax,SEG data
-    mov ds,eax
-;
-    mov edi,OFFSET hd_sys_arr
-    inc ds:[edi].sh_ref_count
-;
-    add edi,16
-    add ds:[edi].sh_ref_count,2
 ;
     mov eax,flat_sel
     mov ds,eax
@@ -251,6 +227,76 @@ CreateSysObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateVfsSysHandle
+;
+;           DESCRIPTION:    Allocate VFS sys file handle
+;
+;           PARAMETERS:     DS          File sel
+;
+;           RETURNS:        EBX         Sys handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public AllocateVfsSysHandle
+
+AllocateVfsSysHandle     Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    int 3
+    push ds
+;
+    mov ax,SEG data
+    mov ds,ax
+    EnterSection ds:hd_section
+;
+    mov ecx,SYS_BITMAP_COUNT  
+    xor edi,edi
+    mov bx,OFFSET hd_sys_bitmap
+
+avhLoop:
+    mov eax,ds:[bx]
+    not eax
+    bsf edx,eax
+    jnz avhOk
+;
+    add bx,4
+    add edi,32
+;
+    loop avhLoop
+;
+    stc
+    pop edx
+    jmp avhLeave
+
+avhOk:
+    add edx,edi
+    bts ds:hd_sys_bitmap,edx
+;
+    pop eax
+    mov ds:[2*edx].hd_sys_arr,ax
+;
+    mov ebx,edx
+    inc bx
+    clc
+
+avhLeave:
+    LeaveSection ds:hd_section
+; 
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+AllocateVfsSysHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open handle
@@ -341,9 +387,9 @@ init_sys_handle     PROC near
     rep stosd
 ;
     mov edi,OFFSET hd_sys_arr
-    xor eax,eax
-    mov ecx,4 * SYS_HANDLE_COUNT
-    rep stosd
+    xor ax,ax
+    mov ecx,SYS_HANDLE_COUNT
+    rep stosw
 ;
     InitSection es:hd_section
     mov es:hd_sys_bitmap,3
