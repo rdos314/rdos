@@ -98,7 +98,7 @@ proc_entry  ENDS
 
 kernel_file       STRUC
 
-kf_blk            blk_header <>
+kf_sys            handle_sys_interface <>
 
 kf_info_phys      DD ?,?
 kf_info_linear    DD ?
@@ -384,6 +384,7 @@ CreateFileSel   Proc near
     push esi
     push edi
 ;
+    int 3
     mov eax,SIZE kernel_file
     call CreateSysObj
 ;
