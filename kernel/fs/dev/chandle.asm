@@ -111,7 +111,6 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
-    extern OpenVfsFile:near
     extern CloseVfsFile:near
     extern CloseVfsProc:near
     extern FreeUserHandle:near
@@ -996,9 +995,6 @@ open_handle     Proc near
     push ecx
     push edx
     push ebp
-;  
-    call OpenVfsFile
-    jnc ohCom
 ;
     OpenLegacyFile
     jc ohFail

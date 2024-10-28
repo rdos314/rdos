@@ -93,6 +93,8 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
+    extern OpenVfsFile:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -245,6 +247,69 @@ CreateSysObj    Proc near
     pop eax
     ret
 CreateSysObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenHandle
+;
+;           DESCRIPTION:    Open handle
+;
+;           PARAMETERS:     ES:(E)DI    Name
+;                           CX          Mode
+;
+;           RETURNS:        EBX         Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_handle_name  DB 'Open Handle', 0
+
+open_handle     Proc near
+    push ds
+    push eax
+    push ecx
+    push edx
+    push ebp
+;  
+    call OpenVfsFile
+    jc ohFail
+;
+    test cx,O_CREAT OR O_TRUNC
+    jz ohSizeOk
+;
+    xor eax,eax
+    xor edx,edx
+    SetHandleSize64
+
+ohSizeOk:
+    clc
+    jmp ohDone
+
+ohFail:
+    xor ebx,ebx
+    jmp ohDone
+
+ohDone:
+    pop ebp
+    pop edx
+    pop ecx
+    pop eax
+    pop ds
+    ret
+open_handle     Endp
+
+open_handle16    PROC far
+    push edi
+    movzx edi,di
+    call open_handle
+    pop edi
+    ret
+open_handle16    ENDP
+
+open_handle32    PROC far
+    call open_handle
+    ret
+open_handle32    ENDP
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -299,6 +364,13 @@ init_sys_handle     PROC near
     xor cl,cl
     mov ax,apply_proc_handle_nr
     RegisterOsGate
+;
+    mov ebx,OFFSET open_handle16
+    mov esi,OFFSET open_handle32
+    mov edi,OFFSET open_handle_name
+    mov dx,virt_es_in
+    mov ax,open_new_handle_nr
+    RegisterUserGate
 ;
     popad
     pop es
