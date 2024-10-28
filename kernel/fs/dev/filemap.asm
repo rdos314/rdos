@@ -3209,11 +3209,16 @@ CreateProcSel   Proc far
     call CreateProcObj
     mov es,eax
 ;
-    xor edi,edi
     xor eax,eax
+    mov edi,SIZE pf_base
     mov ecx,SIZE process_file
-    shr ecx,1
-    rep stosw
+    sub ecx,edi
+    push ecx
+    shr ecx,2
+    rep stosd
+    pop ecx
+    and ecx,3
+    rep stosb
 ;
     mov ecx,240
     mov es:pf_free_count,cl
