@@ -3350,7 +3350,7 @@ DeleteVfsProc      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateHandleSel      Proc near
+CreateHandleSel      Proc far
     push es
     push ebx
     push ecx
