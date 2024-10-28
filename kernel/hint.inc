@@ -59,6 +59,7 @@ hpi_create_proc           DD ?,?
 ;  IN	DS                Handle proc interface
 hpi_delete_proc           DD ?,?
 
+hpi_ref_count             DW ?
 hpi_linear                DD ?
 hpi_proc_linear           DD ?
 hpi_index                 DD ?

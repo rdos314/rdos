@@ -42,7 +42,8 @@ INCLUDE vfs.inc
 
 SYS_HANDLE_COUNT      = 1024
 SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
-PROC_COUNT            = 512
+USER_HANDLE_COUNT     = 512
+USER_BITMAP_COUNT     = USER_HANDLE_COUNT SHR 5
 
 ;
 ; this should always be 8 bytes!
@@ -60,7 +61,8 @@ proc_handle_struc    STRUC
 
 ph_linear        DD ?
 ph_section       section_typ <>
-ph_arr           DD 2 * PROC_COUNT DUP(?)
+ph_bitmap        DD USER_BITMAP_COUNT DUP(?)
+ph_arr           DW USER_HANDLE_COUNT DUP(?)
 
 proc_handle_struc    ENDS
 
@@ -98,38 +100,28 @@ create_proc_handle Proc far
     push ds
     pushad
 ;
+    push es
+;
     mov eax,flat_sel
-    mov ds,eax
+    mov es,eax
 ;
     mov eax,SIZE proc_handle_struc
     AllocateSmallLinear
-    mov ds:[edx].ph_linear,edx
+    mov es:[edx].ph_linear,edx
+;
+    lea edi,[edx].ph_bitmap
+    xor eax,eax
+    mov ecx,USER_BITMAP_COUNT
+    rep stosd
 ;
     lea edi,[edx].ph_arr
-    mov ds:[edi].pe_sel,0
-    mov ds:[edi].pe_handle,1
-    mov ds:[edi].pe_access,IO_READ OR IO_ISTTY
+    xor ax,ax
+    mov ecx,USER_HANDLE_COUNT
+    rep stosw
 ;
-    add edi,8
-    mov ds:[edi].pe_sel,0
-    mov ds:[edi].pe_handle,2
-    mov ds:[edi].pe_access,IO_WRITE OR IO_ISTTY
+    InitSection es:[edx].ph_section
 ;
-    add edi,8
-    mov ds:[edi].pe_sel,0
-    mov ds:[edi].pe_handle,2
-    mov ds:[edi].pe_access,IO_WRITE OR IO_ISTTY
-;    
-    mov ecx,PROC_COUNT - 3
-
-nsLoop:
-    add edi,8
-    mov ds:[edi].pe_sel,0
-    mov ds:[edi].pe_handle,0
-    mov ds:[edi].pe_access,0
-    loop nsLoop
-;    
-    InitSection ds:[edx].ph_section
+    pop es
 ;    
     mov eax,SEG data
     mov ds,eax
@@ -296,7 +288,8 @@ alshLoop:
 
 alshOk:
     add edx,edi
-    bts ds:hd_sys_bitmap,edx
+    lock bts ds:hd_sys_bitmap,edx
+    jc alshLoop
 ;
     pop eax
     mov ds:[2*edx].hd_sys_arr,ax
@@ -425,6 +418,7 @@ CreateProcObj    Proc near
     mov es:hpi_linear,edx
     mov es:hpi_proc_linear,0
     mov es:hpi_index,0
+    mov es:hpi_ref_count,1
     mov es:hpi_sys_sel,ds
 ;
     mov eax,ds:hsi_index
@@ -456,8 +450,6 @@ AllocateProcHandle     Proc near
     pushad
 ;
     mov ebp,eax
-    mov eax,proc_handle_sel
-    mov es,eax
 ;
     mov ecx,PROC_BITMAP_COUNT  
     xor edi,edi
@@ -479,8 +471,11 @@ alphLoop:
 
 alphOk:
     add edx,edi
-    bts ds:hsi_proc_bitmap,edx
+    lock bts ds:hsi_proc_bitmap,edx
+    jc alphLoop
 ;
+    mov ebx,proc_handle_sel
+    mov es,ebx
     mov ebx,edx
     mov edx,es:ph_linear
     mov ds:[4*ebx].hsi_proc_arr,edx
@@ -618,6 +613,60 @@ CreateHandleObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateUserHandle
+;
+;           DESCRIPTION:    Allocate user handle
+;
+;           PARAMETERS:     DS          Handle interface
+;                           EBX         User handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateUserHandle     Proc near
+    push es
+    pushad
+;
+    mov eax,proc_handle_sel
+    mov es,eax
+;
+    mov ecx,USER_BITMAP_COUNT  
+    xor edi,edi
+    mov bx,OFFSET ph_bitmap
+
+aluhLoop:
+    mov eax,es:[bx]
+    not eax
+    bsf edx,eax
+    jnz aluhOk
+;
+    add bx,4
+    add edi,32
+;
+    loop aluhLoop
+;
+    stc
+    jmp aluhDone
+
+aluhOk:
+    add edx,edi
+    lock bts es:ph_bitmap,edx
+    jc aluhLoop
+;
+    mov ebx,edx
+    mov es:[2*ebx].ph_arr,ds
+;
+    inc ebx
+    clc
+
+aluhDone:
+    popad
+    pop es
+    ret
+AllocateUserHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open handle
@@ -656,10 +705,13 @@ ohProcOk:
     LeaveSection ds:hsi_section
 ;
     mov ds,eax
+;
     call fword ptr ds:hpi_create_proc
     jc ohFail
 ;
-
+    call AllocateUserHandle
+    jc ohFail
+;
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
 ;
