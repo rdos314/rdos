@@ -618,13 +618,17 @@ CreateHandleObj   Endp
 ;           DESCRIPTION:    Allocate user handle
 ;
 ;           PARAMETERS:     DS          Handle interface
-;                           EBX         User handle
+;
+;           RETURNS:        EBX         User handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateUserHandle     Proc near
     push es
-    pushad
+    push eax
+    push ecx
+    push edx
+    push edi
 ;
     mov eax,proc_handle_sel
     mov es,eax
@@ -659,7 +663,10 @@ aluhOk:
     clc
 
 aluhDone:
-    popad
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
     pop es
     ret
 AllocateUserHandle  Endp   
@@ -683,9 +690,6 @@ open_handle_name  DB 'Open Handle', 0
 open_handle     Proc near
     push ds
     push eax
-    push ecx
-    push edx
-    push ebp
 ;  
     call OpenVfsFile
     jc ohFail
@@ -728,9 +732,6 @@ ohFail:
     jmp ohDone
 
 ohDone:
-    pop ebp
-    pop edx
-    pop ecx
     pop eax
     pop ds
     ret
