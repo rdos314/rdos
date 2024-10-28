@@ -37,6 +37,7 @@ hsi_create_proc           DD ?,?
 hsi_delete_proc           DD ?,?
 
 hsi_index                 DD ?
+hsi_section               section_typ <>
 
 handle_sys_interface    ENDS
 

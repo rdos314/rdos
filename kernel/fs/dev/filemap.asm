@@ -30,9 +30,9 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\driver.def
+INCLUDE ..\os\system.def
 INCLUDE ..\os\blk.inc
 INCLUDE ..\hint.inc
-INCLUDE ..\os\system.def
 include ..\handle.inc
 INCLUDE ..\filemap.inc
 INCLUDE ..\os\exec.def
@@ -188,7 +188,6 @@ code    SEGMENT byte public 'CODE'
     extern GetRelDir:near
     extern FileHandleToPartFs:near
     extern AllocateVfsSysHandle:near
-    extern RefVfsHandle:near
     extern AllocateProcHandle:near
     extern VfsRead:near
     extern VfsWrite:near
@@ -3861,7 +3860,7 @@ CloseVfsProc   Endp
 ;           PARAMETERS:     ES:EDI      Filename
 ;                           CX          Mode
 ;                           
-;           RETURNS:        BX          File handle entry
+;           RETURNS:        DS          Sys handle obj
 ;                           NC          Success
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3869,7 +3868,6 @@ CloseVfsProc   Endp
     public OpenVfsFile
 
 OpenVfsFile    Proc near
-    push ds
     push es
     push fs
     push gs
@@ -3946,14 +3944,13 @@ ovfFound:
     jc ovfFail
 ;
     mov ds,eax
-    EnterSection ds:kf_section
+    EnterSection ds:hsi_section
 ;
     mov ebx,ds:hsi_index
     or ebx,ebx
     jz ovfNew
 ;
     call SendDerefReq
-    call RefVfsHandle
     jmp ovfHandleOk
 
 ovfNew:
@@ -3961,29 +3958,13 @@ ovfNew:
     mov ds:hsi_index,ebx
 
 ovfHandleOk:
-    call FindVfsProc
-    jnc ovfModOk
-;
-    call CreateVfsProc
-    call AddVfsProc
-
-ovfModOk:
-    LeaveSection ds:kf_section
-;
-    call AllocateUserHandle
-    call AllocateProcHandle
-    jnc ovfModHOk
-;
-    int 3
-    jmp ovfFail
-
-ovfModHOk:
-    mov ds,eax
-    inc ds:pf_ref_count
+    LeaveSection ds:hsi_section
     clc
     jmp ovfDone
 
 ovfFail:
+    xor eax,eax
+    mov ds,eax
     stc
 
 ovfDone:
@@ -3996,7 +3977,6 @@ ovfDone:
     pop gs
     pop fs
     pop es
-    pop ds
     ret
 OpenVfsFile   Endp
 
@@ -5534,7 +5514,6 @@ DupKernelVfsFile    Proc near
     jz dkvfNew
 ;
     call SendDerefReq
-    call RefVfsHandle
     jmp dkvfHandleOk
 
 dkvfNew:

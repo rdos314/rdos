@@ -218,6 +218,7 @@ CreateSysObj    Proc near
     mov ds:hsi_delete_proc+4,cs
 ;
     mov ds:hsi_index,0
+    InitSection ds:hsi_section
 ;
     pop esi
     pop eax
