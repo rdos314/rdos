@@ -3239,6 +3239,9 @@ cvmsLoop:
     mov es:pf_handle,0
     mov es:pf_ref_count,0
 ;
+    mov es:hpi_create_proc,OFFSET CreateHandleSel
+    mov es:hpi_create_proc+4,cs
+;
     push ds
     AllocateLdt
     pop ds
@@ -3325,26 +3328,27 @@ DeleteVfsProc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           AllocateUserHandle
+;       NAME:           CreateHandleSel
 ;
-;       DESCRIPTION:    Allocate user handle
+;       DESCRIPTION:    Create handle sel
 ;
-;       PARAMETERS:     AX              Proc file sel
+;       PARAMETERS:     DS              Handle proc interface
+;                       CX              Access
 ;
 ;       RETURNS:        NC
-;                         DX            User handle
+;                         AX            Handle interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateUserHandle      Proc near
-    push ds
+CreateHandleSel      Proc near
     push es
-    push eax
     push ebx
     push ecx
+    push edx
     push esi
+    push edi
 ;
-    mov ds,eax
+    mov edi,ecx
     mov bx,flat_data_sel
     mov es,ebx
     mov edx,ds:pf_map_linear
@@ -3353,16 +3357,16 @@ AllocateUserHandle      Proc near
     mov ecx,15
     xor esi,esi
 
-auhLoop:
+chsLoop:
     mov eax,es:[edx]
     cmp eax,-1
-    je auhNext
+    je chsNext
 ;
     not eax
     bsf ebx,eax
 ;
     lock bts es:[edx],ebx
-    jc auhLoop
+    jc chsLoop
 ;
     add ebx,esi
 ;
@@ -3379,26 +3383,26 @@ auhLoop:
     mov es:[edx],eax
 ;
     inc ebx
-    mov edx,ebx
+    mov eax,ebx
     clc
-    jmp auhDone
+    jmp chsDone
 
-auhNext:
+chsNext:
     add esi,32
     add edx,4
-    loop auhLoop
+    loop chsLoop
 ;
     stc
 
-auhDone:
+chsDone:
+    pop edi
     pop esi
     pop ecx
+    pop edx
     pop ebx
-    pop eax
     pop es
-    pop ds
     ret
-AllocateUserHandle      Endp
+CreateHandleSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5382,7 +5386,7 @@ DupVfsFile  Proc near
     mov ds,eax
 ;
     inc ds:pf_ref_count
-    call AllocateUserHandle
+;    call AllocateUserHandle
     movzx edi,dx
     dec edi
     shl edi,3
@@ -5453,7 +5457,7 @@ dkvfHandleOk:
 dkvfModOk:
     LeaveSection ds:kf_section
 ;
-    call AllocateUserHandle
+;    call AllocateUserHandle
     call AllocateProcHandle
     jnc dkvfModHOk
 ;
