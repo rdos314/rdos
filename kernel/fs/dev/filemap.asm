@@ -119,13 +119,11 @@ kf_wait_list      DD ?
 kf_wr_base        DD ?,?
 kf_wr_size        DD ?
 
-kf_proc_count     DD ?
 kf_req_count      DD ?
 kf_wait_count     DD ?
 kf_block_count    DD ?
 kf_phys_count     DD ?
 
-kf_proc_arr       DD 64 DUP(?)
 kf_sorted_arr     DB 256 DUP(?)
 kf_handle_arr     DD 256 DUP(?)
 
@@ -420,7 +418,6 @@ CreateFileSel   Proc near
     mov ds:kf_c_handle,0
     mov ds:kf_kmap_linear,0
     mov ds:kf_kmap_sel,0
-    mov ds:kf_proc_count,0
 ;
     mov ecx,256
     mov edi,OFFSET kf_handle_arr
@@ -486,29 +483,48 @@ CreateFileSel   Endp
 UpdateFileSel   Proc near
     push ds
     push es
-    push ebx
-    push ecx
-    push edx
+    pushad
 ;
-    mov ds,ax
-    mov ebx,OFFSET kf_proc_arr
-    mov ecx,ds:kf_proc_count
-    or ecx,ecx
-    jz ufsKernel
+    mov ds,eax
+    EnterSection ds:hsi_section
+;
+    mov eax,flat_sel
+    mov es,eax
+;
+    mov ecx,PROC_BITMAP_COUNT  
+    mov esi,OFFSET hsi_proc_bitmap
+    mov edi,OFFSET hsi_proc_arr
 
 ufsLoop:
-    mov ax,ds:[ebx].pe_map_sel
-    or ax,ax
+    mov eax,ds:[esi]
+    or eax,eax
     jz ufsNext
 ;
-    mov es,eax
-    mov es:pf_check,1
+    push ecx
+    mov ecx,32
+
+ufseLoop:
+    mov edx,ds:[edi]
+    or edx,edx
+    jz ufseNext
 ;
-    mov es,es:pf_map_sel
-    mov es:fm_update,1
+    mov es:[edx].pf_check,1
+;
+    mov edx,es:[edx].pf_map_linear
+    mov es:[edx].fm_update,1
+
+ufseNext:
+    add edi,4
+    loop ufseLoop
+;
+    pop ecx
+    jmp ufsCont
 
 ufsNext:
-    add ebx,4
+    add edi,4*32
+
+ufsCont:
+    add esi,4
     loop ufsLoop
 
 ufsKernel:
@@ -520,9 +536,9 @@ ufsKernel:
     mov es:fm_update,1
 
 ufsDone:
-    pop edx
-    pop ecx
-    pop ebx
+    LeaveSection ds:hsi_section
+;
+    popad
     pop es
     pop ds
     ret
@@ -2806,38 +2822,47 @@ DisableFileReq  Proc near
     push gs
     pushad
 ;
+    EnterSection ds:hsi_section
     mov ebx,ds:[4*edx].kf_handle_arr
     lock bts ds:[ebx].kre_flags,KRE_DISABLED
 ;
-    mov ebx,OFFSET kf_proc_arr
-    mov ecx,ds:kf_proc_count
-    or ecx,ecx
-    jz dfrKernel
+    mov ecx,PROC_BITMAP_COUNT  
+    mov esi,OFFSET hsi_proc_bitmap
+    mov edi,OFFSET hsi_proc_arr
 
 dfrLoop:
-    mov ax,ds:[ebx].pe_map_sel
-    or ax,ax
+    mov eax,ds:[esi]
+    or eax,eax
     jz dfrNext
+;
+    push ecx
+    mov ecx,32
+
+dfreLoop:
+    mov esi,ds:[edi]
+    or esi,esi
+    jz dfreNext
 ;
     push ds
     push ebx
     push ecx
 ;
+    mov eax,flat_sel
     mov ds,eax
-    EnterSection ds:pf_section
+    EnterSection ds:[esi].pf_section
 ;
     mov ecx,240
     xor ebx,ebx
 
 dfrmLoop:
-    mov al,ds:[ebx].pf_ref_arr
+    mov al,ds:[esi+ebx].pf_ref_arr
     or al,al
     jz dfrmNext
 ;
-    cmp edx,ds:[4*ebx].pf_src_arr
+    cmp edx,ds:[esi+4*ebx].pf_src_arr
     jne dfrmNext
 ;
-    mov ds:[ebx].pf_disabled_arr,1
+    mov ds:[esi+ebx].pf_disabled_arr,1
     jmp dfrmLeave
 
 dfrmNext:
@@ -2845,17 +2870,30 @@ dfrmNext:
     loop dfrmLoop
 
 dfrmLeave:
-    LeaveSection ds:pf_section
+    LeaveSection ds:[esi].pf_section
 ; 
     pop ecx
     pop ebx
     pop ds
 
+dfreNext:
+    add edi,4
+    loop dfreLoop
+;
+    pop ecx
+    jmp dfrCont
+
 dfrNext:
-    add ebx,4
-    loop dfrLoop
+    add edi,4*32
+
+dfrCont:
+    add esi,4
+    sub ecx,1
+    jnz dfrLoop
 
 dfrKernel:
+    LeaveSection ds:hsi_section
+;
     EnterSection ds:kf_kmap_section
     mov ax,ds:kf_kmap_sel
     or ax,ax
@@ -3071,56 +3109,6 @@ ffrDone:
     pop es
     ret
 FreeFileReq  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           RemoveVfsProc
-;
-;       DESCRIPTION:    Remove VFS proc
-;
-;       PARAMETERS:     DS              File sel
-;                       AX              Proc file sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveVfsProc      Proc near
-    push eax
-    push ebx
-    push ecx
-;
-    mov ebx,OFFSET kf_proc_arr
-    mov ecx,ds:kf_proc_count
-    or ecx,ecx
-    jnz rvmLoop
-;
-    int 3
-    jmp rvmDone
-
-rvmLoop:
-    cmp ax,ds:[ebx].pe_map_sel
-    je rvmFound
-;
-    add ebx,4
-    loop rvmLoop
-;
-    int 3
-    jmp rvmDone
-
-rvmFound:
-    mov eax,ds:[ebx+4]
-    mov ds:[ebx],eax
-    add ebx,4
-    loop rvmFound
-;
-    dec ds:kf_proc_count
-
-rvmDone:
-    pop ecx
-    pop ebx
-    pop eax
-    ret
-RemoveVfsProc      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3780,8 +3768,8 @@ CloseVfsProc   Proc near
 ;
     call DeleteMap
 ;
-    mov ds,ds:pf_file_sel
-    call RemoveVfsProc
+;    mov ds,ds:pf_file_sel
+;    call RemoveVfsProc
 ;
     call DeleteVfsProc
 
@@ -5035,9 +5023,9 @@ CloseKernelVfsFile   Proc near
     mov ds:kf_kmap_linear,0
     FreeMem
 ;
-    mov eax,ds:kf_proc_count
-    or eax,eax
-    jnz ckvfDone
+;    mov eax,ds:kf_proc_count
+;    or eax,eax
+;    jnz ckvfDone
 ;
     call SendCloseReq
 
