@@ -58,6 +58,7 @@ proc_entry_struc       ENDS
 
 proc_handle_struc    STRUC
 
+ph_linear        DD ?
 ph_section       section_typ <>
 ph_arr           DD 2 * PROC_COUNT DUP(?)
 
@@ -102,7 +103,8 @@ create_proc_handle Proc far
 ;
     mov eax,SIZE proc_handle_struc
     AllocateSmallLinear
-;    
+    mov ds:[edx].ph_linear,edx
+;
     lea edi,[edx].ph_arr
     mov ds:[edi].pe_sel,0
     mov ds:[edi].pe_handle,1
@@ -300,7 +302,7 @@ alshOk:
     mov ds:[2*edx].hd_sys_arr,ax
 ;
     mov ebx,edx
-    inc bx
+    inc ebx
     clc
 
 alshLeave:
@@ -437,6 +439,71 @@ CreateProcObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateProcHandle
+;
+;           DESCRIPTION:    Allocate proc handle
+;
+;           PARAMETERS:     DS          Sys handle sel
+;
+;           RETURNS:        EBX         Proc handle
+;                           EDX         Proc linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateProcHandle     Proc near
+    push es
+    push eax
+    push ecx
+    push edi
+;
+    mov eax,proc_handle_sel
+    mov es,eax
+;
+    EnterSection ds:hsi_section
+;
+    mov ecx,PROC_BITMAP_COUNT  
+    xor edi,edi
+    mov bx,OFFSET hsi_proc_bitmap
+
+alphLoop:
+    mov eax,ds:[bx]
+    not eax
+    bsf edx,eax
+    jnz alphOk
+;
+    add bx,4
+    add edi,32
+;
+    loop alphLoop
+;
+    stc
+    pop edx
+    jmp alphLeave
+
+alphOk:
+    add edx,edi
+    bts ds:hsi_proc_bitmap,edx
+;
+    mov ebx,edx
+    mov edx,es:ph_linear
+    mov ds:[4*ebx].hsi_proc_arr,edx
+;
+    inc ebx
+    clc
+
+alphLeave:
+    LeaveSection ds:hsi_section
+; 
+    pop edi
+    pop ecx
+    pop eax
+    pop es
+    ret
+AllocateProcHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open handle
@@ -467,6 +534,15 @@ open_handle     Proc near
     jc ohFail
 
 ohProcOk:
+    call AllocateProcHandle
+    jc ohFail
+;
+    mov ds,eax
+    mov ds:hpi_index,ebx
+    mov ds:hpi_proc_linear,edx
+;
+
+
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
 ;
