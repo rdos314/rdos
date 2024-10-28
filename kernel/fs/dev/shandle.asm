@@ -500,6 +500,124 @@ AllocateProcHandle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateHandleObj
+;
+;           DESCRIPTION:    Create proc object
+;
+;           PARAMETERS:     EAX        Size of object
+;                           DS         Proc handle sel
+;
+;           RETURNS:        AX         Handle sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateHandleObj
+
+handle_fail    Proc far
+    stc
+    ret
+handle_fail    Endp
+
+CreateHandleObj    Proc near
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+;
+    AllocateSmallLinear
+;
+    push ds
+    AllocateLdt
+    pop ds
+;
+    or bx,4
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,ebx
+;
+    mov es:hei_dup_proc,OFFSET handle_fail
+    mov es:hei_dup_proc+4,cs
+;
+    mov es:hei_get_map_proc,OFFSET handle_fail
+    mov es:hei_get_map_proc+4,cs
+;
+    mov es:hei_poll_proc,OFFSET handle_fail
+    mov es:hei_poll_proc+4,cs
+;
+    mov es:hei_read_proc,OFFSET handle_fail
+    mov es:hei_read_proc+4,cs
+;
+    mov es:hei_write_proc,OFFSET handle_fail
+    mov es:hei_write_proc+4,cs
+;
+    mov es:hei_get_size_proc,OFFSET handle_fail
+    mov es:hei_get_size_proc+4,cs
+;
+    mov es:hei_set_size_proc,OFFSET handle_fail
+    mov es:hei_set_size_proc+4,cs
+;
+    mov es:hei_get_pos_proc,OFFSET handle_fail
+    mov es:hei_get_pos_proc+4,cs
+;
+    mov es:hei_set_pos_proc,OFFSET handle_fail
+    mov es:hei_set_pos_proc+4,cs
+;
+    mov es:hei_get_create_time_proc,OFFSET handle_fail
+    mov es:hei_get_create_time_proc+4,cs
+;
+    mov es:hei_get_modify_time_proc,OFFSET handle_fail
+    mov es:hei_get_modify_time_proc+4,cs
+;
+    mov es:hei_get_access_time_proc,OFFSET handle_fail
+    mov es:hei_get_access_time_proc+4,cs
+;
+    mov es:hei_set_modify_time_proc,OFFSET handle_fail
+    mov es:hei_set_modify_time_proc+4,cs
+;
+    mov es:hei_is_eof_proc,OFFSET handle_fail
+    mov es:hei_is_eof_proc+4,cs
+;
+    mov es:hei_is_device_proc,OFFSET handle_fail
+    mov es:hei_is_device_proc+4,cs
+;
+    mov es:hei_is_ip4_proc,OFFSET handle_fail
+    mov es:hei_is_ip4_proc+4,cs
+;
+    mov es:hei_input_size_proc,OFFSET handle_fail
+    mov es:hei_input_size_proc+4,cs
+;
+    mov es:hei_output_size_proc,OFFSET handle_fail
+    mov es:hei_output_size_proc+4,cs
+;
+    mov es:hei_delete,OFFSET handle_fail
+    mov es:hei_delete+4,cs
+;
+    mov es:hei_index,0
+    mov es:hei_proc_sel,ds
+;
+    mov eax,ds:hpi_index
+    mov es:hei_proc_index,eax
+;
+    mov ds,ds:hpi_sys_sel
+    mov es:hei_sys_sel,ds
+;
+    mov eax,ds:hsi_index
+    mov es:hei_sys_index,eax
+;
+    mov eax,es
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+CreateHandleObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open handle

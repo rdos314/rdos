@@ -147,15 +147,15 @@ hei_input_size_proc       DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  ECX               Available bytes in output buffer
-hei_output_size_proc       DD ?,?
+hei_output_size_proc      DD ?,?
 
-;  IN	DS        Handle entry interface
-hei_delete        DD ?,?
+;  IN	DS                Handle entry interface
+hei_delete                DD ?,?
 
-hei_index         DD ?
-hei_proc_index    DD ?
-hei_proc_sel      DW ?
-hei_sys_index     DD ?
-hei_sys_sel       DW ?
+hei_index                 DD ?
+hei_proc_index            DD ?
+hei_proc_sel              DW ?
+hei_sys_index             DD ?
+hei_sys_sel               DW ?
 
 handle_entry_interface    ENDS

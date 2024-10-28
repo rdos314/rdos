@@ -154,6 +154,15 @@ pf_unlink_arr    DB 240 DUP(?)
 
 process_file   ENDS
 
+
+handle_file   STRUC
+
+hf_base          handle_entry_interface <>
+hf_user_handle   DD ?
+
+handle_file   ENDS
+
+
 kernel_file_map  STRUC
 
 kfm_map           file_map <>
@@ -199,6 +208,7 @@ code    SEGMENT byte public 'CODE'
 
     extern CreateSysObj:near
     extern CreateProcObj:near
+    extern CreateHandleObj:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3382,8 +3392,12 @@ chsLoop:
     add edx,4
     mov es:[edx],eax
 ;
+    mov eax,SIZE handle_file
+    call CreateHandleObj
+    mov es,eax
+;
     inc ebx
-    mov eax,ebx
+    mov es:hf_user_handle,ebx
     clc
     jmp chsDone
 
