@@ -42,7 +42,7 @@ INCLUDE vfs.inc
 
 SYS_HANDLE_COUNT      = 1024
 SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
-PROC_HANDLE_COUNT     = 512
+PROC_COUNT            = 512
 
 ;
 ; this should always be 8 bytes!
@@ -59,7 +59,7 @@ proc_entry_struc       ENDS
 proc_handle_struc    STRUC
 
 ph_section       section_typ <>
-ph_arr           DD 2 * PROC_HANDLE_COUNT DUP(?)
+ph_arr           DD 2 * PROC_COUNT DUP(?)
 
 proc_handle_struc    ENDS
 
@@ -118,7 +118,7 @@ create_proc_handle Proc far
     mov ds:[edi].pe_handle,2
     mov ds:[edi].pe_access,IO_WRITE OR IO_ISTTY
 ;    
-    mov ecx,PROC_HANDLE_COUNT - 3
+    mov ecx,PROC_COUNT - 3
 
 nsLoop:
     add edi,8
@@ -217,6 +217,7 @@ CreateSysObj    Proc near
     mov ds:hsi_delete_proc,OFFSET del_sys_fail
     mov ds:hsi_delete_proc+4,cs
 ;
+    mov ds:hsi_proc_count,0
     mov ds:hsi_index,0
     InitSection ds:hsi_section
 ;
@@ -232,7 +233,7 @@ CreateSysObj   Endp
 ;
 ;           DESCRIPTION:    Allocate VFS sys file handle
 ;
-;           PARAMETERS:     DS          File sel
+;           PARAMETERS:     DS          Sys handle sel
 ;
 ;           RETURNS:        EBX         Sys handle
 ;
@@ -247,7 +248,6 @@ AllocateVfsSysHandle     Proc near
     push edx
     push edi
 ;
-    int 3
     push ds
 ;
     mov ax,SEG data
@@ -296,6 +296,63 @@ avhLeave:
 AllocateVfsSysHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindProc
+;
+;       DESCRIPTION:    Find proc sel
+;
+;       PARAMETERS:     DS              Sys handle sel
+;
+;       RETURNS:        NC
+;                         AX            Proc handle sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindProc      Proc near
+    push es
+    push ebx
+    push ecx
+;
+    movzx ecx,ds:hsi_proc_count
+    or ecx,ecx
+    jz fpFail
+;
+;    GetThread
+;    mov es,ax
+;    mov es,es:p_proc_sel
+;    mov ax,es:pf_c_handle_sel
+;
+;    mov ebx,OFFSET kf_proc_arr
+;    mov ecx,ds:kf_proc_count
+;    or ecx,ecx
+;    stc
+;    jz fvmDone
+
+fvmLoop:
+;    cmp ax,ds:[ebx].pe_proc_sel
+;    je fvmFound
+;
+;    add ebx,4
+;    loop fvmLoop
+;
+
+fpFail:
+    stc
+;    jmp fvmDone
+
+fvmFound:
+;    mov ax,ds:[ebx].pe_map_sel
+;    clc
+
+fvmDone:
+    pop ecx
+    pop ebx
+    pop es
+    ret
+FindProc    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           OpenHandle
@@ -321,6 +378,9 @@ open_handle     Proc near
     call OpenVfsFile
     jc ohFail
 ;
+    call FindProc
+;
+
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
 ;

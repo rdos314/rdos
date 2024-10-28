@@ -25,6 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+PROC_HANDLE_COUNT     = 64
+
 handle_sys_interface    STRUC
 
 hsi_blk                   blk_header <>
@@ -38,6 +40,9 @@ hsi_delete_proc           DD ?,?
 
 hsi_index                 DD ?
 hsi_section               section_typ <>
+
+hsi_proc_count            DW ?
+hsi_proc_arr              DD PROC_HANDLE_COUNT DUP(?)
 
 handle_sys_interface    ENDS
 
