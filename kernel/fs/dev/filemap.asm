@@ -3208,6 +3208,7 @@ CreateProcSel   Proc far
     int 3
     mov eax,SIZE process_file
     call CreateProcObj
+    mov es,eax
 ;
     xor edi,edi
     xor eax,eax
@@ -3234,7 +3235,8 @@ cvmsLoop:
     mov es:pf_handle,0
     mov es:pf_ref_count,0
 ;
-    AllocateGdt
+    AllocateLdt
+    or bx,4
     mov ecx,1000h
     mov edx,ebp
     CreateDataSelector32
@@ -3872,6 +3874,7 @@ ovfNew:
     mov ds:hsi_index,ebx
 
 ovfHandleOk:
+    inc ds:hsi_ref_count
     LeaveSection ds:hsi_section
     clc
     jmp ovfDone

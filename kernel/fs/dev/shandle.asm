@@ -204,8 +204,11 @@ del_sys_fail    Proc far
 del_sys_fail    Endp
 
 CreateSysObj    Proc near
+    push es
     push eax
+    push ecx
     push esi
+    push edi
 ;
     mov esi,eax
     mov ax,8
@@ -217,12 +220,28 @@ CreateSysObj    Proc near
     mov ds:hsi_delete_proc,OFFSET del_sys_fail
     mov ds:hsi_delete_proc+4,cs
 ;
-    mov ds:hsi_proc_count,0
+    mov ds:hsi_ref_count,0
     mov ds:hsi_index,0
     InitSection ds:hsi_section
 ;
+    mov eax,ds
+    mov es,eax
+;
+    mov edi,OFFSET hsi_proc_arr
+    xor eax,eax
+    mov ecx,PROC_HANDLE_COUNT
+    rep stosd
+;
+    mov edi,OFFSET hsi_proc_bitmap
+    xor eax,eax
+    mov ecx,SYS_BITMAP_COUNT
+    rep stosd
+;
+    pop edi
     pop esi
+    pop ecx
     pop eax
+    pop es
     ret
 CreateSysObj   Endp
 
@@ -314,9 +333,9 @@ FindProc      Proc near
     push ebx
     push ecx
 ;
-    movzx ecx,ds:hsi_proc_count
-    or ecx,ecx
-    jz fpFail
+;    movzx ecx,ds:hsi_proc_count
+;    or ecx,ecx
+;    jz fpFail
 ;
 ;    GetThread
 ;    mov es,ax
@@ -380,8 +399,17 @@ del_proc_fail    Endp
 
 CreateProcObj    Proc near
     push es
+    push ebx
+    push ecx
+    push edx
 ;
-    AllocateSmallGlobalMem
+    AllocateSmallLinear
+    AllocateLdt
+;
+    or bx,4
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,ebx
 ;
     mov es:hpi_create_proc,OFFSET cr_handle_fail
     mov es:hpi_create_proc+4,cs
@@ -389,6 +417,8 @@ CreateProcObj    Proc near
     mov es:hpi_delete_proc,OFFSET del_proc_fail
     mov es:hpi_delete_proc+4,cs
 ;
+    mov es:hpi_linear,edx
+    mov es:hpi_proc_linear,0
     mov es:hpi_index,0
     mov es:hpi_sys_sel,ds
 ;
@@ -397,6 +427,9 @@ CreateProcObj    Proc near
 ;
     mov eax,es
 ;
+    pop edx
+    pop ecx
+    pop ebx
     pop es
     ret
 CreateProcObj   Endp

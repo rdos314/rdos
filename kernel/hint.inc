@@ -26,6 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PROC_HANDLE_COUNT     = 64
+PROC_BITMAP_COUNT     = PROC_HANDLE_COUNT SHR 5
 
 handle_sys_interface    STRUC
 
@@ -41,7 +42,9 @@ hsi_delete_proc           DD ?,?
 hsi_index                 DD ?
 hsi_section               section_typ <>
 
-hsi_proc_count            DW ?
+hsi_ref_count             DW ?
+
+hsi_proc_bitmap           DD PROC_BITMAP_COUNT DUP(?)
 hsi_proc_arr              DD PROC_HANDLE_COUNT DUP(?)
 
 handle_sys_interface    ENDS
@@ -56,6 +59,8 @@ hpi_create_proc           DD ?,?
 ;  IN	DS                Handle proc interface
 hpi_delete_proc           DD ?,?
 
+hpi_linear                DD ?
+hpi_proc_linear           DD ?
 hpi_index                 DD ?
 hpi_sys_index             DD ?
 hpi_sys_sel               DW ?
