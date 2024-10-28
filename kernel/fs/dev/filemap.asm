@@ -3411,8 +3411,8 @@ chsNext:
 chsDone:
     pop edi
     pop esi
-    pop ecx
     pop edx
+    pop ecx
     pop ebx
     pop es
     ret
