@@ -355,6 +355,55 @@ FindProc    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateProcObj
+;
+;           DESCRIPTION:    Create proc object
+;
+;           PARAMETERS:     EAX        Size of object
+;                           DS         Sys handle sel
+;
+;           RETURNS:        AX         Proc handle sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateProcObj
+
+cr_handle_fail    Proc far
+    stc
+    ret
+cr_handle_fail    Endp
+
+del_proc_fail    Proc far
+    stc
+    ret
+del_proc_fail    Endp
+
+CreateProcObj    Proc near
+    push es
+;
+    AllocateSmallGlobalMem
+;
+    mov es:hpi_create_proc,OFFSET cr_handle_fail
+    mov es:hpi_create_proc+4,cs
+;
+    mov es:hpi_delete_proc,OFFSET del_proc_fail
+    mov es:hpi_delete_proc+4,cs
+;
+    mov es:hpi_index,0
+    mov es:hpi_sys_sel,ds
+;
+    mov eax,ds:hsi_index
+    mov es:hpi_sys_index,eax
+;
+    mov eax,es
+;
+    pop es
+    ret
+CreateProcObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandle
 ;
 ;           DESCRIPTION:    Open handle

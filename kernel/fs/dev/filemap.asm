@@ -133,6 +133,8 @@ kernel_file       ENDS
 
 process_file   STRUC
 
+pf_base          handle_proc_interface <>
+
 pf_flat_base     DD ?
 pf_map_linear    DD ?
 pf_map_sel       DW ?
@@ -196,6 +198,7 @@ code    SEGMENT byte public 'CODE'
     extern UpdateWrBitmap:near
 
     extern CreateSysObj:near
+    extern CreateProcObj:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -385,6 +388,9 @@ CreateFileSel   Proc near
 ;
     mov eax,SIZE kernel_file
     call CreateSysObj
+;
+    mov ds:hsi_create_proc,OFFSET CreateProcSel
+    mov ds:hsi_create_proc+4,cs
 ;
     InitSection ds:kf_section
     InitSection ds:kf_update_section
@@ -3059,95 +3065,6 @@ FreeFileReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           FindVfsProc
-;
-;       DESCRIPTION:    Find VFS proc sel
-;
-;       PARAMETERS:     DS              File sel
-;
-;       RETURNS:        NC
-;                         AX            Proc file sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindVfsProc      Proc near
-    push es
-    push ebx
-    push ecx
-;
-    GetThread
-    mov es,ax
-    mov es,es:p_proc_sel
-    mov ax,es:pf_c_handle_sel
-;
-    mov ebx,OFFSET kf_proc_arr
-    mov ecx,ds:kf_proc_count
-    or ecx,ecx
-    stc
-    jz fvmDone
-
-fvmLoop:
-    cmp ax,ds:[ebx].pe_proc_sel
-    je fvmFound
-;
-    add ebx,4
-    loop fvmLoop
-;
-    stc
-    jmp fvmDone
-
-fvmFound:
-    mov ax,ds:[ebx].pe_map_sel
-    clc
-
-fvmDone:
-    pop ecx
-    pop ebx
-    pop es
-    ret
-FindVfsProc    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           AddVfsProc
-;
-;       DESCRIPTION:    Add VFS proc
-;
-;       PARAMETERS:     DS              File sel
-;                       AX              Proc file sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddVfsProc      Proc near
-    push eax
-    push ebx
-;
-    mov ebx,ds:kf_proc_count
-    shl ebx,2
-    add ebx,OFFSET kf_proc_arr
-    mov ds:[ebx].pe_map_sel,ax
-;
-    push ds
-;
-    GetThread
-    mov ds,ax
-    mov ds,ds:p_proc_sel
-    mov ax,ds:pf_c_handle_sel
-;
-    pop ds
-;
-    mov ds:[ebx].pe_proc_sel,ax
-    inc ds:kf_proc_count
-;
-    pop ebx
-    pop eax
-    ret
-AddVfsProc    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           RemoveVfsProc
 ;
 ;       DESCRIPTION:    Remove VFS proc
@@ -3198,18 +3115,18 @@ RemoveVfsProc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateVfsProc
+;       NAME:           CreateProcSel
 ;
-;       DESCRIPTION:    Create VFS proc sel
+;       DESCRIPTION:    Create proc sel
 ;
-;       PARAMETERS:     DS              File sel
+;       PARAMETERS:     DS              Sys handle sel
 ;
 ;       RETURNS:        NC
-;                         AX            Proc file sel
+;                         AX            Proc handle sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateVfsProc   Proc near
+CreateProcSel   Proc far
     push es
     push ebx
     push ecx
@@ -3221,10 +3138,6 @@ CreateVfsProc   Proc near
     mov ax,system_data_sel
     mov es,ax
     mov ebx,es:flat_base
-;
-    GetThread
-    mov es,ax
-    mov si,es:p_prog_sel
 ;
     mov ax,flat_data_sel
     mov es,eax
@@ -3292,8 +3205,9 @@ CreateVfsProc   Proc near
     pop edx
     pop ebx
 ;
+    int 3
     mov eax,SIZE process_file
-    AllocateSmallGlobalMem
+    call CreateProcObj
 ;
     xor edi,edi
     xor eax,eax
@@ -3335,7 +3249,7 @@ cvmsLoop:
     pop ebx
     pop es
     ret
-CreateVfsProc      Endp
+CreateProcSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5521,11 +5435,11 @@ dkvfNew:
     mov ds:kf_c_handle,bx
 
 dkvfHandleOk:
-    call FindVfsProc
+;    call FindVfsProc
     jnc dkvfModOk
 ;
-    call CreateVfsProc
-    call AddVfsProc
+;    call CreateVfsProc
+;    call AddVfsProc
 
 dkvfModOk:
     LeaveSection ds:kf_section
