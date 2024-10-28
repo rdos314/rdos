@@ -3205,7 +3205,6 @@ CreateProcSel   Proc far
     pop edx
     pop ebx
 ;
-    int 3
     mov eax,SIZE process_file
     call CreateProcObj
     mov es,eax

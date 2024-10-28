@@ -447,22 +447,17 @@ CreateProcObj   Endp
 ;           DESCRIPTION:    Allocate proc handle
 ;
 ;           PARAMETERS:     DS          Sys handle sel
-;
-;           RETURNS:        EBX         Proc handle
-;                           EDX         Proc linear
+;                           AX          Proc handle sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateProcHandle     Proc near
     push es
-    push eax
-    push ecx
-    push edi
+    pushad
 ;
+    mov ebp,eax
     mov eax,proc_handle_sel
     mov es,eax
-;
-    EnterSection ds:hsi_section
 ;
     mov ecx,PROC_BITMAP_COUNT  
     xor edi,edi
@@ -480,8 +475,7 @@ alphLoop:
     loop alphLoop
 ;
     stc
-    pop edx
-    jmp alphLeave
+    jmp alphDone
 
 alphOk:
     add edx,edi
@@ -491,15 +485,14 @@ alphOk:
     mov edx,es:ph_linear
     mov ds:[4*ebx].hsi_proc_arr,edx
 ;
+    mov es,ebp
     inc ebx
+    mov es:hpi_index,ebx
+    mov es:hpi_proc_linear,edx
     clc
 
-alphLeave:
-    LeaveSection ds:hsi_section
-; 
-    pop edi
-    pop ecx
-    pop eax
+alphDone:
+    popad
     pop es
     ret
 AllocateProcHandle  Endp   
@@ -530,21 +523,24 @@ open_handle     Proc near
     call OpenVfsFile
     jc ohFail
 ;
+    EnterSection ds:hsi_section
+;
     call FindProc
     jnc ohProcOk
 ;
     call fword ptr ds:hsi_create_proc
     jc ohFail
-
-ohProcOk:
+;
     call AllocateProcHandle
     jc ohFail
+
+ohProcOk:
+    LeaveSection ds:hsi_section
 ;
     mov ds,eax
-    mov ds:hpi_index,ebx
-    mov ds:hpi_proc_linear,edx
+    call fword ptr ds:hpi_create_proc
+    jc ohFail
 ;
-
 
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
