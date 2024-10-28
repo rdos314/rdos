@@ -46,6 +46,7 @@ hsi_ref_count             DW ?
 
 hsi_proc_bitmap           DD PROC_BITMAP_COUNT DUP(?)
 hsi_proc_arr              DD PROC_HANDLE_COUNT DUP(?)
+hsi_sel_arr               DW PROC_HANDLE_COUNT DUP(?)
 
 handle_sys_interface    ENDS
 

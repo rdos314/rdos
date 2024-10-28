@@ -226,6 +226,11 @@ CreateSysObj    Proc near
     mov ecx,PROC_HANDLE_COUNT
     rep stosd
 ;
+    mov edi,OFFSET hsi_sel_arr
+    xor eax,eax
+    mov ecx,PROC_HANDLE_COUNT
+    rep stosw
+;
     mov edi,OFFSET hsi_proc_bitmap
     xor eax,eax
     mov ecx,SYS_BITMAP_COUNT
@@ -325,43 +330,58 @@ AllocateLocalSysHandle  Endp
 
 FindProc      Proc near
     push es
-    push ebx
     push ecx
+    push edx
+    push esi
+    push edi
 ;
-;    movzx ecx,ds:hsi_proc_count
-;    or ecx,ecx
-;    jz fpFail
+    mov eax,proc_handle_sel
+    mov es,eax
+    mov edx,es:ph_linear
 ;
-;    GetThread
-;    mov es,ax
-;    mov es,es:p_proc_sel
-;    mov ax,es:pf_c_handle_sel
-;
-;    mov ebx,OFFSET kf_proc_arr
-;    mov ecx,ds:kf_proc_count
-;    or ecx,ecx
-;    stc
-;    jz fvmDone
+    mov ecx,PROC_BITMAP_COUNT  
+    mov esi,OFFSET hsi_proc_bitmap
+    mov edi,OFFSET hsi_proc_arr
 
-fvmLoop:
-;    cmp ax,ds:[ebx].pe_proc_sel
-;    je fvmFound
+fpLoop:
+    mov eax,ds:[esi]
+    or eax,eax
+    jz fpNext
 ;
-;    add ebx,4
-;    loop fvmLoop
+    push ecx
+    mov ecx,32
+
+fpeLoop:
+    cmp edx,ds:[edi]
+    jne fpeNext
 ;
-
-fpFail:
-    stc
-;    jmp fvmDone
-
-fvmFound:
-;    mov ax,ds:[ebx].pe_map_sel
-;    clc
-
-fvmDone:
     pop ecx
-    pop ebx
+    sub edi,OFFSET hsi_proc_arr
+    shl edi,2
+    mov ax,ds:[2*edi].hsi_sel_arr
+    clc
+    jmp fpDone
+
+fpeNext:
+    add edi,4
+    loop fpeLoop
+;
+    pop ecx
+    jmp fpCont
+
+fpNext:
+    add edi,4*32
+
+fpCont:
+    add esi,4
+    loop fpLoop
+;
+    stc
+
+fpDone:
+    pop edi
+    pop esi
+    pop ecx
     pop es
     ret
 FindProc    Endp
@@ -479,6 +499,7 @@ alphOk:
     mov ebx,edx
     mov edx,es:ph_linear
     mov ds:[4*ebx].hsi_proc_arr,edx
+    mov ds:[2*ebx].hsi_sel_arr,es
 ;
     mov es,ebp
     inc ebx
