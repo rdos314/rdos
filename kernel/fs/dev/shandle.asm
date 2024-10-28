@@ -406,7 +406,10 @@ CreateProcObj    Proc near
     push edx
 ;
     AllocateSmallLinear
+;
+    push ds
     AllocateLdt
+    pop ds
 ;
     or bx,4
     mov ecx,eax

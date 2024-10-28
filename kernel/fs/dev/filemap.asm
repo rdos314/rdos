@@ -3205,6 +3205,7 @@ CreateProcSel   Proc far
     pop edx
     pop ebx
 ;
+    int 3
     mov eax,SIZE process_file
     call CreateProcObj
     mov es,eax
@@ -3234,7 +3235,9 @@ cvmsLoop:
     mov es:pf_handle,0
     mov es:pf_ref_count,0
 ;
+    push ds
     AllocateLdt
+    pop ds
     or bx,4
     mov ecx,1000h
     mov edx,ebp
