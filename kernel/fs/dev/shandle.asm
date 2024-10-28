@@ -381,6 +381,7 @@ fpCont:
 fpDone:
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop es
     ret
@@ -499,7 +500,7 @@ alphOk:
     mov ebx,edx
     mov edx,es:ph_linear
     mov ds:[4*ebx].hsi_proc_arr,edx
-    mov ds:[2*ebx].hsi_sel_arr,es
+    mov ds:[2*ebx].hsi_sel_arr,bp
 ;
     mov es,ebp
     inc ebx

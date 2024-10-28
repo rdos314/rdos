@@ -37,6 +37,7 @@ void main()
     int size;
     int dummy;
     int handle = RdosOpenNewHandle("e:/test.bin", O_RDWR);
+    int handle2 = RdosOpenNewHandle("e:/test.bin", O_RDWR);
 
     RdosSetHandlePos(handle, 500234);
     size = RdosReadHandle(handle, buf, 267);
