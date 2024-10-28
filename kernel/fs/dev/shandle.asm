@@ -181,7 +181,7 @@ apply_proc_handle Endp
 ;
 ;           PARAMETERS:     EAX        Size of object
 ;
-;           RETURNS:        DS         Sys handle sel
+;           RETURNS:        DS         Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -251,7 +251,7 @@ CreateSysObj   Endp
 ;
 ;           DESCRIPTION:    Allocate local sys file handle
 ;
-;           PARAMETERS:     DS          Sys handle sel
+;           PARAMETERS:     DS          Sys interface
 ;
 ;           RETURNS:        EBX         Sys handle
 ;
@@ -321,10 +321,10 @@ AllocateLocalSysHandle  Endp
 ;
 ;       DESCRIPTION:    Find proc sel
 ;
-;       PARAMETERS:     DS              Sys handle sel
+;       PARAMETERS:     DS              Sys interface
 ;
 ;       RETURNS:        NC
-;                         AX            Proc handle sel
+;                         AX            Proc interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -394,11 +394,11 @@ FindProc    Endp
 ;
 ;           DESCRIPTION:    Create proc object
 ;
-;           PARAMETERS:     DS         Sys handle sel
+;           PARAMETERS:     DS         Sys interface
 ;                           EAX        Size of oebject
 ;                           EDX        Linear address of object
 ;                           
-;           RETURNS:        AX         Proc handle sel
+;           RETURNS:        AX         Proc interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -458,8 +458,8 @@ CreateProcObj   Endp
 ;
 ;           DESCRIPTION:    Allocate proc handle
 ;
-;           PARAMETERS:     DS          Sys handle sel
-;                           AX          Proc handle sel
+;           PARAMETERS:     DS          Sys interface
+;                           AX          Proc interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -518,11 +518,11 @@ AllocateProcHandle  Endp
 ;
 ;           DESCRIPTION:    Create proc object
 ;
-;           PARAMETERS:     DS         Proc handle sel
+;           PARAMETERS:     DS         Proc interface
 ;                           EAX        Size of oebject
 ;                           EDX        Linear address of object
 ;
-;           RETURNS:        AX         Handle sel
+;           RETURNS:        AX         Handle interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
