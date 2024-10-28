@@ -248,9 +248,9 @@ CreateSysObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateVfsSysHandle
+;           NAME:           AllocateLocalSysHandle
 ;
-;           DESCRIPTION:    Allocate VFS sys file handle
+;           DESCRIPTION:    Allocate local sys file handle
 ;
 ;           PARAMETERS:     DS          Sys handle sel
 ;
@@ -258,9 +258,9 @@ CreateSysObj   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public AllocateVfsSysHandle
+    public AllocateLocalSysHandle
 
-AllocateVfsSysHandle     Proc near
+AllocateLocalSysHandle     Proc near
     push ds
     push eax
     push ecx
@@ -277,22 +277,22 @@ AllocateVfsSysHandle     Proc near
     xor edi,edi
     mov bx,OFFSET hd_sys_bitmap
 
-avhLoop:
+alshLoop:
     mov eax,ds:[bx]
     not eax
     bsf edx,eax
-    jnz avhOk
+    jnz alshOk
 ;
     add bx,4
     add edi,32
 ;
-    loop avhLoop
+    loop alshLoop
 ;
     stc
     pop edx
-    jmp avhLeave
+    jmp alshLeave
 
-avhOk:
+alshOk:
     add edx,edi
     bts ds:hd_sys_bitmap,edx
 ;
@@ -303,7 +303,7 @@ avhOk:
     inc bx
     clc
 
-avhLeave:
+alshLeave:
     LeaveSection ds:hd_section
 ; 
     pop edi
@@ -312,7 +312,7 @@ avhLeave:
     pop eax
     pop ds
     ret
-AllocateVfsSysHandle  Endp   
+AllocateLocalSysHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
