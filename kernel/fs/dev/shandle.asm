@@ -854,6 +854,48 @@ chSelOk:
 
 chBitOk:
     call fword ptr ds:hpi_delete_proc
+;
+    mov ebx,ds:hpi_sys_index
+    cmp ebx,SYS_HANDLE_COUNT
+    jbe chSysHighOk
+;
+    int 3
+
+chSysHighOk:
+    sub ebx,1
+    jae chSysLowOk
+;
+    int 3
+
+chSysLowOk:
+    mov ds,ds:hpi_sys_sel
+    FreeMem
+;
+    sub ds:hsi_ref_count,1
+    jnz chLeave
+;
+    mov edx,ds
+    mov eax,SEG data
+    mov es,eax
+    xor ax,ax
+    xchg ax,es:[2*ebx].hd_sys_arr
+    cmp ax,dx
+    je chSysOk
+;
+    int 3
+
+chSysOk:
+    btc ds:hd_sys_bitmap,ebx
+    jc chSysBitOk
+;
+    int 3
+
+chSysBitOk:
+    mov ds,eax
+    LeaveSection ds:hsi_section
+    call fword ptr ds:hsi_delete_proc
+    clc
+    jmp chDone
 
 chLeave:
     LeaveSection ds:hsi_section
