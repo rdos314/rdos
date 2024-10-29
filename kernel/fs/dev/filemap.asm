@@ -3328,6 +3328,48 @@ DeleteVfsProc      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DeleteHandleSel
+;
+;       DESCRIPTION:    Delete handle sel
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteHandleSel      Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    mov ebx,ds:hf_user_handle
+    or ebx,ebx
+    jz dhsDone
+;
+    mov ds,ds:hei_proc_sel
+    mov edx,ds:pf_map_linear
+    mov eax,flat_data_sel
+    mov ds,eax
+    mov edx,ds:[edx].fm_handle_ptr
+    add edx,OFFSET fh_bitmap
+;
+    dec ebx
+    lock btc ds:[edx],ebx
+    jc dhsDone
+;
+    int 3
+
+dhsDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+DeleteHandleSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateHandleSel
 ;
 ;       DESCRIPTION:    Create handle sel
@@ -3390,6 +3432,9 @@ chsLoop:
 ;
     inc ebx
     mov es:hf_user_handle,ebx
+;
+    mov es:hei_delete_proc, OFFSET DeleteHandleSel
+    mov es:hei_delete_proc+4,cs
     clc
     jmp chsDone
 
@@ -3409,49 +3454,6 @@ chsDone:
     pop es
     ret
 CreateHandleSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FreeUserHandle
-;
-;       DESCRIPTION:    Free user handle
-;
-;       PARAMETERS:     AX              Proc interface
-;                       BX              Handle    
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public FreeUserHandle
-
-FreeUserHandle      Proc near
-    push ds
-    push es
-    push edx
-;
-    or bx,bx
-    jz fuhDone
-;
-    mov ds,eax
-    mov dx,flat_data_sel
-    mov es,edx
-    mov edx,ds:pf_map_linear
-    mov edx,es:[edx].fm_handle_ptr
-    add edx,OFFSET fh_bitmap
-;
-    dec bx
-    movzx ebx,bx
-    lock btc es:[edx],ebx
-    jc fuhDone
-;
-    int 3
-
-fuhDone:
-    pop edx
-    pop es
-    pop ds
-    ret
-FreeUserHandle      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
