@@ -781,6 +781,34 @@ open_handle32    ENDP
 close_handle_name  DB 'Close Handle', 0
 
 close_handle     Proc far
+    push ds
+    push eax
+;
+    movzx ebx,bx
+    mov eax,proc_handle_sel
+    mov ds,eax
+;
+    cmp ebx,USER_HANDLE_COUNT
+    ja chFail
+;
+    sub ebx,1
+    jc chFail
+;
+    xor ax,ax
+    xchg ax,ds:[2*ebx].ph_arr
+    or ax,ax
+    jz chFail
+;
+    btc ds:ph_bitmap,ebx
+    jnc chFail
+;
+
+chFail:
+    stc
+
+chDone:
+    pop eax
+    pop ds
     ret
 close_handle     Endp
        
