@@ -437,7 +437,7 @@ CreateProcObj    Proc near
     mov es:hpi_linear,edx
     mov es:hpi_proc_linear,0
     mov es:hpi_index,0
-    mov es:hpi_ref_count,1
+    mov es:hpi_ref_count,0
     mov es:hpi_sys_sel,ds
 ;
     mov eax,ds:hsi_index
@@ -705,6 +705,7 @@ open_handle_name  DB 'Open Handle', 0
 
 open_handle     Proc near
     push ds
+    push es
     push eax
 ;  
     call OpenVfsFile
@@ -722,10 +723,12 @@ open_handle     Proc near
     jc ohFail
 
 ohProcOk:
+    mov es,eax
+    add es:hpi_ref_count,1
+;
     LeaveSection ds:hsi_section
 ;
     mov ds,eax
-;
     call fword ptr ds:hpi_create_proc
     jc ohFail
 ;
@@ -750,6 +753,7 @@ ohFail:
 
 ohDone:
     pop eax
+    pop es
     pop ds
     ret
 open_handle     Endp
@@ -783,8 +787,8 @@ close_handle_name  DB 'Close Handle', 0
 
 close_handle     Proc far
     push ds
-    push eax
-    push edx
+    push es
+    pushad
 ;
     movzx ebx,bx
     mov eax,proc_handle_sel
@@ -805,19 +809,48 @@ close_handle     Proc far
     jnc chFail
 ;
     mov ds,eax
-    mov ebx,ds:hei_proc_index
-    mov dx,ds:hei_proc_sel
+    mov es,eax
     call fword ptr ds:hei_delete_proc
 ;
-    mov ds,dx
+    mov ebx,ds:hei_proc_index
+    mov ds,ds:hei_proc_sel
+    FreeMem
+;
+    mov ebp,ds
+    mov es,ebp
+    mov ds,ds:hpi_sys_sel
+    EnterSection ds:hsi_section
+;
+    sub es:hpi_ref_count,1
+    jnz chLeave
+;
+    xor ax,ax
+    xchg ax,ds:[2*ebx].hsi_sel_arr
+    cmp ax,bp
+    je chSelOk
+;
+    int 3
 
+chSelOk:
+    xor eax,eax
+    xchg eax,ds:[4*ebx].hsi_proc_arr
+;
+    btc ds:ph_bitmap,ebx
+    jnc chBitOk
+;
+    int 3
+
+chBitOk:
+
+chLeave:
+    LeaveSection ds:hsi_section
 
 chFail:
     stc
 
 chDone:
-    pop edx
-    pop eax
+    popad
+    pop es
     pop ds
     ret
 close_handle     Endp
