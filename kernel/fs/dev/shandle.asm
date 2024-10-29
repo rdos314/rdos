@@ -765,6 +765,24 @@ open_handle32    PROC far
     call open_handle
     ret
 open_handle32    ENDP
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseHandle
+;
+;           DESCRIPTION:    Close handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_handle_name  DB 'Close Handle', 0
+
+close_handle     Proc far
+    ret
+close_handle     Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -826,6 +844,12 @@ init_sys_handle     PROC near
     mov dx,virt_es_in
     mov ax,open_new_handle_nr
     RegisterUserGate
+;
+    mov esi,OFFSET close_handle
+    mov edi,OFFSET close_handle_name
+    xor cl,cl
+    mov ax,close_new_handle_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es

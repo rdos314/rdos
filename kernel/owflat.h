@@ -1543,10 +1543,18 @@
     __value [__eax] \
     __modify [__edx]
 
+
+
 #pragma aux RdosOpenNewHandle = \
     CallGate_open_new_handle  \
     __parm [__edi] [__ecx] \
     __value [__ebx]
+
+#pragma aux RdosCloseNewHandle = \
+    CallGate_close_new_handle  \
+    __parm [__ebx] \
+    __value [__ebx]
+
 
 #pragma aux RdosOpenHandle = \
     CallGate_open_handle  \
