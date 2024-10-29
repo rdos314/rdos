@@ -813,6 +813,18 @@ close_handle     Proc far
     call fword ptr ds:hei_delete_proc
 ;
     mov ebx,ds:hei_proc_index
+    cmp ebx,PROC_HANDLE_COUNT
+    jbe chProcHighOk
+;
+    int 3
+
+chProcHighOk:
+    sub ebx,1
+    jae chProcLowOk
+;
+    int 3
+
+chProcLowOk:
     mov ds,ds:hei_proc_sel
     FreeMem
 ;
@@ -835,12 +847,13 @@ chSelOk:
     xor eax,eax
     xchg eax,ds:[4*ebx].hsi_proc_arr
 ;
-    btc ds:ph_bitmap,ebx
-    jnc chBitOk
+    btc ds:hsi_proc_bitmap,ebx
+    jc chBitOk
 ;
     int 3
 
 chBitOk:
+    call fword ptr ds:hpi_delete_proc
 
 chLeave:
     LeaveSection ds:hsi_section
