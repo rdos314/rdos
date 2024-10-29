@@ -729,6 +729,7 @@ ohProcOk:
     call fword ptr ds:hpi_create_proc
     jc ohFail
 ;
+    mov ds,eax
     call AllocateUserHandle
     jc ohFail
 ;
