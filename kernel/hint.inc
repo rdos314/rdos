@@ -152,7 +152,7 @@ hei_input_size_proc       DD ?,?
 hei_output_size_proc      DD ?,?
 
 ;  IN	DS                Handle entry interface
-hei_delete                DD ?,?
+hei_delete_proc           DD ?,?
 
 hei_index                 DD ?
 hei_proc_index            DD ?

@@ -602,8 +602,8 @@ CreateHandleObj    Proc near
     mov es:hei_output_size_proc,OFFSET handle_fail
     mov es:hei_output_size_proc+4,cs
 ;
-    mov es:hei_delete,OFFSET handle_fail
-    mov es:hei_delete+4,cs
+    mov es:hei_delete_proc,OFFSET handle_fail
+    mov es:hei_delete_proc+4,cs
 ;
     mov es:hei_index,0
     mov es:hei_proc_sel,ds
@@ -784,6 +784,7 @@ close_handle_name  DB 'Close Handle', 0
 close_handle     Proc far
     push ds
     push eax
+    push edx
 ;
     movzx ebx,bx
     mov eax,proc_handle_sel
@@ -803,11 +804,19 @@ close_handle     Proc far
     btc ds:ph_bitmap,ebx
     jnc chFail
 ;
+    mov ds,eax
+    mov ebx,ds:hei_proc_index
+    mov dx,ds:hei_proc_sel
+    call fword ptr ds:hei_delete_proc
+;
+    mov ds,dx
+
 
 chFail:
     stc
 
 chDone:
+    pop edx
     pop eax
     pop ds
     ret
