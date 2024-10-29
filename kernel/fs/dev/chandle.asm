@@ -112,7 +112,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern CloseVfsFile:near
-    extern CloseVfsProc:near
     extern ReadVfsFile:near
     extern WriteVfsFile:near
     extern MapVfsFile_:near
@@ -1138,7 +1137,7 @@ close_handle     Proc far
     mov eax,edx
     mov ebx,ebp
 ;    call FreeUserHandle
-    call CloseVfsProc
+;    call CloseVfsProc
 ;
     pop eax
 

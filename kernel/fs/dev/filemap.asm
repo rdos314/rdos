@@ -3113,6 +3113,57 @@ FreeFileReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DeleteProcSel
+;
+;       DESCRIPTION:    Delete proc sel
+;
+;       PARAMETERS:     DS              Proc interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteProcSel   Proc far
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    call DeleteMap
+;
+    push ds
+    mov ds,ds:pf_map_sel
+    mov ax,flat_data_sel
+    mov es,eax
+    mov ebx,ds:fm_handle_ptr
+    add ebx,OFFSET fh_futex
+    mov eax,es:[ebx].fs_handle
+    or eax,eax
+    jz dpsPop
+;
+    CleanupFutex
+
+dpsPop:
+    pop ds
+;
+    mov es,ds:pf_map_sel
+    FreeMem
+;
+    mov edx,ds:pf_map_linear
+    add edx,ds:pf_flat_base
+    mov ecx,3000h
+    FreeLinear
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+DeleteProcSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateProcSel
 ;
 ;       DESCRIPTION:    Create proc sel
@@ -3242,6 +3293,9 @@ cvmsLoop:
     mov es:hpi_create_proc,OFFSET CreateHandleSel
     mov es:hpi_create_proc+4,cs
 ;
+    mov es:hpi_delete_proc,OFFSET DeleteProcSel
+    mov es:hpi_delete_proc+4,cs
+;
     push ds
     AllocateLdt
     pop ds
@@ -3265,69 +3319,6 @@ CreateProcSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteVfsProc
-;
-;       DESCRIPTION:    Delete VFS proc
-;
-;       PARAMETERS:     AX              Proc interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteVfsProc   Proc near
-    push ds
-    push es
-    push fs
-    push eax
-    push ebx
-    push ecx
-    push edx
-;
-    push eax
-;
-    mov ds,eax
-    mov ds,ds:pf_map_sel
-    mov ax,flat_data_sel
-    mov es,eax
-    mov ebx,ds:fm_handle_ptr
-    add ebx,OFFSET fh_futex
-    mov eax,es:[ebx].fs_handle
-    or eax,eax
-    jz dpsPop
-;
-    CleanupFutex
-
-dpsPop:
-    pop ds
-;
-    mov es,ds:pf_map_sel
-    FreeMem
-;
-    mov eax,ds
-    mov es,eax
-;
-    xor eax,eax
-    mov ds,eax
-;
-    mov edx,es:pf_map_linear
-    add edx,es:pf_flat_base
-    mov ecx,3000h
-    FreeLinear
-;
-    FreeMem
-;
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop fs
-    pop es
-    pop ds
-    ret
-DeleteVfsProc      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           DeleteHandleSel
 ;
 ;       DESCRIPTION:    Delete handle sel
@@ -3347,6 +3338,8 @@ DeleteHandleSel      Proc far
     jz dhsDone
 ;
     mov ds,ds:hei_proc_sel
+    call SyncFileSize
+;
     mov edx,ds:pf_map_linear
     mov eax,flat_data_sel
     mov ds,eax
@@ -3749,40 +3742,6 @@ DeleteVfsFile_  Proc near
     pop ds
     ret
 DeleteVfsFile_  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CloseVfsMap
-;
-;       DESCRIPTION:    Close VFS proc sel
-;
-;       PARAMETERS:     AX            Proc interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CloseVfsProc
-
-CloseVfsProc   Proc near
-    push ds
-;
-    mov ds,eax
-    call SyncFileSize
-;
-    sub ds:pf_ref_count,1
-    jnz cvmDone
-;
-    call DeleteMap
-;
-;    mov ds,ds:pf_file_sel
-;    call RemoveVfsProc
-;
-    call DeleteVfsProc
-
-cvmDone:
-    pop ds
-    ret
-CloseVfsProc   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
