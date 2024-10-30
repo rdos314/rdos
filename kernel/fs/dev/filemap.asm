@@ -5050,8 +5050,8 @@ ReadKernelSel    Proc far
     push eax
     push edx
 ;
+    movzx ebx,ds:hki_sys_sel
     mov fs,ds:hkf_map_sel
-    mov ebx,ds
     xor esi,esi
     xor ebp,ebp
     call KernelRead
@@ -5100,8 +5100,8 @@ WriteKernelSel    Proc far
     push eax
     push edx
 ;
+    movzx ebx,ds:hki_sys_sel
     mov fs,ds:hkf_map_sel
-    mov ebx,ds
     xor esi,esi
     xor ebp,ebp
     call KernelWrite
@@ -5134,10 +5134,12 @@ WriteKernelSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeleteKernelSel  Proc far
+    push ds
     push es
     pushad
 ;
     mov es,ds:hkf_map_sel
+    mov ds,ds:hki_sys_sel
 ;
     mov ebx,OFFSET fm_sorted_arr
     mov ecx,240
@@ -5167,6 +5169,7 @@ dkmUnlink:
 ;
     popad
     pop es
+    pop ds
     ret
 DeleteKernelSel  Endp
 
