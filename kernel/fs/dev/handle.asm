@@ -936,6 +936,37 @@ close_handle     Endp
 read_handle_name  DB 'Read Handle', 0
 
 read_handle     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    ja rhFail
+;
+    sub ebx,1
+    jc rhFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz rhFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_read_proc
+    jmp rhDone
+
+rhFail:
+    xor eax,eax
+    stc
+
+rhDone:
+    pop esi
+    pop ebx
+    pop ds
     ret
 read_handle     Endp
 
