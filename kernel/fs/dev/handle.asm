@@ -1070,11 +1070,8 @@ close_kernel_handle Proc far
 ;
     mov ax,ds:hsi_kernel_sel
     or ax,ax
-    jz ckhHasSel
+    jz ckhLeaveFail
 ;
-    jmp ckhLeaveFail
-
-ckhHasSel:
     mov ds,eax
     sub ds:hki_ref_count,1
     jz ckhFree
