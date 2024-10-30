@@ -5752,16 +5752,16 @@ test_gate    Proc far
     xor edx,edx
     xor eax,eax
     mov ecx,25
-;    WriteKernelHandle
+    WriteNewKernelHandle
 ;
     mov ecx,25
-;    WriteKernelHandle
+    WriteNewKernelHandle
 ;
     mov ecx,25
-;    WriteKernelHandle
+    WriteNewKernelHandle
 ;
     mov ecx,25
-;    WriteKernelHandle
+    WriteNewKernelHandle
 ;
     mov ecx,123
     CloseNewKernelHandle

@@ -2727,8 +2727,8 @@ ReadKernelHandle MACRO
 ; IN  EDX       Position
 ; IN  ES:EDI    Buffer
 ; IN  ECX       Size
-; OUT EAX       Written size
-; OUT EDX       New position
+; OUT ECX       Written size
+; OUT EDX:EAX   New position
 WriteKernelHandle MACRO
     OsGate write_kernel_handle_nr
                     ENDM
@@ -2786,6 +2786,26 @@ OpenNewKernelHandle MACRO
 ; IN  BX        Handle
 CloseNewKernelHandle MACRO
     OsGate close_new_kernel_handle_nr
+                    ENDM
+
+; IN  BX        Handle
+; IN  EDX:EAX   Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT ECX       Read size
+; OUT EDX:EAX   New position
+ReadNewKernelHandle MACRO
+    OsGate read_new_kernel_handle_nr
+                    ENDM
+
+; IN  BX        Handle
+; IN  EDX       Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT ECX       Written size
+; OUT EDX:EAX   New position
+WriteNewKernelHandle MACRO
+    OsGate write_new_kernel_handle_nr
                     ENDM
 
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;

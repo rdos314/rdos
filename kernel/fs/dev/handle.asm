@@ -1134,6 +1134,122 @@ ckhDone:
     pop ds
     ret
 close_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadKernelHandle
+;
+;           DESCRIPTION:    Read with kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Position
+;                           ES:EDI    Buffer
+;                           ECX       Size
+;
+;           RETURNS:        ECX       Read size
+;                           EDX:EAX   New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_kernel_handle_name DB 'Read Kernel Handle', 0
+
+read_kernel_handle Proc far
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,SEG data
+    mov ds,esi
+;
+    movzx ebx,bx
+    cmp ebx,SYS_HANDLE_COUNT
+    ja rkhFail
+;
+    sub ebx,1
+    jc rkhFail
+;
+    mov si,ds:[2*ebx].hd_sys_arr
+    or si,si
+    jz rkhFail
+;
+    mov ds,esi
+    mov si,ds:hsi_kernel_sel
+    or si,si
+    jz rkhFail
+;
+    mov ds,esi
+    call fword ptr ds:hki_read_proc
+    jnc rkhDone
+
+rkhFail:
+    xor ecx,ecx
+    stc
+
+rkhDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+read_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteKernelHandle
+;
+;           DESCRIPTION:    Write with kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Position
+;                           ES:EDI    Buffer
+;                           ECX       Size
+;
+;           RETURNS:        ECX       Read size
+;                           EDX:EAX   New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_kernel_handle_name DB 'Write Kernel Handle', 0
+
+write_kernel_handle Proc far
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,SEG data
+    mov ds,esi
+;
+    movzx ebx,bx
+    cmp ebx,SYS_HANDLE_COUNT
+    ja wkhFail
+;
+    sub ebx,1
+    jc wkhFail
+;
+    mov si,ds:[2*ebx].hd_sys_arr
+    or si,si
+    jz wkhFail
+;
+    mov ds,esi
+    mov si,ds:hsi_kernel_sel
+    or si,si
+    jz wkhFail
+;
+    mov ds,esi
+    call fword ptr ds:hki_write_proc
+    jnc wkhDone
+
+wkhFail:
+    xor ecx,ecx
+    stc
+
+wkhDone:
+    pop ebp
+    pop ebx
+    pop ds
+    ret
+write_kernel_handle Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1199,6 +1315,18 @@ init_sys_handle     PROC near
     mov edi,OFFSET close_kernel_handle_name
     xor cl,cl
     mov ax,close_new_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_kernel_handle
+    mov edi,OFFSET read_kernel_handle_name
+    xor cl,cl
+    mov ax,read_new_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_kernel_handle
+    mov edi,OFFSET write_kernel_handle_name
+    xor cl,cl
+    mov ax,write_new_kernel_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16

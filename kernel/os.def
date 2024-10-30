@@ -928,6 +928,8 @@ delete_proc_handle_nr       = 843
 
 open_new_kernel_handle_nr   = 844
 close_new_kernel_handle_nr  = 845
+read_new_kernel_handle_nr   = 846
+write_new_kernel_handle_nr  = 847
 
 
 osgate_entries              = 850
