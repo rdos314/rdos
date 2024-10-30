@@ -105,14 +105,11 @@ kf_info_linear    DD ?
 kf_sector_size    DW ?
 kf_section        section_typ <>
 kf_update_section section_typ <>
-kf_kmap_section   section_typ <>
 kf_part_sel       DW ?
 kf_req_sync       DW ?
 kf_wait_thread    DW ?
 kf_wr_ptr         DW ?
 kf_c_handle       DW ?
-kf_kmap_sel       DW ?
-kf_kmap_linear    DD ?
 kf_serv_handle    DD ?
 kf_wait_list      DD ?
 
@@ -439,10 +436,12 @@ ufsCont:
     loop ufsLoop
 
 ufsKernel:
-    mov bx,ds:kf_kmap_sel    
+    mov bx,ds:hsi_kernel_sel
     or bx,bx
     jz ufsDone
 ;
+    mov es,ebx
+    mov es,es:hkf_map_sel
     mov es,ebx
     mov es:fm_update,1
 
@@ -2768,12 +2767,13 @@ dfrCont:
 dfrKernel:
     LeaveSection ds:hsi_section
 ;
-    EnterSection ds:kf_kmap_section
-    mov ax,ds:kf_kmap_sel
+    EnterSection ds:hsi_section
+    mov ax,ds:hsi_kernel_sel
     or ax,ax
     jz dfrkLeave
 ;
     mov es,eax
+    mov es,es:hkf_map_sel
     mov ecx,240
     xor ebx,ebx
 
@@ -2793,7 +2793,7 @@ dfrkNext:
     loop dfrkLoop
 
 dfrkLeave:
-    LeaveSection ds:kf_kmap_section
+    LeaveSection ds:hsi_section
 
 dfrCache:
     mov ebx,ds:[4*edx].kf_handle_arr
@@ -3599,9 +3599,10 @@ UpdateKernelMap  Proc near
     push es
     pushad
 ;
-    EnterSection ds:kf_kmap_section
+    EnterSection ds:hsi_section
 ;
-    mov es,ds:kf_kmap_sel
+    mov es,ds:hsi_kernel_sel
+    mov es,es:hkf_map_sel
     mov es:fm_update,0
     mov ebx,OFFSET fm_sorted_arr
     mov ecx,es:fm_count
@@ -3629,7 +3630,7 @@ ukmSkip:
 ukmLeave:
     call UpdateKernelUnlinked
 ;
-    LeaveSection ds:kf_kmap_section
+    LeaveSection ds:hsi_section
 ;
     call SendUpdate
 ;
@@ -4079,7 +4080,8 @@ MapKernelFile_      Proc near
     call WaitForKernelReq
     jc mkfDone
 ;
-    mov es,ds:kf_kmap_sel
+    mov es,ds:hsi_kernel_sel
+    mov es,es:hkf_map_sel
     call SyncKernelMap
 
 mkfDone:
@@ -4113,7 +4115,8 @@ GrowKernelFile_      Proc near
     call WaitForKernelGrow
     jc gkfDone
 ;
-    mov es,ds:kf_kmap_sel
+    mov es,ds:hsi_kernel_sel
+    mov es,es:hkf_map_sel
     call SyncKernelMap
 
 gkfDone:
@@ -5048,6 +5051,7 @@ ReadKernelSel    Proc far
     push edx
 ;
     mov fs,ds:hkf_map_sel
+    mov ebx,ds
     xor esi,esi
     xor ebp,ebp
     call KernelRead
@@ -5097,6 +5101,7 @@ WriteKernelSel    Proc far
     push edx
 ;
     mov fs,ds:hkf_map_sel
+    mov ebx,ds
     xor esi,esi
     xor ebp,ebp
     call KernelWrite
@@ -5334,7 +5339,6 @@ CreateFileSel   Proc near
 ;
     InitSection ds:kf_section
     InitSection ds:kf_update_section
-    InitSection ds:kf_kmap_section
     mov ds:kf_sector_size,di
     mov ds:kf_part_sel,fs
     mov ds:kf_serv_handle,ebx
@@ -5348,8 +5352,6 @@ CreateFileSel   Proc near
     mov ds:kf_phys_count,0
     mov ds:kf_wr_ptr,0
     mov ds:kf_c_handle,0
-    mov ds:kf_kmap_linear,0
-    mov ds:kf_kmap_sel,0
 ;
     mov ecx,256
     mov edi,OFFSET kf_handle_arr
