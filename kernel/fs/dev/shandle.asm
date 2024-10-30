@@ -208,12 +208,16 @@ CreateSysObj    Proc near
     mov ax,8
     CreateBlk
 ;
-    mov ds:hsi_create_proc,OFFSET cr_proc_fail
-    mov ds:hsi_create_proc+4,cs
+    mov ds:hsi_create_proc_proc,OFFSET cr_proc_fail
+    mov ds:hsi_create_proc_proc+4,cs
+;
+    mov ds:hsi_create_kernel_proc,OFFSET cr_proc_fail
+    mov ds:hsi_create_kernel_proc+4,cs
 ;
     mov ds:hsi_delete_proc,OFFSET del_sys_fail
     mov ds:hsi_delete_proc+4,cs
 ;
+    mov ds:hsi_kernel_sel,0
     mov ds:hsi_ref_count,0
     mov ds:hsi_index,0
     InitSection ds:hsi_section
@@ -718,7 +722,7 @@ open_handle     Proc near
 ;
     inc ds:hsi_ref_count
 ;
-    call fword ptr ds:hsi_create_proc
+    call fword ptr ds:hsi_create_proc_proc
     jc ohFail
 ;
     call AllocateProcHandle

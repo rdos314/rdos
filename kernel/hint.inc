@@ -34,7 +34,11 @@ hsi_blk                   blk_header <>
 
 ;  IN	DS                Handle sys interface
 ;  OUT  AX                Proc interface
-hsi_create_proc           DD ?,?
+hsi_create_proc_proc      DD ?,?
+
+;  IN	DS                Handle sys interface
+;  OUT  AX                Kernel interface
+hsi_create_kernel_proc    DD ?,?
 
 ;  IN	DS                Handle sys interface
 hsi_delete_proc           DD ?,?
@@ -44,6 +48,7 @@ hsi_section               section_typ <>
 
 hsi_ref_count             DW ?
 
+hsi_kernel_sel            DW ?
 hsi_proc_bitmap           DD PROC_BITMAP_COUNT DUP(?)
 hsi_proc_arr              DD PROC_HANDLE_COUNT DUP(?)
 hsi_sel_arr               DW PROC_HANDLE_COUNT DUP(?)
@@ -161,3 +166,30 @@ hei_sys_index             DD ?
 hei_sys_sel               DW ?
 
 handle_entry_interface    ENDS
+
+handle_kernel_interface    STRUC
+
+;  IN	DS                Handle kernel interface
+;  IN   EDX:EAX           Position
+;  IN   ES:EDI            Buffer
+;  IN   ECX               Size
+;  OUT  ECX               Read count
+;  OUT  EDX:EAX           New position
+hki_read_proc             DD ?,?
+
+;  IN	DS                Handle kernel interface
+;  IN   EDX:EAX           Position
+;  IN   ES:EDI            Buffer
+;  IN   ECX               Size
+;  OUT  ECX               Written count
+;  OUT  EDX:EAX           New position
+hki_write_proc            DD ?,?
+
+;  IN	DS                Handle kernel interface
+hki_delete_proc           DD ?,?
+
+hki_ref_count             DW ?
+hki_sys_index             DD ?
+hki_sys_sel               DW ?
+
+handle_kernel_interface    ENDS

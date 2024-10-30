@@ -370,105 +370,6 @@ GetFileSel     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateFileSel
-;
-;       DESCRIPTION:    Create file selector
-;
-;       PARAMETERS:     EBX            Serv handle
-;                       EDX            File info linear
-;                       DI             Sector size
-;
-;       RETURNS:        NC
-;                         AX           Sys interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CreateFileSel
-
-CreateFileSel   Proc near
-    push ds
-    push es
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov eax,SIZE kernel_file
-    call CreateSysObj
-;
-    mov ds:hsi_create_proc,OFFSET CreateProcSel
-    mov ds:hsi_create_proc+4,cs
-;
-    InitSection ds:kf_section
-    InitSection ds:kf_update_section
-    InitSection ds:kf_kmap_section
-    mov ds:kf_sector_size,di
-    mov ds:kf_part_sel,fs
-    mov ds:kf_serv_handle,ebx
-    mov ds:kf_wait_list,0
-    mov ds:kf_req_sync,0
-    mov ds:kf_wr_size,0
-
-    mov ds:kf_req_count,0
-    mov ds:kf_wait_count,0
-    mov ds:kf_block_count,0
-    mov ds:kf_phys_count,0
-    mov ds:kf_wr_ptr,0
-    mov ds:kf_c_handle,0
-    mov ds:kf_kmap_linear,0
-    mov ds:kf_kmap_sel,0
-;
-    mov ecx,256
-    mov edi,OFFSET kf_handle_arr
-    mov eax,-1
-
-cfHandleInit:
-    mov ds:[edi],eax
-    add edi,4
-    loop cfHandleInit
-;
-    mov ecx,256
-    mov edi,OFFSET kf_sorted_arr
-    mov eax,-1
-
-cfSortedInit:
-    mov ds:[edi],al
-    inc edi
-    loop cfSortedInit
-;
-    GetPageEntry
-    or ax,800h
-    SetPageEntry
-;
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    pop eax
-;
-    and ax,NOT 800h
-    SetPageEntry
-;
-    and ax,0F000h
-    mov ds:kf_info_phys,eax
-    mov ds:kf_info_phys+4,ebx
-    mov ds:kf_info_linear,edx
-;
-    mov ax,ds
-;
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop es
-    pop ds
-    ret
-CreateFileSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           UpdateFileSel
 ;
 ;       DESCRIPTION:    Update file selector
@@ -5532,6 +5433,109 @@ scrDone:
     ret
 DeleteSysSel   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateFileSel
+;
+;       DESCRIPTION:    Create file selector
+;
+;       PARAMETERS:     EBX            Serv handle
+;                       EDX            File info linear
+;                       DI             Sector size
+;
+;       RETURNS:        NC
+;                         AX           Sys interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateFileSel
+
+CreateFileSel   Proc near
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov eax,SIZE kernel_file
+    call CreateSysObj
+;
+    mov ds:hsi_create_proc_proc,OFFSET CreateProcSel
+    mov ds:hsi_create_proc_proc+4,cs
+;
+    mov ds:hsi_delete_proc, OFFSET DeleteSysSel
+    mov ds:hsi_delete_proc+4,cs
+;
+    InitSection ds:kf_section
+    InitSection ds:kf_update_section
+    InitSection ds:kf_kmap_section
+    mov ds:kf_sector_size,di
+    mov ds:kf_part_sel,fs
+    mov ds:kf_serv_handle,ebx
+    mov ds:kf_wait_list,0
+    mov ds:kf_req_sync,0
+    mov ds:kf_wr_size,0
+
+    mov ds:kf_req_count,0
+    mov ds:kf_wait_count,0
+    mov ds:kf_block_count,0
+    mov ds:kf_phys_count,0
+    mov ds:kf_wr_ptr,0
+    mov ds:kf_c_handle,0
+    mov ds:kf_kmap_linear,0
+    mov ds:kf_kmap_sel,0
+;
+    mov ecx,256
+    mov edi,OFFSET kf_handle_arr
+    mov eax,-1
+
+cfHandleInit:
+    mov ds:[edi],eax
+    add edi,4
+    loop cfHandleInit
+;
+    mov ecx,256
+    mov edi,OFFSET kf_sorted_arr
+    mov eax,-1
+
+cfSortedInit:
+    mov ds:[edi],al
+    inc edi
+    loop cfSortedInit
+;
+    GetPageEntry
+    or ax,800h
+    SetPageEntry
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    and ax,NOT 800h
+    SetPageEntry
+;
+    and ax,0F000h
+    mov ds:kf_info_phys,eax
+    mov ds:kf_info_phys+4,ebx
+    mov ds:kf_info_linear,edx
+;
+    mov ax,ds
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+CreateFileSel   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -5642,8 +5646,6 @@ ovfNew:
 ovfHandleOk:
     LeaveSection ds:hsi_section
 ;
-    mov ds:hsi_delete_proc, OFFSET DeleteSysSel
-    mov ds:hsi_delete_proc+4,cs
     clc
     jmp ovfDone
 
@@ -5664,7 +5666,6 @@ ovfDone:
     pop es
     ret
 OpenVfsFile   Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
