@@ -914,6 +914,68 @@ chDone:
     pop ds
     ret
 close_handle     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenKernelHandle
+;
+;           DESCRIPTION:    Open kernel handle
+;
+;           PARAMETERS:     ES:EDI    Filename
+;                           CX        Mode
+;
+;           RETURNS:        BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_kernel_handle_name DB 'Open Kernel Handle', 0
+
+open_kernel_handle Proc far
+    push ds
+    push es
+    push eax
+;  
+    call OpenVfsFile
+    jc okhFail
+;
+    EnterSection ds:hsi_section
+    mov ax,ds:hsi_kernel_sel
+    or ax,ax
+    jnz okhKernOk
+;
+    call fword ptr ds:hsi_create_kernel_proc
+
+okhKernOk:
+    LeaveSection ds:hsi_section
+
+okhFail:
+    xor ebx,ebx
+    jmp ohDone
+
+okhDone:
+    pop eax
+    pop es
+    pop ds
+    ret
+open_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseKernelHandle
+;
+;           DESCRIPTION:    Close kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_kernel_handle_name DB 'Close Kernel Handle', 0
+
+close_kernel_handle Proc far
+    ret
+close_kernel_handle Endp
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -967,6 +1029,18 @@ init_sys_handle     PROC near
     mov edi,OFFSET apply_proc_handle_name
     xor cl,cl
     mov ax,apply_proc_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET open_kernel_handle
+    mov edi,OFFSET open_kernel_handle_name
+    xor cl,cl
+    mov ax,open_new_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET close_kernel_handle
+    mov edi,OFFSET close_kernel_handle_name
+    xor cl,cl
+    mov ax,close_new_kernel_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16
