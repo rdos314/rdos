@@ -917,6 +917,84 @@ chDone:
     pop ds
     ret
 close_handle     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadHandle
+;
+;           DESCRIPTION:    Read handle
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        EAX         Read count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_handle_name  DB 'Read Handle', 0
+
+read_handle     Proc near
+    ret
+read_handle     Endp
+
+read_handle16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call read_handle
+;
+    pop edi
+    pop ecx
+    ret
+read_handle16    ENDP
+
+read_handle32    PROC far
+    call read_handle
+    ret
+read_handle32    ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteHandle
+;
+;           DESCRIPTION:    Write handle
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        EAX         Read count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_handle_name  DB 'Write Handle', 0
+
+write_handle     Proc near
+    ret
+write_handle     Endp
+
+write_handle16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call write_handle
+;
+    pop edi
+    pop ecx
+    ret
+write_handle16    ENDP
+
+write_handle32    PROC far
+    call write_handle
+    ret
+write_handle32    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1341,6 +1419,20 @@ init_sys_handle     PROC near
     xor cl,cl
     mov ax,close_new_handle_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET read_handle16
+    mov esi,OFFSET read_handle32
+    mov edi,OFFSET read_handle_name
+    mov dx,virt_es_in
+    mov ax,read_new_handle_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET write_handle16
+    mov esi,OFFSET write_handle32
+    mov edi,OFFSET write_handle_name
+    mov dx,virt_es_in
+    mov ax,write_new_handle_nr
+    RegisterUserGate
 ;
     popad
     pop es

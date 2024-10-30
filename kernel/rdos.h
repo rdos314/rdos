@@ -591,6 +591,8 @@ int RDOSAPI RdosWaitForCanBridgeProgramming(int *ErrorCode, int *Position);
 
 int RDOSAPI RdosOpenNewHandle(const char *Name, int Mode);
 int RDOSAPI RdosCloseNewHandle(int Handle);
+int RDOSAPI RdosReadNewHandle(int Handle, void *Buf, int Size);
+int RDOSAPI RdosWriteNewHandle(int Handle, const void *Buf, int Size);
 
 
 int RDOSAPI RdosOpenHandle(const char *Name, int Mode);

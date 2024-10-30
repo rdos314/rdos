@@ -1555,6 +1555,16 @@
     __parm [__ebx] \
     __value [__ebx]
 
+#pragma aux RdosReadNewHandle = \
+    CallGate_read_new_handle  \
+    __parm [__ebx] [__edi] [__ecx]  \
+    __value [__eax]
+
+#pragma aux RdosWriteNewHandle = \
+    CallGate_write_new_handle  \
+    __parm [__ebx] [__edi] [__ecx]  \
+    __value [__eax]
+
 
 #pragma aux RdosOpenHandle = \
     CallGate_open_handle  \

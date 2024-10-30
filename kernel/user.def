@@ -1027,5 +1027,7 @@ delete_handle_nr                  = 851
 
 open_new_handle_nr                = 852
 close_new_handle_nr               = 853
+read_new_handle_nr                = 854
+write_new_handle_nr               = 855
 
 usergate_entries                  = 860

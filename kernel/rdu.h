@@ -1027,6 +1027,8 @@
 
 #define usergate_open_new_handle 0x00000354
 #define usergate_close_new_handle 0x00000355
+#define usergate_read_new_handle 0x00000356
+#define usergate_write_new_handle 0x00000357
 
 
 
@@ -2060,6 +2062,8 @@
 
 #define CallGate_open_new_handle 0x55 0x67 0x9a 84 3 0 0 3 0 0x5d
 #define CallGate_close_new_handle 0x55 0x67 0x9a 85 3 0 0 3 0 0x5d
+#define CallGate_read_new_handle 0x55 0x67 0x9a 86 3 0 0 3 0 0x5d
+#define CallGate_write_new_handle 0x55 0x67 0x9a 87 3 0 0 3 0 0x5d
 
 #else
 
@@ -3091,5 +3095,7 @@
 
 #define CallGate_open_new_handle 0x3e 0x67 0x9a 84 3 0 0 3 0
 #define CallGate_close_new_handle 0x3e 0x67 0x9a 85 3 0 0 3 0
+#define CallGate_read_new_handle 0x3e 0x67 0x9a 86 3 0 0 3 0
+#define CallGate_write_new_handle 0x3e 0x67 0x9a 87 3 0 0 3 0
 
 #endif

@@ -40,6 +40,8 @@ void main()
     int handle = RdosOpenNewHandle("e:/test.bin", O_RDWR);
     int handle2 = RdosOpenNewHandle("e:/test.bin", O_RDWR);
 
+    size = RdosReadNewHandle(handle, buf, 267);
+
     RdosTestGate(buf);
 
     RdosCloseNewHandle(handle);
