@@ -1029,5 +1029,10 @@ open_new_handle_nr                = 852
 close_new_handle_nr               = 853
 read_new_handle_nr                = 854
 write_new_handle_nr               = 855
+get_new_handle_pos32_nr           = 856
+set_new_handle_pos32_nr           = 857
+get_new_handle_pos64_nr           = 858
+set_new_handle_pos64_nr           = 859
 
-usergate_entries                  = 860
+
+usergate_entries                  = 880

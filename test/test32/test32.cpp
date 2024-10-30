@@ -37,33 +37,37 @@ void main()
     char *buf = new char[1024];
     int size;
     int dummy;
-    int handle = RdosOpenNewHandle("e:/test.bin", O_RDWR);
+    long long pos;
     int handle2 = RdosOpenNewHandle("e:/test.bin", O_RDWR);
+    int handle = RdosOpenNewHandle("e:/test.bin", O_RDWR);
 
     size = RdosReadNewHandle(handle, buf, 267);
 
     RdosTestGate(buf);
 
-    RdosCloseNewHandle(handle);
-    RdosCloseNewHandle(handle2);
+    RdosSetNewHandlePos(handle, 500234);
+    size = RdosReadNewHandle(handle, buf, 267);
 
-    RdosSetHandlePos(handle, 500234);
-    size = RdosReadHandle(handle, buf, 267);
+    pos = RdosGetNewHandlePos(handle);
+    pos = RdosGetNewHandlePos(handle2);
 
-    RdosSetHandlePos(handle, 1000234);
-    size = RdosReadHandle(handle, buf, 99);
+    RdosSetNewHandlePos(handle, 1000234);
+    size = RdosReadNewHandle(handle, buf, 99);
 
-    RdosSetHandlePos(handle, 1000234);
-    size = RdosReadHandle(handle, buf, 567);
+    RdosSetNewHandlePos(handle, 1000234);
+    size = RdosReadNewHandle(handle, buf, 567);
 
-    RdosSetHandleSize(handle, 0);
+
+
+//    RdosSetHandleSize(handle, 0);
 
     scanf("%d", &dummy);
 
-    RdosSetHandlePos(handle, 760234);
-    size = RdosReadHandle(handle, buf, 455);
+    RdosSetNewHandlePos(handle, 760234);
+    size = RdosReadNewHandle(handle, buf, 455);
 
-    RdosCloseHandle(handle);
+    RdosCloseNewHandle(handle);
+    RdosCloseNewHandle(handle2);
 
     delete buf;
 

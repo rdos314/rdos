@@ -1565,6 +1565,28 @@
     __parm [__ebx] [__edi] [__ecx]  \
     __value [__eax]
 
+#pragma aux RdosGetNewHandlePos = \
+    CallGate_get_new_handle_pos64  \
+    "jnc ghpDone" \
+    CallGate_get_new_handle_pos32  \
+    "ghpDone:" \
+    __parm [__ebx]  \
+    __value [__edx __eax]
+
+#pragma aux RdosSetNewHandlePos = \
+    CallGate_set_new_handle_pos64  \
+    "jnc shpDone" \
+    CallGate_set_new_handle_pos32  \
+    "jc shpFail" \
+    "xor edx,edx" \
+    "jmp shpDone" \
+    "shpFail:" \
+    "mov eax,-1" \
+    "mov edx,-1" \
+    "shpDone:" \
+    __parm [__ebx] [__edx __eax] \
+    __value [__edx __eax]
+
 
 #pragma aux RdosOpenHandle = \
     CallGate_open_handle  \
