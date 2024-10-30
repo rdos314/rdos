@@ -1006,9 +1006,16 @@ open_kernel_handle Proc far
     jnz okhKernOk
 ;
     call fword ptr ds:hsi_create_kernel_proc
+    mov ds:hsi_kernel_sel,ax
 
 okhKernOk:
+    mov es,eax
+    inc es:hki_ref_count
     LeaveSection ds:hsi_section
+;
+    mov ebx,es:hki_sys_index
+    clc
+    jmp okhFail
 
 okhFail:
     xor ebx,ebx
