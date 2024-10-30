@@ -979,43 +979,6 @@ SendDerefReq     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           SendCloseReq
-;
-;       DESCRIPTION:    Send close req
-;
-;       PARAMETERS:     DS             Sys interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SendCloseReq     Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov ebx,REQ_CLOSE
-    call AddReq
-;
-    mov ebx,ds:kf_serv_handle
-    mov fs,ds:kf_part_sel
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-    jc scrDone
-;
-    mov eax,VFS_CLOSE_FILE
-    call RunMsg
-
-scrDone:
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-SendCloseReq     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           CalcPageCount
 ;
 ;       DESCRIPTION:    Calculate page count
@@ -3113,344 +3076,6 @@ FreeFileReq  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteProcSel
-;
-;       DESCRIPTION:    Delete proc sel
-;
-;       PARAMETERS:     DS              Proc interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteProcSel   Proc far
-    push es
-    push eax
-    push ebx
-    push ecx
-    push edx
-;
-    call DeleteMap
-;
-    push ds
-    mov ds,ds:pf_map_sel
-    mov ax,flat_data_sel
-    mov es,eax
-    mov ebx,ds:fm_handle_ptr
-    add ebx,OFFSET fh_futex
-    mov eax,es:[ebx].fs_handle
-    or eax,eax
-    jz dpsPop
-;
-    CleanupFutex
-
-dpsPop:
-    pop ds
-;
-    mov es,ds:pf_map_sel
-    FreeMem
-;
-    mov edx,ds:pf_map_linear
-    add edx,ds:pf_flat_base
-    mov ecx,3000h
-    FreeLinear
-;
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-    ret
-DeleteProcSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreateProcSel
-;
-;       DESCRIPTION:    Create proc sel
-;
-;       PARAMETERS:     DS              Sys handle sel
-;
-;       RETURNS:        NC
-;                         AX            Proc handle sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateProcSel   Proc far
-    push es
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov ax,system_data_sel
-    mov es,ax
-    mov ebx,es:flat_base
-;
-    mov ax,flat_data_sel
-    mov es,eax
-;
-    mov eax,1000h
-    AllocateBigLinear
-    mov ebp,edx
-;
-    mov eax,3000h
-    AllocateLocalLinear
-;
-    sub edx,ebx
-    mov edi,edx
-;
-    mov eax,-1
-    mov ecx,3Dh
-    rep stosd
-;
-    xor eax,eax
-    mov ecx,7C3h
-    rep stosd
-;
-    mov eax,edx
-    add eax,1000h
-    mov es:[edx].fm_handle_ptr,eax
-    add eax,1000h
-    mov es:[edx].fm_info_ptr,eax
-    mov es:[edx].fm_update,0
-;
-    mov ax,flat_data_sel
-    mov es,eax
-    mov eax,edx
-    add eax,1000h
-    mov ecx,eax
-    add eax,OFFSET fh_futex
-    mov es:[eax].fs_handle,0
-    mov es:[eax].fs_val,-1
-    mov es:[eax].fs_counter,0
-    mov es:[eax].fs_owner,0
-    add ecx,1000h
-    add ecx,OFFSET fi_name
-    mov es:[eax].fs_sect_name,ecx
-;
-    push ebx
-    push edx
-;
-    add edx,ebx
-    add edx,2000h
-    mov eax,ds:kf_info_phys
-    mov ebx,ds:kf_info_phys+4
-    or ax,865h
-    SetPageEntry
-;
-    sub edx,2000h
-    GetPageEntry
-    and ax,0F000h
-    or ax,865h
-    SetPageEntry
-;
-    mov edx,ebp
-    and ax,0F000h
-    or ax,63h
-    SetPageEntry
-;
-    mov eax,SIZE process_file
-    AllocateBigLinear
-;
-    call CreateProcObj
-    mov es,eax
-;
-    pop edx
-    pop ebx
-;
-    xor eax,eax
-    mov edi,SIZE pf_base
-    mov ecx,SIZE process_file
-    sub ecx,edi
-    push ecx
-    shr ecx,2
-    rep stosd
-    pop ecx
-    and ecx,3
-    rep stosb
-;
-    mov ecx,240
-    mov es:pf_free_count,cl
-;
-    mov edi,OFFSET pf_free_arr
-    mov al,cl
-    dec al
-
-cvmsLoop:
-    stosb
-    dec al
-    loop cvmsLoop
-;
-    mov es:pf_flat_base,ebx
-    mov es:pf_map_linear,edx
-    mov es:pf_prog_sel,si
-    mov es:pf_file_sel,ds
-    mov es:pf_handle,0
-    mov es:pf_ref_count,0
-;
-    mov es:hpi_create_proc,OFFSET CreateHandleSel
-    mov es:hpi_create_proc+4,cs
-;
-    mov es:hpi_delete_proc,OFFSET DeleteProcSel
-    mov es:hpi_delete_proc+4,cs
-;
-    push ds
-    AllocateLdt
-    pop ds
-    or bx,4
-    mov ecx,1000h
-    mov edx,ebp
-    CreateDataSelector32
-    mov es:pf_map_sel,bx
-    mov eax,es
-;
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop es
-    ret
-CreateProcSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           DeleteHandleSel
-;
-;       DESCRIPTION:    Delete handle sel
-;
-;       PARAMETERS:     DS              Handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteHandleSel      Proc far
-    push ds
-    push eax
-    push ebx
-    push edx
-;
-    mov ebx,ds:hf_user_handle
-    or ebx,ebx
-    jz dhsDone
-;
-    mov ds,ds:hei_proc_sel
-    call SyncFileSize
-;
-    mov edx,ds:pf_map_linear
-    mov eax,flat_data_sel
-    mov ds,eax
-    mov edx,ds:[edx].fm_handle_ptr
-    add edx,OFFSET fh_bitmap
-;
-    dec ebx
-    lock btc ds:[edx],ebx
-    jc dhsDone
-;
-    int 3
-
-dhsDone:
-    pop edx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-DeleteHandleSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreateHandleSel
-;
-;       DESCRIPTION:    Create handle sel
-;
-;       PARAMETERS:     DS              Handle proc interface
-;                       CX              Access
-;
-;       RETURNS:        NC
-;                         AX            Handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateHandleSel      Proc far
-    push es
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov edi,ecx
-    mov bx,flat_data_sel
-    mov es,ebx
-    mov edx,ds:pf_map_linear
-    mov edx,es:[edx].fm_handle_ptr
-    add edx,OFFSET fh_bitmap
-    mov ecx,15
-    xor esi,esi
-
-chsLoop:
-    mov eax,es:[edx]
-    cmp eax,-1
-    je chsNext
-;
-    not eax
-    bsf ebx,eax
-;
-    lock bts es:[edx],ebx
-    jc chsLoop
-;
-    add ebx,esi
-;
-    mov esi,ebx
-    mov edx,ds:pf_map_linear
-    mov edx,es:[edx].fm_handle_ptr
-    shl esi,3
-
-    add edx,esi
-    add edx,OFFSET fh_pos_arr
-    xor eax,eax
-    mov es:[edx],eax
-    add edx,4
-    mov es:[edx],eax
-;
-    mov eax,SIZE handle_file
-    AllocateSmallLinear
-;
-    call CreateHandleObj
-    mov es,eax
-;
-    inc ebx
-    mov es:hf_user_handle,ebx
-;
-    mov es:hei_delete_proc, OFFSET DeleteHandleSel
-    mov es:hei_delete_proc+4,cs
-    clc
-    jmp chsDone
-
-chsNext:
-    add esi,32
-    add edx,4
-    loop chsLoop
-;
-    stc
-
-chsDone:
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop es
-    ret
-CreateHandleSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           LockMap
 ;
 ;       DESCRIPTION:    Lock map
@@ -3742,136 +3367,6 @@ DeleteVfsFile_  Proc near
     pop ds
     ret
 DeleteVfsFile_  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           OpenVfsFile
-;
-;           DESCRIPTION:    Open VFS file
-;
-;           PARAMETERS:     ES:EDI      Filename
-;                           CX          Mode
-;                           
-;           RETURNS:        DS          Sys handle obj
-;                           NC          Success
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public OpenVfsFile
-
-OpenVfsFile    Proc near
-    push es
-    push fs
-    push gs
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-    push ebp
-;
-    mov eax,es
-    mov gs,eax
-;
-    call GetPathDrive
-    jc ovfFail
-;
-    call GetDrivePart
-    or bx,bx
-    jz ovfFail
-;
-    mov ah,es:[edi]
-    cmp ah,'/'
-    je ovfRoot
-;
-    cmp ah,'\'
-    je ovfRoot
-
-ovfRel:
-    call GetRelDir
-    jmp ovfHasStart
-
-ovfRoot:
-    inc edi
-    xor ax,ax
-
-ovfHasStart:
-    mov esi,edi
-    mov fs,bx
-    mov ds,fs:vfsp_disc_sel
-;
-    push ecx
-    xor ecx,ecx
-    movzx eax,ax
-    call AllocateMsg
-    pop ecx
-    jc ovfFail
-
-ovfCopyPath:
-    lods byte ptr gs:[esi]
-    stosb
-    or al,al
-    jnz ovfCopyPath
-;
-    test cx,O_CREAT
-    jz ovfOpen
-
-ovfCreate:
-    push ecx
-    mov eax,VFS_CREATE_FILE
-    call RunMsg
-    pop ecx
-    jnc ovfFound
-    jmp ovfFail
-
-ovfOpen:
-    push ecx
-    mov eax,VFS_OPEN_FILE
-    call RunMsg
-    pop ecx
-    jc ovfFail
-
-ovfFound:
-    call GetFileSel
-    jc ovfFail
-;
-    mov ds,eax
-    EnterSection ds:hsi_section
-;
-    mov ebx,ds:hsi_index
-    or ebx,ebx
-    jz ovfNew
-;
-    call SendDerefReq
-    jmp ovfHandleOk
-
-ovfNew:
-    call AllocateLocalSysHandle
-    mov ds:hsi_index,ebx
-
-ovfHandleOk:
-    LeaveSection ds:hsi_section
-    clc
-    jmp ovfDone
-
-ovfFail:
-    xor eax,eax
-    mov ds,eax
-    stc
-
-ovfDone:
-    pop ebp
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop eax
-    pop gs
-    pop fs
-    pop es
-    ret
-OpenVfsFile   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4991,7 +4486,7 @@ CloseKernelVfsFile   Proc near
 ;    or eax,eax
 ;    jnz ckvfDone
 ;
-    call SendCloseReq
+;    call SendCloseReq
 
 ckvfDone:
     pop eax
@@ -5207,36 +4702,6 @@ WriteVfsFile    Proc near
     pop fs
     ret
 WriteVfsFile    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CloseVfsFile
-;
-;       DESCRIPTION:    Close VFS file
-;
-;       PARAMETERS:     BX             Sys interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CloseVfsFile
-
-CloseVfsFile  Proc near
-    push ds
-    push eax
-;
-    mov ds,ebx
-    mov ax,ds:kf_kmap_sel
-    or ax,ax
-    jnz cvfDone
-;    
-    call SendCloseReq
-
-cvfDone:
-    pop eax
-    pop ds
-    ret
-CloseVfsFile  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5690,6 +5155,516 @@ make_dir32  Proc far
 mdf32Done:
     ret
 make_dir32  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteHandleSel
+;
+;       DESCRIPTION:    Delete handle sel
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteHandleSel      Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    mov ebx,ds:hf_user_handle
+    or ebx,ebx
+    jz dhsDone
+;
+    mov ds,ds:hei_proc_sel
+    call SyncFileSize
+;
+    mov edx,ds:pf_map_linear
+    mov eax,flat_data_sel
+    mov ds,eax
+    mov edx,ds:[edx].fm_handle_ptr
+    add edx,OFFSET fh_bitmap
+;
+    dec ebx
+    lock btc ds:[edx],ebx
+    jc dhsDone
+;
+    int 3
+
+dhsDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+DeleteHandleSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateHandleSel
+;
+;       DESCRIPTION:    Create handle sel
+;
+;       PARAMETERS:     DS              Handle proc interface
+;                       CX              Access
+;
+;       RETURNS:        NC
+;                         AX            Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateHandleSel      Proc far
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov edi,ecx
+    mov bx,flat_data_sel
+    mov es,ebx
+    mov edx,ds:pf_map_linear
+    mov edx,es:[edx].fm_handle_ptr
+    add edx,OFFSET fh_bitmap
+    mov ecx,15
+    xor esi,esi
+
+chsLoop:
+    mov eax,es:[edx]
+    cmp eax,-1
+    je chsNext
+;
+    not eax
+    bsf ebx,eax
+;
+    lock bts es:[edx],ebx
+    jc chsLoop
+;
+    add ebx,esi
+;
+    mov esi,ebx
+    mov edx,ds:pf_map_linear
+    mov edx,es:[edx].fm_handle_ptr
+    shl esi,3
+
+    add edx,esi
+    add edx,OFFSET fh_pos_arr
+    xor eax,eax
+    mov es:[edx],eax
+    add edx,4
+    mov es:[edx],eax
+;
+    mov eax,SIZE handle_file
+    AllocateSmallLinear
+;
+    call CreateHandleObj
+    mov es,eax
+;
+    inc ebx
+    mov es:hf_user_handle,ebx
+;
+    mov es:hei_delete_proc, OFFSET DeleteHandleSel
+    mov es:hei_delete_proc+4,cs
+    clc
+    jmp chsDone
+
+chsNext:
+    add esi,32
+    add edx,4
+    loop chsLoop
+;
+    stc
+
+chsDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+CreateHandleSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteProcSel
+;
+;       DESCRIPTION:    Delete proc sel
+;
+;       PARAMETERS:     DS              Proc interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteProcSel   Proc far
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    call DeleteMap
+;
+    push ds
+    mov ds,ds:pf_map_sel
+    mov ax,flat_data_sel
+    mov es,eax
+    mov ebx,ds:fm_handle_ptr
+    add ebx,OFFSET fh_futex
+    mov eax,es:[ebx].fs_handle
+    or eax,eax
+    jz dpsPop
+;
+    CleanupFutex
+
+dpsPop:
+    pop ds
+;
+    mov es,ds:pf_map_sel
+    FreeMem
+;
+    mov edx,ds:pf_map_linear
+    add edx,ds:pf_flat_base
+    mov ecx,3000h
+    FreeLinear
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+DeleteProcSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateProcSel
+;
+;       DESCRIPTION:    Create proc sel
+;
+;       PARAMETERS:     DS              Sys handle sel
+;
+;       RETURNS:        NC
+;                         AX            Proc handle sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateProcSel   Proc far
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov ax,system_data_sel
+    mov es,ax
+    mov ebx,es:flat_base
+;
+    mov ax,flat_data_sel
+    mov es,eax
+;
+    mov eax,1000h
+    AllocateBigLinear
+    mov ebp,edx
+;
+    mov eax,3000h
+    AllocateLocalLinear
+;
+    sub edx,ebx
+    mov edi,edx
+;
+    mov eax,-1
+    mov ecx,3Dh
+    rep stosd
+;
+    xor eax,eax
+    mov ecx,7C3h
+    rep stosd
+;
+    mov eax,edx
+    add eax,1000h
+    mov es:[edx].fm_handle_ptr,eax
+    add eax,1000h
+    mov es:[edx].fm_info_ptr,eax
+    mov es:[edx].fm_update,0
+;
+    mov ax,flat_data_sel
+    mov es,eax
+    mov eax,edx
+    add eax,1000h
+    mov ecx,eax
+    add eax,OFFSET fh_futex
+    mov es:[eax].fs_handle,0
+    mov es:[eax].fs_val,-1
+    mov es:[eax].fs_counter,0
+    mov es:[eax].fs_owner,0
+    add ecx,1000h
+    add ecx,OFFSET fi_name
+    mov es:[eax].fs_sect_name,ecx
+;
+    push ebx
+    push edx
+;
+    add edx,ebx
+    add edx,2000h
+    mov eax,ds:kf_info_phys
+    mov ebx,ds:kf_info_phys+4
+    or ax,865h
+    SetPageEntry
+;
+    sub edx,2000h
+    GetPageEntry
+    and ax,0F000h
+    or ax,865h
+    SetPageEntry
+;
+    mov edx,ebp
+    and ax,0F000h
+    or ax,63h
+    SetPageEntry
+;
+    mov eax,SIZE process_file
+    AllocateBigLinear
+;
+    call CreateProcObj
+    mov es,eax
+;
+    pop edx
+    pop ebx
+;
+    xor eax,eax
+    mov edi,SIZE pf_base
+    mov ecx,SIZE process_file
+    sub ecx,edi
+    push ecx
+    shr ecx,2
+    rep stosd
+    pop ecx
+    and ecx,3
+    rep stosb
+;
+    mov ecx,240
+    mov es:pf_free_count,cl
+;
+    mov edi,OFFSET pf_free_arr
+    mov al,cl
+    dec al
+
+cvmsLoop:
+    stosb
+    dec al
+    loop cvmsLoop
+;
+    mov es:pf_flat_base,ebx
+    mov es:pf_map_linear,edx
+    mov es:pf_prog_sel,si
+    mov es:pf_file_sel,ds
+    mov es:pf_handle,0
+    mov es:pf_ref_count,0
+;
+    mov es:hpi_create_proc,OFFSET CreateHandleSel
+    mov es:hpi_create_proc+4,cs
+;
+    mov es:hpi_delete_proc,OFFSET DeleteProcSel
+    mov es:hpi_delete_proc+4,cs
+;
+    push ds
+    AllocateLdt
+    pop ds
+    or bx,4
+    mov ecx,1000h
+    mov edx,ebp
+    CreateDataSelector32
+    mov es:pf_map_sel,bx
+    mov eax,es
+;
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+CreateProcSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteSysSel
+;
+;       DESCRIPTION:    Delete sys sel
+;
+;       PARAMETERS:     DS              Sys interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteSysSel   Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ebx,REQ_CLOSE
+    call AddReq
+;
+    mov ebx,ds:kf_serv_handle
+    mov fs,ds:kf_part_sel
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+    jc scrDone
+;
+    mov eax,VFS_CLOSE_FILE
+    call RunMsg
+
+scrDone:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+DeleteSysSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenVfsFile
+;
+;           DESCRIPTION:    Open VFS file
+;
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        DS          Sys handle obj
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public OpenVfsFile
+
+OpenVfsFile    Proc near
+    push es
+    push fs
+    push gs
+    push eax
+    push ecx
+    push edx
+    push esi
+    push edi
+    push ebp
+;
+    mov eax,es
+    mov gs,eax
+;
+    call GetPathDrive
+    jc ovfFail
+;
+    call GetDrivePart
+    or bx,bx
+    jz ovfFail
+;
+    mov ah,es:[edi]
+    cmp ah,'/'
+    je ovfRoot
+;
+    cmp ah,'\'
+    je ovfRoot
+
+ovfRel:
+    call GetRelDir
+    jmp ovfHasStart
+
+ovfRoot:
+    inc edi
+    xor ax,ax
+
+ovfHasStart:
+    mov esi,edi
+    mov fs,bx
+    mov ds,fs:vfsp_disc_sel
+;
+    push ecx
+    xor ecx,ecx
+    movzx eax,ax
+    call AllocateMsg
+    pop ecx
+    jc ovfFail
+
+ovfCopyPath:
+    lods byte ptr gs:[esi]
+    stosb
+    or al,al
+    jnz ovfCopyPath
+;
+    test cx,O_CREAT
+    jz ovfOpen
+
+ovfCreate:
+    push ecx
+    mov eax,VFS_CREATE_FILE
+    call RunMsg
+    pop ecx
+    jnc ovfFound
+    jmp ovfFail
+
+ovfOpen:
+    push ecx
+    mov eax,VFS_OPEN_FILE
+    call RunMsg
+    pop ecx
+    jc ovfFail
+
+ovfFound:
+    call GetFileSel
+    jc ovfFail
+;
+    mov ds,eax
+    EnterSection ds:hsi_section
+;
+    mov ebx,ds:hsi_index
+    or ebx,ebx
+    jz ovfNew
+;
+    call SendDerefReq
+    jmp ovfHandleOk
+
+ovfNew:
+    call AllocateLocalSysHandle
+    mov ds:hsi_index,ebx
+
+ovfHandleOk:
+    LeaveSection ds:hsi_section
+;
+    mov ds:hsi_delete_proc, OFFSET DeleteSysSel
+    mov ds:hsi_delete_proc+4,cs
+    clc
+    jmp ovfDone
+
+ovfFail:
+    xor eax,eax
+    mov ds,eax
+    stc
+
+ovfDone:
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop gs
+    pop fs
+    pop es
+    ret
+OpenVfsFile   Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

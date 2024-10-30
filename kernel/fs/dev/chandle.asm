@@ -111,7 +111,6 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
-    extern CloseVfsFile:near
     extern ReadVfsFile:near
     extern WriteVfsFile:near
     extern MapVfsFile_:near
@@ -1072,8 +1071,6 @@ close_udp_socket	Proc near
 close_udp_socket	Endp
 
 close_vfs      Proc near
-    mov bx,ax
-    call CloseVfsFile
     ret
 close_vfs      Endp
 
