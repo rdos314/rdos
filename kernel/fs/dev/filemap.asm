@@ -4129,110 +4129,6 @@ GrowKernelFile_      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadVfsFile
-;
-;       DESCRIPTION:    Read VFS file
-;
-;       PARAMETERS:     BX              Sys interface
-;                       EDX:EAX         Position
-;                       ES:EDI          Buffer
-;                       ECX             Size
-;                       ESI             Proc interface (low) & handle (high)
-;
-;       RETURNS:        ECX             Count
-;                       EDX:EAX         New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public ReadVfsFile
-
-ReadVfsFile    Proc near
-    push fs
-    push ebx
-    push esi
-    push ebp
-;
-    mov ebp,esi
-;
-    push eax
-    push edx
-;
-    mov fs,si
-    mov esi,fs:pf_map_linear
-    mov ebx,flat_data_sel
-    mov fs,ebx
-    mov ebx,ebp
-    xor ebp,ebp
-    call VfsRead
-;
-    pop edx
-    pop eax
-;
-    add eax,ecx
-    adc edx,0
-;
-    pop ebp
-    pop esi
-    pop ebx
-    pop fs
-    ret
-ReadVfsFile    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           WriteVfsFile
-;
-;       DESCRIPTION:    Write VFS file
-;
-;       PARAMETERS:     BX              Sys interface
-;                       EDX:EAX         Position
-;                       ES:EDI          Buffer
-;                       ECX             Size
-;                       ESI             Proc interface (low) & handle (high)
-;
-;       RETURNS:        ECX             Count
-;                       EDX:EAX         New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public WriteVfsFile
-
-WriteVfsFile    Proc near
-    push fs
-    push ebx
-    push esi
-    push ebp
-;
-    mov ebp,esi
-;
-    push eax
-    push edx
-;
-    mov fs,si
-    mov esi,fs:pf_map_linear
-    mov ebx,flat_data_sel
-    mov fs,ebx
-    mov ebx,ebp
-    xor ebp,ebp
-    call VfsWrite
-;
-    pop edx
-    pop eax
-;
-    add eax,ecx
-    adc edx,0
-;
-    pop ebp
-    pop esi
-    pop ebx
-    pop fs
-    ret
-WriteVfsFile    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           GetVfsFilePos
 ;
 ;       DESCRIPTION:    Get VFS file pos
@@ -4687,6 +4583,102 @@ make_dir32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ReadHandleSel
+;
+;       DESCRIPTION:    Read handle
+;
+;       PARAMETERS:     DS              Handle interface
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadHandleSel    Proc far
+    push fs
+    push ebx
+    push esi
+    push ebp
+;
+    mov ebp,esi
+;
+    push eax
+    push edx
+;
+    mov fs,si
+    mov esi,fs:pf_map_linear
+    mov ebx,flat_data_sel
+    mov fs,ebx
+    mov ebx,ebp
+    xor ebp,ebp
+    call VfsRead
+;
+    pop edx
+    pop eax
+;
+    add eax,ecx
+    adc edx,0
+;
+    pop ebp
+    pop esi
+    pop ebx
+    pop fs
+    ret
+ReadHandleSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WriteHandleSel
+;
+;       DESCRIPTION:    Write handle
+;
+;       PARAMETERS:     DS              Handle interface
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHandleSel    Proc far
+    push fs
+    push ebx
+    push esi
+    push ebp
+;
+    mov ebp,esi
+;
+    push eax
+    push edx
+;
+    mov fs,si
+    mov esi,fs:pf_map_linear
+    mov ebx,flat_data_sel
+    mov fs,ebx
+    mov ebx,ebp
+    xor ebp,ebp
+    call VfsWrite
+;
+    pop edx
+    pop eax
+;
+    add eax,ecx
+    adc edx,0
+;
+    pop ebp
+    pop esi
+    pop ebx
+    pop fs
+    ret
+WriteHandleSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DeleteHandleSel
 ;
 ;       DESCRIPTION:    Delete handle sel
@@ -4794,6 +4786,12 @@ chsLoop:
     inc ebx
     mov es:hf_user_handle,ebx
 ;
+    mov es:hei_read_proc, OFFSET ReadHandleSel
+    mov es:hei_read_proc+4,cs
+;
+    mov es:hei_write_proc, OFFSET WriteHandleSel
+    mov es:hei_write_proc+4,cs
+;
     mov es:hei_delete_proc, OFFSET DeleteHandleSel
     mov es:hei_delete_proc+4,cs
     clc
@@ -4802,7 +4800,8 @@ chsLoop:
 chsNext:
     add esi,32
     add edx,4
-    loop chsLoop
+    sub ecx,1
+    jnz chsLoop
 ;
     stc
 

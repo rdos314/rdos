@@ -111,8 +111,6 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
-    extern ReadVfsFile:near
-    extern WriteVfsFile:near
     extern MapVfsFile_:near
     extern GrowVfsFile_:near
     extern UpdateVfsFile_:near
@@ -1496,7 +1494,7 @@ poll_udp_socket       Proc near
 poll_udp_socket       Endp
 
 poll_vfs_file        Proc near
-    call ReadVfsFile
+;    call ReadVfsFile
     ret
 poll_vfs_file        Endp
 
@@ -1660,7 +1658,7 @@ read_udp_socket       Proc near
 read_udp_socket       Endp
 
 read_vfs_file        Proc near
-    call ReadVfsFile
+;    call ReadVfsFile
     ret
 read_vfs_file        Endp
 
@@ -1847,7 +1845,7 @@ write_udp_socket      Proc near
 write_udp_socket      Endp
 
 write_vfs_file        Proc near
-    call WriteVfsFile
+;    call WriteVfsFile
     ret
 write_vfs_file        Endp
 
