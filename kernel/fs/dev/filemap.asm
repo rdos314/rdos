@@ -3854,49 +3854,6 @@ SyncKernelMap  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteKernelMap
-;
-;       DESCRIPTION:    Delete all mapped requests for kernel file
-;
-;       PARAMETERS:     DS             Sys interface
-;                       ES             Kernel map sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteKernelMap  Proc near
-    pushad
-;
-    mov ebx,OFFSET fm_sorted_arr
-    mov ecx,240
-
-dkmLoop:
-    mov al,es:[ebx]
-    cmp al,-1
-    je dkmUnlink
-;
-    movzx esi,al
-    add esi,OFFSET kfm_ref_arr
-    movzx edi,al
-    shl edi,4
-    add edi,OFFSET fm_entry_arr    
-    call CheckKernelDirtyMap
-    call FreeKernelMap
-    jmp dkmLoop
-
-dkmNext:
-    inc ebx
-    loop dkmLoop
-
-dkmUnlink:
-    call UpdateKernelUnlinked
-;
-    popad
-    ret
-DeleteKernelMap  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           UpdateKernelFile
 ;
 ;       DESCRIPTION:    Update kernel file
@@ -4165,46 +4122,6 @@ gkfDone:
     pop ds
     ret
 GrowKernelFile_      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CloseKernelVfsFile
-;
-;       DESCRIPTION:    Close kernel VFS file
-;
-;       PARAMETERS:     BX            Sys interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CloseKernelVfsFile
-
-CloseKernelVfsFile   Proc near
-    push ds
-    push es
-    push eax
-;
-    mov ds,ebx
-;
-    mov es,ds:kf_kmap_sel
-    call DeleteKernelMap
-;
-    mov ds:kf_kmap_sel,0
-    mov ds:kf_kmap_linear,0
-    FreeMem
-;
-;    mov eax,ds:kf_proc_count
-;    or eax,eax
-;    jnz ckvfDone
-;
-;    call SendCloseReq
-
-ckvfDone:
-    pop eax
-    pop es
-    pop ds
-    ret
-CloseKernelVfsFile   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5209,39 +5126,50 @@ CreateProcSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteSysSel
+;       NAME:           DeleteKernelSel
 ;
-;       DESCRIPTION:    Delete sys sel
+;       DESCRIPTION:    Delete kernel sel
 ;
-;       PARAMETERS:     DS              Sys interface
+;       PARAMETERS:     DS              Kernel interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteSysSel   Proc far
-    push ds
+DeleteKernelSel  Proc far
     push es
-    push fs
     pushad
 ;
-    mov ebx,REQ_CLOSE
-    call AddReq
+    mov es,ds:hkf_map_sel
 ;
-    mov ebx,ds:kf_serv_handle
-    mov fs,ds:kf_part_sel
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-    jc scrDone
-;
-    mov eax,VFS_CLOSE_FILE
-    call RunMsg
+    mov ebx,OFFSET fm_sorted_arr
+    mov ecx,240
 
-scrDone:
+dkmLoop:
+    mov al,es:[ebx]
+    cmp al,-1
+    je dkmUnlink
+;
+    movzx esi,al
+    add esi,OFFSET kfm_ref_arr
+    movzx edi,al
+    shl edi,4
+    add edi,OFFSET fm_entry_arr    
+    call CheckKernelDirtyMap
+    call FreeKernelMap
+    jmp dkmLoop
+
+dkmNext:
+    inc ebx
+    loop dkmLoop
+
+dkmUnlink:
+    call UpdateKernelUnlinked
+;
+    FreeMem
+;
     popad
-    pop fs
     pop es
-    pop ds
     ret
-DeleteSysSel   Endp
+DeleteKernelSel  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5311,6 +5239,9 @@ ckmLoop:
     call CreateKernelObj
     mov es,eax
 ;
+    mov es:hki_delete_proc,OFFSET DeleteKernelSel
+    mov es:hki_delete_proc+4,cs
+;
     mov es:hkf_map_linear,edx
     mov es:hkf_map_sel,bx
 ;
@@ -5324,6 +5255,43 @@ ckmLoop:
     pop es
     ret
 CreateKernelSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteSysSel
+;
+;       DESCRIPTION:    Delete sys sel
+;
+;       PARAMETERS:     DS              Sys interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteSysSel   Proc far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov ebx,REQ_CLOSE
+    call AddReq
+;
+    mov ebx,ds:kf_serv_handle
+    mov fs,ds:kf_part_sel
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+    jc scrDone
+;
+    mov eax,VFS_CLOSE_FILE
+    call RunMsg
+
+scrDone:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+DeleteSysSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

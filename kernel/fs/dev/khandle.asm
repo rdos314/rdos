@@ -65,7 +65,6 @@ code    SEGMENT byte public 'CODE'
 
     extern allocate_proc_handle:near
 
-    extern CloseKernelVfsFile:near
     extern ReadKernelVfsFile:near
     extern WriteKernelVfsFile:near
     extern DupKernelVfsFile:near
@@ -186,7 +185,7 @@ ckhVfs:
     or bx,bx
     jz ckhLeave
 ;
-    call CloseKernelVfsFile
+;    call CloseKernelVfsFile
     
 ckhLeave:
     LeaveSection ds:hd_section
