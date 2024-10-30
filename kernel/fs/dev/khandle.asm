@@ -65,8 +65,6 @@ code    SEGMENT byte public 'CODE'
 
     extern allocate_proc_handle:near
 
-    extern ReadKernelVfsFile:near
-    extern WriteKernelVfsFile:near
     extern DupKernelVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -248,7 +246,7 @@ rkhVfs:
     or bx,bx
     jz rkhFail
 ;
-    call ReadKernelVfsFile
+;    call ReadKernelVfsFile
     jmp rkhDone
 
 rkhFail:
@@ -311,7 +309,7 @@ wkhVfs:
     or bx,bx
     jz wkhFail
 ;
-    call WriteKernelVfsFile
+;    call WriteKernelVfsFile
     jmp wkhDone
 
 wkhFail:

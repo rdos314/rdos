@@ -4126,110 +4126,6 @@ GrowKernelFile_      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadKernelVfsFile
-;
-;       DESCRIPTION:    Read kernel VFS file
-;
-;       PARAMETERS:     BX              Sys interface
-;                       EDX:EAX         Position
-;                       ES:EDI          Buffer
-;                       ECX             Size
-;
-;       RETURNS:        ECX             Count
-;                       EDX:EAX         New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public ReadKernelVfsFile
-
-ReadKernelVfsFile    Proc near
-    push ds
-    push es
-    push fs
-    push ebx
-    push esi
-    push ebp
-;
-    push eax
-    push edx
-;
-    mov ds,ebx
-    mov fs,ds:kf_kmap_sel
-    xor esi,esi
-    xor ebp,ebp
-    call KernelRead
-;
-    pop edx
-    pop eax
-;
-    add eax,ecx
-    adc edx,0
-    clc
-;
-    pop ebp
-    pop esi
-    pop ebx
-    pop fs
-    pop es
-    pop ds
-    ret
-ReadKernelVfsFile    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           WriteKernelVfsFile
-;
-;       DESCRIPTION:    Write kernel VFS file
-;
-;       PARAMETERS:     BX              Sys interface
-;                       EDX:EAX         Position
-;                       ES:EDI          Buffer
-;                       ECX             Size
-;
-;       RETURNS:        ECX             Count
-;                       EDX:EAX         New position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public WriteKernelVfsFile
-
-WriteKernelVfsFile    Proc near
-    push ds
-    push es
-    push fs
-    push ebx
-    push esi
-    push ebp
-;
-    push eax
-    push edx
-;
-    mov ds,ebx
-    mov fs,ds:kf_kmap_sel
-    xor esi,esi
-    xor ebp,ebp
-    call KernelWrite
-;
-    pop edx
-    pop eax
-;
-    add eax,ecx
-    adc edx,0
-    clc
-;
-    pop ebp
-    pop esi
-    pop ebx
-    pop fs
-    pop es
-    pop ds
-    ret
-WriteKernelVfsFile    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           ReadVfsFile
 ;
 ;       DESCRIPTION:    Read VFS file
@@ -5126,6 +5022,104 @@ CreateProcSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ReadKernelSel
+;
+;       DESCRIPTION:    Read kernel file
+;
+;       PARAMETERS:     DS              Kernel interface
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Count
+;                       EDX:EAX         New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadKernelSel    Proc far
+    push ds
+    push es
+    push fs
+    push ebx
+    push esi
+    push ebp
+;
+    push eax
+    push edx
+;
+    mov fs,ds:hkf_map_sel
+    xor esi,esi
+    xor ebp,ebp
+    call KernelRead
+;
+    pop edx
+    pop eax
+;
+    add eax,ecx
+    adc edx,0
+    clc
+;
+    pop ebp
+    pop esi
+    pop ebx
+    pop fs
+    pop es
+    pop ds
+    ret
+ReadKernelSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WriteKernelSel
+;
+;       DESCRIPTION:    Write kernel file
+;
+;       PARAMETERS:     DS              Kernel interface
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Count
+;                       EDX:EAX         New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteKernelSel    Proc far
+    push ds
+    push es
+    push fs
+    push ebx
+    push esi
+    push ebp
+;
+    push eax
+    push edx
+;
+    mov fs,ds:hkf_map_sel
+    xor esi,esi
+    xor ebp,ebp
+    call KernelWrite
+;
+    pop edx
+    pop eax
+;
+    add eax,ecx
+    adc edx,0
+    clc
+;
+    pop ebp
+    pop esi
+    pop ebx
+    pop fs
+    pop es
+    pop ds
+    ret
+WriteKernelSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DeleteKernelSel
 ;
 ;       DESCRIPTION:    Delete kernel sel
@@ -5238,6 +5232,12 @@ ckmLoop:
 ;
     call CreateKernelObj
     mov es,eax
+;
+    mov es:hki_read_proc,OFFSET ReadKernelSel
+    mov es:hki_read_proc+4,cs
+;
+    mov es:hki_write_proc,OFFSET WriteKernelSel
+    mov es:hki_write_proc+4,cs
 ;
     mov es:hki_delete_proc,OFFSET DeleteKernelSel
     mov es:hki_delete_proc+4,cs
