@@ -1008,6 +1008,7 @@ open_kernel_handle Proc far
     or ax,ax
     jnz okhKernOk
 ;
+    inc ds:hsi_ref_count
     call fword ptr ds:hsi_create_kernel_proc
     mov ds:hsi_kernel_sel,ax
 
