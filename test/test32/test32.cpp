@@ -37,18 +37,13 @@ void main()
     char *buf = new char[1024];
     int size;
     int dummy;
-    int handle = RdosOpenNewHandle("e:/test.bin", O_RDWR);
-    int handle2 = RdosOpenNewHandle("e:/test.bin", O_RDWR);
+    int handle = RdosOpenNewHandle("e:/test.txt", O_RDWR);
+    int handle2 = RdosOpenNewHandle("e:/test.txt", O_RDWR);
+
+    RdosTestGate(buf);
 
     RdosCloseNewHandle(handle);
     RdosCloseNewHandle(handle2);
-
-    for (i = 0; i < 5000; i++)
-    {
-        handle = RdosOpenNewHandle("e:/test.bin", O_RDWR);
-        RdosCloseNewHandle(handle);
-        RdosWaitMilli(100);
-    }
 
     RdosSetHandlePos(handle, 500234);
     size = RdosReadHandle(handle, buf, 267);

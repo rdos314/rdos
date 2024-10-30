@@ -5745,26 +5745,26 @@ test_gate    Proc far
     mov es,ecx
     mov edi,OFFSET test_file
     mov cx,O_CREAT OR O_RDWR
-    OpenKernelHandle
+    OpenNewKernelHandle
     jc tgDone
 ;
     mov edi,OFFSET text_buf
     xor edx,edx
     xor eax,eax
     mov ecx,25
-    WriteKernelHandle
+;    WriteKernelHandle
 ;
     mov ecx,25
-    WriteKernelHandle
+;    WriteKernelHandle
 ;
     mov ecx,25
-    WriteKernelHandle
+;    WriteKernelHandle
 ;
     mov ecx,25
-    WriteKernelHandle
+;    WriteKernelHandle
 ;
     mov ecx,123
-    CloseKernelHandle
+    CloseNewKernelHandle
 
 tgDone:
     pop edi
