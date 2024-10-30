@@ -37,8 +37,8 @@ void main()
     char *buf = new char[1024];
     int size;
     int dummy;
-    int handle = RdosOpenNewHandle("e:/test.txt", O_RDWR);
-    int handle2 = RdosOpenNewHandle("e:/test.txt", O_RDWR);
+    int handle = RdosOpenNewHandle("e:/test.bin", O_RDWR);
+    int handle2 = RdosOpenNewHandle("e:/test.bin", O_RDWR);
 
     RdosCloseNewHandle(handle);
     RdosCloseNewHandle(handle2);

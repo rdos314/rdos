@@ -5733,7 +5733,7 @@ select32    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_gate_name DB 'Test', 0
-test_file      DB 'e:/test.txt', 0
+test_file      DB 'e:/test.bin', 0
 text_buf       DB 'This is written to file', 0Dh, 0Ah, 0
 
 test_gate    Proc far
@@ -5744,24 +5744,30 @@ test_gate    Proc far
     mov ecx,cs
     mov es,ecx
     mov edi,OFFSET test_file
-    mov cx,O_CREAT OR O_RDWR
+    mov cx,O_RDWR
     OpenNewKernelHandle
     jc tgDone
 ;
-    mov edi,OFFSET text_buf
+    mov eax,1024
+    AllocateSmallGlobalMem
+    xor edi,edi
+;
     xor edx,edx
     xor eax,eax
     mov ecx,25
-    WriteNewKernelHandle
+    ReadNewKernelHandle
 ;
+    mov eax,15667
     mov ecx,25
-    WriteNewKernelHandle
+    ReadNewKernelHandle
 ;
+    mov eax,98877
     mov ecx,25
-    WriteNewKernelHandle
+    ReadNewKernelHandle
 ;
+    mov eax,5546
     mov ecx,25
-    WriteNewKernelHandle
+    ReadNewKernelHandle
 ;
     mov ecx,123
     CloseNewKernelHandle
