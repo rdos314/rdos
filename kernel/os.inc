@@ -2773,6 +2773,21 @@ CloseConsole MACRO
     OsGate close_console_nr
                     ENDM
 
+;;;;;;;;;;;; Temporary handle functions ;;;;;;;;;;;
+
+
+; IN  ES:EDI    Filename
+; IN  CX        Mode
+; OUT BX        Handle
+OpenNewKernelHandle MACRO
+    OsGate open_new_kernel_handle_nr
+                    ENDM
+
+; IN  BX        Handle
+CloseNewKernelHandle MACRO
+    OsGate close_new_kernel_handle_nr
+                    ENDM
+
 ;;;;;;;;;;;;; Dos ;;;;;;;;;;;;;;;;;;;
 
 ;       EAX     Bytes

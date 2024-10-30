@@ -926,4 +926,8 @@ clone_proc_handle_nr        = 841
 apply_proc_handle_nr        = 842
 delete_proc_handle_nr       = 843
 
+open_new_kernel_handle_nr   = 844
+close_new_kernel_handle_nr  = 845
+
+
 osgate_entries              = 850
