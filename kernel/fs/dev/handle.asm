@@ -609,6 +609,7 @@ CreateHandleObj    Proc near
     mov es:hei_delete_proc,OFFSET handle_fail
     mov es:hei_delete_proc+4,cs
 ;
+    mov es:hei_ref_count,0
     mov es:hei_index,0
     mov es:hei_proc_sel,ds
 ;
@@ -739,6 +740,7 @@ ohProcOk:
     jc ohFail
 ;
     mov ds,eax
+    inc ds:hei_ref_count
     call AllocateUserHandle
     jc ohFail
 ;
@@ -776,7 +778,6 @@ open_handle32    PROC far
     call open_handle
     ret
 open_handle32    ENDP
-
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -806,6 +807,14 @@ close_handle     Proc far
     sub ebx,1
     jc chFail
 ;
+    mov ax,ds:[2*ebx].ph_arr
+    or ax,ax
+    jz chFail
+;
+    mov es,eax
+    sub es:hei_ref_count,1
+    jnz chOk
+;
     xor ax,ax
     xchg ax,ds:[2*ebx].ph_arr
     or ax,ax
@@ -818,6 +827,19 @@ close_handle     Proc far
     mov es,eax
     call fword ptr ds:hei_delete_proc
 ;
+    mov ax,ds:hei_proc_sel
+    or ax,ax
+    jnz chCheckProc
+;
+    mov ax,ds:hei_sys_sel
+    or ax,ax
+    jz chOk
+;
+    mov ds,eax
+    EnterSection ds:hsi_section
+    jmp chCheckSys
+
+chCheckProc:
     mov ebx,ds:hei_proc_index
     cmp ebx,PROC_HANDLE_COUNT
     jbe chProcHighOk
@@ -877,7 +899,8 @@ chSysHighOk:
 chSysLowOk:
     mov ds,ds:hpi_sys_sel
     FreeMem
-;
+
+chCheckSys:
     sub ds:hsi_ref_count,1
     jnz chLeave
 ;
@@ -910,6 +933,9 @@ chLeave:
 
 chFail:
     stc
+
+chOk:
+    clc
 
 chDone:
     popad
