@@ -3851,7 +3851,6 @@ ovfNew:
     mov ds:hsi_index,ebx
 
 ovfHandleOk:
-    inc ds:hsi_ref_count
     LeaveSection ds:hsi_section
     clc
     jmp ovfDone

@@ -716,6 +716,8 @@ open_handle     Proc near
     call FindProc
     jnc ohProcOk
 ;
+    inc ds:hsi_ref_count
+;
     call fword ptr ds:hsi_create_proc
     jc ohFail
 ;
@@ -853,6 +855,7 @@ chSelOk:
     int 3
 
 chBitOk:
+    mov ds,ebp
     call fword ptr ds:hpi_delete_proc
 ;
     mov ebx,ds:hpi_sys_index
@@ -885,13 +888,12 @@ chSysLowOk:
     int 3
 
 chSysOk:
-    btc ds:hd_sys_bitmap,ebx
+    btc es:hd_sys_bitmap,ebx
     jc chSysBitOk
 ;
     int 3
 
 chSysBitOk:
-    mov ds,eax
     LeaveSection ds:hsi_section
     call fword ptr ds:hsi_delete_proc
     clc
