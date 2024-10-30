@@ -4713,6 +4713,83 @@ WriteHandleSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetPosSel
+;
+;       DESCRIPTION:    Get handle pos
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        EDX:EAX         Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPosSel    Proc far
+    push ds
+    push esi
+;
+    mov eax,ds:hf_user_handle
+    dec eax
+    shl eax,3
+;
+    mov ds,ds:hei_proc_sel
+    mov esi,ds:pf_map_linear
+    mov edx,flat_data_sel
+    mov ds,edx
+;
+    mov edx,ds:[esi].fm_handle_ptr
+    add edx,OFFSET fh_pos_arr
+    add edx,eax
+    mov eax,ds:[edx]
+    mov edx,ds:[edx+4]
+;
+    pop esi
+    pop ds
+    ret
+GetPosSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetPosSel
+;
+;       DESCRIPTION:    Set handle pos
+;
+;       PARAMETERS:     DS              Handle interface
+;                       EDX:EAX         Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPosSel    Proc far
+    push ds
+    push ebx
+    push ecx
+    push esi
+;
+    mov ebx,ds:hf_user_handle
+    dec ebx
+    shl ebx,3
+;
+    mov ds,ds:hei_proc_sel
+    mov esi,ds:pf_map_linear
+    mov ecx,flat_data_sel
+    mov ds,ecx
+;
+    mov ecx,ds:[esi].fm_handle_ptr
+    add ecx,OFFSET fh_pos_arr
+    add ebx,ecx
+    mov ds:[ebx],eax
+    mov ds:[ebx+4],edx
+;
+    pop esi
+    pop ecx
+    pop ebx
+    pop ds
+    ret
+SetPosSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DeleteHandleSel
 ;
 ;       DESCRIPTION:    Delete handle sel
@@ -4825,6 +4902,12 @@ chsLoop:
 ;
     mov es:hei_write_proc, OFFSET WriteHandleSel
     mov es:hei_write_proc+4,cs
+;
+    mov es:hei_get_pos_proc, OFFSET GetPosSel
+    mov es:hei_get_pos_proc+4,cs
+;
+    mov es:hei_set_pos_proc, OFFSET SetPosSel
+    mov es:hei_set_pos_proc+4,cs
 ;
     mov es:hei_delete_proc, OFFSET DeleteHandleSel
     mov es:hei_delete_proc+4,cs

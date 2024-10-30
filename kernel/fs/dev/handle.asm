@@ -1061,6 +1061,188 @@ write_handle32    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetHandlePos
+;
+;           DESCRIPTION:    Get handle pos
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        (EDX:)EAX   Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_pos32_name  DB 'Get C Handle Pos 32', 0
+get_handle_pos64_name  DB 'Get C Handle Pos 64', 0
+
+get_handle_pos32     Proc far
+    push ds
+    push ebx
+    push edx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    ja ghpFail32
+;
+    sub ebx,1
+    jc ghpFail32
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz ghpFail32
+;
+    mov ds,esi
+    call fword ptr ds:hei_get_pos_proc
+    jmp ghpDone32
+
+ghpFail32:
+    xor eax,eax
+    stc
+
+ghpDone32:
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+get_handle_pos32     Endp        
+
+get_handle_pos64     Proc far
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    ja ghpFail64
+;
+    sub ebx,1
+    jc ghpFail64
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz ghpFail64
+;
+    mov ds,esi
+    call fword ptr ds:hei_get_pos_proc
+    jmp ghpDone64
+
+ghpFail64:
+    xor eax,eax
+    xor edx,edx
+    stc
+
+ghpDone64:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+get_handle_pos64     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetHandlePos
+;
+;           DESCRIPTION:    Set handle pos
+;
+;           PARAMETERS:     BX          Handle
+;                           (EDX:)EAX   Position
+;
+;           RETURNS:        (EDX:)EAX   Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_handle_pos32_name  DB 'Set C Handle Pos 32', 0
+set_handle_pos64_name  DB 'Set C Handle Pos 64', 0
+
+set_handle_pos32     Proc far
+    push ds
+    push ebx
+    push edx
+    push esi
+;
+    xor edx,edx
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    ja shpFail32
+;
+    sub ebx,1
+    jc shpFail32
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz shpFail32
+;
+    mov ds,esi
+    call fword ptr ds:hei_set_pos_proc
+    call fword ptr ds:hei_get_pos_proc
+    jmp shpDone32
+
+shpFail32:
+    xor eax,eax
+    stc
+
+shpDone32:
+    pop esi
+    pop edx
+    pop ebx
+    pop ds
+    ret
+set_handle_pos32     Endp        
+
+set_handle_pos64     Proc far
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    ja shpFail64
+;
+    sub ebx,1
+    jc shpFail64
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz shpFail64
+;
+    mov ds,esi
+    call fword ptr ds:hei_set_pos_proc
+    call fword ptr ds:hei_get_pos_proc
+    jmp shpDone64
+
+shpFail64:
+    xor eax,eax
+    xor edx,edx
+    stc
+
+shpDone64:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+set_handle_pos64     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateKernelObj
 ;
 ;           DESCRIPTION:    Create kernel object
@@ -1495,6 +1677,30 @@ init_sys_handle     PROC near
     mov dx,virt_es_in
     mov ax,write_new_handle_nr
     RegisterUserGate
+;
+    mov esi,OFFSET get_handle_pos32
+    mov edi,OFFSET get_handle_pos32_name
+    xor cl,cl
+    mov ax,get_new_handle_pos32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_pos64
+    mov edi,OFFSET get_handle_pos64_name
+    xor cl,cl
+    mov ax,get_new_handle_pos64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_pos32
+    mov edi,OFFSET set_handle_pos32_name
+    xor cl,cl
+    mov ax,set_new_handle_pos32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_pos64
+    mov edi,OFFSET set_handle_pos64_name
+    xor cl,cl
+    mov ax,set_new_handle_pos64_nr
+    RegisterBimodalUserGate
 ;
     popad
     pop es
