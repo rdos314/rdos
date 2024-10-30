@@ -918,6 +918,67 @@ close_handle     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateKernelObj
+;
+;           DESCRIPTION:    Create kernel object
+;
+;           PARAMETERS:     DS         Sys interface
+;                           EAX        Size of object
+;                           EDX        Linear address of object        
+;                           
+;           RETURNS:        AX         Kernel interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateKernelObj
+
+crk_fail    Proc far
+    stc
+    ret
+crk_fail    Endp
+
+delk_proc_fail    Proc far
+    stc
+    ret
+delk_proc_fail    Endp
+
+CreateKernelObj    Proc near
+    push es
+    push ebx
+    push ecx
+;
+    AllocateGdt
+;
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,ebx
+;
+    mov es:hki_read_proc,OFFSET crk_fail
+    mov es:hki_read_proc+4,cs
+;
+    mov es:hki_write_proc,OFFSET crk_fail
+    mov es:hki_write_proc+4,cs
+;
+    mov es:hki_delete_proc,OFFSET delk_proc_fail
+    mov es:hki_delete_proc+4,cs
+;
+    mov es:hki_ref_count,0
+    mov es:hki_sys_sel,ds
+;
+    mov eax,ds:hsi_index
+    mov es:hki_sys_index,eax
+;
+    mov eax,es
+;
+    pop ecx
+    pop ebx
+    pop es
+    ret
+CreateKernelObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenKernelHandle
 ;
 ;           DESCRIPTION:    Open kernel handle

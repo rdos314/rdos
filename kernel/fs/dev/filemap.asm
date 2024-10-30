@@ -176,6 +176,15 @@ kfm_unlink_arr    DB 240 DUP(?)
 
 kernel_file_map  ENDS
 
+handle_kernel_file  STRUC
+
+hkf_base         handle_kernel_interface <>
+
+hkf_map_linear   DD ?
+hkf_map_sel      DW ?
+
+handle_kernel_file  ENDS
+
 data    SEGMENT byte public 'DATA'
 
 sys_section       section_typ <>
@@ -205,6 +214,7 @@ code    SEGMENT byte public 'CODE'
     extern UpdateWrBitmap:near
 
     extern CreateSysObj:near
+    extern CreateKernelObj:near
     extern CreateProcObj:near
     extern CreateHandleObj:near
 
@@ -3272,75 +3282,6 @@ DeleteVfsFile_  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateKernelMap
-;
-;       DESCRIPTION:    Create kernel map sel
-;
-;       RETURNS:        AX              Kernel map sel
-;                       EDX             Kernal map linear
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateKernelMap   Proc near
-    push es
-    push ebx
-    push ecx
-    push esi
-    push edi
-;
-    mov ax,flat_sel
-    mov es,eax
-;
-    mov eax,SIZE kernel_file_map
-    AllocateBigLinear
-    mov edi,edx
-;
-    mov eax,-1
-    mov ecx,3Dh
-    rep stosd
-;
-    xor eax,eax
-    mov ecx,3C3h
-    rep stosd
-;
-    mov ecx,SIZE kernel_file_map - 1000h
-    rep stosb
-;
-    mov eax,ds:kf_info_linear
-    mov es:[edx].fm_handle_ptr,eax
-    mov es:[edx].fm_info_ptr,20h
-    mov es:[edx].fm_update,0
-;
-    AllocateGdt
-    mov ecx,SIZE kernel_file_map
-    CreateDataSelector32
-    mov es,bx
-;
-    mov ecx,240
-    mov es:kfm_free_count,cl
-;
-    mov edi,OFFSET kfm_free_arr
-    mov al,cl
-    dec al
-
-ckmLoop:
-    stosb
-    dec al
-    loop ckmLoop
-;
-    mov eax,ebx
-;
-    pop edi
-    pop esi
-    pop ecx
-    pop ebx
-    pop es
-    ret
-CreateKernelMap      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddKernelDirtyMap
 ;
 ;       DESCRIPTION:    Signal written page
@@ -5302,6 +5243,87 @@ scrDone:
     ret
 DeleteSysSel   Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateKernelSel
+;
+;       DESCRIPTION:    Create kernel sel
+;
+;       PARAMETERS:     DS              Sys handle sel
+;
+;       RETURNS:        NC
+;                         AX            Kernel handle sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateKernelSel   Proc far
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov eax,SIZE kernel_file_map
+    AllocateBigLinear
+    mov edi,edx
+;
+    mov eax,-1
+    mov ecx,3Dh
+    rep stosd
+;
+    xor eax,eax
+    mov ecx,3C3h
+    rep stosd
+;
+    mov ecx,SIZE kernel_file_map - 1000h
+    rep stosb
+;
+    mov eax,ds:kf_info_linear
+    mov es:[edx].fm_handle_ptr,eax
+    mov es:[edx].fm_info_ptr,20h
+    mov es:[edx].fm_update,0
+;
+    AllocateGdt
+    mov ecx,SIZE kernel_file_map
+    CreateDataSelector32
+    mov es,bx
+;
+    mov ecx,240
+    mov es:kfm_free_count,cl
+;
+    mov edi,OFFSET kfm_free_arr
+    mov al,cl
+    dec al
+
+ckmLoop:
+    stosb
+    dec al
+    loop ckmLoop
+;
+    mov eax,SIZE handle_kernel_file
+    AllocateSmallLinear
+;
+    call CreateKernelObj
+    mov es,eax
+;
+    mov es:hkf_map_linear,edx
+    mov es:hkf_map_sel,bx
+;
+    mov eax,es
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+CreateKernelSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5335,6 +5357,9 @@ CreateFileSel   Proc near
 ;
     mov ds:hsi_create_proc_proc,OFFSET CreateProcSel
     mov ds:hsi_create_proc_proc+4,cs
+;
+    mov ds:hsi_create_kernel_proc,OFFSET CreateKernelSel
+    mov ds:hsi_create_kernel_proc+4,cs
 ;
     mov ds:hsi_delete_proc, OFFSET DeleteSysSel
     mov ds:hsi_delete_proc+4,cs
