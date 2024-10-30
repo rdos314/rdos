@@ -65,7 +65,6 @@ code    SEGMENT byte public 'CODE'
 
     extern allocate_proc_handle:near
 
-    extern OpenKernelVfsFile:near
     extern CloseKernelVfsFile:near
     extern ReadKernelVfsFile:near
     extern WriteKernelVfsFile:near
@@ -92,9 +91,6 @@ open_kernel_handle Proc far
     push eax
     push ecx
     push edi
-;
-    call OpenKernelVfsFile
-    jnc okhVfs
 ;
     OpenLegacyKernelFile
     jc okhDone

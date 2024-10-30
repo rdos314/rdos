@@ -755,7 +755,6 @@ ohSizeOk:
 
 ohFail:
     xor ebx,ebx
-    jmp ohDone
 
 ohDone:
     pop eax

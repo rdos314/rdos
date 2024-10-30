@@ -32,6 +32,8 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 include ..\wait.inc
+INCLUDE ..\os\blk.inc
+INCLUDE ..\hint.inc
 INCLUDE ..\driver.def
 INCLUDE ..\os\exec.def
 INCLUDE vfs.inc
@@ -52,6 +54,8 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
+    extern OpenVfsFile:near
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -69,6 +73,31 @@ code    SEGMENT byte public 'CODE'
 open_kernel_handle_name DB 'Open Kernel Handle', 0
 
 open_kernel_handle Proc far
+    push ds
+    push es
+    push eax
+;  
+    call OpenVfsFile
+    jc ohFail
+;
+    EnterSection ds:hsi_section
+    mov ax,ds:hsi_kernel_sel
+    or ax,ax
+    jnz ohKernOk
+;
+    call fword ptr ds:hsi_create_kernel_proc
+
+ohKernOk:
+    LeaveSection ds:hsi_section
+
+ohFail:
+    xor ebx,ebx
+    jmp ohDone
+
+ohDone:
+    pop eax
+    pop es
+    pop ds
     ret
 open_kernel_handle Endp
 
