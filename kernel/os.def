@@ -926,10 +926,17 @@ clone_proc_handle_nr        = 841
 apply_proc_handle_nr        = 842
 delete_proc_handle_nr       = 843
 
-open_new_kernel_handle_nr   = 844
-close_new_kernel_handle_nr  = 845
-read_new_kernel_handle_nr   = 846
-write_new_kernel_handle_nr  = 847
+create_input_handle_nr      = 844
+create_output_handle_nr     = 845
+
+;
+; temporary
+;
+
+open_new_kernel_handle_nr   = 846
+close_new_kernel_handle_nr  = 847
+read_new_kernel_handle_nr   = 848
+write_new_kernel_handle_nr  = 849
 
 
 osgate_entries              = 850

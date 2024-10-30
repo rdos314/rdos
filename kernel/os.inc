@@ -2567,6 +2567,17 @@ AliasModuleHandle       MACRO
     OsGate alias_module_handle_nr
                     ENDM
 
+; OUT AX        Handle sel
+CreateInputHandle  MACRO
+    OsGate create_input_handle_nr
+                    ENDM
+
+; OUT AX        Handle sel
+CreateOutputHandle  MACRO
+    OsGate create_input_handle_nr
+                    ENDM
+
+
 ; OUT AX        C handle selector
 CreateCHandle MACRO
     OsGate create_c_handle_nr

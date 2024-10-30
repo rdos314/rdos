@@ -5639,7 +5639,7 @@ output_size       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateConsoleInputHandle
+;           NAME:           CreateInputHandle
 ;
 ;           DESCRIPTION:    Create consolse input handle
 ;
@@ -5647,9 +5647,9 @@ output_size       Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_console_input_handle_name DB 'Create Console Input Handle', 0
+create_input_handle_name DB 'Create Input Handle', 0
 
-create_console_input_handle        Proc far
+create_input_handle        Proc far
     push ds
     push es
     push ebx
@@ -5729,12 +5729,12 @@ create_console_input_handle        Proc far
     pop es
     pop ds
     ret
-create_console_input_handle        Endp
+create_input_handle        Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateConsoleOutputHandle
+;           NAME:           CreateOutputHandle
 ;
 ;           DESCRIPTION:    Create consolse output handle
 ;
@@ -5742,9 +5742,9 @@ create_console_input_handle        Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_console_output_handle_name DB 'Create Console Output Handle', 0
+create_output_handle_name DB 'Create Output Handle', 0
 
-create_console_output_handle        Proc far
+create_output_handle        Proc far
     push ds
     push es
     push ebx
@@ -5824,7 +5824,7 @@ create_console_output_handle        Proc far
     pop es
     pop ds
     ret
-create_console_output_handle        Endp
+create_output_handle        Endp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5960,6 +5960,18 @@ init_video      PROC near
     mov edi,OFFSET add_video_mode_name
     xor cl,cl
     mov ax,add_video_mode_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_input_handle
+    mov edi,OFFSET create_input_handle_name
+    xor cl,cl
+    mov ax,create_input_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_output_handle
+    mov edi,OFFSET create_output_handle_name
+    xor cl,cl
+    mov ax,create_output_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET read_c_console
