@@ -1006,6 +1006,37 @@ read_handle32    ENDP
 write_handle_name  DB 'Write Handle', 0
 
 write_handle     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    ja whFail
+;
+    sub ebx,1
+    jc whFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz whFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_write_proc
+    jmp rhDone
+
+whFail:
+    xor eax,eax
+    stc
+
+whDone:
+    pop esi
+    pop ebx
+    pop ds
     ret
 write_handle     Endp
 

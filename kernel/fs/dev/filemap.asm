@@ -4588,7 +4588,6 @@ make_dir32  Endp
 ;       DESCRIPTION:    Read handle
 ;
 ;       PARAMETERS:     DS              Handle interface
-;                       EDX:EAX         Position
 ;                       ES:EDI          Buffer
 ;                       ECX             Size
 ;
@@ -4597,34 +4596,52 @@ make_dir32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadHandleSel    Proc far
+    push ds
     push fs
     push ebx
+    push edx
     push esi
     push ebp
 ;
-    mov ebp,esi
+    mov ebp,ds:hf_user_handle
+    mov ds,ds:hei_proc_sel
+    mov bx,flat_data_sel
+    mov fs,ebx
+;
+    dec ebp
+    shl ebp,3
+;
+    mov esi,ds:pf_map_linear
+    mov eax,fs:[esi].fm_handle_ptr
+    add eax,OFFSET fh_pos_arr
+    add ebp,eax
+    mov eax,fs:[ebp]
+    mov edx,fs:[ebp+4]
 ;
     push eax
     push edx
+    push ebp
 ;
-    mov fs,si
-    mov esi,fs:pf_map_linear
-    mov ebx,flat_data_sel
-    mov fs,ebx
-    mov ebx,ebp
+    mov ebx,ds
     xor ebp,ebp
     call VfsRead
 ;
+    pop ebp
     pop edx
     pop eax
 ;
     add eax,ecx
     adc edx,0
 ;
+    mov fs:[ebp],eax
+    mov fs:[ebp+4],edx
+;
     pop ebp
     pop esi
+    pop edx
     pop ebx
     pop fs
+    pop ds
     ret
 ReadHandleSel    Endp
 
