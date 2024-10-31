@@ -103,6 +103,28 @@ create_proc_handle Proc far
     push ds
     pushad
 ;
+    mov eax,SEG data
+    mov ds,eax
+    mov ax,ds:hd_input_sel
+    or ax,ax
+    jnz cpStdOk
+;
+    push es
+
+    CreateInputHandle
+    mov es,eax
+    inc es:hei_ref_count
+    mov ds:hd_input_sel,es
+;
+    CreateOutputHandle
+    mov es,eax
+    mov es,eax
+    inc es:hei_ref_count
+    mov ds:hd_output_sel,es
+;
+    pop es
+
+cpStdOk:
     push es
 ;
     mov eax,flat_sel
@@ -1744,17 +1766,6 @@ test_gate    Proc far
     mov eax,SEG data
     mov ds,eax
 ;
-    CreateInputHandle
-    mov es,eax
-    inc es:hei_ref_count
-    mov ds:hd_input_sel,es
-;
-    CreateOutputHandle
-    mov es,eax
-    mov es,eax
-    inc es:hei_ref_count
-    mov ds:hd_output_sel,es
-;
 
     mov ecx,cs
     mov es,ecx
@@ -1832,6 +1843,8 @@ init_sys_handle     PROC near
     InitSection es:hd_section
     mov es:hd_sys_bitmap,3
     mov es:hd_proc_count,0
+    mov es:hd_input_sel,0
+    mov es:hd_output_sel,0
 ;
     mov eax,cs
     mov ds,eax
