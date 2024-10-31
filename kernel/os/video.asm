@@ -5589,11 +5589,6 @@ close_console     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-handle_fail    Proc far
-    stc
-    ret
-handle_fail    Endp
-
 device_ok      Proc far
     clc
     ret
@@ -5658,44 +5653,10 @@ create_input_handle        Proc far
     mov eax,SIZE handle_entry_interface
     AllocateSmallGlobalMem
 ;
-    mov es:hei_dup_proc,OFFSET handle_fail
-    mov es:hei_dup_proc+4,cs
-;
-    mov es:hei_get_map_proc,OFFSET handle_fail
-    mov es:hei_get_map_proc+4,cs
-;
-    mov es:hei_poll_proc,OFFSET handle_fail
-    mov es:hei_poll_proc+4,cs
+    InitHandle
 ;
     mov es:hei_read_proc,OFFSET read_c_console
     mov es:hei_read_proc+4,cs
-;
-    mov es:hei_write_proc,OFFSET handle_fail
-    mov es:hei_write_proc+4,cs
-;
-    mov es:hei_get_size_proc,OFFSET handle_fail
-    mov es:hei_get_size_proc+4,cs
-;
-    mov es:hei_set_size_proc,OFFSET handle_fail
-    mov es:hei_set_size_proc+4,cs
-;
-    mov es:hei_get_pos_proc,OFFSET handle_fail
-    mov es:hei_get_pos_proc+4,cs
-;
-    mov es:hei_set_pos_proc,OFFSET handle_fail
-    mov es:hei_set_pos_proc+4,cs
-;
-    mov es:hei_get_create_time_proc,OFFSET handle_fail
-    mov es:hei_get_create_time_proc+4,cs
-;
-    mov es:hei_get_modify_time_proc,OFFSET handle_fail
-    mov es:hei_get_modify_time_proc+4,cs
-;
-    mov es:hei_get_access_time_proc,OFFSET handle_fail
-    mov es:hei_get_access_time_proc+4,cs
-;
-    mov es:hei_set_modify_time_proc,OFFSET handle_fail
-    mov es:hei_set_modify_time_proc+4,cs
 ;
     mov es:hei_is_eof_proc,OFFSET eof_input
     mov es:hei_is_eof_proc+4,cs
@@ -5703,24 +5664,8 @@ create_input_handle        Proc far
     mov es:hei_is_device_proc,OFFSET device_ok
     mov es:hei_is_device_proc+4,cs
 ;
-    mov es:hei_is_ip4_proc,OFFSET handle_fail
-    mov es:hei_is_ip4_proc+4,cs
-;
     mov es:hei_input_size_proc,OFFSET input_size
     mov es:hei_input_size_proc+4,cs
-;
-    mov es:hei_output_size_proc,OFFSET handle_fail
-    mov es:hei_output_size_proc+4,cs
-;
-    mov es:hei_delete_proc,OFFSET handle_fail
-    mov es:hei_delete_proc+4,cs
-;
-    mov es:hei_ref_count,0
-    mov es:hei_index,0
-    mov es:hei_proc_sel,0
-    mov es:hei_proc_index,0
-    mov es:hei_sys_sel,0
-    mov es:hei_sys_index,0
 ;
     mov eax,es
 ;
@@ -5753,44 +5698,10 @@ create_output_handle        Proc far
     mov eax,SIZE handle_entry_interface
     AllocateSmallGlobalMem
 ;
-    mov es:hei_dup_proc,OFFSET handle_fail
-    mov es:hei_dup_proc+4,cs
-;
-    mov es:hei_get_map_proc,OFFSET handle_fail
-    mov es:hei_get_map_proc+4,cs
-;
-    mov es:hei_poll_proc,OFFSET handle_fail
-    mov es:hei_poll_proc+4,cs
-;
-    mov es:hei_read_proc,OFFSET handle_fail
-    mov es:hei_read_proc+4,cs
+    InitHandle
 ;
     mov es:hei_write_proc,OFFSET write_c_console
     mov es:hei_write_proc+4,cs
-;
-    mov es:hei_get_size_proc,OFFSET handle_fail
-    mov es:hei_get_size_proc+4,cs
-;
-    mov es:hei_set_size_proc,OFFSET handle_fail
-    mov es:hei_set_size_proc+4,cs
-;
-    mov es:hei_get_pos_proc,OFFSET handle_fail
-    mov es:hei_get_pos_proc+4,cs
-;
-    mov es:hei_set_pos_proc,OFFSET handle_fail
-    mov es:hei_set_pos_proc+4,cs
-;
-    mov es:hei_get_create_time_proc,OFFSET handle_fail
-    mov es:hei_get_create_time_proc+4,cs
-;
-    mov es:hei_get_modify_time_proc,OFFSET handle_fail
-    mov es:hei_get_modify_time_proc+4,cs
-;
-    mov es:hei_get_access_time_proc,OFFSET handle_fail
-    mov es:hei_get_access_time_proc+4,cs
-;
-    mov es:hei_set_modify_time_proc,OFFSET handle_fail
-    mov es:hei_set_modify_time_proc+4,cs
 ;
     mov es:hei_is_eof_proc,OFFSET eof_output
     mov es:hei_is_eof_proc+4,cs
@@ -5798,24 +5709,8 @@ create_output_handle        Proc far
     mov es:hei_is_device_proc,OFFSET device_ok
     mov es:hei_is_device_proc+4,cs
 ;
-    mov es:hei_is_ip4_proc,OFFSET handle_fail
-    mov es:hei_is_ip4_proc+4,cs
-;
-    mov es:hei_input_size_proc,OFFSET handle_fail
-    mov es:hei_input_size_proc+4,cs
-;
     mov es:hei_output_size_proc,OFFSET output_size
     mov es:hei_output_size_proc+4,cs
-;
-    mov es:hei_delete_proc,OFFSET handle_fail
-    mov es:hei_delete_proc+4,cs
-;
-    mov es:hei_ref_count,0
-    mov es:hei_index,0
-    mov es:hei_proc_sel,0
-    mov es:hei_proc_index,0
-    mov es:hei_sys_sel,0
-    mov es:hei_sys_index,0
 ;
     mov eax,es
 ;

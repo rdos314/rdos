@@ -929,14 +929,16 @@ delete_proc_handle_nr       = 843
 create_input_handle_nr      = 844
 create_output_handle_nr     = 845
 
+init_handle_nr              = 846
+
 ;
 ; temporary
 ;
 
-open_new_kernel_handle_nr   = 846
-close_new_kernel_handle_nr  = 847
-read_new_kernel_handle_nr   = 848
-write_new_kernel_handle_nr  = 849
+open_new_kernel_handle_nr   = 847
+close_new_kernel_handle_nr  = 848
+read_new_kernel_handle_nr   = 849
+write_new_kernel_handle_nr  = 850
 
 
-osgate_entries              = 850
+osgate_entries              = 860

@@ -71,6 +71,9 @@ data    SEGMENT byte public 'DATA'
 hd_section       section_typ <>
 hd_proc_count    DW ?
 
+hd_input_sel     DW ?
+hd_output_sel    DW ?
+
 hd_proc_arr      DD MAX_PROC_COUNT DUP(?)
 hd_sys_bitmap    DD SYS_BITMAP_COUNT DUP(?)
 hd_sys_arr       DW SYS_HANDLE_COUNT DUP(?)
@@ -518,40 +521,25 @@ AllocateProcHandle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateHandleObj
+;           NAME:           InitHandleObj
 ;
-;           DESCRIPTION:    Create proc object
+;           DESCRIPTION:    Init handle object
 ;
-;           PARAMETERS:     DS         Proc interface
-;                           EAX        Size of oebject
-;                           EDX        Linear address of object
-;
-;           RETURNS:        AX         Handle interface
+;           PARAMETERS:     ES         Handle interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public CreateHandleObj
+handle_ok      Proc far
+    clc
+    ret
+handle_ok      Endp
 
 handle_fail    Proc far
     stc
     ret
 handle_fail    Endp
 
-CreateHandleObj    Proc near
-    push ds
-    push es
-    push ebx
-    push ecx
-;
-    push ds
-    AllocateLdt
-    pop ds
-;
-    or bx,4
-    mov ecx,eax
-    CreateDataSelector32
-    mov es,ebx
-;
+InitHandleObj  Proc near
     mov es:hei_dup_proc,OFFSET handle_fail
     mov es:hei_dup_proc+4,cs
 ;
@@ -611,6 +599,46 @@ CreateHandleObj    Proc near
 ;
     mov es:hei_ref_count,0
     mov es:hei_index,0
+    mov es:hei_proc_sel,0
+    mov es:hei_proc_index,0
+    mov es:hei_sys_sel,0
+    mov es:hei_sys_index,0
+    ret
+InitHandleObj    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateHandleObj
+;
+;           DESCRIPTION:    Create proc object
+;
+;           PARAMETERS:     DS         Proc interface
+;                           EAX        Size of oebject
+;                           EDX        Linear address of object
+;
+;           RETURNS:        AX         Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateHandleObj
+
+CreateHandleObj    Proc near
+    push ds
+    push es
+    push ebx
+    push ecx
+;
+    push ds
+    AllocateLdt
+    pop ds
+;
+    or bx,4
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,ebx
+    call InitHandleObj
+;
     mov es:hei_proc_sel,ds
 ;
     mov eax,ds:hpi_index
@@ -695,20 +723,18 @@ AllocateUserHandle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           OpenHandle
+;           NAME:           OpenHandleObj
 ;
 ;           DESCRIPTION:    Open handle
 ;
-;           PARAMETERS:     ES:(E)DI    Name
+;           PARAMETERS:     ES:EDI      Name
 ;                           CX          Mode
 ;
 ;           RETURNS:        EBX         Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_handle_name  DB 'Open Handle', 0
-
-open_handle     Proc near
+OpenHandleObj     Proc near
     push ds
     push es
     push eax
@@ -764,25 +790,11 @@ ohDone:
     pop es
     pop ds
     ret
-open_handle     Endp
-
-open_handle16    PROC far
-    push edi
-    movzx edi,di
-    call open_handle
-    pop edi
-    ret
-open_handle16    ENDP
-
-open_handle32    PROC far
-    call open_handle
-    ret
-open_handle32    ENDP
-        
+OpenHandleObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CloseHandle
+;           NAME:           CloseHandleObj
 ;
 ;           DESCRIPTION:    Close handle
 ;
@@ -790,9 +802,7 @@ open_handle32    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_handle_name  DB 'Close Handle', 0
-
-close_handle     Proc far
+CloseHandleObj     Proc near
     push ds
     push es
     pushad
@@ -942,26 +952,24 @@ chDone:
     pop es
     pop ds
     ret
-close_handle     Endp
+CloseHandleObj     Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           ReadHandle
+;           NAME:           ReadHandleObj
 ;
 ;           DESCRIPTION:    Read handle
 ;
 ;           PARAMETERS:     BX          Handle
-;                           ES:(E)DI    Buffer
-;                           (E)CX       Size
+;                           ES:EDI      Buffer
+;                           ECX         Size
 ;
 ;           RETURNS:        EAX         Read count
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_handle_name  DB 'Read Handle', 0
-
-read_handle     Proc near
+ReadHandleObj     Proc near
     push ds
     push ebx
     push esi
@@ -994,30 +1002,12 @@ rhDone:
     pop ebx
     pop ds
     ret
-read_handle     Endp
-
-read_handle16   Proc far
-    push ecx
-    push edi
-;
-    movzx ecx,cx
-    movzx edi,di
-    call read_handle
-;
-    pop edi
-    pop ecx
-    ret
-read_handle16    ENDP
-
-read_handle32    PROC far
-    call read_handle
-    ret
-read_handle32    ENDP
+ReadHandleObj     Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           WriteHandle
+;           NAME:           WriteHandleObj
 ;
 ;           DESCRIPTION:    Write handle
 ;
@@ -1029,9 +1019,7 @@ read_handle32    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_handle_name  DB 'Write Handle', 0
-
-write_handle     Proc near
+WriteHandleObj     Proc near
     push ds
     push ebx
     push esi
@@ -1064,7 +1052,219 @@ whDone:
     pop ebx
     pop ds
     ret
-write_handle     Endp
+WriteHandleObj     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHandlePosObj
+;
+;           DESCRIPTION:    Get handle pos
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EDX:EAX   Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetHandlePosObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    ja ghpFail
+;
+    sub ebx,1
+    jc ghpFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz ghpFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_get_pos_proc
+    jmp ghpDone
+
+ghpFail:
+    xor eax,eax
+    xor edx,edx
+    stc
+
+ghpDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+GetHandlePosObj     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetHandlePosObj
+;
+;           DESCRIPTION:    Set handle pos
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetHandlePosObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    ja shpFail
+;
+    sub ebx,1
+    jc shpFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz shpFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_set_pos_proc
+    jmp shpDone
+
+shpFail:
+    stc
+
+shpDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+SetHandlePosObj     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitHandle
+;
+;           DESCRIPTION:    Init handle object
+;
+;           PARAMETERS:     ES         Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_handle_name  DB 'Init Handle', 0
+
+init_handle     Proc far
+    call InitHandleObj
+    ret
+init_handle     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenHandle
+;
+;           DESCRIPTION:    Open handle
+;
+;           PARAMETERS:     ES:(E)DI    Name
+;                           CX          Mode
+;
+;           RETURNS:        EBX         Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_handle_name  DB 'Open Handle', 0
+
+open_handle16    PROC far
+    push edi
+    movzx edi,di
+    call OpenHandleObj
+    pop edi
+    ret
+open_handle16    ENDP
+
+open_handle32    PROC far
+    call OpenHandleObj
+    ret
+open_handle32    ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseHandle
+;
+;           DESCRIPTION:    Close handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_handle_name  DB 'Close Handle', 0
+
+close_handle     Proc far
+    call CloseHandleObj
+    ret
+close_handle     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadHandle
+;
+;           DESCRIPTION:    Read handle
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        EAX         Read count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_handle_name  DB 'Read Handle', 0
+
+read_handle16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call ReadHandleObj
+;
+    pop edi
+    pop ecx
+    ret
+read_handle16    ENDP
+
+read_handle32    PROC far
+    call ReadHandleObj
+    ret
+read_handle32    ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteHandle
+;
+;           DESCRIPTION:    Write handle
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        EAX         Read count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_handle_name  DB 'Write Handle', 0
 
 write_handle16   Proc far
     push ecx
@@ -1072,7 +1272,7 @@ write_handle16   Proc far
 ;
     movzx ecx,cx
     movzx edi,di
-    call write_handle
+    call WriteHandleObj
 ;
     pop edi
     pop ecx
@@ -1080,7 +1280,7 @@ write_handle16   Proc far
 write_handle16    ENDP
 
 write_handle32    PROC far
-    call write_handle
+    call WriteHandleObj
     ret
 write_handle32    ENDP
 
@@ -1101,75 +1301,27 @@ get_handle_pos32_name  DB 'Get C Handle Pos 32', 0
 get_handle_pos64_name  DB 'Get C Handle Pos 64', 0
 
 get_handle_pos32     Proc far
-    push ds
-    push ebx
     push edx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
-;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    ja ghpFail32
-;
-    sub ebx,1
+    call GetHandlePosObj
     jc ghpFail32
 ;
-    mov si,ds:[2*ebx].ph_arr
-    or si,si
-    jz ghpFail32
+    or edx,edx
+    jnz ghpFail32
 ;
-    mov ds,esi
-    call fword ptr ds:hei_get_pos_proc
+    clc
     jmp ghpDone32
 
 ghpFail32:
-    xor eax,eax
     stc
 
 ghpDone32:
-    pop esi
     pop edx
-    pop ebx
-    pop ds
     ret
 get_handle_pos32     Endp        
 
 get_handle_pos64     Proc far
-    push ds
-    push ebx
-    push esi
-;
-    mov esi,proc_handle_sel
-    mov ds,esi
-;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    ja ghpFail64
-;
-    sub ebx,1
-    jc ghpFail64
-;
-    mov si,ds:[2*ebx].ph_arr
-    or si,si
-    jz ghpFail64
-;
-    mov ds,esi
-    call fword ptr ds:hei_get_pos_proc
-    jmp ghpDone64
-
-ghpFail64:
-    xor eax,eax
-    xor edx,edx
-    stc
-
-ghpDone64:
-    pop esi
-    pop ebx
-    pop ds
+    call GetHandlePosObj
     ret
 get_handle_pos64     Endp        
 
@@ -1191,78 +1343,46 @@ set_handle_pos32_name  DB 'Set C Handle Pos 32', 0
 set_handle_pos64_name  DB 'Set C Handle Pos 64', 0
 
 set_handle_pos32     Proc far
-    push ds
-    push ebx
     push edx
-    push esi
 ;
-    xor edx,edx
-    mov esi,proc_handle_sel
-    mov ds,esi
+    or edx,edx
+    jnz shpFail32
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    ja shpFail32
-;
-    sub ebx,1
-    jc shpFail32
-;
-    mov si,ds:[2*ebx].ph_arr
-    or si,si
-    jz shpFail32
-;
-    mov ds,esi
-    call fword ptr ds:hei_set_pos_proc
-    call fword ptr ds:hei_get_pos_proc
-    jmp shpDone32
+    call SetHandlePosObj
+    jnc shpDone32
 
 shpFail32:
+    call GetHandlePosObj    
+    jc shpZero32
+;
+    stc
+    jmp shpDone32
+
+shpZero32:
     xor eax,eax
     stc
 
 shpDone32:
-    pop esi
     pop edx
-    pop ebx
-    pop ds
     ret
 set_handle_pos32     Endp        
 
 set_handle_pos64     Proc far
-    push ds
-    push ebx
-    push esi
+    call SetHandlePosObj
+    jnc shpDone64
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call GetHandlePosObj
+    jc shpZero64
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    ja shpFail64
-;
-    sub ebx,1
-    jc shpFail64
-;
-    mov si,ds:[2*ebx].ph_arr
-    or si,si
-    jz shpFail64
-;
-    mov ds,esi
-    call fword ptr ds:hei_set_pos_proc
-    call fword ptr ds:hei_get_pos_proc
+    stc
     jmp shpDone64
 
-shpFail64:
+shpZero64:
     xor eax,eax
     xor edx,edx
     stc
 
 shpDone64:
-    pop esi
-    pop ebx
-    pop ds
     ret
 set_handle_pos64     Endp        
 
@@ -1598,6 +1718,79 @@ wkhDone:
     pop ds
     ret
 write_kernel_handle Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;       NAME:           Test gate
+;
+;       DESCRIPTION:    Test
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_gate_name DB 'Test', 0
+test_file      DB 'e:/test.bin', 0
+text_buf       DB 'This is written to file', 0Dh, 0Ah, 0
+
+test_gate    Proc far
+    push es
+    push ecx
+    push edi
+;
+    mov eax,SEG data
+    mov ds,eax
+;
+    CreateInputHandle
+    mov es,eax
+    inc es:hei_ref_count
+    mov ds:hd_input_sel,es
+;
+    CreateOutputHandle
+    mov es,eax
+    mov es,eax
+    inc es:hei_ref_count
+    mov ds:hd_output_sel,es
+;
+
+    mov ecx,cs
+    mov es,ecx
+    mov edi,OFFSET test_file
+    mov cx,O_RDWR
+    OpenNewKernelHandle
+    jc tgDone
+;
+    mov eax,1024
+    AllocateSmallGlobalMem
+    xor edi,edi
+;
+    xor edx,edx
+    xor eax,eax
+    mov ecx,25
+    ReadNewKernelHandle
+;
+    mov eax,15667
+    mov ecx,25
+    ReadNewKernelHandle
+;
+    mov eax,98877
+    mov ecx,25
+    ReadNewKernelHandle
+;
+    mov eax,5546
+    mov ecx,25
+    ReadNewKernelHandle
+;
+    mov ecx,123
+    CloseNewKernelHandle
+
+tgDone:
+    pop edi
+    pop ecx
+    pop es
+    ret
+test_gate    Endp
+
        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1651,6 +1844,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET apply_proc_handle_name
     xor cl,cl
     mov ax,apply_proc_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET init_handle
+    mov edi,OFFSET init_handle_name
+    xor cl,cl
+    mov ax,init_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_kernel_handle
@@ -1726,6 +1925,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET set_handle_pos64_name
     xor cl,cl
     mov ax,set_new_handle_pos64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET test_gate
+    mov edi,OFFSET test_gate_name
+    xor dx,dx
+    mov ax,test_gate_nr
     RegisterBimodalUserGate
 ;
     popad
