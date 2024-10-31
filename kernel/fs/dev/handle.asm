@@ -791,6 +791,7 @@ ohDone:
     pop ds
     ret
 OpenHandleObj     Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -991,7 +992,8 @@ ReadHandleObj     Proc near
 ;
     mov ds,esi
     call fword ptr ds:hei_read_proc
-    jmp rhDone
+    mov eax,ecx
+    jnc rhDone
 
 rhFail:
     xor eax,eax
@@ -1041,7 +1043,8 @@ WriteHandleObj     Proc near
 ;
     mov ds,esi
     call fword ptr ds:hei_write_proc
-    jmp rhDone
+    mov eax,ecx
+    jnc whDone
 
 whFail:
     xor eax,eax
