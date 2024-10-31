@@ -741,7 +741,6 @@ aluhOk:
     mov ebx,edx
     mov es:[2*ebx].ph_arr,ds
 ;
-    inc ebx
     clc
 
 aluhDone:
@@ -846,10 +845,7 @@ CloseHandleObj     Proc near
     mov ds,eax
 ;
     cmp ebx,USER_HANDLE_COUNT
-    ja chFail
-;
-    sub ebx,1
-    jc chFail
+    jae chFail
 ;
     mov ax,ds:[2*ebx].ph_arr
     or ax,ax
@@ -1014,10 +1010,7 @@ ReadHandleObj     Proc near
     movzx ebx,bx
 ;
     cmp ebx,USER_HANDLE_COUNT
-    ja rhFail
-;
-    sub ebx,1
-    jc rhFail
+    jae rhFail
 ;
     mov si,ds:[2*ebx].ph_arr
     or si,si
@@ -1065,10 +1058,7 @@ WriteHandleObj     Proc near
     movzx ebx,bx
 ;
     cmp ebx,USER_HANDLE_COUNT
-    ja whFail
-;
-    sub ebx,1
-    jc whFail
+    jae whFail
 ;
     mov si,ds:[2*ebx].ph_arr
     or si,si
@@ -1114,10 +1104,7 @@ GetHandlePosObj     Proc near
     movzx ebx,bx
 ;
     cmp ebx,USER_HANDLE_COUNT
-    ja ghpFail
-;
-    sub ebx,1
-    jc ghpFail
+    jae ghpFail
 ;
     mov si,ds:[2*ebx].ph_arr
     or si,si
@@ -1162,10 +1149,7 @@ SetHandlePosObj     Proc near
     movzx ebx,bx
 ;
     cmp ebx,USER_HANDLE_COUNT
-    ja shpFail
-;
-    sub ebx,1
-    jc shpFail
+    jae shpFail
 ;
     mov si,ds:[2*ebx].ph_arr
     or si,si
