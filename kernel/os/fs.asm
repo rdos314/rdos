@@ -34,6 +34,8 @@ INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE int.def
 INCLUDE system.inc
+INCLUDE blk.inc
+INCLUDE ..\hint.inc
 INCLUDE ..\fs.inc
 INCLUDE exec.def
 

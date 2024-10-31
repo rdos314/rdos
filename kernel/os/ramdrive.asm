@@ -33,6 +33,8 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE blk.inc
+INCLUDE ..\hint.inc
 INCLUDE ..\fs.inc
 
 MAX_RAM_DRIVES		EQU 4

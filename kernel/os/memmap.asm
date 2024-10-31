@@ -34,6 +34,8 @@ INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.inc
 INCLUDE ..\handle.inc
+INCLUDE blk.inc
+INCLUDE ..\hint.inc
 INCLUDE ..\fs.inc
 INCLUDE exec.def
 

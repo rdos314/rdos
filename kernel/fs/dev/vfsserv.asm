@@ -36,6 +36,8 @@ include ..\driver.def
 include ..\handle.inc
 include ..\wait.inc
 include ..\os\protseg.def
+INCLUDE ..\os\blk.inc
+INCLUDE ..\hint.inc
 include ..\fs.inc
 include ..\os\exec.def
 include vfs.inc
@@ -4271,7 +4273,7 @@ get_vfs_drive_disc   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetDiscIoBase	Proc near
+GetDiscIoBase   Proc near
     push eax
     push ebx
     push ecx
@@ -4312,7 +4314,7 @@ GetDiscIoBase     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddDiscIoPages	Proc near
+AddDiscIoPages  Proc near
     push ds
     pushad
 ;
@@ -4376,7 +4378,7 @@ AddDiscIoPages      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetupDiscIo	Proc near
+SetupDiscIo     Proc near
     push esi
     push edi
 ;
@@ -4414,7 +4416,7 @@ SetupDiscIo     Endp
 
     public DiscReadIo
 
-DiscReadIo	Proc near
+DiscReadIo      Proc near
     push es
     push eax
 ;
@@ -4428,7 +4430,7 @@ DiscReadIo	Proc near
     pop eax
     pop es
     ret
-DiscReadIo	Endp
+DiscReadIo      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4447,7 +4449,7 @@ DiscReadIo	Endp
 
     public DiscWriteIo
 
-DiscWriteIo	Proc near
+DiscWriteIo     Proc near
     push es
     push eax
 ;
@@ -4461,7 +4463,7 @@ DiscWriteIo	Proc near
     pop eax
     pop es
     ret
-DiscWriteIo	Endp
+DiscWriteIo     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4694,7 +4696,7 @@ create_vfs_disc_cmd   Proc near
     ret
 create_vfs_disc_cmd   Endp
 
-create_vfs_disc_cmd16	Proc far
+create_vfs_disc_cmd16   Proc far
     push edi
     movzx edi,di
     call create_vfs_disc_cmd
@@ -4702,7 +4704,7 @@ create_vfs_disc_cmd16	Proc far
     ret
 create_vfs_disc_cmd16   Endp
 
-create_vfs_disc_cmd32	Proc far
+create_vfs_disc_cmd32   Proc far
     call create_vfs_disc_cmd
     ret
 create_vfs_disc_cmd32   Endp

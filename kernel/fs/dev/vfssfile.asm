@@ -36,6 +36,8 @@ include ..\driver.def
 include ..\handle.inc
 include ..\wait.inc
 include ..\os\protseg.def
+INCLUDE ..\os\blk.inc
+INCLUDE ..\hint.inc
 include ..\fs.inc
 include ..\os\exec.def
 include ..\filemap.inc
