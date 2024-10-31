@@ -41,6 +41,10 @@ void main()
     int handle2 = RdosOpenNewHandle("e:/test.bin", O_RDWR);
     int handle = RdosOpenNewHandle("e:/test.bin", O_RDWR);
 
+    size = RdosReadNewHandle(0, buf, 267);
+    RdosWriteNewHandle(1, "Test of output\r\n", 16);
+    RdosWriteNewHandle(2, "Test of error\r\n", 15);
+
     size = RdosReadNewHandle(handle, buf, 267);
 
     RdosTestGate(buf);

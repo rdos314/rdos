@@ -118,7 +118,6 @@ create_proc_handle Proc far
 ;
     CreateOutputHandle
     mov es,eax
-    mov es,eax
     inc es:hei_ref_count
     mov ds:hd_output_sel,es
 ;
