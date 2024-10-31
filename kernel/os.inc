@@ -2579,7 +2579,7 @@ CreateInputHandle  MACRO
 
 ; OUT AX        Handle sel
 CreateOutputHandle  MACRO
-    OsGate create_input_handle_nr
+    OsGate create_output_handle_nr
                     ENDM
 
 

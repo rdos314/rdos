@@ -156,6 +156,7 @@ cpStdOk:
     add fs:hei_ref_count,2
     mov es:[edx].ph_arr+2,fs
     mov es:[edx].ph_arr+4,fs
+;
     mov es:[edx].ph_bitmap,7
 ;
     pop fs
@@ -1753,6 +1754,7 @@ test_file      DB 'e:/test.bin', 0
 text_buf       DB 'This is written to file', 0Dh, 0Ah, 0
 
 test_gate    Proc far
+    push ds
     push es
     push ecx
     push edi
@@ -1796,6 +1798,7 @@ tgDone:
     pop edi
     pop ecx
     pop es
+    pop ds
     ret
 test_gate    Endp
 
