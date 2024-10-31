@@ -126,6 +126,7 @@ create_proc_handle Proc far
 
 cpStdOk:
     push es
+    push fs
 ;
     mov eax,flat_sel
     mov es,eax
@@ -145,11 +146,21 @@ cpStdOk:
     rep stosw
 ;
     InitSection es:[edx].ph_section
-;
-    pop es
 ;    
-    mov eax,SEG data
-    mov ds,eax
+    mov ax,ds:hd_input_sel
+    mov fs,eax
+    inc fs:hei_ref_count
+    mov es:[edx].ph_arr,fs
+;
+    mov ax,ds:hd_output_sel
+    mov fs,eax
+    add fs:hei_ref_count,2
+    mov es:[edx].ph_arr+2,fs
+    mov es:[edx].ph_arr+4,fs
+    mov es:[edx].ph_bitmap,7
+;
+    pop fs
+    pop es
 ;
     EnterSection ds:hd_section
     movzx ebx,ds:hd_proc_count
