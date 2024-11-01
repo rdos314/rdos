@@ -33,6 +33,7 @@ fi_sector_count      DD ?,?
 fi_fs_size           DD ?,?
 fi_size              DD ?,?
 fi_access            DD ?,?
+fi_create            DD ?,?
 fi_modify            DD ?,?
 fi_attrib            DD ?
 fi_flags             DD ?

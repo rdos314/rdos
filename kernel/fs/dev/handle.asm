@@ -608,6 +608,9 @@ InitHandleObj  Proc near
     mov es:hei_write_proc,OFFSET handle_fail
     mov es:hei_write_proc+4,cs
 ;
+    mov es:hei_poll_proc,OFFSET handle_fail
+    mov es:hei_poll_proc+4,cs
+;
     mov es:hei_get_size_proc,OFFSET handle_fail
     mov es:hei_get_size_proc+4,cs
 ;
@@ -1083,8 +1086,8 @@ ReadHandleObj     Endp
 ;           DESCRIPTION:    Write handle
 ;
 ;           PARAMETERS:     BX          Handle
-;                           ES:(E)DI    Buffer
-;                           (E)CX       Size
+;                           ES:EDI      Buffer
+;                           ECX         Size
 ;
 ;           RETURNS:        EAX         Read count
 ;
@@ -1122,6 +1125,54 @@ whDone:
     pop ds
     ret
 WriteHandleObj     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PollHandleObj
+;
+;           DESCRIPTION:    Poll handle
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:EDI      Buffer
+;                           ECX         Size
+;
+;           RETURNS:        EAX         Read count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollHandleObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae phFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz phFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_poll_proc
+    mov eax,ecx
+    jnc phDone
+
+phFail:
+    xor eax,eax
+    stc
+
+phDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+PollHandleObj     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1651,6 +1702,41 @@ write_handle32    PROC far
     call WriteHandleObj
     ret
 write_handle32    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PollHandle
+;
+;           DESCRIPTION:    Poll handle
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        EAX         Read count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_handle_name  DB 'Poll C Handle', 0
+
+poll_handle16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call PollHandleObj
+;
+    pop edi
+    pop ecx
+    ret
+poll_handle16    ENDP
+
+poll_handle32    PROC far
+    call PollHandleObj
+    ret
+poll_handle32    ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2460,6 +2546,13 @@ init_sys_handle     PROC near
     mov edi,OFFSET write_handle_name
     mov dx,virt_es_in
     mov ax,write_handle_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET poll_handle16
+    mov esi,OFFSET poll_handle32
+    mov edi,OFFSET poll_handle_name
+    mov dx,virt_es_in
+    mov ax,poll_handle_nr
     RegisterUserGate
 ;
     mov esi,OFFSET get_handle_pos32

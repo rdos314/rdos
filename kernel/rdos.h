@@ -176,6 +176,7 @@ struct RdosFileInfo
     long long SectorCount;
     long long DiscSize;
     long long CurrSize;
+    long long CreateTime;
     long long AccessTime;
     long long ModifyTime;
     int Attrib;

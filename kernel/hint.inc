@@ -105,6 +105,12 @@ hei_read_proc             DD ?,?
 ;  IN	DS                Handle entry interface
 ;  IN   ES:EDI            Buffer
 ;  IN   ECX               Size
+;  OUT  EAX               Read count
+hei_poll_proc             DD ?,?
+
+;  IN	DS                Handle entry interface
+;  IN   ES:EDI            Buffer
+;  IN   ECX               Size
 ;  OUT  EAX               Written count
 hei_write_proc            DD ?,?
 
