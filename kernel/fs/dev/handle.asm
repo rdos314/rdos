@@ -1592,8 +1592,12 @@ open_kernel_handle Proc far
     push eax
 ;  
     call OpenVfsFile
-    jc okhFail
+    jnc okhOpen
 ;
+    OpenLegacyHandle
+    jc okhFail
+
+okhOpen:
     EnterSection ds:hsi_section
     mov ax,ds:hsi_kernel_sel
     or ax,ax
