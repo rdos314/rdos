@@ -1577,6 +1577,50 @@ EofHandleObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IsHandleDeviceObj
+;
+;           DESCRIPTION:    Is handle device?
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        NC          Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsHandleDeviceObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae ihdFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz ihdFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_is_device_proc
+    jmp ihdDone
+
+ihdFail:
+    stc
+
+ihdDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+IsHandleDeviceObj     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitSysHandle
 ;
 ;           DESCRIPTION:    Init sys object
@@ -2064,6 +2108,26 @@ eof_handle     Proc far
 eofDone:
     ret
 eof_handle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           IsDevice
+;
+;           DESCRIPTION:    Is handle device?
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        NC          Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_handle_device_name  DB 'Is Handle Device?', 0
+
+is_handle_device     Proc far
+    call IsHandleDeviceObj
+    ret
+is_handle_device  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2701,6 +2765,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET eof_handle_name
     xor cl,cl
     mov ax,eof_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET is_handle_device
+    mov edi,OFFSET is_handle_device_name
+    xor cl,cl
+    mov ax,is_handle_device_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate
