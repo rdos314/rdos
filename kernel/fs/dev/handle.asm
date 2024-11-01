@@ -1853,7 +1853,7 @@ write_kernel_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_gate_name DB 'Test', 0
-test_file      DB 'e:/test.bin', 0
+test_file      DB 'b:/rdos.bin', 0
 text_buf       DB 'This is written to file', 0Dh, 0Ah, 0
 
 test_gate    Proc far
