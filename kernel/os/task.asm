@@ -2205,9 +2205,6 @@ delete_process_sel Proc near
     DeleteProcHandle
 ;
     mov ds,es:p_proc_sel
-    mov ax,ds:pf_c_handle_sel
-    DeleteCHandle
-;
     mov ax,ds:pf_cur_dir_sel
     DeleteCurDir
 ;
@@ -8793,7 +8790,6 @@ create_process_sel Proc near
     mov es:pf_cli_thread,0
     mov es:pf_thread_count,0
     mov es:pf_module_count,0
-    mov es:pf_c_handle_sel,0
     mov es:pf_cur_dir_sel,0
     mov es:pf_env_sel,0
     mov es:pf_program_id,bx
@@ -8988,48 +8984,6 @@ sfAddNew:
     pop ds
     ret
 setup_fork Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           create_c_handle
-;
-;           DESCRIPTION:    create_c_handle
-;
-;           PARAMETERS:     ES          New thread
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_c_handle       PROC near
-    push ds
-    push es
-    push fs
-    push eax
-;
-    GetThread
-    mov ds,ax
-    mov fs,ds:p_proc_sel
-    mov ax,fs:pf_c_handle_sel
-    or ax,ax
-    jz cchCreate
-
-cchClone:
-    CloneCHandle
-    jmp cchSave
-
-cchCreate:
-    CreateCHandle
-
-cchSave:
-    mov fs,es:p_proc_sel
-    mov fs:pf_c_handle_sel,ax    
-;
-    pop eax
-    pop fs
-    pop es 
-    pop ds
-    ret
-create_c_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -10198,7 +10152,6 @@ cp64:
     je cpSkipped64
 ;
     CreateProcHandle
-    call create_c_handle
     call create_cur_dir
     call create_env_sel
 
@@ -10219,7 +10172,6 @@ cp32:
     je cpSkipped32
 ;
     CreateProcHandle
-    call create_c_handle
     call create_cur_dir
     call create_env_sel
 
@@ -10612,7 +10564,6 @@ fork_process  PROC far
     call setup_fork
 ;
     CloneProcHandle
-    call create_c_handle
     call create_cur_dir
     call create_env_sel
 ;
@@ -11076,8 +11027,6 @@ init_first_process      Proc near
     mov ds:pf_env_sel,ax
 ;
     CreateProcHandle
-    CreateCHandle
-    mov ds:pf_c_handle_sel,ax    
 ;
     ret
 init_first_process      Endp
@@ -11243,7 +11192,6 @@ create_serv_app  PROC far
     call create_process_sel
     call add_process_thread
     CreateProcHandle
-    call create_c_handle
     call create_cur_dir
     call create_env_sel
     call init_prot_thread

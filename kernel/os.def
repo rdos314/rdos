@@ -672,10 +672,6 @@ get_process_id_nr           = 650
 create_private_ldt_nr       = 651
 destroy_ldt_nr              = 652
 
-create_c_handle_nr          = 653
-clone_c_handle_nr           = 654
-delete_c_handle_nr          = 655
-
 close_console_nr            = 656
 set_focus_console_nr        = 657
 get_focus_console_nr        = 658

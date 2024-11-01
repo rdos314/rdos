@@ -204,7 +204,6 @@ pf_page_table        DD ?
 
 pf_exit_code         DW ?
 
-pf_c_handle_sel      DW ?
 pf_cur_dir_sel       DW ?
 pf_env_sel           DW ?
 

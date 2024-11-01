@@ -672,10 +672,6 @@
 #define osgate_create_private_ldt 651
 #define osgate_destroy_ldt 652
 
-#define osgate_create_c_handle 653
-#define osgate_clone_c_handle 654
-#define osgate_delete_c_handle 655
-
 #define osgate_close_console 656
 #define osgate_set_focus_console 657
 #define osgate_get_focus_console 658
@@ -1602,10 +1598,6 @@
 
 #define OsGate_create_private_ldt 0x3E 0x67 0x9a 139 2 0 0 2 0
 #define OsGate_destroy_ldt 0x3E 0x67 0x9a 140 2 0 0 2 0
-
-#define OsGate_create_c_handle 0x3E 0x67 0x9a 141 2 0 0 2 0
-#define OsGate_clone_c_handle 0x3E 0x67 0x9a 142 2 0 0 2 0
-#define OsGate_delete_c_handle 0x3E 0x67 0x9a 143 2 0 0 2 0
 
 #define OsGate_close_console 0x3E 0x67 0x9a 144 2 0 0 2 0
 #define OsGate_set_focus_console 0x3E 0x67 0x9a 145 2 0 0 2 0
