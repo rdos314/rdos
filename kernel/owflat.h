@@ -1544,58 +1544,6 @@
     __modify [__edx]
 
 
-
-#pragma aux RdosOpenNewHandle = \
-    CallGate_open_new_handle  \
-    __parm [__edi] [__ecx] \
-    __value [__ebx]
-
-#pragma aux RdosCloseNewHandle = \
-    CallGate_close_new_handle  \
-    __parm [__ebx] \
-    __value [__ebx]
-
-#pragma aux RdosReadNewHandle = \
-    CallGate_read_new_handle  \
-    __parm [__ebx] [__edi] [__ecx]  \
-    __value [__eax]
-
-#pragma aux RdosWriteNewHandle = \
-    CallGate_write_new_handle  \
-    __parm [__ebx] [__edi] [__ecx]  \
-    __value [__eax]
-
-#pragma aux RdosGetNewHandlePos = \
-    CallGate_get_new_handle_pos64  \
-    "jnc ghpDone" \
-    CallGate_get_new_handle_pos32  \
-    "ghpDone:" \
-    __parm [__ebx]  \
-    __value [__edx __eax]
-
-#pragma aux RdosSetNewHandlePos = \
-    CallGate_set_new_handle_pos64  \
-    "jnc shpDone" \
-    CallGate_set_new_handle_pos32  \
-    "jc shpFail" \
-    "xor edx,edx" \
-    "jmp shpDone" \
-    "shpFail:" \
-    "mov eax,-1" \
-    "mov edx,-1" \
-    "shpDone:" \
-    __parm [__ebx] [__edx __eax] \
-    __value [__edx __eax]
-
-#pragma aux RdosGetNewHandleSize = \
-    CallGate_get_new_handle_size64  \
-    "jnc ghsDone" \
-    CallGate_get_new_handle_size32  \
-    "ghsDone:" \
-    __parm [__ebx]  \
-    __value [__edx __eax]
-
-
 #pragma aux RdosOpenHandle = \
     CallGate_open_handle  \
     __parm [__edi] [__ecx] \

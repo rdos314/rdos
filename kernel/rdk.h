@@ -921,6 +921,20 @@
 #define osgate_open_kernel_handle 838
 #define osgate_ref_legacy_kernel_file 839
 
+#define osgate_create_proc_handle 840
+#define osgate_clone_proc_handle 841
+#define osgate_apply_proc_handle 842
+#define osgate_delete_proc_handle 843
+
+#define osgate_create_input_handle 844
+#define osgate_create_output_handle 845
+
+#define osgate_init_handle 846
+#define osgate_init_sys_handle 847
+#define osgate_allocate_sys_handle 848
+#define osgate_open_legacy_handle 849
+#define osgate_create_kernel_handle 850
+
 
 
 
@@ -1845,4 +1859,18 @@
 #define OsGate_allocate_fixed_vfs_drive 0x3E 0x67 0x9a 69 3 0 0 2 0
 #define OsGate_open_kernel_handle 0x3E 0x67 0x9a 70 3 0 0 2 0
 #define OsGate_ref_legacy_kernel_file 0x3E 0x67 0x9a 71 3 0 0 2 0
+
+#define OsGate_create_proc_handle 0x3E 0x67 0x9a 72 3 0 0 2 0
+#define OsGate_clone_proc_handle 0x3E 0x67 0x9a 73 3 0 0 2 0
+#define OsGate_apply_proc_handle 0x3E 0x67 0x9a 74 3 0 0 2 0
+#define OsGate_delete_proc_handle 0x3E 0x67 0x9a 75 3 0 0 2 0
+
+#define OsGate_create_input_handle 0x3E 0x67 0x9a 76 3 0 0 2 0
+#define OsGate_create_output_handle 0x3E 0x67 0x9a 77 3 0 0 2 0
+
+#define OsGate_init_handle 0x3E 0x67 0x9a 78 3 0 0 2 0
+#define OsGate_init_sys_handle 0x3E 0x67 0x9a 79 3 0 0 2 0
+#define OsGate_allocate_sys_handle 0x3E 0x67 0x9a 80 3 0 0 2 0
+#define OsGate_open_legacy_handle 0x3E 0x67 0x9a 81 3 0 0 2 0
+#define OsGate_create_kernel_handle 0x3E 0x67 0x9a 82 3 0 0 2 0
 

@@ -1025,16 +1025,4 @@ get_cert_json_nr                  = 849
 update_handle_nr                  = 850
 delete_handle_nr                  = 851
 
-open_new_handle_nr                = 852
-close_new_handle_nr               = 853
-read_new_handle_nr                = 854
-write_new_handle_nr               = 855
-get_new_handle_pos32_nr           = 856
-set_new_handle_pos32_nr           = 857
-get_new_handle_pos64_nr           = 858
-set_new_handle_pos64_nr           = 859
-get_new_handle_size32_nr          = 860
-get_new_handle_size64_nr          = 861
-
-
 usergate_entries                  = 880
