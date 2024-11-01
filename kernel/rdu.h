@@ -1033,6 +1033,8 @@
 #define usergate_set_new_handle_pos32 0x00000359
 #define usergate_get_new_handle_pos64 0x0000035A
 #define usergate_set_new_handle_pos64 0x0000035B
+#define usergate_get_new_handle_size32 0x0000035C
+#define usergate_get_new_handle_size64 0x0000035D
 
 
 
@@ -2073,6 +2075,8 @@
 #define CallGate_set_new_handle_pos32 0x55 0x67 0x9a 89 3 0 0 3 0 0x5d
 #define CallGate_get_new_handle_pos64 0x55 0x67 0x9a 90 3 0 0 3 0 0x5d
 #define CallGate_set_new_handle_pos64 0x55 0x67 0x9a 91 3 0 0 3 0 0x5d
+#define CallGate_get_new_handle_size32 0x55 0x67 0x9a 92 3 0 0 3 0 0x5d
+#define CallGate_get_new_handle_size64 0x55 0x67 0x9a 93 3 0 0 3 0 0x5d
 
 
 #else
@@ -3111,6 +3115,8 @@
 #define CallGate_set_new_handle_pos32 0x3e 0x67 0x9a 89 3 0 0 3 0
 #define CallGate_get_new_handle_pos64 0x3e 0x67 0x9a 90 3 0 0 3 0
 #define CallGate_set_new_handle_pos64 0x3e 0x67 0x9a 91 3 0 0 3 0
+#define CallGate_get_new_handle_size32 0x3e 0x67 0x9a 92 3 0 0 3 0
+#define CallGate_get_new_handle_size64 0x3e 0x67 0x9a 93 3 0 0 3 0
 
 
 #endif

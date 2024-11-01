@@ -2493,6 +2493,33 @@ SetObjPos       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetObjSize
+;
+;           DESCRIPTION:    Get file size
+;
+;           PARAMETERS:     DS              Handle interface
+;                   
+;           RETURNS:        EDX:EAX         Size
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetObjSize Proc far
+    push ds
+;
+    mov ds,ds:hei_sys_sel
+    EnterReadSection ds:file_size_section
+    mov eax,ds:file_size
+    xor edx,edx
+    LeaveReadSection ds:file_size_section
+    clc
+;
+    pop ds
+    retf32
+GetObjSize Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateHandleObj
 ;
 ;           DESCRIPTION:    Create new handle obj
@@ -2537,6 +2564,9 @@ CreateHandleObj   Proc far
 ;
     mov es:hei_set_pos_proc,OFFSET SetObjPos
     mov es:hei_set_pos_proc+4,cs
+;
+    mov es:hei_get_size_proc,OFFSET GetObjSize
+    mov es:hei_get_size_proc+4,cs
 ;
     mov es:hei_delete_proc,OFFSET DeleteHandleObj
     mov es:hei_delete_proc+4,cs

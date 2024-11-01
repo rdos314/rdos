@@ -1033,6 +1033,8 @@ get_new_handle_pos32_nr           = 856
 set_new_handle_pos32_nr           = 857
 get_new_handle_pos64_nr           = 858
 set_new_handle_pos64_nr           = 859
+get_new_handle_size32_nr          = 860
+get_new_handle_size64_nr          = 861
 
 
 usergate_entries                  = 880

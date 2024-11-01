@@ -1587,6 +1587,14 @@
     __parm [__ebx] [__edx __eax] \
     __value [__edx __eax]
 
+#pragma aux RdosGetNewHandleSize = \
+    CallGate_get_new_handle_size64  \
+    "jnc ghsDone" \
+    CallGate_get_new_handle_size32  \
+    "ghsDone:" \
+    __parm [__ebx]  \
+    __value [__edx __eax]
+
 
 #pragma aux RdosOpenHandle = \
     CallGate_open_handle  \

@@ -45,6 +45,9 @@ void main()
     RdosWriteNewHandle(1, "Test of output\r\n", 16);
     RdosWriteNewHandle(2, "Test of error\r\n", 15);
 
+    size = RdosGetNewHandleSize(handle);
+    size = RdosGetNewHandleSize(handle2);
+
     size = RdosReadNewHandle(handle, buf, 267);
 
     RdosTestGate(buf);
