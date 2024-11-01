@@ -40,6 +40,13 @@ INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc
 INCLUDE gate.def
 
+file_handle_interface    STRUC
+
+fhi_base    handle_entry_interface <>
+fhi_pos     DD ?
+
+file_handle_interface    ENDS
+
 CallFileSystem  MACRO   call_proc
     push ds
     push gs
@@ -2196,6 +2203,30 @@ swap_proc       Endp
     public CreateHandleObj
 
 CreateHandleObj   Proc far
+    push es
+    push ebx
+    push ecx
+;
+    mov eax,SIZE file_handle_interface
+    AllocateSmallLinear
+;
+    push ds
+    AllocateLdt
+    pop ds
+;
+    or bx,4
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,bx
+;
+    InitHandle
+    mov es:fhi_pos,0
+;
+    mov ax,es
+;
+    pop ecx
+    pop ebx
+    pop es
     retf32
 CreateHandleObj   Endp
 
