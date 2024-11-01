@@ -2190,6 +2190,23 @@ swap_proc       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DeleteHandleObj
+;
+;           DESCRIPTION:    Delete handle obj
+;
+;           PARAMETERS:     DS     Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+DeleteHandleObj   Proc far
+    clc
+    retf32
+DeleteHandleObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateHandleObj
 ;
 ;           DESCRIPTION:    Create new handle obj
@@ -2221,6 +2238,9 @@ CreateHandleObj   Proc far
 ;
     InitHandle
     mov es:fhi_pos,0
+;
+    mov es:hei_delete_proc,OFFSET DeleteHandleObj
+    mov es:hei_delete_proc+4,cs
 ;
     mov ax,es
 ;
