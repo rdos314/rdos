@@ -2550,6 +2550,84 @@ CreateHandleObj   Proc far
 CreateHandleObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadKernelObj
+;
+;       DESCRIPTION:    Read kernel file
+;
+;       PARAMETERS:     DS              Kernel interface
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Count
+;                       EDX:EAX         New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadKernelObj    Proc far
+    or edx,edx
+    stc
+    jnz rkoDone
+;
+    push ds
+    push edx
+;
+    mov edx,eax
+    mov ds,ds:hki_sys_sel
+    call ReadHandleBase
+    mov ecx,eax
+    add edx,ecx
+    mov eax,edx
+;
+    pop edx
+    pop ds
+
+rkoDone:
+    retf32
+ReadKernelObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WriteKernelObj
+;
+;       DESCRIPTION:    Write kernel file
+;
+;       PARAMETERS:     DS              Kernel interface
+;                       EDX:EAX         Position
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Count
+;                       EDX:EAX         New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteKernelObj    Proc far
+    or edx,edx
+    stc
+    jnz wkoDone
+;
+    push ds
+    push edx
+;
+    mov edx,eax
+    mov ds,ds:hki_sys_sel
+    call WriteHandleBase
+    mov ecx,eax
+    add edx,ecx
+    mov eax,edx
+;
+    pop edx
+    pop ds
+
+wkoDone:
+    retf32
+WriteKernelObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           CreateKernelObj
@@ -2575,11 +2653,11 @@ CreateKernelObj   Proc far
     CreateKernelHandle
     mov es,ax
 ;
-;    mov es:hki_read_proc,OFFSET ReadKernelSel
-;    mov es:hki_read_proc+4,cs
+    mov es:hki_read_proc,OFFSET ReadKernelObj
+    mov es:hki_read_proc+4,cs
 ;
-;    mov es:hki_write_proc,OFFSET WriteKernelSel
-;    mov es:hki_write_proc+4,cs
+    mov es:hki_write_proc,OFFSET WriteKernelObj
+    mov es:hki_write_proc+4,cs
 ;
 ;    mov es:hki_delete_proc,OFFSET DeleteKernelSel
 ;    mov es:hki_delete_proc+4,cs
