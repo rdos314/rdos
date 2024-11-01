@@ -2181,6 +2181,25 @@ swap_loop:
 swap_proc       Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateHandleObj
+;
+;           DESCRIPTION:    Create new handle obj
+;
+;           PARAMETERS:     DS     Sys interface
+;
+;           RETURNS:        AX     Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateHandleObj
+
+CreateHandleObj   Proc far
+    retf32
+CreateHandleObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           Init
