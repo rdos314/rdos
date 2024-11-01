@@ -4841,6 +4841,64 @@ SetSizeSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           IsEofSel
+;
+;       DESCRIPTION:    Is eof?
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        EAX             0 = false, 1 = true
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsEofSel    Proc far
+    push ds
+    push es
+    push esi
+;
+    mov ax,flat_sel
+    mov es,eax
+;
+    mov eax,ds:hf_user_handle
+    dec eax
+    shl eax,3
+;
+    push ds
+    mov ds,ds:hei_proc_sel
+    mov esi,ds:pf_map_linear
+    pop ds
+;
+    mov edx,es:[esi].fm_handle_ptr
+    add edx,OFFSET fh_pos_arr
+    add edx,eax
+    mov eax,es:[edx]
+    mov edx,es:[edx+4]
+;
+    mov ds,ds:hei_sys_sel
+    mov esi,ds:kf_info_linear
+    sub eax,ds:[esi].fi_size
+    sbb edx,ds:[esi].fi_size+4       
+    jc ieNo
+
+ieYes:
+    mov eax,1
+    jmp ieDone
+
+ieNo:
+    xor eax,eax
+
+ieDone:
+    clc
+;
+    pop esi
+    pop es
+    pop ds
+    ret
+IsEofSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetCreateSel
 ;
 ;       DESCRIPTION:    Get handle create time
@@ -5064,6 +5122,9 @@ chsLoop:
 ;
     mov es:hei_get_access_time_proc, OFFSET GetAccessSel
     mov es:hei_get_access_time_proc+4,cs
+;
+    mov es:hei_is_eof_proc, OFFSET IsEofSel
+    mov es:hei_is_eof_proc+4,cs
 ;
     mov es:hei_delete_proc, OFFSET DeleteHandleSel
     mov es:hei_delete_proc+4,cs

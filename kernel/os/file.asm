@@ -1240,7 +1240,7 @@ GetOneFileCacheSize   Endp
 ;
 ;           DESCRIPTION:    Get cache size for all files
 ;
-;           RETURNS:        EAX		Size of file cache
+;           RETURNS:        EAX         Size of file cache
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2303,6 +2303,44 @@ SetObjTime Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           IsObjEof
+;
+;           DESCRIPTION:    Is eof?
+;
+;           PARAMETERS:     DS              Handle interface
+;                   
+;           RETURNS:        EAX             0 = no eof, 1 = eof
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsObjEof Proc far
+    push ds
+;
+    mov ds,ds:hei_sys_sel
+    EnterReadSection ds:file_size_section
+    mov eax,ds:file_size
+    LeaveReadSection ds:file_size_section
+;
+    sub eax,ds:fhi_pos
+    jae ieYes
+
+ieNo:
+    xor eax,eax
+    jmp ieDone
+
+ieYes:
+    mov eax,1
+
+ieDone:
+    clc
+;
+    pop ds
+    retf32
+IsObjEof Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateHandleObj
 ;
 ;           DESCRIPTION:    Create new handle obj
@@ -2368,6 +2406,9 @@ CreateHandleObj   Proc far
 ;
     mov es:hei_set_modify_time_proc,OFFSET SetObjTime
     mov es:hei_set_modify_time_proc+4,cs
+;
+    mov es:hei_is_eof_proc,OFFSET IsObjEof
+    mov es:hei_is_eof_proc+4,cs
 ;
     mov es:hei_delete_proc,OFFSET DeleteHandleObj
     mov es:hei_delete_proc+4,cs

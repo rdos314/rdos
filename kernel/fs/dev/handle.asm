@@ -1533,6 +1533,50 @@ SetHandleModifyObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           EofHandleObj
+;
+;           DESCRIPTION:    Eof 
+;
+;           PARAMETERS:     BX          Handle
+
+;           RETURNS:        EAX         Eof status (0 = not eof, 1 = eof)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EofHandleObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae eohFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz eohFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_is_eof_proc
+    jmp eohDone
+
+eohFail:
+    stc
+
+eohDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+EofHandleObj     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitSysHandle
 ;
 ;           DESCRIPTION:    Init sys object
@@ -1994,6 +2038,32 @@ set_handle_modify_time     Proc far
     call SetHandleModifyObj
     ret
 set_handle_modify_time     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           EofHandle
+;
+;           DESCRIPTION:    Eof for handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EAX         Eof status (-1 = error, 0 = not eof, 1 = eof)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+eof_handle_name  DB 'Eof Handle', 0
+
+eof_handle     Proc far
+    call EofHandleObj
+    jnc eofDone
+;
+    mov eax,1
+    stc
+
+eofDone:
+    ret
+eof_handle  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2625,6 +2695,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET set_handle_modify_time_name
     xor cl,cl
     mov ax,set_handle_modify_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET eof_handle
+    mov edi,OFFSET eof_handle_name
+    xor cl,cl
+    mov ax,eof_handle_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate
