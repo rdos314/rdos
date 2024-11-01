@@ -967,6 +967,7 @@ chBitOk:
     call fword ptr ds:hpi_delete_proc
 ;
     mov ebx,ds:hpi_sys_index
+    mov ds,ds:hpi_sys_sel
 
 chCheckSys:
     cmp ebx,SYS_HANDLE_COUNT
@@ -981,7 +982,6 @@ chSysHighOk:
     int 3
 
 chSysLowOk:
-    mov ds,ds:hpi_sys_sel
     FreeMem
 
     sub ds:hsi_ref_count,1
