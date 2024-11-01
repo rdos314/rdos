@@ -816,13 +816,13 @@ ohProcOk:
     mov ds,eax
     call fword ptr ds:hpi_create_proc
     jc ohFail
-
-ohHandleOk:
+;
     mov ds,eax
     inc ds:hei_ref_count
     call AllocateUserHandle
     jc ohFail
-;
+
+ohCheckTrunc:
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
 ;
@@ -838,9 +838,21 @@ ohLegacy:
     OpenLegacyHandle
     jc ohFail
 ;
+    EnterSection ds:hsi_section
     inc ds:hsi_ref_count
+    LeaveSection ds:hsi_section
+;
     call fword ptr ds:hsi_create_handle_proc
-    jnc ohHandleOk
+    jc ohFail
+;
+    mov ebx,ds:hsi_index
+
+    mov ds,eax
+    mov ds:hei_sys_index,ebx
+;
+    inc ds:hei_ref_count
+    call AllocateUserHandle
+    jnc ohCheckTrunc
 
 ohFail:
     xor ebx,ebx
@@ -905,7 +917,6 @@ CloseHandleObj     Proc near
     jz chOk
 ;
     mov ebx,ds:hei_sys_index
-    FreeMem
     mov ds,eax
     EnterSection ds:hsi_section
     jmp chCheckSys
@@ -956,6 +967,8 @@ chBitOk:
     call fword ptr ds:hpi_delete_proc
 ;
     mov ebx,ds:hpi_sys_index
+
+chCheckSys:
     cmp ebx,SYS_HANDLE_COUNT
     jbe chSysHighOk
 ;
@@ -971,7 +984,6 @@ chSysLowOk:
     mov ds,ds:hpi_sys_sel
     FreeMem
 
-chCheckSys:
     sub ds:hsi_ref_count,1
     jnz chLeave
 ;
