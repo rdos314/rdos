@@ -2245,8 +2245,6 @@ DeleteHandleObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadHandleBase   Proc near
-    push eax
-;
     mov al,ds:file_drive
     test ds:file_attrib, FILE_ATTRIB_NOBUFFER
     jz rhbBuf
@@ -2258,7 +2256,6 @@ rhbBuf:
     call read_file
 
 rhbDone:    
-    pop eax
     ret
 ReadHandleBase   Endp
 
@@ -2279,8 +2276,6 @@ ReadHandleBase   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteHandleBase   Proc near
-    push eax
-;
     cmp edx,ds:file_size
     jbe whbDo
 ;
@@ -2370,7 +2365,6 @@ whbDoBuf:
     call write_file
 
 whbDone:
-    pop eax
     ret
 WriteHandleBase   Endp
 
