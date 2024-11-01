@@ -816,7 +816,8 @@ ohProcOk:
     mov ds,eax
     call fword ptr ds:hpi_create_proc
     jc ohFail
-;
+
+ohHandleOk:
     mov ds,eax
     inc ds:hei_ref_count
     call AllocateUserHandle
@@ -838,6 +839,7 @@ ohLegacy:
     jc ohFail
 ;
     call fword ptr ds:hsi_create_handle_proc
+    jnc ohHandleOk
 
 ohFail:
     xor ebx,ebx
