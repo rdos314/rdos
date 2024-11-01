@@ -2190,6 +2190,30 @@ swap_proc       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CloseSysObj
+;
+;           DESCRIPTION:    Close and delete sys obj
+;
+;           PARAMETERS:     DS              Sys handle interface
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CloseSysObj
+
+CloseSysObj    Proc far
+    push ds
+;
+    mov bx,ds
+    call ReleaseFileSel
+    clc
+;
+    pop ds
+    retf32
+CloseSysObj    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DeleteHandleObj
 ;
 ;           DESCRIPTION:    Delete handle obj
