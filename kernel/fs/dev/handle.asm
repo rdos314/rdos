@@ -772,7 +772,7 @@ OpenHandleObj     Proc near
     push eax
 ;  
     call OpenVfsFile
-    jc ohFail
+    jc ohLegacy
 ;
     EnterSection ds:hsi_section
 ;
@@ -812,6 +812,10 @@ ohProcOk:
 ohSizeOk:
     clc
     jmp ohDone
+
+ohLegacy:  
+    OpenLegacyHandle
+    jc ohFail
 
 ohFail:
     xor ebx,ebx
@@ -1186,6 +1190,26 @@ init_handle     Proc far
     call InitHandleObj
     ret
 init_handle     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateSysHandle
+;
+;           DESCRIPTION:    Allocate sys file handle
+;
+;           PARAMETERS:     DS          Sys interface
+;
+;           RETURNS:        EBX         Sys handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_sys_handle_name  DB 'Allocate Sys Handle', 0
+
+allocate_sys_handle     Proc far
+    call AllocateLocalSysHandle
+    ret
+allocate_sys_handle     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1863,6 +1887,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET init_handle_name
     xor cl,cl
     mov ax,init_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET allocate_sys_handle
+    mov edi,OFFSET allocate_sys_handle_name
+    xor cl,cl
+    mov ax,allocate_sys_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_kernel_handle

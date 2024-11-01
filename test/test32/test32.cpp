@@ -38,8 +38,8 @@ void main()
     int size;
     int dummy;
     long long pos;
-    int handle2 = RdosOpenNewHandle("e:/test.bin", O_RDWR);
-    int handle = RdosOpenNewHandle("e:/test.bin", O_RDWR);
+    int handle2 = RdosOpenNewHandle("b:/safe.bin", O_RDWR);
+    int handle = RdosOpenNewHandle("b:/safe.bin", O_RDWR);
 
     size = RdosReadNewHandle(0, buf, 267);
     RdosWriteNewHandle(1, "Test of output\r\n", 16);

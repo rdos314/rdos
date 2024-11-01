@@ -2572,6 +2572,19 @@ InitHandle  MACRO
     OsGate init_handle_nr
                     ENDM
 
+; IN  DS       Sys interface
+; OUT EBX      Sys handle
+AllocateSysHandle MACRO
+    OsGate allocate_sys_handle_nr
+                    ENDM
+
+; IN  ES:EDI      Filename
+; IN  CX          Mode
+; OUT DS          Sys handle obj
+OpenLegacyHandle  MACRO
+    OsGate open_legacy_handle_nr
+                    ENDM
+
 ; OUT AX        Handle sel
 CreateInputHandle  MACRO
     OsGate create_input_handle_nr

@@ -1514,7 +1514,7 @@ HandleRx    Proc near
     jz hrxDone
 ;
     mov cl,ds:[ebx+6]
-    and cl,7
+    and cl,0Fh
     mov eax,ds:[ebx+8]
     mov edx,ds:[ebx+12]
     mov ebx,ds:[ebx]

@@ -2021,6 +2021,131 @@ open_legacy_file   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           open_legacy_handle
+;
+;           DESCRIPTION:    Open legacy handle
+;
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        DS          Sys handle obj
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_legacy_handle_name  DB 'Open Legacy Handle',0
+
+open_legacy_handle    Proc far
+    push es
+    push fs
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov bx,flat_sel
+    mov fs,bx
+;
+    push edi
+    call ParseDir
+    jc olhPopFailed
+;
+    EnterWriteSection ds:ds_access_section
+    dec ds:ds_usage
+    call ParseFile
+    jnc olhExists
+;
+    test cx,O_CREAT
+    jz olhLeaveFailed
+;
+    call ParseName
+    jc olhLeaveFailed
+;
+    push cx
+    xor cl,cl
+    mov al,ds:ds_drive
+    mov bx,ds
+    CallFileSystem fs_create_file_proc
+    call RequestFileSel
+    pop cx
+;
+    LeaveWriteSection ds:ds_access_section
+    pop edi
+    jmp olhHandle
+
+olhExists:
+    test cx,O_EXCL
+    jnz olhLeaveFailed
+;
+    pop edi
+    call RequestFileSel
+;
+    test cx,O_CREAT OR O_TRUNC
+    jz olhOpen
+;
+    push ds
+    mov ds,bx
+    EnterWriteSection ds:file_size_section
+    pop ds
+;
+    push edx
+    xor edx,edx
+    CallFileSystem fs_set_file_size_proc
+    pop edx
+;
+    push ds
+    mov ds,bx
+    LeaveWriteSection ds:file_size_section
+    pop ds
+
+olhOpen:
+    LeaveWriteSection ds:ds_access_section
+
+olhHandle:
+    call ParseEnd
+;
+    mov ds,bx
+    EnterSection ds:hsi_section
+;
+    mov ebx,ds:hsi_index
+    or ebx,ebx
+    jz olhNew
+;
+    dec ds:file_usage
+    jmp olhHandleOk
+
+olhNew:
+    AllocateSysHandle
+    mov ds:hsi_index,ebx
+
+olhHandleOk:
+    LeaveSection ds:hsi_section
+    clc
+    jmp olhDone
+
+olhLeaveFailed:
+    LeaveWriteSection ds:ds_access_section
+    call ParseEnd
+
+olhPopFailed:
+    pop edi
+
+olhFailed:
+    stc
+
+olhDone:
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop fs
+    pop es
+    retf32
+open_legacy_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           open_legacy_kernel_file
 ;
 ;           DESCRIPTION:    Open legacy kernel file
@@ -3102,6 +3227,12 @@ init_dir    PROC near
     mov edi,OFFSET insert_file_entry_name
     xor cl,cl
     mov ax,insert_file_entry_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET open_legacy_handle
+    mov edi,OFFSET open_legacy_handle_name
+    xor cl,cl
+    mov ax,open_legacy_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_legacy_file
