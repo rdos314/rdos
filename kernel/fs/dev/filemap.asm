@@ -4538,7 +4538,6 @@ MapSel      Proc far
     mov si,ds:hei_proc_sel
     mov ds,esi
     mov fs,esi
-;
     mov es,ds:pf_map_sel
     mov gs,ds:pf_file_sel
 ;
@@ -4559,6 +4558,83 @@ msDone:
     pop ds
     ret
 MapSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UpdateMapSel
+;
+;       DESCRIPTION:    Update map file
+;
+;       PARAMETERS:     DS             Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateMapSel      Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov si,ds:hei_proc_sel
+    mov ds,esi
+    mov fs,esi
+    mov es,ds:pf_map_sel
+    mov gs,ds:pf_file_sel
+    call UpdateMap
+;
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+UpdateMapSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GrowMapSel
+;
+;       DESCRIPTION:    Grow map file
+;
+;       PARAMETERS:     DS             Handle interface
+;                       EDX:EAX        Position
+;                       ECX            Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowMapSel      Proc far
+    push ds
+    push es
+    push fs
+    push gs
+    pushad
+;
+    mov si,ds:hei_proc_sel
+    mov ds,esi
+    mov fs,esi
+    mov es,ds:pf_map_sel
+    mov gs,ds:pf_file_sel
+;
+    call WaitForGrow
+    jc gmsDone
+;
+    call LockMap
+    call SyncMap
+    pushf
+    call UnlockMap
+    popf
+
+gmsDone:
+    popad
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    ret
+GrowMapSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5147,6 +5223,12 @@ chsLoop:
 ;
     mov es:hei_map_proc, OFFSET MapSel
     mov es:hei_map_proc+4,cs
+;
+    mov es:hei_update_map_proc, OFFSET UpdateMapSel
+    mov es:hei_update_map_proc+4,cs
+;
+    mov es:hei_grow_map_proc, OFFSET GrowMapSel
+    mov es:hei_grow_map_proc+4,cs
 ;
     mov es:hei_read_proc, OFFSET ReadHandleSel
     mov es:hei_read_proc+4,cs

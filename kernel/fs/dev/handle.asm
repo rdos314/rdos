@@ -602,6 +602,12 @@ InitHandleObj  Proc near
     mov es:hei_map_proc,OFFSET handle_fail
     mov es:hei_map_proc+4,cs
 ;
+    mov es:hei_update_map_proc,OFFSET handle_fail
+    mov es:hei_update_map_proc+4,cs
+;
+    mov es:hei_grow_map_proc,OFFSET handle_fail
+    mov es:hei_grow_map_proc+4,cs
+;
     mov es:hei_poll_proc,OFFSET handle_fail
     mov es:hei_poll_proc+4,cs
 ;
@@ -1123,6 +1129,91 @@ mhDone:
     pop ds
     ret
 MapHandleObj     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateHandleMapObj
+;
+;           DESCRIPTION:    Update handle map
+;
+;           PARAMETERS:     BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateHandleMapObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae uhmFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz uhmFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_update_map_proc
+    jnc uhmDone
+
+uhmFail:
+    stc
+
+uhmDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+UpdateHandleMapObj     Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GrowHandleMapObj
+;
+;           DESCRIPTION:    Grow handle map
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     Position
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowHandleMapObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae ghmoFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz ghmoFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_grow_map_proc
+    jnc ghmoDone
+
+ghmoFail:
+    stc
+
+ghmoDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+GrowHandleMapObj     Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1854,6 +1945,44 @@ map_handle   Proc far
     call MapHandleObj
     ret
 map_handle    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UpdateHandle
+;
+;           DESCRIPTION:    Update handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_handle_name  DB 'Update Handle', 0
+
+update_handle     Proc far
+    call UpdateHandleMapObj
+    ret
+update_handle    ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GrowHandle
+;
+;           DESCRIPTION:    Grow handle
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     File position
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+grow_handle_name  DB 'Grow Handle', 0
+
+grow_handle     Proc far
+    call GrowHandleMapObj
+    ret
+grow_handle    ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3241,6 +3370,18 @@ init_sys_handle     PROC near
     mov edi,OFFSET map_handle_name
     xor cl,cl
     mov ax,map_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET update_handle
+    mov edi,OFFSET update_handle_name
+    xor cl,cl
+    mov ax,update_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET grow_handle
+    mov edi,OFFSET grow_handle_name
+    xor cl,cl
+    mov ax,grow_handle_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET read_handle16
