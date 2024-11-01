@@ -3088,29 +3088,6 @@ UnlockMap_   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetVfsFileInfo
-;
-;       DESCRIPTION:    Get VFS file info
-;
-;       PARAMETERS:     BX             Proc interface
-;
-;       RETURNS:        EDI            File info
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public GetVfsFileInfo
-
-GetVfsFileInfo     Proc near
-    push ds
-    mov ds,ebx
-    mov edi,ds:pf_map_linear
-    pop ds
-    ret
-GetVfsFileInfo    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           MapVfsFile
 ;
 ;       DESCRIPTION:    Map VFS file
@@ -4514,6 +4491,33 @@ make_dir32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetMapSel
+;
+;       DESCRIPTION:    Read handle
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        EAX               Map index
+;                       EDI               Map linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetMapSel    Proc far
+    push ds
+;
+    mov eax,ds:hf_user_handle
+;
+    mov ds,ds:hei_proc_sel
+    mov edi,ds:pf_map_linear
+    clc
+;
+    pop ds
+    ret
+GetMapSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReadHandleSel
 ;
 ;       DESCRIPTION:    Read handle
@@ -5092,6 +5096,9 @@ chsLoop:
 ;
     inc ebx
     mov es:hf_user_handle,ebx
+;
+    mov es:hei_get_map_proc, OFFSET GetMapSel
+    mov es:hei_get_map_proc+4,cs
 ;
     mov es:hei_read_proc, OFFSET ReadHandleSel
     mov es:hei_read_proc+4,cs

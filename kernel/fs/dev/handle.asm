@@ -1033,6 +1033,53 @@ CloseHandleObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetHandleMapObj
+;
+;           DESCRIPTION:    Get handle map
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EAX         Map index
+;                           EDI         Map linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetHandleMapObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae ghmFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz ghmFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_get_map_proc
+    jnc ghmDone
+
+ghmFail:
+    xor eax,eax
+    xor edi,edi
+    stc
+
+ghmDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+GetHandleMapObj     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ReadHandleObj
 ;
 ;           DESCRIPTION:    Read handle
@@ -1720,6 +1767,26 @@ close_handle     Proc far
     call CloseHandleObj
     ret
 close_handle     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHandleMap
+;
+;           DESCRIPTION:    Get handle map
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EDI         Flat address of file info
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_map_name  DB 'Get Handle Map', 0
+
+get_handle_map   Proc far
+    call GetHandleMapObj
+    ret
+get_handle_map    ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2666,6 +2733,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET close_handle_name
     xor cl,cl
     mov ax,close_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_map
+    mov edi,OFFSET get_handle_map_name
+    xor cl,cl
+    mov ax,get_handle_map_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET read_handle16
