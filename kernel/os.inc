@@ -2656,13 +2656,6 @@ RefCHandle MACRO
     OsGate ref_c_handle_nr
                     ENDM
 
-; IN  ES:EDI    Filename
-; IN  CX        Mode
-; OUT BX        Entry handle
-OpenLegacyFile MACRO
-    OsGate open_legacy_file_nr
-                    ENDM
-
 ; IN  BX        File selector
 ; IN  EDX:EAX   Position
 ; IN  ES:EDI    Buffer
@@ -2721,19 +2714,6 @@ StopReadLegacyFile               MACRO
 ; IN  BX        File selector
 CloseLegacyFile MACRO
     OsGate close_legacy_file_nr
-                    ENDM
-
-; IN  ES:EDI    Filename
-; IN  CX        Mode
-; OUT BX        Handle
-OpenLegacyKernelFile MACRO
-    OsGate open_legacy_kernel_file_nr
-                    ENDM
-
-; IN  BX        File selector
-; OUT BX        Handle
-RefLegacyKernelFile MACRO
-    OsGate ref_legacy_kernel_file_nr
                     ENDM
 
 ; IN  BX        C handle
