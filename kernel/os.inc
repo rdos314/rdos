@@ -2639,18 +2639,6 @@ RefCHandle MACRO
     OsGate ref_c_handle_nr
                     ENDM
 
-; IN  BX            File selector
-; OUT EDX:EAX       File time
-GetLegacyFileTime MACRO
-    OsGate get_legacy_file_time_nr
-                    ENDM
-
-; IN  BX            File selector
-; IN  EDX:EAX       File time
-SetLegacyFileTime MACRO
-    OsGate set_legacy_file_time_nr
-                    ENDM
-
 ; IN  BX        File selector
 ; IN  AX        Handle
 StartReadLegacyFile               MACRO
@@ -2661,11 +2649,6 @@ StartReadLegacyFile               MACRO
 StopReadLegacyFile               MACRO
     OsGate stop_read_legacy_file_nr
                         ENDM
-
-; IN  BX        File selector
-CloseLegacyFile MACRO
-    OsGate close_legacy_file_nr
-                    ENDM
 
 ; IN  BX        C handle
 ; IN  CX        Mode

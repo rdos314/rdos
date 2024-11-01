@@ -4783,6 +4783,64 @@ SetSizeSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetModifySel
+;
+;       DESCRIPTION:    Get handle modidy time
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        EDX:EAX         Tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetModifySel    Proc far
+    push ds
+    push edi
+;
+    mov ds,ds:hei_sys_sel
+    mov edi,ds:kf_info_linear
+    mov ax,flat_sel
+    mov ds,eax
+    mov eax,ds:[edi].fi_modify
+    mov edx,ds:[edi].fi_modify+4       
+;
+    pop edi
+    pop ds
+    ret
+GetModifySel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetAccessSel
+;
+;       DESCRIPTION:    Get handle access time
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        EDX:EAX         Tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAccessSel    Proc far
+    push ds
+    push edi
+;
+    mov ds,ds:hei_sys_sel
+    mov edi,ds:kf_info_linear
+    mov ax,flat_sel
+    mov ds,eax
+    mov eax,ds:[edi].fi_access
+    mov edx,ds:[edi].fi_access+4       
+;
+    pop edi
+    pop ds
+    ret
+GetAccessSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DeleteHandleSel
 ;
 ;       DESCRIPTION:    Delete handle sel
@@ -4907,6 +4965,12 @@ chsLoop:
 ;
     mov es:hei_set_size_proc, OFFSET SetSizeSel
     mov es:hei_set_size_proc+4,cs
+;
+    mov es:hei_get_modify_time_proc, OFFSET GetModifySel
+    mov es:hei_get_modify_time_proc+4,cs
+;
+    mov es:hei_get_access_time_proc, OFFSET GetAccessSel
+    mov es:hei_get_access_time_proc+4,cs
 ;
     mov es:hei_delete_proc, OFFSET DeleteHandleSel
     mov es:hei_delete_proc+4,cs

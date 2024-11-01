@@ -608,12 +608,6 @@
 #define osgate_notify_core_dump 580
 #define osgate_setup_nmi_core_dump 581
 
-#define osgate_allocate_c_handle 584
-#define osgate_close_legacy_file 586
-#define osgate_ref_c_handle 587
-#define osgate_get_legacy_file_time 592
-#define osgate_set_legacy_file_time 593
-
 #define osgate_fork_process 597
 
 #define osgate_reset_process 601
@@ -1533,12 +1527,6 @@
 #define OsGate_start_core_dump 0x3E 0x67 0x9a 67 2 0 0 2 0
 #define OsGate_notify_core_dump 0x3E 0x67 0x9a 68 2 0 0 2 0
 #define OsGate_setup_nmi_core_dump 0x3E 0x67 0x9a 69 2 0 0 2 0
-
-#define OsGate_allocate_c_handle 0x3E 0x67 0x9a 72 2 0 0 2 0
-#define OsGate_close_legacy_file 0x3E 0x67 0x9a 74 2 0 0 2 0
-#define OsGate_ref_c_handle 0x3E 0x67 0x9a 75 2 0 0 2 0
-#define OsGate_get_legacy_file_time 0x3E 0x67 0x9a 80 2 0 0 2 0
-#define OsGate_set_legacy_file_time 0x3E 0x67 0x9a 81 2 0 0 2 0
 
 #define OsGate_fork_process 0x3E 0x67 0x9a 85 2 0 0 2 0
 

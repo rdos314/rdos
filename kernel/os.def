@@ -608,12 +608,6 @@ start_core_dump_nr          = 579
 notify_core_dump_nr         = 580
 setup_nmi_core_dump_nr      = 581
 
-allocate_c_handle_nr        = 584
-close_legacy_file_nr        = 586
-ref_c_handle_nr             = 587
-get_legacy_file_time_nr     = 592
-set_legacy_file_time_nr     = 593
-
 fork_process_nr             = 597
 
 reset_process_nr            = 601

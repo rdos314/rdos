@@ -1304,6 +1304,184 @@ SetHandleSizeObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetHandleCreateObj
+;
+;           DESCRIPTION:    Get handle create time
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EDX:EAX     Tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetHandleCreateObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae ghctFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz ghctFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_get_create_time_proc
+    jmp ghctDone
+
+ghctFail:
+    GetTime
+    stc
+
+ghctDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+GetHandleCreateObj     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHandleModifyObj
+;
+;           DESCRIPTION:    Get handle modify time
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EDX:EAX     Tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetHandleModifyObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae ghmtFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz ghmtFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_get_modify_time_proc
+    jmp ghmtDone
+
+ghmtFail:
+    GetTime
+    stc
+
+ghmtDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+GetHandleModifyObj     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetHandleAccessObj
+;
+;           DESCRIPTION:    Get handle access time
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EDX:EAX     Tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetHandleAccessObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae ghatFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz ghatFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_get_access_time_proc
+    jmp ghatDone
+
+ghatFail:
+    GetTime
+    stc
+
+ghatDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+GetHandleAccessObj     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetHandleModifyObj
+;
+;           DESCRIPTION:    Set handle modify time
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     Tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetHandleModifyObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae shmtFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz shmtFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_set_modify_time_proc
+    jmp shmtDone
+
+shmtFail:
+    stc
+
+shmtDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+SetHandleModifyObj     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitSysHandle
 ;
 ;           DESCRIPTION:    Init sys object
@@ -1679,6 +1857,61 @@ set_handle_size64     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetHandleCreateTime
+;                           GetHandleModifyTime
+;                           GetHandleAccessTime
+;
+;           DESCRIPTION:    Get handle time
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EDX:EAX     Time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_handle_create_time_name  DB 'Get Handle Create Time', 0
+get_handle_modify_time_name  DB 'Get Handle Modify Time', 0
+get_handle_access_time_name  DB 'Get Handle Access Time', 0
+
+get_handle_create_time     Proc far
+    call GetHandleCreateObj
+    ret
+get_handle_create_time     Endp        
+
+get_handle_modify_time     Proc far
+    call GetHandleModifyObj
+    ret
+get_handle_modify_time     Endp        
+
+get_handle_access_time     Proc far
+    call GetHandleAccessObj
+    ret
+get_handle_access_time     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetHandleModifyTime
+;
+;           DESCRIPTION:    Set handle time
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     Time
+;
+;           RETURNS:        EAX         Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_handle_modify_time_name  DB 'Set Handle Modify Time', 0
+
+set_handle_modify_time     Proc far
+    call SetHandleModifyObj
+    ret
+set_handle_modify_time     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateKernelObj
 ;
 ;           DESCRIPTION:    Create kernel object
@@ -2035,7 +2268,6 @@ wkhDone:
     ret
 write_kernel_handle Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2276,6 +2508,30 @@ init_sys_handle     PROC near
     mov edi,OFFSET set_handle_size64_name
     xor cl,cl
     mov ax,set_handle_size64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_create_time
+    mov edi,OFFSET get_handle_create_time_name
+    xor cl,cl
+    mov ax,get_handle_create_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_modify_time
+    mov edi,OFFSET get_handle_modify_time_name
+    xor cl,cl
+    mov ax,get_handle_modify_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_handle_access_time
+    mov edi,OFFSET get_handle_access_time_name
+    xor cl,cl
+    mov ax,get_handle_access_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_modify_time
+    mov edi,OFFSET set_handle_modify_time_name
+    xor cl,cl
+    mov ax,set_handle_modify_time_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate

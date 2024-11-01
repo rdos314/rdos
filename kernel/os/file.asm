@@ -1714,96 +1714,6 @@ write_file      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           get_legacy_file_time
-;
-;           DESCRIPTION:    Get C file time & date
-;
-;           PARAMETERS:     BX          File sel
-;               
-;           RETURNS:        EDX:EAX     File time
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_legacy_file_time_name      DB 'Get Legacy File Time',0
-
-get_legacy_file_time Proc far
-    push ds
-    push es
-;
-    or bx,bx
-    stc
-    jz gftDone
-;
-    mov ds,bx
-    mov dx,flat_sel
-    mov es,dx
-    mov edx,ds:file_dir_entry
-    mov eax,es:[edx].de_time
-    mov edx,es:[edx].de_time+4
-    clc
-
-gftDone:
-    pop es
-    pop ds
-    retf32
-get_legacy_file_time Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           set_legacy_file_time
-;
-;           DESCRIPTION:    Set C file time & date
-;
-;           PARAMETERS:     BX          File selector
-;                           EDX:EAX     New time & date
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_legacy_file_time_name      DB 'Set Legacy File Time',0
-
-set_legacy_file_time Proc far
-    push ds
-    push es
-    push fs
-    push ax
-    push ebx
-    push ecx
-    push edx
-    push edi
-;
-    mov cx,flat_sel
-    mov es,cx
-    mov ecx,eax
-;
-    or bx,bx
-    stc
-    jz sftDone
-;
-    mov fs,bx
-    mov al,fs:file_drive
-    mov edi,fs:file_dir_entry
-    mov es:[edi].de_time,ecx
-    mov es:[edi].de_time+4,edx
-    mov edx,edi
-    CallFileSystem fs_update_file_proc
-    clc
-
-sftDone:
-    pop edi
-    pop edx
-    pop ecx
-    pop ebx
-    pop ax
-    pop fs
-    pop es
-    pop ds
-    retf32
-set_legacy_file_time Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;       NAME:           StartReadLegacyFile
 ;
 ;       DESCRIPTION:    Start read file
@@ -2277,6 +2187,85 @@ SetObjSize Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           GetObjTime
+;
+;           DESCRIPTION:    Get file time & date
+;
+;           PARAMETERS:     DS          Handle interface
+;               
+;           RETURNS:        EDX:EAX     File time
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetObjTime Proc far
+    push ds
+    push es
+;
+    mov ds,ds:hei_sys_sel
+    mov dx,flat_sel
+    mov es,dx
+    mov edx,ds:file_dir_entry
+    mov eax,es:[edx].de_time
+    mov edx,es:[edx].de_time+4
+    clc
+
+gftDone:
+    pop es
+    pop ds
+    retf32
+GetObjTime Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetObjTime
+;
+;           DESCRIPTION:    Set file time & date
+;
+;           PARAMETERS:     DS          Handle interface
+;                           EDX:EAX     New time & date
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetObjTime Proc far
+    push ds
+    push es
+    push fs
+    push ax
+    push ebx
+    push ecx
+    push edx
+    push edi
+;
+    mov cx,flat_sel
+    mov es,cx
+    mov ecx,eax
+;
+    mov bx,ds:hei_sys_sel
+    mov fs,bx
+    mov al,fs:file_drive
+    mov edi,fs:file_dir_entry
+    mov es:[edi].de_time,ecx
+    mov es:[edi].de_time+4,edx
+    mov edx,edi
+    CallFileSystem fs_update_file_proc
+    clc
+
+sftDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
+SetObjTime Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateHandleObj
 ;
 ;           DESCRIPTION:    Create new handle obj
@@ -2327,6 +2316,18 @@ CreateHandleObj   Proc far
 ;
     mov es:hei_set_size_proc,OFFSET SetObjSize
     mov es:hei_set_size_proc+4,cs
+;
+    mov es:hei_get_create_time_proc,OFFSET GetObjTime
+    mov es:hei_get_create_time_proc+4,cs
+;
+    mov es:hei_get_modify_time_proc,OFFSET GetObjTime
+    mov es:hei_get_modify_time_proc+4,cs
+;
+    mov es:hei_get_access_time_proc,OFFSET GetObjTime
+    mov es:hei_get_access_time_proc+4,cs
+;
+    mov es:hei_set_modify_time_proc,OFFSET SetObjTime
+    mov es:hei_set_modify_time_proc+4,cs
 ;
     mov es:hei_delete_proc,OFFSET DeleteHandleObj
     mov es:hei_delete_proc+4,cs
@@ -2505,18 +2506,6 @@ init_file       PROC near
     mov edi,OFFSET free_file_list_entry_name
     xor cl,cl
     mov ax,free_file_list_entry_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET get_legacy_file_time
-    mov edi,OFFSET get_legacy_file_time_name
-    xor cl,cl
-    mov ax,get_legacy_file_time_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET set_legacy_file_time
-    mov edi,OFFSET set_legacy_file_time_name
-    xor cl,cl
-    mov ax,set_legacy_file_time_nr
     RegisterOsGate
 ;
     mov esi,OFFSET start_read_legacy_file
