@@ -2657,32 +2657,6 @@ RefCHandle MACRO
                     ENDM
 
 ; IN  BX        File selector
-; IN  EDX:EAX   Position
-; IN  ES:EDI    Buffer
-; IN  ECX       Size
-; OUT ECX       Read size
-; OUT EDX:EAX   New position
-ReadLegacyFile MACRO
-    OsGate read_legacy_file_nr
-                    ENDM
-
-; IN  BX        File selector
-; IN  EDX       Position
-; IN  ES:EDI    Buffer
-; IN  ECX       Size
-; OUT EAX       Written size
-; OUT EDX       New position
-WriteLegacyFile MACRO
-    OsGate write_legacy_file_nr
-                    ENDM
-
-; IN  BX        File selector
-; OUT EAX       File size
-GetLegacyFileSize MACRO
-    OsGate get_legacy_file_size_nr
-                    ENDM
-
-; IN  BX        File selector
 ; IN  EAX       File size
 SetLegacyFileSize MACRO
     OsGate set_legacy_file_size_nr

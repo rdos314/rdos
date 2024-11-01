@@ -611,9 +611,6 @@
 #define osgate_allocate_c_handle 584
 #define osgate_close_legacy_file 586
 #define osgate_ref_c_handle 587
-#define osgate_read_legacy_file 588
-#define osgate_write_legacy_file 589
-#define osgate_get_legacy_file_size 590
 #define osgate_set_legacy_file_size 591
 #define osgate_get_legacy_file_time 592
 #define osgate_set_legacy_file_time 593
@@ -1545,9 +1542,6 @@
 #define OsGate_allocate_c_handle 0x3E 0x67 0x9a 72 2 0 0 2 0
 #define OsGate_close_legacy_file 0x3E 0x67 0x9a 74 2 0 0 2 0
 #define OsGate_ref_c_handle 0x3E 0x67 0x9a 75 2 0 0 2 0
-#define OsGate_read_legacy_file 0x3E 0x67 0x9a 76 2 0 0 2 0
-#define OsGate_write_legacy_file 0x3E 0x67 0x9a 77 2 0 0 2 0
-#define OsGate_get_legacy_file_size 0x3E 0x67 0x9a 78 2 0 0 2 0
 #define OsGate_set_legacy_file_size 0x3E 0x67 0x9a 79 2 0 0 2 0
 #define OsGate_get_legacy_file_time 0x3E 0x67 0x9a 80 2 0 0 2 0
 #define OsGate_set_legacy_file_time 0x3E 0x67 0x9a 81 2 0 0 2 0
