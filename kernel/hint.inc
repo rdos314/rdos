@@ -41,6 +41,10 @@ hsi_create_proc_proc      DD ?,?
 hsi_create_kernel_proc    DD ?,?
 
 ;  IN	DS                Handle sys interface
+;  OUT  AX                Handle interface
+hsi_create_handle_proc    DD ?,?
+
+;  IN	DS                Handle sys interface
 hsi_delete_proc           DD ?,?
 
 hsi_index                 DD ?

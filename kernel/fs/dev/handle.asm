@@ -219,28 +219,26 @@ apply_proc_handle Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-cr_proc_fail    Proc far
+sys_fail    Proc far
     stc
     ret
-cr_proc_fail    Endp
-
-del_sys_fail    Proc far
-    stc
-    ret
-del_sys_fail    Endp
+sys_fail    Endp
 
 InitSysObj  Proc near
     push eax
     push ecx
     push edi
 ;
-    mov es:hsi_create_proc_proc,OFFSET cr_proc_fail
+    mov es:hsi_create_proc_proc,OFFSET sys_fail
     mov es:hsi_create_proc_proc+4,cs
 ;
-    mov es:hsi_create_kernel_proc,OFFSET cr_proc_fail
+    mov es:hsi_create_kernel_proc,OFFSET sys_fail
     mov es:hsi_create_kernel_proc+4,cs
 ;
-    mov es:hsi_delete_proc,OFFSET del_sys_fail
+    mov es:hsi_create_handle_proc,OFFSET sys_fail
+    mov es:hsi_create_handle_proc+4,cs
+;
+    mov es:hsi_delete_proc,OFFSET sys_fail
     mov es:hsi_delete_proc+4,cs
 ;
     mov es:hsi_kernel_sel,0
@@ -838,6 +836,8 @@ ohSizeOk:
 ohLegacy:  
     OpenLegacyHandle
     jc ohFail
+;
+    call fword ptr ds:hsi_create_handle_proc
 
 ohFail:
     xor ebx,ebx
