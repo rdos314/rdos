@@ -2078,6 +2078,43 @@ WriteHandleObj    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;           NAME:           PollHandleObj
+;
+;           DESCRIPTION:    Poll from legacy file
+;
+;           PARAMETERS:     DS              Handle interface
+;                           ECX             Size
+;                           ES:EDI          Data buffer
+;
+;           RETURNS:        ECX             Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollHandleObj       Proc far
+    push eax
+    push ebx
+    push edx
+;
+    push ds
+    mov edx,ds:fhi_pos
+    mov ds,ds:hei_sys_sel
+    call ReadHandleBase
+    pop ds
+    jc phoDone
+;
+    mov ecx,eax
+    clc
+
+phoDone:
+    pop edx
+    pop ebx
+    pop eax
+    retf32
+PollHandleObj     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;           NAME:           GetObjPos
 ;
 ;           DESCRIPTION:    get file position
@@ -2304,6 +2341,9 @@ CreateHandleObj   Proc far
 ;
     mov es:hei_write_proc,OFFSET WriteHandleObj
     mov es:hei_write_proc+4,cs
+;
+    mov es:hei_poll_proc,OFFSET PollHandleObj
+    mov es:hei_poll_proc+4,cs
 ;
     mov es:hei_get_pos_proc,OFFSET GetObjPos
     mov es:hei_get_pos_proc+4,cs

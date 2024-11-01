@@ -304,6 +304,7 @@ TFile::TFile(TDir *pd, int pi, int bps, int os)
     Info->BytesPerSector = FBytesPerSector;
     Info->DiscSize = Info->SectorCount * FBytesPerSector;
     Info->CurrSize = entry->Size;
+    Info->CreateTime = entry->CreateTime;
     Info->AccessTime = entry->AccessTime;
     Info->ModifyTime = entry->ModifyTime;
     Info->Attrib = entry->Attrib;
