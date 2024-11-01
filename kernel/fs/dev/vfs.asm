@@ -47,7 +47,6 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern init_sys_handle:near
-    extern init_legacy:near
     extern init_buf:near
     extern init_server:near
     extern init_disc:near
@@ -390,7 +389,6 @@ stop_vfs    Endp
 
 init    Proc far
     call init_sys_handle
-    call init_legacy
     call init_buf
     call init_server
     call init_disc

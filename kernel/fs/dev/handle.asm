@@ -2555,6 +2555,435 @@ wkhDone:
     ret
 write_kernel_handle Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenLegacyFile
+;
+;           DESCRIPTION:    Open legacy file
+;
+;           PARAMETERS:     ES:(E)DI    File name
+;                           
+;           RETURNS:        BX          File handle
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_legacy_file_name  DB 'Open Legacy File',0
+
+open_legacy_file32  Proc far
+    push ecx
+;
+    mov cx,O_RDWR
+    call OpenHandleObj
+;
+    pop ecx
+    ret
+open_legacy_file32  Endp
+
+open_legacy_file16     PROC far
+    push ecx
+    push edi
+;
+    movzx edi,di
+    mov cx,O_RDWR
+    call OpenHandleObj
+;
+    pop edi
+    pop ecx
+    ret
+open_legacy_file16     ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateLegacyFile
+;
+;           DESCRIPTION:    Create legacy file
+;
+;           PARAMETERS:     ES:(E)DI        File name
+;
+;           RETURNS:        BX              File handle
+;                           NC              Success
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_legacy_file_name    DB 'Create Legacy File',0
+
+create_legacy_file32  Proc far
+    push ecx
+;
+    mov cx,O_RDWR OR O_CREAT
+    call OpenHandleObj
+;
+    pop ecx
+    ret
+create_legacy_file32  Endp
+
+create_legacy_file16   PROC far
+    push ecx
+    push edi
+;
+    movzx edi,di
+    mov cx,O_RDWR OR O_CREAT
+    call OpenHandleObj
+;
+    pop edi
+    pop ecx
+    ret
+create_legacy_file16   ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseLegacyFile
+;
+;           DESCRIPTION:    Close legacy file
+;
+;           PARAMETERS:     BX              File handle
+;                           NC              Success
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_legacy_file_name DB 'Close Legacy File',0
+
+close_legacy_file   Proc far
+    call CloseHandleObj
+    ret
+close_legacy_file   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DuplLegacyFile
+;
+;           DESCRIPTION:    Duplicate legacy file handle
+;
+;           PARAMETERS:     AX              Old file handle
+;
+;           RETURNS:        BX              New file handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dupl_legacy_file_name  DB 'Dupl Legacy File',0
+
+dupl_legacy_file  Proc far
+    mov ebx,eax
+    DupHandle
+    ret
+dupl_legacy_file  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetLegacyFileSize
+;
+;           DESCRIPTION:    Get legacy file size
+;
+;           PARAMETERS:     BX              File handle
+;                   
+;           RETURNS:        (EDX:)EAX       Size of file
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_legacy_file_size32_name      DB 'Get Legacy File Size 32',0
+get_legacy_file_size64_name      DB 'Get Legacy File Size 64',0
+
+get_legacy_file_size32   Proc far
+    push edx
+;
+    call GetHandleSizeObj
+    jc glhsFail32
+;
+    or edx,edx
+    jnz glhsFail32
+;
+    clc
+    jmp glhsDone32
+
+glhsFail32:
+    stc
+
+glhsDone32:
+    pop edx
+    ret
+get_legacy_file_size32   Endp
+
+get_legacy_file_size64   Proc far
+    call GetHandleSizeObj
+    ret
+get_legacy_file_size64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetLegacyFileSize
+;
+;           DESCRIPTION:    Set legacy file size
+;
+;           PARAMETERS:     BX              File handle
+;                           (EDX:)EAX       Size of file
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_legacy_file_size32_name      DB 'Set Legacy File Size 32',0
+set_legacy_file_size64_name      DB 'Set Legacy File Size 64',0
+
+set_legacy_file_size32   Proc far
+    push edx
+;
+    or edx,edx
+    jnz slhsFail32
+;
+    call SetHandleSizeObj
+    jnc slhsDone32
+
+slhsFail32:
+    call GetHandleSizeObj    
+    jc slhsZero32
+;
+    stc
+    jmp slhsDone32
+
+slhsZero32:
+    xor eax,eax
+    stc
+
+slhsDone32:
+    pop edx
+    ret
+set_legacy_file_size32   Endp
+
+set_legacy_file_size64   Proc far
+    call SetHandleSizeObj
+    jnc slhsDone64
+;
+    call GetHandleSizeObj
+    jc slhsZero64
+;
+    stc
+    jmp slhsDone64
+
+slhsZero64:
+    xor eax,eax
+    xor edx,edx
+    stc
+
+slhsDone64:
+    ret
+set_legacy_file_size64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetLegacyFilePos
+;
+;           DESCRIPTION:    Get legacy file position
+;
+;           PARAMETERS:     BX              File handle
+;               
+;           RETURNS:        (EDX:)EAX       File position
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_legacy_file_pos32_name       DB 'Get Legacy File Position 32',0
+get_legacy_file_pos64_name       DB 'Get Legacy File Position 64',0
+
+get_legacy_file_pos32   Proc far
+    push edx
+;
+    call GetHandlePosObj
+    jc glhpFail32
+;
+    or edx,edx
+    jnz glhpFail32
+;
+    clc
+    jmp glhpDone32
+
+glhpFail32:
+    stc
+
+glhpDone32:
+    pop edx
+    ret
+get_legacy_file_pos32   Endp
+
+get_legacy_file_pos64   Proc far
+    call GetHandlePosObj
+    ret
+get_legacy_file_pos64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetLegacyFilePos
+;
+;           DESCRIPTION:    Set legacy file position
+;
+;           PARAMETERS:     BX              File handle
+;                           (EDX:)EAX       File position
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_legacy_file_pos32_name       DB 'Set Legacy File Position 32',0
+set_legacy_file_pos64_name       DB 'Set Legacy File Position 64',0
+
+
+set_legacy_file_pos32   Proc far
+    push edx
+;
+    xor edx,edx
+    call SetHandlePosObj
+    jnc slhpDone32
+
+slhpFail32:
+    call GetHandlePosObj    
+    jc slhpZero32
+;
+    stc
+    jmp slhpDone32
+
+slhpZero32:
+    xor eax,eax
+    stc
+
+slhpDone32:
+    pop edx
+    ret
+set_legacy_file_pos32   Endp
+
+set_legacy_file_pos64   Proc far
+    call SetHandlePosObj
+    jnc slhpDone64
+;
+    call GetHandlePosObj
+    jc slhpZero64
+;
+    stc
+    jmp slhpDone64
+
+slhpZero64:
+    xor eax,eax
+    xor edx,edx
+    stc
+
+slhpDone64:
+    ret
+set_legacy_file_pos64   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           GetLegacyFileTime
+;
+;           DESCRIPTION:    Get legacy file time & date
+;
+;           PARAMETERS:     BX              File handle
+;               
+;           RETURNS:        EDX:EAX         File time & date
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_legacy_file_time_name      DB 'Get Legacy File Time',0
+
+get_legacy_file_time   Proc far
+    call GetHandleModifyObj
+    ret
+get_legacy_file_time   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetLegacyFileTime
+;
+;           DESCRIPTION:    Set legacy file time & date
+;
+;           PARAMETERS:     BX              File handle
+;                           EDX:EAX         Time & date
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_legacy_file_time_name      DB 'Set Legacy File Time',0
+
+set_legacy_file_time   Proc far
+    call SetHandleModifyObj
+    ret
+set_legacy_file_time   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadLegacyFile
+;
+;           DESCRIPTION:    Read legacy file
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        (E)AX       Bytes read
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_legacy_file_name  DB 'Read Legacy File',0
+
+read_legacy_file32   Proc far
+    call ReadHandleObj
+    ret
+read_legacy_file32   Endp
+
+read_legacy_file16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call ReadHandleObj
+;
+    pop edi
+    pop ecx
+    ret
+read_legacy_file16   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteLegacyFile
+;
+;           DESCRIPTION:    Write legacy file
+;
+;           PARAMETERS:     BX          Handle
+;                           ES:(E)DI    Buffer
+;                           (E)CX       Size
+;
+;           RETURNS:        (E)AX       Bytes written
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_legacy_file_name DB 'Write Legacy File',0
+
+write_legacy_file32   Proc far
+    call WriteHandleObj
+    ret
+write_legacy_file32   Endp
+
+write_legacy_file16   Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call WriteHandleObj
+;
+    pop edi
+    pop ecx
+    ret
+write_legacy_file16   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -2845,6 +3274,106 @@ init_sys_handle     PROC near
     xor cl,cl
     mov ax,is_handle_device_nr
     RegisterBimodalUserGate
+;
+    mov ebx,OFFSET open_legacy_file16
+    mov esi,OFFSET open_legacy_file32
+    mov edi,OFFSET open_legacy_file_name
+    mov dx,virt_es_in
+    mov ax,open_file_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET create_legacy_file16
+    mov esi,OFFSET create_legacy_file32
+    mov edi,OFFSET create_legacy_file_name
+    mov dx,virt_es_in
+    mov ax,create_file_nr
+    RegisterUserGate
+;
+    mov esi,OFFSET close_legacy_file
+    mov edi,OFFSET close_legacy_file_name
+    xor dx,dx
+    mov ax,close_file_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET dupl_legacy_file
+    mov edi,OFFSET dupl_legacy_file_name
+    xor dx,dx
+    mov ax,dupl_file_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_size32
+    mov edi,OFFSET get_legacy_file_size32_name
+    xor dx,dx
+    mov ax,get_file_size32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_size64
+    mov edi,OFFSET get_legacy_file_size64_name
+    xor dx,dx
+    mov ax,get_file_size64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_legacy_file_size32
+    mov edi,OFFSET set_legacy_file_size32_name
+    xor dx,dx
+    mov ax,set_file_size32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_legacy_file_size64
+    mov edi,OFFSET set_legacy_file_size64_name
+    xor dx,dx
+    mov ax,set_file_size64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_pos32
+    mov edi,OFFSET get_legacy_file_pos32_name
+    xor dx,dx
+    mov ax,get_file_pos32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_pos64
+    mov edi,OFFSET get_legacy_file_pos64_name
+    xor dx,dx
+    mov ax,get_file_pos64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_legacy_file_pos32
+    mov edi,OFFSET set_legacy_file_pos32_name
+    xor dx,dx
+    mov ax,set_file_pos32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_legacy_file_pos64
+    mov edi,OFFSET set_legacy_file_pos64_name
+    xor dx,dx
+    mov ax,set_file_pos64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET get_legacy_file_time
+    mov edi,OFFSET get_legacy_file_time_name
+    xor dx,dx
+    mov ax,get_file_time_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_legacy_file_time
+    mov edi,OFFSET set_legacy_file_time_name
+    xor dx,dx
+    mov ax,set_file_time_nr
+    RegisterBimodalUserGate
+;
+    mov ebx,OFFSET read_legacy_file16
+    mov esi,OFFSET read_legacy_file32
+    mov edi,OFFSET read_legacy_file_name
+    mov dx,virt_es_in
+    mov ax,read_file_nr
+    RegisterUserGate
+;
+    mov ebx,OFFSET write_legacy_file16
+    mov esi,OFFSET write_legacy_file32
+    mov edi,OFFSET write_legacy_file_name
+    mov dx,virt_es_in
+    mov ax,write_file_nr
+    RegisterUserGate
 ;
     mov esi,OFFSET test_gate
     mov edi,OFFSET test_gate_name
