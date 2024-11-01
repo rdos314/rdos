@@ -2279,6 +2279,135 @@ rhoDone:
 ReadHandleObj     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           WriteHandleObj
+;
+;           DESCRIPTION:    Writes to legacy file
+;
+;           PARAMETERS:     DS              Handle interface
+;                           ECX             Size
+;                           ES:EDI          Data buffer
+;
+;           RETURNS:        ECX             Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHandleObj       Proc far
+    push eax
+    push ebx
+    push edx
+;
+    mov edx,ds:fhi_pos
+;
+    push ds
+    mov ds,ds:hei_sys_sel
+;
+    cmp edx,ds:file_size
+    jbe whoDo
+;
+    push es
+    push edi
+    push ecx
+    push edx
+;
+    mov eax,1000h
+    AllocateGlobalMem
+;
+    xor di,di
+    mov cx,400h
+    xor eax,eax
+    rep stosd
+    xor edi,edi
+;
+    mov ecx,edx
+    sub ecx,ds:file_size
+    mov edx,ds:file_size
+
+whoFillLoop:
+    push ecx
+;
+    cmp ecx,1000h
+    jbe whoFillDo
+;
+    mov ecx,1000h
+
+whoFillDo:
+    mov al,ds:file_drive
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz whoFillBuf
+;
+    CallFileSystem fs_write_file_proc
+    jmp whoFillCheck
+
+whoFillBuf:
+    call write_file
+
+whoFillCheck:
+    mov eax,ecx
+;
+    pop ecx
+    add edx,eax
+    sub ecx,eax
+    jnz whoFillLoop
+;       
+    FreeMem
+;
+    pop edx
+    pop ecx
+    pop edi
+    pop es
+
+whoDo:
+    mov al,ds:file_drive
+;
+    push es
+    push edx
+;
+    push eax
+    push esi
+    mov ax,flat_sel
+    mov es,ax
+    mov esi,ds:file_dir_entry
+    GetTime
+    mov es:[esi].de_time,eax
+    mov es:[esi].de_time+4,edx
+    mov edx,esi
+    pop esi
+    pop eax
+;
+    CallFileSystem fs_update_file_proc
+;
+    pop edx
+    pop es
+;
+    mov al,ds:file_drive
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz whoDoBuf
+;
+    CallFileSystem fs_write_file_proc
+    jmp whoDoCheck
+
+whoDoBuf:
+    call write_file
+
+whoDoCheck:
+    pop ds
+    jc whoDone
+;
+    mov ecx,eax
+    add edx,ecx
+    mov ds:fhi_pos,edx
+    clc
+
+whoDone:
+    pop edx
+    pop ebx
+    pop eax
+    retf32
+WriteHandleObj    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           CreateHandleObj
@@ -2316,6 +2445,9 @@ CreateHandleObj   Proc far
 ;
     mov es:hei_read_proc,OFFSET ReadHandleObj
     mov es:hei_read_proc+4,cs
+;
+    mov es:hei_write_proc,OFFSET WriteHandleObj
+    mov es:hei_write_proc+4,cs
 ;
     mov es:hei_delete_proc,OFFSET DeleteHandleObj
     mov es:hei_delete_proc+4,cs
