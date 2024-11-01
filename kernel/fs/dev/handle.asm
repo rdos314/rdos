@@ -599,6 +599,9 @@ InitHandleObj  Proc near
     mov es:hei_get_map_proc,OFFSET handle_fail
     mov es:hei_get_map_proc+4,cs
 ;
+    mov es:hei_map_proc,OFFSET handle_fail
+    mov es:hei_map_proc+4,cs
+;
     mov es:hei_poll_proc,OFFSET handle_fail
     mov es:hei_poll_proc+4,cs
 ;
@@ -1076,6 +1079,50 @@ ghmDone:
     pop ds
     ret
 GetHandleMapObj     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MapHandleObj
+;
+;           DESCRIPTION:    Map handle
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     File position
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapHandleObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae mhFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz mhFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_map_proc
+    jnc mhDone
+
+mhFail:
+    stc
+
+mhDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+MapHandleObj     Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1787,6 +1834,26 @@ get_handle_map   Proc far
     call GetHandleMapObj
     ret
 get_handle_map    ENDP
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           MapHandle
+;
+;           DESCRIPTION:    Map handle
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     File position
+;                           ECX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_handle_name  DB 'Map Handle', 0
+
+map_handle   Proc far
+    call MapHandleObj
+    ret
+map_handle    ENDP
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3168,6 +3235,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET get_handle_map_name
     xor cl,cl
     mov ax,get_handle_map_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET map_handle
+    mov edi,OFFSET map_handle_name
+    xor cl,cl
+    mov ax,map_handle_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET read_handle16

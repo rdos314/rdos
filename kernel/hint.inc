@@ -91,6 +91,11 @@ hei_dup_proc              DD ?,?
 hei_get_map_proc          DD ?,?
 
 ;  IN	DS                Handle entry interface
+;  IN  EDX:EAX            File position
+;  IN  ECX                Size
+hei_map_proc              DD ?,?
+
+;  IN	DS                Handle entry interface
 ;  IN   ES:EDI            Buffer
 ;  IN   ECX               Size
 ;  OUT  EAX               Read count
