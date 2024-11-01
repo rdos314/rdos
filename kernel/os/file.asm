@@ -2237,6 +2237,7 @@ CreateHandleObj   Proc far
     mov es,bx
 ;
     InitHandle
+    mov es:hei_sys_sel,ds
     mov es:fhi_pos,0
 ;
     mov es:hei_delete_proc,OFFSET DeleteHandleObj

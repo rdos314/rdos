@@ -838,6 +838,7 @@ ohLegacy:
     OpenLegacyHandle
     jc ohFail
 ;
+    inc ds:hsi_ref_count
     call fword ptr ds:hsi_create_handle_proc
     jnc ohHandleOk
 
