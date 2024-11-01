@@ -904,6 +904,8 @@ CloseHandleObj     Proc near
     or ax,ax
     jz chOk
 ;
+    mov ebx,ds:hei_sys_index
+    FreeMem
     mov ds,eax
     EnterSection ds:hsi_section
     jmp chCheckSys
