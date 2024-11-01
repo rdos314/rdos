@@ -2628,6 +2628,22 @@ wkoDone:
 WriteKernelObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteKernelObj
+;
+;       DESCRIPTION:    Delete kernel file
+;
+;       PARAMETERS:     DS              Kernel interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteKernelObj    Proc far
+    clc
+    retf32
+DeleteKernelObj    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           CreateKernelObj
@@ -2646,6 +2662,7 @@ CreateKernelObj   Proc far
     push es
     push ebx
     push ecx
+    push edx
 ;
     mov eax,SIZE handle_kernel_interface
     AllocateSmallLinear
@@ -2659,9 +2676,10 @@ CreateKernelObj   Proc far
     mov es:hki_write_proc,OFFSET WriteKernelObj
     mov es:hki_write_proc+4,cs
 ;
-;    mov es:hki_delete_proc,OFFSET DeleteKernelSel
-;    mov es:hki_delete_proc+4,cs
+    mov es:hki_delete_proc,OFFSET DeleteKernelObj
+    mov es:hki_delete_proc+4,cs
 ;
+    pop edx
     pop ecx
     pop ebx
     pop es
