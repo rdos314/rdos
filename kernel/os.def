@@ -611,7 +611,6 @@ setup_nmi_core_dump_nr      = 581
 allocate_c_handle_nr        = 584
 close_legacy_file_nr        = 586
 ref_c_handle_nr             = 587
-set_legacy_file_size_nr     = 591
 get_legacy_file_time_nr     = 592
 set_legacy_file_time_nr     = 593
 

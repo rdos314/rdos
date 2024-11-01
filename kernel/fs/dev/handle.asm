@@ -1261,6 +1261,49 @@ GetHandleSizeObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetHandleSizeObj
+;
+;           DESCRIPTION:    Set handle size
+;
+;           PARAMETERS:     BX          Handle
+;                           EDX:EAX     Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetHandleSizeObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae shsFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz shsFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_set_size_proc
+    jmp shsDone
+
+shsFail:
+    stc
+
+shsDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+SetHandleSizeObj     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitSysHandle
 ;
 ;           DESCRIPTION:    Init sys object
@@ -1444,8 +1487,8 @@ write_handle32    ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_handle_pos32_name  DB 'Get C Handle Pos 32', 0
-get_handle_pos64_name  DB 'Get C Handle Pos 64', 0
+get_handle_pos32_name  DB 'Get Handle Pos 32', 0
+get_handle_pos64_name  DB 'Get Handle Pos 64', 0
 
 get_handle_pos32     Proc far
     push edx
@@ -1486,15 +1529,13 @@ get_handle_pos64     Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_handle_pos32_name  DB 'Set C Handle Pos 32', 0
-set_handle_pos64_name  DB 'Set C Handle Pos 64', 0
+set_handle_pos32_name  DB 'Set Handle Pos 32', 0
+set_handle_pos64_name  DB 'Set Handle Pos 64', 0
 
 set_handle_pos32     Proc far
     push edx
 ;
-    or edx,edx
-    jnz shpFail32
-;
+    xor edx,edx
     call SetHandlePosObj
     jnc shpDone32
 
@@ -1550,7 +1591,22 @@ get_handle_size32_name  DB 'Get C Handle Size 32', 0
 get_handle_size64_name  DB 'Get C Handle Size 64', 0
 
 get_handle_size32     Proc far
+    push edx
+;
     call GetHandleSizeObj
+    jc ghsFail32
+;
+    or edx,edx
+    jnz ghsFail32
+;
+    clc
+    jmp ghsDone32
+
+ghsFail32:
+    stc
+
+ghsDone32:
+    pop edx
     ret
 get_handle_size32     Endp        
 
@@ -1558,6 +1614,67 @@ get_handle_size64     Proc far
     call GetHandleSizeObj
     ret
 get_handle_size64     Endp        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetHandleSize
+;
+;           DESCRIPTION:    Set handle size
+;
+;           PARAMETERS:     BX          Handle
+;                           (EDX:)EAX   Position
+;
+;           RETURNS:        (EDX:)EAX   Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_handle_size32_name  DB 'Set Handle Size 32', 0
+set_handle_size64_name  DB 'Set Handle Size 64', 0
+
+set_handle_size32     Proc far
+    push edx
+;
+    or edx,edx
+    jnz shsFail32
+;
+    call SetHandleSizeObj
+    jnc shsDone32
+
+shsFail32:
+    call GetHandleSizeObj    
+    jc shsZero32
+;
+    stc
+    jmp shsDone32
+
+shsZero32:
+    xor eax,eax
+    stc
+
+shsDone32:
+    pop edx
+    ret
+set_handle_size32     Endp        
+
+set_handle_size64     Proc far
+    call SetHandleSizeObj
+    jnc shsDone64
+;
+    call GetHandleSizeObj
+    jc shsZero64
+;
+    stc
+    jmp shsDone64
+
+shsZero64:
+    xor eax,eax
+    xor edx,edx
+    stc
+
+shsDone64:
+    ret
+set_handle_size64     Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2147,6 +2264,18 @@ init_sys_handle     PROC near
     mov edi,OFFSET get_handle_size64_name
     xor cl,cl
     mov ax,get_handle_size64_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_size32
+    mov edi,OFFSET set_handle_size32_name
+    xor cl,cl
+    mov ax,set_handle_size32_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET set_handle_size64
+    mov edi,OFFSET set_handle_size64_name
+    xor cl,cl
+    mov ax,set_handle_size64_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate

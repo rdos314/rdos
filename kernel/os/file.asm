@@ -1714,43 +1714,6 @@ write_file      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           set_legacy_file_size
-;
-;           DESCRIPTION:    Set legacy file size
-;
-;           PARAMETERS:     BX              File selector
-;                           EAX             New size
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_legacy_file_size_name      DB 'Set Legacy File Size',0
-
-set_legacy_file_size Proc far
-    push ds
-    push eax
-    push edx
-;
-    or bx,bx
-    stc
-    jz scfsDone
-;
-    mov edx,eax
-    mov ds,bx
-    mov al,ds:file_drive
-    EnterWriteSection ds:file_size_section
-    CallFileSystem fs_set_file_size_proc
-    LeaveWriteSection ds:file_size_section
-
-scfsDone:
-    pop edx
-    pop eax
-    pop ds
-    retf32
-set_legacy_file_size Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           get_legacy_file_time
 ;
 ;           DESCRIPTION:    Get C file time & date
@@ -2276,6 +2239,44 @@ GetObjSize Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           SetObjSize
+;
+;           DESCRIPTION:    Set legacy file size
+;
+;           PARAMETERS:     DS              Handle interface
+;                           EDX:EAX         New size
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetObjSize Proc far
+    push ds
+    push eax
+    push ebx
+    push edx
+;
+    or edx,edx
+    stc
+    jnz sosDone
+;
+    mov edx,eax
+    mov bx,ds:hei_sys_sel
+    mov ds,bx
+    mov al,ds:file_drive
+    EnterWriteSection ds:file_size_section
+    CallFileSystem fs_set_file_size_proc
+    LeaveWriteSection ds:file_size_section
+
+sosDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop ds
+    retf32
+SetObjSize Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateHandleObj
 ;
 ;           DESCRIPTION:    Create new handle obj
@@ -2323,6 +2324,9 @@ CreateHandleObj   Proc far
 ;
     mov es:hei_get_size_proc,OFFSET GetObjSize
     mov es:hei_get_size_proc+4,cs
+;
+    mov es:hei_set_size_proc,OFFSET SetObjSize
+    mov es:hei_set_size_proc+4,cs
 ;
     mov es:hei_delete_proc,OFFSET DeleteHandleObj
     mov es:hei_delete_proc+4,cs
@@ -2501,12 +2505,6 @@ init_file       PROC near
     mov edi,OFFSET free_file_list_entry_name
     xor cl,cl
     mov ax,free_file_list_entry_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET set_legacy_file_size
-    mov edi,OFFSET set_legacy_file_size_name
-    xor cl,cl
-    mov ax,set_legacy_file_size_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_legacy_file_time

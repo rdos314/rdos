@@ -2639,12 +2639,6 @@ RefCHandle MACRO
     OsGate ref_c_handle_nr
                     ENDM
 
-; IN  BX        File selector
-; IN  EAX       File size
-SetLegacyFileSize MACRO
-    OsGate set_legacy_file_size_nr
-                    ENDM
-
 ; IN  BX            File selector
 ; OUT EDX:EAX       File time
 GetLegacyFileTime MACRO

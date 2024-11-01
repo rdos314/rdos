@@ -4401,73 +4401,6 @@ delete_file32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           GetVfsFileSize
-;
-;       DESCRIPTION:    Get VFS file size
-;
-;       PARAMETERS:     BX             Sys interface
-;
-;       RETRURNS:       EDX:EAX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public GetVfsFileSize
-
-GetVfsFileSize  Proc near
-    push ds
-    push edi
-;
-    mov ds,ebx
-    mov edi,ds:kf_info_linear
-    mov ax,flat_sel
-    mov ds,eax
-    mov eax,ds:[edi].fi_size
-    mov edx,ds:[edi].fi_size+4       
-;
-    pop edi
-    pop ds
-    ret
-GetVfsFileSize  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           SetVfsFileSize
-;
-;       DESCRIPTION:    Set VFS file size
-;
-;       PARAMETERS:     BX             Sys interface
-;                       SI             Proc interface
-;                       EDX:EAX        Size
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public SetVfsFileSize
-
-SetVfsFileSize  Proc near
-    push ds
-    push ecx
-;
-    push eax
-    GetThreadHandle
-    movzx ecx,ax
-    pop eax
-;
-    mov ds,ebx
-    mov ebx,REQ_SIZE
-    call AddReq
-;
-    WaitForSignal
-
-svfsDone:
-    pop ecx
-    pop ds
-    ret
-SetVfsFileSize  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           create_vfs_dir
 ;
 ;       DESCRIPTION:    Create VFS dir
@@ -4789,6 +4722,67 @@ SetPosSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetSizeSel
+;
+;       DESCRIPTION:    Get handle size
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        EDX:EAX         Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetSizeSel    Proc far
+    push ds
+    push edi
+;
+    mov ds,ds:hei_sys_sel
+    mov edi,ds:kf_info_linear
+    mov ax,flat_sel
+    mov ds,eax
+    mov eax,ds:[edi].fi_size
+    mov edx,ds:[edi].fi_size+4       
+;
+    pop edi
+    pop ds
+    ret
+GetSizeSel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetSizeSel
+;
+;       DESCRIPTION:    Set file size
+;
+;       PARAMETERS:     DS              Handle interface
+;                       EDX:EAX         Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSizeSel    Proc far
+    push ds
+    push ecx
+;
+    mov ds,ds:hei_sys_sel
+    push eax
+    GetThreadHandle
+    movzx ecx,ax
+    pop eax
+;
+    mov ebx,REQ_SIZE
+    call AddReq
+;
+    WaitForSignal
+;
+    pop ecx
+    pop ds
+    ret
+SetSizeSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DeleteHandleSel
 ;
 ;       DESCRIPTION:    Delete handle sel
@@ -4907,6 +4901,12 @@ chsLoop:
 ;
     mov es:hei_set_pos_proc, OFFSET SetPosSel
     mov es:hei_set_pos_proc+4,cs
+;
+    mov es:hei_get_size_proc, OFFSET GetSizeSel
+    mov es:hei_get_size_proc+4,cs
+;
+    mov es:hei_set_size_proc, OFFSET SetSizeSel
+    mov es:hei_set_size_proc+4,cs
 ;
     mov es:hei_delete_proc, OFFSET DeleteHandleSel
     mov es:hei_delete_proc+4,cs
