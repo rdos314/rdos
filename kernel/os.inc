@@ -2781,21 +2781,6 @@ CloseKernelHandle MACRO
     OsGate close_kernel_handle_nr
                     ENDM
 
-; IN  ES:EDI    Buffer
-; IN  ECX       Size
-; OUT ECX       Read size
-ReadCConsole MACRO
-    OsGate read_c_console_nr
-                    ENDM
-
-; IN  ES:EDI    Buffer
-; IN  ECX       Size
-; OUT EAX       Written size
-WriteCConsole MACRO
-    OsGate write_c_console_nr
-                    ENDM
-
-
 ; OUT BX       Console selector
 GetFocusConsole MACRO
     OsGate get_focus_console_nr

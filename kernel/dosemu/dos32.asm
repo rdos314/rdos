@@ -94,7 +94,7 @@ key_io  PROC far
     mov edi,edx
     movzx cx,byte ptr es:[edi]
     add edi,2
-    ReadCConsole
+;    ReadCConsole
     dec ax
     dec edi
     mov es:[edi],al

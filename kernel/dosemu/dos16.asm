@@ -94,7 +94,7 @@ key_io  PROC far
     mov di,dx
     movzx cx,byte ptr es:[di]
     add di,2
-    ReadCConsole
+;    ReadCConsole
     dec ax
     dec di
     mov es:[di],al

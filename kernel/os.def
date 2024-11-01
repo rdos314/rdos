@@ -618,8 +618,6 @@ get_legacy_file_size_nr     = 590
 set_legacy_file_size_nr     = 591
 get_legacy_file_time_nr     = 592
 set_legacy_file_time_nr     = 593
-read_c_console_nr           = 594
-write_c_console_nr          = 595
 open_legacy_kernel_file_nr  = 596
 
 fork_process_nr             = 597

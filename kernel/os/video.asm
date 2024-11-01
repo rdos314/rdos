@@ -4773,8 +4773,6 @@ WriteConCr ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_c_console_name  DB 'Write C Console',0
-
 write_con_tab:
 wcct00   DD OFFSET WriteConSkip
 wcct01   DD OFFSET WriteConOne
@@ -5292,8 +5290,6 @@ con_end_key     ENDP
 ;           RETURNS:        ECX           NUMBER OF READ CHARS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_c_console_name   DB 'Read C Console',0
 
 con_ext_key_buf_tab:
 dek00   DD OFFSET con_io_skip
@@ -5867,18 +5863,6 @@ init_video      PROC near
     mov edi,OFFSET create_output_handle_name
     xor cl,cl
     mov ax,create_output_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET read_c_console
-    mov edi,OFFSET read_c_console_name
-    xor cl,cl
-    mov ax,read_c_console_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET write_c_console
-    mov edi,OFFSET write_c_console_name
-    xor cl,cl
-    mov ax,write_c_console_nr
     RegisterOsGate
 ;
     mov esi,OFFSET query_video_mode
