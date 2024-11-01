@@ -2229,6 +2229,56 @@ DeleteHandleObj   Proc far
 DeleteHandleObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;           NAME:           ReadHandleObj
+;
+;           DESCRIPTION:    Reads from legacy file
+;
+;           PARAMETERS:     DS              Handle interface
+;                           ECX             Size
+;                           ES:EDI          Data buffer
+;
+;           RETURNS:        ECX             Bytes read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadHandleObj       Proc far
+    push eax
+    push ebx
+    push edx
+;
+    mov edx,ds:fhi_pos
+;
+    push ds
+    mov ds,ds:hei_sys_sel
+    mov al,ds:file_drive
+    test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+    jz rhoBuf
+;
+    CallFileSystem fs_read_file_proc
+    jmp rhoCheck
+
+rhoBuf:
+    call read_file
+
+rhoCheck:    
+    pop ds
+    jc rhoDone
+;
+    mov ecx,eax
+    add edx,ecx
+    mov ds:fhi_pos,edx
+    clc
+
+rhoDone:
+    pop edx
+    pop ebx
+    pop eax
+    retf32
+ReadHandleObj     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           CreateHandleObj
@@ -2263,6 +2313,9 @@ CreateHandleObj   Proc far
     InitHandle
     mov es:hei_sys_sel,ds
     mov es:fhi_pos,0
+;
+    mov es:hei_read_proc,OFFSET ReadHandleObj
+    mov es:hei_read_proc+4,cs
 ;
     mov es:hei_delete_proc,OFFSET DeleteHandleObj
     mov es:hei_delete_proc+4,cs
