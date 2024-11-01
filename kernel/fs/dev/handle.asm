@@ -207,21 +207,17 @@ aphDone:
     pop ds
     ret
 apply_proc_handle Endp
-
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateSysObj
+;           NAME:           InitSysObj
 ;
-;           DESCRIPTION:    Create sys object
+;           DESCRIPTION:    Init sys object
 ;
-;           PARAMETERS:     EAX        Size of object
-;
-;           RETURNS:        DS         Sys interface
+;           PARAMETERS:     ES         Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CreateSysObj
 
 cr_proc_fail    Proc far
     stc
@@ -233,33 +229,24 @@ del_sys_fail    Proc far
     ret
 del_sys_fail    Endp
 
-CreateSysObj    Proc near
-    push es
+InitSysObj  Proc near
     push eax
     push ecx
-    push esi
     push edi
 ;
-    mov esi,eax
-    mov ax,8
-    CreateBlk
+    mov es:hsi_create_proc_proc,OFFSET cr_proc_fail
+    mov es:hsi_create_proc_proc+4,cs
 ;
-    mov ds:hsi_create_proc_proc,OFFSET cr_proc_fail
-    mov ds:hsi_create_proc_proc+4,cs
+    mov es:hsi_create_kernel_proc,OFFSET cr_proc_fail
+    mov es:hsi_create_kernel_proc+4,cs
 ;
-    mov ds:hsi_create_kernel_proc,OFFSET cr_proc_fail
-    mov ds:hsi_create_kernel_proc+4,cs
+    mov es:hsi_delete_proc,OFFSET del_sys_fail
+    mov es:hsi_delete_proc+4,cs
 ;
-    mov ds:hsi_delete_proc,OFFSET del_sys_fail
-    mov ds:hsi_delete_proc+4,cs
-;
-    mov ds:hsi_kernel_sel,0
-    mov ds:hsi_ref_count,0
-    mov ds:hsi_index,0
-    InitSection ds:hsi_section
-;
-    mov eax,ds
-    mov es,eax
+    mov es:hsi_kernel_sel,0
+    mov es:hsi_ref_count,0
+    mov es:hsi_index,0
+    InitSection es:hsi_section
 ;
     mov edi,OFFSET hsi_proc_arr
     xor eax,eax
@@ -277,6 +264,41 @@ CreateSysObj    Proc near
     rep stosd
 ;
     pop edi
+    pop ecx
+    pop eax
+    ret
+InitSysObj  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSysObj
+;
+;           DESCRIPTION:    Create sys object
+;
+;           PARAMETERS:     EAX        Size of object
+;
+;           RETURNS:        DS         Sys interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateSysObj
+
+CreateSysObj    Proc near
+    push es
+    push eax
+    push ecx
+    push esi
+;
+    mov esi,eax
+    mov ax,8
+    CreateBlk
+;
+    mov eax,ds
+    mov es,eax
+;
+    call InitSysObj
+;
     pop esi
     pop ecx
     pop eax
@@ -1176,6 +1198,24 @@ SetHandlePosObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InitSysHandle
+;
+;           DESCRIPTION:    Init sys object
+;
+;           PARAMETERS:     ES         Sys interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_sys_handle_name  DB 'Init Sys Handle', 0
+
+init_sys_handle_pr     Proc far
+    call InitSysObj
+    ret
+init_sys_handle_pr     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           InitHandle
 ;
 ;           DESCRIPTION:    Init handle object
@@ -1887,6 +1927,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET init_handle_name
     xor cl,cl
     mov ax,init_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET init_sys_handle_pr
+    mov edi,OFFSET init_sys_handle_name
+    xor cl,cl
+    mov ax,init_sys_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET allocate_sys_handle

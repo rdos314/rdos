@@ -511,6 +511,7 @@ req_file_block_loop:
     add eax,SIZE file_data_struc - 4
     AllocateSmallGlobalMem
     mov es:file_dir_sel,ds
+    InitSysHandle
 ;
     mov ax,es
     mov ds,ax
@@ -532,6 +533,8 @@ req_file_skip_lists:
     mov eax,SIZE file_data_struc - 4
     AllocateSmallGlobalMem
     mov es:file_dir_sel,ds
+    InitSysHandle
+;
     mov ax,es
     mov ds,ax
     mov ds:file_block_size,0

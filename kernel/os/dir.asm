@@ -2104,6 +2104,7 @@ olhOpen:
 olhHandle:
     call ParseEnd
 ;
+    int 3
     mov ds,bx
     EnterSection ds:hsi_section
 ;
