@@ -203,7 +203,6 @@ code    SEGMENT byte public 'CODE'
     extern GetRelDir:near
     extern FileHandleToPartFs:near
     extern AllocateLocalSysHandle:near
-    extern AllocateProcHandle:near
     extern VfsRead:near
     extern VfsWrite:near
     extern KernelRead:near
@@ -4312,7 +4311,7 @@ dkvfModOk:
     LeaveSection ds:kf_section
 ;
 ;    call AllocateUserHandle
-    call AllocateProcHandle
+;    call AllocateProcHandle
     jnc dkvfModHOk
 ;
     int 3

@@ -1946,7 +1946,7 @@ test_gate    Proc far
     mov es,ecx
     mov edi,OFFSET test_file
     mov cx,O_RDWR
-    OpenNewKernelHandle
+    OpenKernelHandle
     jc tgDone
 ;
     mov eax,1024
@@ -1956,22 +1956,22 @@ test_gate    Proc far
     xor edx,edx
     xor eax,eax
     mov ecx,25
-    ReadNewKernelHandle
+    ReadKernelHandle
 ;
     mov eax,15667
     mov ecx,25
-    ReadNewKernelHandle
+    ReadKernelHandle
 ;
     mov eax,98877
     mov ecx,25
-    ReadNewKernelHandle
+    ReadKernelHandle
 ;
     mov eax,5546
     mov ecx,25
-    ReadNewKernelHandle
+    ReadKernelHandle
 ;
     mov ecx,123
-    CloseNewKernelHandle
+    CloseKernelHandle
 
 tgDone:
     pop edi
@@ -2065,88 +2065,88 @@ init_sys_handle     PROC near
     mov esi,OFFSET open_kernel_handle
     mov edi,OFFSET open_kernel_handle_name
     xor cl,cl
-    mov ax,open_new_kernel_handle_nr
+    mov ax,open_kernel_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET close_kernel_handle
     mov edi,OFFSET close_kernel_handle_name
     xor cl,cl
-    mov ax,close_new_kernel_handle_nr
+    mov ax,close_kernel_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET read_kernel_handle
     mov edi,OFFSET read_kernel_handle_name
     xor cl,cl
-    mov ax,read_new_kernel_handle_nr
+    mov ax,read_kernel_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET write_kernel_handle
     mov edi,OFFSET write_kernel_handle_name
     xor cl,cl
-    mov ax,write_new_kernel_handle_nr
+    mov ax,write_kernel_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16
     mov esi,OFFSET open_handle32
     mov edi,OFFSET open_handle_name
     mov dx,virt_es_in
-    mov ax,open_new_handle_nr
+    mov ax,open_handle_nr
     RegisterUserGate
 ;
     mov esi,OFFSET close_handle
     mov edi,OFFSET close_handle_name
     xor cl,cl
-    mov ax,close_new_handle_nr
+    mov ax,close_handle_nr
     RegisterBimodalUserGate
 ;
     mov ebx,OFFSET read_handle16
     mov esi,OFFSET read_handle32
     mov edi,OFFSET read_handle_name
     mov dx,virt_es_in
-    mov ax,read_new_handle_nr
+    mov ax,read_handle_nr
     RegisterUserGate
 ;
     mov ebx,OFFSET write_handle16
     mov esi,OFFSET write_handle32
     mov edi,OFFSET write_handle_name
     mov dx,virt_es_in
-    mov ax,write_new_handle_nr
+    mov ax,write_handle_nr
     RegisterUserGate
 ;
     mov esi,OFFSET get_handle_pos32
     mov edi,OFFSET get_handle_pos32_name
     xor cl,cl
-    mov ax,get_new_handle_pos32_nr
+    mov ax,get_handle_pos32_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_handle_pos64
     mov edi,OFFSET get_handle_pos64_name
     xor cl,cl
-    mov ax,get_new_handle_pos64_nr
+    mov ax,get_handle_pos64_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET set_handle_pos32
     mov edi,OFFSET set_handle_pos32_name
     xor cl,cl
-    mov ax,set_new_handle_pos32_nr
+    mov ax,set_handle_pos32_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET set_handle_pos64
     mov edi,OFFSET set_handle_pos64_name
     xor cl,cl
-    mov ax,set_new_handle_pos64_nr
+    mov ax,set_handle_pos64_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_handle_size32
     mov edi,OFFSET get_handle_size32_name
     xor cl,cl
-    mov ax,get_new_handle_size32_nr
+    mov ax,get_handle_size32_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_handle_size64
     mov edi,OFFSET get_handle_size64_name
     xor cl,cl
-    mov ax,get_new_handle_size64_nr
+    mov ax,get_handle_size64_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET test_gate
