@@ -4511,7 +4511,6 @@ mdf32Done:
     ret
 make_dir32  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -4641,6 +4640,65 @@ WriteHandleSel    Proc far
     pop ds
     ret
 WriteHandleSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           PollHandleSel
+;
+;       DESCRIPTION:    Poll handle
+;
+;       PARAMETERS:     DS              Handle interface
+;                       ES:EDI          Buffer
+;                       ECX             Size
+;
+;       RETURNS:        ECX             Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollHandleSel    Proc far
+    push ds
+    push fs
+    push ebx
+    push edx
+    push esi
+    push ebp
+;
+    mov ebp,ds:hf_user_handle
+    mov ds,ds:hei_proc_sel
+    mov bx,flat_data_sel
+    mov fs,ebx
+;
+    dec ebp
+    shl ebp,3
+;
+    mov esi,ds:pf_map_linear
+    mov eax,fs:[esi].fm_handle_ptr
+    add eax,OFFSET fh_pos_arr
+    add ebp,eax
+    mov eax,fs:[ebp]
+    mov edx,fs:[ebp+4]
+;
+    push eax
+    push edx
+    push ebp
+;
+    mov ebx,ds
+    xor ebp,ebp
+    call VfsRead
+;
+    pop ebp
+    pop edx
+    pop eax
+;
+    pop ebp
+    pop esi
+    pop edx
+    pop ebx
+    pop fs
+    pop ds
+    ret
+PollHandleSel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4779,6 +4837,35 @@ SetSizeSel    Proc far
     pop ds
     ret
 SetSizeSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetCreateSel
+;
+;       DESCRIPTION:    Get handle create time
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        EDX:EAX         Tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCreateSel    Proc far
+    push ds
+    push edi
+;
+    mov ds,ds:hei_sys_sel
+    mov edi,ds:kf_info_linear
+    mov ax,flat_sel
+    mov ds,eax
+    mov eax,ds:[edi].fi_create
+    mov edx,ds:[edi].fi_create+4       
+;
+    pop edi
+    pop ds
+    ret
+GetCreateSel  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4954,6 +5041,9 @@ chsLoop:
     mov es:hei_write_proc, OFFSET WriteHandleSel
     mov es:hei_write_proc+4,cs
 ;
+    mov es:hei_poll_proc, OFFSET PollHandleSel
+    mov es:hei_poll_proc+4,cs
+;
     mov es:hei_get_pos_proc, OFFSET GetPosSel
     mov es:hei_get_pos_proc+4,cs
 ;
@@ -4965,6 +5055,9 @@ chsLoop:
 ;
     mov es:hei_set_size_proc, OFFSET SetSizeSel
     mov es:hei_set_size_proc+4,cs
+;
+    mov es:hei_get_create_time_proc, OFFSET GetCreateSel
+    mov es:hei_get_create_time_proc+4,cs
 ;
     mov es:hei_get_modify_time_proc, OFFSET GetModifySel
     mov es:hei_get_modify_time_proc+4,cs
