@@ -2550,6 +2550,47 @@ CreateHandleObj   Proc far
 CreateHandleObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateKernelObj
+;
+;           DESCRIPTION:    Create new kernel obj
+;
+;           PARAMETERS:     DS     Sys interface
+;
+;           RETURNS:        AX     Kernel interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateKernelObj
+
+CreateKernelObj   Proc far
+    push es
+    push ebx
+    push ecx
+;
+    mov eax,SIZE handle_kernel_interface
+    AllocateSmallLinear
+;
+    CreateKernelHandle
+    mov es,ax
+;
+;    mov es:hki_read_proc,OFFSET ReadKernelSel
+;    mov es:hki_read_proc+4,cs
+;
+;    mov es:hki_write_proc,OFFSET WriteKernelSel
+;    mov es:hki_write_proc+4,cs
+;
+;    mov es:hki_delete_proc,OFFSET DeleteKernelSel
+;    mov es:hki_delete_proc+4,cs
+;
+    pop ecx
+    pop ebx
+    pop es
+    retf32
+CreateKernelObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;           NAME:           Init

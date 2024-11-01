@@ -2577,6 +2577,15 @@ InitSysHandle MACRO
     OsGate init_sys_handle_nr
                     ENDM
 
+; IN  DS         Sys interface
+; IN  EAX        Size of object
+; IN  EDX        Linear address of object        
+; OUT AX         Kernel interface
+CreateKernelHandle MACRO
+    OsGate create_kernel_handle_nr
+                    ENDM
+
+
 ; IN  DS       Sys interface
 ; OUT EBX      Sys handle
 AllocateSysHandle MACRO

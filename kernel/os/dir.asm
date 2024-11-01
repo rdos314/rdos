@@ -77,6 +77,7 @@ code    SEGMENT byte public use16 'CODE'
     extrn RequestFileSel:near
     extrn ReleaseFileSel:near
     extrn CreateHandleObj:far
+    extrn CreateKernelObj:far
     extrn CloseSysObj:far
 
 char_tab:
@@ -2119,6 +2120,9 @@ olhHandle:
 olhNew:
     mov ds:hsi_create_handle_proc,OFFSET CreateHandleObj
     mov ds:hsi_create_handle_proc+4,cs
+;
+    mov ds:hsi_create_kernel_proc,OFFSET CreateKernelObj
+    mov ds:hsi_create_kernel_proc+4,cs
 ;
     mov ds:hsi_delete_proc,OFFSET CloseSysObj
     mov ds:hsi_delete_proc+4,cs

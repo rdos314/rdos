@@ -1551,6 +1551,28 @@ CreateKernelObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CreateKernelHandle
+;
+;           DESCRIPTION:    Create kernel handle
+;
+;           PARAMETERS:     DS         Sys interface
+;                           EAX        Size of object
+;                           EDX        Linear address of object        
+;                           
+;           RETURNS:        AX         Kernel interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_kernel_handle_name  DB 'Create Kernel Handle', 0
+
+create_kernel_handle     Proc far
+    call CreateKernelObj
+    ret
+create_kernel_handle     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenKernelHandle
 ;
 ;           DESCRIPTION:    Open kernel handle
@@ -1956,6 +1978,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET allocate_sys_handle_name
     xor cl,cl
     mov ax,allocate_sys_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET create_kernel_handle
+    mov edi,OFFSET create_kernel_handle_name
+    xor cl,cl
+    mov ax,create_kernel_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_kernel_handle
