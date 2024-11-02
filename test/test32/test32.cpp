@@ -78,6 +78,9 @@ void main()
     RdosCloseHandle(handle);
     RdosCloseHandle(handle2);
 
+    handle = RdosOpenHandle("e:/test.txt", O_RDWR);
+    RdosCloseHandle(handle);
+
     delete buf;
 
 /*
