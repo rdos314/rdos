@@ -87,6 +87,55 @@ code    SEGMENT byte public 'CODE'
     extern OpenVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenToIo
+;
+;       DESCRIPTION:    Convert open flags to IO flags
+;
+;       PARAMETERS:     CX              Open flags
+;
+;       RETURNS:        AX              IO flags
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenToIo      Proc near
+    mov al,cl
+    and al,3
+    cmp al,O_RDWR
+    je otiRdWr
+;
+    cmp al,O_RDONLY
+    je otiRdOnly
+;
+    cmp al,O_WRONLY
+    je otiWrOnly
+;
+    xor ax,ax
+    jmp otiAccessOk
+
+otiRdWr:
+    mov ax,IO_READ OR IO_WRITE
+    jmp otiAccessOk
+
+otiRdOnly:
+    mov ax,IO_READ
+    jmp otiAccessOk
+
+otiWrOnly:
+    mov ax,IO_WRITE
+
+otiAccessOk:
+    test cx,O_APPEND
+    jz otiAppendOk
+;
+    or ax,IO_APPEND 
+
+otiAppendOk:
+    ret
+OpenToIo  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           CreateProcHandle
@@ -843,6 +892,8 @@ ohCheckTrunc:
     SetHandleSize64
 
 ohSizeOk:
+    call OpenToIo
+    mov ds:hei_io_mode,ax
     clc
     jmp ohDone
 
@@ -1071,6 +1122,9 @@ GetHandleMapObj     Proc near
     jz ghmFail
 ;
     mov ds,esi
+    test ds:hei_io_mode,IO_READ
+    jz ghmFail
+;
     call fword ptr ds:hei_get_map_proc
     jnc ghmDone
 
@@ -1117,6 +1171,9 @@ MapHandleObj     Proc near
     jz mhFail
 ;
     mov ds,esi
+    test ds:hei_io_mode,IO_READ
+    jz mhFail
+;
     call fword ptr ds:hei_map_proc
     jnc mhDone
 
@@ -1248,6 +1305,9 @@ ReadHandleObj     Proc near
     jz rhFail
 ;
     mov ds,esi
+    test ds:hei_io_mode,IO_READ
+    jz rhFail
+;
     call fword ptr ds:hei_read_proc
     mov eax,ecx
     jnc rhDone
@@ -1296,6 +1356,9 @@ WriteHandleObj     Proc near
     jz whFail
 ;
     mov ds,esi
+    test ds:hei_io_mode,IO_WRITE
+    jz whFail
+;
     call fword ptr ds:hei_write_proc
     mov eax,ecx
     jnc whDone
@@ -1344,6 +1407,9 @@ PollHandleObj     Proc near
     jz phFail
 ;
     mov ds,esi
+    test ds:hei_io_mode,IO_READ
+    jz phFail
+;
     call fword ptr ds:hei_poll_proc
     mov eax,ecx
     jnc phDone

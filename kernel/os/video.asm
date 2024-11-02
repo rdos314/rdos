@@ -5663,6 +5663,8 @@ create_input_handle        Proc far
     mov es:hei_input_size_proc,OFFSET input_size
     mov es:hei_input_size_proc+4,cs
 ;
+    mov es:hei_io_mode,IO_READ OR IO_ISTTY
+;
     mov eax,es
 ;
     pop ecx
@@ -5707,6 +5709,8 @@ create_output_handle        Proc far
 ;
     mov es:hei_output_size_proc,OFFSET output_size
     mov es:hei_output_size_proc+4,cs
+;
+    mov es:hei_io_mode,IO_WRITE OR IO_ISTTY
 ;
     mov eax,es
 ;

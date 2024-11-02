@@ -81,7 +81,6 @@ handle_proc_interface    ENDS
 handle_entry_interface    STRUC
 
 ;  IN	DS                Handle entry interface
-;  IN   CX                Access
 ;  OUT  AX                New interface
 hei_dup_proc              DD ?,?
 
@@ -114,12 +113,6 @@ hei_poll_proc             DD ?,?
 ;  IN   ECX               Size
 ;  OUT  EAX               Read count
 hei_read_proc             DD ?,?
-
-;  IN	DS                Handle entry interface
-;  IN   ES:EDI            Buffer
-;  IN   ECX               Size
-;  OUT  EAX               Read count
-hei_poll_proc             DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN   ES:EDI            Buffer
@@ -182,6 +175,7 @@ hei_output_size_proc      DD ?,?
 ;  IN	DS                Handle entry interface
 hei_delete_proc           DD ?,?
 
+hei_io_mode               DW ?
 hei_ref_count             DW ?
 hei_index                 DD ?
 hei_proc_index            DD ?
