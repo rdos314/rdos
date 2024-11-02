@@ -5591,7 +5591,6 @@ device_ok      Proc far
 device_ok      Endp
 
 dup_handle      Proc far
-    inc ds:hei_ref_count
     mov eax,ds
     clc
     ret

@@ -951,14 +951,6 @@ CloseHandleObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae chFail
 ;
-    mov ax,ds:[2*ebx].ph_arr
-    or ax,ax
-    jz chFail
-;
-    mov es,eax
-    sub es:hei_ref_count,1
-    jnz chOk
-;
     xor ax,ax
     xchg ax,ds:[2*ebx].ph_arr
     or ax,ax
@@ -968,6 +960,9 @@ CloseHandleObj     Proc near
     jnc chFail
 ;
     mov ds,eax
+    sub ds:hei_ref_count,1
+    jnz chOk
+;
     mov es,eax
     call fword ptr ds:hei_delete_proc
 ;
