@@ -5590,6 +5590,13 @@ device_ok      Proc far
     ret
 device_ok      Endp
 
+dup_handle      Proc far
+    inc ds:hei_ref_count
+    mov eax,ds
+    clc
+    ret
+dup_handle      Endp
+
 input_size     Proc far
     PollKeyboard
     jnc is1
@@ -5651,6 +5658,9 @@ create_input_handle        Proc far
 ;
     InitHandle
 ;
+    mov es:hei_dup_proc,OFFSET dup_handle
+    mov es:hei_dup_proc+4,cs
+;
     mov es:hei_read_proc,OFFSET read_c_console
     mov es:hei_read_proc+4,cs
 ;
@@ -5697,6 +5707,9 @@ create_output_handle        Proc far
     AllocateSmallGlobalMem
 ;
     InitHandle
+;
+    mov es:hei_dup_proc,OFFSET dup_handle
+    mov es:hei_dup_proc+4,cs
 ;
     mov es:hei_write_proc,OFFSET write_c_console
     mov es:hei_write_proc+4,cs

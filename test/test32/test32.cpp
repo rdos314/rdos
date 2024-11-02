@@ -38,31 +38,37 @@ void main()
     int size;
     int dummy;
     long long pos;
-    int handle2 = RdosOpenNewHandle("b:/safe.bin", O_RDWR);
-    int handle = RdosOpenNewHandle("b:/safe.bin", O_RDWR);
+    int handle2 = RdosOpenHandle("e:/test.txt", O_RDWR);
+    int handle;
 
-//    size = RdosReadNewHandle(0, buf, 267);
-    RdosWriteNewHandle(1, "Test of output\r\n", 16);
-    RdosWriteNewHandle(2, "Test of error\r\n", 15);
+    handle = RdosDupHandle(0);
+    size = RdosReadHandle(handle, buf, 267);
+    RdosCloseHandle(handle);
 
-    size = RdosGetNewHandleSize(handle);
-    size = RdosGetNewHandleSize(handle2);
+    handle = RdosDupHandle(1);
+    RdosWriteHandle(handle, "Test of redir output\r\n", 16);
+    RdosCloseHandle(handle);
 
-    size = RdosReadNewHandle(handle, buf, 267);
+    handle = RdosOpenHandle("e:/test.txt", O_RDWR);
+
+    size = RdosGetHandleSize(handle);
+    size = RdosGetHandleSize(handle2);
+
+    size = RdosReadHandle(handle, buf, 267);
 
     RdosTestGate(buf);
 
-    RdosSetNewHandlePos(handle, 500234);
-    size = RdosReadNewHandle(handle, buf, 267);
+    RdosSetHandlePos(handle, 500234);
+    size = RdosReadHandle(handle, buf, 267);
 
-    pos = RdosGetNewHandlePos(handle);
-    pos = RdosGetNewHandlePos(handle2);
+    pos = RdosGetHandlePos(handle);
+    pos = RdosGetHandlePos(handle2);
 
-    RdosSetNewHandlePos(handle, 1000234);
-    size = RdosReadNewHandle(handle, buf, 99);
+    RdosSetHandlePos(handle, 1000234);
+    size = RdosReadHandle(handle, buf, 99);
 
-    RdosSetNewHandlePos(handle, 1000234);
-    size = RdosReadNewHandle(handle, buf, 567);
+    RdosSetHandlePos(handle, 1000234);
+    size = RdosReadHandle(handle, buf, 567);
 
 
 
@@ -70,11 +76,11 @@ void main()
 
     scanf("%d", &dummy);
 
-    RdosSetNewHandlePos(handle, 760234);
-    size = RdosReadNewHandle(handle, buf, 455);
+    RdosSetHandlePos(handle, 760234);
+    size = RdosReadHandle(handle, buf, 455);
 
-    RdosCloseNewHandle(handle);
-    RdosCloseNewHandle(handle2);
+    RdosCloseHandle(handle);
+    RdosCloseHandle(handle2);
 
     delete buf;
 
