@@ -1089,6 +1089,55 @@ chDone:
     pop ds
     ret
 CloseHandleObj     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DupHandleObj
+;
+;           DESCRIPTION:    Dup handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EBX         New handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DupHandleObj   Proc near
+    push ds
+    push eax
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae dhFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz dhFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_dup_proc
+    jc dhFail
+;
+    mov ds,eax
+    inc ds:hei_ref_count
+    call AllocateUserHandle
+    jnc dhDone
+
+dhFail:
+    stc
+
+dhDone:
+    pop esi
+    pop eax
+    pop ds
+    ret
+DupHandleObj   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1228,6 +1277,7 @@ uhmDone:
     pop ds
     ret
 UpdateHandleMapObj     Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1971,6 +2021,26 @@ close_handle     Proc far
     call CloseHandleObj
     ret
 close_handle     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DupHandle
+;
+;           DESCRIPTION:    Dup C handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        EBX         New handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dup_handle_name  DB 'Dup C Handle', 0
+
+dup_handle     Proc far
+    call DupHandleObj
+    ret
+dup_handle     Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2817,7 +2887,6 @@ wkhDone:
     ret
 write_kernel_handle Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3424,6 +3493,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET close_handle_name
     xor cl,cl
     mov ax,close_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET dup_handle
+    mov edi,OFFSET dup_handle_name
+    xor cl,cl
+    mov ax,dup_handle_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_handle_map
