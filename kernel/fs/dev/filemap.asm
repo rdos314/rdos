@@ -5283,8 +5283,9 @@ dusLoop:
     lock bts es:[edx],ebx
     jc dusLoop
 ;
-    add ebx,esi
+    inc ds:hpi_ref_count
 ;
+    add ebx,esi
     mov esi,ebx
     mov edx,ds:pf_map_linear
     mov edx,es:[edx].fm_handle_ptr
