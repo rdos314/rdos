@@ -38,7 +38,7 @@ void main()
     int size;
     int dummy;
     long long pos;
-    int handle2 = RdosOpenHandle("e:/test.txt", O_RDWR);
+    int handle2 = RdosOpenHandle("d:/log/9.log", O_RDWR);
     int handle;
 
     RdosSetHandlePos(handle2, 25);

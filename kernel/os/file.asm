@@ -2341,22 +2341,21 @@ IsObjEof Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateHandleObj
+;           NAME:           AllocateObj
 ;
 ;           DESCRIPTION:    Create new handle obj
 ;
 ;           PARAMETERS:     DS     Sys interface
 ;
-;           RETURNS:        AX     Handle interface
+;           RETURNS:        ES     Handle interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public CreateHandleObj
-
-CreateHandleObj   Proc far
-    push es
+AllocateObj   Proc near
+    push eax
     push ebx
     push ecx
+    push edx
 ;
     mov eax,SIZE file_handle_interface
     AllocateSmallLinear
@@ -2373,6 +2372,9 @@ CreateHandleObj   Proc far
     InitHandle
     mov es:hei_sys_sel,ds
     mov es:fhi_pos,0
+;
+    mov es:hei_dup_proc,OFFSET DupObj
+    mov es:hei_dup_proc+4,cs
 ;
     mov es:hei_read_proc,OFFSET ReadHandleObj
     mov es:hei_read_proc+4,cs
@@ -2413,10 +2415,72 @@ CreateHandleObj   Proc far
     mov es:hei_delete_proc,OFFSET DeleteHandleObj
     mov es:hei_delete_proc+4,cs
 ;
-    mov ax,es
-;
+    pop edx
     pop ecx
     pop ebx
+    pop eax
+    ret
+AllocateObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DupObj
+;
+;           DESCRIPTION:    Dup handle obj
+;
+;           PARAMETERS:     DS              Handle interface
+;                   
+;           RETURNS:        AX              New handle interface
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DupObj Proc far
+    push ds
+    push es
+;
+    mov eax,ds:fhi_pos
+    mov ds,ds:hei_sys_sel
+;
+    EnterSection ds:hsi_section
+    inc ds:hsi_ref_count
+    LeaveSection ds:hsi_section
+;
+    call AllocateObj
+    mov es:fhi_pos,eax
+;
+    mov eax,ds:hsi_index
+    mov es:hei_sys_index,eax
+    mov ax,es
+    clc
+;
+    pop es
+    pop ds
+    retf32
+DupObj Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateHandleObj
+;
+;           DESCRIPTION:    Create new handle obj
+;
+;           PARAMETERS:     DS     Sys interface
+;
+;           RETURNS:        AX     Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateHandleObj
+
+CreateHandleObj   Proc far
+    push es
+;
+    call AllocateObj
+    mov ax,es
+;
     pop es
     retf32
 CreateHandleObj   Endp
