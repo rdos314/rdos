@@ -41,15 +41,11 @@ void main()
     int handle2 = RdosOpenHandle("e:/test.txt", O_RDWR);
     int handle;
 
-    handle = RdosDupHandle(0);
-    size = RdosReadHandle(handle, buf, 267);
-    RdosCloseHandle(handle);
+    RdosSetHandlePos(handle2, 25);
+    handle = RdosDupHandle(handle2);
 
-    handle = RdosDupHandle(1);
-    RdosWriteHandle(handle, "Test of redir output\r\n", 16);
-    RdosCloseHandle(handle);
-
-    handle = RdosOpenHandle("e:/test.txt", O_RDWR);
+    pos = RdosGetHandlePos(handle);
+    pos = RdosGetHandlePos(handle2);
 
     size = RdosGetHandleSize(handle);
     size = RdosGetHandleSize(handle2);

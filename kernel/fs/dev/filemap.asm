@@ -5155,6 +5155,187 @@ DeleteHandleSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           InitHandleSel
+;
+;       DESCRIPTION:    Init handle sel
+;
+;       PARAMETERS:     ES              Handle interface
+;                       EBX             Map index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitHandleSel   Proc near
+    inc ebx
+    mov es:hf_user_handle,ebx
+;
+    mov es:hei_dup_proc, OFFSET DupSel
+    mov es:hei_dup_proc+4,cs
+;
+    mov es:hei_get_map_proc, OFFSET GetMapSel
+    mov es:hei_get_map_proc+4,cs
+;
+    mov es:hei_map_proc, OFFSET MapSel
+    mov es:hei_map_proc+4,cs
+;
+    mov es:hei_update_map_proc, OFFSET UpdateMapSel
+    mov es:hei_update_map_proc+4,cs
+;
+    mov es:hei_grow_map_proc, OFFSET GrowMapSel
+    mov es:hei_grow_map_proc+4,cs
+;
+    mov es:hei_read_proc, OFFSET ReadHandleSel
+    mov es:hei_read_proc+4,cs
+;
+    mov es:hei_write_proc, OFFSET WriteHandleSel
+    mov es:hei_write_proc+4,cs
+;
+    mov es:hei_poll_proc, OFFSET PollHandleSel
+    mov es:hei_poll_proc+4,cs
+;
+    mov es:hei_get_pos_proc, OFFSET GetPosSel
+    mov es:hei_get_pos_proc+4,cs
+;
+    mov es:hei_set_pos_proc, OFFSET SetPosSel
+    mov es:hei_set_pos_proc+4,cs
+;
+    mov es:hei_get_size_proc, OFFSET GetSizeSel
+    mov es:hei_get_size_proc+4,cs
+;
+    mov es:hei_set_size_proc, OFFSET SetSizeSel
+    mov es:hei_set_size_proc+4,cs
+;
+    mov es:hei_get_create_time_proc, OFFSET GetCreateSel
+    mov es:hei_get_create_time_proc+4,cs
+;
+    mov es:hei_get_modify_time_proc, OFFSET GetModifySel
+    mov es:hei_get_modify_time_proc+4,cs
+;
+    mov es:hei_get_access_time_proc, OFFSET GetAccessSel
+    mov es:hei_get_access_time_proc+4,cs
+;
+    mov es:hei_is_eof_proc, OFFSET IsEofSel
+    mov es:hei_is_eof_proc+4,cs
+;
+    mov es:hei_delete_proc, OFFSET DeleteHandleSel
+    mov es:hei_delete_proc+4,cs
+;
+    ret
+InitHandleSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DupSel
+;
+;       DESCRIPTION:    Dup handle sel
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        NC
+;                         AX            Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DupSel      Proc far
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov bx,flat_data_sel
+    mov es,ebx
+;
+    mov ax,ds:hei_io_mode
+    push eax
+;
+    mov eax,ds:hf_user_handle
+    dec eax
+    shl eax,3
+;
+    mov ds,ds:hei_proc_sel
+    mov esi,ds:pf_map_linear
+;
+    mov edx,es:[esi].fm_handle_ptr
+    add edx,OFFSET fh_pos_arr
+    add edx,eax
+    mov eax,es:[edx]
+    mov edx,es:[edx+4]
+;
+    push edx
+    push eax
+;
+    mov edx,es:[esi].fm_handle_ptr
+    add edx,OFFSET fh_bitmap
+    mov ecx,15
+    xor esi,esi
+
+dusLoop:
+    mov eax,es:[edx]
+    cmp eax,-1
+    je dusNext
+;
+    not eax
+    bsf ebx,eax
+;
+    lock bts es:[edx],ebx
+    jc dusLoop
+;
+    add ebx,esi
+;
+    mov esi,ebx
+    mov edx,ds:pf_map_linear
+    mov edx,es:[edx].fm_handle_ptr
+    shl esi,3
+    add edx,esi
+    add edx,OFFSET fh_pos_arr
+;
+    pop eax
+    mov es:[edx],eax
+    add edx,4
+;
+    pop eax
+    mov es:[edx],eax
+;
+    mov eax,SIZE handle_file
+    AllocateSmallLinear
+;
+    call CreateHandleObj
+    mov es,eax
+;
+    call InitHandleSel
+;
+    pop eax
+    mov es:hei_io_mode,ax
+    mov eax,es
+    clc
+    jmp dusDone
+
+dusNext:
+    add esi,32
+    add edx,4
+    sub ecx,1
+    jnz dusLoop
+;
+    add esp,12
+    stc
+
+dusDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+DupSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CreateHandleSel
 ;
 ;       DESCRIPTION:    Create handle sel
@@ -5215,56 +5396,7 @@ chsLoop:
     call CreateHandleObj
     mov es,eax
 ;
-    inc ebx
-    mov es:hf_user_handle,ebx
-;
-    mov es:hei_get_map_proc, OFFSET GetMapSel
-    mov es:hei_get_map_proc+4,cs
-;
-    mov es:hei_map_proc, OFFSET MapSel
-    mov es:hei_map_proc+4,cs
-;
-    mov es:hei_update_map_proc, OFFSET UpdateMapSel
-    mov es:hei_update_map_proc+4,cs
-;
-    mov es:hei_grow_map_proc, OFFSET GrowMapSel
-    mov es:hei_grow_map_proc+4,cs
-;
-    mov es:hei_read_proc, OFFSET ReadHandleSel
-    mov es:hei_read_proc+4,cs
-;
-    mov es:hei_write_proc, OFFSET WriteHandleSel
-    mov es:hei_write_proc+4,cs
-;
-    mov es:hei_poll_proc, OFFSET PollHandleSel
-    mov es:hei_poll_proc+4,cs
-;
-    mov es:hei_get_pos_proc, OFFSET GetPosSel
-    mov es:hei_get_pos_proc+4,cs
-;
-    mov es:hei_set_pos_proc, OFFSET SetPosSel
-    mov es:hei_set_pos_proc+4,cs
-;
-    mov es:hei_get_size_proc, OFFSET GetSizeSel
-    mov es:hei_get_size_proc+4,cs
-;
-    mov es:hei_set_size_proc, OFFSET SetSizeSel
-    mov es:hei_set_size_proc+4,cs
-;
-    mov es:hei_get_create_time_proc, OFFSET GetCreateSel
-    mov es:hei_get_create_time_proc+4,cs
-;
-    mov es:hei_get_modify_time_proc, OFFSET GetModifySel
-    mov es:hei_get_modify_time_proc+4,cs
-;
-    mov es:hei_get_access_time_proc, OFFSET GetAccessSel
-    mov es:hei_get_access_time_proc+4,cs
-;
-    mov es:hei_is_eof_proc, OFFSET IsEofSel
-    mov es:hei_is_eof_proc+4,cs
-;
-    mov es:hei_delete_proc, OFFSET DeleteHandleSel
-    mov es:hei_delete_proc+4,cs
+    call InitHandleSel
     clc
     jmp chsDone
 
