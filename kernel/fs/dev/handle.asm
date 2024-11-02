@@ -2655,7 +2655,6 @@ okhKernOk:
 okhFail:
     xor ebx,ebx
     stc
-    jmp ohDone
 
 okhDone:
     pop eax
