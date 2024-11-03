@@ -185,6 +185,7 @@ handle_kernel_file  ENDS
 data    SEGMENT byte public 'DATA'
 
 sys_section       section_typ <>
+sys_handle_arr    DW SYS_HANDLE_COUNT DUP(?)
 
 data    ENDS
 
@@ -6009,6 +6010,83 @@ CreateFileSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InsertSysArr
+;
+;           DESCRIPTION:    Insert new file into sys array
+;
+;           PARAMETERS:     AX          Sys interface
+;                           
+;           RETURNS:        NC          Added to list
+;                           CY          Already in list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertSysArr    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    EnterSection ds:sys_section
+;
+    mov ecx,SYS_HANDLE_COUNT
+    mov ebx,OFFSET sys_handle_arr
+
+isaLoop:
+    mov dx,ds:[ebx+ecx]
+    or dx,dx
+    jz isaNext
+;
+    cmp dx,ax
+    je isaFound
+    ja isaNext
+;
+    add ebx,ecx
+
+isaNext:
+    shr ecx,1
+    test cl,1
+    jz isaLoop
+;
+    mov dx,ds:[ebx]
+    or dx,dx
+    jz isaInsert
+;
+    cmp dx,ax
+    je isaFound
+    ja isaInsert
+;
+    add ebx,2
+
+isaInsert:
+    xchg ax,ds:[ebx]
+    add ebx,2
+    or ax,ax
+    jnz isaInsert
+;
+    clc
+    jmp isaLeave
+
+isaFound:
+    stc
+
+isaLeave:
+    LeaveSection ds:sys_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+InsertSysArr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenVfsFile
 ;
 ;           DESCRIPTION:    Open VFS file
@@ -6099,6 +6177,8 @@ ovfFound:
     call GetFileSel
     jc ovfFail
 ;
+    call InsertSysArr
+;
     mov ds,eax
     EnterSection ds:hsi_section
 ;
@@ -6150,8 +6230,13 @@ OpenVfsFile   Endp
 
 init_client_file    Proc near
     mov bx,SEG data
-    mov ds,ebx
-    InitSection ds:sys_section
+    mov es,ebx
+    InitSection es:sys_section
+;
+    mov edi,OFFSET sys_handle_arr
+    mov ecx,SYS_HANDLE_COUNT
+    xor ax,ax
+    rep stosw
 ;
     mov ebx,cs
     mov ds,ebx
