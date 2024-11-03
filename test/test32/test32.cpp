@@ -34,43 +34,24 @@ void main()
 */
 
 
-
-
-    char *buf = new char[1024];
-
-    RdosTestGate(buf);
-
-/*
-
     int i;
     char *buf = new char[1024];
     int size;
     int dummy;
     long long pos;
-    int handle = RdosOpenHandle("d:/log/9.log", O_RDWR);
-    int handle1 = RdosOpenHandle("d:/log/1.log", O_RDWR);
-    int handle2 = RdosOpenHandle("d:/log/2.log", O_RDWR);
-    int handle3 = RdosOpenHandle("d:/log/3.log", O_RDWR);
-    int handle4 = RdosOpenHandle("d:/log/4.log", O_RDWR);
-    int handle5 = RdosOpenHandle("d:/log/5.log", O_RDWR);
-    int handle6 = RdosOpenHandle("d:/log/6.log", O_RDWR);
-    int handle7 = RdosOpenHandle("d:/log/7.log", O_RDWR);
-    int handle8 = RdosOpenHandle("d:/log/8.log", O_RDWR);
-    int handle9 = RdosOpenHandle("d:/log/9.log", O_RDWR);
+    int handle = RdosOpenHandle("e:/9.log", O_RDWR);
+    int handle1 = RdosOpenHandle("e:/1.log", O_RDWR);
+    int handle2 = RdosOpenHandle("e:/2.log", O_RDWR);
+    int handle3 = RdosOpenHandle("e:/3.log", O_RDWR);
+    int handle4 = RdosOpenHandle("e:/4.log", O_RDWR);
+    int handle5 = RdosOpenHandle("e:/5.log", O_RDWR);
+    int handle6 = RdosOpenHandle("e:/6.log", O_RDWR);
+    int handle7 = RdosOpenHandle("e:/7.log", O_RDWR);
+    int handle8 = RdosOpenHandle("e:/8.log", O_RDWR);
+    int handle9 = RdosOpenHandle("e:/9.log", O_RDWR);
 
-    RdosCloseHandle(handle1);
-    RdosCloseHandle(handle8);
-    RdosCloseHandle(handle2);
-    RdosCloseHandle(handle);
-    RdosCloseHandle(handle6);
-    RdosCloseHandle(handle9);
-    RdosCloseHandle(handle7);
-    RdosCloseHandle(handle3);
-    RdosCloseHandle(handle4);
-    RdosCloseHandle(handle5);
-
-    RdosSetHandlePos(handle2, 25);
-    handle = RdosDupHandle(handle2);
+    RdosSetHandlePos(handle, 25);
+    handle2 = RdosDupHandle(handle);
 
     pos = RdosGetHandlePos(handle);
     pos = RdosGetHandlePos(handle2);
@@ -95,6 +76,17 @@ void main()
     size = RdosReadHandle(handle, buf, 567);
 
 
+    RdosCloseHandle(handle1);
+    RdosCloseHandle(handle8);
+    RdosCloseHandle(handle2);
+    RdosCloseHandle(handle);
+    RdosCloseHandle(handle6);
+    RdosCloseHandle(handle9);
+    RdosCloseHandle(handle7);
+    RdosCloseHandle(handle3);
+    RdosCloseHandle(handle4);
+    RdosCloseHandle(handle5);
+
 
 //    RdosSetHandleSize(handle, 0);
 
@@ -110,6 +102,12 @@ void main()
     RdosCloseHandle(handle);
 
     delete buf;
+
+
+/*
+    char *buf = new char[1024];
+
+    RdosTestGate(buf);
 
 */
 }
