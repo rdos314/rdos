@@ -917,9 +917,4 @@ open_legacy_handle_nr       = 849
 create_kernel_handle_nr     = 850
 open_legacy_kernel_nr       = 851
 
-open_new_kernel_handle_nr   = 852
-close_new_kernel_handle_nr  = 853
-read_new_kernel_handle_nr   = 854
-write_new_kernel_handle_nr  = 855
-
 osgate_entries              = 860
