@@ -6311,9 +6311,17 @@ OpenKernelVfsFile    Proc near
     call OpenVfsFile
     jc okvfDone
 ;
+    mov ax,ds:hsi_kernel_sel
+    or ax,ax
+    jnz okvfKernOk
+;
+    inc ds:hsi_ref_count
     call CreateKernelSel
     jc okvfDone
 ;
+    mov ds:hsi_kernel_sel,ax
+
+okvfKernOk:
     mov ds,eax
     inc ds:hki_ref_count
 

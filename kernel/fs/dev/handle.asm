@@ -3551,18 +3551,13 @@ read_new_kernel_handle Proc far
     mov ds,esi
 ;
     movzx ebx,bx
-    cmp ebx,SYS_HANDLE_COUNT
+    cmp ebx,KERNEL_HANDLE_COUNT
     ja rnkhFail
 ;
     sub ebx,1
     jc rnkhFail
 ;
-    mov si,ds:[2*ebx].hd_sys_arr
-    or si,si
-    jz rnkhFail
-;
-    mov ds,esi
-    mov si,ds:hsi_kernel_sel
+    mov si,ds:[2*ebx].kh_arr
     or si,si
     jz rnkhFail
 ;
@@ -3609,18 +3604,13 @@ write_new_kernel_handle Proc far
     mov ds,esi
 ;
     movzx ebx,bx
-    cmp ebx,SYS_HANDLE_COUNT
+    cmp ebx,KERNEL_HANDLE_COUNT
     ja wnkhFail
 ;
     sub ebx,1
     jc wnkhFail
 ;
-    mov si,ds:[2*ebx].hd_sys_arr
-    or si,si
-    jz wnkhFail
-;
-    mov ds,esi
-    mov si,ds:hsi_kernel_sel
+    mov si,ds:[2*ebx].kh_arr
     or si,si
     jz wnkhFail
 ;
