@@ -3308,6 +3308,283 @@ write_legacy_file16   Proc far
     ret
 write_legacy_file16   Endp
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenKernelHandle
+;
+;           DESCRIPTION:    Open kernel handle
+;
+;           PARAMETERS:     ES:EDI    Filename
+;                           CX        Mode
+;
+;           RETURNS:        BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_new_kernel_handle_name DB 'Open Kernel Handle', 0
+
+open_new_kernel_handle Proc far
+    push ds
+    push es
+    push eax
+;  
+    call OpenVfsFile
+    jnc onkhOpen
+;
+    OpenLegacyHandle
+    jc onkhFail
+
+onkhOpen:
+    EnterSection ds:hsi_section
+    mov ax,ds:hsi_kernel_sel
+    or ax,ax
+    jnz onkhKernOk
+;
+    inc ds:hsi_ref_count
+    call fword ptr ds:hsi_create_kernel_proc
+    mov ds:hsi_kernel_sel,ax
+
+onkhKernOk:
+    mov es,eax
+    inc es:hki_ref_count
+    LeaveSection ds:hsi_section
+;
+    mov ebx,es:hki_sys_index
+    clc
+    jmp onkhDone
+
+onkhFail:
+    xor ebx,ebx
+    stc
+
+onkhDone:
+    pop eax
+    pop es
+    pop ds
+    ret
+open_new_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CloseKernelHandle
+;
+;           DESCRIPTION:    Close kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_new_kernel_handle_name DB 'Close Kernel Handle', 0
+
+close_new_kernel_handle Proc far
+    push ds
+    push es
+    pushad
+;
+    mov eax,SEG data
+    mov es,eax
+;
+    movzx ebx,bx
+    cmp ebx,SYS_HANDLE_COUNT
+    ja cnkhFail
+;
+    sub ebx,1
+    jc cnkhFail
+;
+    mov ax,es:[2*ebx].hd_sys_arr
+    or ax,ax
+    jz cnkhFail
+;
+    mov ds,eax
+    mov ebp,eax
+    EnterSection ds:hsi_section
+;
+    mov ax,ds:hsi_kernel_sel
+    or ax,ax
+    jz cnkhLeaveFail
+;
+    mov ds,eax
+    sub ds:hki_ref_count,1
+    jz cnkhFree
+;
+    mov ds,ebp
+    jmp cnkhLeaveOk
+
+cnkhFree:
+    mov ds,ebp
+    xor ax,ax
+    xchg ax,ds:hsi_kernel_sel
+    mov ds,eax
+    mov es,eax
+    call fword ptr ds:hki_delete_proc
+;
+    mov ds,ebp
+    FreeMem
+;
+    sub ds:hsi_ref_count,1
+    jnz cnkhLeaveOk
+;
+    mov eax,SEG data
+    mov es,eax
+;
+    mov edx,ds
+    xor ax,ax
+    xchg ax,es:[2*ebx].hd_sys_arr
+    cmp ax,dx
+    je cnkhSysOk
+;
+    int 3
+
+cnkhSysOk:
+    btc es:hd_sys_bitmap,ebx
+    jc cnkhSysBitOk
+;
+    int 3
+
+cnkhSysBitOk:
+    LeaveSection ds:hsi_section
+    call fword ptr ds:hsi_delete_proc
+    clc
+    jmp cnkhDone
+
+cnkhLeaveFail:
+    LeaveSection ds:hsi_section
+
+cnkhFail:
+    stc
+    jmp cnkhDone
+
+cnkhLeaveOk:
+    LeaveSection ds:hsi_section
+    clc
+
+cnkhDone:
+    popad
+    pop es
+    pop ds
+    ret
+close_new_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ReadKernelHandle
+;
+;           DESCRIPTION:    Read with kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Position
+;                           ES:EDI    Buffer
+;                           ECX       Size
+;
+;           RETURNS:        ECX       Read size
+;                           EDX:EAX   New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_new_kernel_handle_name DB 'Read Kernel Handle', 0
+
+read_new_kernel_handle Proc far
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,SEG data
+    mov ds,esi
+;
+    movzx ebx,bx
+    cmp ebx,SYS_HANDLE_COUNT
+    ja rnkhFail
+;
+    sub ebx,1
+    jc rnkhFail
+;
+    mov si,ds:[2*ebx].hd_sys_arr
+    or si,si
+    jz rnkhFail
+;
+    mov ds,esi
+    mov si,ds:hsi_kernel_sel
+    or si,si
+    jz rnkhFail
+;
+    mov ds,esi
+    call fword ptr ds:hki_read_proc
+    jnc rnkhDone
+
+rnkhFail:
+    xor ecx,ecx
+    stc
+
+rnkhDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+read_new_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           WriteKernelHandle
+;
+;           DESCRIPTION:    Write with kernel handle
+;
+;           PARAMETERS:     BX        Handle
+;                           EDX:EAX   Position
+;                           ES:EDI    Buffer
+;                           ECX       Size
+;
+;           RETURNS:        ECX       Read size
+;                           EDX:EAX   New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_new_kernel_handle_name DB 'Write Kernel Handle', 0
+
+write_new_kernel_handle Proc far
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,SEG data
+    mov ds,esi
+;
+    movzx ebx,bx
+    cmp ebx,SYS_HANDLE_COUNT
+    ja wnkhFail
+;
+    sub ebx,1
+    jc wnkhFail
+;
+    mov si,ds:[2*ebx].hd_sys_arr
+    or si,si
+    jz wnkhFail
+;
+    mov ds,esi
+    mov si,ds:hsi_kernel_sel
+    or si,si
+    jz wnkhFail
+;
+    mov ds,esi
+    call fword ptr ds:hki_write_proc
+    jnc wnkhDone
+
+wnkhFail:
+    xor ecx,ecx
+    stc
+
+wnkhDone:
+    pop ebp
+    pop ebx
+    pop ds
+    ret
+write_new_kernel_handle Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3318,8 +3595,7 @@ write_legacy_file16   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_gate_name DB 'Test', 0
-test_file      DB 'b:/safe.bin', 0
-text_buf       DB 'This is written to file', 0Dh, 0Ah, 0
+test_file      DB 'e:/rdos.bin', 0
 
 test_gate    Proc far
     push ds
@@ -3327,15 +3603,11 @@ test_gate    Proc far
     push ecx
     push edi
 ;
-    mov eax,SEG data
-    mov ds,eax
-;
-
     mov ecx,cs
     mov es,ecx
     mov edi,OFFSET test_file
     mov cx,O_RDWR
-    OpenKernelHandle
+    OpenNewKernelHandle
     jc tgDone
 ;
     mov eax,1024
@@ -3345,22 +3617,22 @@ test_gate    Proc far
     xor edx,edx
     xor eax,eax
     mov ecx,25
-    ReadKernelHandle
+    ReadNewKernelHandle
 ;
     mov eax,15667
     mov ecx,25
-    ReadKernelHandle
+    ReadNewKernelHandle
 ;
     mov eax,98877
     mov ecx,25
-    ReadKernelHandle
+    ReadNewKernelHandle
 ;
     mov eax,5546
     mov ecx,25
-    ReadKernelHandle
+    ReadNewKernelHandle
 ;
     mov ecx,123
-    CloseKernelHandle
+    CloseNewKernelHandle
 
 tgDone:
     pop edi
@@ -3473,6 +3745,30 @@ init_sys_handle     PROC near
     mov edi,OFFSET write_kernel_handle_name
     xor cl,cl
     mov ax,write_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET open_new_kernel_handle
+    mov edi,OFFSET open_new_kernel_handle_name
+    xor cl,cl
+    mov ax,open_new_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET close_new_kernel_handle
+    mov edi,OFFSET close_new_kernel_handle_name
+    xor cl,cl
+    mov ax,close_new_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET read_new_kernel_handle
+    mov edi,OFFSET read_new_kernel_handle_name
+    xor cl,cl
+    mov ax,read_new_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET write_new_kernel_handle
+    mov edi,OFFSET write_new_kernel_handle_name
+    xor cl,cl
+    mov ax,write_new_kernel_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16

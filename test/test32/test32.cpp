@@ -33,6 +33,15 @@ void main()
 
 */
 
+
+
+
+    char *buf = new char[1024];
+
+    RdosTestGate(buf);
+
+/*
+
     int i;
     char *buf = new char[1024];
     int size;
@@ -101,12 +110,6 @@ void main()
     RdosCloseHandle(handle);
 
     delete buf;
-
-/*
-
-    char *buf = new char[1024];
-
-    RdosTestGate(buf);
 
 */
 }

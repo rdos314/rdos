@@ -2510,6 +2510,41 @@ DeleteProcHandle MACRO
     OsGate delete_proc_handle_nr
                     ENDM
 
+;;;;; Temporary new kernel interface
+
+
+; IN  ES:EDI    Filename
+; IN  CX        Mode
+; OUT BX        Handle
+OpenNewKernelHandle MACRO
+    OsGate open_new_kernel_handle_nr
+                    ENDM
+
+; IN  BX        Handle
+; IN  EDX:EAX   Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT ECX       Read size
+; OUT EDX:EAX   New position
+ReadNewKernelHandle MACRO
+    OsGate read_new_kernel_handle_nr
+                    ENDM
+
+; IN  BX        Handle
+; IN  EDX       Position
+; IN  ES:EDI    Buffer
+; IN  ECX       Size
+; OUT ECX       Written size
+; OUT EDX:EAX   New position
+WriteNewKernelHandle MACRO
+    OsGate write_new_kernel_handle_nr
+                    ENDM
+
+; IN  BX        Handle
+CloseNewKernelHandle MACRO
+    OsGate close_new_kernel_handle_nr
+                    ENDM
+
 ;;;;;;;;;;;;;; Application / process  ;;;;;;;;;;;;;;;;;;
 
 ExecApp MACRO
