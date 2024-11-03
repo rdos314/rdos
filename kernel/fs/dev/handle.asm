@@ -44,6 +44,9 @@ SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
 USER_HANDLE_COUNT     = 512
 USER_BITMAP_COUNT     = USER_HANDLE_COUNT SHR 5
 
+KERNEL_HANDLE_COUNT   = 64
+KERNEL_BITMAP_COUNT   = KERNEL_HANDLE_COUNT SHR 5
+
 ;
 ; this should always be 8 bytes!
 
@@ -76,6 +79,10 @@ hd_output_sel    DW ?
 hd_proc_arr      DD MAX_PROC_COUNT DUP(?)
 hd_sys_bitmap    DD SYS_BITMAP_COUNT DUP(?)
 hd_sys_arr       DW SYS_HANDLE_COUNT DUP(?)
+
+kh_section       section_typ <>
+kh_bitmap        DD KERNEL_BITMAP_COUNT DUP(?)
+kh_arr           DW KERNEL_HANDLE_COUNT DUP(?)
 
 data       ENDS
 
@@ -3677,7 +3684,18 @@ init_sys_handle     PROC near
     mov ecx,SYS_HANDLE_COUNT
     rep stosw
 ;
+    mov edi,OFFSET kh_bitmap
+    xor eax,eax
+    mov ecx,KERNEL_BITMAP_COUNT
+    rep stosd
+;
+    mov edi,OFFSET kh_arr
+    xor ax,ax
+    mov ecx,KERNEL_HANDLE_COUNT
+    rep stosw
+;
     InitSection es:hd_section
+    InitSection es:kh_section
     mov es:hd_sys_bitmap,3
     mov es:hd_proc_count,0
     mov es:hd_input_sel,0
