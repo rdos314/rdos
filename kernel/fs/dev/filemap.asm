@@ -6291,6 +6291,40 @@ OpenVfsFile   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           OpenKernelVfsFile
+;
+;           DESCRIPTION:    Open kernel file
+;
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        DS          Kernel handle obj
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public OpenKernelVfsFile
+
+OpenKernelVfsFile    Proc near
+    push eax
+;
+    call OpenVfsFile
+    jc okvfDone
+;
+    call CreateKernelSel
+    jc okvfDone
+;
+    mov ds,eax
+    inc ds:hki_ref_count
+
+okvfDone:
+    pop eax
+    ret
+OpenKernelVfsFile    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;       NAME:           init_client_file
 ;
 ;       description:    Init file

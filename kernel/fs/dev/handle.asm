@@ -91,6 +91,7 @@ code    SEGMENT byte public 'CODE'
     assume cs:code
 
     extern OpenVfsFile:near
+    extern OpenKernelVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -3320,6 +3321,66 @@ write_legacy_file16   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateKernelHandle
+;
+;           DESCRIPTION:    Allocate kernel handle
+;
+;           PARAMETERS:     DS          Kernel handle interface
+;
+;           RETURNS:        EBX         Kernel handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateKernelHandle     Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov eax,SEG data
+    mov es,eax
+;
+    mov ecx,KERNEL_BITMAP_COUNT  
+    xor edi,edi
+    mov bx,OFFSET kh_bitmap
+
+alkhLoop:
+    mov eax,es:[bx]
+    not eax
+    bsf edx,eax
+    jnz alkhOk
+;
+    add bx,4
+    add edi,32
+;
+    loop alkhLoop
+;
+    stc
+    jmp alkhDone
+
+alkhOk:
+    add edx,edi
+    lock bts es:kh_bitmap,edx
+    jc alkhLoop
+;
+    mov ebx,edx
+    mov es:[2*ebx].kh_arr,ds
+    inc ebx
+    clc
+
+alkhDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+AllocateKernelHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenKernelHandle
 ;
 ;           DESCRIPTION:    Open kernel handle
@@ -3338,29 +3399,15 @@ open_new_kernel_handle Proc far
     push es
     push eax
 ;  
-    call OpenVfsFile
+    call OpenKernelVfsFile
     jnc onkhOpen
 ;
-    OpenLegacyHandle
+    int 3
+;    OpenLegacyHandle
     jc onkhFail
 
 onkhOpen:
-    EnterSection ds:hsi_section
-    mov ax,ds:hsi_kernel_sel
-    or ax,ax
-    jnz onkhKernOk
-;
-    inc ds:hsi_ref_count
-    call fword ptr ds:hsi_create_kernel_proc
-    mov ds:hsi_kernel_sel,ax
-
-onkhKernOk:
-    mov es,eax
-    inc es:hki_ref_count
-    LeaveSection ds:hsi_section
-;
-    mov ebx,es:hki_sys_index
-    clc
+    call AllocateKernelHandle
     jmp onkhDone
 
 onkhFail:
