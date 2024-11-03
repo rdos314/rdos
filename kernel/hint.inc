@@ -30,6 +30,9 @@ SYS_HANDLE_COUNT      = 1024    ; must be a power of 2
 PROC_HANDLE_COUNT     = 64
 PROC_BITMAP_COUNT     = PROC_HANDLE_COUNT SHR 5
 
+USER_HANDLE_COUNT     = 512
+USER_BITMAP_COUNT     = USER_HANDLE_COUNT SHR 5
+
 handle_sys_interface    STRUC
 
 hsi_blk                   blk_header <>
@@ -213,3 +216,12 @@ hki_sys_index             DD ?
 hki_sys_sel               DW ?
 
 handle_kernel_interface    ENDS
+
+proc_handle_struc    STRUC
+
+ph_linear        DD ?
+ph_section       section_typ <>
+ph_bitmap        DD USER_BITMAP_COUNT DUP(?)
+ph_arr           DW USER_HANDLE_COUNT DUP(?)
+
+proc_handle_struc    ENDS

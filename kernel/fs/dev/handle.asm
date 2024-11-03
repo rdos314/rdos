@@ -41,8 +41,6 @@ INCLUDE vfs.inc
     .386p
 
 SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
-USER_HANDLE_COUNT     = 512
-USER_BITMAP_COUNT     = USER_HANDLE_COUNT SHR 5
 
 KERNEL_HANDLE_COUNT   = 64
 KERNEL_BITMAP_COUNT   = KERNEL_HANDLE_COUNT SHR 5
@@ -58,15 +56,6 @@ pe_access       DW ?
 pe_resv         DW ?
 
 proc_entry_struc       ENDS
-
-proc_handle_struc    STRUC
-
-ph_linear        DD ?
-ph_section       section_typ <>
-ph_bitmap        DD USER_BITMAP_COUNT DUP(?)
-ph_arr           DW USER_HANDLE_COUNT DUP(?)
-
-proc_handle_struc    ENDS
 
 data    SEGMENT byte public 'DATA'
 
@@ -90,7 +79,7 @@ code    SEGMENT byte public 'CODE'
     
     assume cs:code
 
-    extern OpenVfsFile:near
+    extern OpenUserVfsFile:near
     extern OpenKernelVfsFile:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -431,79 +420,6 @@ alshLeave:
 AllocateLocalSysHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FindProc
-;
-;       DESCRIPTION:    Find proc sel
-;
-;       PARAMETERS:     DS              Sys interface
-;
-;       RETURNS:        NC
-;                         AX            Proc interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindProc      Proc near
-    push es
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov eax,proc_handle_sel
-    mov es,eax
-    mov edx,es:ph_linear
-;
-    mov ecx,PROC_BITMAP_COUNT  
-    mov esi,OFFSET hsi_proc_bitmap
-    mov edi,OFFSET hsi_proc_arr
-
-fpLoop:
-    mov eax,ds:[esi]
-    or eax,eax
-    jz fpNext
-;
-    push ecx
-    mov ecx,32
-
-fpeLoop:
-    cmp edx,ds:[edi]
-    jne fpeNext
-;
-    pop ecx
-    sub edi,OFFSET hsi_proc_arr
-    shl edi,2
-    mov ax,ds:[2*edi].hsi_sel_arr
-    clc
-    jmp fpDone
-
-fpeNext:
-    add edi,4
-    loop fpeLoop
-;
-    pop ecx
-    jmp fpCont
-
-fpNext:
-    add edi,4*32
-
-fpCont:
-    add esi,4
-    loop fpLoop
-;
-    stc
-
-fpDone:
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop es
-    ret
-FindProc    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           CreateProcObj
@@ -566,66 +482,6 @@ CreateProcObj    Proc near
     pop es
     ret
 CreateProcObj   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateProcHandle
-;
-;           DESCRIPTION:    Allocate proc handle
-;
-;           PARAMETERS:     DS          Sys interface
-;                           AX          Proc interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateProcHandle     Proc near
-    push es
-    pushad
-;
-    mov ebp,eax
-;
-    mov ecx,PROC_BITMAP_COUNT  
-    xor edi,edi
-    mov bx,OFFSET hsi_proc_bitmap
-
-alphLoop:
-    mov eax,ds:[bx]
-    not eax
-    bsf edx,eax
-    jnz alphOk
-;
-    add bx,4
-    add edi,32
-;
-    loop alphLoop
-;
-    stc
-    jmp alphDone
-
-alphOk:
-    add edx,edi
-    lock bts ds:hsi_proc_bitmap,edx
-    jc alphLoop
-;
-    mov ebx,proc_handle_sel
-    mov es,ebx
-    mov ebx,edx
-    mov edx,es:ph_linear
-    mov ds:[4*ebx].hsi_proc_arr,edx
-    mov ds:[2*ebx].hsi_sel_arr,bp
-;
-    mov es,ebp
-    inc ebx
-    mov es:hpi_index,ebx
-    mov es:hpi_proc_linear,edx
-    clc
-
-alphDone:
-    popad
-    pop es
-    ret
-AllocateProcHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -859,34 +715,9 @@ OpenHandleObj     Proc near
     push es
     push eax
 ;  
-    call OpenVfsFile
+    call OpenUserVfsFile
     jc ohLegacy
 ;
-    EnterSection ds:hsi_section
-;
-    call FindProc
-    jnc ohProcOk
-;
-    inc ds:hsi_ref_count
-;
-    call fword ptr ds:hsi_create_proc_proc
-    jc ohFail
-;
-    call AllocateProcHandle
-    jc ohFail
-
-ohProcOk:
-    mov es,eax
-    add es:hpi_ref_count,1
-;
-    LeaveSection ds:hsi_section
-;
-    mov ds,eax
-    call fword ptr ds:hpi_create_proc
-    jc ohFail
-;
-    mov ds,eax
-    inc ds:hei_ref_count
     call AllocateUserHandle
     jc ohFail
 
