@@ -25,6 +25,8 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+SYS_HANDLE_COUNT      = 1024
+
 PROC_HANDLE_COUNT     = 64
 PROC_BITMAP_COUNT     = PROC_HANDLE_COUNT SHR 5
 
