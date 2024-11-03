@@ -6252,14 +6252,10 @@ ovfFound:
     call GetFileSel
     jc ovfFail
 ;
-    call InsertSysArr
-;
     mov ds,eax
     EnterSection ds:hsi_section
-;
-    mov ebx,ds:hsi_index
-    or ebx,ebx
-    jz ovfNew
+    call InsertSysArr
+    jnc ovfNew
 ;
     call SendDerefReq
     jmp ovfHandleOk
