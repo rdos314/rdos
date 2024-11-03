@@ -38,8 +38,27 @@ void main()
     int size;
     int dummy;
     long long pos;
-    int handle2 = RdosOpenHandle("d:/log/9.log", O_RDWR);
-    int handle;
+    int handle = RdosOpenHandle("d:/log/9.log", O_RDWR);
+    int handle1 = RdosOpenHandle("d:/log/1.log", O_RDWR);
+    int handle2 = RdosOpenHandle("d:/log/2.log", O_RDWR);
+    int handle3 = RdosOpenHandle("d:/log/3.log", O_RDWR);
+    int handle4 = RdosOpenHandle("d:/log/4.log", O_RDWR);
+    int handle5 = RdosOpenHandle("d:/log/5.log", O_RDWR);
+    int handle6 = RdosOpenHandle("d:/log/6.log", O_RDWR);
+    int handle7 = RdosOpenHandle("d:/log/7.log", O_RDWR);
+    int handle8 = RdosOpenHandle("d:/log/8.log", O_RDWR);
+    int handle9 = RdosOpenHandle("d:/log/9.log", O_RDWR);
+
+    RdosCloseHandle(handle1);
+    RdosCloseHandle(handle8);
+    RdosCloseHandle(handle2);
+    RdosCloseHandle(handle);
+    RdosCloseHandle(handle6);
+    RdosCloseHandle(handle9);
+    RdosCloseHandle(handle7);
+    RdosCloseHandle(handle3);
+    RdosCloseHandle(handle4);
+    RdosCloseHandle(handle5);
 
     RdosSetHandlePos(handle2, 25);
     handle = RdosDupHandle(handle2);

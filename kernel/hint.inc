@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SYS_HANDLE_COUNT      = 1024
+SYS_HANDLE_COUNT      = 1024    ; must be a power of 2
 
 PROC_HANDLE_COUNT     = 64
 PROC_BITMAP_COUNT     = PROC_HANDLE_COUNT SHR 5

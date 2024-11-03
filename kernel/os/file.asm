@@ -68,8 +68,11 @@ CallFileSystem  MACRO   call_proc
 
 data    SEGMENT byte public 'DATA'
 
-fs_file_list    DW ?
+fs_file_list        DW ?
 fs_file_section     section_typ <>
+
+sys_section         section_typ <>
+sys_handle_arr      DW SYS_HANDLE_COUNT DUP(?)
 
 data    ENDS
 
@@ -565,6 +568,9 @@ req_file_init:
     mov bx,ds
     call InsertFileSel
 ;
+    mov ax,ds
+    call InsertSysArr
+;
     mov fs:[esi].dfe_file_sel,bx
     jmp req_file_leave
 
@@ -574,6 +580,7 @@ req_file_inc:
 
 req_file_leave:
     pop ds
+;
     LeaveSection ds:ds_list_section
     mov al,ds:ds_drive
 ;
@@ -1811,6 +1818,155 @@ swap_proc       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           InsertSysArr
+;
+;           DESCRIPTION:    Insert new file into sys array
+;
+;           PARAMETERS:     AX          Sys interface
+;                           
+;           RETURNS:        NC          Added to list
+;                           CY          Already in list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertSysArr    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    EnterSection ds:sys_section
+;
+    mov ecx,SYS_HANDLE_COUNT
+    mov ebx,OFFSET sys_handle_arr
+    mov dx,ds:[ebx+2*SYS_HANDLE_COUNT-2]
+    or dx,dx
+    jz isaLoop
+;
+    int 3
+
+isaLoop:
+    mov dx,ds:[ebx+ecx]
+    or dx,dx
+    jz isaNext
+;
+    cmp dx,ax
+    je isaFound
+    ja isaNext
+;
+    add ebx,ecx
+
+isaNext:
+    shr ecx,1
+    test cl,1
+    jz isaLoop
+;
+    mov dx,ds:[ebx]
+    or dx,dx
+    jz isaInsert
+;
+    cmp dx,ax
+    je isaFound
+    ja isaInsert
+;
+    add ebx,2
+
+isaInsert:
+    xchg ax,ds:[ebx]
+    add ebx,2
+    or ax,ax
+    jnz isaInsert
+;
+    clc
+    jmp isaLeave
+
+isaFound:
+    stc
+
+isaLeave:
+    LeaveSection ds:sys_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+InsertSysArr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RemoveSysArr
+;
+;           DESCRIPTION:    Remove file from sys array
+;
+;           PARAMETERS:     AX          Sys interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveSysArr    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    EnterSection ds:sys_section
+;
+    mov ecx,SYS_HANDLE_COUNT
+    mov ebx,OFFSET sys_handle_arr
+
+rsaLoop:
+    mov dx,ds:[ebx+ecx]
+    or dx,dx
+    jz rsaNext
+;
+    cmp dx,ax
+    je rsaFound
+    ja rsaNext
+;
+    add ebx,ecx
+
+rsaNext:
+    shr ecx,1
+    test cl,1
+    jz rsaLoop
+;
+    mov dx,ds:[ebx]
+    cmp dx,ax
+    je rsaRemove
+;
+    int 3
+
+rsaFound:
+    add ebx,ecx
+
+rsaRemove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    or ax,ax
+    jnz rsaRemove
+;
+    LeaveSection ds:sys_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+RemoveSysArr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CloseSysObj
 ;
 ;           DESCRIPTION:    Close and delete sys obj
@@ -1823,11 +1979,18 @@ swap_proc       Endp
 
 CloseSysObj    Proc far
     push ds
+    push ax
+    push bx
+;
+    mov ax,ds
+    call RemoveSysArr
 ;
     mov bx,ds
     call ReleaseFileSel
     clc
 ;
+    pop bx
+    pop ax
     pop ds
     retf32
 CloseSysObj    Endp
@@ -2674,8 +2837,15 @@ init_file       PROC near
 ;
     mov ax,SEG data
     mov ds,ax   
+    mov es,ax
     mov ds:fs_file_list,0
     InitSection ds:fs_file_section
+    InitSection ds:sys_section
+;
+    mov di,OFFSET sys_handle_arr
+    mov cx,SYS_HANDLE_COUNT
+    xor ax,ax
+    rep stosw
     ret
 init_file       ENDP
 
