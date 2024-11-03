@@ -3403,7 +3403,7 @@ open_new_kernel_handle Proc far
     jnc onkhOpen
 ;
     int 3
-;    OpenLegacyHandle
+    OpenLegacyKernelHandle
     jc onkhFail
 
 onkhOpen:
@@ -3639,7 +3639,7 @@ write_new_kernel_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_gate_name DB 'Test', 0
-test_file      DB 'e:/rdos.bin', 0
+test_file      DB 'c:/rdos.bin', 0
 
 test_gate    Proc far
     push ds

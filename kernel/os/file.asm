@@ -82,6 +82,7 @@ code    SEGMENT byte public use16 'CODE'
 
     assume cs:code
 
+    extern OpenLegacyObj:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2785,6 +2786,81 @@ CreateKernelObj   Proc far
     retf32
 CreateKernelObj   Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateKernelObj
+;
+;           DESCRIPTION:    Create new kernel obj
+;
+;           PARAMETERS:     DS     Sys interface
+;
+;           RETURNS:        AX     Kernel interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateLocalKernelObj   Proc near
+    push es
+    push ebx
+    push ecx
+    push edx
+;
+    mov eax,SIZE handle_kernel_interface
+    AllocateSmallLinear
+;
+    CreateKernelHandle
+    mov es,ax
+;
+    mov es:hki_read_proc,OFFSET ReadKernelObj
+    mov es:hki_read_proc+4,cs
+;
+    mov es:hki_write_proc,OFFSET WriteKernelObj
+    mov es:hki_write_proc+4,cs
+;
+    mov es:hki_delete_proc,OFFSET DeleteKernelObj
+    mov es:hki_delete_proc+4,cs
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    ret
+CreateLocalKernelObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           OpenLegacyKernel
+;
+;           DESCRIPTION:    Open kernel legacy obj
+;
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        DS          Sys handle obj
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_legacy_kernel_name DB 'Open Legacy Kernel', 0
+
+open_legacy_kernel   Proc far
+    push eax
+;
+    call OpenLegacyObj
+    jc olkDone
+;    
+    call CreateLocalKernelObj
+    mov ds,ax
+    inc ds:hki_ref_count
+    clc
+
+olkDone:
+    pop eax
+    retf32
+open_legacy_kernel   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2803,6 +2879,12 @@ init_file       PROC near
 ;
     mov edi,OFFSET swap_proc
     RegisterSwapProc
+;
+    mov esi,OFFSET open_legacy_kernel
+    mov edi,OFFSET open_legacy_kernel_name
+    xor cl,cl
+    mov ax,open_legacy_kernel_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET get_file_list_entry
     mov edi,OFFSET get_file_list_entry_name

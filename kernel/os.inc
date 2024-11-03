@@ -2634,6 +2634,13 @@ OpenLegacyHandle  MACRO
     OsGate open_legacy_handle_nr
                     ENDM
 
+; IN  ES:EDI      Filename
+; IN  CX          Mode
+; OUT DS          Kernel handle obj
+OpenLegacyKernelHandle  MACRO
+    OsGate open_legacy_kernel_nr
+                    ENDM
+
 ; OUT AX        Handle sel
 CreateInputHandle  MACRO
     OsGate create_input_handle_nr

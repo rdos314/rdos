@@ -1885,7 +1885,7 @@ CloseDirBase    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           open_legacy_handle
+;           NAME:           OpenLegacyObj
 ;
 ;           DESCRIPTION:    Open legacy handle
 ;
@@ -1897,9 +1897,9 @@ CloseDirBase    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_legacy_handle_name  DB 'Open Legacy Handle',0
+    public OpenLegacyObj
 
-open_legacy_handle    Proc far
+OpenLegacyObj    Proc near
     push es
     push fs
     push eax
@@ -1912,18 +1912,18 @@ open_legacy_handle    Proc far
 ;
     push edi
     call ParseDir
-    jc olhPopFailed
+    jc oloPopFailed
 ;
     EnterWriteSection ds:ds_access_section
     dec ds:ds_usage
     call ParseFile
-    jnc olhExists
+    jnc oloExists
 ;
     test cx,O_CREAT
-    jz olhLeaveFailed
+    jz oloLeaveFailed
 ;
     call ParseName
-    jc olhLeaveFailed
+    jc oloLeaveFailed
 ;
     push cx
     xor cl,cl
@@ -1935,17 +1935,17 @@ open_legacy_handle    Proc far
 ;
     LeaveWriteSection ds:ds_access_section
     pop edi
-    jmp olhHandle
+    jmp oloHandle
 
-olhExists:
+oloExists:
     test cx,O_EXCL
-    jnz olhLeaveFailed
+    jnz oloLeaveFailed
 ;
     pop edi
     call RequestFileSel
 ;
     test cx,O_CREAT OR O_TRUNC
-    jz olhOpen
+    jz oloOpen
 ;
     push ds
     mov ds,bx
@@ -1962,10 +1962,10 @@ olhExists:
     LeaveWriteSection ds:file_size_section
     pop ds
 
-olhOpen:
+oloOpen:
     LeaveWriteSection ds:ds_access_section
 
-olhHandle:
+oloHandle:
     call ParseEnd
 ;
     mov ds,bx
@@ -1973,12 +1973,12 @@ olhHandle:
 ;
     mov ebx,ds:hsi_index
     or ebx,ebx
-    jz olhNew
+    jz oloNew
 ;
     dec ds:file_usage
-    jmp olhHandleOk
+    jmp oloHandleOk
 
-olhNew:
+oloNew:
     mov ds:hsi_create_handle_proc,OFFSET CreateHandleObj
     mov ds:hsi_create_handle_proc+4,cs
 ;
@@ -1991,28 +1991,50 @@ olhNew:
     AllocateSysHandle
     mov ds:hsi_index,ebx
 
-olhHandleOk:
+oloHandleOk:
     LeaveSection ds:hsi_section
     clc
-    jmp olhDone
+    jmp oloDone
 
-olhLeaveFailed:
+oloLeaveFailed:
     LeaveWriteSection ds:ds_access_section
     call ParseEnd
 
-olhPopFailed:
+oloPopFailed:
     pop edi
 
-olhFailed:
+oloFailed:
     stc
 
-olhDone:
+oloDone:
     pop edx
     pop ecx
     pop ebx
     pop eax
     pop fs
     pop es
+    ret
+OpenLegacyObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           open_legacy_handle
+;
+;           DESCRIPTION:    Open legacy handle
+;
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        DS          Sys handle obj
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_legacy_handle_name  DB 'Open Legacy Handle',0
+
+open_legacy_handle    Proc far
+    call OpenLegacyObj
     retf32
 open_legacy_handle   Endp
 
