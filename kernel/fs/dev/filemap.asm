@@ -5421,6 +5421,155 @@ chsDone:
 CreateHandleSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InsertSysArr
+;
+;           DESCRIPTION:    Insert new file into sys array
+;
+;           PARAMETERS:     AX          Sys interface
+;                           
+;           RETURNS:        NC          Added to list
+;                           CY          Already in list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertSysArr    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    EnterSection ds:sys_section
+;
+    mov ecx,SYS_HANDLE_COUNT
+    mov ebx,OFFSET sys_handle_arr
+    mov dx,ds:[ebx+2*SYS_HANDLE_COUNT-2]
+    or dx,dx
+    jz isaLoop
+;
+    int 3
+
+isaLoop:
+    mov dx,ds:[ebx+ecx]
+    or dx,dx
+    jz isaNext
+;
+    cmp dx,ax
+    je isaFound
+    ja isaNext
+;
+    add ebx,ecx
+
+isaNext:
+    shr ecx,1
+    test cl,1
+    jz isaLoop
+;
+    mov dx,ds:[ebx]
+    or dx,dx
+    jz isaInsert
+;
+    cmp dx,ax
+    je isaFound
+    ja isaInsert
+;
+    add ebx,2
+
+isaInsert:
+    xchg ax,ds:[ebx]
+    add ebx,2
+    or ax,ax
+    jnz isaInsert
+;
+    clc
+    jmp isaLeave
+
+isaFound:
+    stc
+
+isaLeave:
+    LeaveSection ds:sys_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+InsertSysArr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           RemoveSysArr
+;
+;           DESCRIPTION:    Remove file from sys array
+;
+;           PARAMETERS:     AX          Sys interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveSysArr    Proc near
+    push ds
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov ebx,SEG data
+    mov ds,ebx
+    EnterSection ds:sys_section
+;
+    mov ecx,SYS_HANDLE_COUNT
+    mov ebx,OFFSET sys_handle_arr
+
+rsaLoop:
+    mov dx,ds:[ebx+ecx]
+    or dx,dx
+    jz rsaNext
+;
+    cmp dx,ax
+    je rsaFound
+    ja rsaNext
+;
+    add ebx,ecx
+
+rsaNext:
+    shr ecx,1
+    test cl,1
+    jz rsaLoop
+;
+    mov dx,ds:[ebx]
+    cmp dx,ax
+    je rsaRemove
+;
+    int 3
+
+rsaFound:
+    add ebx,ecx
+
+rsaRemove:
+    mov ax,ds:[ebx+2]
+    mov ds:[ebx],ax
+    add ebx,2
+    or ax,ax
+    jnz rsaRemove
+;
+    LeaveSection ds:sys_section
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+RemoveSysArr    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           DeleteProcSel
@@ -5885,6 +6034,9 @@ DeleteSysSel   Proc far
     push fs
     pushad
 ;
+    mov eax,ds
+    call RemoveSysArr
+;
     mov ebx,REQ_CLOSE
     call AddReq
 ;
@@ -6006,83 +6158,6 @@ cfSortedInit:
     pop ds
     ret
 CreateFileSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InsertSysArr
-;
-;           DESCRIPTION:    Insert new file into sys array
-;
-;           PARAMETERS:     AX          Sys interface
-;                           
-;           RETURNS:        NC          Added to list
-;                           CY          Already in list
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertSysArr    Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-    push edx
-;
-    mov ebx,SEG data
-    mov ds,ebx
-    EnterSection ds:sys_section
-;
-    mov ecx,SYS_HANDLE_COUNT
-    mov ebx,OFFSET sys_handle_arr
-
-isaLoop:
-    mov dx,ds:[ebx+ecx]
-    or dx,dx
-    jz isaNext
-;
-    cmp dx,ax
-    je isaFound
-    ja isaNext
-;
-    add ebx,ecx
-
-isaNext:
-    shr ecx,1
-    test cl,1
-    jz isaLoop
-;
-    mov dx,ds:[ebx]
-    or dx,dx
-    jz isaInsert
-;
-    cmp dx,ax
-    je isaFound
-    ja isaInsert
-;
-    add ebx,2
-
-isaInsert:
-    xchg ax,ds:[ebx]
-    add ebx,2
-    or ax,ax
-    jnz isaInsert
-;
-    clc
-    jmp isaLeave
-
-isaFound:
-    stc
-
-isaLeave:
-    LeaveSection ds:sys_section
-;
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-InsertSysArr    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
