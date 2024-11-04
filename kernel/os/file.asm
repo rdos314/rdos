@@ -2487,6 +2487,60 @@ DupObj Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           open_legacy_handle
+;
+;           DESCRIPTION:    Open legacy handle
+;
+;           PARAMETERS:     ES:EDI      Filename
+;                           CX          Mode
+;                           
+;           RETURNS:        DS          Sys handle obj
+;                           NC          Success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_legacy_handle_name  DB 'Open Legacy Handle',0
+
+open_legacy_handle    Proc far
+    push ebx
+;
+    call OpenLegacyObj
+    jc olhDone
+;
+    EnterSection ds:hsi_section
+;
+    mov ebx,ds:hsi_index
+    or ebx,ebx
+    jz olhNew
+;
+    dec ds:file_usage
+    jmp olhHandleOk
+
+olhNew:
+    mov ds:hsi_create_handle_proc,OFFSET CreateHandleObj
+    mov ds:hsi_create_handle_proc+4,cs
+;
+    mov ds:hsi_create_kernel_proc,OFFSET CreateKernelObj
+    mov ds:hsi_create_kernel_proc+4,cs
+;
+    mov ds:hsi_delete_proc,OFFSET CloseSysObj
+    mov ds:hsi_delete_proc+4,cs
+;
+    AllocateSysHandle
+    mov ds:hsi_index,ebx
+
+olhHandleOk:
+    LeaveSection ds:hsi_section
+    clc
+
+olhDone:
+    pop ebx
+    retf32
+open_legacy_handle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           CreateHandleObj
 ;
 ;           DESCRIPTION:    Create new handle obj
@@ -2718,7 +2772,7 @@ CreateLocalKernelObj   Endp
 ;           PARAMETERS:     ES:EDI      Filename
 ;                           CX          Mode
 ;                           
-;           RETURNS:        DS          Sys handle obj
+;           RETURNS:        DS          Kernel handle obj
 ;                           NC          Success
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2727,9 +2781,35 @@ open_legacy_kernel_name DB 'Open Legacy Kernel', 0
 
 open_legacy_kernel   Proc far
     push eax
+    push ebx
 ;
     call OpenLegacyObj
     jc olkDone
+;
+    EnterSection ds:hsi_section
+;
+    mov ebx,ds:hsi_index
+    or ebx,ebx
+    jz olkNew
+;
+    dec ds:file_usage
+    jmp olkHandleOk
+
+olkNew:
+    mov ds:hsi_create_handle_proc,OFFSET CreateHandleObj
+    mov ds:hsi_create_handle_proc+4,cs
+;
+    mov ds:hsi_create_kernel_proc,OFFSET CreateKernelObj
+    mov ds:hsi_create_kernel_proc+4,cs
+;
+    mov ds:hsi_delete_proc,OFFSET CloseSysObj
+    mov ds:hsi_delete_proc+4,cs
+;
+    AllocateSysHandle
+    mov ds:hsi_index,ebx
+
+olkHandleOk:
+    LeaveSection ds:hsi_section
 ;    
     call CreateLocalKernelObj
     mov ds,ax
@@ -2737,6 +2817,7 @@ open_legacy_kernel   Proc far
     clc
 
 olkDone:
+    pop ebx
     pop eax
     retf32
 open_legacy_kernel   Endp
@@ -2759,6 +2840,12 @@ init_file       PROC near
 ;
     mov edi,OFFSET swap_proc
     RegisterSwapProc
+;
+    mov esi,OFFSET open_legacy_handle
+    mov edi,OFFSET open_legacy_handle_name
+    xor cl,cl
+    mov ax,open_legacy_handle_nr
+    RegisterOsGate
 ;
     mov esi,OFFSET open_legacy_kernel
     mov edi,OFFSET open_legacy_kernel_name

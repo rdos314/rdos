@@ -1969,30 +1969,6 @@ oloHandle:
     call ParseEnd
 ;
     mov ds,bx
-    EnterSection ds:hsi_section
-;
-    mov ebx,ds:hsi_index
-    or ebx,ebx
-    jz oloNew
-;
-    dec ds:file_usage
-    jmp oloHandleOk
-
-oloNew:
-    mov ds:hsi_create_handle_proc,OFFSET CreateHandleObj
-    mov ds:hsi_create_handle_proc+4,cs
-;
-    mov ds:hsi_create_kernel_proc,OFFSET CreateKernelObj
-    mov ds:hsi_create_kernel_proc+4,cs
-;
-    mov ds:hsi_delete_proc,OFFSET CloseSysObj
-    mov ds:hsi_delete_proc+4,cs
-;
-    AllocateSysHandle
-    mov ds:hsi_index,ebx
-
-oloHandleOk:
-    LeaveSection ds:hsi_section
     clc
     jmp oloDone
 
@@ -2015,28 +1991,6 @@ oloDone:
     pop es
     ret
 OpenLegacyObj   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           open_legacy_handle
-;
-;           DESCRIPTION:    Open legacy handle
-;
-;           PARAMETERS:     ES:EDI      Filename
-;                           CX          Mode
-;                           
-;           RETURNS:        DS          Sys handle obj
-;                           NC          Success
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_legacy_handle_name  DB 'Open Legacy Handle',0
-
-open_legacy_handle    Proc far
-    call OpenLegacyObj
-    retf32
-open_legacy_handle   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2948,12 +2902,6 @@ init_dir    PROC near
     mov edi,OFFSET insert_file_entry_name
     xor cl,cl
     mov ax,insert_file_entry_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET open_legacy_handle
-    mov edi,OFFSET open_legacy_handle_name
-    xor cl,cl
-    mov ax,open_legacy_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET get_drive_info
