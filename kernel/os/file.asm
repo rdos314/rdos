@@ -552,6 +552,7 @@ req_file_init:
     InitReadWriteSection ds:file_size_section
     InitSection ds:file_list_section
     mov ds:file_usage,1
+    mov ds:file_kernel_sel,0
     mov ds:file_c_handle,0
     mov ds:file_read_handle,0
     mov ds:file_drive,bl
@@ -2788,12 +2789,15 @@ open_legacy_kernel   Proc far
 ;
     EnterSection ds:hsi_section
 ;
-    mov ebx,ds:hsi_index
-    or ebx,ebx
+    mov ax,ds:file_kernel_sel
+    or ax,ax
     jz olkNew
 ;
     dec ds:file_usage
-    jmp olkHandleOk
+    mov ds,ax
+    inc ds:hki_ref_count
+    clc
+    jmp olkDone
 
 olkNew:
     mov ds:hsi_create_handle_proc,OFFSET CreateHandleObj
@@ -2805,13 +2809,10 @@ olkNew:
     mov ds:hsi_delete_proc,OFFSET CloseSysObj
     mov ds:hsi_delete_proc+4,cs
 ;
-    AllocateSysHandle
-    mov ds:hsi_index,ebx
-
-olkHandleOk:
     LeaveSection ds:hsi_section
 ;    
     call CreateLocalKernelObj
+    mov ds:file_kernel_sel,ax
     mov ds,ax
     inc ds:hki_ref_count
     clc
