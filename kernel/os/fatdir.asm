@@ -31,8 +31,6 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE blk.inc
-INCLUDE ..\hint.inc
 INCLUDE ..\fs.inc
 INCLUDE fat.inc
 

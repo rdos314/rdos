@@ -35,8 +35,6 @@ INCLUDE ..\os.inc
 INCLUDE int.def
 INCLUDE exec.def
 INCLUDE system.inc
-INCLUDE blk.inc
-INCLUDE ..\hint.inc
 INCLUDE ..\fs.inc
 INCLUDE ..\wait.inc
 INCLUDE ..\debevent.inc

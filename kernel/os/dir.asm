@@ -33,8 +33,6 @@ INCLUDE protseg.def
 INCLUDE ..\user.inc
 INCLUDE ..\driver.def
 INCLUDE system.inc
-INCLUDE blk.inc
-INCLUDE ..\hint.inc
 INCLUDE ..\fs.inc
 INCLUDE ..\handle.inc
 INCLUDE ..\apicheck.inc

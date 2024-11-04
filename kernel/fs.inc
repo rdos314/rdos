@@ -62,8 +62,6 @@ file_list_struc	ENDS
 
 file_data_struc	STRUC
 
-file_base               handle_sys_interface <>
-
 file_prev		DW ?
 file_next		DW ?
 file_size_section	read_write_section_typ <>
