@@ -716,8 +716,12 @@ OpenHandleObj     Proc near
     push eax
 ;  
     call OpenUserVfsFile
-    jc ohLegacy
+    jnc ohInit
 ;
+    OpenLegacyHandle
+    jc ohFail
+
+ohInit:
     call AllocateUserHandle
     jc ohFail
 
@@ -734,26 +738,6 @@ ohSizeOk:
     mov ds:hei_io_mode,ax
     clc
     jmp ohDone
-
-ohLegacy:  
-    OpenLegacyHandle
-    jc ohFail
-;
-    EnterSection ds:hsi_section
-    inc ds:hsi_ref_count
-    LeaveSection ds:hsi_section
-;
-    call fword ptr ds:hsi_create_handle_proc
-    jc ohFail
-;
-    mov ebx,ds:hsi_index
-
-    mov ds,eax
-    mov ds:hei_sys_index,ebx
-;
-    inc ds:hei_ref_count
-    call AllocateUserHandle
-    jnc ohCheckTrunc
 
 ohFail:
     xor ebx,ebx

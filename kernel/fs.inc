@@ -72,6 +72,7 @@ file_dir_entry		DD ?
 file_dir_sel            DW ?
 file_usage		DW ?
 file_kernel_sel         DW ?
+file_user_count         DW ?
 file_drive	        DB ?
 file_attrib	        DB ?
 file_c_handle           DW ?

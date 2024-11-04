@@ -2594,7 +2594,7 @@ AllocateSysHandle MACRO
 
 ; IN  ES:EDI      Filename
 ; IN  CX          Mode
-; OUT DS          Sys handle obj
+; OUT DS          Handle obj
 OpenLegacyHandle  MACRO
     OsGate open_legacy_handle_nr
                     ENDM

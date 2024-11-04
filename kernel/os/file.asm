@@ -553,6 +553,7 @@ req_file_init:
     InitSection ds:file_list_section
     mov ds:file_usage,1
     mov ds:file_kernel_sel,0
+    mov ds:file_user_count,0
     mov ds:file_c_handle,0
     mov ds:file_read_handle,0
     mov ds:file_drive,bl
@@ -1855,7 +1856,7 @@ DeleteHandleObj   Proc far
     mov ds,ds:hei_sys_sel
     FreeMem
 ;
-    sub ds:hsi_ref_count,1
+    sub ds:file_user_count,1
     jnz chOk
 ;
     call fword ptr ds:hsi_delete_proc
@@ -2468,14 +2469,12 @@ DupObj Proc far
     mov ds,ds:hei_sys_sel
 ;
     EnterSection ds:hsi_section
-    inc ds:hsi_ref_count
+    inc ds:file_user_count
     LeaveSection ds:hsi_section
 ;
     call AllocateObj
     mov es:fhi_pos,eax
 ;
-    mov eax,ds:hsi_index
-    mov es:hei_sys_index,eax
     mov ax,es
     clc
 ;
@@ -2483,7 +2482,6 @@ DupObj Proc far
     pop ds
     retf32
 DupObj Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2495,7 +2493,7 @@ DupObj Endp
 ;           PARAMETERS:     ES:EDI      Filename
 ;                           CX          Mode
 ;                           
-;           RETURNS:        DS          Sys handle obj
+;           RETURNS:        DS          Handle obj
 ;                           NC          Success
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2503,6 +2501,7 @@ DupObj Endp
 open_legacy_handle_name  DB 'Open Legacy Handle',0
 
 open_legacy_handle    Proc far
+    push es
     push ebx
 ;
     call OpenLegacyObj
@@ -2510,11 +2509,12 @@ open_legacy_handle    Proc far
 ;
     EnterSection ds:hsi_section
 ;
-    mov ebx,ds:hsi_index
-    or ebx,ebx
+    mov bx,ds:file_user_count
+    or bx,bx
     jz olhNew
 ;
     dec ds:file_usage
+    inc ds:file_user_count
     jmp olhHandleOk
 
 olhNew:
@@ -2527,15 +2527,19 @@ olhNew:
     mov ds:hsi_delete_proc,OFFSET CloseSysObj
     mov ds:hsi_delete_proc+4,cs
 ;
-    AllocateSysHandle
-    mov ds:hsi_index,ebx
+    inc ds:file_user_count
 
 olhHandleOk:
     LeaveSection ds:hsi_section
+;
+    call AllocateObj
+    mov bx,es
+    mov ds,bx
     clc
 
 olhDone:
     pop ebx
+    pop es
     retf32
 open_legacy_handle   Endp
 
@@ -2665,6 +2669,7 @@ DeleteKernelObj    Proc far
     mov ds,ds:hki_sys_sel
     FreeMem
 ;
+    mov ds:file_kernel_sel,0
     sub ds:hsi_ref_count,1
     jnz dkoOk
 ;
