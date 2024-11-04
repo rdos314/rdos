@@ -5112,15 +5112,15 @@ GetAccessSel  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteHandleSel
+;       NAME:           CloseHandleSel
 ;
-;       DESCRIPTION:    Delete handle sel
+;       DESCRIPTION:    Close handle sel
 ;
 ;       PARAMETERS:     DS              Handle interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteHandleSel      Proc far
+CloseHandleSel      Proc near
     push ds
     push eax
     push ebx
@@ -5128,7 +5128,7 @@ DeleteHandleSel      Proc far
 ;
     mov ebx,ds:hf_user_handle
     or ebx,ebx
-    jz dhsDone
+    jz choDone
 ;
     mov ds,ds:hei_proc_sel
     call SyncFileSize
@@ -5141,15 +5141,124 @@ DeleteHandleSel      Proc far
 ;
     dec ebx
     lock btc ds:[edx],ebx
-    jc dhsDone
+    jc choDone
 ;
     int 3
 
-dhsDone:
+choDone:
     pop edx
     pop ebx
     pop eax
     pop ds
+    ret
+CloseHandleSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeHandleSel
+;
+;       DESCRIPTION:    Free handle sel
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeHandleSel      Proc near
+    push es
+    push eax
+    push ebx
+    push edx
+;
+    mov ebx,ds:hei_proc_index
+    cmp ebx,PROC_HANDLE_COUNT
+    jbe fhProcHighOk
+;
+    int 3
+
+fhProcHighOk:
+    sub ebx,1
+    jae fhProcLowOk
+;
+    int 3
+
+fhProcLowOk:
+    mov eax,ds
+    mov es,eax
+    mov ds,ds:hei_proc_sel
+    FreeMem
+;
+    mov edx,ds
+    mov es,edx
+    mov ds,ds:hpi_sys_sel
+    EnterSection ds:hsi_section
+;
+    sub es:hpi_ref_count,1
+    jnz fhLeave
+;
+    xor ax,ax
+    xchg ax,ds:[2*ebx].hsi_sel_arr
+    cmp ax,dx
+    je fhSelOk
+;
+    int 3
+
+fhSelOk:
+    xor eax,eax
+    xchg eax,ds:[4*ebx].hsi_proc_arr
+;
+    btc ds:hsi_proc_bitmap,ebx
+    jc fhBitOk
+;
+    int 3
+
+fhBitOk:
+    mov ds,edx
+    call fword ptr ds:hpi_delete_proc
+;
+    mov ds,ds:hpi_sys_sel
+    FreeMem
+;
+    sub ds:hsi_ref_count,1
+    jnz fhLeave
+;
+    LeaveSection ds:hsi_section
+;
+    call fword ptr ds:hsi_delete_proc
+    jmp fhOk
+
+fhLeave:
+    LeaveSection ds:hsi_section
+    jmp fhOk
+
+fhFail:
+    stc
+
+fhOk:
+    clc
+
+fhDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    ret
+FreeHandleSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteHandleSel
+;
+;       DESCRIPTION:    Delete handle sel
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteHandleSel      Proc far
+    call CloseHandleSel
+    call FreeHandleSel
     ret
 DeleteHandleSel      Endp
 

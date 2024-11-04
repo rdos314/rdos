@@ -779,8 +779,8 @@ OpenHandleObj     Endp
 
 CloseHandleObj     Proc near
     push ds
-    push es
-    pushad
+    push eax
+    push ebx
 ;
     movzx ebx,bx
     mov eax,proc_handle_sel
@@ -801,112 +801,7 @@ CloseHandleObj     Proc near
     sub ds:hei_ref_count,1
     jnz chOk
 ;
-    mov es,eax
     call fword ptr ds:hei_delete_proc
-;
-    mov ax,ds:hei_proc_sel
-    or ax,ax
-    jnz chCheckProc
-;
-    mov ax,ds:hei_sys_sel
-    or ax,ax
-    jz chOk
-;
-    mov ebx,ds:hei_sys_index
-    mov ds,eax
-    EnterSection ds:hsi_section
-    jmp chCheckSys
-
-chCheckProc:
-    mov ebx,ds:hei_proc_index
-    cmp ebx,PROC_HANDLE_COUNT
-    jbe chProcHighOk
-;
-    int 3
-
-chProcHighOk:
-    sub ebx,1
-    jae chProcLowOk
-;
-    int 3
-
-chProcLowOk:
-    mov ds,ds:hei_proc_sel
-    FreeMem
-;
-    mov ebp,ds
-    mov es,ebp
-    mov ds,ds:hpi_sys_sel
-    EnterSection ds:hsi_section
-;
-    sub es:hpi_ref_count,1
-    jnz chLeave
-;
-    xor ax,ax
-    xchg ax,ds:[2*ebx].hsi_sel_arr
-    cmp ax,bp
-    je chSelOk
-;
-    int 3
-
-chSelOk:
-    xor eax,eax
-    xchg eax,ds:[4*ebx].hsi_proc_arr
-;
-    btc ds:hsi_proc_bitmap,ebx
-    jc chBitOk
-;
-    int 3
-
-chBitOk:
-    mov ds,ebp
-    call fword ptr ds:hpi_delete_proc
-;
-    mov ebx,ds:hpi_sys_index
-    mov ds,ds:hpi_sys_sel
-
-chCheckSys:
-    cmp ebx,SYS_HANDLE_COUNT
-    jbe chSysHighOk
-;
-    int 3
-
-chSysHighOk:
-    sub ebx,1
-    jae chSysLowOk
-;
-    int 3
-
-chSysLowOk:
-    FreeMem
-
-    sub ds:hsi_ref_count,1
-    jnz chLeave
-;
-    mov edx,ds
-    mov eax,SEG data
-    mov es,eax
-    xor ax,ax
-    xchg ax,es:[2*ebx].hd_sys_arr
-    cmp ax,dx
-    je chSysOk
-;
-    int 3
-
-chSysOk:
-    btc es:hd_sys_bitmap,ebx
-    jc chSysBitOk
-;
-    int 3
-
-chSysBitOk:
-    LeaveSection ds:hsi_section
-    call fword ptr ds:hsi_delete_proc
-    clc
-    jmp chDone
-
-chLeave:
-    LeaveSection ds:hsi_section
     clc
     jmp chDone
 
@@ -917,8 +812,8 @@ chOk:
     clc
 
 chDone:
-    popad
-    pop es
+    pop ebx
+    pop eax
     pop ds
     ret
 CloseHandleObj     Endp

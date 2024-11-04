@@ -39,16 +39,8 @@ void main()
     int size;
     int dummy;
     long long pos;
-    int handle = RdosOpenHandle("e:/9.log", O_RDWR);
-    int handle1 = RdosOpenHandle("e:/1.log", O_RDWR);
-    int handle2 = RdosOpenHandle("e:/2.log", O_RDWR);
-    int handle3 = RdosOpenHandle("e:/3.log", O_RDWR);
-    int handle4 = RdosOpenHandle("e:/4.log", O_RDWR);
-    int handle5 = RdosOpenHandle("e:/5.log", O_RDWR);
-    int handle6 = RdosOpenHandle("e:/6.log", O_RDWR);
-    int handle7 = RdosOpenHandle("e:/7.log", O_RDWR);
-    int handle8 = RdosOpenHandle("e:/8.log", O_RDWR);
-    int handle9 = RdosOpenHandle("e:/9.log", O_RDWR);
+    int handle = RdosOpenHandle("e:/test.bin", O_RDWR);
+    int handle2;
 
     RdosSetHandlePos(handle, 25);
     handle2 = RdosDupHandle(handle);
@@ -76,16 +68,8 @@ void main()
     size = RdosReadHandle(handle, buf, 567);
 
 
-    RdosCloseHandle(handle1);
-    RdosCloseHandle(handle8);
     RdosCloseHandle(handle2);
     RdosCloseHandle(handle);
-    RdosCloseHandle(handle6);
-    RdosCloseHandle(handle9);
-    RdosCloseHandle(handle7);
-    RdosCloseHandle(handle3);
-    RdosCloseHandle(handle4);
-    RdosCloseHandle(handle5);
 
 
 //    RdosSetHandleSize(handle, 0);

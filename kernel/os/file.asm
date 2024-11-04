@@ -1845,9 +1845,31 @@ CloseSysObj    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 DeleteHandleObj   Proc far
+    push es
+    push eax
+;
+    mov ax,ds
+    mov es,ax
+    mov ds,ds:hei_proc_sel
+    FreeMem
+;
+    sub ds:hsi_ref_count,1
+    jnz chOk
+;
+    call fword ptr ds:hsi_delete_proc
     clc
+    jmp chDone
+
+chFail:
+    stc
+
+chOk:
+    clc
+
+chDone:
+    pop eax
+    pop es
     retf32
 DeleteHandleObj   Endp
 
