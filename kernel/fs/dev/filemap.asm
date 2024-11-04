@@ -212,7 +212,7 @@ code    SEGMENT byte public 'CODE'
 
     extern CreateSysObj:near
     extern CreateKernelObj:near
-    extern CreateHandleObj:near
+    extern InitHandleObj:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5330,6 +5330,57 @@ InitHandleSel   Proc near
 ;
     ret
 InitHandleSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateHandleObj
+;
+;           DESCRIPTION:    Create proc object
+;
+;           PARAMETERS:     DS         Proc interface
+;                           EAX        Size of oebject
+;                           EDX        Linear address of object
+;
+;           RETURNS:        AX         Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateHandleObj    Proc near
+    push ds
+    push es
+    push ebx
+    push ecx
+;
+    push ds
+    AllocateLdt
+    pop ds
+;
+    or bx,4
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,ebx
+    call InitHandleObj
+;
+    mov es:hei_proc_sel,ds
+;
+    mov eax,ds:hpi_index
+    mov es:hei_proc_index,eax
+;
+    mov ds,ds:hpi_sys_sel
+    mov es:hei_sys_sel,ds
+;
+    mov eax,ds:hsi_index
+    mov es:hei_sys_index,eax
+;
+    mov eax,es
+;
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+CreateHandleObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
