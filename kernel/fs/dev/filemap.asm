@@ -5987,15 +5987,15 @@ WriteKernelSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteKernelSel
+;       NAME:           CloseKernelSel
 ;
-;       DESCRIPTION:    Delete kernel sel
+;       DESCRIPTION:    Close kernel sel
 ;
 ;       PARAMETERS:     DS              Kernel interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteKernelSel  Proc far
+CloseKernelSel  Proc near
     push ds
     push es
     pushad
@@ -6006,10 +6006,10 @@ DeleteKernelSel  Proc far
     mov ebx,OFFSET fm_sorted_arr
     mov ecx,240
 
-dkmLoop:
+ckmLoop:
     mov al,es:[ebx]
     cmp al,-1
-    je dkmUnlink
+    je ckmUnlink
 ;
     movzx esi,al
     add esi,OFFSET kfm_ref_arr
@@ -6018,13 +6018,13 @@ dkmLoop:
     add edi,OFFSET fm_entry_arr    
     call CheckKernelDirtyMap
     call FreeKernelMap
-    jmp dkmLoop
+    jmp ckmLoop
 
-dkmNext:
+ckmNext:
     inc ebx
-    loop dkmLoop
+    loop ckmLoop
 
-dkmUnlink:
+ckmUnlink:
     call UpdateKernelUnlinked
 ;
     FreeMem
@@ -6032,6 +6032,90 @@ dkmUnlink:
     popad
     pop es
     pop ds
+    ret
+CloseKernelSel  Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteKernelSel
+;
+;       DESCRIPTION:    Delete kernel sel
+;
+;       PARAMETERS:     DS              Kernel interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeKernelSel  Proc near
+    push es
+    push eax
+    push ebx
+    push edx
+;
+    sub ds:hki_ref_count,1
+    jnz fksDone
+;
+    mov ebx,ds
+    mov dx,ds:hki_sys_sel
+    mov ds,edx
+;
+    EnterSection ds:hsi_section
+;
+    xor ax,ax
+    xchg ax,ds:hsi_kernel_sel
+    cmp ax,bx
+    je fksDel
+;
+    int 3
+
+fksDel:
+    mov ds,eax
+    mov es,eax
+    call fword ptr ds:hki_delete_proc
+;
+    mov ds,edx
+    FreeMem
+;
+    sub ds:hsi_ref_count,1
+    jnz fksLeaveOk
+;
+    LeaveSection ds:hsi_section
+;
+    call fword ptr ds:hsi_delete_proc
+    clc
+    jmp fksDone
+
+fksFail:
+    stc
+    jmp fksDone
+
+fksLeaveOk:
+    LeaveSection ds:hsi_section
+    clc
+
+fksDone:
+    pop edx
+    pop ebx
+    pop eax
+    pop es
+    ret
+FreeKernelSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteKernelSel
+;
+;       DESCRIPTION:    Delete kernel sel
+;
+;       PARAMETERS:     DS              Kernel interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteKernelSel  Proc far
+    call CloseKernelSel
+    call FreeKernelSel
     ret
 DeleteKernelSel  Endp
 
@@ -6092,10 +6176,10 @@ CreateKernelSel   Proc far
     mov al,cl
     dec al
 
-ckmLoop:
+ckmiLoop:
     stosb
     dec al
-    loop ckmLoop
+    loop ckmiLoop
 ;
     mov eax,SIZE handle_kernel_file
     AllocateSmallLinear

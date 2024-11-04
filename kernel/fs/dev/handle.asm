@@ -2396,89 +2396,33 @@ close_kernel_handle_name DB 'Close Kernel Handle', 0
 
 close_kernel_handle Proc far
     push ds
-    push es
-    pushad
+    push ebx
+    push esi
 ;
-    mov eax,SEG data
-    mov es,eax
+    mov esi,SEG data
+    mov ds,esi
 ;
     movzx ebx,bx
-    cmp ebx,SYS_HANDLE_COUNT
+    cmp ebx,KERNEL_HANDLE_COUNT
     ja ckhFail
 ;
     sub ebx,1
     jc ckhFail
 ;
-    mov ax,es:[2*ebx].hd_sys_arr
-    or ax,ax
+    mov si,ds:[2*ebx].kh_arr
+    or si,si
     jz ckhFail
 ;
-    mov ds,eax
-    mov ebp,eax
-    EnterSection ds:hsi_section
-;
-    mov ax,ds:hsi_kernel_sel
-    or ax,ax
-    jz ckhLeaveFail
-;
-    mov ds,eax
-    sub ds:hki_ref_count,1
-    jz ckhFree
-;
-    mov ds,ebp
-    jmp ckhLeaveOk
-
-ckhFree:
-    mov ds,ebp
-    xor ax,ax
-    xchg ax,ds:hsi_kernel_sel
-    mov ds,eax
-    mov es,eax
+    mov ds,esi
     call fword ptr ds:hki_delete_proc
-;
-    mov ds,ebp
-    FreeMem
-;
-    sub ds:hsi_ref_count,1
-    jnz ckhLeaveOk
-;
-    mov eax,SEG data
-    mov es,eax
-;
-    mov edx,ds
-    xor ax,ax
-    xchg ax,es:[2*ebx].hd_sys_arr
-    cmp ax,dx
-    je ckhSysOk
-;
-    int 3
-
-ckhSysOk:
-    btc es:hd_sys_bitmap,ebx
-    jc ckhSysBitOk
-;
-    int 3
-
-ckhSysBitOk:
-    LeaveSection ds:hsi_section
-    call fword ptr ds:hsi_delete_proc
-    clc
     jmp ckhDone
-
-ckhLeaveFail:
-    LeaveSection ds:hsi_section
 
 ckhFail:
     stc
-    jmp ckhDone
-
-ckhLeaveOk:
-    LeaveSection ds:hsi_section
-    clc
 
 ckhDone:
-    popad
-    pop es
+    pop esi
+    pop ebx
     pop ds
     ret
 close_kernel_handle Endp

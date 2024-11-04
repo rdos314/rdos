@@ -2599,7 +2599,30 @@ WriteKernelObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DeleteKernelObj    Proc far
+    push es
+    push ebx
+;
+    sub ds:hki_ref_count,1
+    jnz dkoOk
+;
+    mov bx,ds
+    mov es,bx
+    mov bx,ds:hki_sys_sel
+    call fword ptr ds:hki_delete_proc
+;
+    mov ds,bx
+    FreeMem
+;
+    sub ds:hsi_ref_count,1
+    jnz dkoOk
+;
+    call fword ptr ds:hsi_delete_proc
+
+dkoOk:
     clc
+;
+    pop ebx
+    pop es
     retf32
 DeleteKernelObj    Endp
 
