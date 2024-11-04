@@ -1519,24 +1519,6 @@ IsHandleDeviceObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           InitSysHandle
-;
-;           DESCRIPTION:    Init sys object
-;
-;           PARAMETERS:     ES         Sys interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_sys_handle_name  DB 'Init Sys Handle', 0
-
-init_sys_handle_pr     Proc far
-    call InitSysObj
-    ret
-init_sys_handle_pr     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           InitHandle
 ;
 ;           DESCRIPTION:    Init handle object
@@ -1551,26 +1533,6 @@ init_handle     Proc far
     call InitHandleObj
     ret
 init_handle     Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateSysHandle
-;
-;           DESCRIPTION:    Allocate sys file handle
-;
-;           PARAMETERS:     DS          Sys interface
-;
-;           RETURNS:        EBX         Sys handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_sys_handle_name  DB 'Allocate Sys Handle', 0
-
-allocate_sys_handle     Proc far
-    call AllocateLocalSysHandle
-    ret
-allocate_sys_handle     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3021,18 +2983,6 @@ init_sys_handle     PROC near
     mov edi,OFFSET init_handle_name
     xor cl,cl
     mov ax,init_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET init_sys_handle_pr
-    mov edi,OFFSET init_sys_handle_name
-    xor cl,cl
-    mov ax,init_sys_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_sys_handle
-    mov edi,OFFSET allocate_sys_handle_name
-    xor cl,cl
-    mov ax,allocate_sys_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET create_kernel_handle
