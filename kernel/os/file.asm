@@ -1859,6 +1859,10 @@ DeleteHandleObj   Proc far
     sub ds:file_user_count,1
     jnz chOk
 ;
+    mov ax,ds:file_kernel_sel
+    or ax,ax
+    jz chOk
+;
     call fword ptr ds:hsi_delete_proc
     clc
     jmp chDone
@@ -2670,7 +2674,8 @@ DeleteKernelObj    Proc far
     FreeMem
 ;
     mov ds:file_kernel_sel,0
-    sub ds:hsi_ref_count,1
+    mov bx,ds:file_user_count
+    or bx,bx
     jnz dkoOk
 ;
     call fword ptr ds:hsi_delete_proc
