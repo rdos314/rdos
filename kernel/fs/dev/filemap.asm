@@ -6768,7 +6768,6 @@ ouvfProcOk:
     jc ouvfFail
 ;
     mov ds,eax
-    inc ds:hei_ref_count
     clc
     jmp ouvfDone
     

@@ -570,6 +570,7 @@ aluhOk:
     mov ebx,edx
     mov es:[2*ebx].ph_arr,ds
 ;
+    inc ds:hei_ref_count
     clc
 
 aluhDone:
@@ -722,7 +723,6 @@ DupHandleObj   Proc near
     jc dhFail
 ;
     mov ds,eax
-    inc ds:hei_ref_count
     call AllocateUserHandle
     jnc dhDone
 
