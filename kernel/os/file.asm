@@ -519,7 +519,6 @@ req_file_block_loop:
     add eax,SIZE file_data_struc - 4
     AllocateSmallGlobalMem
     mov es:file_dir_sel,ds
-    InitSysHandle
 ;
     mov ax,es
     mov ds,ax
@@ -541,7 +540,6 @@ req_file_skip_lists:
     mov eax,SIZE file_data_struc - 4
     AllocateSmallGlobalMem
     mov es:file_dir_sel,ds
-    InitSysHandle
 ;
     mov ax,es
     mov ds,ax
@@ -1815,30 +1813,6 @@ swap_proc       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CloseSysObj
-;
-;           DESCRIPTION:    Close and delete sys obj
-;
-;           PARAMETERS:     DS              Sys handle interface
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CloseSysObj
-
-CloseSysObj    Proc far
-    push ds
-;
-    mov bx,ds
-    call ReleaseFileSel
-    clc
-;
-    pop ds
-    retf32
-CloseSysObj    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DeleteHandleObj
 ;
 ;           DESCRIPTION:    Delete handle obj
@@ -1849,7 +1823,8 @@ CloseSysObj    Endp
 
 DeleteHandleObj   Proc far
     push es
-    push eax
+    push ax
+    push bx
 ;
     mov ax,ds
     mov es,ax
@@ -1863,7 +1838,8 @@ DeleteHandleObj   Proc far
     or ax,ax
     jz chOk
 ;
-    call fword ptr ds:hsi_delete_proc
+    mov bx,ds
+    call ReleaseFileSel
     clc
     jmp chDone
 
@@ -1874,7 +1850,8 @@ chOk:
     clc
 
 chDone:
-    pop eax
+    pop bx
+    pop ax
     pop es
     retf32
 DeleteHandleObj   Endp
@@ -2472,9 +2449,7 @@ DupObj Proc far
     mov eax,ds:fhi_pos
     mov ds,ds:hei_sys_sel
 ;
-    EnterSection ds:hsi_section
     inc ds:file_user_count
-    LeaveSection ds:hsi_section
 ;
     call AllocateObj
     mov es:fhi_pos,eax
@@ -2511,31 +2486,16 @@ open_legacy_handle    Proc far
     call OpenLegacyObj
     jc olhDone
 ;
-    EnterSection ds:hsi_section
-;
     mov bx,ds:file_user_count
     or bx,bx
     jz olhNew
 ;
     dec ds:file_usage
-    inc ds:file_user_count
-    jmp olhHandleOk
 
 olhNew:
-    mov ds:hsi_create_handle_proc,OFFSET CreateHandleObj
-    mov ds:hsi_create_handle_proc+4,cs
-;
-    mov ds:hsi_create_kernel_proc,OFFSET CreateKernelObj
-    mov ds:hsi_create_kernel_proc+4,cs
-;
-    mov ds:hsi_delete_proc,OFFSET CloseSysObj
-    mov ds:hsi_delete_proc+4,cs
-;
     inc ds:file_user_count
 
 olhHandleOk:
-    LeaveSection ds:hsi_section
-;
     call AllocateObj
     mov bx,es
     mov ds,bx
@@ -2546,31 +2506,6 @@ olhDone:
     pop es
     retf32
 open_legacy_handle   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateHandleObj
-;
-;           DESCRIPTION:    Create new handle obj
-;
-;           PARAMETERS:     DS     Sys interface
-;
-;           RETURNS:        AX     Handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CreateHandleObj
-
-CreateHandleObj   Proc far
-    push es
-;
-    call AllocateObj
-    mov ax,es
-;
-    pop es
-    retf32
-CreateHandleObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2663,7 +2598,7 @@ WriteKernelObj   Endp
 
 DeleteKernelObj    Proc far
     push es
-    push ebx
+    push bx
 ;
     sub ds:hki_ref_count,1
     jnz dkoOk
@@ -2678,12 +2613,13 @@ DeleteKernelObj    Proc far
     or bx,bx
     jnz dkoOk
 ;
-    call fword ptr ds:hsi_delete_proc
+    mov bx,ds
+    call ReleaseFileSel
 
 dkoOk:
     clc
 ;
-    pop ebx
+    pop bx
     pop es
     retf32
 DeleteKernelObj    Endp
@@ -2701,51 +2637,7 @@ DeleteKernelObj    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public CreateKernelObj
-
-CreateKernelObj   Proc far
-    push es
-    push ebx
-    push ecx
-    push edx
-;
-    mov eax,SIZE handle_kernel_interface
-    AllocateSmallLinear
-;
-    CreateKernelHandle
-    mov es,ax
-;
-    mov es:hki_read_proc,OFFSET ReadKernelObj
-    mov es:hki_read_proc+4,cs
-;
-    mov es:hki_write_proc,OFFSET WriteKernelObj
-    mov es:hki_write_proc+4,cs
-;
-    mov es:hki_delete_proc,OFFSET DeleteKernelObj
-    mov es:hki_delete_proc+4,cs
-;
-    pop edx
-    pop ecx
-    pop ebx
-    pop es
-    retf32
-CreateKernelObj   Endp
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateKernelObj
-;
-;           DESCRIPTION:    Create new kernel obj
-;
-;           PARAMETERS:     DS     Sys interface
-;
-;           RETURNS:        AX     Kernel interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateLocalKernelObj   Proc near
+CreateKernelObj   Proc near
     push es
     push ebx
     push ecx
@@ -2771,7 +2663,7 @@ CreateLocalKernelObj   Proc near
     pop ebx
     pop es
     ret
-CreateLocalKernelObj   Endp
+CreateKernelObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2797,8 +2689,6 @@ open_legacy_kernel   Proc far
     call OpenLegacyObj
     jc olkDone
 ;
-    EnterSection ds:hsi_section
-;
     mov ax,ds:file_kernel_sel
     or ax,ax
     jz olkNew
@@ -2810,18 +2700,7 @@ open_legacy_kernel   Proc far
     jmp olkDone
 
 olkNew:
-    mov ds:hsi_create_handle_proc,OFFSET CreateHandleObj
-    mov ds:hsi_create_handle_proc+4,cs
-;
-    mov ds:hsi_create_kernel_proc,OFFSET CreateKernelObj
-    mov ds:hsi_create_kernel_proc+4,cs
-;
-    mov ds:hsi_delete_proc,OFFSET CloseSysObj
-    mov ds:hsi_delete_proc+4,cs
-;
-    LeaveSection ds:hsi_section
-;    
-    call CreateLocalKernelObj
+    call CreateKernelObj
     mov ds:file_kernel_sel,ax
     mov ds,ax
     inc ds:hki_ref_count

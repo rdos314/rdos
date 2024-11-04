@@ -76,9 +76,6 @@ code    SEGMENT byte public use16 'CODE'
 
     extrn RequestFileSel:near
     extrn ReleaseFileSel:near
-    extrn CreateHandleObj:far
-    extrn CreateKernelObj:far
-    extrn CloseSysObj:far
 
 char_tab:
 ct00 DB 0,          0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh,   0FFh
