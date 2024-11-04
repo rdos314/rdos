@@ -6070,10 +6070,7 @@ FreeKernelSel  Proc near
     int 3
 
 fksDel:
-    mov ds,eax
     mov es,eax
-    call fword ptr ds:hki_delete_proc
-;
     mov ds,edx
     FreeMem
 ;

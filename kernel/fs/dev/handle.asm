@@ -3033,7 +3033,7 @@ AllocateKernelHandle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 test_gate_name DB 'Test', 0
-test_file      DB 'c:/rdos.bin', 0
+test_file      DB 'e:/rdos.bin', 0
 
 test_gate    Proc far
     push ds
