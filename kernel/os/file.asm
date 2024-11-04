@@ -1851,7 +1851,7 @@ DeleteHandleObj   Proc far
 ;
     mov ax,ds
     mov es,ax
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hei_sys_sel
     FreeMem
 ;
     sub ds:hsi_ref_count,1
@@ -2607,10 +2607,7 @@ DeleteKernelObj    Proc far
 ;
     mov bx,ds
     mov es,bx
-    mov bx,ds:hki_sys_sel
-    call fword ptr ds:hki_delete_proc
-;
-    mov ds,bx
+    mov ds,ds:hki_sys_sel
     FreeMem
 ;
     sub ds:hsi_ref_count,1
