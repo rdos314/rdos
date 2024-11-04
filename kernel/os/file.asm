@@ -1834,10 +1834,6 @@ DeleteHandleObj   Proc far
     sub ds:file_user_count,1
     jnz chOk
 ;
-    mov ax,ds:file_kernel_sel
-    or ax,ax
-    jz chOk
-;
     mov bx,ds
     call ReleaseFileSel
     clc
@@ -2609,10 +2605,6 @@ DeleteKernelObj    Proc far
     FreeMem
 ;
     mov ds:file_kernel_sel,0
-    mov bx,ds:file_user_count
-    or bx,bx
-    jnz dkoOk
-;
     mov bx,ds
     call ReleaseFileSel
 
