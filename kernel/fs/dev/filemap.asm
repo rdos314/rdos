@@ -58,20 +58,6 @@ PROC_BITMAP_COUNT     = PROC_HANDLE_COUNT SHR 5
     .386p
 
 
-handle_sys_interface    STRUC
-
-hsi_blk                   blk_header <>
-
-hsi_section               section_typ <>
-
-hsi_ref_count             DW ?
-hsi_kernel_sel            DW ?
-hsi_proc_bitmap           DD PROC_BITMAP_COUNT DUP(?)
-hsi_proc_arr              DD PROC_HANDLE_COUNT DUP(?)
-hsi_sel_arr               DW PROC_HANDLE_COUNT DUP(?)
-
-handle_sys_interface    ENDS
-
 handle_proc_interface    STRUC
 
 ;  IN	DS                Handle proc interface
@@ -138,7 +124,15 @@ proc_entry  ENDS
 
 kernel_file       STRUC
 
-kf_sys            handle_sys_interface <>
+kf_blk                   blk_header <>
+
+kf_entry_section         section_typ <>
+
+kf_ref_count             DW ?
+kf_kernel_sel            DW ?
+kf_proc_bitmap           DD PROC_BITMAP_COUNT DUP(?)
+kf_proc_arr              DD PROC_HANDLE_COUNT DUP(?)
+kf_sel_arr               DW PROC_HANDLE_COUNT DUP(?)
 
 kf_info_phys      DD ?,?
 kf_info_linear    DD ?
@@ -430,14 +424,14 @@ UpdateFileSel   Proc near
     pushad
 ;
     mov ds,eax
-    EnterSection ds:hsi_section
+    EnterSection ds:kf_entry_section
 ;
     mov eax,flat_sel
     mov es,eax
 ;
     mov ecx,PROC_BITMAP_COUNT  
-    mov esi,OFFSET hsi_proc_bitmap
-    mov edi,OFFSET hsi_proc_arr
+    mov esi,OFFSET kf_proc_bitmap
+    mov edi,OFFSET kf_proc_arr
 
 ufsLoop:
     mov eax,ds:[esi]
@@ -472,7 +466,7 @@ ufsCont:
     loop ufsLoop
 
 ufsKernel:
-    mov bx,ds:hsi_kernel_sel
+    mov bx,ds:kf_kernel_sel
     or bx,bx
     jz ufsDone
 ;
@@ -482,7 +476,7 @@ ufsKernel:
     mov es:fm_update,1
 
 ufsDone:
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
 ;
     popad
     pop es
@@ -2731,13 +2725,13 @@ DisableFileReq  Proc near
     push gs
     pushad
 ;
-    EnterSection ds:hsi_section
+    EnterSection ds:kf_entry_section
     mov ebx,ds:[4*edx].kf_handle_arr
     lock bts ds:[ebx].kre_flags,KRE_DISABLED
 ;
     mov ecx,PROC_BITMAP_COUNT  
-    mov esi,OFFSET hsi_proc_bitmap
-    mov edi,OFFSET hsi_proc_arr
+    mov esi,OFFSET kf_proc_bitmap
+    mov edi,OFFSET kf_proc_arr
 
 dfrLoop:
     mov eax,ds:[esi]
@@ -2801,10 +2795,10 @@ dfrCont:
     jnz dfrLoop
 
 dfrKernel:
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
 ;
-    EnterSection ds:hsi_section
-    mov ax,ds:hsi_kernel_sel
+    EnterSection ds:kf_entry_section
+    mov ax,ds:kf_kernel_sel
     or ax,ax
     jz dfrkLeave
 ;
@@ -2829,7 +2823,7 @@ dfrkNext:
     loop dfrkLoop
 
 dfrkLeave:
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
 
 dfrCache:
     mov ebx,ds:[4*edx].kf_handle_arr
@@ -3612,9 +3606,9 @@ UpdateKernelMap  Proc near
     push es
     pushad
 ;
-    EnterSection ds:hsi_section
+    EnterSection ds:kf_entry_section
 ;
-    mov es,ds:hsi_kernel_sel
+    mov es,ds:kf_kernel_sel
     mov es,es:hkf_map_sel
     mov es:fm_update,0
     mov ebx,OFFSET fm_sorted_arr
@@ -3643,7 +3637,7 @@ ukmSkip:
 ukmLeave:
     call UpdateKernelUnlinked
 ;
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
 ;
     call SendUpdate
 ;
@@ -4093,7 +4087,7 @@ MapKernelFile_      Proc near
     call WaitForKernelReq
     jc mkfDone
 ;
-    mov es,ds:hsi_kernel_sel
+    mov es,ds:kf_kernel_sel
     mov es,es:hkf_map_sel
     call SyncKernelMap
 
@@ -4128,7 +4122,7 @@ GrowKernelFile_      Proc near
     call WaitForKernelGrow
     jc gkfDone
 ;
-    mov es,ds:hsi_kernel_sel
+    mov es,ds:kf_kernel_sel
     mov es,es:hkf_map_sel
     call SyncKernelMap
 
@@ -5222,13 +5216,13 @@ fhProcLowOk:
     mov edx,ds
     mov es,edx
     mov ds,ds:hpi_sys_sel
-    EnterSection ds:hsi_section
+    EnterSection ds:kf_entry_section
 ;
     sub es:hpi_ref_count,1
     jnz fhLeave
 ;
     xor ax,ax
-    xchg ax,ds:[2*ebx].hsi_sel_arr
+    xchg ax,ds:[2*ebx].kf_sel_arr
     cmp ax,dx
     je fhSelOk
 ;
@@ -5236,9 +5230,9 @@ fhProcLowOk:
 
 fhSelOk:
     xor eax,eax
-    xchg eax,ds:[4*ebx].hsi_proc_arr
+    xchg eax,ds:[4*ebx].kf_proc_arr
 ;
-    btc ds:hsi_proc_bitmap,ebx
+    btc ds:kf_proc_bitmap,ebx
     jc fhBitOk
 ;
     int 3
@@ -5250,16 +5244,16 @@ fhBitOk:
     mov ds,ds:hpi_sys_sel
     FreeMem
 ;
-    sub ds:hsi_ref_count,1
+    sub ds:kf_ref_count,1
     jnz fhLeave
 ;
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
 ;
     call DeleteSysSel
     jmp fhOk
 
 fhLeave:
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
     jmp fhOk
 
 fhFail:
@@ -6198,10 +6192,10 @@ FreeKernelSel  Proc near
     mov dx,ds:hki_file_sel
     mov ds,edx
 ;
-    EnterSection ds:hsi_section
+    EnterSection ds:kf_entry_section
 ;
     xor ax,ax
-    xchg ax,ds:hsi_kernel_sel
+    xchg ax,ds:kf_kernel_sel
     cmp ax,bx
     je fksDel
 ;
@@ -6212,10 +6206,10 @@ fksDel:
     mov ds,edx
     FreeMem
 ;
-    sub ds:hsi_ref_count,1
+    sub ds:kf_ref_count,1
     jnz fksLeaveOk
 ;
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
 ;
     call DeleteSysSel
     clc
@@ -6226,7 +6220,7 @@ fksFail:
     jmp fksDone
 
 fksLeaveOk:
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
     clc
 
 fksDone:
@@ -6402,21 +6396,21 @@ InitSysObj  Proc near
     push ecx
     push edi
 ;
-    mov es:hsi_kernel_sel,0
-    mov es:hsi_ref_count,0
-    InitSection es:hsi_section
+    mov es:kf_kernel_sel,0
+    mov es:kf_ref_count,0
+    InitSection es:kf_entry_section
 ;
-    mov edi,OFFSET hsi_proc_arr
+    mov edi,OFFSET kf_proc_arr
     xor eax,eax
     mov ecx,PROC_HANDLE_COUNT
     rep stosd
 ;
-    mov edi,OFFSET hsi_sel_arr
+    mov edi,OFFSET kf_sel_arr
     xor eax,eax
     mov ecx,PROC_HANDLE_COUNT
     rep stosw
 ;
-    mov edi,OFFSET hsi_proc_bitmap
+    mov edi,OFFSET kf_proc_bitmap
     xor eax,eax
     mov ecx,SYS_BITMAP_COUNT
     rep stosd
@@ -6580,8 +6574,8 @@ FindProc      Proc near
     mov edx,es:ph_linear
 ;
     mov ecx,PROC_BITMAP_COUNT  
-    mov esi,OFFSET hsi_proc_bitmap
-    mov edi,OFFSET hsi_proc_arr
+    mov esi,OFFSET kf_proc_bitmap
+    mov edi,OFFSET kf_proc_arr
 
 fpLoop:
     mov eax,ds:[esi]
@@ -6596,9 +6590,9 @@ fpeLoop:
     jne fpeNext
 ;
     pop ecx
-    sub edi,OFFSET hsi_proc_arr
+    sub edi,OFFSET kf_proc_arr
     shl edi,2
-    mov ax,ds:[2*edi].hsi_sel_arr
+    mov ax,ds:[2*edi].kf_sel_arr
     clc
     jmp fpDone
 
@@ -6647,7 +6641,7 @@ AllocateProcHandle     Proc near
 ;
     mov ecx,PROC_BITMAP_COUNT  
     xor edi,edi
-    mov bx,OFFSET hsi_proc_bitmap
+    mov bx,OFFSET kf_proc_bitmap
 
 alphLoop:
     mov eax,ds:[bx]
@@ -6665,15 +6659,15 @@ alphLoop:
 
 alphOk:
     add edx,edi
-    lock bts ds:hsi_proc_bitmap,edx
+    lock bts ds:kf_proc_bitmap,edx
     jc alphLoop
 ;
     mov ebx,proc_handle_sel
     mov es,ebx
     mov ebx,edx
     mov edx,es:ph_linear
-    mov ds:[4*ebx].hsi_proc_arr,edx
-    mov ds:[2*ebx].hsi_sel_arr,bp
+    mov ds:[4*ebx].kf_proc_arr,edx
+    mov ds:[2*ebx].kf_sel_arr,bp
 ;
     mov es,ebp
     inc ebx
@@ -6779,14 +6773,14 @@ ovfFound:
     jc ovfFail
 ;
     mov ds,eax
-    EnterSection ds:hsi_section
+    EnterSection ds:kf_entry_section
     call InsertSysArr
     jnc ovfHandleOk
 ;
     call SendDerefReq
 
 ovfHandleOk:
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
 ;
     clc
     jmp ovfDone
@@ -6832,12 +6826,12 @@ OpenUserVfsFile    Proc near
     call OpenVfsFile
     jc ouvfDone
 ;
-    EnterSection ds:hsi_section
+    EnterSection ds:kf_entry_section
 ;
     call FindProc
     jnc ouvfProcOk
 ;
-    inc ds:hsi_ref_count
+    inc ds:kf_ref_count
 ;
     call CreateProcSel
     jc ouvfFail
@@ -6849,7 +6843,7 @@ ouvfProcOk:
     mov es,eax
     add es:hpi_ref_count,1
 ;
-    LeaveSection ds:hsi_section
+    LeaveSection ds:kf_entry_section
 ;
     mov ds,eax
     call fword ptr ds:hpi_create_proc
@@ -6889,15 +6883,15 @@ OpenKernelVfsFile    Proc near
     call OpenVfsFile
     jc okvfDone
 ;
-    mov ax,ds:hsi_kernel_sel
+    mov ax,ds:kf_kernel_sel
     or ax,ax
     jnz okvfKernOk
 ;
-    inc ds:hsi_ref_count
+    inc ds:kf_ref_count
     call CreateKernelSel
     jc okvfDone
 ;
-    mov ds:hsi_kernel_sel,ax
+    mov ds:kf_kernel_sel,ax
 
 okvfKernOk:
     mov ds,eax
