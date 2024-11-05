@@ -60,9 +60,6 @@ PROC_BITMAP_COUNT     = PROC_HANDLE_COUNT SHR 5
 
 handle_proc_interface    STRUC
 
-;  IN	DS                Handle proc interface
-hpi_delete_proc           DD ?,?
-
 hpi_ref_count             DW ?
 hpi_linear                DD ?
 hpi_proc_linear           DD ?
@@ -5234,7 +5231,7 @@ fhSelOk:
 
 fhBitOk:
     mov ds,edx
-    call fword ptr ds:hpi_delete_proc
+    call DeleteProcSel
 ;
     mov ds,ds:hpi_sys_sel
     FreeMem
@@ -5761,16 +5758,6 @@ RemoveSysArr    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-cr_handle_fail    Proc far
-    stc
-    ret
-cr_handle_fail    Endp
-
-del_proc_fail    Proc far
-    stc
-    ret
-del_proc_fail    Endp
-
 CreateProcObj    Proc near
     push es
     push ebx
@@ -5784,9 +5771,6 @@ CreateProcObj    Proc near
     mov ecx,eax
     CreateDataSelector32
     mov es,ebx
-;
-    mov es:hpi_delete_proc,OFFSET del_proc_fail
-    mov es:hpi_delete_proc+4,cs
 ;
     mov es:hpi_linear,edx
     mov es:hpi_proc_linear,0
@@ -5981,9 +5965,6 @@ cvmsLoop:
     mov es:pf_file_sel,ds
     mov es:pf_handle,0
     mov es:pf_ref_count,0
-;
-    mov es:hpi_delete_proc,OFFSET DeleteProcSel
-    mov es:hpi_delete_proc+4,cs
 ;
     push ds
     AllocateLdt
