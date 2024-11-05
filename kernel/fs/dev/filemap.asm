@@ -57,19 +57,6 @@ PROC_BITMAP_COUNT     = PROC_HANDLE_COUNT SHR 5
 
     .386p
 
-
-handle_proc_interface    STRUC
-
-hpi_ref_count             DW ?
-hpi_linear                DD ?
-hpi_proc_linear           DD ?
-hpi_index                 DD ?
-hpi_sys_index             DD ?
-hpi_sys_sel               DW ?
-
-handle_proc_interface    ENDS
-
-
 file_handle_seg     STRUC
 
 fh_base       handle_header <>
@@ -153,7 +140,8 @@ kernel_file       ENDS
 
 process_file   STRUC
 
-pf_base          handle_proc_interface <>
+pf_ref_count     DW ?
+pf_index         DD ?
 
 pf_flat_base     DD ?
 pf_map_linear    DD ?
@@ -5207,10 +5195,10 @@ fhProcLowOk:
 ;
     mov edx,ds
     mov es,edx
-    mov ds,ds:hpi_sys_sel
+    mov ds,ds:pf_file_sel
     EnterSection ds:kf_entry_section
 ;
-    sub es:hpi_ref_count,1
+    sub es:pf_ref_count,1
     jnz fhLeave
 ;
     xor ax,ax
@@ -5233,7 +5221,7 @@ fhBitOk:
     mov ds,edx
     call DeleteProcSel
 ;
-    mov ds,ds:hpi_sys_sel
+    mov ds,ds:pf_file_sel
     FreeMem
 ;
     sub ds:kf_ref_count,1
@@ -5382,10 +5370,10 @@ CreateHandleObj    Proc near
 ;
     mov es:hei_proc_sel,ds
 ;
-    mov eax,ds:hpi_index
+    mov eax,ds:pf_index
     mov es:hei_proc_index,eax
 ;
-    mov ds,ds:hpi_sys_sel
+    mov ds,ds:pf_file_sel
     mov es:hei_sys_sel,ds
 ;
     mov eax,es
@@ -5458,7 +5446,7 @@ dusLoop:
     lock bts es:[edx],ebx
     jc dusLoop
 ;
-    inc ds:hpi_ref_count
+    inc ds:pf_ref_count
 ;
     add ebx,esi
     mov esi,ebx
@@ -5772,11 +5760,8 @@ CreateProcObj    Proc near
     CreateDataSelector32
     mov es,ebx
 ;
-    mov es:hpi_linear,edx
-    mov es:hpi_proc_linear,0
-    mov es:hpi_index,0
-    mov es:hpi_ref_count,0
-    mov es:hpi_sys_sel,ds
+    mov es:pf_index,0
+    mov es:pf_ref_count,0
 ;
     mov eax,es
 ;
@@ -5797,7 +5782,7 @@ CreateProcObj   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteProcSel   Proc far
+DeleteProcSel   Proc near
     push es
     push eax
     push ebx
@@ -5937,9 +5922,8 @@ CreateProcSel   Proc near
     pop ebx
 ;
     xor eax,eax
-    mov edi,SIZE pf_base
+    xor edi,edi
     mov ecx,SIZE process_file
-    sub ecx,edi
     push ecx
     shr ecx,2
     rep stosd
@@ -6641,8 +6625,7 @@ alphOk:
 ;
     mov es,ebp
     inc ebx
-    mov es:hpi_index,ebx
-    mov es:hpi_proc_linear,edx
+    mov es:pf_index,ebx
     clc
 
 alphDone:
@@ -6811,7 +6794,7 @@ OpenUserVfsFile    Proc near
 
 ouvfProcOk:
     mov es,eax
-    add es:hpi_ref_count,1
+    add es:pf_ref_count,1
 ;
     LeaveSection ds:kf_entry_section
 ;
