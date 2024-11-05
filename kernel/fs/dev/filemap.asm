@@ -61,11 +61,6 @@ PROC_BITMAP_COUNT     = PROC_HANDLE_COUNT SHR 5
 handle_proc_interface    STRUC
 
 ;  IN	DS                Handle proc interface
-;  IN   CX                Access
-;  OUT  AX                Handle interface
-hpi_create_proc           DD ?,?
-
-;  IN	DS                Handle proc interface
 hpi_delete_proc           DD ?,?
 
 hpi_ref_count             DW ?
@@ -5532,7 +5527,7 @@ DupSel      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateHandleSel      Proc far
+CreateHandleSel      Proc near
     push es
     push ebx
     push ecx
@@ -5790,9 +5785,6 @@ CreateProcObj    Proc near
     CreateDataSelector32
     mov es,ebx
 ;
-    mov es:hpi_create_proc,OFFSET cr_handle_fail
-    mov es:hpi_create_proc+4,cs
-;
     mov es:hpi_delete_proc,OFFSET del_proc_fail
     mov es:hpi_delete_proc+4,cs
 ;
@@ -5989,9 +5981,6 @@ cvmsLoop:
     mov es:pf_file_sel,ds
     mov es:pf_handle,0
     mov es:pf_ref_count,0
-;
-    mov es:hpi_create_proc,OFFSET CreateHandleSel
-    mov es:hpi_create_proc+4,cs
 ;
     mov es:hpi_delete_proc,OFFSET DeleteProcSel
     mov es:hpi_delete_proc+4,cs
@@ -6846,7 +6835,7 @@ ouvfProcOk:
     LeaveSection ds:kf_entry_section
 ;
     mov ds,eax
-    call fword ptr ds:hpi_create_proc
+    call CreateHandleSel
     jc ouvfFail
 ;
     mov ds,eax
