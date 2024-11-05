@@ -40,6 +40,8 @@ include vfs.inc
 include vfsmsg.inc
 include vfsfile.inc
 
+SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
+
   REQ_READ = 1
   REQ_FREE = 2
   REQ_CLOSE = 3
@@ -210,7 +212,6 @@ code    SEGMENT byte public 'CODE'
     extern KernelWrite:near
     extern UpdateWrBitmap:near
 
-    extern CreateSysObj:near
     extern CreateKernelObj:near
     extern InitHandleObj:near
 
@@ -6358,6 +6359,100 @@ scrDone:
     pop ds
     ret
 DeleteSysSel   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           InitSysObj
+;
+;           DESCRIPTION:    Init sys object
+;
+;           PARAMETERS:     ES         Sys interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sys_fail    Proc far
+    stc
+    ret
+sys_fail    Endp
+
+InitSysObj  Proc near
+    push eax
+    push ecx
+    push edi
+;
+    mov es:hsi_create_proc_proc,OFFSET sys_fail
+    mov es:hsi_create_proc_proc+4,cs
+;
+    mov es:hsi_create_kernel_proc,OFFSET sys_fail
+    mov es:hsi_create_kernel_proc+4,cs
+;
+    mov es:hsi_create_handle_proc,OFFSET sys_fail
+    mov es:hsi_create_handle_proc+4,cs
+;
+    mov es:hsi_delete_proc,OFFSET sys_fail
+    mov es:hsi_delete_proc+4,cs
+;
+    mov es:hsi_kernel_sel,0
+    mov es:hsi_ref_count,0
+    mov es:hsi_index,0
+    InitSection es:hsi_section
+;
+    mov edi,OFFSET hsi_proc_arr
+    xor eax,eax
+    mov ecx,PROC_HANDLE_COUNT
+    rep stosd
+;
+    mov edi,OFFSET hsi_sel_arr
+    xor eax,eax
+    mov ecx,PROC_HANDLE_COUNT
+    rep stosw
+;
+    mov edi,OFFSET hsi_proc_bitmap
+    xor eax,eax
+    mov ecx,SYS_BITMAP_COUNT
+    rep stosd
+;
+    pop edi
+    pop ecx
+    pop eax
+    ret
+InitSysObj  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           CreateSysObj
+;
+;           DESCRIPTION:    Create sys object
+;
+;           PARAMETERS:     EAX        Size of object
+;
+;           RETURNS:        DS         Sys interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSysObj    Proc near
+    push es
+    push eax
+    push ecx
+    push esi
+;
+    mov esi,eax
+    mov ax,8
+    CreateBlk
+;
+    mov eax,ds
+    mov es,eax
+;
+    call InitSysObj
+;
+    pop esi
+    pop ecx
+    pop eax
+    pop es
+    ret
+CreateSysObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
