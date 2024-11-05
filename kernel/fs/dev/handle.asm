@@ -1998,8 +1998,7 @@ is_handle_device  Endp
 ;
 ;           DESCRIPTION:    Create kernel object
 ;
-;           PARAMETERS:     DS         Sys interface
-;                           EAX        Size of object
+;           PARAMETERS:     EAX        Size of object
 ;                           EDX        Linear address of object        
 ;                           
 ;           RETURNS:        AX         Kernel interface
@@ -2039,10 +2038,6 @@ CreateKernelObj    Proc near
     mov es:hki_delete_proc+4,cs
 ;
     mov es:hki_ref_count,0
-    mov es:hki_sys_sel,ds
-;
-    mov eax,ds:hsi_index
-    mov es:hki_sys_index,eax
 ;
     mov eax,es
 ;

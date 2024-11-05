@@ -212,8 +212,7 @@ hki_write_proc            DD ?,?
 hki_delete_proc           DD ?,?
 
 hki_ref_count             DW ?
-hki_sys_index             DD ?
-hki_sys_sel               DW ?
+hki_file_sel              DW ?
 
 handle_kernel_interface    ENDS
 

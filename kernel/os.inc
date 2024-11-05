@@ -2572,7 +2572,6 @@ InitHandle  MACRO
     OsGate init_handle_nr
                     ENDM
 
-; IN  DS         Sys interface
 ; IN  EAX        Size of object
 ; IN  EDX        Linear address of object        
 ; OUT AX         Kernel interface

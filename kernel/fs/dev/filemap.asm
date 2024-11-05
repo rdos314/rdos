@@ -6025,7 +6025,7 @@ ReadKernelSel    Proc far
     push eax
     push edx
 ;
-    movzx ebx,ds:hki_sys_sel
+    movzx ebx,ds:hki_file_sel
     mov fs,ds:hkf_map_sel
     xor esi,esi
     xor ebp,ebp
@@ -6075,7 +6075,7 @@ WriteKernelSel    Proc far
     push eax
     push edx
 ;
-    movzx ebx,ds:hki_sys_sel
+    movzx ebx,ds:hki_file_sel
     mov fs,ds:hkf_map_sel
     xor esi,esi
     xor ebp,ebp
@@ -6114,7 +6114,7 @@ CloseKernelSel  Proc near
     pushad
 ;
     mov es,ds:hkf_map_sel
-    mov ds,ds:hki_sys_sel
+    mov ds,ds:hki_file_sel
 ;
     mov ebx,OFFSET fm_sorted_arr
     mov ecx,240
@@ -6170,7 +6170,7 @@ FreeKernelSel  Proc near
     jnz fksDone
 ;
     mov ebx,ds
-    mov dx,ds:hki_sys_sel
+    mov dx,ds:hki_file_sel
     mov ds,edx
 ;
     EnterSection ds:hsi_section
@@ -6296,6 +6296,7 @@ ckmiLoop:
 ;
     call CreateKernelObj
     mov es,eax
+    mov es:hki_file_sel,ds
 ;
     mov es:hki_read_proc,OFFSET ReadKernelSel
     mov es:hki_read_proc+4,cs

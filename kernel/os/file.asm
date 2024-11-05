@@ -2529,7 +2529,7 @@ ReadKernelObj    Proc far
     push edx
 ;
     mov edx,eax
-    mov ds,ds:hki_sys_sel
+    mov ds,ds:hki_file_sel
     call ReadHandleBase
     mov ecx,eax
     add edx,ecx
@@ -2568,7 +2568,7 @@ WriteKernelObj    Proc far
     push edx
 ;
     mov edx,eax
-    mov ds,ds:hki_sys_sel
+    mov ds,ds:hki_file_sel
     call WriteHandleBase
     mov ecx,eax
     add edx,ecx
@@ -2601,7 +2601,7 @@ DeleteKernelObj    Proc far
 ;
     mov bx,ds
     mov es,bx
-    mov ds,ds:hki_sys_sel
+    mov ds,ds:hki_file_sel
     FreeMem
 ;
     mov ds:file_kernel_sel,0
@@ -2623,7 +2623,7 @@ DeleteKernelObj    Endp
 ;
 ;           DESCRIPTION:    Create new kernel obj
 ;
-;           PARAMETERS:     DS     Sys interface
+;           PARAMETERS:     DS     File sel
 ;
 ;           RETURNS:        AX     Kernel interface
 ;
@@ -2640,6 +2640,7 @@ CreateKernelObj   Proc near
 ;
     CreateKernelHandle
     mov es,ax
+    mov es:hki_file_sel,ds
 ;
     mov es:hki_read_proc,OFFSET ReadKernelObj
     mov es:hki_read_proc+4,cs
