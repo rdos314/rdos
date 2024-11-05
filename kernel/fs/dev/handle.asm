@@ -40,8 +40,6 @@ INCLUDE vfs.inc
 
     .386p
 
-SYS_BITMAP_COUNT      = SYS_HANDLE_COUNT SHR 5
-
 KERNEL_HANDLE_COUNT   = 64
 KERNEL_BITMAP_COUNT   = KERNEL_HANDLE_COUNT SHR 5
 
@@ -66,8 +64,6 @@ hd_input_sel     DW ?
 hd_output_sel    DW ?
 
 hd_proc_arr      DD MAX_PROC_COUNT DUP(?)
-hd_sys_bitmap    DD SYS_BITMAP_COUNT DUP(?)
-hd_sys_arr       DW SYS_HANDLE_COUNT DUP(?)
 
 kh_section       section_typ <>
 kh_bitmap        DD KERNEL_BITMAP_COUNT DUP(?)
@@ -252,76 +248,6 @@ aphDone:
     pop ds
     ret
 apply_proc_handle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateLocalSysHandle
-;
-;           DESCRIPTION:    Allocate local sys file handle
-;
-;           PARAMETERS:     DS          Sys interface
-;
-;           RETURNS:        EBX         Sys handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public AllocateLocalSysHandle
-
-AllocateLocalSysHandle     Proc near
-    push ds
-    push eax
-    push ecx
-    push edx
-    push edi
-;
-    push ds
-;
-    mov ax,SEG data
-    mov ds,ax
-    EnterSection ds:hd_section
-;
-    mov ecx,SYS_BITMAP_COUNT  
-    xor edi,edi
-    mov bx,OFFSET hd_sys_bitmap
-
-alshLoop:
-    mov eax,ds:[bx]
-    not eax
-    bsf edx,eax
-    jnz alshOk
-;
-    add bx,4
-    add edi,32
-;
-    loop alshLoop
-;
-    stc
-    pop edx
-    jmp alshLeave
-
-alshOk:
-    add edx,edi
-    lock bts ds:hd_sys_bitmap,edx
-    jc alshLoop
-;
-    pop eax
-    mov ds:[2*edx].hd_sys_arr,ax
-;
-    mov ebx,edx
-    inc ebx
-    clc
-
-alshLeave:
-    LeaveSection ds:hd_section
-; 
-    pop edi
-    pop edx
-    pop ecx
-    pop eax
-    pop ds
-    ret
-AllocateLocalSysHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2835,16 +2761,6 @@ init_sys_handle     PROC near
     mov ecx,MAX_PROC_COUNT
     rep stosd
 ;
-    mov edi,OFFSET hd_sys_bitmap
-    xor eax,eax
-    mov ecx,SYS_BITMAP_COUNT
-    rep stosd
-;
-    mov edi,OFFSET hd_sys_arr
-    xor ax,ax
-    mov ecx,SYS_HANDLE_COUNT
-    rep stosw
-;
     mov edi,OFFSET kh_bitmap
     xor eax,eax
     mov ecx,KERNEL_BITMAP_COUNT
@@ -2857,7 +2773,6 @@ init_sys_handle     PROC near
 ;
     InitSection es:hd_section
     InitSection es:kh_section
-    mov es:hd_sys_bitmap,3
     mov es:hd_proc_count,0
     mov es:hd_input_sel,0
     mov es:hd_output_sel,0
