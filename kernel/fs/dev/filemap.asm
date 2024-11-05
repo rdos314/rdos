@@ -62,13 +62,6 @@ handle_sys_interface    STRUC
 
 hsi_blk                   blk_header <>
 
-;  IN	DS                Handle sys interface
-;  OUT  AX                Handle interface
-hsi_create_handle_proc    DD ?,?
-
-;  IN	DS                Handle sys interface
-hsi_delete_proc           DD ?,?
-
 hsi_index                 DD ?
 hsi_section               section_typ <>
 
@@ -5264,7 +5257,7 @@ fhBitOk:
 ;
     LeaveSection ds:hsi_section
 ;
-    call fword ptr ds:hsi_delete_proc
+    call DeleteSysSel
     jmp fhOk
 
 fhLeave:
@@ -6232,7 +6225,7 @@ fksDel:
 ;
     LeaveSection ds:hsi_section
 ;
-    call fword ptr ds:hsi_delete_proc
+    call DeleteSysSel
     clc
     jmp fksDone
 
@@ -6372,7 +6365,7 @@ CreateKernelSel   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteSysSel   Proc far
+DeleteSysSel   Proc near
     push ds
     push es
     push fs
@@ -6412,21 +6405,10 @@ DeleteSysSel   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-sys_fail    Proc far
-    stc
-    ret
-sys_fail    Endp
-
 InitSysObj  Proc near
     push eax
     push ecx
     push edi
-;
-    mov es:hsi_create_handle_proc,OFFSET sys_fail
-    mov es:hsi_create_handle_proc+4,cs
-;
-    mov es:hsi_delete_proc,OFFSET sys_fail
-    mov es:hsi_delete_proc+4,cs
 ;
     mov es:hsi_kernel_sel,0
     mov es:hsi_ref_count,0
@@ -6518,9 +6500,6 @@ CreateFileSel   Proc near
 ;
     mov eax,SIZE kernel_file
     call CreateSysObj
-;
-    mov ds:hsi_delete_proc, OFFSET DeleteSysSel
-    mov ds:hsi_delete_proc+4,cs
 ;
     InitSection ds:kf_section
     InitSection ds:kf_update_section
