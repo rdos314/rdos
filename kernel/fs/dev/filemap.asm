@@ -168,6 +168,7 @@ handle_file   STRUC
 hf_base          handle_entry_interface <>
 hf_user_handle   DD ?
 hf_proc_index    DD ?
+hf_proc_sel      DW ?
 
 handle_file   ENDS
 
@@ -4514,7 +4515,7 @@ GetMapSel    Proc far
 ;
     mov eax,ds:hf_user_handle
 ;
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     mov edi,ds:pf_map_linear
     clc
 ;
@@ -4542,7 +4543,7 @@ MapSel      Proc far
     push gs
     pushad
 ;
-    mov si,ds:hei_proc_sel
+    mov si,ds:hf_proc_sel
     mov ds,esi
     mov fs,esi
     mov es,ds:pf_map_sel
@@ -4584,7 +4585,7 @@ UpdateMapSel      Proc far
     push gs
     pushad
 ;
-    mov si,ds:hei_proc_sel
+    mov si,ds:hf_proc_sel
     mov ds,esi
     mov fs,esi
     mov es,ds:pf_map_sel
@@ -4619,7 +4620,7 @@ GrowMapSel      Proc far
     push gs
     pushad
 ;
-    mov si,ds:hei_proc_sel
+    mov si,ds:hf_proc_sel
     mov ds,esi
     mov fs,esi
     mov es,ds:pf_map_sel
@@ -4667,7 +4668,7 @@ ReadHandleSel    Proc far
     push ebp
 ;
     mov ebp,ds:hf_user_handle
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     mov bx,flat_data_sel
     mov fs,ebx
 ;
@@ -4732,7 +4733,7 @@ WriteHandleSel    Proc far
     push ebp
 ;
     mov ebp,ds:hf_user_handle
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     mov bx,flat_data_sel
     mov fs,ebx
 ;
@@ -4797,7 +4798,7 @@ PollHandleSel    Proc far
     push ebp
 ;
     mov ebp,ds:hf_user_handle
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     mov bx,flat_data_sel
     mov fs,ebx
 ;
@@ -4853,7 +4854,7 @@ GetPosSel    Proc far
     dec eax
     shl eax,3
 ;
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     mov esi,ds:pf_map_linear
     mov edx,flat_data_sel
     mov ds,edx
@@ -4891,7 +4892,7 @@ SetPosSel    Proc far
     dec ebx
     shl ebx,3
 ;
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     mov esi,ds:pf_map_linear
     mov ecx,flat_data_sel
     mov ds,ecx
@@ -4996,7 +4997,7 @@ IsEofSel    Proc far
     shl eax,3
 ;
     push ds
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     mov esi,ds:pf_map_linear
     pop ds
 ;
@@ -5136,7 +5137,7 @@ CloseHandleSel      Proc near
     or ebx,ebx
     jz choDone
 ;
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     call SyncFileSize
 ;
     mov edx,ds:pf_map_linear
@@ -5191,7 +5192,7 @@ fhProcHighOk:
 fhProcLowOk:
     mov eax,ds
     mov es,eax
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     FreeMem
 ;
     mov edx,ds
@@ -5369,7 +5370,7 @@ CreateHandleObj    Proc near
     mov es,ebx
     call InitHandleObj
 ;
-    mov es:hei_proc_sel,ds
+    mov es:hf_proc_sel,ds
 ;
     mov eax,ds:pf_index
     mov es:hf_proc_index,eax
@@ -5419,7 +5420,7 @@ DupSel      Proc far
     dec eax
     shl eax,3
 ;
-    mov ds,ds:hei_proc_sel
+    mov ds,ds:hf_proc_sel
     mov esi,ds:pf_map_linear
 ;
     mov edx,es:[esi].fm_handle_ptr
