@@ -167,6 +167,7 @@ handle_file   STRUC
 
 hf_base          handle_entry_interface <>
 hf_user_handle   DD ?
+hf_proc_index    DD ?
 
 handle_file   ENDS
 
@@ -5175,7 +5176,7 @@ FreeHandleSel      Proc near
     push ebx
     push edx
 ;
-    mov ebx,ds:hei_proc_index
+    mov ebx,ds:hf_proc_index
     cmp ebx,PROC_HANDLE_COUNT
     jbe fhProcHighOk
 ;
@@ -5371,7 +5372,7 @@ CreateHandleObj    Proc near
     mov es:hei_proc_sel,ds
 ;
     mov eax,ds:pf_index
-    mov es:hei_proc_index,eax
+    mov es:hf_proc_index,eax
 ;
     mov ds,ds:pf_file_sel
     mov es:hei_sys_sel,ds

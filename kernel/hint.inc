@@ -129,8 +129,6 @@ hei_delete_proc           DD ?,?
 
 hei_io_mode               DW ?
 hei_ref_count             DW ?
-hei_index                 DD ?
-hei_proc_index            DD ?
 hei_proc_sel              DW ?
 hei_sys_index             DD ?
 hei_sys_sel               DW ?
