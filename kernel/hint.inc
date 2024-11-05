@@ -27,61 +27,8 @@
 
 SYS_HANDLE_COUNT      = 1024    ; must be a power of 2
 
-PROC_HANDLE_COUNT     = 64
-PROC_BITMAP_COUNT     = PROC_HANDLE_COUNT SHR 5
-
 USER_HANDLE_COUNT     = 512
 USER_BITMAP_COUNT     = USER_HANDLE_COUNT SHR 5
-
-handle_sys_interface    STRUC
-
-hsi_blk                   blk_header <>
-
-;  IN	DS                Handle sys interface
-;  OUT  AX                Proc interface
-hsi_create_proc_proc      DD ?,?
-
-;  IN	DS                Handle sys interface
-;  OUT  AX                Kernel interface
-hsi_create_kernel_proc    DD ?,?
-
-;  IN	DS                Handle sys interface
-;  OUT  AX                Handle interface
-hsi_create_handle_proc    DD ?,?
-
-;  IN	DS                Handle sys interface
-hsi_delete_proc           DD ?,?
-
-hsi_index                 DD ?
-hsi_section               section_typ <>
-
-hsi_ref_count             DW ?
-
-hsi_kernel_sel            DW ?
-hsi_proc_bitmap           DD PROC_BITMAP_COUNT DUP(?)
-hsi_proc_arr              DD PROC_HANDLE_COUNT DUP(?)
-hsi_sel_arr               DW PROC_HANDLE_COUNT DUP(?)
-
-handle_sys_interface    ENDS
-
-handle_proc_interface    STRUC
-
-;  IN	DS                Handle proc interface
-;  IN   CX                Access
-;  OUT  AX                Handle interface
-hpi_create_proc           DD ?,?
-
-;  IN	DS                Handle proc interface
-hpi_delete_proc           DD ?,?
-
-hpi_ref_count             DW ?
-hpi_linear                DD ?
-hpi_proc_linear           DD ?
-hpi_index                 DD ?
-hpi_sys_index             DD ?
-hpi_sys_sel               DW ?
-
-handle_proc_interface    ENDS
 
 handle_entry_interface    STRUC
 
