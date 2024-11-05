@@ -63,10 +63,6 @@ handle_sys_interface    STRUC
 hsi_blk                   blk_header <>
 
 ;  IN	DS                Handle sys interface
-;  OUT  AX                Proc interface
-hsi_create_proc_proc      DD ?,?
-
-;  IN	DS                Handle sys interface
 ;  OUT  AX                Kernel interface
 hsi_create_kernel_proc    DD ?,?
 
@@ -5904,7 +5900,7 @@ DeleteProcSel      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateProcSel   Proc far
+CreateProcSel   Proc near
     push es
     push ebx
     push ecx
@@ -6430,9 +6426,6 @@ InitSysObj  Proc near
     push ecx
     push edi
 ;
-    mov es:hsi_create_proc_proc,OFFSET sys_fail
-    mov es:hsi_create_proc_proc+4,cs
-;
     mov es:hsi_create_kernel_proc,OFFSET sys_fail
     mov es:hsi_create_kernel_proc+4,cs
 ;
@@ -6533,8 +6526,6 @@ CreateFileSel   Proc near
     mov eax,SIZE kernel_file
     call CreateSysObj
 ;
-    mov ds:hsi_create_proc_proc,OFFSET CreateProcSel
-    mov ds:hsi_create_proc_proc+4,cs
 ;
     mov ds:hsi_create_kernel_proc,OFFSET CreateKernelSel
     mov ds:hsi_create_kernel_proc+4,cs
@@ -6889,7 +6880,7 @@ OpenUserVfsFile    Proc near
 ;
     inc ds:hsi_ref_count
 ;
-    call fword ptr ds:hsi_create_proc_proc
+    call CreateProcSel
     jc ouvfFail
 ;
     call AllocateProcHandle
