@@ -62,11 +62,9 @@ handle_sys_interface    STRUC
 
 hsi_blk                   blk_header <>
 
-hsi_index                 DD ?
 hsi_section               section_typ <>
 
 hsi_ref_count             DW ?
-
 hsi_kernel_sel            DW ?
 hsi_proc_bitmap           DD PROC_BITMAP_COUNT DUP(?)
 hsi_proc_arr              DD PROC_HANDLE_COUNT DUP(?)
@@ -5404,9 +5402,6 @@ CreateHandleObj    Proc near
     mov ds,ds:hpi_sys_sel
     mov es:hei_sys_sel,ds
 ;
-    mov eax,ds:hsi_index
-    mov es:hei_sys_index,eax
-;
     mov eax,es
 ;
     pop ecx
@@ -5812,9 +5807,6 @@ CreateProcObj    Proc near
     mov es:hpi_index,0
     mov es:hpi_ref_count,0
     mov es:hpi_sys_sel,ds
-;
-    mov eax,ds:hsi_index
-    mov es:hpi_sys_index,eax
 ;
     mov eax,es
 ;
@@ -6412,7 +6404,6 @@ InitSysObj  Proc near
 ;
     mov es:hsi_kernel_sel,0
     mov es:hsi_ref_count,0
-    mov es:hsi_index,0
     InitSection es:hsi_section
 ;
     mov edi,OFFSET hsi_proc_arr
