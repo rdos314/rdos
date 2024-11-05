@@ -343,7 +343,6 @@ InitHandleObj  Proc near
     mov es:hei_delete_proc+4,cs
 ;
     mov es:hei_ref_count,0
-    mov es:hei_sys_sel,0
     ret
 InitHandleObj    Endp
 

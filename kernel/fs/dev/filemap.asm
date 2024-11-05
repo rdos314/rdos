@@ -169,6 +169,7 @@ hf_base          handle_entry_interface <>
 hf_user_handle   DD ?
 hf_proc_index    DD ?
 hf_proc_sel      DW ?
+hf_file_sel      DW ?
 
 handle_file   ENDS
 
@@ -4927,7 +4928,7 @@ GetSizeSel    Proc far
     push ds
     push edi
 ;
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:hf_file_sel
     mov edi,ds:kf_info_linear
     mov ax,flat_sel
     mov ds,eax
@@ -4955,7 +4956,7 @@ SetSizeSel    Proc far
     push ds
     push ecx
 ;
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:hf_file_sel
     push eax
     GetThreadHandle
     movzx ecx,ax
@@ -5007,7 +5008,7 @@ IsEofSel    Proc far
     mov eax,es:[edx]
     mov edx,es:[edx+4]
 ;
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:hf_file_sel
     mov esi,ds:kf_info_linear
     sub eax,ds:[esi].fi_size
     sbb edx,ds:[esi].fi_size+4       
@@ -5046,7 +5047,7 @@ GetCreateSel    Proc far
     push ds
     push edi
 ;
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:hf_file_sel
     mov edi,ds:kf_info_linear
     mov ax,flat_sel
     mov ds,eax
@@ -5075,7 +5076,7 @@ GetModifySel    Proc far
     push ds
     push edi
 ;
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:hf_file_sel
     mov edi,ds:kf_info_linear
     mov ax,flat_sel
     mov ds,eax
@@ -5104,7 +5105,7 @@ GetAccessSel    Proc far
     push ds
     push edi
 ;
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:hf_file_sel
     mov edi,ds:kf_info_linear
     mov ax,flat_sel
     mov ds,eax
@@ -5376,7 +5377,7 @@ CreateHandleObj    Proc near
     mov es:hf_proc_index,eax
 ;
     mov ds,ds:pf_file_sel
-    mov es:hei_sys_sel,ds
+    mov es:hf_file_sel,ds
 ;
     mov eax,es
 ;

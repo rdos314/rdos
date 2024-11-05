@@ -42,8 +42,9 @@ INCLUDE gate.def
 
 file_handle_interface    STRUC
 
-fhi_base    handle_entry_interface <>
-fhi_pos     DD ?
+fhi_base      handle_entry_interface <>
+fhi_pos       DD ?
+fhi_file_sel  DW ?
 
 file_handle_interface    ENDS
 
@@ -1828,7 +1829,7 @@ DeleteHandleObj   Proc far
 ;
     mov ax,ds
     mov es,ax
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:fhi_file_sel
     FreeMem
 ;
     sub ds:file_user_count,1
@@ -2022,7 +2023,7 @@ ReadHandleObj       Proc far
 ;
     push ds
     mov edx,ds:fhi_pos
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:fhi_file_sel
     call ReadHandleBase
     pop ds
     jc rhoDone
@@ -2061,7 +2062,7 @@ WriteHandleObj       Proc far
 ;
     push ds
     mov edx,ds:fhi_pos
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:fhi_file_sel
     call WriteHandleBase
     pop ds
     jc whoDone
@@ -2100,7 +2101,7 @@ PollHandleObj       Proc far
 ;
     push ds
     mov edx,ds:fhi_pos
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:fhi_file_sel
     call ReadHandleBase
     pop ds
     jc phoDone
@@ -2175,7 +2176,7 @@ SetObjPos       Endp
 GetObjSize Proc far
     push ds
 ;
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:fhi_file_sel
     EnterReadSection ds:file_size_section
     mov eax,ds:file_size
     xor edx,edx
@@ -2209,7 +2210,7 @@ SetObjSize Proc far
     jnz sosDone
 ;
     mov edx,eax
-    mov bx,ds:hei_sys_sel
+    mov bx,ds:fhi_file_sel
     mov ds,bx
     mov al,ds:file_drive
     EnterWriteSection ds:file_size_section
@@ -2241,7 +2242,7 @@ GetObjTime Proc far
     push ds
     push es
 ;
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:fhi_file_sel
     mov dx,flat_sel
     mov es,dx
     mov edx,ds:file_dir_entry
@@ -2281,7 +2282,7 @@ SetObjTime Proc far
     mov es,cx
     mov ecx,eax
 ;
-    mov bx,ds:hei_sys_sel
+    mov bx,ds:fhi_file_sel
     mov fs,bx
     mov al,fs:file_drive
     mov edi,fs:file_dir_entry
@@ -2319,7 +2320,7 @@ SetObjTime Endp
 IsObjEof Proc far
     push ds
 ;
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:fhi_file_sel
     EnterReadSection ds:file_size_section
     mov eax,ds:file_size
     LeaveReadSection ds:file_size_section
@@ -2373,7 +2374,7 @@ AllocateObj   Proc near
     mov es,bx
 ;
     InitHandle
-    mov es:hei_sys_sel,ds
+    mov es:fhi_file_sel,ds
     mov es:fhi_pos,0
 ;
     mov es:hei_dup_proc,OFFSET DupObj
@@ -2443,7 +2444,7 @@ DupObj Proc far
     push es
 ;
     mov eax,ds:fhi_pos
-    mov ds,ds:hei_sys_sel
+    mov ds,ds:fhi_file_sel
 ;
     inc ds:file_user_count
 ;
