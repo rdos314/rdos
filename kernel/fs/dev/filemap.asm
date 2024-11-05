@@ -63,10 +63,6 @@ handle_sys_interface    STRUC
 hsi_blk                   blk_header <>
 
 ;  IN	DS                Handle sys interface
-;  OUT  AX                Kernel interface
-hsi_create_kernel_proc    DD ?,?
-
-;  IN	DS                Handle sys interface
 ;  OUT  AX                Handle interface
 hsi_create_handle_proc    DD ?,?
 
@@ -6287,7 +6283,7 @@ DeleteKernelSel  Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateKernelSel   Proc far
+CreateKernelSel   Proc near
     push es
     push ebx
     push ecx
@@ -6426,9 +6422,6 @@ InitSysObj  Proc near
     push ecx
     push edi
 ;
-    mov es:hsi_create_kernel_proc,OFFSET sys_fail
-    mov es:hsi_create_kernel_proc+4,cs
-;
     mov es:hsi_create_handle_proc,OFFSET sys_fail
     mov es:hsi_create_handle_proc+4,cs
 ;
@@ -6525,10 +6518,6 @@ CreateFileSel   Proc near
 ;
     mov eax,SIZE kernel_file
     call CreateSysObj
-;
-;
-    mov ds:hsi_create_kernel_proc,OFFSET CreateKernelSel
-    mov ds:hsi_create_kernel_proc+4,cs
 ;
     mov ds:hsi_delete_proc, OFFSET DeleteSysSel
     mov ds:hsi_delete_proc+4,cs
