@@ -346,6 +346,8 @@ InitHandleObj  Proc near
     mov es:hui_free_proc+4,cs
 ;
     mov es:hui_ref_count,0
+    mov es:hui_use_count,0
+    mov es:hui_close_thread,0
     ret
 InitHandleObj    Endp
 
