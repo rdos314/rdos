@@ -5719,6 +5719,79 @@ CreateProcObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           FindProcSel
+;
+;       DESCRIPTION:    Find proc sel
+;
+;       PARAMETERS:     DS              File sel
+;
+;       RETURNS:        NC
+;                         AX            Proc interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindProcSel      Proc near
+    push es
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov eax,proc_handle_sel
+    mov es,eax
+    mov edx,es:ph_linear
+;
+    mov ecx,PROC_BITMAP_COUNT  
+    mov esi,OFFSET kf_proc_bitmap
+    mov edi,OFFSET kf_proc_arr
+
+fpLoop:
+    mov eax,ds:[esi]
+    or eax,eax
+    jz fpNext
+;
+    push ecx
+    mov ecx,32
+
+fpeLoop:
+    cmp edx,ds:[edi]
+    jne fpeNext
+;
+    pop ecx
+    sub edi,OFFSET kf_proc_arr
+    shl edi,2
+    mov ax,ds:[2*edi].kf_sel_arr
+    clc
+    jmp fpDone
+
+fpeNext:
+    add edi,4
+    loop fpeLoop
+;
+    pop ecx
+    jmp fpCont
+
+fpNext:
+    add edi,4*32
+
+fpCont:
+    add esi,4
+    loop fpLoop
+;
+    stc
+
+fpDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop es
+    ret
+FindProcSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DeleteProcSel
 ;
 ;       DESCRIPTION:    Delete proc sel
@@ -6223,79 +6296,6 @@ ckmiLoop:
 CreateKernelObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FindProc
-;
-;       DESCRIPTION:    Find proc sel
-;
-;       PARAMETERS:     DS              Sys interface
-;
-;       RETURNS:        NC
-;                         AX            Proc interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindProc      Proc near
-    push es
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov eax,proc_handle_sel
-    mov es,eax
-    mov edx,es:ph_linear
-;
-    mov ecx,PROC_BITMAP_COUNT  
-    mov esi,OFFSET kf_proc_bitmap
-    mov edi,OFFSET kf_proc_arr
-
-fpLoop:
-    mov eax,ds:[esi]
-    or eax,eax
-    jz fpNext
-;
-    push ecx
-    mov ecx,32
-
-fpeLoop:
-    cmp edx,ds:[edi]
-    jne fpeNext
-;
-    pop ecx
-    sub edi,OFFSET kf_proc_arr
-    shl edi,2
-    mov ax,ds:[2*edi].kf_sel_arr
-    clc
-    jmp fpDone
-
-fpeNext:
-    add edi,4
-    loop fpeLoop
-;
-    pop ecx
-    jmp fpCont
-
-fpNext:
-    add edi,4*32
-
-fpCont:
-    add esi,4
-    loop fpLoop
-;
-    stc
-
-fpDone:
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop es
-    ret
-FindProc    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;           NAME:           AllocateProcHandle
@@ -6501,7 +6501,7 @@ OpenUserVfsFile    Proc near
 ;
     EnterSection ds:kf_entry_section
 ;
-    call FindProc
+    call FindProcSel
     jnc ouvfProcOk
 ;
     inc ds:kf_ref_count
