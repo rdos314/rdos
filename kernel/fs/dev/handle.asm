@@ -539,31 +539,62 @@ OpenHandleObj     Endp
 
 CloseHandleObj     Proc near
     push ds
+    push es
     push eax
     push ebx
 ;
     movzx ebx,bx
-    mov eax,proc_handle_sel
-    mov ds,eax
 ;
     cmp ebx,USER_HANDLE_COUNT
     jae chFail
 ;
+    mov eax,proc_handle_sel
+    mov ds,eax
+    EnterSection ds:ph_section
+;
     xor ax,ax
     xchg ax,ds:[2*ebx].ph_arr
     or ax,ax
-    jz chFail
+    jz chLeaveFail
 ;
     btc ds:ph_bitmap,ebx
-    jnc chFail
+    jc chClrOk
 ;
-    mov ds,eax
-    sub ds:hui_ref_count,1
+    int 3
+
+chClrOk:
+    mov es,eax
+    lock sub es:hui_use_count,1
+    jc chLeaveDo
+;
+    GetThread
+    mov es:hui_close_thread,ax
+    LeaveSection ds:ph_section
+
+chWait:
+    WaitForSignal
+;
+    mov ax,es:hui_use_count
+    cmp ax,-1
+    jne chWait
+;
+    mov eax,es
+    jmp chDo
+
+chLeaveDo:
+    LeaveSection ds:ph_section
+
+chDo:
+    sub es:hui_ref_count,1
     jnz chOk
 ;
+    mov ds,eax
     call fword ptr ds:hui_free_proc
     clc
     jmp chDone
+
+chLeaveFail:
+    LeaveSection ds:ph_section
 
 chFail:
     stc
@@ -574,6 +605,7 @@ chOk:
 chDone:
     pop ebx
     pop eax
+    pop es
     pop ds
     ret
 CloseHandleObj     Endp
