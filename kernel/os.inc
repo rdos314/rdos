@@ -2618,14 +2618,6 @@ SignalExceptionHandle MACRO
     OsGate signal_exc_handle_nr
                     ENDM
 
-; IN  AX        Entry type
-; IN  BX        Entry handle
-; IN  DX        Selector
-; OUT BX        Entry handle
-RefCHandle MACRO
-    OsGate ref_c_handle_nr
-                    ENDM
-
 ; IN  BX        File selector
 ; IN  AX        Handle
 StartReadLegacyFile               MACRO
