@@ -5974,18 +5974,18 @@ FreeKernelSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateKernelSel
+;       NAME:           CreateKernelObj
 ;
-;       DESCRIPTION:    Create kernel sel
+;       DESCRIPTION:    Create kernel obj
 ;
-;       PARAMETERS:     DS              Sys handle sel
+;       PARAMETERS:     DS              File sel
 ;
 ;       RETURNS:        NC
 ;                         AX            Kernel handle sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateKernelSel   Proc near
+CreateKernelObj   Proc near
     push es
     push ebx
     push ecx
@@ -6060,7 +6060,7 @@ ckmiLoop:
     pop ebx
     pop es
     ret
-CreateKernelSel   Endp
+CreateKernelObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6561,7 +6561,7 @@ OpenKernelVfsFile    Proc near
     jnz okvfKernOk
 ;
     inc ds:kf_ref_count
-    call CreateKernelSel
+    call CreateKernelObj
     jc okvfDone
 ;
     mov ds:kf_kernel_sel,ax
