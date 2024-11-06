@@ -329,7 +329,7 @@ BlockToPhys  Endp
 ;
 ;       DESCRIPTION:    Get file info
 ;
-;       PARAMETERS:     DS             Sys interface
+;       PARAMETERS:     DS             File sel
 ;
 ;       RETURNS:        EAX            Req count
 ;                       EBX            Wait count
@@ -351,6 +351,126 @@ GetFileDebugInfo   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           CreateFileSel
+;
+;       DESCRIPTION:    Create file selector
+;
+;       PARAMETERS:     EBX            Serv handle
+;                       EDX            File info linear
+;                       DI             Sector size
+;
+;       RETURNS:        NC
+;                         AX           File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public CreateFileSel
+
+CreateFileSel   Proc near
+    push ds
+    push es
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+    mov esi,SIZE kernel_file
+    mov ax,8
+    CreateBlk
+;
+    push es
+    push edi
+;
+    mov eax,ds
+    mov es,eax
+;
+    mov edi,OFFSET kf_proc_arr
+    xor eax,eax
+    mov ecx,PROC_HANDLE_COUNT
+    rep stosd
+;
+    mov edi,OFFSET kf_sel_arr
+    xor eax,eax
+    mov ecx,PROC_HANDLE_COUNT
+    rep stosw
+;
+    mov edi,OFFSET kf_proc_bitmap
+    xor eax,eax
+    mov ecx,SYS_BITMAP_COUNT
+    rep stosd
+;
+    pop edi
+    pop es
+;
+    mov ds:kf_kernel_sel,0
+    mov ds:kf_ref_count,0
+    InitSection ds:kf_entry_section
+    InitSection ds:kf_section
+    InitSection ds:kf_update_section
+    mov ds:kf_sector_size,di
+    mov ds:kf_part_sel,fs
+    mov ds:kf_serv_handle,ebx
+    mov ds:kf_wait_list,0
+    mov ds:kf_req_sync,0
+    mov ds:kf_wr_size,0
+
+    mov ds:kf_req_count,0
+    mov ds:kf_wait_count,0
+    mov ds:kf_block_count,0
+    mov ds:kf_phys_count,0
+    mov ds:kf_wr_ptr,0
+;
+    mov ecx,256
+    mov edi,OFFSET kf_handle_arr
+    mov eax,-1
+
+cfHandleInit:
+    mov ds:[edi],eax
+    add edi,4
+    loop cfHandleInit
+;
+    mov ecx,256
+    mov edi,OFFSET kf_sorted_arr
+    mov eax,-1
+
+cfSortedInit:
+    mov ds:[edi],al
+    inc edi
+    loop cfSortedInit
+;
+    GetPageEntry
+    or ax,800h
+    SetPageEntry
+;
+    push eax
+    mov eax,1000h
+    AllocateBigLinear
+    pop eax
+;
+    and ax,NOT 800h
+    SetPageEntry
+;
+    and ax,0F000h
+    mov ds:kf_info_phys,eax
+    mov ds:kf_info_phys+4,ebx
+    mov ds:kf_info_linear,edx
+;
+    mov ax,ds
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop es
+    pop ds
+    ret
+CreateFileSel   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetFileSel
 ;
 ;       DESCRIPTION:    Get file selector
@@ -358,7 +478,7 @@ GetFileDebugInfo   Endp
 ;       PARAMETERS:     EBX            File handle
 ;
 ;       RETURNS:        NC
-;                         AX           Sys interface
+;                         AX           File sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -386,6 +506,46 @@ gfsDone:
     pop fs
     ret
 GetFileSel     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloseFileObj
+;
+;       DESCRIPTION:    Close file obj
+;
+;       PARAMETERS:     DS              File sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseFileObj   Proc near
+    push ds
+    push es
+    push fs
+    pushad
+;
+    mov eax,ds
+    call RemoveSysArr
+;
+    mov ebx,REQ_CLOSE
+    call AddReq
+;
+    mov ebx,ds:kf_serv_handle
+    mov fs,ds:kf_part_sel
+    mov ds,fs:vfsp_disc_sel
+    call AllocateMsg
+    jc cfoDone
+;
+    mov eax,VFS_CLOSE_FILE
+    call RunMsg
+
+cfoDone:
+    popad
+    pop fs
+    pop es
+    pop ds
+    ret
+CloseFileObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6061,166 +6221,6 @@ ckmiLoop:
     pop es
     ret
 CreateKernelObj   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CloseFileObj
-;
-;       DESCRIPTION:    Close file obj
-;
-;       PARAMETERS:     DS              Sys interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CloseFileObj   Proc near
-    push ds
-    push es
-    push fs
-    pushad
-;
-    mov eax,ds
-    call RemoveSysArr
-;
-    mov ebx,REQ_CLOSE
-    call AddReq
-;
-    mov ebx,ds:kf_serv_handle
-    mov fs,ds:kf_part_sel
-    mov ds,fs:vfsp_disc_sel
-    call AllocateMsg
-    jc cfoDone
-;
-    mov eax,VFS_CLOSE_FILE
-    call RunMsg
-
-cfoDone:
-    popad
-    pop fs
-    pop es
-    pop ds
-    ret
-CloseFileObj   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           CreateFileSel
-;
-;       DESCRIPTION:    Create file selector
-;
-;       PARAMETERS:     EBX            Serv handle
-;                       EDX            File info linear
-;                       DI             Sector size
-;
-;       RETURNS:        NC
-;                         AX           Sys interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public CreateFileSel
-
-CreateFileSel   Proc near
-    push ds
-    push es
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push edi
-;
-    mov esi,SIZE kernel_file
-    mov ax,8
-    CreateBlk
-;
-    push es
-    push edi
-;
-    mov eax,ds
-    mov es,eax
-;
-    mov edi,OFFSET kf_proc_arr
-    xor eax,eax
-    mov ecx,PROC_HANDLE_COUNT
-    rep stosd
-;
-    mov edi,OFFSET kf_sel_arr
-    xor eax,eax
-    mov ecx,PROC_HANDLE_COUNT
-    rep stosw
-;
-    mov edi,OFFSET kf_proc_bitmap
-    xor eax,eax
-    mov ecx,SYS_BITMAP_COUNT
-    rep stosd
-;
-    pop edi
-    pop es
-;
-    mov ds:kf_kernel_sel,0
-    mov ds:kf_ref_count,0
-    InitSection ds:kf_entry_section
-    InitSection ds:kf_section
-    InitSection ds:kf_update_section
-    mov ds:kf_sector_size,di
-    mov ds:kf_part_sel,fs
-    mov ds:kf_serv_handle,ebx
-    mov ds:kf_wait_list,0
-    mov ds:kf_req_sync,0
-    mov ds:kf_wr_size,0
-
-    mov ds:kf_req_count,0
-    mov ds:kf_wait_count,0
-    mov ds:kf_block_count,0
-    mov ds:kf_phys_count,0
-    mov ds:kf_wr_ptr,0
-;
-    mov ecx,256
-    mov edi,OFFSET kf_handle_arr
-    mov eax,-1
-
-cfHandleInit:
-    mov ds:[edi],eax
-    add edi,4
-    loop cfHandleInit
-;
-    mov ecx,256
-    mov edi,OFFSET kf_sorted_arr
-    mov eax,-1
-
-cfSortedInit:
-    mov ds:[edi],al
-    inc edi
-    loop cfSortedInit
-;
-    GetPageEntry
-    or ax,800h
-    SetPageEntry
-;
-    push eax
-    mov eax,1000h
-    AllocateBigLinear
-    pop eax
-;
-    and ax,NOT 800h
-    SetPageEntry
-;
-    and ax,0F000h
-    mov ds:kf_info_phys,eax
-    mov ds:kf_info_phys+4,ebx
-    mov ds:kf_info_linear,edx
-;
-    mov ax,ds
-;
-    pop edi
-    pop esi
-    pop edx
-    pop ecx
-    pop ebx
-    pop es
-    pop ds
-    ret
-CreateFileSel   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
