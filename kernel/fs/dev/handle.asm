@@ -276,6 +276,9 @@ InitHandleObj  Proc near
     mov es:hei_dup_proc,OFFSET handle_fail
     mov es:hei_dup_proc+4,cs
 ;
+    mov es:hei_delete_proc,OFFSET handle_fail
+    mov es:hei_delete_proc+4,cs
+;
     mov es:hei_get_map_proc,OFFSET handle_fail
     mov es:hei_get_map_proc+4,cs
 ;

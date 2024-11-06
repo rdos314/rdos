@@ -37,6 +37,9 @@ handle_entry_interface    STRUC
 hei_dup_proc              DD ?,?
 
 ;  IN	DS                Handle entry interface
+hei_delete_proc           DD ?,?
+
+;  IN	DS                Handle entry interface
 ;  OUT  EAX               Map index
 ;  OUT  EDI               Map linear address
 hei_get_map_proc          DD ?,?

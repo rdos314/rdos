@@ -3235,43 +3235,6 @@ UpdateVfsFile_      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteVfsFile_
-;
-;       DESCRIPTION:    Delete VFS file
-;
-;       PARAMETERS:     ESI            Handle (high) + Proc interface (low)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public DeleteVfsFile_
-
-DeleteVfsFile_  Proc near
-    push ds
-    push eax
-    push ebx
-    push ecx
-;
-    mov ds,esi
-;
-    GetThreadHandle
-    movzx ecx,ax
-;
-    mov ds,ds:pf_file_sel
-    mov ebx,REQ_DELETE
-    call AddReq
-;
-    WaitForSignal
-;
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-DeleteVfsFile_  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           AddKernelDirtyMap
 ;
 ;       DESCRIPTION:    Signal written page
@@ -4297,6 +4260,40 @@ make_dir32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DeleteHandleObj
+;
+;       DESCRIPTION:    Delete file
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteHandleObj  Proc far
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    GetThreadHandle
+    movzx ecx,ax
+;
+    mov ds,ds:hf_proc_sel
+    mov ds,ds:pf_file_sel
+    mov ebx,REQ_DELETE
+    call AddReq
+;
+    WaitForSignal
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+DeleteHandleObj  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetMapSel
 ;
 ;       DESCRIPTION:    Read handle
@@ -5070,6 +5067,9 @@ InitHandleSel   Proc near
 ;
     mov es:hei_dup_proc, OFFSET DupSel
     mov es:hei_dup_proc+4,cs
+;
+    mov es:hei_delete_proc, OFFSET DeleteHandleObj
+    mov es:hei_delete_proc+4,cs
 ;
     mov es:hei_get_map_proc, OFFSET GetMapSel
     mov es:hei_get_map_proc+4,cs
