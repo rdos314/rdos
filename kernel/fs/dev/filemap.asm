@@ -225,7 +225,7 @@ code    SEGMENT byte public 'CODE'
     extern KernelWrite:near
     extern UpdateWrBitmap:near
 
-    extern CreateKernelObj:near
+    extern InitKernelObj:near
     extern InitHandleObj:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6034,10 +6034,9 @@ ckmiLoop:
     loop ckmiLoop
 ;
     mov eax,SIZE handle_kernel_file
-    AllocateSmallLinear
+    AllocateSmallGlobalMem
+    call InitKernelObj
 ;
-    call CreateKernelObj
-    mov es,eax
     mov es:hki_file_sel,ds
 ;
     mov es:hki_read_proc,OFFSET ReadKernelSel

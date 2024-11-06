@@ -2637,10 +2637,11 @@ CreateKernelObj   Proc near
     push edx
 ;
     mov eax,SIZE handle_kernel_interface
-    AllocateSmallLinear
+    AllocateSmallGlobalMem
+    mov ax,es
 ;
-    CreateKernelHandle
-    mov es,ax
+    InitKernelHandle
+;
     mov es:hki_file_sel,ds
 ;
     mov es:hki_read_proc,OFFSET ReadKernelObj

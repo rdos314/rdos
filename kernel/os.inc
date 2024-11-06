@@ -2572,11 +2572,9 @@ InitHandle  MACRO
     OsGate init_handle_nr
                     ENDM
 
-; IN  EAX        Size of object
-; IN  EDX        Linear address of object        
-; OUT AX         Kernel interface
-CreateKernelHandle MACRO
-    OsGate create_kernel_handle_nr
+; IN  ES    Kernel interface
+InitKernelHandle MACRO
+    OsGate init_kernel_handle_nr
                     ENDM
 
 ; IN  ES:EDI      Filename

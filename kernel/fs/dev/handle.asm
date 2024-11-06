@@ -2040,18 +2040,16 @@ is_handle_device  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateKernelObj
+;           NAME:           InitKernelObj
 ;
-;           DESCRIPTION:    Create kernel object
+;           DESCRIPTION:    Init kernel interface
 ;
-;           PARAMETERS:     EAX        Size of object
-;                           EDX        Linear address of object        
-;                           
-;           RETURNS:        AX         Kernel interface
+;           PARAMETERS:	    ES	Kernel handle interface
+;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    public CreateKernelObj
+    public InitKernelObj
 
 crk_fail    Proc far
     stc
@@ -2063,17 +2061,7 @@ fk_proc_fail    Proc far
     ret
 fk_proc_fail    Endp
 
-CreateKernelObj    Proc near
-    push es
-    push ebx
-    push ecx
-;
-    AllocateGdt
-;
-    mov ecx,eax
-    CreateDataSelector32
-    mov es,ebx
-;
+InitKernelObj    Proc near
     mov es:hki_read_proc,OFFSET crk_fail
     mov es:hki_read_proc+4,cs
 ;
@@ -2084,36 +2072,26 @@ CreateKernelObj    Proc near
     mov es:hki_free_proc+4,cs
 ;
     mov es:hki_ref_count,0
-;
-    mov eax,es
-;
-    pop ecx
-    pop ebx
-    pop es
     ret
-CreateKernelObj   Endp
+InitKernelObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           CreateKernelHandle
+;           NAME:           InitKernelHandle
 ;
-;           DESCRIPTION:    Create kernel handle
+;           DESCRIPTION:    Init kernel handle
 ;
-;           PARAMETERS:     DS         Sys interface
-;                           EAX        Size of object
-;                           EDX        Linear address of object        
-;                           
-;           RETURNS:        AX         Kernel interface
+;           PARAMETERS:	    ES	Kernel handle interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-create_kernel_handle_name  DB 'Create Kernel Handle', 0
+init_kernel_handle_name  DB 'Create Kernel Handle', 0
 
-create_kernel_handle     Proc far
-    call CreateKernelObj
+init_kernel_handle     Proc far
+    call InitKernelObj
     ret
-create_kernel_handle     Endp
+init_kernel_handle     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2857,10 +2835,10 @@ init_sys_handle     PROC near
     mov ax,init_handle_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET create_kernel_handle
-    mov edi,OFFSET create_kernel_handle_name
+    mov esi,OFFSET init_kernel_handle
+    mov edi,OFFSET init_kernel_handle_name
     xor cl,cl
-    mov ax,create_kernel_handle_nr
+    mov ax,init_kernel_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET open_kernel_handle
