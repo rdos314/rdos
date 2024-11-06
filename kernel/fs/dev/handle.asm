@@ -413,6 +413,66 @@ AllocateUserHandle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           AllocateKernelHandle
+;
+;           DESCRIPTION:    Allocate kernel handle
+;
+;           PARAMETERS:     DS          Kernel handle interface
+;
+;           RETURNS:        EBX         Kernel handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateKernelHandle     Proc near
+    push es
+    push eax
+    push ecx
+    push edx
+    push edi
+;
+    mov eax,SEG data
+    mov es,eax
+;
+    mov ecx,KERNEL_BITMAP_COUNT  
+    xor edi,edi
+    mov bx,OFFSET kh_bitmap
+
+alkhLoop:
+    mov eax,es:[bx]
+    not eax
+    bsf edx,eax
+    jnz alkhOk
+;
+    add bx,4
+    add edi,32
+;
+    loop alkhLoop
+;
+    stc
+    jmp alkhDone
+
+alkhOk:
+    add edx,edi
+    lock bts es:kh_bitmap,edx
+    jc alkhLoop
+;
+    mov ebx,edx
+    mov es:[2*ebx].kh_arr,ds
+    inc ebx
+    clc
+
+alkhDone:
+    pop edi
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+AllocateKernelHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandleObj
 ;
 ;           DESCRIPTION:    Open handle
@@ -2676,68 +2736,6 @@ write_legacy_file16   Proc far
     pop ecx
     ret
 write_legacy_file16   Endp
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           AllocateKernelHandle
-;
-;           DESCRIPTION:    Allocate kernel handle
-;
-;           PARAMETERS:     DS          Kernel handle interface
-;
-;           RETURNS:        EBX         Kernel handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateKernelHandle     Proc near
-    push es
-    push eax
-    push ecx
-    push edx
-    push edi
-;
-    mov eax,SEG data
-    mov es,eax
-;
-    mov ecx,KERNEL_BITMAP_COUNT  
-    xor edi,edi
-    mov bx,OFFSET kh_bitmap
-
-alkhLoop:
-    mov eax,es:[bx]
-    not eax
-    bsf edx,eax
-    jnz alkhOk
-;
-    add bx,4
-    add edi,32
-;
-    loop alkhLoop
-;
-    stc
-    jmp alkhDone
-
-alkhOk:
-    add edx,edi
-    lock bts es:kh_bitmap,edx
-    jc alkhLoop
-;
-    mov ebx,edx
-    mov es:[2*ebx].kh_arr,ds
-    inc ebx
-    clc
-
-alkhDone:
-    pop edi
-    pop edx
-    pop ecx
-    pop eax
-    pop es
-    ret
-AllocateKernelHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
