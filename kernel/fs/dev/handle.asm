@@ -637,7 +637,6 @@ DeleteHandleObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LockInterface   Proc near
-    push es
     push esi
 ;
     mov esi,proc_handle_sel
@@ -653,8 +652,10 @@ LockInterface   Proc near
     or si,si
     jz liLeaveFail
 ;
-    mov es,esi
-    lock add es:hui_use_count,1
+    push ds
+    mov ds,esi
+    lock add ds:hui_use_count,1
+    pop ds
     LeaveSection ds:ph_section
 ;
     mov ds,esi
@@ -671,7 +672,6 @@ liFail:
 
 liDone:
     pop esi
-    pop es
     ret
 LockInterface   Endp    
 
