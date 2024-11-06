@@ -5758,7 +5758,7 @@ CreateProcSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadKernelSel
+;       NAME:           ReadKernelObj
 ;
 ;       DESCRIPTION:    Read kernel file
 ;
@@ -5772,7 +5772,7 @@ CreateProcSel      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadKernelSel    Proc far
+ReadKernelObj    Proc far
     push ds
     push es
     push fs
@@ -5803,12 +5803,12 @@ ReadKernelSel    Proc far
     pop es
     pop ds
     ret
-ReadKernelSel    Endp
+ReadKernelObj    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           WriteKernelSel
+;       NAME:           WriteKernelObj
 ;
 ;       DESCRIPTION:    Write kernel file
 ;
@@ -5822,7 +5822,7 @@ ReadKernelSel    Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteKernelSel    Proc far
+WriteKernelObj    Proc far
     push ds
     push es
     push fs
@@ -5853,7 +5853,7 @@ WriteKernelSel    Proc far
     pop es
     pop ds
     ret
-WriteKernelSel    Endp
+WriteKernelObj    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6039,10 +6039,10 @@ ckmiLoop:
 ;
     mov es:hki_file_sel,ds
 ;
-    mov es:hki_read_proc,OFFSET ReadKernelSel
+    mov es:hki_read_proc,OFFSET ReadKernelObj
     mov es:hki_read_proc+4,cs
 ;
-    mov es:hki_write_proc,OFFSET WriteKernelSel
+    mov es:hki_write_proc,OFFSET WriteKernelObj
     mov es:hki_write_proc+4,cs
 ;
     mov es:hki_free_proc,OFFSET FreeKernelSel
