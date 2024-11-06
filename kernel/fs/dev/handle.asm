@@ -625,6 +625,92 @@ DeleteHandleObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockInterface
+;
+;           DESCRIPTION:    Lock handle interface
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        NC
+;                             DS        Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockInterface   Proc near
+    push es
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae liFail
+;
+    EnterSection ds:ph_section
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz liLeaveFail
+;
+    mov es,esi
+    lock add es:hui_use_count,1
+    LeaveSection ds:ph_section
+;
+    mov ds,esi
+    clc
+    jmp liDone
+
+liLeaveFail:
+    LeaveSection ds:ph_section
+
+liFail:
+    xor esi,esi
+    mov ds,esi
+    stc
+
+liDone:
+    pop esi
+    pop es
+    ret
+LockInterface   Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockInterface
+;
+;           DESCRIPTION:    Unlock interface
+;
+;           PARAMETERS:     DS          Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockInterface   Proc near
+    pushfd
+;
+    lock sub ds:hui_use_count,1
+    jnc uiDone
+;
+    push ebx
+;
+    mov bx,ds:hui_close_thread
+    or bx,bx
+    jz uiPopDone
+;
+    Signal
+
+uiPopDone:
+    pop ebx
+
+uiDone:
+    popfd
+    ret
+UnlockInterface  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DupHandleObj
 ;
 ;           DESCRIPTION:    Dup handle
@@ -637,23 +723,14 @@ DeleteHandleObj     Endp
 
 DupHandleObj   Proc near
     push ds
+    push es
     push eax
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc dhFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae dhFail
-;
-    mov si,ds:[2*ebx].ph_arr
-    or si,si
-    jz dhFail
-;
-    mov ds,esi
     call fword ptr ds:hui_dup_proc
+    call UnlockInterface
     jc dhFail
 ;
     mov ds,eax
@@ -664,8 +741,8 @@ dhFail:
     stc
 
 dhDone:
-    pop esi
     pop eax
+    pop es
     pop ds
     ret
 DupHandleObj   Endp
