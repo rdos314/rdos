@@ -339,8 +339,8 @@ InitHandleObj  Proc near
     mov es:hei_output_size_proc,OFFSET handle_fail
     mov es:hei_output_size_proc+4,cs
 ;
-    mov es:hei_delete_proc,OFFSET handle_fail
-    mov es:hei_delete_proc+4,cs
+    mov es:hei_free_proc,OFFSET handle_fail
+    mov es:hei_free_proc+4,cs
 ;
     mov es:hei_ref_count,0
     ret
@@ -496,7 +496,7 @@ CloseHandleObj     Proc near
     sub ds:hei_ref_count,1
     jnz chOk
 ;
-    call fword ptr ds:hei_delete_proc
+    call fword ptr ds:hei_free_proc
     clc
     jmp chDone
 
@@ -1933,10 +1933,10 @@ crk_fail    Proc far
     ret
 crk_fail    Endp
 
-delk_proc_fail    Proc far
+fk_proc_fail    Proc far
     stc
     ret
-delk_proc_fail    Endp
+fk_proc_fail    Endp
 
 CreateKernelObj    Proc near
     push es
@@ -1955,8 +1955,8 @@ CreateKernelObj    Proc near
     mov es:hki_write_proc,OFFSET crk_fail
     mov es:hki_write_proc+4,cs
 ;
-    mov es:hki_delete_proc,OFFSET delk_proc_fail
-    mov es:hki_delete_proc+4,cs
+    mov es:hki_free_proc,OFFSET fk_proc_fail
+    mov es:hki_free_proc+4,cs
 ;
     mov es:hki_ref_count,0
 ;
@@ -2065,7 +2065,7 @@ close_kernel_handle Proc far
     jz ckhFail
 ;
     mov ds,esi
-    call fword ptr ds:hki_delete_proc
+    call fword ptr ds:hki_free_proc
     jmp ckhDone
 
 ckhFail:

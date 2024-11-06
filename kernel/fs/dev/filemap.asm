@@ -4969,11 +4969,13 @@ CloseHandleSel      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeHandleSel      Proc near
+FreeHandleSel      Proc far
     push es
     push eax
     push ebx
     push edx
+;
+    call CloseHandleSel
 ;
     mov ebx,ds:hf_proc_index
     cmp ebx,PROC_HANDLE_COUNT
@@ -5053,23 +5055,6 @@ FreeHandleSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteHandleSel
-;
-;       DESCRIPTION:    Delete handle sel
-;
-;       PARAMETERS:     DS              Handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteHandleSel      Proc far
-    call CloseHandleSel
-    call FreeHandleSel
-    ret
-DeleteHandleSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           InitHandleSel
 ;
 ;       DESCRIPTION:    Init handle sel
@@ -5131,8 +5116,8 @@ InitHandleSel   Proc near
     mov es:hei_is_eof_proc, OFFSET IsEofSel
     mov es:hei_is_eof_proc+4,cs
 ;
-    mov es:hei_delete_proc, OFFSET DeleteHandleSel
-    mov es:hei_delete_proc+4,cs
+    mov es:hei_free_proc, OFFSET FreeHandleSel
+    mov es:hei_free_proc+4,cs
 ;
     ret
 InitHandleSel   Endp
@@ -5921,23 +5906,24 @@ ckmUnlink:
     ret
 CloseKernelSel  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteKernelSel
+;       NAME:           FreeKernelSel
 ;
-;       DESCRIPTION:    Delete kernel sel
+;       DESCRIPTION:    Free kernel sel
 ;
 ;       PARAMETERS:     DS              Kernel interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeKernelSel  Proc near
+FreeKernelSel  Proc far
     push es
     push eax
     push ebx
     push edx
+;
+    call CloseKernelSel
 ;
     sub ds:hki_ref_count,1
     jnz fksDone
@@ -5984,23 +5970,6 @@ fksDone:
     pop es
     ret
 FreeKernelSel   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           DeleteKernelSel
-;
-;       DESCRIPTION:    Delete kernel sel
-;
-;       PARAMETERS:     DS              Kernel interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteKernelSel  Proc far
-    call CloseKernelSel
-    call FreeKernelSel
-    ret
-DeleteKernelSel  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6077,8 +6046,8 @@ ckmiLoop:
     mov es:hki_write_proc,OFFSET WriteKernelSel
     mov es:hki_write_proc+4,cs
 ;
-    mov es:hki_delete_proc,OFFSET DeleteKernelSel
-    mov es:hki_delete_proc+4,cs
+    mov es:hki_free_proc,OFFSET FreeKernelSel
+    mov es:hki_free_proc+4,cs
 ;
     mov es:hkf_map_linear,edx
     mov es:hkf_map_sel,bx

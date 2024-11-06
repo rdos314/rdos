@@ -1814,15 +1814,15 @@ swap_proc       Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           DeleteHandleObj
+;           NAME:           FreeHandleObj
 ;
-;           DESCRIPTION:    Delete handle obj
+;           DESCRIPTION:    Free handle obj
 ;
 ;           PARAMETERS:     DS     Handle interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteHandleObj   Proc far
+FreeHandleObj   Proc far
     push es
     push ax
     push bx
@@ -1851,7 +1851,7 @@ chDone:
     pop ax
     pop es
     retf32
-DeleteHandleObj   Endp
+FreeHandleObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -2416,8 +2416,8 @@ AllocateObj   Proc near
     mov es:hei_is_eof_proc,OFFSET IsObjEof
     mov es:hei_is_eof_proc+4,cs
 ;
-    mov es:hei_delete_proc,OFFSET DeleteHandleObj
-    mov es:hei_delete_proc+4,cs
+    mov es:hei_free_proc,OFFSET FreeHandleObj
+    mov es:hei_free_proc+4,cs
 ;
     pop edx
     pop ecx
@@ -2585,20 +2585,20 @@ WriteKernelObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteKernelObj
+;       NAME:           FreeKernelObj
 ;
-;       DESCRIPTION:    Delete kernel file
+;       DESCRIPTION:    Free kernel file
 ;
 ;       PARAMETERS:     DS              Kernel interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteKernelObj    Proc far
+FreeKernelObj    Proc far
     push es
     push bx
 ;
     sub ds:hki_ref_count,1
-    jnz dkoOk
+    jnz fkoOk
 ;
     mov bx,ds
     mov es,bx
@@ -2609,13 +2609,13 @@ DeleteKernelObj    Proc far
     mov bx,ds
     call ReleaseFileSel
 
-dkoOk:
+fkoOk:
     clc
 ;
     pop bx
     pop es
     retf32
-DeleteKernelObj    Endp
+FreeKernelObj    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2649,8 +2649,8 @@ CreateKernelObj   Proc near
     mov es:hki_write_proc,OFFSET WriteKernelObj
     mov es:hki_write_proc+4,cs
 ;
-    mov es:hki_delete_proc,OFFSET DeleteKernelObj
-    mov es:hki_delete_proc+4,cs
+    mov es:hki_free_proc,OFFSET FreeKernelObj
+    mov es:hki_free_proc+4,cs
 ;
     pop edx
     pop ecx

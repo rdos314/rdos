@@ -125,7 +125,7 @@ hei_input_size_proc       DD ?,?
 hei_output_size_proc      DD ?,?
 
 ;  IN	DS                Handle entry interface
-hei_delete_proc           DD ?,?
+hei_free_proc             DD ?,?
 
 hei_io_mode               DW ?
 hei_ref_count             DW ?
@@ -151,7 +151,7 @@ hki_read_proc             DD ?,?
 hki_write_proc            DD ?,?
 
 ;  IN	DS                Handle kernel interface
-hki_delete_proc           DD ?,?
+hki_free_proc             DD ?,?
 
 hki_ref_count             DW ?
 hki_file_sel              DW ?
