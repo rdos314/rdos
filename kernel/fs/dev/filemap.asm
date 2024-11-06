@@ -6102,82 +6102,6 @@ scrDone:
     pop ds
     ret
 DeleteSysSel   Endp
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           InitSysObj
-;
-;           DESCRIPTION:    Init sys object
-;
-;           PARAMETERS:     ES         Sys interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitSysObj  Proc near
-    push eax
-    push ecx
-    push edi
-;
-    mov es:kf_kernel_sel,0
-    mov es:kf_ref_count,0
-    InitSection es:kf_entry_section
-;
-    mov edi,OFFSET kf_proc_arr
-    xor eax,eax
-    mov ecx,PROC_HANDLE_COUNT
-    rep stosd
-;
-    mov edi,OFFSET kf_sel_arr
-    xor eax,eax
-    mov ecx,PROC_HANDLE_COUNT
-    rep stosw
-;
-    mov edi,OFFSET kf_proc_bitmap
-    xor eax,eax
-    mov ecx,SYS_BITMAP_COUNT
-    rep stosd
-;
-    pop edi
-    pop ecx
-    pop eax
-    ret
-InitSysObj  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateSysObj
-;
-;           DESCRIPTION:    Create sys object
-;
-;           PARAMETERS:     EAX        Size of object
-;
-;           RETURNS:        DS         Sys interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateSysObj    Proc near
-    push es
-    push eax
-    push ecx
-    push esi
-;
-    mov esi,eax
-    mov ax,8
-    CreateBlk
-;
-    mov eax,ds
-    mov es,eax
-;
-    call InitSysObj
-;
-    pop esi
-    pop ecx
-    pop eax
-    pop es
-    ret
-CreateSysObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6206,9 +6130,37 @@ CreateFileSel   Proc near
     push esi
     push edi
 ;
-    mov eax,SIZE kernel_file
-    call CreateSysObj
+    mov esi,SIZE kernel_file
+    mov ax,8
+    CreateBlk
 ;
+    push es
+    push edi
+;
+    mov eax,ds
+    mov es,eax
+;
+    mov edi,OFFSET kf_proc_arr
+    xor eax,eax
+    mov ecx,PROC_HANDLE_COUNT
+    rep stosd
+;
+    mov edi,OFFSET kf_sel_arr
+    xor eax,eax
+    mov ecx,PROC_HANDLE_COUNT
+    rep stosw
+;
+    mov edi,OFFSET kf_proc_bitmap
+    xor eax,eax
+    mov ecx,SYS_BITMAP_COUNT
+    rep stosd
+;
+    pop edi
+    pop es
+;
+    mov ds:kf_kernel_sel,0
+    mov ds:kf_ref_count,0
+    InitSection ds:kf_entry_section
     InitSection ds:kf_section
     InitSection ds:kf_update_section
     mov ds:kf_sector_size,di
