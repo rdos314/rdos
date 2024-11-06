@@ -5677,46 +5677,6 @@ rsaRemove:
 RemoveSysArr    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           CreateProcObj
-;
-;           DESCRIPTION:    Create proc object
-;
-;           PARAMETERS:     DS         Sys interface
-;                           EAX        Size of oebject
-;                           EDX        Linear address of object
-;                           
-;           RETURNS:        AX         Proc interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateProcObj    Proc near
-    push es
-    push ebx
-    push ecx
-;
-    push ds
-    AllocateLdt
-    pop ds
-;
-    or bx,4
-    mov ecx,eax
-    CreateDataSelector32
-    mov es,ebx
-;
-    mov es:pf_index,0
-    mov es:pf_ref_count,0
-;
-    mov eax,es
-;
-    pop ecx
-    pop ebx
-    pop es
-    ret
-CreateProcObj   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           FindProcSel
@@ -5788,57 +5748,6 @@ fpDone:
     pop es
     ret
 FindProcSel    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           DeleteProcSel
-;
-;       DESCRIPTION:    Delete proc sel
-;
-;       PARAMETERS:     DS              Proc interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DeleteProcSel   Proc near
-    push es
-    push eax
-    push ebx
-    push ecx
-    push edx
-;
-    call DeleteMap
-;
-    push ds
-    mov ds,ds:pf_map_sel
-    mov ax,flat_data_sel
-    mov es,eax
-    mov ebx,ds:fm_handle_ptr
-    add ebx,OFFSET fh_futex
-    mov eax,es:[ebx].fs_handle
-    or eax,eax
-    jz dpsPop
-;
-    CleanupFutex
-
-dpsPop:
-    pop ds
-;
-    mov es,ds:pf_map_sel
-    FreeMem
-;
-    mov edx,ds:pf_map_linear
-    add edx,ds:pf_flat_base
-    mov ecx,3000h
-    FreeLinear
-;
-    pop edx
-    pop ecx
-    pop ebx
-    pop eax
-    pop es
-    ret
-DeleteProcSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5933,8 +5842,17 @@ CreateProcSel   Proc near
     mov eax,SIZE process_file
     AllocateBigLinear
 ;
-    call CreateProcObj
-    mov es,eax
+    push ds
+    AllocateLdt
+    pop ds
+;
+    or bx,4
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,ebx
+;
+    mov es:pf_index,0
+    mov es:pf_ref_count,0
 ;
     pop edx
     pop ebx
@@ -5987,6 +5905,57 @@ cvmsLoop:
     pop es
     ret
 CreateProcSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteProcSel
+;
+;       DESCRIPTION:    Delete proc sel
+;
+;       PARAMETERS:     DS              Proc interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteProcSel   Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    call DeleteMap
+;
+    push ds
+    mov ds,ds:pf_map_sel
+    mov ax,flat_data_sel
+    mov es,eax
+    mov ebx,ds:fm_handle_ptr
+    add ebx,OFFSET fh_futex
+    mov eax,es:[ebx].fs_handle
+    or eax,eax
+    jz dpsPop
+;
+    CleanupFutex
+
+dpsPop:
+    pop ds
+;
+    mov es,ds:pf_map_sel
+    FreeMem
+;
+    mov edx,ds:pf_map_linear
+    add edx,ds:pf_flat_base
+    mov ecx,3000h
+    FreeLinear
+;
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    pop es
+    ret
+DeleteProcSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
