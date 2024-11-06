@@ -5909,15 +5909,15 @@ CloseKernelSel  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           FreeKernelSel
+;       NAME:           CloseKernelObj
 ;
-;       DESCRIPTION:    Free kernel sel
+;       DESCRIPTION:    Close kernel file
 ;
 ;       PARAMETERS:     DS              Kernel interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeKernelSel  Proc far
+CloseKernelObj  Proc far
     push es
     push eax
     push ebx
@@ -5969,7 +5969,7 @@ fksDone:
     pop eax
     pop es
     ret
-FreeKernelSel   Endp
+CloseKernelObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -6045,7 +6045,7 @@ ckmiLoop:
     mov es:hki_write_proc,OFFSET WriteKernelObj
     mov es:hki_write_proc+4,cs
 ;
-    mov es:hki_free_proc,OFFSET FreeKernelSel
+    mov es:hki_free_proc,OFFSET CloseKernelObj
     mov es:hki_free_proc+4,cs
 ;
     mov es:hkf_map_linear,edx
