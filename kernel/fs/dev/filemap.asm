@@ -5028,7 +5028,7 @@ fhBitOk:
 ;
     LeaveSection ds:kf_entry_section
 ;
-    call DeleteSysSel
+    call CloseFileObj
     jmp fhOk
 
 fhLeave:
@@ -5951,7 +5951,7 @@ fksDel:
 ;
     LeaveSection ds:kf_entry_section
 ;
-    call DeleteSysSel
+    call CloseFileObj
     clc
     jmp fksDone
 
@@ -6066,15 +6066,15 @@ CreateKernelSel   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           DeleteSysSel
+;       NAME:           CloseFileObj
 ;
-;       DESCRIPTION:    Delete sys sel
+;       DESCRIPTION:    Close file obj
 ;
 ;       PARAMETERS:     DS              Sys interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DeleteSysSel   Proc near
+CloseFileObj   Proc near
     push ds
     push es
     push fs
@@ -6090,18 +6090,18 @@ DeleteSysSel   Proc near
     mov fs,ds:kf_part_sel
     mov ds,fs:vfsp_disc_sel
     call AllocateMsg
-    jc scrDone
+    jc cfoDone
 ;
     mov eax,VFS_CLOSE_FILE
     call RunMsg
 
-scrDone:
+cfoDone:
     popad
     pop fs
     pop es
     pop ds
     ret
-DeleteSysSel   Endp
+CloseFileObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
