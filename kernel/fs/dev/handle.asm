@@ -515,6 +515,50 @@ chDone:
     pop ds
     ret
 CloseHandleObj     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DeleteHandleObj
+;
+;           DESCRIPTION:    Delete handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteHandleObj     Proc near
+    push ds
+    push ebx
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae dhoFail
+;
+    mov si,ds:[2*ebx].ph_arr
+    or si,si
+    jz dhoFail
+;
+    mov ds,esi
+    call fword ptr ds:hei_delete_proc
+    jnc dhoDone
+
+dhoFail:
+    xor eax,eax
+    xor edi,edi
+    stc
+
+dhoDone:
+    pop esi
+    pop ebx
+    pop ds
+    ret
+DeleteHandleObj     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1408,6 +1452,24 @@ close_handle     Proc far
     call CloseHandleObj
     ret
 close_handle     Endp
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DeleteHandle
+;
+;           DESCRIPTION:    Delete handle
+;
+;           PARAMETERS:     BX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle_name  DB 'Delete Handle', 0
+
+delete_handle     Proc far
+    call DeleteHandleObj
+    ret
+delete_handle     Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2833,6 +2895,12 @@ init_sys_handle     PROC near
     mov dx,virt_es_in
     mov ax,open_handle_nr
     RegisterUserGate
+;
+    mov esi,OFFSET delete_handle
+    mov edi,OFFSET delete_handle_name
+    xor cl,cl
+    mov ax,delete_handle_nr
+    RegisterBimodalUserGate
 ;
     mov esi,OFFSET close_handle
     mov edi,OFFSET close_handle_name
