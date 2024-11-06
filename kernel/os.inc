@@ -2603,13 +2603,6 @@ CreateOutputHandle  MACRO
     OsGate create_output_handle_nr
                     ENDM
 
-; IN  AX        Entry type
-; IN  DX        Selector
-; OUT BX        Entry handle
-AllocateCHandle MACRO
-    OsGate allocate_c_handle_nr
-                    ENDM
-
 ; IN  BX        Handle
 SignalReadHandle MACRO
     OsGate signal_read_handle_nr
