@@ -42,9 +42,9 @@ INCLUDE gate.def
 
 file_handle_interface    STRUC
 
-fhi_base      handle_entry_interface <>
-fhi_pos       DD ?
-fhi_file_sel  DW ?
+fui_base      handle_user_interface <>
+fui_pos       DD ?
+fui_file_sel  DW ?
 
 file_handle_interface    ENDS
 
@@ -1829,7 +1829,7 @@ FreeHandleObj   Proc far
 ;
     mov ax,ds
     mov es,ax
-    mov ds,ds:fhi_file_sel
+    mov ds,ds:fui_file_sel
     FreeMem
 ;
     sub ds:file_user_count,1
@@ -2022,15 +2022,15 @@ ReadHandleObj       Proc far
     push edx
 ;
     push ds
-    mov edx,ds:fhi_pos
-    mov ds,ds:fhi_file_sel
+    mov edx,ds:fui_pos
+    mov ds,ds:fui_file_sel
     call ReadHandleBase
     pop ds
     jc rhoDone
 ;
     mov ecx,eax
     add edx,ecx
-    mov ds:fhi_pos,edx
+    mov ds:fui_pos,edx
     clc
 
 rhoDone:
@@ -2061,15 +2061,15 @@ WriteHandleObj       Proc far
     push edx
 ;
     push ds
-    mov edx,ds:fhi_pos
-    mov ds,ds:fhi_file_sel
+    mov edx,ds:fui_pos
+    mov ds,ds:fui_file_sel
     call WriteHandleBase
     pop ds
     jc whoDone
 ;
     mov ecx,eax
     add edx,ecx
-    mov ds:fhi_pos,edx
+    mov ds:fui_pos,edx
     clc
 
 whoDone:
@@ -2100,8 +2100,8 @@ PollHandleObj       Proc far
     push edx
 ;
     push ds
-    mov edx,ds:fhi_pos
-    mov ds,ds:fhi_file_sel
+    mov edx,ds:fui_pos
+    mov ds,ds:fui_file_sel
     call ReadHandleBase
     pop ds
     jc phoDone
@@ -2130,7 +2130,7 @@ PollHandleObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetObjPos       Proc far
-    mov eax,ds:fhi_pos
+    mov eax,ds:fui_pos
     xor edx,edx
     clc
     retf32
@@ -2153,7 +2153,7 @@ SetObjPos       Proc far
     stc
     jnz sopDone
 ;
-    mov ds:fhi_pos,eax
+    mov ds:fui_pos,eax
     clc
 
 sopDone:
@@ -2176,7 +2176,7 @@ SetObjPos       Endp
 GetObjSize Proc far
     push ds
 ;
-    mov ds,ds:fhi_file_sel
+    mov ds,ds:fui_file_sel
     EnterReadSection ds:file_size_section
     mov eax,ds:file_size
     xor edx,edx
@@ -2210,7 +2210,7 @@ SetObjSize Proc far
     jnz sosDone
 ;
     mov edx,eax
-    mov bx,ds:fhi_file_sel
+    mov bx,ds:fui_file_sel
     mov ds,bx
     mov al,ds:file_drive
     EnterWriteSection ds:file_size_section
@@ -2242,7 +2242,7 @@ GetObjTime Proc far
     push ds
     push es
 ;
-    mov ds,ds:fhi_file_sel
+    mov ds,ds:fui_file_sel
     mov dx,flat_sel
     mov es,dx
     mov edx,ds:file_dir_entry
@@ -2282,7 +2282,7 @@ SetObjTime Proc far
     mov es,cx
     mov ecx,eax
 ;
-    mov bx,ds:fhi_file_sel
+    mov bx,ds:fui_file_sel
     mov fs,bx
     mov al,fs:file_drive
     mov edi,fs:file_dir_entry
@@ -2320,12 +2320,12 @@ SetObjTime Endp
 IsObjEof Proc far
     push ds
 ;
-    mov ds,ds:fhi_file_sel
+    mov ds,ds:fui_file_sel
     EnterReadSection ds:file_size_section
     mov eax,ds:file_size
     LeaveReadSection ds:file_size_section
 ;
-    sub eax,ds:fhi_pos
+    sub eax,ds:fui_pos
     jae ieYes
 
 ieNo:
@@ -2374,50 +2374,50 @@ AllocateObj   Proc near
     mov es,bx
 ;
     InitHandle
-    mov es:fhi_file_sel,ds
-    mov es:fhi_pos,0
+    mov es:fui_file_sel,ds
+    mov es:fui_pos,0
 ;
-    mov es:hei_dup_proc,OFFSET DupObj
-    mov es:hei_dup_proc+4,cs
+    mov es:hui_dup_proc,OFFSET DupObj
+    mov es:hui_dup_proc+4,cs
 ;
-    mov es:hei_read_proc,OFFSET ReadHandleObj
-    mov es:hei_read_proc+4,cs
+    mov es:hui_read_proc,OFFSET ReadHandleObj
+    mov es:hui_read_proc+4,cs
 ;
-    mov es:hei_write_proc,OFFSET WriteHandleObj
-    mov es:hei_write_proc+4,cs
+    mov es:hui_write_proc,OFFSET WriteHandleObj
+    mov es:hui_write_proc+4,cs
 ;
-    mov es:hei_poll_proc,OFFSET PollHandleObj
-    mov es:hei_poll_proc+4,cs
+    mov es:hui_poll_proc,OFFSET PollHandleObj
+    mov es:hui_poll_proc+4,cs
 ;
-    mov es:hei_get_pos_proc,OFFSET GetObjPos
-    mov es:hei_get_pos_proc+4,cs
+    mov es:hui_get_pos_proc,OFFSET GetObjPos
+    mov es:hui_get_pos_proc+4,cs
 ;
-    mov es:hei_set_pos_proc,OFFSET SetObjPos
-    mov es:hei_set_pos_proc+4,cs
+    mov es:hui_set_pos_proc,OFFSET SetObjPos
+    mov es:hui_set_pos_proc+4,cs
 ;
-    mov es:hei_get_size_proc,OFFSET GetObjSize
-    mov es:hei_get_size_proc+4,cs
+    mov es:hui_get_size_proc,OFFSET GetObjSize
+    mov es:hui_get_size_proc+4,cs
 ;
-    mov es:hei_set_size_proc,OFFSET SetObjSize
-    mov es:hei_set_size_proc+4,cs
+    mov es:hui_set_size_proc,OFFSET SetObjSize
+    mov es:hui_set_size_proc+4,cs
 ;
-    mov es:hei_get_create_time_proc,OFFSET GetObjTime
-    mov es:hei_get_create_time_proc+4,cs
+    mov es:hui_get_create_time_proc,OFFSET GetObjTime
+    mov es:hui_get_create_time_proc+4,cs
 ;
-    mov es:hei_get_modify_time_proc,OFFSET GetObjTime
-    mov es:hei_get_modify_time_proc+4,cs
+    mov es:hui_get_modify_time_proc,OFFSET GetObjTime
+    mov es:hui_get_modify_time_proc+4,cs
 ;
-    mov es:hei_get_access_time_proc,OFFSET GetObjTime
-    mov es:hei_get_access_time_proc+4,cs
+    mov es:hui_get_access_time_proc,OFFSET GetObjTime
+    mov es:hui_get_access_time_proc+4,cs
 ;
-    mov es:hei_set_modify_time_proc,OFFSET SetObjTime
-    mov es:hei_set_modify_time_proc+4,cs
+    mov es:hui_set_modify_time_proc,OFFSET SetObjTime
+    mov es:hui_set_modify_time_proc+4,cs
 ;
-    mov es:hei_is_eof_proc,OFFSET IsObjEof
-    mov es:hei_is_eof_proc+4,cs
+    mov es:hui_is_eof_proc,OFFSET IsObjEof
+    mov es:hui_is_eof_proc+4,cs
 ;
-    mov es:hei_free_proc,OFFSET FreeHandleObj
-    mov es:hei_free_proc+4,cs
+    mov es:hui_free_proc,OFFSET FreeHandleObj
+    mov es:hui_free_proc+4,cs
 ;
     pop edx
     pop ecx
@@ -2443,13 +2443,13 @@ DupObj Proc far
     push ds
     push es
 ;
-    mov eax,ds:fhi_pos
-    mov ds,ds:fhi_file_sel
+    mov eax,ds:fui_pos
+    mov ds,ds:fui_file_sel
 ;
     inc ds:file_user_count
 ;
     call AllocateObj
-    mov es:fhi_pos,eax
+    mov es:fui_pos,eax
 ;
     mov ax,es
     clc

@@ -30,110 +30,112 @@ SYS_HANDLE_COUNT      = 1024    ; must be a power of 2
 USER_HANDLE_COUNT     = 512
 USER_BITMAP_COUNT     = USER_HANDLE_COUNT SHR 5
 
-handle_entry_interface    STRUC
+handle_user_interface    STRUC
 
 ;  IN	DS                Handle entry interface
 ;  OUT  AX                New interface
-hei_dup_proc              DD ?,?
+hui_dup_proc              DD ?,?
 
 ;  IN	DS                Handle entry interface
-hei_delete_proc           DD ?,?
+hui_delete_proc           DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  EAX               Map index
 ;  OUT  EDI               Map linear address
-hei_get_map_proc          DD ?,?
+hui_get_map_proc          DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN  EDX:EAX            File position
 ;  IN  ECX                Size
-hei_map_proc              DD ?,?
+hui_map_proc              DD ?,?
 
 ;  IN	DS                Handle entry interface
-hei_update_map_proc       DD ?,?
+hui_update_map_proc       DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN  EDX:EAX            File position
 ;  IN  ECX                Size
-hei_grow_map_proc         DD ?,?
+hui_grow_map_proc         DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN   ES:EDI            Buffer
 ;  IN   ECX               Size
 ;  OUT  EAX               Read count
-hei_poll_proc             DD ?,?
+hui_poll_proc             DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN   ES:EDI            Buffer
 ;  IN   ECX               Size
 ;  OUT  EAX               Read count
-hei_read_proc             DD ?,?
+hui_read_proc             DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN   ES:EDI            Buffer
 ;  IN   ECX               Size
 ;  OUT  EAX               Written count
-hei_write_proc            DD ?,?
+hui_write_proc            DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  EDX:EAX           Size
-hei_get_size_proc         DD ?,?
+hui_get_size_proc         DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN   EDX:EAX           Size
-hei_set_size_proc         DD ?,?
+hui_set_size_proc         DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  EDX:EAX           Pos
-hei_get_pos_proc          DD ?,?
+hui_get_pos_proc          DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN   EDX:EAX           Pos
-hei_set_pos_proc          DD ?,?
+hui_set_pos_proc          DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  EDX:EAX           Tics
-hei_get_create_time_proc  DD ?,?
+hui_get_create_time_proc  DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  EDX:EAX           Tics
-hei_get_modify_time_proc  DD ?,?
+hui_get_modify_time_proc  DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  EDX:EAX           Tics
-hei_get_access_time_proc  DD ?,?
+hui_get_access_time_proc  DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN   EDX:EAX           Tics
-hei_set_modify_time_proc  DD ?,?
+hui_set_modify_time_proc  DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  EAX               -1 = error, 0 = not eof, 1 = eof
-hei_is_eof_proc           DD ?,?
+hui_is_eof_proc           DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  NC                Device
-hei_is_device_proc        DD ?,?
+hui_is_device_proc        DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  NC                IP ver4
-hei_is_ip4_proc           DD ?,?
+hui_is_ip4_proc           DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  ECX               Bytes in input buffer
-hei_input_size_proc       DD ?,?
+hui_input_size_proc       DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  ECX               Available bytes in output buffer
-hei_output_size_proc      DD ?,?
+hui_output_size_proc      DD ?,?
 
 ;  IN	DS                Handle entry interface
-hei_free_proc             DD ?,?
+hui_free_proc             DD ?,?
 
-hei_io_mode               DW ?
-hei_ref_count             DW ?
+hui_io_mode               DW ?
+hui_ref_count             DW ?
+hui_use_count             DW ?
+hui_close_thread          DW ?
 
-handle_entry_interface    ENDS
+handle_user_interface    ENDS
 
 handle_kernel_interface    STRUC
 

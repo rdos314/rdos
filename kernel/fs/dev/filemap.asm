@@ -165,7 +165,7 @@ process_file   ENDS
 
 handle_file   STRUC
 
-hf_base          handle_entry_interface <>
+hf_base          handle_user_interface <>
 hf_user_handle   DD ?
 hf_proc_index    DD ?
 hf_proc_sel      DW ?
@@ -5225,59 +5225,59 @@ InitHandleSel   Proc near
     inc ebx
     mov es:hf_user_handle,ebx
 ;
-    mov es:hei_dup_proc, OFFSET DupSel
-    mov es:hei_dup_proc+4,cs
+    mov es:hui_dup_proc, OFFSET DupSel
+    mov es:hui_dup_proc+4,cs
 ;
-    mov es:hei_delete_proc, OFFSET DeleteHandleObj
-    mov es:hei_delete_proc+4,cs
+    mov es:hui_delete_proc, OFFSET DeleteHandleObj
+    mov es:hui_delete_proc+4,cs
 ;
-    mov es:hei_get_map_proc, OFFSET GetMapSel
-    mov es:hei_get_map_proc+4,cs
+    mov es:hui_get_map_proc, OFFSET GetMapSel
+    mov es:hui_get_map_proc+4,cs
 ;
-    mov es:hei_map_proc, OFFSET MapSel
-    mov es:hei_map_proc+4,cs
+    mov es:hui_map_proc, OFFSET MapSel
+    mov es:hui_map_proc+4,cs
 ;
-    mov es:hei_update_map_proc, OFFSET UpdateMapSel
-    mov es:hei_update_map_proc+4,cs
+    mov es:hui_update_map_proc, OFFSET UpdateMapSel
+    mov es:hui_update_map_proc+4,cs
 ;
-    mov es:hei_grow_map_proc, OFFSET GrowMapSel
-    mov es:hei_grow_map_proc+4,cs
+    mov es:hui_grow_map_proc, OFFSET GrowMapSel
+    mov es:hui_grow_map_proc+4,cs
 ;
-    mov es:hei_read_proc, OFFSET ReadHandleSel
-    mov es:hei_read_proc+4,cs
+    mov es:hui_read_proc, OFFSET ReadHandleSel
+    mov es:hui_read_proc+4,cs
 ;
-    mov es:hei_write_proc, OFFSET WriteHandleSel
-    mov es:hei_write_proc+4,cs
+    mov es:hui_write_proc, OFFSET WriteHandleSel
+    mov es:hui_write_proc+4,cs
 ;
-    mov es:hei_poll_proc, OFFSET PollHandleSel
-    mov es:hei_poll_proc+4,cs
+    mov es:hui_poll_proc, OFFSET PollHandleSel
+    mov es:hui_poll_proc+4,cs
 ;
-    mov es:hei_get_pos_proc, OFFSET GetPosSel
-    mov es:hei_get_pos_proc+4,cs
+    mov es:hui_get_pos_proc, OFFSET GetPosSel
+    mov es:hui_get_pos_proc+4,cs
 ;
-    mov es:hei_set_pos_proc, OFFSET SetPosSel
-    mov es:hei_set_pos_proc+4,cs
+    mov es:hui_set_pos_proc, OFFSET SetPosSel
+    mov es:hui_set_pos_proc+4,cs
 ;
-    mov es:hei_get_size_proc, OFFSET GetSizeSel
-    mov es:hei_get_size_proc+4,cs
+    mov es:hui_get_size_proc, OFFSET GetSizeSel
+    mov es:hui_get_size_proc+4,cs
 ;
-    mov es:hei_set_size_proc, OFFSET SetSizeSel
-    mov es:hei_set_size_proc+4,cs
+    mov es:hui_set_size_proc, OFFSET SetSizeSel
+    mov es:hui_set_size_proc+4,cs
 ;
-    mov es:hei_get_create_time_proc, OFFSET GetCreateSel
-    mov es:hei_get_create_time_proc+4,cs
+    mov es:hui_get_create_time_proc, OFFSET GetCreateSel
+    mov es:hui_get_create_time_proc+4,cs
 ;
-    mov es:hei_get_modify_time_proc, OFFSET GetModifySel
-    mov es:hei_get_modify_time_proc+4,cs
+    mov es:hui_get_modify_time_proc, OFFSET GetModifySel
+    mov es:hui_get_modify_time_proc+4,cs
 ;
-    mov es:hei_get_access_time_proc, OFFSET GetAccessSel
-    mov es:hei_get_access_time_proc+4,cs
+    mov es:hui_get_access_time_proc, OFFSET GetAccessSel
+    mov es:hui_get_access_time_proc+4,cs
 ;
-    mov es:hei_is_eof_proc, OFFSET IsEofSel
-    mov es:hei_is_eof_proc+4,cs
+    mov es:hui_is_eof_proc, OFFSET IsEofSel
+    mov es:hui_is_eof_proc+4,cs
 ;
-    mov es:hei_free_proc, OFFSET FreeHandleSel
-    mov es:hei_free_proc+4,cs
+    mov es:hui_free_proc, OFFSET FreeHandleSel
+    mov es:hui_free_proc+4,cs
 ;
     ret
 InitHandleSel   Endp
@@ -5356,7 +5356,7 @@ DupSel      Proc far
     mov bx,flat_data_sel
     mov es,ebx
 ;
-    mov ax,ds:hei_io_mode
+    mov ax,ds:hui_io_mode
     push eax
 ;
     mov eax,ds:hf_user_handle
@@ -5417,7 +5417,7 @@ dusLoop:
     call InitHandleSel
 ;
     pop eax
-    mov es:hei_io_mode,ax
+    mov es:hui_io_mode,ax
     mov eax,es
     clc
     jmp dusDone

@@ -1227,7 +1227,7 @@ utNext:
 ;
 ;   DESCRIPTION:    Create a new console
 ;
-;   RETURNS:        BX		Console
+;   RETURNS:        BX          Console
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5652,27 +5652,27 @@ create_input_handle        Proc far
     push ebx
     push ecx
 ;
-    mov eax,SIZE handle_entry_interface
+    mov eax,SIZE handle_user_interface
     AllocateSmallGlobalMem
 ;
     InitHandle
 ;
-    mov es:hei_dup_proc,OFFSET dup_handle
-    mov es:hei_dup_proc+4,cs
+    mov es:hui_dup_proc,OFFSET dup_handle
+    mov es:hui_dup_proc+4,cs
 ;
-    mov es:hei_read_proc,OFFSET read_c_console
-    mov es:hei_read_proc+4,cs
+    mov es:hui_read_proc,OFFSET read_c_console
+    mov es:hui_read_proc+4,cs
 ;
-    mov es:hei_is_eof_proc,OFFSET eof_input
-    mov es:hei_is_eof_proc+4,cs
+    mov es:hui_is_eof_proc,OFFSET eof_input
+    mov es:hui_is_eof_proc+4,cs
 ;
-    mov es:hei_is_device_proc,OFFSET device_ok
-    mov es:hei_is_device_proc+4,cs
+    mov es:hui_is_device_proc,OFFSET device_ok
+    mov es:hui_is_device_proc+4,cs
 ;
-    mov es:hei_input_size_proc,OFFSET input_size
-    mov es:hei_input_size_proc+4,cs
+    mov es:hui_input_size_proc,OFFSET input_size
+    mov es:hui_input_size_proc+4,cs
 ;
-    mov es:hei_io_mode,IO_READ OR IO_ISTTY
+    mov es:hui_io_mode,IO_READ OR IO_ISTTY
 ;
     mov eax,es
 ;
@@ -5702,27 +5702,27 @@ create_output_handle        Proc far
     push ebx
     push ecx
 ;
-    mov eax,SIZE handle_entry_interface
+    mov eax,SIZE handle_user_interface
     AllocateSmallGlobalMem
 ;
     InitHandle
 ;
-    mov es:hei_dup_proc,OFFSET dup_handle
-    mov es:hei_dup_proc+4,cs
+    mov es:hui_dup_proc,OFFSET dup_handle
+    mov es:hui_dup_proc+4,cs
 ;
-    mov es:hei_write_proc,OFFSET write_c_console
-    mov es:hei_write_proc+4,cs
+    mov es:hui_write_proc,OFFSET write_c_console
+    mov es:hui_write_proc+4,cs
 ;
-    mov es:hei_is_eof_proc,OFFSET eof_output
-    mov es:hei_is_eof_proc+4,cs
+    mov es:hui_is_eof_proc,OFFSET eof_output
+    mov es:hui_is_eof_proc+4,cs
 ;
-    mov es:hei_is_device_proc,OFFSET device_ok
-    mov es:hei_is_device_proc+4,cs
+    mov es:hui_is_device_proc,OFFSET device_ok
+    mov es:hui_is_device_proc+4,cs
 ;
-    mov es:hei_output_size_proc,OFFSET output_size
-    mov es:hei_output_size_proc+4,cs
+    mov es:hui_output_size_proc,OFFSET output_size
+    mov es:hui_output_size_proc+4,cs
 ;
-    mov es:hei_io_mode,IO_WRITE OR IO_ISTTY
+    mov es:hui_io_mode,IO_WRITE OR IO_ISTTY
 ;
     mov eax,es
 ;

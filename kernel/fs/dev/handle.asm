@@ -154,12 +154,12 @@ create_proc_handle Proc far
 
     CreateInputHandle
     mov es,eax
-    inc es:hei_ref_count
+    inc es:hui_ref_count
     mov ds:hd_input_sel,es
 ;
     CreateOutputHandle
     mov es,eax
-    inc es:hei_ref_count
+    inc es:hui_ref_count
     mov ds:hd_output_sel,es
 ;
     pop es
@@ -189,12 +189,12 @@ cpStdOk:
 ;    
     mov ax,ds:hd_input_sel
     mov fs,eax
-    inc fs:hei_ref_count
+    inc fs:hui_ref_count
     mov es:[edx].ph_arr,fs
 ;
     mov ax,ds:hd_output_sel
     mov fs,eax
-    add fs:hei_ref_count,2
+    add fs:hui_ref_count,2
     mov es:[edx].ph_arr+2,fs
     mov es:[edx].ph_arr+4,fs
 ;
@@ -273,79 +273,79 @@ handle_fail    Proc far
 handle_fail    Endp
 
 InitHandleObj  Proc near
-    mov es:hei_dup_proc,OFFSET handle_fail
-    mov es:hei_dup_proc+4,cs
+    mov es:hui_dup_proc,OFFSET handle_fail
+    mov es:hui_dup_proc+4,cs
 ;
-    mov es:hei_delete_proc,OFFSET handle_fail
-    mov es:hei_delete_proc+4,cs
+    mov es:hui_delete_proc,OFFSET handle_fail
+    mov es:hui_delete_proc+4,cs
 ;
-    mov es:hei_get_map_proc,OFFSET handle_fail
-    mov es:hei_get_map_proc+4,cs
+    mov es:hui_get_map_proc,OFFSET handle_fail
+    mov es:hui_get_map_proc+4,cs
 ;
-    mov es:hei_map_proc,OFFSET handle_fail
-    mov es:hei_map_proc+4,cs
+    mov es:hui_map_proc,OFFSET handle_fail
+    mov es:hui_map_proc+4,cs
 ;
-    mov es:hei_update_map_proc,OFFSET handle_fail
-    mov es:hei_update_map_proc+4,cs
+    mov es:hui_update_map_proc,OFFSET handle_fail
+    mov es:hui_update_map_proc+4,cs
 ;
-    mov es:hei_grow_map_proc,OFFSET handle_fail
-    mov es:hei_grow_map_proc+4,cs
+    mov es:hui_grow_map_proc,OFFSET handle_fail
+    mov es:hui_grow_map_proc+4,cs
 ;
-    mov es:hei_poll_proc,OFFSET handle_fail
-    mov es:hei_poll_proc+4,cs
+    mov es:hui_poll_proc,OFFSET handle_fail
+    mov es:hui_poll_proc+4,cs
 ;
-    mov es:hei_read_proc,OFFSET handle_fail
-    mov es:hei_read_proc+4,cs
+    mov es:hui_read_proc,OFFSET handle_fail
+    mov es:hui_read_proc+4,cs
 ;
-    mov es:hei_write_proc,OFFSET handle_fail
-    mov es:hei_write_proc+4,cs
+    mov es:hui_write_proc,OFFSET handle_fail
+    mov es:hui_write_proc+4,cs
 ;
-    mov es:hei_poll_proc,OFFSET handle_fail
-    mov es:hei_poll_proc+4,cs
+    mov es:hui_poll_proc,OFFSET handle_fail
+    mov es:hui_poll_proc+4,cs
 ;
-    mov es:hei_get_size_proc,OFFSET handle_fail
-    mov es:hei_get_size_proc+4,cs
+    mov es:hui_get_size_proc,OFFSET handle_fail
+    mov es:hui_get_size_proc+4,cs
 ;
-    mov es:hei_set_size_proc,OFFSET handle_fail
-    mov es:hei_set_size_proc+4,cs
+    mov es:hui_set_size_proc,OFFSET handle_fail
+    mov es:hui_set_size_proc+4,cs
 ;
-    mov es:hei_get_pos_proc,OFFSET handle_fail
-    mov es:hei_get_pos_proc+4,cs
+    mov es:hui_get_pos_proc,OFFSET handle_fail
+    mov es:hui_get_pos_proc+4,cs
 ;
-    mov es:hei_set_pos_proc,OFFSET handle_fail
-    mov es:hei_set_pos_proc+4,cs
+    mov es:hui_set_pos_proc,OFFSET handle_fail
+    mov es:hui_set_pos_proc+4,cs
 ;
-    mov es:hei_get_create_time_proc,OFFSET handle_fail
-    mov es:hei_get_create_time_proc+4,cs
+    mov es:hui_get_create_time_proc,OFFSET handle_fail
+    mov es:hui_get_create_time_proc+4,cs
 ;
-    mov es:hei_get_modify_time_proc,OFFSET handle_fail
-    mov es:hei_get_modify_time_proc+4,cs
+    mov es:hui_get_modify_time_proc,OFFSET handle_fail
+    mov es:hui_get_modify_time_proc+4,cs
 ;
-    mov es:hei_get_access_time_proc,OFFSET handle_fail
-    mov es:hei_get_access_time_proc+4,cs
+    mov es:hui_get_access_time_proc,OFFSET handle_fail
+    mov es:hui_get_access_time_proc+4,cs
 ;
-    mov es:hei_set_modify_time_proc,OFFSET handle_fail
-    mov es:hei_set_modify_time_proc+4,cs
+    mov es:hui_set_modify_time_proc,OFFSET handle_fail
+    mov es:hui_set_modify_time_proc+4,cs
 ;
-    mov es:hei_is_eof_proc,OFFSET handle_fail
-    mov es:hei_is_eof_proc+4,cs
+    mov es:hui_is_eof_proc,OFFSET handle_fail
+    mov es:hui_is_eof_proc+4,cs
 ;
-    mov es:hei_is_device_proc,OFFSET handle_fail
-    mov es:hei_is_device_proc+4,cs
+    mov es:hui_is_device_proc,OFFSET handle_fail
+    mov es:hui_is_device_proc+4,cs
 ;
-    mov es:hei_is_ip4_proc,OFFSET handle_fail
-    mov es:hei_is_ip4_proc+4,cs
+    mov es:hui_is_ip4_proc,OFFSET handle_fail
+    mov es:hui_is_ip4_proc+4,cs
 ;
-    mov es:hei_input_size_proc,OFFSET handle_fail
-    mov es:hei_input_size_proc+4,cs
+    mov es:hui_input_size_proc,OFFSET handle_fail
+    mov es:hui_input_size_proc+4,cs
 ;
-    mov es:hei_output_size_proc,OFFSET handle_fail
-    mov es:hei_output_size_proc+4,cs
+    mov es:hui_output_size_proc,OFFSET handle_fail
+    mov es:hui_output_size_proc+4,cs
 ;
-    mov es:hei_free_proc,OFFSET handle_fail
-    mov es:hei_free_proc+4,cs
+    mov es:hui_free_proc,OFFSET handle_fail
+    mov es:hui_free_proc+4,cs
 ;
-    mov es:hei_ref_count,0
+    mov es:hui_ref_count,0
     ret
 InitHandleObj    Endp
 
@@ -398,7 +398,7 @@ aluhOk:
     mov ebx,edx
     mov es:[2*ebx].ph_arr,ds
 ;
-    inc ds:hei_ref_count
+    inc ds:hui_ref_count
     clc
 
 aluhDone:
@@ -509,7 +509,7 @@ ohCheckTrunc:
 
 ohSizeOk:
     call OpenToIo
-    mov ds:hei_io_mode,ax
+    mov ds:hui_io_mode,ax
     clc
     jmp ohDone
 
@@ -556,10 +556,10 @@ CloseHandleObj     Proc near
     jnc chFail
 ;
     mov ds,eax
-    sub ds:hei_ref_count,1
+    sub ds:hui_ref_count,1
     jnz chOk
 ;
-    call fword ptr ds:hei_free_proc
+    call fword ptr ds:hui_free_proc
     clc
     jmp chDone
 
@@ -605,7 +605,7 @@ DeleteHandleObj     Proc near
     jz dhoFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_delete_proc
+    call fword ptr ds:hui_delete_proc
     jnc dhoDone
 
 dhoFail:
@@ -651,7 +651,7 @@ DupHandleObj   Proc near
     jz dhFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_dup_proc
+    call fword ptr ds:hui_dup_proc
     jc dhFail
 ;
     mov ds,eax
@@ -700,10 +700,10 @@ GetHandleMapObj     Proc near
     jz ghmFail
 ;
     mov ds,esi
-    test ds:hei_io_mode,IO_READ
+    test ds:hui_io_mode,IO_READ
     jz ghmFail
 ;
-    call fword ptr ds:hei_get_map_proc
+    call fword ptr ds:hui_get_map_proc
     jnc ghmDone
 
 ghmFail:
@@ -749,10 +749,10 @@ MapHandleObj     Proc near
     jz mhFail
 ;
     mov ds,esi
-    test ds:hei_io_mode,IO_READ
+    test ds:hui_io_mode,IO_READ
     jz mhFail
 ;
-    call fword ptr ds:hei_map_proc
+    call fword ptr ds:hui_map_proc
     jnc mhDone
 
 mhFail:
@@ -794,7 +794,7 @@ UpdateHandleMapObj     Proc near
     jz uhmFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_update_map_proc
+    call fword ptr ds:hui_update_map_proc
     jnc uhmDone
 
 uhmFail:
@@ -838,7 +838,7 @@ GrowHandleMapObj     Proc near
     jz ghmoFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_grow_map_proc
+    call fword ptr ds:hui_grow_map_proc
     jnc ghmoDone
 
 ghmoFail:
@@ -884,10 +884,10 @@ ReadHandleObj     Proc near
     jz rhFail
 ;
     mov ds,esi
-    test ds:hei_io_mode,IO_READ
+    test ds:hui_io_mode,IO_READ
     jz rhFail
 ;
-    call fword ptr ds:hei_read_proc
+    call fword ptr ds:hui_read_proc
     mov eax,ecx
     jnc rhDone
 
@@ -935,10 +935,10 @@ WriteHandleObj     Proc near
     jz whFail
 ;
     mov ds,esi
-    test ds:hei_io_mode,IO_WRITE
+    test ds:hui_io_mode,IO_WRITE
     jz whFail
 ;
-    call fword ptr ds:hei_write_proc
+    call fword ptr ds:hui_write_proc
     mov eax,ecx
     jnc whDone
 
@@ -986,10 +986,10 @@ PollHandleObj     Proc near
     jz phFail
 ;
     mov ds,esi
-    test ds:hei_io_mode,IO_READ
+    test ds:hui_io_mode,IO_READ
     jz phFail
 ;
-    call fword ptr ds:hei_poll_proc
+    call fword ptr ds:hui_poll_proc
     mov eax,ecx
     jnc phDone
 
@@ -1035,7 +1035,7 @@ GetHandlePosObj     Proc near
     jz ghpFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_get_pos_proc
+    call fword ptr ds:hui_get_pos_proc
     jmp ghpDone
 
 ghpFail:
@@ -1080,7 +1080,7 @@ SetHandlePosObj     Proc near
     jz shpFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_set_pos_proc
+    call fword ptr ds:hui_set_pos_proc
     jmp shpDone
 
 shpFail:
@@ -1124,7 +1124,7 @@ GetHandleSizeObj     Proc near
     jz ghsFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_get_size_proc
+    call fword ptr ds:hui_get_size_proc
     jmp ghsDone
 
 ghsFail:
@@ -1169,7 +1169,7 @@ SetHandleSizeObj     Proc near
     jz shsFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_set_size_proc
+    call fword ptr ds:hui_set_size_proc
     jmp shsDone
 
 shsFail:
@@ -1213,7 +1213,7 @@ GetHandleCreateObj     Proc near
     jz ghctFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_get_create_time_proc
+    call fword ptr ds:hui_get_create_time_proc
     jmp ghctDone
 
 ghctFail:
@@ -1258,7 +1258,7 @@ GetHandleModifyObj     Proc near
     jz ghmtFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_get_modify_time_proc
+    call fword ptr ds:hui_get_modify_time_proc
     jmp ghmtDone
 
 ghmtFail:
@@ -1303,7 +1303,7 @@ GetHandleAccessObj     Proc near
     jz ghatFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_get_access_time_proc
+    call fword ptr ds:hui_get_access_time_proc
     jmp ghatDone
 
 ghatFail:
@@ -1347,7 +1347,7 @@ SetHandleModifyObj     Proc near
     jz shmtFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_set_modify_time_proc
+    call fword ptr ds:hui_set_modify_time_proc
     jmp shmtDone
 
 shmtFail:
@@ -1391,7 +1391,7 @@ EofHandleObj     Proc near
     jz eohFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_is_eof_proc
+    call fword ptr ds:hui_is_eof_proc
     jmp eohDone
 
 eohFail:
@@ -1435,7 +1435,7 @@ IsHandleDeviceObj     Proc near
     jz ihdFail
 ;
     mov ds,esi
-    call fword ptr ds:hei_is_device_proc
+    call fword ptr ds:hui_is_device_proc
     jmp ihdDone
 
 ihdFail:
