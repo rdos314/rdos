@@ -407,7 +407,6 @@ aluhOk:
 ;
     mov ebx,edx
     mov es:[2*ebx].ph_sel_arr,ds
-;
     inc ds:hui_ref_count
     clc
 
@@ -419,6 +418,91 @@ aluhDone:
     pop es
     ret
 AllocateUserHandle  Endp   
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           SetUserHandle
+;
+;           DESCRIPTION:    Set user handle
+;
+;           PARAMETERS:     DS          Handle interface
+;                           EBX         User handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetUserHandle     Proc near
+    push ds
+    push es
+    push eax
+;
+    mov eax,ds
+    mov es,eax
+    mov eax,proc_handle_sel
+    mov ds,eax
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae suhFail
+;
+    EnterSectionUseFlags ds:ph_section
+    xor ax,ax
+    xchg ax,ds:[2*ebx].ph_sel_arr
+    or ax,ax
+    jnz suhClose
+;
+    lock bts ds:ph_bitmap,ebx
+    jnc suhSet
+    jmp suhLeaveFail
+
+suhClose:
+    sub ds:[2*ebx].ph_use_arr,1
+    jc suhLeaveOk
+;
+    GetThread
+    mov ds:[2*ebx].ph_wait_arr,ax
+
+suhWait:
+    LeaveSectionUseFlags ds:ph_section
+    WaitForSignal
+    EnterSection ds:ph_section
+    mov ax,ds:[2*ebx].ph_use_arr
+    cmp ax,-1
+    jne suhWait
+
+suhLeaveOk:
+    add ds:[2*ebx].ph_use_arr,1
+;
+    mov ds,eax
+    sub ds:hui_ref_count,1
+    jnz suhTake
+;
+    call fword ptr ds:hui_free_proc
+
+suhTake:
+    mov eax,proc_handle_sel
+    mov ds,eax
+
+suhSet:
+    inc es:hui_ref_count
+;
+    mov ds:[2*ebx].ph_sel_arr,es
+    LeaveSectionUseFlags ds:ph_section
+    clc
+    jmp suhDone
+
+suhLeaveFail:
+    LeaveSectionUseFlags ds:ph_section
+
+suhFail:
+    stc
+
+suhDone:
+    pop eax
+    pop es
+    pop ds
+    ret
+SetUserHandle  Endp   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -780,6 +864,43 @@ dhDone:
     pop ds
     ret
 DupHandleObj   Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Dup2HandleObj
+;
+;           DESCRIPTION:    Dup2 handle
+;
+;           PARAMETERS:     BX          Src handle
+;                           AX          Dest handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Dup2HandleObj   Proc near
+    push ds
+    push eax
+    push edx
+;
+    mov edx,eax
+;
+    call LockInterface
+    jc dho2Done
+;
+    call fword ptr ds:hui_dup_proc
+    call UnlockInterface
+    jc dho2Done
+;
+    mov ds,eax
+    mov ebx,edx
+    call SetUserHandle
+
+dho2Done:
+    pop edx
+    pop eax
+    pop ds
+    ret
+Dup2HandleObj   Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1425,6 +1546,38 @@ dup_handle     Proc far
     call DupHandleObj
     ret
 dup_handle     Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           Dup2Handle
+;
+;           DESCRIPTION:    Dup2 C handle
+;
+;           PARAMETERS:     BX          Src handle
+;                           AX          Dest handle
+;
+;           RETURNS:        EBX         New handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dup2_handle_name  DB 'Dup2 C Handle', 0
+
+dup2_handle     Proc far
+    call Dup2HandleObj
+    jc dh2Failed
+;
+    movzx ebx,ax
+    clc
+    jmp dh2Done
+
+dh2Failed:
+    mov ebx,-1
+    stc
+
+dh2Done:
+    ret
+dup2_handle    Endp
         
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2763,6 +2916,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET dup_handle_name
     xor cl,cl
     mov ax,dup_handle_nr
+    RegisterBimodalUserGate
+;
+    mov esi,OFFSET dup2_handle
+    mov edi,OFFSET dup2_handle_name
+    xor cl,cl
+    mov ax,dup2_handle_nr
     RegisterBimodalUserGate
 ;
     mov esi,OFFSET get_handle_map
