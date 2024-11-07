@@ -2601,6 +2601,13 @@ DupKernelObj Proc far
 ;
     mov ds,ds:hki_file_sel
 ;
+    mov ax,ds:file_user_count
+    or ax,ax
+    jnz dkoInc
+;
+    inc ds:file_usage
+
+dkoInc:
     inc ds:file_user_count
 ;
     call AllocateObj

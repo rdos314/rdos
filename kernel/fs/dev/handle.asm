@@ -2359,7 +2359,6 @@ dupl_kernel_handle Proc far
     push ds
     push esi
 ;
-    int 3
     mov esi,SEG data
     mov ds,esi
 ;
