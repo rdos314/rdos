@@ -799,18 +799,17 @@ GetHandleMapObj     Proc near
     push ds
 ;
     call LockInterface
-    jc ghmFail
+    jc ghmDone
 ;
     test ds:hui_io_mode,IO_READ
-    jz ghmUnlockFail
+    stc
+    jz ghmUnlock
 ;
     call fword ptr ds:hui_get_map_proc
+
+ghmUnlock:
     call UnlockInterface
     jnc ghmDone
-    jmp ghmFail
-
-ghmUnlockFail:
-    call UnlockInterface
 
 ghmFail:
     xor eax,eax
@@ -839,21 +838,16 @@ MapHandleObj     Proc near
     push ds
 ;
     call LockInterface
-    jc mhFail
+    jc mhDone
 ;
     test ds:hui_io_mode,IO_READ
-    jz mhUnlockFail
+    stc
+    jz mhUnlock
 ;
     call fword ptr ds:hui_map_proc
-    call UnlockInterface
-    jnc mhDone
-    jmp mhFail
 
-mhUnlockFail:
+mhUnlock:
     call UnlockInterface
-
-mhFail:
-    stc
 
 mhDone:
     pop ds
@@ -875,14 +869,10 @@ UpdateHandleMapObj     Proc near
     push ds
 ;
     call LockInterface
-    jc uhmFail
+    jc uhmDone
 ;
     call fword ptr ds:hui_update_map_proc
     call UnlockInterface
-    jnc uhmDone
-
-uhmFail:
-    stc
 
 uhmDone:
     pop ds
@@ -906,14 +896,10 @@ GrowHandleMapObj     Proc near
     push ds
 ;
     call LockInterface
-    jc ghmoFail
+    jc ghmoDone
 ;
     call fword ptr ds:hui_grow_map_proc
     call UnlockInterface
-    jnc ghmoDone
-
-ghmoFail:
-    stc
 
 ghmoDone:
     pop ds
@@ -942,16 +928,15 @@ ReadHandleObj     Proc near
     jc rhFail
 ;
     test ds:hui_io_mode,IO_READ
-    jz rhUnlockFail
+    stc
+    jz rhUnlock
 ;
     call fword ptr ds:hui_read_proc
-    call UnlockInterface
     mov eax,ecx
-    jnc rhDone
-    jmp rhFail
 
-rhUnlockFail:
+rhUnlock:
     call UnlockInterface
+    jnc rhDone
 
 rhFail:
     xor eax,eax
@@ -984,16 +969,15 @@ WriteHandleObj     Proc near
     jc whFail
 ;
     test ds:hui_io_mode,IO_WRITE
-    jz whUnlockFail
+    stc
+    jz whUnlock
 ;
     call fword ptr ds:hui_write_proc
-    call UnlockInterface
     mov eax,ecx
-    jnc whDone
-    jmp whFail
 
-whUnlockFail:
+whUnlock:
     call UnlockInterface
+    jnc whDone
 
 whFail:
     xor eax,eax
@@ -1021,27 +1005,19 @@ WriteHandleObj     Endp
 
 PollHandleObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc phFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae phFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz phFail
-;
-    mov ds,esi
     test ds:hui_io_mode,IO_READ
-    jz phFail
+    stc
+    jz phUnlock
 ;
     call fword ptr ds:hui_poll_proc
     mov eax,ecx
+
+phUnlock:
+    call UnlockInterface
     jnc phDone
 
 phFail:
@@ -1049,8 +1025,6 @@ phFail:
     stc
 
 phDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 PollHandleObj     Endp
@@ -1070,24 +1044,13 @@ PollHandleObj     Endp
 
 GetHandlePosObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc ghpFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae ghpFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz ghpFail
-;
-    mov ds,esi
     call fword ptr ds:hui_get_pos_proc
-    jmp ghpDone
+    call UnlockInterface
+    jnc ghpDone
 
 ghpFail:
     xor eax,eax
@@ -1095,8 +1058,6 @@ ghpFail:
     stc
 
 ghpDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 GetHandlePosObj     Endp        
@@ -1115,31 +1076,14 @@ GetHandlePosObj     Endp
 
 SetHandlePosObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc shpDone
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae shpFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz shpFail
-;
-    mov ds,esi
     call fword ptr ds:hui_set_pos_proc
-    jmp shpDone
-
-shpFail:
-    stc
+    call UnlockInterface
 
 shpDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 SetHandlePosObj     Endp        
@@ -1159,24 +1103,13 @@ SetHandlePosObj     Endp
 
 GetHandleSizeObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc ghsFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae ghsFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz ghsFail
-;
-    mov ds,esi
     call fword ptr ds:hui_get_size_proc
-    jmp ghsDone
+    call UnlockInterface
+    jnc ghsDone
 
 ghsFail:
     xor eax,eax
@@ -1184,8 +1117,6 @@ ghsFail:
     stc
 
 ghsDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 GetHandleSizeObj     Endp        
@@ -1204,31 +1135,14 @@ GetHandleSizeObj     Endp
 
 SetHandleSizeObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc shsDone
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae shsFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz shsFail
-;
-    mov ds,esi
     call fword ptr ds:hui_set_size_proc
-    jmp shsDone
-
-shsFail:
-    stc
+    call UnlockInterface
 
 shsDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 SetHandleSizeObj     Endp        
@@ -1248,32 +1162,19 @@ SetHandleSizeObj     Endp
 
 GetHandleCreateObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc ghctFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae ghctFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz ghctFail
-;
-    mov ds,esi
     call fword ptr ds:hui_get_create_time_proc
-    jmp ghctDone
+    call UnlockInterface
+    jnc ghctDone
 
 ghctFail:
     GetTime
     stc
 
 ghctDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 GetHandleCreateObj     Endp        
@@ -1293,32 +1194,19 @@ GetHandleCreateObj     Endp
 
 GetHandleModifyObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc ghmtFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae ghmtFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz ghmtFail
-;
-    mov ds,esi
     call fword ptr ds:hui_get_modify_time_proc
-    jmp ghmtDone
+    call UnlockInterface
+    jnc ghmtDone
 
 ghmtFail:
     GetTime
     stc
 
 ghmtDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 GetHandleModifyObj     Endp        
@@ -1338,32 +1226,19 @@ GetHandleModifyObj     Endp
 
 GetHandleAccessObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc ghatFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae ghatFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz ghatFail
-;
-    mov ds,esi
     call fword ptr ds:hui_get_access_time_proc
-    jmp ghatDone
+    call UnlockInterface
+    jnc ghatDone
 
 ghatFail:
     GetTime
     stc
 
 ghatDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 GetHandleAccessObj     Endp        
@@ -1382,31 +1257,14 @@ GetHandleAccessObj     Endp
 
 SetHandleModifyObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc shmtDone
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae shmtFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz shmtFail
-;
-    mov ds,esi
     call fword ptr ds:hui_set_modify_time_proc
-    jmp shmtDone
-
-shmtFail:
-    stc
+    call UnlockInterface
 
 shmtDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 SetHandleModifyObj     Endp        
@@ -1426,31 +1284,14 @@ SetHandleModifyObj     Endp
 
 EofHandleObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc eohDone
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae eohFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz eohFail
-;
-    mov ds,esi
     call fword ptr ds:hui_is_eof_proc
-    jmp eohDone
-
-eohFail:
-    stc
+    call UnlockInterface
 
 eohDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 EofHandleObj     Endp        
@@ -1470,31 +1311,14 @@ EofHandleObj     Endp
 
 IsHandleDeviceObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc ihdDone
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae ihdFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz ihdFail
-;
-    mov ds,esi
     call fword ptr ds:hui_is_device_proc
-    jmp ihdDone
-
-ihdFail:
-    stc
+    call UnlockInterface
 
 ihdDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 IsHandleDeviceObj     Endp        
