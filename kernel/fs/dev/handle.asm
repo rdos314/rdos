@@ -557,7 +557,7 @@ CloseHandleObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae chFail
 ;
-    EnterSection ds:ph_section
+    EnterSectionUseFlags ds:ph_section
     xor ax,ax
     xchg ax,ds:[2*ebx].ph_sel_arr
     or ax,ax
@@ -570,7 +570,7 @@ CloseHandleObj     Proc near
     mov ds:[2*ebx].ph_wait_arr,ax
 
 chWait:
-    LeaveSection ds:ph_section
+    LeaveSectionUseFlags ds:ph_section
     WaitForSignal
     EnterSection ds:ph_section
     mov ax,ds:[2*ebx].ph_use_arr
@@ -579,7 +579,7 @@ chWait:
 
 chLeaveOk:
     add ds:[2*ebx].ph_use_arr,1
-    LeaveSection ds:ph_section
+    LeaveSectionUseFlags ds:ph_section
 
     btc ds:ph_bitmap,ebx
     jnc chFail
@@ -593,7 +593,7 @@ chLeaveOk:
     jmp chDone
 
 chLeaveFail:
-    LeaveSection ds:ph_section
+    LeaveSectionUseFlags ds:ph_section
 
 chFail:
     stc
@@ -797,27 +797,20 @@ DupHandleObj   Endp
 
 GetHandleMapObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc ghmFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae ghmFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz ghmFail
-;
-    mov ds,esi
     test ds:hui_io_mode,IO_READ
-    jz ghmFail
+    jz ghmUnlockFail
 ;
     call fword ptr ds:hui_get_map_proc
+    call UnlockInterface
     jnc ghmDone
+    jmp ghmFail
+
+ghmUnlockFail:
+    call UnlockInterface
 
 ghmFail:
     xor eax,eax
@@ -825,8 +818,6 @@ ghmFail:
     stc
 
 ghmDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 GetHandleMapObj     Endp
@@ -846,34 +837,25 @@ GetHandleMapObj     Endp
 
 MapHandleObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc mhFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae mhFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz mhFail
-;
-    mov ds,esi
     test ds:hui_io_mode,IO_READ
-    jz mhFail
+    jz mhUnlockFail
 ;
     call fword ptr ds:hui_map_proc
+    call UnlockInterface
     jnc mhDone
+    jmp mhFail
+
+mhUnlockFail:
+    call UnlockInterface
 
 mhFail:
     stc
 
 mhDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 MapHandleObj     Endp
@@ -891,31 +873,18 @@ MapHandleObj     Endp
 
 UpdateHandleMapObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc uhmFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae uhmFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz uhmFail
-;
-    mov ds,esi
     call fword ptr ds:hui_update_map_proc
+    call UnlockInterface
     jnc uhmDone
 
 uhmFail:
     stc
 
 uhmDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 UpdateHandleMapObj     Endp
@@ -935,31 +904,18 @@ UpdateHandleMapObj     Endp
 
 GrowHandleMapObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc ghmoFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae ghmoFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz ghmoFail
-;
-    mov ds,esi
     call fword ptr ds:hui_grow_map_proc
+    call UnlockInterface
     jnc ghmoDone
 
 ghmoFail:
     stc
 
 ghmoDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 GrowHandleMapObj     Endp
@@ -981,36 +937,27 @@ GrowHandleMapObj     Endp
 
 ReadHandleObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc rhFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae rhFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz rhFail
-;
-    mov ds,esi
     test ds:hui_io_mode,IO_READ
-    jz rhFail
+    jz rhUnlockFail
 ;
     call fword ptr ds:hui_read_proc
+    call UnlockInterface
     mov eax,ecx
     jnc rhDone
+    jmp rhFail
+
+rhUnlockFail:
+    call UnlockInterface
 
 rhFail:
     xor eax,eax
     stc
 
 rhDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 ReadHandleObj     Endp
@@ -1032,36 +979,27 @@ ReadHandleObj     Endp
 
 WriteHandleObj     Proc near
     push ds
-    push ebx
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc whFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae whFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz whFail
-;
-    mov ds,esi
     test ds:hui_io_mode,IO_WRITE
-    jz whFail
+    jz whUnlockFail
 ;
     call fword ptr ds:hui_write_proc
+    call UnlockInterface
     mov eax,ecx
     jnc whDone
+    jmp whFail
+
+whUnlockFail:
+    call UnlockInterface
 
 whFail:
     xor eax,eax
     stc
 
 whDone:
-    pop esi
-    pop ebx
     pop ds
     ret
 WriteHandleObj     Endp
