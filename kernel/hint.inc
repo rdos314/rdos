@@ -154,6 +154,10 @@ hki_read_proc             DD ?,?
 hki_write_proc            DD ?,?
 
 ;  IN	DS                Handle kernel interface
+;  OUT  AX                New user handle interface
+hki_dup_proc              DD ?,?
+
+;  IN	DS                Handle kernel interface
 hki_free_proc             DD ?,?
 
 hki_ref_count             DW ?

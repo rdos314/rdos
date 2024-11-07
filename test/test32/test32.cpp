@@ -11,6 +11,12 @@
 #include "videodev.h"
 #include "table.h"
 
+void CloseThread(void *param)
+{
+    int handle = (int)param;
+    RdosCloseHandle(handle);
+}
+
 void main()
 {
 
@@ -35,27 +41,6 @@ void main()
 
 */
 
-    int previ;
-    int prevo;
-
-    previ = dup(0);
-    prevo = dup(1);
-
-    dup2(previ, 0);
-    dup2(prevo, 1);
-
-    close(previ);
-    close(prevo);
-
-    previ = dup(0);
-    prevo = dup(1);
-
-    dup2(previ, 0);
-    dup2(prevo, 1);
-
-    close(previ);
-    close(prevo);
-
     int i;
     char *buf = new char[1024];
     int size;
@@ -63,6 +48,8 @@ void main()
     long long pos;
     int handle = RdosOpenHandle("e:/test.bin", O_RDWR);
     int handle2;
+
+    RdosCreateThread(CloseThread, "Close thread", (void *)handle, 0x8000);
 
     RdosSetHandlePos(handle, 25);
     handle2 = RdosDupHandle(handle);

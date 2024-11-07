@@ -2118,6 +2118,9 @@ InitKernelObj    Proc near
     mov es:hki_write_proc,OFFSET crk_fail
     mov es:hki_write_proc+4,cs
 ;
+    mov es:hki_dup_proc,OFFSET crk_fail
+    mov es:hki_dup_proc+4,cs
+;
     mov es:hki_free_proc,OFFSET fk_proc_fail
     mov es:hki_free_proc+4,cs
 ;
@@ -2336,6 +2339,57 @@ wkhDone:
     pop ds
     ret
 write_kernel_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DuplKernelHandle
+;
+;           DESCRIPTION:    Dupl kernel handle to user handle
+;
+;           PARAMETERS:     BX        Kernel handle
+;
+;           RETURNS:        BX        User handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dupl_kernel_handle_name DB 'Dupl Kernel Handle', 0
+
+dupl_kernel_handle Proc far
+    push ds
+    push esi
+;
+    int 3
+    mov esi,SEG data
+    mov ds,esi
+;
+    movzx ebx,bx
+    cmp ebx,KERNEL_HANDLE_COUNT
+    ja dkhFail
+;
+    sub ebx,1
+    jc dkhFail
+;
+    mov si,ds:[2*ebx].kh_arr
+    or si,si
+    jz dkhFail
+;
+    mov ds,esi
+    call fword ptr ds:hki_dup_proc
+    jc dkhFail
+;
+    mov ds,eax
+    call AllocateUserHandle
+    jnc dkhDone
+
+dkhFail:
+    stc
+
+dkhDone:
+    pop esi
+    pop ds
+    ret
+dupl_kernel_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2913,6 +2967,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET write_kernel_handle_name
     xor cl,cl
     mov ax,write_kernel_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET dupl_kernel_handle
+    mov edi,OFFSET dupl_kernel_handle_name
+    xor cl,cl
+    mov ax,dupl_kernel_handle_nr
     RegisterOsGate
 ;
     mov ebx,OFFSET open_handle16
