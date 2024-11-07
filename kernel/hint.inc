@@ -132,8 +132,6 @@ hui_free_proc             DD ?,?
 
 hui_io_mode               DW ?
 hui_ref_count             DW ?
-hui_use_count             DW ?
-hui_close_thread          DW ?
 
 handle_user_interface    ENDS
 
@@ -168,6 +166,8 @@ proc_handle_struc    STRUC
 ph_linear        DD ?
 ph_section       section_typ <>
 ph_bitmap        DD USER_BITMAP_COUNT DUP(?)
-ph_arr           DW USER_HANDLE_COUNT DUP(?)
+ph_sel_arr       DW USER_HANDLE_COUNT DUP(?)
+ph_use_arr       DW USER_HANDLE_COUNT DUP(?)
+ph_wait_arr      DW USER_HANDLE_COUNT DUP(?)
 
 proc_handle_struc    ENDS

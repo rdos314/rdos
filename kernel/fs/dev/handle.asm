@@ -180,7 +180,17 @@ cpStdOk:
     mov ecx,USER_BITMAP_COUNT
     rep stosd
 ;
-    lea edi,[edx].ph_arr
+    lea edi,[edx].ph_sel_arr
+    xor ax,ax
+    mov ecx,USER_HANDLE_COUNT
+    rep stosw
+;
+    lea edi,[edx].ph_use_arr
+    xor ax,ax
+    mov ecx,USER_HANDLE_COUNT
+    rep stosw
+;
+    lea edi,[edx].ph_wait_arr
     xor ax,ax
     mov ecx,USER_HANDLE_COUNT
     rep stosw
@@ -190,13 +200,13 @@ cpStdOk:
     mov ax,ds:hd_input_sel
     mov fs,eax
     inc fs:hui_ref_count
-    mov es:[edx].ph_arr,fs
+    mov es:[edx].ph_sel_arr,fs
 ;
     mov ax,ds:hd_output_sel
     mov fs,eax
     add fs:hui_ref_count,2
-    mov es:[edx].ph_arr+2,fs
-    mov es:[edx].ph_arr+4,fs
+    mov es:[edx].ph_sel_arr+2,fs
+    mov es:[edx].ph_sel_arr+4,fs
 ;
     mov es:[edx].ph_bitmap,7
 ;
@@ -346,8 +356,6 @@ InitHandleObj  Proc near
     mov es:hui_free_proc+4,cs
 ;
     mov es:hui_ref_count,0
-    mov es:hui_use_count,0
-    mov es:hui_close_thread,0
     ret
 InitHandleObj    Endp
 
@@ -398,7 +406,7 @@ aluhOk:
     jc aluhLoop
 ;
     mov ebx,edx
-    mov es:[2*ebx].ph_arr,ds
+    mov es:[2*ebx].ph_sel_arr,ds
 ;
     inc ds:hui_ref_count
     clc
@@ -539,62 +547,31 @@ OpenHandleObj     Endp
 
 CloseHandleObj     Proc near
     push ds
-    push es
     push eax
     push ebx
 ;
     movzx ebx,bx
+    mov eax,proc_handle_sel
+    mov ds,eax
 ;
     cmp ebx,USER_HANDLE_COUNT
     jae chFail
 ;
-    mov eax,proc_handle_sel
-    mov ds,eax
-    EnterSection ds:ph_section
-;
     xor ax,ax
-    xchg ax,ds:[2*ebx].ph_arr
+    xchg ax,ds:[2*ebx].ph_sel_arr
     or ax,ax
-    jz chLeaveFail
+    jz chFail
 ;
     btc ds:ph_bitmap,ebx
-    jc chClrOk
-;
-    int 3
-
-chClrOk:
-    mov es,eax
-    lock sub es:hui_use_count,1
-    jc chLeaveDo
-;
-    GetThread
-    mov es:hui_close_thread,ax
-    LeaveSection ds:ph_section
-
-chWait:
-    WaitForSignal
-;
-    mov ax,es:hui_use_count
-    cmp ax,-1
-    jne chWait
-;
-    mov eax,es
-    jmp chDo
-
-chLeaveDo:
-    LeaveSection ds:ph_section
-
-chDo:
-    sub es:hui_ref_count,1
-    jnz chOk
+    jnc chFail
 ;
     mov ds,eax
+    sub ds:hui_ref_count,1
+    jnz chOk
+;
     call fword ptr ds:hui_free_proc
     clc
     jmp chDone
-
-chLeaveFail:
-    LeaveSection ds:ph_section
 
 chFail:
     stc
@@ -605,7 +582,6 @@ chOk:
 chDone:
     pop ebx
     pop eax
-    pop es
     pop ds
     ret
 CloseHandleObj     Endp
@@ -634,7 +610,7 @@ DeleteHandleObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae dhoFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz dhoFail
 ;
@@ -657,92 +633,6 @@ DeleteHandleObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           LockInterface
-;
-;           DESCRIPTION:    Lock handle interface
-;
-;           PARAMETERS:     BX          Handle
-;
-;           RETURNS:        NC
-;                             DS        Handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LockInterface   Proc near
-    push esi
-;
-    mov esi,proc_handle_sel
-    mov ds,esi
-;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae liFail
-;
-    EnterSection ds:ph_section
-    mov si,ds:[2*ebx].ph_arr
-    or si,si
-    jz liLeaveFail
-;
-    push ds
-    mov ds,esi
-    lock add ds:hui_use_count,1
-    pop ds
-    LeaveSection ds:ph_section
-;
-    mov ds,esi
-    clc
-    jmp liDone
-
-liLeaveFail:
-    LeaveSection ds:ph_section
-
-liFail:
-    xor esi,esi
-    mov ds,esi
-    stc
-
-liDone:
-    pop esi
-    ret
-LockInterface   Endp    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           UnlockInterface
-;
-;           DESCRIPTION:    Unlock interface
-;
-;           PARAMETERS:     DS          Handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UnlockInterface   Proc near
-    pushfd
-;
-    lock sub ds:hui_use_count,1
-    jnc uiDone
-;
-    push ebx
-;
-    mov bx,ds:hui_close_thread
-    or bx,bx
-    jz uiPopDone
-;
-    Signal
-
-uiPopDone:
-    pop ebx
-
-uiDone:
-    popfd
-    ret
-UnlockInterface  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DupHandleObj
 ;
 ;           DESCRIPTION:    Dup handle
@@ -755,14 +645,23 @@ UnlockInterface  Endp
 
 DupHandleObj   Proc near
     push ds
-    push es
     push eax
+    push esi
 ;
-    call LockInterface
-    jc dhFail
+    mov esi,proc_handle_sel
+    mov ds,esi
 ;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae dhFail
+;
+    mov si,ds:[2*ebx].ph_sel_arr
+    or si,si
+    jz dhFail
+;
+    mov ds,esi
     call fword ptr ds:hui_dup_proc
-    call UnlockInterface
     jc dhFail
 ;
     mov ds,eax
@@ -773,8 +672,8 @@ dhFail:
     stc
 
 dhDone:
+    pop esi
     pop eax
-    pop es
     pop ds
     ret
 DupHandleObj   Endp
@@ -806,7 +705,7 @@ GetHandleMapObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae ghmFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz ghmFail
 ;
@@ -855,7 +754,7 @@ MapHandleObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae mhFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz mhFail
 ;
@@ -900,7 +799,7 @@ UpdateHandleMapObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae uhmFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz uhmFail
 ;
@@ -944,7 +843,7 @@ GrowHandleMapObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae ghmoFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz ghmoFail
 ;
@@ -990,7 +889,7 @@ ReadHandleObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae rhFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz rhFail
 ;
@@ -1041,7 +940,7 @@ WriteHandleObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae whFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz whFail
 ;
@@ -1092,7 +991,7 @@ PollHandleObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae phFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz phFail
 ;
@@ -1141,7 +1040,7 @@ GetHandlePosObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae ghpFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz ghpFail
 ;
@@ -1186,7 +1085,7 @@ SetHandlePosObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae shpFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz shpFail
 ;
@@ -1230,7 +1129,7 @@ GetHandleSizeObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae ghsFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz ghsFail
 ;
@@ -1275,7 +1174,7 @@ SetHandleSizeObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae shsFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz shsFail
 ;
@@ -1319,7 +1218,7 @@ GetHandleCreateObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae ghctFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz ghctFail
 ;
@@ -1364,7 +1263,7 @@ GetHandleModifyObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae ghmtFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz ghmtFail
 ;
@@ -1409,7 +1308,7 @@ GetHandleAccessObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae ghatFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz ghatFail
 ;
@@ -1453,7 +1352,7 @@ SetHandleModifyObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae shmtFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz shmtFail
 ;
@@ -1497,7 +1396,7 @@ EofHandleObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae eohFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz eohFail
 ;
@@ -1541,7 +1440,7 @@ IsHandleDeviceObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae ihdFail
 ;
-    mov si,ds:[2*ebx].ph_arr
+    mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz ihdFail
 ;
