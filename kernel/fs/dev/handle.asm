@@ -633,6 +633,98 @@ DeleteHandleObj     Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           LockInterface
+;
+;           DESCRIPTION:    Lock interface
+;
+;           PARAMETERS:     BX          Handle
+;
+;           RETURNS:        NC          OK
+;                             DS        Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockInterface   Proc near
+    push esi
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    movzx ebx,bx
+;
+    cmp ebx,USER_HANDLE_COUNT
+    jae liFail
+;
+    EnterSection ds:ph_section
+    mov si,ds:[2*ebx].ph_sel_arr
+    or si,si
+    jz liLeaveFail
+;
+    add ds:[2*ebx].ph_use_arr,1
+    LeaveSection ds:ph_section
+;    
+    mov ds,esi
+    clc
+    pop esi
+    ret
+
+liLeaveFail:
+    LeaveSection ds:ph_section
+
+liFail:
+    xor esi,esi
+    mov ds,esi
+    stc
+    pop esi
+    ret
+LockInterface  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           UnlockInterface
+;
+;           DESCRIPTION:    Unlock interface
+;
+;           PARAMETERS:     EBX          Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockInterface   Proc near
+    push ds
+    push esi
+    pushfd
+;
+    mov esi,proc_handle_sel
+    mov ds,esi
+;
+    EnterSection ds:ph_section
+    sub ds:[2*ebx].ph_use_arr,1
+    jnc uiOk
+;
+    push ebx
+;
+    mov bx,ds:[2*ebx].ph_wait_arr
+    or bx,bx
+    jz uiSigOk
+;
+    Signal
+
+uiSigOk:
+    pop ebx
+
+uiOk:
+    LeaveSection ds:ph_section
+;
+    popfd
+    pop esi
+    pop ds
+    ret
+UnlockInterface  Endp
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DupHandleObj
 ;
 ;           DESCRIPTION:    Dup handle
@@ -646,22 +738,12 @@ DeleteHandleObj     Endp
 DupHandleObj   Proc near
     push ds
     push eax
-    push esi
 ;
-    mov esi,proc_handle_sel
-    mov ds,esi
+    call LockInterface
+    jc dhFail
 ;
-    movzx ebx,bx
-;
-    cmp ebx,USER_HANDLE_COUNT
-    jae dhFail
-;
-    mov si,ds:[2*ebx].ph_sel_arr
-    or si,si
-    jz dhFail
-;
-    mov ds,esi
     call fword ptr ds:hui_dup_proc
+    call UnlockInterface
     jc dhFail
 ;
     mov ds,eax
@@ -672,7 +754,6 @@ dhFail:
     stc
 
 dhDone:
-    pop esi
     pop eax
     pop ds
     ret
