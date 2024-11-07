@@ -5596,6 +5596,12 @@ dup_handle      Proc far
     ret
 dup_handle      Endp
 
+clone_handle      Proc far
+    mov eax,ds
+    clc
+    ret
+clone_handle      Endp
+
 input_size     Proc far
     PollKeyboard
     jnc is1
@@ -5660,6 +5666,9 @@ create_input_handle        Proc far
     mov es:hui_dup_proc,OFFSET dup_handle
     mov es:hui_dup_proc+4,cs
 ;
+    mov es:hui_pre_clone_proc,OFFSET clone_handle
+    mov es:hui_pre_clone_proc+4,cs
+;
     mov es:hui_read_proc,OFFSET read_c_console
     mov es:hui_read_proc+4,cs
 ;
@@ -5709,6 +5718,9 @@ create_output_handle        Proc far
 ;
     mov es:hui_dup_proc,OFFSET dup_handle
     mov es:hui_dup_proc+4,cs
+;
+    mov es:hui_pre_clone_proc,OFFSET clone_handle
+    mov es:hui_pre_clone_proc+4,cs
 ;
     mov es:hui_write_proc,OFFSET write_c_console
     mov es:hui_write_proc+4,cs
