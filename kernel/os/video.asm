@@ -5722,6 +5722,9 @@ create_output_handle        Proc far
     mov es:hui_pre_clone_proc,OFFSET clone_handle
     mov es:hui_pre_clone_proc+4,cs
 ;
+    mov es:hui_post_clone_proc,OFFSET clone_handle
+    mov es:hui_post_clone_proc+4,cs
+;
     mov es:hui_write_proc,OFFSET write_c_console
     mov es:hui_write_proc+4,cs
 ;
