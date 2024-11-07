@@ -643,23 +643,31 @@ CloseHandleObj     Proc near
     jz chLeaveFail
 ;
     sub ds:[2*ebx].ph_use_arr,1
-    jc chLeaveOk
+    jc chLeaveInc
 ;
+    push eax
     GetThread
     mov ds:[2*ebx].ph_wait_arr,ax
+    pop eax
 
 chWait:
     LeaveSectionUseFlags ds:ph_section
     WaitForSignal
     EnterSection ds:ph_section
-    mov ax,ds:[2*ebx].ph_use_arr
-    cmp ax,-1
-    jne chWait
-
-chLeaveOk:
+;
     add ds:[2*ebx].ph_use_arr,1
-    LeaveSectionUseFlags ds:ph_section
+    jc chLeave
+;
+    sub ds:[2*ebx].ph_use_arr,1
+    jmp chWait
 
+chLeaveInc:
+    add ds:[2*ebx].ph_use_arr,1
+
+chLeave:
+    mov ds:[2*ebx].ph_wait_arr,0
+    LeaveSectionUseFlags ds:ph_section
+;
     btc ds:ph_bitmap,ebx
     jnc chFail
 ;
