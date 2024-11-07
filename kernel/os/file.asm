@@ -2583,6 +2583,38 @@ wkoDone:
 WriteKernelObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DupKernelObj
+;
+;           DESCRIPTION:    Dup kernel to user handle obj
+;
+;           PARAMETERS:     DS              Kernel interface
+;                   
+;           RETURNS:        AX              New handle interface
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DupKernelObj Proc far
+    push ds
+    push es
+;
+    mov ds,ds:hki_file_sel
+;
+    inc ds:file_user_count
+;
+    call AllocateObj
+    mov es:fui_pos,0
+;
+    mov ax,es
+    clc
+;
+    pop es
+    pop ds
+    retf32
+DupKernelObj Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           FreeKernelObj
@@ -2649,6 +2681,9 @@ CreateKernelObj   Proc near
 ;
     mov es:hki_write_proc,OFFSET WriteKernelObj
     mov es:hki_write_proc+4,cs
+;
+    mov es:hki_dup_proc,OFFSET DupKernelObj
+    mov es:hki_dup_proc+4,cs
 ;
     mov es:hki_free_proc,OFFSET FreeKernelObj
     mov es:hki_free_proc+4,cs

@@ -2379,6 +2379,7 @@ dupl_kernel_handle Proc far
     jc dkhFail
 ;
     mov ds,eax
+    mov ds:hui_io_mode,IO_READ OR IO_WRITE
     call AllocateUserHandle
     jnc dkhDone
 
