@@ -142,6 +142,7 @@ create_proc_handle_name DB 'Create Proc Handle', 0
 
 create_proc_handle Proc far
     push ds
+    push fs
     pushad
 ;
     mov eax,SEG data
@@ -166,7 +167,6 @@ create_proc_handle Proc far
 
 cpStdOk:
     push es
-    push fs
 ;
     mov eax,flat_sel
     mov es,eax
@@ -199,18 +199,15 @@ cpStdOk:
 ;    
     mov ax,ds:hd_input_sel
     mov fs,eax
-    inc fs:hui_ref_count
     mov es:[edx].ph_sel_arr,fs
 ;
     mov ax,ds:hd_output_sel
     mov fs,eax
-    add fs:hui_ref_count,2
     mov es:[edx].ph_sel_arr+2,fs
     mov es:[edx].ph_sel_arr+4,fs
 ;
     mov es:[edx].ph_bitmap,7
 ;
-    pop fs
     pop es
 ;
     EnterSection ds:hd_section
@@ -224,6 +221,7 @@ cpStdOk:
     mov ds:pf_handle_linear,edx
 ;
     popad
+    pop fs
     pop ds
     ret
 create_proc_handle Endp
@@ -243,13 +241,16 @@ clone_proc_handle_name DB 'Clone Proc Handle', 0
 
 clone_proc_handle Proc far
     push ds
+    push fs
     pushad
 ;
     push es
-    push fs
 ;
     mov eax,flat_sel
     mov es,eax
+;
+    mov eax,proc_handle_sel
+    mov fs,eax
 ;
     mov eax,SIZE proc_handle_struc
     AllocateSmallLinear
@@ -277,7 +278,25 @@ clone_proc_handle Proc far
 ;
     InitSection es:[edx].ph_section
 ;
-    pop fs
+    mov ecx,USER_HANDLE_COUNT
+    xor ebx,ebx
+
+cphLoop:
+    mov ax,fs:[2*ebx].ph_sel_arr
+    or ax,ax
+    jz cphNext
+;
+    mov ds,eax
+    call fword ptr ds:hui_pre_clone_proc
+    jc cphNext
+;
+    mov es:[2*ebx+edx].ph_sel_arr,ax
+    bts es:[edx].ph_bitmap,ebx
+
+cphNext:
+    inc ebx
+    loop cphLoop
+;
     pop es
 ;
     EnterSection ds:hd_section
@@ -291,6 +310,7 @@ clone_proc_handle Proc far
     mov ds:pf_handle_linear,edx
 ;
     popad
+    pop fs
     pop ds
     ret
 clone_proc_handle Endp
@@ -308,8 +328,8 @@ apply_proc_handle_name DB 'Apply Proc Handle', 0
 
 apply_proc_handle Proc far
     push ds
-    push eax
-    push edx
+    push es
+    pushad
 ;
     GetThread
     mov ds,eax
@@ -318,10 +338,28 @@ apply_proc_handle Proc far
     mov bx,proc_handle_sel
     mov ecx,SIZE proc_handle_struc
     CreateDataSelector32
+    mov es,ebx
+;
+    mov ecx,USER_HANDLE_COUNT
+    mov ebx,OFFSET ph_sel_arr
+
+aphLoop:
+    mov ax,es:[ebx]
+    or ax,ax
+    jz aphNext
+;
+    mov ds,eax
+    inc fs:hui_ref_count
+    call fword ptr ds:hui_post_clone_proc
+    mov es:[ebx],ax
+
+aphNext:
+    add ebx,2
+    loop aphLoop
 
 aphDone:
-    pop edx
-    pop eax
+    popad
+    pop es
     pop ds
     ret
 apply_proc_handle Endp
