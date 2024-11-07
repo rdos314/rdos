@@ -231,6 +231,73 @@ create_proc_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CloneProcHandle
+;
+;           DESCRIPTION:    Clone proc handle
+;
+;           PARAMETERS:     ES          New process thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_proc_handle_name DB 'Clone Proc Handle', 0
+
+clone_proc_handle Proc far
+    push ds
+    pushad
+;
+    push es
+    push fs
+;
+    mov eax,flat_sel
+    mov es,eax
+;
+    mov eax,SIZE proc_handle_struc
+    AllocateSmallLinear
+    mov es:[edx].ph_linear,edx
+;
+    lea edi,[edx].ph_bitmap
+    xor eax,eax
+    mov ecx,USER_BITMAP_COUNT
+    rep stosd
+;
+    lea edi,[edx].ph_sel_arr
+    xor ax,ax
+    mov ecx,USER_HANDLE_COUNT
+    rep stosw
+;
+    lea edi,[edx].ph_use_arr
+    xor ax,ax
+    mov ecx,USER_HANDLE_COUNT
+    rep stosw
+;
+    lea edi,[edx].ph_wait_arr
+    xor ax,ax
+    mov ecx,USER_HANDLE_COUNT
+    rep stosw
+;
+    InitSection es:[edx].ph_section
+;
+    pop fs
+    pop es
+;
+    EnterSection ds:hd_section
+    movzx ebx,ds:hd_proc_count
+    shl ebx,2
+    mov ds:[ebx].hd_proc_arr,edx
+    inc ds:hd_proc_count
+    LeaveSection ds:hd_section
+;
+    mov ds,es:p_proc_sel
+    mov ds:pf_handle_linear,edx
+;
+    popad
+    pop ds
+    ret
+clone_proc_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ApplyProcHandle
 ;
 ;           DESCRIPTION:    Apply proc handle
@@ -2931,6 +2998,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET create_proc_handle_name
     xor cl,cl
     mov ax,create_proc_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET clone_proc_handle
+    mov edi,OFFSET clone_proc_handle_name
+    xor cl,cl
+    mov ax,clone_proc_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET apply_proc_handle
