@@ -157,7 +157,7 @@ void TWdFileService::ReqOpen()
 
     handle = RdosOpenHandle(fname, O_RDWR);
 
-    if (handle)
+    if (handle > 0)
     {
         str.printf("Open '%s', ID=%d", fname, handle);
         PutDword(0);
@@ -392,7 +392,7 @@ void TWdFileService::ReqStrToFullPath()
     GetString(FileName, 255);
 
     handle = RdosOpenHandle(FileName, O_RDWR);
-    if (handle)
+    if (handle > 0)
     {
         PutDword(0);
         PutString(FileName);

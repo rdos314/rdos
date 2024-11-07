@@ -90,7 +90,7 @@ TJpegBitmapDevice *TJpegBitmapDevice::Create(const char *FileName)
 	struct jpeg_error_mgr jerr;
 
 	handle = RdosOpenHandle(FileName, O_RDWR);
-	if (handle)
+	if (handle > 0)
 	{
 		cinfo.err = jpeg_std_error(&jerr);
 		jpeg_create_decompress(&cinfo);
@@ -145,7 +145,7 @@ int TJpegBitmapDevice::Save(const char *FileName)
 	int FreeDev = FALSE;
 
 	handle = RdosOpenHandle(FileName, O_CREAT | O_RDWR);
-	if (handle)
+	if (handle > 0)
 	{
 		if (GetBpp() == 24)
 			dev = this;

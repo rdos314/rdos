@@ -1005,7 +1005,7 @@ int TUnzipFile::CheckForNewer(const char *filename)
 
     handle = RdosOpenHandle(filename, O_RDWR);
 
-    if (handle)
+    if (handle > 0)
     {
         RdosGetHandleModifyTime(handle, &msb, &lsb);
         RdosAddSec(&msb, &lsb, 2);
@@ -1046,7 +1046,7 @@ int TUnzipFile::NeedUpdate(const char *filename)
 
     handle = RdosOpenHandle(filename, O_RDWR);
 
-    if (handle)
+    if (handle > 0)
     {
         RdosGetHandleAccessTime(handle, &msb, &lsb);
 
@@ -1738,7 +1738,7 @@ int TUnzip::Open(const char *filename)
 
     FInputHandle = RdosOpenHandle(filename, O_RDWR);
 
-    if (!FInputHandle)
+    if (FInputHandle <= 0)
     {
         Info(0x401, "error:  cannot open zipfile [ %s ]\n", filename);
         return FALSE;
@@ -1776,7 +1776,7 @@ int TUnzip::OpenNoHeader(const char *filename)
 
     FInputHandle = RdosOpenHandle(filename, O_RDWR);
 
-    if (!FInputHandle)
+    if (FInputHandle <= 0)
     {
         Info(0x401, "error:  cannot open zipfile [ %s ]\n", filename);
         return FALSE;

@@ -605,7 +605,7 @@ TAppIniFile::TAppIniFile(const char *IniName)
 
     FileHandle = RdosOpenHandle(IniName, O_RDWR);
 
-    if (FileHandle)
+    if (FileHandle > 0)
         FileSize = RdosGetHandleSize(FileHandle);
 
     if (FileSize)
@@ -647,7 +647,7 @@ TAppIniFile::TAppIniFile(const TAppIniFile &ini)
 
     FileHandle = RdosOpenHandle(ini.FName.GetData(), O_RDWR);
 
-    if (FileHandle)
+    if (FileHandle > 0)
         FileSize = RdosGetHandleSize(FileHandle);
 
     if (FileSize)
@@ -874,10 +874,10 @@ void TAppIniFile::Update()
     char *ptr;
 
     handle = RdosOpenHandle(FName.GetData(), O_RDWR);
-    if (!handle)
+    if (handle <= 0)
         handle = RdosOpenHandle(FName.GetData(), O_CREAT | O_RDWR);
 
-    if (handle)
+    if (handle > 0)
     {
         orgsize = RdosGetHandleSize(handle);
         RdosSetHandlePos(handle, 0);

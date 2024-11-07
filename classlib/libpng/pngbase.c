@@ -94,7 +94,7 @@ int LoadPngBase(const char *FileName)
     unsigned char **row_pointers;
 
     FileHandle = RdosOpenHandle(FileName, O_RDWR);
-    if (FileHandle)
+    if (FileHandle > 0)
     {
         read_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
         read_info_ptr = png_create_info_struct(read_ptr);
@@ -212,7 +212,7 @@ int SavePngBase(const char *FileName, int Bitmap)
     unsigned char *ptr;
 
     FileHandle = RdosOpenHandle(FileName, O_CREAT | O_RDWR);
-    if (FileHandle)
+    if (FileHandle > 0)
     {
         write_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
         write_info_ptr = png_create_info_struct(write_ptr);

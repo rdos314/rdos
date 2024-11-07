@@ -99,6 +99,12 @@ TUnzipExtractor::TUnzipExtractor(int InputFileHandle, TUnzipFile *File, const ch
     FInputHandle = RdosDupHandle(InputFileHandle);
     FOutputHandle = RdosOpenHandle(DestFileName, O_CREAT | O_RDWR);
 
+    if (FInputHandle < 0)
+        FInputHandle = 0;
+
+    if (FOutputHandle < 0)
+        FOutputHandle = 0;
+
     FFile = File;    
 }
 

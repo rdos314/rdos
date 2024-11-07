@@ -1245,7 +1245,7 @@ TGifBitmapDevice *TGifBitmapDevice::Create(const char *FileName)
         TGifBitmapDevice *dev;
 
         FileHandle = RdosOpenHandle(FileName, O_RDWR);
-        if (FileHandle)
+        if (FileHandle > 0)
         {
             GifFile = DGifOpenFileHandle(FileHandle);
                 if (GifFile)

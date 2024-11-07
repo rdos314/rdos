@@ -49,6 +49,9 @@ TFile::TFile(const char *FileName)
 
     FHandle = RdosOpenHandle(FileName, O_RDWR);
 
+    if (FHandle < 0)
+        FHandle = 0;
+
     if (FHandle)
         FMap = RdosGetHandleMap(FHandle, &FMapIndex);
     else
@@ -82,6 +85,9 @@ TFile::TFile(const char *FileName, int Attrib)
     int len;
 
     FHandle = RdosOpenHandle(FileName, O_CREAT | O_RDWR);
+
+    if (FHandle < 0)
+        FHandle = 0;
 
     if (FHandle)
         FMap = RdosGetHandleMap(FHandle, &FMapIndex);
@@ -128,6 +134,10 @@ TFile::TFile(const TFile &file)
     if (file.FHandle)
     {
         FHandle = RdosDupHandle(file.FHandle);
+
+        if (FHandle < 0)
+            FHandle = 0;
+
         if (FHandle)
             FMap = RdosGetHandleMap(FHandle, &FMapIndex);
     }

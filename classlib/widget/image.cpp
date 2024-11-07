@@ -454,7 +454,7 @@ void TImageControl::SetLoadIni(const char *IniName, const char *IniSection)
     FIndex = MAX_IMAGE_COUNT;
 
     fh = RdosOpenHandle(IniName, O_RDWR);
-    if (fh)
+    if (fh > 0)
     {
         RdosCloseHandle(fh);
 
@@ -603,7 +603,7 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
     int DoCheckGif = TRUE;
 
     fh = RdosOpenHandle(path, O_RDWR);
-    if (fh)
+    if (fh > 0)
     {
         RdosCloseHandle(fh);
 
@@ -649,7 +649,7 @@ void TImageControl::LoadOne(const char *path, int MaxCount)
         strcat(str, "\\image.ini");
 
         fh = RdosOpenHandle(str, O_RDWR);
-        if (fh)
+        if (fh > 0)
         {
             RdosCloseHandle(fh);
 

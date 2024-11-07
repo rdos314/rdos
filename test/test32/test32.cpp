@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "rdos.h"
 #include "keyboard.h"
@@ -33,6 +35,26 @@ void main()
 
 */
 
+    int previ;
+    int prevo;
+
+    previ = dup(0);
+    prevo = dup(1);
+
+    dup2(previ, 0);
+    dup2(prevo, 1);
+
+    close(previ);
+    close(prevo);
+
+    previ = dup(0);
+    prevo = dup(1);
+
+    dup2(previ, 0);
+    dup2(prevo, 1);
+
+    close(previ);
+    close(prevo);
 
     int i;
     char *buf = new char[1024];

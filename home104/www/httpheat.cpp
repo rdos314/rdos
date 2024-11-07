@@ -1241,7 +1241,7 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
     strcat(filename, str);
 
     handle = RdosOpenHandle(filename, O_RDWR);
-    if (handle)
+    if (handle > 0)
     {
 	    ok = TRUE;
         RdosCloseHandle(handle);
@@ -1333,7 +1333,7 @@ void THttpRadPage::WriteTemp(int address)
     strcat(filename, str);
 
     handle = RdosOpenHandle(filename, O_RDWR);
-    if (handle)
+    if (handle > 0)
     {
         RdosGetHandleModifyTime(handle, &Msb, &Lsb);
         filetime = TDateTime(Msb, Lsb);

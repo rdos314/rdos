@@ -1345,10 +1345,10 @@ int TLonDevice::DefineEventDebug(const char *LogPath, int DumpFiles, int EntryCo
         sprintf(str, "%s/%d.sdd", LogPath, i);
 
         int fileHandle = RdosOpenHandle(str, O_RDWR);
-        if (fileHandle == 0) 
+        if (fileHandle <= 0) 
             fileHandle = RdosOpenHandle(str, O_CREAT | O_RDWR);
         
-        if (fileHandle == 0) 
+        if (fileHandle <= 0) 
             return FALSE;
         else
             RdosCloseHandle(fileHandle);
