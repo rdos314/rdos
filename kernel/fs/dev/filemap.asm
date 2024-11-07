@@ -6058,6 +6058,51 @@ WriteKernelObj    Proc far
 WriteKernelObj    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           DupKernelObj
+;
+;           DESCRIPTION:    Dup kernel to user handle obj
+;
+;           PARAMETERS:     DS              Kernel interface
+;                   
+;           RETURNS:        AX              New handle interface
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DupKernelObj Proc far
+    push ds
+;
+    mov ds,ds:hki_file_sel
+;
+    EnterSection ds:kf_entry_section
+;
+    call FindProcSel
+    jnc dkoProcOk
+;
+    inc ds:kf_ref_count
+;
+    call CreateProcSel
+    jc dkoDone
+;
+    call AllocateProcHandle
+    jc dkoDone
+
+dkoProcOk:
+    mov es,eax
+    add es:pf_ref_count,1
+;
+    LeaveSection ds:kf_entry_section
+;
+    mov ds,eax
+    call CreateHandleSel
+
+dkoDone:
+    pop ds
+    ret
+DupKernelObj Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           CloseKernelSel
@@ -6246,6 +6291,9 @@ ckmiLoop:
 ;
     mov es:hki_write_proc,OFFSET WriteKernelObj
     mov es:hki_write_proc+4,cs
+;
+    mov es:hki_dup_proc,OFFSET DupKernelObj
+    mov es:hki_dup_proc+4,cs
 ;
     mov es:hki_free_proc,OFFSET CloseKernelObj
     mov es:hki_free_proc+4,cs
