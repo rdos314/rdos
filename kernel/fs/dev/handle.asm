@@ -587,11 +587,11 @@ OpenHandleObj     Proc near
     jnc ohInit
 ;
     OpenLegacyHandle
-    jc ohFail
+    jc ohDone
 
 ohInit:
     call AllocateUserHandle
-    jc ohFail
+    jc ohDone
 
 ohCheckTrunc:
     test cx,O_CREAT OR O_TRUNC
@@ -605,11 +605,6 @@ ohSizeOk:
     call OpenToIo
     mov ds:hui_io_mode,ax
     clc
-    jmp ohDone
-
-ohFail:
-    xor ebx,ebx
-    stc
 
 ohDone:
     pop eax
@@ -846,20 +841,20 @@ DupHandleObj   Proc near
     push eax
 ;
     call LockInterface
-    jc dhFail
+    jc dupFail
 ;
     call fword ptr ds:hui_dup_proc
     call UnlockInterface
-    jc dhFail
+    jc dupFail
 ;
     mov ds,eax
     call AllocateUserHandle
-    jnc dhDone
+    jnc dupDone
 
-dhFail:
+dupFail:
     stc
 
-dhDone:
+dupDone:
     pop eax
     pop ds
     ret
@@ -885,17 +880,21 @@ Dup2HandleObj   Proc near
     mov edx,eax
 ;
     call LockInterface
-    jc dho2Done
+    jc dup2Fail
 ;
     call fword ptr ds:hui_dup_proc
     call UnlockInterface
-    jc dho2Done
+    jc dup2Fail
 ;
     mov ds,eax
     mov ebx,edx
     call SetUserHandle
+    jnc dup2Done
 
-dho2Done:
+dup2Fail:
+    stc
+
+dup2Done:
     pop edx
     pop eax
     pop ds
@@ -1482,12 +1481,22 @@ open_handle16    PROC far
     push edi
     movzx edi,di
     call OpenHandleObj
+    jnc oh16Done
+;
+    mov ebx,-1
+
+oh16Done:
     pop edi
     ret
 open_handle16    ENDP
 
 open_handle32    PROC far
     call OpenHandleObj
+    jnc oh32Done
+;
+    mov ebx,-1
+
+oh32Done:
     ret
 open_handle32    ENDP
         
@@ -1544,6 +1553,11 @@ dup_handle_name  DB 'Dup C Handle', 0
 
 dup_handle     Proc far
     call DupHandleObj
+    jnc dhDone
+;
+    mov ebx,-1
+
+dhDone:
     ret
 dup_handle     Endp
 
