@@ -557,11 +557,30 @@ CloseHandleObj     Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae chFail
 ;
+    EnterSection ds:ph_section
     xor ax,ax
     xchg ax,ds:[2*ebx].ph_sel_arr
     or ax,ax
-    jz chFail
+    jz chLeaveFail
 ;
+    sub ds:[2*ebx].ph_use_arr,1
+    jc chLeaveOk
+;
+    GetThread
+    mov ds:[2*ebx].ph_wait_arr,ax
+
+chWait:
+    LeaveSection ds:ph_section
+    WaitForSignal
+    EnterSection ds:ph_section
+    mov ax,ds:[2*ebx].ph_use_arr
+    cmp ax,-1
+    jne chWait
+
+chLeaveOk:
+    add ds:[2*ebx].ph_use_arr,1
+    LeaveSection ds:ph_section
+
     btc ds:ph_bitmap,ebx
     jnc chFail
 ;
@@ -572,6 +591,9 @@ CloseHandleObj     Proc near
     call fword ptr ds:hui_free_proc
     clc
     jmp chDone
+
+chLeaveFail:
+    LeaveSection ds:ph_section
 
 chFail:
     stc
@@ -655,13 +677,13 @@ LockInterface   Proc near
     cmp ebx,USER_HANDLE_COUNT
     jae liFail
 ;
-    EnterSection ds:ph_section
+    EnterSectionUseFlags ds:ph_section
     mov si,ds:[2*ebx].ph_sel_arr
     or si,si
     jz liLeaveFail
 ;
     add ds:[2*ebx].ph_use_arr,1
-    LeaveSection ds:ph_section
+    LeaveSectionUseFlags ds:ph_section
 ;    
     mov ds,esi
     clc
@@ -669,7 +691,7 @@ LockInterface   Proc near
     ret
 
 liLeaveFail:
-    LeaveSection ds:ph_section
+    LeaveSectionUseFlags ds:ph_section
 
 liFail:
     xor esi,esi
@@ -698,7 +720,7 @@ UnlockInterface   Proc near
     mov esi,proc_handle_sel
     mov ds,esi
 ;
-    EnterSection ds:ph_section
+    EnterSectionUseFlags ds:ph_section
     sub ds:[2*ebx].ph_use_arr,1
     jnc uiOk
 ;
@@ -714,7 +736,7 @@ uiSigOk:
     pop ebx
 
 uiOk:
-    LeaveSection ds:ph_section
+    LeaveSectionUseFlags ds:ph_section
 ;
     popfd
     pop esi
