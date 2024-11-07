@@ -289,6 +289,12 @@ InitHandleObj  Proc near
     mov es:hui_delete_proc,OFFSET handle_fail
     mov es:hui_delete_proc+4,cs
 ;
+    mov es:hui_pre_clone_proc,OFFSET handle_fail
+    mov es:hui_pre_clone_proc+4,cs
+;
+    mov es:hui_post_clone_proc,OFFSET handle_ok
+    mov es:hui_post_clone_proc+4,cs
+;
     mov es:hui_get_map_proc,OFFSET handle_fail
     mov es:hui_get_map_proc+4,cs
 ;

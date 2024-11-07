@@ -40,6 +40,13 @@ hui_dup_proc              DD ?,?
 hui_delete_proc           DD ?,?
 
 ;  IN	DS                Handle entry interface
+;  OUT  AX                New interface
+hui_pre_clone_proc        DD ?,?
+
+;  IN	DS                Handle entry interface
+hui_post_clone_proc       DD ?,?
+
+;  IN	DS                Handle entry interface
 ;  OUT  EAX               Map index
 ;  OUT  EDI               Map linear address
 hui_get_map_proc          DD ?,?
