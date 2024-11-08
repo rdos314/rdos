@@ -2442,18 +2442,22 @@ AllocateObj   Endp
 DupObj Proc far
     push ds
     push es
+    push cx
 ;
     mov eax,ds:fui_pos
+    mov cx,ds:hui_io_mode
     mov ds,ds:fui_file_sel
 ;
     inc ds:file_user_count
 ;
     call AllocateObj
     mov es:fui_pos,eax
+    mov es:hui_io_mode,cx
 ;
     mov ax,es
     clc
 ;
+    pop cx
     pop es
     pop ds
     retf32
