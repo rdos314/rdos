@@ -49,8 +49,6 @@
 
 #define osgate_allocate_global_mem 47
 #define osgate_allocate_small_global_mem 48
-#define osgate_allocate_small_mem 49
-#define osgate_allocate_big_mem 50
 #define osgate_allocate_big_linear 51
 #define osgate_allocate_small_linear 52
 #define osgate_allocate_local_linear 53
@@ -911,10 +909,9 @@
 #define osgate_create_output_handle 845
 
 #define osgate_init_handle 846
-#define osgate_init_sys_handle 847
-#define osgate_allocate_sys_handle 848
 #define osgate_open_legacy_handle 849
-#define osgate_create_kernel_handle 850
+#define osgate_init_kernel_handle 850
+#define osgate_open_legacy_kernel 851
 
 
 
@@ -969,8 +966,6 @@
 
 #define OsGate_allocate_global_mem 0x3E 0x67 0x9a 47 0 0 0 2 0
 #define OsGate_allocate_small_global_mem 0x3E 0x67 0x9a 48 0 0 0 2 0
-#define OsGate_allocate_small_mem 0x3E 0x67 0x9a 49 0 0 0 2 0
-#define OsGate_allocate_big_mem 0x3E 0x67 0x9a 50 0 0 0 2 0
 #define OsGate_allocate_big_linear 0x3E 0x67 0x9a 51 0 0 0 2 0
 #define OsGate_allocate_small_linear 0x3E 0x67 0x9a 52 0 0 0 2 0
 #define OsGate_allocate_local_linear 0x3E 0x67 0x9a 53 0 0 0 2 0
@@ -1831,8 +1826,7 @@
 #define OsGate_create_output_handle 0x3E 0x67 0x9a 77 3 0 0 2 0
 
 #define OsGate_init_handle 0x3E 0x67 0x9a 78 3 0 0 2 0
-#define OsGate_init_sys_handle 0x3E 0x67 0x9a 79 3 0 0 2 0
-#define OsGate_allocate_sys_handle 0x3E 0x67 0x9a 80 3 0 0 2 0
 #define OsGate_open_legacy_handle 0x3E 0x67 0x9a 81 3 0 0 2 0
-#define OsGate_create_kernel_handle 0x3E 0x67 0x9a 82 3 0 0 2 0
+#define OsGate_init_kernel_handle 0x3E 0x67 0x9a 82 3 0 0 2 0
+#define OsGate_open_legacy_kernel 0x3E 0x67 0x9a 83 3 0 0 2 0
 

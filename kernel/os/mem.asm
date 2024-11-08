@@ -255,22 +255,10 @@ init_mem    PROC near
     mov ax,allocate_small_global_mem_nr
     RegisterOsGate
 ;
-    mov esi,OFFSET allocate_small_mem
-    mov edi,OFFSET allocate_small_mem_name
-    xor cl,cl
-    mov ax,allocate_small_mem_nr
-    RegisterOsGate
-;
     mov esi,OFFSET allocate_small_kernel_mem
     mov edi,OFFSET allocate_small_kernel_mem_name
     xor cl,cl
     mov ax,allocate_small_kernel_mem_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET allocate_big_mem
-    mov edi,OFFSET allocate_big_mem_name
-    xor cl,cl
-    mov ax,allocate_big_mem_nr
     RegisterOsGate
 ;
     mov esi,OFFSET log_small_mem
@@ -2307,69 +2295,6 @@ log_big_mem      PROC far
     retf32
 log_big_mem     Endp
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ALLOCATE_SMALL_MEM
-;
-;           DESCRIPTION:    Allocate byte-aligned (dword-aligned) process memory
-;
-;           PARAMETERS:         EAX         Number of bytes
-;
-;           RETURNS:        ES          Selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_small_mem_name DB 'Allocate Small Memory',0
-
-allocate_small_mem      PROC far
-    push ds
-    push eax
-    push bx
-    push cx
-    push edx
-    cmp eax,100000h
-    jc alloc_small_not_page
-    dec eax
-    and ax,0F000h
-    add eax,1000h
-alloc_small_not_page:
-    AllocateSmallLinear
-    AllocateLdt
-    cmp eax,100000h
-    jnc alloc_small_big_seg
-    dec eax
-    mov [bx],ax
-    mov [bx+2],edx
-    mov dl,0F2h
-    xchg dl,[bx+5]
-    shr eax,16
-    and ax,0Fh
-    or ah,dl
-    mov [bx+6],ax
-    jmp alloc_small_big_seg_ok
-alloc_small_big_seg:
-    shr eax,12
-    dec ax
-    mov [bx],ax
-    mov [bx+2],edx
-    mov ah,0F2h
-    xchg ah,[bx+5]
-    mov al,80h
-    mov [bx+6],ax
-alloc_small_big_seg_ok:
-    or bx,7
-    mov es,bx
-    pop edx
-    pop cx
-    pop bx
-    pop eax
-    pop ds
-    retf32
-allocate_small_mem      ENDP
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -2406,62 +2331,6 @@ allocate_small_kernel_mem       PROC far
     pop ds
     retf32
 allocate_small_kernel_mem       ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;           NAME:           ALLOCATE_BIG_MEM
-;
-;           DESCRIPTION:    Allocate page-aligned process memory
-;
-;           PARAMETERS:         EAX         Number of bytes
-;
-;           RETURNS:        ES          Selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-allocate_big_mem_name   DB 'Allocate Big Memory',0
-
-allocate_big_mem    PROC far
-    push ds
-    push eax
-    push bx
-    push cx
-    push edx
-    AllocateBigLinear
-    AllocateLdt
-    cmp eax,100000h
-    jnc alloc_big_big_seg
-    dec eax
-    mov [bx],ax
-    mov [bx+2],edx
-    mov dl,0F2h
-    xchg dl,[bx+5]
-    shr eax,16
-    and ax,0Fh
-    or ah,dl
-    mov [bx+6],ax
-    jmp alloc_big_big_seg_ok
-alloc_big_big_seg:
-    dec cx
-    mov [bx],cx
-    mov [bx+2],edx
-    mov ah,0F2h
-    xchg ah,[bx+5]
-    mov al,80h
-    mov [bx+6],ax
-alloc_big_big_seg_ok:
-    or bx,7
-    mov es,bx
-    pop edx
-    pop cx
-    pop bx
-    pop eax
-    pop ds
-    retf32
-allocate_big_mem    ENDP
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

@@ -1078,22 +1078,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
     __parm [__eax]  \
     __value [__ebx]
 
-#pragma aux RdosAllocateBigLocalSelector = \
-    "push es" \
-    OsGate_allocate_big_mem  \
-    "mov ebx,es" \
-    "pop es" \
-    __parm [__eax]  \
-    __value [__ebx]
-
-#pragma aux RdosAllocateSmallLocalSelector = \
-    "push es" \
-    OsGate_allocate_small_mem  \
-    "mov ebx,es" \
-    "pop es" \
-    __parm [__eax]  \
-    __value [__ebx]
-
 #pragma aux RdosAllocateSmallKernelSelector = \
     "push es" \
     OsGate_allocate_small_kernel_mem  \
@@ -1114,24 +1098,6 @@ int RdosGetSignedHidOutput(int Sel, int Usage);
 #pragma aux RdosAllocateSmallGlobalMem = \
     "push es" \
     OsGate_allocate_small_global_mem  \
-    "mov dx,es" \
-    "xor eax,eax" \
-    "pop es" \
-    __parm [__eax]  \
-    __value [__dx __eax]
-
-#pragma aux RdosAllocateBigLocalMem = \
-    "push es" \
-    OsGate_allocate_big_mem  \
-    "mov dx,es" \
-    "xor eax,eax" \
-    "pop es" \
-    __parm [__eax]  \
-    __value [__dx __eax]
-
-#pragma aux RdosAllocateSmallLocalMem = \
-    "push es" \
-    OsGate_allocate_small_mem  \
     "mov dx,es" \
     "xor eax,eax" \
     "pop es" \

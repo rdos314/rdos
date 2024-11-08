@@ -49,8 +49,6 @@ unhook_page_nr                          = 46
 
 allocate_global_mem_nr          = 47
 allocate_small_global_mem_nr    = 48
-allocate_small_mem_nr           = 49
-allocate_big_mem_nr                     = 50
 allocate_big_linear_nr          = 51
 allocate_small_linear_nr        = 52
 allocate_local_linear_nr        = 53
