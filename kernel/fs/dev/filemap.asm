@@ -4255,6 +4255,7 @@ delete_file_name       DB 'Delete VFS File',0
 org_delete DD ?,?
 
 delete_vfs_file    Proc near
+    push ds
     push ebx
     push ecx
 ;
@@ -4276,6 +4277,7 @@ dvfFail:
 dvfDone:
     pop ecx
     pop ebx
+    pop ds
     ret
 delete_vfs_file    Endp
 
