@@ -35,6 +35,8 @@ void main()
 
 */
 
+/*
+
     int i;
     char *buf = new char[1024];
     int size;
@@ -114,6 +116,7 @@ void main()
 
     delete buf;
 
+*/
 
 /*
     char *buf = new char[1024];
@@ -121,6 +124,8 @@ void main()
     RdosTestGate(buf);
 
 */
+
+    printf("Hello world\r\n");
 }
 
 

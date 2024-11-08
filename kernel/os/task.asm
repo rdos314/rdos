@@ -10525,7 +10525,6 @@ fork_process_name     DB 'Fork Process',0
 fork_start:
     sti
     call trap_create_process
-    int 3
     xor eax,eax
     jmp fork_done
 
