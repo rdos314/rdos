@@ -2342,36 +2342,20 @@ ieDone:
     retf32
 IsObjEof Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateObj
+;           NAME:           InitObj
 ;
-;           DESCRIPTION:    Create new handle obj
+;           DESCRIPTION:    Init handle obj
 ;
-;           PARAMETERS:     DS     Sys interface
-;
-;           RETURNS:        ES     Handle interface
-;
+;           PARAMETERS:     DS     File sel
+;                           ES     Handle interface
+;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateObj   Proc near
-    push eax
-    push ebx
-    push ecx
-    push edx
-;
-    mov eax,SIZE file_handle_interface
-    AllocateSmallLinear
-;
-    push ds
-    AllocateLdt
-    pop ds
-;
-    or bx,4
-    mov ecx,eax
-    CreateDataSelector32
-    mov es,bx
+InitObj   Proc near
 ;
     InitHandle
     mov es:fui_file_sel,ds
@@ -2379,6 +2363,12 @@ AllocateObj   Proc near
 ;
     mov es:hui_dup_proc,OFFSET DupObj
     mov es:hui_dup_proc+4,cs
+;
+    mov es:hui_pre_clone_proc,OFFSET PreCloneObj
+    mov es:hui_pre_clone_proc+4,cs
+;
+    mov es:hui_post_clone_proc,OFFSET PostCloneObj
+    mov es:hui_post_clone_proc+4,cs
 ;
     mov es:hui_read_proc,OFFSET ReadHandleObj
     mov es:hui_read_proc+4,cs
@@ -2418,6 +2408,40 @@ AllocateObj   Proc near
 ;
     mov es:hui_free_proc,OFFSET FreeHandleObj
     mov es:hui_free_proc+4,cs
+    ret
+InitObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateObj
+;
+;           DESCRIPTION:    Create new handle obj
+;
+;           PARAMETERS:     DS     Sys interface
+;
+;           RETURNS:        ES     Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateObj   Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    mov eax,SIZE file_handle_interface
+    AllocateSmallLinear
+;
+    push ds
+    AllocateLdt
+    pop ds
+;
+    or bx,4
+    mov ecx,eax
+    CreateDataSelector32
+    mov es,bx
+    call InitObj
 ;
     pop edx
     pop ecx
@@ -2425,6 +2449,30 @@ AllocateObj   Proc near
     pop eax
     ret
 AllocateObj   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           AllocateCloneObj
+;
+;           DESCRIPTION:    Create new cloned handle obj
+;
+;           PARAMETERS:     DS     Sys interface
+;
+;           RETURNS:        ES     Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateCloneObj   Proc near
+    push eax
+;
+    mov eax,SIZE file_handle_interface
+    AllocateSmallGlobalMem
+    call InitObj
+;
+    pop eax
+    ret
+AllocateCloneObj   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2462,6 +2510,82 @@ DupObj Proc far
     pop ds
     retf32
 DupObj Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PreCloneObj
+;
+;           DESCRIPTION:    Pre clone handle obj
+;
+;           PARAMETERS:     DS              Handle interface
+;                   
+;           RETURNS:        AX              Cloned handle interface
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PreCloneObj Proc far
+    push ds
+    push es
+    push cx
+;
+    mov eax,ds:fui_pos
+    mov cx,ds:hui_io_mode
+    mov ds,ds:fui_file_sel
+;
+    call AllocateCloneObj
+    mov es:fui_pos,eax
+    mov es:hui_io_mode,cx
+;
+    mov ax,es
+    clc
+;
+    pop cx
+    pop es
+    pop ds
+    retf32
+PreCloneObj Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           PostCloneObj
+;
+;           DESCRIPTION:    Post clone handle obj
+;
+;           PARAMETERS:     DS              Handle interface
+;                   
+;           RETURNS:        AX              Cloned handle interface
+;                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PostCloneObj Proc far
+    push ebx
+    push ecx
+    push edx
+;
+    int 3
+    mov bx,ds
+    push bx
+    GetSelectorBaseSize
+;
+    AllocateLdt
+    or bx,4
+;
+    xor ax,ax
+    mov ds,ax
+    CreateDataSelector32
+    mov ax,bx
+;
+    pop bx
+    FreeGdt
+    clc
+;
+    pop edx
+    pop ecx
+    pop ebx
+    retf32
+PostCloneObj Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
