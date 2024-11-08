@@ -299,6 +299,9 @@ cphNext:
 ;
     pop es
 ;
+    mov eax,SEG data
+    mov ds,eax
+;
     EnterSection ds:hd_section
     movzx ebx,ds:hd_proc_count
     shl ebx,2
@@ -349,7 +352,7 @@ aphLoop:
     jz aphNext
 ;
     mov ds,eax
-    inc fs:hui_ref_count
+    inc ds:hui_ref_count
     call fword ptr ds:hui_post_clone_proc
     mov es:[ebx],ax
 
