@@ -5230,6 +5230,12 @@ InitHandleSel   Proc near
     mov es:hui_dup_proc, OFFSET DupSel
     mov es:hui_dup_proc+4,cs
 ;
+    mov es:hui_pre_clone_proc, OFFSET PreCloneSel
+    mov es:hui_pre_clone_proc+4,cs
+;
+    mov es:hui_post_clone_proc, OFFSET PostCloneSel
+    mov es:hui_post_clone_proc+4,cs
+;
     mov es:hui_delete_proc, OFFSET DeleteHandleObj
     mov es:hui_delete_proc+4,cs
 ;
@@ -5443,6 +5449,95 @@ dusDone:
     pop ds
     ret
 DupSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           PreCloneSel
+;
+;       DESCRIPTION:    Pre clone handle sel
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        NC
+;                         AX            Cloned handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PreCloneSel      Proc far
+    push ds
+    push es
+    push edx
+;
+    int 3
+    mov ax,ds:hf_file_sel
+    push eax
+;
+    mov eax,ds:hf_user_handle
+    dec eax
+    shl eax,3
+;
+    mov es,ds:hf_proc_sel
+    mov esi,es:pf_map_linear
+    mov edx,flat_data_sel
+    mov es,edx
+;
+    mov edx,es:[esi].fm_handle_ptr
+    add edx,OFFSET fh_pos_arr
+    add edx,eax
+    mov eax,es:[edx]
+    mov edx,es:[edx+4]
+;
+    push eax
+    push edx
+;
+    mov ax,ds:hui_io_mode
+    push eax
+;
+    mov eax,SIZE handle_file
+    AllocateSmallGlobalMem
+    call InitHandleObj
+    call InitHandleSel
+;
+    pop eax
+    mov es:hui_io_mode,ax
+;
+    pop edx
+    pop eax
+    mov es:hf_user_handle,eax
+    mov es:hf_proc_index,edx
+    mov es:hf_proc_sel,0
+;
+    pop eax
+    mov es:hf_file_sel,ax
+;
+    mov eax,es
+    clc
+;
+    pop edx
+    pop es
+    pop ds
+    ret
+PreCloneSel      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           PostCloneSel
+;
+;       DESCRIPTION:    Post clone handle sel
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;       RETURNS:        NC
+;                         AX            Cloned handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PostCloneSel      Proc far
+    int 3
+    ret
+PostCloneSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
