@@ -2196,7 +2196,7 @@ lpEnvDone:
     je lpDosExec
 
 lpForkExec:
-    int 3
+    ClearProcHandle    
     ResetLdt
     mov ds,es:p_proc_sel
 

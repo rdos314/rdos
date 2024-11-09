@@ -2479,6 +2479,10 @@ ApplyProcHandle MACRO
     OsGate apply_proc_handle_nr
                     ENDM
 
+ClearProcHandle MACRO
+    OsGate clear_proc_handle_nr
+                    ENDM
+
 ; IN  ES       Delete process thread
 DeleteProcHandle MACRO
     OsGate delete_proc_handle_nr
