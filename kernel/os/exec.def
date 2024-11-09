@@ -150,8 +150,6 @@ pr_section           section_typ <>
 pr_bitness           DB ?
 pr_filler            DB ?
 
-pr_ldt_obj           DW ?
-
 pr_handle_mem_sel    DW ?
 pr_handle_sel        DW ?
 
@@ -213,6 +211,8 @@ pf_virt_flags        DW ?
 pf_wait_sti          DW ?
 pf_cli_thread        DW ?
 pf_iopl              DW ?
+
+pf_ldt_obj           DW ?
 
 pf_mem_blocks        DD ?
 pf_mem_section       section_typ <>

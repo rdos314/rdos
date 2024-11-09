@@ -10525,6 +10525,8 @@ fork_process_name     DB 'Fork Process',0
 fork_start:
     sti
     call trap_create_process
+    int 3
+    CloneLdt
     xor eax,eax
     jmp fork_done
 
@@ -10563,6 +10565,7 @@ fork_process  PROC far
     call copy_process_modules
     call setup_fork
 ;
+    CloneProcHandle
     call create_cur_dir
     call create_env_sel
 ;

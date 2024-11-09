@@ -75,6 +75,12 @@ init_ldt    PROC near
     mov ax,destroy_ldt_nr
     RegisterOsGate
 ;    
+    mov esi,OFFSET clone_ldt
+    mov edi,OFFSET clone_ldt_name
+    xor cl,cl
+    mov ax,clone_ldt_nr
+    RegisterOsGate
+;    
     mov esi,OFFSET create_shared_ldt
     mov edi,OFFSET create_shared_ldt_name
     xor cl,cl
@@ -201,8 +207,8 @@ create_private_ldt      PROC far
 ;
     GetThread
     mov es,ax
-    mov es,es:p_prog_sel
-    mov es:pr_ldt_obj,ds
+    mov es,es:p_proc_sel
+    mov es:pf_ldt_obj,ds
 ;
     call InitLdt
 ;
@@ -243,6 +249,81 @@ create_shared_ldt      ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           CloneLdt
+;
+;           DESCRIPTION:    Create a new LDT and import from the current
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clone_ldt_name   DB 'Clone LDT', 0
+
+clone_ldt      PROC far
+    push ds
+    push es
+    push fs
+    pushad
+;
+    GetThread
+    mov fs,ax
+    mov ds,fs:p_ldt_obj
+    mov ax,ds:ldt_free
+    push ax
+;
+    mov bx,fs:p_ldt
+    mov ax,gdt_sel
+    mov ds,ax
+    mov cx,ds:[bx]
+    movzx ecx,cx
+    shr ecx,2
+    inc ecx
+    mov ds,bx
+;
+    mov eax,10000h
+    AllocateBigLinear
+    AllocateGdt
+    CreateLdtSelector
+;
+    mov fs:p_ldt,bx
+    lldt bx
+;
+    AllocateGdt
+    CreateDataSelector16
+    mov fs:p_ldt_sel,bx
+;
+    mov es,bx
+    xor esi,esi
+    xor edi,edi
+    rep movs dword ptr es:[edi],ds:[esi]
+;
+    mov eax,SIZE ldt_struc
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+    mov fs:p_ldt_obj,ds
+;
+    mov bx,fs:p_ldt
+    mov ds:ldt_sel,bx
+;
+    mov bx,fs:p_ldt_sel
+    mov ds:ldt_data_sel,bx
+;
+    pop ax
+    mov ds:ldt_free,ax
+    InitSection ds:ldt_section
+;
+    mov es,fs:p_proc_sel
+    mov es:pf_ldt_obj,ds
+;
+    popad
+    pop fs
+    pop es
+    pop ds
+    retf32
+clone_ldt      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DestroyLdt
 ;
 ;           DESCRIPTION:    Destroy LDT
@@ -261,10 +342,10 @@ destroy_ldt     PROC far
 ;
     GetThread
     mov ds,ax
-    mov ds,ds:p_prog_sel
+    mov ds,ds:p_proc_sel
 ;
     xor bx,bx
-    xchg bx,ds:pr_ldt_obj
+    xchg bx,ds:pf_ldt_obj
     or bx,bx
     jz dlDone
 ;

@@ -316,6 +316,10 @@ DestroyLdt     MACRO
     OsGate destroy_ldt_nr
                     ENDM
 
+CloneLdt     MACRO
+    OsGate clone_ldt_nr
+                    ENDM
+
 CreateSharedLdt     MACRO
     OsGate create_shared_ldt_nr
                     ENDM

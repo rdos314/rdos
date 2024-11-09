@@ -1994,10 +1994,7 @@ spawn_program32 Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 fork_startup:
-    CloneProcHandle
-    CreatePrivateLdt
     CreateHandleData
-    ApplyProcHandle
 ;
     xor eax,eax
     push eax
