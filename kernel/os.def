@@ -914,5 +914,6 @@ init_kernel_handle_nr       = 850
 open_legacy_kernel_nr       = 851
 
 clone_ldt_nr                = 852
+reset_ldt_nr                = 853
 
 osgate_entries              = 860

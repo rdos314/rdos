@@ -2196,6 +2196,8 @@ lpEnvDone:
     je lpDosExec
 
 lpForkExec:
+    int 3
+    ResetLdt
     mov ds,es:p_proc_sel
 
 lpForkFreeMod:

@@ -81,6 +81,12 @@ init_ldt    PROC near
     mov ax,clone_ldt_nr
     RegisterOsGate
 ;    
+    mov esi,OFFSET reset_ldt
+    mov edi,OFFSET reset_ldt_name
+    xor cl,cl
+    mov ax,reset_ldt_nr
+    RegisterOsGate
+;    
     mov esi,OFFSET create_shared_ldt
     mov edi,OFFSET create_shared_ldt_name
     xor cl,cl
@@ -324,6 +330,64 @@ clone_ldt      PROC far
     pop ds
     retf32
 clone_ldt      ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;           NAME:           ResetLdt
+;
+;           DESCRIPTION:    Remove user-mode entries from LDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_ldt_name   DB 'Reset LDT', 0
+
+reset_ldt      PROC far
+    push ds
+    push es
+    pushad
+;
+    GetThread
+    mov ds,ax
+    mov ds,ds:p_ldt_obj
+    EnterSection ds:ldt_section
+;
+    mov bx,ds:ldt_data_sel
+    mov ax,gdt_sel
+    mov es,ax
+    movzx ecx,word ptr es:[bx]
+    inc ecx
+    mov es,bx
+;
+    xor bx,bx
+
+rlLoop:
+    mov al,es:[bx+5]
+    test al,80h
+    jz rlNext
+;
+    mov al,es:[bx+7]
+    and al,0C0h
+    cmp al,0C0h
+    je rlNext
+;
+    mov byte ptr es:[bx+5],0
+    mov ax,ds:ldt_free
+    mov es:[bx],ax
+    mov ds:ldt_free,bx
+
+rlNext:
+    add bx,8
+    sub ecx,8
+    jnz rlLoop
+;
+    LeaveSection ds:ldt_section
+;
+    popad
+    pop es
+    pop ds
+    retf32
+reset_ldt      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
