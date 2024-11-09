@@ -251,7 +251,7 @@ create_shared_ldt      ENDP
 ;
 ;           NAME:           CloneLdt
 ;
-;           DESCRIPTION:    Create a new LDT and import from the current
+;           DESCRIPTION:    Create a new LDT and copy entries from the current
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -261,60 +261,64 @@ clone_ldt      PROC far
     push ds
     push es
     push fs
+    push gs
     pushad
-;
-    GetThread
-    mov fs,ax
-    mov ds,fs:p_ldt_obj
-    mov ax,ds:ldt_free
-    push ax
-;
-    mov bx,fs:p_ldt
-    mov ax,gdt_sel
-    mov ds,ax
-    mov cx,ds:[bx]
-    movzx ecx,cx
-    shr ecx,2
-    inc ecx
-    mov ds,bx
-;
-    mov eax,10000h
-    AllocateBigLinear
-    AllocateGdt
-    CreateLdtSelector
-;
-    mov fs:p_ldt,bx
-    lldt bx
-;
-    AllocateGdt
-    CreateDataSelector16
-    mov fs:p_ldt_sel,bx
-;
-    mov es,bx
-    xor esi,esi
-    xor edi,edi
-    rep movs dword ptr es:[edi],ds:[esi]
 ;
     mov eax,SIZE ldt_struc
     AllocateSmallGlobalMem
     mov ax,es
-    mov ds,ax
-    mov fs:p_ldt_obj,ds
+    mov gs,ax
 ;
-    mov bx,fs:p_ldt
-    mov ds:ldt_sel,bx
+    GetThread
+    mov fs,ax
+    mov ds,fs:p_ldt_obj
+    EnterSection ds:ldt_section
+;
+    mov ax,ds:ldt_free
+    push ax
+;
+    mov eax,10000h
+    AllocateBigLinear
 ;
     mov bx,fs:p_ldt_sel
-    mov ds:ldt_data_sel,bx
+    mov ax,gdt_sel
+    mov ds,ax
+    movzx ecx,word ptr ds:[bx]
+    inc ecx
+    mov ds,bx
+;
+    AllocateGdt
+    CreateDataSelector32
+    mov es,bx
+    xor esi,esi
+    xor edi,edi
+    shr ecx,2
+    rep movs dword ptr es:[edi],ds:[esi]
+;
+    mov ds,fs:p_ldt_obj
+    LeaveSection ds:ldt_section
+;
+    mov fs:p_ldt_sel,bx
+    mov gs:ldt_data_sel,bx
+;
+    AllocateGdt
+    CreateLdtSelector
+;
+    mov fs:p_ldt,bx
+    mov gs:ldt_sel,bx
+    lldt bx
+;
+    mov fs:p_ldt_obj,gs
 ;
     pop ax
-    mov ds:ldt_free,ax
-    InitSection ds:ldt_section
+    mov gs:ldt_free,ax
+    InitSection gs:ldt_section
 ;
     mov es,fs:p_proc_sel
-    mov es:pf_ldt_obj,ds
+    mov es:pf_ldt_obj,gs
 ;
     popad
+    pop gs
     pop fs
     pop es
     pop ds
