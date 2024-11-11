@@ -2450,30 +2450,6 @@ AllocateObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           AllocateCloneObj
-;
-;           DESCRIPTION:    Create new cloned handle obj
-;
-;           PARAMETERS:     DS     Sys interface
-;
-;           RETURNS:        ES     Handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AllocateCloneObj   Proc near
-    push eax
-;
-    mov eax,SIZE file_handle_interface
-    AllocateSmallGlobalMem
-    call InitObj
-;
-    pop eax
-    ret
-AllocateCloneObj   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;           NAME:           DupObj
 ;
 ;           DESCRIPTION:    Dup handle obj
@@ -2524,21 +2500,35 @@ DupObj Endp
 CloneObj Proc far
     push ds
     push es
-    push cx
+    push ebx
+    push ecx
+    push esi
+    push edi
 ;
     int 3
-    mov eax,ds:fui_pos
-    mov cx,ds:hui_io_mode
-    mov ds,ds:fui_file_sel
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,SIZE file_handle_interface
+    mov ecx,eax
+    AllocateSmallLinear
+    mov edi,edx
 ;
-    call AllocateCloneObj
-    mov es:fui_pos,eax
-    mov es:hui_io_mode,cx
+    xor esi,esi
+    rep movs byte ptr es:[edi],ds:[esi]
 ;
-    mov ax,es
+    mov ecx,SIZE file_handle_interface
+    mov bx,ds
+    CreateDataSelector32
+    mov ds,bx
+    mov ds:hui_ref_count,0
+;
+    mov ax,bx
     clc
 ;
-    pop cx
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
     pop es
     pop ds
     retf32
