@@ -41,11 +41,7 @@ hui_delete_proc           DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  OUT  AX                New interface
-hui_pre_clone_proc        DD ?,?
-
-;  IN	DS                Handle entry interface
-;  OUT  AX                Updated interface
-hui_post_clone_proc       DD ?,?
+hui_clone_proc            DD ?,?
 
 ;  IN	DS                Handle entry interface
 hui_clear_proc            DD ?,?

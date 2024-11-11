@@ -10526,7 +10526,7 @@ fork_start:
     sti
     call trap_create_process
     CloneLdt
-    ApplyProcHandle
+    CloneProcHandle
     xor eax,eax
     jmp fork_done
 
@@ -10566,7 +10566,6 @@ fork_process  PROC far
     call setup_fork
 ;
     ClearProcHandle
-    CloneProcHandle
     call create_cur_dir
     call create_env_sel
 ;

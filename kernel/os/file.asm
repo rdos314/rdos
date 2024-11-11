@@ -2364,11 +2364,8 @@ InitObj   Proc near
     mov es:hui_dup_proc,OFFSET DupObj
     mov es:hui_dup_proc+4,cs
 ;
-    mov es:hui_pre_clone_proc,OFFSET PreCloneObj
-    mov es:hui_pre_clone_proc+4,cs
-;
-    mov es:hui_post_clone_proc,OFFSET PostCloneObj
-    mov es:hui_post_clone_proc+4,cs
+    mov es:hui_clone_proc,OFFSET CloneObj
+    mov es:hui_clone_proc+4,cs
 ;
     mov es:hui_read_proc,OFFSET ReadHandleObj
     mov es:hui_read_proc+4,cs
@@ -2514,9 +2511,9 @@ DupObj Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;           NAME:           PreCloneObj
+;           NAME:           CloneObj
 ;
-;           DESCRIPTION:    Pre clone handle obj
+;           DESCRIPTION:    Clone handle obj
 ;
 ;           PARAMETERS:     DS              Handle interface
 ;                   
@@ -2524,11 +2521,12 @@ DupObj Endp
 ;                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PreCloneObj Proc far
+CloneObj Proc far
     push ds
     push es
     push cx
 ;
+    int 3
     mov eax,ds:fui_pos
     mov cx,ds:hui_io_mode
     mov ds,ds:fui_file_sel
@@ -2544,48 +2542,7 @@ PreCloneObj Proc far
     pop es
     pop ds
     retf32
-PreCloneObj Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           PostCloneObj
-;
-;           DESCRIPTION:    Post clone handle obj
-;
-;           PARAMETERS:     DS              Handle interface
-;                   
-;           RETURNS:        AX              Cloned handle interface
-;                           
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PostCloneObj Proc far
-    push ebx
-    push ecx
-    push edx
-;
-    int 3
-    mov bx,ds
-    push bx
-    GetSelectorBaseSize
-;
-    AllocateLdt
-    or bx,4
-;
-    xor ax,ax
-    mov ds,ax
-    CreateDataSelector32
-    mov ax,bx
-;
-    pop bx
-    FreeGdt
-    clc
-;
-    pop edx
-    pop ecx
-    pop ebx
-    retf32
-PostCloneObj Endp
+CloneObj Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

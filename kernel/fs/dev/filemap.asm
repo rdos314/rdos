@@ -5230,11 +5230,8 @@ InitHandleSel   Proc near
     mov es:hui_dup_proc, OFFSET DupSel
     mov es:hui_dup_proc+4,cs
 ;
-    mov es:hui_pre_clone_proc, OFFSET PreCloneSel
-    mov es:hui_pre_clone_proc+4,cs
-;
-    mov es:hui_post_clone_proc, OFFSET PostCloneSel
-    mov es:hui_post_clone_proc+4,cs
+    mov es:hui_clone_proc, OFFSET CloneSel
+    mov es:hui_clone_proc+4,cs
 ;
     mov es:hui_delete_proc, OFFSET DeleteHandleObj
     mov es:hui_delete_proc+4,cs
@@ -5453,9 +5450,9 @@ DupSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           PreCloneSel
+;       NAME:           CloneSel
 ;
-;       DESCRIPTION:    Pre clone handle sel
+;       DESCRIPTION:    Clone handle sel
 ;
 ;       PARAMETERS:     DS              Handle interface
 ;
@@ -5464,7 +5461,7 @@ DupSel      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PreCloneSel      Proc far
+CloneSel      Proc far
     push ds
     push es
     push edx
@@ -5518,26 +5515,7 @@ PreCloneSel      Proc far
     pop es
     pop ds
     ret
-PreCloneSel      Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           PostCloneSel
-;
-;       DESCRIPTION:    Post clone handle sel
-;
-;       PARAMETERS:     DS              Handle interface
-;
-;       RETURNS:        NC
-;                         AX            Cloned handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PostCloneSel      Proc far
-    int 3
-    ret
-PostCloneSel      Endp
+CloneSel      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

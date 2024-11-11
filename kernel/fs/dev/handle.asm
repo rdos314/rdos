@@ -287,9 +287,11 @@ cphLoop:
     jz cphNext
 ;
     mov ds,eax
-    call fword ptr ds:hui_pre_clone_proc
+    call fword ptr ds:hui_clone_proc
     jc cphNext
 ;
+    mov ds,eax
+    inc ds:hui_ref_count
     mov es:[2*ebx+edx].ph_sel_arr,ax
     bts es:[edx].ph_bitmap,ebx
 
@@ -311,6 +313,10 @@ cphNext:
 ;
     mov ds,es:p_proc_sel
     mov ds:pf_handle_linear,edx
+;
+    mov bx,proc_handle_sel
+    mov ecx,SIZE proc_handle_struc
+    CreateDataSelector32
 ;
     popad
     pop fs
@@ -390,24 +396,6 @@ apply_proc_handle Proc far
     CreateDataSelector32
     mov es,ebx
 ;
-    mov ecx,USER_HANDLE_COUNT
-    mov ebx,OFFSET ph_sel_arr
-
-aphLoop:
-    mov ax,es:[ebx]
-    or ax,ax
-    jz aphNext
-;
-    mov ds,eax
-    inc ds:hui_ref_count
-    call fword ptr ds:hui_post_clone_proc
-    mov es:[ebx],ax
-
-aphNext:
-    add ebx,2
-    loop aphLoop
-
-aphDone:
     popad
     pop es
     pop ds
@@ -444,11 +432,8 @@ InitHandleObj  Proc near
     mov es:hui_delete_proc,OFFSET handle_fail
     mov es:hui_delete_proc+4,cs
 ;
-    mov es:hui_pre_clone_proc,OFFSET handle_fail
-    mov es:hui_pre_clone_proc+4,cs
-;
-    mov es:hui_post_clone_proc,OFFSET handle_ok
-    mov es:hui_post_clone_proc+4,cs
+    mov es:hui_clone_proc,OFFSET handle_fail
+    mov es:hui_clone_proc+4,cs
 ;
     mov es:hui_clear_proc,OFFSET handle_ok
     mov es:hui_clear_proc+4,cs
