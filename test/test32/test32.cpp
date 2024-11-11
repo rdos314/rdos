@@ -65,6 +65,9 @@ void main()
         size = RdosReadHandle(handle, buf, 267);
         printf("Read: %d\r\n", size);
 
+        RdosCloseHandle(handle2);
+        RdosCloseHandle(handle);
+
         exit(0);
     }
 
