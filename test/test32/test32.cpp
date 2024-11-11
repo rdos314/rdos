@@ -40,16 +40,14 @@ void main()
     int size;
     int dummy;
     long long pos;
-    int handle = RdosOpenHandle("b:/rdos.bin", O_RDWR);
+    int handle = RdosOpenHandle("e:/test.bin", O_RDWR);
     int handle2;
+
+    handle2 = RdosDupHandle(handle);
+    RdosSetHandlePos(handle, 25);
 
     if (!RdosFork())
     {
-        RdosSetHandlePos(handle, 25);
-        handle2 = RdosDupHandle(handle);
-
-        printf("Dup handle: %d\r\n", handle2);
-
         pos = RdosGetHandlePos(handle);
         printf("Pos 1: %lld\r\n", pos);
 
@@ -70,10 +68,6 @@ void main()
 
         exit(0);
     }
-
-
-    RdosSetHandlePos(handle, 25);
-    handle2 = RdosDupHandle(handle);
 
     pos = RdosGetHandlePos(handle);
     pos = RdosGetHandlePos(handle2);
