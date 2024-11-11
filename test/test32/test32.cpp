@@ -40,7 +40,7 @@ void main()
     int size;
     int dummy;
     long long pos;
-    int handle = RdosOpenHandle("e:/test.bin", O_RDWR);
+    int handle = RdosOpenHandle("b:/rdos.bin", O_RDWR);
     int handle2;
 
     if (!RdosFork())
