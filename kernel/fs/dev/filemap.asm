@@ -5759,22 +5759,17 @@ RemoveSysArr    Endp
 ;       DESCRIPTION:    Find proc sel
 ;
 ;       PARAMETERS:     DS              File sel
+;                       EDX             Handle linear
 ;
 ;       RETURNS:        NC
-;                         AX            Proc interface
+;                         AX            Proc sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindProcSel      Proc near
-    push es
     push ecx
-    push edx
     push esi
     push edi
-;
-    mov eax,proc_handle_sel
-    mov es,eax
-    mov edx,es:ph_linear
 ;
     mov ecx,PROC_BITMAP_COUNT  
     mov esi,OFFSET kf_proc_bitmap
@@ -5818,9 +5813,7 @@ fpCont:
 fpDone:
     pop edi
     pop esi
-    pop edx
     pop ecx
-    pop es
     ret
 FindProcSel    Endp
 
@@ -5831,10 +5824,10 @@ FindProcSel    Endp
 ;
 ;       DESCRIPTION:    Create proc sel
 ;
-;       PARAMETERS:     DS              Sys handle sel
+;       PARAMETERS:     DS              File sel
 ;
 ;       RETURNS:        NC
-;                         AX            Proc handle sel
+;                         AX            Proc sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6147,10 +6140,17 @@ WriteKernelObj    Endp
 
 DupKernelObj Proc far
     push ds
+    push edx
 ;
     mov ds,ds:hki_file_sel
 ;
     EnterSection ds:kf_entry_section
+;
+    push ds
+    mov edx,proc_handle_sel
+    mov ds,edx
+    mov edx,ds:ph_linear
+    pop ds
 ;
     call FindProcSel
     jnc dkoProcOk
@@ -6173,6 +6173,7 @@ dkoProcOk:
     call CreateHandleSel
 
 dkoDone:
+    pop edx
     pop ds
     ret
 DupKernelObj Endp
@@ -6394,16 +6395,17 @@ CreateKernelObj   Endp
 ;
 ;           DESCRIPTION:    Allocate proc handle
 ;
-;           PARAMETERS:     DS          Sys interface
-;                           AX          Proc interface
+;           PARAMETERS:     DS          File sel
+;                           AX          Proc sel
+;                           EDX         Proc handle linear
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateProcHandle     Proc near
-    push es
     pushad
 ;
     mov ebp,eax
+    mov esi,edx
 ;
     mov ecx,PROC_BITMAP_COUNT  
     xor edi,edi
@@ -6428,11 +6430,8 @@ alphOk:
     lock bts ds:kf_proc_bitmap,edx
     jc alphLoop
 ;
-    mov ebx,proc_handle_sel
-    mov es,ebx
     mov ebx,edx
-    mov edx,es:ph_linear
-    mov ds:[4*ebx].kf_proc_arr,edx
+    mov ds:[4*ebx].kf_proc_arr,esi
     mov ds:[2*ebx].kf_sel_arr,bp
 ;
     mov es,ebp
@@ -6442,7 +6441,6 @@ alphOk:
 
 alphDone:
     popad
-    pop es
     ret
 AllocateProcHandle  Endp   
 
@@ -6587,11 +6585,18 @@ OpenVfsFile   Endp
 
 OpenUserVfsFile    Proc near
     push eax
+    push edx
 ;
     call OpenVfsFile
     jc ouvfDone
 ;
     EnterSection ds:kf_entry_section
+;
+    push ds
+    mov edx,proc_handle_sel
+    mov ds,edx
+    mov edx,ds:ph_linear
+    pop ds
 ;
     call FindProcSel
     jnc ouvfProcOk
@@ -6621,6 +6626,7 @@ ouvfProcOk:
 ouvfFail:
 
 ouvfDone:
+    pop edx
     pop eax
     ret
 OpenUserVfsFile   Endp

@@ -40,6 +40,7 @@ hui_dup_proc              DD ?,?
 hui_delete_proc           DD ?,?
 
 ;  IN	DS                Handle entry interface
+;  IN   EDX               New linear handle base
 ;  OUT  AX                New interface
 hui_clone_proc            DD ?,?
 
