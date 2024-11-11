@@ -2502,10 +2502,13 @@ CloneObj Proc far
     push es
     push ebx
     push ecx
+    push edx
     push esi
     push edi
 ;
-    int 3
+    mov es,ds:fui_file_sel
+    inc es:file_user_count
+;
     mov ax,flat_sel
     mov es,ax
     mov eax,SIZE file_handle_interface
@@ -2527,6 +2530,7 @@ CloneObj Proc far
 ;
     pop edi
     pop esi
+    pop edx
     pop ecx
     pop ebx
     pop es

@@ -233,8 +233,6 @@ create_proc_handle Endp
 ;
 ;           DESCRIPTION:    Clone proc handle
 ;
-;           PARAMETERS:     ES          New process thread
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 clone_proc_handle_name DB 'Clone Proc Handle', 0
@@ -243,8 +241,6 @@ clone_proc_handle Proc far
     push ds
     push fs
     pushad
-;
-    push es
 ;
     mov eax,flat_sel
     mov es,eax
@@ -299,7 +295,8 @@ cphNext:
     inc ebx
     loop cphLoop
 ;
-    pop es
+    GetThread
+    mov es,eax
 ;
     mov eax,SEG data
     mov ds,eax
