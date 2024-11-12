@@ -5509,19 +5509,14 @@ CloneSel      Proc far
     call FindProcSel
     jnc csCopy
 ;
-    mov bx,es:pf_map_sel
-    FreeLdt
-;
-    mov ebx,es
-    mov eax,flat_data_sel
-    mov es,eax
-    FreeLdt
-;
     call CreateProcSel
     call AllocateProcHandle
 
 csCopy:
     LeaveSection ds:kf_entry_section
+;
+    mov bx,flat_data_sel
+    mov es,ebx
 ;
     mov ds,eax
     mov esi,ds:pf_map_linear
@@ -5866,7 +5861,7 @@ fpeLoop:
 ;
     pop ecx
     sub edi,OFFSET kf_proc_arr
-    shl edi,2
+    shr edi,2
     mov ax,ds:[2*edi].kf_sel_arr
     clc
     jmp fpDone
