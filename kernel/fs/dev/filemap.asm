@@ -5519,6 +5519,7 @@ CloneSel2      Proc far
     push esi
     push edi
 ;
+    int 3
     mov eax,ds
     mov fs,eax
     mov es,ds:hf_proc_sel
@@ -5582,9 +5583,6 @@ csLoop:
     mov eax,fs:hkf_clone_pos+4
     mov es:[edx].fh_pos_arr+4,eax
 ;
-    mov eax,fs
-    mov ds,eax
-;
     mov ax,flat_sel
     mov es,eax
 ;
@@ -5594,11 +5592,19 @@ csLoop:
     mov ecx,SIZE handle_file
     xor esi,esi
     mov edi,edx
-    rep movsb
+    rep movs es:[edi],fs:[esi]
 ;
-    mov bx,fs
+    mov ebx,fs
     mov ecx,SIZE handle_file
     CreateDataSelector32
+    mov fs,ebx
+;
+    mov fs:hui_ref_count,0
+    mov fs:hf_proc_sel,ds
+;
+    mov eax,ds:pf_index
+    mov fs:hf_proc_index,eax
+;
     mov eax,ebx
     clc
     jmp csDone
