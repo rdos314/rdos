@@ -339,6 +339,61 @@ clone_proc_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           DeleteProcHandle
+;
+;           DESCRIPTION:    Close all open files
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_proc_handle_name DB 'Delete Proc Handle', 0
+
+delete_proc_handle Proc far
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    int 3
+    mov eax,proc_handle_sel
+    mov ds,eax
+;
+    mov ecx,USER_HANDLE_COUNT
+    xor ebx,ebx
+    EnterSection ds:hd_section
+
+dphLoop:
+    mov ax,ds:[2*ebx].ph_sel_arr
+    or ax,ax
+    jz dphNext
+;
+    push ds
+    mov ds,eax
+    call fword ptr ds:hui_free_proc
+    pop ds
+
+dphNext:
+    inc ebx
+    loop dphLoop
+;
+    LeaveSection ds:hd_section
+;
+    xor ebx,ebx
+    mov ds,ebx
+;
+    mov ebx,proc_handle_sel
+    mov es,ebx
+    FreeMem
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+delete_proc_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           ClearProcHandle
 ;
 ;           DESCRIPTION:    Clear active entries
@@ -3095,6 +3150,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET clone_proc_handle_name
     xor cl,cl
     mov ax,clone_proc_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET delete_proc_handle
+    mov edi,OFFSET delete_proc_handle_name
+    xor cl,cl
+    mov ax,delete_proc_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET clear_proc_handle

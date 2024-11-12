@@ -2202,8 +2202,6 @@ delete_process_sel Proc near
     push es
     pushad
 ;
-    DeleteProcHandle
-;
     mov ds,es:p_proc_sel
     mov ax,ds:pf_cur_dir_sel
     DeleteCurDir
@@ -9966,6 +9964,7 @@ terminate_app_handled:
     jmp cleanup_thread
 
 terminate_proc:
+    DeleteProcHandle
     call trap_terminate_thread
     jmp cleanup_process
 

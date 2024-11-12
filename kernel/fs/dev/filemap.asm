@@ -5519,7 +5519,6 @@ CloneSel2      Proc far
     push esi
     push edi
 ;
-    int 3
     mov eax,ds
     mov fs,eax
     mov es,ds:hf_proc_sel
