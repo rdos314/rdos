@@ -5469,7 +5469,8 @@ CloneSel1      Proc far
     push eax
     push edx
 ;
-    int 3
+    mov es,ds:hf_proc_sel
+    mov edx,es:pf_map_linear
 ;
     mov ax,flat_data_sel
     mov es,eax
@@ -5477,9 +5478,6 @@ CloneSel1      Proc far
     mov eax,ds:hf_user_handle
     dec eax
     shl eax,3
-;
-    mov ds,ds:hf_proc_sel
-    mov edx,ds:pf_map_linear
 ;
     mov edx,es:[edx].fm_handle_ptr
     add edx,OFFSET fh_pos_arr
@@ -5521,7 +5519,6 @@ CloneSel2      Proc far
     push esi
     push edi
 ;
-    int 3
     mov eax,ds
     mov fs,eax
     mov es,ds:hf_proc_sel
@@ -5587,6 +5584,9 @@ csLoop:
 ;
     mov eax,fs
     mov ds,eax
+;
+    mov ax,flat_sel
+    mov es,eax
 ;
     mov eax,SIZE handle_file
     AllocateSmallLinear
