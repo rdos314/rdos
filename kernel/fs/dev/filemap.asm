@@ -2352,10 +2352,14 @@ UpdateUnlinked  Proc near
     mov ax,flat_data_sel
     mov fs,eax
     mov ebx,es:fm_handle_ptr
+    or ebx,ebx
+    jz uuUnlink
+;
     mov ax,fs:[ebx].fh_futex.fs_owner
     or ax,ax
     jnz uuPop
-;
+
+uuUnlink:
     call UnlinkMap
 
 uuPop:
@@ -5239,6 +5243,11 @@ FreeHandleSel    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 KillHandleSel      Proc far
+    push es
+    mov es,ds:hf_proc_sel
+    mov es,es:pf_map_sel
+    mov es:fm_handle_ptr,0
+    pop es
     call FreeHandleBase
     ret
 KillHandleSel    Endp
@@ -6140,6 +6149,10 @@ DeleteProcSel   Proc near
 ;
     push ds
     mov ds,ds:pf_map_sel
+    mov eax,ds:fm_handle_ptr
+    or eax,eax
+    jz dpsPop
+;
     mov ax,flat_data_sel
     mov es,eax
     mov ebx,ds:fm_handle_ptr

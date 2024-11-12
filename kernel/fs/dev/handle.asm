@@ -353,7 +353,6 @@ delete_proc_handle Proc far
     push ebx
     push ecx
 ;
-    int 3
     mov eax,proc_handle_sel
     mov ds,eax
 ;
