@@ -368,7 +368,12 @@ dphLoop:
 ;
     push ds
     mov ds,eax
+    sub ds:hui_ref_count,1
+    jnz dphPop
+;
     call fword ptr ds:hui_free_proc
+
+dphPop:
     pop ds
 
 dphNext:
