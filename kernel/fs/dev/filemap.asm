@@ -249,39 +249,39 @@ CheckServ   Proc near
     mov ds,bx
     mov ecx,ds:kf_req_count
     or ecx,ecx
-    jz csDone
+    jz csdDone
 ;
     mov esi,OFFSET kf_sorted_arr
 
-csLoop:
+csdLoop:
     movzx ebx,ds:[esi]
     cmp bl,-1
-    jne csCheck
+    jne csdCheck
 ;
     int 3
-    jmp csDone
+    jmp csdDone
 
-csCheck:
+csdCheck:
     mov ebx,ds:[4*ebx].kf_handle_arr
     mov edi,ds:[ebx].kre_pos
     mov ebp,ds:[ebx].kre_pos+4
     sub edi,eax
     mov ebp,edx
-    jnc csNext
+    jnc csdNext
 ;
     int 3
-    jmp csDone
+    jmp csdDone
 
-csNext:
+csdNext:
     mov eax,ds:[ebx].kre_pos
     mov edx,ds:[ebx].kre_pos+4
     add eax,ds:[ebx].kre_size
     adc edx,0
 ;
     inc esi
-    loop csLoop
+    loop csdLoop
 
-csDone:
+csdDone:
     popad
     pop ds
     ret
@@ -5455,6 +5455,7 @@ DupSel      Endp
 ;       DESCRIPTION:    Clone handle sel
 ;
 ;       PARAMETERS:     DS              Handle interface
+;                       EDX             Process handle sel
 ;
 ;       RETURNS:        NC
 ;                         AX            Cloned handle interface
@@ -5464,54 +5465,130 @@ DupSel      Endp
 CloneSel      Proc far
     push ds
     push es
+    push ebx
+    push ecx
     push edx
+    push esi
+    push edi
+    push ebp
 ;
     int 3
-    mov ax,ds:hf_file_sel
+    mov ebp,edx
+;
+    mov bx,flat_data_sel
+    mov es,ebx
+;
+    mov ax,ds:hui_io_mode
     push eax
 ;
     mov eax,ds:hf_user_handle
     dec eax
     shl eax,3
 ;
-    mov es,ds:hf_proc_sel
-    mov esi,es:pf_map_linear
-    mov edx,flat_data_sel
-    mov es,edx
+    push ds
+    mov ds,ds:hf_proc_sel
+    mov esi,ds:pf_map_linear
 ;
     mov edx,es:[esi].fm_handle_ptr
     add edx,OFFSET fh_pos_arr
     add edx,eax
     mov eax,es:[edx]
     mov edx,es:[edx+4]
+    pop ds
 ;
-    push eax
     push edx
-;
-    mov ax,ds:hui_io_mode
     push eax
+;
+    mov edx,ebp
+    mov ebx,ds
+    mov es,ds:hf_proc_sel
+    mov ds,ds:hf_file_sel
+    FreeLdt
+    EnterSection ds:kf_entry_section
+;
+    call FindProcSel
+    jnc csCopy
+;
+    mov bx,es:pf_map_sel
+    FreeLdt
+;
+    mov ebx,es
+    mov eax,flat_data_sel
+    mov es,eax
+    FreeLdt
+;
+    call CreateProcSel
+    call AllocateProcHandle
+
+csCopy:
+    LeaveSection ds:kf_entry_section
+;
+    mov ds,eax
+    mov esi,ds:pf_map_linear
+;
+    mov edx,es:[esi].fm_handle_ptr
+    add edx,OFFSET fh_bitmap
+    mov ecx,15
+    xor esi,esi
+
+csLoop:
+    mov eax,es:[edx]
+    cmp eax,-1
+    je csNext
+;
+    not eax
+    bsf ebx,eax
+;
+    lock bts es:[edx],ebx
+    jc csLoop
+;
+    inc ds:pf_ref_count
+;
+    add ebx,esi
+    mov esi,ebx
+    mov edx,ds:pf_map_linear
+    mov edx,es:[edx].fm_handle_ptr
+    shl esi,3
+    add edx,esi
+    add edx,OFFSET fh_pos_arr
+;
+    pop eax
+    mov es:[edx],eax
+    add edx,4
+;
+    pop eax
+    mov es:[edx],eax
 ;
     mov eax,SIZE handle_file
-    AllocateSmallGlobalMem
-    call InitHandleObj
+    AllocateSmallLinear
+;
+    call CreateHandleObj
+    mov es,eax
+;
     call InitHandleSel
 ;
     pop eax
     mov es:hui_io_mode,ax
-;
-    pop edx
-    pop eax
-    mov es:hf_user_handle,eax
-    mov es:hf_proc_index,edx
-    mov es:hf_proc_sel,0
-;
-    pop eax
-    mov es:hf_file_sel,ax
-;
     mov eax,es
     clc
+    jmp csDone
+
+csNext:
+    add esi,32
+    add edx,4
+    sub ecx,1
+    jnz csLoop
 ;
+    add esp,12
+    stc
+
+csDone:
+    pop ebp
+    pop edi
+    pop esi
     pop edx
+    pop ecx
+    pop ebx
     pop es
     pop ds
     ret
@@ -5826,8 +5903,7 @@ FindProcSel    Endp
 ;
 ;       PARAMETERS:     DS              File sel
 ;
-;       RETURNS:        NC
-;                         AX            Proc sel
+;       RETURNS:        AX            Proc sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6158,10 +6234,7 @@ DupKernelObj Proc far
     inc ds:kf_ref_count
 ;
     call CreateProcSel
-    jc dkoDone
-;
     call AllocateProcHandle
-    jc dkoDone
 
 dkoProcOk:
     mov es,eax
@@ -6402,6 +6475,7 @@ CreateKernelObj   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateProcHandle     Proc near
+    push es
     pushad
 ;
     mov ebp,eax
@@ -6441,6 +6515,7 @@ alphOk:
 
 alphDone:
     popad
+    pop es
     ret
 AllocateProcHandle  Endp   
 
@@ -6604,10 +6679,7 @@ OpenUserVfsFile    Proc near
     inc ds:kf_ref_count
 ;
     call CreateProcSel
-    jc ouvfFail
-;
     call AllocateProcHandle
-    jc ouvfFail
 
 ouvfProcOk:
     mov es,eax
