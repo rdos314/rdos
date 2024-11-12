@@ -2364,8 +2364,8 @@ InitObj   Proc near
     mov es:hui_dup_proc,OFFSET DupObj
     mov es:hui_dup_proc+4,cs
 ;
-    mov es:hui_clone_proc,OFFSET CloneObj
-    mov es:hui_clone_proc+4,cs
+    mov es:hui_clone2_proc,OFFSET CloneObj
+    mov es:hui_clone2_proc+4,cs
 ;
     mov es:hui_read_proc,OFFSET ReadHandleObj
     mov es:hui_read_proc+4,cs

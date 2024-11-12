@@ -277,23 +277,38 @@ clone_proc_handle Proc far
     mov ecx,USER_HANDLE_COUNT
     xor ebx,ebx
 
-cphLoop:
+cphLoop1:
     mov ax,fs:[2*ebx].ph_sel_arr
     or ax,ax
-    jz cphNext
+    jz cphNext1
 ;
     mov ds,eax
-    call fword ptr ds:hui_clone_proc
-    jc cphNext
+    call fword ptr ds:hui_clone1_proc
+
+cphNext1:
+    inc ebx
+    loop cphLoop1
+;
+    mov ecx,USER_HANDLE_COUNT
+    xor ebx,ebx
+
+cphLoop2:
+    mov ax,fs:[2*ebx].ph_sel_arr
+    or ax,ax
+    jz cphNext2
+;
+    mov ds,eax
+    call fword ptr ds:hui_clone2_proc
+    jc cphNext2
 ;
     mov ds,eax
     inc ds:hui_ref_count
     mov es:[2*ebx+edx].ph_sel_arr,ax
     bts es:[edx].ph_bitmap,ebx
 
-cphNext:
+cphNext2:
     inc ebx
-    loop cphLoop
+    loop cphLoop2
 ;
     GetThread
     mov es,eax
@@ -429,8 +444,11 @@ InitHandleObj  Proc near
     mov es:hui_delete_proc,OFFSET handle_fail
     mov es:hui_delete_proc+4,cs
 ;
-    mov es:hui_clone_proc,OFFSET handle_fail
-    mov es:hui_clone_proc+4,cs
+    mov es:hui_clone1_proc,OFFSET handle_fail
+    mov es:hui_clone1_proc+4,cs
+;
+    mov es:hui_clone2_proc,OFFSET handle_fail
+    mov es:hui_clone2_proc+4,cs
 ;
     mov es:hui_clear_proc,OFFSET handle_ok
     mov es:hui_clear_proc+4,cs

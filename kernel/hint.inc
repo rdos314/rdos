@@ -41,8 +41,12 @@ hui_delete_proc           DD ?,?
 
 ;  IN	DS                Handle entry interface
 ;  IN   EDX               New linear handle base
+hui_clone1_proc           DD ?,?
+
+;  IN	DS                Handle entry interface
+;  IN   EDX               New linear handle base
 ;  OUT  AX                New interface
-hui_clone_proc            DD ?,?
+hui_clone2_proc           DD ?,?
 
 ;  IN	DS                Handle entry interface
 hui_clear_proc            DD ?,?

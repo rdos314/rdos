@@ -193,6 +193,7 @@ handle_kernel_file  STRUC
 
 hkf_base         handle_kernel_interface <>
 
+hkf_clone_pos    DD ?,?
 hkf_map_linear   DD ?
 hkf_map_sel      DW ?
 
@@ -5230,8 +5231,11 @@ InitHandleSel   Proc near
     mov es:hui_dup_proc, OFFSET DupSel
     mov es:hui_dup_proc+4,cs
 ;
-    mov es:hui_clone_proc, OFFSET CloneSel
-    mov es:hui_clone_proc+4,cs
+    mov es:hui_clone1_proc, OFFSET CloneSel1
+    mov es:hui_clone1_proc+4,cs
+;
+    mov es:hui_clone2_proc, OFFSET CloneSel2
+    mov es:hui_clone2_proc+4,cs
 ;
     mov es:hui_delete_proc, OFFSET DeleteHandleObj
     mov es:hui_delete_proc+4,cs
@@ -5450,9 +5454,54 @@ DupSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CloneSel
+;       NAME:           CloneSel1
 ;
-;       DESCRIPTION:    Clone handle sel
+;       DESCRIPTION:    Clone handle sel, step 1
+;
+;       PARAMETERS:     DS              Handle interface
+;                       EDX             Process handle sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloneSel1      Proc far
+    push ds
+    push es
+    push eax
+    push edx
+;
+    int 3
+;
+    mov bx,flat_data_sel
+    mov es,ebx
+;
+    mov eax,ds:hf_user_handle
+    dec eax
+    shl eax,3
+;
+    mov ds,ds:hf_proc_sel
+    mov edx,ds:pf_map_linear
+;
+    mov edx,es:[edx].fm_handle_ptr
+    add edx,OFFSET fh_pos_arr
+    add edx,eax
+    mov eax,es:[edx]
+    mov ds:hkf_clone_pos,eax
+    mov eax,es:[edx+4]
+    mov ds:hkf_clone_pos+4,eax
+;
+    pop edx
+    pop eax
+    pop es
+    pop ds
+    ret
+CloneSel1      Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CloneSel2
+;
+;       DESCRIPTION:    Clone handle sel, step 2
 ;
 ;       PARAMETERS:     DS              Handle interface
 ;                       EDX             Process handle sel
@@ -5462,52 +5511,36 @@ DupSel      Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CloneSel      Proc far
+CloneSel2      Proc far
     push ds
     push es
+    push fs
     push ebx
     push ecx
     push edx
     push esi
     push edi
-    push ebp
 ;
     int 3
-    mov ebp,edx
-;
-    mov bx,flat_data_sel
-    mov es,ebx
-;
-    mov ax,ds:hui_io_mode
-    push eax
-;
-    mov eax,ds:hf_user_handle
-    dec eax
-    shl eax,3
-;
-    push ds
-    mov ds,ds:hf_proc_sel
-    mov esi,ds:pf_map_linear
-;
-    mov edx,es:[esi].fm_handle_ptr
-    add edx,OFFSET fh_pos_arr
-    add edx,eax
-    mov eax,es:[edx]
-    mov edx,es:[edx+4]
-    pop ds
-;
-    push edx
-    push eax
-;
-    mov edx,ebp
-    mov ebx,ds
+    mov eax,ds
+    mov fs,eax
     mov es,ds:hf_proc_sel
     mov ds,ds:hf_file_sel
-    FreeLdt
+;
     EnterSection ds:kf_entry_section
 ;
     call FindProcSel
     jnc csCopy
+;
+    mov bx,es:pf_map_sel
+    FreeLdt
+;
+    mov ebx,es
+    mov eax,flat_data_sel
+    mov es,eax
+    FreeLdt
+;
+    inc ds:kf_ref_count
 ;
     call CreateProcSel
     call AllocateProcHandle
@@ -5545,26 +5578,28 @@ csLoop:
     mov edx,es:[edx].fm_handle_ptr
     shl esi,3
     add edx,esi
-    add edx,OFFSET fh_pos_arr
 ;
-    pop eax
-    mov es:[edx],eax
-    add edx,4
+    mov eax,fs:hkf_clone_pos
+    mov es:[edx].fh_pos_arr,eax
 ;
-    pop eax
-    mov es:[edx],eax
+    mov eax,fs:hkf_clone_pos+4
+    mov es:[edx].fh_pos_arr+4,eax
+;
+    mov eax,fs
+    mov ds,eax
 ;
     mov eax,SIZE handle_file
     AllocateSmallLinear
 ;
-    call CreateHandleObj
-    mov es,eax
+    mov ecx,SIZE handle_file
+    xor esi,esi
+    mov edi,edx
+    rep movsb
 ;
-    call InitHandleSel
-;
-    pop eax
-    mov es:hui_io_mode,ax
-    mov eax,es
+    mov bx,fs
+    mov ecx,SIZE handle_file
+    CreateDataSelector32
+    mov eax,ebx
     clc
     jmp csDone
 
@@ -5574,20 +5609,19 @@ csNext:
     sub ecx,1
     jnz csLoop
 ;
-    add esp,12
     stc
 
 csDone:
-    pop ebp
     pop edi
     pop esi
     pop edx
     pop ecx
     pop ebx
+    pop fs
     pop es
     pop ds
     ret
-CloneSel      Endp
+CloneSel2      Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
