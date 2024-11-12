@@ -10564,7 +10564,6 @@ fork_process  PROC far
     call copy_process_modules
     call setup_fork
 ;
-    ClearProcHandle
     call create_cur_dir
     call create_env_sel
 ;

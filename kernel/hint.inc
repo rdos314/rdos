@@ -49,9 +49,6 @@ hui_clone1_proc           DD ?,?
 hui_clone2_proc           DD ?,?
 
 ;  IN	DS                Handle entry interface
-hui_clear_proc            DD ?,?
-
-;  IN	DS                Handle entry interface
 ;  OUT  EAX               Map index
 ;  OUT  EDI               Map linear address
 hui_get_map_proc          DD ?,?
@@ -141,6 +138,9 @@ hui_output_size_proc      DD ?,?
 
 ;  IN	DS                Handle entry interface
 hui_free_proc             DD ?,?
+
+;  IN	DS                Handle entry interface
+hui_kill_proc             DD ?,?
 
 hui_io_mode               DW ?
 hui_ref_count             DW ?

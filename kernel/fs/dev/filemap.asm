@@ -5121,21 +5121,19 @@ CloseHandleSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           FreeHandleSel
+;       NAME:           FreeHandleBase
 ;
-;       DESCRIPTION:    Free handle sel
+;       DESCRIPTION:    Free handle base
 ;
 ;       PARAMETERS:     DS              Handle interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeHandleSel      Proc far
+FreeHandleBase      Proc near
     push es
     push eax
     push ebx
     push edx
-;
-    call CloseHandleSel
 ;
     mov ebx,ds:hf_proc_index
     cmp ebx,PROC_HANDLE_COUNT
@@ -5210,7 +5208,40 @@ fhDone:
     pop eax
     pop es
     ret
+FreeHandleBase    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeHandleSel
+;
+;       DESCRIPTION:    Free handle sel
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeHandleSel      Proc far
+    call CloseHandleSel
+    call FreeHandleBase
+    ret
 FreeHandleSel    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           KillHandleSel
+;
+;       DESCRIPTION:    Kill handle sel
+;
+;       PARAMETERS:     DS              Handle interface
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+KillHandleSel      Proc far
+    call FreeHandleBase
+    ret
+KillHandleSel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5287,6 +5318,9 @@ InitHandleSel   Proc near
 ;
     mov es:hui_free_proc, OFFSET FreeHandleSel
     mov es:hui_free_proc+4,cs
+;
+    mov es:hui_kill_proc, OFFSET KillHandleSel
+    mov es:hui_kill_proc+4,cs
 ;
     ret
 InitHandleSel   Endp

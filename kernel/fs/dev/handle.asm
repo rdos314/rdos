@@ -371,7 +371,7 @@ dphLoop:
     sub ds:hui_ref_count,1
     jnz dphPop
 ;
-    call fword ptr ds:hui_free_proc
+    call fword ptr ds:hui_kill_proc
 
 dphPop:
     pop ds
@@ -395,53 +395,6 @@ dphNext:
     pop ds
     ret
 delete_proc_handle Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;           NAME:           ClearProcHandle
-;
-;           DESCRIPTION:    Clear active entries
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clear_proc_handle_name DB 'Clear Proc Handle', 0
-
-clear_proc_handle Proc far
-    push ds
-    push eax
-    push ebx
-    push ecx
-;
-    mov eax,proc_handle_sel
-    mov ds,eax
-;
-    mov ecx,USER_HANDLE_COUNT
-    xor ebx,ebx
-    EnterSection ds:hd_section
-
-clrLoop:
-    mov ax,ds:[2*ebx].ph_sel_arr
-    or ax,ax
-    jz clrNext
-;
-    push ds
-    mov ds,eax
-    call fword ptr ds:hui_clear_proc
-    pop ds
-
-clrNext:
-    inc ebx
-    loop clrLoop
-;
-    LeaveSection ds:hd_section
-;
-    pop ecx
-    pop ebx
-    pop eax
-    pop ds
-    ret
-clear_proc_handle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -509,9 +462,6 @@ InitHandleObj  Proc near
 ;
     mov es:hui_clone2_proc,OFFSET handle_fail
     mov es:hui_clone2_proc+4,cs
-;
-    mov es:hui_clear_proc,OFFSET handle_ok
-    mov es:hui_clear_proc+4,cs
 ;
     mov es:hui_get_map_proc,OFFSET handle_fail
     mov es:hui_get_map_proc+4,cs
@@ -3161,12 +3111,6 @@ init_sys_handle     PROC near
     mov edi,OFFSET delete_proc_handle_name
     xor cl,cl
     mov ax,delete_proc_handle_nr
-    RegisterOsGate
-;
-    mov esi,OFFSET clear_proc_handle
-    mov edi,OFFSET clear_proc_handle_name
-    xor cl,cl
-    mov ax,clear_proc_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET apply_proc_handle
