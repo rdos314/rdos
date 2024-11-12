@@ -5471,8 +5471,8 @@ CloneSel1      Proc far
 ;
     int 3
 ;
-    mov bx,flat_data_sel
-    mov es,ebx
+    mov ax,flat_data_sel
+    mov es,eax
 ;
     mov eax,ds:hf_user_handle
     dec eax
