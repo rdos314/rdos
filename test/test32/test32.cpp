@@ -35,6 +35,8 @@ void main()
 
 */
 
+/*
+
     int i;
     char *buf = new char[1024];
     int size;
@@ -45,6 +47,8 @@ void main()
 
     handle2 = RdosDupHandle(handle);
     RdosSetHandlePos(handle, 25);
+
+    size = RdosReadHandle(handle, buf, 267);
 
     if (!RdosFork())
     {
@@ -74,8 +78,6 @@ void main()
 
     size = RdosGetHandleSize(handle);
     size = RdosGetHandleSize(handle2);
-
-    size = RdosReadHandle(handle, buf, 267);
 
     RdosTestGate(buf);
 
@@ -112,6 +114,8 @@ void main()
     delete buf;
 
 
+*/
+
 /*
     char *buf = new char[1024];
 
@@ -119,7 +123,7 @@ void main()
 
 */
 
-//    printf("Hello world\r\n");
+    printf("Hello world\r\n");
 }
 
 
