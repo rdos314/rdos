@@ -5656,7 +5656,6 @@ ExecSel1      Proc far
     push es
     push eax
 ;
-    int 3
     xor ax,ax
     xchg ax,ds:hf_proc_sel
     or ax,ax
@@ -5690,8 +5689,24 @@ ExecSel1      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExecSel2      Proc far
-    int 3
+    push ds
+    push eax
+;
+    mov ax,ds:hf_proc_sel
+    or ax,ax
+    jnz esDone2
+;
+    push ds
+    mov ds,ds:hf_file_sel
+    call CreateProcSel
+    pop ds
+    mov ds:hf_proc_sel,ax
+
+esDone2:
     clc
+;
+    pop eax
+    pop ds
     ret
 ExecSel2      Endp
 
