@@ -339,6 +339,59 @@ clone_proc_handle Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           ExecProcHandle
+;
+;           DESCRIPTION:    Close non stdin/stdout files
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+exec_proc_handle_name DB 'Exec Proc Handle', 0
+
+exec_proc_handle Proc far
+    push ds
+    push eax
+    push ebx
+    push ecx
+;
+    int 3
+    mov eax,proc_handle_sel
+    mov ds,eax
+;
+    mov ecx,USER_HANDLE_COUNT - 3
+    mov ebx,3
+    EnterSection ds:hd_section
+
+ephLoop:
+    mov ax,ds:[2*ebx].ph_sel_arr
+    or ax,ax
+    jz ephNext
+;
+    push ds
+    mov ds,eax
+    sub ds:hui_ref_count,1
+    jnz ephPop
+;
+    call fword ptr ds:hui_free_proc
+
+ephPop:
+    pop ds
+
+ephNext:
+    inc ebx
+    loop ephLoop
+;
+    LeaveSection ds:hd_section
+;
+    pop ecx
+    pop ebx
+    pop eax
+    pop ds
+    ret
+exec_proc_handle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           DeleteProcHandle
 ;
 ;           DESCRIPTION:    Close all open files
@@ -558,15 +611,17 @@ AllocateUserHandle     Proc near
     mov ecx,USER_BITMAP_COUNT  
     xor edi,edi
     mov bx,OFFSET ph_bitmap
+    mov eax,es:[bx]
+    or al,7
 
 aluhLoop:
-    mov eax,es:[bx]
     not eax
     bsf edx,eax
     jnz aluhOk
 ;
     add bx,4
     add edi,32
+    mov eax,es:[bx]
 ;
     loop aluhLoop
 ;
@@ -740,6 +795,48 @@ AllocateKernelHandle  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;           NAME:           VfsFileToHandle
+;
+;           DESCRIPTION:    Convert VFS file to handle
+;
+;           PARAMETERS:     DS          Handle obj
+;                           CX          Mode
+;
+;           RETURNS:        EBX         Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public VfsFileToHandle
+
+VfsFileToHandle     Proc near
+    call AllocateUserHandle
+    jc vfthDone
+;
+    test cx,O_CREAT OR O_TRUNC
+    jz vfthSizeOk
+;
+    push eax
+    push edx
+;
+    xor eax,eax
+    xor edx,edx
+    SetHandleSize64
+;
+    pop edx
+    pop eax
+
+vfthSizeOk:
+    call OpenToIo
+    mov ds:hui_io_mode,ax
+    clc
+
+vfthDone:
+    ret
+VfsFileToHandle   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;           NAME:           OpenHandleObj
 ;
 ;           DESCRIPTION:    Open handle
@@ -770,9 +867,15 @@ ohCheckTrunc:
     test cx,O_CREAT OR O_TRUNC
     jz ohSizeOk
 ;
+    push eax
+    push edx
+;
     xor eax,eax
     xor edx,edx
     SetHandleSize64
+;
+    pop edx
+    pop eax
 
 ohSizeOk:
     call OpenToIo
@@ -3104,6 +3207,12 @@ init_sys_handle     PROC near
     mov edi,OFFSET clone_proc_handle_name
     xor cl,cl
     mov ax,clone_proc_handle_nr
+    RegisterOsGate
+;
+    mov esi,OFFSET exec_proc_handle
+    mov edi,OFFSET exec_proc_handle_name
+    xor cl,cl
+    mov ax,exec_proc_handle_nr
     RegisterOsGate
 ;
     mov esi,OFFSET delete_proc_handle

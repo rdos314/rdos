@@ -17,7 +17,7 @@
 ; You should have received a copy of the GNU General Public License
 ; along with this program; if not, write to the Free Software
 ; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-;
+
 ; The author of this program may be contacted at leif@rdos.net
 ;
 ; FILEMAP.ASM
@@ -228,6 +228,7 @@ code    SEGMENT byte public 'CODE'
 
     extern InitKernelObj:near
     extern InitHandleObj:near
+    extern VfsFileToHandle:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4261,7 +4262,10 @@ delete_vfs_file    Proc near
     push ecx
 ;
     xor ecx,ecx    
-    call OpenVfsFile
+    call OpenUserVfsFile
+    jc dvfFail
+;
+    call VfsFileToHandle
     jc dvfFail
 ;
     push ebx
@@ -4911,6 +4915,7 @@ GetSizeSel  Endp
 
 SetSizeSel    Proc far
     push ds
+    push ebx
     push ecx
 ;
     mov ds,ds:hf_file_sel
@@ -4925,6 +4930,7 @@ SetSizeSel    Proc far
     WaitForSignal
 ;
     pop ecx
+    pop ebx
     pop ds
     ret
 SetSizeSel    Endp
@@ -6693,6 +6699,7 @@ OpenVfsFile   Endp
     public OpenUserVfsFile
 
 OpenUserVfsFile    Proc near
+    push es
     push eax
     push edx
 ;
@@ -6734,6 +6741,7 @@ ouvfFail:
 ouvfDone:
     pop edx
     pop eax
+    pop es
     ret
 OpenUserVfsFile   Endp
 
