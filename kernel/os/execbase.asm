@@ -2223,7 +2223,6 @@ lpForkModOk:
     DetachFork
     LeaveSection ds:pr_cow_section
     ResetProcess
-    ExecUpdateProcHandle
 ;
     mov es:p_prog_id,bx
     mov es:p_prog_sel,gs
@@ -2232,6 +2231,7 @@ lpForkModOk:
     mov cr3,eax
 ;
     InitProcess    
+    ExecUpdateProcHandle
 ;
     mov ds,gs:pr_name_sel
     xor esi,esi
