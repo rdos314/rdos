@@ -2352,14 +2352,10 @@ UpdateUnlinked  Proc near
     mov ax,flat_data_sel
     mov fs,eax
     mov ebx,es:fm_handle_ptr
-    or ebx,ebx
-    jz uuUnlink
-;
     mov ax,fs:[ebx].fh_futex.fs_owner
     or ax,ax
     jnz uuPop
-
-uuUnlink:
+;
     call UnlinkMap
 
 uuPop:
@@ -5125,19 +5121,21 @@ CloseHandleSel      Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           FreeHandleBase
+;       NAME:           FreeHandleSel
 ;
-;       DESCRIPTION:    Free handle base
+;       DESCRIPTION:    Free handle sel
 ;
 ;       PARAMETERS:     DS              Handle interface
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-FreeHandleBase      Proc near
+FreeHandleSel      Proc far
     push es
     push eax
     push ebx
     push edx
+;
+    call CloseHandleSel
 ;
     mov ebx,ds:hf_proc_index
     cmp ebx,PROC_HANDLE_COUNT
@@ -5212,45 +5210,7 @@ fhDone:
     pop eax
     pop es
     ret
-FreeHandleBase    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FreeHandleSel
-;
-;       DESCRIPTION:    Free handle sel
-;
-;       PARAMETERS:     DS              Handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FreeHandleSel      Proc far
-    call CloseHandleSel
-    call FreeHandleBase
-    ret
 FreeHandleSel    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           KillHandleSel
-;
-;       DESCRIPTION:    Kill handle sel
-;
-;       PARAMETERS:     DS              Handle interface
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-KillHandleSel      Proc far
-    push es
-    mov es,ds:hf_proc_sel
-    mov es,es:pf_map_sel
-    mov es:fm_handle_ptr,0
-    pop es
-    call FreeHandleBase
-    ret
-KillHandleSel    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -5327,9 +5287,6 @@ InitHandleSel   Proc near
 ;
     mov es:hui_free_proc, OFFSET FreeHandleSel
     mov es:hui_free_proc+4,cs
-;
-    mov es:hui_kill_proc, OFFSET KillHandleSel
-    mov es:hui_kill_proc+4,cs
 ;
     ret
 InitHandleSel   Endp
@@ -6149,10 +6106,6 @@ DeleteProcSel   Proc near
 ;
     push ds
     mov ds,ds:pf_map_sel
-    mov eax,ds:fm_handle_ptr
-    or eax,eax
-    jz dpsPop
-;
     mov ax,flat_data_sel
     mov es,eax
     mov ebx,ds:fm_handle_ptr

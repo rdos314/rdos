@@ -2405,9 +2405,6 @@ InitObj   Proc near
 ;
     mov es:hui_free_proc,OFFSET FreeHandleObj
     mov es:hui_free_proc+4,cs
-;
-    mov es:hui_kill_proc,OFFSET FreeHandleObj
-    mov es:hui_kill_proc+4,cs
     ret
 InitObj   Endp
 

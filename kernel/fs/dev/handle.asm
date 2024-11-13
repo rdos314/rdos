@@ -370,7 +370,7 @@ dphLoop:
     sub ds:hui_ref_count,1
     jnz dphPop
 ;
-    call fword ptr ds:hui_kill_proc
+    call fword ptr ds:hui_free_proc
 
 dphPop:
     pop ds

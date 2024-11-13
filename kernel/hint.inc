@@ -139,9 +139,6 @@ hui_output_size_proc      DD ?,?
 ;  IN	DS                Handle entry interface
 hui_free_proc             DD ?,?
 
-;  IN	DS                Handle entry interface
-hui_kill_proc             DD ?,?
-
 hui_io_mode               DW ?
 hui_ref_count             DW ?
 

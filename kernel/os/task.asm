@@ -9964,7 +9964,6 @@ terminate_app_handled:
     jmp cleanup_thread
 
 terminate_proc:
-    DeleteProcHandle
     call trap_terminate_thread
     jmp cleanup_process
 
